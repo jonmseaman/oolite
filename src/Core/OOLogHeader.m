@@ -299,6 +299,11 @@ static NSString *GetCPUDescription(void)
 		
 		case CPU_TYPE_ARM:
 			typeStr = @"ARM";
+			break;
+
+		case CPU_TYPE_ARM64:
+			typeStr = @"ARM64";
+			break;
 	}
 	
 	if (typeStr == nil)  typeStr = [NSString stringWithFormat:@"CPU type %llu", sysCPUType];
