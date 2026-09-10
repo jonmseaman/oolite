@@ -2,17 +2,23 @@ oolite_sources = []
 oolite_includes = []
 oolite_override_options = []
 oolite_link_args = []
+dep_method = (host_os == 'darwin') ? 'pkg-config' : 'auto'
 oolite_dependencies = [
-    dependency('sdl3'),
-    dependency('libpng'),
-    dependency('openal'),
-    dependency('vorbisfile'),
-    dependency('vorbis'),
-    dependency('nspr'),
-    dependency('zlib'),
+    dependency('sdl3', method: dep_method),
+    dependency('libpng', method: dep_method),
+    dependency('openal', method: dep_method),
+    dependency('vorbisfile', method: dep_method),
+    dependency('vorbis', method: dep_method),
+    dependency('zlib', method: dep_method),
 ]
 
-if get_option('espeak')
+# nspr exists only for SpiderMonkey; dropped on macOS (M.2), which has no SpiderMonkey build yet.
+if host_os != 'darwin'
+    oolite_dependencies += [dependency('nspr')]
+endif
+
+# espeak-ng packaging for macOS is deferred to M.8; stay off there regardless of the option.
+if get_option('espeak') and host_os != 'darwin'
     oolite_dependencies += [dependency('espeak-ng')]
     add_project_arguments('-DHAVE_LIBESPEAK=1', language: c_family)
 endif
