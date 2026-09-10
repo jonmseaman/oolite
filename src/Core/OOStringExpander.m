@@ -1149,7 +1149,7 @@ static void AppendCharacters(NSMutableString **result, const unichar *characters
 		
 		TODO: build the output string in a fixed-size stack buffer instead.
 	*/
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 	CFStringAppendCharacters((CFMutableStringRef)*result, characters + start, end - start);
 #else
 	NSString *temp = [[NSString alloc] initWithCharacters:characters + start length:end - start];

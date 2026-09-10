@@ -111,7 +111,7 @@ typedef enum
 #define CHART_ZOOM_SHOW_LABELS		2.0
 
 // OO_RESOLUTION_OPTION: true if full screen resolution can be changed.
-#if OOLITE_MAC_OS_X && OOLITE_64_BIT
+#if OOLITE_COCOA_UI && OOLITE_64_BIT
 #define OO_RESOLUTION_OPTION		0
 #else
 #define OO_RESOLUTION_OPTION		1

@@ -9018,7 +9018,7 @@ static NSString *SliderString(NSInteger amountIn20ths)
 		}
 #endif
 #endif
-#if !OOLITE_MAC_OS_X
+#if OOLITE_SDL
 		// window/fullscreen
 		if([gameView inFullScreenMode])
 		{

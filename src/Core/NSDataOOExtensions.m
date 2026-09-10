@@ -52,7 +52,7 @@ SOFTWARE.
 	{
 /* -initWithContentsOfMappedFile fails quietly under OS X if there's no file,
    but GNUstep complains. */
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 		return [[[NSData alloc] initWithContentsOfMappedFile:path] autorelease];
 #else
 		NSFileManager	*fmgr = [NSFileManager defaultManager];

@@ -346,7 +346,7 @@ enum
 
 @implementation OOMusicController (Private)
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 - (void) playiTunesPlaylist:(NSString *)playlistName
 {
 	NSString *ootunesScriptString =

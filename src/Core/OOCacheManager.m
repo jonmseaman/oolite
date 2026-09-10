@@ -35,7 +35,7 @@ MA 02110-1301, USA.
 
 
 // Use the (presumed) most efficient plist format for each platform.
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 #define CACHE_PLIST_FORMAT	NSPropertyListBinaryFormat_v1_0
 #else
 #define CACHE_PLIST_FORMAT	NSPropertyListGNUstepBinaryFormat

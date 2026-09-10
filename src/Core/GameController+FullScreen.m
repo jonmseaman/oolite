@@ -29,9 +29,9 @@ MA 02110-1301, USA.
 #import "OOCollectionExtractors.h"
 
 
-#if OOLITE_MAC_OS_X	// TEMP, should be used for SDL too
+#if OOLITE_COCOA_UI	// TEMP, should be used for SDL too
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 
 #import "OOMacSnowLeopardFullScreenController.h"
 #import "OOMacSystemStandardFullScreenController.h"
@@ -48,7 +48,7 @@ MA 02110-1301, USA.
 
 - (void) setUpDisplayModes
 {
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 	OOFullScreenController *fullScreenController = nil;
 	
 #if OO_MAC_SUPPORT_SYSTEM_STANDARD_FULL_SCREEN
@@ -81,7 +81,7 @@ MA 02110-1301, USA.
 }
 
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 
 - (IBAction) toggleFullScreenAction:(id)sender
 {

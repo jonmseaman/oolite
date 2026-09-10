@@ -1190,7 +1190,7 @@ shaderBindingTarget:(id<OOWeakReferenceSupport>)target
 		
 		NSCharacterSet	*whitespaceCharSet = [NSCharacterSet whitespaceCharacterSet];
 		NSCharacterSet	*whitespaceAndNewlineCharSet = [NSCharacterSet whitespaceAndNewlineCharacterSet];
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 		NSCharacterSet	*newlineCharSet = [NSCharacterSet newlineCharacterSet];
 #else
 		static NSCharacterSet *newlineCharSet = nil;

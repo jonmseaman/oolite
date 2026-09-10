@@ -28,7 +28,7 @@ SOFTWARE.
 #import "NSObjectOOExtensions.h"
 
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 #import <objc/runtime.h>
 #endif
 

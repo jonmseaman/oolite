@@ -182,7 +182,7 @@ static NSData *CopyDataFromFile(NSString *path)
 	return [[NSData oo_dataWithOXZFile:path] retain];
 #if 0
 // without OXZ extension. Code to be deleted once everything is working
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 	return [[NSData alloc] initWithContentsOfMappedFile:path];
 #else
 	NSFileManager	*fmgr = [NSFileManager defaultManager];

@@ -44,7 +44,7 @@ MA 02110-1301, USA.
 #import "OOOXZManager.h"
 #import "OOOpenGLMatrixManager.h"
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 #import "JAPersistentFileReference.h"
 #import <Sparkle/Sparkle.h>
 #import "OoliteApp.h"
@@ -108,7 +108,7 @@ static GameController *sSharedController = nil;
 
 - (void) dealloc
 {
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 	[[[NSWorkspace sharedWorkspace] notificationCenter]	removeObserver:UNIVERSE];
 #endif
 	
@@ -258,7 +258,7 @@ static GameController *sSharedController = nil;
 		[self beginSplashScreen];
 #endif
 		
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 		[OOJoystickManager setStickHandlerClass:[OOMacJoystickManager class]];
 		SetUpSparkle();
 #endif
@@ -307,7 +307,7 @@ static GameController *sSharedController = nil;
 	// Release anything allocated above that is not required.
 	[pool release];
 	
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_COCOA_UI
 	[[NSRunLoop currentRunLoop] run];
 #endif
 }
@@ -335,7 +335,7 @@ static GameController *sSharedController = nil;
 
 - (void) beginSplashScreen
 {
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_COCOA_UI
 	if(!gameView)
 	{
 		gameView = [MyOpenGLView alloc];
@@ -349,7 +349,7 @@ static GameController *sSharedController = nil;
 }
 
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 
 - (void) performGameTick:(id)sender
 {
@@ -419,7 +419,7 @@ static GameController *sSharedController = nil;
 		timer = [[NSTimer timerWithTimeInterval:ti target:self selector:@selector(performGameTick:) userInfo:nil repeats:YES] retain];
 		
 		[[NSRunLoop currentRunLoop] addTimer:timer forMode:NSDefaultRunLoopMode];
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 		[[NSRunLoop currentRunLoop] addTimer:timer forMode:NSEventTrackingRunLoopMode];
 #endif
 
@@ -438,7 +438,7 @@ static GameController *sSharedController = nil;
 }
 
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 
 - (void) recenterVirtualJoystick
 {
@@ -698,7 +698,7 @@ static void RemovePreference(NSString *key)
 {
 	if (![UNIVERSE doingStartUp])  return;
 	
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 	[splashProgressTextField setStringValue:message];
 	[splashProgressTextField display];
 #endif
@@ -710,7 +710,7 @@ static void RemovePreference(NSString *key)
 
 
 #if OO_DEBUG
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 - (BOOL) debugMessageTrackingIsOn
 {
 	return splashProgressTextField != nil;
@@ -788,7 +788,7 @@ static NSMutableArray *sMessageStack;
 {
 	OOLogSetDisplayMessagesInClass(@"startup.progress", NO);
 	
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 	// These views will be released when we replace the content view.
 	splashProgressTextField = nil;
 	splashView = nil;
@@ -802,7 +802,7 @@ static NSMutableArray *sMessageStack;
 }
 
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 
 // NIB methods
 - (void)awakeFromNib
@@ -962,7 +962,7 @@ static NSMutableArray *sMessageStack;
 {
 	OOLog(@"startup.exception", @"***** Unhandled exception during startup: %@ (%@).", [exception name], [exception reason]);
 	
-	#if OOLITE_MAC_OS_X
+	#if OOLITE_COCOA_UI
 		// Display an error alert.
 		// TODO: provide better information on reporting bugs in the manual, and refer to it here.
 		NSRunCriticalAlertPanel(@"Oolite failed to start up, because an unhandled exception occurred.", @"An exception of type %@ occurred. If this problem persists, please file a bug report.", @"OK", NULL, NULL, [exception name]);
@@ -984,7 +984,7 @@ static NSMutableArray *sMessageStack;
 @end
 
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_COCOA_UI
 
 static void SetUpSparkle(void)
 {

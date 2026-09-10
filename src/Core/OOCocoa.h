@@ -61,40 +61,20 @@ MA 02110-1301, USA.
 	
 #else
 	#import <AppKit/AppKit.h>
-	
-	#define OOLITE_MAC_OS_X			1
+
+	#define OOLITE_APPLE_FOUNDATION	1
+	#define OOLITE_SDL				1
 	#define OOLITE_SPEECH_SYNTH		1
-	
+
 	#if __LP64__
 		#define OOLITE_64_BIT		1
 	#endif
-	
+
 	/*	Useful macro copied from GNUstep.
 	*/
 	#ifndef DESTROY
 		#define DESTROY(x) do { id x_ = x; x = nil; [x_ release]; } while (0)
 	#endif
-	
-	#if defined MAC_OS_X_VERSION_10_7 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_7
-		#define OOLITE_MAC_OS_X_10_7	1
-	#endif
-	
-	#if defined MAC_OS_X_VERSION_10_8 && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_8
-		#define OOLITE_MAC_OS_X_10_8	1
-	#endif
-
-	#ifndef MAC_OS_X_VERSION_10_12
-		typedef NSUInteger NSWindowStyleMask;
-	#endif
-#endif
-
-
-#ifndef OOLITE_MAC_OS_X_10_7
-	#define OOLITE_MAC_OS_X_10_7	0
-#endif
-
-#ifndef OOLITE_MAC_OS_X_10_8
-	#define OOLITE_MAC_OS_X_10_8	0
 #endif
 
 
@@ -241,9 +221,21 @@ enum {
 #define OOLITE_GNUSTEP				0
 #endif
 
-#ifndef OOLITE_MAC_OS_X
-#define OOLITE_MAC_OS_X				0
+#ifndef OOLITE_APPLE_FOUNDATION
+#define OOLITE_APPLE_FOUNDATION		0
 #endif
+
+#ifndef OOLITE_COCOA_UI
+#define OOLITE_COCOA_UI				0
+#endif
+
+/*	OOLITE_MAC_OS_X is derived: it means only "the host is an Apple platform",
+	true whenever Foundation comes from Apple, regardless of which view layer
+	(if any) is in use. Sites that mean specifically "the Cocoa/AppKit view
+	layer is in use" or "Foundation comes from Apple, not GNUstep" should test
+	OOLITE_COCOA_UI or OOLITE_APPLE_FOUNDATION instead. See ADR-0010.
+*/
+#define OOLITE_MAC_OS_X				OOLITE_APPLE_FOUNDATION
 
 #ifndef OOLITE_WINDOWS
 #define OOLITE_WINDOWS				0
@@ -302,7 +294,7 @@ enum {
 @end
 
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 	#define OOLITE_RELEASE_PLIST_ERROR_STRINGS 1
 #else
 	#define OOLITE_RELEASE_PLIST_ERROR_STRINGS 0
@@ -313,7 +305,7 @@ enum {
 	NSInteger/int under OS X but (more sensibly) NSComparisonResult under
 	GNUstep.
 */
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 	typedef NSInteger OOComparisonResult;
 #else
 	typedef NSComparisonResult OOComparisonResult;

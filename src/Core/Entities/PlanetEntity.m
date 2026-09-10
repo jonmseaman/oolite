@@ -45,7 +45,7 @@ MA 02110-1301, USA.
 #import "OOGraphicsResetManager.h"
 
 
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_APPLE_FOUNDATION
 #define NSIntegerMapKeyCallBacks	NSIntMapKeyCallBacks
 #define NSIntegerMapValueCallBacks	NSIntMapValueCallBacks
 #endif

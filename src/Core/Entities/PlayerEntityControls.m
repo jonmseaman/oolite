@@ -925,7 +925,7 @@ static NSTimeInterval	time_last_frame;
 	@try
 	{
 	//  command-key controls
-	#if !OOLITE_MAC_OS_X || !OOLITE_64_BIT	// On 64-bit Macs, these are handled by normal menu shortcuts.
+	#if !OOLITE_COCOA_UI || !OOLITE_64_BIT	// On 64-bit Macs, these are handled by normal menu shortcuts.
 		if ([gameController inFullScreenMode])
 		{
 			exceptionContext = @"command key controls";

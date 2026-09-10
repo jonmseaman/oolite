@@ -61,7 +61,7 @@ typedef enum
 @end
 
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 
 /*
 	Declare conformance to NSStreamDelegate, which is a formal protocol starting

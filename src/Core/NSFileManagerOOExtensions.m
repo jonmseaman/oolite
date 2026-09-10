@@ -126,7 +126,7 @@ MA 02110-1301, USA.
 }
 
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_APPLE_FOUNDATION
 
 - (NSArray *) oo_directoryContentsAtPath:(NSString *)path
 {
