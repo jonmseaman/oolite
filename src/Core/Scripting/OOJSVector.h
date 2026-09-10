@@ -28,6 +28,18 @@ MA 02110-1301, USA.
 #include <jsapi.h>
 #import "OOMaths.h"
 
+/*
+	OOJSVector.mm (the implementation) is Objective-C++, because it is the
+	Phase 1 façade exemplar (docs/phases/1-js-engine.md) and needs
+	ooscript::JSEngine.hpp's C++23 types. Every other translation unit that
+	imports this header is still plain Objective-C, compiled with C
+	linkage, so these declarations need extern "C" here or the .mm's
+	C++-mangled symbols will not link against them.
+*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 void InitOOJSVector(JSContext *context, JSObject *global);
 
@@ -74,5 +86,9 @@ BOOL VectorFromArgumentList(JSContext *context, NSString *scriptClass, NSString 
 */
 BOOL VectorFromArgumentListNoError(JSContext *context, uintN argc, jsval *argv, HPVector *outVector, uintN *outConsumed)  GCC_ATTR((nonnull (1, 3, 4)));
 
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 
