@@ -3,6 +3,8 @@ ccid = cc.get_id()
 
 if (host_os == 'windows' or host_os == 'cygwin')
     subdir('windows')
+elif host_os == 'darwin'
+    subdir('macos')
 else
     subdir('linux')
 endif
@@ -25,27 +27,34 @@ if get_option('b_lto')
 endif
 
 add_project_arguments(
-    '-DGNUSTEP_BASE_LIBRARY=1',
-    language: c_family,
-)
-add_project_arguments(
     '-fexceptions',
     '-fobjc-exceptions',
     language: 'objc',
 )
 
-if ccid == 'clang'
+if host_os == 'darwin'
     add_project_arguments(
-        '-DGNUSTEP_RUNTIME=1',
-        '-D_NONFRAGILE_ABI=1',
-        '-fobjc-runtime=gnustep-2.2',
-        '-fblocks',
+        '-fobjc-runtime=macosx',
         language: 'objc',
     )
 else
     add_project_arguments(
-        '-DGNU_RUNTIME=1',
-        '-fconstant-string-class=NSConstantString',
-        language: 'objc',
+        '-DGNUSTEP_BASE_LIBRARY=1',
+        language: c_family,
     )
+    if ccid == 'clang'
+        add_project_arguments(
+            '-DGNUSTEP_RUNTIME=1',
+            '-D_NONFRAGILE_ABI=1',
+            '-fobjc-runtime=gnustep-2.2',
+            '-fblocks',
+            language: 'objc',
+        )
+    else
+        add_project_arguments(
+            '-DGNU_RUNTIME=1',
+            '-fconstant-string-class=NSConstantString',
+            language: 'objc',
+        )
+    endif
 endif
