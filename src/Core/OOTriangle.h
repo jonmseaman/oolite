@@ -24,6 +24,10 @@ MA 02110-1301, USA.
 
 */
 
+#ifndef INCLUDED_OOMATHS_h
+#error Do not include OOTriangle.h directly; include OOMaths.h.
+#else
+
 typedef struct
 {
     Vector v[3];
@@ -68,3 +72,5 @@ OOINLINE bool OOTriangleIsDegenerate(Triangle tri)
 {
     return vector_equal(tri.v[0], tri.v[1]) || vector_equal(tri.v[1], tri.v[2]) || vector_equal(tri.v[2], tri.v[0]);
 }
+
+#endif /* INCLUDED_OOMATHS_h */

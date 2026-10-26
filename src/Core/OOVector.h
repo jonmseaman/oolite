@@ -26,6 +26,10 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#ifndef INCLUDED_OOMATHS_h
+#error Do not include OOVector.h directly; include OOMaths.h.
+#else
+
 #ifndef OOMATHS_EXTERNAL_VECTOR_TYPES
 
 typedef struct Vector {
@@ -54,6 +58,7 @@ extern const Vector2D kZeroVector2D, /* 0, 0 */
 OOINLINE Vector make_vector(OOScalar vx, OOScalar vy, OOScalar vz) INLINE_CONST_FUNC;
 OOINLINE Vector2D MakeVector2D(OOScalar vx, OOScalar vy) INLINE_CONST_FUNC;
 
+#if !OOMATHS_STANDALONE
 /* Generate random vectors. */
 Vector OORandomUnitVector(void);
 Vector OOVectorRandomSpatial(OOScalar maxLength); // Random vector uniformly distributed in radius-maxLength sphere. (Longer vectors are more common.)
@@ -61,6 +66,7 @@ Vector OOVectorRandomRadial(OOScalar maxLength); // Random vector with uniform d
 // only needed in high-precision forms so far
 // Vector OORandomPositionInCylinder(Vector centre1, OOScalar exclusion1, Vector centre2, OOScalar exclusion2, OOScalar radius);
 // Vector OORandomPositionInShell(Vector centre, OOScalar inner, OOScalar outer);
+#endif
 
 /* Multiply vector by scalar (in place) */
 OOINLINE void scale_vector(Vector* outVector, OOScalar factor) ALWAYS_INLINE_FUNC NONNULL_FUNC;
@@ -117,21 +123,34 @@ OOINLINE OOScalar triple_product(Vector first, Vector second, Vector third) INLI
 /* Given three points on a surface, returns the normal to the surface. */
 OOINLINE Vector normal_to_surface(Vector v1, Vector v2, Vector v3) CONST_FUNC;
 
-#if __OBJC__
-NSString* VectorDescription(Vector vector); // @"(x, y, z)"
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit until bead oo-dbz), not a plain C++ one
+/*	Objective-C++ only: OOMaths.h is included inside extern "C" (proposed ADR-0043, bead oo-g7k5). */
+extern "C++" {
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
+std::string VectorDescription(Vector vector); // "(x, y, z)"
 
-/* For storing vectors in NSArrays */
-@interface OONativeVector : NSObject {
-@private
-    Vector v;
+/*	For storing vectors in property lists: a PList::Object node holds the box (OOJSShip.mm makes
+        them, OOPListGameTypes.mm and the JavaScript engine read them). Its Objective-C facade was
+        deleted by bead oo-9ht.5; the box is the node's foreign object itself.
+*/
+class OONativeVector : public oo::PListForeign {
+public:
+    explicit OONativeVector(Vector vect);
+    Vector getVector();
+
+    // oo::PListForeign: what the facade answered (its class, and "%@" as <OONativeVector 0x...>).
+    std::string className() const override;
+    std::string description() const override;
+
+private:
+    Vector v = { };
+};
 }
-- (id)initWithVector:(Vector)vect;
-- (Vector)getVector;
-
-@end
 
 #endif
 
+#if OOMATHS_OPENGL_INTEGRATION
 /*	OpenGL conveniences. Need to be macros to work with OOMacroOpenGL. */
 #define GLVertexOOVector(v)           \
     do {                              \
@@ -143,6 +162,7 @@ NSString* VectorDescription(Vector vector); // @"(x, y, z)"
         Vector v_ = v;                        \
         OOGL(glTranslatef(v_.x, v_.y, v_.z)); \
     } while (0)
+#endif
 
 /*** Only inline definitions beyond this point ***/
 
@@ -313,3 +333,5 @@ OOINLINE Vector normal_to_surface(Vector v1, Vector v2, Vector v3)
     d1 = vector_subtract(v3, v2);
     return cross_product(d0, d1);
 }
+
+#endif /* INCLUDED_OOMATHS_h */

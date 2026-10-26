@@ -24,17 +24,41 @@ MA 02110-1301, USA.
 
 */
 
-#import "OOEntityWithDrawable.h"
+#pragma once
 
-@class OOColor;
+#include "OOEntityWithDrawable.h"
 
-@interface SkyEntity : OOEntityWithDrawable {
-    OOColor* skyColor;
-}
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 
-- (id)initWithColors:(OOColor*)col1 col2:(OOColor*)col2 andSystemInfo:(NSDictionary*)systemInfo;
-- (BOOL)changeProperty:(NSString*)key withDictionary:(NSDictionary*)dict;
+/*	C++ only since bead oo-9ht.109 deleted its Objective-C facade (ADR-0056 amendments oo-9ht.23 and
+        oo-9ht.106): the universe makes it with oo::makeRef<SkyEntity>(), hands it to Objective-C with
+        oo::NewEntityFacade (its object is the root's facade, OOEntityWithDrawable's until bead oo-9ht.40) and finds it by dynamic_cast.
+*/
+class SkyEntity : public OOEntityWithDrawable {
+public:
+    /*	-initWithColors::andSystemInfo:'s body after [super init] (the constructor ran Entity's), run
+            on a new sky once its object is made (the facade ran it until bead oo-9ht.109).
+    */
+    void initWithColors(OOColor* col1, OOColor* col2, const oo::PList& systemInfo);
+    bool changeProperty(const std::string& key, const oo::PList& dict);
 
-- (OOColor*)skyColor;
+    OOColor* getSkyColor(); // -skyColor (amendment oo-862e item 1: the ivar keeps the name)
 
-@end
+    void update(OOTimeDelta delta_t) override;
+    bool isSky() override;
+    bool isVisible() override;
+    bool canCollide() override;
+    GLfloat cameraRangeFront() override;
+    GLfloat cameraRangeBack() override;
+    void drawImmediate(bool immediate, bool translucent) override;
+
+#ifdef OO_DEBUG_MONITOR_ENABLED
+    std::optional<std::string> descriptionForObjDump() override;
+#endif
+
+private:
+    bool readColor1(oo::Ref<OOColor>* ioColor1, oo::Ref<OOColor>* ioColor2, oo::Ref<OOColor>* ioColor3, oo::Ref<OOColor>* ioColor4, const oo::PList& dictionary);
+
+    oo::Ref<OOColor> skyColor;
+};
