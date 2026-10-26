@@ -24,6 +24,10 @@ MA 02110-1301, USA.
 
 */
 
+#ifndef INCLUDED_OOMATHS_h
+#error Do not include OOQuaternion.h directly; include OOMaths.h.
+#else
+
 typedef struct Quaternion {
     OOScalar w;
     OOScalar x;
@@ -49,9 +53,11 @@ OOINLINE Quaternion quaternion_negate(Quaternion q) INLINE_CONST_FUNC;
 /* Conjugate, or spacial inverse -- negate x, y, z components */
 OOINLINE Quaternion quaternion_conjugate(Quaternion q) INLINE_CONST_FUNC;
 
+#if !OOMATHS_STANDALONE
 /* Set quaternion to random unit quaternion */
 void quaternion_set_random(Quaternion* quat) NONNULL_FUNC;
 OOINLINE Quaternion OORandomQuaternion(void) ALWAYS_INLINE_FUNC;
+#endif
 
 /* Build quaternion representing a rotation around a given axis */
 OOINLINE void quaternion_set_rotate_about_axis(Quaternion* quat, Vector axis, OOScalar angle) NONNULL_FUNC;
@@ -84,8 +90,12 @@ void quaternion_rotate_about_axis(Quaternion* quat, Vector axis, OOScalar angle)
 /* Normalize quaternion */
 OOINLINE void quaternion_normalize(Quaternion* quat) NONNULL_FUNC ALWAYS_INLINE_FUNC;
 
-#if __OBJC__
-NSString* QuaternionDescription(Quaternion quaternion); // @"(w + xi + yj + zk)"
+#ifdef __cplusplus
+/*	C++ only: OOMaths.h is included inside extern "C" (proposed ADR-0043, bead oo-dupk). */
+extern "C++" {
+#include "oofnd/StdLib.hpp"
+std::string QuaternionDescription(Quaternion quaternion); // "(w + xi + yj + zk)"
+}
 #endif
 
 Vector quaternion_rotate_vector(Quaternion q, Vector vector) CONST_FUNC;
@@ -149,9 +159,13 @@ OOINLINE void quaternion_normalize(Quaternion* quat)
     quat->z = lv * z;
 }
 
+#if !OOMATHS_STANDALONE
 OOINLINE Quaternion OORandomQuaternion(void)
 {
     Quaternion q;
     quaternion_set_random(&q);
     return q;
 }
+#endif
+
+#endif /* INCLUDED_OOMATHS_h */

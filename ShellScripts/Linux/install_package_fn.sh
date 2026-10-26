@@ -24,7 +24,7 @@ install_package() {
                 arch) pkg_name="base-devel" ;;
             esac ;;
 
-        "clang") pkg_name="clang lld lldb" ;;
+        "clang") pkg_name="clang lld lldb llvm" ;;  # llvm: llvm-ar, which clang.ini names
 
         "cmake") pkg_name="cmake" ;;
 
@@ -84,13 +84,6 @@ install_package() {
                 debian) pkg_name="zlib1g-dev" ;;
                 redhat) pkg_name="zlib-devel" ;;
                 arch) pkg_name="zlib" ;;
-            esac ;;
-
-        "nspr-dev")
-            case "$CURRENT_DISTRO" in
-                debian) pkg_name="libnspr4-dev" ;;
-                redhat) pkg_name="nspr-devel" ;;
-                arch) pkg_name="nspr" ;;
             esac ;;
 
         "espeak-ng-dev")

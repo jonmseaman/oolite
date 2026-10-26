@@ -25,6 +25,16 @@ MA 02110-1301, USA.
 
 */
 
-#include <jsapi.h>
+#pragma once
 
-void InitOOJSClock(JSContext* context, JSObject* global);
+#include "ooscript/JSEngine.hpp"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void InitOOJSClock(ooscript::Context context, ooscript::Object global);
+
+#ifdef __cplusplus
+}
+#endif

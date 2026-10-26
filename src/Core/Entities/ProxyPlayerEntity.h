@@ -5,6 +5,11 @@ ProxyPlayerEntity.h
 Ship entity which, in some respects, emulates a PlayerShip. In particular, at
 this time it implements the extra shader bindable methods of PlayerShip.
 
+The class is C++ (bead oo-amwj; proposed ADR-0056, amendment oo-amwj): ProxyPlayerEntity holds the
+proxy's dials and their accessors. Since bead oo-9ht.183 deleted its Objective-C facade (amendment
+oo-9ht.183) the universe and the player make it with newProxyObject(), and its object is a
+ship's, whose root facade answers its dials to the shader bindings by selector (the ship's
+facade did until bead oo-9ht.144).
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -26,78 +31,90 @@ MA 02110-1301, USA.
 
 */
 
-#import "PlayerEntity.h"
+#pragma once
 
-@interface ProxyPlayerEntity : ShipEntity {
-@private
-    float _fuelLeakRate;
-    GLfloat _dialForwardShield;
-    GLfloat _dialAftShield;
-    OOMissileStatus _missileStatus;
-    OOFuelScoopStatus _fuelScoopStatus;
-    OOCompassMode _compassMode;
-    OOAlertCondition _alertCondition;
-    NSUInteger _trumbleCount;
-    int _tradeInFactor;
-    unsigned _massLocked : 1,
-        _atHyperspeed : 1,
-        _dialIdentEngaged : 1;
-}
+#include "PlayerEntity.h"
 
-- (void)copyValuesFromPlayer:(PlayerEntity*)player;
+/*	The proxy's state and methods. Its ship part is ShipEntity's. C++ only since bead oo-9ht.183
+        deleted its Objective-C facade (ADR-0056 amendment oo-9ht.183): newProxyObject() makes it and its
+        object, which answers the proxy's dials to the shaders by name.
+*/
+class ProxyPlayerEntity : public ShipEntity {
+public:
+    /*	[[ProxyPlayerEntity alloc] cxx_initWithKey:definition:] until bead oo-9ht.183: a new proxy,
+            set up from its definition as a ship (oo::NewShipObject), then given the proxy's defaults.
+            Answers the proxy, its object retained (+1) as +alloc/-init's was, or nullptr when the set-up
+            fails (bead oo-9ht.144: the object until then).
+    */
+    static ::ShipEntity* newProxyObject(const std::string& key, const oo::PList& dict);
 
-// Default: 0
-- (float)fuelLeakRate;
-- (void)setFuelLeakRate:(float)value;
+    // -cxx_initWithKey:definition:'s body after [super cxx_initWithKey:definition:].
+    void initProxyDefaults();
 
-// Default: NO
-- (BOOL)massLocked;
-- (void)setMassLocked:(BOOL)value;
+    void copyValuesFromPlayer(::PlayerEntity* player);
 
-// Default: NO
-- (BOOL)atHyperspeed;
-- (void)setAtHyperspeed:(BOOL)value;
+    // True for PlayerEntity or ProxyPlayerEntity (the category Entity (ProxyPlayer), which went with
+    // the facade in bead oo-9ht.183).
+    bool isPlayerLikeShip();
 
-// Default: 1
-- (GLfloat)dialForwardShield;
-- (void)setDialForwardShield:(GLfloat)value;
+    // Default: 0
+    float fuelLeakRate();
+    void setFuelLeakRate(float value);
 
-// Default: 1
-- (GLfloat)dialAftShield;
-- (void)setDialAftShield:(GLfloat)value;
+    // Default: NO
+    bool massLocked();
+    void setMassLocked(bool value);
 
-// Default: MISSILE_STATUS_SAFE
-- (OOMissileStatus)dialMissileStatus;
-- (void)setDialMissileStatus:(OOMissileStatus)value;
+    // Default: NO
+    bool atHyperspeed();
+    void setAtHyperspeed(bool value);
 
-// Default: SCOOP_STATUS_NOT_INSTALLED or SCOOP_STATUS_OKAY depending on equipment.
-- (OOFuelScoopStatus)dialFuelScoopStatus;
-- (void)setDialFuelScoopStatus:(OOFuelScoopStatus)value;
+    // Default: 1
+    GLfloat dialForwardShield();
+    void setDialForwardShield(GLfloat value);
 
-// Default: COMPASS_MODE_BASIC or COMPASS_MODE_PLANET depending on equipment.
-- (OOCompassMode)compassMode;
-- (void)setCompassMode:(OOCompassMode)value;
+    // Default: 1
+    GLfloat dialAftShield();
+    void setDialAftShield(GLfloat value);
 
-// Default: NO
-- (BOOL)dialIdentEngaged;
-- (void)setDialIdentEngaged:(BOOL)value;
+    // Default: MISSILE_STATUS_SAFE
+    OOMissileStatus dialMissileStatus();
+    void setDialMissileStatus(OOMissileStatus value);
 
-// Default: ALERT_CONDITION_DOCKED
-- (OOAlertCondition)alertCondition;
-- (void)setAlertCondition:(OOAlertCondition)condition;
+    // Default: SCOOP_STATUS_NOT_INSTALLED or SCOOP_STATUS_OKAY depending on equipment.
+    OOFuelScoopStatus dialFuelScoopStatus();
+    void setDialFuelScoopStatus(OOFuelScoopStatus value);
 
-// Default: 0
-- (NSUInteger)trumbleCount;
-- (void)setTrumbleCount:(NSUInteger)value;
+    // Default: COMPASS_MODE_BASIC or COMPASS_MODE_PLANET depending on equipment.
+    OOCompassMode compassMode();
+    void setCompassMode(OOCompassMode value);
 
-- (void)setTradeInFactor:(int)tif;
-- (int)tradeInFactor;
+    // Default: NO
+    bool dialIdentEngaged();
+    void setDialIdentEngaged(bool value);
 
-@end
+    // Default: ALERT_CONDITION_DOCKED
+    OOAlertCondition alertCondition() override;
+    void setAlertCondition(OOAlertCondition value);
 
-@interface Entity (ProxyPlayer)
+    // Default: 0
+    NSUInteger trumbleCount();
+    void setTrumbleCount(NSUInteger value);
 
-// True for PlayerEntity or ProxyPlayerEntity.
-- (BOOL)isPlayerLikeShip;
+    void setTradeInFactor(int tif);
+    int tradeInFactor();
 
-@end
+private:
+    float _fuelLeakRate = 0;
+    GLfloat _dialForwardShield = 0;
+    GLfloat _dialAftShield = 0;
+    OOMissileStatus _missileStatus = { };
+    OOFuelScoopStatus _fuelScoopStatus = { };
+    OOCompassMode _compassMode = { };
+    OOAlertCondition _alertCondition = { };
+    NSUInteger _trumbleCount = 0;
+    int _tradeInFactor = 0;
+    unsigned _massLocked : 1 = 0,
+                           _atHyperspeed : 1 = 0,
+                           _dialIdentEngaged : 1 = 0;
+};

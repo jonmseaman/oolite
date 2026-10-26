@@ -26,13 +26,19 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#import "ShipEntity.h"
-#import <Foundation/Foundation.h>
-#include <jsapi.h>
+#include "OOFoundation.h"
+#include "ooscript/JSEngine.hpp"
+class ShipEntity; // C++ since bead oo-9ht.144
 
-@class ShipEntity;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void InitOOJSShip(JSContext* context, JSObject* global);
+void InitOOJSShip(ooscript::Context context, ooscript::Object global);
 
-JSClass* JSShipClass(void);
-JSObject* JSShipPrototype(void);
+ooscript::ClassDef* JSShipClass(void);
+ooscript::Object JSShipPrototype(void);
+
+#ifdef __cplusplus
+}
+#endif

@@ -26,10 +26,23 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#import "StationEntity.h"
-#import <Foundation/Foundation.h>
-#include <jsapi.h>
+#include "OOFoundation.h"
+#include "ooscript/JSEngine.hpp"
+class StationEntity;
 
-@class StationEntity;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void InitOOJSStation(JSContext* context, JSObject* global);
+void InitOOJSStation(ooscript::Context context, ooscript::Object global);
+
+#ifdef __cplusplus
+}
+#endif
+
+/*	The bodies of StationEntity (OOJavaScriptExtensions), which the engine reaches by selector.
+        StationEntity::getJSClass and ::jsClassName call these
+        (proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+*/
+void OOJSStationGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+std::optional<std::string> OOJSStationJSClassName(void);

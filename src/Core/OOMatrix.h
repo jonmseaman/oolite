@@ -24,8 +24,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOQuaternion.h"
-#include "OOVector.h"
+#ifndef INCLUDED_OOMATHS_h
+#error Do not include OOMatrix.h directly; include OOMaths.h.
+#else
 
 typedef struct OOMatrix {
     OOScalar m[4][4];
@@ -88,6 +89,7 @@ OOINLINE void OOMatrixGetBasisVectors(OOMatrix m, Vector* outRight, Vector* outU
 /* Orthogonalizion - avoidance of distortions due to numerical inaccuracy. */
 OOMatrix OOMatrixOrthogonalize(OOMatrix m) CONST_FUNC;
 
+#if OOMATHS_OPENGL_INTEGRATION
 /*	OpenGL conveniences. Need to be macros to work with OOMacroOpenGL. */
 #define OOMatrixValuesForOpenGL(M) (&(M).m[0][0])
 #define GLMultOOMatrix(M)                                 \
@@ -117,9 +119,15 @@ OOMatrix OOMatrixOrthogonalize(OOMatrix m) CONST_FUNC;
 void GLUniformMatrix3(GLint location, OOMatrix M);
 
 OOINLINE OOMatrix OOMatrixLoadGLMatrix(GLenum matrixID) ALWAYS_INLINE_FUNC;
+#endif
 
-#if __OBJC__
-NSString* OOMatrixDescription(OOMatrix matrix); // @"{{#, #, #, #}, {#, #, #, #}, {#, #, #, #}, {#, #, #, #}}"
+#ifdef __cplusplus
+/*	C++ only: OOMaths.h is included inside extern "C" (proposed ADR-0043, bead oo-6283; OOMatrix.cpp
+        since oo-s37k, as OOQuaternion.h does for QuaternionDescription). */
+extern "C++" {
+#include "oofnd/StdLib.hpp"
+std::string OOMatrixDescription(OOMatrix matrix); // "{{#, #, #, #}, {#, #, #, #}, {#, #, #, #}, {#, #, #, #}}"
+}
 #endif
 
 // Row operations
@@ -333,9 +341,13 @@ OOINLINE OOMatrix OOMatrixTranspose(OOMatrix m)
         m.m[0][3], m.m[1][3], m.m[2][3], m.m[3][3]);
 }
 
+#if OOMATHS_OPENGL_INTEGRATION
 OOINLINE OOMatrix OOMatrixLoadGLMatrix(GLenum matrixID)
 {
     OOMatrix m;
     glGetFloatv(matrixID, OOMatrixValuesForOpenGL(m));
     return m;
 }
+#endif
+
+#endif /* INCLUDED_OOMATHS_h */

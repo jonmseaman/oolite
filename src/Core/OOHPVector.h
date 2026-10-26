@@ -27,8 +27,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFastArithmetic.h"
-#include "OOVector.h"
+#ifndef INCLUDED_OOMATHS_h
+#error Do not include OOHPVector.h directly; include OOMaths.h.
+#else
 
 #ifndef OOMATHS_EXTERNAL_VECTOR_TYPES
 
@@ -61,6 +62,7 @@ OOINLINE HPVector2D MakeHPVector2D(OOHPScalar vx, OOHPScalar vy) INLINE_CONST_FU
 OOINLINE HPVector vectorToHPVector(Vector v) INLINE_CONST_FUNC;
 OOINLINE Vector HPVectorToVector(HPVector v) INLINE_CONST_FUNC;
 
+#if !OOMATHS_STANDALONE
 /* Generate random vectors. */
 HPVector OORandomUnitHPVector(void);
 HPVector OOHPVectorRandomSpatial(OOHPScalar maxLength); // Random vector uniformly distributed in radius-maxLength sphere. (Longer vectors are more common.)
@@ -70,6 +72,7 @@ HPVector OORandomPositionInShell(HPVector centre, OOHPScalar inner, OOHPScalar o
 /* returns the projection of 'point' to the plane defined by the point
          'plane' and the normal vector 'normal' */
 HPVector OOProjectHPVectorToPlane(HPVector point, HPVector plane, HPVector normal);
+#endif
 
 /* Multiply vector by scalar (in place) */
 OOINLINE void HPscale_vector(HPVector* outHPVector, OOHPScalar factor) ALWAYS_INLINE_FUNC NONNULL_FUNC;
@@ -126,12 +129,17 @@ OOINLINE OOHPScalar HPtriple_product(HPVector first, HPVector second, HPVector t
 /* Given three points on a surface, returns the normal to the surface. */
 OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2, HPVector v3) CONST_FUNC;
 
-#if __OBJC__
-NSString* HPVectorDescription(HPVector vector); // @"(x, y, z)"
-NSArray* ArrayFromHPVector(HPVector vector);
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit until bead oo-dbz), not a plain C++ one
+/*	Objective-C++ only: OOMaths.h is included inside extern "C" (proposed ADR-0043, bead oo-dlox). */
+extern "C++" {
+#include "oofnd/StdLib.hpp"
+std::string cxx_HPVectorDescription(HPVector vector); // "(x, y, z)"
+std::vector<double> cxx_ArrayFromHPVector(HPVector vector); // { x, y, z }
+}
 
 #endif
 
+#if OOMATHS_OPENGL_INTEGRATION
 /*	OpenGL conveniences. Need to be macros to work with OOMacroOpenGL. */
 #define GLVertexOOHPVector(v)         \
     do {                              \
@@ -143,6 +151,7 @@ NSArray* ArrayFromHPVector(HPVector vector);
         HPVector v_ = v;                      \
         OOGL(glTranslatef(v_.x, v_.y, v_.z)); \
     } while (0)
+#endif
 
 /*** Only inline definitions beyond this point ***/
 
@@ -331,3 +340,5 @@ OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2, HPVector v3)
     d1 = HPvector_subtract(v3, v2);
     return HPcross_product(d0, d1);
 }
+
+#endif /* INCLUDED_OOMATHS_h */
