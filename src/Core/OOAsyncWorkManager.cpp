@@ -26,7 +26,6 @@ SOFTWARE.
 */
 
 #include "OOAsyncWorkManager.h"
-
 #include "OOCPUInfo.h"
 #include "oofnd/Thread.hpp"
 #include "oofnd/objc/OOException.h"
@@ -59,9 +58,9 @@ namespace {
 OOAsyncWorkManager* sSingleton = nullptr;
 
 /*	A first-in-first-out queue of tasks whose dequeue() blocks until one is
-   there: the part of OOAsyncQueue the manager used, holding tasks (bead
-   oo-9ht.14; OOAsyncQueue holds Objective-C objects). A queued task is
-   retained, as OOAsyncQueue retained it.
+   there: the part of OOAsyncQueue the manager used, holding tasks
+   (OOAsyncQueue holds Objective-C objects). A queued task is retained, as
+   OOAsyncQueue retained it.
 */
 class TaskQueue {
  public:
@@ -137,8 +136,8 @@ class OOManualDispatchAsyncWorkManager : public OOAsyncWorkManagerInternal {
   TaskQueue _taskQueue;
 };
 
-/*	The prioritised task queue Foundation's operation queue was (bead
-   oo-3rb.6): highest priority first and first-in-first-out within a priority,
+/*	The prioritised task queue Foundation's operation queue was: highest
+   priority first and first-in-first-out within a priority,
    as the operation queue ordered operations by queuePriority. A queued task is
    retained until a work thread has dispatched it, as the invocation operation
    retained its argument.
@@ -182,7 +181,7 @@ unsigned WorkThreadCount(void) {
 /*	Starts `count` detached work threads running body(threadNumber),
    numbered from 1, as Foundation's detachNewThreadSelector:toTarget:withObject:
    did with [manager selector:threadNumber]. The thread number is a plain
-   unsigned now (proposed ADR-0043). The manager is an immortal singleton, so a
+   unsigned now. The manager is an immortal singleton, so a
    thread needs no retain on it; the thread body opens its own pool.
 */
 template <class Body>
@@ -190,7 +189,7 @@ void StartWorkThreads(Body body, unsigned count) {
   for (unsigned threadNumber = 1; threadNumber <= count; threadNumber++) {
     oo::thread::detach([body, threadNumber]() {
       {
-        oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+        oo::AutoreleaseScope pool;  // was @autoreleasepool
         body(threadNumber);
       }
     });
@@ -221,8 +220,8 @@ std::mutex sInitLock;
 
 }  // namespace
 
-/*	The manager is made once, here, and its +1 is never released (ADR-0056
-   amendment oo-r7m0): the Objective-C class's +allocWithZone: refused a second
+/*	The manager is made once, here, and its +1 is never released: the
+   Objective-C class's +allocWithZone: refused a second
    instance and its -retain/-release/ -retainCount made the one immortal, so
    that boilerplate is not translated. The class name is logged as
    oo::DescriptionOf([sSingleton class]) logged it.
@@ -372,19 +371,18 @@ bool OOManualDispatchAsyncWorkManager::addTask(
 
 void OOManualDispatchAsyncWorkManager::queueTask(unsigned threadNumber) {
   {
-    oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+    oo::AutoreleaseScope pool;  // was @autoreleasepool
     SetUpWorkThread(threadNumber);
 
     for (;;) {
       {
-        oo::AutoreleaseScope taskPool;  // was @autoreleasepool (oo-31u.8)
+        oo::AutoreleaseScope taskPool;  // was @autoreleasepool
         const oo::Ref<OOAsyncWorkTask> task = _taskQueue.dequeue();
         try {
           task->performAsyncTask();
         } catch (...) {
           if (!oo::CurrentOOException()) throw;
         }  // was @catch (id exception) {}: the game's exceptions only
-           // (oo::Exception since oo-rskgl.1)
         queueResult(task.get());
       }
     }
@@ -395,8 +393,8 @@ void OOManualDispatchAsyncWorkManager::queueTask(unsigned threadNumber) {
  * threads *******/
 /*	This was Foundation's operation queue; it is now an
    OOPrioritizedTaskQueue served by WorkThreadCount() detached std::threads
-   (bead oo-3rb.6). The class name is kept: it is what the
-        asyncWorkManager.dispatchMethod log line prints.
+   The class name is kept: it is what the asyncWorkManager.dispatchMethod
+   log line prints.
 */
 
 bool OOOperationQueueAsyncWorkManager::canBeUsed() {
@@ -452,7 +450,7 @@ void OOOperationQueueAsyncWorkManager::workThread(unsigned threadNumber) {
     }
 
     {
-      oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+      oo::AutoreleaseScope pool;  // was @autoreleasepool
       dispatchTask(task.get());
     }
     task = nullptr;  // the queue's retain, released after the pool as before
@@ -464,8 +462,7 @@ void OOOperationQueueAsyncWorkManager::dispatchTask(OOAsyncWorkTask* task) {
     task->performAsyncTask();
   } catch (...) {
     if (!oo::CurrentOOException()) throw;
-  }  // was @catch (id exception) {}: the game's exceptions only (oo::Exception
-     // since oo-rskgl.1)
+  }  // was @catch (id exception) {}: the game's exceptions only
   queueResult(task);
 }
 

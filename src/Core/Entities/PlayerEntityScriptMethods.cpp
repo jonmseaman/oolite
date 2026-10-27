@@ -22,14 +22,13 @@ MA 02110-1301, USA.
 
 */
 
-#include "PlayerEntityScriptMethods.h"
-
 #include "OOCommodities.h"
 #include "OOConstToString.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "OOSystemDescriptionManager.h"
 #include "PlayerEntityLoadSave.h"
+#include "PlayerEntityScriptMethods.h"
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
@@ -70,11 +69,9 @@ NSInteger IntegerValueOf(const oo::PList* value) {
 
 }  // namespace
 
-/*	The category PlayerEntity (ScriptMethods), bead oo-50zg: members of
-   PlayerEntity (ADR-0056 amendments oo-o89 item 4 and oo-42dr), declared in
-   PlayerEntity.h. The facade's category of the same name forwarded them until
-   bead oo-9ht.177 deleted it; sends to self are member calls.
-*/
+/* The category PlayerEntity (ScriptMethods): members of PlayerEntity, declared
+ * in PlayerEntity.h.
+ */
 
 unsigned PlayerEntity::score() { return ship_kills; }
 

@@ -40,12 +40,11 @@ MA 02110-1301, USA.
 #define DUST_SCALE 2000
 #define DUST_N_PARTICLES 600
 
-/*	C++ only since bead oo-9ht.77 deleted its Objective-C facade (proposed
-   ADR-0056 amendment oo-0mxi): the universe makes it with
-   oo::makeRef<DustEntity>() and init(), hands it to Objective-C with
-   oo::NewEntityFacade, and finds it with dynamic_cast. It is its own graphics
-        reset client (OOGraphicsResetClient), and the dust shader's uniforms are
-   bound to its members (bead oo-t0e2m: OOShaderUniform's C++ target binding).
+/*	The universe makes the dust with oo::makeRef<DustEntity>() and init(),
+   hands it to Objective-C with oo::NewEntityFacade, and finds it with
+   dynamic_cast. It is its own graphics reset client (OOGraphicsResetClient),
+   and the dust shader's uniforms are bound to its members (OOShaderUniform's
+   C++ target binding).
 */
 class DustEntity : public Entity, public OOGraphicsResetClient {
  public:
@@ -68,9 +67,8 @@ class DustEntity : public Entity, public OOGraphicsResetClient {
 #if OO_SHADERS
   OOShaderProgram* getShader();
   Vector offsetPlayerPosition();  // the dust shader's uOffsetPlayerPosition
-                                  // (bead oo-t0e2m)
 #endif
-  Vector warpVector();  // the dust shader's uWarp (bead oo-t0e2m)
+  Vector warpVector();  // the dust shader's uWarp
 
   void drawImmediate(bool immediate, bool translucent) override;
 

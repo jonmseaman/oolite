@@ -22,10 +22,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOEntityWithDrawable.h"
-
 #include "OODrawable.h"
-#include "OOTexture.h"  // allTextures() destroys oo::Ref<OOTexture>s (bead oo-9ht.99)
+#include "OOEntityWithDrawable.h"
+#include "OOTexture.h"  // allTextures() destroys oo::Ref<OOTexture>s
 #include "OOVisualEffectEntity.h"
 #include "ShipEntity.h"
 #include "Universe.h"
@@ -44,7 +43,7 @@ void OOEntityWithDrawable::setDrawable(OODrawable* inDrawable) {
     // Messages to a nil drawable did nothing and answered 0.
     OODrawable* cxxDrawable = drawable.get();
     if (cxxDrawable != nullptr)
-      cxxDrawable->setBindingTarget(this);  // the C++ entity (bead oo-9ht.39.6)
+      cxxDrawable->setBindingTarget(this);  // the C++ entity
 
     collision_radius =
         cxxDrawable != nullptr ? cxxDrawable->collisionRadius() : 0.0f;

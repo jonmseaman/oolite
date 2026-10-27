@@ -1,6 +1,5 @@
 /*	oofnd/Data.hpp
-        oo::Data: a byte buffer, the C++ shape of NSData / NSMutableData (bead
-   oo-i9q).
+        oo::Data: a byte buffer, the C++ shape of NSData / NSMutableData.
 
             Foundation                                  oofnd
             ------------------------------------------
@@ -17,7 +16,7 @@
    (oofnd/FileSystem.hpp) [d writeToFile:p atomically:YES] oo::fs::writeFile(p,
    d, oo::fs::WriteMode::atomic)
 
-        SEMANTICS (proposed ADR-0028):
+        SEMANTICS:
 
           * A VALUE type over std::vector<std::uint8_t>, not a RefCounted
    object. NSData is immutable and shared by retain; in C++ a const Data& or a
@@ -36,13 +35,12 @@
    may still report allocation failure as the standard library does).
 */
 
-#ifndef OOFND_DATA_HPP
-#define OOFND_DATA_HPP
+#pragma once
 
 // Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
 // 0`; C++20 needs the keywords (requires-clauses, <=> in the standard headers
 // this pulls in). Suspend the macros for this header and restore them at its
-// end (proposed ADR-0028).
+// end.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -137,5 +135,3 @@ class Data {
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_DATA_HPP

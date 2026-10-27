@@ -25,12 +25,11 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSOolite.h"
-
 #include <cstring>
 
 #include "MyOpenGLView.h"
 #include "OOConstToString.h"
+#include "OOJSOolite.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "OOStringParsing.h"
@@ -63,23 +62,6 @@ std::optional<std::string> OoliteInfoString(std::string_view key) {
 }
 
 }  // namespace
-
-// Retargeted onto the ooscript facade (JSEngine.hpp), the way OOJSWormhole.mm
-// and OOJSClock.mm do it (bead oo-sdz exemplar): the class dispatch table
-// becomes a static ooscript::ClassDef (stub hooks become nullptr), InitClass
-// becomes ooscript::initClass, numeric conversion becomes
-// ooscript::newNumberValue/ooscript::valueToNumber, and `this` is renamed to
-// `thisObj` (reserved word in Objective-C++, ADR-0001).
-/*
-        C++20 since bead oo-whvg, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. Nothing
-   else in the file was Objective-C: the universe, its game view and the
-   resource manager, which are not converted, are still messaged, which is why
-   the file is still .mm until Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::CallArgs;

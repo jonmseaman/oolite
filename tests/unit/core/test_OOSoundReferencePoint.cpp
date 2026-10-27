@@ -1,14 +1,11 @@
 /*	test_OOSoundReferencePoint.mm
         Unit tests for OOSoundReferencePoint
-   (src/Core/OOBasicSoundReferencePoint.h): bead oo-odlx, converted in the Phase
-   3 house style (proposed ADR-0056).
+   (src/Core/OOBasicSoundReferencePoint.h).
 
         The class is the no-op reference point of the OpenAL sound code
-   (OOSound.h: positional sound is not implemented). The expectations were
-   written against the Objective-C API and run on the unconverted class first: a
-   point can be made, takes a position, a velocity and an orientation without
-   effect, and is freed by its last release. The class has no Objective-C facade
-   (no file outside it messages it), so there is no facade contract to pin. Run:
+   (OOSound.h: positional sound is not implemented). A point can be made, takes
+   a position, a velocity and an orientation without effect, and is freed by
+   its last release. Run: bash tools/check-core-tests.sh
    bash tools/check-core-tests.sh
 */
 

@@ -1,16 +1,11 @@
 /*	test_OORoleSet.mm
-        Unit tests for OORoleSet (src/Core/OORoleSet.h): bead oo-bhb9, a Phase 3
-   conversion in the house style of the OOColor exemplar (proposed ADR-0056).
+        Unit tests for OORoleSet (src/Core/OORoleSet.h).
 
-        It pins what the class computed before the conversion, written against
-   the Objective-C API and run on the unconverted class first: parsing a role
-   string (probabilities, shipKey roles, the thargon rewrite), the normalised
-   role string, lookups, the two role orders, the weighted pick, the modified
-   copies (and which of them return the receiver itself), equality, and the
-        description. Bead oo-9ht.6 deleted the Objective-C facade: those checks
-   now ask the C++ class with every expectation kept, and the facade's own cases
-   (nil stays nil, one facade per set, -copy, alloc/init's peer) retired under
-   the standing approval oo-9n5p9. Run: bash tools/check-core-tests.sh
+        It pins: parsing a role string (probabilities, shipKey roles, the
+   thargon rewrite), the normalised role string, lookups, the two role orders,
+   the weighted pick, the modified copies (and which of them return the receiver
+   itself), equality, and the description. The checks ask the C++ class. Run:
+   bash tools/check-core-tests.sh
 */
 
 #include "OODescription.h"

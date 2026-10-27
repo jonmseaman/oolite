@@ -4,10 +4,7 @@ OOColor.h
 
 An RGBA colour in device colour space.
 
-C++20 since bead oo-11m, the Phase 3 house-style exemplar (proposed ADR-0056;
-docs/phases/3-cpp-conversion.md, "Converting a class"). Its Objective-C facade
-was deleted by bead oo-9ht.1, which moved the class out of namespace cxx. A
-colour is its own PList::Object node payload (oo::PListForeign), as
+A colour is its own PList::Object node payload (oo::PListForeign), as
 OONativeVector is.
 
 
@@ -31,8 +28,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOCOLOR_H
-#define OOCOLOR_H
+#pragma once
 
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
@@ -58,7 +54,7 @@ class OOColor : public oo::PListForeign {
   static oo::Ref<OOColor> colorWithHSBAComponents(
       OOHSBAComponents components);  // Note: hue in 0..360
 
-  /*	Flexible color creator (proposed ADR-0055 item 2): <description> is
+  /*	Flexible color creator: <description> is
      plist data, one of
           - a string: the name of one of the named colours below ("redColor" &
      co.), or components (colorFromString());
@@ -165,9 +161,9 @@ class OOColor : public oo::PListForeign {
   float rgba[4] = {};
 };
 
-/*	A colour carried through plist data as a PList::Object node (proposed
-   ADR-0043 Amendment 2): the colour is the node's foreign object (bead
-   oo-9ht.1; what oo::PListObject() and oo::ObjectIn() did for the facade).
+/*	A colour carried through plist data as a PList::Object node: the colour
+   is the node's foreign object (what oo::PListObject() and oo::ObjectIn() did
+   for the facade).
 */
 inline oo::PList OOColorObjectNode(OOColor* color)  // null colour -> null PList
 {
@@ -184,5 +180,3 @@ inline OOColor* OOColorInObjectNode(
 
 std::string OORGBAComponentsDescription(OORGBAComponents components);
 std::string OOHSBAComponentsDescription(OOHSBAComponents components);
-
-#endif  // OOCOLOR_H

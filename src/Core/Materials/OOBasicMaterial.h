@@ -7,10 +7,6 @@ Material using basic OpenGL properties. Normal materials
 desireable to have a material which does not use normal GL material
 properties, in which case it should be based on OOMaterial directly.
 
-C++20 since bead oo-vl43 (proposed ADR-0056, amendment oo-vl43). The Objective-C
-facade (its bridge header) was deleted by bead oo-9ht.33, which moved the class
-out of namespace cxx.
-
 
 Copyright (C) 2007-2013 Jens Ayton
 
@@ -34,8 +30,7 @@ SOFTWARE.
 
 */
 
-#ifndef OOBASICMATERIAL_H
-#define OOBASICMATERIAL_H
+#pragma once
 
 #include "OOColor.h"
 #include "OOMaterial.h"
@@ -56,15 +51,14 @@ class OOBasicMaterial : public OOMaterial {
   /*	The initialisers. Each runs once, right after construction: from a
      factory above, a subclass's initialiser, or the facade's initialisers. Not
      constructors, because the second asks the virtual permitSpecular(), which
-     must reach a subclass's override (proposed ADR-0056, amendment oo-vl43).
+     must reach a subclass's override.
 
           Initialize with default values (historical Olite defaults, not GL
      defaults): diffuse		{ 1.0, 1.0, 1.0, 1.0 } specular	{ 0.0, 0.0,
      0.0, 1.0 } ambient		{ 1.0, 1.0, 1.0, 1.0 } emission	{ 0.0, 0.0,
      0.0, 1.0 } shininess	0
   */
-  void initWithName(
-      const std::optional<std::string>& name);  // (bead oo-3rb.289.5)
+  void initWithName(const std::optional<std::string>& name);
 
   /*	Initialize with dictionary. Accepted keys:
                   diffuse		colour description
@@ -125,15 +119,12 @@ class OOBasicMaterial : public OOMaterial {
   virtual bool permitSpecular();
 
  private:
-  std::optional<std::string> materialName =
-      {};  // nil-able, as the name was (proposed ADR-0043)
+  std::optional<std::string> materialName = {};  // nil-able, as the name was
 
   // Colours
   GLfloat diffuse[4] = {}, specular[4] = {}, ambient[4] = {}, emission[4] = {};
 
-  // Specular exponent. The leading underscore: shininess() is the getter's name
-  // (amendment oo-rdfh).
+  // Specular exponent. The leading underscore: shininess() is the getter's
+  // name.
   uint8_t _shininess = {};  // Default: 0.0
 };
-
-#endif  // OOBASICMATERIAL_H

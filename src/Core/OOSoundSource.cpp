@@ -33,13 +33,13 @@ SOFTWARE.
 namespace {
 // The sources that are playing, each once, retained (a Foundation mutable set
 // before; sources compare by identity). Created lazily and dropped by +stopAll,
-// as the set was (proposed ADR-0043).
+// as the set was.
 std::vector<oo::Ref<OOSoundSource>>* sPlayingSoundSources = nullptr;
 
 /*	The class as the delegate of a stopped source's channel
    (+channel:didFinishPlayingSound:, which -stop made the channel's delegate by
    [_channel setDelegate:[OOSoundSource class]]): it hands the channel back to
-   the mixer (bead oo-9ht.86).
+   the mixer.
 */
 class StoppedSourceHandler final : public OOSoundChannelDelegate {
  public:
@@ -50,8 +50,7 @@ class StoppedSourceHandler final : public OOSoundChannelDelegate {
 
 StoppedSourceHandler sStoppedSourceHandler;
 
-// The text "%@" printed for the sound: "(null)" for none (bead oo-9ht.68
-// deleted its facade).
+// The text "%@" printed for the sound: "(null)" for none.
 std::string SoundDescription(const OOSound* sound) {
   return (sound != nullptr) ? sound->description() : std::string("(null)");
 }
@@ -72,16 +71,15 @@ OOSoundSource::OOSoundSource(OOSound* inSound) : OOSoundSource() {
 }
 
 // [_sound autorelease] is the oo::Ref's release: the sounds the game plays are
-// kept by the resource manager's cache, and a playing channel retains its own
-// (bead oo-9ht.88).
+// kept by the resource manager's cache, and a playing channel retains its own.
 OOSoundSource::~OOSoundSource() { stop(); }
 
 /*	A const member, so it reads the ivars that -isPlaying, -loop and
-   -repeatCount answered (amendment oo-8kx7 item 5).
+   -repeatCount answered.
 */
 std::optional<std::string> OOSoundSource::descriptionComponents() const {
   if (_channel != nullptr) {
-    // The channel as %@ printed its facade (bead oo-9ht.86 deleted it):
+    // The channel as %@ printed it:
     // <OOSoundChannel 0x...>.
     const std::string channel = oo::str::format(
         "<OOSoundChannel %s>", oo::str::pointerDescription(_channel).c_str());
@@ -117,9 +115,8 @@ void OOSoundSource::setRepeatCount(uint8_t count) { _repeatCount = count; }
 bool OOSoundSource::isPlaying() { return _channel != nullptr; }
 
 /*	[self retain] and [self release] are retain() and release(), which keep
-   this source alive while it plays, as the old object kept itself (bead
-   oo-9ht.88 deleted the facade that carried them); the playing set holds the
-   source.
+   this source alive while it plays, as the old object kept itself; the playing
+   set holds the source.
 */
 void OOSoundSource::play() {
   if (sound() == nullptr) return;

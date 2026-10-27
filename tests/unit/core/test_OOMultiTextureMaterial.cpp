@@ -1,32 +1,21 @@
 /*	test_OOMultiTextureMaterial.mm
         Unit tests for OOMultiTextureMaterial
-   (src/Core/Materials/OOMultiTextureMaterial.h): bead oo-lh0x, converted after
-   its superclass OOBasicMaterial (bead oo-vl43; proposed ADR-0056, amendments
-   oo-smy and oo-vl43).
+   (src/Core/Materials/OOMultiTextureMaterial.h), a subclass of OOBasicMaterial.
 
         A basic material with a diffuse map and an emission map on two texture
    units, combined by the fixed-function texture combiners. This pins, through
-   the Objective-C API its caller (the convenience creators) uses, what it
-   computed before the conversion: which maps each configuration asks for (a
-   plain emission map, or one baked by OOCombinedEmissionMapGenerator from what
-   else is configured), the emission colour kept from the basic material when a
-   map replaces it, the units used, -apply (the maps, the combiner state,
-   texture unit 0 active after), -unapplyWithNext: (the units the next material
-   does not use are cleared), the loading question passed to the maps, and the
-   description. The GL context is a hidden window's; the extension manager runs
-   with its collaborators stubbed as in test_OOOpenGLExtensionManager. Those
-   checks ran on the Objective-C class first and then through the facade. After
-   them: the C++ API (apply() is virtual since this bead: the root facade's
-   -apply and C++ callers reach the override), and the facade's class and
-   identity.
-
-        Bead oo-9ht.42 deleted the facade (ADR-0056 amendment "deleting a
-   facade"). The cases that asked through its selectors ask the C++ class with
-   the same expectations (alloc/init is materialWithName(), retain/release a
-   held Ref); the facade's own case (facade) was retired with it (ADR-0049,
-   standing approval oo-9n5p9), and crossesAsTheBasicMaterialFacade pins what
-        Objective-C sees now: the nearest facade, OOBasicMaterial's.
-        Run: bash tools/check-core-tests.sh
+   the API its caller (the convenience creators) uses, what it computes: which
+   maps each configuration asks for (a plain emission map, or one baked by
+   OOCombinedEmissionMapGenerator from what else is configured), the emission
+   colour kept from the basic material when a map replaces it, the units used,
+   -apply (the maps, the combiner state, texture unit 0 active after),
+   -unapplyWithNext: (the units the next material does not use are cleared), the
+   loading question passed to the maps, and the description. The GL context is a
+   hidden window's; the extension manager runs with its collaborators stubbed as
+   in test_OOOpenGLExtensionManager. The cases ask the C++ class
+   (materialWithName(), a held Ref); crossesAsTheBasicMaterialFacade pins what
+   Objective-C sees: the nearest facade, OOBasicMaterial's. Run: bash
+   tools/check-core-tests.sh
 */
 
 #include <cstdlib>
@@ -60,9 +49,8 @@ void OOLogOutdent(void) {}
 // them.
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 std::vector<std::string> ResourceManager::paths() { return {}; }
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& /*fileName*/,
@@ -70,8 +58,7 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
   return oo::PList(oo::PList::Dict{});
 }
 
-// OORegExpMatcher is C++ since its facade was deleted (bead oo-9ht.12): the
-// stub answers no match.
+// OORegExpMatcher: the stub answers no match.
 oo::Ref<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
   return oo::makeRef<OORegExpMatcher>();
 }
@@ -90,9 +77,8 @@ static std::string Str(const oo::PList& plist) {
   return string != nullptr ? *string : "-";
 }
 
-/*	OOTexture: a stand-in recording what the material asks (proposed
-   ADR-0056, amendment oo-z1s4 item 4). A texture's configuration is the
-   specifier it was made from, or "generated".
+/*	OOTexture: a stand-in recording what the material asks. A texture's
+   configuration is the specifier it was made from, or "generated".
 */
 // kOOTextureExtraShrink, spelled out as before.
 static const uint32_t kExtraShrink = 0x000020UL;
@@ -102,10 +88,9 @@ static int gTexturesDeallocated = 0;
 static std::vector<std::pair<oo::PList, uint32_t>>
     gTextureConfigurations;  // (specifier, extra options)
 
-// Since bead oo-9ht.99 deleted the Objective-C facade, the stand-in is C++: the
-// root's static members the material calls, TestTexture (what they answer), and
-// the root's own members; the short description is every texture's here (they
-// are all TestTextures).
+// The stand-in is C++: the root's static members the material calls,
+// TestTexture (what they answer), and the root's own members; the short
+// description is every texture's here (they are all TestTextures).
 class TestTexture final : public OOTexture {
  public:
   ~TestTexture() override { gTexturesDeallocated++; }
@@ -181,12 +166,10 @@ std::string OOTexture::shortDescription() const {
 /*	OOCombinedEmissionMapGenerator: records which factory was called and
    with what. It answers null when it would have nothing to bake (no emission
    map and no illumination map), as the material's callers never see a generated
-   map for none. It is C++ since bead oo-9ht.135 deleted its Objective-C facade:
-   the stand-in defines the factories, and its own and its bases' other members
-   as no-ops (no texture loader is linked). The material hands the C++ generator
-   to the OOTexture stand-in, which only asks whether it is nil (it handed the
-   generator's Objective-C object, here a plain object, until bead oo-9ht.118
-   deleted the generators' facade).
+   map for none. It is C++: the stand-in defines the factories, and its own
+   and its bases' other members as no-ops (no texture loader is linked). The
+   material hands the C++ generator to the OOTexture stand-in, which only asks
+   whether it is nil.
 */
 static std::vector<std::string> gGenerators;
 
@@ -204,8 +187,7 @@ std::optional<std::string> OOTextureLoader::shortDescriptionComponents() const {
   return std::nullopt;
 }
 void OOTextureLoader::loadTexture() {}
-// The loader is the work manager's task since bead oo-9ht.14 (its vtable):
-// never reached.
+// The loader is the work manager's task (its vtable): never reached.
 void OOTextureLoader::performAsyncTask() { std::abort(); }
 void OOTextureLoader::completeAsyncTask() { std::abort(); }
 uint32_t OOTextureGenerator::textureOptions() { return 0; }
@@ -269,7 +251,7 @@ oo::PList cxx_OOTextureSpecFromObject(
 
 // UNIVERSE is gSharedUniverse: nil, so not reduced detail and no shaders.
 // UNIVERSE stays nil here, so the code under test's guarded calls never reach
-// it; the stand-in only links them (bead oo-ql9rn: they were messages to nil).
+// it; the stand-in only links them.
 class Universe {
  public:
   bool useShaders();
@@ -523,8 +505,7 @@ OO_TEST(cxxAPI) {
   }
 }
 
-// The description names the C++ class, as the facade's did (beads oo-9ht.42,
-// oo-9ht.8).
+// The description names the C++ class.
 OO_TEST(descriptionNamesTheClass) {
   if (!CombinersSupported()) {
     OO_CHECK(false);

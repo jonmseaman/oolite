@@ -25,9 +25,8 @@ SOFTWARE.
 
 */
 
-#include "OODefaultShaderSynthesizer.h"
-
 #include "OOColor.h"
+#include "OODefaultShaderSynthesizer.h"
 #include "OOMaterialSpecifier.h"
 #include "OOMesh.h"
 #include "OOTexture.h"
@@ -57,8 +56,7 @@ std::string FormatFloat(double value);
 
         In debug/testrelease builds, this dispatches through performStage()
    which checks for recursive calls. The stage is named by its text and called
-   through a member-function pointer where it was named by a selector (bead
-   oo-bhxc).
+   through a member-function pointer where it was named by a selector.
 */
 #ifndef NDEBUG
 #define REQUIRE_STAGE(NAME)                                 \
@@ -124,8 +122,7 @@ OODefaultShaderSynthesizer::OODefaultShaderSynthesizer(
 }
 
 /*	-dealloc sent -destroyTemporaries, which only empties members that the
-   destructor destroys anyway; the destructor is the implicit one (amendment
-   oo-vt0o item 2).
+   destructor destroys anyway; the destructor is the implicit one.
 */
 
 std::string OODefaultShaderSynthesizer::vertexShader() { return _vertexShader; }

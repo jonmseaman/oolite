@@ -21,8 +21,6 @@ MA 02110-1301, USA.
 
  */
 
-#include "OOJSStation.h"
-
 #include <cstdint>
 #include <cstring>
 
@@ -35,6 +33,7 @@ MA 02110-1301, USA.
 #include "OOJSInterfaceDefinition.h"
 #include "OOJSPlayer.h"
 #include "OOJSShip.h"
+#include "OOJSStation.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
 #include "OOShipRegistry.h"
@@ -45,44 +44,10 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), InitClass becomes
-   ooscript::initClass, native methods and class hooks take the façade's hook
-   signature (Context/Object/PropertyId/Value pointer/ CallArgs reference), and
-   the directly spelled numeric-conversion / object-conversion / property-lookup
-   calls (NewNumberValue, ValueToBoolean, ValueToNumber, ValueToInt32,
-        ValueToObject, GetProperty) become their ooscript:: façade equivalents.
-   Natives take the façade signature directly (ooscript::Context and a CallArgs
-   reference) and the OOJS_* argument-marshalling macros expand to the CallArgs
-   accessors, so the rest of each function body is UNCHANGED. `this` is renamed
-   to `thisObj` because it is a reserved word once this file compiles as
-   Objective-C++ (ADR-0001).
-
         Station is registered as a Ship subclass and object converter with
    &sStationClass, the same ooscript::ClassDef that ooscript::getClass() reports
    for its instances.
 */
-/*
-        C++20 since bead oo-3oxq, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on StationEntity became two free functions, and its methods became
-   StationEntity members (amendment oo-ykoy, bead oo-9ht.97). OOCommodities,
-   OOCommodityMarket, OOEquipmentType and OOJSInterfaceDefinition, which are C++
-   since beads oo-fqyw, oo-ih7y, oo-fg7i and oo-8fpc, are reached as cxx::
-   classes through oo::ToCxx (amendment oo-ppc, item 4), null-guarded where a
-   message to nil answered; an interface definition is C++ since bead oo-9ht.61
-   deleted its façade, and the station keeps it as oo::Ref. The station is C++
-   since bead oo-9ht.175 deleted its facade: its members are called (its object,
-        a ship's, is the JS object's; the ship is C++ since bead oo-9ht.144).
-   Messages to classes that are still Objective-C (Universe, GameController)
-   stay as they are (the ship registry is C++ since bead oo-9ht.122), which is
-   why the file is still .mm until Phase 4.
-*/
-
 namespace ooscript {}
 using ooscript::CallArgs;
 using ooscript::ClassDef;
@@ -216,7 +181,7 @@ std::optional<std::string> StringAtIndex(const oo::PList& array,
 
 // A mutable dictionary's -setObject:forKey: given a nil value raised this
 // (GNUstep 1.31.1's text), and the calling script saw it as "Native exception:
-// <reason>". (Exceptions have their own beads.)
+// <reason>".
 void RaiseNilValueForKey(std::string_view key) {
   OORaiseException(OOInvalidArgumentException,
                    "Tried to add nil value for key '%s' to dictionary",
@@ -334,10 +299,8 @@ static PropertySpec sStationProperties[] = {
 
 // A raw jsapi mirror of sStationProperties, used only for the two bad-property
 // error reporters in OOJavaScriptEngine.m
-// (OOJSReportBadPropertySelector/Value): those helpers are outside this bead's
-// scope (shared across every binding file) and still take a
-// ooscript::PropertySpec*, not ooscript::PropertySpec* (see OOJSVector.mm's
-// sVectorPropertiesRaw).
+// (OOJSReportBadPropertySelector/Value), which are shared across every binding
+// file and take a ooscript::PropertySpec*.
 namespace {
 static ooscript::PropertySpec sStationPropertiesRaw[] = {
     // JS name ID
@@ -411,7 +374,7 @@ static bool JSStationGetStationEntity(ooscript::Context context,
   OOJS_PROFILE_ENTER
 
   bool result;
-  Entity* entity = nullptr;  // the slot holds the C++ entity (bead oo-9ht.39.3)
+  Entity* entity = nullptr;  // the slot holds the C++ entity
 
   if (outEntity == NULL) return false;
   *outEntity = nil;
@@ -419,8 +382,7 @@ static bool JSStationGetStationEntity(ooscript::Context context,
   result = OOJSEntityGetEntity(context, stationObj, &entity);
   if (!result) return false;
 
-  // A station's object is a ship's since bead oo-9ht.175: its C++ part says it
-  // is a station, where -isKindOfClass:[StationEntity class] did.
+  // A station's object is a ship's: its C++ part says it is a station.
   StationEntity* station = oo::ToStation(entity);
   if (station == nullptr) return false;
 
@@ -438,7 +400,7 @@ static bool JSStationGetShipEntity(ooscript::Context context,
   OOJS_PROFILE_ENTER
 
   bool result;
-  Entity* entity = nullptr;  // the slot holds the C++ entity (bead oo-9ht.39.3)
+  Entity* entity = nullptr;  // the slot holds the C++ entity
 
   if (outEntity == NULL) return false;
   *outEntity = nil;
@@ -456,8 +418,7 @@ static bool JSStationGetShipEntity(ooscript::Context context,
 }  // namespace
 
 // The bodies of StationEntity (OOJavaScriptExtensions), which StationEntity's
-// getJSClass and jsClassName call (proposed ADR-0056 amendments oo-ppc and
-// oo-ykoy).
+// getJSClass and jsClassName call.
 void OOJSStationGetJSClass(ooscript::ClassDef** outClass,
                            ooscript::Object* outPrototype) {
   *outClass = &sStationClass;
@@ -528,8 +489,8 @@ static bool StationGetProperty(Context cx, Object obj, PropertyId propID,
       // same as in ship definition, but this time read/write below
       return ooscript::newNumberValue(
           cx, (entity != nullptr ? entity->ShipEntity::getFlightRoll() : 0.0f),
-          value);  // qualified: the final overrider (bead oo-9ht.175), so the
-                   // binding test stands in for it
+          value);  // qualified: the final overrider, so the binding test stands
+                   // in for it
 
     case kStation_allowsFastDocking:
       *value_raw = OOJSValueFromBOOL(
@@ -579,8 +540,7 @@ static bool StationGetProperty(Context cx, Object obj, PropertyId propID,
     case kStation_shipyard: {
       if (!(entity != nullptr ? entity->hasShipyard() : false)) {
         // return null if station has no shipyard
-        *value_raw = ooscript::nullValue();  // OOJSValueFromNativeObject(context,
-                                             // nil) (bead oo-4aq6a.6)
+        *value_raw = ooscript::nullValue();
       } else {
         if ((entity != nullptr ? entity->getLocalShipyard()
                                : (std::vector<oo::PList>*)nullptr) == nullptr) {
@@ -825,27 +785,24 @@ static bool StationDockPlayer(ooscript::Context context,
     if (gameController != nullptr) gameController->setGamePaused(false);
   }
 
-  if (EXPECT(
-          !(player != nullptr
-                ? player->PlayerEntity::isDocked()
-                : false)))  // qualified: the final overrider (bead oo-9ht.177),
-                            // so the binding test stands in for it
+  if (EXPECT(!(player != nullptr
+                   ? player->PlayerEntity::isDocked()
+                   : false)))  // qualified: the final overrider, so the binding
+                               // test stands in for it
   {
     StationEntity* stationForDockingPlayer = nil;
     JSStationGetStationEntity(context, OOJS_THIS, &stationForDockingPlayer);
     if (player != nullptr)
       player->setDockingClearanceStatus(DOCKING_CLEARANCE_STATUS_GRANTED);
     if (player != nullptr)
-      player
-          ->PlayerEntity::safeAllMissiles();  // qualified: the final overrider
-                                              // (bead oo-9ht.177), so the
-                                              // binding test stands in for it
+      player->PlayerEntity::safeAllMissiles();  // qualified: the final
+                                                // overrider, so the binding
+                                                // test stands in for it
     if (UNIVERSE != nullptr) UNIVERSE->setViewDirection(VIEW_FORWARD);
     if (player != nullptr)
       player->PlayerEntity::enterDock(
-          stationForDockingPlayer);  // qualified: the final overrider (bead
-                                     // oo-9ht.177), so the binding test stands
-                                     // in for it
+          stationForDockingPlayer);  // qualified: the final overrider, so the
+                                     // binding test stands in for it
   }
   OOJS_RETURN_VOID;
 
@@ -863,10 +820,10 @@ static bool StationIncreaseAlertLevel(ooscript::Context context,
     OOJS_RETURN_VOID;  // stale reference, no-op
 
   OOJS_BEGIN_FULL_NATIVE(context)
-  if ((station != nullptr ? station->ShipEntity::alertCondition()
-                          : OOAlertCondition{}) <
-      3)  // qualified: the final overrider (bead oo-9ht.175), so the binding
-          // test stands in for it
+  if ((station != nullptr
+           ? station->ShipEntity::alertCondition()
+           : OOAlertCondition{}) < 3)  // qualified: the final overrider, so the
+                                       // binding test stands in for it
   {
     if (station != nullptr) station->increaseAlertLevel();
   }
@@ -886,10 +843,10 @@ static bool StationDecreaseAlertLevel(ooscript::Context context,
     OOJS_RETURN_VOID;  // stale reference, no-op
 
   OOJS_BEGIN_FULL_NATIVE(context)
-  if ((station != nullptr ? station->ShipEntity::alertCondition()
-                          : OOAlertCondition{}) >
-      1)  // qualified: the final overrider (bead oo-9ht.175), so the binding
-          // test stands in for it
+  if ((station != nullptr
+           ? station->ShipEntity::alertCondition()
+           : OOAlertCondition{}) > 1)  // qualified: the final overrider, so the
+                                       // binding test stands in for it
   {
     if (station != nullptr) station->decreaseAlertLevel();
   }
@@ -927,17 +884,15 @@ static bool StationLaunchShipWithRole(ooscript::Context context,
 
   OOJS_BEGIN_FULL_NATIVE(context)
   result = oo::ToShip(oo::EntityIn(
-      (station != nullptr
-           ? station->launchIndependentShip(*shipRole)
-           : oo::PList())));  // the ship's entity node (bead oo-9ht.39.5.3)
+      (station != nullptr ? station->launchIndependentShip(*shipRole)
+                          : oo::PList())));  // the ship's entity node
   if (abortAllDockings) {
     if (station != nullptr) station->abortAllDockings();
   }
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, result));  // the C++ ship's JS value (its object's until bead
-                          // oo-9ht.39.8.2)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, result));  // the C++ ship's JS value
   OOJS_NATIVE_EXIT
 }
 }  // namespace
@@ -956,9 +911,8 @@ static bool StationLaunchDefenseShip(ooscript::Context context,
   launched =
       (station != nullptr ? station->launchDefenseShip() : (::ShipEntity*)nil);
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, launched));  // the C++ ship's JS value (its object's until bead
-                            // oo-9ht.39.8.2)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -978,9 +932,8 @@ static bool StationLaunchEscort(ooscript::Context context,
   launched =
       (station != nullptr ? station->launchEscort() : (::ShipEntity*)nil);
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, launched));  // the C++ ship's JS value (its object's until bead
-                            // oo-9ht.39.8.2)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -1000,9 +953,8 @@ static bool StationLaunchScavenger(ooscript::Context context,
   launched =
       (station != nullptr ? station->launchScavenger() : (::ShipEntity*)nil);
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, launched));  // the C++ ship's JS value (its object's until bead
-                            // oo-9ht.39.8.2)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -1021,9 +973,8 @@ static bool StationLaunchMiner(ooscript::Context context,
   OOJS_BEGIN_FULL_NATIVE(context)
   launched = (station != nullptr ? station->launchMiner() : (::ShipEntity*)nil);
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, launched));  // the C++ ship's JS value (its object's until bead
-                            // oo-9ht.39.8.2)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
   OOJS_NATIVE_EXIT
 }
 }  // namespace
@@ -1042,9 +993,8 @@ static bool StationLaunchPirateShip(ooscript::Context context,
   launched =
       (station != nullptr ? station->launchPirateShip() : (::ShipEntity*)nil);
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, launched));  // the C++ ship's JS value (its object's until bead
-                            // oo-9ht.39.8.2)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -1064,9 +1014,8 @@ static bool StationLaunchShuttle(ooscript::Context context,
   launched =
       (station != nullptr ? station->launchShuttle() : (::ShipEntity*)nil);
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, launched));  // the C++ ship's JS value (its object's until bead
-                            // oo-9ht.39.8.2)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
   OOJS_NATIVE_EXIT
 }
 }  // namespace
@@ -1085,9 +1034,8 @@ static bool StationLaunchPatrol(ooscript::Context context,
   launched =
       (station != nullptr ? station->launchPatrol() : (::ShipEntity*)nil);
   OOJS_END_FULL_NATIVE
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, launched));  // the C++ ship's JS value (its object's until bead
-                            // oo-9ht.39.8.2)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
   OOJS_NATIVE_EXIT
 }
 }  // namespace
@@ -1102,7 +1050,6 @@ static bool StationLaunchPolice(ooscript::Context context,
     OOJS_RETURN_VOID;  // stale reference, no-op
 
   oo::PList::Array launched;  // the launched ships' entity nodes, in order
-                              // (bead oo-9ht.39.5.3)
   OOJS_BEGIN_FULL_NATIVE(context)
   const oo::PList police =
       (station != nullptr ? station->launchPolice() : oo::PList());
@@ -1223,8 +1170,7 @@ static bool StationSetInterface(ooscript::Context context,
     return false;
   }
 
-  // C++ since bead oo-9ht.61 deleted its façade; the station keeps it
-  // (oo::Ref).
+  // The station keeps it (oo::Ref).
   const oo::Ref<OOJSInterfaceDefinition> definition =
       oo::makeRef<OOJSInterfaceDefinition>();
   OOJSInterfaceDefinition* cxxDefinition = definition.get();
@@ -1295,9 +1241,8 @@ static bool StationSetMarketPrice(ooscript::Context context,
   if (station == (PLAYER != nullptr ? PLAYER->PlayerEntity::dockedStation()
                                     : (StationEntity*)nullptr) &&
       (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-          GUI_SCREEN_MARKET)  // qualified: the final overrider (bead
-                              // oo-9ht.177), so the binding test stands in for
-                              // it
+          GUI_SCREEN_MARKET)  // qualified: the final overrider, so the binding
+                              // test stands in for it
   {
     if (PLAYER != nullptr) PLAYER->setGuiToMarketScreen();  // refresh screen
   }
@@ -1363,9 +1308,8 @@ static bool StationSetMarketQuantity(ooscript::Context context,
   if (station == (PLAYER != nullptr ? PLAYER->PlayerEntity::dockedStation()
                                     : (StationEntity*)nullptr) &&
       (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-          GUI_SCREEN_MARKET)  // qualified: the final overrider (bead
-                              // oo-9ht.177), so the binding test stands in for
-                              // it
+          GUI_SCREEN_MARKET)  // qualified: the final overrider, so the binding
+                              // test stands in for it
   {
     if (PLAYER != nullptr) PLAYER->setGuiToMarketScreen();  // refresh screen
   }
@@ -1378,8 +1322,7 @@ static bool StationSetMarketQuantity(ooscript::Context context,
 
 namespace {
 
-// -[OOEquipmentType weaponThreatAssessment] of a weapon, which is C++ since
-// bead oo-fg7i: 0 for no weapon, as a message to nil answered.
+// OOEquipmentType::weaponThreatAssessment() of a weapon: 0 for no weapon.
 GLfloat WeaponThreatAssessment(OOWeaponType weapon) {
   OOEquipmentType* type = weapon;
   return (type != nullptr) ? type->weaponThreatAssessment() : 0;
@@ -1613,9 +1556,8 @@ static bool StationAddShipToShipyard(ooscript::Context context,
   if (station == (PLAYER != nullptr ? PLAYER->PlayerEntity::dockedStation()
                                     : (StationEntity*)nullptr) &&
       (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-          GUI_SCREEN_SHIPYARD)  // qualified: the final overrider (bead
-                                // oo-9ht.177), so the binding test stands in
-                                // for it
+          GUI_SCREEN_SHIPYARD)  // qualified: the final overrider, so the
+                                // binding test stands in for it
   {
     if (PLAYER != nullptr) PLAYER->setGuiToShipyardScreen(0);
   }
@@ -1670,9 +1612,8 @@ static bool StationRemoveShipFromShipyard(ooscript::Context context,
   if (station == (PLAYER != nullptr ? PLAYER->PlayerEntity::dockedStation()
                                     : (StationEntity*)nullptr) &&
       (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) ==
-          GUI_SCREEN_SHIPYARD)  // qualified: the final overrider (bead
-                                // oo-9ht.177), so the binding test stands in
-                                // for it
+          GUI_SCREEN_SHIPYARD)  // qualified: the final overrider, so the
+                                // binding test stands in for it
   {
     if (PLAYER != nullptr) PLAYER->setGuiToShipyardScreen(0);
   }

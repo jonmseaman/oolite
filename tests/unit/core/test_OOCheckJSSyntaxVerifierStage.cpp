@@ -1,21 +1,16 @@
 /*	test_OOCheckJSSyntaxVerifierStage.mm
-        Unit tests for OOCheckJSSyntaxVerifierStage.h/.mm (bead oo-kdnm;
-   proposed ADR-0056 Amendment 1 and amendment oo-up4b item 6): the stage that
+        Unit tests for OOCheckJSSyntaxVerifierStage.h/.mm: the stage that
    compiles an OXP's scripts, a leaf of OOFileHandlingVerifierStage.
 
-        What the stage computed before the conversion is pinned: its name and
+        What the stage computes is pinned: its name and
    neighbours (the intermediate class's), when it runs (a non-empty Scripts
    folder, or Config/script.js), and which files it hands to the script loader
    (.js and .es in Scripts, in any case, then Config/script.js), with error
    locations switched on first. The script loader and the engine reach the whole
    game, so the test replaces them with classes that record what they are asked.
-   Then the crossing: the converted stage is global, so Objective-C sees it as
-   an OOOXPVerifierStage. Bead oo-9ht.4 deleted the stage facade: the verifier
-   registers and answers the C++ stage itself, so the facade case asks the stage
-   (its description through description()), and the checks that pinned only the
-   facade crossing (one live facade, oo::ToObjC/oo::ToCxx, its class,
-        oo::AsObjCStage) were retired with it (ADR-0049, standing approval
-   oo-9n5p9). Run: bash tools/check-core-tests.sh
+   Then the stage is global: the verifier registers and answers the C++ stage
+   itself, so the facade case asks the stage (its description through
+   description()). Run: bash tools/check-core-tests.sh
 */
 
 #include <filesystem>
@@ -42,9 +37,8 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 #include "OOOXPVerifierTestDouble.h"
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// C++ definitions of the ResourceManager statics the code under test calls,
+// with the stand-in's answers.
 std::optional<std::string> ResourceManager::pathForFileNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   (void)fileName;
@@ -61,8 +55,8 @@ std::vector<std::string> gScriptPaths;  // +scriptWithPath:properties:, in order
 
 }  // namespace
 
-// The engine (OOJavaScriptEngine.h; a C++ class since bead oo-wdqw1 deleted its
-// facade), declared with the header's names and signatures but not its class.
+// The engine (OOJavaScriptEngine.h), declared with the header's names and
+// signatures but not its class.
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
@@ -80,10 +74,8 @@ void OOJavaScriptEngine::setShowErrorLocations(bool value) {
 
 #include "OOScript.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls.
+// OOJSScript (OOJSScript.h), which the code under test calls. The stand-in is a
+// C++ subclass of OOScript declaring the members that code calls.
 class OOJSScript : public OOScript {
  public:
   static oo::Ref<OOJSScript> scriptWithPath(
@@ -132,9 +124,7 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 // verifier runs it first.
 void RunScanner(OOOXPVerifier* verifier) {
   OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)
-      ->run();  // was -fileScannerStage (bead oo-9ht.7); the C++ stage since
-                // oo-9ht.4
+  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -222,9 +212,8 @@ OO_TEST(compilesEachScript) {
   std::filesystem::remove_all(kBase);
 }
 
-// The converted stage is global: the verifier registers it and finds it by name
-// (it held its OOOXPVerifierStage facade until bead oo-9ht.4), and it describes
-// itself with its class's name.
+// The stage is global: the verifier registers it and finds it by name, and it
+// describes itself with its class's name.
 OO_TEST(facade) {
   {
     OOOXPVerifier* verifier = MakeVerifier({"Config/script.js"});

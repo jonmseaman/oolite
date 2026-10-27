@@ -1,6 +1,5 @@
 /*	test_OOTextureSprite.mm
-        Unit tests for OOTextureSprite (src/Core/OOTextureSprite.h): bead
-   oo-ljhc (Phase 3, house style of proposed ADR-0056).
+        Unit tests for OOTextureSprite (src/Core/OOTextureSprite.h).
 
         A texture sprite is a texture and a size; its only output is the
    textured quad it hands to OpenGL. The test captures that quad in feedback
@@ -10,14 +9,11 @@
    centred and background blits, with the alpha clamped to [0, 1]; that the
    texture is applied once per blit, that 2D texturing is off again afterwards,
    and that the background blit leaves the size as it found it. The sprite's
-   texture is a stand-in OOTexture defined here (amendment oo-z1s4 item 4),
+   texture is a stand-in OOTexture defined here,
    which answers its original dimensions and counts -apply; the extension
    manager runs with its collaborators stubbed as in test_OOOpenGLStateManager.
-   The expectations were written against the Objective-C API and run on the
-   unconverted class first, then through the Objective-C facade; bead oo-9ht.71
-   deleted the facade (its contract cases went with it, ADR-0049 approval
-        oo-9n5p9), and they now call the C++ class with every expectation kept.
-        Run: bash tools/check-core-tests.sh
+   The tests call the C++ class.
+   Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -39,9 +35,8 @@
 
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 std::vector<std::string> ResourceManager::paths() { return {}; }
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& /*fileName*/,
@@ -49,8 +44,7 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
   return oo::PList(oo::PList::Dict{});
 }
 
-// OORegExpMatcher is C++ since its facade was deleted (bead oo-9ht.12): the
-// stub answers no match.
+// OORegExpMatcher stub: answers no match.
 oo::Ref<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
   return oo::makeRef<OORegExpMatcher>();
 }
@@ -69,8 +63,8 @@ void OOLogIndent(void) {}
 void OOLogOutdent(void) {}
 
 // The sprite's texture: its original dimensions, and how often it was applied.
-// Since bead oo-9ht.99 deleted the Objective-C facade, the stand-in is C++:
-// TestTexture, and the root's own members (a texture needs them).
+// The stand-in is C++: TestTexture, and the root's own members (a texture
+// needs them).
 class TestTexture final : public OOTexture {
  public:
   NSSize originalDimensions() override { return _dimensions; }
@@ -117,9 +111,8 @@ void OOTexture::forceRebind() {}
 namespace {
 
 TestTexture* Texture(float width, float height) {
-  // What an autoreleased Objective-C texture was: the texture, kept until the
-  // current autorelease scope drains (bead oo-9ht.99 made the texture C++, bead
-  // oo-4aq6a.2 its keeper).
+  // What an autoreleased texture is: the texture, kept until the current
+  // autorelease scope drains.
   oo::Ref<TestTexture> texture = oo::makeRef<TestTexture>();
   texture->_dimensions = NSMakeSize(width, height);
   oo::autorelease(oo::Ref<TestTexture>(texture));

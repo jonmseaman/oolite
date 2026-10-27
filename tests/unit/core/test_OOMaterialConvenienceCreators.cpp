@@ -1,6 +1,6 @@
 /*	test_OOMaterialConvenienceCreators.mm
         Unit tests for OOMaterialConvenienceCreators
-   (src/Core/Materials/OOMaterialConvenienceCreators.h): bead oo-9fwb.
+   (src/Core/Materials/OOMaterialConvenienceCreators.h).
 
         The two class methods that pick and make a material for a mesh from its
    configuration: a shader material (named in the configuration, or synthesized
@@ -12,11 +12,7 @@
    configuration itself as it is written to the cache, against the real material
    classes and GLSL programs compiled in a hidden GL context. The universe, the
    resource manager (shader files), the cache manager, the textures and the
-        emission-map generator are stand-ins (proposed ADR-0056 amendment
-   oo-z1s4 item 4). Those checks ran on the Objective-C category first
-   (oo-9fwb); its bridge was deleted by bead oo-9ht.59 and they run through the
-   C++ static members (ADR-0056 amendment oo-9fwb). Run: bash
-   tools/check-core-tests.sh
+   emission-map generator are stand-ins. Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdlib>
@@ -55,9 +51,8 @@ void OOLogOutdent(void) {}
 const char* const cxx_kOOLogFileNotFound = "files.notFound";
 uint32_t gDebugFlags = 0;
 
-// Link stubs (amendment oo-zffj item 2), never reached here:
-// OOStringParsing.mm's parsers of a vector or quaternion written as a string
-// (OOPListGameTypes.mm links them).
+// Link stubs, never reached here: OOStringParsing.mm's parsers of a vector or
+// quaternion written as a string (OOPListGameTypes.mm links them).
 BOOL cxx_ScanVectorFromString(const std::optional<std::string>&, Vector*) {
   std::abort();
 }
@@ -81,9 +76,8 @@ static std::map<std::string, std::string> gShaderFiles;
 
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 std::vector<std::string> ResourceManager::paths() { return {}; }
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& /*fileName*/,
@@ -98,8 +92,7 @@ std::optional<std::string> ResourceManager::stringFromFilesNamed(
   return found->second;
 }
 
-// OORegExpMatcher is C++ since its facade was deleted (bead oo-9ht.12): the
-// stub answers no match.
+// OORegExpMatcher: the stub answers no match.
 oo::Ref<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
   return oo::makeRef<OORegExpMatcher>();
 }
@@ -119,8 +112,7 @@ static std::vector<std::string> gCacheWrites;
 
 #include "OOCacheManager.h"
 
-// The cache manager is C++ since bead oo-9ht.31 deleted its facade: a C++
-// stand-in with the Objective-C stand-in's answers.
+// The cache manager: a C++ stand-in.
 OOCacheManager* OOCacheManager::sharedCache() {
   static OOCacheManager* shared = new OOCacheManager;
   return shared;
@@ -138,9 +130,9 @@ void OOCacheManager::setPList(const oo::PList& value, const std::string& key,
 }
 
 // The textures: any configuration but "missing" loads; a name with no
-// configuration loads unless "missing". Since bead oo-9ht.99 deleted the
-// Objective-C facade, the stand-in is C++: the root's static members the
-// creators call, TestTexture (what they answer), and the root's own members.
+// configuration loads unless "missing". The stand-in is C++: the root's static
+// members the creators call, TestTexture (what they answer), and the root's own
+// members.
 class TestTexture final : public OOTexture {
  public:
   oo::PList _configuration;
@@ -208,12 +200,10 @@ std::string OOTexture::shortDescription() const { return description(); }
 std::string OOTexture::className() const { return "OOTexture"; }
 void OOTexture::forceRebind() {}
 
-/*	The emission-map generator: C++ since bead oo-9ht.135 deleted its
-   Objective-C facade. The factories answer null for nothing to bake, as before;
-   its own and its bases' other members are no-ops (no texture loader is
+/*	The emission-map generator. The factories answer null for nothing to
+   bake; its own and its bases' other members are no-ops (no texture loader is
    linked). The material hands the C++ generator to the OOTexture stand-in,
-   which only asks whether it is nil (it handed a plain Objective-C object until
-   bead oo-9ht.118 deleted the generators' facade).
+   which only asks whether it is nil.
 */
 OOTextureLoader::OOTextureLoader() {}
 OOTextureLoader::~OOTextureLoader() {}
@@ -229,8 +219,7 @@ std::optional<std::string> OOTextureLoader::shortDescriptionComponents() const {
   return std::nullopt;
 }
 void OOTextureLoader::loadTexture() {}
-// The loader is the work manager's task since bead oo-9ht.14 (its vtable):
-// never reached.
+// The loader is the work manager's task (its vtable): never reached.
 void OOTextureLoader::performAsyncTask() { std::abort(); }
 void OOTextureLoader::completeAsyncTask() { std::abort(); }
 uint32_t OOTextureGenerator::textureOptions() { return 0; }
@@ -280,20 +269,18 @@ oo::PList cxx_OOTextureSpecFromObject(
 class Universe;
 Universe* gSharedUniverse = nil;
 
-// The game view is C++ (MyOpenGLView; its facade's crossing went with bead
-// oo-9ht.153). There is none here: its manager accessor, which the shader
-// program's matrix uniforms would use, is never reached.
+// The game view is C++ (MyOpenGLView). There is none here: its manager
+// accessor, which the shader program's matrix uniforms would use, is never
+// reached.
 OOOpenGLMatrixManager* MyOpenGLView::getOpenGLMatrixManager() {
   return matrixManager.get();
 }
 
 #include "UniverseStandIn.h"
 
-// The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's TestUniverse stood
-// in for), with the header's names and signatures. It answers virtual members,
-// so it has the game's vtable (UniverseStandIn.h) and TestUniverse overrides
-// them.
+// The universe as the code under test sees it: a stand-in for the C++ class,
+// with the header's names and signatures. It answers virtual members, so it has
+// the game's vtable (UniverseStandIn.h) and TestUniverse overrides them.
 class Universe : public oo::RefCounted {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
@@ -350,9 +337,7 @@ oo::Ref<OOMaterial> Make(
       cacheKey, oo::PList(std::move(config)), oo::PList(), nil, smooth);
 }
 
-// The material's C++ class, exactly: what -isMemberOfClass: asked of a subclass
-// with a facade of its own, before the facade-deletion beads (oo-9ht.42) made
-// Objective-C see the nearest facade.
+// The material's C++ class, exactly.
 template <typename T>
 bool IsExactly(const oo::Ref<OOMaterial>& material) {
   if (material == nullptr) return false;

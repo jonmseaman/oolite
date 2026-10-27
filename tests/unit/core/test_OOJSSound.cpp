@@ -1,12 +1,9 @@
 /*	test_OOJSSound.mm
         Unit tests for the Sound JS binding (src/Core/Scripting/OOJSSound.h/.mm)
-   and the bodies of its OOSound category (the Scripting bridge file until bead
-   oo-9ht.68 deleted it with the sound's facade): bead oo-crq2, converted the
-   way bead oo-ppc converted OOJSVector (proposed ADR-0056 amendments oo-ppc and
-   oo-ykoy).
+   and the bodies of its OOSound category.
 
-        As test_OOJSWormhole.mm does (amendment oo-ykoy, item 4), it runs the JS
-   class in a real context on the game's own façade backend
+        As test_OOJSWormhole.mm does, it runs the JS class in a real context on
+   the game's own façade backend
    (ooscript/JSEngine_quickjs.cpp), links the game's own objects for the
    binding, the engine's C++ private-slot glue (OOJSPrivateObject.cpp) and the
         engine's exception translator (OOJSEngineNativeWrappers.mm), and stands
@@ -17,11 +14,10 @@
         against the Objective-C file and run on it first; they pin the
    JS-visible behaviour (name, toString(), the four static methods and their
    errors, SoundFromJSValue() for a Sound and for a name, a native's exception)
-   and what the category answered the engine. Since bead oo-9ht.68 deleted the
-   sound's facade the sound is a C++ stand-in, the category's answers are the
-        functions that held its bodies, and a Sound object's slot holds the
-   binding's holder of the sound, which SoundFromJSValue() answers (standing
-   approval oo-9n5p9). Run: bash tools/check-core-tests.sh
+   and what the category answered the engine. The sound is a C++ stand-in, the
+   category's answers are the functions that held its bodies, and a Sound
+   object's slot holds the binding's holder of the sound, which
+   SoundFromJSValue() answers. Run: bash tools/check-core-tests.sh
 */
 
 #include "OOFoundation.h"
@@ -45,10 +41,10 @@ typedef enum OOEntityStatus {
 } OOEntityStatus;
 #undef ENTRY
 
-/*	The sound: a C++ stand-in since bead oo-9ht.68 deleted the facade this
-   file stubbed (the root's members its vtable names; OOALSound.mm is not
-   linked). A sound named "raise" raises from name(), one named "throw" throws a
-   C++ exception, so the test sees what an exception under a native becomes.
+/*	The sound: a C++ stand-in (the root's members its vtable names;
+   OOALSound.mm is not linked). A sound named "raise" raises from name(), one
+   named "throw" throws a C++ exception, so the test sees what an exception
+   under a native becomes.
 */
 #include <stdexcept>
 
@@ -79,10 +75,10 @@ class OOSoundSource;  // only handed on (OOSoundSource.h)
 
 #include "ResourceManager.h"
 
-/*	The music controller is C++ (bead oo-9ht.90 deleted its Objective-C
-   facade): the members the binding calls, declared as OOMusicController.h
-   declares them (that header would bring the real OOSoundSource into this file)
-   and defined below over this file's record of what was asked.
+/*	The music controller: the members the binding calls, declared as
+   OOMusicController.h declares them (that header would bring the real
+   OOSoundSource into this file) and defined below over this file's record of
+   what was asked.
 */
 #include "oofnd/Ref.hpp"
 class OOMusicController : public oo::RefCounted {
@@ -102,8 +98,7 @@ struct MusicRecord {
   int _stops = 0;
 };
 
-/*	PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this
-   stood in for. The binding asks it its status, the root entity's member
+/*	PLAYER: The binding asks it its status, the root entity's member
    (declared as Entity.h declares it; the test imports no game header that
    defines the classes), answered from the test's value.
 */
@@ -147,14 +142,13 @@ OOSound* MakeSound(const std::optional<std::string>& name) {
 }  // namespace
 
 // Was +[OOSound cxx_soundWithCustomSoundKey:] (the category went with the
-// facade, bead oo-9ht.68).
+// facade).
 OOSound* OOSoundWithCustomSoundKey(const std::string& key) {
   return MakeSound("custom:" + key);
 }
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the Objective-C stand-in's answers.
 OOSound* ResourceManager::ooSoundNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   if (fileName == "missing.ogg") return nullptr;

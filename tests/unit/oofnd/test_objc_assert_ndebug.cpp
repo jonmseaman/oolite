@@ -1,6 +1,5 @@
 /*	test_objc_assert_ndebug.cpp
-        OOAssert.h compiled the way a DEPLOYMENT build compiles it: with NDEBUG
-   (bead oo-pdsng).
+        OOAssert.h compiled the way a DEPLOYMENT build compiles it: with NDEBUG.
 
         Upstream's Foundation assertions were live in every flavour:
    OOFoundation.h defines NS_BLOCK_ASSERTIONS only after importing the

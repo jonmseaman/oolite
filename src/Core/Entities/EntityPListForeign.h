@@ -2,7 +2,7 @@
 
 EntityPListForeign.h
 
-The entity's property-list node (bead oo-dpyk8; EntityHelpers.h, which imports
+The entity's property-list node (EntityHelpers.h, which imports
 this, has the rest): an Object node that holds the entity, and the questions
 that make, read and list such nodes, with whether an entity has its object.
 Needs only the class's name, so a narrow test whose stand-in is its own Entity
@@ -28,8 +28,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef ENTITY_PLIST_FOREIGN_H
-#define ENTITY_PLIST_FOREIGN_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -47,8 +46,8 @@ namespace oo {
 Entity* WithObject(Entity* entity);  // EntityHelpers.mm (out of line: a narrow
                                      // test's stand-in entity answers it)
 
-/*	An entity carried through plist data as a PList::Object node (bead
-   oo-9ht.39.5.3): the node holds the entity (it held the entity's object, which
+/*	An entity carried through plist data as a PList::Object node: the
+   node holds the entity (it held the entity's object, which
    owned the entity, so the node keeps the entity alive as before) and answers
    it. Its class name is the facade's ("Entity"), its description the entity's
    (oo::EntityDescription()), its JS value the entity's (OOJSValueFromPList).
@@ -109,5 +108,3 @@ inline std::vector<Entity*> EntitiesIn(const PList& plist) {
 }
 
 }  // namespace oo
-
-#endif  // ENTITY_PLIST_FOREIGN_H

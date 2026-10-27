@@ -1,15 +1,10 @@
 /*	test_OOProfilingStopwatch.mm
-        Unit tests for OOProfilingStopwatch (src/Core/OOProfilingStopwatch.h):
-   bead oo-m7aj, a Phase 3 conversion in the OOColor house style (proposed
-   ADR-0056). Its only callers (OOCacheManager, OOMesh; both behind profiling
-   switches that are off) were converted with it, so it has no Objective-C
-   facade and the class is global.
+        Unit tests for OOProfilingStopwatch (src/Core/OOProfilingStopwatch.h):.
 
-        Pins what the stopwatch measured before the conversion: a new stopwatch
-   is running; while running, currentTime() is now - start and grows; stop()
-   freezes it; reset() returns the current value and restarts from zero
-   (drift-free while running); start() restarts a stopped watch; and
-        OOHighResTimeDeltaInSeconds() converts this build's microsecond
+        Pins: a new stopwatch is running; while running, currentTime() is now -
+   start and grows; stop() freezes it; reset() returns the current value and
+   restarts from zero (drift-free while running); start() restarts a stopped
+   watch; and OOHighResTimeDeltaInSeconds() converts this build's microsecond
    readings. Timings sleep and compare against generous bounds, so a loaded
    machine cannot fail them. Run: bash tools/check-core-tests.sh
 */

@@ -26,9 +26,8 @@ SOFTWARE.
 
 #ifndef OOENCODINGCONVERTER_EXCLUDE
 
-#include "OOEncodingConverter.h"
-
 #include "OOCache.h"
+#include "OOEncodingConverter.h"
 #include "OOLogging.h"
 #include "oofnd/Encoding.hpp"
 #include "oofnd/String.hpp"
@@ -53,7 +52,7 @@ static const NSUInteger kCachePruneThreshold = 200;
 #include <chrono>
 
 // The 5-second profile report was a repeating run-loop timer; it is now a
-// deadline checked on each conversion (proposed ADR-0033).
+// deadline checked on each conversion.
 static const std::chrono::seconds kProfileInterval{5};
 static OOEncodingConverter* sProfiledConverter = nullptr;
 static std::chrono::steady_clock::time_point sProfileDeadline;
@@ -80,7 +79,7 @@ OOEncodingConverter::OOEncodingConverter(
   _cache->setName(std::string("Text encoding"));
   if (const oo::PList::Dict* substitutionDictionary =
           substitutions.getIf<oo::PList::Dict>()) {
-    // In key order (bead oo-qps.51): the Foundation dictionary this was once
+    // In key order: the Foundation dictionary this was once
     // built into enumerated in its hash order. Two substitutions give different
     // results in different orders only when one's key occurs in another's key
     // or replacement; the stock oolite-font.plist's keys are distinct single

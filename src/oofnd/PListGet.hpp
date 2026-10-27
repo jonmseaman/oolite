@@ -2,8 +2,7 @@
         oo::PList::get<T>(key, fallback) and oo::PList::at<T>(index, fallback):
    the typed, defaulted accessor that replaces OOCollectionExtractors
    (`-oo_<type>ForKey:defaultValue:` and
-        `-oo_<type>AtIndex:defaultValue:`), with the SAME conversions. Proposed
-   ADR-0031.
+        `-oo_<type>AtIndex:defaultValue:`), with the SAME conversions.
 
             Objective-C (OOCollectionExtractors)                  oo::PList
             ----------------------------------------------------
@@ -65,15 +64,14 @@
    reads OOLongLongFromObject, a 64-bit unsigned type
    OOUnsignedLongLongFromObject, and anything narrower clamps the long long
         reading into its own range. That is exact on Windows (LLP64), the only
-   platform today (ADR-0017). On LP64, Oolite's `unsigned long` accessor aliased
-   the SIGNED reading; revisit when Linux returns (Phase 5).
+   platform today. On LP64, Oolite's `unsigned long` accessor aliased the
+   SIGNED reading; revisit when Linux returns.
 */
 
-#ifndef OOFND_PLISTGET_HPP
-#define OOFND_PLISTGET_HPP
+#pragma once
 
 // OOFoundation.h's `#define true 1` / `#define false 0` are suspended for this
-// header (ADR-0028).
+// header.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -422,8 +420,8 @@ F nonNegativeRealFrom(const PList* v, F fallback) noexcept {
   return (result > F(0)) ? result : F(0);
 }
 
-// --- OOCollectionExtractors' game-type forms, without the game (bead oo-9ftb)
-// --------------------
+// --- OOCollectionExtractors' game-type forms, without the game
+// ----------------------------------
 //
 // OOVectorFromObject / OOHPVectorFromObject / OOQuaternionFromObject read N
 // numbers: from an array of exactly N elements (element i as -oo_floatAtIndex:i
@@ -682,5 +680,3 @@ typename PListGet<T>::Result PList::at(std::size_t index) const {
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_PLISTGET_HPP

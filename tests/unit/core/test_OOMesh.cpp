@@ -1,42 +1,29 @@
 /*	test_OOMesh.mm
         Unit tests for OOMesh (src/Core/OOMesh.h/.mm), the drawable of a static
-   mesh from a DAT file: bead oo-dnbf, slice 1 of docs/phases/3-slices/OOMesh.md
-   (Phase 3, house style of proposed ADR-0056; a converted subclass of the
-   converted root OODrawable, amendments oo-smy and oo-pni4).
+   mesh from a DAT file, a subclass of the root OODrawable.
 
         The mesh loads its model through the resource manager, caches its data
    and octree in the cache manager, makes its materials and registers with the
    graphics reset manager, so the test links every game object but main's
-   (tests/unit/core/meson.build entry ['*'], amendment oo-44gg) and runs on the
-   hidden GL context of oo_gl_test_context.hpp. The models are DAT files the
-   test writes to a scratch Resources/Models folder, which is the only resource
-   root: the current directory, the home and the add-on folders all point into
-   the scratch folder (amendment oo-rmd7 item 4), so no add-on is ever scanned.
-   The tetrahedron has no TEXTURES section, so its one material is the
-   placeholder material and no texture is loaded.
+   (tests/unit/core/meson.build entry ['*']) and runs on the hidden GL context
+   of oo_gl_test_context.hpp. The models are DAT files the test writes to a
+   scratch Resources/Models folder, which is the only resource root: the current
+   directory, the home and the add-on folders all point into the scratch folder,
+   so no add-on is ever scanned. The tetrahedron has no TEXTURES section, so its
+   one material is the placeholder material and no texture is loaded.
 
-        The expectations were written against the Objective-C API and run on the
-   unconverted class first: loading (counts, name, radius, draw distance,
+        The expectations cover: loading (counts, name, radius, draw distance,
    bounding box, parts, the material and shader dictionaries, the description),
    scaling, a missing model, the mesh and octree caches, the placeholder
    material, -copy and -mutableCopy, -meshRescaledBy:, the subentity bounding
    box, the debug state and size, and a graphics reset after a mesh is gone (it
-   unregistered itself) (commit 67fcb82ac). Slice 1 made the class shell C++
-   with the Objective-C OOMesh as its facade, so they ran through the facade;
-   only the OOCacheManager (Octree) category became free functions, which
-   OctreeForModel and SetOctreeForModel below now call. Bead oo-9ht.132 deleted
-        the facade: the cases call the C++ class (global OOMesh) with every
-   expected value kept, and only the facade's own checks (identity, nil, the
-   facade class, a member compared with its forwarder, the placeholder
-   material's facade) are retired under the standing approval oo-9n5p9;
-   facadeContract keeps the C++ members' answers, the root's C++ pointer and the
-   factory. Slice 3 (bead oo-9z7x) made the geometry C++ members; the pins of
-   laterSlices and copies ran on it unchanged, and geometryMembers checks the
-   members against the facade. Slice 4 (bead oo-zmix) made the rendering
-   members: rendering was pinned first, and renderingMembers checks the members.
-   Slice 2 (bead oo-rdwg) made loading and copying members and the mesh its own
-        graphics reset client; loadingMembers checks them with no facade alive.
-        Run: bash tools/check-core-tests.sh
+   unregistered itself). The cases call the C++ class (global OOMesh);
+   OctreeForModel and SetOctreeForModel below call the OOCacheManager octree
+   functions. facadeContract keeps the C++ members' answers, the root's C++
+   pointer and the factory. geometryMembers checks the geometry members,
+   renderingMembers the rendering members, and loadingMembers the loading and
+   copying members and the mesh as its own graphics reset client. Run: bash
+   tools/check-core-tests.sh
 */
 
 #include <process.h>
@@ -153,8 +140,7 @@ oo::PList CachedPList(const std::string& key, const std::string& cache) {
   return OOCacheManager::sharedCache()->pListForKey(key, cache);
 }
 
-// The OOCacheManager (Octree) category: free functions on the C++ octree since
-// bead oo-dnbf.
+// The OOCacheManager (Octree) category: free functions on the C++ octree.
 oo::Ref<Octree> OctreeForModel(const std::string& key) {
   return OOCacheManagerOctreeForModel(key);
 }
@@ -468,7 +454,7 @@ OO_TEST(facadeContract) {
   }
 }
 
-// Slice 3 (bead oo-9z7x): the geometry members answer what the facade does.
+// The geometry members.
 OO_TEST(geometryMembers) {
   SetUp();
   {
@@ -502,8 +488,8 @@ OO_TEST(geometryMembers) {
   }
 }
 
-// Slice 4 (bead oo-zmix), pinned before it converted: drawing on the hidden GL
-// context, the display lists it makes, and a graphics reset between draws.
+// Drawing on the hidden GL context, the display lists it makes, and a graphics
+// reset between draws.
 OO_TEST(rendering) {
   SetUp();
   {
@@ -534,7 +520,7 @@ OO_TEST(rendering) {
   }
 }
 
-// Slice 4 (bead oo-zmix): the rendering members, through the C++ mesh.
+// The rendering members, through the C++ mesh.
 OO_TEST(renderingMembers) {
   SetUp();
   {
@@ -554,8 +540,7 @@ OO_TEST(renderingMembers) {
     drawable->renderOpaqueParts();
     OO_CHECK_EQ(glGetError(), static_cast<GLenum>(GL_NO_ERROR));
 
-    // The materials: the placeholder (bead oo-9ht.8 deleted the facade the
-    // member held), rebound; a reset.
+    // The materials: the placeholder, rebound; a reset.
     cxxMesh->rebindMaterials();
     OO_CHECK(cxxMesh->materials[0] == OOMesh::placeholderMaterial().get());
     cxxMesh->resetGraphicsState();
@@ -573,8 +558,8 @@ OO_TEST(renderingMembers) {
   }
 }
 
-// Slice 2 (bead oo-rdwg): loading and copying are C++ members, and the mesh
-// itself is the graphics reset client.
+// Loading and copying are C++ members, and the mesh itself is the graphics
+// reset client.
 OO_TEST(loadingMembers) {
   SetUp();
   {

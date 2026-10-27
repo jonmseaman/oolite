@@ -1,4 +1,4 @@
-// Stub for tests/unit/expander (bead oo-3rb.61): only what
+// Stub for tests/unit/expander: only what
 // src/Core/OOStringExpander.mm uses.
 #pragma once
 #include <cstdarg>
@@ -11,7 +11,6 @@ struct Context {
 }  // namespace ooscript
 ooscript::Context OOJSAcquireContext(void);
 void OOJSRelinquishContext(ooscript::Context context);
-// The C++ form the expander calls since bead oo-vp0y.10 (printf format; bead
-// oo-qqz6: stub-API tracking).
+// The C++ form the expander calls (printf format).
 void cxx_OOJSReportWarningWithArguments(ooscript::Context context,
                                         const char* format, va_list args);

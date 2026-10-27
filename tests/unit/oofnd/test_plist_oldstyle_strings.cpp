@@ -1,6 +1,6 @@
 /*	test_plist_oldstyle_strings.cpp
-        Cases 1-14 for the old-style scanner's strings, escapes and comments
-   (bead oo-6ft): oo::parseOldStylePList on a top-level string. Every expected
+        Cases 1-14 for the old-style scanner's strings, escapes and comments:
+   oo::parseOldStylePList on a top-level string. Every expected
    value and error message was captured from GNUstep base 1.31.1's
    +[NSPropertyListSerialization propertyListFromData:...] (the build the game
    links), through a throwaway harness that printed plist_dump.hpp's format;

@@ -1,10 +1,8 @@
-// Stub for tests/unit/expander (bead oo-3rb.61): only what
-// src/Core/OOStringExpander.mm uses. Since bead oo-9ht.177 the game's PLAYER is
-// the C++ player, whose members the expander calls; since bead oo-6e1.2 the
-// harness's player is C++ too (it was an Objective-C stub answering by
-// selector): the same answers, defined below.
-#ifndef OO_EXPANDER_STUB_PLAYERENTITY_H
-#define OO_EXPANDER_STUB_PLAYERENTITY_H
+// Stub for tests/unit/expander: only what
+// src/Core/OOStringExpander.mm uses. The game's PLAYER is the C++ player, whose
+// members the expander calls; the harness's player is C++ too, with the same
+// answers, defined below.
+#pragma once
 
 #include <format>
 #include <optional>
@@ -27,8 +25,7 @@ struct OOHarnessPlayer {
 // Records "query <name>" (test_string_expander.cpp).
 void OOHarnessRecordQuery(const std::string& name);
 
-// The player's answers, as the Objective-C stub's methods gave them (beads
-// oo-3rb.61, oo-qqz6): every whitelisted legacy query name the stub did not
+// The player's answers: every whitelisted legacy query name the stub did not
 // declare answers with its own name and is logged (so a call the engine makes
 // or skips shows); the declared special keys answer fixed text.
 namespace oo_harness {
@@ -91,7 +88,7 @@ inline oo::PList OOHarnessPlayer::callByName(const std::string& name) {
 }
 
 // The expander asks and calls the player's by-name methods on its C++ part
-// (bead oo-9ht.39.7.2, OOCallByName.h); the harness's player answers them
+// (OOCallByName.h); the harness's player answers them
 // itself.
 #include "OOCallByName.h"
 namespace oo {
@@ -107,5 +104,3 @@ inline PList CallEntityByName(OOHarnessPlayer* player,
 
 OOHarnessPlayer* OOHarnessGetPlayer(void);
 #define PLAYER OOHarnessGetPlayer()
-
-#endif  // OO_EXPANDER_STUB_PLAYERENTITY_H

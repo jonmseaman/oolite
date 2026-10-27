@@ -3,12 +3,9 @@
 OOEntityHold.h
 
 How the universe and the entities' own lists (sub-entities, cargo, colliding
-entities, the player's missiles, ...) own an entity (ADR-0056 amendments
-oo-9ht.39.26, oo-xn1j1). Until the root facade's deletion the holder retained
-the entity's Objective-C object, which owned the C++ entity; since bead oo-dpyk8
-(oo-9ht.39 step 5k.4) the C++ entity owns itself (oo::RefCounted, its last
-release running what the facade's -dealloc ran) and the holder is a strong
-reference to it, with the same counts.
+entities, the player's missiles, ...) own an entity. The C++ entity owns itself
+(oo::RefCounted, its last release running what the facade's -dealloc ran) and
+the holder is a strong reference to it.
 
 An entity that has no object (Entity::hasObject(): never made by a creator, or
 in its last release) is held as null, as a reference to oo::ToObjC()'s nil was;
@@ -34,8 +31,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OO_ENTITY_HOLD_H
-#define OO_ENTITY_HOLD_H
+#pragma once
 
 #include <cstddef>
 #include <utility>
@@ -87,7 +83,7 @@ class EntityHold {
   void swap(EntityHold& other) noexcept { std::swap(_entity, other._entity); }
 
   // Takes over a +1 reference to the entity (oo::RetainEntity()'s; what
-  // oo::adoptObjC(oo::ToObjC(entity)) held, bead oo-xn1j1). Null, and nothing
+  // oo::adoptObjC(oo::ToObjC(entity)) held). Null, and nothing
   // taken, for an entity without its object, as nil was.
   static EntityHold adopt(Entity* entity) noexcept {
     EntityHold result;
@@ -95,8 +91,8 @@ class EntityHold {
     return result;
   }
 
-  // Drops the reference without a release (the deliberate leaks; bead
-  // oo-xn1j1). Null afterwards.
+  // Drops the reference without a release (the deliberate leaks). Null
+  // afterwards.
   void leak() noexcept { _entity = nullptr; }
 
   Entity* get() const noexcept { return _entity; }
@@ -140,5 +136,3 @@ Entity* MadeEntity(const Ref<Entity>& entity);
 Entity* MadeEntityRetained(const Ref<Entity>& entity);
 
 }  // namespace oo
-
-#endif  // OO_ENTITY_HOLD_H

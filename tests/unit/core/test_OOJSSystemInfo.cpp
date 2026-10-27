@@ -1,32 +1,28 @@
 /*	test_OOJSSystemInfo.mm
         Unit tests for the SystemInfo JS binding
    (src/Core/Scripting/OOJSSystemInfo.h/.mm) and the object it wraps,
-   OOSystemInfo (its Objective-C facade deleted by bead oo-9ht.95), after the
-   conversion): bead oo-6ia4, converted the way bead oo-ppc converted OOJSVector
-   (proposed ADR-0056 amendment oo-ppc).
+   OOSystemInfo.
 
-        As the binding tests of amendment oo-ppc item 6 do, it runs the JS class
-   in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp), and links the game's own objects for the
-   binding, the engine's exception translator (OOJSEngineNativeWrappers.mm) and
-   the converted classes the binding asks (OOSystemDescriptionManager,
-   OOCommodities and OOCommodityMarket, C++ since beads oo-9ht.32, oo-9ht.25 and
-   oo-9ht.21 deleted their façades, held as oo::Ref, linked as their own tests
-   link them). It stands in for the universe (its system data, coordinates and
-   routes), the player (its galaxy and position), the running script (its
-   manifest), the resource manager and string expander the converted classes
-   call, and the engine functions the binding links against, with the engine
-        headers' linkage. The engine's native-object conversion asks the object
-   for its JS value, as the engine does, so a SystemInfo's JS object is the one
-   the class makes. Since bead oo-6symp.2 the SystemInfo's slot holds the C++
-   system info, so it also links the engine's C++ private-slot glue
-   (OOJSPrivateObject.cpp: the getter, finalizer and toString()). The
+        As the other binding tests do, it runs the JS class in a real context on
+   the game's own façade backend (ooscript/JSEngine_quickjs.cpp), and links the
+   game's own objects for the binding, the engine's exception translator
+   (OOJSEngineNativeWrappers.mm) and the converted classes the binding asks
+   (OOSystemDescriptionManager, OOCommodities and OOCommodityMarket, held as
+   oo::Ref, linked as their own tests link them). It stands in for the universe
+   (its system data, coordinates and routes), the player (its galaxy and
+   position), the running script (its manifest), the resource manager and string
+   expander the converted classes call, and the engine functions the binding
+   links against, with the engine headers' linkage. The engine's native-object
+   conversion asks the object for its JS value, as the engine does, so a
+   SystemInfo's JS object is the one the class makes. The SystemInfo's slot
+   holds the C++ system info, so it also links the engine's C++ private-slot
+   glue (OOJSPrivateObject.cpp: the getter, finalizer and toString()). The
    expectations were written against the Objective-C file and run on it first;
    they pin the JS-visible behaviour (the cached object, the four properties and
    their errors, system data both ways, enumeration, the four methods and the
    two static ones, interstellar space, a native's exception) and what the
    wrapped object answers the engine (its class name, description and equality).
-        Run: bash tools/check-core-tests.sh
+   Run: bash tools/check-core-tests.sh
 */
 
 #include "OOCommodities.h"
@@ -57,10 +53,8 @@ class StationEntity;
 #include "UniverseStandIn.h"
 
 // The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's Objective-C stand-in
-// stood in for), with the header's names and signatures. It answers virtual
-// members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse
-// overrides them.
+// with the header's names and signatures. It answers virtual members, so it has
+// the game's vtable (UniverseStandIn.h) and StandInUniverse overrides them.
 class Universe : public oo::RefCounted {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
@@ -84,7 +78,7 @@ class Universe : public oo::RefCounted {
 };
 
 // Link stubs, never reached: the code under test calls them on paths the test
-// does not take (the Objective-C stand-in did not answer them; bead oo-ql9rn).
+// does not take.
 ::OOCommodityMarket* Universe::getCommodityMarket() { std::abort(); }
 
 class StandInUniverse : public Universe {
@@ -98,8 +92,7 @@ class StandInUniverse : public Universe {
                               OOSystemLayer) override;
 };
 
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for: the members the code under test calls, declared as the game headers
+// PLAYER: the members the code under test calls, declared as the game headers
 // declare them (the test imports none that defines the classes), with the
 // stand-in's answers.
 class PlayerEntity {
@@ -116,8 +109,7 @@ class PlayerEntity {
 
 #include "ResourceManager.h"
 
-// A station: C++ since bead oo-9ht.175 deleted the Objective-C station this
-// stood in for; the members the commodities call, declared as StationEntity.h
+// A station: the members the commodities call, declared as StationEntity.h
 // declares them (the test imports no game header that defines the class). No
 // case makes a station: link stubs.
 class StationEntity {
@@ -224,11 +216,9 @@ oo::PList sScriptManifest;
 
 #include "OOScript.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls: the running script, and its
-// manifest property.
+// OOJSScript (OOJSScript.h), which the code under test calls. A script is a C++
+// object, so the stand-in is a C++ subclass of OOScript declaring the members
+// that code calls: the running script, and its manifest property.
 class OOJSScript : public OOScript {
  public:
   static OOJSScript* currentlyRunningScript();
@@ -265,10 +255,8 @@ oo::PList OOJSScript::propertyNamed(const std::string& name) {
   return name == "oolite_manifest_identifier" ? sScriptManifest : oo::PList();
 }
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers. trade-goods.plist: food, with no random
-// spread.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers. trade-goods.plist: food, with no random spread.
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& fileName, const std::optional<std::string>& folderName,
     OOResourceMergeMode mergeMode, bool useCache) {
@@ -454,8 +442,7 @@ oo::PList cxx_OOJSPListFromJSValue(ooscript::Context context,
   return oo::PList();
 }
 
-// Link stub (amendment oo-zffj, item 2): the commodity classes' script path,
-// which the test never takes.
+// Link stub: the commodity classes' script path, which the test never takes.
 oo::PList cxx_OOJSPListFromJSObject(ooscript::Context, ooscript::Object) {
   std::abort();
 }
@@ -483,16 +470,14 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
 }
 
 // The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked
-// since bead oo-6symp.2, whose slot holds the C++ system info): no subclass of
-// SystemInfo is registered.
+// whose slot holds the C++ system info): no subclass of SystemInfo is
+// registered.
 extern "C" BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                                ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
 }
 
-// A link stub (bead oo-dbz.4): unreached, the slot holding the C++ object since
-// bead oo-4aq6a.6; it described the slot as an Objective-C object, which
-// oo::DescriptionOf(id) did until libobjc2 went.
+// A link stub, unreached: the slot holds the C++ object.
 bool OOJSObjectWrapperToString(ooscript::Context, ooscript::CallArgs&) {
   std::abort();
 }
@@ -677,7 +662,7 @@ OO_TEST(wrappedObject) {
   SetUpContext();
   ooscript::Value a = GetJSSystemInfoForSystem(sContext, 0, 7);
   ooscript::Value b = GetJSSystemInfoForSystem(sContext, 3, 7);
-  // The slot holds the C++ system info (bead oo-6symp.2).
+  // The slot holds the C++ system info.
   auto slot = [](ooscript::Value v) {
     return static_cast<OOSystemInfo*>(static_cast<oo::RefCounted*>(
         ooscript::getPrivate(sContext, ooscript::toObject(v))));
@@ -777,10 +762,10 @@ OO_TEST(interstellar) {
   sUniverse->_currentSystemData = oo::PList();
 }
 
-// bead oo-f4241: -cxx_currentSystemData answers a PList by value, so a pointer
-// into it taken in an if-init dangled while the keys were read. Long keys (no
-// small-string optimisation) make the copies pushed while iterating allocate,
-// so freed dictionary nodes are reused under the loop.
+// -cxx_currentSystemData answers a PList by value, so a pointer into it taken
+// in an if-init dangled while the keys were read. Long keys (no small-string
+// optimisation) make the copies pushed while iterating allocate, so freed
+// dictionary nodes are reused under the loop.
 OO_TEST(interstellar_keys_of_a_fresh_snapshot) {
   SetUpContext();
   oo::PList::Dict data;

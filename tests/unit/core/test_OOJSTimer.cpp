@@ -1,31 +1,29 @@
 /*	test_OOJSTimer.mm
         Unit tests for the Timer JS binding
-   (src/Core/Scripting/OOJSTimer.h/.mm): bead oo-kdyh, which converts
-   OOScriptTimer and its one subclass OOJSTimer (proposed ADR-0056, amendment
-   oo-ppc for the binding).
+   (src/Core/Scripting/OOJSTimer.h/.mm), covering OOScriptTimer and its one
+   subclass OOJSTimer.
 
         The binding's test runs its JS class in a real context on the game's own
    façade backend (ooscript/JSEngine_quickjs.cpp), and links the game's own
    objects for the binding, its base class OOScriptTimer, the priority queue
    that schedules it and the engine's exception translator
-   (OOJSEngineNativeWrappers.mm), and, since bead oo-6symp put the C++ timer in
-   the Timer's private slot, the engine's C++ private-slot glue
-   (OOJSPrivateObject.cpp: the getter, finalizer and toString()). What the rest
-   of the engine would provide is defined below as the smallest stand-in that
-   does the same thing (amendment oo-ppc item 6): the error and warning
-   reporters, the object getter and converters, the JS glue that OOObject gets
-   from OOJavaScriptEngine.mm, the engine object (which calls the timer's
-   function), the script stack and the universe's clock. The engine's and
-   OOJSScript's headers are not imported, because the test defines those classes
-   (amendment oo-z1s4 item 4). The expectations were written against the
-   Objective-C files and run on them first; they pin the JS-visible behaviour:
-   the constructor and its errors, the three properties, start() and stop(),
-   toString(), firing with the right `this`, a timer whose `this` is null, and
-   what an engine reset does. A timer that is garbage-collected while running
-   (unrootedRunningTimerGC, bead oo-r1ci7) must not call back into the engine
-   from its finalizer: describing it for the warning did, and on QuickJS that
-   corrupted the heap (the test crashed at exit about one run in six with a
-   single collection). Run: bash tools/check-core-tests.sh
+   (OOJSEngineNativeWrappers.mm), and, as the C++ timer is in the Timer's
+   private slot, the engine's C++ private-slot glue (OOJSPrivateObject.cpp: the
+   getter, finalizer and toString()). What the rest of the engine would provide
+   is defined below as the smallest stand-in that does the same thing: the error
+   and warning reporters, the object getter and converters, the JS glue that
+   OOObject gets from OOJavaScriptEngine.mm, the engine object (which calls the
+   timer's function), the script stack and the universe's clock. The engine's
+   and OOJSScript's headers are not imported, because the test defines those
+   classes. The expectations were written against the Objective-C files and run
+   on them first; they pin the JS-visible behaviour: the constructor and its
+   errors, the three properties, start() and stop(), toString(), firing with the
+   right `this`, a timer whose `this` is null, and what an engine reset does. A
+   timer that is garbage-collected while running (unrootedRunningTimerGC) must
+   not call back into the engine from its finalizer: describing it for the
+   warning did, and on QuickJS that corrupted the heap (the test crashed at exit
+   about one run in six with a single collection). Run: bash
+   tools/check-core-tests.sh
 */
 
 #include <cstdarg>
@@ -43,9 +41,9 @@
 #include "oofnd/objc/OOObject.h"
 #include "ooscript/JSEngine.hpp"
 
-// EntityHelpers.mm's (bead oo-dpyk8), which the test does not link: an entity's
-// node (its hold and its description) is reached only for an entity, which the
-// test has none of. A null hold releases nothing.
+// EntityHelpers.mm's, which the test does not link: an entity's node (its hold
+// and its description) is reached only for an entity, which the test has none
+// of. A null hold releases nothing.
 class Entity;
 namespace oo {
 namespace detail {
@@ -168,8 +166,7 @@ oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context, ooscript::Object) {
 }
 
 // The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked
-// since bead oo-6symp, whose slot holds the C++ timer): no subclass of Timer is
-// registered.
+// whose slot holds the C++ timer): no subclass of Timer is registered.
 extern "C" BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                                ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
@@ -178,9 +175,7 @@ extern "C" BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
 // OOJavaScriptEngine.mm's toString() for object wrappers.
 extern "C" bool OOJSObjectWrapperToString(ooscript::Context context,
                                           ooscript::CallArgs& oojsArgs) {
-  // (Unreached: a timer's toString() is its own. The slot holds a C++ object
-  // since bead oo-4aq6a.6.1; the Objective-C root's -cxx_oo_jsDescription it
-  // sent went with OOObject, bead oo-4aq6a.8.)
+  // (Unreached: a timer's toString() is its own.)
   std::string description("[object]");
   ooscript::String str =
       ooscript::newStringCopyN(context, description.data(), description.size());
@@ -207,9 +202,8 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
    (-callJSFunction:...), which calls the function as the engine does, and the
    script stack the timer pushes its owner on.
 */
-// The engine (OOJavaScriptEngine.h; a C++ class since bead oo-wdqw1 deleted its
-// facade), declared with the header's names and signatures but not its class;
-// the stand-in's answers are kept.
+// The engine (OOJavaScriptEngine.h; a C++ class), declared with the header's
+// names and signatures but not its class; the stand-in's answers are kept.
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
@@ -237,10 +231,9 @@ bool OOJavaScriptEngine::callJSFunction(ooscript::Value function,
 
 #include "OOScript.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls.
+// OOJSScript (OOJSScript.h), which the code under test calls. A script is a C++
+// object, so the stand-in is a C++ subclass of OOScript declaring the members
+// that code calls.
 class OOJSScript : public OOScript {
  public:
   static OOJSScript* currentlyRunningScript();
@@ -264,9 +257,8 @@ namespace {
 double sNow = 100.0;
 }  // namespace
 
-// The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's FakeUniverse stood
-// in for), with the header's names and signatures.
+// The universe as the code under test sees it: a stand-in for the C++ class,
+// with the header's names and signatures.
 class Universe {
  public:
   OOTimeAbsolute getTime();
@@ -320,9 +312,8 @@ std::string Eval(const char* src) {
       "e.message : e); } })()";
   ooscript::Value result = ooscript::undefinedValue();
   bool OK = false;
-  {  // was an Objective-C pool (bead oo-dbz.1: no Objective-C object since
-     // oo-4aq6a.8): as the game's frame loop drains: nothing is left to the
-     // thread's pool at exit
+  {  // As the game's frame loop drains: nothing is left to the thread's pool
+     // at exit
     OK = ooscript::evaluateScript(
         gOOJSMainThreadContext, sGlobal, wrapped.c_str(),
         static_cast<unsigned>(wrapped.size()), "test.js", 1, &result);
@@ -528,9 +519,9 @@ OO_TEST(engineReset) {
 OO_TEST(unrootedRunningTimerGC) {
   // A script drops its last reference to a running timer and the engine
   // collects it: the finalizer warns and lets go of the timer, without
-  // re-entering the engine (bead oo-r1ci7). The function's name is a getter
-  // that counts its calls: reading it from the finalizer would run script
-  // inside the collection, which is the defect.
+  // re-entering the engine. The function's name is a getter that counts its
+  // calls: reading it from the finalizer would run script inside the
+  // collection, which is the defect.
   sNow = 100.0;
   OO_CHECK_EQ(
       Eval("globalThis.nameReads = 0; (function () { var f = function () {}; "

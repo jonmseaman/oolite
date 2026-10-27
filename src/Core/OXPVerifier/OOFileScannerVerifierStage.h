@@ -39,18 +39,12 @@ SOFTWARE.
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 
-/*	Foundation sweep (proposed ADR-0043, bead oo-56tr / oo-cjel): file and
+/*	File and
    folder names are UTF-8 std::strings; a name that could be nil is
    std::optional.
 
-        C++20 since bead oo-up4b (proposed ADR-0056 Amendment 1 and amendment
-   oo-up4b). Bead oo-9ht.7 deleted the Objective-C facades of
-   OOFileScannerVerifierStage and OOFileHandlingVerifierStage, and the
-   verifier's -fileScannerStage, once every stage was C++ (ADR-0056 amendment
-   "deleting a facade"): both classes are global, as OOListUnusedFilesStage
-   (bead oo-cwz) always was. A stage finds the scanner by its name through the
-   verifier's stage lookup, which answers the C++ stage (it answered the root
-   facade, an id, until bead oo-9ht.4 deleted that facade).
+   A stage finds the scanner by its name through the verifier's stage lookup,
+   which answers the C++ stage.
 */
 
 class OOFileScannerVerifierStage : public OOOXPVerifierStage {
@@ -82,14 +76,14 @@ class OOFileScannerVerifierStage : public OOOXPVerifierStage {
                   const std::optional<std::string>& context, bool checkBuiltIn);
 
   //	This method performs all the checks the previous one does, but also
-  //returns a file path.
+  // returns a file path.
   std::optional<std::string> pathForFile(
       const std::optional<std::string>& file,
       const std::optional<std::string>& folder,
       const std::optional<std::string>& context, bool checkBuiltIn);
 
   //	Data getters based on above method. An empty oo::Data: no such file (or
-  //an empty one).
+  // an empty one).
   oo::Data dataForFile(const std::optional<std::string>& file,
                        const std::optional<std::string>& folder,
                        const std::optional<std::string>& context,
@@ -159,18 +153,15 @@ class OOFileScannerVerifierStage : public OOOXPVerifierStage {
   std::set<std::string> _skipDirectoryNames = {};
 };
 
-/*	C++20 since bead oo-cwz, the converted stage of the Phase 3
-   class-hierarchy exemplar (proposed ADR-0056 Amendment 1). A C++ subclass of
-   OOOXPVerifierStage that overrides its virtual members. It has no facade of
-   its own: nothing outside this file names it, and the verifier holds it (as
-   its OOOXPVerifierStage facade until bead oo-9ht.4).
+/*	A C++ subclass of OOOXPVerifierStage that overrides its virtual members.
+   Nothing outside this file names it, and the verifier holds it.
 */
 class OOListUnusedFilesStage : public OOOXPVerifierStage {
  public:
   // Returns name to be used in dependents() by other stages; also registers
   // stage.
   static std::string nameForReverseDependencyForVerifier(
-      OOOXPVerifier* verifier);  // flipped with its family (bead oo-3rb.274.2)
+      OOOXPVerifier* verifier);
 
   std::optional<std::string> name() override;
   std::optional<std::vector<std::string>> dependencies() override;

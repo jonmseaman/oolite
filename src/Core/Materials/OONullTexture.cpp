@@ -25,9 +25,8 @@ SOFTWARE.
 
 */
 
-#include "OONullTexture.h"
-
 #include "OOFoundation.h"
+#include "OONullTexture.h"
 #include "OOTextureInternal.h"
 
 namespace {
@@ -63,5 +62,5 @@ std::optional<std::string> OONullTexture::name() {
    (+allocWithZone: answering nil after the first, -copyWithZone: answering
    self, and -retain/-release/-autorelease doing nothing) is not translated:
    nothing but sharedNullTexture() makes the object, and the one reference it
-        keeps is never released (amendment oo-r7m0 item 1).
+        keeps is never released.
 */

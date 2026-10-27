@@ -22,13 +22,12 @@ MA 02110-1301, USA.
 
 */
 
-#include "PlayerEntityKeyMapper.h"
-
 #include "GameController.h"
 #include "HeadUpDisplay.h"
 #include "OOEquipmentType.h"
 #include "OOTexture.h"
 #include "PlayerEntityControls.h"
+#include "PlayerEntityKeyMapper.h"
 #include "PlayerEntityScriptMethods.h"
 #include "ResourceManager.h"
 #include "oofnd/Defaults.hpp"
@@ -54,9 +53,8 @@ std::vector<std::string>
     nav_keys;  // functions that can't be used with mod keys
 std::vector<std::string> camera_keys;  // functions that can't be used with ctrl
 
-// -oo_stringForKey: where the old code could read nil (proposed ADR-0043): a
-// string, or a number's -stringValue; nullopt when the key is absent or holds
-// anything else.
+// -oo_stringForKey: where the old code could read nil: a string, or a number's
+// -stringValue; nullopt when the key is absent or holds anything else.
 std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
                                                 std::string_view key) {
   const oo::PList* value = dict.find(key);
@@ -1334,8 +1332,8 @@ std::vector<oo::PList> PlayerEntity::keyFunctionList() {
   funcList.push_back(
       makeKeyGuiDict(OO_DESC("oolite-keydesc-key_show_fps"), "key_show_fps"));
   //[funcList addObject:[self
-  //makeKeyGuiDict:OO_DESC("oolite-keydesc-key_bloom_toggle")
-  //keyDef:@"key_bloom_toggle"]];
+  // makeKeyGuiDict:OO_DESC("oolite-keydesc-key_bloom_toggle")
+  // keyDef:@"key_bloom_toggle"]];
   funcList.push_back(
       makeKeyGuiDict(OO_DESC("oolite-keydesc-key_mouse_control_roll"),
                      "key_mouse_control_roll"));
@@ -1347,7 +1345,7 @@ std::vector<oo::PList> PlayerEntity::keyFunctionList() {
 #if OO_FOV_INFLIGHT_CONTROL_ENABLED
   funcList.push_back(
       makeKeyGuiDict(OO_DESC("oolite-keydesc-key_inc_field_of_view"),
-                     "key_inc_field_of_view"));  // the member (bead oo-w9pi2)
+                     "key_inc_field_of_view"));
   funcList.push_back(
       makeKeyGuiDict(OO_DESC("oolite-keydesc-key_dec_field_of_view"),
                      "key_dec_field_of_view"));
@@ -1618,7 +1616,7 @@ std::vector<oo::PList> PlayerEntity::keyboardLayoutList() {
   }
 
   // Sorted by "description", ascending, with -compare:, stably: what the sort
-  // descriptor did (bead oo-3rb.20). A missing description never sorted
+  // descriptor did. A missing description never sorted
   // ascending (-compare: to or from nil).
   std::stable_sort(kbdList.begin(), kbdList.end(),
                    [](const oo::PList& a, const oo::PList& b) {

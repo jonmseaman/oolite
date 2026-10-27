@@ -1,26 +1,23 @@
 /*	test_CollisionRegion.mm
-        Unit tests for CollisionRegion (src/Core/CollisionRegion.h): bead
-   oo-44gg (Phase 3, house style of proposed ADR-0056). Its Objective-C facade
-   was deleted by bead oo-9ht.11, which retired the facade's own cases under the
-   standing approval oo-9n5p9 and ported the rest to the C++ class.
+        Unit tests for CollisionRegion (src/Core/CollisionRegion.h).
 
         CollisionRegion's object reads Entity and Universe ivars, so it links
-   the whole game but main (tests/unit/core/meson.build entry ['*'], ADR-0056
-   amendment oo-44gg), and defines the one global main.mm did, gDebugFlags. The
-   regions are driven with plain Entity objects and no Universe (UNIVERSE is
-   nil: no sun, so no shadowing work). The expectations were written against the
-   Objective-C API and run on the unconverted class first: the region tree (a
-   sphere that fits goes into the subregion, one that crosses a border is left
-   out), which region an entity is filed in (the first subregion within whose
-   borders it lies, else the universe), the counts in -debugOut, the description
-   text, the collision counters and the shadow geometry of
-   shadowAtPointOcclusionToValue(). Run: bash tools/check-core-tests.sh
+   the whole game but main (tests/unit/core/meson.build entry ['*']), and
+   defines the one global main.mm did, gDebugFlags. The regions are driven with
+   plain Entity objects and no Universe (UNIVERSE is nil: no sun, so no
+   shadowing work). The expectations were written against the Objective-C API
+   and run on the unconverted class first: the region tree (a sphere that fits
+   goes into the subregion, one that crosses a border is left out), which region
+   an entity is filed in (the first subregion within whose borders it lies, else
+   the universe), the counts in -debugOut, the description text, the collision
+   counters and the shadow geometry of shadowAtPointOcclusionToValue(). Run:
+   bash tools/check-core-tests.sh
 */
 
 #include "CollisionRegion.h"
 #include "Entity.h"
 #include "OOSunEntity.h"
-#include "PlayerEntity.h"  // the stand-in PLAYER (bead oo-vdw34)
+#include "PlayerEntity.h"  // the stand-in PLAYER
 extern PlayerEntity* gOOPlayer;
 #include <string>
 
@@ -34,7 +31,7 @@ uint32_t gDebugFlags = 0;
 
 namespace {
 
-// PLAYER (bead oo-vdw34): the debug build asserts it is set (OOGetPlayer()), so
+// PLAYER: the debug build asserts it is set (OOGetPlayer()), so
 // the entities' positions, which read it, have a player whose viewpoint is the
 // origin: the camera-relative positions are the release build's with no player
 // (the origin's). Never released, as the player is not.
@@ -171,9 +168,8 @@ OO_TEST(entityListGrows) {
 
 OO_TEST(shadowGeometry) {
   {
-    // The function reads only Entity members of the sun, which is C++ since
-    // bead oo-9ht.111 (a cast entity before): a C++ sun with the same position
-    // and radius.
+    // The function reads only Entity members of the sun, which is C++: a C++
+    // sun with the same position and radius.
     oo::Ref<OOSunEntity> sunRef = oo::makeRef<OOSunEntity>();
     sunRef->position = make_HPvector(0, 0, 10000);
     sunRef->collision_radius = 10;

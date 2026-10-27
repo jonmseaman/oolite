@@ -1,21 +1,18 @@
 /*	test_OOJSMission.mm
         Unit tests for the mission JS binding
-   (src/Core/Scripting/OOJSMission.h/.mm): bead oo-nge8, converted the way bead
-   oo-ppc converted OOJSVector (proposed ADR-0056 amendment oo-ppc).
+   (src/Core/Scripting/OOJSMission.h/.mm).
 
-        As the binding tests of amendment oo-ppc item 6 do, it runs the JS class
-   in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp), and links the game's own objects for the
-   binding, the engine's exception translator (OOJSEngineNativeWrappers.mm) and
-   the constant strings (OOConstToJSString.cpp). It stands in for the player
-   (PlayerEntity records what the binding tells it), the universe and its GUI, a
-   demo ship, the running script and the script engine (OOScript and
-   OOJavaScriptEngine, which call the mission screen's callback), the music
-   controller (amendment oo-jy98 item 3: a converted class the binding only
-   calls, an Objective-C stand-in before the conversion and C++ member stand-ins
-   after it, which is the one part of this file the conversion ported), the
-   string expander, the standards switches and the engine functions the binding
-   links against, with the engine headers' linkage; the log is captured with
+   As the other binding tests do, it runs the JS class in a real context on the
+   game's own façade backend (ooscript/JSEngine_quickjs.cpp), and links the
+   game's own objects for the binding, the engine's exception translator
+   (OOJSEngineNativeWrappers.mm) and the constant strings
+   (OOConstToJSString.cpp). It stands in for the player (PlayerEntity records
+   what the binding tells it), the universe and its GUI, a demo ship, the
+   running script and the script engine (OOScript and OOJavaScriptEngine, which
+   call the mission screen's callback), the music controller (a converted class
+   the binding only calls, stood in for by C++ members), the string expander,
+   the standards switches and the engine functions the binding links against,
+   with the engine headers' linkage; the log is captured with
    oo::log::logger().setSink. The expectations were written against the
    Objective-C file and run on it first; they pin the JS-visible behaviour: the
    mission object and its properties, markSystem()/unmarkSystem() with numbers
@@ -43,10 +40,8 @@
 
 typedef NSInteger OOGUIRow;  // as GuiDisplayGen.h declares it
 
-// The demo ship's object (the root's; the Objective-C ship's until bead
-// oo-9ht.144 deleted it), which TestObjectOf answers for the demo ship. C++
-// since bead oo-4aq6a.11 (it was rooted on the Objective-C root class OOObject,
-// which Phase 4 deletes); its selector is a member of the same name.
+// The demo ship's object (the root's), which TestObjectOf answers for the demo
+// ship. Its selector is a member of the same name.
 class TestEntityObject final : public oo::RefCounted {
  public:
   ooscript::Value oo_jsValueInContext(ooscript::Context context);
@@ -59,8 +54,7 @@ class TestEntityObject final : public oo::RefCounted {
    it throws a C++ exception, so the test sees what an exception under a native
    becomes.
 */
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for: the members the code under test calls, declared as the game headers
+// PLAYER: the members the code under test calls, declared as the game headers
 // declare them (the test imports none that defines the classes), with the
 // stand-in's answers.
 #include "OOJSPrivateObject.h"
@@ -76,7 +70,7 @@ class Entity
   void clearJSSelf(ooscript::Object selfVal) override;
 };
 
-// The ship: C++ since bead oo-9ht.144 (the demo ship is a plain one).
+// The ship (the demo ship is a plain one).
 class ShipEntity : public Entity {
  public:
   void setEntityPersonalityInt(uint16_t value);
@@ -139,19 +133,16 @@ class PlayerEntity : public ShipEntity {
   BOOL _throwCxx = {};
 };
 
-// The GUI is C++ since bead oo-9ht.143 deleted its facade: the members the
-// binding calls are defined below (a C++ stand-in with the facade stand-in's
-// answers), recording into sGuiCalls.
+// The GUI: the members the binding calls are defined below (a C++ stand-in
+// with the facade stand-in's answers), recording into sGuiCalls.
 #include "GuiDisplayGen.h"
 #include "OOColor.h"  // and its row colours
 #include "OOTextureSprite.h"  // the stand-in's destructor destroys the GUI's sprite members
 #include "UniverseStandIn.h"
 
 // The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's Objective-C stand-in
-// stood in for), with the header's names and signatures. It answers virtual
-// members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse
-// overrides them.
+// with the header's names and signatures. It answers virtual members, so it has
+// the game's vtable (UniverseStandIn.h) and StandInUniverse overrides them.
 class Universe : public oo::RefCounted {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
@@ -174,8 +165,7 @@ class StandInUniverse : public Universe {
    raises instead, as a script error could, which MissionRunCallback() logs and
    ignores.
 */
-class OOJavaScriptEngine  // a C++ class since bead oo-wdqw1 deleted its facade:
-                          // the header's names and signatures
+class OOJavaScriptEngine  // the header's names and signatures
 {
  public:
   static OOJavaScriptEngine* sharedEngine();
@@ -187,8 +177,8 @@ class OOJavaScriptEngine  // a C++ class since bead oo-wdqw1 deleted its facade:
   BOOL _raise = NO;
 };
 
-// The music controller, a converted class the binding only calls (amendment
-// oo-jy98 item 3): the members the binding calls are defined below.
+// The music controller, a converted class the binding only calls: the members
+// the binding calls are defined below.
 #include <cstdarg>
 #include <cstring>
 #include <map>
@@ -449,14 +439,13 @@ void GuiDisplayGen::setArray(const std::vector<std::string>&, OOGUIRow) {
 }
 
 // The demo ship's object, which TestObjectOf answers (only the demo ship
-// crosses; oo::ToObjC until bead oo-4aq6a.11).
+// crosses).
 ::TestEntityObject* sDemoShipObject = nullptr;
 ::TestEntityObject* TestObjectOf(Entity* entity) {
   return entity != nullptr ? sDemoShipObject : nullptr;
 }
-// The C++ ship's JS value (bead oo-9ht.39.8.2: displayModel is
-// OOJSValueFromCxxObject of the demo ship): its object's, which the binding
-// asked until then.
+// The C++ ship's JS value (displayModel is OOJSValueFromCxxObject of the demo
+// ship): its object's.
 ooscript::Value Entity::jsValueInContext(ooscript::Context context) {
   ::TestEntityObject* object = TestObjectOf(this);
   return object != nullptr ? object->oo_jsValueInContext(context)
@@ -477,10 +466,9 @@ void Universe::removeDemoShips() { _calls.push_back("removeDemoShips"); }
 
 #include "OOScript.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls.
+// OOJSScript (OOJSScript.h), which the code under test calls. A script is a
+// C++ object, so the stand-in is a C++ subclass of OOScript declaring the
+// members that code calls.
 class OOJSScript : public OOScript {
  public:
   static OOJSScript* currentlyRunningScript();
@@ -813,8 +801,7 @@ ooscript::Value OOJSValueFromCxxObject(ooscript::Context context,
       object == static_cast<OOJSPrivateObject*>(sRunningScript))
     return ooscript::objectValue(sScriptObject);
   if (dynamic_cast<Entity*>(object) != nullptr)
-    return object->jsValueInContext(
-        context);  // the demo ship (bead oo-9ht.39.8.2)
+    return object->jsValueInContext(context);  // the demo ship
   return ooscript::nullValue();
 }
 

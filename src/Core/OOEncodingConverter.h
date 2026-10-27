@@ -38,12 +38,8 @@ SOFTWARE.
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 
-class OOCache;  // C++ since bead oo-rdfh
+class OOCache;
 
-/*	C++20 since bead oo-demz (proposed ADR-0056, the OOColor house style).
-   Its one caller (HeadUpDisplay's text engine) was adapted in the same bead, so
-   there is no Objective-C facade and the class is global.
-*/
 class OOEncodingConverter : public oo::RefCounted {
  public:
   // [[OOEncodingConverter alloc] initWithEncoding:substitutions:] and
@@ -71,9 +67,8 @@ class OOEncodingConverter : public oo::RefCounted {
 
   std::optional<oo::str::Encoding> _encoding =
       {};  // nullopt: an unknown encoding name (was NSNotFound)
-  oo::Ref<OOCache>
-      _cache;  // no `= {}`: GCC instantiates ~Ref<T> at a default member
-               // initializer, and T is incomplete here (bead oo-1q4)
+  oo::Ref<OOCache> _cache;  // no `= {}`: GCC instantiates ~Ref<T> at a default
+                            // member initializer, and T is incomplete here
   std::vector<std::pair<std::string, std::string>> _substitutions =
       {};  // in the order they are applied
 };
@@ -91,5 +86,4 @@ class OOEncodingConverter : public oo::RefCounted {
 */
 const char* StringFromEncoding(
     unsigned encoding);  // oo::str::Encoding numeric value; NULL for unknown
-// (EncodingFromString() retired with the Foundation sweep, bead oo-gosz:
-// oo::str::encodingFromName() in oofnd/Encoding.hpp)
+// (For the reverse, see oo::str::encodingFromName() in oofnd/Encoding.hpp.)

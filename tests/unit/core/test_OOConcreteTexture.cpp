@@ -1,8 +1,7 @@
 /*	test_OOConcreteTexture.mm
         Unit tests for OOConcreteTexture
    (src/Core/Materials/OOConcreteTexture.h), the texture that a loader fills and
-   OpenGL holds: bead oo-qa7c (Phase 3, house style of proposed ADR-0056; a leaf
-        of the textures root, amendment oo-whzh).
+   OpenGL holds.
 
         A concrete texture is made with a loader (here a generator, so no file
    is read and the resource manager is never reached), caches itself under its
@@ -10,19 +9,8 @@
    (with mip-maps when asked) and answers their size. It links the whole game
    but main (tests/unit/core/meson.build entry ['*']), on the hidden GL context
    of oo_gl_test_context.hpp; the generator runs on the game's own work manager.
-   The expectations were written against the Objective-C API and run on the
-   unconverted class first (commit 4477d13b5); that API then became the facade,
-   and the last tests pinned the C++ API and the facade's contract.
-
-        Bead oo-9ht.105 deleted the facade (ADR-0056 amendment "deleting a
-   facade"). The texture is made by the C++ factories, and the cases ask it
-   through the object Objective-C now gets, the root's facade (the OOTexture
-   selectors are the root's), with every expectation kept; the facade's own case
-   (facade) was retired with it (ADR-0049, standing approval oo-9n5p9). Bead
-   oo-9ht.99 deleted the root's facade too: the cases ask the C++ texture, kept
-   until the pool drains as the facade was, and
-   concreteTextureCrossesAsTheRootFacade (the crossing) went with it (oo-9n5p9).
-        Run: bash tools/check-core-tests.sh
+   The texture is made by the C++ factories, and the cases ask the C++ texture,
+   kept until the pool drains. Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdlib>
@@ -41,8 +29,6 @@ uint32_t gDebugFlags = 0;
 #endif
 
 // A generator of a 4 x 2 RGBA image whose bytes count up from 1, or of nothing.
-// (An Objective-C subclass until bead oo-9ht.118 deleted the generator's
-// facade; named as it was.)
 class TestGenerator : public OOTextureGenerator {
  public:
   void loadTexture() override {
@@ -58,9 +44,8 @@ class TestGenerator : public OOTextureGenerator {
   BOOL _empty = NO;
 };
 
-// What an autoreleased Objective-C texture was (bead oo-9ht.99 deleted the
-// facade): the C++ texture, kept until the current autorelease scope drains
-// (oo::autorelease; an Objective-C keeper object until bead oo-4aq6a.2).
+// What an autoreleased texture is: the C++ texture, kept until the current
+// autorelease scope drains (oo::autorelease).
 static OOTexture* Autoreleased(const oo::Ref<OOTexture>& texture) {
   if (texture == nullptr) return nullptr;
   oo::autorelease(oo::Ref<OOTexture>(texture));

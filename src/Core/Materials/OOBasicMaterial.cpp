@@ -25,11 +25,10 @@ SOFTWARE.
 
 */
 
-#include "OOBasicMaterial.h"
-
 #include <cstring>
 #include <typeinfo>
 
+#include "OOBasicMaterial.h"
 #include "OOFunctionAttributes.h"
 #include "OOMaterialSpecifier.h"
 #include "OOObjCPList.h"
@@ -78,15 +77,13 @@ void OOBasicMaterial::initWithName(const std::optional<std::string>& name,
 
   // An empty dictionary, not nil: the specifier defaults (a specular exponent
   // of 10) apply. The configuration mixes plist data with live objects
-  // (colours): an oo::PList carries both exactly (proposed ADR-0043 Amendment
-  // 2).
+  // (colours): an oo::PList carries both exactly.
   const oo::PList config =
       !configuration.isNull() ? configuration : oo::PList(oo::PList::Dict{});
 
   // The specifier answers the colour; OOColor::colorWithDescription() of its
   // Object node, which
-  // +[OOColor cxx_colorWithDescription:] answered, was the colour itself (bead
-  // oo-9ht.1).
+  // +[OOColor cxx_colorWithDescription:] answered, was the colour itself.
   colorDesc = cxx_OOMaterialDiffuseColor(config);
   if (colorDesc != nullptr) setDiffuseColor(colorDesc.get());
 

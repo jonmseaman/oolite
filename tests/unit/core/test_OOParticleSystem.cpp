@@ -2,10 +2,7 @@
         Unit tests for OOParticleSystem and its subclasses
    OOSmallFragmentBurstEntity, OOBigFragmentBurstEntity
    (src/Core/Entities/OOParticleSystem.h) and OOExplosionCloudEntity
-        (OOExplosionCloudEntity.h), the particle clouds of an explosion: bead
-   oo-cenx, which converts the class with all its subclasses (proposed ADR-0056,
-   amendments oo-bj8 item 12 and oo-kdyh item 1), so bead oo-ui7h's class is
-   tested here too.
+   (OOExplosionCloudEntity.h), the particle clouds of an explosion.
 
         The entities read Universe and PLAYER, so the test links the whole game
    but main (['*']) and uses a Universe that was never initialised, subclassed
@@ -13,19 +10,15 @@
    loads its texture by name: the test replaces OOTexture's loader with one that
    records the name and answers a stand-in object (or nil, for "not found"). The
    particles themselves are random (the RNG is seeded, as the game seeds it) and
-   private; what the game sees is checked. The expectations were written against
-   the Objective-C API and run on the unconverted classes first (but for "not
-   made without its texture", which crashed there in the Entity facade's
-   -dealloc of an entity whose -init never ran, bead oo-s6ic6): each cloud
-        starts at its source with the source's velocity (the big burst's slowed,
-   the cloud's capped at 1000), is a no-draw effect that cannot collide,
-   collides with anything but an effect, grows its collision radius at its
-   fastest particle's speed, describes its time to live, and removes itself when
-   that runs out; the cloud reads its settings (duration, size, spread, texture)
-   and is not made without its texture. The clouds are made through the one
-   block of helpers below, the only lines the conversion ported: each is now a
-   C++ entity whose Objective-C object is the Entity facade oo::NewEntityFacade
-   made. Run: bash tools/check-core-tests.sh
+   private; what the game sees is checked. The expectations cover: each cloud
+   starts at its source with the source's velocity (the big burst's slowed, the
+   cloud's capped at 1000), is a no-draw effect that cannot collide, collides
+   with anything but an effect, grows its collision radius at its fastest
+   particle's speed, describes its time to live, and removes itself when that
+   runs out; the cloud reads its settings (duration, size, spread, texture) and
+   is not made without its texture. The clouds are made through the one block of
+   helpers below: each is a C++ entity whose Objective-C object is the Entity
+   facade oo::NewEntityFacade made. Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -36,7 +29,7 @@
 #include "OOExplosionCloudEntity.h"
 #include "OOParticleSystem.h"
 #include "OOTexture.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "legacy_random.h"
 #include "oo_test.hpp"
@@ -51,16 +44,14 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// NewTestPlayer<TestPlayer>() (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// NewTestPlayer<TestPlayer>(): a C++ player under the ship's facade, as
+// PlayerEntity::sharedPlayer() makes the game's, retained (+1) as +alloc's
+// object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -76,16 +67,14 @@ class TestUniverse : public Universe {
   Entity* _removed = {};
 
   bool removeEntity(
-      Entity* entity) override  // the C++ entity since bead oo-9ht.39.26; the
-                                // record is its object, as before
+      Entity* entity) override  // the C++ entity; the record is its object
   {
     _removed = entity;
     return YES;
   }
 };
 
-// An effect, for the collision test (an Objective-C subclass until bead
-// oo-j12i2; a C++ one overriding the member its selector became).
+// An effect, for the collision test (a C++ one overriding the member).
 class TestEffect : public Entity {
  public:
   bool isEffect() override { return true; }
@@ -100,8 +89,7 @@ std::optional<std::string> sTextureName;
 bool sTextureFound = true;
 OOTexture* sTexture = nullptr;  // never released
 
-// OOTexture::nameFactory, the test-only loader hook (bead oo-9ht.99), where the
-// facade's class method was replaced.
+// OOTexture::nameFactory, the test-only loader hook.
 oo::Ref<OOTexture> LoadTexture(const std::optional<std::string>& name,
                                const std::optional<std::string>&,
                                OOTextureFlags, GLfloat, GLfloat) {
@@ -132,7 +120,7 @@ void SetUp() {
 Entity* SmallBurst(Entity* source) {
   return oo::MadeEntity(
       OOSmallFragmentBurstEntity::fragmentBurstFromEntity(source));
-}  // the source's C++ entity since bead oo-al52f
+}  // the source's C++ entity
 Entity* BigBurst(Entity* source) {
   return oo::MadeEntity(
       OOBigFragmentBurstEntity::fragmentBurstFromEntity(source));
@@ -140,7 +128,7 @@ Entity* BigBurst(Entity* source) {
 Entity* Cloud(Entity* source, const oo::PList& settings) {
   return oo::MadeEntity(
       OOExplosionCloudEntity::explosionCloudFromEntity(source, settings));
-}  // the source's C++ entity since bead oo-9ht.39.26
+}  // the source's C++ entity
 Entity* SizedCloud(Entity* source, float size, const oo::PList& settings) {
   return oo::MadeEntity(
       OOExplosionCloudEntity::explosionCloudFromEntity(source, size, settings));

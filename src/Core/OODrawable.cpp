@@ -25,13 +25,12 @@ SOFTWARE.
 
 */
 
-#include "OODrawable.h"
-
 #include <cxxabi.h>
 
 #include <cstdlib>
 #include <typeinfo>
 
+#include "OODrawable.h"
 #include "oofnd/String.hpp"
 
 void OODrawable::renderOpaqueParts() {}
@@ -56,8 +55,8 @@ std::optional<std::string> OODrawable::descriptionComponents() const {
   return std::nullopt;
 }
 
-// The facade's -cxx_description (bead oo-9ht.9 deleted it): the C++ class's
-// name, as [self class] named it, and the address, now the drawable's.
+// The C++ class's name and the drawable's own address, with the description
+// components if any.
 std::string OODrawable::description() const {
   int status = 0;
   char* demangled =
@@ -75,14 +74,13 @@ std::string OODrawable::description() const {
 #ifdef OO_DEBUG_MONITOR_ENABLED
 std::vector<oo::Ref<OOTexture>> OODrawable::allTextures() { return {}; }
 
-// The object's own size (was the facade's Objective-C instance size; bead
-// oo-9ht.9).
+// The object's own size.
 size_t OODrawable::totalSize() { return objectSize(); }
 #endif
 
 /*	OODrawableAutorelease(): the drawable goes to the innermost
    oo::AutoreleaseScope, whose drain releases it where the keeper object that
-   held it was released (beads oo-pvhrh, oo-31u.7).
+   held it was released.
 */
 void OODrawableAutorelease(oo::Ref<OODrawable> drawable) {
   if (drawable == nullptr) return;

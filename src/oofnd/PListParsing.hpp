@@ -9,7 +9,7 @@
           * empty data                      -> error "empty data argument passed
    to method"
           * "bplist00..." / first byte 0 or 1 -> binary formats: an error in
-   oofnd (ADR-0027 item 3)
+   oofnd
           * "<?" after plist whitespace       -> oo::parseXMLPList
    (oofnd/PListXML.hpp)
           * anything else                     -> oo::parseOldStylePList
@@ -25,11 +25,10 @@
    ValueIfClass) is the caller's check: r->getIf<oo::PList::Dict>().
 */
 
-#ifndef OOFND_PLISTPARSING_HPP
-#define OOFND_PLISTPARSING_HPP
+#pragma once
 
 // Suspend OOFoundation.h's `#define true 1` / `#define false 0` for this header
-// (see oofnd/Data.hpp, proposed ADR-0028); restored at the end.
+// (see oofnd/Data.hpp); restored at the end.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -83,5 +82,3 @@ inline Expected<PList, PListError> parsePropertyList(
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_PLISTPARSING_HPP

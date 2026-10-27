@@ -6,9 +6,7 @@ A prority queue is a collection into which objects may be inserted in any
 order, but (primarily) extracted in sorted order. The order is defined by the
 comparison function specified at creation time, which must define a partial
 order on the objects in the priority queue. The behaviour when provided with an
-inconsistent comparison function is undefined. (The Objective-C OOPriorityQueue,
-which ordered Objective-C objects by a comparator selector, was deleted by bead
-oo-4aq6a.3: no game code used it after bead oo-9ht.35.)
+inconsistent comparison function is undefined.
 
 The implementation is the standard one, a binary heap. It is described in
 detail in most algorithm textbooks.
@@ -38,8 +36,7 @@ SOFTWARE.
 
 */
 
-#ifndef OOPRIORITYQUEUE_H
-#define OOPRIORITYQUEUE_H
+#pragma once
 
 #include <utility>
 #include <vector>
@@ -48,11 +45,9 @@ SOFTWARE.
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 
-/*	The queue for C++ elements (bead oo-9ht.35, which deleted the
-   OOScriptTimer facade the timer queue held): the elements are held by oo::Ref
-   and ordered by a comparator function where the Objective-C OOPriorityQueue
-   (deleted by bead oo-4aq6a.3) sent a selector. The heap is the Objective-C
-   queue's, step for step (bubbling up on insertion; on removal the last element
+/*	The queue for C++ elements: the elements are held by oo::Ref
+   and ordered by a comparator function. The heap is the standard one, step
+   for step (bubbling up on insertion; on removal the last element
    takes the removed one's place and bubbles down; the exact-object search goes
    on past a match), so elements that compare the same come out in the same
    order. Capacity is the vector's. The element type must be complete where it
@@ -153,5 +148,3 @@ class OOPriorityQueueOf {
   Comparator _comparator;
   std::vector<oo::Ref<T>> _heap;
 };
-
-#endif  // OOPRIORITYQUEUE_H

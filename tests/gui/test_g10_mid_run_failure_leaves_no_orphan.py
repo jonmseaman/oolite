@@ -1,6 +1,6 @@
 """A GUI test that fails MID-RUN, with the game up, must leave no orphaned oolite.exe.
 
-Bead oo-njnw. The bead was filed as a defect: "conftest's shared ``game`` fixture does not take
+This guards a reported defect: "conftest's shared ``game`` fixture does not take
 the process down when a test fails while the game is up; an oolite.exe SURVIVES the run", with a
 reviewer's report of an ``assert False`` injected into test_g1_exit_via_mouse.py on pristine main
 leaving a survivor behind.
@@ -13,8 +13,8 @@ the game demonstrably up - and recording the pid the run itself launched:
     current main 602219c    rc=1, "1 failed, 38 passed in 27.66s", launched pid 11144 -> GONE
     pristine     fd501c4    rc=1, "1 failed, 38 passed in 26.51s", launched pid  6384 -> GONE
 
-fd501c4 is the very tree the bead was filed against, so this is not a leak some later bead fixed
-by accident: the teardown was already correct, and ``GameWindow.kill`` is byte-identical between
+fd501c4 is the very tree the defect was reported against, so this is not a leak some later change
+fixed by accident: the teardown was already correct, and ``GameWindow.kill`` is byte-identical between
 the two trees. The original sighting was a CONCURRENT AGENT'S oolite.exe - five agents share this
 desktop - and a bare ``tasklist /FI "IMAGENAME eq oolite.exe"`` cannot tell that from a leak of
 one's own. Recording the launched pid and asking about THAT pid is what distinguishes them, and it
@@ -39,11 +39,11 @@ never collects it, the tier-wide AST meta-guard in test_g9_post_exit_hygiene.py 
 
     python3 -m pytest oolite-dev/tests/gui/test_g10_mid_run_failure_leaves_no_orphan.py -q
 
-FALSIFIABILITY, measured rather than asserted - see the bead's evidence. With
+FALSIFIABILITY, measured rather than asserted. With
 ``GameWindow.kill``'s ``self.proc.kill()`` neutered in a scratch copy of the tier, this test goes
-RED and names the surviving pid. The committed conftest.py is untouched by this bead.
+RED and names the surviving pid. The committed conftest.py is untouched.
 
-Needs the desktop: a real window, unlocked and logged in (ADR-0017). The child run takes
+Needs the desktop: a real window, unlocked and logged in. The child run takes
 tools/gui-lock through the shared fixture, so this test releases the lock before spawning it (it
 holds none of its own) and launches nothing directly.
 """
@@ -123,8 +123,8 @@ def _run_child(pidfile, child_lock_dir):
     never contends with anything and never reclaims anyone's lock.
 
     THIS IS NOT COMPENSATING FOR THE STALE LOCK, and that was measured rather than assumed. A
-    separate fleet defect - a lock orphaned by a dead session, reclaimed under the script's own
-    age-based protocol and filed as oo-c7bu - produced failures that LOOKED like this deadlock,
+    separate defect - a lock orphaned by a dead session, reclaimed under the script's own
+    age-based protocol - produced failures that LOOKED like this deadlock,
     so the two had to be told apart deliberately. Removing only the ``OO_GUI_LOCK_DIR`` line
     below, from a CLEAN and verified-free lock, still fails: the child never writes its pidfile
     and dies with "1 error in 29.89s", the parent failing at the pidfile assertion after 39s.
@@ -184,7 +184,7 @@ def test_a_mid_run_failure_leaves_no_orphaned_game(desktop_lock, tmp_path):
 
     Every check is scoped to the pid the child run launched. A bare "is any oolite.exe running?"
     would be a false positive against a concurrent sibling GUI run on this shared desktop - and
-    that false positive is exactly what filed this bead, so this test is not allowed to repeat it.
+    that false positive is exactly what prompted this test, so it is not allowed to repeat it.
 
     Takes ``desktop_lock`` directly, and NOT ``game``: this test launches nothing itself, but the
     child it spawns puts a real window on the desktop, so the desktop must be held for the
@@ -267,8 +267,8 @@ def test_the_shared_teardown_kills_on_the_failure_path_and_not_only_on_success()
 
     The structural half of the claim above, checkable with no desktop: if a future edit moved
     ``window.kill()`` out of the finalizer and into the body after the yield, the launching test
-    would still pass on every green run and leak on every red one - the exact defect this bead was
-    filed for. So the SHAPE is pinned too, from the AST rather than from a substring: a comment or
+    would still pass on every green run and leak on every red one - the exact defect this guards
+    against. So the SHAPE is pinned too, from the AST rather than from a substring: a comment or
     a docstring naming kill() must not be able to hold this green.
     """
     import ast
@@ -357,7 +357,7 @@ def test_the_child_cannot_deadlock_on_the_lock_its_parent_holds():
     normally, the pin passed alone in ~10s and then hung for its whole 300s budget when run in
     one pytest invocation with the rest of the launching tier, because the parent's session
     already held the exclusive mutex the child was waiting for. A test that only passes when
-    nothing else runs is the flaky-gate class filed as oo-ac3f, and accept.sh runs acceptance
+    nothing else runs is the flaky-gate class, and accept.sh runs acceptance
     while siblings are live - so the SHAPE is pinned here rather than left to whoever next edits
     the spawn.
 
@@ -367,7 +367,7 @@ def test_the_child_cannot_deadlock_on_the_lock_its_parent_holds():
       conftest's bash-less ``_lock_path()`` fallback alike), so it never queues behind its parent.
       Asserted from the AST with _run_child's docstring stripped, never as a substring: that
       docstring names OO_GUI_LOCK_DIR four times and used to hold this guard green with the real
-      assignment deleted (bug oo-f1sq);
+      assignment deleted;
     * the parent takes the REAL ``desktop_lock`` fixture, so the desktop is genuinely held while
       the child's window is up. Without that second half the first would be a loophole rather
       than a fix - an unlocked game on a desktop five agents share.
@@ -377,7 +377,7 @@ def test_the_child_cannot_deadlock_on_the_lock_its_parent_holds():
 
     # From the AST, with _run_child's OWN DOCSTRING STRIPPED FIRST. A substring check over the
     # source cannot do this job: that docstring names OO_GUI_LOCK_DIR four times, so deleting the
-    # real assignment left this guard GREEN ("1 passed in 0.02s") - bug oo-f1sq. Prose must not be
+    # real assignment left this guard GREEN ("1 passed in 0.02s"). Prose must not be
     # able to hold this green, the same standard the teardown guard above states for kill().
     spawn = ast.parse(inspect.getsource(_run_child))
     func = next(

@@ -26,7 +26,6 @@ SOFTWARE.
 */
 
 #include "OOProbabilisticTextureManager.h"
-
 #include "OOTexture.h"
 #include "PlayerEntityScriptMethods.h"
 #include "ResourceManager.h"
@@ -34,8 +33,7 @@ SOFTWARE.
 
 namespace {
 
-// oo_stringForKey: a string, a number's string value, or nil (Foundation sweep,
-// proposed ADR-0043).
+// oo_stringForKey: a string, a number's string value, or nil.
 std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
                                                 std::string_view key) {
   const oo::PList* value = dict.find(key);
@@ -55,8 +53,7 @@ OOProbabilisticTextureManager::createWithPListName(const std::string& plistName,
                              RANROTGetFullSeed());
 }
 
-// -initWithPListName:...seed: on a new object; null where it answered nil
-// (amendment oo-fg7i item 1).
+// -initWithPListName:...seed: on a new object; null where it answered nil.
 oo::Ref<OOProbabilisticTextureManager>
 OOProbabilisticTextureManager::createWithPListName(const std::string& plistName,
                                                    uint32_t options,
@@ -79,8 +76,7 @@ bool OOProbabilisticTextureManager::initWithPListName(
   NSUInteger i, count, j;
   const oo::PList* entry = nullptr;
   std::optional<std::string> name;
-  float probability =
-      0.0f;  // set wherever name is (GCC -Wmaybe-uninitialized; bead oo-1q4)
+  float probability = 0.0f;  // set wherever name is (GCC -Wmaybe-uninitialized)
   oo::Ref<OOTexture> texture;
   int galID = -1;
   const oo::PList* object = nullptr;
@@ -172,8 +168,7 @@ OOProbabilisticTextureManager::~OOProbabilisticTextureManager() {
 }
 
 // OOObject's -description wrapped this as "<OOProbabilisticTextureManager
-// 0x...>{...}", the text this class's own -description printed (proposed
-// ADR-0043).
+// 0x...>{...}", the text this class's own -description printed.
 std::optional<std::string>
 OOProbabilisticTextureManager::descriptionComponents() const {
   return oo::str::format("%u textures, cumulative probability=%g", _count,
@@ -185,10 +180,9 @@ OOTexture* OOProbabilisticTextureManager::selectTexture() {
   unsigned i;
   int hold = -1;
   int galID =
-      (int)(PLAYER != nullptr
-                ? PLAYER->PlayerEntity::currentGalaxyID()
-                : 0);  // qualified: the final overrider (bead oo-9ht.177), so
-                       // the binding test stands in for it
+      (int)(PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID()
+                              : 0);  // qualified: the final overrider, so the
+                                     // binding test stands in for it
 
   selection = randfWithSeed(&_seed);
 

@@ -1,8 +1,7 @@
 /*	oo_gl_test_context.hpp
         A current OpenGL context for the unit tests of converted GL classes
-   (tests/unit/core; bead oo-z1s4, proposed ADR-0056 amendment oo-z1s4). The
-   game's GL code needs a real context: it reads the driver's strings and
-   limits, and it sets state that the tests read back.
+   (tests/unit/core). The game's GL code needs a real context: it reads the
+   driver's strings and limits, and it sets state that the tests read back.
 
         OOTestGLContext() makes, once per process, one hidden 16x16 SDL window
    with an OpenGL context of SDL's default kind (a compatibility context, as the
@@ -11,8 +10,7 @@
    when the machine has no OpenGL; a test then fails, it does not skip.
 */
 
-#ifndef OO_GL_TEST_CONTEXT_HPP
-#define OO_GL_TEST_CONTEXT_HPP
+#pragma once
 
 #include <SDL3/SDL.h>
 
@@ -41,5 +39,3 @@ inline bool OOTestGLContext() {
   }();
   return ready;
 }
-
-#endif  // OO_GL_TEST_CONTEXT_HPP

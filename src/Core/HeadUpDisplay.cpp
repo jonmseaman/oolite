@@ -22,10 +22,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "HeadUpDisplay.h"
-
 #include "GameController.h"
 #include "GuiDisplayGen.h"
+#include "HeadUpDisplay.h"
 #include "OOColor.h"
 #include "OOConstToString.h"
 #include "OOCrosshairs.h"
@@ -79,11 +78,11 @@ struct CachedInfo {
   float width, height, alpha;
 };
 
-// A dial: a member called by name with its hud.plist entry (ADR-0055 item 5).
+// A dial: a member called by name with its hud.plist entry.
 typedef void (HeadUpDisplay::*OOHUDDial)(const oo::PList& info);
 
 /*	One legend, dial or MFD. Was an array tuple [info, boxed CachedInfo,
-   boxed SEL, selector name] (bead oo-3rb.49); the widget lists are std::vectors
+   boxed SEL, selector name]; the widget lists are std::vectors
    of these, in the same order, filled only while the HUD is initialised.
 */
 struct OOHUDWidget {
@@ -91,10 +90,8 @@ struct OOHUDWidget {
   struct CachedInfo cache;
   BOOL hasCache;   // NO only for an MFD whose info was not a dictionary (below)
   OOHUDDial dial;  // dials only: the member the selector names (DialNamed())
-  std::string selectorString;  // dials only
-  oo::Ref<OOTextureSprite>
-      sprite;  // legends only: the image legend's sprite (the entry held its
-               // facade until bead oo-9ht.71)
+  std::string selectorString;       // dials only
+  oo::Ref<OOTextureSprite> sprite;  // legends only: the image legend's sprite
 };
 
 namespace {
@@ -121,10 +118,9 @@ void AddHUDWidget(std::vector<OOHUDWidget>& widgets, const oo::PList& info,
       OOHUDWidget{info, *cache, !info.isNull(), dial, selectorString, {}});
 }
 
-/*	The dials by selector name (bead oo-mwd58, proposed ADR-0056 amendment
-   oo-9ht.1): exactly the selectors the HUD's Objective-C facade answered (its
-   OODials category, one forwarder per dial member), so a whitelisted name the
-   facade did not answer is still "not implemented".
+/*	The dials by selector name: exactly the selectors the HUD's Objective-C
+   facade answered (its OODials category, one forwarder per dial member), so a
+   whitelisted name the facade did not answer is still "not implemented".
 */
 const struct {
   std::string_view name;
@@ -309,9 +305,7 @@ OOINLINE void GLColorWithOverallAlpha(const GLfloat* color, GLfloat alpha) {
   glColor4f(color[0], color[1], color[2], color[3] * alpha);
 }
 //------------------------------------------------------------------------------------//
-//	The class shell (slice 1): HeadUpDisplay's members. The drawing (slices
-//2-6) follows; the 	facade (HeadUpDisplay+ObjCBridge) was deleted by bead
-//oo-mwd58.
+//	The class shell: HeadUpDisplay's members. The drawing follows.
 
 HeadUpDisplay::HeadUpDisplay() = default;
 
@@ -804,8 +798,7 @@ void HeadUpDisplay::addDial(const oo::PList& info) {
     return;
   }
 
-  // the dials are members, called by name through the dial table (ADR-0055 item
-  // 5; bead oo-mwd58)
+  // the dials are members, called by name through the dial table
   const OOHUDDial dial = DialNamed(*selectorString);
   OOCAssert(dial != nullptr,
             "HUD dial in %s uses selector \"%s\" which is in whitelist, but "
@@ -853,7 +846,7 @@ bool HeadUpDisplay::checkPlayerInSystemFlight() {
 
   return checkPlayerInFlight()     // be in the right mode
          && the_sun && the_planet  // and be in a system
-         && !the_sun->goneNova();  // C++ since bead oo-9ht.111
+         && !the_sun->goneNova();
 }
 
 bool HeadUpDisplay::minimalisticScanner() { return minimalistic_scanner; }
@@ -1204,8 +1197,7 @@ void HeadUpDisplay::drawHUDItem(const oo::PList& info) {
   }
 
   // use the dial stored during init; the dial is called by name with its
-  // configuration (ADR-0055 item 5), through the dial table since bead
-  // oo-mwd58.
+  // configuration, through the dial table.
   (this->*(sCurrentDrawItem->dial))(sCurrentDrawItem->info);
   cxx_OOCheckOpenGLErrors([&]() -> std::string {
     return "HeadUpDisplay after drawHUDItem " +
@@ -1420,8 +1412,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
   std::vector<Entity*> my_entities(
-      ent_count);  // the C++ entities, their objects retained (bead
-                   // oo-9ht.39.27)
+      ent_count);  // the C++ entities, their objects retained
   Entity* scannedEntity = nullptr;
 
   for (i = 0; i < ent_count; i++) {
@@ -1448,13 +1439,13 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
     // slaughter of innocent civillians. if (nonlinear_scanner)
     //{
     //	Vector p = OOVectorMultiplyMatrix(make_vector(10000.0, 0.0, 0.0),
-    //rotMatrix); 	GLDrawNonlinearCascadeWeapon( scanner_cx, scanner_cy, z1, siz,
-    //p, 5000, zoom, alpha ); 	p = OOVectorMultiplyMatrix(make_vector(10000.0,
-    //4500.0, 0.0), rotMatrix); 	GLDrawNonlinearCascadeWeapon( scanner_cx,
-    //scanner_cy, z1, siz, p, 2000, zoom, alpha ); 	p =
-    //OOVectorMultiplyMatrix(make_vector(0.0, 0.0, 20000.0), rotMatrix);
-    //	GLDrawNonlinearCascadeWeapon( scanner_cx, scanner_cy, z1, siz, p, 6000,
-    //zoom, alpha );
+    // rotMatrix); 	GLDrawNonlinearCascadeWeapon( scanner_cx, scanner_cy,
+    // z1, siz, p, 5000, zoom, alpha ); 	p =
+    // OOVectorMultiplyMatrix(make_vector(10000.0, 4500.0, 0.0), rotMatrix);
+    // GLDrawNonlinearCascadeWeapon( scanner_cx, scanner_cy, z1, siz, p, 2000,
+    // zoom, alpha ); 	p = OOVectorMultiplyMatrix(make_vector(0.0, 0.0,
+    // 20000.0), rotMatrix); 	GLDrawNonlinearCascadeWeapon( scanner_cx,
+    //scanner_cy, z1, siz, p, 6000, zoom, alpha );
     //}
     for (i = 0; i < ent_count; i++)  // scanner lollypops
     {
@@ -1555,8 +1546,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
           col[2] = base_col[2];
           col[3] = alpha * base_col[3];
         } else if (scannedEntity->getIsVisualEffect()) {
-          OOVisualEffectEntity* vis =
-              oo::ToEffect(scannedEntity);  // C++ since bead oo-9ht.165
+          OOVisualEffectEntity* vis = oo::ToEffect(scannedEntity);
           GLfloat* base_col =
               (vis != nullptr ? vis->scannerDisplayColorForShip(
                                     flash, vis->scannerDisplayColor1(),
@@ -1815,9 +1805,8 @@ void HeadUpDisplay::drawCompass(const oo::PList& info) {
           STATUS_LAUNCHING)  // normal system
   {
     Entity* reference =
-        (PLAYER != nullptr
-             ? PLAYER->getCompassTargetEntity()
-             : (Entity*)nullptr);  // the C++ entity (bead oo-9ht.39.27)
+        (PLAYER != nullptr ? PLAYER->getCompassTargetEntity()
+                           : (Entity*)nullptr);  // the C++ entity
 
     // translate and rotate the view
 
@@ -1873,7 +1862,7 @@ void HeadUpDisplay::drawCompass(const oo::PList& info) {
         Entity* beacon = (PLAYER != nullptr ? PLAYER->nextBeacon() : nullptr);
         OOHUDBeaconIcon* beaconIcon =
             oo::BeaconDrawable(beacon);  // nil beacon or drawable: nothing, as
-                                         // the message to nil (bead oo-w9pi2)
+                                         // the message to nil
         if (beaconIcon != nullptr)
           beaconIcon->drawHUDBeaconIconAt(NSMakePoint(x, y), siz, alpha, z1);
         break;
@@ -1980,16 +1969,14 @@ void HeadUpDisplay::drawSecondaryTargetReticle(const oo::PList& info) {
     // needs target memory to be working in addition to any other equipment
     // this item may be bound to
     Entity* primary =
-        (player != nullptr
-             ? player->primaryTarget()
-             : (Entity*)nullptr);  // the C++ entities: a target may be any
-                                   // entity (beads oo-9ht.144, oo-9ht.39.27)
+        (player != nullptr ? player->primaryTarget()
+                           : (Entity*)nullptr);  // the C++ entities: a target
+                                                 // may be any entity
     for (unsigned i = 0; i < PLAYER_TARGET_MEMORY_SIZE; i++) {
       const oo::WeakRef<Entity> sec_ref =
           (player != nullptr ? player->targetMemory()
                              : std::vector<oo::WeakRef<Entity>>())
-              .at(i);  // an empty slot (was OONull) is an empty ref (bead
-                       // oo-9ht.39.5.2)
+              .at(i);  // an empty slot (was OONull) is an empty ref
       // isProxy = weakref ; not = OONull (in this case...)
       // can't use isKindOfClass because that throws
       // OOInvalidArgumentException when called on a weakref
@@ -2026,8 +2013,7 @@ void HeadUpDisplay::drawWaypoints(const oo::PList& info) {
             ? UNIVERSE->currentWaypoints()
             : std::map<std::string, oo::EntityHold, std::less<>>())) {
     Entity* waypoint =
-        waypointRef
-            .get();  // the universe holds the C++ waypoint (bead oo-9ht.39.26)
+        waypointRef.get();  // the universe holds the C++ waypoint
     hudDrawWaypoint(waypoint, PLAYER, z1, alpha, waypoint == compass, scale);
   }
 }
@@ -3084,10 +3070,8 @@ void HeadUpDisplay::drawDirectionCue(const oo::PList& /*info*/) {
 
   if ((UNIVERSE != nullptr ? UNIVERSE->getDisplayGUI() : false)) return;
 
-  Entity* target =
-      (PLAYER != nullptr ? PLAYER->primaryTarget()
-                         : (Entity*)nullptr);  // the C++ entity (its object
-                                               // until bead oo-zwnvp)
+  Entity* target = (PLAYER != nullptr ? PLAYER->primaryTarget()
+                                      : (Entity*)nullptr);  // the C++ entity
   if (target == nullptr) return;
 
   // draw the direction cue
@@ -3523,8 +3507,7 @@ void HeadUpDisplay::drawStickSensitivityIndicator(const oo::PList& /*info*/) {
   BOOL mouse = (PLAYER != nullptr ? PLAYER->isMouseControlOn() : false);
   OOJoystickManager* stickHandler =
       OOJoystickManager::sharedStickHandler();  // made by the platform's
-                                                // registered factory (amendment
-                                                // oo-6bux; bead oo-9ht.69)
+                                                // registered factory
   struct CachedInfo cached;
 
   if (stickHandler == nullptr ||
@@ -3929,8 +3912,7 @@ void hudDrawReticleOnTarget(
             HeadUpDisplayShipScannerDisplayColor(ship, isHostile, flash),
             alpha);
       } else if (HeadUpDisplayEntityIsVisualEffect(target)) {
-        OOVisualEffectEntity* vis =
-            oo::ToEffect(target);  // C++ since bead oo-9ht.165
+        OOVisualEffectEntity* vis = oo::ToEffect(target);
         GLColorWithOverallAlpha(
             HeadUpDisplayVisualEffectScannerDisplayColor(vis, flash), alpha);
       } else {
@@ -4004,11 +3986,11 @@ void hudDrawReticleOnTarget(
           // Rendered above in dialTargetName, so no need to do anything here
           // unless we want a separate line Destination: XXX ?
         case WH_SCANINFO_ARRIVAL_TIME: {
-          // a format read at run time (ADR-0043 item 19)
-          const std::string etaFormat = OO_DESC(
-              "wormhole-ETA-@");  // the format first, as Clang evaluates the
-                                  // arguments: a description that is an array
-                                  // draws (ADR-0063 item 5)
+          // a format read at run time
+          const std::string etaFormat =
+              OO_DESC("wormhole-ETA-@");  // the format first, as Clang
+                                          // evaluates the arguments: a
+                                          // description that is an array draws
           std::string wormholeETA = oo::str::formatRuntime(
               etaFormat,
               {cxx_ClockToString(HeadUpDisplayWormholeEstimatedArrivalTime(
@@ -4727,11 +4709,9 @@ static void DrawSpecialOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
   OOGLEND();
 }
 
-/*	The beacon icons (slice 4). OOPolygonSprite's OOHUDBeaconIcon category
-   is a free function on the converted sprite (ADR-0056 amendments oo-6ia4 item
-   3, oo-9fwb), which the sprite's OOHUDBeaconIcon member calls (bead oo-7ae4p:
-   the protocol and the facades are gone; the entities hold their beacon
-   drawables by the C++ interface).
+/*	The beacon icons. OOPolygonSprite's OOHUDBeaconIcon category is a free
+   function on the converted sprite, which the sprite's OOHUDBeaconIcon member
+   calls (the entities hold their beacon drawables by the C++ interface).
 */
 void OOPolygonSprite::drawHUDBeaconIconAt(NSPoint where, NSSize size,
                                           GLfloat alpha, GLfloat z) {
@@ -4811,8 +4791,7 @@ void GetRGBAArrayFromInfo(const oo::PList& info, GLfloat ioColor[4]) {
 
 }  // namespace
 
-// --- One-line sends to classes still behind facades (amendment oo-9ht.139),
-// moved from the HUD's deleted facade (bead oo-mwd58).
+// --- One-line sends to classes still behind facades.
 
 void HeadUpDisplayUniverseGUISetGLColorFromSetting(
     const std::optional<std::string>& setting, OOColor* defaultValue,
@@ -4852,8 +4831,7 @@ Quaternion HeadUpDisplayPlayerCustomViewQuaternion(PlayerEntity* player) {
 OOMatrix HeadUpDisplayPlayerRotationMatrix(PlayerEntity* player) {
   return (player != nullptr ? player->rotationMatrix() : OOMatrix{});
 }
-// The members the facade's selectors forwarded to (bead oo-9ht.39.27): nil's
-// answer for none.
+// The members the facade's selectors forwarded to: nil's answer for none.
 bool HeadUpDisplayEntityIsShip(Entity* entity) {
   return oo::EntityIsShip(entity);
 }
@@ -4927,7 +4905,7 @@ OOViewID HeadUpDisplayUniverseViewDirection() {
 Entity* HeadUpDisplayUniverseFirstEntityTargetedByPlayer() {
   return (UNIVERSE != nullptr ? UNIVERSE->firstEntityTargetedByPlayer()
                               : nullptr);
-}  // its object (the universe answers the C++ entity, bead oo-9ht.39.26)
+}
 Entity* HeadUpDisplayUniverseFirstEntityTargetedByPlayerPrecisely() {
   return (UNIVERSE != nullptr ? UNIVERSE->firstEntityTargetedByPlayerPrecisely()
                               : nullptr);

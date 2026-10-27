@@ -2,10 +2,9 @@
 
 OOPlasmaShotEntity.m
 
-C++20 since bead oo-z9md (see OOPlasmaShotEntity.h). The bodies are the
-Objective-C ones: a message to self is a member call, [super ...] the base's
-member, and the universe and the entity hit are handed the shot (its C++ entity
-since bead oo-xn1j1).
+See OOPlasmaShotEntity.h. The bodies are the Objective-C ones: a message to
+self is a member call, [super ...] the base's member, and the universe and the
+entity hit are handed the shot (its C++ entity).
 
 
 Oolite
@@ -28,10 +27,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOPlasmaShotEntity.h"
-
 #include "OOColor.h"
 #include "OOPlasmaBurstEntity.h"
+#include "OOPlasmaShotEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 
@@ -76,8 +74,7 @@ bool OOPlasmaShotEntity::canCollide() {
          getSpawnTime() + kPlasmaShotActivationDelay;
 }
 
-// The other entity's members (its object's until bead oo-zwnvp); null answers
-// as a message to nil did.
+// The other entity's members; null answers as a message to nil did.
 bool OOPlasmaShotEntity::checkCloseCollisionWith(Entity* otherEntity) {
   return ((otherEntity != nullptr ? otherEntity->rootShipEntity() : nullptr) !=
           ownerEntity()) &&

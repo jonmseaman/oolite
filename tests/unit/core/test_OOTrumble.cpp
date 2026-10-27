@@ -1,6 +1,5 @@
 /*	test_OOTrumble.mm
-        Unit tests for OOTrumble (src/Core/OOTrumble.h): bead oo-862e (Phase 3,
-   proposed ADR-0056); the Objective-C facade went with bead oo-9ht.17.
+        Unit tests for OOTrumble (src/Core/OOTrumble.h).
 
         A trumble is set up from a two-character digram (its colours, pattern,
    maximum size, and the RNG seed for its position, motion and animation
@@ -11,16 +10,14 @@
    and pop (which asks the player to remove it). The test pins that state, the
    savegame dictionary, and what it asks of the game.
 
-        The game around it is replaced (ADR-0056 amendments oo-zffj, oo-8kx7):
-   UNIVERSE, the player, the cargo pods, the commodity market, textures and
+        The game around it is replaced: UNIVERSE, the player, the cargo pods,
+   the commodity market, textures and
    sounds are fakes below that answer from fields and record what they are asked
-   (the sound and the sound source are C++ stand-ins since beads oo-9ht.68 and
-   oo-9ht.88 deleted the facades they stood in for); drawTrumble: is GL and its
-        matrix calls are aborting link stubs. The
-        RNG is the game's own (legacy_random.c). The expectations were written
-   against the Objective-C class and run on it first, reading its private state
-   through the runtime; they now run through the C++ API and read that state
-   through the class's test friend. Run: bash tools/check-core-tests.sh
+   (the sound and the sound source are C++ stand-ins); drawTrumble: is GL and
+   its matrix calls are aborting link stubs. The
+   RNG is the game's own (legacy_random.c). The tests run through the C++ API
+   and read the private state through the class's test friend. Run: bash
+   tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -32,7 +29,7 @@
 
 #include "OOALSound.h"
 #include "OOCommodityMarket.h"
-#include "OOEntityHold.h"  // the cargo list (bead oo-xn1j1)
+#include "OOEntityHold.h"  // the cargo list
 #include "OOMaths.h"
 #include "OOSoundSource.h"
 #include "OOTexture.h"
@@ -47,10 +44,9 @@
 static std::vector<std::string>
     gLog;  // what the trumble asked of the game, in order
 
-// The C++ OOTexture (bead oo-9ht.99 deleted the Objective-C facade this stood
-// in for): the factory the trumble calls, recorded, answering a texture; and
-// the root's own members, which a texture needs (OOTexture.mm links the loaders
-// and the game). The trumble never applies it here.
+// The C++ OOTexture: the factory the trumble calls, recorded, answering a
+// texture; and the root's own members, which a texture needs (OOTexture.mm
+// links the loaders and the game). The trumble never applies it here.
 oo::Ref<OOTexture> OOTexture::textureWithName(
     const std::optional<std::string>& name,
     const std::optional<std::string>& directory, OOTextureFlags options,
@@ -136,12 +132,10 @@ void OOSoundSource::playOOSound(OOSound* s) {
   gLog.push_back("play " + static_cast<TestSound*>(s)->key);
 }
 
-// The cargo pods: C++ ships since bead oo-9ht.144 deleted the Objective-C ship
-// this stood in for, held as their objects, the root's (which holds the C++
-// part, oo::ToCxx reads it, and which oo::ToObjC answers for it), declared as
-// Entity.h and ShipEntity.h declare them (the test imports neither) with the
-// stand-in's answers. The object is C++ since bead oo-4aq6a.2 (it was rooted on
-// the Objective-C root class OOObject, which Phase 4 deletes).
+// The cargo pods: C++ ships held as their objects, the root's (which holds the
+// C++ part, oo::ToCxx reads it, and which oo::ToObjC answers for it), declared
+// as Entity.h and ShipEntity.h declare them (the test imports neither) with the
+// stand-in's answers. The object is C++, rooted on oo::RefCounted.
 class Entity : public oo::RefCounted {
  public:
   virtual ~Entity();
@@ -159,14 +153,12 @@ class TestEntityObject final : public oo::RefCounted {
 Entity::~Entity() = default;
 
 // The market: food is loved (1), furs liked (0.5), anything else refused. The
-// C++ market's one member OOTrumble.mm calls (bead oo-9ht.21 deleted the facade
-// an Objective-C Market stood in for).
+// C++ market's one member OOTrumble.mm calls.
 float OOCommodityMarket::trumbleOpinionForGood(const std::string& good) {
   return (good == "food") ? 1.0f : (good == "furs") ? 0.5f : 0.0f;
 }
 
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for: the members the code under test calls, declared as the game headers
+// PLAYER: the members the code under test calls, declared as the game headers
 // declare them (the test imports none that defines the classes), with the
 // stand-in's answers.
 class ShipEntity : public Entity {
@@ -211,9 +203,8 @@ void PlayerEntity::removeTrumble(OOTrumble* t) { removed.push_back(t); }
 
 #include "UniverseStandIn.h"
 
-// The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's Objective-C stand-in
-// stood in for), with the header's names and signatures. It answers virtual
+// The universe as the code under test sees it: a stand-in for the C++ class,
+// with the header's names and signatures. It answers virtual
 // members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse
 // overrides them.
 class Universe : public oo::RefCounted {
@@ -270,7 +261,7 @@ OOMatrix OOGLPopModelView(void) { std::abort(); }
 void OOGLTranslateModelView(Vector) { std::abort(); }
 void OOGLMultModelView(OOMatrix) { std::abort(); }
 #if OO_CHECK_GL_HEAVY
-// OOGL()/OOGLBEGIN() in the debug flavour (OOOpenGLCheck.h; bead oo-iimku).
+// OOGL()/OOGLBEGIN() in the debug flavour (OOOpenGLCheck.h).
 bool cxx_OOCheckOpenGLErrors(const char*, ...) { std::abort(); }
 #if OO_GL_STATE_VERIFICATION
 void OOGLNoteCurrentFunction(const char*, unsigned) { std::abort(); }
@@ -312,8 +303,7 @@ namespace {
 
 // A cargo pod: a C++ ship under its object (autoreleased, as [[[ShipEntity
 // alloc] init] autorelease] was), carrying the good.
-std::map<Entity*, ::TestEntityObject*>
-    sObjects;  // what TestObjectOf answers (oo::ToObjC until bead oo-4aq6a.2)
+std::map<Entity*, ::TestEntityObject*> sObjects;  // what TestObjectOf answers
 
 ::TestEntityObject* NewPod(const char* good) {
   oo::Ref<ShipEntity> ship = oo::makeRef<ShipEntity>();
@@ -734,12 +724,12 @@ OO_TEST(cxxClass) {
 }
 
 // The pods' objects (Entity+ObjCBridge.mm's oo::ToObjC, which the test does not
-// link, until bead oo-4aq6a.2 made the object C++).
+// link).
 ::TestEntityObject* TestObjectOf(Entity* entity);
 #define OO_ENTITY_HELPERS_STAND_IN_NO_DESCRIPTIONS \
   1  // the test links no OODescription.mm
 #define OO_ENTITY_HELPERS_STAND_IN_CXX
-#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects (bead oo-dpyk8)
+#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects
 ::TestEntityObject* TestObjectOf(Entity* entity) {
   auto found = sObjects.find(entity);
   return found != sObjects.end() ? found->second : nullptr;

@@ -1,22 +1,19 @@
 /*	test_OOQuiriumCascadeEntity.mm
         Unit tests for OOQuiriumCascadeEntity
    (src/Core/Entities/OOQuiriumCascadeEntity.h), the expanding sphere of a
-   quirium cascade: bead oo-2c6g, a leaf of the Entities pattern seam (amendment
-   oo-bj8 item 12).
+   quirium cascade.
 
         Its object needs the game graph, so the test links the whole game but
    main (['*']) and uses a Universe that was never initialised, of a test
    subclass that records what is removed, and a plain entity as PLAYER. The ship
    it is made from is a plain entity too: the class asks it only for its
-        position and owner (a C++ ship under its object, never set up, since
-   bead oo-9ht.144). The expectations were written against the Objective-C API
-   and run on the unconverted class first: nil from a nil ship; what it takes
-   from the ship; that it is the cascade weapon (and other entities are not);
-   the collision delay, the expansion, the energy it deals to what it collides
-   with, and its removal after twenty seconds; its description. Making a cascade
-   goes through the helper below, the only line the conversion ported: since
-   then it is made by its factory and handed to Objective-C as an Entity facade.
-        Run: bash tools/check-core-tests.sh
+   position and owner (a C++ ship under its object, never set up). The
+   expectations cover: nil from a nil ship; what it takes from the ship; that it
+   is the cascade weapon (and other entities are not); the collision delay, the
+   expansion, the energy it deals to what it collides with, and its removal
+   after twenty seconds; its description. Making a cascade goes through the
+   helper below: it is made by its factory and handed to Objective-C as an
+   Entity facade. Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -24,7 +21,7 @@
 
 #include "OODescription.h"
 #include "OOQuiriumCascadeEntity.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "oo_test.hpp"
 
@@ -37,16 +34,14 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// NewTestPlayer<TestPlayer>() (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// NewTestPlayer<TestPlayer>(): a C++ player under the ship's facade, as
+// PlayerEntity::sharedPlayer() makes the game's, retained (+1) as +alloc's
+// object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -64,13 +59,11 @@ class TestUniverse : public Universe {
   bool removeEntity(Entity* entity) override {
     sRemoved = entity;
     return YES;
-  }  // the C++ entity since bead oo-9ht.39.26; the record is its object, as
-     // before
+  }  // the C++ entity; the record is its object
 };
 
-// What the cascade collides with: records the damage it is dealt (an
-// Objective-C subclass until bead oo-j12i2; a C++ one overriding the member its
-// selector became, recording the C++ entities).
+// What the cascade collides with: records the damage it is dealt (a C++ one
+// overriding the member, recording the C++ entities).
 class TestVictim : public Entity {
  public:
   void takeEnergyDamage(double amount, Entity* ent, Entity* other,
@@ -112,7 +105,7 @@ void SetUp() {
   gOOPlayer = player;
   // The ship's -dealloc sends its (absent) scripts entityDestroyed in a request
   // on the main thread's context, so there is one, with nothing in it (the ship
-  // stand-in is C++ since bead oo-9ht.144, as test_StationEntity's ships are).
+  // stand-in is C++, as test_StationEntity's ships are).
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
         ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
@@ -127,8 +120,7 @@ OO_TEST(fromShip) {
     OO_CHECK(MakeCascade(nil) == nil);
 
     Entity* ship = oo::MadeEntity(
-        oo::makeRef<::ShipEntity>());  // a C++ ship under its object (bead
-                                       // oo-9ht.144), never set up
+        oo::makeRef<::ShipEntity>());  // a C++ ship, never set up
     Entity* shipOwner = oo::MadeEntity(oo::makeRef<Entity>());
     ship->setPosition(make_HPvector(5, 6, 7));
     ship->setOwner(shipOwner);
@@ -140,9 +132,7 @@ OO_TEST(fromShip) {
              cascade->getScanClass() == CLASS_MINE);
     OO_CHECK(cascade->owner() == shipOwner);
     OO_CHECK(cascade->isEffect() &&
-             OOEntityIsCascadeWeapon(
-                 cascade));  // the deleted category's -isCascadeWeapon (bead
-                             // oo-9ht.186)
+             OOEntityIsCascadeWeapon(cascade));  // -isCascadeWeapon
     OO_CHECK(!OOEntityIsCascadeWeapon(ship));
     OO_CHECK(!cascade->canCollide() && cascade->checkCloseCollisionWith(nil) &&
              cascade->checkCloseCollisionWith(ship));
@@ -160,8 +150,7 @@ OO_TEST(update) {
   {
     SetUp();
     Entity* ship = oo::MadeEntity(
-        oo::makeRef<::ShipEntity>());  // a C++ ship under its object (bead
-                                       // oo-9ht.144), never set up
+        oo::makeRef<::ShipEntity>());  // a C++ ship, never set up
     Entity* shipOwner = oo::MadeEntity(oo::makeRef<Entity>());
     ship->setOwner(shipOwner);
     Entity* cascade = MakeCascade(oo::ToShip(ship));

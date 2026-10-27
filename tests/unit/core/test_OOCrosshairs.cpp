@@ -1,7 +1,5 @@
 /*	test_OOCrosshairs.mm
-        Unit tests for OOCrosshairs (src/Core/OOCrosshairs.h), a C++ class with
-   no Objective-C facade (its one caller was adapted): bead oo-zffj (Phase 3,
-   proposed ADR-0056).
+        Unit tests for OOCrosshairs (src/Core/OOCrosshairs.h), a C++ class.
 
         OOCrosshairs turns a crosshair definition (a property-list array of
    6-number arrays: alpha, x, y of each end of a line segment) into one vertex
@@ -9,16 +7,14 @@
    hands that buffer to OpenGL. The test pins the buffer: the scale, the colour
    (green when there is none), the per-point alpha clamped and scaled by the
    overall alpha, the red marker a bad entry becomes, and that nothing is built
-   when the overall alpha or the colour's alpha is zero. The expectations were
-   written against the Objective-C class and run on it first (reading the ivars
-   through the runtime); the port reads the same members through the class's
-   test friend, OOCrosshairsTestAccess.
+   when the overall alpha or the colour's alpha is zero. The test reads the
+   members through the class's test friend, OOCrosshairsTestAccess.
 
         render() needs a GL context and the game (UNIVERSE, the GL state and
    matrix managers), which a unit test does not have; the test never calls it.
    The functions it references are defined below as link stubs that abort if
-   called (ADR-0056 amendment oo-zffj), so OOCrosshairs links with OOColor
-   alone. Run: bash tools/check-core-tests.sh
+   called, so OOCrosshairs links with OOColor alone. Run:
+   bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -37,9 +33,7 @@
 
 class Universe;
 Universe* gSharedUniverse = nil;
-GLfloat MyOpenGLView::getDisplay_z() {
-  std::abort();
-}  // a member since bead oo-9ht.153 deleted the view's facade (was a send)
+GLfloat MyOpenGLView::getDisplay_z() { std::abort(); }
 
 void OOSetOpenGLState_(OOOpenGLStateID, const char*, unsigned) { std::abort(); }
 void OOVerifyOpenGLState_(const char*, unsigned) { std::abort(); }
@@ -50,7 +44,7 @@ bool cxx_OOCheckOpenGLErrors(const char*, ...) { std::abort(); }
 #if OO_CHECK_GL_HEAVY && OO_GL_STATE_VERIFICATION
 void OOGLNoteCurrentFunction(const char*, unsigned) {
   std::abort();
-}  // OOGL() in the debug flavour (OOOpenGLCheck.h; bead oo-iimku)
+}  // OOGL() in the debug flavour (OOOpenGLCheck.h)
 #endif
 
 // The vertex buffer: 12 floats (x, y, r, g, b, a of each endpoint) per line

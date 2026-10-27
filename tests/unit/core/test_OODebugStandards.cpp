@@ -1,20 +1,16 @@
 /*	test_OODebugStandards.mm
         Unit tests for the OXP standards checks
-   (src/Core/Debug/OODebugStandards.h): bead oo-izk8, a Debug module file with
-   no class, converted after the pattern seam oo-kq7 (proposed ADR-0056,
-   amendments oo-kq7 and oo-ppc item 2).
+   (src/Core/Debug/OODebugStandards.h), a Debug module file with no class.
 
         The checks read "enforce-oxp-standards" from the user's defaults
    (clamped to off..quit), log a deprecation or an error unless enforcement is
    off, and ask the game controller to quit in quit mode; OOEnforceStandards()
    is true from "enforce" up, and the OXP verifier mode is "warn" from then on,
    when the defaults are no longer read. The tests share that state, so they run
-   in order. These expectations were written against the Objective-C file and
-   run on it first.
+   in order.
 
         The game controller would bring the whole game into the link, so it is
-   this file's stand-in (proposed ADR-0056, amendment oo-z1s4 item 4; C++ since
-   amendment oo-9ht.153): it answers sharedController() and records the contexts
+   this file's stand-in: it answers sharedController() and records the contexts
    it is asked to exit with. The defaults are set in memory (setObject; nothing
    is written without synchronize()). Run: bash tools/check-core-tests.sh
    test_OODebugStandards
@@ -34,10 +30,9 @@ std::vector<std::string> sExitContexts;
 
 }  // namespace
 
-// The controller is C++ since bead oo-9ht.164 deleted its Objective-C facade:
-// C++ definitions of the two members the code under test calls, with the
-// stand-in's answers. The shared controller is storage nothing constructs:
-// exitAppWithContext() reads no state.
+// C++ definitions of the two controller members the code under test calls,
+// with the stand-in's answers. The shared controller is storage nothing
+// constructs: exitAppWithContext() reads no state.
 alignas(
     GameController) unsigned char sControllerStorage[sizeof(GameController)];
 

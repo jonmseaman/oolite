@@ -1,20 +1,15 @@
 /*	test_StationEntity.mm
         Unit tests for StationEntity (src/Core/Entities/StationEntity.h), the
-   station: slice 1 of its slice plan (docs/phases/3-slices/StationEntity.md,
-   bead oo-64ako), the class shell, which moved the station's state and its
-   accessors, market, shipyard, flags and set-up into C++ (proposed ADR-0056,
-   amendments oo-60fwo and oo-64ako). Bead oo-9ht.175 deleted the Objective-C
-   facade (amendment oo-9ht.175): the station is made in C++ (its object is the
-   ship's facade), the cases call its members with every expected value kept,
-   and the selectors the engine and the AI send by name are still sent to its
-   object.
+   station. The station is made in C++ (its object is the ship's facade), the
+   cases call its members, and the selectors the engine and the AI send by name
+   are sent to its object.
 
         As test_ShipEntity's, the station's object needs the game graph, so the
    test links the whole game but main (['*']) and uses a Universe that was never
    initialised and a plain entity as PLAYER. The station keeps StationEntity's
    and ShipEntity's own set-up from the definition; only the virtual dock it
-   makes when it has no docks is a stand-in (TestStation, a C++ subclass since
-        bead oo-9ht.175, records the dock's definition instead of asking the
+   makes when it has no docks is a stand-in (TestStation records the dock's
+   definition instead of asking the
    universe for the shipdata entry). The cases test the slice's own units,
    written against the Objective-C API and run on the unconverted class first;
    the cases after "The crossing" pin the C++ part. Run: bash
@@ -26,7 +21,7 @@
 
 #include "DockEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
-#include "OOCallByName.h"  // oo::EntityRespondsToName / oo::CallEntityByName (bead oo-9ht.39.7.3)
+#include "OOCallByName.h"  // oo::EntityRespondsToName / oo::CallEntityByName
 #include "OOJSStation.h"
 #include "OOObjCPList.h"
 #include "PlayerEntity.h"
@@ -44,16 +39,13 @@ extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 extern ooscript::Context gOOJSMainThreadContext;
 
-class TestStationPlayer : public PlayerEntity  // C++ since bead oo-9ht.177
-                                               // deleted the Objective-C player
-{
+class TestStationPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// A C++ player under the ship's facade, as PlayerEntity::sharedPlayer() makes
+// the game's, retained (+1).
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -73,8 +65,7 @@ oo::PList sVirtualDockDict;
 }  // namespace
 
 // A station whose virtual dock only records its definition (the dock itself is
-// a shipdata entry). A C++ subclass since bead oo-9ht.175 deleted the
-// Objective-C station (amendment oo-9ht.177 item 5).
+// a shipdata entry).
 class TestStation : public StationEntity {
  public:
   bool setUpOneStandardSubentity(const oo::PList& subentDict,
@@ -119,9 +110,8 @@ oo::PList Definition(oo::PList::Dict extra = {}) {
   return oo::PList(std::move(dict));
 }
 
-// [[[TestStation alloc] cxx_initWithKey:definition:] autorelease] until bead
-// oo-9ht.175: made as StationEntity::newStationObject() makes a station, and
-// its object autoreleased.
+// Made as StationEntity::newStationObject() makes a station, and its object
+// autoreleased.
 TestStation* MakeStation(const std::string& key, oo::PList::Dict extra = {}) {
   ::ShipEntity* ship = oo::ToShip(oo::NewShipObject(
       oo::makeRef<TestStation>(), key, Definition(std::move(extra))));
@@ -132,7 +122,7 @@ TestStation* MakeStation(const std::string& key, oo::PList::Dict extra = {}) {
   return station;
 }
 
-// A message to nil's answers (the converted sends, bead oo-9ht.175).
+// A message to nil's answers.
 bool IsRotatingStation(TestStation* s) {
   return s != nullptr ? s->isRotatingStation() : false;
 }
@@ -150,7 +140,7 @@ bool Near(HPVector a, HPVector b) {
 
 }  // namespace
 
-// --- Slice 1: the class shell (bead oo-64ako)
+// --- Slice 1: the class shell
 // ------------------------------------------------------
 
 // The initialiser and the set-up from the definition: every key the station
@@ -521,15 +511,13 @@ OO_TEST(objCStationPartIsAStation) {
   }
 }
 
-// --- Slice 2: docking traffic control and the launch queue (bead oo-9j462)
+// --- Slice 2: docking traffic control and the launch queue
 // -------------------------- Written against the Objective-C API and run on the
 // unconverted slice first. The test's stations have no docks (the virtual dock
 // is a stand-in), so the cases pin what the station does itself.
 
 // A ship visiting the station: its own set-up, and invisible to scripts.
-class TestVisitor : public ShipEntity  // C++ since bead oo-9ht.144 deleted the
-                                       // Objective-C ship
-{
+class TestVisitor : public ShipEntity {
  public:
   bool isVisibleToScripts() override { return NO; }
 };
@@ -694,8 +682,8 @@ OO_TEST(slice2MembersFromCxx) {
   }
 }
 
-// --- Slice 3: docking clearance, damage, allegiance and alert level (bead
-// oo-hjzwk) --------------- Written against the Objective-C API and run on the
+// --- Slice 3: docking clearance, damage, allegiance and alert level
+// --------------- Written against the Objective-C API and run on the
 // unconverted slice first.
 
 namespace {
@@ -712,8 +700,7 @@ void SetEnergy3(Entity* e, GLfloat energy) {
 }
 GLfloat Energy3(Entity* e) { return e->energy; }
 void SetPrimaryTarget3(ShipEntity* s, Entity* target) {
-  s->_primaryTarget = oo::WeakRef<Entity>(
-      target);  // the entity's C++ part (bead oo-9ht.39.5.2)
+  s->_primaryTarget = oo::WeakRef<Entity>(target);
 }
 
 }  // namespace
@@ -840,7 +827,7 @@ OO_TEST(slice3MembersFromCxx) {
   }
 }
 
-// --- Slice 4: NPC launchers (bead oo-tqem7)
+// --- Slice 4: NPC launchers
 // ------------------------------------------------------- Written against the
 // Objective-C API and run on the unconverted slice first. The test's station
 // has no docks (its virtual dock is only recorded), so every launcher takes its
@@ -904,9 +891,8 @@ OO_TEST(slice4LaunchersWithoutLaunchDock) {
   }
 }
 
-// The launchers stay reachable by name (ADR-0055 item 5: AI and scripts send
-// them by name); the by-name table answers them since bead oo-9ht.39.7.3 (the
-// facade's -respondsToSelector: until then).
+// The launchers stay reachable by name (AI and scripts send them by name); the
+// by-name table answers them.
 OO_TEST(slice4LaunchersAnswerTheirSelectors) {
   {
     SetUp();
@@ -946,7 +932,7 @@ OO_TEST(slice4MembersFromCxx) {
   }
 }
 
-// --- The script engine's class questions (bead oo-tt7l1)
+// --- The script engine's class questions
 // ---------------------------------------
 
 // What the engine asks a station by selector: its JS class is the Station

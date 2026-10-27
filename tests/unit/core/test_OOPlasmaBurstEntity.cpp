@@ -1,27 +1,24 @@
 /*	test_OOPlasmaBurstEntity.mm
         Unit tests for OOPlasmaBurstEntity
    (src/Core/Entities/OOPlasmaBurstEntity.h), the burst a plasma shot leaves
-   where it hits: bead oo-l2s5, a leaf of the Entities pattern seam (amendment
-   oo-bj8 item 12).
+   where it hits.
 
         Its object needs the game graph, so the test links the whole game but
    main (['*']) and uses a Universe that was never initialised, of a test
    subclass that answers the time the test sets and records what is removed, and
-   a plain entity as PLAYER. The expectations were written against the
-        Objective-C API and run on the unconverted class first: what the
-   initialiser sets (position, size, red, status), the growth and fade with the
-   time since it was spawned, and its removal after two seconds. Making a burst
-   and reading its colour components go through the helpers below, the only
-   lines the conversion ported: since then a burst is made by its factory and
-   handed to Objective-C as its facade, an OOLightParticleEntity. Run: bash
-   tools/check-core-tests.sh
+   a plain entity as PLAYER. The expectations cover: what the initialiser sets
+   (position, size, red, status), the growth and fade with the time since it was
+   spawned, and its removal after two seconds. Making a burst and reading its
+   colour components go through the helpers below: a burst is made by its
+   factory and handed to Objective-C as its facade, an OOLightParticleEntity.
+   Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>
 
 #include "OODescription.h"
 #include "OOPlasmaBurstEntity.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "oo_test.hpp"
 
@@ -34,16 +31,14 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// NewTestPlayer<TestPlayer>() (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// NewTestPlayer<TestPlayer>(): a C++ player under the ship's facade, as
+// PlayerEntity::sharedPlayer() makes the game's, retained (+1) as +alloc's
+// object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -62,12 +57,10 @@ class TestUniverse : public Universe {
   bool removeEntity(Entity* entity) override {
     sRemoved = entity;
     return YES;
-  }  // the C++ entity since bead oo-9ht.39.26; the record is its object, as
-     // before
+  }  // the C++ entity; the record is its object
 };
 
-// The time the test sets is the universe's own clock, which getTime() answers
-// (bead oo-ql9rn).
+// The time the test sets is the universe's own clock, which getTime() answers.
 Universe* SharedTestUniverse() {
   static Universe* universe = new TestUniverse();
   return universe;
@@ -83,8 +76,7 @@ Entity* MakeBurst(HPVector position) {
   return oo::MadeEntity(OOPlasmaBurstEntity::burstWithPosition(position));
 }
 
-// The object is the root Entity's facade since bead oo-9ht.76; its C++ part is
-// the particle.
+// The object is the root Entity's facade; its C++ part is the particle.
 OOLightParticleEntity* Particle(Entity* e) {
   return static_cast<OOLightParticleEntity*>(e);
 }

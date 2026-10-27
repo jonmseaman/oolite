@@ -1,30 +1,15 @@
 /*	test_OOOXPVerifierStage.mm
         Unit tests for OOOXPVerifierStage
-   (src/Core/OXPVerifier/OOOXPVerifierStage.h): bead oo-cwz, the Phase 3
-   class-HIERARCHY exemplar (proposed ADR-0056, Amendment 1).
+   (src/Core/OXPVerifier/OOOXPVerifierStage.h).
 
-        The base class has a dozen Objective-C subclasses that convert in their
-   own beads, and the Objective-C OOOXPVerifier drives every stage. So this
-   pins, from the Objective-C bodies, what the base computed before the
-   conversion, through the Objective-C API those callers use: the defaults a
-   subclass inherits, the dependency graph (direct and recursive dependency, no
-        duplicates, dependents told once in registration order), running and
-   skipping, an exception from -run caught, the description, and [super ...]
-   from an Objective-C subclass. Then the hierarchy's crossing both ways: a C++
-   stage (the converted kind) behind the facade, an Objective-C stage (the
-   unconverted kind) behind a C++ pointer, identity kept, virtual dispatch
-        reaching the subclass on each side.
-
-        Bead oo-9ht.4 deleted the Objective-C facade (ADR-0056 amendment
-   "deleting a facade") once the verifier and every stage were C++, and moved
-   the class out of namespace cxx. The cases that asked through its selectors
-   ask the C++ class with the same expectations: the Objective-C test stages
-   became C++ subclasses with the same names and answers (the super call a
-   qualified base call), -description is description(). What pinned only the
-   facade (the crossings in cxxStageBehindTheFacade and
-   objCStageBehindACxxPointer, and nilAndLifetime: nil crossings and the adapter
-   outliving its Objective-C owner) was retired with it (ADR-0049, standing
-   approval oo-9n5p9). Run: bash tools/check-core-tests.sh
+        The base class has a dozen subclasses, and OOOXPVerifier drives every
+   stage. So this pins what the base computes: the defaults a subclass inherits,
+   the dependency graph (direct and recursive dependency, no duplicates,
+   dependents told once in registration order), running and skipping, an
+   exception from -run caught, the description, and the super call from a
+   subclass. The test stages are C++ subclasses (the super call a qualified base
+   call), and the description is description(). Run: bash
+   tools/check-core-tests.sh
 */
 
 #include "OODescription.h"
@@ -44,9 +29,8 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   gSubclassResponsibilities++;
 }
 
-/*	A verifier for verifierIsNotRetained: the stage keeps the C++ verifier
-   since bead oo-qg71f (it kept the Objective-C one, which the test stood in for
-   with a plain object). Its constructor is private; the class names this struct
+/*	A verifier for verifierIsNotRetained: the stage keeps the C++ verifier.
+   Its constructor is private; the class names this struct
    its friend for tests. Nothing the verifier defines out of line is called, so
    OOOXPVerifier.mm is not linked.
 */
@@ -56,10 +40,8 @@ struct OOOXPVerifierTestAccess {
   }
 };
 
-/*	A stage that overrides the subclass responsibilities. It was an
-   Objective-C subclass of the facade (an unconverted stage) until bead
-   oo-9ht.4; it keeps its name, so its description is the one the test pinned.
-*/
+/*	A stage that overrides the subclass responsibilities.
+ */
 class TestObjCStage : public OOOXPVerifierStage {
  public:
   std::optional<std::string> name() override { return _testName; }
@@ -78,8 +60,8 @@ class TestObjCStage : public OOOXPVerifierStage {
   bool _raise = false;
 };
 
-// Extends its superclass's dependents through its base's dependents() ([super
-// dependents] until bead oo-9ht.4), as OOTextureHandlingStage does.
+// Extends its superclass's dependents through its base's dependents(), as
+// OOTextureHandlingStage does.
 class TestSuperCallingStage : public TestObjCStage {
  public:
   std::optional<std::vector<std::string>> dependents() override {
@@ -288,8 +270,7 @@ OO_TEST(mixedDependencyGraph) {
     cxxStage->_shouldRun = true;
     const oo::Ref<TestObjCStage> objCStage = MakeStage("ObjC");
 
-    // The verifier wires the stages together (through the facade until bead
-    // oo-9ht.4).
+    // The verifier wires the stages together.
     objCStage->registerDependency(cxxStage.get());
     OO_CHECK(objCStage->isDependentOf(cxxStage.get()));
     OO_CHECK(objCStage->isDependentOf(cxxStage.get()));

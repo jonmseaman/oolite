@@ -1,26 +1,20 @@
 /*	OOOXPVerifierTestDouble.h
         The OOOXPVerifier the OXPVerifier stage tests link instead of the real
-   one (bead oo-9ht.65, from oo-4amcj). The verifier and the resource manager
+   one. The verifier and the resource manager
    reach the whole game, so they are not linked; the stages talk to the verifier
    through its interface only, so the test is the verifier: the configuration is
    a verifyOXP.plist of the test's, registration keeps stages by name and counts
    them (Registrations()).
 
-        It was pasted into each stage test; this is that code, moved, with the
-   same methods and the same behaviour. Since bead oo-9ht.4 deleted the stage
-   facade it keeps, and answers, the C++ stages themselves (it kept their
-   facades), as the verifier does. Since bead oo-qg71f the stages keep and call
-   the C++ verifier, so the double defines OOOXPVerifier's members the stages
-   call (it was an @implementation of the Objective-C facade class, with its own
-        ivars): its state is the class's own members, its answers are unchanged,
-   and a test makes one with OOOXPVerifierTestAccess::Make and counts
+        The stages keep and call the C++ verifier, so the double defines
+   OOOXPVerifier's members the stages call: its state is the class's own
+   members, and a test makes one with OOOXPVerifierTestAccess::Make and counts
    registrations with ::Registrations.
 
         Include it once, from a stage test, after its imports.
 */
 
-#ifndef OO_TESTS_UNIT_CORE_OOOXPVERIFIERTESTDOUBLE_H
-#define OO_TESTS_UNIT_CORE_OOOXPVERIFIERTESTDOUBLE_H
+#pragma once
 
 #include <map>
 #include <optional>
@@ -114,5 +108,3 @@ std::optional<std::vector<std::string>> OOOXPVerifier::configurationSetForKey(
   }
   return std::vector<std::string>(strings.begin(), strings.end());
 }
-
-#endif  // OO_TESTS_UNIT_CORE_OOOXPVERIFIERTESTDOUBLE_H

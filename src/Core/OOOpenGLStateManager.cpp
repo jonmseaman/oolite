@@ -277,7 +277,7 @@ static void SwitchOpenGLStateInternal(
     const OOOpenGLState*
         targetState);  // no NONNULL_FUNC: the body asserts its arguments are
                        // non-null, which GCC drops as always true under the
-                       // attribute (-Wnonnull-compare; bead oo-1q4)
+                       // attribute (-Wnonnull-compare)
 }  // namespace
 
 /*	Accessors
@@ -390,7 +390,7 @@ static bool StatesEqual(
     const OOOpenGLState*
         b);  // no NONNULL_FUNC: the body asserts its arguments are non-null,
              // which GCC drops as always true under the attribute
-             // (-Wnonnull-compare; bead oo-1q4)
+             // (-Wnonnull-compare)
 }  // namespace
 
 #if OO_CHECK_GL_HEAVY

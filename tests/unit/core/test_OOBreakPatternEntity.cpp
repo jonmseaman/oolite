@@ -1,19 +1,16 @@
 /*	test_OOBreakPatternEntity.mm
         Unit tests for OOBreakPatternEntity
    (src/Core/Entities/OOBreakPatternEntity.h), one ring of the hyperspace and
-   docking tunnel: bead oo-a014, a leaf of the Entities pattern seam (amendment
-        oo-bj8 item 12).
+   docking tunnel.
 
         Its object needs the game graph, so the test links the whole game but
    main (['*']) and uses a Universe that was never initialised, of a test
    subclass that records what is removed, and a plain entity as PLAYER. The
-   expectations were written against the Objective-C API and run on the
-        unconverted class first: the polygon (sides clamped to 3...128, the
+   tests cover the polygon (sides clamped to 3...128, the
    aspect ratio, the closing pair of vertices), the default and the set inner
    and outer colours, the status, scan class and break-pattern flags, and
    removal once its lifetime has run out at the ring speed. Its vertex arrays
-   are private; the test reads them through the access struct below, the only
-   lines the conversion ported (amendment oo-862e item 2). Run: bash
+   are private; the test reads them through the access struct below. Run: bash
    tools/check-core-tests.sh
 */
 
@@ -22,7 +19,7 @@
 #include "OOBreakPatternEntity.h"
 #include "OOColor.h"
 #include "OODescription.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 
@@ -35,16 +32,13 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// NewTestPlayer<TestPlayer>() (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// A C++ player under the ship's facade, as PlayerEntity::sharedPlayer() makes
+// the game's, retained (+1) as +alloc's object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -62,8 +56,7 @@ class TestUniverse : public Universe {
   bool removeEntity(Entity* entity) override {
     sRemoved = entity;
     return YES;
-  }  // the C++ entity since bead oo-9ht.39.26; the record is its object, as
-     // before
+  }
 };
 
 // --- The private vertex arrays, and nothing else

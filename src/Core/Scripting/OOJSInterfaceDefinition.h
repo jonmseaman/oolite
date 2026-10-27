@@ -2,10 +2,7 @@
 
 OOJSInterfaceDefinition.h
 
-C++20 since bead oo-8fpc (proposed ADR-0056, the OOColor house style; amendment
-oo-o89). Bead oo-9ht.61 deleted its Objective-C facade (a weak-referenceable
-object) and moved it to the global namespace: the station keeps its definitions
-as oo::Ref, and the player reads them as C++.
+The station keeps its definitions as oo::Ref, and the player reads them as C++.
 
 
 Oolite
@@ -28,8 +25,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOJSINTERFACEDEFINITION_H
-#define OOJSINTERFACEDEFINITION_H
+#pragma once
 
 #include <optional>
 #include <string>
@@ -41,7 +37,6 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 class OOJSScript;  // imported by the .mm, so that a test can stand in for it
-                   // (ADR-0056 amendment oo-fg7i item 5)
 
 class OOJSInterfaceDefinition : public oo::RefCounted {
  public:
@@ -49,8 +44,8 @@ class OOJSInterfaceDefinition : public oo::RefCounted {
   OOJSInterfaceDefinition();
   ~OOJSInterfaceDefinition() override;
 
-  std::optional<std::string> title();  // nullopt: none (bead oo-3rb.290)
-  void setTitle(const std::optional<std::string>& title);  // bead oo-3rb.290
+  std::optional<std::string> title();  // nullopt: none
+  void setTitle(const std::optional<std::string>& title);
   std::optional<std::string> category();
   void setCategory(const std::string& category);
   std::optional<std::string> summary();
@@ -76,5 +71,3 @@ class OOJSInterfaceDefinition : public oo::RefCounted {
   std::optional<std::string> _summary;
   std::optional<std::string> _category;
 };
-
-#endif  // OOJSINTERFACEDEFINITION_H

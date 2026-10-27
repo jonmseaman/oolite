@@ -33,8 +33,7 @@ SOFTWARE.
 #include "OOTexture.h"
 
 // The subclass interface (the categories SubclassInterface,
-// SubclassResponsibilities and SubclassOptional) is OOTexture's own members
-// since bead oo-9ht.99 deleted the facade.
+// SubclassResponsibilities and SubclassOptional) is OOTexture's own members.
 
 /*	OOGenerateTextureCacheKey()
         cxx_OOTextureCacheKeyForSpecifier()

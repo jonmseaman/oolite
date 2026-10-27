@@ -1,30 +1,26 @@
 /*	test_GameController.mm
-        Unit tests for GameController (src/Core/GameController.h): bead
-   oo-zkpmt, slice 1 of the Phase 3 slice plan
-   docs/phases/3-slices/GameController.md (the class shell: the singleton,
-   pause, EcoQoS, the mouse interaction modes, the game view and the launch
-   flag), in the house style of the OOColor exemplar (proposed ADR-0056).
+        Unit tests for GameController (src/Core/GameController.h): the
+   singleton, pause, EcoQoS, the mouse interaction modes, the game view and
+   the launch flag.
 
         The controller is the application's process-wide singleton. It needs the
    JavaScript engine (its pause events are named by OOJSID) and the player
    (PLAYER), so the test links every game object but main's
-   (tests/unit/core/meson.build entry ['*'], amendment oo-44gg), defines
+   (tests/unit/core/meson.build entry ['*']), defines
    gDebugFlags, points the user's home (HOMEPATH: the defaults) at a scratch
    folder, and stands in a recording object for the player and another for the
    game view (as test_DustEntity does for the player). The universe is nil, so
    what the controller sends it is a message to nil, as before the game starts.
    Nothing is drawn and no window is opened.
 
-        It pins what the controller did before the conversion: one shared
+        It pins what the controller does: one shared
    object; the launch flag; the game view it keeps (retained) and tells about
    itself; the mouse interaction modes and the view's notes of each change;
    pause and resume (the mode they save and restore, the player's script events,
    and the process priority class EcoQoS sets on Windows); and the full-screen
-   members and the player-file paths of slice 3. The expectations were written
-   against the Objective-C API and run on the unconverted class first; the
-   façade went with bead oo-9ht.164 (its contract's checks retired under
-   oo-9n5p9), and the cases call the C++ class, the view a C++ subclass of the
-   game's. Run: bash tools/check-core-tests.sh test_GameController
+   members and the player-file paths. The cases call the C++ class, the view a
+   C++ subclass of the game's. Run:
+   bash tools/check-core-tests.sh test_GameController
 */
 
 #include <process.h>
@@ -43,7 +39,7 @@
 #include "OOFullScreenController.h"
 #include "OOJSPropID.h"
 #include "OOJavaScriptEngine.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
@@ -58,7 +54,7 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 
 // PLAYER: records the script events it is sent and answers whether mouse
-// control is on (C++ since bead oo-9ht.177 deleted the Objective-C player).
+// control is on.
 class TestPlayer : public PlayerEntity {
  public:
   std::vector<ooscript::PropertyId> _events;
@@ -71,9 +67,8 @@ class TestPlayer : public PlayerEntity {
   bool isMouseControlOn() override { return _mouseControlOn; }
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// A C++ player under the ship's facade, as PlayerEntity::sharedPlayer() makes
+// the game's, retained (+1) as +alloc's object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -85,9 +80,8 @@ T* NewTestPlayer() {
 
 // The game view: records the controller it is given and the mode changes it is
 // told of, and answers the screen modes the full-screen members ask for. A C++
-// subclass of the game's view (bead oo-9ht.153 deleted the Objective-C facade
-// it stood in for), overriding the members it answered, which are virtual for
-// it; a view made here never opens SDL.
+// subclass of the game's view, overriding the members it answered, which are
+// virtual for it; a view made here never opens SDL.
 class TestView : public MyOpenGLView {
  public:
   ::GameController* _controller = nullptr;
@@ -114,11 +108,8 @@ class TestView : public MyOpenGLView {
 };
 
 // A deferred call's target: records the arguments it is sent, and raises on
-// request. C++ since bead oo-4aq6a.4 (it was rooted on the Objective-C root
-// class OOObject, and the deferred call that performed its selectors, retaining
-// it and the argument until it ran, was the Objective-C form of
-// OOScheduleDeferredCall): a deferred C++ call holding both (Call below) does
-// the same.
+// request. A deferred C++ call holding it and the argument (Call below)
+// retains them until it runs.
 class TestTarget final : public oo::RefCounted {
  public:
   void record(oo::RefCounted* argument) {
@@ -132,7 +123,7 @@ class TestTarget final : public oo::RefCounted {
   std::vector<std::string> _calls;
 };
 
-// A deferred call's argument (a plain OOObject until bead oo-4aq6a.4).
+// A deferred call's argument.
 class TestArgument final : public oo::RefCounted {};
 
 // OOScheduleDeferredCall(target, "record:" or "raise:", argument, delay): the
@@ -148,9 +139,8 @@ void Call(TestTarget* target, void (TestTarget::*method)(oo::RefCounted*),
       delay);
 }
 
-// The controller's state is private since bead oo-auu6o; GameController.h names
-// this struct its friend so the checks below read and set the same members
-// (expected values unchanged).
+// The controller's state is private; GameController.h names this struct its
+// friend so the checks below read and set the same members.
 struct GameControllerTestAccess {
   static auto& _playerFileToLoad(GameController* controller) {
     return controller->_playerFileToLoad;
@@ -245,9 +235,7 @@ OO_TEST(secondControllerRaises) {
     bool raised = false;
     try {
       new GameController();
-    } catch (const oo::Exception& exception)  // was @catch (OOException
-                                              // *exception) (bead oo-rskgl.1)
-    {
+    } catch (const oo::Exception& exception) {
       raised =
           (std::string(exception.name()) == OOInternalInconsistencyException);
     }
@@ -411,9 +399,8 @@ OO_TEST(fullScreenDisplayModes) {
   }
 }
 
-// The full-screen members (bead oo-qinv): the C++ calls give what the façade's
-// selectors gave, on the same state, and pausing full-screen mode records the
-// call to make and leaves full screen.
+// The full-screen members: pausing full-screen mode records the call to make
+// and leaves full screen.
 OO_TEST(fullScreenMembers) {
   SetUp();
   {
@@ -479,7 +466,7 @@ OO_TEST(fullScreenMembers) {
   }
 }
 
-// Slice 3's player-file paths.
+// The player-file paths.
 OO_TEST(playerFilePaths) {
   SetUp();
   {
@@ -502,7 +489,7 @@ OO_TEST(playerFilePaths) {
   }
 }
 
-// Slice 2 (bead oo-hn0fw): the deferred calls fire from -fireDueTimers, one per
+// The deferred calls fire from -fireDueTimers, one per
 // pass, in order; target and argument are kept until then; an OOException from
 // the call is swallowed and the target stays retained (as the Foundation
 // performer leaked it). The game tick's timer is never started here (it would
@@ -545,7 +532,7 @@ OO_TEST(deferredCalls) {
     OO_CHECK(target->retainCount() ==
              3);  // the leaked +1 and the pending 60 s call's
 
-    // Bead oo-pvhrh (added): a C++ deferred call shares the performs' queue -
+    // A C++ deferred call shares the performs' queue -
     // due calls run one per pass in scheduling order, what the call captures is
     // kept until it has run, and an OOException from it is swallowed and the
     // call kept (its captures stay, as the performer leaked its target). (The
@@ -589,7 +576,7 @@ OO_TEST(deferredCalls) {
   }
 }
 
-// Slice 3 (bead oo-5ah4k): the splash screen and window messages reach the
+// The splash screen and window messages reach the
 // view; with no universe starting up there is no progress line; with no player
 // file nothing is loaded.
 OO_TEST(splashAndWindow) {
@@ -614,7 +601,7 @@ OO_TEST(splashAndWindow) {
   }
 }
 
-// Slice 3: with no save-directory default (or one that does not exist), the
+// With no save-directory default (or one that does not exist), the
 // save directory is OO_SAVEDIR, made if missing.
 OO_TEST(saveDirectoryLookup) {
   SetUp();
@@ -649,9 +636,8 @@ OO_TEST(saveDirectoryLookup) {
   }
 }
 
-// The C++ controller (bead oo-zkpmt; its façade's contract went with bead
-// oo-9ht.164): one shared object, and the members telling the view of the
-// controller and keeping the state they read.
+// The C++ controller: one shared object, and the members telling the view of
+// the controller and keeping the state they read.
 OO_TEST(cxxAPI) {
   SetUp();
   {
@@ -689,7 +675,7 @@ OO_TEST(cxxAPI) {
 // The file to load may be handed back from the member itself (the load does
 // this): it is read in full before the member changes, kept or cleared as for
 // any other name (found by ASan as a heap-use-after-free in the sanitized
-// game's launch, oo-hpaeu).
+// game's launch).
 OO_TEST(playerFileToLoadFromItsOwnValue) {
   SetUp();
   {

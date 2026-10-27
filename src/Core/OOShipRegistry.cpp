@@ -25,8 +25,6 @@ SOFTWARE.
 
 */
 
-#include "OOShipRegistry.h"
-
 #include "GameController.h"
 #include "OOCacheManager.h"
 #include "OOColor.h"
@@ -38,6 +36,7 @@ SOFTWARE.
 #include "OOProbabilitySet.h"
 #include "OORoleSet.h"
 #include "OOShipLibraryDescriptions.h"
+#include "OOShipRegistry.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "ResourceManager.h"
@@ -49,8 +48,7 @@ SOFTWARE.
 
 namespace {
 
-OOShipRegistry* sSingleton =
-    nullptr;  // the one +1 is never released (amendment oo-r7m0 item 1)
+OOShipRegistry* sSingleton = nullptr;  // the one +1 is never released
 
 constexpr const char* kRoleWeightsCacheKey = "role weights";
 constexpr const char* kDefaultDemoShip = "coriolis-station";
@@ -947,8 +945,8 @@ bool OOShipRegistry::sanitizeConditions(oo::PList& ioData) {
       conditionScripts.push_back(*script);
     }
   };
-  // OOSanitizeLegacyScriptConditions takes and returns oo::PList (bead
-  // oo-3rb.205; nil is null).
+  // OOSanitizeLegacyScriptConditions takes and returns oo::PList (nil is
+  // null).
   auto sanitize = [](const oo::PList& unsanitized, const std::string& context) {
     return OOSanitizeLegacyScriptConditions(unsanitized, context);
   };
@@ -1168,7 +1166,7 @@ bool OOShipRegistry::preloadShipMeshes(oo::PList& ioData) {
     const std::optional<std::string> modelName =
         StringForKey(&shipEntry, "model");
     {
-      oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+      oo::AutoreleaseScope pool;  // was @autoreleasepool
       [[::GameController sharedController]
           setProgressBarValue:(float)i++ / (float)count];
 
@@ -1265,7 +1263,7 @@ oo::PList OOShipRegistry::canonicalizeSubentityDeclaration(
                                                   outFatalError);
   } else {
     // The declaration's property-list type ("array", "integer", ...; was the
-    // class name of the Foundation object it converted to, bead oo-qps.50).
+    // class name of the Foundation object it converted to).
     OO_LOG_ERR("shipData.load.error.badSubentity",
                "subentity declaration for ship {} should be string or "
                "dictionary, found {}.",

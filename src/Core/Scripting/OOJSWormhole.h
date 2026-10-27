@@ -28,7 +28,7 @@ MA 02110-1301, USA.
 
 #include "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
-class WormholeEntity;  // C++ since bead oo-9ht.112
+class WormholeEntity;
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,9 +42,7 @@ void InitOOJSWormhole(ooscript::Context context, ooscript::Object global);
 
 /*	The bodies of WormholeEntity (OOJavaScriptExtensions), which the engine
    reaches by selector. Its methods are one-line forwarders to these on the
-   WormholeEntity facade, in WormholeEntity+ObjCBridge.mm (bead oo-9ht.43),
-   until that facade goes (oo-9ht.112; proposed ADR-0056 amendments oo-ppc,
-   oo-ykoy and oo-6ia4).
+   WormholeEntity facade, in WormholeEntity+ObjCBridge.mm.
 */
 void OOJSWormholeGetJSClass(ooscript::ClassDef** outClass,
                             ooscript::Object* outPrototype);

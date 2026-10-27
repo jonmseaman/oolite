@@ -1,15 +1,11 @@
 /*	test_OOOpenALController.mm
-        Unit tests for OOOpenALController (src/Core/OOOpenALController.h): bead
-   oo-r7m0, a Phase 3 class conversion (proposed ADR-0056). Its callers were
-   adapted in the bead, so it has no Objective-C facade and there is no facade
-   contract to test.
+        Unit tests for OOOpenALController (src/Core/OOOpenALController.h).
 
         OpenAL runs on OpenAL Soft's null backend (ALSOFT_DRIVERS=null, set
    before the first ALC call), so the machine's sound hardware cannot change the
-   answers and a machine without any still opens a device. The expectations were
-   written against the Objective-C API and run on the unconverted class first:
-   -nosound and --nosound refuse the controller, and it is asked again on the
-   next call; otherwise the one shared controller opens a device, makes its
+   answers and a machine without any still opens a device. The expectations
+   cover: -nosound and --nosound refuse the controller, and it is asked again on
+   the next call; otherwise the one shared controller opens a device, makes its
    context current with no distance model, reads and writes the listener's gain,
    and shutdown tells the sound mixer and releases the context. OOSoundMixer is
    this file's stub, which counts the shutdown it is sent (the real mixer would
@@ -27,8 +23,7 @@
 
 static unsigned sMixerShutdowns = 0;
 
-// The mixer (a C++ stand-in since bead oo-9ht.87 deleted the Objective-C facade
-// this file stubbed): one, never released, counting the shutdowns the
+// The mixer (a C++ stand-in): one, never released, counting the shutdowns the
 // controller sends it.
 OOSoundMixer* OOSoundMixer::sharedMixer() {
   static OOSoundMixer* mixer = oo::makeRef<OOSoundMixer>().leakRef();

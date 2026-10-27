@@ -1,27 +1,16 @@
 /*	test_OOSingleTextureMaterial.mm
         Unit tests for OOSingleTextureMaterial
-   (src/Core/Materials/OOSingleTextureMaterial.h): bead oo-zxzb, converted after
-   its superclass OOBasicMaterial (bead oo-vl43; proposed ADR-0056, amendments
-   oo-smy and oo-vl43).
+   (src/Core/Materials/OOSingleTextureMaterial.h).
 
-        A basic material with one texture. This pins, through the Objective-C
-   API its callers use (OOPlanetDrawable, OOPlanetEntity, the convenience
-   creators), what it computed before the conversion: which texture specifier
-   each initialiser asks for and when it fails (no name, no texture), the
-   configuration reaching the basic material, the texture kept for the
-   material's life, what -doApply / -unapplyWithNext: do to the texture and the
-   GL material, the loading and cube-map questions it passes to the texture, and
-   the description. Those checks ran on the Objective-C class first and then
-   through the facade. After them: the C++ API (null where an initialiser
-   answered nil), the facade's class and identity, and nil.
-
-        Bead oo-9ht.38 deleted the facade (ADR-0056 amendment "deleting a
-   facade"). The cases that asked through its selectors ask the C++ class with
-   the same expectations (alloc/init is materialWithName(), nil is null,
-   retain/release a held Ref); the facade's own cases (facade, nilCrossesAsNull)
-   were retired with it (ADR-0049, standing approval oo-9n5p9), and
-        crossesAsTheBasicMaterialFacade pins what Objective-C sees now: the
-   nearest facade, OOBasicMaterial's. Run: bash tools/check-core-tests.sh
+        A basic material with one texture. This pins what it does: which
+   texture specifier each initialiser asks for and when it fails (no name, no
+   texture), the configuration reaching the basic material, the texture kept
+   for the material's life, what -doApply / -unapplyWithNext: do to the texture
+   and the GL material, the loading and cube-map questions it passes to the
+   texture, and the description. The cases ask the C++ class (alloc/init is
+   materialWithName(), nil is null, retain/release a held Ref);
+   crossesAsTheBasicMaterialFacade pins what Objective-C sees: the nearest
+   facade, OOBasicMaterial's. Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdlib>
@@ -47,19 +36,17 @@ void OOLogIndent(void) {}
 void OOLogOutdent(void) {}
 
 /*	OOTexture (OOTexture.mm links the texture loaders and the game) is a
-   stand-in that records what the material asks of it (proposed ADR-0056,
-   amendment oo-z1s4 item 4). +cxx_textureWithConfiguration: answers nil for a
-   null specifier, or for the name "missing", as a texture that fails to load
-   does.
+   stand-in that records what the material asks of it.
+   +cxx_textureWithConfiguration: answers nil for a null specifier, or for the
+   name "missing", as a texture that fails to load does.
 */
 static int gTextureApplyNones = 0;
 static int gTexturesDeallocated = 0;
 static std::vector<oo::PList> gTextureConfigurations;
 
-/*	Since bead oo-9ht.99 deleted the Objective-C facade, the stand-in is
-   C++: the root's static members the material calls, the root's own members (a
-   texture needs them), and TestTexture, the texture the factory answers, with
-   the same answers the Objective-C stand-in gave.
+/*	The stand-in is C++: the root's static members the material calls, the
+   root's own members (a texture needs them), and TestTexture, the texture the
+   factory answers.
 */
 class TestTexture final : public OOTexture {
  public:
@@ -132,7 +119,7 @@ oo::PList cxx_OOTextureSpecFromObject(
   });
 }
 
-// Link stubs (amendment oo-zffj item 2), never reached here: OOOpenGL.mm's GL
+// Link stubs, never reached here: OOOpenGL.mm's GL
 // state dump.
 OOOpenGLExtensionManager* OOOpenGLExtensionManager::sharedManager() {
   std::abort();
@@ -146,7 +133,7 @@ PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTextureARB = nullptr;
 
 // UNIVERSE is gSharedUniverse: nil, so not reduced detail and no shaders.
 // UNIVERSE stays nil here, so the code under test's guarded calls never reach
-// it; the stand-in only links them (bead oo-ql9rn: they were messages to nil).
+// it; the stand-in only links them (they were messages to nil).
 class Universe {
  public:
   bool useShaders();
@@ -158,9 +145,8 @@ Universe* gSharedUniverse = nil;
 namespace {
 
 TestTexture* MakeTexture() {
-  // What the Objective-C factory's autoreleased result was: the texture, kept
-  // until the current autorelease scope drains (an Objective-C keeper object
-  // until bead oo-4aq6a.2).
+  // The factory's autoreleased result: the texture, kept until the current
+  // autorelease scope drains.
   return static_cast<TestTexture*>(oo::autorelease(
       OOTexture::textureWithConfiguration(oo::PList("hull.png"))));
 }
@@ -172,8 +158,7 @@ oo::Ref<OOSingleTextureMaterial> Make(
                                                    configuration);
 }
 
-// The material's description, as Objective-C printed it ("(null)" for none;
-// bead oo-9ht.8 deleted the root facade).
+// The material's description ("(null)" for none).
 std::string Description(OOMaterial* material) {
   return material != nullptr ? material->description() : "(null)";
 }
@@ -409,8 +394,7 @@ OO_TEST(cxxAPI) {
   }
 }
 
-// The name and description, as the facade answered them (beads oo-9ht.38,
-// oo-9ht.8).
+// The name and description.
 OO_TEST(nameAndDescription) {
   {
     oo::AutoreleaseScope pool;

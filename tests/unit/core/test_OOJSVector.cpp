@@ -1,7 +1,6 @@
 /*	test_OOJSVector.mm
         Unit tests for the Vector3D JS binding
-   (src/Core/Scripting/OOJSVector.h/.mm): bead oo-ppc, the Phase 3
-   scripting-bindings pattern (proposed ADR-0056 amendment oo-ppc).
+   (src/Core/Scripting/OOJSVector.h/.mm).
 
         A binding's test runs its JS class in a real context on the game's own
    façade backend (ooscript/JSEngine_quickjs.cpp) and links the game's own
@@ -132,15 +131,14 @@ ooscript::ClassDef sFakeEntityClass = {"Entity",
 ooscript::ClassDef* JSEntityClass(void) { return &sFakeEntityClass; }
 
 // OOJSEntity.mm's (not linked): the position of the entity an Entity JS object
-// holds (bead oo-9ht.39.8.12; it was the object, whose -position the conversion
-// sent). No case here makes an entity.
+// holds. No case here makes an entity.
 HPVector OOJSEntityPositionOfJSObject(ooscript::Context, ooscript::Object) {
   std::abort();
 }
 
 // A quaternion is the array [w, x, y, z] here: enough to see what OOJSVector
-// hands over. (bool since OOJSQuaternion.h is, bead oo-hwae: a stand-in has the
-// signature of what it stands in for.)
+// hands over. (bool as OOJSQuaternion.h is: a stand-in has the signature of
+// what it stands in for.)
 bool QuaternionToJSValue(ooscript::Context context, Quaternion quaternion,
                          ooscript::Value* outValue) {
   ooscript::Value parts[4] = {
@@ -208,8 +206,7 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
    name of "throw-objc" or "throw-cxx" makes the call throw, so the test sees
    what a native's exception becomes.
 */
-/*	The universe is the C++ class since bead oo-ql9rn deleted its
-   Objective-C facade, which the test's FakeUniverse stood in for. Universe.h is
+/*	The universe is a C++ class. Universe.h is
    included (through the headers above) and Universe.mm is not linked, so the
    test defines the members the code under test calls, with the stand-in's
    bodies, and UNIVERSE is storage nothing constructs: those members read no
@@ -434,7 +431,7 @@ OO_TEST(statistics) {
       "new Vector3D(1, 2, 3).add(new Vector3D(1, 1, 1)).add([1, 2, "
       "3]).add(Vector3D.prototype)");
   // The report is kept in a local: a pointer into the temporary would dangle
-  // once the statement ends (oo-zdxtn, an ASan stack-use-after-scope).
+  // once the statement ends (an ASan stack-use-after-scope).
   const oo::PList reportNode = reportJSVectorStatistics();
   const std::string* report = reportNode.getIf<std::string>();
   OO_CHECK(report != nullptr);

@@ -23,8 +23,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "ShipEntityLoadRestore.h"
-
 #include "AI.h"
 #include "OOConstToString.h"
 #include "OOEquipmentType.h"
@@ -33,6 +31,7 @@ MA 02110-1301, USA.
 #include "OOShipGroup.h"
 #include "OOShipRegistry.h"
 #include "ShipEntityAI.h"
+#include "ShipEntityLoadRestore.h"
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/PListGet.hpp"
@@ -74,14 +73,11 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
                                                 std::string_view key);
 }  // namespace
 
-/*	The category ShipEntity (LoadRestore), bead oo-kw44: members of
-   ShipEntity (ADR-0056 amendments oo-o89 item 4 and oo-42dr), forwarded by the
-   category of the same name in ShipEntity+ObjCBridge.mm until bead oo-9ht.144
-   deleted the facade and its sends became member calls;
-   +shipRestoredFromDictionary:useFallback:context: is a static member, and the
-   private category LoadRestoreInternal's -simplifyShipdata:andGetDeletes: a
-   member with no forwarder (only the members call it).
-*/
+/* The category ShipEntity (LoadRestore): members of ShipEntity;
+ * +shipRestoredFromDictionary:useFallback:context: is a static member, and the
+ * private category LoadRestoreInternal's -simplifyShipdata:andGetDeletes: a
+ * member (only the members call it).
+ */
 
 oo::PList ShipEntity::savedShipDictionaryWithContext(
     OOShipSaveContext* context) {
@@ -228,8 +224,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
     mergedData["escorts"] = oo::PList::unsignedInteger(0);
 
     const oo::PList mergedPlist(std::move(mergedData));
-    // A station is made in C++ since bead oo-9ht.175 (the universe picked its
-    // class).
+    // A station is made in C++ (the universe picked its class).
     if ((UNIVERSE != nullptr ? UNIVERSE->isStationShipDictionary(mergedPlist)
                              : false))
       ship = oo::ToShip(oo::AutoreleaseEntity(

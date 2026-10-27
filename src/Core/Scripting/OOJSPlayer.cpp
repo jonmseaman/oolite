@@ -22,14 +22,13 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSPlayer.h"
-
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToString.h"
 #include "OOFunctionAttributes.h"
 #include "OOJSEntity.h"
+#include "OOJSPlayer.h"
 #include "OOJSShip.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
@@ -42,32 +41,8 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), InitClass becomes
-   ooscript::initClass, native methods and class hooks take the façade's hook
-   signature (Context/Object/PropertyId/Value pointer/ CallArgs reference), and
-   the directly spelled numeric-conversion calls (NewNumberValue, ValueToInt32,
-   ValueToNumber, ValueToECMAUint32, ValueToBoolean) become their ooscript::
-        façade equivalents. Natives take the
-        façade signature directly (ooscript::Context and a CallArgs reference)
-   and the OOJS_* argument-marshalling macros expand to the CallArgs accessors,
-   so the rest of each function body is UNCHANGED. `this` is renamed to
-        `thisObj` because it is a reserved word once this file compiles as
-   Objective-C++ (ADR-0001).
-
         JSPlayerClass() returns &sPlayerClass, the same ooscript::ClassDef that
    ooscript::getClass() reports for the player object.
-*/
-/*
-        C++20 since bead oo-5rva, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. Nothing
-   else in the file was Objective-C: the player (PlayerEntity), the universe and
-   ShipEntity, which are not converted, are still messaged, which is why the
-   file is still .mm until Phase 4.
 */
 
 namespace ooscript {}
@@ -279,11 +254,9 @@ static PropertySpec sPlayerProperties[] = {
 }  // namespace
 
 // A raw jsapi mirror of sPlayerProperties, used only for the bad-property error
-// reporters in OOJavaScriptEngine.m (OOJSReportBadPropertySelector/Value):
-// those helpers are outside this bead's scope (they are shared across every
-// binding file and are retargeted, if at all, by a later seam) and still take a
-// ooscript::PropertySpec*, not ooscript::PropertySpec* (see
-// OOJSVector.mm/OOJSStation.mm for the same pattern).
+// reporters in OOJavaScriptEngine.m (OOJSReportBadPropertySelector/Value),
+// which are shared across every binding file and take a
+// ooscript::PropertySpec*.
 namespace {
 static ooscript::PropertySpec sPlayerPropertiesRaw[] = {
     // JS name					ID
@@ -392,9 +365,9 @@ static bool PlayerGetProperty(Context cx, Object obj, PropertyId propID,
     case kPlayer_score:
       *(value) = ooscript::int32Value(
           (player != nullptr ? player->PlayerEntity::score()
-                             : unsigned{}));  // qualified: the final overrider
-                                              // (bead oo-9ht.177), so the
-                                              // binding test stands in for it
+                             : unsigned{}));  // qualified: the final overrider,
+                                              // so the binding test stands in
+                                              // for it
       return true;
 
     case kPlayer_credits:
@@ -406,9 +379,8 @@ static bool PlayerGetProperty(Context cx, Object obj, PropertyId propID,
           cxx_OODisplayRatingStringFromKillCount(
               (player != nullptr
                    ? player->PlayerEntity::score()
-                   : unsigned{}));  // qualified: the final overrider (bead
-                                    // oo-9ht.177), so the binding test stands
-                                    // in for it
+                   : unsigned{}));  // qualified: the final overrider, so the
+                                    // binding test stands in for it
       *(value) = OOJSValueFromPList(
           context, text.has_value() ? oo::PList(*text) : oo::PList());
     }
@@ -427,9 +399,8 @@ static bool PlayerGetProperty(Context cx, Object obj, PropertyId propID,
       *(value) = ooscript::int32Value(
           (player != nullptr
                ? player->PlayerEntity::getAlertCondition()
-               : OOAlertCondition{}));  // qualified: the final overrider (bead
-                                        // oo-9ht.177), so the binding test
-                                        // stands in for it
+               : OOAlertCondition{}));  // qualified: the final overrider, so
+                                        // the binding test stands in for it
       return true;
 
     case kPlayer_alertTemperature:
@@ -469,8 +440,8 @@ static bool PlayerGetProperty(Context cx, Object obj, PropertyId propID,
     case kPlayer_trumbleCount:
       return ooscript::newNumberValue(
           cx, (player != nullptr ? player->PlayerEntity::getTrumbleCount() : 0),
-          value);  // qualified: the final overrider (bead oo-9ht.177), so the
-                   // binding test stands in for it
+          value);  // qualified: the final overrider, so the binding test stands
+                   // in for it
 
       /* For compatibility with previous versions, these are still on
        * a -7 to +7 scale */
@@ -603,9 +574,9 @@ static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID,
         if (player != nullptr)
           player->PlayerEntity::setBounty(
               iValue,
-              kOOLegalStatusReasonByScript);  // qualified: the final overrider
-                                              // (bead oo-9ht.177), so the
-                                              // binding test stands in for it
+              kOOLegalStatusReasonByScript);  // qualified: the final overrider,
+                                              // so the binding test stands in
+                                              // for it
         return true;
       }
       break;
@@ -661,8 +632,8 @@ static bool PlayerCommsMessage(ooscript::Context context,
     PLAYER->ShipEntity::doScriptEvent(
         OOJSID("commsMessageReceived"),
         {oo::PList(*message),
-         oo::PList()});  // qualified: the final overrider (bead oo-9ht.177), so
-                         // the binding test stands in for it
+         oo::PList()});  // qualified: the final overrider, so the binding test
+                         // stands in for it
   OOJS_RETURN_VOID;
 
   OOJS_NATIVE_EXIT
@@ -898,9 +869,8 @@ static bool PlayerReplaceShip(ooscript::Context context,
   }
 
   if (success) {
-    // The player's entity node (bead oo-9ht.39.8.8), as the next event's: its
-    // JS value is the C++ player's, which its object's -oo_jsValueInContext:
-    // answered; qualified: the final overrider, so the binding test stands in
+    // The player's entity node, as the next event's: its JS value is the C++
+    // player's; qualified: the final overrider, so the binding test stands in
     // for it.
     if (player != nullptr)
       player->ShipEntity::doScriptEvent(OOJSID("playerReplacedShip"),
@@ -910,9 +880,8 @@ static bool PlayerReplaceShip(ooscript::Context context,
       player->ShipEntity::doScriptEvent(
           OOJSID("playerBoughtNewShip"),
           {oo::EntityObjectNode(player),
-           oo::PList::signedInteger(
-               0)});  // qualified: the final overrider (bead oo-9ht.177), so
-                      // the binding test stands in for it
+           oo::PList::signedInteger(0)});  // qualified: the final overrider, so
+                                           // the binding test stands in for it
   }
 
   OOJS_RETURN_BOOL(success);
@@ -940,8 +909,7 @@ static bool PlayerSetEscapePodDestination(ooscript::Context context,
 
   if (oojsArgs.count() == 1) {
     destValue = cxx_OOJSPListFromJSValue(context, OOJS_ARGV[0]);
-    Entity* destEntity = oo::EntityIn(
-        destValue);  // the entity node's (its object until bead oo-dpyk8)
+    Entity* destEntity = oo::EntityIn(destValue);  // the entity node's
 
     if (destValue.isNull()) {
       if (player != nullptr) player->setDockTarget(NULL);
@@ -997,8 +965,8 @@ static bool PlayerSetEscapePodDestination(ooscript::Context context,
           // is the same as the system we're in...
           if (player != nullptr)
             player->PlayerEntity::setTargetSystemID(
-                i);  // qualified: the final overrider (bead oo-9ht.177), so the
-                     // binding test stands in for it
+                i);  // qualified: the final overrider, so the binding test
+                     // stands in for it
         }
         OK = true;
       }
@@ -1048,15 +1016,15 @@ static bool PlayerSetPlayerRole(ooscript::Context context,
       index = index32;
       if (player != nullptr)
         player->PlayerEntity::addRoleToPlayer(
-            *role, index);  // qualified: the final overrider (bead oo-9ht.177),
-                            // so the binding test stands in for it
+            *role, index);  // qualified: the final overrider, so the binding
+                            // test stands in for it
       return true;
     }
   }
   if (player != nullptr)
     player->PlayerEntity::addRoleToPlayer(
-        *role);  // qualified: the final overrider (bead oo-9ht.177), so the
-                 // binding test stands in for it
+        *role);  // qualified: the final overrider, so the binding test stands
+                 // in for it
   return true;
 
   OOJS_NATIVE_EXIT

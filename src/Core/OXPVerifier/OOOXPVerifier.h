@@ -6,11 +6,8 @@ Oolite expansion pack verification manager.
 
 NOTE: the overall design is discussed in OXP verifier design.txt.
 
-C++20 since bead oo-tsa4 (proposed ADR-0056 and its OXPVerifier amendments). The
-stages keep and call it, and GameController calls its static
-runVerificationIfRequested() (bead oo-qg71f); global since bead oo-9ht.130
-deleted its transitional Objective-C facade. The stages are C++
-(OOOXPVerifierStage, global since bead oo-9ht.4 deleted its facade), kept and
+The stages keep and call it, and GameController calls its static
+runVerificationIfRequested(). The stages are C++ (OOOXPVerifierStage), kept and
 driven as they are.
 
 
@@ -56,14 +53,13 @@ SOFTWARE.
 
 class OOOXPVerifierStage;  // OOOXPVerifierStage.h, which imports this header
 
-struct OOOXPVerifierTestAccess;  // tests only (amendment oo-862e item 2)
+struct OOOXPVerifierTestAccess;  // tests only
 
-/*	Foundation sweep (proposed ADR-0043, bead oo-hkvv): verifyOXP.plist is
+/*	verifyOXP.plist is
    an oo::PList, paths and names are UTF-8 std::strings, stages are retained
    through oo::Ref. The stages waiting to be examined or run are a vector in
    registration order (they were a set). A stage is kept as the C++ stage itself
-   (oo::Ref<::OOOXPVerifierStage>; its Objective-C object until bead oo-9ht.4
-   deleted the stage facade, ADR-0056 amendment oo-smy).
+   (oo::Ref<::OOOXPVerifierStage>).
 */
 class OOOXPVerifier : public oo::RefCounted {
  public:
@@ -108,12 +104,10 @@ class OOOXPVerifier : public oo::RefCounted {
   OOOXPVerifier() = default;
 
   // -initWithPath:, which could fail (verifyOXP.plist unreadable):
-  // createWithPath() runs it on a new object and answers null then (ADR-0056
-  // amendments oo-novu, oo-fg7i).
+  // createWithPath() runs it on a new object and answers null then.
   static oo::Ref<OOOXPVerifier> createWithPath(
       const std::optional<std::string>& path);
-  bool initWithPath(const std::optional<std::string>&
-                        path);  // nullopt: nil (bead oo-3rb.292.2)
+  bool initWithPath(const std::optional<std::string>& path);  // nullopt: nil
   void run();
 
   void setUpLogOverrides();
@@ -129,10 +123,9 @@ class OOOXPVerifier : public oo::RefCounted {
 
   void dumpDebugGraphviz();
 
-  /*	Test stand-in hook (ADR-0056 amendment oo-4jjl item 3): makes the stage
-     a test names in its verifyOXP.plist, asked after the stage table and before
-     the class-name lookup (a stage could be an Objective-C class made by its
-     name until bead oo-9ht.4). Null in the game; set only through
+  /*	Test stand-in hook: makes the stage a test names in its verifyOXP.plist,
+     asked after the stage table and before the class-name lookup. Null in the
+     game; set only through
      OOOXPVerifierTestAccess.
   */
   friend struct ::OOOXPVerifierTestAccess;
@@ -146,11 +139,10 @@ class OOOXPVerifier : public oo::RefCounted {
 
   std::map<std::string, oo::Ref<::OOOXPVerifierStage>, std::less<>>
       _stagesByName;  // no `= {}`: GCC instantiates ~Ref<T> at a default member
-                      // initializer, and T is incomplete here (bead oo-1q4)
+                      // initializer, and T is incomplete here
   std::vector<oo::Ref<::OOOXPVerifierStage>>
       _waitingStages;  // no `= {}`: GCC instantiates ~Ref<T> at a default
-                       // member initializer, and T is incomplete here (bead
-                       // oo-1q4)
+                       // member initializer, and T is incomplete here
 
   bool _openForRegistration = {};
 };

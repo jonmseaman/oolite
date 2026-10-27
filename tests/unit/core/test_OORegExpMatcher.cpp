@@ -1,25 +1,19 @@
 /*	test_OORegExpMatcher.mm
-        Unit tests for OORegExpMatcher (src/Core/OORegExpMatcher.h): bead
-   oo-ct7c, converted in the Phase 3 house style (proposed ADR-0056).
+        Unit tests for OORegExpMatcher (src/Core/OORegExpMatcher.h).
 
         The matcher compiles a JavaScript function, "return
    regexp.test(string);", and runs it on a RegExp object it caches by pattern
    and flags. The test links the game's own OORegExpMatcher and the ooscript
    engine (QuickJS), so every match below is the real engine's answer. The
-        Objective-C glue the matcher uses but whose files reach the whole game
-   (the engine singleton, OOJSFunction, OOJSValue and the two value converters;
+   Objective-C glue the matcher uses but whose files reach the whole game (the
+   engine singleton, OOJSFunction, OOJSValue and the two value converters;
    OOJavaScriptEngine.mm links everything) is replaced by the minimal
-   definitions below (OOJSFunction's C++ members since bead oo-9ht.41), which
-   count what the matcher asks of them (ADR-0056 amendment 1 item 8, amendment
-   oo-z1s4 item 4). The expectations were written against the Objective-C API
-   and run on the unconverted class first: what matches, the flags, the empty
+   definitions below (OOJSFunction's C++ members), which count what the matcher
+   asks of them. The expectations cover: what matches, the flags, the empty
    pattern, the cache (one compiled RegExp per pattern and flags), and the
    pseudo-singleton (one matcher per autorelease pool, a new one after the pool
-   drains; nil, and asked again, when the tester does not compile). The C++
-   tests then pinned the same answers through the C++ matcher, and the last test
-   the facade's contract (one facade per matcher, nil stays nil). Bead oo-9ht.12
-   deleted the facade: see the note above the tests. Run: bash
-   tools/check-core-tests.sh
+   drains; nil, and asked again, when the tester does not compile). See the note
+   above the tests. Run: bash tools/check-core-tests.sh
 */
 
 #include <string>
@@ -58,9 +52,8 @@ ooscript::ClassDef sGlobalClass = {"Global", ooscript::ClassFlag::Global,
 
 }  // namespace
 
-// The engine (OOJavaScriptEngine.h; a C++ class since bead oo-wdqw1 deleted its
-// facade), declared with the header's names and signatures but not its class;
-// the stand-in's answers are kept.
+// The engine (OOJavaScriptEngine.h; a C++ class), declared with the header's
+// names and signatures but not its class; the stand-in's answers are kept.
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
@@ -81,9 +74,7 @@ OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
 }
 
 // OOJSFunction (src/Core/Scripting/OOJSFunction.h): the members the matcher
-// calls, defined here in place of OOJSFunction.mm. Until bead oo-9ht.41 deleted
-// the class's Objective-C facade this was an Objective-C stub of the same name;
-// the C++ stand-in does and counts the same.
+// calls, defined here in place of OOJSFunction.mm.
 oo::Ref<OOJSFunction> OOJSFunction::initWithName(
     const std::optional<std::string>& name, ooscript::Object scope,
     const std::optional<std::string>& code, NSUInteger argCount,
@@ -125,9 +116,8 @@ bool OOJSFunction::evaluateWithContext(ooscript::Context context,
                                 _function, argc, argv, result);
 }
 
-// The held value (OOJSEngineCore.h; a C++ class since bead oo-wdqw1 deleted its
-// facade): the members the matcher calls, defined here with the stand-in's
-// answers.
+// The held value (OOJSEngineCore.h; a C++ class): the members the matcher
+// calls, defined here with the stand-in's answers.
 oo::Ref<OOJSValue> OOJSValue::valueWithJSObject(ooscript::Object object,
                                                 ooscript::Context context) {
   oo::Ref<OOJSValue> result = oo::makeRef<OOJSValue>();
@@ -156,13 +146,9 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
 
 // --- The tests
 // ------------------------------------------------------------------------------------
-// Bead oo-9ht.12 deleted the facade. The cases that asked through its selectors
-// ask the C++ matcher with the same expectations; the facade's own contract
-// (facadeContract) and its autorelease-pool lifetime
-// (oneMatcherPerAutoreleasePool) were retired with it (ADR-0049, standing
-// approval oo-9n5p9). The C++ lifetime is cxxOneMatcherWhileHeld's;
-// matchersHeldAcrossMatches pins what the pool gave a caller that holds its
-// matcher.
+// The cases ask the C++ matcher. The C++ lifetime is
+// cxxOneMatcherWhileHeld's; matchersHeldAcrossMatches pins what the pool gave a
+// caller that holds its matcher.
 
 namespace {
 

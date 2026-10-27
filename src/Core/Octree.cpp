@@ -22,8 +22,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "Octree.h"
-
 #include <cstring>
 
 #include "Entity.h"
@@ -32,6 +30,7 @@ MA 02110-1301, USA.
 #include "OOMacroOpenGL.h"
 #include "OOMaths.h"
 #include "OOOpenGL.h"
+#include "Octree.h"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
 
@@ -810,7 +809,7 @@ OOOctreeBuilder::OOOctreeBuilder() {
     _octree = (int*)malloc(_capacity * sizeof *_octree);
     if (_octree == NULL) {
       // -init released itself and returned nil; a constructor cannot, so it
-      // raises what SetNode_slow() raises (ADR-0056 amendment oo-44gg).
+      // raises what SetNode_slow() raises.
       OORaiseException(OOMallocException,
                        "Failed to allocate memory for octree.");
     }

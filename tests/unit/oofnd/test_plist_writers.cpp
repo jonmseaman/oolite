@@ -1,5 +1,5 @@
 /*	test_plist_writers.cpp
-        The old-style and XML writers (bead oo-pig) and oo::parsePropertyList,
+        The old-style and XML writers and oo::parsePropertyList,
    OOPropertyListFromData's dispatcher. Each fixture below is an XML plist and
    the exact bytes GNUstep 1.31.1 wrote for it: OldSchoolPropertyListWriting.m's
    -oldSchoolPListFormatWithErrorDescription: ("...Old") and
@@ -10,7 +10,7 @@
    (its readers are pinned against GNUstep in the other test_plist_*.cpp files)
    and must write the same bytes. "WRITEERR <text>" is the harness's record of a
    nil result and its error description. Fixtures GNUstep cannot produce
-        correctly (ADR-0027) are compared in the tests marked ADR0027 instead.
+        correctly are compared in the tests suffixed GnustepDiffers instead.
         meson test --suite oofnd-plist
 */
 
@@ -774,8 +774,8 @@ OO_TEST(fixtureAllKinds) {
 
 OO_TEST(fixtureStrings) {
   // Bare vs quoted, escapes, controls, NUL, non-BMP. One line differs by
-  // design: GNUstep writes caf\xc3\xa9 bare, oofnd quotes it (ADR-0027 item 5;
-  // oldStyleQuotesNonAscii_ADR0027).
+  // design: GNUstep writes caf\xc3\xa9 bare, oofnd quotes it (see
+  // oldStyleQuotesNonAscii_GnustepDiffers).
   std::string v01Old(kV01Old);
   const std::size_t at = v01Old.find("\tcaf\xc3\xa9,");
   OO_CHECK(at != std::string::npos);
@@ -825,7 +825,7 @@ OO_TEST(fixtureDates) {
   writesLikeGNUstep(kV03In, kV03Old, kV03Xml);
 }
 
-OO_TEST(oldStyleDataGNUstepCannotWrite_ADR0027) {
+OO_TEST(oldStyleDataGNUstepCannotWrite_GnustepDiffers) {
   // 5 bytes: GNUstep writes past its buffer and cuts the '>' (captured:
   // "<01020304 05").
   OO_CHECK_EQ(kW12Old, "(\n\t<01020304 05\n)\n"sv);
@@ -845,7 +845,7 @@ OO_TEST(oldStyleDataGNUstepCannotWrite_ADR0027) {
               "\t 20212223 24252627>;\n\t};\n}\n");
 }
 
-OO_TEST(oldStyleQuotesNonAscii_ADR0027) {
+OO_TEST(oldStyleQuotesNonAscii_GnustepDiffers) {
   // GNUstep writes `caf\xc3\xa9` bare (it is "alphanumeric"), which no plist
   // reader accepts.
   OO_CHECK(kV01Old.find("\tcaf\xc3\xa9,") != std::string_view::npos);
@@ -853,7 +853,7 @@ OO_TEST(oldStyleQuotesNonAscii_ADR0027) {
   OO_CHECK_EQ(oldStyle(oo::PList("cafe")), "cafe\n");
 }
 
-OO_TEST(oldStyleKeysEqualButForCase_ADR0027) {
+OO_TEST(oldStyleKeysEqualButForCase_GnustepDiffers) {
   // GNUstep orders these by hash (captured: A, a, a-, a1, aB, AB, Ab, ab);
   // oofnd by UTF-16 unit.
   OO_CHECK(kV02Old.find("\ta1 = \"7\";\n\taB = \"6\";\n\tAB = \"4\";") !=
@@ -968,7 +968,7 @@ OO_TEST(parsePropertyListDispatch) {
   OO_CHECK_EQ(oo::parsePropertyList("{ a = b ").error().description(),
               "Error Domain=NSPropertyListSerialization Code=0 \"Parse failed "
               "at line 1 (char 9) - reached end of string\"");
-  // Binary plists are not read (ADR-0027 item 3).
+  // Binary plists are not read.
   OO_CHECK(!oo::parsePropertyList("bplist00\x01\x02"sv, &f).has_value());
   OO_CHECK(f == oo::PListFormat::Binary);
   OO_CHECK(!oo::parsePropertyList("\x00\x01"sv, &f).has_value());
@@ -995,7 +995,7 @@ class DescribedForeign : public oo::PListForeign {
 
 }  // namespace
 
-// Captured from gnustep-base 1.31.1 (bead oo-3rb.149):
+// Captured from gnustep-base 1.31.1:
 // +dataFromPropertyList:format:XML succeeds on an object that is not
 // property-list data, writing its -description in a <string> with no line break
 // after it, and reports no error.

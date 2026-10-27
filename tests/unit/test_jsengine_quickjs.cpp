@@ -1,18 +1,18 @@
 /*	test_jsengine_quickjs.cpp
-        Unit test for the ooscript façade on the QuickJS-ng backend (seam 1.4b,
-   bead oo-0kq). Plain C++20 against the façade header and the backend TU,
+        Unit test for the ooscript façade on the QuickJS-ng backend (seam 1.4b).
+   Plain C++20 against the façade header and the backend TU,
    linked against the vendored QuickJS-ng library; no GNUstep, no SDL.
 
         Scoped to what JSEngine_quickjs.cpp implements
    (Context/Value/Object/ClassDef lifecycle plus resolve/enumerate mapped onto
    JSClassExoticMethods, and private-pointer attach/retrieve): see that file's
-   banner for the full list of what is out of scope for this bead. It began as
+   banner for the full list of what is out of scope. It began as
    the same shape of check as the (since retired) SpiderMonkey backend's unit
    test: number canonicalisation, private data through a class with a finalizer,
    and resolve/enumerate acting through the façade's own PropertyId/hook types
    rather than any engine-specific handle.
 
-        Bead oo-1gc.2 made the backend implement all of JSEngine.hpp;
+        The backend implements all of JSEngine.hpp;
    runFullSurface() (after the seam tests, on a runtime of its own) covers each
    area: values and conversions, strings (non-ASCII, ropes, interning),
    plain-object properties and arrays, initClass with tinyid accessors, methods
@@ -87,9 +87,9 @@ ClassDef sPointClass = {"Point",        ClassFlag::HasPrivate,
                         PointFinalize,  nullptr,
                         nullptr,        nullptr};
 
-// Regression fixture for bead oo-902s: unlike PointFinalize above, this
+// Regression fixture: unlike PointFinalize above, this
 // finalizer actually reads its Context argument, so a dangling JSContext*
-// handed to it (the bug this bead fixes) would misbehave instead of going
+// handed to it (the bug it guards against) would misbehave instead of going
 // unnoticed. See its use in main() for the destroyContext()-then-
 // destroyRuntime() sequence that exercises it.
 bool gTouchFinalizeRan = false;
@@ -133,7 +133,7 @@ ClassDef sScaledClass = {"ScaledPoint", ClassFlag::HasPrivate,
                          PointFinalize, nullptr,
                          nullptr,       nullptr};
 
-// MARK: Full façade surface (bead oo-1gc.2)
+// MARK: Full façade surface
 // ------------------------------------------------------
 //
 // Everything below runs on a runtime of its own, after the seam tests above
@@ -353,7 +353,7 @@ ClassDef sEnumClass = {"Enum",  ClassFlag::NewEnumerate,
                        nullptr, nullptr,
                        nullptr, nullptr};
 
-// Store: Enum's names, plus a setProperty hook (bead oo-f1yi3). Assigning to a
+// Store: Enum's names, plus a setProperty hook. Assigning to a
 // name the last enumeration listed must reach the setter, as SpiderMonkey's
 // add-then-set did.
 std::int32_t gStoreA = 1;
@@ -725,7 +725,7 @@ void exerciseFacade(Runtime rt, Context cx) {
         strIs(cx, getFunctionId(valueToFunction(cx, rv)), u"jsfun"));
   Value argv1[1] = {int32Value(4)};
   CHECK(callFunctionValue(cx, nullptr, rv, 1, argv1, &rv) && toInt32(rv) == 12);
-  // SpiderMonkey 1.8.5 let `new` reach any native (bead oo-1gc.13: `new
+  // SpiderMonkey 1.8.5 let `new` reach any native (`new
   // Vector3D.random(n)` in expansion ship scripts): an object result is the
   // value of `new`, a primitive result yields the object created from the
   // callee (plain Object.prototype, since a native has no `prototype`).
@@ -771,8 +771,8 @@ void exerciseFacade(Runtime rt, Context cx) {
 
   // -- One script file run for two objects (ship scripts): a bare name in a
   // closure resolves through the object of the handler call, as SpiderMonkey's
-  // per-run scope chain did, not through the object the file last ran for (bead
-  // oo-1gc.15: `this.list = [...]; ... list[i]` in BUS_MegaBat_events.js).
+  // per-run scope chain did, not through the object the file last ran for
+  // (`this.list = [...]; ... list[i]` in BUS_MegaBat_events.js).
   Object shipA = newObject(cx, &sShipScriptClass, nullptr, nullptr);
   RootedObject shipARoot(cx, shipA, "shipA");
   Object shipB = newObject(cx, &sShipScriptClass, nullptr, nullptr);
@@ -827,8 +827,8 @@ void exerciseFacade(Runtime rt, Context cx) {
   CHECK(compileUCScript(cx, nullptr, u"var = ;", 7, "bad.js", 3) == nullptr &&
         gCap.calls == 1 && gCap.line == 3);
 
-  // -- A script object's manifest property is permanent (bead oo-1gc.14,
-  // Svengali.Snoopers) --------- OOJSScript defines oolite_manifest_identifier
+  // -- A script object's manifest property is permanent
+  // (Svengali.Snoopers) --------- OOJSScript defines oolite_manifest_identifier
   // Permanent|Enumerate|ReadOnly (OOJS_PROP_READONLY, as under SpiderMonkey). A
   // strict `for (var k in this) if (k !== 'name' && k !== 'version') delete
   // this[k];` therefore throws on it, as SpiderMonkey 1.8.5's strict delete of
@@ -998,7 +998,7 @@ void exerciseFacade(Runtime rt, Context cx) {
   CHECK(eval(cx, nullptr, "w.size + bag.lazy", &rv) && isInt32(rv) &&
         toInt32(rv) == 14);
 
-  // Pinned engine difference (bead oo-1gc.16, Alnivel.RoutePlanner): strict
+  // Pinned engine difference (Alnivel.RoutePlanner): strict
   // code that creates a property on a primitive -- here a reduce() callback
   // that returns the key, so the accumulator becomes a string -- throws "not an
   // object", as ES5 requires. SpiderMonkey 1.8.5 set it on a throwaway wrapper
@@ -1163,10 +1163,9 @@ int main() {
                         static_cast<unsigned>(std::strlen(bad)), "bad.js", 1,
                         &rv));
 
-  // Exceptions: a syntax error leaves the engine's own exception pending (bead
-  // oo-s0y). Read it without disturbing it
-  // (isExceptionPending/getPendingException), report it through a backend-held
-  // ErrorReporter, then clear it explicitly.
+  // Exceptions: a syntax error leaves the engine's own exception pending. Read
+  // it without disturbing it (isExceptionPending/getPendingException), report
+  // it through a backend-held ErrorReporter, then clear it explicitly.
   CHECK(isExceptionPending(cx));
   Value pending = undefinedValue();
   CHECK(getPendingException(cx, &pending));
@@ -1278,7 +1277,7 @@ int main() {
     (void)prevReporter;
   }
 
-  // Regression (bead oo-902s): destroyContext() must erase gCtxForRuntime's
+  // Regression: destroyContext() must erase gCtxForRuntime's
   // entry for its runtime (or otherwise ensure FinalizeTramp never dereferences
   // a freed context). Create an object of sTouchClass -- whose finalizer
   // touches its Context argument, unlike PointFinalize above -- attach it to
@@ -1316,8 +1315,7 @@ int main() {
   CHECK(gTouchFinalizeCtxOk);  // and its Context argument was never a dangling
                                // pointer
 
-  runFullSurface();  // bead oo-1gc.2: the rest of JSEngine.hpp, on a runtime of
-                     // its own
+  runFullSurface();  // the rest of JSEngine.hpp, on a runtime of its own
 
   CHECK(std::strcmp(backendName(), "quickjs-ng-0.16.2") == 0);
 

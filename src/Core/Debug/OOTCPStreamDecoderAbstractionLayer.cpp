@@ -3,19 +3,17 @@
         Abstraction layer to allow OOTCPStreamDecoder to work with
    CoreFoundation/ CF-Lite, Cocoa Foundation or GNUstep Foundation.
 
-        oofnd implementation (proposed ADR-0043 Amendment 2 item 14): each
-   handle is a struct OOALObject holding its value as an oo::PList (a string, a
-   data buffer or the parsed packet).
+        oofnd implementation: each handle is a struct OOALObject holding its
+   value as an oo::PList (a string, a data buffer or the parsed packet).
 */
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-#include "OOTCPStreamDecoderAbstractionLayer.h"
-
 #include "OOFoundation.h"
+#include "OOTCPStreamDecoderAbstractionLayer.h"
 #include "OOTCPStreamDecoderFormat.hpp"
 #include "oofnd/PListParsing.hpp"
-#include "oofnd/Ref.hpp"  // oo::AutoreleaseScope (was objc-arc.h's pool functions, oo-31u.8)
+#include "oofnd/Ref.hpp"  // oo::AutoreleaseScope (was objc-arc.h's pool functions)
 #include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 
@@ -29,7 +27,7 @@ struct OOALObject {
 
 struct OOALAutoreleasePool {
   std::vector<std::unique_ptr<OOALObject>> objects;
-  // Was an Objective-C autorelease pool pushed with this one (oo-31u.8).
+  // Was an Objective-C autorelease pool pushed with this one.
   // Declared last so it drains first, before the objects are freed, as the pool
   // was popped before they were.
   oo::AutoreleaseScope deferred;
@@ -59,7 +57,7 @@ std::string DescriptionOf(OOALObjectRef object) {
 // Simulate literal CF/NS strings. Each literal string that is used becomes a
 // single object. Since it uses pointers as keys, it should only be used with
 // literals. Called from OOTCPStreamDecoder.c through OOALSTR(), so it keeps C
-// linkage now that this file is Objective-C++ (bead oo-x7o).
+// linkage now that this file is Objective-C++.
 extern "C" OOALStringRef OOALGetConstantString(const char* string);
 OOALStringRef OOALGetConstantString(const char* string) {
   static std::map<const char*, std::unique_ptr<OOALObject>>* sStrings = nullptr;

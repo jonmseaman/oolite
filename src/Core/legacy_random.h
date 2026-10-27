@@ -26,8 +26,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef LEGACY_RANDOM_H
-#define LEGACY_RANDOM_H
+#pragma once
 
 #include <math.h>
 #include <stdint.h>
@@ -198,6 +197,4 @@ OOINLINE double travelTimeBetweenPlanetPositions(int x1, int y1, int x2,
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

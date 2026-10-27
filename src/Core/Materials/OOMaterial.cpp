@@ -25,8 +25,6 @@ SOFTWARE.
 
 */
 
-#include "OOMaterial.h"
-
 #include <cxxabi.h>
 
 #include <cstdlib>
@@ -34,15 +32,15 @@ SOFTWARE.
 
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"
+#include "OOMaterial.h"
 #include "OOMaterialState.h"
-#include "oofnd/Ref.hpp"  // oo::autorelease (beads oo-pvhrh, oo-31u.7)
+#include "oofnd/Ref.hpp"  // oo::autorelease
 #include "oofnd/String.hpp"
 
 namespace {
 
-/*	The current material, retained (proposed ADR-0056, amendments oo-smy
-   item 4 and oo-9ht.8: it held the Objective-C object until the facade was
-   deleted). Never destroyed, as the static pointer was not.
+/*	The current material, retained. Never destroyed, as the static pointer
+   was not.
 */
 oo::Ref<OOMaterial>& ActiveMaterial() {
   static auto* active = new oo::Ref<OOMaterial>;
@@ -100,8 +98,7 @@ void OOMaterial::applyNone() {
 
 oo::Ref<OOMaterial> OOMaterial::current() { return ActiveMaterial(); }
 
-// OOMaterialState.h: the slot for plain C++ translation units (bead
-// oo-9ht.185).
+// OOMaterialState.h: the slot for plain C++ translation units.
 OOMaterial* OOMaterialRetainCurrent() {
   return OOMaterial::current().leakRef();
 }
@@ -151,7 +148,7 @@ void OOMaterial::willDealloc() {
 
 /*	OOMaterialAutorelease(): the material goes to the innermost
    oo::AutoreleaseScope, whose drain releases it where the keeper object that
-   held it was released (beads oo-pvhrh, oo-31u.7).
+   held it was released.
 */
 void OOMaterialAutorelease(oo::Ref<OOMaterial> material) {
   if (material == nullptr) return;

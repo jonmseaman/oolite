@@ -1,9 +1,7 @@
 /*	test_PlayerEntityStickProfile.mm
         Unit tests for StickProfileScreen
-   (src/Core/Entities/PlayerEntityStickProfile.h): bead oo-movn, a Phase 3
-   conversion in the house style of the OOColor exemplar (proposed ADR-0056), as
-   a class with one caller and no facade (amendment oo-zffj): the player keeps
-   it and its stick-profile category drives it.
+   (src/Core/Entities/PlayerEntityStickProfile.h): a class with one caller: the
+   player keeps it and its stick-profile category drives it.
 
         The screen edits the shared stick handler's roll, pitch and yaw profiles
    on a GUI: it fills the GUI's rows, steps the axis, the dead zone, the profile
@@ -15,16 +13,14 @@
    spline point (0.5, 0.5).
 
         The GUI object references Universe and the player, so the test links the
-   whole game but main (tests/unit/core/meson.build entry ['*'], amendment
-   oo-44gg) and defines gDebugFlags. UNIVERSE is nil: a description lookup
+   whole game but main (tests/unit/core/meson.build entry ['*']) and defines
+   gDebugFlags. UNIVERSE is nil: a description lookup
    answers its key, so the rows show the keys. PLAYER is a stand-in that answers
-   -status and takes the GUI's row-changed script event (amendment oo-vt0o item
-   4); the GUI names that event by its JS id, so the test makes the engine's
+   -status and takes the GUI's row-changed script event; the GUI names that
+   event by its JS id, so the test makes the engine's
    main-thread JS context. The defaults' home (HOMEPATH) is a scratch folder,
    set before they are first read, as in test_OOJoystickManager. The
-   expectations were written against the Objective-C class and run on it first;
-   they now call the C++ members, which are the same methods. Run: bash
-   tools/check-core-tests.sh test_PlayerEntityStickProfile
+   tests call the C++ members. Run: bash
 */
 
 #include <process.h>
@@ -37,7 +33,7 @@
 
 #include "GuiDisplayGen.h"
 #include "OOJoystickManager.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "PlayerEntityStickProfile.h"
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
@@ -56,19 +52,15 @@ extern ooscript::Context
 // PLAYER: the screen asks it for its status (docked: the root's member, which
 // is not virtual, so the player is made docked); the GUI sends it a script
 // event when a row is selected.
-class StickProfileTestPlayer
-    : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the Objective-C
-                           // player
-{
+class StickProfileTestPlayer : public PlayerEntity {
  public:
   using PlayerEntity::doScriptEvent;
   void doScriptEvent(ooscript::PropertyId /*message*/,
                      const std::vector<oo::PList>& /*arguments*/) override {}
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// [[TestPlayer alloc] init]: a C++ player under the ship's
+// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1).
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();

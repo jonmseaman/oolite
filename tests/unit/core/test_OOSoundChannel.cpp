@@ -1,6 +1,5 @@
 /*	test_OOSoundChannel.mm
-        Unit tests for OOSoundChannel (src/Core/OOALSoundChannel.h): bead
-   oo-5vp8, a class of the Audio module (proposed ADR-0056, amendment oo-2en).
+        Unit tests for OOSoundChannel (src/Core/OOALSoundChannel.h).
 
         A channel owns one OpenAL source. It plays a sound by queueing the
    sound's buffers on it (one for a buffered sound, one at a time for a streamed
@@ -9,22 +8,14 @@
    -next/-setNext:. OpenAL runs on OpenAL Soft's null backend
         (ALSOFT_DRIVERS=null), which plays in real time, so the tests wait for a
    short sound to end. The sounds are this file's C++ subclasses of the root
-   OOSound (Objective-C subclasses of its facade until bead oo-9ht.68 deleted
-   it), which make real OpenAL buffers of silence; the decoder, the two concrete
-   sounds and the mixer that OOALSound.mm names are stubs (amendment oo-z1s4
-   item 4). The channel's source is private, so the test reads it as a friend
-   (amendment oo-zffj item 3; through the runtime before the conversion). These
-        expectations were written against the Objective-C API and ran on the
-   unconverted class first; they ran through the facade until bead oo-9ht.86
-   deleted it, and now ask the C++ channel with the same expectations (the
-   facade's own contract was retired with it: ADR-0049, standing approval
-   oo-9n5p9; what its -dealloc told the delegate is the destructor's now, pinned
-   by releasedWhilePlayingTellsTheDelegate). The delegate is a C++
-   OOSoundChannelDelegate. Since bead oo-9ht.68 the sounds are made with
-   oo::makeRef and released by their oo::Ref, where they were alloc/init'd and
-   released or autoreleased, with every expectation kept (standing approval
-        oo-9n5p9).
-        Run: bash tools/check-core-tests.sh test_OOSoundChannel
+   OOSound, which make real OpenAL buffers of silence; the decoder, the two
+   concrete sounds and the mixer that OOALSound.mm names are stubs. The
+   channel's source is private, so the test reads it as a friend. The tests ask
+   the C++ channel; what its destructor tells the delegate is pinned by
+   releasedWhilePlayingTellsTheDelegate. The delegate is a C++
+   OOSoundChannelDelegate, and the sounds are made with oo::makeRef and
+   released by their oo::Ref.
+   Run: bash tools/check-core-tests.sh test_OOSoundChannel
 */
 
 #include <process.h>
@@ -51,23 +42,21 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 }
 
 // The mixer, as the root's update() and the OpenAL controller's shutdown()
-// reach it: there is none (a C++ stand-in since bead oo-9ht.87 deleted the
-// Objective-C facade this file stubbed).
+// reach it: there is none (a C++ stand-in).
 OOSoundMixer* OOSoundMixer::sharedMixer() { return nullptr; }
 void OOSoundMixer::update() {}
 void OOSoundMixer::shutdown() {}
 
-// The decoder the root's cluster asks for: none, for every path (a C++ stand-in
-// since bead oo-9ht.82 deleted the Objective-C facade this file stubbed).
+// The decoder the root's cluster asks for: none, for every path (a C++
+// stand-in).
 oo::Ref<OOALSoundDecoder> OOALSoundDecoder::initWithPath(
     const std::optional<std::string>& inPath) {
   (void)inPath;
   return nullptr;
 }
 
-// The buffered sound the root's cluster names: a C++ stand-in since bead
-// oo-9ht.83 deleted the Objective-C facade this file stubbed. The decoder above
-// refuses every path, so none is made.
+// The buffered sound the root's cluster names: a C++ stand-in. The decoder
+// above refuses every path, so none is made.
 oo::Ref<OOALBufferedSound> OOALBufferedSound::initWithDecoder(
     OOALSoundDecoder* inDecoder) {
   (void)inDecoder;
@@ -77,8 +66,7 @@ OOALBufferedSound::~OOALBufferedSound() {}
 std::optional<std::string> OOALBufferedSound::name() { return _name; }
 ALuint OOALBufferedSound::soundBuffer() { return 0; }
 
-// The streamed sound the root's cluster names: a C++ stand-in since bead
-// oo-9ht.84 deleted the Objective-C facade this file stubbed. None is made
+// The streamed sound the root's cluster names: a C++ stand-in. None is made
 // here.
 oo::Ref<OOALStreamedSound> OOALStreamedSound::initWithDecoder(
     OOALSoundDecoder* inDecoder) {
@@ -96,8 +84,7 @@ ALuint OOALStreamedSound::soundBuffer() { return 0; }
 */
 static int gLiveSounds = 0;
 
-// A C++ subclass of the root since bead oo-9ht.68 deleted the facade it
-// subclassed.
+// A C++ subclass of the root.
 class TestSound final : public OOSound {
  public:
   TestSound() { gLiveSounds++; }
@@ -129,8 +116,7 @@ class TestSound final : public OOSound {
 };
 
 // The delegate: records each sound it is told has finished, and on which
-// channel. (An Objective-C object answering -channel:didFinishPlayingSound:
-// until bead oo-9ht.86 made the delegate C++.)
+// channel.
 class TestDelegate final : public OOSoundChannelDelegate {
  public:
   void channel(OOSoundChannel* inChannel, OOSound* inSound) override {
@@ -367,8 +353,8 @@ OO_TEST(cxxApi) {
   }
 }
 
-// A channel released while it plays tells the delegate of itself, as the
-// facade's -dealloc did (bead oo-9ht.86 moved that into the destructor).
+// A channel released while it plays tells the delegate of itself (the
+// destructor does it).
 OO_TEST(releasedWhilePlayingTellsTheDelegate) {
   SetUp();
   TestDelegate delegate;

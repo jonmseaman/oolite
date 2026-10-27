@@ -1,6 +1,6 @@
 # ooscript — the JavaScript engine façade
 
-`JSEngine.hpp` is the only header Oolite code uses to talk to its script engine (Phase 1 seam 1.1, bead oo-e7c; ADR-0002, architecture §4 R1). Since bead oo-7wx its only backend is `JSEngine_quickjs.cpp` (QuickJS-ng, linked statically); the SpiderMonkey 1.8.5 backend, the `js_backend` option, and the js/NSPR dependencies were removed. `tools/check-jsengine-facade.sh` is the acceptance for the header (engine-neutral, clean under `-Wall -Wextra -Werror`) and, absolutely, for the tree: no game source outside the backend names an engine symbol or header.
+`JSEngine.hpp` is the only header Oolite code uses to talk to its script engine. Its only backend is `JSEngine_quickjs.cpp` (QuickJS-ng, linked statically); the SpiderMonkey 1.8.5 backend, the `js_backend` option, and the js/NSPR dependencies were removed. `tools/check-jsengine-facade.sh` is the acceptance for the header (engine-neutral, clean under `-Wall -Wextra -Werror`) and, absolutely, for the tree: no game source outside the backend names an engine symbol or header.
 
 This file, not the header, carries the engine names: the deny-list forbids `JS_*` tokens in code files, comments included, and a Markdown file is not scanned.
 
@@ -139,14 +139,14 @@ Generated from the header's declarations. One row per façade function that repl
 | `JS_SetOperationCallback` | `ooscript::setOperationCallback` | returns the old one |
 | `JS_TriggerOperationCallback` | `ooscript::triggerOperationCallback` |  |
 | `JS_TriggerAllOperationCallbacks` | `ooscript::triggerAllOperationCallbacks` |  |
-| `JS_SuspendRequest` / `JS_ResumeRequest` | `ooscript::suspendRequest` / `ooscript::resumeRequest` | token-based (bead oo-1gc.3) |
+| `JS_SuspendRequest` / `JS_ResumeRequest` | `ooscript::suspendRequest` / `ooscript::resumeRequest` | token-based |
 | `JS_CompareStrings` | `ooscript::compareStrings` |  |
 | `JS_FreezeObject` | `ooscript::freezeObject` |  |
 | `JS_CompileUCFunction` | `ooscript::compileUCFunction` |  |
 | `JS_CallFunction` | `ooscript::callFunction` |  |
 | `JS_BufferIsCompilableUnit` | `ooscript::bufferIsCompilableUnit` |  |
 | `JSREG_FOLD` / `JSREG_GLOB` / `JSREG_MULTILINE` / `JSREG_STICKY` | `ooscript::RegExpFoldCase` / `RegExpGlobal` / `RegExpMultiline` / `RegExpSticky` | constants |
-| `JS_FrameIterator`, `JS_IsScriptFrame`, `JS_IsConstructorFrame`, `JS_IsDebuggerFrame`, `JS_GetFrameScript`, `JS_GetScriptFilename`, `JS_PCToLineNumber`+`JS_GetFramePC`, `JS_GetFrameFunction`, `JS_GetFrameThis`, `JS_GetFrameScopeChain` | `ooscript::frameIterator`, `frameIsScript`, `frameIsConstructor`, `frameIsDebugger`, `frameScript`, `scriptFilename`, `frameLineNumber`, `frameFunction`, `frameThis`, `frameScopeChain` | debug section; QuickJS-ng: file/line frames only (ADR-0022) |
+| `JS_FrameIterator`, `JS_IsScriptFrame`, `JS_IsConstructorFrame`, `JS_IsDebuggerFrame`, `JS_GetFrameScript`, `JS_GetScriptFilename`, `JS_PCToLineNumber`+`JS_GetFramePC`, `JS_GetFrameFunction`, `JS_GetFrameThis`, `JS_GetFrameScopeChain` | `ooscript::frameIterator`, `frameIsScript`, `frameIsConstructor`, `frameIsDebugger`, `frameScript`, `scriptFilename`, `frameLineNumber`, `frameFunction`, `frameThis`, `frameScopeChain` | debug section; QuickJS-ng: file/line frames only |
 | `JS_GetPropertyDescArray` / `JS_PutPropertyDescArray` | `ooscript::getScopeVariables` / `destroyScopeVariables` | false on QuickJS-ng |
 | `JS_SetDebuggerHandler`, `JS_SetFunctionCallback`, `JS_SetContextCallback` | `ooscript::setDebuggerHandler`, `setFunctionCallback`, `setContextCallback` | debug section |
 | `JS_DumpNamedRoots`, `JS_DumpHeap` | `ooscript::dumpNamedRoots`, `ooscript::dumpHeap` | DEBUG engine builds / QuickJS-ng memory summary |
@@ -186,14 +186,14 @@ Generated from the header's declarations. One row per façade function that repl
 
 ## The QuickJS-ng backend
 
-`JSEngine_quickjs.cpp` implements every function in `JSEngine.hpp` (bead oo-1gc.2) against the vendored QuickJS-ng; `tools/check-jsengine-facade-quickjs.sh` and `tools/check-jsengine-facade-quickjs-asan.sh` are its acceptance. Its file banner is the design record: the handle arena that stands in for SpiderMonkey's conservative stack scan (roots are addresses read at `gc()`/`maybeGC()` time), strings and property ids, how `ClassDef` hooks map onto exotic methods and per-object slots, natives, scripts, errors, and every place it knowingly diverges from SpiderMonkey 1.8.5 (grep `DIVERGENCE`).
+`JSEngine_quickjs.cpp` implements every function in `JSEngine.hpp` against the vendored QuickJS-ng; `tools/check-jsengine-facade-quickjs.sh` and `tools/check-jsengine-facade-quickjs-asan.sh` are its acceptance. Its file banner is the design record: the handle arena that stands in for SpiderMonkey's conservative stack scan (roots are addresses read at `gc()`/`maybeGC()` time), strings and property ids, how `ClassDef` hooks map onto exotic methods and per-object slots, natives, scripts, errors, and every place it knowingly diverges from SpiderMonkey 1.8.5 (grep `DIVERGENCE`).
 
 ## Not in the façade, and why
 
 	JS_EnterLocalRootScope, JS_LeaveLocalRootScope: superseded. SpiderMonkey's conservative stack
 	scan and the QuickJS-ng backend's handle arena both keep a native's locals alive; the three
-	sites were deleted (bead oo-1gc.3).
+	sites were deleted.
 
 	The engine's frame walk, debugger hook, function-call tracer and root/heap dumps used to be
 	listed here; they are now the façade's "Debugging and profiling" section, with the explicit
-	contract that a backend may answer with less (ADR-0022).
+	contract that a backend may answer with less.

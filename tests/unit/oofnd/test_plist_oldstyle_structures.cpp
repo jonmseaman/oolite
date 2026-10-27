@@ -1,9 +1,10 @@
 /*	test_plist_oldstyle_structures.cpp
-        The old-style scanner's arrays, dictionaries, data and nesting (bead
-   oo-6rj), including GNUstep's <*...> and <[...]> extensions. As in
+        The old-style scanner's arrays, dictionaries, data and nesting,
+   including GNUstep's <*...> and <[...]> extensions. As in
    test_plist_oldstyle_strings.cpp, every expected value and message was
    captured from GNUstep base 1.31.1's NSPropertyListSerialization; the two
-   tests marked ADR-0027 pin oofnd's documented differences instead. meson test
+   tests suffixed GnustepDiffers pin oofnd's documented differences instead.
+   meson test
    --suite oofnd-plist
 */
 
@@ -97,7 +98,7 @@ OO_TEST(dictionaryErrors) {
           "line 1 (char 9) - invalid utf8 data while parsing quoted string"));
 }
 
-OO_TEST(nonStringKeysAreRejected_ADR0027) {
+OO_TEST(nonStringKeysAreRejected_GnustepDiffers) {
   // GNUstep accepts these ({(x) = b;} is a dictionary keyed by an array); oofnd
   // keys are strings.
   OO_CHECK_EQ(parsed("{ (x) = b; }"),
@@ -128,7 +129,7 @@ OO_TEST(hexDataErrors) {
   OO_CHECK_EQ(parsed("<01 /* > */ 02>"),
               failure("line 1 (char 13) - unexpected character (wanted '>')"));
   // A comment running to the end: GNUstep reads past the buffer here; oofnd
-  // reports the same message GNUstep produced (ADR-0027 item 4).
+  // reports the same message GNUstep produced.
   OO_CHECK_EQ(parsed("(<01 //>)"),
               failure("line 1 (char 10) - unexpected character (wanted '>')"));
 }
@@ -196,7 +197,7 @@ OO_TEST(undecodableExtensionsAreNilWithoutAnError) {
 }
 
 OO_TEST(dateFieldsNSCalendarDateRejects) {
-  // Found by the GNUstep differential fuzzer (bead oo-g2k):
+  // Found by the GNUstep differential fuzzer:
   // -initWithString:calendarFormat: is nil for a day or month of 0 ("Day of
   // month is zero"), so the whole plist is nil.
   OO_CHECK_EQ(parsed("{ key = <*D2001-01-00 00:00:00 +0000>; }"), "nil");
@@ -208,9 +209,9 @@ OO_TEST(dateFieldsNSCalendarDateRejects) {
               "[T31536000.000]");  // 13 rolls over
 }
 
-OO_TEST(dateZoneBeyondEighteenHoursIsUtc_ADR0027) {
+OO_TEST(dateZoneBeyondEighteenHoursIsUtc_GnustepDiffers) {
   // +timeZoneForSecondsFromGMT: is nil beyond 18 hours and the date falls back
-  // to the local zone; oofnd reads it as UTC (ADR-0027 item 7), as the GNUstep
+  // to the local zone; oofnd reads it as UTC, as the GNUstep
   // oracle pinned to UTC does.
   OO_CHECK_EQ(parsed("{ key = <*D2001-01-01 00:00:00 +1800>; }"),
               "{\"key\"=T-64800.000;}");

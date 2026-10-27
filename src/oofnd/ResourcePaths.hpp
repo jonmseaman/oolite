@@ -2,7 +2,7 @@
         oo::ResourcePaths: where the game finds its built-in Resources, its
    AddOns roots and its per-user directories (saves, snapshots, logs, caches,
    managed OXZs). Replaces the NSBundle / NSHomeDirectory() /
-   NSSearchPathForDirectoriesInDomains() lookups (bead oo-i9q).
+   NSSearchPathForDirectoriesInDomains() lookups.
 
         Every answer reproduces what the game computes TODAY on the SDL
    platforms (Windows, Linux), including the OO_* environment overrides, so a
@@ -43,7 +43,7 @@
    before anything reads it, which is why saves, Logs and GNUstep/Library all
    live next to oolite.exe. On Linux it is $HOME. With neither, the current
         directory. The macOS (Cocoa) layout is not reproduced: that platform is
-   outside ADR-0017. The home and GNUstep/Library rules were probed against
+   not supported. The home and GNUstep/Library rules were probed against
    gnustep-base 1.31 on this toolchain (HOMEPATH with and without a drive,
    NSSearchPathForDirectoriesInDomains); the rest transcribe the Objective-C
    cited above. fs::utf8String() of an answer is the string the Objective-C code
@@ -58,17 +58,15 @@
    here creates a directory: creating and falling back is the consumer's job, as
    it is today (oofnd/FileSystem.hpp).
 
-        Header-only, C++20, compiles with -fno-exceptions. Proposed ADR-0028
-   records the choices.
+        Header-only, C++20, compiles with -fno-exceptions.
 */
 
-#ifndef OOFND_RESOURCEPATHS_HPP
-#define OOFND_RESOURCEPATHS_HPP
+#pragma once
 
 // Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
 // 0`; C++20 needs the keywords (requires-clauses, <=> in the standard headers
 // this pulls in). Suspend the macros for this header and restore them at its
-// end (proposed ADR-0028).
+// end.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -291,5 +289,3 @@ class ResourcePaths {
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_RESOURCEPATHS_HPP

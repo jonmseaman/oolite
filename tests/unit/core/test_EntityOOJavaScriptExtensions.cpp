@@ -1,7 +1,7 @@
 /*	test_EntityOOJavaScriptExtensions.mm
         Unit tests for the categories Entity (OOJavaScriptExtensions) and
    ShipEntity (OOJavaScriptExtensions)
-   (src/Core/Scripting/EntityOOJavaScriptExtensions.h/.mm): bead oo-g223, what
+   (src/Core/Scripting/EntityOOJavaScriptExtensions.h/.mm): what
    the script engine asks an entity by selector (is it visible to scripts, its
    JS class name, its JS class and prototype, its JS object) and what scripts
    ask a ship (its subentities, and setting its target, which climbs from a
@@ -14,11 +14,7 @@
    released): it answers the ShipEntity selectors the category sends (its
    subentities, its owner, being a subentity, its targets) and records what it
    was told. The JS object the entity already has is a plain object of a runtime
-   the test makes. The expectations were written against the Objective-C
-   categories and run on them first; they send only the categories' selectors,
-   so the conversion (the bodies as free functions, the categories' forwarders
-   in EntityOOJavaScriptExtensions+ObjCBridge.mm) changed no line here. Run:
-   bash tools/check-core-tests.sh
+   the test makes. Run: bash tools/check-core-tests.sh
 */
 
 #include <string>
@@ -36,20 +32,16 @@ uint32_t gDebugFlags = 0;
 #endif
 
 // A ship that answers what the functions ask a ship, and records the targets it
-// was told. A C++ subclass since bead oo-9ht.144 deleted the Objective-C ship
-// this subclassed: its subentities, owner and being a subentity are the ship's
-// own state, set by the test; its primary target and the targets it is told are
-// its overrides (removeTarget() is virtual for it, a test seam: amendment
-// oo-9ht.107 item 6).
+// was told. Its subentities, owner and being a subentity are the ship's own
+// state, set by the test; its primary target and the targets it is told are
+// its overrides (removeTarget() is virtual for it, a test seam).
 class TestShip : public ShipEntity {
  public:
   Entity* _testPrimaryTarget = nullptr;
   std::vector<std::string> _told;  // "add <name>" / "remove <name>"
   const char* _name = "";
 
-  Entity* primaryTarget() override {
-    return _testPrimaryTarget;
-  }  // the C++ entity since bead oo-9ht.39.23
+  Entity* primaryTarget() override { return _testPrimaryTarget; }
 
   void addTarget(Entity* targetEntity) override {
     _told.push_back(
@@ -68,9 +60,8 @@ class TestShip : public ShipEntity {
   }
 };
 
-// An entity that scripts can see but that keeps Entity's JS class (an
-// Objective-C subclass until bead oo-j12i2; a C++ one overriding the member its
-// selector became).
+// An entity that scripts can see but that keeps Entity's JS class (a C++
+// subclass overriding the member its selector became).
 class TestVisibleEntity : public Entity {
  public:
   bool isVisibleToScripts() override { return true; }
@@ -209,8 +200,7 @@ OO_TEST(shipIsVisible) {
 OO_TEST(subEntitiesForScript) {
   {
     TestShip* ship = Ship("ship");
-    OO_CHECK(ShipEntityJSSubEntitiesForScript(ship)
-                 .empty());  // -subEntitiesForScript until bead oo-9ht.144
+    OO_CHECK(ShipEntityJSSubEntitiesForScript(ship).empty());
 
     TestShip* turret = Ship("turret");
     TestShip* hull = Ship("hull");
@@ -227,8 +217,7 @@ OO_TEST(setTarget) {
   {
     TestShip* ship = Ship("ship");
     TestShip* other = Ship("other");
-    ShipEntityJSSetTargetForScript(
-        ship, other);  // -setTargetForScript: until bead oo-9ht.144
+    ShipEntityJSSetTargetForScript(ship, other);
     OO_CHECK(Told(ship) == "add other");
   }
 }
@@ -238,14 +227,12 @@ OO_TEST(setTargetNilRemovesPrimaryTarget) {
     TestShip* ship = Ship("ship");
     TestShip* current = Ship("current");
     ship->_testPrimaryTarget = current;
-    ShipEntityJSSetTargetForScript(
-        ship, nullptr);  // -setTargetForScript: until bead oo-9ht.144
+    ShipEntityJSSetTargetForScript(ship, nullptr);
     OO_CHECK(Told(ship) == "remove current");
 
     // No primary target: remove nil.
     TestShip* idle = Ship("idle");
-    ShipEntityJSSetTargetForScript(
-        idle, nullptr);  // -setTargetForScript: until bead oo-9ht.144
+    ShipEntityJSSetTargetForScript(idle, nullptr);
     OO_CHECK(Told(idle) == "remove nil");
   }
 }
@@ -264,8 +251,7 @@ OO_TEST(setTargetClimbsToRootShips) {
     TestShip* enemyTurret = Ship("enemyTurret");
     SetSubEntityOf(enemyTurret, enemy);
 
-    ShipEntityJSSetTargetForScript(
-        turret, enemyTurret);  // -setTargetForScript: until bead oo-9ht.144
+    ShipEntityJSSetTargetForScript(turret, enemyTurret);
     OO_CHECK(Told(root) == "add enemy");
     OO_CHECK(Told(turret).empty() && Told(middle).empty());
   }
@@ -278,8 +264,7 @@ OO_TEST(setTargetStopsAtSelfOwnedOrOwnerless) {
     SetSubEntityOf(loop, loop);
     TestShip* orphan = Ship("orphan");
     orphan->isSubEntity = YES;
-    ShipEntityJSSetTargetForScript(
-        loop, orphan);  // -setTargetForScript: until bead oo-9ht.144
+    ShipEntityJSSetTargetForScript(loop, orphan);
     OO_CHECK(Told(loop) == "add orphan");
   }
 }
@@ -291,14 +276,12 @@ OO_TEST(setTargetOnANonShipRootDoesNothing) {
     TestShip* sub = Ship("sub");
     SetSubEntityOf(sub, notAShip);
     TestShip* target = Ship("target");
-    ShipEntityJSSetTargetForScript(
-        sub, target);  // -setTargetForScript: until bead oo-9ht.144
+    ShipEntityJSSetTargetForScript(sub, target);
     OO_CHECK(Told(sub).empty() && Told(target).empty());
   }
 }
 
-// Bead oo-9ht.107 (ADR-0056 amendment oo-9ht.107): the root category asks the
-// entity's C++ part, so a C++ entity with no façade of its own answers the
+// The root category asks the entity's C++ part, so a C++ entity answers the
 // engine through its overrides, the defaults are the category's bodies, and an
 // Objective-C class's own selectors still answer first.
 namespace {
@@ -327,9 +310,7 @@ OO_TEST(cxxEntityAnswersThroughItsJSMembers) {
     ooscript::Object prototype = reinterpret_cast<ooscript::Object>(1);
 
     Entity* plain = oo::MadeEntity(oo::makeRef<Entity>());
-    OO_CHECK(plain !=
-             nil);  // (and its object's class, the root facade: retired with
-                    // the facade, bead oo-dpyk8, under oo-9n5p9)
+    OO_CHECK(plain != nil);
     OO_CHECK(!OOJSEntityIsVisibleToScripts(plain) &&
              !plain->isVisibleToScripts());
     OO_CHECK(OOJSEntityJSClassName(plain) ==
@@ -338,9 +319,7 @@ OO_TEST(cxxEntityAnswersThroughItsJSMembers) {
     OO_CHECK(jsClass == JSEntityClass() && prototype == JSEntityPrototype());
 
     Entity* scripted = oo::MadeEntity(oo::makeRef<TestScriptedEntity>());
-    OO_CHECK(scripted !=
-             nil);  // (and its object's class, the root facade: retired with
-                    // the facade, bead oo-dpyk8, under oo-9n5p9)
+    OO_CHECK(scripted != nil);
     OO_CHECK(OOJSEntityIsVisibleToScripts(scripted));
     OO_CHECK(OOJSEntityJSClassName(scripted) ==
              std::optional<std::string>("TestScripted"));
@@ -349,11 +328,8 @@ OO_TEST(cxxEntityAnswersThroughItsJSMembers) {
   }
 }
 
-// An entity's Object node (bead oo-9ht.39.5.3): it holds the object, as
-// oo::PListObject()'s did, answers the C++ part, and its JS value is the part's
-// JS object (through the object, as before). That the node holds the object
-// (oo::ObjectIn()) and that a plain Object node of the object answers the same
-// entity are retired with the facade (bead oo-dpyk8, under oo-9n5p9).
+// An entity's Object node holds the object, answers the C++ part, and its JS
+// value is the part's JS object.
 OO_TEST(entityObjectNodeHoldsTheEntity) {
   {
     SetUpContext();

@@ -22,15 +22,14 @@
 
  */
 
-#include "OOPlanetDrawable.h"
-
 #include "MyOpenGLView.h"
 #include "OOMacroOpenGL.h"
 #include "OOOpenGL.h"
 #include "OOPlanetData.h"
+#include "OOPlanetDrawable.h"
 #include "OOSingleTextureMaterial.h"
 #include "OOStellarBody.h"
-#include "OOTexture.h"  // allTextures() destroys oo::Ref<OOTexture>s (bead oo-9ht.99)
+#include "OOTexture.h"  // allTextures() destroys oo::Ref<OOTexture>s
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 
@@ -60,7 +59,7 @@ oo::Ref<OOPlanetDrawable> OOPlanetDrawable::atmosphereWithRadius(float radius) {
 }
 
 OOPlanetDrawable::OOPlanetDrawable() {
-  {  // [super init] could not fail (amendment oo-lh0x item 3).
+  {  // [super init] could not fail.
     _radius = 1.0f;
     recalculateTransform();
     setLevelOfDetail(0.5f);

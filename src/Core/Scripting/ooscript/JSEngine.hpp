@@ -2,17 +2,16 @@
 
 ooscript/JSEngine.hpp
 
-The JavaScript engine façade (Phase 1 seam 1.1, bead oo-e7c; ADR-0002,
-architecture §4 R1).
+The JavaScript engine façade.
 
 Oolite talks to its script engine through this header and nothing else. It is
 sized to what the tree actually calls (the 2026-09-18 histogram over src/: 139
 distinct JS_* functions, 3,828 sites; the top twenty are mapped in README.md
 beside this file), not to what any engine offers. Behind it sits one backend:
 JSEngine_quickjs.cpp, the vendored QuickJS-ng (the patched SpiderMonkey 1.8.5
-backend it replaced was deleted by bead oo-7wx at Phase 1 item 5). Retargeting a
-call site onto this façade must not change behaviour; that is what the goldens
-verify, and it is why every function here keeps the calling convention of the
+backend it replaced is gone). Retargeting a call site onto this façade must not
+change behaviour; that is what the goldens verify, and it is why every function
+here keeps the calling convention of the
 JS_* function it replaces (out-parameters, bool success, same argument order)
 rather than restyling it.
 
@@ -27,8 +26,7 @@ types. The backend adapts them; a call site never writes an engine signature.
 thin-LTO, so the cost of an out-of-line predicate is an LTO decision, not a
 design one.
   * Consumers that are still Objective-C are compiled as Objective-C++ when they
-are retargeted (ADR-0001: the whole tree compiles as Objective-C++ during the
-bridge).
+are retargeted.
 
 Engine function names in this file's comments are written without their JS_*
 prefix: the deny-list (tools/deny-list.txt) forbids the prefixed spelling in any
@@ -182,7 +180,7 @@ class CallArgs {
   Value* argv() const { return vp_ + 2; }  // engine: ARGV
   Value& operator[](unsigned i) const {
     return vp_[2 + i];
-  }                                           // argv[i]; i < count()
+  }  // argv[i]; i < count()
   Value callee() const { return vp_[0]; }     // engine: CALLEE
   Value thisValue() const { return vp_[1]; }  // engine: THIS
   Object thisObject() const;             // engine: THIS_OBJECT (may run script)
@@ -326,7 +324,7 @@ const ClassDef* getObjectClass(
     Context cx,
     Object obj);  // engine: GetClass for any object: our classes as getClass,
                   // the engine's own (Object, Array, ...) a stable hook-less
-                  // descriptor carrying their name (bead oo-1gc.3)
+                  // descriptor carrying their name
 bool instanceOf(Context cx, Object obj, ClassDef* def,
                 Value* argv);                         // engine: InstanceOf
 bool setPrivate(Context cx, Object obj, void* data);  // engine: SetPrivate
@@ -686,7 +684,7 @@ void triggerOperationCallback(Context cx);  // engine: TriggerOperationCallback
 void triggerAllOperationCallbacks(
     Runtime rt);  // engine: TriggerAllOperationCallbacks
 
-// MARK: Completing the retarget (bead oo-1gc.3)
+// MARK: Completing the retarget
 // -------------------------------------------------
 //
 // What the last game files needed that the histogram-sized first cut left out.

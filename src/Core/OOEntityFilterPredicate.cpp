@@ -25,9 +25,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOEntityFilterPredicate.h"
-
 #include "Entity.h"
+#include "OOEntityFilterPredicate.h"
 #include "OOPlanetEntity.h"
 #include "OORoleSet.h"
 #include "ShipEntity.h"
@@ -93,10 +92,8 @@ BOOL NANDPredicate(Entity* entity, void* parameter) {
   return !(A && B);
 }
 
-/*	The predicates ask the C++ entity what the root facade's selectors
-   forwarded to (bead oo-9ht.39.27; an Objective-C stand-in was messaged until
-   bead oo-j12i2).
-*/
+/*	The predicates ask the C++ entity directly.
+ */
 BOOL HasScanClassPredicate(Entity* entity, void* parameter) {
   return *static_cast<const OOScanClass*>(parameter) ==
          (entity != nullptr
@@ -114,8 +111,7 @@ BOOL IsStationPredicate(Entity* entity, void* /*parameter*/) {
 
 BOOL IsPlanetPredicate(Entity* entity, void* /*parameter*/) {
   if (!(entity != nullptr && entity->isPlanet())) return NO;
-  OOStellarBodyType type = OOStellarBodyPlanetType(
-      entity);  // the planet is C++ since bead oo-9ht.129
+  OOStellarBodyType type = OOStellarBodyPlanetType(entity);
   return (type == STELLAR_TYPE_NORMAL_PLANET || type == STELLAR_TYPE_MOON);
 }
 
@@ -176,8 +172,7 @@ BOOL HasPrimaryRoleInSetPredicate(Entity* ship, void* parameter) {
 BOOL IsHostileAgainstTargetPredicate(Entity* ship, void* parameter) {
   return (oo::ToShip(ship) != nullptr ? oo::ToShip(ship)->hasHostileTarget()
                                       : false) &&
-         (oo::ToShip(ship) != nullptr ? oo::ToShip(ship)->primaryTarget()
-                                      : (Entity*)nullptr) ==
-             static_cast<::ShipEntity*>(
-                 parameter);  // the ship (its object until bead oo-9ht.144)
+         (oo::ToShip(ship) != nullptr
+              ? oo::ToShip(ship)->primaryTarget()
+              : (Entity*)nullptr) == static_cast<::ShipEntity*>(parameter);
 }

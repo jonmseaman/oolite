@@ -66,7 +66,7 @@ class OOLaserShotEntity : public Entity {
   friend struct ::OOLaserShotEntityTestAccess;
 
   // -initLaserFromShip:direction:offset:'s body, run once right after
-  // construction (amendment oo-vl43 item 2).
+  // construction.
   void initLaserFromShip(::ShipEntity* srcEntity, OOWeaponFacing direction,
                          Vector offset);
 

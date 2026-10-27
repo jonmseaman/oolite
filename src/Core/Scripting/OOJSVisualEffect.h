@@ -32,7 +32,7 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
 class Entity;
-class OOVisualEffectEntity;  // C++ since bead oo-9ht.165
+class OOVisualEffectEntity;
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,10 +45,8 @@ void InitOOJSVisualEffect(ooscript::Context context, ooscript::Object global);
 #endif
 
 /*	The bodies of OOVisualEffectEntity (OOJavaScriptExtensions), which the
-   engine reaches by selector: the effect's facade forwarded to these (bead
-   oo-9ht.93) until bead oo-9ht.165 deleted it; the C++ effect's
-   getJSClass()/jsClassName()/isVisibleToScripts() overrides call them now
-        (proposed ADR-0056 amendments oo-ppc, oo-ykoy, oo-6ia4 and oo-9ht.165).
+   engine reaches by selector: the C++ effect's
+   getJSClass()/jsClassName()/isVisibleToScripts() overrides call them.
 */
 void OOJSVisualEffectGetJSClass(ooscript::ClassDef** outClass,
                                 ooscript::Object* outPrototype);

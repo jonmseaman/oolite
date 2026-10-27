@@ -1,5 +1,5 @@
 /*	test_encoding.cpp
-        oo::str encodings (oofnd/Encoding.hpp, bead oo-dps):
+        oo::str encodings (oofnd/Encoding.hpp):
    OOEncodingConverter's lossy conversion to the five Windows code pages,
    against GNUstep base 1.31.1 (libiconv with transliteration).
 

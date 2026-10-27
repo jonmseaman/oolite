@@ -23,11 +23,10 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSClock.h"
-
 #include <cstring>
 
 #include "OODebugStandards.h"
+#include "OOJSClock.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "OOStringParsing.h"
@@ -36,28 +35,6 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "ooscript/JSEngine.hpp"
 
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), InitClass becomes
-   ooscript::initClass, the engine's DefineObject call becomes
-   ooscript::defineObject, and the directly spelled numeric-conversion call
-   becomes ooscript::newNumberValue. `this` is renamed to `thisObj` because it
-   is a reserved word once this file compiles as Objective-C++ (ADR-0001).
-   Natives take the façade signature (Context, CallArgs reference) directly, and
-   the OOJS_* argument-marshalling macros (OOJS_NATIVE_ENTER, OOJS_ARGV,
-   OOJS_RETURN_*) expand to the CallArgs accessors.
-*/
-
-/*
-        C++20 since bead oo-xy5r, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT are a C++ try/catch
-   (OOJSEngineNativeWrappers.h) and BOOL/YES/NO are bool/true/false. The file
-   has no category, so there is no bridge. Messages to classes that are still
-   Objective-C (PlayerEntity, Universe) stay as they are, which is why the file
-   is still .mm until Phase 4.
-*/
 namespace ooscript {}
 using ooscript::CallArgs;
 using ooscript::ClassDef;
@@ -223,10 +200,9 @@ static bool ClockGetProperty(Context cx, Object obj, PropertyId propID,
   PlayerEntity* player = OOPlayerForScripting();
   double clockTime;
 
-  clockTime = (player != nullptr
-                   ? player->PlayerEntity::clockTime()
-                   : 0.0);  // qualified: the final overrider (bead oo-9ht.177),
-                            // so the binding test stands in for it
+  clockTime = (player != nullptr ? player->PlayerEntity::clockTime()
+                                 : 0.0);  // qualified: the final overrider, so
+                                          // the binding test stands in for it
 
   switch (ooscript::idToInt32(propID)) {
     case kClock_absoluteSeconds:
@@ -274,8 +250,8 @@ static bool ClockGetProperty(Context cx, Object obj, PropertyId propID,
       return ooscript::newNumberValue(
           cx,
           (player != nullptr ? player->PlayerEntity::clockTimeAdjusted() : 0.0),
-          value);  // qualified: the final overrider (bead oo-9ht.177), so the
-                   // binding test stands in for it
+          value);  // qualified: the final overrider, so the binding test stands
+                   // in for it
 
     case kClock_legacy_scriptTimer:
       cxx_OOStandardsDeprecated(

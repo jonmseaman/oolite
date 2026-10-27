@@ -28,16 +28,15 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-#include "OOJSConsole.h"
-
 #include <stdint.h>
 
-#include "Entity.h"  // an entity's -inspect
-#include "EntityOOJavaScriptExtensions.h"  // callObjC()'s class name of an entity (bead oo-9ht.39.5.1)
+#include "Entity.h"                        // an entity's -inspect
+#include "EntityOOJavaScriptExtensions.h"  // callObjC()'s class name of an entity
 #include "OOConstToString.h"
 #include "OODebugFlags.h"
 #include "OODebugMonitor.h"
 #include "OOJSCall.h"
+#include "OOJSConsole.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSEntity.h"
 #include "OOJSScript.h"
@@ -49,17 +48,16 @@ SOFTWARE.
 #include "OOProfilingStopwatch.h"
 #include "ResourceManager.h"
 #if OO_DEBUG
-#include "OOShaderUniformMethodType.h"  // callObjC()'s scalar results on the console (bead oo-9ht.74)
-#include "OOTypeEncodings.h"  // the monitor rows' measured encodings (bead oo-dbz.3)
+#include "OOShaderUniformMethodType.h"  // callObjC()'s scalar results on the console
+#include "OOTypeEncodings.h"            // the monitor rows' measured encodings
 #endif
 
 #include "oofnd/String.hpp"
 
 // The Mac debug OXP's inspector added -inspect to entities (a category on
-// Entity); inspectEntity() sent it to an entity that answered it. Since the
-// root facade's deletion (bead oo-dpyk8) it calls the entity's virtual
-// inspect() (oo::InspectEntity()), which does nothing unless a subclass
-// overrides it.
+// Entity); inspectEntity() sent it to an entity that answered it. Now it calls
+// the entity's virtual inspect() (oo::InspectEntity()), which does nothing
+// unless a subclass overrides it.
 
 static ooscript::Object sConsolePrototype = NULL;
 static ooscript::Object sConsoleSettingsPrototype = NULL;
@@ -312,9 +310,8 @@ static void InitOOJSConsole(ooscript::Context context,
 void OOJSConsoleDestroy(void) { sConsolePrototype = NULL; }
 
 /*	The console objects' private slot holds the C++ monitor with one retain,
-   released by ConsoleFinalize (bead oo-9ht.74; it held the facade's weak
-   reference). The monitor is never released, as the facade never was, so the
-   slot keeps nothing alive that would otherwise die.
+   released by ConsoleFinalize. The monitor is never released, as the facade
+   never was, so the slot keeps nothing alive that would otherwise die.
 */
 namespace {
 
@@ -349,9 +346,8 @@ void ReportNotTheMonitor(ooscript::Context context, ooscript::Object object,
   const oo::PList node = (object != NULL)
                              ? cxx_OOJSPListFromJSObject(context, object)
                              : oo::PList();
-  // An entity's node: the class of its object, the root facade's (bead
-  // oo-dpyk8). Any other node holds no Objective-C object (bead oo-4aq6a.5
-  // deleted that node): nil's class, described "(null)".
+  // An entity's node: the class of its object, the root facade's. Any other
+  // node holds no Objective-C object: nil's class, described "(null)".
   const std::string className = (oo::EntityIn(node) != nullptr)
                                     ? std::string("Entity")
                                     : std::string("(null)");
@@ -862,7 +858,7 @@ static bool ConsoleInspectEntity(ooscript::Context context,
                                  ooscript::CallArgs& oojsArgs) {
   OOJS_NATIVE_ENTER(context)
 
-  Entity* cxxEntity = nullptr;  // the C++ entity since bead oo-9ht.39.3
+  Entity* cxxEntity = nullptr;  // the C++ entity
 
   if (JSValueToEntity(context, OOJS_ARGV[0], &cxxEntity)) {
     OOJS_BEGIN_FULL_NATIVE(context)
@@ -879,14 +875,13 @@ static bool ConsoleInspectEntity(ooscript::Context context,
 #if OO_DEBUG
 namespace {
 
-/*	callObjC()'s names on the console objects (proposed ADR-0056 amendment
-   oo-9ht.74): the debug monitor's facade, which they held, answered any
-   selector whose signature callObjC() matched. Its deletion leaves this table:
-   exactly the facade's own selectors without arguments, and the two that take
-   the joined string argument. Each row calls the C++ member the selector
-   forwarded to, with the result the selector's signature gave; a scalar row
-   keeps the @encode() of the facade's return type, so its result (or the
-   "cannot be called" error) is the one the selector path read from the same
+/*	callObjC()'s names on the console objects: the debug monitor's facade,
+   which they held, answered any selector whose signature callObjC() matched.
+   This table is exactly the facade's own selectors without arguments, and the
+   two that take the joined string argument. Each row calls the C++ member the
+   selector forwarded to, with the result the selector's signature gave; a
+   scalar row keeps the @encode() of the facade's return type, so its result (or
+   the "cannot be called" error) is the one the selector path read from the same
    encoding, and a row whose signature matched nothing (NotCallable) answers
    that error. Every other name answers "does not respond": the root classes'
    selectors (the weak-reference root and OOObject: lifetime, weak reference,
@@ -1069,8 +1064,7 @@ static bool ConsoleCallObjCMethod(ooscript::Context context,
   ooscript::Value result;
   bool OK;
 
-  // The console objects hold the C++ monitor (bead oo-9ht.74): its table, not a
-  // selector.
+  // The console objects hold the C++ monitor: its table, not a selector.
   if (OODebugMonitor* monitor = MonitorFromJSObject(context, OOJS_THIS)) {
     OOJSPauseTimeLimiter();
     result = ooscript::undefinedValue();
@@ -1082,10 +1076,8 @@ static bool ConsoleCallObjCMethod(ooscript::Context context,
   }
 
   // An entity's `this` converts to its entity node, whose C++ entity this takes
-  // (bead oo-9ht.39.5.3) and calls by its name table (bead oo-9ht.44). Any
-  // other `this` held no Objective-C object since none is made (bead oo-4aq6a.5
-  // deleted the object path and its node): the error below, as for a plain JS
-  // object.
+  // and calls by its name table. Any other `this` held no Objective-C object
+  // since none is made: the error below, as for a plain JS object.
   const oo::PList thisNode = cxx_OOJSPListFromJSObject(context, OOJS_THIS);
   Entity* entity = oo::EntityIn(thisNode);
   if (entity == nullptr) {
@@ -1101,8 +1093,8 @@ static bool ConsoleCallObjCMethod(ooscript::Context context,
 
   OOJSPauseTimeLimiter();
   result = ooscript::undefinedValue();
-  // The class name of the error texts: an entity's is its C++ part's (bead
-  // oo-9ht.39.5.1), the answer its object's -cxx_oo_jsClassName forwarded to.
+  // The class name of the error texts: an entity's is its C++ part's, the
+  // answer its object's -cxx_oo_jsClassName forwarded to.
   std::optional<std::string> className = OOJSEntityJSClassName(entity);
   OK = OOJSCallEntityMethod(context, entity, className.value_or(std::string()),
                             oojsArgs.count(), OOJS_ARGV, &result);
@@ -1350,7 +1342,7 @@ static bool ConsoleProfile(ooscript::Context context,
 
   bool result;
   {
-    oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+    oo::AutoreleaseScope pool;  // was @autoreleasepool
     oo::Ref<OOTimeProfile> profile;
 
     result = PerformProfiling(context, "profile", oojsArgs.count(), OOJS_ARGV,
@@ -1383,7 +1375,7 @@ static bool ConsoleGetProfile(ooscript::Context context,
 
   bool result;
   {
-    oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+    oo::AutoreleaseScope pool;  // was @autoreleasepool
     oo::Ref<OOTimeProfile> profile;
 
     result = PerformProfiling(context, "getProfile", oojsArgs.count(),
@@ -1415,7 +1407,7 @@ static bool ConsoleTrace(ooscript::Context context,
   ooscript::Value rval;
   bool result;
   {
-    oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+    oo::AutoreleaseScope pool;  // was @autoreleasepool
     result = PerformProfiling(context, "trace", oojsArgs.count(), OOJS_ARGV,
                               &rval, true, NULL);
     if (result) {
@@ -1449,8 +1441,7 @@ bool PerformProfiling(ooscript::Context context, const char* nominalFunction,
   else {
     ooscript::Value debugConsole =
         OODebugMonitor::sharedDebugMonitor()->jsValueInContext(
-            context);  // the facade's -oo_jsValueInContext: until bead
-                       // oo-9ht.74
+            context);  // the facade's -oo_jsValueInContext:
     assert(ooscript::isObjectOrNull(debugConsole) &&
            !ooscript::isNull(debugConsole));
     ooscript::getProperty(context, ooscript::toObject(debugConsole), "script",

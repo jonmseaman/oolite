@@ -1,28 +1,22 @@
 /*	test_OOJSWormhole.mm
         Unit tests for the Wormhole JS binding
-   (src/Core/Scripting/OOJSWormhole.h/.mm) and its WormholeEntity category
-   (whose forwarders were on the WormholeEntity facade from bead oo-9ht.43 until
-   bead oo-9ht.112 deleted it: the C++ class's overrides answer the engine now,
-   through the root's JS category, and this test's stand-ins are C++ the same
-   way, amendment oo-9ht.107 item 6): bead oo-ykoy, converted the way bead
-   oo-ppc converted OOJSVector (proposed ADR-0056 amendments oo-ppc and
-   oo-ykoy).
+   (src/Core/Scripting/OOJSWormhole.h/.mm) and its WormholeEntity category (the
+   C++ class's overrides answer the engine, through the root's JS category, and
+   this test's stand-ins are C++ the same way).
 
         It runs the JS class in a real context on the game's own façade backend
-        (ooscript/JSEngine_quickjs.cpp) and links the game's own objects for the
+   (ooscript/JSEngine_quickjs.cpp) and links the game's own objects for the
    binding and the engine's exception translator (OOJSEngineNativeWrappers.mm).
-   The entity classes it reads are stand-ins of the same names (amendment
-   oo-z1s4, item 4), so the test imports neither their headers nor
-   OOJavaScriptEngine.h (which imports them): Entity and WormholeEntity answer
-        only the selectors the binding sends, and the JS side of an entity is a
-   JS object of the binding's class whose private slot is the entity. What the
-   engine provides (the Entity JS class, the subclass table, the object getter,
-   error reporting) is defined below as the smallest stand-in that does the same
-   thing, with the engine header's linkage. The expectations were written
-   against the Objective-C file and run on it first; they pin the JS-visible
-        behaviour (the four properties, read-only, a stale entity, the wrong
-   kind of object, a native's exception) and what the category answers the
-   engine. Run: bash tools/check-core-tests.sh
+   The entity classes it reads are stand-ins of the same names, so the test
+   imports neither their headers nor OOJavaScriptEngine.h (which imports them):
+   Entity and WormholeEntity answer only the selectors the binding sends, and
+   the JS side of an entity is a JS object of the binding's class whose private
+   slot is the entity. What the engine provides (the Entity JS class, the
+   subclass table, the object getter, error reporting) is defined below as the
+   smallest stand-in that does the same thing, with the engine header's linkage.
+   The expectations pin the JS-visible behaviour (the four properties,
+   read-only, a stale entity, the wrong kind of object, a native's exception)
+   and what the category answers the engine. Run: bash tools/check-core-tests.sh
 */
 
 #include "OOTypes.h"
@@ -66,13 +60,10 @@ class WormholeEntity : public Entity {
   OOSystemID _destination = 0;
 };
 
-// What an entity's JS object holds since bead oo-9ht.39.3: a weak reference to
-// the C++ entity.
+// What an entity's JS object holds: a weak reference to the C++ entity.
 #include "OOJSEntityHolder.h"
 
-// C++ since bead oo-4aq6a.11 (it was rooted on the Objective-C root class
-// OOObject, which Phase 4 deletes); its category's selectors are members of the
-// same names.
+// Its category's selectors are members of the same names.
 class TestEntityObject final : public oo::RefCounted {
  public:
   void getJSClass(ooscript::ClassDef** outClass,
@@ -93,8 +84,8 @@ class TestEntityObject final : public oo::RefCounted {
 #include "oo_test.hpp"
 
 // The root's JS category, as the game's asks the C++ part
-// (EntityOOJavaScriptExtensions+ObjCBridge.mm, bead oo-9ht.107): the engine
-// sends these selectors to the wrapped object.
+// (EntityOOJavaScriptExtensions+ObjCBridge.mm): the engine sends these
+// selectors to the wrapped object.
 void TestEntityObject::getJSClass(ooscript::ClassDef** outClass,
                                   ooscript::Object* outPrototype) {
   _cxxEntity->getJSClass(outClass, outPrototype);
@@ -128,8 +119,7 @@ double WormholeEntity::expiryTime() { return _expiryTime; }
 OOSystemID WormholeEntity::getOrigin() { return _origin; }
 OOSystemID WormholeEntity::getDestination() { return _destination; }
 
-// The binding's category, as the C++ class's overrides answer it (bead
-// oo-9ht.112; the WormholeEntity facade forwarded it from bead oo-9ht.43).
+// The binding's category, as the C++ class's overrides answer it.
 void WormholeEntity::getJSClass(ooscript::ClassDef** outClass,
                                 ooscript::Object* outPrototype) {
   ::OOJSWormholeGetJSClass(outClass, outPrototype);
@@ -210,9 +200,9 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
   sConverters[theClass]++;
 }
 
-// The engine's object getter is OOJSPrivateObject.cpp's (linked) since bead
-// oo-9ht.39.3: the JS class must be a subclass of the required one, and the
-// slot holds the entity's holder.
+// The engine's object getter is OOJSPrivateObject.cpp's (linked): the JS class
+// must be a subclass of the required one, and the slot holds the entity's
+// holder.
 
 // The shared toString(), which OOJSCxxObjectWrapperToString() hands a `this` of
 // another class.
@@ -278,7 +268,7 @@ WormholeEntity* sWormholePart = nullptr;  // its C++ part
 
 // A JS object for an entity, as EntityJSValueInContext() makes it: the class
 // and prototype the entity's category names, and a holder of its C++ part in
-// the private slot (bead oo-9ht.39.3).
+// the private slot.
 ooscript::Value JSValueForEntity(TestEntityObject* entity) {
   ooscript::ClassDef* jsClass = nullptr;
   ooscript::Object prototype = nullptr;

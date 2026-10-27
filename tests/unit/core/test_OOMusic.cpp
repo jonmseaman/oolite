@@ -1,22 +1,16 @@
 /*	test_OOMusic.mm
-        Unit tests for OOMusic (src/Core/OOALMusic.h): bead oo-nwbw, a sound of
-   the Audio module (proposed ADR-0056, amendment oo-2en), a subclass of the
-   converted root OOSound that overrides the root's class-cluster initialiser.
+        Unit tests for OOMusic (src/Core/OOALMusic.h), a subclass of the root
+   OOSound that overrides the root's class-cluster initialiser.
 
         A music wraps the sound the root's cluster loads for its path and plays
    it through one sound source that every music shares, made on first play and
    never released; only one music plays at a time. OpenAL runs on OpenAL Soft's
    null backend and the user's defaults are a scratch folder's, as in
    test_OOSound.mm. The sound source is the game's; the mixer and its channels
-        under it are this file's stubs, which record what the source tells them,
-   and so are the decoder and the two concrete sounds that OOALSound.mm names
-   (amendment oo-z1s4 item 4; C++ stand-ins since beads oo-9ht.82, oo-9ht.83 and
-   oo-9ht.84 deleted their facades): "missing.ogg" has no decoder. These
-   expectations were written against the Objective-C API and ran on the
-        unconverted class first; since bead oo-9ht.85 deleted the facade they
-   run through the C++ API (OOMusic, a subclass of OOSound), and since beads
-   oo-9ht.68 and oo-9ht.88 deleted the sound's and the source's facades they ask
-   the C++ source (standing approval oo-9n5p9). Run: bash
+   under it are this file's stubs, which record what the source tells them, and
+   so are the decoder and the two concrete sounds that OOALSound.mm names (C++
+   stand-ins): "missing.ogg" has no decoder. The expectations run through the
+   C++ API (OOMusic, a subclass of OOSound) and ask the C++ source. Run: bash
    tools/check-core-tests.sh test_OOMusic
 */
 
@@ -41,8 +35,7 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 }
 
 /*	The decoder: "missing.ogg" (and no path) has none; any other is small.
-   Counts the decoders alive. A C++ stand-in since bead oo-9ht.82 deleted the
-   Objective-C facade this file stubbed: the factory the cluster calls, a
+   Counts the decoders alive. A C++ stand-in: the factory the cluster calls, a
    subclass answering the path, and the root's members (OOALSoundDecoder.mm is
    not linked), which its vtable names.
 */
@@ -83,8 +76,7 @@ std::optional<std::string> OOALSoundDecoder::descriptionComponents() const {
 
 static int gLiveSounds = 0;
 
-// The buffered sound: a C++ stand-in since bead oo-9ht.83 deleted the
-// Objective-C facade this file stubbed (the members the cluster and the root
+// The buffered sound: a C++ stand-in (the members the cluster and the root
 // call). Counts the live ones.
 oo::Ref<OOALBufferedSound> OOALBufferedSound::initWithDecoder(
     OOALSoundDecoder* inDecoder) {
@@ -102,9 +94,7 @@ ALuint OOALBufferedSound::soundBuffer() {
   return OOSound::soundBuffer();  // the stub did not override it
 }
 
-// The streamed sound: a C++ stand-in since bead oo-9ht.84 deleted the
-// Objective-C facade this file stubbed. It refuses every decoder, as the stub
-// did.
+// The streamed sound: a C++ stand-in. It refuses every decoder.
 oo::Ref<OOALStreamedSound> OOALStreamedSound::initWithDecoder(
     OOALSoundDecoder* inDecoder) {
   (void)inDecoder;
@@ -119,8 +109,7 @@ ALuint OOALStreamedSound::soundBuffer() { return 0; }
 /*	The mixer and its channels, under the real sound source
    (OOSoundSource.mm): the mixer hands out channels that record what they are
    told, in order, and a stopped channel tells its delegate as the real one
-   does. The channel is a C++ stand-in since bead oo-9ht.86 deleted the
-        Objective-C facade this file stubbed (the members the source calls),
+   does. The channel is a C++ stand-in (the members the source calls),
    with its own delegate and sound.
 */
 static std::vector<std::string> gChannelLog;
@@ -152,8 +141,8 @@ void OOSoundChannel::stop() {
 
 static int gChannelsOut = 0;
 
-// The mixer (a C++ stand-in since bead oo-9ht.87 deleted the Objective-C facade
-// this file stubbed): one, never released, handing out a new channel each time.
+// The mixer (a C++ stand-in): one, never released, handing out a new channel
+// each time.
 OOSoundMixer* OOSoundMixer::sharedMixer() {
   static OOSoundMixer* mixer = oo::makeRef<OOSoundMixer>().leakRef();
   return mixer;

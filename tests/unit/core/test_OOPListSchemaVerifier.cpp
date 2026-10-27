@@ -1,32 +1,18 @@
 /*	test_OOPListSchemaVerifier.mm
         Unit tests for OOPListSchemaVerifier
-   (src/Core/OXPVerifier/OOPListSchemaVerifier.h): bead oo-pni4, slice 1 of the
-   Phase 3 slice plan docs/phases/3-slices/OOPListSchemaVerifier.md (the class
-   shell, the public API and the OOPrivate verification core), in the house
-   style of the OOColor exemplar (proposed ADR-0056).
+   (src/Core/OXPVerifier/OOPListSchemaVerifier.h).
 
-        It pins what the verifier answered before the conversion, through the
-   Objective-C API its one caller (OOCheckShipDataPListVerifierStage) uses: nil
-   for a null schema, the delegate, verifying valid and invalid property lists
-   (the failure the delegate is told about: code, reason, key path and expected
-   type), $definitions macros and a bad schema, delegated types (answered,
-   refused, throwing, or a delegate that does not handle them), a delegate that
-   stops at the first failure, no failure handler at all, and
-   +descriptionForKeyPath:. The expectations were written against the
-   unconverted class and run on it first. After the conversion the class was
-   cxx:: OOPListSchemaVerifier behind an Objective-C facade.
-
-        Bead oo-9ht.119 deleted the facade (ADR-0056 amendment "deleting a
-   facade") and made the delegate's informal protocol the C++ interface
-   OOPListSchemaVerifierDelegate. The cases ask the C++ verifier with the same
-   expectations (+verifierWithSchema: and alloc/init as the factories, nil as
-   null); the Objective-C test delegate became a C++ one recording the same
-        (reference counted, so that it is still checked not retained); a
-   delegate that answered neither selector cannot be written in C++, so
-   aDelegateThatHandlesNothing verifies with no delegate, the path an unanswered
-   selector took. facadeContract, which pinned only the facade (one live facade,
-   oo::ToObjC/oo::ToCxx, the delegate handed the facade), was retired with it
-   (ADR-0049, standing approval oo-9n5p9); its C++ API checks are
+        It pins what the verifier answers to its one caller
+   (OOCheckShipDataPListVerifierStage): nil for a null schema, the delegate,
+   verifying valid and invalid property lists (the failure the delegate is told
+   about: code, reason, key path and expected type), $definitions macros and a
+   bad schema, delegated types (answered, refused, throwing, or a delegate that
+   does not handle them), a delegate that stops at the first failure, no failure
+   handler at all, and +descriptionForKeyPath:. The delegate is the C++
+   interface OOPListSchemaVerifierDelegate; the test delegate records what it is
+   told (reference counted, so that it is still checked not retained). A
+   delegate that answers nothing cannot be written in C++, so
+   aDelegateThatHandlesNothing verifies with no delegate. The C++ API checks are
    delegateIsHandedTheVerifier. Run: bash tools/check-core-tests.sh
    test_OOPListSchemaVerifier
 */
@@ -43,9 +29,9 @@
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/objc/OOException.h"
 
-// Link stubs (ADR-0056 amendment oo-zffj item 2): OOPListGameTypes.mm reaches
-// OOStringParsing.mm's scanners for vector and quaternion values, whose object
-// links the game. No schema here uses those types, so each stub aborts.
+// Link stubs: OOPListGameTypes.mm reaches OOStringParsing.mm's scanners for
+// vector and quaternion values, whose object links the game. No schema here
+// uses those types, so each stub aborts.
 BOOL cxx_ScanVectorFromString(const std::optional<std::string>&, Vector*) {
   std::abort();
 }
@@ -84,9 +70,8 @@ std::string FailureText(const OOPListSchemaVerifierError& error,
 }  // namespace
 
 // A delegate that records what it is told. Delegated types answer
-// `delegatedAnswer`, or raise. (An Objective-C object answering the informal
-// protocol until bead oo-9ht.119; reference counted, as that object was, so the
-// test can check the verifier does not retain it.)
+// `delegatedAnswer`, or raise. (Reference counted, so the test can check the
+// verifier does not retain it.)
 class TestSchemaDelegate : public oo::RefCounted,
                            public OOPListSchemaVerifierDelegate {
  public:
@@ -346,9 +331,7 @@ OO_TEST(asksTheDelegateAboutDelegatedTypes) {
 
 OO_TEST(aDelegateThatHandlesNothing) {
   {
-    // Delegated types pass; a failure stops verification. (A delegate that
-    // answered neither selector until bead oo-9ht.119; no delegate takes the
-    // same path.)
+    // Delegated types pass; a failure stops verification.
     const oo::Ref<OOPListSchemaVerifier> verifier =
         OOPListSchemaVerifier::verifierWithSchema(
             Parse("{ type = array; valueType = { type = delegatedType; "
@@ -384,9 +367,7 @@ OO_TEST(describesKeyPaths) {
   OO_CHECK_EQ(KeyPathText(oo::PList("not an array")), "root");
 }
 
-// The C++ verifier hands its delegate itself (it handed the Objective-C
-// delegate its facade until bead oo-9ht.119, which retired facadeContract;
-// these are that case's C++ API checks).
+// The C++ verifier hands its delegate itself.
 OO_TEST(delegateIsHandedTheVerifier) {
   {
     OO_CHECK(OOPListSchemaVerifier::verifierWithSchema(oo::PList()).get() ==

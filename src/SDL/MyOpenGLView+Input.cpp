@@ -7,7 +7,7 @@ Oolite
 */
 
 // Kept first, in a block of its own: which header comes first decides whether
-// MinGW's or the UCRT's printf/strtod family is used (bead oo-we7mm).
+// MinGW's or the UCRT's printf/strtod family is used.
 #include <SDL3/SDL_init.h>
 
 #include "GameController.h"
@@ -25,7 +25,7 @@ namespace {
 
 // What -appendFormat:@"%c" appended for a character code 0..255: the Latin-1
 // character U+0000..U+00FF (GNUstep 1.31.1, captured for 32..255 by a throwaway
-// probe, bead oo-3rb.113), as UTF-8.
+// probe), as UTF-8.
 std::string FormattedCharacter(unsigned code) {
   return oo::utf16ToUtf8(
       std::u16string(1, static_cast<char16_t>(code & 0xFFu)));
@@ -33,9 +33,8 @@ std::string FormattedCharacter(unsigned code) {
 
 }  // namespace
 
-// The input half of MyOpenGLView (ADR-0056 amendments oo-o89 item 4, oo-6rb6
-// item 1; bead oo-0806): the former (Input) category, as members, which other
-// classes call (the facade that forwarded them went with bead oo-9ht.153).
+// The input half of MyOpenGLView: the former (Input) category, as members,
+// which other classes call.
 
 void MyOpenGLView::initKeyMappingData() {
   // load in our keyboard scancode mappings
@@ -238,8 +237,8 @@ void MyOpenGLView::pollControls() {
 
       case SDL_EVENT_MOUSE_BUTTON_UP:
         mbtn_event = (SDL_MouseButtonEvent*)&event;
-        // Timed by the release itself, not by this poll (bugs
-        // oo-3rb.333/oo-3rb.336). timeNow is sampled once as the poll starts,
+        // Timed by the release itself, not by this poll. timeNow is sampled
+        // once as the poll starts,
         // so the two releases of one double-click - 50 ms apart - that
         // straddled a poll which stalled (measured: 0.86 s) were timed as 0.9 s
         // apart and the double-click became two single clicks. SDL stamps every

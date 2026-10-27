@@ -25,25 +25,19 @@ SOFTWARE.
 
 */
 
-#include "OORegExpMatcher.h"
-
 #include "OOJSFunction.h"
 #include "OOJavaScriptEngine.h"
+#include "OORegExpMatcher.h"
 #include "oofnd/String.hpp"
 #include "oofnd/Thread.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   was (bead oo-sdz): the one directly-spelled engine call this file made —
-   compiling a RegExp object from a cached UTF-16 pattern — now goes through the
-   façade's own regexp entry point, engine still underneath. Everything else
-   here (OOJSAcquireContext, OOJSRelinquishContext, OOJSValue, OOJSFunction)
-   already spoke the façade's older OOJS_* naming and is unchanged. A tiny local
+        Compiling a RegExp object from a cached UTF-16 pattern goes through the
+   ooscript façade's regexp entry point (JSEngine.hpp). A tiny local
    reinterpret_cast, the same shape as OOJSVector.mm's OOJSFCX/OOJSROBJ,
-   recovers the plain engine-context and engine-object pointer locals so the
-   rest of the function body is byte for byte what it was.
+   recovers the plain engine-context and engine-object pointer locals.
 */
 
 namespace ooscript {}

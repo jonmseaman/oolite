@@ -1,8 +1,6 @@
 /*	test_OOJavaScriptEngine.mm
         Unit tests for the JavaScript engine
-   (src/Core/Scripting/OOJavaScriptEngine.h/.mm): the four slice beads of
-   docs/phases/3-slices/OOJavaScriptEngine.md (oo-10qz, oo-903c, oo-elta,
-   oo-k4nu; proposed ADR-0056 amendment oo-dqxj item 2).
+   (src/Core/Scripting/OOJavaScriptEngine.h/.mm).
 
         The engine is the singleton that owns the JS runtime and the main thread
    context: it makes the global object and every Oolite class on it, looks up
@@ -13,10 +11,8 @@
    predicates and the JS -> property list converters. It needs the real game, so
    the test links every game object but main's (tests/unit/core/meson.build
    entry ['*'], as test_OOJSScript does) and points the user's directories at a
-   scratch folder. The expectations were written against the Objective-C API and
-        run on the unconverted file first (ADR-0056 item 7); they pin what the
-   scripts and the log see. Run: bash tools/check-core-tests.sh
-   test_OOJavaScriptEngine
+   scratch folder. The expectations pin what the scripts and the log see. Run:
+   bash tools/check-core-tests.sh test_OOJavaScriptEngine
 */
 
 #include <process.h>
@@ -49,13 +45,11 @@ extern ooscript::Context gOOJSMainThreadContext;  // OOJavaScriptEngine.mm
 uint32_t gDebugFlags = 0;
 #endif
 
-// (TestNative, a plain OOObject whose JS value and description the root's JS
-// glue gave, went with that glue, bead oo-4aq6a.6.2; cxxObjectWrapper counts
-// TestCxxNative's finalisation.)
+// (cxxObjectWrapper counts TestCxxNative's finalisation.)
 
-// A C++ native object, as a JS object's private slot holds since bead
-// oo-4aq6a.6: counts its JS wrapper's finalisation and its own, and is a plist
-// Object node's foreign object.
+// A C++ native object, as a JS object's private slot holds: counts its JS
+// wrapper's finalisation and its own, and is a plist Object node's foreign
+// object.
 static int sCxxNativeDeallocs = 0;
 
 class TestCxxNative : public oo::PListForeign, public OOJSPrivateObject {
@@ -75,10 +69,9 @@ class TestCxxNative : public oo::PListForeign, public OOJSPrivateObject {
 };
 
 // An entity whose script-visible answers the test chooses (the predicates ask
-// only these). An Objective-C subclass until bead oo-j12i2: a C++ one
-// overriding the virtual members its selectors became; its -isShip,
-// -isSubEntity and -status answers are the C++ entity's own flags and status,
-// which the predicates read for a C++ entity, set where the test set its ivars.
+// only these). It overrides the virtual members; its -isShip, -isSubEntity and
+// -status answers are the C++ entity's own flags and status, which the
+// predicates read for a C++ entity, set where the test set its ivars.
 class TestScriptEntity : public Entity {
  public:
   bool isVisibleToScripts() override { return _scriptVisible; }
@@ -91,9 +84,8 @@ class TestScriptEntity : public Entity {
 };
 
 #if OOJSENGINE_MONITOR_SUPPORT
-// A debug monitor that records what the engine sends it. A C++
-// OOJavaScriptEngineMonitor since bead oo-9ht.74.1 (it was an Objective-C
-// object adopting the protocol); the same records.
+// A debug monitor that records what the engine sends it: a C++
+// OOJavaScriptEngineMonitor.
 namespace {
 
 // The records (the Objective-C class's @public ivars).
@@ -596,8 +588,7 @@ OO_TEST(nativeObjectValues) {
     ooscript::Context context = OOJSAcquireContext();
 
     // nil and OONull are JS null; OONull is one object that copies as itself.
-    // (nil is the null PList: re-pinned through OOJSValueFromPList when bead
-    // oo-4aq6a.6.2 deleted OOJSValueFromNativeObject; ADR-0062 item 3.)
+    // (nil is the null PList, through OOJSValueFromPList.)
     OO_CHECK(ooscript::isNull(OOJSValueFromPList(context, oo::PList())));
     OONull* null = OONull::null();
     OO_CHECK(null != nullptr && OONull::null() == null);
@@ -608,9 +599,6 @@ OO_TEST(nativeObjectValues) {
     OO_CHECK_EQ(null->description(), "<null>");
     OO_CHECK(ooscript::isNull(OOJSValueFromPList(context, OONullObjectNode())));
     OO_CHECK(ooscript::isNull(null->jsValueInContext(context)));
-
-    // (A plain OOObject's JS value and description, through the root's JS glue,
-    // retired with that glue, bead oo-4aq6a.6.2: ADR-0062 item 2.)
 
     // A native vector is a Vector3D.
     oo::Ref<OONativeVector> vector =
@@ -667,11 +655,6 @@ OO_TEST(jsValueHolder) {
     OOJSRelinquishContext(context);
   }
 }
-
-// (objectWrapper retired with the slot's Objective-C objects, bead oo-4aq6a.6:
-// its Objective-C native object's description, the Objective-C class-checked
-// getters and the finalizer's -oo_clearJSSelf:/release are deleted.
-// cxxObjectWrapper pins what survives.)
 
 // The generic wrapper's hooks with the C++ object the slot holds: the finalizer
 // tells it its wrapper is gone, releases it and empties the slot; toString
@@ -816,7 +799,6 @@ OO_TEST(propertyListsFromJS) {
     OO_CHECK(dict.find("b") != nullptr &&
              *dict.find("b") == oo::PList(static_cast<bool>(
                                     false)));  // OOCocoa.h defines false as 0
-                                               // (amendment oo-kq7 item 8)
 
     // Round trip through OOJSValueFromPList.
     oo::PList back = cxx_OOJSPListFromJSValue(
@@ -880,11 +862,6 @@ OO_TEST(reset) {
     oo::NotificationCenter::defaultCenter().removeObserver(&marker);
   }
 }
-
-// (aValueLeftInTheThreadPoolAtExit, which left a rooted value in libobjc2's
-// thread pool through an OOObject-rooted keeper, retired with OOObject, bead
-// oo-4aq6a.8: no game code puts an object in the runtime's pool since the
-// keepers became oo::AutoreleaseScope, amendment oo-31u.6.)
 
 OO_TEST(cleanUp) {
   oo::log::logger().setSink(nullptr);

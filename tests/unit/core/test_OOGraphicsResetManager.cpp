@@ -1,21 +1,16 @@
 /*	test_OOGraphicsResetManager.mm
         Unit tests for OOGraphicsResetManager
-   (src/Core/OOGraphicsResetManager.h): bead oo-jpd8, a Phase 3 class conversion
-   (proposed ADR-0056).
+   (src/Core/OOGraphicsResetManager.h).
 
-        The expectations were written against the Objective-C API and run on the
-   unconverted class first: one shared manager; a reset re-reads the extension
+        The tests pin: one shared manager; a reset re-reads the extension
    manager (its ResourceManager stub counts the re-read), rebinds the textures
    (this file's OOTexture stub counts it), then tells every registered client
    once; nil is never registered, a client can be registered twice but is told
    once, unregistered clients are not told, a client unregistered by an earlier
    client during the reset is skipped, and a client that raises is logged and
    does not stop the rest. Clients are not retained. The GL context is a hidden
-   window's (oo_gl_test_context.hpp). Bead oo-9ht.23 deleted the manager's
-   facade and the OOGraphicsResetClient protocol: the test's Objective-C client
-   is a C++ client with the same answers, and the facade's contract case went
-        with the facade (standing approval oo-9n5p9).
-        Run: bash tools/check-core-tests.sh
+   window's (oo_gl_test_context.hpp). The test's client is a C++ client. Run:
+   bash tools/check-core-tests.sh
 */
 
 #include <string>
@@ -40,9 +35,8 @@ static std::vector<int>
 #include "OOTexture.h"
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// C++ definitions of the ResourceManager statics the code under test calls,
+// with the stand-in's answers.
 std::vector<std::string> ResourceManager::paths() {
   sPathsCalls++;
   return {};
@@ -53,8 +47,7 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
   return oo::PList(oo::PList::Dict{});
 }
 
-// OORegExpMatcher is C++ since its facade was deleted (bead oo-9ht.12): the
-// stub answers no match.
+// OORegExpMatcher: the stub answers no match.
 oo::Ref<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
   return oo::makeRef<OORegExpMatcher>();
 }
@@ -64,8 +57,7 @@ bool OORegExpMatcher::string(const std::string&, const std::string&) {
 OORegExpMatcher::~OORegExpMatcher() {}
 
 // OOLogging.mm's (it would bring the resource manager into the link); in the
-// debug flavour OOOpenGL.mm's OOGL error check and state dump call them (bead
-// oo-iimku).
+// debug flavour OOOpenGL.mm's OOGL error check and state dump call them.
 void OOLogIndent(void) {}
 void OOLogOutdent(void) {}
 
@@ -77,16 +69,14 @@ OOShaderSetting cxx_OOShaderSettingFromString(const std::string& string) {
 extern const char* const cxx_kOOLogException;
 const char* const cxx_kOOLogException = "exception";
 
-// The C++ OOTexture's static member (bead oo-9ht.99 deleted the Objective-C
-// facade it was a stand-in of).
+// The C++ OOTexture's static member.
 void OOTexture::rebindAllTextures() {
   sRebinds++;
   sOrder.push_back(0);
 }
 
 // A client: counts its resets; may unregister another client, or raise, when
-// told. Reference counted, so the test can see the manager does not retain it
-// (an Objective-C client until bead oo-9ht.23).
+// told. Reference counted, so the test can see the manager does not retain it.
 struct OOTestResetClient : oo::RefCounted, OOGraphicsResetClient {
   int tag = 0;
   unsigned resets = 0;
@@ -199,9 +189,8 @@ OO_TEST(clientsAreNotRetained) {
   }
 }
 
-// A converted client (bead oo-4jjl, amendment oo-jpd8 item 3): told once per
-// reset, after the textures, like the other client; null is never registered;
-// unregistered, it is not told.
+// A C++ client: told once per reset, after the textures, like the other client;
+// null is never registered; unregistered, it is not told.
 namespace {
 
 struct TestCxxClient : OOGraphicsResetClient {

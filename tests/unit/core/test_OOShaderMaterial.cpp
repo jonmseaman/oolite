@@ -1,38 +1,25 @@
 /*	test_OOShaderMaterial.mm
-        Unit tests for OOShaderMaterial (src/Core/Materials/OOShaderMaterial.h):
-   bead oo-ja7y, converted after its superclass OOBasicMaterial (bead oo-vl43;
-   proposed ADR-0056, amendments oo-smy and oo-vl43).
+        Unit tests for OOShaderMaterial (src/Core/Materials/OOShaderMaterial.h).
 
         A basic material with a GLSL program, textures and uniforms. The
    program, the uniforms, the textures and the resource manager are stand-ins
-   that record what the material asks of them (amendment oo-z1s4 item 4), so
-   this pins, through the Objective-C API its callers use (the convenience
-   creators, OOPlanetEntity), what it computed before the conversion: which
-        configurations name a shader material; how the program is asked for
+   that record what the material asks of them, so this pins what it computes:
+   which configurations name a shader material; how the program is asked for
    (sources or file names and the extensions tried, the macro prefix, the
    attribute bindings, the cache key) and when the material fails; which uniform
    each entry of the uniforms dictionary becomes (every type, bindings and the
    whitelist, random values under the target's seed, gloss and gamma defaults);
    the textures loaded or passed in; and -doApply, -unapplyWithNext:, the
    loading questions, -setBindingTarget:, -permitSpecular and the description.
-   Those checks ran on the Objective-C class first and then through the facade.
-   After them: the C++ API (null where the initialiser answered nil), and the
-   facade's class and identity.
+   The cases ask the C++ class (alloc/init and the factory are
+   shaderMaterialWithName(), null where the initialiser answered nil, a held
+   Ref for retain/release, each -setUniform:...Value: the overload its comment
+   names); crossesAsTheBasicMaterialFacade pins what Objective-C sees: the
+   nearest facade, OOBasicMaterial's.
 
-        Bead oo-9ht.46 deleted the facade (ADR-0056 amendment "deleting a
-   facade"). The cases that asked through its selectors ask the C++ class with
-   the same expectations (alloc/init and the factory are
-   shaderMaterialWithName(), nil is null, retain/release a held Ref, each
-   -setUniform:...Value: the overload its comment names); the facade's own case
-   (facade) was retired with it (ADR-0049, standing approval oo-9n5p9), and
-   crossesAsTheBasicMaterialFacade pins what Objective-C sees now: the nearest
-   facade, OOBasicMaterial's.
-
-        Since bead oo-9ht.39.6 the binding target is the C++ entity: the target
-   is a stand-in C++ entity (the test links no entity), its seed answered by the
-   entities' hook as -randomSeedForShaders answered it, and the uniform stand-in
-   records the entity binding where it recorded the object's; every expected
-   value is kept. Run: bash tools/check-core-tests.sh
+        The binding target is a stand-in C++ entity (the test links no entity),
+   its seed answered by the entities' hook, and the uniform stand-in records
+   the entity binding. Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdlib>
@@ -46,7 +33,7 @@
 #include "OORegExpMatcher.h"
 #include "OOShaderMaterial.h"
 #include "OOShaderUniform.h"
-#include "OOShaderUniformMethodType.h"  // the binding target's hooks (bead oo-9ht.39.6)
+#include "OOShaderUniformMethodType.h"  // the binding target's hooks
 #include "OOTexture.h"
 #include "legacy_random.h"
 #include "oo_gl_test_context.hpp"
@@ -89,9 +76,8 @@ static std::vector<std::string> gShaderFileRequests;
 
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 std::vector<std::string> ResourceManager::paths() { return {}; }
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& /*fileName*/,
@@ -106,8 +92,7 @@ std::optional<std::string> ResourceManager::stringFromFilesNamed(
   return found->second;
 }
 
-// OORegExpMatcher is C++ since its facade was deleted (bead oo-9ht.12): the
-// stub answers no match.
+// OORegExpMatcher stub: answers no match.
 oo::Ref<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
   return oo::makeRef<OORegExpMatcher>();
 }
@@ -120,7 +105,7 @@ OOShaderSetting cxx_OOShaderSettingFromString(const std::string& string) {
   return string == "SHADERS_FULL" ? SHADERS_FULL : SHADERS_NOT_SUPPORTED;
 }
 
-// Link stubs (amendment oo-zffj item 2), never reached here: OOTexture.mm's
+// Link stubs, never reached here: OOTexture.mm's
 // specifier of a map value (OOMaterialSpecifier.mm links it), and
 // OOStringParsing.mm's parsers of a vector or quaternion written as a string
 // (OOPListGameTypes.mm links them; OOStringParsing.mm links the game).
@@ -146,8 +131,7 @@ static int gProgramApplies = 0;
 static int gProgramApplyNones = 0;
 static int gProgramsDeallocated = 0;
 
-// OOShaderProgram is C++ since its facade was deleted (bead oo-9ht.58): the
-// same stand-in, as definitions of the members the material calls.
+// OOShaderProgram stand-in, as definitions of the members the material calls.
 OOShaderProgram::~OOShaderProgram() { gProgramsDeallocated++; }
 void OOShaderProgram::apply() { gProgramApplies++; }
 void OOShaderProgram::applyNone() { gProgramApplyNones++; }
@@ -176,9 +160,9 @@ static std::vector<std::string> gUniforms;
 static int gUniformApplies = 0;
 static std::vector<std::string> gUniformTargets;
 
-// OOShaderUniform is C++ since its facade was deleted (bead oo-9ht.55): the
-// same stand-in, as definitions of the members the material calls. Each
-// initialiser is recorded as "name kind value"; the name "bad" fails (null).
+// OOShaderUniform stand-in, as definitions of the members the material calls.
+// Each initialiser is recorded as "name kind value"; the name "bad" fails
+// (null).
 #define OO_TEST_MADE_UNIFORM(uniformName, what)                       \
   do {                                                                \
     gUniforms.push_back((uniformName) + " " + (what));                \
@@ -239,9 +223,8 @@ void OOShaderUniform::setEntityBindingTarget(Entity* target) {
 static int gTextureApplyNones = 0;
 static int gTexturesDeallocated = 0;
 
-// Since bead oo-9ht.99 deleted the Objective-C facade, the stand-in is C++: the
-// root's static members the material calls, TestTexture (what they answer), and
-// the root's own members.
+// The stand-in is C++: the root's static members the material calls,
+// TestTexture (what they answer), and the root's own members.
 class TestTexture final : public OOTexture {
  public:
   ~TestTexture() override { gTexturesDeallocated++; }
@@ -318,11 +301,9 @@ BOOL OOUniformBindingPermitted(const std::string& propertyName,
   return propertyName != "forbidden";
 }
 
-// A binding target, with a seed for random uniforms: a C++ entity since bead
-// oo-9ht.39.6 (the test links no entity, so the class is a stand-in), whose
-// seed the entities' hook answers as the Objective-C target's
-// -randomSeedForShaders did. (Its -someBinding was never called: the uniforms
-// are stand-ins.)
+// A binding target, with a seed for random uniforms: a C++ entity (the test
+// links no entity, so the class is a stand-in), whose seed the entities' hook
+// answers. (Its -someBinding is never called: the uniforms are stand-ins.)
 class Entity {};
 class TestTarget : public Entity {};
 
@@ -331,7 +312,7 @@ const OOShaderEntityHooks* OOShaderEntityHooksIfSet() noexcept {
       [](Entity*) -> Entity* { return nullptr; },
       [](Entity*) -> std::string {
         return "(null)";
-      },  // its object's class and description (bead oo-dpyk8): nil's
+      },  // its object's class and description: nil's
       [](Entity*) -> std::string { return "(null)"; },
       [](Entity*, const char*, OOShaderMemberBinding*) -> bool {
         return false;
@@ -346,7 +327,7 @@ const OOShaderEntityHooks* OOShaderEntityHooksIfSet() noexcept {
 
 // UNIVERSE is gSharedUniverse: nil, so not reduced detail and no shaders.
 // UNIVERSE stays nil here, so the code under test's guarded calls never reach
-// it; the stand-in only links them (bead oo-ql9rn: they were messages to nil).
+// it; the stand-in only links them (they were messages to nil).
 class Universe {
  public:
   bool useShaders();
@@ -817,8 +798,7 @@ OO_TEST(cxxAPI) {
   }
 }
 
-// The description names the C++ class, as the facade's did (beads oo-9ht.46,
-// oo-9ht.8).
+// The description names the C++ class.
 OO_TEST(descriptionNamesTheClass) {
   if (!OOTestGLContext()) {
     OO_CHECK(false);

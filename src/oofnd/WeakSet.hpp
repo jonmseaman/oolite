@@ -34,8 +34,7 @@
    instead).
 */
 
-#ifndef OOFND_WEAKSET_HPP
-#define OOFND_WEAKSET_HPP
+#pragma once
 
 #include <algorithm>
 #include <cstddef>
@@ -164,5 +163,3 @@ class WeakSet {
 };
 
 }  // namespace oo
-
-#endif  // OOFND_WEAKSET_HPP

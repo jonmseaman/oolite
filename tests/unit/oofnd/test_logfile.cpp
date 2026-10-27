@@ -1,6 +1,6 @@
 /*	test_logfile.cpp
         oo::log::FileWriter and the Latest.log byte conversions
-   (oofnd/LogFile.hpp, bead oo-3rb.64).
+   (oofnd/LogFile.hpp).
 
         The logFileBytes rows were captured from gnustep-base 1.31.1 by a
    throwaway probe that ran OOAsyncLogger's -asyncLogMessage: conversion (append
@@ -10,8 +10,7 @@
         same strings.
 */
 
-// The header must survive OOCocoa.h's true/false macros and hand them back
-// (proposed ADR-0028).
+// The header must survive OOCocoa.h's true/false macros and hand them back.
 #define true 1
 #define false 0
 #include <type_traits>

@@ -1,31 +1,21 @@
 /*	test_OOJSFunction.mm
-        Unit tests for OOJSFunction (src/Core/Scripting/OOJSFunction.h/.mm):
-   bead oo-3smy, a Phase 3 conversion in the house style of the OOColor exemplar
-   (proposed ADR-0056; amendment oo-ppc for the scripting files).
+        Unit tests for OOJSFunction (src/Core/Scripting/OOJSFunction.h/.mm).
 
-        OOJSFunction keeps a JS function alive (a GC root) for Objective-C code:
-   the AI's scan predicates (ShipEntityAI) and the regular-expression tester
+   OOJSFunction keeps a JS function alive (a GC root) for Objective-C code: the
+   AI's scan predicates (ShipEntityAI) and the regular-expression tester
    (OORegExpMatcher). The test runs it in a real context on the game's own
    façade backend (ooscript/JSEngine_quickjs.cpp) and links the game's own
    object for the class. What the rest of the engine would provide is defined
-   below as the smallest stand-in that does the same thing (amendment oo-ppc
-   item 6): the engine object (its global object), the script stack, the time
-   limiter, the value converter and the string converter. The engine's and
-   OOJSScript's headers are not imported, because the test defines those classes
-   (amendment oo-z1s4 item 4). The expectations were written against the
-        Objective-C class and run on it first; they pin: both initialisers (and
-   when they answer nil), the name and the description, the function value, raw
-   and object-wrapper evaluation (the script stack and the time limiter balanced
-   around each call, the arguments converted), the predicate's truthiness, and
-   what an engine reset does (commit 34d0592d1). They ran through the
-        Objective-C facade until bead oo-9ht.41 deleted it; they now ask the C++
-   class with the same expectations. The facade's own contract (its description,
-   identity and nil crossings) went with it (ADR-0049, standing approval
-   oo-9n5p9). Bead oo-4aq6a.6.2 deleted the object-wrapper evaluation
-   (evaluatePredicateWithContext() of Objective-C arguments and scope; no game
-   caller): the case predicate and cxxAndFacade's predicate check retired with
-   it (std-2026-10-19 item 2, ADR-0062 item 2), with the TestNumber object and
-   the OOJSValueFromNativeObject() stand-in. Run: bash tools/check-core-tests.sh
+   below as the smallest stand-in that does the same thing: the engine object
+   (its global object), the script stack, the time limiter, the value converter
+   and the string converter. The engine's and OOJSScript's headers are not
+   imported, because the test defines those classes. The expectations were
+   written against the Objective-C class and run on it first; they pin: both
+   initialisers (and when they answer nil), the name and the description, the
+   function value, raw evaluation (the script stack and the time limiter
+   balanced around each call, the arguments converted), the predicate's
+   truthiness, and what an engine reset does (commit 34d0592d1). Run: bash
+   tools/check-core-tests.sh
 */
 
 #include <cstring>
@@ -84,9 +74,8 @@ void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta) {
 void OOJSStopTimeLimiter(void) { sLimiterDepth--; }
 #endif
 
-// The engine (OOJavaScriptEngine.h; a C++ class since bead oo-wdqw1 deleted its
-// facade), declared with the header's names and signatures but not its class;
-// the stand-in's answers are kept.
+// The engine (OOJavaScriptEngine.h), declared with the header's names and
+// signatures but not its class; the stand-in's answers are kept.
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
@@ -102,10 +91,9 @@ ooscript::Object OOJavaScriptEngine::globalObject() { return sGlobal; }
 
 #include "OOScript.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls.
+// OOJSScript (OOJSScript.h), which the code under test calls. A script is a
+// C++ object, so the stand-in is a C++ subclass of OOScript declaring the
+// members that code calls.
 class OOJSScript : public OOScript {
  public:
   static void pushScript(OOJSScript* script);

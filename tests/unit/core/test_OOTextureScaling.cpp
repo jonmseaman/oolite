@@ -1,17 +1,13 @@
 /*	test_OOTextureScaling.mm
-        Unit tests for the texture scaler (src/Core/OOTextureScaling.h): bead
-   oo-dqxj, slice 1 of the Phase 3 slice plan
-   docs/phases/3-slices/OOTextureScaling.md, in the house style of the OOColor
-        exemplar (proposed ADR-0056).
+        Unit tests for the texture scaler (src/Core/OOTextureScaling.h).
 
-        Slice 1 converts the three format-dispatch wrappers (SqueezeVertically,
-   StretchHorizontally, SqueezeHorizontally), whose only Objective-C was the
+        The three format-dispatch wrappers (SqueezeVertically,
+   StretchHorizontally, SqueezeHorizontally) raise
    +[OOException raise:format:] in their unreachable default arm. They are
    file-static, so this test reaches them through OOScalePixMap(): each scaling
    direction, for each of the three pixel formats, pinned byte for byte, plus
    uniform images (which every scaler must keep uniform) and the invalid pixmap
-   that OOScalePixMap() refuses before any wrapper runs. The expectations were
-   written against the unconverted file and run on it first. Run: bash
+   that OOScalePixMap() refuses before any wrapper runs. Run: bash
    tools/check-core-tests.sh test_OOTextureScaling
 */
 
@@ -44,8 +40,7 @@ const char* const cxx_kOOLogParameterError =
 Universe* gSharedUniverse =
     nil;  // OODumpPixMap's UNIVERSE (debug builds); never called here
 
-// OODumpPixMap's view dumps: members since bead oo-9ht.153 deleted the view's
-// facade (they were sends); never called here.
+// OODumpPixMap's view dumps: members of the view; never called here.
 #ifndef NDEBUG
 void MyOpenGLView::dumpGrayToFileNamed(const std::string&, uint8_t*, NSUInteger,
                                        NSUInteger, NSUInteger) {
@@ -187,7 +182,7 @@ OO_TEST(squeezesHorizontally) {
   free(grayAlpha.pixels);
 }
 
-// oo-snnh6: StretchVertically() (2x3 -> 2x4 and 2x2 -> 2x4, into a new buffer;
+// StretchVertically() (2x3 -> 2x4 and 2x2 -> 2x4, into a new buffer;
 // RGBA and gray+alpha take the 4-byte path StretchVerticallyN_x4, 2-wide
 // grayscale the byte path StretchVerticallyN_x1) and the last row of
 // StretchHorizontally() (3x1 -> 4x1, one row, so only the last-row loop runs).
@@ -259,7 +254,7 @@ OO_TEST(stretchesVerticallyAndKeepsTheEdges) {
 // A uniform image stays uniform through every wrapper, in both directions at
 // once. Grayscale is squeezed vertically by a whole factor (8 -> 4): by 8 -> 5
 // its last row comes out at about 3/8 of the value, a defect of the plain-C
-// SqueezeVertically1() that this slice does not touch (oo-9ht.115).
+// SqueezeVertically1() that this test does not touch.
 OO_TEST(keepsUniformImagesUniform) {
   for (OOPixMapFormat format : kFormats) {
     const OOPixMapDimension height = (format == kOOPixMapGrayscale) ? 4 : 5;
@@ -279,7 +274,7 @@ OO_TEST(keepsUniformImagesUniform) {
   }
 }
 
-// oo-9ht.115: a uniform grayscale image squeezed vertically by a non-integer
+// A uniform grayscale image squeezed vertically by a non-integer
 // factor (8 -> 5, and 8x8 -> 3x5 through both squeezers) stays uniform in every
 // row, the last included. Before the fix SqueezeVertically1() counted the final
 // source row's weight without its value, so the last row of 0x5A came out at 33
@@ -312,13 +307,11 @@ OO_TEST(refusesAnInvalidPixMap) {
 // The wrappers' unreachable default arm now raises with OORaiseException(), the
 // function form of
 // +[OOException raise:format:]: the same name and formatted reason (the C++
-// oo::Exception since bead oo-rskgl.1, caught as catch (const oo::Exception &)
-// where @catch (OOException *) was).
+// oo::Exception, caught as catch (const oo::Exception &)).
 OO_TEST(raiseExceptionThrowsTheSameException) {
   const char* name = nullptr;
   std::string reason;
-  std::optional<oo::Exception>
-      kept;  // what the autorelease pool kept alive (bead oo-rskgl.1)
+  std::optional<oo::Exception> kept;  // what the autorelease pool kept alive
   try {
     OORaiseException(OOInternalInconsistencyException,
                      "Unsupported pixmap format in scaler: %s",

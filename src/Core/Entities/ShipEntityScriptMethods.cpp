@@ -24,15 +24,11 @@ MA 02110-1301, USA.
 */
 
 #include "ShipEntityScriptMethods.h"
-
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 
-/*	The category ShipEntity (ScriptMethods), bead oo-42dr: members of
-   ShipEntity (ADR-0056 amendments oo-o89 item 4 and oo-9fwb), forwarded by the
-   category of the same name in ShipEntity+ObjCBridge.mm until bead oo-9ht.144
-   deleted the facade and its sends became member calls.
-*/
+/*	The ShipEntity (ScriptMethods) members.
+ */
 
 ::ShipEntity* ShipEntity::ejectShipOfType(
     const std::optional<std::string>& shipKey) {
@@ -88,8 +84,7 @@ std::vector<oo::EntityHold> ShipEntity::spawnShipsWithRole(
           (spawned != nullptr ? spawned->shipInfoDictionary() : oo::PList())
               .get<bool>("is_submunition")) {
         if (spawned != nullptr)
-          spawned->setOwner(
-              ownerEntity());  // owner()'s C++ entity (bead oo-9ht.39.23)
+          spawned->setOwner(ownerEntity());  // owner()'s C++ entity
         if (spawned != nullptr) spawned->addTarget(primaryTarget());
         if (spawned != nullptr) spawned->setIsMissileFlag(YES);
       }

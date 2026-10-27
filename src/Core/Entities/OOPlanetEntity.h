@@ -35,37 +35,30 @@ MA 02110-1301, USA.
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 
-/*	Foundation sweep (proposed ADR-0043, bead oo-eofd): the planet
-   configuration and material parameters are oo::PLists (mixed: colours are
-   PList::Object nodes); texture and planet names are std::optional (nullopt
-   where they were nil); the name is -cxx_name / -cxx_setName: (the id -name /
-   -setName: retired with oo-qps.44); -textureFileName and
-   -setUpPlanetFromTexture: flipped with PlanetEntity (bead oo-3rb.269.1).
+/*	The planet configuration and material parameters are oo::PLists (mixed:
+   colours are PList::Object nodes); texture and planet names are std::optional
+   (nullopt where they were nil).
 */
 
 class OOMaterial;
 class OOTexture;
-class ShipEntity;        // C++ since bead oo-9ht.144
-class OOPlanetDrawable;  // C++ since bead oo-mw4u (no facade: this class is its
-                         // one caller)
+class ShipEntity;
+class OOPlanetDrawable;  // no facade: this class is its one caller
 
-/*	C++ only since bead oo-9ht.129 deleted its Objective-C facade (ADR-0056
-   amendments oo-9ht.12, oo-9ht.107, oo-9ht.23 and oo-9ht.129): the universe and
-   the legacy scripts make it with oo::makeRef<OOPlanetEntity>(), hand it to
-   Objective-C with oo::NewEntityFacade (its object is the root Entity's facade)
-   and hold it as the C++ class. Its OOStellarBody answers are members
-        (OOStellarBodyRadius() asks them for an Objective-C object), and the
-   root's facade answers the shader binding selectors for a planet only (Entity
-   (OOPlanetShaderBindings), Entity+ObjCBridge.mm).
+/*	The universe and the legacy scripts make it with
+   oo::makeRef<OOPlanetEntity>(), hand it to Objective-C with
+   oo::NewEntityFacade (its object is the root Entity's facade) and hold it as
+   the C++ class. Its OOStellarBody answers are members (OOStellarBodyRadius()
+   asks them for an Objective-C object), and the root's facade answers the
+   shader binding selectors for a planet only (Entity (OOPlanetShaderBindings),
+   Entity+ObjCBridge.mm).
 */
 class OOPlanetEntity : public Entity, public ::OOGraphicsResetClient {
  public:
-  ~OOPlanetEntity()
-      override;  // unregisters the graphics reset client (bead oo-9ht.23)
+  ~OOPlanetEntity() override;  // unregisters the graphics reset client
 
   /*	The initialisers' bodies after [self init] (the constructor ran
-     Entity's), run on a new planet once its object is made (the facade ran them
-     until bead oo-9ht.129).
+     Entity's), run on a new planet once its object is made.
   */
   void initAsMainPlanetForSystem(OOSystemID s);
   void initFromDictionary(const oo::PList& dict, bool atmosphere,
@@ -89,8 +82,7 @@ class OOPlanetEntity : public Entity, public ::OOGraphicsResetClient {
   bool setUpPlanetFromTexture(
       const std::optional<std::string>& fileName);  // nullopt: none
 
-  // The drawables' materials: Objective-C objects, as the drawables keep them
-  // (bead oo-mw4u).
+  // The drawables' materials: Objective-C objects, as the drawables keep them.
   OOMaterial* material();
   OOMaterial* atmosphereMaterial();
   OOMaterial* atmosphereShaderMaterial();
@@ -111,14 +103,13 @@ class OOPlanetEntity : public Entity, public ::OOGraphicsResetClient {
   void setTerminatorThresholdVector(Vector newTerminatorThresholdVector);
   Vector terminatorThresholdVector();  // visible to shader bindings
 
-  // OOStellarBody (which the facade answered until bead oo-9ht.129).
+  // OOStellarBody.
   double radius();
   OOStellarBodyType planetType();
   std::optional<std::string> name();
   void setName(const std::optional<std::string>& name);
 
-  // OOGraphicsResetClient: the planet registers itself once set up (bead
-  // oo-9ht.23; its facade was the client until then).
+  // OOGraphicsResetClient: the planet registers itself once set up.
   void resetGraphicsState() override;
 
   std::optional<std::string> descriptionComponents() const override;
@@ -129,8 +120,7 @@ class OOPlanetEntity : public Entity, public ::OOGraphicsResetClient {
   bool isPlanet() override;
   bool isVisible() override;
 
-  // The binding's bodies (OOJSPlanet.mm), which the facade forwarded to until
-  // bead oo-9ht.129.
+  // The binding's bodies (OOJSPlanet.mm), which the facade forwarded to.
   void getJSClass(ooscript::ClassDef** outClass,
                   ooscript::Object* outPrototype) override;
   std::optional<std::string> jsClassName() override;
@@ -181,7 +171,6 @@ class OOPlanetEntity : public Entity, public ::OOGraphicsResetClient {
   std::optional<std::string> _name;
 
   // The texture generators' noise seed, handed to them directly; was a value
-  // box under "noise_map_seed" in planetInfo / _materialParameters (bead
-  // oo-3rb.48).
+  // box under "noise_map_seed" in planetInfo / _materialParameters.
   RANROTSeed _noiseMapSeed = {};
 };

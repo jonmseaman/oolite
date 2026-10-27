@@ -4,7 +4,7 @@ OOPListGameTypes.h
 
 The game types OOCollectionExtractors read from and wrote to property-list
 objects - Vector, HPVector, Quaternion and the fuzzy boolean - over oo::PList
-instead (bead oo-9ftb, ADR-0043 step 7: the retiring category's replacement).
+instead.
 The routing and conversions are oofnd's (oo::plist_get::tupleFrom / tuplePList /
 fuzzyProbabilityFrom, pinned by tests/unit/oofnd/test_plist_game_tuples.cpp);
 this header adds the game's parts: a string is scanned by cxx_Scan*FromString
@@ -37,8 +37,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOPLISTGAMETYPES_H
-#define OOPLISTGAMETYPES_H
+#pragma once
 
 #include "OOFoundation.h"
 #include "OOMaths.h"
@@ -96,5 +95,3 @@ struct PListGet<Quaternion> {
 };
 
 }  // namespace oo
-
-#endif  // OOPLISTGAMETYPES_H

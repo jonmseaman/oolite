@@ -23,7 +23,6 @@ MA 02110-1301, USA.
 */
 
 #include "OOCacheManager.h"
-
 #include "OOJavaScriptEngine.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/PListParsing.hpp"
@@ -32,21 +31,9 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 
 /*
-        Phase 1 sweep js-retarget (bead oo-vz2), exemplar OOJSVector.mm: this
-   file has no directly-spelled scripting-engine call sites to move onto the
-   ooscript facade (JSEngine.hpp)
-        -- it only imports OOJavaScriptEngine.h for shared logging/plist helpers
-   and never touches the engine's context, object or value types directly. The
-   only change this bead makes is compiling it as Objective-C++ (.m -> .mm,
-   ADR-0001, same as every other file in the sweep) and fixing constructs that
-   are diagnosed defects only once compiled that way: an assignment inside an
-   `if` condition, and file-scope statics that must move into an anonymous
-   namespace.
-
-        Foundation sweep (proposed ADR-0043, bead oo-19g0): the caches are
-   std::maps of retained objects; the cache file is read and written as an
-   oo::PList, in XML (proposed ADR-0027 item 3: oofnd does not parse GNUstep's
-   binary format, and an unreadable cache is rebuilt).
+   The caches are std::maps of retained objects; the cache file is read and
+   written as an oo::PList, in XML (oofnd does not parse GNUstep's binary
+   format, and an unreadable cache is rebuilt).
 */
 
 #define WRITE_ASYNC 1
@@ -128,8 +115,7 @@ std::optional<std::string> OOCacheManager::descriptionComponents() const {
 OOCacheManager* OOCacheManager::sharedCache() {
   // NOTE: assumes single-threaded access.
   if (sSingleton == nullptr) {
-    // Recorded before -init's work ran, as +allocWithZone: recorded it
-    // (amendment oo-z1s4 item 2).
+    // Recorded before -init's work ran, as +allocWithZone: recorded it.
     sSingleton = oo::makeRef<OOCacheManager>().leakRef();
     sSingleton->init();
   }

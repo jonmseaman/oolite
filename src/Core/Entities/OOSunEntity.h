@@ -33,9 +33,8 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 
-/*	Foundation sweep (proposed ADR-0043, bead oo-hach): the sun's system
-   dictionary is an oo::PList and its name std::optional (nil stays nil):
-   -cxx_name / -cxx_setName: (the id -name / -setName: retired with oo-qps.44).
+/*	The sun's system dictionary is an oo::PList and its name std::optional
+   (nil stays nil).
 */
 
 #define SUN_CORONA_SAMPLES \
@@ -54,8 +53,7 @@ MA 02110-1301, USA.
 #define SUN_GLARE_CORONA_FACTOR 1.5
 #endif
 
-/*	C++ only since bead oo-9ht.111 deleted its Objective-C facade (ADR-0056
-   amendments oo-9ht.12, oo-9ht.107): the universe makes it with
+/*	The universe makes it with
    oo::makeRef<OOSunEntity>(), hands it to Objective-C with oo::NewEntityFacade
    (its object is the root Entity's facade) and holds it as the C++ class; its
    OOStellarBody answers are members (OOStellarBodyRadius() asks them for an
@@ -64,8 +62,7 @@ MA 02110-1301, USA.
 class OOSunEntity : public Entity {
  public:
   /*	-initSunWithColor:andDictionary:'s body after [super init] (the
-     constructor ran Entity's), run on a new sun (the facade ran it once it held
-     this object until bead oo-9ht.111).
+     constructor ran Entity's), run on a new sun.
   */
   void initSunWithColor(OOColor* sun_color, const oo::PList& dict);
   bool setSunColor(OOColor* sun_color);
@@ -87,8 +84,8 @@ class OOSunEntity : public Entity {
   void drawDirectVisionSunGlare();
   void resetNova();
 
-  // OOStellarBody's name (-cxx_name / -cxx_setName:), which the facade answered
-  // until bead oo-9ht.111.
+  // OOStellarBody's name (-cxx_name / -cxx_setName:), which the facade
+  // answered.
   std::optional<std::string> name();
   void setName(const std::optional<std::string>& name);
 
@@ -104,8 +101,7 @@ class OOSunEntity : public Entity {
   bool isSun() override;
   bool isVisible() override;
 
-  // The binding's bodies (OOJSSun.mm), which the facade forwarded to until bead
-  // oo-9ht.111.
+  // The binding's bodies (OOJSSun.mm), which the facade forwarded to.
   void getJSClass(ooscript::ClassDef** outClass,
                   ooscript::Object* outPrototype) override;
   std::optional<std::string> jsClassName() override;

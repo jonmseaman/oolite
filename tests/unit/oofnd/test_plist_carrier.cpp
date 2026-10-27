@@ -1,6 +1,6 @@
 /*	test_plist_carrier.cpp
         oo::PList as the Foundation sweep's carrier for mixed configuration
-   dictionaries (proposed ADR-0043 Amendment 2): Type::Object (a foreign object,
+   dictionaries: Type::Object (a foreign object,
    by identity) and single-precision reals
         (+numberWithFloat:).
 

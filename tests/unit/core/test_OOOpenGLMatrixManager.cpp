@@ -1,20 +1,17 @@
 /*	test_OOOpenGLMatrixManager.mm
         Unit tests for OOOpenGLMatrixManager and OOOpenGLMatrixStack
-   (src/Core/OOOpenGLMatrixManager.h): bead oo-vt0o, a Phase 3 class conversion
-   (proposed ADR-0056).
+   (src/Core/OOOpenGLMatrixManager.h).
 
-        The expectations were written against the Objective-C API and run on the
-   unconverted class first: the stack, the model-view and projection arithmetic
-   (including where translate writes, which differs between the two), the
-   degenerate-argument guards of frustum/ortho/perspective, the derived matrices
-   and their cache, what sync loads into OpenGL, the uniform locations of a real
-   shader program, and the OOGL* functions, which reach the manager through the
-   C++ game view's getOpenGLMatrixManager() (this file's Universe and view
-   stubs). The GL context is a hidden window's (oo_gl_test_context.hpp); the
-   extension manager, which loads the shader entry points, runs with its
-   collaborators stubbed as in test_OOOpenGLExtensionManager. The facade's
-        contract test went with the facade (bead oo-9ht.18).
-        Run: bash tools/check-core-tests.sh
+        The expectations cover: the stack, the model-view and projection
+   arithmetic (including where translate writes, which differs between the two),
+   the degenerate-argument guards of frustum/ortho/perspective, the derived
+   matrices and their cache, what sync loads into OpenGL, the uniform locations
+   of a real shader program, and the OOGL* functions, which reach the manager
+   through the C++ game view's getOpenGLMatrixManager() (this file's Universe
+   and view stubs). The GL context is a hidden window's
+   (oo_gl_test_context.hpp); the extension manager, which loads the shader entry
+   points, runs with its collaborators stubbed as in
+   test_OOOpenGLExtensionManager. Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -35,9 +32,8 @@
 
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 std::vector<std::string> ResourceManager::paths() { return {}; }
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& /*fileName*/,
@@ -45,8 +41,7 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
   return oo::PList(oo::PList::Dict{});
 }
 
-// OORegExpMatcher is C++ since its facade was deleted (bead oo-9ht.12): the
-// stub answers no match.
+// OORegExpMatcher: the stub answers no match.
 oo::Ref<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
   return oo::makeRef<OORegExpMatcher>();
 }
@@ -56,8 +51,7 @@ bool OORegExpMatcher::string(const std::string&, const std::string&) {
 OORegExpMatcher::~OORegExpMatcher() {}
 
 // OOLogging.mm's (it would bring the resource manager into the link); in the
-// debug flavour OOOpenGL.mm's OOGL error check and state dump call them (bead
-// oo-iimku).
+// debug flavour OOOpenGL.mm's OOGL error check and state dump call them.
 void OOLogIndent(void) {}
 void OOLogOutdent(void) {}
 
@@ -65,9 +59,8 @@ OOShaderSetting cxx_OOShaderSettingFromString(const std::string& string) {
   return string == "SHADERS_FULL" ? SHADERS_FULL : SHADERS_NOT_SUPPORTED;
 }
 
-// UNIVERSE is gSharedUniverse; its getGameView() answers sView, the C++ view
-// (its facade, which crossed to sView, was deleted by bead oo-9ht.153), whose
-// manager the OOGL* functions use. The C++ view's members they reach are
+// UNIVERSE is gSharedUniverse; its getGameView() answers sView, the C++ view,
+// whose manager the OOGL* functions use. The C++ view's members they reach are
 // stubbed here, and its virtual members (never called).
 class Universe;
 Universe* gSharedUniverse = nil;
@@ -99,11 +92,9 @@ NSSize MyOpenGLView::getViewSize() { std::abort(); }
 
 #include "UniverseStandIn.h"
 
-// The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's OOTestUniverse stood
-// in for), with the header's names and signatures. It answers virtual members,
-// so it has the game's vtable (UniverseStandIn.h) and OOTestUniverse overrides
-// them.
+// The universe as the code under test sees it: a stand-in for the C++ class,
+// with the header's names and signatures. It answers virtual members, so it has
+// the game's vtable (UniverseStandIn.h) and OOTestUniverse overrides them.
 class Universe : public oo::RefCounted {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
@@ -434,9 +425,8 @@ OO_TEST(standardUniformLocations) {
   }
 }
 
-// The view's state is private since bead oo-mlpcc; MyOpenGLView.h names this
-// struct its friend so the checks below read and set the same member (expected
-// values unchanged).
+// The view's state is private; MyOpenGLView.h names this struct its friend so
+// the checks below read and set the same member.
 struct MyOpenGLViewTestAccess {
   static auto& matrixManager(MyOpenGLView* view) { return view->matrixManager; }
 };

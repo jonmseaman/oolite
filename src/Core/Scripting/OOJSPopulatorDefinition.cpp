@@ -24,7 +24,6 @@ MA 02110-1301, USA.
 */
 
 #include "OOJSPopulatorDefinition.h"
-
 #include "OOJSScript.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
@@ -33,16 +32,8 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) per the OOJSVector.mm
-   exemplar (bead oo-sdz): the two directly-spelled engine calls here
-   (RemoveValueRoot, RemoveObjectRoot) go through ooscript:: instead of JS_*.
-   OOJSAcquireContext/OOJSRelinquishContext/
-        OOJSAddGCValueRoot/OOJSAddGCObjectRoot are OOJS_* macros, not JS_*
-   calls, so they are untouched and out of scope for this bead (see
-   JSEngine.hpp's own header comment and OOJSVector.mm's exemplar comment). The
-   two byte-identical façade <-> jsapi view helpers below are local to this call
-   site, exactly as OOJSVector.mm's OOJSFCX/OOJSFVALP/OOJSFOBJ family is local
-   to it.
+        The two byte-identical façade <-> jsapi view helpers below are local to
+   this call site.
 */
 
 namespace ooscript {}
@@ -55,12 +46,6 @@ static inline Object* OOJSFOBJP(ooscript::Object* o) {
   return reinterpret_cast<Object*>(o);
 }
 }  // namespace
-
-/*	C++20 since bead oo-1h0h (proposed ADR-0056 amendment oo-o89):
-   OOJSPopulatorDefinition. -init after [super init] is the constructor,
-   -dealloc the destructor; the engine, the script stack and the owning script's
-   weak reference are Objective-C and are messaged as before.
-*/
 
 OOJSPopulatorDefinition::OOJSPopulatorDefinition() {
   _callback = ooscript::undefinedValue();

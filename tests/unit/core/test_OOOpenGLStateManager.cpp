@@ -1,20 +1,17 @@
 /*	test_OOOpenGLStateManager.mm
         Characterisation tests for the OpenGL state manager
-   (src/Core/OOOpenGLStateManager.mm, declared in OOOpenGL.h): bead oo-rlaz.
+   (src/Core/OOOpenGLStateManager.mm, declared in OOOpenGL.h).
 
-        OOOpenGLStateManager.mm has no @implementation, so it is not a Phase 3
-   class conversion (CLAUDE.md rule 9, ADR-0012); it is plain C++ over OpenGL
-   and stays as it is. This test pins what it does to OpenGL, so that the
-   classes converted around it (and the file's own rename in Phase 4) can be
-   shown not to change the GL state: after OOSetOpenGLState(state), from the
-        context's initial state and from every other standard state, each item
-   of OOOpenGLStates.tbl reads back as the state table says (items the table
-   leaves open, kStateMaybe, are not read), including the blend function set
-   with one glBlendFunc call. The GL context is a hidden window's
+        OOOpenGLStateManager.mm has no @implementation; it is plain C++ over
+   OpenGL. This test pins what it does to OpenGL, so that the classes around it
+   can be shown not to change the GL state: after OOSetOpenGLState(state), from
+   the context's initial state and from every other standard state, each item of
+   OOOpenGLStates.tbl reads back as the state table says (items the table leaves
+   open, kStateMaybe, are not read), including the blend function set with one
+   glBlendFunc call. The GL context is a hidden window's
    (oo_gl_test_context.hpp); the extension manager, which loads the multitexture
    entry points, runs with its collaborators stubbed as in
-        test_OOOpenGLExtensionManager.
-        Run: bash tools/check-core-tests.sh
+   test_OOOpenGLExtensionManager. Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdio>
@@ -33,9 +30,8 @@
 
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 std::vector<std::string> ResourceManager::paths() { return {}; }
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& /*fileName*/,
@@ -43,8 +39,7 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
   return oo::PList(oo::PList::Dict{});
 }
 
-// OORegExpMatcher is C++ since its facade was deleted (bead oo-9ht.12): the
-// stub answers no match.
+// OORegExpMatcher: the stub answers no match.
 oo::Ref<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
   return oo::makeRef<OORegExpMatcher>();
 }

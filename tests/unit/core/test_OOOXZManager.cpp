@@ -1,30 +1,22 @@
 /*	test_OOOXZManager.mm
-        Unit tests for OOOXZManager (src/Core/OOOXZManager.h): bead oo-bwjb,
-   slice 1 of the Phase 3 slice plan docs/phases/3-slices/OOOXZManager.md (the
-   class shell: state, paths, filters, manifests and the download plumbing), in
-   the house style of the OOColor exemplar (proposed ADR-0056).
+        Unit tests for OOOXZManager (src/Core/OOOXZManager.h).
 
-        The manager is a process-wide singleton (amendment oo-r7m0) that keeps
-   the list of OXZ manifests, the managed OXZs on disk, a filter over the list,
-   and one download. The test points the user's home (HOMEPATH: the caches and
-   the defaults), the managed, extract and additional add-on folders, and the
+        The manager is a process-wide singleton that keeps the list of OXZ
+   manifests, the managed OXZs on disk, a filter over the list, and one
+   download. The test points the user's home (HOMEPATH: the caches and the
+   defaults), the managed, extract and additional add-on folders, and the
    built-in Resources (the current directory) at a scratch folder before the
    singleton exists, so nothing of the user's is read or written. Every manifest
    is synthetic, written by the test; no expansion is read. The one download is
    a file: URL (oofnd/Http.hpp), so no network is used.
 
-        It pins what the manager computed before the conversion: the shared
-   instance and the list it loads from the manifest cache, sorted; the paths;
-   the filters and their validation; the human size; the managed OXZs read from
-   disk and matched against the list; a manifest download from start to finish
-   (the list replaced, the cache rewritten, the temporary file removed, the
-        managed list rebuilt), and the requests it then refuses. The
-   expectations were written against the Objective-C API and run on the
-   unconverted class first. Bead oo-9ht.131 deleted the Objective-C facade:
-   every case asks the C++ singleton with every expectation kept, and the
-        facade's contract cases (one facade for the singleton, identity both
-   ways, nil and null, the forwarded private units) retired under the standing
-   approval oo-9n5p9. Run: bash tools/check-core-tests.sh test_OOOXZManager
+        It pins: the shared instance and the list it loads from the manifest
+   cache, sorted; the paths; the filters and their validation; the human size;
+   the managed OXZs read from disk and matched against the list; a manifest
+   download from start to finish (the list replaced, the cache rewritten, the
+   temporary file removed, the managed list rebuilt), and the requests it then
+   refuses. Every case asks the C++ singleton. Run: bash
+   tools/check-core-tests.sh test_OOOXZManager
 */
 
 #include "OOCacheManager.h"
@@ -33,7 +25,7 @@
 #include "OOOXZManager.h"
 #include "OOPListParsing.h"
 #include "OOXMLExtensions.h"
-#include "PlayerEntity.h"  // the stand-in PLAYER (bead oo-vdw34)
+#include "PlayerEntity.h"  // the stand-in PLAYER
 #include "ResourceManager.h"
 #include "oo_test.hpp"
 #include "oofnd/Date.hpp"
@@ -120,9 +112,9 @@ stdfs::path CacheDirectory() {
   return sRoot / "GNUstep" / "Library" / "Caches" / "org.aegidian.oolite";
 }
 
-// PLAYER (bead oo-vdw34): the debug build asserts it is set (OOGetPlayer()), so
-// the manager's GUI page, which asks it to let go of its sounds (Windows), has
-// a player; its viewpoint is the origin. Never released, as the player is not.
+// PLAYER: the debug build asserts it is set (OOGetPlayer()), so the manager's
+// GUI page, which asks it to let go of its sounds (Windows), has a player; its
+// viewpoint is the origin. Never released, as the player is not.
 class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
@@ -467,7 +459,7 @@ OO_TEST(manifestDownload) {
   }
 }
 
-// Slice 2 (bead oo-0hyr): installing, updating, removing and extracting OXZs.
+// Installing, updating, removing and extracting OXZs.
 namespace {
 
 // A stored (uncompressed) zip of the named files, written by hand: a synthetic
@@ -704,12 +696,11 @@ OO_TEST(restartAndUpdateAll) {
   }
 }
 
-// Slices 3 and 4 (beads oo-q7r3, oo-qbgo): the GUI pages. A stand-in UNIVERSE
-// (amendment oo-8kx7 item 7, as an object put in gSharedUniverse for these
-// cases only, since the test links the real Universe) answers -gui with a
+// The GUI pages. A stand-in UNIVERSE (an object put in gSharedUniverse for
+// these cases only, since the test links the real Universe) answers -gui with a
 // recording screen; the manager's sends to it are the page.
-#include "MyOpenGLView.h"  // the game view is C++ (bead oo-9ht.153)
-#include "Universe.h"  // the real class: the test links the whole game (bead oo-ql9rn)
+#include "MyOpenGLView.h"  // the game view is C++
+#include "Universe.h"      // the real class: the test links the whole game
 extern Universe* gSharedUniverse;
 
 // The page's rows (OOOXZManager.mm's private OXZ_GUI_ROW_* values).
@@ -723,9 +714,8 @@ enum {
   OXZ_GUI_ROW_EXIT = 27
 };
 
-// The GUI is C++ since bead oo-9ht.143 deleted its facade: the recording screen
-// overrides the members it answered (proposed ADR-0056 amendment oo-9ht.1),
-// recording the same lines.
+// The GUI is C++: the recording screen overrides the members it answers,
+// recording the lines.
 class TestGui : public GuiDisplayGen {
  public:
   TestGui()
@@ -792,9 +782,8 @@ class TestGui : public GuiDisplayGen {
   }
 };
 
-// The game view: a C++ subclass of the game's (bead oo-9ht.153 deleted the
-// Objective-C facade the test's Objective-C stand-in stood in for), overriding
-// the two members it answered (virtual for it).
+// The game view: a C++ subclass of the game's, overriding the two members it
+// answers (virtual for it).
 class TestGameView : public MyOpenGLView {
  public:
   int resets = 0;
@@ -806,10 +795,9 @@ class TestGameView : public MyOpenGLView {
   }
 };
 
-// The universe the manager sees: a C++ subclass of the game's (bead oo-ql9rn
-// deleted the Objective-C facade the test's Objective-C TestUniverse stood in
-// for), overriding the same members. Its descriptions are testDescriptions (the
-// class has a member _descriptions).
+// The universe the manager sees: a C++ subclass of the game's, overriding the
+// members the manager asks. Its descriptions are testDescriptions (the class
+// has a member _descriptions).
 class TestUniverse : public Universe {
  public:
   oo::Ref<TestGui> testGui = {};
@@ -1308,8 +1296,8 @@ OO_TEST(guiInput) {
   SetUp();
   // The manager leaves these pages through the intro screen, which it shows
   // only with no PLAYER (PLAYER's setGuiToIntroFirstGo()): they run with none,
-  // as before, which only a release-style build can (the debug build asserts
-  // PLAYER is set; bead oo-vdw34).
+  // which only a release-style build can (the debug build asserts PLAYER is
+  // set).
   gOOPlayer = nullptr;
 #if !OO_DEBUG
   {
@@ -1665,8 +1653,8 @@ OO_TEST(guiInput) {
 #endif
 }
 
-// Slice 4 (bead oo-qbgo): the install and remove option pages, and their
-// paging. Release-style builds only (see the case; bead oo-vdw34).
+// The install and remove option pages, and their paging. Release-style builds
+// only (see the case).
 #if !OO_DEBUG
 namespace {
 
@@ -1683,8 +1671,8 @@ OO_TEST(optionPages) {
   SetUp();
   // The manager leaves these pages through the intro screen, which it shows
   // only with no PLAYER (PLAYER's setGuiToIntroFirstGo()): they run with none,
-  // as before, which only a release-style build can (the debug build asserts
-  // PLAYER is set; bead oo-vdw34).
+  // which only a release-style build can (the debug build asserts PLAYER is
+  // set).
   gOOPlayer = nullptr;
   {
     StandInUniverse standIn;
@@ -1951,11 +1939,11 @@ OO_TEST(optionPages) {
 }
 #endif
 
-// The copy-URL key (upstream OoliteProject #747, bead oo-we7mm): on a pick list
-// it copies the selected pack's information URL as the manifest gives it; on
-// the info page, the URL that page showed, lowercased; with no URL, or off the
-// list, or outside the pick states, it copies nothing. The info page itself no
-// longer copies anything.
+// The copy-URL key (upstream OoliteProject #747): on a pick list it copies the
+// selected pack's information URL as the manifest gives it; on the info page,
+// the URL that page showed, lowercased; with no URL, or off the list, or
+// outside the pick states, it copies nothing. The info page itself no longer
+// copies anything.
 OO_TEST(copyUrlKey) {
   SetUp();
   {

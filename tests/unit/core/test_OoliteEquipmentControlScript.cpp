@@ -4,7 +4,7 @@
    (Resources/Scripts/oolite-equipment-control.js) on the game's JavaScript
    engine (QuickJS-ng behind the ooscript facade, ooscript/JSEngine.hpp), with
    the two game objects it reads stood in by plain JS objects
-   (EquipmentInfo.infoForKey and player.ship.removeEquipment). Bead oo-we7mm.
+   (EquipmentInfo.infoForKey and player.ship.removeEquipment).
 
         Pins upstream OoliteProject #369: adding an item removes an installed
    item that lists it as incompatible, but no longer "removes" an incompatible

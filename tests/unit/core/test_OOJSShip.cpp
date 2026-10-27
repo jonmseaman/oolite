@@ -1,9 +1,5 @@
 /*	test_OOJSShip.mm
-        Unit tests for the ship JS binding (src/Core/Scripting/OOJSShip.h/.mm):
-   the test-first half of its slice beads (oo-18mg2, slice 1 of
-   docs/phases/3-slices/OOJSShip.md, and the slices after it), converted the way
-   bead oo-ppc converted OOJSVector (proposed ADR-0056, amendments oo-ppc,
-        oo-luhd, oo-ft5n and oo-9ht.139).
+        Unit tests for the ship JS binding (src/Core/Scripting/OOJSShip.h/.mm).
 
         The Ship object is made by the real engine for a real ship, so the test
    links every game object but main's (tests/unit/core/meson.build entry ['*'],
@@ -11,11 +7,11 @@
    context. The ship is a ShipEntity set up by ShipEntity's own
         -setUpShipFromDictionary: from a definition in the test (PlainShip, as
    test_ShipEntity.mm's), in a Universe that was never initialised and with a
-   plain entity as PLAYER (amendment oo-bj8 item 11); the player branches of the
-   getter read the engine's own player, whose class the test swaps for a
-   subclass that answers -availableFacings and -fleeingStatus itself. The
+   plain entity as PLAYER; the player branches of the getter read the engine's
+   own player, whose class the test swaps for a subclass that answers
+   -availableFacings and -fleeingStatus itself. The
    expectations were written against the Objective-C file and run on it first;
-   slice 1 pins the property getter (every property) and the weapon offsets and
+   they pin the property getter (every property) and the weapon offsets and
    colours its helpers give JavaScript. Run: bash tools/check-core-tests.sh
    test_OOJSShip
 */
@@ -56,24 +52,19 @@ uint32_t gDebugFlags = 0;
 
 namespace {
 
-// What the stand-ins were told, in order (slice 2 on).
+// What the stand-ins were told, in order.
 std::vector<std::string> sLog;
 Entity* sNextBeacon = nil;
-BOOL sPlayerDocked =
-    NO;  // what the engine's player answers -isDocked (slice 3)
+BOOL sPlayerDocked = NO;  // what the engine's player answers -isDocked
 
 }  // namespace
 
 // PLAYER while ships are made (test_ShipEntity.mm's), and the beacon the
 // player's compass was on.
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
-  Entity* nextBeacon() override {
-    return sNextBeacon;
-  }  // the C++ entity since bead oo-9ht.39.23
+  Entity* nextBeacon() override { return sNextBeacon; }
   void setCompassMode(OOCompassMode value) override {
     sLog.push_back(
         oo::str::format("setCompassMode %d", static_cast<int>(value)));
@@ -103,8 +94,7 @@ class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
 // beacon setter tells it.
 class TestUniverse : public Universe {
  public:
-  // The C++ entity since bead oo-9ht.39.8.10 (its object's -beaconCode was the
-  // ship's).
+  // The C++ entity (its object's -beaconCode was the ship's).
   void setNextBeacon(Entity* beacon) override {
     ShipEntity* ship = dynamic_cast<ShipEntity*>(beacon);
     sLog.push_back("setNextBeacon " + (ship != nullptr
@@ -117,9 +107,8 @@ class TestUniverse : public Universe {
     sLog.push_back("clearBeacon");
   }
   void unMagicMainStation() override { sLog.push_back("unMagicMainStation"); }
-  Entity* hazardOnRouteFromEntity(Entity* /*e1*/, double dist, HPVector p2)
-      override  // the C++ entities since bead oo-9ht.39.8.6
-  {
+  Entity* hazardOnRouteFromEntity(Entity* /*e1*/, double dist,
+                                  HPVector p2) override {
     sLog.push_back(oo::str::format("hazardOnRoute %g (%g, %g, %g)", dist, p2.x,
                                    p2.y, p2.z));
     return nullptr;
@@ -129,17 +118,14 @@ class TestUniverse : public Universe {
     return role == "trader";
   }
   std::vector<oo::EntityHold> getContainersOfCommodity(
-      const std::string& commodity_name, OOCargoQuantity how_many)
-      override  // held C++ entities since bead oo-9ht.39.26
-  {
+      const std::string& commodity_name, OOCargoQuantity how_many) override {
     sLog.push_back(oo::str::format("getContainersOfCommodity %s %u",
                                    commodity_name.c_str(),
                                    static_cast<unsigned>(how_many)));
     return {};
   }
-  HPVector getSafeVectorFromEntity(Entity* /*e1*/, double dist, HPVector p2)
-      override  // the C++ entity since bead oo-9ht.39.8.6
-  {
+  HPVector getSafeVectorFromEntity(Entity* /*e1*/, double dist,
+                                   HPVector p2) override {
     sLog.push_back(oo::str::format("getSafeVector %g (%g, %g, %g)", dist, p2.x,
                                    p2.y, p2.z));
     return make_HPvector(10, 20, 30);
@@ -147,9 +133,7 @@ class TestUniverse : public Universe {
 };
 
 // A ship that keeps ShipEntity's own set-up (test_ShipEntity.mm's).
-class PlainShip : public ShipEntity  // C++ since bead oo-9ht.144 deleted the
-                                     // Objective-C ship
-{};
+class PlainShip : public ShipEntity {};
 
 namespace {
 
@@ -160,9 +144,7 @@ OOPlayerFleeingStatus sFleeingStatus = PLAYER_FLEEING_NONE;
 
 // The engine's player, with the two answers the getter's player branches ask
 // for set by the test.
-class TestPlayerShip : public PlayerEntity  // C++ since bead oo-9ht.177 deleted
-                                            // the Objective-C player
-{
+class TestPlayerShip : public PlayerEntity {
  public:
   OOWeaponFacingSet availableFacings() override { return sAvailableFacings; }
   OOPlayerFleeingStatus fleeingStatus() override { return sFleeingStatus; }
@@ -176,7 +158,7 @@ class TestPlayerShip : public PlayerEntity  // C++ since bead oo-9ht.177 deleted
   }
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player under the ship's
+// [[TestPlayer alloc] init]: a C++ player under the ship's
 // facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
 // +alloc's object was.
 template <class T>
@@ -195,8 +177,7 @@ namespace stdfs = std::filesystem;
 stdfs::path sRoot;
 PlayerEntity* sRealPlayer = nullptr;
 PlainShip* sShip = nil;
-PlainShip* sOther =
-    nil;  // a second ship, for the setters that take one (slice 2)
+PlainShip* sOther = nil;  // a second ship, for the setters that take one
 
 // The definition the test's ship is set up from.
 oo::PList ShipDefinition() {
@@ -266,7 +247,7 @@ void SetUp() {
   // The engine's player is a TestPlayerShip: made first, so
   // InitOOJSPlayerShip()'s PlayerEntity::sharedPlayer() answers it (the C++
   // player cannot change class, as object_setClass() made the Objective-C one a
-  // TestPlayerShip; bead oo-9ht.177).
+  // TestPlayerShip).
   gOOPlayer = NewTestPlayer<TestPlayerShip>();
   (void)OOJavaScriptEngine::sharedEngine();
 
@@ -367,7 +348,7 @@ std::string LogShown(const std::string& expected) {
 
 }  // namespace
 
-// MARK: Slice 1: the property getter and its helpers (bead oo-18mg2)
+// MARK: The property getter and its helpers
 // -----------------------------
 
 OO_TEST(registration) {
@@ -583,8 +564,8 @@ OO_TEST(getterPlayerBranches) {
   OO_CHECK_EVAL("player.ship.isPiloted", "true");
 }
 
-// MARK: Slice 2: the property setter (bead oo-chjz4)
-// ----------------------------------------------
+// MARK: The property setter
+// -------------------------
 
 // A setter's value read back through the getter: "(ship.<prop> = <value>,
 // ship.<prop>)".
@@ -601,7 +582,7 @@ OO_TEST(setterNames) {
   OO_CHECK_EVAL(SET("primaryRole", "'hunter'"), "hunter");
   OO_CHECK_EVAL(SET("beaconLabel", "'Label'"), "Label");
   OO_CHECK_EVAL(SET("AIState", "'ATTACK'"),
-                "null");  // as the Objective-C setter answered (oo-lk92s)
+                "null");  // as the Objective-C setter answered
 }
 
 OO_TEST(setterBeaconCode) {
@@ -636,7 +617,7 @@ OO_TEST(setterNumbers) {
   OO_CHECK_EVAL(SET("hyperspaceSpinTime", "12"), "12");
   OO_CHECK_EVAL(SET("bounty", "-5"), "0");
   OO_CHECK_EVAL(SET("bounty", "30"),
-                "0");  // as the Objective-C setter answered (oo-lk92s)
+                "0");  // as the Objective-C setter answered
   OO_CHECK_EVAL(SET("cargoSpaceCapacity", "10"), "10");
   OO_CHECK_EVAL(SET("cargoSpaceCapacity", "-3"), "0");
   OO_CHECK_EVAL(SET("destinationSystem", "-3"), "0");
@@ -681,7 +662,7 @@ OO_TEST(setterNumbers) {
   OO_CHECK_EVAL(SET("maxEscorts", "2"), "2");
   OO_CHECK(Threw("ship.maxEscorts = 20"));
   OO_CHECK(!Threw("ship.fuel = 'lots'"));  // the Objective-C setter did not
-                                           // throw (oo-lk92s)
+                                           // throw
 }
 
 OO_TEST(setterFlags) {
@@ -712,7 +693,7 @@ OO_TEST(setterColours) {
       "JSON.stringify(" SET("scannerDisplayColor1", "'blueColor'") ")",
       "[0,0,1,1]");
   OO_CHECK_EVAL(SET("scannerDisplayColor1", "null"),
-                "1,0,0,1");  // as the Objective-C setter answered (oo-lk92s)
+                "1,0,0,1");  // as the Objective-C setter answered
   OO_CHECK_EVAL("JSON.stringify(" SET("scannerDisplayColor2", "[1, 1, 0]") ")",
                 "[1,1,0,1]");
   OO_CHECK_EVAL(
@@ -775,8 +756,7 @@ OO_TEST(setterPlayerReadOnly) {
   }
 }
 
-// MARK: Slice 3: AI and script, escorts, roles, cargo, spawn, damage, removal,
-// comms (bead oo-08plt)
+// MARK: AI and script, escorts, roles, cargo, spawn, damage, removal, comms
 
 // Whether src threw with the message expected (the message printed when not).
 bool ThrewWith(const std::string& src, const std::string& message) {
@@ -795,12 +775,12 @@ OO_TEST(methodsAI) {
   OO_CHECK(ThrewWith("player.ship.setAI('nullAI.plist')",
                      "Ship.setAI: Not valid for player ship."));
   OO_CHECK_EVAL("(ship.setAI('route1patrolAI.plist'), ship.AI)",
-                "<no AI>");  // as the Objective-C natives answered (oo-lk92s)
+                "<no AI>");  // as the Objective-C natives answered
   OO_CHECK(Threw("ship.switchAI()"));
   OO_CHECK(ThrewWith("player.ship.switchAI('nullAI.plist')",
                      "Ship.switchAI: Not valid for player ship."));
   OO_CHECK_EVAL("(ship.switchAI('nullAI.plist'), ship.AI)",
-                "<no AI>");  // as the Objective-C natives answered (oo-lk92s)
+                "<no AI>");  // as the Objective-C natives answered
   OO_CHECK(ThrewWith("player.ship.exitAI()",
                      "Ship.exitAI: Not valid for player ship."));
   OO_CHECK_EVAL("ship.exitAI()",
@@ -814,7 +794,7 @@ OO_TEST(methodsAI) {
                      "Ship.sendAIMessage: Not valid for player ship."));
   OO_CHECK_EVAL("ship.sendAIMessage('NOTHING_HERE')", "undefined");
   OO_CHECK_EVAL("ship.AI",
-                "<no AI>");  // as the Objective-C natives answered (oo-lk92s)
+                "<no AI>");  // as the Objective-C natives answered
 }
 
 OO_TEST(methodsEscortsRolesEquipment) {
@@ -847,7 +827,7 @@ OO_TEST(methodsCargoAndSpawnArguments) {
   OO_CHECK_EVAL(
       "(function () { try { return ship.addCargoEntity(other); } catch (e) { "
       "return 'refused'; } })()",
-      "<evaluation failed>");  // as the Objective-C native answered (oo-lk92s)
+      "<evaluation failed>");  // as the Objective-C native answered
   OO_CHECK(Threw("ship.dealEnergyDamage(5)"));
   OO_CHECK(Threw("ship.dealEnergyDamage(-5, 100)"));
   OO_CHECK(Threw("ship.dealEnergyDamage(5, -100)"));
@@ -903,8 +883,7 @@ OO_TEST(methodsRemoveAndExplode) {
   if (queued != nullptr) oo::ReleaseEntity(queued);
 }
 
-// MARK: Slice 4: equipment, missiles, bounty, cargo and crew, materials and
-// shaders (bead oo-hqe5l)
+// MARK: Equipment, missiles, bounty, cargo and crew, materials and shaders
 
 // The test's game has no equipment types (no Resources), so the equipment
 // natives see unknown keys.
@@ -933,7 +912,6 @@ OO_TEST(methodsMissilesAndStations) {
                                                                   // Objective-C
                                                                   // native
                                                                   // answered
-                                                                  // (oo-lk92s)
   OO_CHECK_EVAL("ship.fireMissile()", "null");                    // none aboard
   OO_CHECK_EVAL("ship.findNearestStation()", "null");  // none in the universe
 }
@@ -948,7 +926,7 @@ OO_TEST(methodsBountyCargoCrew) {
   OO_CHECK_EVAL("ship.setCargo('food')",
                 "false");  // the universe has no commodities
   OO_CHECK(Threw("ship.setCrew()"));
-  // ship.setCrew(7) is not run here (oo-lk92s): the Objective-C native does not
+  // ship.setCrew(7) is not run here: the Objective-C native does not
   // throw but takes the number as an empty character definition, and making
   // that character expands descriptions (its random name), which ends this
   // test's process, whose universe has none. The goldens cover it.
@@ -971,8 +949,8 @@ OO_TEST(methodsMaterials) {
                 "false");  // no model to make a mesh of
 }
 
-// MARK: Slice 5: exit, escorts, defence targets, collision exceptions,
-// wormholes, docking, course (bead oo-qzn25)
+// MARK: Exit, escorts, defence targets, collision exceptions, wormholes,
+// docking, course
 
 OO_TEST(methodsExitAndEscorts) {
   SetUp();
@@ -1040,8 +1018,8 @@ OO_TEST(methodsWormholesDockingCourse) {
   OO_CHECK_LOG("getSafeVector 250 (1, 2, 3)");
 }
 
-// MARK: Slice 6: AI behaviours, scanner, cargo adjustment, damage and threat
-// assessment, statics (bead oo-ljuy1)
+// MARK: AI behaviours, scanner, cargo adjustment, damage and threat assessment,
+// statics
 
 OO_TEST(methodsBehaviours) {
   SetUp();
@@ -1077,18 +1055,15 @@ OO_TEST(methodsAssessments) {
   SetUp();
   OO_CHECK_EVAL("ship.damageAssessment()",
                 "1");  // missile pylons but no missiles
-  OO_CHECK_EVAL(
-      "ship.threatAssessment()",
-      "3.850000012665987");  // as the Objective-C native answered (oo-lk92s)
-  OO_CHECK_EVAL(
-      "ship.threatAssessment(true)",
-      "1.650000024586916");  // as the Objective-C native answered (oo-lk92s)
+  OO_CHECK_EVAL("ship.threatAssessment()",
+                "3.850000012665987");  // as the Objective-C native answered
+  OO_CHECK_EVAL("ship.threatAssessment(true)",
+                "1.650000024586916");  // as the Objective-C native answered
   OO_CHECK_EVAL("player.ship.threatAssessment(true)",
-                "0.1");  // as the Objective-C native answered (oo-lk92s)
+                "0.1");  // as the Objective-C native answered
   sFleeingStatus = PLAYER_FLEEING_CARGO;
-  OO_CHECK_EVAL(
-      "player.ship.threatAssessment()",
-      "0.4199999958276749");  // as the Objective-C native answered (oo-lk92s)
+  OO_CHECK_EVAL("player.ship.threatAssessment()",
+                "0.4199999958276749");  // as the Objective-C native answered
   sFleeingStatus = PLAYER_FLEEING_NONE;
 }
 

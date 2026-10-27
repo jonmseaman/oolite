@@ -27,9 +27,6 @@ SOFTWARE.
 
 #define OO_PLAIN_CPP_UNIT \
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
-     // (bead oo-dbz)
-#include "OOPixMapChannelOperations.h"
-
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -37,6 +34,7 @@ SOFTWARE.
 #include "OOCPUInfoEndian.h"
 #include "OOFunctionAttributes.h"
 #include "OOPixMap.h"
+#include "OOPixMapChannelOperations.h"
 #include "oofnd/objc/OOAssert.h"
 
 namespace {

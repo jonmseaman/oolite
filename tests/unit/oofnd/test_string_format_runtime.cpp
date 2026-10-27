@@ -1,8 +1,7 @@
 /*	test_string_format_runtime.cpp
-        oo::str::formatRuntime (oofnd/String.hpp; proposed ADR-0043 Amendment
-   3): -[NSString stringWithFormat:] for a format string read at run time
-   (DESC(...) entries, verifyOXP.plist's GraphViz templates), with %@, %p and
-   positional arguments.
+        oo::str::formatRuntime (oofnd/String.hpp): -[NSString stringWithFormat:]
+   for a format string read at run time (DESC(...) entries, verifyOXP.plist's
+   GraphViz templates), with %@, %p and positional arguments.
 
         Every expectation is GNUstep base 1.31.1's own output on this toolchain
    (64-bit Windows), captured by a throwaway Objective-C++ probe linked against

@@ -25,9 +25,8 @@ SOFTWARE.
 
 */
 
-#include "OOPListSchemaVerifier.h"
-
 #include "OOObjCPList.h"
+#include "OOPListSchemaVerifier.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -146,8 +145,7 @@ typedef enum {
 
 /*	The key path the verification core hands down, one link per level (a
    dictionary key, an array index, or neither for the root).
-   OOPListSchemaVerifier.h declares it for the core's members; it is defined
-   here again since bead oo-9ht.119 (it was in the header from bead oo-pni4).
+   OOPListSchemaVerifier.h declares it for the core's members.
 */
 struct BackLinkChain {
   BackLinkChain* link;
@@ -370,7 +368,7 @@ bool OOPListSchemaVerifier::delegateVerifierWithPropertyList(
   std::optional<OOPListSchemaVerifierError> error;
 
   // A C++ delegate answers both members; no delegate is what a delegate that
-  // did not answer the selector (or nil) was (bead oo-9ht.119).
+  // did not answer the selector (or nil) was.
   if (_delegate != nullptr) {
     try {
       result = _delegate->verifierTestProperty(this, rootPList, name, subPList,
@@ -468,7 +466,7 @@ bool OOPListSchemaVerifier::verifyPList(
       type = StringToSchemaType(resolvedSpecifier.get<std::string>("type"),
                                 &error);
 
-// The type verifiers (slice 2, bead oo-pgh9) take the verifier.
+// The type verifiers take the verifier.
 #define VERIFY_CASE(T)                                                        \
   case kType##T:                                                              \
     error = Verify_##T(this, subProperty, resolvedSpecifier, rootPList, name, \
@@ -1662,7 +1660,7 @@ OOPListSchemaVerifierError ErrorTypeMismatch(const char* expectedClassName,
     case oo::PList::Type::Object:
       className = "(null)";
       break;  // any other object: its class's name, nil's for a node with no
-              // Objective-C object (none is made since bead oo-4aq6a.5)
+              // Objective-C object (none is made)
   }
 
   return ErrorWithDictionary(

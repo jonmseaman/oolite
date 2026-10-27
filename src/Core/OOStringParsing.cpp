@@ -22,13 +22,12 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOStringParsing.h"
-
 #include "HeadUpDisplay.h"
 #include "OOFunctionAttributes.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJavaScriptEngine.h"
 #include "OOLogging.h"
+#include "OOStringParsing.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "ResourceManager.h"
@@ -39,14 +38,13 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        OOStringFromDeciCredits below is retargeted onto the ooscript façade
-   (JSEngine.hpp), the same call-site pattern OOJSVector.mm (bead oo-sdz)
-   established: the small set of directly spelled engine calls it makes
-   (retrieving and restoring a pending exception, looking a method up by id, the
-   numeric-conversion call, and invoking a function value) become the façade's
-   equivalents, taking and returning the façade's own
-   Context/Object/Value/PropertyId types directly, while the OOJS_* helpers stay
-   exactly as they were.
+        OOStringFromDeciCredits below goes through the ooscript façade
+   (JSEngine.hpp), the same call-site pattern OOJSVector.mm uses: the small set
+   of directly spelled engine calls it makes (retrieving and restoring a
+   pending exception, looking a method up by id, the numeric-conversion call,
+   and invoking a function value) use the façade's equivalents, taking and
+   returning the façade's own Context/Object/Value/PropertyId types directly,
+   while the OOJS_* helpers are unchanged.
 */
 
 namespace ooscript {}
@@ -194,8 +192,8 @@ Random_Seed cxx_RandomSeedFromString(
   int abcdef[] = {0, 0, 0, 0, 0, 0};
   int i = 0;
   const char* error = nullptr;
-  oo::str::Scanner scanner(abcdefString.value_or(
-      ""));  // a nil string scans as an empty one (proposed ADR-0039)
+  oo::str::Scanner scanner(
+      abcdefString.value_or(""));  // a nil string scans as an empty one
 
   while (!scanner.isAtEnd() && i < 6 && !error) {
     if (!scanner.scanInt(&abcdef[i++])) error = "could not scan a int value.";

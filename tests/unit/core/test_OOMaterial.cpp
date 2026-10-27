@@ -1,23 +1,18 @@
 /*	test_OOMaterial.mm
-        Unit tests for OOMaterial (src/Core/Materials/OOMaterial.h): bead
-   oo-smy, the Materials module exemplar (proposed ADR-0056, amendment oo-smy).
-   Bead oo-9ht.8 deleted the Objective-C facade (the material bridge): its
-   crossing cases went with it (standing approval oo-9n5p9), the Objective-C
-   test materials are C++ subclasses named as they were, and the other cases
-   call the same members with every expectation kept.
+        Unit tests for OOMaterial (src/Core/Materials/OOMaterial.h). The test
+   materials are C++ subclasses.
 
         OOMaterial is the root of the material hierarchy (OOBasicMaterial and
-   the three materials under it convert in their own beads) and owns the one
-   piece of global render state, the current material. So this pins, from the
-   Objective-C bodies, what the root computed before the conversion, through the
-   Objective-C API its callers use: the defaults a subclass inherits, -apply /
-   +applyNone / +current (the previous material told what comes next, the
-   current material retained, a failed -doApply leaving none), -willDealloc's
-   imbalance path, the description, and [super ...] from an Objective-C
-   subclass. Then the hierarchy's crossing both ways, as
-   test_OOOXPVerifierStage.mm does, and the current material keeping an
-   Objective-C material alive while C++ holds it. Run: bash
-   tools/check-core-tests.sh
+   the three materials under it) and owns the one piece of global render state,
+   the current material. So this pins, from the Objective-C bodies, what the
+   root computed before the conversion, through the Objective-C API its callers
+   use: the defaults a subclass inherits, -apply / +applyNone / +current (the
+   previous material told what comes next, the current material retained, a
+   failed -doApply leaving none), -willDealloc's imbalance path, the
+   description, and [super ...] from an Objective-C subclass. Then the
+   hierarchy's crossing both ways, as test_OOOXPVerifierStage.mm does, and the
+   current material keeping an Objective-C material alive while C++ holds it.
+   Run: bash tools/check-core-tests.sh
 */
 
 #include <utility>

@@ -21,42 +21,16 @@ MA 02110-1301, USA.
 
  */
 
-#include "OOJSDock.h"
-
 #include <cstring>
 
 #include "DockEntity.h"
 #include "GameController.h"
+#include "OOJSDock.h"
 #include "OOJSEntity.h"
 #include "OOJSPlayer.h"
 #include "OOJSShip.h"
 #include "OOJavaScriptEngine.h"
 #include "ooscript/JSEngine.hpp"
-
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table is a
-   static ooscript::ClassDef (the stub hooks are nullptr), native methods and
-   class hooks take the façade's hook signatures
-        (Context/Object/PropertyId/Value pointer/CallArgs reference) directly,
-   and the shared OOJavaScriptEngine helpers (OOJSObjectWrapperFinalize,
-   OOJSUnconstructableConstruct, OOJSRegisterSubclass,
-   OOJSRegisterObjectConverter) are used as the class's hooks and registrations
-   with &sDockClass itself. `this` is renamed to `thisObj` because it is a
-        reserved word once this file compiles as Objective-C++ (ADR-0001).
-*/
-
-/*
-        C++20 since bead oo-zbx3, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on DockEntity became two free functions, and its methods moved to
-   DockEntity (amendment oo- ykoy). Messages to classes that are still
-   Objective-C (DockEntity, ShipEntity, Entity) stay as they are, which is why
-   the file is still .mm until Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -187,7 +161,7 @@ static bool JSDockGetDockEntity(ooscript::Context context,
   OOJS_PROFILE_ENTER
 
   bool result;
-  Entity* entity = nullptr;  // the slot holds the C++ entity (bead oo-9ht.39.3)
+  Entity* entity = nullptr;  // the slot holds the C++ entity
 
   if (outEntity == NULL) return false;
   *outEntity = nil;
@@ -195,8 +169,7 @@ static bool JSDockGetDockEntity(ooscript::Context context,
   result = OOJSEntityGetEntity(context, dockObj, &entity);
   if (!result) return false;
 
-  // A dock's object is a ship's since bead oo-9ht.180: its C++ part says it is
-  // a dock, where -isKindOfClass:[DockEntity class] did.
+  // A dock's object is a ship's: its C++ part says it is a dock.
   DockEntity* dock = oo::ToDock(entity);
   if (dock == nullptr) return false;
 
@@ -214,7 +187,7 @@ static bool JSDockGetShipEntity(ooscript::Context context,
   OOJS_PROFILE_ENTER
 
   bool result;
-  Entity* entity = nullptr;  // the slot holds the C++ entity (bead oo-9ht.39.3)
+  Entity* entity = nullptr;  // the slot holds the C++ entity
 
   if (outEntity == NULL) return false;
   *outEntity = nil;
@@ -231,8 +204,8 @@ static bool JSDockGetShipEntity(ooscript::Context context,
 }
 }  // namespace
 
-// The bodies of DockEntity's class questions, which DockEntity's overrides call
-// (bead oo-9ht.47; proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+// The bodies of DockEntity's class questions, which DockEntity's overrides
+// call.
 void OOJSDockGetJSClass(ooscript::ClassDef** outClass,
                         ooscript::Object* outPrototype) {
   *outClass = &sDockClass;

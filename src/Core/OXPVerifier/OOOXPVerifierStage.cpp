@@ -2,12 +2,8 @@
 
 OOOXPVerifierStage.mm
 
-C++20 since bead oo-cwz, the Phase 3 class-hierarchy exemplar (proposed
-ADR-0056, Amendment 1). Method bodies are the Objective-C ones with message
-sends turned into calls (ADR-0012); the subclass responsibilities are virtual.
-Global since bead oo-9ht.4 deleted its facade. Still Objective-C++ until Phase
-4: the exceptions a stage raises are Objective-C objects (the verifier it keeps
-is the C++ one since bead oo-qg71f).
+The subclass responsibilities are virtual. The exceptions a stage raises are
+Objective-C objects.
 
 
 Copyright (C) 2007-2013 Jens Ayton
@@ -32,10 +28,9 @@ SOFTWARE.
 
 */
 
-#include "OOOXPVerifierStage.h"
-
 #include <assert.h>
 
+#include "OOOXPVerifierStage.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
 
@@ -69,8 +64,7 @@ std::optional<std::string> OOOXPVerifierStage::descriptionComponents() const {
          "\"";
 }
 
-// What the facade's -description printed (its -cxx_description, until bead
-// oo-9ht.4).
+// "<Class 0x...>{name}", the stage's description.
 std::string OOOXPVerifierStage::description() const {
   return oo::str::format("<%s %s>{", className().c_str(),
                          oo::str::pointerDescription(this).c_str()) +
@@ -89,8 +83,7 @@ std::string OOOXPVerifierStage::className() const {
   return result;
 }
 
-// The C++ verifier, borrowed (bead oo-qg71f; it was the Objective-C verifier,
-// retained and autoreleased): the verifier keeps its stages and outlives them
+// The C++ verifier, borrowed: the verifier keeps its stages and outlives them
 // while they run.
 OOOXPVerifier* OOOXPVerifierStage::verifier() { return _verifier; }
 
@@ -155,7 +148,7 @@ void OOOXPVerifierStage::performRun() {
     if (!exception) throw;  // not an OOException: it goes on up, as before
     // %@ of a Foundation exception printed GNUstep's -description, "<ClassName:
     // 0x...> NAME:... REASON:..."; OOException has no -description, so the same
-    // layout is spelled out (proposed ADR-0037).
+    // layout is spelled out.
     OO_LOG("verifyOXP.exception",
            "***** Exception while running verification stage \"{}\": "
            "<OOException: {}> NAME:{} REASON:{}",

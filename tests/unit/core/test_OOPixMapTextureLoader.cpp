@@ -2,22 +2,15 @@
         Unit tests for OOPixMapTextureLoader
    (src/Core/Materials/OOPixMapTextureLoader.h), the texture generator whose
    pixels are a pixmap made in memory (the planets' generated surface and cloud
-        textures): bead oo-kvqq (Phase 3, house style of proposed ADR-0056; a
-   leaf of the texture generators, amendments oo-zl36, oo-rr2x and oo-bj8 item
-   12).
+   textures).
 
         It takes over the pixmap it is given, answers its texture options with
    the defaults applied, and hands the pixels to the texture as they are, after
    making room for and generating mip-maps when its options ask for them. It
-   links the whole game but main (tests/unit/core/meson.build entry
-        ['*']), on the hidden GL context of oo_gl_test_context.hpp. The
-   expectations were written against the Objective-C API and run on the
-   unconverted class first (commit ab440895f). Making a loader goes through the
-   helper below, the only lines the conversion ported (amendment oo-bj8 item
-   11): the class is now a global C++ class with no facade of its own, made by
-   its factory (bead oo-9ht.118 deleted the generators' facade it crossed as;
-   its crossing check went with it). The last test pins the C++ API. Run: bash
-   tools/check-core-tests.sh
+   links the whole game but main (tests/unit/core/meson.build entry ['*']), on
+   the hidden GL context of oo_gl_test_context.hpp. Making a loader goes through
+   the helper below: the class is a global C++ class made by its factory. The
+   last test pins the C++ API. Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdlib>
@@ -32,9 +25,8 @@
 uint32_t gDebugFlags = 0;
 #endif
 
-// What an autoreleased Objective-C texture was (bead oo-9ht.99 deleted the
-// facade): the C++ texture, kept until the current autorelease scope drains
-// (oo::autorelease; an Objective-C keeper object until bead oo-4aq6a.2).
+// The C++ texture, kept until the current autorelease scope drains
+// (oo::autorelease).
 static OOTexture* Autoreleased(const oo::Ref<OOTexture>& texture) {
   if (texture == nullptr) return nullptr;
   oo::autorelease(oo::Ref<OOTexture>(texture));

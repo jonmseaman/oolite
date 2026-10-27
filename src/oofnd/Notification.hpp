@@ -1,8 +1,8 @@
 /*	oofnd/Notification.hpp
         oo::NotificationCenter: the replacement for NSNotificationCenter /
-   NSNotification (bead oo-3rb.9, ADR-0029 Decision 5). Named notifications,
-   delivered synchronously to the observers whose (name, object) filter matches,
-   on the posting thread, in registration order.
+   NSNotification. Named notifications, delivered synchronously to the
+   observers whose (name, object) filter matches, on the posting thread, in
+   registration order.
 
             Foundation                                        oofnd
             ------------------------------------------------
@@ -47,12 +47,11 @@
           * There is no userInfo: no call site in the game posts one.
 */
 
-#ifndef OOFND_NOTIFICATION_HPP
-#define OOFND_NOTIFICATION_HPP
+#pragma once
 
 // Objective-C++ game code includes this after OOFoundation.h, whose `#define
 // true 1` / `#define false 0` break the standard headers' keywords. Suspend the
-// macros here (proposed ADR-0028, Data.hpp).
+// macros here (see Data.hpp).
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -89,7 +88,7 @@ class NotificationCenter {
 
   // The process-wide center, as +[NSNotificationCenter defaultCenter].
   static NotificationCenter& defaultCenter() {
-    // Immortal (bead oo-9ht.173): an object freed by a pool drained at thread
+    // Immortal: an object freed by a pool drained at thread
     // detach, after the CRT's static destructors, may still remove its
     // observers here.
     static NotificationCenter& center = *new NotificationCenter;
@@ -201,5 +200,3 @@ class NotificationCenter {
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_NOTIFICATION_HPP

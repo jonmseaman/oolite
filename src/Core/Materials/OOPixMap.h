@@ -109,9 +109,7 @@ OOINLINE void OOCompactPixMap(OOPixMap* ioPixMap) {
 bool OOExpandPixMap(OOPixMap* ioPixMap, size_t desiredSize);
 
 #ifndef NDEBUG
-void OODumpPixMap(OOPixMap pixMap,
-                  const std::string& name);  // Foundation sweep (proposed
-                                             // ADR-0043, bead oo-mhqb)
+void OODumpPixMap(OOPixMap pixMap, const std::string& name);
 #else
 #define OODumpPixMap(p, n) \
   do {                     \

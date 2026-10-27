@@ -1,7 +1,6 @@
 /*	test_OOProbabilisticTextureManager.mm
         Unit tests for OOProbabilisticTextureManager
-   (src/Core/OOProbabilisticTextureManager.h), C++: bead oo-9hdp (Phase 3, house
-   style of proposed ADR-0056).
+   (src/Core/OOProbabilisticTextureManager.h), C++.
 
         The manager reads a list of textures from a Config plist (a name, or a
    dictionary with a texture name, a probability and a galaxy), loads each with
@@ -14,14 +13,11 @@
    by each pick), the sequence of picks for two seeds in two galaxies (including
    the "galaxy list requirements not met" and "last texture" fallbacks), that it
    fails (null) when nothing loads, and that it retains its textures until it
-   goes. The game around it is replaced (ADR-0056 amendments oo-z1s4 item 4,
-   oo-8kx7 item 7): the resource manager answers the configuration below,
-   OOTexture is a stand-in that records how it was asked and counts
-   -ensureFinishedLoading, and the player answers a galaxy. The expectations
-        were written against the Objective-C API and run on the unconverted
-   class first, then ported to the C++ calls (amendment oo-3lj8 item 5: the
-   class has no facade). Only the description's
-        "<OOProbabilisticTextureManager 0x...>" wrapper, which OOObject's
+   goes. The game around it is replaced the resource manager answers the
+   configuration below, OOTexture is a stand-in that records how it was asked
+   and counts -ensureFinishedLoading, and the player answers a galaxy. The
+   expectations are written against the C++ calls. Only the description's
+   "<OOProbabilisticTextureManager 0x...>" wrapper, which OOObject's
    -description added, went with that API: the components are checked as they
    were. Run: bash tools/check-core-tests.sh
 */
@@ -45,9 +41,8 @@ static std::vector<std::string> gLog;
 
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 oo::PList ResourceManager::arrayFromFilesNamed(
     const std::string& fileName, const std::optional<std::string>& folderName,
     bool mergeFiles) {
@@ -56,9 +51,8 @@ oo::PList ResourceManager::arrayFromFilesNamed(
   return gConfig;
 }
 
-// Every texture loads, but for "missing.png".
-// Since bead oo-9ht.99 deleted the Objective-C facade, the stand-in is C++: the
-// factory the manager calls, the root's own members (a texture needs them), and
+// Every texture loads, but for "missing.png". The stand-in is C++: the factory
+// the manager calls, the root's own members (a texture needs them), and
 // TestTexture, which the factory answers.
 class TestTexture final : public OOTexture {
  public:
@@ -116,8 +110,7 @@ void OOTexture::forceRebind() {}
 
 static OOGalaxyID gGalaxy = 0;
 
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for; the members the code under test calls, declared as PlayerEntity.h
+// PLAYER: the members the code under test calls, declared as PlayerEntity.h
 // declares them (the test imports no game header that defines the class), with
 // the same answers.
 class PlayerEntity {

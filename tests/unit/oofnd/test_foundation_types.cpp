@@ -1,6 +1,5 @@
 /*	test_foundation_types.cpp
-        Bead oo-3rb.21 (proposed ADR-0029 Decision 5):
-   oofnd/objc/OOFoundationTypes.h must be GNUstep's
+        oofnd/objc/OOFoundationTypes.h must be GNUstep's
    NSInteger/NSRange/NSPoint/NSSize/NSRect family bit for bit.
 
         The header refuses to compile beside Foundation, so GNUstep's side

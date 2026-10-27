@@ -1,28 +1,22 @@
 /*	test_OOJSGlobal.mm
         Unit tests for the JS global object
-   (src/Core/Scripting/OOJSGlobal.h/.mm) and the engine monitor send it makes
-   (bead oo-9ht.98 removed the Objective-C category it declared): bead oo-3dj2,
-   converted the way bead oo-ppc converted OOJSVector (proposed ADR-0056
-   amendments oo-ppc and oo-6ia4).
+   (src/Core/Scripting/OOJSGlobal.h/.mm) and the engine monitor send it makes.
 
-        As the binding tests of amendment oo-ppc item 6 do, it makes the global
-   object in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp) with the file's own
-        CreateOOJSGlobal()/SetUpOOJSGlobal(), and links the game's own objects
-   for the binding, the engine's exception translator
-   (OOJSEngineNativeWrappers.mm) and the converted classes it uses (OOColor, C++
-   since bead oo-9ht.1 deleted its façade, and OOJSGuiScreenKeyDefinition, C++
-   since bead oo-9ht.62 deleted its façade, linked as their own tests link
-   them). It stands in for the player, the universe, its GUI (C++ since bead
-   oo-9ht.143: the members the binding calls) and game view, the resource
-        manager, the script engine (its monitor and JS calls), the running
-   script, the string expander, the GUI screen names and the commodity names,
-   with the engine headers' linkage. The expectations were written against the
-   Objective-C file and run on it first; they pin the JS-visible behaviour of
-   the three properties and most methods (log and the monitor, the expanders,
-   the screen backgrounds and overlay, the GUI colours, the extra GUI screen
-   keys, autoAIForRole, pauseGame, quitGame) and a native's exception.
-   takeSnapShot(), which reads the disk, is not run. Run: bash
+   As the other binding tests do, it makes the global object in a real context
+   on the game's own façade backend (ooscript/JSEngine_quickjs.cpp) with the
+   file's own CreateOOJSGlobal()/SetUpOOJSGlobal(), and links the game's own
+   objects for the binding, the engine's exception translator
+   (OOJSEngineNativeWrappers.mm) and the converted classes it uses (OOColor and
+   OOJSGuiScreenKeyDefinition, linked as their own tests link them). It stands
+   in for the player, the universe, its GUI (the members the binding calls) and
+   game view, the resource manager, the script engine (its monitor and JS
+   calls), the running script, the string expander, the GUI screen names and the
+   commodity names, with the engine headers' linkage. The expectations were
+   written against the Objective-C file and run on it first; they pin the
+   JS-visible behaviour of the three properties and most methods (log and the
+   monitor, the expanders, the screen backgrounds and overlay, the GUI colours,
+   the extra GUI screen keys, autoAIForRole, pauseGame, quitGame) and a native's
+   exception. takeSnapShot(), which reads the disk, is not run. Run: bash
    tools/check-core-tests.sh
 */
 
@@ -51,8 +45,7 @@ class MyOpenGLView;
 /*	The player: its galaxy and screen, key binding descriptions, extra GUI
    screen keys and the equipment screen's background.
 */
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for: the members the code under test calls, declared as the game headers
+// PLAYER: the members the code under test calls, declared as the game headers
 // declare them (the test imports none that defines the classes), with the
 // stand-in's answers.
 class PlayerEntity {
@@ -79,10 +72,8 @@ class PlayerEntity {
 #include "UniverseStandIn.h"
 
 // The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's Objective-C stand-in
-// stood in for), with the header's names and signatures. It answers virtual
-// members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse
-// overrides them.
+// with the header's names and signatures. It answers virtual members, so it has
+// the game's vtable (UniverseStandIn.h) and StandInUniverse overrides them.
 class Universe : public oo::RefCounted {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
@@ -113,12 +104,11 @@ class StandInUniverse : public Universe {
   ::MyOpenGLView* getGameView() override { return nil; }
 };
 
-// The GUI is C++ since bead oo-9ht.143 deleted its facade: the members
-// OOJSGlobal.mm calls are defined below (a C++ stand-in with the facade
-// stand-in's answers).
+// The GUI: the members OOJSGlobal.mm calls are defined below (a C++ stand-in
+// with the facade stand-in's answers).
 
-// The game view is C++ since bead oo-9ht.153 deleted its facade: the member
-// OOJSGlobal.mm calls is defined below (never run: there is no view).
+// The game view: the member OOJSGlobal.mm calls is defined below (never run:
+// there is no view).
 class MyOpenGLView : public oo::RefCounted {
  public:
   bool snapShot(const std::optional<std::string>& filename);
@@ -127,8 +117,7 @@ class MyOpenGLView : public oo::RefCounted {
 #include "ResourceManager.h"
 
 // The engine, which OOJSGuiScreenKeyDefinition.mm (linked here) calls for its
-// reset-notification observer and its JS calls, is declared below (a C++ class
-// since bead oo-wdqw1).
+// reset-notification observer and its JS calls, is declared below.
 
 #include <cstdarg>
 #include <cstdint>
@@ -293,9 +282,8 @@ bool MyOpenGLView::snapShot(const std::optional<std::string>& filename) {
   std::abort();
 }  // never run
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the Objective-C stand-in's answers.
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& fileName, const std::optional<std::string>& folderName,
     bool mergeFiles) {
@@ -348,10 +336,9 @@ void OOJavaScriptEngine::sendMonitorLogMessage(
 
 #include "OOScript.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls.
+// OOJSScript (OOJSScript.h), which the code under test calls. A script is a
+// C++ object, so the stand-in is a C++ subclass of OOScript declaring the
+// members that code calls.
 class OOJSScript : public OOScript {
  public:
   static OOJSScript* currentlyRunningScript();

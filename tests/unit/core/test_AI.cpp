@@ -1,33 +1,21 @@
 /*	test_AI.mm
-        Unit tests for AI (src/Core/AI.h): bead oo-puw9, a Phase 3 conversion in
-   the house style of the OOColor exemplar (proposed ADR-0056). AI's superclass,
-   the weak-reference root, was then Objective-C, so the AI facade keeps it and
-   owns its C++ object (amendment oo-o89 item 2).
+        Unit tests for AI (src/Core/AI.h).
 
         The AI is a state machine: it loads a state machine (a property list of
    states, each a dictionary of messages, each an array of actions), whitelists
    its actions, keeps a stack of suspended machines, queues messages for its
    next think, and performs an action by sending its owner (a ship) the action's
    selector, by name. Its collaborators link the whole game, so the test defines
-   them itself (amendment oo-z1s4 item 4): the resource manager (one table of AI
-        files and the whitelist), the cache manager (a map), the property-list
-   reader, the deferred-call scheduler (which keeps the calls until the test
-   fires them) and the log indentation functions (which do what OOLogging.mm's
-   do). The owner is an Objective-C object of the test's own answering the
-   ship's selectors that AI sends, and recording the actions it is sent; since
-   bead oo-9ht.144 it is the object of a C++ ship stand-in, which answers what
-   AI asks the ship. The log is captured.
+   them itself: the resource manager (one table of AI files and the whitelist),
+   the cache manager (a map), the property-list reader, the deferred-call
+   scheduler (which keeps the calls until the test fires them) and the log
+   indentation functions (which do what OOLogging.mm's do). The owner is the
+   object of a C++ ship stand-in, which answers what AI asks the ship and
+   records the actions it is sent. The log is captured.
 
-        The expectations were written against the Objective-C API and run on the
-   unconverted class first; they ran through the facade (its forwarding test,
-   amendment oo-8kx7 item 6) until bead oo-9ht.73 deleted it, and now call the
-   C++ class with the same expectations (each
-        [[[AI alloc] init] autorelease] an autoreleased oo::makeRef<AI>(), each
-   send a member call); the owner stand-in is an object holding the ship, since
-   the AI holds the ship's C++ part weakly (oo::WeakRef). It was rooted on the
-   Objective-C root class OOObject until bead oo-4aq6a.2 made it C++ (Phase 4
-   deletes the root): its actions, once found and called by selector, are a
-   table of its members by the same names, answering as they did. Run: bash
+        The owner stand-in is an object holding the ship, since the AI holds the
+   ship's C++ part weakly (oo::WeakRef): its actions, once found and called by
+   selector, are a table of its members by the same names. Run: bash
    tools/check-core-tests.sh
 */
 
@@ -39,11 +27,11 @@
 #include <vector>
 
 #include "AI.h"
-#include "GameController.h"  // OOScheduleDeferredCall, stood in below (bead oo-pvhrh)
-#include "OOCallByName.h"  // oo::CallEntityByName, stood in below (bead oo-9ht.39.7.1)
+#include "GameController.h"  // OOScheduleDeferredCall, stood in below
+#include "OOCallByName.h"    // oo::CallEntityByName, stood in below
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
-#include "oofnd/objc/OOException.h"  // oo::Exception (bead oo-rskgl.1)
+#include "oofnd/objc/OOException.h"  // oo::Exception
 
 // --- Collaborators the game would provide
 // ----------------------------------------------------
@@ -58,9 +46,8 @@ std::vector<std::string> gLog;
 
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager stand-in: C++ definitions of the statics the code under test
+// calls.
 std::optional<std::string> ResourceManager::pathForFileNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   if (gAIFiles.find(fileName) == gAIFiles.end()) return std::nullopt;
@@ -75,8 +62,7 @@ oo::PList cxx_OOPropertyListFromFile(const std::string& path) {
   return found != gAIFiles.end() ? found->second : oo::PList();
 }
 
-// The cache manager is C++ since bead oo-9ht.31 deleted its facade: a C++
-// stand-in with the Objective-C stand-in's answers.
+// The cache manager: a C++ stand-in.
 static std::map<std::string, oo::PList> gCacheEntries;  // "cache/key" -> value
 
 #include "OOCacheManager.h"
@@ -99,8 +85,7 @@ void OOCacheManager::setPList(const oo::PList& value, const std::string& key,
 namespace {
 
 struct DeferredCall {
-  std::function<void()> call;  // the AI's C++ deferred call (bead oo-pvhrh; an
-                               // Objective-C target and -fire before)
+  std::function<void()> call;  // the AI's C++ deferred call
   double delay;
 };
 
@@ -122,7 +107,7 @@ void OOScheduleDeferredCall(std::function<void()> call, NSTimeInterval delay) {
   gDeferred.push_back({std::move(call), delay});
 }
 
-// Link stub (amendment oo-zffj item 2): the graph dump runs only under a
+// Link stub: the graph dump runs only under a
 // default the test never sets.
 void GenerateGraphVizForAIStateMachine(const oo::PList&, const std::string&) {
   std::abort();
@@ -137,14 +122,12 @@ void OOLogOutdent(void) { oo::log::outdent(); }
 // --- The owner
 // -------------------------------------------------------------------------------
 
-/*	The ship is C++ since bead oo-9ht.144 deleted the Objective-C ship: AI
-   asks the C++ ship its universal ID, whether it is the player, its name and
-   whether it reports AI messages, and sets its AI script, and sends its actions
-   to the ship's object by name, as before. The object is the root's (which
-   holds the C++ part, oo::ToCxx reads it, and which oo::ToObjC answers for it);
-   the classes are declared as Entity.h and ShipEntity.h declare them (the test
-   imports neither), and the part answers from its object's fields, as the
-   object's selectors did.
+/*	The ship is C++: AI asks it its universal ID, whether it is the player,
+   its name and whether it reports AI messages, and sets its AI script, and
+   sends its actions to the ship's object by name. The object is the root's
+   (which holds the C++ part, oo::ToCxx reads it, and which oo::ToObjC answers
+   for it); the classes are declared as Entity.h and ShipEntity.h declare them
+   (the test imports neither), and the part answers from its object's fields.
 */
 class TestEntityObject;
 
@@ -164,7 +147,7 @@ class ShipEntity : public Entity {
   void setAIScript(const std::string& aiString);
 };
 
-// The AI holds its owner's C++ part weakly since bead oo-9ht.73.
+// The AI holds its owner's C++ part weakly.
 class TestEntityObject : public oo::RefCounted {
  public:
   virtual const char* className() const {
@@ -206,7 +189,7 @@ class TestShip final : public TestEntityObject {
 
   OOUniversalID _id = {};
   BOOL _isPlayer = NO;
-  AI* _ai = nullptr;                // not retained (C++ since bead oo-9ht.73)
+  AI* _ai = nullptr;                // not retained
   std::vector<std::string> _calls;  // "selector argument", in order
   std::vector<std::string>
       _runningAIs;  // +cxx_currentlyRunningAIDescription during each action
@@ -228,15 +211,15 @@ void ShipEntity::setAIScript(const std::string& aiString) {
   static_cast<TestShip*>(_object)->_script = aiString;
 }
 
-// The test's object of an entity (oo::ToObjC() until bead oo-4aq6a.2;
-// Entity+ObjCBridge.mm's, which the test does not link).
+// The test's object of an entity (Entity+ObjCBridge.mm's stand-in, which the
+// test does not link).
 ::TestEntityObject* TestObjectOf(Entity* entity) {
   return entity != nullptr ? entity->_object : nullptr;
 }
 #define OO_ENTITY_HELPERS_STAND_IN_CXX
-#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects (bead oo-dpyk8)
+#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects
 
-/*	OOEntityCalledByName.mm's (bead oo-9ht.39.7.1), which the test does not
+/*	OOEntityCalledByName.mm's, which the test does not
    link: the test ship has no C++ table, so every name goes to its object, the
    path that file takes for an untabled name. The object's methods by their
    selectors' names, each taking its argument or none, as the Objective-C
@@ -387,8 +370,7 @@ TestShip* NewShip(OOUniversalID uid) {
   return ship;
 }
 
-// [[[AI alloc] init] autorelease] (OOAIAutorelease): the AI is C++ since bead
-// oo-9ht.73 deleted its facade.
+// [[[AI alloc] init] autorelease] (OOAIAutorelease).
 AI* Autoreleased(oo::Ref<AI> ai) {
   AI* result = ai.get();
   OOAIAutorelease(std::move(ai));
@@ -607,8 +589,7 @@ OO_TEST(stackOfStateMachines) {
     bool raised = false;
     try {
       ai->preserveCurrentStateMachine();
-    } catch (const oo::Exception&)  // was @catch (id exception): what src
-                                    // throws (bead oo-rskgl.1)
+    } catch (const oo::Exception&)  // what src throws
     {
       raised = true;
     }
@@ -715,9 +696,7 @@ OO_TEST(deferredCalls) {
 
     ai->setState("GLOBAL", 2.5);
     OO_CHECK(gDeferred.size() == 1);
-    OO_CHECK(gDeferred[0].call !=
-             nullptr);  // the call's own C++ call (bead oo-9ht.73; its
-                        // Objective-C object and -fire until bead oo-pvhrh)
+    OO_CHECK(gDeferred[0].call != nullptr);  // the call's own C++ call
     OO_CHECK(gDeferred[0].delay == 2.5);
     OO_CHECK(ai->state() == std::optional<std::string>("ATTACK"));  // not yet
     FireDeferredCalls();
@@ -762,10 +741,7 @@ OO_TEST(initialiserWithStateMachine) {
   }
 }
 
-// After the conversion: the C++ AI's own calls (bead oo-9ht.73 deleted the
-// facade; its crossings, oo::ToCxx/oo::ToObjC, the facade's identity and the
-// facade-versus-C++ comparisons, went with it under ADR-0049, standing approval
-// oo-9n5p9; facadeContract became this case).
+// The C++ AI's own calls.
 OO_TEST(cxxAPI) {
   SetUp();
   oo::Ref<AI> kept;

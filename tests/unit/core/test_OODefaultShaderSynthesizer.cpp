@@ -1,9 +1,7 @@
 /*	test_OODefaultShaderSynthesizer.mm
         Unit tests for OODefaultShaderSynthesizer
    (src/Core/Materials/OODefaultShaderSynthesizer.h/.mm), the default shader
-   synthesizer: beads oo-bm1q, oo-bhxc and oo-4s5i, the three slices of
-        docs/phases/3-slices/OODefaultShaderSynthesizer.md (Phase 3, house style
-   of proposed ADR-0056, amendments oo-dqxj and oo-pni4).
+   synthesizer.
 
         The synthesizer's one entry point, OOSynthesizeMaterialShader(),
    canonicalises a material configuration (legacy keys, combined maps, the
@@ -16,17 +14,11 @@
    (tests/unit/core/meson.build entry ['*']) and defines gDebugFlags. The log is
    captured, so the warnings and errors are pinned too.
 
-        The expectations were written against the entry point while the class
-   was Objective-C and run on it first (commit 643b5358b); they pin the whole of
+        The tests pin the whole of
    each shader text, the description of the texture list and of the uniforms,
    and the warnings and errors logged. Light-map bindings are not covered: they
-   read the binding types from the game's resources (ResourceManager). Slice 1
-   made the class C++ with an Objective-C facade for the stages; the last test
-   pins the C++ API. Slice 2 (oo-bhxc) pinned three more stage cases on the
-   unconverted stages (commit 66021ca17), then made the stages members. Bead
-   oo-9ht.134 deleted the facade and its contract case (standing approval
-   oo-9n5p9) and moved the class to the global namespace. Run: bash
-   tools/check-core-tests.sh
+   read the binding types from the game's resources (ResourceManager). The last
+   test pins the C++ API. Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdio>
@@ -1223,7 +1215,7 @@ OO_TEST(cubeMapFails) {
   OO_CHECK_EQ(LogLinesContaining("specifies a cube map texture"), 1);
 }
 
-// --- The shader stages (slice 2, bead oo-bhxc)
+// --- The shader stages
 // ---------------------------------------------------
 
 // Light maps with textures: one in illumination mode (which pulls in the
@@ -1504,7 +1496,7 @@ OO_TEST(specularExponentMapExtractionMismatch) {
   OO_CHECK_EQ(LogLinesContaining("specifies 3 channels to extract"), 1);
 }
 
-// --- The C++ class (bead oo-bm1q)
+// --- The C++ class
 // ----------------------------------------------------------------
 
 // The C++ synthesizer, run directly, answers what the entry point wrote; it

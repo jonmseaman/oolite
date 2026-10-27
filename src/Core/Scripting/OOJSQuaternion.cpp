@@ -22,36 +22,15 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSQuaternion.h"
-
 #include <cstring>
 
 #include "OOConstToString.h"
 #include "OOJSEntity.h"
+#include "OOJSQuaternion.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
-
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) per bead oo-45g, the
-   same way bead oo-sdz retargeted OOJSVector.mm (the exemplar for this sweep;
-   see its header comment for the full rationale). `this` and `private` are
-   renamed to `thisObj`/`priv` because both are reserved words once this file
-   compiles as Objective-C++ (ADR-0001).
-*/
-
-/*
-        C++20 since bead oo-hwae, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false; the
-   debug-build category on PlayerEntity became two free functions, which the C++
-   PlayerEntity's members call (oo-9ht.15). Messages to classes that are still
-   Objective-C (Entity) stay as they are, which is why the file is still .mm
-   until Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -269,9 +248,7 @@ namespace {
 static QuaternionStatistics sQuaternionConversionStats;
 }  // namespace
 
-// The bodies of the C++ PlayerEntity's statistics members, which were the
-// category PlayerEntity (JSQuaternionStatistics) until bead oo-9ht.15 (proposed
-// ADR-0056 amendments oo-ppc, oo-9ht.15).
+// The bodies of the C++ PlayerEntity's statistics members.
 oo::PList reportJSQuaternionStatistics(void) {
   QuaternionStatistics* stats = &sQuaternionConversionStats;
 
@@ -371,7 +348,7 @@ bool JSObjectGetQuaternion(ooscript::Context context,
   if (OOJSIsMemberOfSubclass(context, quaternionObj, JSEntityClass())) {
     COUNT(entityCount);
     *outQuaternion = OOJSEntityOrientationOfJSObject(
-        context, quaternionObj);  // the C++ entity's (bead oo-9ht.39.8.12)
+        context, quaternionObj);  // the C++ entity's
     return true;
   }
 
@@ -644,8 +621,7 @@ static bool QuaternionConstruct(ooscript::Context context,
 
   thisObj = (ooscript::newObject(context, &sQuaternionClass, nullptr, nullptr));
   if (EXPECT_NOT(thisObj == NULL)) {
-    free(priv);  // leaked before bead oo-hwae; the analyser sees this path now
-                 // that it is not in an Objective-C try
+    free(priv);
     return false;
   }
 

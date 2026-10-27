@@ -35,7 +35,7 @@ SOFTWARE.
 #include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OOObject.h"
 
-class OOProbabilitySet;  // C++ since bead oo-489v
+class OOProbabilitySet;
 class OOMutableProbabilitySet;
 
 class OOShipRegistry : public oo::RefCounted {
@@ -74,7 +74,7 @@ class OOShipRegistry : public oo::RefCounted {
 
   void init();  // -init's body: run by sharedRegistry() once sSingleton is set,
                 // so that a re-entrant sharedRegistry() answers the registry
-                // being loaded (amendment oo-3bgz item 3)
+                // being loaded
 
   // (OODataLoader) The load stages. The ship dictionary each stage mutates is
   // one property list, passed through every stage.

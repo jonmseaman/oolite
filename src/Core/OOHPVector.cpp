@@ -23,7 +23,7 @@ MA 02110-1301, USA.
 */
 
 #include "OOMaths.h"
-#include "legacy_random.h"  // randf (ADR-0063 item 5 draws on lines of their own)
+#include "legacy_random.h"  // randf
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
 
@@ -61,7 +61,7 @@ HPVector OORandomUnitHPVector(void) {
 
   do {
     float x = randf() - 0.5f;  // one draw per local, in the order Clang
-                               // evaluates the arguments (ADR-0063 item 5)
+                               // evaluates the arguments
     float y = randf() - 0.5f;
     float z = randf() - 0.5f;
     v = make_HPvector(x, y, z);
@@ -79,7 +79,7 @@ HPVector OOHPVectorRandomSpatial(OOHPScalar maxLength) {
 
   do {
     float x = randf() - 0.5f;  // one draw per local, in the order Clang
-                               // evaluates the arguments (ADR-0063 item 5)
+                               // evaluates the arguments
     float y = randf() - 0.5f;
     float z = randf() - 0.5f;
     v = make_HPvector(x, y, z);
@@ -94,7 +94,7 @@ HPVector OOHPVectorRandomSpatial(OOHPScalar maxLength) {
 HPVector OOHPVectorRandomRadial(OOHPScalar maxLength) {
   HPVector direction =
       OORandomUnitHPVector();  // one draw per local, in the order Clang
-                               // evaluates the arguments (ADR-0063 item 5)
+                               // evaluates the arguments
   OOHPScalar length = randf() * maxLength;
   return HPvector_multiply_scalar(direction, length);
 }
@@ -120,10 +120,10 @@ HPVector OORandomPositionInCylinder(HPVector centre1, OOHPScalar exclusion1,
   }
   HPVector result;
   do {
-    HPVector along = OOHPVectorInterpolate(
-        centre1, centre2,
-        randf());  // one draw per local, in the order Clang evaluates the
-                   // arguments (ADR-0063 item 5)
+    HPVector along =
+        OOHPVectorInterpolate(centre1, centre2,
+                              randf());  // one draw per local, in the order
+                                         // Clang evaluates the arguments
     HPVector offset = OOHPVectorRandomSpatial(radius);
     result = HPvector_add(along, offset);
   } while (HPdistance2(result, centre1) < exc12 ||

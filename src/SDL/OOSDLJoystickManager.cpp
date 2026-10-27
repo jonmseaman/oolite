@@ -24,7 +24,6 @@ MA 02110-1301, USA.
 */
 
 #include "OOSDLJoystickManager.h"
-
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
 
@@ -107,8 +106,7 @@ bool OOSDLJoystickManager::handleSDLEvent(SDL_Event* evt) {
     case SDL_EVENT_JOYSTICK_AXIS_MOTION: {
       JoyAxisEvent joyEvt = makeJoyAxisEvent((SDL_JoyAxisEvent*)evt);
       // The index, not joyEvt.which: an unknown stick's -1 is 0xFFFFFFFF in the
-      // unsigned SDL_JoystickID, which passed a `which >= 0` test (bead
-      // oo-9ht.3).
+      // unsigned SDL_JoystickID, which passed a `which >= 0` test).
       if (getJoystickIndexFromId(((SDL_JoyAxisEvent*)evt)->which) >= 0) {
         decodeAxisEvent(&joyEvt);  // OOJoystickManager's
         rc = true;

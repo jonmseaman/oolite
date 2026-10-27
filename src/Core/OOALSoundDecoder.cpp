@@ -26,12 +26,11 @@ SOFTWARE.
 
 */
 
-#include "OOALSoundDecoder.h"
-
 #include <vorbis/vorbisfile.h>
 
 #include <cstring>
 
+#include "OOALSoundDecoder.h"
 #include "OOLogging.h"
 #include "oofnd/String.hpp"
 #include "unzip.h"
@@ -49,8 +48,7 @@ static int OOCloseOXZVorbis(void* datasource);
 
 namespace {
 
-// The class cluster's one concrete decoder, private to this file (proposed
-// ADR-0056, amendment oo-x2wy item 3).
+// The class cluster's one concrete decoder, private to this file.
 class OOALSoundVorbisCodec final : public OOALSoundDecoder {
  public:
   // Was [[OOALSoundVorbisCodec alloc] cxx_initWithPath:]: null where it
@@ -396,8 +394,7 @@ bool OOALSoundVorbisCodec::isStereo() {
 
 // The facade's -description wraps this as "<OOALSoundVorbisCodec 0x...>{...}",
 // which is what this class's own -description printed. comments() reads the
-// file through a non-const pointer, so it is reached through const_cast (as
-// amendment oo-bhb9 item 5 does).
+// file through a non-const pointer, so it is reached through const_cast.
 std::optional<std::string> OOALSoundVorbisCodec::descriptionComponents() const {
   oo::PList commentList;
   if (const auto comments =
@@ -446,7 +443,7 @@ static size_t OOReadOXZVorbis(void* ptr, size_t size, size_t nmemb,
   int err = UNZ_OK;
   err = unzReadCurrentFile(src->uf, buf, toRead);
   //	OO_LOG("sound.replay", "Read {} blocks, got {}",
-  //static_cast<int>(toRead), static_cast<int>(err));
+  // static_cast<int>(toRead), static_cast<int>(err));
   if (err > 0) {
     memcpy(ptr, buf, err);
   }

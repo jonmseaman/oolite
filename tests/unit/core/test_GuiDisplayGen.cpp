@@ -1,6 +1,6 @@
 /*	test_GuiDisplayGen.mm
         Unit tests for -[GuiDisplayGen rowAtVirtualJoystickPosition:]
-   (src/Core/GuiDisplayGen.h): bead oo-3rb.348.
+   (src/Core/GuiDisplayGen.h).
 
         A mouse click on a GUI screen activates a row. It used to activate
    UNIVERSE->cursor_row, which only -drawGUI:drawCursor:YES recomputes, i.e. the
@@ -14,22 +14,17 @@
    (480 px high, rows 16 px from 40 px down) and that it needs no render.
 
         GuiDisplayGen's object references Universe and the player, so the test
-   links the whole game but main (tests/unit/core/meson.build entry ['*'],
-   ADR-0056 amendment oo-44gg) and defines the one global main.mm did,
-   gDebugFlags. UNIVERSE is nil; -init and this method do not use it.
+   links the whole game but main (tests/unit/core/meson.build entry ['*'])
+   and defines the one global main.mm did, gDebugFlags. UNIVERSE is nil;
+   -init and this method do not use it.
 
-        Bead oo-2g51 (slice 1 of docs/phases/3-slices/GuiDisplayGen.md, Phase 3,
-   house style of proposed ADR-0056 and its amendments oo-pni4 and oo-3bgz)
-   added the tests after these four: they pin, through the Objective-C API the
-   game uses, what the slice's units computed before the conversion (the two
-        initialisers, the sizes, the title rule, the rows' texts and keys, the
+        The tests after these four pin what the class's units compute (the two
+   initialisers, the sizes, the title rule, the rows' texts and keys, the
    selection and its skip rows, the colours and the colour settings, the fades'
-   alpha, the tab-stop override, clearing and the two resizes). They were
-   written against the unconverted class and run on it first (commit 9afc661c6);
-        the last two (cxxAPIAnswersTheSame, and facadeContract until bead
-   oo-9ht.143 deleted the facade) pin the C++ API and the facade's contract. The
-   units of slices 2-4 that they reach (-clear's -clearBackground,
-   -cxx_getLastLines, -cxx_setArray:forRow:, -cxx_printLineNoScroll:...) run as
+   alpha, the tab-stop override, clearing and the two resizes); the last
+   (cxxAPIAnswersTheSame) pins the C++ API. The units they reach (-clear's
+   -clearBackground, -cxx_getLastLines, -cxx_setArray:forRow:,
+   -cxx_printLineNoScroll:...) run as
    they are. The settings -init reads (gui-settings.plist, through the real
    ResourceManager) depend on where the test runs, so the tests that need them
    check that they are a dictionary first and pin nothing of their content. Run:
@@ -51,7 +46,7 @@
 #include "oofnd/Data.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"  // oo::Exception (bead oo-rskgl.1)
+#include "oofnd/objc/OOException.h"  // oo::Exception
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -143,8 +138,7 @@ OO_TEST(answersForThePointerNowWithoutARender) {
   }
 }
 
-// --- bead oo-2g51: slice 1 (the class shell, sizes, colours, fades, rows and
-// selection) ---
+// --- The class shell, sizes, colours, fades, rows and selection ---
 
 namespace {
 
@@ -282,12 +276,12 @@ OO_TEST(rowTextsAndKeys) {
     OO_CHECK(gui->keyForRow(3) == std::optional<std::string>("k3"));
     OO_CHECK_EQ(gui->rowForKey("k3"), 3);
     OO_CHECK_EQ(gui->rowForKey("k9"), -1);
-    gui->setArray({"a", "b"}, 4);  // slice 2's unit: a row of columns
+    gui->setArray({"a", "b"}, 4);  // a row of columns
     OO_CHECK(gui->objectForRow(4).isArray());
     OO_CHECK_EQ(gui->objectForRow(4).count(), 2u);
 
-    // The last two rows' text, colour and fade time (slice 2's
-    // -cxx_getLastLines) show the colour.
+    // The last two rows' text, colour and fade time (-cxx_getLastLines) show
+    // the colour.
     gui->setColor(OOColor::redColor().get(), 3);
     gui->setColor(OOColor::greenColor().get(), 7);  // ignored
     gui->setText("three", 3);
@@ -505,7 +499,7 @@ OO_TEST(clearAndResize) {
   }
 }
 
-// --- after the conversion: the C++ API and the facade's contract ---
+// --- The C++ API ---
 
 OO_TEST(cxxAPIAnswersTheSame) {
   {
@@ -543,8 +537,8 @@ OO_TEST(cxxAPIAnswersTheSame) {
   }
 }
 
-// --- bead oo-6dvw: slice 2 (text layout and printing, arrays, scrolling,
-// textures, the status page) --- The unit test links no font: until the HUD's
+// --- Text layout and printing, arrays, scrolling, textures, the status page
+// --- The unit test links no font: until the HUD's
 // text engine has loaded oolite-font.plist every glyph is 0 wide, so a line
 // always fits and long text is split only at its newlines.
 
@@ -657,9 +651,7 @@ OO_TEST(arraysAndInsertedItems) {
     try {
       gui->insertItemsFromArray(
           items, oo::PList(oo::PList::Array{oo::PList("one")}), 0, nil);
-    } catch (const oo::Exception&)  // was @catch (id exception): what src
-                                    // throws (bead oo-rskgl.1)
-    {
+    } catch (const oo::Exception&) {
       raised = true;
     }
     OO_CHECK(raised);
@@ -735,7 +727,7 @@ OO_TEST(cxxSlice2API) {
   }
 }
 
-// --- bead oo-bcz4: slice 3 (drawing, the star chart's title, found systems)
+// --- Drawing, the star chart's title, found systems
 // --- No universe and no player (both nil): the drawing has no view to ask, no
 // chart to draw and no found systems, so these pin what the units do without
 // them.

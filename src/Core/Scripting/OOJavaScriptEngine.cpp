@@ -22,13 +22,12 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJavaScriptEngine.h"
-
 #include <cstring>
 
 #include "OOFoundation.h"  // OOLITE_DEBUG
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
+#include "OOJavaScriptEngine.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Notification.hpp"
@@ -39,20 +38,19 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): every engine call goes through its
-   ooscript:: equivalent, and the natives shared with the class files
-   (OOJSUnconstructableConstruct, OOJSObjectWrapperToString,
-   OOJSObjectWrapperFinalize) take the façade signatures directly.
+        Retargeted onto the ooscript facade (JSEngine.hpp): every engine call
+   goes through its ooscript:: equivalent, and the natives shared with the class
+   files (OOJSUnconstructableConstruct, OOJSObjectWrapperToString,
+   OOJSObjectWrapperFinalize) take the facade signatures directly.
 
         The debugging support below -- the stack walk in OOJSDumpStack,
    GetLocationNameAndLine and DumpVariable, and the `debugger` statement hook --
-   uses the façade's "Debugging and profiling" section (frameIterator /
-   frameScript / frameScopeChain / getScopeVariables / setDebuggerHandler, bead
-   oo-1gc.3). The engine's local root scopes around the array and dictionary
-   value converters (now OOJSValueFromPList's helpers) are superseded by
-   explicit roots, as ooscript/README.md describes: ooscript::RootedValue roots
-   the value about to be handed to the caller.
+   uses the facade's "Debugging and profiling" section (frameIterator /
+   frameScript / frameScopeChain / getScopeVariables / setDebuggerHandler). The
+   engine's local root scopes around the array and dictionary value converters
+   (now OOJSValueFromPList's helpers) are superseded by explicit roots, as
+   ooscript/README.md describes: ooscript::RootedValue roots the value about to
+   be handed to the caller.
 
         Three façade functions were added for this file
    (ooscript::internUCStringN, ooscript::clearScope,
@@ -128,7 +126,7 @@ MA 02110-1301, USA.
 
 namespace {
 static OOJavaScriptEngine* sSharedEngine =
-    nullptr;  // the one +1 is never released (amendment oo-r7m0 item 1)
+    nullptr;  // the one +1 is never released
 }  // namespace
 namespace {
 static unsigned sErrorHandlerStackSkip = 0;
@@ -216,8 +214,7 @@ static void ReportJSError(ooscript::Context context, const char* message,
   // Get offending line, if present, and trim trailing line breaks
   // The report's linebuf may be NULL (ooscript's ErrorReport; the QuickJS
   // engine never sets it): a string_view of NULL read through a null pointer
-  // and crashed every report (bead oo-9ht.142). NULL reads as no line, as it
-  // did before the Foundation sweep (oo-3rb.203).
+  // and crashed every report. NULL reads as no line.
   if (report->linebuf != NULL)
     lineBuf = oo::utf16ToUtf8(std::u16string_view(report->linebuf));
   while (oo::str::hasSuffix(lineBuf, "\n") || oo::str::hasSuffix(lineBuf, "\r"))
@@ -239,9 +236,8 @@ static void ReportJSError(ooscript::Context context, const char* message,
       oo::log::willDisplay(messageClass)) {
     // First line: problem description
     // avoid windows DEP exceptions!
-    // The running script (C++ since bead oo-9ht.133; null when none runs, or
-    // once a script a timer or definition pushed weakly has gone: a message to
-    // nil).
+    // The running script (null when none runs, or once a script a timer or
+    // definition pushed weakly has gone: a message to nil).
     OOJSScript* runningScript = OOJSScript::currentlyRunningScript();
     activeScript = ((runningScript != nullptr) ? runningScript->displayName()
                                                : std::nullopt)
@@ -291,10 +287,9 @@ static void ReportJSError(ooscript::Context context, const char* message,
 
 OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
   if (sSharedEngine == nullptr) {
-    // The one +1, never released (amendment oo-r7m0 item 1). Recorded before
-    // init() runs, as -init recorded self before it made the context, so a
-    // re-entrant sharedEngine() answers the engine being set up (amendment
-    // oo-3bgz item 3).
+    // The one +1, never released. Recorded before init() runs, as -init
+    // recorded self before it made the context, so a re-entrant sharedEngine()
+    // answers the engine being set up.
     OOJavaScriptEngine* engine = oo::makeRef<OOJavaScriptEngine>().leakRef();
     sSharedEngine = engine;
     engine->init();
@@ -771,8 +766,7 @@ static void DumpVariable(ooscript::Context context, ooscript::Variable* prop) {
 
 void OOJSDumpStack(ooscript::Context context) {
   {
-    oo::AutoreleaseScope
-        pool;  // was an Objective-C autorelease pool (oo-31u.8)
+    oo::AutoreleaseScope pool;
     try {
       ooscript::StackFrame frame = NULL;
       unsigned idx = 0;
@@ -885,10 +879,7 @@ void OOJSDumpStack(ooscript::Context context) {
         }
       }
     } catch (...) {
-      // Was @catch (OOException *): an OOException is logged, anything else
-      // goes on up as before (amendment oo-10qz). (Asked of
-      // oo::CurrentOOException() where it was asked through the root's JS
-      // bridge, which went with bead oo-4aq6a.6.2.)
+      // An OOException is logged, anything else goes on up.
       const auto exception =
           oo::CurrentOOException();  // nullopt: not what @catch (OOException *)
                                      // caught
@@ -1068,8 +1059,7 @@ void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
   }
 }
 
-// OOJSReportCurrentException() is in OOJSEngineNativeWrappers.mm
-// (OOJSReportWrappedException() went with bead oo-rskgl.1).
+// OOJSReportCurrentException() is in OOJSEngineNativeWrappers.mm.
 
 #ifndef NDEBUG
 
@@ -1216,11 +1206,6 @@ BOOL OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc,
   OOJS_PROFILE_EXIT
 }
 
-// (The root-class JS glue for classes rooted on OOObject -
-// OOObjectJSValueInContext(), OOObjectJSClassName(), OOObjectJSDescription(),
-// OOObjectJSDescriptionWithClassName() - went with the root's JS bridges, bead
-// oo-4aq6a.6.2: no game object is an Objective-C object.)
-
 namespace {
 // The Foundation array's glue (JSArrayFromNSArray + JSNewNSArrayValue) over
 // ObjectFromPList's array: null elements dropped.
@@ -1314,10 +1299,6 @@ static ooscript::Value JSNumberValue(ooscript::Context context, double number) {
 }
 }  // namespace
 
-// (OOJSValueFromNativeObject(), the JS value of an Objective-C object - null
-// for nil, the root's JS glue - went with bead oo-4aq6a.6.2: no game object is
-// an Objective-C object.)
-
 ooscript::Value OOJSValueFromPList(ooscript::Context context,
                                    const oo::PList& plist) {
   OOJS_PROFILE_ENTER
@@ -1382,29 +1363,25 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
           return OOJSValueFromCxxObject(context, glue);
         if (OONativeVector* box = dynamic_cast<OONativeVector*>(node->get()))
           return OONativeVectorJSValueInContext(box, context);
-        // An entity's node (bead oo-dpyk8): the entity's JS value, which its
-        // object's forwarded to.
+        // An entity's node: the entity's JS value.
         if (const auto* held =
                 dynamic_cast<const oo::EntityPListForeign*>(node->get()))
           return OOJSEntityJSValue(held->entity(), context);
-        // An entity held weakly (bead oo-w9pi2): the entity's value, undefined
-        // once it has gone, as the weak reference forwarded to its object's.
+        // An entity held weakly: the entity's value, undefined once it has
+        // gone.
         if (const auto* weak =
                 dynamic_cast<const oo::EntityWeakPListForeign*>(node->get())) {
           Entity* entity = weak->entity();
           return entity != nullptr ? OOJSEntityJSValue(entity, context)
                                    : ooscript::undefinedValue();
         }
-        // The one null and a held value: their own JS glue, which their facades
-        // forwarded to (bead oo-wdqw1).
+        // The one null and a held value: their own JS glue.
         if (OONull* null = dynamic_cast<OONull*>(node->get()))
           return null->jsValueInContext(context);
         if (OOJSValue* held = dynamic_cast<OOJSValue*>(node->get()))
           return held->jsValueInContext(context);
       }
-      // A node that holds no Objective-C object (a C++ one): no JS glue. (The
-      // Objective-C object's node went with bead oo-4aq6a.5: no game object is
-      // one.)
+      // A node that holds no Objective-C object (a C++ one): no JS glue.
       return ooscript::undefinedValue();
     }
   }
@@ -1412,9 +1389,6 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
 
   OOJS_PROFILE_EXIT_JSVAL
 }
-
-// (OOJSObjectFromNativeObject() went with OOJSValueFromNativeObject(), bead
-// oo-4aq6a.6.2.)
 
 oo::Ref<OOJSValue> OOJSValue::valueWithJSValue(ooscript::Value value,
                                                ooscript::Context context) {
@@ -1793,9 +1767,7 @@ std::string cxx_OOJSEscapedForJavaScriptLiteral(std::string_view string) {
   return result;
 }
 
-// A vector box's JS value, a Vector3D (was OONativeVector
-// (OOJavaScriptConversion)'s -oo_jsValueInContext:, amendment oo-ppc item 3;
-// the box's facade was deleted by bead oo-9ht.5).
+// A vector box's JS value, a Vector3D.
 ooscript::Value OONativeVectorJSValueInContext(OONativeVector* vector,
                                                ooscript::Context context) {
   ooscript::Value value = ooscript::undefinedValue();
@@ -1804,8 +1776,7 @@ ooscript::Value OONativeVectorJSValueInContext(OONativeVector* vector,
 }
 
 OONull* OONull::null() {
-  static OONull* sNull =
-      nullptr;  // the one +1 is never released (amendment oo-r7m0 item 1)
+  static OONull* sNull = nullptr;  // the one +1 is never released
   if (sNull == nullptr) sNull = oo::makeRef<OONull>().leakRef();
   return sNull;
 }
@@ -1838,18 +1809,14 @@ bool OOJSUnconstructableConstruct(ooscript::Context context,
   OOJS_NATIVE_EXIT
 }
 
-// The slot holds a C++ object (bead oo-4aq6a.6): the C++ finalizer, which tells
-// it its wrapper is gone (clearJSSelf, as -oo_clearJSSelf: was sent), releases
-// the slot's retain and empties the slot.
+// The slot holds a C++ object: the C++ finalizer, which tells it its wrapper is
+// gone (clearJSSelf), releases the slot's retain and empties the slot.
 void OOJSObjectWrapperFinalize(ooscript::Context context,
                                ooscript::Object thisObj) {
   OOJSCxxObjectWrapperFinalize(context, thisObj);
 }
 
-// Only an Objective-C object found through the class's converter described
-// itself (its -cxx_oo_jsDescription, else -description); a C++ node's object
-// never did, and no slot holds an Objective-C object since bead oo-4aq6a.6: the
-// JS class names it.
+// No slot holds an Objective-C object, so the JS class names the object.
 bool OOJSObjectWrapperToString(ooscript::Context context,
                                ooscript::CallArgs& oojsArgs) {
   OOJS_NATIVE_ENTER(context)
@@ -1886,8 +1853,8 @@ BOOL JSFunctionPredicate(Entity* entity, void* parameter) {
 
   args[0] = OOJSEntityJSValue(
       entity,
-      param->context);  // the C++ entity's glue (bead oo-9ht.39.25); entity is
-                        // required to be non-nil (asserted above).
+      param->context);  // the C++ entity's glue; entity is required to be
+                        // non-nil (asserted above).
 
   OOJSStartTimeLimiter();
   OOJSResumeTimeLimiter();
@@ -1916,19 +1883,12 @@ BOOL JSFunctionPredicate(Entity* entity, void* parameter) {
 
 namespace {
 
-/*	What the entity predicates ask an entity (amendment oo-nge8 item 5):
-   C++, moved from OOObject+OOJavaScript.mm, whose one-line bridges they were
-   (bead oo-t7o84, ADR-0056 amendment oo-9ht.184).
-*/
+/*	What the entity predicates ask an entity. */
 bool OOJavaScriptEngineIsVisibleToScripts(Entity* entity) {
-  return OOJSEntityIsVisibleToScripts(
-      entity);  // the C++ entity's answer, which the root facade's selector
-                // forwarded to (bead oo-9ht.39.8.9)
+  return OOJSEntityIsVisibleToScripts(entity);
 }
 
-// The root facade's -isShip, -isSubEntity, -isPlanet and -status forwarded to
-// these members (bead oo-9ht.39.25; an Objective-C stand-in was asked until
-// bead oo-j12i2).
+// The entity predicates -isShip, -isSubEntity, -isPlanet and -status.
 bool OOJavaScriptEngineIsShip(Entity* entity) {
   return entity != nullptr && entity->getIsShip();
 }
@@ -1966,9 +1926,8 @@ BOOL JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
       return NO;  // Demo ship
     return YES;
   } else if (OOJavaScriptEngineIsPlanet(entity)) {
-    switch (
-        static_cast<OOPlanetEntity*>(entity)
-            ->planetType())  // a planet: not nil (C++ since bead oo-9ht.129)
+    switch (static_cast<OOPlanetEntity*>(entity)
+                ->planetType())  // a planet: not nil
     {
       case STELLAR_TYPE_MOON:
       case STELLAR_TYPE_NORMAL_PLANET:
@@ -1993,8 +1952,7 @@ BOOL JSEntityIsDemoShipPredicate(Entity* entity, void* /*parameter*/) {
 }
 
 namespace {
-// JS subclass -> superclass, by pointer. Was a non-owned pointer map table
-// (bead oo-3rb.20).
+// JS subclass -> superclass, by pointer.
 static std::unordered_map<const ooscript::ClassDef*, ooscript::ClassDef*>*
     sRegisteredSubClasses;
 }  // namespace
@@ -2077,10 +2035,7 @@ oo::PList cxx_OOJSDictionaryFromJSObject(ooscript::Context context,
       key = cxx_OOStringFromJSString(context, ooscript::idToString(thisID));
     } else if (ooscript::isInt32Id(thisID)) {
       /*	An integer-like property is keyed by its decimal text, the name
-         JS itself gives it (proposed ADR-0051). The Foundation converter kept
-         it as a number key no native code could look up (CIM 15/2/13 asked
-         whether the key should be a string), and this function gave a null
-         PList for the whole object.
+         JS itself gives it, so native code can look it up by that key.
       */
       key = std::to_string(ooscript::idToInt32(thisID));
     }
@@ -2153,10 +2108,8 @@ oo::PList OOJSDictionaryFromStringTable(ooscript::Context context,
 }
 
 namespace {
-/*	JS class -> converter. Was an NSMutableDictionary of boxed class and
-   function pointers (bead oo-3rb.50); allocated on first registration and
-   deleted by UnregisterObjectConverters(), as the dictionary was released
-   there.
+/*	JS class -> converter; allocated on first registration and deleted by
+   UnregisterObjectConverters().
 */
 static std::unordered_map<const ooscript::ClassDef*,
                           OOJSClassConverterCallback>* sObjectConverters;
@@ -2224,8 +2177,8 @@ oo::PList cxx_OOJSPListFromJSObject(ooscript::Context context,
   OOJS_PROFILE_EXIT_VAL(oo::PList())
 }
 
-// The slot holds a C++ object (bead oo-4aq6a.6): a node of it when it is a
-// node's foreign object, else none; an empty slot is a null PList, as nil was.
+// The slot holds a C++ object: a node of it when it is a node's foreign
+// object, else none; an empty slot is a null PList.
 oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context context,
                                           ooscript::Object object) {
   oo::RefCounted* held =
@@ -2342,9 +2295,8 @@ static oo::PList JSBooleanConverter(ooscript::Context context,
   return PListFromJSBooleanObject(context, object);
 }
 
-// A plain JS Object: cxx_OOJSDictionaryFromJSObject() (proposed ADR-0051; was
-// the bridge's Foundation converter, which kept an integer-like key as a
-// number).
+// A plain JS Object: cxx_OOJSDictionaryFromJSObject(); an integer-like key is a
+// string.
 static oo::PList JSPlainObjectConverter(ooscript::Context context,
                                         ooscript::Object object) {
   return cxx_OOJSDictionaryFromJSObject(context, object);

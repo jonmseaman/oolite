@@ -1,38 +1,16 @@
 /*	test_OOShaderUniform.mm
-        Unit tests for OOShaderUniform (src/Core/Materials/OOShaderUniform.h):
-   bead oo-n99o.
+        Unit tests for OOShaderUniform (src/Core/Materials/OOShaderUniform.h).
 
         A uniform of a GLSL program, a constant or bound to a property of an
-   object that it asks for the value on every -apply. This pins, through the
-   Objective-C API its callers use (OOShaderMaterial, DustEntity), what it
-   computed before the conversion, on a real program compiled in a hidden GL
-   context and read back with glGetUniform: which initialisers fail (no program,
-   no uniform of that name, a nil colour, no selector); each constant's value as
-   GL gets it (int, float, vector, colour, quaternion as vector or matrix,
-   matrix); a binding to each supported return type with its conversions (clamp,
-   normalise, quaternion to matrix), the methods it refuses (arguments,
-   unsupported types, not implemented), the super-target chain, and a target
-   that has gone; and the description. Those checks ran on the Objective-C class
-        first and then through the facade. After them: the C++ factories (null
-   where the initialiser answered nil) and the facade's identity.
-
-        Bead oo-9ht.55 deleted the facade (ADR-0056 amendment "deleting a
-   facade"). The cases that asked through its selectors ask the C++ class with
-   the same expectations (each [[alloc] initWith...] is the factory of its
-   arguments, nil is null, retain/release a held Ref, the description is
-        description(), which prints the uniform's own address); the facade's own
-   case (facade) was retired with it (ADR-0049, standing approval oo-9n5p9).
-
-        Bead oo-4aq6a.7 deleted the Objective-C binding target (the factory
-   bound to an object by selector, setBindingTarget(id), the super-target walk
-   over -superShaderBindingTarget): no game code bound an Objective-C object.
-   Its convert options (clamp, normalise, quaternion to matrix, colour, an
-   object that is not a colour) were re-pinned first through the C++ target
-   factory, with the same values (cxxTargetConvertOptions, ADR-0062 item 3), and
-   so was bindingsRefused's constant check (constantIgnoresABindingTarget); then
-   bindings, bindingsRefused, superTargetsAndLifetime and the Objective-C
-   target's checks of initialisersThatFail, description and cxxAPI retired with
-   that path (ADR-0062 item 2; std-2026-10-19 item 2). Run: bash
+   object that it asks for the value on every -apply. This pins what it
+   computes, on a real program compiled in a hidden GL context and read back
+   with glGetUniform: which initialisers fail (no program, no uniform of that
+   name, a null colour, no selector); each constant's value as GL gets it (int,
+   float, vector, colour, quaternion as vector or matrix, matrix); a binding to
+   each supported return type with its conversions (clamp, normalise,
+   quaternion to matrix), the methods it refuses (arguments, unsupported types,
+   not implemented), and a target that has gone; and the description. The
+   cases use the C++ factories (null where an initialiser fails). Run: bash
    tools/check-core-tests.sh
 */
 
@@ -60,9 +38,8 @@ void OOLogOutdent(void) {}
 // them.
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 std::vector<std::string> ResourceManager::paths() { return {}; }
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& /*fileName*/,
@@ -70,8 +47,7 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
   return oo::PList(oo::PList::Dict{});
 }
 
-// OORegExpMatcher is C++ since its facade was deleted (bead oo-9ht.12): the
-// stub answers no match.
+// OORegExpMatcher stub: answers no match.
 oo::Ref<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
   return oo::makeRef<OORegExpMatcher>();
 }
@@ -86,8 +62,7 @@ OOShaderSetting cxx_OOShaderSettingFromString(const std::string& string) {
 
 // The shader program (OOShaderProgram.mm reaches the resource manager): the one
 // member the uniform calls, program(), answering the program the test linked.
-// OOShaderProgram is C++ since its facade was deleted (bead oo-9ht.58): the
-// stand-in is definitions of the members it uses.
+// OOShaderProgram stand-in: definitions of the members the uniform uses.
 static GLhandleARB gStandInProgram = 0;
 
 OOShaderProgram::~OOShaderProgram() {}
@@ -252,9 +227,7 @@ OO_TEST(constants) {
   }
 }
 
-// A constant ignores a binding target (bindingsRefused's check, re-pinned
-// through the entity target's setter when bead oo-4aq6a.7 deleted
-// setBindingTarget(id); ADR-0062 item 3).
+// A constant ignores a binding target (through the entity target's setter).
 OO_TEST(constantIgnoresABindingTarget) {
   if (!SetUpProgram()) {
     OO_CHECK(false);
@@ -297,10 +270,9 @@ OO_TEST(description) {
   }
 }
 
-// A uniform bound to a C++ object's member (bead oo-t0e2m: the dust shader's
-// uWarp and uOffsetPlayerPosition, which were bound by selector to an
-// Objective-C object forwarding to the dust): the value is read from the target
-// on every apply, converted as a method's was, and a target that has gone sets
+// A uniform bound to a C++ object's member (the dust shader's uWarp and
+// uOffsetPlayerPosition): the value is read from the target on every apply,
+// converted as a method's was, and a target that has gone sets
 // nothing.
 namespace {
 
@@ -372,10 +344,9 @@ OO_TEST(cxxTargetBindings) {
   }
 }
 
-// The convert options and value kinds the deleted Objective-C target's case
-// (bindings) pinned, through the C++ target factory with the same values (bead
-// oo-4aq6a.7, ADR-0062 item 3): the type is the one the bound method's return
-// type gave, the getter answers what the method answered.
+// The convert options and value kinds, through the C++ target factory: the type
+// is the one the bound method's return type gave, the getter answers what the
+// method answered.
 namespace {
 
 class ConvertTarget : public oo::RefCounted {
@@ -545,8 +516,7 @@ OO_TEST(cxxAPI) {
   }
 }
 
-// The description prints the uniform's own address (bead oo-9ht.55: there is no
-// facade to print).
+// The description prints the uniform's own address.
 OO_TEST(descriptionPrintsTheUniform) {
   if (!SetUpProgram()) {
     OO_CHECK(false);

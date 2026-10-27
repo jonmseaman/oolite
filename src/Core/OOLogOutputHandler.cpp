@@ -26,8 +26,6 @@ SOFTWARE.
 
 */
 
-#include "OOLogOutputHandler.h"
-
 #include <SDL3/SDL_stdinc.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +39,7 @@ SOFTWARE.
 #include <thread>
 
 #include "OOFoundation.h"
+#include "OOLogOutputHandler.h"
 #include "OOLogging.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
@@ -51,11 +50,11 @@ SOFTWARE.
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/StdLib.hpp"
 
-/*	The Latest.log writer is oo::log::FileWriter (oofnd/LogFile.hpp, bead
-   oo-3rb.64, proposed ADR-0042): the rotation to Previous.log, the writer
-   thread, CRLF, the 1 GiB saturation and the flush are its, byte for byte as
-   OOAsyncLogger did them. What stays here is the glue: the log directory, the
-   logging-echo-to-stderr / stdout switches and the flush deadline of ADR-0033.
+/*	The Latest.log writer is oo::log::FileWriter (oofnd/LogFile.hpp): the
+   rotation to Previous.log, the writer thread, CRLF, the 1 GiB saturation and
+   the flush are its, byte for byte as OOAsyncLogger did them. What stays here
+   is the glue: the log directory, the logging-echo-to-stderr / stdout switches
+   and the flush deadline.
 */
 
 #if OOLITE_MAC_OS_X
@@ -121,8 +120,8 @@ std::string sLogFileName;  // empty until first set: kDefaultLogFileName
 
 }  // namespace
 
-/*	The pending flush (was a one-shot run-loop timer, proposed ADR-0033): a
-   deadline on std::chrono::steady_clock that the frame loop checks. The timer
+/*	The pending flush (was a one-shot run-loop timer): a deadline on
+   std::chrono::steady_clock that the frame loop checks. The timer
    was scheduled on the logging thread's run loop, and only the main thread's
    run loop ever runs, so a flush first requested from another thread never
    fired and blocked later ones; kFlushNever keeps that.

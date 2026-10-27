@@ -1,21 +1,16 @@
 /*	test_OOJoystickProfile.mm
         Unit tests for the joystick axis profiles
-   (src/Core/OOJoystickProfile.h): bead oo-fn2f, converted in the Phase 3 house
-   style (proposed ADR-0056, hierarchy amendments oo-cwz/oo-up4b).
+   (src/Core/OOJoystickProfile.h).
 
         OOJoystickAxisProfile maps a raw axis position through a dead zone and a
    response curve: OOJoystickStandardAxisProfile's power curve, or
    OOJoystickSplineAxisProfile's spline through control points (made of private
-   OOJoystickSplineSegment pieces). The expectations were written against the
-   Objective-C API and run on the unconverted classes first: the defaults and
+   OOJoystickSplineSegment pieces). The expectations cover: the defaults and
    clamps, the dead zone, both curves at pinned sample points, the spline's
    control-point editing rules, and what a copy keeps (a copy does NOT keep the
-   dead zone; the spline copy keeps the points). The C++ test then pins the same
-   answers through the C++ API. Bead oo-9ht.16 deleted the Objective-C facades:
-   the cases that sent their selectors ask the C++ classes (alloc/init as
-        makeRef, -copy as copy(), class checks as dynamic_cast/typeid) with
-   every expectation kept, and the facades' contract case went with them
-   (standing approval oo-9n5p9). Run: bash tools/check-core-tests.sh
+   dead zone; the spline copy keeps the points). The cases use the C++ API
+   (makeRef, copy(), dynamic_cast/typeid for class checks). Run: bash
+   tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -33,9 +28,8 @@ bool SamePoint(NSPoint p, double x, double y) {
   return Near(p.x, x) && Near(p.y, y);
 }
 
-// Whether profile is exactly a T (bead oo-9ht.168: typeid of a plain pointer's
-// object, not of a Ref's overloaded operator*, which clang counts as a side
-// effect).
+// Whether profile is exactly a T (typeid of a plain pointer's object, not of a
+// Ref's overloaded operator*, which clang counts as a side effect).
 template <class T>
 bool IsExactly(OOJoystickAxisProfile* profile) {
   return profile != nullptr && typeid(*profile) == typeid(T);

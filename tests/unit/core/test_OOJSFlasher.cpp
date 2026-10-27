@@ -1,32 +1,27 @@
 /*	test_OOJSFlasher.mm
         Unit tests for the Flasher JS binding
    (src/Core/Scripting/OOJSFlasher.h/.mm) and its OOFlasherEntity category
-   (whose forwarders were on the OOFlasherEntity facade from bead oo-9ht.49, and
-   are the C++ class's overrides of the root's JS members since that facade's
-        deletion, bead oo-9ht.107): bead oo-ub2g, converted the way bead oo-ppc
-   converted OOJSVector (proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+   (the C++ class's overrides of the root's JS members).
 
-        As test_OOJSWormhole.mm does (amendment oo-ykoy, item 4), it runs the JS
-   class in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp), links the game's own objects for the
-   binding, the engine's exception translator (OOJSEngineNativeWrappers.mm) and
-   OOColor (a converted class, reached through its façade), and stands in for
-   the entity classes (Entity answers only the selectors the binding sends;
-   ShipEntity and, since bead oo-9ht.165, OOVisualEffectEntity are C++ parts
-   with only the members it calls) and for the engine functions the binding
-   links against, with the engine headers' linkage. Since bead oo-9ht.107 the
-   flasher is the C++ OOFlasherEntity, which the binding finds through its
-   object's C++ part: the stand-in is that C++ class, declared with the game
-   header's names and signatures but not its class (OOFlasherEntity.h pulls in
-   the game's classes), as test_OOJSGlobal.mm stands in for the engine, under a
-   stand-in C++ root whose JS members the stand-in root category asks, as the
-   game's does (amendment oo-9ht.107). The binding header is not imported,
-   because until this bead it imported OOFlasherEntity.h; InitOOJSFlasher is
-   declared here. The expectations were written against the Objective-C file and
-   run on it first; they pin the JS-visible behaviour (the six properties and
-   their ranges, the colour both ways, remove() from a ship and from a visual
-   effect, a stale flasher, a native's exception) and what the category answers
-   the engine. Run: bash tools/check-core-tests.sh
+   As test_OOJSWormhole.mm does, it runs the JS class in a real context on the
+   game's own façade backend (ooscript/JSEngine_quickjs.cpp), links the game's
+   own objects for the binding, the engine's exception translator
+   (OOJSEngineNativeWrappers.mm) and OOColor (a converted class, reached through
+   its façade), and stands in for the entity classes (Entity answers only the
+   selectors the binding sends; ShipEntity and OOVisualEffectEntity are C++
+   parts with only the members it calls) and for the engine functions the
+   binding links against, with the engine headers' linkage. The flasher is the
+   C++ OOFlasherEntity, which the binding finds through its object's C++ part:
+   the stand-in is that C++ class, declared with the game header's names and
+   signatures but not its class (OOFlasherEntity.h pulls in the game's classes),
+   as test_OOJSGlobal.mm stands in for the engine, under a stand-in C++ root
+   whose JS members the stand-in root category asks, as the game's does. The
+   binding header is not imported; InitOOJSFlasher is declared here. The
+   expectations were written against the Objective-C file and run on it first;
+   they pin the JS-visible behaviour (the six properties and their ranges, the
+   colour both ways, remove() from a ship and from a visual effect, a stale
+   flasher, a native's exception) and what the category answers the engine. Run:
+   bash tools/check-core-tests.sh
 */
 
 #include "OOColor.h"
@@ -47,12 +42,11 @@ class Entity : public oo::RefCounted {
                           ooscript::Object* outPrototype);
   virtual std::optional<std::string> jsClassName();
   virtual bool isVisibleToScripts();
-  Entity* owner();   // the binding calls it since bead oo-9ht.39.8.20 (its
-                     // object's -owner did); the C++ entity since bead oo-dpyk8
-  bool getIsShip();  // what its object's -isShip forwarded to (bead oo-dpyk8)
+  Entity* owner();   // the binding calls it (its object's -owner did)
+  bool getIsShip();  // what its object's -isShip forwarded to
 };
 
-// Global since bead oo-9ht.76 deleted its Objective-C facade, as the game's.
+// Global, as the game's.
 class OOLightParticleEntity : public Entity {
  public:
   float diameter();
@@ -90,13 +84,10 @@ class OOFlasherEntity : public OOLightParticleEntity {
   float _phase = 0;
 };
 
-// What an entity's JS object holds since bead oo-9ht.39.3: a weak reference to
-// the C++ entity.
+// What an entity's JS object holds: a weak reference to the C++ entity.
 #include "OOJSEntityHolder.h"
 
-// C++ since bead oo-4aq6a.11 (it was rooted on the Objective-C root class
-// OOObject, which Phase 4 deletes); its selectors and its category's are
-// members of the same names.
+// Its selectors and its category's are members of the same names.
 class TestEntityObject final : public oo::RefCounted {
  public:
   bool isShip();
@@ -114,8 +105,7 @@ class TestEntityObject final : public oo::RefCounted {
   BOOL _isShip = NO;
 };
 
-// A ship: C++ since bead oo-9ht.144 deleted the Objective-C ship this stood in
-// for, the C++ part of its object, with the one member the binding calls
+// A ship: the C++ part of its object, with the one member the binding calls
 // (declared as ShipEntity.h declares it).
 class ShipEntity : public Entity {
  public:
@@ -124,18 +114,15 @@ class ShipEntity : public Entity {
   OOFlasherEntity* _removedFlasher = nullptr;
 };
 
-// A visual effect: C++ since bead oo-9ht.165 deleted the Objective-C effect
-// this stood in for, the C++ part of its object, with the one member the
+// A visual effect: the C++ part of its object, with the one member the
 // binding calls (declared as OOVisualEffectEntity.h declares it).
 typedef TestEntityObject
-    OOVisualEffectSubEntity;  // as OOVisualEffectEntity.h names it (an object
-                              // conforming to OOSubEntity until bead
-                              // oo-4aq6a.11)
+    OOVisualEffectSubEntity;  // as OOVisualEffectEntity.h names it
 
 class OOVisualEffectEntity : public Entity {
  public:
   void removeSubEntity(OOVisualEffectSubEntity* sub);
-  void removeSubEntity(Entity* sub);  // the binding's since bead oo-9ht.39.8.20
+  void removeSubEntity(Entity* sub);  // the binding's
 
   ::TestEntityObject* _removed = nullptr;
 };
@@ -168,17 +155,16 @@ void ShipEntity::removeFlasher(OOFlasherEntity* flasher) {
 void OOVisualEffectEntity::removeSubEntity(OOVisualEffectSubEntity* sub) {
   _removed = sub;
 }
-::TestEntityObject* TestObjectOf(
-    Entity* entity);  // defined below (oo::ToObjC until bead oo-4aq6a.11)
+::TestEntityObject* TestObjectOf(Entity* entity);  // defined below
 #define OO_ENTITY_HELPERS_STAND_IN_CXX
-#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects (bead oo-dpyk8)
+#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects
 void OOVisualEffectEntity::removeSubEntity(Entity* sub) {
   _removed = TestObjectOf(sub);
-}  // its object, as the binding passed it until bead oo-9ht.39.8.20
+}  // its object, as the binding passed it
 
 // The root's JS category, as the game's asks the C++ part
-// (EntityOOJavaScriptExtensions+ObjCBridge.mm, bead oo-9ht.107): the engine
-// sends these selectors to the wrapped object.
+// (EntityOOJavaScriptExtensions+ObjCBridge.mm): the engine sends these
+// selectors to the wrapped object.
 void TestEntityObject::getJSClass(ooscript::ClassDef** outClass,
                                   ooscript::Object* outPrototype) {
   _cxxEntity->getJSClass(outClass, outPrototype);
@@ -225,8 +211,7 @@ float OOFlasherEntity::frequency() {
   return _frequency;
 }
 
-// The binding's category, as the C++ class's overrides answer it (bead
-// oo-9ht.107).
+// The binding's category, as the C++ class's overrides answer it.
 void OOFlasherEntity::getJSClass(ooscript::ClassDef** outClass,
                                  ooscript::Object* outPrototype) {
   ::OOJSFlasherGetJSClass(outClass, outPrototype);
@@ -299,8 +284,7 @@ std::map<ooscript::ClassDef*, int> sConverters;
 }  // namespace
 
 ooscript::Object gOOEntityJSPrototype = nullptr;
-Entity* gOOJSPlayerIfStale =
-    nullptr;  // the player's C++ entity (bead oo-9ht.39.25)
+Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
 
 extern "C" {
 
@@ -338,9 +322,9 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
   sConverters[theClass]++;
 }
 
-// The engine's object getter is OOJSPrivateObject.cpp's (linked) since bead
-// oo-9ht.39.3: the JS class must be a subclass of the required one, and the
-// slot holds the entity's holder.
+// The engine's object getter is OOJSPrivateObject.cpp's (linked): the JS class
+// must be a subclass of the required one, and the slot holds the entity's
+// holder.
 
 // The shared toString(), which OOJSCxxObjectWrapperToString() hands a `this` of
 // another class.
@@ -419,7 +403,7 @@ std::optional<std::string> OOJSEntityHolder::jsDescription() {
 
 // oo::ToObjC (Entity+ObjCBridge.mm): the object of each C++ part the test
 // wrapped, nil for any other (the binding asks it where its natives still
-// message the object, bead oo-9ht.39.3).
+// message the object).
 namespace {
 std::map<Entity*, TestEntityObject*> sObjects;
 }
@@ -428,12 +412,11 @@ std::map<Entity*, TestEntityObject*> sObjects;
   return found != sObjects.end() ? found->second : nullptr;
 }
 
-// The owner its object's -owner answered until bead oo-9ht.39.8.20, on the same
-// object field.
+// The owner its object's -owner answered, on the same object field.
 Entity* Entity::owner() {
   ::TestEntityObject* object = TestObjectOf(this)->_owner;
   return object != nullptr ? object->_cxxEntity.get()
-                           : nullptr;  // its C++ part (bead oo-dpyk8)
+                           : nullptr;  // its C++ part
 }
 bool Entity::getIsShip() {
   ::TestEntityObject* object = TestObjectOf(this);
@@ -450,12 +433,9 @@ ooscript::Context sContext;
 ooscript::Object sGlobal;
 TestEntityObject* sFlasher = nullptr;     // the flasher's object
 OOFlasherEntity* sFlasherPart = nullptr;  // its C++ part
-TestEntityObject* sShip = nullptr;  // a ship's object and its C++ part (the
-                                    // Objective-C ship until bead oo-9ht.144)
+TestEntityObject* sShip = nullptr;        // a ship's object and its C++ part
 ShipEntity* sShipPart = nullptr;
-TestEntityObject* sEffect =
-    nullptr;  // an effect's object and its C++ part (the Objective-C effect
-              // until bead oo-9ht.165)
+TestEntityObject* sEffect = nullptr;  // an effect's object and its C++ part
 OOVisualEffectEntity* sEffectPart = nullptr;
 
 ooscript::Value JSValueForObject(ooscript::ClassDef* jsClass,
@@ -469,8 +449,7 @@ ooscript::Value JSValueForObject(ooscript::ClassDef* jsClass,
       !OOJSSetCxxPrivate(
           sContext, object,
           oo::makeRef<OOJSEntityHolder>(entity->_cxxEntity.get()).get()))
-    return ooscript::nullValue();  // the slot holds the C++ entity (bead
-                                   // oo-9ht.39.3)
+    return ooscript::nullValue();  // the slot holds the C++ entity
   sObjects[entity->_cxxEntity.get()] = entity;
   return ooscript::objectValue(object);
 }

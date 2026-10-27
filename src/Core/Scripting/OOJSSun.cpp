@@ -23,33 +23,14 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSSun.h"
-
 #include <cstdint>
 #include <cstring>
 
 #include "OOJSEntity.h"
+#include "OOJSSun.h"
 #include "OOJavaScriptEngine.h"
 #include "OOSunEntity.h"
 #include "ooscript/JSEngine.hpp"
-
-// Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm does
-// it (bead oo-sdz, exemplar): a static ClassDef is the class table (stub hooks
-// nullptr), initClass replaces InitClass, natives take the façade's
-// Context/Object/PropertyId/Value/CallArgs signature.
-
-/*
-        C++20 since bead oo-hgfh, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on OOSunEntity became three free functions, and its methods moved to
-   a bridge file of the binding (amendment oo-ykoy), then onto the OOSunEntity
-   facade in OOSunEntity+ObjCBridge.mm (bead oo-9ht.51, amendment oo-6ia4 item
-   3). Messages to classes that are still Objective-C (OOSunEntity, Entity) stay
-   as they are, which is why the file is still .mm until Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -136,12 +117,9 @@ static FunctionSpec sSunMethods[] = {
 }
 
 namespace {
-// The sun is C++ behind the root's facade since bead oo-9ht.111: the getter
-// checks the JS class (a Sun object's private slot holds the sun's Objective-C
-// object, so -isKindOfClass: of the facade class always held) and answers the
-// C++ sun; null for a stale entity, as nil before. Since bead oo-9ht.39.3 the
-// slot holds the C++ entity (OOJSEntityGetEntityOfClass for the Sun class,
-// DEFINE_JS_OBJECT_GETTER(JSSunGetSunObject, &sSunClass, ...) before).
+// The getter checks the JS class and answers the C++ sun (the slot holds the
+// C++ entity, read by OOJSEntityGetEntityOfClass for the Sun class); null for a
+// stale entity.
 bool JSSunGetSunEntity(ooscript::Context context, ooscript::Object inObject,
                        OOSunEntity** outObject) {
   Entity* entity = nullptr;
@@ -161,10 +139,7 @@ void InitOOJSSun(ooscript::Context context, ooscript::Object global) {
   OOJSRegisterSubclass(&sSunClass, JSEntityClass());
 }
 
-// The bodies of OOSunEntity (OOJavaScriptExtensions), whose methods are on the
-// OOSunEntity facade, in OOSunEntity+ObjCBridge.mm (bead oo-9ht.51), until that
-// facade goes (oo-9ht.111; proposed ADR-0056 amendments oo-ppc, oo-ykoy and
-// oo-6ia4).
+// The bodies of OOSunEntity (OOJavaScriptExtensions).
 bool OOJSSunIsVisibleToScripts(void) { return true; }
 
 void OOJSSunGetJSClass(ooscript::ClassDef** outClass,

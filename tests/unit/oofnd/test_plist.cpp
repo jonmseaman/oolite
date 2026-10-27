@@ -1,5 +1,5 @@
 /*	test_plist.cpp
-        Unit tests for oofnd/PList.hpp (bead oo-075): the oo::PList value type -
+        Unit tests for oofnd/PList.hpp: the oo::PList value type -
    the nine kinds a parsed property list can hold, their accessors, NSNumber's
    conversions, value semantics, and the UTF-16 <-> UTF-8 conversion the parsers
    and writers use for NSString's code units. meson test --suite oofnd-plist
@@ -318,7 +318,7 @@ OO_TEST(calendarDatesGNUstepRejects) {
 
 OO_TEST(zuluDatesAreUtc) {
   // GNUstep reads this format in the machine's local zone (it captured 18000 on
-  // a UTC-5 machine); oofnd reads it as UTC (ADR-0027 item 7).
+  // a UTC-5 machine); oofnd reads it as UTC.
   OO_CHECK_EQ(calendarDate("2001-01-01T00:00:00Z", true), 0.0);
   OO_CHECK_EQ(calendarDate("2001-07-01T00:00:00Z", true), 15638400.0);
   OO_CHECK_EQ(calendarDate("2001-07-01 00:00:00Z", true), -1e300);

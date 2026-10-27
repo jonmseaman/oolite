@@ -1,9 +1,7 @@
 /*	test_OOStandaloneAtmosphereGenerator.mm
         Unit tests for OOStandaloneAtmosphereGenerator
    (src/Core/Materials/OOStandaloneAtmosphereGenerator.h), the texture generator
-   of a planet's cloud layer when its surface is not generated: bead oo-y3dd
-        (Phase 3, house style of proposed ADR-0056; a leaf of the texture
-   generators, amendments oo-zl36, oo-rr2x and oo-kvqq).
+   of a planet's cloud layer when its surface is not generated.
 
         It reads the cloud parameters from the planet's material parameters
    (colours as PList::Object nodes holding OOColors), sizes its texture by the
@@ -11,14 +9,10 @@
    3D noise), keys it by its parameters, and fills it with clouds from the
    seed's noise, their alpha scaled by cloud_alpha. It links the whole game but
    main (tests/unit/core/meson.build entry ['*']), on the hidden GL context of
-   oo_gl_test_context.hpp. The expectations were written against the Objective-C
-   API and run on the unconverted class first. Making a generator and the class
-   methods go through the helpers below, the only lines the conversion ported
-   (amendment oo-bj8 item 11): the class is now a global C++ class with no
-        facade of its own (bead oo-9ht.118 deleted the generators' facade its
-   generator crossed as; the crossing check went with it). The last test pins
-   the C++ API. Run: bash tools/check-core-tests.sh
-   test_OOStandaloneAtmosphereGenerator
+   oo_gl_test_context.hpp. Making a generator and the class
+   methods go through the helpers below. The class is a global C++ class with
+   no facade of its own. The last test pins the C++ API. Run: bash
+   tools/check-core-tests.sh test_OOStandaloneAtmosphereGenerator
 */
 
 #include <cstdlib>
@@ -38,9 +32,8 @@
 uint32_t gDebugFlags = 0;
 #endif
 
-// What an autoreleased Objective-C texture was (bead oo-9ht.99 deleted the
-// facade): the C++ texture, kept until the current autorelease scope drains
-// (oo::autorelease; an Objective-C keeper object until bead oo-4aq6a.2).
+// What an autoreleased texture is: the C++ texture, kept until the current
+// autorelease scope drains (oo::autorelease).
 static OOTexture* Autoreleased(const oo::Ref<OOTexture>& texture) {
   if (texture == nullptr) return nullptr;
   oo::autorelease(oo::Ref<OOTexture>(texture));

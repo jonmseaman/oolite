@@ -1,8 +1,7 @@
 /*	oofnd/objc/OOAssert.h
-        Foundation-free assertions (bead oo-diow, the NSAssert seam of the
-   oo-qps gap sweep; proposed ADR-0029 floor). Same semantics as
-   gnustep-base 1.31.1's macros, pinned with a throwaway harness (a method, a
-   class method and a C function, each plain and parameter form):
+        Foundation-free assertions. Same semantics as gnustep-base 1.31.1's
+   macros, pinned with a throwaway harness (a method, a class method and a C
+   function, each plain and parameter form):
 
             Foundation                                  here
             ------------------------------------------
@@ -13,7 +12,7 @@
             NSCParameterAssert(cond)                    OOCParameterAssert(cond)
 
         LIVE IN EVERY FLAVOUR, deployment (NDEBUG) included, because
-   Foundation's were (bead oo-pdsng). Upstream's OOFoundation.h defines
+   Foundation's were. Upstream's OOFoundation.h defines
    NS_BLOCK_ASSERTIONS iff NDEBUG, but only AFTER it imports the Foundation
    umbrella header, and gnustep-base's include-guarded exception header picks
    the blocked or live assertion macros when it is first parsed (its line 432),
@@ -39,17 +38,14 @@
    +[OOException raise:format:].
 */
 
-#ifndef OOFND_OBJC_OOASSERT_H
-#define OOFND_OBJC_OOASSERT_H
+#pragma once
 
-/*	The method forms (OOAssert, OOParameterAssert: self/_cmd) went with
-   libobjc2 (bead oo-dbz): no game code called them. A game unit (an
-   Objective-C++ unit until oo-dbz) still gets OOException.h from here, as it
-   did; a plain C or C++ translation unit (bead oo-9ht.64: OOConstToJSString)
-   does not.
+/*	There are no method forms (OOAssert, OOParameterAssert: self/_cmd): no
+   game code calls them. A game C++ unit gets OOException.h from here; a plain
+   C or C++ translation unit (OO_PLAIN_CPP_UNIT, e.g. OOConstToJSString) does
+   not.
 */
-#if defined(__cplusplus) && \
-    !defined(OO_PLAIN_CPP_UNIT)  // was __OBJC__ (bead oo-dbz)
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT)
 #include "oofnd/objc/OOException.h"
 #endif
 #include "oofnd/PrintfFormat.h"
@@ -67,7 +63,7 @@ void OOAssertFailedInFunction(const char* function, const char* file, long line,
 }
 #endif
 
-// Not conditional on NDEBUG: see the head of this file (bead oo-pdsng).
+// Not conditional on NDEBUG: see the head of this file.
 #define OOCAssert(condition, ...)                                       \
   do {                                                                  \
     if (!(condition))                                                   \
@@ -77,5 +73,3 @@ void OOAssertFailedInFunction(const char* function, const char* file, long line,
 
 #define OOCParameterAssert(condition) \
   OOCAssert((condition), "Invalid parameter not satisfying: %s", #condition)
-
-#endif  // OOFND_OBJC_OOASSERT_H

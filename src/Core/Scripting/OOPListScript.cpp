@@ -22,11 +22,10 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOPListScript.h"
-
 #include "OOCacheManager.h"
 #include "OOLegacyScriptWhitelist.h"
 #include "OOPListParsing.h"
+#include "OOPListScript.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 
 namespace {
@@ -40,12 +39,10 @@ constexpr const char* kCacheName = "sanitized legacy scripts";
 
 }  // namespace
 
-/*	C++20 since bead oo-q9q4 (proposed ADR-0056), a C++ subclass of OOScript
-   since bead oo-9ht.57 deleted its facade (amendment oo-o89 item 3): the
-   class's own factories below make the scripts with oo::makeRef, as [[self
-   alloc] ...] did, and hand them back (the root's facades until bead
-   oo-9ht.133). -displayName, which OOScript implements, is the inherited
-   member. The cache manager is C++ and is called directly.
+/*	A C++ subclass of OOScript: the class's own factories below make the
+   scripts with oo::makeRef and hand them back. -displayName, which OOScript
+   implements, is the inherited member. The cache manager is C++ and is called
+   directly.
 */
 
 std::optional<std::vector<oo::Ref<OOScript>>> OOPListScript::scriptsInPListFile(
@@ -77,9 +74,7 @@ std::optional<std::string> OOPListScript::name() {
 }
 
 std::optional<std::string> OOPListScript::scriptDescription() {
-  // The metadata's "description" string. Nothing sends -scriptDescription (bead
-  // oo-3rb.266 measured), so a non-string value, which the id-typed selector
-  // returned as the object, is nullopt here.
+  // The metadata's "description" string. A non-string value is nullopt here.
   const oo::PList* value = _metadata.get<oo::PList>(kMDKeyDescription);
   if (value == nullptr || !value->isString()) return std::nullopt;
   return *value->getIf<std::string>();
@@ -100,7 +95,7 @@ void OOPListScript::runWithTarget(Entity* target) {
   if (target != nullptr && !(oo::ToShip(target) != nullptr)) {
     OO_LOG("script.legacy.run.badTarget",
            "Expected ShipEntity or nil for target, got {}.",
-           oo::EntityClassName(target));  // its class's name (bead oo-w9pi2)
+           oo::EntityClassName(target));  // its class's name
     return;
   }
 

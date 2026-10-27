@@ -1,6 +1,6 @@
 /*	test_tcp_stream_format.cpp
         The debug console's stream decoder formatter
-   (src/Core/Debug/OOTCPStreamDecoderFormat.hpp, bead oo-0mxm): -[NSString
+   (src/Core/Debug/OOTCPStreamDecoderFormat.hpp): -[NSString
    initWithFormat:arguments:] for the conversions OOTCPStreamDecoder.c uses. Not
    an oofnd header, but plain C++ with no Foundation, so it lives in this tier.
 

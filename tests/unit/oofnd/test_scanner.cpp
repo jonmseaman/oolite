@@ -1,6 +1,6 @@
 /*	test_scanner.cpp
-        oo::str::CharacterSet and oo::str::Scanner (oofnd/Scanner.hpp, bead
-   oo-3rb.12) against GNUstep base 1.31.1.
+        oo::str::CharacterSet and oo::str::Scanner (oofnd/Scanner.hpp)
+   against GNUstep base 1.31.1.
 
         Every expectation was captured from gnustep-base 1.31.1 on this
    toolchain by throwaway Objective-C probes (not committed):
@@ -16,8 +16,7 @@
    diff.
 */
 
-// The header must survive OOCocoa.h's true/false macros and hand them back
-// (proposed ADR-0028).
+// The header must survive OOCocoa.h's true/false macros and hand them back.
 #define true 1
 #define false 0
 #include <type_traits>
@@ -527,7 +526,7 @@ OO_TEST(trimFindAndSplitBySet) {
            parts[3].empty());
 }
 
-// Captured from GNUstep base (bead oo-3rb.67):
+// Captured from GNUstep base:
 // -rangeOfCharacterFromSet:options:NSLiteralSearch range: with the old-style
 // plist writer's escape set, and -longCharacterIsMember: of a unit.
 OO_TEST(rangedSearchAndLongMembership) {

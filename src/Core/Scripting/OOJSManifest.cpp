@@ -22,13 +22,12 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSManifest.h"
-
 #include <cstring>
 
 #include "OOCommodities.h"
 #include "OOCommodityMarket.h"
 #include "OOIsNumberLiteral.h"
+#include "OOJSManifest.h"
 #include "OOJSPlayer.h"
 #include "OOJSPlayerShip.h"
 #include "OOJavaScriptEngine.h"
@@ -37,36 +36,6 @@ MA 02110-1301, USA.
 #include "PlayerEntityScriptMethods.h"
 #include "Universe.h"
 #include "ooscript/JSEngine.hpp"
-
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar; see also
-   OOJSClock.mm/OOJSMissionVariables.mm): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hook is nullptr), the class-creation call
-   becomes ooscript::initClass, the two class-as-property registrations become
-   ooscript::defineObject, and the directly spelled numeric-conversion call
-   becomes ooscript::valueToInt32. `this` is renamed to `thisObj` because it is
-   a reserved word once this file compiles as Objective-C++ (ADR-0001). The
-   class hooks (deleteProperty, getProperty, setProperty) take the façade's
-   Context/Object/PropertyId/Value signature directly, and the shared
-   OOJSObjectWrapperFinalize is the class's finalize hook. The manual object
-   construction in oo_jsValueInContext: (the engine's NewObject/SetPrivate) is
-        retargeted the same way JSVectorWithVector() retargets it in
-   OOJSVector.mm.
-*/
-/*
-        C++20 since bead oo-7nfv, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false.
-   OOManifest, a helper class that nothing made, is gone (see where it stood).
-   OOCommodities and OOCommodityMarket, which are C++ since beads oo-fqyw and
-   oo-ih7y, are reached as cxx:: classes through oo::ToCxx (amendment oo-ppc,
-   item 4), null-guarded where a message to nil answered. Messages to classes
-   that are still Objective-C (PlayerEntity, Universe) stay as they are, which
-   is why the file is still .mm until Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -156,10 +125,7 @@ static FunctionSpec sManifestMethods[] = {
     {0}};
 }  // namespace
 
-// OOManifest, the helper class "wrapped by JS Manifest objects", is gone (bead
-// oo-7nfv): nothing made one. Both Manifest objects are defined with no private
-// object (InitOOJSManifest), and no other file names the class, so its
-// -oo_jsValueInContext: and -cxx_oo_jsClassName were never sent.
+// Both Manifest objects are defined with no private object (InitOOJSManifest).
 
 void InitOOJSManifest(ooscript::Context context, ooscript::Object global) {
   Object proto =
@@ -204,9 +170,8 @@ static bool ManifestGetProperty(Context cx, Object obj, PropertyId propID,
       case kManifest_list:
         result = (entity != nullptr
                       ? entity->PlayerEntity::cargoListForScripting()
-                      : oo::PList());  // qualified: the final overrider (bead
-                                       // oo-9ht.177), so the binding test
-                                       // stands in for it
+                      : oo::PList());  // qualified: the final overrider, so
+                                       // the binding test stands in for it
         break;
 
       default:
@@ -269,8 +234,8 @@ static bool ManifestSetProperty(Context cx, Object obj, PropertyId propID,
     if (unit == UNITS_TONS &&
         (entity != nullptr ? entity->PlayerEntity::getSpecialCargo()
                            : std::optional<std::string>())
-            .has_value())  // qualified: the final overrider (bead oo-9ht.177),
-                           // so the binding test stands in for it
+            .has_value())  // qualified: the final overrider, so the binding
+                           // test stands in for it
     {
       cxx_OOJSReportWarning(context,
                             "PlayerShip.manifest['foo'] - cannot modify cargo "

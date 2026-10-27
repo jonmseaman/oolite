@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 #include "ShipEntity.h"
 #include "oofnd/StdLib.hpp"
 
-// shiplibrary.plist keys, UTF-8 (Foundation sweep, proposed ADR-0043): a caller
+// shiplibrary.plist keys, UTF-8: a caller
 // that needs an Objective-C key passes oo::NSStringFrom(kOODemoShip...).
 
 static constexpr const char* kOODemoShipKey = "ship";

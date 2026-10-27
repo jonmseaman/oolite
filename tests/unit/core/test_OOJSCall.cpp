@@ -1,7 +1,6 @@
 /*	test_OOJSCall.mm
         Unit tests for OOJSCallEntityMethod()
-   (src/Core/Scripting/OOJSCall.h/.mm): bead oo-81hy, a Phase 3 scripting file
-   (proposed ADR-0056 amendment oo-ppc).
+   (src/Core/Scripting/OOJSCall.h/.mm).
 
         OOJSCallObjCObjectMethod() implemented the debug-build callObjC(): it
    called an Objective-C method by name on an object, choosing how by the
@@ -9,21 +8,15 @@
    own façade backend (ooscript/JSEngine_quickjs.cpp) and links the game's own
    objects for the file and the signature reader (OOShaderUniformMethodType.mm).
    What the rest of the engine would provide is defined below as the smallest
-   stand-in that does the same thing (amendment oo-ppc item 6): the error
+   stand-in that does the same thing: the error
    reporter, the string and property-list converters, Vector3D and Quaternion
    (plain arrays here), and the ship and player classes (the call makes a ship
    the player's script target). The game's headers for those are not imported,
-        because the test defines those classes (amendment oo-z1s4 item 4).
+        because the test defines those classes.
 
-        Bead oo-4aq6a.5 deleted the Objective-C object path
-   (OOJSCallObjCObjectMethod; the console's callObjC() is given only entities
-   and monitors): its cases voidAndStringMethods, scalarMethods, objectMethods,
-   errors and shipBecomesScriptTarget, and the object calls of
-   entityMethodsByTable and playerStatisticsByName, retired with it (ADR-0062
-   item 2; std-2026-10-19 item 2), after the surviving entity call's signatures,
-   results and errors were pinned (entityResultsByTable, ADR-0062 item 3). The
-   test's entity objects are C++ (std-2026-10-19 item 1): its by-name stand-ins
-   answer the names the entity's object answered from a table of the test's own.
+        The console's callObjC() is given only entities and monitors. The
+   test's entity objects are C++: its by-name stand-ins answer the names the
+   entity's object answers from a table of the test's own.
         Run: bash tools/check-core-tests.sh
 */
 
@@ -32,10 +25,10 @@
 #include <string>
 #include <vector>
 
-#include "EntityPListForeign.h"  // an entity's node (bead oo-dpyk8)
+#include "EntityPListForeign.h"  // an entity's node
 #include "OOCallByName.h"
 #include "OODescription.h"
-#include "OOEntityCalledByName.h"  // oo::CallEntityByNameTyped, stood in below (bead oo-9ht.39.7.2)
+#include "OOEntityCalledByName.h"  // oo::CallEntityByNameTyped, stood in below
 #include "OOJSCall.h"
 #include "OOJSEngineNativeWrappers.h"
 #include "OOMaths.h"
@@ -84,8 +77,7 @@ std::optional<std::string> cxx_OOStringFromJSValueEvenIfNull(
 }
 
 class TestEntityObject;
-::TestEntityObject* TestObjectOf(
-    Entity* entity);  // below (oo::ToObjC until bead oo-4aq6a.5)
+::TestEntityObject* TestObjectOf(Entity* entity);  // below
 
 // A property list as JS: strings, numbers and booleans as themselves; an object
 // node as the string "<object CLASS>", which is enough to see which object came
@@ -117,7 +109,7 @@ extern "C" ooscript::Object JSQuaternionWithQuaternion(
                  {quaternion.w, quaternion.x, quaternion.y, quaternion.z});
 }
 
-// Link stub (amendment oo-zffj item 2): OOShaderUniformMethodType.mm's matrix
+// Link stub: OOShaderUniformMethodType.mm's matrix
 // reader answers it for a nil object; the test calls no matrix method, and
 // OOMatrix.mm would bring OpenGL.
 extern "C" const OOMatrix kZeroMatrix = {};
@@ -140,10 +132,8 @@ class Entity : public oo::RefCounted {
   virtual ~Entity();
 };
 
-// An entity's object, C++ since bead oo-4aq6a.5 (it was rooted on the
-// Objective-C root class OOObject, which Phase 4 deletes): its class's runtime
-// name, and the names it answered by selector, which the by-name stand-ins
-// below answer from the test's own table.
+// An entity's object: its class's runtime name, and the names it answers by
+// selector, which the by-name stand-ins below answer from the test's own table.
 class TestEntityObject : public oo::RefCounted {
  public:
   virtual const char* className() const { return "Entity"; }
@@ -155,10 +145,9 @@ class ShipEntity : public Entity {};
 
 Entity::~Entity() = default;
 
-// The player is C++ since bead oo-9ht.177 deleted its Objective-C class: the
-// C++ player as far as the call sees it (declared as PlayerEntity.h declares
-// it; the test imports no game header that defines the class) and its object, a
-// ship (the ship's facade in the game).
+// The C++ player as far as the call sees it (declared as PlayerEntity.h
+// declares it; the test imports no game header that defines the class) and its
+// object, a ship (the ship's facade in the game).
 class TestPlayerObject final : public TestEntityObject {
  public:
   const char* className() const override { return "TestPlayerObject"; }
@@ -168,9 +157,8 @@ class PlayerEntity : public ShipEntity {
  public:
   void setScriptTarget(::ShipEntity* target);
 #if OO_DEBUG
-  // The statistics members, which callObjC's name table calls by name (bead
-  // oo-9ht.15), as far as the table sees them: each records its call and
-  // answers a marker.
+  // The statistics members, which callObjC's name table calls by name, as far
+  // as the table sees them: each records its call and answers a marker.
   static oo::PList reportJSVectorStatistics();
   static void clearJSVectorStatistics();
   static oo::PList reportJSQuaternionStatistics();
@@ -191,7 +179,7 @@ TestPlayerObject* sPlayerObject = nullptr;  // the player's object
   return entity != nullptr ? (::TestEntityObject*)sPlayerObject : nullptr;
 }  // only the player crosses
 #define OO_ENTITY_HELPERS_STAND_IN_CXX 1
-#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects (bead oo-dpyk8)
+#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects
 
 ooscript::Value OOJSValueFromPList(ooscript::Context context,
                                    const oo::PList& plist) {
@@ -206,8 +194,7 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
       text = *plist.getIf<std::string>();
       break;
     case oo::PList::Type::Object: {
-      Entity* entity =
-          oo::EntityIn(plist);  // an entity's node: its object (bead oo-dpyk8)
+      Entity* entity = oo::EntityIn(plist);  // an entity's node: its object
       ::TestEntityObject* object =
           (entity != nullptr) ? TestObjectOf(entity) : nullptr;
       text = std::string("<object ") +
@@ -221,7 +208,7 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
       ooscript::newStringCopyN(context, text.data(), text.size()));
 }
 
-/*	OOEntityCalledByName.mm's (bead oo-9ht.39.7.2), which the test does not
+/*	OOEntityCalledByName.mm's, which the test does not
    link: the test's entities have no C++ table of the game's, so the names the
    player's object answered are answered from the test's own (what its
    Objective-C object's methods returned): the typed results, a void method and
@@ -265,9 +252,8 @@ oo::PList oo::CallEntityByName(Entity* entity, const std::string& name,
   return oo::PList();
 }
 
-// The typed call on the C++ table (bead oo-9ht.39.7.2), which callObjC() takes
-// for every typed name of an entity's table since bead oo-9ht.39.8.25: the
-// values the object's methods answered.
+// The typed call on the C++ table, which callObjC() takes for every typed name
+// of an entity's table: the values the object's methods answered.
 bool oo::CallEntityByNameTyped(Entity* entity, const std::string& name,
                                OOEntityByNameValue& value) {
   if (!oo::EntityRespondsToName(entity, name)) return false;
@@ -334,9 +320,9 @@ ooscript::Value StringValue(const char* text) {
       ooscript::newStringCopyN(Context(), text, std::strlen(text)));
 }
 
-// Calls the name (and arguments) on an entity by callObjC()'s entity name table
-// (bead oo-9ht.44); gives the result as a string ("<unchanged>" when the call
-// left it alone), or "error: <message>".
+// Calls the name (and arguments) on an entity by callObjC()'s entity name
+// table; gives the result as a string ("<unchanged>" when the call left it
+// alone), or "error: <message>".
 std::string CallEntity(Entity* entity, std::vector<ooscript::Value> argv) {
   sLastError.clear();
   ooscript::Value result =
@@ -359,7 +345,7 @@ std::string CallEntity(Entity* entity, const char* selector) {
 // MARK: Tests
 // -------------------------------------------------------------------------------------
 
-// callObjC() on an entity by its name table (bead oo-9ht.44): a name of the
+// callObjC() on an entity by its name table: a name of the
 // table that the entity's object answers is called with the table's signature;
 // any other name does not respond, even one the object answers (a root-class or
 // lifetime selector, or one the facade does not define).
@@ -385,14 +371,12 @@ OO_TEST(entityMethodsByTable) {
   }
 }
 
-/*	The entity call's signatures, results and errors (bead oo-4aq6a.5,
-   ADR-0062 item 3): what the deleted object path's cases (voidAndStringMethods,
-   scalarMethods, objectMethods, errors) pinned for the forms the entity table
-   uses, through the table: a void method, a string parameter (the parameters
-   joined with spaces), a property-list result (a null one leaves the result), a
-        boolean, a float and a double, a vector and a quaternion, an entity
-   result and a null one, a matrix that cannot be called, a parameter missing,
-   and parameters after a name with no colon.
+/*	The entity call's signatures, results and errors, for the forms the
+   entity table uses, through the table: a void method, a string parameter (the
+   parameters joined with spaces), a property-list result (a null one leaves the
+   result), a boolean, a float and a double, a vector and a quaternion, an
+   entity result and a null one, a matrix that cannot be called, a parameter
+   missing, and parameters after a name with no colon.
 */
 OO_TEST(entityResultsByTable) {
   {
@@ -444,10 +428,9 @@ OO_TEST(entityResultsByTable) {
 #if OO_DEBUG
 // The player's conversion statistics by name
 // (PS.callObjC("reportJSVectorStatistics")): the categories' selectors, now C++
-// members reached through callObjC's name table (bead oo-9ht.15), with the
-// categories' signatures; only the player answers them. The player is called as
-// the C++ entity it is (its object, which the case called, went with the root
-// facade, bead oo-dpyk8).
+// members reached through callObjC's name table, with the categories'
+// signatures; only the player answers them. The player is called as the C++
+// entity it is.
 OO_TEST(playerStatisticsByName) {
   {
     oo::AutoreleaseScope pool;

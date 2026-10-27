@@ -1,27 +1,23 @@
 /*	test_OOPlanetDrawable.mm
         Unit tests for OOPlanetDrawable (src/Core/OOPlanetDrawable.h), the
-   sphere that draws a planet's surface or its atmosphere: bead oo-mw4u, a
-   subclass of the converted drawable root OODrawable (proposed ADR-0056,
-   amendments oo-smy and oo-zffj).
+   sphere that draws a planet's surface or its atmosphere, a subclass of the
+   drawable root OODrawable.
 
         The drawable reads the universe for its level of detail, so the test
    links the whole game but main (['*']) and uses a Universe that was never
    initialised, subclassed to answer the detail setting and a game view of the
-   test's size. The expectations were written against the Objective-C API and
-   run on the unconverted class first: a planet's and an atmosphere's defaults
-        (radius 1, half detail), the radius (its magnitude), the level of detail
+   test's size. The expectations cover: a planet's and an atmosphere's defaults
+   (radius 1, half detail), the radius (its magnitude), the level of detail
    (clamped, rounded to the planet data's levels, and computed from the view
    distance and the screen width), which parts are opaque or translucent, the
    bounds, the material and its name, and a copy. Drawing needs OpenGL and is
-   left to the goldens. The class has one caller, OOPlanetEntity, so the
-        conversion left no facade (amendment oo-zffj); the drawable is made and
-   read through the one block of helpers below, the only lines the conversion
-   ported. Run: bash tools/check-core-tests.sh
+   left to the goldens. The drawable is made and read through the one block of
+   helpers below. Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>
 
-#include "MyOpenGLView.h"  // the game view is C++ (bead oo-9ht.153)
+#include "MyOpenGLView.h"  // the game view is C++
 #include "OOBasicMaterial.h"
 #include "OOPlanetData.h"
 #include "OOPlanetDrawable.h"
@@ -35,10 +31,8 @@ uint32_t gDebugFlags = 0;
 
 extern Universe* gSharedUniverse;
 
-// The game view, as far as the drawable asks it.
-// The game view: a C++ subclass of the game's (bead oo-9ht.153 deleted the
-// Objective-C facade the test's Objective-C stand-in stood in for), overriding
-// the one member it answered (virtual for it).
+// The game view, as far as the drawable asks it. The game view: a C++ subclass
+// of the game's, overriding the one member it answers (virtual for it).
 class TestView : public MyOpenGLView {
  public:
   NSSize _size = {};
@@ -61,10 +55,9 @@ TestUniverse* sUniverse = nil;
 
 void SetUp() {
   if (sUniverse == nil) {
-    sUniverse = new TestUniverse();     // never released
-    sUniverse->_view = new TestView();  // never released
-    sUniverse->gameView =
-        sUniverse->_view;  // what -gameView answered (bead oo-ql9rn)
+    sUniverse = new TestUniverse();          // never released
+    sUniverse->_view = new TestView();       // never released
+    sUniverse->gameView = sUniverse->_view;  // what -gameView answers
   }
   sUniverse->_reduced = NO;
   sUniverse->_view->_size = NSMakeSize(800, 600);
@@ -77,8 +70,7 @@ const float kGranularity = (float)(kOOPlanetDataLevels - 1);
 
 float Level(float lod) { return roundf(lod * kGranularity) / kGranularity; }
 
-// A material kept until the pool drains, as the facade's autoreleased object
-// was (bead oo-9ht.8).
+// A material kept until the pool drains.
 OOMaterial* NamedMaterial(const char* name) {
   oo::Ref<OOMaterial> material =
       OOBasicMaterial::materialWithName(std::string(name), oo::PList());

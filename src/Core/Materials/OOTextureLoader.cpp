@@ -26,9 +26,7 @@ SOFTWARE.
 */
 
 // Kept first, in a block of its own: which header comes first decides whether
-// MinGW's or the UCRT's printf/strtod family is used (bead oo-we7mm).
-#include "OOTextureLoader.h"
-
+// MinGW's or the UCRT's printf/strtod family is used.
 #include <cxxabi.h>
 #include <stdlib.h>
 
@@ -45,6 +43,7 @@ SOFTWARE.
 #include "OOPixMapChannelOperations.h"
 #include "OOTexture.h"
 #include "OOTextureGenerator.h"
+#include "OOTextureLoader.h"
 #include "OOTextureScaling.h"
 #include "ResourceManager.h"
 #include "Universe.h"
@@ -89,8 +88,7 @@ oo::Ref<OOTextureLoader> OOTextureLoader::loaderWithPath(
   // relying on extensions.
   extension = oo::str::lowercase(oo::str::pathExtension(*inPath));
   if (extension == "png") {
-    // A C++ loader (bead oo-z889); the work manager retains it while it is
-    // queued.
+    // A C++ loader; the work manager retains it while it is queued.
     const oo::Ref<::OOPNGTextureLoader> loader =
         oo::makeRef<::OOPNGTextureLoader>();
     if (loader->initWithPath(inPath, options)) result = loader;
@@ -276,7 +274,7 @@ bool OOTextureLoader::getResult(OOPixMap* result,
   BOOL OK = YES;
 
   if (!_ready) {
-    // The work manager knows the task as the C++ loader (bead oo-9ht.14).
+    // The work manager knows the task as the C++ loader.
     OOAsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(this);
   }
   if (_data == NULL) OK = NO;

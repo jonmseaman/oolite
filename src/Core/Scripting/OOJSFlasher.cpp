@@ -21,8 +21,6 @@ MA 02110-1301, USA.
 
  */
 
-#include "OOJSFlasher.h"
-
 #include <cstdint>
 #include <cstring>
 
@@ -30,35 +28,12 @@ MA 02110-1301, USA.
 #include "OOColor.h"
 #include "OOFlasherEntity.h"
 #include "OOJSEntity.h"
+#include "OOJSFlasher.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOVisualEffectEntity.h"
 #include "ShipEntity.h"
 #include "ooscript/JSEngine.hpp"
-
-// Retargeted onto the ooscript facade (JSEngine.hpp), the way OOJSVector.mm and
-// OOJSWormhole.mm do it (bead oo-sdz exemplar): stub hooks become nullptr,
-// InitClass becomes ooscript::initClass, numeric/boolean conversion becomes
-// ooscript::newNumberValue/valueToNumber/valueToBoolean, and `this` is renamed
-// to `thisObj` (reserved word in Objective-C++, ADR-0001).
-
-/*
-        C++20 since bead oo-ub2g, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on OOFlasherEntity became three free functions, and its methods and
-   interface moved to a bridge file of the binding (amendment oo-ykoy), then
-   onto the OOFlasherEntity facade (bead oo-9ht.49, amendment oo-6ia4 item 3),
-   and with that facade's deletion (bead oo-9ht.107) into the C++ class's
-   overrides of the root's JS members. OOColor, which is C++ since bead oo-11m,
-   is reached as OOColor through oo::ToCxx/oo::ToObjC (amendment oo-ppc, item
-   4). The flasher is the C++ OOFlasherEntity, found through its entity's C++
-   part (amendment oo-9ht.12 item 6). Messages to classes that are still
-   Objective-C (ShipEntity, OOVisualEffectEntity, Entity) stay as they are,
-   which is why the file is still .mm until Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -207,7 +182,7 @@ static bool JSFlasherGetFlasherEntity(ooscript::Context context,
   OOJS_PROFILE_ENTER
 
   bool result;
-  Entity* entity = nullptr;  // the slot holds the C++ entity (bead oo-9ht.39.3)
+  Entity* entity = nullptr;  // the slot holds the C++ entity
 
   if (outEntity == NULL) return false;
   *outEntity = nullptr;
@@ -220,8 +195,7 @@ static bool JSFlasherGetFlasherEntity(ooscript::Context context,
   OOFlasherEntity* flasher = dynamic_cast<OOFlasherEntity*>(entity);
   if (flasher == nullptr) return false;
 
-  *outEntity =
-      flasher;  // the natives no longer ask its object (bead oo-9ht.39.8.20)
+  *outEntity = flasher;
   return true;
 
   OOJS_PROFILE_EXIT
@@ -229,8 +203,7 @@ static bool JSFlasherGetFlasherEntity(ooscript::Context context,
 }  // namespace
 
 // The bodies of OOFlasherEntity (OOJavaScriptExtensions), which the C++ class's
-// overrides of the root's JS members call (bead oo-9ht.107; proposed ADR-0056
-// amendments oo-ppc, oo-ykoy, oo-6ia4 and oo-9ht.107).
+// overrides of the root's JS members call.
 void OOJSFlasherGetJSClass(ooscript::ClassDef** outClass,
                            ooscript::Object* outPrototype) {
   *outClass = &sFlasherClass;
@@ -383,13 +356,12 @@ static bool FlasherSetProperty(Context cx, Object obj, PropertyId propID,
 
 // *** Methods ***
 
-#define GET_THIS_FLASHER(THISENT)                                        \
-  do {                                                                   \
-    if (EXPECT_NOT(                                                      \
-            !JSFlasherGetFlasherEntity(context, OOJS_THIS, &(THISENT)))) \
-      return false; /* Exception */                                      \
-    if (OOIsStaleEntity(THISENT))                                        \
-      OOJS_RETURN_VOID; /* the C++ flasher's (bead oo-9ht.39.8.20) */    \
+#define GET_THIS_FLASHER(THISENT)                                           \
+  do {                                                                      \
+    if (EXPECT_NOT(                                                         \
+            !JSFlasherGetFlasherEntity(context, OOJS_THIS, &(THISENT))))    \
+      return false;                                 /* Exception */         \
+    if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID; /* the C++ flasher's */ \
   } while (0)
 
 namespace {
@@ -400,16 +372,13 @@ static bool FlasherRemove(ooscript::Context context,
   OOFlasherEntity* thisEnt = nullptr;
   GET_THIS_FLASHER(thisEnt);
 
-  Entity* parent =
-      thisEnt->owner();  // the C++ member its object's -owner answered (beads
-                         // oo-9ht.39.8.20, oo-dpyk8)
+  Entity* parent = thisEnt->owner();  // the C++ member
   if (oo::EntityIsShip(parent)) {
     if (oo::ToShip(parent) != nullptr)
       oo::ToShip(parent)->removeFlasher(thisEnt);
   } else {
     if (OOVisualEffectEntity* effect = oo::ToEffect(parent))
-      effect->removeSubEntity(thisEnt);  // C++ since bead oo-9ht.165; the C++
-                                         // flasher (bead oo-9ht.39.8.20)
+      effect->removeSubEntity(thisEnt);  // the C++ flasher
   }
 
   OOJS_RETURN_VOID;

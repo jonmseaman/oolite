@@ -1,7 +1,5 @@
 /*	test_OOScript.mm
-        Unit tests for OOScript (src/Core/Scripting/OOScript.h/.mm): bead
-   oo-604l, a Phase 3 conversion in the house style of the OOColor exemplar
-   (proposed ADR-0056).
+        Unit tests for OOScript (src/Core/Scripting/OOScript.h/.mm).
 
         OOScript is the abstract root of the scripts: its subclasses (OOJSScript
    and OOPListScript, C++) answer the name, description and version, whether
@@ -9,23 +7,15 @@
    a description from them, and its class methods load scripts from files,
    folders and lists. The class methods reach the resource manager, the cache
    and the legacy-script sanitizer, so the test links every game object but
-   main's (tests/unit/core/meson.build entry ['*'], amendment oo-44gg) and
-   defines gDebugFlags. The user's directories point at a scratch folder
-   (amendment oo-rmd7 item 4). JavaScript files are not loaded (that needs the
-   engine); every path that would reach OOJSScript is one that fails first. The
-   expectations were written against the Objective-C API and run on the
-   unconverted class first: the root's own answers, an Objective-C subclass's
-   overrides and [super ...], the loaders (no file, a folder, an unknown
+   main's (tests/unit/core/meson.build entry ['*']) and defines gDebugFlags. The
+   user's directories point at a scratch folder. JavaScript files are not loaded
+   (that needs the engine); every path that would reach OOJSScript is one that
+   fails first. The expectations cover: the root's own answers, a subclass's
+   overrides and the super call, the loaders (no file, a folder, an unknown
    extension, a legacy script from the cache, names not found, a world-scripts
-   list, a folder with no scripts). The crossing checks (ADR-0056 Amendment 1
-   item 8), added with the conversion, came last. Bead oo-9ht.133 deleted the
-   Objective-C facade (ADR-0056 amendment oo-9ht.133; retired under the standing
-   approval oo-9n5p9, tools/retire-test-approvals.txt): the facade's crossing
-   cases (crossingObjCSubclass, adapterOutlivesOwner, and crossingCxxSubclass's
-        identity checks) went with it, and the cases that asked through the
-   facade's selectors ask the C++ class, with every expectation kept (the
-   Objective-C test subclass is a C++ one, its [super ...] the root's member).
-        Run: bash tools/check-core-tests.sh test_OOScript
+   list, a folder with no scripts). The cases ask the C++ class (the test
+   subclass is a C++ one, its super call the root's member). Run: bash
+   tools/check-core-tests.sh test_OOScript
 */
 
 #include <process.h>
@@ -49,8 +39,8 @@
 uint32_t gDebugFlags = 0;
 #endif
 
-// A subclass that overrides the subclass responsibilities (an Objective-C one
-// until bead oo-9ht.133; its [super ...] are the root's members).
+// A subclass that overrides the subclass responsibilities (its super calls are
+// the root's members).
 class TestObjCScript final : public OOScript {
  public:
   std::optional<std::string> name() override { return std::string("objc"); }
@@ -74,7 +64,7 @@ class TestObjCScript final : public OOScript {
   bool superRequiresTickle() { return OOScript::requiresTickle(); }
 
   int runs = 0;
-  Entity* lastTarget = nullptr;  // the C++ entity (bead oo-w9pi2)
+  Entity* lastTarget = nullptr;  // the C++ entity
   bool hasVersion = false;
 };
 
@@ -203,9 +193,7 @@ OO_TEST(scriptsFromFileAtPath) {
     OO_CHECK(scripts.has_value() && scripts->size() == 1);
     if (scripts.has_value() && scripts->size() == 1) {
       OO_CHECK((Names(*scripts) == std::vector<std::string>{"legacy"}));
-      OO_CHECK(
-          dynamic_cast<OOPListScript*>((*scripts)[0].get()) !=
-          nullptr);  // was -isKindOfClass: of the facade bead oo-9ht.57 deleted
+      OO_CHECK(dynamic_cast<OOPListScript*>((*scripts)[0].get()) != nullptr);
     }
   }
 }
@@ -272,8 +260,7 @@ OO_TEST(worldScriptsAtPath) {
   }
 }
 
-// The crossing (ADR-0056 Amendment 1 item 8), after the conversion; its facade
-// checks went with the facade (bead oo-9ht.133).
+// The crossing.
 
 namespace {
 
@@ -289,7 +276,7 @@ class TestCxxScript final : public OOScript {
   }
 
   int runs = 0;
-  Entity* lastTarget = nullptr;  // the C++ entity (bead oo-w9pi2)
+  Entity* lastTarget = nullptr;  // the C++ entity
 };
 
 }  // namespace

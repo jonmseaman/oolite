@@ -1,9 +1,9 @@
 /*	test_defaults.cpp
-        Unit tests for oofnd/Defaults.hpp (bead oo-32f): oo::Defaults against
+        Unit tests for oofnd/Defaults.hpp: oo::Defaults against
    NSUserDefaults as the game runs it today (gnustep-base 1.31 with
    NSUserDefaults+Override and NSBundle+Override). Every expected value and byte
    string below was captured from a probe program linked against that
-   gnustep-base on this toolchain (proposed ADR-0032).
+   gnustep-base on this toolchain.
 
         OOCocoa.h's true/false macros are defined first, exactly as the game has
    them, so this file also proves Defaults.hpp (and all it includes) survives

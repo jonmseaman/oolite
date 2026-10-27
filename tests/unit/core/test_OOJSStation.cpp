@@ -1,32 +1,27 @@
 /*	test_OOJSStation.mm
         Unit tests for the Station JS binding
    (src/Core/Scripting/OOJSStation.h/.mm) and its StationEntity answers for the
-   class (StationEntity::getJSClass): bead oo-3oxq, converted the way bead
-   oo-ppc converted OOJSVector (proposed ADR-0056 amendments oo-ppc, oo-ykoy and
-   oo-6ia4).
+   class (StationEntity::getJSClass).
 
-        As test_OOJSWormhole.mm does (amendment oo-ykoy, item 4), it runs the JS
-   class in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp), links the game's own objects for the
-   binding, its bridge, the engine's exception translator
-        (OOJSEngineNativeWrappers.mm) and the converted classes it uses
-   (OOCommodities and OOCommodityMarket, C++ since beads oo-9ht.25 and oo-9ht.21
-   deleted their façades (held as oo::Ref), OOEquipmentType, reached through its
-   façade, and OOJSInterfaceDefinition, C++ since bead oo-9ht.61 deleted its
-   façade), and stands in for the classes the binding messages (Entity,
-   ShipEntity and StationEntity, the player, the universe, the game controller
-   and the ship registry answer only the selectors the binding sends), for the
-   resource manager and string expander the commodities call, the script engine
-   and running script the interface definitions call, and the engine functions
-   the binding links against, with the engine headers' linkage. The expectations
-   were written against the Objective-C file and run on it first; they pin the
-   JS-visible behaviour (the properties both ways, docking, the alert level, the
-   launches, the interfaces, the market, the shipyard's errors, a non-station, a
-   native's exception) and what the category answers the engine. Run: bash
-   tools/check-core-tests.sh
+   As test_OOJSWormhole.mm does, it runs the JS class in a real context on the
+   game's own façade backend (ooscript/JSEngine_quickjs.cpp), links the game's
+   own objects for the binding, its bridge, the engine's exception translator
+   (OOJSEngineNativeWrappers.mm) and the converted classes it uses
+   (OOCommodities and OOCommodityMarket (held as oo::Ref), OOEquipmentType and
+   OOJSInterfaceDefinition), and stands in for the classes the binding messages
+   (Entity, ShipEntity and StationEntity, the player, the universe, the game
+   controller and the ship registry answer only the selectors the binding
+   sends), for the resource manager and string expander the commodities call,
+   the script engine and running script the interface definitions call, and the
+   engine functions the binding links against, with the engine headers' linkage.
+   The expectations were written against the Objective-C file and run on it
+   first; they pin the JS-visible behaviour (the properties both ways, docking,
+   the alert level, the launches, the interfaces, the market, the shipyard's
+   errors, a non-station, a native's exception) and what the category answers
+   the engine. Run: bash tools/check-core-tests.sh
 */
 
-#include "EntityPListForeign.h"  // an entity's node (bead oo-dpyk8)
+#include "EntityPListForeign.h"  // an entity's node
 #include "OOCommodities.h"
 #include "OOCommodityMarket.h"
 #include "OODescription.h"
@@ -69,8 +64,8 @@ typedef OOEquipmentType* OOWeaponType;
 
 // The C++ root, as far as the binding and the root's JS category reach it; its
 // JS glue (OOJSPrivateObject, as the game's root implements it) answers its
-// object's JS value (bead oo-9ht.39.8.2: the binding's launches return
-// OOJSValueFromCxxObject of the C++ ship).
+// object's JS value (the binding's launches return OOJSValueFromCxxObject of
+// the C++ ship).
 class Entity : public oo::RefCounted, public OOJSPrivateObject {
  public:
   virtual ~Entity();
@@ -82,8 +77,7 @@ class Entity : public oo::RefCounted, public OOJSPrivateObject {
 };
 
 // The ship's members the binding calls on a station, by their final overrider
-// (bead oo-9ht.175); the ship is C++ since bead oo-9ht.144 deleted the
-// Objective-C ship (a ship's part is a plain one).
+// (a ship's part is a plain one).
 class ShipEntity : public Entity {
  public:
   GLfloat getFlightRoll();
@@ -91,15 +85,13 @@ class ShipEntity : public Entity {
   OOAlertCondition alertCondition();
 };
 
-// What an entity's JS object holds since bead oo-9ht.39.3: a weak reference to
-// the C++ entity.
+// What an entity's JS object holds: a weak reference to the C++ entity.
 #include "OOJSEntityHolder.h"
 
 // The object: the root's, which holds the C++ part (oo::ToCxx reads it) and
-// asks it the JS questions. C++ since bead oo-4aq6a.12 (it was rooted on the
-// Objective-C root class OOObject, which Phase 4 deletes); its selectors are
-// members of the same names, and what its -respondsToSelector: answered for the
-// category's two is answersJSClass().
+// asks it the JS questions. Its selectors are members of the same names, and
+// what its -respondsToSelector: answered for the category's two is
+// answersJSClass().
 class TestEntityObject final : public oo::RefCounted {
  public:
   const char* className() const {
@@ -117,8 +109,7 @@ class TestEntityObject final : public oo::RefCounted {
   ooscript::Object _jsSelf = nullptr;
 };
 
-/*	A station: C++ since bead oo-9ht.175 deleted the Objective-C station
-   this stood in for (its object is the ship's facade); the members the binding
+/*	A station (its object is the ship's facade); the members the binding
    calls, declared as StationEntity.h declares them (the test imports no game
    header that defines the class), with the stand-in's answers. One whose
         equivalent tech level is 99 raises from getEquivalentTechLevel(), one
@@ -206,8 +197,7 @@ class StationEntity : public ShipEntity {
   ::ShipEntity* _launched = nil;
 };
 
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for: the members the code under test calls, declared as the game headers
+// PLAYER: the members the code under test calls, declared as the game headers
 // declare them (the test imports none that defines the classes), with the
 // stand-in's answers.
 class PlayerEntity {
@@ -238,10 +228,8 @@ class PlayerEntity {
   std::string _name;
 };
 
-// The game controller: a stand-in for the C++ class (bead oo-9ht.164 deleted
-// the Objective-C facade the test's Objective-C stand-in stood in for), with
-// the header's names and signatures, defined out of line below with the
-// stand-in's answers.
+// The game controller: a stand-in for the C++ class, with the header's names
+// and signatures, defined out of line below with the stand-in's answers.
 class GameController : public oo::RefCounted {
  public:
   BOOL _paused = NO;
@@ -253,10 +241,8 @@ class GameController : public oo::RefCounted {
 #include "UniverseStandIn.h"
 
 // The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's Objective-C stand-in
-// stood in for), with the header's names and signatures. It answers virtual
-// members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse
-// overrides them.
+// with the header's names and signatures. It answers virtual members, so it has
+// the game's vtable (UniverseStandIn.h) and StandInUniverse overrides them.
 class Universe : public oo::RefCounted {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
@@ -277,7 +263,7 @@ class Universe : public oo::RefCounted {
 };
 
 // Link stubs, never reached: the code under test calls them on paths the test
-// does not take (the Objective-C stand-in did not answer them; bead oo-ql9rn).
+// does not take (the Objective-C stand-in did not answer them).
 ::OOCommodityMarket* Universe::getCommodityMarket() { std::abort(); }
 oo::PList Universe::getEquipmentData() { std::abort(); }
 oo::PList Universe::getEquipmentDataOutfitting() { std::abort(); }
@@ -289,8 +275,8 @@ class StandInUniverse : public Universe {
 
 #include "ResourceManager.h"
 
-// The engine (OOJavaScriptEngine.h; a C++ class since bead oo-wdqw1 deleted its
-// facade), declared with the header's names and signatures but not its class.
+// The engine (OOJavaScriptEngine.h), declared with the header's names and
+// signatures but not its class.
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
@@ -319,8 +305,7 @@ ooscript::Object sShipPrototype = nullptr;
 std::map<ooscript::ClassDef*, ooscript::ClassDef*> sSuperclasses;
 std::map<ooscript::ClassDef*, int> sConverters;
 std::map<Entity*, ::TestEntityObject*>
-    sObjects;  // what TestObjectOf answers (oo::ToObjC until bead oo-4aq6a.12):
-               // each ship's object
+    sObjects;  // what TestObjectOf answers: each ship's object
 }  // namespace
 
 ooscript::Object gOOEntityJSPrototype = nullptr;
@@ -352,24 +337,21 @@ ooscript::Value TestEntityObject::oo_jsValueInContext(
     if (_cxxEntity == nullptr)
       _cxxEntity = oo::makeRef<Entity>();  // a plain entity's C++ part
     sObjects[_cxxEntity.get()] = this;
-    OOJSSetCxxPrivate(
-        context, _jsSelf,
-        oo::makeRef<OOJSEntityHolder>(_cxxEntity.get())
-            .get());  // the slot holds the C++ entity (bead oo-9ht.39.3)
+    OOJSSetCxxPrivate(context, _jsSelf,
+                      oo::makeRef<OOJSEntityHolder>(_cxxEntity.get())
+                          .get());  // the slot holds the C++ entity
   }
   return ooscript::objectValue(_jsSelf);
 }
 
-::TestEntityObject* TestObjectOf(
-    Entity* entity);  // Entity+ObjCBridge.mm's oo::ToObjC until bead
-                      // oo-4aq6a.12, defined below
+::TestEntityObject* TestObjectOf(Entity* entity);  // defined below
 #define OO_ENTITY_HELPERS_STAND_IN_CXX
-#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects (bead oo-dpyk8)
+#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects
 
 namespace {
 
-// A ship's object (the root's, holding a C++ ship since bead oo-9ht.144 deleted
-// the Objective-C ship this made), kept for the life of the test.
+// A ship's object (the root's, holding a C++ ship), kept for the life of the
+// test.
 ::TestEntityObject* NewShipObject(const char* name, oo::Ref<Entity> ship) {
   ::TestEntityObject* object = oo::makeRef<::TestEntityObject>().leakRef();
   object->_cxxEntity = ship;
@@ -388,7 +370,7 @@ void Entity::getJSClass(ooscript::ClassDef** outClass,
 }
 std::optional<std::string> Entity::jsClassName() { return std::nullopt; }
 // What OOJSValueFromNativeObject made of the entity's object, which the binding
-// returned until bead oo-9ht.39.8.2: its -oo_jsValueInContext:, null for none.
+// returned: its -oo_jsValueInContext:, null for none.
 ooscript::Value Entity::jsValueInContext(ooscript::Context context) {
   ::TestEntityObject* object = TestObjectOf(this);
   return object != nullptr ? object->oo_jsValueInContext(context)
@@ -508,7 +490,7 @@ void StationEntity::generateShipyard() {
 oo::PList StationEntity::launchIndependentShip(const std::string& role) {
   _lastLaunch = "role " + role;
   return oo::EntityObjectNode(_launched);
-}  // the C++ entity's node (bead oo-dpyk8)
+}  // the C++ entity's node
 ::ShipEntity* StationEntity::launchDefenseShip() { return launched("defense"); }
 ::ShipEntity* StationEntity::launchEscort() { return launched("escort"); }
 ::ShipEntity* StationEntity::launchScavenger() { return launched("scavenger"); }
@@ -520,8 +502,7 @@ oo::PList StationEntity::launchIndependentShip(const std::string& role) {
 oo::PList StationEntity::launchPolice() {
   _lastLaunch = "police";
   // The launched ship's node twice, as the array of its object twice was; none
-  // for no ship (the nil object was left out). The C++ entity's nodes since
-  // bead oo-dpyk8.
+  // for no ship (the nil object was left out). The C++ entity's nodes.
   oo::PList::Array ships;
   if (_launched != nullptr) ships.push_back(oo::EntityObjectNode(_launched));
   if (_launched != nullptr) ships.push_back(oo::EntityObjectNode(_launched));
@@ -592,8 +573,7 @@ void Universe::setViewDirection(OOViewID vd) { _view = vd; }
 Random_Seed Universe::marketSeed() { return Random_Seed{}; }
 OOSystemID Universe::currentSystemID() { return 7; }
 
-// The ship registry is C++ (bead oo-9ht.122): a C++ stand-in with the facade
-// stand-in's answers.
+// The ship registry: a C++ stand-in with the facade stand-in's answers.
 OOShipRegistry* OOShipRegistry::sharedRegistry() {
   return nullptr;
 }  // the test adds no ship to a shipyard
@@ -606,9 +586,8 @@ oo::PList OOShipRegistry::shipyardInfoForKey(const std::string& key) {
   return oo::PList();
 }
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers. trade-goods.plist: food and gems.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the Objective-C stand-in's answers. trade-goods.plist: food and gems.
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& fileName, const std::optional<std::string>& folderName,
     OOResourceMergeMode mergeMode, bool useCache) {
@@ -646,10 +625,9 @@ bool OOJavaScriptEngine::callJSFunction(ooscript::Value, ooscript::Object,
 
 #include "OOScript.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls.
+// OOJSScript (OOJSScript.h), which the code under test calls. A script is a
+// C++ object, so the stand-in is a C++ subclass of OOScript declaring the
+// members that code calls.
 class OOJSScript : public OOScript {
  public:
   static OOJSScript* currentlyRunningScript();
@@ -681,13 +659,11 @@ std::string cxx_OOLookUpDescriptionPRIV(const std::string& key) {
 
 #include "OOCacheManager.h"
 
-// Link stubs (amendment oo-zffj item 2): what OOEquipmentType reaches to load
+// Link stubs: what OOEquipmentType reaches to load
 // equipment, which the test never does (no equipment type is made), and the
 // weapon lookups of addShipToShipyard(), which the test's shipyard items never
 // reach.
-OOCacheManager* OOCacheManager::sharedCache() {
-  std::abort();
-}  // C++ since bead oo-9ht.31 (was an empty Objective-C class)
+OOCacheManager* OOCacheManager::sharedCache() { std::abort(); }
 void OOCacheManager::setPList(const oo::PList&, const std::string&,
                               const std::string&) {
   std::abort();
@@ -781,9 +757,9 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
     return js != nullptr ? ooscript::stringValue(js) : ooscript::nullValue();
   }
   if (plist.isNumber()) return ooscript::numberValue(plist.doubleValue());
-  if (Entity* entity = oo::EntityIn(
-          plist))  // an entity's node: its object's value (bead oo-dpyk8), as
-                   // OOJSValueFromNativeObject() gave it
+  if (Entity* entity =
+          oo::EntityIn(plist))  // an entity's node: its object's value, as
+                                // OOJSValueFromNativeObject() gave it
   {
     ::TestEntityObject* object = TestObjectOf(entity);
     return object != nullptr ? object->oo_jsValueInContext(context)
@@ -830,8 +806,7 @@ PlayerEntity* sPlayer = nullptr;
 }
 
 ooscript::Context gOOJSMainThreadContext = nullptr;
-Entity* gOOJSPlayerIfStale =
-    nullptr;  // the player's C++ entity (bead oo-9ht.39.25)
+Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
 PlayerEntity* gOOPlayer = nullptr;
 Universe* gSharedUniverse = nil;
 
@@ -877,9 +852,9 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
   sConverters[theClass]++;
 }
 
-// The engine's object getter is OOJSPrivateObject.cpp's (linked) since bead
-// oo-9ht.39.3: the JS class must be a subclass of the required one, and the
-// slot holds the entity's holder.
+// The engine's object getter is OOJSPrivateObject.cpp's (linked): the JS class
+// must be a subclass of the required one, and the slot holds the entity's
+// holder.
 
 // The shared toString(), which OOJSCxxObjectWrapperToString() hands a `this` of
 // another class.
@@ -981,12 +956,10 @@ void SetUpContext() {
   sPlayer->_name = "player";
   sPlayer->_screen = GUI_SCREEN_STATUS;
   gOOPlayer = sPlayer;
-  sStationObject = NewShipObject(
-      "Coriolis",
-      oo::makeRef<StationEntity>());  // kept for the life of the test; a
-                                      // station's object (the ship's facade
-                                      // from bead oo-9ht.175, the root's since
-                                      // bead oo-9ht.144)
+  sStationObject =
+      NewShipObject("Coriolis",
+                    oo::makeRef<StationEntity>());  // kept for the life of the
+                                                    // test; a station's object
   sStation = static_cast<StationEntity*>(sStationObject->_cxxEntity.get());
   sStation->_name = "Coriolis";
   sStation->_npcTraffic = YES;
@@ -1426,8 +1399,8 @@ OO_TEST(nativeExceptions) {
 }
 
 // The JS glue of OOEquipmentType (OOJSPrivateObject), defined in
-// OOJSEquipmentInfo.mm, which this test does not link (bead oo-6symp.3): the
-// vtable names these.
+// OOJSEquipmentInfo.mm, which this test does not link: the vtable names
+// these.
 ooscript::Value OOEquipmentType::jsValueInContext(ooscript::Context) {
   return ooscript::Value();
 }

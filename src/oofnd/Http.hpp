@@ -1,7 +1,7 @@
 /*	oofnd/Http.hpp
         oo::http::Download: one GET on its own thread, its callbacks queued for
-   the main thread to take in order (bead oo-3rb.13, proposed ADR-0044). The OXZ
-   manager's NSURLConnection without Foundation.
+   the main thread to take in order. The OXZ manager's NSURLConnection without
+   Foundation.
 
             OOOXZManager (Objective-C, gnustep-base 1.31)            oo::http
             -------------------------------------------------------
@@ -35,8 +35,8 @@
    what arrived.
           * file: URLs are read from disk and delivered the same way.
 
-        Deliberate differences, all in paths no well-formed http(s) URL reaches
-   (proposed ADR-0044): a URL NSURL rejected (spaces, non-ASCII, empty) or a
+        Deliberate differences, all in paths no well-formed http(s) URL reaches:
+   a URL NSURL rejected (spaces, non-ASCII, empty) or a
    scheme other than http, https or file fails at once, where NSURLConnection
    never called back; an upper-case scheme and a relative redirect work, where
    it also never called back; an empty or unresolvable host fails, where it
@@ -44,17 +44,16 @@
    description.
 
         Windows: WinHTTP (an OS component; link -lwinhttp). Elsewhere every
-   http(s) download fails with a clear error until the Phase 5 backend (libcurl)
-   lands; file: URLs work everywhere.
+   http(s) download fails with a clear error (there is no libcurl backend yet);
+   file: URLs work everywhere.
 
         Header-only, C++20, compiles with -fno-exceptions.
 */
 
-#ifndef OOFND_HTTP_HPP
-#define OOFND_HTTP_HPP
+#pragma once
 
 // Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; suspend them for this header (proposed ADR-0028).
+// 0`; suspend them for this header.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -375,9 +374,7 @@ class Download {
     runWinHttp(*url, userAgent);
 #else
     (void)userAgent;
-    push(
-        failure("no HTTP client in this build (proposed ADR-0044: libcurl at "
-                "Phase 5)"));
+    push(failure("no HTTP client in this build"));
 #endif
   }
 
@@ -606,5 +603,3 @@ class Download {
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_HTTP_HPP

@@ -4,11 +4,8 @@ EntityShaderBindings.m
 
 Extra methods exposed for shader bindings.
 
-C++20 since bead oo-aeev (proposed ADR-0056, amendment oo-9fwb): the category
-Entity (ShaderBindings) is members of Entity (Entity.h), defined here. The
-shader uniforms bind them through the entities' member table (bead oo-9ht.158);
-the category's forwarders (EntityShaderBindings+ObjCBridge.mm) went with bead
-oo-9ht.127.
+The category Entity (ShaderBindings) is members of Entity (Entity.h), defined
+here. The shader uniforms bind them through the entities' member table.
 
 
 Oolite
@@ -39,8 +36,8 @@ MA 02110-1301, USA.
 
 #include "Entity.h"
 #include "OOPlanetEntity.h"
-#include "OOShaderUniformMethodType.h"  // the shader binding member table (beads oo-9ht.158, oo-9ht.39.6.1)
-#include "OOTypeEncodings.h"  // the rows' measured encodings (bead oo-dbz.3)
+#include "OOShaderUniformMethodType.h"  // the shader binding member table
+#include "OOTypeEncodings.h"            // the rows' measured encodings
 #include "OOVisualEffectEntity.h"
 #include "OOWaypointEntity.h"
 #include "PlayerEntity.h"
@@ -96,12 +93,10 @@ unsigned Entity::systemProductivity() {
 
 #if OO_SHADERS || !defined(NDEBUG)
 
-/*	The entities' shader binding member table (bead oo-9ht.158, ADR-0056
-   amendment oo-9ht.158; the bead's recommended default), moved here from
-   Entity+ObjCBridge.mm by bead oo-9ht.39.6.1 (amendment oo-9ht.39.6.1), its
-   rows receiving the C++ entity: one row per name a shader may bind on an
-        entity (shader-uniform-bindings.plist and, since oo-9ht.39.6.1, every
-   other name whitelist.plist permits that the root's facade answered), each
+/*	The entities' shader binding member table, its rows receiving the C++
+   entity: one row per name a shader may bind on an entity
+   (shader-uniform-bindings.plist and every other name whitelist.plist permits
+   that the root's facade answered), each
    with its uniform type (the type encoding of the method it replaces, so the
    uniform's type is the one the selector path read), whether it applies to this
    entity (what the root facade's -respondsToSelector: answered for it) and its
@@ -138,7 +133,7 @@ void StoreShaderBindingValue(OOShaderBindingValue& out, R value) {
   else if constexpr (std::is_same_v<R, NSPoint>)
     out.p = value;
   else if constexpr (std::is_same_v<R, OOColor*>)
-    out.color = value;  // borrowed (fogUniform, bead oo-9ht.39.6.1)
+    out.color = value;  // borrowed (fogUniform)
   else if constexpr (std::is_floating_point_v<R>)
     out.f = value;
   // BOOL (signed char): sign-extended, as the selector path's call returning
@@ -460,7 +455,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> GLfloat {
          if (OOVisualEffectEntity* effect = EffectPart(part))
-           return effect->hullHeatLevel(); /* bead oo-9ht.165 */
+           return effect->hullHeatLevel();
          ShipEntity* ship = ShipPart(part);
          return ship != nullptr ? ship->hullHeatLevel() : GLfloat{};
        }());
@@ -688,9 +683,8 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
          return player != nullptr ? player->getTrumbleCount() : NSUInteger{};
        }());
      }},
-    // Bead oo-9ht.39.6.1: the other names whitelist.plist permits that the
-    // root's facade answered by selector (amendment oo-9ht.158 item 4 left them
-    // there), each with its method's return type, the facade's
+    // The other names whitelist.plist permits that the root's facade answered
+    // by selector, each with its method's return type, the facade's
     // -respondsToSelector: answer and the method's body. The planet's five
     // (Entity (OOPlanetShaderBindings)):
     {"airColorAsVector", kOOTypeEncoding<Vector>,
@@ -760,7 +754,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
            out, [part]() -> OOColor* { return part->fogUniform().get(); }());
      }},  // borrowed: the entity holds it
     // The ship family's, found by name (an effect's part answers the three
-    // vectors too, bead oo-9ht.165):
+    // vectors too):
     {"forwardVector", kOOTypeEncoding<Vector>,
      [](Entity* part) -> bool {
        return EffectPart(part) != nullptr || ShipPart(part) != nullptr;
@@ -768,7 +762,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
          if (OOVisualEffectEntity* effect = EffectPart(part))
-           return effect->forwardVector(); /* bead oo-9ht.165 */
+           return effect->forwardVector();
          ShipEntity* ship = ShipPart(part);
          return ship != nullptr ? ship->forwardVector() : kZeroVector;
        }());
@@ -780,7 +774,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
          if (OOVisualEffectEntity* effect = EffectPart(part))
-           return effect->upVector(); /* bead oo-9ht.165 */
+           return effect->upVector();
          ShipEntity* ship = ShipPart(part);
          return ship != nullptr ? ship->upVector() : kZeroVector;
        }());
@@ -792,7 +786,7 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
      [](Entity* part, OOShaderBindingValue& out) {
        StoreShaderBindingValue(out, [part]() -> Vector {
          if (OOVisualEffectEntity* effect = EffectPart(part))
-           return effect->rightVector(); /* bead oo-9ht.165 */
+           return effect->rightVector();
          ShipEntity* ship = ShipPart(part);
          return ship != nullptr ? ship->rightVector() : kZeroVector;
        }());
@@ -944,14 +938,13 @@ bool EntityShaderMemberBindingFor(Entity* entity, const char* property,
 }
 
 /*	What the uniforms and the materials ask of a binding target that is an
-   entity (bead oo-9ht.39.6, ADR-0056 amendment oo-9ht.39.6), registered so that
-   the materials link without the entities. Each answers what the entity's
-   object answered: the root facade's methods are the C++ entity's members (bead
-   oo-dpyk8 deleted the object).
+   entity, registered so that the materials link without the entities. Each
+   answers what the entity's object answered: the root facade's methods are the
+   C++ entity's members.
 */
 namespace {
 
-// What the root facade's object answered (bead oo-dpyk8 deleted it): the
+// What the root facade's object answered: the
 // entity's own members, for an entity that has its object; nil's answers for
 // one without.
 Entity* ShaderSuperTarget(Entity* entity) {
@@ -978,8 +971,8 @@ bool ShaderMemberBinding(Entity* entity, const char* property,
 
 bool ShaderRandomSeed(Entity* entity, uint32_t* outSeed) {
   // -randomSeedForShaders: the ship family's, found by name (the root's facade
-  // answered it for a ship's part, the by-name table's row since bead
-  // oo-9ht.39.7.3), and a ship's part's where there was no object to ask.
+  // answered it for a ship's part, the by-name table's row), and a ship's
+  // part's where there was no object to ask.
   ShipEntity* ship = ShipPart(entity);
   if (ship == nullptr) return false;
   *outSeed = ship->randomSeedForShaders();

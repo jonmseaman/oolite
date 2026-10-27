@@ -41,13 +41,12 @@ extern "C" {
 
 void InitOOJSEntity(ooscript::Context context, ooscript::Object global);
 
-// The C++ entity (bead oo-9ht.39.3: the slot holds it; the facade before), or
-// null for a stale one.
+// The C++ entity the slot holds, or null for a stale one.
 bool JSValueToEntity(ooscript::Context context, ooscript::Value value,
                      Entity** outEntity);
 
-// The Entity class is an ooscript::ClassDef owned by OOJSEntity.mm (bead
-// oo-oap); JSEntityClass() returns it. Declared as a real function rather than
+// The Entity class is an ooscript::ClassDef owned by OOJSEntity.mm;
+// JSEntityClass() returns it. Declared as a real function rather than
 // OOINLINE so the class definition stays private to OOJSEntity.mm.
 ooscript::ClassDef* JSEntityClass(void);
 
@@ -57,13 +56,11 @@ ooscript::ClassDef* JSEntityClass(void);
 
 extern ooscript::Object gOOEntityJSPrototype;
 
-/*	OOJSEntityGetEntity was DEFINE_JS_OBJECT_GETTER's getter of the Entity
-   class until bead oo-9ht.39.3 (ADR-0056 amendment oo-9ht.39.3): the slot holds
-   an OOJSEntityHolder, so the getter is OOJSGetCxxPrivate's (the same JS class
-   check and error) and answers the C++ entity, null for a stale one (or a
-   prototype). The JS class fixes what the slot holds, so the Objective-C class
-   check of the debug build has nothing left to check. A binding's own class
-        (Ship, Planet, Sun) passes its JS class as DEFINE_JS_OBJECT_GETTER did.
+/*	OOJSEntityGetEntity: the slot holds an OOJSEntityHolder, so the getter
+   is OOJSGetCxxPrivate's (the same JS class check and error) and answers the
+   C++ entity, null for a stale one (or a prototype). The JS class fixes what
+   the slot holds. A binding's own class (Ship, Planet, Sun) passes its JS
+   class.
 */
 OOINLINE bool OOJSEntityGetEntityOfClass(ooscript::Context context,
                                          ooscript::Object inObject,
@@ -83,18 +80,15 @@ OOINLINE bool OOJSEntityGetEntity(ooscript::Context context,
 }
 
 /*	OOJSNativeObjectOfClassFromJSValue(context, value, <the root entity
-   class>) for a C++ caller (bead oo-9ht.39.3): the entity an entity's JS object
-   holds, else null, with no error (another value, another object, a stale
-   entity), as that answered nil.
+   class>) for a C++ caller: the entity an entity's JS object holds, else null,
+   with no error (another value, another object, a stale entity).
 */
 Entity* OOJSEntityFromJSValue(ooscript::Context context, ooscript::Value value);
 
 // The position and orientation of the C++ entity an entity's JS object (of any
 // entity class) holds, zero for a stale one, for the conversions that take them
-// (OOJSVector, OOJSQuaternion): its getPosition()/getOrientation(), which the
-// object's -position/-orientation answered until bead oo-9ht.39.8.12 (the
-// object of OOJSEntityObjectFromJSObject, nil for a stale one). The object must
-// be of the Entity class or a subclass.
+// (OOJSVector, OOJSQuaternion): its getPosition()/getOrientation(). The object
+// must be of the Entity class or a subclass.
 HPVector OOJSEntityPositionOfJSObject(ooscript::Context context,
                                       ooscript::Object object);
 Quaternion OOJSEntityOrientationOfJSObject(ooscript::Context context,
@@ -131,8 +125,7 @@ OOINLINE ooscript::Object JSEntityPrototype(void) {
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern "C++" {  // C++ parameters (proposed ADR-0043, bead oo-emib); nullopt
-                // class or function: no warning (was nil)
+extern "C++" {  // C++ parameters; nullopt class or function: no warning
 bool EntityFromArgumentList(ooscript::Context context,
                             const std::optional<std::string>& scriptClass,
                             const std::optional<std::string>& function,
@@ -149,14 +142,14 @@ bool EntityFromArgumentList(ooscript::Context context,
         blockJSPlayerShipProps flag is in effect (i.e., the escape pod sequence
    is active).
 */
-// The global holds the player's C++ entity while the flag is in effect (bead
-// oo-9ht.39.25; it held the player's object), else null.
+// The global holds the player's C++ entity while the flag is in effect, else
+// null.
 OOINLINE bool OOIsPlayerStale(void) {
   extern Entity* gOOJSPlayerIfStale;
   return gOOJSPlayerIfStale != nullptr;
 }
 
-// Of the C++ entity a getter answers (bead oo-9ht.39.3).
+// Of the C++ entity a getter answers.
 OOINLINE bool OOIsStaleEntity(Entity* entity) {
   extern Entity* gOOJSPlayerIfStale;
   return entity == nullptr ||

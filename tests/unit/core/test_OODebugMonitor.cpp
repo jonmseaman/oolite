@@ -1,32 +1,24 @@
 /*	test_OODebugMonitor.mm
-        Unit tests for OODebugMonitor (src/Core/Debug/OODebugMonitor.h): bead
-   oo-kq7, the Debug module's pattern seam (proposed ADR-0056, amendment
-   oo-kq7); its Objective-C facade was deleted by bead oo-9ht.74 (amendment
-   oo-9ht.74).
+        Unit tests for OODebugMonitor (src/Core/Debug/OODebugMonitor.h).
 
         OODebugMonitor is the singleton that connects a debugger (the TCP
    console client the golden harness drives the game through) to the game: it
    keeps the debug configuration (the OXPs' debugConfig.plist under the user's
    overrides, normalised), relays the JavaScript console to the debugger, is the
    JavaScript engine's monitor (errors, warnings and log lines), serves source
-        lines to the console, and dumps memory statistics. These expectations
-   were written against the Objective-C API and run on the unconverted class
-   first.
+        lines to the console, and dumps memory statistics.
 
         The classes and functions the monitor reaches would bring the whole game
-   into the link, so they are this file's stand-ins (proposed ADR-0056,
-   amendment oo-z1s4 item 4), answering only what the monitor asks and recording
-   it: the resource manager (the OXPs' configuration and the console script's
-   path), the JavaScript engine (the monitor it is given), OOJSScript (the
+   into the link, so they are this file's stand-ins, answering only what the
+   monitor asks and recording it: the resource manager (the OXPs'
+   configuration and the console script's path), the JavaScript engine (the
+   monitor it is given), OOJSScript (the
    console script it makes, and the command it is asked to run), the console's
    JS wrapper, the time limiter, the universe and the player (no entities), the
    texture registry (none). The JS context is a real one (ooscript on QuickJS),
    for the heap statistics and the wrapper object. The user's defaults are a
    scratch folder's (HOMEPATH). The monitor is a singleton, so the tests run in
-   order on one monitor. Since the conversion (commit b86b2b897 ran them on the
-   Objective-C class) they ran through the facade; since its deletion (bead
-   oo-9ht.74) they call the same C++ members, with every expectation kept but
-   the facade's contract checks. Run: bash tools/check-core-tests.sh
+   order on one monitor. Run: bash tools/check-core-tests.sh
 */
 
 #include <process.h>
@@ -42,7 +34,7 @@
 #include "OOColor.h"
 #include "OODebugMonitor.h"
 #include "OODescription.h"
-#include "OOEntityHold.h"  // the universe's entity list holds C++ entities (bead oo-9ht.39.26)
+#include "OOEntityHold.h"  // the universe's entity list holds C++ entities
 #include "OOObjCPList.h"
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
@@ -86,29 +78,25 @@ uint32_t gDebugFlags = 0;
 #endif
 uint32_t gLiveEntityCount = 0;
 
-// WormholeEntity.mm's (the wormhole is C++ since bead oo-9ht.112, so the
-// monitor's dump asks it through this function, where it sent -shipsInTransit):
-// the test dumps no entity.
+// WormholeEntity.mm's: the monitor's dump asks it through this function. The
+// test dumps no entity.
 class Entity;
 oo::PList WormholeEntityShipsInTransit(Entity*) { return oo::PList(); }
 
 // UNIVERSE stays nil here, so the monitor's guarded call never reaches it; the
-// stand-in only links it (bead oo-ql9rn: it was a message to nil).
+// stand-in only links it.
 class Universe {
  public:
-  std::vector<oo::EntityHold>
-  entityList();  // held C++ entities since bead oo-9ht.39.26
+  std::vector<oo::EntityHold> entityList();  // held C++ entities
 };
 std::vector<oo::EntityHold> Universe::entityList() { return {}; }
 
 Universe* gSharedUniverse = nil;
 
-// The ship is C++ since bead oo-9ht.144 deleted the Objective-C ship: what the
-// monitor's entity dump links against (a ship's object, the root's, holds its
-// C++ part, which oo::ToCxx reads), declared as Entity.h and ShipEntity.h
-// declare them (the test imports neither). The test dumps no entity, so none is
-// reached. The object is C++ since bead oo-4aq6a.2 (it was rooted on the
-// Objective-C root class OOObject, which Phase 4 deletes).
+// What the monitor's entity dump links against (a ship's object, the root's,
+// holds its C++ part, which oo::ToCxx reads), declared as Entity.h and
+// ShipEntity.h declare them (the test imports neither). The test dumps no
+// entity, so none is reached.
 class Entity : public oo::RefCounted {
  public:
   virtual ~Entity();
@@ -119,9 +107,7 @@ class Entity : public oo::RefCounted {
 
 class TestEntityObject final : public oo::RefCounted {
  public:
-  const char* className() const {
-    return "Entity";
-  }  // its Objective-C class's runtime name
+  const char* className() const { return "Entity"; }
 
   oo::Ref<Entity> _cxxEntity;
 };
@@ -136,16 +122,13 @@ bool Entity::getIsShip() { std::abort(); }
 bool Entity::getIsPlayer() { std::abort(); }
 bool Entity::getIsWormhole() { std::abort(); }
 std::vector<oo::EntityHold> ShipEntity::subEntityEnumerator() { std::abort(); }
-::TestEntityObject* TestObjectOf(Entity*) {
-  std::abort();
-}  // oo::ToObjC until bead oo-4aq6a.2
+::TestEntityObject* TestObjectOf(Entity*) { std::abort(); }
 #define OO_ENTITY_HELPERS_STAND_IN_CXX
-#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects (bead oo-dpyk8): never reached either
+#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects: never reached either
 
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player; the members
-// the monitor calls on it (declared as PlayerEntity.h declares them; the test
-// imports no game header that defines the class). The test has no player, so
-// none is reached.
+// PLAYER: the members the monitor calls on it (declared as PlayerEntity.h
+// declares them; the test imports no game header that defines the class). The
+// test has no player, so none is reached.
 class PlayerEntity {
  public:
   NSUInteger dialMaxMissiles();
@@ -159,7 +142,7 @@ NSUInteger PlayerEntity::dialMaxMissiles() { std::abort(); }
 }
 std::vector<oo::EntityHold> PlayerEntity::getScannedWormholes() {
   return {};
-}  // no wormholes (the memory statistics' stand-in player asks; bead oo-vdw34)
+}  // no wormholes (the memory statistics' stand-in player asks)
 
 PlayerEntity* gOOPlayer = nullptr;
 
@@ -174,9 +157,8 @@ const char* const kOOJavaScriptEngineDidResetNotificationName =
 
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// C++ definitions of the ResourceManager statics the code under test calls,
+// with the stand-in's answers.
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& fileName, const std::optional<std::string>& folderName,
     bool mergeFiles) {
@@ -192,14 +174,9 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
   return std::nullopt;
 }
 
-// The engine's monitor interface is C++ (OOJavaScriptEngineMonitor.h, from
-// OODebugMonitor.h) since bead oo-9ht.74.1; the stand-in protocol that was here
-// went with the Objective-C one.
-
-// The engine and the one null (OOJavaScriptEngine.h; C++ classes since bead
-// oo-wdqw1 deleted their facades), declared with the header's names and
-// signatures but not their classes; the null is its own property-list node's
-// foreign object, as in the game.
+// The engine and the one null (OOJavaScriptEngine.h), declared with the
+// header's names and signatures but not their classes; the null is its own
+// property-list node's foreign object, as in the game.
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
@@ -207,8 +184,7 @@ class OOJavaScriptEngine {
   ooscript::Object globalObject();
   void removeGCObjectRoot(ooscript::Object* rootPtr);
 
-  OOJavaScriptEngineMonitor* _monitor =
-      nullptr;  // the C++ monitor interface (bead oo-9ht.74.1)
+  OOJavaScriptEngineMonitor* _monitor = nullptr;  // the C++ monitor interface
 };
 
 OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
@@ -246,11 +222,9 @@ std::string OONull::description() const { return "<null>"; }
 #include "OOScript.h"
 #include "OOTexture.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls. The console script: made from
-// its path with the console as a property; runs commands.
+// OOJSScript (OOJSScript.h), which the code under test calls. The stand-in is a
+// C++ subclass of OOScript declaring the members that code calls. The console
+// script: made from its path with the console as a property; runs commands.
 class OOJSScript : public OOScript {
  public:
   static oo::Ref<OOJSScript> scriptWithPath(
@@ -302,7 +276,7 @@ oo::Ref<OOJSScript> OOJSScript::scriptWithPath(
 }
 OOJSScript* OOJSScript::currentlyRunningScript() { return nullptr; }
 
-#include "OOJSEngineCore.h"  // OOJSValue complete: GCC instantiates ~Ref<OOJSValue> where a Ref is returned (bead oo-1q4)
+#include "OOJSEngineCore.h"  // OOJSValue complete: GCC instantiates ~Ref<OOJSValue> where a Ref is returned
 
 // The special-functions object (OOJSSpecialFunctions.h): none, as the stand-in
 // gave (nil).
@@ -361,17 +335,15 @@ std::optional<oo::Data> OODataFromOXZFile(const std::string& path) {
 }
 
 // No textures, so the memory dump lists none; and no entity class is ever an
-// entity. The C++ OOTexture's static members (bead oo-9ht.99 deleted the
-// Objective-C facade they stood in for), and the member the dump calls on each
-// texture (there are none: never reached).
+// entity. The C++ OOTexture's static members, and the member the dump calls on
+// each texture (there are none: never reached).
 std::vector<oo::Ref<OOTexture>> OOTexture::cachedTexturesByAge() { return {}; }
 std::vector<oo::Ref<OOTexture>> OOTexture::allTextures() { return {}; }
 size_t OOTexture::dataSize() { std::abort(); }
 
-// An entity with a drawable: C++ since bead oo-9ht.40 deleted its Objective-C
-// facade, the member the monitor's entity dump calls (declared as
-// OOEntityWithDrawable.h declares it). The test dumps no entity, so none is
-// reached.
+// An entity with a drawable: the member the monitor's entity dump calls
+// (declared as OOEntityWithDrawable.h declares it). The test dumps no entity,
+// so none is reached.
 class OODrawable;
 class OOEntityWithDrawable : public Entity {
  public:
@@ -384,8 +356,7 @@ OODrawable* OOEntityWithDrawable::getDrawable() { std::abort(); }
 // -------------------------------------------------------------------------------
 
 // Records what the monitor sends it. Refuses to connect, or raises, when told
-// to. A C++ OODebuggerInterface since bead oo-9ht.81 (it was an Objective-C
-// object adopting the protocol); the same members, the same records.
+// to. A C++ OODebuggerInterface.
 namespace {
 
 // The records (the Objective-C class's @public ivars).
@@ -571,8 +542,7 @@ OO_TEST(sharedMonitorIsSetUpOnce) {
              static_cast<OOJavaScriptEngineMonitor*>(monitor));
 
     OO_CHECK(sConsoleScriptsMade == 1);
-    // The console property is an Object node of the monitor itself (bead
-    // oo-9ht.74; it was the facade's).
+    // The console property is an Object node of the monitor itself.
     const oo::PList* console = sConsoleScriptProperties.find("console");
     const oo::PList::Object* consoleNode =
         (console != nullptr) ? console->getIf<oo::PList::Object>() : nullptr;
@@ -770,8 +740,7 @@ OO_TEST(engineErrorsAndLogLinesReachTheConsole) {
   {
     oo::AutoreleaseScope pool;
     OODebugMonitor* monitor = OODebugMonitor::sharedDebugMonitor();
-    OOJavaScriptEngineMonitor* engineMonitor =
-        monitor;  // the C++ monitor interface (bead oo-9ht.74.1)
+    OOJavaScriptEngineMonitor* engineMonitor = monitor;
     const std::string path = WriteSource("script.js", "line one\n  line two\n");
 
     ooscript::ErrorReport report = {};
@@ -867,8 +836,8 @@ OO_TEST(memoryStatistics) {
     gLiveEntityCount = 3;
     gLog.clear();
     static PlayerEntity sStandInPlayer;  // the debug build asserts that PLAYER
-                                         // is set (OOGetPlayer(); bead
-                                         // oo-vdw34): one with no wormholes
+                                         // is set (OOGetPlayer()): one with no
+                                         // wormholes
     gOOPlayer = &sStandInPlayer;
     monitor->dumpMemoryStatistics();
     gOOPlayer = nullptr;
@@ -937,9 +906,7 @@ OO_TEST(javaScriptValueAndEngineReset) {
   }
 }
 
-// The one C++ monitor for the life of the process, described as its facade was
-// ("%@"). The facade and its contract checks (one facade, its weak reference,
-// nil crossings) went with bead oo-9ht.74.
+// The one C++ monitor for the life of the process, described as "%@".
 OO_TEST(cxxMonitorAndItsFacade) {
   SetUp();
   OODebugMonitor* monitor = OODebugMonitor::sharedDebugMonitor();

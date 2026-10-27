@@ -41,8 +41,7 @@ void InitOOJSStation(ooscript::Context context, ooscript::Object global);
 #endif
 
 /*	The bodies of StationEntity (OOJavaScriptExtensions), which the engine
-   reaches by selector. StationEntity::getJSClass and ::jsClassName call these
-        (proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+   reaches by selector. StationEntity::getJSClass and ::jsClassName call these.
 */
 void OOJSStationGetJSClass(ooscript::ClassDef** outClass,
                            ooscript::Object* outPrototype);

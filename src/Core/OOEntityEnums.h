@@ -5,7 +5,7 @@ OOEntityEnums.h
 The entity enumerations that used to live inside Objective-C class headers:
 OOEntityStatus and OOScanClass (Entities/Entity.h), OOGUIScreenID and
 OOGalacticHyperspaceBehaviour (Entities/PlayerEntity.h), OOShipDamageType
-(Entities/ShipEntity.h). Moved here unchanged (bead oo-9ht.64) so a plain C or
+(Entities/ShipEntity.h). They live here so a plain C or
 C++ translation unit (OOConstToJSString) can name them without parsing an
 @interface. Those headers include this one back, so no caller changes.
 
@@ -30,8 +30,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef INCLUDED_OOENTITYENUMS_h
-#define INCLUDED_OOENTITYENUMS_h
+#pragma once
 
 // From Entities/Entity.h.
 
@@ -46,7 +45,7 @@ typedef enum OOEntityStatus {
 #ifndef __cplusplus
 /* ISO C++ forbids a forward reference to an unscoped enum with no fixed
    underlying type (this used to compile only because this file was Objective-C,
-   not Objective-C++; ADR-0001). The full definition is three lines below in
+   not Objective-C++). The full definition is three lines below in
    this same file, so C++ translation units never need the forward tag at all.
  */
 typedef enum OOScanClass OOScanClass;
@@ -100,5 +99,3 @@ typedef enum {
 
   kOOShipDamageTypeDefault = kOODamageTypeEnergy
 } OOShipDamageType;
-
-#endif  // INCLUDED_OOENTITYENUMS_h

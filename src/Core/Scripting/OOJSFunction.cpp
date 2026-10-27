@@ -23,20 +23,16 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSFunction.h"
-
 #include "OOJSEngineTimeManagement.h"
+#include "OOJSFunction.h"
 #include "OOJSScript.h"
 #include "oofnd/Notification.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 
-/*	C++20 since bead oo-3smy (proposed ADR-0056): OOJSFunction. The
-   initialisers answered nil for their input, so they are static factories of
-   the same name (amendment oo-novu item 1); the part of
-   -initWithFunction:context: that cannot fail is the private constructor. The
-   engine, the script stack and the wrapped arguments are Objective-C and are
-   messaged as before.
+/*	OOJSFunction. The initialisers are static factories answering null for
+   their input; the part of -initWithFunction:context: that cannot fail is the
+   private constructor.
 */
 
 oo::Ref<OOJSFunction> OOJSFunction::initWithFunction(
@@ -164,7 +160,3 @@ bool OOJSFunction::evaluateWithContext(ooscript::Context context,
 
   return OK;
 }
-
-// (The object-wrapper evaluations, evaluateWithContext(id jsThis, arguments)
-// and evaluatePredicateWithContext(), went with OOJSValueFromNativeObject(),
-// bead oo-4aq6a.6.2.)

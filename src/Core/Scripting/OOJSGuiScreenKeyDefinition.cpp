@@ -24,27 +24,12 @@ MA 02110-1301, USA.
 */
 
 #include "OOJSGuiScreenKeyDefinition.h"
-
 #include "OOJSScript.h"
 // #import "OOJavaScriptEngine.h"
 
 #include "oofnd/Notification.hpp"
 #include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
-
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) per bead oo-6u8, the
-   same way bead oo-sdz retargeted OOJSVector.mm (the exemplar for this sweep;
-   see its header comment for the full rationale). This file only directly
-   called the two RemoveValueRoot / RemoveObjectRoot engine functions
-   (ooscript/README.md's retarget map); OOJSAddGCValueRoot / OOJSAddGCObjectRoot
-   are OOJS_*-spelled macros from OOJavaScriptEngine.h, not themselves spelled
-   with the engine's own prefix at this call site, and are unchanged, out of
-   scope for the sweep exactly as OOJSVector.mm's header comment describes for
-   the OOJS_* argument-marshalling macros. `this` is not used here, so no
-   reserved-word renames were needed; the file is still built as Objective-C++
-   (ADR-0001) because it now names the ooscript:: namespace.
-*/
 
 namespace ooscript {}
 using ooscript::Context;
@@ -59,12 +44,6 @@ static inline Object* OOJSFOBJP(ooscript::Object* o) {
   return reinterpret_cast<Object*>(o);
 }
 }  // namespace
-
-/*	C++20 since bead oo-xg7g (proposed ADR-0056 amendment oo-o89):
-   OOJSGuiScreenKeyDefinition. -init after [super init] is the constructor,
-   -dealloc the destructor; the engine, the script stack and the owning script's
-   weak reference are Objective-C and are messaged as before.
-*/
 
 OOJSGuiScreenKeyDefinition::OOJSGuiScreenKeyDefinition() {
   _callback = ooscript::undefinedValue();

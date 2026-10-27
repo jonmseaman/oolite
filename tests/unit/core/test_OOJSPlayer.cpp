@@ -1,16 +1,15 @@
 /*	test_OOJSPlayer.mm
         Unit tests for the player JS binding
-   (src/Core/Scripting/OOJSPlayer.h/.mm): bead oo-5rva, converted the way bead
-   oo-ppc converted OOJSVector (proposed ADR-0056 amendment oo-ppc).
+   (src/Core/Scripting/OOJSPlayer.h/.mm).
 
-        As the binding tests of amendment oo-ppc item 6 do, it runs the JS class
+        As the other binding tests do, it runs the JS class
    in a real context on the game's own façade backend
    (ooscript/JSEngine_quickjs.cpp), and links the game's own objects for the
    binding, the engine's exception translator (OOJSEngineNativeWrappers.mm) and
    the random numbers it draws (legacy_random.c). It stands in for the player
    and a station (PlayerEntity and ShipEntity answer only the selectors the
-   binding sends, and record what they are told; the ship is C++ since bead
-   oo-9ht.144, its stations' objects the root's), the universe (messages,
+   binding sends, and record what they are told; its stations' objects are the
+   root's), the universe (messages,
    speech, nearby systems), the display strings, the script event names and the
    engine functions the binding links against, with the engine headers' linkage.
    The expectations were written against the Objective-C file and run on it
@@ -22,7 +21,7 @@
    tools/check-core-tests.sh
 */
 
-#include "EntityPListForeign.h"  // an entity's node (bead oo-dpyk8)
+#include "EntityPListForeign.h"  // an entity's node
 #include "OOEntityEnums.h"
 #include "OOFoundation.h"
 #include "OOObjCPList.h"
@@ -62,11 +61,9 @@ enum {
 
 class Entity;
 
-// A ship's object: the root's, which holds the C++ part (oo::ToCxx reads it); a
-// station's and the player's were the Objective-C ship's until bead oo-9ht.144
-// deleted it. C++ since bead oo-4aq6a.12 (it was rooted on the Objective-C root
-// class OOObject, which Phase 4 deletes): its selectors are members of the same
-// names, and className() answers its Objective-C class's name.
+// A ship's object: the root's, which holds the C++ part (oo::ToCxx reads it).
+// Its selectors are members of the same names, and className() answers its
+// Objective-C class's name.
 class TestEntityObject : public oo::RefCounted {
  public:
   virtual const char* className() const {
@@ -84,19 +81,17 @@ class TestEntityObject : public oo::RefCounted {
    set it throws a C++ exception, so the test sees what an exception under a
    native becomes.
 */
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for: the members the code under test calls, declared as the game headers
+// PLAYER: the members the code under test calls, declared as the game headers
 // declare them (the test imports none that defines the classes), with the
 // stand-in's answers.
 class Entity : public oo::RefCounted {
  public:
   virtual ~Entity();
   OOEntityStatus status();
-  bool
-  getIsStation();  // what its object's -isStation forwarded to (bead oo-dpyk8)
+  bool getIsStation();  // what its object's -isStation forwarded to
 };
 
-// The ship: C++ since bead oo-9ht.144 (a station's part is a plain one).
+// The ship (a station's part is a plain one).
 class ShipEntity : public Entity {
  public:
   void doScriptEvent(ooscript::PropertyId message,
@@ -175,10 +170,8 @@ class PlayerEntity : public ShipEntity {
 #include "UniverseStandIn.h"
 
 // The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's Objective-C stand-in
-// stood in for), with the header's names and signatures. It answers virtual
-// members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse
-// overrides them.
+// with the header's names and signatures. It answers virtual members, so it has
+// the game's vtable (UniverseStandIn.h) and StandInUniverse overrides them.
 class Universe : public oo::RefCounted {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
@@ -238,9 +231,9 @@ std::string Describe(const oo::PList& plist) {
   if (plist.isNull()) return "null";
   if (const std::string* str = plist.getIf<std::string>()) return *str;
   if (plist.isNumber()) return oo::str::format("%g", plist.doubleValue());
-  if (Entity* entity = oo::EntityIn(
-          plist))  // an entity's node: its object's class (bead oo-dpyk8; "nil"
-                   // for none, as class_getName(Nil) answered)
+  if (Entity* entity =
+          oo::EntityIn(plist))  // an entity's node: its object's class ("nil"
+                                // for none, as class_getName(Nil) answered)
   {
     ::TestEntityObject* object = TestObjectOfPart(entity);
     return object != nullptr ? object->className() : "nil";
@@ -261,10 +254,8 @@ bool TestEntityObject::isStation() { return _isStation; }
 OOEntityStatus TestEntityObject::status() { return _status; }
 
 // The player's object (in the game the ship's facade over the C++ player),
-// which TestObjectOf answers (oo::ToObjC until bead oo-4aq6a.12): a ship whose
-// class is named PlayerEntity, as the game's player object was before bead
-// oo-9ht.177, so the events name it as they did (a subclass made at run time
-// until bead oo-4aq6a.12).
+// which TestObjectOf answers: a ship whose class is named PlayerEntity, so the
+// events name it as they did.
 class TestPlayerObject final : public TestEntityObject {
  public:
   const char* className() const override { return "PlayerEntity"; }
@@ -280,7 +271,7 @@ class TestPlayerObject final : public TestEntityObject {
   return entity != nullptr ? sPlayerObject : nullptr;
 }  // only the player crosses
 #define OO_ENTITY_HELPERS_STAND_IN_CXX
-#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects (bead oo-dpyk8)
+#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects
 
 Entity::~Entity() = default;
 OOEntityStatus Entity::status() {
@@ -288,8 +279,8 @@ OOEntityStatus Entity::status() {
 }
 
 // The object of each C++ part the script handed over (a station's), and the
-// player's for any other (bead oo-dpyk8: the binding hands over the C++ entity,
-// where it handed over the object).
+// player's for any other (the binding hands over the C++ entity, where it
+// handed over the object).
 namespace {
 std::map<Entity*, ::TestEntityObject*> sPartObjects;
 ::TestEntityObject* TestObjectOfPart(Entity* entity) {
@@ -494,8 +485,7 @@ oo::PList cxx_OOJSPListFromJSValue(ooscript::Context context,
   if (ooscript::isObject(value) &&
       ooscript::getObjectClass(context, ooscript::toObject(value)) ==
           &sFakeStationClass) {
-    // The station's C++ entity's node, as the game's converter makes it (bead
-    // oo-dpyk8).
+    // The station's C++ entity's node, as the game's converter makes it.
     ::TestEntityObject* object = (::TestEntityObject*)ooscript::getPrivate(
         context, ooscript::toObject(value));
     sPartObjects[object->_cxxEntity.get()] = object;
@@ -532,8 +522,7 @@ std::map<ooscript::ClassDef*, int> sConverters;
 
 PlayerEntity* gOOPlayer = nullptr;
 Universe* gSharedUniverse = nil;
-Entity* gOOJSPlayerIfStale =
-    nullptr;  // the player's C++ entity (bead oo-9ht.39.25)
+Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
 
 extern "C" {
 
@@ -606,8 +595,7 @@ ooscript::Object sGlobal;
 PlayerEntity* sPlayer = nullptr;
 Universe* sUniverse = nil;
 ::TestEntityObject* sStation =
-    nullptr;  // a station's object and a ship's that is not one (C++ ships
-              // since bead oo-9ht.144)
+    nullptr;  // a station's object and a ship's that is not one
 ::TestEntityObject* sNonStation = nullptr;
 ShipEntity* sStationShip = nullptr;
 
@@ -945,8 +933,8 @@ OO_TEST(escapePodDestination) {
   OO_CHECK_EVAL("player.setEscapePodDestination(null)",
                 "threw: Player.setEscapePodDestination() only works while the "
                 "escape pod is in flight.");
-  gOOJSPlayerIfStale = sPlayer;  // the player's C++ entity (bead oo-9ht.39.25;
-                                 // the stand-in object has no part)
+  gOOJSPlayerIfStale = sPlayer;  // the player's C++ entity (the stand-in
+                                 // object has no part)
 
   sPlayer->_dockTargetSet = NO;
   OO_CHECK_EVAL("(player.setEscapePodDestination(station), 'called')",

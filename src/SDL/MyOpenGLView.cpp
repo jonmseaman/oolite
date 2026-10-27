@@ -22,14 +22,13 @@ MA 02110-1301, USA.
 
 */
 
-#include "MyOpenGLView.h"
-
 #include <SDL3/SDL_clipboard.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_timer.h>
 
 #include "GameController.h"
 #include "GuiDisplayGen.h"
+#include "MyOpenGLView.h"
 #include "OOConstToString.h"
 #include "OOFullScreenController.h"
 #include "OOGraphicsResetManager.h"
@@ -50,8 +49,7 @@ MA 02110-1301, USA.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-// The save and snapshot directory names (moved here when the NSFileManager
-// category header retired, bead oo-pwz0).
+// The save and snapshot directory names.
 #define SAVEDIR "oolite-saves"
 #define SNAPSHOTDIR "snapshots"
 
@@ -774,8 +772,7 @@ void MyOpenGLView::initSplashScreen() {
   return;
 }
 
-// Slice 2 of docs/phases/3-slices/MyOpenGLView.md (bead oo-72cz): accessors,
-// display modes, settings, display / HDR, FOV and MSAA.
+// Accessors, display modes, settings, display / HDR, FOV and MSAA.
 
 NSRect MyOpenGLView::getBounds() { return bounds; }
 
@@ -1143,8 +1140,7 @@ bool MyOpenGLView::pollShiftKey() {
 #endif
 }
 
-// Slice 3 of docs/phases/3-slices/MyOpenGLView.md (bead oo-299r): snapshots and
-// debug image dumps.
+// Snapshots and debug image dumps.
 
 bool MyOpenGLView::snapShot(const std::optional<std::string>& filename) {
   BOOL snapShotOK = YES;
@@ -1377,8 +1373,7 @@ void MyOpenGLView::dumpGrayAlphaToFileNamed(const std::string& name,
   SDL_Surface* tmpSurface = SDL_CreateSurface(
       width, height,
       SDL_PIXELFORMAT_RGBA32);  // its own pixels, as -dumpGray: never the
-                                // caller's 2-byte-a-pixel buffer (bead
-                                // oo-5thb0)
+                                // caller's 2-byte-a-pixel buffer
   for (int y = 0; static_cast<NSUInteger>(y) < height; y++) {
     uint8_t* srcRow = bytes + rowBytes * y;
     uint8_t* dstRow = (uint8_t*)tmpSurface->pixels + y * tmpSurface->pitch;

@@ -1,36 +1,16 @@
 /*	test_OOFileScannerVerifierStage.mm
-        Unit tests for OOFileScannerVerifierStage.h/.mm (bead oo-up4b; proposed
-   ADR-0056 Amendment 1 and amendment oo-up4b): OOFileScannerVerifierStage and
-   the intermediate class OOFileHandlingVerifierStage that the file-handling
-   stages subclass.
+        Unit tests for OOFileScannerVerifierStage.h/.mm:
+   OOFileScannerVerifierStage and the intermediate class
+   OOFileHandlingVerifierStage that the file-handling stages subclass.
 
-        What the file computed before the conversion is pinned through the
-   Objective-C API the other stages use: the dependency and dependent a
-   file-handling stage names (and registers), [super dependents] from a
-   subclass, and the scanner's answers over a real directory: case-insensitive
-        look-up with folder fallback, junk, skipped and Read Me files, listings,
-   data and property lists. Then the crossing: an Objective-C subclass of the
-   intermediate class behind a C++ pointer, a C++ subclass of it behind the
-   facade, the scanner's own facade class and identity, and the adapter
-   outliving its owner.
-
-        Bead oo-9ht.7 deleted both classes' Objective-C facades and the
-   verifier's -fileScannerStage (ADR-0056 amendment "deleting a facade"). The
-   cases that asked through their selectors ask the C++ classes with the same
-   expectations (the Objective-C test stages became C++ subclasses, the super
-   call a qualified base call, -fileScannerStage the stage lookup it made,
-   isKindOfClass: a dynamic_cast); the scanner now crosses as the root's facade,
-   as every global stage does. The cases that pinned only the deleted facades
-   (scannerMadeByAllocInit, objCFileStageBehindACxxPointer, the facade half of
-   scannerFacade, nilAndLifetime) were retired with them (ADR-0049, standing
-        approval oo-9n5p9).
-        Bead oo-9ht.4 deleted the root's facade (OOOXPVerifierStage): the
-   verifier answers the C++ stage itself, so cxxFileStageBehindTheFacade asks
-   the stage (its description through description(), as scannerFindsFiles does),
-   and the checks that pinned only that facade's crossing (one live facade,
-   oo::ToObjC/oo::ToCxx, its class; the C++-made scanner's half of
-        scannerFacade) were retired with it (ADR-0049, standing approval
-   oo-9n5p9). Run: bash tools/check-core-tests.sh
+        The tests pin the dependency and dependent a file-handling stage names
+   (and registers), the base class's dependents from a subclass, and the
+   scanner's answers over a real directory: case-insensitive look-up with
+   folder fallback, junk, skipped and Read Me files, listings, data and
+   property lists. The verifier answers the C++ stage itself, so
+   cxxFileStageBehindTheFacade asks the stage (its description through
+   description(), as scannerFindsFiles does). Run: bash
+   tools/check-core-tests.sh
 */
 
 #include <filesystem>
@@ -59,9 +39,8 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 #include "OOOXPVerifierTestDouble.h"
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// C++ definitions of the ResourceManager statics the code under test calls,
+// with the stand-in's answers.
 std::optional<std::string> ResourceManager::pathForFileNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   if (fileName != "builtin.png") return std::nullopt;
@@ -140,8 +119,7 @@ OOOXPVerifier* MakeVerifier(const std::string& path) {
 const std::vector<std::string> kScannerName = {"Scanning files"};
 const std::vector<std::string> kUnusedName = {"Checking for unused files"};
 
-// The registered scanner, as the stages find it (the verifier's
-// -fileScannerStage until bead oo-9ht.7).
+// The registered scanner, as the stages find it.
 OOFileScannerVerifierStage* ScannerOf(OOOXPVerifier* verifier) {
   return dynamic_cast<OOFileScannerVerifierStage*>(
       verifier->stageWithName(OOFileScannerVerifierStage::kName));

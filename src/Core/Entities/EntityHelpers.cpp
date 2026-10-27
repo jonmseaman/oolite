@@ -2,10 +2,10 @@
 
 EntityHelpers.mm
 
-The questions the deleted root entity facade answered (EntityHelpers.h, bead
-oo-dpyk8): its categories' and its helpers' bodies, asked of the C++ entity, and
-the entities' own counts (OOEntityHold.h): what -retain, -release, -autorelease
-and the facade's creation did.
+The questions the deleted root entity facade answered (EntityHelpers.h): its
+categories' and its helpers' bodies, asked of the C++ entity, and the entities'
+own counts (OOEntityHold.h): what -retain, -release, -autorelease and the
+facade's creation did.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -36,7 +36,7 @@ MA 02110-1301, USA.
 #include "OOVisualEffectEntity.h"
 #include "OOWaypointEntity.h"
 #include "ShipEntity.h"
-#include "oofnd/Ref.hpp"  // oo::autorelease (oo-31u.6)
+#include "oofnd/Ref.hpp"  // oo::autorelease
 #include "oofnd/String.hpp"
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -88,8 +88,7 @@ void oo::ReleaseEntity(Entity* entity) {
 
 Entity* oo::AutoreleaseEntity(Entity* entity) {
   // The caller's +1 goes to the innermost oo::AutoreleaseScope, released at the
-  // same drain and in the same order as -autorelease's object (beads oo-pvhrh,
-  // oo-31u.6).
+  // same drain and in the same order as -autorelease's object.
   if (WithObject(entity) != nullptr) oo::autorelease(entity);
   return entity;
 }

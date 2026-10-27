@@ -1,17 +1,15 @@
 /*	test_OOJSEntity.mm
         Unit tests for the Entity JS binding
-   (src/Core/Scripting/OOJSEntity.h/.mm): bead oo-tq53, converted the way bead
-   oo-ppc converted OOJSVector (proposed ADR-0056 amendment oo-ppc).
+   (src/Core/Scripting/OOJSEntity.h/.mm).
 
-        As test_OOJSSun.mm does (amendment oo-ykoy, item 4), it runs the JS
-   class in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp), links the game's own objects for the
-   binding, the engine's exception translator (OOJSEngineNativeWrappers.mm), the
-   constant strings (OOConstToJSString.cpp) and the maths it calls, and stands
-   in for the entity classes (Entity and ShipEntity answer only the selectors
-   the binding sends; the binding messages the Objective-C Entity, the façade
-   every entity still is, and calls a ship's C++ part, C++ since bead
-   oo-9ht.144), for the vector and quaternion conversions (a vector is the array
+   As test_OOJSSun.mm does, it runs the JS class in a real context on the game's
+   own façade backend (ooscript/JSEngine_quickjs.cpp), links the game's own
+   objects for the binding, the engine's exception translator
+   (OOJSEngineNativeWrappers.mm), the constant strings (OOConstToJSString.cpp)
+   and the maths it calls, and stands in for the entity classes (Entity and
+   ShipEntity answer only the selectors the binding sends; the binding messages
+   the Objective-C Entity, the façade every entity still is, and calls a ship's
+   C++ part), for the vector and quaternion conversions (a vector is the array
    [x, y, z] here, a quaternion [w, x, y, z]) and for the engine functions the
    binding links against, with the engine headers' linkage. The expectations
    were written against the Objective-C file and run on it first; they pin the
@@ -20,13 +18,11 @@
    the C functions other bindings call (JSValueToEntity(),
    EntityFromArgumentList()). Run: bash tools/check-core-tests.sh
 
-        Since bead oo-9ht.39.3 (ADR-0056 amendment oo-9ht.39.3) an entity's JS
-   object holds its C++ part (an OOJSEntityHolder) and the getters answer it.
-   Since bead oo-9ht.39.8.21 the property blocks call the C++ entity's members,
-   the root facade's selectors' bodies: the stand-in for the C++ class has the
+        An entity's JS object holds its C++ part (an OOJSEntityHolder) and the
+   getters answer it. The property blocks call the C++ entity's members, the
+   root facade's selectors' bodies: the stand-in for the C++ class has the
    game's vtable (EntityStandIn.h) and answers as the Objective-C stand-in, its
-   object, did (the stand-ins re-based under the standing approval oo-9n5p9; no
-   expectation changed). The engine's C++ slot glue (OOJSPrivateObject.h) is
+   object, did. The engine's C++ slot glue (OOJSPrivateObject.h) is
    stood in for as the Objective-C glue was (the same class check and error, the
    same toString()).
 */
@@ -53,20 +49,18 @@
 #include "EntityStandIn.h"
 class Entity : public oo::RefCounted,
                public ::OOJSPrivateObject  // the C++ root, with the game's
-                                           // vtable (bead oo-9ht.39.8.21)
+                                           // vtable
 {
  public:
   OO_ENTITY_STAND_IN_VIRTUAL_MEMBERS
   virtual ~Entity();
-  void dumpState();        // the binding calls it since bead oo-9ht.39.8.2 (the
-                           // object's -dumpState did)
-  HPVector getPosition();  // OOJSEntityPositionOfJSObject's (bead
-                           // oo-9ht.39.8.12), and the position property's
-  Quaternion getOrientation();  // OOJSEntityOrientationOfJSObject's (bead
-                                // oo-9ht.39.8.12); no case reaches it
-  // The non-virtual members the property blocks call since bead oo-9ht.39.8.21;
-  // each answers what the entity's object (the Objective-C stand-in below)
-  // answered.
+  void dumpState();        // the binding calls it (the object's -dumpState did)
+  HPVector getPosition();  // OOJSEntityPositionOfJSObject's, and the position
+                           // property's
+  Quaternion getOrientation();  // OOJSEntityOrientationOfJSObject's; no case
+                                // reaches it
+  // The non-virtual members the property blocks call; each answers what the
+  // entity's object (the Objective-C stand-in below) answered.
   OOEntityStatus status();
   GLfloat getMass();
   Entity* ownerEntity();
@@ -87,8 +81,7 @@ class Entity : public oo::RefCounted,
 };
 
 // The C++ part of each of the test's entities: the virtual members the property
-// blocks call (bead oo-9ht.39.8.21), each answering what the entity's object
-// answered.
+// blocks call, each answering what the entity's object answered.
 class TestEntityPart : public Entity {
  public:
   GLfloat collisionRadius() override;
@@ -103,9 +96,7 @@ class TestEntityPart : public Entity {
   bool getIsVisualEffect() override;
 };
 
-// C++ since bead oo-4aq6a.12 (it was rooted on the Objective-C root class
-// OOObject, which Phase 4 deletes): its selectors are members of the same
-// names, its ivars zeroed members.
+// Its selectors are members of the same names, its ivars zeroed members.
 class TestEntityObject final : public oo::RefCounted {
  public:
   const char* className() const {
@@ -161,10 +152,9 @@ class TestEntityObject final : public oo::RefCounted {
   int _positionSets = {};
 };
 
-// A ship: C++ since bead oo-9ht.144 deleted the Objective-C ship this stood in
-// for, the C++ part of an entity's object, declared as ShipEntity.h declares it
-// (the test imports no game header that defines the class), with the stand-in's
-// answers.
+// A ship: the C++ part of an entity's object, declared as ShipEntity.h
+// declares it (the test imports no game header that defines the class), with
+// the stand-in's answers.
 class ShipEntity : public TestEntityPart {
  public:
   void resetExhaustPlumes();
@@ -174,8 +164,7 @@ class ShipEntity : public TestEntityPart {
   int _aegisChecks = 0;
 };
 
-// What an entity's JS object holds since bead oo-9ht.39.3: a weak reference to
-// the C++ entity.
+// What an entity's JS object holds: a weak reference to the C++ entity.
 #include <cstdarg>
 #include <cstring>
 #include <map>
@@ -307,8 +296,7 @@ std::map<ooscript::ClassDef*, ooscript::ClassDef*> sSuperclasses;
 std::map<ooscript::ClassDef*, int> sConverters;
 std::map<TestEntityObject*, ooscript::Object> sEntityObjects;
 std::map<Entity*, TestEntityObject*>
-    sObjects;  // what TestObjectOf answers (oo::ToObjC until bead oo-4aq6a.12):
-               // each wrapped entity's object
+    sObjects;  // what TestObjectOf answers: each wrapped entity's object
 ooscript::Context sContext;
 
 // An array of numbers as JavaScript, and back: enough to see what the binding
@@ -341,8 +329,8 @@ bool JSValueToNumbers(ooscript::Context context, ooscript::Value value,
 }
 
 // An entity's JS object, as EntityJSValueInContext() makes it: the Entity
-// class, and a holder of the entity's C++ part in the private slot (bead
-// oo-9ht.39.3; a plain one for an entity made without). One per entity.
+// class, and a holder of the entity's C++ part in the private slot (a plain one
+// for an entity made without). One per entity.
 ooscript::Value JSValueForEntity(TestEntityObject* entity) {
   ooscript::Object& object = sEntityObjects[entity];
   if (object == nullptr) {
@@ -365,22 +353,19 @@ ooscript::Value JSValueForEntity(TestEntityObject* entity) {
 
 }  // namespace
 
-Entity* gOOJSPlayerIfStale =
-    nullptr;  // the player's C++ entity (bead oo-9ht.39.25)
+Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
 
-// What the object's -dumpState counted until bead oo-9ht.39.8.2.
-// oo::ToObjC (Entity+ObjCBridge.mm) until bead oo-4aq6a.12: the object of a C++
-// part the test wrapped, null for any other.
+// The object of a C++ part the test wrapped, null for any other.
 ::TestEntityObject* TestObjectOf(Entity* entity);
 #define OO_ENTITY_HELPERS_STAND_IN_CXX
-#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects (bead oo-dpyk8)
+#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects
 ::TestEntityObject* TestObjectOf(Entity* entity) {
   auto found = sObjects.find(entity);
   return found != sObjects.end() ? found->second : nullptr;
 }
 
-// [object message] where object may be nil (bead oo-4aq6a.12): nil answered
-// zero and did nothing.
+// [object message] where object may be nil: nil answered zero and did
+// nothing.
 template <class Result, class... Parameters, class... Arguments>
 Result Send(::TestEntityObject* object,
             Result (::TestEntityObject::*method)(Parameters...),
@@ -396,15 +381,14 @@ Result Send(::TestEntityObject* object,
 
 void Entity::dumpState() { TestObjectOf(this)->_dumps++; }
 // What the object's -position/-orientation answered for the vector and
-// quaternion conversions, which read the C++ entity since bead oo-9ht.39.8.12
-// (link stand-ins: no case here converts an entity).
+// quaternion conversions, which read the C++ entity (link stand-ins: no case
+// here converts an entity).
 HPVector Entity::getPosition() { return TestObjectOf(this)->_position; }
 Quaternion Entity::getOrientation() { return TestObjectOf(this)->_orientation; }
 
 // What the object's selectors answered, which the property blocks call the C++
-// members for since bead oo-9ht.39.8.21: each asks the object, so the
-// stand-in's state, its counters and -mass's raise and throw are what they
-// were.
+// members for: each asks the object, so the stand-in's state, its counters and
+// -mass's raise and throw are what they were.
 OOEntityStatus Entity::status() {
   return Send(TestObjectOf(this), &TestEntityObject::status);
 }
@@ -582,7 +566,7 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 
 }  // extern "C"
 
-// The engine's C++ slot glue (OOJSPrivateObject.h, bead oo-9ht.39.3), as the
+// The engine's C++ slot glue (OOJSPrivateObject.h), as the
 // Objective-C glue was stood in for: the getter's JS class check and error, the
 // slot's retain, a finalizer that does nothing and the same toString().
 bool OOJSGetCxxPrivateImpl(ooscript::Context context, ooscript::Object object,
@@ -622,9 +606,9 @@ bool OOJSCxxObjectWrapperToString(ooscript::Context context,
   return true;
 }
 
-// The JS value of a C++ object: an entity's own JS object (the owner property's
-// since bead oo-9ht.39.8.21, what OOJSValueFromNativeObject made of its
-// object), null for null; a holder's glue is never reached (no case wraps a
+// The JS value of a C++ object: an entity's own JS object (the owner
+// property's, what OOJSValueFromNativeObject made of its object), null for
+// null; a holder's glue is never reached (no case wraps a
 // holder's value).
 ooscript::Value OOJSValueFromCxxObject(ooscript::Context,
                                        OOJSPrivateObject* object) {
@@ -643,8 +627,7 @@ namespace {
 
 ooscript::Runtime sRuntime;
 ooscript::Object sGlobal;
-TestEntityObject* sShip = nullptr;  // a ship's object and its C++ part (the
-                                    // Objective-C ship until bead oo-9ht.144)
+TestEntityObject* sShip = nullptr;  // a ship's object and its C++ part
 ShipEntity* sShipPart = nullptr;
 TestEntityObject* sRock = nullptr;
 TestEntityObject* sMother = nullptr;
@@ -865,7 +848,7 @@ OO_TEST(staleEntities) {
   OO_CHECK_EVAL(
       "(function () { Entity.prototype.energy = 5; return 'set'; })()", "set");
   // The player while the escape pod is in flight is stale too.
-  gOOJSPlayerIfStale = sShipPart;  // its C++ part (bead oo-9ht.39.25)
+  gOOJSPlayerIfStale = sShipPart;  // its C++ part
   OO_CHECK_EVAL("ship.isValid + ':' + ship.mass + ':' + ship.owner",
                 "false:undefined:undefined");
   OO_CHECK_EVAL("(function () { ship.energy = 5; return 'set'; })()", "set");

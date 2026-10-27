@@ -1,29 +1,22 @@
 /*	test_Entity.mm
         Unit tests for Entity (src/Core/Entities/Entity.h), the root of the
-   entity hierarchy: bead oo-bj8, the Entities pattern seam (Phase 3, house
-   style of proposed ADR-0056).
+   entity hierarchy.
 
         Entity's object reads Universe and PlayerEntity, so the test links the
-   whole game but main (tests/unit/core/meson.build entry ['*'], ADR-0056
-   amendment oo-44gg) and defines the one global main.mm did, gDebugFlags.
-   UNIVERSE is a Universe that was never initialised (zeroed by the runtime:
-   session 0, time 0, no entities), whose ivars the test sets where a case needs
-   them, and PLAYER is a plain entity that answers -viewpointPosition. The
-   expectations were written against the Objective-C API and run on the
-   unconverted class first: the defaults an entity starts with, the accessors
-   and what they derive (camera ranges, speed, matrices), movement and rotation,
-        -update: in the cockpit, in flight and as a subentity, owners (weak) and
-   parents, the position-sorted linked lists, the session check, the shader
-   bindings, the description, and which methods reach an Objective-C subclass's
-   overrides. Ivars the game reads directly (the lists, the motion flags) are
-   read through the small block of helpers below, the one place that knows where
-   they live: since the conversion, through the facade's _cxxEntity (amendment
-        oo-bj8). The tests after the Objective-C ones pinned the crossing, as
-   test_OODrawable.mm does: a C++ entity behind its facade, and the dump-state
-   lines the Objective-C body could not print. Since the facade's deletion (bead
-   oo-dpyk8) the cases call the C++ entity's members, which its messages
-   forwarded to; the facade's own contract (its class, nil) is retired under
-   oo-9n5p9. Run: bash tools/check-core-tests.sh
+   whole game but main (tests/unit/core/meson.build entry ['*']) and defines
+   the one global main.mm did, gDebugFlags. UNIVERSE is a Universe that was
+   never initialised (zeroed by the runtime: session 0, time 0, no entities),
+   whose ivars the test sets where a case needs them, and PLAYER is a plain
+   entity that answers -viewpointPosition. The tests cover the defaults an
+   entity starts with, the accessors and what they derive (camera ranges,
+   speed, matrices), movement and rotation, -update: in the cockpit, in flight
+   and as a subentity, owners (weak) and parents, the position-sorted linked
+   lists, the session check, the shader bindings, the description, and which
+   methods reach a subclass's overrides. Ivars the game reads directly (the
+   lists, the motion flags) are read through the small block of helpers below,
+   the one place that knows where they live. The tests after the first ones
+   pin the crossing, as test_OODrawable.mm does: a C++ entity and the
+   dump-state lines. Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdio>
@@ -36,7 +29,7 @@
 #include "Entity.h"
 #include "OODebugFlags.h"
 #include "OODescription.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 #include "oofnd/Log.hpp"
@@ -51,8 +44,7 @@ extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
 // PLAYER: a player whose viewpoint is set by the test (PlayerEntity's is its
-// position plus an offset; C++ since bead oo-9ht.177 deleted the Objective-C
-// player).
+// position plus an offset).
 class TestPlayer : public PlayerEntity {
  public:
   HPVector _viewpoint = kZeroHPVector;
@@ -60,26 +52,22 @@ class TestPlayer : public PlayerEntity {
   HPVector viewpointPosition() override { return _viewpoint; }
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player made as
-// PlayerEntity::sharedPlayer() makes the game's (under its object until bead
-// oo-dpyk8), retained (+1) as +alloc's object was.
+// A C++ player made as PlayerEntity::sharedPlayer() makes the game's,
+// retained (+1) as +alloc's object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     oo::RetainEntity(oo::MadeEntity(player));
   }
   return player.get();
 }
 
 // A subclass whose overrides count, so the test sees which of the root's
-// members reach it. An Objective-C subclass (an unconverted entity, as
-// ShipEntity was) until bead oo-j12i2 deleted the adapter that let one be a C++
-// entity: a C++ subclass overriding the virtual members its selectors became,
-// with the same counts. Global and keeping its name, which the expected log and
-// dump texts print (the C++ class's name, as they printed the Objective-C
-// class's).
+// members reach it: a C++ subclass overriding the virtual members, with the
+// same counts. Global and keeping its name, which the expected log and dump
+// texts print.
 class TestObjCEntity : public Entity {
  public:
   bool isPlanet() override { return true; }
@@ -170,13 +158,12 @@ bool Logged(const std::string& text) {
   return false;
 }
 
-// Since Universe's class shell (amendment oo-riqmz) its ivars are members of
-// its C++ part.
+// Universe's ivars are members of its C++ part.
 template <class T>
 T& UniverseIvar(const char* name) {
   Universe* part = sUniverse;
   // Each name answers only the ivar's own type (GCC -Wstrict-aliasing on the
-  // other cast; bead oo-1q4).
+  // other cast).
   if constexpr (std::is_same_v<T, decltype(part->_sessionID)>) {
     if (std::strcmp(name, "_sessionID") == 0) return part->_sessionID;
   }
@@ -206,7 +193,7 @@ TestPlayer* SetUpPlayer(HPVector position, HPVector viewpoint) {
     player =
         NewTestPlayer<TestPlayer>();  // never released, as the player is not
   gOOPlayer = player;  // before its position, which reads PLAYER (the debug
-                       // build asserts it is set; bead oo-vdw34)
+                       // build asserts it is set)
   player->setPosition(position);
   player->_viewpoint = viewpoint;
   return player;
@@ -233,7 +220,7 @@ bool QuaternionNear(Quaternion a, Quaternion b) {
 
 OO_TEST(defaults) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
     UniverseIvar<NSUInteger>("_sessionID") = 7;
@@ -286,7 +273,7 @@ OO_TEST(defaults) {
 
 OO_TEST(accessors) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(make_HPvector(1, 1, 1), make_HPvector(0, 0, 10));
 
@@ -353,7 +340,7 @@ OO_TEST(accessors) {
 
 OO_TEST(orientationAndMovement) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
 
@@ -413,7 +400,7 @@ OO_TEST(orientationAndMovement) {
 
 OO_TEST(update) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(make_HPvector(0, 0, 1), make_HPvector(0, 0, 2));
 
@@ -455,13 +442,13 @@ OO_TEST(update) {
 
 OO_TEST(ownersAndParents) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
 
     Entity* entity = MakeEntity(kZeroHPVector, 1.0f);
     {
-      oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+      oo::AutoreleaseScope scope;
       Entity* owner = oo::RetainEntity(oo::MadeEntity(oo::makeRef<Entity>()));
       entity->setOwner(owner);
       OO_CHECK(entity->owner() == owner);
@@ -498,7 +485,7 @@ OO_TEST(ownersAndParents) {
 
 OO_TEST(linkedLists) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
 
@@ -563,7 +550,7 @@ OO_TEST(linkedLists) {
 
 OO_TEST(sessionAndShaderBindings) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(make_HPvector(0, 1, 0), kZeroHPVector);
     UniverseIvar<OOTimeAbsolute>("universal_time") = 100;
@@ -602,7 +589,7 @@ OO_TEST(sessionAndShaderBindings) {
 
 OO_TEST(objCSubclassOverrides) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
 
@@ -648,7 +635,7 @@ OO_TEST(objCSubclassOverrides) {
 
 OO_TEST(rootDefaultsForSubclassResponsibilities) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
 
@@ -668,7 +655,7 @@ OO_TEST(rootDefaultsForSubclassResponsibilities) {
 #ifndef NDEBUG
 OO_TEST(liveEntityCount) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
 
@@ -676,26 +663,20 @@ OO_TEST(liveEntityCount) {
     const size_t memory = gTotalEntityMemory;
     Entity* entity = nil;
     {
-      oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+      oo::AutoreleaseScope scope;
       entity = oo::RetainEntity(oo::MadeEntity(
           oo::makeRef<TestObjCEntity>()));  // +1, as +alloc's was
     }
     OO_CHECK(gLiveEntityCount == count + 1);
     OO_CHECK(gTotalEntityMemory ==
-             memory + oo::EntityObjectSize(
-                          entity));  // its object's size (beads oo-j12i2,
-                                     // oo-dpyk8: the facade's)
+             memory + oo::EntityObjectSize(entity));  // its object's size
     oo::ReleaseEntity(entity);
     OO_CHECK(gLiveEntityCount == count && gTotalEntityMemory == memory);
   }
 }
 #endif
 
-// releasedBeforeInit (a failing Objective-C initialiser's [self release] before
-// the facade's -init ran) retired with the Objective-C entities' adapter (bead
-// oo-j12i2, under oo-9n5p9): a façade case.
-
-// --- The crossing (after the conversion)
+// --- The crossing
 // ---------------------------------------------------------
 
 OO_TEST(cxxEntityBehindItsFacade) {
@@ -703,18 +684,15 @@ OO_TEST(cxxEntityBehindItsFacade) {
   const uint32_t count = gLiveEntityCount;
 #endif
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
-    // The test's reference goes with the pool (bead oo-dpyk8: the object's
-    // lifetime is the entity's, so the live count below falls when the entity
-    // goes).
+    oo::AutoreleaseScope scope;
+    // The test's reference goes with the pool (the object's lifetime is the
+    // entity's, so the live count below falls when the entity goes).
     const oo::Ref<TestCxxEntity> entity = oo::makeRef<TestCxxEntity>();
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
 
     Entity* facade = oo::MadeEntity(entity);
     OO_CHECK(facade == entity.get());
-    // (The facade's class and its oo::ToCxx()/oo::ToObjC() identity: retired
-    // with the facade, bead oo-dpyk8, under oo-9n5p9.)
 #ifndef NDEBUG
     OO_CHECK(gLiveEntityCount == count + 1);
 #endif
@@ -745,21 +723,11 @@ OO_TEST(cxxEntityBehindItsFacade) {
     other->removeFromLinkedLists();
     sUniverse->n_entities = 0;
   }
-  // The facade was the entity's identity and owner: gone with the pool. (That
-  // oo::ToObjC() of the entity answered nil afterwards: retired with the
-  // facade, bead oo-dpyk8, under oo-9n5p9.)
+  // The facade was the entity's identity and owner: gone with the pool.
 #ifndef NDEBUG
   OO_CHECK(gLiveEntityCount == count);
 #endif
 }
-
-// objCEntityBehindACxxPointer and adapterOutlivesItsObject (an Objective-C
-// entity's C++ part, the adapter oo::ObjCEntity) retired with the adapter (bead
-// oo-j12i2, under oo-9n5p9): façade cases.
-
-// facadeNilStaysNil (nil's oo::ToCxx(), nullptr's oo::ToObjC(), a facade for no
-// entity, and messages to a nil entity) retired with the facade (bead oo-dpyk8,
-// under oo-9n5p9): a façade case.
 
 // PlayerEntity's -deferredInit sends -init again (through -[ShipEntity
 // cxx_initWithKey:...]) to an entity that is already initialised and has a
@@ -767,7 +735,7 @@ OO_TEST(cxxEntityBehindItsFacade) {
 // set stays.
 OO_TEST(initSentAgain) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
     TestObjCEntity* entity = static_cast<TestObjCEntity*>(
@@ -776,8 +744,7 @@ OO_TEST(initSentAgain) {
     entity->setStatus(STATUS_IN_FLIGHT);
     entity->setEnergy(42);
     entity->setUniversalID(9);
-    entity->init();  // the body -init ran again (bead oo-j12i2: the facade's
-                     // -init identity and recount, façade checks, retired)
+    entity->init();  // the body -init ran again
     OO_CHECK(HPvector_equal(entity->getPosition(), kZeroHPVector) &&
              entity->status() == STATUS_COCKPIT_DISPLAY);
     OO_CHECK(entity->getEnergy() == 42 && entity->getUniversalID() == 9);
@@ -789,7 +756,7 @@ OO_TEST(initSentAgain) {
 // raise and end the dump; the C++ body prints them.
 OO_TEST(dumpStateOwnerLines) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUpUniverse();
     SetUpPlayer(kZeroHPVector, kZeroHPVector);
     Entity* entity = MakeEntity(kZeroHPVector, 1.0f);

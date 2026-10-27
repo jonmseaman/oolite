@@ -29,11 +29,10 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-#include "OODebugMonitor.h"
-
 #include <map>
 
 #include "OOConcreteTexture.h"
+#include "OODebugMonitor.h"
 #include "OODrawable.h"
 #include "OOJSConsole.h"
 #include "OOJSEngineTimeManagement.h"
@@ -60,11 +59,9 @@ OODebugMonitor* sSingleton = nullptr;
 
 /*	The monitor's private "application will terminate" notification: posted
    by applicationWillTerminate() (GameControllercalls it on exit) and observed
-   by the monitor itself, on oo::NotificationCenter with no object (bead
-   oo-3rb.40). Was the same text as a Foundation notification name on the
-   Foundation center; on Mac OS X it was AppKit's notification, which
-   oo::NotificationCenter does not receive (that build is not maintained,
-        ADR-0009).
+   by the monitor itself, on oo::NotificationCenter with no object. On Mac OS
+   X it was AppKit's notification, which oo::NotificationCenter does not
+   receive (that build is not maintained).
 */
 static const char* const
     kOODebugMonitorApplicationWillTerminateNotificationName =
@@ -85,8 +82,8 @@ void OODebugMonitor::init() {
 
     ::OOJavaScriptEngine* jsEng = OOJavaScriptEngine::sharedEngine();
 #if OOJSENGINE_MONITOR_SUPPORT
-    jsEng->setMonitor(this);  // the C++ monitor interface (bead oo-9ht.74.1);
-                              // the engine borrows it
+    jsEng->setMonitor(this);  // the C++ monitor interface; the engine
+                              // borrows it
 #endif
 
     setUpDebugConsoleScript();
@@ -110,16 +107,14 @@ void OODebugMonitor::init() {
 }
 
 /*	-dealloc is not translated: it never ran. The singleton boilerplate made
-   -release do nothing, and the one monitor is never released (proposed
-   ADR-0056, amendment oo-kq7).
+   -release do nothing, and the one monitor is never released.
 */
 
 OODebugMonitor* OODebugMonitor::sharedDebugMonitor() {
   // NOTE: assumes single-threaded access. The debug monitor is not, on the
   // whole, thread safe.
   if (sSingleton == nullptr) {
-    // Recorded before init(), as +allocWithZone: recorded it before -init ran
-    // (amendment oo-z1s4 item 2).
+    // Recorded before init(), as +allocWithZone: recorded it before -init ran.
     sSingleton = oo::makeRef<OODebugMonitor>().leakRef();
     sSingleton->init();
   }
@@ -230,8 +225,8 @@ void OODebugMonitor::showJSConsole() {
 oo::PList OODebugMonitor::configurationValueForKey(const std::string& key) {
   // The override, else (when it is missing or null) the OXPs' value; an OONull
   // in either reads as null (an OONull override hides the OXPs' value). (An
-  // Object node held no Objective-C object, which none is since bead
-  // oo-4aq6a.5, so any Object node but the null's read as nil, as it did.)
+  // Object node held no Objective-C object, which none is now, so any Object
+  // node but the null's read as nil.)
   const auto isNil = [](const oo::PList* v) {
     return v == nullptr || v->isNull() ||
            (v->type() == oo::PList::Type::Object && !OOIsNullObjectNode(*v));
@@ -366,7 +361,7 @@ struct OODebugMonitor::EntityDumpState {
   std::set<oo::Ref<OOTexture>> entityTextures;
   std::set<oo::Ref<OOTexture>> visibleEntityTextures;
   std::map<Entity*, oo::EntityHold>
-      seenEntities;  // each held, as its object was retained (bead oo-w9pi2)
+      seenEntities;  // each held, as its object was retained
   unsigned seenCount = 0;
   size_t totalEntityObjSize = 0;
   size_t totalDrawableSize = 0;
@@ -381,15 +376,12 @@ void OODebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
 
   size_t entitySize =
       oo::EntityObjectSize(entity);  // its object's size, as the root's debug
-                                     // size method answered it (bead oo-dpyk8)
+                                     // size method answered it
   size_t drawableSize = 0;
-  // -isKindOfClass:[OOEntityWithDrawable class] and -drawable until bead
-  // oo-9ht.40 deleted that facade
   OOEntityWithDrawable* withDrawable =
       dynamic_cast<OOEntityWithDrawable*>(entity);
   if (withDrawable != nullptr) {
-    OODrawable* drawable =
-        withDrawable->getDrawable();  // C++ since bead oo-hahfg
+    OODrawable* drawable = withDrawable->getDrawable();
     drawableSize = (drawable != nullptr) ? drawable->totalSize() : 0;
   }
 
@@ -427,8 +419,7 @@ void OODebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
     }
 
     if (oo::EntityIsPlayer(entity) && PLAYER != nullptr) {
-      PlayerEntity* player = PLAYER;  // the entity that answers -isPlayer (C++
-                                      // since bead oo-9ht.177)
+      PlayerEntity* player = PLAYER;  // the entity that answers -isPlayer
       NSUInteger i, count = player->dialMaxMissiles();
       for (i = 0; i < count; i++) {
         Entity* subentity = player->missileForPylon(i);
@@ -440,16 +431,15 @@ void OODebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
     // FIXME: dump atmosphere texture.
   }
   if (entity->getIsWormhole()) {
-    const oo::PList shipsInTransit = WormholeEntityShipsInTransit(
-        entity);  // -shipsInTransit (C++ since bead oo-9ht.112)
+    const oo::PList shipsInTransit =
+        WormholeEntityShipsInTransit(entity);  // -shipsInTransit
     if (const oo::PList::Array* shipInfos =
             shipsInTransit.getIf<oo::PList::Array>()) {
       for (const oo::PList& shipInfo : *shipInfos) {
         const oo::PList* shipNode = shipInfo.find("ship");
         ::ShipEntity* ship = oo::ToShip(
-            (shipNode != nullptr)
-                ? oo::EntityIn(*shipNode)
-                : nullptr);  // the ship's entity node (bead oo-9ht.39.5.3)
+            (shipNode != nullptr) ? oo::EntityIn(*shipNode)
+                                  : nullptr);  // the ship's entity node
         dumpEntity(ship, state, false);
       }
     }
@@ -462,7 +452,7 @@ void OODebugMonitor::dumpMemoryStatistics() {
   oo::log::indent();
 
   //	Get texture retain counts before the entity dumper starts messing with
-  //them.
+  // them.
   const std::vector<oo::Ref<OOTexture>> allTextures = OOTexture::allTextures();
   std::map<OOTexture*, NSUInteger> textureRefCounts;
 
@@ -522,8 +512,7 @@ void OODebugMonitor::dumpMemoryStatistics() {
 
   for (const oo::Ref<OOTexture>& texRef : textures) {
     OOTexture* tex = texRef.get();
-    size_t objSize = sizeof *tex;  // the texture root's size (was its facade's
-                                   // instance size; bead oo-9ht.99)
+    size_t objSize = sizeof *tex;  // the texture root's size
     size_t dataSize = tex->dataSize();
 
 #if OOTEXTURE_RELOADABLE
@@ -679,7 +668,7 @@ void OODebugMonitor::setUpDebugConsoleScript() {
     // Live objects as Object nodes; a nil special-functions wrapper leaves
     // "special" out, as the nil-terminated list did. The console is the monitor
     // itself (oo::PListForeign), whose JS value is the console object
-    // (jsValueInContext()), as the facade's node's was (bead oo-9ht.74).
+    // (jsValueInContext()), as the facade's node's was.
     oo::PList::Dict jsProps;
     jsProps["console"] =
         oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(this)));
@@ -912,8 +901,8 @@ std::string OODebugMonitor::description() const {
 }
 
 /*	The canonical singleton boilerplate (the category OODebugMonitor
-   (Singleton)) was the facade's (bead oo-9ht.74 deleted it): the one monitor is
-   made by sharedDebugMonitor() and never released.
+   (Singleton)) was the facade's: the one monitor is made by
+   sharedDebugMonitor() and never released.
 */
 
 #endif /* OO_DEBUG_MONITOR_ENABLED */

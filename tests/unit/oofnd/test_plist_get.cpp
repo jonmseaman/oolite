@@ -1,6 +1,6 @@
 /*	test_plist_get.cpp
-        oo::PList::get<T> / at<T> (oofnd/PListGet.hpp, bead oo-u77, proposed
-   ADR-0031) against OOCollectionExtractors as the game runs it today.
+        oo::PList::get<T> / at<T> (oofnd/PListGet.hpp) against
+   OOCollectionExtractors as the game runs it today.
 
         kCaptured below was printed by a throwaway harness that compiled
    OOCollectionExtractors.mm (OOCOLLECTIONEXTRACTORS_SIMPLE, -O2 as the game

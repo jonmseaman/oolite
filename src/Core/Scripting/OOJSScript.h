@@ -5,14 +5,10 @@ OOJSScript.h
 JavaScript support for Oolite
 Copyright (C) 2007-2013 David Taylor and Jens Ayton.
 
-C++20 since bead oo-u61e.4 (proposed ADR-0056, the OOColor house style), a
-subclass of OOScript (bead oo-604l). Its Objective-C facade was deleted by bead
-oo-9ht.137, and the OOScript root's facade, which was then its object, by bead
-oo-9ht.133 (ADR-0056 amendment oo-9ht.133): the script's identity is the C++
-object. Holders keep it as oo::Ref (the timers and definitions as oo::WeakRef),
-the stack of running scripts holds it weakly, and the Script JS object's private
-slot holds a weak reference to it (OOJSPrivateObject glue, amendment oo-6symp),
-as it held the facade's weak reference proxy.
+A subclass of OOScript: the script's identity is the C++ object. Holders keep it
+as oo::Ref (the timers and definitions as oo::WeakRef), the stack of running
+scripts holds it weakly, and the Script JS object's private slot holds a weak
+reference to it (OOJSPrivateObject glue).
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -31,8 +27,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOJSSCRIPT_H
-#define OOJSSCRIPT_H
+#pragma once
 
 #include "OOJavaScriptEngine.h"
 #include "OOScript.h"
@@ -50,8 +45,7 @@ class OOJSScript : public OOScript {
   static oo::Ref<OOJSScript> scriptWithPath(
       const std::optional<std::string>& path, const oo::PList& properties);
 
-  // The old -dealloc's body (the facade's, which ran it as willDealloc() until
-  // bead oo-9ht.133).
+  // The old -dealloc's body.
   ~OOJSScript() override;
 
   // The old -initWithPath:properties: after [super init], run by
@@ -133,5 +127,3 @@ class OOJSScript : public OOScript {
 
 OOJS_EXTERN_C void InitOOJSScript(ooscript::Context context,
                                   ooscript::Object global);
-
-#endif  // OOJSSCRIPT_H

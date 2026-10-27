@@ -2,22 +2,19 @@
 
 OOEntityCalledByName.mm
 
-An entity's method called by name, on its C++ part (bead oo-9ht.39.7.1, ADR-0056
-amendment oo-9ht.39.7.1; declared in OOCallByName.h). The facade's by-name
-categories are the generated table OOEntityCalledByNameTable.h
-(tools/gen-entity-by-name-table.py): a tabled name is answered for the C++ part
-it applies to, exactly as the root facade's -respondsToSelector: and the
-category method answered it, and called as OOCallByName called the method (the
-same signature rules, read from the declared types' encodings instead of the
-method's type encoding: @encode()'s, measured literals since bead oo-dbz.3).
-Since bead oo-9ht.39.9 any other name, and a tabled name that does not apply,
-are answered without the entity's Objective-C object, as OOCallByName answered
-them on it (OOEntityObjectNamesTable.h); an Objective-C stand-in's went to its
-object until bead oo-j12i2. callObjC() reads a typed result through
-oo::CallEntityByNameTyped (bead oo-9ht.39.7.2). Since bead oo-9ht.39.7.3 the
-categories are deleted (the table is the source): a tabled name that applies but
-whose signature the call cannot use is logged here, and oo::ScheduleEntityCall
-holds the deferred calls.
+An entity's method called by name, on its C++ part (declared in OOCallByName.h).
+The facade's by-name categories are the generated table
+OOEntityCalledByNameTable.h (tools/gen-entity-by-name-table.py): a tabled name
+is answered for the C++ part it applies to, exactly as the root facade's
+-respondsToSelector: and the category method answered it, and called as
+OOCallByName called the method (the same signature rules, read from the declared
+types' encodings instead of the method's type encoding: @encode()'s, measured
+literals). Any other name, and a tabled name that does not apply, are answered
+without the entity's Objective-C object, as OOCallByName answered them on it
+(OOEntityObjectNamesTable.h). callObjC() reads a typed result through
+oo::CallEntityByNameTyped. The table is the source: a tabled name that applies
+but whose signature the call cannot use is logged here, and
+oo::ScheduleEntityCall holds the deferred calls.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -39,8 +36,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOEntityCalledByName.h"
-
 #include <cstring>
 #include <string_view>
 #include <type_traits>
@@ -52,10 +47,11 @@ MA 02110-1301, USA.
 #include "GameController.h"  // OOScheduleDeferredCall (oo::ScheduleEntityCall, the player's selectors called by name)
 #include "OOCallByName.h"
 #include "OODescription.h"
+#include "OOEntityCalledByName.h"
 #include "OOEntityWithDrawable.h"
-#include "OOPlanetEntity.h"  // the facade rows (bead oo-9ht.39.8.25)
+#include "OOPlanetEntity.h"  // the facade rows
 #include "OOQuiriumCascadeEntity.h"
-#include "OOTypeEncodings.h"  // the rows' measured encodings (bead oo-dbz.3)
+#include "OOTypeEncodings.h"  // the rows' measured encodings
 #include "OOVisualEffectEntity.h"
 #include "OOWaypointEntity.h"
 #include "PlayerEntity.h"
@@ -151,9 +147,9 @@ void OOEntityByNameTyped(Entity* entity, OOEntityByNameValue& value) {
   else if constexpr (std::is_same_v<Result, Quaternion>)
     value.quaternion = Function(entity);
   else if constexpr (std::is_same_v<Result, OOColor*>)
-    value.color = Function(entity);  // borrowed (bead oo-9ht.39.8.25)
+    value.color = Function(entity);  // borrowed
   else if constexpr (std::is_convertible_v<Result, Entity*>)
-    value.entity = Function(entity);  // the C++ entity (bead oo-9ht.39.24)
+    value.entity = Function(entity);  // the C++ entity
   else
     (void)Function(entity);  // a result callObjC() cannot read (it does not
                              // call such a method)
@@ -164,10 +160,9 @@ void OOEntityByNameTyped(Entity* entity, OOEntityByNameValue& value) {
 #include "OOEntityCalledByNameTable.h"
 
 /*	The root facade's own selectors that callObjC() lists and the by-name
-   table does not (bead oo-9ht.39.8.25, ADR-0056 amendment oo-9ht.39.8.25), so
-   callObjC() asks and calls an entity's C++ part for every name of its table.
-   Each function is the facade method's body (Entity+ObjCBridge.mm, and the
-   cascade's category, deleted by bead oo-9ht.186), verbatim, with the entity
+   table does not, so callObjC() asks and calls an entity's C++ part for every
+   name of its table. Each function is the facade method's body
+   (Entity+ObjCBridge.mm, and the cascade's category), verbatim, with the entity
    for the facade's own C++ entity, after a guard for no entity (zero, as a
    message to nil answered; the calls never pass one); a name whose result
    callObjC() cannot read (a string, a vector of objects, a matrix, a
@@ -176,8 +171,7 @@ void OOEntityByNameTyped(Entity* entity, OOEntityByNameValue& value) {
    entity but for the planet's shader selectors (a planet's part) and the beacon
    protocol's (a ship's, an effect's or a waypoint's part). The entity results
         (nextBeacon, prevBeacon, parentEntity, rootShipEntity) are the C++
-   entity since bead oo-9ht.39.24: callObjC() makes its Object node, the same as
-   the object's.
+   entity: callObjC() makes its Object node, the same as the object's.
 */
 namespace {
 
@@ -403,8 +397,7 @@ void Facade_orientationChanged(Entity* entity) {
   if (entity == nullptr) return;
   entity->orientationChanged();
 }
-Entity* Facade_owner(Entity* entity)  // the owner's C++ entity (its object's
-                                      // until bead oo-dpyk8)
+Entity* Facade_owner(Entity* entity)  // the owner's C++ entity
 {
   if (entity == nullptr) return {};
   return entity->owner();
@@ -454,8 +447,7 @@ OOEntityStatus Facade_status(Entity* entity) {
   return entity->status();
 }
 Entity* Facade_superShaderBindingTarget(
-    Entity*
-        entity)  // the parent's C++ entity (its object's until bead oo-dpyk8)
+    Entity* entity)  // the parent's C++ entity
 {
   if (entity == nullptr) return {};
   return entity->superShaderBindingTarget();
@@ -725,8 +717,7 @@ bool oo::CallEntityByNameTyped(Entity* entity, const std::string& name,
     row->typed(entity, value);
     return true;
   }
-  // A facade row (bead oo-9ht.39.8.25): the facade method's body, for an entity
-  // that answers it.
+  // A facade row: the facade method's body, for an entity that answers it.
   const OOEntityFacadeRow* facade = EntityFacadeRowNamed(name);
   if (facade == nullptr || facade->typed == nullptr ||
       (facade->answers != nullptr && !facade->answers(entity)))
@@ -740,7 +731,7 @@ namespace {
 enum class Kind : std::uint8_t {
   Void,    // a void result, or a scalar result the call ignores
   PList,   // an oo::PList result
-  Object,  // an object result, ignored (ADR-0055 Amendment 2)
+  Object,  // an object result, ignored
   Unsupported
 };
 
@@ -800,8 +791,7 @@ std::optional<oo::PList> CallRow(const OOEntityByNameRow& row, Entity* entity,
 }
 
 /*	The class OOCallByName's lines named: the entity's object's, the root's
-   facade, of class Entity (not asked since bead oo-9ht.39.9, ADR-0056 amendment
-   oo-9ht.39.9; an Objective-C stand-in's own class until bead oo-j12i2).
+   facade, of class Entity (not asked).
 */
 const char* ObjectClassName(Entity*) { return "Entity"; }
 
@@ -809,9 +799,7 @@ const char* ObjectClassName(Entity*) { return "Entity"; }
    cannot use (OOCallByName.mm LogBadSignature), for a tabled name that applies:
    the class of the entity's object, as the category method was its; the type
    encoding is the row's, @encode() of the result, of self and _cmd and of the
-   argument, without the frame offsets the method's encoding had (bead
-        oo-9ht.39.7.3, ADR-0056 amendment oo-9ht.39.7.3: a log-text-only
-   change).
+   argument, without the frame offsets the method's encoding had.
 */
 void LogBadSignature(Entity* entity, const OOEntityByNameRow& row) {
   std::string encoding = std::string(row.result) + kOOTypeEncoding<OOObjCId> +
@@ -849,13 +837,12 @@ const OOEntityObjectName* AnsweredObjectName(Entity* entity,
 }
 
 /*	A C++ entity's name outside the by-name table, as OOCallByName answered
-   it on the entity's object (bead oo-9ht.39.9, ADR-0056 amendment oo-9ht.39.9),
-   without the object: a facade row's method with no argument that the call
-   called is the row's body (its result ignored, as the call ignored it); any
-   other name the object answered is logged as the call logged it (the method's
-        type encoding), a root-class or lifetime method included, which is no
-   longer called; any other name does not respond. The texts are OOCallByName's
-   (OOCallByName.mm LogUnknown, LogBadSignature).
+   it on the entity's object, without the object: a facade row's method with no
+   argument that the call called is the row's body (its result ignored, as the
+   call ignored it); any other name the object answered is logged as the call
+   logged it (the method's type encoding), a root-class or lifetime method
+   included, which is no longer called; any other name does not respond. The
+   texts are OOCallByName's (OOCallByName.mm LogUnknown, LogBadSignature).
 */
 oo::PList CallObjectName(Entity* entity, const std::string& name,
                          bool hasArgument) {
@@ -886,12 +873,11 @@ bool oo::EntityRespondsToName(Entity* entity, const std::string& name) {
   if (entity == nullptr) return false;
   if (const OOEntityByNameRow* row = EntityByNameRowNamed(name))
     return EntityByNameRowApplies(*row, entity);
-  // A facade row (bead oo-9ht.39.8.25): the root facade's
+  // A facade row: the root facade's
   // -respondsToSelector:'s answer for the facade's method.
   if (const OOEntityFacadeRow* facade = EntityFacadeRowNamed(name))
     return facade->answers == nullptr || facade->answers(entity);
-  // Any other name the entity's object answered (bead oo-9ht.39.9): the object
-  // is not asked.
+  // Any other name the entity's object answered: the object is not asked.
   return AnsweredObjectName(entity, name) != nullptr;
 }
 
@@ -924,8 +910,7 @@ void oo::ScheduleEntityCall(Entity* entity, void (*call)(Entity* entity),
                             double delay) {
   if (entity == nullptr || call == nullptr) return;
   // The call holds the entity, so it keeps the entity alive until it has run,
-  // as the Objective-C holder OOEntityDeferredCall did (bead oo-9ht.39.7.3; a
-  // C++ call since bead oo-pvhrh).
+  // as the Objective-C holder OOEntityDeferredCall did.
   oo::Ref<Entity> held(entity);
   OOScheduleDeferredCall([held, call]() { call(held.get()); }, delay);
 }

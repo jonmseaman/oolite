@@ -1,6 +1,6 @@
 /*	test_OOFastArithmetic.mm
         Unit tests for OORoundUpToPowerOf2_32/_64/_NS
-   (src/Core/OOFastArithmetic.h): bead oo-lglaq.
+   (src/Core/OOFastArithmetic.h).
 
         The expression the functions shared with upstream had no defined value
    for 1 (__builtin_clz(0)) nor for 0 and values above the high bit (a shift by

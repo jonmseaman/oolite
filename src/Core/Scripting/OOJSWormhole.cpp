@@ -21,37 +21,29 @@ MA 02110-1301, USA.
 
  */
 
-#include "OOJSWormhole.h"
-
 #include <cstdint>
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJSVector.h"
+#include "OOJSWormhole.h"
 #include "OOJavaScriptEngine.h"
 #include "WormholeEntity.h"
 #include "ooscript/JSEngine.hpp"
 
-// Retargeted onto the ooscript facade (JSEngine.hpp), the way OOJSVector.mm and
-// OOJSWaypoint.mm do it (bead oo-sdz exemplar): stub hooks become nullptr,
-// InitClass becomes ooscript::initClass, numeric conversion becomes
-// ooscript::newNumberValue, and `this` is renamed to `thisObj` (reserved word
-// in Objective-C++, ADR-0001).
+// Retargeted onto the ooscript facade (JSEngine.hpp), the way OOJSVector.cpp
+// and OOJSWaypoint.cpp do it: stub hooks become nullptr, InitClass becomes
+// ooscript::initClass, numeric conversion becomes ooscript::newNumberValue, and
+// `this` is spelled `thisObj`.
 
 /*
-        C++20 since bead oo-ykoy, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on WormholeEntity became three free functions, and its methods moved
-   to a bridge file of the binding (amendment oo-ykoy), then onto the
-   WormholeEntity facade in WormholeEntity+ObjCBridge.mm (bead oo-9ht.43,
-        amendment oo-6ia4 item 3). Messages to classes that are still
-   Objective-C (WormholeEntity, Entity) stay as they are, which is why the file
-   is still .mm until Phase 4.
-*/
+ * OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and
+ * scope guards (OOJSEngineNativeWrappers.h). The category on WormholeEntity is
+ * three free functions, whose methods are on the WormholeEntity facade in
+ * WormholeEntity+ObjCBridge.mm. Messages to classes that are still Objective-C
+ * (WormholeEntity, Entity) go through their Objective-C interfaces.
+ */
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -178,7 +170,7 @@ static bool JSWormholeGetWormholeEntity(ooscript::Context context,
   OOJS_PROFILE_ENTER
 
   bool result;
-  Entity* entity = nullptr;  // the slot holds the C++ entity (bead oo-9ht.39.3)
+  Entity* entity = nullptr;  // the slot holds the C++ entity
 
   if (outEntity == NULL) return false;
   *outEntity = nullptr;
@@ -186,8 +178,7 @@ static bool JSWormholeGetWormholeEntity(ooscript::Context context,
   result = OOJSEntityGetEntity(context, wormholeObj, &entity);
   if (!result) return false;
 
-  // The wormhole is C++ behind the root's facade since bead oo-9ht.112
-  // (-isKindOfClass: before).
+  // The wormhole is C++ behind the root's facade.
   *outEntity = dynamic_cast<WormholeEntity*>(entity);
   return *outEntity != nullptr;
 
@@ -196,9 +187,7 @@ static bool JSWormholeGetWormholeEntity(ooscript::Context context,
 }  // namespace
 
 // The bodies of WormholeEntity (OOJavaScriptExtensions), whose methods are on
-// the WormholeEntity facade, in WormholeEntity+ObjCBridge.mm (bead oo-9ht.43),
-// until that facade goes (oo-9ht.112; proposed ADR-0056 amendments oo-ppc,
-// oo-ykoy and oo-6ia4).
+// the WormholeEntity facade, in WormholeEntity+ObjCBridge.mm.
 void OOJSWormholeGetJSClass(ooscript::ClassDef** outClass,
                             ooscript::Object* outPrototype) {
   *outClass = &sWormholeClass;
@@ -254,8 +243,7 @@ static bool WormholeGetProperty(Context cx, Object obj, PropertyId propID,
   }
 
   *value_raw = ooscript::nullValue();  // what OOJSValueFromNativeObject() gave
-                                       // for the nil result (unreached: every
-                                       // case returns; bead oo-4aq6a.6)
+                                       // case returns)
   return true;
 
   OOJS_NATIVE_EXIT

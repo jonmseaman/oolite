@@ -1,17 +1,13 @@
 /*	test_OOEncodingConverter.mm
-        Unit tests for OOEncodingConverter (src/Core/OOEncodingConverter.h):
-   bead oo-demz, a Phase 3 conversion in the house style of the OOColor exemplar
-   (proposed ADR-0056).
+        Unit tests for OOEncodingConverter (src/Core/OOEncodingConverter.h).
 
-        It pins what the converter computed before the conversion: the encoding
+        It pins what the converter computes: the encoding
    read from a font property list (an unknown or missing name is no encoding),
    the substitutions (in key order; a value that is not a string substitutes "";
    a substitutions entry that is not a dictionary is ignored), conversion with
    and without an encoding, a repeated conversion (the cache), the description
-   and StringFromEncoding(). The expectations were written against the
-   Objective-C API and run on the unconverted class first (commit 1e601c6d1);
-   its one caller was adapted in the bead, so there is no facade and the calls
-   here are the C++ class's. Run: bash tools/check-core-tests.sh
+   and StringFromEncoding(). The calls here are the C++ class's. Run:
+   bash tools/check-core-tests.sh
 */
 
 #include "OOEncodingConverter.h"

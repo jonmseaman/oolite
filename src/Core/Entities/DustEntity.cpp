@@ -23,7 +23,6 @@ MA 02110-1301, USA.
 */
 
 #include "DustEntity.h"
-
 #include "MyOpenGLView.h"
 #include "OODebugFlags.h"
 #include "OOGraphicsResetManager.h"
@@ -52,10 +51,8 @@ enum { kShaderModeOff, kShaderModeOn, kShaderModeUnknown };
 #endif
 
 #if OO_SHADERS
-/*	The dust shader's two uniforms read the dust's members (bead oo-t0e2m,
-   which deleted the file-local Objective-C object they were bound to by
-   selector since bead oo-9ht.77). The uniform holds the dust weakly, as it held
-   that object: once the dust has gone it sets nothing.
+/*	The dust shader's two uniforms read the dust's members. The uniform
+   holds the dust weakly: once the dust has gone it sets nothing.
 */
 namespace {
 
@@ -81,7 +78,7 @@ void DustEntity::init() {
 
   // this should be unnecessary
   //	ranrot_srand((uint32_t)oo::date::timeIntervalSince1970());	// seed
-  //randomiser by time
+  // randomiser by time
 
   // self = [super init]: the constructor ran Entity's -init body.
 

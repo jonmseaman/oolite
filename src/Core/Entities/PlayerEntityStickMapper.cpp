@@ -22,12 +22,11 @@ MA 02110-1301, USA.
 
 */
 
-#include "PlayerEntityStickMapper.h"
-
 #include "HeadUpDisplay.h"
 #include "OOJoystickManager.h"
 #include "OOTexture.h"
 #include "PlayerEntityControls.h"
+#include "PlayerEntityStickMapper.h"
 #include "PlayerEntityStickProfile.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/PListGet.hpp"
@@ -289,8 +288,7 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
 // Callback function, called by JoystickHandler when the callback
 // is set. The dictionary contains the thing that was pressed/moved.
 void PlayerEntity::updateFunction(
-    const oo::PList&
-        hwDict)  // called by name (joystick callback, ADR-0055 item 5)
+    const oo::PList& hwDict)  // called by name (joystick callback)
 {
   OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
   waitingForStickCallback = NO;
@@ -796,8 +794,7 @@ std::vector<oo::PList> PlayerEntity::stickFunctionList() {
 #if OO_FOV_INFLIGHT_CONTROL_ENABLED
   funcList.push_back(makeStickGuiDict(
       OO_DESC("stickmapper-increase-field-of-view"), HW_AXIS | HW_BUTTON,
-      AXIS_FIELD_OF_VIEW,
-      BUTTON_INC_FIELD_OF_VIEW));  // the member (bead oo-w9pi2)
+      AXIS_FIELD_OF_VIEW, BUTTON_INC_FIELD_OF_VIEW));
   funcList.push_back(makeStickGuiDict(
       OO_DESC("stickmapper-decrease-field-of-view"), HW_AXIS | HW_BUTTON,
       AXIS_FIELD_OF_VIEW, BUTTON_DEC_FIELD_OF_VIEW));

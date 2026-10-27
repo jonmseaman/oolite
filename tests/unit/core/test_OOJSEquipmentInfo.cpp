@@ -1,12 +1,10 @@
 /*	test_OOJSEquipmentInfo.mm
         Unit tests for the EquipmentInfo JS binding
    (src/Core/Scripting/OOJSEquipmentInfo.h/.mm) and the JS glue of
-   OOEquipmentType: bead oo-supk, converted the way bead oo-ppc converted
-   OOJSVector (proposed ADR-0056 amendments oo-ppc and oo-6ia4); the type's
-   façade was deleted by bead oo-9ht.28, so a type reaches the engine as a PList
-   Object node holding the C++ type.
+   OOEquipmentType: a type reaches the engine as a PList Object node holding
+   the C++ type.
 
-        As test_OOJSShipGroup.mm does (amendment oo-6ia4, item 7), it runs the
+        As test_OOJSShipGroup.mm does, it runs the
    JS class in a real context on the game's own façade backend
    (ooscript/JSEngine_quickjs.cpp), links the game's own objects for the
    binding, its bridge, the engine's exception translator
@@ -118,8 +116,7 @@ oo::PList EquipmentData() {
 }  // namespace
 
 // The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade this stood in for), with the
-// header's names and signatures.
+// with the header's names and signatures.
 class Universe {
  public:
   oo::PList getEquipmentData();
@@ -133,8 +130,7 @@ Universe* gSharedUniverse = nil;
 
 #include "OOCacheManager.h"
 
-// The cache manager is C++ since bead oo-9ht.31 deleted its facade: a C++
-// stand-in with the Objective-C stand-in's answers.
+// The cache manager: a C++ stand-in with the Objective-C stand-in's answers.
 OOCacheManager* OOCacheManager::sharedCache() {
   static OOCacheManager* shared = new OOCacheManager;
   return shared;
@@ -149,8 +145,7 @@ void OOCacheManager::setPList(const oo::PList& value, const std::string& key,
 
 #include "OOScript.h"
 
-// OOScript's members that OOEquipmentType.mm calls (the Objective-C OOScript
-// stand-in until bead oo-9ht.133 deleted the facade), and the rest of its
+// OOScript's members that OOEquipmentType.mm calls, and the rest of its
 // virtual members, for the vtable.
 std::optional<std::string> OOScript::descriptionComponents() {
   return std::nullopt;
@@ -185,10 +180,9 @@ oo::Ref<OOScript> OOScript::jsScriptFromFileNamed(const std::string& fileName,
    _throwCxx is set throws a C++ exception, so the test sees what an exception
         under a native becomes.
 */
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for: the members the code under test calls, declared as the game headers
+// PLAYER: the members the code under test calls, declared as the game headers
 // declare them (the test imports none that defines the classes), with the
-// stand-in's answers. The ship is C++ since bead oo-9ht.144.
+// stand-in's answers.
 class Entity {
  public:
 };
@@ -422,9 +416,9 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
   sConverters[theClass]++;
 }
 
-// The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked
-// since bead oo-6symp.3, whose slot holds the C++ equipment type): no subclass
-// of EquipmentInfo is registered.
+// The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked;
+// its slot holds the C++ equipment type): no subclass of EquipmentInfo is
+// registered.
 BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;

@@ -1,5 +1,5 @@
 /*	test_date.cpp
-        Unit tests for oofnd/Date.hpp (bead oo-3rb.11): oo::date, the
+        Unit tests for oofnd/Date.hpp: oo::date, the
    replacement for NSDate. Pins the reference-date epoch (2001-01-01 00:00:00
    UTC) so timeIntervalSinceReferenceDate() returns the number NSDate did, the
    round trips, NSDate -description's format, and the monotonic clock.

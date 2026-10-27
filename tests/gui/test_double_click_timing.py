@@ -1,7 +1,6 @@
 """Offline guard: the SDL double-click is timed by its events, not by the poll that read them.
 
-Bugs oo-3rb.333 (G5) and oo-3rb.336 (G8), and the same miss seen in G1: every row this tier
-activates is activated by a double-click (``GameWindow.confirm_row``), and the game decides
+Every row this tier activates is activated by a double-click (``GameWindow.confirm_row``), and the game decides
 "double" in ``-pollControls`` (MyOpenGLView+Input) by comparing the time of this left-button
 release with the last one against MOUSE_DOUBLE_CLICK_INTERVAL (0.40 s).
 

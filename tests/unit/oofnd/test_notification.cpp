@@ -1,5 +1,5 @@
 /*	test_notification.cpp
-        Unit tests for oofnd/Notification.hpp (bead oo-3rb.9):
+        Unit tests for oofnd/Notification.hpp:
    oo::NotificationCenter, the replacement for NSNotificationCenter, checked
    against the semantics the header documents: name and object filters (empty
    name / nullptr object as wildcards), registration-order synchronous delivery,

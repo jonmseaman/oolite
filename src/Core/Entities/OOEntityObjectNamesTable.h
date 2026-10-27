@@ -3,26 +3,23 @@
 OOEntityObjectNamesTable.h
 
 The names a C++ entity's Objective-C object (the root's facade, class Entity)
-answered outside the by-name table OOEntityCalledByNameTable.h (bead
-oo-9ht.39.9, ADR-0056 amendment oo-9ht.39.9): measured on main 0836d09a6 by
-asking the facade of a ship, a station, a dock, the player, a proxy, a visual
-effect and a waypoint each name of its class and its root classes, with
-OOCallByName's rules (a planet's five shader names from their declarations).
-This file is the source (the facade it was proved equal to went with bead
-oo-dpyk8).
+answered outside the by-name table OOEntityCalledByNameTable.h: measured on main
+0836d09a6 by asking the facade of a ship, a station, a dock, the player, a
+proxy, a visual effect and a waypoint each name of its class and its root
+classes, with OOCallByName's rules (a planet's five shader names from their
+declarations). This file is the source.
 
 One row per name: when the object answered it (null: every entity; the planet's
 and the beacon's names for the parts the facade's -respondsToSelector: answered
 them for), the kind (OOEntityCalledByName.h) and the method's type encoding, as
 OOCallByName logged it. The JS glue the facade no longer answers
-(isVisibleToScripts, deleteJSSelf; bead oo-9ht.39.8.9) has no row: a call to it
+(isVisibleToScripts, deleteJSSelf) has no row: a call to it
 does not respond. Included by OOEntityCalledByName.mm only, after
 AnswersPlanet() and AnswersBeacon().
 
 */
 
-#ifndef OOENTITYOBJECTNAMESTABLE_H
-#define OOENTITYOBJECTNAMESTABLE_H
+#pragma once
 
 const OOEntityObjectName kOOEntityObjectNames[] = {
     {".cxx_construct", nullptr, kOOEntityObjectLifetime, "@16@0:8"},
@@ -727,5 +724,3 @@ const OOEntityObjectName kOOEntityObjectNames[] = {
     {"zeroDistance", nullptr, kOOEntityObjectCalled, "d16@0:8"},
     {"zone", nullptr, kOOEntityObjectSignature, "^{OOZone=}16@0:8"},
 };
-
-#endif  // OOENTITYOBJECTNAMESTABLE_H

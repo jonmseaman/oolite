@@ -1,7 +1,5 @@
 /*	test_HeadUpDisplay.mm
-        Unit tests for HeadUpDisplay (src/Core/HeadUpDisplay.h): bead oo-engam
-   (Phase 3, slice 1 of docs/phases/3-slices/HeadUpDisplay.md, the class shell;
-   proposed ADR-0056 and its amendments oo-pni4 and oo-9ht.139).
+        Unit tests for HeadUpDisplay (src/Core/HeadUpDisplay.h).
 
         The HUD is made from a hud.plist dictionary: its MFDs, its reticle
    colours (from the drawTargetReticle: dial, green/red/cyan without one),
@@ -11,19 +9,17 @@
         accessors and setters (clamping, the hidden selectors, the deferred HUD
    name, nil colours refused), the reticle colours' identity, and
    +nonlinearScannerScale:Zoom:Scale:. Drawing is GL and is pinned by the
-   goldens, not here (amendment oo-z1s4).
+   goldens, not here.
 
         The HUD's object references the universe, the player and the GUIs, so
    the test links the whole game but main (tests/unit/core/meson.build entry
-   ['*'], amendment oo-44gg) on the hidden GL context of oo_gl_test_context.hpp.
+   ['*']) on the hidden GL context of oo_gl_test_context.hpp.
    UNIVERSE and PLAYER are nil. The resource manager runs in strict mode on a
    scratch Resources folder the test writes (the current directory and HOMEPATH
         point at it), holding its own whitelist and one crosshair file, so no
    game resource and no add-on is read; the font is missing, so the text engine
-   has no texture. The expectations were written against the Objective-C class
-   and run on it first; the last test pins the C++ API (the facade's contract
-   went with the facade, bead oo-mwd58). Run: bash tools/check-core-tests.sh
-   test_HeadUpDisplay
+   has no texture. The last test pins the C++ API. Run:
+   bash tools/check-core-tests.sh test_HeadUpDisplay
 */
 
 #include <process.h>
@@ -79,8 +75,7 @@ void SetUp() {
       SCENARIO_OXP_DEFINITION_NONE));  // strict: the built-in Resources alone
 }
 
-// [[HeadUpDisplay alloc] cxx_initWithDictionary:inFile:] (the C++ HUD since
-// bead oo-mwd58).
+// Makes the C++ HUD from a dictionary and file name.
 oo::Ref<HeadUpDisplay> NewHUD(
     const oo::PList& info,
     const std::optional<std::string>& name = std::string("test-hud.plist")) {
@@ -340,9 +335,8 @@ OO_TEST(nonlinearScannerScale) {
 OO_TEST(setCrosshairDefinition) {
   SetUp();
   {
-    // Slice 2 (bead oo-8fiz9): the scripts' crosshair setter. (The frame's
-    // dials by name were the facade's selectors until bead oo-mwd58; they are
-    // the dial table's now.)
+    // The scripts' crosshair setter. (The frame's dials by name are the dial
+    // table's.)
     oo::Ref<HeadUpDisplay> hud = NewHUD(oo::PList(oo::PList::Dict{}));
     OO_CHECK(hud->setCrosshairDefinition("testcross.plist"));
     OO_CHECK(hud->getCrosshairDefinition() ==
@@ -356,17 +350,14 @@ OO_TEST(setCrosshairDefinition) {
 OO_TEST(beaconCodeIcon) {
   SetUp();
   {
-    // Slice 4 (bead oo-2p1ug): the entities hold the code icon by the C++
-    // OOHUDBeaconIcon interface (the protocol and the icon's facade until bead
-    // oo-7ae4p; the facade's identity check went with it, standing approval
-    // oo-9n5p9).
+    // The entities hold the code icon by the C++ OOHUDBeaconIcon interface.
     oo::Ref<OOHUDBeaconCodeIcon> icon = oo::makeRef<OOHUDBeaconCodeIcon>("A");
     OO_CHECK(icon != nullptr);
     OO_CHECK(dynamic_cast<OOHUDBeaconIcon*>(icon.get()) != nullptr);
   }
 }
 
-// --- The C++ API (bead oo-engam)
+// --- The C++ API
 // ------------------------------------------------------------
 
 OO_TEST(cxxAPI) {
@@ -410,7 +401,7 @@ OO_TEST(cxxAPI) {
 
     // Neither the player nor the universe: not in flight. Only a release-style
     // build can ask with no player: the debug build asserts that PLAYER is set
-    // (OOGetPlayer(); bead oo-vdw34).
+    // (OOGetPlayer()).
 #if !OO_DEBUG
     OO_CHECK(!hud->checkPlayerInFlight());
     OO_CHECK(!hud->checkPlayerInSystemFlight());

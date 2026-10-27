@@ -21,14 +21,13 @@ MA 02110-1301, USA.
 
  */
 
-#include "OOJSVisualEffect.h"
-
 #include <cstdint>
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJSVector.h"
+#include "OOJSVisualEffect.h"
 #include "OOJavaScriptEngine.h"
 #include "OOMesh.h"
 #include "OOObjCPList.h"
@@ -37,28 +36,21 @@ MA 02110-1301, USA.
 #include "ResourceManager.h"
 #include "ooscript/JSEngine.hpp"
 
-// Retargeted onto the ooscript facade (JSEngine.hpp), the way OOJSVector.mm and
-// OOJSFlasher.mm do it (bead oo-sdz exemplar): stub hooks become nullptr,
-// InitClass becomes ooscript::initClass, numeric/boolean conversion becomes
-// ooscript::newNumberValue/valueToNumber/valueToInt32, and `this` is renamed to
-// `thisObj` (reserved word in Objective-C++, ADR-0001).
+// Retargeted onto the ooscript facade (JSEngine.hpp), the way OOJSVector.cpp
+// and OOJSFlasher.cpp do it: stub hooks become nullptr, InitClass becomes
+// ooscript::initClass, numeric/boolean conversion becomes
+// ooscript::newNumberValue/valueToNumber/valueToInt32, and `this` is spelled
+// `thisObj`.
 /*
-        C++20 since bead oo-s1wq, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on OOVisualEffectEntity became four free functions, and its methods
-   and interface moved to a bridge file of the binding (amendment oo-ykoy), then
-   onto the OOVisualEffectEntity facade in OOVisualEffectEntity+ObjCBridge.mm
-   (bead oo-9ht.93, amendment oo-6ia4 item 3); restoreSubEntities() calls the
-   function that holds -subEntitiesForScript's body. OOColor, which is C++ since
-   bead oo-11m, is reached as OOColor through oo::ToCxx/oo::ToObjC (amendment
-   oo-ppc, item 4). Messages to classes that are still Objective-C
-   (OOVisualEffectEntity, ResourceManager, Universe, PlayerEntity; OOMesh is C++
-   since bead oo-9ht.132) stay as they are, which is why the file is still .mm
-   until Phase 4.
-*/
+ * OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and
+ * scope guards (OOJSEngineNativeWrappers.h). The category on
+ * OOVisualEffectEntity is four free functions, whose methods and interface are
+ * on the OOVisualEffectEntity facade in OOVisualEffectEntity+ObjCBridge.mm;
+ * restoreSubEntities() calls the function that holds -subEntitiesForScript's
+ * body. OOColor is reached through oo::ToCxx/oo::ToObjC. Messages to classes
+ * that are still Objective-C (OOVisualEffectEntity, ResourceManager, Universe,
+ * PlayerEntity) go through their Objective-C interfaces.
+ */
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -322,7 +314,7 @@ static bool JSVisualEffectGetVisualEffectEntity(
   OOJS_PROFILE_ENTER
 
   bool result;
-  Entity* entity = nullptr;  // the slot holds the C++ entity (bead oo-9ht.39.3)
+  Entity* entity = nullptr;  // the slot holds the C++ entity
 
   if (outEntity == NULL) return false;
   *outEntity = nil;
@@ -330,9 +322,7 @@ static bool JSVisualEffectGetVisualEffectEntity(
   result = OOJSEntityGetEntity(context, visualEffectObj, &entity);
   if (!result) return false;
 
-  OOVisualEffectEntity* effect =
-      oo::ToEffect(entity);  // -isKindOfClass:[OOVisualEffectEntity class]
-                             // until bead oo-9ht.165
+  OOVisualEffectEntity* effect = oo::ToEffect(entity);
   if (effect == nullptr) return false;
 
   *outEntity = effect;
@@ -343,9 +333,9 @@ static bool JSVisualEffectGetVisualEffectEntity(
 }  // namespace
 
 // The bodies of OOVisualEffectEntity (OOJavaScriptExtensions), whose methods
-// are on the OOVisualEffectEntity facade, in OOVisualEffectEntity+ObjCBridge.mm
-// (bead oo-9ht.93), until that facade goes (oo-9ht.165; proposed ADR-0056
-// amendments oo-ppc, oo-ykoy and oo-6ia4).
+// The bodies of OOVisualEffectEntity (OOJavaScriptExtensions), whose methods
+// are on the OOVisualEffectEntity facade, in
+// OOVisualEffectEntity+ObjCBridge.mm.
 void OOJSVisualEffectGetJSClass(ooscript::ClassDef** outClass,
                                 ooscript::Object* outPrototype) {
   *outClass = &sVisualEffectClass;
@@ -549,18 +539,14 @@ static bool VisualEffectSetProperty(Context cx, Object obj, PropertyId propID,
       sValue = cxx_OOStringFromJSValue(context, *value_raw);
       if (!sValue.has_value() || sValue->empty()) {
         if ((entity != nullptr ? entity->isBeacon() : false)) {
-          if (UNIVERSE != nullptr)
-            UNIVERSE->clearBeacon(
-                entity);  // the C++ entity (bead oo-9ht.39.8.10)
+          if (UNIVERSE != nullptr) UNIVERSE->clearBeacon(entity);
           if ((PLAYER != nullptr ? PLAYER->nextBeaconEntity() : nullptr) ==
-              entity)  // the C++ entities (bead oo-9ht.39.8.10; not virtual, so
-                       // the binding test stands in for it)
+              entity)  // not virtual, so the binding test stands in for it
           {
             if (PLAYER != nullptr)
               PLAYER->PlayerEntity::setCompassMode(
-                  COMPASS_MODE_PLANET);  // qualified: the final overrider (bead
-                                         // oo-9ht.177), so the binding test
-                                         // stands in for it
+                  COMPASS_MODE_PLANET);  // qualified: the final overrider, so
+                                         // the binding test stands in for it
           }
         }
       } else {
@@ -569,9 +555,7 @@ static bool VisualEffectSetProperty(Context cx, Object obj, PropertyId propID,
         } else  // Universe needs to update beacon lists in this case only
         {
           if (entity != nullptr) entity->setBeaconCode(sValue);
-          if (UNIVERSE != nullptr)
-            UNIVERSE->setNextBeacon(
-                entity);  // the C++ entity (bead oo-9ht.39.8.10)
+          if (UNIVERSE != nullptr) UNIVERSE->setNextBeacon(entity);
         }
       }
       return true;
@@ -704,9 +688,8 @@ static bool VisualEffectSetProperty(Context cx, Object obj, PropertyId propID,
 
 // *** Methods ***
 
-// The effect's mesh's materials and shaders: C++ since bead oo-9ht.132 (the
-// effect's -mesh answers the C++ mesh); null for no mesh, as a message to nil
-// answered.
+// The effect's mesh's materials and shaders; null for no mesh, as a message to
+// nil answered.
 namespace {
 oo::PList MeshMaterials(OOVisualEffectEntity* effect) {
   OOMesh* mesh = (effect != nullptr ? effect->mesh() : (OOMesh*)nullptr);
@@ -724,8 +707,7 @@ oo::PList MeshShaders(OOVisualEffectEntity* effect) {
     if (EXPECT_NOT(!JSVisualEffectGetVisualEffectEntity(context, OOJS_THIS, \
                                                         &(THISENT))))       \
       return false; /* Exception */                                         \
-    if (OOIsStaleEntity(THISENT))                                           \
-      OOJS_RETURN_VOID; /* the C++ effect's (bead oo-9ht.39.8.13) */        \
+    if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID;                         \
   } while (0)
 
 namespace {
@@ -739,12 +721,8 @@ static bool VisualEffectRemove(ooscript::Context cx,
   GET_THIS_EFFECT(thisEnt);
 
   if ((thisEnt != nullptr ? thisEnt->getIsSubEntity() : false)) {
-    OOVisualEffectEntity* parent = oo::ToEffect(
-        oo::LiveOwner(thisEnt));  // C++ since bead oo-9ht.165; the owner's C++
-                                  // entity (bead oo-9ht.39.25)
-    if (parent != nullptr)
-      parent->removeSubEntity(
-          thisEnt);  // the C++ sub-entity (bead oo-9ht.39.8.13)
+    OOVisualEffectEntity* parent = oo::ToEffect(oo::LiveOwner(thisEnt));
+    if (parent != nullptr) parent->removeSubEntity(thisEnt);
   } else {
     if (thisEnt != nullptr) thisEnt->remove();
   }
@@ -940,8 +918,7 @@ static bool VisualEffectSetMaterialsInternal(ooscript::Context context,
   // First we test to see if we can create the mesh.
   const oo::Ref<OOMesh> mesh = OOMesh::meshWithName(
       modelName.value_or(std::string()), std::nullopt, materials, shaders,
-      effectDict.get<bool>("smooth", false), shaderMacros,
-      thisEnt);  // the C++ effect (bead oo-9ht.39.6)
+      effectDict.get<bool>("smooth", false), shaderMacros, thisEnt);
 
   if (mesh != nullptr) {
     if (thisEnt != nullptr) thisEnt->setMesh(mesh.get());
@@ -1005,9 +982,7 @@ static bool VisualEffectRestoreSubEntities(ooscript::Context cx,
 
   GET_THIS_EFFECT(thisEnt);
 
-  // -subEntitiesForScript, called as the function that holds its body
-  // (amendment oo-ykoy item 2; the method is on the OOVisualEffectEntity facade
-  // since bead oo-9ht.93).
+  // -subEntitiesForScript, called as the function that holds its body.
   NSUInteger subCount = OOJSVisualEffectSubEntitiesForScript(thisEnt).size();
 
   if (thisEnt != nullptr) thisEnt->clearSubEntities();

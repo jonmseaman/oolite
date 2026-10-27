@@ -25,16 +25,13 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOBASICSOUNDREFERENCEPOINT_H
-#define OOBASICSOUNDREFERENCEPOINT_H
+#pragma once
 
 #include "OOMaths.h"
 #include "oofnd/Ref.hpp"
 
-/*	C++ since bead oo-odlx (proposed ADR-0056). Nothing outside this file
-   messages it, so it has no Objective-C facade and is global: the one outside
-   mention, OOSoundSource's no-op -positionRelativeTo:, takes it by (borrowed)
-   pointer.
+/*	Nothing outside this file messages it: the one outside mention,
+   OOSoundSource's no-op -positionRelativeTo:, takes it by (borrowed) pointer.
 */
 class OOSoundReferencePoint : public oo::RefCounted {
  public:
@@ -43,5 +40,3 @@ class OOSoundReferencePoint : public oo::RefCounted {
   void setVelocity(Vector inVelocity);
   void setOrientation(Vector inOrientation);
 };
-
-#endif  // OOBASICSOUNDREFERENCEPOINT_H

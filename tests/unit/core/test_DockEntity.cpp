@@ -1,20 +1,15 @@
 /*	test_DockEntity.mm
         Unit tests for DockEntity (src/Core/Entities/DockEntity.h), a station's
-   dock: slice 1 of its slice plan (docs/phases/3-slices/DockEntity.md, bead
-   oo-ao2d), the class shell, which moved the dock's state and its flags,
-   geometry and lifecycle into C++ (proposed ADR-0056, amendments oo-60fwo and
-   oo-64ako). Bead oo-9ht.180 deleted the Objective-C facade (amendment
-   oo-9ht.180): the dock is made in C++ (its object is the ship's facade) and
-   the cases call its members with every expected value kept.
+   dock: the class shell, with the dock's state and its flags, geometry and
+   lifecycle. The dock is made in C++ (its object is the ship's facade) and the
+   cases call its members.
 
         As test_StationEntity's, the dock's object needs the game graph, so the
    test links the whole game but main (['*']) and uses a Universe that was never
    initialised and a plain entity as PLAYER (answering the one player query a
    dock makes when it aborts its dockings). A dock's station is a StationEntity
    whose virtual dock only records its definition, with the dock added as its
-   subentity. The cases test the slice's own units through the Objective-C API,
-   written against it and run on the unconverted class first; the cases after
-   "The crossing" pin the C++ part once it exists. Run: bash
+   subentity. Run: bash
    tools/check-core-tests.sh test_DockEntity
 */
 
@@ -37,17 +32,16 @@ extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 extern ooscript::Context gOOJSMainThreadContext;
 
-// PLAYER: docked at no station (C++ since bead oo-9ht.177 deleted the
-// Objective-C player).
+// PLAYER: docked at no station.
 class TestDockPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
   ::StationEntity* getTargetDockStation() override { return nil; }
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// [[TestPlayer alloc] init]: a C++ player under the ship's facade, as
+// PlayerEntity::sharedPlayer() makes the game's, retained (+1) as +alloc's
+// object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -58,8 +52,7 @@ T* NewTestPlayer() {
 }
 
 // A station whose virtual dock is not made (the dock is a shipdata entry). A
-// C++ subclass since bead oo-9ht.175 deleted the Objective-C station (amendment
-// oo-9ht.177 item 5).
+// C++ subclass.
 class TestDockStation : public StationEntity {
  public:
   bool setUpOneStandardSubentity(const oo::PList& /*subentDict*/,
@@ -91,9 +84,9 @@ oo::PList Definition() {
   return oo::PList(oo::PList::Dict{{"unpiloted", oo::PList(true)}});
 }
 
-// [[[DockEntity alloc] cxx_initWithKey:definition:] autorelease] until bead
-// oo-9ht.180: the dock DockEntity::newDockObject() makes, its object (the
-// ship's facade) autoreleased.
+// [[[DockEntity alloc] cxx_initWithKey:definition:] autorelease]: the dock
+// DockEntity::newDockObject() makes, its object (the ship's facade)
+// autoreleased.
 DockEntity* MakeDock(const std::string& key) {
   ::ShipEntity* ship = DockEntity::newDockObject(key, Definition());
   oo::AutoreleaseEntity(ship);
@@ -102,9 +95,9 @@ DockEntity* MakeDock(const std::string& key) {
 
 // A dock that is a subentity of a station, so its parent is the station.
 DockEntity* MakeDockOfStation(TestDockStation** outStation) {
-  // [[[TestDockStation alloc] cxx_initWithKey:definition:] autorelease] until
-  // bead oo-9ht.175: made as StationEntity::newStationObject() makes a station,
-  // its object (the ship's facade) autoreleased.
+  // [[[TestDockStation alloc] cxx_initWithKey:definition:] autorelease]: made
+  // as StationEntity::newStationObject() makes a station, its object (the
+  // ship's facade) autoreleased.
   ::ShipEntity* object = oo::ToShip(oo::AutoreleaseEntity(oo::NewShipObject(
       oo::makeRef<TestDockStation>(), "dock-station", Definition())));
   TestDockStation* station = static_cast<TestDockStation*>(object);
@@ -129,7 +122,7 @@ BoundingBox Box(float width, float height) {
 
 }  // namespace
 
-// --- Slice 1: the class shell (bead oo-ao2d)
+// --- The class shell
 // --------------------------------------------------------
 
 // The initialiser and the set-up from the definition: a dock is a ship that is
@@ -248,7 +241,7 @@ OO_TEST(virtualDockTakesNoDamage) {
   }
 }
 
-// --- Slice 2: docking guidance (bead oo-9ht.178)
+// --- Docking guidance
 // --------------------------------------------------- These cases reach only
 // the approach queue and the dock's flags: no player, no ship in the universe,
 // no clock.
@@ -327,7 +320,7 @@ OO_TEST(autoDockEmptyQueue) {
   }
 }
 
-// --- Slice 3: the docking corridor and launching (bead oo-9ht.179)
+// --- The docking corridor and launching
 // ----------------------------- These cases reach only the launch queue and the
 // checks that refuse a non-ship: no player, no script engine, no ship in the
 // universe.
@@ -361,7 +354,7 @@ OO_TEST(launchQueue) {
     DockEntity* part = dock;
     OO_CHECK(part->launchQueue[0].get() == second &&
              part->launchQueue[1].get() ==
-                 first);  // the queue holds the C++ ships (bead oo-9ht.39.19)
+                 first);  // the queue holds the C++ ships
     OO_CHECK((first != nullptr ? first->status() : OOEntityStatus{}) ==
                  STATUS_DOCKED &&
              (second != nullptr ? second->status() : OOEntityStatus{}) ==

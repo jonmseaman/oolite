@@ -1,15 +1,11 @@
 /*	test_OOVector.mm
         Unit tests for OONativeVector (src/Core/OOVector.h), the box that stores
-   a Vector in a property list: bead oo-86ek (Phase 3, house style of proposed
-   ADR-0056). Bead oo-9ht.5 deleted its Objective-C facade: the box is a
-   PList::Object node's foreign object itself, the cases below ask the C++ box
-   with every expectation kept, and the facade's own cases (nil stays nil, one
-        facade per box, a message to a nil box) retired under the standing
-   approval oo-9n5p9. The rest of OOVector.mm is plain C (ADR-0012) and stays
-   verbatim; the free functions the box shares a file with are pinned here too.
+   a Vector in a property list. The box is a PList::Object node's foreign
+   object itself, and the cases below ask the C++ box. The rest of OOVector.mm
+   is plain C and stays verbatim; the free functions the box shares a file with
+   are pinned here too.
 
-        The expectations were written against the Objective-C API and run on the
-   unconverted class first: the box hands back the vector it was made with, is
+        The tests pin that the box hands back the vector it was made with, is
    an OONativeVector, and survives an Object node (as OOJSShip.mm and
    OOPListGameTypes.mm use it). Run: bash tools/check-core-tests.sh
 */

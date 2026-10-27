@@ -1,21 +1,15 @@
 /*	test_OOCheckDemoShipsPListVerifierStage.mm
-        Unit tests for OOCheckDemoShipsPListVerifierStage.h/.mm (bead oo-si5w;
-   proposed ADR-0056 Amendment 1 and amendment oo-up4b item 6): the stage that
+        Unit tests for OOCheckDemoShipsPListVerifierStage.h/.mm: the stage that
    checks demoships.plist against shipdata.plist, a leaf of
    OOFileHandlingVerifierStage.
 
-        What the stage computed before the conversion is pinned: its name and
+        What the stage computes is pinned: its name and
    neighbours (the intermediate class's), that it runs when the OXP has a
    demoships.plist, and what it logs: a demoships.plist or shipdata.plist of the
    wrong type, and each entry that names no ship (or is not a string). Then the
-   crossing: the converted stage is global, so Objective-C sees it as an
-        OOOXPVerifierStage.
-        Bead oo-9ht.4 deleted the stage facade: the verifier registers and
-   answers the C++ stage itself, so the facade case asks the stage (its
-   description through description()), and the checks that pinned only the
-   facade crossing (one live facade, oo::ToObjC/oo::ToCxx, its class,
-        oo::AsObjCStage) were retired with it (ADR-0049, standing approval
-   oo-9n5p9). Run: bash tools/check-core-tests.sh
+   stage is global: the verifier registers and answers the C++ stage itself, so
+   the facade case asks the stage (its description through description()).
+   Run: bash tools/check-core-tests.sh
 */
 
 #include <filesystem>
@@ -43,9 +37,8 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 #include "OOOXPVerifierTestDouble.h"
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// C++ definitions of the ResourceManager statics the code under test calls,
+// with the stand-in's answers.
 std::optional<std::string> ResourceManager::pathForFileNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   (void)fileName;
@@ -88,9 +81,7 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 // verifier runs it first.
 void RunScanner(OOOXPVerifier* verifier) {
   OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)
-      ->run();  // was -fileScannerStage (bead oo-9ht.7); the C++ stage since
-                // oo-9ht.4
+  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -194,9 +185,8 @@ OO_TEST(entriesNameShips) {
   std::filesystem::remove_all(kBase);
 }
 
-// The converted stage is global: the verifier registers it and finds it by name
-// (it held its OOOXPVerifierStage facade until bead oo-9ht.4), and it describes
-// itself with its class's name.
+// The stage is global: the verifier registers it and finds it by name, and it
+// describes itself with its class's name.
 OO_TEST(facade) {
   {
     OOOXPVerifier* verifier = MakeVerifier({});

@@ -1,24 +1,20 @@
 /*	test_DustEntity.mm
         Unit tests for DustEntity (src/Core/Entities/DustEntity.h), the space
-   dust drawn around the player: bead oo-0mxi, a leaf of the Entities pattern
-   seam (amendment oo-bj8 item 12).
+   dust drawn around the player.
 
         Its object needs the game graph, so the test links the whole game but
    main (['*']) and uses a Universe that was never initialised (detail level
    minimum, so no dust shader) and an entity as PLAYER whose viewpoint, velocity
-   and hyperspeed factor the test sets. -init asks the OpenGL extension manager
+   and hyperspeed factor the test sets. init() asks the OpenGL extension manager
    about point sprites, which needs a current context (oo_gl_test_context.hpp).
-   The expectations were written against the Objective-C API and run on the
-   unconverted class first: what -init sets (status, the collision radius the
-   draw pass uses, the pale cyan colour), the dust colour setter, the
-   camera-relative position (the viewpoint wrapped to the dust cube), the two
-   vectors the dust shader binds by selector (-warpVector,
-   -offsetPlayerPosition), and that the universe can still find the dust. Bead
-   oo-9ht.77 deleted the Objective-C facade (proposed ADR-0056 amendment
-        oo-0mxi): the universe makes it with oo::makeRef<DustEntity>() and
-   init() and hands it over with oo::NewEntityFacade, so the test does the same
-   and asks the C++ class; the facade checks (class, selectors) went with the
-   facade (ADR-0049, oo-9n5p9). Run: bash tools/check-core-tests.sh
+   The tests cover what init() sets (status, the collision radius the draw pass
+   uses, the pale cyan colour), the dust colour setter, the camera-relative
+   position (the viewpoint wrapped to the dust cube), the two vectors the dust
+   shader binds by selector (-warpVector, -offsetPlayerPosition), and that the
+   universe can still find the dust. The universe makes it with
+   oo::makeRef<DustEntity>() and init() and hands it over with
+   oo::NewEntityFacade, so the test does the same and asks the C++ class.
+   Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -26,7 +22,7 @@
 #include "DustEntity.h"
 #include "OOColor.h"
 #include "OODescription.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_gl_test_context.hpp"
 #include "oo_test.hpp"
@@ -40,8 +36,7 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-// PLAYER: a player whose viewpoint and hyperspeed factor the test sets (C++
-// since bead oo-9ht.177 deleted the Objective-C player).
+// PLAYER: a player whose viewpoint and hyperspeed factor the test sets.
 class TestPlayer : public PlayerEntity {
  public:
   HPVector _viewpoint = kZeroHPVector;
@@ -50,9 +45,8 @@ class TestPlayer : public PlayerEntity {
   GLfloat getHyperspeedFactor() override { return 32.0f; }
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// A C++ player under the ship's facade, as PlayerEntity::sharedPlayer() makes
+// the game's, retained (+1) as +alloc's object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();

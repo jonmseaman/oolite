@@ -1,4 +1,4 @@
-// Stub for tests/unit/expander (bead oo-3rb.61): only what
+// Stub for tests/unit/expander: only what
 // src/Core/OOStringExpander.mm uses.
 #pragma once
 #include "PlayerEntity.h"

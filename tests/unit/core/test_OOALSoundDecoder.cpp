@@ -1,7 +1,5 @@
 /*	test_OOALSoundDecoder.mm
-        Unit tests for OOALSoundDecoder (src/Core/OOALSoundDecoder.h): bead
-   oo-y0gz, a Phase 3 class conversion (proposed ADR-0056, the Audio module's
-   pattern: amendment oo-2en).
+        Unit tests for OOALSoundDecoder (src/Core/OOALSoundDecoder.h).
 
         The decoder is a class cluster: -cxx_initWithPath: and +codecWithPath:
    answer the private Vorbis codec for a path ending in "ogg" (a file, or a file
@@ -10,11 +8,8 @@
    it in chunks of OOAL_STREAM_CHUNK_SIZE and starts again on -reset. The sound
    decoded here is the game's own Resources/Sounds/boop.ogg, found from this
    file's path, so the answers are the file's: Vorbis decodes the same samples
-   on every machine. These expectations were written against the Objective-C API
-   and ran on the unconverted class first; since bead oo-9ht.82 deleted the
-   facade they ask the C++ class (standing approval oo-9n5p9). After them comes
-   the C++ API's own case. Run: bash tools/check-core-tests.sh
-   test_OOALSoundDecoder
+   on every machine. The tests ask the C++ class. After them comes the C++
+   API's own case. Run: bash tools/check-core-tests.sh test_OOALSoundDecoder
 */
 
 #include <cstdlib>

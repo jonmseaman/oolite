@@ -1,7 +1,7 @@
 /*	oofnd/Defaults.hpp
         oo::Defaults: the game's preferences, replacing NSUserDefaults and the
    two categories that bend GNUstep's to Oolite (Core/NSUserDefaults+Override.m,
-   Core/NSBundle+Override.m); bead oo-32f.
+   Core/NSBundle+Override.m).
 
             today (Objective-C, gnustep-base 1.31)                   oofnd
             -------------------------------------------------------
@@ -19,7 +19,7 @@
    applicationDomainName()
 
         Everything below was probed against gnustep-base 1.31 on this toolchain
-   (proposed ADR-0032):
+  :
 
           * FILE. <home>/GNUstep/Defaults/<domain>.plist, home as
    ResourcePaths::homeDirectory() (next to oolite.exe; GNUstep.conf's
@@ -53,11 +53,10 @@
    mutex).
 */
 
-#ifndef OOFND_DEFAULTS_HPP
-#define OOFND_DEFAULTS_HPP
+#pragma once
 
 // Suspend OOFoundation.h's `#define true 1` / `#define false 0` for this header
-// (see oofnd/Data.hpp, proposed ADR-0028); restored at the end.
+// (see oofnd/Data.hpp); restored at the end.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -660,5 +659,3 @@ class Defaults {
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_DEFAULTS_HPP

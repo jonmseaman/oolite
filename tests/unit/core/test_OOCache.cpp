@@ -1,17 +1,13 @@
 /*	test_OOCache.mm
-        Unit tests for OOCache (src/Core/OOCache.h): bead oo-rdfh, a Phase 3
-   conversion in the house style of the OOColor exemplar (proposed ADR-0056).
+        Unit tests for OOCache (src/Core/OOCache.h).
 
-        It pins what the cache computed before the conversion: an empty cache's
+        It pins what the cache computes: an empty cache's
    settings, storing, replacing and removing values (a null value is not
    stored), dirtiness, least-recently-used order (a lookup promotes), pruning
    (the threshold's floor, auto-pruning to 80%, manual pruning to the threshold,
    no pruning while loading), the property-list round trip, a live object held
-        in an Object node, the name and the description. The expectations were
-   written against the Objective-C API and run on the unconverted class first
-   (commit f751759c8); both callers were adapted in the bead, so there is no
-   facade and the calls here are the C++ class's. Run: bash
-   tools/check-core-tests.sh
+        in an Object node, the name and the description. The calls here are the
+   C++ class's. Run: bash tools/check-core-tests.sh
 */
 
 #include "OOCache.h"
@@ -204,9 +200,7 @@ OO_TEST(propertyListRoundTrip) {
   }
 }
 
-// A live object in an Object node: a C++ one (bead oo-4aq6a.5 deleted the node
-// of an Objective-C object, which this case held; the same checks through the
-// C++ node, ADR-0062 item 3).
+// A live object in an Object node: a C++ one.
 namespace {
 
 class TestForeign final : public oo::PListForeign {

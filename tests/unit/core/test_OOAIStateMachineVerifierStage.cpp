@@ -1,24 +1,17 @@
 /*	test_OOAIStateMachineVerifierStage.mm
-        Unit tests for OOAIStateMachineVerifierStage.h/.mm (bead oo-94qk;
-   proposed ADR-0056 Amendment 1 and amendment oo-up4b item 6): the AI stage, a
+        Unit tests for OOAIStateMachineVerifierStage.h/.mm: the AI stage, a
    leaf of OOFileHandlingVerifierStage.
 
-        What the stage computed before the conversion is pinned: its name and
+        What the stage computes is pinned: its name and
    its neighbours (the intermediate class's), the AIs a ship names (found or
    not, each once), and the check of each AI against the whitelist (states that
    are not dictionaries, handlers that are not arrays, actions that are not
    strings, and the unpermitted methods, sorted case-insensitively). What it
-        reports goes to the log, which the test captures. Then the crossing: the
-   converted stage is global, so Objective-C sees it as an OOOXPVerifierStage
-   (the verifier registers its facade, and the ship data stage finds it by
-   name), and it reaches the scanner through the stage lookup by the scanner's
-   name (the verifier's -fileScannerStage until bead oo-9ht.7). Bead oo-9ht.4
-   deleted the stage facade: the verifier registers and answers the C++ stage
-        itself, so the facade case asks the stage (its description through
-   description()), and the checks that pinned only the facade crossing (one live
-   facade, oo::ToObjC/oo::ToCxx, its class, oo::AsObjCStage) were retired with
-   it (ADR-0049, standing approval oo-9n5p9). Run: bash
-   tools/check-core-tests.sh
+        reports goes to the log, which the test captures. Then the stage is
+   global: the verifier registers and answers the C++ stage itself (the ship
+   data stage finds it by name), and the stage reaches the scanner through the
+   stage lookup by the scanner's name. The facade case asks the stage (its
+   description through description()). Run: bash tools/check-core-tests.sh
 */
 
 #include <filesystem>
@@ -60,9 +53,8 @@ oo::PList cxx_OOPropertyListFromFile(const std::string& path) {
 #include "OOOXPVerifierTestDouble.h"
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// C++ definitions of the ResourceManager statics the code under test calls,
+// with the stand-in's answers.
 std::optional<std::string> ResourceManager::pathForFileNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   if (fileName != "builtinAI.plist") return std::nullopt;
@@ -134,9 +126,7 @@ int LogLinesContaining(std::string_view text) {
 // verifier runs it first.
 void RunScanner(OOOXPVerifier* verifier) {
   OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)
-      ->run();  // was -fileScannerStage (bead oo-9ht.7); the C++ stage since
-                // oo-9ht.4
+  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -275,8 +265,7 @@ OO_TEST(runChecksEachAIAgainstTheWhitelist) {
 }
 
 // The converted stage is global: the verifier (the ship data stage's holder)
-// registers it and finds it by name (it held its OOOXPVerifierStage facade
-// until bead oo-9ht.4).
+// registers it and finds it by name.
 OO_TEST(facade) {
   {
     const std::string base = MakeOXP();

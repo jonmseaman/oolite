@@ -25,10 +25,9 @@ SOFTWARE.
 
 */
 
-#include "OOShaderMaterial.h"
-
 #include "OOObjCPList.h"
-#include "OOShaderUniformMethodType.h"  // the binding target's hooks (bead oo-9ht.39.6)
+#include "OOShaderMaterial.h"
+#include "OOShaderUniformMethodType.h"  // the binding target's hooks
 
 #if OO_SHADERS
 
@@ -91,9 +90,9 @@ bool OOShaderMaterial::configurationDictionarySpecifiesShaderMaterial(
   return false;
 }
 
-// What the log lines printed for the binding target's Objective-C object (beads
-// oo-9ht.39.6, oo-dpyk8): its class's name and its description; "(null)" for
-// none, or where the entities have registered no hooks, as nil's.
+// What the log lines printed for the binding target's Objective-C object: its
+// class's name and its description; "(null)" for none, or where the entities
+// have registered no hooks, as nil's.
 namespace {
 
 std::string TargetClassName(Entity* target) {
@@ -289,9 +288,8 @@ bool OOShaderMaterial::initWithName(const std::optional<std::string>& name,
 }
 
 // -dealloc's body, but for its first line ([self willDealloc], the root
-// facade's: proposed ADR-0056, amendment oo-smy item 3); the shader program is
-// an oo::Ref. (The binding target the material kept and never read went with
-// bead oo-9ht.39.6: the uniforms hold it.)
+// facade's); the shader program is an oo::Ref. (The uniforms hold the binding
+// target.)
 OOShaderMaterial::~OOShaderMaterial() {
   uint32_t i;
 
@@ -326,8 +324,8 @@ bool OOShaderMaterial::bindSafeUniform(
     const std::string& uniformName, Entity* target,
     const std::optional<std::string>& property,
     OOUniformConvertOptions options) {
-  // The property's name, where it was its selector (bead oo-xu228.3.2): NULL
-  // exactly where there is none.
+  // The property's name, where it was its selector: NULL exactly where there is
+  // none.
   const char* propertyName = property.has_value() ? property->c_str() : nullptr;
 
   if (propertyName != NULL && OOUniformBindingPermitted(*property, target)) {
@@ -447,8 +445,7 @@ void OOShaderMaterial::addUniformsFromDictionary(const oo::PList& uniformDefs,
   const OOShaderEntityHooks* hooks = OOShaderEntityHooksIfSet();
   if (target != nullptr && hooks != nullptr &&
       hooks->randomSeed(target, &randomSeed)) {
-    // -randomSeedForShaders, where the target's object answered it (bead
-    // oo-9ht.39.6: the hook).
+    // -randomSeedForShaders, where the target's object answered it (the hook).
   } else {
     // The material's address, as (uint32_t)(uintptr_t)self was: now the C++
     // object's.
@@ -602,8 +599,7 @@ bool OOShaderMaterial::doApply() {
   }
   if (texCount > 1) OOGL(glActiveTextureARB(GL_TEXTURE0_ARB));
 
-  // @try / @catch (id): a C++ catch (...) catches an Objective-C exception
-  // (ADR-0056 amendment oo-ppc).
+  // @try / @catch (id): a C++ catch (...) catches an Objective-C exception.
   try {
     for (const auto& [name, uniform] : uniforms) {
       uniform->apply();

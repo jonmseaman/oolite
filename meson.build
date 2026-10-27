@@ -1,6 +1,6 @@
 project(
     'oolite',
-    ['c', 'cpp'],	# the Objective-C languages went with libobjc2 (bead oo-dbz.5): every game unit is C++
+    ['c', 'cpp'],	# every game unit is C++
     meson_version: '>= 1.4.0',
     version: run_command(
         'bash',
@@ -73,14 +73,10 @@ endif
 # It is applied UNCONDITIONALLY, not only for golden builds: a flag that is only on in one
 # configuration is a flag whose absence nobody notices.
 #
-# GLOBAL, not project, arguments (bead oo-5pr): QuickJS-ng is a meson subproject linked into the
+# GLOBAL, not project, arguments: QuickJS-ng is a meson subproject linked into the
 # game binary, its number code produces floats that land in the dumps, and project arguments do
 # not reach a subproject (nor does a subproject() c_args default option).
 add_global_arguments('-ffp-contract=off', language: c_family)
-
-# (A message to an undeclared method was an error, -Werror=objc-method-access, proposed ADR-0050,
-# bead oo-tk0w, while the game sent Objective-C messages. No unit is Objective-C since bead oo-dbz.5:
-# a call to an undeclared C++ member is a compile error by itself.)
 
 if get_option('no_shaders')
     add_project_arguments('-DNO_SHADERS=1', language: c_family)
@@ -135,18 +131,18 @@ gnustep_folder = ''  # Not needed for Windows
 # dependencies, compiler/linker flags and build
 subdir('src')
 
-# The unit tests are built by every flavour but deployment (bead oo-we7mm): they test the live
+# The unit tests are built by every flavour but deployment: they test the live
 # assertion and debug paths, which a deployment build (NDEBUG) compiles out, and upstream's CI
 # builds `./mk.sh build deployment` (since #756), which builds every default target.
-# They are Windows-only for now (bead oo-cpohc): they were written and verified on the native
-# Windows toolchain (ADR-0017) and use its headers and LLP64 types (<process.h>, _putenv_s,
+# They are Windows-only for now: they were written and verified on the native
+# Windows toolchain and use its headers and LLP64 types (<process.h>, _putenv_s,
 # <winsock2.h>, long == 32 bits), so the Linux CI flavours build the game without them.
 #
-# deployment_unit_tests (bead oo-pdsng, proposed ADR-0066) builds the oofnd suite under the
+# deployment_unit_tests builds the oofnd suite under the
 # deployment macros as well, in a separate non-LTO build directory (tools/check-deployment-tests.sh):
 # OOCAssert compiled out under NDEBUG, and with it PlayerEntity::deferredInit's ship set-up, passed
 # every test-flavour suite and broke the shipped game. The core suite joins it once its test files
-# build under NDEBUG (bead oo-pdsng follow-up: 78 executables still guard their gDebugFlags
+# build under NDEBUG (78 executables still guard their gDebugFlags
 # definition on !NDEBUG, which upstream #756 moved to OO_DEBUG_MONITOR_ENABLED, and the like).
 if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows'
     # Unit tests that need no game build (meson test --suite oofnd).

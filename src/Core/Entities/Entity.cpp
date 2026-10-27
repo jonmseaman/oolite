@@ -22,10 +22,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "Entity.h"
-
 #include "CollisionRegion.h"
 #include "DockEntity.h"
+#include "Entity.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
 #include "OOConstToString.h"
@@ -34,11 +33,11 @@ MA 02110-1301, USA.
 #include "OOPlanetEntity.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
-#include "StationEntity.h"  // willDispose(): the station's and the dock's parts (bead oo-dpyk8)
+#include "StationEntity.h"  // willDispose(): the station's and the dock's parts
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"  // oo::CurrentOOException (beads oo-rskgl, oo-rskgl.1)
+#include "oofnd/objc/OOException.h"  // oo::CurrentOOException
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 uint32_t gLiveEntityCount = 0;
@@ -92,9 +91,9 @@ void Entity::init() {
   lastDrawCounter = 0;
 }
 
-/*	What the root facade's -dealloc ran before the C++ part went (bead
-   oo-dpyk8, oo-9ht.39 step 5k.4): the last release runs it, with the entity
-   whole (oo::RefCounted::willDispose()), in the same order. An entity that
+/*	What the root facade's -dealloc ran before the C++ part went: the last
+   release runs it, with the entity whole (oo::RefCounted::willDispose()), in
+   the same order. An entity that
    never had its object (no creator made its facade) ran none of it, so it runs
    none. From its first line the entity no longer has its object (hasObject()),
    as oo::ToObjC() answered nil for an object being deallocated: holds and
@@ -104,12 +103,10 @@ void Entity::willDispose() noexcept {
   if (!_hasObject) return;
   _disposing = true;
 
-  /*	A ship's -dealloc ran first: its facade was a subclass of the root's
-     until bead oo-9ht.144. The player's, a station's or a dock's part first, as
-     their facades' -dealloc ran before the ship's (beads oo-9ht.177,
-     oo-9ht.175, oo-9ht.180); then the weak references, dropped before
-          entityDestroyed (see ShipEntity::shipWillDealloc()); then the ship's
-     body.
+  /*	A ship's -dealloc ran first. The player's, a station's or a dock's part
+     first, as their facades' -dealloc ran before the ship's; then the weak
+     references, dropped before entityDestroyed (see
+     ShipEntity::shipWillDealloc()); then the ship's body.
   */
   if (::ShipEntity* ship = dynamic_cast<::ShipEntity*>(this)) {
     if (::PlayerEntity* player = dynamic_cast<::PlayerEntity*>(ship))
@@ -124,7 +121,7 @@ void Entity::willDispose() noexcept {
 
   if (UNIVERSE != nullptr) {
     // The log line describes the entity before it goes (the facade's described
-    // its object; the address is the entity's since bead oo-dpyk8).
+    // its object; the address is the entity's).
     if (getUniversalID() != NO_TARGET) {
       OO_LOG("universe.unremovedEntity",
              "Entity {} dealloced without being removed from universe! (This "
@@ -144,7 +141,7 @@ void Entity::willDispose() noexcept {
 #endif
 
   // The weak references read null from here, where the facade's superclass's
-  // -dealloc dropped the object's (bead oo-9ht.39.5.2).
+  // -dealloc dropped the object's.
   dropWeakReferences();
 }
 
@@ -537,12 +534,12 @@ void Entity::throwSparks() {
 
 void Entity::setOwner(Entity* ent) {
   _owner = oo::WithObject(ent);  // an entity without its object was nil's empty
-                                 // reference (bead oo-dpyk8)
+                                 // reference
 }
 
 Entity* Entity::owner() {
   return oo::WithObject(_owner.get());  // +0, null once it has gone, as the
-                                        // object read (bead oo-dpyk8)
+                                        // object read
 }
 
 Entity* Entity::ownerEntity() { return _owner.get(); }
@@ -556,15 +553,13 @@ std::string oo::EntityWeakPListForeign::description() const {
 }
 
 Entity* Entity::parentEntity() {
-  Entity* owner =
-      oo::LiveOwner(this);  // the owner's object's part, +0 (bead oo-w9pi2)
+  Entity* owner = oo::LiveOwner(this);  // the owner's object's part, +0
   if (oo::EntityIsShipWithSubEntityShip(owner, this)) return owner;
   return nullptr;
 }
 
 Entity* Entity::superShaderBindingTarget() {
-  return oo::WithObject(parentEntity());  // +0, as the owner was read (beads
-                                          // oo-9ht.39.24, oo-dpyk8)
+  return oo::WithObject(parentEntity());  // +0, as the owner was read
 }
 
 Entity* Entity::rootShipEntity() {
@@ -810,7 +805,7 @@ void Entity::dumpState() {
     } catch (...) {
       if (!oo::CurrentOOException()) throw;
     }  // was @catch (id exception) {}: the game's exceptions only
-       // (oo::Exception since oo-rskgl.1)
+       // (oo::Exception)
     oo::log::popIndent();
   }
 }
@@ -822,7 +817,7 @@ void Entity::dumpSelfState() {
   std::string ownerDescription;  // the literals were @"self" and @"none"
 
   if (owner == oo::WithObject(this))
-    ownerDescription = "self";  // the objects compared (bead oo-dpyk8)
+    ownerDescription = "self";  // the objects compared
   else if (owner == nullptr)
     ownerDescription = "none";
   else
@@ -867,14 +862,13 @@ void Entity::dumpSelfState() {
 }
 
 // The Mac debug OXP's inspector added -inspect to entities; no class answers it
-// in this build (bead oo-dpyk8).
+// in this build.
 void Entity::inspect() {}
 
 void Entity::subEntityReallyDied(::ShipEntity* sub) {
   OO_LOG("entity.bug", "{} called for non-ship entity {} by {}",
          __PRETTY_FUNCTION__, oo::str::pointerDescription(oo::WithObject(this)),
-         oo::str::pointerDescription(
-             sub));  // the entity's address (its object's until bead oo-dpyk8)
+         oo::str::pointerDescription(sub));  // the entity's address
 }
 
 NSUInteger Entity::getLastDrawCounter() { return lastDrawCounter; }
@@ -951,8 +945,8 @@ bool Entity::getIsImmuneToBreakPatternHide() {
 }
 
 // Entity (OOJavaScriptExtensions)'s answers for the class, which the root
-// category forwards here (ADR-0056 amendment oo-9ht.107): the category's
-// bodies, which a C++ subclass overrides.
+// category forwards here: the category's bodies, which a C++ subclass
+// overrides.
 void Entity::getJSClass(ooscript::ClassDef** outClass,
                         ooscript::Object* outPrototype) {
   ::EntityJSGetJSClass(outClass, outPrototype);
@@ -964,7 +958,7 @@ std::optional<std::string> Entity::jsClassName() {
 
 bool Entity::isVisibleToScripts() { return ::EntityJSIsVisibleToScripts(); }
 
-// The JS glue (bead oo-9ht.39.3): the bodies are
+// The JS glue: the bodies are
 // EntityOOJavaScriptExtensions.mm's, as they were when the root facade answered
 // the selectors.
 ooscript::Value Entity::jsValueInContext(ooscript::Context context) {

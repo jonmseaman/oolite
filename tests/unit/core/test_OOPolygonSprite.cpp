@@ -1,21 +1,17 @@
 /*	test_OOPolygonSprite.mm
-        Unit tests for OOPolygonSprite (src/Core/OOPolygonSprite.h): bead
-   oo-4111 (Phase 3, house style of proposed ADR-0056). Bead oo-9ht.30 deleted
-   its Objective-C facade: the cases ask the C++ class, and the facade's
-   contract cases went with it (standing approval oo-9n5p9).
+        Unit tests for OOPolygonSprite (src/Core/OOPolygonSprite.h).
 
         It links the whole game but main (tests/unit/core/meson.build entry
    ['*']: the sprite reaches the graphics reset manager, the extension manager
    and, in debug builds, the resource manager). There is no GL context, so
    nothing is drawn: the sprite's tesselation (GLU) runs at creation and is
-   observable as success or nil. The expectations were written against the
-   Objective-C API and run on the unconverted class first: which data arrays
-   make a sprite (flat pairs, arrays of contours, clockwise, duplicate and
-   non-finite vertices) and which answer nil (no contours), the description (the
-   debug name), and what the class answers to (the graphics reset client's
-        -resetGraphicsState, and the HUD's beacon icon category; the C++
-   interfaces OOGraphicsResetClient and OOHUDBeaconIcon since beads oo-9ht.23
-   and oo-7ae4p). Run: bash tools/check-core-tests.sh
+   observable as success or nil. The expectations cover: which data arrays make
+   a sprite (flat pairs, arrays of contours, clockwise, duplicate and non-finite
+   vertices) and which answer nil (no contours), the description (the debug
+   name), and what the class answers to (the graphics reset client's
+   -resetGraphicsState, and the HUD's beacon icon category; the C++ interfaces
+   OOGraphicsResetClient and OOHUDBeaconIcon). Run: bash
+   tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -88,8 +84,7 @@ OO_TEST(descriptionAndProtocols) {
 #ifndef NDEBUG
     OO_CHECK(text.ends_with(">{triangle}"));
 #endif
-    // The protocols are C++ interfaces (beads oo-9ht.23, oo-7ae4p);
-    // drawFilled/drawOutline are members.
+    // The protocols are C++ interfaces; drawFilled/drawOutline are members.
     OO_CHECK(dynamic_cast<OOHUDBeaconIcon*>(sprite.get()) != nullptr);
     OOGraphicsResetClient* client =
         dynamic_cast<OOGraphicsResetClient*>(sprite.get());

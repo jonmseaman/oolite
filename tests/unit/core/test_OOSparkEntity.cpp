@@ -1,18 +1,15 @@
 /*	test_OOSparkEntity.mm
         Unit tests for OOSparkEntity (src/Core/Entities/OOSparkEntity.h), the
-   spark a damaged ship throws: bead oo-c2dk, a leaf of the Entities pattern
-   seam (amendment oo-bj8 item 12).
+   spark a damaged ship throws.
 
         Its object needs the game graph, so the test links the whole game but
    main (['*']) and uses a Universe that was never initialised, of a test
    subclass that records what is removed, and a plain entity as PLAYER. The
-   expectations were written against the Objective-C API and run on the
-        unconverted class first: what the initialiser sets (position, velocity,
-   size, colour, status), the fade towards red as it updates, and its removal
-   when it has faded. Making a spark and reading its colour components go
-   through the helpers below, the only lines the conversion ported: since then
-        a spark is made by its factory and handed to Objective-C as its facade,
-   an OOLightParticleEntity. Run: bash tools/check-core-tests.sh
+   tests pin what the initialiser sets (position, velocity, size, colour,
+   status), the fade towards red as it updates, and its removal when it has
+   faded. Making a spark and reading its colour components go through the
+   helpers below: a spark is made by its factory and handed to Objective-C as
+   its facade, an OOLightParticleEntity. Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -20,7 +17,7 @@
 #include "OOColor.h"
 #include "OODescription.h"
 #include "OOSparkEntity.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 
@@ -33,16 +30,13 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// NewTestPlayer<TestPlayer>() (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// NewTestPlayer<TestPlayer>(): a C++ player under the ship's facade, as
+// PlayerEntity::sharedPlayer() makes the game's, retained (+1).
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -60,8 +54,7 @@ class TestUniverse : public Universe {
   bool removeEntity(Entity* entity) override {
     sRemoved = entity;
     return YES;
-  }  // the C++ entity since bead oo-9ht.39.26; the record is its object, as
-     // before
+  }
 };
 
 namespace {
@@ -75,8 +68,7 @@ Entity* MakeSpark(HPVector position, Vector velocity, OOTimeDelta duration,
       position, velocity, duration, size, color));
 }
 
-// The object is the root Entity's facade since bead oo-9ht.76; its C++ part is
-// the particle.
+// The object is the root Entity; its C++ part is the particle.
 OOLightParticleEntity* Particle(Entity* e) {
   return static_cast<OOLightParticleEntity*>(e);
 }

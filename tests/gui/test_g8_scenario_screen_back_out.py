@@ -21,7 +21,7 @@ Written the way the two merged tests closest to it are written, and reusing both
   own echo - it is split in the source and joined at runtime, and the answer is the text between
   the SECOND and third occurrence, hence ``count >= 2``) and the per-frame key sampling are G5's,
   restated here for the same reason G2 restated them: a shared helper added to conftest.py by two
-  concurrent GUI beads is a guaranteed merge conflict, and nothing below is needed by any other
+  concurrent GUI tests is a guaranteed merge conflict, and nothing below is needed by any other
   test.
 
 WHAT "ROW 1" ACTUALLY IS ON THE SCENARIO SCREEN. DERIVED, NOT ASSUMED.
@@ -95,7 +95,7 @@ start screen's ` Exit Game ` row.
 
     python3 -m pytest oolite-dev/tests/gui/test_g8_scenario_screen_back_out.py -x -q
 
-Needs the desktop: a real window, unlocked and logged in (ADR-0017). It takes tools/gui-lock for
+Needs the desktop: a real window, unlocked and logged in. It takes tools/gui-lock for
 the duration, via the ``game`` fixture - this file launches nothing of its own.
 """
 
@@ -125,7 +125,7 @@ TESTS_DIR = os.path.abspath(os.path.join(HERE, ".."))
 if TESTS_DIR not in sys.path:
     sys.path.insert(0, TESTS_DIR)
 
-# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py, oo-7j3t).
+# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py).
 from source_paths import iter_source_files, resolve_source  # noqa: E402
 PLAYER_ENTITY = resolve_source("Core", "Entities", "PlayerEntity")
 PLAYER_ENTITY_H = os.path.join(SRC_DIR, "Core", "Entities", "PlayerEntity.h")
@@ -181,7 +181,7 @@ def _method_body(source, signature):
 
 
 def _start_screen_row_zero(body):
-    # `int row_zero = N;` became `int row_zero; row_zero = N;` in the .m -> .mm switch (oo-x7o):
+    # `int row_zero = N;` became `int row_zero; row_zero = N;` in the .m -> .mm switch:
     # C++ forbids a case label jumping past an initialisation. Either spelling carries N.
     match = re.search(r"int\s+row_zero\s*(?:=|;\s*row_zero\s*=)\s*(\d+)\s*;", body)
     assert match, (
@@ -225,8 +225,8 @@ def exit_row_dispatch():
     body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
     row_zero = _start_screen_row_zero(body)
     # Either spelling of the exit call: the ObjC -exitAppWithContext:@"..." or the C++
-    # -cxx_exitAppWithContext:"..." it became in Phase 2 (oo-6abg). Jon approved accepting
-    # both, 2026-09-29 (bead oo-3rb.332).
+    # -cxx_exitAppWithContext:"..." it became. Jon approved accepting
+    # both, 2026-09-29.
     branch = re.search(
         r"\[gui selectedRow\]\s*==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{\s*"
         r"\[\[UNIVERSE gameController\] (?:exitAppWithContext:@|cxx_exitAppWithContext:)\"([^\"]+)\"\]",
@@ -272,8 +272,9 @@ def scenario_exit_row():
         "-setGuiToScenarioScreen: no longer builds its rows from GUI_ROW_SCENARIOS_START; G8's "
         "back-out row derivation no longer describes the screen"
     )
-    # Either spelling (Jon approved accepting both, 2026-09-30, bead oo-3rb.332): the ObjC
-    # form or the C++ form it became in Phase 2 (DESC(@"...") -> OO_DESC("..."), oo-3rb.321; setKey:@"exit" -> cxx_setKey:"exit", oo-q01b).
+    # Either spelling (Jon approved accepting both, 2026-09-30): the ObjC form or
+    # the C++ form it became (DESC(@"...") -> OO_DESC("..."); setKey:@"exit" ->
+    # cxx_setKey:"exit").
     label = re.search(
         r'(?:DESC\(@"|OO_DESC\(")' + re.escape(SCENARIO_EXIT_DESC_KEY) + r'"\).*?forRow:start_row\s*-\s*(\d+)\]',
         body,
@@ -361,7 +362,7 @@ class ScreenWitness:
                 self._conn, _ = self._server.accept()
                 # An accepted socket INHERITS the listener's non-blocking mode on Windows, so
                 # _recv_exactly would raise WinError 10035 instead of waiting for the rest of a
-                # packet (oo-8yp). Every read is deadline-guarded by select(), so blocking is safe.
+                # packet. Every read is deadline-guarded by select(), so blocking is safe.
                 self._conn.setblocking(True)
                 self._handshake()
                 return self
@@ -561,7 +562,7 @@ def test_g8_scenario_screen_back_out(screen_witness, game):
 
     # Asked of the OS process table, not of proc.poll() - wait() above already stored that code.
     assert_no_surviving_game_processes(game.proc.pid)
-    # G9 hygiene, with the launch-time defaults mark the fixture recorded (oo-5rsa).
+    # G9 hygiene, with the launch-time defaults mark the fixture recorded.
     assert_clean_exit(game)
     # And the shutdown ran to its last line, for the START-SCREEN ` Exit Game ` row.
     assert_shutdown_path_completed(game, expected_context=EXPECTED_EXIT_CONTEXT)
@@ -630,8 +631,8 @@ def test_the_arrival_observable_has_exactly_two_assignment_sites_and_only_one_is
         "-setGuiToScenarioScreen: no longer assigns gui_screen = " + SCENARIO_SCREEN
     )
 
-    # Either spelling (Jon approved accepting both, 2026-09-30, bead oo-3rb.332): the ObjC
-    # form or the C++ form it became in Phase 2 (loadPlayerFromFile:(NSString *) -> (const std::string &), oo-3rb.177).
+    # Either spelling (Jon approved accepting both, 2026-09-30): the ObjC form or
+    # the C++ form it became (loadPlayerFromFile:(NSString *) -> (const std::string &)).
     loadsave = _read(PLAYER_LOADSAVE)
     loader_signature = next(
         (
@@ -749,8 +750,8 @@ def test_the_back_out_chain_is_the_only_way_off_the_scenario_screen_by_that_row(
     account of.
     """
     start_scenario = _method_body(_read(PLAYER_LOADSAVE), "- (BOOL) startScenario")
-    # Either spelling (Jon approved accepting both, 2026-09-30, bead oo-3rb.332): the ObjC
-    # form or the C++ form it became in Phase 2 ([key isEqualToString:@"exit"] -> key == "exit", oo-3rb.177).
+    # Either spelling (Jon approved accepting both, 2026-09-30): the ObjC form or
+    # the C++ form it became ([key isEqualToString:@"exit"] -> key == "exit").
     exit_branch = re.search(
         r'if\s*\(\s*(?:\[key isEqualToString:@"'
         + re.escape(SCENARIO_EXIT_GUI_KEY)
@@ -814,7 +815,7 @@ def test_g8_asserts_arrival_and_return_as_separate_properties():
     """THE ANTI-DECAY GUARD: two assertions, two messages, and the game asked both times.
 
     Read from this file's own AST, never its text: a docstring or a comment containing
-    "ARRIVAL FAILED" is not an assertion, and a sibling bead's substring guard was held green by
+    "ARRIVAL FAILED" is not an assertion, and a sibling test's substring guard was held green by
     exactly that. Every requirement below is checked against real ``ast.Assert``/``ast.Call``
     nodes inside the launching test.
 

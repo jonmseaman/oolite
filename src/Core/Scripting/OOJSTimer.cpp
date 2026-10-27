@@ -23,11 +23,10 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSTimer.h"
-
 #include <cstring>
 
 #include "OOJSScript.h"
+#include "OOJSTimer.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
 #include "Universe.h"
@@ -37,48 +36,36 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), the engine's
-   InitClass call becomes ooscript::initClass, and the directly spelled engine
-   calls (NewObject, SetPrivate, GetPrivate, RemoveObjectRoot, RemoveValueRoot,
-   ValueToObject, ValueToFunction, GetFunctionId, IsConstructing, ValueToNumber,
-   NewNumberValue) go through ooscript:: instead. `this` is renamed to `thisObj`
-        because it is a reserved word once this file compiles as Objective-C++
-   (ADR-0001).
-
-        OOJSAddGCObjectRoot, OOJSAddGCValueRoot, OOJSAcquireContext and
-   OOJSRelinquishContext are OOJS_* macros, not directly spelled engine calls,
-   so they are untouched and out of scope for this bead (see JSEngine.hpp's own
-   header comment and OOJSVector.mm's exemplar comment); the same is true of the
-   OOJS_ARGV, OOJS_THIS, OOJS_RETURN_ family and OOJS_NATIVE_ENTER.
-
-        Because ooscript::ClassDef, unlike the engine's old plain-C class
-   struct, does not tolerate the old file's "forward-declared-then-defined"
-   tentative-definition trick under Objective-C++'s stricter one-definition
-   rule, sTimerClass's forward-declared consumer (-initWithDelay:...) is placed
-        after the ClassDef's single full definition, so the whole file is
-   reordered relative to the old .m layout: forward declarations, the ClassDef
-   and its spec tables come first, then the OOJSTimer Objective-C
-   implementation, then InitOOJSTimer() and the native hook bodies.
-
-        OOJSRegisterObjectConverter() is given &sTimerClass itself.
-
-        C++20 since bead oo-kdyh (proposed ADR-0056, amendment oo-ppc): the
-   class is OOJSTimer, a C++ subclass of OOScriptTimer (global since beads
-   oo-9ht.37 and oo-9ht.35). BOOL/YES/NO are bool/true/false.
-
-        Since bead oo-6symp (proposed ADR-0056 amendment oo-6symp) the JS
-   private slot holds the OOJSTimer itself, retained, which implements
-   OOJSPrivateObject: the natives read it with OOJSGetCxxPrivate (the class
-   check of DEFINE_JS_OBJECT_GETTER), the finalizer is the engine's
-        OOJSCxxObjectWrapperFinalize (which sends clearJSSelf(), where
-   TimerFinalize's warning now is), and toString() is
-   OOJSCxxObjectWrapperToString with the timer's jsDescription(). The converter
-   answers the timer itself as a plist Object node (bead oo-9ht.35 deleted its
-        Objective-C facade, which it answered before), which converts back to
-   the Timer object.
-*/
+ * Retargeted onto the ooscript facade (JSEngine.hpp): the class dispatch table
+ * is a static ooscript::ClassDef (the stub hooks are nullptr), the engine's
+ * InitClass call is ooscript::initClass, and the directly spelled engine calls
+ * (NewObject, SetPrivate, GetPrivate, RemoveObjectRoot, RemoveValueRoot,
+ * ValueToObject, ValueToFunction, GetFunctionId, IsConstructing, ValueToNumber,
+ * NewNumberValue) go through ooscript:: instead. `this` is spelled `thisObj`.
+ *
+ * OOJSAddGCObjectRoot, OOJSAddGCValueRoot, OOJSAcquireContext and
+ * OOJSRelinquishContext are OOJS_* macros, not directly spelled engine calls,
+ * as are the OOJS_ARGV, OOJS_THIS, OOJS_RETURN_ family and OOJS_NATIVE_ENTER.
+ *
+ * ooscript::ClassDef does not tolerate a forward-declared-then-defined
+ * tentative definition under the one-definition rule, so sTimerClass's
+ * forward-declared consumer is placed after the ClassDef's single full
+ * definition: forward declarations, the ClassDef and its spec tables come
+ * first, then the OOJSTimer implementation, then InitOOJSTimer() and the native
+ * hook bodies.
+ *
+ * OOJSRegisterObjectConverter() is given &sTimerClass itself.
+ *
+ * The class is OOJSTimer, a C++ subclass of OOScriptTimer. The JS private slot
+ * holds the OOJSTimer itself, retained, which implements OOJSPrivateObject: the
+ * natives read it with OOJSGetCxxPrivate (the class check of
+ * DEFINE_JS_OBJECT_GETTER), the finalizer is the engine's
+ * OOJSCxxObjectWrapperFinalize (which calls clearJSSelf(), where
+ * TimerFinalize's warning now is), and toString() is
+ * OOJSCxxObjectWrapperToString with the timer's jsDescription(). The converter
+ * answers the timer itself as a plist Object node, which converts back to the
+ * Timer object.
+ */
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -229,8 +216,7 @@ bool OOJSTimer::initWithDelay(OOTimeAbsolute delay, OOTimeDelta interval,
     _jsSelf = (ooscript::newObject((context), &sTimerClass, (sTimerPrototype),
                                    nullptr));
     if (_jsSelf != NULL) {
-      // The private slot holds the timer, retained, as it kept self (ADR-0056
-      // amendment oo-6symp).
+      // The private slot holds the timer, retained, as it kept self.
       if (!OOJSSetCxxPrivate(context, _jsSelf, this)) _jsSelf = NULL;
     }
     if (_jsSelf == NULL) {
@@ -312,12 +298,10 @@ void OOJSTimer::timerFired() {
   // constructor) dies.
   const oo::PList thisValue = cxx_OOJSPListFromJSObject(context, _jsThis);
   if (oo::EntityIn(thisValue) != nullptr)
-    described = true;  // an entity's object described itself (bead oo-dpyk8)
-  // (An Objective-C object's node, described by its class's
-  // -cxx_oo_jsDescription, went with bead oo-4aq6a.5: no game object is one.)
+    described = true;  // an entity's object described itself
   else {
     // A plain value (object, array, String/Number/Boolean object): its
-    // Foundation form's -oo_jsDescription was never nil (ADR-0051).
+    // Foundation form's -oo_jsDescription was never nil.
     described = !thisValue.isNull();
   }
 
@@ -344,7 +328,7 @@ void OOJSTimer::clearJSSelf(ooscript::Object selfVal) {
   if (isScheduled()) {
     // Described from the timer's own state: its full description reads the
     // function's name, which runs script inside the collection and corrupts the
-    // heap (bead oo-r1ci7).
+    // heap.
     OO_LOG_WARN(
         "script.javaScript.unrootedTimer",
         "Timer {} is being garbage-collected while still running. You must "
@@ -366,8 +350,7 @@ std::optional<std::string> OOJSTimer::jsDescription() {
 }
 
 // OOJSBasicPrivateObjectConverter for the C++ timer the slot holds: the timer
-// as a plist Object node, where it answered the timer's facade (bead
-// oo-9ht.35); null for the prototype.
+// as a plist Object node; null for the prototype.
 namespace {
 static oo::PList TimerConverter(ooscript::Context context,
                                 ooscript::Object object) {

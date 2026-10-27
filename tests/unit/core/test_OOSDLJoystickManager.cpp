@@ -1,14 +1,11 @@
 /*	test_OOSDLJoystickManager.mm
         Unit tests for OOSDLJoystickManager (src/SDL/OOSDLJoystickManager.h),
-   the OOJoystickManager subclass: bead oo-o89, the Phase 3 platform (SDL/)
-   pattern (proposed ADR-0056, amendment oo-o89). Its Objective-C facade was
-   deleted by bead oo-9ht.2: the class derives from the C++ OOJoystickManager
-   and the tests call the same members.
+   the OOJoystickManager subclass. The class derives from the C++
+   OOJoystickManager.
 
         The SDL joystick layer runs against one SDL virtual joystick
    (SDL_AttachVirtualJoystick), with every hardware driver hinted off so a pad
-   plugged into the machine cannot change the answers. The expectations were
-   written against the Objective-C API and run on the unconverted class first:
+   plugged into the machine cannot change the answers. The expectations cover:
    the stick is opened and named, SDL ids map to stick indices, the three event
    makers copy the event and translate its id, the axis is read from SDL, and
    handleSDLEvent: routes an event of a known stick to the superclass's decoder
@@ -197,7 +194,7 @@ OO_TEST(handlesEventsThroughTheSuperclass) {
     // An event it does not handle is refused. (Not pinned: an event of a stick
     // it did not open. Its index is -1 in an unsigned SDL_JoystickID, so the
     // `which >= 0` guard lets it through to the decoder, which indexes its
-    // tables with it; bead oo-o89's report.)
+    // tables with it.)
     SDL_Event key = {};
     key.type = SDL_EVENT_KEY_DOWN;
     OO_CHECK(!manager->handleSDLEvent(&key));
@@ -205,10 +202,9 @@ OO_TEST(handlesEventsThroughTheSuperclass) {
 }
 
 // An event of a stick the manager did not open (one hot-plugged after it was
-// made) is refused and leaves the superclass's state alone (bead oo-9ht.3). Its
-// index, -1, used to be stored in the unsigned SDL_JoystickID, so the `which >=
-// 0` guard let it through to the decoder, which indexed its per-stick tables
-// with it.
+// made) is refused and leaves the superclass's state alone. Its index, -1, used
+// to be stored in the unsigned SDL_JoystickID, so the `which >= 0` guard let it
+// through to the decoder, which indexed its per-stick tables with it.
 OO_TEST(refusesEventsOfAStickItDidNotOpen) {
   VirtualStick& vs = Stick();
   const SDL_JoystickID stray = vs.id + 100;

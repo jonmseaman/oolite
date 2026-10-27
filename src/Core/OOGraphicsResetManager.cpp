@@ -26,7 +26,6 @@ SOFTWARE.
 */
 
 #include "OOGraphicsResetManager.h"
-
 #include "OOOpenGLExtensionManager.h"
 #include "OOTexture.h"
 #include "oofnd/Log.hpp"
@@ -72,8 +71,7 @@ void OOGraphicsResetManager::resetGraphicsState() {
   // A copy, so a client may register or unregister during the reset (one
   // unregistered by an earlier client is skipped). Unordered, as the Foundation
   // set was: its order was pointer-hash order, so it already varied from run to
-  // run. (The Objective-C clients, told first, went with the protocol: bead
-  // oo-9ht.23.)
+  // run.
   const std::vector<OOGraphicsResetClient*> cxxSnapshot(cxxClients.begin(),
                                                         cxxClients.end());
   for (OOGraphicsResetClient* client : cxxSnapshot) {
@@ -95,4 +93,4 @@ void OOGraphicsResetManager::resetGraphicsState() {
 
 // The singleton category (+allocWithZone:, and -retain/-release/-autorelease
 // doing nothing) is not translated: the one instance is made only by
-// sharedManager() and never released (proposed ADR-0056 amendment oo-r7m0).
+// sharedManager() and never released.

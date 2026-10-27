@@ -1,6 +1,6 @@
 /*	oofnd/FileSystem.hpp
         oo::fs: file-system operations, the C++ shape of NSFileManager and of
-   Oolite's NSFileManager (OOExtensions) category (bead oo-i9q). Built on
+   Oolite's NSFileManager (OOExtensions) category. Built on
    std::filesystem, using only its non-throwing (std::error_code) overloads;
    every fallible call returns oo::Expected.
 
@@ -34,7 +34,7 @@
    timeInterval...  oo::fs::modificationTimeSince1970(p) [fm
    oo_oxzFileExistsAtPath:p]                 OOOxzFileExistsAtPath(path)
 
-        SEMANTICS (proposed ADR-0028), each matching what GNUstep does today:
+        SEMANTICS, each matching what GNUstep does today:
 
           * Paths are UTF-8 at the Objective-C boundary. Never build a Path from
    a std::string directly: on Windows that decodes it in the ANSI code page.
@@ -63,13 +63,12 @@
         Header-only, C++20, compiles with -fno-exceptions.
 */
 
-#ifndef OOFND_FILESYSTEM_HPP
-#define OOFND_FILESYSTEM_HPP
+#pragma once
 
 // Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
 // 0`; C++20 needs the keywords (requires-clauses, <=> in the standard headers
 // this pulls in). Suspend the macros for this header and restore them at its
-// end (proposed ADR-0028).
+// end.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -421,8 +420,8 @@ inline Result<void> writeFile(const Path& path, const Data& data,
 
 // An empty file open for writing (created, or truncated if it exists), or
 // nullptr: what -createFileAtPath:contents:nil attributes:nil followed by
-// +fileHandleForWritingAtPath: gave the OXZ manager's download (bead
-// oo-3rb.13). The caller writes with fwrite and closes with fclose.
+// +fileHandleForWritingAtPath: gave the OXZ manager's download. The caller
+// writes with fwrite and closes with fclose.
 inline std::FILE* createFileForWriting(const Path& path) noexcept {
   return detail::openFile(path, true);
 }
@@ -442,7 +441,7 @@ inline bool synchronizeFile(std::FILE* file) noexcept {
 
 /*	The contents of the file at path, where a path component with the
    extension .oxz (any case) is a zip archive and the rest of the path names a
-   file inside it (bead oo-3rb.131). nullopt where +oo_dataWithOXZFile: returned
+   file inside it. nullopt where +oo_dataWithOXZFile: returned
    nil: no such file, a directory, an empty plain file, or an archive or entry
    that cannot be read (with the same log lines). Defined in Core
         (OODataFromOXZFile.mm); uses MiniZip for .oxz segments.
@@ -450,7 +449,7 @@ inline bool synchronizeFile(std::FILE* file) noexcept {
 std::optional<oo::Data> OODataFromOXZFile(const std::string& path);
 
 /*	True when the path names an existing non-directory file, including a
-   path that crosses a .oxz zip component (bead oo-1ddr). Same answers as the
+   path that crosses a .oxz zip component. Same answers as the
    file manager's -oo_oxzFileExistsAtPath:. Defined in Core
    (OODataFromOXZFile.mm).
 */
@@ -458,5 +457,3 @@ bool OOOxzFileExistsAtPath(const std::string& path);
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_FILESYSTEM_HPP

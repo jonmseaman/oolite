@@ -1,22 +1,17 @@
 /*	test_OOCacheManager.mm
-        Unit tests for OOCacheManager (src/Core/OOCacheManager.h): bead oo-rmd7,
-   a Phase 3 conversion in the house style of the OOColor exemplar (proposed
-   ADR-0056).
+        Unit tests for OOCacheManager (src/Core/OOCacheManager.h).
 
         The manager is a process-wide singleton that keeps named caches of
    property lists and writes them to one file in the user's caches directory.
    The test points that directory (HOMEPATH) and the built-in Resources (the
    current directory) at a scratch folder before the singleton exists, so
-   nothing of the user's is read or written. It pins what the manager computed
-   before the conversion: one shared instance; storing, replacing, reading and
+   nothing of the user's is read or written. It pins what the manager does:
+   one shared instance; storing, replacing, reading and
    removing entries and whole caches; dirtiness (in the description); the cache
    directory (not made unless asked); a flush writing through the asynchronous
    work manager and a reload reading it back; writes refused while disallowed; a
    cache from another game version, or one that does not parse, discarded;
-        clearing everything. The expectations were written against the
-   Objective-C API and run on the unconverted class first (commit 079054e79);
-   they ran through the facade until bead oo-9ht.31 deleted it with its contract
-   test (standing approval oo-9n5p9), and now ask the C++ class. Run: bash
+        clearing everything. The tests ask the C++ class. Run: bash
    tools/check-core-tests.sh
 */
 
@@ -33,10 +28,9 @@
 
 /*	The asynchronous work manager (OOAsyncWorkManager.mm) starts worker
    threads, so it is not linked. A stand-in answers the three calls the cache
-   manager makes (proposed ADR-0056 amendment oo-z1s4 item 4): it keeps each
+   manager makes: it keeps each
    task and runs it when it is waited for, as a worker thread would have run it
-   by then, and counts both. It was an Objective-C stub of the facade until bead
-   oo-9ht.14 made the manager and its tasks C++; its answers are the same.
+   by then, and counts both.
 */
 static int gTasksAdded = 0;
 static int gTasksPerformed = 0;

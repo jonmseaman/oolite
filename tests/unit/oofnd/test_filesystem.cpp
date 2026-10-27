@@ -1,5 +1,5 @@
 /*	test_filesystem.cpp
-        Unit tests for oofnd/FileSystem.hpp (bead oo-i9q): oo::fs, the
+        Unit tests for oofnd/FileSystem.hpp: oo::fs, the
    replacement for NSFileManager, the NSFileManager (OOExtensions) category and
    NSData's file I/O. Each test works in its own fresh directory under the
    system temporary directory and removes it afterwards.

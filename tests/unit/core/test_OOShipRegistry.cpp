@@ -1,21 +1,14 @@
 /*	test_OOShipRegistry.mm
-        Unit tests for OOShipRegistry (src/Core/OOShipRegistry.h): bead oo-3bgz,
-   slice 1 of the Phase 3 slice plan docs/phases/3-slices/OOShipRegistry.md (the
-   class shell, lifecycle, the lookups, OOConveniences and the singleton), in
-   the house style of the OOColor exemplar (proposed ADR-0056).
+        Unit tests for OOShipRegistry (src/Core/OOShipRegistry.h).
 
-        It pins what the registry answered before the conversion, through the
-   Objective-C API its callers use, over a small ship data set that a stand-in
-   ResourceManager serves: the shared instance, every lookup (ship, effect and
-   shipyard entries, player ships, roles and their probability sets, keys with a
-   role, a random key for a role, demo ships), replacing an entry, and +reload,
-   which makes a new registry from the cache the first one filled. The data
-   pipeline itself (OODataLoader, slices 2 and 3) runs as it is; this test only
-   fixes its input. The expectations were written against the unconverted class
-   and run on it first. After the conversion the class sat in namespace cxx
-   behind an Objective-C facade, which bead oo-9ht.122 deleted with its
-   facade-contract case (standing approval oo-9n5p9); the cases ask the C++
-   class. Run: bash tools/check-core-tests.sh test_OOShipRegistry
+        It pins what the registry answers, through the C++ API its callers use,
+   over a small ship data set that a stand-in ResourceManager serves: the
+   shared instance, every lookup (ship, effect and shipyard entries, player
+   ships, roles and their probability sets, keys with a role, a random key for
+   a role, demo ships), replacing an entry, and +reload, which makes a new
+   registry from the cache the first one filled. The data pipeline itself
+   (OODataLoader) runs as it is; this test only fixes its input. Run: bash
+   tools/check-core-tests.sh test_OOShipRegistry
 */
 
 #include <cstdio>
@@ -36,10 +29,10 @@
 #include "oo_test.hpp"
 #include "oofnd/PListParsing.hpp"
 
-// Link stubs (ADR-0056 amendment oo-zffj item 2): what OOShipRegistry.mm and
-// OOCacheManager.mm reference whose objects would link the game. The paths the
-// test runs never reach the aborting ones: no ship has a condition script, a
-// subentity, a vector or quaternion string, and nothing flushes the cache.
+// Link stubs: what OOShipRegistry.mm and OOCacheManager.mm reference whose
+// objects would link the game. The paths the test runs never reach the aborting
+// ones: no ship has a condition script, a subentity, a vector or quaternion
+// string, and nothing flushes the cache.
 class Universe;
 class PlayerEntity;
 PlayerEntity* gOOPlayer = nullptr;
@@ -52,7 +45,7 @@ OOEntityStatus Entity::status() { std::abort(); }
 Universe* gSharedUniverse = nil;
 
 // UNIVERSE stays nil here, so the registry's guarded call never reaches it; the
-// stand-in only links it (bead oo-ql9rn: it was a message to nil).
+// stand-in only links it (it was a message to nil).
 class OOScript;
 class Universe {
  public:
@@ -94,8 +87,7 @@ std::string OOShipLibraryCategoryPlural(const std::string& category) {
 }
 
 // OOCacheManager.mm calls the asynchronous work manager for its flush, which
-// the test never does (a C++ stand-in since bead oo-9ht.14 made the manager
-// C++; it was an empty Objective-C class).
+// the test never does (a C++ stand-in).
 OOAsyncWorkManager* OOAsyncWorkManager::sharedAsyncWorkManager() {
   std::abort();
 }
@@ -179,9 +171,8 @@ oo::PList FileNamed(const std::string& name) {
 
 }  // namespace
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& fileName, const std::optional<std::string>& folderName,
     OOResourceMergeMode mergeMode, bool useCache) {
@@ -323,10 +314,9 @@ OO_TEST(reloadMakesANewRegistryFromTheCache) {
          "adder cobra3-player coriolis-station viper");
 }
 
-// Subentity declarations (slice 3 of the plan, the loader's canonicalisation
-// and validation): a fresh load of the subentity data set, the registry's cache
-// cleared first so that +reload reads the files again. Pinned on the
-// unconverted loader (bead oo-r9gn) before slice 3 (bead oo-ugw3).
+// Subentity declarations (the loader's canonicalisation and validation): a
+// fresh load of the subentity data set, the registry's cache cleared first so
+// that +reload reads the files again.
 OO_TEST(canonicalizesSubentityDeclarations) {
   sSubentityData = true;
   OOCacheManager::sharedCache()->clearCache("ship registry");

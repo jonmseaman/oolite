@@ -1,18 +1,14 @@
 /*	test_OOCommodityMarket.mm
-        Unit tests for OOCommodityMarket (src/Core/OOCommodityMarket.h): bead
-   oo-ih7y (Phase 3, proposed ADR-0056).
+        Unit tests for OOCommodityMarket (src/Core/OOCommodityMarket.h).
 
         A market is a table of goods, each a trade-goods.plist definition (a
    dictionary): the goods in sort_order, prices and quantities set within the
    good's capacity (127 where it has none), the definitions' texts expanded, the
    mass unit, legality and trumble opinion read back, and the player's and a
    station's amounts saved and loaded, including 1.80-era saves that name goods
-   by their display name. The string expander is replaced (ADR-0056 amendment
-   oo-8kx7): it returns its input in angle brackets. The expectations were
-   written against the Objective-C class and run on it first; bead oo-9ht.21
-        deleted that facade, and the same expectations now ask the C++ class
-   (held as oo::Ref where the autoreleased facade was); the last tests pin the
-   C++ API. Run: bash tools/check-core-tests.sh
+   by their display name. The string expander is replaced: it returns its input
+   in angle brackets. The tests ask the C++ class (held as oo::Ref); the last
+   tests pin the C++ API. Run: bash tools/check-core-tests.sh
 */
 
 #include <string>

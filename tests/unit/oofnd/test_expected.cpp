@@ -1,8 +1,8 @@
 /*	test_expected.cpp
-        Unit tests for oofnd/Expected.hpp (bead oo-fde): oo::Expected<T, E>,
+        Unit tests for oofnd/Expected.hpp: oo::Expected<T, E>,
    oo::Unexpected<E>, oo::unexpect and oo::BadExpectedAccess, checked against
-   the behaviour C++23 specifies for std::expected so that the Phase 6 swap
-   (ADR-0011) is a rename.
+   the behaviour C++23 specifies for std::expected so that a swap to it is a
+   rename.
 
         A Tracked value type counts its live instances, so every construction
    path, assignment transition (value <-> error) and swap case is also checked

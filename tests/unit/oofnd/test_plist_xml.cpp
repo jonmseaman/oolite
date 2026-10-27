@@ -1,12 +1,12 @@
 /*	test_plist_xml.cpp
-        The XML plist reader (bead oo-gxv): oo::changeDTDIfApplicable
+        The XML plist reader: oo::changeDTDIfApplicable
    (OOPListParsing.m's ChangeDTDIfApplicable, byte for byte) and
    oo::parseXMLPList (GNUstep's GSXMLPListParser over GSSloppyXMLParser). Parse
    expectations were captured from GNUstep base 1.31.1 through
         OOPropertyListFromData's path (DTD change, then
    NSPropertyListSerialization) with a throwaway harness printing
-   plist_dump.hpp's format; the tests marked ADR-0027 pin oofnd's documented
-        differences where GNUstep raised an exception or depended on the
+   plist_dump.hpp's format; the tests suffixed GnustepDiffers pin oofnd's
+   documented differences where GNUstep raised an exception or depended on the
    machine's time zone. meson test --suite oofnd-plist
 */
 
@@ -350,7 +350,7 @@ OO_TEST(theDeclarationMustBeTheFirstByte) {
               kFailed);  // BOM
 }
 
-OO_TEST(whereGNUstepRaisesOofndFails_ADR0027) {
+OO_TEST(whereGNUstepRaisesOofndFails_GnustepDiffers) {
   // GNUstep raises NSInvalidArgumentException out of the parser ("Tried to add
   // nil to array", "Tried to add nil value for key 'a' to dictionary"); oofnd
   // reports a failed parse.
@@ -362,7 +362,7 @@ OO_TEST(whereGNUstepRaisesOofndFails_ADR0027) {
 }
 
 OO_TEST(aTokenCutAtTheEndOfTheDataMustBeUtf8) {
-  // Found by the GNUstep differential fuzzer (bead oo-g2k). At the end of the
+  // Found by the GNUstep differential fuzzer. At the end of the
   // data cget() does not advance, so a tag, declaration word, attribute or run
   // of text that reaches the end loses its last byte. GNUstep makes each an
   // NSString with NewUTF8STR(); when the cut falls inside a character that is
@@ -397,7 +397,7 @@ OO_TEST(aTokenCutAtTheEndOfTheDataMustBeUtf8) {
 }
 
 OO_TEST(namesLoseALeadingBomAsNSStringsDo) {
-  // Found by the GNUstep differential fuzzer (bead oo-g2k): tag names,
+  // Found by the GNUstep differential fuzzer: tag names,
   // declaration names and attribute names are NSStrings made from UTF-8, which
   // drops a leading U+FEFF.
   const std::string bom = "\xef\xbb\xbf";
@@ -416,7 +416,7 @@ OO_TEST(namesLoseALeadingBomAsNSStringsDo) {
 }
 
 OO_TEST(anEmptyOrUnknownEncodingNameReadsAsUtf8) {
-  // Found by the GNUstep differential fuzzer (bead oo-g2k): encoding="" (or a
+  // Found by the GNUstep differential fuzzer: encoding="" (or a
   // name GNUstep does not know) is GSUndefinedEncoding, which is read as UTF-8,
   // not refused.
   OO_CHECK_EQ(parsed("<?xml version=\"1.0\" "
@@ -434,12 +434,11 @@ OO_TEST(anEmptyOrUnknownEncodingNameReadsAsUtf8) {
       "S\"\\u00E9\"");
 }
 
-OO_TEST(whereGNUstepNeverReturnsOofndFails_ADR0027) {
-  // Found by the GNUstep differential fuzzer (bead oo-g2k). An <!ATTLIST whose
+OO_TEST(whereGNUstepNeverReturnsOofndFails_GnustepDiffers) {
+  // Found by the GNUstep differential fuzzer. An <!ATTLIST whose
   // unquoted default runs to the end of the data: -_newQarg steps back onto the
   // last byte and the declaration loop re-reads it forever, so GNUstep never
-  // returns. oofnd used to loop forever with it; it now fails the parse
-  // (ADR-0027 item 4).
+  // returns. oofnd used to loop forever with it; it now fails the parse.
   const std::string h =
       "<?xml version=\"1.0\"?><plist><string>x</string></plist>";
   OO_CHECK_EQ(parsed(h + "<!ATTLIST x a b c"), kFailed);
@@ -459,10 +458,10 @@ OO_TEST(whereGNUstepNeverReturnsOofndFails_ADR0027) {
 }
 
 OO_TEST(dateTextIsReadAsACStringInLatin1) {
-  // Found by the GNUstep differential fuzzer (bead oo-g2k). NSCalendarDate
+  // Found by the GNUstep differential fuzzer. NSCalendarDate
   // parses [description cString] (ISO-8859-1 in the game's build), which stops
   // at a NUL; a character beyond U+00FF raises NSCharacterConversionException
-  // out of GNUstep's parser, and oofnd fails the parse (ADR-0027 item 7).
+  // out of GNUstep's parser, and oofnd fails the parse.
   const std::string x = "<?xml version=\"1.0\"?><plist>";
   OO_CHECK_EQ(parsed(x + "<array><date>2001-01-01 00:00:00 "
                          "+0000\xc3\xa9</date></array></plist>"),
@@ -479,7 +478,7 @@ OO_TEST(dateTextIsReadAsACStringInLatin1) {
               "nil");
 }
 
-OO_TEST(zuluDatesAreUtc_ADR0027) {
+OO_TEST(zuluDatesAreUtc_GnustepDiffers) {
   // GNUstep read these in the machine's local zone (T18000.000 and
   // T15652800.000 on the UTC-5 capture machine); the "+0000" form is
   // zone-independent and matches.

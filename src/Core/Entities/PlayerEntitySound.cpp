@@ -22,14 +22,13 @@ MA 02110-1301, USA.
 
 */
 
-#include "PlayerEntitySound.h"
-
 #include "GameController.h"
 #include "OOCallByName.h"  // oo::ScheduleEntityCall
 #include "OOEquipmentType.h"
 #include "OOMaths.h"
 #include "OOSound.h"
 #include "OOSoundSourcePool.h"
+#include "PlayerEntitySound.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"
@@ -58,20 +57,17 @@ namespace {
 ::OOSoundSource* sAfterburnerSources[2];
 }  // namespace
 
-// The pools are C++ (bead oo-9ht.89 deleted their Objective-C facade); each
-// static holds one retain, as the facades did, given up by ReleasePool where
-// the facades were DESTROYed. A message to a nil pool did nothing, so each play
-// checks for none.
+// Each pool static holds one retain, given up by ReleasePool. A message to a
+// nil pool did nothing, so each play checks for none.
 namespace {
 void ReleasePool(OOSoundSourcePool*& pool) {
   if (pool != nullptr) pool->release();
   pool = nullptr;
 }
 
-// The sources are C++ too (bead oo-9ht.88 deleted their Objective-C facade):
-// each static holds the retain alloc/init gave it, given up by ReleaseSource
-// where DESTROY released it. A message to a nil source did nothing and
-// -isPlaying answered NO, so each use checks for none.
+// Each source static holds the retain alloc/init gave it, given up by
+// ReleaseSource. A message to a nil source did nothing and -isPlaying answered
+// NO, so each use checks for none.
 ::OOSoundSource* NewSource(::OOSound* sound = nullptr) {
   return oo::makeRef<::OOSoundSource>(sound).leakRef();
 }
@@ -437,8 +433,7 @@ void PlayerEntity::updateAfterburnerSound() {
       sAfterburnerSources[which]->play();
     which = !which;
 
-    // and swap sounds in 1.25s time (a deferred call on the C++ player since
-    // bead oo-9ht.39.7.3; by name on its object before)
+    // and swap sounds in 1.25s time (a deferred call on the player)
     oo::ScheduleEntityCall(
         this,
         [](Entity* entity) {

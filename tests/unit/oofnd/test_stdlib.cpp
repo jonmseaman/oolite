@@ -1,5 +1,5 @@
 /*	test_stdlib.cpp
-        Regression test for bead oo-3rb.10: oofnd/StdLib.hpp, the standard
+        Regression test: oofnd/StdLib.hpp, the standard
    containers and clocks Objective-C++ game code uses, must compile after
    OOCocoa.h's `#define true 1` /
         `#define false 0` and hand those macros back unchanged (see

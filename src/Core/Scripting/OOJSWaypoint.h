@@ -41,9 +41,7 @@ void InitOOJSWaypoint(ooscript::Context context, ooscript::Object global);
 
 /*	The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the
    engine reaches through the root's JS members: the C++ class's overrides call
-   these (the OOWaypointEntity facade forwarded to them from bead oo-9ht.50
-   until bead oo-9ht.108 deleted it; proposed ADR-0056 amendments oo-ppc,
-   oo-ykoy, oo-6ia4 and oo-9ht.107).
+   these.
 */
 void OOJSWaypointGetJSClass(ooscript::ClassDef** outClass,
                             ooscript::Object* outPrototype);

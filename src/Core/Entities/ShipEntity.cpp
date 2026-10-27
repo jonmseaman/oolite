@@ -23,8 +23,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "ShipEntity.h"
-
 #include <string_view>
 
 #include "AI.h"
@@ -80,6 +78,7 @@ MA 02110-1301, USA.
 #include "PlayerEntitySound.h"
 #include "ProxyPlayerEntity.h"
 #include "ResourceManager.h"
+#include "ShipEntity.h"
 #include "ShipEntityAI.h"
 #include "ShipEntityScriptMethods.h"
 #include "StationEntity.h"
@@ -88,7 +87,7 @@ MA 02110-1301, USA.
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h"  // oo::Finally, oo::CurrentOOException (beads oo-rskgl, oo-rskgl.1)
+#include "oofnd/objc/OOException.h"  // oo::Finally, oo::CurrentOOException
 
 #define USEMASC 1
 
@@ -105,10 +104,7 @@ static GLfloat calcFuelChargeRate(GLfloat myMass) {
    kMassCharge)  // proportion of price that doesn't change with ship's mass.
 
   GLfloat baseMass =
-      (PLAYER != nullptr
-           ? PLAYER->baseMass()
-           : 0.0f);  // [PLAYER baseMass] (ShipEntityPlayerBaseMass() until bead
-                     // oo-9ht.144)
+      (PLAYER != nullptr ? PLAYER->baseMass() : 0.0f);  // [PLAYER baseMass]
   // if anything is wrong, use 1 (the default  charge rate).
   if (myMass <= 0.0 || baseMass <= 0.0) return 1.0;
 
@@ -148,12 +144,11 @@ oo::PList OptionalKeyPList(const std::optional<std::string>& key) {
   return key.has_value() ? oo::PList(*key) : oo::PList();
 }
 
-/*	Readers for a subentity / ship configuration held as an oo::PList (the
-   Foundation sweep, proposed ADR-0043): what oo::PListView(dict)'s array /
-   string / get<HPVector> / get<Quaternion> answered. A string is nil (nullopt)
-   when the key is absent or holds neither a string nor a number; vectors and
-   quaternions go through OOPListGameTypes' readers, with their defaults for a
-   missing key.
+/*	Readers for a subentity / ship configuration held as an oo::PList: what
+   oo::PListView(dict)'s array / string / get<HPVector> / get<Quaternion>
+   answered. A string is nil (nullopt) when the key is absent or holds neither a
+   string nor a number; vectors and quaternions go through OOPListGameTypes'
+   readers, with their defaults for a missing key.
 */
 const oo::PList* ArrayForKey(const oo::PList& dict, std::string_view key) {
   const oo::PList* value = dict.find(key);
@@ -294,17 +289,15 @@ NSUInteger ShipGroupCursorBatch(OOShipGroupCursor& cursor, ShipEntity** batch) {
 
 }  // namespace
 
-/*	A ship made in C++ (oo::NewShipObject, beads oo-9ht.183, oo-9ht.144):
-   the object holding ship, the root's facade (OOEntityWithDrawable's until bead
-   oo-9ht.40) (the root's -initWithCxxEntity: stores the part once, so the
+/*	A ship made in C++ (oo::NewShipObject): the object holding ship, the
+   root's facade (the root's -initWithCxxEntity: stores the part once, so the
    root's -init body runs once, as [super init] did), then the set-up from the
    definition. The failing set-up released the object, as the initialiser did.
 */
 ShipEntity* oo::NewShipObject(const Ref<ShipEntity>& ship,
                               const std::string& key, const oo::PList& dict) {
   if (ship == nullptr) return nullptr;
-  MadeEntityRetained(
-      ship);  // +1, as +alloc gave (its object's, until bead oo-dpyk8)
+  MadeEntityRetained(ship);  // +1, as +alloc gave
   if (!ship->initShipSetUp(key, dict)) {
     ReleaseEntity(ship.get());
     return nullptr;
@@ -312,8 +305,8 @@ ShipEntity* oo::NewShipObject(const Ref<ShipEntity>& ship,
   return ship.get();
 }
 
-// The deleted facade's -initShipSetUpWithKey:definition: (bead oo-9ht.183),
-// unchanged but for self.
+// The ship's initialiser body: initWithKey(), then the set-up from the
+// dictionary.
 bool ShipEntity::initShipSetUp(const std::string& key, const oo::PList& dict) {
   OOJS_PROFILE_ENTER
 
@@ -333,9 +326,8 @@ bool ShipEntity::initShipSetUp(const std::string& key, const oo::PList& dict) {
   OOJS_PROFILE_EXIT
 }
 
-// The deleted facade's -dealloc body after the subclasses' parts and the weak
-// reference's drop, which the root's -dealloc (Entity::willDispose() since bead
-// oo-dpyk8) runs first (bead oo-9ht.144).
+// The -dealloc body after the subclasses' parts and the weak reference's drop,
+// which the root's -dealloc (Entity::willDispose()) runs first.
 void ShipEntity::shipWillDealloc() {
   /*	NOTE: we guarantee that entityDestroyed is sent immediately after the
           JS ship becomes invalid (as a result of dropping the weakref), i.e.
@@ -384,7 +376,7 @@ void ShipEntity::shipWillDealloc() {
 }
 
 /*	-cxx_initWithKey:definition:'s body between [super init] and the set-up
-   from the dictionary (initShipSetUp() runs both: amendment oo-60fwo).
+   from the dictionary (initShipSetUp() runs both).
 */
 void ShipEntity::initWithKey(const std::string& key) {
   _shipKey = key;
@@ -453,15 +445,12 @@ static BOOL IsBehaviourHostile(OOBehaviour behaviour) {
   return 100 < behaviour && behaviour < 120;
 }
 
-// The stellar bodies are C++ entities (bead oo-al52f): -position and -radius
-// were the members.
+// The stellar bodies are C++ entities: -position and -radius were the members.
 namespace {
 float SurfaceDistanceSqaredV(HPVector reference, Entity* stellar) {
   float centerDistance =
       HPmagnitude2(HPvector_subtract(stellar->getPosition(), reference));
-  float r = OOStellarBodyRadius(
-      stellar);  // [stellar radius] (ShipEntityStellarBodyRadius() until bead
-                 // oo-9ht.144)
+  float r = OOStellarBodyRadius(stellar);  // [stellar radius]
   /*	1.35: empirical value used to help determine proximity when non-nested
                   planets are close to each other
           */
@@ -473,11 +462,9 @@ float SurfaceDistanceSqared(Entity* reference, Entity* stellar) {
 }
 
 OOComparisonResult ComparePlanetsBySurfaceDistance(
-    Entity* e1, Entity* e2, void* context)  // the C++ planets (bead oo-al52f)
+    Entity* e1, Entity* e2, void* context)  // the C++ planets
 {
-  HPVector p =
-      static_cast<ShipEntity*>(context)
-          ->getPosition();  // the ship (its object until bead oo-9ht.144)
+  HPVector p = static_cast<ShipEntity*>(context)->getPosition();  // the ship
 
   float p1 = SurfaceDistanceSqaredV(p, e1);
   float p2 = SurfaceDistanceSqaredV(p, e2);
@@ -539,7 +526,7 @@ Vector cxx_positionOffsetForShipInRotationToAlignment(
   return result;
 }
 
-/*	Slice 33 (bead oo-tz2ra): -broadcastHitByLaserFrom:'s search for the
+/*	-broadcastHitByLaserFrom:'s search for the
    authorities, without messages. Its parameter is the victim's C++ part with
    the two answers the predicate messaged for, read once before the search (both
    are plain reads); the entities' C++ parts answer the rest (getScanClass() is
@@ -549,7 +536,7 @@ namespace {
 
 struct AuthorityPredicateParameter {
   ShipEntity* victim;
-  Entity* mainStation;  // [UNIVERSE station], the C++ station (bead oo-al52f)
+  Entity* mainStation;     // [UNIVERSE station], the C++ station
   bool victimWithinAegis;  // [victim withinStationAegis]
 };
 
@@ -602,10 +589,8 @@ bool ShipEntity::isShipWithSubEntityShip(Entity* other) {
   return YES;
 }
 
-// Slice 2 of docs/phases/3-slices/ShipEntity.md (bead oo-cvbe3): set-up from
-// the ship dictionary (cxx_setUpFromDictionary:). Members of the C++ ship,
-// called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
+// Set-up from the ship dictionary (cxx_setUpFromDictionary:). Members of the
+// C++ ship.
 
 bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
   OOJS_PROFILE_ENTER
@@ -803,7 +788,7 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
         DictionaryForKey(shipDict, "materials"),
         DictionaryForKey(shipDict, "shaders"),
         shipDict.get<bool>("smooth", false), OODefaultShipShaderMacros(),
-        this,  // the C++ ship (bead oo-9ht.39.6)
+        this,  // the C++ ship
         _scaleFactor, true);
 
     if (mesh == nullptr) return NO;
@@ -909,10 +894,8 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
   OOJS_PROFILE_EXIT
 }
 
-// Slice 3 of docs/phases/3-slices/ShipEntity.md (bead oo-mvzmb):
 // setUpShipFromDictionary:, subentity serialisation and set-up. Members of the
-// C++ ship, called directly, since bead oo-9ht.144 deleted the facade (ADR-0056
-// amendment oo-9ht.144).
+// C++ ship.
 
 bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict) {
   OOJS_PROFILE_ENTER
@@ -1236,8 +1219,7 @@ bool ShipEntity::setUpSubEntities() {
     // the string reader gave.
     const std::vector<std::string> definition =
         oo::str::tokens(plumes->at<std::string>(i));
-    // C++ since bead oo-9ht.110: the plume's object is the root façade; nil for
-    // no tokens.
+    // The plume's object is the root façade; nil for no tokens.
     addSubEntity(oo::MadeEntity(OOExhaustPlumeEntity::exhaustForShip(
         this, definition,
         _scaleFactor)));  // its object made as before (null for none)
@@ -1290,7 +1272,7 @@ bool ShipEntity::setUpOneSubentity(const oo::PList& subentDict) {
 }
 
 bool ShipEntity::setUpOneFlasher(const oo::PList& subentDict) {
-  // C++ since bead oo-9ht.107: the flasher's object is the nearest façade left.
+  // The flasher's object is the nearest façade left.
   const oo::Ref<OOFlasherEntity> flasher =
       OOFlasherEntity::flasherWithDictionary(subentDict);
   Entity* flasherPart = oo::MadeEntity(flasher);  // its object made as before
@@ -1302,10 +1284,8 @@ bool ShipEntity::setUpOneFlasher(const oo::PList& subentDict) {
   return YES;
 }
 
-// Slice 4 of docs/phases/3-slices/ShipEntity.md (bead oo-ln2m1): standard
-// subentities and cargo pods; descriptions, mesh, vectors, misjump, subentity
-// lists, AI scripts. Members of the C++ ship, called directly, since bead
-// oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Standard subentities and cargo pods; descriptions, mesh, vectors, misjump,
+// subentity lists, AI scripts. Members of the C++ ship.
 
 bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict,
                                            bool asTurret) {
@@ -1660,10 +1640,8 @@ std::optional<std::string> ShipEntity::descriptionComponents() const {
   }
 }
 
-// Slice 5 of docs/phases/3-slices/ShipEntity.md (bead oo-ddnn8): bounding
-// boxes, octree hit tests, universe add / remove, beacons, boulders, escort
-// set-up. Members of the C++ ship, called directly, since bead oo-9ht.144
-// deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Bounding boxes, octree hit tests, universe add / remove, beacons, boulders,
+// escort set-up. Members of the C++ ship.
 
 BoundingBox ShipEntity::findBoundingBoxRelativeToPosition(HPVector opv,
                                                           Vector _i, Vector _j,
@@ -1763,7 +1741,7 @@ void ShipEntity::wasAddedToUniverse() {
   }
 
   //	Tell subentities, too (last to first, as -makeObjectsPerformSelector:
-  //went)
+  // went)
   const std::vector<oo::EntityHold> subs = subEntities;
   for (auto sub = subs.rbegin(); sub != subs.rend(); ++sub) {
     if (sub->get() != nullptr) sub->get()->wasAddedToUniverse();
@@ -1848,15 +1826,14 @@ OOHUDBeaconIcon* ShipEntity::beaconDrawable() {
   return _beaconDrawable.get();
 }
 
-// The beacons' C++ entities since bead oo-9ht.39.23: null when the object is
-// gone, as the object was nil.
+// The beacons' C++ entities: null when the object is gone, as the object was
+// nil.
 Entity* ShipEntity::prevBeacon() { return oo::LiveEntity(_prevBeacon); }
 
 Entity* ShipEntity::nextBeacon() { return oo::LiveEntity(_nextBeacon); }
 
-// Through the virtual nextBeacon() (a test's player answers it) (bead
-// oo-9ht.39.8.10): the JS bindings compare the C++ entity, which nextBeacon()
-// answers since bead oo-9ht.39.23.
+// Through the virtual nextBeacon() (a test's player answers it): the JS
+// bindings compare the C++ entity, which nextBeacon() answers.
 Entity* ShipEntity::nextBeaconEntity() { return nextBeacon(); }
 
 void ShipEntity::setPrevBeacon(Entity* beaconShip) {
@@ -2046,7 +2023,7 @@ void ShipEntity::setUpMixedEscorts() {
       for (i = min; i < max; i++) {
         if (Ranrot() % 11 < static_cast<unsigned>(government) +
                                 2)  // unsigned, as the comparison converted it
-                                    // (GCC -Wsign-compare; bead oo-1q4)
+                                    // (GCC -Wsign-compare)
         {
           desired--;
         }
@@ -2076,11 +2053,9 @@ void ShipEntity::setUpMixedEscorts() {
   _pendingEscortCount = 0;
 }
 
-// Slice 6 of docs/phases/3-slices/ShipEntity.md (bead oo-5z5wd): escort
-// creation, ship data key, weapon offsets, octree collision checks, subentity
-// geometry, escape-pod launch. Members of the C++ ship, called directly, since
-// bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
-/*	Slice 6 (bead oo-5z5wd): the octree collision check, without messages:
+// Escort creation, ship data key, weapon offsets, octree collision checks,
+// subentity geometry, escape-pod launch. Members of the C++ ship.
+/*	The octree collision check, without messages:
    the ships' C++ parts answer their positions, frames and -canCollide (a
    virtual member, so PlayerEntity's override still runs), and the octrees' C++
    objects test the hit.
@@ -2242,8 +2217,7 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter,
     escorter->setOwner(this);  // mark self as group leader
 
   if (status() == STATUS_DOCKED) {
-    // A station's object is a ship's since bead oo-9ht.175, and a dock's since
-    // bead oo-9ht.180: their C++ parts answer (no other owner answered the
+    // A station's and a dock's C++ parts answer (no other owner answered the
     // selector).
     if (::StationEntity* station = oo::ToStation(owner()))
       station->addShipToLaunchQueue(escorter, NO);
@@ -2379,7 +2353,6 @@ Triangle ShipEntity::absoluteIJKForSubentity() {
   Triangle result = {{kBasisXVector, kBasisYVector, kBasisZVector}};
   Entity* last = nullptr;
   Entity* father = this;  // the C++ entities, which the objects forwarded to
-                          // (bead oo-9ht.39.16)
   OOMatrix r_mat;
 
   // NO_TARGET is 0, so the old `father != (Entity *)NO_TARGET` test only
@@ -2522,8 +2495,7 @@ bool ShipEntity::checkCloseCollisionWith(Entity* otherPart) {
 
   if (otherShip != nil) {
     // check hull octree versus other hull octree
-    collider =
-        doOctreesCollide(this, otherShip);  // the C++ part (bead oo-9ht.39.4)
+    collider = doOctreesCollide(this, otherShip);  // the C++ part
     return (collider != nil);
   }
 
@@ -2532,9 +2504,7 @@ bool ShipEntity::checkCloseCollisionWith(Entity* otherPart) {
   return YES;
 }
 
-// Slice 7 of docs/phases/3-slices/ShipEntity.md (bead oo-k2q1f): update:.
-// Members of the C++ ship, called directly, since bead oo-9ht.144 deleted the
-// facade (ADR-0056 amendment oo-9ht.144).
+// update:. Members of the C++ ship.
 
 void ShipEntity::update(OOTimeDelta delta_t) {
   if (shipinfoDictionary.isNull()) {
@@ -3023,10 +2993,8 @@ void ShipEntity::update(OOTimeDelta delta_t) {
   }
 }
 
-// Slice 8 of docs/phases/3-slices/ShipEntity.md (bead oo-vxdsc): behaviour
-// dispatch, attack response, equipment queries. Members of the C++ ship, called
-// directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
+// Behaviour dispatch, attack response, equipment queries. Members of the C++
+// ship.
 
 void ShipEntity::processBehaviour(OOTimeDelta delta_t) {
   BOOL applyThrust = YES;
@@ -3434,10 +3402,8 @@ void ShipEntity::setHyperspaceSpinTime(float newValue) {
   hyperspaceMotorSpinTime = newValue;
 }
 
-// Slice 9 of docs/phases/3-slices/ShipEntity.md (bead oo-ke13m): equipment
-// validity and adding, weapon mounts, scripting lists. Members of the C++ ship,
-// called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
+// Equipment validity and adding, weapon mounts, scripting lists. Members of the
+// C++ ship.
 
 bool ShipEntity::canAddEquipment(const std::string& equipmentKeyIn,
                                  const std::string& context) {
@@ -3510,8 +3476,8 @@ OOWeaponType ShipEntity::weaponTypeIDForFacing(OOWeaponFacing facing,
 ::OOEquipmentType* ShipEntity::weaponTypeForFacing(OOWeaponFacing facing,
                                                    bool strict) {
   //	OOWeaponType weaponType = [self weaponTypeIDForFacing:facing
-  //strict:strict]; 	return [OOEquipmentType
-  //equipmentTypeWithIdentifier:OOEquipmentIdentifierFromWeaponType(weaponType)];
+  // strict:strict]; 	return [OOEquipmentType
+  // equipmentTypeWithIdentifier:OOEquipmentIdentifierFromWeaponType(weaponType)];
   return weaponTypeIDForFacing(facing, strict);
 }
 
@@ -3881,10 +3847,8 @@ std::vector<std::string> ShipEntity::equipmentKeys() { return _equipment; }
 
 NSUInteger ShipEntity::equipmentCount() { return _equipment.size(); }
 
-// Slice 10 of docs/phases/3-slices/ShipEntity.md (bead oo-wvcs2): equipment
-// removal, missile selection, capacities and has-equipment predicates, shields.
-// Members of the C++ ship, called directly, since bead oo-9ht.144 deleted the
-// facade (ADR-0056 amendment oo-9ht.144).
+// Equipment removal, missile selection, capacities and has-equipment
+// predicates, shields. Members of the C++ ship.
 
 void ShipEntity::removeEquipmentItem(const std::string& equipmentKey) {
   // "" (a former nil) matches no equipment key.
@@ -4286,10 +4250,8 @@ float ShipEntity::shieldRechargeRate() {
 
 double ShipEntity::maxHyperspaceDistance() { return MAX_JUMP_RANGE; }
 
-// Slice 11 of docs/phases/3-slices/ShipEntity.md (bead oo-eh955): thrust and
-// afterburner; behaviours: idle, tumble, tractored, track, intercept, break
-// off, dogfight, evasive. Members of the C++ ship, called directly, since bead
-// oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Thrust and afterburner; behaviours: idle, tumble, tractored, track,
+// intercept, break off, dogfight, evasive. Members of the C++ ship.
 
 float ShipEntity::afterburnerFactor() { return afterburner_speed_factor; }
 
@@ -4658,10 +4620,8 @@ void ShipEntity::behaviour_evasive_action(double delta_t) {
   fireMainWeapon(rangeToPrimaryTarget());
 }
 
-// Slice 12 of docs/phases/3-slices/ShipEntity.md (bead oo-0akes): behaviours:
-// attack target, broadside, close with target. Members of the C++ ship, called
-// directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
+// Behaviours: attack target, broadside, close with target. Members of the C++
+// ship.
 
 void ShipEntity::behaviour_attack_target(double /*delta_t*/) {
   double range = rangeToPrimaryTarget();
@@ -5070,10 +5030,8 @@ void ShipEntity::behaviour_close_with_target(double delta_t) {
   }
 }
 
-// Slice 13 of docs/phases/3-slices/ShipEntity.md (bead oo-xmajv): behaviours:
-// sniper, fly to target six, mining target, attack fly to target. Members of
-// the C++ ship, called directly, since bead oo-9ht.144 deleted the facade
-// (ADR-0056 amendment oo-9ht.144).
+// Behaviours: sniper, fly to target six, mining target, attack fly to target.
+// Members of the C++ ship.
 
 void ShipEntity::behaviour_attack_sniper(double delta_t) {
   if (!canStillTrackPrimaryTarget()) {
@@ -5456,11 +5414,8 @@ void ShipEntity::behaviour_attack_fly_to_target(double delta_t) {
   }
 }
 
-// Slice 14 of docs/phases/3-slices/ShipEntity.md (bead oo-v9sa5): behaviours:
-// fly from target, running defence, flee, range from destination, face
-// destination, land on planet, formation. Members of the C++ ship, called
-// directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
+// Behaviours: fly from target, running defence, flee, range from destination,
+// face destination, land on planet, formation. Members of the C++ ship.
 
 void ShipEntity::behaviour_attack_fly_from_target(double delta_t) {
   double range = rangeToPrimaryTarget();
@@ -5716,7 +5671,6 @@ void ShipEntity::behaviour_land_on_planet(double delta_t) {
       (UNIVERSE != nullptr
            ? UNIVERSE->entityForUniversalID(planetForLanding)
            : nullptr));  // null for any other entity, whose -isPlanet was NO
-                         // (C++ since bead oo-9ht.129)
 
   if (!(planet != nullptr ? planet->isPlanet() : false)) {
     behaviour = BEHAVIOUR_IDLE;
@@ -5807,10 +5761,8 @@ void ShipEntity::behaviour_formation_form_up(double delta_t) {
   }
 }
 
-// Slice 15 of docs/phases/3-slices/ShipEntity.md (bead oo-x4qqv): behaviours:
-// fly to / from destination, avoid collision, turret, navpoints, scripted AI;
-// reaction time. Members of the C++ ship, called directly, since bead
-// oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Behaviours: fly to / from destination, avoid collision, turret, navpoints,
+// scripted AI; reaction time. Members of the C++ ship.
 
 void ShipEntity::behaviour_fly_to_destination(double delta_t) {
   double distance = rangeToDestination();
@@ -5988,8 +5940,7 @@ void ShipEntity::behaviour_track_as_turret(double delta_t) {
   for (const auto& targetRef :
        (turret_owner != nullptr ? turret_owner->defenseTargets()
                                 : std::vector<oo::EntityHold>())) {
-    Entity* target =
-        targetRef.get();  // the snapshot keeps its object (bead oo-9ht.39.16)
+    Entity* target = targetRef.get();  // the snapshot keeps its object
     // defense targets cannot be tracked while cloaked
     if (target->getScanClass() == CLASS_NO_DRAW ||
         (oo::ToShip(target) != nullptr ? oo::ToShip(target)->isCloaked()
@@ -6231,10 +6182,8 @@ HPVector ShipEntity::calculateTargetPosition() {
       HPvector_multiply_scalar(trackingCurveCoeffs[2], t * t));
 }
 
-// Slice 16 of docs/phases/3-slices/ShipEntity.md (bead oo-d96oe): tracking
-// curve, drawing, scanner colours, cloaking, subentities and owner, thrust.
-// Members of the C++ ship, called directly, since bead oo-9ht.144 deleted the
-// facade (ADR-0056 amendment oo-9ht.144).
+// Tracking curve, drawing, scanner colours, cloaking, subentities and owner,
+// thrust. Members of the C++ ship.
 
 void ShipEntity::startTrackingCurve() {
   Entity* target = primaryTarget();
@@ -6365,7 +6314,7 @@ void ShipEntity::drawImmediate(bool immediate, bool translucent) {
                 dynamic_cast<cxx::OOSubEntityInterface*>(subEntity))
           cxxSub->drawSubEntityImmediate(immediate, translucent);
         // (else: nothing - the root's category drew only a ship's or an
-        // effect's part, which adopt the interface; bead oo-dpyk8)
+        // effect's part, which adopt the interface)
       }
     }
   }
@@ -6635,7 +6584,7 @@ void ShipEntity::setOwner(Entity* who_owns_entity) {
   */
   if (isSubEntity) {
     if (OODrawable* drawable = getDrawable())
-      drawable->setBindingTarget(this);  // the C++ entity (bead oo-9ht.39.6)
+      drawable->setBindingTarget(this);  // the C++ entity
   }
 }
 
@@ -6690,10 +6639,8 @@ void ShipEntity::orientationChanged() {
   v_right = vector_right_from_quaternion(orientation);
 }
 
-// Slice 17 of docs/phases/3-slices/ShipEntity.md (bead oo-6hofy): attitude,
-// collision avoidance, messages, groups and escort accessors, proximity alert,
-// names and descriptions. Members of the C++ ship, called directly, since bead
-// oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Attitude, collision avoidance, messages, groups and escort accessors,
+// proximity alert, names and descriptions. Members of the C++ ship.
 
 void ShipEntity::applyRoll(GLfloat roll1, GLfloat climb1) {
   Quaternion q1 = kIdentityQuaternion;
@@ -6738,7 +6685,7 @@ void ShipEntity::avoidCollision() {
       // must use the weak ref here to prevent potential over-retention
       condition["primaryTarget"] =
           oo::EntityWeakNode(primaryTarget());  // weakly, as its object's weak
-                                                // reference was (bead oo-w9pi2)
+                                                // reference was
     }
     condition["desired_range"] = oo::PList::singleReal(
         desired_range);  // floats, as oo_setFloat: stored them
@@ -6768,9 +6715,8 @@ void ShipEntity::resumePostProximityAlert() {
   behaviour = (OOBehaviour)previousCondition.get<int>("behaviour");
   const oo::PList* previousTarget = previousCondition.find("primaryTarget");
   _primaryTarget = oo::WeakRef<Entity>(
-      previousTarget != nullptr
-          ? oo::EntityInWeakNode(*previousTarget)
-          : nullptr);  // the node holds the target weakly (bead oo-w9pi2)
+      previousTarget != nullptr ? oo::EntityInWeakNode(*previousTarget)
+                                : nullptr);  // the node holds the target weakly
   startTrackingCurve();
   desired_range = previousCondition.get<float>("desired_range");
   desired_speed = previousCondition.get<float>("desired_speed");
@@ -6782,7 +6728,7 @@ void ShipEntity::resumePostProximityAlert() {
   _proximityAlert = nullptr;
 
   //[shipAI message:@"RESTART_DOCKING"];	// if docking, start over, other
-  //AIs will ignore this message
+  // AIs will ignore this message
 }
 
 double ShipEntity::getMessageTime() { return messageTime; }
@@ -6886,8 +6832,7 @@ NSUInteger ShipEntity::turretCount() {
   return count;
 }
 
-// The C++ entity (bead oo-9ht.39.23.2): null, and forgotten, when its object is
-// gone, as before.
+// The C++ entity: null, and forgotten, when its object is gone, as before.
 Entity* ShipEntity::proximityAlert() {
   Entity* prox = oo::LiveEntity(_proximityAlert);
   if (prox == nullptr) {
@@ -7051,10 +6996,8 @@ void ShipEntity::setScanDescription(const std::optional<std::string>& inName) {
   scan_description = inName;
 }
 
-// Slice 18 of docs/phases/3-slices/ShipEntity.md (bead oo-vho1o): roles,
-// ship-type predicates, hostility, weapon data, scanner range, aegis
-// transition, nearest planet. Members of the C++ ship, called directly, since
-// bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Roles, ship-type predicates, hostility, weapon data, scanner range, aegis
+// transition, nearest planet. Members of the C++ ship.
 
 std::optional<std::string> ShipEntity::identFromShip(::ShipEntity* otherShip) {
   if (isJammingScanning() &&
@@ -7190,7 +7133,7 @@ std::optional<std::string> ShipEntity::jsClassName() {
 
 // A ship made in C++ (the player, the proxy) is visible to scripts, as its
 // deleted facade was: the Objective-C PlayerEntity and ProxyPlayerEntity
-// inherited ShipEntity's answer (bead oo-ak1km).
+// inherited ShipEntity's answer.
 bool ShipEntity::isVisibleToScripts() {
   return ::ShipEntityJSIsVisibleToScripts();
 }
@@ -7276,8 +7219,7 @@ void ShipEntity::setReportAIMessages(bool yn) { reportAIMessages = yn; }
 
 void ShipEntity::transitionToAegisNone() {
   if (!suppressAegisMessages && aegis_status != AEGIS_NONE) {
-    Entity* lastAegisLock =
-        this->lastAegisLock();  // the C++ entity (bead oo-al52f)
+    Entity* lastAegisLock = this->lastAegisLock();  // the C++ entity
     if (lastAegisLock != nullptr) {
       doScriptEvent(OOJSID("shipExitedPlanetaryVicinity"), lastAegisLock);
 
@@ -7312,8 +7254,7 @@ void ShipEntity::transitionToAegisNone() {
        (UNIVERSE != nullptr ? UNIVERSE->planets()
                             : std::vector<oo::EntityHold>())) {
     planet = static_cast<::OOPlanetEntity*>(
-        planetRef
-            .get());  // the list holds only planets (C++ since bead oo-9ht.129)
+        planetRef.get());  // the list holds only planets
     // Ignore miniature planets.
     if ((planet != nullptr ? planet->planetType() : OOStellarBodyType{}) ==
         STELLAR_TYPE_MINIATURE)
@@ -7330,8 +7271,7 @@ void ShipEntity::transitionToAegisNone() {
 }
 
 Entity* ShipEntity::findNearestStellarBody() {
-  Entity* match =
-      findNearestPlanet();  // the C++ planet and sun (bead oo-al52f)
+  Entity* match = findNearestPlanet();  // the C++ planet and sun
   Entity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
 
   if (sun != nullptr) {
@@ -7346,8 +7286,7 @@ Entity* ShipEntity::findNearestStellarBody() {
 
 ::OOPlanetEntity* ShipEntity::findNearestPlanetExcludingMoons() {
   ::OOPlanetEntity* result = nil;
-  std::vector<oo::EntityHold>
-      planets;  // the planets, held (beads oo-9ht.39.26, oo-al52f)
+  std::vector<oo::EntityHold> planets;  // the planets, held
 
   for (const auto& planet :
        (UNIVERSE != nullptr ? UNIVERSE->planets()
@@ -7369,13 +7308,11 @@ Entity* ShipEntity::findNearestStellarBody() {
   return result;
 }
 
-// Slice 19 of docs/phases/3-slices/ShipEntity.md (bead oo-umyg2): aegis, home
-// and destination systems, status, crew, AI and ship script, fuel. Members of
-// the C++ ship, called directly, since bead oo-9ht.144 deleted the facade
-// (ADR-0056 amendment oo-9ht.144).
+// Aegis, home and destination systems, status, crew, AI and ship script, fuel.
+// Members of the C++ ship.
 
 OOAegisStatus ShipEntity::checkForAegis() {
-  Entity* nearest = findNearestStellarBody();  // the C++ entity (bead oo-al52f)
+  Entity* nearest = findNearestStellarBody();  // the C++ entity
   BOOL sunGoneNova =
       ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr
            ? UNIVERSE->sun()->goneNova()
@@ -7454,7 +7391,7 @@ OOAegisStatus ShipEntity::checkForAegis() {
     cr2 = (mainPlanet != nullptr ? mainPlanet->radius() : 0.0);
     cr2 *= cr2;
     if (d2 < cr2 * 9.0f) {
-      nearest = mainPlanet;  // the C++ planet (bead oo-al52f)
+      nearest = mainPlanet;  // the C++ planet
       result = AEGIS_CLOSE_TO_MAIN_PLANET;
     }
   }
@@ -7487,11 +7424,8 @@ OOAegisStatus ShipEntity::checkForAegis() {
           !sunGoneNova)  // With small main planets the station aegis can come
                          // before planet aegis
       {
-        doScriptEvent(
-            OOJSID("shipEnteredPlanetaryVicinity"),
-            (UNIVERSE != nullptr
-                 ? UNIVERSE->planet()
-                 : nullptr));  // the planet is C++ since bead oo-9ht.129
+        doScriptEvent(OOJSID("shipEnteredPlanetaryVicinity"),
+                      (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr));
         setLastAegisLock((UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr));
       }
     } else if (EXPECT_NOT(result == AEGIS_NONE && aegis_status != result)) {
@@ -7529,7 +7463,7 @@ OOAegisStatus ShipEntity::checkForAegis() {
           // It's been years since 1.71 - it should be safe enough to comment
           // out the line below for 1.77/1.78 -- Kaks 20120917
           //[shipAI message:@"AEGIS_CLOSE_TO_PLANET"];	    // fires only for
-          //main planets, kept for compatibility with pre-1.72 AI plists.
+          // main planets, kept for compatibility with pre-1.72 AI plists.
           if (shipAI != nullptr)
             shipAI->message(
                 "AEGIS_CLOSE_TO_MAIN_PLANET");  // fires only for main planet.
@@ -7556,8 +7490,8 @@ bool ShipEntity::withinStationAegis() {
   return aegis_status == AEGIS_IN_DOCKING_RANGE;
 }
 
-// A planet or sun, the C++ entity (bead oo-9ht.39.23.3): null, and forgotten,
-// when its object is gone, as before.
+// A planet or sun, the C++ entity: null, and forgotten, when its object is
+// gone, as before.
 Entity* ShipEntity::lastAegisLock() {
   Entity* stellar = oo::LiveEntity(_lastAegisLock);
   if (stellar == nullptr) {
@@ -7747,10 +7681,8 @@ GLfloat ShipEntity::fuelChargeRate() {
   return rate;
 }
 
-// Slice 20 of docs/phases/3-slices/ShipEntity.md (bead oo-66inv): sticks,
-// bounty and legal status, commodities and cargo, speed. Members of the C++
-// ship, called directly, since bead oo-9ht.144 deleted the facade (ADR-0056
-// amendment oo-9ht.144).
+// Sticks, bounty and legal status, commodities and cargo, speed. Members of the
+// C++ ship.
 
 void ShipEntity::applySticks(double delta_t) {
   double rate1 = 2.0 * delta_t;  // roll
@@ -7937,7 +7869,7 @@ OOCargoType ShipEntity::cargoType() { return cargo_type; }
 
 /* Note: this array probably contains some template cargo pods. Do not
  * pass it to Javascript without reifying them first. The live container:
- * callers edit it in place (ADR-0043 Amendment 3 item 22); nullptr for a nil
+ * callers edit it in place; nullptr for a nil
  * receiver. */
 std::vector<oo::EntityHold>* ShipEntity::getCargo() { return &cargo; }
 
@@ -8039,8 +7971,7 @@ OOCargoFlag ShipEntity::cargoFlag() { return cargo_flag; }
 void ShipEntity::setCargoFlag(OOCargoFlag flag) {
   if (cargo_flag != flag) {
     cargo_flag = flag;
-    std::vector<oo::EntityHold>
-        newCargo;  // the universe's pods (bead oo-9ht.39.26)
+    std::vector<oo::EntityHold> newCargo;  // the universe's pods
     unsigned num = 0;
     if (likely_cargo > 0) {
       num = likely_cargo * (0.5 + randf());
@@ -8110,10 +8041,8 @@ void ShipEntity::setDesiredSpeed(double amount) { desired_speed = amount; }
 
 double ShipEntity::desiredSpeed() { return desired_speed; }
 
-// Slice 21 of docs/phases/3-slices/ShipEntity.md (bead oo-cicod): flight
-// controls and limits, temperature, dealing damage, hulks, damage notes.
-// Members of the C++ ship, called directly, since bead oo-9ht.144 deleted the
-// facade (ADR-0056 amendment oo-9ht.144).
+// Flight controls and limits, temperature, dealing damage, hulks, damage notes.
+// Members of the C++ ship.
 
 double ShipEntity::desiredRange() { return desired_range; }
 
@@ -8276,8 +8205,7 @@ void ShipEntity::dealEnergyDamage(GLfloat baseDamage, GLfloat range,
   if (targets.size() > 0) {
     unsigned i;
     for (i = 0; i < targets.size(); i++) {
-      Entity* e2 = targets[i].get();  // the snapshot keeps its object (beads
-                                      // oo-9ht.39.16, oo-9ht.39.26)
+      Entity* e2 = targets[i].get();  // the snapshot keeps its object
       Vector p2 = vectorTo(e2);
       double ecr = e2->collisionRadius();
       double d = (magnitude(p2) - ecr) / range;
@@ -8292,7 +8220,7 @@ void ShipEntity::dealEnergyDamage(GLfloat baseDamage, GLfloat range,
         // but might be negative for other nearby ships which are
         // actually moving further away from the missile
         //				double vMag = vSign > 0.0 ?
-        //magnitude(v2) : -magnitude(v2);
+        // magnitude(v2) : -magnitude(v2);
         double vMag = vSign * magnitude(v2);
         if (vMag > 1000.0) {
           vMag = 1000.0;
@@ -8356,8 +8284,7 @@ void ShipEntity::dealEnergyDamageWithinDesiredRange() {
   if (targets.size() > 0) {
     unsigned i;
     for (i = 0; i < targets.size(); i++) {
-      Entity* e2 = targets[i].get();  // the snapshot keeps its object (beads
-                                      // oo-9ht.39.16, oo-9ht.39.26)
+      Entity* e2 = targets[i].get();  // the snapshot keeps its object
       Vector p2 = vectorTo(e2);
       double ecr = e2->collisionRadius();
       double d =
@@ -8466,10 +8393,8 @@ void ShipEntity::noteKilledBy(Entity* whom, OOShipDamageType type) {
   OOJSRelinquishContext(context);
 }
 
-// Slice 22 of docs/phases/3-slices/ShipEntity.md (bead oo-z1utw): destruction,
-// rescaling, cargo debris, explosions, energy blast. Members of the C++ ship,
-// called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
+// Destruction, rescaling, cargo debris, explosions, energy blast. Members of
+// the C++ ship.
 
 void ShipEntity::getDestroyedBy(Entity* whom, OOShipDamageType type) {
   noteKilledBy(whom, type);
@@ -8493,7 +8418,7 @@ void ShipEntity::rescaleBy(GLfloat factor, bool writeToCache) {
         DictionaryForKey(shipDict, "materials"),
         DictionaryForKey(shipDict, "shaders"),
         shipDict.get<bool>("smooth", false), OODefaultShipShaderMacros(),
-        this,  // the C++ ship (bead oo-9ht.39.6)
+        this,  // the C++ ship
         factor, writeToCache);
 
     if (mesh == nullptr) return;
@@ -8510,7 +8435,7 @@ void ShipEntity::rescaleBy(GLfloat factor, bool writeToCache) {
     if (cxx::OOSubEntityInterface* cxxSub =
             dynamic_cast<cxx::OOSubEntityInterface*>(se))
       cxxSub->rescaleBy(factor, writeToCache);
-    // (else: none - every ship sub-entity adopts the interface; bead oo-dpyk8)
+    // (else: none - every ship sub-entity adopts the interface)
   }
 
   // rescale mass
@@ -8961,8 +8886,7 @@ void ShipEntity::broadcastEnergyBlastImminent() {
   if (targets.size() > 0) {
     unsigned i;
     for (i = 0; i < targets.size(); i++) {
-      Entity* e2 = targets[i].get();  // the snapshot keeps its object (beads
-                                      // oo-9ht.39.16, oo-9ht.39.26)
+      Entity* e2 = targets[i].get();  // the snapshot keeps its object
       if (oo::EntityIsShip(e2)) {
         ::ShipEntity* se = oo::ToShip(e2);
         if (se != nullptr) se->setFoundTarget(this);
@@ -8981,10 +8905,8 @@ void ShipEntity::removeExhaust(OOExhaustPlumeEntity* exhaust) {
     exhaust->setOwner(nullptr);  // [exhaustObject setOwner:nil]
 }
 
-// Slice 23 of docs/phases/3-slices/ShipEntity.md (bead oo-xmrgd): subentity
-// death, alignment offsets, large explosion, laser heat, personality, scanner,
-// remembered ships. Members of the C++ ship, called directly, since bead
-// oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Subentity death, alignment offsets, large explosion, laser heat, personality,
+// scanner, remembered ships. Members of the C++ ship.
 
 void ShipEntity::removeFlasher(OOFlasherEntity* flasher) {
   std::erase(subEntities, static_cast<Entity*>(flasher));
@@ -9118,8 +9040,7 @@ void ShipEntity::collectBountyFor(::ShipEntity* other) {
 OOComparisonResult ShipEntity::compareBeaconCodeWith(Entity* other) {
   return (OOComparisonResult)oo::str::caseInsensitiveCompare(
       beaconCode().value_or(""),
-      oo::BeaconCode(other).value_or(
-          ""));  // the other's -beaconCode (bead oo-al52f)
+      oo::BeaconCode(other).value_or(""));  // the other's -beaconCode
 }
 
 // for shaders, equivalent to 1.76's NPC laserHeatLevel
@@ -9205,7 +9126,7 @@ void ShipEntity::resetExhaustPlumes() {
 -----------------------------------------*/
 
 void ShipEntity::checkScanner() {
-  Entity* scan;  // the C++ part (bead oo-9ht.39.4)
+  Entity* scan;  // the C++ part
   n_scanned_ships = 0;
   //
   scan = z_previous;
@@ -9250,7 +9171,7 @@ void ShipEntity::checkScanner() {
 }
 
 void ShipEntity::checkScannerIgnoringUnpowered() {
-  Entity* scan;  // the C++ part (bead oo-9ht.39.4)
+  Entity* scan;  // the C++ part
   n_scanned_ships = 0;
   //
   GLfloat scannerRange2 = scannerRange * scannerRange;
@@ -9309,8 +9230,8 @@ void ShipEntity::checkScannerIgnoringUnpowered() {
 
 int ShipEntity::numberOfScannedShips() { return n_scanned_ships; }
 
-// The C++ entity (bead oo-9ht.39.23): null, and forgotten, when its object is
-// gone or it is no valid target, as before.
+// The C++ entity: null, and forgotten, when its object is gone or it is no
+// valid target, as before.
 Entity* ShipEntity::foundTarget() {
   Entity* result = oo::LiveEntity(_foundTarget);
   if (result == nullptr || !isValidTarget(result)) {
@@ -9324,8 +9245,8 @@ void ShipEntity::setFoundTarget(Entity* targetEntity) {
   _foundTarget = oo::WeakRef<Entity>(targetEntity);
 }
 
-// The C++ entity (bead oo-9ht.39.23): null, and forgotten, when its object is
-// gone or it is no valid target, as before.
+// The C++ entity: null, and forgotten, when its object is gone or it is no
+// valid target, as before.
 Entity* ShipEntity::primaryAggressor() {
   Entity* result = oo::LiveEntity(_primaryAggressor);
   if (result == nullptr || !isValidTarget(result)) {
@@ -9339,8 +9260,8 @@ void ShipEntity::setPrimaryAggressor(Entity* targetEntity) {
   _primaryAggressor = oo::WeakRef<Entity>(targetEntity);
 }
 
-// The C++ entity (bead oo-9ht.39.23.1): null when its object is gone or it is
-// no valid target, as before.
+// The C++ entity: null when its object is gone or it is no valid target, as
+// before.
 Entity* ShipEntity::lastEscortTarget() {
   Entity* result = oo::LiveEntity(_lastEscortTarget);
   if (result == nullptr || !isValidTarget(result)) {
@@ -9354,13 +9275,11 @@ void ShipEntity::setLastEscortTarget(Entity* targetEntity) {
   _lastEscortTarget = oo::WeakRef<Entity>(targetEntity);
 }
 
-// Slice 24 of docs/phases/3-slices/ShipEntity.md (bead oo-zd80m): target memory
-// and validity, behaviour and destination accessors, distances, leading the
-// target. Members of the C++ ship, called directly, since bead oo-9ht.144
-// deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Target memory and validity, behaviour and destination accessors, distances,
+// leading the target. Members of the C++ ship.
 
-// The C++ entity (bead oo-9ht.39.23.1): null when its object is gone or it is
-// no valid target, as before.
+// The C++ entity: null when its object is gone or it is no valid target, as
+// before.
 Entity* ShipEntity::thankedShip() {
   Entity* result = oo::LiveEntity(_thankedShip);
   if (result == nullptr || !isValidTarget(result)) {
@@ -9374,8 +9293,8 @@ void ShipEntity::setThankedShip(Entity* targetEntity) {
   _thankedShip = oo::WeakRef<Entity>(targetEntity);
 }
 
-// The C++ entity (bead oo-9ht.39.23.1): null when its object is gone or it is
-// no valid target, as before.
+// The C++ entity: null when its object is gone or it is no valid target, as
+// before.
 Entity* ShipEntity::rememberedShip() {
   Entity* result = oo::LiveEntity(_rememberedShip);
   if (result == nullptr || !isValidTarget(result)) {
@@ -9389,8 +9308,8 @@ void ShipEntity::setRememberedShip(Entity* targetEntity) {
   _rememberedShip = oo::WeakRef<Entity>(targetEntity);
 }
 
-// The C++ entity (bead oo-9ht.39.23.4): null, and forgotten, when its object is
-// gone or it is no valid target, as before.
+// The C++ entity: null, and forgotten, when its object is gone or it is no
+// valid target, as before.
 Entity* ShipEntity::targetStation() {
   Entity* result = oo::LiveEntity(_targetStation);
   if (result == nullptr || !isValidTarget(result)) {
@@ -9407,8 +9326,8 @@ void ShipEntity::setTargetStation(Entity* targetEntity) {
 /* Now we use weakrefs rather than universal ID this function checks
  * for targets which may have a valid reference but are not currently
  * targetable. */
-// The C++ entity since bead oo-9ht.39.23 (the object's -isShip, -status,
-// -isWormhole and -scanClass read these).
+// The C++ entity (the object's -isShip, -status, -isWormhole and -scanClass
+// read these).
 bool ShipEntity::isValidTarget(Entity* target) {
   if (target == nullptr) {
     return NO;
@@ -9494,8 +9413,8 @@ bool ShipEntity::canStillTrackPrimaryTarget() {
   return YES;
 }
 
-// The C++ entity (bead oo-9ht.39.23; its object before): null, and forgotten,
-// when its object is gone or it is no valid target, as before.
+// The C++ entity: null, and forgotten, when its object is gone or it is no
+// valid target, as before.
 Entity* ShipEntity::primaryTarget() {
   Entity* result = oo::LiveEntity(_primaryTarget);
   if ((result == nil && _primaryTarget != oo::WeakRef<Entity>()) ||
@@ -9691,9 +9610,9 @@ double ShipEntity::ballTrackLeadingTarget(double delta_t, Entity* target) {
   // this is in absolute coordinates, so now rotate it
 
   Entity* last = nullptr;
-  Entity* father = oo::LiveEntity(oo::WeakRef<Entity>(
-      parentEntity()));  // null once its object has gone, as the object read +0
-                         // was nil (bead oo-xn1j1)
+  Entity* father = oo::LiveEntity(
+      oo::WeakRef<Entity>(parentEntity()));  // null once its object has gone,
+                                             // as the object read +0 was nil
 
   Quaternion q = kIdentityQuaternion;
   while ((father) && (father != last) &&
@@ -9750,9 +9669,7 @@ double ShipEntity::ballTrackLeadingTarget(double delta_t, Entity* target) {
   return aim_cos;
 }
 
-// Slice 25 of docs/phases/3-slices/ShipEntity.md (bead oo-k6wuw): evasive jink,
-// primary and side target tracking. Members of the C++ ship, called directly,
-// since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Evasive jink, primary and side target tracking. Members of the C++ ship.
 
 void ShipEntity::setEvasiveJink(GLfloat z) {
   if (accuracy < COMBAT_AI_ISNT_AWFUL) {
@@ -10146,10 +10063,8 @@ double ShipEntity::trackSideTarget(double delta_t, bool leftside) {
   return d_right * reverse;
 }
 
-// Slice 26 of docs/phases/3-slices/ShipEntity.md (bead oo-v92af): missile and
-// destination tracking, collision exceptions, defence targets, ranges. Members
-// of the C++ ship, called directly, since bead oo-9ht.144 deleted the facade
-// (ADR-0056 amendment oo-9ht.144).
+// Missile and destination tracking, collision exceptions, defence targets,
+// ranges. Members of the C++ ship.
 
 double ShipEntity::missileTrackPrimaryTarget(double delta_t) {
   Vector relPos;
@@ -10483,8 +10398,7 @@ std::vector<oo::EntityHold> ShipEntity::defenseTargets() {
   return targets;
 }
 
-// The C++ entity since bead oo-9ht.39.23; the weak set holds it since bead
-// oo-9ht.22.3.
+// The C++ entity; the weak set holds it.
 bool ShipEntity::addDefenseTarget(Entity* target) {
   if (defenseTargetCount() >= MAX_TARGETS) {
     return NO;
@@ -10558,10 +10472,8 @@ bool ShipEntity::hasProximityAlertIgnoringTarget(bool ignore_target) {
   return NO;
 }
 
-// Slice 27 of docs/phases/3-slices/ShipEntity.md (bead oo-pnfyp): aim
-// tolerance, sun glare, main weapons and turret fire, laser colours. Members of
-// the C++ ship, called directly, since bead oo-9ht.144 deleted the facade
-// (ADR-0056 amendment oo-9ht.144).
+// Aim tolerance, sun glare, main weapons and turret fire, laser colours.
+// Members of the C++ ship.
 
 // lower is better. Defines angular size of circle in which ship
 // thinks is on target
@@ -10610,7 +10522,7 @@ GLfloat ShipEntity::currentAimTolerance() {
         // looking towards sun can seriously mess up aim (glareLevel 0..1)
         basic_aim *= (1.0 + glareLevel * 3.0);
         //				OO_LOG("aim.debug", "Sun glare affecting
-        //aim: {:f} for {}", glareLevel, oo::DescriptionOf(self));
+        // aim: {:f} for {}", glareLevel, oo::DescriptionOf(self));
         if (glareLevel > 0.5f) {
           // strong glare makes precise targeting impossible
           best_cos = 0.99999;
@@ -10918,9 +10830,9 @@ bool ShipEntity::fireTurretCannon(double range) {
   HPVector origin = getPosition();
 
   Entity* last = nullptr;
-  Entity* father = oo::LiveEntity(oo::WeakRef<Entity>(
-      parentEntity()));  // null once its object has gone, as the object read +0
-                         // was nil (bead oo-xn1j1)
+  Entity* father = oo::LiveEntity(
+      oo::WeakRef<Entity>(parentEntity()));  // null once its object has gone,
+                                             // as the object read +0 was nil
   OOMatrix r_mat;
 
   vel = vector_forward_from_quaternion(orientation);  // Facing
@@ -10973,10 +10885,8 @@ void ShipEntity::setExhaustEmissiveColor(::OOColor* color) {
   return exhaust_emissive_color.get();
 }
 
-// Slice 28 of docs/phases/3-slices/ShipEntity.md (bead oo-40ocf): laser shots,
-// missed shots, sparks, missile launch decision. Members of the C++ ship,
-// called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
+// Laser shots, missed shots, sparks, missile launch decision. Members of the
+// C++ ship.
 
 bool ShipEntity::fireSubentityLaserShot(double range) {
   setShipHitByLaser(nullptr);
@@ -11012,8 +10922,7 @@ bool ShipEntity::fireSubentityLaserShot(double range) {
 
   const oo::Ref<OOLaserShotEntity> shot =
       OOLaserShotEntity::laserFromShip(this, direction, kZeroVector);
-  Entity* shotObjC =
-      oo::MadeEntity(shot);  // the shot, given its object (bead oo-9ht.39.26)
+  Entity* shotObjC = oo::MadeEntity(shot);  // the shot, given its object
   shot->setColor(laser_color.get());
   shot->setScanClass(CLASS_NO_DRAW);
 
@@ -11105,8 +11014,7 @@ bool ShipEntity::fireDirectLaserShot(double range) {
 
 bool ShipEntity::fireDirectLaserDefensiveShot() {
   for (const auto& targetRef : defenseTargets()) {
-    Entity* target =
-        targetRef.get();  // the snapshot keeps its object (bead oo-9ht.39.16)
+    Entity* target = targetRef.get();  // the snapshot keeps its object
     // can't fire defensively at cloaked ships
     if (target->getScanClass() == CLASS_NO_DRAW ||
         (oo::ToShip(target) != nullptr ? oo::ToShip(target)->isCloaked()
@@ -11159,8 +11067,7 @@ bool ShipEntity::fireDirectLaserShotAt(Entity* my_target) {
   // do special effects laser line
   const oo::Ref<OOLaserShotEntity> shot = OOLaserShotEntity::laserFromShip(
       this, WEAPON_FACING_FORWARD, kZeroVector);
-  Entity* shotObjC =
-      oo::MadeEntity(shot);  // the shot, given its object (bead oo-9ht.39.26)
+  Entity* shotObjC = oo::MadeEntity(shot);  // the shot, given its object
   shot->setColor(laser_color.get());
   shot->setScanClass(CLASS_NO_DRAW);
   shot->setPosition(position);
@@ -11265,8 +11172,7 @@ bool ShipEntity::fireLaserShotInDirection(OOWeaponFacing direction,
     setShipHitByLaser(victim);
 
     shot = OOLaserShotEntity::laserFromShip(this, direction, laserPortOffset);
-    Entity* shotObjC =
-        oo::MadeEntity(shot);  // the shot, given its object (bead oo-9ht.39.26)
+    Entity* shotObjC = oo::MadeEntity(shot);  // the shot, given its object
     if (getIsPlayer()) {
       shotEntities.emplace_back(shot);
     }
@@ -11462,10 +11368,8 @@ Vector ShipEntity::missileLaunchPosition() {
   return fireMissileWithIdentifier(std::nullopt, primaryTarget());
 }
 
-// Slice 29 of docs/phases/3-slices/ShipEntity.md (bead oo-g900k): missile
-// firing, ECM, cloak, cascade mine, escape capsule, cargo dumping. Members of
-// the C++ ship, called directly, since bead oo-9ht.144 deleted the facade
-// (ADR-0056 amendment oo-9ht.144).
+// Missile firing, ECM, cloak, cascade mine, escape capsule, cargo dumping.
+// Members of the C++ ship.
 
 ::ShipEntity* ShipEntity::fireMissileWithIdentifier(
     const std::optional<std::string>& requestedIdentifier, Entity* target) {
@@ -11959,9 +11863,7 @@ OOCargoType ShipEntity::dumpItem(::ShipEntity* cargoObj) {
   return (OOCargoType)result;
 }
 
-// Slice 30 of docs/phases/3-slices/ShipEntity.md (bead oo-ogoct): collisions,
-// velocity, tractoring and scooping. Members of the C++ ship, called directly,
-// since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Collisions, velocity, tractoring and scooping. Members of the C++ ship.
 
 void ShipEntity::manageCollisions() {
   // deal with collisions
@@ -11984,8 +11886,7 @@ void ShipEntity::manageCollisions() {
             ent, ent->isSun() ? kOODamageTypeHitASun : kOODamageTypeHitAPlanet);
         if (this == PLAYER) oo::RetainEntity(this);
       } else if (ent->getIsWormhole()) {
-        // the C++ wormhole (C++ since bead oo-9ht.112; a C-style cast of its
-        // object until bead oo-9ht.144)
+        // the C++ wormhole
         if (getIsPlayer())
           enterWormhole(static_cast<::WormholeEntity*>(ent));
         else
@@ -12419,10 +12320,8 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents,
   if (UNIVERSE != nullptr) UNIVERSE->removeEntity(other);
 }
 
-// Slice 31 of docs/phases/3-slices/ShipEntity.md (bead oo-gx86h): cascades,
-// energy / scrape / heat damage, abandoning ship, docks, wormholes, witchspace.
-// Members of the C++ ship, called directly, since bead oo-9ht.144 deleted the
-// facade (ADR-0056 amendment oo-9ht.144).
+// Cascades, energy / scrape / heat damage, abandoning ship, docks, wormholes,
+// witchspace. Members of the C++ ship.
 
 bool ShipEntity::cascadeIfAppropriateWithDamageAmount(double amount,
                                                       Entity* /* owner */) {
@@ -12829,7 +12728,7 @@ void ShipEntity::enterWormhole(::WormholeEntity* w_hole, bool /* replacing */) {
   // MKW 2011.02.27 - Moved here from ShipEntityAI so escorts reliably follow
   //                  mother in all wormhole cases, not just when the ship
   //                  creates the wormhole.
-  addTarget(w_hole);  // its Objective-C object (C++ since bead oo-9ht.112)
+  addTarget(w_hole);  // its Objective-C object
   setFoundTarget(w_hole);
   if (shipAI != nullptr)
     shipAI->reactToMessage(
@@ -12891,10 +12790,8 @@ void ShipEntity::leaveWitchspace() {
   witchspaceLeavingEffects();
 }
 
-// Slice 32 of docs/phases/3-slices/ShipEntity.md (bead oo-5e0ny): witchspace
-// effects, offences, lights, escort formation and deployment, nearest stations.
-// Members of the C++ ship, called directly, since bead oo-9ht.144 deleted the
-// facade (ADR-0056 amendment oo-9ht.144).
+// Witchspace effects, offences, lights, escort formation and deployment,
+// nearest stations. Members of the C++ ship.
 
 bool ShipEntity::witchspaceLeavingEffects() {
   // all ships exiting witchspace will share the same orientation.
@@ -13349,10 +13246,8 @@ void ShipEntity::setTargetToSystemStation() {
   return;
 }
 
-// Slice 33 of docs/phases/3-slices/ShipEntity.md (bead oo-tz2ra): landing,
-// docking abort, broadcasts and comms, fines, AI messages, spawning, close
-// contacts, salvage. Members of the C++ ship, called directly, since bead
-// oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Landing, docking abort, broadcasts and comms, fines, AI messages, spawning,
+// close contacts, salvage. Members of the C++ ship.
 
 void ShipEntity::landOnPlanet(::OOPlanetEntity* planet) {
   if (planet && isShuttle()) {
@@ -13598,7 +13493,7 @@ void ShipEntity::interpretAIMessage(const std::string& ms) {
         oo::str::intValue(tokens[1]);  // Attacker that switched targets.
     Entity* switcher =
         (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(switcher_id)
-                             : nullptr);  // the C++ entity (bead oo-9ht.39.26)
+                             : nullptr);  // the C++ entity
     int rescuer_id =
         oo::str::intValue(tokens[2]);  // New primary target of attacker.
     Entity* rescuer =
@@ -13803,10 +13698,8 @@ void ShipEntity::sendCoordinatesToPilot() {
 }
 #endif
 
-// Slice 34 of docs/phases/3-slices/ShipEntity.md (bead oo-nkyn3): salvage
-// pilot, debug dump, script info, demo ship, script events and AI reactions,
-// alert condition, shader helpers. Members of the C++ ship, called directly,
-// since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Salvage pilot, debug dump, script info, demo ship, script events and AI
+// reactions, alert condition, shader helpers. Members of the C++ ship.
 
 #if OO_SALVAGE_SUPPORT
 void ShipEntity::pilotArrived() {
@@ -13862,7 +13755,7 @@ void ShipEntity::dumpSelfState() {
     } catch (...) {
       if (!oo::CurrentOOException()) throw;
     }  // was @catch (id exception) {}: the game's exceptions only
-       // (oo::Exception since oo-rskgl.1)
+       // (oo::Exception)
     OOLogPopIndent();
   }
   OO_LOG("dumpState.shipEntity", "Accuracy: {:g}", accuracy);
@@ -13950,9 +13843,8 @@ void ShipEntity::doScriptEvent(ooscript::PropertyId message) {
   OOJSRelinquishContext(context);
 }
 
-// With entities (bead oo-9ht.39.16): each entity's JS value, what
-// OOJSValueFromNativeObject() gave for its object (null for none). The id forms
-// had no caller and are deleted (bead oo-4aq6a.6).
+// With entities: each entity's JS value, what OOJSValueFromNativeObject() gave
+// for its object (null for none).
 void ShipEntity::doScriptEvent(ooscript::PropertyId message, Entity* argument) {
   ooscript::Context context = OOJSAcquireContext();
 
@@ -14156,11 +14048,11 @@ std::optional<std::string> ShipEntity::descriptionForObjDump() {
 }
 #endif
 
-/*	Slice 34 (bead oo-nkyn3): the shader and weapon-range helpers, without
-   messages. The resource manager and the equipment types answer through their
-   C++ classes; the binding target's class is asked of the runtime, and its kind
-   of entity of the entity's C++ part (getIsShip(), getIsVisualEffect(): the
-   facade's -isShip and -isVisualEffect answer the same).
+/*	The shader and weapon-range helpers, without messages. The resource
+   manager and the equipment types answer through their C++ classes; the binding
+   target's class is asked of the runtime, and its kind of entity of the
+   entity's C++ part (getIsShip(), getIsVisualEffect(): the facade's -isShip and
+   -isVisualEffect answer the same).
 */
 oo::PList OODefaultShipShaderMacros(void) {
   // "ship-prefix-macros" of the material defaults, read once; an empty
@@ -14177,8 +14069,7 @@ oo::PList OODefaultShipShaderMacros(void) {
 }
 
 // is this the right place for this function now? - CIM
-// The target is the C++ entity since bead oo-9ht.39.6; every entity's object
-// was a kind of Entity.
+// The target is the C++ entity; every entity's object was a kind of Entity.
 BOOL OOUniformBindingPermitted(const std::string& propertyName,
                                Entity* bindingTarget) {
   // the whitelists, read once (membership only)
@@ -14199,8 +14090,7 @@ BOOL OOUniformBindingPermitted(const std::string& propertyName,
       if (shipWhitelist.contains(propertyName)) return YES;
     }
     // -isPlayerLikeShip answered YES for these two only (ProxyPlayerEntity.mm);
-    // their objects are a ship's since beads oo-9ht.177 and oo-9ht.183, so it
-    // is asked of the C++ part.
+    // it is asked of the C++ part.
     if (dynamic_cast<PlayerEntity*>(entity) != nullptr ||
         dynamic_cast<ProxyPlayerEntity*>(entity) != nullptr) {
       if (playerShipWhitelist.contains(propertyName)) return YES;

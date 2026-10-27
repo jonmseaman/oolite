@@ -18,8 +18,7 @@
    vacuously.
 */
 
-#ifndef OOFND_TESTS_OO_TEST_HPP
-#define OOFND_TESTS_OO_TEST_HPP
+#pragma once
 
 #include <csignal>
 #include <cstdio>
@@ -71,7 +70,7 @@ inline bool check(bool ok, const char* expr, const char* file, int line) {
 inline int runAll(const char* file) {
   const std::vector<Case>& cases = registry();
   // An abort() (an uncaught exception, a failed debug assertion) ends the
-  // process with no summary line; name the case it happened in (oo-vdw34). Only
+  // process with no summary line; name the case it happened in. Only
   // async-signal-safe-enough calls here.
   std::signal(SIGABRT, [](int) {
     std::fprintf(stderr, "oo_test: abort() in case %s\n", currentTest());
@@ -84,7 +83,7 @@ inline int runAll(const char* file) {
     std::printf("%s %s\n", failures() == before ? "ok  " : "FAIL", c.name);
     // Flushed per case: stdout is a pipe under meson, so a process that dies
     // mid-run (an abort, a fast-fail, a sanitizer exit) would otherwise lose
-    // every line, and with them which case was running (oo-vdw34).
+    // every line, and with them which case was running.
     std::fflush(stdout);
   }
   std::printf("oo_test: %s: %zu tests, %d checks, %d failures\n", file,
@@ -110,5 +109,3 @@ inline int runAll(const char* file) {
 
 #define OO_TEST_MAIN() \
   int main() { return ::oo_test::runAll(__FILE__); }
-
-#endif  // OOFND_TESTS_OO_TEST_HPP

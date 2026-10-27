@@ -23,27 +23,24 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSWorldScripts.h"
-
 #include <cstring>
 
 #include "OOJSPlayer.h"
+#include "OOJSWorldScripts.h"
 #include "OOJavaScriptEngine.h"
 #include "OOScript.h"
 #include "PlayerEntity.h"
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) per the OOJSVector.mm
-   exemplar (bead oo-sdz): the class dispatch table (PropertyStub /
-   StrictPropertyStub / ResolveStub / ConvertStub / FinalizeStub) is replaced by
-   nullptr hooks in ooscript::ClassDef, and the two directly-spelled engine
-   calls (DefineObject, DefineProperty) go through the façade. The hook
-        functions (WorldScriptsGetProperty, WorldScriptsEnumerate) take the
-   façade's hook signature (ooscript::Context / Object / PropertyId) directly
-   rather than the engine's, so the OOJS_* macros and the rest of each function
-   body need no conversion. `this` is renamed to `thisObj` because it is a
-   reserved word once this file compiles as Objective-C++ (ADR-0001).
+        Retargeted onto the ooscript facade (JSEngine.hpp): the class dispatch
+   table (PropertyStub / StrictPropertyStub / ResolveStub / ConvertStub /
+   FinalizeStub) is replaced by nullptr hooks in ooscript::ClassDef, and the two
+   directly-spelled engine calls (DefineObject, DefineProperty) go through the
+   facade. The hook functions (WorldScriptsGetProperty, WorldScriptsEnumerate)
+   take the facade's hook signature (ooscript::Context / Object / PropertyId)
+   directly rather than the engine's, so the OOJS_* macros and the rest of each
+   function body need no conversion. `this` is spelled `thisObj`.
 */
 
 namespace ooscript {}

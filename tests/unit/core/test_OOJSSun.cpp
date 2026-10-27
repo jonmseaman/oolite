@@ -1,23 +1,19 @@
 /*	test_OOJSSun.mm
         Unit tests for the Sun JS binding (src/Core/Scripting/OOJSSun.h/.mm) and
-   its OOSunEntity category (whose forwarders were on the OOSunEntity facade
-   from bead oo-9ht.51 until bead oo-9ht.111 deleted it: the C++ class's
-   overrides answer the engine now, through the root's JS category, and this
-   test's stand-ins are C++ the same way, amendment oo-9ht.107 item 6): bead
-        oo-hgfh, converted the way bead oo-ppc converted OOJSVector (proposed
-   ADR-0056 amendments oo-ppc and oo-ykoy).
+   its OOSunEntity category (the C++ class's overrides answer the engine,
+   through the root's JS category, and this test's stand-ins are C++ the same
+   way).
 
-        As test_OOJSWormhole.mm does (amendment oo-ykoy, item 4), it runs the JS
-   class in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp), links the game's own objects for the binding
-   and the engine's exception translator (OOJSEngineNativeWrappers.mm), and
-   stands in for the entity classes (Entity and OOSunEntity answer only the
-   selectors the binding sends) and for the engine functions the binding links
-        against, with the engine headers' linkage. The expectations were written
-   against the Objective-C file and run on it first; they pin the JS-visible
-   behaviour (the four properties, goNova() and cancelNova(), a non-sun, a
-   native's exception) and what the category answers the engine. Run: bash
-   tools/check-core-tests.sh
+   As test_OOJSWormhole.mm does, it runs the JS class in a real context on the
+   game's own façade backend (ooscript/JSEngine_quickjs.cpp), links the game's
+   own objects for the binding and the engine's exception translator
+   (OOJSEngineNativeWrappers.mm), and stands in for the entity classes (Entity
+   and OOSunEntity answer only the selectors the binding sends) and for the
+   engine functions the binding links against, with the engine headers' linkage.
+   The expectations were written against the Objective-C file and run on it
+   first; they pin the JS-visible behaviour (the four properties, goNova() and
+   cancelNova(), a non-sun, a native's exception) and what the category answers
+   the engine. Run: bash tools/check-core-tests.sh
 */
 
 #include "OOFoundation.h"
@@ -64,13 +60,10 @@ class OOSunEntity : public Entity {
   int _novaCalls = 0;
 };
 
-// What an entity's JS object holds since bead oo-9ht.39.3: a weak reference to
-// the C++ entity.
+// What an entity's JS object holds: a weak reference to the C++ entity.
 #include "OOJSEntityHolder.h"
 
-// C++ since bead oo-4aq6a.11 (it was rooted on the Objective-C root class
-// OOObject, which Phase 4 deletes); its category's selectors are members of the
-// same names.
+// Its category's selectors are members of the same names.
 class TestEntityObject final : public oo::RefCounted {
  public:
   void getJSClass(ooscript::ClassDef** outClass,
@@ -92,8 +85,8 @@ class TestEntityObject final : public oo::RefCounted {
 #include "oo_test.hpp"
 
 // The root's JS category, as the game's asks the C++ part
-// (EntityOOJavaScriptExtensions+ObjCBridge.mm, bead oo-9ht.107): the engine
-// sends these selectors to the wrapped object.
+// (EntityOOJavaScriptExtensions+ObjCBridge.mm): the engine sends these
+// selectors to the wrapped object.
 void TestEntityObject::getJSClass(ooscript::ClassDef** outClass,
                                   ooscript::Object* outPrototype) {
   _cxxEntity->getJSClass(outClass, outPrototype);
@@ -133,8 +126,7 @@ void OOSunEntity::setGoingNova(bool yesno, double interval) {
   _novaCalls++;
 }
 
-// The binding's category, as the C++ class's overrides answer it (bead
-// oo-9ht.111; the OOSunEntity facade forwarded it from bead oo-9ht.51).
+// The binding's category, as the C++ class's overrides answer it.
 void OOSunEntity::getJSClass(ooscript::ClassDef** outClass,
                              ooscript::Object* outPrototype) {
   ::OOJSSunGetJSClass(outClass, outPrototype);
@@ -242,9 +234,9 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
   sConverters[theClass]++;
 }
 
-// The engine's object getter is OOJSPrivateObject.cpp's (linked) since bead
-// oo-9ht.39.3: the JS class must be a subclass of the required one, and the
-// slot holds the entity's holder.
+// The engine's object getter is OOJSPrivateObject.cpp's (linked): the JS class
+// must be a subclass of the required one, and the slot holds the entity's
+// holder.
 
 // The shared toString(), which OOJSCxxObjectWrapperToString() hands a `this` of
 // another class.
@@ -319,8 +311,7 @@ ooscript::Value JSValueForObject(ooscript::ClassDef* jsClass,
       !OOJSSetCxxPrivate(
           sContext, object,
           oo::makeRef<OOJSEntityHolder>(entity->_cxxEntity.get()).get()))
-    return ooscript::nullValue();  // the slot holds the C++ entity (bead
-                                   // oo-9ht.39.3)
+    return ooscript::nullValue();  // the slot holds the C++ entity
   return ooscript::objectValue(object);
 }
 

@@ -1,16 +1,12 @@
 /*	test_OOColor.mm
-        Unit tests for OOColor (src/Core/OOColor.h) and, until bead oo-9ht.1
-   deleted it, its Objective-C facade (OOColor+ObjCBridge.h): bead oo-11m, the
-   Phase 3 house-style exemplar (proposed ADR-0056).
+        Unit tests for OOColor (src/Core/OOColor.h).
 
-        A converted class's test lives in tests/unit/core/test_<Class>.mm and
-   links the game's own objects for the class, its bridge and what they need
+        A class's test lives in tests/unit/core/test_<Class>.mm and
+   links the game's own objects for the class and what they need
    (tests/unit/core/meson.build), so it tests exactly what the game runs. It
-   pins what the class computed before the conversion, from the Objective-C
-   bodies: component arithmetic, the four description forms, the text, and what
-        the facade's selectors answered, now asked of the C++ colour (its
-   crossing, nil and identity cases went with it). Run: bash
-   tools/check-core-tests.sh
+   pins what the class computes: component arithmetic, the four description
+   forms, the text, and the selectors' answers asked of the C++ colour. Run:
+   bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -214,8 +210,7 @@ OO_TEST(text) {
 
 OO_TEST(facadeForwards) {
   {
-    // What the facade's selectors answered, asked of the C++ colour since bead
-    // oo-9ht.1 deleted the facade (its -isKindOfClass: check went with it).
+    // What the selectors answer, asked of the C++ colour.
     oo::Ref<OOColor> red = OOColor::redColor();
     OO_CHECK(red->redComponent() == 1.0f && red->greenComponent() == 0.0f &&
              red->alphaComponent() == 1.0f);
@@ -245,7 +240,7 @@ OO_TEST(facadeIdentity) {
              opaque);  // returned itself before the conversion
 
     // An Object node's colour comes back as the same object (the colour is the
-    // node's foreign object since bead oo-9ht.1).
+    // node's foreign object).
     oo::PList node = OOColorObjectNode(opaque.get());
     OO_CHECK(OOColor::colorWithDescription(node) == opaque);
     OO_CHECK(OOColor::colorWithDescription(node).get() == opaque.get());

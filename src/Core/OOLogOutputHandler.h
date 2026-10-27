@@ -52,7 +52,7 @@ void OOLogOutputHandlerClose(void);
 void OOLogOutputHandlerPrintLine(std::string_view line);
 
 // Queue the pending log-file flush if its deadline has passed. Called from the
-// frame loop (proposed ADR-0033).
+// frame loop.
 void OOLogOutputHandlerFlushIfDue(void);
 
 // This will attempt to ensure the containing directory exists. If it fails, it

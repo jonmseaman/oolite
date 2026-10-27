@@ -1,19 +1,15 @@
 /*	test_OOProbabilitySet.mm
         Unit tests for OOProbabilitySet and OOMutableProbabilitySet
-   (src/Core/OOProbabilitySet.h): bead oo-489v, a Phase 3 conversion in the
-   house style of the OOColor exemplar (proposed ADR-0056).
+   (src/Core/OOProbabilitySet.h).
 
-        It pins what the class cluster computed before the conversion: the empty
-   set (one shared object), the one-object and general immutable sets, weights
-   (clamped at zero), sums, probabilities, the weighted pick (a zero weight is
-   never picked; all zero picks nothing), the property-list round trip, element
-   identity (strings by value, Object nodes by object), the mutable set
-        (including its weight lookup, which subtracts the previous entry's
-   weight), copies both ways, the description, and the exception for a non-zero
-   count with no arrays. The expectations were written against the Objective-C
-   API and run on the unconverted classes first (commit 4e5958266); both callers
-   were adapted in the bead, so there is no facade and the calls here are the
-   C++ classes'. Run: bash tools/check-core-tests.sh
+        It pins: the empty set (one shared object), the one-object and general
+   immutable sets, weights (clamped at zero), sums, probabilities, the weighted
+   pick (a zero weight is never picked; all zero picks nothing), the
+   property-list round trip, element identity (strings by value, Object nodes by
+   object), the mutable set (including its weight lookup, which subtracts the
+   previous entry's weight), copies both ways, the description, and the
+   exception for a non-zero count with no arrays. The calls here are the C++
+   classes'. Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -184,9 +180,7 @@ OO_TEST(propertyListRoundTrip) {
   }
 }
 
-// Object elements: C++ objects in Object nodes (bead oo-4aq6a.5 deleted the
-// node of an Objective-C object, which this case held; the same checks through
-// the C++ node, ADR-0062 item 3).
+// Object elements: C++ objects in Object nodes.
 namespace {
 
 class TestForeign final : public oo::PListForeign {
@@ -306,8 +300,7 @@ OO_TEST(copies) {
 OO_TEST(nonZeroCountWithoutArraysRaises) {
   {
     const char* name = nullptr;
-    std::optional<oo::Exception>
-        kept;  // what the autorelease pool kept alive (bead oo-rskgl.1)
+    std::optional<oo::Exception> kept;  // what the autorelease pool kept alive
     try {
       (void)OOProbabilitySet::probabilitySetWithObjects(NULL, NULL, 2);
     } catch (const oo::Exception& e)  // was @catch (OOException *e)

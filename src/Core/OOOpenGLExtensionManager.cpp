@@ -25,13 +25,12 @@ SOFTWARE.
 
 */
 
-#include "OOOpenGLExtensionManager.h"
-
 #include <stdlib.h>
 
 #include "OOConstToString.h"
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"
+#include "OOOpenGLExtensionManager.h"
 #include "OORegExpMatcher.h"
 #include "ResourceManager.h"
 #include "oofnd/Log.hpp"
@@ -290,8 +289,7 @@ void OOOpenGLExtensionManager::reset() {
       versionString ? reinterpret_cast<const char*>(versionString) : "(null)",
       vendor.value_or("(null)"), renderer.value_or("(null)"));
   {
-    // Listed in byte order of the name (the set's hash order before; proposed
-    // ADR-0043).
+    // Listed in byte order of the name (the set's hash order before).
     std::string extensionList;
     for (const std::string& extension : extensions) {
       if (!extensionList.empty()) extensionList += ", ";
@@ -784,7 +782,7 @@ namespace {
 // The regexp test sent to a string that may be nil (a nil string matched
 // nothing). matcher is the one pass's matcher, taken on first use and held by
 // the caller: the autoreleased Objective-C matcher lived until the pool
-// drained, so one pass compiled one tester (ADR-0056 amendment oo-ct7c item 3).
+// drained, so one pass compiled one tester.
 // A null matcher (the tester did not compile) answers NO and is asked again.
 BOOL MatchesRegExp(oo::Ref<::OORegExpMatcher>& matcher,
                    const std::optional<std::string>& string,
@@ -892,7 +890,7 @@ oo::PList OOOpenGLExtensionManager::lookUpPerGPUSettingsWithVersionString(
 
 // The singleton category (+allocWithZone:, and -retain/-release/-autorelease
 // doing nothing) is not translated: the one instance is made only by
-// sharedManager() and never released (proposed ADR-0056 amendment oo-r7m0).
+// sharedManager() and never released.
 
 #if OOLITE_WINDOWS
 

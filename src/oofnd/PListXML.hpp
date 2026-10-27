@@ -1,6 +1,6 @@
 /*	oofnd/PListXML.hpp
         The XML property-list reader Oolite runs today, reproduced
-   quirk-for-quirk (ADR-0027):
+   quirk-for-quirk:
 
           * oo::changeDTDIfApplicable() - OOPListParsing.m's
    ChangeDTDIfApplicable(): when the data starts with exactly <?xml
@@ -48,11 +48,10 @@
    property list".
 */
 
-#ifndef OOFND_PLISTXML_HPP
-#define OOFND_PLISTXML_HPP
+#pragma once
 
 // Suspend OOFoundation.h's `#define true 1` / `#define false 0` for this header
-// (see oofnd/Data.hpp, proposed ADR-0028); restored at the end.
+// (see oofnd/Data.hpp); restored at the end.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -227,7 +226,7 @@ inline std::string charsetForXml(std::string_view xml) {
 
 // -[NSXMLParser initWithData:]: decode by the declared charset, falling back to
 // ISO-8859-1 when that fails, and re-encode as UTF-8. nullopt for encodings
-// oofnd does not read (ADR-0027 item 6).
+// oofnd does not read.
 inline std::optional<std::string> xmlDataAsUtf8(std::string_view data) {
   const std::string charset = charsetForXml(data);
   // An empty or unknown name is GSUndefinedEncoding, which GNUstep reads as it
@@ -563,7 +562,7 @@ class XMLPListReader {
           val = static_cast<unsigned int>(d);
         }
         // (sscanf returning kEOF left GNUstep reading an uninitialised value:
-        // treated here as not a number, ADR-0027 item 4.)
+        // treated here as not a number.)
         if (n == 1) {
           if (val > 0x10FFFF) {
             abort_ = true;  // "invalid numeric entity codepoint"
@@ -701,8 +700,7 @@ class XMLPListReader {
         } else {
           // At the end of the data, -_newQarg steps back onto the last byte;
           // unless that byte opens a quote, this loop then re-reads it forever
-          // and GNUstep never returns. oofnd fails the parse instead (ADR-0027
-          // item 4).
+          // and GNUstep never returns. oofnd fails the parse instead.
           if (c == kEOF && bytes_[cend_ - 1] != '"' &&
               bytes_[cend_ - 1] != '\'') {
             abort_ = true;
@@ -818,8 +816,8 @@ class XMLPListReader {
       // NSCalendarDate reads [description cString]: GNUstep's default C-string
       // encoding, ISO-8859-1 in the game's build, up to the first NUL. A
       // character beyond U+00FF raises NSCharacterConversionException out of
-      // the parser; oofnd fails the parse (ADR-0027 item 7). Found by the
-      // GNUstep differential fuzzer (bead oo-g2k).
+      // the parser; oofnd fails the parse. Found by the GNUstep
+      // differential fuzzer.
       const std::u16string units = utf8ToUtf16(value_);
       std::string latin1;
       for (char16_t u : units) {
@@ -866,7 +864,7 @@ class XMLPListReader {
       if (!item) {
         // -addObject:nil / -setObject:nil forKey: raise
         // NSInvalidArgumentException out of GNUstep's parser; oofnd fails the
-        // parse instead (ADR-0027 item 7).
+        // parse instead.
         abort_ = true;
         return;
       }
@@ -923,5 +921,3 @@ inline Expected<PList, PListError> parseXMLPList(std::string_view bytes) {
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_PLISTXML_HPP

@@ -2,10 +2,8 @@
 
 OOColor.mm
 
-C++20 since bead oo-11m, the Phase 3 house-style exemplar (proposed ADR-0056).
 Method bodies are the Objective-C ones with message sends turned into calls; the
-arithmetic is verbatim (ADR-0012). An Object node's colour is the node's foreign
-object (bead oo-9ht.1).
+arithmetic is verbatim. An Object node's colour is the node's foreign object.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -28,7 +26,6 @@ MA 02110-1301, USA.
 */
 
 #include "OOColor.h"
-
 #include "OOMaths.h"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
@@ -38,8 +35,8 @@ namespace {
 
 /*	The named colours colorWithDescription() accepts: the class methods
    whose names end in "Color", which the Objective-C class looked up by selector
-   name and -respondsToSelector: (the Phase 3 recipe's "explicit table" for a
-   selector called by name).
+   name and -respondsToSelector: (an explicit table for a selector called by
+   name).
 */
 struct NamedColor {
   std::string_view name;
@@ -165,8 +162,7 @@ oo::Ref<OOColor> OOColor::colorWithDescription(const oo::PList& description,
   if (description.isNull()) return nullptr;
 
   if (description.type() == oo::PList::Type::Object) {
-    // The colour in an Object node is the node's foreign object (bead
-    // oo-9ht.1).
+    // The colour in an Object node is the node's foreign object.
     if (OOColor* color = OOColorInObjectNode(description))
       result = oo::Ref<OOColor>(color);
   } else if (const std::string* string = description.getIf<std::string>()) {

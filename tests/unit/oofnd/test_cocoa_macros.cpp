@@ -1,8 +1,8 @@
 /*	test_cocoa_macros.cpp
-        Regression test for bead oo-i9q: the oofnd headers Objective-C++ game
+        Regression test: the oofnd headers Objective-C++ game
    code includes must compile after Oolite's OOCocoa.h, which does `#define true
    1` / `#define false 0`, and must hand those macros back unchanged (game code
-   keeps its int-typed true/false; proposed ADR-0028). Here the macros are
+   keeps its int-typed true/false). Here the macros are
    defined exactly as OOCocoa.h defines them, BEFORE any standard header, so
         every standard header the oofnd headers pull in is first parsed inside
    their macro guard.

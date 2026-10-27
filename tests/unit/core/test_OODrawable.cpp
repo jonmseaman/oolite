@@ -1,18 +1,11 @@
 /*	test_OODrawable.mm
-        Unit tests for OODrawable (src/Core/OODrawable.h): bead oo-smy, with
-   OOMaterial the Materials module exemplar (proposed ADR-0056, amendment
-   oo-smy).
+        Unit tests for OODrawable (src/Core/OODrawable.h).
 
         OODrawable is the root of the drawables (OOMesh, OOPlanetDrawable and
    OOSkyDrawable). It computes nothing but defaults, so this pins those, the
    debug size (totalSize() is the object's own size, which a subclass extends
    through the root's totalSize()), and a subclass's overrides and description.
-   The expectations were written against the Objective-C class and its facade;
-        bead oo-9ht.9 deleted the facade, so the cases that sent its selectors
-   call the C++ class with every expected value kept (the Objective-C test
-   subclass is a C++ one, its instance size the object's), and the facade's
-   crossing cases (identity both ways, the adapter of an Objective-C subclass,
-   the bitwise copy, nil) are retired under the standing approval oo-9n5p9. Run:
+   The test subclass is a C++ one, its instance size the object's. Run:
    bash tools/check-core-tests.sh
 */
 
@@ -21,8 +14,7 @@
 #include "OODrawable.h"
 #include "oo_test.hpp"
 
-// A subclass that overrides the members the Objective-C test subclass did (bead
-// oo-9ht.9).
+// A subclass that overrides the root's members.
 class TestSubDrawable : public OODrawable {
  public:
   void renderOpaqueParts() override { opaqueRenders++; }

@@ -23,50 +23,16 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSEquipmentInfo.h"
-
 #include <cstring>
 
 #include "OODebugStandards.h"
 #include "OOEquipmentType.h"
+#include "OOJSEquipmentInfo.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
 #include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
-
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), InitClass becomes
-   ooscript::initClass, and the directly spelled instance-check,
-   private-storage, object-construction and numeric/integer-conversion calls
-   become ooscript::instanceOf / ooscript::getPrivate / ooscript::setPrivate /
-        ooscript::newObject / ooscript::newNumberValue / ooscript::valueToInt32.
-   `this` is renamed to `thisObj` because it is a reserved word once this file
-   compiles as Objective-C++ (ADR-0001). Natives take the façade signature
-   directly; the OOJS_* argument-marshalling macros (OOJS_NATIVE_ENTER,
-   OOJS_ARGV, OOJS_RETURN_*) expand to the CallArgs accessors.
-*/
-/*
-        C++20 since bead oo-supk, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false.
-   OOEquipmentType (OOJavaScriptExtensions), the category on the converted
-   class's façade that owns its _jsSelf ivar, became three free functions that
-   take the façade's ivar by reference, and its methods moved to the façade
-   (OOEquipmentType+ObjCBridge.mm; amendment oo-6ia4 item 3, bead oo-9ht.102).
-   OOEquipmentType and OOColor, which are C++ since beads oo-fg7i and oo-11m,
-   are reached as cxx:: classes through oo::ToCxx/oo::ToObjC (amendment oo-ppc,
-   item 4); the property hooks cross once, and Ask() answers what a message to
-   nil answered for the prototype, which has no type. JSValueToEquipmentType()
-   still answers the façade, and JSValueToEquipmentKeyRelaxed()'s out-parameter
-   stays BOOL *, so their callers compile unchanged. Messages to classes that
-   are still Objective-C (PlayerEntity) stay as they are, which is why the file
-   is still .mm until Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -99,8 +65,7 @@ oo::PList NormalizedColorComponents(OOColor* color) {
 }
 
 // What the type answers, or what a message to nil answered (0, false, nullopt,
-// null, an empty list) when there is no type: the prototype's case (amendment
-// oo-6ia4 item 2).
+// null, an empty list) when there is no type: the prototype's case.
 template <typename Result>
 Result Ask(OOEquipmentType* type, Result (OOEquipmentType::*member)()) {
   return type != nullptr ? (type->*member)() : Result{};
@@ -334,8 +299,8 @@ bool JSEquipmentInfoGetEquipmentType(ooscript::Context context,
 }
 
 // OOJSBasicPrivateObjectConverter for the C++ type the slot holds: the type
-// itself as an Object node (bead oo-9ht.28; it was its facade), for the callers
-// of cxx_OOJSPListFromJSValue (null for the prototype).
+// itself as an Object node, for the callers of cxx_OOJSPListFromJSValue (null
+// for the prototype).
 oo::PList EquipmentInfoConverter(ooscript::Context context,
                                  ooscript::Object object) {
   OOEquipmentType* type = static_cast<OOEquipmentType*>(
@@ -449,7 +414,7 @@ static bool EquipmentInfoGetProperty(Context cx, Object obj, PropertyId propID,
         PlayerEntity* player =
             OOPlayerForScripting();  // fuelChargeRate qualified: the final
                                      // overrider, so the binding test stands in
-                                     // for it (bead oo-9ht.177)
+                                     // for it
         return ooscript::newNumberValue(
             cx,
             (PLAYER_MAX_FUEL - (player != nullptr ? player->getFuel() : 0)) *
@@ -462,8 +427,8 @@ static bool EquipmentInfoGetProperty(Context cx, Object obj, PropertyId propID,
         return ooscript::newNumberValue(
             cx,
             (player != nullptr ? player->PlayerEntity::renovationCosts() : 0),
-            value);  // qualified: the final overrider (bead oo-9ht.177), so the
-                     // binding test stands in for it
+            value);  // qualified: the final overrider, so the binding test
+                     // stands in for it
       } else {
         PlayerEntity* player = OOPlayerForScripting();
         return ooscript::newNumberValue(
@@ -752,9 +717,8 @@ static bool EquipmentInfoGetAllEqipment(Context cx, Object /*obj*/,
 }
 }  // namespace
 
-// The JS glue of OOEquipmentType (OOJSPrivateObject; amendment oo-6symp item
-// 5), which the engine reaches through the slot's C++ object or an Object node
-// that holds the type.
+// The JS glue of OOEquipmentType (OOJSPrivateObject), which the engine reaches
+// through the slot's C++ object or an Object node that holds the type.
 ooscript::Value OOEquipmentType::jsValueInContext(ooscript::Context context) {
   if (_jsSelf == NULL) {
     _jsSelf = (ooscript::newObject((context), &sEquipmentInfoClass,

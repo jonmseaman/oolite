@@ -8,7 +8,7 @@ desktop nor a build marked ``offline`` so it gates in a clean checkout.
 
 WHY THIS FILE IS BOTH A LAUNCHING TEST AND A META-TEST
 ------------------------------------------------------
-Most of G9 already shipped, inside other beads, and a survey of what is actually asserted after
+Most of G9 already shipped, inside other tests, and a survey of what is actually asserted after
 exit today says so:
 
   G1 (test_g1_exit_via_mouse.py)      exit status 0; assert_no_surviving_game_processes(pid);
@@ -31,7 +31,7 @@ the shutdown the log records, and both were MEASURED on this build rather than a
        falsified it: a game killed at the START SCREEN does NOT slip past assert_clean_exit. I
        drove exactly that - a break twin replacing close_window() with proc.kill() - and the
        defaults check caught it, "mtime unchanged since launch ... size 309 vs 309". What it
-       says is "a leftover from an earlier run (oo-5rsa)", i.e. the right verdict for the wrong
+       says is "a leftover from an earlier run", i.e. the right verdict for the wrong
        reason. So the coverage gap is specifically a death AFTER the synchronize, not any kill.
   2. WHY THE GAME EXITED.  -exitAppWithContext: is reached from NINE call sites in this tree
      (PlayerEntityControls.m:958/2658/4981, GameController.m:272/921, Universe.m:1048,
@@ -49,7 +49,7 @@ in this tier including future ones with no test having to remember it.
 Hence both halves. The launching test proves the new assertions hold against a real exit - a
 helper nobody has run against a real shutdown is a hope. The meta-test then locks the contract so
 a future G4/G5 cannot quietly omit it: launching a game and never asking what it left behind is
-the failure mode this bead exists to prevent, and no amount of coverage in THIS file prevents it
+the failure mode this test exists to prevent, and no amount of coverage in THIS file prevents it
 in the NEXT one.
 
 REPORTED, NOT NORMALISED: G7 asserts the prefs file by name and parses it directly, where G1 and
@@ -59,7 +59,7 @@ so a fresh plist in the SHARED build would satisfy it while G7's private pristin
 nothing). It is left exactly as it is; the meta-test below requires the shared baseline and does
 not forbid a test from asserting more.
 
-Needs the desktop for the launching test: a real window, unlocked and logged in (ADR-0017). It
+Needs the desktop for the launching test: a real window, unlocked and logged in. It
 takes tools/gui-lock for the duration via the ``game`` fixture and launches nothing of its own.
 """
 
@@ -85,7 +85,7 @@ TESTS_DIR = os.path.abspath(os.path.join(HERE, ".."))
 if TESTS_DIR not in sys.path:
     sys.path.insert(0, TESTS_DIR)
 
-# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py, oo-7j3t).
+# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py).
 from source_paths import iter_source_files, resolve_source  # noqa: E402
 
 # Same budget as G1/G3: a close that has not taken the game down by now has not worked.
@@ -140,7 +140,7 @@ def test_g9_post_exit_hygiene_holds_after_a_real_exit(game):
     assert returncode == 0, f"the game exited with {returncode}, not 0"
 
     # 3. Nothing of ours survives in the OS process table. Not proc.poll(), which wait() above
-    #    already reaped and which is therefore true by construction (oo-5rsa).
+    #    already reaped and which is therefore true by construction.
     assert_no_surviving_game_processes(game.proc.pid)
 
     # 4. The established baseline: no dump, no ERROR in the log, a defaults file THIS run wrote
@@ -336,8 +336,8 @@ def test_every_exit_context_in_the_tree_is_distinguished_from_the_expected_one()
     for path in iter_source_files(src):
         with open(path, "r", encoding="utf-8", errors="replace") as fh:
             # Either spelling of the exit call: the ObjC -exitAppWithContext:@"..." or the C++
-            # -cxx_exitAppWithContext:"..." it became in Phase 2 (oo-6abg). Jon approved
-            # accepting both, 2026-09-29 (bead oo-3rb.332).
+            # -cxx_exitAppWithContext:"..." it became. Jon approved
+            # accepting both, 2026-09-29.
             contexts |= set(re.findall(
                 r'(?:exitAppWithContext:@|cxx_exitAppWithContext:)"([^"]+)"', fh.read()))
     assert EXPECTED_EXIT_CONTEXT in contexts, (
@@ -435,7 +435,7 @@ def test_a_scrambled_exit_trace_fails_on_order(tmp_path):
 
 @pytest.mark.offline
 def test_an_absent_log_fails_rather_than_skipping(tmp_path):
-    """No Latest.log is a FAILURE. A missing witness file is the silent pass oo-7by1 removed."""
+    """No Latest.log is a FAILURE. A missing witness file is the silent pass the tier must never allow."""
     with pytest.raises(AssertionError) as caught:
         assert_shutdown_path_completed(str(tmp_path))
     assert "no Latest.log" in str(caught.value)
@@ -445,13 +445,13 @@ def test_an_absent_log_fails_rather_than_skipping(tmp_path):
 def test_a_start_screen_kill_is_caught_by_the_existing_check_but_for_the_wrong_reason(tmp_path):
     """THE FALSIFIED HYPOTHESIS, kept as a regression test of what is actually true.
 
-    This bead was started on the belief that a game killed at the start screen slips past
+    This test was started on the belief that a game killed at the start screen slips past
     assert_clean_exit. A break twin - close_window() replaced with proc.kill() in the launching
     test - DISPROVED it against the real build: the shared plist's mtime never moves, so the
     defaults check fails with "mtime unchanged since launch ... size 309 vs 309".
 
     So it is caught, and the reportable fact is that it is caught for the WRONG REASON: the
-    message says "a leftover from an earlier run (oo-5rsa)" when what happened is that this run
+    message says "a leftover from an earlier run" when what happened is that this run
     died. assert_shutdown_path_completed says the right thing about the same run. Both halves
     are asserted, so if either message changes the discrepancy is re-examined deliberately.
     """
@@ -473,7 +473,7 @@ def test_a_start_screen_kill_is_caught_by_the_existing_check_but_for_the_wrong_r
     )
     assert "leftover from an earlier run" in str(by_defaults.value), (
         "and it attributes it to a stale file rather than to a run that died - the diagnostic "
-        "defect this bead reports rather than a coverage gap"
+        "defect this test reports rather than a coverage gap"
     )
 
     with pytest.raises(AssertionError) as by_trace:
@@ -585,7 +585,7 @@ def test_the_check_is_not_a_directory_scan_of_the_shared_build(tmp_path):
 
 # --- the meta half: no future GUI test can forget --------------------------------------------
 #
-# AST, never a substring. A sibling bead's `assert "name" in body` was held green by the
+# AST, never a substring. A sibling test's `assert "name" in body` was held green by the
 # function's own docstring after both real assertions had been deleted; every check below reads
 # ast.Call nodes out of the parsed tree, and the break twin two tests down proves it.
 
@@ -681,7 +681,7 @@ def test_the_meta_assertion_fails_when_a_test_omits_a_helper():
         "    assert_clean_exit(game)\n"
     )
     # The realistic omission: the helper's NAME still appears, in a docstring and a comment,
-    # exactly the way a substring guard gets fooled (the sibling-bead defect this avoids).
+    # exactly the way a substring guard gets fooled (the defect this avoids).
     broken = (
         "def test_g4_something(game):\n"
         '    """Exits cleanly; hygiene is assert_clean_exit\'s job."""\n'
@@ -800,7 +800,7 @@ def test_g9_does_not_pretend_to_run_the_game_without_a_desktop():
             "OO_GUI_REQUIRE's control and can hide a run that never happened (oo-7by1). "
             f"Decorator: {text}"
         )
-    # No conditional-import skip anywhere in this file either (oo-7by1: a hard dependency must
+    # No conditional-import skip anywhere in this file either (a hard dependency must
     # fail, not skip). Asserted off the AST so this guard's own mention of the name in a string
     # cannot be what it finds.
     calls = {
@@ -838,7 +838,7 @@ def test_the_witnesses_are_the_strings_the_game_really_writes():
         "line has been reworded and this witness now matches nothing"
     )
     # Either spelling of the exit.context log call: the ObjC OOLog(@"...") or the C++ OO_LOG("...")
-    # it became in Phase 2 (oo-ffi5). Jon approved accepting both, 2026-09-29 (bead oo-3rb.332).
+    # it became. Jon approved accepting both, 2026-09-29.
     assert 'OOLog(@"exit.context"' in source or 'OO_LOG("exit.context"' in source, (
         "GameController.m no longer logs the exit.context domain, so "
         f"{SHUTDOWN_EXIT_CONTEXT_WITNESS!r} can never appear in a log"

@@ -1,11 +1,9 @@
 /*	test_OOBasicMaterial.mm
-        Unit tests for OOBasicMaterial (src/Core/Materials/OOBasicMaterial.h):
-   bead oo-vl43, converted after its root (bead oo-smy, proposed ADR-0056
-   amendment oo-smy); its Objective-C facade deleted by bead oo-9ht.33.
+        Unit tests for OOBasicMaterial (src/Core/Materials/OOBasicMaterial.h).
 
         OOBasicMaterial is the fixed-function material and the superclass of the
-   three texture and shader materials. This pins what it computed before the
-   conversion, through its C++ API: the defaults, what a configuration
+   three texture and shader materials. This pins what it computes, through its
+   C++ API: the defaults, what a configuration
    dictionary sets (through OOMaterialSpecifier), the colour and component
    accessors, the clamped shininess, permitSpecular(), the GL state doApply()
    sets (read back from a real context), unapplyWithNext() falling back to the
@@ -38,16 +36,14 @@ void OOLogIndent(void) {
 void OOLogOutdent(void) {}
 
 /*	OOTexture (OOTexture.mm links the texture loaders and the game) stands
-   in for the one class method the material sends, and counts it (proposed
-   ADR-0056, amendment oo-z1s4 item 4).
+   in for the one class method the material sends, and counts it.
 */
 static int gTextureApplyNones = 0;
 
-// The C++ OOTexture's static member (bead oo-9ht.99 deleted the Objective-C
-// facade it was a stand-in of).
+// The C++ OOTexture's static member.
 void OOTexture::applyNone() { gTextureApplyNones++; }
 
-// Link stubs (amendment oo-zffj item 2), never reached here:
+// Link stubs, never reached here:
 // OOMaterialSpecifier.mm's texture specifiers, and OOOpenGL.mm's GL state dump.
 oo::PList cxx_OOTextureSpecFromObject(const oo::PList&,
                                       const std::optional<std::string>&) {
@@ -65,16 +61,15 @@ PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTextureARB = nullptr;
 
 /*	UNIVERSE is gSharedUniverse. The material asks it -reducedDetail
    (-permitSpecular), and the specifier asks it -useShaders; a stand-in answers
-   both (amendment oo-vt0o item 4).
+   both.
 */
 class Universe;
 Universe* gSharedUniverse = nil;
 
 #include "UniverseStandIn.h"
 
-// The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's TestUniverse stood
-// in for), with the header's names and signatures. It answers virtual members,
+// The universe as the code under test sees it: a stand-in for the C++ class,
+// with the header's names and signatures. It answers virtual members,
 // so it has the game's vtable (UniverseStandIn.h) and TestUniverse overrides
 // them.
 class Universe : public oo::RefCounted {
@@ -480,7 +475,7 @@ OO_TEST(cxxAPI) {
   }
 }
 
-// The name, as the facade answered it (bead oo-9ht.33, oo-9ht.8).
+// The name of a C++ material.
 OO_TEST(nameOfACxxMaterial) {
   {
     const oo::Ref<OOBasicMaterial> m =

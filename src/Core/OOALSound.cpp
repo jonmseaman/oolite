@@ -24,8 +24,6 @@ SOFTWARE.
 
 */
 
-#include "OOALSound.h"
-
 #include <cxxabi.h>
 
 #include <cstdlib>
@@ -33,6 +31,7 @@ SOFTWARE.
 #include <typeinfo>
 
 #include "OOALBufferedSound.h"
+#include "OOALSound.h"
 #include "OOALSoundDecoder.h"
 #include "OOALSoundMixer.h"
 #include "OOALStreamedSound.h"
@@ -97,9 +96,9 @@ OOSound::OOSound() {
   if (!sIsSetUp) setUp();
 }
 
-/*	The body of -cxx_initWithContentsOfFile: after the receiver's release
-   (the facade's, until bead oo-9ht.68): the concrete sound it makes. The
-   decoder is released at the end of the scope, as [decoder release] did.
+/*	The body of -cxx_initWithContentsOfFile: after the receiver's release:
+   the concrete sound it makes. The decoder is released at the end of the
+   scope, as [decoder release] did.
 */
 oo::Ref<OOSound> OOSound::initWithContentsOfFile(
     const std::optional<std::string>& path) {
@@ -159,8 +158,8 @@ std::optional<std::string> OOSound::descriptionComponents() const {
   return std::nullopt;
 }
 
-// The facade's -cxx_description (bead oo-9ht.68 deleted it): the C++ class's
-// name, without a namespace, its address and its components.
+// The former facade's -cxx_description: the C++ class's name, without a
+// namespace, its address and its components.
 std::string OOSound::description() const {
   int status = 0;
   char* demangled =

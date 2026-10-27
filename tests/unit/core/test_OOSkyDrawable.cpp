@@ -1,23 +1,20 @@
 /*	test_OOSkyDrawable.mm
         Unit tests for OOSkyDrawable (src/Core/OOSkyDrawable.h), the drawable of
-   the sky (the stars and nebulae behind a system): bead oo-4jjl, a Phase 3
-   class conversion (proposed ADR-0056).
+   the sky (the stars and nebulae behind a system).
 
         The drawable loads its star and nebula textures from the game's
    resources, which the test has not, so it links the whole game but main
    (['*']), uses a Universe that was never initialised (minimum detail, so the
    nebulae are not set up) and replaces the star set-up with a stand-in that
-   records what the drawable passed it (as test_SkyEntity.mm does; decision
-   oo-jsx0h). The expectations were written against the Objective-C API and run
-   on the unconverted class first: the stand-in gets the two star colours and
+   records what the drawable passed it (as test_SkyEntity.mm does): the
+   stand-in gets the two star colours and
    the drawable keeps the star and nebula counts it was given; the sky has
    opaque parts only and no draw distance limit; it has no quad sets, so no
-        textures; and it is a graphics reset client, so a reset deletes its
+   textures; and it is a graphics reset client, so a reset deletes its
    display list (the GL context is a hidden window's, oo_gl_test_context.hpp).
-   The drawable's private state is read through the one block of helpers below,
-   which is all the conversion changed. Bead oo-9ht.9 deleted the root's facade
-   the test held the drawable by; it holds the C++ drawable and calls its
-   members, every expected value kept. Run: bash tools/check-core-tests.sh
+   The drawable's private state is read through the one block of helpers below.
+   The test holds the C++ drawable and calls its members. Run: bash
+   tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -74,8 +71,7 @@ namespace {
 
 void InstallStandIn() { OOSkyDrawableTestAccess::InstallStandIn(); }
 
-// A sky drawable: a new C++ drawable, as the root (the root facade until bead
-// oo-9ht.9).
+// A sky drawable: a new C++ drawable.
 oo::Ref<OODrawable> Sky(OOColor* color1, OOColor* color2, unsigned starCount,
                         unsigned nebulaCount) {
   return oo::makeRef<OOSkyDrawable>(color1, color2, OOColor::greenColor().get(),

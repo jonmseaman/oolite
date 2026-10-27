@@ -1,14 +1,14 @@
 /*	test_sysdesc_tools.cpp
         Regression test for the localisation tools in
-   src/Core/OOConvertSystemDescriptions.mm (bead oo-vjwp): --export-sysdesc,
+   src/Core/OOConvertSystemDescriptions.mm: --export-sysdesc,
    --compile-sysdesc and the line converter they share.
 
-        oo-xh1g ported the tools from Foundation to oo::PList / std::string. The
+        The tools were ported from Foundation to oo::PList / std::string. The
    port visits dictionaries in key order (byte order) where the Foundation code
    visited them in hash order, which decides the slot an unknown key is given,
    the order of the "Assigning key" log lines and the order of the written
-   dictionaries' keys. The digests below were CAPTURED FROM THE PORTED TOOL
-   (tree at bead/oo-xh1g), not from the Foundation original: they pin the new
+   dictionaries' keys. The digests below were CAPTURED FROM THE PORTED TOOL,
+   not from the Foundation original: they pin the new
    behaviour so that a later change to it shows, and say nothing about what the
    hash-ordered original wrote.
 
@@ -28,11 +28,6 @@
    (UTF-16 units, a missing "]", digits only).
 
         Run with --print to see the recorded lines and the digests.
-
-        C++ since bead oo-6e1.2 (std-2026-10-19 item 1): it was Objective-C++ on
-   gnustep-base for two Foundation log stubs the tools stopped calling when they
-   moved to oo::log, an autorelease pool and blocks; every scenario, input and
-   digest is unchanged.
 */
 
 #include <stdint.h>
@@ -84,11 +79,9 @@ oo::PList KeyTable() {
 // --- stubs
 // -------------------------------------------------------------------------------------
 
-// The tools log through oo::log (OO_LOG) since their port; the Foundation log
-// stubs that stood here (OOLogWithFunctionFileAndLine...) were no longer called
-// and went with gnustep-base (oo-6e1.2).
+// The tools log through oo::log (OO_LOG).
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade.
+// ResourceManager is C++.
 oo::PList ResourceManager::dictionaryFromFilesNamed(
     const std::string& fileName,
     const std::optional<std::string>& /*folderName*/, bool /*mergeFiles*/) {
@@ -106,8 +99,7 @@ bool ResourceManager::writeDiagnosticData(const oo::Data& data,
   return YES;
 }
 
-// The C++ universe's member (bead oo-ql9rn), over the same data as the
-// Objective-C stub's C++ form.
+// The C++ universe's member.
 const oo::PList* Universe::descriptions() { return &sDescriptions; }
 static Universe* sUniverse;
 Universe* OOGetUniverse(void) { return sUniverse; }
@@ -166,7 +158,7 @@ void CheckLine(const char* line, const oo::PList& keys, BOOL useFallback,
 
 int main(int argc, const char* argv[]) {
   {
-    oo::AutoreleaseScope pool;  // was @autoreleasepool (bead oo-6e1.2)
+    oo::AutoreleaseScope pool;
     if (argc < 2) {
       fprintf(stderr, "usage: %s descriptions.plist [--print]\n", argv[0]);
       return 2;

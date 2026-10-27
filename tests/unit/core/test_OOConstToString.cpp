@@ -1,9 +1,7 @@
 /*	test_OOConstToString.mm
         Unit tests for the OOConstToString functions that message converted
-   classes: bead oo-3c81 (Phase 3, proposed ADR-0056). OOConstToString.mm has no
-   class; its sends to OOEquipmentType (oo-fg7i) and OOCommodityMarket (oo-ih7y)
-   become C++ member calls, and its [UNIVERSE ...] sends wait for the Universe
-   conversion (oo-pas).
+   classes. OOConstToString.mm has no class; it calls OOEquipmentType and
+   OOCommodityMarket members and sends to UNIVERSE.
 
         Pinned: a weapon type's identifier (none for no weapon, "EQ_WEAPON_NONE"
    for the string form), the sloppy lookup that tries an "EQ_" prefix and falls
@@ -11,12 +9,11 @@
    forms, and the mass unit of a commodity in the universe's market (tons when
    there is no market or no such good).
 
-        The game around them is replaced, as in test_OOEquipmentType (ADR-0056
-   amendments oo-zffj, oo-8kx7): UNIVERSE hands out the equipment data, the
+        The game around them is replaced, as in test_OOEquipmentType: UNIVERSE
+   hands out the equipment data, the
    descriptions and a market; the cache manager, script loader, player and
    standards functions are the test's. OOEquipmentType, OOCommodityMarket and
-   OOColor are the game's own. The expectations were written and run on the
-        Objective-C sends first. Run: bash tools/check-core-tests.sh
+   OOColor are the game's own. Run: bash tools/check-core-tests.sh
    test_OOConstToString
 */
 
@@ -76,10 +73,8 @@ oo::PList Good(
 #include "UniverseStandIn.h"
 
 // The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's Objective-C stand-in
-// stood in for), with the header's names and signatures. It answers virtual
-// members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse
-// overrides them.
+// with the header's names and signatures. It answers virtual members, so it has
+// the game's vtable (UniverseStandIn.h) and StandInUniverse overrides them.
 class Universe : public oo::RefCounted {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
@@ -130,8 +125,7 @@ Random_Seed OOStringExpanderDefaultRandomSeed(void) { return Random_Seed(); }
 
 #include "OOCacheManager.h"
 
-// The cache manager is C++ since bead oo-9ht.31 deleted its facade: a C++
-// stand-in with the Objective-C stand-in's answers.
+// The cache manager: a C++ stand-in.
 OOCacheManager* OOCacheManager::sharedCache() {
   static OOCacheManager* shared = new OOCacheManager;
   return shared;
@@ -146,8 +140,7 @@ void OOCacheManager::setPList(const oo::PList& value, const std::string& key,
 
 #include "OOScript.h"
 
-// OOScript's members that OOEquipmentType.mm calls (the Objective-C OOScript
-// stand-in until bead oo-9ht.133 deleted the facade), and the rest of its
+// OOScript's members that OOEquipmentType.mm calls, and the rest of its
 // virtual members, for the vtable.
 std::optional<std::string> OOScript::descriptionComponents() {
   return std::nullopt;
@@ -175,8 +168,7 @@ oo::Ref<OOScript> OOScript::jsScriptFromFileNamed(const std::string&,
   return nullptr;
 }
 
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for; the members the code under test calls, declared as PlayerEntity.h
+// PLAYER: the members the code under test calls, declared as PlayerEntity.h
 // declares them (the test imports no game header that defines the class), with
 // the same answers.
 class PlayerEntity {
@@ -332,8 +324,7 @@ OO_TEST(massUnitOfACommodity) {
 }
 
 // The JS glue of OOEquipmentType (OOJSPrivateObject), defined in
-// OOJSEquipmentInfo.mm, which this test does not link (bead oo-6symp.3): the
-// vtable names these.
+// OOJSEquipmentInfo.mm, which this test does not link: the vtable names these.
 ooscript::Value OOEquipmentType::jsValueInContext(ooscript::Context) {
   return ooscript::Value();
 }

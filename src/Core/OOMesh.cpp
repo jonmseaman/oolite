@@ -34,8 +34,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOMesh.h"
-
 #include <cstring>
 
 #include "Entity.h"  // for NO_DRAW_DISTANCE_FACTOR.
@@ -48,6 +46,7 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "OOMacroOpenGL.h"
 #include "OOMaterialConvenienceCreators.h"
+#include "OOMesh.h"
 #include "OOMeshToOctreeConverter.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOProfilingStopwatch.h"
@@ -220,7 +219,7 @@ oo::Ref<OOMaterial> OOMesh::placeholderMaterial() {
 
   if (placeholderMaterial == nullptr) {
     // +cxx_materialDefaults answers a copy: keep it alive while noTextures
-    // points into it (bead oo-f4241).
+    // points into it.
     const oo::PList materialDefaults = ResourceManager::materialDefaults();
     const oo::PList* noTextures = materialDefaults.find("no-textures-material");
     placeholderMaterial =
@@ -283,8 +282,7 @@ const char* NormalModeDescription(OOMeshNormalMode mode) {
 }  // namespace
 
 std::optional<std::string> OOMesh::descriptionComponents() const {
-  OOMesh* mesh =
-      const_cast<OOMesh*>(this);  // the getters are not const (ADR-0056 item 3)
+  OOMesh* mesh = const_cast<OOMesh*>(this);  // the getters are not const
   const std::optional<std::string> modelName = mesh->modelName();
   return oo::str::format(
       "\"%s\", %zu vertices, %zu faces, radius: %g m normals: %s",
@@ -824,15 +822,15 @@ bool OOMesh::initWithName(const std::string& name,
 oo::Ref<OOMesh> OOMesh::mutableCopyWithZone(OOZone* /*zone*/) {
   OOMeshMaterialCount i;
 
-  // NSCopyObject(self, 0, zone) without Foundation (ADR-0029 reroot): a new
+  // NSCopyObject(self, 0, zone) without Foundation: a new
   // mesh whose members are copied one by one (the copy constructor), as
   // NSCopyObject copied the ivars bitwise and the C++ ones were then
   // constructed afresh over the copy, so the buffers are shared. Zones are
   // unused, as on GNUstep.
   oo::Ref<OOMesh> result = oo::makeRef<OOMesh>(*this);
 
-  // (The binding target is a weak reference since bead oo-9ht.39.6, copied; the
-  // octree is a C++ reference, copied.)
+  // (The binding target is a weak reference, copied; the octree is a C++
+  // reference, copied.)
 
   for (i = 0; i != kOOMeshMaxMaterials; ++i) {
     oo::retain(result->materials[i]);
@@ -1129,7 +1127,7 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
     if (scanner->scanString("VERTEX")) {
       for (j = 0; j < vertexCount; j++) {
         float x = 0, y = 0, z = 0;  // read only after every scan succeeded (GCC
-                                    // -Wmaybe-uninitialized; bead oo-1q4)
+                                    // -Wmaybe-uninitialized)
         if (!failFlag) {
           if (!scanner->scanFloat(&x)) failFlag = YES;
           if (!scanner->scanFloat(&y)) failFlag = YES;
@@ -1153,7 +1151,7 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
         int r, g, b;
         float nx = 0, ny = 0,
               nz = 0;  // read only after every scan succeeded (GCC
-                       // -Wmaybe-uninitialized; bead oo-1q4)
+                       // -Wmaybe-uninitialized)
         int n_v;
         if (!failFlag) {
           // colors
@@ -1332,7 +1330,7 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
 
       for (j = 0; j < vertexCount; j++) {
         float x = 0, y = 0, z = 0;  // read only after every scan succeeded (GCC
-                                    // -Wmaybe-uninitialized; bead oo-1q4)
+                                    // -Wmaybe-uninitialized)
         if (!failFlag) {
           if (!scanner->scanFloat(&x)) failFlag = YES;
           if (!scanner->scanFloat(&y)) failFlag = YES;
@@ -1967,8 +1965,7 @@ BoundingBox OOMesh::boundingBox() { return _boundingBox; }
 
 static const char* const kOOCacheMeshes = "OOMesh";
 
-// The OOCacheManager (OOMesh) category, as free functions next to the cache
-// (the slice plan).
+// The OOCacheManager (OOMesh) category, as free functions next to the cache.
 
 namespace {
 

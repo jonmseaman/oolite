@@ -1,6 +1,5 @@
 /*	test_OOSoundSource.mm
-        Unit tests for OOSoundSource (src/Core/OOSoundSource.h): bead oo-zoj3, a
-   class of the Audio module (proposed ADR-0056, amendment oo-2en).
+        Unit tests for OOSoundSource (src/Core/OOSoundSource.h).
 
         A sound source plays one sound at a time through a channel it pops from
    the shared mixer, as the channel's delegate: it gives the channel its
@@ -9,18 +8,12 @@
    stops every source that is playing. The mixer and its channels are this
    file's stubs, which record what they are told (the real ones would make
    OpenAL sources); the sound is an opaque object to a source, so it is a stub
-   too, with only a name (amendment oo-z1s4 item 4; a C++ subclass of the root
-   since bead oo-9ht.68 deleted the facade it stood in for, with the root's
+   too, with only a name (a C++ subclass of the root, with the root's
    members OOALSound.mm would define). The playing channel is private, so the
-   test reads it as a friend (amendment oo-zffj item 3; through the runtime
-   before the conversion). These expectations were written against the
-        Objective-C API and ran on the unconverted class first; they ran through
-   the facade, which was its forwarding test, until bead oo-9ht.88 deleted it:
-   they now ask the C++ source (alloc/init as oo::makeRef, "%@" as
-   descriptionComponents(), an autorelease pool as an oo::AutoreleaseScope) with
-   every expectation kept (standing approval oo-9n5p9). After them comes the C++
-   API. The mixer and the channel are C++ stand-ins since beads oo-9ht.87 and
-   oo-9ht.86 deleted their facades, and the source is its channel's C++ delegate
+   test reads it as a friend. The tests ask the C++ source (alloc/init as
+   oo::makeRef, "%@" as descriptionComponents(), an autorelease pool as an
+   oo::AutoreleaseScope); after them comes the C++ API. The mixer and the
+   channel are C++ stand-ins, and the source is its channel's C++ delegate
    (OOSoundChannelDelegate). Run: bash tools/check-core-tests.sh
    test_OOSoundSource
 */
@@ -37,9 +30,8 @@
 static int gLiveSounds = 0;
 
 /*	The sound: OOALSound.mm is not linked, so the root's members the source
-   and the sound's vtable name are defined here as the root answers them (C++
-   since bead oo-9ht.68 deleted the facade this file stubbed), and a test sound
-   has only a name, which "%@" prints between the braces.
+   and the sound's vtable name are defined here as the root answers them (C++),
+   and a test sound has only a name, which "%@" prints between the braces.
 */
 OOSound::OOSound() {}
 std::optional<std::string> OOSound::name() { return std::nullopt; }
@@ -72,10 +64,9 @@ class TestSound final : public OOSound {
 
 /*	A channel records what it is told, in order; Finish() ends its sound as
    the real one does when OpenAL stops, and stop() as its stop() does: both tell
-   the delegate. A C++ stand-in since bead oo-9ht.86 deleted the Objective-C
-   facade this file stubbed (the members a source calls): its delegate, sound
-   and loop are the channel's own; the position and gain it is given are kept
-   per channel here.
+   the delegate. A C++ stand-in (the members a source calls): its delegate,
+   sound and loop are the channel's own; the position and gain it is given are
+   kept per channel here.
 */
 static std::vector<std::string> gLog;
 
@@ -128,8 +119,7 @@ void OOSoundChannel::stop() {
 static int gChannelsOut = 0;
 static int gChannelsAvailable = 8;
 
-// The mixer (a C++ stand-in since bead oo-9ht.87 deleted the Objective-C facade
-// this file stubbed): one, never released, handing out at most
+// The mixer (a C++ stand-in): one, never released, handing out at most
 // gChannelsAvailable channels.
 OOSoundMixer* OOSoundMixer::sharedMixer() {
   static OOSoundMixer* mixer = oo::makeRef<OOSoundMixer>().leakRef();

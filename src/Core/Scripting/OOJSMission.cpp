@@ -23,13 +23,12 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSMission.h"
-
 #include <cstring>
 
 #include "GuiDisplayGen.h"
 #include "OOConstToJSString.h"
 #include "OODebugStandards.h"
+#include "OOJSMission.h"
 #include "OOJSPlayer.h"
 #include "OOJSScript.h"
 #include "OOJSVector.h"
@@ -39,37 +38,6 @@ MA 02110-1301, USA.
 #include "PlayerEntityScriptMethods.h"
 #include "oofnd/objc/OOException.h"
 #include "ooscript/JSEngine.hpp"
-
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), the class-creation
-   calls become ooscript::initClass and ooscript::defineObject, and the directly
-   spelled numeric/object/property calls become their ooscript:: equivalents
-   (valueToObject, newNumberValue, getProperty, setProperty, deleteProperty,
-   valueToNumber, valueToBoolean, valueToInt32). `this` is renamed to `thisObj`
-        because it is a reserved word once this file compiles as Objective-C++
-   (ADR-0001). The class hooks (getProperty, setProperty) and every
-   ooscript::FunctionSpec entry take the façade's
-        Context/Object/PropertyId/Value/CallArgs signature directly.
-*/
-/*
-        C++20 since bead oo-nge8, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false.
-   OOMusicController, which is C++ since bead oo-lfkq, is reached as
-   OOMusicController (amendment oo-ppc, item 4). MissionRunCallback()'s
-   @try/@catch (OOException *) around the callback stayed verbatim (amendment
-        oo-puw9 item 4) until bead oo-rskgl made it a C++ try/catch with the
-   other exception sites. mission.markedSystems kept the destinations it reads
-   in a local: it read them through a pointer into a temporary that had died
-   (bead oo-nge8; the same defect in OOJSSystemInfo.mm is bead oo-f4241).
-   Messages to classes that are still Objective-C (PlayerEntity, Universe,
-        GuiDisplayGen, OOJSScript, OOJavaScriptEngine) stay as they are, which
-   is why the file is still .mm until Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -310,9 +278,8 @@ static bool MissionGetProperty(Context cx, Object thisObj, PropertyId propID,
     case kMission_markedSystems: {
       // The destinations' values, in key order (-allValues gave hash order).
       oo::PList::Array values;
-      // Kept in a local: getIf() points into it, and the temporary the message
-      // answered died at the end of the if's initialiser (a dangling pointer
-      // until bead oo-nge8).
+      // Kept in a local: getIf() points into it, and a temporary would die at
+      // the end of the if's initialiser (a dangling pointer).
       const oo::PList missionDestinations =
           (player != nullptr ? player->getMissionDestinations() : oo::PList());
       if (const oo::PList::Dict* destinations =
@@ -765,9 +732,9 @@ static bool MissionRunScreen(ooscript::Context context,
       if (player != nullptr)
         player->setCustomChartCentre(
             (player != nullptr ? player->PlayerEntity::getGalaxy_coordinates()
-                               : NSPoint{}));  // qualified: the final overrider
-                                               // (bead oo-9ht.177), so the
-                                               // binding test stands in for it
+                               : NSPoint{}));  // qualified: the final
+                                               // overrider, so the binding test
+                                               // stands in for it
       cxx_OOJSReportWarning(
           context,
           "Mission.runScreen: invalid value for customChartCentre. Must be "
@@ -785,9 +752,9 @@ static bool MissionRunScreen(ooscript::Context context,
       if (player != nullptr)
         player->setCustomChartCentre(
             (player != nullptr ? player->PlayerEntity::getGalaxy_coordinates()
-                               : NSPoint{}));  // qualified: the final overrider
-                                               // (bead oo-9ht.177), so the
-                                               // binding test stands in for it
+                               : NSPoint{}));  // qualified: the final
+                                               // overrider, so the binding test
+                                               // stands in for it
       cxx_OOJSReportWarning(
           context,
           "Mission.runScreen: invalid value for customChartCentreInLY. Must be "
@@ -818,8 +785,8 @@ static bool MissionRunScreen(ooscript::Context context,
       }
 
       //	[player
-      //showShipModel:oo::NSStringOrNil(cxx_OOStringFromJSValue(context,
-      //value))];
+      // showShipModel:oo::NSStringOrNil(cxx_OOStringFromJSValue(context,
+      // value))];
       demoShip = (UNIVERSE != nullptr ? UNIVERSE->makeDemoShipWithRole(
                                             role.value_or(""), (bool)spinning)
                                       : (::ShipEntity*)nil);
@@ -833,9 +800,8 @@ static bool MissionRunScreen(ooscript::Context context,
       ooscript::valueToInt32(context, (value), &personality);
       if (demoShip != nullptr) demoShip->setEntityPersonalityInt(personality);
     }
-    ooscript::Value demoShipVal = OOJSValueFromCxxObject(
-        context, demoShip);  // the C++ ship's JS value (its object's
-                             // -oo_jsValueInContext: until bead oo-9ht.39.8.2)
+    ooscript::Value demoShipVal =
+        OOJSValueFromCxxObject(context, demoShip);  // the C++ ship's JS value
     ooscript::setProperty(context, (sMissionObject), "displayModel",
                           (&demoShipVal));
   } else {

@@ -28,9 +28,5 @@ SOFTWARE.
 */
 
 #include "OOFoundation.h"
-
 #include "OOFunctionAttributes.h"
 #include "oofnd/String.hpp"
-
-// OOConsumeReference() went with libobjc2 (bead oo-dbz): it took and gave an
-// Objective-C object.

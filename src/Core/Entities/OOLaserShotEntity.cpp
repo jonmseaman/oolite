@@ -23,10 +23,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOLaserShotEntity.h"
-
 #include "MyOpenGLView.h"
 #include "OOGraphicsResetManager.h"
+#include "OOLaserShotEntity.h"
 #include "OOMacroOpenGL.h"
 #include "OOTexture.h"
 #include "ShipEntity.h"
@@ -56,8 +55,7 @@ static OOTexture* sShotTexture2 = nil;
 
 namespace {
 
-// The shot textures' graphics reset client, which the facade class was until
-// bead oo-9ht.78 (ADR-0056 amendment oo-jpd8 item 3): registered once, with the
+// The shot textures' graphics reset client: registered once, with the
 // textures, and never destroyed.
 class ShotTextureResetClient : public OOGraphicsResetClient {
  public:

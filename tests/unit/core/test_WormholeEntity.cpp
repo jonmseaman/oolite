@@ -1,8 +1,6 @@
 /*	test_WormholeEntity.mm
         Unit tests for WormholeEntity (src/Core/Entities/WormholeEntity.h), the
-   witchspace wormholes ships leave behind: bead oo-z55j, a leaf of the Entities
-   seam with a facade (proposed ADR-0056, amendments oo-bj8 item 12 and
-   oo-0mxi).
+   witchspace wormholes ships leave behind, a leaf of the Entities seam.
 
         The entity reads Universe and PLAYER, so the test links the whole game
    but main (['*']) and uses a Universe that was never initialised, subclassed
@@ -11,7 +9,7 @@
    format, with no sun, and to record what is removed; PLAYER is an entity that
    answers the galaxy, the clock, its galactic coordinates and its forward
    vector; the ship that opens a wormhole is a plain entity of the mass the test
-   sets (a C++ ship under its object, never set up, since bead oo-9ht.144). The
+   sets (a C++ ship under its object, never set up). The
    expectations were written against the Objective-C API and run on the
    unconverted class first: a wormhole made by a ship is a no-mass-yet effect of
         the wormhole scan class whose size, expiry and arrival follow from the
@@ -22,12 +20,10 @@
         and removes it once it has expired; -suckInShip: refuses a missing ship,
    one already leaving, another system and an expired wormhole; -disgorgeShips
    moves a wormhole that held the player behind the player; and the description.
-   Masses and distances are set through the one helper below. The callers made
-   it with alloc/initWormholeTo:fromShip: and alloc/initWithDict:, which the
-   conversion kept on the facade; bead oo-9ht.112 deleted the facade (standing
-   approval oo-9n5p9): the cases make the C++ wormhole and its Objective-C
-   object (oo::NewEntityFacade) and ask the C++ class, and the facade case pins
-   the new crossing: its object is the root Entity's. Run: bash
+   Masses and distances are set through the one helper below. The cases make
+   the C++ wormhole and its Objective-C object (oo::NewEntityFacade) and ask
+   the C++ class, and the facade case pins that its object is the root
+   Entity's. Run: bash
    tools/check-core-tests.sh
 */
 
@@ -38,7 +34,7 @@
 #include "OODescription.h"
 #include "OOJSWormhole.h"
 #include "OOSystemDescriptionManager.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "Universe.h"
 #include "WormholeEntity.h"
 #include "oo_test.hpp"
@@ -53,9 +49,7 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   double _clock = {};
   NSPoint _coordinates = {};
@@ -68,9 +62,8 @@ class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
   Vector forwardVector() override { return make_vector(0, 0, 1); }
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// A C++ player under the ship's facade, as PlayerEntity::sharedPlayer() makes
+// the game's, retained (+1).
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -80,8 +73,7 @@ T* NewTestPlayer() {
   return player.get();
 }
 
-// An effect, for the collision test (an Objective-C subclass until bead
-// oo-j12i2; a C++ one overriding the member its selector became).
+// An effect, for the collision test (a C++ subclass overriding the member).
 class TestEffect : public Entity {
  public:
   bool isEffect() override { return true; }
@@ -92,17 +84,14 @@ class TestEffect : public Entity {
 class TestUniverse : public Universe {
  public:
   OOSystemID& _system = systemID;  // the universe's own state, which its getter
-                                   // answers (bead oo-ql9rn)
+                                   // answers
   Entity* _removed = {};
 
   std::optional<std::string> getSystemName(OOSystemID sys,
                                            OOGalaxyID /*gnum*/) override {
     return "System " + std::to_string(sys);
   }  // getSystemName(sys) asks it
-  bool removeEntity(
-      Entity* entity) override  // the C++ entity since bead oo-9ht.39.26; the
-                                // record is its object, as before
-  {
+  bool removeEntity(Entity* entity) override {
     _removed = entity;
     return YES;
   }
@@ -136,9 +125,8 @@ void SetUp() {
         oo::PList(oo::PList::Dict{{"coordinates", oo::PList("13 24")}}), "0 9");
     manager->buildRouteCache();    // fills the coordinates cache
     sManager = manager.leakRef();  // never released
-    // What -systemManager and -cxx_descriptionForKey: answered: the universe's
-    // own manager and descriptions (the game's clock format, for the
-    // description's arrival time; bead oo-ql9rn).
+    // The universe's own manager and descriptions (the game's clock format, for
+    // the description's arrival time).
     sUniverse->systemManager = oo::Ref<OOSystemDescriptionManager>(sManager);
     sUniverse->_descriptions = oo::PList(
         oo::PList::Dict{{"clock-format", oo::PList("%07d:%02d:%02d:%02d")}});
@@ -150,8 +138,7 @@ void SetUp() {
   gSharedUniverse = sUniverse;
   gOOPlayer = sPlayer;
   // The ship's -dealloc sends its (absent) scripts entityDestroyed in a request
-  // on the main thread's context, so there is one, with nothing in it (the ship
-  // stand-in is C++ since bead oo-9ht.144, as test_StationEntity's ships are).
+  // on the main thread's context, so there is one, with nothing in it.
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
         ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
@@ -168,9 +155,8 @@ bool Near(double a, double b) {
   return std::fabs(a - b) < 1e-3 * std::fmax(1.0, std::fabs(b));
 }
 
-// A ship: C++ since bead oo-9ht.144 (the wormhole calls its members), under its
-// object (oo::NewEntityFacade, autoreleased as the plain entity was), never set
-// up.
+// A ship: C++ (the wormhole calls its members), under its object
+// (oo::NewEntityFacade, autoreleased), never set up.
 Entity* Ship(GLfloat mass) {
   Entity* ship = oo::MadeEntity(oo::makeRef<::ShipEntity>());
   SetMass(ship, mass);
@@ -401,18 +387,15 @@ OO_TEST(facade) {
   {
     SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
-    // Its Objective-C object is the root's facade since bead oo-9ht.112
-    // (amendment oo-9ht.107).
+    // Its Objective-C object is the root's facade.
     Entity* object = wh;
-    OO_CHECK(object !=
-             nil);  // (and its object's class, the root facade: retired with
-                    // the facade, bead oo-dpyk8, under oo-9n5p9)
-    // A C++ entity (amendment oo-0mxi), not an Objective-C entity's adapter.
+    OO_CHECK(object != nil);
+    // A C++ entity, not an Objective-C entity's adapter.
     OO_CHECK(dynamic_cast<WormholeEntity*>(object) == wh);
   }
 }
 
-// The binding's category, which the facade carries since bead oo-9ht.43: what
+// The binding's category, which the facade carries: what
 // the engine asks a WormholeEntity for by selector is what OOJSWormhole.mm
 // answers.
 OO_TEST(jsExtensions) {
@@ -421,8 +404,7 @@ OO_TEST(jsExtensions) {
     WormholeEntity* wh = ToNine(Ship(1000.0f));
     ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
     ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
-    Entity* object =
-        wh;  // what the engine asks (the root's facade since bead oo-9ht.112)
+    Entity* object = wh;  // what the engine asks (the root's facade)
     OOJSEntityGetJSClass(object, &jsClass, &prototype);
     OOJSWormholeGetJSClass(&expectedClass, &expectedPrototype);
     OO_CHECK(jsClass != nullptr && jsClass == expectedClass &&

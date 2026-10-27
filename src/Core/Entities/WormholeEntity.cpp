@@ -22,8 +22,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "WormholeEntity.h"
-
 #include "AI.h"
 #include "OOJSWormhole.h"
 #include "OOLogging.h"
@@ -41,6 +39,7 @@ MA 02110-1301, USA.
 #include "ShipEntityLoadRestore.h"
 #include "StationEntity.h"
 #include "Universe.h"
+#include "WormholeEntity.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
 
@@ -92,7 +91,7 @@ void WormholeEntity::initWithDict(const oo::PList& dict) {
   // [self init] could not fail.
   {
     {
-      oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+      oo::AutoreleaseScope pool;  // was @autoreleasepool
       // wormholes from pre-1.80 savegames using "origin_seed" and "dest_seed"
       // currently get defaults set; will probably disappear unnoticed
       origin = dict.get<int>("origin_id", 0);
@@ -669,8 +668,8 @@ bool WormholeEntity::canCollide() {
   return (witch_mass > 0.0);
 }
 
-// The other entity's -isEffect, as the particle system asks it (bead
-// oo-9ht.39.20): [nil isEffect] answered NO.
+// The other entity's -isEffect, as the particle system asks it: [nil isEffect]
+// answered NO.
 bool WormholeEntity::checkCloseCollisionWith(Entity* otherEntity) {
   return otherEntity == nullptr || !otherEntity->isEffect();
 }
@@ -901,8 +900,7 @@ void WormholeEntity::dumpSelfState() {
   }
 }
 
-// The binding's bodies (OOJSWormhole.mm), which the facade forwarded to until
-// bead oo-9ht.112.
+// The binding's bodies (OOJSWormhole.mm).
 void WormholeEntity::getJSClass(ooscript::ClassDef** outClass,
                                 ooscript::Object* outPrototype) {
   ::OOJSWormholeGetJSClass(outClass, outPrototype);
@@ -917,7 +915,7 @@ bool WormholeEntity::isVisibleToScripts() {
 }
 
 oo::PList WormholeEntityShipsInTransit(Entity* entity) {
-  WormholeEntity* wormhole = dynamic_cast<WormholeEntity*>(
-      entity);  // the C++ entity (bead oo-w9pi2; was its object)
+  WormholeEntity* wormhole =
+      dynamic_cast<WormholeEntity*>(entity);  // the C++ entity
   return (wormhole != nullptr) ? wormhole->getShipsInTransit() : oo::PList();
 }

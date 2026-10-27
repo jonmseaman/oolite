@@ -22,12 +22,11 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSSoundSource.h"
-
 #include <cstring>
 
 #include "OOJSPrivateObject.h"
 #include "OOJSSound.h"
+#include "OOJSSoundSource.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOSound.h"
@@ -36,33 +35,8 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), InitClass becomes
-   ooscript::initClass, and the directly spelled construction-check,
-   object-construction, private-storage and boolean/integer/ numeric-conversion
-   calls become ooscript::isConstructing (via CallArgs), ooscript::newObject,
-        ooscript::setPrivate, ooscript::valueToBoolean, ooscript::valueToInt32
-   and ooscript::newNumberValue/valueToNumber. `this` is renamed to `thisObj`
-   because it is a reserved word once this file compiles as Objective-C++
-   (ADR-0001).
-
-        Natives and class hooks take the façade signature directly; the shared
-        OOJSObjectWrapperToString and OOJSObjectWrapperFinalize natives are used
-   as-is in the class and method tables.
-*/
-
-/*
-        C++20 since bead oo-cib0, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on OOSoundSource became two free functions, and its methods moved to
-   the Scripting bridge file (amendment oo-ykoy). Beads oo-9ht.88 and oo-9ht.68
-   deleted the source's and the sound's facades and that file: both are C++, and
-   a SoundSource object's private slot holds an OOJSSoundSourceHolder of the
-   source (amendment oo-6symp; ADR-0056 amendment oo-9ht.68).
+        The shared OOJSObjectWrapperToString and OOJSObjectWrapperFinalize
+   natives are used as-is in the class and method tables.
 */
 
 namespace ooscript {}
@@ -218,10 +192,8 @@ static bool JSSoundSourceGetSoundSource(ooscript::Context context,
   return true;
 }
 
-// The class's converter: the slot held the source's facade, which
-// OOJSBasicPrivateObjectConverter handed to Objective-C callers of
-// OOJSNativeObjectFromJSValue. No Objective-C object is left to hand over (bead
-// oo-9ht.88), and nothing asks for one.
+// The class's converter: no Objective-C object is left to hand over, and
+// nothing asks for one.
 static oo::PList SoundSourceConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();
 }
@@ -485,10 +457,8 @@ static bool SoundSourcePlayOrRepeat(ooscript::Context context,
 }
 }  // namespace
 
-// The bodies of OOSoundSource (OOJavaScriptExtentions), whose methods were in
-// the Scripting bridge file until bead oo-9ht.88 deleted the source's facade
-// (proposed ADR-0056 amendments oo-ppc and oo-ykoy). A null source is JS null,
-// as OOJSValueFromNativeObject() answered nil.
+// The bodies of OOSoundSource (OOJavaScriptExtentions). A null source is JS
+// null.
 ooscript::Value OOJSSoundSourceJSValueInContext(OOSoundSource* source,
                                                 ooscript::Context context) {
   ooscript::Object jsSelf = NULL;

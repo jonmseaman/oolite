@@ -187,7 +187,6 @@ bool OOPlanetTextureGenerator::initWithPlanetInfo(const oo::PList& planetInfo,
     _info.paleLandColor = FloatRGBFromDictColor(planetInfo, "polar_land_color");
     _info.polarSeaColor = FloatRGBFromDictColor(planetInfo, "polar_sea_color");
     _info.seed = seed;  // was a value box under "noise_map_seed" in planetInfo
-                        // (bead oo-3rb.48)
     if (planetInfo.find("cloud_alpha") != nullptr) {
       OO_LOG("texture.planet.generate", "{}",
              "Extracting atmosphere parameters");
@@ -807,7 +806,7 @@ OOINLINE float Hermite(float q) { return 3.0f * q * q - 2.0f * q * q * q; }
 OOINLINE int32_t fast_floor(double val) {
   val += 68719476736.0 * 1.5;
   int32_t words[2];  // the double's two 32-bit halves, read without
-                     // type-punning (GCC -Wstrict-aliasing; bead oo-1q4)
+                     // type-punning (GCC -Wstrict-aliasing)
   std::memcpy(words, &val, sizeof words);
   return (words[iman_] >> 16);
 }
@@ -834,7 +833,7 @@ static BOOL FillFBMBuffer(OOPlanetTextureGeneratorInfo* info) {
 
 enum {
   //	Size of permutation buffer used to map integer coordinates to gradients.
-  //Must be power of two.
+  // Must be power of two.
   kPermutationCount = 1 << 10,
   kPermutationMask = kPermutationCount - 1,
 

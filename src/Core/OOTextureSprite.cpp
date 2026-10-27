@@ -22,11 +22,10 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOTextureSprite.h"
-
 #include "OOMacroOpenGL.h"
 #include "OOMaths.h"
 #include "OOTexture.h"
+#include "OOTextureSprite.h"
 
 oo::Ref<OOTextureSprite> OOTextureSprite::initWithTexture(
     OOTexture* inTexture) {
@@ -36,8 +35,7 @@ oo::Ref<OOTextureSprite> OOTextureSprite::initWithTexture(
                      : NSSize{});  // a message to nil answered a zero size
 }
 
-// -initWithTexture:size:'s failure test, then the object (amendment oo-novu
-// item 1).
+// -initWithTexture:size:'s failure test, then the object.
 oo::Ref<OOTextureSprite> OOTextureSprite::initWithTexture(OOTexture* inTexture,
                                                           NSSize spriteSize) {
   if (inTexture == nil) {

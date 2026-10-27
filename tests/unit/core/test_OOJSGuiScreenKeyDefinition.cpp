@@ -1,25 +1,19 @@
 /*	test_OOJSGuiScreenKeyDefinition.mm
         Unit tests for OOJSGuiScreenKeyDefinition
-   (src/Core/Scripting/OOJSGuiScreenKeyDefinition.h/.mm): bead oo-xg7g, a Phase
-   3 conversion in the house style of the OOColor exemplar (proposed ADR-0056;
-   amendment oo-o89, as its superclass, the weak-reference root, was still
-   Objective-C).
+   (src/Core/Scripting/OOJSGuiScreenKeyDefinition.h/.mm).
 
         A GUI screen key definition is a script's extra keys for a GUI screen: a
    name and the keys it registers, and a JS callback and its `this` that it
    keeps alive (GC roots) and runs with the entry's key, pushing the script that
    made it. The test runs it in a real context on the game's own façade backend
    (ooscript/JSEngine_quickjs.cpp) and links the game's own objects for the
-        class (the script's weak reference was the weak-reference class until
-   bead oo-9ht.22). What the rest of the engine would provide is defined below
-   as the smallest stand-in that does the same thing: the engine object (which
+   class. What the rest of the engine would provide is defined below as the
+   smallest stand-in that does the same thing: the engine object (which
    calls the function), the script stack (OOJSScript) and the property-list
    converter. The engine's and OOJSScript's headers are not imported, because
-   the test defines those classes (amendment oo-z1s4 item 4); the class's header
-   names OOScript with @class for that (amendment oo-fg7i item 5). The
-   expectations were written against the Objective-C class and run on it first;
-   since bead oo-9ht.62 deleted the façade (a weak-reference root subclass) they
-   ask the C++ class. They pin the initial state, the name and the keys, the
+   the test defines those classes; the class's header names OOScript with
+   @class for that. The expectations were written against the Objective-C class
+   and run on it first. They pin the initial state, the name and the keys, the
    callback and its `this` (kept alive across a garbage collection), the run,
    the sort order (interfaceCompare(), with its null cases) and an engine reset.
         Run: bash tools/check-core-tests.sh
@@ -61,9 +55,8 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
       ooscript::newStringCopyN(context, string->data(), string->size()));
 }
 
-// The engine (OOJavaScriptEngine.h; a C++ class since bead oo-wdqw1 deleted its
-// facade), declared with the header's names and signatures but not its class;
-// the stand-in's answers are kept.
+// The engine (OOJavaScriptEngine.h), declared with the header's names and
+// signatures but not its class; the stand-in's answers are kept.
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
@@ -95,10 +88,9 @@ OOJSScript* sRunningScript = nullptr;
 
 #include "OOScript.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls.
+// OOJSScript (OOJSScript.h), which the code under test calls. A script is a
+// C++ object, so the stand-in is a C++ subclass of OOScript declaring the
+// members that code calls.
 class OOJSScript : public OOScript {
  public:
   static OOJSScript* currentlyRunningScript();

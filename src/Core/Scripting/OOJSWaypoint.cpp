@@ -21,8 +21,6 @@ MA 02110-1301, USA.
 
  */
 
-#include "OOJSWaypoint.h"
-
 #include <cstdint>
 #include <cstring>
 
@@ -30,36 +28,28 @@ MA 02110-1301, USA.
 #include "OOJSEntity.h"
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
+#include "OOJSWaypoint.h"
 #include "OOJavaScriptEngine.h"
 #include "OOWaypointEntity.h"
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), InitClass becomes
-   ooscript::initClass, and the two directly spelled numeric-conversion calls
-   become ooscript::newNumberValue/valueToNumber. `this` is renamed to `thisObj`
-   because it is a reserved word once this file compiles as Objective-C++
-   (ADR-0001).
+        Retargeted onto the ooscript facade (JSEngine.hpp): the class dispatch
+   table is a static ooscript::ClassDef (the stub hooks are nullptr), InitClass
+   is ooscript::initClass, and the two directly spelled numeric-conversion
+   calls are ooscript::newNumberValue/valueToNumber. `this` is spelled
+   `thisObj`.
 
         Waypoint is registered as an Entity subclass and object converter with
    &sWaypointClass, the same ooscript::ClassDef that ooscript::getClass()
    reports for its instances.
-*/
 
-/*
-        C++20 since bead oo-mae5, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on OOWaypointEntity became three free functions, and its methods and
-   interface moved to a bridge file of the binding (amendment oo-ykoy), then
-   onto the OOWaypointEntity facade in OOWaypointEntity+ObjCBridge.mm (bead
-   oo-9ht.50, amendment oo-6ia4 item 3). Messages to classes that are still
-   Objective-C (OOWaypointEntity, Entity, Universe, PlayerEntity) stay as they
-   are, which is why the file is still .mm until Phase 4.
+        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch
+   and scope guards (OOJSEngineNativeWrappers.h). The category on
+   OOWaypointEntity is three free functions, whose methods and interface are on
+   the OOWaypointEntity facade in OOWaypointEntity+ObjCBridge.mm. Messages to
+   classes that are still Objective-C (OOWaypointEntity, Entity, Universe,
+   PlayerEntity) go through their Objective-C interfaces.
 */
 
 namespace ooscript {}
@@ -146,10 +136,8 @@ static PropertySpec sWaypointProperties[] = {
 
 // A raw jsapi mirror of sWaypointProperties, used only for the two bad-property
 // error reporters in OOJavaScriptEngine.m
-// (OOJSReportBadPropertySelector/Value): those helpers are outside this bead's
-// scope (shared across every binding file) and still take a
-// ooscript::PropertySpec*, not ooscript::PropertySpec* (see OOJSVector.mm's
-// sVectorPropertiesRaw).
+// (OOJSReportBadPropertySelector/Value): those helpers are shared across every
+// binding file and still take a ooscript::PropertySpec*.
 namespace {
 static ooscript::PropertySpec sWaypointPropertiesRaw[] = {
     // JS name							ID
@@ -186,7 +174,7 @@ static bool JSWaypointGetWaypointEntity(ooscript::Context context,
   OOJS_PROFILE_ENTER
 
   bool result;
-  Entity* entity = nullptr;  // the slot holds the C++ entity (bead oo-9ht.39.3)
+  Entity* entity = nullptr;  // the slot holds the C++ entity
 
   if (outEntity == NULL) return false;
   *outEntity = nullptr;
@@ -194,9 +182,8 @@ static bool JSWaypointGetWaypointEntity(ooscript::Context context,
   result = OOJSEntityGetEntity(context, wormholeObj, &entity);
   if (!result) return false;
 
-  // A waypoint is the C++ OOWaypointEntity (a nil or other entity is not, as
-  // -isKindOfClass: answered). The natives call its members (bead
-  // oo-9ht.39.8.18), where they messaged its object.
+  // A waypoint is the C++ OOWaypointEntity (a nil or other entity is not). The
+  // natives call its members.
   OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(entity);
   if (waypoint == nullptr) return false;
 
@@ -208,9 +195,7 @@ static bool JSWaypointGetWaypointEntity(ooscript::Context context,
 }  // namespace
 
 // The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the C++
-// class's overrides of the root's JS members call since bead oo-9ht.108 deleted
-// the facade that forwarded to them (bead oo-9ht.50; proposed ADR-0056
-// amendments oo-ppc, oo-ykoy, oo-6ia4 and oo-9ht.107).
+// class's overrides of the root's JS members call.
 void OOJSWaypointGetJSClass(ooscript::ClassDef** outClass,
                             ooscript::Object* outPrototype) {
   *outClass = &sWaypointClass;
@@ -240,8 +225,7 @@ static bool WaypointGetProperty(Context cx, Object obj, PropertyId propID,
   Quaternion q = kIdentityQuaternion;
 
   if (!JSWaypointGetWaypointEntity(context, thisObj, &waypoint))
-    return false;  // not null after this (its object, nil only without a
-                   // facade, is not asked since bead oo-9ht.39.8.18)
+    return false;  // not null after this
 
   switch (ooscript::idToInt32(propID)) {
     case kWaypoint_beaconCode:
@@ -295,25 +279,21 @@ static bool WaypointSetProperty(Context cx, Object obj, PropertyId propID,
   Quaternion qValue;
 
   if (!JSWaypointGetWaypointEntity(context, thisObj, &waypoint))
-    return false;  // not null after this (bead oo-9ht.39.8.18)
+    return false;  // not null after this
 
   switch (ooscript::idToInt32(propID)) {
     case kWaypoint_beaconCode:
       sValue = cxx_OOStringFromJSValue(context, *value_raw);
       if (!sValue.has_value() || sValue->empty()) {
         if (waypoint->isBeacon()) {
-          if (UNIVERSE != nullptr)
-            UNIVERSE->clearBeacon(
-                waypoint);  // the C++ waypoint (bead oo-9ht.39.8.10)
+          if (UNIVERSE != nullptr) UNIVERSE->clearBeacon(waypoint);
           if ((PLAYER != nullptr ? PLAYER->nextBeaconEntity() : nullptr) ==
-              waypoint)  // the C++ entities (bead oo-9ht.39.8.10; not virtual,
-                         // so the binding test stands in for it)
+              waypoint)  // not virtual, so the binding test stands in for it
           {
             if (PLAYER != nullptr)
               PLAYER->PlayerEntity::setCompassMode(
-                  COMPASS_MODE_PLANET);  // qualified: the final overrider (bead
-                                         // oo-9ht.177), so the binding test
-                                         // stands in for it
+                  COMPASS_MODE_PLANET);  // qualified: the final overrider, so
+                                         // the binding test stands in for it
           }
         }
       } else {
@@ -322,9 +302,7 @@ static bool WaypointSetProperty(Context cx, Object obj, PropertyId propID,
         } else  // Universe needs to update beacon lists in this case only
         {
           waypoint->setBeaconCode(sValue);
-          if (UNIVERSE != nullptr)
-            UNIVERSE->setNextBeacon(
-                waypoint);  // the C++ waypoint (bead oo-9ht.39.8.10)
+          if (UNIVERSE != nullptr) UNIVERSE->setNextBeacon(waypoint);
         }
       }
       return true;

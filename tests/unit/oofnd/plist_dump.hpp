@@ -15,8 +15,7 @@
    (-[NSString compare:])
 */
 
-#ifndef OOFND_TESTS_PLIST_DUMP_HPP
-#define OOFND_TESTS_PLIST_DUMP_HPP
+#pragma once
 
 #include <algorithm>
 #include <cinttypes>
@@ -52,8 +51,7 @@ inline void dump(const oo::PList& p, std::string& out) {
     case oo::PList::Type::Null:
       out += "nil";
       break;
-    case oo::PList::Type::Object:  // no parser produces one (ADR-0043 Amendment
-                                   // 2)
+    case oo::PList::Type::Object:  // no parser produces one
       out += "object";
       break;
     case oo::PList::Type::Bool:
@@ -128,5 +126,3 @@ inline std::string dump(const oo::PList& p) {
 }
 
 }  // namespace oo_test
-
-#endif  // OOFND_TESTS_PLIST_DUMP_HPP

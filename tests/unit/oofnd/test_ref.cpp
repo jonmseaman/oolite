@@ -1,7 +1,7 @@
 /*	test_ref.cpp
-        Unit tests for oofnd/Ref.hpp (bead oo-qpa): oo::RefCounted, oo::Ref<T>,
+        Unit tests for oofnd/Ref.hpp: oo::RefCounted, oo::Ref<T>,
    oo::WeakRef<T> and oo::AutoreleaseScope, against the Objective-C
-   retain/release/autorelease contract they mirror (ADR-0003) and the
+   retain/release/autorelease contract they mirror and the
    OOWeakReference semantics they replace.
 
         Every test object records its destruction in a log, so the tests assert
@@ -460,7 +460,7 @@ OO_TEST(weakRefOnlyComparisonCreatesNoControl) {
   OO_CHECK(oo::detail::WeakAccess::existingControl(b.get()) == nullptr);
 }
 
-// dropWeakReferences() (bead oo-9ht.39.5.2): an object whose identity dies
+// dropWeakReferences(): an object whose identity dies
 // before its count does (an entity's C++ part, when its Objective-C object
 // starts -dealloc) zeroes its weak refs early, as -weakRefDrop did; the object
 // lives on, and a WeakRef made afterwards is a new identity, as a -weakRetain
@@ -488,7 +488,7 @@ OO_TEST(dropWeakReferencesZeroesThemWhileTheObjectLives) {
   OO_CHECK(w.get() == nullptr && again.get() == nullptr);
 }
 
-// willDispose() (bead oo-dpyk8): the last release runs it once, with the object
+// willDispose(): the last release runs it once, with the object
 // whole (its weak references still read it), before the weak references are
 // zeroed and the destructor runs; a balanced retain and release inside it do
 // not dispose again.
@@ -574,8 +574,8 @@ OO_TEST(autoreleaseScopesNest) {
                   1u);  // the innermost scope receives them
     }
     OO_CHECK(oo::AutoreleaseScope::current() == &outer);
-    OO_CHECK(gDeathLog == (std::vector<std::string>{
-                              "inner-2", "inner-1"}));  // LIFO (ADR-0045)
+    OO_CHECK(gDeathLog ==
+             (std::vector<std::string>{"inner-2", "inner-1"}));  // LIFO
     OO_CHECK_EQ(gLive, 1);
     oo::autorelease(new Thing("outer-2"));
   }
@@ -590,9 +590,8 @@ OO_TEST(drainReleasesInOrderAndKeepsTheScopeOpen) {
   for (int i = 0; i < 3; ++i)
     oo::autorelease(new Thing("t" + std::to_string(i)));
   scope.drain();  // [pool release]; pool = [[... alloc] init]
-  OO_CHECK(gDeathLog ==
-           (std::vector<std::string>{
-               "t2", "t1", "t0"}));  // the game's order: LIFO (ADR-0045)
+  OO_CHECK(gDeathLog == (std::vector<std::string>{
+                            "t2", "t1", "t0"}));  // the game's order: LIFO
   OO_CHECK_EQ(scope.pendingCount(), 0u);
   OO_CHECK(oo::AutoreleaseScope::current() == &scope);
   oo::autorelease(new Thing("after-drain"));
@@ -604,7 +603,7 @@ OO_TEST(drainReleasesInOrderAndKeepsTheScopeOpen) {
 OO_TEST(drainingCascades) {
   // Releasing a pooled object whose destructor autoreleases more objects drains
   // those too, in the same drain, as libobjc2's emptyPool loops until the pool
-  // is empty. LIFO (ADR-0045): the newest (sibling) goes first, and
+  // is empty. LIFO: the newest (sibling) goes first, and
   // born-in-dealloc lands on top, so it goes right after.
   reset();
   {
@@ -679,7 +678,7 @@ OO_TEST(scopesArePerThread) {
   OO_CHECK(gDeathLog == std::vector<std::string>{"worker"});
 }
 
-// --- thread safety of the count (ADR-0003)
+// --- thread safety of the count
 // ----------------------------------------------------
 
 OO_TEST(retainReleaseAreAtomicAcrossThreads) {

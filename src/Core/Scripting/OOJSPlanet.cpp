@@ -23,43 +23,16 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSPlanet.h"
-
 #include <cstdint>
 #include <cstring>
 
 #include "OOJSEntity.h"
+#include "OOJSPlanet.h"
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOPlanetEntity.h"
 #include "ooscript/JSEngine.hpp"
-
-// Retargeted onto the ooscript facade (JSEngine.hpp), the way OOJSVector.mm and
-// OOJSFlasher.mm do it (bead oo-sdz exemplar): stub hooks become nullptr,
-// InitClass becomes ooscript::initClass, numeric conversion becomes
-// ooscript::newNumberValue/ valueToNumber, and `this` is renamed to `thisObj`
-// (reserved word in Objective-C++, ADR-0001). The class dispatch table itself
-// becomes an ooscript::ClassDef, and &sPlanetClass is what
-// DEFINE_JS_OBJECT_GETTER, getJSClass:andPrototype: and
-// OOJSRegisterObjectConverter/OOJSRegisterSubclass receive.
-/*
-        C++20 since bead oo-7ixd, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on OOPlanetEntity became three free functions, and its methods moved
-   to a bridge file of the binding (amendment oo-ykoy), then onto the
-   OOPlanetEntity facade in OOPlanetEntity+ObjCBridge.mm (bead oo-9ht.92,
-        amendment oo-6ia4 item 3), then into the C++ planet's overrides when
-   bead oo-9ht.129 deleted that facade; the planet is C++ and called directly,
-   null-guarded where the message to nil was harmless. OOColor, which is C++
-   since bead oo-11m, is reached as OOColor through oo::ToCxx/oo::ToObjC
-   (amendment oo-ppc, item 4). Messages to classes that are still Objective-C
-   (OOPlanetEntity, Universe) stay as they are, which is why the file is still
-   .mm until Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -205,13 +178,9 @@ static ooscript::PropertySpec sPlanetPropertiesRaw[] = {
 }  // namespace
 
 namespace {
-// The planet is C++ behind the root's facade since bead oo-9ht.129: the getter
-// checks the JS class (a Planet object's private slot holds the planet's
-// Objective-C object, so -isKindOfClass: of the facade class always held) and
-// answers the C++ planet; null for a stale entity, as nil before. Since bead
-// oo-9ht.39.3 the slot holds the C++ entity (OOJSEntityGetEntityOfClass for the
-// Planet class, DEFINE_JS_OBJECT_GETTER(JSPlanetGetPlanetObject, &sPlanetClass,
-// ...) before).
+// The getter checks the JS class and answers the C++ planet (the slot holds the
+// C++ entity, read by OOJSEntityGetEntityOfClass for the Planet class); null
+// for a stale entity.
 bool JSPlanetGetPlanetEntity(ooscript::Context context,
                              ooscript::Object inObject,
                              OOPlanetEntity** outObject) {
@@ -234,9 +203,7 @@ void InitOOJSPlanet(ooscript::Context context, ooscript::Object global) {
 }
 
 // The bodies of OOPlanetEntity (OOJavaScriptExtensions), called by the C++
-// planet's overrides (bead oo-9ht.129; the OOPlanetEntity facade forwarded to
-// them from bead oo-9ht.92; proposed ADR-0056 amendments oo-ppc, oo-ykoy and
-// oo-6ia4).
+// planet's overrides.
 bool OOJSPlanetIsVisibleToScripts(OOPlanetEntity* planet) {
   OOStellarBodyType type =
       (planet != nullptr ? planet->planetType() : (OOStellarBodyType)0);
@@ -330,10 +297,9 @@ static bool PlanetGetProperty(Context cx, Object obj, PropertyId propID,
       return true;
 
     case kPlanet_orientation:
-      // The C++ member the root's selector reached (bead oo-9ht.39.8.2),
-      // qualified: the final overrider for a planet (OOPlanetEntity has no
-      // subclass and does not override it), so the binding test stands in for
-      // it; zero for none, as the message to nil.
+      // The C++ member, qualified: the final overrider for a planet
+      // (OOPlanetEntity has no subclass and does not override it), so the
+      // binding test stands in for it; zero for none.
       return QuaternionToJSValue(context,
                                  planet != nullptr
                                      ? planet->Entity::normalOrientation()
@@ -453,9 +419,8 @@ static bool PlanetSetProperty(Context cx, Object obj, PropertyId propID,
     case kPlanet_orientation:
       if (JSValueToQuaternion(context, *value_raw, &qValue)) {
         quaternion_normalize(&qValue);
-        // The C++ member the root's selector reached (bead oo-9ht.39.8.2),
-        // qualified: the final overrider (OOPlanetEntity has no subclass), so
-        // the binding test stands in for it; nothing for none.
+        // The C++ member, qualified: the final overrider (OOPlanetEntity has no
+        // subclass), so the binding test stands in for it; nothing for none.
         if (planet != nullptr) planet->OOPlanetEntity::setOrientation(qValue);
         return true;
       }

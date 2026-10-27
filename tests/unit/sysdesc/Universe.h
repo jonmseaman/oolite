@@ -1,4 +1,4 @@
-// Stub for tests/unit/sysdesc (bead oo-vjwp): only what
+// Stub for tests/unit/sysdesc only what
 // src/Core/OOConvertSystemDescriptions.mm uses.
 #pragma once
 #include "OOFoundation.h"
@@ -6,9 +6,7 @@
 #ifndef OO_LOCALIZATION_TOOLS
 #define OO_LOCALIZATION_TOOLS 1
 #endif
-// The universe is C++ since bead oo-ql9rn deleted its Objective-C facade: the
-// tools call the member of the same name (the Objective-C form the stub
-// declared went with the facade).
+// The universe is C++: the tools call the member of the same name.
 class Universe {
  public:
   const oo::PList* descriptions();

@@ -1,5 +1,5 @@
 /*	oofnd/PListWriting.hpp
-        The two plist writers Oolite uses, reproduced byte for byte (ADR-0027):
+        The two plist writers Oolite uses, reproduced byte for byte:
 
             Objective-C                                                   oofnd
             ------------------------------------------------------------
@@ -23,11 +23,11 @@
    groups of four bytes, a new line every 32; the whole thing ends in a newline.
    Dates cannot be written ("non-plist object in dictionary" inside a container,
    "Class NSCalendarDate does not support OldSchoolPropertyListWriting" at the
-   top). Differences (ADR-0027): a string with non-ASCII characters is always
-   quoted (item 5); data of a length where the original overflows its buffer or
-   loops (5-7, 9+ bytes) is written in the intended form, not truncated or
-   crashed (item 4); keys equal but for case are ordered by their UTF-16 units
-   (GNUstep: hash order).
+   top). Differences: a string with non-ASCII characters is always quoted; data
+   of a length where the original overflows its buffer or loops (5-7, 9+
+   bytes) is written in the intended form, not truncated or crashed; keys
+   equal but for case are ordered by their UTF-16 units (GNUstep: hash
+   order).
 
         XML (GNUstep's OAppend with step 2): Apple's DOCTYPE header; indentation
    "", 4 spaces, tab, tab + 4 spaces, ... capped at six tabs; keys sorted by
@@ -43,11 +43,10 @@
    XML writer writes nothing for it.
 */
 
-#ifndef OOFND_PLISTWRITING_HPP
-#define OOFND_PLISTWRITING_HPP
+#pragma once
 
 // Suspend OOFoundation.h's `#define true 1` / `#define false 0` for this header
-// (see oofnd/Data.hpp, proposed ADR-0028); restored at the end.
+// (see oofnd/Data.hpp); restored at the end.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -204,7 +203,7 @@ class OldStyleWriter {
              (c >= 'a' && c <= 'z');
     };
     // +alphanumericCharacterSet is Unicode-wide in GNUstep; oofnd quotes all
-    // non-ASCII (ADR-0027 item 5), so only ASCII letters and digits leave a
+    // non-ASCII, so only ASCII letters and digits leave a
     // string bare.
     if (!u.empty() && std::all_of(u.begin(), u.end(), isAlnum) &&
         !(u[0] >= '0' && u[0] <= '9')) {
@@ -253,7 +252,7 @@ class OldStyleWriter {
   // NSData's writer, as intended: GNUstep's buffer is too small for 5-7 and 9+
   // bytes (it truncates, pads with uninitialised bytes or crashes) and loops
   // forever for more than 32 bytes at indentation 0. Byte-identical for 0-4 and
-  // 8 bytes (ADR-0027 item 4).
+  // 8 bytes.
   static void formatData(const Data& d, unsigned indent, std::string& out) {
     static constexpr char kHex[] = "0123456789ABCDEF";
     const std::uint8_t* b = d.bytes();
@@ -526,10 +525,10 @@ inline void appendXML(std::string& out, const PList& v, unsigned level) {
       out += "<string>(nil)</string>";  // OAppend's nil branch (no newline)
       return;
     case PList::Type::Object:
-      // Not property-list data (Amendment 2 carrier): its -description in a
-      // <string>, with NO line break after it (captured from
-      // gnustep-base 1.31.1, bead oo-3rb.149: GNUstep's XML writer falls
-      // through to the description without the string branch's newline).
+      // Not property-list data (the foreign-object carrier): its -description
+      // in a <string>, with NO line break after it (captured from
+      // gnustep-base 1.31.1: GNUstep's XML writer falls through to the
+      // description without the string branch's newline).
       out += "<string>";
       appendXMLString(out, v.getIf<PList::Object>()->get()->description());
       out += "</string>";
@@ -569,5 +568,3 @@ inline Expected<Data, PListError> writeXMLPList(const PList& plist) {
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_PLISTWRITING_HPP

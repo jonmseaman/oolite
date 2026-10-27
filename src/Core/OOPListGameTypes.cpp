@@ -2,7 +2,7 @@
 
 OOPListGameTypes.mm
 
-See OOPListGameTypes.h (bead oo-9ftb).
+See OOPListGameTypes.h.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -24,9 +24,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOPListGameTypes.h"
-
 #include "OOObjCPList.h"
+#include "OOPListGameTypes.h"
 #include "OOStringParsing.h"
 #include "OOVector.h"
 #include "legacy_random.h"

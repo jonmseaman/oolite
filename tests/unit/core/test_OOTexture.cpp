@@ -1,10 +1,9 @@
 /*	test_OOTexture.mm
         Unit tests for OOTexture (src/Core/Materials/OOTexture.h), the root of
-   the textures: bead oo-whzh (Phase 3, house style of proposed ADR-0056; the
-   Materials module's pattern, amendments oo-smy and oo-2en).
+   the textures.
 
         OOTexture is abstract. OOConcreteTexture and OONullTexture derive from
-   it in their own files and convert in their own beads. The root keeps the
+   it in their own files. The root keeps the
    texture caches (the live textures by cache key, unretained; the recent
    textures, retained; every live texture, for graphics resets) and is the
    factory that answers a cached texture or a new OOConcreteTexture. It links
@@ -14,19 +13,12 @@
    named texture is found in the cache by its key, and the generator's -enqueue
    is the test's, so no file is read and no worker thread runs.
 
-        The expectations were written against the Objective-C API and run on the
-   unconverted class first (commit 84b1acfc6); that API then became the facade
-   (the texture bridge). Bead oo-9ht.99 deleted the facade (ADR-0056 amendment
-   oo-9ht.99): the cases call the C++ members with every expectation kept, and
-   the facade's crossing cases (objCTextureBehindACxxPointer, nilAndLifetime)
-   and its identity and superclass lines went with it (ADR-0049, standing
-   approval oo-9n5p9). Two subclasses stand for the concrete textures, C++ now
-   with the names and answers of the Objective-C ones: TestTexture overrides
+        The cases call the C++ members. Two subclasses stand for the concrete
+   textures: TestTexture overrides
    what OOConcreteTexture does and caches itself under a key, BareTexture
    overrides nothing, so it answers the root's defaults. An autoreleased texture
-   is kept until its scope drains (oo::autorelease; an Objective-C keeper object
-   until bead oo-4aq6a.2). After them comes the C++ API. Run: bash
-   tools/check-core-tests.sh
+   is kept until its scope drains (oo::autorelease). After them comes the C++
+   API. Run: bash tools/check-core-tests.sh
 */
 
 #include <algorithm>
@@ -84,9 +76,8 @@ class TestTexture final : public OOTexture {
 // A texture that overrides nothing: the root's own answers.
 class BareTexture final : public OOTexture {};
 
-// What an autoreleased Objective-C texture was (bead oo-9ht.99 deleted the
-// facade): the C++ texture, kept until the current autorelease scope drains
-// (oo::autorelease; an Objective-C keeper object until bead oo-4aq6a.2).
+// What an autoreleased texture is: the C++ texture, kept until the current
+// autorelease scope drains (oo::autorelease).
 static OOTexture* Autoreleased(const oo::Ref<OOTexture>& texture) {
   if (texture == nullptr) return nullptr;
   oo::autorelease(oo::Ref<OOTexture>(texture));
@@ -94,8 +85,7 @@ static OOTexture* Autoreleased(const oo::Ref<OOTexture>& texture) {
 }
 
 // A generator that is never queued: enqueue() answers what the test says, and
-// counts. (An Objective-C subclass until bead oo-9ht.118 deleted the
-// generator's facade; named as it was.)
+// counts.
 class TestGenerator : public OOTextureGenerator {
  public:
   std::optional<std::string> cacheKey() override { return _key; }
@@ -357,9 +347,7 @@ OO_TEST(nullTexture) {
     oo::AutoreleaseScope pool;
     OOTexture* none = OOTexture::nullTexture().get();
     OO_CHECK(dynamic_cast<OONullTexture*>(none) != nullptr &&
-             none ==
-                 OOTexture::nullTexture());  // was -isKindOfClass: of the
-                                             // facade bead oo-9ht.100 deleted
+             none == OOTexture::nullTexture());
     OO_CHECK(SameSize(none->dimensions(), 0, 0) && !none->isMipMapped());
 #ifndef NDEBUG
     OO_CHECK(none->name() == std::optional<std::string>("<null texture>"));
@@ -470,8 +458,7 @@ OO_TEST(cxxTextureBehindTheFacade) {
     oo::AutoreleaseScope pool;
     const oo::Ref<TestCxxTexture> texture =
         oo::makeRef<TestCxxTexture>(std::string("test:cxx"));
-    OOTexture* facade = texture.get();  // what the callers hold since bead
-                                        // oo-9ht.99 (was its facade)
+    OOTexture* facade = texture.get();  // what the callers hold
 
     // The callers' calls reach the C++ overrides, and the root's defaults.
     OO_CHECK(SameSize(facade->dimensions(), 16, 2) &&
@@ -506,10 +493,10 @@ OO_TEST(cxxTextureBehindTheFacade) {
   OO_CHECK(gTestDeallocs == deallocs);
 }
 
-/*	Bead oo-31u.9: clearCache() hands the old recent-texture cache to
+/*	clearCache() hands the old recent-texture cache to
    oo::autorelease, as upstream's [sRecentTextures autorelease] handed it to the
    enclosing pool. In the game that is the frame loop's or the start-up's
-   oo::AutoreleaseScope (oo-31u.8). The cache, and the textures only it keeps,
+   oo::AutoreleaseScope. The cache, and the textures only it keeps,
    are released at the drain of the NEAREST open scope: not at the call, not at
    an outer scope's drain, and nothing is counted as autoreleased without a
    scope.

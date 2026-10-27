@@ -1,5 +1,5 @@
 /*	test_resourcepaths.cpp
-        Unit tests for oofnd/ResourcePaths.hpp (bead oo-i9q): oo::ResourcePaths,
+        Unit tests for oofnd/ResourcePaths.hpp: oo::ResourcePaths,
    checked against the paths the Objective-C code computes today
    (NSHomeDirectory() under GNUstep, SDL/main.mm's HOMEPATH,
    NSFileManagerOOExtensions, OOLogOutputHandler, OOOXZManager,

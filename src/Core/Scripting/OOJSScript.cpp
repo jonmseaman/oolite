@@ -26,8 +26,6 @@ MA 02110-1301, USA.
 #define OO_CACHE_JS_SCRIPTS 1
 #endif
 
-#include "OOJSScript.h"
-
 #include <cstring>
 
 #include "Entity.h"
@@ -37,6 +35,7 @@ MA 02110-1301, USA.
 #include "OODebugStandards.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSPrivateObject.h"
+#include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
 #include "OOLogging.h"
 #include "OOManifestProperties.h"
@@ -54,41 +53,11 @@ MA 02110-1301, USA.
 #endif
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), the engine's
-   InitClass call becomes ooscript::initClass, and the directly spelled engine
-   calls (NewObject, SetPrivate, IsExceptionPending, ClearPendingException,
-   ReportPendingException, RemoveObjectRoot, IsInRequest, GetMethodById,
-   CallFunctionValue, GetPropertyById, SetPropertyById, StringEqualsAscii) go
-        through ooscript:: instead. `this` is renamed to `thisObj` because it is
-   a reserved word once this file compiles as Objective-C++ (ADR-0001).
-
-        OOJSAcquireContext, OOJSRelinquishContext, OOJSAddGCObjectRoot,
-   OOJSStartTimeLimiter*, OOJSStopTimeLimiter and the OOJS_PROP_* flag macros
-   are OOJS_*-spelled, not directly spelled engine calls, so they are untouched
-   and out of scope for this bead (see JSEngine.hpp's own header comment and
-   OOJSVector.mm's exemplar comment).
-
-        The class's own defineProperty: method and the compiled-script cache
-   (LoadScriptWithName / CompiledScriptData / ScriptWithCompiledData) used to
-   spell out the engine's read-only property definition and
-   precompiled-script/XDR calls directly, with no façade equivalent to retarget
-   onto. Seam bead oo-1gc.1 (same pattern as oo-whgj for
-   OORegExpMatcher.m/oo-1cl) added that equivalent to the façade --
-   ooscript::definePropertyById, the opaque ooscript::Script handle plus
-   compileUCScript/newScriptObject/executeScript/destroyScript, and
-   ooscript::serializeScript/deserializeScript wrapping the engine's XDR family
-   (the serialised format itself stays backend-private, per ooscript/README.md's
-   "Not in the façade" note) -- so this rework moves those call sites onto it
-   too, same as everything else in this file.
-
         toString() (OOJSObjectWrapperToString), the constructor
    (OOJSUnconstructableConstruct) and the finalizer (OOJSObjectWrapperFinalize)
-   are shared natives in OOJavaScriptEngine.mm that take the façade signatures
-   directly, so the class tables name them without adapters. ScriptAddProperty
-   (the class's addProperty hook, used to warn about the removed tickle()
-        handler) is a PropertyGetter in façade terms.
+   are shared natives in OOJavaScriptEngine.mm, so the class tables name them
+   without adapters. ScriptAddProperty (the class's addProperty hook, used to
+   warn about the removed tickle() handler) is a PropertyGetter.
 */
 
 namespace ooscript {}
@@ -107,9 +76,7 @@ using ooscript::Value;
 namespace {
 struct RunningStack {
   RunningStack* back = nullptr;
-  // The running script, held weakly (bead oo-9ht.133: the stack held its
-  // Objective-C object, or the weak reference proxy a timer or definition
-  // pushed); null for a script-less push.
+  // The running script, held weakly; null for a script-less push.
   oo::WeakRef<OOJSScript> current;
   bool scriptless =
       false;  // pushed with no script, which scriptStack() refuses
@@ -156,11 +123,10 @@ static bool ScriptToString(Context context, CallArgs& oojsArgs);
 static oo::PList ScriptConverter(ooscript::Context context,
                                  ooscript::Object object);
 
-/*	A Script object's private slot (bead oo-9ht.133): a weak reference to
-   its script, as the slot held the weak reference proxy the script's facade
-   gave, so the JS object does not keep the script alive. The slot retains it
-   once; OOJSCxxObjectWrapperFinalize releases it (it has no JS glue of its own:
-   the converter and toString() below ask the script, and answer what a dead
+/*	A Script object's private slot: a weak reference to its script, so the
+   JS object does not keep the script alive. The slot retains it once;
+   OOJSCxxObjectWrapperFinalize releases it (it has no JS glue of its own: the
+   converter and toString() below ask the script, and answer what a dead
    reference did once it has gone).
 */
 class ScriptPrivate final : public oo::RefCounted {

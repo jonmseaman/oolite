@@ -22,13 +22,12 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOTrumble.h"
-
 #include "MyOpenGLView.h"
 #include "OOMaths.h"
 #include "OOSound.h"
 #include "OOStringParsing.h"
 #include "OOTexture.h"
+#include "OOTrumble.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
 #include "Universe.h"
@@ -564,7 +563,7 @@ void OOTrumble::updateTrumble(double delta_t) {
         const std::string eatFormat =
             OO_DESC("trumbles-eat-@");  // the format first, as Clang evaluates
                                         // the arguments: a description that is
-                                        // an array draws (ADR-0063 item 5)
+                                        // an array draws
         const std::string ms = oo::str::formatRuntime(
             eatFormat,
             {(UNIVERSE != nullptr ? UNIVERSE->displayNameForCommodity(
@@ -887,10 +886,9 @@ void OOTrumble::setFromDictionary(const oo::PList& dict) {
   movement = cxx_PointFromString(dict.get<std::string>("movement"));
 }
 
-// The source and the sounds are C++ since beads oo-9ht.88 and oo-9ht.68 deleted
-// their facades. Each static holds one retain for the process, as alloc/init
-// (and -initWithCustomSoundKey:, which answered the cached sound retained) gave
-// it; the source is made the first time, so it is there whenever the sounds are
+// Each static holds one retain for the process, as alloc/init (and
+// -initWithCustomSoundKey:, which answered the cached sound retained) gave it;
+// the source is made the first time, so it is there whenever the sounds are
 // played.
 static OOSoundSource* sTrumbleSoundSource;
 static OOSound* sTrumbleIdleSound;

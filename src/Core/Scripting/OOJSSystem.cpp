@@ -23,8 +23,6 @@
 
  */
 
-#include "OOJSSystem.h"
-
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
@@ -37,12 +35,13 @@
 #include "OOJSPopulatorDefinition.h"
 #include "OOJSQuaternion.h"
 #include "OOJSScript.h"
+#include "OOJSSystem.h"
 #include "OOJSSystemInfo.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
 #include "OOPlanetEntity.h"
-#include "OOSunEntity.h"  // the sun is C++ since bead oo-9ht.111
+#include "OOSunEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "PlayerEntityScriptMethods.h"
 #include "ShipEntity.h"
@@ -52,23 +51,6 @@
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), InitClass becomes
-   ooscript::initClass, the engine's DefineObject call becomes
-   ooscript::defineObject (see OOJSClock.mm/OOJSPlayer.mm for the same
-   InitClass-then-defineObject pairing), native methods and class hooks take the
-        façade's hook signature (Context/Object/PropertyId/Value
-   pointer/CallArgs reference), and the directly spelled numeric- and
-   object-conversion calls (NewNumberValue, ValueToNumber, ValueToBoolean,
-   ValueToInt32, ValueToObject, GetProperty) become their ooscript::
-        equivalents. Natives take the
-        façade signature directly (ooscript::Context and a CallArgs reference)
-   and the OOJS_* argument-marshalling macros expand to the CallArgs accessors,
-   so the rest of each function body is UNCHANGED. `this` is renamed to
-   `thisObj` because it is a reserved word once this file compiles as
-   Objective-C++ (ADR-0001).
-
         System's constructor is unconstructable, the same as Vector's and
    Station's: the shared OOJSUnconstructableConstruct native is passed to
    ooscript::initClass directly.
@@ -365,10 +347,8 @@ static PropertySpec sSystemProperties[] = {
 
 // A raw jsapi mirror of sSystemProperties, used only for the two bad-property
 // error reporters in OOJavaScriptEngine.m
-// (OOJSReportBadPropertySelector/Value): those helpers are outside this bead's
-// scope (shared across every binding file and are retargeted, if at all, by a
-// later seam) and still take a ooscript::PropertySpec*, not
-// ooscript::PropertySpec* (see OOJSVector.mm's sVectorPropertiesRaw).
+// (OOJSReportBadPropertySelector/Value), which are shared across every binding
+// file and take a ooscript::PropertySpec*.
 namespace {
 static ooscript::PropertySpec sSystemPropertiesRaw[] = {
     // JS name						ID
@@ -495,9 +475,7 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID,
 
     case kSystem_mainPlanet:
       result = oo::EntityObjectNode(
-          (UNIVERSE != nullptr
-               ? UNIVERSE->planet()
-               : nullptr));  // the planet is C++ since bead oo-9ht.129
+          (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr));
       handled = true;
       break;
 
@@ -508,13 +486,12 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID,
       break;
 
     case kSystem_planets: {
-      std::vector<oo::EntityHold>
-          visible;  // the planets (their objects held, bead oo-9ht.39.26)
+      std::vector<oo::EntityHold> visible;  // the planets (their objects held)
       for (const auto& r :
            (UNIVERSE != nullptr ? UNIVERSE->planets()
                                 : std::vector<oo::EntityHold>())) {
         if (!OOJSEntityIsVisibleToScripts(r.get()))
-          continue;  // the C++ planet's answer (bead oo-9ht.39.5.1)
+          continue;  // the C++ planet's answer
         visible.push_back(r);
       }
       result = oo::EntityNodesFrom(visible);
@@ -795,8 +772,7 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID,
   if (system == -1)
     return true;  // Can't change anything else in interstellar space.
 
-  // The running script (C++ since bead oo-9ht.133 deleted its last facade): a
-  // message to no script answered null.
+  // The running script: null when no script runs.
   OOJSScript* runningScript = OOJSScript::currentlyRunningScript();
   manifest = (runningScript != nullptr)
                  ? runningScript->propertyNamed(kLocalManifestProperty)
@@ -967,9 +943,8 @@ static bool SystemAddPlanet(ooscript::Context context,
                               : (OOPlanetEntity*)nullptr);
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, planet));  // the C++ planet's JS value (its object's until bead
-                          // oo-9ht.39.8.1)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, planet));  // the C++ planet's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -999,9 +974,8 @@ static bool SystemAddMoon(ooscript::Context context,
                               : (OOPlanetEntity*)nullptr);
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, planet));  // the C++ planet's JS value (its object's until bead
-                          // oo-9ht.39.8.1)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, planet));  // the C++ planet's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -1030,7 +1004,7 @@ static bool SystemCountShipsWithPrimaryRole(ooscript::Context context,
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
-  Entity* relativeTo = nullptr;  // the C++ entity (bead oo-9ht.39.8.23)
+  Entity* relativeTo = nullptr;  // the C++ entity
   double range = -1;
   unsigned result;
 
@@ -1070,7 +1044,7 @@ static bool SystemCountShipsWithRole(ooscript::Context context,
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
-  Entity* relativeTo = nullptr;  // the C++ entity (bead oo-9ht.39.8.23)
+  Entity* relativeTo = nullptr;  // the C++ entity
   double range = -1;
   unsigned result;
 
@@ -1110,7 +1084,7 @@ static bool SystemShipsWithPrimaryRole(ooscript::Context context,
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
-  Entity* relativeTo = nullptr;  // the C++ entity (bead oo-9ht.39.8.23)
+  Entity* relativeTo = nullptr;  // the C++ entity
   double range = -1;
   std::vector<oo::EntityHold> result;
 
@@ -1149,7 +1123,7 @@ static bool SystemShipsWithRole(ooscript::Context context,
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
-  Entity* relativeTo = nullptr;  // the C++ entity (bead oo-9ht.39.8.23)
+  Entity* relativeTo = nullptr;  // the C++ entity
   double range = -1;
   std::vector<oo::EntityHold> result;
 
@@ -1188,7 +1162,7 @@ static bool SystemCountEntitiesWithScanClass(ooscript::Context context,
   OOJS_NATIVE_ENTER(context)
 
   OOScanClass scanClass = CLASS_NOT_SET;
-  Entity* relativeTo = nullptr;  // the C++ entity (bead oo-9ht.39.8.23)
+  Entity* relativeTo = nullptr;  // the C++ entity
   double range = -1;
   unsigned result;
 
@@ -1228,7 +1202,7 @@ static bool SystemEntitiesWithScanClass(ooscript::Context context,
   OOJS_NATIVE_ENTER(context)
 
   OOScanClass scanClass = CLASS_NOT_SET;
-  Entity* relativeTo = nullptr;  // the C++ entity (bead oo-9ht.39.8.23)
+  Entity* relativeTo = nullptr;  // the C++ entity
   double range = -1;
   std::vector<oo::EntityHold> result;
 
@@ -1269,7 +1243,7 @@ static bool SystemFilteredEntities(ooscript::Context context,
 
   ooscript::Object jsThis = NULL;
   ooscript::Value predicate;
-  Entity* relativeTo = nullptr;  // the C++ entity (bead oo-9ht.39.8.23)
+  Entity* relativeTo = nullptr;  // the C++ entity
   double range = -1;
   std::vector<oo::EntityHold> result;
 
@@ -1746,7 +1720,7 @@ static bool SystemAddVisualEffect(ooscript::Context context,
     return false;
   }
 
-  Entity* result = nullptr;  // the C++ effect (beads oo-9ht.165, oo-9ht.39.26)
+  Entity* result = nullptr;  // the C++ effect
 
   OOJS_BEGIN_FULL_NATIVE(context)
 
@@ -1755,9 +1729,7 @@ static bool SystemAddVisualEffect(ooscript::Context context,
 
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN(OOJSEntityJSValue(
-      result, context));  // what OOJSValueFromNativeObject() gave for its
-                          // object (amendment oo-9ht.39.16)
+  OOJS_RETURN(OOJSEntityJSValue(result, context));
 
   OOJS_NATIVE_EXIT
 }
@@ -1983,8 +1955,8 @@ static bool SystemAddShipsOrGroup(Context cx, CallArgs& oojsArgs,
         oo::EntityNodesFrom(added);  // null where no ship was added, as before
 
   if (isGroup) {
-    const std::vector<Entity*> ships = oo::EntitiesIn(
-        result);  // borrowed: result holds them (bead oo-9ht.39.5.3)
+    const std::vector<Entity*> ships =
+        oo::EntitiesIn(result);  // borrowed: result holds them
     ShipEntity* first = (ships.size() > 0 ? oo::ToShip(ships[0]) : nullptr);
     if (ships.size() > 0)
       result =
@@ -2069,8 +2041,8 @@ static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs,
         oo::EntityNodesFrom(added);  // null where no ship was added, as before
 
   if (isGroup) {
-    const std::vector<Entity*> ships = oo::EntitiesIn(
-        result);  // borrowed: result holds them (bead oo-9ht.39.5.3)
+    const std::vector<Entity*> ships =
+        oo::EntitiesIn(result);  // borrowed: result holds them
     ShipEntity* first = (ships.size() > 0 ? oo::ToShip(ships[0]) : nullptr);
     if (ships.size() > 0)
       result =
@@ -2098,8 +2070,7 @@ static BOOL GetRelativeToAndRange(ooscript::Context context,
 
   // Get optional argument relativeTo : Entity
   if (*ioArgc != 0) {
-    Entity* relativeTo = nullptr;  // the C++ entity since bead oo-9ht.39.3,
-                                   // which goes out since bead oo-9ht.39.8.23
+    Entity* relativeTo = nullptr;  // the C++ entity
     if (EXPECT_NOT(ooscript::isNull(**ioArgv) ||
                    !JSValueToEntity(context, **ioArgv, &relativeTo))) {
       cxx_OOJSReportBadArguments(context, "System", methodName, 1, *ioArgv,
@@ -2177,9 +2148,9 @@ static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
                                                     Entity* relativeTo) {
   OOJS_PROFILE_ENTER
 
-  Entity *ea = a,  // the C++ entities (bead oo-9ht.39.25)
+  Entity *ea = a,  // the C++ entities
       *eb = b;
-  Entity* r = relativeTo;  // the C++ entity (bead oo-9ht.39.8.23)
+  Entity* r = relativeTo;  // the C++ entity
   float d1, d2;
 
   d1 = HPdistance2(ea->position, r->position);

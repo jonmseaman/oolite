@@ -1,13 +1,9 @@
 /*	test_Octree.mm
-        Unit tests for Octree and OOOctreeBuilder (src/Core/Octree.h): bead
-   oo-novu (Phase 3, house style of proposed ADR-0056).
+        Unit tests for Octree and OOOctreeBuilder (src/Core/Octree.h).
 
-        The expectations were written against the Objective-C API and run on the
-   unconverted classes first: what the builder builds (and folds), the cache
+        The tests pin what the builder builds (and folds), the cache
    representation and its round trip, the volume, the random point, line hits
-   and octree-octree hits, and the facade's -init forms that answer nil. Ported
-   to the C++ API by bead oo-9ht.20, which deleted the facade. Run: bash
-   tools/check-core-tests.sh
+   and octree-octree hits. Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>

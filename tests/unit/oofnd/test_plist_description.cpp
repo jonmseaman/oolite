@@ -1,7 +1,6 @@
 /*	test_plist_description.cpp
-        oo::describe(const oo::PList &) (oofnd/PListDescription.hpp; proposed
-   ADR-0055 item 1, bead oo-qps.32): the text gnustep-base's -description gave
-   for the Foundation form of a PList.
+        oo::describe(const oo::PList &) (oofnd/PListDescription.hpp): the text
+   gnustep-base's -description gave for the Foundation form of a PList.
 
         Every expectation is GNUstep base 1.31.1's own output on this toolchain,
    captured by tools/captures/plist-description/capture.sh (a probe linked

@@ -40,12 +40,11 @@ SOFTWARE.
         the icons we're likely to encounter.
 */
 
-#include "OOPolygonSprite.h"
-
 #include "OOGraphicsResetManager.h"
 #include "OOMacroOpenGL.h"
 #include "OOMaths.h"
 #include "OOPointMaths.h"
+#include "OOPolygonSprite.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
@@ -57,8 +56,8 @@ SOFTWARE.
 
 #define kCosMitreLimit 0.866f  // Approximately cos(30 deg)
 
-/*	Contours are std::vector<NSPoint> (arrays of point boxes before;
-   proposed ADR-0043). The tesselator is handed a pointer to each vertex, so a
+/*	Contours are std::vector<NSPoint> (arrays of point boxes before).
+   The tesselator is handed a pointer to each vertex, so a
    contour must not change, or be destroyed, until its polygon has ended (the
    boxes used to live in the autorelease pool until -loadPolygons: returned).
 */
@@ -175,8 +174,7 @@ oo::Ref<OOPolygonSprite> OOPolygonSprite::initWithDataArray(
       return nullptr;
     }
 
-    // -initWithDataArray:... registered the sprite (its facade did until bead
-    // oo-9ht.30).
+    // -initWithDataArray:... registered the sprite.
     OOGraphicsResetManager::sharedManager()->registerCxxClient(sprite.get());
   }
 
@@ -842,9 +840,10 @@ void SVGDumpAppendBaseContour(TessPolygonData* data,
   // Close and add a circle at the first vertex. (SVG has support for end
   // markers, but this isn’t reliable across implementations.)
   if (points.empty())
-    OORaiseException(OORangeException,
-                     "SVGDumpAppendBaseContour: empty contour");  // -objectAtIndex:0
-                                                                  // raised here
+    OORaiseException(
+        OORangeException,
+        "SVGDumpAppendBaseContour: empty contour");  // -objectAtIndex:0
+                                                     // raised here
   NSPoint p = points[0];
   *data->debugSVG += oo::str::format(
       "z\"/>\n\t\t\t<circle cx=\"%f\" cy=\"%f\" r=\"0.1\" fill=\"#BBB\" "

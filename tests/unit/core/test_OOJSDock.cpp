@@ -1,20 +1,17 @@
 /*	test_OOJSDock.mm
         Unit tests for the Dock JS binding (src/Core/Scripting/OOJSDock.h/.mm)
-   and the DockEntity answers that DockEntity's overrides give the engine (bead
-   oo-9ht.47): bead oo-zbx3, converted the way bead oo-ppc converted OOJSVector
-   (proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+   and the DockEntity answers that DockEntity's overrides give the engine.
 
-        As test_OOJSWormhole.mm does (amendment oo-ykoy, item 4), it runs the JS
-   class in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp), links the game's own objects for the
-   binding, its bridge and the engine's exception translator
-        (OOJSEngineNativeWrappers.mm), and stands in for the entity classes
-   (Entity, ShipEntity, DockEntity answer only the selectors the binding sends)
-   and for the engine functions the binding links against, with the engine
-   header's linkage. The expectations were written against the Objective-C file
-   and run on it first; they pin the JS-visible behaviour (the five properties,
-   the three writable ones, isQueued(), a non-dock, a native's exception) and
-   what the category answers the engine. Run: bash tools/check-core-tests.sh
+   As test_OOJSWormhole.mm does, it runs the JS class in a real context on the
+   game's own façade backend (ooscript/JSEngine_quickjs.cpp), links the game's
+   own objects for the binding, its bridge and the engine's exception translator
+   (OOJSEngineNativeWrappers.mm), and stands in for the entity classes (Entity,
+   ShipEntity, DockEntity answer only the selectors the binding sends) and for
+   the engine functions the binding links against, with the engine header's
+   linkage. The expectations were written against the Objective-C file and run
+   on it first; they pin the JS-visible behaviour (the five properties, the
+   three writable ones, isQueued(), a non-dock, a native's exception) and what
+   the category answers the engine. Run: bash tools/check-core-tests.sh
 */
 
 #include "OOFoundation.h"
@@ -35,18 +32,15 @@ class Entity : public oo::RefCounted {
   virtual std::optional<std::string> jsClassName();
 };
 
-// The ship: C++ since bead oo-9ht.144 deleted the Objective-C ship this stood
-// in for (a ship's part is a plain one, held by its object as a dock's is).
+// The ship (a ship's part is a plain one, held by its object as a dock's is).
 class ShipEntity : public Entity {};
 
 // The object: the root's, which holds the C++ part (oo::ToCxx reads it) and
-// asks it the JS questions. What an entity's JS object holds since bead
-// oo-9ht.39.3: a weak reference to the C++ entity.
+// asks it the JS questions. What an entity's JS object holds: a weak reference
+// to the C++ entity.
 #include "OOJSEntityHolder.h"
 
-// C++ since bead oo-4aq6a.11 (it was rooted on the Objective-C root class
-// OOObject, which Phase 4 deletes); its category's two selectors are members of
-// the same names.
+// Its category's two selectors are members of the same names.
 class TestEntityObject final : public oo::RefCounted {
  public:
   void getJSClass(ooscript::ClassDef** outClass,
@@ -56,13 +50,12 @@ class TestEntityObject final : public oo::RefCounted {
   oo::Ref<Entity> _cxxEntity;
 };
 
-/*	A dock: C++ since bead oo-9ht.180 deleted the Objective-C dock this
-   stood in for (its object is the ship's facade); the members the binding
-   calls, declared as DockEntity.h declares them (the test imports no game
-   header that defines the class), with the stand-in's answers. A dock whose
-        docking queue holds 99 ships raises from countOfShipsInDockingQueue(),
-   one whose queue holds 98 throws a C++ exception, so the test sees what an
-   exception under a native becomes.
+/*	A dock (its object is the ship's facade); the members the binding calls,
+   declared as DockEntity.h declares them (the test imports no game header that
+   defines the class), with the stand-in's answers. A dock whose docking queue
+   holds 99 ships raises from countOfShipsInDockingQueue(), one whose queue
+   holds 98 throws a C++ exception, so the test sees what an exception under a
+   native becomes.
 */
 class DockEntity : public ShipEntity {
  public:
@@ -242,9 +235,9 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
   sConverters[theClass]++;
 }
 
-// The engine's object getter is OOJSPrivateObject.cpp's (linked) since bead
-// oo-9ht.39.3: the JS class must be a subclass of the required one, and the
-// slot holds the entity's holder.
+// The engine's object getter is OOJSPrivateObject.cpp's (linked): the JS class
+// must be a subclass of the required one, and the slot holds the entity's
+// holder.
 
 // The shared toString(), which OOJSCxxObjectWrapperToString() hands a `this` of
 // another class.
@@ -306,8 +299,7 @@ ooscript::Context sContext;
 ooscript::Object sGlobal;
 DockEntity* sDock = nullptr;  // the C++ dock (its object: sDockObject)
 TestEntityObject* sDockObject = nullptr;
-TestEntityObject* sShip = nullptr;  // a ship's object and its C++ part (the
-                                    // Objective-C ship until bead oo-9ht.144)
+TestEntityObject* sShip = nullptr;  // a ship's object and its C++ part
 ShipEntity* sShipPart = nullptr;
 
 // A ship's object holding its C++ part, kept for the life of the test.
@@ -328,8 +320,7 @@ ooscript::Value JSValueForObject(ooscript::ClassDef* jsClass,
       !OOJSSetCxxPrivate(
           sContext, object,
           oo::makeRef<OOJSEntityHolder>(entity->_cxxEntity.get()).get()))
-    return ooscript::nullValue();  // the slot holds the C++ entity (bead
-                                   // oo-9ht.39.3)
+    return ooscript::nullValue();  // the slot holds the C++ entity
   return ooscript::objectValue(object);
 }
 
@@ -365,7 +356,6 @@ void SetUpContext() {
 
   sDockObject =
       NewShipObject(oo::makeRef<DockEntity>());  // a dock's object is a ship's
-                                                 // since bead oo-9ht.180
   sDock = static_cast<DockEntity*>(sDockObject->_cxxEntity.get());
   sDock->_allowsDocking = YES;
   sDock->_disallowedDockingCollides = NO;

@@ -10,7 +10,7 @@
   oo::parseOldStylePList(bytes); if (!r) OOLog(..., "%s",
   r.error().description().c_str());
 
-        It reproduces GNUstep quirk-for-quirk (ADR-0027), including the odd
+        It reproduces GNUstep quirk-for-quirk, including the odd
   parts:
 
           * Whitespace is the bytes 0x08-0x0D and space (GNUstep's fixed table:
@@ -36,7 +36,7 @@
           * After the top-level item only whitespace and comments may follow.
   * Arrays "( a, b, )" may end in a comma; ",," is an empty string. Dictionaries
     "{ k = v; }" may omit the last ';' and keep the last of repeated keys; keys
-  must be strings (ADR-0027 item 2). Data "<0a0b 0c>" allows whitespace and
+  must be strings. Data "<0a0b 0c>" allows whitespace and
   comments between octets.
   * GNUstep's extensions "<*I12>", "<*R1.5>", "<*BY>", "<*D2001-01-01 00:00:00
   +0000>" and
@@ -48,11 +48,10 @@
   formats them: "Parse failed at line L (char C) - <reason>".
 */
 
-#ifndef OOFND_PLISTOLDSTYLE_HPP
-#define OOFND_PLISTOLDSTYLE_HPP
+#pragma once
 
 // Suspend OOFoundation.h's `#define true 1` / `#define false 0` for this header
-// (see oofnd/Data.hpp, proposed ADR-0028); restored at the end.
+// (see oofnd/Data.hpp); restored at the end.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -481,8 +480,7 @@ class OldStyleScanner {
       std::optional<PList> key = parseItem();
       if (!key) return std::nullopt;
       if (!key->isString()) {
-        // GNUstep accepts any item as a key; oofnd keys are strings (ADR-0027
-        // item 2).
+        // GNUstep accepts any item as a key; oofnd keys are strings.
         err_ = "non-string key in dictionary";
         return std::nullopt;
       }
@@ -556,8 +554,7 @@ class OldStyleScanner {
       (void)skipSpace();
     }
     // GNUstep reads ptr[pos] even when a comment ran to the end of the input
-    // (undefined behaviour there); oofnd treats the end as "not '>'" (ADR-0027
-    // item 4).
+    // (undefined behaviour there); oofnd treats the end as "not '>'".
     if (pos_ >= end_ || ptr_[pos_] != '>') {
       err_ = "unexpected character (wanted '>')";
       return std::nullopt;
@@ -679,5 +676,3 @@ inline Expected<PList, PListError> parseOldStylePList(
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_PLISTOLDSTYLE_HPP

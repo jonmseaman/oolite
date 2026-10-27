@@ -14,7 +14,7 @@ Three things here are not obvious and are the reason the file looks the way it d
 
 * Readiness is measured on the GAME's clock, never on this script's. See wait_until_rendering.
 
-* The DESKTOP LOCK is taken by the command-line entry point, NOT by ``run_test`` (bug oo-ccy9).
+* The DESKTOP LOCK is taken by the command-line entry point, NOT by ``run_test``.
   Running this file as a script is the build's single smoke launch, and one real window on the
   interactive desktop must exclude the GUI tier's. But ``run_test`` is the reusable half that the
   N-concurrent claim above is about, and an exclusive mutex inside it would serialise - or
@@ -22,7 +22,7 @@ Three things here are not obvious and are the reason the file looks the way it d
   and leaves the library function alone.
 
 * The PREFS ROOT is per-run, by STAGING A PRIVATE oolite.app - not by a lock and not by an
-  environment variable (bug oo-pzc1). ``src/SDL/main.m:119`` does
+  environment variable. ``src/SDL/main.m:119`` does
 
       SDL_setenv_unsafe("GNUSTEP_USERS_ROOT", currentWorkingDir, YES)
 
@@ -35,8 +35,8 @@ Three things here are not obvious and are the reason the file looks the way it d
   other runs' preferences are silently lost).
 
   The only thing the game reads is WHERE ITS OWN BINARY LIVES, so isolation has to be a private
-  directory holding the binary. That is exactly what ``tests/golden/golden_run.py`` does (bug
-  oo-16s) and why it is the desktop-lock exemption: junctions for read-only directories, hard
+  directory holding the binary. That is exactly what ``tests/golden/golden_run.py`` does
+  and why it is the desktop-lock exemption: junctions for read-only directories, hard
   links for files, real copies for the three directories the game WRITES. A lock was the wrong
   answer here for the same reason it is wrong there - ``run_test`` is the N-concurrent half, and
   an exclusive mutex inside it would serialise or deadlock the fan-out. The staging code is
@@ -46,7 +46,7 @@ Three things here are not obvious and are the reason the file looks the way it d
 
   ``--check-isolation`` and ``--prefs-race`` prove both halves offline, with no built game.
 
-* PATHS FROM THE COMMAND LINE CROSS A BOUNDARY (bug oo-vyey). The repository's shell is MSYS2
+* PATHS FROM THE COMMAND LINE CROSS A BOUNDARY. The repository's shell is MSYS2
   bash, so the documented way to run this - ``--load "$SAVE"`` with ``$SAVE`` a natural
   ``/c/Users/...`` path - hands an MSYS path to a NATIVE Windows python. ``os.path.abspath`` then
   resolves it against the current DRIVE (``/c/Users/x`` becomes ``C:/c/Users/x``, a real directory
@@ -86,7 +86,7 @@ OOLITE_VERSION_KEY = "Oolite version"
 IS_WINDOWS = sys.platform == "win32" or (os.name == "nt")
 
 
-# --- THE MSYS PATH BOUNDARY (bug oo-vyey) ------------------------------------------------------
+# --- THE MSYS PATH BOUNDARY ------------------------------------------------------
 #
 # This script is a NATIVE Windows python invoked from MSYS2 bash, and the two disagree about what
 # a path is. `/c/Users/jon/save.oolite-save` is what the shell means; os.path.abspath resolves it
@@ -355,7 +355,7 @@ def _console_config_dir(host, port):
     return root
 
 
-# --- per-run prefs isolation (bug oo-pzc1) -----------------------------------------------------
+# --- per-run prefs isolation -----------------------------------------------------
 #
 # Real copies rather than links: these are the directories the GAME WRITES, and sharing them is
 # the collision. Same list as tests/golden/golden_run.py:56 - GNUstep/ holds Defaults/oolite.plist
@@ -444,7 +444,7 @@ def _is_reparse_point(path):
 def prefs_file(app_root):
     """The defaults file the game writes: GNUSTEP_USERS_ROOT/GNUstep/Defaults/oolite.plist.
 
-    Learned on bead oo-5rsa: this is an OpenStep 'old-style' plist, NOT XML, so plistlib cannot
+    Note: this is an OpenStep 'old-style' plist, NOT XML, so plistlib cannot
     parse a real one. Nothing here parses it; only its PATH and its owner matter.
     """
     return os.path.join(app_root, "GNUstep", "Defaults", "oolite.plist")
@@ -475,7 +475,7 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
 
     config_dir = _console_config_dir(host, port)
 
-    # THE PREFS ROOT (bug oo-pzc1). Stage a private oolite.app and run the binary from THERE, so
+    # THE PREFS ROOT. Stage a private oolite.app and run the binary from THERE, so
     # main.m:119 derives this run's GNUSTEP_USERS_ROOT from a directory nobody else is using. Not
     # an env var - the game overwrites it (SDL_setenv_unsafe ..., YES) - and not a lock, which
     # would serialise the N-concurrent fan-out this function exists to support.
@@ -506,7 +506,7 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
         # src/SDL/main.m:167 - the argument after -load is taken as the commander to load, and it
         # must end in .oolite-save for the game to accept it.
         #
-        # Converted HERE too, not only in __main__ (bug oo-vyey): this is the boundary where the
+        # Converted HERE too, not only in __main__: this is the boundary where the
         # string stops being python's and becomes a NATIVE Windows process's argv, and run_test is
         # a library function that callers - tests/golden, the component tier - invoke directly
         # with whatever their own MSYS shell handed them. native_path is a no-op on an
@@ -750,7 +750,7 @@ def parse_args(argv=None):
     return args
 
 
-# --- offline self-checks (bug oo-pzc1) ---------------------------------------------------------
+# --- offline self-checks ---------------------------------------------------------
 #
 # Both need no built game and no desktop, so they still gate something real in the detached,
 # build-less checkout accept.sh merges into (the tools/check-splash-off.py --self-test pattern).
@@ -1161,7 +1161,7 @@ def _check_msys_paths():
                 failures.append("-load argument %r does not name the save at %r" % (handed, real))
             if not os.path.isfile(handed):
                 failures.append("-load argument %r is not an existing file" % handed)
-            # The staging from bug oo-pzc1 must still be intact: the binary launched must be the
+            # The per-run staging must still be intact: the binary launched must be the
             # PRIVATE staged copy, never the shared build.
             launched = os.path.dirname(os.path.abspath(argv[0]))
             if os.path.normcase(launched) == os.path.normcase(os.path.abspath(app)):
@@ -1267,7 +1267,7 @@ def _desktop_lock_helper():
     This file lives in a subtree that is also pushed to the fork on its own, where tools/ does
     not exist; there is no fleet to collide with there, so a missing helper is not an error. When
     the outer repository IS around us, its tools/gui-lock is the desktop mutex every launcher on
-    this machine shares, and this launcher must take it (bug oo-ccy9).
+    this machine shares, and this launcher must take it.
     """
     here = os.path.dirname(os.path.abspath(__file__))
     while True:
@@ -1309,7 +1309,7 @@ if __name__ == "__main__":
     bin_name = "oolite.exe" if IS_WINDOWS else "oolite"
     original_cwd = os.getcwd()
     # native_path FIRST, then abspath: abspath on an MSYS path silently invents a real-looking
-    # C:/c/... that exists on this machine (bug oo-vyey). The same reasoning applies to --path and
+    # C:/c/... that exists on this machine. The same reasoning applies to --path and
     # --output, which also arrive from the MSYS shell and also end up in the native game's world
     # (the app dir becomes the staging source and the cwd; the output dir becomes OO_SNAPSHOTSDIR
     # and OO_LOGSDIR, read by the game itself).
@@ -1336,7 +1336,7 @@ if __name__ == "__main__":
         print(f"[*] Moving to {target_dir}")
         os.chdir(target_dir)
 
-        # THE DESKTOP LOCK (bug oo-ccy9). This is the smoke test, and it launches ONE game -
+        # THE DESKTOP LOCK. This is the smoke test, and it launches ONE game -
         # which on Windows means one real window on the interactive desktop, because
         # SDL_VIDEODRIVER=offscreen is deliberately not set there. Two games on the desktop at
         # once steal each other's foreground, so it queues behind the GUI tier rather than

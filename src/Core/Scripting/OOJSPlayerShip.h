@@ -56,9 +56,8 @@ ooscript::Object JSPlayerShipObject(void);
 #endif
 
 /*	PlayerEntity (OOJavaScriptExtensions), whose methods the engine and the
-   player send by selector: the bodies, as free functions (ADR-0056 amendments
-   oo-ppc item 3, oo-ykoy). The C++ player calls them
-   (PlayerEntity::jsClassName(), bead oo-9ht.177).
+   player send by selector: the bodies, as free functions. The C++ player calls
+   them (PlayerEntity::jsClassName()).
 */
 std::optional<std::string> OOJSPlayerShipJSClassName(void);
 void OOJSPlayerShipSetJSSelf(PlayerEntity* player, ooscript::Object val,

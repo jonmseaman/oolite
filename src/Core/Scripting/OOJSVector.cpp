@@ -22,55 +22,43 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSVector.h"
-
 #include <cstring>
 
 #include "OOConstToString.h"
 #include "OOJSEntity.h"
 #include "OOJSQuaternion.h"
+#include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
 
 /*
-        This is the Phase 1 seam 1.1x exemplar (bead oo-sdz): the first binding
-   file retargeted onto the ooscript façade (JSEngine.hpp); every other binding
-   file follows its style. Nothing here includes the engine's own header or
-   names its types: handles are ooscript::Context / Object / Value / PropertyId,
-   and OOJavaScriptEngine.h's OOJS_* argument-marshalling macros (OOJS_ARGV,
-   OOJS_THIS, OOJS_RETURN_*) expand to the ooscript::CallArgs accessors.
-
-        The class dispatch table is a static ooscript::ClassDef (the engine's
-   PropertyStub / EnumerateStub / ResolveStub / ConvertStub family become
-   nullptr hooks), and each engine call (InitClass, NewObject, SetPrivate,
-   GetInstancePrivate, IsArrayObject, GetArrayLength, LookupElement,
-   ValueToNumber, GetPrivate, InstanceOf, NewNumberValue, NewArrayObject,
-        SetElement) is its ooscript:: equivalent with the same calling
-   convention. Class hooks (VectorGetProperty, VectorSetProperty,
-   VectorFinalize) and natives (VectorConstruct and every ooscript::FunctionSpec
-   entry) take the façade's hook signature directly (ooscript::Context / Object
-   / PropertyId / Value pointer / CallArgs reference); a native that consumes
-   its arguments piecemeal copies oojsArgs.count() into a local argc first.
-   `this` and `private` are renamed to `thisObj`/`priv` because both are
-   reserved words once this file compiles as Objective-C++ (ADR-0001;
-   JSEngine.hpp's own header comment: "Consumers that are still Objective-C are
-   compiled as Objective-C++ when they are retargeted").
-*/
-
-/*
-        C++20 since bead oo-ppc, the Phase 3 scripting-bindings pattern
-   (proposed ADR-0056 amendment oo-ppc); the other OOJS* binding files follow
-   it. A binding file has no class of its own: its JS class (ClassDef,
-   PropertySpec and FunctionSpec tables, hooks, natives) was already C++ since
-        Phase 1, so the conversion is what is left of Objective-C.
-   OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and
-   scope guards (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false;
-   the category on PlayerEntity became two free functions, and the C++
-   PlayerEntity's members call them (oo-9ht.15). Messages to classes that are
-   still Objective-C (Entity, Universe) stay as they are, which is why the file
-   is still .mm until Phase 4.
-*/
+ * The first binding file retargeted onto the ooscript facade (JSEngine.hpp);
+ * every other binding file follows its style. Nothing here includes the
+ * engine's own header or names its types: handles are ooscript::Context /
+ * Object / Value / PropertyId, and OOJavaScriptEngine.h's OOJS_*
+ * argument-marshalling macros (OOJS_ARGV, OOJS_THIS, OOJS_RETURN_*) expand to
+ * the ooscript::CallArgs accessors.
+ *
+ * The class dispatch table is a static ooscript::ClassDef (the engine's
+ * PropertyStub / EnumerateStub / ResolveStub / ConvertStub family become
+ * nullptr hooks), and each engine call (InitClass, NewObject, SetPrivate,
+ * GetInstancePrivate, IsArrayObject, GetArrayLength, LookupElement,
+ * ValueToNumber, GetPrivate, InstanceOf, NewNumberValue, NewArrayObject,
+ * SetElement) is its ooscript:: equivalent with the same calling convention.
+ * Class hooks (VectorGetProperty, VectorSetProperty, VectorFinalize) and
+ * natives (VectorConstruct and every ooscript::FunctionSpec entry) take the
+ * facade's hook signature directly (ooscript::Context / Object / PropertyId /
+ * Value pointer / CallArgs reference); a native that consumes its arguments
+ * piecemeal copies oojsArgs.count() into a local argc first. `this` and
+ * `private` are spelled `thisObj`/`priv`.
+ *
+ * OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and
+ * scope guards (OOJSEngineNativeWrappers.h). The statistics reporting that was
+ * a category on PlayerEntity is two free functions, which the C++
+ * PlayerEntity's members call. Messages to classes that are still Objective-C
+ * (Entity, Universe) go through their Objective-C interfaces.
+ */
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -401,9 +389,7 @@ namespace {
 static VectorStatistics sVectorConversionStats;
 }  // namespace
 
-// The bodies of the C++ PlayerEntity's statistics members, which were the
-// category PlayerEntity (JSVectorStatistics) until bead oo-9ht.15 (proposed
-// ADR-0056 amendments oo-ppc, oo-9ht.15).
+// The bodies of the C++ PlayerEntity's statistics members.
 oo::PList reportJSVectorStatistics(void) {
   VectorStatistics* stats = &sVectorConversionStats;
 
@@ -497,8 +483,8 @@ bool JSObjectGetVector(ooscript::Context context, ooscript::Object vectorObj,
   // If it's an entity, use its position.
   if (OOJSIsMemberOfSubclass(context, vectorObj, JSEntityClass())) {
     COUNT(entityCount);
-    *outVector = OOJSEntityPositionOfJSObject(
-        context, vectorObj);  // the C++ entity's (bead oo-9ht.39.8.12)
+    *outVector =
+        OOJSEntityPositionOfJSObject(context, vectorObj);  // the C++ entity's
     return true;
   }
 
@@ -756,8 +742,7 @@ static bool VectorConstruct(ooscript::Context context,
 
   thisObj = (ooscript::newObject(context, &sVectorClass, nullptr, nullptr));
   if (EXPECT_NOT(thisObj == NULL)) {
-    free(priv);  // leaked before bead oo-ppc; the analyser sees this path now
-                 // that it is not in an Objective-C try
+    free(priv);
     return false;
   }
 

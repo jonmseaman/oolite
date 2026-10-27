@@ -29,20 +29,16 @@ SOFTWARE.
 
 */
 
-#ifndef OOCOMBINEDEMISSIONMAPGENERATOR_H
-#define OOCOMBINEDEMISSIONMAPGENERATOR_H
+#pragma once
 
 #include "OOColor.h"
 #include "OOTextureGenerator.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 
-/*	Phase 3 (bead oo-e6xa, proposed ADR-0056 amendments oo-qa7c, oo-rmd7
-   item 3 and oo-rr2x): a converted leaf of the texture generators, over
-   OOTextureGenerator. Bead oo-9ht.135 deleted its Objective-C facade: its
-   caller (OOMultiTextureMaterial) makes it with the factories below, and hands
-   the C++ generator to the texture (the generators' facade it was seen as went
-        with bead oo-9ht.118).
+/*	A leaf of the texture generators, over OOTextureGenerator. Its caller
+   (OOMultiTextureMaterial) makes it with the factories below, and hands the C++
+   generator to the texture.
 */
 class OOCombinedEmissionMapGenerator : public OOTextureGenerator {
  public:
@@ -53,7 +49,7 @@ class OOCombinedEmissionMapGenerator : public OOTextureGenerator {
           illuminationColor:optionsSpecifier: and
      -cxx_initWithEmissionAndIlluminationMapSpec:
           diffuseMap:diffuseColor:emissionColor:illuminationColor:optionsSpecifier:;
-     null where they answered nil (amendment oo-novu).
+     null where they answered nil.
   */
   static oo::Ref<OOCombinedEmissionMapGenerator> generatorWithEmissionMapSpec(
       const oo::PList& emissionMapSpec, OOColor* emissionColor,
@@ -110,5 +106,3 @@ class OOCombinedEmissionMapGenerator : public OOTextureGenerator {
   std::string _diffuseDesc;
 #endif
 };
-
-#endif  // OOCOMBINEDEMISSIONMAPGENERATOR_H

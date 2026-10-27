@@ -2,13 +2,12 @@
         Foundation-free assertions: the failure path (see OOAssert.h).
 */
 
-#include "oofnd/objc/OOAssert.h"
-
 #include <cstdarg>
 #include <cstdio>
 #include <string>
 
 #include "oofnd/Log.hpp"
+#include "oofnd/objc/OOAssert.h"
 
 namespace {
 
@@ -32,8 +31,7 @@ std::string FormatV(const char* format, va_list args) {
   // class "gnustep".
   if (oo::log::willDisplay("gnustep"))
     oo::log::message("gnustep", nullptr, nullptr, 0, "{}", reason);
-  OORaiseException(OOInternalInconsistencyException, "%s",
-                   reason.c_str());  // oo::Exception since bead oo-rskgl.1
+  OORaiseException(OOInternalInconsistencyException, "%s", reason.c_str());
   __builtin_unreachable();
 }
 

@@ -43,12 +43,11 @@ class OOMaterial;
 
 typedef struct {
   OOMaterial* material;  // retained by OODebugBeginWireframe(), released by
-                         // OODebugEndWireframe() (bead oo-9ht.8)
+                         // OODebugEndWireframe()
 } OODebugWFState;
 
 OODebugWFState OODebugBeginWireframe(
-    bool ignoreZ);  // bool, not BOOL: the .cpp's BOOL is windows.h's int (bead
-                    // oo-9ht.185)
+    bool ignoreZ);  // bool, not BOOL: the .cpp's BOOL is windows.h's int
 void OODebugEndWireframe(OODebugWFState state);
 
 OOINLINE void OODebugDrawBoundingBox(BoundingBox box);

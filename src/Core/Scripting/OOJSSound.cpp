@@ -22,11 +22,10 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSSound.h"
-
 #include <cstring>
 
 #include "OOJSPrivateObject.h"
+#include "OOJSSound.h"
 #include "OOJSSoundSource.h"
 #include "OOJavaScriptEngine.h"
 #include "OOMusicController.h"
@@ -37,34 +36,9 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), InitClass becomes
-   ooscript::initClass, and the directly spelled object-construction,
-   private-storage and boolean-conversion calls become ooscript::newObject,
-   ooscript::setPrivate and ooscript::valueToBoolean. `this` is renamed to
-   `thisObj` because it is a reserved word once this file compiles as
-   Objective-C++ (ADR-0001).
-
-        Natives and class hooks take the façade signature directly; the shared
-        OOJSObjectWrapperToString, OOJSObjectWrapperFinalize and
+        The shared OOJSObjectWrapperToString, OOJSObjectWrapperFinalize and
    OOJSUnconstructableConstruct natives are used as-is in the class and method
    tables.
-*/
-
-/*
-        C++20 since bead oo-crq2, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on OOSound became three free functions, and its methods moved to the
-   Scripting bridge file (amendment oo- ykoy). Bead oo-9ht.68 deleted the
-   sound's facade and that file: the sound is C++, and a Sound object's private
-   slot holds an OOJSSoundHolder of it (amendment oo-6symp; ADR-0056 amendment
-        oo-9ht.68). Messages to classes that are still Objective-C
-   (ResourceManager, PlayerEntity) stay as they are, which is why the file is
-   still .mm until Phase 4.
 */
 
 namespace ooscript {}
@@ -150,15 +124,14 @@ enum : std::uint8_t {
 };
 
 namespace {
-static PropertySpec sSoundProperties[] =
-    {
-        // JS name					ID
-        // flags getter	setter
-        {"name", kSound_name,
-         PropertyFlag::Permanent | PropertyFlag::Enumerate |
-             PropertyFlag::ReadOnly | PropertyFlag::Shared,
-         nullptr, nullptr},
-        {0}};
+static PropertySpec sSoundProperties[] = {
+    // JS name					ID
+    // flags getter	setter
+    {"name", kSound_name,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate |
+         PropertyFlag::ReadOnly | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {0}};
 }  // namespace
 
 namespace {
@@ -218,10 +191,8 @@ static bool JSSoundGetSound(ooscript::Context context, ooscript::Object object,
 }
 }  // namespace
 
-// The class's converter: the slot held the sound's facade, which
-// OOJSBasicPrivateObjectConverter handed to Objective-C callers of
-// OOJSNativeObjectFromJSValue. No Objective-C object is left to hand over (bead
-// oo-9ht.68): the sound's own callers ask SoundFromJSValue().
+// The class's converter: no Objective-C object is left to hand over; the
+// sound's own callers ask SoundFromJSValue().
 namespace {
 static oo::PList SoundConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();
@@ -249,7 +220,7 @@ OOSound* SoundFromJSValue(ooscript::Context context, ooscript::Value value) {
         cxx_OOStringFromJSValue(context, value).value_or(std::string()));
   } else {
     // OOJSNativeObjectOfClassFromJSValue(context, value, [OOSound class]): the
-    // sound of a Sound object, else null (bead oo-9ht.68).
+    // sound of a Sound object, else null.
     if (!ooscript::isObject(value)) return nullptr;
     ooscript::Object object = ooscript::toObject(value);
     if (object == nullptr ||
@@ -443,10 +414,7 @@ static bool SoundStaticStopMusic(ooscript::Context context,
 }
 }  // namespace
 
-// The bodies of OOSound (OOJavaScriptExtentions), whose methods were in the
-// Scripting bridge file until bead oo-9ht.68 deleted the sound's facade
-// (proposed ADR-0056 amendments oo-ppc and oo-ykoy). A null sound is JS null,
-// as OOJSValueFromNativeObject() answered nil.
+// The bodies of OOSound (OOJavaScriptExtentions). A null sound is JS null.
 ooscript::Value OOJSSoundJSValueInContext(OOSound* sound,
                                           ooscript::Context context) {
   ooscript::Object jsSelf = NULL;

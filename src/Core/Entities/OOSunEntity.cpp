@@ -22,8 +22,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOSunEntity.h"
-
 #include <cstring>
 
 #include "AI.h"
@@ -37,6 +35,7 @@ MA 02110-1301, USA.
 #include "OOPlanetEntity.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
+#include "OOSunEntity.h"
 #include "PlayerEntity.h"
 #include "ShipEntityAI.h"
 #include "Universe.h"
@@ -458,7 +457,7 @@ void OOSunEntity::drawTranslucentParts() {
 void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
                                     GLfloat z_distance) {
   //	if (EXPECT_NOT(inner_radius >= z_distance))  return;	// inside the
-  //sphere
+  // sphere
 
   GLfloat activity[8] = {0.84, 0.74, 0.64, 0.54, 0.3, 0.4, 0.7, 0.8};
 
@@ -767,8 +766,7 @@ void OOSunEntity::setName(const std::optional<std::string>& name) {
   _name = name;
 }
 
-// The binding's bodies (OOJSSun.mm), which the facade forwarded to until bead
-// oo-9ht.111.
+// The binding's bodies (OOJSSun.mm), which the facade forwarded to.
 void OOSunEntity::getJSClass(ooscript::ClassDef** outClass,
                              ooscript::Object* outPrototype) {
   ::OOJSSunGetJSClass(outClass, outPrototype);
@@ -780,15 +778,15 @@ std::optional<std::string> OOSunEntity::jsClassName() {
 
 bool OOSunEntity::isVisibleToScripts() { return ::OOJSSunIsVisibleToScripts(); }
 
-// OOStellarBody.h: the sun (bead oo-9ht.111) and the planet (bead oo-9ht.129)
-// asked directly, any other body by selector.
+// OOStellarBody.h: the sun and the planet asked
+// directly, any other body by selector.
 double OOStellarBodyRadius(Entity* body) {
   if (body == nullptr) return 0.0;
   if (OOSunEntity* sun = dynamic_cast<OOSunEntity*>(body)) return sun->radius();
   if (OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(body))
     return planet->radius();
   return 0.0;  // any other body: none in the game; its object did not answer
-               // -radius (bead oo-dpyk8)
+               // -radius
 }
 
 OOStellarBodyType OOStellarBodyPlanetType(Entity* body) {
@@ -798,5 +796,5 @@ OOStellarBodyType OOStellarBodyPlanetType(Entity* body) {
   if (OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(body))
     return planet->planetType();
   return (OOStellarBodyType)0;  // any other body: none in the game; its object
-                                // did not answer -planetType (bead oo-dpyk8)
+                                // did not answer -planetType
 }

@@ -1,33 +1,23 @@
 /*	test_ResourceManager.mm
-        Unit tests for ResourceManager (src/Core/ResourceManager.h): bead
-   oo-jfno, slice 1 of the Phase 3 slice plan
-   docs/phases/3-slices/ResourceManager.md (the class shell, the file-scope
-   state, the search paths, the add-on selection and the path utilities), in the
-   house style of the OOColor exemplar (proposed ADR-0056, amendments oo-pni4
-   and oo-3bgz).
+        Unit tests for ResourceManager (src/Core/ResourceManager.h).
 
-        ResourceManager is class methods over file-scope state. These tests pin,
-   through the Objective-C API its callers use, what the slice's units answered
-   before the conversion: the state before any scan (no add-on selection, no
+        ResourceManager is class methods over file-scope state. These tests pin
+   what its units answer: the state before any scan (no add-on selection, no
    errors, no OXP messages, no manifests), external paths, which make the search
    paths without a scan, the root paths (the built-in data, the managed add-ons,
    the user's add-on folders, as oo::ResourcePaths computes them), masking the
    user's name in paths, and resetting. They never scan for add-ons: that would
-   read the machine's installed expansions (CLAUDE.md rule 6), so the search
-   paths are always given as external paths first. The expectations were written
-   against the unconverted class and run on it first. After the conversion the
-   class was a C++ class (static members) behind an Objective-C facade; the last
-   test checked that the C++ API answered the same. Bead oo-9ht.150 deleted the
-   facade: every send is now the static member it forwarded to, with the same
-   expectations.
+   read the machine's installed expansions, so the search
+   paths are always given as external paths first. ResourceManager is a C++
+   class (static members), and the last test checks the C++ API.
 
         ResourceManager.mm reaches the universe, the HUD, the OXZ manager and
    the scripts, so the test links every game object but main's
-   (tests/unit/core/meson.build entry ['*'], ADR-0056 amendment oo-44gg) and
-   defines gDebugFlags. UNIVERSE is nil. Bead oo-he11 (slice 2: the OXP
-   manifests) runs the tests in a scratch game folder (see ScratchGameFolder)
-   and adds a scan of fixture add-ons whose manifests the slice accepts or
-   rejects. Run: bash tools/check-core-tests.sh test_ResourceManager
+   (tests/unit/core/meson.build entry ['*']) and
+   defines gDebugFlags. UNIVERSE is nil. The tests run in a scratch game folder
+   (see ScratchGameFolder) and add a scan of fixture add-ons whose manifests
+   the scan accepts or rejects. Run: bash tools/check-core-tests.sh
+   test_ResourceManager
 */
 
 #include <process.h>
@@ -56,12 +46,12 @@ uint32_t gDebugFlags = 0;
 
 namespace {
 
-/*	Bead oo-he11: every folder ResourceManager reads is under a scratch game
+/*	Every folder ResourceManager reads is under a scratch game
    folder, made before main() and so before the first ResourceManager call (the
    root paths are computed once): the home (HOMEPATH), the managed and extract
    add-on folders, and the current directory, whose Resources folder holds only
    an Info-gnustep.plist (version 9.9.9) and whose AddOns folder holds only the
-   fixtures the slice 2 test writes. The machine's own add-ons are never read.
+   fixtures the scan test writes. The machine's own add-ons are never read.
 */
 struct ScratchGameFolder {
   ScratchGameFolder() {
@@ -181,8 +171,7 @@ OO_TEST(externalPathsAreTheSearchPathsWithoutAScan) {
 
 OO_TEST(cxxAPIAnswersTheSame) {
   {
-    // The static members (the facade that forwarded to them went with bead
-    // oo-9ht.150).
+    // The static members.
     OO_CHECK(ResourceManager::builtInPath() == ResourceManager::builtInPath());
     OO_CHECK(ResourceManager::rootPaths() == ResourceManager::rootPaths());
     OO_CHECK(ResourceManager::userRootPaths() ==
@@ -205,8 +194,8 @@ OO_TEST(cxxAPIAnswersTheSame) {
   }
 }
 
-// --- bead oo-he11: slice 2 (OXP manifests: validation, requirements,
-// conflicts, dependencies, scenarios) --- A scan of a scratch game folder whose
+// --- OXP manifests: validation, requirements,
+// conflicts, dependencies, scenarios --- A scan of a scratch game folder whose
 // only add-ons are fixtures the test writes: every root the scan reads (the
 // built-in data, the managed, extract and additional add-on folders,
 // <cwd>/AddOns) is under the scratch folder, set before the first
@@ -377,8 +366,8 @@ OO_TEST(cxxSlice2API) {
   }
 }
 
-// --- bead oo-elve: slice 3 (plist loading and merging, the configuration
-// dictionaries) --- Over the scratch game folder of slice 2's test: the
+// --- Plist loading and merging, the configuration
+// dictionaries --- Over the scratch game folder of the scan test: the
 // built-in data and two fixture add-ons, a.oxp and h.oxp (both kept by the
 // scan), each with Config plists that the test writes. No cache: every load is
 // asked with the cache off, or for a file name no other test loads.
@@ -537,8 +526,8 @@ OO_TEST(cxxSlice3API) {
   }
 }
 
-// --- bead oo-5dzou: slice 4 (file lookup, sounds, music, strings, scripts,
-// diagnostics) --- Over the same scratch game folder.
+// --- File lookup, sounds, music, strings, scripts, diagnostics --- Over the
+// same scratch game folder.
 
 OO_TEST(singleFileLookups) {
   {
@@ -631,14 +620,14 @@ OO_TEST(cxxSlice4API) {
     OO_CHECK(ResourceManager::systemDescriptionManager().get() != nullptr);
     OO_CHECK(ResourceManager::diagnosticFileLocation() ==
              ResourceManager::diagnosticFileLocation());
-    // A new C++ manager (bead oo-9ht.32 deleted the manager's facade).
+    // A new C++ manager.
     oo::Ref<OOSystemDescriptionManager> manager =
         ResourceManager::systemDescriptionManager();
     OO_CHECK(manager != nullptr);
   }
 }
 
-/*	Bead oo-31u.9: ooSoundNamed() goes through the sound cache. A sound
+/*	ooSoundNamed() goes through the sound cache. A sound
    found is kept by the cache and answered borrowed; a missing one is nil.
    Neither reaches retrieveFileNamed()'s uncached oo::autorelease with an
    object, so nothing waits for a scope's drain, and nothing is counted as

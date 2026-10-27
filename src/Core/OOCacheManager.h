@@ -37,16 +37,13 @@ MA 02110-1301, USA.
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 
-/*	Foundation sweep (proposed ADR-0043, bead oo-19g0): cache names and keys
-   are UTF-8 std::strings. The cache directory is std::nullopt where it was nil.
-   Every cached value is property-list data, held as an oo::PList (proposed
-   ADR-0055 item 2, bead oo-qps.36) and written to the cache file as it is; a
-   null PList is "no value".
+/*	Cache names and keys are UTF-8 std::strings. The cache directory is
+   std::nullopt where it was nil. Every cached value is property-list data,
+   held as an oo::PList and written to the cache file as it is; a null PList is
+   "no value".
 */
-/*	C++20 since bead oo-rmd7 (proposed ADR-0056; a singleton, amendments
-   oo-r7m0 and oo-z1s4). Its Objective-C facade was deleted by bead oo-9ht.31,
-   which moved the class out of namespace cxx and made the write task
-   (OOAsyncCacheWriter) a C++ task (OOAsyncWorkTask, bead oo-9ht.14).
+/*	The cache manager is a singleton. The write task (OOAsyncCacheWriter) is
+   a C++ task (OOAsyncWorkTask).
 */
 class OOAsyncCacheWriter;
 

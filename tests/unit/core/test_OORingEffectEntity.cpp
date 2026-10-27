@@ -1,28 +1,24 @@
 /*	test_OORingEffectEntity.mm
         Unit tests for OORingEffectEntity
    (src/Core/Entities/OORingEffectEntity.h), the expanding ring of a big
-   explosion or a witchspace jump: bead oo-peql, a leaf of the Entities seam
-   (proposed ADR-0056, amendment oo-bj8 item 12).
+   explosion or a witchspace jump.
 
         The entity reads Universe and PLAYER, so the test links the whole game
    but main (['*']) and uses a Universe that was never initialised, subclassed
-   to record -removeEntity:, and a plain entity as PLAYER. The expectations were
-   written against the Objective-C API and run on the unconverted class first
-   (but for "no ring from nil", which crashed there in the Entity facade's
-        -dealloc of an entity whose -init never ran, bead oo-s6ic6): no ring
-   from nil; a ring takes the source's position, orientation and velocity, is an
-   effect that cannot collide, owned by the source; its description counts the
-   time passed; it removes itself after two seconds. The rings are made through
-   the one block of helpers below, the only lines the conversion ported: the
-   ring is now a C++ entity whose Objective-C object is the Entity facade
-   oo::NewEntityFacade made. Run: bash tools/check-core-tests.sh
+   to record -removeEntity:, and a plain entity as PLAYER. The expectations
+   cover: no ring from nil; a ring takes the source's position, orientation and
+   velocity, is an effect that cannot collide, owned by the source; its
+   description counts the time passed; it removes itself after two seconds. The
+   rings are made through the one block of helpers below: each ring is a C++
+   entity whose Objective-C object is the Entity facade oo::NewEntityFacade
+   made. Run: bash tools/check-core-tests.sh
 */
 
 #include <string>
 
 #include "OODescription.h"
 #include "OORingEffectEntity.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "oo_test.hpp"
 
@@ -35,16 +31,14 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// NewTestPlayer<TestPlayer>() (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// NewTestPlayer<TestPlayer>(): a C++ player under the ship's facade, as
+// PlayerEntity::sharedPlayer() makes the game's, retained (+1) as +alloc's
+// object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -60,8 +54,7 @@ class TestUniverse : public Universe {
   Entity* _removed = {};
 
   bool removeEntity(
-      Entity* entity) override  // the C++ entity since bead oo-9ht.39.26; the
-                                // record is its object, as before
+      Entity* entity) override  // the C++ entity; the record is its object
   {
     _removed = entity;
     return YES;
@@ -88,7 +81,7 @@ void SetUp() {
 
 Entity* Ring(Entity* source) {
   return oo::MadeEntity(OORingEffectEntity::ringFromEntity(source));
-}  // the source's C++ entity since bead oo-9ht.39.26
+}  // the source's C++ entity
 Entity* ShrinkingRing(Entity* source) {
   return oo::MadeEntity(OORingEffectEntity::shrinkingRingFromEntity(source));
 }

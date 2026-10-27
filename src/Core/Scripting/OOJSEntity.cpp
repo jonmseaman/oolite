@@ -22,13 +22,12 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSEntity.h"
-
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToJSString.h"
 #include "OOJSCall.h"
+#include "OOJSEntity.h"
 #include "OOJSPlayer.h"
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
@@ -39,33 +38,9 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, exemplar for this sweep, bead oo-oap): the class table
-   is a static ooscript::ClassDef (stub hooks become nullptr), initClass
-   replaces the engine's InitClass, and the getProperty/setProperty class hooks
-   and the natives take the façade's Context/Object/PropertyId/Value
-   pointer/CallArgs signature directly.
-
         The Entity class, sEntityClass, is the shared base for every other
    entity binding file's OOJSRegisterSubclass()/DEFINE_JS_OBJECT_GETTER() call;
    JSEntityClass() returns it.
-
-        `this` is renamed to `thisObj` because it is a reserved word once this
-   file compiles as Objective-C++ (ADR-0001).
-*/
-
-/*
-        C++20 since bead oo-tq53, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The C API
-   in OOJSEntity.h (JSValueToEntity(), EntityFromArgumentList(),
-   OOIsPlayerStale(), OOIsStaleEntity()) returns bool too; its callers compile
-   unchanged. Nothing else in the file was Objective-C: an entity is still
-        messaged through the Objective-C Entity, the façade every entity is
-   while its subclasses are Objective-C (ShipEntity's own selectors included),
-   as OOJSSun.mm does, which is why the file is still .mm until Phase 4.
 */
 
 namespace ooscript {}
@@ -110,7 +85,7 @@ static ClassDef sEntityClass = {
     nullptr,  // resolve (engine default: ResolveStub)
     nullptr,  // convert (engine default: ConvertStub)
     OOJSCxxObjectWrapperFinalize,  // finalize (the slot holds an
-                                   // OOJSEntityHolder, bead oo-9ht.39.3)
+                                   // OOJSEntityHolder)
     nullptr,                       // call
     nullptr,                       // construct
     nullptr,  // backend: owned by the façade backend, must start null
@@ -402,9 +377,8 @@ static bool EntityGetProperty(Context cx, Object obj, PropertyId propID,
     return true;
   }
 
-  // The C++ members the root facade's selectors called (bead oo-9ht.39.8.21;
-  // ADR-0056 amendment oo-9ht.39.8.21): a virtual one reaches an Objective-C
-  // entity's override as the selector did.
+  // The C++ members the properties call: a virtual one reaches an
+  // Objective-C entity's override.
   switch (ooscript::idToInt32(propID)) {
     case kEntity_collisionRadius:
       return ooscript::newNumberValue(cx, cxxEntity->collisionRadius(), value);
@@ -536,7 +510,7 @@ static bool EntitySetProperty(Context cx, Object obj, PropertyId propID,
   if (EXPECT_NOT(!OOJSEntityGetEntity(context, thisObj, &cxxEntity)))
     return false;
   if (OOIsStaleEntity(cxxEntity)) return true;
-  // The C++ members the root facade's selectors called (bead oo-9ht.39.8.21).
+  // The C++ members the properties call.
 
   switch (ooscript::idToInt32(propID)) {
     case kEntity_position:
@@ -617,9 +591,7 @@ static bool EntityDumpState(ooscript::Context context,
 
   Entity* thisEnt = nullptr;
   OOJSEntityGetEntity(context, OOJS_THIS, &thisEnt);
-  if (thisEnt != nullptr)
-    thisEnt->dumpState();  // the C++ member, which the object's -dumpState
-                           // called (bead oo-9ht.39.8.2)
+  if (thisEnt != nullptr) thisEnt->dumpState();  // the C++ member
 
   OOJS_RETURN_VOID;
 

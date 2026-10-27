@@ -22,8 +22,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSShip.h"
-
 #include "AI.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
@@ -38,6 +36,7 @@ MA 02110-1301, USA.
 #include "OOJSEquipmentInfo.h"
 #include "OOJSPlayer.h"
 #include "OOJSQuaternion.h"
+#include "OOJSShip.h"
 #include "OOJSVector.h"
 #include "OOJSWormhole.h"
 #include "OOJavaScriptEngine.h"
@@ -60,32 +59,6 @@ MA 02110-1301, USA.
 #include "WormholeEntity.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
-
-/*
-        Converted slice by slice to C++20 (docs/phases/3-slices/OOJSShip.md;
-   proposed ADR-0056, amendments oo-ppc, oo-luhd, oo-ft5n and oo-9ht.139). A
-   converted native or helper has no Objective-C: BOOL/YES/NO/nil are
-   bool/true/false/nullptr; the ship it wraps is reached as ShipEntity through
-   oo::ToCxx (its members an Objective-C subclass overrides are virtual, so
-   dispatch is as before), the converted classes the ship hands out (AI,
-   OORoleSet, OOShipGroup, OOColor, OONativeVector) as cxx:: classes,
-   null-guarded where a message to nil answered; and a send to a class that was
-   still Objective-C (the player, the universe) was a one-line function in the
-   binding's bridge file until bead oo-9ht.181 inlined each one at its call (a
-   member call on the C++ player, a message to the universe) and deleted the
-   file. Slice 1 (bead oo-18mg2): ShipGetProperty() and its helpers. Slice 2
-   (bead oo-chjz4): ShipSetProperty(). Slice 3 (bead oo-08plt): the AI and
-        script, escort, role, cargo, spawn, damage, removal, legacy-action,
-   comms, ECM and abandon natives. Slice 4 (bead oo-hqe5l): equipment, missiles,
-   nearest station, bounty, cargo, crew, materials and shaders. Slice 5 (bead
-   oo-qzn25): system exit, escort formation, defence targets, collision
-   exceptions, cascades, group, escort and patrol, wormholes, docking
-   instructions, distress and course. Slice 6 (bead oo-ljuy1): the perform*
-   behaviours, the scanner, cargo adjustment, damage and threat assessment, and
-   the static methods (the ship registry is OOShipRegistry). Since oo-9ht.181
-   the file sends the universe its messages directly, as OOJSStation.mm does,
-   until the universe is C++ (oo-pas).
-*/
 
 namespace {
 
@@ -310,7 +283,7 @@ static ooscript::ClassDef sShipClass = {
     nullptr,                       // resolve
     nullptr,                       // convert
     OOJSCxxObjectWrapperFinalize,  // finalize (the slot holds an
-                                   // OOJSEntityHolder, bead oo-9ht.39.3)
+                                   // OOJSEntityHolder)
     nullptr,                       // call
     nullptr,                       // construct
     nullptr,                       // backend
@@ -755,12 +728,9 @@ static ooscript::FunctionSpec sShipStaticMethods[] = {
 
 namespace {
 
-/*	The ship a JS Ship object holds. DEFINE_JS_OBJECT_GETTER's getter
-   answered the ship's object until bead oo-9ht.144 deleted the ship's facade
-   (the object is now the drawable's facade, so the getter checks the root's
-   class); this answers its C++ ship, null where the object was nil. Since bead
-        oo-9ht.39.3 the slot holds the C++ entity (OOJSEntityGetEntityOfClass,
-   the same JS class check).
+/*	The ship a JS Ship object holds: its C++ ship, null where there is none.
+   The slot holds the C++ entity (OOJSEntityGetEntityOfClass, with the JS class
+   check).
 */
 BOOL JSShipGetShipEntity(ooscript::Context context, ooscript::Object inObject,
                          ShipEntity** outShip) {
@@ -799,9 +769,8 @@ oo::PList NormalizedColorComponents(OOColor* color) {
   return oo::PList(std::move(components));
 }
 
-/*	The ship's AI is C++ (AI, since bead oo-9ht.73 without a facade). A ship
-   with no AI answered none or false to what the getter sent the AI; so does a
-   null AI here (ADR-0056 amendment oo-6ia4 item 2).
+/*	The ship's AI is C++ (AI). A ship with no AI answers none or false to
+   what the getter sends the AI; so does a null AI here.
 */
 std::optional<std::string> AIName(ShipEntity* ship) {
   AI* ai = ship->getAI();
@@ -825,9 +794,8 @@ bool IsShip(Entity* entity) {
   return dynamic_cast<ShipEntity*>(entity) != nullptr;
 }
 
-/*	The ship's mesh is C++ (OOMesh, global since bead oo-9ht.132). A ship
-   with no mesh answered null to -materials and -shaders; so does a null mesh
-   here.
+/*	The ship's mesh is C++ (OOMesh). A ship with no mesh answers null to
+   -materials and -shaders; so does a null mesh here.
 */
 oo::PList MeshMaterials(ShipEntity* ship) {
   OOMesh* mesh = ship->mesh();
@@ -986,9 +954,7 @@ static bool ShipGetProperty(ooscript::Context context,
 
     case kShip_target:
       result = oo::EntityObjectNode(
-          ship->primaryTarget());  // the C++ entity's object node or nil (bead
-                                   // oo-9ht.39.5.2; the getter answers the C++
-                                   // entity since oo-9ht.39.23)
+          ship->primaryTarget());  // the C++ entity's object node or nil
       break;
 
     case kShip_defenseTargets: {
@@ -1113,7 +1079,7 @@ static bool ShipGetProperty(ooscript::Context context,
       result = NativeVectorArray(ship->getForwardWeaponOffset());
       break;
       //			return VectorToJSValue(context, [entity
-      //forwardWeaponOffset], value);
+      // forwardWeaponOffset], value);
 
     case kShip_weaponPositionPort:
       result = NativeVectorArray(ship->getPortWeaponOffset());
@@ -1512,8 +1478,7 @@ bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObject,
   OOJS_NATIVE_ENTER(context)
 
   ShipEntity* entity = nullptr;
-  Entity* target = nullptr;  // as JSValueToEntity() answers (the C++ entity
-                             // since bead oo-9ht.39.3)
+  Entity* target = nullptr;  // as JSValueToEntity() answers (the C++ entity)
   std::optional<std::string> sValue;
   double fValue;
   int32_t iValue;
@@ -1607,8 +1572,7 @@ bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObject,
       {
         if (ship->isBeacon()) {
           if (UNIVERSE != nullptr)
-            UNIVERSE->clearBeacon(
-                entity);  // the C++ entity (bead oo-9ht.39.8.10)
+            UNIVERSE->clearBeacon(entity);  // the C++ entity
           if ((PLAYER != nullptr ? PLAYER->nextBeaconEntity() : nullptr) ==
               entity) {
             if (PLAYER != nullptr) PLAYER->setCompassMode(COMPASS_MODE_PLANET);
@@ -1621,8 +1585,7 @@ bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObject,
         {
           ship->setBeaconCode(sValue);
           if (UNIVERSE != nullptr)
-            UNIVERSE->setNextBeacon(
-                entity);  // the C++ entity (bead oo-9ht.39.8.10)
+            UNIVERSE->setNextBeacon(entity);  // the C++ entity
         }
       }
       return true;
@@ -1736,9 +1699,7 @@ bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObject,
         ship->setFoundTarget(nullptr);
         return true;
       } else if (JSValueToEntity(context, *value, &target) && IsShip(target)) {
-        ship->setFoundTarget(
-            target);  // the C++ entity (bead oo-9ht.39.8.11; the member takes
-                      // it since oo-9ht.39.23)
+        ship->setFoundTarget(target);  // the C++ entity
         return true;
       }
       break;
@@ -1750,9 +1711,7 @@ bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObject,
         ship->setPrimaryAggressor(nullptr);
         return true;
       } else if (JSValueToEntity(context, *value, &target) && IsShip(target)) {
-        ship->setPrimaryAggressor(
-            target);  // the C++ entity (bead oo-9ht.39.8.11; the member takes
-                      // it since oo-9ht.39.23)
+        ship->setPrimaryAggressor(target);  // the C++ entity
         return true;
       }
       break;
@@ -2018,7 +1977,7 @@ bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObject,
 
     case kShip_thrust:
       //			if (EXPECT_NOT(ship->getIsPlayer()))  goto
-      //playerReadOnly;
+      // playerReadOnly;
 
       if (ooscript::valueToNumber(context, *value, &fValue)) {
         ship->setThrust(OOClamp_0_max_f(fValue, ship->maxThrust()));
@@ -2547,8 +2506,7 @@ static bool ShipEjectItem(ooscript::Context context,
 
   OOJS_RETURN(OOJSValueFromCxxObject(
       context,
-      ship->ejectShipOfRole(role)));  // the C++ ship's JS value (its object's
-                                      // until bead oo-9ht.39.8.1)
+      ship->ejectShipOfRole(role)));  // the C++ ship's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -2643,8 +2601,7 @@ static bool ShipEjectSpecificItem(ooscript::Context context,
 
   OOJS_RETURN(OOJSValueFromCxxObject(
       context,
-      ship->ejectShipOfType(itemKey)));  // the C++ ship's JS value (its
-                                         // object's until bead oo-9ht.39.8.1)
+      ship->ejectShipOfType(itemKey)));  // the C++ ship's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -2688,8 +2645,7 @@ static bool ShipDumpCargo(ooscript::Context context,
     }
 
     for (i = 1; i < count; i++) {
-      // drop 3 canisters per 2 seconds (a deferred call on the C++ ship since
-      // bead oo-9ht.39.7.3; by name on its object before)
+      // drop 3 canisters per 2 seconds (a deferred call on the C++ ship)
       oo::ScheduleEntityCall(
           thisEnt,
           [](Entity* entity) {
@@ -2702,8 +2658,7 @@ static bool ShipDumpCargo(ooscript::Context context,
 
   OOJS_RETURN(OOJSValueFromCxxObject(
       context,
-      ship->dumpCargoItem(pref)));  // the C++ pod's JS value (its object's
-                                    // until bead oo-9ht.39.8.1)
+      ship->dumpCargoItem(pref)));  // the C++ pod's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -2933,8 +2888,7 @@ static bool ShipFireECM(ooscript::Context context,
 
   OK = ship->fireECM();
   if (!OK) {
-    // The C++ ship's JS description (bead oo-9ht.39.8.8): what its object's
-    // OOObjectJSDescription() made of the same jsClassName() and
+    // The C++ ship's JS description: made of its jsClassName() and
     // descriptionComponents().
     cxx_OOJSReportWarning(
         context,
@@ -3385,9 +3339,8 @@ static bool ShipFireMissile(ooscript::Context context,
   else
     result = ship->fireMissile();
 
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, result));  // the C++ missile's JS value (its object's until bead
-                          // oo-9ht.39.8.1)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, result));  // the C++ missile's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -3398,7 +3351,7 @@ static bool ShipFindNearestStation(ooscript::Context context,
   OOJS_NATIVE_ENTER(context)
 
   ShipEntity* thisEnt = nullptr;
-  ShipEntity* result = nullptr;  // a station (its object until bead oo-9ht.144)
+  ShipEntity* result = nullptr;  // a station
 
   GET_THIS_SHIP(thisEnt);
   ShipEntity* ship = thisEnt;  // not null: thisEnt is not
@@ -3421,9 +3374,8 @@ static bool ShipFindNearestStation(ooscript::Context context,
     }
   }
 
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, result));  // the C++ station's JS value (its object's until bead
-                          // oo-9ht.39.8.1)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, result));  // the C++ station's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -3713,7 +3665,7 @@ bool ShipSetMaterialsInternal(ooscript::Context context,
       shipDict.get<bool>("smooth", false),
       (prefixMacros != nullptr && prefixMacros->isDict()) ? *prefixMacros
                                                           : oo::PList(),
-      thisEnt);  // the C++ ship (bead oo-9ht.39.6)
+      thisEnt);  // the C++ ship
 
   if (mesh != nullptr) {
     ship->setMesh(mesh.get());
@@ -3800,10 +3752,8 @@ bool RemoveOrExplodeShip(ooscript::Context context,
   }
 
   if (thisEnt ==
-      oo::ToShip((UNIVERSE != nullptr
-                      ? UNIVERSE->station()
-                      : nullptr)))  // the C++ station (through its object until
-                                    // bead oo-9ht.39.8.1)
+      oo::ToShip((UNIVERSE != nullptr ? UNIVERSE->station()
+                                      : nullptr)))  // the C++ station
   {
     // Allow exploding of main station (e.g. nova mission)
     if (UNIVERSE != nullptr) UNIVERSE->unMagicMainStation();
@@ -3864,8 +3814,7 @@ static bool ShipAddDefenseTarget(ooscript::Context context,
     return false;
   }
 
-  ship->addDefenseTarget(target);  // the C++ ship (bead oo-9ht.39.8.11; the
-                                   // member takes it since oo-9ht.39.23)
+  ship->addDefenseTarget(target);  // the C++ ship
 
   OOJS_RETURN_VOID;
 
@@ -3892,8 +3841,7 @@ static bool ShipRemoveDefenseTarget(ooscript::Context context,
     return false;
   }
 
-  ship->removeDefenseTarget(target);  // the C++ ship (bead oo-9ht.39.8.11; the
-                                      // member takes it since oo-9ht.39.23)
+  ship->removeDefenseTarget(target);  // the C++ ship
 
   OOJS_RETURN_VOID;
 
@@ -4092,8 +4040,7 @@ static bool ShipPatrolReportIn(ooscript::Context context,
   if (target != nullptr &&
       target->getIsStation())  // none: not a station, as a message to nil
   {
-    StationEntity* station = oo::ToStation(
-        target);  // the C++ ship (through its object until bead oo-9ht.39.8.1)
+    StationEntity* station = oo::ToStation(target);  // the C++ ship
     station->acceptPatrolReportFrom(thisEnt);
   }
 
@@ -4154,9 +4101,8 @@ static bool ShipEnterWormhole(ooscript::Context context,
       return false;
     }
 
-    ship->enterWormhole(static_cast<WormholeEntity*>(
-        hole));  // the C++ wormhole (a C-style cast of its object until bead
-                 // oo-9ht.144)
+    ship->enterWormhole(
+        static_cast<WormholeEntity*>(hole));  // the C++ wormhole
   }
 
   OOJS_RETURN_VOID;
@@ -4453,15 +4399,13 @@ static bool ShipCheckCourseToDestination(ooscript::Context context,
   GET_THIS_SHIP(thisEnt);
   ShipEntity* ship = thisEnt;  // not null: thisEnt is not
 
-  Entity* hazard =
-      (UNIVERSE != nullptr
-           ? UNIVERSE->hazardOnRouteFromEntity(thisEnt, ship->desiredRange(),
-                                               ship->destination())
-           : nullptr);  // the C++ entities (bead oo-9ht.39.8.6)
+  Entity* hazard = (UNIVERSE != nullptr ? UNIVERSE->hazardOnRouteFromEntity(
+                                              thisEnt, ship->desiredRange(),
+                                              ship->destination())
+                                        : nullptr);  // the C++ entities
 
-  OOJS_RETURN(OOJSValueFromCxxObject(
-      context, hazard));  // the C++ hazard's JS value (its object's until bead
-                          // oo-9ht.39.8.6)
+  OOJS_RETURN(
+      OOJSValueFromCxxObject(context, hazard));  // the C++ hazard's JS value
 
   OOJS_PROFILE_EXIT
 }
@@ -4474,11 +4418,10 @@ static bool ShipGetSafeCourseToDestination(ooscript::Context context,
   GET_THIS_SHIP(thisEnt);
   ShipEntity* ship = thisEnt;  // not null: thisEnt is not
 
-  HPVector waypoint =
-      (UNIVERSE != nullptr
-           ? UNIVERSE->getSafeVectorFromEntity(thisEnt, ship->desiredRange(),
-                                               ship->destination())
-           : HPVector{});  // the C++ ship (bead oo-9ht.39.8.6)
+  HPVector waypoint = (UNIVERSE != nullptr ? UNIVERSE->getSafeVectorFromEntity(
+                                                 thisEnt, ship->desiredRange(),
+                                                 ship->destination())
+                                           : HPVector{});  // the C++ ship
 
   OOJS_RETURN_HPVECTOR(waypoint);
 

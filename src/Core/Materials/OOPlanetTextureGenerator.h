@@ -25,8 +25,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOPLANETTEXTUREGENERATOR_H
-#define OOPLANETTEXTUREGENERATOR_H
+#pragma once
 
 #include "OOMaths.h"
 #include "OOTextureGenerator.h"
@@ -75,12 +74,9 @@ typedef struct OOPlanetTextureGeneratorInfo {
   BOOL perlin3d;
 } OOPlanetTextureGeneratorInfo;
 
-/*	Phase 3 (bead oo-kyje, proposed ADR-0056 amendments oo-bj8 item 12,
-   oo-fn2f, oo-novu, oo-rr2x item 3, oo-kvqq and oo-y3dd): a converted leaf of
-   the texture generators, global, over OOTextureGenerator, with no facade of
-   its own; so are the two helper generators private to its file. Its one caller
-   (OOPlanetEntity) calls the static members; a texture takes the C++ generator
-   (it took the generators' facade until bead oo-9ht.118 deleted it).
+/*	A leaf of the texture generators, over OOTextureGenerator; so are the
+   two helper generators private to its file. Its one caller (OOPlanetEntity)
+   calls the static members; a texture takes the C++ generator.
 */
 class OOPlanetTextureGenerator : public OOTextureGenerator {
  public:
@@ -88,10 +84,8 @@ class OOPlanetTextureGenerator : public OOTextureGenerator {
 
   /*	planetInfo is the planet's material parameters, a mixed configuration:
      plist values with the colours as PList::Object nodes holding OOColors
-     (proposed ADR-0043 Amendment 2; the selector-family flip oo-3rb.269.2,
-     which ended the id boundary of beads oo-lzk6 / oo-2pmp). Was
-     [[OOPlanetTextureGenerator alloc] initWithPlanetInfo:seed:]; null where
-     that answered nil (amendment oo-novu).
+     Was [[OOPlanetTextureGenerator alloc] initWithPlanetInfo:seed:]; null
+     where that answered nil.
   */
   static oo::Ref<OOPlanetTextureGenerator> generatorWithPlanetInfo(
       const oo::PList& planetInfo, RANROTSeed seed);
@@ -99,8 +93,8 @@ class OOPlanetTextureGenerator : public OOTextureGenerator {
                           RANROTSeed seed);  // false where it answered nil
 
   /*	Were +planetTextureWithInfo:seed: and the three
-     +generatePlanetTexture:...; the textures are answered retained (amendment
-     oo-2en item 2). The one that took a texture and an atmosphere
+     +generatePlanetTexture:...; the textures are answered retained. The one
+     that took a texture and an atmosphere
           (+generatePlanetTexture:andAtmosphere:withInfo:seed:) has its own
      name: its arguments have the types of the one that took a texture and a
      secondary texture.
@@ -128,7 +122,7 @@ class OOPlanetTextureGenerator : public OOTextureGenerator {
   /*	Was -getResult:format:width:height:, whose keywords are not the root's
           -getResult:format:originalWidth:originalHeight:, so it never overrode
      it and nothing sends it; kept, under a name that does not override
-     getResult() either (amendment oo-y3dd).
+     getResult() either.
   */
   bool getResultFormatWidthHeight(OOPixMap* outData,
                                   OOTextureDataFormat* outFormat,
@@ -153,5 +147,3 @@ class OOPlanetTextureGenerator : public OOTextureGenerator {
   oo::Ref<OOPlanetNormalMapGenerator> _nMapGenerator;
   oo::Ref<OOPlanetAtmosphereGenerator> _atmoGenerator;
 };
-
-#endif  // OOPLANETTEXTUREGENERATOR_H

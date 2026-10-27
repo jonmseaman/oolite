@@ -1,29 +1,22 @@
 /*	test_OOVisualEffectEntity.mm
         Unit tests for OOVisualEffectEntity
-   (src/Core/Entities/OOVisualEffectEntity.h), the scripted visual effects: bead
-   oo-ukxy8, slice 1 of the Phase 3 slice plan
-        docs/phases/3-slices/OOVisualEffectEntity.md (the class shell:
-   initialisers, flags, mesh, subentities and flashers, scaling, orientation
+   (src/Core/Entities/OOVisualEffectEntity.h), the scripted visual effects
+   (initialisers, flags, mesh, subentities and flashers, scaling, orientation
    vectors, drawing, update, the break pattern flag and the subentity
-   relationship), in the house style of the OOColor exemplar (proposed ADR-0056,
-        amendments oo-bj8 and oo-dnbf).
+   relationship).
 
         The entity reads Universe and PLAYER, so the test links the whole game
    but main (['*']), starts the JavaScript engine (the effect names its script
    events with OOJSID) in a scratch folder with no scripts (so an effect has no
    script), and uses a Universe that was never initialised, which makes the
    standard subentities the effects ask it for, and a plain entity as PLAYER. No
-   effect has a model, so nothing is drawn. The expectations were written
-   against the Objective-C API and run on the unconverted class first: an
+   effect has a model, so nothing is drawn. The tests pin an
    effect's flags, key, class and status; its scales and the radii they scale;
    its flasher and standard subentities (made from the definition, owned,
-        listed, counted, scaled with it, removed and cleared); its orientation
-   vectors; and the break pattern flag. The façade contract (a C++ entity behind
-   the OOVisualEffectEntity façade, the C++ members, slice 2 on the façade) came
-   with the conversion; since bead oo-9ht.165 deleted the façade, an effect is
-   the global C++ class, made with oo::NewVisualEffectObject() under
-        OOEntityWithDrawable's facade, and the cases call its members (ADR-0056
-   amendment oo-9ht.165). Run: bash tools/check-core-tests.sh
+   listed, counted, scaled with it, removed and cleared); its orientation
+   vectors; and the break pattern flag. An effect is the global C++ class, made
+   with oo::NewVisualEffectObject() under OOEntityWithDrawable's facade, and the
+   cases call its members. Run: bash tools/check-core-tests.sh
    test_OOVisualEffectEntity
 */
 
@@ -41,7 +34,7 @@
 #include "OOJSVisualEffect.h"
 #include "OOJavaScriptEngine.h"
 #include "OOVisualEffectEntity.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "ShipEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -56,16 +49,13 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// NewTestPlayer<TestPlayer>() (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// NewTestPlayer<TestPlayer>(): a C++ player under the ship's
+// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1).
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -79,8 +69,8 @@ T* NewTestPlayer() {
 // no definition, by key ("missing" has none).
 class TestUniverse : public Universe {
  public:
-  Entity* newVisualEffectWithName(const std::string& effectKey)
-      override  // the effect, its object +1 (beads oo-9ht.165, oo-9ht.39.26)
+  Entity* newVisualEffectWithName(
+      const std::string& effectKey) override  // the effect, its object +1
   {
     if (effectKey == "missing") return nullptr;
     return oo::NewVisualEffect(effectKey, oo::PList());
@@ -106,9 +96,7 @@ void SetUp() {
                           oo::Data("{ CFBundleVersion = \"9.9.9-test\"; }", 35),
                           oo::fs::WriteMode::direct)
             .has_value());
-    {  // was an Objective-C pool (bead oo-dbz.1: no Objective-C object since
-       // oo-4aq6a.8): the engine autoreleases facades as it starts (as
-       // test_OOJSSystem, bead oo-9ht.172; here oo-9ht.174)
+    {  // the engine autoreleases facades as it starts
       (void)OOJavaScriptEngine::sharedEngine();
     }
   }
@@ -119,9 +107,8 @@ void SetUp() {
   gSharedUniverse = universe;
   static TestPlayer* player = nullptr;
   if (player == nil) {
-    {  // was an Objective-C pool (bead oo-dbz.1: no Objective-C object since
-       // oo-4aq6a.8): what the stand-in player's -init autoreleases is freed
-       // while the engine is alive (bead oo-9ht.174)
+    {  // what the stand-in player's -init autoreleases is freed
+       // while the engine is alive
       player = NewTestPlayer<TestPlayer>();
     }
   }
@@ -146,9 +133,8 @@ oo::PList Flasher(double x) {
 }
 
 // An effect, as the universe makes it (oo::NewVisualEffect(),
-// [[OOVisualEffectEntity alloc] cxx_initWithKey:definition:] until bead
-// oo-9ht.165): the C++ effect, autoreleased (its object was until bead
-// oo-dpyk8).
+// An effect, as the universe makes it (oo::NewVisualEffect()): the C++ effect,
+// autoreleased.
 OOVisualEffectEntity* Effect(const std::string& key,
                              const oo::PList& definition) {
   return oo::ToEffect(
@@ -168,7 +154,7 @@ OO_TEST(defaults) {
     OO_CHECK(effect->getIsVisualEffect());
     OO_CHECK(!effect->canCollide());
     OO_CHECK(effect->effectKey() == std::optional<std::string>("test-effect"));
-    OO_CHECK(effect->mesh() == nullptr);  // the C++ mesh since bead oo-9ht.132
+    OO_CHECK(effect->mesh() == nullptr);
     OO_CHECK(effect->getScanClass() == CLASS_VISUAL_EFFECT);
     OO_CHECK(effect->status() == STATUS_EFFECT);
     OO_CHECK(!effect->isBreakPattern());
@@ -221,8 +207,7 @@ OO_TEST(flasherSubentities) {
                   Flasher(10), oo::PList(std::string("not a dictionary"))})}}));
     OO_CHECK_EQ(effect->subEntityCount(), 1u);  // the string made no subentity
     std::vector<oo::EntityHold> flashers =
-        effect->flasherEnumerator();  // the flashers (bead oo-9ht.107; held C++
-                                      // entities since bead oo-xn1j1)
+        effect->flasherEnumerator();  // the flashers (held C++ entities)
     OO_CHECK_EQ(flashers.size(), 1u);
     OO_CHECK(effect->effectSubEntityEnumerator().empty());
     OO_CHECK(effect->visualEffectSubEntityEnumerator().has_value() &&
@@ -281,9 +266,7 @@ OO_TEST(standardSubentities) {
     // it drains is what owns the child (pending autoreleases are not
     // ownership).
     OOVisualEffectEntity* effect = nullptr;
-    std::vector<oo::EntityHold>
-        effects;  // the subentities (bead oo-9ht.165; held C++ entities since
-                  // bead oo-xn1j1)
+    std::vector<oo::EntityHold> effects;  // the subentities (held C++ entities)
     Entity* effectObject = nil;
     {
       effectObject = oo::NewVisualEffect(
@@ -301,8 +284,7 @@ OO_TEST(standardSubentities) {
     if (effects.size() != 1) return;
 
     Entity* childObject =
-        effects[0].get();  // the child (its object until bead oo-dpyk8; bead
-                           // oo-9ht.165), +0 and not autoreleased
+        effects[0].get();  // the child, +0 and not autoreleased
     OOVisualEffectEntity* child = oo::ToEffect(childObject);
     OO_CHECK(child->effectKey() == std::optional<std::string>("child"));
     OO_CHECK(Near(child->getPosition().y, 5.0));
@@ -357,8 +339,7 @@ OO_TEST(orientationVectors) {
   }
 }
 
-// Slice 2 (bead oo-xkf6c): the scanner colours, the script, the beacons and the
-// shader uniforms.
+// The scanner colours, the script, the beacons and the shader uniforms.
 OO_TEST(scannerColours) {
   SetUp();
   {
@@ -425,7 +406,7 @@ OO_TEST(beacons) {
     OO_CHECK(effect->prevBeacon() == nil && effect->nextBeacon() == nil);
 
     OOVisualEffectEntity* other = Effect("other", Dict({}));
-    effect->setPrevBeacon(other);  // the C++ entity (bead oo-9ht.39.24)
+    effect->setPrevBeacon(other);
     effect->setNextBeacon(other);
     OO_CHECK(effect->prevBeacon() == other && effect->nextBeacon() == other);
     effect->setNextBeacon(nullptr);
@@ -463,9 +444,9 @@ OO_TEST(shaderUniforms) {
   }
 }
 
-// The façade (bead oo-ukxy8): an effect is a C++ entity whose Objective-C
+// The façade: an effect is a C++ entity whose Objective-C
 // object is the OOVisualEffectEntity façade, made by the initialiser the
-// universe sends; the C++ members give the façade's answers, and slice 2's
+// universe sends; the C++ members give the façade's answers, and the
 // selectors still answer on the façade.
 OO_TEST(facadeContract) {
   SetUp();
@@ -473,8 +454,7 @@ OO_TEST(facadeContract) {
     OOVisualEffectEntity* effect = Effect(
         "facade",
         Dict({{"subentities", oo::PList(oo::PList::Array{Flasher(1)})}}));
-    OOVisualEffectEntity* cxxEffect =
-        effect;  // the C++ class since bead oo-9ht.165
+    OOVisualEffectEntity* cxxEffect = effect;
     OO_CHECK(cxxEffect != nullptr);
     OO_CHECK(oo::ToEffect(cxxEffect) == effect);
     OO_CHECK(oo::ToEffect(static_cast<Entity*>(nil)) == nullptr);
@@ -493,22 +473,22 @@ OO_TEST(facadeContract) {
     std::vector<oo::EntityHold> flashers = cxxEffect->flasherEnumerator();
     OO_CHECK(flashers.size() == 1 && flashers[0].get()->owner() == effect);
 
-    // Slice 2, on the façade, reads the state the class keeps.
+    // The members, on the façade, read the state the class keeps.
     OO_CHECK(Near(effect->hullHeatLevel(), 60.0 / 256.0));
     effect->setShaderFloat1(0.5f);
     OO_CHECK(cxxEffect->_shaderFloat1 == 0.5f);
   }
 }
 
-// Slice 2's C++ members (bead oo-xkf6c) answer as the façade does.
+// The scanner-colour, script, beacon and shader-uniform members answer as the
+// façade does.
 OO_TEST(slice2Members) {
   SetUp();
   {
     OOVisualEffectEntity* effect = Effect(
         "members",
         Dict({{"scanner_display_color1", oo::PList(std::string("redColor"))}}));
-    OOVisualEffectEntity* cxxEffect =
-        effect;  // the C++ class since bead oo-9ht.165
+    OOVisualEffectEntity* cxxEffect = effect;
     OO_CHECK(cxxEffect->scannerDisplayColor1() ==
              effect->scannerDisplayColor1());
     OO_CHECK(cxxEffect->scannerDisplayColor2() == nullptr);
@@ -523,17 +503,15 @@ OO_TEST(slice2Members) {
   }
 }
 
-// The binding's category, which the facade carried from bead oo-9ht.93 and the
-// C++ class's overrides answer since bead oo-9ht.165: what the engine asks an
-// effect's object for by selector is what OOJSVisualEffect.mm answers.
+// The binding's category: what the engine asks an effect's object for by
+// selector is what OOJSVisualEffect.mm answers.
 OO_TEST(jsExtensions) {
   SetUp();
   {
     OOVisualEffectEntity* effect = Effect("js-effect", Dict({}));
     ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
     ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
-    Entity* object = effect;  // the engine asks the object (the root's
-                              // category, since bead oo-9ht.165)
+    Entity* object = effect;  // the engine asks the object
     OOJSEntityGetJSClass(object, &jsClass, &prototype);
     OOJSVisualEffectGetJSClass(&expectedClass, &expectedPrototype);
     OO_CHECK(jsClass != nullptr && jsClass == expectedClass &&

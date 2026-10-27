@@ -130,8 +130,7 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 
 // context is used for error messages.
-// A null oo::PList stands for nil, in and out (bead oo-3rb.205, proposed
-// ADR-0043).
+// A null oo::PList stands for nil, in and out.
 oo::PList OOSanitizeLegacyScript(const oo::PList& script,
                                  const std::optional<std::string>& context,
                                  BOOL allowAIMethods);

@@ -1,8 +1,7 @@
 /*	test_SkyEntity.mm
         Unit tests for SkyEntity (src/Core/Entities/SkyEntity.h), the star field
-   and nebulae behind a system: bead oo-sxgm, a leaf of the Entities seam under
-   OOEntityWithDrawable, with a facade (proposed ADR-0056, amendments oo-bj8
-   item 12 and oo-0mxi).
+   and nebulae behind a system, a leaf of the Entities seam under
+   OOEntityWithDrawable.
 
         The entity reads Universe and PLAYER, so the test links the whole game
    but main (['*']) and uses a Universe that was never initialised (minimum
@@ -10,10 +9,7 @@
    answers the viewpoint the test sets as PLAYER. Its drawable, OOSkyDrawable,
    loads star textures from the game's resources, which the test has not; the
         test replaces the drawable's star set-up with a stand-in that records
-   the two colours the sky passed (method_setImplementation, as
-   test_OOParticleSystem does for the texture loader, until OOSkyDrawable became
-   C++ with no facade in bead oo-4jjl: since then its test seam, ported with
-        Jon's decision oo-jsx0h, expectations unchanged). The
+   the two colours the sky passed (through OOSkyDrawable's test seam). The
         expectations were written against the Objective-C API and run on the
    unconverted class first: the sky colour is the system's sun colour, else the
    blend of the two colours; the sky's colours come from "sky_rgb_colors" (six
@@ -21,10 +17,9 @@
    drawable, the status and the flags; -update: puts it at the viewpoint with
    the clear depth as its distance; and -changeProperty:withDictionary: takes a
    new sun colour (and relights) and refuses anything else. The distances are
-   read through the one helper below. Since bead oo-9ht.109 deleted the class's
-   Objective-C facade (ADR-0056 amendment oo-9ht.106) the sky is made as the
-   universe makes it, in C++ with its object (the OOEntityWithDrawable facade,
-   the root's since bead oo-9ht.40) made by oo::NewEntityFacade: the class's own
+   read through the one helper below. The sky is made as the universe makes it,
+   in C++ with its object (the OOEntityWithDrawable facade) made by
+   oo::NewEntityFacade: the class's own
    selectors are member calls, the root's are still sent to the object, and the
    last test pins that the object is a C++ entity's. Run: bash
    tools/check-core-tests.sh
@@ -35,7 +30,7 @@
 #include "MyOpenGLView.h"
 #include "OOColor.h"
 #include "OOSkyDrawable.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "SkyEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -49,9 +44,7 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector _viewpoint = {};
 
@@ -82,7 +75,7 @@ void SetUpStars(OOSkyDrawable*, OOColor* color1, OOColor* color2) {
 
 }  // namespace
 
-// The converted drawable's test seam for its star set-up (decision oo-jsx0h).
+// The drawable's test seam for its star set-up.
 struct OOSkyDrawableTestAccess {
   static void SetStarSetUpStandIn(void (*standIn)(OOSkyDrawable*, OOColor*,
                                                   OOColor*)) {
@@ -90,9 +83,8 @@ struct OOSkyDrawableTestAccess {
   }
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// A C++ player under the ship's facade, as PlayerEntity::sharedPlayer() makes
+// the game's, retained (+1).
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -136,11 +128,8 @@ bool ColorIs(OOColor* color, float r, float g, float b, float a) {
   return Near(cr, r) && Near(cg, g) && Near(cb, b) && Near(ca, a);
 }
 
-// [[[SkyEntity alloc] initWithColors:...] autorelease] until bead oo-9ht.109:
-// the object first, then the initialiser's body, as the universe makes the sky.
-Entity* Sky(const oo::PList& info)  // the root's facade since bead oo-9ht.40
-                                    // deleted the drawable's
-{
+// The object first, then the initialiser's body, as the universe makes the sky.
+Entity* Sky(const oo::PList& info) {
   const oo::Ref<SkyEntity> sky = oo::makeRef<SkyEntity>();
   Entity* object = oo::MadeEntity(sky);
   sky->initWithColors(OOColor::redColor().get(), OOColor::blueColor().get(),
@@ -157,11 +146,9 @@ OO_TEST(made) {
     SetUp();
     Entity* sky = Sky(Dict({{"sky_n_stars", oo::PList(7)}}));
     OO_CHECK(sky != nil && SkyPart(sky) != nullptr &&
-             dynamic_cast<OOEntityWithDrawable*>(sky) !=
-                 nullptr);  // -isKindOfClass:[OOEntityWithDrawable class] until
-                            // bead oo-9ht.40
+             dynamic_cast<OOEntityWithDrawable*>(sky) != nullptr);
     OO_CHECK(dynamic_cast<OOSkyDrawable*>(SkyPart(sky)->getDrawable()) !=
-             nullptr);  // -drawable until bead oo-9ht.40
+             nullptr);
     OO_CHECK(sky->status() == STATUS_EFFECT);
     OO_CHECK(sky->isSky() && sky->isVisible() && !sky->canCollide());
     OO_CHECK(sky->cameraRangeFront() == (GLfloat)MAX_CLEAR_DEPTH &&
@@ -227,8 +214,7 @@ OO_TEST(update) {
     OO_CHECK(CamZeroDistance(sky) == ZeroDistance(sky));
 
     // No player: the position stays. Only a release-style build can ask with
-    // none: the debug build asserts that PLAYER is set (OOGetPlayer(); bead
-    // oo-vdw34).
+    // none: the debug build asserts that PLAYER is set (OOGetPlayer()).
 #if !OO_DEBUG
     gOOPlayer = nullptr;
     sPlayer->_viewpoint = make_HPvector(8, 8, 8);
@@ -262,7 +248,7 @@ OO_TEST(facade) {
   {
     SetUp();
     Entity* sky = Sky(Dict({{"sky_n_stars", oo::PList(0)}}));
-    // A C++ entity (amendment oo-0mxi), not an Objective-C entity's adapter.
+    // A C++ entity, not an Objective-C entity's adapter.
     OO_CHECK(dynamic_cast<SkyEntity*>(sky) != nullptr);
     OO_CHECK(sky == sky);
   }

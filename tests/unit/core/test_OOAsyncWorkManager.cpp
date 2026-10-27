@@ -1,18 +1,14 @@
 /*	test_OOAsyncWorkManager.mm
-        Unit tests for OOAsyncWorkManager (src/Core/OOAsyncWorkManager.h): bead
-   oo-x2wy, a Phase 3 conversion in the OOColor house style (proposed ADR-0056;
-   amendment oo-x2wy for the protocol and the private subclasses).
+        Unit tests for OOAsyncWorkManager (src/Core/OOAsyncWorkManager.h).
 
-        Pins what the manager did before the conversion: one shared manager; nil
+        Pins what the manager does: one shared manager; nil
    is refused; a task is performed on a work thread and then completed on the
    thread that waits for it or collects pending tasks; a task without
         -completeAsyncTask is performed and never collected; waiting for a task
    that was never added returns at once; an exception thrown by
    -performAsyncTask is swallowed and the task still completes; every priority
-   is accepted and performed. The tasks were Objective-C objects adopting
-   OOAsyncWorkTask until bead oo-9ht.14 made the protocol a C++ interface; they
-   are C++ tasks with the same behaviour, and the facade's tests went with the
-   facade (standing approval oo-9n5p9). Run: bash tools/check-core-tests.sh
+   is accepted and performed. The tasks are C++ tasks implementing
+   OOAsyncWorkTask. Run: bash tools/check-core-tests.sh
 */
 
 #include <atomic>
@@ -21,7 +17,7 @@
 
 #include "OOAsyncWorkManager.h"
 #include "oo_test.hpp"
-#include "oofnd/objc/OOException.h"  // oo::Exception (bead oo-rskgl.1)
+#include "oofnd/objc/OOException.h"  // oo::Exception
 
 class TestTask : public OOAsyncWorkTask {
  public:
@@ -31,10 +27,8 @@ class TestTask : public OOAsyncWorkTask {
     performedOnCallingThread = (std::this_thread::get_id() == callingThread);
     performed = true;
     if (shouldThrow)
-      throw oo::Exception(
-          OOGenericException,
-          "");  // was @throw of an OOObject: the managers swallow the game's
-                // exception (bead oo-rskgl.1)
+      throw oo::Exception(OOGenericException,
+                          "");  // the managers swallow the game's exception
   }
 
   bool hasCompleteAsyncTask() const override { return true; }

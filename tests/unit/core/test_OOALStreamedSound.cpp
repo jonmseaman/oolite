@@ -1,7 +1,6 @@
 /*	test_OOALStreamedSound.mm
-        Unit tests for OOALStreamedSound (src/Core/OOALStreamedSound.h): bead
-   oo-03g7, a sound of the Audio module (proposed ADR-0056, amendment oo-2en), a
-   subclass of the converted root OOSound.
+        Unit tests for OOALStreamedSound (src/Core/OOALStreamedSound.h): a
+   sound of the Audio module, a subclass of the root OOSound.
 
         A streamed sound keeps its decoder and decodes OOAL_STREAM_CHUNK_SIZE
    bytes into each -soundBuffer, a new OpenAL buffer, until a chunk comes back
@@ -11,15 +10,10 @@
    game's Resources: boop.ogg fits in one chunk, OoliteTheme.ogg (the music)
    needs many and is the one the root's class cluster streams. The buffered
    sound and the mixer, which OOALSound.mm also names, are this file's stubs
-   (amendment oo-z1s4 item 4). These expectations were written against the
-   Objective-C API and ran on the unconverted class first; they ran through the
-   facade, which was its forwarding test, until bead oo-9ht.84 deleted the
-   facade: they now ask the C++ class (alloc/init as initWithDecoder(), the
-   class checks as dynamic_cast) with every expectation kept (standing approval
-   oo-9n5p9); since beads oo-9ht.68 and oo-9ht.82 deleted the root's and the
-   decoder's facades the description is the root's description(), the buffer
-        helper calls the C++ sound and the decoder and the cluster are C++.
-   After them comes the C++ API (OOALStreamedSound, a subclass of OOSound). Run:
+   as well. The tests ask the C++ class (initWithDecoder(), the class checks as
+   dynamic_cast); the description is the root's description(), the buffer helper
+   calls the C++ sound and the decoder and the cluster are C++. After them comes
+   the C++ API (OOALStreamedSound, a subclass of OOSound). Run:
    bash tools/check-core-tests.sh test_OOALStreamedSound
 */
 
@@ -45,15 +39,13 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 }
 
 // The mixer, as the root's update() and the OpenAL controller's shutdown()
-// reach it: there is none (a C++ stand-in since bead oo-9ht.87 deleted the
-// Objective-C facade this file stubbed).
+// reach it: there is none.
 OOSoundMixer* OOSoundMixer::sharedMixer() { return nullptr; }
 void OOSoundMixer::update() {}
 void OOSoundMixer::shutdown() {}
 
 // OOALSound.mm makes a buffered sound for up to 1 MB of decoded data; never
-// here. A C++ stand-in since bead oo-9ht.83 deleted the Objective-C facade this
-// file stubbed.
+// here.
 oo::Ref<OOALBufferedSound> OOALBufferedSound::initWithDecoder(
     OOALSoundDecoder* inDecoder) {
   (void)inDecoder;

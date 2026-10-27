@@ -1,17 +1,13 @@
 /*	test_OOJSConsole.mm
         Unit tests for the debug console's JS binding
-   (src/Core/Debug/OOJSConsole.h/.mm): bead oo-jy98, a binding file converted
-   the way amendment oo-ppc converts the OOJS* files, in the Debug module of
-   amendment oo-kq7 (proposed ADR-0056).
+   (src/Core/Debug/OOJSConsole.h/.mm).
 
         It runs the Console and ConsoleSettings classes in a real context on the
    game's own facade backend (ooscript/JSEngine_quickjs.cpp) and links the
    game's own objects for the binding, the engine's exception translator
    (OOJSEngineNativeWrappers.mm); the console's JS objects hold the C++ debug
-   monitor (bead oo-9ht.74 deleted its Objective-C facade, which they held
-   through its weak reference). What the rest of the game provides is defined
-   below as the smallest stand-in that does the same thing (amendments oo-z1s4
-   item 4, oo-ppc item 6, oo-ykoy item 4): the C++ debug monitor's members
+   monitor. What the rest of the game provides is defined below as the
+   smallest stand-in that does the same thing: the C++ debug monitor's members
    (recording what they are asked), the JavaScript engine's flags, the
    universe's detail level and FPS display, the OpenGL extension manager's
    answers, an entity that can be inspected, the script stack, the error
@@ -130,8 +126,8 @@ void OODebugMonitor::jsEngine(OOJavaScriptEngine*, ooscript::Context,
 void OODebugMonitor::jsEngine(OOJavaScriptEngine*, ooscript::Context,
                               const std::string&,
                               const std::optional<std::string>&) {}
-// The monitor's JS glue and description (bead oo-9ht.74): its JS value is
-// defined below, with the console object it answers.
+// The monitor's JS glue and description: its JS value is defined below, with
+// the console object it answers.
 void OODebugMonitor::clearJSSelf(ooscript::Object) {}
 std::string OODebugMonitor::className() const { return "OODebugMonitor"; }
 std::string OODebugMonitor::description() const { return "<OODebugMonitor>"; }
@@ -251,17 +247,15 @@ ooscript::Object sConsoleObject = nullptr;
 }  // namespace
 
 // The monitor's JS value is the console object (as the monitor's
-// jsValueInContext() makes it; the stand-in was the engine's
-// OOJSValueFromNativeObject() of the monitor's facade until bead oo-9ht.74);
-// undefined before it is made.
+// jsValueInContext() makes it); undefined before it is made.
 ooscript::Value OODebugMonitor::jsValueInContext(ooscript::Context) {
   if (sConsoleObject != nullptr) return ooscript::objectValue(sConsoleObject);
   return ooscript::undefinedValue();
 }
 
 // The node of a JS object, which the console reads to name what it was given
-// (bead oo-dpyk8: an entity's node names its object's class): as above, none in
-// the test wraps a native object.
+// (an entity's node names its object's class): as above, none in the test
+// wraps a native object.
 oo::PList cxx_OOJSPListFromJSObject(ooscript::Context, ooscript::Object) {
   return oo::PList();
 }
@@ -301,9 +295,9 @@ OOGraphicsDetail cxx_OOGraphicsDetailFromString(const std::string& string) {
   return (string == "DETAIL_2") ? DETAIL_LEVEL_SHADERS : DETAIL_LEVEL_MINIMUM;
 }
 
-// EntityHelpers.mm's (bead oo-dpyk8), which the test does not link: an entity's
-// node (its hold and its description) is reached only for an entity, which the
-// test has none of. A null hold releases nothing.
+// EntityHelpers.mm's, which the test does not link: an entity's node (its hold
+// and its description) is reached only for an entity, which the test has none
+// of. A null hold releases nothing.
 class Entity;
 namespace oo {
 namespace detail {
@@ -321,7 +315,7 @@ Entity* oo::WithObject(Entity* entity) {
   return nullptr;
 }
 
-// MARK: Debug-flavour link stand-ins (bead oo-iimku)
+// MARK: Debug-flavour link stand-ins
 // ------------------------------------------------- OOJSConsole.mm's callObjC()
 // (#if OO_DEBUG) and its diagnostic dumps (#if DEBUG) compile only in the debug
 // flavour, which builds this test for Tier C's ASan stage. No case reaches
@@ -364,9 +358,8 @@ std::optional<std::string> ResourceManager::diagnosticFileLocation() {
 }
 #endif
 
-// The engine (OOJavaScriptEngine.h; a C++ class since bead oo-wdqw1 deleted its
-// facade), declared with the header's names and signatures but not its class;
-// the stand-in's answers are kept.
+// The engine (OOJavaScriptEngine.h), declared with the header's names and
+// signatures but not its class; the stand-in's answers are kept.
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
@@ -427,9 +420,8 @@ std::optional<std::string> OOOpenGLExtensionManager::rendererString() {
 GLint OOOpenGLExtensionManager::textureUnitCount() { return 4; }
 GLint OOOpenGLExtensionManager::textureImageUnitCount() { return 16; }
 
-// The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's FakeUniverse stood
-// in for), with the header's names and signatures.
+// The universe as the code under test sees it: a stand-in for the C++ class,
+// with the header's names and signatures.
 class Universe {
  public:
   OOGraphicsDetail _detailLevel;
@@ -451,9 +443,8 @@ class Universe;
 Universe* gSharedUniverse = nil;
 
 // An entity, as the console's inspectEntity() sees it: one answers -inspect
-// (the Mac debug OXP's inspector), one does not. C++ since bead oo-4aq6a.11
-// (rooted on the Objective-C root class OOObject, which Phase 4 deletes, until
-// then): answersInspect() is what -respondsToSelector: of -inspect answered.
+// (the Mac debug OXP's inspector), one does not.
+// answersInspect() is what -respondsToSelector: of -inspect answered.
 class TestEntityObject : public oo::RefCounted {
  public:
   virtual bool answersInspect() { return false; }
@@ -473,9 +464,9 @@ TestEntityObject* sInspectableEntity = nullptr;
 
 }  // namespace
 
-// Each entity's C++ part (bead oo-9ht.39.3: an entity's JS object holds it,
-// JSValueToEntity() answers it and TestObjectOf its object, which the console
-// asks to -inspect). Kept for the life of the test.
+// Each entity's C++ part (an entity's JS object holds it, JSValueToEntity()
+// answers it and TestObjectOf its object, which the console asks to
+// -inspect). Kept for the life of the test.
 class Entity : public oo::RefCounted {};
 
 namespace {
@@ -500,16 +491,15 @@ BOOL JSValueToEntity(ooscript::Context, ooscript::Value value,
   return YES;
 }
 
-// oo::ToObjC (Entity+ObjCBridge.mm) until bead oo-4aq6a.11: each C++ part's
-// entity, null for any other.
+// Each C++ part's entity, null for any other.
 ::TestEntityObject* TestObjectOf(Entity* entity) {
   if (entity == InspectablePart()) return sInspectableEntity;
   if (entity == PlainPart()) return sPlainEntity;
   return nullptr;
 }
 
-// EntityHelpers.mm's oo::InspectEntity() (bead oo-dpyk8), as the console asked
-// the object until then: -inspect, if the entity's object answers it.
+// EntityHelpers.mm's oo::InspectEntity(): -inspect, if the entity's object
+// answers it.
 namespace oo {
 void InspectEntity(Entity* entity);
 }
@@ -520,10 +510,9 @@ void oo::InspectEntity(Entity* entity) {
 
 #include "OOScript.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls.
+// OOJSScript (OOJSScript.h), which the code under test calls. A script is a
+// C++ object, so the stand-in is a C++ subclass of OOScript declaring the
+// members that code calls.
 class OOJSScript : public OOScript {
  public:
   static std::vector<oo::Ref<OOJSScript>> scriptStack();

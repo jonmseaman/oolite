@@ -1,40 +1,25 @@
 /*	test_OOPListScript.mm
-        Unit tests for OOPListScript (src/Core/Scripting/OOPListScript.h/.mm):
-   bead oo-q9q4, a Phase 3 conversion in the house style of the OOColor exemplar
-   (proposed ADR-0056).
+        Unit tests for OOPListScript (src/Core/Scripting/OOPListScript.h/.mm).
 
         OOPListScript is a legacy (property-list) world script:
    +scriptsInPListFile: reads a file of named script arrays, sanitizes each,
    caches the sanitized scripts in OOCacheManager, and makes one script per
    array, answering the name, the metadata's description and version, and
-   running its actions on the player. Its superclass OOScript was still
-   Objective-C, and its file reaches the cache manager, the legacy-script
-   sanitizer and the player, so the test links every game object but main's
-   (tests/unit/core/meson.build entry ['*'], ADR-0056 amendment oo-44gg) and
-        defines gDebugFlags. The user's directories point at a scratch folder
-   (amendment oo-rmd7 item 4). The sanitizer needs the game's resources, so the
-   scripts come from the cache, as the game loads them after the first run, and
-   from files with no script arrays. The expectations were written against the
-   Objective-C API and run on the unconverted class first: the cached path
-        (names in key order, metadata, a missing or ill-typed script array), the
-   file path (no file, a file that is not a dictionary, a dictionary with
-   nothing to sanitize and what it caches), the description and version, the
-   display name, -requiresTickle, and a run with a target that is not a ship
-   (commit 60996db56). They then ran through the facade, and the facade's
-   contract was checked last.
+   running its actions on the player. Its file reaches the cache manager, the
+   legacy-script sanitizer and the player, so the test links every game object
+   but main's (tests/unit/core/meson.build entry ['*']) and defines gDebugFlags.
+   The user's directories point at a scratch folder. The sanitizer needs the
+   game's resources, so the scripts come from the cache, as the game loads them
+   after the first run, and from files with no script arrays. The expectations
+   cover: the cached path (names in key order, metadata, a missing or ill-typed
+   script array), the file path (no file, a file that is not a dictionary, a
+   dictionary with nothing to sanitize and what it caches), the description and
+   version, the display name, -requiresTickle, and a run with a target that is
+   not a ship.
 
-        Bead oo-9ht.57 deleted the facade: OOPListScript is a C++ subclass of
-   cxx::OOScript, and the scripts it makes cross as the root's facade, an
-   OOScript, through which the cases above still ask (the OOScript selectors are
-   the root's) with every expectation kept; +scriptsInPListFile: is the C++
-   member, and -isKindOfClass:[OOPListScript class] a dynamic_cast of the C++
-   script. The facade's own case (facade) was retired with it (ADR-0049,
-   standing approval oo-9n5p9), and plistScriptCrossesAsTheRootFacade pinned the
-   crossing. Bead oo-9ht.133 deleted the root's facade (ADR-0056 amendment
-   oo-9ht.133, the same approval): the scripts are held as oo::Ref<OOScript>,
-   the cases ask the C++ class what they asked through the root's selectors,
-   with every expectation kept, and plistScriptIsItsOwnObject replaces the
-   root-facade crossing case. Run: bash tools/check-core-tests.sh
+        OOPListScript is a C++ subclass of OOScript. The scripts are held as
+   oo::Ref<OOScript>, the cases ask the C++ class, and plistScriptIsItsOwnObject
+   checks that a script is its own object. Run: bash tools/check-core-tests.sh
 */
 
 #include <process.h>
@@ -209,8 +194,7 @@ OO_TEST(files) {
   }
 }
 
-// A plist script is its own object, held as oo::Ref<OOScript> (bead oo-9ht.133
-// deleted the root's facade, as which Objective-C saw it since bead oo-9ht.57).
+// A plist script is its own object, held as oo::Ref<OOScript>.
 OO_TEST(plistScriptIsItsOwnObject) {
   SetUp();
   {

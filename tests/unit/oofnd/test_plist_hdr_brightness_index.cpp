@@ -1,14 +1,13 @@
 /*	test_plist_hdr_brightness_index.cpp
-        Bead oo-4hdyr: pins today's (upstream's) behaviour for an HDR max
+        Pins today's (upstream's) behaviour for an HDR max
    brightness that is not in descriptions.plist's hdr_maxBrightness_array.
-   Decision: keep upstream behaviour (ADR-0056 amendment oo-4hdyr; Jon may
-   overrule).
+   Decision: keep upstream behaviour (Jon may overrule).
 
         The two game sites are PlayerEntity.mm (the game-options screen's
    HDRMAXBRIGHTNESS row) and PlayerEntityControls.mm (the left/right arrow on
    that row). Both run only when OOLITE_WINDOWS and the game view's hdrOutput()
    is true, from a full PlayerEntity with a Universe, a GUI and key state; no
-   core test has a stand-in for that, and one would be far beyond this bead's
+   core test has a stand-in for that, and one would be far beyond this test's
    size. So this test pins the behaviour at helper level instead: each site's
    index arithmetic is copied below verbatim (minus the log and the GUI calls)
    and run on the oofnd pieces it depends on, the int narrowing of NSNotFound

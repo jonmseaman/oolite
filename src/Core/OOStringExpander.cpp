@@ -23,8 +23,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOStringExpander.h"
-
 #include <map>
 #include <optional>
 #include <set>
@@ -34,6 +32,7 @@ MA 02110-1301, USA.
 #include "OOCallByName.h"
 #include "OOFoundation.h"
 #include "OOJavaScriptEngine.h"
+#include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityScriptMethods.h"
@@ -47,10 +46,10 @@ MA 02110-1301, USA.
 
 /*	The expansion engine works on UTF-16 code units, as it did on the
    Objective-C string's characters, held in std::u16string; an empty optional
-   stands for nil (bead oo-3rb.61, proposed ADR-0034 decision 4). Text enters
+   stands for nil. Text enters
    and leaves as UTF-8 (WTF-8, lossless: oo::utf8ToUtf16 / oo::utf16ToUtf8). The
    unmigrated callees (Universe, PlayerEntity, ResourceManager) and the log and
-   JavaScript reports are converted at the call (bead oo-3il6).
+   JavaScript reports are converted at the call.
 */
 typedef std::u16string OOUnits;
 typedef std::optional<std::u16string> OOMaybeUnits;
@@ -167,10 +166,8 @@ OOMaybeUnits ExpandStringKeySpecial(OOStringExpansionContext* context,
 OOMaybeUnits ExpandStringKeyKeyboardBinding(OOStringExpansionContext* context,
                                             const OOUnits& key);
 /*	Key -> method name tables, keyed by the key's UTF-8 (string equality).
-   Were map tables with object keys and non-owned selector values (bead
-   oo-3rb.20); never iterated. The value is the name the method is called by
-   (oo::CallEntityByName): the selector was only ever read back as its name
-   (bead oo-xu228).
+   Never iterated. The value is the name the method is called by
+   (oo::CallEntityByName).
 */
 typedef std::map<std::string, std::string, std::less<>> OOSelectorTable;
 
@@ -297,8 +294,7 @@ std::optional<std::string> cxx_OOExpandDescriptionString(
   // Was an autorelease-pool block, kept as the C++ pool: what the expander
   // calls by name may defer a release (OOCallByName).
   {
-    oo::AutoreleaseScope
-        pool;  // was an Objective-C autorelease pool (oo-31u.8)
+    oo::AutoreleaseScope pool;  // was an Objective-C autorelease pool
     // TODO: profile caching the results. Would need to keep track of whether
     // we've done something nondeterministic (array selection, %R etc). (The
     // context's values are C++ now: nothing is left to release if an exception
@@ -419,9 +415,9 @@ OOUnits Expand(OOStringExpansionContext* context, const OOUnits& string,
       /*	If replacement string is "\x7F", eat the following character.
               This is used in system_description for the one empty string
               in [22]. At the end of the string there is no following
-              character, and nothing is eaten (bead oo-3rb.69, approved by
-              Jon 2026-09-29: upstream tested replaceLength < size, which let
-              idx + replaceLength pass size there and assert below).
+              character, and nothing is eaten (upstream tested
+              replaceLength < size, which let idx + replaceLength pass size
+              there and assert below).
       */
       if (*replacement == u"\x7F" && replaceLength < size) {
         if (idx + replaceLength < size) replaceLength++;
@@ -806,7 +802,7 @@ OOMaybeUnits ExpandStringKeyOverride(OOStringExpansionContext* context,
                     "string or number.",
                     oo::DescriptionOf(*value).c_str(),
                     key.c_str());  // the value (was <ClassName 0x...> of its
-                                   // Foundation object, bead oo-qps.50)
+                                   // Foundation object)
     }
 #endif
     return ValueText(*value);
@@ -833,8 +829,7 @@ OOMaybeUnits ExpandStringKeySpecial(OOStringExpansionContext* context,
         "Special string expansion selector %s for [%s] is not implemented.",
         selector->c_str(), key.c_str());
 
-    // Called by name (ADR-0055 item 5) on the player's C++ part (bead
-    // oo-9ht.39.7.2): a string result, as a PList.
+    // Called by name on the player's C++ part: a string result, as a PList.
     const oo::PList result = oo::CallEntityByName(PLAYER, *selector);
     if (!result.isNull()) {
       const std::string* string = result.getIf<std::string>();
@@ -930,7 +925,7 @@ OOMaybeUnits ExpandStringKeyFromDescriptions(OOStringExpansionContext* context,
                  "is not a string or number.",
                  oo::DescriptionOf(value),
                  key);  // the value (was <ClassName 0x...> of its Foundation
-                        // object, bead oo-qps.50)
+                        // object)
       return std::nullopt;
     }
 
@@ -952,7 +947,7 @@ OOMaybeUnits ExpandStringKeyMissionVariable(
     // A string variable expands to its text; an unset one to nothing. A
     // variable that is not a string (an array, from the legacy set-list action)
     // expands as unset: its Objective-C object was sent -length, which it did
-    // not answer (bead oo-qps.50).
+    // not answer.
     const oo::PList value =
         (PLAYER != nullptr ? PLAYER->missionVariableForKey(keyString)
                            : oo::PList());
@@ -1007,9 +1002,8 @@ OOMaybeUnits ExpandLegacyScriptSelectorKey(OOStringExpansionContext* context,
   const std::string* selector = LookUpLegacySelector(key);
 
   if (selector != nullptr) {
-    // Called by name (ADR-0055 item 5) on the player's C++ part (bead
-    // oo-9ht.39.7.2): "%@" of the result, as [[result description]] gave it
-    // (nil stays nil).
+    // Called by name on the player's C++ part: "%@" of the result, as [[result
+    // description]] gave it (nil stays nil).
     const oo::PList result = oo::CallEntityByName(PLAYER, *selector);
     return UnitsFromOptional(
         !result.isNull() ? std::optional<std::string>(oo::DescriptionOf(result))

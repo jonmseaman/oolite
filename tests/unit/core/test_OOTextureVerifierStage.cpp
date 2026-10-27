@@ -1,10 +1,9 @@
 /*	test_OOTextureVerifierStage.mm
-        Unit tests for OOTextureVerifierStage.h/.mm (bead oo-tuq8; proposed
-   ADR-0056 Amendment 1 and amendment oo-up4b items 2 and 6): the texture stage,
+        Unit tests for OOTextureVerifierStage.h/.mm: the texture stage,
    a leaf of OOFileHandlingVerifierStage, and OOTextureHandlingStage, an
    intermediate class that the ship data and model stages subclass.
 
-        What the file computed before the conversion is pinned: the texture
+        The tests pin the texture
    stage's name and neighbours, the textures other stages name (found or not,
    each once, empty names ignored), when it runs, and what it logs for each
    texture and image it loads (unreadable, failed, not a power of two, OK). The
@@ -12,18 +11,10 @@
         that reads "<width>x<height>" from the file. A texture-handling stage
    adds the texture stage to its intermediate class's dependents, also through
    [super dependents]. Then the crossing: the converted texture stage is global,
-   and a C++ subclass of OOTextureHandlingStage is behind the root's facade.
-   Bead oo-9ht.45 deleted OOTextureHandlingStage's facade: its Objective-C test
-        subclasses became C++ subclasses with the same answers (the super call a
-   qualified base call), the verifier's -textureVerifierStage became the stage
-   lookup it made, and the two cases that pinned the facade's crossing
-   (objCTextureUserBehindACxxPointer, adapterOutlivesItsOwner) were retired with
-   it (ADR-0049, standing approval oo-9n5p9). Bead oo-9ht.4 deleted the root's
-   facade (OOOXPVerifierStage): the verifier registers and answers the C++ stage
-   itself, so cxxTextureUserBehindTheFacade and textureStageFacade ask the stage
-   (its description through description()), and the checks that pinned only that
-   facade's crossing (one live facade, oo::ToObjC/oo::ToCxx, its class) were
-   retired with it (ADR-0049, standing approval oo-9n5p9). Run: bash
+   and a C++ subclass of OOTextureHandlingStage is behind the root's stage.
+   The verifier registers and answers the C++ stage itself, so
+   cxxTextureUserBehindTheFacade and textureStageFacade ask the stage (its
+   description through description()). Run: bash
    tools/check-core-tests.sh
 */
 
@@ -56,9 +47,8 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 #include "OOOXPVerifierTestDouble.h"
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 std::optional<std::string> ResourceManager::pathForFileNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   if (fileName != "builtin.png") return std::nullopt;
@@ -81,9 +71,8 @@ void OOFreePixMap(OOPixMap* ioPixMap) {
   *ioPixMap = OOPixMap{};
 }
 
-/*	The loader factory and a loader of the file's contents: C++ since bead
-   oo-9ht.114 deleted the loaders' facade (the Objective-C stand-in was an
-   @implementation of it). The root's members are defined here (no texture
+/*	The loader factory and a loader of the file's contents: C++. The root's
+   members are defined here (no texture
    loader is linked); the stand-in's subclass answers the result.
 */
 OOTextureLoader::OOTextureLoader() {}
@@ -190,9 +179,7 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 // verifier runs it first.
 void RunScanner(OOOXPVerifier* verifier) {
   OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)
-      ->run();  // was -fileScannerStage (bead oo-9ht.7); the C++ stage since
-                // oo-9ht.4
+  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -354,8 +341,7 @@ OO_TEST(textureHandlingStage) {
 }
 
 // A converted texture-handling stage: a C++ subclass of the intermediate class.
-// Global, as the ship data and model stages are (the verifier held it as its
-// OOOXPVerifierStage facade until bead oo-9ht.4).
+// Global, as the ship data and model stages are.
 class TestCxxTextureUser : public OOTextureHandlingStage {
  public:
   std::optional<std::string> name() override { return "Using textures in C++"; }
@@ -376,8 +362,7 @@ OO_TEST(cxxTextureUserBehindTheFacade) {
 }
 
 // The texture stage is global: the verifier's stage lookup by the texture
-// stage's name (what -textureVerifierStage sent) answers it once it is
-// registered (its OOOXPVerifierStage facade until bead oo-9ht.4).
+// stage's name answers it once it is registered.
 OO_TEST(textureStageFacade) {
   {
     OOOXPVerifier* verifier = MakeVerifier({{"Images/a.png", "8x8"}});

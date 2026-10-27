@@ -22,8 +22,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOWaypointEntity.h"
-
 #include "Entity.h"
 #include "HeadUpDisplay.h"
 #include "OOJSWaypoint.h"
@@ -32,6 +30,7 @@ MA 02110-1301, USA.
 #include "OOPListGameTypes.h"
 #include "OOPolygonSprite.h"
 #include "OOStringExpander.h"
+#include "OOWaypointEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oofnd/PListGet.hpp"
@@ -262,8 +261,7 @@ void OOWaypointEntity::setNextBeacon(Entity* beaconShip) {
 
 bool OOWaypointEntity::isJammingScanning() { return NO; }
 
-// The binding's category, which the facade forwarded (bead oo-9ht.50) until
-// bead oo-9ht.108.
+// The binding's category, which the facade forwarded.
 void OOWaypointEntity::getJSClass(ooscript::ClassDef** outClass,
                                   ooscript::Object* outPrototype) {
   ::OOJSWaypointGetJSClass(outClass, outPrototype);

@@ -28,17 +28,14 @@ SOFTWARE.
 
 */
 
-#ifndef INCLUDED_OOPROFILINGSTOPWATCH_h
-#define INCLUDED_OOPROFILINGSTOPWATCH_h
+#pragma once
 
 #ifndef OOSTOPWATCH_STANDALONE
 #if defined(__cplusplus) && \
-    !defined(               \
-        OO_PLAIN_CPP_UNIT)  // was __OBJC__: a game unit (an Objective-C++ unit
-                            // until bead oo-dbz), not a plain C++ one
+    !defined(OO_PLAIN_CPP_UNIT)  // a game unit, not a plain C++ one
 #include "OOFoundation.h"
 #else
-/*	A plain C++ translation unit (bead oo-9ht.72: the JS bindings, through
+/*	A plain C++ translation unit (the JS bindings, through
         OOJSEngineNativeWrappers.h) cannot parse OOFoundation.h's Objective-C
    class declarations. The one platform switch below that differs from its
    default on this build is set as OOFoundation.h sets it (WIN32 is only defined
@@ -104,7 +101,7 @@ typedef DWORD OOHighResTimeValue;  // Rolls over once every 50 days, but we can
 
 #else
 /*	...otherwise, use a microsecond count from std::chrono::steady_clock for
-   higher precision (formerly the script engine's own clock; bead oo-1gc.3).
+   higher precision (formerly the script engine's own clock).
    Only differences between two readings are ever used.
 */
 #define OO_PROFILING_STOPWATCH_MICROSECONDS 1
@@ -177,5 +174,3 @@ class OOProfilingStopwatch : public oo::RefCounted {
   OOHighResTimeValue _end = {};
   bool _running = {};
 };
-
-#endif  // INCLUDED_OOPROFILINGSTOPWATCH_h

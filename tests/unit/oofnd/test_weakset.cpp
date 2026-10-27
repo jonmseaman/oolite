@@ -1,5 +1,5 @@
 /*	test_weakset.cpp
-        Unit tests for oofnd/WeakSet.hpp (bead oo-qpa): oo::WeakSet<T>, the
+        Unit tests for oofnd/WeakSet.hpp: oo::WeakSet<T>, the
    replacement for OOWeakSet, checked against the semantics OOWeakSet.h
    documents (members leave silently when they die, identity not equality,
    adding nil is a no-op, removing a non-member is fine, copies hold the live

@@ -22,8 +22,6 @@
 
  */
 
-#include "PlayerEntityLoadSave.h"
-
 #include <algorithm>
 
 #include "GameController.h"
@@ -40,6 +38,7 @@
 #include "OOXMLExtensions.h"
 #include "PlayerEntityContracts.h"
 #include "PlayerEntityControls.h"
+#include "PlayerEntityLoadSave.h"
 #include "PlayerEntitySound.h"
 #include "ProxyPlayerEntity.h"
 #include "ResourceManager.h"
@@ -110,10 +109,9 @@ unsigned char FirstUnitLowByte(const std::string& string) {
 
 namespace {
 
-/*	Formerly -[MyOpenGLView isCommandModifierKeyDown], the file's category
-   on the view's facade (bead oo-rczn, ADR-0056 amendment oo-lmdi8): the view's
-   C++ part answers (no view: NO, as a message to nil did).
-*/
+/* Whether the command modifier key is down: the view answers (no view: NO, as
+ * a message to nil did).
+ */
 bool IsCommandModifierKeyDown(::MyOpenGLView* gameView) {
   MyOpenGLView* view = gameView;
   return view != nullptr && view->isCtrlDown();
@@ -162,8 +160,8 @@ void PlayerEntity::autosavePlayer() {
     writePlayerToPath(savePath);
   } catch (...) {
     // Suppress exceptions silently. Warning the user about failed autosaves
-    // would be pretty unhelpful. (The game's own, oo::Exception since
-    // oo-rskgl.1: what @catch (id) caught; anything else goes on up.)
+    // would be pretty unhelpful. (The game's own oo::Exception: what
+    // @catch (id) caught; anything else goes on up.)
     if (!oo::CurrentOOException()) throw;
   }
 
@@ -1321,8 +1319,8 @@ void PlayerEntity::showCommanderShip(int cdrArrayIndex) {
       cdr.get<int>("galaxy_number") + 1;  // Galaxy numbering starts at 0.
 
   // %c of a government / economy value 0..23 gives that one UTF-16 unit, U+0000
-  // included (pinned against gnustep-base's -stringWithFormat:, bead
-  // oo-3rb.176); oo::str::format keeps the NUL byte.
+  // included (pinned against gnustep-base's -stringWithFormat:);
+  // oo::str::format keeps the NUL byte.
   std::string locationGov;
   std::string locationEco;
   std::string locationTL;

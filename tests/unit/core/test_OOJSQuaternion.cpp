@@ -1,7 +1,6 @@
 /*	test_OOJSQuaternion.mm
         Unit tests for the Quaternion JS binding
-   (src/Core/Scripting/OOJSQuaternion.h/.mm): bead oo-hwae, converted the way
-   bead oo-ppc converted OOJSVector (proposed ADR-0056 amendment oo-ppc).
+   (src/Core/Scripting/OOJSQuaternion.h/.mm).
 
         Like test_OOJSVector.mm, it runs the JS class in a real context on the
    game's own façade backend (ooscript/JSEngine_quickjs.cpp) and links the
@@ -131,8 +130,7 @@ ooscript::ClassDef sFakeEntityClass = {"Entity",
 ooscript::ClassDef* JSEntityClass(void) { return &sFakeEntityClass; }
 
 // OOJSEntity.mm's (not linked): the position and orientation of the entity an
-// Entity JS object holds (bead oo-9ht.39.8.12; it was the object, whose
-// -position/-orientation the conversions sent). The test's fake entities are
+// Entity JS object holds. The test's fake entities are
 // put in the slot themselves; the orientation is the fake's (below). No case
 // converts an entity to a vector here.
 HPVector OOJSEntityPositionOfJSObject(ooscript::Context, ooscript::Object) {
@@ -168,9 +166,7 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
    class whose private slot holds something that has an -orientation. A fake
    entity made with orientation w = -1 raises from -orientation, one made with w
    = -2 throws a C++ exception, so the test sees what an exception under a
-   native becomes. C++ since bead oo-4aq6a.11 (it was rooted on the Objective-C
-   root class OOObject, which Phase 4 deletes); its selector is a member of the
-   same name.
+   native becomes. Its selector is a member of the same name.
 */
 class FakeEntity final : public oo::RefCounted {
  public:
@@ -186,12 +182,12 @@ Quaternion FakeEntity::orientation() {
   return _orientation;
 }
 
-// The fake entity's orientation, as the conversion asked its object (nil: zero)
-// until bead oo-9ht.39.8.12.
+// The fake entity's orientation, as the conversion asked its object (nil:
+// zero).
 Quaternion OOJSEntityOrientationOfJSObject(ooscript::Context context,
                                            ooscript::Object object) {
   FakeEntity* entity = (FakeEntity*)ooscript::getPrivate(
-      context, object);  // the slot's object itself (bead oo-9ht.22)
+      context, object);  // the slot's object itself
   return entity != nullptr ? entity->orientation()
                            : Quaternion{};  // (a message to nil gave zero)
 }
@@ -200,8 +196,7 @@ Universe* gSharedUniverse =
     nil;  // OOJSVector.mm's coordinate-system methods read it; not called here
 
 // Link stubs, never reached: OOJSVector.mm's coordinate-system methods call
-// them on the universe, which stays nil here (bead oo-ql9rn: they were messages
-// to nil).
+// them on the universe, which stays nil here (they were messages to nil).
 HPVector Universe::legacyPositionFrom(HPVector, const std::string&) {
   std::abort();
 }
@@ -447,7 +442,7 @@ OO_TEST(statistics) {
       "new Quaternion(1, 2, 3, 4).multiply(new Quaternion()).multiply([1, 2, "
       "3, 4]).multiply(Quaternion.prototype)");
   // The report is kept in a local: a pointer into the temporary would dangle
-  // once the statement ends (oo-zdxtn, an ASan stack-use-after-scope).
+  // once the statement ends (an ASan stack-use-after-scope).
   const oo::PList reportNode = reportJSQuaternionStatistics();
   const std::string* report = reportNode.getIf<std::string>();
   OO_CHECK(report != nullptr);

@@ -22,19 +22,18 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSSystemInfo.h"
-
 #include <cstring>
 
 #include "OOCommodities.h"
 #include "OOConstToString.h"
 #include "OOIsNumberLiteral.h"
 #include "OOJSScript.h"
+#include "OOJSSystemInfo.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
 #include "OOSystemDescriptionManager.h"
-#include "OOTypes.h"  // OOCreditsQuantity (ADR-0063 item 5 samplePrice)
+#include "OOTypes.h"  // OOCreditsQuantity (samplePrice)
 #include "PlayerEntityScriptMethods.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"
@@ -42,50 +41,30 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), the engine's own
-   InitClass entry point becomes ooscript::initClass, native methods and class
-   hooks take the façade's hook signature (Context/Object/PropertyId/Value
-   pointer/CallArgs reference), and the directly spelled object-creation,
-   numeric-conversion, property-id and function-call engine entry points become
-   their ooscript:: façade equivalents. Natives take the façade signature
-   directly (ooscript::Context and a CallArgs reference) and the OOJS_*
-        argument-marshalling macros expand to the CallArgs accessors, so the
-   rest of each function body is UNCHANGED. `this` is renamed to `thisObj`
-   because it is a reserved word once this file compiles as Objective-C++
-        (ADR-0001).
+ * Retargeted onto the ooscript facade (JSEngine.hpp): the class dispatch table
+ * is a static ooscript::ClassDef (the stub hooks are nullptr), the engine's
+ * InitClass entry point is ooscript::initClass, and native methods and class
+ * hooks take the facade's hook signature (Context/Object/PropertyId/Value
+ * pointer/CallArgs reference). Natives take that signature directly and the
+ * OOJS_* argument-marshalling macros expand to the CallArgs accessors. `this`
+ * is spelled `thisObj`.
+ *
+ * SystemInfo is registered as an object converter with &sSystemInfoClass, the
+ * same ooscript::ClassDef that ooscript::getClass() reports for its instances.
+ *
+ * OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and
+ * scope guards (OOJSEngineNativeWrappers.h). OOSystemInfo, the class a
+ * SystemInfo wraps, is declared in OOJSSystemInfo.h and is what the JS private
+ * slot holds; its initWithGalaxy:system: is a factory that answers null. The
+ * natives null-guard where a message to nil would answer. The private slot
+ * holds the C++ system info itself, which implements OOJSPrivateObject: the
+ * natives read it with OOJSGetCxxPrivate, the finalizer and toString() are the
+ * engine's OOJSCxxObjectWrapperFinalize and OOJSCxxObjectWrapperToString, and
+ * the converter answers the object itself, as a oo::PListForeign.
+ */
 
-        SystemInfo is registered as an object converter with &sSystemInfoClass,
-   the same ooscript::ClassDef that ooscript::getClass() reports for its
-   instances.
-*/
-/*
-        C++20 since bead oo-6ia4, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false.
-   OOSystemInfo, the class a SystemInfo wraps, is OOSystemInfo
-   (OOJSSystemInfo.h), which the JS private slot holds; its
-        -initWithGalaxy:system: is a factory that answers null (amendment
-   oo-novu). The natives null-guard where a message to nil answered, and
-   OOSystemDescriptionManager and OOCommodities, which are C++ since beads
-   oo-0sr1 and oo-fqyw, are reached the same way (amendment oo-ppc, item 4).
-   Messages to classes that are still Objective-C (Universe, PlayerEntity,
-   OOJSScript) stay as they are, which is why the file is still .mm until
-   Phase 4. Since bead oo-6symp.2 (proposed ADR-0056 amendment oo-6symp) the
-   private slot holds the C++ system info itself, which implements
-   OOJSPrivateObject: the natives read it with OOJSGetCxxPrivate, the finalizer
-   and toString() are the engine's OOJSCxxObjectWrapperFinalize and
-   OOJSCxxObjectWrapperToString, and the converter answers the object itself, as
-   a oo::PListForeign (bead oo-9ht.95 deleted the Objective-C facade).
-*/
-
-// The running script's manifest property (-cxx_propertyNamed: of the running
-// OOJSScript, whose facades beads oo-9ht.137 and oo-9ht.133 deleted); null for
-// no script, or once a script a timer or definition pushed weakly has gone, as
-// the message to nil answered.
+// The running script's manifest property; null for no script, or once a script
+// a timer or definition pushed weakly has gone, as the message to nil answered.
 namespace {
 oo::PList RunningScriptManifest() {
   OOJSScript* running = OOJSScript::currentlyRunningScript();
@@ -218,34 +197,32 @@ enum : std::uint8_t {
 };
 
 namespace {
-static PropertySpec sSystemInfoProperties[] =
-    {
-        // JS name					ID
-        // flags getter	setter
-        {"coordinates", kSystemInfo_coordinates,
-         PropertyFlag::Permanent | PropertyFlag::Enumerate |
-             PropertyFlag::ReadOnly | PropertyFlag::Shared,
-         nullptr, nullptr},
-        {"internalCoordinates", kSystemInfo_internalCoordinates,
-         PropertyFlag::Permanent | PropertyFlag::Enumerate |
-             PropertyFlag::ReadOnly | PropertyFlag::Shared,
-         nullptr, nullptr},
-        {"galaxyID", kSystemInfo_galaxyID,
-         PropertyFlag::Permanent | PropertyFlag::Enumerate |
-             PropertyFlag::ReadOnly | PropertyFlag::Shared,
-         nullptr, nullptr},
-        {"systemID", kSystemInfo_systemID,
-         PropertyFlag::Permanent | PropertyFlag::Enumerate |
-             PropertyFlag::ReadOnly | PropertyFlag::Shared,
-         nullptr, nullptr},
-        {0}};
+static PropertySpec sSystemInfoProperties[] = {
+    // JS name					ID
+    // flags getter	setter
+    {"coordinates", kSystemInfo_coordinates,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate |
+         PropertyFlag::ReadOnly | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {"internalCoordinates", kSystemInfo_internalCoordinates,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate |
+         PropertyFlag::ReadOnly | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {"galaxyID", kSystemInfo_galaxyID,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate |
+         PropertyFlag::ReadOnly | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {"systemID", kSystemInfo_systemID,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate |
+         PropertyFlag::ReadOnly | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {0}};
 }  // namespace
 
 // A raw jsapi mirror of sSystemInfoProperties, used only for the bad-property
-// error reporter in OOJavaScriptEngine.m (OOJSReportBadPropertySelector): that
-// helper is outside this bead's scope (shared across every binding file) and
-// still takes a ooscript::PropertySpec*, not ooscript::PropertySpec* (see
-// OOJSVector.mm for the same pattern).
+// error reporter in OOJavaScriptEngine.m (OOJSReportBadPropertySelector), which
+// is shared across every binding file and still takes a
+// ooscript::PropertySpec*.
 namespace {
 static ooscript::PropertySpec sSystemInfoPropertiesRaw[] = {
     // JS name					ID
@@ -319,8 +296,7 @@ int PropertyIntValue(const oo::PList& value) {
 }  // namespace
 
 // DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, &sSystemInfoClass,
-// sSystemInfoPrototype, OOSystemInfo) for the C++ system info the slot holds
-// (bead oo-6symp.2).
+// sSystemInfoPrototype, OOSystemInfo) for the C++ system info the slot holds.
 namespace {
 static bool JSSystemInfoGetSystemInfo(ooscript::Context context,
                                       ooscript::Object inObject,
@@ -412,7 +388,7 @@ std::vector<std::string> OOSystemInfo::allKeys() {
     // the dictionary's keys, in key order (-allKeys gave hash order)
     std::vector<std::string> keys;
     // -cxx_currentSystemData answers a copy: keep it alive while the loop reads
-    // it (bead oo-f4241).
+    // it.
     const oo::PList systemData =
         (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList());
     if (const oo::PList::Dict* systemDict =
@@ -440,11 +416,10 @@ systemSeedForSystemNumber:_system];
 NSPoint OOSystemInfo::coordinates() {
   if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false) &&
       _system == -1) {
-    return (
-        PLAYER != nullptr
-            ? PLAYER->PlayerEntity::getGalaxy_coordinates()
-            : NSPoint{});  // qualified: the final overrider (bead oo-9ht.177),
-                           // so the binding test stands in for it
+    return (PLAYER != nullptr
+                ? PLAYER->PlayerEntity::getGalaxy_coordinates()
+                : NSPoint{});  // qualified: the final overrider, so the binding
+                               // test stands in for it
   }
   return (UNIVERSE != nullptr ? UNIVERSE->coordinatesForSystem(_system)
                               : NSPoint{});
@@ -634,7 +609,7 @@ static bool SystemInfoDeleteProperty(Context cx, Object obj, PropertyId propID,
   OOJS_PROFILE_ENTER  // Any exception will be converted in
                       // SystemInfoSetProperty()
 
-                          Value v = ooscript::undefinedValue();
+      Value v = ooscript::undefinedValue();
   return SystemInfoSetProperty(cx, obj, propID, false, &v);
 
   OOJS_PROFILE_EXIT
@@ -660,11 +635,10 @@ static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID,
   bool savedInterstellarInfo =
       !(UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false) &&
       SystemOf(info) == -1;
-  bool sameGalaxy =
-      (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID()
-                         : OOGalaxyID{}) ==
-      GalaxyOf(info);  // qualified: the final overrider (bead oo-9ht.177), so
-                       // the binding test stands in for it
+  bool sameGalaxy = (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID()
+                                       : OOGalaxyID{}) ==
+                    GalaxyOf(info);  // qualified: the final overrider, so the
+                                     // binding test stands in for it
 
   if (ooscript::isInt32Id(propID)) {
     switch (ooscript::idToInt32(propID)) {
@@ -892,9 +866,9 @@ static bool SystemInfoSamplePrice(ooscript::Context context,
   bool sameGalaxy =
       (GalaxyOf(thisInfo) ==
        (PLAYER != nullptr ? PLAYER->PlayerEntity::galaxyNumber()
-                          : OOGalaxyID{}));  // qualified: the final overrider
-                                             // (bead oo-9ht.177), so the
-                                             // binding test stands in for it
+                          : OOGalaxyID{}));  // qualified: the final overrider,
+                                             // so the binding test stands in
+                                             // for it
   if (!sameGalaxy) {
     cxx_OOJSReportErrorForCaller(
         context, "SystemInfo", "samplePrice",
@@ -906,7 +880,7 @@ static bool SystemInfoSamplePrice(ooscript::Context context,
       thisInfo,
       std::string("economy")));  // one system-data read per local, in the order
                                  // Clang evaluates the arguments: a description
-                                 // that is an array draws (ADR-0063 item 5)
+                                 // that is an array draws
   std::optional<std::string> commodityScript =
       ManifestString(ValueForKey(thisInfo, std::string("commodity_script")));
   OOCreditsQuantity price = commodities->samplePriceForCommodity(
@@ -998,7 +972,7 @@ static bool SystemInfoStaticFilteredSystems(ooscript::Context context,
   std::vector<oo::Ref<OOSystemInfo>> result;
   bool OK;
   {
-    oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+    oo::AutoreleaseScope pool;
     result.reserve(256);
 
     // Not OOJS_BEGIN_FULL_NATIVE() - we use the engine while paused.
@@ -1008,9 +982,9 @@ static bool SystemInfoStaticFilteredSystems(ooscript::Context context,
     OK = true;  // (the array was always made)
     OOGalaxyID galaxy =
         (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID()
-                           : OOGalaxyID{});  // qualified: the final overrider
-                                             // (bead oo-9ht.177), so the
-                                             // binding test stands in for it
+                           : OOGalaxyID{});  // qualified: the final overrider,
+                                             // so the binding test stands in
+                                             // for it
     OOSystemID system;
     for (system = 0; system <= kOOMaximumSystemID; system++) {
       // NOTE: this deliberately bypasses the cache, since iteration is

@@ -1,8 +1,8 @@
 /*	oofnd/String.hpp
-        oo::str: string utilities over UTF-8 std::string (ADR-0013 decision 4),
-   the C++ shape of the NSString methods Oolite relies on and of its own
-   NSString categories (bead oo-dps, proposed ADR-0034). Every function
-   reproduces what GNUstep base 1.31.1 does, character for character;
+        oo::str: string utilities over UTF-8 std::string, the
+   C++ shape of the NSString methods Oolite relies on and of its own NSString
+   categories. Every function reproduces what GNUstep base 1.31.1 does,
+   character for character;
         tests/unit/oofnd/test_string.cpp pins each one against output captured
    from it.
 
@@ -60,11 +60,10 @@
         Header-only, C++20, compiles with -fno-exceptions.
 */
 
-#ifndef OOFND_STRING_HPP
-#define OOFND_STRING_HPP
+#pragma once
 
 // Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; suspend them for this header (proposed ADR-0028).
+// 0`; suspend them for this header.
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -434,8 +433,7 @@ inline bool decodeStrictUtf8(const std::uint8_t* p, std::size_t n,
 // tests/unit/oofnd/test_unicode_file.cpp): the UTF-16 path applies
 // -stringWithCharacters:'s mark handling twice, the UTF-8 path drops up to two
 // more leading U+FEFF. The category passed length + 3 instead of length - 3
-// after a UTF-8 BOM, reading past the buffer (bead oo-3rb.62, proposed
-// ADR-0038); this is the corrected length.
+// after a UTF-8 BOM, reading past the buffer; this is the corrected length.
 inline std::string decodeUnicodeFile(const std::uint8_t* bytes,
                                      std::size_t length) {
   if (length >= 2 && length % 2 == 0) {
@@ -499,8 +497,8 @@ inline void deleteUnitAt(std::string& s, std::size_t index) {
 // +[NSString stringWithFormat:] for formats without %@: vsnprintf into a
 // std::string. GNUstep's formatter gave the same bytes for 2,102 of 2,183
 // captured (conversion, value) pairs, every conversion the game formats numbers
-// with (test_string.cpp). Where they differ this follows C, deliberately
-// (proposed ADR-0034): %s passes UTF-8 through (GNUstep decoded the bytes as
+// with (test_string.cpp). Where they differ this follows C, deliberately:
+// %s passes UTF-8 through (GNUstep decoded the bytes as
 // Latin-1), %c / %lc above 0x7F, %p ("0x1234" / "(null)" in GNUstep), %hhd
 // (GNUstep printed it unsigned) and %f of magnitudes from about 1e22 (GNUstep
 // dropped trailing digits).
@@ -769,8 +767,7 @@ inline std::vector<std::string> tokens(std::string_view s) {
   return result;
 }
 
-// --- path components and pointers (the Foundation sweep, proposed ADR-0043)
-// ------------------
+// --- path components and pointers ------------------
 
 // -pathComponents, +pathWithComponents:, -lastPathComponent,
 // -stringByDeletingLastPathComponent and -stringByAppendingPathComponent: as
@@ -1009,8 +1006,8 @@ inline std::string pointerDescription(const void* pointer) {
 // -------------------------------------------------------------------------------
 
 // -compare: and -caseInsensitiveCompare: as orderings: < 0, 0, > 0 for
-// NSOrderedAscending, Same, Descending (the Foundation sweep, proposed
-// ADR-0043; for sorting and ordered containers). Both walk the UTF-16 units as
+// NSOrderedAscending, Same, Descending (for sorting and ordered
+// containers). Both walk the UTF-16 units as
 // NSString does; the caseInsensitive form first maps each unit through
 // toLower() (GNUstep folds to LOWER case: "_" sorts before "B", captured).
 // Exact for every ASCII pair (tests/unit/oofnd/test_string_compare.cpp pins
@@ -1031,7 +1028,7 @@ inline int caseInsensitiveCompare(std::string_view a, std::string_view b) {
   return c < 0 ? -1 : (c > 0 ? 1 : 0);
 }
 
-// -[NSString localizedCompare:] as an ordering (< 0, 0, > 0; bead oo-r4d6).
+// -[NSString localizedCompare:] as an ordering (< 0, 0, > 0).
 // GNUstep hands it to ICU: a collator for [NSLocale currentLocale] -- ICU's
 // default locale, en_US on the fleet machine -- at its default attributes,
 // comparing the strings as ICU does (so "a" < "A" < "b", "_x" < "1.10" < "a",
@@ -1357,8 +1354,7 @@ inline std::string formatReal(double value, char conversion,
 // ("%2$@", "%1$5d"). A conversion GNUstep does not know ("%k") and a lone '%'
 // at the end are copied as they are, as GNUstep copies them; %n writes nothing.
 // Where GNUstep reads memory that is not there (too few arguments, a string for
-// %d), oofnd prints what a nil / zero argument prints ("(null)", "0") instead
-// (ADR-0043 Amendment 3).
+// %d), oofnd prints what a nil / zero argument prints ("(null)", "0") instead.
 inline std::string formatRuntime(std::string_view fmt,
                                  std::span<const FormatArg> args) {
   std::string out;
@@ -1553,5 +1549,3 @@ inline std::string formatRuntime(std::string_view fmt) {
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_STRING_HPP

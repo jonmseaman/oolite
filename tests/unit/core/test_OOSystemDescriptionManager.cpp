@@ -1,24 +1,20 @@
 /*	test_OOSystemDescriptionManager.mm
         Unit tests for OOSystemDescriptionManager and OOSystemDescriptionEntry
-        (src/Core/OOSystemDescriptionManager.h): bead oo-0sr1, a Phase 3
-   conversion in the house style of the OOColor exemplar (proposed ADR-0056).
+        (src/Core/OOSystemDescriptionManager.h).
 
         The manager is the planetinfo store: per-system property dictionaries in
    four layers, universal and interstellar properties, a per-system cache, the
    route cache, and the scripted changes a saved game keeps. This pins what it
-   computed before the conversion: the layer order (priority, dynamic, static,
+   computes: the layer order (priority, dynamic, static,
    universal, core), the property validation (coordinates, numbers given as
         strings, names), the cache kept up to date by each setter, interstellar
    keys, scripted changes saved, removed, exported and imported (an OXP that is
    not installed is skipped), the legacy nova import and its sun-radius fix, the
    route cache, the current system, the random seeds and the invalid-system
-   answers. The game around it is replaced (ADR-0056 amendments oo-zffj and
-   oo-8kx7): UNIVERSE, PLAYER and ResourceManager are fakes that answer the one
+   answers. The game around it is replaced: UNIVERSE, PLAYER and ResourceManager
+   are fakes that answer the one
    question each is asked, and the two string parsers it calls are given here.
-   The expectations were written against the Objective-C API and run on the
-   unconverted class first (commit 465174df9); they ran through the facade until
-   bead oo-9ht.32 deleted it, and now ask the C++ class (held as oo::Ref where
-   the autoreleased facade was) with every expectation kept. The C++ API and the
+   The tests ask the C++ class (held as oo::Ref). The C++ API and the
    entry on its own follow. Run: bash tools/check-core-tests.sh
 */
 
@@ -36,9 +32,8 @@
 static OOSystemID gCurrentSystem = 7;
 static OOGalaxyID gGalaxy = 0;
 
-// The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade this stood in for), with the
-// header's names and signatures.
+// The universe as the code under test sees it: a stand-in for the C++ class,
+// with the header's names and signatures.
 class Universe {
  public:
   OOSystemID currentSystemID();
@@ -48,8 +43,7 @@ OOSystemID Universe::currentSystemID() { return gCurrentSystem; }
 
 Universe* gSharedUniverse = nil;
 
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for; the members the code under test calls, declared as PlayerEntity.h
+// PLAYER: the members the code under test calls, declared as PlayerEntity.h
 // declares them (the test imports no game header that defines the class), with
 // the same answers.
 class PlayerEntity {
@@ -64,9 +58,8 @@ PlayerEntity* gOOPlayer = nullptr;
 // ResourceManager: one installed OXP, org.test.installed.
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 oo::PList ResourceManager::manifestForIdentifier(
     const std::string& identifier) {
   if (identifier != "org.test.installed") return oo::PList();

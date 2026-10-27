@@ -1,5 +1,5 @@
 /*	test_process.cpp
-        Unit tests for oofnd/Process.hpp (bead oo-3rb.18): the NSProcessInfo
+        Unit tests for oofnd/Process.hpp: the NSProcessInfo
    replacements. On Windows this TU includes <windows.h> AFTER the header, which
    also proves the header's kernel32 declarations are identical redeclarations.
 */

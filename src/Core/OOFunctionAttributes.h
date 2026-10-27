@@ -1,5 +1,4 @@
-#ifndef INCLUDED_OOFUNCTIONATTRIBUTES_h
-#define INCLUDED_OOFUNCTIONATTRIBUTES_h
+#pragma once
 
 #ifndef GCC_ATTR
 #ifdef __GNUC__
@@ -96,5 +95,3 @@
   do {                   \
   } while (0)
 #endif
-
-#endif /* INCLUDED_OOFUNCTIONATTRIBUTES_h */

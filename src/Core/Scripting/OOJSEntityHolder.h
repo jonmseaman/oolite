@@ -2,14 +2,12 @@
 
 OOJSEntityHolder.h
 
-What an entity's JS object holds in its private slot (bead oo-9ht.39.3, proposed
-ADR-0056 amendment oo-9ht.39.3, which applies amendment oo-6symp to the
-entities): a weak reference to the C++ entity. The slot held the root facade's
-weak reference proxy until then, so the JS object did not keep the entity alive
-and read as a stale reference (nil) once it had gone; the holder does the same
-with oo::WeakRef. The slot retains the holder (OOJSSetCxxPrivate) and the
-finalizer releases it (OOJSCxxObjectWrapperFinalize). EntityJSValueInContext()
-makes one per JS object.
+What an entity's JS object holds in its private slot: a weak reference to the
+C++ entity (an oo::WeakRef), so the JS object does not keep the entity alive and
+reads as a stale reference once it has gone. The slot retains the holder
+(OOJSSetCxxPrivate) and the finalizer releases it
+(OOJSCxxObjectWrapperFinalize). EntityJSValueInContext() makes one per JS
+object.
 
 Include it after Entity's definition (Entity.h; a test's stand-in): oo::WeakRef
 needs the complete class. The JS glue members are defined in OOJSEntity.mm (a
@@ -35,8 +33,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOJSENTITYHOLDER_H
-#define OOJSENTITYHOLDER_H
+#pragma once
 
 #include "OOJSPrivateObject.h"
 #include "oofnd/Ref.hpp"
@@ -60,5 +57,3 @@ class OOJSEntityHolder final : public oo::RefCounted, public OOJSPrivateObject {
  private:
   oo::WeakRef<Entity> _entity;
 };
-
-#endif  // OOJSENTITYHOLDER_H

@@ -25,20 +25,11 @@ SOFTWARE.
 
 */
 
-#include "OOJSFrameCallbacks.h"
-
 #include "OOJSEngineTimeManagement.h"
+#include "OOJSFrameCallbacks.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/objc/OOAssert.h"
-
-/*	Converted in bead oo-n041 (proposed ADR-0056 amendment oo-ppc): a
-   binding with no class of its own. BOOL/YES/NO are bool/true/false; the file
-   statics and functions whose lines that touched are in an anonymous namespace,
-   as the others already were. A deferred add still keeps its callback in an
-   OOJSValue (a C++ object since bead oo-wdqw1), and the universe's time
-   acceleration is still a message.
-*/
 
 /*
         By default, tracking IDs are scrambled to discourage people from trying
@@ -98,8 +89,7 @@ static CallbackEntry* sCallbacks;
 static NSUInteger sCount;          // Number of slots in use.
 static NSUInteger sSpace;          // Number of slots allocated.
 static NSUInteger sHighWaterMark;  // Number of slots which are GC roots.
-// A deferred add or remove (proposed ADR-0043: was a Foundation dictionary with
-// the same three entries).
+// A deferred add or remove.
 typedef struct {
   std::string operation;  // "add" or "remove"
   uint32_t trackingID;

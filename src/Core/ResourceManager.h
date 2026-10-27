@@ -30,15 +30,14 @@ MA 02110-1301, USA.
 
 #include "OOFoundation.h"
 #include "OOOpenGL.h"
-#include "OOScript.h"  // oo::Ref<OOScript> members and results (bead oo-9ht.133)
+#include "OOScript.h"  // oo::Ref<OOScript> members and results
 #include "oofnd/Data.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OOObject.h"
-class OOSystemDescriptionManager;  // OOSystemDescriptionManager.h (C++ since
-                                   // bead oo-0sr1; global since oo-9ht.32)
-class OOSound;  // C++ since bead oo-9ht.68 deleted its facade
+class OOSystemDescriptionManager;  // OOSystemDescriptionManager.h
+class OOSound;
 class OOMusic;
 
 typedef enum {
@@ -63,9 +62,7 @@ inline constexpr std::string_view SCENARIO_OXP_DEFINITION_BYTAG = "tag:";
 inline constexpr std::string_view SCENARIO_OXP_DEFINITION_NOPLIST = "exc:";
 
 /*	Class methods over file-scope state: the class is never made, and every
-   member is static (ADR-0056 item 3; amendment oo-jfno item 1). All four slices
-   of docs/phases/3-slices/ResourceManager.md are members. In the global
-   namespace since bead oo-9ht.150 deleted the Objective-C facade.
+   member is static.
 */
 class ResourceManager {
  public:
@@ -108,7 +105,7 @@ class ResourceManager {
   static void clearCaches();
 
   static oo::Ref<OOSystemDescriptionManager>
-  systemDescriptionManager();  // a new manager (C++ since bead oo-0sr1)
+  systemDescriptionManager();  // a new manager
   static oo::PList shaderBindingTypesDictionary();
   // nullopt when not found (was nil); folderName nullopt where nil was passed.
   static std::optional<std::string> pathForFileNamed(
@@ -209,8 +206,8 @@ class ResourceManager {
       const std::string& fileName, const std::optional<std::string>& folderName,
       std::map<std::string, oo::Ref<OOSound>, std::less<>>* ioCache,
       std::optional<std::string> key,
-      bool useCache);  // the class was always OOSound (C++ since bead
-                       // oo-9ht.68); borrowed: the cache keeps it
+      bool useCache);  // the class was always OOSound; borrowed:
+                       // the cache keeps it
   static bool directoryExists(const std::string& inPath, bool inCreate);
   static bool checkCacheUpToDateForPaths(
       const std::vector<std::string>& searchPaths);
@@ -239,7 +236,6 @@ class ResourceManager {
   static bool manifestAllowedByScenarioWithTag(
       const oo::PList& manifest,
       const std::string& tag);  // its own name: the overloads would collide
-                                // (amendment oo-kyje item 2)
   static void addErrorWithKey(const std::string& descriptionKey,
                               const std::string& param1,
                               const std::string& param2);

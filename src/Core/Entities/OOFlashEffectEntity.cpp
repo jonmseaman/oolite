@@ -23,9 +23,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOFlashEffectEntity.h"
-
 #include "OOColor.h"
+#include "OOFlashEffectEntity.h"
 #include "OOGraphicsResetManager.h"
 #include "OOTexture.h"
 #include "PlayerEntity.h"
@@ -43,9 +42,8 @@ static OOTexture* sFlashTexture = nil;
 
 namespace {
 
-// The texture's graphics reset client, which the facade class was until bead
-// oo-9ht.23 (ADR-0056 amendment oo-jpd8 item 3, as OOLaserShotEntity's):
-// registered once, with the texture, and never destroyed.
+// The texture's graphics reset client (as OOLaserShotEntity's): registered
+// once, with the texture, and never destroyed.
 class FlashTextureResetClient : public OOGraphicsResetClient {
  public:
   void resetGraphicsState() override {
@@ -78,8 +76,7 @@ void OOFlashEffectEntity::initLaserFlashWithPosition(HPVector pos, Vector vel,
   }
 }
 
-// The C++ entity (bead oo-al52f; it was its Objective-C object, amendment
-// oo-bj8 item 4): the members -position, -velocity and -collisionRadius
+// The C++ entity: the members -position, -velocity and -collisionRadius
 // forwarded to; none answers zero, as nil did.
 oo::Ref<OOFlashEffectEntity> OOFlashEffectEntity::explosionFlashFromEntity(
     Entity* entity) {

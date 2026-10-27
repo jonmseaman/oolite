@@ -1,22 +1,15 @@
 /*	test_OOModelVerifierStage.mm
-        Unit tests for OOModelVerifierStage.h/.mm (bead oo-5zby; proposed
-   ADR-0056 Amendment 1 and amendments oo-up4b and oo-94qk): the model stage, a
-   subclass of OOTextureHandlingStage.
+        Unit tests for OOModelVerifierStage.h/.mm: the model stage, a subclass
+   of OOTextureHandlingStage.
 
-        What the stage computed before the conversion is pinned: its name, that
-   asking its name registers it (once), its neighbours (the intermediate
-   class's), the models other stages name (found in the OXP or built in, or not;
-   an empty name is not found; each model and context once), when it runs, and
-   what it logs (a placeholder check of each model, in the order named). The
-        verifier finds it again by its name (through -modelVerifierStage until
-   bead oo-9ht.56 deleted that category: standing approval oo-9n5p9). Then the
-   crossing: the converted stage is global, so Objective-C sees it as an
-   OOOXPVerifierStage. Bead oo-9ht.4 deleted the stage facade: the verifier
-   registers and answers the C++ stage itself, so nameRegistersTheStage and the
-   facade case ask the stage (its description through description()), and the
-   checks that pinned only the facade crossing (its class, oo::ToObjC/
-        oo::ToCxx, oo::AsObjCStage) were retired with it (ADR-0049, standing
-   approval oo-9n5p9). Run: bash tools/check-core-tests.sh
+        The tests pin: its name, that asking its name registers it (once), its
+   neighbours (the intermediate class's), the models other stages name (found in
+   the OXP or built in, or not; an empty name is not found; each model and
+   context once), when it runs, and what it logs (a placeholder check of each
+   model, in the order named). The verifier finds it again by its name. The
+   stage is global. The verifier registers and answers the C++ stage itself, so
+   nameRegistersTheStage and the facade case ask the stage (its description
+   through description()). Run: bash tools/check-core-tests.sh
 */
 
 #include <filesystem>
@@ -46,9 +39,8 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 #include "OOOXPVerifierTestDouble.h"
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 std::optional<std::string> ResourceManager::pathForFileNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   if (fileName != "builtin.dat") return std::nullopt;
@@ -59,8 +51,7 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
 // model here names a texture.
 void OOFreePixMap(OOPixMap* ioPixMap) { *ioPixMap = OOPixMap{}; }
 
-// The loader factory, as the Objective-C stand-in answered it (nil); C++ since
-// bead oo-9ht.114 deleted the loaders' facade.
+// The loader factory, answering nil.
 oo::Ref<OOTextureLoader> OOTextureLoader::loaderWithPath(
     const std::optional<std::string>& /*path*/, uint32_t /*options*/) {
   return nullptr;
@@ -101,9 +92,7 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 // verifier runs it first.
 void RunScanner(OOOXPVerifier* verifier) {
   OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)
-      ->run();  // was -fileScannerStage (bead oo-9ht.7); the C++ stage since
-                // oo-9ht.4
+  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -209,9 +198,8 @@ OO_TEST(stagesNameModels) {
   std::filesystem::remove_all(kBase);
 }
 
-// The converted stage is global: the verifier registers the stage itself (its
-// OOOXPVerifierStage facade until bead oo-9ht.4), and finds it by name for the
-// ship data stage.
+// The stage is global: the verifier registers the stage itself, and finds it by
+// name for the ship data stage.
 OO_TEST(facade) {
   {
     OOOXPVerifier* verifier = MakeVerifier({{"Models/ship.dat", "model"}});

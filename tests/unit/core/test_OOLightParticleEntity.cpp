@@ -1,23 +1,19 @@
 /*	test_OOLightParticleEntity.mm
         Unit tests for OOLightParticleEntity
    (src/Core/Entities/OOLightParticleEntity.h), the textured glow that the
-   sparks, flashes, flashers and plasma effects draw: bead oo-0otc, after the
-        Entities pattern seam (amendment oo-bj8, test_OOEntityWithDrawable.mm).
+   sparks, flashes, flashers and plasma effects draw.
 
         Like Entity's, its object needs the game graph, so the test links the
-   whole game but main
-        (['*']) and uses a Universe that was never initialised (detail level
-   minimum, so reduced detail) of a test subclass that answers the time and
-   records what is removed, and a plain entity as PLAYER. The expectations were
-   written against the Objective-C API and run on the unconverted class first:
-   -initWithDiameter: (draw distance, scan class, status, white), the colour and
-        diameter setters, -drawSubEntityImmediate:translucent: (the owner's
-   camera distance, the cut-off, and the draw it sends to self), and that the
-   texture a subclass answers is the one the debug texture list reports. The
-   colour components, a @protected ivar, are read through the one helper below.
-   Since bead oo-9ht.76 deleted the class's Objective-C facade (ADR-0056
-   amendment oo-9ht.106) a particle is made in C++ and handed to Objective-C
-   with oo::NewEntityFacade, whose object is the root Entity's facade: the test
+   whole game but main (['*']) and uses a Universe that was never initialised
+   (detail level minimum, so reduced detail) of a test subclass that answers the
+   time and records what is removed, and a plain entity as PLAYER. The
+   expectations cover: -initWithDiameter: (draw distance, scan class, status,
+   white), the colour and diameter setters, -drawSubEntityImmediate:translucent:
+   (the owner's camera distance, the cut-off, and the draw it sends to self),
+   and that the texture a subclass answers is the one the debug texture list
+   reports. The colour components, a @protected ivar, are read through the one
+   helper below. A particle is made in C++ and handed to Objective-C with
+   oo::NewEntityFacade, whose object is the root Entity's facade: the test
    subclass is a C++ subclass with the same answers, the class's own selectors
    are member calls and the root's are still sent to the object. Run: bash
    tools/check-core-tests.sh
@@ -28,7 +24,7 @@
 #include "OOColor.h"
 #include "OODescription.h"
 #include "OOLightParticleEntity.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"  // PLAYER is C++
 #include "Universe.h"
 #include "oo_test.hpp"
 
@@ -41,16 +37,14 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// NewTestPlayer<TestPlayer>() (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// NewTestPlayer<TestPlayer>(): a C++ player under the ship's facade, as
+// PlayerEntity::sharedPlayer() makes the game's, retained (+1) as +alloc's
+// object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -66,8 +60,7 @@ class TestUniverse : public Universe {
 };
 
 // A subclass, as OOFlashEffectEntity is: counts its draws and answers its own
-// texture. (An Objective-C subclass until bead oo-9ht.76; global, so its
-// description names it as before.)
+// texture. (Global, so its description names it.)
 class TestParticle : public OOLightParticleEntity {
  public:
   int _draws = 0;
@@ -80,8 +73,7 @@ class TestParticle : public OOLightParticleEntity {
   OOTexture* texture() override { return _texture; }
 };
 
-// An owner whose camera distance the test sets: a plain entity (an Objective-C
-// subclass that overrode nothing until bead oo-j12i2).
+// An owner whose camera distance the test sets: a plain entity.
 
 namespace {
 
@@ -116,7 +108,7 @@ bool ComponentsAre(OOLightParticleEntity* e, GLfloat r, GLfloat g, GLfloat b,
   return c[0] == r && c[1] == g && c[2] == b && c[3] == a;
 }
 
-/*	[[[T alloc] initWithDiameter:d] autorelease] until bead oo-9ht.76: a new
+/*	A new
    C++ particle, its object (the root's facade, autoreleased) made first and the
    initialiser's body run after, the facade's order. The object holds the
    particle; the test sends it the root's selectors.
@@ -227,8 +219,7 @@ OO_TEST(texturesListTheSubclassTexture) {
     Entity* object = nil;
     TestParticle* particle = NewParticle<TestParticle>(1.0f, &object);
     const oo::Ref<OOTexture> kept =
-        oo::makeRef<OOTexture>();  // a C++ texture since bead oo-9ht.99; only
-                                   // retained and compared
+        oo::makeRef<OOTexture>();  // a C++ texture; only retained and compared
     OOTexture* texture = kept.get();
     particle->_texture = texture;
     const std::vector<oo::Ref<OOTexture>> textures = object->allTextures();
@@ -248,8 +239,7 @@ OO_TEST(description) {
   }
 }
 
-// --- A converted subclass (bead oo-9ht.76: the facade's crossing checks went
-// with the facade) -----
+// --- A C++ subclass -----
 
 // A converted subclass, as OOSparkEntity is.
 class TestCxxParticle : public OOLightParticleEntity {};

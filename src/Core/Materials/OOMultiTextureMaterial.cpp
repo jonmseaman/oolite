@@ -25,11 +25,10 @@ SOFTWARE.
 
 */
 
-#include "OOMultiTextureMaterial.h"
-
 #include "OOCombinedEmissionMapGenerator.h"
 #include "OOMacroOpenGL.h"
 #include "OOMaterialSpecifier.h"
+#include "OOMultiTextureMaterial.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOTexture.h"
 #include "oofnd/objc/OOAssert.h"
@@ -51,7 +50,7 @@ bool OOMultiTextureMaterial::initWithName(
   }
 
   // The configuration mixes plist data with live objects (colours): an
-  // oo::PList carries both exactly (proposed ADR-0043 Amendment 2).
+  // oo::PList carries both exactly.
   const oo::PList& config = configuration;
   const oo::PList diffuseSpec = cxx_OOMaterialDiffuseMapSpecifier(config, name);
   const oo::PList emissionSpec = cxx_OOMaterialEmissionMapSpecifier(config);
@@ -124,8 +123,8 @@ bool OOMultiTextureMaterial::initWithName(
   return true;
 }
 
-// -dealloc's [self willDealloc] is the root facade's (proposed ADR-0056,
-// amendment oo-smy item 3), and the maps are released with their oo::ObjCRefs.
+// -dealloc's [self willDealloc] is the root facade's, and the maps are released
+// with their oo::ObjCRefs.
 
 std::optional<std::string> OOMultiTextureMaterial::descriptionComponents()
     const {

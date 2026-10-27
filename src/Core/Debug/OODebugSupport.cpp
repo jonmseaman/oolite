@@ -27,10 +27,9 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-#include "OODebugSupport.h"
-
 #include "GameController.h"
 #include "OODebugMonitor.h"
+#include "OODebugSupport.h"
 #include "OODebugTCPConsoleClient.h"
 #include "OOJavaScriptEngine.h"
 #include "ResourceManager.h"
@@ -42,8 +41,7 @@ void OOInitDebugSupport(void) {
   oo::PList debugSettings;
   std::optional<std::string> consoleHost;
   unsigned short consolePort = 0;
-  oo::Ref<OODebuggerInterface>
-      debugger;  // a C++ interface since bead oo-9ht.81
+  oo::Ref<OODebuggerInterface> debugger;
   bool activateDebugConsole = false;
 
   // Load debug settings.
@@ -57,7 +55,7 @@ void OOInitDebugSupport(void) {
   if (debugOXPPath.has_value()) {
     // The debug plug-in (Mac Contents/PlugIns/Debug.bundle) is never loaded on
     // the platforms built (the loader answered nil everywhere), so its
-    // controller's debugger branch is gone (ADR-0056 amendment oo-9ht.91).
+    // controller's debugger branch is gone.
 
     // oo_stringForKey: a string, or a number's string value; nil for anything
     // else.

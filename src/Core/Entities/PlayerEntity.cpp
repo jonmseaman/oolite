@@ -22,8 +22,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "PlayerEntity.h"
-
 #include <assert.h>
 
 #include <string_view>
@@ -71,6 +69,7 @@ MA 02110-1301, USA.
 #include "OOTexture.h"
 #include "OOTrumble.h"
 #include "Octree.h"
+#include "PlayerEntity.h"
 #include "PlayerEntityContracts.h"
 #include "PlayerEntityControls.h"
 #include "PlayerEntityKeyMapper.h"
@@ -109,11 +108,10 @@ enum {
 namespace {
 
 /*	What oo::PListView's string / vector / quaternion readers answered, for
-   a configuration held as an oo::PList (the Foundation sweep, proposed
-   ADR-0043): a string is nullopt when the key is absent or holds neither a
-   string nor a number; vectors and quaternions go through
-   OOCollectionExtractors' readers (unmigrated) with their defaults for a
-   missing key. (Same readers as ShipEntity.mm's.)
+   a configuration held as an oo::PList: a string is nullopt when the key is
+   absent or holds neither a string nor a number; vectors and quaternions go
+   through OOCollectionExtractors' readers (unmigrated) with their defaults for
+   a missing key. (Same readers as ShipEntity.mm's.)
 */
 std::optional<std::string> StringForKey(const oo::PList& dict,
                                         std::string_view key) {
@@ -203,8 +201,8 @@ NSUInteger IndexOfGood(const std::vector<std::string>& goods,
 // The market sorters, as orderings (< 0, 0, > 0 for OOOrderedAscending, Same,
 // Descending) over commodity keys; used with std::stable_sort, as
 // -sortedArrayUsingFunction:context: is a stable sort in GNUstep (probed on
-// gnustep-base: ties keep their order). They read the market's C++ part (slice
-// 23, bead oo-wt5jv); a null market answers as a nil one did (no name, 0).
+// gnustep-base: ties keep their order). They read the market's C++ part; a null
+// market answers as a nil one did (no name, 0).
 int marketSorterByName(const std::string& a, const std::string& b,
                        OOCommodityMarket* market) {
   // (-compare: on a nil name: goods always have names)
@@ -248,8 +246,8 @@ std::vector<oo::PList> CustomViewsFrom(const oo::PList& value) {
 }
 
 // The docked station's interface for <key>, or nil (objectForKey: on a nil
-// dictionary or key). Reads the station's C++ part (slice 21, bead oo-a602n); a
-// null station has none.
+// dictionary or key). Reads the station's C++ part; a null
+// station has none.
 OOJSInterfaceDefinition* InterfaceForKey(
     StationEntity* station, const std::optional<std::string>& key) {
   if (station == nullptr || !key.has_value()) return nullptr;
@@ -414,11 +412,9 @@ std::optional<std::string> last_outfitting_key;  // nullopt = none (was nil)
 
 PlayerEntity* gOOPlayer = nullptr;
 
-/*	The player's life (ADR-0056 amendment oo-9ht.177): +sharedPlayer, -init,
-   -deferredInit and the first part of -dealloc, which were the facade's
-   (PlayerEntity+ObjCBridge.mm, deleted by bead oo-9ht.177). The player's
-   Objective-C object is a ship's (OOEntityWithDrawable's facade since bead
-        oo-9ht.144).
+/*	The player's life: +sharedPlayer, -init, -deferredInit and the first
+   part of -dealloc, which were the facade's. The player's Objective-C object is
+   a ship's (OOEntityWithDrawable's facade).
 
         Nasty initialization mechanism:
         PlayerEntity is made on demand by sharedPlayer(). This
@@ -444,13 +440,13 @@ PlayerEntity* PlayerEntity::sharedPlayer() {
 
 ::ShipEntity* PlayerEntity::newPlayerObject() {
   // -init: the ship's part only ([super initBypassForPlayer]), under the facade
-  // oo::NewEntityFacade picks (the drawable's since bead oo-9ht.144); the
-  // player, its object retained (+1).
+  // oo::NewEntityFacade picks (the drawable's); the player, its object
+  // retained (+1).
   OOCAssert(gOOPlayer == nullptr,
             "Expected only one PlayerEntity to exist at a time.");
   oo::Ref<PlayerEntity> player = oo::makeRef<PlayerEntity>();
   {
-    oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+    oo::AutoreleaseScope pool;  // was @autoreleasepool
     return oo::ToShip(oo::RetainEntity(oo::MadeEntity(player)));
   }
 }
@@ -458,8 +454,8 @@ PlayerEntity* PlayerEntity::sharedPlayer() {
 void PlayerEntity::deferredInit() {
   OOCAssert(gOOPlayer == this,
             "Expected only one PlayerEntity to exist at a time.");
-  // -[ShipEntity cxx_initWithKey:definition:] sent again: since bead oo-9ht.144
-  // the root's -initWithCxxEntity: (what the ship's -initShipPart sent an
+  // -[ShipEntity cxx_initWithKey:definition:] sent again: the root's
+  // -initWithCxxEntity: (what the ship's -initShipPart sent an
   // initialised ship), then the ship's set-up.
   OOCAssert(oo::EntityInitAgain(this) == this &&
                 initShipSetUp(std::string(PLAYER_SHIP_DESC),
@@ -521,8 +517,7 @@ void PlayerEntity::willDealloc() {
 
   destroySound();
 
-  wormholeObject = nullptr;  // the wormhole's Objective-C object (beads
-                             // oo-9ht.112, oo-5q11i)
+  wormholeObject = nullptr;  // the wormhole's Objective-C object
   wormhole = nullptr;
 
   int i;
@@ -544,10 +539,8 @@ std::optional<std::string> PlayerEntity::jsClassName() {
   return OOJSPlayerShipJSClassName();
 }
 
-// Slice 2 of docs/phases/3-slices/PlayerEntity.md (bead oo-m4tfc): cargo pods,
-// commodity data and credits, galaxy and chart coordinates, the current and
-// previous system. (Its facade forwarded each selector until bead oo-9ht.177
-// deleted it; sends to self are member calls.)
+// Cargo pods, commodity data and credits, galaxy and chart coordinates, the
+// current and previous system. (Sends to self are member calls.)
 
 void PlayerEntity::setName(const std::optional<std::string>& /*inName*/) {
   // Block super method; player ship can't be renamed (-setName: forwards here).
@@ -994,10 +987,8 @@ void PlayerEntity::setPreviousSystemID(OOSystemID sid) {
   previous_system_id = sid;
 }
 
-// Slice 3 of docs/phases/3-slices/PlayerEntity.md (bead oo-7pa3t): target,
-// next-hop and info systems, the wormhole, the commander data dictionary
-// (save). (Its facade forwarded each selector until bead oo-9ht.177 deleted it;
-// sends to self are member calls.)
+// Target, next-hop and info systems, the wormhole, the commander data
+// dictionary (save). (Sends to self are member calls.)
 
 OOSystemID PlayerEntity::targetSystemID() { return target_system_id; }
 
@@ -1170,12 +1161,12 @@ bool PlayerEntity::infoSystemOnRoute() {
 ::WormholeEntity* PlayerEntity::getWormhole() { return wormhole; }
 
 void PlayerEntity::setWormhole(::WormholeEntity* newWormhole) {
-  // The wormhole is C++ since bead oo-9ht.112: its Objective-C object (the
-  // root's facade, which owns it) is what is retained. oo::ToObjC answers it
+  // The wormhole is C++: its Objective-C object (the root's facade, which owns
+  // it) is what is retained. oo::ToObjC answers it
   // autoreleased: the pool drains that here, so the object's retain count is
   // its holders' alone afterwards, as before.
   {
-    oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+    oo::AutoreleaseScope pool;                     // was @autoreleasepool
     wormholeObject = oo::EntityHold(newWormhole);  // null for null
     wormhole = newWormhole;
   }
@@ -1184,12 +1175,12 @@ void PlayerEntity::setWormhole(::WormholeEntity* newWormhole) {
 oo::PList PlayerEntity::commanderDataDictionary() {
   int i;
 
-  // Built as the old mutable dictionary was; each number keeps its kind
-  // (proposed ADR-0043 items 11 and 15): +numberWithInt: / oo_setInteger:
-  // (+numberWithLong:) signed, +numberWithUnsigned*: / oo_setUnsignedInteger:
-  // unsigned, +numberWithFloat: a single real, +numberWithDouble: and
-  // oo_setFloat: (+numberWithDouble:) a double, +numberWithBool: a bool. A nil
-  // value (which -setObject:forKey: refused) is left out.
+  // Built as the old mutable dictionary was; each number keeps its kind:
+  // +numberWithInt: / oo_setInteger: (+numberWithLong:) signed,
+  // +numberWithUnsigned*: / oo_setUnsignedInteger: unsigned, +numberWithFloat:
+  // a single real, +numberWithDouble: and oo_setFloat: (+numberWithDouble:) a
+  // double, +numberWithBool: a bool. A nil value (which -setObject:forKey:
+  // refused) is left out.
   oo::PList::Dict result;
 
   if (const std::optional<std::string> version =
@@ -1508,8 +1499,8 @@ oo::PList PlayerEntity::commanderDataDictionary() {
   clear_checksum();
   // TODO: should checksum checks be removed?
   //	munge_checksum(galaxy_seed.a);	munge_checksum(galaxy_seed.b);
-  //munge_checksum(galaxy_seed.c); 	munge_checksum(galaxy_seed.d);
-  //munge_checksum(galaxy_seed.e);	munge_checksum(galaxy_seed.f);
+  // munge_checksum(galaxy_seed.c); 	munge_checksum(galaxy_seed.d);
+  // munge_checksum(galaxy_seed.e);	munge_checksum(galaxy_seed.f);
   munge_checksum(galaxy_coordinates.x);
   munge_checksum(galaxy_coordinates.y);
   munge_checksum(credits);
@@ -1538,9 +1529,8 @@ oo::PList PlayerEntity::commanderDataDictionary() {
   return oo::PList(std::move(result));
 }
 
-// Slice 4 of docs/phases/3-slices/PlayerEntity.md (bead oo-qvnwb): setting the
-// commander data from a dictionary (load). (Its facade forwarded each selector
-// until bead oo-9ht.177 deleted it; sends to self are member calls.)
+// Setting the commander data from a dictionary (load). (Sends to self are
+// member calls.)
 
 bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
   // multi-function displays
@@ -2323,10 +2313,8 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
   return YES;
 }
 
-// Slice 5 of docs/phases/3-slices/PlayerEntity.md (bead oo-mmcfq): set-up and
-// start-up, ship set-up from the dictionary, the session, warning about
-// hostiles. (Its facade forwarded each selector until bead oo-9ht.177 deleted
-// it; sends to self are member calls.)
+// Set-up and start-up, ship set-up from the dictionary, the session, warning
+// about hostiles. (Sends to self are member calls.)
 
 bool PlayerEntity::setUpAndConfirmOK(bool stopOnError) {
   return setUpAndConfirmOK(stopOnError, NO);
@@ -2420,8 +2408,7 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
   /* on OSes that allow safe deletion of open files, can use sounds
    * on the OXZ screen and other start screens */
   if (UNIVERSE != nullptr) UNIVERSE->preloadSounds();
-  setUpSound();  // the C++ member (by name on the object until bead
-                 // oo-9ht.39.7.3)
+  setUpSound();  // the C++ member
   if (saveGame) {
     worldScripts = ResourceManager::loadScripts();
     if (UNIVERSE != nullptr) UNIVERSE->loadConditionScripts();
@@ -2536,7 +2523,7 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
   script_time_interval = SCRIPT_TIMER_INTERVAL;
 
   // The local hour, minute and second of now, as the calendar date gave them
-  // (oofnd/Date.hpp; bead oo-qps.24).
+  // (oofnd/Date.hpp).
   const oo::date::Clock::time_point now = oo::date::Clock::now();
   long long secondOfDay =
       (static_cast<long long>(
@@ -2717,7 +2704,7 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
   cloaking_device_active = NO;
 
   demoShip.leak();  // dropped without a release, as assigning nil to the raw
-                    // pointer did (bead oo-5q11i keeps that)
+                    // pointer did
 
   OOMusicController::sharedController()->justStop();
   stickProfileScreen = oo::makeRef<StickProfileScreen>();
@@ -2730,9 +2717,8 @@ void PlayerEntity::completeSetUpAndSetTarget(bool /*setTarget*/) {
   ::OOSoundSource::stopAll();
 
   setDockedStation((UNIVERSE != nullptr ? UNIVERSE->station() : nullptr));
-  setLastAegisLock((UNIVERSE != nullptr
-                        ? UNIVERSE->planet()
-                        : nullptr));  // the planet is C++ since bead oo-9ht.129
+  setLastAegisLock((UNIVERSE != nullptr ? UNIVERSE->planet()
+                                        : nullptr));  // the planet is C++
   // only do this if we're not in strict mode, otherwise all previously saved
   // OXP key/joystick defs will be wiped.
   if ((UNIVERSE != nullptr ? UNIVERSE->getUseAddOns()
@@ -2890,9 +2876,7 @@ bool PlayerEntity::canCollide() {
   }
 }
 
-// Slice 6 of docs/phases/3-slices/PlayerEntity.md (bead oo-vzjco): sun glare,
-// the atmosphere, update:. (Its facade forwarded each selector until bead
-// oo-9ht.177 deleted it; sends to self are member calls.)
+// Sun glare, the atmosphere, update:. (Sends to self are member calls.)
 
 OOComparisonResult PlayerEntity::compareZeroDistance(Entity* /*otherEntity*/) {
   return OOOrderedDescending;  // always the most near
@@ -3093,9 +3077,8 @@ void PlayerEntity::update(OOTimeDelta delta_t) {
   STAGE_TRACKING_END
 }
 
-// Slice 7 of docs/phases/3-slices/PlayerEntity.md (bead oo-5c466): the
-// bookkeeping tick (doBookkeeping:), movement flags. (Its facade forwarded each
-// selector until bead oo-9ht.177 deleted it; sends to self are member calls.)
+// The bookkeeping tick (doBookkeeping:), movement flags. (Sends to self are
+// member calls.)
 
 void PlayerEntity::doBookkeeping(double delta_t) {
   STAGE_TRACKING_BEGIN
@@ -3517,9 +3500,7 @@ void PlayerEntity::doBookkeeping(double delta_t) {
     UNIVERSE->getGameView()->setFov(fieldOfView, YES);
 
   // scanner sanity check - lose any targets further than maximum scanner range
-  Entity* primeTarget =
-      primaryTarget();  // any entity (a wormhole too; the object was typed
-                        // ShipEntity until bead oo-9ht.144)
+  Entity* primeTarget = primaryTarget();  // any entity (a wormhole too)
   if (primeTarget &&
       HPdistance2(primeTarget->getPosition(), getPosition()) >
           SCANNER_MAX_RANGE2 &&
@@ -3584,10 +3565,8 @@ void PlayerEntity::updateMovementFlags() {
   lastOrientation = orientation;
 }
 
-// Slice 8 of docs/phases/3-slices/PlayerEntity.md (bead oo-ijf0s): alert
-// conditions, mass lock, fuel scoops, clocks, script and trumble ticks, the
-// autopilot and docking requests. (Its facade forwarded each selector until
-// bead oo-9ht.177 deleted it; sends to self are member calls.)
+// Alert conditions, mass lock, fuel scoops, clocks, script and trumble ticks,
+// the autopilot and docking requests. (Sends to self are member calls.)
 
 void PlayerEntity::updateAlertConditionForNearbyEntities() {
   if (!isInSpace() || status() == STATUS_DOCKING) {
@@ -3600,8 +3579,7 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
   std::vector<Entity*> my_entities(
-      ent_count);  // the C++ entities, their objects retained (bead
-                   // oo-9ht.39.18)
+      ent_count);  // the C++ entities, their objects retained
   Entity* scannedEntity = nullptr;
   for (i = 0; i < ent_count; i++) {
     my_entities[i] = oo::RetainEntity(uni_entities[i]);  // retained
@@ -3725,7 +3703,7 @@ bool PlayerEntity::checkEntityForMassLock(Entity* ent, int theirClass) {
       (oo::ToShip(ent) != nullptr ? oo::ToShip(ent)->isCloaked() : false);
 
   if (EXPECT_NOT(ent->isStellarObject())) {
-    Entity* stellar = ent;  // a sun or a planet (bead oo-9ht.39.18)
+    Entity* stellar = ent;  // a sun or a planet
     if (EXPECT(OOStellarBodyPlanetType(stellar) != STELLAR_TYPE_MINIATURE)) {
       double dist = stellar->zero_distance;
       double rad = stellar->collision_radius;
@@ -3956,8 +3934,7 @@ void PlayerEntity::performDockingRequest(::StationEntity* stationForDocking) {
   if (stationForDocking == nil) return;
   if (!(stationForDocking != nullptr ? stationForDocking->getIsStation()
                                      : false))
-    return;  // a StationEntity (-isKindOfClass:) by its type since bead
-             // oo-9ht.175
+    return;  // a StationEntity (-isKindOfClass:) by its type
   if (isDocked()) return;
   if (autopilot_engaged && targetStation() == stationForDocking) return;
   if (autopilot_engaged && targetStation() != stationForDocking) {
@@ -3987,8 +3964,7 @@ void PlayerEntity::cancelDockingRequest(::StationEntity* stationForDocking) {
   if (stationForDocking == nil) return;
   if (!(stationForDocking != nullptr ? stationForDocking->getIsStation()
                                      : false))
-    return;  // a StationEntity (-isKindOfClass:) by its type since bead
-             // oo-9ht.175
+    return;  // a StationEntity (-isKindOfClass:) by its type
   if (isDocked()) return;
   if (autopilot_engaged && targetStation() == stationForDocking) return;
   if (autopilot_engaged && targetStation() != stationForDocking) {
@@ -4056,11 +4032,9 @@ void PlayerEntity::disengageAutopilot() {
   }
 }
 
-// Slice 9 of docs/phases/3-slices/PlayerEntity.md (bead oo-qyjcv): the
-// autopilot AI, hyperspeed, in-flight / witchspace / launch / docking / dead
-// updates, game over, the ship model view, targeting. (Its facade forwarded
-// each selector until bead oo-9ht.177 deleted it; sends to self are member
-// calls.)
+// The autopilot AI, hyperspeed, in-flight / witchspace / launch / docking /
+// dead updates, game over, the ship model view, targeting. (Sends to self are
+// member calls.)
 
 void PlayerEntity::resetAutopilotAI() {
   ::AI* myAI = getAI();
@@ -4358,8 +4332,7 @@ void PlayerEntity::gameOverFadeToBW() {
 // Target is valid if it's within Scanner range, AND
 // Target is a ship AND is not cloaked or jamming, OR
 // Target is a wormhole AND player has the Wormhole Scanner
-bool PlayerEntity::isValidTarget(
-    Entity* target)  // the C++ entity since bead oo-9ht.39.23
+bool PlayerEntity::isValidTarget(Entity* target)  // the C++ entity
 {
   // Just in case we got called with a bad target.
   if (!target) return NO;
@@ -4442,7 +4415,7 @@ void PlayerEntity::showShipModelWithKey(
 
   ::ShipEntity* ship = ::ProxyPlayerEntity::newProxyObject(
       shipKey, shipData);  // [[ProxyPlayerEntity alloc]
-                           // cxx_initWithKey:definition:] until bead oo-9ht.183
+                           // cxx_initWithKey:definition:]
   if (personality != ENTITY_PERSONALITY_INVALID) {
     if (ship != nullptr) ship->setEntityPersonalityInt(personality);
   }
@@ -4581,10 +4554,10 @@ void PlayerEntity::updateTargeting() {
         if (clockTimeAdjusted() > (wh != nullptr ? wh->scanTime() : 0.0) + 2) {
           if (wh != nullptr) wh->setScanInfo(WH_SCANINFO_COLLAPSE_TIME);
           //[UNIVERSE
-          //cxx_addCommsMessage:oo::str::formatRuntime(OO_DESC("wormhole-collapse-time-computed"),
+          // cxx_addCommsMessage:oo::str::formatRuntime(OO_DESC("wormhole-collapse-time-computed"),
           //						   { [UNIVERSE
-          //cxx_getSystemName:[wh destination]].value_or(std::string()) })
-          //forCount:5.0];
+          // cxx_getSystemName:[wh destination]].value_or(std::string()) })
+          // forCount:5.0];
         }
         break;
       case WH_SCANINFO_COLLAPSE_TIME:
@@ -4596,8 +4569,7 @@ void PlayerEntity::updateTargeting() {
                                                       // Clang evaluates the
                                                       // arguments: a
                                                       // description that is an
-                                                      // array draws (ADR-0063
-                                                      // item 5)
+                                                      // array draws
             UNIVERSE->addCommsMessage(
                 oo::str::formatRuntime(
                     arrivalFormat,
@@ -4637,10 +4609,9 @@ void PlayerEntity::updateTargeting() {
   STAGE_TRACKING_END
 }
 
-// Slice 10 of docs/phases/3-slices/PlayerEntity.md (bead oo-9u9w6): attitude,
-// view matrices and viewpoints, drawing, mass lock, the docked station, the HUD
-// and its custom dials, shield levels. (Its facade forwarded each selector
-// until bead oo-9ht.177 deleted it; sends to self are member calls.)
+// Attitude, view matrices and viewpoints, drawing, mass lock, the docked
+// station, the HUD and its custom dials, shield levels. (Sends to self are
+// member calls.)
 
 void PlayerEntity::orientationChanged() {
   quaternion_normalize(&orientation);
@@ -5014,11 +4985,9 @@ GLfloat PlayerEntity::dialForwardShield() {
   return OOClamp_0_1_f(result);
 }
 
-// Slice 11 of docs/phases/3-slices/PlayerEntity.md (bead oo-zxg1h): the dials
-// (shields, energy, fuel, heat, altitude, clock, missiles, scoop), fuel leak,
-// the comm log, player roles, system memory, the compass target. (Its facade
-// forwarded each selector until bead oo-9ht.177 deleted it; sends to self are
-// member calls.)
+// The dials (shields, energy, fuel, heat, altitude, clock, missiles, scoop),
+// fuel leak, the comm log, player roles, system memory, the compass target.
+// (Sends to self are member calls.)
 
 GLfloat PlayerEntity::dialAftShield() {
   if (EXPECT_NOT(maxAftShieldLevel() <= 0)) {
@@ -5315,7 +5284,7 @@ void PlayerEntity::updateSystemMemory() {
 }
 
 // Virtual: a test's player answers it. What the object-answering
-// getCompassTarget() answered the C++ entity of (bead oo-zwnvp): null once the
+// getCompassTarget() answered the C++ entity of: null once the
 // target's object has gone, which also forgets it.
 Entity* PlayerEntity::getCompassTargetEntity() {
   Entity* result = oo::LiveEntity(compassTarget);
@@ -5334,8 +5303,7 @@ void PlayerEntity::setCompassTargetEntity(Entity* value) {
 void PlayerEntity::validateCompassTarget() {
   ::OOSunEntity* the_sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
   Entity* the_planet =
-      (UNIVERSE != nullptr ? UNIVERSE->planet()
-                           : nullptr);  // C++ since bead oo-9ht.129
+      (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr);  // C++
   ::StationEntity* the_station =
       (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr);
   Entity* the_target = primaryTarget();
@@ -5345,7 +5313,7 @@ void PlayerEntity::validateCompassTarget() {
       !(the_sun != nullptr ? the_sun->goneNova()
                            : false))  // and the system has not been novabombed
   {
-    Entity* new_target = nullptr;  // the C++ entities (bead oo-9ht.39.18)
+    Entity* new_target = nullptr;  // the C++ entities
     OOAegisStatus aegis = checkForAegis();
 
     switch (getCompassMode()) {
@@ -5371,7 +5339,7 @@ void PlayerEntity::validateCompassTarget() {
         break;
 
       case COMPASS_MODE_SUN:
-        new_target = the_sun;  // the sun is C++ since bead oo-9ht.111
+        new_target = the_sun;  // the sun is C++
         break;
 
       case COMPASS_MODE_TARGET:
@@ -5411,8 +5379,7 @@ std::optional<std::string> PlayerEntity::compassTargetLabel() {
     case COMPASS_MODE_BEACONS: {
       Entity* target = getCompassTargetEntity();
       if (target) {
-        return oo::BeaconLabel(
-            target);  // the beacon category's answer (bead oo-w9pi2)
+        return oo::BeaconLabel(target);  // the beacon category's answer
       }
       return "";
     }
@@ -5434,10 +5401,8 @@ std::optional<std::string> PlayerEntity::compassTargetLabel() {
   return "";
 }
 
-// Slice 12 of docs/phases/3-slices/PlayerEntity.md (bead oo-rqcfz): compass
-// mode, missiles and pylons, special cargo, the multi-function displays, alert
-// flags. (Its facade forwarded each selector until bead oo-9ht.177 deleted it;
-// sends to self are member calls.)
+// Compass mode, missiles and pylons, special cargo, the multi-function
+// displays, alert flags. (Sends to self are member calls.)
 
 OOCompassMode PlayerEntity::getCompassMode() { return compassMode; }
 
@@ -5446,7 +5411,6 @@ void PlayerEntity::setCompassMode(OOCompassMode value) { compassMode = value; }
 void PlayerEntity::setPrevCompassMode() {
   OOAegisStatus aegis = AEGIS_NONE;
   Entity* beacon = nullptr;  // the C++ beacons, linked through their objects
-                             // (bead oo-9ht.39.18)
 
   switch (compassMode) {
     case COMPASS_MODE_INACTIVE:
@@ -5504,7 +5468,6 @@ void PlayerEntity::setPrevCompassMode() {
 void PlayerEntity::setNextCompassMode() {
   OOAegisStatus aegis = AEGIS_NONE;
   Entity* beacon = nullptr;  // the C++ beacons, linked through their objects
-                             // (bead oo-9ht.39.18)
 
   switch (compassMode) {
     case COMPASS_MODE_INACTIVE:
@@ -5582,14 +5545,12 @@ std::optional<std::string> PlayerEntity::dialTargetName() {
     result = OO_DESC("no-target-string");
   }
 
-  // A wormhole answered -identFromShip: through its facade until bead
-  // oo-9ht.112; it is asked directly now, and any other target that answers the
-  // selector as before.
+  // A wormhole answered -identFromShip: through its facade; it is asked
+  // directly now, and any other target that answers the selector as before.
   if (WormholeEntity* wh = dynamic_cast<WormholeEntity*>(target_entity)) {
     result = wh->identFromShip(this);
-  } else if (::ShipEntity* ship = oo::ToShip(
-                 target_entity))  // what answered -identFromShip: (a ship's
-                                  // facade until bead oo-9ht.144)
+  } else if (::ShipEntity* ship =
+                 oo::ToShip(target_entity))  // what answered -identFromShip:
   {
     result = ship->identFromShip(this);
   }
@@ -5895,10 +5856,8 @@ OOAlertCondition PlayerEntity::realAlertCondition() {
   return getAlertCondition();
 }
 
-// Slice 13 of docs/phases/3-slices/PlayerEntity.md (bead oo-30g73): alert
-// condition, AI messages, mounting and firing missiles and mines, the cloak,
-// ECM, energy units, the main weapons. (Its facade forwarded each selector
-// until bead oo-9ht.177 deleted it; sends to self are member calls.)
+// Alert condition, AI messages, mounting and firing missiles and mines, the
+// cloak, ECM, energy units, the main weapons. (Sends to self are member calls.)
 
 OOAlertCondition PlayerEntity::getAlertCondition() {
   OOAlertCondition old_alert_condition = alertConditionLevel;
@@ -6336,10 +6295,8 @@ OOWeaponType PlayerEntity::currentWeapon() {
   return weaponForFacing(currentWeaponFacing);
 }
 
-// Slice 14 of docs/phases/3-slices/PlayerEntity.md (bead oo-m8x1y): hit
-// testing, damage, the doppelganger, the escape capsule, dumping cargo, bounty.
-// (Its facade forwarded each selector until bead oo-9ht.177 deleted it; sends
-// to self are member calls.)
+// Hit testing, damage, the doppelganger, the escape capsule, dumping cargo,
+// bounty. (Sends to self are member calls.)
 
 // override ShipEntity definition to ensure that
 // if shields are still up, always hit the main entity and take the damage
@@ -6392,7 +6349,7 @@ GLfloat PlayerEntity::doesHitLine(HPVector v0, HPVector v1,
 void PlayerEntity::takeEnergyDamage(double amount, Entity* entPart,
                                     Entity* otherPart,
                                     const std::string& weaponIdentifier) {
-  Entity* ent = entPart;  // the C++ entities (bead oo-9ht.39.18)
+  Entity* ent = entPart;  // the C++ entities
   Entity* other = otherPart;
   HPVector rel_pos;
   OOScalar d_forward, d_right, d_up;
@@ -6605,8 +6562,8 @@ void PlayerEntity::takeHeatDamage(double amount) {
     if (result != nullptr)
       result->switchAITo("nullAI.plist");  // fly straight on
     if (result != nullptr) result->setTemperature(temperature());
-    // The proxy's member since bead oo-9ht.183 (a ship of another class, which
-    // a proxy definition never makes, did not answer -copyValuesFromPlayer:).
+    // The proxy's member (a ship of another class, which a proxy definition
+    // never makes, did not answer -copyValuesFromPlayer:).
     if (::ProxyPlayerEntity* proxy = dynamic_cast<::ProxyPlayerEntity*>(result))
       proxy->copyValuesFromPlayer(this);
   }
@@ -6861,10 +6818,9 @@ void PlayerEntity::setBounty(OOCreditsQuantity amount,
   OOJSRelinquishContext(context);
 }
 
-// Slice 15 of docs/phases/3-slices/PlayerEntity.md (bead oo-2lpiu): legal
-// status, offences, bounties collected, internal damage, destruction, ending a
-// scenario, docking and leaving dock. (Its facade forwarded each selector until
-// bead oo-9ht.177 deleted it; sends to self are member calls.)
+// Legal status, offences, bounties collected, internal damage, destruction,
+// ending a scenario, docking and leaving dock. (Sends to self are member
+// calls.)
 
 OOCreditsQuantity PlayerEntity::getBounty() { return legalStatusValue; }
 
@@ -7115,8 +7071,8 @@ void PlayerEntity::loseTargetStatus() {
   std::vector<Entity*> my_entities(ent_count);
   int i;
   for (i = 0; i < ent_count; i++)
-    my_entities[i] = oo::RetainEntity(
-        uni_entities[i]);  //	retained (its object; bead oo-9ht.39.18)
+    my_entities[i] =
+        oo::RetainEntity(uni_entities[i]);  //	retained (its object)
   for (i = 0; i < ent_count; i++) {
     Entity* thing = my_entities[i];
     if (thing->isShip) {
@@ -7404,10 +7360,8 @@ void PlayerEntity::leaveDock(::StationEntity* station) {
   playLaunchFromStation();
 }
 
-// Slice 16 of docs/phases/3-slices/PlayerEntity.md (bead oo-vqjjb): witchspace:
-// start, end, checklist, jump type and distance, fuel, galactic and wormhole
-// jumps. (Its facade forwarded each selector until bead oo-9ht.177 deleted it;
-// sends to self are member calls.)
+// Witchspace: start, end, checklist, jump type and distance, fuel, galactic and
+// wormhole jumps. (Sends to self are member calls.)
 
 void PlayerEntity::witchStart() {
   // chances of entering witchspace with autopilot on are very low, but as
@@ -7456,7 +7410,7 @@ void PlayerEntity::witchStart() {
   // set the new market seed now!
   // reseeding the RNG should be completely unnecessary here
   //	ranrot_srand((uint32_t)oo::date::timeIntervalSince1970());	// seed
-  //randomiser by time
+  // randomiser by time
   market_rnd = ranrot_rand() & 255;  // random factor for market values is reset
 }
 
@@ -7727,10 +7681,8 @@ void PlayerEntity::enterWormhole(::WormholeEntity* w_hole) {
                  (w_hole != nullptr ? w_hole->withMisjump() : false) ||
                  flightPitch == max_flight_pitch || randf() > 0.995;
   wormholeObject.leak();  // a wormhole held here was dropped without a release,
-                          // as before (bead oo-5q11i keeps that)
-  wormholeObject =
-      oo::EntityHold(w_hole);  // held (its Objective-C object, bead oo-9ht.112;
-                               // a hold since bead oo-xn1j1)
+                          // as before
+  wormholeObject = oo::EntityHold(w_hole);  // held (its Objective-C object)
   wormhole = w_hole;
   addScannedWormhole(wormhole);
   setStatus(STATUS_ENTERING_WITCHSPACE);
@@ -7803,11 +7755,10 @@ void PlayerEntity::enterWitchspace() {
 
   // Create the players' wormhole
   {
-    // +alloc/-init...: a new C++ wormhole and its Objective-C object, +1 (bead
-    // oo-9ht.112).
+    // +alloc/-init...: a new C++ wormhole and its Objective-C object, +1.
     oo::Ref<WormholeEntity> whRef = oo::makeRef<WormholeEntity>();
     wormholeObject.leak();  // a wormhole held here was dropped without a
-                            // release, as before (bead oo-5q11i keeps that)
+                            // release, as before
     wormholeObject = oo::EntityHold(oo::MadeEntity(whRef));
     whRef->initWormholeTo(jumpTarget, this);
     wormhole = whRef.get();
@@ -7927,10 +7878,8 @@ void PlayerEntity::witchJumpTo(OOSystemID sTo, bool misjump) {
   }
 }
 
-// Slice 17 of docs/phases/3-slices/PlayerEntity.md (bead oo-6tuef): leaving
-// witchspace, the status screen, the equipment list, primed and fast equipment,
-// weapon types. (Its facade forwarded each selector until bead oo-9ht.177
-// deleted it; sends to self are member calls.)
+// Leaving witchspace, the status screen, the equipment list, primed and fast
+// equipment, weapon types. (Sends to self are member calls.)
 
 void PlayerEntity::leaveWitchspace() {
   double d1 = SCANNER_MAX_RANGE * ((Ranrot() & 255) / 256.0 - 0.5);
@@ -8571,10 +8520,8 @@ void PlayerEntity::setFastEquipmentB(const std::optional<std::string>& eqKey) {
   return weaponType;
 }
 
-// Slice 18 of docs/phases/3-slices/PlayerEntity.md (bead oo-3fzv5): scripting
-// lists (missiles, cargo, contracts), the system data screen, marked
-// destinations, the chart screens. (Its facade forwarded each selector until
-// bead oo-9ht.177 deleted it; sends to self are member calls.)
+// Scripting lists (missiles, cargo, contracts), the system data screen, marked
+// destinations, the chart screens. (Sends to self are member calls.)
 
 std::vector<oo::Ref<::OOEquipmentType>> PlayerEntity::missilesList() {
   tidyMissilePylons();  // just in case.
@@ -8917,8 +8864,7 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
                    : OO_DESC("sysdata-route-hours%0"));  // one description per
                                                          // local, in the order
                                                          // Clang evaluates the
-                                                         // arguments (ADR-0063
-                                                         // item 5)
+                                                         // arguments
           const std::string jumpsText =
               OO_DESC_PLURAL("sysdata-route-jumps", routeJumps);
           distanceInfo = oo::str::format(
@@ -9098,14 +9044,14 @@ void PlayerEntity::setGuiToChartScreenFrom(OOGUIScreenID oldScreen) {
     // distance-f & est-travel-time-f are identical between short & long range
     // charts in standard Oolite, however can be alterered separately via OXPs
     //[gui cxx_setText:cxx_OOExpandKey("short-range-chart-distance", distance)
-    //forRow:20];
+    // forRow:20];
     // std::string travelTimeRow;
     // if ([self hasHyperspaceMotor] && distance > 0.0 && distance * 10.0 <=
     // fuel)
     //{
     //	double time = estimatedTravelTime;
     //	travelTimeRow = cxx_OOExpandKey("short-range-chart-est-travel-time",
-    //time);
+    // time);
     //}
     //[gui setText:travelTimeRow forRow:21];
     if (gui_screen == GUI_SCREEN_LONG_RANGE_CHART) {
@@ -9151,10 +9097,8 @@ void PlayerEntity::setGuiToChartScreenFrom(OOGUIScreenID oldScreen) {
   }
 }
 
-// Slice 19 of docs/phases/3-slices/PlayerEntity.md (bead oo-4tqku): the game
-// options and load / save screens, equip-screen key highlight, available
-// facings. (Its facade forwarded each selector until bead oo-9ht.177 deleted
-// it; sends to self are member calls.)
+// The game options and load / save screens, equip-screen key highlight,
+// available facings. (Sends to self are member calls.)
 
 void PlayerEntity::setGuiToGameOptionsScreen() {
   ::MyOpenGLView* gameView =
@@ -9310,7 +9254,7 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
     int fovTicks =
         (int)((fov - MIN_FOV_DEG) * 20 / (MAX_FOV_DEG - MIN_FOV_DEG));
     const std::string fovWordDesc = OO_DESC("gameoptions-fov-value");
-    // %c 176 gave U+00B0 (probed on GNUstep base, oo-3rb.218); written as its
+    // %c 176 gave U+00B0 (probed on GNUstep base); written as its
     // UTF-8 bytes
     gui->setText(oo::str::format("%s%s (%d%s) ", fovWordDesc.c_str(),
                                  SliderString(fovTicks).c_str(), (int)fov,
@@ -9671,9 +9615,8 @@ OOWeaponFacingSet PlayerEntity::availableFacings() {
   return available_facings & VALID_WEAPON_FACINGS;
 }
 
-// Slice 20 of docs/phases/3-slices/PlayerEntity.md (bead oo-dycza): the
-// equip-ship screen and upgrade information. (Its facade forwarded each
-// selector until bead oo-9ht.177 deleted it; sends to self are member calls.)
+// The equip-ship screen and upgrade information. (Sends to self are member
+// calls.)
 
 void PlayerEntity::setGuiToEquipShipScreen(
     int skipParam, const std::optional<std::string>& eqKeyForSelectFacing) {
@@ -10168,10 +10111,8 @@ void PlayerEntity::showInformationForSelectedUpgradeWithFormatString(
   }
 }
 
-// Slice 21 of docs/phases/3-slices/PlayerEntity.md (bead oo-a602n): the
-// interfaces screen, the start screen and intro, the OXZ manager, GUI and view
-// change notes. (Its facade forwarded each selector until bead oo-9ht.177
-// deleted it; sends to self are member calls.)
+// The interfaces screen, the start screen and intro, the OXZ manager, GUI and
+// view change notes. (Sends to self are member calls.)
 
 void PlayerEntity::setGuiToInterfacesScreen(int skip) {
   if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
@@ -10666,10 +10607,8 @@ void PlayerEntity::noteViewDidChangeFrom(OOViewID fromView, OOViewID toView) {
   noteSwitchToView(toView, fromView);
 }
 
-// Slice 22 of docs/phases/3-slices/PlayerEntity.md (bead oo-mv49m): buying
-// equipment, script price adjustment, weapon mounts, passenger berths, removing
-// missiles, trade-in. (Its facade forwarded each selector until bead oo-9ht.177
-// deleted it; sends to self are member calls.)
+// Buying equipment, script price adjustment, weapon mounts, passenger berths,
+// removing missiles, trade-in. (Sends to self are member calls.)
 
 void PlayerEntity::buySelectedItem() {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
@@ -11205,10 +11144,8 @@ void PlayerEntity::doTradeIn(OOCreditsQuantity tradeInValue,
   }
 }
 
-// Slice 23 of docs/phases/3-slices/PlayerEntity.md (bead oo-wt5jv): cargo
-// quantities, the local market, market filters and sorters, market screen rows.
-// (Its facade forwarded each selector until bead oo-9ht.177 deleted it; sends
-// to self are member calls.)
+// Cargo quantities, the local market, market filters and sorters, market screen
+// rows. (Sends to self are member calls.)
 
 OOCargoQuantity PlayerEntity::cargoQuantityForType(const std::string& type) {
   OOCargoQuantity amount =
@@ -11598,10 +11535,8 @@ std::optional<std::string> PlayerEntity::marketScreenTitle() {
   }
 }
 
-// Slice 24 of docs/phases/3-slices/PlayerEntity.md (bead oo-bj7u8): the market
-// screens, buying and selling commodities, mining and speech flags, adding
-// equipment. (Its facade forwarded each selector until bead oo-9ht.177 deleted
-// it; sends to self are member calls.)
+// The market screens, buying and selling commodities, mining and speech flags,
+// adding equipment. (Sends to self are member calls.)
 
 void PlayerEntity::setGuiToMarketScreen() {
   ::OOCommodityMarket* localMarket = this->localMarket();
@@ -11704,7 +11639,6 @@ void PlayerEntity::setGuiToMarketScreen() {
 
     // The docked station (else a targeted station that broadcasts its market)
     // was looked up here and never read; the dead lookup went with the facade
-    // (bead oo-9ht.177).
 
     gui->setTitle(marketScreenTitle());
 
@@ -11892,11 +11826,11 @@ void PlayerEntity::setGuiToMarketInfoScreen() {
 
     const std::string selectedCommodity =
         *marketSelectedCommodity;  // (non-nil here)
-    const std::string informationFormat = OO_DESC(
-        "oolite-commodity-information-@");  // the format first, as Clang
-                                            // evaluates the arguments: a
-                                            // description that is an array
-                                            // draws (ADR-0063 item 5)
+    const std::string informationFormat =
+        OO_DESC("oolite-commodity-information-@");  // the format first, as
+                                                    // Clang evaluates the
+                                                    // arguments: a description
+                                                    // that is an array draws
     gui->setTitle(oo::str::formatRuntime(
         informationFormat,
         {TextArg((shipCommodityData != nullptr
@@ -11920,7 +11854,7 @@ void PlayerEntity::setGuiToMarketInfoScreen() {
           "oolite-commodity-contracted-d-@");  // the format first, as Clang
                                                // evaluates the arguments: a
                                                // description that is an array
-                                               // draws (ADR-0063 item 5)
+                                               // draws
       gui->setText(oo::str::formatRuntime(
                        contractedFormat,
                        {contracted,
@@ -12163,11 +12097,9 @@ bool PlayerEntity::addEquipmentItem(const std::string& equipmentKey,
   return addEquipmentItem(equipmentKey, YES, context);
 }
 
-// Slice 25 of docs/phases/3-slices/PlayerEntity.md (bead oo-hu1xk): adding /
-// removing / custom-activated equipment, pylons, parcels and passengers, comms,
-// fines, trade-in factor, renovation, view offsets, trumbles. (Its facade
-// forwarded each selector until bead oo-9ht.177 deleted it; sends to self are
-// member calls.)
+// Adding / removing / custom-activated equipment, pylons, parcels and
+// passengers, comms, fines, trade-in factor, renovation, view offsets,
+// trumbles. (Sends to self are member calls.)
 
 bool PlayerEntity::addEquipmentItem(const std::string& equipmentKey,
                                     bool validateAddition,
@@ -12207,7 +12139,7 @@ bool PlayerEntity::addEquipmentItem(const std::string& equipmentKey,
 }
 
 std::vector<oo::PList>* PlayerEntity::customEquipmentActivation() {
-  return &customEquipActivation;  // the live entries (ADR-0043 item 22)
+  return &customEquipActivation;  // the live entries
 }
 
 void PlayerEntity::addEquipmentWithScriptToCustomKeyArray(
@@ -12670,10 +12602,8 @@ oo::Ref<OOTrumble>* PlayerEntity::trumbleArray() { return trumble; }
 
 NSUInteger PlayerEntity::getTrumbleCount() { return trumbleCount; }
 
-// Slice 26 of docs/phases/3-slices/PlayerEntity.md (bead oo-cpam5): trumble
-// values, checksums, screen modes, target memory, missile ident, rotating and
-// panning the custom view. (Its facade forwarded each selector until bead
-// oo-9ht.177 deleted it; sends to self are member calls.)
+// Trumble values, checksums, screen modes, target memory, missile ident,
+// rotating and panning the custom view. (Sends to self are member calls.)
 
 oo::PList PlayerEntity::trumbleValue() {
   const std::string namekey = oo::str::format(
@@ -12847,8 +12777,7 @@ void PlayerEntity::setFoundTarget(Entity* targetEntity) {
 }
 
 // override shipentity addTarget to implement target_memory
-void PlayerEntity::addTarget(
-    Entity* targetEntity)  // the C++ entity since bead oo-9ht.39.23
+void PlayerEntity::addTarget(Entity* targetEntity)  // the C++ entity
 {
   if (status() != STATUS_IN_FLIGHT && status() != STATUS_WITCHSPACE_COUNTDOWN)
     return;
@@ -12863,8 +12792,8 @@ void PlayerEntity::addTarget(
   // wormholes don't go in target memory
   else if (hasEquipmentItemProviding("EQ_TARGET_MEMORY") &&
            targetEntity != nullptr) {
-    const oo::WeakRef<Entity> targetRef = oo::WeakRef<Entity>(
-        targetEntity);  // was [targetEntity weakSelf] (bead oo-9ht.39.5.2)
+    const oo::WeakRef<Entity> targetRef =
+        oo::WeakRef<Entity>(targetEntity);  // was [targetEntity weakSelf]
     // -indexOfObject: compared the weak references (proxies) by identity;
     // WeakRef's == compares the same identity
     const auto slotFor = [this](const oo::WeakRef<Entity>& ref) -> NSUInteger {
@@ -13148,11 +13077,9 @@ void PlayerEntity::customViewPanDown(OOScalar angle) {
           dot_product(customViewOffset, customViewForwardVector)));
 }
 
-// Slice 27 of docs/phases/3-slices/PlayerEntity.md (bead oo-u1e9m): custom view
-// vectors and data, the mission overlay and background, world scripts and
-// script events, galactic hyperspace, jump cause, commander and save names.
-// (Its facade forwarded each selector until bead oo-9ht.177 deleted it; sends
-// to self are member calls.)
+// Custom view vectors and data, the mission overlay and background, world
+// scripts and script events, galactic hyperspace, jump cause, commander and
+// save names. (Sends to self are member calls.)
 
 void PlayerEntity::customViewPanLeft(OOScalar angle) {
   quaternion_rotate_about_axis(&customViewQuaternion, customViewUpVector,
@@ -13575,10 +13502,9 @@ void PlayerEntity::setLastsaveName(const std::optional<std::string>& value) {
       _lastsaveName.has_value() ? oo::PList(*_lastsaveName) : oo::PList());
 }
 
-// Slice 28 of docs/phases/3-slices/PlayerEntity.md (bead oo-zn1vy): docking
-// clearance, scanned wormholes, mission destinations, the shipyard record,
-// extra mission and GUI-screen keys, the state dump. (Its facade forwarded each
-// selector until bead oo-9ht.177 deleted it; sends to self are member calls.)
+// Docking clearance, scanned wormholes, mission destinations, the shipyard
+// record, extra mission and GUI-screen keys, the state dump. (Sends to self are
+// member calls.)
 
 bool PlayerEntity::isDocked() {
   BOOL isDockedStatus = NO;
@@ -13817,8 +13743,7 @@ void PlayerEntity::clearExtraGuiScreenKeys(OOGUIScreenID gui,
     ::OOJSGuiScreenKeyDefinition* def = keydefs[i].get();
     // the old code read "name" from the definition object with PListView, which
     // only reads dictionaries, so this never matched; kept as it was (the
-    // definition was an Object node, which find() does not look into; bead
-    // oo-9ht.62 deleted the facade it wrapped)
+    // definition was an Object node, which find() does not look into)
     const oo::PList definitionValue;
     const oo::PList* definitionName = definitionValue.find("name");
     if (def && definitionName != nullptr && definitionName->isString() &&
@@ -13968,7 +13893,7 @@ void PlayerEntity::dumpSelfState() {
 
 #if OO_DEBUG
 // What the deleted categories PlayerEntity (JSVectorStatistics) /
-// (JSQuaternionStatistics) answered (bead oo-9ht.15): one-line forwarders to
+// (JSQuaternionStatistics) answered: one-line forwarders to
 // the functions that hold their bodies.
 oo::PList PlayerEntity::reportJSVectorStatistics() {
   return ::reportJSVectorStatistics();

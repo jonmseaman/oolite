@@ -1,6 +1,5 @@
 /*	test_string_sweep.cpp
-        The oo::str helpers the Foundation sweep added after its first batch
-   (oofnd/String.hpp; proposed ADR-0043, "Amendment 1"): the path-component
+        The oo::str helpers (oofnd/String.hpp): the path-component
    family and GNUstep's "%p".
 
         Every expectation is GNUstep base 1.31.1's own answer on this toolchain

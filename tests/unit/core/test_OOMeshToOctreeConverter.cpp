@@ -1,16 +1,13 @@
 /*	test_OOMeshToOctreeConverter.mm
         Unit tests for OOMeshToOctreeConverter
-   (src/Core/OOMeshToOctreeConverter.h): bead oo-rsk8 (Phase 3, house style of
-   proposed ADR-0056).
+   (src/Core/OOMeshToOctreeConverter.h).
 
         It links the whole game but main (tests/unit/core/meson.build entry
-   ['*']), because the octrees it builds are Octree objects (ADR-0056 amendments
-   oo-44gg, oo-novu). The expectations were written against the Objective-C API
-   and run on the unconverted class first: what octree a set of triangles gives
-   (nodes, radius and volume) at several depths, that degenerate triangles are
-        dropped, the description, and that the triangle store grows past its
-   sixteen inline slots. They were moved onto the C++ class when its Objective-C
-   facade was deleted (bead oo-9ht.26). Run: bash tools/check-core-tests.sh
+   ['*']), because the octrees it builds are Octree objects. The expectations
+   cover: what octree a set of triangles gives (nodes, radius and volume) at
+   several depths, that degenerate triangles are dropped, the description, and
+   that the triangle store grows past its sixteen inline slots. Run: bash
+   tools/check-core-tests.sh
 */
 
 #include <cmath>

@@ -2,9 +2,7 @@
 
 OOPlasmaShotEntity.h
 
-C++20 since bead oo-z9md, a leaf of the Entities seam under
-OOLightParticleEntity (proposed ADR-0056, amendments oo-bj8 item 12 and
-oo-peql), as OOPlasmaBurstEntity (oo-l2s5).
+A leaf under OOLightParticleEntity, as OOPlasmaBurstEntity.
 
 
 Oolite
@@ -31,10 +29,9 @@ MA 02110-1301, USA.
 
 #include "OOLightParticleEntity.h"
 
-/*	A converted leaf (amendment oo-bj8 item 12): global, over
-   OOLightParticleEntity, with no facade of its own. ShipEntity makes one with
-   shotWithPosition() and hands it to Objective-C with oo::NewEntityFacade,
-   whose object is an OOLightParticleEntity.
+/*	A global class over OOLightParticleEntity, with no facade of its own.
+   ShipEntity makes one with shotWithPosition() and hands it to Objective-C with
+   oo::NewEntityFacade, whose object is an OOLightParticleEntity.
 */
 class OOPlasmaShotEntity : public OOLightParticleEntity {
  public:
@@ -45,8 +42,7 @@ class OOPlasmaShotEntity : public OOLightParticleEntity {
                                                       OOTimeDelta duration,
                                                       OOColor* color);
 
-  // -initWithPosition:...'s body, run once right after construction (amendment
-  // oo-vl43 item 2).
+  // -initWithPosition:...'s body, run once right after construction.
   void initWithPosition(HPVector position, Vector velocity, float energy,
                         OOTimeDelta duration, OOColor* color);
 

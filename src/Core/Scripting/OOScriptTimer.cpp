@@ -23,10 +23,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOScriptTimer.h"
-
 #include "OOLogging.h"
 #include "OOPriorityQueue.h"
+#include "OOScriptTimer.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"
 
@@ -96,7 +95,6 @@ std::string OOScriptTimer::description() const {
   return descriptionWithComponents(descriptionComponents());
 }
 
-// The deleted facade's description (bead oo-9ht.35):
 // oo::DescriptionWithComponents() of an object of the C++ class's name.
 std::string OOScriptTimer::descriptionWithComponents(
     const std::optional<std::string>& components) const {

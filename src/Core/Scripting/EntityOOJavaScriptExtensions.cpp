@@ -2,13 +2,9 @@
 
 EntityOOJavaScriptExtensions.m
 
-C++20 since bead oo-g223 (proposed ADR-0056, amendments oo-ppc and oo-ykoy): the
-bodies of the categories Entity (OOJavaScriptExtensions) and ShipEntity
-(OOJavaScriptExtensions) as free functions (EntityOOJavaScriptExtensions.h). A
-method that used self takes the object as its first parameter, and its messages
-to the object stay messages: the categories are overridden by subclasses that
-are still Objective-C. The categories' forwarders are in
-EntityOOJavaScriptExtensions+ObjCBridge.mm.
+The Entity and ShipEntity JavaScript extensions as free functions
+(EntityOOJavaScriptExtensions.h). A method that used self takes the object as
+its first parameter.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -30,9 +26,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "EntityOOJavaScriptExtensions.h"
-
 #include "DockEntity.h"
+#include "EntityOOJavaScriptExtensions.h"
 #include "OOJSDock.h"
 #include "OOJSEntity.h"
 #include "OOJSPrivateObject.h"
@@ -55,21 +50,15 @@ std::optional<std::string> EntityJSClassName(void) {
   return std::string("Entity");
 }
 
-/*	The entity's JS object (bead oo-9ht.39.3, ADR-0056 amendment
-   oo-9ht.39.3): made on first use for an entity that scripts can see, of the
-   class and prototype the entity names, its private slot an OOJSEntityHolder (a
-   weak reference to the entity, as the slot held the facade's weak reference:
-   the JS object does not keep the entity alive), rooted while the entity lives
-   and dropped when the engine resets. The body is the one the facade's JS value
-   selector ran, asking the C++ entity what it asked the facade (whose selectors
-   answered from the C++ part).
+/*	The entity's JS object: made on first use for an entity that scripts can
+   see, of the class and prototype the entity names, its private slot an
+   OOJSEntityHolder (a weak reference to the entity: the JS object does not keep
+   the entity alive), rooted while the entity lives and dropped when the engine
+   resets.
 */
-/*	The class questions the facade's JS value selector asked by selector,
-   answered by the C++ entity's members (the root facade's category forwarded to
-   them). Exported since bead oo-9ht.39.5.1 for the engine's generic paths that
-   asked an entity's object (OOJSSystem's planets filter, callObjC()'s class
-   name). An Objective-C stand-in's own override was sent until bead oo-j12i2
-   deleted the adapter.
+/*	The class questions about an entity's JS object, answered by the C++
+   entity's members. Used by the engine's generic paths that ask an entity's
+   object (OOJSSystem's planets filter, callObjC()'s class name).
 */
 
 bool OOJSEntityIsVisibleToScripts(Entity* entity) {
@@ -193,17 +182,16 @@ void ShipEntityJSSetTargetForScript(ShipEntity* ship, ShipEntity* target) {
   while ((me != nullptr ? me->getIsSubEntity() : false)) {
     if (me == oo::ToShip((me != nullptr ? me->owner() : nullptr)) ||
         (me != nullptr ? me->owner() : nullptr) == nil)
-      break;  // its own object (bead oo-9ht.39.25: the ship, not its object)
+      break;  // its own object: the ship, not its object
     me = oo::ToShip((me != nullptr ? me->owner() : nullptr));
   }
   while ((target != nullptr ? target->getIsSubEntity() : false)) {
     if (target == oo::ToShip((target != nullptr ? target->owner() : nullptr)) ||
         (target != nullptr ? target->owner() : nullptr) == nil)
-      break;  // its own object (bead oo-9ht.39.25: the ship, not its object)
+      break;  // its own object: the ship, not its object
     target = oo::ToShip((target != nullptr ? target->owner() : nullptr));
   }
-  if (me == nullptr)
-    return;  // what ToShip(ToObjC(me)) asked (bead oo-9ht.39.25)
+  if (me == nullptr) return;  // what ToShip(ToObjC(me)) asked
   if (target != nil) {
     if (me != nullptr) me->addTarget(target);
   } else {

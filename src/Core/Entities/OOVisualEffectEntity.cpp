@@ -23,8 +23,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOVisualEffectEntity.h"
-
 #include "HeadUpDisplay.h"
 #include "MyOpenGLView.h"
 #include "OOColor.h"
@@ -44,6 +42,7 @@ MA 02110-1301, USA.
 #include "OOShaderMaterial.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
+#include "OOVisualEffectEntity.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/PListGet.hpp"
@@ -95,15 +94,12 @@ std::vector<oo::EntityHold> VisualEffectsIn(
 
 }  // namespace
 
-// [[OOVisualEffectEntity alloc] cxx_initWithKey:definition:] until bead
-// oo-9ht.165 deleted the effect's facade: the root's facade
-// (OOEntityWithDrawable's until bead oo-9ht.40) holding a new effect (+1, as
-// +alloc gave), then the initialiser's body, which may fail, as the Objective-C
-// one did.
+// [[OOVisualEffectEntity alloc] cxx_initWithKey:definition:]: the root's
+// facade holding a new effect (+1, as +alloc gave), then the initialiser's
+// body, which may fail, as the Objective-C one did.
 Entity* oo::NewVisualEffect(const std::string& key, const oo::PList& dict) {
   const Ref<OOVisualEffectEntity> effect = makeRef<OOVisualEffectEntity>();
-  MadeEntityRetained(
-      effect);  // +1, as +alloc gave (its object's, until bead oo-dpyk8)
+  MadeEntityRetained(effect);  // +1, as +alloc gave
   if (!effect->initWithKey(key, dict)) {
     ReleaseEntity(effect.get());
     return nullptr;
@@ -112,9 +108,8 @@ Entity* oo::NewVisualEffect(const std::string& key, const oo::PList& dict) {
 }
 
 /*	-cxx_initWithKey:definition:'s body after [super init] (the constructor
-   ran Entity's). oo::NewVisualEffect() runs it once the effect is made
-   (amendment oo-0mxi item 2); false where the initialiser released itself and
-   answered nil.
+   ran Entity's). oo::NewVisualEffect() runs it once the effect is made; false
+   where the initialiser released itself and answered nil.
 */
 bool OOVisualEffectEntity::initWithKey(const std::string& key,
                                        const oo::PList& dict) {
@@ -153,7 +148,7 @@ bool OOVisualEffectEntity::setUpVisualEffectFromDictionary(
         *modelName, _effectKey, DictionaryForKey(effectDict, "materials"),
         DictionaryForKey(effectDict, "shaders"),
         effectDict.get<bool>("smooth", false), OODefaultShipShaderMacros(),
-        this);  // the C++ effect (bead oo-9ht.39.6)
+        this);  // the C++ effect
     if (mesh == nullptr) return false;
     setMesh(mesh.get());
   }
@@ -261,8 +256,7 @@ bool OOVisualEffectEntity::setUpSubEntities() {
   return true;
 }
 
-// The list holds the sub-entities (bead oo-xn1j1); [sub setOwner:nil] first, as
-// before.
+// The list holds the sub-entities; [sub setOwner:nil] first, as before.
 void OOVisualEffectEntity::removeSubEntity(Entity* sub) {
   if (sub != nullptr) sub->setOwner(nullptr);
   if (_subEntities.has_value())
@@ -287,7 +281,7 @@ bool OOVisualEffectEntity::setUpOneSubentity(const oo::PList& subentDict) {
 }
 
 bool OOVisualEffectEntity::setUpOneFlasher(const oo::PList& subentDict) {
-  // C++ since bead oo-9ht.107: the flasher's object is the nearest façade left.
+  // The flasher's object is the nearest façade left.
   Entity* flasher =
       oo::MadeEntity(OOFlasherEntity::flasherWithDictionary(subentDict));
   if (flasher != nullptr)
@@ -301,8 +295,7 @@ bool OOVisualEffectEntity::setUpOneFlasher(const oo::PList& subentDict) {
 
 bool OOVisualEffectEntity::setUpOneStandardSubentity(
     const oo::PList& subentDict) {
-  Entity* subentity =
-      nullptr;  // the effect, its object +1 (beads oo-9ht.165, oo-9ht.39.26)
+  Entity* subentity = nullptr;  // the effect, its object +1
   std::optional<std::string> subentKey;
   HPVector subPosition;
   Quaternion subOrientation;
@@ -430,8 +423,7 @@ void OOVisualEffectEntity::rescaleBy(GLfloat factor) {
     se->setPosition(HPvector_multiply_scalar(se->getPosition(), factor));
     if (OOSubEntityInterface* cxxSub = dynamic_cast<OOSubEntityInterface*>(se))
       cxxSub->rescaleBy(factor);
-    // (else: none - every effect sub-entity adopts the interface; bead
-    // oo-dpyk8)
+    // (else: none - every effect sub-entity adopts the interface)
   }
 
   collision_radius *= factor;
@@ -481,7 +473,6 @@ void OOVisualEffectEntity::setScaleX(GLfloat factor) {
       if (OOSubEntityInterface* cxxSub =
               dynamic_cast<OOSubEntityInterface*>(se))
         cxxSub->rescaleBy(flasher_factor);  // every effect sub-entity adopts it
-                                            // (bead oo-dpyk8)
     }
   }
 
@@ -510,7 +501,6 @@ void OOVisualEffectEntity::setScaleY(GLfloat factor) {
       if (OOSubEntityInterface* cxxSub =
               dynamic_cast<OOSubEntityInterface*>(se))
         cxxSub->rescaleBy(flasher_factor);  // every effect sub-entity adopts it
-                                            // (bead oo-dpyk8)
     }
   }
 
@@ -539,7 +529,6 @@ void OOVisualEffectEntity::setScaleZ(GLfloat factor) {
       if (OOSubEntityInterface* cxxSub =
               dynamic_cast<OOSubEntityInterface*>(se))
         cxxSub->rescaleBy(flasher_factor);  // every effect sub-entity adopts it
-                                            // (bead oo-dpyk8)
     }
   }
 
@@ -590,8 +579,7 @@ void OOVisualEffectEntity::drawImmediate(bool immediate, bool translucent) {
               dynamic_cast<OOSubEntityInterface*>(subEntity))
         cxxSub->drawSubEntityImmediate(immediate, translucent);
       else if (::ShipEntity* ship = oo::ToShip(subEntity))
-        ship->drawSubEntityImmediate(
-            immediate, translucent);  // the category's (bead oo-dpyk8)
+        ship->drawSubEntityImmediate(immediate, translucent);  // the category's
     }
   }
 }
@@ -624,7 +612,7 @@ oo::PList OOVisualEffectEntity::effectInfoDictionary() {
 }
 
 // (SubEntityRelationship) a slightly misnamed test now things other than ships
-// can have subents The C++ entity (bead oo-w9pi2): the members its object's
+// can have subents The C++ entity: the members its object's
 // messages forwarded to (the virtual getIsVisualEffect() and setOwner(), which
 // an Objective-C entity's adapter sends on; nil's NO for none).
 bool OOVisualEffectEntity::isShipWithSubEntityShip(Entity* other) {
@@ -885,7 +873,7 @@ void OOVisualEffectEntity::setShaderVector2(Vector value) {
 }
 
 // The JS questions, which the effect's facade answered with the binding's
-// functions until bead oo-9ht.165 (the root's facade asks these now).
+// functions (the root's facade asks these now).
 void OOVisualEffectEntity::getJSClass(ooscript::ClassDef** outClass,
                                       ooscript::Object* outPrototype) {
   ::OOJSVisualEffectGetJSClass(outClass, outPrototype);

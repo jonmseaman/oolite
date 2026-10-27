@@ -25,40 +25,15 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSMissionVariables.h"
-
 #include <cstring>
 
 #include "OOIsNumberLiteral.h"
+#include "OOJSMissionVariables.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "ooscript/JSEngine.hpp"
-
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar; see also OOJSClock.mm): the class
-   dispatch table becomes a static ooscript::ClassDef (the stub hooks are
-   nullptr), the class-creation call becomes ooscript::defineObject, the
-   property-name-to-id call in the enumerate hook becomes ooscript::valueToId,
-   and the directly spelled numeric-conversion call becomes
-        ooscript::newNumberValue. `this` is renamed to `thisObj` because it is a
-   reserved word once this file compiles as Objective-C++ (ADR-0001). The class
-   hooks (delProperty, getProperty, setProperty) and the new-enumerate protocol
-   hook now take the façade's Context/Object/ PropertyId/Value signature
-   directly, so no conversion is needed anywhere in the file.
-*/
-/*
-        C++20 since bead oo-s4ns, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. Nothing
-   else in the file was Objective-C: the player (PlayerEntity), which is not
-   converted, is still messaged, which is why the file is still .mm until
-   Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::ClassDef;

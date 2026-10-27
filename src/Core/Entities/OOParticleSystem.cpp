@@ -2,12 +2,11 @@
 
 OOParticleSystem.m
 
-C++20 since bead oo-cenx (see OOParticleSystem.h). The bodies are the
-Objective-C ones: a message to self is a member call, [super ...] the base's
-member, a superclass initialiser that could not fail keeps its guarded
-statements in a plain block, and the universe is handed the entity's Objective-C
-object, oo::ToObjC(this). Other entities stay their Objective-C objects
-(amendment oo-bj8 item 4).
+See OOParticleSystem.h. The bodies are the Objective-C ones: a message to self
+is a member call, [super ...] the base's member, a superclass initialiser that
+could not fail keeps its guarded statements in a plain block, and the universe
+is handed the entity's Objective-C object, oo::ToObjC(this). Other entities stay
+their Objective-C objects.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -29,13 +28,12 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOParticleSystem.h"
-
 #include "MyOpenGLView.h"
 #include "OOLightParticleEntity.h"
 #include "OOMacroOpenGL.h"
+#include "OOParticleSystem.h"
 #include "OOTexture.h"
-#include "OOVector.h"  // make_vector (ADR-0063 item 5 draws on lines of their own)
+#include "OOVector.h"  // make_vector
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"
@@ -70,10 +68,9 @@ void OOParticleSystem::initWithPosition(HPVector pos, Vector vel,
       _particleVelocity[i] =
           vector_multiply_scalar(OORandomUnitVector(), speed);
 
-      GLfloat red =
-          baseColor[0] * 0.1f *
-          (9.5f + randf());  // one draw per local, in the order Clang evaluates
-                             // the arguments (ADR-0063 item 5)
+      GLfloat red = baseColor[0] * 0.1f *
+                    (9.5f + randf());  // one draw per local, in the order Clang
+                                       // evaluates the arguments
       GLfloat green = baseColor[1] * 0.1f * (9.5f + randf());
       GLfloat blue = baseColor[2] * 0.1f * (9.5f + randf());
       Vector color = make_vector(red, green, blue);
@@ -99,7 +96,7 @@ bool OOParticleSystem::canCollide() { return false; }
 
 bool OOParticleSystem::checkCloseCollisionWith(Entity* other) {
   if (other == oo::LiveOwner(this))
-    return false;  // the owner's C++ entity, null for none (bead oo-9ht.39.20)
+    return false;  // the owner's C++ entity, null for none
   return other == nullptr || !other->isEffect();  // [nil isEffect] answered NO
 }
 
@@ -287,8 +284,8 @@ OOSmallFragmentBurstEntity::fragmentBurstFromEntity(Entity* entity) {
       entity != nullptr ? entity->getPosition() : kZeroHPVector,
       entity != nullptr ? entity->getVelocity() : kZeroVector,
       entity != nullptr ? entity->collisionRadius()
-                        : 0.0f);  // the C++ entity's members (bead oo-al52f);
-                                  // none answers zero, as nil did
+                        : 0.0f);  // the C++ entity's members; none
+                                  // answers zero, as nil did
   return result;
 }
 
@@ -341,7 +338,7 @@ OOBigFragmentBurstEntity::fragmentBurstFromEntity(Entity* entity) {
       vector_multiply_scalar(
           entity != nullptr ? entity->getVelocity() : kZeroVector, 0.85),
       entity != nullptr ? entity->collisionRadius()
-                        : 0.0f);  // the C++ entity's members (bead oo-al52f)
+                        : 0.0f);  // the C++ entity's members
   return result;
 }
 

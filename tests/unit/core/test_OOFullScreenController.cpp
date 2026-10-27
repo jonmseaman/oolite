@@ -1,19 +1,15 @@
 /*	test_OOFullScreenController.mm
         Unit tests for OOFullScreenController
-   (src/Core/OOFullScreenController.h): bead oo-bgmb, a Phase 3 conversion in
-   the house style of the OOColor exemplar (proposed ADR-0056).
+   (src/Core/OOFullScreenController.h).
 
         OOFullScreenController is the abstract base of the Mac full-screen
    controllers (Mac-only, not in this tree), so on this build nothing makes one.
-   This pins what the base computed before the conversion: the game view it
+   This pins what the base computes: the game view it
    keeps (retained until the controller goes), every "subclass responsibility"
    method's log call and default answer, and -currentDisplayMode, the one method
         with a body, which picks the current index out of the subclass's mode
-   list (null for no list, an index past the end, or NSNotFound). The
-   expectations were written against the Objective-C API, with an Objective-C
-   subclass, and run on the unconverted class first (commit a9b218647); the
-   class has no facade (no compiled caller), so they are ported to the C++
-   class, and the subclass to a C++ one. Run: bash tools/check-core-tests.sh
+   list (null for no list, an index past the end, or NSNotFound). The test
+   subclass is a C++ one. Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdlib>
@@ -34,10 +30,9 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
   gSubclassResponsibilities++;
 }
 
-/*	The game view is C++ since bead oo-9ht.153 deleted its facade, so the
-   view the controller keeps is a C++ view. SDL/MyOpenGLView.mm is not linked:
-   its destructor (a view made here has no window or context to destroy) and its
-   virtual members (never called) are defined here.
+/*	The view the controller keeps is a C++ view. SDL/MyOpenGLView.mm is not
+   linked: its destructor (a view made here has no window or context to
+   destroy) and its virtual members (never called) are defined here.
 */
 MyOpenGLView::~MyOpenGLView() {}
 void MyOpenGLView::endSplashScreen() { std::abort(); }

@@ -24,8 +24,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOOXZManager.h"
-
 #include <algorithm>
 #include <optional>
 #include <string>
@@ -37,6 +35,7 @@ MA 02110-1301, USA.
 #include "OOCacheManager.h"
 #include "OOColor.h"
 #include "OOManifestProperties.h"
+#include "OOOXZManager.h"
 #include "OOPListParsing.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
@@ -107,8 +106,7 @@ constexpr std::string_view kOOOXZFilterDays = "d:";
 constexpr std::string_view kOOOXZFilterTag = "t:";
 }  // namespace
 
-// OXZInstallableState is declared in OOOXZManager.h (bead oo-0hyr: a member's
-// result).
+// OXZInstallableState is declared in OOOXZManager.h (a member's result).
 
 enum {
   OXZ_GUI_ROW_LISTHEAD = 0,
@@ -212,8 +210,7 @@ bool OXZOrderedBefore(const oo::PList& m1, const oo::PList& m2) {
   return result < 0;
 }
 
-// DESC(...) formatRuntime: a format read at run time (proposed ADR-0043
-// Amendment 3 item 19).
+// DESC(...) formatRuntime: a format read at run time.
 std::string DescFormat(const std::string& format,
                        std::initializer_list<oo::str::FormatArg> args) {
   return oo::str::formatRuntime(format, args);
@@ -284,8 +281,7 @@ std::optional<std::string> JoinedTags(const oo::PList& manifest) {
   return result;
 }
 
-OOOXZManager* sSingleton =
-    nullptr;  // the one +1 is never released (amendment oo-r7m0 item 1)
+OOOXZManager* sSingleton = nullptr;  // the one +1 is never released
 
 }  // namespace
 
@@ -317,7 +313,6 @@ OOOXZManager* OOOXZManager::sharedManager() {
   if (sSingleton == nullptr) {
     OOOXZManager* manager =
         oo::makeRef<OOOXZManager>().leakRef();  // the one +1, never released
-                                                // (amendment oo-r7m0 item 1)
     manager->init();
     sSingleton = manager;
   }
@@ -492,11 +487,10 @@ void OOOXZManager::setOXPURL(const std::optional<std::string>& url) {
 }
 
 oo::PList OOOXZManager::applyCurrentFilter(const oo::PList& list) {
-  /*	The filter is a member function (was a selector, called through its IMP:
-     bead oo-3rb.53, and before that a Foundation invocation object). The
-     one-argument filters take the manifest; the rest take the manifest and the
-     parameter (the prefixes are ASCII, so the byte offset is the old character
-     offset).
+  /*	The filter is a member function (was a selector, called through its
+     IMP). The one-argument filters take the manifest; the rest take the
+     manifest and the parameter (the prefixes are ASCII, so the byte offset is
+     the old character offset).
   */
   typedef bool (OOOXZManager::*OneArgumentFilter)(const oo::PList&);
   typedef bool (OOOXZManager::*TwoArgumentFilter)(const oo::PList&,
@@ -692,7 +686,7 @@ void OOOXZManager::processDownloadEvents() {
     std::optional<oo::http::Event> event = _currentDownload->nextEvent();
     if (!event.has_value()) break;
     {
-      oo::AutoreleaseScope pool;  // was @autoreleasepool (oo-31u.8)
+      oo::AutoreleaseScope pool;  // was @autoreleasepool
       switch (event->kind) {
         case oo::http::Event::Kind::response:
           downloadDidReceiveResponse(event->expectedLength);
@@ -732,7 +726,7 @@ bool OOOXZManager::cancelUpdate() {
   } else {
     _interfaceState = OXZ_STATE_MAIN;
   }
-  gui();  // slice 3, still Objective-C on the facade
+  gui();
   return true;
 }
 
@@ -1278,8 +1272,7 @@ bool OOOXZManager::installOXZ(NSUInteger item) {
            "Manifest does not have a download URL - cannot install");
     return false;
   }
-  // The URL as a string; any other kind fetches nothing and fails at once
-  // (proposed ADR-0044).
+  // The URL as a string; any other kind fetches nothing and fails at once.
   const std::string urlString =
       ManifestString(manifest, std::string(kOOManifestDownloadURL))
           .value_or("");
@@ -1429,7 +1422,6 @@ void OOOXZManager::gui() {
                                                           // the arguments: a
                                                           // description that is
                                                           // an array draws
-                                                          // (ADR-0063 item 5)
           gui->setText(
               DescFormat(filterFormat,
                          {cxx_OOExpand("[oolite_key_oxzmanager_setfilter]")
@@ -1477,7 +1469,6 @@ void OOOXZManager::gui() {
                                                           // the arguments: a
                                                           // description that is
                                                           // an array draws
-                                                          // (ADR-0063 item 5)
           gui->addLongText(
               DescFormat(progressFormat, {_currentDownloadName,
                                           Arg(humanSize(_downloadProgress)),
@@ -2531,8 +2522,8 @@ void OOOXZManager::downloadDidReceiveData(const std::string& data) {
    *
    * The game tick is no longer a run-loop timer, so GameController fires
    * it (and the run loop's own due timers) here, as the run loop did.
-   * Proposed ADR-0033. The download itself no longer blocks the frame
-   * loop (it runs on its own thread, proposed ADR-0044); the call stays
+   * The download itself no longer blocks the frame
+   * loop (it runs on its own thread); the call stays
    * so a burst of queued chunks still lets the game tick between them.
    */
   ::GameController::sharedController()->fireDueTimers();

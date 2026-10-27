@@ -83,8 +83,8 @@ OOINLINE bool StatusIsSendable(OOTCPClientConnectionStatus status) {
 
 }  // namespace
 
-/*	The socket (bead oo-3rb.14, proposed ADR-0041). What the Foundation
-   streams did, measured against gnustep-base 1.31 on Windows, and kept here:
+/*	The socket. What the Foundation streams did, measured against
+   gnustep-base 1.31 on Windows, and kept here:
 
         * The host is looked up by name, IPv4 only; an unknown name logs
    GNUstep's own "Host '...' not found" line and gives no connection.
@@ -315,8 +315,7 @@ OODebugTCPConsoleClient::~OODebugTCPConsoleClient() {
   /*	-dealloc then told a connected monitor (_monitor set) to disconnect it.
      That never did anything: the monitor retains its debugger (this client's
      facade) while _monitor is set, so the client could not be released then,
-     and the monitor ignores a debugger that is not its own. Not translated
-     (proposed ADR-0056, amendment oo-kq7 item 3).
+     and the monitor ignores a debugger that is not its own. Not translated.
   */
 
   closeConnection();
@@ -647,7 +646,7 @@ void OODebugTCPConsoleClient::sendDictionary(const oo::PList& dictionary) {
   if (dictionary.isNull() || !StatusIsSendable(_status)) return;
 
   /*	GNUstep's XML property-list serialisation, byte for byte
-     (oo::writeXMLPList, ADR-0043 item 15). GNUstep reported no error for
+     (oo::writeXMLPList). GNUstep reported no error for
      anything the console is sent (an object that is not property-list data is
      written as its description, probed); writeXMLPList fails only on a null
      list, which is not sent. The log keeps GNUstep's fallback text.
@@ -1001,8 +1000,8 @@ void OODebugTCPConsoleClient::DecoderPacket(void* cbInfo,
                                             OOALObjectRef packetType,
                                             OOALObjectRef packet) {
   // The decoder's handles hold property lists
-  // (OOTCPStreamDecoderAbstractionLayer, bead oo-x3xy). A type that is not a
-  // string was nil, and no packet was dispatched.
+  // (OOTCPStreamDecoderAbstractionLayer). A type that is not a string was
+  // nil, and no packet was dispatched.
   const std::string* type = OOALObjectPList(packetType).getIf<std::string>();
   if (type == nullptr) return;
   static_cast<OODebugTCPConsoleClient*>(cbInfo)->dispatchPacket(
@@ -1021,8 +1020,7 @@ void OODebugTCPConsoleClient::DecoderError(void* cbInfo,
 
 #ifdef OO_LOG_DEBUG_PROTOCOL_PACKETS
 void LogOOTCPStreamDecoderPacket(OOALObjectRef packetHandle) {
-  // GNUstep's XML property-list serialisation, byte for byte (ADR-0043 item
-  // 15).
+  // GNUstep's XML property-list serialisation, byte for byte.
   const oo::Expected<oo::Data, oo::PListError> data =
       oo::writeXMLPList(OOALObjectPList(packetHandle));
   const std::string xml =

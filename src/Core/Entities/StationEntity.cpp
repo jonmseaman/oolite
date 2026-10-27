@@ -22,8 +22,6 @@
 
 */
 
-#include "StationEntity.h"
-
 #include "AI.h"
 #include "DockEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
@@ -45,11 +43,12 @@
 #include "OOStringParsing.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "ShipEntityAI.h"
+#include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
 
-// -oo_stringForKey:'s value without the Foundation type (proposed ADR-0043): a
+// -oo_stringForKey:'s value without the Foundation type: a
 // string as is, a number's -stringValue, anything else (or nothing) nullopt, as
 // it gave nil.
 namespace {
@@ -78,7 +77,7 @@ oo::PList cxx_OOMakeDockingInstructions(
   acc["speed"] = oo::PList(static_cast<double>(speed));
   acc["range"] = oo::PList(static_cast<double>(range));
   acc["station"] = oo::EntityWeakNode(
-      station);  // weakly, as its object's weak reference was (bead oo-w9pi2)
+      station);  // weakly, as its object's weak reference was
   acc["match_rotation"] = oo::PList(static_cast<bool>(match_rotation));
   acc["docking_stage"] = oo::PList::signedInteger(docking_stage);
   if (ai_message) {
@@ -90,14 +89,13 @@ oo::PList cxx_OOMakeDockingInstructions(
   return oo::PList(std::move(acc));
 }
 
-// Slice 4 of docs/phases/3-slices/StationEntity.md (bead oo-tqem7): NPC
-// launchers. Several are sent by name (ADR-0055 item 5), which the root's
-// facade answers for a station's part (beads oo-9ht.175, oo-9ht.144).
+// NPC launchers. Several are sent by name, which the root's facade answers for
+// a station's part.
 
 // Exposed to AI
 oo::PList StationEntity::launchIndependentShip(
-    const std::string& role)  // called by name (ADR-0055 item 5): the ship
-                              // launched, as an Object node (null: none)
+    const std::string& role)  // called by name: the ship launched, as an
+                              // Object node (null: none)
 {
   ShipEntity* self = this;
   if (!hasLaunchDock()) {
@@ -151,7 +149,7 @@ oo::PList StationEntity::launchIndependentShip(
         // JSAI: not needed - oolite-traderAI.js handles exiting if full fuel
         // and plentiful cargo
         //				[ship
-        //switchAITo:@"exitingTraderAI.plist"];
+        // switchAITo:@"exitingTraderAI.plist"];
         if ((ship != nullptr ? ship->getFuel() : OOFuelQuantity{}) == 0) {
           if (ship != nullptr) ship->setFuel(70);
         }
@@ -189,10 +187,9 @@ oo::PList StationEntity::launchIndependentShip(
 }
 
 // Exposed to AI
-oo::PList StationEntity::launchPolice()  // called by name (ADR-0055 item 5)
+oo::PList StationEntity::launchPolice()  // called by name
 {
-  std::vector<oo::EntityHold>
-      result;  // the police ships' objects, held (bead oo-9ht.39.19)
+  std::vector<oo::EntityHold> result;  // the police ships' objects, held
   if (!hasLaunchDock()) {
     OO_LOG("station.launchShip.impossible",
            "Cancelled launch for a police ship, as the {} has no launch docks.",
@@ -726,7 +723,7 @@ oo::PList StationEntity::launchPolice()  // called by name (ADR-0055 item 5)
 
 // Exposed to AI
 void StationEntity::launchShipWithRole(
-    const std::string& role)  // called by name (ADR-0055 item 5)
+    const std::string& role)  // called by name
 {
   if (!hasLaunchDock()) {
     OO_LOG("station.launchShip.impossible",
@@ -755,10 +752,7 @@ void StationEntity::launchShipWithRole(
   if (ship != nullptr) oo::ReleaseEntity(ship);
 }
 
-// Slice 1 of docs/phases/3-slices/StationEntity.md (bead oo-64ako): class
-// shell, market and shipyard, flags and accessors. The facade's initialiser and
-// -dealloc are members since bead oo-9ht.175 deleted the facade (ADR-0056
-// amendment oo-9ht.175).
+// Class shell, market and shipyard, flags and accessors.
 
 ::ShipEntity* StationEntity::newStationObject(const std::string& key,
                                               const oo::PList& dict) {
@@ -951,8 +945,7 @@ void StationEntity::setPlanet(::OOPlanetEntity* planet_entity) {
 }
 
 ::OOPlanetEntity* StationEntity::getPlanet() {
-  // The planet is C++ since bead oo-9ht.129: null for any other entity (and for
-  // none, as nil).
+  // Null for any other entity (and for none, as nil).
   return dynamic_cast<::OOPlanetEntity*>(
       (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(planet) : nullptr));
 }
@@ -1202,9 +1195,10 @@ std::optional<std::string> StationEntity::marketOverrideName() {
   // 2010.06.14 - Micha - we can't default to the primary role as otherwise the
   // logic
   //				generating the market in [Universe
-  //commodityDataForEconomy:] doesn't 				work properly with the various overrides.
-  //The primary role will get 				used if either there is no market override, or the
-  //market wasn't 				defined.
+  // commodityDataForEconomy:] doesn't 				work properly
+  // with the various overrides. The primary role will get
+  // used if either there is no market override, or the market wasn't
+  // defined.
   return OptionalStringValue(shipinfoDictionary.find("market"));
 }
 
@@ -1373,8 +1367,7 @@ void StationEntity::dumpSelfState() {
   }
 }
 
-// Slice 2 of docs/phases/3-slices/StationEntity.md (bead oo-9j462): docking
-// traffic control and the launch queue.
+// Docking traffic control and the launch queue.
 
 void StationEntity::sanityCheckShipsOnApproach() {
   unsigned soa = 0;
@@ -1773,9 +1766,7 @@ void StationEntity::update(OOTimeDelta delta_t) {
                                                                 // arguments: a
                                                                 // description
                                                                 // that is an
-                                                                // array draws
-                                                                // (ADR-0063
-                                                                // item 5)
+                                                                // array draws.
         sendExpandedMessage(
             oo::str::formatRuntime(
                 grantedFormat,
@@ -1793,8 +1784,7 @@ void StationEntity::update(OOTimeDelta delta_t) {
                                                            // as Clang evaluates
                                                            // the arguments: a
                                                            // description that
-                                                           // is an array draws
-                                                           // (ADR-0063 item 5)
+                                                           // is an array draws.
         sendExpandedMessage(
             oo::str::formatRuntime(
                 grantedFormat,
@@ -2093,8 +2083,7 @@ void StationEntity::addShipToStationCount(::ShipEntity* ship) {
   }
 }
 
-// Slice 3 of docs/phases/3-slices/StationEntity.md (bead oo-hjzwk): docking
-// clearance, damage, allegiance and alert level.
+// Docking clearance, damage, allegiance and alert level.
 
 bool StationEntity::collideWithShip(::ShipEntity* other) {
   /*
@@ -2350,9 +2339,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
                                                               // arguments: a
                                                               // description
                                                               // that is an
-                                                              // array draws
-                                                              // (ADR-0063 item
-                                                              // 5)
+                                                              // array draws.
           sendExpandedMessage(
               oo::str::formatRuntime(
                   extendedFormat,
@@ -2531,9 +2518,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
                                                               // arguments: a
                                                               // description
                                                               // that is an
-                                                              // array draws
-                                                              // (ADR-0063 item
-                                                              // 5)
+                                                              // array draws.
       sendExpandedMessage(
           oo::str::formatRuntime(
               grantedFormat,
@@ -2552,8 +2537,7 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
                                                          // Clang evaluates the
                                                          // arguments: a
                                                          // description that is
-                                                         // an array draws
-                                                         // (ADR-0063 item 5)
+                                                         // an array draws.
       sendExpandedMessage(
           oo::str::formatRuntime(
               grantedFormat,

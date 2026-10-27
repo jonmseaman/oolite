@@ -70,7 +70,7 @@ bool JSQuaternionSetQuaternion(ooscript::Context context,
         On failure, it will return NO and raise an error. If the caller is a JS
         callback, it must return NO to signal an error.
 */
-extern "C++" {  // C++ parameters (proposed ADR-0043, bead oo-38bp)
+extern "C++" {  // C++ parameters
 bool QuaternionFromArgumentList(ooscript::Context context,
                                 const std::string& scriptClass,
                                 const std::string& function, unsigned argc,
@@ -100,7 +100,7 @@ bool QuaternionFromArgumentListNoError(ooscript::Context context, unsigned argc,
 /*	The quaternion-conversion statistics the debug console reads with
         PS.callObjC("reportJSQuaternionStatistics"): the C++ PlayerEntity's
    static members of the same names forward here, reached by callObjC's name
-   table (bead oo-9ht.15).
+   table.
 */
 oo::PList reportJSQuaternionStatistics(void);
 void clearJSQuaternionStatistics(void);

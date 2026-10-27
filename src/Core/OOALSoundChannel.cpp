@@ -25,9 +25,8 @@ SOFTWARE.
 
 */
 
-#include "OOALSoundChannel.h"
-
 #include "OOALSound.h"
+#include "OOALSoundChannel.h"
 #include "OOLogging.h"
 #include "OOMaths.h"
 #include "oofnd/Log.hpp"
@@ -51,9 +50,8 @@ bool OOSoundChannel::init() {
 }
 
 // -dealloc: [self hasStopped] (make sure buffers are dequeued and deleted, and
-// tell the delegate), which the facade's -dealloc sent until bead oo-9ht.86,
-// then the source goes. A channel whose init() failed has no source (the facade
-// of one was never made, so nothing was told).
+// tell the delegate), then the source goes. A channel whose init() failed has
+// no source, so nothing is told.
 OOSoundChannel::~OOSoundChannel() {
   if (_source != 0) hasStopped();
   OOAL(alDeleteSources(1, &_source));

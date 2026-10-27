@@ -1,7 +1,6 @@
 /*	test_OOJSFrameCallbacks.mm
         Unit tests for the frame callbacks
-   (src/Core/Scripting/OOJSFrameCallbacks.h/.mm): bead oo-n041, a Phase 3
-   scripting file (proposed ADR-0056 amendment oo-ppc).
+   (src/Core/Scripting/OOJSFrameCallbacks.h/.mm).
 
         The file defines the global functions addFrameCallback(),
    removeFrameCallback() and isValidFrameCallback(), and
@@ -10,10 +9,10 @@
         (ooscript/JSEngine_quickjs.cpp) and links the game's own objects for the
    file and the engine's exception translator (OOJSEngineNativeWrappers.mm).
    What the rest of the engine would provide is defined below as the smallest
-   stand-in that does the same thing (amendment oo-ppc item 6): the error and
+   stand-in that does the same thing: the error and
    warning reporters, OOJSValue (a rooted JS value, which a deferred add keeps),
    the time limiter and the universe's time acceleration. The engine's header is
-   not imported, because the test defines OOJSValue (amendment oo-z1s4 item 4).
+   not imported, because the test defines OOJSValue.
    The expectations were written against the Objective-C file and run on it
    first; they pin the three functions and their errors, the delta each callback
    receives, adds and removes made while the callbacks run (deferred to the end
@@ -99,9 +98,8 @@ std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
   return result;
 }
 
-// A JS value kept alive for C++ (OOJSEngineCore.h; a C++ class since bead
-// oo-wdqw1 deleted its facade): the members the deferred add calls, defined
-// here with the stand-in's answers.
+// A JS value kept alive for C++ (OOJSEngineCore.h): the members the deferred
+// add calls, defined here with the stand-in's answers.
 oo::Ref<OOJSValue> OOJSValue::valueWithJSValue(ooscript::Value value,
                                                ooscript::Context context) {
   oo::Ref<OOJSValue> result = oo::makeRef<OOJSValue>();
@@ -150,8 +148,7 @@ extern "C" void OOJSUnreachable(const char* function, const char*, unsigned) {
 
 // The universe's time acceleration, which scales each frame's delta.
 // The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's FakeUniverse stood
-// in for), with the header's names and signatures.
+// with the header's names and signatures.
 class Universe {
  public:
   double getTimeAccelerationFactor();

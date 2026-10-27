@@ -23,9 +23,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOExhaustPlumeEntity.h"
-
 #include "MyOpenGLView.h"
+#include "OOExhaustPlumeEntity.h"
 #include "OOGraphicsResetManager.h"
 #include "OOJSExhaustPlume.h"
 #include "OOMacroOpenGL.h"
@@ -48,9 +47,8 @@ static OOTexture* sPlumeTexture = nil;
 
 namespace {
 
-// The plume texture's graphics reset client, which the façade class was until
-// bead oo-9ht.110 (ADR-0056 amendment oo-9ht.107 item 5): registered once, with
-// the texture, and never destroyed.
+// The plume texture's graphics reset client: registered once, with the
+// texture, and never destroyed.
 class PlumeTextureResetClient : public OOGraphicsResetClient {
  public:
   void resetGraphicsState() override {
@@ -672,8 +670,7 @@ void OOExhaustPlumeEntity::resetGraphicsState() {
   sPlumeTexture = nullptr;
 }
 
-// The binding's bodies (OOJSExhaustPlume.mm), which the façade forwarded to
-// until bead oo-9ht.110.
+// The binding's bodies (OOJSExhaustPlume.mm), which the façade forwarded to.
 void OOExhaustPlumeEntity::getJSClass(ooscript::ClassDef** outClass,
                                       ooscript::Object* outPrototype) {
   ::OOJSExhaustPlumeGetJSClass(outClass, outPrototype);

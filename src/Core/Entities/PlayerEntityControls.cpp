@@ -22,8 +22,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "PlayerEntityControls.h"
-
 #include <cstring>
 
 #include "AI.h"
@@ -52,6 +50,7 @@ MA 02110-1301, USA.
 #include "OOSystemDescriptionManager.h"
 #include "OOTexture.h"
 #include "PlayerEntityContracts.h"
+#include "PlayerEntityControls.h"
 #include "PlayerEntityKeyMapper.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "PlayerEntityLoadSave.h"
@@ -76,7 +75,7 @@ MA 02110-1301, USA.
 
 // Whether any of the keys is down. Every key is read, as the "a | b | c" it
 // replaces read them all (a bitwise OR of bools, which clang flags once
-// clang-format spaces the operators; bead oo-we7mm).
+// clang-format spaces the operators).
 static bool AnyKeyPressed(std::initializer_list<bool> keys) {
   for (bool key : keys) {
     if (key) return true;
@@ -528,8 +527,8 @@ oo::PList PlayerEntity::processKeyCode(const oo::PList& key_def) {
     }
 
     //	for '0' '1' '2' '3' '4' '5' '6' '7' '8' '9' - we want to interpret those
-    //as strings - not numbers 	alphabetical characters and symbols will return
-    //an intValue of 0.
+    // as strings - not numbers 	alphabetical characters and symbols will
+    // return an intValue of 0.
 
     if (value != nullptr && value->isString() && (iValue < 10)) {
       const std::string& keystring = *value->getIf<std::string>();
@@ -696,8 +695,8 @@ void PlayerEntity::getPollControls(double delta_t) {
   }
 }
 
-// The GUI row a mouse click activates (bead oo-3rb.348). UNIVERSE->cursor_row
-// is only recomputed when the GUI is RENDERED, so after a stall the motion
+// The GUI row a mouse click activates. UNIVERSE->cursor_row is only
+// recomputed when the GUI is RENDERED, so after a stall the motion
 // events and the click arrive in one tick and cursor_row is still the row of
 // the last render, not the row under the pointer (a click aimed at row 26
 // activated row 22, which the pointer had crossed on its way). On an
@@ -932,8 +931,7 @@ void PlayerEntity::pollApplicationControls() {
       }
 
       if ((gameView != nullptr ? gameView->isCommandQDown() : false)) {
-        // The target was the controller's object; the controller is C++ (bead
-        // oo-9ht.164), and on SDL the pair is kept, never performed: nil.
+        // On SDL the pair is kept, never performed: nil.
         if (gameController != nullptr)
           gameController->pauseFullScreenModeToPerform("exitAppCommandQ", nil);
       }
@@ -1838,8 +1836,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           dump_target_state_pressed = YES;
           Entity* target = primaryTarget();
           if (target == nullptr) target = this;
-          target->dumpState();  // what the facade's -dumpState called (bead
-                                // oo-9ht.39.18)
+          target->dumpState();
         }
       } else
         dump_target_state_pressed = NO;
@@ -2662,8 +2659,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
                                          : false)) {
                 if (controller != nullptr)
                   controller->pauseFullScreenModeToPerform("savePlayer", nil);
-              }  // no target: the SDL build never performs it, and the entity's
-                 // object no longer answers -savePlayer (bead oo-w9pi2)
+              }  // no target: the SDL build never performs it
               else
                 savePlayer();
             } else {
@@ -3776,9 +3772,10 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
 
   if ((guiSelectedRow == GUI_ROW(GAME, VOLUME)) &&
       ((checkKeyPress(n_key_gui_arrow_right)) ||
-       (checkKeyPress(n_key_gui_arrow_left))))  // (+[OOSound
-                                                // respondsToSelector:@selector(masterVolume)]
-                                                // was always YES)
+       (checkKeyPress(
+           n_key_gui_arrow_left))))  // (+[OOSound
+                                     // respondsToSelector:@selector(masterVolume)]
+                                     // was always YES)
   {
     if ((!volumeControlPressed) ||
         (script_time > timeLastKeyPress + KEY_REPEAT_INTERVAL)) {
@@ -5619,7 +5616,7 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking) {
   }
 
   Entity* target;
-  target = primaryTarget();  // the C++ entities (bead oo-9ht.39.18)
+  target = primaryTarget();
   // If target isn't dockable, check for nearby stations
   if (!(target != nullptr && target->getIsStation())) {
     ::Universe* uni = UNIVERSE;
@@ -5692,10 +5689,7 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking) {
       // TOO_BIG_TO_DOCK issued when docks are scripted to reject docking
       if ((oo::ToDock(sub.get()) != nullptr
                ? oo::ToDock(sub.get())->canAcceptShipForDocking(this)
-               : std::optional<std::string>()) ==
-          "TOO_BIG_TO_DOCK")  // a dock's object is a ship's since bead
-                              // oo-9ht.180
-      {
+               : std::optional<std::string>()) == "TOO_BIG_TO_DOCK") {
         message = ExpandKeyWithArguments(
             (ts == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr))
                 ? "autopilot-denied"

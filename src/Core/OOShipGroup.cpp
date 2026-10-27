@@ -33,9 +33,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOShipGroup.h"
-
 #include "OOMaths.h"
+#include "OOShipGroup.h"
 #include "ShipEntity.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
@@ -44,7 +43,7 @@ MA 02110-1301, USA.
 enum { kMinSize = 4, kMaxFreeSpace = 128 };
 
 /*	OOShipGroupMembers: range-for over a group's live members, in _members
-   order, replacing the for-in fast-enumeration conformance (bead oo-3rb.20). It
+   order, replacing the for-in fast-enumeration conformance. It
    fetches batches of kBatchSize exactly as
    -countByEnumeratingWithState:objects:count: did under clang's for-in (whose
    buffer is 16 objects): dead references are compacted, and -cleanUp runs, at
@@ -73,7 +72,7 @@ class OOShipGroupMembers {
 
     ::ShipEntity* operator*() const {
       return oo::ToShip(_buffer[_position].get());
-    }  // the member's ship (the object until bead oo-9ht.144)
+    }  // the member's ship
     Iterator& operator++() {
       OOCAssert(_group->updateCount() == _updateCount,
                 "OOShipGroup was mutated while being enumerated.");
@@ -92,7 +91,7 @@ class OOShipGroupMembers {
     NSUInteger _updateCount;
     NSUInteger _index = 0, _batchCount = 0, _position = 0;
     oo::EntityHold _buffer[kBatchSize];  // held, as the autoreleased objects
-                                         // were (bead oo-w9pi2)
+                                         // were
   };
 
   Iterator begin() const { return Iterator(_group); }
@@ -141,13 +140,12 @@ std::string OOShipGroup::description() const {
 
 OOShipGroup::~OOShipGroup() {
   // The members' and the leader's weak references go with the vector and the
-  // member (bead oo-9ht.24's release of the leader's included).
+  // member.
   _name.reset();
 }
 
 std::optional<std::string> OOShipGroup::descriptionComponents() const {
-  // leader() drops a stale weak reference, so it is not const (amendment
-  // oo-bhb9 item 5).
+  // leader() drops a stale weak reference, so it is not const.
   OOShipGroup* mutableThis = const_cast<OOShipGroup*>(this);
   std::string desc = oo::str::format("%zu ships", _count);
   if (_name.has_value()) {
@@ -222,7 +220,7 @@ bool OOShipGroup::containsShip(::ShipEntity* ship) {
   for (::ShipEntity* containedShip : OOShipGroupMembers(this)) {
     if (ship != nullptr &&
         ship == containedShip)  // what -isEqual: of their objects answered
-                                // (identity; bead oo-9ht.39.27)
+                                // (identity)
     {
       return true;
     }
@@ -265,7 +263,7 @@ bool OOShipGroup::removeShip(::ShipEntity* ship) {
   while ((containedShip = shipEnum.next())) {
     if (ship != nullptr &&
         ship == containedShip)  // what -isEqual: of their objects answered
-                                // (identity; bead oo-9ht.39.27)
+                                // (identity)
     {
       index = shipEnum.index() - 1;
       _members[index] = _members[--_count];
@@ -274,9 +272,8 @@ bool OOShipGroup::removeShip(::ShipEntity* ship) {
       // Clean up
       if (ship != nullptr) ship->setGroup(nullptr);
       if (ship != nullptr)
-        ship->ShipEntity::setOwner(
-            ship);  // qualified: the final overrider (bead oo-9ht.144), so the
-                    // group's test stands in for it
+        ship->ShipEntity::setOwner(ship);  // qualified: the final overrider, so
+                                           // the group's test stands in for it
       cleanUp();
       break;
     }

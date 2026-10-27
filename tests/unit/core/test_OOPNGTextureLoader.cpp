@@ -1,21 +1,17 @@
 /*	test_OOPNGTextureLoader.mm
         Unit tests for OOPNGTextureLoader
    (src/Core/Materials/OOPNGTextureLoader.h), the texture loader that reads PNG
-   files: bead oo-z889 (Phase 3, house style of proposed ADR-0056; a leaf of the
-        texture loaders, amendments oo-zl36 and oo-vl43).
+   files.
 
         The loaders' factory makes one for a path ending in .png and queues it
    on the game's work manager; on a work thread it reads the file with libpng,
    and the texture takes the pixels on the main thread. The test writes its PNG
    files with libpng's simplified API into a scratch directory under the working
    directory, so no game resource is read. It links the whole game but main
-        (tests/unit/core/meson.build entry ['*']), on the hidden GL context of
+   (tests/unit/core/meson.build entry ['*']), on the hidden GL context of
    oo_gl_test_context.hpp (the loaders' one-time set-up reads the GL texture
-   size limit). The expectations were written against the Objective-C API and
-   run on the unconverted class first (commit a35e9c1a5); the loader is made by
-   the factory, so they hold unchanged after it. The last test pins the C++ API
-        of the converted class (a global C++ class with no facade of its own).
-        Run: bash tools/check-core-tests.sh
+   size limit). The loader is made by the factory. The last test pins the C++
+   API of the class (a global C++ class). Run: bash tools/check-core-tests.sh
 */
 
 #include <png.h>
@@ -266,8 +262,7 @@ OO_TEST(cxxApi) {
              loader->cacheKey() ==
                  std::optional<std::string>("cxx.png:0x0002"));
 
-    // The work manager takes the C++ loader (its facade until bead oo-9ht.14
-    // made the task C++; bead oo-9ht.114 deleted the facade).
+    // The work manager takes the C++ loader.
     OO_CHECK(loader->description().starts_with("<OOPNGTextureLoader 0x"));
     OO_CHECK(OOAsyncWorkManager::sharedAsyncWorkManager()->addTask(
         loader.get(), kOOAsyncPriorityMedium));

@@ -1,17 +1,8 @@
 /*	test_OOPriorityQueue.mm
-        Unit tests for OOPriorityQueueOf (src/Core/OOPriorityQueue.h): bead
-   oo-9ht.35, the binary heap over C++ elements that the timer queue
-   (OOScriptTimer) holds.
-
-        Bead oo-3lj8 converted the Objective-C OOPriorityQueue (elements ordered
-   by a comparator selector) and pinned it here; bead oo-9ht.35 added
-   OOPriorityQueueOf, the same heap step for step, and checked it against the
-   Objective-C queue as an oracle, equal keys included. Bead oo-4aq6a.3 deleted
-   the Objective-C queue (no game caller since oo-9ht.35): its six cases retired
-        with it (std-2026-10-19 item 2), and the two OOPriorityQueueOf cases
-   compare with the Objective-C queue's output measured on the tree before the
-   deletion, written as literals (ADR-0062 item 1). Run: bash
-   tools/check-core-tests.sh
+        Unit tests for OOPriorityQueueOf (src/Core/OOPriorityQueue.h), the
+   binary heap over C++ elements that the timer queue (OOScriptTimer) holds. The
+   expected orders are literals measured from a reference implementation. Run:
+   bash tools/check-core-tests.sh
 */
 
 #include <string>
@@ -20,7 +11,7 @@
 #include "OOPriorityQueue.h"
 #include "oo_test.hpp"
 
-// MARK: OOPriorityQueueOf (bead oo-9ht.35)
+// MARK: OOPriorityQueueOf
 // ------------------------------------------------------
 
 namespace {
@@ -81,9 +72,8 @@ OO_TEST(cxxQueueGivesTheSameOrder) {
     OO_CHECK(cxxQueue.peekAtNextObject() != nullptr &&
              cxxQueue.peekAtNextObject()->key == 0);
 
-    // Take a few, put one back, then empty the queue. The expected orders are
-    // the deleted Objective-C OOPriorityQueue's, measured on the same keys and
-    // steps before bead oo-4aq6a.3 (ADR-0062 item 1).
+    // Take a few, put one back, then empty the queue. The expected orders were
+    // measured from a reference implementation on the same keys and steps.
     std::vector<oo::Ref<CxxItem>> cxxFirst;
     for (int i = 0; i < 4; i++) {
       cxxFirst.push_back(cxxQueue.removeNextObject());
@@ -112,10 +102,8 @@ OO_TEST(cxxQueueHoldsAndRemovesByIdentity) {
     OO_CHECK_EQ(CxxItem::sLive, 3);
 
     // The search goes on past a match, so the element moved into the removed
-    // one's place is not looked at again: the same as the Objective-C
-    // OOPriorityQueue, whatever that leaves. The count is that queue's,
-    // measured on the same steps before bead oo-4aq6a.3 deleted it (ADR-0062
-    // item 1).
+    // one's place is not looked at again, whatever that leaves. The count was
+    // measured from a reference implementation on the same steps.
     queue.removeExactObject(three.get());
     OO_CHECK(queue.count() < 4);
     OO_CHECK(queue.count() == 3);

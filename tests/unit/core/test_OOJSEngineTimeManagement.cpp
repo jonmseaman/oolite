@@ -1,29 +1,24 @@
 /*	test_OOJSEngineTimeManagement.mm
         Unit tests for the script time limiter and profiler
-   (src/Core/Scripting/OOJSEngineTimeManagement.h/.mm): bead oo-cn4o, a Phase 3
-   conversion in the house style of the OOColor exemplar (proposed ADR-0056;
-        amendment oo-ppc for the scripting files).
+   (src/Core/Scripting/OOJSEngineTimeManagement.h/.mm).
 
-        The file holds the time limiter (start/stop, pause/resume), the watchdog
+   The file holds the time limiter (start/stop, pause/resume), the watchdog
    thread that stops a script which runs too long, and the debug-build profiler,
    whose results are OOTimeProfile and OOTimeProfileEntry objects. The test runs
    them against the game's own façade backend (ooscript/JSEngine_quickjs.cpp)
    and links the game's own objects for the file and the stopwatch
-        (OOProfilingStopwatch.mm). What the rest of the engine would provide is
+   (OOProfilingStopwatch.mm). What the rest of the engine would provide is
    defined below as the smallest stand-in that does the same thing: the engine
    object the watchdog keeps, the running script (named in the "terminated" log
    line), the stack dump, and the property-list converter (recording what it is
    given). The file's own header imports the engine's, which the test defines
-   classes of, so the test declares what it calls itself (amendment oo-z1s4 item
-   4). The expectations were written against the Objective-C file and run on it
-   first; they pin the limiter's limit through nesting, an extra stop, pause and
-   resume; the profiler's entries (names, hit counts, the frame kind), the
-   profile's and entries' descriptions and property lists and the comparisons;
-   and the watchdog stopping an endless script. Run: bash
-   tools/check-core-tests.sh
+   classes of, so the test declares what it calls itself. The expectations were
+   written against the Objective-C file and run on it first; they pin the
+   limiter's limit through nesting, an extra stop, pause and resume; the
+   profiler's entries (names, hit counts, the frame kind), the profile's and
+   entries' descriptions and property lists and the comparisons; and the
+   watchdog stopping an endless script. Run: bash tools/check-core-tests.sh
 */
-
-#include "test_OOJSEngineTimeManagement.hpp"
 
 #include <chrono>
 #include <cstring>
@@ -40,6 +35,7 @@
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/OOObject.h"
 #include "ooscript/JSEngine.hpp"
+#include "test_OOJSEngineTimeManagement.hpp"
 
 // MARK: The file's API, as its header declares it
 // ----------------------------------------------
@@ -104,9 +100,8 @@ extern "C" void OOJSDumpStack(ooscript::Context) { sStackDumps++; }
 #endif
 
 // The engine owns the runtime; the watchdog reads it from the engine's ivar, as
-// in the game. The engine (a C++ class since bead oo-wdqw1 deleted its facade):
-// reference counted, as the watchdog holds it; the engine owns the runtime,
-// which the watchdog is handed with it.
+// in the game. The engine is reference counted, as the watchdog holds it; the
+// engine owns the runtime, which the watchdog is handed with it.
 class OOJavaScriptEngine : public oo::RefCounted {
  public:
   explicit OOJavaScriptEngine(ooscript::Runtime runtime) : _runtime(runtime) {}
@@ -116,10 +111,9 @@ class OOJavaScriptEngine : public oo::RefCounted {
 
 #include "OOScript.h"
 
-// OOJSScript (OOJSScript.h), which the code under test calls. Since bead
-// oo-9ht.133 deleted the OOScript root's facade (a script's object since bead
-// oo-9ht.137) a script is the C++ object, so the stand-in is a C++ subclass of
-// OOScript declaring the members that code calls.
+// OOJSScript (OOJSScript.h), which the code under test calls. A script is a
+// C++ object, so the stand-in is a C++ subclass of OOScript declaring the
+// members that code calls.
 class OOJSScript : public OOScript {
  public:
   static OOJSScript* currentlyRunningScript();

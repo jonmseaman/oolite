@@ -2,9 +2,8 @@
 
 OOExplosionCloudEntity.m
 
-C++20 since bead oo-cenx, with its superclass (see OOParticleSystem.h and
-OOParticleSystem.mm: the bodies are the Objective-C ones, translated the same
-way).
+See OOParticleSystem.h and OOParticleSystem.mm: the bodies are the Objective-C
+ones, translated the same way.
 
 
 Oolite
@@ -27,9 +26,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOExplosionCloudEntity.h"
-
 #include "OOColor.h"
+#include "OOExplosionCloudEntity.h"
 #include "OOGraphicsResetManager.h"
 #include "OOTexture.h"
 #include "PlayerEntity.h"
@@ -63,10 +61,9 @@ bool OOExplosionCloudEntity::initExplosionCloudWithEntity(
               DETAIL_LEVEL_SHADERS
           ? 10
           : 25;
-  HPVector pos = entity != nullptr
-                     ? entity->getPosition()
-                     : kZeroHPVector;  // the C++ entity (bead oo-9ht.39.26);
-                                       // nil answered zero
+  HPVector pos = entity != nullptr ? entity->getPosition()
+                                   : kZeroHPVector;  // the C++ entity; nil
+                                                     // answered zero
   Vector vel = entity != nullptr ? entity->getVelocity() : kZeroVector;
 
   if (settings.isNull()) {

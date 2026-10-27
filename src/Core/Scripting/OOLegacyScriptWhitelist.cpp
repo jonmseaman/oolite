@@ -23,9 +23,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOLegacyScriptWhitelist.h"
-
 #include "OOFoundation.h"
+#include "OOLegacyScriptWhitelist.h"
 #include "OOStringParsing.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "ResourceManager.h"
@@ -37,9 +36,9 @@ MA 02110-1301, USA.
   OOLITE_DEBUG  // If nonzero, raw condition strings are included; if zero, a
                 // placeholder is used.
 
-/*	The sanitizer works on oo::PList trees (bead oo-3rb.204, proposed
-   ADR-0043): a sanitized script or conditions array is plist data (bools,
-   unsigned integers, strings, nested arrays). A null oo::PList stands for nil.
+/*	The sanitizer works on oo::PList trees: a sanitized script or conditions
+   array is plist data (bools, unsigned integers, strings, nested arrays). A
+   null oo::PList stands for nil.
 */
 
 typedef struct SanStackElement SanStackElement;
@@ -604,7 +603,7 @@ static std::optional<std::string> SanitizeActionMethod(
 //	Return a conditions array that always evaluates as false.
 namespace {
 static oo::PList AlwaysFalseConditions(void) {
-  /*	Upstream bug kept (proposed ADR-0043; goldens decide): the cache is only
+  /*	Upstream bug kept (goldens decide): the cache is only
      filled when it is already non-nil, so this always returns nil (a null
      PList). A failed conditions array therefore drops its enclosing conditional
      statement.

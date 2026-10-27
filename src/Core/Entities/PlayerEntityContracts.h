@@ -28,13 +28,9 @@ MA 02110-1301, USA.
 
 #include "PlayerEntity.h"
 
-/*	Beads oo-6e3h, oo-t2t5, oo-oo99 (ADR-0056 amendment oo-lmdi8): the
-   category PlayerEntity (Contracts) is members of PlayerEntity, declared in
-   PlayerEntity.h and defined in PlayerEntityContracts.mm. Its Objective-C
-   interface, for the callers that remained, was the category of the same name
-   in PlayerEntity+ObjCBridge.h (deleted by bead oo-9ht.177), which
-   PlayerEntity.h imports. This header stays for the files that import it.
-*/
+/* The category PlayerEntity (Contracts) is members of PlayerEntity, declared
+ * in PlayerEntity.h. This header stays for the files that include it.
+ */
 #include <string_view>
 
 #include "GuiDisplayGen.h"

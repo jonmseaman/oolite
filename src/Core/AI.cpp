@@ -22,11 +22,10 @@ MA 02110-1301, USA.
 
 */
 
-#include "AI.h"
-
 #include <cstring>
 #include <functional>
 
+#include "AI.h"
 #include "GameController.h"
 #include "OOCacheManager.h"
 #include "OOCallByName.h"
@@ -36,7 +35,7 @@ MA 02110-1301, USA.
 #include "ShipEntity.h"
 #include "ShipEntityAI.h"
 #include "oofnd/Log.hpp"
-#include "oofnd/Ref.hpp"  // oo::autorelease (beads oo-pvhrh, oo-31u.7)
+#include "oofnd/Ref.hpp"  // oo::autorelease
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
@@ -76,7 +75,7 @@ std::string PendingMessagesDescription(const std::set<std::string>& messages) {
 }
 
 /*	The AI's methods a deferred call names, by the selector the by-name call
-   (OOCallByName) used: exactly the names the facade answered (bead oo-9ht.73).
+   (OOCallByName) used: exactly the names the facade answered.
    setStateMachine(smName, delay) names -setStateMachine:, which the facade did
    not answer (the ship's selector), so it is not here and its call logs and
    does nothing, as before.
@@ -93,8 +92,7 @@ const DeferredAIMethod kDeferredAIMethods[] = {
 }  // namespace
 
 /*	OOAIAutorelease(): the AI goes to the innermost oo::AutoreleaseScope,
-   whose drain releases it where the keeper object that held it was released
-   (beads oo-pvhrh, oo-31u.7).
+   whose drain releases it where the keeper object that held it was released.
 */
 
 void OOAIAutorelease(oo::Ref<AI> ai) {
@@ -102,10 +100,8 @@ void OOAIAutorelease(oo::Ref<AI> ai) {
   oo::autorelease(std::move(ai));
 }
 
-/*	A deferred call's body (bead oo-9ht.73; a C++ call since bead oo-pvhrh,
-   where the Objective-C holder OOAIDeferredCall's -fire was the target): calls
-   the method the selector named, found in kDeferredAIMethods by the name the
-   by-name call used.
+/*	A deferred call's body calls the method the selector named, found in
+   kDeferredAIMethods by the name the by-name call used.
 */
 namespace {
 
@@ -139,7 +135,7 @@ class OOPreservedAIStateMachine : public oo::RefCounted {
                             const std::optional<std::string>& script);
 
   oo::PList stateMachine();
-  std::optional<std::string> name();  // (bead oo-3rb.289.8)
+  std::optional<std::string> name();
   std::optional<std::string> state();
   std::set<std::string> pendingMessages();
   std::optional<std::string> jsScript();
@@ -520,8 +516,7 @@ void AI::reactToMessage(
     --recursionLimiter;
   } else {
     if (currentState.has_value()) {
-      // the ship's C++ part answers its methods called by name (bead
-      // oo-9ht.39.7.1)
+      // the ship's C++ part answers its methods called by name
       if (oo::EntityRespondsToName(owner, "interpretAIMessage:")) {
         oo::CallEntityByName(owner, "interpretAIMessage:", message);
       }
@@ -567,8 +562,7 @@ void AI::takeAction(const std::string& action) {
         dataString = std::move(joined);
       }
 
-      // the ship's C++ part answers its methods called by name (bead
-      // oo-9ht.39.7.1)
+      // the ship's C++ part answers its methods called by name
       if (oo::EntityRespondsToName(owner, selectorStr)) {
         if (dataString.has_value())
           oo::CallEntityByName(owner, selectorStr, *dataString);

@@ -1,6 +1,6 @@
 /*	test_plist_game_tuples.cpp
         oo::plist_get::tupleFrom / tuplePList / fuzzyProbabilityFrom
-   (oofnd/PListGet.hpp, bead oo-9ftb): OOCollectionExtractors'
+   (oofnd/PListGet.hpp): OOCollectionExtractors'
    OOVectorFromObject / OOHPVectorFromObject / OOQuaternionFromObject,
         OOPropertyListFrom{Vector,HPVector,Quaternion} and
    OOFuzzyBooleanFromObject's probability, over a PList.

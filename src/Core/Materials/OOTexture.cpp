@@ -26,7 +26,7 @@
 
 #include "OOTexture.h"
 // Before OOConcreteTexture.h, in a block of its own: OOTextureInternal.h tests
-// OOTEXTURE_RELOADABLE, which OOConcreteTexture.h defines (bead oo-we7mm).
+// OOTEXTURE_RELOADABLE, which OOConcreteTexture.h defines.
 #include <cxxabi.h>
 
 #include <cstdlib>
@@ -88,11 +88,10 @@ namespace {
 
 // Allocated on first use and never freed, so a texture deallocated during exit
 // never finds them destroyed. Were a Foundation mutable dictionary / set of
-// boxed pointers (bead oo-3rb.10). They hold the C++ textures.
+// boxed pointers. They hold the C++ textures.
 std::unordered_map<std::string, OOTexture*>* sLiveTextureCache;
 std::unordered_set<OOTexture*>* sAllLiveTextures;
-// The textures, retained, as Object nodes (OOTextureObjectNode(); bead
-// oo-9ht.99).
+// The textures, retained, as Object nodes (OOTextureObjectNode()).
 OOCache* sRecentTextures;
 
 }  // namespace
@@ -198,8 +197,7 @@ oo::Ref<OOTexture> OOTexture::textureWithConfiguration(
 
 oo::Ref<OOTexture> OOTexture::nullTexture() {
   // The shared null texture, which OONullTexture keeps for the life of the
-  // process (its facade, kept here until bead oo-9ht.99, was the same object
-  // whenever it was asked).
+  // process.
   return oo::Ref<OOTexture>(::OONullTexture::sharedNullTexture());
 }
 
@@ -211,8 +209,7 @@ oo::Ref<OOTexture> OOTexture::textureWithGenerator(
 oo::Ref<OOTexture> OOTexture::textureWithGenerator(
     ::OOTextureGenerator* generator, bool enqueue) {
   if (generator == nullptr) return nullptr;
-  ::OOTextureGenerator* cxxGenerator =
-      generator;  // C++ since bead oo-9ht.118 deleted the generator's facade
+  ::OOTextureGenerator* cxxGenerator = generator;
 
 #ifndef OOTEXTURE_NO_CACHE
   OOTexture* existing = existingTextureForKey(cxxGenerator->cacheKey());
@@ -302,7 +299,7 @@ void OOTexture::clearCache() {
   // [sRecentTextures autorelease]: released at the drain of the nearest
   // oo::AutoreleaseScope, as upstream's pool did; the only caller,
   // Universe::reinitAndShowDemo(), runs in the frame loop's or the start-up's
-  // scope (ADR-0056 amendment oo-31u.9).
+  // scope.
   oo::autorelease(sRecentTextures);
   sRecentTextures = nullptr;
   CLEAR_TRACE_CONTEXT();
@@ -696,8 +693,8 @@ BOOL cxx_OOInterpretTextureSpecifier(const oo::PList& specifier,
     // Bad type
     // "got" names an object's class, or the property-list type (it was the
     // class of the Foundation object built for the value, such as
-    // GSInlineArray). An Object node held no Objective-C object (none is made
-    // since bead oo-4aq6a.5): nil's class, "(null)", as before.
+    // GSInlineArray). An Object node held no Objective-C object: nil's class,
+    // "(null)", as before.
     if (!specifier.isNull())
       OO_LOG(cxx_kOOLogParameterError,
              "{}: expected string or dictionary, got {}.", __PRETTY_FUNCTION__,

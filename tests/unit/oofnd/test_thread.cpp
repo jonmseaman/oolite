@@ -1,5 +1,5 @@
 /*	test_thread.cpp
-        Unit tests for oofnd/Thread.hpp (bead oo-3rb.6): the std::thread
+        Unit tests for oofnd/Thread.hpp: the std::thread
    replacements for NSThread. On Windows this TU includes <windows.h> AFTER the
    header, which also proves the header's kernel32 declarations are identical
    redeclarations.
@@ -21,7 +21,7 @@
 namespace {
 
 // Runs `body` through oo::thread::detach and waits for it to finish. The wait
-// is UNBOUNDED (bead oo-3rb.68): a 10 s bound flaked under a loaded ASan build,
+// is UNBOUNDED: a 10 s bound flaked under a loaded ASan build,
 // and a timed-out wait returned while the detached lambda still held references
 // to this frame's m/cv/done - a use-after-return in the test itself. A hung
 // thread is bounded by the run's own timeout (check-oofnd, ctest, accept.sh's

@@ -1,15 +1,12 @@
 /*	test_OOFlashEffectEntity.mm
         Unit tests for OOFlashEffectEntity
    (src/Core/Entities/OOFlashEffectEntity.h), the white flash of an explosion
-   and the coloured flash where a laser hits: bead oo-wue8, a leaf of the
-   Entities seam under OOLightParticleEntity (proposed ADR-0056, amendments
-   oo-bj8 item 12, oo-0otc and oo-0mxi).
+   and the coloured flash where a laser hits.
 
         The entity reads Universe and PLAYER, so the test links the whole game
    but main (['*']) and uses a Universe that was never initialised, subclassed
    to answer the time the test sets and to record -removeEntity:, and a plain
-   entity as PLAYER. The expectations were written against the Objective-C API
-   and run on the unconverted class first: an explosion flash sits where its
+   entity as PLAYER. The tests cover: an explosion flash sits where its
         entity is, moves with it, starts at its collision radius, is white and
    grows at 150 times its size a second (at least 600) to half opacity; a laser
    flash starts at diameter 1 in the given colour and grows at 150 a second to
@@ -19,11 +16,10 @@
    through the one block of helpers below. Its texture is loaded once, by name
    (the loader replaced as in test_OOParticleSystem). The flashes are made by
    the C++ factories the callers call and handed to Objective-C with
-   oo::NewEntityFacade, as the callers do since bead oo-9ht.106 deleted the
-   class's Objective-C facade (ADR-0056 amendment oo-9ht.106): the class's own
-   selectors are member calls, the root's are still sent to the object, and the
-   last test pins that the object is a C++ entity's (the root Entity's facade).
-        Run: bash tools/check-core-tests.sh
+   oo::NewEntityFacade, as the callers do: the class's own selectors are member
+   calls, the root's are still sent to the object, and the last test pins that
+   the object is a C++ entity's (the root Entity's facade). Run:
+   bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -33,7 +29,7 @@
 #include "OOColor.h"
 #include "OOFlashEffectEntity.h"
 #include "OOTexture.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 
@@ -46,16 +42,13 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// NewTestPlayer<TestPlayer>() (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// A C++ player under the ship's facade, as PlayerEntity::sharedPlayer() makes
+// the game's, retained (+1) as +alloc's object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -70,13 +63,10 @@ T* NewTestPlayer() {
 class TestUniverse : public Universe {
  public:
   OOTimeAbsolute& _time = universal_time;  // the universe's own state, which
-                                           // its getter answers (bead oo-ql9rn)
+                                           // its getter answers
   Entity* _removed = {};
 
-  bool removeEntity(
-      Entity* entity) override  // the C++ entity since bead oo-9ht.39.26; the
-                                // record is its object, as before
-  {
+  bool removeEntity(Entity* entity) override {
     _removed = entity;
     return YES;
   }
@@ -90,8 +80,7 @@ TestUniverse* sUniverse = nil;
 std::optional<std::string> sTextureName;
 OOTexture* sTexture = nullptr;  // never released
 
-// OOTexture::nameFactory, the test-only loader hook (bead oo-9ht.99), where the
-// facade's class method was replaced.
+// OOTexture::nameFactory, the test-only loader hook.
 oo::Ref<OOTexture> LoadTexture(const std::optional<std::string>& name,
                                const std::optional<std::string>&,
                                OOTextureFlags, GLfloat, GLfloat) {
@@ -127,8 +116,7 @@ float Diameter(Entity* e) {
 
 bool Near(double a, double b) { return std::fabs(a - b) < 1e-4; }
 
-// The flash's object, as the ship and the universe hand it to Objective-C (bead
-// oo-9ht.106).
+// The flash's object, as the ship and the universe hand it to Objective-C.
 Entity* FlashObject(const oo::Ref<OOFlashEffectEntity>& flash) {
   return oo::MadeEntity(flash);
 }
@@ -261,7 +249,7 @@ OO_TEST(facade) {
     SetUp(0.0);
     Entity* flash =
         FlashObject(OOFlashEffectEntity::explosionFlashFromEntity(Exploding()));
-    // A C++ entity (amendment oo-0mxi), not an Objective-C entity's adapter.
+    // A C++ entity.
     OO_CHECK(dynamic_cast<OOFlashEffectEntity*>(flash) != nullptr);
     OO_CHECK(flash == flash);
   }

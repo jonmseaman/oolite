@@ -24,14 +24,13 @@ SOFTWARE.
 
 */
 
-#include "OOTextureScaling.h"
-
 #include <stdlib.h>
 
 #include "OOCPUInfo.h"
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"
 #include "OOMaths.h"
+#include "OOTextureScaling.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
@@ -75,7 +74,7 @@ static void ScaleToHalf_1_x8(void* srcBytes, void* dstBytes,
                              OOPixMapDimension srcWidth,
                              OOPixMapDimension srcHeight) NONNULL_FUNC;
 //	static void ScaleToHalf_2_x4(void *srcBytes, void *dstBytes,
-//OOPixMapDimension srcWidth, OOPixMapDimension srcHeight) NONNULL_FUNC;
+// OOPixMapDimension srcWidth, OOPixMapDimension srcHeight) NONNULL_FUNC;
 static void ScaleToHalf_4_x2(void* srcBytes, void* dstBytes,
                              OOPixMapDimension srcWidth,
                              OOPixMapDimension srcHeight) NONNULL_FUNC;
@@ -84,7 +83,7 @@ static void ScaleToHalf_1_x4(void* srcBytes, void* dstBytes,
                              OOPixMapDimension srcWidth,
                              OOPixMapDimension srcHeight) NONNULL_FUNC;
 //	static void ScaleToHalf_2_x2(void *srcBytes, void *dstBytes,
-//OOPixMapDimension srcWidth, OOPixMapDimension srcHeight) NONNULL_FUNC;
+// OOPixMapDimension srcWidth, OOPixMapDimension srcHeight) NONNULL_FUNC;
 #endif
 
 OOINLINE void StretchVertically(OOPixMap srcPx,
@@ -939,7 +938,7 @@ static void StretchVerticallyN_x1(OOPixMap srcPx, OOPixMap dstPx) {
   // re-pointed at the last source row: after the loop it is one row past the
   // row the final pass blended from, which is that same last row only while
   // dstPx.height < 2 * srcPx.height, and one row past the end of the buffer
-  // otherwise (oo-snnh6, an ASan heap-buffer-overflow READ).
+  // otherwise (an ASan heap-buffer-overflow READ).
   src0 = (uint8_t*)(src + srcRowBytes * (srcPx.height - 1));
   x = xCount;
   while (x--) {
@@ -992,7 +991,7 @@ static void StretchVerticallyN_x4(OOPixMap srcPx, OOPixMap dstPx) {
   // re-pointed at the last source row: after the loop it is one row past the
   // row the final pass blended from, which is that same last row only while
   // dstPx.height < 2 * srcPx.height, and one row past the end of the buffer
-  // otherwise (oo-snnh6, an ASan heap-buffer-overflow READ).
+  // otherwise (an ASan heap-buffer-overflow READ).
   src0 = (uint32_t*)(src + srcRowBytes * (srcPx.height - 1));
   x = xCount;
   while (x--) {
@@ -1047,7 +1046,7 @@ static void StretchVerticallyN_x8(OOPixMap srcPx, OOPixMap dstPx) {
   // re-pointed at the last source row: after the loop it is one row past the
   // row the final pass blended from, which is that same last row only while
   // dstPx.height < 2 * srcPx.height, and one row past the end of the buffer
-  // otherwise (oo-snnh6, an ASan heap-buffer-overflow READ).
+  // otherwise (an ASan heap-buffer-overflow READ).
   src0 = (uint64_t*)(src + srcRowBytes * (srcPx.height - 1));
   x = xCount;
   while (x--) {
@@ -1109,7 +1108,7 @@ static void StretchHorizontally1(OOPixMap srcPx, OOPixMap dstPx) {
     src = srcStart + (fractX >> 12);
     // The last pixel's look-ahead lands one past the row exactly when its
     // weight is 0; clamp it so the last row does not read past the buffer
-    // (oo-snnh6), as StretchHorizontally4 does.
+    // as StretchHorizontally4 does.
     if (EXPECT_NOT((fractX >> 12) >= srcPx.width))
       src = srcStart + (srcPx.width - 1);
     px1 = *src;
@@ -1175,7 +1174,7 @@ static void StretchHorizontally2(OOPixMap srcPx, OOPixMap dstPx) {
     src = srcStart + (fractX >> 12);
     // The last pixel's look-ahead lands one past the row exactly when its
     // weight is 0; clamp it so the last row does not read past the buffer
-    // (oo-snnh6), as StretchHorizontally4 does.
+    // as StretchHorizontally4 does.
     if (EXPECT_NOT((fractX >> 12) >= srcPx.width))
       src = srcStart + (srcPx.width - 1);
     px1 = *src;
@@ -1354,7 +1353,7 @@ static void SqueezeVertically1(OOPixMap srcPx, OOPixMapDimension dstHeight) {
         ++y;
         src = (uint8_t*)((char*)src + srcRowBytes);
         if (EXPECT_NOT(y == endY)) {
-          /*	<= as in SqueezeVertically2/4 (bead oo-9ht.115): with < the last
+          /*	<= as in SqueezeVertically2/4: with < the last
                   source row's endWeight was counted in weight but not in accum,
              so a non-integer squeeze darkened the last output row (90 -> 33 for
              8 -> 5). endY == srcPx.height (one past the last row) only happens

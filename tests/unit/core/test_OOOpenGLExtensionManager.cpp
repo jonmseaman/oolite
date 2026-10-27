@@ -1,7 +1,6 @@
 /*	test_OOOpenGLExtensionManager.mm
         Unit tests for OOOpenGLExtensionManager
-   (src/Core/OOOpenGLExtensionManager.h): bead oo-z1s4, a Phase 3 class
-   conversion (proposed ADR-0056).
+   (src/Core/OOOpenGLExtensionManager.h).
 
         The manager reads the machine's own OpenGL (a hidden window's context,
    oo_gl_test_context.hpp), so its answers are checked against what the test
@@ -11,10 +10,7 @@
    the matching is pinned exactly: precedence order, a regexp array ANDed, the
    first match wins, and what a match overrides. OORegExpMatcher and
    cxx_OOShaderSettingFromString are stubs as well (the real ones reach the
-   script engine and the Universe). The expectations were written against the
-   Objective-C API and run on the unconverted class first. The facade's contract
-   test went with the facade (bead oo-9ht.13; standing approval oo-9n5p9). Run:
-   bash tools/check-core-tests.sh
+   script engine and the Universe). Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdio>
@@ -37,9 +33,8 @@ static oo::PList sGPUSettings = oo::PList(oo::PList::Dict{});
 
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the stand-in's answers.
 std::vector<std::string> ResourceManager::paths() {
   sPathsCalls++;
   return {};
@@ -53,9 +48,8 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
   return sGPUSettings;
 }
 
-// OORegExpMatcher is C++ since its facade was deleted (bead oo-9ht.12).
-// sMatchersMade counts the matchers asked for: a GPU settings pass takes one
-// and holds it across its matches.
+// OORegExpMatcher: sMatchersMade counts the matchers asked for: a GPU settings
+// pass takes one and holds it across its matches.
 static unsigned sMatchersMade = 0;
 
 oo::Ref<OORegExpMatcher> OORegExpMatcher::regExpMatcher() {
@@ -69,8 +63,7 @@ bool OORegExpMatcher::string(const std::string& string,
 }
 
 // OOLogging.mm's (it would bring the resource manager into the link); in the
-// debug flavour OOOpenGL.mm's OOGL error check and state dump call them (bead
-// oo-iimku).
+// debug flavour OOOpenGL.mm's OOGL error check and state dump call them.
 void OOLogIndent(void) {}
 void OOLogOutdent(void) {}
 
@@ -281,10 +274,8 @@ OO_TEST(gpuSettingsMatchInPrecedenceOrder) {
 }
 
 OO_TEST(gpuSettingsPassTakesOneMatcher) {
-  // The Objective-C matcher was autoreleased, so one pass's matches shared it
-  // (and its compiled tester); the C++ pass holds the one it takes (ADR-0056
-  // amendment oo-ct7c item 3, bead oo-9ht.12). A pass with no regexp takes
-  // none, as no message was sent.
+  // A pass holds the one matcher it takes for all its matches (and its compiled
+  // tester). A pass with no regexp takes none.
   OO_CHECK(OOTestGLContext());
   {
     OOOpenGLExtensionManager* manager =

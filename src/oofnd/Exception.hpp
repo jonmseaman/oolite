@@ -1,9 +1,7 @@
 /*	oofnd/Exception.hpp
-        oo::Exception: the game's exception as a C++ type (bead oo-rskgl.1,
-   ADR-0056 amendments oo-rskgl and oo-rskgl.1). It replaced the Objective-C
-   OOException as the thing OORaiseException() throws; the Objective-C class was
-   deleted by bead oo-4aq6a.1, which moved the rest of oofnd/objc/OOException.h
-   here (that header now only includes this one).
+        oo::Exception: the game's exception as a C++ type, the thing
+   OORaiseException() throws. (oofnd/objc/OOException.h only includes this
+   header.)
 
             OOException                                   oofnd
             --------------------------------------------
@@ -22,8 +20,7 @@
    either. %@ has no meaning in OORaiseException's format: callers pass UTF-8
    strings (%s).
 
-        The game's @try/@catch/@finally as C++ try/catch (ADR-0056 amendment
-   oo-rskgl):
+        The game's @try/@catch/@finally as C++ try/catch:
 
             @catch (OOException *e) { ... [e name] ... }   catch (...)
                                                             {
@@ -49,12 +46,10 @@
         C++20.
 */
 
-#ifndef OOFND_EXCEPTION_HPP
-#define OOFND_EXCEPTION_HPP
+#pragma once
 
 // Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; suspend them for the standard headers (as oofnd/Data.hpp does, proposed
-// ADR-0028).
+// 0`; suspend them for the standard headers (as oofnd/Data.hpp does).
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -76,9 +71,8 @@ extern const char* const OORangeException;
 extern const char* const OOInternalInconsistencyException;
 extern const char* const OOMallocException;
 
-/*	+[OOException raise:name format:...] as a function (Phase 3, proposed
-   ADR-0056 amendment oo-dqxj): throws oo::Exception with the name and the
-   printf-formatted reason. Never returns.
+/*	+[OOException raise:name format:...] as a function: throws oo::Exception
+   with the name and the printf-formatted reason. Never returns.
 */
 void OORaiseException(const char* name, const char* format, ...)
     OO_PRINTF_FORMAT(2, 3) __attribute__((noreturn));
@@ -141,5 +135,3 @@ class Finally {
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif  // OOFND_EXCEPTION_HPP

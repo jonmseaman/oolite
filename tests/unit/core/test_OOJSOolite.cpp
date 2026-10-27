@@ -1,9 +1,8 @@
 /*	test_OOJSOolite.mm
         Unit tests for the oolite JS binding
-   (src/Core/Scripting/OOJSOolite.h/.mm): bead oo-whvg, converted the way bead
-   oo-ppc converted OOJSVector (proposed ADR-0056 amendment oo-ppc).
+   (src/Core/Scripting/OOJSOolite.h/.mm).
 
-        As the binding tests of amendment oo-ppc item 6 do, it runs the JS class
+        As the other binding tests do, it runs the JS class
    in a real context on the game's own façade backend
    (ooscript/JSEngine_quickjs.cpp), and links the game's own objects for the
    binding and the engine's exception translator (OOJSEngineNativeWrappers.mm).
@@ -23,7 +22,7 @@
 #include "oofnd/Ref.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
-#include "oofnd/objc/OOFoundationTypes.h"  // BOOL (from <objc/runtime.h> until bead oo-dbz.4)
+#include "oofnd/objc/OOFoundationTypes.h"  // BOOL
 #include "oofnd/objc/OOObject.h"
 #include "ooscript/JSEngine.hpp"
 
@@ -49,10 +48,8 @@ typedef enum {
   OOSDR_TONEMAPPER_REINHARD
 } OOSDRToneMapper;
 
-// The game view: a stand-in for the C++ class (bead oo-9ht.153 deleted the
-// Objective-C facade the test's Objective-C stand-in stood in for), with the
-// header's names and signatures, defined out of line below with the stand-in's
-// answers.
+// The game view: a stand-in for the C++ class, with the header's names and
+// signatures, defined out of line below with the stand-in's answers.
 class MyOpenGLView : public oo::RefCounted {
  public:
   float _colorSaturation = {};
@@ -78,9 +75,8 @@ class MyOpenGLView : public oo::RefCounted {
 #include "UniverseStandIn.h"
 
 // The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's Objective-C stand-in
-// stood in for), with the header's names and signatures. It answers virtual
-// members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse
+// with the header's names and signatures. It answers virtual members, so it
+// has the game's vtable (UniverseStandIn.h) and StandInUniverse
 // overrides them.
 class Universe : public oo::RefCounted {
  public:
@@ -160,9 +156,8 @@ void Universe::setTimeAccelerationFactor(double newTimeAccelerationFactor) {
   _timeAccelerationFactor = newTimeAccelerationFactor;
 }
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// ResourceManager: C++ definitions of the statics the code under test calls,
+// with the Objective-C stand-in's answers.
 std::vector<std::string> ResourceManager::paths() {
   return {"C:/Users/jameson/Oolite/Resources",
           "C:/Users/jameson/AddOns/one.oxp"};

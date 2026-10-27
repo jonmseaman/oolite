@@ -22,10 +22,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOCommodities.h"
-
 #include <string_view>
 
+#include "OOCommodities.h"
 #include "OOCommodityMarket.h"
 #include "OOJSScript.h"
 #include "OOStringExpander.h"
@@ -37,9 +36,8 @@ MA 02110-1301, USA.
 
 namespace {
 
-// keys in trade-goods.plist (moved from OOCommodities.h by bead oo-3rb.154;
-// sort_order, trumble_opinion, comment and short_comment are read only by
-// OOCommodityMarket.mm)
+// keys in trade-goods.plist (sort_order, trumble_opinion, comment and
+// short_comment are read only by OOCommodityMarket.mm)
 constexpr std::string_view kOOCommodityName = "name";
 constexpr std::string_view kOOCommodityClasses = "classes";
 constexpr std::string_view kOOCommodityContainer = "quantity_unit";
@@ -182,12 +180,13 @@ OOCommodities::OOCommodities() {
 oo::Ref<OOCommodityMarket> OOCommodities::generateManifestForPlayer() {
   oo::Ref<OOCommodityMarket> market = oo::makeRef<OOCommodityMarket>();
 
-  for (const auto& [commodity, info] :
-       _commodityLists)  // key order (bead oo-3rb.154)
+  for (const auto& [commodity, info] : _commodityLists)  // key order
   {
     oo::PList good =
-        info.isDict() ? info : oo::PList(oo::PList::Dict{});  // +dictionaryWithDictionary:
-                                                              // of the entry
+        info.isDict()
+            ? info
+            : oo::PList(oo::PList::Dict{});  // +dictionaryWithDictionary:
+                                             // of the entry
     SetUnsigned(good, kOOCommodityPriceCurrent, 0);
     SetUnsigned(good, kOOCommodityQuantityCurrent, 0);
     /* The actual capacity of the player ship is a total, not
@@ -203,12 +202,13 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateManifestForPlayer() {
 oo::Ref<OOCommodityMarket> OOCommodities::generateBlankMarket() {
   oo::Ref<OOCommodityMarket> market = oo::makeRef<OOCommodityMarket>();
 
-  for (const auto& [commodity, info] :
-       _commodityLists)  // key order (bead oo-3rb.154)
+  for (const auto& [commodity, info] : _commodityLists)  // key order
   {
     oo::PList good =
-        info.isDict() ? info : oo::PList(oo::PList::Dict{});  // +dictionaryWithDictionary:
-                                                              // of the entry
+        info.isDict()
+            ? info
+            : oo::PList(oo::PList::Dict{});  // +dictionaryWithDictionary:
+                                             // of the entry
     SetUnsigned(good, kOOCommodityPriceCurrent, 0);
     SetUnsigned(good, kOOCommodityQuantityCurrent, 0);
     SetUnsigned(good, kOOCommodityCapacity, 0);
@@ -265,7 +265,7 @@ oo::PList OOCommodities::modifyGood(const oo::PList& good, ::OOScript* script,
           ? station->jsValueInContext(context)
           : ooscript::nullValue(),  // the C++ station's JS value, which
                                     // OOJSValueFromNativeObject() of its object
-                                    // reached (bead oo-w9pi2)
+                                    // reached
       ooscript::int32Value(system)};
   BOOL OK = YES;
   const char* errorType = nullptr;
@@ -324,8 +324,7 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForSystemWithEconomy(
 
   oo::Ref<OOCommodityMarket> market = oo::makeRef<OOCommodityMarket>();
 
-  for (const auto& [commodity, info] :
-       _commodityLists)  // key order (bead oo-3rb.154)
+  for (const auto& [commodity, info] : _commodityLists)  // key order
   {
     oo::PList good = info;
     OOCargoQuantity q = generateQuantityForGood(good, economy);
@@ -371,8 +370,7 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForStation(
   OOCommodityMarket* mainMarket =
       (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket() : nullptr);
 
-  for (const auto& [commodity, info] :
-       _commodityLists)  // key order (bead oo-3rb.154)
+  for (const auto& [commodity, info] : _commodityLists)  // key order
   {
     oo::PList good = info;
     OOCargoQuantity baseCapacity =

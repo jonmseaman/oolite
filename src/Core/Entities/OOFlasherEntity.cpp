@@ -23,9 +23,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOFlasherEntity.h"
-
 #include "OOColor.h"
+#include "OOFlasherEntity.h"
 #include "OOJSFlasher.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
@@ -115,7 +114,7 @@ void OOFlasherEntity::update(OOTimeDelta delta_t) {
         _justSwitched = YES;
         ++_activeColor;
         _activeColor %= count;  //_activeColor = ++_activeColor % count; is
-                                //potentially undefined operation
+                                // potentially undefined operation
         setColor(flasherColorAtIndex(_activeColor));
       }
     } else if (_justSwitched) {
@@ -167,8 +166,7 @@ void OOFlasherEntity::rescaleBy(GLfloat /*factor*/, bool /*writeToCache*/) {
      implementation requirements */
 }
 
-// The binding's bodies (OOJSFlasher.mm), which the façade forwarded to until
-// bead oo-9ht.107.
+// The binding's bodies (OOJSFlasher.mm), which the façade forwarded to.
 void OOFlasherEntity::getJSClass(ooscript::ClassDef** outClass,
                                  ooscript::Object* outPrototype) {
   ::OOJSFlasherGetJSClass(outClass, outPrototype);

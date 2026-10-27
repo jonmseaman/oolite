@@ -2,14 +2,10 @@
 
 ooscript/JSEngine_quickjs.cpp
 
-The QuickJS-ng backend of the façade in JSEngine.hpp (Phase 1 seams 1.4b/1.4c,
-beads oo-0kq and oo-s0y; full surface: bead oo-1gc.2). Every function
-JSEngine.hpp declares is defined here, so the game can link against this backend
-instead of JSEngine_spidermonkey.cpp. The SpiderMonkey backend plus
-SpiderMonkey 1.8.5's own semantics are the behavioural spec; where QuickJS-ng
-cannot match them the divergence is written down next to the code (grep
-"DIVERGENCE") and in the bead notes, so Phase 1's differential triage knows what
-to expect.
+The QuickJS-ng backend of the façade in JSEngine.hpp. Every function
+JSEngine.hpp declares is defined here. SpiderMonkey 1.8.5's own semantics are
+the behavioural spec; where QuickJS-ng cannot match them the divergence is
+written down next to the code (grep "DIVERGENCE").
 
 Value representation
         ooscript::Value must stay an 8-byte POD, but QuickJS-ng's JSValue is 16
@@ -36,7 +32,7 @@ deep. At that point the value currently stored at every registered root ADDRESS
 is re-referenced into the fresh arena first (roots are addresses read at flush
 time, as SpiderMonkey's root scanning reads them), then the old arena is freed,
 then the cycle collector runs. Values held inside JS objects are owned by
-QuickJS as usual. DIVERGENCE (deliberate, from the bead's "request depth 0"):
+QuickJS as usual. DIVERGENCE (deliberate, from a strict "request depth 0"):
 the flush is allowed at request depth <= 1, because Oolite's only collection
 site (OOJavaScriptEngine -garbageCollectionOpportunity:) acquires the context,
 i.e. opens a request, around its gc() / maybeGC() call; at depth 0 the game
@@ -138,7 +134,6 @@ of Oolite.
 
 #define OO_PLAIN_CPP_UNIT \
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
-     // (bead oo-dbz)
 #include <quickjs.h>
 
 #include <algorithm>
@@ -394,8 +389,8 @@ struct ContextState {
       ctorForProto;  // initClass without a constructor
 };
 
-// The process registries are immortal: allocated once and never destroyed (bead
-// oo-9ht.173). libobjc drains a thread's open autorelease pools at thread
+// The process registries are immortal: allocated once and never destroyed.
+// libobjc drains a thread's open autorelease pools at thread
 // detach, which on Windows runs after the CRT has destroyed namespace-scope
 // objects; an autoreleased OOJSValue or script freed there still reaches them
 // (beginRequest -> csOf, finalizers, roots). The same holds for every registry
@@ -406,8 +401,7 @@ std::unordered_map<JSRuntime*, JSContext*>& gCtxForRuntime =
     *new std::unordered_map<JSRuntime*,
                             JSContext*>;  // finalizers get only a JSRuntime*
 JSContext* gDefaultCtx = nullptr;         // for the ctx-less calls
-ContextCallback gContextCallbackHook =
-    nullptr;  // setContextCallback (bead oo-1gc.3)
+ContextCallback gContextCallbackHook = nullptr;  // setContextCallback
 std::vector<const Value*>& gConstructing =
     *new std::vector<const Value*>;  // vp blocks of constructor calls
 
@@ -1025,10 +1019,9 @@ struct BackendClass {
 std::unordered_map<JSClassID, BackendClass*>& gClasses =
     *new std::unordered_map<JSClassID, BackendClass*>;
 
-// Names an old-style enumerate hook defines while ExGetOwnPropertyNames runs it
-// (bead oo-1gc.4): QuickJS-ng snapshots the shape's names before calling the
-// exotic hook, so a name the hook adds would otherwise be missing from that
-// enumeration.
+// Names an old-style enumerate hook defines while ExGetOwnPropertyNames runs
+// it: QuickJS-ng snapshots the shape's names before calling the exotic hook, so
+// a name the hook adds would otherwise be missing from that enumeration.
 struct DefineCollector {
   void* target;
   std::vector<JSAtom> atoms;
@@ -1041,7 +1034,7 @@ DefineCollector* gDefineCollector = nullptr;
 // clock's properties and hasOwnProperty("credits") is true for player. The
 // PropertySpec accessors each class prototype carries are recorded here (atom,
 // enumerable, read-only) so own-property queries and enumeration can report
-// them the same way; property reads are unaffected. (bead oo-1gc.6)
+// them the same way; property reads are unaffected.
 struct SharedPermanent {
   JSAtom atom;
   bool enumerable;
@@ -1545,8 +1538,7 @@ int ExSetProperty(JSContext* ctx, JSValueConst obj, JSAtom atom,
     // newEnumerate listing, the tinyid registry): the object does not have it,
     // so SpiderMonkey's assignment added it -- addProperty, then the class's
     // setProperty, then a slot -- which is the path below. Defining it on the
-    // shape instead skipped the setter and left a read-only, permanent shadow
-    // (bead oo-f1yi3).
+    // shape instead skipped the setter and left a read-only, permanent shadow.
     if (own && fromShape)
       return JS_DefineProperty(ctx, obj, atom, val, JS_UNDEFINED, JS_UNDEFINED,
                                JS_PROP_HAS_VALUE | JS_PROP_NO_EXOTIC);
@@ -1694,7 +1686,7 @@ void FinalizeTramp(JSRuntime* rt, JSValueConst val) {
   if (bc == nullptr) return;
   if (bc->def->finalize != nullptr) {
     // gCtxForRuntime holds the last live context for this runtime;
-    // destroyContext() erases it (bead oo-902s), so a finalizer running after
+    // destroyContext() erases it, so a finalizer running after
     // its context went away sees a null Context rather than a dangling one.
     NativeScope scope(rsOf(rt));
     bc->def->finalize(wrap(finalizeContext(rt)), objOf(val));
@@ -1801,8 +1793,7 @@ JSValue objectProto(JSContext* ctx) {
 // "[object Clock]"); scripts test for it. QuickJS-ng says "Object" unless
 // Symbol.toStringTag says otherwise, so every class prototype -- and an
 // instance whose prototype is plain Object.prototype
-// -- carries the ClassDef's name as a non-enumerable, shape-level tag (bead
-// oo-1gc.6).
+// -- carries the ClassDef's name as a non-enumerable, shape-level tag.
 void tagWithClassName(JSContext* ctx, JSValueConst obj, const ClassDef* def) {
   if (def == nullptr || def->name == nullptr) return;
   JSValue global = JS_GetGlobalObject(ctx);
@@ -2048,7 +2039,6 @@ bool defineAccessor(JSContext* ctx, JSValueConst obj, JSAtom atom,
   // A read-only property gets no setter at all, so its descriptor
   // says it is not writable and assignment behaves as SpiderMonkey's did for a
   // read-only property: ignored in sloppy code, a TypeError in strict code
-  // (bead oo-1gc.6).
   const bool readOnly =
       (b & static_cast<std::uint8_t>(PropertyFlag::ReadOnly)) != 0;
   auto* rec = new AccessorRec{JS_GetRuntime(ctx),
@@ -2163,7 +2153,7 @@ bool definePropertySpecs(JSContext* ctx, JSValueConst obj,
 // (Object.prototype when it has none), called the native, and returned the
 // native's object result or else that `this` (jsinterp.cpp, js_CreateThis then
 // Invoke with JSINVOKE_CONSTRUCT). Expansions rely on it: `new
-// Vector3D.random(n)` (bead oo-1gc.13) is a constructor call of a static
+// Vector3D.random(n)` is a constructor call of a static
 // method, which QuickJS-ng refuses without the constructor bit. runNative
 // already implements exactly that construct path for a native with no
 // ctorClass.
@@ -2290,11 +2280,11 @@ JSEvalOptions evalOptions(const char* filename, unsigned lineno, int flags) {
 // file; only when none is does it fall back to the object the file last ran
 // for. Without that a ship script whose handler sets `this.list` and then reads
 // `list` failed with a ReferenceError whenever another ship had run the same
-// file since (bead oo-1gc.15: BUS_MegaBat_events.js). DIVERGENCE: an assignment
+// file since. DIVERGENCE: an assignment
 // to such a name defines it on the global rather than the script object;
 // console-evaluated code (not from a script file) gets no fallback; a closure
 // of one ship's run called directly from another ship's handler (no façade call
-// in between) resolves through the caller's object. (beads oo-1gc.4, oo-1gc.15)
+// in between) resolves through the caller's object.
 JSClassID gScopeFallbackClassId = 0;
 std::unordered_map<std::string, JSValue>& gScopeByFile =
     *new std::unordered_map<std::string, JSValue>;  // owned references
@@ -2808,13 +2798,12 @@ Object getGlobalObject(Context cx) {
 // The engine's own classes (Object, Array, String, ...) answer a stable,
 // hook-less descriptor per engine class id, named as SpiderMonkey names them,
 // so the game can key its object converters on them exactly as it keyed on the
-// engine's class pointer (bead oo-1gc.4). The name comes from
+// engine's class pointer. The name comes from
 // Object.prototype.toString's tag the first time an id is seen.
 const ClassDef* foreignClassDef(JSContext* ctx, JSValueConst obj) {
   static std::unordered_map<JSClassID, ClassDef*>& sForeign =
       *new std::unordered_map<JSClassID,
                               ClassDef*>;  // immortal, as the registries above
-                                           // (bead oo-9ht.173)
   const JSClassID id = JS_GetClassID(obj);
   auto it = sForeign.find(id);
   if (it != sForeign.end()) return it->second;
@@ -3661,7 +3650,7 @@ void destroyRuntime(Runtime rt) {
   }
   // Erase after freeing: JS_FreeRuntime runs the pending finalizers, and
   // FinalizeTramp looks up gCtxForRuntime (already erased by destroyContext()
-  // when the context went first, bead oo-902s).
+  // when the context went first).
   JS_FreeRuntime(jrt);
   gCtxForRuntime.erase(jrt);
   delete rs;
@@ -3715,7 +3704,7 @@ void destroyContext(Context cx) {
     delete cs;
   }
 
-  // Erase gCtxForRuntime's entry for this context (bead oo-902s) before freeing
+  // Erase gCtxForRuntime's entry for this context before freeing
   // it, so a finalizer that runs later (QuickJS-ng finalizes cycles lazily, in
   // JS_FreeRuntime) sees no context rather than this dangling one.
   JSRuntime* jrt = JS_GetRuntime(ctx);
@@ -3884,7 +3873,7 @@ void triggerAllOperationCallbacks(Runtime rt) {
   for (ContextState* cs : rs->contexts) cs->triggered.store(true);
 }
 
-// MARK: Completing the retarget (bead oo-1gc.3)
+// MARK: Completing the retarget
 // -------------------------------------------------
 
 // QuickJS-ng has no threads to hand a request to, so a suspension is a no-op
@@ -4111,8 +4100,7 @@ const char* backendName() { return "quickjs-ng-0.16.2"; }
 //
 // A per-class (name -> tinyid) table consulted by
 // get_own_property/get_own_property_names so the resolve/enumerate hooks can be
-// exercised with int ids before initClass existed (bead oo-0kq's unit test).
-// initClass does not use it.
+// exercised with int ids in unit tests. initClass does not use it.
 
 void registerResolvableProperty(Context cx, ClassDef* def, const char* name,
                                 std::int32_t tinyid) {

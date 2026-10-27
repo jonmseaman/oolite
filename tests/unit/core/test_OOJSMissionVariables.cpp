@@ -1,9 +1,8 @@
 /*	test_OOJSMissionVariables.mm
         Unit tests for the missionVariables JS binding
-   (src/Core/Scripting/OOJSMissionVariables.h/.mm): bead oo-s4ns, converted the
-   way bead oo-ppc converted OOJSVector (proposed ADR-0056 amendment oo-ppc).
+   (src/Core/Scripting/OOJSMissionVariables.h/.mm).
 
-        As the binding tests of amendment oo-ppc item 6 do, it runs the JS class
+        As the other binding tests do, it runs the JS class
    in a real context on the game's own façade backend
    (ooscript/JSEngine_quickjs.cpp), and links the game's own objects for the
    binding, the engine's exception translator (OOJSEngineNativeWrappers.mm) and
@@ -32,11 +31,10 @@
    "mission_boom" raises, and reading "mission_cxxboom" throws a C++ exception,
    so the test sees what an exception under a native becomes.
 */
-// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood
-// in for: the members the code under test calls, declared as the game headers
+// PLAYER: the members the code under test calls, declared as the game headers
 // declare them (the test imports none that defines the classes), with the
 // stand-in's answers.
-class ShipEntity;  // C++ since bead oo-9ht.144
+class ShipEntity;
 class PlayerEntity {
  public:
   oo::PList missionVariables();
@@ -353,7 +351,7 @@ OO_TEST(deleting) {
   // A variable the script has set (which the façade backend keeps as a property
   // of the object, as test_OOJSManifest.mm sees): delete clears it. (Only
   // variables the object does not report yet: assigning to one it does report
-  // is bead oo-f1yi3, a fault of the backend, not of the binding.)
+  // is a fault of the backend, not of the binding.)
   OO_CHECK_EVAL(
       "(function () { missionVariables.added = 'x'; return delete "
       "missionVariables.added; })()",
@@ -367,10 +365,10 @@ OO_TEST(deleting) {
   OO_CHECK_EQ(sPlayer->_sets, 2);
 }
 
-// bead oo-f1yi3: a variable the object already reports (here, after an
-// enumeration listed it) is still written through the class's setter, as
-// SpiderMonkey's assignment did, and is not shadowed by a read-only property;
-// delete on it then clears it.
+// A variable the object already reports (here, after an enumeration listed it)
+// is still written through the class's setter, as SpiderMonkey's assignment
+// did, and is not shadowed by a read-only property; delete on it then clears
+// it.
 OO_TEST(overwritingAReportedVariable) {
   SetUpContext();
   ResetVariables();

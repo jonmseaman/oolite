@@ -1,45 +1,31 @@
 /*	test_OOOXPVerifier.mm
-        Unit tests for OOOXPVerifier (src/Core/OXPVerifier/OOOXPVerifier.h) and
-   its Objective-C facade (deleted by bead oo-9ht.130, which moved the class out
-   of namespace cxx): bead oo-tsa4, the last class of the OXPVerifier hierarchy
-        exemplar (proposed ADR-0056 and its amendments oo-cwz, oo-up4b,
-   oo-94qk).
+        Unit tests for OOOXPVerifier (src/Core/OXPVerifier/OOOXPVerifier.h).
 
         The verifier reaches the resource manager, the cache manager, the game
    controller and the log handler, so the test links every game object but
-   main's (tests/unit/core/meson.build entry
-        ['*'], amendment oo-44gg) and defines gDebugFlags. The user's
-   directories and the game folder are a scratch folder (amendment oo-rmd7 item
-   4) holding the verifier's own configuration,
-        Resources/Config/verifyOXP.plist, which names the test's stages
-   (Objective-C subclasses of the stage facade, as OOModelVerifierStage still
-   is); the stages record what the verifier asks of them. Opening the log at the
-   end is switched off in the defaults.
+   main's (tests/unit/core/meson.build entry ['*']) and defines gDebugFlags. The
+   user's directories and the game folder are a scratch folder holding the
+   verifier's own configuration, Resources/Config/verifyOXP.plist, which names
+   the test's stages (C++ subclasses of OOOXPVerifierStage); the stages record
+   what the verifier asks of them. Opening the log at the end is switched off in
+   the defaults.
 
         It is driven as the game drives it, through +runVerificationIfRequested
    with -verify-oxp on the command line: no request, a request without a path, a
    missing path, a file. Then a run: registration (unknown, excluded, nameless
    and same-named classes; a stage registered while another answers its
    dependents; registration refused once it closes), dependency resolution
-        (order, reverse dependencies, an unresolved dependency, a loop), running
-   (a stage that should not run, an exception in a stage), and what a stage
-   reads from the verifier (path, display name, configuration, other stages by
-   name). The expectations were written against the Objective-C class and run on
-   it first.
+   (order, reverse dependencies, an unresolved dependency, a loop), running (a
+   stage that should not run, an exception in a stage), and what a stage reads
+   from the verifier (path, display name, configuration, other stages by name).
 
-        Bead oo-9ht.4 deleted the stage facade, so a stage can no longer be an
-   Objective-C class that the verifier makes from its name: the test's stages
-   became C++ subclasses of OOOXPVerifierStage with the same names and answers,
-   which the verifier makes by name through its test hook
-        (OOOXPVerifierTestAccess, asked where the class lookup was), and the
-   stages hand and compare the C++ stages with -registerStage: and
-   -cxx_stageWithName: (ADR-0049, standing approval oo-9n5p9; no case or
-   expectation changed). Bead oo-qg71f moved the callers off the verifier's
-   Objective-C facade: the test runs the verification through the static
+        The test's stages are C++ subclasses of OOOXPVerifierStage, which the
+   verifier makes by name through its test hook (OOOXPVerifierTestAccess), and
+   the stages hand and compare the C++ stages with -registerStage: and
+   -cxx_stageWithName:. The test runs the verification through the static
    OOOXPVerifier::runVerificationIfRequested(), as GameController does, and the
-   stages call the C++ verifier they keep (verifier()) where they sent the
-   facade's selectors (ADR-0049, standing approval oo-9n5p9; no case or
-   expectation changed). Run: bash tools/check-core-tests.sh test_OOOXPVerifier
+   stages call the C++ verifier they keep (verifier()). Run: bash
+   tools/check-core-tests.sh test_OOOXPVerifier
 */
 
 #include <process.h>
@@ -64,8 +50,7 @@ uint32_t gDebugFlags = 0;
 #endif
 
 /*	The verifier makes the stages verifyOXP.plist names; a test's stage by
-   its class name through this hook (it made an Objective-C stage class from its
-   name until bead oo-9ht.4).
+   its class name through this hook.
 */
 struct OOOXPVerifierTestAccess {
   static void SetStageMaker(
@@ -161,8 +146,7 @@ bool RunWithArguments(std::vector<std::string> arguments) {
 
 // --- The test's stages
 // ------------------------------------------------------------------------ C++
-// subclasses of OOOXPVerifierStage (Objective-C subclasses of its facade until
-// bead oo-9ht.4).
+// subclasses of OOOXPVerifierStage.
 
 class OOTestStage : public OOOXPVerifierStage {
  public:

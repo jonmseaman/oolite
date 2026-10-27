@@ -24,7 +24,6 @@ MA 02110-1301, USA.
 */
 
 #include "OOCheckShipDataPListVerifierStage.h"
-
 #include "OOModelVerifierStage.h"
 
 #if OO_OXP_VERIFIER_ENABLED
@@ -76,8 +75,7 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dictionary,
   return dictionary.get<std::string>(key);
 }
 
-// A %@ argument that was oo::NSStringOrNil(text): "(null)" for nullopt (bead
-// oo-qps.24).
+// A %@ argument that was oo::NSStringOrNil(text): "(null)" for nullopt.
 oo::str::FormatArg TextOrNull(const std::optional<std::string>& text) {
   return text.has_value() ? oo::str::FormatArg(*text)
                           : oo::str::FormatArg::null();
@@ -128,8 +126,7 @@ void OOCheckShipDataPListVerifierStage::run() {
 
   if (_shipdataPList.isNull()) return;
 
-  // Get AI verifier stage (may be null). C++ since bead oo-94qk; the verifier
-  // holds it.
+  // Get AI verifier stage (may be null). The verifier holds it.
   _aiVerifierStage =
       static_cast<OOAIStateMachineVerifierStage*>(verifier()->stageWithName(
           OOAIStateMachineVerifierStage::nameForReverseDependencyForVerifier(
@@ -176,9 +173,7 @@ void OOCheckShipDataPListVerifierStage::run() {
       ResourceManager::dictionaryFromFilesNamed("shipdataEntrySchema.plist",
                                                 "Schemata", NO));
   if (_schemaVerifier != nullptr)
-    _schemaVerifier->setDelegate(
-        this);  // the stage itself since bead oo-9ht.119 (a message to nil did
-                // nothing)
+    _schemaVerifier->setDelegate(this);  // the stage itself
 
   for (const auto& [shipKey, value] : *_shipdataPList.getIf<oo::PList::Dict>())
     shipList.push_back(shipKey);
@@ -335,7 +330,7 @@ void OOCheckShipDataPListVerifierStage::checkModel() {
   const oo::PList* shaders = _info.get<oo::PList::Dict>("shaders");
 
   if (model.has_value()) {
-    // C++ since bead oo-5zby; the verifier holds it (may be null).
+    // The verifier holds it (may be null).
     OOModelVerifierStage* modelStage = static_cast<OOModelVerifierStage*>(
         verifier()->stageWithName(OOModelVerifierStage::kName));
     if (modelStage == nullptr ||

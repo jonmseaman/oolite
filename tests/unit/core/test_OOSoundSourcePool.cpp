@@ -1,6 +1,5 @@
 /*	test_OOSoundSourcePool.mm
-        Unit tests for OOSoundSourcePool (src/Core/OOSoundSourcePool.h): bead
-   oo-d2y9, a class of the Audio module (proposed ADR-0056, amendment oo-2en).
+        Unit tests for OOSoundSourcePool (src/Core/OOSoundSourcePool.h).
 
         A pool keeps a fixed number of sound sources and plays each
    customsounds.plist key on one of them, chosen by priority and expiry time: an
@@ -8,13 +7,10 @@
    one of lower priority, then an expired one of equal priority, else none. It
    can refuse a key repeated within its minimum repeat time, and reserve a
    source for a sound that must not overlap itself. The game clock is a fake
-   Universe answering -getTime (amendment oo-8kx7 item 7); the sound (with its
+   Universe answering -getTime; the sound (with its
    custom-sound look-up) and the sound source are this file's stubs, which
-   record what the pool asks of them (amendment oo-z1s4 item 4; C++ stand-ins
-   since beads oo-9ht.68 and oo-9ht.88 deleted the facades they stood in for,
-   and an autorelease pool is an oo::AutoreleaseScope). These expectations were
-   written against the Objective-C API and ran on the unconverted class first;
-   since bead oo-9ht.89 deleted the pool's facade they ask the C++ pool. After
+   record what the pool asks of them (C++ stand-ins, and an autorelease pool is
+   an oo::AutoreleaseScope). The tests ask the C++ pool. After
    them comes the C++ API (OOSoundSourcePool, whose selectors are overloads).
         Run: bash tools/check-core-tests.sh test_OOSoundSourcePool
 */
@@ -30,9 +26,8 @@
 #include "oo_test.hpp"
 
 // The game clock.
-// The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade this stood in for), with the
-// header's names and signatures.
+// The universe as the code under test sees it: a stand-in for the C++ class,
+// with the header's names and signatures.
 class Universe {
  public:
   OOTimeAbsolute _time;
@@ -44,10 +39,9 @@ OOTimeAbsolute Universe::getTime() { return _time; }
 
 Universe* gSharedUniverse = nil;
 
-/*	A sound is its key; "[missing]" has none. A C++ stand-in since bead
-   oo-9ht.68 deleted the facade this file stubbed: the custom-sound look-up the
-   pool calls (Universe.h; its sound lives until the innermost scope ends, as
-   the autoreleased one did) and the root's members a sound's vtable names.
+/*	A sound is its key; "[missing]" has none. A C++ stand-in: the
+   custom-sound look-up the pool calls (Universe.h; its sound lives until the
+   innermost scope ends) and the root's members a sound's vtable names.
 */
 OOSound::OOSound() {}
 std::optional<std::string> OOSound::name() { return std::nullopt; }
@@ -73,9 +67,8 @@ class TestSound final : public OOSound {
 }
 
 /*	A source records what it plays; the test says when it has stopped
-   playing. A C++ stand-in since bead oo-9ht.88 deleted the facade this file
-   stubbed: the members the pool calls (and the delegate member its vtable
-   names), recording per source in the order they were made.
+   playing. A C++ stand-in: the members the pool calls (and the delegate member
+   its vtable names), recording per source in the order they were made.
 */
 struct SourceRecord {
   std::string _key;

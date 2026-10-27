@@ -1,5 +1,5 @@
 /*	test_log.cpp
-        oo::log (oofnd/Log.hpp, bead oo-qpb) against the Objective-C
+        oo::log (oofnd/Log.hpp) against the Objective-C
    OOLogging.mm it replaces.
 
         The expectation below is the complete output of a throwaway probe (not

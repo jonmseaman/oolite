@@ -1,9 +1,8 @@
 /*	test_OOCheckShipDataPListVerifierStage.mm
-        Unit tests for OOCheckShipDataPListVerifierStage.h/.mm (bead oo-1v2w;
-   proposed ADR-0056 Amendment 1, amendments oo-up4b and oo-rmd7): the
+        Unit tests for OOCheckShipDataPListVerifierStage.h/.mm: the
    shipdata.plist stage, a subclass of OOTextureHandlingStage.
 
-        What the stage computed before the conversion is pinned: its name, its
+        What the stage computes is pinned: its name, its
    dependents (the intermediate class's, then the model and AI stages, which
    asking registers), when it runs, and what it logs for each ship, grouped
    under a "Ship" line: keys unknown or of another category, a player ship that
@@ -12,13 +11,9 @@
    hands each model to the model stage and each AI to the AI stage. The schema
    verifier and the resource manager reach the whole game, so the test replaces
    them: the schema verifier reports a value "BAD" as a failure and asks its
-   delegate about a value "DELEGATED". Then the crossing: the converted stage is
-   global, so Objective-C sees it as an OOOXPVerifierStage. Bead oo-9ht.4
-   deleted the stage facade: the verifier registers and answers the C++ stage
-        itself, so the facade case asks the stage (its description through
-   description()), and the checks that pinned only the facade crossing (one live
-   facade, oo::ToObjC/oo::ToCxx, its class, oo::AsObjCStage) were retired with
-   it (ADR-0049, standing approval oo-9n5p9). Run: bash
+   delegate about a value "DELEGATED". Then the stage is global: the verifier
+   registers and answers the C++ stage itself, so the facade case asks the
+   stage (its description through description()). Run: bash
    tools/check-core-tests.sh
 */
 
@@ -59,9 +54,8 @@ oo::PList cxx_OOPropertyListFromFile(const std::string& path) {
 #include "OOOXPVerifierTestDouble.h"
 #include "ResourceManager.h"
 
-// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade:
-// C++ definitions of the statics the code under test calls, with the
-// Objective-C stand-in's answers.
+// C++ definitions of the ResourceManager statics the code under test calls,
+// with the stand-in's answers.
 std::optional<std::string> ResourceManager::pathForFileNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   if (fileName != "builtin.dat") return std::nullopt;
@@ -85,8 +79,7 @@ oo::PList ResourceManager::whitelistDictionary() { return oo::PList(); }
 // ship here names a texture.
 void OOFreePixMap(OOPixMap* ioPixMap) { *ioPixMap = OOPixMap{}; }
 
-// The loader factory, as the Objective-C stand-in answered it (nil); C++ since
-// bead oo-9ht.114 deleted the loaders' facade.
+// The loader factory, as the stand-in answers it (nil).
 oo::Ref<OOTextureLoader> OOTextureLoader::loaderWithPath(
     const std::optional<std::string>& /*path*/, uint32_t /*options*/) {
   return nullptr;
@@ -94,11 +87,9 @@ oo::Ref<OOTextureLoader> OOTextureLoader::loaderWithPath(
 
 /*	The schema verifier (OOPListSchemaVerifier.mm reaches the game's plist
    types): a value "BAD" fails, a value "DELEGATED" is a delegated type, and
-   each is reported to the delegate as the real verifier reports it. Since bead
-   oo-9ht.119 deleted its Objective-C facade the stand-in defines the C++
-   class's members that the stage calls (it was an @implementation of the facade
-        with ivars of its own), and tells the stage through the C++ delegate
-   interface.
+   each is reported to the delegate as the real verifier reports it. The
+   stand-in defines the C++ class's members that the stage calls, and tells the
+   stage through the C++ delegate interface.
 */
 const char* const kPListKeyPathErrorKey = "keyPath";
 
@@ -206,9 +197,7 @@ void WriteFile(const std::filesystem::path& path, const char* contents) {
 // verifier runs it first.
 void RunScanner(OOOXPVerifier* verifier) {
   OOFileScannerVerifierStage::nameForDependencyForVerifier(verifier);
-  verifier->stageWithName(OOFileScannerVerifierStage::kName)
-      ->run();  // was -fileScannerStage (bead oo-9ht.7); the C++ stage since
-                // oo-9ht.4
+  verifier->stageWithName(OOFileScannerVerifierStage::kName)->run();
 }
 
 const std::vector<std::string> kScannerName = {"Scanning files"};
@@ -365,9 +354,8 @@ OO_TEST(checksEachShip) {
   std::filesystem::remove_all(kBase);
 }
 
-// The converted stage is global: the verifier registers it and finds it by name
-// (it held its OOOXPVerifierStage facade until bead oo-9ht.4), and it describes
-// itself with its class's name.
+// The stage is global: the verifier registers it and finds it by name, and it
+// describes itself with its class's name.
 OO_TEST(facade) {
   {
     OOOXPVerifier* verifier = MakeVerifier({});

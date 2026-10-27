@@ -1,25 +1,21 @@
 /*	test_OOJSSystem.mm
         Unit tests for the system JS binding
-   (src/Core/Scripting/OOJSSystem.h/.mm): the test-first half of its slice beads
-   (oo-luhd, slice 1 of docs/phases/3-slices/OOJSSystem.md, and the slices after
-        it), converted the way bead oo-ppc converted OOJSVector (proposed
-   ADR-0056, amendments oo-ppc and oo-9ht.139).
+   (src/Core/Scripting/OOJSSystem.h/.mm).
 
-        The System object is made by the real engine, so the test links every
-   game object but main's (tests/unit/core/meson.build entry ['*'], as
+   The System object is made by the real engine, so the test links every game
+   object but main's (tests/unit/core/meson.build entry ['*'], as
    test_OOJSScript does) and runs the binding in the engine's own context. The
    universe and the player are stand-ins of other names (FakeUniverse,
-        FakePlayer, amendment oo-ppc item 6) put where UNIVERSE and PLAYER read
-   them; they answer only the selectors the binding sends and record what they
-   are told. The entities are real Entity objects (a subclass that is visible to
-   scripts), so the engine's predicates, its entity wrappers and
-   JSValueToEntity() run unchanged. The expectations were written against the
-        Objective-C file and run on it first; they pin the JS-visible behaviour
-   of the property getter and setter (in a system and in interstellar space),
-   toString(), addPlanet()/addMoon(), sendAllShipsAway(), the counts and the
-   entity searches (filtering, ordering by distance, the optional reference
-   entity and range, and their errors) and locationFromCode(). Run: bash
-   tools/check-core-tests.sh test_OOJSSystem
+   FakePlayer) put where UNIVERSE and PLAYER read them; they answer only the
+   selectors the binding sends and record what they are told. The entities are
+   real Entity objects (a subclass that is visible to scripts), so the engine's
+   predicates, its entity wrappers and JSValueToEntity() run unchanged. The
+   expectations were written against the Objective-C file and run on it first;
+   they pin the JS-visible behaviour of the property getter and setter (in a
+   system and in interstellar space), toString(), addPlanet()/addMoon(),
+   sendAllShipsAway(), the counts and the entity searches (filtering, ordering
+   by distance, the optional reference entity and range, and their errors) and
+   locationFromCode(). Run: bash tools/check-core-tests.sh test_OOJSSystem
 */
 
 #include <process.h>
@@ -53,7 +49,7 @@ extern PlayerEntity* gOOPlayer;
 uint32_t gDebugFlags = 0;
 #endif
 
-// The ship's group, private again in C++ (bead oo-9ht.184.1), and nothing else.
+// The ship's group, private again in C++, and nothing else.
 struct ShipEntityTestAccess {
   static oo::Ref<::OOShipGroup>& Group(::ShipEntity* s) { return s->_group; }
 };
@@ -61,10 +57,8 @@ struct ShipEntityTestAccess {
 // MARK: The stand-ins
 // -----------------------------------------------------------------------------
 
-// An entity scripts can see; it answers like any Entity otherwise (an
-// Objective-C subclass until bead oo-j12i2; a C++ one overriding the member its
-// -isVisibleToScripts became; its -group, which nothing asked once the system
-// asked the C++ ship for its group, went with it).
+// An entity scripts can see; it answers like any Entity otherwise (a C++ one
+// overriding the member its -isVisibleToScripts became).
 class TestEntity : public Entity {
  public:
   bool isVisibleToScripts() override { return _visible; }
@@ -72,8 +66,8 @@ class TestEntity : public Entity {
   bool _visible = false;
 };
 
-// The universe answers held C++ entities (bead oo-9ht.39.26): the stand-in's
-// lists of objects, so held.
+// The universe answers held C++ entities: the stand-in's lists of objects, so
+// held.
 std::vector<oo::EntityHold> Held(const std::vector<oo::EntityHold>& objects) {
   std::vector<oo::EntityHold> result;
   for (const auto& object : objects) result.emplace_back(object.get());
@@ -100,9 +94,7 @@ std::vector<oo::EntityHold> MatchingEntities(
   return result;
 }
 
-class FakePlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class FakePlayer : public PlayerEntity {
  public:
   OOGalaxyID _galaxy = {};
   OOSystemID _system = {};
@@ -129,17 +121,15 @@ class FakePlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
   }
   ::OOPlanetEntity* addPlanetEntity(const std::string& planetKey) override {
     _log.push_back("addPlanet " + planetKey);
-    return static_cast<OOPlanetEntity*>(
-        _planetToAdd);  // the C++ planet since bead oo-9ht.129
+    return static_cast<OOPlanetEntity*>(_planetToAdd);  // the C++ planet
   }
   ::OOPlanetEntity* addMoonEntity(const std::string& moonKey) override {
     _log.push_back("addMoon " + moonKey);
-    return static_cast<OOPlanetEntity*>(
-        _planetToAdd);  // the C++ planet since bead oo-9ht.129
+    return static_cast<OOPlanetEntity*>(_planetToAdd);  // the C++ planet
   }
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player under the ship's
+// [[TestPlayer alloc] init]: a C++ player under the ship's
 // facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
 // +alloc's object was.
 template <class T>
@@ -176,7 +166,7 @@ class FakeUniverse : public Universe {
   Entity *_station, *_planet, *_sun;
   std::vector<oo::EntityHold> _planets, _stations, _wormholes, _entities;
   std::map<std::string, oo::EntityHold, std::less<>>
-      _waypoints;  // the waypoints' objects (bead oo-9ht.108)
+      _waypoints;  // the waypoints' objects
   float _ambient = {};
   int _lightings = {};
   BOOL _breakPattern = {};
@@ -212,8 +202,7 @@ class FakeUniverse : public Universe {
   }
   std::vector<oo::EntityHold> findShipsMatchingPredicate(
       EntityFilterPredicate predicate, void* parameter, double range,
-      Entity* entity) override  // the C++ entity since bead oo-9ht.39.26
-  {
+      Entity* entity) override {
     _lastShipsPredicate = "ships:" + PredicateName(predicate);
     _lastRange = range;
     _lastRelativeTo = entity;
@@ -229,9 +218,7 @@ class FakeUniverse : public Universe {
   }
   std::vector<oo::EntityHold> findEntitiesMatchingPredicate(
       EntityFilterPredicate predicate, void* parameter, double range,
-      Entity* entity)
-      override  // the reference's C++ entity since bead oo-9ht.39.8.23
-  {
+      Entity* entity) override {
     _lastRange = range;
     _lastRelativeTo = entity;
     return Held(MatchingEntities(this->_entities, predicate, parameter));
@@ -311,9 +298,7 @@ class FakeUniverse : public Universe {
     _log.push_back("findSystem " + sysName);
     return sysName == "Lave" ? 7 : -1;
   }
-  Entity* addVisualEffectAt(HPVector pos, const std::string& key)
-      override  // the C++ effect since bead oo-9ht.39.26
-  {
+  Entity* addVisualEffectAt(HPVector pos, const std::string& key) override {
     _log.push_back(oo::str::format("addVisualEffect %s %g %g %g", key.c_str(),
                                    pos.x, pos.y, pos.z));
     return _effectToAdd;  // the effect (the stand-in answered its object as the
@@ -333,10 +318,9 @@ class FakeUniverse : public Universe {
   HPVector getWitchspaceExitPosition() override {
     return make_HPvector(7, 8, 9);
   }
-  std::vector<oo::EntityHold> addShipsAt(
-      HPVector pos, const std::string& role, unsigned count, GLfloat radius,
-      bool isGroup) override  // held C++ entities since bead oo-9ht.39.26
-  {
+  std::vector<oo::EntityHold> addShipsAt(HPVector pos, const std::string& role,
+                                         unsigned count, GLfloat radius,
+                                         bool isGroup) override {
     _log.push_back(oo::str::format("addShipsAt %g %g %g %s %u %g %d", pos.x,
                                    pos.y, pos.z, role.c_str(), count, radius,
                                    isGroup ? 1 : 0));
@@ -370,7 +354,7 @@ Entity* MakeEntity(double x, BOOL visible) {
   return entity;
 }
 
-// A ship the fake universe adds (bead oo-9ht.144): the system asks the C++ ship
+// A ship the fake universe adds: the system asks the C++ ship
 // for its group, so the stand-in that answered -group is a C++ ship under its
 // object (oo::NewEntityFacade, retained and never released, as MakeEntity's),
 // placed as the stand-in was and never set up.
@@ -405,9 +389,7 @@ void SetUp() {
                              oo::Data(info.data(), info.size()),
                              oo::fs::WriteMode::direct)
                .has_value());
-  {  // was an Objective-C pool (bead oo-dbz.1: no Objective-C object since
-     // oo-4aq6a.8): the engine autoreleases facades as it starts (as Eval(),
-     // bead oo-9ht.172)
+  {  // the engine autoreleases facades as it starts (as Eval() does)
     (void)OOJavaScriptEngine::sharedEngine();
   }
 
@@ -477,7 +459,7 @@ void SetUp() {
 // Evaluates src in the engine's context and gives its result as a string
 // ("undefined", "null",
 // ...), or "threw: <message>".
-// In its own autorelease pool, as the game's frame is (bead oo-9ht.172): an
+// In its own autorelease pool, as the game's frame is: an
 // object the engine or the binding autoreleases is freed here, while the engine
 // is alive. With no pool it went to the main thread's implicit pool, which
 // libobjc drains at thread detach, after the C++ static destructors: an
@@ -801,7 +783,7 @@ OO_TEST(searches) {
   OO_CHECK(Eval("system.entitiesWithScanClass()").rfind("threw: ", 0) == 0);
 }
 
-// Slice 2 (bead oo-yqoa): the legacy spawners, the static lookups, effects,
+// The legacy spawners, the static lookups, effects,
 // populators, waypoints and the ship creators.
 OO_TEST(legacySpawners) {
   SetUp();
@@ -914,8 +896,7 @@ OO_TEST(populators) {
                              : nullptr;
   OO_CHECK(definition != nullptr);
   if (definition != nullptr) {
-    {  // was an Objective-C pool (bead oo-dbz.1: no Objective-C object since
-       // oo-4aq6a.8): as Eval() (bead oo-9ht.172)
+    {  // as Eval()
       ooscript::Context context = OOJSAcquireContext();
       OO_CHECK(OOJSValueIsFunction(context, definition->callback()));
       OOJSRelinquishContext(context);

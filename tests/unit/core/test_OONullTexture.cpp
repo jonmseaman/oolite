@@ -1,29 +1,16 @@
 /*	test_OONullTexture.mm
         Unit tests for OONullTexture (src/Core/Materials/OONullTexture.h), the
-   texture that applies no texture: bead oo-jvm6 (Phase 3, house style of
-   proposed ADR-0056; a leaf of the textures root, amendment oo-whzh).
+   texture that applies no texture, a leaf of the textures root.
 
         The null texture is a process-wide singleton that OOTexture's
    +nullTexture answers. It links the whole game but main
    (tests/unit/core/meson.build entry ['*']), on the hidden GL context of
-        oo_gl_test_context.hpp, because applying it unbinds the current texture.
-   The expectations were written against the Objective-C API and run on the
-   unconverted class first: one shared instance, what it answers as a texture
-   (no size, not mip-mapped, the root's defaults), that applying it binds no
-   texture, that a graphics reset leaves it alone, and its debug name (commit
-        dc5b2aff6). That API then became the facade, and the last tests
-        pinned the C++ API and the facade's contract.
-
-        Bead oo-9ht.100 deleted the facade (ADR-0056 amendment "deleting a
-   facade"). The cases that asked through it ask the same object as Objective-C
-   now gets it: OOTexture::nullTexture(), the root's facade of the C++ null
-   texture, which OOTexture keeps for the process as +sharedNullTexture kept its
-   facade; -isKindOfClass: of the deleted class is a dynamic_cast of the C++
-   texture. The facade's own case (facade) was retired with it (ADR-0049,
-   standing approval oo-9n5p9). Bead oo-9ht.99 deleted the root's facade too:
-   the cases call the C++ texture OOTexture::nullTexture() answers, and
-   nullTextureCrossesAsTheRootFacade (the crossing) went with it (oo-9n5p9).
-        Run: bash tools/check-core-tests.sh
+   oo_gl_test_context.hpp, because applying it unbinds the current texture. The
+   expectations cover: one shared instance, what it answers as a texture (no
+   size, not mip-mapped, the root's defaults), that applying it binds no
+   texture, that a graphics reset leaves it alone, and its debug name. The cases
+   call the C++ texture OOTexture::nullTexture() answers; a class check is a
+   dynamic_cast of the C++ texture. Run: bash tools/check-core-tests.sh
 */
 
 #include "OODescription.h"

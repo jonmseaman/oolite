@@ -22,8 +22,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSPlayerShip.h"
-
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
@@ -36,6 +34,7 @@ MA 02110-1301, USA.
 #include "OOJSEntity.h"
 #include "OOJSEquipmentInfo.h"
 #include "OOJSPlayer.h"
+#include "OOJSPlayerShip.h"
 #include "OOJSQuaternion.h"
 #include "OOJSShip.h"
 #include "OOJSVector.h"
@@ -56,22 +55,6 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOException.h"
 #include "ooscript/JSEngine.hpp"
 
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr),
-   InitClass/DefineObject become ooscript::initClass / ooscript::defineObject,
-   native methods and class hooks take the façade's hook signature
-        (Context/Object/PropertyId/Value pointer/CallArgs reference), and the
-   directly spelled numeric-conversion calls (NewNumberValue, ValueToNumber,
-   ValueToBoolean, ValueToInt32, ValueToECMAUint32, SetPrivate,
-   RemoveObjectRoot) become their ooscript:: façade equivalents. Natives take
-   the façade signature directly (ooscript::Context and a CallArgs reference)
-   and the OOJS_* argument-marshalling macros expand to the CallArgs accessors,
-   so the rest of each function body is UNCHANGED. `this` is renamed to
-   `thisObj` because it is a reserved word once this file compiles as
-   Objective-C++ (ADR-0001).
-*/
 namespace ooscript {}
 using ooscript::CallArgs;
 using ooscript::ClassDef;
@@ -113,10 +96,8 @@ oo::PList NormalizedColorComponents(OOColor* color) {
   return oo::PList(std::move(components));
 }
 
-/*	The player's HUD is converted (HeadUpDisplay), and the player answers
-   its facade. A player with no HUD answered zero, false, nil or none to every
-   message the getter sent the HUD; so does a null HUD here (ADR-0056 amendments
-   oo-6ia4 item 2, oo-nge8 item 6).
+/*	A player with no HUD answers zero, false, nil or none to every message
+   the getter sends the HUD; so does a null HUD here.
 */
 template <typename R>
 R AskHud(PlayerEntity* player, R (HeadUpDisplay::*member)()) {
@@ -618,10 +599,8 @@ static PropertySpec sPlayerShipProperties[] = {
 
 // A raw jsapi mirror of sPlayerShipProperties, used only for the two
 // bad-property error reporters in OOJavaScriptEngine.m
-// (OOJSReportBadPropertySelector/Value): those helpers are outside this bead's
-// scope (shared across every binding file) and still take a
-// ooscript::PropertySpec*, not ooscript::PropertySpec* (see OOJSVector.mm's
-// sVectorPropertiesRaw).
+// (OOJSReportBadPropertySelector/Value), which are shared across every binding
+// file and take a ooscript::PropertySpec*.
 namespace {
 static ooscript::PropertySpec sPlayerShipPropertiesRaw[] = {
     // JS name								ID
@@ -769,9 +748,8 @@ void InitOOJSPlayerShip(ooscript::Context context, ooscript::Object global) {
       ooscript::defineObject((context), (JSPlayerObject()), "ship",
                              &sPlayerShipClass, proto, OOJS_PROP_READONLY);
   sPlayerShipObject = (shipObj);
-  // The slot holds a weak reference to the C++ player (bead oo-9ht.39.3; the
-  // player's object's weak reference before), as every entity's JS object's
-  // does.
+  // The slot holds a weak reference to the C++ player, as every entity's JS
+  // object's does.
   OOJSSetCxxPrivate((context), shipObj,
                     oo::makeRef<OOJSEntityHolder>(player).get());
   OOJSPlayerShipSetJSSelf(
@@ -786,8 +764,7 @@ ooscript::Object JSPlayerShipPrototype(void) { return sPlayerShipPrototype; }
 ooscript::Object JSPlayerShipObject(void) { return sPlayerShipObject; }
 
 // PlayerEntity (OOJavaScriptExtensions): the bodies of the category's methods,
-// which the engine and the player sent by selector; the C++ player calls them
-// (ADR-0056 amendments oo-ppc item 3, oo-ykoy, oo-9ht.177).
+// which the engine and the player sent by selector; the C++ player calls them.
 std::optional<std::string> OOJSPlayerShipJSClassName(void) {
   return std::string("PlayerShip");
 }
@@ -1076,7 +1053,6 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
           player != nullptr
               ? player->getCompassTargetEntity()
               : (Entity*)nullptr);  // the C++ entity's node, the same object's
-                                    // (bead oo-9ht.39.25)
       break;
 
     case kPlayerShip_compassType:
@@ -1236,8 +1212,7 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
   OOGalacticHyperspaceBehaviour ghBehaviour;
   Vector vValue;
   oo::Ref<OOColor> colorForScript;  // the colours are converted (OOColor)
-  Entity* eValue = nullptr;  // as JSValueToEntity() answers (the C++ entity
-                             // since bead oo-9ht.39.3)
+  Entity* eValue = nullptr;  // as JSValueToEntity() answers (the C++ entity)
 
   switch (ooscript::idToInt32(propID)) {
     case kPlayerShip_fuelLeakRate:
@@ -1336,19 +1311,16 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
       // make sure we have a valid entity
       if (!ooscript::isNull(*value_raw) &&
           JSValueToEntity(context, *value_raw, &eValue)) {
-        Entity* current =
-            (player != nullptr
-                 ? player->getCompassTargetEntity()
-                 : nullptr);  // the C++ entities (bead oo-9ht.39.25)
+        Entity* current = (player != nullptr ? player->getCompassTargetEntity()
+                                             : nullptr);  // the C++ entities
         if (player != nullptr) player->setNextCompassMode();
         if (player != nullptr) player->validateCompassTarget();
         // cycle the targets until we either get back to the start (entity not
         // found) or we find the one we're looking for
-        while (
-            (player != nullptr ? player->getCompassTargetEntity() : nullptr) !=
-                current &&
-            (player != nullptr ? player->getCompassTargetEntity() : nullptr) !=
-                eValue)  // the C++ entities (bead oo-9ht.39.8.11)
+        while ((player != nullptr ? player->getCompassTargetEntity()
+                                  : nullptr) != current &&
+               (player != nullptr ? player->getCompassTargetEntity()
+                                  : nullptr) != eValue)  // the C++ entities
         {
           if (player != nullptr) player->setNextCompassMode();
           if (player != nullptr) player->validateCompassTarget();
@@ -1573,7 +1545,6 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
 
     case kPlayerShip_currentWeapon: {
       BOOL exists = NO;  // JSValueToEquipmentKeyRelaxed() takes a BOOL *
-                         // (amendment oo-nge8 item 1)
       sValue = JSValueToEquipmentKeyRelaxed(context, *value_raw, &exists);
       if (!exists || !sValue.has_value()) {
         sValue = "EQ_WEAPON_NONE";
@@ -1777,9 +1748,9 @@ static bool PlayerShipEngageAutopilotToStation(ooscript::Context context,
   StationEntity* stationForDocking = nil;
 
   if (oojsArgs.count() > 0)
-    stationForDocking = oo::ToStation(OOJSEntityFromJSValue(
-        context,
-        OOJS_ARGV[0]));  // a station's object is a ship's (bead oo-9ht.175)
+    stationForDocking = oo::ToStation(
+        OOJSEntityFromJSValue(context,
+                              OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nil) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "engageAutopilot",
                                MIN(oojsArgs.count(), 1U), OOJS_ARGV,
@@ -1822,9 +1793,9 @@ static bool PlayerShipRequestDockingClearance(ooscript::Context context,
   StationEntity* stationForDocking = nil;
 
   if (oojsArgs.count() > 0)
-    stationForDocking = oo::ToStation(OOJSEntityFromJSValue(
-        context,
-        OOJS_ARGV[0]));  // a station's object is a ship's (bead oo-9ht.175)
+    stationForDocking = oo::ToStation(
+        OOJSEntityFromJSValue(context,
+                              OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nil) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "requestDockingClearance",
                                MIN(oojsArgs.count(), 1U), OOJS_ARGV,
@@ -1850,9 +1821,9 @@ static bool PlayerShipCancelDockingRequest(ooscript::Context context,
   StationEntity* stationForDocking = nil;
 
   if (oojsArgs.count() > 0)
-    stationForDocking = oo::ToStation(OOJSEntityFromJSValue(
-        context,
-        OOJS_ARGV[0]));  // a station's object is a ship's (bead oo-9ht.175)
+    stationForDocking = oo::ToStation(
+        OOJSEntityFromJSValue(context,
+                              OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nil) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "cancelDockingRequest",
                                MIN(oojsArgs.count(), 1U), OOJS_ARGV,

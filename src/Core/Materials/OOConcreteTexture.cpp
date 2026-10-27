@@ -24,9 +24,8 @@
 
 */
 
-#include "OOConcreteTexture.h"
-
 #include "OOCPUInfo.h"
+#include "OOConcreteTexture.h"
 #include "OOLogging.h"
 #include "OOMacroOpenGL.h"
 #include "OOOpenGLExtensionManager.h"
@@ -72,9 +71,7 @@ OOConcreteTexture::OOConcreteTexture(OOTextureLoader* loader,
 #endif
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-  // "<" + [loader class] + ">" of a generator: the C++ class's name since bead
-  // oo-9ht.118 deleted the generator's facade (ADR-0056 amendment oo-9ht.114
-  // item 4).
+  // "<" + [loader class] + ">" of a generator: the C++ class's name.
   if (dynamic_cast<OOTextureGenerator*>(loader) != nullptr) {
     _name = "<" + loader->className() + ">";
   }

@@ -4,8 +4,7 @@ Abstraction layer to allow OOTCPStreamDecoder to work with CoreFoundation/
 CF-Lite, Cocoa Foundation or GNUstep Foundation.
 */
 
-#ifndef INCLUDED_OOTCPStreamDecoderAbstractionLayer_h
-#define INCLUDED_OOTCPStreamDecoderAbstractionLayer_h
+#pragma once
 
 #ifndef OOTCPSTREAM_USE_COREFOUNDATION
 #define OOTCPSTREAM_USE_COREFOUNDATION 0
@@ -65,11 +64,10 @@ typedef JAAutoreleasePoolRef OOALAutoreleasePoolRef;
 #include <stdbool.h>
 #include <stdlib.h>
 
-/*	The handles are opaque in C and C++ alike (proposed ADR-0043 Amendment 2
-   item 14): a struct OOALObject, defined in
-   OOTCPStreamDecoderAbstractionLayer.mm, holding a string, a data buffer or a
-   property list (an oo::PList). Handles made by a Create/FromData function are
-        owned (+1) and freed by OOALRelease(); OOALDictionaryGetValue(),
+/*	The handles are opaque in C and C++ alike: a struct OOALObject, defined
+   in OOTCPStreamDecoderAbstractionLayer.mm, holding a string, a data buffer or
+   a property list (an oo::PList). Handles made by a Create/FromData function
+   are owned (+1) and freed by OOALRelease(); OOALDictionaryGetValue(),
    OOTypeDescription() and OOALSTR() answer borrowed handles that live as long
    as their parent (or for ever, for OOALSTR). A handle from
    OOALPropertyListFromData() belongs to the innermost
@@ -96,8 +94,7 @@ OOALStringRef OOALGetConstantString(
    Objective-C string literals for OODebugTCPConsoleClient; only the C decoder
    spells its strings as handles.
 */
-#if !(defined(__cplusplus) && \
-      !defined(OO_PLAIN_CPP_UNIT))  // was !__OBJC__ (bead oo-dbz)
+#if !(defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT))  // was !__OBJC__
 #define OOALSTR(string) OOALGetConstantString("" string "")
 #endif
 
@@ -142,4 +139,3 @@ const oo::PList& OOALObjectPList(OOALObjectRef object);
 #endif
 
 #endif /* OOTCPSTREAM_USE_COREFOUNDATION */
-#endif /* INCLUDED_OOTCPStreamDecoderAbstractionLayer_h */

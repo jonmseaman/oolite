@@ -36,7 +36,7 @@ SOFTWARE.
 #include "oofnd/PListWriting.hpp"
 #include "oofnd/String.hpp"
 
-/*	Foundation sweep (proposed ADR-0043, bead oo-xh1g): the descriptions are
+/*	The descriptions are
    oo::PLists, the lines std::strings scanned in UTF-16 units as -rangeOfString:
    scanned them. The indices are integers (an index from the key table's
    -intValue may be negative, as the Foundation number was). Dictionaries are

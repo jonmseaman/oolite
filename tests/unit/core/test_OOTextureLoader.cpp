@@ -1,7 +1,6 @@
 /*	test_OOTextureLoader.mm
         Unit tests for OOTextureLoader (src/Core/Materials/OOTextureLoader.h),
-   the root of the texture loaders: bead oo-zl36 (Phase 3, house style of
-   proposed ADR-0056; the textures module, amendments oo-whzh and oo-bj8).
+   the root of the texture loaders.
 
         A loader is a task on the game's work manager: its subclass's
    -loadTexture fills the pixels on a work thread, the root then applies the
@@ -12,12 +11,8 @@
    file is read; the class factory is asked only for paths it refuses. It links
    the whole game but main (tests/unit/core/meson.build entry ['*']), on the
    hidden GL context of oo_gl_test_context.hpp (the loaders' one-time set-up
-        reads the GL texture size limit). The expectations were written against
-   the Objective-C API and run on the unconverted class first (commit
-   c5a02306c). Bead oo-9ht.114 deleted the Objective-C facade: its crossing
-   cases went with it (standing approval oo-9n5p9), the Objective-C test loader
-        is a C++ subclass of the same name with the same answers, and the other
-   cases call the same members with every expectation kept. The last test pins
+        reads the GL texture size limit). The test's loader is a C++ subclass,
+   and the cases call its members. The last test pins
    the C++ API (OOTextureLoader). Run: bash tools/check-core-tests.sh
 */
 
@@ -39,8 +34,7 @@ uint32_t gDebugFlags = 0;
 static int gLoads = 0;
 
 // A loader whose pixels are a width x height image of the given format whose
-// bytes count up from 1, or none, or an exception. (An Objective-C subclass
-// until bead oo-9ht.114; named as it was.)
+// bytes count up from 1, or none, or an exception.
 class TestLoader : public OOTextureLoader {
  public:
   void loadTexture() override {
@@ -105,8 +99,7 @@ TestLoader* Loader(const char* path, uint32_t options, uint32_t width,
 }
 
 bool Queue(OOTextureLoader* loader) {
-  // The work manager's task is the C++ loader since bead oo-9ht.14 (it was the
-  // Objective-C object).
+  // The work manager's task is the C++ loader.
   return OOAsyncWorkManager::sharedAsyncWorkManager()->addTask(
       loader, kOOAsyncPriorityMedium);
 }

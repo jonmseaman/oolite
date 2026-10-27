@@ -4,10 +4,8 @@ OOJSEngineTimeManagement.h
 
 Functionality related to time limiting and profiling of JavaScript code.
 
-C++20 since bead oo-cn4o (proposed ADR-0056; amendment oo-ppc for the scripting
-files): the profile classes are OOTimeProfile and OOTimeProfileEntry (no
-Objective-C facades since bead oo-9ht.63). The watchdog is a function of this
-file; it was a category of the engine that nothing else sent.
+The profile classes are OOTimeProfile and OOTimeProfileEntry. The watchdog is a
+function of this file.
 
 
 Copyright (C) 2010-2013 Jens Ayton
@@ -189,7 +187,7 @@ class OOTimeProfileEntry : public oo::RefCounted {
 
   std::optional<std::string> description();
 
-  std::optional<std::string> function();  // nullopt: none (bead oo-3rb.291.3)
+  std::optional<std::string> function();  // nullopt: none
   NSUInteger hitCount();
   double totalTimeSum();
   double selfTimeSum();

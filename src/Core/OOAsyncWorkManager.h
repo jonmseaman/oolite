@@ -27,8 +27,7 @@ SOFTWARE.
 
 */
 
-#ifndef OOASYNCWORKMANAGER_H
-#define OOASYNCWORKMANAGER_H
+#pragma once
 
 #include "OOFoundation.h"
 #include "oofnd/Ref.hpp"
@@ -43,7 +42,7 @@ typedef enum {
    has a completion (hasCompleteAsyncTask()), completed on the main thread by
    completeAsyncTask(). This was the Objective-C protocol OOAsyncWorkTask, whose
    -completeAsyncTask was optional; the manager's -respondsToSelector: test is
-   hasCompleteAsyncTask() (bead oo-9ht.14). The manager retains a task while it
+   hasCompleteAsyncTask(). The manager retains a task while it
    is queued or pending, as it retained the Objective-C object.
 */
 class OOAsyncWorkTask : public oo::RefCounted {
@@ -90,5 +89,3 @@ class OOAsyncWorkManager : public oo::RefCounted {
   OOAsyncWorkManager() = default;
   ~OOAsyncWorkManager() override;
 };
-
-#endif  // OOASYNCWORKMANAGER_H

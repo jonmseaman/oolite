@@ -1,5 +1,5 @@
 /*	test_string.cpp
-        oo::str (oofnd/String.hpp, bead oo-dps) against GNUstep base 1.31.1.
+        oo::str (oofnd/String.hpp) against GNUstep base 1.31.1.
 
         Every expectation here was captured from gnustep-base 1.31.1 on this
    toolchain (throwaway probes, not committed): readable rows for the cases
@@ -13,8 +13,7 @@
    failure, rebuild that program and diff its lines against these.
 */
 
-// The header must survive OOCocoa.h's true/false macros and hand them back
-// (proposed ADR-0028).
+// The header must survive OOCocoa.h's true/false macros and hand them back.
 #define true 1
 #define false 0
 #include <type_traits>

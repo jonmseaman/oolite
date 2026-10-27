@@ -2,9 +2,7 @@
         Unit tests for OOCombinedEmissionMapGenerator
    (src/Core/Materials/OOCombinedEmissionMapGenerator.h), the texture generator
    that bakes a material's emission map, illumination map, diffuse map and their
-   modulating colours into one emission texture: bead oo-e6xa (Phase 3, house
-   style of proposed ADR-0056; a leaf of the texture generators, amendments
-   oo-zl36 and oo-rr2x).
+   modulating colours into one emission texture.
 
         It answers nil when there is nothing to bake, takes its texture options,
    anisotropy and LOD bias from the options specifier, keys its texture by what
@@ -16,12 +14,8 @@
    scratch folder first and the resource manager in strict mode (the built-in
    Resources alone), so no game resource and no add-on is read. It links the
    whole game but main (tests/unit/core/meson.build entry ['*']), on the hidden
-   GL context of oo_gl_test_context.hpp. The expectations were written against
-   the Objective-C API and run on the unconverted class first (commit
-   49fa6013a), then through the facade of the C++ class. Bead oo-9ht.135 deleted
-   that facade, and bead oo-9ht.118 the generators' facade they were then asked
-   through: the generators are made by the C++ factories and asked directly,
-   with the same expectations. The last test pins the C++ API. Run: bash
+   GL context of oo_gl_test_context.hpp. The generators are made by the C++
+   factories and asked directly. The last test pins the C++ API. Run: bash
    tools/check-core-tests.sh test_OOCombinedEmissionMapGenerator
 */
 
@@ -48,9 +42,8 @@
 uint32_t gDebugFlags = 0;
 #endif
 
-// What an autoreleased Objective-C texture was (bead oo-9ht.99 deleted the
-// facade): the C++ texture, kept until the current autorelease scope drains
-// (oo::autorelease; an Objective-C keeper object until bead oo-4aq6a.2).
+// What an autoreleased texture is: the C++ texture, kept until the current
+// autorelease scope drains (oo::autorelease).
 static OOTexture* Autoreleased(const oo::Ref<OOTexture>& texture) {
   if (texture == nullptr) return nullptr;
   oo::autorelease(oo::Ref<OOTexture>(texture));
@@ -234,7 +227,7 @@ OO_TEST(cacheKeys) {
                                         KeyOf("e.png") + "}*" + redRGBA + ";"));
     // A white colour is no colour; the diffuse map is only used with
     // illumination. The generator before the expected key, the order Clang
-    // evaluates the two sides of == (bead oo-1q4).
+    // evaluates the two sides of ==.
     const std::optional<std::string> whiteKey =
         NewGenerator(oo::PList("e.png"), OOColor::whiteColor().get(),
                      DiffuseMap(), nil, oo::PList(), nil, oo::PList("e.png"))
@@ -407,8 +400,7 @@ OO_TEST(cxxApi) {
                      "emission map;emission:{" + KeyOf("e.png") + "}*" +
                      red->rgbaDescription().value_or("") + ";"));
 
-    // A generator the factory made is one (it crossed back from its facade
-    // until bead oo-9ht.118).
+    // A generator the factory made is one.
     OOTextureGenerator* made =
         NewGenerator(oo::PList("e.png"), nil, nil, nil, oo::PList(), nil,
                      oo::PList("e.png"));

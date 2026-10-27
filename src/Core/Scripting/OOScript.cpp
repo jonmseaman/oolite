@@ -22,8 +22,6 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOScript.h"
-
 #include <cxxabi.h>
 
 #include <cstdlib>
@@ -35,10 +33,11 @@ MA 02110-1301, USA.
 #include "OOLogging.h"
 #include "OOPListParsing.h"
 #include "OOPListScript.h"
+#include "OOScript.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/FileSystem.hpp"
-#include "oofnd/Ref.hpp"  // oo::autorelease (beads oo-pvhrh, oo-31u.7)
+#include "oofnd/Ref.hpp"  // oo::autorelease
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOObject.h"
 
@@ -59,9 +58,7 @@ static std::optional<std::vector<std::string>> StringsFromArrayFile(
   return result;
 }
 
-// The C++ class's name, as [self class] named an Objective-C script's class
-// (the deleted facade's -description named it so; bead oo-9ht.133 moved it
-// here).
+// The C++ class's name, as [self class] named an Objective-C script's class.
 static std::string ClassName(const OOScript& script) {
   int status = 0;
   char* demangled =
@@ -344,7 +341,7 @@ void OOScript::clearJSSelf(ooscript::Object) {}
 
 /*	OOScriptAutorelease(): the script goes to the innermost
    oo::AutoreleaseScope, whose drain releases it where the keeper object that
-   held it was released (beads oo-pvhrh, oo-31u.7).
+   held it was released.
 */
 void OOScriptAutorelease(oo::Ref<OOScript> script) {
   if (script == nullptr) return;

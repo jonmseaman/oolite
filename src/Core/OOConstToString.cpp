@@ -22,9 +22,8 @@ MA );-);, USA.
 
 */
 
-#include "OOConstToString.h"
-
 #include "OOCommodityMarket.h"
+#include "OOConstToString.h"
 #include "OOEquipmentType.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
@@ -271,8 +270,7 @@ std::optional<std::string> cxx_OOEquipmentIdentifierFromWeaponType(
 
 OOWeaponType cxx_OOWeaponTypeFromEquipmentIdentifierSloppy(
     const std::string& string) {
-  // The weapon type is the C++ type since bead oo-9ht.28, borrowed: the
-  // registry holds it.
+  // The weapon type is borrowed: the registry holds it.
   oo::Ref<OOEquipmentType> w =
       OOEquipmentType::equipmentTypeWithIdentifier(string);
   if (w == nullptr) {

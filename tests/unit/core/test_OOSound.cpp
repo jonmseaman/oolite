@@ -1,28 +1,22 @@
 /*	test_OOSound.mm
-        Unit tests for OOSound (src/Core/OOALSound.h): bead oo-2en, the Audio
-   module's pattern seam (proposed ADR-0056, amendment oo-2en).
+        Unit tests for OOSound (src/Core/OOALSound.h).
 
         OOSound is the root of the sounds: OOALBufferedSound, OOALStreamedSound
-   and OOMusic derive from it in their own files and convert in their own beads.
+   and OOMusic derive from it in their own files.
    The root keeps the sound system's global state (set up, sound OK, the master
    volume, which it keeps in the "volume_control" default) and is the class
    cluster that initWithContentsOfFile() turns into a buffered or a streamed
-   sound by the decoded size. These expectations were written against the
-   Objective-C API and run on the unconverted class first (commit cecf0a94f);
-   they ran through the facade, which was its forwarding test, until bead
-   oo-9ht.68 deleted it: they now ask the C++ class (alloc/init as oo::makeRef,
-   the cluster as the factory, the class checks as dynamic_cast, "%@" as
-        description()) with every expectation kept (standing approval oo-9n5p9).
-   After them come the C++ API and a C++ subclass, as test_OODrawable.mm does.
+   sound by the decoded size. The tests ask the C++ class (alloc/init as
+   oo::makeRef, the cluster as the factory, the class checks as dynamic_cast,
+   description()). After them come the C++ API and a C++ subclass, as
+   test_OODrawable.mm does.
 
         OpenAL runs on OpenAL Soft's null backend (ALSOFT_DRIVERS=null), so the
    machine's sound hardware cannot change the answers; the user's defaults are a
    scratch folder's (HOMEPATH), so the machine's own volume cannot either. The
-   decoder, the two concrete sounds and the mixer are this file's stubs
-   (proposed ADR-0056, amendment oo-z1s4 item 4): the real ones would bring
-        Vorbis and the whole mixer into the link. All are C++ stand-ins since
-   beads oo-9ht.82, oo-9ht.83, oo-9ht.84 and oo-9ht.87 deleted their facades
-   (standing approval oo-9n5p9). Run: bash tools/check-core-tests.sh
+   decoder, the two concrete sounds and the mixer are this file's stubs: the
+   real ones would bring Vorbis and the whole mixer into the link. All are C++
+   stand-ins. Run: bash tools/check-core-tests.sh
 */
 
 #include <process.h>
@@ -60,9 +54,8 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 
 static unsigned gMixerUpdates = 0;
 
-// The mixer (a C++ stand-in since bead oo-9ht.87 deleted the Objective-C facade
-// this file stubbed): one, never released, counting the updates the root sends
-// it.
+// The mixer (a C++ stand-in): one, never released, counting the updates the
+// root sends it.
 OOSoundMixer* OOSoundMixer::sharedMixer() {
   static OOSoundMixer* mixer = oo::makeRef<OOSoundMixer>().leakRef();
   return mixer;
@@ -75,9 +68,8 @@ void OOSoundMixer::shutdown() {}
 /*	The decoder: a path names its decoded size. "missing.ogg" (and no path)
    has no decoder, "big.ogg" is one byte over the 1 MB a buffered sound may
    hold, "edge.ogg" exactly that, and anything else is small. Counts the
-   decoders alive, so the test sees each released. A C++ stand-in since bead
-   oo-9ht.82 deleted the Objective-C facade this file stubbed: the factory the
-        cluster calls, a subclass answering the path, and the root's members
+   decoders alive, so the test sees each released. A C++ stand-in: the factory
+   the cluster calls, a subclass answering the path, and the root's members
    (OOALSoundDecoder.mm is not linked), which its vtable names.
 */
 static int gLiveDecoders = 0;
@@ -121,8 +113,7 @@ std::optional<std::string> OOALSoundDecoder::descriptionComponents() const {
 }
 
 // The two concrete sounds. "bad.ogg" fails to load. The buffered sound is a C++
-// stand-in since bead oo-9ht.83 deleted the Objective-C facade this file
-// stubbed (the members the cluster and the root call).
+// stand-in (the members the cluster and the root call).
 oo::Ref<OOALBufferedSound> OOALBufferedSound::initWithDecoder(
     OOALSoundDecoder* inDecoder) {
   if (inDecoder->name() == "bad.ogg") return nullptr;
@@ -137,9 +128,8 @@ std::optional<std::string> OOALBufferedSound::name() { return _name; }
 
 ALuint OOALBufferedSound::soundBuffer() { return 42; }
 
-// The streamed sound: a C++ stand-in since bead oo-9ht.84 deleted the
-// Objective-C facade this file stubbed. Its rewinds are counted per sound (its
-// _rewinds ivar was), and a rewind reaches the root's.
+// The streamed sound: a C++ stand-in. Its rewinds are counted per sound, and a
+// rewind reaches the root's.
 static std::map<const OOALStreamedSound*, int> gStreamedRewinds;
 
 oo::Ref<OOALStreamedSound> OOALStreamedSound::initWithDecoder(
@@ -170,8 +160,7 @@ static int Rewinds(OOSound* sound) {
 }
 
 // A subclass that overrides the designated initialiser and wraps a sound, as
-// OOMusic does (a C++ subclass since bead oo-9ht.68 deleted the facade its
-// Objective-C version subclassed).
+// OOMusic does (a C++ subclass).
 class TestMusic final : public OOSound {
  public:
   static oo::Ref<TestMusic> initWithContentsOfFile(
@@ -432,7 +421,7 @@ OO_TEST(objCSoundBehindACxxPointer) {
       OOSound::initWithContentsOfFile(std::string("big.ogg"));
   OO_CHECK(part != nullptr);
 
-  // The streamed sound is C++ since oo-9ht.84; its rewind reaches the root's.
+  // The streamed sound is C++: its rewind reaches the root's.
   OO_CHECK(part->name() == std::optional<std::string>("big.ogg"));
   OO_CHECK(part->soundBuffer() == 7 && part->soundIncomplete());
   part->rewind();

@@ -1,33 +1,19 @@
 /*	test_EntityShaderBindings.mm
         Unit tests for the category Entity (ShaderBindings)
-   (src/Core/Entities/EntityShaderBindings.mm): bead oo-aeev, the values a
+   (src/Core/Entities/EntityShaderBindings.mm): the values a
    shader's uniforms bind to by name on any entity (the clock, the system's
    "flavour" numbers and its attributes), all read from PLAYER.
 
-        The category has no header: the shader uniforms find its methods by
-   selector and read their return types from the runtime
-   (OOShaderUniformTypeFromMethod). So the test declares the category itself,
-   sends its selectors to an entity, and pins each method's return type
-        encoding, which decides the uniform's type. PLAYER is an entity that
-   answers the selectors the category sends with values the test sets; a system
-   attribute that is not a number reads 0, as -unsignedIntValue of nil did. The
-   test links the whole game but main (['*']) for Entity. The expectations were
-   written against the Objective-C category and run on it first; the conversion
-   (amendment oo-9fwb: members of Entity, the category's forwarders in
-        EntityShaderBindings+ObjCBridge.mm) changed no line here. Since the
-   uniforms bind the members through the entities' member table (bead
-   oo-9ht.158) and the forwarders went (bead oo-9ht.127), the test asks the
-   binding a uniform makes for each name on an entity's object, and pins the
-        uniform type the row gives, which is the one the method's return type
-   encoding gave
-        ('f' a float, 'I' an unsigned int); every expected value is kept. Since
-   bead oo-9ht.39.6.1 moved the table to EntityShaderBindings.mm, its rows read
-   the entity's C++ part (the binding's target, which the helpers below pass
-   where they passed the object; no expected value changes), and
-        everyPermittedNameBindsAsBySelector (added) pins that every name
-   whitelist.plist permits that the facade still binds by selector binds through
-   a row, with the type the selector path read (the names whose facade methods
-   earlier beads deleted bind by row only). Run: bash tools/check-core-tests.sh
+        The shader uniforms bind the entity's members through the entities'
+   member table, so the test asks the binding a uniform makes for each name on
+   an entity, and pins the uniform type the row gives ('f' a float, 'I' an
+   unsigned int). PLAYER is an entity that answers what the category asks for
+   with values the test sets; a system attribute that is not a number reads 0.
+   The test links the whole game but main (['*']) for Entity. The rows read the
+   entity's C++ part (the binding's target, which the helpers below pass), and
+        everyPermittedNameBindsAsBySelector pins that every name
+   whitelist.plist permits binds through a row, with the type the selector path
+   read. Run: bash tools/check-core-tests.sh
 */
 
 #include <cmath>
@@ -35,7 +21,7 @@
 #include <cstring>
 
 #include "Entity.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 
@@ -47,13 +33,11 @@ uint32_t gDebugFlags = 0;
 class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 
-// The values under test, as the uniforms reach them: the binding for a name
-// (bead oo-9ht.158).
-#include "OOEntityCalledByName.h"  // the by-name table's names (bead oo-9ht.39.7.3)
+// The values under test, as the uniforms reach them: the binding for a name.
+#include "OOEntityCalledByName.h"  // the by-name table's names
 #include "OOShaderUniformMethodType.h"
 
-// PLAYER: answers what the category asks for, with the test's values (C++ since
-// bead oo-9ht.177 deleted the Objective-C player).
+// PLAYER: answers what the category asks for, with the test's values.
 class TestPlayer : public PlayerEntity {
  public:
   double _clockTime = 0;
@@ -75,9 +59,8 @@ class TestPlayer : public PlayerEntity {
   oo::PList systemProductivity_number() override { return _productivity; }
 };
 
-// [[TestPlayer alloc] init] (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// A C++ player under the ship's facade, as PlayerEntity::sharedPlayer() makes
+// the game's, retained (+1) as +alloc's object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -107,8 +90,8 @@ void SetUp() {
 
 Entity* AnEntity() { return oo::MadeEntity(oo::makeRef<Entity>()); }
 
-// The binding a uniform bound to the name on the entity's object makes (the
-// member table; the entity's own since bead oo-dpyk8 deleted the object).
+// The binding a uniform bound to the name on the entity makes (the member
+// table).
 OOShaderMemberBinding Binding(Entity* entity, const char* name) {
   OOShaderMemberBinding binding = {};
   if (!EntityShaderMemberBindingFor(entity, name, &binding)) binding = {};
@@ -120,8 +103,7 @@ long long BoundInt(Entity* entity, const char* name) {
   OOShaderBindingValue value = {};
   const OOShaderMemberBinding binding = Binding(entity, name);
   if (binding.get != nullptr)
-    binding.get(binding.target,
-                value);  // the entity's C++ part (bead oo-9ht.39.6.1)
+    binding.get(binding.target, value);  // the entity's C++ part
   return value.i;
 }
 
@@ -129,8 +111,7 @@ double BoundFloat(Entity* entity, const char* name) {
   OOShaderBindingValue value = {};
   const OOShaderMemberBinding binding = Binding(entity, name);
   if (binding.get != nullptr)
-    binding.get(binding.target,
-                value);  // the entity's C++ part (bead oo-9ht.39.6.1)
+    binding.get(binding.target, value);  // the entity's C++ part
   return value.f;
 }
 
@@ -221,19 +202,15 @@ OO_TEST(subclassesAnswerToo) {
     // A subclass of Entity (here the test's player) answers the category's
     // selectors.
     sPlayer->_random100 = 7;
-    OO_CHECK(BoundInt(sPlayer, "pseudoFixedD100") ==
-             7);  // the player's object (C++ player since bead oo-9ht.177)
+    OO_CHECK(BoundInt(sPlayer, "pseudoFixedD100") == 7);  // the player's object
   }
 }
 
-// Bead oo-9ht.39.6.1: every name whitelist.plist permits a shader to bind on an
-// entity (its four shader_*_binding_methods arrays) is a row of the member
-// table where the root's facade answered it, with the uniform type the selector
-// path read from the facade's method; laserColor, which nothing answers, and
-// the NSUInteger names, whose type no uniform takes, bind neither way. The
-// comparison with the selector path on the entity's object (the root facade's
-// methods) is retired with the facade (bead oo-dpyk8, under oo-9n5p9): the rows
-// and the bindings they make are still checked.
+// Every name whitelist.plist permits a shader to bind on an entity (its four
+// shader_*_binding_methods arrays) is a row of the member table, with the
+// uniform type the selector path read; laserColor, which nothing answers, and
+// the NSUInteger names, whose type no uniform takes, bind neither way. The rows
+// and the bindings they make are checked.
 OO_TEST(everyPermittedNameBindsAsBySelector) {
   {
     SetUp();

@@ -27,29 +27,14 @@ SOFTWARE.
 
 #define OO_PLAIN_CPP_UNIT \
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
-     // (bead oo-dbz)
-#include "OOJSFont.h"
-
 #include <algorithm>
 #include <optional>
 
 #include "OOJSEngineCore.h"
+#include "OOJSFont.h"
 #include "OOStringWidth.h"
 #include "ooscript/JSEngine.hpp"
 
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar) and OOJSClock.mm does it for a
-   single global object with no class of its own: the engine's DefineObject and
-   DefineFunction entry points become ooscript::defineObject and
-   ooscript::defineFunction. This file has no class hooks, no property table and
-   no argument-marshalling beyond the OOJS_* macros (OOJS_NATIVE_ENTER,
-        OOJS_ARGV, OOJS_RETURN_DOUBLE), which expand to the CallArgs accessors
-   of the façade native signature. `this` is not used here, so no renaming is
-   required. It is plain C++ (bead oo-ptv5, ADR-0012): it includes the engine's
-   C++ header OOJSEngineCore.h and OOStringWidth.h (oo-9ht.72), MIN became
-   std::min on the same unsigned operands, and NO false.
-*/
 namespace ooscript {}
 using ooscript::CallArgs;
 using ooscript::Context;

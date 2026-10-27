@@ -1,6 +1,6 @@
 /*	test_unicode_file.cpp
         oo::str::stringWithContentsOfUnicodeFile / decodeUnicodeText
-   (oofnd/Encoding.hpp, bead oo-3rb.123): +[NSString
+   (oofnd/Encoding.hpp): +[NSString
    stringWithContentsOfUnicodeFile:] (NSStringOOExtensions) as GNUstep 1.31.1
    runs it.
 

@@ -4,10 +4,9 @@
    toolchain (64-bit Windows, MSYS2 UCRT64).
 
         Every expectation is GNUstep's own answer, captured by two throwaway
-   Objective-C probes linked against gnustep-base (bead oo-3rb.327; the probes
-   are the ones oo-qps.68/.70/.71 used to verify the three file-local copies
-   this helper replaced): the first printed [path
-   stringByAppendingPathExtension:ext] for the 11 paths x 5 extensions of
+   Objective-C probes linked against gnustep-base (the probes
+   verified the three file-local copies this helper replaced): the first printed
+   [path stringByAppendingPathExtension:ext] for the 11 paths x 5 extensions of
    kGridRows, the second for the backslash, drive and root paths of kRootRows
    with @"log". The rows are that output, unedited. For the paths that come back
    unchanged GNUstep also logged "cannot append extension"; the helper does not

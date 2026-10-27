@@ -1,21 +1,17 @@
 /*	test_OOJSShipGroup.mm
         Unit tests for the ShipGroup JS binding
-   (src/Core/Scripting/OOJSShipGroup.h/.mm) and the JS glue of OOShipGroup: bead
-   oo-n64m, converted the way bead oo-ppc converted OOJSVector (proposed
-        ADR-0056 amendments oo-ppc and oo-ykoy); the group's façade was deleted
-   by bead oo-9ht.19, so a group reaches the engine as a PList Object node
-   holding the C++ group, and the stand-in ship holds its groups as oo::Ref
-   where it held the autoreleased façades.
+   (src/Core/Scripting/OOJSShipGroup.h/.mm) and the JS glue of OOShipGroup: a
+   group reaches the engine as a PList Object node holding the C++ group, and
+   the stand-in ship holds its groups as oo::Ref.
 
-        As test_OOJSWormhole.mm does (amendment oo-ykoy, item 4), it runs the JS
-   class in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp), links the game's own objects for the
-   binding, its bridge, the engine's exception translator
-        (OOJSEngineNativeWrappers.mm) and OOShipGroup (a converted class,
-   reached through its façade, as test_OOShipGroup.mm links it), and stands in
-   for ShipEntity (a weakly referenced object answering only the selectors the
-   binding and the group send, with a JS object of its own; a C++ ship under a
-   stand-in root object since bead oo-9ht.144), OONull, and the engine functions
+        As test_OOJSWormhole.mm does, it runs the JS class in a real context on
+   the game's own façade backend (ooscript/JSEngine_quickjs.cpp), links the
+   game's own objects for the binding, its bridge, the engine's exception
+   translator (OOJSEngineNativeWrappers.mm) and OOShipGroup (as
+   test_OOShipGroup.mm links it), and stands in for ShipEntity (a weakly
+   referenced object answering only the selectors the binding and the group
+   send, with a JS object of its own; a C++ ship under a stand-in root
+   object), OONull, and the engine functions
    the binding links against, with the engine headers' linkage. The engine's
    native-object conversion asks the object for its JS value, as the engine
    does, so a group's JS object is the one the category makes. The expectations
@@ -26,7 +22,7 @@
    per group until the engine clears it). Run: bash tools/check-core-tests.sh
 */
 
-#include "EntityPListForeign.h"  // an entity's node (bead oo-dpyk8)
+#include "EntityPListForeign.h"  // an entity's node
 #include "OODescription.h"
 #include "OOObjCPList.h"
 #include "OOShipGroup.h"
@@ -40,11 +36,11 @@
 
 /*	A ship: the group it is in, the group it leads as escorts, and whether
    it takes an escort. A ship named "boom" raises from acceptAsEscort(), so the
-   test sees what an exception under a native becomes. C++ since bead oo-9ht.144
-   deleted the Objective-C ship this stood in for: a ship's object is the root's
-   (a weakly referenced object with a JS object of its own), which holds the C++
-   part (oo::ToCxx reads it) and which TestObjectOf answers for it; declared as
-        Entity.h and ShipEntity.h declare them (the test imports neither).
+   test sees what an exception under a native becomes. A ship's object is the
+   root's (a weakly referenced object with a JS object of its own), which holds
+   the C++ part (oo::ToCxx reads it) and which TestObjectOf answers for it;
+   declared as Entity.h and ShipEntity.h declare them (the test imports
+   neither).
 */
 class TestEntityObject;
 
@@ -70,10 +66,8 @@ class ShipEntity : public Entity {
   int _accepted = 0;
 };
 
-// The ship's object. C++ since bead oo-4aq6a.13 (it was rooted on the
-// Objective-C root class OOObject, which Phase 4 deletes): its selectors are
-// members of the same names; the JS slot holds it (not retained, as it held the
-// Objective-C object).
+// The ship's object. Its selectors are members of the same names; the JS slot
+// holds it (not retained, as it held the Objective-C object).
 class TestEntityObject final : public oo::RefCounted {
  public:
   const char* className() const {
@@ -87,9 +81,8 @@ class TestEntityObject final : public oo::RefCounted {
   ooscript::Object _jsSelf = nullptr;
 };
 
-// The one null (OOJavaScriptEngine.h; a C++ class since bead oo-wdqw1 deleted
-// its facade), declared with the header's names and signatures but not its
-// class: its own property-list node's object.
+// The one null (OOJavaScriptEngine.h), declared with the header's names and
+// signatures but not its class: its own property-list node's object.
 class OONull : public oo::PListForeign {
  public:
   static OONull* null();
@@ -130,13 +123,11 @@ bool ShipEntity::acceptAsEscort(::ShipEntity* other_ship) {
   return YES;
 }
 
-// Entity+ObjCBridge.mm's oo::ToObjC (which the test does not link) until bead
-// oo-4aq6a.13.
 ::TestEntityObject* TestObjectOf(Entity* entity) {
   return entity != nullptr ? entity->_object : nullptr;
 }
 #define OO_ENTITY_HELPERS_STAND_IN_CXX
-#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects (bead oo-dpyk8)
+#include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects
 
 std::optional<std::string> TestEntityObject::cxx_descriptionComponents() {
   return _name;
@@ -243,9 +234,9 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
     if (dynamic_cast<OONull*>(node->get()) != nullptr)
       return ooscript::nullValue();  // OONull is null
   }
-  if (Entity* entity = oo::EntityIn(
-          plist))  // an entity's node: its object's value (bead oo-dpyk8), as
-                   // OOJSValueFromNativeObject() gave it
+  if (Entity* entity =
+          oo::EntityIn(plist))  // an entity's node: its object's value, as
+                                // OOJSValueFromNativeObject() gave it
   {
     ::TestEntityObject* object = TestObjectOf(entity);
     return object != nullptr ? object->oo_jsValueInContext(context)
@@ -287,25 +278,23 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
   sConverters[theClass]++;
 }
 
-// The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked
-// since bead oo-6symp.1, whose slot holds the C++ group): no subclass of
-// ShipGroup is registered.
+// The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked;
+// its slot holds the C++ group): no subclass of ShipGroup is registered.
 BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
 }
 
 // (No longer reached for a group, whose toString() is
-// OOJSCxxObjectWrapperToString.) A link stub (bead oo-dbz.4): unreached, the
-// slot holding the C++ object since bead oo-4aq6a.6; it described the slot as
-// an Objective-C object, which oo::DescriptionOf(id) did until libobjc2 went.
+// OOJSCxxObjectWrapperToString.) A link stub: unreached, the slot holding the
+// C++ object.
 bool OOJSObjectWrapperToString(ooscript::Context, ooscript::CallArgs&) {
   std::abort();
 }
 
 // The engine's wrapper finalizer: the slot's C++ object (src's
-// OOJSObjectWrapperFinalize since bead oo-4aq6a.6.1) is released and the slot
-// emptied. (Unreached: a group's finalizer is the C++ one.)
+// OOJSObjectWrapperFinalize) is released and the slot emptied. (Unreached: a
+// group's finalizer is the C++ one.)
 void OOJSObjectWrapperFinalize(ooscript::Context context,
                                ooscript::Object object) {
   oo::RefCounted* native =
@@ -338,15 +327,14 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 
 // OOJSEntity.mm's (not linked): the C++ entity of an entity's JS object, null
 // for any other value, with no error
-// (OOJSNativeObjectOfClassFromJSValue(context, value, [TestEntityObject class])
-// until bead oo-9ht.39.3, whose stand-in this was). The test's ships keep their
-// object in the slot, as the game's slot held the object's weak reference
-// before.
+// (OOJSNativeObjectOfClassFromJSValue(context, value, [TestEntityObject
+// class]), whose stand-in this was). The test's ships keep their object in the
+// slot, as the game's slot held the object's weak reference before.
 Entity* OOJSEntityFromJSValue(ooscript::Context context,
                               ooscript::Value value) {
   if (!ooscript::isObject(value) || ooscript::isNull(value)) return nullptr;
-  // The slot holds an oo::RefCounted: a ship's object, or a group (bead
-  // oo-4aq6a.13: the class check, -isKindOfClass: until then, is the C++ one).
+  // The slot holds an oo::RefCounted: a ship's object, or a group (the class
+  // check is the C++ one).
   TestEntityObject* entity =
       dynamic_cast<TestEntityObject*>(static_cast<oo::RefCounted*>(
           ooscript::getPrivate(context, ooscript::toObject(value))));

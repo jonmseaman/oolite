@@ -35,7 +35,7 @@ SOFTWARE.
 #include "OOFoundation.h"
 #include "OOFunctionAttributes.h"
 
-// OO_LOG / oo::log (ADR-0035): the Foundation-free logging API. extern "C++"
+// OO_LOG / oo::log: the Foundation-free logging API. extern "C++"
 // because this header is sometimes reached from inside an extern "C" block
 // (OOMaths.h), as OOFoundation.h notes.
 #ifdef __cplusplus

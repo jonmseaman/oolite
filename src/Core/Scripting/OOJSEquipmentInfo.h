@@ -48,7 +48,7 @@ void InitOOJSEquipmentInfo(ooscript::Context context, ooscript::Object global);
         JSValueToEquipmentKeyRelaxed() will return any string that does not end
         with _DAMAGED.
  */
-class OOEquipmentType;  // C++ since bead oo-9ht.28 (OOEquipmentType.h)
+class OOEquipmentType;  // OOEquipmentType.h
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,13 +56,11 @@ extern "C" {
 
 OOEquipmentType* JSValueToEquipmentType(ooscript::Context context,
                                         ooscript::Value value);
-extern "C++" {  // C++ results (proposed ADR-0043, bead oo-xcqk); nullopt where
-                // these returned nil
+extern "C++" {  // C++ results; nullopt where there is none
 std::optional<std::string> JSValueToEquipmentKey(ooscript::Context context,
                                                  ooscript::Value value);
 
-// outExists stays BOOL *: its callers pass the address of a BOOL of their own
-// (bead oo-supk).
+// outExists is BOOL *: its callers pass the address of a BOOL of their own.
 std::optional<std::string> JSValueToEquipmentKeyRelaxed(
     ooscript::Context context, ooscript::Value value, BOOL* outExists);
 }
@@ -72,6 +70,6 @@ std::optional<std::string> JSValueToEquipmentKeyRelaxed(
 #endif
 
 /*	The JS class name of OOEquipmentType's OOJSPrivateObject members,
-   defined in OOJSEquipmentInfo.mm (proposed ADR-0056 amendment oo-6symp).
+   defined in OOJSEquipmentInfo.mm.
 */
 std::optional<std::string> OOJSEquipmentInfoJSClassName(void);

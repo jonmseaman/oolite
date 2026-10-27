@@ -2,10 +2,10 @@
 
 OOJSPrivateObject.cpp
 
-The engine glue for a JS object whose private slot holds a C++ object (proposed
-ADR-0056 amendment oo-6symp). Each function is the C++ counterpart of the
-Objective-C one named beside it in OOJavaScriptEngine.mm, dispatching to
-OOJSPrivateObject's virtual members where that one sent a selector to an id.
+The engine glue for a JS object whose private slot holds a C++ object. Each
+function is the C++ counterpart of the Objective-C one named beside it in
+OOJavaScriptEngine.mm, dispatching to OOJSPrivateObject's virtual members where
+that one sent a selector to an id.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -29,13 +29,11 @@ MA 02110-1301, USA.
 
 #define OO_PLAIN_CPP_UNIT \
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
-     // (bead oo-dbz)
-#include "OOJSPrivateObject.h"
-
 #include <cstdint>
 #include <string>
 
 #include "OOJSEngineCore.h"
+#include "OOJSPrivateObject.h"
 #include "oofnd/String.hpp"
 
 // OOJSValueFromNativeObject(): nil is null, anything else answers

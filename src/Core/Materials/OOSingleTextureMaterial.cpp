@@ -25,9 +25,8 @@ SOFTWARE.
 
 */
 
-#include "OOSingleTextureMaterial.h"
-
 #include "OOFunctionAttributes.h"
+#include "OOSingleTextureMaterial.h"
 #include "OOTexture.h"
 
 oo::Ref<OOSingleTextureMaterial> OOSingleTextureMaterial::materialWithName(
@@ -77,8 +76,8 @@ bool OOSingleTextureMaterial::initWithName(
   return true;
 }
 
-// -dealloc's [self willDealloc] is the root facade's (proposed ADR-0056,
-// amendment oo-smy item 3), and the texture is released with _texture.
+// -dealloc's [self willDealloc] is the root facade's, and the texture is
+// released with _texture.
 
 std::optional<std::string> OOSingleTextureMaterial::descriptionComponents()
     const {

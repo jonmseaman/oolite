@@ -4,13 +4,10 @@ StationEntity.h
 
 ShipEntity subclass representing a space station or dockable ship.
 
-C++ since its slice plan (docs/phases/3-slices/StationEntity.md; proposed
-ADR-0056, amendments oo-60fwo and oo-64ako). Bead oo-9ht.175 deleted its
-Objective-C facade (amendment oo-9ht.175): a station is made in C++ by
-StationEntity::newStationObject() and its Objective-C object is a ship's (the
-root's facade answers the selectors the game still finds by name on a station,
-AI actions, legacy-script and callObjC() calls, shader bindings, for a station's
-C++ part only; the ship's facade did until bead oo-9ht.144).
+A station is made in C++ by StationEntity::newStationObject() and its
+Objective-C object is a ship's (the root's facade answers the selectors the game
+still finds by name on a station: AI actions, legacy-script and callObjC()
+calls, shader bindings, for a station's C++ part only).
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -56,21 +53,18 @@ typedef enum {
 
 #define DOCKING_CLEARANCE_WINDOW 126.0
 
-/*	The station's state and members (docs/phases/3-slices/StationEntity.md).
+/*	The station's state and members.
 
         The ivars are data members with the same names, every one
-   zero-initialised as the runtime zeroed them (amendment oo-bj8 item 1).
-   Pointers to Objective-C objects stay what they were, retained by hand where
-   they were (amendment oo-bj8 item 4). C++ only since bead oo-9ht.175 deleted
-   its Objective-C facade (ADR-0056 amendment oo-9ht.175).
+   zero-initialised as the runtime zeroed them. Pointers to Objective-C objects
+   stay what they were, retained by hand where they were.
 */
 class StationEntity : public ShipEntity {
  public:
-  /*	[[StationEntity alloc] cxx_initWithKey:definition:] until bead
-     oo-9ht.175: a new station, set up from its definition as a ship
+  /*	A new station, set up from its definition as a ship
      (oo::NewShipObject), then given the station's defaults. Answers the
      station, its object retained (+1) as +alloc/-init's was, or nullptr when
-     the set-up fails (bead oo-9ht.144: the object until then).
+     the set-up fails.
   */
   static ::ShipEntity* newStationObject(const std::string& key,
                                         const oo::PList& dict);
@@ -80,8 +74,7 @@ class StationEntity : public ShipEntity {
   void initStationDefaults();
 
   // The facade's -dealloc body, which the root's -dealloc calls first for a
-  // station's part (the ship's did until bead oo-9ht.144), as the subclass's
-  // -dealloc ran before its superclass's (bead oo-9ht.175).
+  // station's part, as the subclass's -dealloc ran before its superclass's.
   void willDealloc();
 
   // Slice 1: class shell, market and shipyard, flags and accessors.
@@ -89,8 +82,7 @@ class StationEntity : public ShipEntity {
   void getJSClass(ooscript::ClassDef** outClass,
                   ooscript::Object* outPrototype) override;
   std::optional<std::string> jsClassName() override;
-  // The ship's answer, which the facade inherited; a C++ part is asked since
-  // bead oo-9ht.175.
+  // The ship's answer, which the facade inherited.
   bool isVisibleToScripts() override;
   OOTechLevelID getEquivalentTechLevel();
   void setEquivalentTechLevel(OOTechLevelID value);
@@ -148,8 +140,7 @@ class StationEntity : public ShipEntity {
   std::optional<std::string> descriptionComponents() const override;
   void dumpSelfState() override;
 
-  // ShipEntityAI.mm slice 1 (bead oo-iebuz): the category StationEntity
-  // (OOAIPrivate).
+  // The category StationEntity (OOAIPrivate).
   void acceptDistressMessageFrom(::ShipEntity* other) override;
 
   // Slice 2: docking traffic control and the launch queue.
@@ -205,7 +196,7 @@ class StationEntity : public ShipEntity {
 
   // Slice 4: NPC launchers. Not overrides: ShipEntity's same-named members are
   // not virtual (the ship's answer "not a station"); the root's facade asks a
-  // station's part first (beads oo-9ht.175, oo-9ht.144).
+  // station's part first.
   oo::PList launchIndependentShip(
       const std::string&
           role);  // the ship launched, as an Object node (null: none)
@@ -220,10 +211,8 @@ class StationEntity : public ShipEntity {
   void launchShipWithRole(const std::string& role);
 
   // @private in Objective-C; still public (the tests read them), as the
-  // player's were after its facade went (ADR-0056 amendment oo-9ht.177 item 6)
-  oo::WeakSet<Entity> _shipsOnHold =
-      {};  // the ships' C++ parts, weakly (an OOWeakSet of their objects until
-           // bead oo-9ht.22.3)
+  // player's were.
+  oo::WeakSet<Entity> _shipsOnHold = {};  // the ships' C++ parts, weakly
   ::DockEntity* player_reserved_dock = {};
   double last_launch_time = {};
   double approach_spacing = {};
@@ -280,21 +269,19 @@ class StationEntity : public ShipEntity {
 
 namespace oo {
 
-// The same question of a C++ ship (a ship is C++ since bead oo-9ht.144):
-// nullptr for null or another ship.
+// The same question of a C++ ship: nullptr for null or another ship.
 inline ::StationEntity* ToStation(::ShipEntity* ship) {
   return dynamic_cast<::StationEntity*>(ship);
 }
 
-// The same of a C++ entity (what an entity's JS object holds since bead
-// oo-9ht.39.3).
+// The same of a C++ entity (what an entity's JS object holds).
 inline ::StationEntity* ToStation(Entity* entity) {
   return dynamic_cast<::StationEntity*>(entity);
 }
 
 }  // namespace oo
 
-// A mixed configuration (proposed ADR-0043 Amendment 2): "station" is an Object
+// A mixed configuration: "station" is an Object
 // node holding the station's weak reference; ai_message / comms_message absent
 // when nullopt.
 oo::PList cxx_OOMakeDockingInstructions(

@@ -42,12 +42,14 @@ MA 02110-1301, USA.
 #define NS_BLOCK_ASSERTIONS 1
 #endif
 
-/*	OO_DEBUG is set by the build system for debug builds (meson.build adds -DOO_DEBUG when
-        optimization==0 or debug==true; the deployment/test/dev flavours never do).
+/*	OO_DEBUG is set by the build system for debug builds (meson.build adds
+   -DOO_DEBUG when optimization==0 or debug==true; the deployment/test/dev
+   flavours never do).
 
-        Hoisted here from further down the file because the enumeration macros below have to
-        test it, and a macro cannot be defined in terms of one the preprocessor has not seen
-        yet. Nothing between here and the old site defines it, so the meaning is unchanged.
+        Hoisted here from further down the file because the enumeration macros
+   below have to test it, and a macro cannot be defined in terms of one the
+   preprocessor has not seen yet. Nothing between here and the old site defines
+   it, so the meaning is unchanged.
 */
 #ifndef OO_DEBUG
 // Defined by makefile/Xcode in debug builds.
@@ -58,25 +60,29 @@ MA 02110-1301, USA.
 #include <stdbool.h>
 
 #ifdef GNUSTEP_BASE_LIBRARY
-/*	No Foundation (oo-qps.17, ADR-0055): the C types it gave (NSInteger, NSRange, NSPoint...)
-        come from the floor's header, which #errors beside any Foundation header, so nothing on
-        this path can reach one. GNUSTEP_BASE_LIBRARY is the build's own define (src/meson).
+/*	No Foundation: the C types it gave (NSInteger, NSRange, NSPoint...)
+        come from the floor's header, which #errors beside any Foundation
+   header, so nothing on this path can reach one. GNUSTEP_BASE_LIBRARY is the
+   build's own define (src/meson).
 */
 #if defined(_WIN32)
-/*	What gnustep-base's GSConfig.h gave every file through Foundation: the Windows API
-        and Winsock, with the Windows BOOL renamed so Objective-C's stays BOOL.
+/*	What gnustep-base's GSConfig.h gave every file through Foundation: the
+   Windows API and Winsock, with the Windows BOOL renamed so Objective-C's stays
+   BOOL.
 */
 #define BOOL WinBOOL
 #define __OBJC_BOOL 1
 #include <winsock2.h>
-// <winsock2.h> first: <windows.h> before it would bring in the old <winsock.h> (kept apart so
-// clang-format's include sorting cannot swap them; upstream #748 did the same for its headers).
+// <winsock2.h> first: <windows.h> before it would bring in the old <winsock.h>
+// (kept apart so clang-format's include sorting cannot swap them; upstream #748
+// did the same for its headers).
 #include <windows.h>
 #undef __OBJC_BOOL
 #undef BOOL
 #endif
-#include "oofnd/objc/OOFoundationTypes.h"
 #include <assert.h>
+
+#include "oofnd/objc/OOFoundationTypes.h"
 #define OOLITE_GNUSTEP 1
 
 // gnustep-base's macro; the Mac OS X path below defines the same one.
@@ -95,12 +101,14 @@ MA 02110-1301, USA.
 #endif
 
 #if defined(__GNUC__) && !OOLITE_HAVE_CLANG
-// GCC version; for instance, 40300 for 4.3.0. Deliberately undefined in Clang (which defines fake __GNUC__ macros for compatibility).
-#define OOLITE_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+// GCC version; for instance, 40300 for 4.3.0. Deliberately undefined in Clang
+// (which defines fake __GNUC__ macros for compatibility).
+#define OOLITE_GCC_VERSION \
+  (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
 
 #if OOLITE_GNUSTEP
-#include <limits.h> // to get UINT_MAX
+#include <limits.h>  // to get UINT_MAX
 #include <stdint.h>
 
 #define OOLITE_SDL 1
@@ -117,11 +125,12 @@ MA 02110-1301, USA.
 #endif
 
 #if defined(__cplusplus)
-/*	Objective-C++ is built as C++20 (ADR-0011; proposed ADR-0028). The true/false macros below
-        stay exactly as they were (game code keeps its int-typed true/false), but a C++20 standard
-        header parsed after them breaks: <optional> has `bool(__x) <=> false`, i.e. bool <=> int.
-        So those headers are parsed here first, with the real keywords; their include guards make
-        every later #include of them a no-op. extern "C++" because OOFoundation.h is sometimes reached
+/*	Objective-C++ is built as C++20. The true/false macros below
+        stay exactly as they were (game code keeps its int-typed true/false),
+   but a C++20 standard header parsed after them breaks: <optional> has
+   `bool(__x) <=> false`, i.e. bool <=> int. So those headers are parsed here
+   first, with the real keywords; their include guards make every later #include
+   of them a no-op. extern "C++" because OOFoundation.h is sometimes reached
         from inside an extern "C" block (OOMaths.h).
 */
 extern "C++" {
@@ -134,11 +143,21 @@ extern "C++" {
 #define false 0
 
 #if !defined(MAX)
-#define MAX(A, B) ({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a > __b ? __a : __b; })
+#define MAX(A, B)            \
+  ({                         \
+    __typeof__(A) __a = (A); \
+    __typeof__(B) __b = (B); \
+    __a > __b ? __a : __b;   \
+  })
 #endif
 
 #if !defined(MIN)
-#define MIN(A, B) ({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __a : __b; })
+#define MIN(A, B)            \
+  ({                         \
+    __typeof__(A) __a = (A); \
+    __typeof__(B) __b = (B); \
+    __a < __b ? __a : __b;   \
+  })
 #endif
 
 #ifdef HAVE_LIBESPEAK
@@ -191,12 +210,11 @@ extern "C++" {
 #define OOLITE_PROPERTY_SYNTAX (OOLITE_MAC_OS_X || OOLITE_HAVE_CLANG)
 
 #include "OOLogging.h"
-
 #include "oofnd/objc/OOObject.h"
 
-/*	The description family (-cxx_descriptionComponents & co., oo::DescriptionOf), Foundation-free
-        (proposed ADR-0055 item 1).
-*/
+/*	The description family (-cxx_descriptionComponents & co.,
+ * oo::DescriptionOf), Foundation-free.
+ */
 #include "OODescription.h"
 
 #if OOLITE_MAC_OS_X
@@ -205,10 +223,10 @@ extern "C++" {
 #define OOLITE_RELEASE_PLIST_ERROR_STRINGS 0
 #endif
 
-/*	The ordering type and values under Oolite's own names (bead oo-3yh0): game code spells
-        OOComparisonResult / OOOrdered*, never the NS names. Since oo-qps.17 it is Oolite's own
-        NSInteger enum with Foundation's values; the Mac OS X path (Phase 5) keeps AppKit's NSInteger
-        callbacks and Foundation's constants.
+/*	The ordering type and values under Oolite's own names: game code spells
+        OOComparisonResult / OOOrdered*, never the NS names. It is Oolite's own
+   NSInteger enum with Foundation's values; the Mac OS X path keeps AppKit's
+   NSInteger callbacks and Foundation's constants.
 */
 #if OOLITE_MAC_OS_X
 typedef NSInteger OOComparisonResult;
@@ -219,9 +237,9 @@ inline constexpr OOComparisonResult OOOrderedDescending = NSOrderedDescending;
 #endif
 #elif defined(__cplusplus)
 enum OOComparisonResult : NSInteger {
-    OOOrderedAscending = -1,
-    OOOrderedSame = 0,
-    OOOrderedDescending = 1
+  OOOrderedAscending = -1,
+  OOOrderedSame = 0,
+  OOOrderedDescending = 1
 };
 #endif
 
@@ -243,24 +261,24 @@ enum OOComparisonResult : NSInteger {
 
         the type of [Bar fooWithProperty] is inferred to be Bar *.
 
-        Clang treats methods of type id as instancetype when their names begin with
-        +alloc, +new, -init, -autorelease, -retain, or -self.
+        Clang treats methods of type id as instancetype when their names begin
+   with +alloc, +new, -init, -autorelease, -retain, or -self.
 
         For compilers without instancetype support, id is appropriate but less
         type-safe.
 
-        NOTE: it is not appropriate to use instancetype for a factory method which
-        chooses which publicly-visible subclass to instantiate based on parameters.
-        For instance, calling one of the OOMaterial convenience factory methods on
-        OOShaderMaterial might return an OOSingleTextureMaterial, so the correct
-        return type is either OOMaterial or id.
-        On the other hand, it is appropriate on factory methods which just wrap
-        the corresponding -init and/or -init + configuration through properties.
-        (Such factory methods should be implemented in terms of [[self alloc]
-        init...].)
+        NOTE: it is not appropriate to use instancetype for a factory method
+   which chooses which publicly-visible subclass to instantiate based on
+   parameters. For instance, calling one of the OOMaterial convenience factory
+   methods on OOShaderMaterial might return an OOSingleTextureMaterial, so the
+   correct return type is either OOMaterial or id. On the other hand, it is
+   appropriate on factory methods which just wrap the corresponding -init and/or
+   -init + configuration through properties. (Such factory methods should be
+   implemented in terms of [[self alloc] init...].)
 */
 
-// OO_DEBUG is defined at the top of this file, where the enumeration macros can test it.
+// OO_DEBUG is defined at the top of this file, where the enumeration macros can
+// test it.
 
 #if OOLITE_WINDOWS
 #ifndef OO_GAME_DATA_TO_USER_FOLDER

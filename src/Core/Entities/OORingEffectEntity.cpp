@@ -2,10 +2,9 @@
 
 OORingEffectEntity.m
 
-C++20 since bead oo-peql (see OORingEffectEntity.h). The bodies are the
-Objective-C ones: a message to self is a member call, [super ...] the base's
-member, and the universe is handed the entity's Objective-C object,
-oo::ToObjC(this).
+See OORingEffectEntity.h. The bodies are the Objective-C ones: a message to self
+is a member call, [super ...] the base's member, and the universe is handed the
+entity's Objective-C object, oo::ToObjC(this).
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -27,9 +26,8 @@ MA 02110-1301, USA.
 
 */
 
-#include "OORingEffectEntity.h"
-
 #include "OOMacroOpenGL.h"
+#include "OORingEffectEntity.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"
 
@@ -65,8 +63,7 @@ void OORingEffectEntity::initialize() {
   }
 }
 
-// The source is the C++ entity (bead oo-9ht.39.26; it was its Objective-C
-// object, amendment oo-bj8 item 4).
+// The source is the C++ entity.
 bool OORingEffectEntity::initRingFromEntity(Entity* sourceEntity) {
   if (sourceEntity == nullptr) {
     return false;

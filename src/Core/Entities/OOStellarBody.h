@@ -43,15 +43,11 @@ typedef enum {
 #define PLANET_MINIATURE_FACTOR 0.00185
 #define MAX_SUBDIVIDE 6
 
-/*	-radius and -planetType of a stellar body's Objective-C object (bead
-   oo-9ht.111): the sun and the planet, C++ since their facades were deleted
-   (beads oo-9ht.111, oo-9ht.129), are asked directly (their object is the root
-   Entity's facade, which does not answer them); any other body by selector, as
-   before. Nil answers 0, as the message to nil did. Defined in OOSunEntity.mm.
+/*	-radius and -planetType of a stellar body's Objective-C object: the sun
+   and the planet are asked directly (their object is the root Entity's facade,
+   which does not answer them); any other body by selector. Nil answers 0, as
+   the message to nil did. Defined in OOSunEntity.mm.
 */
 class Entity;
-double OOStellarBodyRadius(
-    Entity* body);  // of the C++ entity (bead oo-9ht.39.26; the object
-                    // overloads went with bead oo-zwnvp)
-OOStellarBodyType OOStellarBodyPlanetType(
-    Entity* body);  // the same (bead oo-al52f)
+double OOStellarBodyRadius(Entity* body);                 // of the C++ entity
+OOStellarBodyType OOStellarBodyPlanetType(Entity* body);  // the same

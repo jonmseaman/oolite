@@ -1,28 +1,23 @@
 /*	test_OOJSExhaustPlume.mm
         Unit tests for the ExhaustPlume JS binding
    (src/Core/Scripting/OOJSExhaustPlume.h/.mm) and its OOExhaustPlumeEntity
-   category (whose forwarders were on the OOExhaustPlumeEntity facade from bead
-   oo-9ht.48, and are the C++ class's overrides of the root's JS members since
-   that facade's deletion, bead oo-9ht.110): bead oo-utlm, converted the way
-   bead oo-ppc converted OOJSVector (proposed ADR-0056 amendments oo-ppc and
-        oo-ykoy).
+   category (the C++ class's overrides of the root's JS members).
 
-        As test_OOJSWormhole.mm does (amendment oo-ykoy, item 4), it runs the JS
+        As test_OOJSWormhole.mm does, it runs the JS
    class in a real context on the game's own façade backend
    (ooscript/JSEngine_quickjs.cpp), links the game's own objects for the binding
    and the engine's exception translator (OOJSEngineNativeWrappers.mm), and
    stands in for the entity classes (Entity and ShipEntity answer only the
    selectors the binding sends), for the Vector3D conversions (a vector is the
         array [x, y, z] here) and for the engine functions the binding links
-   against, with the engine headers' linkage. Since bead oo-9ht.110 the plume is
-   the C++ OOExhaustPlumeEntity, which the binding finds through its object's
+   against, with the engine headers' linkage. The plume is the C++
+   OOExhaustPlumeEntity, which the binding finds through its object's
    C++ part: the stand-in is that C++ class, declared with the game header's
    names and signatures but not its class (OOExhaustPlumeEntity.h pulls in the
         game's classes), as test_OOJSGlobal.mm stands in for the engine, under a
    stand-in C++ root whose JS members the stand-in root category asks, as the
-   game's does (amendment oo-9ht.107). The binding header is not imported,
-   because until this bead it imported OOExhaustPlumeEntity.h;
-   InitOOJSExhaustPlume is declared here. The expectations were written against
+   game's does. The binding header is not imported; InitOOJSExhaustPlume is
+   declared here. The expectations were written against
    the Objective-C file and run on it first; they pin the JS-visible behaviour
    (size, remove(), a stale plume, a non-plume, a native's exception) and what
    the category answers the engine. Run: bash tools/check-core-tests.sh
@@ -46,8 +41,7 @@ class Entity : public oo::RefCounted {
                           ooscript::Object* outPrototype);
   virtual std::optional<std::string> jsClassName();
   virtual bool isVisibleToScripts();
-  Entity* owner();  // the binding calls it since bead oo-9ht.39.8.19 (its
-                    // object's -owner did); the C++ entity since bead oo-dpyk8
+  Entity* owner();  // the binding calls it (its object's -owner did)
 };
 
 /*	A plume whose scale has x = -1 raises from scale(), one with x = -2
@@ -67,13 +61,10 @@ class OOExhaustPlumeEntity : public Entity {
   Vector _scale = {};
 };
 
-// What an entity's JS object holds since bead oo-9ht.39.3: a weak reference to
-// the C++ entity.
+// What an entity's JS object holds: a weak reference to the C++ entity.
 #include "OOJSEntityHolder.h"
 
-// C++ since bead oo-4aq6a.11 (it was rooted on the Objective-C root class
-// OOObject, which Phase 4 deletes); its category's selectors are members of the
-// same names.
+// Its category's selectors are members of the same names.
 class TestEntityObject final : public oo::RefCounted {
  public:
   void getJSClass(ooscript::ClassDef** outClass,
@@ -85,8 +76,7 @@ class TestEntityObject final : public oo::RefCounted {
   ::TestEntityObject* _owner = nullptr;
 };
 
-// A ship: C++ since bead oo-9ht.144 deleted the Objective-C ship this stood in
-// for, the C++ part of its object, with the one member the binding calls
+// A ship: the C++ part of its object, with the one member the binding calls
 // (declared as ShipEntity.h declares it).
 class ShipEntity : public Entity {
  public:
@@ -117,8 +107,8 @@ void ShipEntity::removeExhaust(OOExhaustPlumeEntity* exhaust) {
 }
 
 // The root's JS category, as the game's asks the C++ part
-// (EntityOOJavaScriptExtensions+ObjCBridge.mm, bead oo-9ht.107): the engine
-// sends these selectors to the wrapped object.
+// (EntityOOJavaScriptExtensions+ObjCBridge.mm): the engine sends these
+// selectors to the wrapped object.
 void TestEntityObject::getJSClass(ooscript::ClassDef** outClass,
                                   ooscript::Object* outPrototype) {
   _cxxEntity->getJSClass(outClass, outPrototype);
@@ -150,8 +140,7 @@ Vector OOExhaustPlumeEntity::scale() {
 
 void OOExhaustPlumeEntity::setScale(Vector scale) { _scale = scale; }
 
-// The binding's category, as the C++ class's overrides answer it (bead
-// oo-9ht.110).
+// The binding's category, as the C++ class's overrides answer it.
 void OOExhaustPlumeEntity::getJSClass(ooscript::ClassDef** outClass,
                                       ooscript::Object* outPrototype) {
   ::OOJSExhaustPlumeGetJSClass(outClass, outPrototype);
@@ -201,8 +190,7 @@ std::map<ooscript::ClassDef*, int> sConverters;
 }  // namespace
 
 ooscript::Object gOOEntityJSPrototype = nullptr;
-Entity* gOOJSPlayerIfStale =
-    nullptr;  // the player's C++ entity (bead oo-9ht.39.25)
+Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
 
 extern "C" {
 
@@ -240,9 +228,9 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
   sConverters[theClass]++;
 }
 
-// The engine's object getter is OOJSPrivateObject.cpp's (linked) since bead
-// oo-9ht.39.3: the JS class must be a subclass of the required one, and the
-// slot holds the entity's holder.
+// The engine's object getter is OOJSPrivateObject.cpp's (linked): the JS class
+// must be a subclass of the required one, and the slot holds the entity's
+// holder.
 
 // The shared toString(), which OOJSCxxObjectWrapperToString() hands a `this` of
 // another class.
@@ -326,23 +314,21 @@ std::optional<std::string> OOJSEntityHolder::jsDescription() {
 
 // oo::ToObjC (Entity+ObjCBridge.mm): the object of each C++ part the test
 // wrapped, nil for any other (the binding asks it where its natives still
-// message the object, bead oo-9ht.39.3).
+// message the object).
 namespace {
 std::map<Entity*, TestEntityObject*> sObjects;
 }
-::TestEntityObject* TestObjectOf(
-    Entity* entity);  // oo::ToObjC until bead oo-4aq6a.11
+::TestEntityObject* TestObjectOf(Entity* entity);
 ::TestEntityObject* TestObjectOf(Entity* entity) {
   auto found = sObjects.find(entity);
   return found != sObjects.end() ? found->second : nullptr;
 }
 
-// The owner its object's -owner answered until bead oo-9ht.39.8.19, on the same
-// object field.
+// The owner its object's -owner answered, on the same object field.
 Entity* Entity::owner() {
   ::TestEntityObject* object = TestObjectOf(this)->_owner;
   return object != nullptr ? object->_cxxEntity.get()
-                           : nullptr;  // its C++ part (bead oo-dpyk8)
+                           : nullptr;  // its C++ part
 }
 
 // MARK: The context
@@ -355,8 +341,7 @@ ooscript::Context sContext;
 ooscript::Object sGlobal;
 TestEntityObject* sPlume = nullptr;          // the plume's object
 OOExhaustPlumeEntity* sPlumePart = nullptr;  // its C++ part
-TestEntityObject* sShip = nullptr;  // a ship's object and its C++ part (the
-                                    // Objective-C ship until bead oo-9ht.144)
+TestEntityObject* sShip = nullptr;           // a ship's object and its C++ part
 ShipEntity* sShipPart = nullptr;
 
 ooscript::Value JSValueForObject(ooscript::ClassDef* jsClass,
@@ -370,8 +355,7 @@ ooscript::Value JSValueForObject(ooscript::ClassDef* jsClass,
       !OOJSSetCxxPrivate(
           sContext, object,
           oo::makeRef<OOJSEntityHolder>(entity->_cxxEntity.get()).get()))
-    return ooscript::nullValue();  // the slot holds the C++ entity (bead
-                                   // oo-9ht.39.3)
+    return ooscript::nullValue();  // the slot holds the C++ entity
   sObjects[entity->_cxxEntity.get()] = entity;
   return ooscript::objectValue(object);
 }

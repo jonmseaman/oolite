@@ -55,14 +55,11 @@ const oo::PList* FindDisplayMode(const oo::PList::Array& modes,
 }
 }  // namespace
 
-// The former FullScreen category of GameController (bead oo-qinv): members of
-// GameController, defined here (ADR-0056 amendment oo-o89 item 4). Their
-// callers call them (the façade that forwarded the category's selectors went
-// with bead oo-9ht.164).
+// The former FullScreen category of GameController: members of GameController,
+// defined here. Their callers call them.
 
 void GameController::setUpDisplayModes() {
-  // The screen's mode dictionaries, in its order (Foundation sweep, proposed
-  // ADR-0043).
+  // The screen's mode dictionaries, in its order.
   const std::vector<oo::PList> modes =
       (_gameView != nullptr ? _gameView->getScreenSizeArray()
                             : std::vector<oo::PList>());
@@ -156,9 +153,7 @@ NSUInteger GameController::indexOfCurrentDisplayMode() {
 
 void GameController::pauseFullScreenModeToPerform(const char* selectorName,
                                                   oo::RefCounted* target) {
-  pauseSelector = selectorName != nullptr
-                      ? selectorName
-                      : "";  // by name since bead oo-xu228.3
+  pauseSelector = selectorName != nullptr ? selectorName : "";
   pauseTarget = target;
   stayInFullScreenMode = false;
 }

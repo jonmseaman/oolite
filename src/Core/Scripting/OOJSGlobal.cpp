@@ -23,14 +23,13 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSGlobal.h"
-
 #include <cstring>
 
 #include "GuiDisplayGen.h"
 #include "MyOpenGLView.h"
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
+#include "OOJSGlobal.h"
 #include "OOJSGuiScreenKeyDefinition.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
@@ -44,58 +43,6 @@ MA 02110-1301, USA.
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
-
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) per bead oo-8yi, the
-   same way bead oo-sdz retargeted OOJSVector.mm (the exemplar for this sweep;
-   see its header comment for the full rationale). This file's directly-spelled
-   engine calls -- the ooscript::ClassDef hook-stub family
-        (PropertyStub/EnumerateStub/ResolveStub/ConvertStub), NewNumberValue,
-   ValueToNumber, ValueToBoolean, ValueToObject, GetProperty, DefineProperty,
-   DefineProperties, DefineFunctions, NewCompartmentAndGlobalObject and
-   SetGlobalObject -- become their ooscript:: façade equivalents per
-   ooscript/README.md's retarget map; the OOJS_* argument-marshalling macros
-   (OOJS_ARGV, OOJS_THIS, OOJS_NATIVE_ENTER/EXIT, OOJS_RETURN_*) are
-   OOJS_*-spelled, not themselves the engine's own prefix at these call sites,
-   and stay exactly as before, out of scope for the sweep.
-
-        SetGlobalObject had no façade equivalent yet; ooscript::setGlobalObject
-   is added to JSEngine.hpp/JSEngine_spidermonkey.cpp by this bead following the
-   existing newGlobalObject/getGlobalObject pattern (the engine's
-   SetGlobalObject entry point's only call site in the tree).
-
-        Retargeting DefineProperties/DefineFunctions requires
-   sGlobalProperties/sGlobalMethods to become
-   ooscript::PropertySpec/FunctionSpec tables (the façade's DefineProperties and
-        DefineFunctions take those, not the engine's ooscript::PropertySpec /
-   ooscript::FunctionSpec pointers), every JS global method to take the façade's
-   NativeFn hook signature (Context, CallArgs&) rather than the engine's
-   (ooscript::Context, unsigned argc, ooscript::Value *vp). A small shim at the
-   top of each recovers the old ooscript::Context, unsigned, and ooscript::Value
-   * locals so the OOJS_* argument-marshalling macros and the rest of each body
-   are UNCHANGED, exactly as OOJSVector.mm's own retarget does it.
-   GlobalGetProperty/GlobalSetProperty take the façade's
-        PropertyGetter/PropertySetter hook signature for the same reason (they
-   are wired into sGlobalClass, now a ClassDef). `this` is renamed to `thisObj`
-   because it is a reserved word once this file compiles as Objective-C++
-   (ADR-0001).
-*/
-
-/*
-        C++20 since bead oo-3dj2, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. log()
-   calls the C++ engine's monitor member directly (bead oo-9ht.98; amendments
-   oo-9ht.66 and oo-6ia4 item 6). OOColor, which is C++ since bead oo-11m, is
-   reached as a cxx:: class through oo::ToCxx/oo::ToObjC (amendment oo-ppc, item
-   4); OOJSGuiScreenKeyDefinition is C++ since bead oo-xg7g and has no façade
-   since bead oo-9ht.62: the key definition is made with oo::makeRef and the
-   player keeps it. Messages to classes that are still Objective-C
-   (PlayerEntity, Universe, GuiDisplayGen, MyOpenGLView, ResourceManager) stay
-   as they are, which is why the file is still .mm until Phase 4.
-*/
 
 namespace ooscript {}
 using ooscript::CallArgs;
@@ -269,10 +216,8 @@ static PropertySpec sGlobalProperties[] = {
 
 // A raw jsapi mirror of sGlobalProperties, used only for the two bad-property
 // error reporters in OOJavaScriptEngine.m
-// (OOJSReportBadPropertySelector/Value): those helpers are outside this bead's
-// scope (they are shared across every binding file) and still take a
-// ooscript::PropertySpec*, not ooscript::PropertySpec*, the same as
-// OOJSVector.mm's sVectorPropertiesRaw.
+// (OOJSReportBadPropertySelector/Value), which are shared across every binding
+// file and take a ooscript::PropertySpec*.
 namespace {
 static ooscript::PropertySpec sGlobalPropertiesRaw[] = {
     // JS name					ID
@@ -353,11 +298,11 @@ static bool GlobalGetProperty(Context cx, Object obj, PropertyId propID,
 
   switch (ooscript::idToInt32(propID)) {
     case kGlobal_galaxyNumber:
-      *value = ooscript::int32Value((
-          player != nullptr ? player->PlayerEntity::currentGalaxyID()
-                            : OOGalaxyID{}));  // qualified: the final overrider
-                                               // (bead oo-9ht.177), so the
-                                               // binding test stands in for it
+      *value = ooscript::int32Value(
+          (player != nullptr ? player->PlayerEntity::currentGalaxyID()
+                             : OOGalaxyID{}));  // qualified: the final
+                                                // overrider so the binding test
+                                                // stands in for it
       return true;
 
     case kGlobal_guiScreen:
@@ -777,7 +722,7 @@ static bool GlobalSetExtraGuiScreenKeys(ooscript::Context context,
     return false;
   }
 
-  // C++ since bead oo-9ht.62 deleted its façade; the player keeps it (oo::Ref).
+  // The player keeps it (oo::Ref).
   const oo::Ref<OOJSGuiScreenKeyDefinition> definition =
       oo::makeRef<OOJSGuiScreenKeyDefinition>();
   OOJSGuiScreenKeyDefinition* cxxDefinition = definition.get();

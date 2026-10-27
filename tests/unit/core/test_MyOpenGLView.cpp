@@ -1,15 +1,13 @@
 /*	test_MyOpenGLView.mm
         Unit tests for MyOpenGLView (src/SDL/MyOpenGLView.h), the game's SDL
-   window and OpenGL view: bead oo-6rb6, slice 1 of the Phase 3 slice plan
-   docs/phases/3-slices/MyOpenGLView.md (the class shell, the window and OpenGL
-   lifecycle, the splash screen), in the house style of the OOColor exemplar
-   (proposed ADR-0056, amendments oo-o89, oo-3bgz and oo-2g51).
+   window and OpenGL view (the class shell, the window and OpenGL lifecycle,
+   the splash screen).
 
-        The view is made as the game makes it (new and init(); +alloc/-init
-   until bead oo-9ht.153), in a scratch home (no user defaults, so the splash
+        The view is made as the game makes it (new and init()), in a scratch
+   home (no user defaults, so the splash
    screen is on and -init opens no window) with OpenAL on its null backend. The
-   tests pin, through the Objective-C API (the C++ members since its facade
-   went), what the slice's units answer without a window: the state -init leaves
+   tests pin, through the C++ members, what the view's units answer without a
+   window: the state -init leaves
    (no game controller, the window caption, the size the view starts at, the
    input state, a matrix manager), the display it would open on and that
    display's native size, and the projection -updateGLSize: sets up, read back
@@ -17,17 +15,15 @@
    window (-createWindowWithSize:, -initSplashScreen, -endSplashScreen,
    -initialiseGLWithSize:, -updateScreen) would show a real window on the
    desktop, which a unit test must not do (CLAUDE.md, tools/gui-lock); the
-   goldens launch the game, which runs all of them. The expectations were
-   written against the unconverted class and run on it first. The view's
+   goldens launch the game, which runs all of them. The view's
    -dealloc quits SDL, so one view serves every test and the last one releases
-   it. Bead oo-72cz (slice 2) adds the accessors, the display-mode list and the
-   saved window, full-screen and HDR settings, again without a window. Bead
-   oo-299r (slice 3) adds the debug image dumps; the snapshot needs the game
-   window.
+   it. Further tests cover the accessors, the display-mode list and the
+   saved window, full-screen and HDR settings, again without a window, and the
+   debug image dumps; the snapshot needs the game window.
 
         MyOpenGLView.mm reaches the game controller, the universe and the
    player, so the test links every game object but main's
-   (tests/unit/core/meson.build entry ['*'], ADR-0056 amendment oo-44gg) and
+   (tests/unit/core/meson.build entry ['*']) and
    defines gDebugFlags. Run: bash tools/check-core-tests.sh test_MyOpenGLView
 */
 
@@ -174,8 +170,8 @@ OO_TEST(updateGLSizeSetsTheProjection) {
   }
 }
 
-// --- bead oo-72cz: slice 2 (accessors, display modes, settings, display / HDR,
-// FOV and MSAA) --- No window: none of these open one (full-screen mode is only
+// --- Accessors, display modes, settings, display / HDR, FOV and MSAA ---
+// No window: none of these open one (full-screen mode is only
 // switched off again, and the screen size is set while windowed). Settings the
 // setters save go to the scratch home's defaults.
 
@@ -337,7 +333,7 @@ OO_TEST(slice2DisplayModesAndSavedSettings) {
   }
 }
 
-// --- bead oo-299r: slice 3 (snapshots and the debug image dumps) ---
+// --- Snapshots and the debug image dumps ---
 // -cxx_snapShot: reads the game window's surface, which a unit test may not
 // open (the goldens' screenshots run it). The dumps write PNGs under
 // <home>/oolite-saves/snapshots.
@@ -402,8 +398,8 @@ OO_TEST(slice3DebugImageDumps) {
   }
 }
 
-// Bead oo-5thb0: a gray+alpha dump reads the caller's bytes (2 a pixel, tightly
-// packed rows) and writes neither them nor past their end.
+// A gray+alpha dump reads the caller's bytes (2 a pixel, tightly packed rows)
+// and writes neither them nor past their end.
 OO_TEST(dumpGrayAlphaLeavesTheCallersBytes) {
   {
     namespace stdfs = std::filesystem;
@@ -426,17 +422,15 @@ OO_TEST(dumpGrayAlphaLeavesTheCallersBytes) {
 
 #endif
 
-// The view's state is private since bead oo-mlpcc; MyOpenGLView.h names this
-// struct its friend so the checks below read the same members (expected values
-// unchanged).
+// The view's state is private; MyOpenGLView.h names this struct its friend so
+// the checks below read the same members.
 struct MyOpenGLViewTestAccess {
   static auto& viewSize(MyOpenGLView* view) { return view->viewSize; }
   static auto& display_z(MyOpenGLView* view) { return view->display_z; }
   static auto& matrixManager(MyOpenGLView* view) { return view->matrixManager; }
 };
 
-// After the conversion: the C++ view the game made (its facade's crossings went
-// with bead oo-9ht.153).
+// The C++ view the game made.
 OO_TEST(cxxAPI) {
   {
     MyOpenGLView* view = View();
@@ -454,7 +448,7 @@ OO_TEST(cxxAPI) {
   }
 }
 
-// After slice 2's conversion: its members answer as the facade's methods do.
+// The members: accessors, display modes and settings.
 OO_TEST(cxxSlice2API) {
   {
     MyOpenGLView* view = View();
@@ -495,7 +489,7 @@ OO_TEST(cxxSlice2API) {
   }
 }
 
-// After slice 3's conversion: the dumps as members.
+// The dumps as members.
 OO_TEST(cxxSlice3API) {
   {
 #ifndef NDEBUG

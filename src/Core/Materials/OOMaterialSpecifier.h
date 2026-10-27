@@ -33,14 +33,11 @@ SOFTWARE.
 #include "OOFoundation.h"
 #include "oofnd/PList.hpp"
 
-/*	Material configuration properties (Foundation sweep, proposed ADR-0043
-   Amendment 2, bead oo-hiis). A material configuration is an oo::PList
-   dictionary: property-list data plus PList::Object nodes for the live objects
-   callers put in it (colours, textures); a null PList is a nil configuration,
-   and every function then answers as a message to nil did. Specifiers are
-        oo::PList dictionaries (null = nil). The Foundation dictionary category
-   these replace, and the Foundation-string key constants, live on in a
-   transitional bridge (now removed) until their callers move.
+/*	Material configuration properties. A material configuration is an
+   oo::PList dictionary: property-list data plus PList::Object nodes for the
+   live objects callers put in it (colours, textures); a null PList is a nil
+   configuration, and every function then answers as a message to nil did.
+   Specifiers are oo::PList dictionaries (null = nil).
 */
 oo::Ref<OOColor> cxx_OOMaterialDiffuseColor(const oo::PList& configuration);
 oo::Ref<OOColor> cxx_OOMaterialAmbientColor(const oo::PList& configuration);

@@ -1,22 +1,16 @@
 /*	test_OOTextureGenerator.mm
         Unit tests for OOTextureGenerator
    (src/Core/Materials/OOTextureGenerator.h), a texture loader that needs no
-   file: bead oo-rr2x (Phase 3, house style of proposed ADR-0056; an
-   intermediate class of the texture loaders, amendments oo-zl36 and oo-vl43).
+   file.
 
         A generator chooses its own texture options, anisotropy, LOD bias and
    cache key, and queues itself on the game's work manager;
    OOPixMapTextureLoader and the planet, atmosphere and emission-map generators
-   derive from it in their own files. The test's generators are subclasses
-   (Objective-C until bead oo-9ht.118 deleted the facade; C++ now, named as they
-   were): a bare one that answers the class's defaults, and one that overrides
+   derive from it in their own files. The test's generators are C++ subclasses:
+   a bare one that answers the class's defaults, and one that overrides
    them. It links the whole game but main (tests/unit/core/meson.build entry
-   ['*']), on the hidden GL context of oo_gl_test_context.hpp. The expectations
-   were written against the Objective-C API and run on the unconverted class
-   first (commit 221196e7a). Bead oo-9ht.118 deleted the facade: its crossing
-   cases went with it (standing approval oo-9n5p9), and the other cases call the
-   same members with every expectation kept; the last test pins the C++ API
-   (OOTextureGenerator). Run: bash tools/check-core-tests.sh
+   ['*']), on the hidden GL context of oo_gl_test_context.hpp. The last test
+   pins the C++ API (OOTextureGenerator). Run: bash tools/check-core-tests.sh
 */
 
 #include <cstdlib>
@@ -35,8 +29,7 @@ uint32_t gDebugFlags = 0;
 static int gLoads = 0;
 
 // A generator of an 8 x 8 RGBA image whose bytes count up from 1. Its root
-// state is written in one block (the conversion of the loaders' root ported it;
-// amendment oo-bj8 item 11).
+// state is written in one block.
 class BareGenerator : public OOTextureGenerator {
  public:
   void loadTexture() override {
@@ -63,9 +56,8 @@ class ChoosyGenerator : public BareGenerator {
   }
 };
 
-// What an autoreleased Objective-C texture was (bead oo-9ht.99 deleted the
-// facade): the C++ texture, kept until the current autorelease scope drains
-// (oo::autorelease; an Objective-C keeper object until bead oo-4aq6a.2).
+// What an autoreleased texture is: the C++ texture, kept until the current
+// autorelease scope drains (oo::autorelease).
 static OOTexture* Autoreleased(const oo::Ref<OOTexture>& texture) {
   if (texture == nullptr) return nullptr;
   oo::autorelease(oo::Ref<OOTexture>(texture));
@@ -210,8 +202,7 @@ OO_TEST(cxxApi) {
     OO_CHECK(generator->anisotropy() == (GLfloat)kOOTextureDefaultAnisotropy &&
              generator->lodBias() == (GLfloat)kOOTextureDefaultLODBias);
 
-    // A texture takes it (it took the generator's facade until bead
-    // oo-9ht.118).
+    // A texture takes it.
     OO_CHECK(generator->textureOptions() ==
              (kOOTextureMinFilterLinear | kOOTextureMagFilterLinear));
     OO_CHECK(generator->cacheKey() ==

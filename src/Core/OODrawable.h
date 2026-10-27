@@ -4,11 +4,8 @@ OODrawable.h
 
 Abstract base class for objects which can draw themselves.
 
-C++20 since bead oo-smy, with OOMaterial the Materials module exemplar (proposed
-ADR-0056, amendment oo-smy). Global since bead oo-9ht.9 deleted the Objective-C
-facade (with oo-hahfg, which moved the entities' drawable to C++, and
-oo-9ht.132, the OOMesh facade): every drawable (OOMesh, OOPlanetDrawable,
-OOSkyDrawable) and every holder is C++.
+Every drawable (OOMesh, OOPlanetDrawable, OOSkyDrawable) and every holder is
+C++.
 
 
 Copyright (C) 2007-2013 Jens Ayton
@@ -33,18 +30,17 @@ SOFTWARE.
 
 */
 
-#ifndef OODRAWABLE_H
-#define OODRAWABLE_H
+#pragma once
 
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include "OOOpenGL.h"
 #include "oofnd/objc/OOObject.h"
-class Entity;  // Entity.h: the shader binding target (bead oo-9ht.39.6)
+class Entity;  // Entity.h: the shader binding target
 
 #include <vector>
 
-#include "OOTexture.h"  // allTextures() answers oo::Ref<OOTexture>, which needs the class (bead oo-9ht.99)
+#include "OOTexture.h"  // allTextures() answers oo::Ref<OOTexture>, which needs the class
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 
@@ -70,8 +66,8 @@ class OODrawable : public oo::RefCounted {
   // OOSkyDrawable override it.
   virtual std::optional<std::string> descriptionComponents() const;
 
-  // What "%@" printed for the drawable's facade (bead oo-9ht.9): "<Class
-  // 0x...>{components}", the C++ class's name and the drawable's own address.
+  // "<Class 0x...>{components}": the C++ class's name and the drawable's own
+  // address.
   std::string description() const;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -79,18 +75,14 @@ class OODrawable : public oo::RefCounted {
   virtual size_t
   totalSize();  // Size including dynamic data, not counting textures.
 
-  // The object's own size, which totalSize() starts from (the facade's instance
-  // size until bead oo-9ht.9): sizeof the dynamic type, each subclass answering
-  // its own.
+  // The object's own size, which totalSize() starts from: sizeof the dynamic
+  // type, each subclass answering its own.
   virtual size_t objectSize() const { return sizeof *this; }
 #endif
 };
 
-/*	[drawable autorelease], which the deleted facade answered (bead
-   oo-hahfg): keeps the drawable until the current autorelease pool drains, so a
-   drawable an entity replaces lives exactly as long as its autoreleased object
-   did. Nothing for null.
+/*	Keeps the drawable until the current autorelease pool drains, so a
+   drawable an entity replaces lives exactly as long as an autoreleased object
+   would. Nothing for null.
 */
 void OODrawableAutorelease(oo::Ref<OODrawable> drawable);
-
-#endif  // OODRAWABLE_H

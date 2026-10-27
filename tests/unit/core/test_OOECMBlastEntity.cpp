@@ -1,33 +1,26 @@
 /*	test_OOECMBlastEntity.mm
         Unit tests for OOECMBlastEntity (src/Core/Entities/OOECMBlastEntity.h),
-   the invisible entity that sends a ship's ECM pulses: bead oo-ryhi, a leaf of
-   the Entities seam (proposed ADR-0056, amendment oo-bj8 item 12).
+   the invisible entity that sends a ship's ECM pulses.
 
         The entity reads Universe, so the test links the whole game but main
    (['*']) and uses a Universe that was never initialised, subclassed to record
    -removeEntity: and the range searches the pulses make (it finds no ship, so
-   no script event is sent). The firing ship was a plain entity (the blast
-   messaged it only as one: -position, -status, its weak reference); since bead
-   oo-9ht.144 the blast calls the C++ ship's members, so it is a C++ ship under
-   its object, never set up. The expectations were written against the
-   Objective-C API and run on the unconverted class first (but for "no blast
-        from nil", which crashed there in the Entity facade's -dealloc of an
-   entity whose -init never ran, bead oo-s6ic6): no blast from nil; a blast is a
+   no script event is sent). The blast calls the C++ ship's members, so the
+   firing ship is a C++ ship under its object, never set up. The tests cover:
+   no blast from nil; a blast is a
    no-draw effect at the ship's position; four pulses half a second apart, a
    quarter of the scanner range wider each, then it removes itself; a dead or
    deallocated ship ends it at once; it is an ECM blast and the ship is not
-   (-isECMBlast, which nothing sent, went with its bridge in bead oo-9ht.75; the
-   check asks the C++ member). The blasts are made through the one helper below,
-   the only line the conversion ported: the blast is now a C++ entity whose
-   Objective-C object is the Entity facade oo::NewEntityFacade made. Run: bash
-   tools/check-core-tests.sh
+   (the check asks the C++ member). The blasts are made through the one helper
+   below: the blast is a C++ entity whose object is the Entity facade
+   oo::NewEntityFacade made. Run: bash tools/check-core-tests.sh
 */
 
 #include <vector>
 
 #include "OOECMBlastEntity.h"
-#include "PlayerEntity.h"  // the stand-in PLAYER (bead oo-vdw34)
-#include "ShipEntity.h"    // the ship is C++ (bead oo-9ht.144)
+#include "PlayerEntity.h"  // the stand-in PLAYER
+#include "ShipEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 
@@ -47,18 +40,13 @@ class TestUniverse : public Universe {
   std::vector<double>* _ranges = {};
   Entity* _searchedFrom = {};
 
-  bool removeEntity(
-      Entity* entity) override  // the C++ entity since bead oo-9ht.39.26; the
-                                // record is its object, as before
-  {
+  bool removeEntity(Entity* entity) override {
     _removed = entity;
     return YES;
   }
   std::vector<oo::EntityHold> findEntitiesMatchingPredicate(
       EntityFilterPredicate /*predicate*/, void* /*parameter*/, double range,
-      Entity* entity) override  // held C++ entities since bead oo-9ht.39.26
-                                // // the reference's C++ entity
-  {
+      Entity* entity) override {
     _ranges->push_back(range);
     _searchedFrom = entity;
     return {};
@@ -73,7 +61,7 @@ namespace {
 TestUniverse* sUniverse = nil;
 std::vector<double> sRanges;
 
-// PLAYER (bead oo-vdw34): the debug build asserts it is set (OOGetPlayer()), so
+// PLAYER: the debug build asserts it is set (OOGetPlayer()), so
 // the entities' positions, which read it, have a player whose viewpoint is the
 // origin: the camera-relative positions are the release build's with no player
 // (the origin's). Never released, as the player is not.
@@ -87,7 +75,7 @@ void SetUpTestPlayer() {
   if (player == nullptr) {
     oo::Ref<TestPlayer> made = oo::makeRef<TestPlayer>();
     {
-      oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+      oo::AutoreleaseScope scope;
       oo::RetainEntity(oo::MadeEntity(
           made));  // +1, as PlayerEntity::sharedPlayer() makes the game's
     }
@@ -107,16 +95,14 @@ void SetUp() {
   gSharedUniverse = sUniverse;
   SetUpTestPlayer();
   // The ship's -dealloc sends its (absent) scripts entityDestroyed in a request
-  // on the main thread's context, so there is one, with nothing in it (the ship
-  // stand-in is C++ since bead oo-9ht.144, as test_StationEntity's ships are).
+  // on the main thread's context, so there is one, with nothing in it.
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
         ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
 }
 
-// A ship: C++ since bead oo-9ht.144 (the blast calls its members), under its
-// object (oo::NewEntityFacade, autoreleased as the plain entity was), never set
-// up.
+// A ship (the blast calls its members), under its object
+// (oo::NewEntityFacade, autoreleased), never set up.
 Entity* Ship() {
   Entity* ship = oo::MadeEntity(oo::makeRef<::ShipEntity>());
   ship->setPosition(make_HPvector(10, 20, 30));
@@ -124,15 +110,14 @@ Entity* Ship() {
   return ship;
 }
 
-// --- How the test makes a blast (ported by the conversion), and nothing else
+// --- How the test makes a blast
 // ---------------------
 
 Entity* Blast(Entity* ship) {
   return oo::MadeEntity(OOECMBlastEntity::initFromShip(oo::ToShip(ship)));
 }
 
-// What -[Entity isECMBlast] answered, from the C++ member (bead oo-9ht.75
-// deleted the category).
+// Whether the entity is an ECM blast, from the C++ member.
 bool IsECMBlast(Entity* entity) {
   OOECMBlastEntity* blast = dynamic_cast<OOECMBlastEntity*>(entity);
   return blast != nullptr && blast->isECMBlast();
@@ -144,7 +129,7 @@ bool IsECMBlast(Entity* entity) {
 
 OO_TEST(noShipNoBlast) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUp();
     OO_CHECK(Blast(nil) == nil);
   }
@@ -152,7 +137,7 @@ OO_TEST(noShipNoBlast) {
 
 OO_TEST(blastAtTheShip) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUp();
     Entity* ship = Ship();
     Entity* blast = Blast(ship);
@@ -167,7 +152,7 @@ OO_TEST(blastAtTheShip) {
 
 OO_TEST(fourPulsesThenGone) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUp();
     Entity* ship = Ship();
     Entity* blast = Blast(ship);
@@ -190,7 +175,7 @@ OO_TEST(fourPulsesThenGone) {
 
 OO_TEST(deadShipEndsIt) {
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUp();
     Entity* ship = Ship();
     Entity* blast = Blast(ship);
@@ -201,15 +186,15 @@ OO_TEST(deadShipEndsIt) {
 
   Entity* blast = nil;
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     SetUp();
-    Entity* ship = oo::RetainEntity(oo::MadeEntity(
-        oo::makeRef<::ShipEntity>()));  // a ship (bead oo-9ht.144)
+    Entity* ship = oo::RetainEntity(
+        oo::MadeEntity(oo::makeRef<::ShipEntity>()));  // a ship
     blast = oo::RetainEntity(Blast(ship));
     oo::ReleaseEntity(ship);  // the blast holds it weakly
   }
   {
-    oo::AutoreleaseScope scope;  // was @autoreleasepool (oo-31u.6)
+    oo::AutoreleaseScope scope;
     blast->update(0.5);
     OO_CHECK(sRanges.empty() && sUniverse->_removed == blast);
     oo::ReleaseEntity(blast);

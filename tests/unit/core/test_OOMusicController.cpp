@@ -1,7 +1,6 @@
 /*	test_OOMusicController.mm
-        Unit tests for OOMusicController (src/Core/OOMusicController.h): bead
-   oo-lfkq, a class of the Audio module (proposed ADR-0056, amendment oo-2en),
-   and a singleton (amendment oo-r7m0).
+        Unit tests for OOMusicController (src/Core/OOMusicController.h), a
+   singleton.
 
         The controller plays one music at a time, loaded by name from the
    resource manager: the theme, the docking and docked music and the mission
@@ -10,12 +9,9 @@
    read when it is made and written when it changes. The user's defaults are a
    scratch folder's (HOMEPATH). The resource manager and the music are this
    file's stubs, which record what they are asked (the real ones would bring the
-   sound system into the link; amendment oo-z1s4 item 4): "missing.ogg" has no
-   music. These expectations were written against the Objective-C API and ran on
-   the unconverted class first; since bead oo-9ht.90 deleted the facade they ask
-   the C++ class with every expectation kept, and the facade's contract case
-   retired under the standing approval oo-9n5p9. After them comes the C++ API
-   case. Run: bash tools/check-core-tests.sh test_OOMusicController
+   sound system into the link): "missing.ogg" has no music. The expectations ask
+   the C++ class. After them comes the C++ API case. Run: bash
+   tools/check-core-tests.sh test_OOMusicController
 */
 
 #include <process.h>
@@ -48,7 +44,7 @@ struct MusicState {
 static std::map<const OOMusic*, MusicState> gMusics;
 
 // The sound root, which the music derives from: a stand-in, as OOALSound.mm
-// would bring the sound system into the link (bead oo-ra76k).
+// would bring the sound system into the link.
 OOSound::OOSound() = default;
 std::optional<std::string> OOSound::name() { return std::nullopt; }
 ALuint OOSound::soundBuffer() { return 0; }
@@ -59,7 +55,7 @@ std::optional<std::string> OOSound::descriptionComponents() const {
 }
 
 // The music: this file's C++ stand-in for OOMusic (OOALMusic.mm is not linked;
-// bead oo-ra76k), answering what the Objective-C stand-in answered.
+// not linked).
 oo::Ref<OOMusic> OOMusic::initWithContentsOfFile(
     const std::optional<std::string>& inPath) {
   oo::Ref<OOMusic> self = oo::adopt(new OOMusic);

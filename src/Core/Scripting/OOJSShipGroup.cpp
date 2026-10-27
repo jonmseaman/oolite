@@ -23,11 +23,10 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJSShipGroup.h"
-
 #include <cstring>
 
 #include "OOJSEntity.h"
+#include "OOJSShipGroup.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
 #include "OOShipGroup.h"
@@ -37,15 +36,6 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm
-   does it (bead oo-sdz, the sweep exemplar): the class dispatch table becomes a
-   static ooscript::ClassDef (the stub hooks are nullptr), InitClass becomes
-   ooscript::initClass, and the directly spelled construction-check,
-   object-construction and private-storage calls become ooscript::isConstructing
-   (via CallArgs), ooscript::newObject and ooscript::setPrivate. `this` is
-   renamed to `thisObj` because it is a reserved word once this file compiles as
-        Objective-C++ (ADR-0001).
-
         ShipGroup has its own private-object getter (originally built by
    DEFINE_JS_OBJECT_GETTER(), OOJavaScriptEngine.h) the way OOJSSoundSource.mm's
    JSSoundSourceGetSoundSource does; it checks against &sShipGroupClass, the
@@ -55,20 +45,6 @@ MA 02110-1301, USA.
    (OOJSObjectWrapperToString) are the shared natives, which already take the
    façade signatures and go into the tables directly.
 */
-/*
-        C++20 since bead oo-n64m, converted the way bead oo-ppc converted
-   OOJSVector.mm (proposed ADR-0056 amendment oo-ppc). The JS class was already
-   C++ on the ooscript façade; OOJS_NATIVE_ENTER/EXIT and
-   OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The
-   category on the OOShipGroup façade became two members of the C++ group
-   (amendments oo-ykoy, oo-bwrq and oo-6symp). The group, C++ since bead
-   oo-bwrq, is called directly since its façade was deleted (bead oo-9ht.19),
-        null-guarded where a message to nil answered. Messages to classes that
-   are still Objective-C (ShipEntity) stay as they are, which is why the file is
-   still .mm until Phase 4.
-*/
-
 namespace ooscript {}
 using ooscript::CallArgs;
 using ooscript::ClassDef;
@@ -171,10 +147,8 @@ static PropertySpec sShipGroupProperties[] = {
 
 // A raw jsapi mirror of sShipGroupProperties, used only for the two
 // bad-property error reporters in OOJavaScriptEngine.m
-// (OOJSReportBadPropertySelector/Value): those helpers are outside this bead's
-// scope (shared across every binding file) and still take a
-// ooscript::PropertySpec*, not ooscript::PropertySpec* (see OOJSVector.mm's
-// sVectorPropertiesRaw).
+// (OOJSReportBadPropertySelector/Value), which are shared across every binding
+// file and take a ooscript::PropertySpec*.
 namespace {
 static ooscript::PropertySpec sShipGroupPropertiesRaw[] = {
     // JS name					ID
@@ -374,8 +348,7 @@ static bool ShipGroupConstruct(ooscript::Context context,
 }  // namespace
 
 /*	The JS glue of the C++ group (OOJSPrivateObject). The group's JS object
-   is its _jsSelf (amendment oo-6symp, item 5): the object's private slot holds
-   the group, retained.
+   is its _jsSelf: the object's private slot holds the group, retained.
 */
 
 ooscript::Value OOShipGroup::jsValueInContext(ooscript::Context context) {

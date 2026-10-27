@@ -1,24 +1,15 @@
 /*	test_OOScriptTimer.mm
-        Unit tests for OOScriptTimer (src/Core/Scripting/OOScriptTimer.h/.mm):
-   bead oo-kdyh, a Phase 3 conversion in the house style of the OOColor exemplar
-   (proposed ADR-0056).
+        Unit tests for OOScriptTimer (src/Core/Scripting/OOScriptTimer.h/.mm).
 
         OOScriptTimer is the abstract base of script timers: it keeps the fire
    time and interval, schedules itself in a priority queue ordered by next fire
-   time (OOPriorityQueue, bead oo-3lj8), and +updateTimers fires the due ones in
-   order, rescheduling the repeating ones. This pins what it computed before the
-   conversion: the initialisers (and the one that answers nil), the interval
-   clamp, setNextTime's refusal while scheduled, the description, the firing
-   order, one-shot and repeating timers, a timer scheduled while the timers are
-   updating (deferred to the end of the update), a timer that stops itself when
-   it fires, +noteGameReset, and the ordering selector the queue calls. The
-   expectations were written against the Objective-C API, with an Objective-C
-   subclass, and run on the unconverted class first (commit 709ecf5c8). The
-   subclass was ported to a C++ one by the conversion; bead oo-9ht.35 deleted
-   the facade, so the checks that used the base class through it call the C++
-   class with every expected value kept (nil is null), and the facade's own case
-   (identity, nil, the facade class) is retired under the standing approval
-   oo-9n5p9. Run: bash tools/check-core-tests.sh
+   time (OOPriorityQueue), and +updateTimers fires the due ones in order,
+   rescheduling the repeating ones. This pins the initialisers (and the one
+   that answers null), the interval clamp, setNextTime's refusal while
+   scheduled, the description, the firing order, one-shot and repeating timers,
+   a timer scheduled while the timers are updating (deferred to the end of the
+   update), a timer that stops itself when it fires, +noteGameReset, and the
+   ordering selector the queue calls. Run: bash tools/check-core-tests.sh
 */
 
 #include <string>
@@ -48,9 +39,8 @@ const char* const cxx_kOOLogException = "exception";
  */
 static double gNow = 100.0;
 
-// The universe as the code under test sees it: a stand-in for the C++ class
-// (bead oo-ql9rn deleted the Objective-C facade the test's FakeUniverse stood
-// in for), with the header's names and signatures.
+// The universe as the code under test sees it: a stand-in for the C++ class,
+// with the header's names and signatures.
 class Universe {
  public:
   OOTimeAbsolute getTime();

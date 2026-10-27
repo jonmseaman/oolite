@@ -89,13 +89,8 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) per bead oo-4kf, the
-   same way bead oo-sdz retargeted OOJSVector.mm (the exemplar for this sweep;
-   see its header comment for the full rationale) and bead oo-45g retargeted
-   OOJSQuaternion.mm.
-
         Every value and id is inspected through the façade's predicates and
-   accessors (bead oo-1gc.3). The façade cannot distinguish the engine's
+   accessors. The façade cannot distinguish the engine's
    internal value and id kinds, so the cases that read them directly are gone:
    the debug-build magic-value switch in JSValueTypeDbg() (array hole, args
    hole, native enumerate, ...), and the empty / zero / object /

@@ -156,11 +156,8 @@ OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2,
                                       HPVector v3) CONST_FUNC;
 
 #if defined(__cplusplus) && \
-    !defined(               \
-        OO_PLAIN_CPP_UNIT)  // was __OBJC__: a game unit (an Objective-C++ unit
-                            // until bead oo-dbz), not a plain C++ one
-/*	Objective-C++ only: OOMaths.h is included inside extern "C" (proposed
- * ADR-0043, bead oo-dlox). */
+    !defined(OO_PLAIN_CPP_UNIT)  // a game unit, not a plain C++ one
+/*	Objective-C++ only: OOMaths.h is included inside extern "C". */
 extern "C++" {
 #include "oofnd/StdLib.hpp"
 std::string cxx_HPVectorDescription(HPVector vector);        // "(x, y, z)"

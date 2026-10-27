@@ -4,7 +4,7 @@ These tests are `offline`: no desktop, no built game, no pyautogui. They exist b
 failure they cover is invisible by construction — when the GUI tier skips, every command in the
 DoD path still exits 0, and the only way to notice is to assert on the skip machinery itself.
 
-Bug oo-7by1: `pytest.importorskip("pyautogui")` inside the `game` fixture meant the G1 DoD
+Defect: `pytest.importorskip("pyautogui")` inside the `game` fixture meant the G1 DoD
 command exited 0 green on three separate configurations where G1 never executed (non-Windows;
 Windows without pyautogui; and any machine at all, since nothing installed requirements.txt).
 """
@@ -132,7 +132,7 @@ def test_oo_gui_require_is_honoured_by_the_fixture_source():
     assert game_sig.split(",")[0].strip() == "gui_runtime"
 
 
-# --- bug oo-5rsa: the three post-exit hygiene checks must be able to FAIL ----------------------
+# --- the three post-exit hygiene checks must be able to FAIL ----------------------
 #
 # assert_clean_exit promised "no core dump, no ERROR in Latest.log, and a defaults file that still
 # parses", and the story (docs/stories/G1-exit-via-mouse.md:13,46) additionally requires "no
@@ -459,12 +459,12 @@ def test_g1_asserts_on_the_process_table_not_on_returncode():
     assert "oolite.exe" in conftest.GAME_PROCESS_NAMES
 
 
-# --- oo-5rsa attempt 2: "exists and parses" is not "was written by THIS run" ------------------
+# --- second attempt: "exists and parses" is not "was written by THIS run" ------------------
 #
 # The first fix asserted only that a defaults file EXISTS and PARSES. app_dir is the PERSISTENT
 # build tree (oolite-dev/build/meson_test/oolite.app), so a plist left behind by any earlier
 # run satisfied that forever: the game could write nothing at all - or not start - and the check
-# still passed. That is the same "cannot fail" defect class this bead exists to remove, so the
+# still passed. That is the same "cannot fail" defect class this test exists to remove, so the
 # check now compares against a mark taken at LAUNCH, and the tests below construct exactly the
 # stale-file case a reviewer used to falsify the first attempt.
 
@@ -655,7 +655,7 @@ def test_g1_passes_the_launch_mark_through_to_the_hygiene_check():
 #
 # surviving_game_processes reaches kernel32 (CreateToolhelp32Snapshot/Process32First/
 # Process32Next/CloseHandle). Their declarations are asserted there, beside the rest of the
-# oo-x2uy guards, because those tests are the ones permitted to name ctypes.windll.
+# ctypes-declaration guards, because those tests are the ones permitted to name ctypes.windll.
 
 
 @pytest.mark.offline
@@ -685,7 +685,7 @@ def test_assert_clean_exit_runs_every_check_unconditionally():
     assert "Latest.log" in body
 
 
-# --- bug oo-3opg: a click must be aimed a frame BEFORE the button goes down -------------------
+# --- a click must be aimed a frame BEFORE the button goes down ----------------------------
 #
 # The defect these pin is not a timeout and not a screen: it is that Oolite reads the clicked
 # row out of UNIVERSE->cursor_row, which is written only while RENDERING (Universe.m:5343 is the

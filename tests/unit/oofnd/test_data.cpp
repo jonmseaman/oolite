@@ -1,5 +1,5 @@
 /*	test_data.cpp
-        Unit tests for oofnd/Data.hpp (bead oo-i9q): oo::Data, the replacement
+        Unit tests for oofnd/Data.hpp: oo::Data, the replacement
    for NSData and NSMutableData, checked against the NSData behaviour its banner
    maps (construction, bytes and length, appending, zero-filled growth,
    subranges, equality by content).

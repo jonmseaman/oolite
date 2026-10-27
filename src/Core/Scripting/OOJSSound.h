@@ -30,7 +30,7 @@ MA 02110-1301, USA.
 #include "OOJSPrivateObject.h"
 #include "oofnd/Ref.hpp"
 #include "ooscript/JSEngine.hpp"
-class OOSound;  // C++ since bead oo-9ht.68 deleted its facade
+class OOSound;
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,24 +49,20 @@ OOSound* SoundFromJSValue(ooscript::Context context, ooscript::Value value);
 }
 #endif
 
-/*	The bodies of OOSound (OOJavaScriptExtentions), which the engine reached
-   by selector until bead oo-9ht.68 deleted the sound's facade (and the
-   Scripting bridge file, which held the category's forwarders): a new Sound
-   object for the sound (JS null for none), its toString() text and its JS class
-   name. The binding and the SoundSource binding call them.
+/*	The bodies of OOSound (OOJavaScriptExtentions): a new Sound object for
+   the sound (JS null for none), its toString() text and its JS class name. The
+   binding and the SoundSource binding call them.
 */
 ooscript::Value OOJSSoundJSValueInContext(OOSound* sound,
                                           ooscript::Context context);
 std::optional<std::string> OOJSSoundJSDescription(OOSound* sound);
 std::optional<std::string> OOJSSoundJSClassName(void);
 
-/*	What a Sound object's private slot holds (bead oo-9ht.68: it held the
-   sound's facade, retained). -oo_jsValueInContext: made a new Sound object each
-   time, so each object has its own holder, which retains the sound; the slot
-   retains the holder (OOJSSetCxxPrivate) and the finalizer releases it
-   (OOJSCxxObjectWrapperFinalize). Its toString() is the sound's (ADR-0056
-   amendment oo-9ht.68 item 2). Defined in OOJSSound.mm; only the binding makes
-   one.
+/*	What a Sound object's private slot holds. Each Sound object has its own
+   holder, which retains the sound; the slot retains the holder
+   (OOJSSetCxxPrivate) and the finalizer releases it
+   (OOJSCxxObjectWrapperFinalize). Its toString() is the sound's. Defined in
+   OOJSSound.mm; only the binding makes one.
 */
 class OOJSSoundHolder final : public oo::RefCounted, public OOJSPrivateObject {
  public:

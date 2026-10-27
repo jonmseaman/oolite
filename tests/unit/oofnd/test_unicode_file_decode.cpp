@@ -1,5 +1,5 @@
 /*	test_unicode_file_decode.cpp
-        oo::str::decodeUnicodeFile (oofnd/String.hpp, bead oo-3rb.62) against
+        oo::str::decodeUnicodeFile (oofnd/String.hpp) against
    GNUstep base 1.31.1.
 
         +[NSString stringWithContentsOfUnicodeFile:] (NSStringOOExtensions)
@@ -14,8 +14,7 @@
    when every one of the 40,000 lines matches.
 */
 
-// The header must survive OOCocoa.h's true/false macros and hand them back
-// (proposed ADR-0028).
+// The header must survive OOCocoa.h's true/false macros and hand them back.
 #define true 1
 #define false 0
 #include <type_traits>

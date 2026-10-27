@@ -25,13 +25,13 @@
                 placeholder) inside a configuration dictionary
 
         The last two rows are the Foundation sweep's typed carrier for
-   configuration dictionaries that mix property-list data with live objects
-   (proposed ADR-0043 Amendment 2). No parser produces either; the game side
-   (src/Core/OOObjCPList.h) makes an Object from a live Objective-C object and
-   reads it back. An Object is an oo::Ref to a PListForeign, which oofnd never
-   looks into: it compares by identity and describes itself.
+   configuration dictionaries that mix property-list data with live objects. No
+   parser produces either; the game side (src/Core/OOObjCPList.h) makes an
+   Object from a live Objective-C object and reads it back. An Object is an
+   oo::Ref to a PListForeign, which oofnd never looks into: it compares by
+   identity and describes itself.
 
-        Representation choices (ADR-0013 decision 4 and proposed ADR-0027):
+        Representation choices:
 
           * Strings are std::string holding UTF-8. NSString is UTF-16; a lone
    surrogate (which an old-style "\UD800" escape can produce) is kept as its
@@ -59,7 +59,7 @@
    PList::Dict. The typed, converting accessor that replaces
         OOCollectionExtractors, get<T>(key, fallback) / at<T>(index, fallback),
    is declared here and defined in oofnd/PListGet.hpp (included at the end of
-   this header; proposed ADR-0031).
+   this header).
 
         Also here, shared by the parsers: oo::PListFormat (NSPropertyListFormat)
    and oo::PListError (the error string GNUstep reports, and the -[NSError
@@ -71,7 +71,7 @@
 
 // Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
 // 0`; C++20 needs the keywords. Suspend the macros for this header and restore
-// them at its end (as oofnd/Data.hpp does; proposed ADR-0028).
+// them at its end (as oofnd/Data.hpp does).
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -103,9 +103,8 @@ namespace oo {
 template <class T>
 struct PListGet;
 
-// A value inside a PList that is not property-list data (proposed ADR-0043
-// Amendment 2): the game side wraps an Objective-C object in a subclass.
-// Compared by identity.
+// A value inside a PList that is not property-list data: the game side wraps
+// an Objective-C object in a subclass. Compared by identity.
 class PListForeign : public RefCounted {
  public:
   virtual std::string className()
@@ -348,7 +347,7 @@ enum class PListFormat {
 // -[NSPropertyListSerialization propertyListWithData:options:format:error:]),
 // e.g. "Parse failed at line 2 (char 17) - unexpected character (wanted '=')";
 // description() is the
-// -[NSError description] that OOPropertyListFromData logged. ADR-0027 item 9.
+// -[NSError description] that OOPropertyListFromData logged.
 struct PListError {
   std::string message;
 
@@ -399,7 +398,7 @@ namespace plist_detail {
 // literals must match while input remains, trailing input is ignored, and
 // out-of-range fields roll over (month 13 is next January; absoluteGregorianDay
 // counts every month past 12 as 31 days). nullopt where GNUstep returns nil
-// (including a day or month of 0). One deliberate difference (ADR-0027 item 7):
+// (including a day or month of 0). One deliberate difference:
 // GNUstep reads the "Z" format, and a %z offset beyond 18 hours, in the
 // machine's LOCAL time zone; oofnd reads them as UTC, which is what the Z says.
 inline std::optional<double> parseCalendarDate(std::string_view s, bool zulu) {
@@ -479,7 +478,7 @@ inline std::optional<double> parseCalendarDate(std::string_view s, bool zulu) {
           src += found;
           if (found == 2) zone *= 100;
           // +timeZoneForSecondsFromGMT: is nil beyond 18 hours, and a nil zone
-          // is the local one: UTC in oofnd (ADR-0027 item 7).
+          // is the local one: UTC in oofnd.
           const long seconds = ((zone / 100) * 60 + (zone % 100)) * 60;
           zoneSeconds = seconds > 64800 ? 0 : sign * seconds;
         }

@@ -1,28 +1,22 @@
 /*	test_OOEntityWithDrawable.mm
         Unit tests for OOEntityWithDrawable
    (src/Core/Entities/OOEntityWithDrawable.h), the entity that draws through an
-   OODrawable and the base of ShipEntity, SkyEntity and OOVisualEffectEntity:
-        bead oo-bj8, the Entities pattern seam, with Entity (test_Entity.mm).
+   OODrawable and the base of ShipEntity, SkyEntity and OOVisualEffectEntity.
 
         Like Entity's, its object needs the game graph, so the test links the
    whole game but main
         (['*']) and uses a Universe that was never initialised (no frustum
    planes, so every sphere is in view; no wireframe) and a plain entity as
    PLAYER. The drawable is a subclass of OODrawable that counts what it is asked
-   (an Objective-C one until bead oo-hahfg moved the entity's drawable to C++; a
-   C++ one since, with the same answers). The expectations were written against
-   the Objective-C API and run on the unconverted class first: -setDrawable:
+   (a C++ one). The tests cover: -setDrawable:
    takes the drawable's radius, draw distance and bounding box and makes the
    entity its binding target; -findCollisionRadius and the debug texture list
    ask the drawable; -drawImmediate:translucent: skips an entity beyond its draw
         distance and draws the right parts otherwise. The tests after those pin
-   the intermediate class's crossing (amendment oo-up4b item 2): a C++
-   subclass's object holds it. Since bead oo-9ht.40 deleted the class's
-   Objective-C facade (ADR-0056 amendment oo-9ht.40) the entities are C++ under
-   the root's facade (oo::NewEntityFacade): the class's own selectors
-   (-drawable, -setDrawable:) are member calls and the root's are still sent to
-   the object; the Objective-C subclasses and their crossing case went with the
-   facade. Run: bash tools/check-core-tests.sh
+   the intermediate class's crossing: a C++ subclass's object holds it. The
+   entities are C++ under the root's facade (oo::NewEntityFacade): the class's
+   own selectors (-drawable, -setDrawable:) are member calls and the root's are
+   still sent to the object. Run: bash tools/check-core-tests.sh
 */
 
 #include <cstring>
@@ -30,7 +24,7 @@
 #include "OODescription.h"
 #include "OODrawable.h"
 #include "OOEntityWithDrawable.h"
-#include "PlayerEntity.h"  // PLAYER is C++ (bead oo-9ht.177)
+#include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 
@@ -43,16 +37,13 @@ class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
 
-class TestPlayer : public PlayerEntity  // C++ since bead oo-9ht.177 deleted the
-                                        // Objective-C player
-{
+class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// NewTestPlayer<TestPlayer>() (bead oo-9ht.177): a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
-// +alloc's object was.
+// A C++ player under the ship's facade, as PlayerEntity::sharedPlayer() makes
+// the game's, retained (+1) as +alloc's object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -62,8 +53,7 @@ T* NewTestPlayer() {
   return player.get();
 }
 
-// The drawable: a C++ subclass of OODrawable since bead oo-hahfg (every
-// drawable is C++), with the answers the Objective-C one gave.
+// The drawable: a C++ subclass of OODrawable.
 class TestDrawable : public OODrawable {
  public:
   void renderOpaqueParts() override { _opaqueRenders++; }
@@ -73,8 +63,7 @@ class TestDrawable : public OODrawable {
   BoundingBox boundingBox() override {
     return (BoundingBox){{-1, -2, -3}, {1, 2, 3}};
   }
-  // The target is the C++ entity since bead oo-9ht.39.6; the stand-in records
-  // its object, as it recorded the target.
+  // The stand-in records its object, as it recorded the target.
   void setBindingTarget(Entity* target) override { _bindingTarget = target; }
 
   int _opaqueRenders = 0;
@@ -98,9 +87,8 @@ void SetCamZeroDistance(Entity* e, GLfloat value) {
   e->cam_zero_distance = value;
 }
 
-// An entity with a drawable and its object, as the game makes a C++ one
-// ([[OOEntityWithDrawable alloc] init] until bead oo-9ht.40 deleted that
-// facade): the root's facade, autoreleased.
+// An entity with a drawable and its object, as the game makes a C++ one: the
+// root's facade, autoreleased.
 template <class T = OOEntityWithDrawable>
 T* NewWithDrawable(Entity** outObject) {
   const oo::Ref<T> part = oo::makeRef<T>();
