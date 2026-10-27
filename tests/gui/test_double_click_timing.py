@@ -63,7 +63,7 @@ def test_the_click_interval_is_taken_from_the_release_event_timestamp():
     assert "timeNow" not in rhs, (
         "timeBetweenClicks is computed from timeNow again - the poll's start time. Two releases "
         "read by two polls are then timed by the frame between the polls, and one slow frame "
-        "turns a real double-click into two single clicks (oo-3rb.333/oo-3rb.336)"
+        "turns a real double-click into two single clicks"
     )
     stamped = {m.group(1) for m in re.finditer(r"(\w+)\s*=\s*[^;]*mbtn_event->timestamp", body)}
     uses_timestamp = "mbtn_event->timestamp" in rhs or any(

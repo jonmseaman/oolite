@@ -1440,8 +1440,7 @@ void PlayerEntity::awardCargo(
   }
 
   const oo::PList tokenArray = TokenArray(tokens);
-  const std::string& type =
-      tokens[1];  // the good (Amendment 1 item 10: a std::string)
+  const std::string& type = tokens[1];  // the good (a std::string)
   if (!((UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr) != nullptr
             ? UNIVERSE->getCommodities()->goodDefined(type)
             : false)) {
@@ -3028,7 +3027,7 @@ bool PlayerEntity::addEqScriptForKey(const std::string& eq_key) {
   // no duplicates! (eqScripts holds (key, script) pairs)
   if (eqScriptIndexForKey(eq_key) != eqScripts.size()) return NO;
 
-  // the script's properties: a mixed configuration (Amendment 2)
+  // the script's properties: a mixed configuration
   oo::PList::Dict properties;
   properties["ship"] = oo::EntityObjectNode(this);
   properties["equipmentKey"] = oo::PList(eq_key);

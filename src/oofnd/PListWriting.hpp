@@ -169,7 +169,6 @@ class OldStyleWriter {
         return false;
       case PList::Type::Object:
         // NSObject's -oldSchoolPListFormatWithIndentation:errorDescription:
-        // (Amendment 2 carrier).
         error = "Class " + v.getIf<PList::Object>()->get()->className() +
                 " does not support OldSchoolPropertyListWriting";
         return false;

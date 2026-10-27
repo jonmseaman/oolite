@@ -23,7 +23,7 @@
 
 namespace {
 
-const char* const kStickName = "oo-o89 virtual stick";
+const char* const kStickName = "virtual stick";
 
 // The virtual stick, attached once before any manager is made (a manager opens
 // the sticks that exist when it is initialised), and a handle of the test's own

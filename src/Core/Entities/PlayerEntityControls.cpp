@@ -3403,8 +3403,7 @@ void PlayerEntity::pollMarketScreenControls() {
         if (gameView != nullptr) gameView->clearMouse();
       }
       if (!wait_for_key_up) {
-        const std::optional<std::string> item =
-            marketSelectedCommodity;  // Amendment 1 item 10
+        const std::optional<std::string> item = marketSelectedCommodity;
         OOCargoQuantity yours =
             (shipCommodityData != nullptr
                  ? shipCommodityData->quantityForGood(item.value_or(""))

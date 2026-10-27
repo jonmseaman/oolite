@@ -9,8 +9,8 @@ that is never the target of anything here - the police - still exists afterwards
 assert the pirate is destroyed: whether the eight police engage at all depends on a spawn-time
 bounty draw (``system.addShips("pirate", ...)`` gives each ship ``bounty = 20 + randf() * 50``,
 ``Universe.m:4026``, against ``policeAI``'s ``fineThreshold()`` of 32 in Lave), so in roughly a
-quarter of runs no combat happens at all - see ``docs/stories/S8-measurements.md`` (measured with
-``tools/oo-qwk5-probe.py``) for the full record of that investigation. Proving the full title
+quarter of runs no combat happens at all - measured with a
+probe script over many runs. Proving the full title
 claim (a destroyed ship actually leaves ``system.allShips``, not just that its role count fell)
 needs a per-ship identity handle so the assertion can name the ship this scenario spawned rather
 than a role the populator also writes to - deferred.

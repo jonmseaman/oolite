@@ -981,7 +981,7 @@ OO_TEST(parsePropertyListDispatch) {
 
 namespace {
 
-// An object that is not property-list data (the Amendment 2 carrier),
+// An object that is not property-list data,
 // describing itself.
 class DescribedForeign : public oo::PListForeign {
  public:

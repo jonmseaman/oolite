@@ -88,7 +88,7 @@ def test_every_win32_call_site_is_declared():
     assert not undeclared, (
         "these Win32 call sites have no argtypes/restype declaration in "
         "conftest.WIN32_SIGNATURES, so an HWND argument is marshalled as a 32-bit int and "
-        "truncates on 64-bit Windows (oo-x2uy):\n  " + "\n  ".join(undeclared)
+        "truncates on 64-bit Windows:\n  " + "\n  ".join(undeclared)
     )
 
 
@@ -116,7 +116,7 @@ def test_no_call_goes_through_ctypes_windll():
                 offenders.append(f"{name}:{node.lineno}")
     assert not offenders, (
         "ctypes.windll used at " + ", ".join(sorted(set(offenders))) + "; use the tier's own "
-        "WinDLL handle so argtypes are not shared with the rest of the process (oo-x2uy)"
+        "WinDLL handle so argtypes are not shared with the rest of the process"
     )
 
 

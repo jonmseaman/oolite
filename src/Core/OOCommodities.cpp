@@ -258,7 +258,7 @@ oo::PList OOCommodities::modifyGood(const oo::PList& good, ::OOScript* script,
   ooscript::Value rval;
   // The JS boundary takes and gives property-list objects: the info crosses as
   // one, and an accepted result comes back through oo::PListFrom (an exact
-  // round trip, Amendment 2 item 11).
+  // round trip).
   ooscript::Value args[] = {
       OOJSValueFromPList(context, good),
       station != nullptr

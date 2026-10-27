@@ -144,6 +144,15 @@ subdir('src')
 # every test-flavour suite and broke the shipped game. The core suite joins it once its test files
 # build under NDEBUG (78 executables still guard their gDebugFlags
 # definition on !NDEBUG, which upstream #756 moved to OO_DEBUG_MONITOR_ENABLED, and the like).
+if host_machine.system() == 'windows'
+    # Tests load the toolchain's libstdc++/libwinpthread, which must win over older copies earlier
+    # on PATH (Git for Windows ships mingw64 ones; a missing symbol surfaces as exit 0xc0000139).
+    toolchain_bin = import('fs').parent(find_program(meson.get_compiler('cpp').cmd_array()[0]).full_path())
+    test_env = environment()
+    test_env.prepend('PATH', toolchain_bin)
+    add_test_setup('default', env: test_env, is_default: true)
+endif
+
 if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows'
     # Unit tests that need no game build (meson test --suite oofnd).
     subdir('tests/unit/oofnd')

@@ -3,8 +3,8 @@
 # Proving entity lifetime needs a per-ship identity handle so the assertion can name the ship
 # this scenario spawned rather than a role the populator also writes to - that capability is
 # deferred. It also does not prove the pirate is killed: whether the
-# eight police engage at all depends on a spawn-time bounty draw (docs/stories/S8-measurements.md
-# via tools/oo-qwk5-probe.py), so asserting the pirate is destroyed is a coin flip and is not
+# eight police engage at all depends on a spawn-time bounty draw
+# (measured with a probe script), so asserting the pirate is destroyed is a coin flip and is not
 # asserted here. This scenario proves only that the setup (1 pirate + 8 police)
 # runs and completes the stated tick budget without an ERROR in Latest.log, and that a role that
 # is never the target of anything in this scenario - the police - still exists afterwards.

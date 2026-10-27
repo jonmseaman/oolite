@@ -975,7 +975,7 @@ def test_the_rows_are_derived_from_the_game_source_and_not_written_down():
         value, _index, _count = assigned[constant]
         assert isinstance(value, ast.Call) and isinstance(value.func, ast.Name), (
             f"{constant} is no longer the result of a call; a hardcoded row is exactly what this "
-            "bead forbids, because a renumbered menu would then confirm the wrong row silently"
+            "test forbids, because a renumbered menu would then confirm the wrong row silently"
         )
         assert value.func.id == function, (
             f"{constant} is derived by {value.func.id}(), not {function}()"

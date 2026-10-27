@@ -144,7 +144,7 @@ OO_TEST(verifyOXPGraphvizTemplates) {
               std::string("\tst0x12345678 -> st0x12345678\n"));
 }
 
-OO_TEST(missingArgumentsPrintAsNil_ADR0043) {
+OO_TEST(missingArgumentsPrintAsNil) {
   // GNUstep reads past the argument list here (undefined); oofnd prints nil /
   // zero.
   OO_CHECK_EQ(formatRuntime("[%@][%d][%s][%p]"),

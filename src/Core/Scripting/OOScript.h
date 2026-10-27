@@ -84,7 +84,7 @@ class OOScript : public oo::PListForeign, public ::OOJSPrivateObject {
   static oo::Ref<OOScript> jsAIScriptFromFileNamed(const std::string& fileName,
                                                    const oo::PList& properties);
 
-  // The subclass responsibilities (Amendment 1 item 2). The root's own answer
+  // The subclass responsibilities. The root's own answer
   // none, logging an error.
   virtual std::optional<std::string> descriptionComponents();
   virtual std::optional<std::string> name();               // nullopt: none

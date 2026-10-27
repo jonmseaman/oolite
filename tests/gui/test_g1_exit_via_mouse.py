@@ -444,7 +444,7 @@ def test_an_unusable_desktop_is_reported_distinguishably_from_a_broken_g1():
 
     message = str(caught.value)
     assert not isinstance(caught.value, pytest.skip.Exception), (
-        "an unusable desktop must not SKIP; that is the silent pass oo-7by1 removed"
+        "an unusable desktop must not SKIP; that is the silent pass a skip would be"
     )
     assert DESKTOP_UNUSABLE_MARKER in message, (
         "the failure must carry the precondition marker so it is machine-distinguishable from a "

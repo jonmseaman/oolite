@@ -261,7 +261,7 @@ def test_atexit_restore_is_idempotent_after_a_normal_restore(tmp_path):
         "the late atexit hook CLOBBERED a concurrent sibling's freshly-parked DLL. Once our own "
         "teardown has restored, the hook must be DISARMED - being conditional on 'parked exists "
         "and live free' is no protection, because a legitimate park reproduces that state "
-        "exactly (oo-992b)"
+        "exactly"
     )
     assert not (app / dll).is_file(), (
         "the late hook renamed the sibling's parked DLL back to its live name mid-run, silently "
@@ -333,7 +333,7 @@ def test_a_normal_restore_unregisters_its_atexit_hooks(tmp_path):
         window._restore_software_gl()
         assert atexit._ncallbacks() == before, (
             "a normal restore must leave NO atexit hooks of its own behind; they accumulated "
-            "one per park across the whole session (oo-992b)"
+            "one per park across the whole session"
         )
     finally:
         conftest.atexit.unregister = real
@@ -399,7 +399,7 @@ def test_the_guard_appends_a_durable_breadcrumb_naming_the_path_and_mtime(tmp_pa
 
     assert crumb.is_file(), (
         "the guard healed the build and failed, so the incident is now UNREPRODUCIBLE; without "
-        "a durable breadcrumb a CI retry erases it entirely (oo-992b)"
+        "a durable breadcrumb a CI retry erases it entirely"
     )
     text = crumb.read_text(encoding="utf-8")
     assert stranded in text, "the breadcrumb must name the stranded DLL"

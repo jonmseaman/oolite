@@ -33,7 +33,7 @@ unmodified, not a reimplementation and not a private copy of its body. The child
 it launched to a file, fails while the game is up, and the parent then asserts that pid is gone
 from the operating system's process table.
 
-The child file is named ``_njnw_child_*.py`` rather than ``test_*.py`` so that a normal tier run
+The child file is named ``_orphan_child_*.py`` rather than ``test_*.py`` so that a normal tier run
 never collects it, the tier-wide AST meta-guard in test_g9_post_exit_hygiene.py (which walks
 ``os.listdir`` for ``test_*.py``) never sees it, and it is removed in a ``finally`` either way.
 
@@ -71,7 +71,7 @@ ORPHAN_GRACE_SECONDS = 15.0
 # The child gets the tier's own readiness budget plus room for the launch itself. A real launch is
 # ~11-25s on this machine; a child that came back in under a second did not run a game at all,
 # which is asserted below rather than assumed.
-CHILD_TIMEOUT_SECONDS = float(os.environ.get("OO_NJNW_CHILD_TIMEOUT", "300"))
+CHILD_TIMEOUT_SECONDS = float(os.environ.get("OO_ORPHAN_CHILD_TIMEOUT", "300"))
 
 # A child run that finishes faster than this cannot have launched, pinned and settled a real
 # window (the fixture alone sleeps SETTLE_SECONDS after a startup gate that waits for
@@ -79,10 +79,10 @@ CHILD_TIMEOUT_SECONDS = float(os.environ.get("OO_NJNW_CHILD_TIMEOUT", "300"))
 # its own preamble in 0.4s while claiming to have exercised the teardown.
 MINIMUM_REAL_LAUNCH_SECONDS = 5.0
 
-INJECTED_MESSAGE = "oo-njnw: deliberate mid-run failure with the game UP"
+INJECTED_MESSAGE = "deliberate mid-run failure with the game UP"
 
 CHILD_SOURCE = '''\
-"""GENERATED, TRANSIENT (bead oo-njnw). Fails MID-RUN with the game up, on purpose.
+"""GENERATED, TRANSIENT. Fails MID-RUN with the game up, on purpose.
 
 Written into the GUI tier directory by test_g10_mid_run_failure_leaves_no_orphan.py so that the
 ``conftest.py`` it binds is this tier's real one - the point is to exercise the SHARED ``game``
@@ -94,9 +94,9 @@ it in a finally.
 import os
 
 
-def test_njnw_child_fails_while_the_game_is_up(game):
+def test_orphan_child_fails_while_the_game_is_up(game):
     pid = game.proc.pid
-    with open(os.environ["OO_NJNW_PIDFILE"], "w", encoding="utf-8") as handle:
+    with open(os.environ["OO_ORPHAN_PIDFILE"], "w", encoding="utf-8") as handle:
         handle.write(str(pid))
     assert game.proc.poll() is None, "the game must still be up at the injection point"
     assert False, {message!r}
@@ -132,14 +132,14 @@ def _run_child(pidfile, child_lock_dir):
     with no stale lock anywhere in the picture. The private directory is therefore load-bearing
     on its own merits and is kept.
     """
-    child = os.path.join(HERE, "_njnw_child_%d.py" % os.getpid())
+    child = os.path.join(HERE, "_orphan_child_%d.py" % os.getpid())
     with open(child, "w", encoding="utf-8") as handle:
         handle.write(CHILD_SOURCE.format(message=INJECTED_MESSAGE))
-    env = dict(os.environ, OO_NJNW_PIDFILE=pidfile)
+    env = dict(os.environ, OO_ORPHAN_PIDFILE=pidfile)
     env["OO_GUI_LOCK_DIR"] = child_lock_dir
     # Its own owner identity too, so nothing it does can be mistaken for this process's, and a
     # release it makes can only ever apply to its own private directory.
-    env["OO_GUI_LOCK_OWNER"] = "njnw-child:py%d" % os.getpid()
+    env["OO_GUI_LOCK_OWNER"] = "orphan-child:py%d" % os.getpid()
     # A short acquisition budget: the child's lock is private and uncontended, so if it ever
     # blocks here something is wrong with the arrangement above and it must say so quickly
     # rather than burning the whole timeout.
@@ -151,12 +151,12 @@ def _run_child(pidfile, child_lock_dir):
                 sys.executable,
                 "-m",
                 "pytest",
-                os.path.basename(child) + "::test_njnw_child_fails_while_the_game_is_up",
+                os.path.basename(child) + "::test_orphan_child_fails_while_the_game_is_up",
                 "-q",
                 "-p",
                 "no:cacheprovider",
                 "-o",
-                "python_files=_njnw_child_*.py",
+                "python_files=_orphan_child_*.py",
                 "--oolite-app",
                 _app_dir_argument(),
             ],
@@ -243,7 +243,7 @@ def test_a_mid_run_failure_leaves_no_orphaned_game(desktop_lock, tmp_path):
         + f" still alive {ORPHAN_GRACE_SECONDS}s after the shared ``game`` fixture's teardown "
         "returned. A leaked window is parked by _pin_window at exactly (0,0) at the same client "
         "size, so it covers the NEXT test's click point pixel for pixel and silently eats its "
-        "clicks - the root cause of bug oo-0p8f, and five agents share this desktop (oo-njnw). "
+        "clicks and five agents share this desktop. "
         f"Child rc={returncode} in {seconds:.1f}s:\n{output}"
     )
 
@@ -255,7 +255,7 @@ def test_a_mid_run_failure_leaves_no_orphaned_game(desktop_lock, tmp_path):
     # and that the child really did take a real launch's worth of time. A pin whose green run
     # leaves no trace of the pid it observed cannot be audited (run with -s to see it).
     print(
-        f"oo-njnw: child launched oolite.exe pid {pid}, failed MID-RUN with the game up "
+        f"child launched oolite.exe pid {pid}, failed MID-RUN with the game up "
         f"({INJECTED_MESSAGE!r}), and the shared fixture's teardown left that pid DEAD "
         f"- child rc={returncode} in {seconds:.1f}s"
     )
@@ -293,7 +293,7 @@ def test_the_shared_teardown_kills_on_the_failure_path_and_not_only_on_success()
     assert "kill" in in_finally, (
         "the game fixture's teardown does not call .kill() from its ``finally`` handler. In the "
         "body after the yield it would be skipped by exactly the failed runs most likely to have "
-        "left a game on the desktop, which is the leak bead oo-njnw investigated (and disproved "
+        "left a game on the desktop, which is the leak this test investigated (and disproved "
         "on both fd501c4 and 602219c precisely because the call is in the finalizer)."
     )
 
@@ -343,9 +343,9 @@ def test_the_generated_child_fails_mid_run_rather_than_after_the_game_exits():
         "the child must assert the game is still UP immediately before failing, or the pin cannot "
         "claim to exercise a MID-RUN failure"
     )
-    assert "OO_NJNW_PIDFILE" in unparsed and "game.proc.pid" in unparsed, (
+    assert "OO_ORPHAN_PIDFILE" in unparsed and "game.proc.pid" in unparsed, (
         "the child must record the pid it launched, or the parent has nothing pid-scoped to "
-        "assert on and would fall back to the image-name query that misattributed this bead"
+        "assert on and would fall back to the image-name query that misattributed an earlier run"
     )
 
 

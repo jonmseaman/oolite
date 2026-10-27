@@ -1166,7 +1166,7 @@ def _check_msys_paths():
             launched = os.path.dirname(os.path.abspath(argv[0]))
             if os.path.normcase(launched) == os.path.normcase(os.path.abspath(app)):
                 failures.append("the run launched out of the SHARED build %s - per-run staging "
-                                "(bug oo-pzc1) was undone" % app)
+                                " was undone" % app)
     finally:
         subprocess.Popen = real_popen
         os.chdir(previous_cwd)

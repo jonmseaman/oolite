@@ -147,7 +147,7 @@ def test_g9_post_exit_hygiene_holds_after_a_real_exit(game):
     #    and which re-parses. Passed the fixture so the launch mark travels with it.
     assert_clean_exit(game)
 
-    # 5. THE ASSERTIONS THIS BEAD ADDS. Step 4's evidence is the :906 defaults synchronize, which
+    # 5. THE ASSERTIONS ADDED HERE. Step 4's evidence is the :906 defaults synchronize, which
     #    happens BEFORE OOLoggingTerminate/SDL_Quit/the OpenAL shutdown; the log footer is the
     #    only witness that the code after it ran. And the context must be THIS gesture's: all
     #    nine exit paths in the tree synchronize, close the log and exit 0, so without the
@@ -758,7 +758,7 @@ def test_the_fixture_itself_asserts_the_build_was_put_back():
         assert helper in in_finally, (
             f"the game fixture's teardown does not call {helper}(); without it a run that "
             "stranded a software-GL DLL in the SHARED build goes green and the breakage lands "
-            "on the component tier (oo-e75)"
+            "on the component tier"
         )
     assert "kill" in {
         sub.func.attr
@@ -797,7 +797,7 @@ def test_g9_does_not_pretend_to_run_the_game_without_a_desktop():
         )
         assert "skip" not in text, (
             "the launching test carries its own skip marker, which sits outside "
-            "OO_GUI_REQUIRE's control and can hide a run that never happened (oo-7by1). "
+            "OO_GUI_REQUIRE's control and can hide a run that never happened. "
             f"Decorator: {text}"
         )
     # No conditional-import skip anywhere in this file either (a hard dependency must
@@ -809,7 +809,7 @@ def test_g9_does_not_pretend_to_run_the_game_without_a_desktop():
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
     }
     assert "importorskip" not in calls, (
-        "no importorskip in this tier: a hard dependency must fail, not skip (oo-7by1)"
+        "no importorskip in this tier: a hard dependency must fail, not skip"
     )
 
 

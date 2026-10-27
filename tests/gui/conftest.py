@@ -1233,7 +1233,7 @@ class GameWindow:
             f"could not give the Oolite window (hwnd {self.hwnd}) the foreground within "
             f"{FOCUS_TIMEOUT_SECONDS}s; foreground is hwnd {USER32.GetForegroundWindow()}. "
             "Synthetic clicks go to whatever is focused, so this tier cannot run on a desktop "
-            "whose foreground it cannot take (a screen locked or in use - ADR-0017)."
+            "whose foreground it cannot take (a screen locked or in use)."
         )
 
     def assert_focused(self):
@@ -1840,13 +1840,13 @@ def require_gui_platform():
     if GUI_REQUIRED:
         pytest.fail(
             "OO_GUI_REQUIRE is set but this is not Windows "
-            f"(sys.platform={sys.platform!r}). The GUI tier runs natively on Windows "
-            "(ADR-0017); a run asked to exercise G1 must not pass by skipping."
+            f"(sys.platform={sys.platform!r}). The GUI tier runs natively on Windows; "
+            "a run asked to exercise G1 must not pass by skipping."
         )
     # The one legitimate skip in this tier: a platform where G1 is genuinely not applicable.
     # Deliberate and explicit - not a missing dependency in disguise.
     pytest.skip(
-        "the GUI tier runs natively on Windows (ADR-0017); "
+        "the GUI tier runs natively on Windows; "
         "set OO_GUI_REQUIRE=1 to make this a failure instead"
     )
 
@@ -2191,7 +2191,7 @@ def assert_defaults_file_reparses(app_dir, launch_mark):
     assert launch_mark is not None, (
         "assert_defaults_file_reparses needs the launch-time mark from "
         "defaults_write_mark(app_dir); without it the check degrades to 'a defaults file "
-        "exists somewhere', which a plist left by an earlier run satisfies forever (oo-5rsa)"
+        "exists somewhere', which a plist left by an earlier run satisfies forever"
     )
     candidates = defaults_path_candidates(app_dir)
     found = [p for p in candidates if os.path.isfile(p)]
@@ -2226,7 +2226,7 @@ def assert_defaults_file_reparses(app_dir, launch_mark):
         "as it was at launch, so the -synchronize in GameController.m:905-906 never landed and "
         "what is on disk is a leftover from an earlier run. app_dir is the persistent build "
         "tree, so 'a defaults file exists and parses' is true forever and proves nothing "
-        "(oo-5rsa). Unwritten:\n  " + "\n  ".join(stale)
+        ". Unwritten:\n  " + "\n  ".join(stale)
     )
 
     path = fresh[0]
@@ -2436,13 +2436,13 @@ def _clean_exit_arguments(game_or_output_dir, app_dir, defaults_launch_mark):
     assert app_dir is not None, (
         "assert_clean_exit needs the app directory as well as the output directory: the G9 "
         "defaults check reads <app_dir>/GNUstep/Defaults/oolite.plist, and a one-argument "
-        "call would skip it entirely. Call assert_clean_exit(game) (oo-5rsa)."
+        "call would skip it entirely. Call assert_clean_exit(game)."
     )
     assert defaults_launch_mark is not None, (
         "assert_clean_exit needs the launch-time defaults mark (GameWindow.start() records it "
         "as game.defaults_launch_mark). Without it the defaults check can only say 'a file "
         "exists', which a plist from an earlier run satisfies forever. Call "
-        "assert_clean_exit(game) (oo-5rsa)."
+        "assert_clean_exit(game)."
     )
     return game_or_output_dir, app_dir, defaults_launch_mark
 
@@ -2556,7 +2556,7 @@ def assert_shutdown_path_completed(game_or_output_dir, expected_context=None):
         f"way out, and {SHUTDOWN_LOG_CLOSED_WITNESS!r} in particular comes AFTER the :906 "
         "defaults synchronize that assert_clean_exit infers the shutdown from - so a process "
         "that died in OOLoggingTerminate, SDL_Quit or the OpenAL shutdown passes every other "
-        "check in this tier and is caught only here (oo-e75)."
+        "check in this tier and is caught only here."
     )
     ordered = [at[w] for w in SHUTDOWN_WITNESSES]
     assert ordered == sorted(ordered), (
@@ -2576,7 +2576,7 @@ def assert_shutdown_path_completed(game_or_output_dir, expected_context=None):
             "from nine call sites in this tree and EVERY one of them synchronizes defaults, "
             "closes the log and exits 0 - so without this assertion a test whose gesture did "
             "nothing, while the game left by some other route, is green with its central claim "
-            "false (oo-e75)."
+            "false."
         )
     return line
 
@@ -2605,7 +2605,7 @@ def assert_no_parked_runtime_files(window):
     assert isinstance(window, GameWindow), (
         "assert_no_parked_runtime_files takes the GameWindow, not a path: the check is 'did THIS "
         "run put back what it moved', and only the window knows what it moved. A directory scan "
-        "fails on a concurrent sibling run's legitimate parking (oo-e75)."
+        "fails on a concurrent sibling run's legitimate parking."
     )
     assert not window._restore_failures, (
         "software-GL DLL(s) this run parked could not be renamed back: "
@@ -2613,7 +2613,7 @@ def assert_no_parked_runtime_files(window):
         + ". _park_software_gl moved them aside inside the SHARED build "
         f"{window.app_dir} and _restore_software_gl found nothing to move back, so the "
         "component tier's offscreen rendering is broken on disk for every other agent on this "
-        "machine until someone renames them by hand (oo-e75)."
+        "machine until someone renames them by hand."
     )
     lost = sorted(path for path in window._parked_ever if not os.path.isfile(path))
     assert not lost, (
@@ -2621,7 +2621,7 @@ def assert_no_parked_runtime_files(window):
         + ", ".join(lost)
         + f". The restore reported success, so no *{GameWindow._PARKED_SUFFIX} twin is left "
         "either: the rename lost the file rather than merely leaving it aside, and there is "
-        "nothing to rename back (oo-e75)."
+        "nothing to rename back."
     )
     return list(window._parked_ever)
 
@@ -2746,7 +2746,7 @@ def assert_no_inherited_parked_runtime_files(app_dir, dlls, suffix):
             else ""
         )
         + "This failure is deliberate even though the build is now repaired: a silent fix is a "
-        "fix nobody investigates (oo-992b). "
+        "fix nobody investigates. "
         f"The repair also makes this incident non-reproducible on a re-run, so it has been "
         f"APPENDED to {os.path.join(app_dir, INHERITED_PARKED_BREADCRUMB)} - read that file "
         "rather than re-running, because a retry will find a clean baseline and pass."

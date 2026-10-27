@@ -1259,7 +1259,7 @@ def test_g6_does_not_pretend_to_run_the_game_without_a_desktop():
             f"the launching test is marked offline; it would pass with no build. {text}"
         )
         assert "skip" not in text, (
-            f"the launching test carries its own skip marker (oo-7by1). {text}"
+            f"the launching test carries its own skip marker. {text}"
         )
     calls = {
         node.func.attr
@@ -1267,5 +1267,5 @@ def test_g6_does_not_pretend_to_run_the_game_without_a_desktop():
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
     }
     assert "importorskip" not in calls, (
-        "no importorskip in this tier: a hard dependency must fail, not skip (oo-7by1)"
+        "no importorskip in this tier: a hard dependency must fail, not skip"
     )

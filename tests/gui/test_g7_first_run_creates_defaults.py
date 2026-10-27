@@ -225,7 +225,7 @@ def test_a_pristine_root_marks_the_prefs_file_as_absent_at_launch(tmp_path):
     assert prefs_file in mark, "the prefs file must be marked even when it does not exist"
     assert mark[prefs_file] is None, (
         "a path absent at launch must be marked None; its later existence is then the proof of "
-        "a write, which is stronger than any timestamp (oo-5rsa)"
+        "a write, which is stronger than any timestamp"
     )
 
     # ... and once a file is there, the mark is NOT None, so the guard above can fail.
@@ -362,7 +362,7 @@ def test_g7_asserts_on_the_prefs_file_by_name_and_only_after_a_real_launch():
         "G7 must assert the prefs file was ABSENT at launch, in two steps: that start() recorded "
         "a launch mark at all, and that the mark's entry for prefs_file is None. Found "
         f"{len(mark_asserts)} assert statement(s) referencing .defaults_launch_mark. Without both, "
-        "'it exists afterwards' is satisfied by a leftover and the test cannot fail (oo-5rsa). "
+        "'it exists afterwards' is satisfied by a leftover and the test cannot fail. "
         "Mentioning defaults_launch_mark in the docstring does NOT count."
     )
     calls = {

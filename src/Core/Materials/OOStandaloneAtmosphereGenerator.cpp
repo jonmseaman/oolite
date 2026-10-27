@@ -406,9 +406,8 @@ namespace {
 FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary,
                                const std::string& key) {
   const oo::PList* value = dictionary.find(key);
-  OOColor* color = (value != nullptr)
-                       ? OOColorInObjectNode(*value)
-                       : nullptr;  // an Object node (Amendment 2)
+  OOColor* color = (value != nullptr) ? OOColorInObjectNode(*value)
+                                      : nullptr;  // an Object node
   OOCAssert(color != nullptr, "Expected OOColor, got %s",
             (value != nullptr) ? oo::DescriptionOf(*value).c_str() : "(null)");
 
