@@ -152,7 +152,7 @@ Generated from the header's declarations. One row per façade function that repl
 | `JS_DumpNamedRoots`, `JS_DumpHeap` | `ooscript::dumpNamedRoots`, `ooscript::dumpHeap` | DEBUG engine builds / QuickJS-ng memory summary |
 | `JS_Now` | `std::chrono::steady_clock` (OOProfilingStopwatch.h) | not a façade call |
 
-## Top-20 map: engine function -> façade call (histogram over upstream/oolite/src, 2026-09-18)
+## Top-20 map: engine function -> façade call (histogram over oolite-dev/src, 2026-09-18)
 
 	  rank  sites  JS_* function                 façade
 	     1    144  JS_NewNumberValue             ooscript::newNumberValue / ooscript::numberValue
