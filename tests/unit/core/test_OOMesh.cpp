@@ -354,12 +354,11 @@ OO_TEST(graphicsResetAfterRelease) {
   OO_CHECK(true);
 }
 
-// Pins for the later slices (loading, geometry, rendering), taken before they
-// convert.
+// Pins for loading, geometry and rendering.
 OO_TEST(laterSlices) {
   SetUp();
   {
-    // Loading (slice 2): a smooth mesh caches its normals and tangents with
+    // Loading: a smooth mesh caches its normals and tangents with
     // normal mode 1.
     const oo::Ref<OOMesh> smooth = Mesh("tetra2.dat", 1.0f, YES, YES);
     OO_CHECK(smooth != nullptr);
@@ -386,7 +385,7 @@ OO_TEST(laterSlices) {
     OO_CHECK(CachedPList("tetra.dat:0:1.000", "OOMesh").find("normal data") ==
              nullptr);
 
-    // Geometry (slice 3): the bounding box relative to a position and basis.
+    // Geometry: the bounding box relative to a position and basis.
     const Vector i = make_vector(1, 0, 0), j = make_vector(0, 1, 0),
                  k = make_vector(0, 0, 1);
     const BoundingBox relative = normals->findBoundingBoxRelativeToPosition(
@@ -401,7 +400,7 @@ OO_TEST(laterSlices) {
     OO_CHECK(SameVector(flipped.max, make_vector(5, 10, 10)));
     OO_CHECK(MeshOctree(normals.get()) != nullptr);
 
-    // Rendering (slice 4): rebinding the materials keeps the placeholder.
+    // Rendering: rebinding the materials keeps the placeholder.
     normals->rebindMaterials();
     OO_CHECK(normals->hasOpaqueParts());
 #ifndef NDEBUG
@@ -427,7 +426,7 @@ OO_TEST(facadeContract) {
              cxxMesh);  // a copy is the mesh itself
 
     // Through the root's C++ pointer, the overrides answer (the bounding box is
-    // slice 3's).
+    // geometry's).
     OODrawable* drawable = cxxMesh;
     OO_CHECK(Near(drawable->collisionRadius(), 10.0));
     OO_CHECK(Near(drawable->maxDrawDistance(), cxxMesh->maxDrawDistance()));

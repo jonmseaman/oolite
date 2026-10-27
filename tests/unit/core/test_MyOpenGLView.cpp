@@ -14,7 +14,7 @@
    from a hidden OpenGL context (oo_gl_test_context.hpp). Opening the game's
    window (-createWindowWithSize:, -initSplashScreen, -endSplashScreen,
    -initialiseGLWithSize:, -updateScreen) would show a real window on the
-   desktop, which a unit test must not do (CLAUDE.md, tools/gui-lock); the
+   desktop, which a unit test must not do; the
    goldens launch the game, which runs all of them. The view's
    -dealloc quits SDL, so one view serves every test and the last one releases
    it. Further tests cover the accessors, the display-mode list and the

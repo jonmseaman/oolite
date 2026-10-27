@@ -24,7 +24,7 @@
    colour, a texture, a             PList(PList::Object)    Type::Object
                 placeholder) inside a configuration dictionary
 
-        The last two rows are the Foundation sweep's typed carrier for
+        The last two rows are the typed carrier for
    configuration dictionaries that mix property-list data with live objects. No
    parser produces either; the game side (src/Core/OOObjCPList.h) makes an
    Object from a live Objective-C object and reads it back. An Object is an

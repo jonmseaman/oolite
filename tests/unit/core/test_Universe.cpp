@@ -20,9 +20,9 @@
 
 #include "PlayerEntity.h"
 #include "Universe.h"
-#include "oofnd/objc/OOException.h"  // slice 24: -handleOoliteException:
+#include "oofnd/objc/OOException.h"  // -handleOoliteException:
 
-extern PlayerEntity* gOOPlayer;  // the slice 2-13 cases run before slice 14's
+extern PlayerEntity* gOOPlayer;  // the early cases run before the later ones
                                  // stand-in player is installed
 
 #include "oo_test.hpp"
@@ -265,9 +265,9 @@ OO_TEST(facadeAndPart) {
   }
 }
 
-// Slices 2-13: the units a universe that was never initialised can answer,
+// The units a universe that was never initialised can answer,
 // written against the Objective-C API and run on the unconverted class first.
-// Slice 3 (pausing, quitting and the set-up from a station or witchspace) needs
+// Pausing, quitting and the set-up from a station or witchspace need
 // the player, the GUI and the game controller, and is pinned by the goldens.
 
 OO_TEST(slice2StartUpFlagsAddOnsAndEntityList) {
@@ -434,7 +434,7 @@ OO_TEST(slice9BeaconsWaypointsBreakPatternAndAIs) {
                // only a release-style build can ask with none
     PlayerEntity* standIn = gOOPlayer;
     gOOPlayer = nullptr;  // no player: an earlier case leaves its stand-in
-                          // (slice 14's SetUpTestPlayer())
+                          // (SetUpTestPlayer())
     OO_CHECK(u->breakPatternHide());  // no player
     gOOPlayer = standIn;
 #endif
@@ -537,7 +537,7 @@ OO_TEST(slice13EntityLookUp) {
   }
 }
 
-// Slice 14: demo ships, safe vectors, hazards on route, laser
+// Demo ships, safe vectors, hazards on route, laser
 // hits. Written against the Objective-C API and run on the unconverted class
 // first. The entities sit in the universe's sorted list by hand (no
 // -addEntity:, which needs the whole game).
@@ -678,11 +678,11 @@ OO_TEST(slice14Hazard) {
   }
 }
 
-// Slice 15: counting and finding entities by predicate, time,
+// Counting and finding entities by predicate, time,
 // collisions, the view direction. Written against the Objective-C API and run
 // on the unconverted class first; the entities sit in the sorted list by hand,
-// as slice 14's. Counts as a ship for the ship predicates (a C++ entity whose
-// ship flag, which -isShip and the predicates read, is set).
+// as the demo-ship cases do. Counts as a ship for the ship predicates (a C++
+// entity whose ship flag, which -isShip and the predicates read, is set).
 class Slice15ShipLike : public Entity {
  public:
   Slice15ShipLike() { isShip = YES; }
@@ -804,7 +804,7 @@ OO_TEST(slice15TimeAndCollisions) {
   }
 }
 
-// Slice 16: the view direction, custom sounds, screen
+// The view direction, custom sounds, screen
 // backgrounds, messages. Written against the Objective-C API and run on the
 // unconverted class first. A headless universe has no GUIs and no player (the
 // messages that reach the player's script events are left to the goldens), so
@@ -903,7 +903,7 @@ OO_TEST(slice16SoundsAndBackgrounds) {
   }
 }
 
-// Slice 17: update:, time acceleration, ECM visual effects.
+// Update:, time acceleration, ECM visual effects.
 // Written against the Objective-C API and run on the unconverted class first. A
 // full update needs the whole game (the player, the JavaScript engine); a
 // universe whose updates are off only lets go of the dead.
@@ -956,7 +956,7 @@ OO_TEST(slice17Settings) {
   }
 }
 
-// Slice 18: filterSortedLists, which marks the entities that
+// FilterSortedLists, which marks the entities that
 // cannot meet another on the z axis and chains the rest for the collision test.
 // Written against the Objective-C API and run on the unconverted class first.
 // The x, y and z lists are linked by hand in one order.
@@ -1009,7 +1009,7 @@ OO_TEST(slice18FilterSortedLists) {
   }
 }
 
-// Slice 19: galaxy and system changes, descriptions, scenarios,
+// Galaxy and system changes, descriptions, scenarios,
 // characters, mission text, system data and names, finding systems. Written
 // against the Objective-C API and run on the unconverted class first. A
 // headless universe has no system manager, so the state these answer is set in
@@ -1076,7 +1076,7 @@ OO_TEST(slice19DataAndNames) {
   }
 }
 
-// Slice 20: neighbouring systems, system-name look-up, routes,
+// Neighbouring systems, system-name look-up, routes,
 // planet textures, global and equipment data, the commodity market, time
 // descriptions. Written against the Objective-C API and run on the unconverted
 // class first; with no system manager, what needs the galaxy's data is left to
@@ -1127,7 +1127,7 @@ OO_TEST(slice20DataAndTime) {
   }
 }
 
-// Slice 21: short time descriptions, sun skimmers, station
+// Short time descriptions, sun skimmers, station
 // markets. Written against the Objective-C API and run on the unconverted class
 // first; the words come from descriptions set in the member by hand (no plural
 // rules: "%0" is the singular, "%1" the plural).
@@ -1161,7 +1161,7 @@ OO_TEST(slice21ShortTimeAndMarkets) {
   }
 }
 
-// Slice 23: witchspace exit and sun-skim positions, beacons by
+// Witchspace exit and sun-skim positions, beacons by
 // code, script events to all ships, the GUIs and display flags. Written against
 // the Objective-C API and run on the unconverted class first; trade-in values
 // and brochures need the ship registry (the goldens).
@@ -1209,7 +1209,7 @@ OO_TEST(slice23GUIsAndFlags) {
   }
 }
 
-// Slice 24: autosave, wireframe and detail levels, shaders,
+// Autosave, wireframe and detail levels, shaders,
 // exceptions, speech (eSpeak and none), message logs, settings, session IDs.
 // Written against the Objective-C API and run on the unconverted class first.
 // The setters that write the user's preferences
@@ -1284,7 +1284,7 @@ OO_TEST(slice24Voices) {
 }
 #endif
 
-// Slice 25: reinitialising and the demo, the initial universe,
+// Reinitialising and the demo, the initial universe,
 // random positions, removing entities, preloading sounds, wormhole population,
 // graph dumps. Written against the Objective-C API and run on the unconverted
 // class first; the selectors only the private category declared are declared
@@ -1361,7 +1361,7 @@ OO_TEST(slice25DoRemoveEntity) {
   }
 }
 
-// Slice 26: graph-viz references, localisation tools,
+// Graph-viz references, localisation tools,
 // planet-material pruning, condition scripts, the custom-sound categories of
 // OOSound and OOSoundSource, description look-ups. Written against the
 // Objective-C API and run on the unconverted class first. Loading a condition

@@ -196,7 +196,7 @@ std::string Titles(const oo::PList& list) {
   return result;
 }
 
-// The manager's private API (the units of slice 1 the facade did not declare):
+// The manager's private API (the units the facade did not declare):
 // its C++ members.
 OOOXZManager* Manager() { return OOOXZManager::sharedManager(); }
 std::optional<std::string> ManifestPath() { return Manager()->manifestPath(); }
@@ -386,7 +386,7 @@ OO_TEST(managedOXZs) {
     OO_CHECK_TEXT(Titles(OOOXZManager::sharedManager()->managedOXZs()),
                   "Local 3, Alpha 1.0");
 
-    // The installable states (slice 2) decide these, from the managed OXZs.
+    // The installable states decide these, from the managed OXZs.
     OO_CHECK_TEXT(Filtered("u"), "Alpha 2.0, Alpha 1.5");
     OO_CHECK_TEXT(Filtered("i"), "Mission 0.1, Alpha 2.0, Alpha 1.5, Zeta 1.0");
     Manager()->setFilter("*");
@@ -554,7 +554,7 @@ std::string ColorName(OOColor* c) {
   return "other";
 }
 
-// The slice 2 units: their C++ members.
+// The installable-state units: their C++ members.
 oo::PList InstalledManifest(const std::string& identifier) {
   return Manager()->installedManifestForIdentifier(identifier);
 }
@@ -1040,7 +1040,7 @@ OO_TEST(guiPages) {
                   "range 25+4\n"
                   "select 25\n");
 
-    // The list pages (slice 4's options), with the filter line through the
+    // The list pages (the options), with the filter line through the
     // string expander.
     m->_changesMade = false;
     m->_downloadStatus = OXZ_DOWNLOAD_NONE;

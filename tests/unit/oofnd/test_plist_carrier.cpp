@@ -1,5 +1,5 @@
 /*	test_plist_carrier.cpp
-        oo::PList as the Foundation sweep's carrier for mixed configuration
+        oo::PList as the carrier for mixed configuration
    dictionaries: Type::Object (a foreign object,
    by identity) and single-precision reals
         (+numberWithFloat:).

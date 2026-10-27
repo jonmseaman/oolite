@@ -10,7 +10,7 @@
    and ShipEntity's own set-up from the definition; only the virtual dock it
    makes when it has no docks is a stand-in (TestStation records the dock's
    definition instead of asking the
-   universe for the shipdata entry). The cases test the slice's own units,
+   universe for the shipdata entry). The cases test the station's own units,
    written against the Objective-C API and run on the unconverted class first;
    the cases after "The crossing" pin the C++ part. Run: bash
    tools/check-core-tests.sh test_StationEntity
@@ -140,7 +140,7 @@ bool Near(HPVector a, HPVector b) {
 
 }  // namespace
 
-// --- Slice 1: the class shell
+// --- The class shell
 // ------------------------------------------------------
 
 // The initialiser and the set-up from the definition: every key the station
@@ -511,9 +511,9 @@ OO_TEST(objCStationPartIsAStation) {
   }
 }
 
-// --- Slice 2: docking traffic control and the launch queue
+// --- Docking traffic control and the launch queue
 // -------------------------- Written against the Objective-C API and run on the
-// unconverted slice first. The test's stations have no docks (the virtual dock
+// unconverted class first. The test's stations have no docks (the virtual dock
 // is a stand-in), so the cases pin what the station does itself.
 
 // A ship visiting the station: its own set-up, and invisible to scripts.
@@ -682,9 +682,9 @@ OO_TEST(slice2MembersFromCxx) {
   }
 }
 
-// --- Slice 3: docking clearance, damage, allegiance and alert level
+// --- Docking clearance, damage, allegiance and alert level
 // --------------- Written against the Objective-C API and run on the
-// unconverted slice first.
+// unconverted class first.
 
 namespace {
 
@@ -827,9 +827,9 @@ OO_TEST(slice3MembersFromCxx) {
   }
 }
 
-// --- Slice 4: NPC launchers
+// --- NPC launchers
 // ------------------------------------------------------- Written against the
-// Objective-C API and run on the unconverted slice first. The test's station
+// Objective-C API and run on the unconverted class first. The test's station
 // has no docks (its virtual dock is only recorded), so every launcher takes its
 // "no launch docks" path: nothing is made, queued or counted, and the station's
 // universe is never asked for a ship.

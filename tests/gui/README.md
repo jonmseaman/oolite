@@ -22,7 +22,7 @@ so a run that was *supposed* to exercise G1 cannot come back green from the wron
 It needs a **real desktop**: logged in, unlocked, and not doing anything else, because the tier
 takes the desktop exclusively while it runs.
 That exclusion is `tools/gui-lock`, taken by the session-scoped `desktop_lock` fixture. It runs
-in Tier C and nightly, **never per change**. An RDP disconnect takes the desktop with it.
+in the full gate and nightly, **never per change**. An RDP disconnect takes the desktop with it.
 
 ### The lock is not this tier's private business
 

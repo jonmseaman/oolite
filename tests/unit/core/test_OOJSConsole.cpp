@@ -318,7 +318,7 @@ Entity* oo::WithObject(Entity* entity) {
 // MARK: Debug-flavour link stand-ins
 // ------------------------------------------------- OOJSConsole.mm's callObjC()
 // (#if OO_DEBUG) and its diagnostic dumps (#if DEBUG) compile only in the debug
-// flavour, which builds this test for Tier C's ASan stage. No case reaches
+// flavour, which builds this test for the ASan stage. No case reaches
 // them; a call is a test bug.
 
 #if OO_DEBUG

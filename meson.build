@@ -9,7 +9,7 @@ project(
         check: true,
     ).stdout().strip(),
     default_options: [
-        # PINNED -O FOR GOLDEN BUILDS (decision 11, see tests/golden/GOLDEN_STORAGE.md).
+        # PINNED -O FOR GOLDEN BUILDS (see tests/golden/GOLDEN_STORAGE.md).
         # A golden blessed at one optimisation level is not comparable to a run at another:
         # -O changes vectorisation width, reassociation opportunities and inlining, all of
         # which move the low-order bits of float results. This is the level the stored
@@ -53,7 +53,7 @@ if is_debug
     )
 endif
 
-# FLOATING-POINT CONTRACTION IS OFF FOR EVERY BUILD (decision 11).
+# FLOATING-POINT CONTRACTION IS OFF FOR EVERY BUILD.
 #
 # clang's default is -ffp-contract=on, which lets it fuse `a*b + c` into a single FMA
 # instruction. FMA rounds ONCE instead of twice, so the fused and unfused forms give

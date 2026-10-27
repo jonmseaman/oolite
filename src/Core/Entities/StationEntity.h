@@ -77,7 +77,7 @@ class StationEntity : public ShipEntity {
   // station's part, as the subclass's -dealloc ran before its superclass's.
   void willDealloc();
 
-  // Slice 1: class shell, market and shipyard, flags and accessors.
+  // Class shell, market and shipyard, flags and accessors.
   bool isUnpiloted() override;
   void getJSClass(ooscript::ClassDef** outClass,
                   ooscript::Object* outPrototype) override;
@@ -143,7 +143,7 @@ class StationEntity : public ShipEntity {
   // The category StationEntity (OOAIPrivate).
   void acceptDistressMessageFrom(::ShipEntity* other) override;
 
-  // Slice 2: docking traffic control and the launch queue.
+  // Docking traffic control and the launch queue.
   void sanityCheckShipsOnApproach();
   void launchShip(::ShipEntity* ship);
   void abortAllDockings();
@@ -171,7 +171,7 @@ class StationEntity : public ShipEntity {
   void noteDockedShip(::ShipEntity* ship);
   void addShipToStationCount(::ShipEntity* ship);
 
-  // Slice 3: docking clearance, damage, allegiance and alert level.
+  // Docking clearance, damage, allegiance and alert level.
   bool collideWithShip(::ShipEntity* other) override;
   bool hasHostileTarget() override;
   void takeEnergyDamage(double amount, Entity* ent, Entity* other,
@@ -194,7 +194,7 @@ class StationEntity : public ShipEntity {
   unsigned currentlyInDockingQueues();
   unsigned currentlyInLaunchingQueues();
 
-  // Slice 4: NPC launchers. Not overrides: ShipEntity's same-named members are
+  // NPC launchers. Not overrides: ShipEntity's same-named members are
   // not virtual (the ship's answer "not a station"); the root's facade asks a
   // station's part first.
   oo::PList launchIndependentShip(

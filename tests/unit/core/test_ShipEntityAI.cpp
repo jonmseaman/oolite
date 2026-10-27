@@ -7,7 +7,7 @@
    initialised (no entities, so every scan finds nothing), a plain entity as
    PLAYER and an empty JavaScript context. Its ships have no AI and are
         invisible to scripts, so the AI messages and script events the methods
-   send go nowhere. Each slice adds its cases under a comment naming it, written
+   send go nowhere. Each group of cases sits under a comment naming it, written
    against the Objective-C API and run on the unconverted class first. Ivars go
    through the helpers below. Run: bash tools/check-core-tests.sh
    test_ShipEntityAI
@@ -141,7 +141,7 @@ BOOL AlwaysYes(Entity*, void*) { return YES; }
 
 }  // namespace
 
-// --- Slice 1: the AI category, OOAIPrivate (ship and station), the station
+// --- The AI category, OOAIPrivate (ship and station), the station
 // stubs ---
 
 // The perform* behaviours: each sets its behaviour and resets the frustration.
@@ -430,7 +430,7 @@ OO_TEST(slice1MembersFromCxx) {
   }
 }
 
-// --- Slice 2: PureAI part 1: state, speed, scans for prey and loot, planets,
+// --- PureAI part 1: state, speed, scans for prey and loot, planets,
 // legal status
 // ------------------------------------------------------------------------------------
 
@@ -604,7 +604,7 @@ OO_TEST(slice2MembersFromCxx) {
   }
 }
 
-// --- Slice 3: PureAI part 2: checks, comms, Thargoids, escorts, patrols,
+// --- PureAI part 2: checks, comms, Thargoids, escorts, patrols,
 // target marking
 // ------------------------------------------------------------------------------------
 
@@ -769,7 +769,7 @@ OO_TEST(slice3MembersFromCxx) {
   }
 }
 
-// --- Slice 4: PureAI part 3: stored targets, nearest-ship scans, stations,
+// --- PureAI part 3: stored targets, nearest-ship scans, stations,
 // script actions, beacons
 // ------------------------------------------------------------------------------
 

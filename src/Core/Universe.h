@@ -232,7 +232,7 @@ class Universe : public oo::RefCounted {
   */
   static Universe* newUniverse(::MyOpenGLView* inGameView);
 
-  // -initWithGameView:'s set-up, after [super init] (slice 1).
+  // -initWithGameView:'s set-up, after [super init].
   void initWithGameView(::MyOpenGLView* inGameView);
   // -dealloc's body, run by the destructor (it was the facade's -dealloc before
   // it released this part).
@@ -244,7 +244,7 @@ class Universe : public oo::RefCounted {
   // below.
   OO_UNIVERSE_VIRTUAL_MEMBERS(;, ;)
 
-  // Slice 2: post-processing FX and colour-blind modes, the target framebuffer,
+  // Post-processing FX and colour-blind modes, the target framebuffer,
   // start-up flags, add-ons, the entity list.
   bool bloom();
   void setBloom(bool newBloom);
@@ -384,7 +384,7 @@ class Universe : public oo::RefCounted {
                             // initialisation (an array)
   oo::PList equipmentDataOutfitting;
   //	std::set<std::string>	pirateVictimRoles;		// Roles listed
-  //in pirateVictimRoles.plist.
+  // in pirateVictimRoles.plist.
   oo::PList roleCategories;  // Categories for roles from role-categories.plist,
                              // extending the old pirate-victim-roles.plist
                              // (category -> array of roles)
@@ -499,7 +499,7 @@ class Universe : public oo::RefCounted {
   int _currentPostFX = 0;
   int _colorblindMode = 0;
 
-  // Slice 3: pause and quit, carrying the player on, set-up from station /
+  // Pause and quit, carrying the player on, set-up from station /
   // witchspace / misjump, witchspace and planet set-up.
   void pauseGame();
   void quitGame();
@@ -511,7 +511,7 @@ class Universe : public oo::RefCounted {
   void setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2);
   ::OOPlanetEntity* setUpPlanet();
 
-  // Slice 4: setUpSpace, populating normal space, the system populator.
+  // SetUpSpace, populating normal space, the system populator.
   void setUpSpace();
   void populateNormalSpace();
   void clearSystemPopulator();
@@ -522,7 +522,7 @@ class Universe : public oo::RefCounted {
   void populateSystemFromDictionariesWithSun(::OOSunEntity* sun,
                                              ::OOPlanetEntity* planet);
 
-  // Slice 5: locations by code, lighting, adding ships by role, coordinate
+  // Locations by code, lighting, adding ships by role, coordinate
   // systems. locationByCode(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h) setAmbientLightLevel(): virtual, in
   // OO_UNIVERSE_VIRTUAL_MEMBERS (UniverseVirtualMembers.h)
@@ -541,7 +541,7 @@ class Universe : public oo::RefCounted {
   std::optional<std::string> expressPosition(HPVector pos,
                                              const std::string& system);
 
-  // Slice 6: legacy positions, adding ships at / near positions and in boxes,
+  // Legacy positions, adding ships at / near positions and in boxes,
   // spawning, visual effects.
   HPVector legacyPositionFrom(HPVector pos, const std::string& system);
   HPVector coordinatesFromCoordinateSystemString(
@@ -563,7 +563,7 @@ class Universe : public oo::RefCounted {
   // addVisualEffectAt(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)	// the effect's object
 
-  // Slice 7: adding ships within a radius and on routes, role categories,
+  // Adding ships within a radius and on routes, role categories,
   // witchspace entries and effects, break patterns, the docking clearance
   // protocol, game over.
   ::ShipEntity* addShipAt(HPVector pos, const std::string& role,
@@ -584,7 +584,7 @@ class Universe : public oo::RefCounted {
   void setDockingClearanceProtocolActive(bool newValue);
   void handleGameOver();
 
-  // Slice 8: the intro and demo ships, the ship library text, station and
+  // The intro and demo ships, the ship library text, station and
   // planet look-ups.
   void setupIntroFirstGo(bool justCobra);
   oo::PList demoShipData();
@@ -604,7 +604,7 @@ class Universe : public oo::RefCounted {
   // Objective-C objects stations(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
 
-  // Slice 9: wormholes, the main station, beacons, waypoints, sky colour, the
+  // Wormholes, the main station, beacons, waypoints, sky colour, the
   // break pattern, making ships by role and name, default AIs, cargo capacity.
   // wormholes(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h) unMagicMainStation(): virtual, in
@@ -646,7 +646,7 @@ class Universe : public oo::RefCounted {
   std::optional<std::string> defaultAIForRole(const std::string& role);
   OOCargoQuantity maxCargoForShip(const std::string& desc);
 
-  // Slice 10: equipment prices, commodities and cargo pods, the game view and
+  // Equipment prices, commodities and cargo pods, the game view and
   // controller, settings, entity lighting, the active view matrix.
   OOCreditsQuantity getEquipmentPriceForKey(const std::string& eq_key);
   ::OOCommodities* getCommodities();
@@ -675,11 +675,11 @@ class Universe : public oo::RefCounted {
                            Vector* outUp);
   OOMatrix activeViewMatrix();
 
-  // Slice 11: the view frustum.
+  // The view frustum.
   void defineFrustum();
   bool viewFrustumIntersectsSphereAt(Vector position, GLfloat radius);
 
-  // Slice 12: drawUniverse, framebuffer preparation, frame counters, the view
+  // DrawUniverse, framebuffer preparation, frame counters, the view
   // matrix.
   void drawUniverse();
   void prepareToRenderIntoDefaultFramebuffer();
@@ -687,7 +687,7 @@ class Universe : public oo::RefCounted {
   void resetFramesDoneThisUpdate();
   OOMatrix getViewMatrix();
 
-  // Slice 13: messages and the watermark, entity look-up, the linked lists,
+  // Messages and the watermark, entity look-up, the linked lists,
   // adding and removing entities, demo ships.
   void drawMessage();
   void drawWatermarkString(const std::string& watermarkString);
@@ -699,7 +699,7 @@ class Universe : public oo::RefCounted {
   void removeAllEntitiesExceptPlayer();
   void removeDemoShips();
 
-  // Slice 14: making demo ships, safe vectors, hazards on route, wreckage,
+  // Making demo ships, safe vectors, hazards on route, wreckage,
   // laser hits.
   ::ShipEntity* makeDemoShipWithRole(const std::string& role, bool spinning);
   bool isVectorClearFromEntity(Entity* e1, double dist, HPVector p2);
@@ -715,7 +715,7 @@ class Universe : public oo::RefCounted {
                                             OOWeaponFacing direction,
                                             Vector offset, GLfloat* range_ptr);
 
-  // Slice 15: player targeting, entities in range, counting and finding ships
+  // Player targeting, entities in range, counting and finding ships
   // by role and predicate, time, collisions, view direction.
   Entity* firstEntityTargetedByPlayer();
   Entity* firstEntityTargetedByPlayerPrecisely();
@@ -752,7 +752,7 @@ class Universe : public oo::RefCounted {
   // getViewDirection(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
 
-  // Slice 16: setting the view direction, GUI view mode, custom sounds, screen
+  // Setting the view direction, GUI view mode, custom sounds, screen
   // textures, messages and comms, delayed messages, repopulating.
   void setViewDirection(OOViewID vd);
   void enterGUIViewModeWithMouseInteraction(bool mouseInteraction);
@@ -785,18 +785,18 @@ class Universe : public oo::RefCounted {
                       ::OOColor* selectedColor, OOTimeDelta how_long);
   void repopulateSystem();
 
-  // Slice 17: update:, time acceleration, ECM visual effects.
+  // Update:, time acceleration, ECM visual effects.
   void update(OOTimeDelta inDeltaT);
   bool getECMVisualFXEnabled();
   void setECMVisualFXEnabled(bool isEnabled);
   double getTimeAccelerationFactor();
   void setTimeAccelerationFactor(double newTimeAccelerationFactor);
 
-  // Slice 18: filterSortedLists, setGalaxyTo:.
+  // FilterSortedLists, setGalaxyTo:.
   void filterSortedLists();
   void setGalaxyTo(OOGalaxyID g);
 
-  // Slice 19: galaxy and system changes, descriptions, scenarios, characters,
+  // Galaxy and system changes, descriptions, scenarios, characters,
   // mission text, system data and names, finding systems.
   void setGalaxyTo(OOGalaxyID g, bool forced);
   void setSystemTo(OOSystemID s);
@@ -847,7 +847,7 @@ class Universe : public oo::RefCounted {
   // (UniverseVirtualMembers.h)
   OOSystemID findSystemAtCoords(NSPoint coords, OOGalaxyID g);
 
-  // Slice 20: neighbouring systems, system-name look-up, routes (with
+  // Neighbouring systems, system-name look-up, routes (with
   // RouteElement), planet textures, global and equipment data, the commodity
   // market, time descriptions.
   oo::PList nearbyDestinationsWithinRange(double range);
@@ -870,18 +870,18 @@ class Universe : public oo::RefCounted {
   ::OOCommodityMarket* getCommodityMarket();
   std::optional<std::string> timeDescription(double interval);
 
-  // Slice 21: short time descriptions, sun skimmers, station markets.
+  // Short time descriptions, sun skimmers, station markets.
   std::optional<std::string> shortTimeDescription(double interval);
   void makeSunSkimmer(::ShipEntity* ship, bool setAI);
   Random_Seed marketSeed();
   void loadStationMarkets(const oo::PList& marketData);
   oo::PList getStationMarkets();
 
-  // Slice 22: ships for sale (cxx_shipsForSaleForSystem:withTL:atTime:).
+  // Ships for sale (cxx_shipsForSaleForSystem:withTL:atTime:).
   oo::PList shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
                                   OOTimeAbsolute current_time);
 
-  // Slice 23: trade-in value, brochure descriptions, witchspace exit and
+  // Trade-in value, brochure descriptions, witchspace exit and
   // sun-skim positions, beacons by code, script events to all ships, the GUIs,
   // FPS and autosave. tradeInValueForCommanderDictionary(): virtual, in
   // OO_UNIVERSE_VIRTUAL_MEMBERS (UniverseVirtualMembers.h)
@@ -911,7 +911,7 @@ class Universe : public oo::RefCounted {
   bool getAutoSave();
   void setAutoSaveNow(bool value);
 
-  // Slice 24: autosave, wireframe and detail levels, shaders, exceptions, air
+  // Autosave, wireframe and detail levels, shaders, exceptions, air
   // resistance, speech (eSpeak and none), message logs, settings, cargo pods,
   // session IDs.
   bool getAutoSaveNow();
@@ -953,7 +953,7 @@ class Universe : public oo::RefCounted {
   unsigned int setVoice(unsigned int index, bool isMale);
 #endif
 
-  // Slice 25: reinitialising and the demo, the initial universe, random
+  // Reinitialising and the demo, the initial universe, random
   // positions, removing entities, preloading sounds, wormhole population, graph
   // dumps. reinitAndShowDemo(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
@@ -972,7 +972,7 @@ class Universe : public oo::RefCounted {
   void dumpSystemDescriptionGraphViz();
 #endif
 
-  // Slice 26: graph-viz references, localisation tools, planet-material
+  // Graph-viz references, localisation tools, planet-material
   // pruning, condition scripts, the custom-sound categories of OOSound and
   // OOSoundSource, description look-ups.
 #if OO_LOCALIZATION_TOOLS
@@ -1013,7 +1013,7 @@ std::string cxx_OOLookUpPluralDescriptionPRIV(const std::string& key,
                                               NSInteger count);
 
 /*	The bodies of the custom-sound categories of OOSound and OOSoundSource
-   (slice 26): the sound for a customsounds.plist key (borrowed: the resource
+   The sound for a customsounds.plist key (borrowed: the resource
    manager's cache keeps it; null for none), and playing it on a source (nothing
    for a null source, as a message to nil did).
 */
@@ -1032,7 +1032,7 @@ std::optional<std::string> cxx_OODisplayStringFromEconomyID(
     OOEconomyID economy);
 #endif
 
-/*	The look-ups behind the description and custom-sound keys (slice 26): a
+/*	The look-ups behind the description and custom-sound keys: a
    call to the universe when there is one, else what the message to nil
    answered. Inline, so a test that stands in for the universe with a class of
    its own defines only the members it answers.
