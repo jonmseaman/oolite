@@ -32,10 +32,12 @@ MA 02110-1301, USA.
 
 #include "PlayerEntity.h"
 
-/*	Beads oo-xmvt, oo-rczn (ADR-0056 amendment oo-lmdi8): the category PlayerEntity (LoadSave) is members of
-        PlayerEntity, declared in PlayerEntity.h and defined in PlayerEntityLoadSave.mm. Its Objective-C interface,
-        for the callers that remained, was the category of the same name in PlayerEntity+ObjCBridge.h (deleted by bead oo-9ht.177),
-        which PlayerEntity.h imports. This header stays for the files that import it.
+/*	Beads oo-xmvt, oo-rczn (ADR-0056 amendment oo-lmdi8): the category
+   PlayerEntity (LoadSave) is members of PlayerEntity, declared in
+   PlayerEntity.h and defined in PlayerEntityLoadSave.mm. Its Objective-C
+   interface, for the callers that remained, was the category of the same name
+   in PlayerEntity+ObjCBridge.h (deleted by bead oo-9ht.177), which
+   PlayerEntity.h imports. This header stays for the files that import it.
 */
 #include "GuiDisplayGen.h"
 #include "MyOpenGLView.h"
@@ -55,13 +57,14 @@ MA 02110-1301, USA.
 #define SAVE_OVERWRITE_YES_ROW 8
 #define SAVE_OVERWRITE_NO_ROW 9
 
-// The load / save macros (USE_CUSTOM_LOAD_SAVE_ON_MAC_DEBUG, OOLITE_USE_APPKIT_LOAD_SAVE,
-// OO_USE_APPKIT_LOAD_SAVE_ALWAYS, OO_USE_CUSTOM_LOAD_SAVE) are in PlayerEntity.h, whose member
-// declarations of this file's categories they condition (ADR-0056 amendment oo-lmdi8).
+// The load / save macros (USE_CUSTOM_LOAD_SAVE_ON_MAC_DEBUG,
+// OOLITE_USE_APPKIT_LOAD_SAVE, OO_USE_APPKIT_LOAD_SAVE_ALWAYS,
+// OO_USE_CUSTOM_LOAD_SAVE) are in PlayerEntity.h, whose member declarations of
+// this file's categories they condition (ADR-0056 amendment oo-lmdi8).
 
 OOCreditsQuantity OODeciCreditsFromDouble(double doubleDeciCredits);
 
-/*	Value is either a real or something that can be duck-typed to an integer as
-        oo::plist_get::unsignedLongLongFrom() reads it (nullptr: 0).
+/*	Value is either a real or something that can be duck-typed to an integer
+   as oo::plist_get::unsignedLongLongFrom() reads it (nullptr: 0).
 */
 OOCreditsQuantity OODeciCreditsFromPList(const oo::PList* value);

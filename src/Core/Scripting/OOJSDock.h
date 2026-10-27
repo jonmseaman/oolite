@@ -40,8 +40,10 @@ void InitOOJSDock(ooscript::Context context, ooscript::Object global);
 }
 #endif
 
-/*	The bodies of Entity (OOJavaScriptExtensions)'s class questions for a dock, which the C++
-        DockEntity's overrides call (bead oo-9ht.47; proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+/*	The bodies of Entity (OOJavaScriptExtensions)'s class questions for a
+   dock, which the C++ DockEntity's overrides call (bead oo-9ht.47; proposed
+   ADR-0056 amendments oo-ppc and oo-ykoy).
 */
-void OOJSDockGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+void OOJSDockGetJSClass(ooscript::ClassDef** outClass,
+                        ooscript::Object* outPrototype);
 std::optional<std::string> OOJSDockJSClassName(void);

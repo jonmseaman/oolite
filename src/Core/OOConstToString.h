@@ -37,11 +37,11 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 enum {
-    // Values used for unknown strings.
-    kOOCargoTypeDefault = CARGO_NOT_CARGO,
-    //	kOOCommodityTypeDefault		= COMMODITY_UNDEFINED,
-    kOOEnergyUnitTypeDefault = ENERGY_UNIT_NONE,
-    kOORouteTypeDefault = OPTIMIZED_BY_JUMPS
+  // Values used for unknown strings.
+  kOOCargoTypeDefault = CARGO_NOT_CARGO,
+  //	kOOCommodityTypeDefault		= COMMODITY_UNDEFINED,
+  kOOEnergyUnitTypeDefault = ENERGY_UNIT_NONE,
+  kOORouteTypeDefault = OPTIMIZED_BY_JUMPS
 };
 
 /*
@@ -84,8 +84,9 @@ declaration, each with its C++ (cxx_) form beside it, in particular:
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 
-// C++ forms (bead oo-nts1, chunk oo-3rb.160): std::string results (never nil) and const
-// std::string & parameters (the old nil arrived as "" and matched nothing: the same defaults).
+// C++ forms (bead oo-nts1, chunk oo-3rb.160): std::string results (never nil)
+// and const std::string & parameters (the old nil arrived as "" and matched
+// nothing: the same defaults).
 std::string cxx_JSTypeToString(int /* ooscript::Type */ type);
 std::string cxx_CargoTypeToString(OOCargoType cargo);
 OOCargoType cxx_StringToCargoType(const std::string& string);
@@ -93,7 +94,8 @@ std::string cxx_EnergyUnitTypeToString(OOEnergyUnitType unit);
 OOEnergyUnitType cxx_StringToEnergyUnitType(const std::string& string);
 std::string cxx_RouteTypeToString(OORouteType routeType);
 OORouteType cxx_StringToRouteType(const std::string& string);
-std::string cxx_DockingClearanceStatusToString(OODockingClearanceStatus dockingClearanceStatus);
+std::string cxx_DockingClearanceStatusToString(
+    OODockingClearanceStatus dockingClearanceStatus);
 std::string cxx_OOStringFromGraphicsDetail(OOGraphicsDetail detail);
 OOGraphicsDetail cxx_OOGraphicsDetailFromString(const std::string& string);
 std::string cxx_OOStringFromHDRToneMapper(OOHDRToneMapper toneMapper);
@@ -101,24 +103,32 @@ OOHDRToneMapper cxx_OOHDRToneMapperFromString(const std::string& string);
 std::string cxx_OOStringFromSDRToneMapper(OOSDRToneMapper toneMapper);
 OOSDRToneMapper cxx_OOSDRToneMapperFromString(const std::string& string);
 
-// The .tbl families whose types come from OOTypes.h (chunk oo-3rb.161); the others are declared
-// beside their enums in Entity.h, ShipEntity.h and PlayerEntity.h.
+// The .tbl families whose types come from OOTypes.h (chunk oo-3rb.161); the
+// others are declared beside their enums in Entity.h, ShipEntity.h and
+// PlayerEntity.h.
 std::string cxx_OOStringFromCompassMode(OOCompassMode mode);
 OOCompassMode cxx_OOCompassModeFromString(const std::string& string);
 std::string cxx_OOStringFromLongRangeChartMode(OOLongRangeChartMode chartMode);
-OOLongRangeChartMode cxx_OOLongRangeChartModeFromString(const std::string& string);
+OOLongRangeChartMode cxx_OOLongRangeChartModeFromString(
+    const std::string& string);
 std::string cxx_OOStringFromLegalStatusReason(OOLegalStatusReason reason);
 
-// Commodity display strings (chunk oo-3rb.162). A commodity is named by its identifier string.
-std::string cxx_CommodityDisplayNameForSymbolicName(const std::string& symbolicName);
-std::string cxx_CommodityDisplayNameForCommodityArray(const oo::PList& commodityDefinition); // an array
-std::optional<std::string> cxx_DisplayStringForMassUnit(OOMassUnit unit); // nullopt: no description (was nil)
-std::optional<std::string> cxx_DisplayStringForMassUnitForCommodity(const std::string& commodity);
+// Commodity display strings (chunk oo-3rb.162). A commodity is named by its
+// identifier string.
+std::string cxx_CommodityDisplayNameForSymbolicName(
+    const std::string& symbolicName);
+std::string cxx_CommodityDisplayNameForCommodityArray(
+    const oo::PList& commodityDefinition);  // an array
+std::optional<std::string> cxx_DisplayStringForMassUnit(
+    OOMassUnit unit);  // nullopt: no description (was nil)
+std::optional<std::string> cxx_DisplayStringForMassUnitForCommodity(
+    const std::string& commodity);
 
 // Shader settings (OOShaderSetting is OOOpenGL.h's; chunk oo-3rb.163).
 // Programmer-readable shader mode strings.
 OOShaderSetting cxx_OOShaderSettingFromString(const std::string& string);
 std::string cxx_OOStringFromShaderSetting(OOShaderSetting setting);
 // Localized shader mode strings; nullopt: no description (was nil).
-std::optional<std::string> cxx_OODisplayStringFromShaderSetting(OOShaderSetting setting);
+std::optional<std::string> cxx_OODisplayStringFromShaderSetting(
+    OOShaderSetting setting);
 #endif

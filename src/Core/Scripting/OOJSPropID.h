@@ -30,11 +30,21 @@ MA 02110-1301, USA.
 
 /*
         OOJSID(const char * [literal])
-        Macro to create a string-based ooscript::PropertyId. The string is interned and converted
-        into a string by a helper the first time the macro is hit, then cached.
+        Macro to create a string-based ooscript::PropertyId. The string is
+   interned and converted into a string by a helper the first time the macro is
+   hit, then cached.
 */
 
-#define OOJSID(str) ({ static ooscript::PropertyId idCache; static bool inited; if (EXPECT_NOT(!inited)) { OOJSInitJSIDCachePRIVATE("" str, &idCache); inited = true; } idCache; })
+#define OOJSID(str)                               \
+  ({                                              \
+    static ooscript::PropertyId idCache;          \
+    static bool inited;                           \
+    if (EXPECT_NOT(!inited)) {                    \
+      OOJSInitJSIDCachePRIVATE("" str, &idCache); \
+      inited = true;                              \
+    }                                             \
+    idCache;                                      \
+  })
 #ifdef __cplusplus
 extern "C" {
 #endif

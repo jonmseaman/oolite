@@ -6,9 +6,10 @@ Class responsible for converting a sound to a PCM buffer for playback. This
 class is an implementation detail. Do not use it directly; use OOSound to
 load sounds.
 
-C++20 since bead oo-y0gz (proposed ADR-0056, the Audio module: amendment oo-2en). Bead oo-9ht.82
-deleted its Objective-C facade and moved it to the global namespace: the sounds call it directly.
-The Vorbis codec, the class cluster's one concrete decoder, is private to OOALSoundDecoder.mm.
+C++20 since bead oo-y0gz (proposed ADR-0056, the Audio module: amendment
+oo-2en). Bead oo-9ht.82 deleted its Objective-C facade and moved it to the
+global namespace: the sounds call it directly. The Vorbis codec, the class
+cluster's one concrete decoder, is private to OOALSoundDecoder.mm.
 
 
 OOALSound - OpenAL sound implementation for Oolite.
@@ -39,43 +40,46 @@ SOFTWARE.
 
 #include "OOFoundation.h"
 #include "OOFunctionAttributes.h"
-#include "oofnd/objc/OOObject.h"
-
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
+#include "oofnd/objc/OOObject.h"
 
 #define OOAL_STREAM_CHUNK_SIZE (sizeof(char) * 409600)
 
 class OOALSoundDecoder : public oo::RefCounted {
-public:
-    /*	Was -cxx_initWithPath:, a class cluster's initialiser: it answered, in place of the
-            receiver, the Vorbis codec for a path whose extension is "ogg", else nil. Null where it
-            answered nil (also when the codec could not open the file).
-    */
-    static oo::Ref<OOALSoundDecoder> initWithPath(const std::optional<std::string>& inPath); // nullopt: null (bead oo-3rb.292.2)
-    static oo::Ref<OOALSoundDecoder> codecWithPath(const std::string& inPath);
+ public:
+  /*	Was -cxx_initWithPath:, a class cluster's initialiser: it answered, in
+     place of the receiver, the Vorbis codec for a path whose extension is
+     "ogg", else nil. Null where it answered nil (also when the codec could not
+     open the file).
+  */
+  static oo::Ref<OOALSoundDecoder> initWithPath(
+      const std::optional<std::string>&
+          inPath);  // nullopt: null (bead oo-3rb.292.2)
+  static oo::Ref<OOALSoundDecoder> codecWithPath(const std::string& inPath);
 
-    // Full-buffer reading.
-    virtual bool readCreatingBuffer(char** outBuffer, size_t* outSize);
+  // Full-buffer reading.
+  virtual bool readCreatingBuffer(char** outBuffer, size_t* outSize);
 
-    // Stream reading.
-    virtual size_t streamToBuffer(char* buffer);
+  // Stream reading.
+  virtual size_t streamToBuffer(char* buffer);
 
-    // Returns the size of the data readCreatingBuffer() will create.
-    virtual size_t sizeAsBuffer();
+  // Returns the size of the data readCreatingBuffer() will create.
+  virtual size_t sizeAsBuffer();
 
-    virtual bool isStereo();
+  virtual bool isStereo();
 
-    virtual long sampleRate();
+  virtual long sampleRate();
 
-    // For streaming
-    virtual void reset();
+  // For streaming
+  virtual void reset();
 
-    virtual std::optional<std::string> name(); // (bead oo-3rb.289.2)
+  virtual std::optional<std::string> name();  // (bead oo-3rb.289.2)
 
-    // What "%@" prints between the braces of <Class 0x...>{...} (OODescription.h). None here, as
-    // OOObject answered; the codec prints its name and comments.
-    virtual std::optional<std::string> descriptionComponents() const;
+  // What "%@" prints between the braces of <Class 0x...>{...}
+  // (OODescription.h). None here, as OOObject answered; the codec prints its
+  // name and comments.
+  virtual std::optional<std::string> descriptionComponents() const;
 };
 
-#endif // OOALSOUNDDECODER_H
+#endif  // OOALSOUNDDECODER_H

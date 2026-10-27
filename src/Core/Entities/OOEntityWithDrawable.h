@@ -4,10 +4,10 @@ OOEntityWithDrawable.h
 
 Abstract intermediate class for entities which use an OODrawable to render.
 
-C++20 since bead oo-bj8, with Entity the Entities pattern seam (proposed ADR-0056, amendment
-oo-bj8). The global C++ class since bead oo-9ht.40 deleted its Objective-C facade
-(OOEntityWithDrawable+ObjCBridge): the object of a ship, a sky or a visual effect is the root's
-facade (ADR-0056 amendment oo-9ht.40).
+C++20 since bead oo-bj8, with Entity the Entities pattern seam (proposed
+ADR-0056, amendment oo-bj8). The global C++ class since bead oo-9ht.40 deleted
+its Objective-C facade (OOEntityWithDrawable+ObjCBridge): the object of a ship,
+a sky or a visual effect is the root's facade (ADR-0056 amendment oo-9ht.40).
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -32,22 +32,22 @@ MA 02110-1301, USA.
 #pragma once
 
 #include "Entity.h"
-
-#include "OODrawable.h" // the drawable is held by oo::Ref (a complete type wherever the entity is destroyed)
+#include "OODrawable.h"  // the drawable is held by oo::Ref (a complete type wherever the entity is destroyed)
 
 class OOEntityWithDrawable : public Entity {
-public:
-    OODrawable* getDrawable(); // borrowed
-    void setDrawable(OODrawable* drawable);
+ public:
+  OODrawable* getDrawable();  // borrowed
+  void setDrawable(OODrawable* drawable);
 
-    double findCollisionRadius() override;
-    void drawImmediate(bool immediate, bool translucent) override;
+  double findCollisionRadius() override;
+  void drawImmediate(bool immediate, bool translucent) override;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    std::vector<oo::Ref<OOTexture>> allTextures() override;
+  std::vector<oo::Ref<OOTexture>> allTextures() override;
 #endif
 
-private:
-    // The drawable, held (an Objective-C object until bead oo-hahfg: every drawable is C++).
-    oo::Ref<OODrawable> drawable;
+ private:
+  // The drawable, held (an Objective-C object until bead oo-hahfg: every
+  // drawable is C++).
+  oo::Ref<OODrawable> drawable;
 };

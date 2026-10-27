@@ -2,9 +2,10 @@
 
 OOJSPopulatorDefinition.h
 
-C++20 since bead oo-1h0h (proposed ADR-0056, the OOColor house style). An oo::RefCounted, global
-namespace since bead oo-9ht.60: OOJSSystem makes it with oo::makeRef and Universe keeps it as a
-PList::Object node (OOJSPopulatorDefinitionToPList / OOJSPopulatorDefinitionIn below).
+C++20 since bead oo-1h0h (proposed ADR-0056, the OOColor house style). An
+oo::RefCounted, global namespace since bead oo-9ht.60: OOJSSystem makes it with
+oo::makeRef and Universe keeps it as a PList::Object node
+(OOJSPopulatorDefinitionToPList / OOJSPopulatorDefinitionIn below).
 
 
 Oolite
@@ -36,31 +37,35 @@ MA 02110-1301, USA.
 #include "oofnd/Ref.hpp"
 #include "ooscript/JSEngine.hpp"
 
-class OOJSScript; // imported by the .mm, so that a test can stand in for it (ADR-0056 amendment oo-fg7i item 5)
+class OOJSScript;  // imported by the .mm, so that a test can stand in for it
+                   // (ADR-0056 amendment oo-fg7i item 5)
 
 class OOJSPopulatorDefinition : public oo::RefCounted {
-public:
-    OOJSPopulatorDefinition();
-    ~OOJSPopulatorDefinition() override;
+ public:
+  OOJSPopulatorDefinition();
+  ~OOJSPopulatorDefinition() override;
 
-    ooscript::Value callback();
-    void setCallback(ooscript::Value callback);
-    ooscript::Object callbackThis();
-    void setCallbackThis(ooscript::Object callbackthis);
+  ooscript::Value callback();
+  void setCallback(ooscript::Value callback);
+  ooscript::Object callbackThis();
+  void setCallbackThis(ooscript::Object callbackthis);
 
-    void runPopulatorCallback(HPVector location);
+  void runPopulatorCallback(HPVector location);
 
-private:
-    void deleteJSPointers();
+ private:
+  void deleteJSPointers();
 
-    ooscript::Value _callback = { };
-    ooscript::Object _callbackThis = { };
-    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's weak reference proxy)
+  ooscript::Value _callback = {};
+  ooscript::Object _callbackThis = {};
+  oo::WeakRef<OOJSScript> _owningScript;  // a weak reference (was the facade's
+                                          // weak reference proxy)
 };
 
-// A PList::Object node holding the definition (strongly), as the settings' callbackObj.
-oo::PList OOJSPopulatorDefinitionToPList(oo::Ref<OOJSPopulatorDefinition> definition);
+// A PList::Object node holding the definition (strongly), as the settings'
+// callbackObj.
+oo::PList OOJSPopulatorDefinitionToPList(
+    oo::Ref<OOJSPopulatorDefinition> definition);
 // The definition inside such a node; nullptr for any other node.
 OOJSPopulatorDefinition* OOJSPopulatorDefinitionIn(const oo::PList& plist);
 
-#endif // OOJSPOPULATORDEFINITION_H
+#endif  // OOJSPOPULATORDEFINITION_H

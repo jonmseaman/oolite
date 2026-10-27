@@ -33,7 +33,8 @@ MA 02110-1301, USA.
 extern "C" {
 #endif
 
-void InitOOJSMissionVariables(ooscript::Context context, ooscript::Object global);
+void InitOOJSMissionVariables(ooscript::Context context,
+                              ooscript::Object global);
 
 #ifdef __cplusplus
 }

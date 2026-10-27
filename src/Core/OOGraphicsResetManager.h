@@ -9,9 +9,10 @@ display lists relying on old texture names. All objects which have display
 lists must therefore register with the OOGraphicsResetManager on init, and
 unregister on dealloc.
 
-C++20 since bead oo-jpd8 (proposed ADR-0056). Its Objective-C facade and the OOGraphicsResetClient
-protocol were deleted by bead oo-9ht.23 (ADR-0056 amendment "deleting a facade"): the class is
-global, and every client is a C++ OOGraphicsResetClient.
+C++20 since bead oo-jpd8 (proposed ADR-0056). Its Objective-C facade and the
+OOGraphicsResetClient protocol were deleted by bead oo-9ht.23 (ADR-0056
+amendment "deleting a facade"): the class is global, and every client is a C++
+OOGraphicsResetClient.
 
 
 Copyright (C) 2007-2013 Jens Ayton and contributors
@@ -43,32 +44,33 @@ SOFTWARE.
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 
-// A client (amendment oo-jpd8 item 3, added by bead oo-4jjl for OOSkyDrawable): the deleted
-// protocol OOGraphicsResetClient's method as a pure virtual. It registers with registerCxxClient().
+// A client (amendment oo-jpd8 item 3, added by bead oo-4jjl for OOSkyDrawable):
+// the deleted protocol OOGraphicsResetClient's method as a pure virtual. It
+// registers with registerCxxClient().
 class OOGraphicsResetClient {
-public:
-    virtual ~OOGraphicsResetClient() = default;
-    virtual void resetGraphicsState() = 0;
+ public:
+  virtual ~OOGraphicsResetClient() = default;
+  virtual void resetGraphicsState() = 0;
 };
 
 class OOGraphicsResetManager : public oo::RefCounted {
-public:
-    // The shared manager, made on first use; borrowed, never released (proposed ADR-0056
-    // amendment oo-r7m0).
-    static OOGraphicsResetManager* sharedManager();
+ public:
+  // The shared manager, made on first use; borrowed, never released (proposed
+  // ADR-0056 amendment oo-r7m0).
+  static OOGraphicsResetManager* sharedManager();
 
-    ~OOGraphicsResetManager();
+  ~OOGraphicsResetManager();
 
-    // Clients are not retained; null is never registered (bead oo-9ht.23 deleted the overloads
-    // that took an Objective-C client).
-    void registerCxxClient(OOGraphicsResetClient* client);
-    void unregisterCxxClient(OOGraphicsResetClient* client);
+  // Clients are not retained; null is never registered (bead oo-9ht.23 deleted
+  // the overloads that took an Objective-C client).
+  void registerCxxClient(OOGraphicsResetClient* client);
+  void unregisterCxxClient(OOGraphicsResetClient* client);
 
-    // Forwarded to all clients, after resetting textures.
-    void resetGraphicsState();
+  // Forwarded to all clients, after resetting textures.
+  void resetGraphicsState();
 
-private:
-    std::unordered_set<OOGraphicsResetClient*> cxxClients = { }; // not retained
+ private:
+  std::unordered_set<OOGraphicsResetClient*> cxxClients = {};  // not retained
 };
 
-#endif // OOGRAPHICSRESETMANAGER_H
+#endif  // OOGRAPHICSRESETMANAGER_H

@@ -7,9 +7,10 @@ A channel for audio playback.
 This class is an implementation detail. Do not use it directly; use an
 OOSoundSource to play an OOSound.
 
-C++20 since bead oo-5vp8 (proposed ADR-0056, the Audio module: amendment oo-2en). Its Objective-C
-facade was deleted by bead oo-9ht.86: the mixer makes and keeps the channels (oo::Ref), the sound
-sources hold one borrowed, and the delegate is the C++ interface OOSoundChannelDelegate below.
+C++20 since bead oo-5vp8 (proposed ADR-0056, the Audio module: amendment
+oo-2en). Its Objective-C facade was deleted by bead oo-9ht.86: the mixer makes
+and keeps the channels (oo::Ref), the sound sources hold one borrowed, and the
+delegate is the C++ interface OOSoundChannelDelegate below.
 
 OOALSound - OpenAL sound implementation for Oolite.
 Copyright (C) 2006-2013 Jens Ayton
@@ -37,74 +38,76 @@ SOFTWARE.
 #ifndef OOALSOUNDCHANNEL_H
 #define OOALSOUNDCHANNEL_H
 
+#include "OOALSound.h"
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include "OOOpenALController.h"
-#include "oofnd/objc/OOObject.h"
-
 #include "oofnd/Ref.hpp"
-
-#include "OOALSound.h"
+#include "oofnd/objc/OOObject.h"
 struct OOSoundChannelTestAccess;
 class OOSoundChannel;
 
-/*	The channel's delegate: was the informal OOObject (OOSoundChannelDelegate) category, any object
-        answering -channel:didFinishPlayingSound: (bead oo-9ht.86). The channel holds it unretained, as
-        before; a playing sound source and the stopped-source handler implement it.
+/*	The channel's delegate: was the informal OOObject
+   (OOSoundChannelDelegate) category, any object answering
+   -channel:didFinishPlayingSound: (bead oo-9ht.86). The channel holds it
+   unretained, as before; a playing sound source and the stopped-source handler
+   implement it.
 */
 class OOSoundChannelDelegate {
-public:
-    virtual void channel(OOSoundChannel* channel, OOSound* sound) = 0;
+ public:
+  virtual void channel(OOSoundChannel* channel, OOSound* sound) = 0;
 
-protected:
-    ~OOSoundChannelDelegate() = default;
+ protected:
+  ~OOSoundChannelDelegate() = default;
 };
 
 class OOSoundChannel : public oo::RefCounted {
-public:
-    /*	Was -init, which answered nil when OpenAL would not make a source: false then (amendment
-            oo-r7m0 item 2). Its maker runs it right after making the channel and drops a channel for
-            which it fails.
-    */
-    bool init();
+ public:
+  /*	Was -init, which answered nil when OpenAL would not make a source: false
+     then (amendment oo-r7m0 item 2). Its maker runs it right after making the
+     channel and drops a channel for which it fails.
+  */
+  bool init();
 
-    ~OOSoundChannel() override;
+  ~OOSoundChannel() override;
 
-    void update();
+  void update();
 
-    void setDelegate(OOSoundChannelDelegate* delegate);
+  void setDelegate(OOSoundChannelDelegate* delegate);
 
-    // Unretained pointer used to maintain simple stack
-    OOSoundChannel* next();
-    void setNext(OOSoundChannel* next);
+  // Unretained pointer used to maintain simple stack
+  OOSoundChannel* next();
+  void setNext(OOSoundChannel* next);
 
-    // set sound position relative to listener
-    void setPosition(Vector vector);
-    void setGain(float gain);
-    bool playSound(OOSound* sound, bool loop);
-    void stop();
+  // set sound position relative to listener
+  void setPosition(Vector vector);
+  void setGain(float gain);
+  bool playSound(OOSound* sound, bool loop);
+  void stop();
 
-    OOSound* sound();
+  OOSound* sound();
 
-private:
-    // Was the private -hasStopped, which told the delegate that self had finished; -dealloc sent it
-    // too, so the destructor does.
-    void hasStopped();
+ private:
+  // Was the private -hasStopped, which told the delegate that self had
+  // finished; -dealloc sent it too, so the destructor does.
+  void hasStopped();
 
-    bool enqueueBuffer(OOSound* sound);
-    void getNextSoundBuffer();
+  bool enqueueBuffer(OOSound* sound);
+  void getNextSoundBuffer();
 
-    OOSoundChannel* _next = { };
-    OOSoundChannelDelegate* _delegate = { };
-    oo::Ref<OOSound> _sound; // retained, as the Objective-C sound was
-    ALuint _buffer = { };
-    ALuint _lastBuffer = { };
-    bool _bigSound = { };
-    ALuint _source = { };
-    // (The Objective-C class's _playing, which nothing read or wrote, is not kept: -Wunused-private-field.)
-    bool _loop = { };
+  OOSoundChannel* _next = {};
+  OOSoundChannelDelegate* _delegate = {};
+  oo::Ref<OOSound> _sound;  // retained, as the Objective-C sound was
+  ALuint _buffer = {};
+  ALuint _lastBuffer = {};
+  bool _bigSound = {};
+  ALuint _source = {};
+  // (The Objective-C class's _playing, which nothing read or wrote, is not
+  // kept: -Wunused-private-field.)
+  bool _loop = {};
 
-    friend struct ::OOSoundChannelTestAccess; // tests only (amendment oo-862e item 2)
+  friend struct ::OOSoundChannelTestAccess;  // tests only (amendment oo-862e
+                                             // item 2)
 };
 
-#endif // OOALSOUNDCHANNEL_H
+#endif  // OOALSOUNDCHANNEL_H

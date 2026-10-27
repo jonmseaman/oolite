@@ -46,14 +46,15 @@ MA 02110-1301, USA.
 // prevent the including of SDL_opengl.h loading a previous version of glext.h
 #define NO_SDL_GLEXT
 
-// GL_GLEXT_PROTOTYPES must be defined for the Linux build to use shaders. A plain C++ unit
-// (OO_PLAIN_CPP_UNIT) does not include OOFoundation.h, so test the build's LINUX define as well.
+// GL_GLEXT_PROTOTYPES must be defined for the Linux build to use shaders. A
+// plain C++ unit (OO_PLAIN_CPP_UNIT) does not include OOFoundation.h, so test
+// the build's LINUX define as well.
 #if OOLITE_LINUX || defined(LINUX)
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
 #define __DEFINED_GL_GLEXT_PROTOTYPES
-#endif // GL_GLEXT_PROTOTYPES
-#endif // OOLITE_LINUX && !OOLITE_WINDOWS
+#endif  // GL_GLEXT_PROTOTYPES
+#endif  // OOLITE_LINUX && !OOLITE_WINDOWS
 
 // the standard SDL_opengl.h
 #include <SDL3/SDL_opengl.h>
@@ -67,7 +68,7 @@ MA 02110-1301, USA.
 #undef __DEFINED_GL_GLEXT_PROTOTYPES
 #endif
 
-#else // Not OS X or SDL
+#else  // Not OS X or SDL
 
 #error OOOpenGL.h: unknown target!
 

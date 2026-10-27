@@ -32,15 +32,15 @@ SOFTWARE.
 
 #pragma once
 
-#include "OOMaterial.h"
-
-#include "oofnd/PList.hpp"
-
 #include <optional>
 #include <string>
 
+#include "OOMaterial.h"
+#include "oofnd/PList.hpp"
+
 class OOColor;
 
-// The creators are static members of OOMaterial (materialWithName(), in OOMaterial.h), defined
-// in OOMaterialConvenienceCreators.mm since bead oo-9fwb (proposed ADR-0056 amendment oo-o89 item
-// 4). The Objective-C category was deleted by bead oo-9ht.59.
+// The creators are static members of OOMaterial (materialWithName(), in
+// OOMaterial.h), defined in OOMaterialConvenienceCreators.mm since bead oo-9fwb
+// (proposed ADR-0056 amendment oo-o89 item 4). The Objective-C category was
+// deleted by bead oo-9ht.59.

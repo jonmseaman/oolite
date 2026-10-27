@@ -31,16 +31,17 @@ MA 02110-1301, USA.
 #include "OOMaths.h"
 #include "oofnd/Ref.hpp"
 
-/*	C++ since bead oo-odlx (proposed ADR-0056). Nothing outside this file messages it, so it has
-        no Objective-C facade and is global: the one outside mention, OOSoundSource's no-op
-        -positionRelativeTo:, takes it by (borrowed) pointer.
+/*	C++ since bead oo-odlx (proposed ADR-0056). Nothing outside this file
+   messages it, so it has no Objective-C facade and is global: the one outside
+   mention, OOSoundSource's no-op -positionRelativeTo:, takes it by (borrowed)
+   pointer.
 */
 class OOSoundReferencePoint : public oo::RefCounted {
-public:
-    // Positional audio attributes are ignored in this implementation
-    void setPosition(Vector inPosition);
-    void setVelocity(Vector inVelocity);
-    void setOrientation(Vector inOrientation);
+ public:
+  // Positional audio attributes are ignored in this implementation
+  void setPosition(Vector inPosition);
+  void setVelocity(Vector inVelocity);
+  void setOrientation(Vector inOrientation);
 };
 
-#endif // OOBASICSOUNDREFERENCEPOINT_H
+#endif  // OOBASICSOUNDREFERENCEPOINT_H

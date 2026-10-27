@@ -2,11 +2,12 @@
 
 OOEntityEnums.h
 
-The entity enumerations that used to live inside Objective-C class headers: OOEntityStatus and
-OOScanClass (Entities/Entity.h), OOGUIScreenID and OOGalacticHyperspaceBehaviour
-(Entities/PlayerEntity.h), OOShipDamageType (Entities/ShipEntity.h). Moved here unchanged (bead
-oo-9ht.64) so a plain C or C++ translation unit (OOConstToJSString) can name them without parsing
-an @interface. Those headers include this one back, so no caller changes.
+The entity enumerations that used to live inside Objective-C class headers:
+OOEntityStatus and OOScanClass (Entities/Entity.h), OOGUIScreenID and
+OOGalacticHyperspaceBehaviour (Entities/PlayerEntity.h), OOShipDamageType
+(Entities/ShipEntity.h). Moved here unchanged (bead oo-9ht.64) so a plain C or
+C++ translation unit (OOConstToJSString) can name them without parsing an
+@interface. Those headers include this one back, so no caller changes.
 
 
 Oolite
@@ -43,10 +44,11 @@ typedef enum OOEntityStatus {
 #ifndef OO_SCANCLASS_TYPE
 #define OO_SCANCLASS_TYPE
 #ifndef __cplusplus
-/* ISO C++ forbids a forward reference to an unscoped enum with no fixed underlying
-   type (this used to compile only because this file was Objective-C, not Objective-C++;
-   ADR-0001). The full definition is three lines below in this same file, so C++
-   translation units never need the forward tag at all. */
+/* ISO C++ forbids a forward reference to an unscoped enum with no fixed
+   underlying type (this used to compile only because this file was Objective-C,
+   not Objective-C++; ADR-0001). The full definition is three lines below in
+   this same file, so C++ translation units never need the forward tag at all.
+ */
 typedef enum OOScanClass OOScanClass;
 #endif
 #endif
@@ -58,9 +60,9 @@ enum OOScanClass {
 #undef ENTRY
 
 enum {
-    // Values used for unknown strings.
-    kOOEntityStatusDefault = STATUS_INACTIVE,
-    kOOScanClassDefault = CLASS_NOT_SET
+  // Values used for unknown strings.
+  kOOEntityStatusDefault = STATUS_INACTIVE,
+  kOOScanClassDefault = CLASS_NOT_SET
 };
 
 // From Entities/PlayerEntity.h.
@@ -71,21 +73,22 @@ typedef enum {
 #include "OOGUIScreenID.tbl"
 } OOGUIScreenID;
 
-#define GALACTIC_HYPERSPACE_ENTRY(label, value) GALACTIC_HYPERSPACE_##label = value,
+#define GALACTIC_HYPERSPACE_ENTRY(label, value) \
+  GALACTIC_HYPERSPACE_##label = value,
 
 typedef enum {
 #include "OOGalacticHyperspaceBehaviour.tbl"
 
-    GALACTIC_HYPERSPACE_MAX = GALACTIC_HYPERSPACE_BEHAVIOUR_FIXED_COORDINATES
+  GALACTIC_HYPERSPACE_MAX = GALACTIC_HYPERSPACE_BEHAVIOUR_FIXED_COORDINATES
 } OOGalacticHyperspaceBehaviour;
 
 #undef ENTRY
 #undef GALACTIC_HYPERSPACE_ENTRY
 
 enum {
-    // Values used for unknown strings.
-    kOOGUIScreenIDDefault = GUI_SCREEN_MAIN,
-    kOOGalacticHyperspaceBehaviourDefault = GALACTIC_HYPERSPACE_BEHAVIOUR_UNKNOWN
+  // Values used for unknown strings.
+  kOOGUIScreenIDDefault = GUI_SCREEN_MAIN,
+  kOOGalacticHyperspaceBehaviourDefault = GALACTIC_HYPERSPACE_BEHAVIOUR_UNKNOWN
 };
 
 // From Entities/ShipEntity.h.
@@ -95,7 +98,7 @@ typedef enum {
 #include "OOShipDamageType.tbl"
 #undef DIFF_STRING_ENTRY
 
-    kOOShipDamageTypeDefault = kOODamageTypeEnergy
+  kOOShipDamageTypeDefault = kOODamageTypeEnergy
 } OOShipDamageType;
 
-#endif // INCLUDED_OOENTITYENUMS_h
+#endif  // INCLUDED_OOENTITYENUMS_h

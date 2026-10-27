@@ -2,12 +2,13 @@
 
 OOOpenGLExtensionPointers.h
 
-The OpenGL feature switches (OO_SHADERS, OO_USE_VBO, OO_USE_FBO, OO_MULTITEXTURE,
-OO_TEXTURE_CUBE_MAP) and, on Windows, the function pointers for the OpenGL extensions used in the
-game, moved verbatim out of OOOpenGLExtensionManager.h (bead oo-9ht.120), which includes this
-header back where they were. This header is plain C/C++ (no Objective-C, no Foundation), so a C++
-translation unit that only calls an extension through its pointer (OOMatrix, bead oo-s37k) can
-include it without the extension manager's class.
+The OpenGL feature switches (OO_SHADERS, OO_USE_VBO, OO_USE_FBO,
+OO_MULTITEXTURE, OO_TEXTURE_CUBE_MAP) and, on Windows, the function pointers for
+the OpenGL extensions used in the game, moved verbatim out of
+OOOpenGLExtensionManager.h (bead oo-9ht.120), which includes this header back
+where they were. This header is plain C/C++ (no Objective-C, no Foundation), so
+a C++ translation unit that only calls an extension through its pointer
+(OOMatrix, bead oo-s37k) can include it without the extension manager's class.
 
 
 Copyright (C) 2007-2013 Jens Ayton and contributors
@@ -35,9 +36,10 @@ SOFTWARE.
 #ifndef OOOPENGLEXTENSIONPOINTERS_H
 #define OOOPENGLEXTENSIONPOINTERS_H
 
-/*	The platform switch below is set by the Foundation prefix header in an Objective-C translation
-        unit; a plain one sets it the same way (WIN32 is only defined on the GNUstep build), as
-        OOProfilingStopwatch.h does, so both kinds see the same declarations.
+/*	The platform switch below is set by the Foundation prefix header in an
+   Objective-C translation unit; a plain one sets it the same way (WIN32 is only
+   defined on the GNUstep build), as OOProfilingStopwatch.h does, so both kinds
+   see the same declarations.
 */
 #if defined(WIN32) && !defined(OOLITE_WINDOWS)
 #define OOLITE_WINDOWS 1
@@ -76,10 +78,11 @@ SOFTWARE.
 #warning NO_SHADERS not defined and GL_ARB_vertex_shader not defined; if possible, use a newer version of glext.h.
 #endif
 
-#endif // OO_SHADERS
+#endif  // OO_SHADERS
 
 #if GL_ARB_vertex_buffer_object
-#define OO_USE_VBO 0 // Disabled due to crashes on certain systems (and limited VBO use)
+#define OO_USE_VBO \
+  0  // Disabled due to crashes on certain systems (and limited VBO use)
 #else
 #define OO_USE_VBO 0
 #warning Building without vertex buffer object support, are your OpenGL headers up to date?
@@ -93,9 +96,10 @@ SOFTWARE.
 #endif
 
 /*	Multitexturing requires GL_ARB_multitexture, but we only have use for it
-        if GL_ARB_texture_env_combine is available, and GL_ARB_texture_env_combine
-        requires GL_ARB_multitexture. Both GL_ARB_multitexture and
-        GL_ARB_texture_env_combine were promoted to core in OpenGL 1.3.
+        if GL_ARB_texture_env_combine is available, and
+   GL_ARB_texture_env_combine requires GL_ARB_multitexture. Both
+   GL_ARB_multitexture and GL_ARB_texture_env_combine were promoted to core in
+   OpenGL 1.3.
 */
 #if GL_ARB_texture_env_combine
 #define OO_MULTITEXTURE 1
@@ -140,13 +144,15 @@ extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC glEnableVertexAttribArrayARB;
 extern PFNGLVERTEXATTRIBPOINTERARBPROC glVertexAttribPointerARB;
 extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
 extern PFNGLVALIDATEPROGRAMARBPROC glValidateProgramARB;
-#endif // OO_SHADERS
+#endif  // OO_SHADERS
 
 #if OO_SHADERS || OO_MULTITEXTURE
-// The SDL3/SDL_opengl.h header file declares glActiveTextureARB symbols as a function, not a function pointer, which means that if we
-// try to declare or set glActiveTextureARB we get compiler errors. StackOverflow AI suggests we either use GLEW or we use a declare a different
-// name for the symbol. As there are currently only three symbols with this problem, I've gone for the latter approach, creating a macro
-// so we can stull use glActiveTexture in the code
+// The SDL3/SDL_opengl.h header file declares glActiveTextureARB symbols as a
+// function, not a function pointer, which means that if we try to declare or
+// set glActiveTextureARB we get compiler errors. StackOverflow AI suggests we
+// either use GLEW or we use a declare a different name for the symbol. As there
+// are currently only three symbols with this problem, I've gone for the latter
+// approach, creating a macro so we can stull use glActiveTexture in the code
 // -- kanthoney 2026-05-04
 #define glActiveTextureARB glActiveTextureARBPtr
 extern PFNGLACTIVETEXTUREARBPROC glActiveTextureARB;
@@ -211,6 +217,6 @@ extern PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
 extern PFNGLCLAMPCOLORPROC glClampColor;
 #endif
 
-#endif // OOLITE_WINDOWS
+#endif  // OOLITE_WINDOWS
 
-#endif // OOOPENGLEXTENSIONPOINTERS_H
+#endif  // OOOPENGLEXTENSIONPOINTERS_H

@@ -2,11 +2,12 @@
 
 OOParticleSystem.h
 
-C++20 since bead oo-cenx, a leaf of the Entities seam (proposed ADR-0056, amendment oo-bj8 item
-12), converted with all its subclasses (amendment oo-kdyh item 1): the two fragment bursts here
-and OOExplosionCloudEntity. Global classes over Entity, with no facade: nothing messages
-them by their own selectors. Their callers (ShipEntity, Universe) make them with a factory and
-hand the universe the Entity facade oo::NewEntityFacade makes, which is each one's Objective-C
+C++20 since bead oo-cenx, a leaf of the Entities seam (proposed ADR-0056,
+amendment oo-bj8 item 12), converted with all its subclasses (amendment oo-kdyh
+item 1): the two fragment bursts here and OOExplosionCloudEntity. Global classes
+over Entity, with no facade: nothing messages them by their own selectors. Their
+callers (ShipEntity, Universe) make them with a factory and hand the universe
+the Entity facade oo::NewEntityFacade makes, which is each one's Objective-C
 object from then on.
 
 Oolite
@@ -32,78 +33,75 @@ MA 02110-1301, USA.
 #pragma once
 
 #include "Entity.h"
-
 #include "OOMaths.h"
 #include "OOTypes.h"
 
 class OOTexture;
 class OOColor;
 
-enum {
-    kFragmentBurstMaxParticles = 64,
-    kBigFragmentBurstMaxParticles = 16
-};
+enum { kFragmentBurstMaxParticles = 64, kBigFragmentBurstMaxParticles = 16 };
 
 class OOParticleSystem : public Entity {
-public:
-    std::optional<std::string> descriptionComponents() const override;
-    bool canCollide() override;
-    bool checkCloseCollisionWith(Entity* other) override;
-    void update(OOTimeDelta delta_t) override;
-    void drawImmediate(bool immediate, bool translucent) override;
-    bool isEffect() override;
+ public:
+  std::optional<std::string> descriptionComponents() const override;
+  bool canCollide() override;
+  bool checkCloseCollisionWith(Entity* other) override;
+  void update(OOTimeDelta delta_t) override;
+  void drawImmediate(bool immediate, bool translucent) override;
+  bool isEffect() override;
 
-    virtual OOTexture* texture();
+  virtual OOTexture* texture();
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    std::vector<oo::Ref<OOTexture>> allTextures() override;
+  std::vector<oo::Ref<OOTexture>> allTextures() override;
 #endif
 
-protected:
-    // -init answered nil: only a subclass makes one, then runs initWithPosition().
-    OOParticleSystem() = default;
+ protected:
+  // -init answered nil: only a subclass makes one, then runs
+  // initWithPosition().
+  OOParticleSystem() = default;
 
-    /*	Initialize particle effect with particles flying out randomly.
-            Initiali _particleSize[] is equal to speed.
-     */
-    void initWithPosition(HPVector position,
-        Vector velocity,
-        unsigned count,
-        float minSpeed,
-        float maxSpeed,
-        OOTimeDelta duration,
-        GLfloat baseColor[4]);
+  /*	Initialize particle effect with particles flying out randomly.
+          Initiali _particleSize[] is equal to speed.
+   */
+  void initWithPosition(HPVector position, Vector velocity, unsigned count,
+                        float minSpeed, float maxSpeed, OOTimeDelta duration,
+                        GLfloat baseColor[4]);
 
-    Vector _particlePosition[kFragmentBurstMaxParticles] = { };
-    Vector _particleVelocity[kFragmentBurstMaxParticles] = { };
-    GLfloat _particleColor[kFragmentBurstMaxParticles][4] = { };
-    GLfloat _particleSize[kFragmentBurstMaxParticles] = { };
-    unsigned _count = { };
+  Vector _particlePosition[kFragmentBurstMaxParticles] = {};
+  Vector _particleVelocity[kFragmentBurstMaxParticles] = {};
+  GLfloat _particleColor[kFragmentBurstMaxParticles][4] = {};
+  GLfloat _particleSize[kFragmentBurstMaxParticles] = {};
+  unsigned _count = {};
 
-    unsigned _particleType = { };
+  unsigned _particleType = {};
 
-    OOTimeDelta _timePassed = { }, _duration = { };
-    double _maxSpeed = { };
+  OOTimeDelta _timePassed = {}, _duration = {};
+  double _maxSpeed = {};
 };
 
 class OOSmallFragmentBurstEntity : public OOParticleSystem {
-public:
-    static oo::Ref<OOSmallFragmentBurstEntity> fragmentBurstFromEntity(Entity* entity); // the C++ entity (bead oo-al52f)
+ public:
+  static oo::Ref<OOSmallFragmentBurstEntity> fragmentBurstFromEntity(
+      Entity* entity);  // the C++ entity (bead oo-al52f)
 
-    void update(OOTimeDelta delta_t) override;
+  void update(OOTimeDelta delta_t) override;
 
-private:
-    void initFragmentBurstFrom(HPVector fragPosition, Vector fragVelocity, GLfloat size);
+ private:
+  void initFragmentBurstFrom(HPVector fragPosition, Vector fragVelocity,
+                             GLfloat size);
 };
 
 class OOBigFragmentBurstEntity : public OOParticleSystem {
-public:
-    static oo::Ref<OOBigFragmentBurstEntity> fragmentBurstFromEntity(Entity* entity); // the C++ entity (bead oo-al52f)
+ public:
+  static oo::Ref<OOBigFragmentBurstEntity> fragmentBurstFromEntity(
+      Entity* entity);  // the C++ entity (bead oo-al52f)
 
-    void update(double delta_t) override;
+  void update(double delta_t) override;
 
-private:
-    void initFragmentBurstFrom(HPVector fragPosition, Vector fragVelocity, GLfloat size);
+ private:
+  void initFragmentBurstFrom(HPVector fragPosition, Vector fragVelocity,
+                             GLfloat size);
 
-    GLfloat _baseSize = { };
+  GLfloat _baseSize = {};
 };

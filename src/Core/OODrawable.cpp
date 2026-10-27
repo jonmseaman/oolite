@@ -26,91 +26,65 @@ SOFTWARE.
 */
 
 #include "OODrawable.h"
-#include "oofnd/String.hpp"
+
+#include <cxxabi.h>
 
 #include <cstdlib>
-#include <cxxabi.h>
 #include <typeinfo>
 
-void OODrawable::renderOpaqueParts()
-{
+#include "oofnd/String.hpp"
+
+void OODrawable::renderOpaqueParts() {}
+
+void OODrawable::renderTranslucentParts() {}
+
+bool OODrawable::hasOpaqueParts() { return false; }
+
+bool OODrawable::hasTranslucentParts() { return false; }
+
+GLfloat OODrawable::collisionRadius() { return 0.0f; }
+
+GLfloat OODrawable::maxDrawDistance() { return 0.0f; }
+
+BoundingBox OODrawable::boundingBox() { return kZeroBoundingBox; }
+
+void OODrawable::setBindingTarget(Entity* /*target*/) {}
+
+void OODrawable::dumpSelfState() {}
+
+std::optional<std::string> OODrawable::descriptionComponents() const {
+  return std::nullopt;
 }
 
-void OODrawable::renderTranslucentParts()
-{
-}
-
-bool OODrawable::hasOpaqueParts()
-{
-    return false;
-}
-
-bool OODrawable::hasTranslucentParts()
-{
-    return false;
-}
-
-GLfloat OODrawable::collisionRadius()
-{
-    return 0.0f;
-}
-
-GLfloat OODrawable::maxDrawDistance()
-{
-    return 0.0f;
-}
-
-BoundingBox OODrawable::boundingBox()
-{
-    return kZeroBoundingBox;
-}
-
-void OODrawable::setBindingTarget(Entity* /*target*/)
-{
-}
-
-void OODrawable::dumpSelfState()
-{
-}
-
-std::optional<std::string> OODrawable::descriptionComponents() const
-{
-    return std::nullopt;
-}
-
-// The facade's -cxx_description (bead oo-9ht.9 deleted it): the C++ class's name, as [self class]
-// named it, and the address, now the drawable's.
-std::string OODrawable::description() const
-{
-    int status = 0;
-    char* demangled = abi::__cxa_demangle(typeid(*this).name(), nullptr, nullptr, &status);
-    const std::string name = (status == 0 && demangled != nullptr) ? demangled : typeid(*this).name();
-    std::free(demangled);
-    std::string result = oo::str::format("<%s %s>", name.c_str(), oo::str::pointerDescription(this).c_str());
-    if (const std::optional<std::string> components = descriptionComponents())
-        result += "{" + *components + "}";
-    return result;
+// The facade's -cxx_description (bead oo-9ht.9 deleted it): the C++ class's
+// name, as [self class] named it, and the address, now the drawable's.
+std::string OODrawable::description() const {
+  int status = 0;
+  char* demangled =
+      abi::__cxa_demangle(typeid(*this).name(), nullptr, nullptr, &status);
+  const std::string name =
+      (status == 0 && demangled != nullptr) ? demangled : typeid(*this).name();
+  std::free(demangled);
+  std::string result = oo::str::format(
+      "<%s %s>", name.c_str(), oo::str::pointerDescription(this).c_str());
+  if (const std::optional<std::string> components = descriptionComponents())
+    result += "{" + *components + "}";
+  return result;
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-std::vector<oo::Ref<OOTexture>> OODrawable::allTextures()
-{
-    return { };
-}
+std::vector<oo::Ref<OOTexture>> OODrawable::allTextures() { return {}; }
 
-// The object's own size (was the facade's Objective-C instance size; bead oo-9ht.9).
-size_t OODrawable::totalSize()
-{
-    return objectSize();
-}
+// The object's own size (was the facade's Objective-C instance size; bead
+// oo-9ht.9).
+size_t OODrawable::totalSize() { return objectSize(); }
 #endif
 
-/*	OODrawableAutorelease(): the drawable goes to the innermost oo::AutoreleaseScope, whose drain releases it
-        where the keeper object that held it was released (beads oo-pvhrh, oo-31u.7).
+/*	OODrawableAutorelease(): the drawable goes to the innermost
+   oo::AutoreleaseScope, whose drain releases it where the keeper object that
+   held it was released (beads oo-pvhrh, oo-31u.7).
 */
-void OODrawableAutorelease(oo::Ref<OODrawable> drawable)
-{
-    if (drawable == nullptr)
-        return;
-    oo::autorelease(std::move(drawable));
+void OODrawableAutorelease(oo::Ref<OODrawable> drawable) {
+  if (drawable == nullptr) return;
+  oo::autorelease(std::move(drawable));
 }
