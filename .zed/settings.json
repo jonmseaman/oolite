@@ -1,0 +1,17 @@
+// clangd does completion and diagnostics from the meson compile database; see .clangd.
+// "clangd" must resolve to MSYS2's ucrt64/bin/clangd.exe (put ucrt64/bin on PATH, or set a full
+// path here).
+{
+  "lsp": {
+    "clangd": {
+      "binary": {
+        "path": "clangd",
+        "arguments": ["--background-index", "--header-insertion=never"]
+      }
+    }
+  },
+  "file_types": {
+    "C++": ["h"]
+  },
+  "format_on_save": "off"
+}
