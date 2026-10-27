@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 */
 
+#pragma once
+
 #ifndef INCLUDED_OOMATHS_h
 #error Do not include OOFastArithmetic.h directly; include OOMaths.h.
 #else

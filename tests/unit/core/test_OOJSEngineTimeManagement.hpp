@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "OOFoundation.h"  // OOComparisonResult, NSUInteger
 #include "oofnd/Ref.hpp"
 #include "ooscript/JSEngine.hpp"
 

@@ -24,9 +24,16 @@ MA 02110-1301, USA.
 
 */
 
+#pragma once
+
 #ifndef INCLUDED_OOMATHS_h
 #error Do not include OOBoundingBox.h directly; include OOMaths.h.
 #else
+
+// Each maths header includes what it uses, so OOMaths.h may list them in any
+// order.
+#include "OOHPVector.h"
+#include "OOVector.h"
 
 typedef struct {
   Vector min;

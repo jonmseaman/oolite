@@ -26,9 +26,15 @@ MA 02110-1301, USA.
 
 */
 
+#pragma once
+
 #ifndef INCLUDED_OOMATHS_h
 #error Do not include OOVoxel.h directly; include OOMaths.h.
 #else
+
+// Each maths header includes what it uses, so OOMaths.h may list them in any
+// order.
+#include "OOVector.h"
 
 #define CUBE_FACE_RIGHT 0x01
 #define CUBE_FACE_LEFT 0x02

@@ -57,14 +57,10 @@ std::string At(long line) {
          "  Assertion failed in ";
 }
 
-void CFail(int y) {
-  sLine = __LINE__;
-  OOCAssert(y == 0, "y is %d", y);
-}
-void CParam(void* p) {
-  sLine = __LINE__;
-  OOCParameterAssert(p != NULL);
-}
+// clang-format off: each assertion must be on the line sLine records.
+void CFail(int y) { sLine = __LINE__; OOCAssert(y == 0, "y is %d", y); }
+void CParam(void *p) { sLine = __LINE__; OOCParameterAssert(p != NULL); }
+// clang-format on
 
 }  // namespace
 

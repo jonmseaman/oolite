@@ -144,9 +144,8 @@ typedef double OOHPScalar;
 #endif
 #endif
 
-// Each of these builds on the ones before it, so each is its own include block:
-// clang-format sorts only within a block (upstream #748 made its headers
-// self-contained for the same reason).
+// Each maths header includes the others it uses, so this list may be in any
+// order (clang-format sorts it).
 #include "OOFastArithmetic.h"
 #include "OOHPVector.h"
 #include "OOMatrix.h"

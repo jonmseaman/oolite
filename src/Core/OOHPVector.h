@@ -31,6 +31,10 @@ MA 02110-1301, USA.
 #error Do not include OOHPVector.h directly; include OOMaths.h.
 #else
 
+// Each maths header includes what it uses, so OOMaths.h may list them in any
+// order.
+#include "OOVector.h"
+
 #ifndef OOMATHS_EXTERNAL_VECTOR_TYPES
 
 typedef struct HPVector {

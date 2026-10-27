@@ -24,9 +24,17 @@ MA 02110-1301, USA.
 
 */
 
+#pragma once
+
 #ifndef INCLUDED_OOMATHS_h
 #error Do not include OOMatrix.h directly; include OOMaths.h.
 #else
+
+// Each maths header includes what it uses, so OOMaths.h may list them in any
+// order.
+#include "OOHPVector.h"
+#include "OOQuaternion.h"
+#include "OOVector.h"
 
 typedef struct OOMatrix {
   OOScalar m[4][4];
