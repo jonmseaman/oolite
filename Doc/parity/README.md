@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 71 / 241 upstream `.m` files · extra rows below
+**Progress:** 85 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -221,28 +221,28 @@ Patterns that recur across files. Each instance is also recorded in its own file
 ### Materials, textures, meshes, drawables, OpenGL — [graphics.md](graphics.md)
 
 - [ ] `Core/Materials/OOBasicMaterial.m` → `Core/Materials/OOBasicMaterial.cpp` (314 / 320 lines) — *pending* — [findings](graphics.md#oobasicmaterial)
-- [ ] `Core/Materials/OOCombinedEmissionMapGenerator.m` → `Core/Materials/OOCombinedEmissionMapGenerator.cpp` (446 / 441 lines) — *pending* — [findings](graphics.md#oocombinedemissionmapgenerator)
-- [ ] `Core/Materials/OOConcreteTexture.m` → `Core/Materials/OOConcreteTexture.cpp` (641 / 638 lines) — *pending* — [findings](graphics.md#ooconcretetexture)
+- [x] `Core/Materials/OOCombinedEmissionMapGenerator.m` → `Core/Materials/OOCombinedEmissionMapGenerator.cpp` (446 / 441 lines) — 12✅ 1❌ — [findings](graphics.md#oocombinedemissionmapgenerator)
+- [x] `Core/Materials/OOConcreteTexture.m` → `Core/Materials/OOConcreteTexture.cpp` (641 / 638 lines) — 26✅ — [findings](graphics.md#ooconcretetexture)
 - [ ] `Core/Materials/OODefaultShaderSynthesizer.m` → `Core/Materials/OODefaultShaderSynthesizer.cpp` (1451 / 1265 lines) — *pending* — [findings](graphics.md#oodefaultshadersynthesizer)
 - [ ] `Core/Materials/OOMaterial.m` → `Core/Materials/OOMaterial.cpp` (140 / 184 lines) — *pending* — [findings](graphics.md#oomaterial)
 - [ ] `Core/Materials/OOMaterialConvenienceCreators.m` → `Core/Materials/OOMaterialConvenienceCreators.cpp` (539 / 575 lines) — *pending* — [findings](graphics.md#oomaterialconveniencecreators)
 - [ ] `Core/Materials/OOMaterialSpecifier.m` → `Core/Materials/OOMaterialSpecifier.cpp` (256 / 246 lines) — *pending* — [findings](graphics.md#oomaterialspecifier)
 - [ ] `Core/Materials/OOMultiTextureMaterial.m` → `Core/Materials/OOMultiTextureMaterial.cpp` (204 / 221 lines) — *pending* — [findings](graphics.md#oomultitexturematerial)
-- [ ] `Core/Materials/OONullTexture.m` → `Core/Materials/OONullTexture.cpp` (116 / 78 lines) — *pending* — [findings](graphics.md#oonulltexture)
-- [ ] `Core/Materials/OOPNGTextureLoader.m` → `Core/Materials/OOPNGTextureLoader.cpp` (221 / 225 lines) — *pending* — [findings](graphics.md#oopngtextureloader)
-- [ ] `Core/Materials/OOPixMap.m` → `Core/Materials/OOPixMap.cpp` (242 / 235 lines) — *pending* — [findings](graphics.md#oopixmap)
-- [ ] `Core/Materials/OOPixMapChannelOperations.m` → `Core/Materials/OOPixMapChannelOperations.cpp` (331 / 353 lines) — *pending* — [findings](graphics.md#oopixmapchanneloperations)
-- [ ] `Core/Materials/OOPixMapTextureLoader.m` → `Core/Materials/OOPixMapTextureLoader.cpp` (86 / 91 lines) — *pending* — [findings](graphics.md#oopixmaptextureloader)
-- [ ] `Core/Materials/OOPlanetTextureGenerator.m` → `Core/Materials/OOPlanetTextureGenerator.cpp` (1261 / 1258 lines) — *pending* — [findings](graphics.md#ooplanettexturegenerator)
+- [x] `Core/Materials/OONullTexture.m` → `Core/Materials/OONullTexture.cpp` (116 / 78 lines) — 6✅ 6➖ — [findings](graphics.md#oonulltexture)
+- [x] `Core/Materials/OOPNGTextureLoader.m` → `Core/Materials/OOPNGTextureLoader.cpp` (221 / 225 lines) — 7✅ — [findings](graphics.md#oopngtextureloader)
+- [x] `Core/Materials/OOPixMap.m` → `Core/Materials/OOPixMap.cpp` (242 / 235 lines) — 12✅ — [findings](graphics.md#oopixmap)
+- [x] `Core/Materials/OOPixMapChannelOperations.m` → `Core/Materials/OOPixMapChannelOperations.cpp` (331 / 353 lines) — 11✅ — [findings](graphics.md#oopixmapchanneloperations)
+- [x] `Core/Materials/OOPixMapTextureLoader.m` → `Core/Materials/OOPixMapTextureLoader.cpp` (86 / 91 lines) — 4✅ — [findings](graphics.md#oopixmaptextureloader)
+- [x] `Core/Materials/OOPlanetTextureGenerator.m` → `Core/Materials/OOPlanetTextureGenerator.cpp` (1261 / 1258 lines) — 50✅ 1⚠️ 1❌ — [findings](graphics.md#ooplanettexturegenerator)
 - [ ] `Core/Materials/OOShaderMaterial.m` → `Core/Materials/OOShaderMaterial.cpp` (794 / 770 lines) — *pending* — [findings](graphics.md#ooshadermaterial)
 - [ ] `Core/Materials/OOShaderProgram.m` → `Core/Materials/OOShaderProgram.cpp` (472 / 553 lines) — *pending* — [findings](graphics.md#ooshaderprogram)
 - [ ] `Core/Materials/OOShaderUniform.m` → `Core/Materials/OOShaderUniform.cpp` (542 / 554 lines) — *pending* — [findings](graphics.md#ooshaderuniform)
 - [ ] `Core/Materials/OOShaderUniformMethodType.m` → `Core/Materials/OOShaderUniformMethodType.cpp` (280 / 125 lines) — *pending* — [findings](graphics.md#ooshaderuniformmethodtype)
 - [ ] `Core/Materials/OOSingleTextureMaterial.m` → `Core/Materials/OOSingleTextureMaterial.cpp` (115 / 129 lines) — *pending* — [findings](graphics.md#oosingletexturematerial)
-- [ ] `Core/Materials/OOStandaloneAtmosphereGenerator.m` → `Core/Materials/OOStandaloneAtmosphereGenerator.cpp` (753 / 758 lines) — *pending* — [findings](graphics.md#oostandaloneatmospheregenerator)
-- [ ] `Core/Materials/OOTexture.m` → `Core/Materials/OOTexture.cpp` (884 / 889 lines) — *pending* — [findings](graphics.md#ootexture)
-- [ ] `Core/Materials/OOTextureGenerator.m` → `Core/Materials/OOTextureGenerator.cpp` (58 / 55 lines) — *pending* — [findings](graphics.md#ootexturegenerator)
-- [ ] `Core/Materials/OOTextureLoader.m` → `Core/Materials/OOTextureLoader.cpp` (505 / 554 lines) — *pending* — [findings](graphics.md#ootextureloader)
+- [x] `Core/Materials/OOStandaloneAtmosphereGenerator.m` → `Core/Materials/OOStandaloneAtmosphereGenerator.cpp` (753 / 758 lines) — 24✅ 1⚠️ 1❌ — [findings](graphics.md#oostandaloneatmospheregenerator)
+- [x] `Core/Materials/OOTexture.m` → `Core/Materials/OOTexture.cpp` (884 / 889 lines) — 41✅ 1⚠️ 2❌ 8➖ — [findings](graphics.md#ootexture)
+- [x] `Core/Materials/OOTextureGenerator.m` → `Core/Materials/OOTextureGenerator.cpp` (58 / 55 lines) — 5✅ — [findings](graphics.md#ootexturegenerator)
+- [x] `Core/Materials/OOTextureLoader.m` → `Core/Materials/OOTextureLoader.cpp` (505 / 554 lines) — 18✅ 1❌ — [findings](graphics.md#ootextureloader)
 - [ ] `Core/OOConvertCubeMapToLatLong.m` → `Core/OOConvertCubeMapToLatLong.cpp` (146 / 148 lines) — *pending* — [findings](graphics.md#ooconvertcubemaptolatlong)
 - [ ] `Core/OODebugGLDrawing.m` → `Core/OODebugGLDrawing.cpp` (160 / 164 lines) — *pending* — [findings](graphics.md#oodebuggldrawing)
 - [ ] `Core/OODrawable.m` → `Core/OODrawable.cpp` (86 / 116 lines) — *pending* — [findings](graphics.md#oodrawable)
@@ -257,9 +257,9 @@ Patterns that recur across files. Each instance is also recorded in its own file
 - [ ] `Core/OOPolygonSprite.m` → `Core/OOPolygonSprite.cpp` (862 / 874 lines) — *pending* — [findings](graphics.md#oopolygonsprite)
 - [ ] `Core/OOProbabilisticTextureManager.m` → `Core/OOProbabilisticTextureManager.cpp` (229 / 239 lines) — *pending* — [findings](graphics.md#ooprobabilistictexturemanager)
 - [ ] `Core/OOSkyDrawable.m` → `Core/OOSkyDrawable.cpp` (685 / 679 lines) — *pending* — [findings](graphics.md#ooskydrawable)
-- [ ] `Core/OOTextureScaling.m` → `Core/OOTextureScaling.cpp` (1578 / 1605 lines) — *pending* — [findings](graphics.md#ootexturescaling)
+- [x] `Core/OOTextureScaling.m` → `Core/OOTextureScaling.cpp` (1578 / 1605 lines) — 23✅ 6⚠️ 1❌ — [findings](graphics.md#ootexturescaling)
 - [ ] `Core/OOTextureSprite.m` → `Core/OOTextureSprite.cpp` (115 / 106 lines) — *pending* — [findings](graphics.md#ootexturesprite)
-- [ ] `Core/TextureStore.m` → *(absorbed — locate in `src/oofnd/` or callers)* (338 / — lines) — *pending* — [findings](graphics.md#texturestore)
+- [x] `Core/TextureStore.m` → *(absorbed — 9➖ — [findings](graphics.md#texturestore)
 
 ### HUD, GUI, crosshairs — [hud-gui.md](hud-gui.md)
 
