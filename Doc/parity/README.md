@@ -12,7 +12,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 Patterns that recur across files. Each instance is also recorded in its own file's section.
 
-1. **Preference defaults: `oo_*ForKey:defaultValue:` → `isNull() ? default : xForKey()`** (❌ low, about 15 sites; see [foundation.md#oocollectionextractors](foundation.md#oocollectionextractors)). Upstream's extractor returned `defaultValue` whenever the stored value could not be converted, such as a non-numeric or unrecognised string. The port returns the default only when the key is absent; otherwise the converter yields 0/NO. Sites:
+1. **Preference defaults: `oo_*ForKey:defaultValue:` → `isNull() ? default : xForKey()`** (❌ **med** in Universe, where a malformed pref gives FOV→MIN, procedural planets off, ECM FX off and detail level 0; low elsewhere; about 15 sites; see [foundation.md#oocollectionextractors](foundation.md#oocollectionextractors)). Upstream's extractor returned `defaultValue` whenever the stored value could not be converted, such as a non-numeric or unrecognised string. The port returns the default only when the key is absent; otherwise the converter yields 0/NO. Sites:
    - `OOALSound.cpp:62` (volume_control → 0 mutes the game)
    - `OOLogging.cpp:262-267` (logging-show-time/class → NO drops the log prefixes)
    - `GameController.cpp:235,303`
@@ -50,7 +50,7 @@ Patterns that recur across files. Each instance is also recorded in its own file
 - ✔ **JS `ship.speed` became writable.** `OOJSShip.cpp:504`; it was read-only upstream. No ADR. [scripting.md#oojsship](scripting.md#oojsship)
 - **`EquipmentInfo.provides` returns `[]` instead of `null`** for equipment with no extra-info dict (`OOEquipmentType.cpp:603`). [scripting.md#oojsequipmentinfo](scripting.md#oojsequipmentinfo)
 - ✔ **`OORoleSet::anyRole` walks roles in sorted order**, so the same random draw picks a different role (`OORoleSet.cpp:172`). [gamedata.md#ooroleset](gamedata.md#ooroleset)
-- ⚠️ *(intentional, ADR-0043 / oo-3rb.154)* Role probability sets, the pending-AI-message order and commodity generation now iterate in key order. Ship picks, AI transitions, and market prices/quantities differ from upstream for the same seed.
+- ⚠️ *(intentional, ADR-0043 / oo-3rb.154)* Populator blocks with equal priority (most of them) run in key order (`Universe.cpp:2055`), so populated ship positions differ for the same seed. Role probability sets, the pending-AI-message order and commodity generation now iterate in key order. Ship picks, AI transitions, and market prices/quantities differ from upstream for the same seed.
 - ⚠️ *(intentional, oo-9ht.115)* `SqueezeVertically1` changes output pixels for 1-channel textures (`OOTextureScaling.cpp:1272`).
 - ⚠️ *(intentional, ADR-0002)* JS syntax and semantics now follow QuickJS-ng, not SpiderMonkey 1.8.5. This affects the OXP verifier's JS check and every script.
 
