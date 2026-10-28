@@ -850,541 +850,689 @@ Upstream `src/Core/Materials/OOTextureLoader.m` ↔ `Core/Materials/OOTextureLoa
 <a id="ooconvertcubemaptolatlong"></a>
 Upstream `src/Core/OOConvertCubeMapToLatLong.m` ↔ `Core/OOConvertCubeMapToLatLong.cpp`
 
-**Status:** pending
+**Status:** done — 1 rows: 1 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOConvertCubeMapToLatLong()` (35) | | |
+| `OOConvertCubeMapToLatLong()` (35) | `OOConvertCubeMapToLatLong` `Core/OOConvertCubeMapToLatLong.cpp:37` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ (note) — The body matches upstream line for line. The only changes:
+  - The sin/cos VLAs are now `std::vector<float>`.
+  - `OOAllocatePixMap(..., 4, ...)` casts `4` to `OOPixMapFormat` (= `kOOPixMapRGBA`).
+  - `NSCParameterAssert` → `OOCParameterAssert`.
+  - The face selection, the `width*3/4 - y` latitude index, the `(x*r+1)*halfSize` truncation to `OOPixMapDimension` and the final half-size `OOScalePixMap` are unchanged.
+  - Float `sin`/`cos`/`fabs` resolve to the float overloads, as tgmath did upstream (see the cross-cutting check in `math.md`).
+  - upstream `Core/OOConvertCubeMapToLatLong.m:35-145` ↔ port `Core/OOConvertCubeMapToLatLong.cpp:37-148`
 
 ## OODebugGLDrawing
 
 <a id="oodebuggldrawing"></a>
 Upstream `src/Core/OODebugGLDrawing.m` ↔ `Core/OODebugGLDrawing.cpp`
 
-**Status:** pending
+**Status:** done — 7 rows: 7 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `ApplyColor()` (34) | | |
-| `OODebugDrawColoredBoundingBoxBetween()` (46) | | |
-| `OODebugDrawColoredLine()` (76) | | |
-| `OODebugDrawBasis()` (91) | | |
-| `OODebugDrawPoint()` (113) | | |
-| `OODebugBeginWireframe()` (128) | | |
-| `OODebugEndWireframe()` (153) | | |
+| `ApplyColor()` (34) | `ApplyColor` `Core/OODebugGLDrawing.cpp:36` | ✅ |
+| `OODebugDrawColoredBoundingBoxBetween()` (46) | `OODebugDrawColoredBoundingBoxBetween` `Core/OODebugGLDrawing.cpp:49` | ✅ |
+| `OODebugDrawColoredLine()` (76) | `OODebugDrawColoredLine` `Core/OODebugGLDrawing.cpp:79` | ✅ |
+| `OODebugDrawBasis()` (91) | `OODebugDrawBasis` `Core/OODebugGLDrawing.cpp:94` | ✅ |
+| `OODebugDrawPoint()` (113) | `OODebugDrawPoint` `Core/OODebugGLDrawing.cpp:116` | ✅ |
+| `OODebugBeginWireframe()` (128) | `OODebugBeginWireframe` `Core/OODebugGLDrawing.cpp:131` | ✅ |
+| `OODebugEndWireframe()` (153) | `OODebugEndWireframe` `Core/OODebugGLDrawing.cpp:157` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ (note) — The material that was current is now held +1 in `OODebugWFState` (`OOMaterialRetainCurrent`) and released by `OOMaterialApplyAndRelease`. Upstream held an autoreleased `[OOMaterial current]`. Order is unchanged: `applyNone` before `glPushAttrib`, and re-apply after `glPopAttrib`. A null material is still not applied, as a message to nil was. — upstream `Core/OODebugGLDrawing.m:132,157` ↔ port `Core/OODebugGLDrawing.cpp:136,161`, `Core/Materials/OOMaterial.cpp:107-121`
+- ✅ (note) — For a nil colour, `ApplyColor` still falls back to `lightGrayColor`. The vertex order of every primitive, the attrib mask, the `ignoreZ` branches and the line width / point size (1, 10) are unchanged.
 
 ## OODrawable
 
 <a id="oodrawable"></a>
 Upstream `src/Core/OODrawable.m` ↔ `Core/OODrawable.cpp`
 
-**Status:** pending
+**Status:** done — 11 rows: 10 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OODrawable renderOpaqueParts]` (33) | | |
-| `-[OODrawable renderTranslucentParts]` (37) | | |
-| `-[OODrawable hasOpaqueParts]` (41) | | |
-| `-[OODrawable hasTranslucentParts]` (46) | | |
-| `-[OODrawable collisionRadius]` (51) | | |
-| `-[OODrawable maxDrawDistance]` (56) | | |
-| `-[OODrawable boundingBox]` (61) | | |
-| `-[OODrawable setBindingTarget:]` (66) | | |
-| `-[OODrawable dumpSelfState]` (70) | | |
-| `-[OODrawable allTextures]` (75) | | |
-| `-[OODrawable totalSize]` (80) | | |
+| `-[OODrawable renderOpaqueParts]` (33) | `OODrawable::renderOpaqueParts` `Core/OODrawable.cpp:35` | ✅ |
+| `-[OODrawable renderTranslucentParts]` (37) | `OODrawable::renderTranslucentParts` `Core/OODrawable.cpp:39` | ✅ |
+| `-[OODrawable hasOpaqueParts]` (41) | `OODrawable::hasOpaqueParts` `Core/OODrawable.cpp:43` | ✅ |
+| `-[OODrawable hasTranslucentParts]` (46) | `OODrawable::hasTranslucentParts` `Core/OODrawable.cpp:48` | ✅ |
+| `-[OODrawable collisionRadius]` (51) | `OODrawable::collisionRadius` `Core/OODrawable.cpp:53` | ✅ |
+| `-[OODrawable maxDrawDistance]` (56) | `OODrawable::maxDrawDistance` `Core/OODrawable.cpp:58` | ✅ |
+| `-[OODrawable boundingBox]` (61) | `OODrawable::boundingBox` `Core/OODrawable.cpp:63` | ✅ |
+| `-[OODrawable setBindingTarget:]` (66) | `OODrawable::setBindingTarget` `Core/OODrawable.cpp:68` | ✅ |
+| `-[OODrawable dumpSelfState]` (70) | `OODrawable::dumpSelfState` `Core/OODrawable.cpp:72` | ✅ |
+| `-[OODrawable allTextures]` (75) | `OODrawable::allTextures` `Core/OODrawable.cpp:96` | ✅ |
+| `-[OODrawable totalSize]` (80) | `OODrawable::totalSize` `Core/OODrawable.cpp:102` | ⚠️ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — The debug-monitor-only `totalSize` uses the virtual `objectSize()` (`sizeof *this` unless a subclass overrides it) instead of `-oo_objectSize`, so reported byte counts differ. The comment cites bead oo-9ht.9. — upstream `Core/OODrawable.m:80` ↔ port `Core/OODrawable.cpp:101-105`, `Core/OODrawable.h:81`
+- ✅ (note) — The port adds `description()` / `descriptionComponents()` (`<DemangledClass 0x…>{…}`, replacing NSObject's) and `OODrawableAutorelease`. Upstream had no such methods in this file; they are not behaviour of the rows above. — port `Core/OODrawable.cpp:76-116`
 
 ## OOEnvironmentCubeMap
 
 <a id="ooenvironmentcubemap"></a>
-Upstream `src/Core/OOEnvironmentCubeMap.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/OOEnvironmentCubeMap.m` ↔ *(none — the file was never in the upstream build and was deleted as dead code: bead oo-v7ob, decision oo-9wpwn; note at `Core/Universe.cpp:10598`)*
 
-**Status:** pending
+**Status:** done — 10 rows: 0 ✅ 0 ⚠️ 0 ❌ 10 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOEnvironmentCubeMap initWithSideLength:]` (55) | | |
-| `-[OOEnvironmentCubeMap dealloc]` (69) | | |
-| `-[OOEnvironmentCubeMap render]` (76) | | |
-| `-[OOEnvironmentCubeMap renderOnePassWithSky:sun:planets:]` (130) | | |
-| `-[OOEnvironmentCubeMap setUp]` (166) | | |
-| `-[OOEnvironmentCubeMap apply]` (216) | | |
-| `-[OOEnvironmentCubeMap dimensions]` (222) | | |
-| `-[OOEnvironmentCubeMap forceRebind]` (227) | | |
-| `-[OOEnvironmentCubeMap isCubeMap]` (240) | | |
-| `-[OOEnvironmentCubeMap copyPixMapRepresentation]` (245) | | |
+| `-[OOEnvironmentCubeMap initWithSideLength:]` (55) | — (deleted, bead oo-v7ob) | ➖ |
+| `-[OOEnvironmentCubeMap dealloc]` (69) | — (deleted) | ➖ |
+| `-[OOEnvironmentCubeMap render]` (76) | — (deleted) | ➖ |
+| `-[OOEnvironmentCubeMap renderOnePassWithSky:sun:planets:]` (130) | — (deleted) | ➖ |
+| `-[OOEnvironmentCubeMap setUp]` (166) | — (deleted) | ➖ |
+| `-[OOEnvironmentCubeMap apply]` (216) | — (deleted) | ➖ |
+| `-[OOEnvironmentCubeMap dimensions]` (222) | — (deleted) | ➖ |
+| `-[OOEnvironmentCubeMap forceRebind]` (227) | — (deleted) | ➖ |
+| `-[OOEnvironmentCubeMap isCubeMap]` (240) | — (deleted) | ➖ |
+| `-[OOEnvironmentCubeMap copyPixMapRepresentation]` (245) | — (deleted) | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ➖ **low** — The class is gone and nothing replaces it. This matches the upstream binary:
+  - `OOEnvironmentCubeMap.m` is not listed in upstream `src/Core/meson.build`, which lists its neighbours, e.g. `OOConvertCubeMapToLatLong.m` at line 39.
+  - No other upstream source references the class. The only mention is a TODO comment, upstream `Core/Universe.m:465`.
+  - The port keeps that TODO with the deletion noted — port `Core/Universe.cpp:10598-10599`. `Core/Materials/OOTexture.h:125` still names it in a comment.
+  - No observable change.
 
 ## OOGraphicsResetManager
 
 <a id="oographicsresetmanager"></a>
 Upstream `src/Core/OOGraphicsResetManager.m` ↔ `Core/OOGraphicsResetManager.cpp`
 
-**Status:** pending
+**Status:** done — 11 rows: 4 ✅ 1 ⚠️ 0 ❌ 6 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOGraphicsResetManager dealloc]` (36) | | |
-| `+[OOGraphicsResetManager sharedManager]` (45) | | |
-| `-[OOGraphicsResetManager registerClient:]` (52) | | |
-| `-[OOGraphicsResetManager unregisterClient:]` (61) | | |
-| `-[OOGraphicsResetManager resetGraphicsState]` (66) | | |
-| `+[OOGraphicsResetManager(Singleton) allocWithZone:]` (103) | | |
-| `-[OOGraphicsResetManager(Singleton) copyWithZone:]` (112) | | |
-| `-[OOGraphicsResetManager(Singleton) retain]` (117) | | |
-| `-[OOGraphicsResetManager(Singleton) retainCount]` (122) | | |
-| `-[OOGraphicsResetManager(Singleton) release]` (127) | | |
-| `-[OOGraphicsResetManager(Singleton) autorelease]` (131) | | |
+| `-[OOGraphicsResetManager dealloc]` (36) | `OOGraphicsResetManager::~OOGraphicsResetManager` `Core/OOGraphicsResetManager.cpp:40` | ✅ |
+| `+[OOGraphicsResetManager sharedManager]` (45) | `OOGraphicsResetManager::sharedManager` `Core/OOGraphicsResetManager.cpp:46` | ✅ |
+| `-[OOGraphicsResetManager registerClient:]` (52) | `OOGraphicsResetManager::registerCxxClient` `Core/OOGraphicsResetManager.cpp:53` | ✅ |
+| `-[OOGraphicsResetManager unregisterClient:]` (61) | `OOGraphicsResetManager::unregisterCxxClient` `Core/OOGraphicsResetManager.cpp:60` | ✅ |
+| `-[OOGraphicsResetManager resetGraphicsState]` (66) | `OOGraphicsResetManager::resetGraphicsState` `Core/OOGraphicsResetManager.cpp:65` | ⚠️ |
+| `+[OOGraphicsResetManager(Singleton) allocWithZone:]` (103) | — not translated (comment `Core/OOGraphicsResetManager.cpp:97-99`, amendment oo-r7m0) | ➖ |
+| `-[OOGraphicsResetManager(Singleton) copyWithZone:]` (112) | — not translated | ➖ |
+| `-[OOGraphicsResetManager(Singleton) retain]` (117) | — not translated | ➖ |
+| `-[OOGraphicsResetManager(Singleton) retainCount]` (122) | — not translated | ➖ |
+| `-[OOGraphicsResetManager(Singleton) release]` (127) | — not translated | ➖ |
+| `-[OOGraphicsResetManager(Singleton) autorelease]` (131) | — not translated | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `resetGraphicsState` iterates over a snapshot of the client set. A client unregistered by an earlier client during the reset is skipped, and registering during the reset is safe. Upstream enumerated the live `NSMutableSet`, so mutating it during the reset was undefined. The port comment documents this. Client order is hash order in both, so it is unspecified either way. — upstream `Core/OOGraphicsResetManager.m:78-86` ↔ port `Core/OOGraphicsResetManager.cpp:75-91`
+- ✅ (note) — The order of work matches: `glFinish`; log `rendering.reset.start` with indent; `OOOpenGLExtensionManager::reset`; `OOTexture::rebindAllTextures`; the clients; outdent; log `rendering.reset.end`. The log texts and the `kOOLogException` text are the same. An `OOException` is caught and logged, and anything else propagates, as NSException-only `@catch` did. — port `Core/OOGraphicsResetManager.cpp:67-94`
+- ➖ (note) — The singleton category is not needed: the one instance is leaked (`leakRef`) and never released. — port `Core/OOGraphicsResetManager.cpp:46-51,97-99`
 
 ## OOMesh
 
 <a id="oomesh"></a>
 Upstream `src/Core/OOMesh.m` ↔ `Core/OOMesh.cpp`
 
-**Status:** pending
+**Status:** done — 66 rows: 62 ✅ 3 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `Profile()` (87) | | |
-| `IsLegacyNormalMode()` (180) | | |
-| `IsPerVertexNormalMode()` (201) | | |
-| `+[OOMesh meshWithName:]` (223) | | |
-| `+[OOMesh meshWithName:]` (242) | | |
-| `+[OOMesh placeholderMaterial]` (263) | | |
-| `-[OOMesh init]` (274) | | |
-| `-[OOMesh dealloc]` (294) | | |
-| `NormalModeDescription()` (326) | | |
-| `-[OOMesh descriptionComponents]` (340) | | |
-| `-[OOMesh copyWithZone:]` (345) | | |
-| `-[OOMesh modelName]` (353) | | |
-| `-[OOMesh vertexCount]` (358) | | |
-| `-[OOMesh faceCount]` (363) | | |
-| `-[OOMesh renderOpaqueParts]` (368) | | |
-| `-[OOMesh rebindMaterials]` (530) | | |
-| `-[OOMesh materials]` (565) | | |
-| `-[OOMesh shaders]` (570) | | |
-| `-[OOMesh hasOpaqueParts]` (575) | | |
-| `-[OOMesh collisionRadius]` (580) | | |
-| `-[OOMesh maxDrawDistance]` (585) | | |
-| `-[OOMesh octreeDepth]` (591) | | |
-| `-[OOMesh octreeDepth]` (625) | | |
-| `-[OOMesh octree]` (631) | | |
-| `-[OOMesh findBoundingBoxRelativeToPosition:]` (664) | | |
-| `-[OOMesh findSubentityBoundingBoxWithPosition:rotMatrix:]` (709) | | |
-| `-[OOMesh meshRescaledBy:]` (739) | | |
-| `-[OOMesh setBindingTarget:]` (746) | | |
-| `-[OOMesh dumpSelfState]` (756) | | |
-| `-[OOMesh allTextures]` (768) | | |
-| `-[OOMesh totalSize]` (779) | | |
-| `-[OOMesh suppressClangStuff]` (808) | | |
-| `-[OOMesh(Private) initWithName:]` (817) | | |
-| `-[OOMesh(Private) mutableCopyWithZone:]` (881) | | |
-| `-[OOMesh(Private) deleteDisplayLists]` (913) | | |
-| `-[OOMesh(Private) resetGraphicsState]` (923) | | |
-| `-[OOMesh(Private) modelData]` (930) | | |
-| `-[OOMesh(Private) setModelFromModelData:name:]` (992) | | |
-| `-[OOMesh(Private) loadData:scaleFactor:]` (1080) | | |
-| `-[OOMesh(Private) checkNormalsAndAdjustWinding]` (1488) | | |
-| `-[OOMesh(Private) generateFaceTangents]` (1534) | | |
-| `FaceArea()` (1571) | | |
-| `-[OOMesh(Private) calculateVertexNormalsAndTangentsWithFaceRefs:]` (1580) | | |
-| `FaceAreaCorrect()` (1619) | | |
-| `-[OOMesh(Private) calculateVertexTangentsWithFaceRefs:]` (1634) | | |
-| `-[OOMesh(Private) getNormal:andTangent:forVertex:inSmoothGroup:]` (1681) | | |
-| `-[OOMesh(Private) setUpVertexArrays]` (1706) | | |
-| `-[OOMesh(Private) calculateBoundingVolumes]` (1786) | | |
-| `-[OOMesh(Private) rescaleByFactor:]` (1827) | | |
-| `-[OOMesh(Private) boundingBox]` (1850) | | |
-| `-[OOMesh(Private) debugDrawNormals]` (1856) | | |
-| `-[OOMesh(Private) setRetainedObject:forKey:]` (1907) | | |
-| `Scribble()` (1919) | | |
-| `-[OOMesh(Private) allocateBytesWithSize:count:key:]` (1941) | | |
-| `-[OOMesh(Private) allocateVertexBuffersWithCount:]` (1956) | | |
-| `-[OOMesh(Private) allocateNormalBuffersWithCount:]` (1962) | | |
-| `-[OOMesh(Private) allocateFaceBuffersWithCount:]` (1969) | | |
-| `-[OOMesh(Private) allocateVertexArrayBuffersWithCount:]` (1975) | | |
-| `-[OOMesh(Private) renameTexturesFrom:to:]` (1986) | | |
-| `+[OOCacheManager(OOMesh) meshDataForName:]` (2006) | | |
-| `+[OOCacheManager(OOMesh) setMeshData:forName:]` (2011) | | |
-| `+[OOCacheManager(Octree) octreeForModel:]` (2024) | | |
-| `+[OOCacheManager(Octree) setOctree:forModel:]` (2041) | | |
-| `VFRAddFace()` (2048) | | |
-| `VFRGetCount()` (2061) | | |
-| `VFRGetFaceAtIndex()` (2068) | | |
+| enum `kBaseOctreeDepth`…`kOctreeSmallSizeThreshold`, normal-mode enum, log-class constants (65–80) | same `Core/OOMesh.cpp:69-84` | ✅ |
+| `Profile()` (87) | `Profile` `Core/OOMesh.cpp:91` | ✅ |
+| `IsLegacyNormalMode()` (180) | `IsLegacyNormalMode` `Core/OOMesh.cpp:148` | ✅ |
+| `IsPerVertexNormalMode()` (201) | `IsPerVertexNormalMode` `Core/OOMesh.cpp:168` | ✅ |
+| `+[OOMesh meshWithName:cacheKey:…shaderBindingTarget:]` (223) | `OOMesh::meshWithName` (7-arg) `Core/OOMesh.cpp:187` | ✅ |
+| `+[OOMesh meshWithName:…scaleFactor:cacheWriteable:]` (242) | `OOMesh::meshWithName` (9-arg) `Core/OOMesh.cpp:202` | ✅ |
+| `+[OOMesh placeholderMaterial]` (263) | `OOMesh::placeholderMaterial` `Core/OOMesh.cpp:218` | ✅ |
+| `-[OOMesh init]` (274) | `OOMesh::OOMesh` `Core/OOMesh.cpp:232` | ✅ |
+| `-[OOMesh dealloc]` (294) | `OOMesh::~OOMesh` `Core/OOMesh.cpp:246` | ✅ |
+| `NormalModeDescription()` (326) | `NormalModeDescription` `Core/OOMesh.cpp:267` | ✅ |
+| `-[OOMesh descriptionComponents]` (340) | `OOMesh::descriptionComponents` `Core/OOMesh.cpp:283` | ✅ |
+| `-[OOMesh copyWithZone:]` (345) | `OOMesh::copyWithZone` `Core/OOMesh.cpp:290` | ✅ |
+| `-[OOMesh modelName]` (353) | `OOMesh::modelName` `Core/OOMesh.cpp:299` | ✅ |
+| `-[OOMesh vertexCount]` (358) | `OOMesh::getVertexCount` `Core/OOMesh.cpp:304` | ✅ |
+| `-[OOMesh faceCount]` (363) | `OOMesh::getFaceCount` `Core/OOMesh.cpp:309` | ✅ |
+| `-[OOMesh renderOpaqueParts]` (368) | `OOMesh::renderOpaqueParts` `Core/OOMesh.cpp:314` | ✅ |
+| `-[OOMesh rebindMaterials]` (530) | `OOMesh::rebindMaterials` `Core/OOMesh.cpp:485` | ✅ |
+| `-[OOMesh materials]` (565) | `OOMesh::getMaterials` `Core/OOMesh.cpp:521` | ✅ |
+| `-[OOMesh shaders]` (570) | `OOMesh::shaders` `Core/OOMesh.cpp:526` | ✅ |
+| `-[OOMesh hasOpaqueParts]` (575) | `OOMesh::hasOpaqueParts` `Core/OOMesh.cpp:531` | ✅ |
+| `-[OOMesh collisionRadius]` (580) | `OOMesh::collisionRadius` `Core/OOMesh.cpp:536` | ✅ |
+| `-[OOMesh maxDrawDistance]` (585) | `OOMesh::maxDrawDistance` `Core/OOMesh.cpp:541` | ✅ |
+| `-[OOMesh octreeDepth]` (591, ADAPTIVE_OCTREE_DEPTH) | `OOMesh::octreeDepth` `Core/OOMesh.cpp:547` | ✅ |
+| `-[OOMesh octreeDepth]` (625, non-adaptive) | `OOMesh::octreeDepth` `Core/OOMesh.cpp:581` | ✅ |
+| `-[OOMesh octree]` (631) | `OOMesh::getOctree` `Core/OOMesh.cpp:587` | ✅ |
+| `-[OOMesh findBoundingBoxRelativeToPosition:…]` (664) | `OOMesh::findBoundingBoxRelativeToPosition` `Core/OOMesh.cpp:617` | ✅ |
+| `-[OOMesh findSubentityBoundingBoxWithPosition:rotMatrix:]` (709) | `OOMesh::findSubentityBoundingBoxWithPosition` `Core/OOMesh.cpp:655` | ✅ |
+| `-[OOMesh meshRescaledBy:]` (739) | `OOMesh::meshRescaledBy` `Core/OOMesh.cpp:685` | ✅ |
+| `-[OOMesh setBindingTarget:]` (746) | `OOMesh::setBindingTarget` `Core/OOMesh.cpp:692` | ✅ |
+| `-[OOMesh dumpSelfState]` (756) | `OOMesh::dumpSelfState` `Core/OOMesh.cpp:704` | ✅ |
+| `-[OOMesh allTextures]` (768) | `OOMesh::allTextures` `Core/OOMesh.cpp:716` | ✅ |
+| `-[OOMesh totalSize]` (779) | `OOMesh::totalSize` `Core/OOMesh.cpp:733` | ✅ |
+| `-[OOMesh suppressClangStuff]` (808) | `OOMesh::suppressClangStuff` `Core/OOMesh.cpp:766` | ✅ |
+| `-[OOMesh(Private) initWithName:…]` (817) | `OOMesh::initWithName` `Core/OOMesh.cpp:771` | ✅ |
+| `-[OOMesh(Private) mutableCopyWithZone:]` (881) | `OOMesh::mutableCopyWithZone` `Core/OOMesh.cpp:831` (+ defaulted copy ctor `Core/OOMesh.h:122`) | ✅ |
+| `-[OOMesh(Private) deleteDisplayLists]` (913) | `OOMesh::deleteDisplayLists` `Core/OOMesh.cpp:1400` | ✅ |
+| `-[OOMesh(Private) resetGraphicsState]` (923) | `OOMesh::resetGraphicsState` `Core/OOMesh.cpp:1410` | ✅ |
+| `-[OOMesh(Private) modelData]` (930) | `OOMesh::modelData` `Core/OOMesh.cpp:855` | ⚠️ |
+| `-[OOMesh(Private) setModelFromModelData:name:]` (992) | `OOMesh::setModelFromModelData` `Core/OOMesh.cpp:899` | ⚠️ |
+| `-[OOMesh(Private) loadData:scaleFactor:]` (1080) | `OOMesh::loadData` `Core/OOMesh.cpp:984` | ❌ |
+| `-[OOMesh(Private) checkNormalsAndAdjustWinding]` (1488) | `OOMesh::checkNormalsAndAdjustWinding` `Core/OOMesh.cpp:1640` | ✅ |
+| `-[OOMesh(Private) generateFaceTangents]` (1534) | `OOMesh::generateFaceTangents` `Core/OOMesh.cpp:1686` | ✅ |
+| `FaceArea()` (1571) | `FaceArea` `Core/OOMesh.cpp:1616` | ✅ |
+| `-[OOMesh(Private) calculateVertexNormalsAndTangentsWithFaceRefs:]` (1580) | `OOMesh::calculateVertexNormalsAndTangentsWithFaceRefs` `Core/OOMesh.cpp:1723` | ✅ |
+| `FaceAreaCorrect()` (1619) | `FaceAreaCorrect` `Core/OOMesh.cpp:1625` | ✅ |
+| `-[OOMesh(Private) calculateVertexTangentsWithFaceRefs:]` (1634) | `OOMesh::calculateVertexTangentsWithFaceRefs` `Core/OOMesh.cpp:1762` | ✅ |
+| `-[OOMesh(Private) getNormal:andTangent:forVertex:inSmoothGroup:]` (1681) | `OOMesh::getNormal` `Core/OOMesh.cpp:1809` | ✅ |
+| `-[OOMesh(Private) setUpVertexArrays]` (1706) | `OOMesh::setUpVertexArrays` `Core/OOMesh.cpp:1417` | ✅ |
+| `-[OOMesh(Private) calculateBoundingVolumes]` (1786) | `OOMesh::calculateBoundingVolumes` `Core/OOMesh.cpp:1834` | ✅ |
+| `-[OOMesh(Private) rescaleByFactor:]` (1827) | `OOMesh::rescaleByFactor` `Core/OOMesh.cpp:1875` | ✅ |
+| `-[OOMesh(Private) boundingBox]` (1850) | `OOMesh::boundingBox` `Core/OOMesh.cpp:1898` | ✅ |
+| `-[OOMesh(Private) debugDrawNormals]` (1856) | `OOMesh::debugDrawNormals` `Core/OOMesh.cpp:1498` | ✅ |
+| `-[OOMesh(Private) setRetainedObject:forKey:]` (1907) | `OOMesh::setRetainedObject` `Core/OOMesh.cpp:1549` | ✅ |
+| `Scribble()` (1919) | `Scribble` `Core/OOMesh.cpp:1381` | ✅ |
+| `-[OOMesh(Private) allocateBytesWithSize:count:key:]` (1941) | `OOMesh::allocateBytesWithSize` `Core/OOMesh.cpp:1557` | ⚠️ |
+| `-[OOMesh(Private) allocateVertexBuffersWithCount:]` (1956) | `OOMesh::allocateVertexBuffersWithCount` `Core/OOMesh.cpp:1573` | ✅ |
+| `-[OOMesh(Private) allocateNormalBuffersWithCount:]` (1962) | `OOMesh::allocateNormalBuffersWithCount` `Core/OOMesh.cpp:1579` | ✅ |
+| `-[OOMesh(Private) allocateFaceBuffersWithCount:]` (1969) | `OOMesh::allocateFaceBuffersWithCount` `Core/OOMesh.cpp:1586` | ✅ |
+| `-[OOMesh(Private) allocateVertexArrayBuffersWithCount:]` (1975) | `OOMesh::allocateVertexArrayBuffersWithCount` `Core/OOMesh.cpp:1592` | ✅ |
+| `-[OOMesh(Private) renameTexturesFrom:to:]` (1986) | `OOMesh::renameTexturesFrom` `Core/OOMesh.cpp:1603` | ✅ |
+| `+[OOCacheManager(OOMesh) meshDataForName:]` (2006) | `OOCacheManagerMeshDataForName` `Core/OOMesh.cpp:1909` | ✅ |
+| `+[OOCacheManager(OOMesh) setMeshData:forName:]` (2011) | `OOCacheManagerSetMeshData` `Core/OOMesh.cpp:1914` | ✅ |
+| `+[OOCacheManager(Octree) octreeForModel:]` (2024) | `OOCacheManagerOctreeForModel` `Core/OOMesh.cpp:1927` (nil-key guard moved to caller `:590`) | ✅ |
+| `+[OOCacheManager(Octree) setOctree:forModel:]` (2041) | `OOCacheManagerSetOctree` `Core/OOMesh.cpp:1940` (nil-key guard at caller `:605`) | ✅ |
+| `VFRAddFace()` (2048) | `VFRAddFace` `Core/OOMesh.cpp:1947` | ✅ |
+| `VFRGetCount()` (2061) | `VFRGetCount` `Core/OOMesh.cpp:1958` | ✅ |
+| `VFRGetFaceAtIndex()` (2068) | `VFRGetFaceAtIndex` `Core/OOMesh.cpp:1965` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — The `mesh.load.warning.nonTriangular` warning names the mesh differently. Upstream `initWithName:` calls `[super init]`, not `-init`, so `baseFile` is still nil inside `loadData` and the message reads "of (null)". The port constructor sets `baseFile = "No Model"` first, so it reads "of No Model". This log text matters to goldens. — upstream `Core/OOMesh.m:829,1275` ↔ port `Core/OOMesh.cpp:234,1166`
+- ⚠️ **low** — The port copies mesh-cache data where upstream aliased it. — upstream `Core/OOMesh.m:949,1049` ↔ port `Core/OOMesh.cpp:5-10,885,952`
+  - Upstream `modelData` put the mesh's own `_retainedObjects` NSData buffers into the `OOMesh` cache by reference (`OOCacheManager.m:185`), and `setModelFromModelData` used the cached bytes in place.
+  - So a later `meshRescaledBy:` (`OOVisualEffectEntity.m:375`) also rescaled the cached vertices for the rest of the session. That was an upstream bug: later visual effects with the same model loaded pre-scaled.
+  - The port copies in both directions, so this no longer happens. The port's header comment documents the change.
+- ⚠️ **low** — `allocateBytesWithSize` now zero-fills (`oo::Data::setLength`); upstream `malloc` left memory uninitialised. Slots a failed parse leaves unwritten are 0, not garbage. The comment documents this. — upstream `Core/OOMesh.m:1947` ↔ port `Core/OOMesh.cpp:1564`
+- ✅ (note) — The .dat tokenizer matches upstream. — port `Core/OOMesh.cpp:1024-1365`
+  - `oo::str::split` keeps empty parts, as `componentsSeparatedByString:` did, so `#…` lines become empty.
+  - `Scanner::scanString` is ASCII case-insensitive and skips whitespace and newlines, as NSScanner's defaults did. `scanInt` saturates as in GNUstep, and `scanFloat` is `scanDouble` narrowed to float.
+  - Section order is unchanged: NVERTS→NFACES→VERTEX→FACES→TEXTURES→NAMES→NORMALS→TANGENTS. Every `failString` text and the `mesh.error`/`mesh.load.*` log classes are identical.
+  - `explicitTangents` is still never set, an upstream quirk kept as is.
+- ✅ (note) — The cache keys match upstream. — port `Core/OOMesh.cpp:799,995,1893-1895`
+  - Mesh data uses `"%s:%u:%.3f"` (file name, normal mode, scale) in cache `"OOMesh"`.
+  - The octree uses `"%s-%.3f"` in cache `"octrees"`.
+  - After `rescaleByFactor`, `baseFile` and the octree key are cleared, so the octree is neither read from nor written to the cache, as upstream.
+- ✅ (note) — Normals, tangents and material binding match upstream. — port `Core/OOMesh.cpp:390-424,485-519`
+  - Smoothing groups: `r` is the smooth group, and edge vertices use `getNormal`.
+  - The normal/tangent maths keeps the same operand order; only the VLAs became `std::vector<float>`.
+  - `rebindMaterials` walks `0..materialCount` with deferred release and the `_oo_placeholder_material` sentinel.
+  - `renderOpaqueParts` applies materials in index order, with the same `triangle_range` and texture-coordinate switching.
+- ✅ (note) — `meshRescaledBy` still shares the vertex and display buffers with the source mesh: the defaulted copy constructor copies the refcounted raw pointers. Rescaling therefore also mutates the source mesh's vertices, exactly as `NSCopyObject` did. — port `Core/OOMesh.h:122`
+- ✅ (note) — `allTextures` (debug only) returns a vector that may contain duplicates, where upstream returned an `NSSet`. The port comment says the caller's forwarder removes duplicates; that was not checked. — port `Core/OOMesh.cpp:716-731`
 
 ## OOOpenGL
 
 <a id="ooopengl"></a>
 Upstream `src/Core/OOOpenGL.m` ↔ `Core/OOOpenGL.cpp`
 
-**Status:** pending
+**Status:** done — 24 rows: 24 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOCheckOpenGLErrors()` (38) | | |
-| `OOGLWireframeModeOn()` (85) | | |
-| `OOGLWireframeModeOff()` (100) | | |
-| `GLDrawBallBillboard()` (107) | | |
-| `GLDrawOvalPoints()` (132) | | |
-| `GLDrawOval()` (149) | | |
-| `GLDrawFilledOval()` (158) | | |
-| `GLDrawPoints()` (167) | | |
-| `GLDrawFilledPoints()` (180) | | |
-| `GLDrawQuadStrip()` (193) | | |
-| `GLScaledLineWidth()` (206) | | |
-| `GLScaledPointSize()` (212) | | |
-| `GLGetDisplayScaleFactor()` (218) | | |
-| `GLSetDisplayScaleFactor()` (223) | | |
-| `LogOpenGLState()` (239) | | |
-| `OOGLColorToString()` (270) | | |
-| `GLDumpLightState()` (292) | | |
-| `GLDumpMaterialState()` (317) | | |
-| `GLDumpCullingState()` (380) | | |
-| `GLDumpFogState()` (402) | | |
-| `GLDumpStateFlags()` (439) | | |
-| `OOGLEnumToString()` (471) | | |
-| `OOGLFlagToString()` (541) | | |
-| `LogOpenGLState()` (548) | | |
+| `OOCheckOpenGLErrors()` (38) | `cxx_OOCheckOpenGLErrors(const char*, ...)` `Core/OOOpenGL.cpp:42` → `cxx_OOCheckOpenGLErrors(std::function)` `:62` | ✅ |
+| `OOGLWireframeModeOn()` (85) | `OOGLWireframeModeOn` `Core/OOOpenGL.cpp:107` | ✅ |
+| `OOGLWireframeModeOff()` (100) | `OOGLWireframeModeOff` `Core/OOOpenGL.cpp:122` | ✅ |
+| `GLDrawBallBillboard()` (107) | `GLDrawBallBillboard` `Core/OOOpenGL.cpp:129` | ✅ |
+| `GLDrawOvalPoints()` (132) | `GLDrawOvalPoints` `Core/OOOpenGL.cpp:154` | ✅ |
+| `GLDrawOval()` (149) | `GLDrawOval` `Core/OOOpenGL.cpp:171` | ✅ |
+| `GLDrawFilledOval()` (158) | `GLDrawFilledOval` `Core/OOOpenGL.cpp:180` | ✅ |
+| `GLDrawPoints()` (167) | `GLDrawPoints` `Core/OOOpenGL.cpp:189` | ✅ |
+| `GLDrawFilledPoints()` (180) | `GLDrawFilledPoints` `Core/OOOpenGL.cpp:202` | ✅ |
+| `GLDrawQuadStrip()` (193) | `GLDrawQuadStrip` `Core/OOOpenGL.cpp:215` | ✅ |
+| `GLScaledLineWidth()` (206) | `GLScaledLineWidth` `Core/OOOpenGL.cpp:228` | ✅ |
+| `GLScaledPointSize()` (212) | `GLScaledPointSize` `Core/OOOpenGL.cpp:234` | ✅ |
+| `GLGetDisplayScaleFactor()` (218) | `GLGetDisplayScaleFactor` `Core/OOOpenGL.cpp:240` | ✅ |
+| `GLSetDisplayScaleFactor()` (223) | `GLSetDisplayScaleFactor` `Core/OOOpenGL.cpp:245` | ✅ |
+| `LogOpenGLState()` (239) | `LogOpenGLState` `Core/OOOpenGL.cpp:261` | ✅ |
+| `OOGLColorToString()` (270) | `OOGLColorToString` `Core/OOOpenGL.cpp:292` | ✅ |
+| `GLDumpLightState()` (292) | `GLDumpLightState` `Core/OOOpenGL.cpp:314` | ✅ |
+| `GLDumpMaterialState()` (317) | `GLDumpMaterialState` `Core/OOOpenGL.cpp:339` | ✅ |
+| `GLDumpCullingState()` (380) | `GLDumpCullingState` `Core/OOOpenGL.cpp:402` | ✅ |
+| `GLDumpFogState()` (402) | `GLDumpFogState` `Core/OOOpenGL.cpp:424` | ✅ |
+| `GLDumpStateFlags()` (439) | `GLDumpStateFlags` `Core/OOOpenGL.cpp:461` | ✅ |
+| `OOGLEnumToString()` (471) | `OOGLEnumToString` `Core/OOOpenGL.cpp:493` | ✅ |
+| `OOGLFlagToString()` (541) | `OOGLFlagToString` `Core/OOOpenGL.cpp:563` | ✅ |
+| `LogOpenGLState()` (548, NDEBUG stub) | `LogOpenGLState` `Core/OOOpenGL.cpp:570` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ (note) — `OOCheckOpenGLErrors` builds the context string once, on the first error, and reuses it. Upstream reassigned `format` to the formatted string inside the loop, so a second queued GL error re-formatted the already-formatted text with the same varargs. The two differ only when two or more errors are queued and the expanded context contains a `%`. Otherwise the following are unchanged:
+  - the log class `rendering.opengl.error` and its text;
+  - `(null)` for a NULL `gluErrorString`;
+  - `{:#x}` for `%#x` (`errCode` is never 0 here);
+  - the `noReenter` guard;
+  - the `willDisplay` short-circuit.
+  - upstream `Core/OOOpenGL.m:58-70` ↔ port `Core/OOOpenGL.cpp:76-91`
+- ✅ (note) — The state-dump helpers (debug only) keep every message text, the order, and the upstream quirks:
+  - lights read `GL_LIGHT1` for every index;
+  - "Fog index" re-reads `GL_FOG_DENSITY`;
+  - `DUMP_GET_FLAG` is never `#undef`'d.
+  - `%g` → `{:g}` gives the same output.
+  - upstream `Core/OOOpenGL.m:292-468` ↔ port `Core/OOOpenGL.cpp:314-487`
+- ✅ (note) — `GLDrawBallBillboard`/`GLDrawOvalPoints`: the loop bounds compare a `GLfloat` to `M_PI*2.0` (double), and the step is a float `+=`, as upstream. `sin`/`cos` on a float resolve to the float overloads, as tgmath did (see `math.md`). The vertex counts therefore match.
 
 ## OOOpenGLExtensionManager
 
 <a id="ooopenglextensionmanager"></a>
 Upstream `src/Core/OOOpenGLExtensionManager.m` ↔ `Core/OOOpenGLExtensionManager.cpp`
 
-**Status:** pending
+**Status:** done — 40 rows: 33 ✅ 1 ⚠️ 0 ❌ 6 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `ArrayOfExtensions()` (173) | | |
-| `-[OOOpenGLExtensionManager init]` (187) | | |
-| `-[OOOpenGLExtensionManager reset]` (202) | | |
-| `-[OOOpenGLExtensionManager dealloc]` (300) | | |
-| `+[OOOpenGLExtensionManager sharedManager]` (315) | | |
-| `-[OOOpenGLExtensionManager haveExtension:]` (323) | | |
-| `-[OOOpenGLExtensionManager shadersSupported]` (339) | | |
-| `-[OOOpenGLExtensionManager shadersForceDisabled]` (348) | | |
-| `-[OOOpenGLExtensionManager defaultDetailLevel]` (357) | | |
-| `-[OOOpenGLExtensionManager maximumDetailLevel]` (370) | | |
-| `-[OOOpenGLExtensionManager textureImageUnitCount]` (383) | | |
-| `-[OOOpenGLExtensionManager vboSupported]` (392) | | |
-| `-[OOOpenGLExtensionManager fboSupported]` (401) | | |
-| `-[OOOpenGLExtensionManager textureCombinersSupported]` (410) | | |
-| `-[OOOpenGLExtensionManager textureUnitCount]` (419) | | |
-| `-[OOOpenGLExtensionManager majorVersionNumber]` (428) | | |
-| `-[OOOpenGLExtensionManager minorVersionNumber]` (433) | | |
-| `-[OOOpenGLExtensionManager releaseVersionNumber]` (438) | | |
-| `-[OOOpenGLExtensionManager getVersionMajor:minor:release:]` (443) | | |
-| `-[OOOpenGLExtensionManager versionIsAtLeastMajor:minor:]` (453) | | |
-| `-[OOOpenGLExtensionManager vendorString]` (458) | | |
-| `-[OOOpenGLExtensionManager rendererString]` (463) | | |
-| `-[OOOpenGLExtensionManager usePointSmoothing]` (468) | | |
-| `-[OOOpenGLExtensionManager useLineSmoothing]` (473) | | |
-| `-[OOOpenGLExtensionManager useDustShader]` (478) | | |
-| `IntegerFromString()` (485) | | |
-| `-[OOOpenGLExtensionManager(OOPrivate) checkShadersSupported]` (509) | | |
-| `-[OOOpenGLExtensionManager(OOPrivate) checkVBOSupported]` (580) | | |
-| `-[OOOpenGLExtensionManager(OOPrivate) checkFBOSupported]` (600) | | |
-| `-[OOOpenGLExtensionManager(OOPrivate) checkTextureCombinersSupported]` (657) | | |
-| `CheckRegExps()` (677) | | |
-| `CompareGPUSettingsByPriority()` (704) | | |
-| `-[OOOpenGLExtensionManager(OOPrivate) lookUpPerGPUSettingsWithVersionString:extensionsString:]` (722) | | |
-| `+[OOOpenGLExtensionManager(Singleton) allocWithZone:]` (775) | | |
-| `-[OOOpenGLExtensionManager(Singleton) copyWithZone:]` (784) | | |
-| `-[OOOpenGLExtensionManager(Singleton) retain]` (789) | | |
-| `-[OOOpenGLExtensionManager(Singleton) retainCount]` (794) | | |
-| `-[OOOpenGLExtensionManager(Singleton) release]` (799) | | |
-| `-[OOOpenGLExtensionManager(Singleton) autorelease]` (803) | | |
-| `OOBadOpenGLExtensionUsed()` (812) | | |
+| Windows extension function-pointer table, all initialised to `OOBadOpenGLExtensionUsed` (54-146) | same `Core/OOOpenGLExtensionManager.cpp:55-145` | ✅ |
+| `ArrayOfExtensions()` (173) | `ArrayOfExtensions` `Core/OOOpenGLExtensionManager.cpp:162` | ✅ |
+| `-[OOOpenGLExtensionManager init]` (187) | implicit constructor (`std::mutex lock` member, `Core/OOOpenGLExtensionManager.h:115`) + `reset()` from `sharedManager` `:307` | ✅ |
+| `-[OOOpenGLExtensionManager reset]` (202) | `OOOpenGLExtensionManager::reset` `Core/OOOpenGLExtensionManager.cpp:184` | ⚠️ |
+| `-[OOOpenGLExtensionManager dealloc]` (300) | `OOOpenGLExtensionManager::~OOOpenGLExtensionManager` `Core/OOOpenGLExtensionManager.cpp:294` | ✅ |
+| `+[OOOpenGLExtensionManager sharedManager]` (315) | `OOOpenGLExtensionManager::sharedManager` `Core/OOOpenGLExtensionManager.cpp:300` | ✅ |
+| `-[OOOpenGLExtensionManager haveExtension:]` (323) | `OOOpenGLExtensionManager::haveExtension` `Core/OOOpenGLExtensionManager.cpp:312` | ✅ |
+| `-[OOOpenGLExtensionManager shadersSupported]` (339) | `OOOpenGLExtensionManager::shadersSupported` `Core/OOOpenGLExtensionManager.cpp:328` | ✅ |
+| `-[OOOpenGLExtensionManager shadersForceDisabled]` (348) | `OOOpenGLExtensionManager::shadersForceDisabled` `Core/OOOpenGLExtensionManager.cpp:337` | ✅ |
+| `-[OOOpenGLExtensionManager defaultDetailLevel]` (357) | `OOOpenGLExtensionManager::defaultDetailLevel` `Core/OOOpenGLExtensionManager.cpp:346` | ✅ |
+| `-[OOOpenGLExtensionManager maximumDetailLevel]` (370) | `OOOpenGLExtensionManager::maximumDetailLevel` `Core/OOOpenGLExtensionManager.cpp:359` | ✅ |
+| `-[OOOpenGLExtensionManager textureImageUnitCount]` (383) | `OOOpenGLExtensionManager::textureImageUnitCount` `Core/OOOpenGLExtensionManager.cpp:372` | ✅ |
+| `-[OOOpenGLExtensionManager vboSupported]` (392) | `OOOpenGLExtensionManager::vboSupported` `Core/OOOpenGLExtensionManager.cpp:381` | ✅ |
+| `-[OOOpenGLExtensionManager fboSupported]` (401) | `OOOpenGLExtensionManager::fboSupported` `Core/OOOpenGLExtensionManager.cpp:390` | ✅ |
+| `-[OOOpenGLExtensionManager textureCombinersSupported]` (410) | `OOOpenGLExtensionManager::textureCombinersSupported` `Core/OOOpenGLExtensionManager.cpp:399` | ✅ |
+| `-[OOOpenGLExtensionManager textureUnitCount]` (419) | `OOOpenGLExtensionManager::textureUnitCount` `Core/OOOpenGLExtensionManager.cpp:408` | ✅ |
+| `-[OOOpenGLExtensionManager majorVersionNumber]` (428) | `OOOpenGLExtensionManager::majorVersionNumber` `Core/OOOpenGLExtensionManager.cpp:417` | ✅ |
+| `-[OOOpenGLExtensionManager minorVersionNumber]` (433) | `OOOpenGLExtensionManager::minorVersionNumber` `Core/OOOpenGLExtensionManager.cpp:422` | ✅ |
+| `-[OOOpenGLExtensionManager releaseVersionNumber]` (438) | `OOOpenGLExtensionManager::releaseVersionNumber` `Core/OOOpenGLExtensionManager.cpp:427` | ✅ |
+| `-[OOOpenGLExtensionManager getVersionMajor:minor:release:]` (443) | `OOOpenGLExtensionManager::getVersionMajor` `Core/OOOpenGLExtensionManager.cpp:432` | ✅ |
+| `-[OOOpenGLExtensionManager versionIsAtLeastMajor:minor:]` (453) | `OOOpenGLExtensionManager::versionIsAtLeastMajor` `Core/OOOpenGLExtensionManager.cpp:442` | ✅ |
+| `-[OOOpenGLExtensionManager vendorString]` (458) | `OOOpenGLExtensionManager::vendorString` `Core/OOOpenGLExtensionManager.cpp:447` | ✅ |
+| `-[OOOpenGLExtensionManager rendererString]` (463) | `OOOpenGLExtensionManager::rendererString` `Core/OOOpenGLExtensionManager.cpp:452` | ✅ |
+| `-[OOOpenGLExtensionManager usePointSmoothing]` (468) | `OOOpenGLExtensionManager::usePointSmoothing` `Core/OOOpenGLExtensionManager.cpp:457` | ✅ |
+| `-[OOOpenGLExtensionManager useLineSmoothing]` (473) | `OOOpenGLExtensionManager::useLineSmoothing` `Core/OOOpenGLExtensionManager.cpp:462` | ✅ |
+| `-[OOOpenGLExtensionManager useDustShader]` (478) | `OOOpenGLExtensionManager::useDustShader` `Core/OOOpenGLExtensionManager.cpp:467` | ✅ |
+| `IntegerFromString()` (485) | `IntegerFromString` `Core/OOOpenGLExtensionManager.cpp:472` | ✅ |
+| `-[OOOpenGLExtensionManager(OOPrivate) checkShadersSupported]` (509) | `OOOpenGLExtensionManager::checkShadersSupported` `Core/OOOpenGLExtensionManager.cpp:494` | ✅ |
+| `-[OOOpenGLExtensionManager(OOPrivate) checkVBOSupported]` (580) | `OOOpenGLExtensionManager::checkVBOSupported` `Core/OOOpenGLExtensionManager.cpp:563` | ✅ |
+| `-[OOOpenGLExtensionManager(OOPrivate) checkFBOSupported]` (600) | `OOOpenGLExtensionManager::checkFBOSupported` `Core/OOOpenGLExtensionManager.cpp:583` | ✅ |
+| `-[OOOpenGLExtensionManager(OOPrivate) checkTextureCombinersSupported]` (657) | `OOOpenGLExtensionManager::checkTextureCombinersSupported` `Core/OOOpenGLExtensionManager.cpp:640` | ✅ |
+| `CheckRegExps()` (677) | `CheckRegExps` `Core/OOOpenGLExtensionManager.cpp:677` (+ `MatchesRegExp` `:665`) | ✅ |
+| `CompareGPUSettingsByPriority()` (704) | sort lambda in `lookUpPerGPUSettingsWithVersionString` `Core/OOOpenGLExtensionManager.cpp:724` | ✅ |
+| `-[OOOpenGLExtensionManager(OOPrivate) lookUpPerGPUSettingsWithVersionString:extensionsString:]` (722) | `OOOpenGLExtensionManager::lookUpPerGPUSettingsWithVersionString` `Core/OOOpenGLExtensionManager.cpp:713` | ✅ |
+| `+[OOOpenGLExtensionManager(Singleton) allocWithZone:]` (775) | — not translated (comment `Core/OOOpenGLExtensionManager.cpp:763-765`, amendment oo-r7m0); "record before reset" kept at `:303-307` | ➖ |
+| `-[OOOpenGLExtensionManager(Singleton) copyWithZone:]` (784) | — not translated | ➖ |
+| `-[OOOpenGLExtensionManager(Singleton) retain]` (789) | — not translated | ➖ |
+| `-[OOOpenGLExtensionManager(Singleton) retainCount]` (794) | — not translated | ➖ |
+| `-[OOOpenGLExtensionManager(Singleton) release]` (799) | — not translated | ➖ |
+| `-[OOOpenGLExtensionManager(Singleton) autorelease]` (803) | — not translated | ➖ |
+| `OOBadOpenGLExtensionUsed()` (812) | `OOBadOpenGLExtensionUsed` `Core/OOOpenGLExtensionManager.cpp:769` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — The `rendering.opengl.extensions` log lists extensions in byte order (`std::set<std::string>`); upstream listed them in `NSSet` hash order. The count and separators are the same. A port comment cites proposed ADR-0043. — upstream `Core/OOOpenGLExtensionManager.m:248` ↔ port `Core/OOOpenGLExtensionManager.cpp:222-231`
+- ✅ (note) — Detection is unchanged:
+  - The minimum version is 3.3 and too-old raises `OoliteOpenGLTooOldException` with the same text.
+  - Shaders require the five ARB extensions, checked in the same order with the same log text.
+  - `-noshaders`/`--noshaders` is scanned over all arguments, argv[0] included.
+  - The VBO test is `≥1.5 || GL_ARB_vertex_buffer_object` (`OO_USE_VBO` is 0 in both).
+  - FBO is `GL_EXT_framebuffer_object`.
+  - Combiners are `GL_ARB_texture_env_combine`, else `textureUnitCount = 1`.
+  - upstream `Core/OOOpenGLExtensionManager.m:509-675` ↔ port `Core/OOOpenGLExtensionManager.cpp:494-656`
+- ✅ (note) — The shader-level defaults are unchanged:
+  - `default_shader_level`/`maximum_shader_level` default to `"SHADERS_FULL"`. An unknown string maps to `kOOShaderSettingDefault` (= `SHADERS_NOT_SUPPORTED`), the same in both `OOShaderSettingFromString` versions (`OOConstToString.m:458`, `.cpp:481`).
+  - When the maximum is ≤ OFF, shaders are disabled and the log names the GPU by its string `name`, else by the renderer.
+  - default is clamped to maximum.
+  - `texture_image_units`/`texture_units` can only lower the counts, floored at 0.
+  - `smooth_points`/`smooth_lines`/`use_dust_shader` default to YES.
+  - Members start zeroed, as ivars did (`Core/OOOpenGLExtensionManager.h:119-145`).
+  - port `Core/OOOpenGLExtensionManager.cpp:241-291`
+- ✅ (note) — The GPU-settings lookup keeps upstream semantics:
+  - Sorting is by `precedence` (default 1) descending, then case-insensitive name. A non-dict entry sorts with precedence 0, as nil-messaging gave.
+  - `vendor` is taken raw, so a string or an array of regexps (ANDed) works.
+  - `renderer`/`version`/`extensions` go through `oo_stringForKey`, so an array there means no restriction.
+  - A nil subject string never matches.
+  - Ties between names equal but for case now keep byte order instead of hash order; this is noted in a port comment.
+  - upstream `Core/OOOpenGLExtensionManager.m:677-770` ↔ port `Core/OOOpenGLExtensionManager.cpp:659-761`
+- ✅ (note) — NULL from `glGetString` (`GL_EXTENSIONS`/`GL_VENDOR`/`GL_RENDERER`/`GL_VERSION`) becomes `nullopt` and is logged as "(null)". Upstream passed NULL to `+stringWithUTF8String:`/`-initWithUTF8String:`, whose behaviour on NULL is Foundation's and not visible here. Reachable only without a current GL context. — upstream `Core/OOOpenGLExtensionManager.m:210-214,253` ↔ port `Core/OOOpenGLExtensionManager.cpp:174-195,238`
 
 ## OOOpenGLMatrixManager
 
 <a id="ooopenglmatrixmanager"></a>
 Upstream `src/Core/OOOpenGLMatrixManager.m` ↔ `Core/OOOpenGLMatrixManager.cpp`
 
-**Status:** pending
+**Status:** done — 60 rows: 60 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOOpenGLMatrixStack init]` (51) | | |
-| `-[OOOpenGLMatrixStack dealloc]` (59) | | |
-| `-[OOOpenGLMatrixStack push:]` (65) | | |
-| `-[OOOpenGLMatrixStack pop]` (70) | | |
-| `-[OOOpenGLMatrixStack stackCount]` (81) | | |
-| `-[OOOpenGLMatrixManager(Private) updateModelView]` (97) | | |
-| `-[OOOpenGLMatrixManager(Private) updateProjection]` (112) | | |
-| `-[OOOpenGLMatrixManager init]` (127) | | |
-| `-[OOOpenGLMatrixManager dealloc]` (150) | | |
-| `-[OOOpenGLMatrixManager loadModelView:]` (157) | | |
-| `-[OOOpenGLMatrixManager resetModelView]` (164) | | |
-| `-[OOOpenGLMatrixManager multModelView:]` (170) | | |
-| `-[OOOpenGLMatrixManager translateModelView:]` (176) | | |
-| `-[OOOpenGLMatrixManager rotateModelView:axis:]` (185) | | |
-| `-[OOOpenGLMatrixManager scaleModelView:]` (190) | | |
-| `-[OOOpenGLMatrixManager lookAtWithEye:center:up:]` (195) | | |
-| `-[OOOpenGLMatrixManager pushModelView]` (209) | | |
-| `-[OOOpenGLMatrixManager popModelView]` (214) | | |
-| `-[OOOpenGLMatrixManager getModelView]` (221) | | |
-| `-[OOOpenGLMatrixManager countModelView]` (226) | | |
-| `-[OOOpenGLMatrixManager syncModelView]` (231) | | |
-| `-[OOOpenGLMatrixManager loadProjection:]` (239) | | |
-| `-[OOOpenGLMatrixManager multProjection:]` (246) | | |
-| `-[OOOpenGLMatrixManager translateProjection:]` (252) | | |
-| `-[OOOpenGLMatrixManager rotateProjection:axis:]` (261) | | |
-| `-[OOOpenGLMatrixManager scaleProjection:]` (266) | | |
-| `-[OOOpenGLMatrixManager frustumLeft:right:bottom:top:near:far:]` (271) | | |
-| `-[OOOpenGLMatrixManager orthoLeft:right:bottom:top:near:far:]` (282) | | |
-| `-[OOOpenGLMatrixManager perspectiveFovy:aspect:zNear:zFar:]` (293) | | |
-| `-[OOOpenGLMatrixManager resetProjection]` (305) | | |
-| `-[OOOpenGLMatrixManager pushProjection]` (311) | | |
-| `-[OOOpenGLMatrixManager popProjection]` (316) | | |
-| `-[OOOpenGLMatrixManager getProjection]` (323) | | |
-| `-[OOOpenGLMatrixManager syncProjection]` (328) | | |
-| `-[OOOpenGLMatrixManager getMatrix:]` (336) | | |
-| `-[OOOpenGLMatrixManager standardMatrixUniformLocations:]` (398) | | |
-| `OOGLPushModelView()` (431) | | |
-| `OOGLPopModelView()` (438) | | |
-| `OOGLGetModelView()` (446) | | |
-| `OOGLResetModelView()` (453) | | |
-| `OOGLLoadModelView()` (460) | | |
-| `OOGLMultModelView()` (467) | | |
-| `OOGLTranslateModelView()` (474) | | |
-| `OOGLRotateModelView()` (481) | | |
-| `OOGLScaleModelView()` (488) | | |
-| `OOGLLookAt()` (495) | | |
-| `OOGLResetProjection()` (502) | | |
-| `OOGLPushProjection()` (509) | | |
-| `OOGLPopProjection()` (516) | | |
-| `OOGLGetProjection()` (524) | | |
-| `OOGLLoadProjection()` (531) | | |
-| `OOGLMultProjection()` (538) | | |
-| `OOGLTranslateProjection()` (545) | | |
-| `OOGLRotateProjection()` (552) | | |
-| `OOGLScaleProjection()` (559) | | |
-| `OOGLFrustum()` (566) | | |
-| `OOGLOrtho()` (573) | | |
-| `OOGLPerspective()` (580) | | |
-| `OOGLGetModelViewProjection()` (587) | | |
+| `ooliteStandardMatrixUniforms[]` table (32) | same `Core/OOOpenGLMatrixManager.cpp:33` | ✅ |
+| `-[OOOpenGLMatrixStack init]` (51) | implicit constructor (`std::vector` member; comment `Core/OOOpenGLMatrixManager.cpp:49`) | ✅ |
+| `-[OOOpenGLMatrixStack dealloc]` (59) | implicit destructor | ✅ |
+| `-[OOOpenGLMatrixStack push:]` (65) | `OOOpenGLMatrixStack::push` `Core/OOOpenGLMatrixManager.cpp:51` | ✅ |
+| `-[OOOpenGLMatrixStack pop]` (70) | `OOOpenGLMatrixStack::pop` `Core/OOOpenGLMatrixManager.cpp:56` | ✅ |
+| `-[OOOpenGLMatrixStack stackCount]` (81) | `OOOpenGLMatrixStack::stackCount` `Core/OOOpenGLMatrixManager.cpp:66` | ✅ |
+| `-[OOOpenGLMatrixManager(Private) updateModelView]` (97) | `OOOpenGLMatrixManager::updateModelView` `Core/OOOpenGLMatrixManager.cpp:71` | ✅ |
+| `-[OOOpenGLMatrixManager(Private) updateProjection]` (112) | `OOOpenGLMatrixManager::updateProjection` `Core/OOOpenGLMatrixManager.cpp:86` | ✅ |
+| `-[OOOpenGLMatrixManager init]` (127) | `OOOpenGLMatrixManager::OOOpenGLMatrixManager` `Core/OOOpenGLMatrixManager.cpp:97` | ✅ |
+| `-[OOOpenGLMatrixManager dealloc]` (150) | `oo::Ref` members (comment `Core/OOOpenGLMatrixManager.cpp:117`) | ✅ |
+| `-[OOOpenGLMatrixManager loadModelView:]` (157) | `OOOpenGLMatrixManager::loadModelView` `Core/OOOpenGLMatrixManager.cpp:119` | ✅ |
+| `-[OOOpenGLMatrixManager resetModelView]` (164) | `OOOpenGLMatrixManager::resetModelView` `Core/OOOpenGLMatrixManager.cpp:126` | ✅ |
+| `-[OOOpenGLMatrixManager multModelView:]` (170) | `OOOpenGLMatrixManager::multModelView` `Core/OOOpenGLMatrixManager.cpp:132` | ✅ |
+| `-[OOOpenGLMatrixManager translateModelView:]` (176) | `OOOpenGLMatrixManager::translateModelView` `Core/OOOpenGLMatrixManager.cpp:138` | ✅ |
+| `-[OOOpenGLMatrixManager rotateModelView:axis:]` (185) | `OOOpenGLMatrixManager::rotateModelView` `Core/OOOpenGLMatrixManager.cpp:147` | ✅ |
+| `-[OOOpenGLMatrixManager scaleModelView:]` (190) | `OOOpenGLMatrixManager::scaleModelView` `Core/OOOpenGLMatrixManager.cpp:152` | ✅ |
+| `-[OOOpenGLMatrixManager lookAtWithEye:center:up:]` (195) | `OOOpenGLMatrixManager::lookAtWithEye` `Core/OOOpenGLMatrixManager.cpp:157` | ✅ |
+| `-[OOOpenGLMatrixManager pushModelView]` (209) | `OOOpenGLMatrixManager::pushModelView` `Core/OOOpenGLMatrixManager.cpp:171` | ✅ |
+| `-[OOOpenGLMatrixManager popModelView]` (214) | `OOOpenGLMatrixManager::popModelView` `Core/OOOpenGLMatrixManager.cpp:176` | ✅ |
+| `-[OOOpenGLMatrixManager getModelView]` (221) | `OOOpenGLMatrixManager::getModelView` `Core/OOOpenGLMatrixManager.cpp:183` | ✅ |
+| `-[OOOpenGLMatrixManager countModelView]` (226) | `OOOpenGLMatrixManager::countModelView` `Core/OOOpenGLMatrixManager.cpp:188` | ✅ |
+| `-[OOOpenGLMatrixManager syncModelView]` (231) | `OOOpenGLMatrixManager::syncModelView` `Core/OOOpenGLMatrixManager.cpp:193` | ✅ |
+| `-[OOOpenGLMatrixManager loadProjection:]` (239) | `OOOpenGLMatrixManager::loadProjection` `Core/OOOpenGLMatrixManager.cpp:201` | ✅ |
+| `-[OOOpenGLMatrixManager multProjection:]` (246) | `OOOpenGLMatrixManager::multProjection` `Core/OOOpenGLMatrixManager.cpp:208` | ✅ |
+| `-[OOOpenGLMatrixManager translateProjection:]` (252) | `OOOpenGLMatrixManager::translateProjection` `Core/OOOpenGLMatrixManager.cpp:214` | ✅ |
+| `-[OOOpenGLMatrixManager rotateProjection:axis:]` (261) | `OOOpenGLMatrixManager::rotateProjection` `Core/OOOpenGLMatrixManager.cpp:223` | ✅ |
+| `-[OOOpenGLMatrixManager scaleProjection:]` (266) | `OOOpenGLMatrixManager::scaleProjection` `Core/OOOpenGLMatrixManager.cpp:228` | ✅ |
+| `-[OOOpenGLMatrixManager frustumLeft:right:bottom:top:near:far:]` (271) | `OOOpenGLMatrixManager::frustumLeft` `Core/OOOpenGLMatrixManager.cpp:233` | ✅ |
+| `-[OOOpenGLMatrixManager orthoLeft:right:bottom:top:near:far:]` (282) | `OOOpenGLMatrixManager::orthoLeft` `Core/OOOpenGLMatrixManager.cpp:244` | ✅ |
+| `-[OOOpenGLMatrixManager perspectiveFovy:aspect:zNear:zFar:]` (293) | `OOOpenGLMatrixManager::perspectiveFovy` `Core/OOOpenGLMatrixManager.cpp:255` | ✅ |
+| `-[OOOpenGLMatrixManager resetProjection]` (305) | `OOOpenGLMatrixManager::resetProjection` `Core/OOOpenGLMatrixManager.cpp:267` | ✅ |
+| `-[OOOpenGLMatrixManager pushProjection]` (311) | `OOOpenGLMatrixManager::pushProjection` `Core/OOOpenGLMatrixManager.cpp:273` | ✅ |
+| `-[OOOpenGLMatrixManager popProjection]` (316) | `OOOpenGLMatrixManager::popProjection` `Core/OOOpenGLMatrixManager.cpp:278` | ✅ |
+| `-[OOOpenGLMatrixManager getProjection]` (323) | `OOOpenGLMatrixManager::getProjection` `Core/OOOpenGLMatrixManager.cpp:285` | ✅ |
+| `-[OOOpenGLMatrixManager syncProjection]` (328) | `OOOpenGLMatrixManager::syncProjection` `Core/OOOpenGLMatrixManager.cpp:290` | ✅ |
+| `-[OOOpenGLMatrixManager getMatrix:]` (336) | `OOOpenGLMatrixManager::getMatrix` `Core/OOOpenGLMatrixManager.cpp:298` | ✅ |
+| `-[OOOpenGLMatrixManager standardMatrixUniformLocations:]` (398) | `OOOpenGLMatrixManager::standardMatrixUniformLocations` `Core/OOOpenGLMatrixManager.cpp:360` | ✅ |
+| `OOGLPushModelView()` (431) | `OOGLPushModelView` `Core/OOOpenGLMatrixManager.cpp:399` | ✅ |
+| `OOGLPopModelView()` (438) | `OOGLPopModelView` `Core/OOOpenGLMatrixManager.cpp:408` | ✅ |
+| `OOGLGetModelView()` (446) | `OOGLGetModelView` `Core/OOOpenGLMatrixManager.cpp:417` | ✅ |
+| `OOGLResetModelView()` (453) | `OOGLResetModelView` `Core/OOOpenGLMatrixManager.cpp:424` | ✅ |
+| `OOGLLoadModelView()` (460) | `OOGLLoadModelView` `Core/OOOpenGLMatrixManager.cpp:433` | ✅ |
+| `OOGLMultModelView()` (467) | `OOGLMultModelView` `Core/OOOpenGLMatrixManager.cpp:442` | ✅ |
+| `OOGLTranslateModelView()` (474) | `OOGLTranslateModelView` `Core/OOOpenGLMatrixManager.cpp:451` | ✅ |
+| `OOGLRotateModelView()` (481) | `OOGLRotateModelView` `Core/OOOpenGLMatrixManager.cpp:460` | ✅ |
+| `OOGLScaleModelView()` (488) | `OOGLScaleModelView` `Core/OOOpenGLMatrixManager.cpp:469` | ✅ |
+| `OOGLLookAt()` (495) | `OOGLLookAt` `Core/OOOpenGLMatrixManager.cpp:478` | ✅ |
+| `OOGLResetProjection()` (502) | `OOGLResetProjection` `Core/OOOpenGLMatrixManager.cpp:487` | ✅ |
+| `OOGLPushProjection()` (509) | `OOGLPushProjection` `Core/OOOpenGLMatrixManager.cpp:496` | ✅ |
+| `OOGLPopProjection()` (516) | `OOGLPopProjection` `Core/OOOpenGLMatrixManager.cpp:505` | ✅ |
+| `OOGLGetProjection()` (524) | `OOGLGetProjection` `Core/OOOpenGLMatrixManager.cpp:514` | ✅ |
+| `OOGLLoadProjection()` (531) | `OOGLLoadProjection` `Core/OOOpenGLMatrixManager.cpp:521` | ✅ |
+| `OOGLMultProjection()` (538) | `OOGLMultProjection` `Core/OOOpenGLMatrixManager.cpp:530` | ✅ |
+| `OOGLTranslateProjection()` (545) | `OOGLTranslateProjection` `Core/OOOpenGLMatrixManager.cpp:539` | ✅ |
+| `OOGLRotateProjection()` (552) | `OOGLRotateProjection` `Core/OOOpenGLMatrixManager.cpp:548` | ✅ |
+| `OOGLScaleProjection()` (559) | `OOGLScaleProjection` `Core/OOOpenGLMatrixManager.cpp:557` | ✅ |
+| `OOGLFrustum()` (566) | `OOGLFrustum` `Core/OOOpenGLMatrixManager.cpp:566` | ✅ |
+| `OOGLOrtho()` (573) | `OOGLOrtho` `Core/OOOpenGLMatrixManager.cpp:575` | ✅ |
+| `OOGLPerspective()` (580) | `OOGLPerspective` `Core/OOOpenGLMatrixManager.cpp:584` | ✅ |
+| `OOGLGetModelViewProjection()` (587) | `OOGLGetModelViewProjection` `Core/OOOpenGLMatrixManager.cpp:593` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ (note) — The matrix maths is textually identical:
+  - the multiply operand order (`OOMatrixMultiply(matrix, current)`);
+  - translate writes row 3 for the model view and column 3 for the projection (an upstream asymmetry, kept);
+  - the frustum, ortho and perspective guards and formulas;
+  - the normal-matrix cube-root determinant scaling (`powf(fabsf(d), 1.0/3)`);
+  - the lazy `valid[]` invalidation sets.
+  - upstream `Core/OOOpenGLMatrixManager.m:97-394` ↔ port `Core/OOOpenGLMatrixManager.cpp:71-358`
+- ✅ (note) — In the `OOGL*` wrappers, a missing universe or game view does nothing and returns `kZeroMatrix`, which reproduces a message to nil returning a zeroed struct. Every wrapper still syncs after its mutation. — port `Core/OOOpenGLMatrixManager.cpp:387-597`
+- ✅ (note) — `standardMatrixUniformLocations` returns an `oo::PList` array by value, where upstream returned a +1-retained NSArray. The entries are unchanged: `[location, index, "mat3"/"mat4"]`, with "mat3" only for `OOLITE_GL_MATRIX_NORMAL`, in index order. — port `Core/OOOpenGLMatrixManager.cpp:360-385`
 
 ## OOOpenGLStateManager
 
 <a id="ooopenglstatemanager"></a>
 Upstream `src/Core/OOOpenGLStateManager.m` ↔ `Core/OOOpenGLStateManager.cpp`
 
-**Status:** pending
+**Status:** done — 18 rows: 18 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `GetState_DEPTH_WRITEMASK()` (97) | | |
-| `GetState_TEXTURE_ENV_MODE()` (112) | | |
-| `GetState_ACTIVE_TEXTURE()` (126) | | |
-| `GetState_CLIENT_ACTIVE_TEXTURE()` (139) | | |
-| `SetState_CULL_FACE_MODE()` (158) | | |
-| `OOGLNoteCurrentFunction()` (209) | | |
-| `SetFunctionTracking()` (226) | | |
-| `OOSetOpenGLState_()` (238) | | |
-| `OOVerifyOpenGLState_()` (255) | | |
-| `GetCurrentOpenGLState()` (265) | | |
-| `StatesEqual()` (290) | | |
-| `VerifyOpenGLStateInternal()` (325) | | |
-| `OOSetOpenGLState()` (385) | | |
-| `SwitchOpenGLStateInternal()` (397) | | |
-| `OOResetGLStateVerifier()` (443) | | |
+| `StateFlag` enum / `OOOpenGLState` struct (52-77) | same `Core/OOOpenGLStateManager.cpp:56-81` | ✅ |
+| `Tables/OOOpenGLStates.tbl` (X-macro item list) | `Core/Tables/OOOpenGLStates.tbl` (byte-identical, `diff` clean) | ✅ |
+| `kStandardStates[]` definitions (450-629) | `kStandardStates[]` `Core/OOOpenGLStateManager.cpp:84-268` | ✅ |
+| `GetState_DEPTH_WRITEMASK()` (97) | `GetState_DEPTH_WRITEMASK` `Core/OOOpenGLStateManager.cpp:288` | ✅ |
+| `GetState_TEXTURE_ENV_MODE()` (112) | `GetState_TEXTURE_ENV_MODE` `Core/OOOpenGLStateManager.cpp:303` | ✅ |
+| `GetState_ACTIVE_TEXTURE()` (126) | `GetState_ACTIVE_TEXTURE` `Core/OOOpenGLStateManager.cpp:317` | ✅ |
+| `GetState_CLIENT_ACTIVE_TEXTURE()` (139) | `GetState_CLIENT_ACTIVE_TEXTURE` `Core/OOOpenGLStateManager.cpp:330` | ✅ |
+| `SetState_CULL_FACE_MODE()` (158) | `SetState_CULL_FACE_MODE` `Core/OOOpenGLStateManager.cpp:349` (other `SetState_*` macros identical, `:298-356`) | ✅ |
+| `OOGLNoteCurrentFunction()` (209) | `OOGLNoteCurrentFunction` `Core/OOOpenGLStateManager.cpp:404` (stub `:429`) | ✅ |
+| `SetFunctionTracking()` (226) | `SetFunctionTracking` `Core/OOOpenGLStateManager.cpp:421` (stub `:430`) | ✅ |
+| `OOSetOpenGLState_()` (238) | `OOSetOpenGLState_` `Core/OOOpenGLStateManager.cpp:435` | ✅ |
+| `OOVerifyOpenGLState_()` (255) | `OOVerifyOpenGLState_` `Core/OOOpenGLStateManager.cpp:452` | ✅ |
+| `GetCurrentOpenGLState()` (265) | `GetCurrentOpenGLState` `Core/OOOpenGLStateManager.cpp:462` | ✅ |
+| `StatesEqual()` (290) | `StatesEqual` `Core/OOOpenGLStateManager.cpp:488` | ✅ |
+| `VerifyOpenGLStateInternal()` (325) | `VerifyOpenGLStateInternal` `Core/OOOpenGLStateManager.cpp:524` | ✅ |
+| `OOSetOpenGLState()` (385) | `OOSetOpenGLState` `Core/OOOpenGLStateManager.cpp:584` | ✅ |
+| `SwitchOpenGLStateInternal()` (397) | `SwitchOpenGLStateInternal` `Core/OOOpenGLStateManager.cpp:597` | ✅ |
+| `OOResetGLStateVerifier()` (443) | `OOResetGLStateVerifier` `Core/OOOpenGLStateManager.cpp:644` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ (note) — The state tables match field for field. — upstream `Core/OOOpenGLStateManager.m:450-629` ↔ port `Core/OOOpenGLStateManager.cpp:84-268`
+  - Upstream used index designators (`[OPENGL_STATE_…] =`); the port uses positional entries in enum order (OPAQUE, TRANSLUCENT_PASS, ADDITIVE_BLENDING, OVERLAY, INTERNAL_USE_ONLY). That order is the same in both `OOOpenGL.h` enums (upstream `:117-124`, port `:115-122`).
+  - All 33 fields of each of the 5 states were compared: the LIGHTING/LIGHT0-7 Maybe/false pattern, TEXTURE_2D, BLEND with its SRC/DST, FOG, the six client arrays, DEPTH_TEST/DEPTH_WRITEMASK, CULL_FACE/mode, FRONT_FACE, SHADE_MODEL, TEXTURE_ENV_MODE and the (client-)active texture.
+  - The only change is the spelling: `true`/`false` are written as `kStateTrue`/`kStateFalse`, which are the same values.
+- ✅ (note) — The switch and verify logic is the same X-macro expansion:
+  - Maybe-flags are skipped.
+  - The blend func is always reapplied when the source has BLEND off (CIM 3/1/13).
+  - `ITEM_SPECIAL` items are still displayed with `OOGLFlagToString` even for enum items (an upstream quirk).
+  - The log class `rendering.opengl.state` and its texts are unchanged.
+  - `OO_GL_STATE_VERIFICATION` still follows `NDEBUG` (`Core/OOOpenGLCheck.h:38-40`).
+  - The `NONNULL_FUNC` attribute was dropped from two static helpers, to avoid `-Wnonnull-compare`; their non-null asserts remain.
+  - port `Core/OOOpenGLStateManager.cpp:524-641`
 
 ## OOPlanetDrawable
 
 <a id="ooplanetdrawable"></a>
 Upstream `src/Core/OOPlanetDrawable.m` ↔ `Core/OOPlanetDrawable.cpp`
 
-**Status:** pending
+**Status:** done — 30 rows: 29 ✅ 0 ⚠️ 0 ❌ 1 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OOPlanetDrawable planetWithTextureName:radius:]` (57) | | |
-| `+[OOPlanetDrawable atmosphereWithRadius:]` (66) | | |
-| `-[OOPlanetDrawable init]` (74) | | |
-| `-[OOPlanetDrawable initAsAtmosphere]` (85) | | |
-| `-[OOPlanetDrawable dealloc]` (94) | | |
-| `-[OOPlanetDrawable copyWithZone:]` (101) | | |
-| `-[OOPlanetDrawable material]` (113) | | |
-| `-[OOPlanetDrawable setMaterial:]` (118) | | |
-| `-[OOPlanetDrawable textureName]` (124) | | |
-| `-[OOPlanetDrawable setTextureName:]` (129) | | |
-| `-[OOPlanetDrawable radius]` (138) | | |
-| `-[OOPlanetDrawable setRadius:]` (143) | | |
-| `-[OOPlanetDrawable levelOfDetail]` (149) | | |
-| `-[OOPlanetDrawable setLevelOfDetail:]` (154) | | |
-| `-[OOPlanetDrawable calculateLevelOfDetailForViewDistance:]` (159) | | |
-| `-[OOPlanetDrawable renderOpaqueParts]` (173) | | |
-| `-[OOPlanetDrawable renderTranslucentParts]` (184) | | |
-| `-[OOPlanetDrawable renderTranslucentPartsOnOpaquePass]` (196) | | |
-| `-[OOPlanetDrawable renderCommonParts]` (212) | | |
-| `-[OOPlanetDrawable hasOpaqueParts]` (286) | | |
-| `-[OOPlanetDrawable hasTranslucentParts]` (291) | | |
-| `-[OOPlanetDrawable collisionRadius]` (296) | | |
-| `-[OOPlanetDrawable maxDrawDistance]` (301) | | |
-| `-[OOPlanetDrawable boundingBox]` (307) | | |
-| `-[OOPlanetDrawable setBindingTarget:]` (312) | | |
-| `-[OOPlanetDrawable dumpSelfState]` (317) | | |
-| `-[OOPlanetDrawable recalculateTransform]` (324) | | |
-| `-[OOPlanetDrawable debugDrawNormals]` (331) | | |
-| `-[OOPlanetDrawable allTextures]` (380) | | |
+| `#if NEW_PLANETS` file guard (26/389) | (guard dropped) `Core/OOPlanetDrawable.cpp:27` | ✅ |
+| `+[OOPlanetDrawable planetWithTextureName:radius:]` (57) | `OOPlanetDrawable::planetWithTextureName` `Core/OOPlanetDrawable.cpp:46` | ✅ |
+| `+[OOPlanetDrawable atmosphereWithRadius:]` (66) | `OOPlanetDrawable::atmosphereWithRadius` `Core/OOPlanetDrawable.cpp:55` | ✅ |
+| `-[OOPlanetDrawable init]` (74) | `OOPlanetDrawable::OOPlanetDrawable` `Core/OOPlanetDrawable.cpp:63` | ✅ |
+| `-[OOPlanetDrawable initAsAtmosphere]` (85) | `OOPlanetDrawable::initAsAtmosphere` `Core/OOPlanetDrawable.cpp:72` | ✅ |
+| `-[OOPlanetDrawable dealloc]` (94) | `_material` member destructor (`Core/OOPlanetDrawable.cpp:82` comment) | ➖ |
+| `-[OOPlanetDrawable copyWithZone:]` (101) | `OOPlanetDrawable::copy` `Core/OOPlanetDrawable.cpp:84` | ✅ |
+| `-[OOPlanetDrawable material]` (113) | `OOPlanetDrawable::material` `Core/OOPlanetDrawable.cpp:96` | ✅ |
+| `-[OOPlanetDrawable setMaterial:]` (118) | `OOPlanetDrawable::setMaterial` `Core/OOPlanetDrawable.cpp:101` | ✅ |
+| `-[OOPlanetDrawable textureName]` (124) | `OOPlanetDrawable::textureName` `Core/OOPlanetDrawable.cpp:107` | ✅ |
+| `-[OOPlanetDrawable setTextureName:]` (129) | `OOPlanetDrawable::setTextureName` `Core/OOPlanetDrawable.cpp:113` | ✅ |
+| `-[OOPlanetDrawable radius]` (138) | `OOPlanetDrawable::radius` `Core/OOPlanetDrawable.cpp:125` | ✅ |
+| `-[OOPlanetDrawable setRadius:]` (143) | `OOPlanetDrawable::setRadius` `Core/OOPlanetDrawable.cpp:130` | ✅ |
+| `-[OOPlanetDrawable levelOfDetail]` (149) | `OOPlanetDrawable::levelOfDetail` `Core/OOPlanetDrawable.cpp:136` | ✅ |
+| `-[OOPlanetDrawable setLevelOfDetail:]` (154) | `OOPlanetDrawable::setLevelOfDetail` `Core/OOPlanetDrawable.cpp:141` | ✅ |
+| `-[OOPlanetDrawable calculateLevelOfDetailForViewDistance:]` (159) | `OOPlanetDrawable::calculateLevelOfDetailForViewDistance` `Core/OOPlanetDrawable.cpp:146` | ✅ |
+| `-[OOPlanetDrawable renderOpaqueParts]` (173) | `OOPlanetDrawable::renderOpaqueParts` `Core/OOPlanetDrawable.cpp:160` | ✅ |
+| `-[OOPlanetDrawable renderTranslucentParts]` (184) | `OOPlanetDrawable::renderTranslucentParts` `Core/OOPlanetDrawable.cpp:171` | ✅ |
+| `-[OOPlanetDrawable renderTranslucentPartsOnOpaquePass]` (196) | `OOPlanetDrawable::renderTranslucentPartsOnOpaquePass` `Core/OOPlanetDrawable.cpp:183` | ✅ |
+| `-[OOPlanetDrawable renderCommonParts]` (212) | `OOPlanetDrawable::renderCommonParts` `Core/OOPlanetDrawable.cpp:199` | ✅ |
+| `-[OOPlanetDrawable hasOpaqueParts]` (286) | `OOPlanetDrawable::hasOpaqueParts` `Core/OOPlanetDrawable.cpp:275` | ✅ |
+| `-[OOPlanetDrawable hasTranslucentParts]` (291) | `OOPlanetDrawable::hasTranslucentParts` `Core/OOPlanetDrawable.cpp:280` | ✅ |
+| `-[OOPlanetDrawable collisionRadius]` (296) | `OOPlanetDrawable::collisionRadius` `Core/OOPlanetDrawable.cpp:285` | ✅ |
+| `-[OOPlanetDrawable maxDrawDistance]` (301) | `OOPlanetDrawable::maxDrawDistance` `Core/OOPlanetDrawable.cpp:290` | ✅ |
+| `-[OOPlanetDrawable boundingBox]` (307) | `OOPlanetDrawable::boundingBox` `Core/OOPlanetDrawable.cpp:296` | ✅ |
+| `-[OOPlanetDrawable setBindingTarget:]` (312) | `OOPlanetDrawable::setBindingTarget` `Core/OOPlanetDrawable.cpp:301` | ✅ |
+| `-[OOPlanetDrawable dumpSelfState]` (317) | `OOPlanetDrawable::dumpSelfState` `Core/OOPlanetDrawable.cpp:307` | ✅ |
+| `-[OOPlanetDrawable recalculateTransform]` (324) | `OOPlanetDrawable::recalculateTransform` `Core/OOPlanetDrawable.cpp:314` | ✅ |
+| `-[OOPlanetDrawable debugDrawNormals]` (331) | `OOPlanetDrawable::debugDrawNormals` `Core/OOPlanetDrawable.cpp:321` | ✅ |
+| `-[OOPlanetDrawable allTextures]` (380) | `OOPlanetDrawable::allTextures` `Core/OOPlanetDrawable.cpp:368` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ➖ **low** — `-dealloc`'s `DESTROY(_material)` is now done by the `oo::Ref<OOMaterial>` member destructor. No observable change. — upstream `Core/OOPlanetDrawable.m:94` ↔ port `Core/OOPlanetDrawable.cpp:82`
+- ✅ (note) — The `#if NEW_PLANETS` guard is dropped. Upstream hard-codes `NEW_PLANETS 1` (`Core/Entities/OOStellarBody.h:35`), so the same code is compiled. — upstream `Core/OOPlanetDrawable.m:26` ↔ port `Core/OOPlanetDrawable.cpp:27`
+- ✅ (note) — `setTextureName:` behaves as before. — upstream `Core/OOPlanetDrawable.m:129` ↔ port `Core/OOPlanetDrawable.cpp:113`
+  - It builds `{diffuse_map={repeat_s=yes;cube_map=yes};}` as a literal `PList` with string `"yes"` values.
+  - `OOSingleTextureMaterial::materialWithName` is `makeRef` + `initWithName` and returns null on failure, as alloc/init returned nil.
+  - A nil `textureName` can no longer arrive, because the parameter is now `const std::string&`.
+- ✅ (note) — Nil-messaging is reproduced. — upstream `Core/OOPlanetDrawable.m:161,232` ↔ port `Core/OOPlanetDrawable.cpp:148,202`
+  - A null `_material` skips `apply`, and `wantsNormalsAsTextureCoordinates` reads NO.
+  - A null `UNIVERSE` or `gameView` gives `reducedDetail` NO and a view width of 0.
 
 ## OOPolygonSprite
 
 <a id="oopolygonsprite"></a>
 Upstream `src/Core/OOPolygonSprite.m` ↔ `Core/OOPolygonSprite.cpp`
 
-**Status:** pending
+**Status:** done — 28 rows: 27 ✅ 0 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOPolygonSprite initWithDataArray:outlineWidth:name:]` (131) | | |
-| `-[OOPolygonSprite dealloc]` (158) | | |
-| `-[OOPolygonSprite descriptionComponents]` (172) | | |
-| `-[OOPolygonSprite drawWithData:count:VBO:]` (178) | | |
-| `-[OOPolygonSprite drawFilled]` (219) | | |
-| `-[OOPolygonSprite drawOutline]` (230) | | |
-| `-[OOPolygonSprite resetGraphicsState]` (241) | | |
-| `-[OOPolygonSprite loadPolygons:outlineWidth:]` (257) | | |
-| `SubmitVertices()` (408) | | |
-| `DataArrayToPoints()` (426) | | |
-| `BuildOutlineContour()` (491) | | |
-| `GrowTessPolygonData()` (585) | | |
-| `AppendVertex()` (612) | | |
-| `TessBeginCallback()` (625) | | |
-| `TessVertexCallback()` (636) | | |
-| `TessCombineCallback()` (723) | | |
-| `TessEndCallback()` (729) | | |
-| `ErrorCallback()` (740) | | |
-| `SVGDumpBegin()` (760) | | |
-| `SVGDumpEnd()` (771) | | |
-| `SVGDumpBeginGroup()` (781) | | |
-| `SVGDumpEndGroup()` (789) | | |
-| `SVGDumpAppendBaseContour()` (796) | | |
-| `SVGDumpBeginPrimitive()` (815) | | |
-| `SVGDumpEndPrimitive()` (849) | | |
-| `SVGDumpAppendTriangle()` (856) | | |
+| `kCosMitreLimit` constant (53) | `kCosMitreLimit` `Core/OOPolygonSprite.cpp:57` | ✅ |
+| `TessPolygonData` struct (61) | `TessPolygonData` `Core/OOPolygonSprite.cpp:66` (+`combinedVertices`) | ✅ |
+| `-[OOPolygonSprite initWithDataArray:outlineWidth:name:]` (131) | `OOPolygonSprite::initWithDataArray` `Core/OOPolygonSprite.cpp:142` | ✅ |
+| `-[OOPolygonSprite dealloc]` (158) | `OOPolygonSprite::~OOPolygonSprite` `Core/OOPolygonSprite.cpp:168` | ✅ |
+| `-[OOPolygonSprite descriptionComponents]` (172) | `OOPolygonSprite::descriptionComponents` `Core/OOPolygonSprite.cpp:176` (+`description` :182) | ✅ |
+| `-[OOPolygonSprite drawWithData:count:VBO:]` (178) | `OOPolygonSprite::drawWithData` `Core/OOPolygonSprite.cpp:193` | ✅ |
+| `-[OOPolygonSprite drawFilled]` (219) | `OOPolygonSprite::drawFilled` `Core/OOPolygonSprite.cpp:234` | ✅ |
+| `-[OOPolygonSprite drawOutline]` (230) | `OOPolygonSprite::drawOutline` `Core/OOPolygonSprite.cpp:243` | ✅ |
+| `-[OOPolygonSprite resetGraphicsState]` (241) | `OOPolygonSprite::resetGraphicsState` `Core/OOPolygonSprite.cpp:252` | ✅ |
+| `-[OOPolygonSprite loadPolygons:outlineWidth:]` (257) | `OOPolygonSprite::loadPolygons` `Core/OOPolygonSprite.cpp:268` | ✅ |
+| `SubmitVertices()` (408) | `SubmitVertices` `Core/OOPolygonSprite.cpp:409` | ✅ |
+| `DataArrayToPoints()` (426) | `DataArrayToPoints` `Core/OOPolygonSprite.cpp:427` | ❌ |
+| `BuildOutlineContour()` (491) | `BuildOutlineContour` `Core/OOPolygonSprite.cpp:493` | ✅ |
+| `GrowTessPolygonData()` (585) | `GrowTessPolygonData` `Core/OOPolygonSprite.cpp:590` | ✅ |
+| `AppendVertex()` (612) | `AppendVertex` `Core/OOPolygonSprite.cpp:617` | ✅ |
+| `TessBeginCallback()` (625) | `TessBeginCallback` `Core/OOPolygonSprite.cpp:630` | ✅ |
+| `TessVertexCallback()` (636) | `TessVertexCallback` `Core/OOPolygonSprite.cpp:641` | ✅ |
+| `TessCombineCallback()` (723) | `TessCombineCallback` `Core/OOPolygonSprite.cpp:728` | ✅ |
+| `TessEndCallback()` (729) | `TessEndCallback` `Core/OOPolygonSprite.cpp:736` | ✅ |
+| `ErrorCallback()` (740) | `ErrorCallback` `Core/OOPolygonSprite.cpp:747` | ✅ |
+| `SVGDumpBegin()` (760) | `SVGDumpBegin` `Core/OOPolygonSprite.cpp:767` | ✅ |
+| `SVGDumpEnd()` (771) | `SVGDumpEnd` `Core/OOPolygonSprite.cpp:777` | ✅ |
+| `SVGDumpBeginGroup()` (781) | `SVGDumpBeginGroup` `Core/OOPolygonSprite.cpp:788` | ✅ |
+| `SVGDumpEndGroup()` (789) | `SVGDumpEndGroup` `Core/OOPolygonSprite.cpp:797` | ✅ |
+| `SVGDumpAppendBaseContour()` (796) | `SVGDumpAppendBaseContour` `Core/OOPolygonSprite.cpp:805` | ✅ |
+| `SVGDumpBeginPrimitive()` (815) | `SVGDumpBeginPrimitive` `Core/OOPolygonSprite.cpp:827` | ✅ |
+| `SVGDumpEndPrimitive()` (849) | `SVGDumpEndPrimitive` `Core/OOPolygonSprite.cpp:861` | ✅ |
+| `SVGDumpAppendTriangle()` (856) | `SVGDumpAppendTriangle` `Core/OOPolygonSprite.cpp:868` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — A contour entry that is not an array is handled differently. — upstream `Core/OOPolygonSprite.m:445-455` ↔ port `Core/OOPolygonSprite.cpp:446-457`
+  - Upstream sent `-count`/`-oo_doubleAtIndex:` to it. That raises for an NSNumber, NSString or NSDictionary, so sprite creation threw.
+  - In the port, `PList::count()` gives 0 for a scalar and the dict size for a dict, and `at<double>` gives 0. The entry becomes an empty contour (or duplicate (0,0) points) and is silently skipped.
+- ✅ (note) — The tessellation callbacks fire in the same order. Fan and strip primitives are still split into a triangle soup with the same pending0/pending1 parity rule. The unknown-mode log `polygonSprite.tesselate.error` and its error text are unchanged. — upstream `Core/OOPolygonSprite.m:636-754` ↔ port `Core/OOPolygonSprite.cpp:641-761`
+- ✅ (note) — Outline construction matches upstream. — upstream `Core/OOPolygonSprite.m:355-371,491-583` ↔ port `Core/OOPolygonSprite.cpp:361-376,493-586`
+  - The width is halved, and the outer contour is submitted before the inner one.
+  - The mitre test is still `-dot < kCosMitreLimit || !clockwise`.
+  - The inner walk index is still `(count*2-3-i)%count`.
+  - NaN vertices are still dropped.
+  - Only the outline tessellator gets `GLU_TESS_WINDING_POSITIVE`.
+- ✅ (note) — The storage changes have no observable effect. — upstream `Core/OOPolygonSprite.m:299,474,726` ↔ port `Core/OOPolygonSprite.cpp:310,476,728`
+  - Contours are `std::vector<NSPoint>` instead of NSValue arrays.
+  - Combine-callback vertices are owned by `TessPolygonData::combinedVertices` instead of the autorelease pool. They live through both passes, and `outlineContours.reserve` keeps the pointers stable.
+  - Duplicate end points are trimmed with `NSEqualPoints` (`==`) instead of NSValue `isEqual:`. Only -0.0 vs 0.0 could differ.
+  - The `oo_arrayAtIndex` nil checks in the fill and outline loops are gone. They could not fire, because `DataArrayToPoints` always returns arrays.
+- ✅ (note, debug only) — A nil `_name` printed "(null)" upstream in the SVG file name and the `ErrorCallback` text; the port's `std::string` prints "". Callers always pass a name. — upstream `Core/OOPolygonSprite.m:747,777` ↔ port `Core/OOPolygonSprite.cpp:754,783`
 
 ## OOProbabilisticTextureManager
 
 <a id="ooprobabilistictexturemanager"></a>
 Upstream `src/Core/OOProbabilisticTextureManager.m` ↔ `Core/OOProbabilisticTextureManager.cpp`
 
-**Status:** pending
+**Status:** done — 9 rows: 8 ✅ 0 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOProbabilisticTextureManager initWithPListName:]` (36) | | |
-| `-[OOProbabilisticTextureManager initWithPListName:]` (48) | | |
-| `-[OOProbabilisticTextureManager dealloc]` (147) | | |
-| `-[OOProbabilisticTextureManager description]` (168) | | |
-| `-[OOProbabilisticTextureManager selectTexture]` (173) | | |
-| `-[OOProbabilisticTextureManager textureCount]` (205) | | |
-| `-[OOProbabilisticTextureManager ensureTexturesLoaded]` (210) | | |
-| `-[OOProbabilisticTextureManager seed]` (219) | | |
-| `-[OOProbabilisticTextureManager setSeed:]` (224) | | |
+| `-[OOProbabilisticTextureManager initWithPListName:options:anisotropy:lodBias:]` (36) | `OOProbabilisticTextureManager::createWithPListName` (4-arg) `Core/OOProbabilisticTextureManager.cpp:48` | ✅ |
+| `-[OOProbabilisticTextureManager initWithPListName:…seed:]` (48) | `createWithPListName` (5-arg) `Core/OOProbabilisticTextureManager.cpp:61` → `initWithPListName` `:73` | ✅ |
+| `-[OOProbabilisticTextureManager dealloc]` (147) | `OOProbabilisticTextureManager::~OOProbabilisticTextureManager` `Core/OOProbabilisticTextureManager.cpp:159` | ✅ |
+| `-[OOProbabilisticTextureManager description]` (168) | `OOProbabilisticTextureManager::descriptionComponents` `Core/OOProbabilisticTextureManager.cpp:180` | ✅ |
+| `-[OOProbabilisticTextureManager selectTexture]` (173) | `OOProbabilisticTextureManager::selectTexture` `Core/OOProbabilisticTextureManager.cpp:185` | ❌ |
+| `-[OOProbabilisticTextureManager textureCount]` (205) | `OOProbabilisticTextureManager::textureCount` `Core/OOProbabilisticTextureManager.cpp:217` | ✅ |
+| `-[OOProbabilisticTextureManager ensureTexturesLoaded]` (210) | `OOProbabilisticTextureManager::ensureTexturesLoaded` `Core/OOProbabilisticTextureManager.cpp:222` | ✅ |
+| `-[OOProbabilisticTextureManager seed]` (219) | `OOProbabilisticTextureManager::seed` `Core/OOProbabilisticTextureManager.cpp:231` | ✅ |
+| `-[OOProbabilisticTextureManager setSeed:]` (224) | `OOProbabilisticTextureManager::setSeed` `Core/OOProbabilisticTextureManager.cpp:236` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — The overrun log text differs, because `__PRETTY_FUNCTION__` now expands to `OOTexture* OOProbabilisticTextureManager::selectTexture()` instead of `-[OOProbabilisticTextureManager selectTexture]`. This affects `probabilisticTextureManager.internalWarning` and `.internalFailure`. Both are emitted only when the cumulative-probability walk overruns. — upstream `Core/OOProbabilisticTextureManager.m:194,198` ↔ port `Core/OOProbabilisticTextureManager.cpp:209,213`
+- ✅ (note) — Loading matches upstream. — upstream `Core/OOProbabilisticTextureManager.m:85-129` ↔ port `Core/OOProbabilisticTextureManager.cpp:112-147`
+  - Entries are read in plist array order.
+  - In a dict, `texture` goes through `oo_stringForKey` semantics (a number's string value is accepted), `probability` defaults to 1.0, and `galaxy` must be a string or the `textures.load` error is logged (with "(null)" for a missing name). A bare string has probability 1.
+  - Entries with probability ≤ 0 or a texture that fails to load are skipped.
+  - The cumulative arithmetic `_prob[n] = p + (gal ≥ 0 ? _probMaxGal[gal] : _probMax)` is unchanged. An all-galaxy entry adds to every `_probMaxGal` slot.
+  - When nothing loads, the result is null, as nil was.
+- ✅ (note) — `selectTexture` consumes the RNG as upstream:
+  - one `randfWithSeed(&_seed)` per call, scaled by `_probMaxGal[galID]`;
+  - galaxy filter, `hold` fallback and last-texture fallback in the same order;
+  - a null `PLAYER` gives galaxy 0, as nil-messaging did.
+  - The texture seed sequence used by the sky is therefore unchanged.
+  - port `Core/OOProbabilisticTextureManager.cpp:185-215`
 
 ## OOSkyDrawable
 
 <a id="ooskydrawable"></a>
 Upstream `src/Core/OOSkyDrawable.m` ↔ `Core/OOSkyDrawable.cpp`
 
-**Status:** pending
+**Status:** done — 24 rows: 23 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOSkyDrawable initWithColor1:]` (120) | | |
-| `-[OOSkyDrawable dealloc]` (166) | | |
-| `-[OOSkyDrawable renderOpaqueParts]` (178) | | |
-| `-[OOSkyDrawable hasOpaqueParts]` (223) | | |
-| `-[OOSkyDrawable maxDrawDistance]` (228) | | |
-| `-[OOSkyDrawable allTextures]` (234) | | |
-| `-[OOSkyDrawable totalSize]` (246) | | |
-| `DebugColor()` (262) | | |
-| `-[OOSkyDrawable(OOPrivate) setUpStarsWithColor1:color2:]` (271) | | |
-| `-[OOSkyDrawable(OOPrivate) setUpNebulaeWithColor1:]` (322) | | |
-| `-[OOSkyDrawable(OOPrivate) addQuads:count:]` (412) | | |
-| `-[OOSkyDrawable(OOPrivate) loadStarTextures]` (420) | | |
-| `-[OOSkyDrawable(OOPrivate) loadNebulaTextures]` (436) | | |
-| `-[OOSkyDrawable(OOPrivate) ensureTexturesLoaded]` (452) | | |
-| `-[OOSkyDrawable(OOPrivate) resetGraphicsState]` (458) | | |
-| `+[OOSkyQuadSet addQuads:count:toArray:]` (472) | | |
-| `-[OOSkyQuadSet initWithQuadsWithTexture:inArray:count:]` (500) | | |
-| `-[OOSkyQuadSet dealloc]` (616) | | |
-| `-[OOSkyQuadSet description]` (630) | | |
-| `-[OOSkyQuadSet render]` (635) | | |
-| `-[OOSkyQuadSet totalSize]` (649) | | |
-| `-[OOSkyQuadSet texture]` (654) | | |
-| `SaturatedColorInRange()` (662) | | |
+| constants `SKY_ELEMENT_SCALE_FACTOR`/`NEBULA_SHUFFLE_FACTOR`/`sMinTexCoord`/`sMaxTexCoord`/`kSkyQuadSet*EntriesPerVertex` (40-64) | `Core/OOSkyDrawable.cpp:42-72` | ✅ |
+| `-[OOSkyDrawable initWithColor1:]` (120) | `OOSkyDrawable::OOSkyDrawable` `Core/OOSkyDrawable.cpp:120` | ✅ |
+| `-[OOSkyDrawable dealloc]` (166) | `OOSkyDrawable::~OOSkyDrawable` `Core/OOSkyDrawable.cpp:160` | ✅ |
+| `-[OOSkyDrawable renderOpaqueParts]` (178) | `OOSkyDrawable::renderOpaqueParts` `Core/OOSkyDrawable.cpp:169` | ✅ |
+| `-[OOSkyDrawable hasOpaqueParts]` (223) | `OOSkyDrawable::hasOpaqueParts` `Core/OOSkyDrawable.cpp:215` | ✅ |
+| `-[OOSkyDrawable maxDrawDistance]` (228) | `OOSkyDrawable::maxDrawDistance` `Core/OOSkyDrawable.cpp:220` | ✅ |
+| `-[OOSkyDrawable allTextures]` (234) | `OOSkyDrawable::allTextures` `Core/OOSkyDrawable.cpp:226` | ✅ |
+| `-[OOSkyDrawable totalSize]` (246) | `OOSkyDrawable::totalSize` `Core/OOSkyDrawable.cpp:238` | ✅ |
+| `DebugColor()` (262) | `DebugColor` `Core/OOSkyDrawable.cpp:253` (both `#if DEBUG_COLORS` = 0) | ✅ |
+| `-[OOSkyDrawable(OOPrivate) setUpStarsWithColor1:color2:]` (271) | `OOSkyDrawable::setUpStars` `Core/OOSkyDrawable.cpp:264` | ✅ |
+| `-[OOSkyDrawable(OOPrivate) setUpNebulaeWithColor1:]` (322) | `OOSkyDrawable::setUpNebulae` `Core/OOSkyDrawable.cpp:320` | ✅ |
+| `-[OOSkyDrawable(OOPrivate) addQuads:count:]` (412) | `OOSkyDrawable::addQuads` `Core/OOSkyDrawable.cpp:408` | ✅ |
+| `-[OOSkyDrawable(OOPrivate) loadStarTextures]` (420) | `OOSkyDrawable::loadStarTextures` `Core/OOSkyDrawable.cpp:413` | ✅ |
+| `-[OOSkyDrawable(OOPrivate) loadNebulaTextures]` (436) | `OOSkyDrawable::loadNebulaTextures` `Core/OOSkyDrawable.cpp:429` | ✅ |
+| `-[OOSkyDrawable(OOPrivate) ensureTexturesLoaded]` (452) | `OOSkyDrawable::ensureTexturesLoaded` `Core/OOSkyDrawable.cpp:445` | ✅ |
+| `-[OOSkyDrawable(OOPrivate) resetGraphicsState]` (458) | `OOSkyDrawable::resetGraphicsState` `Core/OOSkyDrawable.cpp:453` | ✅ |
+| `+[OOSkyQuadSet addQuads:count:toArray:]` (472) | `OOSkyQuadSet::addQuads` `Core/OOSkyDrawable.cpp:465` | ✅ |
+| `-[OOSkyQuadSet initWithQuadsWithTexture:inArray:count:]` (500) | `OOSkyQuadSet::initWithQuadsWithTexture` `Core/OOSkyDrawable.cpp:489` | ✅ |
+| `-[OOSkyQuadSet dealloc]` (616) | `OOSkyQuadSet::~OOSkyQuadSet` `Core/OOSkyDrawable.cpp:605` | ✅ |
+| `-[OOSkyQuadSet description]` (630) | `OOSkyQuadSet::descriptionComponents` `Core/OOSkyDrawable.cpp:617` | ✅ |
+| `-[OOSkyQuadSet render]` (635) | `OOSkyQuadSet::render` `Core/OOSkyDrawable.cpp:622` | ✅ |
+| `-[OOSkyQuadSet totalSize]` (649) | `OOSkyQuadSet::totalSize` `Core/OOSkyDrawable.cpp:637` | ⚠️ |
+| `-[OOSkyQuadSet texture]` (654) | `OOSkyQuadSet::texture` `Core/OOSkyDrawable.cpp:643` | ✅ |
+| `SaturatedColorInRange()` (662) | `SaturatedColorInRange` `Core/OOSkyDrawable.cpp:651` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ✅ (note) — The star RNG order matches upstream. For each of the `_starCount` stars the calls are:
+  1. `OORandomQuaternion()`
+  2. `randf()` (blend fraction)
+  3. `selectTexture()`
+  4. `ranrot_rand() % 6`
 
+  The blend fraction is now read into a local first, but it is still drawn when `color1` is nil, as evaluating the ObjC argument did. The texture manager is re-seeded with `RANROTGetFullSeed()` first, as before. — upstream `Core/OOSkyDrawable.m:287-301,433` ↔ port `Core/OOSkyDrawable.cpp:284-300,426`
+- ✅ (note) — The nebula RNG order and constants match upstream. — upstream `Core/OOSkyDrawable.m:345-406,662-685` ↔ port `Core/OOSkyDrawable.cpp:342-403,651-677`
+  - Outer loop: `randf()` inside `SaturatedColorInRange`, then `OORandomQuaternion()`.
+  - Inner cluster loop:
+    1. `i<_nebulaCount` short-circuits before `randf() < clusterFactor`.
+    2. `ranrot_rand() & 15`
+    3. `selectTexture()`
+    4. `randf()` (rotation)
+    5. 4×`randf()` (shuffle)
+  - The double-increment bug and `_nebulaCount = actualCount` are kept.
+  - The constants are unchanged: `/500`, `0.005`, `r1/32`, `0.5*sat+0.5`, and `hue/=360` only with hueFix.
+- ✅ (note) — Quad-set grouping is unchanged in effect. — upstream `Core/OOSkyDrawable.m:472-498,510-605` ↔ port `Core/OOSkyDrawable.cpp:465-487,500-595`
+  - Textures are still grouped by identity, in first-seen order. The port uses a vector plus `std::find` where upstream used `NSMutableSet`; OOTexture does not override `-isEqual:`, so the result is the same.
+  - Sets are appended in first-seen texture order, stars before nebulae, and rendered in that order.
+  - The `sky-color-correction` tone-map and the `sky.setup` log are unchanged.
+- ⚠️ **low** — The debug-monitor `totalSize` of `OOSkyQuadSet` uses `sizeof *this` instead of `-oo_objectSize`, so reported byte counts differ. A port comment states the substitution. — upstream `Core/OOSkyDrawable.m:651` ↔ port `Core/OOSkyDrawable.cpp:639-640`
+- ✅ (note) — The test-only hook `sSetUpStarsStandIn` (decision oo-jsx0h, `Core/OOSkyDrawable.h:92-95`) is null in the game, so the upstream path runs. — port `Core/OOSkyDrawable.cpp:266-269`
+- ✅ (note) — Nil handling: upstream `Core/OOSkyDrawable.m:151,557,667` ↔ port `Core/OOSkyDrawable.cpp:147,546-549,657-660`
+  - A null `UNIVERSE` gives `reducedDetail` NO, so nebulae are still built.
+  - A nil colour gives colour components of 0, and HSB starts at 0; upstream left them uninitialised.
+  - `blendedColorWithFraction(f, nullptr)` with a null `color2` was not checked against ObjC nil semantics. That depends on OOColor's port.
 
 ## OOTextureScaling
 
@@ -1439,22 +1587,21 @@ Upstream `src/Core/OOTextureScaling.m` ↔ `Core/OOTextureScaling.cpp`
 <a id="ootexturesprite"></a>
 Upstream `src/Core/OOTextureSprite.m` ↔ `Core/OOTextureSprite.cpp`
 
-**Status:** pending
+**Status:** done — 7 rows: 7 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOTextureSprite initWithTexture:]` (32) | | |
-| `-[OOTextureSprite initWithTexture:size:]` (37) | | |
-| `-[OOTextureSprite dealloc]` (52) | | |
-| `-[OOTextureSprite size]` (59) | | |
-| `-[OOTextureSprite blitToX:Y:Z:alpha:]` (64) | | |
-| `-[OOTextureSprite blitCentredToX:Y:Z:alpha:]` (95) | | |
-| `-[OOTextureSprite blitBackgroundCentredToX:Y:Z:alpha:]` (102) | | |
+| `-[OOTextureSprite initWithTexture:]` (32) | `OOTextureSprite::initWithTexture(OOTexture*)` `Core/OOTextureSprite.cpp:30` | ✅ |
+| `-[OOTextureSprite initWithTexture:size:]` (37) | `OOTextureSprite::initWithTexture(OOTexture*, NSSize)` `Core/OOTextureSprite.cpp:36` + ctor `:45` | ✅ |
+| `-[OOTextureSprite dealloc]` (52) | `oo::Ref<OOTexture> texture` member | ✅ |
+| `-[OOTextureSprite size]` (59) | `OOTextureSprite::getSize` `Core/OOTextureSprite.cpp:51` | ✅ |
+| `-[OOTextureSprite blitToX:Y:Z:alpha:]` (64) | `OOTextureSprite::blitToX` `Core/OOTextureSprite.cpp:56` | ✅ |
+| `-[OOTextureSprite blitCentredToX:Y:Z:alpha:]` (95) | `OOTextureSprite::blitCentredToX` `Core/OOTextureSprite.cpp:88` | ✅ |
+| `-[OOTextureSprite blitBackgroundCentredToX:Y:Z:alpha:]` (102) | `OOTextureSprite::blitBackgroundCentredToX` `Core/OOTextureSprite.cpp:95` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ (note) — A nil texture still returns null (nil). The one-argument form asks a nil texture for a zero size first, as a message to nil did. The `OPENGL_STATE_OVERLAY` state, the alpha clamp, the anticlockwise quad with its texture-coordinate corners, and the 512 distance scaling and unscaling in `blitBackgroundCentredToX` are unchanged. `NSSize` is still `CGFloat`-based (`oofnd/objc/OOFoundationTypes.h:75,95`), so the `/2.0` centring arithmetic has the same precision. — upstream `Core/OOTextureSprite.m:32-113` ↔ port `Core/OOTextureSprite.cpp:30-106`
 
 ## TextureStore
 

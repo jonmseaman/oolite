@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 100 / 241 upstream `.m` files · extra rows below
+**Progress:** 115 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -243,22 +243,22 @@ Patterns that recur across files. Each instance is also recorded in its own file
 - [x] `Core/Materials/OOTexture.m` → `Core/Materials/OOTexture.cpp` (884 / 889 lines) — 41✅ 1⚠️ 2❌ 8➖ — [findings](graphics.md#ootexture)
 - [x] `Core/Materials/OOTextureGenerator.m` → `Core/Materials/OOTextureGenerator.cpp` (58 / 55 lines) — 5✅ — [findings](graphics.md#ootexturegenerator)
 - [x] `Core/Materials/OOTextureLoader.m` → `Core/Materials/OOTextureLoader.cpp` (505 / 554 lines) — 18✅ 1❌ — [findings](graphics.md#ootextureloader)
-- [ ] `Core/OOConvertCubeMapToLatLong.m` → `Core/OOConvertCubeMapToLatLong.cpp` (146 / 148 lines) — *pending* — [findings](graphics.md#ooconvertcubemaptolatlong)
-- [ ] `Core/OODebugGLDrawing.m` → `Core/OODebugGLDrawing.cpp` (160 / 164 lines) — *pending* — [findings](graphics.md#oodebuggldrawing)
-- [ ] `Core/OODrawable.m` → `Core/OODrawable.cpp` (86 / 116 lines) — *pending* — [findings](graphics.md#oodrawable)
-- [ ] `Core/OOEnvironmentCubeMap.m` → *(absorbed — locate in `src/oofnd/` or callers)* (268 / — lines) — *pending* — [findings](graphics.md#ooenvironmentcubemap)
-- [ ] `Core/OOGraphicsResetManager.m` → `Core/OOGraphicsResetManager.cpp` (136 / 99 lines) — *pending* — [findings](graphics.md#oographicsresetmanager)
-- [ ] `Core/OOMesh.m` → `Core/OOMesh.cpp` (2078 / 1973 lines) — *pending* — [findings](graphics.md#oomesh)
-- [ ] `Core/OOOpenGL.m` → `Core/OOOpenGL.cpp` (552 / 574 lines) — *pending* — [findings](graphics.md#ooopengl)
-- [ ] `Core/OOOpenGLExtensionManager.m` → `Core/OOOpenGLExtensionManager.cpp` (818 / 775 lines) — *pending* — [findings](graphics.md#ooopenglextensionmanager)
-- [ ] `Core/OOOpenGLMatrixManager.m` → `Core/OOOpenGLMatrixManager.cpp` (591 / 597 lines) — *pending* — [findings](graphics.md#ooopenglmatrixmanager)
-- [ ] `Core/OOOpenGLStateManager.m` → `Core/OOOpenGLStateManager.cpp` (629 / 648 lines) — *pending* — [findings](graphics.md#ooopenglstatemanager)
-- [ ] `Core/OOPlanetDrawable.m` → `Core/OOPlanetDrawable.cpp` (389 / 374 lines) — *pending* — [findings](graphics.md#ooplanetdrawable)
-- [ ] `Core/OOPolygonSprite.m` → `Core/OOPolygonSprite.cpp` (862 / 874 lines) — *pending* — [findings](graphics.md#oopolygonsprite)
-- [ ] `Core/OOProbabilisticTextureManager.m` → `Core/OOProbabilisticTextureManager.cpp` (229 / 239 lines) — *pending* — [findings](graphics.md#ooprobabilistictexturemanager)
-- [ ] `Core/OOSkyDrawable.m` → `Core/OOSkyDrawable.cpp` (685 / 679 lines) — *pending* — [findings](graphics.md#ooskydrawable)
+- [x] `Core/OOConvertCubeMapToLatLong.m` → `Core/OOConvertCubeMapToLatLong.cpp` (146 / 148 lines) — 1✅ — [findings](graphics.md#ooconvertcubemaptolatlong)
+- [x] `Core/OODebugGLDrawing.m` → `Core/OODebugGLDrawing.cpp` (160 / 164 lines) — 7✅ — [findings](graphics.md#oodebuggldrawing)
+- [x] `Core/OODrawable.m` → `Core/OODrawable.cpp` (86 / 116 lines) — 10✅ 1⚠️ — [findings](graphics.md#oodrawable)
+- [x] `Core/OOEnvironmentCubeMap.m` → *(absorbed — 10➖ — [findings](graphics.md#ooenvironmentcubemap)
+- [x] `Core/OOGraphicsResetManager.m` → `Core/OOGraphicsResetManager.cpp` (136 / 99 lines) — 4✅ 1⚠️ 6➖ — [findings](graphics.md#oographicsresetmanager)
+- [x] `Core/OOMesh.m` → `Core/OOMesh.cpp` (2078 / 1973 lines) — 62✅ 3⚠️ 1❌ — [findings](graphics.md#oomesh)
+- [x] `Core/OOOpenGL.m` → `Core/OOOpenGL.cpp` (552 / 574 lines) — 24✅ — [findings](graphics.md#ooopengl)
+- [x] `Core/OOOpenGLExtensionManager.m` → `Core/OOOpenGLExtensionManager.cpp` (818 / 775 lines) — 33✅ 1⚠️ 6➖ — [findings](graphics.md#ooopenglextensionmanager)
+- [x] `Core/OOOpenGLMatrixManager.m` → `Core/OOOpenGLMatrixManager.cpp` (591 / 597 lines) — 60✅ — [findings](graphics.md#ooopenglmatrixmanager)
+- [x] `Core/OOOpenGLStateManager.m` → `Core/OOOpenGLStateManager.cpp` (629 / 648 lines) — 18✅ — [findings](graphics.md#ooopenglstatemanager)
+- [x] `Core/OOPlanetDrawable.m` → `Core/OOPlanetDrawable.cpp` (389 / 374 lines) — 29✅ 1➖ — [findings](graphics.md#ooplanetdrawable)
+- [x] `Core/OOPolygonSprite.m` → `Core/OOPolygonSprite.cpp` (862 / 874 lines) — 27✅ 1❌ — [findings](graphics.md#oopolygonsprite)
+- [x] `Core/OOProbabilisticTextureManager.m` → `Core/OOProbabilisticTextureManager.cpp` (229 / 239 lines) — 8✅ 1❌ — [findings](graphics.md#ooprobabilistictexturemanager)
+- [x] `Core/OOSkyDrawable.m` → `Core/OOSkyDrawable.cpp` (685 / 679 lines) — 23✅ 1⚠️ — [findings](graphics.md#ooskydrawable)
 - [x] `Core/OOTextureScaling.m` → `Core/OOTextureScaling.cpp` (1578 / 1605 lines) — 23✅ 6⚠️ 1❌ — [findings](graphics.md#ootexturescaling)
-- [ ] `Core/OOTextureSprite.m` → `Core/OOTextureSprite.cpp` (115 / 106 lines) — *pending* — [findings](graphics.md#ootexturesprite)
+- [x] `Core/OOTextureSprite.m` → `Core/OOTextureSprite.cpp` (115 / 106 lines) — 7✅ — [findings](graphics.md#ootexturesprite)
 - [x] `Core/TextureStore.m` → *(absorbed — 9➖ — [findings](graphics.md#texturestore)
 
 ### HUD, GUI, crosshairs — [hud-gui.md](hud-gui.md)
