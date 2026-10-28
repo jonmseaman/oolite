@@ -10,57 +10,64 @@ Each section: method coverage table (every upstream method / C function → C++ 
 <a id="dockentity"></a>
 Upstream `src/Core/Entities/DockEntity.m` ↔ `Core/Entities/DockEntity.cpp`
 
-**Status:** pending
+**Status:** done — 43 rows: 41 ✅ 1 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[DockEntity pruneAndCountShipsOnApproach]` (60) | | |
-| `-[DockEntity abortAllDockings]` (89) | | |
-| `-[DockEntity abortAllLaunches]` (129) | | |
-| `-[DockEntity autoDockShipsInQueue:]` (135) | | |
-| `-[DockEntity autoDockShipsOnApproach]` (148) | | |
-| `-[DockEntity allowsDocking]` (153) | | |
-| `-[DockEntity setAllowsDocking:]` (158) | | |
-| `-[DockEntity disallowedDockingCollides]` (166) | | |
-| `-[DockEntity allowsLaunching]` (171) | | |
-| `-[DockEntity setAllowsLaunching:]` (176) | | |
-| `-[DockEntity setDisallowedDockingCollides:]` (184) | | |
-| `-[DockEntity setVirtual]` (189) | | |
-| `-[DockEntity canAcceptShipForDocking:]` (194) | | |
-| `-[DockEntity isOffCentre]` (234) | | |
-| `-[DockEntity dockingInstructionsForShip:]` (246) | | |
-| `-[DockEntity addShipToShipsOnApproach:]` (400) | | |
-| `-[DockEntity noteDockingForShip:]` (522) | | |
-| `-[DockEntity abortDockingForShip:]` (531) | | |
-| `-[DockEntity portUpVectorForShipsBoundingBox:]` (560) | | |
-| `-[DockEntity shipIsInDockingQueue:]` (571) | | |
-| `-[DockEntity countOfShipsInDockingQueue]` (591) | | |
-| `-[DockEntity countOfShipsInLaunchQueue]` (596) | | |
-| `-[DockEntity shipIsInDockingCorridor:]` (601) | | |
-| `-[DockEntity pullInShipIfPermitted:]` (773) | | |
-| `-[DockEntity addShipToLaunchQueue:withPriority:]` (782) | | |
-| `-[DockEntity launchShip:]` (801) | | |
-| `-[DockEntity countOfShipsInLaunchQueueWithPrimaryRole:]` (854) | | |
-| `-[DockEntity allowsLaunchingOf:]` (865) | | |
-| `-[DockEntity clear]` (894) | | |
-| `-[DockEntity dockingCorridorIsEmpty]` (900) | | |
-| `-[DockEntity clearDockingCorridor]` (966) | | |
-| `-[DockEntity setDimensionsAndCorridor:ddc:launching:]` (1032) | | |
-| `-[DockEntity isDock]` (1058) | | |
-| `-[DockEntity initWithKey:definition:]` (1063) | | |
-| `-[DockEntity dealloc]` (1082) | | |
-| `-[DockEntity clearIdLocks:]` (1091) | | |
-| `-[DockEntity clearAllIdLocks]` (1101) | | |
-| `-[DockEntity setUpShipFromDictionary:]` (1109) | | |
-| `-[DockEntity update:]` (1124) | | |
-| `-[DockEntity noteTakingDamage:from:type:]` (1142) | | |
-| `-[DockEntity takeEnergyDamage:from:becauseOf:weaponIdentifier:]` (1151) | | |
-| `-[DockEntity drawImmediate:translucent:]` (1161) | | |
+| `shipsOnApproach` ivar (`DockEntity.h:34`, `NSMutableDictionary` keyed by `NSNumber`) | `shipsOnApproach` `std::map<unsigned short, …>` `Core/Entities/DockEntity.h:126` | ❌ |
+| `-[DockEntity pruneAndCountShipsOnApproach]` (60) | `DockEntity::pruneAndCountShipsOnApproach` `Core/Entities/DockEntity.cpp:332` | ✅ |
+| `-[DockEntity abortAllDockings]` (89) | `DockEntity::abortAllDockings` `Core/Entities/DockEntity.cpp:362` | ✅ |
+| `-[DockEntity abortAllLaunches]` (129) | `DockEntity::abortAllLaunches` `Core/Entities/DockEntity.cpp:832` | ✅ |
+| `-[DockEntity autoDockShipsInQueue:]` (135) | `DockEntity::autoDockShipsInQueue` `Core/Entities/DockEntity.cpp:410` | ✅ |
+| `-[DockEntity autoDockShipsOnApproach]` (148) | `DockEntity::autoDockShipsOnApproach` `Core/Entities/DockEntity.cpp:422` | ✅ |
+| `-[DockEntity allowsDocking]` (153) | `DockEntity::allowsDocking` `Core/Entities/DockEntity.cpp:121` | ✅ |
+| `-[DockEntity setAllowsDocking:]` (158) | `DockEntity::setAllowsDocking` `Core/Entities/DockEntity.cpp:126` | ✅ |
+| `-[DockEntity disallowedDockingCollides]` (166) | `DockEntity::disallowedDockingCollides` `Core/Entities/DockEntity.cpp:134` | ✅ |
+| `-[DockEntity allowsLaunching]` (171) | `DockEntity::allowsLaunching` `Core/Entities/DockEntity.cpp:139` | ✅ |
+| `-[DockEntity setAllowsLaunching:]` (176) | `DockEntity::setAllowsLaunching` `Core/Entities/DockEntity.cpp:144` | ✅ |
+| `-[DockEntity setDisallowedDockingCollides:]` (184) | `DockEntity::setDisallowedDockingCollides` `Core/Entities/DockEntity.cpp:152` | ✅ |
+| `-[DockEntity setVirtual]` (189) | `DockEntity::setVirtual` `Core/Entities/DockEntity.cpp:157` | ✅ |
+| `-[DockEntity canAcceptShipForDocking:]` (194) | `DockEntity::canAcceptShipForDocking` `Core/Entities/DockEntity.cpp:427` | ✅ |
+| `-[DockEntity isOffCentre]` (234) | `DockEntity::isOffCentre` `Core/Entities/DockEntity.cpp:162` | ✅ |
+| `-[DockEntity dockingInstructionsForShip:]` (246) | `DockEntity::dockingInstructionsForShip` `Core/Entities/DockEntity.cpp:467` | ⚠️ |
+| `-[DockEntity addShipToShipsOnApproach:]` (400) | `DockEntity::addShipToShipsOnApproach` `Core/Entities/DockEntity.cpp:631` | ✅ |
+| `-[DockEntity noteDockingForShip:]` (522) | `DockEntity::noteDockingForShip` `Core/Entities/DockEntity.cpp:757` | ✅ |
+| `-[DockEntity abortDockingForShip:]` (531) | `DockEntity::abortDockingForShip` `Core/Entities/DockEntity.cpp:766` | ✅ |
+| `-[DockEntity portUpVectorForShipsBoundingBox:]` (560) | `DockEntity::portUpVectorForShipsBoundingBox` `Core/Entities/DockEntity.cpp:174` | ✅ |
+| `-[DockEntity shipIsInDockingQueue:]` (571) | `DockEntity::shipIsInDockingQueue` `Core/Entities/DockEntity.cpp:799` | ✅ |
+| `-[DockEntity countOfShipsInDockingQueue]` (591) | `DockEntity::countOfShipsInDockingQueue` `Core/Entities/DockEntity.cpp:185` | ✅ |
+| `-[DockEntity countOfShipsInLaunchQueue]` (596) | `DockEntity::countOfShipsInLaunchQueue` `Core/Entities/DockEntity.cpp:190` | ✅ |
+| `-[DockEntity shipIsInDockingCorridor:]` (601) | `DockEntity::shipIsInDockingCorridor` `Core/Entities/DockEntity.cpp:838` | ✅ |
+| `-[DockEntity pullInShipIfPermitted:]` (773) | `DockEntity::pullInShipIfPermitted` `Core/Entities/DockEntity.cpp:819` | ✅ |
+| `-[DockEntity addShipToLaunchQueue:withPriority:]` (782) | `DockEntity::addShipToLaunchQueue` `Core/Entities/DockEntity.cpp:1017` | ✅ |
+| `-[DockEntity launchShip:]` (801) | `DockEntity::launchShip` `Core/Entities/DockEntity.cpp:1033` | ✅ |
+| `-[DockEntity countOfShipsInLaunchQueueWithPrimaryRole:]` (854) | `DockEntity::countOfShipsInLaunchQueueWithPrimaryRole` `Core/Entities/DockEntity.cpp:1103` | ✅ |
+| `-[DockEntity allowsLaunchingOf:]` (865) | `DockEntity::allowsLaunchingOf` `Core/Entities/DockEntity.cpp:1113` | ✅ |
+| `-[DockEntity clear]` (894) | `DockEntity::clear` `Core/Entities/DockEntity.cpp:195` | ✅ |
+| `-[DockEntity dockingCorridorIsEmpty]` (900) | `DockEntity::dockingCorridorIsEmpty` `Core/Entities/DockEntity.cpp:1142` | ✅ |
+| `-[DockEntity clearDockingCorridor]` (966) | `DockEntity::clearDockingCorridor` `Core/Entities/DockEntity.cpp:1210` | ✅ |
+| `-[DockEntity setDimensionsAndCorridor:ddc:launching:]` (1032) | `DockEntity::setDimensionsAndCorridor` `Core/Entities/DockEntity.cpp:201` | ✅ |
+| `-[DockEntity isDock]` (1058) | `DockEntity::isDock` `Core/Entities/DockEntity.cpp:227` | ✅ |
+| `-[DockEntity initWithKey:definition:]` (1063) | `DockEntity::newDockObject` `Core/Entities/DockEntity.cpp:96` + `initDockDefaults` `:104` (queues are value members) | ✅ |
+| `-[DockEntity dealloc]` (1082) | `DockEntity::willDealloc` `Core/Entities/DockEntity.cpp:116` | ✅ |
+| `-[DockEntity clearIdLocks:]` (1091) | `DockEntity::clearIdLocks` `Core/Entities/DockEntity.cpp:249` | ✅ |
+| `-[DockEntity clearAllIdLocks]` (1101) | `DockEntity::clearAllIdLocks` `Core/Entities/DockEntity.cpp:259` | ✅ |
+| `-[DockEntity setUpShipFromDictionary:]` (1109) | `DockEntity::setUpShipFromDictionary` `Core/Entities/DockEntity.cpp:267` | ✅ |
+| `-[DockEntity update:]` (1124) | `DockEntity::update` `Core/Entities/DockEntity.cpp:282` | ✅ |
+| `-[DockEntity noteTakingDamage:from:type:]` (1142) | `DockEntity::noteTakingDamage` `Core/Entities/DockEntity.cpp:301` | ✅ |
+| `-[DockEntity takeEnergyDamage:from:becauseOf:weaponIdentifier:]` (1151) | `DockEntity::takeEnergyDamage` `Core/Entities/DockEntity.cpp:310` | ✅ |
+| `-[DockEntity drawImmediate:translucent:]` (1161) | `DockEntity::drawImmediate` `Core/Entities/DockEntity.cpp:320` | ✅ |
+
+Checked against the emphasis points: the corridor tables (`corridor_distance/offset/speed/range/rotate`, count 9, final approach index 3), the 16-point offset from `entityPersonalityInt & 0xf`/`0xf0`/`0xf00`, `ssize = MAX(port_depth, 1500)`, the approach thresholds (SCANNER_MAX_RANGE → APPROACH 10000; `< 1000 + radii` → BACK_OFF 5000; wrong side → side point at `collisionRadius + 5000`, range 1000; `> 12500` → APPROACH 10000), `max_allowed_range = 2*range + collision_radius`, the stage-1 half speed inside 1 km, the three-stage id_lock look-ahead with stage 1 never claimed, corridor box `0.90`/`1.25`/×3 warning/×1.5 safety, the `0.9*max.z + 0.1*min.z` pull-in point, the 1500 m (2 250 000) abort radius with the 10 s grace, the launch-queue priority insert at index 0, `STATION_DELAY_BETWEEN_LAUNCHES`/`STATION_LAUNCH_RETRY_INTERVAL`, mass > 1000, 5 km/2 km/`vdp > 0.86`, the 15 s nudge loop and 3 km push. All match the upstream lines.
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — The approach queue is a `std::map` (iterates by ascending ship ID). Upstream used an `NSMutableDictionary` (hash order). So the order in which `DOCKING_ABORTED`/`stationWithdrewDockingClearance` go out in prune and abortAllDockings, and the order of `enterDock:` in autoDockShipsInQueue, can differ — upstream `Core/Entities/DockEntity.m:65,96,138` ↔ port `Core/Entities/DockEntity.cpp:336,368,412` (`ShipIDsIn`)
+- ⚠️ **low** — The `station.issueDockingInstructions.failed` error logs print the queue/stack as old-style plist text, not GNUstep `-description` (comment cites ADR-0043 item 23) — upstream `Core/Entities/DockEntity.m:294,304` ↔ port `Core/Entities/DockEntity.cpp:516-519,529`
+- ✅ subtle — addShipToShipsOnApproach drops upstream's `corridor_length += port_corridor`. That was a dead store: `rz` was already assigned. The port comment cites bead oo-ao2d — upstream `Core/Entities/DockEntity.m:487-488` ↔ port `Core/Entities/DockEntity.cpp:718-720`
+- ✅ subtle — dockingInstructionsForShip copies the next-coords dict before sending the comms message, then finds the stack again before erasing or setting `hold_message_given`. If script code removes the ship's entry in the middle, the port skips the edit. Upstream mutated an array that might already be orphaned. The returned instructions are the same — upstream `Core/Entities/DockEntity.m:340-397` ↔ port `Core/Entities/DockEntity.cpp:565-628`
+- ✅ subtle — update guards `launchQueue.erase` when the queue was emptied during `launchShip` (upstream `-removeObjectAtIndex:0` would have raised) — upstream `Core/Entities/DockEntity.m:1134` ↔ port `Core/Entities/DockEntity.cpp:292-293`
+- ✅ subtle — prune/abort/autoDock use `oo::ToShip(entityForUniversalID)`. If a UID now belongs to a non-ship, the port treats it as dead and removes it. Upstream would have sent ship selectors to it — upstream `Core/Entities/DockEntity.m:66` ↔ port `Core/Entities/DockEntity.cpp:337`
 
 ## ShipEntity
 
@@ -809,319 +816,359 @@ Upstream `src/Core/Entities/ShipEntity.m` lines 9809–13041 ↔ `Core/Entities/
 <a id="shipentityai"></a>
 Upstream `src/Core/Entities/ShipEntityAI.m` ↔ `Core/Entities/ShipEntityAI.cpp`
 
-**Status:** pending
+**Status:** done — 156 rows: 154 ✅ 2 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[ShipEntity(AI) setAITo:]` (245) | | |
-| `-[ShipEntity(AI) setAIScript:]` (268) | | |
-| `-[ShipEntity(AI) switchAITo:]` (287) | | |
-| `-[ShipEntity(AI) scanForHostiles]` (293) | | |
-| `-[ShipEntity(AI) groupAttackTarget]` (315) | | |
-| `-[ShipEntity(AI) performAttack]` (350) | | |
-| `-[ShipEntity(AI) performCollect]` (359) | | |
-| `-[ShipEntity(AI) performEscort]` (365) | | |
-| `-[ShipEntity(AI) performFaceDestination]` (373) | | |
-| `-[ShipEntity(AI) performFlee]` (379) | | |
-| `-[ShipEntity(AI) performFlyToRangeFromDestination]` (394) | | |
-| `-[ShipEntity(AI) performHold]` (400) | | |
-| `-[ShipEntity(AI) performIdle]` (407) | | |
-| `-[ShipEntity(AI) performIntercept]` (413) | | |
-| `-[ShipEntity(AI) performLandOnPlanet]` (419) | | |
-| `-[ShipEntity(AI) performMining]` (434) | | |
-| `-[ShipEntity(AI) performScriptedAI]` (446) | | |
-| `-[ShipEntity(AI) performScriptedAttackAI]` (452) | | |
-| `-[ShipEntity(AI) performBuoyTumble]` (458) | | |
-| `-[ShipEntity(AI) performStop]` (466) | | |
-| `-[ShipEntity(AI) performTumble]` (473) | | |
-| `-[ShipEntity(AI) performHyperSpaceToSpecificSystem:]` (481) | | |
-| `-[ShipEntity(AI) requestDockingCoordinates]` (486) | | |
-| `-[ShipEntity(AI) recallDockingInstructions]` (536) | | |
-| `-[ShipEntity(AI) scanForNearestIncomingMissile]` (555) | | |
-| `-[ShipEntity(AI) enterPlayerWormhole]` (564) | | |
-| `-[ShipEntity(AI) enterTargetWormhole]` (569) | | |
-| `-[ShipEntity(AI) wormholeEscorts]` (609) | | |
-| `-[ShipEntity(AI) wormholeEntireGroup]` (635) | | |
-| `-[ShipEntity(AI) suggestEscortTo:]` (641) | | |
-| `-[ShipEntity(AI) broadcastDistressMessage]` (677) | | |
-| `-[ShipEntity(AI) broadcastDistressMessageWithDumping:]` (683) | | |
-| `-[ShipEntity(PureAI) setStateTo:]` (752) | | |
-| `-[ShipEntity(PureAI) pauseAI:]` (757) | | |
-| `-[ShipEntity(PureAI) randomPauseAI:]` (762) | | |
-| `-[ShipEntity(PureAI) dropMessages:]` (778) | | |
-| `-[ShipEntity(PureAI) debugDumpPendingMessages]` (790) | | |
-| `-[ShipEntity(PureAI) setDestinationToCurrentLocation]` (795) | | |
-| `-[ShipEntity(PureAI) setDestinationToJinkPosition]` (801) | | |
-| `-[ShipEntity(PureAI) setDesiredRangeTo:]` (808) | | |
-| `-[ShipEntity(PureAI) setDesiredRangeForWaypoint]` (813) | | |
-| `-[ShipEntity(PureAI) setSpeedTo:]` (818) | | |
-| `-[ShipEntity(PureAI) setSpeedFactorTo:]` (823) | | |
-| `-[ShipEntity(PureAI) setSpeedToCruiseSpeed]` (828) | | |
-| `-[ShipEntity(PureAI) setThrustFactorTo:]` (833) | | |
-| `-[ShipEntity(PureAI) setTargetToPrimaryAggressor]` (838) | | |
-| `-[ShipEntity(PureAI) addPrimaryAggressorAsDefenseTarget]` (871) | | |
-| `-[ShipEntity(PureAI) scanForNearestMerchantman]` (884) | | |
-| `-[ShipEntity(PureAI) scanForRandomMerchantman]` (913) | | |
-| `-[ShipEntity(PureAI) scanForLoot]` (937) | | |
-| `-[ShipEntity(PureAI) scanForRandomLoot]` (979) | | |
-| `-[ShipEntity(PureAI) setTargetToFoundTarget]` (1007) | | |
-| `-[ShipEntity(PureAI) addFoundTargetAsDefenseTarget]` (1016) | | |
-| `-[ShipEntity(PureAI) checkForFullHold]` (1026) | | |
-| `-[ShipEntity(PureAI) getWitchspaceEntryCoordinates]` (1037) | | |
-| `-[ShipEntity(PureAI) setDestinationFromCoordinates]` (1065) | | |
-| `-[ShipEntity(PureAI) setCoordinatesFromPosition]` (1070) | | |
-| `-[ShipEntity(PureAI) fightOrFleeMissile]` (1075) | | |
-| `-[ShipEntity(PureAI) setCourseToPlanet]` (1144) | | |
-| `-[ShipEntity(PureAI) setTakeOffFromPlanet]` (1165) | | |
-| `-[ShipEntity(PureAI) landOnPlanet]` (1177) | | |
-| `-[ShipEntity(PureAI) checkTargetLegalStatus]` (1183) | | |
-| `-[ShipEntity(PureAI) checkOwnLegalStatus]` (1207) | | |
-| `-[ShipEntity(PureAI) exitAIWithMessage:]` (1229) | | |
-| `-[ShipEntity(PureAI) setDestinationToTarget]` (1236) | | |
-| `-[ShipEntity(PureAI) setDestinationWithinTarget]` (1243) | | |
-| `-[ShipEntity(PureAI) checkCourseToDestination]` (1256) | | |
-| `-[ShipEntity(PureAI) checkAegis]` (1272) | | |
-| `-[ShipEntity(PureAI) checkEnergy]` (1308) | | |
-| `-[ShipEntity(PureAI) checkHeatInsulation]` (1325) | | |
-| `-[ShipEntity(PureAI) findNewDefenseTarget]` (1336) | | |
-| `-[ShipEntity(PureAI) scanForOffenders]` (1351) | | |
-| `-[ShipEntity(PureAI) setCourseToWitchpoint]` (1388) | | |
-| `-[ShipEntity(PureAI) setDestinationToWitchpoint]` (1396) | | |
-| `-[ShipEntity(PureAI) setDestinationToStationBeacon]` (1401) | | |
-| `-[ShipEntity(PureAI) performHyperSpaceExit]` (1408) | | |
-| `-[ShipEntity(PureAI) performHyperSpaceExitWithoutReplacing]` (1413) | | |
-| `-[ShipEntity(PureAI) disengageAutopilot]` (1418) | | |
-| `-[ShipEntity(PureAI) wormholeGroup]` (1423) | | |
-| `-[ShipEntity(PureAI) commsMessage:]` (1439) | | |
-| `-[ShipEntity(PureAI) commsMessageByUnpiloted:]` (1444) | | |
-| `-[ShipEntity(PureAI) ejectCargo]` (1449) | | |
-| `-[ShipEntity(PureAI) scanForThargoid]` (1461) | | |
-| `-[ShipEntity(PureAI) scanForNonThargoid]` (1466) | | |
-| `-[ShipEntity(PureAI) thargonCheckMother]` (1488) | | |
-| `-[ShipEntity(PureAI) becomeUncontrolledThargon]` (1512) | | |
-| `-[ShipEntity(PureAI) checkDistanceTravelled]` (1536) | | |
-| `-[ShipEntity(PureAI) fightOrFleeHostiles]` (1542) | | |
-| `-[ShipEntity(PureAI) suggestEscort]` (1585) | | |
-| `-[ShipEntity(PureAI) escortCheckMother]` (1591) | | |
-| `-[ShipEntity(PureAI) checkGroupOddsVersusTarget]` (1607) | | |
-| `-[ShipEntity(PureAI) scanForFormationLeader]` (1621) | | |
-| `-[ShipEntity(PureAI) messageMother:]` (1652) | | |
-| `-[ShipEntity(PureAI) messageSelf:]` (1665) | | |
-| `-[ShipEntity(PureAI) setPlanetPatrolCoordinates]` (1670) | | |
-| `-[ShipEntity(PureAI) setSunSkimStartCoordinates]` (1732) | | |
-| `-[ShipEntity(PureAI) setSunSkimEndCoordinates]` (1749) | | |
-| `-[ShipEntity(PureAI) setSunSkimExitCoordinates]` (1760) | | |
-| `-[ShipEntity(PureAI) patrolReportIn]` (1779) | | |
-| `-[ShipEntity(PureAI) checkForMotherStation]` (1788) | | |
-| `-[ShipEntity(PureAI) sendTargetCommsMessage:]` (1804) | | |
-| `-[ShipEntity(PureAI) markTargetForFines]` (1814) | | |
-| `-[ShipEntity(PureAI) markTargetForOffence:]` (1825) | | |
-| `-[ShipEntity(PureAI) storeTarget]` (1838) | | |
-| `-[ShipEntity(PureAI) recallStoredTarget]` (1849) | | |
-| `-[ShipEntity(PureAI) scanForRocks]` (1871) | | |
-| `-[ShipEntity(PureAI) setDestinationToDockingAbort]` (1907) | | |
-| `-[ShipEntity(PureAI) requestNewTarget]` (1936) | | |
-| `-[ShipEntity(PureAI) rollD:]` (1965) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipWithPrimaryRole:]` (1977) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipHavingRole:]` (1982) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipWithAnyPrimaryRole:]` (1987) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipHavingAnyRole:]` (1993) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipWithScanClass:]` (1999) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipWithoutPrimaryRole:]` (2005) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipNotHavingRole:]` (2010) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipWithoutAnyPrimaryRole:]` (2015) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipNotHavingAnyRole:]` (2021) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipWithoutScanClass:]` (2027) | | |
-| `-[ShipEntity(PureAI) scanForNearestShipMatchingPredicate:]` (2033) | | |
-| `-[ShipEntity(PureAI) setCoordinates:]` (2126) | | |
-| `-[ShipEntity(PureAI) checkForNormalSpace]` (2158) | | |
-| `-[ShipEntity(PureAI) setTargetToRandomStation]` (2166) | | |
-| `-[ShipEntity(PureAI) setTargetToLastStation]` (2210) | | |
-| `-[ShipEntity(PureAI) addFuel:]` (2222) | | |
-| `-[ShipEntity(PureAI) scriptActionOnTarget:]` (2227) | | |
-| `-[ShipEntity(PureAI) safeScriptActionOnTarget:]` (2256) | | |
-| `-[ShipEntity(PureAI) sendScriptMessage:]` (2274) | | |
-| `-[ShipEntity(PureAI) ai_throwSparks]` (2287) | | |
-| `-[ShipEntity(PureAI) explodeSelf]` (2292) | | |
-| `-[ShipEntity(PureAI) ai_debugMessage:]` (2297) | | |
-| `-[ShipEntity(PureAI) targetFirstBeaconWithCode:]` (2306) | | |
-| `-[ShipEntity(PureAI) targetNextBeaconWithCode:]` (2316) | | |
-| `-[ShipEntity(PureAI) setRacepointsFromTarget]` (2347) | | |
-| `-[ShipEntity(PureAI) performFlyRacepoints]` (2367) | | |
-| `-[ShipEntity(OOAIPrivate) checkFoundTarget]` (2378) | | |
-| `-[ShipEntity(OOAIPrivate) performHyperSpaceExitReplace:]` (2387) | | |
-| `-[ShipEntity(OOAIPrivate) performHyperSpaceExitReplace:toSystem:]` (2392) | | |
-| `-[ShipEntity(OOAIPrivate) scanForNearestShipWithPredicate:parameter:]` (2466) | | |
-| `-[ShipEntity(OOAIPrivate) scanForNearestShipWithNegatedPredicate:parameter:]` (2492) | | |
-| `-[ShipEntity(OOAIPrivate) acceptDistressMessageFrom:]` (2498) | | |
-| `-[StationEntity(OOAIPrivate) acceptDistressMessageFrom:]` (2517) | | |
-| `-[ShipEntity(OOAIStationStubs) launchPatrol]` (2550) | | |
+| `-[ShipEntity(AI) setAITo:]` (245) | `ShipEntity::setAITo` `Core/Entities/ShipEntityAI.cpp:105` | ✅ |
+| `-[ShipEntity(AI) setAIScript:]` (268) | `ShipEntity::setAIScript` `Core/Entities/ShipEntityAI.cpp:131` | ✅ |
+| `-[ShipEntity(AI) switchAITo:]` (287) | `ShipEntity::switchAITo` `Core/Entities/ShipEntityAI.cpp:146` | ✅ |
+| `-[ShipEntity(AI) scanForHostiles]` (293) | `ShipEntity::scanForHostiles` `Core/Entities/ShipEntityAI.cpp:153` | ✅ |
+| `-[ShipEntity(AI) groupAttackTarget]` (315) | `ShipEntity::groupAttackTarget` `Core/Entities/ShipEntityAI.cpp:175` | ✅ |
+| `-[ShipEntity(AI) performAttack]` (350) | `ShipEntity::performAttack` `Core/Entities/ShipEntityAI.cpp:217` | ✅ |
+| `-[ShipEntity(AI) performCollect]` (359) | `ShipEntity::performCollect` `Core/Entities/ShipEntityAI.cpp:226` | ✅ |
+| `-[ShipEntity(AI) performEscort]` (365) | `ShipEntity::performEscort` `Core/Entities/ShipEntityAI.cpp:232` | ✅ |
+| `-[ShipEntity(AI) performFaceDestination]` (373) | `ShipEntity::performFaceDestination` `Core/Entities/ShipEntityAI.cpp:240` | ✅ |
+| `-[ShipEntity(AI) performFlee]` (379) | `ShipEntity::performFlee` `Core/Entities/ShipEntityAI.cpp:246` | ✅ |
+| `-[ShipEntity(AI) performFlyToRangeFromDestination]` (394) | `ShipEntity::performFlyToRangeFromDestination` `Core/Entities/ShipEntityAI.cpp:261` | ✅ |
+| `-[ShipEntity(AI) performHold]` (400) | `ShipEntity::performHold` `Core/Entities/ShipEntityAI.cpp:267` | ✅ |
+| `-[ShipEntity(AI) performIdle]` (407) | `ShipEntity::performIdle` `Core/Entities/ShipEntityAI.cpp:274` | ✅ |
+| `-[ShipEntity(AI) performIntercept]` (413) | `ShipEntity::performIntercept` `Core/Entities/ShipEntityAI.cpp:280` | ✅ |
+| `-[ShipEntity(AI) performLandOnPlanet]` (419) | `ShipEntity::performLandOnPlanet` `Core/Entities/ShipEntityAI.cpp:286` | ✅ |
+| `-[ShipEntity(AI) performMining]` (434) | `ShipEntity::performMining` `Core/Entities/ShipEntityAI.cpp:302` | ✅ |
+| `-[ShipEntity(AI) performScriptedAI]` (446) | `ShipEntity::performScriptedAI` `Core/Entities/ShipEntityAI.cpp:314` | ✅ |
+| `-[ShipEntity(AI) performScriptedAttackAI]` (452) | `ShipEntity::performScriptedAttackAI` `Core/Entities/ShipEntityAI.cpp:320` | ✅ |
+| `-[ShipEntity(AI) performBuoyTumble]` (458) | `ShipEntity::performBuoyTumble` `Core/Entities/ShipEntityAI.cpp:326` | ✅ |
+| `-[ShipEntity(AI) performStop]` (466) | `ShipEntity::performStop` `Core/Entities/ShipEntityAI.cpp:334` | ✅ |
+| `-[ShipEntity(AI) performTumble]` (473) | `ShipEntity::performTumble` `Core/Entities/ShipEntityAI.cpp:341` | ✅ |
+| `-[ShipEntity(AI) performHyperSpaceToSpecificSystem:]` (481) | `ShipEntity::performHyperSpaceToSpecificSystem` `Core/Entities/ShipEntityAI.cpp:349` | ✅ |
+| `-[ShipEntity(AI) requestDockingCoordinates]` (486) | `ShipEntity::requestDockingCoordinates` `Core/Entities/ShipEntityAI.cpp:354` | ✅ |
+| `-[ShipEntity(AI) recallDockingInstructions]` (536) | `ShipEntity::recallDockingInstructions` `Core/Entities/ShipEntityAI.cpp:406` | ✅ |
+| `-[ShipEntity(AI) scanForNearestIncomingMissile]` (555) | `ShipEntity::scanForNearestIncomingMissile` `Core/Entities/ShipEntityAI.cpp:426` | ✅ |
+| `-[ShipEntity(AI) enterPlayerWormhole]` (564) | `ShipEntity::enterPlayerWormhole` `Core/Entities/ShipEntityAI.cpp:436` | ✅ |
+| `-[ShipEntity(AI) enterTargetWormhole]` (569) | `ShipEntity::enterTargetWormhole` `Core/Entities/ShipEntityAI.cpp:441` | ✅ |
+| `-[ShipEntity(AI) wormholeEscorts]` (609) | `ShipEntity::wormholeEscorts` `Core/Entities/ShipEntityAI.cpp:481` | ✅ |
+| `-[ShipEntity(AI) wormholeEntireGroup]` (635) | `ShipEntity::wormholeEntireGroup` `Core/Entities/ShipEntityAI.cpp:507` | ✅ |
+| `-[ShipEntity(AI) suggestEscortTo:]` (641) | `ShipEntity::suggestEscortTo` `Core/Entities/ShipEntityAI.cpp:513` | ✅ |
+| `-[ShipEntity(AI) broadcastDistressMessage]` (677) | `ShipEntity::broadcastDistressMessage` `Core/Entities/ShipEntityAI.cpp:551` | ✅ |
+| `-[ShipEntity(AI) broadcastDistressMessageWithDumping:]` (683) | `ShipEntity::broadcastDistressMessageWithDumping` `Core/Entities/ShipEntityAI.cpp:557` | ✅ |
+| `-[ShipEntity(PureAI) setStateTo:]` (752) | `ShipEntity::setStateTo` `Core/Entities/ShipEntityAI.cpp:820` | ✅ |
+| `-[ShipEntity(PureAI) pauseAI:]` (757) | `ShipEntity::pauseAI` `Core/Entities/ShipEntityAI.cpp:826` | ✅ |
+| `-[ShipEntity(PureAI) randomPauseAI:]` (762) | `ShipEntity::randomPauseAI` `Core/Entities/ShipEntityAI.cpp:832` | ✅ |
+| `-[ShipEntity(PureAI) dropMessages:]` (778) | `ShipEntity::dropMessages` `Core/Entities/ShipEntityAI.cpp:849` | ✅ |
+| `-[ShipEntity(PureAI) debugDumpPendingMessages]` (790) | `ShipEntity::debugDumpPendingMessages` `Core/Entities/ShipEntityAI.cpp:857` | ✅ |
+| `-[ShipEntity(PureAI) setDestinationToCurrentLocation]` (795) | `ShipEntity::setDestinationToCurrentLocation` `Core/Entities/ShipEntityAI.cpp:863` | ✅ |
+| `-[ShipEntity(PureAI) setDestinationToJinkPosition]` (801) | `ShipEntity::setDestinationToJinkPosition` `Core/Entities/ShipEntityAI.cpp:869` | ✅ |
+| `-[ShipEntity(PureAI) setDesiredRangeTo:]` (808) | `ShipEntity::setDesiredRangeTo` `Core/Entities/ShipEntityAI.cpp:876` | ✅ |
+| `-[ShipEntity(PureAI) setDesiredRangeForWaypoint]` (813) | `ShipEntity::setDesiredRangeForWaypoint` `Core/Entities/ShipEntityAI.cpp:881` | ✅ |
+| `-[ShipEntity(PureAI) setSpeedTo:]` (818) | `ShipEntity::setSpeedTo` `Core/Entities/ShipEntityAI.cpp:886` | ✅ |
+| `-[ShipEntity(PureAI) setSpeedFactorTo:]` (823) | `ShipEntity::setSpeedFactorTo` `Core/Entities/ShipEntityAI.cpp:891` | ✅ |
+| `-[ShipEntity(PureAI) setSpeedToCruiseSpeed]` (828) | `ShipEntity::setSpeedToCruiseSpeed` `Core/Entities/ShipEntityAI.cpp:896` | ✅ |
+| `-[ShipEntity(PureAI) setThrustFactorTo:]` (833) | `ShipEntity::setThrustFactorTo` `Core/Entities/ShipEntityAI.cpp:901` | ✅ |
+| `-[ShipEntity(PureAI) setTargetToPrimaryAggressor]` (838) | `ShipEntity::setTargetToPrimaryAggressor` `Core/Entities/ShipEntityAI.cpp:906` | ✅ |
+| `-[ShipEntity(PureAI) addPrimaryAggressorAsDefenseTarget]` (871) | `ShipEntity::addPrimaryAggressorAsDefenseTarget` `Core/Entities/ShipEntityAI.cpp:941` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestMerchantman]` (884) | `ShipEntity::scanForNearestMerchantman` `Core/Entities/ShipEntityAI.cpp:954` | ✅ |
+| `-[ShipEntity(PureAI) scanForRandomMerchantman]` (913) | `ShipEntity::scanForRandomMerchantman` `Core/Entities/ShipEntityAI.cpp:983` | ✅ |
+| `-[ShipEntity(PureAI) scanForLoot]` (937) | `ShipEntity::scanForLoot` `Core/Entities/ShipEntityAI.cpp:1009` | ✅ |
+| `-[ShipEntity(PureAI) scanForRandomLoot]` (979) | `ShipEntity::scanForRandomLoot` `Core/Entities/ShipEntityAI.cpp:1056` | ✅ |
+| `-[ShipEntity(PureAI) setTargetToFoundTarget]` (1007) | `ShipEntity::setTargetToFoundTarget` `Core/Entities/ShipEntityAI.cpp:1088` | ✅ |
+| `-[ShipEntity(PureAI) addFoundTargetAsDefenseTarget]` (1016) | `ShipEntity::addFoundTargetAsDefenseTarget` `Core/Entities/ShipEntityAI.cpp:1098` | ✅ |
+| `-[ShipEntity(PureAI) checkForFullHold]` (1026) | `ShipEntity::checkForFullHold` `Core/Entities/ShipEntityAI.cpp:1108` | ✅ |
+| `-[ShipEntity(PureAI) getWitchspaceEntryCoordinates]` (1037) | `ShipEntity::getWitchspaceEntryCoordinates` `Core/Entities/ShipEntityAI.cpp:1122` | ✅ |
+| `-[ShipEntity(PureAI) setDestinationFromCoordinates]` (1065) | `ShipEntity::setDestinationFromCoordinates` `Core/Entities/ShipEntityAI.cpp:1148` | ✅ |
+| `-[ShipEntity(PureAI) setCoordinatesFromPosition]` (1070) | `ShipEntity::setCoordinatesFromPosition` `Core/Entities/ShipEntityAI.cpp:1153` | ✅ |
+| `-[ShipEntity(PureAI) fightOrFleeMissile]` (1075) | `ShipEntity::fightOrFleeMissile` `Core/Entities/ShipEntityAI.cpp:1158` | ✅ |
+| `-[ShipEntity(PureAI) setCourseToPlanet]` (1144) | `ShipEntity::setCourseToPlanet` `Core/Entities/ShipEntityAI.cpp:1235` | ✅ |
+| `-[ShipEntity(PureAI) setTakeOffFromPlanet]` (1165) | `ShipEntity::setTakeOffFromPlanet` `Core/Entities/ShipEntityAI.cpp:1257` | ✅ |
+| `-[ShipEntity(PureAI) landOnPlanet]` (1177) | `ShipEntity::landOnPlanet` `Core/Entities/ShipEntityAI.cpp:1269` | ✅ |
+| `-[ShipEntity(PureAI) checkTargetLegalStatus]` (1183) | `ShipEntity::checkTargetLegalStatus` `Core/Entities/ShipEntityAI.cpp:1275` | ✅ |
+| `-[ShipEntity(PureAI) checkOwnLegalStatus]` (1207) | `ShipEntity::checkOwnLegalStatus` `Core/Entities/ShipEntityAI.cpp:1304` | ✅ |
+| `-[ShipEntity(PureAI) exitAIWithMessage:]` (1229) | `ShipEntity::exitAIWithMessage` `Core/Entities/ShipEntityAI.cpp:1331` | ✅ |
+| `-[ShipEntity(PureAI) setDestinationToTarget]` (1236) | `ShipEntity::setDestinationToTarget` `Core/Entities/ShipEntityAI.cpp:1337` | ✅ |
+| `-[ShipEntity(PureAI) setDestinationWithinTarget]` (1243) | `ShipEntity::setDestinationWithinTarget` `Core/Entities/ShipEntityAI.cpp:1344` | ✅ |
+| `-[ShipEntity(PureAI) checkCourseToDestination]` (1256) | `ShipEntity::checkCourseToDestination` `Core/Entities/ShipEntityAI.cpp:1357` | ✅ |
+| `-[ShipEntity(PureAI) checkAegis]` (1272) | `ShipEntity::checkAegis` `Core/Entities/ShipEntityAI.cpp:1382` | ✅ |
+| `-[ShipEntity(PureAI) checkEnergy]` (1308) | `ShipEntity::checkEnergy` `Core/Entities/ShipEntityAI.cpp:1426` | ✅ |
+| `-[ShipEntity(PureAI) checkHeatInsulation]` (1325) | `ShipEntity::checkHeatInsulation` `Core/Entities/ShipEntityAI.cpp:1447` | ✅ |
+| `-[ShipEntity(PureAI) findNewDefenseTarget]` (1336) | `ShipEntity::findNewDefenseTarget` `Core/Entities/ShipEntityAI.cpp:1460` | ✅ |
+| `-[ShipEntity(PureAI) scanForOffenders]` (1351) | `ShipEntity::scanForOffenders` `Core/Entities/ShipEntityAI.cpp:1475` | ✅ |
+| `-[ShipEntity(PureAI) setCourseToWitchpoint]` (1388) | `ShipEntity::setCourseToWitchpoint` `Core/Entities/ShipEntityAI.cpp:1511` | ✅ |
+| `-[ShipEntity(PureAI) setDestinationToWitchpoint]` (1396) | `ShipEntity::setDestinationToWitchpoint` `Core/Entities/ShipEntityAI.cpp:1519` | ✅ |
+| `-[ShipEntity(PureAI) setDestinationToStationBeacon]` (1401) | `ShipEntity::setDestinationToStationBeacon` `Core/Entities/ShipEntityAI.cpp:1524` | ✅ |
+| `-[ShipEntity(PureAI) performHyperSpaceExit]` (1408) | `ShipEntity::performHyperSpaceExit` `Core/Entities/ShipEntityAI.cpp:1531` | ✅ |
+| `-[ShipEntity(PureAI) performHyperSpaceExitWithoutReplacing]` (1413) | `ShipEntity::performHyperSpaceExitWithoutReplacing` `Core/Entities/ShipEntityAI.cpp:1536` | ✅ |
+| `-[ShipEntity(PureAI) disengageAutopilot]` (1418) | `ShipEntity::disengageAutopilot` `Core/Entities/ShipEntityAI.cpp:1541` | ✅ |
+| `-[ShipEntity(PureAI) wormholeGroup]` (1423) | `ShipEntity::wormholeGroup` `Core/Entities/ShipEntityAI.cpp:1546` | ✅ |
+| `-[ShipEntity(PureAI) commsMessage:]` (1439) | `ShipEntity::commsMessage` `Core/Entities/ShipEntityAI.cpp:1566` | ✅ |
+| `-[ShipEntity(PureAI) commsMessageByUnpiloted:]` (1444) | `ShipEntity::commsMessageByUnpiloted` `Core/Entities/ShipEntityAI.cpp:1571` | ✅ |
+| `-[ShipEntity(PureAI) ejectCargo]` (1449) | `ShipEntity::ejectCargo` `Core/Entities/ShipEntityAI.cpp:1576` | ✅ |
+| `-[ShipEntity(PureAI) scanForThargoid]` (1461) | `ShipEntity::scanForThargoid` `Core/Entities/ShipEntityAI.cpp:1589` | ✅ |
+| `-[ShipEntity(PureAI) scanForNonThargoid]` (1466) | `ShipEntity::scanForNonThargoid` `Core/Entities/ShipEntityAI.cpp:1594` | ✅ |
+| `-[ShipEntity(PureAI) thargonCheckMother]` (1488) | `ShipEntity::thargonCheckMother` `Core/Entities/ShipEntityAI.cpp:1616` | ✅ |
+| `-[ShipEntity(PureAI) becomeUncontrolledThargon]` (1512) | `ShipEntity::becomeUncontrolledThargon` `Core/Entities/ShipEntityAI.cpp:1641` | ✅ |
+| `-[ShipEntity(PureAI) checkDistanceTravelled]` (1536) | `ShipEntity::checkDistanceTravelled` `Core/Entities/ShipEntityAI.cpp:1667` | ✅ |
+| `-[ShipEntity(PureAI) fightOrFleeHostiles]` (1542) | `ShipEntity::fightOrFleeHostiles` `Core/Entities/ShipEntityAI.cpp:1675` | ✅ |
+| `-[ShipEntity(PureAI) suggestEscort]` (1585) | `ShipEntity::suggestEscort` `Core/Entities/ShipEntityAI.cpp:1724` | ✅ |
+| `-[ShipEntity(PureAI) escortCheckMother]` (1591) | `ShipEntity::escortCheckMother` `Core/Entities/ShipEntityAI.cpp:1730` | ✅ |
+| `-[ShipEntity(PureAI) checkGroupOddsVersusTarget]` (1607) | `ShipEntity::checkGroupOddsVersusTarget` `Core/Entities/ShipEntityAI.cpp:1748` | ✅ |
+| `-[ShipEntity(PureAI) scanForFormationLeader]` (1621) | `ShipEntity::scanForFormationLeader` `Core/Entities/ShipEntityAI.cpp:1767` | ✅ |
+| `-[ShipEntity(PureAI) messageMother:]` (1652) | `ShipEntity::messageMother` `Core/Entities/ShipEntityAI.cpp:1800` | ✅ |
+| `-[ShipEntity(PureAI) messageSelf:]` (1665) | `ShipEntity::messageSelf` `Core/Entities/ShipEntityAI.cpp:1809` | ✅ |
+| `-[ShipEntity(PureAI) setPlanetPatrolCoordinates]` (1670) | `ShipEntity::setPlanetPatrolCoordinates` `Core/Entities/ShipEntityAI.cpp:1814` | ✅ |
+| `-[ShipEntity(PureAI) setSunSkimStartCoordinates]` (1732) | `ShipEntity::setSunSkimStartCoordinates` `Core/Entities/ShipEntityAI.cpp:1877` | ✅ |
+| `-[ShipEntity(PureAI) setSunSkimEndCoordinates]` (1749) | `ShipEntity::setSunSkimEndCoordinates` `Core/Entities/ShipEntityAI.cpp:1897` | ✅ |
+| `-[ShipEntity(PureAI) setSunSkimExitCoordinates]` (1760) | `ShipEntity::setSunSkimExitCoordinates` `Core/Entities/ShipEntityAI.cpp:1910` | ✅ |
+| `-[ShipEntity(PureAI) patrolReportIn]` (1779) | `ShipEntity::patrolReportIn` `Core/Entities/ShipEntityAI.cpp:1930` | ✅ |
+| `-[ShipEntity(PureAI) checkForMotherStation]` (1788) | `ShipEntity::checkForMotherStation` `Core/Entities/ShipEntityAI.cpp:1940` | ✅ |
+| `-[ShipEntity(PureAI) sendTargetCommsMessage:]` (1804) | `ShipEntity::sendTargetCommsMessage` `Core/Entities/ShipEntityAI.cpp:1959` | ✅ |
+| `-[ShipEntity(PureAI) markTargetForFines]` (1814) | `ShipEntity::markTargetForFines` `Core/Entities/ShipEntityAI.cpp:1969` | ✅ |
+| `-[ShipEntity(PureAI) markTargetForOffence:]` (1825) | `ShipEntity::markTargetForOffence` `Core/Entities/ShipEntityAI.cpp:1982` | ✅ |
+| `-[ShipEntity(PureAI) storeTarget]` (1838) | `ShipEntity::storeTarget` `Core/Entities/ShipEntityAI.cpp:1996` | ✅ |
+| `-[ShipEntity(PureAI) recallStoredTarget]` (1849) | `ShipEntity::recallStoredTarget` `Core/Entities/ShipEntityAI.cpp:2012` | ✅ |
+| `-[ShipEntity(PureAI) scanForRocks]` (1871) | `ShipEntity::scanForRocks` `Core/Entities/ShipEntityAI.cpp:2036` | ✅ |
+| `-[ShipEntity(PureAI) setDestinationToDockingAbort]` (1907) | `ShipEntity::setDestinationToDockingAbort` `Core/Entities/ShipEntityAI.cpp:2072` | ✅ |
+| `-[ShipEntity(PureAI) requestNewTarget]` (1936) | `ShipEntity::requestNewTarget` `Core/Entities/ShipEntityAI.cpp:2101` | ✅ |
+| `-[ShipEntity(PureAI) rollD:]` (1965) | `ShipEntity::rollD` `Core/Entities/ShipEntityAI.cpp:2131` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipWithPrimaryRole:]` (1977) | `ShipEntity::scanForNearestShipWithPrimaryRole` `Core/Entities/ShipEntityAI.cpp:2143` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipHavingRole:]` (1982) | `ShipEntity::scanForNearestShipHavingRole` `Core/Entities/ShipEntityAI.cpp:2148` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipWithAnyPrimaryRole:]` (1987) | `ShipEntity::scanForNearestShipWithAnyPrimaryRole` `Core/Entities/ShipEntityAI.cpp:2153` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipHavingAnyRole:]` (1993) | `ShipEntity::scanForNearestShipHavingAnyRole` `Core/Entities/ShipEntityAI.cpp:2159` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipWithScanClass:]` (1999) | `ShipEntity::scanForNearestShipWithScanClass` `Core/Entities/ShipEntityAI.cpp:2165` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipWithoutPrimaryRole:]` (2005) | `ShipEntity::scanForNearestShipWithoutPrimaryRole` `Core/Entities/ShipEntityAI.cpp:2171` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipNotHavingRole:]` (2010) | `ShipEntity::scanForNearestShipNotHavingRole` `Core/Entities/ShipEntityAI.cpp:2176` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipWithoutAnyPrimaryRole:]` (2015) | `ShipEntity::scanForNearestShipWithoutAnyPrimaryRole` `Core/Entities/ShipEntityAI.cpp:2181` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipNotHavingAnyRole:]` (2021) | `ShipEntity::scanForNearestShipNotHavingAnyRole` `Core/Entities/ShipEntityAI.cpp:2187` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipWithoutScanClass:]` (2027) | `ShipEntity::scanForNearestShipWithoutScanClass` `Core/Entities/ShipEntityAI.cpp:2193` | ✅ |
+| `-[ShipEntity(PureAI) scanForNearestShipMatchingPredicate:]` (2033) | `ShipEntity::scanForNearestShipMatchingPredicate` `Core/Entities/ShipEntityAI.cpp:2199` | ✅ |
+| `-[ShipEntity(PureAI) setCoordinates:]` (2126) | `ShipEntity::setCoordinates` `Core/Entities/ShipEntityAI.cpp:2296` | ✅ |
+| `-[ShipEntity(PureAI) checkForNormalSpace]` (2158) | `ShipEntity::checkForNormalSpace` `Core/Entities/ShipEntityAI.cpp:2326` | ✅ |
+| `-[ShipEntity(PureAI) setTargetToRandomStation]` (2166) | `ShipEntity::setTargetToRandomStation` `Core/Entities/ShipEntityAI.cpp:2337` | ✅ |
+| `-[ShipEntity(PureAI) setTargetToLastStation]` (2210) | `ShipEntity::setTargetToLastStation` `Core/Entities/ShipEntityAI.cpp:2383` | ✅ |
+| `-[ShipEntity(PureAI) addFuel:]` (2222) | `ShipEntity::addFuel` `Core/Entities/ShipEntityAI.cpp:2396` | ✅ |
+| `-[ShipEntity(PureAI) scriptActionOnTarget:]` (2227) | `ShipEntity::scriptActionOnTarget` `Core/Entities/ShipEntityAI.cpp:2401` | ✅ |
+| `-[ShipEntity(PureAI) safeScriptActionOnTarget:]` (2256) | `ShipEntity::safeScriptActionOnTarget` `Core/Entities/ShipEntityAI.cpp:2431` | ✅ |
+| `-[ShipEntity(PureAI) sendScriptMessage:]` (2274) | `ShipEntity::sendScriptMessage` `Core/Entities/ShipEntityAI.cpp:2449` | ⚠️ |
+| `-[ShipEntity(PureAI) ai_throwSparks]` (2287) | `ShipEntity::ai_throwSparks` `Core/Entities/ShipEntityAI.cpp:2465` | ✅ |
+| `-[ShipEntity(PureAI) explodeSelf]` (2292) | `ShipEntity::explodeSelf` `Core/Entities/ShipEntityAI.cpp:2470` | ✅ |
+| `-[ShipEntity(PureAI) ai_debugMessage:]` (2297) | `ShipEntity::ai_debugMessage` `Core/Entities/ShipEntityAI.cpp:2475` | ✅ |
+| `-[ShipEntity(PureAI) targetFirstBeaconWithCode:]` (2306) | `ShipEntity::targetFirstBeaconWithCode` `Core/Entities/ShipEntityAI.cpp:2484` | ✅ |
+| `-[ShipEntity(PureAI) targetNextBeaconWithCode:]` (2316) | `ShipEntity::targetNextBeaconWithCode` `Core/Entities/ShipEntityAI.cpp:2497` | ✅ |
+| `-[ShipEntity(PureAI) setRacepointsFromTarget]` (2347) | `ShipEntity::setRacepointsFromTarget` `Core/Entities/ShipEntityAI.cpp:2536` | ✅ |
+| `-[ShipEntity(PureAI) performFlyRacepoints]` (2367) | `ShipEntity::performFlyRacepoints` `Core/Entities/ShipEntityAI.cpp:2558` | ✅ |
+| `-[ShipEntity(OOAIPrivate) checkFoundTarget]` (2378) | `ShipEntity::checkFoundTarget` `Core/Entities/ShipEntityAI.cpp:621` | ✅ |
+| `-[ShipEntity(OOAIPrivate) performHyperSpaceExitReplace:]` (2387) | `ShipEntity::performHyperSpaceExitReplace` `Core/Entities/ShipEntityAI.cpp:632` | ✅ |
+| `-[ShipEntity(OOAIPrivate) performHyperSpaceExitReplace:toSystem:]` (2392) | `ShipEntity::performHyperSpaceExitReplace` `Core/Entities/ShipEntityAI.cpp:637` | ✅ |
+| `-[ShipEntity(OOAIPrivate) scanForNearestShipWithPredicate:parameter:]` (2466) | `ShipEntity::scanForNearestShipWithPredicate` `Core/Entities/ShipEntityAI.cpp:719` | ✅ |
+| `-[ShipEntity(OOAIPrivate) scanForNearestShipWithNegatedPredicate:parameter:]` (2492) | `ShipEntity::scanForNearestShipWithNegatedPredicate` `Core/Entities/ShipEntityAI.cpp:745` | ✅ |
+| `-[ShipEntity(OOAIPrivate) acceptDistressMessageFrom:]` (2498) | `ShipEntity::acceptDistressMessageFrom` `Core/Entities/ShipEntityAI.cpp:751` | ✅ |
+| `-[StationEntity(OOAIPrivate) acceptDistressMessageFrom:]` (2517) | `StationEntity::acceptDistressMessageFrom` `Core/Entities/ShipEntityAI.cpp:802` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) increaseAlertLevel]` (2540, `STATION_STUB_NOARG`) | `ShipEntity::increaseAlertLevel` `Core/Entities/ShipEntityAI.cpp:775` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) decreaseAlertLevel]` (2541, `STATION_STUB_NOARG`) | `ShipEntity::decreaseAlertLevel` `Core/Entities/ShipEntityAI.cpp:776` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) launchPolice]` (2542, `STATION_STUB_NOARG`) | `ShipEntity::launchPolice` `Core/Entities/ShipEntityAI.cpp:778` | ⚠️ |
+| `-[ShipEntity(OOAIStationStubs) launchDefenseShip]` (2543, `STATION_STUB_NOARG`) | `ShipEntity::launchDefenseShip` `Core/Entities/ShipEntityAI.cpp:784` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) launchScavenger]` (2544, `STATION_STUB_NOARG`) | `ShipEntity::launchScavenger` `Core/Entities/ShipEntityAI.cpp:785` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) launchMiner]` (2545, `STATION_STUB_NOARG`) | `ShipEntity::launchMiner` `Core/Entities/ShipEntityAI.cpp:786` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) launchPirateShip]` (2546, `STATION_STUB_NOARG`) | `ShipEntity::launchPirateShip` `Core/Entities/ShipEntityAI.cpp:787` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) launchShuttle]` (2547, `STATION_STUB_NOARG`) | `ShipEntity::launchShuttle` `Core/Entities/ShipEntityAI.cpp:788` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) launchTrader]` (2548, `STATION_STUB_NOARG`) | `ShipEntity::launchTrader` `Core/Entities/ShipEntityAI.cpp:789` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) launchEscort]` (2549, `STATION_STUB_NOARG`) | `ShipEntity::launchEscort` `Core/Entities/ShipEntityAI.cpp:790` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) launchPatrol]` (2550) | `ShipEntity::launchPatrol` `Core/Entities/ShipEntityAI.cpp:792` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) launchShipWithRole:]` (2555, `STATION_STUB_ARG`) | `ShipEntity::launchShipWithRole` `Core/Entities/ShipEntityAI.cpp:798` | ✅ |
+| `-[ShipEntity(OOAIStationStubs) abortAllDockings]` (2556, `STATION_STUB_NOARG`) | `ShipEntity::abortAllDockings` `Core/Entities/ShipEntityAI.cpp:799` | ✅ |
+| AI-plist dispatch: `Resources/Config/whitelist.plist` `ai_methods` + `ai_and_action_methods` (168 names) and `ai_method_aliases`, sent by `-performSelector:withObject:` (`AI.m:809-870`) | one by-name row per selector in `Core/Entities/OOEntityCalledByNameTable.h` (e.g. `pauseAI:` :2360, `launchPatrol` :2356, `rollD:` :2435) | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `sendScriptMessage:` with an empty or whitespace-only message: upstream raised `NSRangeException` at `-objectAtIndex:0`, which aborted the AI action. The port does nothing; the code comment says this is deliberate — upstream `Core/Entities/ShipEntityAI.m:2278-2283` ↔ port `Core/Entities/ShipEntityAI.cpp:2453-2462`
+- ⚠️ **low** — The ship stub `launchPolice` returns an empty `oo::PList` instead of `void`, so that the by-name row can return the station's launched ships (cites ADR-0055 item 5). It still logs `ai.invalid.notAStation` with the same text — upstream `Core/Entities/ShipEntityAI.m:2542` ↔ port `Core/Entities/ShipEntityAI.cpp:778-782`
+- ✅ note — AI-plist reachability: every name in `whitelist.plist` `ai_methods` + `ai_and_action_methods` (168), and every alias target, resolves to a row in `OOEntityCalledByNameTable.h` with the right ship, station or dock routing. The port's whitelist is byte-identical to upstream's. The only methods of this file without a row take non-string arguments (`suggestEscortTo:`, `acceptDistressMessageFrom:`, `performHyperSpaceExitReplace:`, `performHyperSpaceToSpecificSystem:`, `broadcastDistressMessageWithDumping:`, the predicate scans), and none of them is whitelisted — port `Core/Entities/OOEntityCalledByNameTable.h:2346-2445`
+- ✅ note — Constants and search ranges match upstream: `desired_range = 1250*randf()+750`; flee jink 400 and the aspect test `> 0.9995` with `randf() < 0.15`; docking-request range `SCANNER_MAX_RANGE2 * 6.25`; distress spacing `messageTime > 2*randf()` and the beg threshold `0.375*maxEnergy`; offence marks 8 (distress), 64 (attacked police) and `1|(ranrot&15)` (assisting); `scanForOffenders` `gov*0.4` against `ranrot&255` (1.0 without a sun); patrol legs at 5 km and 25 km with `desired_range` 250 and a `randf() < .25` chance to dock; witchspace-entry offset 10 km and `maxFlightSpeed*10`; dock-abort back-off 8 km; sun-skim exit 10 km; `ejectCargo` 10% of the hold, cut below 16, one canister every 0.75 s. Every AI message string (`TARGET_FOUND`, `NOTHING_FOUND`, `HOLD_FULL`, `ROLL_%d`, `AIMS_AGGRESSOR_SWITCHED_TARGET %d %d`, …) and its order is unchanged, and so are the RNG draw order and the scanner-range loops — upstream `ShipEntityAI.m` passim ↔ port `ShipEntityAI.cpp` passim
+- ✅ note — The predicate parameters changed type with the predicates: `HasScanClassPredicate` takes an `OOScanClass*` (was `NSNumber`), the role predicates take a `std::string*`, and the role-set predicates take a `std::vector<std::string>*` (was `NSSet`; membership is the same) — upstream `Core/OOEntityFilterPredicate.m:108-164` ↔ port `Core/OOEntityFilterPredicate.cpp:111-179`
+- ✅ note — `ejectCargo`'s `-performSelector:withObject:afterDelay:` became `oo::ScheduleEntityCall` (a deferred call that holds the entity), with the same delays `0.75*i` — upstream `Core/Entities/ShipEntityAI.m:1456-1458` ↔ port `Core/Entities/ShipEntityAI.cpp:1583-1586`
+- ✅ note — `checkAegis`'s invalid-state `NSLog` is now `OO_LOG("unclassified", …)`, which is the class upstream gave a routed NSLog (`kOOLogUnconvertedNSLog`, `OOLogging.m:604`) — upstream `Core/Entities/ShipEntityAI.m:1303` ↔ port `Core/Entities/ShipEntityAI.cpp:1420`
 
 ## ShipEntityLoadRestore
 
 <a id="shipentityloadrestore"></a>
 Upstream `src/Core/Entities/ShipEntityLoadRestore.m` ↔ `Core/Entities/ShipEntityLoadRestore.cpp`
 
-**Status:** pending
+**Status:** done — 7 rows: 6 ✅ 0 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[ShipEntity(LoadRestore) savedShipDictionaryWithContext:]` (75) | | |
-| `+[ShipEntity(LoadRestore) shipRestoredFromDictionary:]` (163) | | |
-| `-[ShipEntity(LoadRestore) simplifyShipdata:andGetDeletes:]` (251) | | |
-| `StripIgnoredKeys()` (292) | | |
-| `GroupIDForGroup()` (304) | | |
-| `GroupForGroupID()` (341) | | |
+| `KEY_*` save-game key table (38-61) | `KEY_*` macros `Core/Entities/ShipEntityLoadRestore.cpp:42-65` (identical spellings) | ✅ |
+| `-[ShipEntity(LoadRestore) savedShipDictionaryWithContext:]` (75) | `ShipEntity::savedShipDictionaryWithContext` `Core/Entities/ShipEntityLoadRestore.cpp:85` | ✅ |
+| `+[ShipEntity(LoadRestore) shipRestoredFromDictionary:]` (163) | `ShipEntity::shipRestoredFromDictionary` (static) `Core/Entities/ShipEntityLoadRestore.cpp:179` | ❌ |
+| `-[ShipEntity(LoadRestore) simplifyShipdata:andGetDeletes:]` (251) | `ShipEntity::simplifyShipdata` `Core/Entities/ShipEntityLoadRestore.cpp:305` | ✅ |
+| `StripIgnoredKeys()` (292) | `StripIgnoredKeys` (anon ns) `Core/Entities/ShipEntityLoadRestore.cpp:341` | ✅ |
+| `GroupIDForGroup()` (304) | `GroupIDForGroup` (anon ns, `OOShipSaveContext`) `Core/Entities/ShipEntityLoadRestore.cpp:352` | ✅ |
+| `GroupForGroupID()` (341) | `GroupForGroupID` (anon ns) `Core/Entities/ShipEntityLoadRestore.cpp:375` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — When the restored dictionary has no `primary_role` (or a value that is not a string or number), the port writes `ship->primaryRole = std::nullopt` with no null check. If the ship's init failed (`newStationObject`/`NewShipObject` returned null), this dereferences null. Upstream sent `-setPrimaryRole:nil` to nil, which did nothing, and returned nil — upstream `Core/Entities/ShipEntityLoadRestore.m:194` ↔ port `Core/Entities/ShipEntityLoadRestore.cpp:220-225`
+- ✅ note — The save keys and restore defaults match: `AI` defaults to `"nullAI.plist"`; `energy_level` defaults to `1.0` (written only if `energy != maxEnergy`, as a double, which is what `oo_setFloat:` stored); `position` defaults to `kZeroHPVector` and `orientation` to `kIdentityQuaternion` (each written only when different from that default); `group` and `escort_group` default to `NSNotFound`; `is_group_leader` defaults to NO. The forced overrides `auto_ai = NO` and `escorts = 0` are kept, and the 17 `StripIgnoredKeys` names are identical — upstream `Core/Entities/ShipEntityLoadRestore.m:38-61,185-246,296` ↔ port `Core/Entities/ShipEntityLoadRestore.cpp:42-65,206-300,343`
+- ✅ note — Where upstream would raise on a nil value in `-setObject:forKey:` (nil `_shipKey`, role string, primary role, AI `associatedJS`), the port writes `""` or omits the key; the code comments say so. These are crash paths upstream, not reachable in normal play — upstream `Core/Entities/ShipEntityLoadRestore.m:81,85,109,154` ↔ port `Core/Entities/ShipEntityLoadRestore.cpp:92,96-99,124,168-170`
+- ✅ note — `shipdata_deletes` is listed in key byte order, where upstream used `NSDictionary` hash order. It is applied as a set of removals, so only the order in the save file changes — upstream `Core/Entities/ShipEntityLoadRestore.m:266-271` ↔ port `Core/Entities/ShipEntityLoadRestore.cpp:317-322`
+- ✅ note — The ship class is chosen by `Universe::isStationShipDictionary`, which carries the same roles/`isCarrier`/`is_carrier` priority as `-shipClassForShipDictionary:` — upstream `Core/Universe.m:3777-3796` ↔ port `Core/Universe.cpp:4258-4277`, `Core/Entities/ShipEntityLoadRestore.cpp:211-214`
 
 ## ShipEntityScriptMethods
 
 <a id="shipentityscriptmethods"></a>
 Upstream `src/Core/Entities/ShipEntityScriptMethods.m` ↔ `Core/Entities/ShipEntityScriptMethods.cpp`
 
-**Status:** pending
+**Status:** done — 3 rows: 3 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[ShipEntity(ScriptMethods) ejectShipOfType:]` (34) | | |
-| `-[ShipEntity(ScriptMethods) ejectShipOfRole:]` (47) | | |
-| `-[ShipEntity(ScriptMethods) spawnShipsWithRole:count:]` (60) | | |
+| `-[ShipEntity(ScriptMethods) ejectShipOfType:]` (34) | `ShipEntity::ejectShipOfType` `Core/Entities/ShipEntityScriptMethods.cpp:36` | ✅ |
+| `-[ShipEntity(ScriptMethods) ejectShipOfRole:]` (47) | `ShipEntity::ejectShipOfRole` `Core/Entities/ShipEntityScriptMethods.cpp:49` | ✅ |
+| `-[ShipEntity(ScriptMethods) spawnShipsWithRole:count:]` (60) | `ShipEntity::spawnShipsWithRole` `Core/Entities/ShipEntityScriptMethods.cpp:62` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ note — `spawnShipsWithRole:count:` keeps the `script.debug.note.addShips` log, the submunition check (`is_submunition` only when the missile flag is set), and the owner rules for submunitions and mines. `count == 0` returns an empty array; otherwise one spawn is attempted per count, as in the `do … while (--count)` loop — upstream `Core/Entities/ShipEntityScriptMethods.m:60-89` ↔ port `Core/Entities/ShipEntityScriptMethods.cpp:62-97`
 
 ## StationEntity
 
 <a id="stationentity"></a>
 Upstream `src/Core/Entities/StationEntity.m` ↔ `Core/Entities/StationEntity.cpp`
 
-**Status:** pending
+**Status:** done — 112 rows: 107 ✅ 2 ⚠️ 1 ❌ 2 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[StationEntity isUnpiloted]` (76) | | |
-| `-[StationEntity equivalentTechLevel]` (81) | | |
-| `-[StationEntity setEquivalentTechLevel:]` (90) | | |
-| `-[StationEntity virtualPortDimensions]` (95) | | |
-| `-[StationEntity playerReservedDock]` (100) | | |
-| `-[StationEntity beaconPosition]` (105) | | |
-| `-[StationEntity equipmentPriceFactor]` (114) | | |
-| `-[StationEntity marketCapacity]` (119) | | |
-| `-[StationEntity marketDefinition]` (124) | | |
-| `-[StationEntity marketScriptName]` (129) | | |
-| `-[StationEntity marketMonitored]` (134) | | |
-| `-[StationEntity marketBroadcast]` (142) | | |
-| `-[StationEntity legalStatusOfManifest:export:]` (150) | | |
-| `-[StationEntity localMarket]` (166) | | |
-| `-[StationEntity setLocalMarket:]` (179) | | |
-| `-[StationEntity localMarketForScripting]` (184) | | |
-| `-[StationEntity setPrice:forCommodity:]` (189) | | |
-| `-[StationEntity setQuantity:forCommodity:]` (194) | | |
-| `-[StationEntity localShipyard]` (199) | | |
-| `-[StationEntity setLocalShipyard:]` (204) | | |
-| `-[StationEntity localInterfaces]` (211) | | |
-| `-[StationEntity setInterfaceDefinition:forKey:]` (216) | | |
-| `-[StationEntity initialiseLocalMarket]` (225) | | |
-| `-[StationEntity setPlanet:]` (232) | | |
-| `-[StationEntity planet]` (240) | | |
-| `-[StationEntity countOfDockedContractors]` (245) | | |
-| `-[StationEntity countOfDockedPolice]` (250) | | |
-| `-[StationEntity countOfDockedDefenders]` (255) | | |
-| `-[StationEntity dockSubEntityEnumerator]` (260) | | |
-| `-[StationEntity sanityCheckShipsOnApproach]` (265) | | |
-| `-[StationEntity launchShip:]` (283) | | |
-| `-[StationEntity abortAllDockings]` (312) | | |
-| `-[StationEntity autoDockShipsOnHold]` (343) | | |
-| `-[StationEntity autoDockShipsOnApproach]` (354) | | |
-| `-[StationEntity portUpVectorForShip:]` (368) | | |
-| `OOMakeDockingInstructions()` (380) | | |
-| `-[StationEntity dockingInstructionsForShip:]` (401) | | |
-| `-[StationEntity holdPositionInstructionForShip:]` (503) | | |
-| `-[StationEntity abortDockingForShip:]` (513) | | |
-| `-[StationEntity initWithKey:definition:]` (535) | | |
-| `-[StationEntity dealloc]` (551) | | |
-| `-[StationEntity setUpShipFromDictionary:]` (566) | | |
-| `-[StationEntity setUpSubEntities]` (655) | | |
-| `-[StationEntity shipIsInDockingCorridor:]` (700) | | |
-| `-[StationEntity pullInShipIfPermitted:]` (717) | | |
-| `-[StationEntity dockingCorridorIsEmpty]` (722) | | |
-| `-[StationEntity clearDockingCorridor]` (737) | | |
-| `-[StationEntity update:]` (751) | | |
-| `-[StationEntity clear]` (853) | | |
-| `-[StationEntity hasMultipleDocks]` (864) | | |
-| `-[StationEntity hasClearDock]` (880) | | |
-| `-[StationEntity hasEligibleDock]` (894) | | |
-| `-[StationEntity hasLaunchDock]` (908) | | |
-| `-[StationEntity selectDockForDocking]` (921) | | |
-| `-[StationEntity addShipToLaunchQueue:withPriority:]` (933) | | |
-| `-[StationEntity countOfShipsInLaunchQueueWithPrimaryRole:]` (984) | | |
-| `-[StationEntity fitsInDock:]` (995) | | |
-| `-[StationEntity fitsInDock:andLogNoFit:]` (1000) | | |
-| `-[StationEntity noteDockedShip:]` (1019) | | |
-| `-[StationEntity addShipToStationCount:]` (1065) | | |
-| `-[StationEntity interstellarUndockingAllowed]` (1081) | | |
-| `-[StationEntity hasNPCTraffic]` (1086) | | |
-| `-[StationEntity setHasNPCTraffic:]` (1091) | | |
-| `-[StationEntity collideWithShip:]` (1096) | | |
-| `-[StationEntity hasHostileTarget]` (1108) | | |
-| `-[StationEntity takeEnergyDamage:from:becauseOf:weaponIdentifier:]` (1113) | | |
-| `-[StationEntity adjustVelocity:]` (1156) | | |
-| `-[StationEntity takeScrapeDamage:from:]` (1162) | | |
-| `-[StationEntity takeHeatDamage:]` (1169) | | |
-| `-[StationEntity allegiance]` (1176) | | |
-| `-[StationEntity setAllegiance:]` (1181) | | |
-| `-[StationEntity alertLevel]` (1187) | | |
-| `-[StationEntity setAlertLevel:signallingScript:]` (1192) | | |
-| `-[StationEntity launchIndependentShip:]` (1222) | | |
-| `-[StationEntity increaseAlertLevel]` (1297) | | |
-| `-[StationEntity decreaseAlertLevel]` (1303) | | |
-| `-[StationEntity launchPolice]` (1309) | | |
-| `-[StationEntity launchDefenseShip]` (1366) | | |
-| `-[StationEntity launchScavenger]` (1461) | | |
-| `-[StationEntity launchMiner]` (1503) | | |
-| `-[StationEntity launchPirateShip]` (1549) | | |
-| `-[StationEntity launchShuttle]` (1603) | | |
-| `-[StationEntity launchEscort]` (1636) | | |
-| `-[StationEntity launchPatrol]` (1662) | | |
-| `-[StationEntity launchShipWithRole:]` (1712) | | |
-| `-[StationEntity becomeExplosion]` (1734) | | |
-| `-[StationEntity becomeEnergyBlast]` (1761) | | |
-| `-[StationEntity becomeLargeExplosion:]` (1768) | | |
-| `-[StationEntity acceptPatrolReportFrom:]` (1775) | | |
-| `-[StationEntity acceptDockingClearanceRequestFrom:]` (1782) | | |
-| `-[StationEntity currentlyInDockingQueues]` (1974) | | |
-| `-[StationEntity currentlyInLaunchingQueues]` (1986) | | |
-| `-[StationEntity requiresDockingClearance]` (1997) | | |
-| `-[StationEntity setRequiresDockingClearance:]` (2002) | | |
-| `-[StationEntity allowsFastDocking]` (2007) | | |
-| `-[StationEntity setAllowsFastDocking:]` (2012) | | |
-| `-[StationEntity allowsAutoDocking]` (2017) | | |
-| `-[StationEntity setAllowsAutoDocking:]` (2022) | | |
-| `-[StationEntity allowsSaving]` (2027) | | |
-| `-[StationEntity isRotatingStation]` (2033) | | |
-| `-[StationEntity marketOverrideName]` (2040) | | |
-| `-[StationEntity hasShipyard]` (2050) | | |
-| `-[StationEntity generateShipyard]` (2071) | | |
-| `-[StationEntity generateShipyard:]` (2076) | | |
-| `-[StationEntity suppressArrivalReports]` (2095) | | |
-| `-[StationEntity setSuppressArrivalReports:]` (2100) | | |
-| `-[StationEntity hasBreakPattern]` (2105) | | |
-| `-[StationEntity setHasBreakPattern:]` (2110) | | |
-| `-[StationEntity descriptionComponents]` (2115) | | |
-| `-[StationEntity dumpSelfState]` (2120) | | |
+| `_shipsOnHold` ivar (`StationEntity.h:53`, `OOWeakSet`) | `_shipsOnHold` `oo::WeakSet<Entity>` `Core/Entities/StationEntity.h:209` | ❌ |
+| `@interface StationEntity (mwDebug)` `dbgGetShipsOnApproach`/`dbgGetIdLocks`/`dbgDumpIdLocks` (67-69, declared only, never implemented) | — | ➖ |
+| `-[StationEntity isUnpiloted]` (76) | `StationEntity::isUnpiloted` `Core/Entities/StationEntity.cpp:727` | ✅ |
+| `-[StationEntity equivalentTechLevel]` (81) | `StationEntity::getEquivalentTechLevel` `Core/Entities/StationEntity.cpp:747` | ✅ |
+| `-[StationEntity setEquivalentTechLevel:]` (90) | `StationEntity::setEquivalentTechLevel` `Core/Entities/StationEntity.cpp:756` | ✅ |
+| `-[StationEntity virtualPortDimensions]` (95) | `StationEntity::virtualPortDimensions` `Core/Entities/StationEntity.cpp:761` | ✅ |
+| `-[StationEntity playerReservedDock]` (100) | `StationEntity::playerReservedDock` `Core/Entities/StationEntity.cpp:766` | ✅ |
+| `-[StationEntity beaconPosition]` (105) | `StationEntity::beaconPosition` `Core/Entities/StationEntity.cpp:771` | ✅ |
+| `-[StationEntity equipmentPriceFactor]` (114) | `StationEntity::getEquipmentPriceFactor` `Core/Entities/StationEntity.cpp:780` | ✅ |
+| `-[StationEntity marketCapacity]` (119) | `StationEntity::getMarketCapacity` `Core/Entities/StationEntity.cpp:785` | ✅ |
+| `-[StationEntity marketDefinition]` (124) | `StationEntity::getMarketDefinition` `Core/Entities/StationEntity.cpp:790` | ✅ |
+| `-[StationEntity marketScriptName]` (129) | `StationEntity::getMarketScriptName` `Core/Entities/StationEntity.cpp:795` | ✅ |
+| `-[StationEntity marketMonitored]` (134) | `StationEntity::getMarketMonitored` `Core/Entities/StationEntity.cpp:800` | ✅ |
+| `-[StationEntity marketBroadcast]` (142) | `StationEntity::getMarketBroadcast` `Core/Entities/StationEntity.cpp:808` | ✅ |
+| `-[StationEntity legalStatusOfManifest:export:]` (150) | `StationEntity::legalStatusOfManifest` `Core/Entities/StationEntity.cpp:816` | ✅ |
+| `-[StationEntity localMarket]` (166) | `StationEntity::getLocalMarket` `Core/Entities/StationEntity.cpp:831` | ✅ |
+| `-[StationEntity setLocalMarket:]` (179) | `StationEntity::setLocalMarket` `Core/Entities/StationEntity.cpp:844` | ✅ |
+| `-[StationEntity localMarketForScripting]` (184) | `StationEntity::localMarketForScripting` `Core/Entities/StationEntity.cpp:851` | ✅ |
+| `-[StationEntity setPrice:forCommodity:]` (189) | `StationEntity::setPrice` `Core/Entities/StationEntity.cpp:857` | ✅ |
+| `-[StationEntity setQuantity:forCommodity:]` (194) | `StationEntity::setQuantity` `Core/Entities/StationEntity.cpp:864` | ✅ |
+| `-[StationEntity localShipyard]` (199) | `StationEntity::getLocalShipyard` `Core/Entities/StationEntity.cpp:871` | ✅ |
+| `-[StationEntity setLocalShipyard:]` (204) | `StationEntity::setLocalShipyard` `Core/Entities/StationEntity.cpp:876` | ✅ |
+| `-[StationEntity localInterfaces]` (211) | `StationEntity::getLocalInterfaces` `Core/Entities/StationEntity.cpp:881` | ✅ |
+| `-[StationEntity setInterfaceDefinition:forKey:]` (216) | `StationEntity::setInterfaceDefinition` `Core/Entities/StationEntity.cpp:886` | ✅ |
+| `-[StationEntity initialiseLocalMarket]` (225) | `StationEntity::initialiseLocalMarket` `Core/Entities/StationEntity.cpp:895` | ✅ |
+| `-[StationEntity setPlanet:]` (232) | `StationEntity::setPlanet` `Core/Entities/StationEntity.cpp:901` | ✅ |
+| `-[StationEntity planet]` (240) | `StationEntity::getPlanet` `Core/Entities/StationEntity.cpp:909` | ✅ |
+| `-[StationEntity countOfDockedContractors]` (245) | `StationEntity::countOfDockedContractors` `Core/Entities/StationEntity.cpp:915` | ✅ |
+| `-[StationEntity countOfDockedPolice]` (250) | `StationEntity::countOfDockedPolice` `Core/Entities/StationEntity.cpp:920` | ✅ |
+| `-[StationEntity countOfDockedDefenders]` (255) | `StationEntity::countOfDockedDefenders` `Core/Entities/StationEntity.cpp:925` | ✅ |
+| `-[StationEntity dockSubEntityEnumerator]` (260) | `StationEntity::dockSubEntities` `Core/Entities/StationEntity.cpp:930` (held snapshot vector, same order and `isDock` filter) | ➖ |
+| `-[StationEntity sanityCheckShipsOnApproach]` (265) | `StationEntity::sanityCheckShipsOnApproach` `Core/Entities/StationEntity.cpp:1299` | ✅ |
+| `-[StationEntity launchShip:]` (283) | `StationEntity::launchShip` `Core/Entities/StationEntity.cpp:1317` | ✅ |
+| `-[StationEntity abortAllDockings]` (312) | `StationEntity::abortAllDockings` `Core/Entities/StationEntity.cpp:1351` | ✅ |
+| `-[StationEntity autoDockShipsOnHold]` (343) | `StationEntity::autoDockShipsOnHold` `Core/Entities/StationEntity.cpp:1389` | ✅ |
+| `-[StationEntity autoDockShipsOnApproach]` (354) | `StationEntity::autoDockShipsOnApproach` `Core/Entities/StationEntity.cpp:1399` | ✅ |
+| `-[StationEntity portUpVectorForShip:]` (368) | `StationEntity::portUpVectorForShip` `Core/Entities/StationEntity.cpp:1414` | ✅ |
+| `OOMakeDockingInstructions()` (380) | `cxx_OOMakeDockingInstructions` `Core/Entities/StationEntity.cpp:72` | ✅ |
+| `-[StationEntity dockingInstructionsForShip:]` (401) | `StationEntity::dockingInstructionsForShip` `Core/Entities/StationEntity.cpp:1428` | ✅ |
+| `-[StationEntity holdPositionInstructionForShip:]` (503) | `StationEntity::holdPositionInstructionForShip` `Core/Entities/StationEntity.cpp:1530` | ✅ |
+| `-[StationEntity abortDockingForShip:]` (513) | `StationEntity::abortDockingForShip` `Core/Entities/StationEntity.cpp:1540` | ✅ |
+| `-[StationEntity initWithKey:definition:]` (535) | `StationEntity::newStationObject` `Core/Entities/StationEntity.cpp:699` + `initStationDefaults` `:707` | ✅ |
+| `-[StationEntity dealloc]` (551) | `StationEntity::willDealloc` `Core/Entities/StationEntity.cpp:718` (other members released by destructor) | ✅ |
+| `-[StationEntity setUpShipFromDictionary:]` (566) | `StationEntity::setUpShipFromDictionary` `Core/Entities/StationEntity.cpp:942` | ✅ |
+| `-[StationEntity setUpSubEntities]` (655) | `StationEntity::setUpSubEntities` `Core/Entities/StationEntity.cpp:1033` | ✅ |
+| `-[StationEntity shipIsInDockingCorridor:]` (700) | `StationEntity::shipIsInDockingCorridor` `Core/Entities/StationEntity.cpp:1564` | ✅ |
+| `-[StationEntity pullInShipIfPermitted:]` (717) | `StationEntity::pullInShipIfPermitted` `Core/Entities/StationEntity.cpp:1580` | ✅ |
+| `-[StationEntity dockingCorridorIsEmpty]` (722) | `StationEntity::dockingCorridorIsEmpty` `Core/Entities/StationEntity.cpp:1586` | ✅ |
+| `-[StationEntity clearDockingCorridor]` (737) | `StationEntity::clearDockingCorridor` `Core/Entities/StationEntity.cpp:1600` | ✅ |
+| `-[StationEntity update:]` (751) | `StationEntity::update` `Core/Entities/StationEntity.cpp:1614` | ✅ |
+| `-[StationEntity clear]` (853) | `StationEntity::clear` `Core/Entities/StationEntity.cpp:1718` | ✅ |
+| `-[StationEntity hasMultipleDocks]` (864) | `StationEntity::hasMultipleDocks` `Core/Entities/StationEntity.cpp:1729` | ✅ |
+| `-[StationEntity hasClearDock]` (880) | `StationEntity::hasClearDock` `Core/Entities/StationEntity.cpp:1736` | ✅ |
+| `-[StationEntity hasEligibleDock]` (894) | `StationEntity::hasEligibleDock` `Core/Entities/StationEntity.cpp:1749` | ✅ |
+| `-[StationEntity hasLaunchDock]` (908) | `StationEntity::hasLaunchDock` `Core/Entities/StationEntity.cpp:1762` | ✅ |
+| `-[StationEntity selectDockForDocking]` (921) | `StationEntity::selectDockForDocking` `Core/Entities/StationEntity.cpp:1774` | ✅ |
+| `-[StationEntity addShipToLaunchQueue:withPriority:]` (933) | `StationEntity::addShipToLaunchQueue` `Core/Entities/StationEntity.cpp:1785` | ✅ |
+| `-[StationEntity countOfShipsInLaunchQueueWithPrimaryRole:]` (984) | `StationEntity::countOfShipsInLaunchQueueWithPrimaryRole` `Core/Entities/StationEntity.cpp:1838` | ✅ |
+| `-[StationEntity fitsInDock:]` (995) | `StationEntity::fitsInDock(ship)` `Core/Entities/StationEntity.cpp:1848` | ✅ |
+| `-[StationEntity fitsInDock:andLogNoFit:]` (1000) | `StationEntity::fitsInDock(ship, logNoFit)` `Core/Entities/StationEntity.cpp:1853` | ✅ |
+| `-[StationEntity noteDockedShip:]` (1019) | `StationEntity::noteDockedShip` `Core/Entities/StationEntity.cpp:1872` | ✅ |
+| `-[StationEntity addShipToStationCount:]` (1065) | `StationEntity::addShipToStationCount` `Core/Entities/StationEntity.cpp:1911` | ✅ |
+| `-[StationEntity interstellarUndockingAllowed]` (1081) | `StationEntity::getInterstellarUndockingAllowed` `Core/Entities/StationEntity.cpp:1081` | ✅ |
+| `-[StationEntity hasNPCTraffic]` (1086) | `StationEntity::getHasNPCTraffic` `Core/Entities/StationEntity.cpp:1086` | ✅ |
+| `-[StationEntity setHasNPCTraffic:]` (1091) | `StationEntity::setHasNPCTraffic` `Core/Entities/StationEntity.cpp:1091` | ✅ |
+| `-[StationEntity collideWithShip:]` (1096) | `StationEntity::collideWithShip` `Core/Entities/StationEntity.cpp:1930` | ✅ |
+| `-[StationEntity hasHostileTarget]` (1108) | `StationEntity::hasHostileTarget` `Core/Entities/StationEntity.cpp:1942` | ✅ |
+| `-[StationEntity takeEnergyDamage:from:becauseOf:weaponIdentifier:]` (1113) | `StationEntity::takeEnergyDamage` `Core/Entities/StationEntity.cpp:1947` | ✅ |
+| `-[StationEntity adjustVelocity:]` (1156) | `StationEntity::adjustVelocity` `Core/Entities/StationEntity.cpp:1993` | ✅ |
+| `-[StationEntity takeScrapeDamage:from:]` (1162) | `StationEntity::takeScrapeDamage` `Core/Entities/StationEntity.cpp:1999` | ✅ |
+| `-[StationEntity takeHeatDamage:]` (1169) | `StationEntity::takeHeatDamage` `Core/Entities/StationEntity.cpp:2006` | ✅ |
+| `-[StationEntity allegiance]` (1176) | `StationEntity::getAllegiance` `Core/Entities/StationEntity.cpp:2013` | ✅ |
+| `-[StationEntity setAllegiance:]` (1181) | `StationEntity::setAllegiance` `Core/Entities/StationEntity.cpp:2018` | ✅ |
+| `-[StationEntity alertLevel]` (1187) | `StationEntity::getAlertLevel` `Core/Entities/StationEntity.cpp:2023` | ✅ |
+| `-[StationEntity setAlertLevel:signallingScript:]` (1192) | `StationEntity::setAlertLevel` `Core/Entities/StationEntity.cpp:2028` | ✅ |
+| `-[StationEntity launchIndependentShip:]` (1222) | `StationEntity::launchIndependentShip` `Core/Entities/StationEntity.cpp:97` (returns an Object node) | ⚠️ |
+| `-[StationEntity increaseAlertLevel]` (1297) | `StationEntity::increaseAlertLevel` `Core/Entities/StationEntity.cpp:2064` | ✅ |
+| `-[StationEntity decreaseAlertLevel]` (1303) | `StationEntity::decreaseAlertLevel` `Core/Entities/StationEntity.cpp:2070` | ✅ |
+| `-[StationEntity launchPolice]` (1309) | `StationEntity::launchPolice` `Core/Entities/StationEntity.cpp:191` (returns Object nodes) | ⚠️ |
+| `-[StationEntity launchDefenseShip]` (1366) | `StationEntity::launchDefenseShip` `Core/Entities/StationEntity.cpp:257` | ✅ |
+| `-[StationEntity launchScavenger]` (1461) | `StationEntity::launchScavenger` `Core/Entities/StationEntity.cpp:368` | ✅ |
+| `-[StationEntity launchMiner]` (1503) | `StationEntity::launchMiner` `Core/Entities/StationEntity.cpp:418` | ✅ |
+| `-[StationEntity launchPirateShip]` (1549) | `StationEntity::launchPirateShip` `Core/Entities/StationEntity.cpp:472` | ✅ |
+| `-[StationEntity launchShuttle]` (1603) | `StationEntity::launchShuttle` `Core/Entities/StationEntity.cpp:537` | ✅ |
+| `-[StationEntity launchEscort]` (1636) | `StationEntity::launchEscort` `Core/Entities/StationEntity.cpp:576` | ✅ |
+| `-[StationEntity launchPatrol]` (1662) | `StationEntity::launchPatrol` `Core/Entities/StationEntity.cpp:607` | ✅ |
+| `-[StationEntity launchShipWithRole:]` (1712) | `StationEntity::launchShipWithRole` `Core/Entities/StationEntity.cpp:667` | ✅ |
+| `-[StationEntity becomeExplosion]` (1734) | `StationEntity::becomeExplosion` `Core/Entities/StationEntity.cpp:2076` | ✅ |
+| `-[StationEntity becomeEnergyBlast]` (1761) | `StationEntity::becomeEnergyBlast` `Core/Entities/StationEntity.cpp:2107` | ✅ |
+| `-[StationEntity becomeLargeExplosion:]` (1768) | `StationEntity::becomeLargeExplosion` `Core/Entities/StationEntity.cpp:2114` | ✅ |
+| `-[StationEntity acceptPatrolReportFrom:]` (1775) | `StationEntity::acceptPatrolReportFrom` `Core/Entities/StationEntity.cpp:2121` | ✅ |
+| `-[StationEntity acceptDockingClearanceRequestFrom:]` (1782) | `StationEntity::acceptDockingClearanceRequestFrom` `Core/Entities/StationEntity.cpp:2128` | ✅ |
+| `-[StationEntity currentlyInDockingQueues]` (1974) | `StationEntity::currentlyInDockingQueues` `Core/Entities/StationEntity.cpp:2319` | ✅ |
+| `-[StationEntity currentlyInLaunchingQueues]` (1986) | `StationEntity::currentlyInLaunchingQueues` `Core/Entities/StationEntity.cpp:2330` | ✅ |
+| `-[StationEntity requiresDockingClearance]` (1997) | `StationEntity::getRequiresDockingClearance` `Core/Entities/StationEntity.cpp:1096` | ✅ |
+| `-[StationEntity setRequiresDockingClearance:]` (2002) | `StationEntity::setRequiresDockingClearance` `Core/Entities/StationEntity.cpp:1101` | ✅ |
+| `-[StationEntity allowsFastDocking]` (2007) | `StationEntity::getAllowsFastDocking` `Core/Entities/StationEntity.cpp:1106` | ✅ |
+| `-[StationEntity setAllowsFastDocking:]` (2012) | `StationEntity::setAllowsFastDocking` `Core/Entities/StationEntity.cpp:1111` | ✅ |
+| `-[StationEntity allowsAutoDocking]` (2017) | `StationEntity::getAllowsAutoDocking` `Core/Entities/StationEntity.cpp:1116` | ✅ |
+| `-[StationEntity setAllowsAutoDocking:]` (2022) | `StationEntity::setAllowsAutoDocking` `Core/Entities/StationEntity.cpp:1121` | ✅ |
+| `-[StationEntity allowsSaving]` (2027) | `StationEntity::getAllowsSaving` `Core/Entities/StationEntity.cpp:1126` | ✅ |
+| `-[StationEntity isRotatingStation]` (2033) | `StationEntity::isRotatingStation` `Core/Entities/StationEntity.cpp:1132` | ✅ |
+| `-[StationEntity marketOverrideName]` (2040) | `StationEntity::marketOverrideName` `Core/Entities/StationEntity.cpp:1144` | ✅ |
+| `-[StationEntity hasShipyard]` (2050) | `StationEntity::hasShipyard` `Core/Entities/StationEntity.cpp:1154` | ✅ |
+| `-[StationEntity generateShipyard]` (2071) | `StationEntity::generateShipyard()` `Core/Entities/StationEntity.cpp:1175` | ✅ |
+| `-[StationEntity generateShipyard:]` (2076) | `StationEntity::generateShipyard(OOTechLevelID)` `Core/Entities/StationEntity.cpp:1180` | ✅ |
+| `-[StationEntity suppressArrivalReports]` (2095) | `StationEntity::suppressArrivalReports` `Core/Entities/StationEntity.cpp:1202` | ✅ |
+| `-[StationEntity setSuppressArrivalReports:]` (2100) | `StationEntity::setSuppressArrivalReports` `Core/Entities/StationEntity.cpp:1207` | ✅ |
+| `-[StationEntity hasBreakPattern]` (2105) | `StationEntity::getHasBreakPattern` `Core/Entities/StationEntity.cpp:1212` | ✅ |
+| `-[StationEntity setHasBreakPattern:]` (2110) | `StationEntity::setHasBreakPattern` `Core/Entities/StationEntity.cpp:1217` | ✅ |
+| `-[StationEntity descriptionComponents]` (2115) | `StationEntity::descriptionComponents` `Core/Entities/StationEntity.cpp:1222` | ✅ |
+| `-[StationEntity dumpSelfState]` (2120) | `StationEntity::dumpSelfState` `Core/Entities/StationEntity.cpp:1227` | ✅ |
+
+Checked against the emphasis points:
+- Docking queue: the dock pick chooses the fewest enqueued below a queue cap of 100, uses `willOpenDockingPortFor` for DOCK_CLOSED, and has the `alldockstoosmall`/TRY_AGAIN_LATER fallback. Hold is triggered by `|v|² > 1`, pitch or yaw `> 0.01`, or roll `> 0.01` with an off-centre dock. The fugitive-player refusal is at `legalStatus > 50`.
+- Launch scheduling: there are two threshold passes up to 16, the first skipping `player_reserved_dock` and docks with inbound ships. The shuttle interval is 900 s, with `ranrot & 3` docked and last-launch offset `(ranrot & 63) * 15`. Traders are `3 + (ranrot & 7)`, interval `3600/n`, first launch in 60 s. Patrol is 300 s.
+- Defence launch counts: police use `i < 4 && defenders_launched < max_police`, with the interceptor test `(Ranrot & 3) + 9 < TL`. Defence ships and patrol use `(Ranrot & 7) + 6 <= TL`, TL 6 when NSNotFound. Pirates get bounty `10 + floor(randf*20)`. Defaults are max_scavengers/max_defense_ships 3, max_police STATION_MAX_POLICE, and `equipment_price_factor` clamped to ≥ 0.5.
+- Fuzzy booleans: `has_npc_traffic`, `has_patrol_ships` and `has_shipyard` still draw `randf()` through `OOFuzzyBooleanFromPList`. The market comes from `generateMarketForStation`. The shipyard comes from `shipsForSaleForSystem:withTL:atTime:`, and bought IDs are removed.
+- Alert levels: the clamp is GREEN..RED, then `alertConditionChanged(new, old)`, then the GREEN/YELLOW/RED_ALERT AI message. Main-station retaliation is bounty 64, or 96 for a cascade, ×1.5 if the bounty is already at least that.
+
+All of these match the upstream lines.
 
 **Differences:**
 
-- *pending*
+- ❌ **low** — `_shipsOnHold` is an insertion-ordered `oo::WeakSet` (vector + index). Upstream `OOWeakSet` enumerated in `NSMutableSet` hash order. So the order of `DOCKING_ABORTED`/`stationWithdrewDockingClearance` in abortAllDockings, the order of `enterDock:` in autoDockShipsOnHold, and the dumpSelfState listing can differ — upstream `Core/Entities/StationEntity.m:320-325,345-349,2175` ↔ port `Core/Entities/StationEntity.cpp:1360-1368,1391-1394,1288`
+- ⚠️ **low** — `launchIndependentShip` and `launchPolice` return `oo::PList` Object node(s), not `ShipEntity*`/`NSArray`. The comment cites the "called by name (ADR-0055 item 5)" interface. The selection and side effects are the same — upstream `Core/Entities/StationEntity.m:1222,1309` ↔ port `Core/Entities/StationEntity.cpp:97,191`
+- ➖ **low** — `dockSubEntityEnumerator` is replaced by `dockSubEntities()`, a snapshot of held subentity refs filtered by `isDock`. Every former enumerator loop iterates that snapshot, so a dock removed or added during a loop is still or not yet visited — upstream `Core/Entities/StationEntity.m:260` ↔ port `Core/Entities/StationEntity.cpp:930`
+- ✅ subtle — In launchShip, upstream's "just use the last one" fallback is dead code: the exhausted enumerator left `sub` nil. The port keeps it dead on purpose (comment), so a station with no launching dock does not launch the player here in either version — upstream `Core/Entities/StationEntity.m:303-307` ↔ port `Core/Entities/StationEntity.cpp:1339-1346`
+- ✅ subtle — In launchDefenseShip, upstream retried `default_defense_ship_role` by pointer comparison, that is, only when shipdata supplied `defense_ship_role`. The port turns this into the `shipdataSuppliedRole` flag. The extra `newShipWithRole` call (and its RNG draws) happens in the same cases — upstream `Core/Entities/StationEntity.m:1406-1412` ↔ port `Core/Entities/StationEntity.cpp:299-307`
+- ✅ subtle — launchEscort and launchShipWithRole still release the new ship before returning it. launchEscort returns a dangling pointer when the ship did not fit. This is the same latent bug as upstream — upstream `Core/Entities/StationEntity.m:1657` ↔ port `Core/Entities/StationEntity.cpp:601-603`
+- ✅ subtle — legalStatusOfManifest dereferences `getLocalMarket()` without a null check. Upstream messaged nil and got status 0. This is only reachable if the main station runs while `UNIVERSE commodityMarket` is nil — upstream `Core/Entities/StationEntity.m:153-163` ↔ port `Core/Entities/StationEntity.cpp:819-820`
+- ✅ subtle — getPlanet does a `dynamic_cast<OOPlanetEntity*>`, so a reused UID that now names a non-planet gives null. Upstream returned that entity under a planet type — upstream `Core/Entities/StationEntity.m:242` ↔ port `Core/Entities/StationEntity.cpp:912`
+- ✅ subtle — For a `roles` value that is not a string, isRotatingStation returns NO. Upstream raised an unrecognised selector. An absent `roles` still gives YES (nil range location 0) — upstream `Core/Entities/StationEntity.m:2037` ↔ port `Core/Entities/StationEntity.cpp:1136-1141`
 

@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 215 / 241 upstream `.m` files · extra rows below
+**Progress:** 220 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -197,12 +197,12 @@ Recorded per file. The bulk falls into three groups:
 
 ### Ship, station, dock entities — [entities-ship.md](entities-ship.md)
 
-- [ ] `Core/Entities/DockEntity.m` → `Core/Entities/DockEntity.cpp` (1170 / 1278 lines) — *pending* — [findings](entities-ship.md#dockentity)
+- [x] `Core/Entities/DockEntity.m` → `Core/Entities/DockEntity.cpp` (1170 / 1278 lines) — 41✅ 1⚠️ 1❌ — [findings](entities-ship.md#dockentity)
 - [x] `Core/Entities/ShipEntity.m` → `Core/Entities/ShipEntity.cpp` (13041 / 13775 lines) — 627✅ 5⚠️ 11❌ 8➖ — [findings](entities-ship.md#shipentity)
-- [ ] `Core/Entities/ShipEntityAI.m` → `Core/Entities/ShipEntityAI.cpp` (2558 / 2563 lines) — *pending* — [findings](entities-ship.md#shipentityai)
-- [ ] `Core/Entities/ShipEntityLoadRestore.m` → `Core/Entities/ShipEntityLoadRestore.cpp` (358 / 412 lines) — *pending* — [findings](entities-ship.md#shipentityloadrestore)
-- [ ] `Core/Entities/ShipEntityScriptMethods.m` → `Core/Entities/ShipEntityScriptMethods.cpp` (92 / 97 lines) — *pending* — [findings](entities-ship.md#shipentityscriptmethods)
-- [ ] `Core/Entities/StationEntity.m` → `Core/Entities/StationEntity.cpp` (2185 / 2338 lines) — *pending* — [findings](entities-ship.md#stationentity)
+- [x] `Core/Entities/ShipEntityAI.m` → `Core/Entities/ShipEntityAI.cpp` (2558 / 2563 lines) — 154✅ 2⚠️ — [findings](entities-ship.md#shipentityai)
+- [x] `Core/Entities/ShipEntityLoadRestore.m` → `Core/Entities/ShipEntityLoadRestore.cpp` (358 / 412 lines) — 6✅ 1❌ — [findings](entities-ship.md#shipentityloadrestore)
+- [x] `Core/Entities/ShipEntityScriptMethods.m` → `Core/Entities/ShipEntityScriptMethods.cpp` (92 / 97 lines) — 3✅ — [findings](entities-ship.md#shipentityscriptmethods)
+- [x] `Core/Entities/StationEntity.m` → `Core/Entities/StationEntity.cpp` (2185 / 2338 lines) — 107✅ 2⚠️ 1❌ 2➖ — [findings](entities-ship.md#stationentity)
 
 ### Other entities (planets, effects, particles, base Entity) — [entities-other.md](entities-other.md)
 
