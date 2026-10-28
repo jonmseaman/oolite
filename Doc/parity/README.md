@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 190 / 241 upstream `.m` files · extra rows below
+**Progress:** 191 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -196,7 +196,7 @@ Recorded per file. The bulk falls into three groups:
 ### Ship, station, dock entities — [entities-ship.md](entities-ship.md)
 
 - [ ] `Core/Entities/DockEntity.m` → `Core/Entities/DockEntity.cpp` (1170 / 1278 lines) — *pending* — [findings](entities-ship.md#dockentity)
-- [ ] `Core/Entities/ShipEntity.m` → `Core/Entities/ShipEntity.cpp` (13041 / 13775 lines) — *pending* — [findings](entities-ship.md#shipentity)
+- [x] `Core/Entities/ShipEntity.m` → `Core/Entities/ShipEntity.cpp` (13041 / 13775 lines) — 627✅ 5⚠️ 11❌ 8➖ — [findings](entities-ship.md#shipentity)
 - [ ] `Core/Entities/ShipEntityAI.m` → `Core/Entities/ShipEntityAI.cpp` (2558 / 2563 lines) — *pending* — [findings](entities-ship.md#shipentityai)
 - [ ] `Core/Entities/ShipEntityLoadRestore.m` → `Core/Entities/ShipEntityLoadRestore.cpp` (358 / 412 lines) — *pending* — [findings](entities-ship.md#shipentityloadrestore)
 - [ ] `Core/Entities/ShipEntityScriptMethods.m` → `Core/Entities/ShipEntityScriptMethods.cpp` (92 / 97 lines) — *pending* — [findings](entities-ship.md#shipentityscriptmethods)
