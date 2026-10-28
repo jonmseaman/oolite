@@ -209,7 +209,7 @@ inline void* ptrOf(std::uint64_t payload) {
 constexpr std::uint64_t kIdInt = 1ULL << 63;
 constexpr std::uint64_t kIdString = 1ULL << 62;
 constexpr std::uint64_t kIdSymbol = 1ULL << 61;
-// QuickJS-ng 0.16.2 encodes integer-index atoms (0 .. 2^31-2) inline with this
+// QuickJS-ng 0.17.0 encodes integer-index atoms (0 .. 2^31-2) inline with this
 // tag bit (quickjs.c JS_ATOM_TAG_INT). The vendored version is pinned by the
 // meson wrap.
 constexpr JSAtom kAtomTagInt = 1u << 31;
@@ -4107,7 +4107,7 @@ bool dumpHeap(Context cx, void* file) {
 
 // The pre-existing unit test pins this exact string (the engine and its
 // vendored version).
-const char* backendName() { return "quickjs-ng-0.16.2"; }
+const char* backendName() { return "quickjs-ng-0.17.0"; }
 
 // MARK: Test-only glue (not part of the façade)
 // ------------------------------------------------
