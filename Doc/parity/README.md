@@ -45,6 +45,12 @@ Patterns that recur across files. Each instance is also recorded in its own file
 - ✔ **Every JS error/warning is logged under class `script.javaScript.<sev>.notAnError`.** The QuickJS backend never passes an `errorNumber` to `invokeReporter` (`JSEngine_quickjs.cpp:878,936,3507,3519`), so the `javascript-errors.plist` lookup always resolves error 0. Message text also follows QuickJS-ng wording, and compile errors no longer print the source line (`linebuf` is always null). [scripting.md#oojavascriptengine](scripting.md#oojavascriptengine)
 - **SpiderMonkey language extensions are gone** (`for each`, expression closures, `toSource`, Array generics). `setVersion(ECMA5)` and the context options are stored but ignored. No built-in script uses these extensions; OXPs may.
 - **Missile ident lock on a wormhole shows an empty name.** `printIdentLockedOnForMissile` requires `oo::ToShip`, but `WormholeEntity` has its own `identFromShip` (`PlayerEntity.cpp:11504`). [entities-player.md#playerentity](entities-player.md#playerentity)
+- ✔ **Standard-library exceptions now crash where upstream logged and continued.** Catch sites were narrowed from `@catch (id)` / `@catch (NSException*)` to `catch (const oo::Exception&)` (bead oo-rskgl.1: "the game throws only oo::Exception"). Affected: the main loop (`GameController.cpp:425`), `AI.cpp`, `PlayerEntityControls`, and the legacy script engine. But the port can throw `std::` exceptions, which then reach `std::terminate`:
+  - `currentLaserOffset().at(0)` on an empty list, in `PlayerEntity.cpp:5821` and `PlayerEntityControls.cpp:1194`;
+  - `std::vector(howMany)` with a negative count from the legacy `addShipsAt` action (`Universe.cpp:2679`).
+
+  [cpp-only.md](cpp-only.md)
+- **`oo::EntityShortDescription` loses the class and ship name** (`EntityHelpers.cpp:154`). This changes `ai.error.stackOverflow`, `ship.subentity.sanityCheck.failed`, `entity.invalidSession` and other log text. [cpp-only.md](cpp-only.md)
 - ✔ **`laserColor` shader uniform can no longer be bound.** It has no row in `EntityShaderBindings.cpp`, whose comment wrongly says it "fails as before". Upstream bound `-[ShipEntity laserColor]` (an OOColor) via `OOShaderUniform.m:511`. [graphics.md#oushaderuniform](graphics.md#ooshaderuniform)
 - ✔ **Symlinked `.oxp` folders are not found.** The OXP scan uses `symlink_status` (`ResourceManager.cpp:498`). [gamedata.md#resourcemanager](gamedata.md#resourcemanager)
 - ✔ **Data cache likely rebuilt every launch.** File mod-times are converted using two separate `now()` readings, which jitter (`oofnd/FileSystem.hpp:180-182`), so `dataCache.rebuild.datesChanged` fires. [gamedata.md#resourcemanager](gamedata.md#resourcemanager)
@@ -349,6 +355,6 @@ Other low findings are recorded per file. The bulk falls into three groups:
 ### Extra rows
 
 - [x] C sources and tables (`*.c`, `Tables/*.tbl`, `OOSaveEXRSnapshot.cpp`) verbatim check — ✅ identical except include/NDEBUG plumbing — [c-and-tables.md](c-and-tables.md)
-- [ ] C++-only files (`EntityHelpers`, `OOEntityCalledByName`, `OODataFromOXZFile`, `OOPListGameTypes`, `OOJSEngineNativeWrappers`, `OOJSPrivateObject`, `ooscript/JSEngine_quickjs.cpp`, `oofnd/Exception.cpp`, `oofnd/objc/OOAssert.cpp`) reviewed against what they replace — *pending* — [cpp-only.md](cpp-only.md)
+- [x] C++-only files (`EntityHelpers`, `OOEntityCalledByName`, `OODataFromOXZFile`, `OOPListGameTypes`, `OOJSEngineNativeWrappers`, `OOJSPrivateObject`, `ooscript/JSEngine_quickjs.cpp`, `oofnd/Exception.cpp`, `oofnd/objc/OOAssert.cpp`) reviewed against what they replace — 8 files + dispatch-table completeness; 2 med ❌ (exception narrowing, `EntityShortDescription`) — [cpp-only.md](cpp-only.md)
 - [x] Maths headers (`OOMaths.h`, `OOFastArithmetic.h`, inline functions in `OOVector.h`/`OOHPVector.h`/`OOQuaternion.h`/`OOMatrix.h`) — 11✅ 2⚠️ — [findings](math.md#oomaths)
 - [ ] Header constants sweep (`#define`, enums, default values across paired `.h`) — *pending* — [headers.md](headers.md)
