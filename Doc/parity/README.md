@@ -29,7 +29,28 @@ Patterns that recur across files. Each instance is also recorded in its own file
 
 ## Suspected divergences (ranked)
 
-*pending — filled as batches complete*
+*Running list; reordered and finalised when every batch is in. ✔ = verified by the coordinator against both sources.*
+
+### High
+- ✔ **NPC subentity flashers and exhaust plumes are never updated.** `ShipEntity::update` calls `update()` only on subentities that cast to `ShipEntity` (`oo::ToShip`). Upstream sent `-update:` to every subentity. As a result, `OOFlasherEntity` lights don't animate and `OOExhaustPlumeEntity` trails don't track on NPC and demo ships. Affects all three loops: upstream `ShipEntity.m:2113,2382,2469` ↔ port `ShipEntity.cpp:2500,2773,2866`. [details](entities-ship.md#shipentity)
+
+### Medium
+- ✔ **`laserColor` shader uniform can no longer be bound.** It has no row in `EntityShaderBindings.cpp`, whose comment wrongly says it "fails as before". Upstream bound `-[ShipEntity laserColor]` (an OOColor) via `OOShaderUniform.m:511`. [graphics.md#oushaderuniform](graphics.md#ooshaderuniform)
+- ✔ **Symlinked `.oxp` folders are not found.** The OXP scan uses `symlink_status` (`ResourceManager.cpp:498`). [gamedata.md#resourcemanager](gamedata.md#resourcemanager)
+- ✔ **Data cache likely rebuilt every launch.** File mod-times are converted using two separate `now()` readings, which jitter (`oofnd/FileSystem.hpp:180-182`), so `dataCache.rebuild.datesChanged` fires. [gamedata.md#resourcemanager](gamedata.md#resourcemanager)
+- ✔ **JS `ship.speed` became writable.** `OOJSShip.cpp:504`; it was read-only upstream. No ADR. [scripting.md#oojsship](scripting.md#oojsship)
+- **`EquipmentInfo.provides` returns `[]` instead of `null`** for equipment with no extra-info dict (`OOEquipmentType.cpp:603`). [scripting.md#oojsequipmentinfo](scripting.md#oojsequipmentinfo)
+- ✔ **`OORoleSet::anyRole` walks roles in sorted order**, so the same random draw picks a different role (`OORoleSet.cpp:172`). [gamedata.md#ooroleset](gamedata.md#ooroleset)
+- ⚠️ *(intentional, ADR-0043 / oo-3rb.154)* Role probability sets, the pending-AI-message order and commodity generation now iterate in key order. Ship picks, AI transitions, and market prices/quantities differ from upstream for the same seed.
+- ⚠️ *(intentional, oo-9ht.115)* `SqueezeVertically1` changes output pixels for 1-channel textures (`OOTextureScaling.cpp:1272`).
+- ⚠️ *(intentional, ADR-0002)* JS syntax and semantics now follow QuickJS-ng, not SpiderMonkey 1.8.5. This affects the OXP verifier's JS check and every script.
+
+### Low
+Recorded per file. The bulk falls into three groups:
+- the cross-cutting patterns above;
+- log-text drift;
+- missing null guards where upstream relied on nil-messaging (`UNIVERSE` lookups in OOConstToString/OOStringExpander, `drawTrumbles`, `behaviour_attack_slow_dogfight`).
+
 
 ## Checklist
 
