@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 237 / 241 upstream `.m` files · extra rows below
+**Progress:** 241 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -189,13 +189,13 @@ Other low findings are recorded per file. The bulk falls into three groups:
 
 - [x] `Core/Entities/PlayerEntity.m` → `Core/Entities/PlayerEntity.cpp` (11911 / 12466 lines) — 468✅ 14⚠️ 7❌ 3➖ — [findings](entities-player.md#playerentity)
 - [x] `Core/Entities/PlayerEntityContracts.m` → `Core/Entities/PlayerEntityContracts.cpp` (1775 / 1898 lines) — 40✅ 1⚠️ — [findings](entities-player.md#playerentitycontracts)
-- [ ] `Core/Entities/PlayerEntityControls.m` → `Core/Entities/PlayerEntityControls.cpp` (4813 / 4962 lines) — *pending* — [findings](entities-player.md#playerentitycontrols)
-- [ ] `Core/Entities/PlayerEntityKeyMapper.m` → `Core/Entities/PlayerEntityKeyMapper.cpp` (1611 / 1719 lines) — *pending* — [findings](entities-player.md#playerentitykeymapper)
+- [x] `Core/Entities/PlayerEntityControls.m` → `Core/Entities/PlayerEntityControls.cpp` (4813 / 4962 lines) — 40✅ 6⚠️ 4❌ — [findings](entities-player.md#playerentitycontrols)
+- [x] `Core/Entities/PlayerEntityKeyMapper.m` → `Core/Entities/PlayerEntityKeyMapper.cpp` (1611 / 1719 lines) — 40✅ 1⚠️ 2❌ — [findings](entities-player.md#playerentitykeymapper)
 - [x] `Core/Entities/PlayerEntityLoadSave.m` → `Core/Entities/PlayerEntityLoadSave.cpp` (1181 / 1287 lines) — 23✅ 2⚠️ 1❌ — [findings](entities-player.md#playerentityloadsave)
 - [x] `Core/Entities/PlayerEntityScriptMethods.m` → `Core/Entities/PlayerEntityScriptMethods.cpp` (576 / 608 lines) — 35✅ — [findings](entities-player.md#playerentityscriptmethods)
 - [x] `Core/Entities/PlayerEntitySound.m` → `Core/Entities/PlayerEntitySound.cpp` (654 / 706 lines) — 86✅ — [findings](entities-player.md#playerentitysound)
-- [ ] `Core/Entities/PlayerEntityStickMapper.m` → `Core/Entities/PlayerEntityStickMapper.cpp` (856 / 747 lines) — *pending* — [findings](entities-player.md#playerentitystickmapper)
-- [ ] `Core/Entities/PlayerEntityStickProfile.m` → `Core/Entities/PlayerEntityStickProfile.cpp` (597 / 566 lines) — *pending* — [findings](entities-player.md#playerentitystickprofile)
+- [x] `Core/Entities/PlayerEntityStickMapper.m` → `Core/Entities/PlayerEntityStickMapper.cpp` (856 / 747 lines) — 12✅ 1❌ — [findings](entities-player.md#playerentitystickmapper)
+- [x] `Core/Entities/PlayerEntityStickProfile.m` → `Core/Entities/PlayerEntityStickProfile.cpp` (597 / 566 lines) — 26✅ 1➖ — [findings](entities-player.md#playerentitystickprofile)
 - [x] `Core/Entities/ProxyPlayerEntity.m` → `Core/Entities/ProxyPlayerEntity.cpp` (208 / 194 lines) — 27✅ 2➖ — [findings](entities-player.md#proxyplayerentity)
 
 ### Ship, station, dock entities — [entities-ship.md](entities-ship.md)

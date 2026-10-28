@@ -628,118 +628,177 @@ Scope note: this file does **not** generate passenger, parcel or cargo contracts
 <a id="playerentitycontrols"></a>
 Upstream `src/Core/Entities/PlayerEntityControls.m` ↔ `Core/Entities/PlayerEntityControls.cpp`
 
-**Status:** pending
+**Status:** done — 50 rows: 40 ✅ 6 ⚠️ 4 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[PlayerEntity(Controls) initControls]` (203) | | |
-| `-[PlayerEntity(Controls) initKeyConfigSettings]` (293) | | |
-| `-[PlayerEntity(Controls) processKeyCode:]` (512) | | |
-| `-[PlayerEntity(Controls) checkNavKeyPress:]` (591) | | |
-| `-[PlayerEntity(Controls) checkKeyPress:]` (603) | | |
-| `-[PlayerEntity(Controls) checkKeyPress:fKey_only:]` (608) | | |
-| `-[PlayerEntity(Controls) checkKeyPress:ignore_ctrl:]` (613) | | |
-| `-[PlayerEntity(Controls) checkKeyPress:fKey_only:ignore_ctrl:]` (618) | | |
-| `-[PlayerEntity(Controls) getFirstKeyCode:]` (642) | | |
-| `-[PlayerEntity(Controls) pollControls:]` (648) | | |
-| `-[PlayerEntity(Controls) handleGUIUpDownArrowKeys]` (697) | | |
-| `-[PlayerEntity(Controls) targetNewSystem:whileTyping:]` (772) | | |
-| `-[PlayerEntity(Controls) clearPlanetSearchString]` (785) | | |
-| `-[PlayerEntity(Controls) targetNewSystem:]` (793) | | |
-| `-[PlayerEntity(Controls) switchToMainView]` (798) | | |
-| `-[PlayerEntity(Controls) noteSwitchToView:fromView:]` (813) | | |
-| `-[PlayerEntity(Controls) beginWitchspaceCountdown:]` (818) | | |
-| `-[PlayerEntity(Controls) beginWitchspaceCountdown]` (846) | | |
-| `-[PlayerEntity(Controls) cancelWitchspaceCountdown]` (853) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollApplicationControls]` (868) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollFlightControls:]` (1043) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollGuiArrowKeyControls:]` (1795) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollMarketScreenControls]` (2706) | | |
-| `-[PlayerEntity(OOControlsPrivate) handleGameOptionsScreenKeys]` (2899) | | |
-| `-[PlayerEntity(OOControlsPrivate) handleKeyMapperScreenKeys]` (3332) | | |
-| `-[PlayerEntity(OOControlsPrivate) handleKeyboardLayoutKeys]` (3365) | | |
-| `-[PlayerEntity(OOControlsPrivate) handleStickMapperScreenKeys]` (3398) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollCustomViewControls]` (3433) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollViewControls]` (3554) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollFlightArrowKeyControls:]` (3679) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollGuiScreenControls]` (3889) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollGuiScreenControlsWithFKeyAlias:]` (3894) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollGameOverControls:]` (4016) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollAutopilotControls:]` (4034) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollDockedControls:]` (4108) | | |
-| `-[PlayerEntity(OOControlsPrivate) handleUndockControl]` (4174) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollDemoControls:]` (4188) | | |
-| `-[PlayerEntity(OOControlsPrivate) pollMissionInterruptControls]` (4497) | | |
-| `-[PlayerEntity(OOControlsPrivate) handleMissionCallback]` (4514) | | |
-| `-[PlayerEntity(OOControlsPrivate) setGuiToMissionEndScreen]` (4542) | | |
-| `-[PlayerEntity(OOControlsPrivate) switchToThisView:]` (4598) | | |
-| `-[PlayerEntity(OOControlsPrivate) switchToThisView:andProcessWeaponFacing:]` (4603) | | |
-| `-[PlayerEntity(OOControlsPrivate) switchToThisView:fromView:andProcessWeaponFacing:justNotify:]` (4608) | | |
-| `-[PlayerEntity(OOControlsPrivate) handleAutopilotOn:]` (4653) | | |
-| `-[PlayerEntity(OOControlsPrivate) handleButtonIdent]` (4758) | | |
-| `-[PlayerEntity(OOControlsPrivate) handleButtonTargetMissile]` (4775) | | |
+| file-scope statics / `#define`s (68–165) | statics + `CUSTOM_VIEW_*` defines Core/Entities/PlayerEntityControls.cpp:75–183 | ✅ |
+| (port-only) `AnyKeyPressed`, replaces bitwise `a \| b \| c` | `AnyKeyPressed` Core/Entities/PlayerEntityControls.cpp:81 | ⚠️ |
+| (port-only) `OOExpandKey(...)` macro uses (839, 1299) | `ExpandKeyWithArguments` Core/Entities/PlayerEntityControls.cpp:189 | ✅ |
+| (extracted) click-row lookup, inline `UNIVERSE->cursor_row` (745–756) | `ClickedGUIRow` (static) Core/Entities/PlayerEntityControls.cpp:664 | ⚠️ |
+| `-[PlayerEntity(Controls) initControls]` (203) | `PlayerEntity::initControls` Core/Entities/PlayerEntityControls.cpp:198 | ✅ |
+| `-[PlayerEntity(Controls) initKeyConfigSettings]` (293) | `PlayerEntity::initKeyConfigSettings` Core/Entities/PlayerEntityControls.cpp:288 | ❌ |
+| `-[PlayerEntity(Controls) processKeyCode:]` (512) | `PlayerEntity::processKeyCode` Core/Entities/PlayerEntityControls.cpp:479 | ❌ |
+| `-[PlayerEntity(Controls) checkNavKeyPress:]` (591) | `PlayerEntity::checkNavKeyPress` Core/Entities/PlayerEntityControls.cpp:548 | ✅ |
+| `-[PlayerEntity(Controls) checkKeyPress:]` (603) | `PlayerEntity::checkKeyPress(const oo::PList&)` Core/Entities/PlayerEntityControls.cpp:561 | ✅ |
+| `-[PlayerEntity(Controls) checkKeyPress:fKey_only:]` (608) | `PlayerEntity::checkKeyPress(const oo::PList&, bool)` Core/Entities/PlayerEntityControls.cpp:566 | ✅ |
+| `-[PlayerEntity(Controls) checkKeyPress:ignore_ctrl:]` (613) | `PlayerEntity::checkKeyPressIgnoreCtrl` Core/Entities/PlayerEntityControls.cpp:571 | ✅ |
+| `-[PlayerEntity(Controls) checkKeyPress:fKey_only:ignore_ctrl:]` (618) | `PlayerEntity::checkKeyPress(const oo::PList&, bool, bool)` Core/Entities/PlayerEntityControls.cpp:576 | ✅ |
+| `-[PlayerEntity(Controls) getFirstKeyCode:]` (642) | `PlayerEntity::getFirstKeyCode` Core/Entities/PlayerEntityControls.cpp:601 | ✅ |
+| `-[PlayerEntity(Controls) pollControls:]` (648) | `PlayerEntity::getPollControls` Core/Entities/PlayerEntityControls.cpp:607 | ✅ |
+| `-[PlayerEntity(Controls) handleGUIUpDownArrowKeys]` (697) | `PlayerEntity::handleGUIUpDownArrowKeys` Core/Entities/PlayerEntityControls.cpp:678 | ⚠️ |
+| `-[PlayerEntity(Controls) targetNewSystem:whileTyping:]` (772) | `PlayerEntity::targetNewSystem(int, bool)` Core/Entities/PlayerEntityControls.cpp:750 | ✅ |
+| `-[PlayerEntity(Controls) clearPlanetSearchString]` (785) | `PlayerEntity::clearPlanetSearchString` Core/Entities/PlayerEntityControls.cpp:763 | ✅ |
+| `-[PlayerEntity(Controls) targetNewSystem:]` (793) | `PlayerEntity::targetNewSystem(int)` Core/Entities/PlayerEntityControls.cpp:770 | ✅ |
+| `-[PlayerEntity(Controls) switchToMainView]` (798) | `PlayerEntity::switchToMainView` Core/Entities/PlayerEntityControls.cpp:775 | ✅ |
+| `-[PlayerEntity(Controls) noteSwitchToView:fromView:]` (813) | `PlayerEntity::noteSwitchToView` Core/Entities/PlayerEntityControls.cpp:795 | ✅ |
+| `-[PlayerEntity(Controls) beginWitchspaceCountdown:]` (818) | `PlayerEntity::beginWitchspaceCountdown(int)` Core/Entities/PlayerEntityControls.cpp:800 | ✅ |
+| `-[PlayerEntity(Controls) beginWitchspaceCountdown]` (846) | `PlayerEntity::beginWitchspaceCountdown()` Core/Entities/PlayerEntityControls.cpp:830 | ✅ |
+| `-[PlayerEntity(Controls) cancelWitchspaceCountdown]` (853) | `PlayerEntity::cancelWitchspaceCountdown` Core/Entities/PlayerEntityControls.cpp:837 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) pollApplicationControls]` (868) | `PlayerEntity::pollApplicationControls` Core/Entities/PlayerEntityControls.cpp:849 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) pollFlightControls:]` (1043) | `PlayerEntity::pollFlightControls` Core/Entities/PlayerEntityControls.cpp:1047 | ❌ |
+| `-[PlayerEntity(OOControlsPrivate) pollGuiArrowKeyControls:]` (1795) | `PlayerEntity::pollGuiArrowKeyControls` Core/Entities/PlayerEntityControls.cpp:1834 | ⚠️ |
+| `-[PlayerEntity(OOControlsPrivate) pollMarketScreenControls]` (2706) | `PlayerEntity::pollMarketScreenControls` Core/Entities/PlayerEntityControls.cpp:2780 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) handleGameOptionsScreenKeys]` (2899) | `PlayerEntity::handleGameOptionsScreenKeys` Core/Entities/PlayerEntityControls.cpp:2975 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) handleKeyMapperScreenKeys]` (3332) | `PlayerEntity::handleKeyMapperScreenKeys` Core/Entities/PlayerEntityControls.cpp:3434 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) handleKeyboardLayoutKeys]` (3365) | `PlayerEntity::handleKeyboardLayoutKeys` Core/Entities/PlayerEntityControls.cpp:3467 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) handleStickMapperScreenKeys]` (3398) | `PlayerEntity::handleStickMapperScreenKeys` Core/Entities/PlayerEntityControls.cpp:3500 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) pollCustomViewControls]` (3433) | `PlayerEntity::pollCustomViewControls` Core/Entities/PlayerEntityControls.cpp:3535 | ⚠️ |
+| `-[PlayerEntity(OOControlsPrivate) pollViewControls]` (3554) | `PlayerEntity::pollViewControls` Core/Entities/PlayerEntityControls.cpp:3661 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) pollFlightArrowKeyControls:]` (3679) | `PlayerEntity::pollFlightArrowKeyControls` Core/Entities/PlayerEntityControls.cpp:3789 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) pollGuiScreenControls]` (3889) | `PlayerEntity::pollGuiScreenControls` Core/Entities/PlayerEntityControls.cpp:4000 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) pollGuiScreenControlsWithFKeyAlias:]` (3894) | `PlayerEntity::pollGuiScreenControlsWithFKeyAlias` Core/Entities/PlayerEntityControls.cpp:4005 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) pollGameOverControls:]` (4016) | `PlayerEntity::pollGameOverControls` Core/Entities/PlayerEntityControls.cpp:4133 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) pollAutopilotControls:]` (4034) | `PlayerEntity::pollAutopilotControls` Core/Entities/PlayerEntityControls.cpp:4152 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) pollDockedControls:]` (4108) | `PlayerEntity::pollDockedControls` Core/Entities/PlayerEntityControls.cpp:4227 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) handleUndockControl]` (4174) | `PlayerEntity::handleUndockControl` Core/Entities/PlayerEntityControls.cpp:4299 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) pollDemoControls:]` (4188) | `PlayerEntity::pollDemoControls` Core/Entities/PlayerEntityControls.cpp:4314 | ⚠️ |
+| `-[PlayerEntity(OOControlsPrivate) pollMissionInterruptControls]` (4497) | `PlayerEntity::pollMissionInterruptControls` Core/Entities/PlayerEntityControls.cpp:4632 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) handleMissionCallback]` (4514) | `PlayerEntity::handleMissionCallback` Core/Entities/PlayerEntityControls.cpp:4650 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) setGuiToMissionEndScreen]` (4542) | `PlayerEntity::setGuiToMissionEndScreen` Core/Entities/PlayerEntityControls.cpp:4679 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) switchToThisView:]` (4598) | `PlayerEntity::switchToThisView(OOViewID)` Core/Entities/PlayerEntityControls.cpp:4736 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) switchToThisView:andProcessWeaponFacing:]` (4603) | `PlayerEntity::switchToThisView(OOViewID, bool)` Core/Entities/PlayerEntityControls.cpp:4741 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) switchToThisView:fromView:andProcessWeaponFacing:justNotify:]` (4608) | `PlayerEntity::switchToThisView(OOViewID, OOViewID, bool, bool)` Core/Entities/PlayerEntityControls.cpp:4746 | ❌ |
+| `-[PlayerEntity(OOControlsPrivate) handleAutopilotOn:]` (4653) | `PlayerEntity::handleAutopilotOn` Core/Entities/PlayerEntityControls.cpp:4792 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) handleButtonIdent]` (4758) | `PlayerEntity::handleButtonIdent` Core/Entities/PlayerEntityControls.cpp:4904 | ✅ |
+| `-[PlayerEntity(OOControlsPrivate) handleButtonTargetMissile]` (4775) | `PlayerEntity::handleButtonTargetMissile` Core/Entities/PlayerEntityControls.cpp:4922 | ✅ |
+
+Checked and equal:
+- **Default key bindings:** all 144 `LOAD_KEY_SETTING2` lines (key code, shift, mod1, second key) are byte-identical. In upstream `keyDef` is never allocated (`NSMutableArray* keyDef = nil`), so the defaults are built but never stored, and every binding comes from `keyconfig2.plist`. The port drops the dead construction and says so in a comment. Both merge in the same order: the `keyboard-code` layout (fallback `"default"`, run through `processKeyCode`), then the `KeyConfigOverrides` default on top, unprocessed.
+- **Constants:** `KEY_REPEAT_INTERVAL` 0.20, `MINIMUM_GAME_TICK` 0.25, `SHIP_THRUST_FACTOR` 5, `DEFAULT_HYPERSPACE_SPIN_TIME` 15, `CUSTOM_VIEW_ROTATE_SPEED` 1.0 / `_ZOOM_SPEED` 5.0 / `_SPEED_REDUCTION_FACTOR` 0.3, the precision factor (default 0.5, clamped to [0.05, 1.0]), mouse sensitivity 2.0, view-switch threshold 0.5, scanner zoom limits 5.0/1.0, and the chart lerp (3:1, /4) and zoom factors.
+- **Debounce:** every `*_pressed` flag and `timeLastKeyPress` repeat is set and cleared in the same order.
+- **Flight input:** the roll/pitch/yaw dampner ramps, the `-reqYaw` sign, `STICK_AXISUNASSIGNED` zeroing and the keyboard-override cancel rules match.
+- **Strings:** the `DESC`/expander keys (`seconds`, `destination`, `equipmentName`, `brightnessValue`, `voiceName`, `musicMode`, `colorblindModeDesc`, `detailLevel`) match.
+- **Autopilot:** the `handleAutopilotOn:` fine maths (`ranrot_rand() & 0x3ff`, `/ (1+government)`, interstellar = 2), the +1200 s clock penalty, and the order `forceWitchspaceEntries` → `safeAllMissiles` → `setViewDirection` → `enterDock` match.
 
 **Differences:**
 
-- *pending*
+- ❌ **low** — **Key-config errors no longer abort.** Case: the chosen keyboard layout lacks a binding (or `keyboard-code` names no layout, so `kdic2` is empty).
+  - Upstream: `[kdic2 setObject:curr ?: keyDef …]` inserts nil (`keyDef` is always nil), which raises and aborts `initKeyConfigSettings`/`initControls`. `keyconfig2_settings` is not stored, the later `n_key_*` stay stale, and the exception reaches the caller.
+  - Port: leaves that one `n_key_*` as a null PList (unbound) and carries on.
+  - Error path only; the shipped plist has every key — upstream `Core/Entities/PlayerEntityControls.m:331,348-359` ↔ port `Core/Entities/PlayerEntityControls.cpp:318-327`
+- ❌ **low** — **A definition with no `"key"` entry** (e.g. `{shift = YES;}`), which is not empty.
+  - Upstream: `[defNew setObject:nil forKey:@"key"]` in the non-string branch raises, so the key-config load is aborted.
+  - Port: pushes the entry without a key, which reads as key code 0. The port's comment at :539 acknowledges this — upstream `Core/Entities/PlayerEntityControls.m:526,581` ↔ port `Core/Entities/PlayerEntityControls.cpp:538-540`
+- ❌ **low** — **The laser-hit sound can throw.** After a successful `fireMainWeapon`, upstream's `[[self currentLaserOffset] oo_vectorAtIndex:0]` gives `kZeroVector` when the offset array is empty. That happens for a multi-mount ship whose `weapon_position_*` is `()`.
+  - Port: `currentLaserOffset().at(0)` throws `std::out_of_range`. That is not an `OOException`, so the `catch` rethrows it out of `pollFlightControls`/`getPollControls` instead of logging and continuing — upstream `Core/Entities/PlayerEntityControls.m:1187,1790-1792` ↔ port `Core/Entities/PlayerEntityControls.cpp:1194,1826-1830`
+- ❌ **low** — **Error-log text.** With `processWeaponFacing=YES` and a non-main view, upstream's `%s __FUNCTION__` prints the full selector `-[PlayerEntity(OOControlsPrivate) switchToThisView:fromView:andProcessWeaponFacing:justNotify:]`; the port prints `switchToThisView`. The class `general.error.parameterError`, the prefix and the view number are unchanged — upstream `Core/Entities/PlayerEntityControls.m:4642` ↔ port `Core/Entities/PlayerEntityControls.cpp:4781`
+- ⚠️ **low** — **Click and double-click on a GUI list.** In `MOUSE_MODE_UI_SCREEN_WITH_INTERACTION` the port selects the row under the pointer now (`rowAtVirtualJoystickPosition`), not `UNIVERSE->cursor_row` from the last render. After a frame stall, a click can select a different row than upstream did. Deliberate (bead oo-3rb.348, comment at :657–663) — upstream `Core/Entities/PlayerEntityControls.m:745-757` ↔ port `Core/Entities/PlayerEntityControls.cpp:664-675,726,733`
+- ⚠️ **low** — **`AnyKeyPressed({...})`** replaces bitwise `a | b | c` (bead oo-we7mm). The initializer list still evaluates every operand, so the side effects of the key reads are the same — port `Core/Entities/PlayerEntityControls.cpp:79-88`
+- ⚠️ **low** — **Script-registered GUI keys** are walked in `std::map` byte order, not `NSDictionary -allKeys` hash order (port comment: "byte order (was -allKeys order)"). All the keys share one `extra_gui_key_pressed` flag, and the key walked last decides it. So with two or more registered keys, the order can change which held key fires every frame instead of once, and the callback order when two are pressed together — upstream `Core/Entities/PlayerEntityControls.m:2649` ↔ port `Core/Entities/PlayerEntityControls.cpp:2721`
+- ⚠️ **low** — **Mission-screen extra keys** are walked in `std::map` order instead of `-allKeys` order (port comment "ORDER-SENSITIVE"). `extra_key_pressed` is reset by every unpressed key after a pressed one, so the order decides which bound key latches or repeats, and which key wins when two are held — upstream `Core/Entities/PlayerEntityControls.m:4441-4451` ↔ port `Core/Entities/PlayerEntityControls.cpp:4576-4588`
+- ⚠️ **low** — **The custom-view timer** uses `oo::date::monotonicSeconds()` instead of `[NSDate timeIntervalSinceReferenceDate]` (commented "intervals only"). The zoom/rotate `delta_t` is the same except across a wall-clock jump, or on the very first call (`last_time = 0`), where the size of the bogus first delta differs. The 0.20 s escape-pod double-press window and the paused-options `time_last_frame` (:1461, :1469, :1662) use the same substitution — upstream `Core/Entities/PlayerEntityControls.m:3463` ↔ port `Core/Entities/PlayerEntityControls.cpp:3566`
+- ⚠️ **low** — **Fullscreen pause targets.** The quicksave-failure fallback `pauseFullScreenModeToPerform("savePlayer", nil)` (bead oo-w9pi2) and Cmd-Q `("exitAppCommandQ", nil)` (bead oo-9ht.164) pass no target. There is no observable change: on SDL both builds only store the selector/target pair and never perform it — upstream `Core/Entities/PlayerEntityControls.m:2269, 896` ↔ port `Core/Entities/PlayerEntityControls.cpp:2328, 880-882`
+- ✅ **low** (note) — **Exception catching.** `getPollControls`, `pollApplicationControls`, `pollFlightControls` and `pollDockedControls` catch only `OOException` and rethrow anything else. Upstream's `@catch (NSException*)` caught every raise, including range errors, which the port sometimes turns into `std::` exceptions (see the laser-offset bullet). The log formats are kept — upstream `Core/Entities/PlayerEntityControls.m:691-693,1038-1040,4169-4171` ↔ port `Core/Entities/PlayerEntityControls.cpp:649-654,1039-1044,4291-4296`
+- ✅ **low** (note) — **String modifier flags.** For modifier flags given as strings, upstream uses `-[NSString boolValue]` (a leading 1-9/y/Y/t/T). The port's `get<bool>` uses `OOBooleanFromObject` rules. They differ for strings like "on" or "0.5". The shipped plists use YES/NO — upstream `Core/Entities/PlayerEntityControls.m:634-636` ↔ port `Core/Entities/PlayerEntityControls.cpp:593-595`
+- ✅ **low** (note) — **Unchecked dereferences.** Some messages to nil became unchecked dereferences, which would crash where upstream did nothing:
+  - `getHud()->setHidden` (:1028)
+  - `gui->` in `handleGUIUpDownArrowKeys`/`targetNewSystem` (:690, :752)
+  - `gui->setSelectedRow`/`keyForRow`/`clearBackground` (:4071–4122, :4333, :4443, :4562)
+  - `UNIVERSE->getGui()->…` (:4248, :4654, :4702)
+  - `UNIVERSE->messageGUI()->clear()` (:4254)
 
+  The HUD and GUI are never nil in a running game.
+- ✅ **low** (note) — **A nil station or missile name** is expanded as `""` in the port. Upstream's `OOExpandKey` with a nil argument would raise. That needs `ts == nil`, e.g. inside the Aegis with no main station. `handleAutopilotOn` also uses `oo::ToStation(target)` where upstream had a C cast — upstream `Core/Entities/PlayerEntityControls.m:4699-4710, 4801, 4806` ↔ port `Core/Entities/PlayerEntityControls.cpp:4842-4853, 4950, 4956`
+- ✅ **low** (note) — **Upstream quirks the port keeps:**
+  - Market `NSNotFound` index arithmetic: `++NSIntegerMax` wraps and selects the last item in both (`.m:2775` ↔ `.cpp:2851`).
+  - Windows HDR max-brightness lookup: `int brightnessIdx = NSNotFound` narrows to -1, so `"hdr.maxBrightness.notFound"` never logs (`.m:2928` ↔ `.cpp:3009`).
+  - The FOV row's `%c` 176 is written as UTF-8 `"\xC2\xB0"`, the same glyph (`.m:3183` ↔ `.cpp:3292`).
+  - The always-YES `respondsToSelector:@selector(masterVolume)` guard is dropped (`.m:3130` ↔ `.cpp:3238`).
+  - The dead `#if !NEW_PLANETS` options row is dropped, so the row indices still match (`.m:3248`).
 
 ## PlayerEntityKeyMapper
 
 <a id="playerentitykeymapper"></a>
 Upstream `src/Core/Entities/PlayerEntityKeyMapper.m` ↔ `Core/Entities/PlayerEntityKeyMapper.cpp`
 
-**Status:** pending
+**Status:** done — 43 rows: 40 ✅ 1 ⚠️ 2 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[PlayerEntity(KeyMapper) initCheckingDictionary]` (77) | | |
-| `-[PlayerEntity(KeyMapper) resetKeyFunctions]` (112) | | |
-| `-[PlayerEntity(KeyMapper) setGuiToKeyMapperScreen:]` (118) | | |
-| `-[PlayerEntity(KeyMapper) setGuiToKeyMapperScreen:resetCurrentRow:]` (123) | | |
-| `-[PlayerEntity(KeyMapper) keyMapperInputHandler:view:]` (188) | | |
-| `-[PlayerEntity(KeyMapper) entryIsIndexCustomEquip:]` (296) | | |
-| `-[PlayerEntity(KeyMapper) entryIsDictCustomEquip:]` (301) | | |
-| `-[PlayerEntity(KeyMapper) entryIsCustomEquip:]` (306) | | |
-| `-[PlayerEntity(KeyMapper) getCustomEquipArray:]` (314) | | |
-| `-[PlayerEntity(KeyMapper) getCustomEquipIndex:]` (337) | | |
-| `-[PlayerEntity(KeyMapper) getCustomEquipKeyDefType:]` (357) | | |
-| `-[PlayerEntity(KeyMapper) setGuiToKeyConfigScreen]` (368) | | |
-| `-[PlayerEntity(KeyMapper) setGuiToKeyConfigScreen:]` (373) | | |
-| `-[PlayerEntity(KeyMapper) outputKeyDefinition:shift:mod1:mod2:skiprows:]` (469) | | |
-| `-[PlayerEntity(KeyMapper) handleKeyConfigKeys:view:]` (512) | | |
-| `-[PlayerEntity(KeyMapper) setGuiToKeyConfigEntryScreen]` (548) | | |
-| `-[PlayerEntity(KeyMapper) handleKeyConfigEntryKeys:view:]` (598) | | |
-| `-[PlayerEntity(KeyMapper) updateKeyDefinition:index:]` (630) | | |
-| `-[PlayerEntity(KeyMapper) updateShiftKeyDefinition:index:]` (656) | | |
-| `-[PlayerEntity(KeyMapper) setGuiToConfirmClearScreen]` (698) | | |
-| `-[PlayerEntity(KeyMapper) handleKeyMapperConfirmClearKeys:view:]` (731) | | |
-| `-[PlayerEntity(KeyMapper) displayKeyFunctionList:skip:]` (760) | | |
-| `-[PlayerEntity(KeyMapper) keyFunctionList]` (875) | | |
-| `-[PlayerEntity(KeyMapper) makeKeyGuiDict:keyDef:]` (1042) | | |
-| `-[PlayerEntity(KeyMapper) makeKeyGuiDictHeader:]` (1052) | | |
-| `-[PlayerEntity(KeyMapper) setGuiToKeyboardLayoutScreen:]` (1061) | | |
-| `-[PlayerEntity(KeyMapper) setGuiToKeyboardLayoutScreen:resetCurrentRow:]` (1066) | | |
-| `-[PlayerEntity(KeyMapper) handleKeyboardLayoutEntryKeys:view:]` (1101) | | |
-| `-[PlayerEntity(KeyMapper) keyboardDescription:]` (1142) | | |
-| `-[PlayerEntity(KeyMapper) keyboardLayoutList]` (1159) | | |
-| `-[PlayerEntity(KeyMapper) displayKeyboardLayoutList:skip:]` (1202) | | |
-| `-[PlayerEntity(KeyMapper) validateAllKeys]` (1265) | | |
-| `-[PlayerEntity(KeyMapper) validateKey:checkKeys:]` (1282) | | |
-| `-[PlayerEntity(KeyMapper) searchArrayForMatch:key:checkKeys:]` (1416) | | |
-| `-[PlayerEntity(KeyMapper) entryIsEqualToDefault:]` (1446) | | |
-| `-[PlayerEntity(KeyMapper) compareKeyEntries:second:]` (1463) | | |
-| `-[PlayerEntity(KeyMapper) saveKeySetting:]` (1475) | | |
-| `-[PlayerEntity(KeyMapper) unsetKeySetting:]` (1526) | | |
-| `-[PlayerEntity(KeyMapper) deleteKeySetting:]` (1548) | | |
-| `-[PlayerEntity(KeyMapper) deleteAllKeySettings]` (1565) | | |
-| `-[PlayerEntity(KeyMapper) loadKeySettings]` (1591) | | |
-| `-[PlayerEntity(KeyMapper) reloadPage]` (1598) | | |
+| file-scope statics `key_index`…`camera_keys` (35–44) | statics + anonymous-namespace `selected_entry`/`key_list`/`kdic_check`/`nav_keys`/`camera_keys` Core/Entities/PlayerEntityKeyMapper.cpp:39–51 | ✅ |
+| `-[PlayerEntity(KeyMapper) initCheckingDictionary]` (77) | `PlayerEntity::initCheckingDictionary` Core/Entities/PlayerEntityKeyMapper.cpp:192 | ✅ |
+| `-[PlayerEntity(KeyMapper) resetKeyFunctions]` (112) | `PlayerEntity::resetKeyFunctions` Core/Entities/PlayerEntityKeyMapper.cpp:215 | ✅ |
+| `-[PlayerEntity(KeyMapper) setGuiToKeyMapperScreen:]` (118) | `PlayerEntity::setGuiToKeyMapperScreen(unsigned)` Core/Entities/PlayerEntityKeyMapper.cpp:220 | ✅ |
+| `-[PlayerEntity(KeyMapper) setGuiToKeyMapperScreen:resetCurrentRow:]` (123) | `PlayerEntity::setGuiToKeyMapperScreen(unsigned, bool)` Core/Entities/PlayerEntityKeyMapper.cpp:225 | ✅ |
+| `-[PlayerEntity(KeyMapper) keyMapperInputHandler:view:]` (188) | `PlayerEntity::keyMapperInputHandler` Core/Entities/PlayerEntityKeyMapper.cpp:293 | ❌ |
+| `-[PlayerEntity(KeyMapper) entryIsIndexCustomEquip:]` (296) | `PlayerEntity::entryIsIndexCustomEquip` Core/Entities/PlayerEntityKeyMapper.cpp:411 | ✅ |
+| `-[PlayerEntity(KeyMapper) entryIsDictCustomEquip:]` (301) | `PlayerEntity::entryIsDictCustomEquip` Core/Entities/PlayerEntityKeyMapper.cpp:416 | ✅ |
+| `-[PlayerEntity(KeyMapper) entryIsCustomEquip:]` (306) | `PlayerEntity::entryIsCustomEquip` Core/Entities/PlayerEntityKeyMapper.cpp:421 | ✅ |
+| `-[PlayerEntity(KeyMapper) getCustomEquipArray:]` (314) | `PlayerEntity::getCustomEquipArray` Core/Entities/PlayerEntityKeyMapper.cpp:429 | ✅ |
+| `-[PlayerEntity(KeyMapper) getCustomEquipIndex:]` (337) | `PlayerEntity::getCustomEquipIndex` Core/Entities/PlayerEntityKeyMapper.cpp:454 | ✅ |
+| `-[PlayerEntity(KeyMapper) getCustomEquipKeyDefType:]` (357) | `PlayerEntity::getCustomEquipKeyDefType` Core/Entities/PlayerEntityKeyMapper.cpp:474 | ✅ |
+| `-[PlayerEntity(KeyMapper) setGuiToKeyConfigScreen]` (368) | `PlayerEntity::setGuiToKeyConfigScreen()` Core/Entities/PlayerEntityKeyMapper.cpp:485 | ✅ |
+| `-[PlayerEntity(KeyMapper) setGuiToKeyConfigScreen:]` (373) | `PlayerEntity::setGuiToKeyConfigScreen(bool)` Core/Entities/PlayerEntityKeyMapper.cpp:490 | ✅ |
+| `-[PlayerEntity(KeyMapper) outputKeyDefinition:shift:mod1:mod2:skiprows:]` (469) | `PlayerEntity::outputKeyDefinition` Core/Entities/PlayerEntityKeyMapper.cpp:582 | ✅ |
+| `-[PlayerEntity(KeyMapper) handleKeyConfigKeys:view:]` (512) | `PlayerEntity::handleKeyConfigKeys` Core/Entities/PlayerEntityKeyMapper.cpp:614 | ✅ |
+| `-[PlayerEntity(KeyMapper) setGuiToKeyConfigEntryScreen]` (548) | `PlayerEntity::setGuiToKeyConfigEntryScreen` Core/Entities/PlayerEntityKeyMapper.cpp:652 | ✅ |
+| `-[PlayerEntity(KeyMapper) handleKeyConfigEntryKeys:view:]` (598) | `PlayerEntity::handleKeyConfigEntryKeys` Core/Entities/PlayerEntityKeyMapper.cpp:706 | ✅ |
+| `-[PlayerEntity(KeyMapper) updateKeyDefinition:index:]` (630) | `PlayerEntity::updateKeyDefinition` Core/Entities/PlayerEntityKeyMapper.cpp:739 | ✅ |
+| `-[PlayerEntity(KeyMapper) updateShiftKeyDefinition:index:]` (656) | `PlayerEntity::updateShiftKeyDefinition` Core/Entities/PlayerEntityKeyMapper.cpp:758 | ✅ |
+| `-[PlayerEntity(KeyMapper) setGuiToConfirmClearScreen]` (698) | `PlayerEntity::setGuiToConfirmClearScreen` Core/Entities/PlayerEntityKeyMapper.cpp:793 | ✅ |
+| `-[PlayerEntity(KeyMapper) handleKeyMapperConfirmClearKeys:view:]` (731) | `PlayerEntity::handleKeyMapperConfirmClearKeys` Core/Entities/PlayerEntityKeyMapper.cpp:827 | ✅ |
+| `-[PlayerEntity(KeyMapper) displayKeyFunctionList:skip:]` (760) | `PlayerEntity::displayKeyFunctionList` Core/Entities/PlayerEntityKeyMapper.cpp:862 | ✅ |
+| `-[PlayerEntity(KeyMapper) keyFunctionList]` (875) | `PlayerEntity::keyFunctionList` Core/Entities/PlayerEntityKeyMapper.cpp:978 | ✅ |
+| `-[PlayerEntity(KeyMapper) makeKeyGuiDict:keyDef:]` (1042) | `PlayerEntity::makeKeyGuiDict` Core/Entities/PlayerEntityKeyMapper.cpp:1146 | ✅ |
+| `-[PlayerEntity(KeyMapper) makeKeyGuiDictHeader:]` (1052) | `PlayerEntity::makeKeyGuiDictHeader` Core/Entities/PlayerEntityKeyMapper.cpp:1157 | ✅ |
+| `-[PlayerEntity(KeyMapper) setGuiToKeyboardLayoutScreen:]` (1061) | `PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned)` Core/Entities/PlayerEntityKeyMapper.cpp:1166 | ✅ |
+| `-[PlayerEntity(KeyMapper) setGuiToKeyboardLayoutScreen:resetCurrentRow:]` (1066) | `PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned, bool)` Core/Entities/PlayerEntityKeyMapper.cpp:1171 | ✅ |
+| `-[PlayerEntity(KeyMapper) handleKeyboardLayoutEntryKeys:view:]` (1101) | `PlayerEntity::handleKeyboardLayoutEntryKeys` Core/Entities/PlayerEntityKeyMapper.cpp:1210 | ✅ |
+| `-[PlayerEntity(KeyMapper) keyboardDescription:]` (1142) | `PlayerEntity::keyboardDescription` Core/Entities/PlayerEntityKeyMapper.cpp:1257 | ✅ |
+| `-[PlayerEntity(KeyMapper) keyboardLayoutList]` (1159) | `PlayerEntity::keyboardLayoutList` Core/Entities/PlayerEntityKeyMapper.cpp:1264 | ⚠️ |
+| `-[PlayerEntity(KeyMapper) displayKeyboardLayoutList:skip:]` (1202) | `PlayerEntity::displayKeyboardLayoutList` Core/Entities/PlayerEntityKeyMapper.cpp:1303 | ✅ |
+| `-[PlayerEntity(KeyMapper) validateAllKeys]` (1265) | `PlayerEntity::validateAllKeys` Core/Entities/PlayerEntityKeyMapper.cpp:1365 | ✅ |
+| `-[PlayerEntity(KeyMapper) validateKey:checkKeys:]` (1282) | `PlayerEntity::validateKey` Core/Entities/PlayerEntityKeyMapper.cpp:1381 | ✅ |
+| `-[PlayerEntity(KeyMapper) searchArrayForMatch:key:checkKeys:]` (1416) | `PlayerEntity::searchArrayForMatch` Core/Entities/PlayerEntityKeyMapper.cpp:1523 | ✅ |
+| `-[PlayerEntity(KeyMapper) entryIsEqualToDefault:]` (1446) | `PlayerEntity::entryIsEqualToDefault` Core/Entities/PlayerEntityKeyMapper.cpp:1554 | ✅ |
+| `-[PlayerEntity(KeyMapper) compareKeyEntries:second:]` (1463) | `PlayerEntity::compareKeyEntries` Core/Entities/PlayerEntityKeyMapper.cpp:1573 | ✅ |
+| `-[PlayerEntity(KeyMapper) saveKeySetting:]` (1475) | `PlayerEntity::saveKeySetting` Core/Entities/PlayerEntityKeyMapper.cpp:1584 | ❌ |
+| `-[PlayerEntity(KeyMapper) unsetKeySetting:]` (1526) | `PlayerEntity::unsetKeySetting` Core/Entities/PlayerEntityKeyMapper.cpp:1635 | ✅ |
+| `-[PlayerEntity(KeyMapper) deleteKeySetting:]` (1548) | `PlayerEntity::deleteKeySetting` Core/Entities/PlayerEntityKeyMapper.cpp:1653 | ✅ |
+| `-[PlayerEntity(KeyMapper) deleteAllKeySettings]` (1565) | `PlayerEntity::deleteAllKeySettings` Core/Entities/PlayerEntityKeyMapper.cpp:1673 | ✅ |
+| `-[PlayerEntity(KeyMapper) loadKeySettings]` (1591) | `PlayerEntity::loadKeySettings` Core/Entities/PlayerEntityKeyMapper.cpp:1702 | ✅ |
+| `-[PlayerEntity(KeyMapper) reloadPage]` (1598) | `PlayerEntity::reloadPage` Core/Entities/PlayerEntityKeyMapper.cpp:1708 | ✅ |
+
+Checked and equal:
+- **Function list:** `keyFunctionList` has the same headers, `oolite-keydesc-*` keys, `key_*` definitions and `#if OO_FOV_INFLIGHT_CONTROL_ENABLED` block, in the same order (mechanical diff; `key_bloom_toggle` is commented out in both).
+- **Validation groups:** the 10 groups in `validateKey` (gui, debug, customview, inflight + custom equipment, docking, docked, paused, chart, sysinfo, market) list identical keys in the same order (mechanical diff).
+- **Text layout:** the tab stops are the same (10/290/400 on the mapper screen, 10/290 on the config and layout screens). So are the `"Function"`/`"Assigned to"`/`"Overrides"` heading, the `"Index:%zu"`/`"More:%zd"` row keys, the paging maths (`MAX_ROWS_KC_FUNCTIONS`, `previous = skip - (MAX-2)`), the selectable ranges, and the `+ 5` row offset for the alternate key.
+- **Description truncation:** over 50 UTF-16 units becomes the first 48 + `"..."`.
+- **Other screens and saving:** the confirm-clear Y/N bytes (`& 0x00ff`, `- 32`), the shift auto-toggle on one-character keys, and the save path (blank-alternate removal, primary == alternate removal, revert-to-default) match.
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — **'u' or 'r' on the "Keyboard layout" row** (`GUI_ROW_KC_SELECTKBD`, key `kbd:…`, inside the selectable range, so `selFunctionIdx = -1`).
+  - Upstream: `[keyFunctions objectAtIndex:-1]` raises `NSRangeException`, which `pollControls` catches and logs. Nothing is changed.
+  - Port: `KeyFunctionAt(-1)` gives a null entry. For 'u' it calls `unsetKeySetting("")`, which persists a bogus `"" = ()` entry in the `KeyConfigOverrides` default, re-reads the key config and reloads the page. For 'r' it calls `deleteKeySetting("")` (rewrites the overrides unchanged) and reloads — upstream `Core/Entities/PlayerEntityKeyMapper.m:239, 252` ↔ port `Core/Entities/PlayerEntityKeyMapper.cpp:352, 366`
+- ❌ **low** — **`saveKeySetting`: two raise paths now complete.**
+  - (a) Empty `key_list`, e.g. Save on an entry already unset with 'u'. Upstream's `[key_list objectAtIndex:0]` raises, so nothing is saved, the error is logged and the screen stays. The port treats the key as 0 and saves an empty override (or deletes it if it matches the default), then returns to the list.
+  - (b) Primary key cleared (0) while the alternate is set. Upstream sends `-isEqualToString:@""` to the alternate's `"key"`, which `processKeyCode` stored as an `NSNumber`; that raises. The port's `IsEmptyString` returns false and saves `[unset, alternate]`.
+  - upstream `Core/Entities/PlayerEntityKeyMapper.m:1488-1489` ↔ port `Core/Entities/PlayerEntityKeyMapper.cpp:1598-1600`
+- ⚠️ **low** — **Keyboard-layout list sorting.** Non-default layouts are walked in `std::map` key order and stable-sorted by `"description"` with `oo::str::compare` (port comment cites bead oo-3rb.20). Upstream walked `-allKeys` (hash order) and used `NSSortDescriptor` (ascending, `-compare:`). The result can differ only for layouts with equal or missing descriptions. A keymappings file without a `"default"` entry makes upstream raise on `insertObject:nil`; the port inserts a null row instead — upstream `Core/Entities/PlayerEntityKeyMapper.m:1173-1195` ↔ port `Core/Entities/PlayerEntityKeyMapper.cpp:1271-1297`
+- ✅ **low** (note) — **Out-of-range reads.** Where upstream would raise on an out-of-range `objectAtIndex:` (`customEquipActivation` at index -1 in `displayKeyFunctionList`/`searchArrayForMatch`/`saveKeySetting`, `kbdLayouts` beyond the end, `characterAtIndex:0` on an empty yes/no description), the port reads a null entry or 0 and continues. None of these is reachable with consistent data — e.g. upstream `Core/Entities/PlayerEntityKeyMapper.m:822, 1432, 1126, 744` ↔ port `Core/Entities/PlayerEntityKeyMapper.cpp:924, 1537, 1239, 844`
+- ✅ **low** (note) — **Unchecked `gui->` dereferences** throughout (upstream messages to a nil GUI did nothing); the GUI is never nil in a running game.
 
 ## PlayerEntityLoadSave
 
@@ -951,69 +1010,86 @@ Upstream `src/Core/Entities/PlayerEntitySound.m` ↔ `Core/Entities/PlayerEntity
 <a id="playerentitystickmapper"></a>
 Upstream `src/Core/Entities/PlayerEntityStickMapper.m` ↔ `Core/Entities/PlayerEntityStickMapper.cpp`
 
-**Status:** pending
+**Status:** done — 13 rows: 12 ✅ 0 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[PlayerEntity(StickMapper) resetStickFunctions]` (48) | | |
-| `-[PlayerEntity(StickMapper) setGuiToStickMapperScreen:]` (54) | | |
-| `-[PlayerEntity(StickMapper) setGuiToStickMapperScreen:resetCurrentRow:]` (59) | | |
-| `-[PlayerEntity(StickMapper) stickMapperInputHandler:]` (124) | | |
-| `-[PlayerEntity(StickMapper) updateFunction:]` (201) | | |
-| `-[PlayerEntity(StickMapper) checkCustomEquipButtons:ignore:]` (283) | | |
-| `-[PlayerEntity(StickMapper) removeFunction:]` (307) | | |
-| `-[PlayerEntity(StickMapper) displayFunctionList:]` (358) | | |
-| `-[PlayerEntity(StickMapper) describeStickDict:]` (474) | | |
-| `-[PlayerEntity(StickMapper) hwToString:]` (499) | | |
-| `-[PlayerEntity(StickMapper) stickFunctionList]` (517) | | |
-| `-[PlayerEntity(StickMapper) makeStickGuiDict:]` (825) | | |
-| `-[PlayerEntity(StickMapper) makeStickGuiDictHeader:]` (846) | | |
+| `-[PlayerEntity(StickMapper) resetStickFunctions]` (48) | `PlayerEntity::resetStickFunctions` Core/Entities/PlayerEntityStickMapper.cpp:134 | ✅ |
+| `-[PlayerEntity(StickMapper) setGuiToStickMapperScreen:]` (54) | `PlayerEntity::setGuiToStickMapperScreen(unsigned)` Core/Entities/PlayerEntityStickMapper.cpp:139 | ✅ |
+| `-[PlayerEntity(StickMapper) setGuiToStickMapperScreen:resetCurrentRow:]` (59) | `PlayerEntity::setGuiToStickMapperScreen(unsigned, bool)` Core/Entities/PlayerEntityStickMapper.cpp:144 | ✅ |
+| `-[PlayerEntity(StickMapper) stickMapperInputHandler:]` (124) | `PlayerEntity::stickMapperInputHandler` Core/Entities/PlayerEntityStickMapper.cpp:205 | ✅ |
+| `-[PlayerEntity(StickMapper) updateFunction:]` (201) | `PlayerEntity::updateFunction` Core/Entities/PlayerEntityStickMapper.cpp:277 | ❌ |
+| `-[PlayerEntity(StickMapper) checkCustomEquipButtons:ignore:]` (283) | `PlayerEntity::checkCustomEquipButtons` Core/Entities/PlayerEntityStickMapper.cpp:357 | ✅ |
+| `-[PlayerEntity(StickMapper) removeFunction:]` (307) | `PlayerEntity::removeFunction` Core/Entities/PlayerEntityStickMapper.cpp:381 | ✅ |
+| `-[PlayerEntity(StickMapper) displayFunctionList:]` (358) | `PlayerEntity::displayFunctionList` Core/Entities/PlayerEntityStickMapper.cpp:427 | ✅ |
+| `-[PlayerEntity(StickMapper) describeStickDict:]` (474) | `PlayerEntity::describeStickDict` Core/Entities/PlayerEntityStickMapper.cpp:539 | ✅ |
+| `-[PlayerEntity(StickMapper) hwToString:]` (499) | `PlayerEntity::hwToString` Core/Entities/PlayerEntityStickMapper.cpp:563 | ✅ |
+| `-[PlayerEntity(StickMapper) stickFunctionList]` (517) | `PlayerEntity::stickFunctionList` Core/Entities/PlayerEntityStickMapper.cpp:581 | ✅ |
+| `-[PlayerEntity(StickMapper) makeStickGuiDict:]` (825) | `PlayerEntity::makeStickGuiDict` Core/Entities/PlayerEntityStickMapper.cpp:724 | ✅ |
+| `-[PlayerEntity(StickMapper) makeStickGuiDictHeader:]` (846) | `PlayerEntity::makeStickGuiDictHeader` Core/Entities/PlayerEntityStickMapper.cpp:739 | ✅ |
+
+Checked and equal:
+- **Function list:** `stickFunctionList` has the same 233 tokens (`stickmapper-*` keys, `HW_*`, `AXIS_*`, `BUTTON_*`, the `10000`/`20000` custom-equipment offsets) in the same order (mechanical diff). That includes upstream's reuse of `BUTTON_PRIMEEQUIPMENT` for "prime-prev-equipment".
+- **Truncation:** stick names are cut by 5 characters plus `"..."` while wider than 18 em (11 em for the additional name). `makeStickGuiDict` cuts at 28 UTF-16 units (not 48) above 50.
+- **Axis/button unsetting:** the cross-unsetting in `updateFunction` (thrust, FOV, view X/Y) matches.
+- **Custom equipment:** the `10000`/`20000` decoding into `CUSTOMEQUIP_BUTTONACTIVATE`/`_BUTTONMODE` matches.
+- **Display and paging:** the hat description (`(n - MAX_REAL_BUTTONS)/4 + 1`, `dir[n & 3]`), the paging maths and the `GUI_ROW_STICKPROFILE` selectable range match. Upstream's in-place edits through `mutableCopy` + `replaceObjectAtIndex:` become direct edits of the vector entry, with the same result.
+- **Callback:** the joystick callback is a lambda instead of `@selector(updateFunction:)` (ADR-0055 item 5, cited at :277).
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — **Error-log text in `updateFunction`.** The "called when not on stick mapper screen" error logs `__PRETTY_FUNCTION__` through `{}`. Upstream printed `-[PlayerEntity(StickMapper) updateFunction:]`; the port prints the C++ signature (`void PlayerEntity::updateFunction(const oo::PList&)`). The class `joystick.configure.error` is unchanged — upstream `Core/Entities/PlayerEntityStickMapper.m:208` ↔ port `Core/Entities/PlayerEntityStickMapper.cpp:284`
+- ✅ **low** (note) — **Out-of-range indexes.** `stickFunctions`/`customEquipActivation` indexes past the end (upstream `objectAtIndex:` raises) give a null entry in the port. That would need `Enter` with `selFunctionIdx == -1` on a selectable non-`Index:` row; none exists besides the profile row, which is handled first — upstream `Core/Entities/PlayerEntityStickMapper.m:171, 213` ↔ port `Core/Entities/PlayerEntityStickMapper.cpp:249, 289`
 
 ## PlayerEntityStickProfile
 
 <a id="playerentitystickprofile"></a>
 Upstream `src/Core/Entities/PlayerEntityStickProfile.m` ↔ `Core/Entities/PlayerEntityStickProfile.cpp`
 
-**Status:** pending
+**Status:** done — 27 rows: 26 ✅ 0 ⚠️ 0 ❌ 1 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[PlayerEntity(StickProfile) setGuiToStickProfileScreen:]` (69) | | |
-| `-[PlayerEntity(StickProfile) stickProfileInputHandler:]` (76) | | |
-| `-[PlayerEntity(StickProfile) stickProfileGraphAxisProfile:screenAt:screenSize:]` (180) | | |
-| `-[StickProfileScreen init]` (191) | | |
-| `-[StickProfileScreen dealloc]` (207) | | |
-| `-[StickProfileScreen startGui:]` (217) | | |
-| `-[StickProfileScreen mouseDown:]` (228) | | |
-| `-[StickProfileScreen mouseUp]` (253) | | |
-| `-[StickProfileScreen deleteSelected]` (262) | | |
-| `-[StickProfileScreen(StickProfileInternal) nextAxis]` (280) | | |
-| `-[StickProfileScreen(StickProfileInternal) previousAxis]` (290) | | |
-| `-[StickProfileScreen(StickProfileInternal) currentAxis]` (300) | | |
-| `-[StickProfileScreen(StickProfileInternal) increaseDeadzone]` (315) | | |
-| `-[StickProfileScreen(StickProfileInternal) decreaseDeadzone]` (325) | | |
-| `-[StickProfileScreen(StickProfileInternal) nextProfileType]` (335) | | |
-| `-[StickProfileScreen(StickProfileInternal) previousProfileType]` (355) | | |
-| `-[StickProfileScreen(StickProfileInternal) currentProfileIsSpline]` (375) | | |
-| `-[StickProfileScreen(StickProfileInternal) IncreasePower]` (383) | | |
-| `-[StickProfileScreen(StickProfileInternal) DecreasePower]` (397) | | |
-| `-[StickProfileScreen(StickProfileInternal) IncreaseParam]` (411) | | |
-| `-[StickProfileScreen(StickProfileInternal) DecreaseParam]` (425) | | |
-| `-[StickProfileScreen(StickProfileInternal) graphProfile:at:size:]` (439) | | |
-| `-[StickProfileScreen(StickProfileInternal) startEdit]` (487) | | |
-| `-[StickProfileScreen(StickProfileInternal) saveSettings]` (504) | | |
-| `-[StickProfileScreen(StickProfileInternal) showScreen]` (510) | | |
-| `-[StickProfileScreen(StickProfileInternal) profileType]` (584) | | |
+| `GUI_ROW_STICKPROFILE_*` defines + `static BOOL stickProfileArrow_pressed` (36–43) | same, Core/Entities/PlayerEntityStickProfile.cpp:38–45 | ✅ |
+| `-[PlayerEntity(StickProfile) setGuiToStickProfileScreen:]` (69) | `PlayerEntity::setGuiToStickProfileScreen` Core/Entities/PlayerEntityStickProfile.cpp:69 | ✅ |
+| `-[PlayerEntity(StickProfile) stickProfileInputHandler:]` (76) | `PlayerEntity::stickProfileInputHandler` Core/Entities/PlayerEntityStickProfile.cpp:77 | ✅ |
+| `-[PlayerEntity(StickProfile) stickProfileGraphAxisProfile:screenAt:screenSize:]` (180) | `PlayerEntity::stickProfileGraphAxisProfile` Core/Entities/PlayerEntityStickProfile.cpp:194 | ✅ |
+| `-[StickProfileScreen init]` (191) | `StickProfileScreen::StickProfileScreen` Core/Entities/PlayerEntityStickProfile.cpp:207 | ✅ |
+| `-[StickProfileScreen dealloc]` (207) | implicit destructor (`oo::Ref` members release `profiles[][]`) Core/Entities/PlayerEntityStickProfile.h:78 | ➖ |
+| `-[StickProfileScreen startGui:]` (217) | `StickProfileScreen::startGui` Core/Entities/PlayerEntityStickProfile.cpp:214 | ✅ |
+| `-[StickProfileScreen mouseDown:]` (228) | `StickProfileScreen::mouseDown` Core/Entities/PlayerEntityStickProfile.cpp:225 | ✅ |
+| `-[StickProfileScreen mouseUp]` (253) | `StickProfileScreen::mouseUp` Core/Entities/PlayerEntityStickProfile.cpp:250 | ✅ |
+| `-[StickProfileScreen deleteSelected]` (262) | `StickProfileScreen::deleteSelected` Core/Entities/PlayerEntityStickProfile.cpp:259 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) nextAxis]` (280) | `StickProfileScreen::nextAxis` Core/Entities/PlayerEntityStickProfile.cpp:272 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) previousAxis]` (290) | `StickProfileScreen::previousAxis` Core/Entities/PlayerEntityStickProfile.cpp:282 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) currentAxis]` (300) | `StickProfileScreen::currentAxis` Core/Entities/PlayerEntityStickProfile.cpp:292 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) increaseDeadzone]` (315) | `StickProfileScreen::increaseDeadzone` Core/Entities/PlayerEntityStickProfile.cpp:307 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) decreaseDeadzone]` (325) | `StickProfileScreen::decreaseDeadzone` Core/Entities/PlayerEntityStickProfile.cpp:317 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) nextProfileType]` (335) | `StickProfileScreen::nextProfileType` Core/Entities/PlayerEntityStickProfile.cpp:327 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) previousProfileType]` (355) | `StickProfileScreen::previousProfileType` Core/Entities/PlayerEntityStickProfile.cpp:346 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) currentProfileIsSpline]` (375) | `StickProfileScreen::currentProfileIsSpline` Core/Entities/PlayerEntityStickProfile.cpp:365 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) IncreasePower]` (383) | `StickProfileScreen::IncreasePower` Core/Entities/PlayerEntityStickProfile.cpp:373 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) DecreasePower]` (397) | `StickProfileScreen::DecreasePower` Core/Entities/PlayerEntityStickProfile.cpp:386 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) IncreaseParam]` (411) | `StickProfileScreen::IncreaseParam` Core/Entities/PlayerEntityStickProfile.cpp:399 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) DecreaseParam]` (425) | `StickProfileScreen::DecreaseParam` Core/Entities/PlayerEntityStickProfile.cpp:412 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) graphProfile:at:size:]` (439) | `StickProfileScreen::graphProfile` Core/Entities/PlayerEntityStickProfile.cpp:425 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) startEdit]` (487) | `StickProfileScreen::startEdit` Core/Entities/PlayerEntityStickProfile.cpp:473 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) saveSettings]` (504) | `StickProfileScreen::saveSettings` Core/Entities/PlayerEntityStickProfile.cpp:489 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) showScreen]` (510) | `StickProfileScreen::showScreen` Core/Entities/PlayerEntityStickProfile.cpp:495 | ✅ |
+| `-[StickProfileScreen(StickProfileInternal) profileType]` (584) | `StickProfileScreen::profileType` Core/Entities/PlayerEntityStickProfile.cpp:555 | ✅ |
+
+Checked and equal:
+- **Profile edits:** the deadzone step is `STICK_MAX_DEADZONE / 20`, the power step `STICKPROFILE_MAX_POWER / 20`, the parameter step ±0.05. The shared constants and the `GUI_ROW_*` defines are identical in the port headers.
+- **Profile type switch:** next/previous profile type keep the outgoing profile in `profiles[axis][0|1]` (retained via `oo::Ref`'s retaining constructor; `OOJoystickManager::setProfile` also retains) and copy the deadzone across. `isKindOfClass:` becomes `dynamic_cast`.
+- **Curve drawing:** `graphProfile` uses the same 220×220 box at (x−110, y−100), the same 10-px inset, `rawValue(i/(w−20))` per pixel column, the 4×4 ovals with 20 segments, and the same colours and string positions.
+- **Spline editing by mouse:** `(pos.x − origin.x − 10)/(w − 20)` and `(−pos.y − origin.y − 10)/(h − 20)`, the [0,1] hit test, and the add/move/delete with `saveStickSettings` match.
+- **`showScreen` text:** tab stops 50/140. The bar strings are `|`×n + `.`×(20−n), with n = `(int)(20·v/max + 0.5)` for deadzone and power, n = `(int)(20·param)` for sensitivity, clamped to 0..20. The formats `"%@%@ (%0.4f)"`, `"%@%@ (%.1f) "`, `"%@%@ (%0.2f) "` are unchanged, and the spline layout sets `GUI_KEY_SKIP` rows in magenta. The selectable range is `(1, 20)`.
+- **Initial state:** `selected/dragged/double_click_control_point` start at 0 in both (ObjC zero-fill ↔ member initialisers) until `startEdit` sets them to -1.
 
 **Differences:**
 
-- *pending*
-
+- ➖ **low** — `-dealloc` (releasing `profiles[3][2]`) is replaced by `oo::Ref` member destruction; same effect — upstream `Core/Entities/PlayerEntityStickProfile.m:207-215` ↔ port `Core/Entities/PlayerEntityStickProfile.h:78`
+- ✅ **low** (note) — **Nil checks.** The port guards `stickProfileScreen != nullptr` at every call (matching nil messaging) and reads `deadzone` as 0.0 for a null profile in `showScreen` (matching `[nil deadzone]`). `!currentProfileIsSpline` on a nil screen is true in both, so the power/param rows still react — upstream `Core/Entities/PlayerEntityStickProfile.m:146, 526` ↔ port `Core/Entities/PlayerEntityStickProfile.cpp:156, 509`
 
 ## ProxyPlayerEntity
 
