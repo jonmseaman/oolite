@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 0 / 241 upstream `.m` files · extra rows below
+**Progress:** 14 / 241 upstream `.m` files · extra rows below
 
 ## Suspected divergences (ranked)
 
@@ -185,19 +185,19 @@ a row is checked when every method in its coverage table has been compared and i
 
 ### Sound and music — [sound.md](sound.md)
 
-- [ ] `Core/OOALBufferedSound.m` → `Core/OOALBufferedSound.cpp` (94 / 91 lines) — *pending* — [findings](sound.md#ooalbufferedsound)
-- [ ] `Core/OOALMusic.m` → `Core/OOALMusic.cpp` (117 / 113 lines) — *pending* — [findings](sound.md#ooalmusic)
-- [ ] `Core/OOALSound.m` → `Core/OOALSound.cpp` (164 / 191 lines) — *pending* — [findings](sound.md#ooalsound)
-- [ ] `Core/OOALSoundChannel.m` → `Core/OOALSoundChannel.cpp` (223 / 215 lines) — *pending* — [findings](sound.md#ooalsoundchannel)
-- [ ] `Core/OOALSoundDecoder.m` → `Core/OOALSoundDecoder.cpp` (461 / 482 lines) — *pending* — [findings](sound.md#ooalsounddecoder)
-- [ ] `Core/OOALSoundMixer.m` → `Core/OOALSoundMixer.cpp` (158 / 124 lines) — *pending* — [findings](sound.md#ooalsoundmixer)
-- [ ] `Core/OOALStreamedSound.m` → `Core/OOALStreamedSound.cpp` (114 / 111 lines) — *pending* — [findings](sound.md#ooalstreamedsound)
-- [ ] `Core/OOBasicSoundReferencePoint.m` → `Core/OOBasicSoundReferencePoint.cpp` (41 / 37 lines) — *pending* — [findings](sound.md#oobasicsoundreferencepoint)
-- [ ] `Core/OOMusic.m` → *(absorbed — locate in `src/oofnd/` or callers)* (11 / — lines) — *pending* — [findings](sound.md#oomusic)
-- [ ] `Core/OOMusicController.m` → `Core/OOMusicController.cpp` (361 / 305 lines) — *pending* — [findings](sound.md#oomusiccontroller)
-- [ ] `Core/OOOpenALController.m` → `Core/OOOpenALController.cpp` (102 / 96 lines) — *pending* — [findings](sound.md#ooopenalcontroller)
-- [ ] `Core/OOSoundSource.m` → `Core/OOSoundSource.cpp` (299 / 333 lines) — *pending* — [findings](sound.md#oosoundsource)
-- [ ] `Core/OOSoundSourcePool.m` → `Core/OOSoundSourcePool.cpp` (249 / 238 lines) — *pending* — [findings](sound.md#oosoundsourcepool)
+- [x] `Core/OOALBufferedSound.m` → `Core/OOALBufferedSound.cpp` (94 / 91 lines) — 4✅ — [findings](sound.md#ooalbufferedsound)
+- [x] `Core/OOALMusic.m` → `Core/OOALMusic.cpp` (117 / 113 lines) — 9✅ 1➖ — [findings](sound.md#ooalmusic)
+- [x] `Core/OOALSound.m` → `Core/OOALSound.cpp` (164 / 191 lines) — 10✅ 1❌ 1➖ — [findings](sound.md#ooalsound)
+- [x] `Core/OOALSoundChannel.m` → `Core/OOALSoundChannel.cpp` (223 / 215 lines) — 14✅ — [findings](sound.md#ooalsoundchannel)
+- [x] `Core/OOALSoundDecoder.m` → `Core/OOALSoundDecoder.cpp` (461 / 482 lines) — 21✅ 1➖ — [findings](sound.md#ooalsounddecoder)
+- [x] `Core/OOALSoundMixer.m` → `Core/OOALSoundMixer.cpp` (158 / 124 lines) — 5✅ 1⚠️ 6➖ — [findings](sound.md#ooalsoundmixer)
+- [x] `Core/OOALStreamedSound.m` → `Core/OOALStreamedSound.cpp` (114 / 111 lines) — 6✅ — [findings](sound.md#ooalstreamedsound)
+- [x] `Core/OOBasicSoundReferencePoint.m` → `Core/OOBasicSoundReferencePoint.cpp` (41 / 37 lines) — 3✅ — [findings](sound.md#oobasicsoundreferencepoint)
+- [x] `Core/OOMusic.m` → *(absorbed — 1➖ — [findings](sound.md#oomusic)
+- [x] `Core/OOMusicController.m` → `Core/OOMusicController.cpp` (361 / 305 lines) — 25✅ 6➖ — [findings](sound.md#oomusiccontroller)
+- [x] `Core/OOOpenALController.m` → `Core/OOOpenALController.cpp` (102 / 96 lines) — 5✅ — [findings](sound.md#ooopenalcontroller)
+- [x] `Core/OOSoundSource.m` → `Core/OOSoundSource.cpp` (299 / 333 lines) — 31✅ 1⚠️ — [findings](sound.md#oosoundsource)
+- [x] `Core/OOSoundSourcePool.m` → `Core/OOSoundSourcePool.cpp` (249 / 238 lines) — 12✅ — [findings](sound.md#oosoundsourcepool)
 
 ### Materials, textures, meshes, drawables, OpenGL — [graphics.md](graphics.md)
 
