@@ -566,55 +566,62 @@ Upstream `src/Core/Entities/PlayerEntity.m` lines 5982–11911 ↔ `Core/Entitie
 <a id="playerentitycontracts"></a>
 Upstream `src/Core/Entities/PlayerEntityContracts.m` ↔ `Core/Entities/PlayerEntityContracts.cpp`
 
-**Status:** pending
+**Status:** done — 41 rows: 40 ✅ 1 ⚠️ 0 ❌ 0 ➖
+
+Scope note: this file does **not** generate passenger, parcel or cargo contracts. Upstream generates them in the JS world scripts (`oolite-contracts-*.js`). This category only accepts contracts (`addPassenger…`, `addParcel…`, `awardContract…`, called from JS), settles them on docking (`checkPassengerContracts`), and draws the manifest and report screens. The RNG uses that do live here were checked: `randf()` for the tip and halving loops, `Ranrot()` for escape-pod bounty against insurance and for the cargo IDs in `awardContract`, and `market_rnd` in the reputation getters. Each one is called in the same order and under the same conditions as upstream.
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[PlayerEntity(Contracts) processEscapePods]` (61) | | |
-| `-[PlayerEntity(Contracts) checkPassengerContracts]` (147) | | |
-| `-[PlayerEntity(Contracts) contractedVolumeForGood:]` (422) | | |
-| `-[PlayerEntity(Contracts) addMessageToReport:]` (435) | | |
-| `-[PlayerEntity(Contracts) reputation]` (445) | | |
-| `-[PlayerEntity(Contracts) passengerReputation]` (450) | | |
-| `-[PlayerEntity(Contracts) increasePassengerReputation:]` (464) | | |
-| `-[PlayerEntity(Contracts) decreasePassengerReputation:]` (489) | | |
-| `-[PlayerEntity(Contracts) parcelReputation]` (514) | | |
-| `-[PlayerEntity(Contracts) increaseParcelReputation:]` (528) | | |
-| `-[PlayerEntity(Contracts) decreaseParcelReputation:]` (553) | | |
-| `-[PlayerEntity(Contracts) contractReputation]` (578) | | |
-| `-[PlayerEntity(Contracts) increaseContractReputation:]` (592) | | |
-| `-[PlayerEntity(Contracts) decreaseContractReputation:]` (617) | | |
-| `-[PlayerEntity(Contracts) erodeReputation]` (642) | | |
-| `-[PlayerEntity(Contracts) normaliseReputation]` (696) | | |
-| `-[PlayerEntity(Contracts) addPassenger:start:destination:eta:fee:advance:risk:]` (746) | | |
-| `-[PlayerEntity(Contracts) removePassenger:]` (776) | | |
-| `-[PlayerEntity(Contracts) addParcel:start:destination:eta:fee:premium:risk:]` (797) | | |
-| `-[PlayerEntity(Contracts) removeParcel:]` (828) | | |
-| `-[PlayerEntity(Contracts) awardContract:commodity:start:]` (849) | | |
-| `-[PlayerEntity(Contracts) removeContract:destination:]` (920) | | |
-| `-[PlayerEntity(Contracts) passengerList]` (945) | | |
-| `-[PlayerEntity(Contracts) parcelList]` (950) | | |
-| `-[PlayerEntity(Contracts) contractList]` (955) | | |
-| `-[PlayerEntity(Contracts) contractsListFromArray:forCargo:forParcels:]` (960) | | |
-| `-[PlayerEntity(Contracts) setGuiToManifestScreen]` (986) | | |
-| `-[PlayerEntity(Contracts) setManifestScreenRow:inColor:forRow:ofRows:andOffset:inMultipage:]` (1167) | | |
-| `-[PlayerEntity(Contracts) setGuiToDockingReportScreen]` (1183) | | |
-| `-[PlayerEntity(Contracts) priceForShipKey:]` (1255) | | |
-| `-[PlayerEntity(Contracts) setGuiToShipyardScreen:]` (1261) | | |
-| `-[PlayerEntity(Contracts) showShipyardInfoForSelection]` (1393) | | |
-| `-[PlayerEntity(Contracts) showTradeInInformationFooter]` (1463) | | |
-| `-[PlayerEntity(Contracts) showShipyardModel:shipData:personality:]` (1476) | | |
-| `-[PlayerEntity(Contracts) missingSubEntitiesAdjustment]` (1483) | | |
-| `-[PlayerEntity(Contracts) tradeInValue]` (1490) | | |
-| `-[PlayerEntity(Contracts) buySelectedShip]` (1510) | | |
-| `-[PlayerEntity(Contracts) replaceShipWithNamedShip:]` (1620) | | |
-| `-[PlayerEntity(Contracts) newShipCommonSetup:yardInfo:baseInfo:]` (1658) | | |
-| `RepForRisk()` (1764) | | |
+| `-[PlayerEntity(Contracts) processEscapePods]` (61) | `PlayerEntity::processEscapePods` Core/Entities/PlayerEntityContracts.cpp:94 | ✅ |
+| `-[PlayerEntity(Contracts) checkPassengerContracts]` (147) | `PlayerEntity::checkPassengerContracts` Core/Entities/PlayerEntityContracts.cpp:186 | ✅ |
+| `-[PlayerEntity(Contracts) contractedVolumeForGood:]` (422) | `PlayerEntity::contractedVolumeForGood` Core/Entities/PlayerEntityContracts.cpp:466 | ✅ |
+| `-[PlayerEntity(Contracts) addMessageToReport:]` (435) | `PlayerEntity::addMessageToReport` Core/Entities/PlayerEntityContracts.cpp:478 | ✅ |
+| `-[PlayerEntity(Contracts) reputation]` (445) | `PlayerEntity::getReputation` Core/Entities/PlayerEntityContracts.cpp:488 | ✅ |
+| `-[PlayerEntity(Contracts) passengerReputation]` (450) | `PlayerEntity::passengerReputation` Core/Entities/PlayerEntityContracts.cpp:493 | ✅ |
+| `-[PlayerEntity(Contracts) increasePassengerReputation:]` (464) | `PlayerEntity::increasePassengerReputation` Core/Entities/PlayerEntityContracts.cpp:507 | ✅ |
+| `-[PlayerEntity(Contracts) decreasePassengerReputation:]` (489) | `PlayerEntity::decreasePassengerReputation` Core/Entities/PlayerEntityContracts.cpp:532 | ✅ |
+| `-[PlayerEntity(Contracts) parcelReputation]` (514) | `PlayerEntity::parcelReputation` Core/Entities/PlayerEntityContracts.cpp:557 | ✅ |
+| `-[PlayerEntity(Contracts) increaseParcelReputation:]` (528) | `PlayerEntity::increaseParcelReputation` Core/Entities/PlayerEntityContracts.cpp:571 | ✅ |
+| `-[PlayerEntity(Contracts) decreaseParcelReputation:]` (553) | `PlayerEntity::decreaseParcelReputation` Core/Entities/PlayerEntityContracts.cpp:596 | ✅ |
+| `-[PlayerEntity(Contracts) contractReputation]` (578) | `PlayerEntity::contractReputation` Core/Entities/PlayerEntityContracts.cpp:621 | ✅ |
+| `-[PlayerEntity(Contracts) increaseContractReputation:]` (592) | `PlayerEntity::increaseContractReputation` Core/Entities/PlayerEntityContracts.cpp:635 | ✅ |
+| `-[PlayerEntity(Contracts) decreaseContractReputation:]` (617) | `PlayerEntity::decreaseContractReputation` Core/Entities/PlayerEntityContracts.cpp:660 | ✅ |
+| `-[PlayerEntity(Contracts) erodeReputation]` (642) | `PlayerEntity::erodeReputation` Core/Entities/PlayerEntityContracts.cpp:685 | ✅ |
+| `-[PlayerEntity(Contracts) normaliseReputation]` (696) | `PlayerEntity::normaliseReputation` Core/Entities/PlayerEntityContracts.cpp:739 | ✅ |
+| `-[PlayerEntity(Contracts) addPassenger:start:destination:eta:fee:advance:risk:]` (746) | `PlayerEntity::addPassenger` Core/Entities/PlayerEntityContracts.cpp:789 | ✅ |
+| `-[PlayerEntity(Contracts) removePassenger:]` (776) | `PlayerEntity::removePassenger` Core/Entities/PlayerEntityContracts.cpp:819 | ✅ |
+| `-[PlayerEntity(Contracts) addParcel:start:destination:eta:fee:premium:risk:]` (797) | `PlayerEntity::addParcel` Core/Entities/PlayerEntityContracts.cpp:840 | ✅ |
+| `-[PlayerEntity(Contracts) removeParcel:]` (828) | `PlayerEntity::removeParcel` Core/Entities/PlayerEntityContracts.cpp:872 | ✅ |
+| `-[PlayerEntity(Contracts) awardContract:commodity:start:]` (849) | `PlayerEntity::awardContract` Core/Entities/PlayerEntityContracts.cpp:893 | ✅ |
+| `-[PlayerEntity(Contracts) removeContract:destination:]` (920) | `PlayerEntity::removeContract` Core/Entities/PlayerEntityContracts.cpp:961 | ✅ |
+| `-[PlayerEntity(Contracts) passengerList]` (945) | `PlayerEntity::passengerList` Core/Entities/PlayerEntityContracts.cpp:988 | ✅ |
+| `-[PlayerEntity(Contracts) parcelList]` (950) | `PlayerEntity::parcelList` Core/Entities/PlayerEntityContracts.cpp:993 | ✅ |
+| `-[PlayerEntity(Contracts) contractList]` (955) | `PlayerEntity::contractList` Core/Entities/PlayerEntityContracts.cpp:998 | ✅ |
+| `-[PlayerEntity(Contracts) contractsListFromArray:forCargo:forParcels:]` (960) | `PlayerEntity::contractsListFromEntries` Core/Entities/PlayerEntityContracts.cpp:1003 | ✅ |
+| `SET_MANIFEST_ROW` macro (984) *(added)* | `SET_MANIFEST_ROW` macro Core/Entities/PlayerEntityContracts.cpp:1038 | ✅ |
+| `-[PlayerEntity(Contracts) setGuiToManifestScreen]` (986) | `PlayerEntity::setGuiToManifestScreen` Core/Entities/PlayerEntityContracts.cpp:1040 | ✅ |
+| `-[PlayerEntity(Contracts) setManifestScreenRow:inColor:forRow:ofRows:andOffset:inMultipage:]` (1167) | `PlayerEntity::setManifestScreenRow` Core/Entities/PlayerEntityContracts.cpp:1228 | ✅ |
+| `-[PlayerEntity(Contracts) setGuiToDockingReportScreen]` (1183) | `PlayerEntity::setGuiToDockingReportScreen` Core/Entities/PlayerEntityContracts.cpp:1250 | ✅ |
+| `-[PlayerEntity(Contracts) priceForShipKey:]` (1255) | `PlayerEntity::priceForShipKey` Core/Entities/PlayerEntityContracts.cpp:1369 | ✅ |
+| `-[PlayerEntity(Contracts) setGuiToShipyardScreen:]` (1261) | `PlayerEntity::setGuiToShipyardScreen` Core/Entities/PlayerEntityContracts.cpp:1374 | ✅ |
+| `-[PlayerEntity(Contracts) showShipyardInfoForSelection]` (1393) | `PlayerEntity::showShipyardInfoForSelection` Core/Entities/PlayerEntityContracts.cpp:1507 | ✅ |
+| `-[PlayerEntity(Contracts) showTradeInInformationFooter]` (1463) | `PlayerEntity::showTradeInInformationFooter` Core/Entities/PlayerEntityContracts.cpp:1575 | ✅ |
+| `-[PlayerEntity(Contracts) showShipyardModel:shipData:personality:]` (1476) | `PlayerEntity::showShipyardModel` Core/Entities/PlayerEntityContracts.cpp:1588 | ✅ |
+| `-[PlayerEntity(Contracts) missingSubEntitiesAdjustment]` (1483) | `PlayerEntity::missingSubEntitiesAdjustment` Core/Entities/PlayerEntityContracts.cpp:1595 | ✅ |
+| `-[PlayerEntity(Contracts) tradeInValue]` (1490) | `PlayerEntity::tradeInValue` Core/Entities/PlayerEntityContracts.cpp:1602 | ✅ |
+| `-[PlayerEntity(Contracts) buySelectedShip]` (1510) | `PlayerEntity::buySelectedShip` Core/Entities/PlayerEntityContracts.cpp:1623 | ✅ |
+| `-[PlayerEntity(Contracts) replaceShipWithNamedShip:]` (1620) | `PlayerEntity::replaceShipWithNamedShip` Core/Entities/PlayerEntityContracts.cpp:1746 | ✅ |
+| `-[PlayerEntity(Contracts) newShipCommonSetup:yardInfo:baseInfo:]` (1658) | `PlayerEntity::newShipCommonSetup` Core/Entities/PlayerEntityContracts.cpp:1785 | ⚠️ |
+| `RepForRisk()` (1764) | `RepForRisk` Core/Entities/PlayerEntityContracts.cpp:1887 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low**: portable equipment carried over to a new ship is re-added in sorted key order. Upstream used `NSMutableSet` hash order. This changes only the order of the `addEquipmentItem(…, NO, "portable")` calls; the port's comment says so. — upstream `Core/Entities/PlayerEntityContracts.m:1725-1742` ↔ port `Core/Entities/PlayerEntityContracts.cpp:1853-1867`
+- ✅ note: the fee and deadline maths match exactly. This covers the integer `dest_eta`, the `fee *= 110; fee /= 100; dest_eta *= 0.5` tip loop, the 3600 s threshold for passengers and 86400 s for parcels, the late-delivery fare halving, the cargo `10 * float fee` truncated to `int`, and `acceptable_ratio = 100 - 10*system_id/256`. It also covers `credits += reward` with a `float` reward (the float-precision rounding of `credits` is kept), `RepForRisk` 1/2/4, `MAX_CONTRACT_REP` and the bean-shift loops. — upstream `Core/Entities/PlayerEntityContracts.m:147-418` ↔ port `Core/Entities/PlayerEntityContracts.cpp:186-464`
+- ✅ note: the contract and manifest screen text matches. It uses the same `DESC` keys (`passenger-delivered-okay-@-@-@`, `cargo-delivered-short-@-@-d`, `cargo-refused-short-%@`, `contracts-cash-@-load-d-of-d-passengers-d-of-d-berths`, and the rest) with the same argument order. Each report line ends with `\n` and the last one is trimmed, as `appendFormatLine:` did. A nil name prints `(null)` through `FormatArg::null()`. `OOExpandKey` argument names match: `label`/`destination`/`deadline`/`feeDesc`, `current`/`max`, `system`, `shipType`/`tradeIn`/`total`/`credits`. — port `Core/Entities/PlayerEntityContracts.cpp:219-408, 1003-1035, 1125-1128, 1288, 1422, 1584-1585`
+- ✅ note: the contract dictionaries keep the upstream number kinds: `signedInteger` for start, destination and amount; double for the times, fee and premium; `unsignedInteger` for risk. The port builds them as `oo::PList::Dict`, so the key order of the in-memory dictionary is sorted rather than hashed. Any effect on the saved XML belongs to the plist writer, not to this file. — port `Core/Entities/PlayerEntityContracts.cpp:792-801, 843-852, 913-924`
+- ✅ note (upstream quirk kept): `buySelectedShip` indexes `localShipyard` by `selectedRow - GUI_ROW_SHIPYARD_START` and ignores the page `skip`. It does this both for the `playerWillBuyNewShip` argument and for the ship it removes. — upstream `Core/Entities/PlayerEntityContracts.m:1561,1598` ↔ port `Core/Entities/PlayerEntityContracts.cpp:1673,1723`
+- ✅ note: where upstream would have raised an exception, the port is defensive instead. A nil `SHIPYARD_KEY_ID` is skipped where `setObject:forKey:nil` raised, and a nil `CARGO_KEY_ID` is skipped in `removeContract`. A nil value in an `OOExpandKey` dictionary is left out where `dictionaryWithObjects:count:` raised. These change behaviour only on malformed data. — port `Core/Entities/PlayerEntityContracts.cpp:1404-1408, 977-979, 1022-1030`
 
 ## PlayerEntityControls
 
@@ -739,191 +746,205 @@ Upstream `src/Core/Entities/PlayerEntityKeyMapper.m` ↔ `Core/Entities/PlayerEn
 <a id="playerentityloadsave"></a>
 Upstream `src/Core/Entities/PlayerEntityLoadSave.m` ↔ `Core/Entities/PlayerEntityLoadSave.cpp`
 
-**Status:** pending
+**Status:** done — 26 rows: 23 ✅ 2 ⚠️ 1 ❌ 0 ➖
+
+Scope note: the save-file **keys** are not in this file. They are written by `commanderDataDictionary` and read by `setCommanderDataFromDictionary`, both in `PlayerEntity`. The default commander (the `setUp…`/new-commander dictionary) and the default save directory (`GameController::playerFileDirectory`/`defaultCommanderPath`) are also elsewhere. This file covers the container: the XML write, the load order, file naming, the listing and the error paths. All the layout constants in `PlayerEntityLoadSave.h` (`STARTROW`, `NUMROWS`, `MOREROW`, `BACKROW`, `EXITROW`, `CDRDESCROW`, `INPUTROW`, `LABELROW`, `ENDROW`, `SAVE_OVERWRITE_*_ROW`) are identical in both trees.
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[PlayerEntity(LoadSave) loadPlayer]` (79) | | |
-| `-[PlayerEntity(LoadSave) savePlayer]` (87) | | |
-| `-[PlayerEntity(LoadSave) autosavePlayer]` (92) | | |
-| `-[PlayerEntity(LoadSave) quicksavePlayer]` (127) | | |
-| `-[PlayerEntity(LoadSave) setGuiToScenarioScreen:]` (148) | | |
-| `-[PlayerEntity(LoadSave) addScenarioModel:]` (214) | | |
-| `-[PlayerEntity(LoadSave) showScenarioDetails]` (219) | | |
-| `-[PlayerEntity(LoadSave) startScenario]` (243) | | |
-| `-[PlayerEntity(LoadSave) commanderSelector]` (281) | | |
-| `-[PlayerEntity(LoadSave) saveCommanderInputHandler]` (364) | | |
-| `-[PlayerEntity(LoadSave) overwriteCommanderInputHandler]` (450) | | |
-| `-[PlayerEntity(LoadSave) loadPlayerFromFile:asNew:]` (481) | | |
-| `-[PlayerEntity(OOLoadSavePrivate) writePlayerToPath:]` (679) | | |
-| `-[PlayerEntity(OOLoadSavePrivate) nativeSavePlayer:]` (714) | | |
-| `-[PlayerEntity(OOLoadSavePrivate) setGuiToLoadCommanderScreen]` (726) | | |
-| `-[PlayerEntity(OOLoadSavePrivate) setGuiToSaveCommanderScreen:]` (748) | | |
-| `-[PlayerEntity(OOLoadSavePrivate) setGuiToOverwriteScreen:]` (778) | | |
-| `sortCommanders()` (814) | | |
-| `-[PlayerEntity(OOLoadSavePrivate) lsCommanders:]` (819) | | |
-| `-[PlayerEntity(OOLoadSavePrivate) existingNativeSave:]` (983) | | |
-| `-[PlayerEntity(OOLoadSavePrivate) showCommanderShip:]` (992) | | |
-| `-[PlayerEntity(OOLoadSavePrivate) findIndexOfCommander:]` (1110) | | |
-| `-[MyOpenGLView(OOLoadSaveExtensions) isCommandModifierKeyDown]` (1128) | | |
-| `PersonalityForCommanderDict()` (1135) | | |
-| `OODeciCreditsFromDouble()` (1147) | | |
-| `OODeciCreditsFromObject()` (1174) | | |
+| `-[PlayerEntity(LoadSave) loadPlayer]` (79) | `PlayerEntity::loadPlayer` Core/Entities/PlayerEntityLoadSave.cpp:134 | ✅ |
+| `-[PlayerEntity(LoadSave) savePlayer]` (87) | `PlayerEntity::savePlayer` Core/Entities/PlayerEntityLoadSave.cpp:142 | ✅ |
+| `-[PlayerEntity(LoadSave) autosavePlayer]` (92) | `PlayerEntity::autosavePlayer` Core/Entities/PlayerEntityLoadSave.cpp:147 | ✅ |
+| `-[PlayerEntity(LoadSave) quicksavePlayer]` (127) | `PlayerEntity::quicksavePlayer` Core/Entities/PlayerEntityLoadSave.cpp:183 | ✅ |
+| `-[PlayerEntity(LoadSave) setGuiToScenarioScreen:]` (148) | `PlayerEntity::setGuiToScenarioScreen` Core/Entities/PlayerEntityLoadSave.cpp:204 | ✅ |
+| `-[PlayerEntity(LoadSave) addScenarioModel:]` (214) | `PlayerEntity::addScenarioModel` Core/Entities/PlayerEntityLoadSave.cpp:271 | ✅ |
+| `-[PlayerEntity(LoadSave) showScenarioDetails]` (219) | `PlayerEntity::showScenarioDetails` Core/Entities/PlayerEntityLoadSave.cpp:276 | ✅ |
+| `-[PlayerEntity(LoadSave) startScenario]` (243) | `PlayerEntity::startScenario` Core/Entities/PlayerEntityLoadSave.cpp:304 | ✅ |
+| `-[PlayerEntity(LoadSave) commanderSelector]` (281) | `PlayerEntity::commanderSelector` Core/Entities/PlayerEntityLoadSave.cpp:342 | ✅ |
+| `-[PlayerEntity(LoadSave) saveCommanderInputHandler]` (364) | `PlayerEntity::saveCommanderInputHandler` Core/Entities/PlayerEntityLoadSave.cpp:434 | ✅ |
+| `-[PlayerEntity(LoadSave) overwriteCommanderInputHandler]` (450) | `PlayerEntity::overwriteCommanderInputHandler` Core/Entities/PlayerEntityLoadSave.cpp:527 | ✅ |
+| `-[PlayerEntity(LoadSave) loadPlayerFromFile:asNew:]` (481) | `PlayerEntity::loadPlayerFromFile` Core/Entities/PlayerEntityLoadSave.cpp:559 | ⚠️ |
+| `-[PlayerEntity(OOLoadSavePrivate) writePlayerToPath:]` (679) | `PlayerEntity::writePlayerToPath` Core/Entities/PlayerEntityLoadSave.cpp:781 | ❌ |
+| `-[PlayerEntity(OOLoadSavePrivate) nativeSavePlayer:]` (714) | `PlayerEntity::nativeSavePlayer` Core/Entities/PlayerEntityLoadSave.cpp:823 | ✅ |
+| `-[PlayerEntity(OOLoadSavePrivate) setGuiToLoadCommanderScreen]` (726) | `PlayerEntity::setGuiToLoadCommanderScreen` Core/Entities/PlayerEntityLoadSave.cpp:835 | ✅ |
+| `-[PlayerEntity(OOLoadSavePrivate) setGuiToSaveCommanderScreen:]` (748) | `PlayerEntity::setGuiToSaveCommanderScreen` Core/Entities/PlayerEntityLoadSave.cpp:859 | ✅ |
+| `-[PlayerEntity(OOLoadSavePrivate) setGuiToOverwriteScreen:]` (778) | `PlayerEntity::setGuiToOverwriteScreen` Core/Entities/PlayerEntityLoadSave.cpp:892 | ✅ |
+| `sortCommanders()` (814) | lambda in `PlayerEntity::lsCommanders` Core/Entities/PlayerEntityLoadSave.cpp:987 | ✅ |
+| `-[PlayerEntity(OOLoadSavePrivate) lsCommanders:]` (819) | `PlayerEntity::lsCommanders` Core/Entities/PlayerEntityLoadSave.cpp:928 | ⚠️ |
+| `-[PlayerEntity(OOLoadSavePrivate) existingNativeSave:]` (983) | `PlayerEntity::existingNativeSave` Core/Entities/PlayerEntityLoadSave.cpp:1088 | ✅ |
+| `-[PlayerEntity(OOLoadSavePrivate) showCommanderShip:]` (992) | `PlayerEntity::showCommanderShip` Core/Entities/PlayerEntityLoadSave.cpp:1097 | ✅ |
+| `-[PlayerEntity(OOLoadSavePrivate) findIndexOfCommander:]` (1110) | `PlayerEntity::findIndexOfCommander` Core/Entities/PlayerEntityLoadSave.cpp:1215 | ✅ |
+| `-[MyOpenGLView(OOLoadSaveExtensions) isCommandModifierKeyDown]` (1128) | `IsCommandModifierKeyDown` (anon. namespace) Core/Entities/PlayerEntityLoadSave.cpp:126 | ✅ |
+| `PersonalityForCommanderDict()` (1135) | `PersonalityForCommanderDict` (anon. namespace) Core/Entities/PlayerEntityLoadSave.cpp:1232 | ✅ |
+| `OODeciCreditsFromDouble()` (1147) | `OODeciCreditsFromDouble` Core/Entities/PlayerEntityLoadSave.cpp:1249 | ✅ |
+| `OODeciCreditsFromObject()` (1174) | `OODeciCreditsFromPList` Core/Entities/PlayerEntityLoadSave.cpp:1276 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low**: the "nil path" save-error log line embeds `__PRETTY_FUNCTION__`. Its text changes from `-[PlayerEntity(OOLoadSavePrivate) writePlayerToPath:]` to the C++ signature `void PlayerEntity::writePlayerToPath(const std::string&)`. The guard also fires on an empty path where upstream fired only on nil. Upstream with an empty path would try the write and raise `OoliteException` instead. — upstream `Core/Entities/PlayerEntityLoadSave.m:686-689` ↔ port `Core/Entities/PlayerEntityLoadSave.cpp:788-791`
+- ⚠️ **low**: a save file whose root parses but is not a dictionary no longer logs `OODictionaryFromFile`'s `plist.wrongType` line. The load still fails with `loadfailed-could-not-load-file`, and the listing still skips the file. The port's comment says this is deliberate. — upstream `Core/Entities/PlayerEntityLoadSave.m:503,852` ↔ port `Core/Entities/PlayerEntityLoadSave.cpp:582-584, 962-964`
+- ✅ note (load error paths): the order of the five checks matches: no file, could not load, `setUseAddOns`, ship type missing or unknown, `setUpAndConfirmOK`, then `setCommanderDataFromDictionary`. Each uses the same `DESC` keys. The failure tail matches too: the `load.failed` line `***** Failed to load saved game "<lastPathComponent>": <reason|unknown error>`, `setPlayerFileToLoad(nil)` (the port passes `""`, which `GameController::setPlayerFileToLoad` maps to nullopt because the extension is not `oolite-save`), `handleGameOver`, and both 9 s messages. The `load.progress` lines are identical. One small change: an empty `fileToOpen` now reports `loadfailed-no-file-specified` (upstream: nil only), but every caller passes a real path. — port `Core/Entities/PlayerEntityLoadSave.cpp:570-674`
+- ✅ note (post-load sequence): this matches step for step. It sets the time acceleration, calls `setSystemTo`, `removeAllEntitiesExceptPlayer`, `setGalaxyTo(…, YES)`, `setUpSpace` and `setAutoSaveNow(NO)`, docks at the main station, zeroes the flight variables, and sets personality. It reads `localMarket` (array) or initialises the market, then `scenario_key`, `completeSetUpAndSetTarget(NO)`, `populateNormalSpace`, GC, and the `docked_station_position`/`docked_station_role` station switch (only when `allowsSaving`). Then `station_markets`, `startUpComplete`, key suppression only when `finishedLaunching`, the `gui_screen` choice, and `missionScreenOpportunity`. — port `Core/Entities/PlayerEntityLoadSave.cpp:676-778`
+- ✅ note (file naming): a native save is `<dir>/<name>.oolite-save`. `SaveFileName` emulates `stringByAppendingPathExtension:`, dropping trailing `/` or `\`. An autosave is `<dir>/<lastsaveName><DESC(autosave-commander-suffix)>.oolite-save`, a plain append that adds the suffix only when it is missing. Afterwards it restores `save_path` and `lastsaveName` exactly as upstream, keeping the autosave path when there was no previous `save_path`. Quicksave reuses `save_path`, then `playerFileToLoad`, and otherwise logs `quickSave.failed.noName` and raises `OoliteGameNotSavedException`. — port `Core/Entities/PlayerEntityLoadSave.cpp:102-108, 147-202, 823-833`
+- ✅ note (write path): `OOWriteXMLPListToFile` replaces `-writeOOXMLToFile:atomically:errorDescription:` and still writes atomically. On success it does `clearPreviousMessage`, shows `game-saved` for 2 s, records `save_path`, `playerFileToLoad` and `playerFileDirectory`, and calls `setAutoSaveNow(NO)`. On failure it logs `save.failed` and raises `OoliteException` with the same text. Upstream's conversion-error text always ended `: (null)`, because its local `errorDesc` was never assigned. The port appends the real reason; that difference belongs to `OOXMLExtensions`. — upstream `Core/OOXMLExtensions.m:31-40` ↔ port `Core/OOXMLExtensions.cpp:30-37`
+- ✅ note (listing order): entries are the `(..)` parent-folder row, readable `*.oolite-save` files whose extension matches case-insensitively, and non-hidden sub-folders. They are sorted by `saved_game_path` using the locale collation (`oo::str::localizedCompare`, ICU, as GNUstep's `-localizedCompare:` sorted). `stable_sort` against GNUstep's sort makes no difference because the paths are unique. The upstream quirk `highlightIdx = … + currentPage*NUMROWS` (not `page`) is kept. — upstream `Core/Entities/PlayerEntityLoadSave.m:814-981` ↔ port `Core/Entities/PlayerEntityLoadSave.cpp:928-1085`
+- ✅ note: `autosavePlayer` catches only the game's own `oo::Exception` (what `@catch (id)` caught) and re-throws anything else, as the port's comment says. — port `Core/Entities/PlayerEntityLoadSave.cpp:168-175`
+- ✅ note: out-of-range `cdrDetailArray` indices now return quietly where `-objectAtIndex:` raised. — port `Core/Entities/PlayerEntityLoadSave.cpp:405-406, 445, 488, 1102-1103`
 
 ## PlayerEntityScriptMethods
 
 <a id="playerentityscriptmethods"></a>
 Upstream `src/Core/Entities/PlayerEntityScriptMethods.m` ↔ `Core/Entities/PlayerEntityScriptMethods.cpp`
 
-**Status:** pending
+**Status:** done — 35 rows: 35 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[PlayerEntity(ScriptMethods) score]` (40) | | |
-| `-[PlayerEntity(ScriptMethods) setScore:]` (45) | | |
-| `-[PlayerEntity(ScriptMethods) creditBalance]` (50) | | |
-| `-[PlayerEntity(ScriptMethods) setCreditBalance:]` (55) | | |
-| `-[PlayerEntity(ScriptMethods) dockedStationName]` (60) | | |
-| `-[PlayerEntity(ScriptMethods) dockedStationDisplayName]` (65) | | |
-| `-[PlayerEntity(ScriptMethods) dockedAtMainStation]` (70) | | |
-| `-[PlayerEntity(ScriptMethods) awardCommodityType:amount:]` (75) | | |
-| `-[PlayerEntity(ScriptMethods) resetScannerZoom]` (148) | | |
-| `-[PlayerEntity(ScriptMethods) currentGalaxyID]` (153) | | |
-| `-[PlayerEntity(ScriptMethods) currentSystemID]` (158) | | |
-| `-[PlayerEntity(ScriptMethods) setMissionChoice:]` (165) | | |
-| `-[PlayerEntity(ScriptMethods) setMissionChoice:withEvent:]` (170) | | |
-| `-[PlayerEntity(ScriptMethods) setMissionChoice:keyPress:]` (175) | | |
-| `-[PlayerEntity(ScriptMethods) setMissionChoice:keyPress:withEvent:]` (180) | | |
-| `-[PlayerEntity(ScriptMethods) allowMissionInterrupt]` (202) | | |
-| `-[PlayerEntity(ScriptMethods) scriptTimer]` (207) | | |
-| `-[PlayerEntity(ScriptMethods) systemPseudoRandom100]` (215) | | |
-| `-[PlayerEntity(ScriptMethods) systemPseudoRandom256]` (221) | | |
-| `-[PlayerEntity(ScriptMethods) systemPseudoRandomFloat]` (227) | | |
-| `-[PlayerEntity(ScriptMethods) passengerContractMarker:]` (238) | | |
-| `-[PlayerEntity(ScriptMethods) parcelContractMarker:]` (248) | | |
-| `-[PlayerEntity(ScriptMethods) cargoContractMarker:]` (258) | | |
-| `-[PlayerEntity(ScriptMethods) defaultMarker:]` (268) | | |
-| `-[PlayerEntity(ScriptMethods) validatedMarker:]` (278) | | |
-| `-[PlayerEntity(ScriptMethods) creditsFormattedForSubstitution]` (301) | | |
-| `-[PlayerEntity(ScriptMethods) creditsFormattedForLegacySubstitution]` (312) | | |
-| `-[PlayerEntity(ScriptMethods) commanderBountyAsString]` (322) | | |
-| `-[PlayerEntity(ScriptMethods) commanderKillsAsString]` (328) | | |
-| `-[PlayerEntity(ScriptMethods) keyBindingDescription2:]` (334) | | |
-| `-[PlayerEntity(ScriptMethods) getKeyBindingDescription:]` (344) | | |
-| `-[PlayerEntity(ScriptMethods) keyCodeDescription:]` (369) | | |
-| `-[PlayerEntity(ScriptMethods) keyCodeDescriptionShort:]` (468) | | |
-| `OOGalacticCoordinatesFromInternal()` (568) | | |
-| `OOInternalCoordinatesFromGalactic()` (573) | | |
+| `-[PlayerEntity(ScriptMethods) score]` (40) | `PlayerEntity::score` Core/Entities/PlayerEntityScriptMethods.cpp:84 | ✅ |
+| `-[PlayerEntity(ScriptMethods) setScore:]` (45) | `PlayerEntity::setScore` Core/Entities/PlayerEntityScriptMethods.cpp:89 | ✅ |
+| `-[PlayerEntity(ScriptMethods) creditBalance]` (50) | `PlayerEntity::creditBalance` Core/Entities/PlayerEntityScriptMethods.cpp:94 | ✅ |
+| `-[PlayerEntity(ScriptMethods) setCreditBalance:]` (55) | `PlayerEntity::setCreditBalance` Core/Entities/PlayerEntityScriptMethods.cpp:99 | ✅ |
+| `-[PlayerEntity(ScriptMethods) dockedStationName]` (60) | `PlayerEntity::dockedStationName` Core/Entities/PlayerEntityScriptMethods.cpp:104 | ✅ |
+| `-[PlayerEntity(ScriptMethods) dockedStationDisplayName]` (65) | `PlayerEntity::dockedStationDisplayName` Core/Entities/PlayerEntityScriptMethods.cpp:109 | ✅ |
+| `-[PlayerEntity(ScriptMethods) dockedAtMainStation]` (70) | `PlayerEntity::dockedAtMainStation` Core/Entities/PlayerEntityScriptMethods.cpp:114 | ✅ |
+| `-[PlayerEntity(ScriptMethods) awardCommodityType:amount:]` (75) | `PlayerEntity::awardCommodityType` Core/Entities/PlayerEntityScriptMethods.cpp:119 | ✅ |
+| `-[PlayerEntity(ScriptMethods) resetScannerZoom]` (148) | `PlayerEntity::resetScannerZoom` Core/Entities/PlayerEntityScriptMethods.cpp:202 | ✅ |
+| `-[PlayerEntity(ScriptMethods) currentGalaxyID]` (153) | `PlayerEntity::currentGalaxyID` Core/Entities/PlayerEntityScriptMethods.cpp:207 | ✅ |
+| `-[PlayerEntity(ScriptMethods) currentSystemID]` (158) | `PlayerEntity::currentSystemID` Core/Entities/PlayerEntityScriptMethods.cpp:212 | ✅ |
+| `-[PlayerEntity(ScriptMethods) setMissionChoice:]` (165) | `PlayerEntity::setMissionChoice(newChoice)` Core/Entities/PlayerEntityScriptMethods.cpp:219 | ✅ |
+| `-[PlayerEntity(ScriptMethods) setMissionChoice:withEvent:]` (170) | `PlayerEntity::setMissionChoice(newChoice, withEvent)` Core/Entities/PlayerEntityScriptMethods.cpp:224 | ✅ |
+| `-[PlayerEntity(ScriptMethods) setMissionChoice:keyPress:]` (175) | `PlayerEntity::setMissionChoice(newChoice, keyPress)` Core/Entities/PlayerEntityScriptMethods.cpp:229 | ✅ |
+| `-[PlayerEntity(ScriptMethods) setMissionChoice:keyPress:withEvent:]` (180) | `PlayerEntity::setMissionChoice(newChoice, keyPress, withEvent)` Core/Entities/PlayerEntityScriptMethods.cpp:234 | ✅ |
+| `-[PlayerEntity(ScriptMethods) allowMissionInterrupt]` (202) | `PlayerEntity::allowMissionInterrupt` Core/Entities/PlayerEntityScriptMethods.cpp:253 | ✅ |
+| `-[PlayerEntity(ScriptMethods) scriptTimer]` (207) | `PlayerEntity::scriptTimer` Core/Entities/PlayerEntityScriptMethods.cpp:258 | ✅ |
+| `-[PlayerEntity(ScriptMethods) systemPseudoRandom100]` (215) | `PlayerEntity::systemPseudoRandom100` Core/Entities/PlayerEntityScriptMethods.cpp:266 | ✅ |
+| `-[PlayerEntity(ScriptMethods) systemPseudoRandom256]` (221) | `PlayerEntity::systemPseudoRandom256` Core/Entities/PlayerEntityScriptMethods.cpp:272 | ✅ |
+| `-[PlayerEntity(ScriptMethods) systemPseudoRandomFloat]` (227) | `PlayerEntity::systemPseudoRandomFloat` Core/Entities/PlayerEntityScriptMethods.cpp:278 | ✅ |
+| `-[PlayerEntity(ScriptMethods) passengerContractMarker:]` (238) | `PlayerEntity::passengerContractMarker` (+ `MarkerFor`) Core/Entities/PlayerEntityScriptMethods.cpp:289 | ✅ |
+| `-[PlayerEntity(ScriptMethods) parcelContractMarker:]` (248) | `PlayerEntity::parcelContractMarker` Core/Entities/PlayerEntityScriptMethods.cpp:294 | ✅ |
+| `-[PlayerEntity(ScriptMethods) cargoContractMarker:]` (258) | `PlayerEntity::cargoContractMarker` Core/Entities/PlayerEntityScriptMethods.cpp:299 | ✅ |
+| `-[PlayerEntity(ScriptMethods) defaultMarker:]` (268) | `PlayerEntity::defaultMarker` Core/Entities/PlayerEntityScriptMethods.cpp:304 | ✅ |
+| `-[PlayerEntity(ScriptMethods) validatedMarker:]` (278) | `PlayerEntity::validatedMarker` Core/Entities/PlayerEntityScriptMethods.cpp:309 | ✅ |
+| `-[PlayerEntity(ScriptMethods) creditsFormattedForSubstitution]` (301) | `PlayerEntity::creditsFormattedForSubstitution` Core/Entities/PlayerEntityScriptMethods.cpp:334 | ✅ |
+| `-[PlayerEntity(ScriptMethods) creditsFormattedForLegacySubstitution]` (312) | `PlayerEntity::creditsFormattedForLegacySubstitution` Core/Entities/PlayerEntityScriptMethods.cpp:345 | ✅ |
+| `-[PlayerEntity(ScriptMethods) commanderBountyAsString]` (322) | `PlayerEntity::commanderBountyAsString` Core/Entities/PlayerEntityScriptMethods.cpp:355 | ✅ |
+| `-[PlayerEntity(ScriptMethods) commanderKillsAsString]` (328) | `PlayerEntity::commanderKillsAsString` Core/Entities/PlayerEntityScriptMethods.cpp:361 | ✅ |
+| `-[PlayerEntity(ScriptMethods) keyBindingDescription2:]` (334) | `PlayerEntity::keyBindingDescription2` Core/Entities/PlayerEntityScriptMethods.cpp:367 | ✅ |
+| `-[PlayerEntity(ScriptMethods) getKeyBindingDescription:]` (344) | `PlayerEntity::getKeyBindingDescription` (+ `BoolValueOf`/`IntegerValueOf`) Core/Entities/PlayerEntityScriptMethods.cpp:378 | ✅ |
+| `-[PlayerEntity(ScriptMethods) keyCodeDescription:]` (369) | `PlayerEntity::keyCodeDescription` Core/Entities/PlayerEntityScriptMethods.cpp:403 | ✅ |
+| `-[PlayerEntity(ScriptMethods) keyCodeDescriptionShort:]` (468) | `PlayerEntity::keyCodeDescriptionShort` Core/Entities/PlayerEntityScriptMethods.cpp:502 | ✅ |
+| `OOGalacticCoordinatesFromInternal()` (568) | `OOGalacticCoordinatesFromInternal` Core/Entities/PlayerEntityScriptMethods.cpp:600 | ✅ |
+| `OOInternalCoordinatesFromGalactic()` (573) | `OOInternalCoordinatesFromGalactic` Core/Entities/PlayerEntityScriptMethods.cpp:605 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ note: the `keyCodeDescription`/`keyCodeDescriptionShort` switch tables are identical, case for case and `DESC` key for `DESC` key (diffed mechanically). For the default `%C`, the port truncates the code to one UTF-16 unit as upstream did. — port `Core/Entities/PlayerEntityScriptMethods.cpp:403-598`
+- ✅ note: `validatedMarker` with a nil marker keeps the upstream nil-messaging result `{system = 0}`. The nil `name` ended `+dictionaryWithObjectsAndKeys:` early. The range check, defaults (`MISSION_DEST_LEGACY`, `redColor`, `MARKER_X`, scale 1.0 as a single real) and the four fixed markers' colours and shapes all match. — port `Core/Entities/PlayerEntityScriptMethods.cpp:289-331`
+- ✅ note: `awardCommodityType` keeps the upstream infinite loop for tonne goods while special cargo is aboard (the outer `while (amount)` with nothing decremented). It keeps the `amount_per_container` 1000/1000000 split and the docked path's cap at `maxAvailableCargoSpace`. — port `Core/Entities/PlayerEntityScriptMethods.cpp:131-199`
+- ✅ note: `systemPseudoRandom*` reseed the planet-description RNG on every call, as upstream did (its FIXME is kept). — port `Core/Entities/PlayerEntityScriptMethods.cpp:266-287`
 
 ## PlayerEntitySound
 
 <a id="playerentitysound"></a>
 Upstream `src/Core/Entities/PlayerEntitySound.m` ↔ `Core/Entities/PlayerEntitySound.cpp`
 
-**Status:** pending
+**Status:** done — 86 rows: 86 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[PlayerEntity(Sound) setUpSound]` (70) | | |
-| `-[PlayerEntity(Sound) setUpWeaponSounds]` (101) | | |
-| `-[PlayerEntity(Sound) destroySound]` (155) | | |
-| `-[PlayerEntity(Sound) playInterfaceBeep:]` (178) | | |
-| `-[PlayerEntity(Sound) isBeeping]` (188) | | |
-| `-[PlayerEntity(Sound) boop]` (193) | | |
-| `-[PlayerEntity(Sound) playIdentOn]` (198) | | |
-| `-[PlayerEntity(Sound) playIdentOff]` (203) | | |
-| `-[PlayerEntity(Sound) playIdentLockedOn]` (208) | | |
-| `-[PlayerEntity(Sound) playMissileArmed]` (213) | | |
-| `-[PlayerEntity(Sound) playMineArmed]` (218) | | |
-| `-[PlayerEntity(Sound) playMissileSafe]` (223) | | |
-| `-[PlayerEntity(Sound) playMissileLockedOn]` (228) | | |
-| `-[PlayerEntity(Sound) playNextEquipmentSelected]` (233) | | |
-| `-[PlayerEntity(Sound) playNextMissileSelected]` (238) | | |
-| `-[PlayerEntity(Sound) playWeaponsOnline]` (243) | | |
-| `-[PlayerEntity(Sound) playWeaponsOffline]` (248) | | |
-| `-[PlayerEntity(Sound) playCargoJettisioned]` (253) | | |
-| `-[PlayerEntity(Sound) playAutopilotOn]` (258) | | |
-| `-[PlayerEntity(Sound) playAutopilotOff]` (263) | | |
-| `-[PlayerEntity(Sound) playAutopilotOutOfRange]` (271) | | |
-| `-[PlayerEntity(Sound) playAutopilotCannotDockWithTarget]` (276) | | |
-| `-[PlayerEntity(Sound) playSaveOverwriteYes]` (281) | | |
-| `-[PlayerEntity(Sound) playSaveOverwriteNo]` (286) | | |
-| `-[PlayerEntity(Sound) playHoldFull]` (291) | | |
-| `-[PlayerEntity(Sound) playJumpMassLocked]` (296) | | |
-| `-[PlayerEntity(Sound) playTargetLost]` (301) | | |
-| `-[PlayerEntity(Sound) playNoTargetInMemory]` (306) | | |
-| `-[PlayerEntity(Sound) playTargetSwitched]` (311) | | |
-| `-[PlayerEntity(Sound) playHyperspaceNoTarget]` (316) | | |
-| `-[PlayerEntity(Sound) playHyperspaceNoFuel]` (321) | | |
-| `-[PlayerEntity(Sound) playHyperspaceBlocked]` (326) | | |
-| `-[PlayerEntity(Sound) playHyperspaceDistanceTooGreat]` (331) | | |
-| `-[PlayerEntity(Sound) playCloakingDeviceOn]` (336) | | |
-| `-[PlayerEntity(Sound) playCloakingDeviceOff]` (341) | | |
-| `-[PlayerEntity(Sound) playMenuNavigationUp]` (346) | | |
-| `-[PlayerEntity(Sound) playMenuNavigationDown]` (351) | | |
-| `-[PlayerEntity(Sound) playMenuNavigationNot]` (356) | | |
-| `-[PlayerEntity(Sound) playMenuPagePrevious]` (361) | | |
-| `-[PlayerEntity(Sound) playMenuPageNext]` (366) | | |
-| `-[PlayerEntity(Sound) playDismissedReportScreen]` (371) | | |
-| `-[PlayerEntity(Sound) playDismissedMissionScreen]` (376) | | |
-| `-[PlayerEntity(Sound) playChangedOption]` (381) | | |
-| `-[PlayerEntity(Sound) updateFuelScoopSoundWithInterval:]` (386) | | |
-| `-[PlayerEntity(Sound) updateAfterburnerSound]` (407) | | |
-| `-[PlayerEntity(Sound) startAfterburnerSound]` (426) | | |
-| `-[PlayerEntity(Sound) stopAfterburnerSound]` (434) | | |
-| `-[PlayerEntity(Sound) playCloakingDeviceInsufficientEnergy]` (439) | | |
-| `-[PlayerEntity(Sound) playBuyCommodity]` (444) | | |
-| `-[PlayerEntity(Sound) playBuyShip]` (449) | | |
-| `-[PlayerEntity(Sound) playSellCommodity]` (454) | | |
-| `-[PlayerEntity(Sound) playCantBuyCommodity]` (459) | | |
-| `-[PlayerEntity(Sound) playCantSellCommodity]` (464) | | |
-| `-[PlayerEntity(Sound) playCantBuyShip]` (469) | | |
-| `-[PlayerEntity(Sound) playStandardHyperspace]` (474) | | |
-| `-[PlayerEntity(Sound) playGalacticHyperspace]` (479) | | |
-| `-[PlayerEntity(Sound) playHyperspaceAborted]` (484) | | |
-| `-[PlayerEntity(Sound) playHitByECMSound]` (489) | | |
-| `-[PlayerEntity(Sound) playFiredECMSound]` (495) | | |
-| `-[PlayerEntity(Sound) playLaunchFromStation]` (501) | | |
-| `-[PlayerEntity(Sound) playDockWithStation]` (506) | | |
-| `-[PlayerEntity(Sound) playExitWitchspace]` (511) | | |
-| `-[PlayerEntity(Sound) playHostileWarning]` (516) | | |
-| `-[PlayerEntity(Sound) playAlertConditionRed]` (521) | | |
-| `-[PlayerEntity(Sound) playIncomingMissile:]` (526) | | |
-| `-[PlayerEntity(Sound) playEnergyLow]` (531) | | |
-| `-[PlayerEntity(Sound) playDockingDenied]` (536) | | |
-| `-[PlayerEntity(Sound) playWitchjumpFailure]` (541) | | |
-| `-[PlayerEntity(Sound) playWitchjumpMisjump]` (546) | | |
-| `-[PlayerEntity(Sound) playWitchjumpBlocked]` (551) | | |
-| `-[PlayerEntity(Sound) playWitchjumpDistanceTooGreat]` (556) | | |
-| `-[PlayerEntity(Sound) playWitchjumpInsufficientFuel]` (561) | | |
-| `-[PlayerEntity(Sound) playFuelLeak]` (566) | | |
-| `-[PlayerEntity(Sound) playShieldHit:weaponIdentifier:]` (571) | | |
-| `-[PlayerEntity(Sound) playDirectHit:weaponIdentifier:]` (579) | | |
-| `-[PlayerEntity(Sound) playScrapeDamage:]` (587) | | |
-| `-[PlayerEntity(Sound) playLaserHit:offset:weaponIdentifier:]` (592) | | |
-| `-[PlayerEntity(Sound) playWeaponOverheated:]` (608) | | |
-| `-[PlayerEntity(Sound) playMissileLaunched:weaponIdentifier:]` (613) | | |
-| `-[PlayerEntity(Sound) playMineLaunched:weaponIdentifier:]` (621) | | |
-| `-[PlayerEntity(Sound) playEscapePodScooped]` (629) | | |
-| `-[PlayerEntity(Sound) playAegisCloseToPlanet]` (634) | | |
-| `-[PlayerEntity(Sound) playAegisCloseToStation]` (639) | | |
-| `-[PlayerEntity(Sound) playGameOver]` (644) | | |
-| `-[PlayerEntity(Sound) playLegacyScriptSound:]` (649) | | |
+| `-[PlayerEntity(Sound) setUpSound]` (70) | `PlayerEntity::setUpSound` Core/Entities/PlayerEntitySound.cpp:123 | ✅ |
+| `-[PlayerEntity(Sound) setUpWeaponSounds]` (101) | `PlayerEntity::setUpWeaponSounds` Core/Entities/PlayerEntitySound.cpp:155 | ✅ |
+| `-[PlayerEntity(Sound) destroySound]` (155) | `PlayerEntity::destroySound` Core/Entities/PlayerEntitySound.cpp:196 | ✅ |
+| `-[PlayerEntity(Sound) playInterfaceBeep:]` (178) | `PlayerEntity::playInterfaceBeep` Core/Entities/PlayerEntitySound.cpp:219 | ✅ |
+| `-[PlayerEntity(Sound) isBeeping]` (188) | `PlayerEntity::isBeeping` Core/Entities/PlayerEntitySound.cpp:230 | ✅ |
+| `-[PlayerEntity(Sound) boop]` (193) | `PlayerEntity::boop` Core/Entities/PlayerEntitySound.cpp:235 | ✅ |
+| `-[PlayerEntity(Sound) playIdentOn]` (198) | `PlayerEntity::playIdentOn` Core/Entities/PlayerEntitySound.cpp:240 | ✅ |
+| `-[PlayerEntity(Sound) playIdentOff]` (203) | `PlayerEntity::playIdentOff` Core/Entities/PlayerEntitySound.cpp:245 | ✅ |
+| `-[PlayerEntity(Sound) playIdentLockedOn]` (208) | `PlayerEntity::playIdentLockedOn` Core/Entities/PlayerEntitySound.cpp:250 | ✅ |
+| `-[PlayerEntity(Sound) playMissileArmed]` (213) | `PlayerEntity::playMissileArmed` Core/Entities/PlayerEntitySound.cpp:255 | ✅ |
+| `-[PlayerEntity(Sound) playMineArmed]` (218) | `PlayerEntity::playMineArmed` Core/Entities/PlayerEntitySound.cpp:260 | ✅ |
+| `-[PlayerEntity(Sound) playMissileSafe]` (223) | `PlayerEntity::playMissileSafe` Core/Entities/PlayerEntitySound.cpp:265 | ✅ |
+| `-[PlayerEntity(Sound) playMissileLockedOn]` (228) | `PlayerEntity::playMissileLockedOn` Core/Entities/PlayerEntitySound.cpp:270 | ✅ |
+| `-[PlayerEntity(Sound) playNextEquipmentSelected]` (233) | `PlayerEntity::playNextEquipmentSelected` Core/Entities/PlayerEntitySound.cpp:275 | ✅ |
+| `-[PlayerEntity(Sound) playNextMissileSelected]` (238) | `PlayerEntity::playNextMissileSelected` Core/Entities/PlayerEntitySound.cpp:280 | ✅ |
+| `-[PlayerEntity(Sound) playWeaponsOnline]` (243) | `PlayerEntity::playWeaponsOnline` Core/Entities/PlayerEntitySound.cpp:285 | ✅ |
+| `-[PlayerEntity(Sound) playWeaponsOffline]` (248) | `PlayerEntity::playWeaponsOffline` Core/Entities/PlayerEntitySound.cpp:290 | ✅ |
+| `-[PlayerEntity(Sound) playCargoJettisioned]` (253) | `PlayerEntity::playCargoJettisioned` Core/Entities/PlayerEntitySound.cpp:295 | ✅ |
+| `-[PlayerEntity(Sound) playAutopilotOn]` (258) | `PlayerEntity::playAutopilotOn` Core/Entities/PlayerEntitySound.cpp:300 | ✅ |
+| `-[PlayerEntity(Sound) playAutopilotOff]` (263) | `PlayerEntity::playAutopilotOff` Core/Entities/PlayerEntitySound.cpp:305 | ✅ |
+| `-[PlayerEntity(Sound) playAutopilotOutOfRange]` (271) | `PlayerEntity::playAutopilotOutOfRange` Core/Entities/PlayerEntitySound.cpp:313 | ✅ |
+| `-[PlayerEntity(Sound) playAutopilotCannotDockWithTarget]` (276) | `PlayerEntity::playAutopilotCannotDockWithTarget` Core/Entities/PlayerEntitySound.cpp:318 | ✅ |
+| `-[PlayerEntity(Sound) playSaveOverwriteYes]` (281) | `PlayerEntity::playSaveOverwriteYes` Core/Entities/PlayerEntitySound.cpp:323 | ✅ |
+| `-[PlayerEntity(Sound) playSaveOverwriteNo]` (286) | `PlayerEntity::playSaveOverwriteNo` Core/Entities/PlayerEntitySound.cpp:328 | ✅ |
+| `-[PlayerEntity(Sound) playHoldFull]` (291) | `PlayerEntity::playHoldFull` Core/Entities/PlayerEntitySound.cpp:333 | ✅ |
+| `-[PlayerEntity(Sound) playJumpMassLocked]` (296) | `PlayerEntity::playJumpMassLocked` Core/Entities/PlayerEntitySound.cpp:338 | ✅ |
+| `-[PlayerEntity(Sound) playTargetLost]` (301) | `PlayerEntity::playTargetLost` Core/Entities/PlayerEntitySound.cpp:343 | ✅ |
+| `-[PlayerEntity(Sound) playNoTargetInMemory]` (306) | `PlayerEntity::playNoTargetInMemory` Core/Entities/PlayerEntitySound.cpp:348 | ✅ |
+| `-[PlayerEntity(Sound) playTargetSwitched]` (311) | `PlayerEntity::playTargetSwitched` Core/Entities/PlayerEntitySound.cpp:353 | ✅ |
+| `-[PlayerEntity(Sound) playHyperspaceNoTarget]` (316) | `PlayerEntity::playHyperspaceNoTarget` Core/Entities/PlayerEntitySound.cpp:358 | ✅ |
+| `-[PlayerEntity(Sound) playHyperspaceNoFuel]` (321) | `PlayerEntity::playHyperspaceNoFuel` Core/Entities/PlayerEntitySound.cpp:363 | ✅ |
+| `-[PlayerEntity(Sound) playHyperspaceBlocked]` (326) | `PlayerEntity::playHyperspaceBlocked` Core/Entities/PlayerEntitySound.cpp:368 | ✅ |
+| `-[PlayerEntity(Sound) playHyperspaceDistanceTooGreat]` (331) | `PlayerEntity::playHyperspaceDistanceTooGreat` Core/Entities/PlayerEntitySound.cpp:373 | ✅ |
+| `-[PlayerEntity(Sound) playCloakingDeviceOn]` (336) | `PlayerEntity::playCloakingDeviceOn` Core/Entities/PlayerEntitySound.cpp:378 | ✅ |
+| `-[PlayerEntity(Sound) playCloakingDeviceOff]` (341) | `PlayerEntity::playCloakingDeviceOff` Core/Entities/PlayerEntitySound.cpp:383 | ✅ |
+| `-[PlayerEntity(Sound) playMenuNavigationUp]` (346) | `PlayerEntity::playMenuNavigationUp` Core/Entities/PlayerEntitySound.cpp:388 | ✅ |
+| `-[PlayerEntity(Sound) playMenuNavigationDown]` (351) | `PlayerEntity::playMenuNavigationDown` Core/Entities/PlayerEntitySound.cpp:393 | ✅ |
+| `-[PlayerEntity(Sound) playMenuNavigationNot]` (356) | `PlayerEntity::playMenuNavigationNot` Core/Entities/PlayerEntitySound.cpp:398 | ✅ |
+| `-[PlayerEntity(Sound) playMenuPagePrevious]` (361) | `PlayerEntity::playMenuPagePrevious` Core/Entities/PlayerEntitySound.cpp:403 | ✅ |
+| `-[PlayerEntity(Sound) playMenuPageNext]` (366) | `PlayerEntity::playMenuPageNext` Core/Entities/PlayerEntitySound.cpp:408 | ✅ |
+| `-[PlayerEntity(Sound) playDismissedReportScreen]` (371) | `PlayerEntity::playDismissedReportScreen` Core/Entities/PlayerEntitySound.cpp:413 | ✅ |
+| `-[PlayerEntity(Sound) playDismissedMissionScreen]` (376) | `PlayerEntity::playDismissedMissionScreen` Core/Entities/PlayerEntitySound.cpp:418 | ✅ |
+| `-[PlayerEntity(Sound) playChangedOption]` (381) | `PlayerEntity::playChangedOption` Core/Entities/PlayerEntitySound.cpp:423 | ✅ |
+| `-[PlayerEntity(Sound) updateFuelScoopSoundWithInterval:]` (386) | `PlayerEntity::updateFuelScoopSoundWithInterval` Core/Entities/PlayerEntitySound.cpp:428 | ✅ |
+| `-[PlayerEntity(Sound) updateAfterburnerSound]` (407) | `PlayerEntity::updateAfterburnerSound` Core/Entities/PlayerEntitySound.cpp:450 | ✅ |
+| `-[PlayerEntity(Sound) startAfterburnerSound]` (426) | `PlayerEntity::startAfterburnerSound` Core/Entities/PlayerEntitySound.cpp:469 | ✅ |
+| `-[PlayerEntity(Sound) stopAfterburnerSound]` (434) | `PlayerEntity::stopAfterburnerSound` Core/Entities/PlayerEntitySound.cpp:477 | ✅ |
+| `-[PlayerEntity(Sound) playCloakingDeviceInsufficientEnergy]` (439) | `PlayerEntity::playCloakingDeviceInsufficientEnergy` Core/Entities/PlayerEntitySound.cpp:482 | ✅ |
+| `-[PlayerEntity(Sound) playBuyCommodity]` (444) | `PlayerEntity::playBuyCommodity` Core/Entities/PlayerEntitySound.cpp:487 | ✅ |
+| `-[PlayerEntity(Sound) playBuyShip]` (449) | `PlayerEntity::playBuyShip` Core/Entities/PlayerEntitySound.cpp:493 | ✅ |
+| `-[PlayerEntity(Sound) playSellCommodity]` (454) | `PlayerEntity::playSellCommodity` Core/Entities/PlayerEntitySound.cpp:499 | ✅ |
+| `-[PlayerEntity(Sound) playCantBuyCommodity]` (459) | `PlayerEntity::playCantBuyCommodity` Core/Entities/PlayerEntitySound.cpp:505 | ✅ |
+| `-[PlayerEntity(Sound) playCantSellCommodity]` (464) | `PlayerEntity::playCantSellCommodity` Core/Entities/PlayerEntitySound.cpp:511 | ✅ |
+| `-[PlayerEntity(Sound) playCantBuyShip]` (469) | `PlayerEntity::playCantBuyShip` Core/Entities/PlayerEntitySound.cpp:517 | ✅ |
+| `-[PlayerEntity(Sound) playStandardHyperspace]` (474) | `PlayerEntity::playStandardHyperspace` Core/Entities/PlayerEntitySound.cpp:523 | ✅ |
+| `-[PlayerEntity(Sound) playGalacticHyperspace]` (479) | `PlayerEntity::playGalacticHyperspace` Core/Entities/PlayerEntitySound.cpp:528 | ✅ |
+| `-[PlayerEntity(Sound) playHyperspaceAborted]` (484) | `PlayerEntity::playHyperspaceAborted` Core/Entities/PlayerEntitySound.cpp:533 | ✅ |
+| `-[PlayerEntity(Sound) playHitByECMSound]` (489) | `PlayerEntity::playHitByECMSound` Core/Entities/PlayerEntitySound.cpp:538 | ✅ |
+| `-[PlayerEntity(Sound) playFiredECMSound]` (495) | `PlayerEntity::playFiredECMSound` Core/Entities/PlayerEntitySound.cpp:544 | ✅ |
+| `-[PlayerEntity(Sound) playLaunchFromStation]` (501) | `PlayerEntity::playLaunchFromStation` Core/Entities/PlayerEntitySound.cpp:550 | ✅ |
+| `-[PlayerEntity(Sound) playDockWithStation]` (506) | `PlayerEntity::playDockWithStation` Core/Entities/PlayerEntitySound.cpp:555 | ✅ |
+| `-[PlayerEntity(Sound) playExitWitchspace]` (511) | `PlayerEntity::playExitWitchspace` Core/Entities/PlayerEntitySound.cpp:560 | ✅ |
+| `-[PlayerEntity(Sound) playHostileWarning]` (516) | `PlayerEntity::playHostileWarning` Core/Entities/PlayerEntitySound.cpp:565 | ✅ |
+| `-[PlayerEntity(Sound) playAlertConditionRed]` (521) | `PlayerEntity::playAlertConditionRed` Core/Entities/PlayerEntitySound.cpp:571 | ✅ |
+| `-[PlayerEntity(Sound) playIncomingMissile:]` (526) | `PlayerEntity::playIncomingMissile` Core/Entities/PlayerEntitySound.cpp:577 | ✅ |
+| `-[PlayerEntity(Sound) playEnergyLow]` (531) | `PlayerEntity::playEnergyLow` Core/Entities/PlayerEntitySound.cpp:583 | ✅ |
+| `-[PlayerEntity(Sound) playDockingDenied]` (536) | `PlayerEntity::playDockingDenied` Core/Entities/PlayerEntitySound.cpp:589 | ✅ |
+| `-[PlayerEntity(Sound) playWitchjumpFailure]` (541) | `PlayerEntity::playWitchjumpFailure` Core/Entities/PlayerEntitySound.cpp:595 | ✅ |
+| `-[PlayerEntity(Sound) playWitchjumpMisjump]` (546) | `PlayerEntity::playWitchjumpMisjump` Core/Entities/PlayerEntitySound.cpp:601 | ✅ |
+| `-[PlayerEntity(Sound) playWitchjumpBlocked]` (551) | `PlayerEntity::playWitchjumpBlocked` Core/Entities/PlayerEntitySound.cpp:607 | ✅ |
+| `-[PlayerEntity(Sound) playWitchjumpDistanceTooGreat]` (556) | `PlayerEntity::playWitchjumpDistanceTooGreat` Core/Entities/PlayerEntitySound.cpp:613 | ✅ |
+| `-[PlayerEntity(Sound) playWitchjumpInsufficientFuel]` (561) | `PlayerEntity::playWitchjumpInsufficientFuel` Core/Entities/PlayerEntitySound.cpp:619 | ✅ |
+| `-[PlayerEntity(Sound) playFuelLeak]` (566) | `PlayerEntity::playFuelLeak` Core/Entities/PlayerEntitySound.cpp:625 | ✅ |
+| `-[PlayerEntity(Sound) playShieldHit:weaponIdentifier:]` (571) | `PlayerEntity::playShieldHit` Core/Entities/PlayerEntitySound.cpp:631 | ✅ |
+| `-[PlayerEntity(Sound) playDirectHit:weaponIdentifier:]` (579) | `PlayerEntity::playDirectHit` Core/Entities/PlayerEntitySound.cpp:637 | ✅ |
+| `-[PlayerEntity(Sound) playScrapeDamage:]` (587) | `PlayerEntity::playScrapeDamage` Core/Entities/PlayerEntitySound.cpp:643 | ✅ |
+| `-[PlayerEntity(Sound) playLaserHit:offset:weaponIdentifier:]` (592) | `PlayerEntity::playLaserHit` Core/Entities/PlayerEntitySound.cpp:649 | ✅ |
+| `-[PlayerEntity(Sound) playWeaponOverheated:]` (608) | `PlayerEntity::playWeaponOverheated` Core/Entities/PlayerEntitySound.cpp:660 | ✅ |
+| `-[PlayerEntity(Sound) playMissileLaunched:weaponIdentifier:]` (613) | `PlayerEntity::playMissileLaunched` Core/Entities/PlayerEntitySound.cpp:666 | ✅ |
+| `-[PlayerEntity(Sound) playMineLaunched:weaponIdentifier:]` (621) | `PlayerEntity::playMineLaunched` Core/Entities/PlayerEntitySound.cpp:672 | ✅ |
+| `-[PlayerEntity(Sound) playEscapePodScooped]` (629) | `PlayerEntity::playEscapePodScooped` Core/Entities/PlayerEntitySound.cpp:678 | ✅ |
+| `-[PlayerEntity(Sound) playAegisCloseToPlanet]` (634) | `PlayerEntity::playAegisCloseToPlanet` Core/Entities/PlayerEntitySound.cpp:684 | ✅ |
+| `-[PlayerEntity(Sound) playAegisCloseToStation]` (639) | `PlayerEntity::playAegisCloseToStation` Core/Entities/PlayerEntitySound.cpp:690 | ✅ |
+| `-[PlayerEntity(Sound) playGameOver]` (644) | `PlayerEntity::playGameOver` Core/Entities/PlayerEntitySound.cpp:696 | ✅ |
+| `-[PlayerEntity(Sound) playLegacyScriptSound:]` (649) | `PlayerEntity::playLegacyScriptSound` Core/Entities/PlayerEntitySound.cpp:702 | ✅ |
+| `OO_ASSIGN_SOUNDSTR_TO_SOUNDS` macro (119) *(added)* | `assignSound` lambda in `PlayerEntity::setUpWeaponSounds` Core/Entities/PlayerEntitySound.cpp:170 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ note (events and keys): every `play…` method uses the same custom-sound key as upstream, including the upstream quirks. `playMenuPagePrevious` plays `[menu-next-page]` and `playMenuPageNext` plays `[menu-previous-page]`. The spelling `[cloaking-device-insufficent-energy]` is kept. Each method also goes to the same source or pool: interface beep, break-pattern, ECM, hyperspace, or the buy-sell, warning, weapon, damage or misc pool. Positions are unchanged (`kInterfaceBeepPosition` and the rest). — port `Core/Entities/PlayerEntitySound.cpp:103-110, 219-706`
+- ✅ note (volume/priority): pool sizes are unchanged (4/6/3/4/2), as is the damage pool's 0.1 s minimum repeat. Warning priorities match: hostile 1, red alert 2, incoming missile 3, energy low 0.5, docking denied 1, witchdrive failure and misjump 1.5, blocked, too far and no fuel 1.3, fuel leak 0.5. So do the laser hit/miss settings (priority 1.0, expiry 0.05, overlap YES), overheat (overlap NO) and legacy script sound (priority 1.1). Each call reaches the `OOSoundSourcePool` overload of the same shape: `(key, float, Vector)`, `(key, bool, Vector)`, `(key, float)`, `(key, Vector)`. — port `Core/Entities/PlayerEntitySound.cpp:139-143, 565-706`; `Core/OOSoundSourcePool.h:65-72`
+- ✅ note: in `updateAfterburnerSound`, the 1.25 s re-arm moves from `performSelector:afterDelay:` to `oo::ScheduleEntityCall`. That queue runs on wall-clock time (`steady_clock`) and holds the entity, matching the run-loop timer and its retain. — port `Core/Entities/PlayerEntitySound.cpp:450-467`; `Core/Entities/OOEntityCalledByName.cpp:1006-1014`; `Core/GameController.cpp:156-168`
+- ✅ note: the weapon-sound maps are `std::map` rather than `NSDictionary`. They are only looked up, never iterated, so the ordering change has no effect. A missing identifier still falls back to the default key. — port `Core/Entities/PlayerEntitySound.cpp:93-119, 155-194`
 
 ## PlayerEntityStickMapper
 
@@ -999,41 +1020,43 @@ Upstream `src/Core/Entities/PlayerEntityStickProfile.m` ↔ `Core/Entities/Playe
 <a id="proxyplayerentity"></a>
 Upstream `src/Core/Entities/ProxyPlayerEntity.m` ↔ `Core/Entities/ProxyPlayerEntity.cpp`
 
-**Status:** pending
+**Status:** done — 29 rows: 27 ✅ 0 ⚠️ 0 ❌ 2 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[ProxyPlayerEntity initWithKey:definition:]` (30) | | |
-| `-[ProxyPlayerEntity copyValuesFromPlayer:]` (44) | | |
-| `-[ProxyPlayerEntity isPlayerLikeShip]` (63) | | |
-| `-[ProxyPlayerEntity fuelLeakRate]` (68) | | |
-| `-[ProxyPlayerEntity setFuelLeakRate:]` (73) | | |
-| `-[ProxyPlayerEntity massLocked]` (78) | | |
-| `-[ProxyPlayerEntity setMassLocked:]` (83) | | |
-| `-[ProxyPlayerEntity atHyperspeed]` (88) | | |
-| `-[ProxyPlayerEntity setAtHyperspeed:]` (93) | | |
-| `-[ProxyPlayerEntity dialForwardShield]` (98) | | |
-| `-[ProxyPlayerEntity setDialForwardShield:]` (103) | | |
-| `-[ProxyPlayerEntity dialAftShield]` (108) | | |
-| `-[ProxyPlayerEntity setDialAftShield:]` (113) | | |
-| `-[ProxyPlayerEntity dialMissileStatus]` (118) | | |
-| `-[ProxyPlayerEntity setDialMissileStatus:]` (123) | | |
-| `-[ProxyPlayerEntity dialFuelScoopStatus]` (128) | | |
-| `-[ProxyPlayerEntity setDialFuelScoopStatus:]` (133) | | |
-| `-[ProxyPlayerEntity compassMode]` (138) | | |
-| `-[ProxyPlayerEntity setCompassMode:]` (143) | | |
-| `-[ProxyPlayerEntity dialIdentEngaged]` (148) | | |
-| `-[ProxyPlayerEntity setDialIdentEngaged:]` (153) | | |
-| `-[ProxyPlayerEntity alertCondition]` (158) | | |
-| `-[ProxyPlayerEntity setAlertCondition:]` (163) | | |
-| `-[ProxyPlayerEntity trumbleCount]` (168) | | |
-| `-[ProxyPlayerEntity setTrumbleCount:]` (173) | | |
-| `-[ProxyPlayerEntity setTradeInFactor:]` (178) | | |
-| `-[ProxyPlayerEntity tradeInFactor]` (183) | | |
-| `-[Entity(ProxyPlayer) isPlayerLikeShip]` (194) | | |
-| `-[PlayerEntity(ProxyPlayer) isPlayerLikeShip]` (203) | | |
+| `-[ProxyPlayerEntity initWithKey:definition:]` (30) | `ProxyPlayerEntity::newProxyObject` + `initProxyDefaults` Core/Entities/ProxyPlayerEntity.cpp:28,41 | ✅ |
+| `-[ProxyPlayerEntity copyValuesFromPlayer:]` (44) | `ProxyPlayerEntity::copyValuesFromPlayer` Core/Entities/ProxyPlayerEntity.cpp:50 | ✅ |
+| `-[ProxyPlayerEntity isPlayerLikeShip]` (63) | `ProxyPlayerEntity::isPlayerLikeShip` Core/Entities/ProxyPlayerEntity.cpp:69 | ✅ |
+| `-[ProxyPlayerEntity fuelLeakRate]` (68) | `ProxyPlayerEntity::fuelLeakRate` Core/Entities/ProxyPlayerEntity.cpp:74 | ✅ |
+| `-[ProxyPlayerEntity setFuelLeakRate:]` (73) | `ProxyPlayerEntity::setFuelLeakRate` Core/Entities/ProxyPlayerEntity.cpp:79 | ✅ |
+| `-[ProxyPlayerEntity massLocked]` (78) | `ProxyPlayerEntity::massLocked` Core/Entities/ProxyPlayerEntity.cpp:84 | ✅ |
+| `-[ProxyPlayerEntity setMassLocked:]` (83) | `ProxyPlayerEntity::setMassLocked` Core/Entities/ProxyPlayerEntity.cpp:89 | ✅ |
+| `-[ProxyPlayerEntity atHyperspeed]` (88) | `ProxyPlayerEntity::atHyperspeed` Core/Entities/ProxyPlayerEntity.cpp:94 | ✅ |
+| `-[ProxyPlayerEntity setAtHyperspeed:]` (93) | `ProxyPlayerEntity::setAtHyperspeed` Core/Entities/ProxyPlayerEntity.cpp:99 | ✅ |
+| `-[ProxyPlayerEntity dialForwardShield]` (98) | `ProxyPlayerEntity::dialForwardShield` Core/Entities/ProxyPlayerEntity.cpp:104 | ✅ |
+| `-[ProxyPlayerEntity setDialForwardShield:]` (103) | `ProxyPlayerEntity::setDialForwardShield` Core/Entities/ProxyPlayerEntity.cpp:109 | ✅ |
+| `-[ProxyPlayerEntity dialAftShield]` (108) | `ProxyPlayerEntity::dialAftShield` Core/Entities/ProxyPlayerEntity.cpp:114 | ✅ |
+| `-[ProxyPlayerEntity setDialAftShield:]` (113) | `ProxyPlayerEntity::setDialAftShield` Core/Entities/ProxyPlayerEntity.cpp:119 | ✅ |
+| `-[ProxyPlayerEntity dialMissileStatus]` (118) | `ProxyPlayerEntity::dialMissileStatus` Core/Entities/ProxyPlayerEntity.cpp:124 | ✅ |
+| `-[ProxyPlayerEntity setDialMissileStatus:]` (123) | `ProxyPlayerEntity::setDialMissileStatus` Core/Entities/ProxyPlayerEntity.cpp:129 | ✅ |
+| `-[ProxyPlayerEntity dialFuelScoopStatus]` (128) | `ProxyPlayerEntity::dialFuelScoopStatus` Core/Entities/ProxyPlayerEntity.cpp:134 | ✅ |
+| `-[ProxyPlayerEntity setDialFuelScoopStatus:]` (133) | `ProxyPlayerEntity::setDialFuelScoopStatus` Core/Entities/ProxyPlayerEntity.cpp:139 | ✅ |
+| `-[ProxyPlayerEntity compassMode]` (138) | `ProxyPlayerEntity::compassMode` Core/Entities/ProxyPlayerEntity.cpp:144 | ✅ |
+| `-[ProxyPlayerEntity setCompassMode:]` (143) | `ProxyPlayerEntity::setCompassMode` Core/Entities/ProxyPlayerEntity.cpp:149 | ✅ |
+| `-[ProxyPlayerEntity dialIdentEngaged]` (148) | `ProxyPlayerEntity::dialIdentEngaged` Core/Entities/ProxyPlayerEntity.cpp:154 | ✅ |
+| `-[ProxyPlayerEntity setDialIdentEngaged:]` (153) | `ProxyPlayerEntity::setDialIdentEngaged` Core/Entities/ProxyPlayerEntity.cpp:159 | ✅ |
+| `-[ProxyPlayerEntity alertCondition]` (158) | `ProxyPlayerEntity::alertCondition` Core/Entities/ProxyPlayerEntity.cpp:164 | ✅ |
+| `-[ProxyPlayerEntity setAlertCondition:]` (163) | `ProxyPlayerEntity::setAlertCondition` Core/Entities/ProxyPlayerEntity.cpp:169 | ✅ |
+| `-[ProxyPlayerEntity trumbleCount]` (168) | `ProxyPlayerEntity::trumbleCount` Core/Entities/ProxyPlayerEntity.cpp:174 | ✅ |
+| `-[ProxyPlayerEntity setTrumbleCount:]` (173) | `ProxyPlayerEntity::setTrumbleCount` Core/Entities/ProxyPlayerEntity.cpp:179 | ✅ |
+| `-[ProxyPlayerEntity setTradeInFactor:]` (178) | `ProxyPlayerEntity::setTradeInFactor` Core/Entities/ProxyPlayerEntity.cpp:184 | ✅ |
+| `-[ProxyPlayerEntity tradeInFactor]` (183) | `ProxyPlayerEntity::tradeInFactor` Core/Entities/ProxyPlayerEntity.cpp:189 | ✅ |
+| `-[Entity(ProxyPlayer) isPlayerLikeShip]` (194) | — (replaced by type test in `OOUniformBindingPermitted`, Core/Entities/ShipEntity.cpp:13753) | ➖ |
+| `-[PlayerEntity(ProxyPlayer) isPlayerLikeShip]` (203) | — (replaced by type test in `OOUniformBindingPermitted`, Core/Entities/ShipEntity.cpp:13753) | ➖ |
 
 **Differences:**
 
-- *pending*
+- ➖ `-isPlayerLikeShip` had a single caller, `OOUniformBindingPermitted`. It now tests `dynamic_cast<PlayerEntity*> || dynamic_cast<ProxyPlayerEntity*>`. That gives the same answer: YES for exactly those two classes, NO for every other entity. `ProxyPlayerEntity::isPlayerLikeShip` (non-virtual) is left with no callers. Bead oo-9ht.177/183 per the comment. — upstream `Core/Entities/ShipEntity.m:13020` ↔ port `Core/Entities/ShipEntity.cpp:13751-13756`
+- ✅ note (copied fields): `copyValuesFromPlayer` copies all 12 fields in upstream order, through the same player getters: fuelLeakRate, massLocked, atHyperspeed, dialForwardShield, dialAftShield, dialMissileStatus, dialFuelScoopStatus, compassMode, dialIdentEngaged, alertCondition (the computing `getAlertCondition`, as upstream's `-alertCondition` computed), trumbleCount and tradeInFactor. The extra `player != nullptr` ternaries are dead after the early return. — port `Core/Entities/ProxyPlayerEntity.cpp:50-67`
+- ✅ note: the defaults are unchanged. Both shields are 1.0, scoop status follows `hasScoop`, compass follows `EQ_ADVANCED_COMPASS`, and trade-in is 95. They are applied after the ship set-up, as upstream's `-initWithKey:definition:` did after `super`. The ivar defaults are zero and the setter clamps (`fmax` on the leak rate, `!!` on the bools) are kept. — port `Core/Entities/ProxyPlayerEntity.cpp:28-48, 79-102`; `Core/Entities/ProxyPlayerEntity.h:107-119`
 
