@@ -6,7 +6,12 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 241 / 241 upstream `.m` files · extra rows below
+**Progress:** 241 / 241 upstream `.m` files, plus C/table files, C++-only files and the header sweep: **complete**.
+
+**Totals across all coverage tables:** 7,476 rows: 6,518 ✅ · 263 ⚠️ · 170 ❌ · 525 ➖. The header sweep separately compared 857 `#define`s, 948 enum values and 173 constants and found 0 ❌.
+Of the 170 ❌, 2 are high and about 12 medium (below); the rest are low (log text, nil-messaging edge cases, iteration order).
+
+**Method:** each file was read side by side, method by method, by an auditor following [AUDIT-BRIEF.md](AUDIT-BRIEF.md). Every high finding and most medium ones (✔) were then re-verified by the coordinator against both sources.
 
 ## Cross-cutting findings
 
@@ -15,7 +20,7 @@ Patterns that recur across files. Each instance is also recorded in its own file
 1. **Preference defaults: `oo_*ForKey:defaultValue:` → `isNull() ? default : xForKey()`** (❌ **med** in Universe, where a malformed pref gives FOV→MIN, procedural planets off, ECM FX off and detail level 0; low elsewhere; about 15 sites; see [foundation.md#oocollectionextractors](foundation.md#oocollectionextractors)). Upstream's extractor returned `defaultValue` whenever the stored value could not be converted, such as a non-numeric or unrecognised string. The port returns the default only when the key is absent; otherwise the converter yields 0/NO. Sites:
    - `OOALSound.cpp:62` (volume_control → 0 mutes the game)
    - `OOLogging.cpp:262-267` (logging-show-time/class → NO drops the log prefixes)
-   - `GameController.cpp:235,303`
+   - `GameController.cpp:235` (a malformed `animation_timer_interval` → 0 → the frame loop spins at ~10 kHz instead of 240 Hz, **med**), `:303` (`ecoqos`)
    - `Universe.cpp:308,333,338,344`
 
    Bools also differ in parsing. `Defaults::boolForKey` uses GNUstep `-[NSString boolValue]`, where "on" and ".5" read NO; upstream's `OOBooleanFromObject` read them as YES or fell back to the default. Fix candidate: a `Defaults::get<T>(key, fallback)` with `oo_*ForKey` semantics (cf. `PListGet.hpp`).
@@ -29,7 +34,7 @@ Patterns that recur across files. Each instance is also recorded in its own file
 
 ## Suspected divergences (ranked)
 
-*Running list; reordered and finalised when every batch is in. ✔ = verified by the coordinator against both sources.*
+*Final. ✔ = verified by the coordinator against both sources; unmarked = auditor finding with cited lines, not independently re-read.*
 
 ### High
 - ✔ **NPC subentity flashers and exhaust plumes are never updated.** `ShipEntity::update` calls `update()` only on subentities that cast to `ShipEntity` (`oo::ToShip`). Upstream sent `-update:` to every subentity. As a result, `OOFlasherEntity` lights don't animate and `OOExhaustPlumeEntity` trails don't track on NPC and demo ships. Affects all three loops: upstream `ShipEntity.m:2113,2382,2469` ↔ port `ShipEntity.cpp:2500,2773,2866`. [details](entities-ship.md#shipentity)
@@ -51,7 +56,7 @@ Patterns that recur across files. Each instance is also recorded in its own file
 
   [cpp-only.md](cpp-only.md)
 - **`oo::EntityShortDescription` loses the class and ship name** (`EntityHelpers.cpp:154`). This changes `ai.error.stackOverflow`, `ship.subentity.sanityCheck.failed`, `entity.invalidSession` and other log text. [cpp-only.md](cpp-only.md)
-- ✔ **`laserColor` shader uniform can no longer be bound.** It has no row in `EntityShaderBindings.cpp`, whose comment wrongly says it "fails as before". Upstream bound `-[ShipEntity laserColor]` (an OOColor) via `OOShaderUniform.m:511`. [graphics.md#oushaderuniform](graphics.md#ooshaderuniform)
+- ✔ **`laserColor` shader uniform can no longer be bound.** It has no row in `EntityShaderBindings.cpp`, whose comment wrongly says it "fails as before". Upstream bound `-[ShipEntity laserColor]` (an OOColor) via `OOShaderUniform.m:511`. [graphics.md#ooshaderuniform](graphics.md#ooshaderuniform)
 - ✔ **Symlinked `.oxp` folders are not found.** The OXP scan uses `symlink_status` (`ResourceManager.cpp:498`). [gamedata.md#resourcemanager](gamedata.md#resourcemanager)
 - ✔ **Data cache likely rebuilt every launch.** File mod-times are converted using two separate `now()` readings, which jitter (`oofnd/FileSystem.hpp:180-182`), so `dataCache.rebuild.datesChanged` fires. [gamedata.md#resourcemanager](gamedata.md#resourcemanager)
 - ✔ **JS `ship.speed` became writable.** `OOJSShip.cpp:504`; it was read-only upstream. No ADR. [scripting.md#oojsship](scripting.md#oojsship)
@@ -69,47 +74,60 @@ Other low findings are recorded per file. The bulk falls into three groups:
 - log-text drift;
 - missing null guards where upstream relied on nil-messaging (`UNIVERSE` lookups in OOConstToString/OOStringExpander, `drawTrumbles`, `behaviour_attack_slow_dogfight`).
 
+## Suggested follow-ups
+
+These are proposals, not filed beads. Each would want a test that fails before the fix and passes after it.
+
+1. Update every subentity in `ShipEntity::update` (all three loops), not only `ShipEntity` ones.
+2. In `ExDeleteProperty`, call the class `delProperty` hook even when no own slot exists. Add a unit test for deleting a mission variable loaded from a save.
+3. Pass SpiderMonkey-equivalent error numbers through `invokeReporter`, or map QuickJS error kinds onto `javascript-errors.plist` classes.
+4. Add a `Defaults::get<T>(key, fallback)` with `oo_*ForKey:defaultValue:` semantics and replace the ~15 `isNull() ? … : xForKey()` sites.
+5. Widen the main-loop and AI/legacy catch sites to `std::exception` (log and continue), or replace the `.at()` and negative-size call sites that can throw.
+6. Add the `laserColor` row to `EntityShaderBindings.cpp`, and correct the comment saying it "fails as before".
+7. Follow symlinks in the OXP scan, and compute mod-times from a single clock reading so the data cache stays valid.
+8. Decide intentionally on `ship.speed` writability and on `EquipmentInfo.provides` returning null. Record each as an ADR either way.
+9. Restore `EntityShortDescription`'s class and name text, and the dropped log arguments listed under cross-cutting item 4.
 
 ## Checklist
 
 ### Foundation replacements, logging, collections, async — [foundation.md](foundation.md)
 
-- [x] `Core/NSBundle+Override.m` → *(absorbed — 1➖ — [findings](foundation.md#nsbundleoverride)
-- [x] `Core/NSDataOOExtensions.m` → *(absorbed — 1✅ — [findings](foundation.md#nsdataooextensions)
-- [x] `Core/NSDictionaryOOExtensions.m` → *(absorbed — 3➖ — [findings](foundation.md#nsdictionaryooextensions)
-- [x] `Core/NSFileManagerOOExtensions.m` → *(absorbed — 9✅ 1❌ 6➖ — [findings](foundation.md#nsfilemanagerooextensions)
-- [x] `Core/NSMutableDictionaryOOExtensions.m` → *(absorbed — 1✅ — [findings](foundation.md#nsmutabledictionaryooextensions)
-- [x] `Core/NSNumberOOExtensions.m` → *(absorbed — 2➖ — [findings](foundation.md#nsnumberooextensions)
-- [x] `Core/NSObjectOOExtensions.m` → *(absorbed — 2➖ — [findings](foundation.md#nsobjectooextensions)
-- [x] `Core/NSScannerOOExtensions.m` → *(absorbed — 2✅ — [findings](foundation.md#nsscannerooextensions)
-- [x] `Core/NSStringOOExtensions.m` → *(absorbed — 8✅ 2⚠️ 3➖ — [findings](foundation.md#nsstringooextensions)
-- [x] `Core/NSThreadOOExtensions.m` → *(absorbed — 1✅ — [findings](foundation.md#nsthreadooextensions)
-- [x] `Core/NSUserDefaults+Override.m` → *(absorbed — 1❌ — [findings](foundation.md#nsuserdefaultsoverride)
-- [x] `Core/OOAsyncQueue.m` → *(absorbed — 4✅ 10➖ — [findings](foundation.md#ooasyncqueue)
+- [x] `Core/NSBundle+Override.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 1➖ — [findings](foundation.md#nsbundleoverride)
+- [x] `Core/NSDataOOExtensions.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 1✅ — [findings](foundation.md#nsdataooextensions)
+- [x] `Core/NSDictionaryOOExtensions.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 3➖ — [findings](foundation.md#nsdictionaryooextensions)
+- [x] `Core/NSFileManagerOOExtensions.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 9✅ 1❌ 6➖ — [findings](foundation.md#nsfilemanagerooextensions)
+- [x] `Core/NSMutableDictionaryOOExtensions.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 1✅ — [findings](foundation.md#nsmutabledictionaryooextensions)
+- [x] `Core/NSNumberOOExtensions.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 2➖ — [findings](foundation.md#nsnumberooextensions)
+- [x] `Core/NSObjectOOExtensions.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 2➖ — [findings](foundation.md#nsobjectooextensions)
+- [x] `Core/NSScannerOOExtensions.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 2✅ — [findings](foundation.md#nsscannerooextensions)
+- [x] `Core/NSStringOOExtensions.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 8✅ 2⚠️ 3➖ — [findings](foundation.md#nsstringooextensions)
+- [x] `Core/NSThreadOOExtensions.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 1✅ — [findings](foundation.md#nsthreadooextensions)
+- [x] `Core/NSUserDefaults+Override.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 1❌ — [findings](foundation.md#nsuserdefaultsoverride)
+- [x] `Core/OOAsyncQueue.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 4✅ 10➖ — [findings](foundation.md#ooasyncqueue)
 - [x] `Core/OOAsyncWorkManager.m` → `Core/OOAsyncWorkManager.cpp` (423 / 481 lines) — 15✅ 4⚠️ 5➖ — [findings](foundation.md#ooasyncworkmanager)
 - [x] `Core/OOCPUInfo.m` → `Core/OOCPUInfo.cpp` (226 / 228 lines) — 7✅ — [findings](foundation.md#oocpuinfo)
 - [x] `Core/OOCache.m` → `Core/OOCache.cpp` (1048 / 994 lines) — 44✅ 3⚠️ 1➖ — [findings](foundation.md#oocache)
 - [x] `Core/OOCacheManager.m` → `Core/OOCacheManager.cpp` (668 / 561 lines) — 28✅ 2⚠️ 6➖ — [findings](foundation.md#oocachemanager)
-- [x] `Core/OOCollectionExtractors.m` → *(absorbed — 120✅ 2⚠️ 5❌ 76➖ — [findings](foundation.md#oocollectionextractors)
-- [x] `Core/OODeepCopy.m` → *(absorbed — 1❌ 6➖ — [findings](foundation.md#oodeepcopy)
+- [x] `Core/OOCollectionExtractors.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 120✅ 2⚠️ 5❌ 76➖ — [findings](foundation.md#oocollectionextractors)
+- [x] `Core/OODeepCopy.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 1❌ 6➖ — [findings](foundation.md#oodeepcopy)
 - [x] `Core/OOEncodingConverter.m` → `Core/OOEncodingConverter.cpp` (242 / 214 lines) — 8✅ 2⚠️ — [findings](foundation.md#ooencodingconverter)
-- [x] `Core/OOExcludeObjectEnumerator.m` → *(absorbed — 5➖ — [findings](foundation.md#ooexcludeobjectenumerator)
-- [x] `Core/OOFilteringEnumerator.m` → *(absorbed — 19➖ — [findings](foundation.md#oofilteringenumerator)
+- [x] `Core/OOExcludeObjectEnumerator.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 5➖ — [findings](foundation.md#ooexcludeobjectenumerator)
+- [x] `Core/OOFilteringEnumerator.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 19➖ — [findings](foundation.md#oofilteringenumerator)
 - [x] `Core/OOFoundation.m` → `Core/OOFoundation.cpp` (92 / 35 lines) — 6➖ — [findings](foundation.md#oofoundation)
 - [x] `Core/OOIsNumberLiteral.m` → `Core/OOIsNumberLiteral.cpp` (135 / 134 lines) — 1✅ — [findings](foundation.md#ooisnumberliteral)
 - [x] `Core/OOLogHeader.m` → `Core/OOLogHeader.cpp` (355 / 370 lines) — 7✅ — [findings](foundation.md#oologheader)
 - [x] `Core/OOLogOutputHandler.m` → `Core/OOLogOutputHandler.cpp` (649 / 567 lines) — 17✅ 2⚠️ 4❌ 1➖ — [findings](foundation.md#oologoutputhandler)
 - [x] `Core/OOLogging.m` → `Core/OOLogging.cpp` (832 / 289 lines) — 40✅ 2⚠️ 2❌ — [findings](foundation.md#oologging)
 - [x] `Core/OOPListParsing.m` → `Core/OOPListParsing.cpp` (233 / 74 lines) — 3✅ 1⚠️ 5➖ — [findings](foundation.md#ooplistparsing)
-- [x] `Core/OOPriorityQueue.m` → *(absorbed — 13✅ 1⚠️ 23➖ — [findings](foundation.md#oopriorityqueue)
+- [x] `Core/OOPriorityQueue.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 13✅ 1⚠️ 23➖ — [findings](foundation.md#oopriorityqueue)
 - [x] `Core/OOProfilingStopwatch.m` → `Core/OOProfilingStopwatch.cpp` (129 / 120 lines) — 7✅ 1⚠️ — [findings](foundation.md#ooprofilingstopwatch)
 - [x] `Core/OORegExpMatcher.m` → `Core/OORegExpMatcher.cpp` (140 / 164 lines) — 5✅ 1➖ — [findings](foundation.md#ooregexpmatcher)
-- [x] `Core/OOWeakReference.m` → *(absorbed — 6✅ 2⚠️ 12➖ — [findings](foundation.md#ooweakreference)
-- [x] `Core/OOWeakSet.m` → *(absorbed — 15✅ 4⚠️ 5➖ — [findings](foundation.md#ooweakset)
+- [x] `Core/OOWeakReference.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 6✅ 2⚠️ 12➖ — [findings](foundation.md#ooweakreference)
+- [x] `Core/OOWeakSet.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 15✅ 4⚠️ 5➖ — [findings](foundation.md#ooweakset)
 - [x] `Core/OOXMLExtensions.m` → `Core/OOXMLExtensions.cpp` (55 / 48 lines) — 1❌ — [findings](foundation.md#ooxmlextensions)
-- [x] `Core/OldSchoolPropertyListWriting.m` → *(absorbed — 5✅ 3⚠️ — [findings](foundation.md#oldschoolpropertylistwriting)
-- [x] `Core/ReleaseLockProxy.m` → *(absorbed — 17➖ — [findings](foundation.md#releaselockproxy)
-- [x] `SDL/Comparison.m` → *(absorbed — 6➖ — [findings](foundation.md#comparison)
+- [x] `Core/OldSchoolPropertyListWriting.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 5✅ 3⚠️ — [findings](foundation.md#oldschoolpropertylistwriting)
+- [x] `Core/ReleaseLockProxy.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 17➖ — [findings](foundation.md#releaselockproxy)
+- [x] `SDL/Comparison.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 6➖ — [findings](foundation.md#comparison)
 
 ### Maths, geometry, collision — [math.md](math.md)
 
@@ -118,7 +136,7 @@ Other low findings are recorded per file. The bulk falls into three groups:
 - [x] `Core/OOMatrix.m` → `Core/OOMatrix.cpp` (424 / 435 lines) — 44✅ — [findings](math.md#oomatrix)
 - [x] `Core/OOMeshToOctreeConverter.m` → `Core/OOMeshToOctreeConverter.cpp` (825 / 821 lines) — 19✅ — [findings](math.md#oomeshtooctreeconverter)
 - [x] `Core/OOQuaternion.m` → `Core/OOQuaternion.cpp` (408 / 412 lines) — 26✅ — [findings](math.md#ooquaternion)
-- [x] `Core/OOSpatialReference.m` → *(absorbed — 1✅ 2➖ — [findings](math.md#oospatialreference)
+- [x] `Core/OOSpatialReference.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 1✅ 2➖ — [findings](math.md#oospatialreference)
 - [x] `Core/OOVector.m` → `Core/OOVector.cpp` (139 / 151 lines) — 33✅ — [findings](math.md#oovector)
 - [x] `Core/OOVoxel.m` → `Core/OOVoxel.c` (197 / 197 lines) — 7✅ — [findings](math.md#oovoxel)
 - [x] `Core/Octree.m` → `Core/Octree.cpp` (906 / 866 lines) — 34✅ 2⚠️ 2➖ — [findings](math.md#octree)
@@ -251,7 +269,7 @@ Other low findings are recorded per file. The bulk falls into three groups:
 - [x] `Core/OOALSoundMixer.m` → `Core/OOALSoundMixer.cpp` (158 / 124 lines) — 5✅ 1⚠️ 6➖ — [findings](sound.md#ooalsoundmixer)
 - [x] `Core/OOALStreamedSound.m` → `Core/OOALStreamedSound.cpp` (114 / 111 lines) — 6✅ — [findings](sound.md#ooalstreamedsound)
 - [x] `Core/OOBasicSoundReferencePoint.m` → `Core/OOBasicSoundReferencePoint.cpp` (41 / 37 lines) — 3✅ — [findings](sound.md#oobasicsoundreferencepoint)
-- [x] `Core/OOMusic.m` → *(absorbed — 1➖ — [findings](sound.md#oomusic)
+- [x] `Core/OOMusic.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 1➖ — [findings](sound.md#oomusic)
 - [x] `Core/OOMusicController.m` → `Core/OOMusicController.cpp` (361 / 305 lines) — 25✅ 6➖ — [findings](sound.md#oomusiccontroller)
 - [x] `Core/OOOpenALController.m` → `Core/OOOpenALController.cpp` (102 / 96 lines) — 5✅ — [findings](sound.md#ooopenalcontroller)
 - [x] `Core/OOSoundSource.m` → `Core/OOSoundSource.cpp` (299 / 333 lines) — 31✅ 1⚠️ — [findings](sound.md#oosoundsource)
@@ -285,7 +303,7 @@ Other low findings are recorded per file. The bulk falls into three groups:
 - [x] `Core/OOConvertCubeMapToLatLong.m` → `Core/OOConvertCubeMapToLatLong.cpp` (146 / 148 lines) — 1✅ — [findings](graphics.md#ooconvertcubemaptolatlong)
 - [x] `Core/OODebugGLDrawing.m` → `Core/OODebugGLDrawing.cpp` (160 / 164 lines) — 7✅ — [findings](graphics.md#oodebuggldrawing)
 - [x] `Core/OODrawable.m` → `Core/OODrawable.cpp` (86 / 116 lines) — 10✅ 1⚠️ — [findings](graphics.md#oodrawable)
-- [x] `Core/OOEnvironmentCubeMap.m` → *(absorbed — 10➖ — [findings](graphics.md#ooenvironmentcubemap)
+- [x] `Core/OOEnvironmentCubeMap.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 10➖ — [findings](graphics.md#ooenvironmentcubemap)
 - [x] `Core/OOGraphicsResetManager.m` → `Core/OOGraphicsResetManager.cpp` (136 / 99 lines) — 4✅ 1⚠️ 6➖ — [findings](graphics.md#oographicsresetmanager)
 - [x] `Core/OOMesh.m` → `Core/OOMesh.cpp` (2078 / 1973 lines) — 62✅ 3⚠️ 1❌ — [findings](graphics.md#oomesh)
 - [x] `Core/OOOpenGL.m` → `Core/OOOpenGL.cpp` (552 / 574 lines) — 24✅ — [findings](graphics.md#ooopengl)
@@ -298,7 +316,7 @@ Other low findings are recorded per file. The bulk falls into three groups:
 - [x] `Core/OOSkyDrawable.m` → `Core/OOSkyDrawable.cpp` (685 / 679 lines) — 23✅ 1⚠️ — [findings](graphics.md#ooskydrawable)
 - [x] `Core/OOTextureScaling.m` → `Core/OOTextureScaling.cpp` (1578 / 1605 lines) — 23✅ 6⚠️ 1❌ — [findings](graphics.md#ootexturescaling)
 - [x] `Core/OOTextureSprite.m` → `Core/OOTextureSprite.cpp` (115 / 106 lines) — 7✅ — [findings](graphics.md#ootexturesprite)
-- [x] `Core/TextureStore.m` → *(absorbed — 9➖ — [findings](graphics.md#texturestore)
+- [x] `Core/TextureStore.m` → *(absorbed into `src/oofnd/` or callers; see findings)* — 9➖ — [findings](graphics.md#texturestore)
 
 ### HUD, GUI, crosshairs — [hud-gui.md](hud-gui.md)
 
@@ -357,4 +375,4 @@ Other low findings are recorded per file. The bulk falls into three groups:
 - [x] C sources and tables (`*.c`, `Tables/*.tbl`, `OOSaveEXRSnapshot.cpp`) verbatim check — ✅ identical except include/NDEBUG plumbing — [c-and-tables.md](c-and-tables.md)
 - [x] C++-only files (`EntityHelpers`, `OOEntityCalledByName`, `OODataFromOXZFile`, `OOPListGameTypes`, `OOJSEngineNativeWrappers`, `OOJSPrivateObject`, `ooscript/JSEngine_quickjs.cpp`, `oofnd/Exception.cpp`, `oofnd/objc/OOAssert.cpp`) reviewed against what they replace — 8 files + dispatch-table completeness; 2 med ❌ (exception narrowing, `EntityShortDescription`) — [cpp-only.md](cpp-only.md)
 - [x] Maths headers (`OOMaths.h`, `OOFastArithmetic.h`, inline functions in `OOVector.h`/`OOHPVector.h`/`OOQuaternion.h`/`OOMatrix.h`) — 11✅ 2⚠️ — [findings](math.md#oomaths)
-- [ ] Header constants sweep (`#define`, enums, default values across paired `.h`) — *pending* — [headers.md](headers.md)
+- [x] Header constants sweep (`#define`, enums, default values across paired `.h`) — 238 header pairs, 857 defines, 948 enum values, 173 consts, 105 inlines: 0 ❌, 4 ⚠️ — [headers.md](headers.md)
