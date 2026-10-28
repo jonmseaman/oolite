@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 191 / 241 upstream `.m` files · extra rows below
+**Progress:** 199 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -42,6 +42,8 @@ Patterns that recur across files. Each instance is also recorded in its own file
   [scripting.md#oojsmissionvariables](scripting.md#oojsmissionvariables)
 
 ### Medium
+- ✔ **Every JS error/warning is logged under class `script.javaScript.<sev>.notAnError`.** The QuickJS backend never passes an `errorNumber` to `invokeReporter` (`JSEngine_quickjs.cpp:878,936,3507,3519`), so the `javascript-errors.plist` lookup always resolves error 0. Message text also follows QuickJS-ng wording, and compile errors no longer print the source line (`linebuf` is always null). [scripting.md#oojavascriptengine](scripting.md#oojavascriptengine)
+- **SpiderMonkey language extensions are gone** (`for each`, expression closures, `toSource`, Array generics). `setVersion(ECMA5)` and the context options are stored but ignored. No built-in script uses these extensions; OXPs may.
 - ✔ **`laserColor` shader uniform can no longer be bound.** It has no row in `EntityShaderBindings.cpp`, whose comment wrongly says it "fails as before". Upstream bound `-[ShipEntity laserColor]` (an OOColor) via `OOShaderUniform.m:511`. [graphics.md#oushaderuniform](graphics.md#ooshaderuniform)
 - ✔ **Symlinked `.oxp` folders are not found.** The OXP scan uses `symlink_status` (`ResourceManager.cpp:498`). [gamedata.md#resourcemanager](gamedata.md#resourcemanager)
 - ✔ **Data cache likely rebuilt every launch.** File mod-times are converted using two separate `now()` readings, which jitter (`oofnd/FileSystem.hpp:180-182`), so `dataCache.rebuild.datesChanged` fires. [gamedata.md#resourcemanager](gamedata.md#resourcemanager)
@@ -134,18 +136,18 @@ Recorded per file. The bulk falls into three groups:
 - [x] `Core/Entities/PlayerEntityLegacyScriptEngine.m` → `Core/Entities/PlayerEntityLegacyScriptEngine.cpp` (2625 / 2772 lines) — 146✅ 6⚠️ 1❌ — [findings](scripting.md#playerentitylegacyscriptengine)
 - [x] `Core/Scripting/EntityOOJavaScriptExtensions.m` → `Core/Scripting/EntityOOJavaScriptExtensions.cpp` (149 / 219 lines) — 9✅ 1❌ — [findings](scripting.md#entityoojavascriptextensions)
 - [x] `Core/Scripting/OOConstToJSString.m` → `Core/Scripting/OOConstToJSString.cpp` (240 / 248 lines) — 9✅ — [findings](scripting.md#ooconsttojsstring)
-- [ ] `Core/Scripting/OOJSCall.m` → `Core/Scripting/OOJSCall.cpp` (229 / 333 lines) — *pending* — [findings](scripting.md#oojscall)
+- [x] `Core/Scripting/OOJSCall.m` → `Core/Scripting/OOJSCall.cpp` (229 / 333 lines) — 1✅ 1⚠️ 5➖ — [findings](scripting.md#oojscall)
 - [x] `Core/Scripting/OOJSClock.m` → `Core/Scripting/OOJSClock.cpp` (229 / 324 lines) — 8✅ — [findings](scripting.md#oojsclock)
 - [x] `Core/Scripting/OOJSDock.m` → `Core/Scripting/OOJSDock.cpp` (267 / 363 lines) — 11✅ — [findings](scripting.md#oojsdock)
-- [ ] `Core/Scripting/OOJSEngineDebuggerHelpers.m` → `Core/Scripting/OOJSEngineDebuggerHelpers.cpp` (235 / 240 lines) — *pending* — [findings](scripting.md#oojsenginedebuggerhelpers)
-- [ ] `Core/Scripting/OOJSEngineTimeManagement.m` → `Core/Scripting/OOJSEngineTimeManagement.cpp` (923 / 916 lines) — *pending* — [findings](scripting.md#oojsenginetimemanagement)
+- [x] `Core/Scripting/OOJSEngineDebuggerHelpers.m` → `Core/Scripting/OOJSEngineDebuggerHelpers.cpp` (235 / 240 lines) — 6✅ 2⚠️ — [findings](scripting.md#oojsenginedebuggerhelpers)
+- [x] `Core/Scripting/OOJSEngineTimeManagement.m` → `Core/Scripting/OOJSEngineTimeManagement.cpp` (923 / 916 lines) — 49✅ 7⚠️ 1❌ 2➖ — [findings](scripting.md#oojsenginetimemanagement)
 - [x] `Core/Scripting/OOJSEntity.m` → `Core/Scripting/OOJSEntity.cpp` (388 / 531 lines) — 14✅ — [findings](scripting.md#oojsentity)
 - [x] `Core/Scripting/OOJSEquipmentInfo.m` → `Core/Scripting/OOJSEquipmentInfo.cpp` (528 / 700 lines) — 15✅ 1⚠️ 1❌ — [findings](scripting.md#oojsequipmentinfo)
 - [x] `Core/Scripting/OOJSExhaustPlume.m` → `Core/Scripting/OOJSExhaustPlume.cpp` (214 / 306 lines) — 10✅ — [findings](scripting.md#oojsexhaustplume)
 - [x] `Core/Scripting/OOJSFlasher.m` → `Core/Scripting/OOJSFlasher.cpp` (290 / 399 lines) — 10✅ — [findings](scripting.md#oojsflasher)
 - [x] `Core/Scripting/OOJSFont.m` → `Core/Scripting/OOJSFont.cpp` (57 / 92 lines) — 2✅ — [findings](scripting.md#oojsfont)
 - [x] `Core/Scripting/OOJSFrameCallbacks.m` → `Core/Scripting/OOJSFrameCallbacks.cpp` (435 / 468 lines) — 13✅ — [findings](scripting.md#oojsframecallbacks)
-- [ ] `Core/Scripting/OOJSFunction.m` → `Core/Scripting/OOJSFunction.cpp` (241 / 180 lines) — *pending* — [findings](scripting.md#oojsfunction)
+- [x] `Core/Scripting/OOJSFunction.m` → `Core/Scripting/OOJSFunction.cpp` (241 / 180 lines) — 8✅ 1❌ 3➖ — [findings](scripting.md#oojsfunction)
 - [x] `Core/Scripting/OOJSGlobal.m` → `Core/Scripting/OOJSGlobal.cpp` (789 / 1043 lines) — 24✅ 2❌ — [findings](scripting.md#oojsglobal)
 - [x] `Core/Scripting/OOJSGuiScreenKeyDefinition.m` → `Core/Scripting/OOJSGuiScreenKeyDefinition.cpp` (150 / 172 lines) — 13✅ — [findings](scripting.md#oojsguiscreenkeydefinition)
 - [x] `Core/Scripting/OOJSInterfaceDefinition.m` → `Core/Scripting/OOJSInterfaceDefinition.cpp` (166 / 178 lines) — 15✅ — [findings](scripting.md#oojsinterfacedefinition)
@@ -158,7 +160,7 @@ Recorded per file. The bulk falls into three groups:
 - [x] `Core/Scripting/OOJSPlayerShip.m` → `Core/Scripting/OOJSPlayerShip.cpp` (1751 / 2149 lines) — 38✅ 1⚠️ 1❌ — [findings](scripting.md#oojsplayership)
 - [x] `Core/Scripting/OOJSPopulatorDefinition.m` → `Core/Scripting/OOJSPopulatorDefinition.cpp` (125 / 171 lines) — 8✅ — [findings](scripting.md#oojspopulatordefinition)
 - [x] `Core/Scripting/OOJSQuaternion.m` → `Core/Scripting/OOJSQuaternion.cpp` (925 / 980 lines) — 32✅ — [findings](scripting.md#oojsquaternion)
-- [ ] `Core/Scripting/OOJSScript.m` → `Core/Scripting/OOJSScript.cpp` (761 / 889 lines) — *pending* — [findings](scripting.md#oojsscript)
+- [x] `Core/Scripting/OOJSScript.m` → `Core/Scripting/OOJSScript.cpp` (761 / 889 lines) — 29✅ 4⚠️ 2➖ — [findings](scripting.md#oojsscript)
 - [x] `Core/Scripting/OOJSShip.m` → `Core/Scripting/OOJSShip.cpp` (4015 / 4311 lines) — 95✅ 2⚠️ 3❌ — [findings](scripting.md#oojsship)
 - [x] `Core/Scripting/OOJSShipGroup.m` → `Core/Scripting/OOJSShipGroup.cpp` (347 / 510 lines) — 13✅ — [findings](scripting.md#oojsshipgroup)
 - [x] `Core/Scripting/OOJSSound.m` → `Core/Scripting/OOJSSound.cpp` (299 / 452 lines) — 14✅ 1⚠️ — [findings](scripting.md#oojssound)
@@ -174,10 +176,10 @@ Recorded per file. The bulk falls into three groups:
 - [x] `Core/Scripting/OOJSWaypoint.m` → `Core/Scripting/OOJSWaypoint.cpp` (250 / 345 lines) — 9✅ — [findings](scripting.md#oojswaypoint)
 - [x] `Core/Scripting/OOJSWorldScripts.m` → `Core/Scripting/OOJSWorldScripts.cpp` (110 / 164 lines) — 3✅ 1⚠️ — [findings](scripting.md#oojsworldscripts)
 - [x] `Core/Scripting/OOJSWormhole.m` → `Core/Scripting/OOJSWormhole.cpp` (196 / 272 lines) — 9✅ — [findings](scripting.md#oojswormhole)
-- [ ] `Core/Scripting/OOJavaScriptEngine.m` → `Core/Scripting/OOJavaScriptEngine.cpp` (2322 / 2206 lines) — *pending* — [findings](scripting.md#oojavascriptengine)
+- [x] `Core/Scripting/OOJavaScriptEngine.m` → `Core/Scripting/OOJavaScriptEngine.cpp` (2322 / 2206 lines) — 89✅ 11⚠️ 5❌ 13➖ — [findings](scripting.md#oojavascriptengine)
 - [x] `Core/Scripting/OOLegacyScriptWhitelist.m` → `Core/Scripting/OOLegacyScriptWhitelist.cpp` (515 / 587 lines) — 14✅ 2❌ — [findings](scripting.md#oolegacyscriptwhitelist)
-- [ ] `Core/Scripting/OOPListScript.m` → `Core/Scripting/OOPListScript.cpp` (193 / 185 lines) — *pending* — [findings](scripting.md#ooplistscript)
-- [ ] `Core/Scripting/OOScript.m` → `Core/Scripting/OOScript.cpp` (271 / 339 lines) — *pending* — [findings](scripting.md#ooscript)
+- [x] `Core/Scripting/OOPListScript.m` → `Core/Scripting/OOPListScript.cpp` (193 / 185 lines) — 4✅ 4⚠️ 1❌ 1➖ — [findings](scripting.md#ooplistscript)
+- [x] `Core/Scripting/OOScript.m` → `Core/Scripting/OOScript.cpp` (271 / 339 lines) — 12✅ 1⚠️ — [findings](scripting.md#ooscript)
 - [x] `Core/Scripting/OOScriptTimer.m` → `Core/Scripting/OOScriptTimer.cpp` (244 / 280 lines) — 18✅ — [findings](scripting.md#ooscripttimer)
 
 ### Player entity and its categories — [entities-player.md](entities-player.md)

@@ -293,21 +293,25 @@ Upstream `src/Core/Scripting/OOConstToJSString.m` ↔ `Core/Scripting/OOConstToJ
 <a id="oojscall"></a>
 Upstream `src/Core/Scripting/OOJSCall.m` ↔ `Core/Scripting/OOJSCall.cpp`
 
-**Status:** pending
+**Status:** done — 7 rows: 1 ✅ 1 ⚠️ 0 ❌ 5 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOJSCallObjCObjectMethod()` (66) | | |
-| `SignatureMatch()` (186) | | |
-| `GetMethodType()` (194) | | |
-| `-[OOJSCallMethodSignatureTemplateClass voidVoidMethod]` (214) | | |
-| `-[OOJSCallMethodSignatureTemplateClass voidObjectMethod:]` (218) | | |
-| `-[OOJSCallMethodSignatureTemplateClass objectObjectMethod:]` (222) | | |
+| `MethodExpectsParameter()` (64) *(added: inline, missed by extractor)* | `MethodExpectsParameter()` `Core/Scripting/OOJSCall.cpp:73` | ✅ |
+| `OOJSCallObjCObjectMethod()` (66) | `CallMethod()` `Core/Scripting/OOJSCall.cpp:150`, entry `OOJSCallEntityMethod()` `Core/Scripting/OOJSCall.cpp:328` | ⚠️ |
+| `SignatureMatch()` (186) | — (signatures precomputed in the generated table `kOOJSCallEntityMethods`, `OOJSCallEntityMethods.h`) | ➖ |
+| `GetMethodType()` (194) | `MethodTypeOfRow()` `Core/Scripting/OOJSCall.cpp:124` (reads the table row's form/encoding) | ➖ |
+| `-[OOJSCallMethodSignatureTemplateClass voidVoidMethod]` (214) | — (template class deleted; `OOJSCallEntityMethodForm::VoidVoid`) | ➖ |
+| `-[OOJSCallMethodSignatureTemplateClass voidObjectMethod:]` (218) | — (`OOJSCallEntityMethodForm::VoidString`) | ➖ |
+| `-[OOJSCallMethodSignatureTemplateClass objectObjectMethod:]` (222) | — (`OOJSCallEntityMethodForm::PListString`) | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **med** — `callObjC()` now reaches only entities. Upstream it reached any native object that `OOJSNativeObjectFromJSObject` returned (scripts, timers, sounds, system info and so on). A non-entity `this` now reports "`<class>.callObjC(): (null) does not respond to method X.`". Bead oo-4aq6a.5 (comment at OOJSCall.cpp:146-148). — upstream `Debug/OOJSConsole.m:705`, `Core/Scripting/OOJSCall.m:97` ↔ port `Core/Scripting/OOJSCall.cpp:313-319`, `Core/Debug/OOJSConsole.cpp:946`
+- ⚠️ **low** — Methods are looked up in a generated name table (bead oo-9ht.44) plus `oo::EntityRespondsToName`, not with `respondsToSelector:`. Any entity selector missing from the table now reports "does not respond". — upstream `Core/Scripting/OOJSCall.m:97` ↔ port `Core/Scripting/OOJSCall.cpp:199`
+- ❌ **low** — Parameter join: upstream `concatenationOfStringsFromJavaScriptValues` left the parameter nil when the first argument's `toString` failed, and raised (`appendString:nil`) when a later one failed. The port substitutes `""` and carries on. — upstream `Core/Scripting/OOJavaScriptEngine.m:1648-1655` ↔ port `Core/Scripting/OOJSCall.cpp:179-183`
+- ⚠️ **low** — In `OO_DEBUG` builds the player statistics methods (`report/clearJSVector/QuaternionStatistics`) are dispatched first, through `kPlayerMethods`, and skip the signature check. All four take no argument, so the result is the same (ADR-0056 amendment oo-9ht.15). — port `Core/Scripting/OOJSCall.cpp:86-106,187-197`
+- Subtle, ✅: a method returning a colour used to be `kMethodTypeObjectVoid` with an `OOColor` JS value; it is now `kMethodTypeColorVoid` with `OOColorObjectNode`, and the `_bool` suffix still gives `false`. Integer and float results are still widened through signed/unsigned 64-bit and double. Error texts match, as does the `setScriptTarget:` side effect before the selector is converted. — port `Core/Scripting/OOJSCall.cpp:161-170,239-244,271-288`
 
 ## OOJSClock
 
@@ -373,94 +377,116 @@ Upstream `src/Core/Scripting/OOJSDock.m` ↔ `Core/Scripting/OOJSDock.cpp`
 <a id="oojsenginedebuggerhelpers"></a>
 Upstream `src/Core/Scripting/OOJSEngineDebuggerHelpers.m` ↔ `Core/Scripting/OOJSEngineDebuggerHelpers.cpp`
 
-**Status:** pending
+**Status:** done — 8 rows: 6 ✅ 2 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `JSValueToStrDbg()` (85) | | |
-| `JSObjectToStrDbg()` (94) | | |
-| `JSStringToStrDbg()` (101) | | |
-| `JSValueTypeDbg()` (108) | | |
-| `JSValueToStrSafeDbg()` (155) | | |
-| `JSObjectToStrSafeDbg()` (187) | | |
-| `JSStringToStrSafeDbg()` (194) | | |
-| `JSIDToStrSafeDbg()` (201) | | |
+| `JSValueToStrDbg()` (85) | `JSValueToStrDbg` `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:122` | ✅ |
+| `JSObjectToStrDbg()` (94) | `JSObjectToStrDbg` `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:132` | ✅ |
+| `JSStringToStrDbg()` (101) | `JSStringToStrDbg` `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:139` | ✅ |
+| `JSValueTypeDbg()` (108) | `JSValueTypeDbg` `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:146` | ⚠️ |
+| `JSValueToStrSafeDbg()` (155) | `JSValueToStrSafeDbg` `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:169` | ✅ |
+| `JSObjectToStrSafeDbg()` (187) | `JSObjectToStrSafeDbg` `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:201` | ✅ |
+| `JSStringToStrSafeDbg()` (194) | `JSStringToStrSafeDbg` `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:208` | ✅ |
+| `JSIDToStrSafeDbg()` (201) | `JSIDToStrSafeDbg` `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:215` | ⚠️ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — The magic-value switch ("magic (array hole)" etc.) is gone: such values cannot be expressed through the façade and fall to "unknown". Documented in the port's file comment (beads oo-4kf, oo-1gc.3). — upstream `Core/Scripting/OOJSEngineDebuggerHelpers.m:123-145` ↔ port `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:94-100,165`
+- ⚠️ **low** — `JSValueTypeDbg` names objects through `OOJSGetClass` → `getObjectClass` (`Core/Scripting/OOJSEngineCore.h:234`), so engine built-ins report QuickJS-ng's class names instead of SpiderMonkey's. The port comment says such objects report "object", but that is stale: the fallback applies only when the descriptor is null. — upstream `Core/Scripting/OOJSEngineDebuggerHelpers.m:148` ↔ port `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:160-163`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:2812`
+- ⚠️ **low** — `JSIDToStrSafeDbg`: the empty/zero/object/default-XML-namespace id kinds and the raw-bits `unknown <0x%llX>` collapse to "unknown", and symbol ids also fall into "unknown". The bug text changes from `*** uninterned string in jsid! ***` to `*** uninterned string in ooscript::PropertyId! ***`. — upstream `Core/Scripting/OOJSEngineDebuggerHelpers.m:206-232` ↔ port `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:221-236`
+- Subtle — The "Safe" variants no longer avoid the engine. `getStringLength`, `getInternedStringChars` and `idToString` use the backend's `gDefaultCtx` and build cached UTF-16 buffers, and `idToString` creates a `JSString` from the atom that goes into the arena and the interned set. — port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:2572-2580,3394-3431`
+- Subtle — Results come from one shared static `std::string` (`DebuggerCString`), not autoreleased strings, so the next `*Dbg` call invalidates the previous result. This matters only when used from a debugger. — port `Core/Scripting/OOJSEngineDebuggerHelpers.cpp:114-119`
 
 ## OOJSEngineTimeManagement
 
 <a id="oojsenginetimemanagement"></a>
 Upstream `src/Core/Scripting/OOJSEngineTimeManagement.m` ↔ `Core/Scripting/OOJSEngineTimeManagement.cpp`
 
-**Status:** pending
+**Status:** done — 59 rows: 49 ✅ 7 ⚠️ 1 ❌ 2 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOJSPauseTimeLimiter()` (129) | | |
-| `OOJSResumeTimeLimiter()` (137) | | |
-| `OOJSCopyTimeLimiterNominalStartTime()` (151) | | |
-| `OOJSResetTimeLimiter()` (156) | | |
-| `OOJSGetTimeLimiterLimit()` (164) | | |
-| `OOJSSetTimeLimiterLimit()` (169) | | |
-| `-[OOJavaScriptEngine(WatchdogTimer) watchdogTimerThread]` (177) | | |
-| `OperationCallback()` (204) | | |
-| `ContextCallback()` (228) | | |
-| `OOJSTimeManagementInit()` (240) | | |
-| `OOJSBeginProfiling()` (293) | | |
-| `OOJSEndProfiling()` (313) | | |
-| `OOJSIsProfiling()` (354) | | |
-| `CleanUpJSFrame()` (366) | | |
-| `TraceEnterJSFunction()` (371) | | |
-| `FunctionCallback()` (430) | | |
-| `OOJSProfileEnter()` (490) | | |
-| `OOJSProfileExit()` (510) | | |
-| `UpdateProfileForFrame()` (553) | | |
-| `-[OOTimeProfile dealloc]` (581) | | |
-| `-[OOTimeProfile description]` (588) | | |
-| `-[OOTimeProfile totalTime]` (624) | | |
-| `-[OOTimeProfile setTotalTime:]` (629) | | |
-| `-[OOTimeProfile javaScriptTime]` (634) | | |
-| `-[OOTimeProfile setJavaScriptTime:]` (644) | | |
-| `-[OOTimeProfile nativeTime]` (650) | | |
-| `-[OOTimeProfile setNativeTime:]` (655) | | |
-| `-[OOTimeProfile extensionTime]` (660) | | |
-| `-[OOTimeProfile setExtensionTime:]` (665) | | |
-| `-[OOTimeProfile nonExtensionTime]` (670) | | |
-| `-[OOTimeProfile profilerOverhead]` (675) | | |
-| `-[OOTimeProfile setProfilerOverhead:]` (680) | | |
-| `-[OOTimeProfile profileEntries]` (685) | | |
-| `-[OOTimeProfile setProfileEntries:]` (690) | | |
-| `-[OOTimeProfile oo_jsValueInContext:]` (698) | | |
-| `-[OOTimeProfile propertyListRepresentation]` (703) | | |
-| `-[OOTimeProfileEntry initWithCName:]` (727) | | |
-| `-[OOTimeProfileEntry initWithJSFunction:context:]` (741) | | |
-| `-[OOTimeProfileEntry dealloc]` (776) | | |
-| `-[OOTimeProfileEntry addSampleWithTotalTime:selfTime:]` (783) | | |
-| `-[OOTimeProfileEntry description]` (792) | | |
-| `-[OOTimeProfileEntry function]` (818) | | |
-| `-[OOTimeProfileEntry hitCount]` (823) | | |
-| `-[OOTimeProfileEntry totalTimeSum]` (828) | | |
-| `-[OOTimeProfileEntry selfTimeSum]` (833) | | |
-| `-[OOTimeProfileEntry totalTimeAverage]` (838) | | |
-| `-[OOTimeProfileEntry selfTimeAverage]` (843) | | |
-| `-[OOTimeProfileEntry totalTimeMax]` (848) | | |
-| `-[OOTimeProfileEntry selfTimeMax]` (853) | | |
-| `-[OOTimeProfileEntry isJavaScriptFrame]` (858) | | |
-| `-[OOTimeProfileEntry compareByTotalTime:]` (867) | | |
-| `-[OOTimeProfileEntry compareByTotalTimeReverse:]` (872) | | |
-| `-[OOTimeProfileEntry compareBySelfTime:]` (884) | | |
-| `-[OOTimeProfileEntry compareBySelfTimeReverse:]` (889) | | |
-| `-[OOTimeProfileEntry oo_jsValueInContext:]` (901) | | |
-| `-[OOTimeProfileEntry propertyListRepresentation]` (906) | | |
+| statics + `OOJS_TIME_LIMIT` (0.2 s debug / 1 s) (54-73) *(added)* | same statics, `Core/Scripting/OOJSEngineTimeManagement.cpp:59-80` | ✅ |
+| `OOJSStartTimeLimiterWithTimeLimit_()` (80) *(added)* | `OOJSStartTimeLimiterWithTimeLimit_` `Core/Scripting/OOJSEngineTimeManagement.cpp:87` | ✅ |
+| `OOJSStopTimeLimiter_()` (105) *(added)* | `OOJSStopTimeLimiter_` `Core/Scripting/OOJSEngineTimeManagement.cpp:112` | ✅ |
+| `OOJSPauseTimeLimiter()` (129) | `OOJSPauseTimeLimiter` `Core/Scripting/OOJSEngineTimeManagement.cpp:136` | ✅ |
+| `OOJSResumeTimeLimiter()` (137) | `OOJSResumeTimeLimiter` `Core/Scripting/OOJSEngineTimeManagement.cpp:144` | ✅ |
+| `OOJSCopyTimeLimiterNominalStartTime()` (151) | `OOJSCopyTimeLimiterNominalStartTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:158` | ✅ |
+| `OOJSResetTimeLimiter()` (156) | `OOJSResetTimeLimiter` `Core/Scripting/OOJSEngineTimeManagement.cpp:163` | ✅ |
+| `OOJSGetTimeLimiterLimit()` (164) | `OOJSGetTimeLimiterLimit` `Core/Scripting/OOJSEngineTimeManagement.cpp:171` | ✅ |
+| `OOJSSetTimeLimiterLimit()` (169) | `OOJSSetTimeLimiterLimit` `Core/Scripting/OOJSEngineTimeManagement.cpp:176` | ✅ |
+| `-[OOJavaScriptEngine(WatchdogTimer) watchdogTimerThread]` (177) | `WatchdogTimerThread` `Core/Scripting/OOJSEngineTimeManagement.cpp:186` (+ `triggerAllOperationCallbacks` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3895`) | ❌ |
+| `OperationCallback()` (204) | `OperationCallback` `Core/Scripting/OOJSEngineTimeManagement.cpp:212` (+ `InterruptTramp` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:2375`) | ✅ |
+| `ContextCallback()` (228) | `ContextCallback` `Core/Scripting/OOJSEngineTimeManagement.cpp:237` | ✅ |
+| `OOJSTimeManagementInit()` (240) | `OOJSTimeManagementInit` `Core/Scripting/OOJSEngineTimeManagement.cpp:249` | ✅ |
+| `OOJSBeginProfiling()` (293) | `OOJSBeginProfiling` `Core/Scripting/OOJSEngineTimeManagement.cpp:297` | ✅ |
+| `OOJSEndProfiling()` (313) | `OOJSEndProfiling` `Core/Scripting/OOJSEngineTimeManagement.cpp:320` | ✅ |
+| `OOJSIsProfiling()` (354) | `OOJSIsProfiling` `Core/Scripting/OOJSEngineTimeManagement.cpp:367` | ✅ |
+| `CleanUpJSFrame()` (366) | `CleanUpJSFrame` `Core/Scripting/OOJSEngineTimeManagement.cpp:381` (never compiled) | ⚠️ |
+| `TraceEnterJSFunction()` (371) | `TraceEnterJSFunction` `Core/Scripting/OOJSEngineTimeManagement.cpp:386` (never compiled) | ⚠️ |
+| `FunctionCallback()` (430) | `FunctionCallback` `Core/Scripting/OOJSEngineTimeManagement.cpp:447` (never compiled) | ⚠️ |
+| `OOJSProfileEnter()` (490) | `OOJSProfileEnter` `Core/Scripting/OOJSEngineTimeManagement.cpp:505` | ✅ |
+| `OOJSProfileExit()` (510) | `OOJSProfileExit` `Core/Scripting/OOJSEngineTimeManagement.cpp:527` | ✅ |
+| `UpdateProfileForFrame()` (553) | `UpdateProfileForFrame` `Core/Scripting/OOJSEngineTimeManagement.cpp:570` | ✅ |
+| `-[OOTimeProfile dealloc]` (581) | implicit (`std::vector<oo::Ref<…>>` member) `Core/Scripting/OOJSEngineTimeManagement.h` | ➖ |
+| `-[OOTimeProfile description]` (588) | `OOTimeProfile::description` `Core/Scripting/OOJSEngineTimeManagement.cpp:597` | ✅ |
+| `-[OOTimeProfile totalTime]` (624) | `OOTimeProfile::totalTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:633` | ✅ |
+| `-[OOTimeProfile setTotalTime:]` (629) | `OOTimeProfile::setTotalTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:638` | ✅ |
+| `-[OOTimeProfile javaScriptTime]` (634) | `OOTimeProfile::javaScriptTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:643` | ⚠️ |
+| `-[OOTimeProfile setJavaScriptTime:]` (644) | `OOTimeProfile::setJavaScriptTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:653` (never compiled) | ⚠️ |
+| `-[OOTimeProfile nativeTime]` (650) | `OOTimeProfile::nativeTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:659` | ✅ |
+| `-[OOTimeProfile setNativeTime:]` (655) | `OOTimeProfile::setNativeTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:664` | ✅ |
+| `-[OOTimeProfile extensionTime]` (660) | `OOTimeProfile::extensionTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:669` | ✅ |
+| `-[OOTimeProfile setExtensionTime:]` (665) | `OOTimeProfile::setExtensionTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:674` | ✅ |
+| `-[OOTimeProfile nonExtensionTime]` (670) | `OOTimeProfile::nonExtensionTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:679` | ✅ |
+| `-[OOTimeProfile profilerOverhead]` (675) | `OOTimeProfile::profilerOverhead` `Core/Scripting/OOJSEngineTimeManagement.cpp:684` | ✅ |
+| `-[OOTimeProfile setProfilerOverhead:]` (680) | `OOTimeProfile::setProfilerOverhead` `Core/Scripting/OOJSEngineTimeManagement.cpp:689` | ✅ |
+| `-[OOTimeProfile profileEntries]` (685) | `OOTimeProfile::profileEntries` `Core/Scripting/OOJSEngineTimeManagement.cpp:694` | ✅ |
+| `-[OOTimeProfile setProfileEntries:]` (690) | `OOTimeProfile::setProfileEntries` `Core/Scripting/OOJSEngineTimeManagement.cpp:699` | ✅ |
+| `-[OOTimeProfile oo_jsValueInContext:]` (698) | `OOTimeProfile::oo_jsValueInContext` `Core/Scripting/OOJSEngineTimeManagement.cpp:704` | ✅ |
+| `-[OOTimeProfile propertyListRepresentation]` (703) | `OOTimeProfile::propertyListRepresentation` `Core/Scripting/OOJSEngineTimeManagement.cpp:709` | ✅ |
+| `-[OOTimeProfileEntry initWithCName:]` (727) | `OOTimeProfileEntry::OOTimeProfileEntry(const char*)` `Core/Scripting/OOJSEngineTimeManagement.cpp:728` | ✅ |
+| `-[OOTimeProfileEntry initWithJSFunction:context:]` (741) | `OOTimeProfileEntry::OOTimeProfileEntry(Function, Context)` `Core/Scripting/OOJSEngineTimeManagement.cpp:740` (never compiled) | ⚠️ |
+| `-[OOTimeProfileEntry dealloc]` (776) | implicit (`std::optional<std::string>` member) `Core/Scripting/OOJSEngineTimeManagement.h` | ➖ |
+| `-[OOTimeProfileEntry addSampleWithTotalTime:selfTime:]` (783) | `OOTimeProfileEntry::addSampleWithTotalTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:774` | ✅ |
+| `-[OOTimeProfileEntry description]` (792) | `OOTimeProfileEntry::description` `Core/Scripting/OOJSEngineTimeManagement.cpp:783` | ✅ |
+| `-[OOTimeProfileEntry function]` (818) | `OOTimeProfileEntry::function` `Core/Scripting/OOJSEngineTimeManagement.cpp:810` | ✅ |
+| `-[OOTimeProfileEntry hitCount]` (823) | `OOTimeProfileEntry::hitCount` `Core/Scripting/OOJSEngineTimeManagement.cpp:815` | ✅ |
+| `-[OOTimeProfileEntry totalTimeSum]` (828) | `OOTimeProfileEntry::totalTimeSum` `Core/Scripting/OOJSEngineTimeManagement.cpp:820` | ✅ |
+| `-[OOTimeProfileEntry selfTimeSum]` (833) | `OOTimeProfileEntry::selfTimeSum` `Core/Scripting/OOJSEngineTimeManagement.cpp:825` | ✅ |
+| `-[OOTimeProfileEntry totalTimeAverage]` (838) | `OOTimeProfileEntry::totalTimeAverage` `Core/Scripting/OOJSEngineTimeManagement.cpp:830` | ✅ |
+| `-[OOTimeProfileEntry selfTimeAverage]` (843) | `OOTimeProfileEntry::selfTimeAverage` `Core/Scripting/OOJSEngineTimeManagement.cpp:835` | ✅ |
+| `-[OOTimeProfileEntry totalTimeMax]` (848) | `OOTimeProfileEntry::totalTimeMax` `Core/Scripting/OOJSEngineTimeManagement.cpp:840` | ✅ |
+| `-[OOTimeProfileEntry selfTimeMax]` (853) | `OOTimeProfileEntry::selfTimeMax` `Core/Scripting/OOJSEngineTimeManagement.cpp:845` | ✅ |
+| `-[OOTimeProfileEntry isJavaScriptFrame]` (858) | `OOTimeProfileEntry::isJavaScriptFrame` `Core/Scripting/OOJSEngineTimeManagement.cpp:850` | ⚠️ |
+| `-[OOTimeProfileEntry compareByTotalTime:]` (867) | `OOTimeProfileEntry::compareByTotalTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:859` | ✅ |
+| `-[OOTimeProfileEntry compareByTotalTimeReverse:]` (872) | `OOTimeProfileEntry::compareByTotalTimeReverse` `Core/Scripting/OOJSEngineTimeManagement.cpp:864` | ✅ |
+| `-[OOTimeProfileEntry compareBySelfTime:]` (884) | `OOTimeProfileEntry::compareBySelfTime` `Core/Scripting/OOJSEngineTimeManagement.cpp:876` | ✅ |
+| `-[OOTimeProfileEntry compareBySelfTimeReverse:]` (889) | `OOTimeProfileEntry::compareBySelfTimeReverse` `Core/Scripting/OOJSEngineTimeManagement.cpp:881` | ✅ |
+| `-[OOTimeProfileEntry oo_jsValueInContext:]` (901) | `OOTimeProfileEntry::oo_jsValueInContext` `Core/Scripting/OOJSEngineTimeManagement.cpp:893` | ✅ |
+| `-[OOTimeProfileEntry propertyListRepresentation]` (906) | `OOTimeProfileEntry::propertyListRepresentation` `Core/Scripting/OOJSEngineTimeManagement.cpp:898` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — The watchdog thread's `triggerAllOperationCallbacks` walks `rs->contexts` (a `std::vector`) without a lock, whereas SpiderMonkey's TriggerAllOperationCallbacks took the GC lock. On the main thread `newContext`/`destroyContext` push to and erase from that vector (e.g. `OOJavaScriptEngine::reset` → `createMainThreadContext`). That is a data race, with a possible use-after-free, if the limiter fires during an engine reset. — upstream `Core/Scripting/OOJSEngineTimeManagement.m:197` ↔ port `Core/Scripting/OOJSEngineTimeManagement.cpp:206`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3895-3900,3687,3704`
+- Subtle (✅) — Limiter parity:
+  - The constants match (`OOJS_TIME_LIMIT` 0.2 s debug / 1 s; `kOOJSLongTimeLimit` 5.0).
+  - Start and pause nesting, the pause extension of `sLimiterTimeLimit` and the profiler-overhead extension are line-for-line the same.
+  - The kill message keeps class `script.javaScript.timeLimit` and the text "Script \"%@\" ran for %g seconds and has been terminated." (`{:g}` ≡ `%g`; a nil name prints "(null)").
+  - The abort is uncatchable: `InterruptTramp` returns 1, QuickJS-ng throws its uncatchable "interrupted", and `finish()` frees it without reporting. The caller sees "false, nothing pending", as with SpiderMonkey's callback returning false.
+  - — port `Core/Scripting/OOJSEngineTimeManagement.cpp:212-235`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:883-897,2375-2388`
+- Subtle — Polling granularity differs. SpiderMonkey ran the triggered callback at the next backedge or call. QuickJS-ng runs the interrupt handler only when its interrupt counter expires (about every 10k ops), and the façade calls Oolite's callback only if that context's atomic `triggered` flag is set (`exchange(false)`). The worst-case delay is negligible against the 1 s watchdog sleep. — port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:2375-2388,3620`
+- ⚠️ **low** — JavaScript-function profiling and call tracing are gone:
+  - Upstream meson defines `MOZ_TRACE_JSCALLS=1` by default (`meson.build:99-100`, `meson.options:12`). The port never defines it, and `ooscript::setFunctionCallback` returns false on QuickJS-ng.
+  - `FunctionCallback`, `TraceEnterJSFunction`, `CleanUpJSFrame`, `initWithJSFunction:` and `setJavaScriptTime:` are compiled out.
+  - Profiles and traces in profiling (debug) builds now show only native `[ON]` entries; `javaScriptTime` = `totalTime − nativeTime`; `isJavaScriptFrame` is always false.
+  - Intentional per the port comment (bead oo-99txa).
+  - — upstream `Core/Scripting/OOJSEngineTimeManagement.m:233-235,365-488,636-647,858-864` ↔ port `Core/Scripting/OOJSEngineTimeManagement.cpp:242-244,268-271,643-650,850-857`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:4095`
+- Subtle — `OOJSDumpStack` called from the time-limit kill path (under `OO_DEBUG_MONITOR_ENABLED`) now gets file/line frames only, because the backend's `frameThis`, `frameScopeChain` and `getScopeVariables` return nothing (ADR-0022). — port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:4086-4091`
+- Subtle — Profile entries come from `std::unordered_map` iteration followed by a descending `std::stable_sort` on self time. Upstream sorted `NSMapTable` values with `sortedArrayUsingSelector:`. Both leave ties in arbitrary order. — upstream `Core/Scripting/OOJSEngineTimeManagement.m:336` ↔ port `Core/Scripting/OOJSEngineTimeManagement.cpp:343-348`
+- Subtle — `OOTimeProfile::propertyListRepresentation` stores each entry's property list under `"profiles"`. Upstream stored the raw entry objects, which converted themselves through `oo_jsValueInContext:`, so the JS result is the same. Keys now come out of a `std::map` (alphabetical) rather than NSDictionary hash order, so the JS property enumeration order of the profile object may differ. — upstream `Core/Scripting/OOJSEngineTimeManagement.m:712-720,908-918` ↔ port `Core/Scripting/OOJSEngineTimeManagement.cpp:709-726,898-914`, `oofnd/PList.hpp:136`
+- ➖ — `dealloc` methods are replaced by RAII members (`std::vector<oo::Ref<>>`, `std::optional<std::string>`). — port `Core/Scripting/OOJSEngineTimeManagement.h`
 
 ## OOJSEntity
 
@@ -640,27 +666,38 @@ Upstream `src/Core/Scripting/OOJSFrameCallbacks.m` ↔ `Core/Scripting/OOJSFrame
 <a id="oojsfunction"></a>
 Upstream `src/Core/Scripting/OOJSFunction.m` ↔ `Core/Scripting/OOJSFunction.cpp`
 
-**Status:** pending
+**Status:** done — 12 rows: 8 ✅ 0 ⚠️ 1 ❌ 3 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOJSFunction initWithFunction:context:]` (32) | | |
-| `-[OOJSFunction initWithName:]` (55) | | |
-| `-[OOJSFunction deleteJSValue]` (114) | | |
-| `-[OOJSFunction dealloc]` (128) | | |
-| `-[OOJSFunction descriptionComponents]` (136) | | |
-| `-[OOJSFunction name]` (144) | | |
-| `-[OOJSFunction function]` (149) | | |
-| `-[OOJSFunction functionValue]` (154) | | |
-| `-[OOJSFunction evaluateWithContext:]` (163) | | |
-| `-[OOJSFunction evaluateWithContext:]` (179) | | |
-| `-[OOJSFunction evaluateWithContext:]` (211) | | |
-| `-[OOJSFunction evaluatePredicateWithContext:]` (226) | | |
+| `-[OOJSFunction initWithFunction:context:]` (32) | `OOJSFunction::initWithFunction()` `Core/Scripting/OOJSFunction.cpp:39` + ctor `Core/Scripting/OOJSFunction.cpp:50` | ✅ |
+| `-[OOJSFunction initWithName:]` (55) | `OOJSFunction::initWithName()` `Core/Scripting/OOJSFunction.cpp:63` → `ooscript::compileUCFunction` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3935` | ❌ |
+| `-[OOJSFunction deleteJSValue]` (114) | `OOJSFunction::deleteJSValue()` `Core/Scripting/OOJSFunction.cpp:122` | ✅ |
+| `-[OOJSFunction dealloc]` (128) | `OOJSFunction::~OOJSFunction()` `Core/Scripting/OOJSFunction.cpp:135` | ✅ |
+| `-[OOJSFunction descriptionComponents]` (136) | `OOJSFunction::descriptionComponents()` `Core/Scripting/OOJSFunction.cpp:140` | ✅ |
+| `-[OOJSFunction name]` (144) | `OOJSFunction::name()` `Core/Scripting/OOJSFunction.cpp:145` | ✅ |
+| `-[OOJSFunction function]` (149) | `OOJSFunction::function()` `Core/Scripting/OOJSFunction.cpp:150` | ✅ |
+| `-[OOJSFunction functionValue]` (154) | `OOJSFunction::functionValue()` `Core/Scripting/OOJSFunction.cpp:155` | ✅ |
+| `-[OOJSFunction evaluateWithContext:]` (163) | `OOJSFunction::evaluateWithContext()` `Core/Scripting/OOJSFunction.cpp:164` → `ooscript::callFunction` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3962` | ✅ |
+| `-[OOJSFunction evaluateWithContext:]` (179) | — removed, bead oo-4aq6a.6.2 (`Core/Scripting/OOJSFunction.cpp:179-180`) | ➖ |
+| `-[OOJSFunction evaluateWithContext:]` (211) | — removed, bead oo-4aq6a.6.2 | ➖ |
+| `-[OOJSFunction evaluatePredicateWithContext:]` (226) | — removed, bead oo-4aq6a.6.2 (no game caller; the AI scan predicate goes through `JSFunctionPredicate` in OOJavaScriptEngine) | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — The named function is no longer defined on the scope. SpiderMonkey's `CompileUCFunction` defines `name` as an enumerable property of the scope object. Both callers pass a NULL scope (the global), so upstream the global gained `_oo_AIScanPredicate` / `matchesRegExp`. The port evaluates a named function expression and defines nothing. — upstream `Core/Scripting/OOJSFunction.m:95` (SpiderMonkey `jsapi.cpp:4880-4884`) ↔ port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3935-3957`
+- ❌ **low** — Line numbers shift. The port wraps the body as `"(function name(args) {\n" + body + "\n})"` and evaluates it at line `lineno-1`, clamped to 1. For `lineNumber` 0 (ShipEntityAI's `_oo_AIScanPredicate`) or 1, body errors are reported at line 2 instead of 0/1. — port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3953-3954`, `Core/Entities/ShipEntityAI.cpp:2249-2256`
+- ❌ **low** — "Compile" now evaluates text. The body is spliced into source and the wrapper expression is run, so a body with an unbalanced `}` can close the wrapper and run code in global scope at compile time, or return a non-function. An example is an AI-plist scan predicate, which is wrapped in `"return " + expr + ";"`. Upstream `compileFunctionBody` parsed the body alone and ran nothing. — port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3940-3956`
+- **low** — Scope chain and error reporting:
+  - SpiderMonkey parents the function to `scope`, so free identifiers resolve through it. The port's function closes over the global plus the filename-based scope fallback. No visible effect today, since both callers pass NULL (the global).
+  - A syntax error reaches the reporter as a pending exception (`ReportFlag::Exception` via `finish`/`reportPendingImpl`) with QuickJS-ng wording, not as SpiderMonkey's compile-error report.
+  - — port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:886-936,2329-2350`
+- Subtle, ✅:
+  - `_name` is read from the function's `name` property (`getFunctionId` `JSEngine_quickjs.cpp:3121`); an empty name becomes null and prints `<anonymous>`. Upstream used the compile atom, with the same result.
+  - `_function` is rooted by address in the handle arena, as SpiderMonkey's named root was.
+  - A NULL `this` in `callFunction` becomes the global for a non-strict function in both engines.
+  - Code is converted with `utf8ToUtf16`, matching `getCharacters:`.
+  - — port `Core/Scripting/OOJSFunction.cpp:54-55,92,172`
 
 ## OOJSGlobal
 
@@ -1161,49 +1198,70 @@ Upstream `src/Core/Scripting/OOJSQuaternion.m` ↔ `Core/Scripting/OOJSQuaternio
 <a id="oojsscript"></a>
 Upstream `src/Core/Scripting/OOJSScript.m` ↔ `Core/Scripting/OOJSScript.cpp`
 
-**Status:** pending
+**Status:** done — 35 rows: 29 ✅ 4 ⚠️ 0 ❌ 2 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OOJSScript scriptWithPath:properties:]` (104) | | |
-| `-[OOJSScript initWithPath:properties:]` (109) | | |
-| `-[OOJSScript dealloc]` (256) | | |
-| `-[OOJSScript oo_jsClassName]` (281) | | |
-| `-[OOJSScript descriptionComponents]` (286) | | |
-| `-[OOJSScript javaScriptEngineWillReset:]` (294) | | |
-| `+[OOJSScript currentlyRunningScript]` (305) | | |
-| `+[OOJSScript scriptStack]` (312) | | |
-| `-[OOJSScript weakRetain]` (321) | | |
-| `-[OOJSScript weakRefDied:]` (328) | | |
-| `-[OOJSScript name]` (334) | | |
-| `-[OOJSScript scriptDescription]` (343) | | |
-| `-[OOJSScript version]` (348) | | |
-| `-[OOJSScript runWithTarget:]` (353) | | |
-| `-[OOJSScript callMethod:]` (357) | | |
-| `-[OOJSScript propertyWithID:inContext:]` (417) | | |
-| `-[OOJSScript setProperty:withID:inContext:]` (430) | | |
-| `-[OOJSScript defineProperty:withID:inContext:]` (440) | | |
-| `-[OOJSScript propertyNamed:]` (450) | | |
-| `-[OOJSScript setProperty:named:]` (464) | | |
-| `-[OOJSScript defineProperty:named:]` (478) | | |
-| `-[OOJSScript oo_jsValueInContext:]` (492) | | |
-| `+[OOJSScript pushScript:]` (499) | | |
-| `+[OOJSScript popScript:]` (512) | | |
-| `-[OOJSScript(OOPrivate) scriptNameFromPath:]` (541) | | |
-| `-[OOJSScript(OOPrivate) defaultPropertiesFromPath:]` (573) | | |
-| `-[OOScript(JavaScriptEvents) callMethod:]` (603) | | |
-| `InitOOJSScript()` (614) | | |
-| `ScriptAddProperty()` (620) | | |
-| `AddStackToArrayReversed()` (635) | | |
-| `LoadScriptWithName()` (643) | | |
-| `CompiledScriptData()` (707) | | |
-| `ScriptWithCompiledData()` (728) | | |
-| `StrippedName()` (754) | | |
+| `+[OOJSScript scriptWithPath:properties:]` (104) | `OOJSScript::scriptWithPath` `Core/Scripting/OOJSScript.cpp:200` (a failed init drops the Ref, as `DESTROY(self)` did) | ✅ |
+| `-[OOJSScript initWithPath:properties:]` (109) | `OOJSScript::initWithPath` `Core/Scripting/OOJSScript.cpp:208` | ⚠️ |
+| `-[OOJSScript dealloc]` (256) | `OOJSScript::~OOJSScript` `Core/Scripting/OOJSScript.cpp:347` | ✅ |
+| `-[OOJSScript oo_jsClassName]` (281) | `OOJSScript::jsClassName` `Core/Scripting/OOJSScript.cpp:362` | ✅ |
+| `-[OOJSScript descriptionComponents]` (286) | `OOJSScript::descriptionComponents` `Core/Scripting/OOJSScript.cpp:367` | ✅ |
+| `-[OOJSScript javaScriptEngineWillReset:]` (294) | `OOJSScript::javaScriptEngineWillReset` `Core/Scripting/OOJSScript.cpp:375` (nulls `_jsSelf` before unrooting, as upstream; roots are keyed by address) | ✅ |
+| `+[OOJSScript currentlyRunningScript]` (305) | `OOJSScript::currentlyRunningScript` `Core/Scripting/OOJSScript.cpp:386` | ✅ |
+| `+[OOJSScript scriptStack]` (312) | `OOJSScript::scriptStack` `Core/Scripting/OOJSScript.cpp:393` | ✅ |
+| `-[OOJSScript weakRetain]` (321) | — `oo::WeakRef<OOJSScript>` in `RunningStack` / `ScriptPrivate` (bead oo-9ht.133), `Core/Scripting/OOJSScript.cpp:103-155` | ➖ |
+| `-[OOJSScript weakRefDied:]` (328) | — same (`oo::WeakRef` clears itself) | ➖ |
+| `-[OOJSScript name]` (334) | `OOJSScript::name` `Core/Scripting/OOJSScript.cpp:401` | ✅ |
+| `-[OOJSScript scriptDescription]` (343) | `OOJSScript::scriptDescription` `Core/Scripting/OOJSScript.cpp:411` | ✅ |
+| `-[OOJSScript version]` (348) | `OOJSScript::version` `Core/Scripting/OOJSScript.cpp:416` | ✅ |
+| `-[OOJSScript runWithTarget:]` (353) | `OOJSScript::runWithTarget` `Core/Scripting/OOJSScript.cpp:421` | ✅ |
+| `-[OOJSScript callMethod:]` (357) | `OOJSScript::callMethod` `Core/Scripting/OOJSScript.cpp:425` → `callFunctionValue` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3152` | ✅ |
+| `-[OOJSScript propertyWithID:inContext:]` (417) | `OOJSScript::propertyWithID` `Core/Scripting/OOJSScript.cpp:484` | ✅ |
+| `-[OOJSScript setProperty:withID:inContext:]` (430) | `OOJSScript::setProperty(PList, PropertyId, Context)` `Core/Scripting/OOJSScript.cpp:497` → `setByAtom` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:2905` | ⚠️ |
+| `-[OOJSScript defineProperty:withID:inContext:]` (440) | `OOJSScript::defineProperty(PList, PropertyId, Context)` `Core/Scripting/OOJSScript.cpp:507` (`kScriptDefinePropertyFlags` ≡ `OOJS_PROP_READONLY`) | ✅ |
+| `-[OOJSScript propertyNamed:]` (450) | `OOJSScript::propertyNamed` `Core/Scripting/OOJSScript.cpp:517` | ✅ |
+| `-[OOJSScript setProperty:named:]` (464) | `OOJSScript::setProperty(PList, string)` `Core/Scripting/OOJSScript.cpp:529` | ✅ |
+| `-[OOJSScript defineProperty:named:]` (478) | `OOJSScript::defineProperty(PList, string)` `Core/Scripting/OOJSScript.cpp:543` | ✅ |
+| `-[OOJSScript oo_jsValueInContext:]` (492) | `OOJSScript::jsValueInContext` `Core/Scripting/OOJSScript.cpp:557` | ✅ |
+| `+[OOJSScript pushScript:]` (499) | `OOJSScript::pushScript(OOJSScript*)` / `pushScript(const WeakRef&)` `Core/Scripting/OOJSScript.cpp:574,586` | ✅ |
+| `+[OOJSScript popScript:]` (512) | `OOJSScript::popScript` `Core/Scripting/OOJSScript.cpp:597` | ✅ |
+| `-[OOJSScript(OOPrivate) scriptNameFromPath:]` (541) | `OOJSScript::scriptNameFromPath` `Core/Scripting/OOJSScript.cpp:623` | ✅ |
+| `-[OOJSScript(OOPrivate) defaultPropertiesFromPath:]` (573) | `OOJSScript::defaultPropertiesFromPath` `Core/Scripting/OOJSScript.cpp:658` | ⚠️ |
+| `-[OOScript(JavaScriptEvents) callMethod:]` (603) | `OOScript::callMethod` `Core/Scripting/OOScript.cpp:297` (always false) | ✅ |
+| `InitOOJSScript()` (614) | `InitOOJSScript` `Core/Scripting/OOJSScript.cpp:686` (converter `ScriptConverter` :696: the slot's weak script, null once gone, as `OOJSBasicPrivateObjectConverter` gave nil) | ✅ |
+| `ScriptAddProperty()` (620) | `ScriptAddProperty` `Core/Scripting/OOJSScript.cpp:724` | ✅ |
+| `AddStackToArrayReversed()` (635) | `AddStackToArrayReversed` `Core/Scripting/OOJSScript.cpp:745` | ✅ |
+| `LoadScriptWithName()` (643) | `LoadScriptWithName` `Core/Scripting/OOJSScript.cpp:759` → `compileUCScript`/`executeScript` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3198,3231` | ⚠️ |
+| `CompiledScriptData()` (707) | `CompiledScriptData` `Core/Scripting/OOJSScript.cpp:827` → `serializeScript` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3259` | ✅ |
+| `ScriptWithCompiledData()` (728) | `ScriptWithCompiledData` `Core/Scripting/OOJSScript.cpp:840` → `deserializeScript` | ✅ |
+| `StrippedName()` (754) | `StrippedName` `Core/Scripting/OOJSScript.cpp:851` | ✅ |
+| `sScriptMethods` `toString` → `OOJSObjectWrapperToString` (85-93) *(added)* | `ScriptToString` `Core/Scripting/OOJSScript.cpp:704` ("[Script <components>]", else "[object Script]" for the prototype / a dead script; another class's `this` → `OOJSObjectWrapperToString`) | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **med** — Name resolution for script code is reversed and assignment escapes. SpiderMonkey runs the script with `_jsSelf` at the head of the scope chain, so a bare identifier resolves against the script object (and its `Script.prototype`/`Object.prototype` chain) before the global, in top-level code and in every closure. QuickJS-ng global code has only the global scope, so the backend puts a "scope fallback" exotic object on the global's prototype, consulted only when the global lacks the name. This has three consequences:
+  - A global of the same name now shadows the script's property.
+  - Assigning to a bare name that exists only on the script object creates a global, and that global is shared by every script.
+  - Console-evaluated code gets no fallback.
+  - Documented as DIVERGENCE (beads oo-1gc.4, oo-1gc.15).
+  - — upstream `Core/Scripting/OOJSScript.m:205` (SpiderMonkey `jsinterp.cpp:971`) ↔ port `Core/Scripting/OOJSScript.cpp:296`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:2201-2219,2329-2338,3231-3236`
+- Note — The backend banner claims SpiderMonkey put top-level `var`/function declarations on the scope object. That is not true for Oolite: upstream sets `JSOPTION_VAROBJFIX` (`OOJavaScriptEngine.m:86`), so `initialVarObj = chain->getGlobal()` (SpiderMonkey `jsinterp.cpp:971`) and declarations landed on the global in both engines. That part is equivalent; only the lookup order and assignment above diverge. — port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:87-90`
+- ⚠️ **low** — Manifest default properties (`version`, `author`, `license`, the local-manifest identifier) and caller `properties` are now defined in `std::map` key order, not NSDictionary hash order. The only effect is the JS enumeration order (`for…in`, `Object.keys`) of a script object's own properties. Stated in the port comments. — upstream `Core/Scripting/OOJSScript.m:168-191` ↔ port `Core/Scripting/OOJSScript.cpp:262-282`
+- ⚠️ **low** — `defaultPropertiesFromPath`: a `manifest.plist` that is not a dictionary no longer logs `OODictionaryFromFile`'s `plist.wrongType` line (stated in the comment). A nil path now short-circuits to "no manifest". The `setObject:nil` raise for a non-string/number manifest value is kept (`ValueForKey`). — upstream `Core/Scripting/OOJSScript.m:576-577` ↔ port `Core/Scripting/OOJSScript.cpp:661-663,883-888`
+- ⚠️ **low** — `setProperty:withID:` now reports failure differently. The façade's `setByAtom` calls the QuickJS-ng set, which throws a TypeError on a read-only property, where SpiderMonkey's non-strict `JS_SetPropertyById` silently succeeded (backend DIVERGENCE). A `setProperty` onto a property that `properties` or the manifest identifier defined read-only (e.g. the initial `name` set at :291 if a caller passes `name`) now returns false and leaves a TypeError pending. That error is then reported by the next `reportPendingException` (load failure or `callMethod`). — upstream `Core/Scripting/OOJSScript.m:437` ↔ port `Core/Scripting/OOJSScript.cpp:504`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:2905-2910`
+- ⚠️ **low** — Compile and execute are split differently. `compileUCScript` compiles bytecode only to report syntax errors. Because `executeScript` with `obj != global` re-evaluates the kept *source* with `this = _jsSelf`, every script is parsed twice, and the compiled-script cache effectively caches source. The cache blob is the backend's own format (magic `OOQJSX1`), so caches written by a SpiderMonkey build are rejected and recompiled. Filename (`path` UTF-8), first line 1, `this` = script object and the debug-only `"use strict"` prepend (and its +1 line shift) are unchanged. — upstream `Core/Scripting/OOJSScript.m:687-698` ↔ port `Core/Scripting/OOJSScript.cpp:807-818`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3198-3245,2371`
+- Subtle — Strict mode: QuickJS-ng honours `"use strict"` natively, with ES5 strict semantics as in SpiderMonkey 1.8.5. `JSOPTION_STRICT` (extra warnings) was never set. ✅ — port `Core/Scripting/OOJSScript.cpp:793-800`
+- Subtle — Load-failure reporting order is unchanged.
+  - Compile error: reported (and cleared) inside `compileUCScript` when no script is running (the façade's LAST_FRAME_CHECKS), then `script.javaScript.load.failed` is logged.
+  - Nested load (a ship script spawned from inside a JS call): the exception stays pending, `load.failed` is logged, then `reportPendingException` reports it.
+  - Both match SpiderMonkey. Log class and text differences are under OOJavaScriptEngine `ReportJSError`.
+  - — port `Core/Scripting/OOJSScript.cpp:294-334`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:886-901`
+- Subtle — `callMethod`:
+  - It keeps the push/pop of the running-script stack around the call, the time limiter, the `isExceptionPending` → report → `OK = false` path, and the debug `script.javaScript.call` "Calling [%@].%@()" log with indent.
+  - A non-function handler (e.g. `this.startUp = 5`) still fails, but QuickJS-ng's text is "not a function", not SpiderMonkey's decompiled "5 is not a function".
+  - — port `Core/Scripting/OOJSScript.cpp:443-481`
+- Subtle — `name`/`version`/`description` go through `DescriptionOrNil` (`oo::DescriptionOf`, pinned to GNUstep's `-description`): a string is itself, a number uses `%0.16g`, a bool prints 1/0, and a dictionary uses `{k = v; }`, matching `[[obj description] copy]`. ✅ — port `Core/Scripting/OOJSScript.cpp:863-871`, `oofnd/PListDescription.hpp:7-20`
 
 ## OOJSShip
 
@@ -1856,128 +1914,165 @@ Upstream `src/Core/Scripting/OOJSWormhole.m` ↔ `Core/Scripting/OOJSWormhole.cp
 <a id="oojavascriptengine"></a>
 Upstream `src/Core/Scripting/OOJavaScriptEngine.m` ↔ `Core/Scripting/OOJavaScriptEngine.cpp`
 
-**Status:** pending
+**Status:** done — 118 rows: 89 ✅ 11 ⚠️ 5 ❌ 13 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `ReportJSError()` (135) | | |
-| `+[OOJavaScriptEngine sharedEngine]` (237) | | |
-| `-[OOJavaScriptEngine runMissionCallback]` (245) | | |
-| `-[OOJavaScriptEngine init]` (250) | | |
-| `-[OOJavaScriptEngine createMainThreadContext]` (291) | | |
-| `-[OOJavaScriptEngine destroyMainThreadContext]` (378) | | |
-| `-[OOJavaScriptEngine reset]` (403) | | |
-| `-[OOJavaScriptEngine dealloc]` (450) | | |
-| `-[OOJavaScriptEngine globalObject]` (462) | | |
-| `-[OOJavaScriptEngine callJSFunction:]` (467) | | |
-| `-[OOJavaScriptEngine removeGCObjectRoot:]` (490) | | |
-| `-[OOJavaScriptEngine removeGCValueRoot:]` (497) | | |
-| `-[OOJavaScriptEngine garbageCollectionOpportunity:]` (504) | | |
-| `-[OOJavaScriptEngine showErrorLocations]` (515) | | |
-| `-[OOJavaScriptEngine setShowErrorLocations:]` (520) | | |
-| `-[OOJavaScriptEngine objectClass]` (525) | | |
-| `-[OOJavaScriptEngine stringClass]` (530) | | |
-| `-[OOJavaScriptEngine arrayClass]` (535) | | |
-| `-[OOJavaScriptEngine numberClass]` (540) | | |
-| `-[OOJavaScriptEngine booleanClass]` (545) | | |
-| `-[OOJavaScriptEngine lookUpStandardClassPointers]` (550) | | |
-| `-[OOJavaScriptEngine registerStandardObjectConverters]` (579) | | |
-| `DebuggerHook()` (589) | | |
-| `-[OOJavaScriptEngine dumpStackForErrors]` (601) | | |
-| `-[OOJavaScriptEngine setDumpStackForErrors:]` (606) | | |
-| `-[OOJavaScriptEngine dumpStackForWarnings]` (611) | | |
-| `-[OOJavaScriptEngine setDumpStackForWarnings:]` (616) | | |
-| `-[OOJavaScriptEngine enableDebuggerStatement]` (621) | | |
-| `-[OOJavaScriptEngine(OOMonitorSupport) setMonitor:]` (633) | | |
-| `-[OOJavaScriptEngine(OOMonitorSupportInternal) sendMonitorError:]` (643) | | |
-| `-[OOJavaScriptEngine(OOMonitorSupportInternal) sendMonitorLogMessage:]` (652) | | |
-| `DumpVariable()` (667) | | |
-| `OOJSDumpStack()` (694) | | |
-| `GetLocationNameAndLine()` (804) | | |
-| `OOJSDescribeLocation()` (823) | | |
-| `OOJSMarkConsoleEvalLocation()` (851) | | |
-| `OOJSInitJSIDCachePRIVATE()` (857) | | |
-| `OOJSIDFromString()` (873) | | |
-| `OOStringFromJSID()` (906) | | |
-| `CallerPrefix()` (921) | | |
-| `OOJSReportError()` (930) | | |
-| `OOJSReportErrorForCaller()` (939) | | |
-| `OOJSReportErrorWithArguments()` (957) | | |
-| `OOJSReportWrappedException()` (973) | | |
-| `OOJSUnreachable()` (986) | | |
-| `OOJSReportWarning()` (994) | | |
-| `OOJSReportWarningForCaller()` (1003) | | |
-| `OOJSReportWarningWithArguments()` (1021) | | |
-| `OOJSReportBadPropertySelector()` (1035) | | |
-| `OOJSReportBadPropertyValue()` (1043) | | |
-| `OOJSReportBadArguments()` (1052) | | |
-| `OOJSSetWarningOrErrorStackSkip()` (1068) | | |
-| `OOJSArgumentListGetNumber()` (1073) | | |
-| `OOJSArgumentListGetNumberNoError()` (1084) | | |
-| `JSArrayFromNSArray()` (1108) | | |
-| `JSNewNSArrayValue()` (1147) | | |
-| `JSObjectFromNSDictionary()` (1179) | | |
-| `JSNewNSDictionaryValue()` (1249) | | |
-| `-[NSObject(OOJavaScriptConversion) oo_jsValueInContext:]` (1279) | | |
-| `-[NSObject(OOJavaScriptConversion) oo_jsClassName]` (1284) | | |
-| `-[NSObject(OOJavaScriptConversion) oo_jsDescription]` (1289) | | |
-| `-[NSObject(OOJavaScriptConversion) oo_jsDescriptionWithClassName:]` (1294) | | |
-| `-[NSObject(OOJavaScriptConversion) oo_clearJSSelf:]` (1316) | | |
-| `OOJSObjectFromNativeObject()` (1322) | | |
-| `+[OOJSValue valueWithJSValue:inContext:]` (1333) | | |
-| `+[OOJSValue valueWithJSObject:inContext:]` (1342) | | |
-| `-[OOJSValue initWithJSValue:inContext:]` (1351) | | |
-| `-[OOJSValue initWithJSObject:inContext:]` (1381) | | |
-| `-[OOJSValue deleteJSValue]` (1386) | | |
-| `-[OOJSValue dealloc]` (1400) | | |
-| `-[OOJSValue oo_jsValueInContext:]` (1406) | | |
-| `OOJSStrLiteralCachePRIVATE()` (1413) | | |
-| `OOStringFromJSString()` (1430) | | |
-| `OOStringFromJSValueEvenIfNull()` (1449) | | |
-| `OOStringFromJSValue()` (1461) | | |
-| `OOStringFromJSPropertyIDAndSpec()` (1473) | | |
-| `DescribeValue()` (1493) | | |
-| `OOJSDescribeValue()` (1578) | | |
-| `+[NSString(OOJavaScriptExtensions) stringWithJavaScriptParameters:count:inContext:]` (1585) | | |
-| `-[NSString(OOJavaScriptExtensions) oo_jsValueInContext:]` (1607) | | |
-| `+[NSString(OOJavaScriptExtensions) concatenationOfStringsFromJavaScriptValues:count:separator:inContext:]` (1634) | | |
-| `-[NSString(OOJavaScriptExtensions) escapedForJavaScriptLiteral]` (1663) | | |
-| `-[NSString(OOJavaScriptExtensions) oo_jsClassName]` (1726) | | |
-| `-[NSArray(OOJavaScriptConversion) oo_jsValueInContext:]` (1735) | | |
-| `-[OONativeVector(OOJavaScriptConversion) oo_jsValueInContext:]` (1746) | | |
-| `-[NSDictionary(OOJavaScriptConversion) oo_jsValueInContext:]` (1757) | | |
-| `-[NSNumber(OOJavaScriptConversion) oo_jsValueInContext:]` (1768) | | |
-| `-[NSNumber(OOJavaScriptConversion) oo_jsClassName]` (1797) | | |
-| `-[NSNull(OOJavaScriptConversion) oo_jsValueInContext:]` (1806) | | |
-| `OOJSUnconstructableConstruct()` (1813) | | |
-| `OOJSObjectWrapperFinalize()` (1826) | | |
-| `OOJSObjectWrapperToString()` (1840) | | |
-| `JSFunctionPredicate()` (1868) | | |
-| `JSEntityIsJavaScriptVisiblePredicate()` (1908) | | |
-| `JSEntityIsJavaScriptSearchablePredicate()` (1917) | | |
-| `JSEntityIsDemoShipPredicate()` (1949) | | |
-| `OOJSRegisterSubclass()` (1956) | | |
-| `UnregisterSubclasses()` (1969) | | |
-| `OOJSIsSubclass()` (1975) | | |
-| `OOJSDictionaryFromJSValue()` (2039) | | |
-| `OOJSDictionaryFromJSObject()` (2052) | | |
-| `OOJSDictionaryFromStringTable()` (2103) | | |
-| `OOJSNativeObjectFromJSValue()` (2155) | | |
-| `OOJSNativeObjectFromJSObject()` (2182) | | |
-| `OOJSNativeObjectOfClassFromJSValue()` (2207) | | |
-| `OOJSNativeObjectOfClassFromJSObject()` (2215) | | |
-| `OOJSBasicPrivateObjectConverter()` (2223) | | |
-| `OOJSRegisterObjectConverter()` (2235) | | |
-| `UnregisterObjectConverters()` (2254) | | |
-| `JSArrayConverter()` (2259) | | |
-| `JSStringConverter()` (2296) | | |
-| `JSNumberConverter()` (2301) | | |
-| `JSBooleanConverter()` (2310) | | |
+| `ReportJSError()` (135) | `ReportJSError` `Core/Scripting/OOJavaScriptEngine.cpp:164` ← `invokeReporter` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:844` | ❌ |
+| `+[OOJavaScriptEngine sharedEngine]` (237) | `OOJavaScriptEngine::sharedEngine` `Core/Scripting/OOJavaScriptEngine.cpp:266` | ✅ |
+| `-[OOJavaScriptEngine runMissionCallback]` (245) | `OOJavaScriptEngine::runMissionCallback` `Core/Scripting/OOJavaScriptEngine.cpp:280` | ✅ |
+| `-[OOJavaScriptEngine init]` (250) | `OOJavaScriptEngine::init` `Core/Scripting/OOJavaScriptEngine.cpp:285` | ✅ |
+| `-[OOJavaScriptEngine createMainThreadContext]` (291) | `OOJavaScriptEngine::createMainThreadContext` `Core/Scripting/OOJavaScriptEngine.cpp:322` | ❌ |
+| `-[OOJavaScriptEngine destroyMainThreadContext]` (378) | `OOJavaScriptEngine::destroyMainThreadContext` `Core/Scripting/OOJavaScriptEngine.cpp:409` | ⚠️ |
+| `-[OOJavaScriptEngine reset]` (403) | `OOJavaScriptEngine::reset` `Core/Scripting/OOJavaScriptEngine.cpp:434` | ⚠️ |
+| `-[OOJavaScriptEngine dealloc]` (450) | `OOJavaScriptEngine::~OOJavaScriptEngine` `Core/Scripting/OOJavaScriptEngine.cpp:481` (never runs: the shared engine is leaked, amendment oo-r7m0) | ✅ |
+| `-[OOJavaScriptEngine globalObject]` (462) | `OOJavaScriptEngine::globalObject` `Core/Scripting/OOJavaScriptEngine.cpp:541` | ✅ |
+| `-[OOJavaScriptEngine callJSFunction:]` (467) | `OOJavaScriptEngine::callJSFunction` `Core/Scripting/OOJavaScriptEngine.cpp:546` | ✅ |
+| `-[OOJavaScriptEngine removeGCObjectRoot:]` (490) | `OOJavaScriptEngine::removeGCObjectRoot` `Core/Scripting/OOJavaScriptEngine.cpp:565` | ✅ |
+| `-[OOJavaScriptEngine removeGCValueRoot:]` (497) | `OOJavaScriptEngine::removeGCValueRoot` `Core/Scripting/OOJavaScriptEngine.cpp:572` | ✅ |
+| `-[OOJavaScriptEngine garbageCollectionOpportunity:]` (504) | `OOJavaScriptEngine::garbageCollectionOpportunity` `Core/Scripting/OOJavaScriptEngine.cpp:579` → `gc`/`maybeGC` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3855,3865` | ⚠️ |
+| `-[OOJavaScriptEngine showErrorLocations]` (515) | `OOJavaScriptEngine::showErrorLocations` `Core/Scripting/OOJavaScriptEngine.cpp:590` | ✅ |
+| `-[OOJavaScriptEngine setShowErrorLocations:]` (520) | `OOJavaScriptEngine::setShowErrorLocations` `Core/Scripting/OOJavaScriptEngine.cpp:595` | ✅ |
+| `-[OOJavaScriptEngine objectClass]` (525) | `OOJavaScriptEngine::objectClass` `Core/Scripting/OOJavaScriptEngine.cpp:600` | ✅ |
+| `-[OOJavaScriptEngine stringClass]` (530) | `OOJavaScriptEngine::stringClass` `Core/Scripting/OOJavaScriptEngine.cpp:605` | ✅ |
+| `-[OOJavaScriptEngine arrayClass]` (535) | `OOJavaScriptEngine::arrayClass` `Core/Scripting/OOJavaScriptEngine.cpp:610` | ✅ |
+| `-[OOJavaScriptEngine numberClass]` (540) | `OOJavaScriptEngine::numberClass` `Core/Scripting/OOJavaScriptEngine.cpp:615` | ✅ |
+| `-[OOJavaScriptEngine booleanClass]` (545) | `OOJavaScriptEngine::booleanClass` `Core/Scripting/OOJavaScriptEngine.cpp:620` | ✅ |
+| `-[OOJavaScriptEngine lookUpStandardClassPointers]` (550) | `OOJavaScriptEngine::lookUpStandardClassPointers` `Core/Scripting/OOJavaScriptEngine.cpp:491` (built-in classes are `getObjectClass`'s stable descriptors) | ✅ |
+| `-[OOJavaScriptEngine registerStandardObjectConverters]` (579) | `OOJavaScriptEngine::registerStandardObjectConverters` `Core/Scripting/OOJavaScriptEngine.cpp:532` (+ new `JSPlainObjectConverter` :2202) | ⚠️ |
+| `DebuggerHook()` (589) | `DebuggerHook` `Core/Scripting/OOJavaScriptEngine.cpp:628` (never called: `setDebuggerHandler` no-op, `JSEngine_quickjs.cpp:4094`) | ⚠️ |
+| `-[OOJavaScriptEngine dumpStackForErrors]` (601) | `OOJavaScriptEngine::dumpStackForErrors` `Core/Scripting/OOJavaScriptEngine.cpp:640` | ✅ |
+| `-[OOJavaScriptEngine setDumpStackForErrors:]` (606) | `OOJavaScriptEngine::setDumpStackForErrors` `Core/Scripting/OOJavaScriptEngine.cpp:645` | ✅ |
+| `-[OOJavaScriptEngine dumpStackForWarnings]` (611) | `OOJavaScriptEngine::dumpStackForWarnings` `Core/Scripting/OOJavaScriptEngine.cpp:650` | ✅ |
+| `-[OOJavaScriptEngine setDumpStackForWarnings:]` (616) | `OOJavaScriptEngine::setDumpStackForWarnings` `Core/Scripting/OOJavaScriptEngine.cpp:655` | ✅ |
+| `-[OOJavaScriptEngine enableDebuggerStatement]` (621) | `OOJavaScriptEngine::enableDebuggerStatement` `Core/Scripting/OOJavaScriptEngine.cpp:660` | ⚠️ |
+| `-[OOJavaScriptEngine(OOMonitorSupport) setMonitor:]` (633) | `OOJavaScriptEngine::setMonitor` `Core/Scripting/OOJavaScriptEngine.cpp:668` (borrowed pointer, documented at `OOJavaScriptEngine.h:134`) | ✅ |
+| `-[OOJavaScriptEngine(OOMonitorSupportInternal) sendMonitorError:]` (643) | `OOJavaScriptEngine::sendMonitorError` `Core/Scripting/OOJavaScriptEngine.cpp:673` | ✅ |
+| `-[OOJavaScriptEngine(OOMonitorSupportInternal) sendMonitorLogMessage:]` (652) | `OOJavaScriptEngine::sendMonitorLogMessage` `Core/Scripting/OOJavaScriptEngine.cpp:680` | ✅ |
+| `DumpVariable()` (667) | `DumpVariable` `Core/Scripting/OOJavaScriptEngine.cpp:692` | ✅ |
+| `OOJSDumpStack()` (694) | `OOJSDumpStack` `Core/Scripting/OOJavaScriptEngine.cpp:730` → frame API `Core/Scripting/ooscript/JSEngine_quickjs.cpp:4045-4091` | ⚠️ |
+| `GetLocationNameAndLine()` (804) | `GetLocationNameAndLine` `Core/Scripting/OOJavaScriptEngine.cpp:852` (the `name != NULL` slip is kept) | ✅ |
+| `OOJSDescribeLocation()` (823) | `OOJSDescribeLocation` `Core/Scripting/OOJavaScriptEngine.cpp:871` | ✅ |
+| `OOJSMarkConsoleEvalLocation()` (851) | `OOJSMarkConsoleEvalLocation` `Core/Scripting/OOJavaScriptEngine.cpp:896` (pointer compare still works: `frameScript` hands out one token per filename) | ✅ |
+| `OOJSInitJSIDCachePRIVATE()` (857) | `OOJSInitJSIDCachePRIVATE` `Core/Scripting/OOJavaScriptEngine.cpp:902` | ✅ |
+| `OOJSIDFromString()` (873) | `cxx_OOJSIDFromString` `Core/Scripting/OOJavaScriptEngine.cpp:921` | ✅ |
+| `OOStringFromJSID()` (906) | `cxx_OOStringFromJSID` `Core/Scripting/OOJavaScriptEngine.cpp:938` | ✅ |
+| `CallerPrefix()` (921) | `CallerPrefix` `Core/Scripting/OOJavaScriptEngine.cpp:954` | ✅ |
+| `OOJSReportError()` (930) | `cxx_OOJSReportError` `Core/Scripting/OOJavaScriptEngine.cpp:964` | ✅ |
+| `OOJSReportErrorForCaller()` (939) | `cxx_OOJSReportErrorForCaller` `Core/Scripting/OOJavaScriptEngine.cpp:973` | ✅ |
+| `OOJSReportErrorWithArguments()` (957) | `cxx_OOJSReportErrorWithArguments` `Core/Scripting/OOJavaScriptEngine.cpp:989` → `reportErrorImpl` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:871` | ❌ |
+| `OOJSReportWrappedException()` (973) | moved to `OOJSReportCurrentException` `Core/Scripting/OOJSEngineNativeWrappers.cpp:44` (same texts; also catches `std::exception`) | ➖ |
+| `OOJSUnreachable()` (986) | `OOJSUnreachable` `Core/Scripting/OOJavaScriptEngine.cpp:1006` | ✅ |
+| `OOJSReportWarning()` (994) | `cxx_OOJSReportWarning` `Core/Scripting/OOJavaScriptEngine.cpp:1014` | ✅ |
+| `OOJSReportWarningForCaller()` (1003) | `cxx_OOJSReportWarningForCaller` `Core/Scripting/OOJavaScriptEngine.cpp:1023` | ✅ |
+| `OOJSReportWarningWithArguments()` (1021) | `cxx_OOJSReportWarningWithArguments` `Core/Scripting/OOJavaScriptEngine.cpp:1039` → `reportWarning` `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3499` | ❌ |
+| `OOJSReportBadPropertySelector()` (1035) | `OOJSReportBadPropertySelector` `Core/Scripting/OOJavaScriptEngine.cpp:1050` | ✅ |
+| `OOJSReportBadPropertyValue()` (1043) | `OOJSReportBadPropertyValue` `Core/Scripting/OOJavaScriptEngine.cpp:1059` | ✅ |
+| `OOJSReportBadArguments()` (1052) | `cxx_OOJSReportBadArguments` `Core/Scripting/OOJavaScriptEngine.cpp:1068` | ✅ |
+| `OOJSSetWarningOrErrorStackSkip()` (1068) | `OOJSSetWarningOrErrorStackSkip` `Core/Scripting/OOJavaScriptEngine.cpp:1084` | ✅ |
+| `OOJSArgumentListGetNumber()` (1073) | `cxx_OOJSArgumentListGetNumber` `Core/Scripting/OOJavaScriptEngine.cpp:1089` | ✅ |
+| `OOJSArgumentListGetNumberNoError()` (1084) | `OOJSArgumentListGetNumberNoError` `Core/Scripting/OOJavaScriptEngine.cpp:1100` (argv padded to nargs with undefined by the trampoline, as SpiderMonkey did) | ✅ |
+| `JSArrayFromNSArray()` (1108) | `JSArrayValueFromPList` `Core/Scripting/OOJavaScriptEngine.cpp:1130` | ✅ |
+| `JSNewNSArrayValue()` (1147) | `JSArrayValueFromPList` `Core/Scripting/OOJavaScriptEngine.cpp:1130` (`RootedValue` replaces the local root scope) | ✅ |
+| `JSObjectFromNSDictionary()` (1179) | `JSObjectValueFromPList` `Core/Scripting/OOJavaScriptEngine.cpp:1172` | ⚠️ |
+| `JSNewNSDictionaryValue()` (1249) | `JSObjectValueFromPList` `Core/Scripting/OOJavaScriptEngine.cpp:1172` | ✅ |
+| `-[NSObject(OOJavaScriptConversion) oo_jsValueInContext:]` (1279) | — gone with the root's JS glue, bead oo-4aq6a.6.2 (`Core/Scripting/OOJavaScriptEngine.cpp:1124-1126`); `OOJSValueFromPList` Object case `:1270` answers undefined for a node with no glue | ➖ |
+| `-[NSObject(OOJavaScriptConversion) oo_jsClassName]` (1284) | — per-class `jsClassName()` (e.g. `OOJSScript.cpp:362`) | ➖ |
+| `-[NSObject(OOJavaScriptConversion) oo_jsDescription]` (1289) | — per-class `jsDescription()` (e.g. `OOJSScript.cpp:565`) | ➖ |
+| `-[NSObject(OOJavaScriptConversion) oo_jsDescriptionWithClassName:]` (1294) | — folded into `jsDescription()` (same "[%@ %@]" / "[object %@]" forms) | ➖ |
+| `-[NSObject(OOJavaScriptConversion) oo_clearJSSelf:]` (1316) | — `clearJSSelf` via `OOJSCxxObjectWrapperFinalize` `Core/Scripting/OOJSPrivateObject.cpp:81` | ➖ |
+| `OOJSObjectFromNativeObject()` (1322) | — removed, bead oo-4aq6a.6.2 (`Core/Scripting/OOJavaScriptEngine.cpp:1302`) | ➖ |
+| `+[OOJSValue valueWithJSValue:inContext:]` (1333) | `OOJSValue::valueWithJSValue` `Core/Scripting/OOJavaScriptEngine.cpp:1304` | ✅ |
+| `+[OOJSValue valueWithJSObject:inContext:]` (1342) | `OOJSValue::valueWithJSObject` `Core/Scripting/OOJavaScriptEngine.cpp:1315` | ✅ |
+| `-[OOJSValue initWithJSValue:inContext:]` (1351) | `OOJSValue::initWithJSValue` `Core/Scripting/OOJavaScriptEngine.cpp:1326` | ✅ |
+| `-[OOJSValue initWithJSObject:inContext:]` (1381) | `OOJSValue::initWithJSObject` `Core/Scripting/OOJavaScriptEngine.cpp:1356` | ✅ |
+| `-[OOJSValue deleteJSValue]` (1386) | `OOJSValue::deleteJSValue` `Core/Scripting/OOJavaScriptEngine.cpp:1361` | ✅ |
+| `-[OOJSValue dealloc]` (1400) | `OOJSValue::~OOJSValue` `Core/Scripting/OOJavaScriptEngine.cpp:1374` | ✅ |
+| `-[OOJSValue oo_jsValueInContext:]` (1406) | `OOJSValue::jsValueInContext` `Core/Scripting/OOJavaScriptEngine.cpp:1379` | ✅ |
+| `OOJSStrLiteralCachePRIVATE()` (1413) | `OOJSStrLiteralCachePRIVATE` `Core/Scripting/OOJavaScriptEngine.cpp:1394` (upstream's `string == NULL` test slip kept) | ✅ |
+| `OOStringFromJSString()` (1430) | `cxx_OOStringFromJSString` `Core/Scripting/OOJavaScriptEngine.cpp:1411` | ✅ |
+| `OOStringFromJSValueEvenIfNull()` (1449) | `cxx_OOStringFromJSValueEvenIfNull` `Core/Scripting/OOJavaScriptEngine.cpp:1430` → `valueToString` `JSEngine_quickjs.cpp:2475` | ✅ |
+| `OOStringFromJSValue()` (1461) | `cxx_OOStringFromJSValue` `Core/Scripting/OOJavaScriptEngine.cpp:1442` | ✅ |
+| `OOStringFromJSPropertyIDAndSpec()` (1473) | `cxx_OOStringFromJSPropertyIDAndSpec` `Core/Scripting/OOJavaScriptEngine.cpp:1454` | ✅ |
+| `DescribeValue()` (1493) | `DescribeValue` `Core/Scripting/OOJavaScriptEngine.cpp:1475` | ✅ |
+| `OOJSDescribeValue()` (1578) | `cxx_OOJSDescribeValue` `Core/Scripting/OOJavaScriptEngine.cpp:1564` | ✅ |
+| `+[NSString(OOJavaScriptExtensions) stringWithJavaScriptParameters:count:inContext:]` (1585) | `cxx_OOJSStringWithJavaScriptParameters` `Core/Scripting/OOJavaScriptEngine.cpp:1569` | ✅ |
+| `-[NSString(OOJavaScriptExtensions) oo_jsValueInContext:]` (1607) | `OOJSValueFromPList` String case `Core/Scripting/OOJavaScriptEngine.cpp:1252` | ✅ |
+| `+[NSString(OOJavaScriptExtensions) concatenationOfStringsFromJavaScriptValues:count:separator:inContext:]` (1634) | `cxx_OOJSConcatenationOfStringsFromJavaScriptValues` `Core/Scripting/OOJavaScriptEngine.cpp:1591` | ❌ |
+| `-[NSString(OOJavaScriptExtensions) escapedForJavaScriptLiteral]` (1663) | `cxx_OOJSEscapedForJavaScriptLiteral` `Core/Scripting/OOJavaScriptEngine.cpp:1619` (byte-wise over UTF-8; every escape is ASCII) | ✅ |
+| `-[NSString(OOJavaScriptExtensions) oo_jsClassName]` (1726) | — no Foundation strings remain | ➖ |
+| `-[NSArray(OOJavaScriptConversion) oo_jsValueInContext:]` (1735) | `OOJSValueFromPList` Array case `Core/Scripting/OOJavaScriptEngine.cpp:1264` | ✅ |
+| `-[OONativeVector(OOJavaScriptConversion) oo_jsValueInContext:]` (1746) | `OONativeVectorJSValueInContext` `Core/Scripting/OOJavaScriptEngine.cpp:1673` | ✅ |
+| `-[NSDictionary(OOJavaScriptConversion) oo_jsValueInContext:]` (1757) | `OOJSValueFromPList` Dict case `Core/Scripting/OOJavaScriptEngine.cpp:1267` | ⚠️ |
+| `-[NSNumber(OOJavaScriptConversion) oo_jsValueInContext:]` (1768) | `OOJSValueFromPList` Bool/Integer/Real cases `Core/Scripting/OOJavaScriptEngine.cpp:1227-1250` | ✅ |
+| `-[NSNumber(OOJavaScriptConversion) oo_jsClassName]` (1797) | — no Foundation numbers remain | ➖ |
+| `-[NSNull(OOJavaScriptConversion) oo_jsValueInContext:]` (1806) | `OONull::jsValueInContext` `Core/Scripting/OOJavaScriptEngine.cpp:1700` | ✅ |
+| `OOJSUnconstructableConstruct()` (1813) | `OOJSUnconstructableConstruct` `Core/Scripting/OOJavaScriptEngine.cpp:1705` | ✅ |
+| `OOJSObjectWrapperFinalize()` (1826) | `OOJSObjectWrapperFinalize` `Core/Scripting/OOJavaScriptEngine.cpp:1721` → `OOJSCxxObjectWrapperFinalize` `Core/Scripting/OOJSPrivateObject.cpp:81` | ✅ |
+| `OOJSObjectWrapperToString()` (1840) | `OOJSObjectWrapperToString` `Core/Scripting/OOJavaScriptEngine.cpp:1729` | ⚠️ |
+| `JSFunctionPredicate()` (1868) | `JSFunctionPredicate` `Core/Scripting/OOJavaScriptEngine.cpp:1748` | ✅ |
+| `JSEntityIsJavaScriptVisiblePredicate()` (1908) | `JSEntityIsJavaScriptVisiblePredicate` `Core/Scripting/OOJavaScriptEngine.cpp:1825` | ✅ |
+| `JSEntityIsJavaScriptSearchablePredicate()` (1917) | `JSEntityIsJavaScriptSearchablePredicate` `Core/Scripting/OOJavaScriptEngine.cpp:1834` (the `STELLAR_TYPE_ATMOSPHERE` case was `!NEW_PLANETS` only) | ✅ |
+| `JSEntityIsDemoShipPredicate()` (1949) | `JSEntityIsDemoShipPredicate` `Core/Scripting/OOJavaScriptEngine.cpp:1864` | ✅ |
+| `OOJSRegisterSubclass()` (1956) | `OOJSRegisterSubclass` `Core/Scripting/OOJavaScriptEngine.cpp:1874` | ✅ |
+| `UnregisterSubclasses()` (1969) | `UnregisterSubclasses` `Core/Scripting/OOJavaScriptEngine.cpp:1888` | ✅ |
+| `OOJSIsSubclass()` (1975) | `OOJSIsSubclass` `Core/Scripting/OOJavaScriptEngine.cpp:1895` | ✅ |
+| `OOJSDictionaryFromJSValue()` (2039) | `OOJSDictionaryFromJSValue` `Core/Scripting/OOJavaScriptEngine.cpp:1911` | ✅ |
+| `OOJSDictionaryFromJSObject()` (2052) | `cxx_OOJSDictionaryFromJSObject` `Core/Scripting/OOJavaScriptEngine.cpp:1924` | ⚠️ |
+| `OOJSDictionaryFromStringTable()` (2103) | `OOJSDictionaryFromStringTable` `Core/Scripting/OOJavaScriptEngine.cpp:1970` | ✅ |
+| `OOJSNativeObjectFromJSValue()` (2155) | `cxx_OOJSPListFromJSValue` `Core/Scripting/OOJavaScriptEngine.cpp:2024` | ✅ |
+| `OOJSNativeObjectFromJSObject()` (2182) | `cxx_OOJSPListFromJSObject` `Core/Scripting/OOJavaScriptEngine.cpp:2059` | ✅ |
+| `OOJSNativeObjectOfClassFromJSValue()` (2207) | — deleted, bead oo-4aq6a.6 (`Core/Scripting/OOJSEngineCore.h:221-226`) | ➖ |
+| `OOJSNativeObjectOfClassFromJSObject()` (2215) | — deleted, bead oo-4aq6a.6 | ➖ |
+| `OOJSBasicPrivateObjectConverter()` (2223) | `OOJSBasicPrivateObjectConverter` `Core/Scripting/OOJavaScriptEngine.cpp:2086` (a node of the slot's `PListForeign`, else null) | ✅ |
+| `OOJSRegisterObjectConverter()` (2235) | `OOJSRegisterObjectConverter` `Core/Scripting/OOJavaScriptEngine.cpp:2094` | ✅ |
+| `UnregisterObjectConverters()` (2254) | `UnregisterObjectConverters` `Core/Scripting/OOJavaScriptEngine.cpp:2109` | ✅ |
+| `JSArrayConverter()` (2259) | `JSArrayConverter`/`PListFromJSArray` `Core/Scripting/OOJavaScriptEngine.cpp:2117,2145` | ✅ |
+| `JSStringConverter()` (2296) | `JSStringConverter` `Core/Scripting/OOJavaScriptEngine.cpp:2158` | ✅ |
+| `JSNumberConverter()` (2301) | `JSNumberConverter` `Core/Scripting/OOJavaScriptEngine.cpp:2174` | ✅ |
+| `JSBooleanConverter()` (2310) | `JSBooleanConverter` `Core/Scripting/OOJavaScriptEngine.cpp:2195` | ✅ |
+| `OOJSObjectGetterImplPRIVATE()` (1990) *(added)* | replaced by the C++ slot getter `Core/Scripting/OOJSPrivateObject.cpp:58` (same class check and error text) | ➖ |
+| `OOJSAcquireContext()` / `OOJSRelinquishContext()` (`.h` 116/125) *(added)* | `Core/Scripting/OOJSEngineCore.h:55,64` (requests are bookkeeping on QuickJS-ng) | ✅ |
+| `OOJSValueFromNativeObject()` (`.h` 229) *(added)* | replaced by `OOJSValueFromPList` `Core/Scripting/OOJavaScriptEngine.cpp:1219` | ➖ |
+| `OOJSGetClass()` (`.h` 346) *(added)* | `OOJSGetClass` → `getObjectClass` `Core/Scripting/OOJSEngineCore.h:234` | ✅ |
+| `OOJSValueIsFunction()` / `OOJSValueIsArray()` (`.h` 361/374) *(added)* | `Core/Scripting/OOJSEngineCore.h:245,257` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **med** — Every reported error, warning and exception now has `errorNumber` 0, so the log message class is always `script.javaScript.<severity>.notAnError`. The cause: `invokeReporter` defaults `errorNumber = 0` and none of its four callers passes another value, and `javascript-errors.plist` maps `"0"` to `notAnError`. Upstream classes carried the SpiderMonkey message number:
+  - `OOJSReportError`/`OOJSReportWarning` → `…ooliteDefined` (206, `JSMSG_USER_DEFINED_ERROR`, SpiderMonkey `jscntxt.cpp:1439`).
+  - Engine errors keep their own name: `…notDefined` (1), `…notFunction` (22), `…undefinedProp` (162), `…unexpectedType` (222).
+  - A thrown non-Error → `…uncaughtException` (147).
+  - The class appears in every log line and in log filtering. — upstream `Core/Scripting/OOJavaScriptEngine.m:179-186` ↔ port `Core/Scripting/OOJavaScriptEngine.cpp:213-218`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:844-857,878,936,3507`
+- Subtle — A thrown non-Error value (`throw "x"`) is reported with `ReportFlag::Exception`, so the log reads "JavaScript exception" with message "uncaught exception: x". SpiderMonkey reported it through `JS_ReportErrorNumber(JSMSG_UNCAUGHT_EXCEPTION)`, whose `ReportError` sets `JSREPORT_EXCEPTION` for that number, so severity matches; only the class differs (see above). For Error objects thrown by user code SpiderMonkey zeroed the report (errorNumber 0, i.e. `notAnError`), which matches the port. — SpiderMonkey `jsexn.cpp:1250-1290` ↔ port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:904-938`
+- ❌ **low** — The source line is never shown. The QuickJS backend always passes `linebuf = nullptr`, so the location line for compile errors becomes "      file, line N." where upstream printed "      file, line N: <offending source line>". — upstream `Core/Scripting/OOJavaScriptEngine.m:174-176,202-206` ↔ port `Core/Scripting/OOJavaScriptEngine.cpp:207-210,233-237`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:856`
+- ❌ **med** — Message texts that reach the log are QuickJS-ng's, not SpiderMonkey 1.8.5's. For example `foo.bar` on undefined gives SpiderMonkey "TypeError: foo is undefined" and QuickJS-ng "cannot read property 'bar' of undefined", and syntax-error wording differs throughout. The façade's own replacements of SpiderMonkey's decompiler-based messages use `ToString(value)` instead of the source expression: `valueToFunction` "X is not a function" and `valueToInt32` "can't convert X to an integer". Locations come from parsing `Error.stack` (`errorLocation`/`parseLocation`), so they are the construction point of the Error, as before. — port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:758-829,2435-2458,2486-2500`
+- ❌ **med** — `createMainThreadContext`: `setOptions` (VAROBJFIX/RELIMIT/ANONFUNFIX/JIT) and `setVersion(ECMA5)` are only stored, and QuickJS-ng parses ES2023. SpiderMonkey 1.8.5 language extensions that OXPs may use no longer compile or exist: `for each (… in …)`, expression closures, `toSource`/`uneval`, Array/String generics (`Array.forEach(a, f)`), `watch`/`unwatch`, `__iterator__`, E4X. Legacy `const`, block-level function statements and `Function.prototype.toString` (decompiled vs original text) behave differently. Not recorded among the backend's DIVERGENCE notes. No built-in script uses the extensions (grep of upstream `Resources/Scripts`, `DebugOXP`); impact is on expansions. — upstream `Core/Scripting/OOJavaScriptEngine.m:80-86,306-307` ↔ port `Core/Scripting/OOJavaScriptEngine.cpp:113-119,337-338`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3767-3795`
+- ⚠️ **low** — `createMainThreadContext`: the GC zeal block is reached only when `gcZealSupported()`, which is always false (upstream compiled it only under `JS_GC_ZEAL`). The `js-gc-zeal` default is ignored. — port `Core/Scripting/OOJavaScriptEngine.cpp:340-348`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3874-3875`
+- ⚠️ **low** — `destroyMainThreadContext`'s `clearScope` leaves non-configurable (permanent) properties in place, where SpiderMonkey's ClearScope emptied the scope (backend DIVERGENCE). The QuickJS-ng global is also the context's fixed global, not a fresh object of Oolite's global class (banner DIVERGENCE). The context is destroyed straight after, so no observable effect is expected. — port `Core/Scripting/OOJavaScriptEngine.cpp:413`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:110-113,2649-2652`
+- ⚠️ **low** — `reset`: upstream built SpiderMonkey with `JS_THREADSAFE` on Mac/Linux debug builds (`Doc/SpidermonkeyChanges.txt:7`). In those builds it refused a reset made inside a request (`script.javascript.init.error`) and logged `script.javascript.init` "JavaScript reset successful." on every reset. `isThreadsafeBuild()` is always false on QuickJS-ng, so the port behaves like an upstream release build: no check and no log line. — upstream `Core/Scripting/OOJavaScriptEngine.m:423-433` ↔ port `Core/Scripting/OOJavaScriptEngine.cpp:454-464`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3763`
+- ⚠️ **low** — `garbageCollectionOpportunity` (GC rooting vs refcounting):
+  - `gc()`/`maybeGC()` release the façade's handle arena (re-referencing every registered root address first). `gc()` then runs QuickJS-ng's cycle collector; `maybeGC()` does not and leaves cycles to QuickJS-ng's allocation-driven GC.
+  - The flush is allowed at request depth ≤ 1 (backend DIVERGENCE), so a caller holding an unrooted `Value` across `gc()` inside its own request is exposed.
+  - Acyclic garbage is freed immediately and finalizers (e.g. `OOJSCxxObjectWrapperFinalize`) run at different times than under SpiderMonkey's lazy GC.
+  - `JS_SetMemoryLimit(256 MiB)` counts all engine allocations (bytecode, strings, shapes), whereas `JS_NewRuntime(maxbytes)` capped the GC heap only.
+  - — port `Core/Scripting/OOJavaScriptEngine.cpp:579-588`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:22-38,706-715,3609-3620,3855-3871`
+- ⚠️ **low** — `registerStandardObjectConverters` / `OOJSDictionaryFromJSObject`: integer-like JS keys become decimal-string keys. Upstream made `NSNumber` keys that native code could not look up (proposed ADR-0051, comment at :1945-1949). Result dictionaries are `std::map` (sorted), not NSDictionary hash order. — upstream `Core/Scripting/OOJavaScriptEngine.m:2074-2080` ↔ port `Core/Scripting/OOJavaScriptEngine.cpp:1944-1951,2202-2205`
+- ⚠️ **low** — `JSObjectFromNSDictionary` / NSDictionary → JS: properties are now set in sorted key order, not NSDictionary hash order (the port comment says "key order"), which changes `for…in`/`Object.keys`/`JSON.stringify` order of objects built from plists. Separately, QuickJS-ng enumerates integer-like keys first and in ascending order (ES2015 OrdinaryOwnPropertyKeys), where SpiderMonkey 1.8.5 used insertion order for non-array objects. Upstream's `NSNumber`-key branch (`0 < index` → `JS_SetElement`) has no counterpart, because PList keys are strings. — upstream `Core/Scripting/OOJavaScriptEngine.m:1195-1229` ↔ port `Core/Scripting/OOJavaScriptEngine.cpp:1185-1195`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3094-3110`
+- ⚠️ **low** — Debugger and stack dumps (ADR-0022: the backend answers with less):
+  - `enableDebuggerStatement` installs a handler QuickJS-ng never calls, so a JS `debugger;` statement no longer logs `script.javaScript.debugger` "debugger invoked during …" or dumps the stack.
+  - `OOJSDumpStack` gets a snapshot of `new Error().stack`: file/line only, `frameFunction` null (every frame prints "<not a function frame>" instead of `name()`/`new name()`), and no `this`, arguments or locals.
+  - — port `Core/Scripting/OOJavaScriptEngine.cpp:628-663,730-842`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3990-4095`
+- ⚠️ **low** — `OOJSObjectWrapperToString` no longer asks the native object for `oo_jsDescription`/`description` and always answers "[object <JSClass>]". Classes whose slot holds a C++ object describe themselves through `OOJSCxxObjectWrapperToString` (`Core/Scripting/OOJSPrivateObject.cpp:97`) or their own `toString` (e.g. `ScriptToString`). This wrapper remains only the fallback for a foreign `this` (bead oo-4aq6a.6, comment at :1726-1728). — upstream `Core/Scripting/OOJavaScriptEngine.m:1848-1853` ↔ port `Core/Scripting/OOJavaScriptEngine.cpp:1729-1746`
+- ❌ **low** — `concatenationOfStringsFromJavaScriptValues`: when an element after the first fails `ToString`, upstream `appendString:nil` raised an `NSInvalidArgumentException`, which the native wrapper reported as "Native exception: …". The port appends the separator and skips the element. A failing first element is skipped in both. — upstream `Core/Scripting/OOJavaScriptEngine.m:1647-1656` ↔ port `Core/Scripting/OOJavaScriptEngine.cpp:1603-1612`
+- **low** (value conversions behind the façade):
+  - `valueToInt32` (non-ECMA `JS_ValueToInt32`) errors on `d > 2147483647.0 || d < -2147483648.0`. SpiderMonkey errored only on `d <= -2147483649.0 || d >= 2147483648.0` and rounded with `floor(d + 0.5)`, so values in (2147483647, 2147483648) and (-2147483649, -2147483648) now fail.
+  - `ToNumber` of strings follows ES2015+ (e.g. `"0b101"`, `"0o17"` convert; NaN in 1.8.5).
+  - Unchanged: `ToBoolean`, `ToECMAInt32`/`Uint32`, `ToObject(null/undefined)` → null without error, `ToString` of numbers, and `numberValue`'s int32 canonicalisation (−0 stays double, NaN canonicalised).
+  - — SpiderMonkey `jsnum.cpp:1360-1365` ↔ port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:204-221,2400-2483`
+- Subtle — Warnings: `reportWarning` never becomes an exception and takes its filename/line from a fresh `Error().stack` when a script is running, otherwise none, so the second log line is suppressed as in SpiderMonkey's `PopulateReportBlame`. `reportError` throws an `Error(message)` while a script frame is active and calls the reporter directly otherwise, matching SpiderMonkey's `ReportError` → `js_ErrorToException` split. "Script running" is approximated by probing up to 16 stack levels with `JS_GetScriptOrModuleName`. — port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:719-731,871-879,3499-3509`
+- Subtle — `ReportJSError` itself (severity words, highlight `*****`/`-----`, "<unidentified script>", the `showLocation && stackSkip == 0 && filename` gate, the monitor call bracketed by save/restore of the exception state, the pause/resume of the time limiter) is line-for-line equivalent; the differences above all come from the report the backend builds. ✅ — port `Core/Scripting/OOJavaScriptEngine.cpp:164-259`
+- Subtle — `OOJSValueFromPList` reproduces `NSNumber -oo_jsValueInContext:`: bool → int32 1/0, integers in int32 range → int32, else double via `numberValue` (which canonicalises integral doubles back to int32, as `JS_NewNumberValue` did), and single-precision reals widened from `float`. An empty string → `emptyStringValue`; data and date → undefined (the root class's glue). ✅ — port `Core/Scripting/OOJavaScriptEngine.cpp:1219-1300`
 
 ## OOLegacyScriptWhitelist
 
@@ -2023,53 +2118,69 @@ Upstream `src/Core/Scripting/OOLegacyScriptWhitelist.m` ↔ `Core/Scripting/OOLe
 <a id="ooplistscript"></a>
 Upstream `src/Core/Scripting/OOPListScript.m` ↔ `Core/Scripting/OOPListScript.cpp`
 
-**Status:** pending
+**Status:** done — 10 rows: 4 ✅ 4 ⚠️ 1 ❌ 1 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OOPListScript scriptsInPListFile:]` (50) | | |
-| `-[OOPListScript dealloc]` (63) | | |
-| `-[OOPListScript name]` (71) | | |
-| `-[OOPListScript scriptDescription]` (76) | | |
-| `-[OOPListScript version]` (81) | | |
-| `-[OOPListScript requiresTickle]` (86) | | |
-| `-[OOPListScript runWithTarget:]` (91) | | |
-| `+[OOPListScript(SetUp) scriptsFromDictionaryOfScripts:filePath:]` (112) | | |
-| `+[OOPListScript(SetUp) loadCachedScripts:]` (152) | | |
-| `-[OOPListScript(SetUp) initWithName:scriptArray:metadata:]` (173) | | |
+| `+[OOPListScript scriptsInPListFile:]` (50) | `OOPListScript::scriptsInPListFile()` `Core/Scripting/OOPListScript.cpp:49` | ⚠️ |
+| `-[OOPListScript dealloc]` (63) | — (implicit: `_script`/`_metadata` are `oo::PList` members) | ➖ |
+| `-[OOPListScript name]` (71) | `OOPListScript::name()` `Core/Scripting/OOPListScript.cpp:65` | ✅ |
+| `-[OOPListScript scriptDescription]` (76) | `OOPListScript::scriptDescription()` `Core/Scripting/OOPListScript.cpp:73` | ⚠️ |
+| `-[OOPListScript version]` (81) | `OOPListScript::version()` `Core/Scripting/OOPListScript.cpp:84` | ❌ |
+| `-[OOPListScript requiresTickle]` (86) | `OOPListScript::requiresTickle()` `Core/Scripting/OOPListScript.cpp:94` | ✅ |
+| `-[OOPListScript runWithTarget:]` (91) | `OOPListScript::runWithTarget()` `Core/Scripting/OOPListScript.cpp:99` | ✅ |
+| `+[OOPListScript(SetUp) scriptsFromDictionaryOfScripts:filePath:]` (112) | `OOPListScript::scriptsFromDictionaryOfScripts()` `Core/Scripting/OOPListScript.cpp:115` | ⚠️ |
+| `+[OOPListScript(SetUp) loadCachedScripts:]` (152) | `OOPListScript::loadCachedScripts()` `Core/Scripting/OOPListScript.cpp:153` | ⚠️ |
+| `-[OOPListScript(SetUp) initWithName:scriptArray:metadata:]` (173) | ctor `OOPListScript::OOPListScript()` `Core/Scripting/OOPListScript.cpp:174` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **med** — The scripts in one plist now come out in sorted key order (`oo::PList::Dict` is a `std::map`), not NSDictionary hash order. This changes the order of world scripts from a `script.plist`, and with it their tickle/run order and log order. Stated in the port comments at OOPListScript.cpp:125 and :162. — upstream `Core/Scripting/OOPListScript.m:129,158` ↔ port `Core/Scripting/OOPListScript.cpp:126,163`
+- ❌ **low** — A non-string metadata `version` is dropped. Upstream `-version` returned any object and `-displayName` formatted it with `%@`, so an XML `<real>1.2</real>` gave "name 1.2". The port returns nullopt, so `script.legacy.run` and every other `displayName` user print just "name". The port comment's "-length" rationale does not match upstream `displayName`. — upstream `Core/Scripting/OOPListScript.m:81-84`, `Core/Scripting/OOScript.m:253-254` ↔ port `Core/Scripting/OOPListScript.cpp:84-92`
+- ⚠️ **low** — A non-string `description` → nullopt. The comment cites bead oo-3rb.266: nothing calls it. — port `Core/Scripting/OOPListScript.cpp:73-82`
+- ⚠️ **low** — A `script.plist` that is not a dictionary no longer logs `plist.wrongType` ("Property list is wrong type - expected NSDictionary…"); the port comment at :58 says so. — upstream `Core/OOPListParsing.m:226-232` ↔ port `Core/Scripting/OOPListScript.cpp:56-60`
+- Subtle, ✅:
+  - Metadata keys (`name`, `description`, `version`, `!metadata!`, `script`) and the cache name "sanitized legacy scripts" match.
+  - A cache entry leaves out metadata when it is nil, as `dictionaryWithObjectsAndKeys:` did.
+  - Sanitization goes through `OOSanitizeLegacyScript(…, key, false)`.
+  - The `script.legacy.run.badTarget` and `script.legacy.run` log classes and texts match.
+  - A missing `PLAYER` is guarded where upstream relied on a nil message.
+  - A cached entry with no script array gets an empty `PList` where upstream had a nil array.
+  - — port `Core/Scripting/OOPListScript.cpp:32-38,99-113,137-141,167`
 
 ## OOScript
 
 <a id="ooscript"></a>
 Upstream `src/Core/Scripting/OOScript.m` ↔ `Core/Scripting/OOScript.cpp`
 
-**Status:** pending
+**Status:** done — 13 rows: 12 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OOScript worldScriptsAtPath:]` (43) | | |
-| `+[OOScript scriptsFromFileNamed:]` (117) | | |
-| `+[OOScript scriptsFromList:]` (132) | | |
-| `+[OOScript scriptsFromFileAtPath:]` (149) | | |
-| `+[OOScript jsScriptFromFileNamed:properties:]` (175) | | |
-| `+[OOScript jsAIScriptFromFileNamed:properties:]` (200) | | |
-| `-[OOScript descriptionComponents]` (225) | | |
-| `-[OOScript name]` (230) | | |
-| `-[OOScript scriptDescription]` (236) | | |
-| `-[OOScript version]` (242) | | |
-| `-[OOScript displayName]` (248) | | |
-| `-[OOScript requiresTickle]` (261) | | |
-| `-[OOScript runWithTarget:]` (266) | | |
+| `+[OOScript worldScriptsAtPath:]` (43) | `OOScript::worldScriptsAtPath()` `Core/Scripting/OOScript.cpp:76` | ⚠️ |
+| `+[OOScript scriptsFromFileNamed:]` (117) | `OOScript::scriptsFromFileNamed()` `Core/Scripting/OOScript.cpp:146` | ✅ |
+| `+[OOScript scriptsFromList:]` (132) | `OOScript::scriptsFromList()` `Core/Scripting/OOScript.cpp:161` | ✅ |
+| `+[OOScript scriptsFromFileAtPath:]` (149) | `OOScript::scriptsFromFileAtPath()` `Core/Scripting/OOScript.cpp:176` | ✅ |
+| `+[OOScript jsScriptFromFileNamed:properties:]` (175) | `OOScript::jsScriptFromFileNamed()` `Core/Scripting/OOScript.cpp:202` | ✅ |
+| `+[OOScript jsAIScriptFromFileNamed:properties:]` (200) | `OOScript::jsAIScriptFromFileNamed()` `Core/Scripting/OOScript.cpp:227` | ✅ |
+| `-[OOScript descriptionComponents]` (225) | `OOScript::descriptionComponents()` `Core/Scripting/OOScript.cpp:252` | ✅ |
+| `-[OOScript name]` (230) | `OOScript::name()` `Core/Scripting/OOScript.cpp:257` | ✅ |
+| `-[OOScript scriptDescription]` (236) | `OOScript::scriptDescription()` `Core/Scripting/OOScript.cpp:263` | ✅ |
+| `-[OOScript version]` (242) | `OOScript::version()` `Core/Scripting/OOScript.cpp:269` | ✅ |
+| `-[OOScript displayName]` (248) | `OOScript::displayName()` `Core/Scripting/OOScript.cpp:275` | ✅ |
+| `-[OOScript requiresTickle]` (261) | `OOScript::requiresTickle()` `Core/Scripting/OOScript.cpp:286` | ✅ |
+| `-[OOScript runWithTarget:]` (266) | `OOScript::runWithTarget()` `Core/Scripting/OOScript.cpp:291` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `world-scripts.plist` is read through `StringsFromArrayFile`. A file that is not an array no longer logs `plist.wrongType` (stated in the comment at OOScript.cpp:45-47). Non-string entries are skipped silently, where upstream passed them to `scriptsFromFileNamed:`, which logs "Could not find script file …" or raises. — upstream `Core/Scripting/OOScript.m:57`, `Core/OOPListParsing.m:219-232` ↔ port `Core/Scripting/OOScript.cpp:48-60,86`
+- Subtle, ✅:
+  - Load order is the same: `world-scripts.plist`, then `script.js`, then `script.es`, then `script.plist`, with plist scripts skipped when standards are enforced.
+  - Log classes (`script.load.javaScript`, `.pList`, `.parseOK`, `.parseError`, `.none`, `.notFound`, `.badName`), their texts and the indent/outdent match.
+  - An empty `scriptsFromList` result stops the search, as before.
+  - `displayName`/`descriptionComponents` print "(null)" exactly where `%@` printed nil.
+  - — port `Core/Scripting/OOScript.cpp:83-143,252-284`
+- Note: the port adds `callMethod` (always false), `className`, `description`, `jsValueInContext` and `clearJSSelf` from the deleted facade (`Core/Scripting/OOScript.cpp:297-329`). `callMethod` is upstream's `-[OOScript(JavaScriptEvents) callMethod:]` (`OOJSScript.m:603`), audited in the OOJSScript section.
 
 ## OOScriptTimer
 
