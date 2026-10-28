@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 230 / 241 upstream `.m` files · extra rows below
+**Progress:** 232 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -303,8 +303,8 @@ Other low findings are recorded per file. The bulk falls into three groups:
 
 ### Universe and GameController — [universe.md](universe.md)
 
-- [ ] `Core/GameController.m` → `Core/GameController.cpp` (902 / 1193 lines) — *pending* — [findings](universe.md#gamecontroller)
-- [ ] `Core/Universe.m` → `Core/Universe.cpp` (10137 / 10879 lines) — *pending* — [findings](universe.md#universe)
+- [x] `Core/GameController.m` → `Core/GameController.cpp` (902 / 1193 lines) — 50✅ 5⚠️ 3❌ 2➖ — [findings](universe.md#gamecontroller)
+- [x] `Core/Universe.m` → `Core/Universe.cpp` (10137 / 10879 lines) — 351✅ 10⚠️ 10❌ 3➖ — [findings](universe.md#universe)
 
 ### SDL platform, input devices, debug support — [platform.md](platform.md)
 
