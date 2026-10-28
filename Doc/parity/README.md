@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 199 / 241 upstream `.m` files · extra rows below
+**Progress:** 215 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -209,25 +209,25 @@ Recorded per file. The bulk falls into three groups:
 - [ ] `Core/Entities/DustEntity.m` → `Core/Entities/DustEntity.cpp` (418 / 430 lines) — *pending* — [findings](entities-other.md#dustentity)
 - [ ] `Core/Entities/Entity.m` → `Core/Entities/Entity.cpp` (1055 / 1152 lines) — *pending* — [findings](entities-other.md#entity)
 - [ ] `Core/Entities/EntityShaderBindings.m` → `Core/Entities/EntityShaderBindings.cpp` (77 / 421 lines) — *pending* — [findings](entities-other.md#entityshaderbindings)
-- [ ] `Core/Entities/OOBreakPatternEntity.m` → `Core/Entities/OOBreakPatternEntity.cpp` (169 / 151 lines) — *pending* — [findings](entities-other.md#oobreakpatternentity)
-- [ ] `Core/Entities/OOECMBlastEntity.m` → `Core/Entities/OOECMBlastEntity.cpp` (123 / 118 lines) — *pending* — [findings](entities-other.md#ooecmblastentity)
-- [ ] `Core/Entities/OOEntityWithDrawable.m` → `Core/Entities/OOEntityWithDrawable.cpp` (122 / 120 lines) — *pending* — [findings](entities-other.md#ooentitywithdrawable)
-- [ ] `Core/Entities/OOExhaustPlumeEntity.m` → `Core/Entities/OOExhaustPlumeEntity.cpp` (681 / 694 lines) — *pending* — [findings](entities-other.md#ooexhaustplumeentity)
-- [ ] `Core/Entities/OOExplosionCloudEntity.m` → `Core/Entities/OOExplosionCloudEntity.cpp` (252 / 247 lines) — *pending* — [findings](entities-other.md#ooexplosioncloudentity)
-- [ ] `Core/Entities/OOFlashEffectEntity.m` → `Core/Entities/OOFlashEffectEntity.cpp` (140 / 144 lines) — *pending* — [findings](entities-other.md#ooflasheffectentity)
-- [ ] `Core/Entities/OOFlasherEntity.m` → `Core/Entities/OOFlasherEntity.cpp` (217 / 217 lines) — *pending* — [findings](entities-other.md#ooflasherentity)
-- [ ] `Core/Entities/OOLaserShotEntity.m` → `Core/Entities/OOLaserShotEntity.cpp` (315 / 316 lines) — *pending* — [findings](entities-other.md#oolasershotentity)
-- [ ] `Core/Entities/OOLightParticleEntity.m` → `Core/Entities/OOLightParticleEntity.cpp` (329 / 334 lines) — *pending* — [findings](entities-other.md#oolightparticleentity)
-- [ ] `Core/Entities/OOParticleSystem.m` → `Core/Entities/OOParticleSystem.cpp` (353 / 354 lines) — *pending* — [findings](entities-other.md#ooparticlesystem)
+- [x] `Core/Entities/OOBreakPatternEntity.m` → `Core/Entities/OOBreakPatternEntity.cpp` (169 / 151 lines) — 8✅ 2➖ — [findings](entities-other.md#oobreakpatternentity)
+- [x] `Core/Entities/OOECMBlastEntity.m` → `Core/Entities/OOECMBlastEntity.cpp` (123 / 118 lines) — 4✅ 1➖ — [findings](entities-other.md#ooecmblastentity)
+- [x] `Core/Entities/OOEntityWithDrawable.m` → `Core/Entities/OOEntityWithDrawable.cpp` (122 / 120 lines) — 5✅ 1➖ — [findings](entities-other.md#ooentitywithdrawable)
+- [x] `Core/Entities/OOExhaustPlumeEntity.m` → `Core/Entities/OOExhaustPlumeEntity.cpp` (681 / 694 lines) — 16✅ 1❌ 1➖ — [findings](entities-other.md#ooexhaustplumeentity)
+- [x] `Core/Entities/OOExplosionCloudEntity.m` → `Core/Entities/OOExplosionCloudEntity.cpp` (252 / 247 lines) — 5✅ 1➖ — [findings](entities-other.md#ooexplosioncloudentity)
+- [x] `Core/Entities/OOFlashEffectEntity.m` → `Core/Entities/OOFlashEffectEntity.cpp` (140 / 144 lines) — 8✅ 1❌ — [findings](entities-other.md#ooflasheffectentity)
+- [x] `Core/Entities/OOFlasherEntity.m` → `Core/Entities/OOFlasherEntity.cpp` (217 / 217 lines) — 19✅ 1⚠️ 2➖ — [findings](entities-other.md#ooflasherentity)
+- [x] `Core/Entities/OOLaserShotEntity.m` → `Core/Entities/OOLaserShotEntity.cpp` (315 / 316 lines) — 14✅ 1❌ 1➖ — [findings](entities-other.md#oolasershotentity)
+- [x] `Core/Entities/OOLightParticleEntity.m` → `Core/Entities/OOLightParticleEntity.cpp` (329 / 334 lines) — 13✅ 1❌ — [findings](entities-other.md#oolightparticleentity)
+- [x] `Core/Entities/OOParticleSystem.m` → `Core/Entities/OOParticleSystem.cpp` (353 / 354 lines) — 14✅ 1⚠️ 1➖ — [findings](entities-other.md#ooparticlesystem)
 - [ ] `Core/Entities/OOPlanetEntity.m` → `Core/Entities/OOPlanetEntity.cpp` (1052 / 1164 lines) — *pending* — [findings](entities-other.md#ooplanetentity)
-- [ ] `Core/Entities/OOPlasmaBurstEntity.m` → `Core/Entities/OOPlasmaBurstEntity.cpp` (62 / 67 lines) — *pending* — [findings](entities-other.md#ooplasmaburstentity)
-- [ ] `Core/Entities/OOPlasmaShotEntity.m` → `Core/Entities/OOPlasmaShotEntity.cpp` (113 / 128 lines) — *pending* — [findings](entities-other.md#ooplasmashotentity)
-- [ ] `Core/Entities/OOQuiriumCascadeEntity.m` → `Core/Entities/OOQuiriumCascadeEntity.cpp` (165 / 161 lines) — *pending* — [findings](entities-other.md#ooquiriumcascadeentity)
-- [ ] `Core/Entities/OORingEffectEntity.m` → `Core/Entities/OORingEffectEntity.cpp` (157 / 170 lines) — *pending* — [findings](entities-other.md#ooringeffectentity)
-- [ ] `Core/Entities/OOSparkEntity.m` → `Core/Entities/OOSparkEntity.cpp` (81 / 86 lines) — *pending* — [findings](entities-other.md#oosparkentity)
+- [x] `Core/Entities/OOPlasmaBurstEntity.m` → `Core/Entities/OOPlasmaBurstEntity.cpp` (62 / 67 lines) — 2✅ — [findings](entities-other.md#ooplasmaburstentity)
+- [x] `Core/Entities/OOPlasmaShotEntity.m` → `Core/Entities/OOPlasmaShotEntity.cpp` (113 / 128 lines) — 4✅ — [findings](entities-other.md#ooplasmashotentity)
+- [x] `Core/Entities/OOQuiriumCascadeEntity.m` → `Core/Entities/OOQuiriumCascadeEntity.cpp` (165 / 161 lines) — 9✅ 1➖ — [findings](entities-other.md#ooquiriumcascadeentity)
+- [x] `Core/Entities/OORingEffectEntity.m` → `Core/Entities/OORingEffectEntity.cpp` (157 / 170 lines) — 9✅ — [findings](entities-other.md#ooringeffectentity)
+- [x] `Core/Entities/OOSparkEntity.m` → `Core/Entities/OOSparkEntity.cpp` (81 / 86 lines) — 3✅ — [findings](entities-other.md#oosparkentity)
 - [ ] `Core/Entities/OOSunEntity.m` → `Core/Entities/OOSunEntity.cpp` (738 / 775 lines) — *pending* — [findings](entities-other.md#oosunentity)
 - [ ] `Core/Entities/OOVisualEffectEntity.m` → `Core/Entities/OOVisualEffectEntity.cpp` (875 / 985 lines) — *pending* — [findings](entities-other.md#oovisualeffectentity)
-- [ ] `Core/Entities/OOWaypointEntity.m` → `Core/Entities/OOWaypointEntity.cpp` (289 / 284 lines) — *pending* — [findings](entities-other.md#oowaypointentity)
+- [x] `Core/Entities/OOWaypointEntity.m` → `Core/Entities/OOWaypointEntity.cpp` (289 / 284 lines) — 20✅ 1❌ 1➖ — [findings](entities-other.md#oowaypointentity)
 - [ ] `Core/Entities/PlanetEntity.m` → *(no counterpart; check whether upstream builds it)* (1498 / — lines) — *pending* — [findings](entities-other.md#planetentity)
 - [ ] `Core/Entities/SkyEntity.m` → `Core/Entities/SkyEntity.cpp` (313 / 319 lines) — *pending* — [findings](entities-other.md#skyentity)
 - [ ] `Core/Entities/WormholeEntity.m` → `Core/Entities/WormholeEntity.cpp` (802 / 857 lines) — *pending* — [findings](entities-other.md#wormholeentity)
