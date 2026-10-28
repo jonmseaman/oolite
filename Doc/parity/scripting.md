@@ -246,22 +246,24 @@ Upstream `src/Core/Scripting/EntityOOJavaScriptExtensions.m` ↔ `Core/Scripting
 <a id="ooconsttojsstring"></a>
 Upstream `src/Core/Scripting/OOConstToJSString.m` ↔ `Core/Scripting/OOConstToJSString.cpp`
 
-**Status:** pending
+**Status:** done — 9 rows: 9 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOConstToJSStringInit()` (129) | | |
-| `OOConstToJSStringDestroy()` (149) | | |
-| `CompareEntries()` (156) | | |
-| `InitTable()` (168) | | |
-| `OOJSStringFromConstantPRIVATE()` (182) | | |
-| `OOConstantFromJSStringPRIVATE()` (206) | | |
-| `OOConstantFromJSValuePRIVATE()` (233) | | |
+| `OOConstToJSStringInit()` (129) | `OOConstToJSStringInit` OOConstToJSString.cpp:133 | ✅ |
+| `OOConstToJSStringDestroy()` (149) | `OOConstToJSStringDestroy` OOConstToJSString.cpp:155 | ✅ |
+| `CompareEntries()` (156) | `CompareEntries` OOConstToJSString.cpp:164 | ✅ |
+| `InitTable()` (168) | `InitTable` OOConstToJSString.cpp:176 | ✅ |
+| `OOJSStringFromConstantPRIVATE()` (182) | `OOJSStringFromConstantPRIVATE` OOConstToJSString.cpp:190 | ✅ |
+| `OOConstantFromJSStringPRIVATE()` (206) | `OOConstantFromJSStringPRIVATE` OOConstToJSString.cpp:214 | ✅ |
+| `OOConstantFromJSValuePRIVATE()` (233) | `OOConstantFromJSValuePRIVATE` OOConstToJSString.cpp:241 | ✅ |
+| *(added)* nine `s…TableEntries[]` tables from `Core/Tables/*.tbl` + `ENTRY` macros (71–107) | same tables OOConstToJSString.cpp:79–113; all nine `.tbl` files byte-identical (diffed) | ✅ |
+| *(added)* header inlines `OOJSStringFrom…/…FromJSString/…FromJSValue` + default values (`OOConstToJSString.h`) | `OOConstToJSString.h`: bodies and per-type defaults identical after signature renaming (diffed) | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ **low** — The binary search has the same latent bug on both sides. When `value` is below the smallest entry, `max = mid - 1` underflows `NSUInteger` and the loop continues, so this was kept, not introduced — upstream `OOConstToJSString.m:189-201` ↔ port `OOConstToJSString.cpp:197-209`
+- ✅ **low** — `sInited` exists only under `!NDEBUG` in the port. It is only read by asserts, so there is no release-build effect — upstream `OOConstToJSString.m:60` ↔ port `OOConstToJSString.cpp:62-64`
 
 ## OOJSCall
 
@@ -447,26 +449,34 @@ Upstream `src/Core/Scripting/OOJSEntity.m` ↔ `Core/Scripting/OOJSEntity.cpp`
 <a id="oojsequipmentinfo"></a>
 Upstream `src/Core/Scripting/OOJSEquipmentInfo.m` ↔ `Core/Scripting/OOJSEquipmentInfo.cpp`
 
-**Status:** pending
+**Status:** done — 17 rows: 15 ✅ 1 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSEquipmentInfo()` (162) | | |
-| `JSValueToEquipmentType()` (169) | | |
-| `JSValueToEquipmentKey()` (188) | | |
-| `JSValueToEquipmentKeyRelaxed()` (193) | | |
-| `EquipmentInfoGetProperty()` (224) | | |
-| `EquipmentInfoSetProperty()` (414) | | |
-| `EquipmentInfoGetAllEqipment()` (471) | | |
-| `-[OOEquipmentType(OOJavaScriptExtensions) oo_jsValueInContext:]` (483) | | |
-| `-[OOEquipmentType(OOJavaScriptExtensions) oo_jsClassName]` (496) | | |
-| `-[OOEquipmentType(OOJavaScriptExtensions) oo_clearJSSelf:]` (501) | | |
-| `EquipmentInfoStaticInfoForKey()` (512) | | |
+| *(added)* `sEquipmentInfoProperties[]` (83): 38 props, `displayColor`/`effectiveTechLevel` RW_CB, rest RO_CB | `sEquipmentInfoProperties` OOJSEquipmentInfo.cpp:187: same 38 names, IDs and order; RW = Permanent\|Enumerate\|Shared, RO adds ReadOnly | ✅ |
+| *(added)* `sEquipmentInfoStaticProperties[]` (126): `allEquipment` RO_CB | OOJSEquipmentInfo.cpp:232 | ✅ |
+| *(added)* `sEquipmentInfoMethods[]` (131): `toString`/0 | OOJSEquipmentInfo.cpp:243 (`EquipmentInfoToString` → `OOJSCxxObjectWrapperToString`) | ✅ |
+| *(added)* `sEquipmentInfoStaticMethods[]` (137): `infoForKey`/0 | OOJSEquipmentInfo.cpp:251 | ✅ |
+| *(added)* `sEquipmentInfoClass` (143) | `sEquipmentInfoClass` OOJSEquipmentInfo.cpp:259 | ✅ |
+| `InitOOJSEquipmentInfo()` (162) | `InitOOJSEquipmentInfo` OOJSEquipmentInfo.cpp:297 (converter `EquipmentInfoConverter` :288 gives the type as an Object node) | ✅ |
+| `JSValueToEquipmentType()` (169) | `JSValueToEquipmentType` OOJSEquipmentInfo.cpp:305 | ✅ |
+| `JSValueToEquipmentKey()` (188) | `JSValueToEquipmentKey` OOJSEquipmentInfo.cpp:324 | ✅ |
+| `JSValueToEquipmentKeyRelaxed()` (193) | `JSValueToEquipmentKeyRelaxed` OOJSEquipmentInfo.cpp:329 | ✅ |
+| `EquipmentInfoGetProperty()` (224), all cases except the following two rows | `EquipmentInfoGetProperty` OOJSEquipmentInfo.cpp:362 | ✅ |
+| `EquipmentInfoGetProperty()`, `provides` case (301) | OOJSEquipmentInfo.cpp:445 | ❌ |
+| `EquipmentInfoGetProperty()`, `requiresEquipment`/`requiresAnyEquipment`/`incompatibleEquipment` cases (373–383) | OOJSEquipmentInfo.cpp:518–528 via `KeyArrayOrNull` :113 | ⚠️ |
+| `EquipmentInfoSetProperty()` (414) | `EquipmentInfoSetProperty` OOJSEquipmentInfo.cpp:558 | ✅ |
+| `EquipmentInfoGetAllEqipment()` (471) | `EquipmentInfoGetAllEqipment` OOJSEquipmentInfo.cpp:621 | ✅ |
+| `-[OOEquipmentType(OOJavaScriptExtensions) oo_jsValueInContext:]` (483) | `OOEquipmentType::jsValueInContext` OOJSEquipmentInfo.cpp:636 | ✅ |
+| `-[OOEquipmentType(OOJavaScriptExtensions) oo_jsClassName]` (496) | `OOJSEquipmentInfoJSClassName` OOJSEquipmentInfo.cpp:666 (+ `jsDescription` :657, same format as the inherited `oo_jsDescriptionWithClassName:`) | ✅ |
+| `-[OOEquipmentType(OOJavaScriptExtensions) oo_clearJSSelf:]` (501) | `OOEquipmentType::clearJSSelf` OOJSEquipmentInfo.cpp:649 | ✅ |
+| `EquipmentInfoStaticInfoForKey()` (512) | `EquipmentInfoStaticInfoForKey` OOJSEquipmentInfo.cpp:675 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **med** — `EquipmentInfo.provides` returns `[]` instead of `null` for equipment with no extra-info dictionary (`equipment.plist` entries with only the required fields). Upstream sets `_provides` only inside `if (extra != nil)`, so `[nil copy]` gives JS `null`. The port's `providesForScripting()` returns a `std::vector`, so the result is always an array. Scripts that test `eq.provides` for truthiness or `=== null` take the other branch — upstream `OOJSEquipmentInfo.m:301-303`, `OOEquipmentType.m:214-240,629-632` ↔ port `OOJSEquipmentInfo.cpp:445-447`, `OOEquipmentType.cpp:263-268,603-606`
+- ⚠️ **low** — `requiresEquipment`, `requiresAnyEquipment` and `incompatibleEquipment` come back as sorted key arrays instead of `NSSet -allObjects` hash order. The membership is the same and only the array order changes (port comment at :111-112) — upstream `OOJSEquipmentInfo.m:373-383` ↔ port `OOJSEquipmentInfo.cpp:113-118,518-528`
+- ✅ note — `effectiveTechLevel` setter: the deprecation text, the `(null)` for a nil identifier, the 0..15 clamp that keeps 99, the `%u` mission-variable format and the warning text all match. `calculatedPrice` keeps the same EQ_FUEL formula, `(70 - fuel) * price * fuelChargeRate`, and the same `EQ_RENOVATION` branch. `installationTime` keeps its `price + 600` fallback. `scriptInfo`, `weaponInfo` and `scriptName` keep the `{}`/`""` fallbacks for nil.
 
 ## OOJSExhaustPlume
 
@@ -519,45 +529,45 @@ Upstream `src/Core/Scripting/OOJSFlasher.m` ↔ `Core/Scripting/OOJSFlasher.cpp`
 <a id="oojsfont"></a>
 Upstream `src/Core/Scripting/OOJSFont.m` ↔ `Core/Scripting/OOJSFont.cpp`
 
-**Status:** pending
+**Status:** done — 2 rows: 2 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSFont()` (36) | | |
-| `FontMeasureString()` (44) | | |
+| `InitOOJSFont()` (36) | `InitOOJSFont` OOJSFont.cpp:69 (`defaultFont` READONLY, `measureString`/1 METHOD_READONLY) | ✅ |
+| `FontMeasureString()` (44) | `FontMeasureString` OOJSFont.cpp:78 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ note — `measureString(null)` measures `""` in the port. Upstream measures a nil string. Both report the same bad-argument text, with an `undefined` argv, when the argument is undefined or missing.
 
 ## OOJSFrameCallbacks
 
 <a id="oojsframecallbacks"></a>
 Upstream `src/Core/Scripting/OOJSFrameCallbacks.m` ↔ `Core/Scripting/OOJSFrameCallbacks.cpp`
 
-**Status:** pending
+**Status:** done — 13 rows: 13 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSFrameCallbacks()` (113) | | |
-| `OOJSFrameCallbacksInvoke()` (127) | | |
-| `OOJSFrameCallbacksRemoveAll()` (165) | | |
-| `GlobalAddFrameCallback()` (180) | | |
-| `GlobalRemoveFrameCallback()` (214) | | |
-| `GlobalIsValidFrameCallback()` (242) | | |
-| `AddCallback()` (265) | | |
-| `GrowCallbackList()` (296) | | |
-| `GetIndexForTrackingID()` (343) | | |
-| `RemoveCallbackWithTrackingID()` (363) | | |
-| `RemoveCallbackAtIndex()` (377) | | |
-| `QueueDeferredOperation()` (398) | | |
-| `RunDeferredOperations()` (411) | | |
+| `InitOOJSFrameCallbacks()` (113) | `InitOOJSFrameCallbacks` OOJSFrameCallbacks.cpp:141 | ✅ |
+| `OOJSFrameCallbacksInvoke()` (127) | `OOJSFrameCallbacksInvoke` OOJSFrameCallbacks.cpp:155 | ✅ |
+| `OOJSFrameCallbacksRemoveAll()` (165) | `OOJSFrameCallbacksRemoveAll` OOJSFrameCallbacks.cpp:194 | ✅ |
+| `GlobalAddFrameCallback()` (180) | `GlobalAddFrameCallback` OOJSFrameCallbacks.cpp:209 | ✅ |
+| `GlobalRemoveFrameCallback()` (214) | `GlobalRemoveFrameCallback` OOJSFrameCallbacks.cpp:243 | ✅ |
+| `GlobalIsValidFrameCallback()` (242) | `GlobalIsValidFrameCallback` OOJSFrameCallbacks.cpp:271 | ✅ |
+| `AddCallback()` (265) | `AddCallback` OOJSFrameCallbacks.cpp:295 | ✅ |
+| `GrowCallbackList()` (296) | `GrowCallbackList` OOJSFrameCallbacks.cpp:328 | ✅ |
+| `GetIndexForTrackingID()` (343) | `GetIndexForTrackingID` OOJSFrameCallbacks.cpp:377 | ✅ |
+| `RemoveCallbackWithTrackingID()` (363) | `RemoveCallbackWithTrackingID` OOJSFrameCallbacks.cpp:399 | ✅ |
+| `RemoveCallbackAtIndex()` (377) | `RemoveCallbackAtIndex` OOJSFrameCallbacks.cpp:414 | ✅ |
+| `QueueDeferredOperation()` (398) | `QueueDeferredOperation` OOJSFrameCallbacks.cpp:436 (a `std::vector<DeferredOperation>` instead of an array of dicts) | ✅ |
+| `RunDeferredOperations()` (411) | `RunDeferredOperations` OOJSFrameCallbacks.cpp:446 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ note (ordering) — The ID scramble constants are unchanged (`0x2315EB16`, `992699`), and the ID is still seeded from `timeIntervalSinceReferenceDate`. Callbacks run in slot order `0..sCount-1`. Removal swaps the last entry into the removed slot, so ordering after a removal is the same as upstream — upstream `:147-151,386-388` ↔ port `:175-179,423-425`
+- ✅ note (mutation during iteration) — While running, add and remove are queued in call order and replayed after the loop. A deferred remove of an unknown ID is still silent (no warning), and a failed deferred add logs `script.frameCallback.deferredAdd.failed` with the same text. Upstream round-trips the ID through `NSNumber numberWithInt` and `oo_intForKey`; the port stores the `uint32_t` directly, which is lossless both ways — upstream `:398-432` ↔ port `:436-465`
+- ✅ note — `addFrameCallback` returns `INT_TO_JSVAL`/`int32Value` of a `uint32` on both sides, so IDs ≥ 2³¹ come back negative in both. Argument-error texts are identical ("function", "frame callback tracking ID"), and so is `"removeFrameCallback(): invalid tracking ID."`.
 
 ## OOJSFunction
 
@@ -629,58 +639,56 @@ Upstream `src/Core/Scripting/OOJSGlobal.m` ↔ `Core/Scripting/OOJSGlobal.cpp`
 <a id="oojsguiscreenkeydefinition"></a>
 Upstream `src/Core/Scripting/OOJSGuiScreenKeyDefinition.m` ↔ `Core/Scripting/OOJSGuiScreenKeyDefinition.cpp`
 
-**Status:** pending
+**Status:** done — 13 rows: 13 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOJSGuiScreenKeyDefinition init]` (31) | | |
-| `-[OOJSGuiScreenKeyDefinition deleteJSPointers]` (47) | | |
-| `-[OOJSGuiScreenKeyDefinition dealloc]` (63) | | |
-| `-[OOJSGuiScreenKeyDefinition name]` (72) | | |
-| `-[OOJSGuiScreenKeyDefinition setName:]` (77) | | |
-| `-[OOJSGuiScreenKeyDefinition registerKeys]` (83) | | |
-| `-[OOJSGuiScreenKeyDefinition setRegisterKeys:]` (88) | | |
-| `-[OOJSGuiScreenKeyDefinition callback]` (94) | | |
-| `-[OOJSGuiScreenKeyDefinition setCallback:]` (99) | | |
-| `-[OOJSGuiScreenKeyDefinition callbackThis]` (108) | | |
-| `-[OOJSGuiScreenKeyDefinition setCallbackThis:]` (113) | | |
-| `-[OOJSGuiScreenKeyDefinition runCallback:]` (122) | | |
-| `-[OOJSGuiScreenKeyDefinition interfaceCompare:]` (145) | | |
+| `-[OOJSGuiScreenKeyDefinition init]` (31) | constructor OOJSGuiScreenKeyDefinition.cpp:64 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition deleteJSPointers]` (47) | `deleteJSPointers` OOJSGuiScreenKeyDefinition.cpp:76 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition dealloc]` (63) | destructor OOJSGuiScreenKeyDefinition.cpp:91 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition name]` (72) | `name` OOJSGuiScreenKeyDefinition.cpp:98 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition setName:]` (77) | `setName` OOJSGuiScreenKeyDefinition.cpp:103 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition registerKeys]` (83) | `registerKeys` OOJSGuiScreenKeyDefinition.cpp:108 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition setRegisterKeys:]` (88) | `setRegisterKeys` OOJSGuiScreenKeyDefinition.cpp:113 (value copy = `-copy`) | ✅ |
+| `-[OOJSGuiScreenKeyDefinition callback]` (94) | `callback` OOJSGuiScreenKeyDefinition.cpp:118 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition setCallback:]` (99) | `setCallback` OOJSGuiScreenKeyDefinition.cpp:123 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition callbackThis]` (108) | `callbackThis` OOJSGuiScreenKeyDefinition.cpp:132 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition setCallbackThis:]` (113) | `setCallbackThis` OOJSGuiScreenKeyDefinition.cpp:137 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition runCallback:]` (122) | `runCallback` OOJSGuiScreenKeyDefinition.cpp:146 | ✅ |
+| `-[OOJSGuiScreenKeyDefinition interfaceCompare:]` (145) | `interfaceCompare` OOJSGuiScreenKeyDefinition.cpp:164 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ note — `interfaceCompare` with a nil `_name` returns `OOOrderedSame`, which models a message to nil. A nil other name compares as `""`. The case-folding rules are those of `oo::str::caseInsensitiveCompare` (audited with foundation) — upstream `:145-148` ↔ port `:164-172`
 
 ## OOJSInterfaceDefinition
 
 <a id="oojsinterfacedefinition"></a>
 Upstream `src/Core/Scripting/OOJSInterfaceDefinition.m` ↔ `Core/Scripting/OOJSInterfaceDefinition.cpp`
 
-**Status:** pending
+**Status:** done — 15 rows: 15 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOJSInterfaceDefinition init]` (31) | | |
-| `-[OOJSInterfaceDefinition deleteJSPointers]` (47) | | |
-| `-[OOJSInterfaceDefinition dealloc]` (63) | | |
-| `-[OOJSInterfaceDefinition title]` (72) | | |
-| `-[OOJSInterfaceDefinition setTitle:]` (77) | | |
-| `-[OOJSInterfaceDefinition category]` (83) | | |
-| `-[OOJSInterfaceDefinition setCategory:]` (88) | | |
-| `-[OOJSInterfaceDefinition summary]` (94) | | |
-| `-[OOJSInterfaceDefinition setSummary:]` (99) | | |
-| `-[OOJSInterfaceDefinition callback]` (105) | | |
-| `-[OOJSInterfaceDefinition setCallback:]` (110) | | |
-| `-[OOJSInterfaceDefinition callbackThis]` (119) | | |
-| `-[OOJSInterfaceDefinition setCallbackThis:]` (124) | | |
-| `-[OOJSInterfaceDefinition runCallback:]` (133) | | |
-| `-[OOJSInterfaceDefinition interfaceCompare:]` (156) | | |
+| `-[OOJSInterfaceDefinition init]` (31) | constructor OOJSInterfaceDefinition.cpp:60 | ✅ |
+| `-[OOJSInterfaceDefinition deleteJSPointers]` (47) | `deleteJSPointers` OOJSInterfaceDefinition.cpp:72 | ✅ |
+| `-[OOJSInterfaceDefinition dealloc]` (63) | destructor OOJSInterfaceDefinition.cpp:87 | ✅ |
+| `-[OOJSInterfaceDefinition title]` (72) | `title` OOJSInterfaceDefinition.cpp:94 | ✅ |
+| `-[OOJSInterfaceDefinition setTitle:]` (77) | `setTitle` OOJSInterfaceDefinition.cpp:99 | ✅ |
+| `-[OOJSInterfaceDefinition category]` (83) | `category` OOJSInterfaceDefinition.cpp:104 | ✅ |
+| `-[OOJSInterfaceDefinition setCategory:]` (88) | `setCategory` OOJSInterfaceDefinition.cpp:109 (non-optional; the only caller, `Station.setInterface`, never passes nil) | ✅ |
+| `-[OOJSInterfaceDefinition summary]` (94) | `summary` OOJSInterfaceDefinition.cpp:114 | ✅ |
+| `-[OOJSInterfaceDefinition setSummary:]` (99) | `setSummary` OOJSInterfaceDefinition.cpp:119 (same as above) | ✅ |
+| `-[OOJSInterfaceDefinition callback]` (105) | `callback` OOJSInterfaceDefinition.cpp:124 | ✅ |
+| `-[OOJSInterfaceDefinition setCallback:]` (110) | `setCallback` OOJSInterfaceDefinition.cpp:129 | ✅ |
+| `-[OOJSInterfaceDefinition callbackThis]` (119) | `callbackThis` OOJSInterfaceDefinition.cpp:138 | ✅ |
+| `-[OOJSInterfaceDefinition setCallbackThis:]` (124) | `setCallbackThis` OOJSInterfaceDefinition.cpp:143 | ✅ |
+| `-[OOJSInterfaceDefinition runCallback:]` (133) | `runCallback` OOJSInterfaceDefinition.cpp:152 | ✅ |
+| `-[OOJSInterfaceDefinition interfaceCompare:]` (156) | `interfaceCompare` OOJSInterfaceDefinition.cpp:170 + `CaseInsensitiveCompare` :46 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ note — The nil branches of `CaseInsensitiveCompare` cannot be reached. `Station.setInterface` always supplies a non-empty title, and a non-empty category (defaulting to `interfaces-category-uncategorised`) — upstream `OOJSStation.m:763-808` ↔ port `OOJSStation.cpp:1022-1069`
 
 ## OOJSManifest
 
@@ -896,23 +904,22 @@ Upstream `src/Core/Scripting/OOJSPlayerShip.m` ↔ `Core/Scripting/OOJSPlayerShi
 <a id="oojspopulatordefinition"></a>
 Upstream `src/Core/Scripting/OOJSPopulatorDefinition.m` ↔ `Core/Scripting/OOJSPopulatorDefinition.cpp`
 
-**Status:** pending
+**Status:** done — 8 rows: 8 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOJSPopulatorDefinition init]` (33) | | |
-| `-[OOJSPopulatorDefinition deleteJSPointers]` (49) | | |
-| `-[OOJSPopulatorDefinition dealloc]` (65) | | |
-| `-[OOJSPopulatorDefinition callback]` (74) | | |
-| `-[OOJSPopulatorDefinition setCallback:]` (79) | | |
-| `-[OOJSPopulatorDefinition callbackThis]` (88) | | |
-| `-[OOJSPopulatorDefinition setCallbackThis:]` (93) | | |
-| `-[OOJSPopulatorDefinition runCallback:]` (102) | | |
+| `-[OOJSPopulatorDefinition init]` (33) | constructor OOJSPopulatorDefinition.cpp:61 | ✅ |
+| `-[OOJSPopulatorDefinition deleteJSPointers]` (49) | `deleteJSPointers` OOJSPopulatorDefinition.cpp:73 | ✅ |
+| `-[OOJSPopulatorDefinition dealloc]` (65) | destructor OOJSPopulatorDefinition.cpp:88 | ✅ |
+| `-[OOJSPopulatorDefinition callback]` (74) | `callback` OOJSPopulatorDefinition.cpp:95 | ✅ |
+| `-[OOJSPopulatorDefinition setCallback:]` (79) | `setCallback` OOJSPopulatorDefinition.cpp:100 | ✅ |
+| `-[OOJSPopulatorDefinition callbackThis]` (88) | `callbackThis` OOJSPopulatorDefinition.cpp:109 | ✅ |
+| `-[OOJSPopulatorDefinition setCallbackThis:]` (93) | `setCallbackThis` OOJSPopulatorDefinition.cpp:114 | ✅ |
+| `-[OOJSPopulatorDefinition runCallback:]` (102) | `runPopulatorCallback` OOJSPopulatorDefinition.cpp:123 (renamed; same body: `HPVectorToVector` → `VectorToJSValue`, push/pop owner) | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ note — The port adds `OOJSPopulatorDefinitionToPList`/`…In` (:157, :164) so that a definition can travel inside a `PList` where upstream put the object itself in an `NSDictionary`. These add no behaviour of their own.
 
 ## OOJSQuaternion
 
@@ -1136,93 +1143,103 @@ Upstream `src/Core/Scripting/OOJSShip.m` ↔ `Core/Scripting/OOJSShip.cpp`
 <a id="oojsshipgroup"></a>
 Upstream `src/Core/Scripting/OOJSShipGroup.m` ↔ `Core/Scripting/OOJSShipGroup.cpp`
 
-**Status:** pending
+**Status:** done — 13 rows: 13 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSShipGroup()` (84) | | |
-| `ShipGroupGetProperty()` (90) | | |
-| `ShipGroupSetProperty()` (134) | | |
-| `ShipGroupConstruct()` (173) | | |
-| `-[OOShipGroup(OOJavaScriptExtensions) oo_jsValueInContext:]` (208) | | |
-| `-[OOShipGroup(OOJavaScriptExtensions) oo_clearJSSelf:]` (226) | | |
-| `ShipGroupAddShip()` (237) | | |
-| `ShipGroupRemoveShip()` (298) | | |
-| `ShipGroupContainsShip()` (324) | | |
+| *(added)* `sShipGroupClass` (41) | `sShipGroupClass` OOJSShipGroup.cpp:109 | ✅ |
+| *(added)* `sShipGroupProperties[]` (64): `count` RO, `leader` RW, `name` RW, `ships` RO (all _CB) | `sShipGroupProperties` OOJSShipGroup.cpp:137 (+ identical raw mirror :152 for error reporters) | ✅ |
+| *(added)* `sShipGroupMethods[]` (73): `toString`/0, `addShip`/1, `containsShip`/1, `removeShip`/1 | `sShipGroupMethods` OOJSShipGroup.cpp:163 | ✅ |
+| `InitOOJSShipGroup()` (84) | `InitOOJSShipGroup` OOJSShipGroup.cpp:190 (converter :179 gives the group as an Object node) | ✅ |
+| `ShipGroupGetProperty()` (90) | `ShipGroupGetProperty` OOJSShipGroup.cpp:200 | ✅ |
+| `ShipGroupSetProperty()` (134) | `ShipGroupSetProperty` OOJSShipGroup.cpp:248 | ✅ |
+| `ShipGroupConstruct()` (173) | `ShipGroupConstruct` OOJSShipGroup.cpp:297 | ✅ |
+| `-[OOShipGroup(OOJavaScriptExtensions) oo_jsValueInContext:]` (208) | `OOShipGroup::jsValueInContext` OOJSShipGroup.cpp:337 | ✅ |
+| `-[OOShipGroup(OOJavaScriptExtensions) oo_clearJSSelf:]` (226) | `OOShipGroup::clearJSSelf` OOJSShipGroup.cpp:355 | ✅ |
+| *(added)* inherited `oo_jsDescription` (class name `OOShipGroup`, no `oo_jsClassName`) | `OOShipGroup::jsDescription` OOJSShipGroup.cpp:363 + `ShipGroupToString` :375 | ✅ |
+| `ShipGroupAddShip()` (237) | `ShipGroupAddShip` OOJSShipGroup.cpp:383 | ✅ |
+| `ShipGroupRemoveShip()` (298) | `ShipGroupRemoveShip` OOJSShipGroup.cpp:454 | ✅ |
+| `ShipGroupContainsShip()` (324) | `ShipGroupContainsShip` OOJSShipGroup.cpp:484 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ note — The escort-group branch of `addShip` is the same. "Already escorting" logs a warning and returns `false`. When an unescorted leader whose escort group is its own group gets a new escort, the port makes a new `"ship group"` group and leaks it at +1, as upstream's `alloc/init` did. The text of the escort-group warning matches, but `%@` of the ship becomes `oo::EntityDescription(ship)` (audited with entities) — upstream `:258-291` ↔ port `:409-446`
 
 ## OOJSSound
 
 <a id="oojssound"></a>
 Upstream `src/Core/Scripting/OOJSSound.m` ↔ `Core/Scripting/OOJSSound.cpp`
 
-**Status:** pending
+**Status:** done — 15 rows: 14 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSSound()` (108) | | |
-| `SoundFromJSValue()` (114) | | |
-| `SoundGetProperty()` (131) | | |
-| `GetNamedSound()` (156) | | |
-| `SoundStaticLoad()` (172) | | |
-| `SoundStaticMusicSoundSource()` (195) | | |
-| `SoundStaticPlayMusic()` (207) | | |
-| `SoundStaticStopMusic()` (245) | | |
-| `-[OOSound(OOJavaScriptExtentions) oo_jsValueInContext:]` (273) | | |
-| `-[OOSound(OOJavaScriptExtentions) oo_jsDescription]` (289) | | |
-| `-[OOSound(OOJavaScriptExtentions) oo_jsClassName]` (294) | | |
+| *(added)* `sSoundClass` (43; setProperty `JS_StrictPropertyStub`) | `sSoundClass` OOJSSound.cpp:118 (setProperty default stub) | ✅ |
+| *(added)* `sSoundProperties[]` (63): `name` RO_CB | OOJSSound.cpp:143 | ✅ |
+| *(added)* `sSoundMethods[]` (69): `toString`/0 | OOJSSound.cpp:151 (`SoundToString` :304) | ✅ |
+| *(added)* `sSoundStaticMethods[]` (79): `load`/1, `musicSoundSource`/0, `playMusic`/1, `stopMusic`/0 | OOJSSound.cpp:164 | ✅ |
+| `InitOOJSSound()` (108) | `InitOOJSSound` OOJSSound.cpp:219; converter `SoundConverter` :211 returns null | ⚠️ |
+| `SoundFromJSValue()` (114) | `SoundFromJSValue` OOJSSound.cpp:228 (keeps the upstream pause-without-resume of the time limiter) | ✅ |
+| `SoundGetProperty()` (131) | `SoundGetProperty` OOJSSound.cpp:254 | ✅ |
+| `GetNamedSound()` (156) | `GetNamedSound` OOJSSound.cpp:286 | ✅ |
+| `SoundStaticLoad()` (172) | `SoundStaticLoad` OOJSSound.cpp:314 | ✅ |
+| `SoundStaticMusicSoundSource()` (195) | `SoundStaticMusicSoundSource` OOJSSound.cpp:339 | ✅ |
+| `SoundStaticPlayMusic()` (207) | `SoundStaticPlayMusic` OOJSSound.cpp:354 | ✅ |
+| `SoundStaticStopMusic()` (245) | `SoundStaticStopMusic` OOJSSound.cpp:394 | ✅ |
+| `-[OOSound(OOJavaScriptExtentions) oo_jsValueInContext:]` (273) | `OOJSSoundJSValueInContext` OOJSSound.cpp:424 (new wrapper per call, as upstream) | ✅ |
+| `-[OOSound(OOJavaScriptExtentions) oo_jsDescription]` (289) | `OOJSSoundJSDescription` OOJSSound.cpp:444 (`[Sound "name"]`, `(null)` for nil name) | ✅ |
+| `-[OOSound(OOJavaScriptExtentions) oo_jsClassName]` (294) | `OOJSSoundJSClassName` OOJSSound.cpp:449 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — The object converter registered for `Sound` returns null instead of the native `OOSound` that `OOJSBasicPrivateObjectConverter` returned. A generic JS→native or plist conversion of a `Sound` object therefore gives null. The sound's own callers use `SoundFromJSValue()`, which reads the slot directly (bead oo-9ht.68, comment at :207-209) — upstream `OOJSSound.m:111` ↔ port `OOJSSound.cpp:211-214,225`
+- ✅ note — The texts and arities of the `playMusic` argument errors match, including upstream's second report with count 1 after `OOJSArgumentListGetNumber` fails. The `stopMusic` text `"string or no argument"` matches too.
 
 ## OOJSSoundSource
 
 <a id="oojssoundsource"></a>
 Upstream `src/Core/Scripting/OOJSSoundSource.m` ↔ `Core/Scripting/OOJSSoundSource.cpp`
 
-**Status:** pending
+**Status:** done — 13 rows: 12 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSSoundSource()` (110) | | |
-| `SoundSourceConstruct()` (116) | | |
-| `SoundSourceGetProperty()` (132) | | |
-| `SoundSourceSetProperty()` (179) | | |
-| `SoundSourcePlay()` (255) | | |
-| `SoundSourceStop()` (285) | | |
-| `SoundSourcePlayOrRepeat()` (304) | | |
-| `-[OOSoundSource(OOJavaScriptExtentions) oo_jsValueInContext:]` (324) | | |
-| `-[OOSoundSource(OOJavaScriptExtentions) oo_jsClassName]` (340) | | |
+| *(added)* `sSoundSourceClass` (42) | `sSoundSourceClass` OOJSSoundSource.cpp:105 | ✅ |
+| *(added)* `sSoundSourceProperties[]` (68): `isPlaying` RO, `loop`/`position`/`positional`/`repeatCount`/`sound`/`volume` RW (all _CB) | OOJSSoundSource.cpp:136 | ✅ |
+| *(added)* `sSoundSourceMethods[]` (80): `toString`/0, `play`/0, `playOrRepeat`/0, `stop`/0 | OOJSSoundSource.cpp:150 | ✅ |
+| `InitOOJSSoundSource()` (110) | `InitOOJSSoundSource` OOJSSoundSource.cpp:202; converter `SoundSourceConverter` :194 returns null | ⚠️ |
+| `SoundSourceConstruct()` (116) | `SoundSourceConstruct` OOJSSoundSource.cpp:210 | ✅ |
+| `SoundSourceGetProperty()` (132) | `SoundSourceGetProperty` OOJSSoundSource.cpp:230 | ✅ |
+| `SoundSourceSetProperty()` (179) | `SoundSourceSetProperty` OOJSSoundSource.cpp:283 (keeps the dead `if (100 < 1)` and the 0..1 volume clamp) | ✅ |
+| `SoundSourcePlay()` (255) | `SoundSourcePlay` OOJSSoundSource.cpp:378 | ✅ |
+| `SoundSourceStop()` (285) | `SoundSourceStop` OOJSSoundSource.cpp:412 | ✅ |
+| `SoundSourcePlayOrRepeat()` (304) | `SoundSourcePlayOrRepeat` OOJSSoundSource.cpp:435 | ✅ |
+| `-[OOSoundSource(OOJavaScriptExtentions) oo_jsValueInContext:]` (324) | `OOJSSoundSourceJSValueInContext` OOJSSoundSource.cpp:460 | ✅ |
+| `-[OOSoundSource(OOJavaScriptExtentions) oo_jsClassName]` (340) | `OOJSSoundSourceJSClassName` OOJSSoundSource.cpp:480 | ✅ |
+| *(added)* inherited `oo_jsDescription` → `[SoundSource <components>]` | `OOJSSoundSourceHolder::jsDescription` OOJSSoundSource.cpp:171 + `SoundSourceToString` :370 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — The `SoundSource` object converter returns null instead of the native `OOSoundSource` (bead oo-9ht.88, comment at :191-193). A generic JS→native conversion of a `SoundSource` gives null — upstream `OOJSSoundSource.m:113` ↔ port `OOJSSoundSource.cpp:194-197,206`
 
 ## OOJSSpecialFunctions
 
 <a id="oojsspecialfunctions"></a>
 Upstream `src/Core/Scripting/OOJSSpecialFunctions.m` ↔ `Core/Scripting/OOJSSpecialFunctions.cpp`
 
-**Status:** pending
+**Status:** done — 5 rows: 5 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSSpecialFunctions()` (43) | | |
-| `JSSpecialFunctionsObjectWrapper()` (47) | | |
-| `SpecialJSWarning()` (70) | | |
-| `SpecialMarkConsoleEntryPoint()` (90) | | |
+| *(added)* `sSpecialFunctionsMethods[]` (33): `jsWarning`/1, `markConsoleEntryPoint`/0 (if `OO_DEBUG_MONITOR_ENABLED`) | OOJSSpecialFunctions.cpp:37 (macro comes from `meson.build` command line, so unaffected by `OO_PLAIN_CPP_UNIT`) | ✅ |
+| `InitOOJSSpecialFunctions()` (43) | `InitOOJSSpecialFunctions` OOJSSpecialFunctions.cpp:46 (empty) | ✅ |
+| `JSSpecialFunctionsObjectWrapper()` (47) | `JSSpecialFunctionsObjectWrapper` OOJSSpecialFunctions.cpp:50 | ✅ |
+| `SpecialJSWarning()` (70) | `SpecialJSWarning` OOJSSpecialFunctions.cpp:73 | ✅ |
+| `SpecialMarkConsoleEntryPoint()` (90) | `SpecialMarkConsoleEntryPoint` OOJSSpecialFunctions.cpp:93 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- *none*
 
 ## OOJSStation
 
@@ -1697,30 +1714,39 @@ Upstream `src/Core/Scripting/OOJavaScriptEngine.m` ↔ `Core/Scripting/OOJavaScr
 <a id="oolegacyscriptwhitelist"></a>
 Upstream `src/Core/Scripting/OOLegacyScriptWhitelist.m` ↔ `Core/Scripting/OOLegacyScriptWhitelist.cpp`
 
-**Status:** pending
+**Status:** done — 16 rows: 14 ✅ 0 ⚠️ 2 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOSanitizeLegacyScript()` (58) | | |
-| `OOSanitizeLegacyScriptInternal()` (65) | | |
-| `OOSanitizeLegacyScriptConditions()` (101) | | |
-| `OOSanitizeLegacyScriptConditionsInternal()` (110) | | |
-| `OOLegacyConditionsAreSanitized()` (149) | | |
-| `SanitizeCondition()` (156) | | |
-| `SanitizeConditionalStatement()` (290) | | |
-| `SanitizeActionStatement()` (336) | | |
-| `ClassifyLHSConditionSelector()` (375) | | |
-| `SanitizeQueryMethod()` (406) | | |
-| `SanitizeActionMethod()` (427) | | |
-| `AlwaysFalseConditions()` (476) | | |
-| `IsAlwaysFalseConditions()` (487) | | |
-| `StringFromStackInternal()` (492) | | |
-| `StringFromStack()` (512) | | |
+| *(added)* `Resources/Config/whitelist.plist` (all 12 tables: `action_methods`, `ai_methods`, `ai_and_action_methods`, `query_methods`, `*_aliases`, …) and `+[ResourceManager whitelistDictionary]` | same file, byte-identical (diffed); `ResourceManager::whitelistDictionary` ResourceManager.cpp:1641 (loaded once, missing cached) | ✅ |
+| `OOSanitizeLegacyScript()` (58) | `OOSanitizeLegacyScript` OOLegacyScriptWhitelist.cpp:66 | ✅ |
+| `OOSanitizeLegacyScriptInternal()` (65) | `OOSanitizeLegacyScriptInternal` OOLegacyScriptWhitelist.cpp:73 | ❌ |
+| `OOSanitizeLegacyScriptConditions()` (101) | `OOSanitizeLegacyScriptConditions` OOLegacyScriptWhitelist.cpp:107 | ✅ |
+| `OOSanitizeLegacyScriptConditionsInternal()` (110) | `OOSanitizeLegacyScriptConditionsInternal` OOLegacyScriptWhitelist.cpp:114 | ❌ |
+| `OOLegacyConditionsAreSanitized()` (149) | `OOLegacyConditionsAreSanitized` OOLegacyScriptWhitelist.cpp:155 | ✅ |
+| `SanitizeCondition()` (156) | `SanitizeCondition` OOLegacyScriptWhitelist.cpp:164 | ✅ |
+| `SanitizeConditionalStatement()` (290) | `SanitizeConditionalStatement` OOLegacyScriptWhitelist.cpp:292 | ✅ |
+| `SanitizeActionStatement()` (336) | `SanitizeActionStatement` OOLegacyScriptWhitelist.cpp:346 | ✅ |
+| `ClassifyLHSConditionSelector()` (375) | `ClassifyLHSConditionSelector` OOLegacyScriptWhitelist.cpp:397 (unused `stack` param dropped) | ✅ |
+| `SanitizeQueryMethod()` (406) | `SanitizeQueryMethod` OOLegacyScriptWhitelist.cpp:467 (+ `WhitelistSet` :433, `WhitelistDictionary` :449, `AliasFor` :456) | ✅ |
+| `SanitizeActionMethod()` (427) | `SanitizeActionMethod` OOLegacyScriptWhitelist.cpp:486 | ✅ |
+| `AlwaysFalseConditions()` (476) | `AlwaysFalseConditions` OOLegacyScriptWhitelist.cpp:539 (upstream inverted-cache bug kept: always returns null) | ✅ |
+| `IsAlwaysFalseConditions()` (487) | `IsAlwaysFalseConditions` OOLegacyScriptWhitelist.cpp:555 | ✅ |
+| `StringFromStackInternal()` (492) | `StringFromStackInternal` OOLegacyScriptWhitelist.cpp:565 | ✅ |
+| `StringFromStack()` (512) | `StringFromStack` OOLegacyScriptWhitelist.cpp:583 | ✅ |
 
 **Differences:**
 
-- *pending*
+- ❌ **low** — `script.syntax.statement.invalidType` names the offending statement's type with the PList type name (`integer`, `array`, `bool` …) instead of its Objective-C class (`[statement class]`, e.g. `GSMutableArray`). The log text differs for malformed scripts only — upstream `OOLegacyScriptWhitelist.m:86` ↔ port `OOLegacyScriptWhitelist.cpp:93`
+- ❌ **low** — `script.syntax.condition.notString` has the same class-name→type-name change in its log text — upstream `OOLegacyScriptWhitelist.m:129` ↔ port `OOLegacyScriptWhitelist.cpp:133`
+- ✅ note (whitelist tables, entry by entry) — `whitelist.plist` is byte-identical. The sets are built the same way:
+  - query = `query_methods`.
+  - action = `action_methods` ∪ `ai_and_action_methods`.
+  - action+AI = `ai_methods` ∪ action.
+  - AI aliases = `ai_method_aliases` overlaid by `action_method_aliases` (action wins, as `dictionaryByAddingEntriesFromDictionary:`).
 
+  Aliases are resolved before the membership test, and LHS type is classified by the suffix of the un-aliased selector. Both sides cache the tables for the life of the process — upstream `:406-473` ↔ port `:467-534`
+- ✅ note — `AlwaysFalseConditions()` returns nil/null on both sides because of the upstream `!= nil` bug, so a conditions array that fails sanitising drops its whole conditional statement. This is kept on purpose (port comment :541-544, proposed ADR-0043). The comparator table (`morethan`→GREATERTHAN), the rejection of OP_NUMBER+`undefined` and OP_BOOL with anything but equal/notequal, the RHS coalescing, the join and `[credits_number]` rewrite of action arguments, and the 2-element array for actions with no argument all match.
 
 ## OOPListScript
 
