@@ -306,6 +306,26 @@ bool StoreSet(Context cx, Object, PropertyId id, bool, Value* vp)
 ClassDef sStoreClass = { "Store", ClassFlag::NewEnumerate, nullptr, nullptr, StoreGet, StoreSet,
                          nullptr, EnumNext, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
+// Vault: a value held only natively, served by getProperty, cleared by delProperty
+// (missionVariables loaded from a save). SpiderMonkey ran delProperty on `delete` whether or not
+// the object had an own property of that name, so a delete never preceded by a JS assignment
+// must still reach the hook.
+bool gVaultHasA = true;
+int gVaultDels = 0;
+bool VaultGet(Context cx, Object, PropertyId id, Value* vp)
+{
+	if (gVaultHasA && idIs(cx, id, "a"))  *vp = int32Value(11);
+	return true;
+}
+bool VaultDel(Context cx, Object, PropertyId id, Value*)
+{
+	++gVaultDels;
+	if (idIs(cx, id, "a"))  gVaultHasA = false;
+	return true;
+}
+ClassDef sVaultClass = { "Vault", ClassFlag::None, nullptr, VaultDel, VaultGet, nullptr,
+                         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+
 // Temp: a convert hook; Callable: a class call hook.
 bool TempConvert(Context, Object, Type hint, Value* vp)
 {
@@ -515,6 +535,13 @@ void exerciseFacade(Runtime rt, Context cx)
 	CHECK(gStoreSets == 2 && gStoreA == 6);
 	gStoreA = 3;   // the hook's value, not one frozen on the object
 	CHECK(eval(cx, nullptr, "store.a", &rv) && isInt32(rv) && toInt32(rv) == 3);
+
+	Object vault = newObject(cx, &sVaultClass, nullptr, nullptr);
+	Value vaultVal = objectValue(vault);
+	CHECK(setProperty(cx, global, "vault", &vaultVal));
+	CHECK(eval(cx, nullptr, "[vault.a, delete vault.a, vault.a === undefined].join('|')", &rv));
+	CHECK(valIs(cx, rv, u"11|true|true"));
+	CHECK(gVaultDels == 1 && !gVaultHasA);
 
 	CHECK(initClass(cx, global, nullptr, &sTempClass, TempConstruct, 0, nullptr, nullptr, nullptr, nullptr) != nullptr);
 	CHECK(eval(cx, nullptr, "var t = new Temp(); t * 2", &rv) && isInt32(rv) && toInt32(rv) == 42);

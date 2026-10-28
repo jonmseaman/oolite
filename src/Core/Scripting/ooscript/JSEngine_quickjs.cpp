@@ -1601,8 +1601,20 @@ namespace {
         BackendClass* bc = classOf(obj);
         ObjRec* rec = recOf(obj);
         Slot* s = rec != nullptr ? rec->find(atom) : nullptr;
-        if (bc == nullptr || s == nullptr)
+        if (bc == nullptr)
             return 1;
+        if (s == nullptr) {
+            // SpiderMonkey ran delProperty on delete whether or not the object had an own property
+            // of that name: a value the class serves only natively (missionVariables loaded from a
+            // save, systemInfo's dynamic layer) is cleared by the hook alone.
+            if (bc->def->delProperty != nullptr && !isSymbolAtom(ctx, atom)) {
+                Value v = booleanValue(true);
+                NativeScope scope(rsOf(ctx));
+                if (!bc->def->delProperty(wrap(ctx), objOf(obj), idFromAtom(ctx, atom), &v))
+                    return failInt(ctx);
+            }
+            return 1;
+        }
         if (!s->configurable)
             return 0;
         if (bc->def->delProperty != nullptr && !isSymbolAtom(ctx, atom)) {

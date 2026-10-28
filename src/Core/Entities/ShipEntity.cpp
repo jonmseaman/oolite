@@ -2499,8 +2499,8 @@ void ShipEntity::update(OOTimeDelta delta_t)
             const std::vector<oo::EntityHold> subs = subEntities; // a snapshot, as -subEntities copied
             for (const auto& sub : subs) {
                 ::ShipEntity* se = oo::ToShip(sub.get());
-                if (se != nullptr)
-                    se->update(delta_t);
+                if (sub.get() != nullptr) // every subentity, as [se update:] went to each: flashers and exhaust plumes too
+                    sub.get()->update(delta_t);
                 if ((se != nullptr ? se->getIsShip() : false)) {
                     BoundingBox sebb = (se != nullptr ? se->findSubentityBoundingBox() : BoundingBox { });
                     bounding_box_add_vector(&totalBoundingBox, sebb.max);
@@ -2771,9 +2771,8 @@ void ShipEntity::update(OOTimeDelta delta_t)
                 // only copy the subent array if there are subentities
                 const std::vector<oo::EntityHold> subs = subEntities; // a snapshot, as -subEntities copied
                 for (const auto& sub : subs) {
-                    ::ShipEntity* se = oo::ToShip(sub.get());
-                    if (se != nullptr)
-                        se->update(delta_t);
+                    if (sub.get() != nullptr) // every subentity, as [se update:] went to each: flashers and exhaust plumes too
+                        sub.get()->update(delta_t);
                 }
             }
             // super update
@@ -2865,8 +2864,8 @@ void ShipEntity::update(OOTimeDelta delta_t)
         const std::vector<oo::EntityHold> subs = subEntities; // a snapshot, as -subEntities copied
         for (const auto& sub : subs) {
             ::ShipEntity* se = oo::ToShip(sub.get());
-            if (se != nullptr)
-                se->update(delta_t);
+            if (sub.get() != nullptr) // every subentity, as [se update:] went to each: flashers and exhaust plumes too
+                sub.get()->update(delta_t);
             if ((se != nullptr ? se->getIsShip() : false)) {
                 BoundingBox sebb = (se != nullptr ? se->findSubentityBoundingBox() : BoundingBox { });
                 bounding_box_add_vector(&totalBoundingBox, sebb.max);

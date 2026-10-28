@@ -31,6 +31,7 @@
 #include "PlayerEntity.h"
 #include "ShipEntityScriptMethods.h"
 #include "ShipEntityLoadRestore.h"
+#include "OOFlasherEntity.h"
 
 #include "oo_test.hpp"
 
@@ -812,6 +813,51 @@ OO_TEST(updateDemoShip)
 		if (ship != nullptr)  ship->update(0.1);
 		OO_CHECK((ship != nullptr ? ship->getMaxFlightSpeed() : 0.0f) == 300.0f);
 		OO_CHECK(sub->_updates == 1);
+		if (ship != nullptr)  ship->clearSubEntities();
+	}
+}
+
+
+// A flasher whose -update: only counts: a subentity that is not a ship.
+class CountingFlasher : public OOFlasherEntity
+{
+public:
+	int		_updates = 0;
+
+	void update(OOTimeDelta delta_t) override
+	{
+		(void)delta_t;
+		_updates++;
+	}
+};
+
+
+// Every subentity is updated, not only ship subentities: upstream sent -update: to each member of
+// -subEntities, so flashers animate and exhaust plumes track (ShipEntity.m:2113, 2382, 2469).
+OO_TEST(updateReachesNonShipSubentities)
+{
+	{
+		SetUp();
+		TestShip *ship = MakeShip<TestShip>("demo", Definition());
+		CountingFlasher *flasher = static_cast<CountingFlasher *>(oo::MadeEntity(oo::makeRef<CountingFlasher>()));
+		OO_CHECK((ship != nullptr ? ship->setUpFromDictionary(oo::PList()) : false));
+		if (ship != nullptr)  ship->addSubEntity(flasher);
+		ShipEntityTestAccess::IsDemoShip(MutablePart(ship)) = YES;
+		ShipEntityTestAccess::DemoRate(MutablePart(ship)) = 0;
+		if (ship != nullptr)  ship->update(0.1);
+		OO_CHECK(flasher->_updates == 1);
+		if (ship != nullptr)  ship->clearSubEntities();
+	}
+	{
+		SetUp();
+		TestShip *ship = MakeShip<TestShip>("launching", Definition());
+		CountingFlasher *flasher = static_cast<CountingFlasher *>(oo::MadeEntity(oo::makeRef<CountingFlasher>()));
+		OO_CHECK((ship != nullptr ? ship->setUpFromDictionary(oo::PList()) : false));
+		if (ship != nullptr)  ship->addSubEntity(flasher);
+		if (ship != nullptr)  ship->setStatus(STATUS_LAUNCHING);
+		if (ship != nullptr)  ship->update(0.1);
+		OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) == STATUS_LAUNCHING);
+		OO_CHECK(flasher->_updates == 1);
 		if (ship != nullptr)  ship->clearSubEntities();
 	}
 }
