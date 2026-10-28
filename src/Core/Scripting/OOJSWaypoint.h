@@ -29,15 +29,9 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSWaypoint(ooscript::Context context, ooscript::Object global);
 
-#ifdef __cplusplus
-}
-#endif
 
 /*	The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the
    engine reaches through the root's JS members: the C++ class's overrides call

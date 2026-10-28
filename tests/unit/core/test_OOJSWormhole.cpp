@@ -16,7 +16,7 @@
    smallest stand-in that does the same thing, with the engine header's linkage.
    The expectations pin the JS-visible behaviour (the four properties,
    read-only, a stale entity, the wrong kind of object, a native's exception)
-   and what the category answers the engine. Run: bash tools/check-core-tests.sh
+   and what the category answers the engine. Run: tests/run.sh unit
 */
 
 #include "OOTypes.h"
@@ -170,7 +170,6 @@ std::map<ooscript::ClassDef*, int> sConverters;
 
 ooscript::Object gOOEntityJSPrototype = nullptr;
 
-extern "C" {
 
 ooscript::ClassDef* JSEntityClass(void) { return &sFakeEntityClass; }
 
@@ -185,13 +184,13 @@ void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
   sSuperclasses[subclass] = superclass;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
@@ -238,7 +237,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();

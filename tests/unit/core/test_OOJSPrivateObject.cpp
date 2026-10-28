@@ -17,7 +17,7 @@
    -oo_jsValueInContext: (one JS object per object, null for null), the getter's
    class check and its error text, the finalizer's -oo_clearJSSelf: and release,
    and toString()'s -cxx_oo_jsDescription with its fallbacks and a native's
-   exception. Run: bash tools/check-core-tests.sh
+   exception. Run: tests/run.sh unit
 */
 
 #include <cstdarg>
@@ -162,18 +162,18 @@ std::map<ooscript::ClassDef*, ooscript::ClassDef*> sSuperclasses;
 int sForeignToStrings = 0;
 }  // namespace
 
-extern "C" BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                                ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 // The engine's Objective-C toString(), which a `this` of another class falls
 // back to.
-extern "C" bool OOJSObjectWrapperToString(ooscript::Context context,
+bool OOJSObjectWrapperToString(ooscript::Context context,
                                           ooscript::CallArgs& oojsArgs) {
   sForeignToStrings++;
   oojsArgs.setRval(
@@ -182,8 +182,8 @@ extern "C" bool OOJSObjectWrapperToString(ooscript::Context context,
 }
 
 #if OOJS_PROFILE
-extern "C" void OOJSProfileEnter(OOJSProfileStackFrame*, const char*) {}
-extern "C" void OOJSProfileExit(OOJSProfileStackFrame*) {}
+void OOJSProfileEnter(OOJSProfileStackFrame*, const char*) {}
+void OOJSProfileExit(OOJSProfileStackFrame*) {}
 #endif
 
 #ifndef NDEBUG

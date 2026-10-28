@@ -17,7 +17,7 @@
    limiter's limit through nesting, an extra stop, pause and resume; the
    profiler's entries (names, hit counts, the frame kind), the profile's and
    entries' descriptions and property lists and the comparisons; and the
-   watchdog stopping an endless script. Run: bash tools/check-core-tests.sh
+   watchdog stopping an endless script. Run: tests/run.sh unit
 */
 
 #include <chrono>
@@ -46,10 +46,10 @@ class OOJavaScriptEngine;
 // them (test_OOJSEngineTimeManagement.hpp).
 
 #ifndef NDEBUG
-extern "C" void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta limit,
+void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta limit,
                                                    const char* file,
                                                    unsigned line);
-extern "C" void OOJSStopTimeLimiter_(const char* file, unsigned line);
+void OOJSStopTimeLimiter_(const char* file, unsigned line);
 #define StartLimiter(limit) \
   OOJSStartTimeLimiterWithTimeLimit_(limit, __FILE__, __LINE__)
 #define StopLimiter() OOJSStopTimeLimiter_(__FILE__, __LINE__)
@@ -60,13 +60,13 @@ void OOJSStopTimeLimiter(void);
 #define StopLimiter() OOJSStopTimeLimiter()
 #endif
 
-extern "C" void OOJSBeginProfiling(bool trace);
+void OOJSBeginProfiling(bool trace);
 oo::Ref<OOTimeProfile> OOJSEndProfiling(void);
-extern "C" bool OOJSIsProfiling(void);
-extern "C" void OOJSResetTimeLimiter(void);
-extern "C" OOTimeDelta OOJSGetTimeLimiterLimit(void);
-extern "C" void OOJSSetTimeLimiterLimit(OOTimeDelta limit);
-extern "C" void OOJSTimeManagementInit(OOJavaScriptEngine* engine,
+bool OOJSIsProfiling(void);
+void OOJSResetTimeLimiter(void);
+OOTimeDelta OOJSGetTimeLimiterLimit(void);
+void OOJSSetTimeLimiterLimit(OOTimeDelta limit);
+void OOJSTimeManagementInit(OOJavaScriptEngine* engine,
                                        ooscript::Runtime runtime);
 
 // MARK: What the rest of the engine provides
@@ -96,7 +96,7 @@ std::optional<std::string> cxx_OOStringFromJSString(ooscript::Context context,
 }
 
 #ifndef NDEBUG
-extern "C" void OOJSDumpStack(ooscript::Context) { sStackDumps++; }
+void OOJSDumpStack(ooscript::Context) { sStackDumps++; }
 #endif
 
 // The engine owns the runtime; the watchdog reads it from the engine's ivar, as

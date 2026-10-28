@@ -38,7 +38,7 @@ oo::Ref<OOTextureSprite> OOTextureSprite::initWithTexture(
 // -initWithTexture:size:'s failure test, then the object.
 oo::Ref<OOTextureSprite> OOTextureSprite::initWithTexture(OOTexture* inTexture,
                                                           NSSize spriteSize) {
-  if (inTexture == nil) {
+  if (inTexture == nullptr) {
     return nullptr;
   }
 

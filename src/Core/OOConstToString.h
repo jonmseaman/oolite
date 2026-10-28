@@ -80,7 +80,6 @@ declaration, each with its C++ (cxx_) form beside it, in particular:
 
 */
 
-#ifdef __cplusplus
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 
@@ -131,4 +130,3 @@ std::string cxx_OOStringFromShaderSetting(OOShaderSetting setting);
 // Localized shader mode strings; nullopt: no description (was nil).
 std::optional<std::string> cxx_OODisplayStringFromShaderSetting(
     OOShaderSetting setting);
-#endif

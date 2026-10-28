@@ -59,40 +59,10 @@ MA 02110-1301, USA.
 #include <math.h>
 #include <stdbool.h>
 
-#ifdef GNUSTEP_BASE_LIBRARY
-/*	No Foundation: the C types it gave (NSInteger, NSRange, NSPoint...)
-        come from the floor's header, which #errors beside any Foundation
-   header, so nothing on this path can reach one. GNUSTEP_BASE_LIBRARY is the
-   build's own define (src/meson).
-*/
-#if defined(_WIN32)
-/*	What gnustep-base's GSConfig.h gave every file through Foundation: the
-   Windows API and Winsock, with the Windows BOOL renamed so Objective-C's stays
-   BOOL.
-*/
-#define BOOL WinBOOL
-#define __OBJC_BOOL 1
-#include <winsock2.h>
-// <winsock2.h> first: <windows.h> before it would bring in the old <winsock.h>
-// (kept apart so clang-format's include sorting cannot swap them; upstream #748
-// did the same for its headers).
-#include <windows.h>
-#undef __OBJC_BOOL
-#undef BOOL
-#endif
 #include <assert.h>
 
 #include "oofnd/objc/OOFoundationTypes.h"
-#define OOLITE_GNUSTEP 1
 
-// gnustep-base's macro; the Mac OS X path below defines the same one.
-
-#else
-#define OOLITE_MAC_OS_X 1
-
-/*	Useful macro copied from GNUstep.
- */
-#endif
 
 #ifdef __clang__
 #define OOLITE_HAVE_CLANG 1
@@ -107,7 +77,6 @@ MA 02110-1301, USA.
   (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
 
-#if OOLITE_GNUSTEP
 #include <limits.h>  // to get UINT_MAX
 #include <stdint.h>
 
@@ -123,24 +92,6 @@ MA 02110-1301, USA.
 #ifdef LINUX
 #define OOLITE_LINUX 1
 #endif
-
-#if defined(__cplusplus)
-/*	Objective-C++ is built as C++20. The true/false macros below
-        stay exactly as they were (game code keeps its int-typed true/false),
-   but a C++20 standard header parsed after them breaks: <optional> has
-   `bool(__x) <=> false`, i.e. bool <=> int. So those headers are parsed here
-   first, with the real keywords; their include guards make every later #include
-   of them a no-op. extern "C++" because OOFoundation.h is sometimes reached
-        from inside an extern "C" block (OOMaths.h).
-*/
-extern "C++" {
-#include <compare>
-#include <optional>
-}
-#endif
-
-#define true 1
-#define false 0
 
 #if !defined(MAX)
 #define MAX(A, B)            \
@@ -173,11 +124,6 @@ extern "C++" {
 #define IBAction void
 #endif
 
-#endif
-
-#ifndef OOLITE_GNUSTEP
-#define OOLITE_GNUSTEP 0
-#endif
 
 #ifndef OOLITE_MAC_OS_X
 #define OOLITE_MAC_OS_X 0
@@ -230,12 +176,10 @@ extern "C++" {
 */
 #if OOLITE_MAC_OS_X
 typedef NSInteger OOComparisonResult;
-#ifdef __cplusplus
 inline constexpr OOComparisonResult OOOrderedAscending = NSOrderedAscending;
 inline constexpr OOComparisonResult OOOrderedSame = NSOrderedSame;
 inline constexpr OOComparisonResult OOOrderedDescending = NSOrderedDescending;
-#endif
-#elif defined(__cplusplus)
+#else
 enum OOComparisonResult : NSInteger {
   OOOrderedAscending = -1,
   OOOrderedSame = 0,

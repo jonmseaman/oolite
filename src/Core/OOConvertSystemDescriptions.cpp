@@ -65,7 +65,7 @@ void InitKeyToIndexDict(const oo::PList& dict, KeysToIndices& outKeysToIndices,
 
 std::optional<std::string> IndexToKey(NSUInteger index,
                                       const oo::PList& indicesToKeys,
-                                      BOOL useFallback) {
+                                      bool useFallback) {
   const oo::PList* value = indicesToKeys.find(oo::str::format("%zu", index));
   if (value != nullptr && value->getIf<std::string>() != nullptr)
     return *value->getIf<std::string>();
@@ -151,7 +151,7 @@ oo::PList ConvertIndicesToKeys(const oo::PList& entry,
 
   for (std::size_t i = 0; i < entry.count(); i++) {
     result.push_back(oo::PList(OOStringifySystemDescriptionLine(
-        entry.at<std::string>(i), indicesToKeys, YES)));
+        entry.at<std::string>(i), indicesToKeys, true)));
   }
 
   return oo::PList(std::move(result));
@@ -173,13 +173,13 @@ NSUInteger HighestIndex(const std::map<long long, oo::PList>& sparseArray) {
 
 // The plist as the file text: XML, or the old-school format.
 oo::Expected<oo::Data, oo::PListError> WriteSystemDescriptions(
-    const oo::PList& plist, BOOL asXML) {
+    const oo::PList& plist, bool asXML) {
   return asXML ? oo::writeXMLPList(plist) : oo::writeOldStylePList(plist);
 }
 
 }  // namespace
 
-void CompileSystemDescriptions(BOOL asXML) {
+void CompileSystemDescriptions(bool asXML) {
   const oo::PList sysDescDict = ResourceManager::dictionaryFromFilesNamed(
       "sysdesc.plist", std::string("Config"), false);
   if (sysDescDict.isNull()) {
@@ -218,7 +218,7 @@ void CompileSystemDescriptions(BOOL asXML) {
   }
 }
 
-void ExportSystemDescriptions(BOOL asXML) {
+void ExportSystemDescriptions(bool asXML) {
   const oo::PList descriptions = *UNIVERSE->descriptions();
   const oo::PList* sysDescArray =
       descriptions.get<oo::PList::Array>("system_description");
@@ -300,7 +300,7 @@ oo::PList OOConvertSystemDescriptionsToDictionaryFormat(
   for (std::size_t i = 0; i < descriptionsInArrayFormat.count(); i++) {
     oo::PList entry =
         ConvertIndicesToKeys(*descriptionsInArrayFormat.at(i), indicesToKeys);
-    result[*IndexToKey(i, indicesToKeys, YES)] = std::move(entry);
+    result[*IndexToKey(i, indicesToKeys, true)] = std::move(entry);
   }
 
   return oo::PList(std::move(result));
@@ -308,7 +308,7 @@ oo::PList OOConvertSystemDescriptionsToDictionaryFormat(
 
 std::string OOStringifySystemDescriptionLine(const std::string& lineText,
                                              const oo::PList& indicesToKeys,
-                                             BOOL useFallback) {
+                                             bool useFallback) {
   std::u16string line = oo::utf8ToUtf16(lineText);
   std::size_t location = 0, length = line.size(), p1, p2;
 

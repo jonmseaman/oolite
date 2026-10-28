@@ -62,17 +62,11 @@ SOFTWARE.
   OOJSStartTimeLimiterWithTimeLimit_(limit, OOLOG_FILE_NAME, __LINE__)
 #define OOJSStopTimeLimiter() OOJSStopTimeLimiter_(OOLOG_FILE_NAME, __LINE__)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta limit, const char* file,
                                         unsigned line);
 void OOJSStopTimeLimiter_(const char* file, unsigned line);
 
-#ifdef __cplusplus
-}
-#endif
 
 #else
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit);
@@ -110,9 +104,6 @@ class OOTimeProfile;
 
 oo::Ref<OOTimeProfile> OOJSEndProfiling(void);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void OOJSBeginProfiling(bool trace);
 bool OOJSIsProfiling(void);
@@ -123,9 +114,6 @@ void OOJSResetTimeLimiter(void);
 OOTimeDelta OOJSGetTimeLimiterLimit(void);
 void OOJSSetTimeLimiterLimit(OOTimeDelta limit);
 
-#ifdef __cplusplus
-}
-#endif
 
 /*
         NOTE: the profiler declarations that need to be visible to functions
@@ -221,13 +209,7 @@ class OOTimeProfileEntry : public oo::RefCounted {
 
 class OOJavaScriptEngine;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void OOJSTimeManagementInit(OOJavaScriptEngine* engine,
                             ooscript::Runtime runtime);
 
-#ifdef __cplusplus
-}
-#endif

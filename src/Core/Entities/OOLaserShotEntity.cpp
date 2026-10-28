@@ -50,8 +50,8 @@ MA 02110-1301, USA.
 #define kLaserFlareWidth (1.8f)
 #define kLaserHalfWidth (3.6f)
 
-static OOTexture* sShotTexture = nil;
-static OOTexture* sShotTexture2 = nil;
+static OOTexture* sShotTexture = nullptr;
+static OOTexture* sShotTexture2 = nullptr;
 
 namespace {
 
@@ -263,9 +263,9 @@ void OOLaserShotEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   });
 }
 
-bool OOLaserShotEntity::isEffect() { return YES; }
+bool OOLaserShotEntity::isEffect() { return true; }
 
-bool OOLaserShotEntity::canCollide() { return NO; }
+bool OOLaserShotEntity::canCollide() { return false; }
 
 OOTexture* OOLaserShotEntity::texture1() {
   return OOLaserShotEntity::outerTexture();
@@ -276,7 +276,7 @@ OOTexture* OOLaserShotEntity::texture2() {
 }
 
 void OOLaserShotEntity::setUpTexture() {
-  if (sShotTexture == nil) {
+  if (sShotTexture == nullptr) {
     sShotTexture = OOTexture::textureWithName(
                        "oolite-laser-blur.png", "Textures",
                        kOOTextureMinFilterMipMap | kOOTextureMagFilterLinear |
@@ -296,12 +296,12 @@ void OOLaserShotEntity::setUpTexture() {
 }
 
 OOTexture* OOLaserShotEntity::innerTexture() {
-  if (sShotTexture2 == nil) setUpTexture();
+  if (sShotTexture2 == nullptr) setUpTexture();
   return sShotTexture2;
 }
 
 OOTexture* OOLaserShotEntity::outerTexture() {
-  if (sShotTexture == nil) setUpTexture();
+  if (sShotTexture == nullptr) setUpTexture();
   return sShotTexture;
 }
 

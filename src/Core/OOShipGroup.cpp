@@ -151,7 +151,7 @@ std::optional<std::string> OOShipGroup::descriptionComponents() const {
   if (_name.has_value()) {
     desc = oo::str::format("\"%s\", %s", _name->c_str(), desc.c_str());
   }
-  if (mutableThis->leader() != nil) {
+  if (mutableThis->leader() != nullptr) {
     desc = oo::str::format(
         "%s, leader: %s", desc.c_str(),
         oo::EntityShortDescription(mutableThis->leader()).c_str());
@@ -171,7 +171,7 @@ void OOShipGroup::setName(const std::optional<std::string>& name) {
   ::ShipEntity* result = oo::ToShip(_leader.get());
 
   // If reference is stale, delete weakref object.
-  if (result == nil) _leader.reset();
+  if (result == nullptr) _leader.reset();
 
   return result;
 }
@@ -201,7 +201,7 @@ std::vector<oo::EntityHold> OOShipGroup::memberArray() {
 
 std::vector<oo::EntityHold> OOShipGroup::memberArrayExcludingLeader() {
   std::vector<oo::EntityHold> result;
-  ::ShipEntity* leader = nil;
+  ::ShipEntity* leader = nullptr;
 
   if (_count == 0) return result;
   leader = this->leader();
@@ -250,16 +250,16 @@ bool OOShipGroup::addShip(::ShipEntity* ship) {
 }
 
 bool OOShipGroup::removeShip(::ShipEntity* ship) {
-  ::ShipEntity* containedShip = nil;
+  ::ShipEntity* containedShip = nullptr;
   NSUInteger index;
   bool foundIt = false;
 
   _updateCount++;
 
-  if (ship == leader()) setLeader(nil);
+  if (ship == leader()) setLeader(nullptr);
 
   OOShipGroupCursor shipEnum(this);
-  shipEnum.setPerformCleanup(NO);
+  shipEnum.setPerformCleanup(false);
   while ((containedShip = shipEnum.next())) {
     if (ship != nullptr &&
         ship == containedShip)  // what -isEqual: of their objects answered
@@ -292,7 +292,7 @@ NSUInteger OOShipGroup::count() {
 
   if (_count != 0) {
     OOShipGroupCursor memberEnum(this);
-    while (memberEnum.next() != nil) result++;
+    while (memberEnum.next() != nullptr) result++;
   }
 
   assert(result == _count);
@@ -303,7 +303,7 @@ NSUInteger OOShipGroup::count() {
 bool OOShipGroup::isEmpty() {
   if (_count == 0) return true;
 
-  return OOShipGroupCursor(this).next() == nil;
+  return OOShipGroupCursor(this).next() == nullptr;
 }
 
 bool OOShipGroup::resizeTo(NSUInteger newCapacity) {
@@ -341,8 +341,8 @@ NSUInteger OOShipGroup::updateCount() { return _updateCount; }
 
   OOShipGroupCursor* enumerator = this;
   OOShipGroup* group = enumerator->_group.get();
-  ::ShipEntity* result = nil;
-  BOOL cleanupNeeded = NO;
+  ::ShipEntity* result = nullptr;
+  bool cleanupNeeded = false;
 
   if (enumerator->_updateCount != group->_updateCount) {
     OORaiseException(
@@ -353,20 +353,20 @@ NSUInteger OOShipGroup::updateCount() { return _updateCount; }
 
   while (enumerator->_index < group->_count) {
     result = oo::ToShip(group->_members[enumerator->_index].get());
-    if (result != nil) {
+    if (result != nullptr) {
       enumerator->_index++;
       break;
     }
 
     // If we got here, the group contains a stale reference to a dead ship.
     group->_members[enumerator->_index] = group->_members[--group->_count];
-    cleanupNeeded = YES;
+    cleanupNeeded = true;
   }
 
   // Clean-up handling. Only perform actual clean-up at end of iteration.
   if (enumerator->_considerCleanup) {
     enumerator->_cleanupNeeded = enumerator->_cleanupNeeded && cleanupNeeded;
-    if (enumerator->_cleanupNeeded && result == nil) {
+    if (enumerator->_cleanupNeeded && result == nullptr) {
       group->cleanUp();
     }
   }
@@ -381,20 +381,20 @@ NSUInteger OOShipGroupMembers::FillBatch(OOShipGroup* group,
                                          oo::EntityHold* buffer,
                                          NSUInteger length) {
   NSUInteger srcIndex, dstIndex = 0;
-  ::ShipEntity* item = nil;
-  BOOL cleanupNeeded = NO;
+  ::ShipEntity* item = nullptr;
+  bool cleanupNeeded = false;
 
   srcIndex = *ioIndex;
   while (srcIndex < group->_count && dstIndex < length) {
     item = oo::ToShip(group->_members[srcIndex].get());
-    if (item != nil) {
+    if (item != nullptr) {
       buffer[dstIndex++] =
           oo::EntityHold(item);  // its object retained (and autoreleased by
                                  // oo::ToObjC), as before
       srcIndex++;
     } else {
       group->_members[srcIndex] = group->_members[--group->_count];
-      cleanupNeeded = YES;
+      cleanupNeeded = true;
     }
   }
 
@@ -409,6 +409,6 @@ OOShipGroupCursor::OOShipGroupCursor(OOShipGroup* group) {
   assert(group != nullptr);
 
   _group = oo::Ref<OOShipGroup>(group);
-  _considerCleanup = YES;
+  _considerCleanup = true;
   _updateCount = group->updateCount();
 }

@@ -135,7 +135,7 @@ void DustEntity::setDustColor(OOColor* color) {
 
 OOColor* DustEntity::dustColor() { return dust_color.get(); }
 
-bool DustEntity::canCollide() { return NO; }
+bool DustEntity::canCollide() { return false; }
 
 void DustEntity::updateCameraRelativePosition() {
   HPVector c_pos =
@@ -248,7 +248,7 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
     return;  // DON'T DRAW
 
   ::PlayerEntity* player = PLAYER;
-  assert(player != nil);
+  assert(player != nullptr);
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   if (gDebugFlags & DEBUG_NO_DUST) return;
@@ -256,7 +256,7 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
 
 #if OO_SHADERS
   if (EXPECT_NOT(shaderMode == kShaderModeUnknown)) checkShaderMode();
-  BOOL useShader = (shaderMode == kShaderModeOn);
+  bool useShader = (shaderMode == kShaderModeOn);
 #endif
 
   GLfloat* fogcolor =
@@ -268,7 +268,7 @@ void DustEntity::drawImmediate(bool /*immediate*/, bool translucent) {
           .width /
       800.0f;
 
-  BOOL warp_stars = (player != nullptr ? player->atHyperspeed() : false);
+  bool warp_stars = (player != nullptr ? player->atHyperspeed() : false);
   float dustIntensity;
 
   OO_ENTER_OPENGL();

@@ -14,7 +14,7 @@
    released): it answers the ShipEntity selectors the category sends (its
    subentities, its owner, being a subentity, its targets) and records what it
    was told. The JS object the entity already has is a plain object of a runtime
-   the test makes. Run: bash tools/check-core-tests.sh
+   the test makes. Run: tests/run.sh unit
 */
 
 #include <string>
@@ -95,7 +95,7 @@ TestShip* Ship(const char* name) {
   {
     oo::RetainEntity(oo::MadeEntity(ship));
   }
-  ship->isShip = YES;
+  ship->isShip = true;
   ship->_name = name;
   return ship.get();
 }
@@ -103,7 +103,7 @@ TestShip* Ship(const char* name) {
 // A subentity's owner, and that it is one (the Objective-C ship answered -owner
 // and -isSubEntity).
 void SetSubEntityOf(TestShip* ship, Entity* owner) {
-  ship->isSubEntity = YES;
+  ship->isSubEntity = true;
   ship->Entity::setOwner(owner);
 }
 
@@ -263,7 +263,7 @@ OO_TEST(setTargetStopsAtSelfOwnedOrOwnerless) {
     TestShip* loop = Ship("loop");
     SetSubEntityOf(loop, loop);
     TestShip* orphan = Ship("orphan");
-    orphan->isSubEntity = YES;
+    orphan->isSubEntity = true;
     ShipEntityJSSetTargetForScript(loop, orphan);
     OO_CHECK(Told(loop) == "add orphan");
   }
@@ -310,7 +310,7 @@ OO_TEST(cxxEntityAnswersThroughItsJSMembers) {
     ooscript::Object prototype = reinterpret_cast<ooscript::Object>(1);
 
     Entity* plain = oo::MadeEntity(oo::makeRef<Entity>());
-    OO_CHECK(plain != nil);
+    OO_CHECK(plain != nullptr);
     OO_CHECK(!OOJSEntityIsVisibleToScripts(plain) &&
              !plain->isVisibleToScripts());
     OO_CHECK(OOJSEntityJSClassName(plain) ==
@@ -319,7 +319,7 @@ OO_TEST(cxxEntityAnswersThroughItsJSMembers) {
     OO_CHECK(jsClass == JSEntityClass() && prototype == JSEntityPrototype());
 
     Entity* scripted = oo::MadeEntity(oo::makeRef<TestScriptedEntity>());
-    OO_CHECK(scripted != nil);
+    OO_CHECK(scripted != nullptr);
     OO_CHECK(OOJSEntityIsVisibleToScripts(scripted));
     OO_CHECK(OOJSEntityJSClassName(scripted) ==
              std::optional<std::string>("TestScripted"));

@@ -66,7 +66,7 @@ bool OOSingleTextureMaterial::initWithName(
 bool OOSingleTextureMaterial::initWithName(
     const std::optional<std::string>& name, OOTexture* texture,
     const oo::PList& configuration) {
-  if (name.has_value() && texture != nil) {
+  if (name.has_value() && texture != nullptr) {
     OOBasicMaterial::initWithName(name, configuration);
     _texture = oo::Ref<OOTexture>(texture);
   } else {

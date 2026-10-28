@@ -149,11 +149,11 @@ std::optional<std::string> OOCharacter::species() {
   std::optional<std::string> speciesString;
   if (species == 3)
     speciesString =
-        (UNIVERSE != nullptr ? UNIVERSE->getSystemInhabitants(genSeed().e, NO)
+        (UNIVERSE != nullptr ? UNIVERSE->getSystemInhabitants(genSeed().e, false)
                              : std::optional<std::string>());
   else
     speciesString = (UNIVERSE != nullptr ? UNIVERSE->getSystemInhabitants(
-                                               planetIDOfOrigin(), NO)
+                                               planetIDOfOrigin(), false)
                                          : std::optional<std::string>());
 
   if (!speciesString.has_value()) return std::nullopt;

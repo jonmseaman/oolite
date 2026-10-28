@@ -38,7 +38,7 @@ MA 02110-1301, USA.
 #define kLaserFlashInitialSize 1.0f
 #define kExplosionFlashAlpha 0.5f
 
-static OOTexture* sFlashTexture = nil;
+static OOTexture* sFlashTexture = nullptr;
 
 namespace {
 
@@ -131,12 +131,12 @@ void OOFlashEffectEntity::update(OOTimeDelta delta_t) {
 }
 
 OOTexture* OOFlashEffectEntity::texture() {
-  if (sFlashTexture == nil) OOFlashEffectEntity::setUpTexture();
+  if (sFlashTexture == nullptr) OOFlashEffectEntity::setUpTexture();
   return sFlashTexture;
 }
 
 void OOFlashEffectEntity::setUpTexture() {
-  if (sFlashTexture == nil) {
+  if (sFlashTexture == nullptr) {
     sFlashTexture = OOTexture::textureWithName(
                         "oolite-particle-flash.png", "Textures",
                         kOOTextureMinFilterMipMap | kOOTextureMagFilterLinear |

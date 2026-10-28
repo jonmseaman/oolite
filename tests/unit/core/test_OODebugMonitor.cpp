@@ -18,7 +18,7 @@
    texture registry (none). The JS context is a real one (ooscript on QuickJS),
    for the heap statistics and the wrapper object. The user's defaults are a
    scratch folder's (HOMEPATH). The monitor is a singleton, so the tests run in
-   order on one monitor. Run: bash tools/check-core-tests.sh
+   order on one monitor. Run: tests/run.sh unit
 */
 
 #include <process.h>
@@ -91,7 +91,7 @@ class Universe {
 };
 std::vector<oo::EntityHold> Universe::entityList() { return {}; }
 
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 // What the monitor's entity dump links against (a ship's object, the root's,
 // holds its C++ part, which oo::ToCxx reads), declared as Entity.h and
@@ -303,13 +303,13 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
   return ooscript::undefinedValue();
 }
 
-extern "C" void OOJSInitJSIDCachePRIVATE(const char* name,
+void OOJSInitJSIDCachePRIVATE(const char* name,
                                          ooscript::PropertyId* idCache) {
   (void)name;
   *idCache = ooscript::PropertyId();
 }
 
-extern "C" void OOJSStartTimeLimiterWithTimeLimit_(double limit,
+void OOJSStartTimeLimiterWithTimeLimit_(double limit,
                                                    const char* file,
                                                    unsigned line) {
   (void)limit;
@@ -317,13 +317,13 @@ extern "C" void OOJSStartTimeLimiterWithTimeLimit_(double limit,
   (void)line;
   sTimeLimiterStarts++;
 }
-extern "C" void OOJSStopTimeLimiter_(const char* file, unsigned line) {
+void OOJSStopTimeLimiter_(const char* file, unsigned line) {
   (void)file;
   (void)line;
   sTimeLimiterStops++;
 }
-extern "C" void OOJSPauseTimeLimiter(void) { sTimeLimiterPauses++; }
-extern "C" void OOJSResumeTimeLimiter(void) { sTimeLimiterResumes++; }
+void OOJSPauseTimeLimiter(void) { sTimeLimiterPauses++; }
+void OOJSResumeTimeLimiter(void) { sTimeLimiterResumes++; }
 
 // The source files the console shows: plain files (OODataFromOXZFile reads
 // through an .oxz too).
@@ -361,8 +361,8 @@ namespace {
 
 // The records (the Objective-C class's @public ivars).
 struct TestDebuggerRecord : public OODebuggerInterface {
-  BOOL _refuse = NO;
-  BOOL _raise = NO;
+  bool _refuse = false;
+  bool _raise = false;
   int _connects = 0;
   std::vector<std::string> _disconnects;  // the messages ("(none)" for nullopt)
   std::vector<std::string> _output;       // "colorKey|text|location,length"
@@ -381,9 +381,9 @@ class TestDebugger : public TestDebuggerRecord {
     if (_raise) OORaiseException("TestException", "%s", "no thanks");
     if (_refuse) {
       *message = "refused";
-      return NO;
+      return false;
     }
-    return YES;
+    return true;
   }
 
   void disconnectDebugMonitor(
@@ -680,7 +680,7 @@ OO_TEST(debuggersThatRefuseOrRaise) {
 
     // A new debugger disconnects the old one first, even if it then fails.
     TestDebugger* refusing = NewDebugger();
-    refusing->_refuse = YES;
+    refusing->_refuse = true;
     OO_CHECK(!monitor->setDebugger(refusing));
     OO_CHECK(first->_disconnects.size() == 1 &&
              first->_disconnects[0] == "New debugger set.");
@@ -688,7 +688,7 @@ OO_TEST(debuggersThatRefuseOrRaise) {
     OO_CHECK(LogLinesContaining("because an error occurred: refused") == 1);
 
     TestDebugger* raising = NewDebugger();
-    raising->_raise = YES;
+    raising->_raise = true;
     OO_CHECK(!monitor->setDebugger(raising));
     OO_CHECK(LogLinesContaining(
                  "because an exception occurred: TestException -- no thanks") ==
@@ -749,12 +749,12 @@ OO_TEST(engineErrorsAndLogLinesReachTheConsole) {
     report.lineno = 2;
 
     // No debugger: nothing at all.
-    engineMonitor->jsEngine(nil, gOOJSMainThreadContext, &report, 0, YES,
+    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, &report, 0, true,
                             std::string("ignored"));
 
     TestDebugger* debugger = NewDebugger();
     OO_CHECK(monitor->setDebugger(debugger));
-    engineMonitor->jsEngine(nil, gOOJSMainThreadContext, &report, 0, YES,
+    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, &report, 0, true,
                             std::string("careful"));
     OO_CHECK(debugger->_output.size() == 1);
     OO_CHECK(debugger->_output.size() == 1 &&
@@ -765,7 +765,7 @@ OO_TEST(engineErrorsAndLogLinesReachTheConsole) {
 
     report.flags = static_cast<unsigned>(ooscript::ReportFlag::Exception) |
                    static_cast<unsigned>(ooscript::ReportFlag::Strict);
-    engineMonitor->jsEngine(nil, gOOJSMainThreadContext, &report, 1, YES,
+    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, &report, 1, true,
                             std::string("boom"));
     OO_CHECK(debugger->_output.size() == 2 &&
              debugger->_output[1] ==
@@ -773,18 +773,18 @@ OO_TEST(engineErrorsAndLogLinesReachTheConsole) {
     OO_CHECK(debugger->_shows == 1);  // show-console-on-error is not set
 
     report.flags = 0;
-    engineMonitor->jsEngine(nil, gOOJSMainThreadContext, &report, 0, NO,
+    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, &report, 0, false,
                             std::string("bad"));
     OO_CHECK(debugger->_output.size() == 3 &&
              debugger->_output[2] == "error|Error: bad|0,6");
 
-    engineMonitor->jsEngine(nil, gOOJSMainThreadContext, std::string("logged"),
+    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, std::string("logged"),
                             std::nullopt);
     OO_CHECK(debugger->_output.size() == 4 &&
              debugger->_output[3] == "log|logged|0,0");
     OO_CHECK(debugger->_shows == 1);  // show-console-on-log is no
     monitor->setConfigurationValue(oo::PList("yes"), "show-console-on-log");
-    engineMonitor->jsEngine(nil, gOOJSMainThreadContext, std::string("again"),
+    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, std::string("again"),
                             std::string("class"));
     OO_CHECK(debugger->_shows == 2);
     monitor->setConfigurationValue(oo::PList(), "show-console-on-log");
@@ -797,10 +797,10 @@ OO_TEST(settingsFlags) {
   SetUp();
   StartLog();
   OODebugMonitor* monitor = OODebugMonitor::sharedDebugMonitor();
-  monitor->setTCPIgnoresDroppedPackets(YES);
-  monitor->setTCPIgnoresDroppedPackets(YES);
+  monitor->setTCPIgnoresDroppedPackets(true);
+  monitor->setTCPIgnoresDroppedPackets(true);
   OO_CHECK(monitor->TCPIgnoresDroppedPackets());
-  monitor->setTCPIgnoresDroppedPackets(NO);
+  monitor->setTCPIgnoresDroppedPackets(false);
   OO_CHECK(!monitor->TCPIgnoresDroppedPackets());
   OO_CHECK(LogLinesContaining("The TCP console will try to stay connected, "
                               "ignoring dropped TCP packets.") == 1);
@@ -809,9 +809,9 @@ OO_TEST(settingsFlags) {
           "The TCP console will disconnect if an error affects TCP packets.") ==
       1);
 
-  monitor->setUsingPlugInController(YES);
+  monitor->setUsingPlugInController(true);
   OO_CHECK(monitor->usingPlugInController());
-  monitor->setUsingPlugInController(NO);
+  monitor->setUsingPlugInController(false);
   OO_CHECK(!monitor->usingPlugInController());
 }
 

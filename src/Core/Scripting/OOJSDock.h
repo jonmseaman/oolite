@@ -30,15 +30,9 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 class DockEntity;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSDock(ooscript::Context context, ooscript::Object global);
 
-#ifdef __cplusplus
-}
-#endif
 
 /*	The bodies of Entity (OOJavaScriptExtensions)'s class questions for a
    dock, which the C++ DockEntity's overrides call.

@@ -16,7 +16,7 @@
    JS-visible behaviour (every property both ways, the owner, a stale entity and
    the escape-pod player, the prototype, dumpState(), a native's exception) and
    the C functions other bindings call (JSValueToEntity(),
-   EntityFromArgumentList()). Run: bash tools/check-core-tests.sh
+   EntityFromArgumentList()). Run: tests/run.sh unit
 
         An entity's JS object holds its C++ part (an OOJSEntityHolder) and the
    getters answer it. The property blocks call the C++ entity's members, the
@@ -177,14 +177,12 @@ class ShipEntity : public TestEntityPart {
 #include "oo_test.hpp"
 
 // The binding's C API (OOJSEntity.h, which imports the engine and universe
-// headers, so the test names what it calls itself). They returned BOOL, which
+// headers, so the test names what it calls itself). They returned bool, which
 // is returned as bool is.
-extern "C" {
 void InitOOJSEntity(ooscript::Context context, ooscript::Object global);
 bool JSValueToEntity(ooscript::Context context, ooscript::Value value,
                      Entity** outEntity);
 ooscript::ClassDef* JSEntityClass(void);
-}
 extern ooscript::Object gOOEntityJSPrototype;
 bool EntityFromArgumentList(ooscript::Context context,
                             const std::optional<std::string>& scriptClass,
@@ -281,7 +279,7 @@ std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
 
 std::string cxx_OOJSDescribeValue(ooscript::Context context,
                                   ooscript::Value value,
-                                  BOOL abbreviateObjects) {
+                                  bool abbreviateObjects) {
   return std::string(abbreviateObjects ? "abbr:" : "full:") +
          cxx_OOStringFromJSValue(context, value).value_or("null");
 }
@@ -476,7 +474,6 @@ bool TestEntityPart::getIsVisualEffect() {
   return Send(TestObjectOf(this), &TestEntityObject::isVisualEffect);
 }
 
-extern "C" {
 
 bool HPVectorToJSValue(ooscript::Context context, HPVector vector,
                        ooscript::Value* outValue) {
@@ -525,13 +522,13 @@ void OOJSReportBadPropertyValue(ooscript::Context context, ooscript::Object,
   cxx_OOJSReportError(context, "bad property value");
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
@@ -564,7 +561,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 // The engine's C++ slot glue (OOJSPrivateObject.h), as the
 // Objective-C glue was stood in for: the getter's JS class check and error, the
@@ -649,8 +645,8 @@ void SetUpContext() {
   // Kept for the life of the test.
   sMother = oo::makeRef<TestEntityObject>().leakRef();
   sMother->_cxxEntity = oo::makeRef<ShipEntity>();
-  sMother->_isShip = YES;
-  sMother->_isStation = YES;
+  sMother->_isShip = true;
+  sMother->_isStation = true;
   sMother->_status = STATUS_ACTIVE;
   sMother->_scanClass = CLASS_STATION;
 
@@ -668,10 +664,10 @@ void SetUpContext() {
   sShip->_maxEnergy = 256;
   sShip->_distanceTravelled = 12.5f;
   sShip->_spawnTime = 3.25f;
-  sShip->_isShip = YES;
-  sShip->_isSunlit = YES;
-  sShip->_isVisible = YES;
-  sShip->_isInSpace = YES;
+  sShip->_isShip = true;
+  sShip->_isSunlit = true;
+  sShip->_isVisible = true;
+  sShip->_isInSpace = true;
 
   sRock = oo::makeRef<TestEntityObject>().leakRef();
   sRock->_status = STATUS_ACTIVE;
@@ -825,11 +821,11 @@ OO_TEST(writeProperties) {
   OO_CHECK_EVAL(
       "(function () { rock.scanClass = 'CLASS_CARGO'; return 'set'; })()",
       "threw: entity.scanClass is read-only except on NPC ships.");
-  sShip->_isPlayer = YES;
+  sShip->_isPlayer = true;
   OO_CHECK_EVAL(
       "(function () { ship.scanClass = 'CLASS_CARGO'; return 'set'; })()",
       "threw: entity.scanClass is read-only except on NPC ships.");
-  sShip->_isPlayer = NO;
+  sShip->_isPlayer = false;
   OO_CHECK_EVAL("ship.scanClass", "CLASS_POLICE");
   sShip->_scanClass = CLASS_NEUTRAL;
 

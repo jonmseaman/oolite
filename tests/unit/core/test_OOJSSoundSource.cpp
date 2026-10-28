@@ -17,7 +17,7 @@
    (their members over a record per object), the category's answers are the
    functions that held its bodies, and the engine's C++ private-slot glue
    (OOJSPrivateObject.h) is stood in for as its Objective-C getter, finalizer
-   and toString() were. Run: bash tools/check-core-tests.sh
+   and toString() were. Run: tests/run.sh unit
 */
 
 #include "OOFoundation.h"
@@ -65,10 +65,10 @@ class TestSound final : public OOSound {
 */
 struct SourceRecord {
   oo::Ref<OOSound> _sound;
-  BOOL _loop = NO;
+  bool _loop = false;
   uint8_t _repeatCount = 0;
-  BOOL _playing = NO;
-  BOOL _positional = NO;
+  bool _playing = false;
+  bool _positional = false;
   Vector _position = {};
   float _gain = 0.0f;
   int _plays = 0;
@@ -100,15 +100,15 @@ void OOSoundSource::setRepeatCount(uint8_t inCount) {
 bool OOSoundSource::isPlaying() { return sRecords[this]._playing; }
 void OOSoundSource::play() {
   sRecords[this]._plays++;
-  sRecords[this]._playing = YES;
+  sRecords[this]._playing = true;
 }
 void OOSoundSource::playOrRepeat() {
   sRecords[this]._playOrRepeats++;
-  sRecords[this]._playing = YES;
+  sRecords[this]._playing = true;
 }
 void OOSoundSource::stop() {
   sRecords[this]._stops++;
-  sRecords[this]._playing = NO;
+  sRecords[this]._playing = false;
 }
 void OOSoundSource::setPositional(bool inPositional) {
   sRecords[this]._positional = inPositional;
@@ -175,7 +175,6 @@ std::map<ooscript::ClassDef*, int> sConverters;
 ooscript::ClassDef sFakeSoundClass = {"Sound", ooscript::ClassFlag::HasPrivate};
 }  // namespace
 
-extern "C" {
 
 void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
                                    ooscript::PropertyId,
@@ -195,7 +194,7 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
   sConverters[theClass]++;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
 }
@@ -247,7 +246,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 // A sound's JS value, as the Sound binding gives it: a JS Sound holding the
 // sound (OOJSSound.mm is not linked); null for none.
@@ -263,9 +261,9 @@ ooscript::Value OOJSSoundJSValueInContext(OOSound* sound,
 
 // A JS Sound's sound, or null for anything else (a name is not looked up here).
 // C linkage, as OOJSSound.h declares it.
-extern "C" OOSound* SoundFromJSValue(ooscript::Context context,
+OOSound* SoundFromJSValue(ooscript::Context context,
                                      ooscript::Value value);
-extern "C" OOSound* SoundFromJSValue(ooscript::Context context,
+OOSound* SoundFromJSValue(ooscript::Context context,
                                      ooscript::Value value) {
   if (!ooscript::isObject(value) || ooscript::toObject(value) == nullptr)
     return nullptr;

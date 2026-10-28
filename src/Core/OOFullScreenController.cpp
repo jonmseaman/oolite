@@ -34,7 +34,7 @@ MyOpenGLView* OOFullScreenController::gameView() { return _gameView.get(); }
 
 bool OOFullScreenController::inFullScreenMode() {
   OOLogGenericSubclassResponsibility();
-  return NO;
+  return false;
 }
 
 void OOFullScreenController::setFullScreenMode(bool /*value*/) {
@@ -64,7 +64,7 @@ bool OOFullScreenController::setDisplayWidth(NSUInteger /*width*/,
                                              NSUInteger /*height*/,
                                              NSUInteger /*refresh*/) {
   OOLogGenericSubclassResponsibility();
-  return NO;
+  return false;
 }
 
 oo::PList OOFullScreenController::findDisplayModeForWidth(

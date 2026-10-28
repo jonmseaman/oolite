@@ -16,7 +16,7 @@
    JS-visible behaviour: the Manifest class and its two objects, the list, a
    commodity's quantity both ways (clamped at zero, refused for tonnage with
    special cargo, delete), the four comment methods and their errors, and a
-   native's exception. Run: bash tools/check-core-tests.sh
+   native's exception. Run: tests/run.sh unit
 */
 
 #include "OOCommodities.h"
@@ -55,7 +55,7 @@ class PlayerEntity {
   std::optional<std::string> _specialCargo;
   oo::Ref<OOCommodityMarket> _shipCommodityData;
   int _sets = {};
-  BOOL _throwCxx = {};
+  bool _throwCxx = {};
 };
 
 // The universe as the code under test sees it: a stand-in for the C++ class
@@ -158,7 +158,7 @@ std::optional<std::string> PlayerEntity::getSpecialCargo() {
 ::OOScript* PlayerEntity::commodityScriptNamed(
     const std::optional<std::string>& script) {
   (void)script;
-  return nil;
+  return nullptr;
 }
 
 // ResourceManager: C++ definitions of the statics the code under test calls,
@@ -292,9 +292,8 @@ std::map<ooscript::ClassDef*, int> sConverters;
 }  // namespace
 
 PlayerEntity* gOOPlayer = nullptr;
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
-extern "C" {
 
 PlayerEntity* OOPlayerForScripting(void) { return sPlayer; }
 
@@ -342,7 +341,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 // MARK: The context
 // -------------------------------------------------------------------------------
@@ -352,7 +350,7 @@ namespace {
 ooscript::Runtime sRuntime;
 ooscript::Context sContext;
 ooscript::Object sGlobal;
-Universe* sUniverse = nil;
+Universe* sUniverse = nullptr;
 
 void SetUpContext() {
   if (sContext != nullptr) return;
@@ -517,9 +515,9 @@ OO_TEST(comments) {
 OO_TEST(nativeExceptions) {
   SetUpContext();
   OO_CHECK_EVAL("manifest.furs", "threw: Native exception: cargo boom");
-  sPlayer->_throwCxx = YES;
+  sPlayer->_throwCxx = true;
   OO_CHECK_EVAL("manifest.gems", "threw: Native exception: cxx boom");
-  sPlayer->_throwCxx = NO;
+  sPlayer->_throwCxx = false;
   OO_CHECK_EVAL("manifest.gems", "12");
   OO_CHECK_EQ(sLimiterPauses, 0);
   OO_CHECK_EQ(sProfileDepth, 0);

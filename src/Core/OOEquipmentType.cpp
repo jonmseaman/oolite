@@ -204,9 +204,9 @@ oo::Ref<OOEquipmentType> OOEquipmentType::createWithInfo(
 }
 
 bool OOEquipmentType::initWithInfo(const oo::PList& info) {
-  BOOL OK = YES;
+  bool OK = true;
 
-  if (OK && info.count() <= EQUIPMENT_LONG_DESC_INDEX) OK = NO;
+  if (OK && info.count() <= EQUIPMENT_LONG_DESC_INDEX) OK = false;
 
   if (OK) {
     // Read required attributes
@@ -226,7 +226,7 @@ bool OOEquipmentType::initWithInfo(const oo::PList& info) {
              "identifier or description (\"{}\", {}, \"{}\")",
              name.value_or("(null)"), identifier.value_or("(null)"),
              description.value_or("(null)"));
-      OK = NO;
+      OK = false;
     } else {
       _name = *name;
       _identifier = *identifier;
@@ -238,18 +238,18 @@ bool OOEquipmentType::initWithInfo(const oo::PList& info) {
     // Implied attributes for backwards-compatibility
     if (oo::str::hasSuffix(_identifier, "_MISSILE") ||
         oo::str::hasSuffix(_identifier, "_MINE")) {
-      _isMissileOrMine = YES;
-      _requiresEmptyPylon = YES;
+      _isMissileOrMine = true;
+      _requiresEmptyPylon = true;
     } else if (_identifier == "EQ_PASSENGER_BERTH_REMOVAL") {
-      _requiresFreePassengerBerth = YES;
+      _requiresFreePassengerBerth = true;
     } else if (_identifier == "EQ_FUEL") {
-      _requiresNonFullFuel = YES;
+      _requiresNonFullFuel = true;
     }
-    _isVisible = YES;
-    _isAvailableToPlayer = YES;
-    _isAvailableToNPCs = YES;
+    _isVisible = true;
+    _isAvailableToPlayer = true;
+    _isAvailableToNPCs = true;
     _damageProbability = 1.0;
-    _hideValues = NO;
+    _hideValues = false;
   }
 
   if (OK && info.count() > EQUIPMENT_EXTRA_INFO_INDEX) {
@@ -486,13 +486,13 @@ bool OOEquipmentType::isMissileOrMine() { return _isMissileOrMine; }
 bool OOEquipmentType::isPortableBetweenShips() { return _portableBetweenShips; }
 
 bool OOEquipmentType::canCarryMultiple() {
-  if (isMissileOrMine()) return YES;
+  if (isMissileOrMine()) return true;
   // technically multiple can be fitted, but not to the same mount.
-  if (isPrimaryWeapon()) return NO;
+  if (isPrimaryWeapon()) return false;
 
   // hard-coded as special items
   if (_identifier == "EQ_PASSENGER_BERTH" || _identifier == "EQ_TRUMBLE") {
-    return YES;
+    return true;
   }
 
   return _canCarryMultiple;
@@ -505,13 +505,13 @@ GLfloat OOEquipmentType::damageProbability() {
 }
 
 bool OOEquipmentType::canBeDamaged() {
-  if (isMissileOrMine()) return NO;
+  if (isMissileOrMine()) return false;
 
   if (damageProbability() > 0.0) {
-    return YES;
+    return true;
   }
 
-  return NO;
+  return false;
 }
 
 bool OOEquipmentType::isVisible() { return _isVisible; }

@@ -88,9 +88,6 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
       {};  // The latest JS SystemInfo object made for this.
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSSystemInfo(ooscript::Context context, ooscript::Object global);
 
@@ -99,6 +96,3 @@ void InitOOJSSystemInfo(ooscript::Context context, ooscript::Object global);
 ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context,
                                          OOGalaxyID galaxy, OOSystemID system);
 
-#ifdef __cplusplus
-}
-#endif

@@ -766,7 +766,7 @@ static bool MissionRunScreen(ooscript::Context context,
     UNIVERSE->removeDemoShips();  // remove any demoship or miniature planet
                                   // that may be remaining from previous screens
 
-  ShipEntity* demoShip = nil;
+  ShipEntity* demoShip = nullptr;
   if (ooscript::getProperty(context, (params), "model", (&value)) &&
       !ooscript::isUndefined(value)) {
     if ((player != nullptr ? player->status() : OOEntityStatus{}) ==
@@ -789,10 +789,10 @@ static bool MissionRunScreen(ooscript::Context context,
       // value))];
       demoShip = (UNIVERSE != nullptr ? UNIVERSE->makeDemoShipWithRole(
                                             role.value_or(""), (bool)spinning)
-                                      : (::ShipEntity*)nil);
+                                      : (::ShipEntity*)nullptr);
     }
   }
-  if (demoShip != nil) {
+  if (demoShip != nullptr) {
     if (ooscript::getProperty(context, (params), "modelPersonality",
                               (&value)) &&
         !ooscript::isUndefined(value)) {

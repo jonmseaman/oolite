@@ -152,14 +152,14 @@ constexpr const char* kSerializedEntryKeyValue = "value";
 static OOCacheImpl* CacheAllocate(void);
 static void CacheFree(OOCacheImpl* cache);
 
-static BOOL CacheInsert(OOCacheImpl* cache, const std::string& key,
+static bool CacheInsert(OOCacheImpl* cache, const std::string& key,
                         const oo::PList& value);
-static BOOL CacheRemove(OOCacheImpl* cache, const std::string& key);
+static bool CacheRemove(OOCacheImpl* cache, const std::string& key);
 static const oo::PList* CacheRetrieve(OOCacheImpl* cache,
                                       const std::string& key);
 static unsigned CacheGetCount(OOCacheImpl* cache);
 namespace {
-BOOL CacheRemoveOldest(OOCacheImpl* cache, const std::string& logKey);
+bool CacheRemoveOldest(OOCacheImpl* cache, const std::string& logKey);
 std::vector<oo::PList> CacheArrayOfContentsByAge(OOCacheImpl* cache);
 oo::PList CacheArrayOfNodesByAge(OOCacheImpl* cache);
 const std::optional<std::string>& CacheGetName(OOCacheImpl* cache);
@@ -378,21 +378,21 @@ static void CacheFree(OOCacheImpl* cache) {
   delete cache;
 }
 
-static BOOL CacheInsert(OOCacheImpl* cache, const std::string& key,
+static bool CacheInsert(OOCacheImpl* cache, const std::string& key,
                         const oo::PList& value) {
   OOCacheNode* node = NULL;
 
-  if (cache == NULL || value.isNull()) return NO;
+  if (cache == NULL || value.isNull()) return false;
 
   node = TreeInsert(cache, key, value);
   if (node != NULL) {
     AgeListMakeYoungest(cache, node);
-    return YES;
+    return true;
   } else
-    return NO;
+    return false;
 }
 
-static BOOL CacheRemove(OOCacheImpl* cache, const std::string& key) {
+static bool CacheRemove(OOCacheImpl* cache, const std::string& key) {
   OOCacheNode *node = NULL, *newRoot = NULL;
 
   node = TreeSplay(&cache->root, key);
@@ -413,15 +413,15 @@ static BOOL CacheRemove(OOCacheImpl* cache, const std::string& key) {
     AgeListRemove(cache, node);
     CacheNodeFree(cache, node);
 
-    return YES;
+    return true;
   } else
-    return NO;
+    return false;
 }
 
 namespace {
-BOOL CacheRemoveOldest(OOCacheImpl* cache, const std::string& logKey) {
+bool CacheRemoveOldest(OOCacheImpl* cache, const std::string& logKey) {
   // This could be more efficient, but does it need to be?
-  if (cache == NULL || cache->oldest == NULL) return NO;
+  if (cache == NULL || cache->oldest == NULL) return false;
 
   OO_LOG(logKey, "Pruning cache \"{}\": removing {}",
          cache->name.value_or("(null)"), cache->oldest->key);
@@ -581,7 +581,7 @@ static OOCacheNode* TreeSplay(OOCacheNode** root, const std::string& key) {
   int order;
   OOCacheNode N = {.leftChild = NULL, .rightChild = NULL};
   OOCacheNode *node = NULL, *temp = NULL, *l = &N, *r = &N;
-  BOOL exact = NO;
+  bool exact = false;
 
   if (root == NULL || *root == NULL) return NULL;
 
@@ -626,7 +626,7 @@ static OOCacheNode* TreeSplay(OOCacheNode** root, const std::string& key) {
       node = node->rightChild;
     } else {
       // Found exact match
-      exact = YES;
+      exact = true;
       break;
     }
   }
@@ -706,7 +706,7 @@ static OOCacheNode* TreeCheckIntegrity(OOCacheImpl* cache, OOCacheNode* node,
                                        OOCacheNode* expectedParent,
                                        const std::string& context) {
   int order;
-  BOOL OK = YES;
+  bool OK = true;
 
   if (node == NULL) return NULL;
 
@@ -715,7 +715,7 @@ static OOCacheNode* TreeCheckIntegrity(OOCacheImpl* cache, OOCacheNode* node,
         "dataCache.integrityCheck",
         "Integrity check ({} for \"{}\"): node \"{}\" has nil value, deleting.",
         context, cache->name.value_or("(null)"), CacheNodeGetDescription(node));
-    OK = NO;
+    OK = false;
   }
   if (OK && node->leftChild != NULL) {
     order = node->key.compare(node->leftChild->key);

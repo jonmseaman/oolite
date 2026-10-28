@@ -352,7 +352,7 @@ std::optional<std::string> JSValueToEquipmentKey(ooscript::Context context,
 }
 
 std::optional<std::string> JSValueToEquipmentKeyRelaxed(
-    ooscript::Context context, ooscript::Value value, BOOL* outExists) {
+    ooscript::Context context, ooscript::Value value, bool* outExists) {
   OOJS_PROFILE_ENTER
 
   std::optional<std::string> result;

@@ -35,14 +35,9 @@ Three things here are not obvious and are the reason the file looks the way it d
   other runs' preferences are silently lost).
 
   The only thing the game reads is WHERE ITS OWN BINARY LIVES, so isolation has to be a private
-  directory holding the binary. That is exactly what ``tests/golden/golden_run.py`` does
-  and why it is the desktop-lock exemption: junctions for read-only directories, hard
-  links for files, real copies for the three directories the game WRITES. A lock was the wrong
-  answer here for the same reason it is wrong there - ``run_test`` is the N-concurrent half, and
-  an exclusive mutex inside it would serialise or deadlock the fan-out. The staging code is
-  duplicated rather than imported because this subtree is also pushed to the fork on its own,
-  where ``tests/golden/`` does not exist (same reason ``_desktop_lock_helper`` locates tools/ at
-  runtime).
+  directory holding the binary. That is what the staging here does: junctions for read-only
+  directories, hard links for files, real copies for the three directories the game WRITES.
+  ``run_test`` is the N-concurrent half, so nothing in it locks the desktop.
 
   ``--check-isolation`` and ``--prefs-race`` prove both halves offline, with no built game.
 
@@ -52,8 +47,8 @@ Three things here are not obvious and are the reason the file looks the way it d
   resolves it against the current DRIVE (``/c/Users/x`` becomes ``C:/c/Users/x``, a real directory
   on this machine, which is how the mistake survives), and the same string would go on to the
   native game binary's ``-load``. Every path that arrives as an argument is therefore converted at
-  the boundary with ``cygpath -m``, exactly as ``tests/golden/run.sh:124`` and ``tools/gui-lock``
-  do. ``--check-msys-paths`` proves both directions offline.
+  the boundary with ``cygpath -m``, with the same conversion
+  any MSYS-to-native boundary needs. ``--check-msys-paths`` proves both directions offline.
 """
 
 import argparse
@@ -94,7 +89,7 @@ IS_WINDOWS = sys.platform == "win32" or (os.name == "nt")
 # a real directory (C:\c exists), so the mistake does not announce itself - it silently reads the
 # wrong tree, or hands the wrong string to the game's -load. cygpath is the only thing that knows
 # the mapping (it reads /etc/fstab and the MSYS root), so it is what does the conversion, exactly
-# as tests/golden/run.sh:124 and tools/gui-lock:35 already do.
+# as every MSYS-to-native boundary does.
 #
 # Applied ONCE, at the argument boundary, never deeper: a path already in native form is left
 # alone (cygpath -m is idempotent on `C:/...`), and off Windows there is no boundary to cross.
@@ -358,7 +353,7 @@ def _console_config_dir(host, port):
 # --- per-run prefs isolation -----------------------------------------------------
 #
 # Real copies rather than links: these are the directories the GAME WRITES, and sharing them is
-# the collision. Same list as tests/golden/golden_run.py:56 - GNUstep/ holds Defaults/oolite.plist
+# the collision. GNUstep/ holds Defaults/oolite.plist
 # (the raced file), Logs/ holds Latest.log, oolite-saves/ holds commanders.
 PRIVATE_SUBDIRS = ("GNUstep", "Logs", "oolite-saves")
 
@@ -508,7 +503,7 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
         #
         # Converted HERE too, not only in __main__: this is the boundary where the
         # string stops being python's and becomes a NATIVE Windows process's argv, and run_test is
-        # a library function that callers - tests/golden, the component tier - invoke directly
+        # a library function that callers - the component tier among them - invoke directly
         # with whatever their own MSYS shell handed them. native_path is a no-op on an
         # already-native path, so the CLI's conversion is not undone by a second one.
         cmd += ["-load", native_path(load_save)]
@@ -752,8 +747,8 @@ def parse_args(argv=None):
 
 # --- offline self-checks ---------------------------------------------------------
 #
-# Both need no built game and no desktop, so they still gate something real in the detached,
-# build-less checkout accept.sh merges into (the tools/check-splash-off.py --self-test pattern).
+# Both need no built game and no desktop, so they still gate something real in a build-less
+# checkout.
 
 
 def _fake_app(root):
@@ -1261,35 +1256,6 @@ def _settle_units_check():
     return 0
 
 
-def _desktop_lock_helper():
-    """tools/desktop_lock from the OUTER repository, or None when there is none.
-
-    This file lives in a subtree that is also pushed to the fork on its own, where tools/ does
-    not exist; there is no fleet to collide with there, so a missing helper is not an error. When
-    the outer repository IS around us, its tools/gui-lock is the desktop mutex every launcher on
-    this machine shares, and this launcher must take it.
-    """
-    here = os.path.dirname(os.path.abspath(__file__))
-    while True:
-        tools = os.path.join(here, "tools")
-        if os.path.isfile(os.path.join(tools, "gui-lock")) and os.path.isfile(
-            os.path.join(tools, "desktop_lock.py")
-        ):
-            if tools not in sys.path:
-                sys.path.insert(0, tools)
-            import desktop_lock  # noqa: F401  - located at runtime, on purpose
-
-            return desktop_lock
-        parent = os.path.dirname(here)
-        if parent == here:
-            print(
-                "[!] no tools/desktop_lock.py above this checkout; "
-                "launching WITHOUT the desktop mutex"
-            )
-            return None
-        here = parent
-
-
 if __name__ == "__main__":
     args = parse_args()
 
@@ -1336,45 +1302,23 @@ if __name__ == "__main__":
         print(f"[*] Moving to {target_dir}")
         os.chdir(target_dir)
 
-        # THE DESKTOP LOCK. This is the smoke test, and it launches ONE game -
-        # which on Windows means one real window on the interactive desktop, because
-        # SDL_VIDEODRIVER=offscreen is deliberately not set there. Two games on the desktop at
-        # once steal each other's foreground, so it queues behind the GUI tier rather than
-        # racing it.
+        # This is the smoke test, and it launches ONE game - which on Windows means one real
+        # window on the interactive desktop, because SDL_VIDEODRIVER=offscreen is deliberately
+        # not set there. Two games on the desktop at once steal each other's foreground, so run
+        # it alone (tests/run.sh smoke).
         #
-        # The lock lives in the OUTER repository (tools/gui-lock), not in this subtree, and this
-        # file must keep working when the subtree is pushed to the fork on its own - so the
-        # helper is located at runtime and a missing one is a warning, not a failure. It is also
-        # taken around run_test only: acquiring before the chdir above would hold the desktop
-        # while resolving paths, which is free but says the wrong thing about what the lock
-        # protects.
-        lock_helper = _desktop_lock_helper()
-        if lock_helper is None:
-            success = run_test(
-                bin_name,
-                test_output,
-                args.port,
-                args.host,
-                load_save,
-                args.settle_game_seconds,
-                args.ready_timeout,
-                app_dir=target_dir,
-                keep_staged=args.keep_staged,
-            )
-        else:
-            with lock_helper.desktop_lock("smoke", start=__file__, stream=sys.stdout):
-                # Run the test from within the Oolite directory
-                success = run_test(
-                    bin_name,
-                    test_output,
-                    args.port,
-                    args.host,
-                    load_save,
-                    args.settle_game_seconds,
-                    args.ready_timeout,
-                    app_dir=target_dir,
-                    keep_staged=args.keep_staged,
-                )
+        # Run the test from within the Oolite directory
+        success = run_test(
+            bin_name,
+            test_output,
+            args.port,
+            args.host,
+            load_save,
+            args.settle_game_seconds,
+            args.ready_timeout,
+            app_dir=target_dir,
+            keep_staged=args.keep_staged,
+        )
 
     except Exception as e:
         print(f"[!] Critical Error: {e}")

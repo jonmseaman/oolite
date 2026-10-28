@@ -36,7 +36,7 @@ MA 02110-1301, USA.
 #define PARTICLE_DISTANCE_SCALE_LOW 12.0
 #define PARTICLE_DISTANCE_SCALE_HIGH 36.0
 
-static OOTexture* sBlobTexture = nil;
+static OOTexture* sBlobTexture = nullptr;
 
 namespace {
 
@@ -304,7 +304,7 @@ OOTexture* OOLightParticleEntity::texture() {
 }
 
 void OOLightParticleEntity::setUpTexture() {
-  if (sBlobTexture == nil) {
+  if (sBlobTexture == nullptr) {
     sBlobTexture = OOTexture::textureWithName(
                        "oolite-particle-blur.png", "Textures",
                        kOOTextureMinFilterMipMap | kOOTextureMagFilterLinear |
@@ -317,7 +317,7 @@ void OOLightParticleEntity::setUpTexture() {
 }
 
 OOTexture* OOLightParticleEntity::defaultParticleTexture() {
-  if (sBlobTexture == nil) setUpTexture();
+  if (sBlobTexture == nullptr) setUpTexture();
   return sBlobTexture;
 }
 
@@ -326,9 +326,9 @@ void OOLightParticleEntity::resetGraphicsState() {
   sBlobTexture = nullptr;
 }
 
-bool OOLightParticleEntity::isEffect() { return YES; }
+bool OOLightParticleEntity::isEffect() { return true; }
 
-bool OOLightParticleEntity::canCollide() { return NO; }
+bool OOLightParticleEntity::canCollide() { return false; }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 std::vector<oo::Ref<OOTexture>> OOLightParticleEntity::allTextures() {

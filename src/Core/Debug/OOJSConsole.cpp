@@ -928,24 +928,22 @@ const MonitorMethod kMonitorMethods[] = {
     {"dumpMemoryStatistics", MonitorMethodForm::VoidVoid,
      [](OODebugMonitor* m) { m->dumpMemoryStatistics(); }, nullptr, nullptr,
      nullptr, nullptr},
-#if OOLITE_GNUSTEP
     {"applicationWillTerminate", MonitorMethodForm::VoidVoid,
      [](OODebugMonitor* m) { m->applicationWillTerminate(); }, nullptr, nullptr,
      nullptr, nullptr},
-#endif
     {"debuggerConnected", MonitorMethodForm::Scalar, nullptr, nullptr, nullptr,
      [](OODebugMonitor* m) -> long long { return m->debuggerConnected(); },
-     kOOTypeEncoding<BOOL>},
+     kOOTypeEncoding<bool>},
     {"TCPIgnoresDroppedPackets", MonitorMethodForm::Scalar, nullptr, nullptr,
      nullptr,
      [](OODebugMonitor* m) -> long long {
        return m->TCPIgnoresDroppedPackets();
      },
-     kOOTypeEncoding<BOOL>},
+     kOOTypeEncoding<bool>},
     {"usingPlugInController", MonitorMethodForm::Scalar, nullptr, nullptr,
      nullptr,
      [](OODebugMonitor* m) -> long long { return m->usingPlugInController(); },
-     kOOTypeEncoding<BOOL>},
+     kOOTypeEncoding<bool>},
     {"configurationKeys", MonitorMethodForm::NotCallable, nullptr, nullptr,
      nullptr, nullptr, nullptr},  // a std::vector result
     {"dumpJSMemoryStatistics", MonitorMethodForm::Scalar, nullptr, nullptr,

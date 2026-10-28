@@ -15,7 +15,7 @@
    class and run on it first; they pin the initial state, the callback and its
    `this` (kept alive across a garbage collection), the run (its `this`, its
    location, the owning script pushed and popped), an engine reset, and the weak
-   reference to a definition. Run: bash tools/check-core-tests.sh
+   reference to a definition. Run: tests/run.sh unit
 */
 
 #include <cstring>
@@ -47,7 +47,7 @@ const char* const kOOJavaScriptEngineWillResetNotificationName =
 
 // A vector is the array [x, y, z] here: enough to see what the definition hands
 // over.
-extern "C" bool VectorToJSValue(ooscript::Context context, Vector vector,
+bool VectorToJSValue(ooscript::Context context, Vector vector,
                                 ooscript::Value* outValue) {
   ooscript::Value parts[3] = {ooscript::numberValue(vector.x),
                               ooscript::numberValue(vector.y),

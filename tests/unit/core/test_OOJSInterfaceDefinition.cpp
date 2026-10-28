@@ -16,7 +16,7 @@
    and run on it first. They pin the initial state and the text properties, the
    callback and its `this` (kept alive across a garbage collection), the run,
    the sort order (interfaceCompare(), with its null cases) and an engine reset.
-        Run: bash tools/check-core-tests.sh
+        Run: tests/run.sh unit
 */
 
 #include <cstring>

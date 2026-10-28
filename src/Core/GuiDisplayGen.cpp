@@ -46,7 +46,7 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
 
-OOINLINE BOOL RowInRange(OOGUIRow row, NSRange range) {
+OOINLINE bool RowInRange(OOGUIRow row, NSRange range) {
   return ((int)range.location <= row &&
           row < (int)(range.location + range.length));
 }
@@ -128,7 +128,7 @@ oo::Ref<OOTextureSprite> NewTextureSpriteWithDescriptor(
   NSSize size;
 
   texture = TextureForGUITexture(descriptor, srgbaOption);
-  if (texture.get() == nil) return nullptr;
+  if (texture.get() == nullptr) return nullptr;
 
   double specifiedWidth = descriptor.get<double>("width", -INFINITY);
   double specifiedHeight = descriptor.get<double>("height", -INFINITY);
@@ -164,8 +164,8 @@ oo::Ref<OOTextureSprite> NewTextureSpriteWithDescriptor(
 
 }  // namespace
 
-static BOOL _refreshStarChart =
-    NO;  // set by refreshStarChart(), read by drawStarChart()
+static bool _refreshStarChart =
+    false;  // set by refreshStarChart(), read by drawStarChart()
 
 GuiDisplayGen::GuiDisplayGen() {
   size_in_pixels = NSMakeSize(MAIN_GUI_PIXEL_WIDTH, MAIN_GUI_PIXEL_HEIGHT);
@@ -216,7 +216,7 @@ GuiDisplayGen::GuiDisplayGen() {
   backgroundSpecial = GUI_BACKGROUND_SPECIAL_NONE;
 
   guiUserSettings = ResourceManager::dictionaryFromFilesNamed(
-      "gui-settings.plist", "Config", YES);
+      "gui-settings.plist", "Config", true);
 }
 
 GuiDisplayGen::GuiDisplayGen(NSSize gui_size, int gui_cols, int gui_rows,
@@ -594,7 +594,7 @@ void GuiDisplayGen::overrideTabs(OOGUITabSettings stops,
   const oo::PList* override =
       guiUserSettings.get<oo::PList::Array>(setting, nullptr);
   NSUInteger i;
-  if (stops != NULL && override != nil) {
+  if (stops != NULL && override != nullptr) {
     if (len > GUI_MAX_COLUMNS) {
       len = GUI_MAX_COLUMNS;
     }
@@ -1054,7 +1054,7 @@ bool GuiDisplayGen::setForegroundTextureKey(
 }
 
 bool GuiDisplayGen::preloadGUITexture(const oo::PList& descriptor) {
-  return TextureForGUITexture(descriptor, kOOTextureSRGBA).get() != nil;
+  return TextureForGUITexture(descriptor, kOOTextureSRGBA).get() != nullptr;
 }
 
 oo::PList GuiDisplayGen::textureDescriptorFromJSValue(
@@ -1143,7 +1143,7 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
   {
     if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
       UNIVERSE->gameController()
-          ->setMouseInteractionModeForUIWithMouseInteraction(YES);
+          ->setMouseInteractionModeForUIWithMouseInteraction(true);
 
     i = itemsPerColumn * 4;  // total items in the first and last pages
     itemsPerColumn--;        // for all the middle pages.
@@ -1182,7 +1182,7 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
 
       if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
         UNIVERSE->gameController()
-            ->setMouseInteractionModeForUIWithMouseInteraction(NO);
+            ->setMouseInteractionModeForUIWithMouseInteraction(false);
     }
   }
 
@@ -1237,7 +1237,7 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
                             OOColor::orangeColor().get(), 1.0);
     } else  /// add color selection here
     {
-      ::OOColor* dispCol = nil;
+      ::OOColor* dispCol = nullptr;
       if (const oo::PList::Array* row = info.getIf<oo::PList::Array>()) {
         if (row->size() > 2) dispCol = OOColorInObjectNode((*row)[2]);
       }
@@ -1268,7 +1268,7 @@ void GuiDisplayGen::drawGUIBackground() {
   }
 }
 
-void GuiDisplayGen::refreshStarChart() { _refreshStarChart = YES; }
+void GuiDisplayGen::refreshStarChart() { _refreshStarChart = true; }
 
 int GuiDisplayGen::drawGUI(GLfloat alpha, bool drawCursor) {
   GLfloat x = drawPosition.x;
@@ -1295,13 +1295,13 @@ int GuiDisplayGen::drawGUI(GLfloat alpha, bool drawCursor) {
           backgroundSpecial == GUI_BACKGROUND_SPECIAL_CUSTOM_ANA_QUICKEST ||
           backgroundSpecial == GUI_BACKGROUND_SPECIAL_CUSTOM_ANA_SHORTEST) {
         drawStarChart(x - 0.5f * size_in_pixels.width,
-                      y - 0.5f * size_in_pixels.height, z, alpha, NO);
+                      y - 0.5f * size_in_pixels.height, z, alpha, false);
       }
       if (backgroundSpecial == GUI_BACKGROUND_SPECIAL_LONG ||
           backgroundSpecial == GUI_BACKGROUND_SPECIAL_LONG_ANA_QUICKEST ||
           backgroundSpecial == GUI_BACKGROUND_SPECIAL_LONG_ANA_SHORTEST) {
         drawStarChart(x - 0.5f * size_in_pixels.width,
-                      y - 0.5f * size_in_pixels.height, z, alpha, YES);
+                      y - 0.5f * size_in_pixels.height, z, alpha, true);
       }
       if ((player != nullptr ? player->guiScreen() : OOGUIScreenID{}) ==
           GUI_SCREEN_STATUS) {
@@ -1534,7 +1534,7 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
         }
         cxx_OODrawStringQuadsAligned(text, x + rowPosition[i].x,
                                      y + rowPosition[i].y, z, characterSize,
-                                     NO);
+                                     false);
 
         // draw cursor at end of current Row
         //
@@ -1567,7 +1567,7 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
     if (rowText[i].isArray()) {
       const oo::PList& array = rowText[i];
       NSUInteger j, max_columns = MIN(array.count(), n_columns);
-      BOOL isLeftAligned;
+      bool isLeftAligned;
 
       for (j = 0; j < max_columns; j++) {
         const std::string text =
@@ -1639,7 +1639,7 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
           }
           cxx_OODrawStringQuadsAligned(text, x + rowPosition[i].x,
                                        y + rowPosition[i].y, z, characterSize,
-                                       NO);
+                                       false);
         }
       }
     }
@@ -1672,7 +1672,7 @@ void GuiDisplayGen::setStarChartTitle() {
                  (player != nullptr ? player->getCursor_coordinates()
                                     : NSPoint{}),
                  (player != nullptr ? player->galaxyNumber() : OOGalaxyID{}),
-                 NO)
+                 false)
            : 0);
 
   const std::string location_key = oo::str::format(
@@ -1772,7 +1772,7 @@ OOSystemID GuiDisplayGen::targetNextFoundSystem(int direction)  // +1 , 0 , -1
           GUI_SCREEN_LONG_RANGE_CHART)
     return sys;
 
-  BOOL* systemsFound =
+  bool* systemsFound =
       (UNIVERSE != nullptr ? UNIVERSE->systemsFound() : nullptr);
   unsigned i, first = 0, last = 0, count = 0;
   int systemIndex = foundSystem + direction;
@@ -1906,7 +1906,7 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
                   "link_color", oo::str::format("interstellar: %d %ld %ld", g,
                                                 (long)i, (long)j)));
 
-          if (thisConnectionColor == nil) {
+          if (thisConnectionColor == nullptr) {
             thisConnectionColor = defaultConnectionColor;
           }
           thisConnectionColor->getRed(&lr, &lg, &lb, &la);
@@ -1920,7 +1920,7 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
                   "link_color", oo::str::format("interstellar: %d %ld %ld", g,
                                                 (long)j, (long)i)));
 
-          if (thatConnectionColor == nil) {
+          if (thatConnectionColor == nullptr) {
             thatConnectionColor = thisConnectionColor;
           }
           thatConnectionColor->getRed(&lr, &lg, &lb, &la);
@@ -2025,7 +2025,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
   OOGalaxyID galaxy_id =
       (player != nullptr ? player->galaxyNumber() : OOGalaxyID{});
   GLfloat r = 1.0, g = 1.0, b = 1.0;
-  BOOL noNova;
+  bool noNova;
   NSPoint cu;
   NSUInteger systemParameter;
 
@@ -2060,7 +2060,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
 
   OORouteType advancedNavArrayMode =
       (player != nullptr ? player->ANAMode() : OORouteType{});
-  BOOL routeExists = NO;
+  bool routeExists = false;
 
   NSInteger concealment[256];
   for (i = 0; i < 256; i++) {
@@ -2070,7 +2070,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
         systemInfo.get<int>("concealment", OO_SYSTEMCONCEALMENT_NONE);
   }
 
-  BOOL* systemsFound =
+  bool* systemsFound =
       (UNIVERSE != nullptr ? UNIVERSE->systemsFound() : nullptr);
   NSSize viewSize = (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
                          ? UNIVERSE->getGameView()->backingViewSize()
@@ -2126,13 +2126,13 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
     OOSystemID sysid;
     int tec, eco, gov;
     std::string p_name;
-    BOOL nova;
+    bool nova;
   } nearby_systems[256];
   static int num_nearby_systems = 0;
 
   if (_refreshStarChart || galaxy_id != saved_galaxy_id) {
     // saved systems are stale; recompute
-    _refreshStarChart = NO;
+    _refreshStarChart = false;
 
     num_nearby_systems = 0;
     for (i = 0; i < 256; i++) {
@@ -2200,7 +2200,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
     // displayed if ([[[UNIVERSE gameView] typedString] length] > 0)  [player
     // clearPlanetSearchString];
 
-    if (!routeInfo.isNull()) routeExists = YES;
+    if (!routeInfo.isNull()) routeExists = true;
 
     drawAdvancedNavArrayAtX(
         x + hoffset, y + voffset, z, alpha,
@@ -2371,7 +2371,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                      ? UNIVERSE->getSystemManager()->getProperty("sun_color", i,
                                                                  galaxy_id)
                      : oo::PList()));
-            if (sunColor != nil) {
+            if (sunColor != nullptr) {
               sunColor->getRed(&r, &g, &b, &alpha);
               alpha = 1.0;  // reset
             }
@@ -2418,7 +2418,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
         continue;
       }
 
-      BOOL mark = systemsFound[i];
+      bool mark = systemsFound[i];
       float marker_size = 8.0 / zoom;
       NSPoint sys_coordinates =
           systemManager->getCoordinatesForSystem(i, galaxy_id);

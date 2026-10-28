@@ -16,7 +16,7 @@
    listed, counted, scaled with it, removed and cleared); its orientation
    vectors; and the break pattern flag. An effect is the global C++ class, made
    with oo::NewVisualEffectObject() under OOEntityWithDrawable's facade, and the
-   cases call its members. Run: bash tools/check-core-tests.sh
+   cases call its members. Run: tests/run.sh unit
    test_OOVisualEffectEntity
 */
 
@@ -100,13 +100,13 @@ void SetUp() {
       (void)OOJavaScriptEngine::sharedEngine();
     }
   }
-  static Universe* universe = nil;
-  if (universe == nil) {
+  static Universe* universe = nullptr;
+  if (universe == nullptr) {
     universe = new TestUniverse();  // never released
   }
   gSharedUniverse = universe;
   static TestPlayer* player = nullptr;
-  if (player == nil) {
+  if (player == nullptr) {
     {  // what the stand-in player's -init autoreleases is freed
        // while the engine is alive
       player = NewTestPlayer<TestPlayer>();
@@ -149,7 +149,7 @@ OO_TEST(defaults) {
   SetUp();
   {
     OOVisualEffectEntity* effect = Effect("test-effect", Dict({}));
-    OO_CHECK(effect != nil);
+    OO_CHECK(effect != nullptr);
     OO_CHECK(effect->isEffect());
     OO_CHECK(effect->getIsVisualEffect());
     OO_CHECK(!effect->canCollide());
@@ -177,7 +177,7 @@ OO_TEST(defaults) {
     // A null definition is an empty one; -init has the empty key.
     OOVisualEffectEntity* plain =
         Effect(std::string{}, oo::PList());  // what -init made
-    OO_CHECK(plain != nil);
+    OO_CHECK(plain != nullptr);
     OO_CHECK(plain->effectKey() == std::optional<std::string>(""));
     OO_CHECK(plain->effectInfoDictionary() == Dict({}));
   }
@@ -189,9 +189,9 @@ OO_TEST(breakPatternFlag) {
     OOVisualEffectEntity* effect =
         Effect("bp", Dict({{"is_break_pattern", oo::PList(true)}}));
     OO_CHECK(effect->isBreakPattern());
-    effect->setIsBreakPattern(NO);
+    effect->setIsBreakPattern(false);
     OO_CHECK(!effect->isBreakPattern());
-    effect->setIsBreakPattern(YES);
+    effect->setIsBreakPattern(true);
     OO_CHECK(effect->isBreakPattern());
   }
 }
@@ -246,7 +246,7 @@ OO_TEST(flasherSubentities) {
 
     effect->removeSubEntity(flasher);
     OO_CHECK_EQ(effect->subEntityCount(), 0u);
-    OO_CHECK(flasher->owner() == nil);
+    OO_CHECK(flasher->owner() == nullptr);
     OO_CHECK(!effect->hasSubEntity(flasher));
   }
 }
@@ -267,7 +267,7 @@ OO_TEST(standardSubentities) {
     // ownership).
     OOVisualEffectEntity* effect = nullptr;
     std::vector<oo::EntityHold> effects;  // the subentities (held C++ entities)
-    Entity* effectObject = nil;
+    Entity* effectObject = nullptr;
     {
       effectObject = oo::NewVisualEffect(
           "parent", Dict({{"subentities", oo::PList(std::move(subs))}}));
@@ -344,9 +344,9 @@ OO_TEST(scannerColours) {
   SetUp();
   {
     OOVisualEffectEntity* plain = Effect("plain", Dict({}));
-    OO_CHECK(plain->scannerDisplayColor1() == nil);
-    OO_CHECK(plain->scannerDisplayColor2() == nil);
-    OO_CHECK(plain->scannerDisplayColorForShip(YES, nullptr, nullptr)[3] ==
+    OO_CHECK(plain->scannerDisplayColor1() == nullptr);
+    OO_CHECK(plain->scannerDisplayColor2() == nullptr);
+    OO_CHECK(plain->scannerDisplayColorForShip(true, nullptr, nullptr)[3] ==
              0.0f);  // transparent black
 
     OOVisualEffectEntity* effect = Effect(
@@ -356,17 +356,17 @@ OO_TEST(scannerColours) {
              {"scanner_display_color2", oo::PList(std::string("blueColor"))}}));
     OOColor* c1 = effect->scannerDisplayColor1();
     OOColor* c2 = effect->scannerDisplayColor2();
-    OO_CHECK(c1 != nil && c2 != nil);
+    OO_CHECK(c1 != nullptr && c2 != nullptr);
     float r, g, b, a;
     c1->getRed(&r, &g, &b, &a);
     OO_CHECK(r == 1.0f && g == 0.0f && b == 0.0f && a == 1.0f);
 
-    GLfloat* flashOn = effect->scannerDisplayColorForShip(YES, c1, c2);
+    GLfloat* flashOn = effect->scannerDisplayColorForShip(true, c1, c2);
     OO_CHECK(flashOn[0] == 1.0f && flashOn[2] == 0.0f);
-    GLfloat* flashOff = effect->scannerDisplayColorForShip(NO, c1, c2);
+    GLfloat* flashOff = effect->scannerDisplayColorForShip(false, c1, c2);
     OO_CHECK(flashOff[0] == 0.0f && flashOff[2] == 1.0f);
-    OO_CHECK(effect->scannerDisplayColorForShip(NO, c1, nullptr)[0] == 1.0f);
-    OO_CHECK(effect->scannerDisplayColorForShip(YES, nullptr, c2)[2] == 1.0f);
+    OO_CHECK(effect->scannerDisplayColorForShip(false, c1, nullptr)[0] == 1.0f);
+    OO_CHECK(effect->scannerDisplayColorForShip(true, nullptr, c2)[2] == 1.0f);
 
     // A new colour replaces it; nil takes the definition's again.
     effect->setScannerDisplayColor1(OOColor::greenColor().get());
@@ -387,7 +387,7 @@ OO_TEST(scriptAndScriptInfo) {
         "scripted",
         Dict({{"script", oo::PList(std::string("no-such-script.js"))},
               {"script_info", Dict({{"k", oo::PList(std::string("v"))}})}}));
-    OO_CHECK(effect->script() == nil);
+    OO_CHECK(effect->script() == nullptr);
     OO_CHECK(effect->scriptInfo() ==
              Dict({{"k", oo::PList(std::string("v"))}}));
     OO_CHECK(Effect("bare", Dict({}))->scriptInfo() == Dict({}));
@@ -403,14 +403,14 @@ OO_TEST(beacons) {
     OO_CHECK(!effect->beaconCode().has_value());
     OO_CHECK(!effect->beaconLabel().has_value());
     OO_CHECK(!effect->isJammingScanning());
-    OO_CHECK(effect->prevBeacon() == nil && effect->nextBeacon() == nil);
+    OO_CHECK(effect->prevBeacon() == nullptr && effect->nextBeacon() == nullptr);
 
     OOVisualEffectEntity* other = Effect("other", Dict({}));
     effect->setPrevBeacon(other);
     effect->setNextBeacon(other);
     OO_CHECK(effect->prevBeacon() == other && effect->nextBeacon() == other);
     effect->setNextBeacon(nullptr);
-    OO_CHECK(effect->nextBeacon() == nil);
+    OO_CHECK(effect->nextBeacon() == nullptr);
     effect->setPrevBeacon(nullptr);
 
     // An empty code is none.
@@ -457,8 +457,8 @@ OO_TEST(facadeContract) {
     OOVisualEffectEntity* cxxEffect = effect;
     OO_CHECK(cxxEffect != nullptr);
     OO_CHECK(oo::ToEffect(cxxEffect) == effect);
-    OO_CHECK(oo::ToEffect(static_cast<Entity*>(nil)) == nullptr);
-    OO_CHECK(static_cast<OOVisualEffectEntity*>(nullptr) == nil);
+    OO_CHECK(oo::ToEffect(static_cast<Entity*>(nullptr)) == nullptr);
+    OO_CHECK(static_cast<OOVisualEffectEntity*>(nullptr) == nullptr);
 
     OO_CHECK(cxxEffect->effectKey() == effect->effectKey());
     OO_CHECK(cxxEffect->subEntityCount() == effect->subEntityCount());
@@ -518,7 +518,7 @@ OO_TEST(jsExtensions) {
              prototype == expectedPrototype);
     OO_CHECK(OOJSEntityJSClassName(object) ==
              std::optional<std::string>("VisualEffect"));
-    OO_CHECK(OOJSEntityIsVisibleToScripts(object) == YES);
+    OO_CHECK(OOJSEntityIsVisibleToScripts(object) == true);
   }
 }
 

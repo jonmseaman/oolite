@@ -59,7 +59,7 @@ MA 02110-1301, USA.
 #endif
 #endif
 
-static BOOL sInited = NO;
+static bool sInited = false;
 
 static NSUInteger sNumberOfCPUs = 0;  // Yes, really 0.
 
@@ -101,7 +101,7 @@ void OOCPUInfoInit(void) {
 #warning Do not know how to find number of CPUs on this architecture.
 #endif  // OS selection
 
-  sInited = YES;
+  sInited = true;
 }
 
 NSUInteger OOCPUCount(void) {
@@ -183,7 +183,7 @@ OOMemoryStatus OOSystemMemoryStatus(void) {
 #if OOLITE_WINDOWS
 std::string operatingSystemFullVersion(void) {
   OSVERSIONINFOW osver;
-  char outUBRString[65] = "";
+  std::string outUBRString;
 
   osver.dwOSVersionInfoSize = sizeof(osver);
   GetVersionExW(&osver);
@@ -197,10 +197,7 @@ std::string operatingSystemFullVersion(void) {
     DWORD dwUBR = 0;
     if (RegQueryValueEx(hKey, "UBR", NULL, NULL, (BYTE*)&dwUBR, &dwUBRSize) ==
         ERROR_SUCCESS) {
-      char strUBR[64] = "";
-      ltoa(dwUBR, strUBR, 10);
-      strcpy(outUBRString, ".");
-      strcat(outUBRString, strUBR);
+      outUBRString = "." + std::to_string(dwUBR);
     }
   }
 
@@ -211,7 +208,7 @@ std::string operatingSystemFullVersion(void) {
       reinterpret_cast<const char16_t*>(osver.szCSDVersion)));
   return oo::str::format("%lu.%lu.%lu%s %s", osver.dwMajorVersion,
                          osver.dwMinorVersion, osver.dwBuildNumber,
-                         outUBRString, csdVersion.c_str());
+                         outUBRString.c_str(), csdVersion.c_str());
 }
 
 /*
@@ -219,13 +216,13 @@ is64bitSystem: Detect operating system bitness. This function is based mainly on
 code by Mark S. Kolich, as seen in
 http://mark.koli.ch/2009/10/reliably-checking-os-bitness-32-or-64-bit-on-windows-with-a-tiny-c-app.html
 */
-BOOL is64BitSystem(void) {
+bool is64BitSystem(void) {
 #if defined(_WIN64)
   // if we have been compiled as a 64-bit app and we are running, we are
   // obviously on a 64-bit system
-  return YES;
+  return true;
 #else
-  BOOL is64Bit = NO;
+  BOOL is64Bit = FALSE;
 
   IW64PFP IW64P =
       (IW64PFP)GetProcAddress(GetModuleHandle("kernel32"), "IsWow64Process");
@@ -233,7 +230,7 @@ BOOL is64BitSystem(void) {
     IW64P(GetCurrentProcess(), &is64Bit);
   }
 
-  return is64Bit;
+  return is64Bit != FALSE;
 #endif
 }
 #endif  // OOLITE_WINDOWS

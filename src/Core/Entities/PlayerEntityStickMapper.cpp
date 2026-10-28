@@ -133,7 +133,7 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries,
 void PlayerEntity::resetStickFunctions() { stickFunctions.clear(); }
 
 void PlayerEntity::setGuiToStickMapperScreen(unsigned skip) {
-  setGuiToStickMapperScreen(skip, NO);
+  setGuiToStickMapperScreen(skip, false);
 }
 
 void PlayerEntity::setGuiToStickMapperScreen(unsigned skip,
@@ -218,7 +218,7 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
       stickHandler->clearCallback();
       gui->setArray(std::vector<std::string>{"Function setting aborted."},
                     GUI_ROW_INSTRUCT);
-      waitingForStickCallback = NO;
+      waitingForStickCallback = false;
     }
 
     // Break out now.
@@ -277,7 +277,7 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
             "function.";
     }
     gui->setArray(std::vector<std::string>{instructions}, GUI_ROW_INSTRUCT);
-    waitingForStickCallback = YES;
+    waitingForStickCallback = true;
   }
 
   if ((gameView != nullptr ? gameView->isDown('u') : false)) {
@@ -291,7 +291,7 @@ void PlayerEntity::updateFunction(
     const oo::PList& hwDict)  // called by name (joystick callback)
 {
   OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
-  waitingForStickCallback = NO;
+  waitingForStickCallback = false;
 
   // Right time and the right place?
   if (gui_screen != GUI_SCREEN_STICKMAPPER) {
@@ -408,7 +408,7 @@ void PlayerEntity::removeFunction(int idx) {
   const oo::PList& entry = StickFunctionAt(stickFunctions, idx);
   const oo::PList* butfunc = entry.find(KEY_BUTTONFN);  // -intValue as before
   const oo::PList* axfunc = entry.find(KEY_AXISFN);
-  BOOL custom = NO;
+  bool custom = false;
   selFunctionIdx = idx;
 
   // Some things can have either axis or buttons - make sure we clear
@@ -417,7 +417,7 @@ void PlayerEntity::removeFunction(int idx) {
     // special case for OXP equipment buttons
     if (IntValueOf(*butfunc) >= 10000) {
       int bf = IntValueOf(*butfunc);
-      custom = YES;
+      custom = true;
       std::string key = std::string(CUSTOMEQUIP_BUTTONACTIVATE);
       bf -= 10000;
       if (bf >= 10000) {

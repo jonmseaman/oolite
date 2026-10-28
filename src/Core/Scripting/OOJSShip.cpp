@@ -732,15 +732,15 @@ namespace {
    The slot holds the C++ entity (OOJSEntityGetEntityOfClass, with the JS class
    check).
 */
-BOOL JSShipGetShipEntity(ooscript::Context context, ooscript::Object inObject,
+bool JSShipGetShipEntity(ooscript::Context context, ooscript::Object inObject,
                          ShipEntity** outShip) {
   OOCParameterAssert(outShip != NULL);
   Entity* entity = nullptr;
   if (EXPECT_NOT(
           !OOJSEntityGetEntityOfClass(context, inObject, &sShipClass, &entity)))
-    return NO;
+    return false;
   *outShip = oo::ToShip(entity);
-  return YES;
+  return true;
 }
 }  // namespace
 
@@ -1488,7 +1488,7 @@ bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObject,
   HPVector hpvValue;
   OOShipGroup* group = nullptr;
   oo::Ref<OOColor> colorForScript;
-  BOOL exists;  // JSValueToEquipmentKeyRelaxed()'s out parameter
+  bool exists;  // JSValueToEquipmentKeyRelaxed()'s out parameter
 
   if (EXPECT_NOT(!JSShipGetShipEntity(context, thisObject, &entity)))
     return false;
@@ -2211,7 +2211,7 @@ playerReadOnly:
 #define GET_THIS_SHIP(THISENT)                                          \
   do {                                                                  \
     if (EXPECT_NOT(!JSShipGetShipEntity(context, OOJS_THIS, &THISENT))) \
-      return NO; /* Exception */                                        \
+      return false; /* Exception */                                        \
     if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID;                     \
   } while (0)
 
@@ -2755,7 +2755,7 @@ static bool ShipExplode(ooscript::Context context,
                         ooscript::CallArgs& oojsArgs) {
   OOJS_NATIVE_ENTER(context)
 
-  return RemoveOrExplodeShip(context, oojsArgs, YES);
+  return RemoveOrExplodeShip(context, oojsArgs, true);
 
   OOJS_NATIVE_EXIT
 }
@@ -2926,7 +2926,7 @@ static bool ShipCanAwardEquipment(ooscript::Context context,
   std::string ctx =
       "scripted";  // a nil context fails the check below, as "" does
   bool result;
-  BOOL exists;
+  bool exists;
 
   GET_THIS_SHIP(thisEnt);
   ShipEntity* ship = thisEnt;  // not null: thisEnt is not
@@ -3546,17 +3546,17 @@ static bool ShipSetMaterials(ooscript::Context context,
                              ooscript::CallArgs& oojsArgs) {
   OOJS_NATIVE_ENTER(context)
 
-  ShipEntity* thisEnt = nil;
+  ShipEntity* thisEnt = nullptr;
 
   if (oojsArgs.count() < 1) {
     cxx_OOJSReportBadArguments(context, "Ship", "setMaterials", 0, OOJS_ARGV,
                                std::nullopt, "parameter object");
-    return NO;
+    return false;
   }
 
   GET_THIS_SHIP(thisEnt);
 
-  return ShipSetMaterialsInternal(context, oojsArgs, thisEnt, NO);
+  return ShipSetMaterialsInternal(context, oojsArgs, thisEnt, false);
 
   OOJS_NATIVE_EXIT
 }
@@ -3566,14 +3566,14 @@ static bool ShipSetShaders(ooscript::Context context,
                            ooscript::CallArgs& oojsArgs) {
   OOJS_NATIVE_ENTER(context)
 
-  ShipEntity* thisEnt = nil;
+  ShipEntity* thisEnt = nullptr;
 
   GET_THIS_SHIP(thisEnt);
 
   if (oojsArgs.count() < 1) {
     cxx_OOJSReportBadArguments(context, "Ship", "setShaders", 0, OOJS_ARGV,
                                std::nullopt, "parameter object");
-    return NO;
+    return false;
   }
 
   if (ooscript::isNull(OOJS_ARGV[0]) ||
@@ -3586,11 +3586,11 @@ static bool ShipSetShaders(ooscript::Context context,
         cxx_OOStringFromJSValueEvenIfNull(context, OOJS_ARGV[0])
             .value_or("(null)")
             .c_str());
-    OOJS_RETURN_BOOL(NO);
+    OOJS_RETURN_BOOL(false);
   }
 
   OOJS_ARGV[1] = OOJS_ARGV[0];
-  return ShipSetMaterialsInternal(context, oojsArgs, thisEnt, YES);
+  return ShipSetMaterialsInternal(context, oojsArgs, thisEnt, true);
 
   OOJS_NATIVE_EXIT
 }

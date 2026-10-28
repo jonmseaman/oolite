@@ -106,7 +106,7 @@ static bool WorldScriptsGetProperty(Context cx, Object obj, PropertyId propID,
   std::optional<std::string> scriptName;
   OOScript* script = nullptr;
 
-  if (!ooscript::isStringId(jsPropID)) return YES;
+  if (!ooscript::isStringId(jsPropID)) return true;
   scriptName =
       cxx_OOStringFromJSString(context, ooscript::idToString(jsPropID));
 
@@ -136,7 +136,7 @@ static bool WorldScriptsGetProperty(Context cx, Object obj, PropertyId propID,
     }
   }
 
-  return YES;
+  return true;
 
   OOJS_NATIVE_EXIT
 }
@@ -167,10 +167,10 @@ static bool WorldScriptsEnumerate(Context cx, Object obj) {
     if (!ooscript::defineProperty(cx, obj, name.c_str(), nullVal,
                                   WorldScriptsGetProperty, nullptr,
                                   kWorldScriptsPropertyFlags))
-      return NO;
+      return false;
   }
 
-  return YES;
+  return true;
 
   OOJS_NATIVE_EXIT
 }

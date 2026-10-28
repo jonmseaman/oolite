@@ -130,7 +130,7 @@ namespace {
 std::optional<std::string>
     sCurrentMissionKey;  // nullopt: no current mission (was nil)
 }  // namespace
-static ShipEntity* scriptTarget = nil;
+static ShipEntity* scriptTarget = nullptr;
 
 namespace {
 std::string CurrentScriptNameOr(const std::string& alternative) {
@@ -264,7 +264,7 @@ double QueryDoubleValue(const oo::PList& value) {
 void PerformScriptActions(const oo::PList& actions, Entity* target);
 void PerformConditionalStatment(const oo::PList& actions, Entity* target);
 void PerformActionStatment(const oo::PList& statement, Entity* target);
-BOOL TestScriptConditions(const oo::PList& conditions);
+bool TestScriptConditions(const oo::PList& conditions);
 }  // namespace
 
 namespace {
@@ -349,7 +349,7 @@ void PerformActionStatment(const oo::PList& statement, Entity* target) {
   }
 }
 
-BOOL TestScriptConditions(const oo::PList& conditions) {
+bool TestScriptConditions(const oo::PList& conditions) {
   PlayerEntity* player = PLAYER;  // no player: every condition failed, as a
                                   // message to nil answered
 
@@ -357,11 +357,11 @@ BOOL TestScriptConditions(const oo::PList& conditions) {
           conditions.getIf<oo::PList::Array>()) {
     for (const oo::PList& condition : *conditionArray) {
       if (player == nullptr || !player->scriptTestCondition(condition))
-        return NO;
+        return false;
     }
   }
 
-  return YES;
+  return true;
 }
 }  // namespace
 
@@ -385,7 +385,7 @@ OOINLINE OOEntityStatus RecursiveRemapStatus(OOEntityStatus status) {
   }
 }
 
-static BOOL sRunningScript = NO;
+static bool sRunningScript = false;
 
 // Return the world scripts that care about -checkScript, by name, in the world
 // scripts' (load) order.
@@ -407,7 +407,7 @@ PlayerEntity::getWorldScriptsRequiringTickle() {
 }
 
 void PlayerEntity::checkScript() {
-  BOOL wasRunningScript = sRunningScript;
+  bool wasRunningScript = sRunningScript;
   OOEntityStatus status, restoreStatus;
 
   const std::vector<std::pair<std::string, oo::Ref<OOScript>>> tickleScripts =
@@ -446,7 +446,7 @@ void PlayerEntity::checkScript() {
       status = RecursiveRemapStatus(status);
       setStatus(status);
     }
-    sRunningScript = YES;
+    sRunningScript = true;
 
     // After all that, actually running the scripts is trivial. ORDER-SENSITIVE
     // (decision D): load order (was script-name byte order, and before that the
@@ -506,7 +506,7 @@ void PlayerEntity::runUnsanitizedScriptActions(
 }
 
 bool PlayerEntity::scriptTestConditions(const oo::PList& array) {
-  BOOL result = NO;
+  bool result = false;
 
   try {
     result = TestScriptConditions(array);
@@ -557,10 +557,10 @@ bool PlayerEntity::scriptTestCondition(const oo::PList& scriptCondition) {
   std::optional<std::string> lhsString;
   std::string expandedRHS;
   double lhsValue, rhsValue;
-  BOOL lhsFlag, rhsFlag;
+  bool lhsFlag, rhsFlag;
 
   opType = (OOOperationType)scriptCondition.at<unsigned int>(0);
-  if (opType == OP_FALSE) return NO;
+  if (opType == OP_FALSE) return false;
 
   selectorString = scriptCondition.at<std::string>(2);
   comparator = (OOComparisonType)scriptCondition.at<unsigned int>(3);
@@ -608,16 +608,16 @@ bool PlayerEntity::scriptTestCondition(const oo::PList& scriptCondition) {
         return DOUBLEVAL(lhsString) > oo::str::doubleValue(expandedRHS);
 
       case COMPARISON_ONEOF: {
-        if (!lhsString.has_value()) return NO;  // nil matched nothing
+        if (!lhsString.has_value()) return false;  // nil matched nothing
         const std::string trimmedLHS = TrimWhitespace(*lhsString);
 
         for (const std::string& rhsItem : oo::str::split(expandedRHS, ",")) {
           if (trimmedLHS == TrimWhitespace(rhsItem)) {
-            return YES;
+            return true;
           }
         }
       }
-        return NO;
+        return false;
     }
   } else if (opType == OP_NUMBER) {
     lhsValue = QueryDoubleValue(oo::CallEntityByName(this, selector));
@@ -627,11 +627,11 @@ bool PlayerEntity::scriptTestCondition(const oo::PList& scriptCondition) {
         rhsValue = oo::str::doubleValue(rhsItem);
 
         if (lhsValue == rhsValue) {
-          return YES;
+          return true;
         }
       }
 
-      return NO;
+      return false;
     } else {
       rhsValue = oo::str::doubleValue(expandedRHS);
 
@@ -657,7 +657,7 @@ bool PlayerEntity::scriptTestCondition(const oo::PList& scriptCondition) {
                  "numbers, evaluating to false.",
                  CurrentScriptDescription(),
                  cxx_OOComparisonTypeToString(comparator));
-          return NO;
+          return false;
       }
     }
   } else if (opType == OP_BOOL) {
@@ -682,7 +682,7 @@ bool PlayerEntity::scriptTestCondition(const oo::PList& scriptCondition) {
                "booleans, evaluating to false.",
                CurrentScriptDescription(),
                cxx_OOComparisonTypeToString(comparator));
-        return NO;
+        return false;
     }
   }
 
@@ -698,7 +698,7 @@ bool PlayerEntity::scriptTestCondition(const oo::PList& scriptCondition) {
          "***** SCRIPT ERROR: in {}, unhandled condition '{}' ({}). {}",
          CurrentScriptDescription(), scriptCondition.at<std::string>(1),
          conditionDescription, "This is an internal error, please report it.");
-  return NO;
+  return false;
 }
 
 std::optional<std::string> PlayerEntity::expandScriptRightHandSide(
@@ -828,7 +828,7 @@ oo::PList PlayerEntity::missionsList() {
       result1.push_back(vars);
     } else if (const oo::PList::Array* varList =
                    vars.getIf<oo::PList::Array>()) {
-      BOOL found = NO;
+      bool found = false;
       const std::optional<std::string> header = StringAtIndex(vars, 0);
       for (std::size_t i = 0; i < result2.size(); i++) {
         const std::optional<std::string> elementHeader =
@@ -842,7 +842,7 @@ oo::PList PlayerEntity::missionsList() {
           oo::PList::Array merged = *element.getIf<oo::PList::Array>();
           merged.insert(merged.end(), varList->begin() + 1, varList->end());
           result2.push_back(oo::PList(std::move(merged)));
-          found = YES;
+          found = true;
           break;
         }
       }
@@ -1338,7 +1338,7 @@ void PlayerEntity::awardEquipment(
            CurrentScriptDescription(), equipKey);
   } else if ((eqType != nullptr ? eqType->canCarryMultiple() : false) ||
              !hasEquipmentItem(oo::PList(equipKey))) {
-    addEquipmentItem(equipKey, YES, "scripted");
+    addEquipmentItem(equipKey, true, "scripted");
   }
 }
 
@@ -1472,7 +1472,7 @@ void PlayerEntity::awardCargo(
   awardCommodityType(type, amount);
 }
 
-void PlayerEntity::removeAllCargo() { removeAllCargo(NO); }
+void PlayerEntity::removeAllCargo() { removeAllCargo(false); }
 
 void PlayerEntity::removeAllCargo(bool forceRemoval) {
   // Misnamed method. It only removes cargo measured in TONS, g & Kg items are
@@ -1521,7 +1521,7 @@ void PlayerEntity::useSpecialCargo(
   if (::scriptTarget != this) return;
 
   const std::string description = descriptionString;
-  removeAllCargo(YES);
+  removeAllCargo(true);
   OO_LOG(kOOLogNoteUseSpecialCargo, "Going to useSpecialCargo:'{}'",
          description);
   specialCargo = cxx_OOExpand(description);
@@ -1583,7 +1583,7 @@ void PlayerEntity::messageShipAIs(
 
 void PlayerEntity::ejectItem(const std::string& itemKey)  // called by name
 {
-  if (::scriptTarget == nil) ::scriptTarget = oo::ToShip(this);
+  if (::scriptTarget == nullptr) ::scriptTarget = oo::ToShip(this);
   if (::scriptTarget != nullptr) ::scriptTarget->ejectShipOfType(itemKey);
 }
 
@@ -1811,7 +1811,7 @@ void PlayerEntity::set(
   std::vector<std::string> tokens = oo::str::tokens(argument);
   std::string missionVariableString;
   std::string valueString;
-  BOOL hasMissionPrefix, hasLocalPrefix;
+  bool hasMissionPrefix, hasLocalPrefix;
 
   if (tokens.size() < 2) {
     OO_LOG(kOOLogSyntaxSet,
@@ -1848,7 +1848,7 @@ void PlayerEntity::set(
 void PlayerEntity::reset(const std::string& missionvariable)  // called by name
 {
   const std::string missionVariableString = TrimWhitespace(missionvariable);
-  BOOL hasMissionPrefix, hasLocalPrefix;
+  bool hasMissionPrefix, hasLocalPrefix;
 
   hasMissionPrefix = oo::str::hasPrefix(missionVariableString, "mission_");
   hasLocalPrefix = oo::str::hasPrefix(missionVariableString, "local_");
@@ -1869,7 +1869,7 @@ void PlayerEntity::increment(
     const std::string& missionVariableObject)  // called by name
 {
   const std::string missionVariableString = missionVariableObject;
-  BOOL hasMissionPrefix, hasLocalPrefix;
+  bool hasMissionPrefix, hasLocalPrefix;
   int value = 0;
 
   hasMissionPrefix = oo::str::hasPrefix(missionVariableString, "mission_");
@@ -1901,7 +1901,7 @@ void PlayerEntity::decrement(
     const std::string& missionVariableObject)  // called by name
 {
   const std::string missionVariableString = missionVariableObject;
-  BOOL hasMissionPrefix, hasLocalPrefix;
+  bool hasMissionPrefix, hasLocalPrefix;
   int value = 0;
 
   hasMissionPrefix = oo::str::hasPrefix(missionVariableString, "mission_");
@@ -1937,7 +1937,7 @@ void PlayerEntity::add(
   std::string valueString;
   double value;
   std::vector<std::string> tokens = oo::str::tokens(argument);
-  BOOL hasMissionPrefix, hasLocalPrefix;
+  bool hasMissionPrefix, hasLocalPrefix;
 
   if (tokens.size() < 2) {
     OO_LOG(kOOLogSyntaxAdd, "***** SCRIPT ERROR: in {}, CANNOT ADD: '{}'",
@@ -1981,7 +1981,7 @@ void PlayerEntity::subtract(
   std::string valueString;
   double value;
   std::vector<std::string> tokens = oo::str::tokens(argument);
-  BOOL hasMissionPrefix, hasLocalPrefix;
+  bool hasMissionPrefix, hasLocalPrefix;
 
   if (tokens.size() < 2) {
     OO_LOG(kOOLogSyntaxSubtract,
@@ -2135,19 +2135,19 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
   gui->setSelectableRange(NSMakeRange(0, 0));  // clears the selectable range
   if (UNIVERSE != nullptr)
     UNIVERSE->enterGUIViewModeWithMouseInteraction(
-        YES);  // enables mouse selection of the choices list items
+        true);  // enables mouse selection of the choices list items
 
   OOGUIRow choicesRow = (end_row + 1) - keysCount;
   std::string choiceText;
 
-  BOOL selectableRowExists = NO;
+  bool selectableRowExists = false;
   NSUInteger firstSelectableRow = end_row;
 
   for (const std::string& choiceKey : choiceKeys) {
     const oo::PList& choiceValue = *choicesDict.find(choiceKey);
     OOGUIAlignment alignment = GUI_ALIGN_CENTER;
     oo::Ref<OOColor> rowColor = OOColor::yellowColor();
-    BOOL selectable = YES;
+    bool selectable = true;
     if (const std::string* text = choiceValue.getIf<std::string>()) {
       choiceText = " " + *text + " ";
     } else if (choiceValue.isDict()) {
@@ -2169,7 +2169,7 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
       }
       const oo::PList* colorDesc = choiceValue.find("color");
       if (choiceValue.get<bool>("unselectable")) {
-        selectable = NO;
+        selectable = false;
       }
       if (colorDesc != nullptr) {
         rowColor = OOColor::colorWithDescription(*colorDesc);
@@ -2192,7 +2192,7 @@ void PlayerEntity::setMissionChoicesDictionary(const oo::PList& choicesDict) {
       }
       gui->setColor(rowColor.get(), choicesRow);
       if (selectable && !selectableRowExists) {
-        selectableRowExists = YES;
+        selectableRowExists = true;
         firstSelectableRow = choicesRow;
       }
     } else {
@@ -2257,8 +2257,8 @@ void PlayerEntity::showShipModel(const std::string& role)  // called by name
   }
 
   ::ShipEntity* ship =
-      (UNIVERSE != nullptr ? UNIVERSE->makeDemoShipWithRole(roleString, YES)
-                           : (::ShipEntity*)nil);
+      (UNIVERSE != nullptr ? UNIVERSE->makeDemoShipWithRole(roleString, true)
+                           : (::ShipEntity*)nullptr);
   OO_LOG(kOOLogNoteShowShipModel, "::::: showShipModel:'{}' ({}) ({})",
          roleString, oo::EntityDescription(ship),
          (ship != nullptr ? ship->getName() : std::optional<std::string>())
@@ -2330,13 +2330,13 @@ void PlayerEntity::setSunNovaIn(
 {
   double time_until_nova = oo::str::doubleValue(time_value);
   if ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr)
-    UNIVERSE->sun()->setGoingNova(YES, time_until_nova);
+    UNIVERSE->sun()->setGoingNova(true, time_until_nova);
 }
 
 void PlayerEntity::launchFromStation() {
   // ensure autosave is ready for the next unscripted launch
   if ((UNIVERSE != nullptr ? UNIVERSE->getAutoSave() : false)) {
-    if (UNIVERSE != nullptr) UNIVERSE->setAutoSaveNow(YES);
+    if (UNIVERSE != nullptr) UNIVERSE->setAutoSaveNow(true);
   }
   if (status() == STATUS_DOCKING)
     setStatus(STATUS_DOCKED);  // needed here to prevent the normal update from
@@ -2345,10 +2345,10 @@ void PlayerEntity::launchFromStation() {
 }
 
 void PlayerEntity::blowUpStation() {
-  ::StationEntity* mainStation = nil;
+  ::StationEntity* mainStation = nullptr;
 
   mainStation = (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr);
-  if (mainStation != nil) {
+  if (mainStation != nullptr) {
     if (UNIVERSE != nullptr) UNIVERSE->unMagicMainStation();
     if (mainStation != nullptr)
       mainStation->takeEnergyDamage(
@@ -2419,7 +2419,7 @@ void PlayerEntity::addPlanet(const std::string& planetKey)  // called by name
 ::OOPlanetEntity* PlayerEntity::addPlanetEntity(const std::string& planetKey) {
   OO_LOG(kOOLogNoteAddPlanet, "addPlanet: {}", planetKey);
 
-  if (!UNIVERSE) return nil;
+  if (!UNIVERSE) return nullptr;
   // The system properties, once, as an oo::PList (null when there are none).
   const oo::PList dict =
       ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) != nullptr
@@ -2429,7 +2429,7 @@ void PlayerEntity::addPlanet(const std::string& planetKey)  // called by name
     OO_LOG("script.error.addPlanet.keyNotFound",
            "***** ERROR: could not find an entry in planetinfo.plist for '{}'",
            planetKey);
-    return nil;
+    return nullptr;
   }
 
   /*- add planet -*/
@@ -2468,14 +2468,14 @@ void PlayerEntity::addPlanet(const std::string& planetKey)  // called by name
            "***** ERROR: you must specify a position for scripted planet '{}' "
            "before it can be created",
            planetKey);
-    return nil;
+    return nullptr;
   }
 
   const std::string positionString =
       ConditionString(*positionValue).value_or(std::string());
   if (oo::str::hasPrefix(positionString, "abs ") &&
-      ((UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr) != nil ||
-       (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nil)) {
+      ((UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr) != nullptr ||
+       (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr)) {
     OO_LOG_WARN("script.deprecated",
                 "setting {} for {} '{}' in 'abs' inside .plists can cause "
                 "compatibility issues across Oolite versions. Use coordinates "
@@ -2511,7 +2511,7 @@ void PlayerEntity::addMoon(const std::string& moonKey)  // called by name
 ::OOPlanetEntity* PlayerEntity::addMoonEntity(const std::string& moonKey) {
   OO_LOG(kOOLogNoteAddPlanet, "DEBUG: addMoon '{}'", moonKey);
 
-  if (!UNIVERSE) return nil;
+  if (!UNIVERSE) return nullptr;
   // The system properties, once, as an oo::PList (null when there are none).
   const oo::PList dict =
       ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) != nullptr
@@ -2521,7 +2521,7 @@ void PlayerEntity::addMoon(const std::string& moonKey)  // called by name
     OO_LOG("script.error.addPlanet.keyNotFound",
            "***** ERROR: could not find an entry in planetinfo.plist for '{}'",
            moonKey);
-    return nil;
+    return nullptr;
   }
 
   /*- add planet -*/
@@ -2560,14 +2560,14 @@ void PlayerEntity::addMoon(const std::string& moonKey)  // called by name
            "***** ERROR: you must specify a position for scripted moon '{}' "
            "before it can be created",
            moonKey);
-    return nil;
+    return nullptr;
   }
 
   const std::string positionString =
       ConditionString(*positionValue).value_or(std::string());
   if (oo::str::hasPrefix(positionString, "abs ") &&
-      ((UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr) != nil ||
-       (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nil)) {
+      ((UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr) != nullptr ||
+       (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr)) {
     OO_LOG_WARN("script.deprecated",
                 "setting {} for {} '{}' in 'abs' inside .plists can cause "
                 "compatibility issues across Oolite versions. Use coordinates "
@@ -2619,7 +2619,7 @@ void PlayerEntity::playSound(const std::string& soundName)  // called by name
 
 void PlayerEntity::doMissionCallback() {
   // make sure we don't call the same callback twice
-  _missionWithCallback = NO;
+  _missionWithCallback = false;
   OOJavaScriptEngine::sharedEngine()->runMissionCallback();
 }
 
@@ -2634,7 +2634,7 @@ std::optional<std::string> PlayerEntity::missionScreenID() {
 }
 
 void PlayerEntity::endMissionScreenAndNoteOpportunity() {
-  _missionAllowInterrupt = NO;
+  _missionAllowInterrupt = false;
   clearMissionScreenID();
   // Older scripts might intercept missionScreenEnded first, and call secondary
   // mission screens.
@@ -2652,7 +2652,7 @@ void PlayerEntity::setGuiToMissionScreen() {
   // likewise exit screen target
   setMissionExitScreen(GUI_SCREEN_STATUS);
 
-  setGuiToMissionScreenWithCallback(NO);
+  setGuiToMissionScreenWithCallback(false);
 }
 
 void PlayerEntity::refreshMissionScreenTextEntry() {
@@ -2675,7 +2675,7 @@ void PlayerEntity::refreshMissionScreenTextEntry() {
       end_row, GUI_ALIGN_LEFT);
   gui->setColor(OOColor::cyanColor().get(), end_row);
 
-  gui->setShowTextCursor(YES);
+  gui->setShowTextCursor(true);
   gui->setCurrentRow(end_row);
 }
 
@@ -2696,7 +2696,7 @@ void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
       gui->setText(OO_DESC("press-space-commander"), end_row, GUI_ALIGN_CENTER);
       gui->setColor(OOColor::yellowColor().get(), end_row);
       gui->setKey("spacebar", end_row);
-      gui->setShowTextCursor(NO);
+      gui->setShowTextCursor(false);
     } else {
       refreshMissionScreenTextEntry();
     }
@@ -2705,7 +2705,7 @@ void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
     gui->setForegroundTextureDescriptor(missionOverlayDescriptorOrDefault());
     gui->setBackgroundTextureDescriptor(missionBackgroundDescriptorOrDefault());
     // must set special second as setting the descriptor resets it
-    BOOL overridden = missionBackgroundDescriptor() ? YES : NO;
+    bool overridden = missionBackgroundDescriptor() ? true : false;
     gui->setBackgroundTextureSpecial(missionBackgroundSpecial(), !overridden);
   }
   /* ends */
@@ -2719,9 +2719,9 @@ void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
   OOMusicController::sharedController()->playMissionMusic();
 
   // the following are necessary...
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(NO);
+  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
   _missionWithCallback = callback;
-  _missionAllowInterrupt = NO;
+  _missionAllowInterrupt = false;
   noteGUIDidChangeFrom(oldScreen, gui_screen);
 }
 
@@ -2733,7 +2733,7 @@ void PlayerEntity::setBackgroundFromDescriptionsKey(const std::string& d_key) {
   //
   addScene(items, kZeroVector);
   //
-  setShowDemoShips(YES);
+  setShowDemoShips(true);
 }
 
 void PlayerEntity::addScene(const oo::PList& items, Vector off) {
@@ -2760,7 +2760,7 @@ bool PlayerEntity::processSceneDictionary(const oo::PList& couplet,
   oo::PList else_actions;
   if (const oo::PList* elseActions = couplet.find("else"))
     else_actions = oo::PList(oo::PList::Array{*elseActions});
-  BOOL success = YES;
+  bool success = true;
   // ("%@" of the dictionaries: their round-tripped descriptions, the same text)
   if (conditions == nullptr) {
     OO_LOG("script.scene.couplet.badConditions",
@@ -2772,7 +2772,7 @@ bool PlayerEntity::processSceneDictionary(const oo::PList& couplet,
       OO_LOG("script.scene.couplet.badConditions",
              "***** SCENE ERROR: {} - conditions not {}, returning {}.",
              oo::DescriptionOf(*conditions), "an array", "NO");
-      return NO;
+      return false;
     }
   }
 
@@ -2796,7 +2796,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
 
   const std::vector<std::string> i_info = oo::str::tokens(item);
   if (i_info.empty())
-    return NO;  // (nil returned NO; an all-blank string raised on
+    return false;  // (nil returned NO; an all-blank string raised on
                 // -objectAtIndex:0)
   const std::string i_key = oo::str::lowercase(i_info[0]);
 
@@ -2820,7 +2820,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
   //
   if (i_key == "scene") {
     if (i_info.size() != 5)  // must be scene_key_x_y_z
-      return NO;             //		   0.... 1.. 2 3 4
+      return false;             //		   0.... 1.. 2 3 4
     const std::string& scene_key = i_info[1];
     Vector scene_offset = {};
     cxx_ScanVectorFromString(joined(2, 3), &scene_offset);
@@ -2835,9 +2835,9 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     //
     if (!scene_items.isNull()) {
       addScene(scene_items, scene_offset);
-      return YES;
+      return true;
     } else
-      return NO;
+      return false;
   }
   //
   // Add ship models:
@@ -2845,19 +2845,19 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
   if (i_key == "ship" || i_key == "model" || i_key == "role") {
     if (i_info.size() != 10)  // must be item_name_x_y_z_W_X_Y_Z_align
     {
-      return NO;  //		   0... 1... 2 3 4 5 6 7 8 9....
+      return false;  //		   0... 1... 2 3 4 5 6 7 8 9....
     }
 
-    ::ShipEntity* ship = nil;
+    ::ShipEntity* ship = nullptr;
 
     if (i_key == "ship" || i_key == "model") {
       ship = (UNIVERSE != nullptr ? UNIVERSE->newShipWithName(i_info[1])
-                                  : (::ShipEntity*)nil);
+                                  : (::ShipEntity*)nullptr);
     } else if (i_key == "role") {
       ship = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(i_info[1])
-                                  : (::ShipEntity*)nil);
+                                  : (::ShipEntity*)nullptr);
     }
-    if (!ship) return NO;
+    if (!ship) return false;
 
     cxx_ScanVectorAndQuaternionFromString(joined(2, 7), &model_p0, &model_q);
 
@@ -2883,20 +2883,20 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     if (ship != nullptr) ship->setBehaviour(BEHAVIOUR_STOP_STILL);
 
     if (ship != nullptr) oo::ReleaseEntity(ship);
-    return YES;
+    return true;
   }
   //
   // Add player ship model:
   //
   if (i_key == "player") {
     if (i_info.size() != 9)  // must be player_x_y_z_W_X_Y_Z_align
-      return NO;             //		   0..... 1 2 3 4 5 6 7 8....
+      return false;             //		   0..... 1 2 3 4 5 6 7 8....
 
     ::ShipEntity* doppelganger =
         (UNIVERSE != nullptr
              ? UNIVERSE->newShipWithName(shipDataKey().value_or(std::string()))
-             : (::ShipEntity*)nil);  // retain count = 1
-    if (!doppelganger) return NO;
+             : (::ShipEntity*)nullptr);  // retain count = 1
+    if (!doppelganger) return false;
 
     cxx_ScanVectorAndQuaternionFromString(joined(1, 7), &model_p0, &model_q);
 
@@ -2927,14 +2927,14 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
       doppelganger->setBehaviour(BEHAVIOUR_STOP_STILL);
 
     if (doppelganger != nullptr) oo::ReleaseEntity(doppelganger);
-    return YES;
+    return true;
   }
   //
   // Add  planet model: selected via gui-scene-show-planet/-local-planet
   //
   if (i_key == "local-planet" || i_key == "target-planet") {
     if (i_info.size() != 4)  // must be xxxxx-planet_x_y_z
-      return NO;             //		   0........... 1 2 3
+      return false;             //		   0........... 1 2 3
 
     // sunlight position for F7 screen is chosen pseudo randomly from  4
     // different positions.
@@ -2950,7 +2950,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     if (UNIVERSE != nullptr)
       UNIVERSE->setMainLightPosition(_sysInfoLight);  // set light origin
 
-    ::OOPlanetEntity* originalPlanet = nil;
+    ::OOPlanetEntity* originalPlanet = nullptr;
     if (i_key == "local-planet" &&
         (UNIVERSE != nullptr && UNIVERSE->sun() != nullptr)) {
       originalPlanet = (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr);
@@ -2969,7 +2969,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
       oo::MadeEntity(miniature);
       doppelganger = miniature.get();
     }
-    if (doppelganger == nil) return NO;
+    if (doppelganger == nullptr) return false;
 
     cxx_ScanVectorFromString(joined(1, 3), &model_p0);
 
@@ -3004,10 +3004,10 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     if (doppelganger != nullptr) doppelganger->update(deltaT);
     if (UNIVERSE != nullptr) UNIVERSE->addEntity(doppelganger);
 
-    return YES;
+    return true;
   }
 
-  return NO;
+  return false;
 }
 
 bool PlayerEntity::addEqScriptForKey(const std::string& eq_key) {
@@ -3022,10 +3022,10 @@ bool PlayerEntity::addEqScriptForKey(const std::string& eq_key) {
          "Added equipment {}, with the following script property: '{}'.",
          eq_key, scriptName.value_or("(null)"));
 
-  if (!scriptName.has_value()) return NO;
+  if (!scriptName.has_value()) return false;
 
   // no duplicates! (eqScripts holds (key, script) pairs)
-  if (eqScriptIndexForKey(eq_key) != eqScripts.size()) return NO;
+  if (eqScriptIndexForKey(eq_key) != eqScripts.size()) return false;
 
   // the script's properties: a mixed configuration
   oo::PList::Dict properties;
@@ -3033,7 +3033,7 @@ bool PlayerEntity::addEqScriptForKey(const std::string& eq_key) {
   properties["equipmentKey"] = oo::PList(eq_key);
   oo::Ref<OOScript> s = OOScript::jsScriptFromFileNamed(
       *scriptName, oo::PList(std::move(properties)));
-  if (s == nullptr) return NO;
+  if (s == nullptr) return false;
 
   OO_LOG("player.equipmentScript", "Script '{}': installation {}successful.",
          *scriptName, (s == nullptr ? "un" : ""));
@@ -3043,7 +3043,7 @@ bool PlayerEntity::addEqScriptForKey(const std::string& eq_key) {
     primedEquipment++;  // if primed-none, keep it as primed-none.
   OO_LOG("player.equipmentScript", "Scriptable equipment available: {}.",
          eqScripts.size());
-  return YES;
+  return true;
 }
 
 void PlayerEntity::removeEqScriptForKey(const std::string& eq_key) {
@@ -3090,7 +3090,7 @@ void PlayerEntity::targetNearestHostile() {
   scanForHostiles();
   Entity* ent = foundTarget();
   if (ent != nullptr) {
-    ident_engaged = YES;
+    ident_engaged = true;
     missile_status = MISSILE_STATUS_TARGET_LOCKED;
     addTarget(ent);
   }
@@ -3100,7 +3100,7 @@ void PlayerEntity::targetNearestIncomingMissile() {
   scanForNearestIncomingMissile();
   Entity* ent = foundTarget();
   if (ent != nullptr) {
-    ident_engaged = YES;
+    ident_engaged = true;
     missile_status = MISSILE_STATUS_TARGET_LOCKED;
     addTarget(ent);
   }

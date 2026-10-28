@@ -92,7 +92,7 @@ bool OOJoystickManager::getButtonState(int function) {
   return butstate[function];
 }
 
-const BOOL* OOJoystickManager::getAllButtonStates() { return butstate; }
+const bool* OOJoystickManager::getAllButtonStates() { return butstate; }
 
 bool OOJoystickManager::isButtonDown(int button, int stickNum) {
   return true_butstate[stickNum][button];

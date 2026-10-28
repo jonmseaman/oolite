@@ -191,23 +191,23 @@ typedef struct {
   ooscript::Value function;  // Caller is responsible for ensuring this is a
                              // function object (using OOJSValueIsFunction()).
   ooscript::Object jsThis;
-  BOOL errorFlag;  // Set if a JS exception occurs. The
+  bool errorFlag;  // Set if a JS exception occurs. The
                    // exception will have been reported.
                    // This also supresses further filtering.
 } JSFunctionPredicateParameter;
-OOJS_EXTERN_C BOOL JSFunctionPredicate(Entity* entity, void* parameter);
+bool JSFunctionPredicate(Entity* entity, void* parameter);
 
 // YES for ships and (normal) planets. Parameter: ignored.
-OOJS_EXTERN_C BOOL JSEntityIsJavaScriptVisiblePredicate(Entity* entity,
+bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity,
                                                         void* parameter);
 
 // YES for ships other than sub-entities and menu-display ships, and planets
 // other than atmospheres and menu miniatures. Parameter: ignored.
-OOJS_EXTERN_C BOOL JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
+bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
                                                            void* parameter);
 
 // YES for menu-display ships. Parameter: ignored
-OOJS_EXTERN_C BOOL JSEntityIsDemoShipPredicate(Entity* entity, void* parameter);
+bool JSEntityIsDemoShipPredicate(Entity* entity, void* parameter);
 
 /*	OOJSGetCxxPrivate() (OOJSPrivateObject.h) reads the C++ object every JS
    object's private slot holds.

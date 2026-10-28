@@ -29,7 +29,7 @@ MA 02110-1301, USA.
                                                 const oo::PList& dict) {
   const oo::Ref<ProxyPlayerEntity> proxy = oo::makeRef<ProxyPlayerEntity>();
   ::ShipEntity* ship = oo::ToShip(oo::NewShipObject(proxy, key, dict));
-  if (ship != nil) proxy->initProxyDefaults();
+  if (ship != nullptr) proxy->initProxyDefaults();
   return ship;
 }
 
@@ -49,7 +49,7 @@ void ProxyPlayerEntity::initProxyDefaults() {
 }
 
 void ProxyPlayerEntity::copyValuesFromPlayer(::PlayerEntity* player) {
-  if (player == nil) return;
+  if (player == nullptr) return;
 
   setFuelLeakRate((player != nullptr ? player->fuelLeakRate() : 0.0f));
   setMassLocked((player != nullptr ? player->massLocked() : false));
@@ -70,7 +70,7 @@ void ProxyPlayerEntity::copyValuesFromPlayer(::PlayerEntity* player) {
   setTradeInFactor((player != nullptr ? player->tradeInFactor() : int{}));
 }
 
-bool ProxyPlayerEntity::isPlayerLikeShip() { return YES; }
+bool ProxyPlayerEntity::isPlayerLikeShip() { return true; }
 
 float ProxyPlayerEntity::fuelLeakRate() { return _fuelLeakRate; }
 

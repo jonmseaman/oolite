@@ -32,13 +32,13 @@ MA 02110-1301, USA.
 
 ::ShipEntity* ShipEntity::ejectShipOfType(
     const std::optional<std::string>& shipKey) {
-  ::ShipEntity* item = nil;
+  ::ShipEntity* item = nullptr;
 
   if (shipKey.has_value()) {
     item = oo::ToShip(oo::AutoreleaseEntity(
         (UNIVERSE != nullptr ? UNIVERSE->newShipWithName(*shipKey)
-                             : (::ShipEntity*)nil)));
-    if (item != nil) dumpItem(item);
+                             : (::ShipEntity*)nullptr)));
+    if (item != nullptr) dumpItem(item);
   }
 
   return item;
@@ -46,13 +46,13 @@ MA 02110-1301, USA.
 
 ::ShipEntity* ShipEntity::ejectShipOfRole(
     const std::optional<std::string>& role) {
-  ::ShipEntity* item = nil;
+  ::ShipEntity* item = nullptr;
 
   if (role.has_value()) {
     item = oo::ToShip(oo::AutoreleaseEntity(
         (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(*role)
-                             : (::ShipEntity*)nil)));
-    if (item != nil) dumpItem(item);
+                             : (::ShipEntity*)nullptr)));
+    if (item != nullptr) dumpItem(item);
   }
 
   return item;
@@ -64,7 +64,7 @@ std::vector<oo::EntityHold> ShipEntity::spawnShipsWithRole(
       rootShipEntity());  // FIXME: (EMMSTRAN) implement an -absolutePosition
                           // method, use that in spawnShipWithRole:near:, and
                           // use self instead of root.
-  ::ShipEntity* spawned = nil;
+  ::ShipEntity* spawned = nullptr;
   std::vector<oo::EntityHold> result;
 
   if (count == 0) return result;
@@ -76,8 +76,8 @@ std::vector<oo::EntityHold> ShipEntity::spawnShipsWithRole(
 
   do {
     spawned = (UNIVERSE != nullptr ? UNIVERSE->spawnShipWithRole(role, ship)
-                                   : (::ShipEntity*)nil);
-    if (spawned != nil) {
+                                   : (::ShipEntity*)nullptr);
+    if (spawned != nullptr) {
       if (spawned != nullptr)
         spawned->setTemperature(randomEjectaTemperature());
       if (isMissileFlagSet() &&
@@ -86,7 +86,7 @@ std::vector<oo::EntityHold> ShipEntity::spawnShipsWithRole(
         if (spawned != nullptr)
           spawned->setOwner(ownerEntity());  // owner()'s C++ entity
         if (spawned != nullptr) spawned->addTarget(primaryTarget());
-        if (spawned != nullptr) spawned->setIsMissileFlag(YES);
+        if (spawned != nullptr) spawned->setIsMissileFlag(true);
       }
       if ((spawned != nullptr ? spawned->isMine() : false)) {
         if (spawned != nullptr) spawned->setOwner(this);

@@ -162,7 +162,7 @@ static bool SunGetProperty(Context cx, Object obj, PropertyId propID,
 
   OOJS_NATIVE_ENTER(context)
 
-  OOSunEntity* sun = nil;
+  OOSunEntity* sun = nullptr;
 
   if (EXPECT_NOT(!JSSunGetSunEntity(context, thisObj, &sun))) return false;
 
@@ -204,7 +204,7 @@ namespace {
 static bool SunGoNova(ooscript::Context context, ooscript::CallArgs& oojsArgs) {
   OOJS_NATIVE_ENTER(context)
 
-  OOSunEntity* sun = nil;
+  OOSunEntity* sun = nullptr;
   double delay = 0;
 
   if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun))) return false;
@@ -225,7 +225,7 @@ static bool SunCancelNova(ooscript::Context context,
                           ooscript::CallArgs& oojsArgs) {
   OOJS_NATIVE_ENTER(context)
 
-  OOSunEntity* sun = nil;
+  OOSunEntity* sun = nullptr;
 
   if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun))) return false;
 

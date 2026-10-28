@@ -13,7 +13,7 @@
    The expectations were written against the Objective-C file and run on it
    first; they pin the JS-visible behaviour (the four properties, goNova() and
    cancelNova(), a non-sun, a native's exception) and what the category answers
-   the engine. Run: bash tools/check-core-tests.sh
+   the engine. Run: tests/run.sh unit
 */
 
 #include "OOFoundation.h"
@@ -54,8 +54,8 @@ class OOSunEntity : public Entity {
 
   double _radius = 0;
   std::optional<std::string> _name;
-  BOOL _willGoNova = NO;
-  BOOL _goneNova = NO;
+  bool _willGoNova = false;
+  bool _goneNova = false;
   double _novaTime = 0;
   int _novaCalls = 0;
 };
@@ -198,7 +198,6 @@ std::map<ooscript::ClassDef*, int> sConverters;
 
 ooscript::Object gOOEntityJSPrototype = nullptr;
 
-extern "C" {
 
 ooscript::ClassDef* JSEntityClass(void) { return &sFakeEntityClass; }
 
@@ -219,13 +218,13 @@ void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
   sSuperclasses[subclass] = superclass;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
@@ -272,7 +271,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();
@@ -435,14 +433,14 @@ OO_TEST(nova) {
                 "undefined");  // not going nova: nothing to cancel
   OO_CHECK_EQ(sSun->_novaCalls, 3);
   // Gone nova: isGoingNova is false, and cancelNova() does nothing.
-  sSun->_willGoNova = YES;
-  sSun->_goneNova = YES;
+  sSun->_willGoNova = true;
+  sSun->_goneNova = true;
   OO_CHECK_EVAL("sun.hasGoneNova", "true");
   OO_CHECK_EVAL("sun.isGoingNova", "false");
   OO_CHECK_EVAL("sun.cancelNova()", "undefined");
   OO_CHECK_EQ(sSun->_novaCalls, 3);
-  sSun->_willGoNova = NO;
-  sSun->_goneNova = NO;
+  sSun->_willGoNova = false;
+  sSun->_goneNova = false;
 }
 
 OO_TEST(otherObjects) {

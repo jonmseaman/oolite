@@ -31,15 +31,9 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSEquipmentInfo(ooscript::Context context, ooscript::Object global);
 
-#ifdef __cplusplus
-}
-#endif
 
 /*	Given a ooscript::Value representing a string (equipment key) or a JS
    EquipmentInfo, return the corresponding EquipmentType or key. Note that
@@ -50,24 +44,16 @@ void InitOOJSEquipmentInfo(ooscript::Context context, ooscript::Object global);
  */
 class OOEquipmentType;  // OOEquipmentType.h
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 OOEquipmentType* JSValueToEquipmentType(ooscript::Context context,
                                         ooscript::Value value);
-extern "C++" {  // C++ results; nullopt where there is none
 std::optional<std::string> JSValueToEquipmentKey(ooscript::Context context,
                                                  ooscript::Value value);
 
-// outExists is BOOL *: its callers pass the address of a BOOL of their own.
+// outExists is bool *: its callers pass the address of a bool of their own.
 std::optional<std::string> JSValueToEquipmentKeyRelaxed(
-    ooscript::Context context, ooscript::Value value, BOOL* outExists);
-}
+    ooscript::Context context, ooscript::Value value, bool* outExists);
 
-#ifdef __cplusplus
-}
-#endif
 
 /*	The JS class name of OOEquipmentType's OOJSPrivateObject members,
    defined in OOJSEquipmentInfo.mm.

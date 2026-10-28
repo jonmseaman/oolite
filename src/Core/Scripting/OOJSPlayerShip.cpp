@@ -1544,7 +1544,7 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
       }
 
     case kPlayerShip_currentWeapon: {
-      BOOL exists = NO;  // JSValueToEquipmentKeyRelaxed() takes a BOOL *
+      bool exists = false;  // JSValueToEquipmentKeyRelaxed() takes a bool *
       sValue = JSValueToEquipmentKeyRelaxed(context, *value_raw, &exists);
       if (!exists || !sValue.has_value()) {
         sValue = "EQ_WEAPON_NONE";
@@ -1745,13 +1745,13 @@ static bool PlayerShipEngageAutopilotToStation(ooscript::Context context,
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
 
   PlayerEntity* player = OOPlayerForScripting();
-  StationEntity* stationForDocking = nil;
+  StationEntity* stationForDocking = nullptr;
 
   if (oojsArgs.count() > 0)
     stationForDocking = oo::ToStation(
         OOJSEntityFromJSValue(context,
                               OOJS_ARGV[0]));  // a station's object is a ship's
-  if (stationForDocking == nil) {
+  if (stationForDocking == nullptr) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "engageAutopilot",
                                MIN(oojsArgs.count(), 1U), OOJS_ARGV,
                                std::nullopt, "station");
@@ -1790,13 +1790,13 @@ static bool PlayerShipRequestDockingClearance(ooscript::Context context,
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
 
   PlayerEntity* player = OOPlayerForScripting();
-  StationEntity* stationForDocking = nil;
+  StationEntity* stationForDocking = nullptr;
 
   if (oojsArgs.count() > 0)
     stationForDocking = oo::ToStation(
         OOJSEntityFromJSValue(context,
                               OOJS_ARGV[0]));  // a station's object is a ship's
-  if (stationForDocking == nil) {
+  if (stationForDocking == nullptr) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "requestDockingClearance",
                                MIN(oojsArgs.count(), 1U), OOJS_ARGV,
                                std::nullopt, "station");
@@ -1818,13 +1818,13 @@ static bool PlayerShipCancelDockingRequest(ooscript::Context context,
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
 
   PlayerEntity* player = OOPlayerForScripting();
-  StationEntity* stationForDocking = nil;
+  StationEntity* stationForDocking = nullptr;
 
   if (oojsArgs.count() > 0)
     stationForDocking = oo::ToStation(
         OOJSEntityFromJSValue(context,
                               OOJS_ARGV[0]));  // a station's object is a ship's
-  if (stationForDocking == nil) {
+  if (stationForDocking == nullptr) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "cancelDockingRequest",
                                MIN(oojsArgs.count(), 1U), OOJS_ARGV,
                                std::nullopt, "station");

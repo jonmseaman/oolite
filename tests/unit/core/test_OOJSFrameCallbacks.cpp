@@ -18,7 +18,7 @@
    receives, adds and removes made while the callbacks run (deferred to the end
    of the frame), a throwing callback, growth past the first 16 slots, and
         removing all.
-        Run: bash tools/check-core-tests.sh
+        Run: tests/run.sh unit
 */
 
 #include <cstdarg>
@@ -34,10 +34,10 @@
 #include "oofnd/objc/OOObject.h"
 #include "ooscript/JSEngine.hpp"
 
-extern "C" void InitOOJSFrameCallbacks(ooscript::Context context,
+void InitOOJSFrameCallbacks(ooscript::Context context,
                                        ooscript::Object global);
-extern "C" void OOJSFrameCallbacksInvoke(OOTimeDelta delta);
-extern "C" void OOJSFrameCallbacksRemoveAll(void);
+void OOJSFrameCallbacksInvoke(OOTimeDelta delta);
+void OOJSFrameCallbacksRemoveAll(void);
 
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
@@ -117,12 +117,12 @@ std::string OOJSValue::className() const { return "OOJSValue"; }
 std::string OOJSValue::description() const { return "<OOJSValue>"; }
 
 #ifndef NDEBUG
-extern "C" void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta limit,
+void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta limit,
                                                    const char*, unsigned) {
   sLimiterDepth++;
   sLastLimit = limit;
 }
-extern "C" void OOJSStopTimeLimiter_(const char*, unsigned) { sLimiterDepth--; }
+void OOJSStopTimeLimiter_(const char*, unsigned) { sLimiterDepth--; }
 #else
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit) {
   sLimiterDepth++;
@@ -132,15 +132,15 @@ void OOJSStopTimeLimiter(void) { sLimiterDepth--; }
 #endif
 
 #if OOJS_PROFILE
-extern "C" void OOJSProfileEnter(OOJSProfileStackFrame*, const char*) {}
-extern "C" void OOJSProfileExit(OOJSProfileStackFrame*) {}
+void OOJSProfileEnter(OOJSProfileStackFrame*, const char*) {}
+void OOJSProfileExit(OOJSProfileStackFrame*) {}
 #endif
 
-extern "C" void OOJSPauseTimeLimiter(void) {}
-extern "C" void OOJSResumeTimeLimiter(void) {}
+void OOJSPauseTimeLimiter(void) {}
+void OOJSResumeTimeLimiter(void) {}
 
 #ifndef NDEBUG
-extern "C" void OOJSUnreachable(const char* function, const char*, unsigned) {
+void OOJSUnreachable(const char* function, const char*, unsigned) {
   std::printf("unreachable reached in %s\n", function);
   abort();
 }
@@ -158,7 +158,7 @@ typedef Universe FakeUniverse;
 double Universe::getTimeAccelerationFactor() { return 2.0; }
 
 class Universe;
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 // MARK: The context
 // -------------------------------------------------------------------------------

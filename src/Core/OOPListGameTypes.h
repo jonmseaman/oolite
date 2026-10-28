@@ -58,7 +58,7 @@ oo::PList OOPListFromQuaternion(
     Quaternion value);  // OOPropertyListFromQuaternion: {w x y z}
                         // single-precision reals
 
-BOOL OOFuzzyBooleanFromPList(
+bool OOFuzzyBooleanFromPList(
     const oo::PList* value,
     float defaultValue);  // OOFuzzyBooleanFromObject (draws randf())
 

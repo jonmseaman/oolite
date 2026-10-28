@@ -17,7 +17,7 @@
    dials the ship's facade answers by name for a proxy. The last case pins that
    the proxy and the player are visible to scripts. Every ship is C++ and its
    object is the drawable's facade, whose root category answers the dials by
-   name. Run: bash tools/check-core-tests.sh
+   name. Run: tests/run.sh unit
    test_ProxyPlayerEntity
 */
 
@@ -61,8 +61,8 @@ T* NewTestPlayer() {
 class TestDialPlayer : public PlayerEntity {
  public:
   float fuelLeakRate() override { return 2.5f; }
-  bool massLocked() override { return YES; }
-  bool atHyperspeed() override { return YES; }
+  bool massLocked() override { return true; }
+  bool atHyperspeed() override { return true; }
   GLfloat dialForwardShield() override { return 0.25f; }
   GLfloat dialAftShield() override { return 0.75f; }
   OOMissileStatus dialMissileStatus() override {
@@ -72,7 +72,7 @@ class TestDialPlayer : public PlayerEntity {
     return SCOOP_STATUS_ACTIVE;
   }
   OOCompassMode getCompassMode() override { return COMPASS_MODE_STATION; }
-  bool dialIdentEngaged() override { return YES; }
+  bool dialIdentEngaged() override { return true; }
   OOAlertCondition getAlertCondition() override { return ALERT_CONDITION_RED; }
   NSUInteger getTrumbleCount() override { return 7; }
   int tradeInFactor() override { return 80; }
@@ -81,8 +81,8 @@ class TestDialPlayer : public PlayerEntity {
 namespace {
 
 void SetUp() {
-  static Universe* universe = nil;
-  if (universe == nil) {
+  static Universe* universe = nullptr;
+  if (universe == nullptr) {
     universe = new Universe();  // never released
   }
   gSharedUniverse = universe;
@@ -153,12 +153,12 @@ OO_TEST(accessors) {
     OO_CHECK(proxy->fuelLeakRate() == 0);
     proxy->setFuelLeakRate(1.5f);
     OO_CHECK(proxy->fuelLeakRate() == 1.5f);
-    proxy->setMassLocked((BOOL)4);
-    OO_CHECK(proxy->massLocked() == YES);
-    proxy->setMassLocked(NO);
-    OO_CHECK(proxy->massLocked() == NO);
-    proxy->setAtHyperspeed((BOOL)2);
-    OO_CHECK(proxy->atHyperspeed() == YES);
+    proxy->setMassLocked((bool)4);
+    OO_CHECK(proxy->massLocked() == true);
+    proxy->setMassLocked(false);
+    OO_CHECK(proxy->massLocked() == false);
+    proxy->setAtHyperspeed((bool)2);
+    OO_CHECK(proxy->atHyperspeed() == true);
     proxy->setDialForwardShield(0.5f);
     proxy->setDialAftShield(0.125f);
     OO_CHECK(proxy->dialForwardShield() == 0.5f &&
@@ -169,8 +169,8 @@ OO_TEST(accessors) {
     OO_CHECK(proxy->dialFuelScoopStatus() == SCOOP_STATUS_FULL_HOLD);
     proxy->setCompassMode(COMPASS_MODE_TARGET);
     OO_CHECK(proxy->compassMode() == COMPASS_MODE_TARGET);
-    proxy->setDialIdentEngaged((BOOL)9);
-    OO_CHECK(proxy->dialIdentEngaged() == YES);
+    proxy->setDialIdentEngaged((bool)9);
+    OO_CHECK(proxy->dialIdentEngaged() == true);
     proxy->setAlertCondition(ALERT_CONDITION_YELLOW);
     OO_CHECK(proxy->alertCondition() == ALERT_CONDITION_YELLOW);
     proxy->setTrumbleCount(12);
@@ -221,7 +221,7 @@ OO_TEST(isPlayerLikeShip) {
 OO_TEST(objCProxyPartIsAProxy) {
   {
     SetUp();
-    Entity* object = nil;
+    Entity* object = nullptr;
     ProxyPlayerEntity* part = MakeProxy(&object);
     Entity* asEntity = object;
     OO_CHECK(part != nullptr);
@@ -241,7 +241,7 @@ OO_TEST(objCProxyPartIsAProxy) {
 OO_TEST(dialsAnsweredByNameForAProxy) {
   {
     SetUp();
-    Entity* object = nil;
+    Entity* object = nullptr;
     ProxyPlayerEntity* proxy = MakeProxy(&object);
     proxy->setDialForwardShield(0.5f);
     proxy->setTradeInFactor(42);
@@ -259,7 +259,7 @@ OO_TEST(dialsAnsweredByNameForAProxy) {
     ShipEntity* ship = oo::ToShip(oo::AutoreleaseEntity(oo::NewShipObject(
         oo::makeRef<::ShipEntity>(), "ship",
         oo::PList(oo::PList::Dict{{"unpiloted", oo::PList(true)}}))));
-    OO_CHECK(ship != nil && !(ship != nullptr ? oo::EntityRespondsToName(
+    OO_CHECK(ship != nullptr && !(ship != nullptr ? oo::EntityRespondsToName(
                                                     ship, "dialForwardShield")
                                               : false));
   }
@@ -271,7 +271,7 @@ OO_TEST(dialsAnsweredByNameForAProxy) {
 OO_TEST(playerAndProxyAreVisibleToScripts) {
   {
     SetUp();
-    Entity* object = nil;
+    Entity* object = nullptr;
     ProxyPlayerEntity* proxy = MakeProxy(&object);
     OO_CHECK(proxy->isVisibleToScripts());
     OO_CHECK(OOJSEntityIsVisibleToScripts(object));

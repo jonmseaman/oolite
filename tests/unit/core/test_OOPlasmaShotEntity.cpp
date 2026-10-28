@@ -17,7 +17,7 @@
    shots are made, and their colour read, through the one block of helpers
    below: the shot is a C++ entity whose Objective-C object is the
    OOLightParticleEntity facade oo::NewEntityFacade made. Run: bash
-   tools/check-core-tests.sh
+   tests/run.sh unit
 */
 
 #include <string>
@@ -69,14 +69,14 @@ class TestUniverse : public Universe {
       Entity* entity) override  // the C++ entity; the record is its object
   {
     _removed = entity;
-    return YES;
+    return true;
   }
   bool addEntity(
       Entity* entity) override  // the C++ entity; the record is its object
   {
     oo::ReleaseEntity(_added);
     _added = oo::RetainEntity(entity);
-    return YES;
+    return true;
   }
 };
 
@@ -111,16 +111,16 @@ extern ooscript::Context
 
 namespace {
 
-TestUniverse* sUniverse = nil;
+TestUniverse* sUniverse = nullptr;
 
 void SetUp(OOTimeAbsolute time) {
-  if (sUniverse == nil) {
+  if (sUniverse == nullptr) {
     sUniverse = new TestUniverse();  // never released
   }
   sUniverse->_time = time;
-  sUniverse->_removed = nil;
+  sUniverse->_removed = nullptr;
   oo::ReleaseEntity(sUniverse->_added);
-  sUniverse->_added = nil;
+  sUniverse->_added = nullptr;
   gSharedUniverse = sUniverse;
   static TestPlayer* player = nullptr;
   if (player == nullptr) player = NewTestPlayer<TestPlayer>();
@@ -175,7 +175,7 @@ OO_TEST(shotIsMade) {
   {
     SetUp(10.0);
     Entity* shot = RedShot();
-    OO_CHECK(shot != nil &&
+    OO_CHECK(shot != nullptr &&
              dynamic_cast<OOLightParticleEntity*>(shot) != nullptr);
     OO_CHECK(HPvector_equal(shot->getPosition(), make_HPvector(1, 2, 3)));
     Vector v = shot->getVelocity();
@@ -219,7 +219,7 @@ OO_TEST(collisions) {
     OO_CHECK(!shot->checkCloseCollisionWith(effect));
     OO_CHECK(!shot->checkCloseCollisionWith(ship));  // its own ship
     OO_CHECK(shot->checkCloseCollisionWith(Ship()));
-    OO_CHECK(shot->checkCloseCollisionWith(nil));
+    OO_CHECK(shot->checkCloseCollisionWith(nullptr));
   }
 }
 
@@ -234,7 +234,7 @@ OO_TEST(hitDamagesAndBursts) {
     SetColliding(shot, ship);
     sUniverse->_time = 0.1;
     shot->update(0.1);
-    OO_CHECK(sUniverse->_removed == nil && sUniverse->_added == nil);
+    OO_CHECK(sUniverse->_removed == nullptr && sUniverse->_added == nullptr);
 
     TestTarget* target =
         static_cast<TestTarget*>(oo::MadeEntity(oo::makeRef<TestTarget>()));
@@ -245,7 +245,7 @@ OO_TEST(hitDamagesAndBursts) {
     OO_CHECK(target->_weapon == "EQ_WEAPON_PLASMA_SHOT");
     OO_CHECK(sUniverse->_removed == shot);
     Entity* burst = sUniverse->_added;
-    OO_CHECK(burst != nil && burst != shot &&
+    OO_CHECK(burst != nullptr && burst != shot &&
              dynamic_cast<OOPlasmaBurstEntity*>(burst) !=
                  nullptr);  // a C++ entity
     OO_CHECK(HPvector_equal(burst->getPosition(), shot->getPosition()));
@@ -258,7 +258,7 @@ OO_TEST(expires) {
     Entity* shot = RedShot();
     sUniverse->_time = 1.0;
     shot->update(1.0);
-    OO_CHECK(sUniverse->_removed == nil);
+    OO_CHECK(sUniverse->_removed == nullptr);
     sUniverse->_time = 2.5;
     shot->update(1.5);
     OO_CHECK(sUniverse->_removed == shot);

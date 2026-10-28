@@ -48,20 +48,12 @@
 
 #pragma once
 
-// Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; suspend them for the standard headers (as oofnd/Data.hpp does).
-#pragma push_macro("true")
-#pragma push_macro("false")
-#undef true
-#undef false
-
 #include <optional>
 #include <string>
 #include <utility>
 
 #include "oofnd/PrintfFormat.h"
 
-extern "C" {
 
 // Exception names. The text is Foundation's, so a name that reaches a log reads
 // as it did.
@@ -76,7 +68,6 @@ extern const char* const OOMallocException;
 */
 void OORaiseException(const char* name, const char* format, ...)
     OO_PRINTF_FORMAT(2, 3) __attribute__((noreturn));
-}
 
 namespace oo {
 
@@ -133,5 +124,3 @@ class Finally {
 
 }  // namespace oo
 
-#pragma pop_macro("false")
-#pragma pop_macro("true")

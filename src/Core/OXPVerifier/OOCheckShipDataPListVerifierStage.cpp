@@ -134,7 +134,7 @@ void OOCheckShipDataPListVerifierStage::run() {
 
   const oo::PList ooliteShipDataPList =
       ResourceManager::dictionaryFromFilesNamed("shipdata.plist", "Config",
-                                                YES);
+                                                true);
   if (const oo::PList::Dict* shipDataDict =
           ooliteShipDataPList.getIf<oo::PList::Dict>()) {
     for (const auto& [shipKey, shipEntry] : *shipDataDict)
@@ -171,7 +171,7 @@ void OOCheckShipDataPListVerifierStage::run() {
 
   _schemaVerifier = OOPListSchemaVerifier::verifierWithSchema(
       ResourceManager::dictionaryFromFilesNamed("shipdataEntrySchema.plist",
-                                                "Schemata", NO));
+                                                "Schemata", false));
   if (_schemaVerifier != nullptr)
     _schemaVerifier->setDelegate(this);  // the stage itself
 

@@ -112,9 +112,7 @@ class OODebugMonitor : public oo::PListForeign,
 
   std::string sourceCodeForFile(const std::string& filePath, unsigned line);
 
-#if OOLITE_GNUSTEP
   void applicationWillTerminate();
-#endif
 
   // The JavaScript engine's monitor (OOJavaScriptEngineMonitor): errors and
   // warnings, and log messages (messageClass nullopt if Log() is used rather

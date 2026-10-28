@@ -93,8 +93,8 @@ PlayerEntity::processEscapePods()  // removes pods from cargo bay and treats
                                    // categories of characters carried
 {
   unsigned i;
-  BOOL added_entry =
-      NO;  // to prevent empty lines for slaves and the rare empty report.
+  bool added_entry =
+      false;  // to prevent empty lines for slaves and the rare empty report.
   std::string result;
   std::vector<oo::Ref<OOCharacter>> rescuees;
   // -intValue of the system's government: a string's leading integer, a number
@@ -137,7 +137,7 @@ PlayerEntity::processEscapePods()  // removes pods from cargo bay and treats
       rescuee->doScriptEvent(OOJSID("unloadCharacter"));
     } else if (!rescuee->legacyScript().isNull()) {
       runUnsanitizedScriptActions(
-          rescuee->legacyScript(), YES,
+          rescuee->legacyScript(), true,
           oo::str::format("<character \"%s\" script>",
                           rescuee->name().value_or("(null)").c_str()),
           nullptr);
@@ -150,8 +150,8 @@ PlayerEntity::processEscapePods()  // removes pods from cargo bay and treats
             OO_DESC("capture-reward-for-@@-@-credits-@-alt"),
             {rescuee->name().value_or("(null)"),
              rescuee->shortDescription().value_or("(null)"),
-             cxx_OOStringFromDeciCredits(reward, YES, NO),
-             cxx_OOStringFromDeciCredits(insurance, YES, NO)});
+             cxx_OOStringFromDeciCredits(reward, true, false),
+             cxx_OOStringFromDeciCredits(insurance, true, false)});
         doScriptEvent(
             OOJSID("playerRescuedEscapePod"),
             {oo::PList::unsignedInteger(static_cast<NSUInteger>(reward)),
@@ -162,8 +162,8 @@ PlayerEntity::processEscapePods()  // removes pods from cargo bay and treats
             OO_DESC("rescue-reward-for-@@-@-credits-@-alt"),
             {rescuee->name().value_or("(null)"),
              rescuee->shortDescription().value_or("(null)"),
-             cxx_OOStringFromDeciCredits(insurance - reward, YES, NO),
-             cxx_OOStringFromDeciCredits(reward, YES, NO)});
+             cxx_OOStringFromDeciCredits(insurance - reward, true, false),
+             cxx_OOStringFromDeciCredits(reward, true, false)});
         reward = insurance - reward;
         doScriptEvent(
             OOJSID("playerRescuedEscapePod"),
@@ -171,22 +171,22 @@ PlayerEntity::processEscapePods()  // removes pods from cargo bay and treats
              oo::PList("insurance"), rescuee->infoForScripting()});
       }
       credits += reward;
-      added_entry = YES;
+      added_entry = true;
     } else if (rescuee->insuranceCredits()) {
       // claim insurance reward
       result += oo::str::formatRuntime(
           OO_DESC("rescue-reward-for-@@-@-credits"),
           {rescuee->name().value_or("(null)"),
            rescuee->shortDescription().value_or("(null)"),
-           cxx_OOStringFromDeciCredits(rescuee->insuranceCredits() * 10, YES,
-                                       NO)});
+           cxx_OOStringFromDeciCredits(rescuee->insuranceCredits() * 10, true,
+                                       false)});
       credits += 10 * rescuee->insuranceCredits();
       doScriptEvent(OOJSID("playerRescuedEscapePod"),
                     {oo::PList::unsignedInteger(static_cast<NSUInteger>(
                          10 * rescuee->insuranceCredits())),
                      oo::PList("insurance"), rescuee->infoForScripting()});
 
-      added_entry = YES;
+      added_entry = true;
     } else if (rescuee->legalStatus()) {
       // claim bounty for capture
       float reward = (5.0 + government) * rescuee->legalStatus();
@@ -194,13 +194,13 @@ PlayerEntity::processEscapePods()  // removes pods from cargo bay and treats
           OO_DESC("capture-reward-for-@@-@-credits"),
           {rescuee->name().value_or("(null)"),
            rescuee->shortDescription().value_or("(null)"),
-           cxx_OOStringFromDeciCredits(reward, YES, NO)});
+           cxx_OOStringFromDeciCredits(reward, true, false)});
       credits += reward;
       doScriptEvent(
           OOJSID("playerRescuedEscapePod"),
           {oo::PList::unsignedInteger(static_cast<NSUInteger>(reward)),
            oo::PList("bounty"), rescuee->infoForScripting()});
-      added_entry = YES;
+      added_entry = true;
     } else {
       // sell as slave - increase no. of slaves in manifest
       if (shipCommodityData != nullptr)
@@ -210,7 +210,7 @@ PlayerEntity::processEscapePods()  // removes pods from cargo bay and treats
                      rescuee->infoForScripting()});
     }
     if ((i < rescuees.size() - 1) && added_entry) result += "\n";
-    added_entry = NO;
+    added_entry = false;
   }
 
   calculateCurrentCargo();
@@ -578,14 +578,14 @@ PlayerEntity::checkPassengerContracts()  // returns messages from any passengers
     double dest_eta = DoubleForKey(passenger_record, names[i]) - ship_clock;
     if (dest_eta < 0) {
       // check they're not STILL on board
-      BOOL on_board = NO;
+      bool on_board = false;
       unsigned j;
       for (j = 0; j < passengers.size(); j++) {
         const oo::PList* passenger_name = passengers[j].find(
             std::string(PASSENGER_KEY_NAME));  // -isEqual: to the record's key
         if (passenger_name != nullptr && passenger_name->isString() &&
             *passenger_name->getIf<std::string>() == names[i])
-          on_board = YES;
+          on_board = true;
       }
       if (!on_board) {
         passenger_record.erase(names[i]);
@@ -941,7 +941,7 @@ bool PlayerEntity::addPassenger(const std::string& Name, unsigned start,
   // extra checks, just in case.
   if (passengers.size() >= max_passengers ||
       passenger_record.find(Name) != passenger_record.end())
-    return NO;
+    return false;
 
   if (risk > 1) {
     addRoleToPlayer("trader-courier+");
@@ -953,7 +953,7 @@ bool PlayerEntity::addPassenger(const std::string& Name, unsigned start,
   doScriptEvent(OOJSID("playerEnteredContract"),
                 {oo::PList("passenger"), passenger_info});
 
-  return YES;
+  return true;
 }
 
 bool PlayerEntity::removePassenger(
@@ -961,7 +961,7 @@ bool PlayerEntity::removePassenger(
                               // Name, returns NO if none found
 {
   // extra check, just in case.
-  if (passengers.empty()) return NO;
+  if (passengers.empty()) return false;
 
   unsigned i;
 
@@ -972,11 +972,11 @@ bool PlayerEntity::removePassenger(
     if (this_name == Name) {
       passengers.erase(passengers.begin() + i);
       passenger_record.erase(Name);
-      return YES;
+      return true;
     }
   }
 
-  return NO;
+  return false;
 }
 
 bool PlayerEntity::addParcel(const std::string& Name, unsigned start,
@@ -1014,7 +1014,7 @@ bool PlayerEntity::addParcel(const std::string& Name, unsigned start,
   doScriptEvent(OOJSID("playerEnteredContract"),
                 {oo::PList("parcel"), parcel_info});
 
-  return YES;
+  return true;
 }
 
 bool PlayerEntity::removeParcel(
@@ -1022,7 +1022,7 @@ bool PlayerEntity::removeParcel(
                               // returns NO if none found
 {
   // extra check, just in case.
-  if (parcels.empty()) return NO;
+  if (parcels.empty()) return false;
 
   unsigned i;
 
@@ -1033,11 +1033,11 @@ bool PlayerEntity::removeParcel(
     if (this_name == Name) {
       parcels.erase(parcels.begin() + i);
       parcel_record.erase(Name);
-      return YES;
+      return true;
     }
   }
 
-  return NO;
+  return false;
 }
 
 bool PlayerEntity::awardContract(unsigned qty, const std::string& type,
@@ -1051,8 +1051,8 @@ bool PlayerEntity::awardContract(unsigned qty, const std::string& type,
   if (!((UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr) != nullptr
             ? UNIVERSE->getCommodities()->goodDefined(type)
             : false))
-    return NO;
-  if (qty < 1) return NO;
+    return false;
+  if (qty < 1) return false;
 
   // avoid duplicate cargo_IDs
   while (contract_record.find(cargo_ID) != contract_record.end()) {
@@ -1094,7 +1094,7 @@ bool PlayerEntity::awardContract(unsigned qty, const std::string& type,
   if (contractCargoUnits == UNITS_KILOGRAMS) cargoSpaceRequired /= 1000;
   if (contractCargoUnits == UNITS_GRAMS) cargoSpaceRequired /= 1000000;
 
-  if (cargoSpaceRequired > availableCargoSpace()) return NO;
+  if (cargoSpaceRequired > availableCargoSpace()) return false;
 
   if (shipCommodityData != nullptr) shipCommodityData->addQuantity(qty, type);
 
@@ -1119,19 +1119,19 @@ bool PlayerEntity::awardContract(unsigned qty, const std::string& type,
   doScriptEvent(OOJSID("playerEnteredContract"),
                 {oo::PList("cargo"), cargo_info});
 
-  return YES;
+  return true;
 }
 
 bool PlayerEntity::removeContract(
     const std::string& type,
     unsigned dest)  // removes the first match found, returns NO if none found
 {
-  if (contracts.empty() || dest > 255) return NO;
+  if (contracts.empty() || dest > 255) return false;
 
   if (!((UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr) != nullptr
             ? UNIVERSE->getCommodities()->goodDefined(type)
             : false))
-    return NO;
+    return false;
 
   unsigned i;
 
@@ -1147,23 +1147,23 @@ bool PlayerEntity::removeContract(
           OptionalStringForKey(contractInfo, std::string(CARGO_KEY_ID));
       if (cargoID) contract_record.erase(*cargoID);
       contracts.erase(contracts.begin() + i);
-      return YES;
+      return true;
     }
   }
 
-  return NO;
+  return false;
 }
 
 std::vector<std::string> PlayerEntity::passengerList() {
-  return contractsListFromEntries(passengers, NO, NO);
+  return contractsListFromEntries(passengers, false, false);
 }
 
 std::vector<std::string> PlayerEntity::parcelList() {
-  return contractsListFromEntries(parcels, NO, YES);
+  return contractsListFromEntries(parcels, false, true);
 }
 
 std::vector<std::string> PlayerEntity::contractList() {
-  return contractsListFromEntries(contracts, YES, NO);
+  return contractsListFromEntries(contracts, true, false);
 }
 
 std::vector<std::string> PlayerEntity::contractsListFromEntries(
@@ -1225,7 +1225,7 @@ void PlayerEntity::setGuiToManifestScreen() {
 
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   gui_screen = GUI_SCREEN_MANIFEST;
-  BOOL guiChanged = (oldScreen != gui_screen);
+  bool guiChanged = (oldScreen != gui_screen);
   if (guiChanged) {
     gui->setStatusPage(0);  // need to do this earlier than the rest
   }
@@ -1236,7 +1236,7 @@ void PlayerEntity::setGuiToManifestScreen() {
     oo::Ref<OOColor> subheadColor = gui->colorFromSetting(
         cxx_kGuiManifestSubheadColor, OOColor::greenColor().get());
     oo::Ref<OOColor> entryColor =
-        gui->colorFromSetting(cxx_kGuiManifestEntryColor, nil);
+        gui->colorFromSetting(cxx_kGuiManifestEntryColor, nullptr);
     oo::Ref<OOColor> scrollColor = gui->colorFromSetting(
         cxx_kGuiManifestScrollColor, OOColor::greenColor().get());
     oo::Ref<OOColor> noScrollColor = gui->colorFromSetting(
@@ -1283,7 +1283,7 @@ void PlayerEntity::setGuiToManifestScreen() {
     }
 
     NSInteger page_offset = 0;
-    BOOL multi_page = NO;
+    bool multi_page = false;
     //		NSUInteger total_rows = cargoRowCount +
     //MAX(1U,[passengerManifest count]) + MAX(1U,[contractManifest count]) +
     //mmRows + MAX(1U,[parcelManifest count]) + 5;
@@ -1295,7 +1295,7 @@ void PlayerEntity::setGuiToManifestScreen() {
         gui->setStatusPage(0);
         page_offset = 0;
       }
-      multi_page = YES;
+      multi_page = true;
     }
 
     OOGUITabSettings tab_stops;
@@ -1369,7 +1369,7 @@ void PlayerEntity::setGuiToManifestScreen() {
                            missionsRow + mmRow);
           ++mmRow;
         } else if (mmEntry.isArray()) {
-          BOOL isHeading = YES;
+          bool isHeading = true;
           for (const oo::PList& mmItem : nonNull(mmEntry)) {
             if (isHeading) {
               SET_MANIFEST_ROW(mmItem, entryColor.get(), missionsRow + mmRow);
@@ -1378,7 +1378,7 @@ void PlayerEntity::setGuiToManifestScreen() {
                                subheadColor.get(),
                                missionsRow + mmRow);  // @"\t%@"
             }
-            isHeading = NO;
+            isHeading = false;
             ++mmRow;
           }
         }
@@ -1410,14 +1410,14 @@ void PlayerEntity::setGuiToManifestScreen() {
       gui->setSelectedRow(r_start);
     }
 
-    gui->setShowTextCursor(NO);
+    gui->setShowTextCursor(false);
   }
   /* ends */
 
   lastTextKey.reset();
 
-  setShowDemoShips(NO);
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(NO);
+  setShowDemoShips(false);
+  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
   if (guiChanged) {
     gui->setForegroundTextureKey(std::optional<std::string>(
@@ -1455,7 +1455,7 @@ void PlayerEntity::setGuiToDockingReportScreen() {
 
   OOGUIScreenID oldScreen = gui_screen;
   gui_screen = GUI_SCREEN_REPORT;
-  BOOL guiChanged = (oldScreen != gui_screen);
+  bool guiChanged = (oldScreen != gui_screen);
 
   OOGUIRow i, text_row = 1;
 
@@ -1468,7 +1468,7 @@ void PlayerEntity::setGuiToDockingReportScreen() {
 
     for (i = 1; i <= 18; i++) {
       gui->setColor(
-          gui->colorFromSetting(std::string(cxx_kGuiDockingReportColor), nil)
+          gui->colorFromSetting(std::string(cxx_kGuiDockingReportColor), nullptr)
               .get(),
           21);
     }
@@ -1500,23 +1500,23 @@ void PlayerEntity::setGuiToDockingReportScreen() {
              passengers.size(), max_passengers}),
         GUI_ROW_MARKET_CASH);
     gui->setColor(
-        gui->colorFromSetting(std::string(cxx_kGuiDockingSummaryColor), nil)
+        gui->colorFromSetting(std::string(cxx_kGuiDockingSummaryColor), nullptr)
             .get(),
         GUI_ROW_MARKET_CASH);
 
     gui->setText(OO_DESC("press-space-commander"), 21, GUI_ALIGN_CENTER);
     gui->setColor(
-        gui->colorFromSetting(std::string(cxx_kGuiDockingContinueColor), nil)
+        gui->colorFromSetting(std::string(cxx_kGuiDockingContinueColor), nullptr)
             .get(),
         21);
-    gui->setShowTextCursor(NO);
+    gui->setShowTextCursor(false);
   }
   /* ends */
 
   lastTextKey.reset();
 
-  setShowDemoShips(NO);
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(NO);
+  setShowDemoShips(false);
+  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
   if (guiChanged) {
     gui->setForegroundTextureKey(
@@ -1606,7 +1606,7 @@ void PlayerEntity::setGuiToShipyardScreen(NSUInteger skip) {
 
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   gui_screen = GUI_SCREEN_SHIPYARD;
-  BOOL guiChanged = (oldScreen != gui_screen);
+  bool guiChanged = (oldScreen != gui_screen);
 
   unsigned i;
 
@@ -1614,7 +1614,7 @@ void PlayerEntity::setGuiToShipyardScreen(NSUInteger skip) {
   OOTechLevelID stationTechLevel;
   ::StationEntity* station = dockedStation();
 
-  if (station != nil) {
+  if (station != nullptr) {
     stationTechLevel =
         (station != nullptr ? station->getEquivalentTechLevel() : 0);
   } else {
@@ -1714,7 +1714,7 @@ void PlayerEntity::setGuiToShipyardScreen(NSUInteger skip) {
         if (!shipName && ship != nullptr)
           shipName = OptionalStringForKey(*ship, "name");  // KEY_NAME
         gui->setColor(
-            gui->colorFromSetting(cxx_kGuiShipyardEntryColor, nil).get(),
+            gui->colorFromSetting(cxx_kGuiShipyardEntryColor, nullptr).get(),
             startRow + i);
         gui->setArray({" " + shipName.value_or("(null)") + " ",
                        cxx_OOIntCredits(ship_price)},
@@ -1750,13 +1750,13 @@ void PlayerEntity::setGuiToShipyardScreen(NSUInteger skip) {
 
     showTradeInInformationFooter();
 
-    gui->setShowTextCursor(NO);
+    gui->setShowTextCursor(false);
   }
 
   // the following are necessary...
 
   setShowDemoShips((shipCount > 0));
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(YES);
+  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(true);
 
   if (guiChanged) {
     gui->setForegroundTextureKey("docked_overlay");
@@ -1856,9 +1856,9 @@ void PlayerEntity::showTradeInInformationFooter() {
   OOCreditsQuantity total = tradeIn + credits;
   const oo::PList shipType = oo::PList(getDisplayName().value_or(""));
 
-  gui->setColor(gui->colorFromSetting(cxx_kGuiShipyardTradeinColor, nil).get(),
+  gui->setColor(gui->colorFromSetting(cxx_kGuiShipyardTradeinColor, nullptr).get(),
                 GUI_ROW_MARKET_CASH - 1);
-  gui->setColor(gui->colorFromSetting(cxx_kGuiShipyardTradeinColor, nil).get(),
+  gui->setColor(gui->colorFromSetting(cxx_kGuiShipyardTradeinColor, nullptr).get(),
                 GUI_ROW_MARKET_CASH);
   gui->setText(ExpandKey("shipyard-trade-in-value",
                          {{"shipType", shipType},
@@ -1875,7 +1875,7 @@ void PlayerEntity::showTradeInInformationFooter() {
 void PlayerEntity::showShipyardModel(const std::string& shipKey,
                                      const oo::PList& shipData,
                                      uint16_t personality) {
-  if (dockedStation() == nil) return;
+  if (dockedStation() == nullptr) return;
   showShipModelWithKey(shipKey, shipData, personality, 1.2, 0.8, 6.4,
                        "shipyard");
 }
@@ -1919,7 +1919,7 @@ bool PlayerEntity::buySelectedShip() {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   OOGUIRow selectedRow = gui->getSelectedRow();
 
-  if (selectedRow <= 0) return NO;
+  if (selectedRow <= 0) return false;
 
   const std::optional<std::string> key = gui->keyForRow(selectedRow);
 
@@ -1952,7 +1952,7 @@ bool PlayerEntity::buySelectedShip() {
     }
     gui->setArray(row_info, GUI_ROW_SHIPYARD_LABELS);
     if (UNIVERSE != nullptr) UNIVERSE->removeDemoShips();
-    return YES;
+    return true;
   }
 
   // first check you can afford it!
@@ -1961,7 +1961,7 @@ bool PlayerEntity::buySelectedShip() {
       shipInfo.get<unsigned long long>("price");  // SHIPYARD_KEY_PRICE
   OOCreditsQuantity tradeIn = tradeInValue();
 
-  if (credits + tradeIn < price * 10) return NO;  // you can't afford it!
+  if (credits + tradeIn < price * 10) return false;  // you can't afford it!
 
   // from this point, the player is committed to buying - raise a pre-buy script
   // event
@@ -1989,7 +1989,7 @@ bool PlayerEntity::buySelectedShip() {
   for (const std::string& good :
        (shipCommodityData != nullptr ? shipCommodityData->goods()
                                      : std::vector<std::string>())) {
-    trySellingCommodity(good, YES);
+    trySellingCommodity(good, true);
   }
   // We tried to sell everything. If there are still items present in our
   // inventory, it means that the market got saturated (quantity in station >
@@ -2015,7 +2015,7 @@ bool PlayerEntity::buySelectedShip() {
       max_passengers++;
       max_cargo -= PASSENGER_BERTH_SPACE;
     } else {
-      addEquipmentItem(eq_key.value_or(std::string()), YES,
+      addEquipmentItem(eq_key.value_or(std::string()), true,
                        "newShip");  // none: "", as nil was
     }
   }
@@ -2039,7 +2039,7 @@ bool PlayerEntity::buySelectedShip() {
 
   // perform the transformation
   if (!setCommanderDataFromDictionary(commanderDataDictionary()))
-    return NO;  // gather up all the info
+    return false;  // gather up all the info
 
   setStatus(STATUS_DOCKED);
   setEntityPersonalityInt(
@@ -2052,10 +2052,10 @@ bool PlayerEntity::buySelectedShip() {
   ship_trade_in_factor = 100;
 
   if ((UNIVERSE != nullptr ? UNIVERSE->getAutoSave() : false)) {
-    if (UNIVERSE != nullptr) UNIVERSE->setAutoSaveNow(YES);
+    if (UNIVERSE != nullptr) UNIVERSE->setAutoSaveNow(true);
   }
 
-  return YES;
+  return true;
 }
 
 bool PlayerEntity::replaceShipWithNamedShip(const std::string& shipKey) {
@@ -2066,7 +2066,7 @@ bool PlayerEntity::replaceShipWithNamedShip(const std::string& shipKey) {
       OOShipRegistry::sharedRegistry()->shipInfoForKey(shipKey);
 
   if (ship_info.isNull() || ship_base_dict.isNull()) {
-    return NO;
+    return false;
   }
 
   // from this point, the player is committed to replacing - raise a pre-replace
@@ -2077,7 +2077,7 @@ bool PlayerEntity::replaceShipWithNamedShip(const std::string& shipKey) {
 
   // perform the transformation
   if (!setCommanderDataFromDictionary(commanderDataDictionary()))
-    return NO;  // gather up all the info
+    return false;  // gather up all the info
 
   // refill from ship_info
   const oo::PList* standardEquipment = ship_info.get<oo::PList::Dict>(
@@ -2093,7 +2093,7 @@ bool PlayerEntity::replaceShipWithNamedShip(const std::string& shipKey) {
       max_passengers++;
       max_cargo -= PASSENGER_BERTH_SPACE;
     } else {
-      addEquipmentItem(eq_key.value_or(std::string()), YES,
+      addEquipmentItem(eq_key.value_or(std::string()), true,
                        "newShip");  // none: "", as nil was
     }
   }
@@ -2101,7 +2101,7 @@ bool PlayerEntity::replaceShipWithNamedShip(const std::string& shipKey) {
   setEntityPersonalityInt(ship_info.get<unsigned short>(
       "personality"));  // SHIPYARD_KEY_PERSONALITY
 
-  return YES;
+  return true;
 }
 
 void PlayerEntity::newShipCommonSetup(const std::string& shipKey,
@@ -2202,7 +2202,7 @@ void PlayerEntity::newShipCommonSetup(const std::string& shipKey,
   // restore  portable equipment (in key order; the set it replaced gave hash
   // order)
   for (const std::string& eq_desc : portable_equipment) {
-    addEquipmentItem(eq_desc, NO, "portable");
+    addEquipmentItem(eq_desc, false, "portable");
   }
 
   // set up subentities from scratch; new ship could carry more or fewer than

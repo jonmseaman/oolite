@@ -238,7 +238,7 @@ static bool PlanetGetProperty(Context cx, Object obj, PropertyId propID,
 
   OOJS_NATIVE_ENTER(context)
 
-  OOPlanetEntity* planet = nil;
+  OOPlanetEntity* planet = nullptr;
   if (!JSPlanetGetPlanetEntity(context, thisObj, &planet)) return false;
 
   switch (ooscript::idToInt32(propID)) {
@@ -337,7 +337,7 @@ static bool PlanetSetProperty(Context cx, Object obj, PropertyId propID,
 
   OOJS_NATIVE_ENTER(context)
 
-  OOPlanetEntity* planet = nil;
+  OOPlanetEntity* planet = nullptr;
   std::optional<std::string> sValue;
   Quaternion qValue;
   Vector vValue;

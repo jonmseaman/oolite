@@ -18,7 +18,7 @@
    first; they pin the JS-visible behaviour (the properties both ways, docking,
    the alert level, the launches, the interfaces, the market, the shipyard's
    errors, a non-station, a native's exception) and what the category answers
-   the engine. Run: bash tools/check-core-tests.sh
+   the engine. Run: tests/run.sh unit
 */
 
 #include "EntityPListForeign.h"  // an entity's node
@@ -173,28 +173,28 @@ class StationEntity : public ShipEntity {
   ::ShipEntity* launched(const char* what);
 
   std::string _name;
-  BOOL _npcTraffic = NO;
-  BOOL _hasShipyard = NO;
+  bool _npcTraffic = false;
+  bool _hasShipyard = false;
   OOStationAlertLevel _alertLevel = {};
   std::optional<std::string> _allegiance;
-  BOOL _requiresClearance = NO;
+  bool _requiresClearance = false;
   float _roll = 0;
-  BOOL _fastDocking = NO;
-  BOOL _autoDocking = NO;
+  bool _fastDocking = false;
+  bool _autoDocking = false;
   unsigned _contractors = 0, _police = 0, _defenders = 0;
   OOTechLevelID _techLevel = 0;
   float _priceFactor = 0;
-  BOOL _suppressReports = NO;
-  BOOL _breakPattern = NO;
+  bool _suppressReports = false;
+  bool _breakPattern = false;
   std::vector<oo::PList>* _shipyard = nullptr;
   int _shipyardsMade = 0;
   oo::Ref<OOCommodityMarket> _market;
   int _abortAll = 0;
   ::ShipEntity* _abortedShip = nullptr;
-  BOOL _fits = NO;
+  bool _fits = false;
   std::map<std::string, oo::Ref<OOJSInterfaceDefinition>> _interfaces;
   std::string _lastLaunch;
-  ::ShipEntity* _launched = nil;
+  ::ShipEntity* _launched = nullptr;
 };
 
 // PLAYER: the members the code under test calls, declared as the game headers
@@ -221,7 +221,7 @@ class PlayerEntity {
 
   StationEntity* _dockedStation = {};
   OOGUIScreenID _screen = {};
-  BOOL _docked = {};
+  bool _docked = {};
   int _marketRefreshes = {};
   int _shipyardRefreshes = {};
   std::string _dockLog;
@@ -232,7 +232,7 @@ class PlayerEntity {
 // and signatures, defined out of line below with the stand-in's answers.
 class GameController : public oo::RefCounted {
  public:
-  BOOL _paused = NO;
+  bool _paused = false;
 
   bool isGamePaused();
   void setGamePaused(bool value);
@@ -545,8 +545,8 @@ void PlayerEntity::setDockingClearanceStatus(
 }
 void PlayerEntity::safeAllMissiles() { _dockLog += "safe; "; }
 void PlayerEntity::enterDock(::StationEntity* station) {
-  _dockLog += "dock " + (station != nil ? station->_name : std::string("nil"));
-  _docked = YES;
+  _dockLog += "dock " + (station != nullptr ? station->_name : std::string("nil"));
+  _docked = true;
 }
 oo::PList PlayerEntity::processKeyCode(const oo::PList& /*key_def*/) {
   std::abort();
@@ -561,7 +561,7 @@ oo::PList PlayerEntity::missionVariableForKey(const std::string& /*key*/) {
 ::OOScript* PlayerEntity::commodityScriptNamed(
     const std::optional<std::string>& script) {
   (void)script;
-  return nil;
+  return nullptr;
 }
 
 bool GameController::isGamePaused() { return _paused; }
@@ -676,7 +676,7 @@ oo::Ref<OOScript> OOScript::jsScriptFromFileNamed(const std::string&,
 void OOScriptAutorelease(oo::Ref<OOScript>) { std::abort(); }
 
 void cxx_OOStandardsDeprecated(const std::string&) { std::abort(); }
-extern "C" BOOL OOEnforceStandards(void) { std::abort(); }
+bool OOEnforceStandards(void) { std::abort(); }
 oo::PList OOSanitizeLegacyScriptConditions(const oo::PList&,
                                            const std::optional<std::string>&) {
   std::abort();
@@ -684,7 +684,7 @@ oo::PList OOSanitizeLegacyScriptConditions(const oo::PList&,
 OOWeaponType cxx_OOWeaponTypeFromEquipmentIdentifierSloppy(const std::string&) {
   std::abort();
 }
-extern "C" BOOL isWeaponNone(OOWeaponType) { std::abort(); }
+bool isWeaponNone(OOWeaponType) { std::abort(); }
 
 extern const char* const kOOJavaScriptEngineWillResetNotificationName;
 const char* const kOOJavaScriptEngineWillResetNotificationName =
@@ -808,9 +808,8 @@ PlayerEntity* sPlayer = nullptr;
 ooscript::Context gOOJSMainThreadContext = nullptr;
 Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
 PlayerEntity* gOOPlayer = nullptr;
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
-extern "C" {
 
 PlayerEntity* OOPlayerForScripting(void) { return sPlayer; }
 
@@ -837,13 +836,13 @@ void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
   sSuperclasses[subclass] = superclass;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
@@ -894,7 +893,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();
@@ -924,7 +922,7 @@ StationEntity* sOther = nullptr;
 ::TestEntityObject* sOtherObject = nullptr;
 ::TestEntityObject* sShip = nullptr;  // a ship's object and its C++ part
 ::ShipEntity* sShipPart = nullptr;
-Universe* sUniverse = nil;
+Universe* sUniverse = nullptr;
 
 void Define(const char* name, ooscript::Value value) {
   ooscript::setProperty(sContext, sGlobal, name, &value);
@@ -962,11 +960,11 @@ void SetUpContext() {
                                                     // test; a station's object
   sStation = static_cast<StationEntity*>(sStationObject->_cxxEntity.get());
   sStation->_name = "Coriolis";
-  sStation->_npcTraffic = YES;
+  sStation->_npcTraffic = true;
   sStation->_alertLevel = STATION_ALERT_LEVEL_GREEN;
   sStation->_allegiance = "galcop";
   sStation->_roll = 0.25f;
-  sStation->_autoDocking = YES;
+  sStation->_autoDocking = true;
   sStation->_contractors = 2;
   sStation->_police = 3;
   sStation->_defenders = 4;
@@ -1120,14 +1118,14 @@ OO_TEST(setters) {
       "station.breakPattern = true; return station.suppressArrivalReports + ' "
       "' + station.breakPattern; })()",
       "true true");
-  sStation->_npcTraffic = YES;
+  sStation->_npcTraffic = true;
   sStation->_allegiance = "galcop";
-  sStation->_requiresClearance = NO;
+  sStation->_requiresClearance = false;
   sStation->_roll = 0.25f;
-  sStation->_fastDocking = NO;
-  sStation->_autoDocking = YES;
-  sStation->_suppressReports = NO;
-  sStation->_breakPattern = NO;
+  sStation->_fastDocking = false;
+  sStation->_autoDocking = true;
+  sStation->_suppressReports = false;
+  sStation->_breakPattern = false;
 }
 
 OO_TEST(docking) {
@@ -1140,14 +1138,14 @@ OO_TEST(docking) {
   OO_CHECK_EVAL("station.abortDockingForShip()",
                 "threw: bad arguments: Station.abortDockingForShip(0) - / ship "
                 "in docking queue");
-  sStation->_fits = YES;
+  sStation->_fits = true;
   OO_CHECK_EVAL("station.canDockShip(ship)", "true");
-  sStation->_fits = NO;
+  sStation->_fits = false;
   OO_CHECK_EVAL("station.canDockShip(ship)", "false");
   OO_CHECK_EVAL("station.canDockShip()",
                 "threw: bad arguments: Station.canDockShip(0) - / shipEntity");
   // dockPlayer(): unpauses the game, then docks the player unless it is docked.
-  sUniverse->_controller->_paused = YES;
+  sUniverse->_controller->_paused = true;
   OO_CHECK_EVAL("station.dockPlayer()", "undefined");
   OO_CHECK(!sUniverse->_controller->_paused);
   OO_CHECK_EQ(
@@ -1160,7 +1158,7 @@ OO_TEST(docking) {
   sPlayer->_dockLog.clear();
   OO_CHECK_EVAL("other.dockPlayer()", "undefined");
   OO_CHECK_EQ(sPlayer->_dockLog, std::string());
-  sPlayer->_docked = NO;
+  sPlayer->_docked = false;
 }
 
 OO_TEST(alertLevel) {
@@ -1321,7 +1319,7 @@ OO_TEST(market) {
       "station.setMarketQuantity('food', 0)",
       "true");
   OO_CHECK_EQ(sPlayer->_marketRefreshes, 2);
-  sPlayer->_dockedStation = nil;
+  sPlayer->_dockedStation = nullptr;
   sPlayer->_screen = GUI_SCREEN_STATUS;
 }
 
@@ -1335,7 +1333,7 @@ OO_TEST(shipyard) {
       std::string(
           "Station.removeShipFromShipyard: Station does not have shipyard."));
   OO_CHECK_EVAL("station.removeShipFromShipyard(0)", "<evaluation failed>");
-  sStation->_hasShipyard = YES;
+  sStation->_hasShipyard = true;
   sStation->_shipyardsMade = 0;
   OO_CHECK_EVAL(
       "station.shipyard.length + ' ' + station.shipyard[0].short_description",
@@ -1362,9 +1360,9 @@ OO_TEST(shipyard) {
       "station.removeShipFromShipyard(0) + ' ' + station.shipyard.length",
       "true 0");
   OO_CHECK_EQ(sPlayer->_shipyardRefreshes, 1);
-  sPlayer->_dockedStation = nil;
+  sPlayer->_dockedStation = nullptr;
   sPlayer->_screen = GUI_SCREEN_STATUS;
-  sStation->_hasShipyard = NO;
+  sStation->_hasShipyard = false;
 }
 
 OO_TEST(otherObjects) {

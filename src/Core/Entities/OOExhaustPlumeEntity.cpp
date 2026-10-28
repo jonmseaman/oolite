@@ -43,7 +43,7 @@ MA 02110-1301, USA.
 #define kScaleLevel2 0.8f
 #define kScaleLevel3 0.6f
 
-static OOTexture* sPlumeTexture = nil;
+static OOTexture* sPlumeTexture = nullptr;
 
 namespace {
 
@@ -102,7 +102,7 @@ void OOExhaustPlumeEntity::setScale(Vector scale) {
   }
 }
 
-bool OOExhaustPlumeEntity::isExhaust() { return YES; }
+bool OOExhaustPlumeEntity::isExhaust() { return true; }
 
 double OOExhaustPlumeEntity::findCollisionRadius() { return collision_radius; }
 
@@ -114,7 +114,7 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
   ::ShipEntity* ship = oo::ToShip(owner());
   // also don't draw if the ship isn't visible
   if (EXPECT_NOT(
-          ship == nil || !(ship != nullptr ? ship->isVisible() : false) ||
+          ship == nullptr || !(ship != nullptr ? ship->isVisible() : false) ||
           ((ship != nullptr ? ship->getIsPlayer() : false) &&
            (ship != nullptr ? ship->suppressFlightNotifications() : false))))
     return;
@@ -647,7 +647,7 @@ OOTexture* OOExhaustPlumeEntity::texture() {
 }
 
 void OOExhaustPlumeEntity::setUpTexture() {
-  if (sPlumeTexture == nil) {
+  if (sPlumeTexture == nullptr) {
     sPlumeTexture =
         OOTexture::textureWithName(
             "oolite-exhaust-blur.png", "Textures",
@@ -661,7 +661,7 @@ void OOExhaustPlumeEntity::setUpTexture() {
 }
 
 OOTexture* OOExhaustPlumeEntity::plumeTexture() {
-  if (sPlumeTexture == nil) setUpTexture();
+  if (sPlumeTexture == nullptr) setUpTexture();
   return sPlumeTexture;
 }
 

@@ -13,7 +13,7 @@
    hands out the equipment data, the
    descriptions and a market; the cache manager, script loader, player and
    standards functions are the test's. OOEquipmentType, OOCommodityMarket and
-   OOColor are the game's own. Run: bash tools/check-core-tests.sh
+   OOColor are the game's own. Run: tests/run.sh unit
    test_OOConstToString
 */
 
@@ -102,7 +102,7 @@ oo::PList Universe::getEquipmentData() { return EquipmentData(); }
 oo::PList Universe::getEquipmentDataOutfitting() { return EquipmentData(); }
 ::OOCommodityMarket* Universe::getCommodityMarket() { return market.get(); }
 
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 // The mass-unit symbols, as descriptions.plist spells them.
 std::string cxx_OOLookUpDescriptionPRIV(const std::string& key) {
@@ -194,7 +194,7 @@ PlayerEntity* gOOPlayer = nullptr;
 
 void cxx_OOStandardsDeprecated(const std::string& /*message*/) {}
 
-extern "C" BOOL OOEnforceStandards(void) { return NO; }
+bool OOEnforceStandards(void) { return false; }
 
 oo::PList OOSanitizeLegacyScriptConditions(
     const oo::PList& conditions,
@@ -205,13 +205,13 @@ oo::PList OOSanitizeLegacyScriptConditions(
 namespace {
 
 void LoadEquipment() {
-  if (gSharedUniverse == nil) gSharedUniverse = new StandInUniverse();
+  if (gSharedUniverse == nullptr) gSharedUniverse = new StandInUniverse();
   if (gOOPlayer == nullptr) gOOPlayer = new PlayerEntity;  // never deleted
   OOEquipmentType::loadEquipment();
 }
 
 std::string IdentifierOf(OOWeaponType weapon) {
-  return weapon != nil ? weapon->identifier().value_or("-") : "nil";
+  return weapon != nullptr ? weapon->identifier().value_or("-") : "nil";
 }
 
 }  // namespace
@@ -225,17 +225,17 @@ OO_TEST(weaponTypeIdentifiers) {
     OOWeaponType pulse =
         OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_PULSE_LASER")
             .get();
-    OO_CHECK(pulse != nil);
+    OO_CHECK(pulse != nullptr);
 
     OO_CHECK(cxx_OOStringFromWeaponType(pulse) ==
              std::optional<std::string>("EQ_WEAPON_PULSE_LASER"));
-    OO_CHECK(cxx_OOStringFromWeaponType(nil) ==
+    OO_CHECK(cxx_OOStringFromWeaponType(nullptr) ==
              std::optional<std::string>("EQ_WEAPON_NONE"));
 
     OO_CHECK(cxx_OOEquipmentIdentifierFromWeaponType(pulse) ==
              std::optional<std::string>("EQ_WEAPON_PULSE_LASER"));
     // A message to nil answered a zeroed std::optional: no identifier.
-    OO_CHECK(cxx_OOEquipmentIdentifierFromWeaponType(nil) == std::nullopt);
+    OO_CHECK(cxx_OOEquipmentIdentifierFromWeaponType(nullptr) == std::nullopt);
   }
 }
 
@@ -247,7 +247,7 @@ OO_TEST(sloppyLookUp) {
             .get();
     OOWeaponType none =
         OOEquipmentType::equipmentTypeWithIdentifier("EQ_WEAPON_NONE").get();
-    OO_CHECK(pulse != nil && none != nil && pulse != none);
+    OO_CHECK(pulse != nullptr && none != nullptr && pulse != none);
 
     // The identifier itself, then with "EQ_" put in front, then EQ_WEAPON_NONE.
     OO_CHECK(cxx_OOWeaponTypeFromEquipmentIdentifierSloppy(

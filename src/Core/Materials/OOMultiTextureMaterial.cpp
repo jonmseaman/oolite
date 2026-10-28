@@ -85,16 +85,16 @@ bool OOMultiTextureMaterial::initWithName(
     if (!diffuseSpec.isNull()) {
       _diffuseMap =
           oo::Ref<OOTexture>(OOTexture::textureWithConfiguration(diffuseSpec));
-      if (_diffuseMap.get() != nil) _unitsUsed++;
+      if (_diffuseMap.get() != nullptr) _unitsUsed++;
     }
 
     // Check for simplest cases, where we don't need to bake a derived emission
     // map.
     if (!emissionSpec.isNull() && illuminationSpec.isNull() &&
-        emissionAndIlluminationSpec.isNull() && emissionColor == nil) {
+        emissionAndIlluminationSpec.isNull() && emissionColor == nullptr) {
       _emissionMap = oo::Ref<OOTexture>(OOTexture::textureWithConfiguration(
           emissionSpec, kOOTextureExtraShrink));
-      if (_emissionMap.get() != nil) _unitsUsed++;
+      if (_emissionMap.get() != nullptr) _unitsUsed++;
     } else {
       oo::Ref<OOCombinedEmissionMapGenerator> generator;
 
@@ -116,7 +116,7 @@ bool OOMultiTextureMaterial::initWithName(
 
       _emissionMap =
           oo::Ref<OOTexture>(OOTexture::textureWithGenerator(generator.get()));
-      if (_emissionMap.get() != nil) _unitsUsed++;
+      if (_emissionMap.get() != nullptr) _unitsUsed++;
     }
   }
 
@@ -162,14 +162,14 @@ void OOMultiTextureMaterial::apply() {
 
   GLenum textureUnit = GL_TEXTURE0_ARB;
 
-  if (_diffuseMap.get() != nil) {
+  if (_diffuseMap.get() != nullptr) {
     OOGL(glActiveTextureARB(textureUnit++));
     OOGL(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB));
     OOGL(glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE));
     if (_diffuseMap != nullptr) _diffuseMap->apply();
   }
 
-  if (_emissionMap.get() != nil) {
+  if (_emissionMap.get() != nullptr) {
     OOGL(glActiveTextureARB(textureUnit++));
     OOGL(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB));
     OOGL(glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_ADD));
@@ -207,7 +207,7 @@ void OOMultiTextureMaterial::unapplyWithNext(OOMaterial* next) {
 #ifdef OO_DEBUG_MONITOR_ENABLED
 std::vector<oo::Ref<OOTexture>> OOMultiTextureMaterial::allTextures() {
   std::vector<oo::Ref<OOTexture>> result;
-  if (_diffuseMap.get() == nil) {
+  if (_diffuseMap.get() == nullptr) {
     result.emplace_back(_emissionMap.get());
     return result;
   }

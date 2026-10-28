@@ -33,9 +33,6 @@ MA 02110-1301, USA.
 // reachable through OOMaths.h.
 #define INCLUDED_OOMATHS_h
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #ifndef OOMATHS_STANDALONE
 #define OOMATHS_STANDALONE 0
@@ -45,8 +42,7 @@ extern "C" {
 #define OOMATHS_OPENGL_INTEGRATION !OOMATHS_STANDALONE
 #endif
 
-#if defined(__cplusplus) && \
-    !defined(OO_PLAIN_CPP_UNIT)  // a game unit, not a plain C++ one
+#ifndef OO_PLAIN_CPP_UNIT
 #include "OOFoundation.h"
 #endif
 
@@ -60,8 +56,7 @@ extern "C" {
 #include "OOFunctionAttributes.h"
 
 #if OOMATHS_OPENGL_INTEGRATION
-#if defined(__cplusplus) && \
-    !defined(OO_PLAIN_CPP_UNIT)  // a game unit, not a plain C++ one
+#ifndef OO_PLAIN_CPP_UNIT
 #include "OOOpenGL.h"
 #else
 /*	A plain C or C++ translation unit (OOVoxel.c) needs only the
@@ -158,6 +153,3 @@ typedef double OOHPScalar;
 #include "legacy_random.h"
 #endif
 
-#ifdef __cplusplus
-}
-#endif

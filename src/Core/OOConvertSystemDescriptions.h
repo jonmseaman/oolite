@@ -53,8 +53,8 @@ oo::PList OOConvertSystemDescriptionsToDictionaryFormat(
 
 std::string OOStringifySystemDescriptionLine(const std::string& line,
                                              const oo::PList& indicesToKeys,
-                                             BOOL useFallback);
+                                             bool useFallback);
 
 //	Higher-level functions to drive the entire conversion.
-void CompileSystemDescriptions(BOOL asXML);
-void ExportSystemDescriptions(BOOL asXML);
+void CompileSystemDescriptions(bool asXML);
+void ExportSystemDescriptions(bool asXML);

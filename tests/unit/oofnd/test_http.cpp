@@ -8,21 +8,13 @@
    difference (the relative redirect, an unparseable URL).
 
         On Windows the test runs its own HTTP server on 127.0.0.1 (winsock): no
-   network is used. Link: -lwinhttp -lws2_32 (tests/unit/oofnd/meson.build;
-   tools/check-oofnd.sh reads this line:)
+   network is used. Link: -lwinhttp -lws2_32 (tests/unit/oofnd/meson.build reads this line:)
 */
 // oofnd-link-windows: -lwinhttp -lws2_32
 
-// The header must survive OOCocoa.h's true/false macros and hand them back.
-#define true 1
-#define false 0
 #include <type_traits>
 
 #include "oofnd/Http.hpp"
-static_assert(std::is_same_v<decltype(true), int>,
-              "Http.hpp must restore OOCocoa.h's true macro");
-#undef true
-#undef false
 
 #include <atomic>
 #include <chrono>

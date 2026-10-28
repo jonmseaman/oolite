@@ -177,7 +177,6 @@ OOMatrix OOMatrixOrthogonalize(OOMatrix m) {
   return m;
 }
 
-#ifdef __cplusplus
 std::string OOMatrixDescription(OOMatrix matrix) {
   return oo::str::format(
       "{{%g, %g, %g, %g}, {%g, %g, %g, %g}, {%g, %g, %g, %g}, {%g, %g, %g, "
@@ -187,7 +186,6 @@ std::string OOMatrixDescription(OOMatrix matrix) {
       matrix.m[2][0], matrix.m[2][1], matrix.m[2][2], matrix.m[2][3],
       matrix.m[3][0], matrix.m[3][1], matrix.m[3][2], matrix.m[3][3]);
 }
-#endif
 
 OOMatrix OOMatrixForBillboard(HPVector bbPos, HPVector eyePos) {
   Vector v0, v1, v2, arbv;

@@ -75,7 +75,7 @@ std::vector<std::string> StringsFromArray(const oo::PList& array) {
   return result;
 }
 
-BOOL CheckNameConflict(
+bool CheckNameConflict(
     const std::string& lcName,
     const std::map<std::string, std::string, std::less<>>& directoryCases,
     const std::map<std::string, std::string, std::less<>>& rootFiles,
@@ -416,7 +416,7 @@ void OOFileScannerVerifierStage::checkRootFolders() {
 void OOFileScannerVerifierStage::checkConfigFiles() {
   std::string lcName;
   std::optional<std::string> realFileName;
-  BOOL inConfigDir;
+  bool inConfigDir;
 
   for (const std::string& name : StringsFromArray(
            verifier()->configurationArrayForKey("knownConfigFiles"))) {
@@ -445,7 +445,7 @@ void OOFileScannerVerifierStage::checkConfigFiles() {
 void OOFileScannerVerifierStage::checkKnownFiles() {
   std::string lcDirectory, lcName;
   std::optional<std::string> realFileName;
-  BOOL inDirectory;
+  bool inDirectory;
 
   // Folders in byte order of their names (they were in dictionary order).
   const oo::PList directories =
@@ -577,7 +577,6 @@ void OOFileScannerVerifierStage::checkPListFormat(
           formatDesc = "Apple binary format";
           break;
 
-#if OOLITE_GNUSTEP
         case oo::PListFormat::GNUstep:
           formatDesc = "GNUstep text format";
           break;
@@ -585,7 +584,6 @@ void OOFileScannerVerifierStage::checkPListFormat(
         case oo::PListFormat::GNUstepBinary:
           formatDesc = "GNUstep binary format";
           break;
-#endif
 
         default:
           formatDesc = oo::str::format("unknown format (%i)", (int)format);
@@ -675,7 +673,7 @@ OOFileHandlingVerifierStage::dependents() {
 
 namespace {
 
-BOOL CheckNameConflict(
+bool CheckNameConflict(
     const std::string& lcName,
     const std::map<std::string, std::string, std::less<>>& directoryCases,
     const std::map<std::string, std::string, std::less<>>& rootFiles,
@@ -684,17 +682,17 @@ BOOL CheckNameConflict(
   if (directory != directoryCases.end()) {
     if (outExisting != NULL) *outExisting = directory->second;
     if (outExistingType != NULL) *outExistingType = "directory";
-    return YES;
+    return true;
   }
 
   const auto file = rootFiles.find(lcName);
   if (file != rootFiles.end()) {
     if (outExisting != NULL) *outExisting = file->second;
     if (outExistingType != NULL) *outExistingType = "file";
-    return YES;
+    return true;
   }
 
-  return NO;
+  return false;
 }
 
 }  // namespace

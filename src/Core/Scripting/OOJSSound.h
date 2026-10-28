@@ -32,9 +32,6 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 class OOSound;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSSound(ooscript::Context context, ooscript::Object global);
 
@@ -45,9 +42,6 @@ void InitOOJSSound(ooscript::Context context, ooscript::Object global);
  */
 OOSound* SoundFromJSValue(ooscript::Context context, ooscript::Value value);
 
-#ifdef __cplusplus
-}
-#endif
 
 /*	The bodies of OOSound (OOJavaScriptExtentions): a new Sound object for
    the sound (JS null for none), its toString() text and its JS class name. The

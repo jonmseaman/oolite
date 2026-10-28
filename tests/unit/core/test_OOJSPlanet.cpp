@@ -16,7 +16,7 @@
    and run on it first; they pin the JS-visible behaviour (the twelve
    properties, the colours both ways, a texture that loads or does not, a moon,
    a non-planet, a native's exception) and what the category answers the engine.
-   Run: bash tools/check-core-tests.sh
+   Run: tests/run.sh unit
 */
 
 #include "OOColor.h"
@@ -90,7 +90,7 @@ class OOPlanetEntity : public Entity {
   oo::Ref<OOColor> _illuminationColor;
   float _airColorMixRatio = 0;
   float _airDensity = 0;
-  BOOL _hasAtmosphere = NO;
+  bool _hasAtmosphere = false;
   std::optional<std::string> _texture;
   double _rotationalVelocity = 0;
   Vector _terminatorThresholdVector = {};
@@ -224,9 +224,9 @@ void OOPlanetEntity::setTerminatorThresholdVector(Vector v) {
 bool OOPlanetEntity::setUpPlanetFromTexture(
     const std::optional<std::string>& fileName) {
   _textureLoads++;
-  if (!fileName.has_value() || *fileName == "missing.png") return NO;
+  if (!fileName.has_value() || *fileName == "missing.png") return false;
   _texture = fileName;
-  return YES;
+  return true;
 }
 
 double OOPlanetEntity::radius() {
@@ -384,9 +384,8 @@ bool JSValueToNumbers(ooscript::Context context, ooscript::Value value,
 }  // namespace
 
 ooscript::Object gOOEntityJSPrototype = nullptr;
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
-extern "C" {
 
 // A vector is the array [x, y, z] here, a quaternion [w, x, y, z].
 bool VectorToJSValue(ooscript::Context context, Vector vector,
@@ -422,13 +421,13 @@ void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
   sSuperclasses[subclass] = superclass;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
@@ -490,7 +489,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();
@@ -514,9 +512,9 @@ namespace {
 ooscript::Runtime sRuntime;
 ooscript::Context sContext;
 ooscript::Object sGlobal;
-OOPlanetEntity* sPlanet = nil;
-OOPlanetEntity* sMoon = nil;
-FakeUniverse* sUniverse = nil;
+OOPlanetEntity* sPlanet = nullptr;
+OOPlanetEntity* sMoon = nullptr;
+FakeUniverse* sUniverse = nullptr;
 
 ooscript::Value JSValueForObject(ooscript::ClassDef* jsClass,
                                  ooscript::Object prototype,
@@ -566,7 +564,7 @@ void SetUpContext() {
   sPlanet->_airColor = OOColor::colorWithRed(0.5f, 0.25f, 1, 1);
   sPlanet->_airColorMixRatio = 0.5f;
   sPlanet->_airDensity = 0.75f;
-  sPlanet->_hasAtmosphere = YES;
+  sPlanet->_hasAtmosphere = true;
   sPlanet->_texture = "lave.png";
   sPlanet->_rotationalVelocity = 0.125;
   sPlanet->_terminatorThresholdVector = make_vector(0.25, 1, 2);

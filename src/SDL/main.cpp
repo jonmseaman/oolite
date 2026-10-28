@@ -22,7 +22,6 @@ MA 02110-1301, USA.
 
 */
 
-#ifdef GNUSTEP_BASE_LIBRARY
 #include "GameController.h"
 #include "OOLoggingExtended.h"
 #include "oofnd/Process.hpp"
@@ -44,6 +43,7 @@ MA 02110-1301, USA.
 
 #include <cstring>
 #include <optional>
+#include <string>
 // Make sure that a high performance GPU is
 // selected, if more than one are available
 __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
@@ -60,7 +60,6 @@ namespace {
 // statics such as oo::log's logger have died.
 GameController* controller = nullptr;
 }  // namespace
-#endif
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 uint32_t gDebugFlags = 0;
@@ -86,7 +85,6 @@ int main(int argc, char* argv[]) {
   // built it (UTF-8 on Windows).
   oo::process::setArguments(argc, argv);
 
-#ifdef GNUSTEP_BASE_LIBRARY
   int i;
 
 #if OOLITE_WINDOWS
@@ -98,17 +96,21 @@ int main(int argc, char* argv[]) {
 #define TABS3 "\t\t\t"
 #define TABS4 ""
 
-// Detect current working directory and set up GNUstep environment variables
-#define MAX_PATH_LEN 256
-  char currentWorkingDir[MAX_PATH_LEN];
-  DWORD bufferSize = MAX_PATH_LEN;
+  // Detect current working directory and set up GNUstep environment variables
+  // (32767 characters is the longest path Windows allows).
+  std::string currentWorkingDir(32768, '\0');
+  DWORD bufferSize = static_cast<DWORD>(currentWorkingDir.size());
 
-  QueryFullProcessImageName(GetCurrentProcess(), 0, currentWorkingDir,
-                            &bufferSize);
-  // Strip the exe filenameb (from last backslash onwards), leave just the path
-  char* probeString = strrchr(currentWorkingDir, '\\');
-  if (probeString)
-    *probeString = '\0';  // currentWorkingDir now contains the path we need
+  if (QueryFullProcessImageName(GetCurrentProcess(), 0,
+                                currentWorkingDir.data(), &bufferSize)) {
+    currentWorkingDir.resize(bufferSize);
+  } else {
+    currentWorkingDir.clear();
+  }
+  // Strip the exe filename (from last backslash onwards), leave just the path
+  const size_t probe = currentWorkingDir.rfind('\\');
+  if (probe != std::string::npos)
+    currentWorkingDir.resize(probe);  // now the path we need
 
   // Prepend system PATH env variable with our own executable's path
   const char* pathEnvVar = "Path";
@@ -117,34 +119,31 @@ int main(int argc, char* argv[]) {
     pathEnvVar = "PATH";
     systemPath = SDL_getenv(pathEnvVar);
   }
-  size_t currentWorkingDirLen = strlen(currentWorkingDir);
-  size_t systemPathLen = strlen(systemPath);
-  // the max possible length of the string below is systemPath plus the path
-  // we have determined for us, plus one char for the ";" and one char for the
-  // null terminator
-  char* finalPath =
-      (char*)malloc(systemPathLen + currentWorkingDirLen + 2 * sizeof(char));
-  strcpy(finalPath, currentWorkingDir);
-  strcat(finalPath, ";");
-  strcat(finalPath, systemPath);
+  std::string finalPath = currentWorkingDir;
+  if (systemPath) {
+    finalPath += ';';
+    finalPath += systemPath;
+  }
 
-  SDL_setenv_unsafe("GNUSTEP_PATH_HANDLING", "windows", YES);
-  SDL_setenv_unsafe(pathEnvVar, finalPath, YES);
-  SDL_setenv_unsafe("GNUSTEP_SYSTEM_ROOT", currentWorkingDir, YES);
-  SDL_setenv_unsafe("GNUSTEP_LOCAL_ROOT", currentWorkingDir, YES);
-  SDL_setenv_unsafe("GNUSTEP_NETWORK_ROOT", currentWorkingDir, YES);
-  SDL_setenv_unsafe("GNUSTEP_USERS_ROOT", currentWorkingDir, YES);
+  SDL_setenv_unsafe("GNUSTEP_PATH_HANDLING", "windows", true);
+  SDL_setenv_unsafe(pathEnvVar, finalPath.c_str(), true);
+  SDL_setenv_unsafe("GNUSTEP_SYSTEM_ROOT", currentWorkingDir.c_str(), true);
+  SDL_setenv_unsafe("GNUSTEP_LOCAL_ROOT", currentWorkingDir.c_str(), true);
+  SDL_setenv_unsafe("GNUSTEP_NETWORK_ROOT", currentWorkingDir.c_str(), true);
+  SDL_setenv_unsafe("GNUSTEP_USERS_ROOT", currentWorkingDir.c_str(), true);
 #if OO_GAME_DATA_TO_USER_FOLDER
-  SDL_setenv_unsafe("HOMEPATH",
-                    strcat(SDL_getenv("LOCALAPPDATA"), "\\Oolite\\oolite.app"),
-                    YES);
+  // The path is built in a string of its own; LOCALAPPDATA is the
+  // environment's buffer and must not be appended to.
+  const char* localAppData = SDL_getenv("LOCALAPPDATA");
+  const std::string userHome =
+      localAppData ? std::string(localAppData) + "\\Oolite\\oolite.app"
+                   : currentWorkingDir;
+  SDL_setenv_unsafe("HOMEPATH", userHome.c_str(), true);
 #else
-  SDL_setenv_unsafe("HOMEPATH", currentWorkingDir, YES);
+  SDL_setenv_unsafe("HOMEPATH", currentWorkingDir.c_str(), true);
 #endif
 
-  SetCurrentDirectory(currentWorkingDir);
-
-  free(finalPath);
+  SetCurrentDirectory(currentWorkingDir.c_str());
 
   /*	Windows ambitiously starts apps with the C library locale set to the
           system locale rather than the "C" locale as per spec. Fixing here so
@@ -199,7 +198,7 @@ int main(int argc, char* argv[]) {
         controller->setPlayerFileToLoad(argument);
       }
 
-      if (!strcmp("-help", argv[i]) || !strcmp("--help", argv[i])) {
+      if (argument == "-help" || argument == "--help") {
         std::string processNameString = oo::process::processName();
         char const* processName = processNameString.c_str();
         char s[2048];
@@ -267,7 +266,7 @@ int main(int argc, char* argv[]) {
         OO_LOG(
             "process.args",
             "{} option detected, exiting after help page has been displayed.",
-            argv[i]);
+            argument);
         return 0;
       }
     }
@@ -288,7 +287,6 @@ int main(int argc, char* argv[]) {
                exception->name(), exception->reason());
     return EXIT_FAILURE;
   }
-#endif
 
   // never reached
   return 0;

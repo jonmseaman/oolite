@@ -17,7 +17,7 @@
    first (commit ea566a254, with an Objective-C stand-in of the extension
    manager's facade; since the conversion the stand-in is the C++ manager's
    members); they pin the JS-visible behaviour of every property and method that
-   compiles in the test flavour. Run: bash tools/check-core-tests.sh
+   compiles in the test flavour. Run: tests/run.sh unit
    test_OOJSConsole
 */
 
@@ -117,9 +117,7 @@ bool OODebugMonitor::usingPlugInController() { return false; }
 std::string OODebugMonitor::sourceCodeForFile(const std::string&, unsigned) {
   return std::string();
 }
-#if OOLITE_GNUSTEP
 void OODebugMonitor::applicationWillTerminate() {}
-#endif
 void OODebugMonitor::jsEngine(OOJavaScriptEngine*, ooscript::Context,
                               ooscript::ErrorReport*, unsigned, bool,
                               const std::string&) {}
@@ -350,7 +348,7 @@ int gOOTestEntityCxxEntityIvarOffset = 0;
 #if DEBUG
 #include "ResourceManager.h"
 
-std::string cxx_OOJSDescribeValue(ooscript::Context, ooscript::Value, BOOL) {
+std::string cxx_OOJSDescribeValue(ooscript::Context, ooscript::Value, bool) {
   std::abort();
 }
 std::optional<std::string> ResourceManager::diagnosticFileLocation() {
@@ -425,7 +423,7 @@ GLint OOOpenGLExtensionManager::textureImageUnitCount() { return 16; }
 class Universe {
  public:
   OOGraphicsDetail _detailLevel;
-  BOOL _displayFPS;
+  bool _displayFPS;
 
   OOGraphicsDetail getDetailLevel();
   void setDetailLevel(OOGraphicsDetail);
@@ -440,7 +438,7 @@ bool Universe::getDisplayFPS() { return _displayFPS; }
 void Universe::setDisplayFPS(bool value) { _displayFPS = value; }
 
 class Universe;
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 // An entity, as the console's inspectEntity() sees it: one answers -inspect
 // (the Mac debug OXP's inspector), one does not.
@@ -482,13 +480,13 @@ Entity* InspectablePart() {
 
 // inspectEntity(true) is the inspectable entity, inspectEntity(false) the
 // other; anything else none. (OOJSEntity.h declares it with C linkage.)
-extern "C" BOOL JSValueToEntity(ooscript::Context, ooscript::Value value,
+bool JSValueToEntity(ooscript::Context, ooscript::Value value,
                                 Entity** outEntity);
-BOOL JSValueToEntity(ooscript::Context, ooscript::Value value,
+bool JSValueToEntity(ooscript::Context, ooscript::Value value,
                      Entity** outEntity) {
-  if (!ooscript::isBoolean(value)) return NO;
+  if (!ooscript::isBoolean(value)) return false;
   *outEntity = ooscript::toBoolean(value) ? InspectablePart() : PlainPart();
-  return YES;
+  return true;
 }
 
 // Each C++ part's entity, null for any other.

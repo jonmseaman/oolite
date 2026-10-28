@@ -125,5 +125,5 @@ class OOJSScript : public OOScript {
   std::optional<std::string> _filePath;
 };
 
-OOJS_EXTERN_C void InitOOJSScript(ooscript::Context context,
+void InitOOJSScript(ooscript::Context context,
                                   ooscript::Object global);

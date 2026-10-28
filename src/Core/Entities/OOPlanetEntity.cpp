@@ -143,7 +143,7 @@ oo::PList MaterialConfigWithTextures(
   oo::PList result = configuration;
   oo::PList::Array textureObjects;
   for (OOTexture* texture : textures) {
-    if (texture == nil) break;
+    if (texture == nullptr) break;
     textureObjects.push_back(OOTextureObjectNode(texture));
   }
   (*result.getIf<oo::PList::Dict>())["_oo_texture_objects"] =
@@ -158,12 +158,12 @@ void OOPlanetEntity::initAsMainPlanetForSystem(OOSystemID s) {
   oo::PList planetInfo =
       (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(s) : oo::PList());
 
-  SetInfo(planetInfo, "mainForLocalSystem", oo::PList(static_cast<bool>(YES)));
+  SetInfo(planetInfo, "mainForLocalSystem", oo::PList(static_cast<bool>(true)));
   if (s != (PLAYER != nullptr ? PLAYER->systemID() : 0)) {
-    SetInfo(planetInfo, "isMiniature", oo::PList(static_cast<bool>(YES)));
+    SetInfo(planetInfo, "isMiniature", oo::PList(static_cast<bool>(true)));
   }
   initFromDictionary(
-      planetInfo, planetInfo.get<bool>("has_atmosphere", YES),
+      planetInfo, planetInfo.get<bool>("has_atmosphere", true),
       ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) != nullptr
            ? UNIVERSE->getSystemManager()->getRandomSeedForSystem(
                  s, (PLAYER != nullptr ? PLAYER->galaxyNumber() : OOGalaxyID{}))
@@ -318,7 +318,7 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
         collision_radius + ATMOSPHERE_DEPTH);
     _airColor = OOColor::colorWithRed(0.8f, 0.8f, 0.9f, 1.0f);
   }
-  if (YES)  // create _materialParameters when NEW_ATMOSPHERE is set to 0
+  if (true)  // create _materialParameters when NEW_ATMOSPHERE is set to 0
 #endif
   {
     _materialParameters = ValuesForKeys(
@@ -605,7 +605,7 @@ bool OOPlanetEntity::initAsMiniatureVersionOfPlanet(OOPlanetEntity* planet) {
 
   _terminatorThresholdVector = planet->_terminatorThresholdVector;
 
-  _miniature = YES;
+  _miniature = true;
 
   _planetDrawable = planet->_planetDrawable->copy();
   _planetDrawable->setRadius(collision_radius);
@@ -679,7 +679,7 @@ void OOPlanetEntity::update(OOTimeDelta delta_t) {
   Entity::update(delta_t);
 
   if (EXPECT(!_miniature)) {
-    BOOL canDrawShaderAtmosphere =
+    bool canDrawShaderAtmosphere =
         _atmosphereShaderDrawable != nullptr &&
         (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel()
                              : OOGraphicsDetail{}) >= DETAIL_LEVEL_SHADERS;
@@ -815,7 +815,7 @@ bool OOPlanetEntity::isFinishedLoading() {
 // translucent is read only in the branch that
 // OOLITE_HAVE_FIXED_THE_ABOVE_DESCRIBED_BUG_WHICH_WE_HAVENT compiles out.
 void OOPlanetEntity::drawImmediate(bool /*immediate*/, bool /*translucent*/) {
-  BOOL canDrawShaderAtmosphere =
+  bool canDrawShaderAtmosphere =
       _atmosphereShaderDrawable != nullptr &&
       (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel() : OOGraphicsDetail{}) >=
           DETAIL_LEVEL_SHADERS;
@@ -904,21 +904,21 @@ void OOPlanetEntity::drawImmediate(bool /*immediate*/, bool /*translucent*/) {
 }
 
 bool OOPlanetEntity::checkCloseCollisionWith(Entity* other) {
-  if (!other) return NO;
+  if (!other) return false;
   if (other->isShip) {
     ::ShipEntity* ship = oo::ToShip(other);
     if ((ship != nullptr ? ship->getBehaviour() : OOBehaviour{}) ==
         BEHAVIOUR_LAND_ON_PLANET) {
-      return NO;
+      return false;
     }
   }
 
-  return YES;
+  return true;
 }
 
 bool OOPlanetEntity::planetHasStation() {
   // find the nearest station...
-  ::ShipEntity* station = nil;
+  ::ShipEntity* station = nullptr;
   station =
       oo::ToShip((UNIVERSE != nullptr ? UNIVERSE->nearestShipMatchingPredicate(
                                             IsStationPredicate, nullptr, this)
@@ -929,9 +929,9 @@ bool OOPlanetEntity::planetHasStation() {
                  position) <
           4 * collision_radius)  // there is a station in range.
   {
-    return YES;
+    return true;
   }
-  return NO;
+  return false;
 }
 
 void OOPlanetEntity::launchShuttle() {
@@ -959,7 +959,7 @@ void OOPlanetEntity::launchShuttle() {
 
   ::ShipEntity* shuttle_ship =
       (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("shuttle")
-                           : (::ShipEntity*)nil);  // retain count = 1
+                           : (::ShipEntity*)nullptr);  // retain count = 1
   if (shuttle_ship) {
     if ((shuttle_ship != nullptr
              ? shuttle_ship->getCrew()
@@ -991,9 +991,9 @@ void OOPlanetEntity::welcomeShuttle(::ShipEntity* /*shuttle*/) {
   _shuttlesOnGround++;
 }
 
-bool OOPlanetEntity::isPlanet() { return YES; }
+bool OOPlanetEntity::isPlanet() { return true; }
 
-bool OOPlanetEntity::isVisible() { return YES; }
+bool OOPlanetEntity::isVisible() { return true; }
 
 double OOPlanetEntity::rotationalVelocity() { return _rotationalVelocity; }
 
@@ -1075,7 +1075,7 @@ void OOPlanetEntity::resetGraphicsState() {
 
 void OOPlanetEntity::setTextureFileName(
     const std::optional<std::string>& textureFileName) {
-  BOOL isMoon = _atmosphereDrawable == nullptr;
+  bool isMoon = _atmosphereDrawable == nullptr;
 
   std::optional<std::string> textureName = textureFileName;
   oo::Ref<OOTexture> diffuseMap;  // held: the factories answer the texture
@@ -1089,9 +1089,9 @@ void OOPlanetEntity::setTextureFileName(
 #if OO_SHADERS
   OOGraphicsDetail detailLevel =
       (UNIVERSE != nullptr ? UNIVERSE->getDetailLevel() : OOGraphicsDetail{});
-  BOOL shadersOn = detailLevel >= DETAIL_LEVEL_SHADERS;
+  bool shadersOn = detailLevel >= DETAIL_LEVEL_SHADERS;
 #else
-  const BOOL shadersOn = NO;
+  const bool shadersOn = false;
 #endif
 
   if (textureName.has_value()) {
@@ -1237,17 +1237,17 @@ void OOPlanetEntity::setTextureFileName(
 bool OOPlanetEntity::setUpPlanetFromTexture(
     const std::optional<std::string>& textureName) {
   setTextureFileName(textureName);
-  return YES;
+  return true;
 }
 
 OOMaterial* OOPlanetEntity::material() { return _planetDrawable->material(); }
 
 OOMaterial* OOPlanetEntity::atmosphereMaterial() {
-  return _atmosphereDrawable ? _atmosphereDrawable->material() : nil;
+  return _atmosphereDrawable ? _atmosphereDrawable->material() : nullptr;
 }
 
 OOMaterial* OOPlanetEntity::atmosphereShaderMaterial() {
-  if (!_atmosphereShaderDrawable) return nil;
+  if (!_atmosphereShaderDrawable) return nullptr;
   return _atmosphereShaderDrawable->material();
 }
 

@@ -155,14 +155,10 @@ OOINLINE OOHPScalar HPtriple_product(HPVector first, HPVector second,
 OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2,
                                       HPVector v3) CONST_FUNC;
 
-#if defined(__cplusplus) && \
-    !defined(OO_PLAIN_CPP_UNIT)  // a game unit, not a plain C++ one
-/*	Objective-C++ only: OOMaths.h is included inside extern "C". */
-extern "C++" {
+#ifndef OO_PLAIN_CPP_UNIT
 #include "oofnd/StdLib.hpp"
 std::string cxx_HPVectorDescription(HPVector vector);        // "(x, y, z)"
 std::vector<double> cxx_ArrayFromHPVector(HPVector vector);  // { x, y, z }
-}
 
 #endif
 

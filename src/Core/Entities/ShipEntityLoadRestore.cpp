@@ -144,18 +144,18 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   }
 
   // Add groups.
-  if (_group != nil) {
+  if (_group != nullptr) {
     result[KEY_GROUP_ID] =
         oo::PList::unsignedInteger(GroupIDForGroup(_group.get(), *context));
-    if ((_group != nullptr ? _group->leader() : (::ShipEntity*)nil) == this)
-      result[KEY_IS_GROUP_LEADER] = oo::PList(static_cast<bool>(YES));
+    if ((_group != nullptr ? _group->leader() : (::ShipEntity*)nullptr) == this)
+      result[KEY_IS_GROUP_LEADER] = oo::PList(static_cast<bool>(true));
     const std::optional<std::string> groupName =
         (_group != nullptr ? _group->name() : std::optional<std::string>());
     if (groupName.has_value()) {
       result[KEY_GROUP_NAME] = *groupName;
     }
   }
-  if (_escortGroup != nil) {
+  if (_escortGroup != nullptr) {
     result[KEY_ESCORT_GROUP_ID] = oo::PList::unsignedInteger(
         GroupIDForGroup(_escortGroup.get(), *context));
   }
@@ -164,8 +164,8 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
      witchspace. But it is needed in the save file to correctly restore an
      escorted group.
   */
-  else if (_group != nil && (_group != nullptr ? _group->leader()
-                                               : (::ShipEntity*)nil) == this) {
+  else if (_group != nullptr && (_group != nullptr ? _group->leader()
+                                               : (::ShipEntity*)nullptr) == this) {
     result[KEY_ESCORT_GROUP_ID] =
         oo::PList::unsignedInteger(GroupIDForGroup(_group.get(), *context));
   }
@@ -193,11 +193,11 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
 
 ::ShipEntity* ShipEntity::shipRestoredFromDictionary(
     const oo::PList& dict, bool fallback, OOShipSaveContext* context) {
-  if (dict.isNull()) return nil;
+  if (dict.isNull()) return nullptr;
   OOShipSaveContext localContext;
   if (context == nullptr) context = &localContext;
 
-  ::ShipEntity* ship = nil;
+  ::ShipEntity* ship = nullptr;
 
   const std::string shipKey =
       dict.get<std::string>(KEY_SHIP_KEY);  // "" finds no ship, as nil did
@@ -220,7 +220,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
       for (const auto& [key, value] : *overrides->getIf<oo::PList::Dict>())
         mergedData.insert_or_assign(key, value);
     }
-    mergedData["auto_ai"] = oo::PList(static_cast<bool>(NO));
+    mergedData["auto_ai"] = oo::PList(static_cast<bool>(false));
     mergedData["escorts"] = oo::PList::unsignedInteger(0);
 
     const oo::PList mergedPlist(std::move(mergedData));
@@ -248,12 +248,12 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
     // Unknown ship; fall back on role if desired and possible.
     const std::optional<std::string> shipPrimaryRole =
         OptionalStringForKey(dict, KEY_PRIMARY_ROLE);
-    if (!fallback || !shipPrimaryRole.has_value()) return nil;
+    if (!fallback || !shipPrimaryRole.has_value()) return nullptr;
 
     ship = oo::ToShip(oo::AutoreleaseEntity(
         (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(*shipPrimaryRole)
-                             : (::ShipEntity*)nil)));
-    if (ship == nil) return nil;
+                             : (::ShipEntity*)nullptr)));
+    if (ship == nullptr) return nullptr;
   }
 
   // The following stuff is deliberately set up the same way even if using role
@@ -274,7 +274,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   if (const oo::PList* equipment = dict.get<oo::PList::Array>(KEY_EQUIPMENT)) {
     for (const oo::PList& eqKey : *equipment->getIf<oo::PList::Array>()) {
       if (const std::string* key = eqKey.getIf<std::string>()) {
-        if (ship != nullptr) ship->addEquipmentItem(*key, NO, "loading");
+        if (ship != nullptr) ship->addEquipmentItem(*key, false, "loading");
       }  // the saved keys are strings
     }
   }
@@ -283,7 +283,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   if (const oo::PList* missileList = dict.get<oo::PList::Array>(KEY_MISSILES)) {
     for (const oo::PList& eqKey : *missileList->getIf<oo::PList::Array>()) {
       if (const std::string* key = eqKey.getIf<std::string>()) {
-        if (ship != nullptr) ship->addEquipmentItem(*key, NO, "loading");
+        if (ship != nullptr) ship->addEquipmentItem(*key, false, "loading");
       }  // the saved keys are strings
     }
   }
@@ -302,10 +302,10 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
       if (group != nullptr) group->setName(groupName);
     }
     if ((ship != nullptr ? ship->hasPrimaryRole("escort") : false) &&
-        ship != (group != nullptr ? group->leader() : (::ShipEntity*)nil)) {
+        ship != (group != nullptr ? group->leader() : (::ShipEntity*)nullptr)) {
       if (ship != nullptr)
         ship->setOwner(
-            (group != nullptr ? group->leader() : (::ShipEntity*)nil));
+            (group != nullptr ? group->leader() : (::ShipEntity*)nullptr));
     }
   }
 

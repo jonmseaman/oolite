@@ -60,7 +60,7 @@ typedef struct ConstTable {
 #define TABLE(entries) {sizeof entries / sizeof *entries, entries}
 
 // Unconditional, as upstream's: OOCAssert reads it in every flavour.
-static BOOL sInited = NO;
+static bool sInited = false;
 
 /*
         The interned string "UNDEFINED", returned by
@@ -150,12 +150,12 @@ void OOConstToJSStringInit(ooscript::Context context) {
   InitTable(context, &gOOLegalStatusReasonConstTable);
   InitTable(context, &gOOLongRangeChartModeConstTable);
 
-  sInited = YES;
+  sInited = true;
 }
 
 void OOConstToJSStringDestroy(void) {
   OOCAssert(sInited, "OOConstToJSStringDestroy() called while not inited.");
-  sInited = NO;
+  sInited = false;
   // jsString pointers are now officially junk.
 }
 

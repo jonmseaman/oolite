@@ -61,7 +61,7 @@ enum class OOEntityByNameArgument : std::uint8_t {
 };
 
 // A typed call's result, kept by its type: an integer,
-// enum or BOOL result as a long long (as OOCallIntegerMethod() converted it), a
+// enum or bool result as a long long (as OOCallIntegerMethod() converted it), a
 // float or double as a double, a vector, a quaternion, an entity, a colour, a
 // property list. callObjC() reads the member its row's type names. (An
 // Objective-C object result, which no row answers, is not kept.)

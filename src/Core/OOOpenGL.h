@@ -29,8 +29,7 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#if defined(__cplusplus) && \
-    !defined(OO_PLAIN_CPP_UNIT)  // a game unit, not a plain C++ one
+#ifndef OO_PLAIN_CPP_UNIT
 #include "OOFoundation.h"
 #endif
 #include "OOOpenGLCheck.h"
@@ -113,9 +112,6 @@ typedef enum {
   OPENGL_STATE_INTERNAL_USE_ONLY
 } OOOpenGLStateID;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #if OO_GL_STATE_VERIFICATION
 void OOSetOpenGLState_(OOOpenGLStateID state, const char* function,
@@ -172,8 +168,7 @@ void GLDrawBallBillboard(GLfloat radius, GLfloat step, GLfloat z_distance);
 /*	GLDrawOval(), GLDrawFilledOval()
         Draw axis-alligned ellipses, as outline and fill respectively.
 */
-#if defined(__cplusplus) && \
-    !defined(OO_PLAIN_CPP_UNIT)  // NSSize is Foundation's; a
+#ifndef OO_PLAIN_CPP_UNIT
                                  // plain C++ unit (OODebugGLDrawing.cpp) does
                                  // not see these
 void GLDrawOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz, GLfloat step);
@@ -195,9 +190,6 @@ void GLDrawPoints(OOGLVector* points, int n);
 void GLDrawFilledPoints(OOGLVector* points, int n);
 void GLDrawQuadStrip(OOGLVector* points, int n);
 
-#ifdef __cplusplus
-}
-#endif
 
 enum { kOOShaderSettingDefault = SHADERS_NOT_SUPPORTED };
 
@@ -206,13 +198,8 @@ enum { kOOShaderSettingDefault = SHADERS_NOT_SUPPORTED };
 
 #ifndef NDEBUG
 
-#ifdef __cplusplus
-extern "C++" {  // (this header is sometimes reached from inside OOMaths.h's
-                // extern "C" block)
 std::string OOGLColorToString(GLfloat color[4]);
 std::string OOGLEnumToString(GLenum value);
 std::string OOGLFlagToString(bool value);
-}
-#endif
 
 #endif

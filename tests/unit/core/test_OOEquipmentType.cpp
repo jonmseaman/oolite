@@ -17,7 +17,7 @@
    standards and legacy-condition functions are test replacements. OOColor is
    the game's own. The tests ask the C++ class, and the last tests pin the C++
    API and that a registered type outlives the autorelease pool, as ships rely
-   on. Run: bash tools/check-core-tests.sh
+   on. Run: tests/run.sh unit
 */
 
 #include <cstdio>
@@ -33,7 +33,7 @@
 // --------------------------------------------------------------
 
 static std::vector<std::string> gLog;
-static BOOL gEnforceStandards = NO;
+static bool gEnforceStandards = false;
 
 namespace {
 
@@ -146,7 +146,7 @@ oo::PList Universe::getEquipmentDataOutfitting() {
       Item(9, 9, "Outfit", "EQ_OUTFIT", "Only outfitting")});
 }
 
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 #include "OOCacheManager.h"
 
@@ -231,7 +231,7 @@ void cxx_OOStandardsDeprecated(const std::string& message) {
   gLog.push_back("deprecated " + message);
 }
 
-extern "C" BOOL OOEnforceStandards(void) { return gEnforceStandards; }
+bool OOEnforceStandards(void) { return gEnforceStandards; }
 
 oo::PList OOSanitizeLegacyScriptConditions(
     const oo::PList& conditions, const std::optional<std::string>& context) {
@@ -242,10 +242,10 @@ oo::PList OOSanitizeLegacyScriptConditions(
 namespace {
 
 void Reset() {
-  if (gSharedUniverse == nil) gSharedUniverse = new Universe();
+  if (gSharedUniverse == nullptr) gSharedUniverse = new Universe();
   if (gOOPlayer == nullptr) gOOPlayer = new PlayerEntity;  // never deleted
   gLog.clear();
-  gEnforceStandards = NO;
+  gEnforceStandards = false;
 }
 
 std::string Keys(const std::optional<std::vector<std::string>>& keys) {
@@ -256,7 +256,7 @@ std::string Keys(const std::optional<std::vector<std::string>>& keys) {
 }
 
 std::string Colour(OOColor* color) {
-  if (color == nil) return "nil";
+  if (color == nullptr) return "nil";
   char buffer[64];
   std::snprintf(buffer, sizeof buffer, "(%g %g %g %g)", color->redComponent(),
                 color->greenComponent(), color->blueComponent(),
@@ -266,7 +266,7 @@ std::string Colour(OOColor* color) {
 
 // Everything an equipment type answers, in one line.
 std::string Describe(OOEquipmentType* t) {
-  if (t == nil) return "nil";
+  if (t == nullptr) return "nil";
   char buffer[1024];
   std::snprintf(
       buffer, sizeof buffer,
@@ -514,7 +514,7 @@ OO_TEST(registries) {
       "scripts/equipment conditions = cond.js,; ",
   };
 
-  OOEquipmentType* fuel = nil;
+  OOEquipmentType* fuel = nullptr;
   {
     Reset();
     OOEquipmentType::loadEquipment();
@@ -524,7 +524,7 @@ OO_TEST(registries) {
   {
     // The registry keeps its types: the same object, pool after pool, and from
     // every list.
-    OO_CHECK(fuel != nil &&
+    OO_CHECK(fuel != nullptr &&
              OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL").get() ==
                  fuel);
     OO_CHECK(OOEquipmentType::allEquipmentTypes().front().get() == fuel);
@@ -564,7 +564,7 @@ OO_TEST(registries) {
   {
     // Strict standards: legacy conditions are dropped and TL99 stays 99.
     Reset();
-    gEnforceStandards = YES;
+    gEnforceStandards = true;
     OOEquipmentType::loadEquipment();
     OO_CHECK(expect(Log()));
     OOEquipmentType* booster =
@@ -572,7 +572,7 @@ OO_TEST(registries) {
     OO_CHECK(booster->conditions().isNull() &&
              booster->effectiveTechLevel() == 99);
     OO_CHECK(OOEquipmentType::equipmentTypeWithIdentifier("EQ_EXTRA_MISSILE")
-                 .get() == nil);  // a reload starts again
+                 .get() == nullptr);  // a reload starts again
     OO_CHECK(OOEquipmentType::equipmentTypeWithIdentifier("EQ_FUEL")
                  .get()
                  ->identifier() == std::optional<std::string>("EQ_FUEL"));
@@ -652,7 +652,7 @@ OO_TEST(objectNode) {
 }
 
 OO_TEST(facadeIdentity) {
-  OOEquipmentType* fuel = nil;
+  OOEquipmentType* fuel = nullptr;
   oo::Ref<OOColor> blue;  // the C++ colour
   {
     Reset();
@@ -675,7 +675,7 @@ OO_TEST(facadeIdentity) {
     OOEquipmentType* quiet =
         OOEquipmentType::equipmentTypeWithIdentifier("EQ_QUIET").get();
     OO_CHECK(
-        quiet != nil &&
+        quiet != nullptr &&
         quiet ==
             OOEquipmentType::equipmentTypeWithIdentifier("EQ_QUIET").get());
     blue = nullptr;

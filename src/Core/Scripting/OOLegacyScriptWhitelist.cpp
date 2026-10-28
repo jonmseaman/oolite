@@ -51,7 +51,7 @@ struct SanStackElement {
 namespace {
 static oo::PList OOSanitizeLegacyScriptInternal(const oo::PList& script,
                                                 SanStackElement* stack,
-                                                BOOL allowAIMethods);
+                                                bool allowAIMethods);
 static oo::PList OOSanitizeLegacyScriptConditionsInternal(
     const oo::PList& conditions, SanStackElement* stack);
 
@@ -59,10 +59,10 @@ static oo::PList SanitizeCondition(const std::string& condition,
                                    SanStackElement* stack);
 static oo::PList SanitizeConditionalStatement(const oo::PList& statement,
                                               SanStackElement* stack,
-                                              BOOL allowAIMethods);
+                                              bool allowAIMethods);
 static oo::PList SanitizeActionStatement(const std::string& statement,
                                          SanStackElement* stack,
-                                         BOOL allowAIMethods);
+                                         bool allowAIMethods);
 static OOOperationType ClassifyLHSConditionSelector(
     const std::string& selectorString,
     std::optional<std::string>* outSanitizedMethod);
@@ -71,17 +71,17 @@ static std::optional<std::string> SanitizeQueryMethod(
                                          // returns nullopt if whitelist fails.
 static std::optional<std::string> SanitizeActionMethod(
     const std::string& selectorString,
-    BOOL allowAIMethods);  // Checks aliases and whitelist, returns nullopt if
+    bool allowAIMethods);  // Checks aliases and whitelist, returns nullopt if
                            // whitelist fails.
 static oo::PList AlwaysFalseConditions(void);
-static BOOL IsAlwaysFalseConditions(const oo::PList& conditions);
+static bool IsAlwaysFalseConditions(const oo::PList& conditions);
 
 static std::string StringFromStack(SanStackElement* topOfStack);
 }  // namespace
 
 oo::PList OOSanitizeLegacyScript(const oo::PList& script,
                                  const std::optional<std::string>& context,
-                                 BOOL allowAIMethods) {
+                                 bool allowAIMethods) {
   SanStackElement stackRoot = {NULL, context, 0};
   return OOSanitizeLegacyScriptInternal(
       script, &stackRoot,
@@ -91,7 +91,7 @@ oo::PList OOSanitizeLegacyScript(const oo::PList& script,
 namespace {
 static oo::PList OOSanitizeLegacyScriptInternal(const oo::PList& script,
                                                 SanStackElement* stack,
-                                                BOOL allowAIMethods) {
+                                                bool allowAIMethods) {
   oo::PList::Array result;
   NSUInteger index = 0;
 
@@ -141,7 +141,7 @@ namespace {
 static oo::PList OOSanitizeLegacyScriptConditionsInternal(
     const oo::PList& conditions, SanStackElement* stack) {
   oo::PList::Array result;
-  BOOL OK = YES;
+  bool OK = true;
   NSUInteger index = 0;
 
   if (OOLegacyConditionsAreSanitized(conditions) || conditions.isNull())
@@ -160,7 +160,7 @@ static oo::PList OOSanitizeLegacyScriptConditionsInternal(
                "***** SCRIPT ERROR: in {}, bad condition - expected string, "
                "got {}; ignoring.",
                StringFromStack(stack), oo::typeName(condition.type()));
-        OK = NO;
+        OK = false;
         break;
       }
 
@@ -168,7 +168,7 @@ static oo::PList OOSanitizeLegacyScriptConditionsInternal(
       if (!tokens.isNull()) {
         result.push_back(std::move(tokens));
       } else {
-        OK = NO;
+        OK = false;
         break;
       }
     }
@@ -181,8 +181,8 @@ static oo::PList OOSanitizeLegacyScriptConditionsInternal(
 }
 }  // namespace
 
-BOOL OOLegacyConditionsAreSanitized(const oo::PList& conditions) {
-  if (conditions.count() == 0) return YES;  // Empty array is safe.
+bool OOLegacyConditionsAreSanitized(const oo::PList& conditions) {
+  if (conditions.count() == 0) return true;  // Empty array is safe.
   const oo::PList* first = conditions.at(0);
   return first != nullptr && first->isArray();
 }
@@ -340,7 +340,7 @@ static oo::PList SanitizeCondition(const std::string& condition,
 namespace {
 static oo::PList SanitizeConditionalStatement(const oo::PList& statement,
                                               SanStackElement* stack,
-                                              BOOL allowAIMethods) {
+                                              bool allowAIMethods) {
   oo::PList conditions;
   oo::PList doActions;
   oo::PList elseActions;
@@ -399,7 +399,7 @@ static oo::PList SanitizeConditionalStatement(const oo::PList& statement,
 namespace {
 static oo::PList SanitizeActionStatement(const std::string& statement,
                                          SanStackElement* stack,
-                                         BOOL allowAIMethods) {
+                                         bool allowAIMethods) {
   std::vector<std::string> tokens;
   NSUInteger tokenCount;
   std::string rawSelectorString;
@@ -544,7 +544,7 @@ static std::optional<std::string> SanitizeQueryMethod(
 
 namespace {
 static std::optional<std::string> SanitizeActionMethod(
-    const std::string& selectorString, BOOL allowAIMethods) {
+    const std::string& selectorString, bool allowAIMethods) {
   static const oo::PList whitelistDictionary =
       ResourceManager::whitelistDictionary();
   static std::set<std::string> whitelist;
@@ -619,7 +619,7 @@ static oo::PList AlwaysFalseConditions(void) {
 }  // namespace
 
 namespace {
-static BOOL IsAlwaysFalseConditions(const oo::PList& conditions) {
+static bool IsAlwaysFalseConditions(const oo::PList& conditions) {
   // -oo_arrayAtIndex:0 (an array element, else nil), then its
   // -oo_unsignedIntAtIndex:0.
   const oo::PList* first = conditions.at(0);

@@ -109,5 +109,5 @@ class CollisionRegion : public oo::RefCounted {
 /* Given a region centred at e1pos with a radius of e1rad, the depth
  * of shadowing cast by e2 from the_sun is recorded in outValue, with
  * >1 = no shadow, <1 = shadow */
-BOOL shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
+bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
                                    OOSunEntity* the_sun, float* outValue);

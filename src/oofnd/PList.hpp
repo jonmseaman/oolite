@@ -69,14 +69,6 @@
 #ifndef OOFND_PLIST_HPP
 #define OOFND_PLIST_HPP
 
-// Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; C++20 needs the keywords. Suspend the macros for this header and restore
-// them at its end (as oofnd/Data.hpp does).
-#pragma push_macro("true")
-#pragma push_macro("false")
-#undef true
-#undef false
-
 #include <cmath>
 #include <compare>
 #include <concepts>
@@ -625,8 +617,6 @@ inline std::u16string utf8ToUtf16(std::string_view s) {
 
 }  // namespace oo
 
-#pragma pop_macro("false")
-#pragma pop_macro("true")
 
 #endif  // OOFND_PLIST_HPP
 

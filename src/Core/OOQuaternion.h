@@ -106,14 +106,9 @@ void quaternion_rotate_about_axis(Quaternion* quat, Vector axis,
 OOINLINE void quaternion_normalize(Quaternion* quat)
     NONNULL_FUNC ALWAYS_INLINE_FUNC;
 
-#ifdef __cplusplus
-/*	C++ only: OOMaths.h is included inside extern "C". */
-extern "C++" {
 #include "oofnd/StdLib.hpp"
 std::string QuaternionDescription(
     Quaternion quaternion);  // "(w + xi + yj + zk)"
-}
-#endif
 
 Vector quaternion_rotate_vector(Quaternion q, Vector vector) CONST_FUNC;
 HPVector quaternion_rotate_HPvector(Quaternion q, HPVector vector) CONST_FUNC;

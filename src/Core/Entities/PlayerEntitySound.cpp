@@ -425,7 +425,7 @@ void PlayerEntity::updateAfterburnerSound() {
 
   if (!afterburner_engaged)  // end the loop cycle
   {
-    afterburnerSoundLooping = NO;
+    afterburnerSoundLooping = false;
   }
 
   if (afterburnerSoundLooping) {
@@ -446,7 +446,7 @@ void PlayerEntity::updateAfterburnerSound() {
 
 void PlayerEntity::startAfterburnerSound() {
   if (!afterburnerSoundLooping) {
-    afterburnerSoundLooping = YES;
+    afterburnerSoundLooping = true;
     updateAfterburnerSound();
   }
 }
@@ -624,20 +624,20 @@ void PlayerEntity::playLaserHit(bool hit, Vector weaponOffset,
     if (sWeaponSoundPool != nullptr)
       sWeaponSoundPool->playSoundWithKey(
           WeaponSoundKey(weaponShotHit, weaponIdentifier, "[player-laser-hit]"),
-          1.0f, 0.05, static_cast<bool>(YES), weaponOffset);
+          1.0f, 0.05, static_cast<bool>(true), weaponOffset);
   } else {
     if (sWeaponSoundPool != nullptr)
       sWeaponSoundPool->playSoundWithKey(
           WeaponSoundKey(weaponShotMiss, weaponIdentifier,
                          "[player-laser-miss]"),
-          1.0f, 0.05, static_cast<bool>(YES), weaponOffset);
+          1.0f, 0.05, static_cast<bool>(true), weaponOffset);
   }
 }
 
 void PlayerEntity::playWeaponOverheated(Vector weaponOffset) {
   if (sWeaponSoundPool != nullptr)
     sWeaponSoundPool->playSoundWithKey("[weapon-overheat]",
-                                       static_cast<bool>(NO), weaponOffset);
+                                       static_cast<bool>(false), weaponOffset);
 }
 
 void PlayerEntity::playMissileLaunched(Vector weaponOffset,

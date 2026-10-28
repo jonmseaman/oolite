@@ -77,7 +77,7 @@ FloatRGB FloatRGBFromDictColor(
 
 }  // namespace
 
-static BOOL FillFBMBuffer(OOStandaloneAtmosphereGeneratorInfo* info);
+static bool FillFBMBuffer(OOStandaloneAtmosphereGeneratorInfo* info);
 static float QFactor(float* accbuffer, int x, int y, unsigned width,
                      float polar_y_value, float bias, float polar_y);
 static float BlendAlpha(float fraction, float a, float b);
@@ -169,7 +169,7 @@ bool OOStandaloneAtmosphereGenerator::generateAtmosphereTexture(
 
   *texture = OOTexture::textureWithGenerator(atmoGen.get());
 
-  return texture->get() != nil;
+  return texture->get() != nullptr;
 }
 
 std::optional<std::string>
@@ -195,14 +195,14 @@ std::optional<std::string> OOStandaloneAtmosphereGenerator::cacheKey() {
 bool OOStandaloneAtmosphereGenerator::getResultFormatWidthHeight(
     OOPixMap* outData, OOTextureDataFormat* outFormat, uint32_t* outWidth,
     uint32_t* outHeight) {
-  BOOL waiting = NO;
+  bool waiting = false;
   if (!isReady()) {
     waiting = true;
     OO_LOG("texture.planet.generate.wait", "{} generator {}", "Waiting for",
            description());
   }
 
-  BOOL result =
+  bool result =
       OOTextureGenerator::getResult(outData, outFormat, outWidth, outHeight);
 
   if (waiting) {
@@ -223,7 +223,7 @@ void OOStandaloneAtmosphereGenerator::loadTexture() {
   OO_LOG("texture.planet.generate.begin", "Started generator {}",
          description());
 
-  BOOL success = NO;
+  bool success = false;
 
   uint8_t *aBuffer = NULL, *apx = NULL;
   float* randomBuffer = NULL;
@@ -274,7 +274,7 @@ void OOStandaloneAtmosphereGenerator::loadTexture() {
       }
     }
 
-    success = YES;
+    success = true;
     _format = (OOTextureDataFormat)kOOTextureDataRGBA;
   }
 
@@ -439,10 +439,10 @@ OOINLINE int32_t fast_floor(double val) {
   return (words[iman_] >> 16);
 }
 
-static BOOL GenerateFBMNoise(OOStandaloneAtmosphereGeneratorInfo* info);
-static BOOL GenerateFBMNoise3D(OOStandaloneAtmosphereGeneratorInfo* info);
+static bool GenerateFBMNoise(OOStandaloneAtmosphereGeneratorInfo* info);
+static bool GenerateFBMNoise3D(OOStandaloneAtmosphereGeneratorInfo* info);
 
-static BOOL FillFBMBuffer(OOStandaloneAtmosphereGeneratorInfo* info) {
+static bool FillFBMBuffer(OOStandaloneAtmosphereGeneratorInfo* info) {
   OOCParameterAssert(info != NULL);
 
   // Allocate result buffer.
@@ -454,9 +454,9 @@ static BOOL FillFBMBuffer(OOStandaloneAtmosphereGeneratorInfo* info) {
       GenerateFBMNoise3D(info);
     }
 
-    return YES;
+    return true;
   }
-  return NO;
+  return false;
 }
 
 enum {
@@ -586,10 +586,10 @@ static float SampleNoise3D(OOStandaloneAtmosphereGeneratorInfo* info,
         kPermutationCount = 1024 this allows for 4e2567 different noise maps,
         which is a lot more than RanRot will actually give us.
 */
-static BOOL MakePermutationTable(OOStandaloneAtmosphereGeneratorInfo* info) {
+static bool MakePermutationTable(OOStandaloneAtmosphereGeneratorInfo* info) {
   uint16_t* perms =
       (uint16_t*)malloc(sizeof *info->permutations * kPermutationCount);
-  if (EXPECT_NOT(perms == NULL)) return NO;
+  if (EXPECT_NOT(perms == NULL)) return false;
 
   /*	Fisher-Yates/Durstenfeld/Knuth shuffle, "inside-out" variant.
           Based on pseudocode from
@@ -608,11 +608,11 @@ static BOOL MakePermutationTable(OOStandaloneAtmosphereGeneratorInfo* info) {
   }
 
   info->permutations = perms;
-  return YES;
+  return true;
 }
 
-static BOOL GenerateFBMNoise3D(OOStandaloneAtmosphereGeneratorInfo* info) {
-  BOOL OK = NO;
+static bool GenerateFBMNoise3D(OOStandaloneAtmosphereGeneratorInfo* info) {
+  bool OK = false;
 
   FAIL_IF(!MakePermutationTable(info));
 
@@ -723,7 +723,7 @@ static void AddNoise(OOStandaloneAtmosphereGeneratorInfo* info,
   }
 }
 
-static BOOL GenerateFBMNoise(OOStandaloneAtmosphereGeneratorInfo* info) {
+static bool GenerateFBMNoise(OOStandaloneAtmosphereGeneratorInfo* info) {
   // Allocate the temporary buffers we need in one fell swoop, to avoid
   // administrative overhead.
   size_t randomBufferSize =
@@ -732,7 +732,7 @@ static BOOL GenerateFBMNoise(OOStandaloneAtmosphereGeneratorInfo* info) {
   size_t ixBufferSize = info->width * sizeof(int);
   char* sharedBuffer =
       (char*)malloc(randomBufferSize + qxBufferSize + ixBufferSize);
-  if (sharedBuffer == NULL) return NO;
+  if (sharedBuffer == NULL) return false;
 
   float* randomBuffer = (float*)sharedBuffer;
   float* qxBuffer = (float*)(sharedBuffer + randomBufferSize);
@@ -756,7 +756,7 @@ static BOOL GenerateFBMNoise(OOStandaloneAtmosphereGeneratorInfo* info) {
   }
 
   FREE(sharedBuffer);
-  return YES;
+  return true;
 }
 
 static float QFactor(float* accbuffer, int x, int y, unsigned width,

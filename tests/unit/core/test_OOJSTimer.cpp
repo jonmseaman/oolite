@@ -23,7 +23,7 @@
    not call back into the engine from its finalizer: describing it for the
    warning did, and on QuickJS that corrupted the heap (the test crashed at exit
    about one run in six with a single collection). Run: bash
-   tools/check-core-tests.sh
+   tests/run.sh unit
 */
 
 #include <cstdarg>
@@ -56,7 +56,7 @@ void oo::detail::EntityRelease(Entity* entity) noexcept {
 }
 std::string oo::EntityDescription(Entity*) { std::abort(); }
 
-extern "C" void InitOOJSTimer(ooscript::Context context,
+void InitOOJSTimer(ooscript::Context context,
                               ooscript::Object global);
 
 // MARK: What the rest of the engine provides
@@ -108,14 +108,14 @@ void cxx_OOJSReportBadArguments(
                       expectedArgsDescription.value_or("").c_str());
 }
 
-extern "C" void OOJSReportBadPropertySelector(ooscript::Context context,
+void OOJSReportBadPropertySelector(ooscript::Context context,
                                               ooscript::Object,
                                               ooscript::PropertyId,
                                               ooscript::PropertySpec*) {
   cxx_OOJSReportError(context, "bad property selector");
 }
 
-extern "C" void OOJSReportBadPropertyValue(ooscript::Context context,
+void OOJSReportBadPropertyValue(ooscript::Context context,
                                            ooscript::Object,
                                            ooscript::PropertyId,
                                            ooscript::PropertySpec*,
@@ -154,7 +154,7 @@ oo::PList cxx_OOJSPListFromJSObject(ooscript::Context,
 typedef oo::PList (*OOJSClassConverterCallback)(ooscript::Context context,
                                                 ooscript::Object object);
 
-extern "C" void OOJSRegisterObjectConverter(
+void OOJSRegisterObjectConverter(
     ooscript::ClassDef* theClass, OOJSClassConverterCallback converter) {
   sConverterRegistered = theClass != nullptr &&
                          std::string(theClass->name) == "Timer" &&
@@ -167,13 +167,13 @@ oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context, ooscript::Object) {
 
 // The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked
 // whose slot holds the C++ timer): no subclass of Timer is registered.
-extern "C" BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                                ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
 }
 
 // OOJavaScriptEngine.mm's toString() for object wrappers.
-extern "C" bool OOJSObjectWrapperToString(ooscript::Context context,
+bool OOJSObjectWrapperToString(ooscript::Context context,
                                           ooscript::CallArgs& oojsArgs) {
   // (Unreached: a timer's toString() is its own.)
   std::string description("[object]");
@@ -184,8 +184,8 @@ extern "C" bool OOJSObjectWrapperToString(ooscript::Context context,
 }
 
 #if OOJS_PROFILE
-extern "C" void OOJSProfileEnter(OOJSProfileStackFrame*, const char*) {}
-extern "C" void OOJSProfileExit(OOJSProfileStackFrame*) {}
+void OOJSProfileEnter(OOJSProfileStackFrame*, const char*) {}
+void OOJSProfileExit(OOJSProfileStackFrame*) {}
 #endif
 
 void OOJSPauseTimeLimiter(void) {}
@@ -268,7 +268,7 @@ typedef Universe FakeUniverse;
 OOTimeAbsolute Universe::getTime() { return sNow; }
 
 class Universe;
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 extern const char* const cxx_kOOLogException;
 const char* const cxx_kOOLogException = "exception";

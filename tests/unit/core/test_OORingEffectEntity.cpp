@@ -11,7 +11,7 @@
    description counts the time passed; it removes itself after two seconds. The
    rings are made through the one block of helpers below: each ring is a C++
    entity whose Objective-C object is the Entity facade oo::NewEntityFacade
-   made. Run: bash tools/check-core-tests.sh
+   made. Run: tests/run.sh unit
 */
 
 #include <string>
@@ -57,19 +57,19 @@ class TestUniverse : public Universe {
       Entity* entity) override  // the C++ entity; the record is its object
   {
     _removed = entity;
-    return YES;
+    return true;
   }
 };
 
 namespace {
 
-TestUniverse* sUniverse = nil;
+TestUniverse* sUniverse = nullptr;
 
 void SetUp() {
-  if (sUniverse == nil) {
+  if (sUniverse == nullptr) {
     sUniverse = new TestUniverse();  // never released
   }
-  sUniverse->_removed = nil;
+  sUniverse->_removed = nullptr;
   gSharedUniverse = sUniverse;
   static TestPlayer* player = nullptr;
   if (player == nullptr) player = NewTestPlayer<TestPlayer>();
@@ -102,8 +102,8 @@ Entity* Source() {
 OO_TEST(noSourceNoRing) {
   {
     SetUp();
-    OO_CHECK(Ring(nil) == nil);
-    OO_CHECK(ShrinkingRing(nil) == nil);
+    OO_CHECK(Ring(nullptr) == nullptr);
+    OO_CHECK(ShrinkingRing(nullptr) == nullptr);
   }
 }
 
@@ -112,7 +112,7 @@ OO_TEST(ringTakesTheSource) {
     SetUp();
     Entity* source = Source();
     for (Entity* ring : {Ring(source), ShrinkingRing(source)}) {
-      OO_CHECK(ring != nil && ring != source);
+      OO_CHECK(ring != nullptr && ring != source);
       OO_CHECK(HPvector_equal(ring->getPosition(), make_HPvector(1, 2, 3)));
       Quaternion q = ring->getOrientation();
       OO_CHECK(q.w == 0 && q.x == 1 && q.y == 0 && q.z == 0);
@@ -141,10 +141,10 @@ OO_TEST(updateCountsAndExpires) {
     OO_CHECK(
         HPvector_equal(ring->getPosition(),
                        make_HPvector(3, 4.5, 6)));  // moved by its velocity
-    OO_CHECK(sUniverse->_removed == nil);
+    OO_CHECK(sUniverse->_removed == nullptr);
 
     ring->update(1.5);
-    OO_CHECK(sUniverse->_removed == nil);  // exactly two seconds: not yet
+    OO_CHECK(sUniverse->_removed == nullptr);  // exactly two seconds: not yet
     ring->update(0.25);
     OO_CHECK(sUniverse->_removed == ring);
   }

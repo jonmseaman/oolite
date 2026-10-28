@@ -151,7 +151,7 @@ class OOOpenGLExtensionManager : public oo::RefCounted {
 #endif
 };
 
-OOINLINE BOOL OOShadersSupported(void) INLINE_PURE_FUNC;
-OOINLINE BOOL OOShadersSupported(void) {
+OOINLINE bool OOShadersSupported(void) INLINE_PURE_FUNC;
+OOINLINE bool OOShadersSupported(void) {
   return OOOpenGLExtensionManager::sharedManager()->shadersSupported();
 }

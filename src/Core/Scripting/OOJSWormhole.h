@@ -30,15 +30,9 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 class WormholeEntity;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSWormhole(ooscript::Context context, ooscript::Object global);
 
-#ifdef __cplusplus
-}
-#endif
 
 /*	The bodies of WormholeEntity (OOJavaScriptExtensions), which the engine
    reaches by selector. Its methods are one-line forwarders to these on the

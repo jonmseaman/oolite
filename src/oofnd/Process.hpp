@@ -36,13 +36,6 @@
 
 #pragma once
 
-// Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; suspend them for the standard headers (as oofnd/Data.hpp does).
-#pragma push_macro("true")
-#pragma push_macro("false")
-#undef true
-#undef false
-
 #include <cstdlib>
 #include <optional>
 #include <string>
@@ -52,7 +45,7 @@
 
 #if defined(_WIN32)
 // Declared exactly as the Windows headers declare them (DWORD = unsigned long,
-// UINT = unsigned int, BOOL = int), so this header does not pull <windows.h>
+// UINT = unsigned int, bool = int), so this header does not pull <windows.h>
 // into Objective-C++ game code.
 extern "C" {
 __declspec(dllimport) unsigned long __stdcall GetVersion(void);
@@ -163,5 +156,3 @@ inline std::optional<std::string> env(const char* name) {
 
 }  // namespace oo
 
-#pragma pop_macro("false")
-#pragma pop_macro("true")

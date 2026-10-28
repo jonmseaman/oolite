@@ -13,7 +13,7 @@
    universe for the shipdata entry). The cases test the station's own units,
    written against the Objective-C API and run on the unconverted class first;
    the cases after "The crossing" pin the C++ part. Run: bash
-   tools/check-core-tests.sh test_StationEntity
+   meson test -C build/meson_test test_StationEntity
 */
 
 #include <cmath>
@@ -70,7 +70,7 @@ class TestStation : public StationEntity {
  public:
   bool setUpOneStandardSubentity(const oo::PList& subentDict,
                                  bool asTurret) override {
-    if (asTurret) return NO;
+    if (asTurret) return false;
     sVirtualDocks++;
     sVirtualDockDict = subentDict;
     return !sFailVirtualDock;
@@ -84,8 +84,8 @@ void SetExplicitlyUnpiloted(ShipEntity* s, bool value) {
 }
 
 void SetUp() {
-  static Universe* universe = nil;
-  if (universe == nil) {
+  static Universe* universe = nullptr;
+  if (universe == nullptr) {
     universe = new Universe();  // never released
   }
   gSharedUniverse = universe;
@@ -172,7 +172,7 @@ OO_TEST(initAndSetUpFromDictionary) {
             {"allows_auto_docking", oo::PList(false)},
             {"interstellar_undocking", oo::PList(true)},
         });
-    OO_CHECK(station != nil);
+    OO_CHECK(station != nullptr);
     OO_CHECK((station != nullptr ? station->getIsShip() : false) &&
              (station != nullptr ? station->getIsStation() : false) &&
              !(station != nullptr ? station->getIsPlayer() : false));
@@ -221,9 +221,9 @@ OO_TEST(initAndSetUpFromDictionary) {
         (station != nullptr ? station->virtualPortDimensions() : Vector{}),
         make_vector(69, 69, 250)));
     OO_CHECK((station != nullptr ? station->playerReservedDock()
-                                 : (DockEntity*)nullptr) == nil);
+                                 : (DockEntity*)nullptr) == nullptr);
     OO_CHECK((station != nullptr ? station->group() : (OOShipGroup*)nullptr) !=
-                 nil &&
+                 nullptr &&
              (station != nullptr ? station->group() : (OOShipGroup*)nullptr) ==
                  (station != nullptr ? station->stationGroup()
                                      : (OOShipGroup*)nullptr));
@@ -254,7 +254,7 @@ OO_TEST(setUpDefaults) {
   {
     SetUp();
     TestStation* station = MakeStation("plain");
-    OO_CHECK(station != nil);
+    OO_CHECK(station != nullptr);
     OO_CHECK((station != nullptr ? station->countOfDockedContractors()
                                  : unsigned{}) == 3 &&
              (station != nullptr ? station->countOfDockedDefenders()
@@ -304,7 +304,7 @@ OO_TEST(virtualDockThatFails) {
     SetUp();
     sFailVirtualDock = true;
     TestStation* station = MakeStation("dockless");
-    OO_CHECK(station != nil && sVirtualDocks == 1);
+    OO_CHECK(station != nullptr && sVirtualDocks == 1);
     OO_CHECK(!(station != nullptr ? station->setUpSubEntities() : false) &&
              sVirtualDocks == 2);
     sFailVirtualDock = false;
@@ -324,9 +324,9 @@ OO_TEST(isUnpiloted) {
     SetExplicitlyUnpiloted(station, false);
     OO_CHECK(!(station != nullptr ? station->isUnpiloted()
                                   : false));  // a ship of CLASS_CARGO would be
-    if (station != nullptr) station->setHulk(YES);
+    if (station != nullptr) station->setHulk(true);
     OO_CHECK((station != nullptr ? station->isUnpiloted() : false));
-    if (station != nullptr) station->setHulk(NO);
+    if (station != nullptr) station->setHulk(false);
     OO_CHECK(!(station != nullptr ? station->isUnpiloted() : false));
   }
 }
@@ -338,34 +338,34 @@ OO_TEST(flagsAndCounts) {
     if (station != nullptr) station->setEquivalentTechLevel(4);
     OO_CHECK((station != nullptr ? station->getEquivalentTechLevel() : 0) == 4);
 
-    if (station != nullptr) station->setHasNPCTraffic(NO);
+    if (station != nullptr) station->setHasNPCTraffic(false);
     OO_CHECK(!(station != nullptr ? station->getHasNPCTraffic() : false));
-    if (station != nullptr) station->setHasNPCTraffic((BOOL)7);
-    OO_CHECK((station != nullptr ? station->getHasNPCTraffic() : false) == YES);
+    if (station != nullptr) station->setHasNPCTraffic((bool)7);
+    OO_CHECK((station != nullptr ? station->getHasNPCTraffic() : false) == true);
 
-    if (station != nullptr) station->setRequiresDockingClearance((BOOL)2);
+    if (station != nullptr) station->setRequiresDockingClearance((bool)2);
     OO_CHECK((station != nullptr ? station->getRequiresDockingClearance()
-                                 : false) == YES);
-    if (station != nullptr) station->setRequiresDockingClearance(NO);
+                                 : false) == true);
+    if (station != nullptr) station->setRequiresDockingClearance(false);
     OO_CHECK((station != nullptr ? station->getRequiresDockingClearance()
-                                 : false) == NO);
+                                 : false) == false);
 
-    if (station != nullptr) station->setAllowsFastDocking((BOOL)4);
+    if (station != nullptr) station->setAllowsFastDocking((bool)4);
     OO_CHECK((station != nullptr ? station->getAllowsFastDocking() : false) ==
-             YES);
-    if (station != nullptr) station->setAllowsAutoDocking(NO);
+             true);
+    if (station != nullptr) station->setAllowsAutoDocking(false);
     OO_CHECK((station != nullptr ? station->getAllowsAutoDocking() : false) ==
-             NO);
+             false);
 
-    if (station != nullptr) station->setSuppressArrivalReports((BOOL)8);
+    if (station != nullptr) station->setSuppressArrivalReports((bool)8);
     OO_CHECK((station != nullptr ? station->suppressArrivalReports() : false) ==
-             YES);
-    if (station != nullptr) station->setHasBreakPattern(NO);
+             true);
+    if (station != nullptr) station->setHasBreakPattern(false);
     OO_CHECK((station != nullptr ? station->getHasBreakPattern() : false) ==
-             NO);
-    if (station != nullptr) station->setHasBreakPattern(YES);
+             false);
+    if (station != nullptr) station->setHasBreakPattern(true);
     OO_CHECK((station != nullptr ? station->getHasBreakPattern() : false) ==
-             YES);
+             true);
   }
 }
 
@@ -404,7 +404,7 @@ OO_TEST(shipyardAndInterfaces) {
                               std::less<>>*)nullptr)
                  ->empty());
 
-    StationEntity* none = nil;
+    StationEntity* none = nullptr;
     OO_CHECK((none != nullptr ? none->getLocalShipyard()
                               : (std::vector<oo::PList>*)nullptr) == nullptr &&
              (none != nullptr
@@ -467,7 +467,7 @@ OO_TEST(positionPlanetAndDescription) {
 
     if (station != nullptr) station->setPlanet(nullptr);
     OO_CHECK((station != nullptr ? station->getPlanet()
-                                 : (OOPlanetEntity*)nullptr) == nil);
+                                 : (OOPlanetEntity*)nullptr) == nullptr);
 
     const std::optional<std::string> components =
         (station != nullptr ? station->descriptionComponents()
@@ -519,7 +519,7 @@ OO_TEST(objCStationPartIsAStation) {
 // A ship visiting the station: its own set-up, and invisible to scripts.
 class TestVisitor : public ShipEntity {
  public:
-  bool isVisibleToScripts() override { return NO; }
+  bool isVisibleToScripts() override { return false; }
 };
 
 namespace {
@@ -557,7 +557,7 @@ OO_TEST(slice2NoDocks) {
              !(station != nullptr ? station->hasLaunchDock() : false) &&
              !(station != nullptr ? station->hasEligibleDock() : false));
     OO_CHECK((station != nullptr ? station->selectDockForDocking()
-                                 : (DockEntity*)nullptr) == nil);
+                                 : (DockEntity*)nullptr) == nullptr);
     OO_CHECK(!(station != nullptr ? station->dockingCorridorIsEmpty() : false));
     OO_CHECK(!(station != nullptr ? station->shipIsInDockingCorridor(ship)
                                   : false) &&
@@ -571,13 +571,13 @@ OO_TEST(slice2NoDocks) {
                   : unsigned{}) == 0);
     OO_CHECK(!(station != nullptr ? station->fitsInDock(nullptr) : false) &&
              !(station != nullptr ? station->fitsInDock(ship) : false) &&
-             !(station != nullptr ? station->fitsInDock(ship, NO) : false));
+             !(station != nullptr ? station->fitsInDock(ship, false) : false));
     OO_CHECK((station != nullptr ? station->dockingInstructionsForShip(nullptr)
                                  : oo::PList())
                  .isNull());
 
     // Nothing to launch from, clear or check: nothing happens.
-    if (station != nullptr) station->addShipToLaunchQueue(ship, YES);  // logged
+    if (station != nullptr) station->addShipToLaunchQueue(ship, true);  // logged
     if (station != nullptr) station->launchShip(ship);
     if (station != nullptr) station->clearDockingCorridor();
     if (station != nullptr) station->sanityCheckShipsOnApproach();
@@ -672,8 +672,8 @@ OO_TEST(slice2MembersFromCxx) {
     TestStation* station = MakeStation("member2");
     TestVisitor* ship = MakeVisitor("guest");
     StationEntity* part = station;
-    OO_CHECK(!part->hasMultipleDocks() && !part->fitsInDock(nil) &&
-             part->selectDockForDocking() == nil);
+    OO_CHECK(!part->hasMultipleDocks() && !part->fitsInDock(nullptr) &&
+             part->selectDockForDocking() == nullptr);
     ShipsOnHold2(station)->add(ship);
     OO_CHECK(part->holdPositionInstructionForShip(ship).get<std::string>(
                  "ai_message", "") == "HOLD_POSITION");
@@ -721,16 +721,16 @@ OO_TEST(slice3AllegianceAndAlertLevel) {
     OO_CHECK((station != nullptr
                   ? station->getAlertLevel()
                   : OOStationAlertLevel{}) == STATION_ALERT_LEVEL_GREEN);
-    if (station != nullptr) station->setAlertLevel(STATION_ALERT_LEVEL_RED, NO);
+    if (station != nullptr) station->setAlertLevel(STATION_ALERT_LEVEL_RED, false);
     OO_CHECK((station != nullptr
                   ? station->getAlertLevel()
                   : OOStationAlertLevel{}) == STATION_ALERT_LEVEL_RED);
     if (station != nullptr)
-      station->setAlertLevel((OOStationAlertLevel)99, NO);  // clamped
+      station->setAlertLevel((OOStationAlertLevel)99, false);  // clamped
     OO_CHECK((station != nullptr
                   ? station->getAlertLevel()
                   : OOStationAlertLevel{}) == STATION_ALERT_LEVEL_RED);
-    if (station != nullptr) station->setAlertLevel((OOStationAlertLevel)0, NO);
+    if (station != nullptr) station->setAlertLevel((OOStationAlertLevel)0, false);
     OO_CHECK((station != nullptr
                   ? station->getAlertLevel()
                   : OOStationAlertLevel{}) == STATION_ALERT_LEVEL_GREEN);
@@ -754,7 +754,7 @@ OO_TEST(slice3AllegianceAndAlertLevel) {
     SetPrimaryTarget3(station, intruder);
     OO_CHECK((station != nullptr ? station->hasHostileTarget() : false));
     if (station != nullptr)
-      station->setAlertLevel(STATION_ALERT_LEVEL_GREEN, NO);
+      station->setAlertLevel(STATION_ALERT_LEVEL_GREEN, false);
     OO_CHECK(!(station != nullptr ? station->hasHostileTarget() : false));
   }
 }
@@ -805,7 +805,7 @@ OO_TEST(slice3MembersFromCxx) {
     SetUp();
     TestStation* station = MakeStation("member3");
     StationEntity* part = station;
-    part->setAlertLevel(STATION_ALERT_LEVEL_RED, NO);
+    part->setAlertLevel(STATION_ALERT_LEVEL_RED, false);
     OO_CHECK(part->getAlertLevel() == STATION_ALERT_LEVEL_RED &&
              (station != nullptr
                   ? station->getAlertLevel()
@@ -863,19 +863,19 @@ OO_TEST(slice4LaunchersWithoutLaunchDock) {
                  (station != nullptr ? station->launchPolice() : oo::PList()))
                  .empty());
     OO_CHECK((station != nullptr ? station->launchDefenseShip()
-                                 : (::ShipEntity*)nil) == nil);
+                                 : (::ShipEntity*)nullptr) == nullptr);
     OO_CHECK((station != nullptr ? station->launchScavenger()
-                                 : (::ShipEntity*)nil) == nil);
+                                 : (::ShipEntity*)nullptr) == nullptr);
     OO_CHECK((station != nullptr ? station->launchMiner()
-                                 : (::ShipEntity*)nil) == nil);
+                                 : (::ShipEntity*)nullptr) == nullptr);
     OO_CHECK((station != nullptr ? station->launchPirateShip()
-                                 : (::ShipEntity*)nil) == nil);
+                                 : (::ShipEntity*)nullptr) == nullptr);
     OO_CHECK((station != nullptr ? station->launchShuttle()
-                                 : (::ShipEntity*)nil) == nil);
+                                 : (::ShipEntity*)nullptr) == nullptr);
     OO_CHECK((station != nullptr ? station->launchEscort()
-                                 : (::ShipEntity*)nil) == nil);
+                                 : (::ShipEntity*)nullptr) == nullptr);
     OO_CHECK((station != nullptr ? station->launchPatrol()
-                                 : (::ShipEntity*)nil) == nil);
+                                 : (::ShipEntity*)nullptr) == nullptr);
     if (station != nullptr) station->launchShipWithRole("shuttle");
 
     OO_CHECK(DefendersLaunched4(station) == defenders &&
@@ -921,11 +921,11 @@ OO_TEST(slice4MembersFromCxx) {
     const unsigned defenders = DefendersLaunched4(station);
     OO_CHECK(part->launchIndependentShip("trader").isNull());
     OO_CHECK(oo::EntitiesIn(part->launchPolice()).empty());
-    OO_CHECK(part->launchDefenseShip() == nil &&
-             part->launchScavenger() == nil && part->launchMiner() == nil);
-    OO_CHECK(part->launchPirateShip() == nil && part->launchShuttle() == nil &&
-             part->launchEscort() == nil);
-    OO_CHECK(part->launchPatrol() == nil);
+    OO_CHECK(part->launchDefenseShip() == nullptr &&
+             part->launchScavenger() == nullptr && part->launchMiner() == nullptr);
+    OO_CHECK(part->launchPirateShip() == nullptr && part->launchShuttle() == nullptr &&
+             part->launchEscort() == nullptr);
+    OO_CHECK(part->launchPatrol() == nullptr);
     part->launchShipWithRole("escort");
     OO_CHECK(DefendersLaunched4(station) == defenders &&
              part->currentlyInLaunchingQueues() == 0);

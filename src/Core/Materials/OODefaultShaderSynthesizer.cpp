@@ -62,13 +62,13 @@ std::string FormatFloat(double value);
 #define REQUIRE_STAGE(NAME)                                 \
   if (!_completed_##NAME) {                                 \
     performStage(#NAME, &OODefaultShaderSynthesizer::NAME); \
-    _completed_##NAME = YES;                                \
+    _completed_##NAME = true;                                \
   }
 #else
 #define REQUIRE_STAGE(NAME)  \
   if (!_completed_##NAME) {  \
     NAME();                  \
-    _completed_##NAME = YES; \
+    _completed_##NAME = true; \
   }
 #endif
 
@@ -78,7 +78,7 @@ std::optional<std::string> GetExtractMode(const oo::PList& textureSpecifier);
 
 }  // namespace
 
-BOOL OOSynthesizeMaterialShader(const oo::PList& configuration,
+bool OOSynthesizeMaterialShader(const oo::PList& configuration,
                                 const std::optional<std::string>& materialKey,
                                 const std::optional<std::string>& entityName,
                                 std::string* outVertexShader,
@@ -108,7 +108,7 @@ BOOL OOSynthesizeMaterialShader(const oo::PList& configuration,
     }
   }
 
-  return YES;
+  return true;
 }
 
 OODefaultShaderSynthesizer::OODefaultShaderSynthesizer(
@@ -358,7 +358,7 @@ std::string KeyFromTextureSpec(const oo::PList& spec) {
   OOTextureFlags texOptions;
   float anisotropy, lodBias;
   if (!cxx_OOInterpretTextureSpecifier(spec, &texName, &texOptions, &anisotropy,
-                                       &lodBias, YES)) {
+                                       &lodBias, true)) {
     // OOInterpretTextureSpecifier() will have logged something.
     OORaiseException(OOGenericException, "Invalid texture specifier");
   }
@@ -383,7 +383,7 @@ NSUInteger OODefaultShaderSynthesizer::assignIDForTexture(
   OOTextureFlags texOptions;
   float anisotropy, lodBias;
   if (!cxx_OOInterpretTextureSpecifier(spec, &texName, &texOptions, &anisotropy,
-                                       &lodBias, YES)) {
+                                       &lodBias, true)) {
     // OOInterpretTextureSpecifier() will have logged something.
     OORaiseException(OOGenericException, "Invalid texture specifier");
   }
@@ -407,9 +407,9 @@ NSUInteger OODefaultShaderSynthesizer::assignIDForTexture(
     std::string texUniform = oo::str::format("uTexture%zu", texID);
 
 #ifndef NDEBUG
-    BOOL useInternalFormat = NO;
+    bool useInternalFormat = false;
 #else
-    BOOL useInternalFormat = YES;
+    bool useInternalFormat = true;
 #endif
 
     _textures.push_back(cxx_OOMakeTextureSpecifier(
@@ -588,7 +588,7 @@ void OODefaultShaderSynthesizer::writeTextureCoordRead() {
   addVarying("vTexCoords", "vec2");
   _vertexBody += "\tvTexCoords = gl_MultiTexCoord0.st;\n\t\n";
 
-  BOOL haveTexCoords = NO;
+  bool haveTexCoords = false;
   oo::PList parallaxMap = cxx_OOMaterialParallaxMapSpecifier(_configuration);
 
   if (!parallaxMap.isNull()) {
@@ -602,7 +602,7 @@ void OODefaultShaderSynthesizer::writeTextureCoordRead() {
       std::string swizzle = GetExtractMode(parallaxMap).value_or("a");
       NSUInteger channelCount = swizzle.size();
       if (channelCount == 1) {
-        haveTexCoords = YES;
+        haveTexCoords = true;
 
         REQUIRE_STAGE(writeEyeVector);
 
@@ -651,9 +651,9 @@ void OODefaultShaderSynthesizer::writeDiffuseColorTermIfNeeded() {
   if (diffuseColor == nullptr) diffuseColor = OOColor::whiteColor();
 
   if (diffuseColor->isBlack()) return;
-  _usesDiffuseTerm = YES;
+  _usesDiffuseTerm = true;
 
-  BOOL haveDiffuseColor = NO;
+  bool haveDiffuseColor = false;
   if (!diffuseMap.isNull()) {
     std::optional<std::string> readInstr =
         readRGBForTextureSpec(diffuseMap, "diffuse");
@@ -662,7 +662,7 @@ void OODefaultShaderSynthesizer::writeDiffuseColorTermIfNeeded() {
     } else {
       _fragmentBody +=
           oo::str::format("\tvec3 diffuseColor = %s;\n", readInstr->c_str());
-      haveDiffuseColor = YES;
+      haveDiffuseColor = true;
     }
   }
 
@@ -678,7 +678,7 @@ void OODefaultShaderSynthesizer::writeDiffuseColorTermIfNeeded() {
           "\tconst vec3 diffuseColor = vec3(%s, %s, %s);\n",
           FormatFloat(rgba[0]).c_str(), FormatFloat(rgba[1]).c_str(),
           FormatFloat(rgba[2]).c_str());
-      haveDiffuseColor = YES;
+      haveDiffuseColor = true;
     }
   }
 
@@ -715,7 +715,7 @@ void OODefaultShaderSynthesizer::writeDiffuseLighting() {
       "gl_LightModel.ambient).rgb;\n\t\n",
       normalDotLight);
 
-  _haveDiffuseLight = YES;
+  _haveDiffuseLight = true;
 }
 
 void OODefaultShaderSynthesizer::writeLightVector() {
@@ -769,7 +769,7 @@ void OODefaultShaderSynthesizer::writeNormalIfNeeded() {
       _fragmentBody +=
           oo::str::format("\tvec3 normal = normalize(%s.%s - 0.5);\n\t\n",
                           sample.c_str(), swizzle.c_str());
-      _usesNormalMap = YES;
+      _usesNormalMap = true;
       return;
     } else {
       OO_LOG_WARN("material.synthesis.warning.extractionMismatch",
@@ -779,7 +779,7 @@ void OODefaultShaderSynthesizer::writeNormalIfNeeded() {
                   entityName().value_or("(null)"), swizzle.size(), "3");
     }
   }
-  _constZNormal = YES;
+  _constZNormal = true;
 }
 
 void OODefaultShaderSynthesizer::writeNormal() {
@@ -817,7 +817,7 @@ void OODefaultShaderSynthesizer::writeSpecularLighting() {
 
   if (specularColor->isBlack()) return;
 
-  BOOL modulateWithDiffuse =
+  bool modulateWithDiffuse =
       specularColorMap.get<bool>(cxx_kOOTextureSpecifierSelfColorKey);
 
   REQUIRE_STAGE(writeTotalColor);
@@ -830,7 +830,7 @@ void OODefaultShaderSynthesizer::writeSpecularLighting() {
 
   _fragmentBody += "\t// Specular (Blinn-Phong) lighting\n";
 
-  BOOL haveSpecularColor = NO;
+  bool haveSpecularColor = false;
   if (!specularColorMap.isNull()) {
     std::optional<std::string> readInstr =
         readRGBForTextureSpec(specularColorMap, "specular colour");
@@ -841,7 +841,7 @@ void OODefaultShaderSynthesizer::writeSpecularLighting() {
 
     _fragmentBody +=
         oo::str::format("\tvec3 specularColor = %s;\n", readInstr->c_str());
-    haveSpecularColor = YES;
+    haveSpecularColor = true;
   }
 
   if (!haveSpecularColor || !specularColor->isWhite()) {
@@ -871,7 +871,7 @@ void OODefaultShaderSynthesizer::writeSpecularLighting() {
           "\tvec3 specularColor = vec3(%s, %s, %s);  // %s\n",
           FormatFloat(rgba[0]).c_str(), FormatFloat(rgba[1]).c_str(),
           FormatFloat(rgba[2]).c_str(), comment);
-      haveSpecularColor = YES;
+      haveSpecularColor = true;
     }
   }
 
@@ -888,7 +888,7 @@ void OODefaultShaderSynthesizer::writeSpecularLighting() {
   }
 
   // Specular exponent.
-  BOOL haveSpecularExponent = NO;
+  bool haveSpecularExponent = false;
   if (!specularExponentMap.isNull()) {
     std::optional<std::string> readInstr =
         readOneChannelForTextureSpec(specularExponentMap, "specular exponent");
@@ -899,7 +899,7 @@ void OODefaultShaderSynthesizer::writeSpecularLighting() {
 
     _fragmentBody += oo::str::format("\tfloat specularExponent = %s * %.1f;\n",
                                      readInstr->c_str(), specularExponent);
-    haveSpecularExponent = YES;
+    haveSpecularExponent = true;
   }
   if (!haveSpecularExponent) {
     _fragmentBody += oo::str::format("\tconst float specularExponent = %.1f;\n",
@@ -957,7 +957,7 @@ void OODefaultShaderSynthesizer::writeLightMaps() {
     const oo::PList* color = lightMapSpec.get<oo::PList::Array>(
         cxx_kOOTextureSpecifierModulateColorKey);
     float rgba[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    BOOL isIllumination =
+    bool isIllumination =
         lightMapSpec.get<bool>(cxx_kOOTextureSpecifierIlluminationModeKey);
 
     if (EXPECT_NOT(color == nullptr && textureSpec.isNull())) {
@@ -1194,18 +1194,18 @@ oo::PList CanonicalizeMaterialSpecifier(
 
   // Specular maps.
   {
-    BOOL haveNewSpecular = NO;
+    bool haveNewSpecular = false;
     texSpec = StringOrDictionarySpecifier(
         spec.find(cxx_kOOMaterialSpecularColorMapName));
     if (!texSpec.isNull()) {
-      haveNewSpecular = YES;
+      haveNewSpecular = true;
       result[cxx_kOOMaterialSpecularColorMapName] = texSpec;
     }
 
     texSpec = StringOrDictionarySpecifier(
         spec.find(cxx_kOOMaterialSpecularExponentMapName));
     if (!texSpec.isNull()) {
-      haveNewSpecular = YES;
+      haveNewSpecular = true;
       result[cxx_kOOMaterialSpecularExponentMapName] = texSpec;
     }
 
@@ -1224,20 +1224,20 @@ oo::PList CanonicalizeMaterialSpecifier(
 
   // Normal and parallax maps.
   {
-    BOOL haveParallax = NO;
-    BOOL haveNewNormal = NO;
+    bool haveParallax = false;
+    bool haveNewNormal = false;
     texSpec =
         StringOrDictionarySpecifier(spec.find(cxx_kOOMaterialNormalMapName));
     if (!texSpec.isNull()) {
-      haveNewNormal = YES;
+      haveNewNormal = true;
       result[cxx_kOOMaterialNormalMapName] = texSpec;
     }
 
     texSpec =
         StringOrDictionarySpecifier(spec.find(cxx_kOOMaterialParallaxMapName));
     if (!texSpec.isNull()) {
-      haveNewNormal = YES;
-      haveParallax = YES;
+      haveNewNormal = true;
+      haveParallax = true;
       result[cxx_kOOMaterialParallaxMapName] = texSpec;
     }
 
@@ -1246,7 +1246,7 @@ oo::PList CanonicalizeMaterialSpecifier(
       texSpec = StringOrDictionarySpecifier(
           spec.find(cxx_kOOMaterialNormalAndParallaxMapName));
       if (!texSpec.isNull()) {
-        haveParallax = YES;
+        haveParallax = true;
         result[cxx_kOOMaterialNormalMapName] = texSpec;
         texSpec = AddingValue(texSpec, cxx_kOOTextureSpecifierSwizzleKey,
                               oo::PList("a"));

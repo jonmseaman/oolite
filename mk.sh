@@ -77,6 +77,10 @@ meson_setup() {
             exit 1
         fi
     fi
+    # clangd and clang-tidy (-p .) read the compile database from this directory's root.
+    if [[ -f "$build_dir/compile_commands.json" ]]; then
+        cp -f "$build_dir/compile_commands.json" compile_commands.json
+    fi
 }
 
 meson_compile() {

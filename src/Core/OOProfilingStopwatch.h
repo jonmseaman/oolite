@@ -31,8 +31,7 @@ SOFTWARE.
 #pragma once
 
 #ifndef OOSTOPWATCH_STANDALONE
-#if defined(__cplusplus) && \
-    !defined(OO_PLAIN_CPP_UNIT)  // a game unit, not a plain C++ one
+#ifndef OO_PLAIN_CPP_UNIT
 #include "OOFoundation.h"
 #else
 /*	A plain C++ translation unit (the JS bindings, through

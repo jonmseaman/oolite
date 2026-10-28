@@ -45,10 +45,4 @@ MA 02110-1301, USA.
     }                                             \
     idCache;                                      \
   })
-#ifdef __cplusplus
-extern "C" {
-#endif
 void OOJSInitJSIDCachePRIVATE(const char* name, ooscript::PropertyId* idCache);
-#ifdef __cplusplus
-}
-#endif

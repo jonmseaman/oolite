@@ -35,9 +35,6 @@ MA 02110-1301, USA.
 
 class Entity;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSEntity(ooscript::Context context, ooscript::Object global);
 
@@ -50,9 +47,6 @@ bool JSValueToEntity(ooscript::Context context, ooscript::Value value,
 // OOINLINE so the class definition stays private to OOJSEntity.mm.
 ooscript::ClassDef* JSEntityClass(void);
 
-#ifdef __cplusplus
-}
-#endif
 
 extern ooscript::Object gOOEntityJSPrototype;
 
@@ -122,19 +116,11 @@ OOINLINE ooscript::Object JSEntityPrototype(void) {
         scriptClass and function are non-nil, a warning will be reported to the
         log.
 */
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern "C++" {  // C++ parameters; nullopt class or function: no warning
 bool EntityFromArgumentList(ooscript::Context context,
                             const std::optional<std::string>& scriptClass,
                             const std::optional<std::string>& function,
                             unsigned argc, ooscript::Value* argv,
                             Entity** outEntity, unsigned* outConsumed);
-}
-#ifdef __cplusplus
-}
-#endif
 
 /*
         For scripting purposes, a JS entity object is a stale reference if its

@@ -74,14 +74,11 @@ class OOPlanetEntity;
 #include "GuiDisplayGen.h"  // the universe keeps its GUIs (oo::Ref)
 class CollisionRegion;
 
-typedef BOOL (*EntityFilterPredicate)(Entity* entity,
+typedef bool (*EntityFilterPredicate)(Entity* entity,
                                       void* parameter);  // the C++ entity
 
 #ifndef OO_SCANCLASS_TYPE
 #define OO_SCANCLASS_TYPE
-#ifndef __cplusplus
-typedef enum OOScanClass OOScanClass;
-#endif
 #endif
 
 #define CROSSHAIR_SIZE 32.0
@@ -301,7 +298,7 @@ class Universe : public oo::RefCounted {
 
   GLfloat airResistanceFactor = 0;
 
-  ::MyOpenGLView* gameView = nil;
+  ::MyOpenGLView* gameView = nullptr;
 
   int next_universal_id = 0;
   Entity* entity_for_uid[MAX_ENTITY_UID] = {};  // C++ parts, borrowed
@@ -336,18 +333,18 @@ class Universe : public oo::RefCounted {
   oo::Ref<OOSystemDescriptionManager> replacedSystemManager;
   std::vector<oo::Ref<OOCharacter>> replacedCharacterPool;
 
-  BOOL displayGUI = NO;
-  BOOL wasDisplayGUI = NO;
+  bool displayGUI = false;
+  bool wasDisplayGUI = false;
 
-  BOOL autoSaveNow = NO;
-  BOOL autoSave = NO;
-  BOOL wireframeGraphics = NO;
+  bool autoSaveNow = false;
+  bool autoSave = false;
+  bool wireframeGraphics = false;
   OOGraphicsDetail detailLevel = {};
   // Above entry replaces these two
-  //	BOOL					reducedDetail;
+  //	bool					reducedDetail;
   //	OOShaderSetting			shaderEffectsLevel;
 
-  BOOL displayFPS = NO;
+  bool displayFPS = false;
 
   OOTimeAbsolute universal_time = 0;
   OOTimeDelta time_delta = 0;
@@ -362,7 +359,7 @@ class Universe : public oo::RefCounted {
 
   GLfloat main_light_position[4] = {};
 
-  BOOL dumpCollisionInfo = NO;
+  bool dumpCollisionInfo = false;
 
   oo::Ref<OOCommodities> commodities;
   oo::Ref<OOCommodityMarket> commodityMarket;
@@ -403,15 +400,15 @@ class Universe : public oo::RefCounted {
   std::optional<std::string>
       system_names[256];  // hold pregenerated universe info (nullopt where the
                           // name was nil)
-  BOOL system_found[256] = {};  // holds matches for input strings
+  bool system_found[256] = {};  // holds matches for input strings
 
   int breakPatternCounter = 0;
 
-  ::ShipEntity* demo_ship = nil;
+  ::ShipEntity* demo_ship = nullptr;
 
-  ::StationEntity* cachedStation = nil;
-  ::OOPlanetEntity* cachedPlanet = nil;
-  ::OOSunEntity* cachedSun = nil;
+  ::StationEntity* cachedStation = nullptr;
+  ::OOPlanetEntity* cachedPlanet = nullptr;
+  ::OOSunEntity* cachedSun = nullptr;
   std::vector<oo::EntityHold> allPlanets;  // the planets (their objects held)
   std::vector<oo::EntityHold>
       allStations;  // the stations (their objects held), each once, in the
@@ -424,20 +421,20 @@ class Universe : public oo::RefCounted {
                           // block's callbackObj is an Object node)
   OOTimeDelta next_repopulation = 0;
   std::optional<std::string> system_repopulator;
-  BOOL deterministic_population = NO;
+  bool deterministic_population = false;
 
   std::optional<std::vector<OOSystemID>>
       closeSystems;  // the current system's neighbours; nullopt until cached
 
   std::string useAddOns;
 
-  BOOL no_update = NO;
+  bool no_update = false;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   double timeAccelerationFactor = 0;
 #endif
 
-  BOOL ECMVisualFXEnabled = NO;
+  bool ECMVisualFXEnabled = false;
 
   std::vector<oo::EntityHold> activeWormholes;
 
@@ -446,7 +443,7 @@ class Universe : public oo::RefCounted {
   oo::Ref<::CollisionRegion> universeRegion;
 
   // check and maintain linked lists occasionally
-  BOOL doLinkedListMaintenanceThisUpdate = NO;
+  bool doLinkedListMaintenanceThisUpdate = false;
 
   std::vector<oo::EntityHold>
       entitiesDeadThisUpdate;  // each once, in the order removed
@@ -455,7 +452,7 @@ class Universe : public oo::RefCounted {
 
 #if OOLITE_SPEECH_SYNTH
 #if OOLITE_MAC_OS_X
-  NSSpeechSynthesizer* speechSynthesizer = nil;
+  NSSpeechSynthesizer* speechSynthesizer = nullptr;
 #elif OOLITE_ESPEAK
   const espeak_VOICE** espeak_voices = nullptr;
   unsigned int espeak_voice_count = 0;
@@ -464,20 +461,20 @@ class Universe : public oo::RefCounted {
 #endif
 
   std::vector<oo::Ref<::OOMaterial>> _preloadingPlanetMaterials;
-  BOOL doProcedurallyTexturedPlanets = NO;
+  bool doProcedurallyTexturedPlanets = false;
 
   GLfloat frustum[6][4] = {};
 
   std::map<std::string, oo::Ref<OOScript>, std::less<>> conditionScripts;
 
-  BOOL _pauseMessage = NO;
-  BOOL _autoCommLog = NO;
-  BOOL _permanentCommLog = NO;
-  BOOL _autoMessageLogBg = NO;
-  BOOL _permanentMessageLog = NO;
-  BOOL _witchspaceBreakPattern = NO;
-  BOOL _dockingClearanceProtocolActive = NO;
-  BOOL _doingStartUp = NO;
+  bool _pauseMessage = false;
+  bool _autoCommLog = false;
+  bool _permanentCommLog = false;
+  bool _autoMessageLogBg = false;
+  bool _permanentMessageLog = false;
+  bool _witchspaceBreakPattern = false;
+  bool _dockingClearanceProtocolActive = false;
+  bool _doingStartUp = false;
 
   GLuint msaaTextureID = 0;
   GLuint targetTextureID = 0;
@@ -495,7 +492,7 @@ class Universe : public oo::RefCounted {
   GLint defaultDrawFBO = 0;
   GLuint pingpongFBO[2] = {};
   GLuint pingpongColorbuffers[2] = {};
-  BOOL _bloom = NO;
+  bool _bloom = false;
   int _currentPostFX = 0;
   int _colorblindMode = 0;
 
@@ -858,7 +855,7 @@ class Universe : public oo::RefCounted {
   NSPoint findSystemCoordinatesWithPrefix(const std::string& p_fix);
   NSPoint findSystemCoordinatesWithPrefix(const std::string& p_fix,
                                           bool exactMatch);
-  BOOL* systemsFound();
+  bool* systemsFound();
   std::optional<std::string> systemNameIndex(OOSystemID index);
   oo::PList routeFromSystem(OOSystemID start, OOSystemID goal,
                             OORouteType optimizeBy);
@@ -1021,7 +1018,6 @@ std::string cxx_OOLookUpPluralDescriptionPRIV(const std::string& key,
 void OOSoundSourcePlayCustomSoundWithKey(::OOSoundSource* source,
                                          const std::string& key);
 
-#ifdef __cplusplus
 #include "oofnd/StdLib.hpp"
 
 // C++ forms, defined in OOConstToString.mm: nullopt where the
@@ -1030,7 +1026,6 @@ std::optional<std::string> cxx_OODisplayStringFromGovernmentID(
     OOGovernmentID government);
 std::optional<std::string> cxx_OODisplayStringFromEconomyID(
     OOEconomyID economy);
-#endif
 
 /*	The look-ups behind the description and custom-sound keys: a
    call to the universe when there is one, else what the message to nil

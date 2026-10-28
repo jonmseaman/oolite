@@ -32,15 +32,9 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 class OOSoundSource;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSSoundSource(ooscript::Context context, ooscript::Object global);
 
-#ifdef __cplusplus
-}
-#endif
 
 /*	The bodies of OOSoundSource (OOJavaScriptExtentions): a new SoundSource
    object for the source (JS null for none) and the JS class name. The binding

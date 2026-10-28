@@ -62,13 +62,6 @@
 
 #pragma once
 
-// Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; suspend them for this header.
-#pragma push_macro("true")
-#pragma push_macro("false")
-#undef true
-#undef false
-
 #include <algorithm>
 #include <charconv>
 #include <cmath>
@@ -1547,5 +1540,3 @@ inline std::string formatRuntime(std::string_view fmt) {
 
 }  // namespace oo::str
 
-#pragma pop_macro("false")
-#pragma pop_macro("true")

@@ -62,16 +62,6 @@ MA 02110-1301, USA.
 #endif
 #endif
 
-#ifdef __cplusplus
-#ifndef OOJS_EXTERN_C
-#define OOJS_EXTERN_C extern "C"
-#endif
-#else
-#ifndef OOJS_EXTERN_C
-#define OOJS_EXTERN_C
-#endif
-#endif
-
 #define OOJS_PROFILE OOLITE_DEBUG
 
 /*
@@ -142,7 +132,7 @@ MA 02110-1301, USA.
 void OOJSReportCurrentException(ooscript::Context context);
 
 #ifndef NDEBUG
-OOJS_EXTERN_C void OOJSUnreachable(const char* function, const char* file,
+void OOJSUnreachable(const char* function, const char* file,
                                    unsigned line) NO_RETURN_FUNC;
 #else
 #define OOJSUnreachable(function, file, line) OO_UNREACHABLE()
@@ -174,8 +164,8 @@ OOJS_EXTERN_C void OOJSUnreachable(const char* function, const char* file,
 
 // The scope OOJS_BEGIN_FULL_NATIVE opens: what its Objective-C try and finally
 // did, in the same order.
-OOJS_EXTERN_C void OOJSPauseTimeLimiter(void);
-OOJS_EXTERN_C void OOJSResumeTimeLimiter(void);
+void OOJSPauseTimeLimiter(void);
+void OOJSResumeTimeLimiter(void);
 
 class OOJSFullNativeScope {
  public:
@@ -221,9 +211,9 @@ struct OOJSProfileStackFrame {
 };
 
 #define OOJS_DECLARE_PROFILE_STACK_FRAME(name) OOJSProfileStackFrame name;
-OOJS_EXTERN_C void OOJSProfileEnter(OOJSProfileStackFrame* frame,
+void OOJSProfileEnter(OOJSProfileStackFrame* frame,
                                     const char* function);
-OOJS_EXTERN_C void OOJSProfileExit(OOJSProfileStackFrame* frame);
+void OOJSProfileExit(OOJSProfileStackFrame* frame);
 
 // The scope OOJS_PROFILE_ENTER opens: enters the frame, and exits it however
 // the scope ends.

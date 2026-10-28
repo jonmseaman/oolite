@@ -31,9 +31,6 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSQuaternion(ooscript::Context context, ooscript::Object global);
 
@@ -70,7 +67,6 @@ bool JSQuaternionSetQuaternion(ooscript::Context context,
         On failure, it will return NO and raise an error. If the caller is a JS
         callback, it must return NO to signal an error.
 */
-extern "C++" {  // C++ parameters
 bool QuaternionFromArgumentList(ooscript::Context context,
                                 const std::string& scriptClass,
                                 const std::string& function, unsigned argc,
@@ -78,7 +74,6 @@ bool QuaternionFromArgumentList(ooscript::Context context,
                                 Quaternion* outQuaternion,
                                 unsigned* outConsumed)
     GCC_ATTR((nonnull(1, 5, 6)));
-}
 
 /*	QuaternionFromArgumentList()
 
@@ -90,9 +85,6 @@ bool QuaternionFromArgumentListNoError(ooscript::Context context, unsigned argc,
                                        unsigned* outConsumed)
     GCC_ATTR((nonnull(1, 3, 4)));
 
-#ifdef __cplusplus
-}
-#endif
 
 #if OO_DEBUG
 #include "oofnd/PList.hpp"

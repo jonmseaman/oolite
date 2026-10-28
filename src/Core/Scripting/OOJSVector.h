@@ -31,9 +31,6 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSVector(ooscript::Context context, ooscript::Object global);
 
@@ -80,13 +77,11 @@ bool JSVectorSetHPVector(ooscript::Context context, ooscript::Object vectorObj,
         DEPRECATED in favour of JSObjectGetVector(), since the list-of-number
    form is no longer used.
 */
-extern "C++" {  // C++ parameters
 bool VectorFromArgumentList(ooscript::Context context,
                             const std::string& scriptClass,
                             const std::string& function, unsigned argc,
                             ooscript::Value* argv, HPVector* outVector,
                             unsigned* outConsumed) GCC_ATTR((nonnull(1, 5, 6)));
-}
 
 /*	VectorFromArgumentListNoError()
 
@@ -97,9 +92,6 @@ bool VectorFromArgumentListNoError(ooscript::Context context, unsigned argc,
                                    unsigned* outConsumed)
     GCC_ATTR((nonnull(1, 3, 4)));
 
-#ifdef __cplusplus
-}
-#endif
 
 #if OO_DEBUG
 #include "oofnd/PList.hpp"

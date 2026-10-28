@@ -158,7 +158,7 @@ void HandleOneCommand(std::string& graphViz, const std::string& stateKey,
                       std::size_t commandCount,
                       std::set<std::string>& specialNodes,
                       std::set<std::string>& uniqueSet,
-                      BOOL* haveSetOrSwichAI) {
+                      bool* haveSetOrSwichAI) {
   const std::optional<std::string> command =
       CommandAt(handlerCommands, commandIter);
   if (EXPECT_NOT(!command.has_value())) return;
@@ -175,8 +175,8 @@ void HandleOneCommand(std::string& graphViz, const std::string& stateKey,
       const std::string& targetState = components[1];
       std::string targetLabel =
           HandlerToken(targetState, "ENTER", handlerKeys, uniqueSet);
-      BOOL constraint = YES;
-      if (targetState == stateKey || targetState == "GLOBAL") constraint = NO;
+      bool constraint = true;
+      if (targetState == stateKey || targetState == "GLOBAL") constraint = false;
 
       graphViz += oo::str::format("\t%s -> %s [lhead=cluster_%s%s]\n",
                                   handlerToken.c_str(), targetLabel.c_str(),
@@ -220,7 +220,7 @@ void HandleOneCommand(std::string& graphViz, const std::string& stateKey,
                                 : std::nullopt;
     AddExitAINode(graphViz, handlerToken, message, specialNodes);
   } else if (method == "setAITo:" || method == "switchAITo:") {
-    *haveSetOrSwichAI = YES;
+    *haveSetOrSwichAI = true;
     AddChangeAINode(graphViz, handlerToken, method, components, handlerCommands,
                     commandIter, commandCount, specialNodes);
   }
@@ -287,7 +287,7 @@ void GenerateGraphVizForAIStateMachine(const oo::PList& stateMachine,
             std::size_t commandIter,
                 commandCount =
                     (handlerCommands != nullptr) ? handlerCommands->count() : 0;
-            BOOL haveSetOrSwichAI = NO;
+            bool haveSetOrSwichAI = false;
 
             for (commandIter = 0; commandIter < commandCount; commandIter++) {
               HandleOneCommand(graphViz, stateKey, handlerKey, handlerKeys,

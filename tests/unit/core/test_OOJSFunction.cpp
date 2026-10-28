@@ -15,7 +15,7 @@
    function value, raw evaluation (the script stack and the time limiter
    balanced around each call, the arguments converted), the predicate's
    truthiness, and what an engine reset does (commit 34d0592d1). Run: bash
-   tools/check-core-tests.sh
+   tests/run.sh unit
 */
 
 #include <cstring>
@@ -60,12 +60,12 @@ std::optional<std::string> cxx_OOStringFromJSString(ooscript::Context context,
 }
 
 #ifndef NDEBUG
-extern "C" void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta, const char*,
+void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta, const char*,
                                                    unsigned) {
   sLimiterDepth++;
   sLimiterStarts++;
 }
-extern "C" void OOJSStopTimeLimiter_(const char*, unsigned) { sLimiterDepth--; }
+void OOJSStopTimeLimiter_(const char*, unsigned) { sLimiterDepth--; }
 #else
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta) {
   sLimiterDepth++;

@@ -247,7 +247,7 @@ oo::Ref<OOMaterial> OOMaterial::defaultShaderMaterialWithName(
   // A failed synthesis leaves the texture list null (and the shaders empty)
   // where it left all four nil. Mirror dictionaryWithObjectsAndKeys: nil-stop —
   // unsynthesized keeps only the is-synthesized flag.
-  BOOL synthesized = !textureSpecList.isNull();
+  bool synthesized = !textureSpecList.isNull();
   oo::PList::Dict synthesizedConfigDict;
   synthesizedConfigDict[kOOIsSynthesizedMaterialConfigurationKey] =
       oo::PList(true);
@@ -433,7 +433,7 @@ void AddTexture(OOMaterialSynthContext* context, const char* uniformName,
 
 void AddColorIfAppropriate(OOMaterialSynthContext* context, OOColor* color,
                            const char* key, const char* macroName) {
-  if (color != nil) {
+  if (color != nullptr) {
     oo::PList::Array components;
     for (float component : color->normalizedArray()) {
       components.push_back(oo::PList::singleReal(component));
@@ -445,7 +445,7 @@ void AddColorIfAppropriate(OOMaterialSynthContext* context, OOColor* color,
 
 void AddMacroColorIfAppropriate(OOMaterialSynthContext* context, OOColor* color,
                                 const char* macroName) {
-  if (color != nil) {
+  if (color != nullptr) {
     std::string macroText = oo::str::format(
         "vec4(%g, %g, %g, %g)", color->redComponent(), color->greenComponent(),
         color->blueComponent(), color->alphaComponent());
@@ -486,14 +486,14 @@ void SynthEmissionAndIllumination(OOMaterialSynthContext* context) {
       cxx_OOMaterialIlluminationMapSpecifier(context->inConfig);
   oo::PList emissionAndIlluminationSpec =
       cxx_OOMaterialEmissionAndIlluminationMapSpecifier(context->inConfig);
-  BOOL isCombinedSpec = NO;
-  BOOL haveIlluminationMap = NO;
+  bool isCombinedSpec = false;
+  bool haveIlluminationMap = false;
 
   if (emissionMapSpec.isNull() && !emissionAndIlluminationSpec.isNull()) {
     emissionMapSpec = emissionAndIlluminationSpec;
     if (illuminationMapSpec.isNull())
       isCombinedSpec =
-          YES;  // Else use only emission part of emission_and_illumination_map,
+          true;  // Else use only emission part of emission_and_illumination_map,
                 // combined with full illumination_map.
   }
 
@@ -530,7 +530,7 @@ void SynthEmissionAndIllumination(OOMaterialSynthContext* context) {
       context->texturesUsed < context->maxTextures) {
     AddTexture(context, "uIlluminationMap", nullptr, "OOSTD_ILLUMINATION_MAP",
                illuminationMapSpec);
-    haveIlluminationMap = YES;
+    haveIlluminationMap = true;
   }
 
   if (haveIlluminationMap) {
@@ -543,11 +543,11 @@ void SynthEmissionAndIllumination(OOMaterialSynthContext* context) {
 
 void SynthNormalMap(OOMaterialSynthContext* context) {
   if (context->texturesUsed < context->maxTextures) {
-    BOOL hasParallax = YES;
+    bool hasParallax = true;
     oo::PList normalMapSpec =
         cxx_OOMaterialNormalAndParallaxMapSpecifier(context->inConfig);
     if (normalMapSpec.isNull()) {
-      hasParallax = NO;
+      hasParallax = false;
       normalMapSpec = cxx_OOMaterialNormalMapSpecifier(context->inConfig);
     }
 
@@ -573,7 +573,7 @@ void SynthSpecular(OOMaterialSynthContext* context) {
   GLfloat gloss = cxx_OOMaterialGloss(context->inConfig);
   if (gloss < 0.0f || gloss > 1.0f) return;
 
-  BOOL gammaCorrect = cxx_OOMaterialGammaCorrect(context->inConfig) ? YES : NO;
+  bool gammaCorrect = cxx_OOMaterialGammaCorrect(context->inConfig) ? true : false;
 
   oo::PList specularMapSpec;
   oo::Ref<OOColor> specularColor;
@@ -599,7 +599,7 @@ void SynthSpecular(OOMaterialSynthContext* context) {
                "OOSTD_SPECULAR_MAP", specularMapSpec);
   }
 
-  if (specularColor != nil) {
+  if (specularColor != nullptr) {
     /*	As with emission colour, specular_modulate_color is transformed to
      specular_color here because the shader reads it from the standard
      material specular colour property set by OOBasicMaterial.

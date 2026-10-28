@@ -77,7 +77,7 @@ static inline Object* OOJSFOBJP(ooscript::Object* o) {
 
 // Support functions for entity search methods.
 namespace {
-static BOOL GetRelativeToAndRange(ooscript::Context context,
+static bool GetRelativeToAndRange(ooscript::Context context,
                                   const std::string& methodName,
                                   unsigned* ioArgc, ooscript::Value** ioArgv,
                                   Entity** outRelativeTo, double* outRange);
@@ -450,7 +450,7 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID,
   OOJS_NATIVE_ENTER(context)
 
   oo::PList result;  // null maps to null
-  PlayerEntity* player = nil;
+  PlayerEntity* player = nullptr;
   bool handled = false;
 
   player = OOPlayerForScripting();
@@ -734,7 +734,7 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID,
 
   OOJS_NATIVE_ENTER(context)
 
-  PlayerEntity* player = nil;
+  PlayerEntity* player = nullptr;
   OOGalaxyID galaxy;
   OOSystemID system;
   std::optional<std::string> stringValue;
@@ -927,7 +927,7 @@ static bool SystemAddPlanet(ooscript::Context context,
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> key;
-  OOPlanetEntity* planet = nil;
+  OOPlanetEntity* planet = nullptr;
 
   if (oojsArgs.count() > 0)
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
@@ -958,7 +958,7 @@ static bool SystemAddMoon(ooscript::Context context,
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> key;
-  OOPlanetEntity* planet = nil;
+  OOPlanetEntity* planet = nullptr;
 
   if (oojsArgs.count() > 0)
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
@@ -1094,7 +1094,7 @@ static bool SystemShipsWithPrimaryRole(ooscript::Context context,
     cxx_OOJSReportBadArguments(context, "System", "countShipsWithRole",
                                MIN(oojsArgs.count(), 1U), OOJS_ARGV,
                                std::nullopt, "string (role)");
-    return NO;
+    return false;
   }
 
   // Get optional arguments
@@ -1102,7 +1102,7 @@ static bool SystemShipsWithPrimaryRole(ooscript::Context context,
   ooscript::Value* argv = OOJS_ARGV + 1;
   if (EXPECT_NOT(!GetRelativeToAndRange(context, "shipsWithPrimaryRole", &argc,
                                         &argv, &relativeTo, &range)))
-    return NO;
+    return false;
 
   // Search for entities
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -1133,7 +1133,7 @@ static bool SystemShipsWithRole(ooscript::Context context,
     cxx_OOJSReportBadArguments(context, "System", "shipsWithRole",
                                MIN(oojsArgs.count(), 1U), OOJS_ARGV,
                                std::nullopt, "string (role)");
-    return NO;
+    return false;
   }
 
   // Get optional arguments
@@ -1141,7 +1141,7 @@ static bool SystemShipsWithRole(ooscript::Context context,
   ooscript::Value* subargv = OOJS_ARGV + 1;
   if (EXPECT_NOT(!GetRelativeToAndRange(context, "shipsWithRole", &argc,
                                         &subargv, &relativeTo, &range)))
-    return NO;
+    return false;
 
   // Search for entities
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -1212,7 +1212,7 @@ static bool SystemEntitiesWithScanClass(ooscript::Context context,
     cxx_OOJSReportBadArguments(context, "System", "countEntitiesWithScanClass",
                                MIN(oojsArgs.count(), 1U), OOJS_ARGV,
                                std::nullopt, "string (scan class)");
-    return NO;
+    return false;
   }
 
   // Get optional arguments
@@ -1220,7 +1220,7 @@ static bool SystemEntitiesWithScanClass(ooscript::Context context,
   ooscript::Value* argv = OOJS_ARGV + 1;
   if (EXPECT_NOT(!GetRelativeToAndRange(context, "entitiesWithScanClass", &argc,
                                         &argv, &relativeTo, &range)))
-    return NO;
+    return false;
 
   // Search for entities
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -1254,7 +1254,7 @@ static bool SystemFilteredEntities(ooscript::Context context,
         context, "System", "filteredEntities", oojsArgs.count(), OOJS_ARGV,
         std::nullopt,
         "this, predicate function, and optional reference entity and range");
-    return NO;
+    return false;
   }
   predicate = OOJS_ARGV[1];
 
@@ -1263,16 +1263,16 @@ static bool SystemFilteredEntities(ooscript::Context context,
   ooscript::Value* argv = OOJS_ARGV + 2;
   if (EXPECT_NOT(!GetRelativeToAndRange(context, "filteredEntities", &argc,
                                         &argv, &relativeTo, &range)))
-    return NO;
+    return false;
 
   // Search for entities
-  JSFunctionPredicateParameter param = {context, predicate, jsThis, NO};
+  JSFunctionPredicateParameter param = {context, predicate, jsThis, false};
   OOJSPauseTimeLimiter();
   result =
       FindJSVisibleEntities(JSFunctionPredicate, &param, relativeTo, range);
   OOJSResumeTimeLimiter();
 
-  if (EXPECT_NOT(param.errorFlag)) return NO;
+  if (EXPECT_NOT(param.errorFlag)) return false;
 
   OOJS_RETURN_PLIST(oo::EntityNodesFrom(result));
 
@@ -1299,7 +1299,7 @@ static bool SystemLocationFromCode(ooscript::Context context,
   OOSunEntity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
   OOPlanetEntity* planet = (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr);
   HPVector position = kZeroHPVector;
-  if (sun == nil || planet == nil) {
+  if (sun == nullptr || planet == nullptr) {
     position = (UNIVERSE != nullptr
                     ? UNIVERSE->locationByCode("WITCHPOINT", nullptr, nullptr)
                     : HPVector{});
@@ -1319,7 +1319,7 @@ static bool SystemLocationFromCode(ooscript::Context context,
 // Number]]) : Array
 namespace {
 static bool SystemAddShips(ooscript::Context cx, ooscript::CallArgs& oojsArgs) {
-  return SystemAddShipsOrGroup(cx, oojsArgs, NO);
+  return SystemAddShipsOrGroup(cx, oojsArgs, false);
 }
 }  // namespace
 
@@ -1327,7 +1327,7 @@ static bool SystemAddShips(ooscript::Context cx, ooscript::CallArgs& oojsArgs) {
 // Number]]) : Array
 namespace {
 static bool SystemAddGroup(ooscript::Context cx, ooscript::CallArgs& oojsArgs) {
-  return SystemAddShipsOrGroup(cx, oojsArgs, YES);
+  return SystemAddShipsOrGroup(cx, oojsArgs, true);
 }
 }  // namespace
 
@@ -1336,7 +1336,7 @@ static bool SystemAddGroup(ooscript::Context cx, ooscript::CallArgs& oojsArgs) {
 namespace {
 static bool SystemAddShipsToRoute(ooscript::Context cx,
                                   ooscript::CallArgs& oojsArgs) {
-  return SystemAddShipsOrGroupToRoute(cx, oojsArgs, NO);
+  return SystemAddShipsOrGroupToRoute(cx, oojsArgs, false);
 }
 }  // namespace
 
@@ -1345,7 +1345,7 @@ static bool SystemAddShipsToRoute(ooscript::Context cx,
 namespace {
 static bool SystemAddGroupToRoute(ooscript::Context cx,
                                   ooscript::CallArgs& oojsArgs) {
-  return SystemAddShipsOrGroupToRoute(cx, oojsArgs, YES);
+  return SystemAddShipsOrGroupToRoute(cx, oojsArgs, true);
 }
 }  // namespace
 
@@ -1668,14 +1668,14 @@ static bool SystemStaticInfoForSystem(ooscript::Context context,
     cxx_OOJSReportBadArguments(context, "System", "infoForSystem",
                                oojsArgs.count(), OOJS_ARGV, std::nullopt,
                                "galaxy ID and system ID");
-    return NO;
+    return false;
   }
 
   if (galaxyID < 0 || galaxyID > kOOMaximumGalaxyID) {
     cxx_OOJSReportBadArguments(
         context, "System", "infoForSystem", 1, OOJS_ARGV, "Invalid galaxy ID",
         oo::str::format("number in the range 0 to %u", kOOMaximumGalaxyID));
-    return NO;
+    return false;
   }
 
   if (systemID < kOOMinimumSystemID || systemID > kOOMaximumSystemID) {
@@ -1684,7 +1684,7 @@ static bool SystemStaticInfoForSystem(ooscript::Context context,
         "Invalid system ID",
         oo::str::format("number in the range %i to %i", kOOMinimumSystemID,
                         kOOMaximumSystemID));
-    return NO;
+    return false;
   }
 
   OOJS_RETURN(GetJSSystemInfoForSystem(context, galaxyID, systemID));
@@ -2059,7 +2059,7 @@ static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs,
 }  // namespace
 
 namespace {
-static BOOL GetRelativeToAndRange(ooscript::Context context,
+static bool GetRelativeToAndRange(ooscript::Context context,
                                   const std::string& methodName,
                                   unsigned* ioArgc, ooscript::Value** ioArgv,
                                   Entity** outRelativeTo, double* outRange) {
@@ -2075,7 +2075,7 @@ static BOOL GetRelativeToAndRange(ooscript::Context context,
                    !JSValueToEntity(context, **ioArgv, &relativeTo))) {
       cxx_OOJSReportBadArguments(context, "System", methodName, 1, *ioArgv,
                                  std::nullopt, "entity");
-      return NO;
+      return false;
     }
     *outRelativeTo = relativeTo;
     (*ioArgv)++;
@@ -2087,13 +2087,13 @@ static BOOL GetRelativeToAndRange(ooscript::Context context,
     if (!EXPECT_NOT(ooscript::valueToNumber((context), (**ioArgv), outRange))) {
       cxx_OOJSReportBadArguments(context, "System", methodName, 1, *ioArgv,
                                  std::nullopt, "number");
-      return NO;
+      return false;
     }
     (*ioArgv)++;
     (*ioArgc)--;
   }
 
-  return YES;
+  return true;
 
   OOJS_PROFILE_EXIT
 }

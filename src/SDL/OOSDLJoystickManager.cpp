@@ -28,8 +28,6 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 
 OOSDLJoystickManager::OOSDLJoystickManager() {
-  int i;
-
   std::map<std::string, int, std::less<>> idMap;
 
   // Find and open the sticks. Make sure that we don't fail if more joysticks
@@ -44,7 +42,7 @@ OOSDLJoystickManager::OOSDLJoystickManager() {
            MAX_STICKS);
   }
   if (stickCount) {
-    for (i = 0; i < stickCount; i++) {
+    for (int i = 0; i < stickCount; i++) {
       // it's doubtful MAX_STICKS will ever get exceeded, but
       // we need to be defensive.
       if (i > MAX_STICKS) break;

@@ -12,7 +12,7 @@
    description, and [super ...] from an Objective-C subclass. Then the
    hierarchy's crossing both ways, as test_OOOXPVerifierStage.mm does, and the
    current material keeping an Objective-C material alive while C++ holds it.
-   Run: bash tools/check-core-tests.sh
+   Run: tests/run.sh unit
 */
 
 #include <utility>
@@ -142,7 +142,7 @@ OO_TEST(rootDefaults) {
     material->ensureFinishedLoading();
     OO_CHECK(material->isFinishedLoading());
     OO_CHECK(!material->wantsNormalsAsTextureCoordinates());
-    material->setBindingTarget(nil);
+    material->setBindingTarget(nullptr);
     material->unapplyWithNext(nullptr);
 #if OO_MULTITEXTURE
     OO_CHECK(material->countOfTextureUnitsWithBaseCoordinates() == 1);

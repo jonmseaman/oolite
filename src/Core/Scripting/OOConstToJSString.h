@@ -37,9 +37,6 @@ MA 02110-1301, USA.
 #include "OOTypes.h"
 #include "ooscript/JSEngine.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void OOConstToJSStringInit(ooscript::Context context);
 void OOConstToJSStringDestroy(void);
@@ -59,9 +56,6 @@ NSUInteger OOConstantFromJSValuePRIVATE(ooscript::Context context,
                                         struct ConstTable* table,
                                         NSInteger defaultValue);
 
-#ifdef __cplusplus
-}
-#endif
 
 /*	ooscript::String OOJSStringFromEntityStatus(ooscript::Context,
    OOEntityStatus) ooscript::Value OOJSValueFromEntityStatus(ooscript::Context,

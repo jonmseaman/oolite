@@ -35,7 +35,7 @@ MA 02110-1301, USA.
   (0.05)  // seconds before we start colliding with and damaging things.
 
 bool OOQuiriumCascadeEntity::initQuiriumCascadeFromShip(::ShipEntity* ship) {
-  if (ship == nil) {
+  if (ship == nullptr) {
     return false;  // [self release]; return nil
   }
 
@@ -147,14 +147,14 @@ void OOQuiriumCascadeEntity::drawImmediate(bool /*immediate*/,
   });
 }
 
-bool OOQuiriumCascadeEntity::isEffect() { return YES; }
+bool OOQuiriumCascadeEntity::isEffect() { return true; }
 
-bool OOQuiriumCascadeEntity::isCascadeWeapon() { return YES; }
+bool OOQuiriumCascadeEntity::isCascadeWeapon() { return true; }
 
 bool OOQuiriumCascadeEntity::canCollide() {
   return _timePassed > kQuiriumCollisionDelay;
 }
 
 bool OOQuiriumCascadeEntity::checkCloseCollisionWith(Entity* /*other*/) {
-  return YES;
+  return true;
 }

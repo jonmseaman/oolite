@@ -69,12 +69,12 @@ SOFTWARE.
 // log in Leopard. Extremely unsupported, so not used in release builds.
 static void InitCrashReporterInfo(void);
 static void SetCrashReporterInfo(const char* info);
-static BOOL sCrashReporterInfoAvailable = NO;
+static bool sCrashReporterInfoAvailable = false;
 
 #endif
 
 typedef void (*LogCStringFunctionProc)(const char* string, unsigned length,
-                                       BOOL withSyslogBanner);
+                                       bool withSyslogBanner);
 typedef LogCStringFunctionProc (*LogCStringFunctionGetterProc)(void);
 typedef void (*LogCStringFunctionSetterProc)(LogCStringFunctionProc);
 
@@ -83,14 +83,12 @@ static LogCStringFunctionSetterProc _NSSetLogCStringFunction = NULL;
 
 static void LoadLogCStringFunctions(void);
 static void OONSLogCStringFunction(const char* string, unsigned length,
-                                   BOOL withSyslogBanner);
+                                   bool withSyslogBanner);
 
 static std::string GetAppName(void);
 
 static LogCStringFunctionProc sDefaultLogCStringFunction = NULL;
 
-#elif !OOLITE_GNUSTEP
-#error Unknown platform!
 #endif
 
 namespace {
@@ -107,9 +105,9 @@ void AsyncLogMessage(std::string_view message);
 #define kFlushInterval \
   2.0  // Lower bound on interval between explicit log file flushes.
 
-static BOOL sInited = NO;
-static BOOL sWriteToStderr = YES;
-static BOOL sWriteToStdout = NO;
+static bool sInited = false;
+static bool sWriteToStderr = true;
+static bool sWriteToStdout = false;
 
 namespace {
 
@@ -145,13 +143,13 @@ void OOLogOutputHandlerInit(void) {
 
   sMainThreadID = std::this_thread::get_id();
   sLogger = StartLogger();
-  sInited = YES;
+  sInited = true;
 
   if (sLogger != nullptr) {
     sWriteToStderr =
         oo::Defaults::standard().boolForKey("logging-echo-to-stderr");
   } else {
-    sWriteToStderr = YES;
+    sWriteToStderr = true;
   }
 
 #if OOLITE_MAC_OS_X
@@ -185,8 +183,8 @@ const std::string& LogFileName(void) {
 
 void OOLogOutputHandlerClose(void) {
   if (sInited) {
-    sWriteToStderr = YES;
-    sInited = NO;
+    sWriteToStderr = true;
+    sInited = false;
 
     if (sLogger != nullptr) sLogger->end(Postamble());
     sLogger.reset();
@@ -217,7 +215,7 @@ void OOLogOutputHandlerFlushIfDue(void) {
 void OOLogOutputHandlerPrintLine(std::string_view line) {
   if (sInited && sLogger != nullptr && !sWriteToStdout) AsyncLogMessage(line);
 
-  BOOL doCStringStuff = sWriteToStderr || sWriteToStdout;
+  bool doCStringStuff = sWriteToStderr || sWriteToStdout;
 #if SET_CRASH_REPORTER_INFO
   doCStringStuff = doCStringStuff || sCrashReporterInfoAvailable;
 #endif
@@ -253,7 +251,7 @@ void cxx_OOLogOutputHandlerChangeLogFile(const std::string& name) {
                  "Log setup: could not open log at {}, will log to stdout "
                  "instead.",
                  *path);
-        sWriteToStderr = YES;
+        sWriteToStderr = true;
       }
     }
   }
@@ -359,7 +357,7 @@ static void LoadLogCStringFunctions(void) {
 }
 
 static void OONSLogCStringFunction(const char* string, unsigned length,
-                                   BOOL withSyslogBanner) {
+                                   bool withSyslogBanner) {
   if (oo::log::willDisplay("system")) {
     oo::log::logger().write("system", NULL, NULL, 0,
                             string != NULL ? string : "(null)");
@@ -401,7 +399,7 @@ static void ExcludeFromTimeMachine(const std::string& path) {
         carbonCoreBundle, CFSTR("CSBackupSetItemExcluded"));
     if (CSBackupSetItemExcluded != NULL) {
       (void)CSBackupSetItemExcluded(
-          [NSURL fileURLWithPath:oo::NSStringFrom(path)], YES, NO);
+          [NSURL fileURLWithPath:oo::NSStringFrom(path)], true, false);
     }
   }
 }
@@ -477,7 +475,7 @@ const std::optional<std::string>& LogBasePath(void) {
 #if OOLITE_MAC_OS_X
       // ~/Library
       path = oo::StdString([NSSearchPathForDirectoriesInDomains(
-          NSLibraryDirectory, NSUserDomainMask, YES) objectAtIndex:0]);
+          NSLibraryDirectory, NSUserDomainMask, true) objectAtIndex:0]);
 #elif OOLITE_LINUX
       // ~/.Oolite
       path = AppendPathComponent(
@@ -535,7 +533,7 @@ static std::mutex sCrashReporterInfoLock;
 static void InitCrashReporterInfo(void) {
   sCrashReporterInfo = dlsym(RTLD_DEFAULT, "__crashreporter_info__");
   if (sCrashReporterInfo != NULL) {
-    sCrashReporterInfoAvailable = YES;
+    sCrashReporterInfoAvailable = true;
   }
 }
 

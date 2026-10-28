@@ -37,7 +37,7 @@ oo::PList cxx_OOPropertyListFromData(
   oo::PList result;
 
   const std::string source = whereFrom.value_or("<data in memory>");
-  if (UNIVERSE != nil) {
+  if (UNIVERSE != nullptr) {
     OO_LOG("plist.information", "Parsing {} as a property list.", source);
   }
 

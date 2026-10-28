@@ -47,72 +47,66 @@ typedef struct {
   void* parameter2;
 } BinaryOperationPredicateParameter;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-BOOL YESPredicate(Entity* entity,
+bool YESPredicate(Entity* entity,
                   void* parameter);  // Parameter: ignored. Always returns YES.
-BOOL NOPredicate(Entity* entity,
+bool NOPredicate(Entity* entity,
                  void* parameter);  // Parameter: ignored. Always returns NO.
 
-BOOL NOTPredicate(
+bool NOTPredicate(
     Entity* entity,
     void* parameter);  // Parameter: ChainedEntityPredicateParameter. Reverses
                        // effect of chained predicate.
 
-BOOL ANDPredicate(
+bool ANDPredicate(
     Entity* entity,
     void* parameter);  // Parameter: BinaryOperationPredicateParameter.
                        // Short-circuiting AND operator.
-BOOL ORPredicate(
+bool ORPredicate(
     Entity* entity,
     void* parameter);  // Parameter: BinaryOperationPredicateParameter.
                        // Short-circuiting OR operator.
-BOOL NORPredicate(
+bool NORPredicate(
     Entity* entity,
     void* parameter);  // Parameter: BinaryOperationPredicateParameter.
                        // Short-circuiting NOR operator.
-BOOL XORPredicate(
+bool XORPredicate(
     Entity* entity,
     void* parameter);  // Parameter: BinaryOperationPredicateParameter. XOR
                        // operator.
-BOOL NANDPredicate(
+bool NANDPredicate(
     Entity* entity,
     void* parameter);  // Parameter: BinaryOperationPredicateParameter. NAND
                        // operator.
 
-BOOL HasScanClassPredicate(Entity* entity,
+bool HasScanClassPredicate(Entity* entity,
                            void* parameter);  // Parameter: an OOScanClass
-BOOL IsShipPredicate(
+bool IsShipPredicate(
     Entity* entity,
     void* parameter);  // Parameter: ignored. Tests isShip and !isSubentity.
-BOOL IsStationPredicate(
+bool IsStationPredicate(
     Entity* entity, void* parameter);  // Parameter: ignored. Tests isStation.
-BOOL IsPlanetPredicate(
+bool IsPlanetPredicate(
     Entity* entity,
     void* parameter);  // Parameter: ignored. Tests isPlanet and planetType ==
                        // STELLAR_TYPE_NORMAL_PLANET.
-BOOL IsSunPredicate(Entity* entity,
+bool IsSunPredicate(Entity* entity,
                     void* parameter);  // Parameter: ignored. Tests isSun.
-BOOL IsVisualEffectPredicate(
+bool IsVisualEffectPredicate(
     Entity* entity, void* parameter);  // Parameter: ignored. Tests
                                        // isVisualEffect and !isSubentity.
 
 // These predicates assume their parameter is a ShipEntity.
-BOOL HasRolePredicate(
+bool HasRolePredicate(
     Entity* ship, void* parameter);  // Parameter: a std::string (null: none)
-BOOL HasPrimaryRolePredicate(
+bool HasPrimaryRolePredicate(
     Entity* ship, void* parameter);  // Parameter: a std::string (null: none)
-BOOL HasRoleInSetPredicate(
+bool HasRoleInSetPredicate(
     Entity* ship,
     void* parameter);  // Parameter: a std::vector<std::string> of roles
-BOOL HasPrimaryRoleInSetPredicate(
+bool HasPrimaryRoleInSetPredicate(
     Entity* ship,
     void* parameter);  // Parameter: a std::vector<std::string> of roles
-BOOL IsHostileAgainstTargetPredicate(Entity* ship,
+bool IsHostileAgainstTargetPredicate(Entity* ship,
                                      void* parameter);  // Parameter: ShipEntity
 
-#ifdef __cplusplus
-}
-#endif

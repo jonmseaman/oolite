@@ -30,15 +30,9 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 class ShipEntity;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSShip(ooscript::Context context, ooscript::Object global);
 
 ooscript::ClassDef* JSShipClass(void);
 ooscript::Object JSShipPrototype(void);
 
-#ifdef __cplusplus
-}
-#endif

@@ -16,7 +16,7 @@
    linkage. The expectations were written to pin the JS-visible behaviour (the
    four properties, a beacon code that registers or clears a beacon, an
    unoriented waypoint, a non-waypoint, a native's exception) and what the
-   category answers the engine. Run: bash tools/check-core-tests.sh
+   category answers the engine. Run: tests/run.sh unit
 */
 
 #include "OOFoundation.h"
@@ -65,7 +65,7 @@ class OOWaypointEntity : public Entity {
   void setBeaconLabel(const std::optional<std::string>& blabel);
   bool isBeacon();
 
-  BOOL _oriented = NO;
+  bool _oriented = false;
   OOScalar _size = 0;
 };
 
@@ -139,7 +139,7 @@ class PlayerEntity : public ShipEntity {
  public:
   void setCompassMode(OOCompassMode value);
 
-  FakeGame* _game = nil;
+  FakeGame* _game = nullptr;
 };
 
 #include <cstdarg>
@@ -271,10 +271,9 @@ std::map<ooscript::ClassDef*, int> sConverters;
 }  // namespace
 
 ooscript::Object gOOEntityJSPrototype = nullptr;
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 PlayerEntity* gOOPlayer = nullptr;
 
-extern "C" {
 
 ooscript::ClassDef* JSEntityClass(void) { return &sFakeEntityClass; }
 
@@ -295,13 +294,13 @@ void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
   sSuperclasses[subclass] = superclass;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
@@ -378,7 +377,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();
@@ -439,7 +437,7 @@ ooscript::Context sContext;
 ooscript::Object sGlobal;
 TestEntityObject* sWaypoint = nullptr;      // the waypoint's object
 OOWaypointEntity* sWaypointPart = nullptr;  // its C++ part
-FakeGame* sGame = nil;
+FakeGame* sGame = nullptr;
 
 ooscript::Value JSValueForObject(ooscript::ClassDef* jsClass,
                                  ooscript::Object prototype,
@@ -493,7 +491,7 @@ void SetUpContext() {
   sWaypointPart = static_cast<OOWaypointEntity*>(sWaypoint->_cxxEntity.get());
   sWaypoint->_beaconLabel = "Label";
   sWaypoint->_orientation = make_quaternion(0, 1, 0, 0);
-  sWaypointPart->_oriented = YES;
+  sWaypointPart->_oriented = true;
   sWaypointPart->_size = 20;
   Define("waypoint", JSValueForEntity(sWaypoint));
   Define("plainEntity",
@@ -561,10 +559,10 @@ OO_TEST(properties) {
   OO_CHECK_EVAL("waypoint.size", "20");
   OO_CHECK_EVAL("Object.keys(Waypoint.prototype).join()",
                 "beaconCode,beaconLabel,orientation,size");
-  sWaypointPart->_oriented = NO;
+  sWaypointPart->_oriented = false;
   OO_CHECK_EVAL("waypoint.orientation",
                 "0,0,0,0");  // unoriented: the zero quaternion
-  sWaypointPart->_oriented = YES;
+  sWaypointPart->_oriented = true;
 }
 
 OO_TEST(setters) {

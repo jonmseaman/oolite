@@ -141,23 +141,17 @@ OOMatrix OOMatrixOrthogonalize(OOMatrix m) CONST_FUNC;
   } while (0)
 #define GLUniformMatrix(location, M)                                          \
   do {                                                                        \
-    OOGL(glUniformMatrix4fvARB(location, 1, NO, OOMatrixValuesForOpenGL(M))); \
+    OOGL(glUniformMatrix4fvARB(location, 1, false, OOMatrixValuesForOpenGL(M))); \
   } while (0)
 void GLUniformMatrix3(GLint location, OOMatrix M);
 
 OOINLINE OOMatrix OOMatrixLoadGLMatrix(GLenum matrixID) ALWAYS_INLINE_FUNC;
 #endif
 
-#ifdef __cplusplus
-/*	C++ only: OOMaths.h is included inside extern "C" (as OOQuaternion.h
-   does for QuaternionDescription). */
-extern "C++" {
 #include "oofnd/StdLib.hpp"
 std::string OOMatrixDescription(
     OOMatrix
         matrix);  // "{{#, #, #, #}, {#, #, #, #}, {#, #, #, #}, {#, #, #, #}}"
-}
-#endif
 
 // Row operations
 

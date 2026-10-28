@@ -73,7 +73,7 @@ class StickProfileScreen : public oo::RefCounted {
       nullptr;  // the shared handler, not retained, as before
   NSUInteger current_axis = 0;
   oo::Ref<OOJoystickAxisProfile> profiles[3][2] = {};
-  GuiDisplayGen* gui = nil;  // not retained, as before
+  GuiDisplayGen* gui = nullptr;  // not retained, as before
   NSRect graphRect = {};
   NSInteger selected_control_point = 0;
   NSInteger dragged_control_point = 0;

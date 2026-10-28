@@ -132,7 +132,7 @@ void OOPlanetDrawable::setLevelOfDetail(float lod) {
 }
 
 void OOPlanetDrawable::calculateLevelOfDetailForViewDistance(float distance) {
-  BOOL simple = (UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false);
+  bool simple = (UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false);
   float drawFactor = (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
                           ? UNIVERSE->getGameView()->getViewSize()
                           : NSSize{})
@@ -301,7 +301,7 @@ void OOPlanetDrawable::debugDrawNormals() {
 
   OO_ENTER_OPENGL();
 
-  state = OODebugBeginWireframe(NO);
+  state = OODebugBeginWireframe(false);
 
   const OOPlanetDataLevel* data = &kPlanetData[_lod];
   unsigned i;

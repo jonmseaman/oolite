@@ -66,10 +66,6 @@ MA 02110-1301, USA.
 
 #include "oofnd/objc/OOObject.h"
 
-// extern "C++" because this header is reached from inside an extern "C" block
-// (OOMaths.h -> OOFoundation.h), as OOLogging.h is.
-extern "C++" {
-
 #include "oofnd/PListDescription.hpp"
 #include "oofnd/StdLib.hpp"
 
@@ -84,4 +80,3 @@ inline std::string DescriptionOf(const oo::PList& plist) {
 
 }  // namespace oo
 
-}  // extern "C++"

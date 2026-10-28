@@ -17,7 +17,7 @@
    and what the category answered the engine. The sound is a C++ stand-in, the
    category's answers are the functions that held its bodies, and a Sound
    object's slot holds the binding's holder of the sound, which
-   SoundFromJSValue() answers. Run: bash tools/check-core-tests.sh
+   SoundFromJSValue() answers. Run: tests/run.sh unit
 */
 
 #include "OOFoundation.h"
@@ -93,7 +93,7 @@ class OOMusicController : public oo::RefCounted {
 // What the controller was asked.
 struct MusicRecord {
   std::optional<std::string> _playing;
-  BOOL _loop = NO;
+  bool _loop = false;
   float _gain = 0.0f;
   int _stops = 0;
 };
@@ -245,18 +245,18 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
   return js != nullptr ? ooscript::stringValue(js) : ooscript::nullValue();
 }
 
-BOOL cxx_OOJSArgumentListGetNumber(
+bool cxx_OOJSArgumentListGetNumber(
     ooscript::Context context, const std::optional<std::string>& scriptClass,
     const std::optional<std::string>& function, unsigned argc,
     ooscript::Value* argv, double* outNumber, unsigned* outConsumed) {
   if (argc > 0 && ooscript::valueToNumber(context, argv[0], outNumber) &&
       !std::isnan(*outNumber)) {
     if (outConsumed != NULL) *outConsumed = 1;
-    return YES;
+    return true;
   }
   cxx_OOJSReportBadArguments(context, scriptClass, function, argc, argv,
                              "Expected number, got", std::nullopt);
-  return NO;
+  return false;
 }
 
 namespace {
@@ -265,7 +265,6 @@ std::map<ooscript::ClassDef*, int> sConverters;
 
 PlayerEntity* gOOPlayer = nullptr;
 
-extern "C" {
 
 void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
                                    ooscript::PropertyId,
@@ -279,7 +278,7 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
   sConverters[theClass]++;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
 }
@@ -317,7 +316,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 // MARK: The context
 // -------------------------------------------------------------------------------

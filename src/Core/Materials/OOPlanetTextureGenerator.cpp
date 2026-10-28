@@ -90,7 +90,7 @@ class OOPlanetNormalMapGenerator : public OOTextureGenerator {
   void loadTexture() override;
 
  private:
-  BOOL _enqueued = {};
+  bool _enqueued = {};
   std::string _cacheKey;
   RANROTSeed _seed = {};
 };
@@ -114,7 +114,7 @@ class OOPlanetAtmosphereGenerator : public OOTextureGenerator {
                  uint32_t* outWidth, uint32_t* outHeight) override;
 
  private:
-  BOOL _enqueued = {};
+  bool _enqueued = {};
   std::string _cacheKey;
   RANROTSeed _seed = {};
   oo::Ref<OOPlanetTextureGenerator>
@@ -130,7 +130,7 @@ FloatRGB FloatRGBFromDictColor(
 
 }  // namespace
 
-static BOOL FillFBMBuffer(OOPlanetTextureGeneratorInfo* info);
+static bool FillFBMBuffer(OOPlanetTextureGeneratorInfo* info);
 
 static float QFactor(float* accbuffer, int x, int y, unsigned width,
                      float polar_y_value, float bias, float polar_y);
@@ -249,12 +249,12 @@ bool OOPlanetTextureGenerator::generatePlanetTextureAndAtmosphere(
   if (atmoGen == nullptr) return false;
 
   *atmosphere = OOTexture::textureWithGenerator(atmoGen);
-  if (atmosphere->get() == nil) return false;
+  if (atmosphere->get() == nullptr) return false;
 
   *texture =
       OOTexture::textureWithGenerator(diffuseGen.get(), atmoGen->enqueued());
 
-  return texture->get() != nil;
+  return texture->get() != nullptr;
 }
 
 bool OOPlanetTextureGenerator::generatePlanetTexture(
@@ -262,7 +262,7 @@ bool OOPlanetTextureGenerator::generatePlanetTexture(
     const oo::PList& planetInfo, RANROTSeed seed) {
   OOCParameterAssert(texture != NULL);
 
-  BOOL enqueue = NO;
+  bool enqueue = false;
 
   const oo::Ref<OOPlanetTextureGenerator> diffuseGen =
       generatorWithPlanetInfo(planetInfo, seed);
@@ -273,13 +273,13 @@ bool OOPlanetTextureGenerator::generatePlanetTexture(
     if (normalGen == nullptr) return false;
 
     *secondaryTexture = OOTexture::textureWithGenerator(normalGen);
-    if (secondaryTexture->get() == nil) return false;
+    if (secondaryTexture->get() == nullptr) return false;
     enqueue = normalGen->enqueued();
   }
 
   *texture = OOTexture::textureWithGenerator(diffuseGen.get(), enqueue);
 
-  return texture->get() != nil;
+  return texture->get() != nullptr;
 }
 
 bool OOPlanetTextureGenerator::generatePlanetTexture(
@@ -288,7 +288,7 @@ bool OOPlanetTextureGenerator::generatePlanetTexture(
     RANROTSeed seed) {
   OOCParameterAssert(texture != NULL);
 
-  BOOL enqueue = NO;
+  bool enqueue = false;
 
   const oo::Ref<OOPlanetTextureGenerator> diffuseGen =
       generatorWithPlanetInfo(planetInfo, seed);
@@ -299,7 +299,7 @@ bool OOPlanetTextureGenerator::generatePlanetTexture(
     if (normalGen == nullptr) return false;
 
     *secondaryTexture = OOTexture::textureWithGenerator(normalGen);
-    if (secondaryTexture->get() == nil) return false;
+    if (secondaryTexture->get() == nullptr) return false;
     enqueue = normalGen->enqueued();
   }
 
@@ -307,7 +307,7 @@ bool OOPlanetTextureGenerator::generatePlanetTexture(
   if (atmoGen == nullptr) return false;
 
   *atmosphere = OOTexture::textureWithGenerator(atmoGen);
-  if (atmosphere->get() == nil) {
+  if (atmosphere->get() == nullptr) {
     if (secondaryTexture != NULL) {
       *secondaryTexture = nullptr;
     }
@@ -321,7 +321,7 @@ bool OOPlanetTextureGenerator::generatePlanetTexture(
                                   : std::string("(null)"));
 
   *texture = OOTexture::textureWithGenerator(diffuseGen.get(), enqueue);
-  return texture->get() != nil;
+  return texture->get() != nullptr;
 }
 
 // Was -dealloc: the helper generators are released with their members.
@@ -378,14 +378,14 @@ OOPlanetAtmosphereGenerator* OOPlanetTextureGenerator::atmosphereGenerator() {
 bool OOPlanetTextureGenerator::getResultFormatWidthHeight(
     OOPixMap* outData, OOTextureDataFormat* outFormat, uint32_t* outWidth,
     uint32_t* outHeight) {
-  BOOL waiting = NO;
+  bool waiting = false;
   if (!isReady()) {
     waiting = true;
     OO_LOG("texture.planet.generate.wait", "{} generator {}", "Waiting for",
            description());
   }
 
-  BOOL result =
+  bool result =
       OOTextureGenerator::getResult(outData, outFormat, outWidth, outHeight);
 
   if (waiting) {
@@ -404,9 +404,9 @@ void OOPlanetTextureGenerator::loadTexture() {
   OO_LOG("texture.planet.generate.begin", "Started generator {}",
          description());
 
-  BOOL success = NO;
-  BOOL generateNormalMap = (bool)_nMapGenerator;
-  BOOL generateAtmosphere = (bool)_atmoGenerator;
+  bool success = false;
+  bool generateNormalMap = (bool)_nMapGenerator;
+  bool generateAtmosphere = (bool)_atmoGenerator;
 
   uint8_t *buffer = NULL, *px = NULL;
   uint8_t *nBuffer = NULL, *npx = NULL;
@@ -566,7 +566,7 @@ void OOPlanetTextureGenerator::loadTexture() {
       }
     }
 
-    success = YES;
+    success = true;
     _format = (OOTextureDataFormat)kOOTextureDataRGBA;
   }
 
@@ -810,10 +810,10 @@ OOINLINE int32_t fast_floor(double val) {
   return (words[iman_] >> 16);
 }
 
-static BOOL GenerateFBMNoise(OOPlanetTextureGeneratorInfo* info);
-static BOOL GenerateFBMNoise3D(OOPlanetTextureGeneratorInfo* info);
+static bool GenerateFBMNoise(OOPlanetTextureGeneratorInfo* info);
+static bool GenerateFBMNoise3D(OOPlanetTextureGeneratorInfo* info);
 
-static BOOL FillFBMBuffer(OOPlanetTextureGeneratorInfo* info) {
+static bool FillFBMBuffer(OOPlanetTextureGeneratorInfo* info) {
   OOCParameterAssert(info != NULL);
 
   // Allocate result buffer.
@@ -825,9 +825,9 @@ static BOOL FillFBMBuffer(OOPlanetTextureGeneratorInfo* info) {
       GenerateFBMNoise3D(info);
     }
 
-    return YES;
+    return true;
   }
-  return NO;
+  return false;
 }
 
 enum {
@@ -951,10 +951,10 @@ static float SampleNoise3D(OOPlanetTextureGeneratorInfo* info, Vector p) {
 }
 
 //	Noise map generator
-static BOOL MakePermutationTable(OOPlanetTextureGeneratorInfo* info) {
+static bool MakePermutationTable(OOPlanetTextureGeneratorInfo* info) {
   uint16_t* perms =
       (uint16_t*)malloc(sizeof *info->permutations * kPermutationCount);
-  if (EXPECT_NOT(perms == NULL)) return NO;
+  if (EXPECT_NOT(perms == NULL)) return false;
 
   perms[0] = 0;
   uint16_t n;
@@ -963,11 +963,11 @@ static BOOL MakePermutationTable(OOPlanetTextureGeneratorInfo* info) {
   }
 
   info->permutations = perms;
-  return YES;
+  return true;
 }
 
-static BOOL GenerateFBMNoise3D(OOPlanetTextureGeneratorInfo* info) {
-  BOOL OK = NO;
+static bool GenerateFBMNoise3D(OOPlanetTextureGeneratorInfo* info) {
+  bool OK = false;
 
   FAIL_IF(!MakePermutationTable(info));
 
@@ -1078,7 +1078,7 @@ static void AddNoise(OOPlanetTextureGeneratorInfo* info, float* randomBuffer,
   }
 }
 
-static BOOL GenerateFBMNoise(OOPlanetTextureGeneratorInfo* info) {
+static bool GenerateFBMNoise(OOPlanetTextureGeneratorInfo* info) {
   // Allocate the temporary buffers we need in one fell swoop, to avoid
   // administrative overhead.
   size_t randomBufferSize =
@@ -1087,7 +1087,7 @@ static BOOL GenerateFBMNoise(OOPlanetTextureGeneratorInfo* info) {
   size_t ixBufferSize = info->width * sizeof(int);
   char* sharedBuffer =
       (char*)malloc(randomBufferSize + qxBufferSize + ixBufferSize);
-  if (sharedBuffer == NULL) return NO;
+  if (sharedBuffer == NULL) return false;
 
   float* randomBuffer = (float*)sharedBuffer;
   float* qxBuffer = (float*)(sharedBuffer + randomBufferSize);
@@ -1111,7 +1111,7 @@ static BOOL GenerateFBMNoise(OOPlanetTextureGeneratorInfo* info) {
   }
 
   FREE(sharedBuffer);
-  return YES;
+  return true;
 }
 
 static float QFactor(float* accbuffer, int x, int y, unsigned width,
@@ -1164,7 +1164,7 @@ bool OOPlanetNormalMapGenerator::initWithCacheKey(const std::string& cacheKey,
   if (initWithPath(oo::str::format("OOPlanetNormalTexture@%s",
                                    oo::str::pointerDescription(this).c_str()),
                    kOOTextureAllowCubeMap)) {
-    _enqueued = NO;
+    _enqueued = false;
     _cacheKey = cacheKey;
     _seed = seed;
     return true;
@@ -1186,8 +1186,8 @@ bool OOPlanetNormalMapGenerator::enqueue() {
           (The alternative would be for it to block a work thread waiting for
           the real generator to complete, which seemed silly.)
   */
-  _enqueued = YES;
-  return YES;
+  _enqueued = true;
+  return true;
 }
 
 bool OOPlanetNormalMapGenerator::enqueued() { return _enqueued; }
@@ -1234,7 +1234,7 @@ bool OOPlanetAtmosphereGenerator::initWithCacheKey(
     _cacheKey = cacheKey;
     _seed = seed;
     _parent = oo::Ref<OOPlanetTextureGenerator>(parent);
-    _enqueued = NO;
+    _enqueued = false;
     return true;
   }
   return false;
@@ -1249,8 +1249,8 @@ uint32_t OOPlanetAtmosphereGenerator::textureOptions() {
 }
 
 bool OOPlanetAtmosphereGenerator::enqueue() {
-  _enqueued = YES;
-  return YES;
+  _enqueued = true;
+  return true;
 }
 
 bool OOPlanetAtmosphereGenerator::enqueued() { return _enqueued; }

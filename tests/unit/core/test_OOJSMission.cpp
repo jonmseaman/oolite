@@ -20,7 +20,7 @@
    form, runScreen() (its settings, its errors, and the callback
    MissionRunCallback() makes, including an exception in it, which is logged and
    ignored), runShipLibrary(), and a native's exception. Run: bash
-   tools/check-core-tests.sh
+   tests/run.sh unit
 */
 
 #include "OOConstToJSString.h"
@@ -128,9 +128,9 @@ class PlayerEntity : public ShipEntity {
   OOGUIScreenID _exitScreen = {};
   oo::PList _choice;
   oo::PList _keyPress;
-  BOOL _removeFails = {};
-  BOOL _raise = {};
-  BOOL _throwCxx = {};
+  bool _removeFails = {};
+  bool _raise = {};
+  bool _throwCxx = {};
 };
 
 // The GUI: the members the binding calls are defined below (a C++ stand-in
@@ -174,7 +174,7 @@ class OOJavaScriptEngine  // the header's names and signatures
                       ooscript::Value* outResult);
 
   int _calls = 0;
-  BOOL _raise = NO;
+  bool _raise = false;
 };
 
 // The music controller, a converted class the binding only calls: the members
@@ -461,7 +461,7 @@ void Universe::removeDemoShips() { _calls.push_back("removeDemoShips"); }
 ::ShipEntity* Universe::makeDemoShipWithRole(const std::string& role,
                                              bool spinning) {
   _calls.push_back("demoShip('" + role + "', " + (spinning ? "YES)" : "NO)"));
-  return role == "none" ? nil : _demoShip;
+  return role == "none" ? nullptr : _demoShip;
 }
 
 #include "OOScript.h"
@@ -569,7 +569,7 @@ void cxx_OOStandardsDeprecated(const std::string& message) {
   sDeprecations++;
 }
 
-extern "C" bool OOEnforceStandards(void) { return sEnforceStandards; }
+bool OOEnforceStandards(void) { return sEnforceStandards; }
 
 void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
                                       const char* format, va_list args) {
@@ -719,7 +719,7 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
 }
 
 // The internal chart coordinates of a galactic position: (x * 4, y * 2) here.
-extern "C" NSPoint OOInternalCoordinatesFromGalactic(
+NSPoint OOInternalCoordinatesFromGalactic(
     Vector galacticCoordinates) {
   return NSMakePoint(galacticCoordinates.x * 4, galacticCoordinates.y * 2);
 }
@@ -729,10 +729,9 @@ ooscript::Object sScriptObject = nullptr;
 }
 
 PlayerEntity* gOOPlayer = nullptr;
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 ooscript::Context gOOJSMainThreadContext = nullptr;
 
-extern "C" {
 
 PlayerEntity* OOPlayerForScripting(void) { return gOOPlayer; }
 
@@ -792,7 +791,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 // (a C++ function, outside the C block above)
 ooscript::Value OOJSValueFromCxxObject(ooscript::Context context,
@@ -813,7 +811,7 @@ namespace {
 ooscript::Runtime sRuntime;
 ooscript::Object sGlobal;
 PlayerEntity* sPlayer = nullptr;
-Universe* sUniverse = nil;
+Universe* sUniverse = nullptr;
 
 void SetUpContext() {
   if (sContext != nullptr) return;
@@ -968,11 +966,11 @@ OO_TEST(markSystems) {
   OO_CHECK_CALLS(
       sPlayer->_calls,
       "removeMarker({name:'default',system:7}); removeMarker({system:12})");
-  sPlayer->_removeFails = YES;
+  sPlayer->_removeFails = true;
   OO_CHECK_EVAL("mission.unmarkSystem({system: 4})", "false");
   OO_CHECK_EVAL("mission.unmarkSystem({name: 'no system'})",
                 "true");  // not tried
-  sPlayer->_removeFails = NO;
+  sPlayer->_removeFails = false;
   OO_CHECK_EVAL(
       "mission.unmarkSystem(true, 'x')",
       "threw: bad arguments: Mission.unmarkSystem(1) - / numbers or objects");
@@ -1152,11 +1150,11 @@ OO_TEST(runScreenOtherSettings) {
       "mission.runScreen({}, function () { this.called = true; }, theScript)",
       "true");
   sPlayer->_calls.clear();
-  sEngine->_raise = YES;
+  sEngine->_raise = true;
   sLog.clear();
   sScriptStack.clear();
   MissionRunCallback();
-  sEngine->_raise = NO;
+  sEngine->_raise = false;
   OO_CHECK_EQ(sLog.size(), static_cast<std::size_t>(1));
   OO_CHECK(!sLog.empty() &&
            sLog[0].find("Ignoring exception") != std::string::npos &&
@@ -1199,12 +1197,12 @@ OO_TEST(runShipLibrary) {
 
 OO_TEST(nativeExceptions) {
   SetUpContext();
-  sPlayer->_raise = YES;
+  sPlayer->_raise = true;
   OO_CHECK_EVAL("mission.screenID", "threw: Native exception: screen boom");
-  sPlayer->_raise = NO;
-  sPlayer->_throwCxx = YES;
+  sPlayer->_raise = false;
+  sPlayer->_throwCxx = true;
   OO_CHECK_EVAL("mission.screenID", "threw: Native exception: cxx boom");
-  sPlayer->_throwCxx = NO;
+  sPlayer->_throwCxx = false;
   OO_CHECK_EVAL("mission.screenID", "null");
   OO_CHECK_EQ(sLimiterPauses, 0);
   OO_CHECK_EQ(sProfileDepth, 0);

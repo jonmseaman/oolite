@@ -64,7 +64,7 @@ MA 02110-1301, USA.
         iterating.
 
         Up to sixteen triangles can be stored directly in the GeometryData. If
-   more than sixteen are needed, a heap-allocated array is used instead. At one
+   more than sixteen are needed, a std::vector (heap) is used instead. At one
         point, I attempted to be cleverer about the storage using unions and
    implied capacity, but this was significantly slower with only small amounts
    of stack space saved.
@@ -75,6 +75,8 @@ MA 02110-1301, USA.
 */
 
 #include <cstring>
+#include <new>
+#include <vector>
 
 #include "OOMaths.h"
 #include "Octree.h"
@@ -95,7 +97,8 @@ MA 02110-1301, USA.
 
 
         Triangle *triangles
-                Pointer to the triangle array. Initially points at smallData.
+                Pointer to the triangle array. Initially points at smallData;
+                once that is outgrown, at heap's elements.
 
         uint32_t count
                 The number of triangles currently in the GeometryData.
@@ -110,6 +113,9 @@ MA 02110-1301, USA.
         Triangle smallData[]
                 Initial triangle storage. Should not be accessed directly; if
    it's relevant, triangles points to it.
+
+        std::vector<Triangle> heap
+                Storage after smallData is outgrown; its size is capacity.
 */
 typedef struct OOMeshToOctreeConverterInternalData GeometryData;
 
@@ -207,11 +213,9 @@ OOINLINE void DestroyGeometryData(GeometryData* data) {
             "Attempt to destroy a GeometryData twice.");
 #endif
 
-  if (data->capacity != kOOMeshToOctreeConverterSmallDataCapacity) {
-    // If capacity is kOOMeshToOctreeConverterSmallDataCapacity, triangles
-    // points to smallData.
-    free(data->triangles);
-  }
+  // If capacity is kOOMeshToOctreeConverterSmallDataCapacity, triangles points
+  // to smallData and heap is empty.
+  std::vector<Triangle>().swap(data->heap);
 
 #if OO_DEBUG
   data->triangles = kScribbleValue;
@@ -785,6 +789,12 @@ static void SplitGeometryZ(GeometryData* data, GeometryData* dPlus,
   TranslateGeometryZ(dMinus, z);
 }
 
+[[noreturn]] static void OutOfGeometryMemory() {
+  OO_LOG("general.error.allocationFailure", "{}",
+         "!!!!! Ran out of memory to allocate more geometry!");
+  exit(EXIT_FAILURE);
+}
+
 /*
         void AddTriangle_slow(GeometryData *data, Triangle tri)
 
@@ -794,7 +804,7 @@ static void SplitGeometryZ(GeometryData* data, GeometryData* dPlus,
         If no memory has been allocated yet, capacity is
         kOOMeshToOctreeConverterSmallDataCapacity, triangles points at smallData
         and pendingCapacity is the capacity passed to InitGeometryData().
-   Otherwise, triangles is a malloced pointer.
+   Otherwise, triangles points at the elements of heap.
 
         This is marked noinline so that the fast path in AddTriangle() can be
         inlined. Without the attribute, clang (and probably gcc too) will inline
@@ -809,22 +819,22 @@ static NO_INLINE_FUNC void AddTriangle_slow(GeometryData* data, Triangle tri) {
     data->capacity = MAX(
         data->pendingCapacity,
         static_cast<uint32_t>(kOOMeshToOctreeConverterSmallDataCapacity * 2));
-    data->triangles = (Triangle*)malloc(data->capacity * sizeof(Triangle));
-    memcpy(data->triangles, data->smallData, sizeof data->smallData);
+    try {
+      data->heap.resize(data->capacity);
+    } catch (const std::bad_alloc&) {
+      OutOfGeometryMemory();
+    }
+    memcpy(data->heap.data(), data->smallData, sizeof data->smallData);
   } else {
     // create more space by doubling the capacity of this geometry.
     data->capacity = 1 + data->capacity * 2;
-    data->triangles =
-        (Triangle*)realloc(data->triangles, data->capacity * sizeof(Triangle));
-
-    // N.b.: we leak here if realloc() failed, but we're about to abort anyway.
+    try {
+      data->heap.resize(data->capacity);
+    } catch (const std::bad_alloc&) {
+      OutOfGeometryMemory();
+    }
   }
-
-  if (EXPECT_NOT(data->triangles == NULL)) {
-    OO_LOG("general.error.allocationFailure", "{}",
-           "!!!!! Ran out of memory to allocate more geometry!");
-    exit(EXIT_FAILURE);
-  }
+  data->triangles = data->heap.data();
 
   data->triangles[data->count++] = tri;
 }

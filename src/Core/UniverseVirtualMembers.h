@@ -53,7 +53,7 @@ class OOPlanetEntity;
 class OOSunEntity;
 class GuiDisplayGen;
 class Entity;
-typedef BOOL (*EntityFilterPredicate)(Entity* entity,
+typedef bool (*EntityFilterPredicate)(Entity* entity,
                                       void* parameter);  // the C++ entity
 
 /*	VOID_BODY ends each member answering nothing, VALUE_BODY each member

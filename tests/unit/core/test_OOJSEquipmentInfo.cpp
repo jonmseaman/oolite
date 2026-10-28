@@ -22,7 +22,7 @@
    level both ways, the prototype, infoForKey(), allEquipment, a native's
    exception), the C functions other bindings call (JSValueToEquipmentType(),
    JSValueToEquipmentKey(), JSValueToEquipmentKeyRelaxed()) and what the
-   category answers the engine. Run: bash tools/check-core-tests.sh
+   category answers the engine. Run: tests/run.sh unit
 */
 
 #include <cstdarg>
@@ -48,7 +48,7 @@
 namespace {
 
 std::vector<std::string> gLog;
-BOOL gEnforceStandards = NO;
+bool gEnforceStandards = false;
 int gDeprecations = 0;
 
 oo::PList Dict(
@@ -126,7 +126,7 @@ class Universe {
 oo::PList Universe::getEquipmentData() { return EquipmentData(); }
 oo::PList Universe::getEquipmentDataOutfitting() { return EquipmentData(); }
 
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 #include "OOCacheManager.h"
 
@@ -209,7 +209,7 @@ class PlayerEntity : public ShipEntity {
   float _fuelChargeRate = {};
   double _renovationCosts = {};
   oo::PList::Dict _missionVariables;
-  BOOL _throwCxx = {};
+  bool _throwCxx = {};
 };
 
 void PlayerEntity::setScriptTarget(::ShipEntity* target) { (void)target; }
@@ -253,7 +253,7 @@ void cxx_OOStandardsDeprecated(const std::string& message) {
   gDeprecations++;
 }
 
-extern "C" BOOL OOEnforceStandards(void) { return gEnforceStandards; }
+bool OOEnforceStandards(void) { return gEnforceStandards; }
 
 oo::PList OOSanitizeLegacyScriptConditions(
     const oo::PList& conditions, const std::optional<std::string>& context) {
@@ -394,7 +394,6 @@ namespace {
 std::map<ooscript::ClassDef*, int> sConverters;
 }
 
-extern "C" {
 
 PlayerEntity* OOPlayerForScripting(void) { return gOOPlayer; }
 
@@ -419,7 +418,7 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
 // The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked;
 // its slot holds the C++ equipment type): no subclass of EquipmentInfo is
 // registered.
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
 }
@@ -461,7 +460,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();
@@ -733,7 +731,7 @@ OO_TEST(writableProperties) {
   OO_CHECK_EQ(sLastWarning,
               std::string("Cannot modify effective tech level for EQ_FUEL, "
                           "because its base tech level is not 99."));
-  gEnforceStandards = YES;
+  gEnforceStandards = true;
   OO_CHECK_EVAL(
       "(function () { var e = EquipmentInfo.infoForKey('EQ_SHIELD_BOOSTER'); "
       "e.effectiveTechLevel = 5; return e.effectiveTechLevel; })()",
@@ -742,7 +740,7 @@ OO_TEST(writableProperties) {
       sLastWarning,
       std::string("Cannot modify effective tech level for EQ_SHIELD_BOOSTER, "
                   "because its base tech level is not 99."));
-  gEnforceStandards = NO;
+  gEnforceStandards = false;
 }
 
 OO_TEST(prototypeAndOtherObjects) {
@@ -795,28 +793,28 @@ OO_TEST(cFunctions) {
 
   OO_CHECK(JSValueToEquipmentType(sContext, missileValue) == missile);
   OO_CHECK(JSValueToEquipmentType(sContext, key) == missile);
-  OO_CHECK(JSValueToEquipmentType(sContext, unknownKey) == nil);
-  OO_CHECK(JSValueToEquipmentType(sContext, ooscript::nullValue()) == nil);
+  OO_CHECK(JSValueToEquipmentType(sContext, unknownKey) == nullptr);
+  OO_CHECK(JSValueToEquipmentType(sContext, ooscript::nullValue()) == nullptr);
   OO_CHECK(JSValueToEquipmentKey(sContext, missileValue) ==
            std::optional<std::string>("EQ_MISSILE"));
   OO_CHECK(JSValueToEquipmentKey(sContext, unknownKey) == std::nullopt);
 
-  BOOL exists = NO;
+  bool exists = false;
   OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, missileValue, &exists) ==
                std::optional<std::string>("EQ_MISSILE") &&
-           exists == YES);
+           exists == true);
   OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, key, &exists) ==
                std::optional<std::string>("EQ_MISSILE") &&
-           exists == YES);
+           exists == true);
   OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, unknownKey, &exists) ==
                std::optional<std::string>("EQ_SOMETHING") &&
-           exists == NO);
+           exists == false);
   OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, damagedKey, &exists) ==
                std::nullopt &&
-           exists == NO);  // _DAMAGED is refused
+           exists == false);  // _DAMAGED is refused
   OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, ooscript::numberValue(3),
                                         &exists) == std::nullopt &&
-           exists == NO);
+           exists == false);
   OO_CHECK(JSValueToEquipmentKeyRelaxed(sContext, key, nullptr) ==
            std::optional<std::string>("EQ_MISSILE"));
   OO_CHECK_EQ(sProfileDepth, 0);
@@ -826,10 +824,10 @@ OO_TEST(nativeExceptions) {
   SetUpContext();
   OO_CHECK_EVAL("EquipmentInfo.infoForKey('EQ_SCOOPER').calculatedPrice",
                 "threw: Native exception: price boom");
-  sPlayer->_throwCxx = YES;
+  sPlayer->_throwCxx = true;
   OO_CHECK_EVAL("EquipmentInfo.infoForKey('EQ_MISSILE').calculatedPrice",
                 "threw: Native exception: cxx boom");
-  sPlayer->_throwCxx = NO;
+  sPlayer->_throwCxx = false;
   OO_CHECK_EVAL("EquipmentInfo.infoForKey('EQ_MISSILE').calculatedPrice",
                 "500");
   OO_CHECK_EQ(sLimiterPauses, 0);

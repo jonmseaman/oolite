@@ -13,7 +13,7 @@
    first; they pin the JS-visible behaviour: construction, w/x/y/z, every method
    and static method, the errors, Quaternion.prototype reading as zero, an
    entity read as its orientation, and how an exception under a native reaches
-   JS. Run: bash tools/check-core-tests.sh
+   JS. Run: tests/run.sh unit
 */
 
 #include <cmath>
@@ -86,26 +86,26 @@ std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
   return result;
 }
 
-BOOL OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc,
+bool OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc,
                                       ooscript::Value* argv, double* outNumber,
                                       unsigned* outConsumed) {
   if (argc == 0 || !ooscript::valueToNumber(context, argv[0], outNumber) ||
       std::isnan(*outNumber))
-    return NO;
+    return false;
   if (outConsumed != NULL) *outConsumed = 1;
-  return YES;
+  return true;
 }
 
-BOOL cxx_OOJSArgumentListGetNumber(
+bool cxx_OOJSArgumentListGetNumber(
     ooscript::Context context, const std::optional<std::string>& scriptClass,
     const std::optional<std::string>& function, unsigned argc,
     ooscript::Value* argv, double* outNumber, unsigned* outConsumed) {
   if (OOJSArgumentListGetNumberNoError(context, argc, argv, outNumber,
                                        outConsumed))
-    return YES;
+    return true;
   cxx_OOJSReportBadArguments(context, scriptClass, function, argc, argv,
                              "Expected number, got", std::nullopt);
-  return NO;
+  return false;
 }
 
 ooscript::Value OOJSValueFromPList(ooscript::Context context,
@@ -117,7 +117,7 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
   return js != nullptr ? ooscript::stringValue(js) : ooscript::nullValue();
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
 }
@@ -193,7 +193,7 @@ Quaternion OOJSEntityOrientationOfJSObject(ooscript::Context context,
 }
 
 Universe* gSharedUniverse =
-    nil;  // OOJSVector.mm's coordinate-system methods read it; not called here
+    nullptr;  // OOJSVector.mm's coordinate-system methods read it; not called here
 
 // Link stubs, never reached: OOJSVector.mm's coordinate-system methods call
 // them on the universe, which stays nil here (they were messages to nil).

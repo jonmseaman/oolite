@@ -139,7 +139,7 @@ class OOPListSchemaVerifier : public oo::RefCounted {
                    const oo::PList& subProperty, const oo::PList& subSchema,
                    BackLinkChain keyPath, bool tentative,
                    std::optional<OOPListSchemaVerifierError>* outError,
-                   BOOL* outStop);
+                   bool* outStop);
   oo::PList resolveSchemaType(
       const oo::PList& specifier, BackLinkChain keyPath,
       std::optional<OOPListSchemaVerifierError>*
@@ -260,7 +260,7 @@ typedef enum {
   kPListErrorLastErrorCode
 } OOPListSchemaVerifierErrorCode;
 
-OOINLINE BOOL OOPlistErrorIsSchemaError(OOPListSchemaVerifierErrorCode error) {
+OOINLINE bool OOPlistErrorIsSchemaError(OOPListSchemaVerifierErrorCode error) {
   return kPListErrorStartOfSchemaErrors < error &&
          error < kPListErrorLastErrorCode;
 }

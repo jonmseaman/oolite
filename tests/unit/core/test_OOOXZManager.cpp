@@ -16,7 +16,7 @@
    download from start to finish (the list replaced, the cache rewritten, the
    temporary file removed, the managed list rebuilt), and the requests it then
    refuses. Every case asks the C++ singleton. Run: bash
-   tools/check-core-tests.sh test_OOOXZManager
+   meson test -C build/meson_test test_OOOXZManager
 */
 
 #include "OOCacheManager.h"
@@ -822,7 +822,7 @@ class TestUniverse : public Universe {
   ::OOSystemDescriptionManager* getSystemManager() override { return nullptr; }
   bool reinitAndShowDemo(bool showDemo) override {
     (void)showDemo;
-    return YES;
+    return true;
   }
 };
 
@@ -836,7 +836,7 @@ struct StandInUniverse {
     gSharedUniverse = universe;
   }
   ~StandInUniverse() {
-    gSharedUniverse = nil;
+    gSharedUniverse = nullptr;
   }  // never released: a universe's teardown (the facade's -dealloc) flushes
      // the caches and the GL objects
   std::string Page() {

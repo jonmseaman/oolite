@@ -1,13 +1,8 @@
 /*	test_stdlib.cpp
         Regression test: oofnd/StdLib.hpp, the standard
-   containers and clocks Objective-C++ game code uses, must compile after
-   OOCocoa.h's `#define true 1` /
-        `#define false 0` and hand those macros back unchanged (see
-   test_cocoa_macros.cpp).
+   containers and clocks game code uses.
 */
 
-#define true 1
-#define false 0
 
 #include "oofnd/StdLib.hpp"
 
@@ -17,15 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-static_assert(std::is_same_v<decltype(true), int>,
-              "StdLib.hpp must restore OOCocoa.h's true macro");
-static_assert(std::is_same_v<decltype(false), int>,
-              "StdLib.hpp must restore OOCocoa.h's false macro");
-static constexpr int kTrueAfter = true;
-static constexpr int kFalseAfter = false;
 
-#undef true
-#undef false
 
 #include "oo_test.hpp"
 
@@ -34,11 +21,6 @@ namespace {
 struct Matrix {
   float m[4][4];
 };
-
-OO_TEST(macrosAreRestoredWithTheirValues) {
-  OO_CHECK_EQ(kTrueAfter, 1);
-  OO_CHECK_EQ(kFalseAfter, 0);
-}
 
 OO_TEST(containersWork) {
   // The shapes the NSValue exemplars use: a value stack, a pointer set, a

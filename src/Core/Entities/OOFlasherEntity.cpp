@@ -50,7 +50,7 @@ void OOFlasherEntity::initWithDictionary(const oo::PList& dictionary) {
     setUpColors(dictionary.get<oo::PList::Array>("colors"));
     getCurrentColorComponents();
 
-    setActive(dictionary.get<bool>("initially_on", YES));
+    setActive(dictionary.get<bool>("initially_on", true));
   }
 }
 
@@ -111,14 +111,14 @@ void OOFlasherEntity::update(OOTimeDelta delta_t) {
           wave > _wave)  // don't test for wave >= _wave - could give wrong
                          // results with very low frequencies
       {
-        _justSwitched = YES;
+        _justSwitched = true;
         ++_activeColor;
         _activeColor %= count;  //_activeColor = ++_activeColor % count; is
                                 // potentially undefined operation
         setColor(flasherColorAtIndex(_activeColor));
       }
     } else if (_justSwitched) {
-      _justSwitched = NO;
+      _justSwitched = false;
     }
 
     float threshold = cosf(_brightfraction * M_PI);
@@ -153,7 +153,7 @@ void OOFlasherEntity::drawSubEntityImmediate(bool immediate, bool translucent) {
   }
 }
 
-bool OOFlasherEntity::isFlasher() { return YES; }
+bool OOFlasherEntity::isFlasher() { return true; }
 
 double OOFlasherEntity::findCollisionRadius() { return diameter() / 2.0; }
 

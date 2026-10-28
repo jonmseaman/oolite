@@ -35,14 +35,6 @@
 
 #pragma once
 
-// Objective-C++ game code includes this after OOFoundation.h, whose `#define
-// true 1` / `#define false 0` break the standard headers' keywords. Suspend the
-// macros here (see oofnd/Data.hpp).
-#pragma push_macro("true")
-#pragma push_macro("false")
-#undef true
-#undef false
-
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
@@ -151,5 +143,3 @@ inline std::string description(Clock::time_point t = Clock::now()) {
 
 }  // namespace oo::date
 
-#pragma pop_macro("false")
-#pragma pop_macro("true")

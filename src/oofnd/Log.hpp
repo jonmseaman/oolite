@@ -37,13 +37,6 @@
 
 #pragma once
 
-// Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; suspend them for this header.
-#pragma push_macro("true")
-#pragma push_macro("false")
-#undef true
-#undef false
-
 #include <atomic>
 #include <chrono>
 #include <cstddef>
@@ -553,5 +546,3 @@ inline constexpr std::string_view kWarningPrefix = "----- WARNING: ";
                                __LINE__, ::oo::log::kWarningPrefix,    \
                                __VA_ARGS__)
 
-#pragma pop_macro("false")
-#pragma pop_macro("true")

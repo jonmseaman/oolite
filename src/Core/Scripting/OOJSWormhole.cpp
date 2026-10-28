@@ -211,10 +211,10 @@ static bool WormholeGetProperty(Context cx, Object obj, PropertyId propID,
 
   OOJS_NATIVE_ENTER(context)
 
-  WormholeEntity* entity = nil;
+  WormholeEntity* entity = nullptr;
 
   if (!JSWormholeGetWormholeEntity(context, thisObj, &entity)) return false;
-  if (entity == nil) {
+  if (entity == nullptr) {
     *value_raw = ooscript::undefinedValue();
     return true;
   }
@@ -261,10 +261,10 @@ static bool WormholeSetProperty(Context cx, Object obj, PropertyId propID,
 
   OOJS_NATIVE_ENTER(context)
 
-  WormholeEntity* entity = nil;
+  WormholeEntity* entity = nullptr;
 
   if (!JSWormholeGetWormholeEntity(context, thisObj, &entity)) return false;
-  if (entity == nil) return true;
+  if (entity == nullptr) return true;
 
   switch (ooscript::idToInt32(propID)) {
     default:

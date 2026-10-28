@@ -109,25 +109,25 @@ class OOShipRegistry : public oo::RefCounted {
   oo::PList canonicalizeSubentityDeclaration(const oo::PList& declaration,
                                              const std::string& shipKey,
                                              const oo::PList& shipData,
-                                             BOOL* outFatalError);
+                                             bool* outFatalError);
   oo::PList translateOldStyleSubentityDeclaration(
       const std::string& declaration, const std::string& shipKey,
-      const oo::PList& shipData, BOOL* outFatalError);
+      const oo::PList& shipData, bool* outFatalError);
   oo::PList translateOldStyleFlasherDeclaration(const oo::PList& tokens,
                                                 const std::string& shipKey,
-                                                BOOL* outFatalError);
+                                                bool* outFatalError);
   oo::PList translateOldStandardBasicSubentityDeclaration(
       const oo::PList& tokens, const std::string& shipKey,
-      const oo::PList& shipData, BOOL* outFatalError);
+      const oo::PList& shipData, bool* outFatalError);
   oo::PList validateNewStyleSubentityDeclaration(const oo::PList& declaration,
                                                  const std::string& shipKey,
-                                                 BOOL* outFatalError);
+                                                 bool* outFatalError);
   oo::PList validateNewStyleFlasherDeclaration(const oo::PList& declaration,
                                                const std::string& shipKey,
-                                               BOOL* outFatalError);
+                                               bool* outFatalError);
   oo::PList validateNewStyleStandardSubentityDeclaration(
       const oo::PList& declaration, const std::string& shipKey,
-      BOOL* outFatalError);
+      bool* outFatalError);
 
   bool shipIsBallTurretForKey(const std::string& shipKey,
                               const oo::PList& shipData);

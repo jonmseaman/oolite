@@ -8,7 +8,7 @@
    a role, demo ships), replacing an entry, and +reload, which makes a new
    registry from the cache the first one filled. The data pipeline itself
    (OODataLoader) runs as it is; this test only fixes its input. Run: bash
-   tools/check-core-tests.sh test_OOShipRegistry
+   meson test -C build/meson_test test_OOShipRegistry
 */
 
 #include <cstdio>
@@ -42,7 +42,7 @@ class Entity {
   OOEntityStatus status();
 };
 OOEntityStatus Entity::status() { std::abort(); }
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 // UNIVERSE stays nil here, so the registry's guarded call never reaches it; the
 // stand-in only links it (it was a message to nil).
@@ -63,13 +63,13 @@ oo::PList OOSanitizeLegacyScriptConditions(const oo::PList&,
                                            const std::optional<std::string>&) {
   std::abort();
 }
-BOOL cxx_ScanVectorFromString(const std::optional<std::string>&, Vector*) {
+bool cxx_ScanVectorFromString(const std::optional<std::string>&, Vector*) {
   std::abort();
 }
-BOOL cxx_ScanHPVectorFromString(const std::optional<std::string>&, HPVector*) {
+bool cxx_ScanHPVectorFromString(const std::optional<std::string>&, HPVector*) {
   std::abort();
 }
-BOOL cxx_ScanQuaternionFromString(const std::optional<std::string>&,
+bool cxx_ScanQuaternionFromString(const std::optional<std::string>&,
                                   Quaternion*) {
   std::abort();
 }

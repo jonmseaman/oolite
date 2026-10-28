@@ -15,7 +15,7 @@
    in test_OOOpenGLExtensionManager. The cases ask the C++ class
    (materialWithName(), a held Ref); crossesAsTheBasicMaterialFacade pins what
    Objective-C sees: the nearest facade, OOBasicMaterial's. Run: bash
-   tools/check-core-tests.sh
+   tests/run.sh unit
 */
 
 #include <cstdlib>
@@ -207,7 +207,7 @@ OOCombinedEmissionMapGenerator::generatorWithEmissionMapSpec(
   gGenerators.push_back(
       "emission:" + Str(emissionMapSpec) +
       " emissionColor:" + (emissionColor != nullptr ? "yes" : "no") +
-      " diffuseMap:" + (diffuseMap != nil ? "yes" : "no") +
+      " diffuseMap:" + (diffuseMap != nullptr ? "yes" : "no") +
       " diffuseColor:" + (diffuseColor != nullptr ? "yes" : "no") +
       " illumination:" + Str(illuminationMapSpec) + " illuminationColor:" +
       (illuminationColor != nullptr ? "yes" : "no") + " options:" + Str(spec));
@@ -221,7 +221,7 @@ OOCombinedEmissionMapGenerator::generatorWithEmissionAndIlluminationMapSpec(
     OOColor*, OOColor*, OOColor*, const oo::PList& spec) {
   gGenerators.push_back(
       "emissionAndIllumination:" + Str(emissionAndIlluminationMapSpec) +
-      " diffuseMap:" + (diffuseMap != nil ? "yes" : "no") +
+      " diffuseMap:" + (diffuseMap != nullptr ? "yes" : "no") +
       " options:" + Str(spec));
   return oo::makeRef<OOCombinedEmissionMapGenerator>();
 }
@@ -258,7 +258,7 @@ class Universe {
 };
 bool Universe::useShaders() { return false; }
 
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 namespace {
 

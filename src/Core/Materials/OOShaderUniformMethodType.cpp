@@ -49,7 +49,7 @@ SOFTWARE.
 #include "OOTypeEncodings.h"  // @encode()'s measured literals; OOColor * the complete class's, as the bindings' own
 #include "oofnd/String.hpp"
 
-static BOOL sInited = NO;
+static bool sInited = false;
 static const char* sTemplates[kOOShaderUniformTypeCount];
 
 static void InitTemplates(void);
@@ -57,7 +57,7 @@ static void InitTemplates(void);
 OOShaderUniformType OOShaderUniformTypeFromEncoding(const char* typeCode) {
   unsigned i;
 
-  if (EXPECT_NOT(sInited == NO)) InitTemplates();
+  if (EXPECT_NOT(sInited == false)) InitTemplates();
   if (EXPECT_NOT(typeCode == NULL)) return kOOShaderUniformTypeInvalid;
 
   for (i = kOOShaderUniformTypeInvalid + 1; i != kOOShaderUniformTypeCount;
@@ -110,7 +110,7 @@ static void InitTemplates(void) {
   GET_TEMPLATE(kOOShaderUniformTypeColor, OOColor*);
   GET_TEMPLATE(kOOShaderUniformTypeObject, OOObjCId);  // id's
 
-  sInited = YES;
+  sInited = true;
 }
 
 #endif  // OO_SHADERS
