@@ -29,6 +29,10 @@ MA 02110-1301, USA.
 
 #pragma once
 
+// The maths headers it includes #error unless this is defined, so they are only
+// reachable through OOMaths.h.
+#define INCLUDED_OOMATHS_h
+
 #ifdef __cplusplus
 extern "C" {
 #endif
