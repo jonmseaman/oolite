@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 34 / 241 upstream `.m` files · extra rows below
+**Progress:** 37 / 241 upstream `.m` files · extra rows below
 
 ## Suspected divergences (ranked)
 
@@ -28,8 +28,8 @@ a row is checked when every method in its coverage table has been compared and i
 - [ ] `Core/NSThreadOOExtensions.m` → *(absorbed — locate in `src/oofnd/` or callers)* (53 / — lines) — *pending* — [findings](foundation.md#nsthreadooextensions)
 - [ ] `Core/NSUserDefaults+Override.m` → *(absorbed — locate in `src/oofnd/` or callers)* (68 / — lines) — *pending* — [findings](foundation.md#nsuserdefaultsoverride)
 - [ ] `Core/OOAsyncQueue.m` → *(absorbed — locate in `src/oofnd/` or callers)* (293 / — lines) — *pending* — [findings](foundation.md#ooasyncqueue)
-- [ ] `Core/OOAsyncWorkManager.m` → `Core/OOAsyncWorkManager.cpp` (423 / 481 lines) — *pending* — [findings](foundation.md#ooasyncworkmanager)
-- [ ] `Core/OOCPUInfo.m` → `Core/OOCPUInfo.cpp` (226 / 228 lines) — *pending* — [findings](foundation.md#oocpuinfo)
+- [x] `Core/OOAsyncWorkManager.m` → `Core/OOAsyncWorkManager.cpp` (423 / 481 lines) — 15✅ 4⚠️ 5➖ — [findings](foundation.md#ooasyncworkmanager)
+- [x] `Core/OOCPUInfo.m` → `Core/OOCPUInfo.cpp` (226 / 228 lines) — 7✅ — [findings](foundation.md#oocpuinfo)
 - [ ] `Core/OOCache.m` → `Core/OOCache.cpp` (1048 / 994 lines) — *pending* — [findings](foundation.md#oocache)
 - [ ] `Core/OOCacheManager.m` → `Core/OOCacheManager.cpp` (668 / 561 lines) — *pending* — [findings](foundation.md#oocachemanager)
 - [ ] `Core/OOCollectionExtractors.m` → *(absorbed — locate in `src/oofnd/` or callers)* (1372 / — lines) — *pending* — [findings](foundation.md#oocollectionextractors)
@@ -78,7 +78,7 @@ a row is checked when every method in its coverage table has been compared and i
 - [x] `Core/OXPVerifier/OOModelVerifierStage.m` → `Core/OXPVerifier/OOModelVerifierStage.cpp` (191 / 114 lines) — 4✅ 2❌ 3➖ — [findings](oxpverifier.md#oomodelverifierstage)
 - [x] `Core/OXPVerifier/OOOXPVerifier.m` → `Core/OXPVerifier/OOOXPVerifier.cpp` (690 / 733 lines) — 15✅ 3⚠️ 4❌ 1➖ — [findings](oxpverifier.md#oooxpverifier)
 - [x] `Core/OXPVerifier/OOOXPVerifierStage.m` → `Core/OXPVerifier/OOOXPVerifierStage.cpp` (211 / 237 lines) — 18✅ 1⚠️ 2➖ — [findings](oxpverifier.md#oooxpverifierstage)
-- [ ] `Core/OXPVerifier/OOPListSchemaVerifier.m` → `Core/OXPVerifier/OOPListSchemaVerifier.cpp` (1393 / 1456 lines) — *pending* — [findings](oxpverifier.md#ooplistschemaverifier)
+- [x] `Core/OXPVerifier/OOPListSchemaVerifier.m` → `Core/OXPVerifier/OOPListSchemaVerifier.cpp` (1393 / 1456 lines) — 39✅ 5⚠️ 1❌ 6➖ — [findings](oxpverifier.md#ooplistschemaverifier)
 - [x] `Core/OXPVerifier/OOTextureVerifierStage.m` → `Core/OXPVerifier/OOTextureVerifierStage.cpp` (187 / 143 lines) — 5✅ 2❌ 3➖ — [findings](oxpverifier.md#ootextureverifierstage)
 
 ### Scripting (JS engine, OOJS*, legacy scripts, JS console) — [scripting.md](scripting.md)
