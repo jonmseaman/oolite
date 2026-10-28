@@ -335,11 +335,8 @@ def test_every_exit_context_in_the_tree_is_distinguished_from_the_expected_one()
     contexts = set()
     for path in iter_source_files(src):
         with open(path, "r", encoding="utf-8", errors="replace") as fh:
-            # Either spelling of the exit call: the ObjC -exitAppWithContext:@"..." or the C++
-            # -cxx_exitAppWithContext:"..." it became. Jon approved
-            # accepting both, 2026-09-29.
-            contexts |= set(re.findall(
-                r'(?:exitAppWithContext:@|cxx_exitAppWithContext:)"([^"]+)"', fh.read()))
+            # clang-format may wrap the literal onto the line after the call's `(`.
+            contexts |= set(re.findall(r'exitAppWithContext\(\s*"([^"]+)"', fh.read()))
     assert EXPECTED_EXIT_CONTEXT in contexts, (
         f"{EXPECTED_EXIT_CONTEXT!r} is not an exit context in the game's source any more; this "
         f"test would then never pass. Found: {sorted(contexts)}"

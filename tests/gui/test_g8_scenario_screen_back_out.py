@@ -200,11 +200,11 @@ def scenario_screen_row():
     one this test wants, and ``K + row_zero`` is its row. Nothing is hardcoded, so a menu that
     gains or loses an entry above the scenario row fails loudly instead of opening Game Options.
     """
-    body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
+    body = _method_body(_read(PLAYER_CONTROLS), "void PlayerEntity::pollDemoControls(double")
     row_zero = _start_screen_row_zero(body)
     branch = re.search(
-        r"\[gui selectedRow\]\s*==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{(?:[^{}]*?)"
-        r"\[self setGuiToScenarioScreen:",
+        r"==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{(?:[^{}]*?)"
+        r"setGuiToScenarioScreen\(",
         body,
         re.S,
     )
@@ -222,14 +222,13 @@ def exit_row_dispatch():
     actually contains is what makes the final shutdown evidence attributable to THIS row rather
     than to one of the tree's other -exitAppWithContext: call sites.
     """
-    body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
+    body = _method_body(_read(PLAYER_CONTROLS), "void PlayerEntity::pollDemoControls(double")
     row_zero = _start_screen_row_zero(body)
     # Either spelling of the exit call: the ObjC -exitAppWithContext:@"..." or the C++
     # -cxx_exitAppWithContext:"..." it became. Jon approved accepting
     # both, 2026-09-29.
     branch = re.search(
-        r"\[gui selectedRow\]\s*==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{\s*"
-        r"\[\[UNIVERSE gameController\] (?:exitAppWithContext:@|cxx_exitAppWithContext:)\"([^\"]+)\"\]",
+        r"==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{[^{}]*?exitAppWithContext\(\s*\"([^\"]+)\"",
         body,
     )
     assert branch, (
@@ -264,7 +263,7 @@ def scenario_exit_row():
     disagree would mean this test confirms a row whose visible text is not the one the story
     names. The offset is subtracted from ``GUI_ROW_SCENARIOS_START`` rather than written as 1.
     """
-    body = _method_body(_read(PLAYER_LOADSAVE), "- (void) setGuiToScenarioScreen:(int)page")
+    body = _method_body(_read(PLAYER_LOADSAVE), "void PlayerEntity::setGuiToScenarioScreen(int page)")
     start_row_name = re.search(
         r"OOGUIRow\s+start_row\s*=\s*(GUI_ROW_SCENARIOS_START)\s*;", body
     )
@@ -276,7 +275,7 @@ def scenario_exit_row():
     # the C++ form it became (DESC(@"...") -> OO_DESC("..."); setKey:@"exit" ->
     # cxx_setKey:"exit").
     label = re.search(
-        r'(?:DESC\(@"|OO_DESC\(")' + re.escape(SCENARIO_EXIT_DESC_KEY) + r'"\).*?forRow:start_row\s*-\s*(\d+)\]',
+        r'OO_DESC\("' + re.escape(SCENARIO_EXIT_DESC_KEY) + r'"\).*?,\s*start_row\s*-\s*(\d+)\)',
         body,
         re.S,
     )
@@ -285,7 +284,7 @@ def scenario_exit_row():
         "at a start_row-relative offset, so G8 cannot find the ` Return to Menu ` row"
     )
     key = re.search(
-        r'(?:setKey:@"|cxx_setKey:")' + re.escape(SCENARIO_EXIT_GUI_KEY) + r'"\s+forRow:start_row\s*-\s*(\d+)\]',
+        r'setKey\("' + re.escape(SCENARIO_EXIT_GUI_KEY) + r'",\s*start_row\s*-\s*(\d+)\)',
         body,
     )
     assert key, (
@@ -626,7 +625,7 @@ def test_the_arrival_observable_has_exactly_two_assignment_sites_and_only_one_is
         "out of the live game; every assignment site must be shown unobservable or unreachable."
     )
 
-    setter = _method_body(_read(PLAYER_LOADSAVE), "- (void) setGuiToScenarioScreen:(int)page")
+    setter = _method_body(_read(PLAYER_LOADSAVE), "void PlayerEntity::setGuiToScenarioScreen(int page)")
     assert re.search(r"gui_screen\s*=\s*" + SCENARIO_SCREEN, setter), (
         "-setGuiToScenarioScreen: no longer assigns gui_screen = " + SCENARIO_SCREEN
     )
@@ -634,17 +633,7 @@ def test_the_arrival_observable_has_exactly_two_assignment_sites_and_only_one_is
     # Either spelling (Jon approved accepting both, 2026-09-30): the ObjC form or
     # the C++ form it became (loadPlayerFromFile:(NSString *) -> (const std::string &)).
     loadsave = _read(PLAYER_LOADSAVE)
-    loader_signature = next(
-        (
-            sig
-            for sig in (
-                "- (BOOL) loadPlayerFromFile:(NSString *)fileToOpen asNew:",
-                "- (BOOL) loadPlayerFromFile:(const std::string &)fileToOpen asNew:",
-            )
-            if sig in loadsave
-        ),
-        "- (BOOL) loadPlayerFromFile:(NSString *)fileToOpen asNew:",
-    )
+    loader_signature = "bool PlayerEntity::loadPlayerFromFile("
     loader = _method_body(loadsave, loader_signature)
     assign = re.search(r"gui_screen\s*=\s*" + SCENARIO_SCREEN, loader)
     assert assign, (
@@ -652,7 +641,7 @@ def test_the_arrival_observable_has_exactly_two_assignment_sites_and_only_one_is
         "that it cannot be observed was made about THAT method and must be remade"
     )
     tail = loader[assign.end():]
-    status_call = tail.find("[self setGuiToStatusScreen]")
+    status_call = tail.find("setGuiToStatusScreen()")
     assert status_call >= 0, (
         "-loadPlayerFromFile:asNew: assigns gui_screen = " + SCENARIO_SCREEN + " and no longer "
         "calls -setGuiToStatusScreen afterwards. That value would now SURVIVE into the run loop, "
@@ -669,7 +658,7 @@ def test_the_arrival_observable_has_exactly_two_assignment_sites_and_only_one_is
     # And -setGuiToStatusScreen really is what overwrites it.
     assert re.search(
         r"gui_screen\s*=\s*GUI_SCREEN_STATUS",
-        _method_body(_read(PLAYER_ENTITY), "- (void) setGuiToStatusScreen"),
+        _method_body(_read(PLAYER_ENTITY), "void PlayerEntity::setGuiToStatusScreen()"),
     ), "-setGuiToStatusScreen no longer assigns gui_screen, so it cannot overwrite the load path's"
 
 
@@ -749,7 +738,7 @@ def test_the_back_out_chain_is_the_only_way_off_the_scenario_screen_by_that_row(
     Without this, "confirm row 1 and the game came back" would be a coincidence this file has no
     account of.
     """
-    start_scenario = _method_body(_read(PLAYER_LOADSAVE), "- (BOOL) startScenario")
+    start_scenario = _method_body(_read(PLAYER_LOADSAVE), "bool PlayerEntity::startScenario()")
     # Either spelling (Jon approved accepting both, 2026-09-30): the ObjC form or
     # the C++ form it became ([key isEqualToString:@"exit"] -> key == "exit").
     exit_branch = re.search(
@@ -777,17 +766,17 @@ def test_the_back_out_chain_is_the_only_way_off_the_scenario_screen_by_that_row(
         f"-pollGuiScreenControls has no `case {SCENARIO_SCREEN}:` any more; the scenario screen "
         "no longer has a dispatcher and G8's back-out has nothing to drive"
     )
-    case_end = controls.find("\n\t\tcase ", case_start + 1)
+    case_end = controls.find("\n    case ", case_start + 1)
     assert case_end > case_start, "could not find the end of the scenario screen's case block"
     case_body = controls[case_start:case_end]
     back_out = re.search(
-        r"if\s*\(\s*!\s*\[self startScenario\]\s*\)\s*\{(.*?)\}", case_body, re.S
+        r"if\s*\(\s*!\s*startScenario\(\)\s*\)\s*\{(.*?)\}", case_body, re.S
     )
     assert back_out, (
         f"the {SCENARIO_SCREEN} dispatcher no longer has an `if (![self startScenario])` branch, "
         "so a NO from the exit row no longer returns the game to the start screen"
     )
-    assert "setGuiToIntroFirstGo:YES" in back_out.group(1), (
+    assert "setGuiToIntroFirstGo(YES)" in back_out.group(1), (
         "the `if (![self startScenario])` branch no longer calls -setGuiToIntroFirstGo:YES: "
         f"{back_out.group(1)!r}. That call is what assigns {START_SCREEN}, which is G8's RETURN "
         "observable."
@@ -802,8 +791,8 @@ def test_the_back_out_chain_is_the_only_way_off_the_scenario_screen_by_that_row(
         "or the select key, so game.confirm_row() would not reach -startScenario at all"
     )
     # And the screen does NOT preselect the back-out row: this is why the test selects it first.
-    setter = _method_body(_read(PLAYER_LOADSAVE), "- (void) setGuiToScenarioScreen:(int)page")
-    assert re.search(r"setSelectedRow:start_row\s*\]", setter), (
+    setter = _method_body(_read(PLAYER_LOADSAVE), "void PlayerEntity::setGuiToScenarioScreen(int page)")
+    assert re.search(r"setSelectedRow\(start_row\)", setter), (
         "-setGuiToScenarioScreen: no longer leaves the selection on start_row. G8 selects the "
         "back-out row explicitly BECAUSE it is not preselected; if that changed, the reason for "
         "the extra select_row call has changed too and should be re-read."
