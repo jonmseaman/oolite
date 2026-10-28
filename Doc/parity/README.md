@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 115 / 241 upstream `.m` files · extra rows below
+**Progress:** 116 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -131,7 +131,7 @@ Patterns that recur across files. Each instance is also recorded in its own file
 - [ ] `Core/Scripting/OOJSPopulatorDefinition.m` → `Core/Scripting/OOJSPopulatorDefinition.cpp` (125 / 171 lines) — *pending* — [findings](scripting.md#oojspopulatordefinition)
 - [ ] `Core/Scripting/OOJSQuaternion.m` → `Core/Scripting/OOJSQuaternion.cpp` (925 / 980 lines) — *pending* — [findings](scripting.md#oojsquaternion)
 - [ ] `Core/Scripting/OOJSScript.m` → `Core/Scripting/OOJSScript.cpp` (761 / 889 lines) — *pending* — [findings](scripting.md#oojsscript)
-- [ ] `Core/Scripting/OOJSShip.m` → `Core/Scripting/OOJSShip.cpp` (4015 / 4311 lines) — *pending* — [findings](scripting.md#oojsship)
+- [x] `Core/Scripting/OOJSShip.m` → `Core/Scripting/OOJSShip.cpp` (4015 / 4311 lines) — 95✅ 2⚠️ 3❌ — [findings](scripting.md#oojsship)
 - [ ] `Core/Scripting/OOJSShipGroup.m` → `Core/Scripting/OOJSShipGroup.cpp` (347 / 510 lines) — *pending* — [findings](scripting.md#oojsshipgroup)
 - [ ] `Core/Scripting/OOJSSound.m` → `Core/Scripting/OOJSSound.cpp` (299 / 452 lines) — *pending* — [findings](scripting.md#oojssound)
 - [ ] `Core/Scripting/OOJSSoundSource.m` → `Core/Scripting/OOJSSoundSource.cpp` (345 / 483 lines) — *pending* — [findings](scripting.md#oojssoundsource)

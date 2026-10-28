@@ -1014,108 +1014,122 @@ Upstream `src/Core/Scripting/OOJSScript.m` ↔ `Core/Scripting/OOJSScript.cpp`
 <a id="oojsship"></a>
 Upstream `src/Core/Scripting/OOJSShip.m` ↔ `Core/Scripting/OOJSShip.cpp`
 
-**Status:** pending
+**Status:** done — 100 rows: 95 ✅ 2 ⚠️ 3 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSShip()` (575) | | |
-| `JSShipClass()` (582) | | |
-| `JSShipPrototype()` (587) | | |
-| `ShipGetProperty()` (592) | | |
-| `ShipSetProperty()` (1177) | | |
-| `ShipSetScript()` (1832) | | |
-| `ShipSetAI()` (1858) | | |
-| `ShipSwitchAI()` (1884) | | |
-| `ShipExitAI()` (1910) | | |
-| `ShipReactToAIMessage()` (1941) | | |
-| `ShipSendAIMessage()` (1967) | | |
-| `ShipDeployEscorts()` (1993) | | |
-| `ShipDockEscorts()` (2008) | | |
-| `ShipHasEquipmentProviding()` (2023) | | |
-| `ShipHasRole()` (2045) | | |
-| `ShipEjectItem()` (2067) | | |
-| `ShipAddCargoEntity()` (2089) | | |
-| `ShipEjectSpecificItem()` (2135) | | |
-| `ShipDumpCargo()` (2157) | | |
-| `ShipSpawn()` (2197) | | |
-| `ShipDealEnergyDamage()` (2228) | | |
-| `ShipExplode()` (2272) | | |
-| `ShipRemove()` (2282) | | |
-| `ShipRunLegacyScriptActions()` (2312) | | |
-| `ShipCommsMessage()` (2346) | | |
-| `ShipFireECM()` (2375) | | |
-| `ShipAbandonShip()` (2395) | | |
-| `ShipCanAwardEquipment()` (2408) | | |
-| `ShipAwardEquipment()` (2454) | | |
-| `ShipRemoveEquipment()` (2523) | | |
-| `ShipRestoreSubEntities()` (2574) | | |
-| `ShipSetEquipmentStatus()` (2603) | | |
-| `ShipEquipmentStatus()` (2683) | | |
-| `ShipSelectNewMissile()` (2742) | | |
-| `ShipFireMissile()` (2761) | | |
-| `ShipFindNearestStation()` (2781) | | |
-| `ShipSetBounty()` (2808) | | |
-| `ShipSetCargo()` (2836) | | |
-| `ShipSetCrew()` (2866) | | |
-| `ShipSetCargoType()` (2902) | | |
-| `ShipSetMaterials()` (2941) | | |
-| `ShipSetShaders()` (2960) | | |
-| `ShipSetMaterialsInternal()` (2985) | | |
-| `ShipExitSystem()` (3049) | | |
-| `ShipUpdateEscortFormation()` (3077) | | |
-| `RemoveOrExplodeShip()` (3090) | | |
-| `ShipClearDefenseTargets()` (3133) | | |
-| `ShipAddDefenseTarget()` (3146) | | |
-| `ShipRemoveDefenseTarget()` (3166) | | |
-| `ShipAddCollisionException()` (3186) | | |
-| `ShipRemoveCollisionException()` (3210) | | |
-| `ShipGetMaterials()` (3233) | | |
-| `ShipGetShaders()` (3251) | | |
-| `ShipBroadcastCascadeImminent()` (3268) | | |
-| `ShipBecomeCascadeExplosion()` (3281) | | |
-| `ShipOfferToEscort()` (3294) | | |
-| `ShipRequestHelpFromGroup()` (3314) | | |
-| `ShipPatrolReportIn()` (3329) | | |
-| `ShipMarkTargetForFines()` (3351) | | |
-| `ShipEnterWormhole()` (3370) | | |
-| `ShipNotifyGroupOfWormhole()` (3399) | | |
-| `ShipThrowSpark()` (3413) | | |
-| `ShipPerformAttack()` (3426) | | |
-| `ShipPerformCollect()` (3439) | | |
-| `ShipPerformEscort()` (3452) | | |
-| `ShipPerformFaceDestination()` (3465) | | |
-| `ShipPerformFlee()` (3478) | | |
-| `ShipPerformFlyToRangeFromDestination()` (3491) | | |
-| `ShipPerformHold()` (3504) | | |
-| `ShipPerformIdle()` (3517) | | |
-| `ShipPerformIntercept()` (3530) | | |
-| `ShipPerformLandOnPlanet()` (3543) | | |
-| `ShipPerformMining()` (3556) | | |
-| `ShipPerformScriptedAI()` (3569) | | |
-| `ShipPerformScriptedAttackAI()` (3582) | | |
-| `ShipPerformStop()` (3595) | | |
-| `ShipPerformTumble()` (3608) | | |
-| `ShipRequestDockingInstructions()` (3621) | | |
-| `ShipRecallDockingInstructions()` (3639) | | |
-| `ShipBroadcastDistressMessage()` (3657) | | |
-| `ShipCheckCourseToDestination()` (3670) | | |
-| `ShipGetSafeCourseToDestination()` (3684) | | |
-| `ShipCheckScanner()` (3698) | | |
-| `ShipAdjustCargo()` (3728) | | |
-| `ShipDamageAssessment()` (3770) | | |
-| `ShipThreatAssessment()` (3797) | | |
-| `ShipThreatAssessmentWeapon()` (3918) | | |
-| `ShipStaticKeys()` (3928) | | |
-| `ShipStaticKeysForRole()` (3939) | | |
-| `ShipStaticRoleIsInCategory()` (3956) | | |
-| `ShipStaticRoles()` (3973) | | |
-| `ShipStaticShipDataForKey()` (3984) | | |
-| `ShipStaticSetShipDataForKey()` (4000) | | |
+| `sShipClass` JSClass (153) | `sShipClass` ooscript::ClassDef `Core/Scripting/OOJSShip.cpp:204` | ✅ |
+| `enum kShip_*` property IDs from -128 (177) | `enum kShip_*` `Core/Scripting/OOJSShip.cpp:231` | ✅ |
+| `sShipProperties[]` JSPropertySpec (325) | `sShipProperties[]` `Core/Scripting/OOJSShip.cpp:379` | ⚠️ |
+| `sShipMethods[]` JSFunctionSpec (476) | `sShipMethods[]` `Core/Scripting/OOJSShip.cpp:530` | ✅ |
+| `sShipStaticMethods[]` (562) | `sShipStaticMethods[]` `Core/Scripting/OOJSShip.cpp:616` | ✅ |
+| `JSShipGetShipEntity` (DEFINE_JS_OBJECT_GETTER, 573) | `JSShipGetShipEntity()` `Core/Scripting/OOJSShip.cpp:634` | ✅ |
+| `GET_THIS_SHIP` macro (1823) | `GET_THIS_SHIP` `Core/Scripting/OOJSShip.cpp:2034` | ✅ |
+| `InitOOJSShip()` (575) | `InitOOJSShip()` `Core/Scripting/OOJSShip.cpp:645` | ✅ |
+| `JSShipClass()` (582) | `JSShipClass()` `Core/Scripting/OOJSShip.cpp:652` | ✅ |
+| `JSShipPrototype()` (587) | `JSShipPrototype()` `Core/Scripting/OOJSShip.cpp:657` | ✅ |
+| `ShipGetProperty()` (592) | `ShipGetProperty()` `Core/Scripting/OOJSShip.cpp:733` | ✅ |
+| `ShipSetProperty()` (1177) | `ShipSetProperty()` `Core/Scripting/OOJSShip.cpp:1337` | ⚠️ |
+| `ShipSetScript()` (1832) | `ShipSetScript()` `Core/Scripting/OOJSShip.cpp:2043` | ✅ |
+| `ShipSetAI()` (1858) | `ShipSetAI()` `Core/Scripting/OOJSShip.cpp:2070` | ✅ |
+| `ShipSwitchAI()` (1884) | `ShipSwitchAI()` `Core/Scripting/OOJSShip.cpp:2097` | ✅ |
+| `ShipExitAI()` (1910) | `ShipExitAI()` `Core/Scripting/OOJSShip.cpp:2124` | ✅ |
+| `ShipReactToAIMessage()` (1941) | `ShipReactToAIMessage()` `Core/Scripting/OOJSShip.cpp:2157` | ✅ |
+| `ShipSendAIMessage()` (1967) | `ShipSendAIMessage()` `Core/Scripting/OOJSShip.cpp:2184` | ✅ |
+| `ShipDeployEscorts()` (1993) | `ShipDeployEscorts()` `Core/Scripting/OOJSShip.cpp:2211` | ✅ |
+| `ShipDockEscorts()` (2008) | `ShipDockEscorts()` `Core/Scripting/OOJSShip.cpp:2227` | ✅ |
+| `ShipHasEquipmentProviding()` (2023) | `ShipHasEquipmentProviding()` `Core/Scripting/OOJSShip.cpp:2243` | ✅ |
+| `ShipHasRole()` (2045) | `ShipHasRole()` `Core/Scripting/OOJSShip.cpp:2266` | ✅ |
+| `ShipEjectItem()` (2067) | `ShipEjectItem()` `Core/Scripting/OOJSShip.cpp:2289` | ✅ |
+| `ShipAddCargoEntity()` (2089) | `ShipAddCargoEntity()` `Core/Scripting/OOJSShip.cpp:2312` | ✅ |
+| `ShipEjectSpecificItem()` (2135) | `ShipEjectSpecificItem()` `Core/Scripting/OOJSShip.cpp:2360` | ✅ |
+| `ShipDumpCargo()` (2157) | `ShipDumpCargo()` `Core/Scripting/OOJSShip.cpp:2383` | ✅ |
+| `ShipSpawn()` (2197) | `ShipSpawn()` `Core/Scripting/OOJSShip.cpp:2425` | ✅ |
+| `ShipDealEnergyDamage()` (2228) | `ShipDealEnergyDamage()` `Core/Scripting/OOJSShip.cpp:2457` | ✅ |
+| `ShipExplode()` (2272) | `ShipExplode()` `Core/Scripting/OOJSShip.cpp:2502` | ✅ |
+| `ShipRemove()` (2282) | `ShipRemove()` `Core/Scripting/OOJSShip.cpp:2512` | ✅ |
+| `ShipRunLegacyScriptActions()` (2312) | `ShipRunLegacyScriptActions()` `Core/Scripting/OOJSShip.cpp:2543` | ✅ |
+| `ShipCommsMessage()` (2346) | `ShipCommsMessage()` `Core/Scripting/OOJSShip.cpp:2577` | ✅ |
+| `ShipFireECM()` (2375) | `ShipFireECM()` `Core/Scripting/OOJSShip.cpp:2607` | ✅ |
+| `ShipAbandonShip()` (2395) | `ShipAbandonShip()` `Core/Scripting/OOJSShip.cpp:2630` | ✅ |
+| `ShipCanAwardEquipment()` (2408) | `ShipCanAwardEquipment()` `Core/Scripting/OOJSShip.cpp:2644` | ✅ |
+| `ShipAwardEquipment()` (2454) | `ShipAwardEquipment()` `Core/Scripting/OOJSShip.cpp:2691` | ✅ |
+| `ShipRemoveEquipment()` (2523) | `ShipRemoveEquipment()` `Core/Scripting/OOJSShip.cpp:2762` | ✅ |
+| `ShipRestoreSubEntities()` (2574) | `ShipRestoreSubEntities()` `Core/Scripting/OOJSShip.cpp:2814` | ✅ |
+| `ShipSetEquipmentStatus()` (2603) | `ShipSetEquipmentStatus()` `Core/Scripting/OOJSShip.cpp:2845` | ✅ |
+| `ShipEquipmentStatus()` (2683) | `ShipEquipmentStatus()` `Core/Scripting/OOJSShip.cpp:2927` | ✅ |
+| `ShipSelectNewMissile()` (2742) | `ShipSelectNewMissile()` `Core/Scripting/OOJSShip.cpp:2987` | ✅ |
+| `ShipFireMissile()` (2761) | `ShipFireMissile()` `Core/Scripting/OOJSShip.cpp:3006` | ✅ |
+| `ShipFindNearestStation()` (2781) | `ShipFindNearestStation()` `Core/Scripting/OOJSShip.cpp:3027` | ✅ |
+| `ShipSetBounty()` (2808) | `ShipSetBounty()` `Core/Scripting/OOJSShip.cpp:3056` | ✅ |
+| `ShipSetCargo()` (2836) | `ShipSetCargo()` `Core/Scripting/OOJSShip.cpp:3085` | ✅ |
+| `ShipSetCrew()` (2866) | `ShipSetCrew()` `Core/Scripting/OOJSShip.cpp:3117` | ❌ |
+| `ShipSetCargoType()` (2902) | `ShipSetCargoType()` `Core/Scripting/OOJSShip.cpp:3155` | ✅ |
+| `ShipSetMaterials()` (2941) | `ShipSetMaterials()` `Core/Scripting/OOJSShip.cpp:3195` | ✅ |
+| `ShipSetShaders()` (2960) | `ShipSetShaders()` `Core/Scripting/OOJSShip.cpp:3214` | ✅ |
+| `ShipSetMaterialsInternal()` (2985) | `ShipSetMaterialsInternal()` `Core/Scripting/OOJSShip.cpp:3240` | ✅ |
+| `ShipExitSystem()` (3049) | `ShipExitSystem()` `Core/Scripting/OOJSShip.cpp:3309` | ✅ |
+| `ShipUpdateEscortFormation()` (3077) | `ShipUpdateEscortFormation()` `Core/Scripting/OOJSShip.cpp:3338` | ✅ |
+| `RemoveOrExplodeShip()` (3090) | `RemoveOrExplodeShip()` `Core/Scripting/OOJSShip.cpp:3353` | ✅ |
+| `ShipClearDefenseTargets()` (3133) | `ShipClearDefenseTargets()` `Core/Scripting/OOJSShip.cpp:3400` | ✅ |
+| `ShipAddDefenseTarget()` (3146) | `ShipAddDefenseTarget()` `Core/Scripting/OOJSShip.cpp:3414` | ✅ |
+| `ShipRemoveDefenseTarget()` (3166) | `ShipRemoveDefenseTarget()` `Core/Scripting/OOJSShip.cpp:3435` | ✅ |
+| `ShipAddCollisionException()` (3186) | `ShipAddCollisionException()` `Core/Scripting/OOJSShip.cpp:3456` | ✅ |
+| `ShipRemoveCollisionException()` (3210) | `ShipRemoveCollisionException()` `Core/Scripting/OOJSShip.cpp:3482` | ✅ |
+| `ShipGetMaterials()` (3233) | `ShipGetMaterials()` `Core/Scripting/OOJSShip.cpp:3507` | ✅ |
+| `ShipGetShaders()` (3251) | `ShipGetShaders()` `Core/Scripting/OOJSShip.cpp:3525` | ✅ |
+| `ShipBroadcastCascadeImminent()` (3268) | `ShipBroadcastCascadeImminent()` `Core/Scripting/OOJSShip.cpp:3542` | ✅ |
+| `ShipBecomeCascadeExplosion()` (3281) | `ShipBecomeCascadeExplosion()` `Core/Scripting/OOJSShip.cpp:3556` | ✅ |
+| `ShipOfferToEscort()` (3294) | `ShipOfferToEscort()` `Core/Scripting/OOJSShip.cpp:3570` | ✅ |
+| `ShipRequestHelpFromGroup()` (3314) | `ShipRequestHelpFromGroup()` `Core/Scripting/OOJSShip.cpp:3591` | ✅ |
+| `ShipPatrolReportIn()` (3329) | `ShipPatrolReportIn()` `Core/Scripting/OOJSShip.cpp:3607` | ✅ |
+| `ShipMarkTargetForFines()` (3351) | `ShipMarkTargetForFines()` `Core/Scripting/OOJSShip.cpp:3630` | ✅ |
+| `ShipEnterWormhole()` (3370) | `ShipEnterWormhole()` `Core/Scripting/OOJSShip.cpp:3649` | ✅ |
+| `ShipNotifyGroupOfWormhole()` (3399) | `ShipNotifyGroupOfWormhole()` `Core/Scripting/OOJSShip.cpp:3680` | ✅ |
+| `ShipThrowSpark()` (3413) | `ShipThrowSpark()` `Core/Scripting/OOJSShip.cpp:3695` | ✅ |
+| `ShipPerformAttack()` (3426) | `ShipPerformAttack()` `Core/Scripting/OOJSShip.cpp:3709` | ✅ |
+| `ShipPerformCollect()` (3439) | `ShipPerformCollect()` `Core/Scripting/OOJSShip.cpp:3723` | ✅ |
+| `ShipPerformEscort()` (3452) | `ShipPerformEscort()` `Core/Scripting/OOJSShip.cpp:3737` | ✅ |
+| `ShipPerformFaceDestination()` (3465) | `ShipPerformFaceDestination()` `Core/Scripting/OOJSShip.cpp:3751` | ✅ |
+| `ShipPerformFlee()` (3478) | `ShipPerformFlee()` `Core/Scripting/OOJSShip.cpp:3765` | ✅ |
+| `ShipPerformFlyToRangeFromDestination()` (3491) | `ShipPerformFlyToRangeFromDestination()` `Core/Scripting/OOJSShip.cpp:3779` | ✅ |
+| `ShipPerformHold()` (3504) | `ShipPerformHold()` `Core/Scripting/OOJSShip.cpp:3793` | ✅ |
+| `ShipPerformIdle()` (3517) | `ShipPerformIdle()` `Core/Scripting/OOJSShip.cpp:3807` | ✅ |
+| `ShipPerformIntercept()` (3530) | `ShipPerformIntercept()` `Core/Scripting/OOJSShip.cpp:3821` | ✅ |
+| `ShipPerformLandOnPlanet()` (3543) | `ShipPerformLandOnPlanet()` `Core/Scripting/OOJSShip.cpp:3835` | ✅ |
+| `ShipPerformMining()` (3556) | `ShipPerformMining()` `Core/Scripting/OOJSShip.cpp:3849` | ✅ |
+| `ShipPerformScriptedAI()` (3569) | `ShipPerformScriptedAI()` `Core/Scripting/OOJSShip.cpp:3863` | ✅ |
+| `ShipPerformScriptedAttackAI()` (3582) | `ShipPerformScriptedAttackAI()` `Core/Scripting/OOJSShip.cpp:3877` | ✅ |
+| `ShipPerformStop()` (3595) | `ShipPerformStop()` `Core/Scripting/OOJSShip.cpp:3891` | ✅ |
+| `ShipPerformTumble()` (3608) | `ShipPerformTumble()` `Core/Scripting/OOJSShip.cpp:3905` | ✅ |
+| `ShipRequestDockingInstructions()` (3621) | `ShipRequestDockingInstructions()` `Core/Scripting/OOJSShip.cpp:3919` | ✅ |
+| `ShipRecallDockingInstructions()` (3639) | `ShipRecallDockingInstructions()` `Core/Scripting/OOJSShip.cpp:3933` | ✅ |
+| `ShipBroadcastDistressMessage()` (3657) | `ShipBroadcastDistressMessage()` `Core/Scripting/OOJSShip.cpp:3947` | ✅ |
+| `ShipCheckCourseToDestination()` (3670) | `ShipCheckCourseToDestination()` `Core/Scripting/OOJSShip.cpp:3961` | ✅ |
+| `ShipGetSafeCourseToDestination()` (3684) | `ShipGetSafeCourseToDestination()` `Core/Scripting/OOJSShip.cpp:3976` | ✅ |
+| `ShipCheckScanner()` (3698) | `ShipCheckScanner()` `Core/Scripting/OOJSShip.cpp:3991` | ✅ |
+| `ShipAdjustCargo()` (3728) | `ShipAdjustCargo()` `Core/Scripting/OOJSShip.cpp:4023` | ✅ |
+| `ShipDamageAssessment()` (3770) | `ShipDamageAssessment()` `Core/Scripting/OOJSShip.cpp:4065` | ✅ |
+| `ShipThreatAssessment()` (3797) | `ShipThreatAssessment()` `Core/Scripting/OOJSShip.cpp:4093` | ✅ |
+| `ShipThreatAssessmentWeapon()` (3918) | `ShipThreatAssessmentWeapon()` `Core/Scripting/OOJSShip.cpp:4215` | ✅ |
+| `ShipStaticKeys()` (3928) | `ShipStaticKeys()` `Core/Scripting/OOJSShip.cpp:4225` | ❌ |
+| `ShipStaticKeysForRole()` (3939) | `ShipStaticKeysForRole()` `Core/Scripting/OOJSShip.cpp:4235` | ✅ |
+| `ShipStaticRoleIsInCategory()` (3956) | `ShipStaticRoleIsInCategory()` `Core/Scripting/OOJSShip.cpp:4254` | ✅ |
+| `ShipStaticRoles()` (3973) | `ShipStaticRoles()` `Core/Scripting/OOJSShip.cpp:4271` | ❌ |
+| `ShipStaticShipDataForKey()` (3984) | `ShipStaticShipDataForKey()` `Core/Scripting/OOJSShip.cpp:4281` | ✅ |
+| `ShipStaticSetShipDataForKey()` (4000) | `ShipStaticSetShipDataForKey()` `Core/Scripting/OOJSShip.cpp:4298` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **med** — The `speed` property is now `OOJS_PROP_READWRITE_CB` (upstream `OOJS_PROP_READONLY_CB`), and `ShipSetProperty` gains a `kShip_speed` case that calls `setSpeed()`. Upstream ignored writes silently (a TypeError in strict mode). In the port an NPC write takes effect. `player.ship.speed = x` throws "player.ship.speed is read-only.", and a negative or NaN value throws "ship.speed must be a number >= 0.". A long code comment justifies the change, but no ADR or bead id is cited. It is the only change in the property table: name, tinyid and flags match for every other entry — upstream `Core/Scripting/OOJSShip.m:450` ↔ port `Core/Scripting/OOJSShip.cpp:504`, `:1693-1734`
+- ❌ **low** — `setCrew()`: when `OOCharacter characterWithDictionary` answers nil, upstream `[NSArray arrayWithObject:nil]` raises, and the JS caller gets an exception. The port skips the nil character and sets an empty crew, so the ship becomes unpiloted and the call returns `true` — upstream `Core/Scripting/OOJSShip.m:2889-2890` ↔ port `Core/Scripting/OOJSShip.cpp:3139-3143`
+- ❌ **low** — `Ship.keys()` and `Ship.roles()` return array order from `std::map` (sorted ascending, `OOShipRegistry::shipKeys()/shipRoles()`). Upstream used NSDictionary `-allKeys` hash order. The contents are the same but scripts can see the new order. (The order change comes from OOShipRegistry, not this file.) — upstream `Core/Scripting/OOJSShip.m:3933,3978` ↔ port `Core/Scripting/OOJSShip.cpp:4230,4276`
+- ✅ note (dict key order) — Getter `roleWeights` and `equipmentStatus(…, true)` build `oo::PList::Dict` (`std::map`). JS object keys therefore enumerate sorted (`EQUIPMENT_DAMAGED` before `EQUIPMENT_OK`), not in NSDictionary order. The values are the same — port `Core/Scripting/OOJSShip.cpp:781-785`, `:2971-2973`
+- ✅ note (ShipGetProperty) — I checked all 144 cases. Every case returns the same type, and null vs undefined matches upstream. A stale entity gives `undefined`. A nil object result gives `null` (`StringOrNull`, `EntityObjectNode`, a null PList). `scriptInfo` is `{}`, never null (`ShipEntity::getScriptInfo()`). `crew` is null when the ship is unpiloted. `commodity` is null when the amount is 0. The AI getters give null/false with no AI — port `Core/Scripting/OOJSShip.cpp:733-1335`
+- ✅ note (ShipSetProperty) — Validation and error text match case by case. This covers the entityPersonality range, scriptedMisjumpRange and sunGlareFilter messages, max* "cannot be negative", the injectorSpeedFactor bounds, maxEscorts, and "player.ship.%s is read-only.". Two upstream quirks are kept: `kShip_entityPersonality` falls through to `hyperspaceSpinTime` when int conversion fails, and the sunGlareFilter message says "> 0.0 and < 1.0" while the check is inclusive — port `Core/Scripting/OOJSShip.cpp:1489-1498`, `:1819-1829`
+- ✅ note (copy-paste quirks kept) — `patrolReportIn()` reports bad arguments as `addDefenseTarget`. `keysForRole` reports as `shipKeysForRole`. `setShipDataForKey` reports as `setShipInfoForKey`. The property table still lists `homeSystem` twice. `setBounty()` returns true without setting rval — port `Core/Scripting/OOJSShip.cpp:3616`, `:4247`, `:4307`, `:435/439`, `:3079`
+- ✅ note (nil args) — Where upstream sent nil to a Foundation API, the port passes `""`: `setShipDataForKey` with a non-string key, `adjustCargo` with a nil commodity. `setShipDataForKey` with a non-object second argument uses `toObject` where upstream used raw `JSVAL_TO_OBJECT`. `checkScanner` skips null entries, where upstream `addObject:nil` would raise. Only degenerate inputs reach any of these — port `Core/Scripting/OOJSShip.cpp:4304`, `:4053-4056`, `:4015`
+- ✅ note — `InitOOJSShip` registers `OOJSEntityObjectConverter` in place of `OOJSBasicPrivateObjectConverter`, and the class finalizer is `OOJSCxxObjectWrapperFinalize`. Both are documented as the entity-holder replacement (bead oo-9ht.39.3), and the converted value is still the entity's object or null when stale — port `Core/Scripting/OOJSShip.cpp:216`, `:648`
 
 ## OOJSShipGroup
 
