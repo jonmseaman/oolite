@@ -6,7 +6,24 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 37 / 241 upstream `.m` files · extra rows below
+**Progress:** 49 / 241 upstream `.m` files · extra rows below
+
+## Cross-cutting findings
+
+Patterns that recur across files. Each instance is also recorded in its own file's section.
+
+1. **Preference defaults: `oo_*ForKey:defaultValue:` → `isNull() ? default : xForKey()`** (❌ low, 9 sites). Upstream's extractor returned `defaultValue` whenever the stored value could not be converted, such as a non-numeric or unrecognised string. The port returns the default only when the key is absent; otherwise the converter yields 0/NO. Sites:
+   - `OOALSound.cpp:62` (volume_control → 0 mutes the game)
+   - `OOLogging.cpp:262-267` (logging-show-time/class → NO drops the log prefixes)
+   - `GameController.cpp:235,303`
+   - `Universe.cpp:308,333,338,344`
+
+   Fix candidate: a `Defaults::get<T>(key, fallback)` with `oo_*ForKey` semantics (cf. `PListGet.hpp`).
+2. **Hash-order → sorted-order iteration.** Dictionaries and sets that upstream walked in GNUstep hash order are walked in key/byte order. This reorders log lines and warnings: OXP verifier stages, shipdata key warnings, AI states, OOEncodingConverter substitutions. It is intentional where cited (oo-qps.51), unintended elsewhere, and visible only where order reaches output or RNG.
+3. **Log text drift.** Some log messages lost an argument or changed class:
+   - `verifyOXP.scanFiles.nonStandardFile` lost "(type)";
+   - log-setup NSLog calls became `OO_LOG("unclassified")`;
+   - `plist.wrongType` is no longer emitted.
 
 ## Suspected divergences (ranked)
 
@@ -30,25 +47,25 @@ a row is checked when every method in its coverage table has been compared and i
 - [ ] `Core/OOAsyncQueue.m` → *(absorbed — locate in `src/oofnd/` or callers)* (293 / — lines) — *pending* — [findings](foundation.md#ooasyncqueue)
 - [x] `Core/OOAsyncWorkManager.m` → `Core/OOAsyncWorkManager.cpp` (423 / 481 lines) — 15✅ 4⚠️ 5➖ — [findings](foundation.md#ooasyncworkmanager)
 - [x] `Core/OOCPUInfo.m` → `Core/OOCPUInfo.cpp` (226 / 228 lines) — 7✅ — [findings](foundation.md#oocpuinfo)
-- [ ] `Core/OOCache.m` → `Core/OOCache.cpp` (1048 / 994 lines) — *pending* — [findings](foundation.md#oocache)
-- [ ] `Core/OOCacheManager.m` → `Core/OOCacheManager.cpp` (668 / 561 lines) — *pending* — [findings](foundation.md#oocachemanager)
+- [x] `Core/OOCache.m` → `Core/OOCache.cpp` (1048 / 994 lines) — 44✅ 3⚠️ 1➖ — [findings](foundation.md#oocache)
+- [x] `Core/OOCacheManager.m` → `Core/OOCacheManager.cpp` (668 / 561 lines) — 28✅ 2⚠️ 6➖ — [findings](foundation.md#oocachemanager)
 - [ ] `Core/OOCollectionExtractors.m` → *(absorbed — locate in `src/oofnd/` or callers)* (1372 / — lines) — *pending* — [findings](foundation.md#oocollectionextractors)
 - [ ] `Core/OODeepCopy.m` → *(absorbed — locate in `src/oofnd/` or callers)* (262 / — lines) — *pending* — [findings](foundation.md#oodeepcopy)
-- [ ] `Core/OOEncodingConverter.m` → `Core/OOEncodingConverter.cpp` (242 / 214 lines) — *pending* — [findings](foundation.md#ooencodingconverter)
+- [x] `Core/OOEncodingConverter.m` → `Core/OOEncodingConverter.cpp` (242 / 214 lines) — 8✅ 2⚠️ — [findings](foundation.md#ooencodingconverter)
 - [ ] `Core/OOExcludeObjectEnumerator.m` → *(absorbed — locate in `src/oofnd/` or callers)* (79 / — lines) — *pending* — [findings](foundation.md#ooexcludeobjectenumerator)
 - [ ] `Core/OOFilteringEnumerator.m` → *(absorbed — locate in `src/oofnd/` or callers)* (227 / — lines) — *pending* — [findings](foundation.md#oofilteringenumerator)
-- [ ] `Core/OOFoundation.m` → `Core/OOFoundation.cpp` (92 / 35 lines) — *pending* — [findings](foundation.md#oofoundation)
-- [ ] `Core/OOIsNumberLiteral.m` → `Core/OOIsNumberLiteral.cpp` (135 / 134 lines) — *pending* — [findings](foundation.md#ooisnumberliteral)
-- [ ] `Core/OOLogHeader.m` → `Core/OOLogHeader.cpp` (355 / 370 lines) — *pending* — [findings](foundation.md#oologheader)
-- [ ] `Core/OOLogOutputHandler.m` → `Core/OOLogOutputHandler.cpp` (649 / 567 lines) — *pending* — [findings](foundation.md#oologoutputhandler)
-- [ ] `Core/OOLogging.m` → `Core/OOLogging.cpp` (832 / 289 lines) — *pending* — [findings](foundation.md#oologging)
-- [ ] `Core/OOPListParsing.m` → `Core/OOPListParsing.cpp` (233 / 74 lines) — *pending* — [findings](foundation.md#ooplistparsing)
+- [x] `Core/OOFoundation.m` → `Core/OOFoundation.cpp` (92 / 35 lines) — 6➖ — [findings](foundation.md#oofoundation)
+- [x] `Core/OOIsNumberLiteral.m` → `Core/OOIsNumberLiteral.cpp` (135 / 134 lines) — 1✅ — [findings](foundation.md#ooisnumberliteral)
+- [x] `Core/OOLogHeader.m` → `Core/OOLogHeader.cpp` (355 / 370 lines) — 7✅ — [findings](foundation.md#oologheader)
+- [x] `Core/OOLogOutputHandler.m` → `Core/OOLogOutputHandler.cpp` (649 / 567 lines) — 17✅ 2⚠️ 4❌ 1➖ — [findings](foundation.md#oologoutputhandler)
+- [x] `Core/OOLogging.m` → `Core/OOLogging.cpp` (832 / 289 lines) — 40✅ 2⚠️ 2❌ — [findings](foundation.md#oologging)
+- [x] `Core/OOPListParsing.m` → `Core/OOPListParsing.cpp` (233 / 74 lines) — 3✅ 1⚠️ 5➖ — [findings](foundation.md#ooplistparsing)
 - [ ] `Core/OOPriorityQueue.m` → *(absorbed — locate in `src/oofnd/` or callers)* (640 / — lines) — *pending* — [findings](foundation.md#oopriorityqueue)
-- [ ] `Core/OOProfilingStopwatch.m` → `Core/OOProfilingStopwatch.cpp` (129 / 120 lines) — *pending* — [findings](foundation.md#ooprofilingstopwatch)
-- [ ] `Core/OORegExpMatcher.m` → `Core/OORegExpMatcher.cpp` (140 / 164 lines) — *pending* — [findings](foundation.md#ooregexpmatcher)
+- [x] `Core/OOProfilingStopwatch.m` → `Core/OOProfilingStopwatch.cpp` (129 / 120 lines) — 7✅ 1⚠️ — [findings](foundation.md#ooprofilingstopwatch)
+- [x] `Core/OORegExpMatcher.m` → `Core/OORegExpMatcher.cpp` (140 / 164 lines) — 5✅ 1➖ — [findings](foundation.md#ooregexpmatcher)
 - [ ] `Core/OOWeakReference.m` → *(absorbed — locate in `src/oofnd/` or callers)* (174 / — lines) — *pending* — [findings](foundation.md#ooweakreference)
 - [ ] `Core/OOWeakSet.m` → *(absorbed — locate in `src/oofnd/` or callers)* (280 / — lines) — *pending* — [findings](foundation.md#ooweakset)
-- [ ] `Core/OOXMLExtensions.m` → `Core/OOXMLExtensions.cpp` (55 / 48 lines) — *pending* — [findings](foundation.md#ooxmlextensions)
+- [x] `Core/OOXMLExtensions.m` → `Core/OOXMLExtensions.cpp` (55 / 48 lines) — 1❌ — [findings](foundation.md#ooxmlextensions)
 - [ ] `Core/OldSchoolPropertyListWriting.m` → *(absorbed — locate in `src/oofnd/` or callers)* (301 / — lines) — *pending* — [findings](foundation.md#oldschoolpropertylistwriting)
 - [ ] `Core/ReleaseLockProxy.m` → *(absorbed — locate in `src/oofnd/` or callers)* (169 / — lines) — *pending* — [findings](foundation.md#releaselockproxy)
 - [ ] `SDL/Comparison.m` → *(absorbed — locate in `src/oofnd/` or callers)* (82 / — lines) — *pending* — [findings](foundation.md#comparison)

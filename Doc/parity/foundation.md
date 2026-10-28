@@ -247,38 +247,42 @@ Upstream `src/Core/OOAsyncQueue.m` ↔ *(absorbed — locate in `src/oofnd/` or 
 <a id="ooasyncworkmanager"></a>
 Upstream `src/Core/OOAsyncWorkManager.m` ↔ `Core/OOAsyncWorkManager.cpp`
 
-**Status:** pending
+**Status:** done — 24 rows: 15 ✅ 4 ⚠️ 0 ❌ 5 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitAsyncWorkManager()` (95) | | |
-| `+[OOAsyncWorkManager initialize]` (121) | | |
-| `+[OOAsyncWorkManager sharedAsyncWorkManager]` (130) | | |
-| `+[OOAsyncWorkManager allocWithZone:]` (148) | | |
-| `-[OOAsyncWorkManager dealloc]` (157) | | |
-| `-[OOAsyncWorkManager release]` (163) | | |
-| `-[OOAsyncWorkManager retain]` (167) | | |
-| `-[OOAsyncWorkManager retainCount]` (172) | | |
-| `-[OOAsyncWorkManager addTask:priority:]` (177) | | |
-| `-[OOAsyncWorkManager completePendingTasks]` (183) | | |
-| `-[OOAsyncWorkManager waitForTaskToComplete:]` (188) | | |
-| `-[OOAsyncWorkManagerInternal init]` (198) | | |
-| `-[OOAsyncWorkManagerInternal completePendingTasks]` (220) | | |
-| `-[OOAsyncWorkManagerInternal waitForTaskToComplete:]` (236) | | |
-| `-[OOAsyncWorkManagerInternal queueResult:]` (268) | | |
-| `-[OOAsyncWorkManagerInternal noteTaskQueued:]` (275) | | |
-| `-[OOManualDispatchAsyncWorkManager init]` (293) | | |
-| `-[OOManualDispatchAsyncWorkManager addTask:priority:]` (318) | | |
-| `-[OOManualDispatchAsyncWorkManager queueTask:]` (329) | | |
-| `+[OOOperationQueueAsyncWorkManager canBeUsed]` (363) | | |
-| `-[OOOperationQueueAsyncWorkManager init]` (371) | | |
-| `-[OOOperationQueueAsyncWorkManager dealloc]` (385) | | |
-| `-[OOOperationQueueAsyncWorkManager addTask:priority:]` (392) | | |
-| `-[OOOperationQueueAsyncWorkManager dispatchTask:]` (413) | | |
+| `InitAsyncWorkManager()` (95) | `InitAsyncWorkManager` `Core/OOAsyncWorkManager.cpp:228` | ✅ |
+| `+[OOAsyncWorkManager initialize]` (121) | `sInitLock` (std::mutex, Windows only) `Core/OOAsyncWorkManager.cpp:222` | ✅ |
+| `+[OOAsyncWorkManager sharedAsyncWorkManager]` (130) | `OOAsyncWorkManager::sharedAsyncWorkManager` `Core/OOAsyncWorkManager.cpp:250` | ✅ |
+| `+[OOAsyncWorkManager allocWithZone:]` (148) | — (singleton made once and leaked, `Core/OOAsyncWorkManager.cpp:223-226`) | ➖ |
+| `-[OOAsyncWorkManager dealloc]` (157) | `~OOAsyncWorkManager` (abort) `Core/OOAsyncWorkManager.cpp:268` | ✅ |
+| `-[OOAsyncWorkManager release]` (163) | — (immortal singleton) | ➖ |
+| `-[OOAsyncWorkManager retain]` (167) | — (immortal singleton) | ➖ |
+| `-[OOAsyncWorkManager retainCount]` (172) | — (immortal singleton) | ➖ |
+| `-[OOAsyncWorkManager addTask:priority:]` (177) | `OOAsyncWorkManager::addTask` `Core/OOAsyncWorkManager.cpp:273` | ✅ |
+| `-[OOAsyncWorkManager completePendingTasks]` (183) | `OOAsyncWorkManager::completePendingTasks` `Core/OOAsyncWorkManager.cpp:279` | ✅ |
+| `-[OOAsyncWorkManager waitForTaskToComplete:]` (188) | `OOAsyncWorkManager::waitForTaskToComplete` `Core/OOAsyncWorkManager.cpp:284` | ✅ |
+| `-[OOAsyncWorkManagerInternal init]` (198) | `OOAsyncWorkManagerInternal()` `Core/OOAsyncWorkManager.cpp:292` | ✅ |
+| `-[OOAsyncWorkManagerInternal completePendingTasks]` (220) | `OOAsyncWorkManagerInternal::completePendingTasks` `Core/OOAsyncWorkManager.cpp:297` | ✅ |
+| `-[OOAsyncWorkManagerInternal waitForTaskToComplete:]` (236) | `OOAsyncWorkManagerInternal::waitForTaskToComplete` `Core/OOAsyncWorkManager.cpp:313` | ✅ |
+| `-[OOAsyncWorkManagerInternal queueResult:]` (268) | `OOAsyncWorkManagerInternal::queueResult` (`hasCompleteAsyncTask()` for `respondsToSelector:`) `Core/OOAsyncWorkManager.cpp:345` | ✅ |
+| `-[OOAsyncWorkManagerInternal noteTaskQueued:]` (275) | `OOAsyncWorkManagerInternal::noteTaskQueued` (identity set) `Core/OOAsyncWorkManager.cpp:352` | ✅ |
+| `-[OOManualDispatchAsyncWorkManager init]` (293) | `OOManualDispatchAsyncWorkManager()` + `WorkThreadCount` `:172` + `StartWorkThreads` `:187` `Core/OOAsyncWorkManager.cpp:362` | ✅ |
+| `-[OOManualDispatchAsyncWorkManager addTask:priority:]` (318) | `OOManualDispatchAsyncWorkManager::addTask` `Core/OOAsyncWorkManager.cpp:370` | ✅ |
+| `-[OOManualDispatchAsyncWorkManager queueTask:]` (329) | `OOManualDispatchAsyncWorkManager::queueTask` + `SetUpWorkThread` `:199` `Core/OOAsyncWorkManager.cpp:381` | ⚠️ |
+| `+[OOOperationQueueAsyncWorkManager canBeUsed]` (363) | `OOOperationQueueAsyncWorkManager::canBeUsed` `Core/OOAsyncWorkManager.cpp:409` | ⚠️ |
+| `-[OOOperationQueueAsyncWorkManager init]` (371) | `OOOperationQueueAsyncWorkManager()` `Core/OOAsyncWorkManager.cpp:414` | ⚠️ |
+| `-[OOOperationQueueAsyncWorkManager dealloc]` (385) | — (immortal singleton; queue never freed) | ➖ |
+| `-[OOOperationQueueAsyncWorkManager addTask:priority:]` (392) | `OOOperationQueueAsyncWorkManager::addTask` `Core/OOAsyncWorkManager.cpp:420` | ✅ |
+| `-[OOOperationQueueAsyncWorkManager dispatchTask:]` (413) | `OOOperationQueueAsyncWorkManager::dispatchTask` + `workThread` `:441` `Core/OOAsyncWorkManager.cpp:470` | ⚠️ |
 
 **Differences:**
 
-- *pending*
+- ⚠️ **low** — task exceptions: upstream `@catch (id)` swallowed everything; port catches only game exceptions (`oo::CurrentOOException()`) and rethrows the rest on a detached thread (→ `std::terminate`). Cited bead oo-rskgl.1 — upstream `Core/OOAsyncWorkManager.m:342-346,415-419` ↔ port `Core/OOAsyncWorkManager.cpp:391-396,472-477`
+- ⚠️ **low** — NSOperationQueue replaced by a fixed pool of `WorkThreadCount()` = min(OOCPUCount(), 8) (8 in OO_DEBUG) threads named "OOAsyncWorkManager thread N" at priority 0.5, high→low then FIFO (bead oo-3rb.6). Concurrency and completion order of async tasks (texture loads, cache write) can differ; no log text changes — upstream `Core/OOAsyncWorkManager.m:371-411` ↔ port `Core/OOAsyncWorkManager.cpp:409-468`
+- ⚠️ **low** — `canBeUsed` no longer checks that `NSInvocationOperation` exists, only `disable-operation-queue-work-manager`. On GNUstep 1.31 (OO_HAVE_NSOPERATION=0, class present) both select the operation-queue manager — upstream `Core/OOAsyncWorkManager.m:363-368` ↔ port `Core/OOAsyncWorkManager.cpp:409-412`
+- ✅ subtle — the `asyncWorkManager.dispatchMethod` line prints the class name as a literal ("OOOperationQueueAsyncWorkManager"), matching `%@` of `[sSingleton class]` — upstream `Core/OOAsyncWorkManager.m:115` ↔ port `Core/OOAsyncWorkManager.cpp:247`
+- ✅ subtle — the base `waitForTaskToComplete` exception text uses C++ `__PRETTY_FUNCTION__` (not "-[OOAsyncWorkManager waitForTaskToComplete:]"); reached only on a subclass-responsibility bug — upstream `Core/OOAsyncWorkManager.m:191` ↔ port `Core/OOAsyncWorkManager.cpp:287`
 
 
 ## OOCPUInfo
@@ -286,21 +290,22 @@ Upstream `src/Core/OOAsyncWorkManager.m` ↔ `Core/OOAsyncWorkManager.cpp`
 <a id="oocpuinfo"></a>
 Upstream `src/Core/OOCPUInfo.m` ↔ `Core/OOCPUInfo.cpp`
 
-**Status:** pending
+**Status:** done — 7 rows: 7 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOCPUInfoInit()` (60) | | |
-| `OOCPUCount()` (99) | | |
-| `OOCPUID()` (115) | | |
-| `OOCPUDescription()` (132) | | |
-| `OOSystemMemoryStatus()` (154) | | |
-| `operatingSystemFullVersion()` (181) | | |
-| `is64BitSystem()` (210) | | |
+| `OOCPUInfoInit()` (60) | `OOCPUInfoInit` `Core/OOCPUInfo.cpp:63` | ✅ |
+| `OOCPUCount()` (99) | `OOCPUCount` `Core/OOCPUInfo.cpp:102` | ✅ |
+| `OOCPUID()` (115) | `OOCPUID` `Core/OOCPUInfo.cpp:114` | ✅ |
+| `OOCPUDescription()` (132) | `OOCPUDescription` `Core/OOCPUInfo.cpp:131` | ✅ |
+| `OOSystemMemoryStatus()` (154) | `OOSystemMemoryStatus` `Core/OOCPUInfo.cpp:153` | ✅ |
+| `operatingSystemFullVersion()` (181) | `operatingSystemFullVersion` `Core/OOCPUInfo.cpp:180` | ✅ |
+| `is64BitSystem()` (210) | `is64BitSystem` `Core/OOCPUInfo.cpp:212` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ✅ subtle — `operatingSystemFullVersion`'s `%S` service-pack string is converted UTF-16→UTF-8 explicitly and printed with `%s`, as `-stringWithFormat:` did; feeds the log header's "Windows <ver> 64-bit" line — upstream `Core/OOCPUInfo.m:202-203` ↔ port `Core/OOCPUInfo.cpp:201-205`
+- ✅ subtle — `OOCPUDescription` keeps the original's uninitialised `CPUBrandString` when the CPU reports fewer than 0x80000004 extended leaves (same UB both sides); the endian-test log lines keep class `cpuInfo.endianTest.failed` — upstream `Core/OOCPUInfo.m:132-151` ↔ port `Core/OOCPUInfo.cpp:131-150`
 
 
 ## OOCache
@@ -308,62 +313,67 @@ Upstream `src/Core/OOCPUInfo.m` ↔ `Core/OOCPUInfo.cpp`
 <a id="oocache"></a>
 Upstream `src/Core/OOCache.m` ↔ `Core/OOCache.cpp`
 
-**Status:** pending
+**Status:** done — 48 rows: 44 ✅ 3 ⚠️ 0 ❌ 1 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOCache dealloc]` (185) | | |
-| `-[OOCache description]` (193) | | |
-| `-[OOCache init]` (198) | | |
-| `-[OOCache initWithPList:]` (203) | | |
-| `-[OOCache pListRepresentation]` (235) | | |
-| `-[OOCache objectForKey:]` (242) | | |
-| `-[OOCache setObject:forKey:]` (256) | | |
-| `-[OOCache removeObjectForKey:]` (269) | | |
-| `-[OOCache setPruneThreshold:]` (279) | | |
-| `-[OOCache pruneThreshold]` (289) | | |
-| `-[OOCache setAutoPrune:]` (294) | | |
-| `-[OOCache autoPrune]` (303) | | |
-| `-[OOCache prune]` (308) | | |
-| `-[OOCache dirty]` (335) | | |
-| `-[OOCache markClean]` (340) | | |
-| `-[OOCache name]` (345) | | |
-| `-[OOCache setName:]` (350) | | |
-| `-[OOCache objectsByAge]` (355) | | |
-| `-[OOCache(Private) loadFromArray:]` (364) | | |
-| `CacheAllocate()` (414) | | |
-| `CacheFree()` (419) | | |
-| `CacheInsert()` (429) | | |
-| `CacheRemove()` (444) | | |
-| `CacheRemoveOldest()` (471) | | |
-| `CacheRetrieve()` (481) | | |
-| `CacheArrayOfContentsByAge()` (497) | | |
-| `CacheArrayOfNodesByAge()` (513) | | |
-| `CacheGetName()` (529) | | |
-| `CacheSetName()` (534) | | |
-| `CacheGetCount()` (540) | | |
-| `CacheCheckIntegrity()` (547) | | |
-| `CacheNodeAllocate()` (569) | | |
-| `CacheNodeFree()` (586) | | |
-| `CacheNodeGetValue()` (610) | | |
-| `CacheNodeSetValue()` (619) | | |
-| `CacheNodeGetDescription()` (631) | | |
-| `TreeSplay()` (649) | | |
-| `TreeInsert()` (721) | | |
-| `TreeCountNodes()` (774) | | |
-| `TreeCheckIntegrity()` (782) | | |
-| `AgeListMakeYoungest()` (835) | | |
-| `AgeListRemove()` (850) | | |
-| `AgeListCheckIntegrity()` (877) | | |
-| `-[OOCache(DebugGraphViz) appendNodesFromSubTree:toString:]` (959) | | |
-| `-[OOCache(DebugGraphViz) generateGraphVizBodyWithRootNamed:]` (973) | | |
-| `-[OOCache(DebugGraphViz) generateGraphViz]` (1008) | | |
-| `-[OOCache(DebugGraphViz) writeGraphVizToURL:]` (1029) | | |
-| `-[OOCache(DebugGraphViz) writeGraphVizToPath:]` (1042) | | |
+| `-[OOCache dealloc]` (185) | `~OOCache` `Core/OOCache.cpp:180` | ✅ |
+| `-[OOCache description]` (193) | `OOCache::descriptionComponents` `Core/OOCache.cpp:188` | ✅ |
+| `-[OOCache init]` (198) | `OOCache::cacheWithPList(oo::PList())` `Core/OOCache.cpp:193` | ✅ |
+| `-[OOCache initWithPList:]` (203) | `OOCache::initWithPList` `Core/OOCache.cpp:201` | ✅ |
+| `-[OOCache pListRepresentation]` (235) | `OOCache::pListRepresentation` `Core/OOCache.cpp:225` | ✅ |
+| `-[OOCache objectForKey:]` (242) | `OOCache::pListForKey` `Core/OOCache.cpp:230` | ✅ |
+| `-[OOCache setObject:forKey:]` (256) | `OOCache::setPList` `Core/OOCache.cpp:245` | ✅ |
+| `-[OOCache removeObjectForKey:]` (269) | `OOCache::removePListForKey` `Core/OOCache.cpp:258` | ✅ |
+| `-[OOCache setPruneThreshold:]` (279) | `OOCache::setPruneThreshold` `Core/OOCache.cpp:268` | ✅ |
+| `-[OOCache pruneThreshold]` (289) | `OOCache::pruneThreshold` `Core/OOCache.cpp:278` | ✅ |
+| `-[OOCache setAutoPrune:]` (294) | `OOCache::setAutoPrune` `Core/OOCache.cpp:283` | ✅ |
+| `-[OOCache autoPrune]` (303) | `OOCache::autoPrune` `Core/OOCache.cpp:292` | ✅ |
+| `-[OOCache prune]` (308) | `OOCache::prune` `Core/OOCache.cpp:297` | ✅ |
+| `-[OOCache dirty]` (335) | `OOCache::dirty` `Core/OOCache.cpp:327` | ✅ |
+| `-[OOCache markClean]` (340) | `OOCache::markClean` `Core/OOCache.cpp:332` | ✅ |
+| `-[OOCache name]` (345) | `OOCache::name` `Core/OOCache.cpp:337` | ✅ |
+| `-[OOCache setName:]` (350) | `OOCache::setName` `Core/OOCache.cpp:342` | ✅ |
+| `-[OOCache objectsByAge]` (355) | `OOCache::pListsByAge` `Core/OOCache.cpp:347` | ⚠️ |
+| `-[OOCache(Private) loadFromArray:]` (364) | `OOCache::loadFromArray` `Core/OOCache.cpp:354` | ✅ |
+| `CacheAllocate()` (414) | `CacheAllocate` `Core/OOCache.cpp:399` | ✅ |
+| `CacheFree()` (419) | `CacheFree` `Core/OOCache.cpp:404` | ✅ |
+| `CacheInsert()` (429) | `CacheInsert` `Core/OOCache.cpp:413` | ✅ |
+| `CacheRemove()` (444) | `CacheRemove` `Core/OOCache.cpp:428` | ✅ |
+| `CacheRemoveOldest()` (471) | `CacheRemoveOldest` `Core/OOCache.cpp:456` | ✅ |
+| `CacheRetrieve()` (481) | `CacheRetrieve` `Core/OOCache.cpp:468` | ✅ |
+| `CacheArrayOfContentsByAge()` (497) | `CacheArrayOfContentsByAge` `Core/OOCache.cpp:487` | ⚠️ |
+| `CacheArrayOfNodesByAge()` (513) | `CacheArrayOfNodesByAge` `Core/OOCache.cpp:504` | ✅ |
+| `CacheGetName()` (529) | `CacheGetName` `Core/OOCache.cpp:523` | ✅ |
+| `CacheSetName()` (534) | `CacheSetName` `Core/OOCache.cpp:528` | ✅ |
+| `CacheGetCount()` (540) | `CacheGetCount` `Core/OOCache.cpp:535` | ✅ |
+| `CacheCheckIntegrity()` (547) | `CacheCheckIntegrity` (compiled out) `Core/OOCache.cpp:542` | ✅ |
+| `CacheNodeAllocate()` (569) | `CacheNodeAllocate` `Core/OOCache.cpp:564` | ✅ |
+| `CacheNodeFree()` (586) | `CacheNodeFree` `Core/OOCache.cpp:574` | ✅ |
+| `CacheNodeGetValue()` (610) | `CacheNodeGetValue` `Core/OOCache.cpp:588` | ✅ |
+| `CacheNodeSetValue()` (619) | `CacheNodeSetValue` `Core/OOCache.cpp:597` | ✅ |
+| `CacheNodeGetDescription()` (631) | `CacheNodeGetDescription` (compiled out) `Core/OOCache.cpp:607` | ✅ |
+| `TreeSplay()` (649) | `TreeSplay` `Core/OOCache.cpp:625` | ⚠️ |
+| `TreeInsert()` (721) | `TreeInsert` `Core/OOCache.cpp:695` | ✅ |
+| `TreeCountNodes()` (774) | `TreeCountNodes` (compiled out) `Core/OOCache.cpp:748` | ✅ |
+| `TreeCheckIntegrity()` (782) | `TreeCheckIntegrity` (compiled out) `Core/OOCache.cpp:756` | ✅ |
+| `AgeListMakeYoungest()` (835) | `AgeListMakeYoungest` `Core/OOCache.cpp:804` | ✅ |
+| `AgeListRemove()` (850) | `AgeListRemove` `Core/OOCache.cpp:819` | ✅ |
+| `AgeListCheckIntegrity()` (877) | `AgeListCheckIntegrity` (compiled out) `Core/OOCache.cpp:846` | ✅ |
+| `-[OOCache(DebugGraphViz) appendNodesFromSubTree:toString:]` (959) | `OOCache::appendNodesFromSubTree` `Core/OOCache.cpp:922` | ✅ |
+| `-[OOCache(DebugGraphViz) generateGraphVizBodyWithRootNamed:]` (973) | `OOCache::generateGraphVizBodyWithRootNamed` `Core/OOCache.cpp:936` | ✅ |
+| `-[OOCache(DebugGraphViz) generateGraphViz]` (1008) | `OOCache::generateGraphViz` `Core/OOCache.cpp:969` | ✅ |
+| `-[OOCache(DebugGraphViz) writeGraphVizToURL:]` (1029) | folded into `writeGraphVizToPath` (bead oo-3rb.264) `Core/OOCache.cpp:988` | ➖ |
+| `-[OOCache(DebugGraphViz) writeGraphVizToPath:]` (1042) | `OOCache::writeGraphVizToPath` `Core/OOCache.cpp:989` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ⚠️ **low** — keys are `std::string` ordered by `std::string::compare` (UTF-8 bytes) instead of `-[NSString compare:]` (UTF-16 units, non-literal). Only the splay-tree shape changes for keys mixing supplementary and U+E000–U+FFFF characters; lookups, age order and `pListRepresentation` (age order) are unaffected. Documented `Core/OOCache.cpp:139` — upstream `Core/OOCache.m:669-691` ↔ port `Core/OOCache.cpp:643-665`
+- ⚠️ **low** — `objectsByAge` of an empty cache returns an empty vector, not nil (documented `Core/OOCache.cpp:486`) — upstream `Core/OOCache.m:502-503` ↔ port `Core/OOCache.cpp:492-493`
+- ✅ subtle — prune logging unchanged: class `dataCache.prune.<name>` (nil name → "(null)"), "Pruning cache \"%@\" - removing %u entries", per-entry "Pruning cache \"%@\": removing %@", indented under `indentIf`/`outdentIf` — upstream `Core/OOCache.m:325-332,477` ↔ port `Core/OOCache.cpp:317-324,462`
+- ✅ subtle — loading from a plist leaves the cache dirty and unpruned (prune threshold 0 / autoPrune off until after `loadFromArray`) in both — upstream `Core/OOCache.m:216-225` ↔ port `Core/OOCache.cpp:211-220`, `Core/OOCache.h:109-112`
+- ✅ subtle — `pListForKey` returns a copy of the stored `oo::PList` where `-objectForKey:` returned the same retained object; values are immutable plist data, so no observable effect — upstream `Core/OOCache.m:253` ↔ port `Core/OOCache.cpp:236-237`
+- ✅ subtle — the debug-only `node->key is NULL` check in `TreeSplay` and the nil-key check in `TreeCheckIntegrity` are gone (a `std::string` key cannot be nil) — upstream `Core/OOCache.m:665-667,790-793` ↔ port `Core/OOCache.cpp:638-642,764`
 
 
 ## OOCacheManager
@@ -371,50 +381,54 @@ Upstream `src/Core/OOCache.m` ↔ `Core/OOCache.cpp`
 <a id="oocachemanager"></a>
 Upstream `src/Core/OOCacheManager.m` ↔ `Core/OOCacheManager.cpp`
 
-**Status:** pending
+**Status:** done — 36 rows: 28 ✅ 2 ⚠️ 0 ❌ 6 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOCacheManager init]` (112) | | |
-| `-[OOCacheManager dealloc]` (122) | | |
-| `-[OOCacheManager description]` (129) | | |
-| `+[OOCacheManager sharedCache]` (134) | | |
-| `-[OOCacheManager objectForKey:inCache:]` (144) | | |
-| `-[OOCacheManager setObject:forKey:inCache:]` (166) | | |
-| `-[OOCacheManager removeObjectForKey:inCache:]` (190) | | |
-| `-[OOCacheManager clearCache:]` (210) | | |
-| `-[OOCacheManager clearAllCaches]` (223) | | |
-| `-[OOCacheManager reloadAllCaches]` (230) | | |
-| `-[OOCacheManager flush]` (236) | | |
-| `-[OOCacheManager finishOngoingFlush]` (244) | | |
-| `-[OOCacheManager setAllowCacheWrites:]` (251) | | |
-| `-[OOCacheManager cacheDirectoryPathCreatingIfNecessary:]` (256) | | |
-| `-[OOCacheManager(Private) loadCache]` (285) | | |
-| `-[OOCacheManager(Private) write]` (348) | | |
-| `-[OOCacheManager(Private) clear]` (417) | | |
-| `-[OOCacheManager(Private) dirty]` (423) | | |
-| `-[OOCacheManager(Private) markClean]` (428) | | |
-| `-[OOCacheManager(Private) loadDict]` (433) | | |
-| `-[OOCacheManager(Private) writeDict:]` (472) | | |
-| `-[OOCacheManager(Private) buildCachesFromDictionary:]` (513) | | |
-| `-[OOCacheManager(Private) dictionaryOfCaches]` (537) | | |
-| `-[OOCacheManager(Private) directoryExists:create:]` (542) | | |
-| `-[OOCacheManager(Private) cachePathCreatingIfNecessary:]` (567) | | |
-| `-[OOCacheManager(Private) cachePathCreatingIfNecessary:]` (575) | | |
-| `+[OOCacheManager(Singleton) allocWithZone:]` (594) | | |
-| `-[OOCacheManager(Singleton) copyWithZone:]` (603) | | |
-| `-[OOCacheManager(Singleton) retain]` (608) | | |
-| `-[OOCacheManager(Singleton) retainCount]` (613) | | |
-| `-[OOCacheManager(Singleton) release]` (618) | | |
-| `-[OOCacheManager(Singleton) autorelease]` (622) | | |
-| `-[OOAsyncCacheWriter initWithCacheContents:]` (632) | | |
-| `-[OOAsyncCacheWriter dealloc]` (645) | | |
-| `-[OOAsyncCacheWriter performAsyncTask]` (652) | | |
-| `-[OOAsyncCacheWriter completeAsyncTask]` (662) | | |
+| `-[OOCacheManager init]` (112) | `OOCacheManager::init` `Core/OOCacheManager.cpp:107` | ✅ |
+| `-[OOCacheManager dealloc]` (122) | `~OOCacheManager` `Core/OOCacheManager.cpp:113` | ✅ |
+| `-[OOCacheManager description]` (129) | `OOCacheManager::descriptionComponents` `Core/OOCacheManager.cpp:120` | ✅ |
+| `+[OOCacheManager sharedCache]` (134) | `OOCacheManager::sharedCache` `Core/OOCacheManager.cpp:125` | ✅ |
+| `-[OOCacheManager objectForKey:inCache:]` (144) | `OOCacheManager::pListForKey` `Core/OOCacheManager.cpp:137` | ✅ |
+| `-[OOCacheManager setObject:forKey:inCache:]` (166) | `OOCacheManager::setPList` `Core/OOCacheManager.cpp:164` | ✅ |
+| `-[OOCacheManager removeObjectForKey:inCache:]` (190) | `OOCacheManager::removeObjectForKey` `Core/OOCacheManager.cpp:179` | ✅ |
+| `-[OOCacheManager clearCache:]` (210) | `OOCacheManager::clearCache` `Core/OOCacheManager.cpp:200` | ✅ |
+| `-[OOCacheManager clearAllCaches]` (223) | `OOCacheManager::clearAllCaches` `Core/OOCacheManager.cpp:215` | ✅ |
+| `-[OOCacheManager reloadAllCaches]` (230) | `OOCacheManager::reloadAllCaches` `Core/OOCacheManager.cpp:222` | ✅ |
+| `-[OOCacheManager flush]` (236) | `OOCacheManager::flush` `Core/OOCacheManager.cpp:228` | ✅ |
+| `-[OOCacheManager finishOngoingFlush]` (244) | `OOCacheManager::finishOngoingFlush` `Core/OOCacheManager.cpp:236` | ✅ |
+| `-[OOCacheManager setAllowCacheWrites:]` (251) | `OOCacheManager::setAllowCacheWrites` `Core/OOCacheManager.cpp:243` | ✅ |
+| `-[OOCacheManager cacheDirectoryPathCreatingIfNecessary:]` (256) | `OOCacheManager::cacheDirectoryPathCreatingIfNecessary` (`ResourcePaths::cachesDirectory()`, `oofnd/ResourcePaths.hpp:188`) `Core/OOCacheManager.cpp:248` | ✅ |
+| `-[OOCacheManager(Private) loadCache]` (285) | `OOCacheManager::loadCache` (+ `OoliteInfoString` `:91`) `Core/OOCacheManager.cpp:273` | ✅ |
+| `-[OOCacheManager(Private) write]` (348) | `OOCacheManager::write` `Core/OOCacheManager.cpp:334` | ✅ |
+| `-[OOCacheManager(Private) clear]` (417) | `OOCacheManager::clear` `Core/OOCacheManager.cpp:394` | ✅ |
+| `-[OOCacheManager(Private) dirty]` (423) | `OOCacheManager::dirty` `Core/OOCacheManager.cpp:399` | ✅ |
+| `-[OOCacheManager(Private) markClean]` (428) | `OOCacheManager::markClean` `Core/OOCacheManager.cpp:404` | ✅ |
+| `-[OOCacheManager(Private) loadDict]` (433) | `OOCacheManager::loadDict` `Core/OOCacheManager.cpp:409` | ⚠️ |
+| `-[OOCacheManager(Private) writeDict:]` (472) | `OOCacheManager::writeDict` `Core/OOCacheManager.cpp:430` | ⚠️ |
+| `-[OOCacheManager(Private) buildCachesFromDictionary:]` (513) | `OOCacheManager::buildCachesFromDictionary` `Core/OOCacheManager.cpp:464` | ✅ |
+| `-[OOCacheManager(Private) dictionaryOfCaches]` (537) | `OOCacheManager::dictionaryOfCaches` `Core/OOCacheManager.cpp:485` | ✅ |
+| `-[OOCacheManager(Private) directoryExists:create:]` (542) | `OOCacheManager::directoryExists` `Core/OOCacheManager.cpp:497` | ✅ |
+| `-[OOCacheManager(Private) cachePathCreatingIfNecessary:]` (567) | `OOCacheManager::cachePathCreatingIfNecessary` (Mac) `Core/OOCacheManager.cpp:521` | ✅ |
+| `-[OOCacheManager(Private) cachePathCreatingIfNecessary:]` (575) | `OOCacheManager::cachePathCreatingIfNecessary` `Core/OOCacheManager.cpp:531` | ✅ |
+| `+[OOCacheManager(Singleton) allocWithZone:]` (594) | — (singleton leaked once, `Core/OOCacheManager.cpp:129-131`) | ➖ |
+| `-[OOCacheManager(Singleton) copyWithZone:]` (603) | — | ➖ |
+| `-[OOCacheManager(Singleton) retain]` (608) | — | ➖ |
+| `-[OOCacheManager(Singleton) retainCount]` (613) | — | ➖ |
+| `-[OOCacheManager(Singleton) release]` (618) | — | ➖ |
+| `-[OOCacheManager(Singleton) autorelease]` (622) | — | ➖ |
+| `-[OOAsyncCacheWriter initWithCacheContents:]` (632) | `OOAsyncCacheWriter::writerWithCacheContents` `Core/OOCacheManager.cpp:541` | ✅ |
+| `-[OOAsyncCacheWriter dealloc]` (645) | implicit `~OOAsyncCacheWriter` `Core/OOCacheManager.h:106` | ✅ |
+| `-[OOAsyncCacheWriter performAsyncTask]` (652) | `OOAsyncCacheWriter::performAsyncTask` `Core/OOCacheManager.cpp:548` | ✅ |
+| `-[OOAsyncCacheWriter completeAsyncTask]` (662) | `OOAsyncCacheWriter::completeAsyncTask` (+ `hasCompleteAsyncTask` → true, `Core/OOCacheManager.h:112`) `Core/OOCacheManager.cpp:558` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ⚠️ **low** — the cache file is written as XML (`oo::writeXMLPList`) instead of GNUstep binary; an existing GNUstep-binary `Oolite-cache.plist` is unreadable, so the first run logs `dataCache.badData` "Could not read data cache: binary property lists are not supported by oofnd" and rebuilds, where upstream logged `dataCache.found` "Found data cache." (ADR-0027 item 3, comment `Core/OOCacheManager.cpp:43-45`) — upstream `Core/OOCacheManager.m:449-464,486` ↔ port `Core/OOCacheManager.cpp:419-423,440`
+- ⚠️ **low** — `dataCache.badData` / `dataCache.write.serialize.failed` carry oofnd's parser/writer error text instead of GNUstep's `errorDescription` — upstream `Core/OOCacheManager.m:460,491` ↔ port `Core/OOCacheManager.cpp:421,442`
+- ✅ subtle — the Oolite version compared against the cache is `CFBundleVersion` read from `Info-gnustep.plist` in the built-in resources instead of `[[NSBundle mainBundle] infoDictionary]`; a missing version still mismatches and prints "(null)" — upstream `Core/OOCacheManager.m:295,306-309` ↔ port `Core/OOCacheManager.cpp:278,291-294`
+- ✅ subtle — `writeDict` failing at `cachePathCreatingIfNecessary` returns before clearing `_scheduledWrite` in both, so later flushes are skipped for the session (faithful) — upstream `Core/OOCacheManager.m:478-480,508` ↔ port `Core/OOCacheManager.cpp:432-434,459`
+- ✅ subtle — the `dataCache.retrieve/set/remove/clear.*` lines are OO_DEBUG-only in both (`OODebugLog`) — upstream `Core/OOCacheManager.m:155-217` ↔ port `Core/OOCacheManager.cpp:147-211`
 
 
 ## OOCollectionExtractors
@@ -658,24 +672,27 @@ Upstream `src/Core/OODeepCopy.m` ↔ *(absorbed — locate in `src/oofnd/` or ca
 <a id="ooencodingconverter"></a>
 Upstream `src/Core/OOEncodingConverter.m` ↔ `Core/OOEncodingConverter.cpp`
 
-**Status:** pending
+**Status:** done — 10 rows: 8 ✅ 2 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOEncodingConverter initWithEncoding:substitutions:]` (66) | | |
-| `-[OOEncodingConverter initWithFontPList:]` (87) | | |
-| `-[OOEncodingConverter dealloc]` (92) | | |
-| `-[OOEncodingConverter descriptionComponents]` (108) | | |
-| `-[OOEncodingConverter convertString:]` (113) | | |
-| `-[OOEncodingConverter encoding]` (141) | | |
-| `-[OOEncodingConverter(Private) performConversionForString:]` (150) | | |
-| `-[OOEncodingConverter(Private) profileFire:]` (178) | | |
-| `StringFromEncoding()` (206) | | |
-| `EncodingFromString()` (229) | | |
+| `-[OOEncodingConverter initWithEncoding:substitutions:]` (66) | `OOEncodingConverter(encoding, substitutions)` `Core/OOEncodingConverter.cpp:74` | ⚠️ |
+| `-[OOEncodingConverter initWithFontPList:]` (87) | `OOEncodingConverter(fontPList)` + `FontSubstitutions` `:66` `Core/OOEncodingConverter.cpp:101` | ✅ |
+| `-[OOEncodingConverter dealloc]` (92) | `~OOEncodingConverter` `Core/OOEncodingConverter.cpp:106` | ✅ |
+| `-[OOEncodingConverter descriptionComponents]` (108) | `OOEncodingConverter::descriptionComponents` `Core/OOEncodingConverter.cpp:118` | ✅ |
+| `-[OOEncodingConverter convertString:]` (113) | `OOEncodingConverter::convertString` `Core/OOEncodingConverter.cpp:124` | ✅ |
+| `-[OOEncodingConverter encoding]` (141) | `OOEncodingConverter::encoding` (nullopt = NSNotFound) `Core/OOEncodingConverter.cpp:167` | ✅ |
+| `-[OOEncodingConverter(Private) performConversionForString:]` (150) | `OOEncodingConverter::performConversionForString` → `oo::str::convertForFont` (`oofnd/Encoding.hpp:2086`) `Core/OOEncodingConverter.cpp:172` | ✅ |
+| `-[OOEncodingConverter(Private) profileFire:]` (178) | `OOEncodingConverter::profileFire` (compiled out) `Core/OOEncodingConverter.cpp:189` | ⚠️ |
+| `StringFromEncoding()` (206) | `StringFromEncoding` → `oo::str::encodingName` (`oofnd/Encoding.hpp:90`) `Core/OOEncodingConverter.cpp:211` | ✅ |
+| `EncodingFromString()` (229) | `oo::str::encodingFromName` `oofnd/Encoding.hpp:108` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ⚠️ **low** — substitutions are applied in the dictionary's key (byte) order instead of NSDictionary hash order; results differ only when one key occurs in another's key or replacement (not the case for the stock `oolite-font.plist`). A non-string replacement substitutes "" where upstream sent `-length` to a non-string (bead oo-qps.51, comment `:78-84`) — upstream `Core/OOEncodingConverter.m:158-163` ↔ port `Core/OOEncodingConverter.cpp:77-87`
+- ⚠️ **low** — PROFILE_ENCODING_CONVERTER's repeating NSTimer became a deadline checked on each conversion (proposed ADR-0033); compiled out (`PROFILE_ENCODING_CONVERTER 0`) — upstream `Core/OOEncodingConverter.m:78-81` ↔ port `Core/OOEncodingConverter.cpp:94-98,148-158`
+- ✅ subtle — an unknown encoding (NSNotFound) gave a nil conversion that was returned and not cached; the port returns empty `oo::Data` and caches nothing — same zero-length result for the HUD; `descriptionComponents` prints 4294967295 as `%u` of NSNotFound did — upstream `Core/OOEncodingConverter.m:110,127-130,166` ↔ port `Core/OOEncodingConverter.cpp:121,130-136,175-176`
+- ✅ subtle — encoding numeric values are kept (CP1251=11 … CP1250=15, `oofnd/Encoding.hpp:81-86`) and the lossy conversion reproduces GNUstep/iconv transliteration per the captured tables in `oofnd/Encoding.hpp` (banner :18-28); the converter's OOCache is named "Text encoding" with threshold 200, so its prune log class is still `dataCache.prune.Text encoding` — upstream `Core/OOEncodingConverter.m:70-72` ↔ port `Core/OOEncodingConverter.cpp:76-78`
 
 
 ## OOExcludeObjectEnumerator
@@ -737,20 +754,20 @@ Upstream `src/Core/OOFilteringEnumerator.m` ↔ *(absorbed — locate in `src/oo
 <a id="oofoundation"></a>
 Upstream `src/Core/OOFoundation.m` ↔ `Core/OOFoundation.cpp`
 
-**Status:** pending
+**Status:** done — 6 rows: 0 ✅ 0 ⚠️ 0 ❌ 6 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSObject(OODescriptionComponents) descriptionComponents]` (35) | | |
-| `-[NSObject(OODescriptionComponents) description]` (44) | | |
-| `-[NSObject(OODescriptionComponents) shortDescription]` (59) | | |
-| `-[NSObject(OODescriptionComponents) shortDescriptionComponents]` (71) | | |
-| `-[NSEnumerator(OOForEachSupport) objectEnumerator]` (80) | | |
-| `OOConsumeReference()` (88) | | |
+| `-[NSObject(OODescriptionComponents) descriptionComponents]` (35) | per-class `descriptionComponents()` returning `std::optional<std::string>` (e.g. `Core/OOCache.h:92`); no root default (`Core/OODescription.h:82-87`) | ➖ |
+| `-[NSObject(OODescriptionComponents) description]` (44) | no central wrapper; "<Class 0x…>{…}" is assembled per call site with `oo::str::pointerDescription` (`Core/OODescription.h:17-18`); plists via `oo::DescriptionOf(const oo::PList&)` `Core/OODescription.h:90` | ➖ |
+| `-[NSObject(OODescriptionComponents) shortDescription]` (59) | per-class/per-site (e.g. `Core/Entities/EntityHelpers.h:49`) | ➖ |
+| `-[NSObject(OODescriptionComponents) shortDescriptionComponents]` (71) | per-class (no root default) | ➖ |
+| `-[NSEnumerator(OOForEachSupport) objectEnumerator]` (80) | — (no NSEnumerator; range-for) | ➖ |
+| `OOConsumeReference()` (88) | — (went with libobjc2, bead oo-dbz; `Core/OOFoundation.cpp:35`) | ➖ |
 
 **Differences:**
 
-- *pending*
+- ➖ **low** — the NSObject description category is gone: upstream printed "<Class %p>{components}" or, when components was nil, "<Class %p>" (no braces) for every object; the port has no shared wrapper, so each call site must reproduce the nil→no-braces rule and the GNUstep `%p` (low 32 bits) itself. Not a defect in this file, but a drift risk for any log line that prints an object with `%@` — upstream `Core/OOFoundation.m:44-56` ↔ port `Core/OODescription.h:9-18,82-87`
 
 
 ## OOIsNumberLiteral
@@ -758,15 +775,15 @@ Upstream `src/Core/OOFoundation.m` ↔ `Core/OOFoundation.cpp`
 <a id="ooisnumberliteral"></a>
 Upstream `src/Core/OOIsNumberLiteral.m` ↔ `Core/OOIsNumberLiteral.cpp`
 
-**Status:** pending
+**Status:** done — 1 rows: 1 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOIsNumberLiteral()` (40) | | |
+| `OOIsNumberLiteral()` (40) | `OOIsNumberLiteral(const std::string&, BOOL)` `Core/OOIsNumberLiteral.cpp:42` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ✅ subtle — scans UTF-8 bytes instead of UTF-16 units; every non-ASCII unit/byte hits `default:` → NO in both, so results match. The nil check is gone (the argument is a reference); the debug FAIL variant (NSLog → `OO_LOG("unclassified")`) is compiled out in both — upstream `Core/OOIsNumberLiteral.m:27-37,52-56` ↔ port `Core/OOIsNumberLiteral.cpp:28-40,53-55`
 
 
 ## OOLogHeader
@@ -774,21 +791,24 @@ Upstream `src/Core/OOIsNumberLiteral.m` ↔ `Core/OOIsNumberLiteral.cpp`
 <a id="oologheader"></a>
 Upstream `src/Core/OOLogHeader.m` ↔ `Core/OOLogHeader.cpp`
 
-**Status:** pending
+**Status:** done — 7 rows: 7 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOPrintLogHeader()` (57) | | |
-| `OOPlatformDescription()` (183) | | |
-| `AdditionalLogHeaderInfo()` (202) | | |
-| `GetCPUDescription()` (229) | | |
-| `GetSysCtlString()` (309) | | |
-| `GetSysCtlInt()` (325) | | |
-| `AdditionalLogHeaderInfo()` (347) | | |
+| `OOPrintLogHeader()` (57) | `OOPrintLogHeader` `Core/OOLogHeader.cpp:61` | ✅ |
+| `OOPlatformDescription()` (183) | `OOPlatformDescription` (std::string) `Core/OOLogHeader.cpp:192` | ✅ |
+| `AdditionalLogHeaderInfo()` (202) | `AdditionalLogHeaderInfo` (Mac) `Core/OOLogHeader.cpp:212` | ✅ |
+| `GetCPUDescription()` (229) | `GetCPUDescription` (Mac) `Core/OOLogHeader.cpp:241` | ✅ |
+| `GetSysCtlString()` (309) | `GetSysCtlString` (Mac) `Core/OOLogHeader.cpp:322` | ✅ |
+| `GetSysCtlInt()` (325) | `GetSysCtlInt` (Mac) `Core/OOLogHeader.cpp:338` | ✅ |
+| `AdditionalLogHeaderInfo()` (347) | `AdditionalLogHeaderInfo` `Core/OOLogHeader.cpp:361` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ✅ subtle — header text is literal-for-literal: "Opening log for Oolite %@ by %@ (<cpu><variant>) under %@ at %@.\n", the "<cpu> N processor(s) detected. System RAM: … MB (free: … MB)." line, "\nBuild options: %@.\n", the logcontrol note, and the whole logged once as `log.header` with format "%@\n" (trailing blank line kept) — upstream `Core/OOLogHeader.m:169-180,353` ↔ port `Core/OOLogHeader.cpp:171-187,367`
+- ✅ subtle — "new planets" is now unconditional; upstream gated it on NEW_PLANETS, which `OOStellarBody.h:35` always defines to 1 — upstream `Core/OOLogHeader.m:108-110` ↔ port `Core/OOLogHeader.cpp:112`
+- ✅ subtle — the date is `oo::date::description()` (NSDate `-description` "YYYY-MM-DD HH:MM:SS +hhmm", local zone, `oofnd/Date.hpp:85-139`) and the non-Windows OS string is `oo::process::operatingSystemVersionString()` (uname release, `oofnd/Process.hpp:125-135`) — upstream `Core/OOLogHeader.m:153,169` ↔ port `Core/OOLogHeader.cpp:155,171`
+- ✅ subtle — the header is printed before `LoadExplicitSettings`, so it carries no time/class prefix and every class shows (Options default all-false, `_default` YES), as upstream (sShowTime/sShowClass start NO) — upstream `Core/OOLogging.m:83-87,555-557` ↔ port `oofnd/Log.hpp:78-83,448`, `Core/OOLogging.cpp:202-204`
 
 
 ## OOLogOutputHandler
@@ -796,38 +816,44 @@ Upstream `src/Core/OOLogHeader.m` ↔ `Core/OOLogHeader.cpp`
 <a id="oologoutputhandler"></a>
 Upstream `src/Core/OOLogOutputHandler.m` ↔ `Core/OOLogOutputHandler.cpp`
 
-**Status:** pending
+**Status:** done — 24 rows: 17 ✅ 2 ⚠️ 4 ❌ 1 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOLogOutputHandlerInit()` (111) | | |
-| `OOLogOutputHandlerClose()` (147) | | |
-| `OOLogOutputHandlerStartLoggingToStdout()` (170) | | |
-| `OOLogOutputHandlerStopLoggingToStdout()` (174) | | |
-| `OOLogOutputHandlerPrint()` (179) | | |
-| `OOLogHandlerGetLogPath()` (203) | | |
-| `OOLogOutputHandlerChangeLogFile()` (208) | | |
-| `-[OOAsyncLogger init]` (223) | | |
-| `-[OOAsyncLogger dealloc]` (260) | | |
-| `-[OOAsyncLogger startLogging]` (270) | | |
-| `-[OOAsyncLogger endLogging]` (330) | | |
-| `-[OOAsyncLogger changeFile]` (346) | | |
-| `-[OOAsyncLogger asyncLogMessage:]` (353) | | |
-| `-[OOAsyncLogger flushLog]` (377) | | |
-| `-[OOAsyncLogger loggerThread]` (383) | | |
-| `LoadLogCStringFunctions()` (463) | | |
-| `OONSLogCStringFunction()` (481) | | |
-| `OONSLogPrintfHandler()` (490) | | |
-| `DirectoryExistCreatingIfNecessary()` (499) | | |
-| `ExcludeFromTimeMachine()` (521) | | |
-| `GetAppName()` (533) | | |
-| `OOLogHandlerGetLogBasePath()` (552) | | |
-| `InitCrashReporterInfo()` (606) | | |
-| `SetCrashReporterInfo()` (619) | | |
+| `OOLogOutputHandlerInit()` (111) | `OOLogOutputHandlerInit` `Core/OOLogOutputHandler.cpp:132` | ✅ |
+| `OOLogOutputHandlerClose()` (147) | `OOLogOutputHandlerClose` `Core/OOLogOutputHandler.cpp:181` | ✅ |
+| `OOLogOutputHandlerStartLoggingToStdout()` (170) | `OOLogOutputHandlerStartLoggingToStdout` `Core/OOLogOutputHandler.cpp:200` | ✅ |
+| `OOLogOutputHandlerStopLoggingToStdout()` (174) | `OOLogOutputHandlerStopLoggingToStdout` `Core/OOLogOutputHandler.cpp:204` | ✅ |
+| `OOLogOutputHandlerPrint()` (179) | `OOLogOutputHandlerPrintLine` (+ `oo::log::consoleBytes`, `oofnd/LogFile.hpp:111`) `Core/OOLogOutputHandler.cpp:220` | ✅ |
+| `OOLogHandlerGetLogPath()` (203) | `cxx_OOLogHandlerGetLogPath` / `LogPath` `:512` `Core/OOLogOutputHandler.cpp:244` | ✅ |
+| `OOLogOutputHandlerChangeLogFile()` (208) | `cxx_OOLogOutputHandlerChangeLogFile` `Core/OOLogOutputHandler.cpp:249` | ❌ |
+| `-[OOAsyncLogger init]` (223) | `StartLogger` + `oo::log::rotateToPrevious` (`oofnd/LogFile.hpp:133`) `Core/OOLogOutputHandler.cpp:271` | ❌ |
+| `-[OOAsyncLogger dealloc]` (260) | `FileWriter::~FileWriter` `oofnd/LogFile.hpp:157` | ✅ |
+| `-[OOAsyncLogger startLogging]` (270) | `FileWriter::start` `oofnd/LogFile.hpp:161` | ✅ |
+| `-[OOAsyncLogger endLogging]` (330) | `FileWriter::end` (`oofnd/LogFile.hpp:194`) + `Postamble` `Core/OOLogOutputHandler.cpp:167` | ✅ |
+| `-[OOAsyncLogger changeFile]` (346) | folded into `cxx_OOLogOutputHandlerChangeLogFile` `Core/OOLogOutputHandler.cpp:253-261` | ✅ |
+| `-[OOAsyncLogger asyncLogMessage:]` (353) | `AsyncLogMessage` (+ `FileWriter::write`, `logFileBytes` `oofnd/LogFile.hpp:82,180`) `Core/OOLogOutputHandler.cpp:297` | ⚠️ |
+| `-[OOAsyncLogger flushLog]` (377) | `OOLogOutputHandlerFlushIfDue` (+ `FileWriter::flush` `oofnd/LogFile.hpp:191`) `Core/OOLogOutputHandler.cpp:209` | ⚠️ |
+| `-[OOAsyncLogger loggerThread]` (383) | `FileWriter::run` `oofnd/LogFile.hpp:240` | ✅ |
+| `LoadLogCStringFunctions()` (463) | `LoadLogCStringFunctions` (Mac) `Core/OOLogOutputHandler.cpp:339` | ✅ |
+| `OONSLogCStringFunction()` (481) | `OONSLogCStringFunction` (Mac) `Core/OOLogOutputHandler.cpp:357` | ✅ |
+| `OONSLogPrintfHandler()` (490) | — (no gnustep-base: nothing to capture) | ➖ |
+| `DirectoryExistCreatingIfNecessary()` (499) | `DirectoryExistCreatingIfNecessary` `Core/OOLogOutputHandler.cpp:368` | ❌ |
+| `ExcludeFromTimeMachine()` (521) | `ExcludeFromTimeMachine` (Mac) `Core/OOLogOutputHandler.cpp:389` | ✅ |
+| `GetAppName()` (533) | `GetAppName` (Mac) `Core/OOLogOutputHandler.cpp:401` | ❌ |
+| `OOLogHandlerGetLogBasePath()` (552) | `LogBasePath` / `cxx_OOLogHandlerGetLogBasePath` `:505` (+ `AppendPathComponent` `:434`) `Core/OOLogOutputHandler.cpp:458` | ✅ |
+| `InitCrashReporterInfo()` (606) | `InitCrashReporterInfo` (Mac debug) `Core/OOLogOutputHandler.cpp:529` | ✅ |
+| `SetCrashReporterInfo()` (619) | `SetCrashReporterInfo` (Mac debug) `Core/OOLogOutputHandler.cpp:537` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ⚠️ **low** — Latest.log flushing: the one-shot 2 s NSTimer on the run loop became a steady-clock deadline that only fires when the frame loop calls `OOLogOutputHandlerFlushIfDue` (proposed ADR-0033, comment `:117-122`). The file is unbuffered (`setvbuf _IONBF`, `oofnd/LogFile.hpp:168`), so a flush is only fsync/_commit: readers see every line as soon as the writer thread writes it; only durability across an OS crash depends on the call site. A first request off the main thread still disables flushing forever, as upstream did — upstream `Core/OOLogOutputHandler.m:370-381` ↔ port `Core/OOLogOutputHandler.cpp:209-218,305-311`
+- ❌ **low** — log-setup failures used `NSLog` (stderr with GNUstep's "date process[pid:tid] " banner, or — once the printf handler was installed — a `gnustep`-class line in Latest.log); the port uses `OO_LOG("unclassified", …)`, so text/prefix and message class differ ("could not move or delete existing log", "could not open log", "expected … to be a folder", "could not create folder") — upstream `Core/OOLogOutputHandler.m:244,322,507,512` ↔ port `Core/OOLogOutputHandler.cpp:259,280,286,373,378`
+- ❌ **low** — `ChangeLogFile` start failure: upstream logged "could not open log" only when creating the file failed (from `-startLogging`) and as class `gnustep` via the installed NSLog handler; the port logs it as `unclassified` and also when `LogPath()` is fine but `FileWriter::start` fails for another reason — upstream `Core/OOLogOutputHandler.m:316-324,349-350` ↔ port `Core/OOLogOutputHandler.cpp:255-261`
+- ❌ **low** (Mac only) — `GetAppName` reads `CFBundleName` from `<built-in resources>/Info-gnustep.plist` instead of the main bundle's Info.plist, so on a Mac bundle without that file the log folder becomes `~/Library/Logs/<unknown application>` — upstream `Core/OOLogOutputHandler.m:539-544` ↔ port `Core/OOLogOutputHandler.cpp:406-420`
+- ➖ **low** — GNUstep's own `NSLog` output (class `gnustep`) is no longer captured into Latest.log; with gnustep-base removed there is no such output to capture — upstream `Core/OOLogOutputHandler.m:137-141,490-495` ↔ port (none; `Core/OOLogOutputHandler.cpp:87-89`)
+- ✅ subtle — file bytes match: line + "\n", every "\n" → "\r\n" on Windows (except before a combining unit, as GNUstep's non-literal split), lone-surrogate lines dropped, 1 GiB saturation notice text and process-wide flag, postamble "\nClosing log at <NSDate description>.", rotation Latest.log → Previous.log — upstream `Core/OOLogOutputHandler.m:238-248,336-338,359-368,403-416` ↔ port `oofnd/LogFile.hpp:82-141,180-276`, `Core/OOLogOutputHandler.cpp:167-170`
+- ✅ subtle — `LogBasePath` retries after a failed mkdir where upstream kept an unretained autoreleased string in its static (dangling on the next call); the default paths (`$OO_LOGSDIR`, `<home>/Logs`, `<home>/.Oolite/Logs`) are unchanged — upstream `Core/OOLogOutputHandler.m:556-594` ↔ port `Core/OOLogOutputHandler.cpp:458-501`
 
 
 ## OOLogging
@@ -835,55 +861,65 @@ Upstream `src/Core/OOLogOutputHandler.m` ↔ `Core/OOLogOutputHandler.cpp`
 <a id="oologging"></a>
 Upstream `src/Core/OOLogging.m` ↔ `Core/OOLogging.cpp`
 
-**Status:** pending
+**Status:** done — 44 rows: 40 ✅ 2 ⚠️ 2 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `CacheValue()` (120) | | |
-| `Inited()` (128) | | |
-| `OOLogWillDisplayMessagesInClass()` (136) | | |
-| `OOLogSetDisplayMessagesInClass()` (172) | | |
-| `OOLogGetParentMessageClass()` (194) | | |
-| `OOLogIndentIf()` (210) | | |
-| `OOLogOutdentIf()` (216) | | |
-| `GetIndentLevel()` (238) | | |
-| `SetIndentLevel()` (243) | | |
-| `OOLogPushIndent()` (248) | | |
-| `OOLogPopIndent()` (264) | | |
-| `GetIndentLevel()` (289) | | |
-| `SetIndentLevel()` (295) | | |
-| `OOLogPushIndent()` (301) | | |
-| `OOLogPopIndent()` (323) | | |
-| `OOLogIndent()` (345) | | |
-| `OOLogOutdent()` (354) | | |
-| `OOLogWithPrefix()` (365) | | |
-| `OOLogWithFunctionFileAndLine()` (375) | | |
-| `OOLogWithFunctionFileAndLineAndArguments()` (384) | | |
-| `OOLogGenericParameterErrorForFunction()` (459) | | |
-| `OOLogGenericSubclassResponsibilityForFunction()` (464) | | |
-| `OOLogShowFunction()` (469) | | |
-| `OOLogSetShowFunction()` (474) | | |
-| `OOLogShowFileAndLine()` (484) | | |
-| `OOLogSetShowFileAndLine()` (489) | | |
-| `OOLogShowTime()` (499) | | |
-| `OOLogSetShowTime()` (504) | | |
-| `OOLogShowMessageClass()` (514) | | |
-| `OOLogSetShowMessageClass()` (519) | | |
-| `OOLogSetShowMessageClassTemporary()` (529) | | |
-| `OOLoggingInit()` (534) | | |
-| `OOLoggingTerminate()` (562) | | |
-| `OOLoggingReloadSettings()` (576) | | |
-| `OOLogInsertMarker()` (581) | | |
-| `OOLogInternal_()` (610) | | |
-| `LoadExplicitSettings()` (650) | | |
-| `LoadExplicitSettingsFromDictionary()` (719) | | |
-| `OOLogAbbreviatedFileName()` (762) | | |
-| `ResolveDisplaySetting()` (783) | | |
-| `ResolveMetaClassReference()` (809) | | |
+| `CacheValue()` (120) | `Logger::Value::on()/off()` `oofnd/Log.hpp:372-373` | ✅ |
+| `Inited()` (128) | `Logger::checkInitialized` `oofnd/Log.hpp:290` | ✅ |
+| `OOLogWillDisplayMessagesInClass()` (136) | `Logger::willDisplay` / `oo::log::willDisplay` `:463` `oofnd/Log.hpp:313` | ✅ |
+| `OOLogSetDisplayMessagesInClass()` (172) | `Logger::setDisplay` `oofnd/Log.hpp:299` | ✅ |
+| `OOLogGetParentMessageClass()` (194) | `oo::log::parentClass` `oofnd/Log.hpp:124` | ✅ |
+| `OOLogIndentIf()` (210) | `oo::log::indentIf` `oofnd/Log.hpp:477` | ✅ |
+| `OOLogOutdentIf()` (216) | `oo::log::outdentIf` `oofnd/Log.hpp:483` | ✅ |
+| `GetIndentLevel()` (238) | `oo::log::indentLevel` (thread_local) `oofnd/Log.hpp:194` | ✅ |
+| `SetIndentLevel()` (243) | `IndentState::level` writes in `indent`/`outdent`/`popIndent` `oofnd/Log.hpp:195-200,472` | ✅ |
+| `OOLogPushIndent()` (248) | `OOLogPushIndent` → `oo::log::pushIndent` `Core/OOLogging.cpp:88`, `oofnd/Log.hpp:202` | ✅ |
+| `OOLogPopIndent()` (264) | `OOLogPopIndent` → `oo::log::popIndent` `Core/OOLogging.cpp:93`, `oofnd/Log.hpp:465` | ✅ |
+| `GetIndentLevel()` (289) | (thread-dictionary variant) same as above `oofnd/Log.hpp:194` | ✅ |
+| `SetIndentLevel()` (295) | (thread-dictionary variant) same as above | ✅ |
+| `OOLogPushIndent()` (301) | (thread-dictionary variant) `oofnd/Log.hpp:202` | ✅ |
+| `OOLogPopIndent()` (323) | (thread-dictionary variant) `oofnd/Log.hpp:465` | ✅ |
+| `OOLogIndent()` (345) | `OOLogIndent` → `oo::log::indent` `Core/OOLogging.cpp:98`, `oofnd/Log.hpp:195` | ✅ |
+| `OOLogOutdent()` (354) | `OOLogOutdent` → `oo::log::outdent` `Core/OOLogging.cpp:103`, `oofnd/Log.hpp:196` | ✅ |
+| `OOLogWithPrefix()` (365) | `oo::log::messageWithPrefix` `oofnd/Log.hpp:499` | ✅ |
+| `OOLogWithFunctionFileAndLine()` (375) | `oo::log::message` `oofnd/Log.hpp:492` | ✅ |
+| `OOLogWithFunctionFileAndLineAndArguments()` (384) | `Logger::write` + `composeLine` `:164` + `timeStamp` `:147` `oofnd/Log.hpp:337` | ✅ |
+| `OOLogGenericParameterErrorForFunction()` (459) | `OOLogGenericParameterErrorForFunction` `Core/OOLogging.cpp:108` | ✅ |
+| `OOLogGenericSubclassResponsibilityForFunction()` (464) | `OOLogGenericSubclassResponsibilityForFunction` `Core/OOLogging.cpp:113` | ✅ |
+| `OOLogShowFunction()` (469) | `OOLogShowFunction` `Core/OOLogging.cpp:118` | ✅ |
+| `OOLogSetShowFunction()` (474) | `OOLogSetShowFunction` `Core/OOLogging.cpp:123` | ✅ |
+| `OOLogShowFileAndLine()` (484) | `OOLogShowFileAndLine` `Core/OOLogging.cpp:135` | ✅ |
+| `OOLogSetShowFileAndLine()` (489) | `OOLogSetShowFileAndLine` `Core/OOLogging.cpp:140` | ✅ |
+| `OOLogShowTime()` (499) | `OOLogShowTime` `Core/OOLogging.cpp:152` | ✅ |
+| `OOLogSetShowTime()` (504) | `OOLogSetShowTime` `Core/OOLogging.cpp:157` | ✅ |
+| `OOLogShowMessageClass()` (514) | `OOLogShowMessageClass` `Core/OOLogging.cpp:169` | ✅ |
+| `OOLogSetShowMessageClass()` (519) | `OOLogSetShowMessageClass` `Core/OOLogging.cpp:174` | ✅ |
+| `OOLogSetShowMessageClassTemporary()` (529) | `OOLogSetShowMessageClassTemporary` → `Logger::setShowClassTemporarily` `Core/OOLogging.cpp:186` | ✅ |
+| `OOLoggingInit()` (534) | `OOLoggingInit` (+ `LogSink` `:56`) `Core/OOLogging.cpp:191` | ✅ |
+| `OOLoggingTerminate()` (562) | `OOLoggingTerminate` `Core/OOLogging.cpp:208` | ✅ |
+| `OOLoggingReloadSettings()` (576) | `OOLoggingReloadSettings` `Core/OOLogging.cpp:222` | ✅ |
+| `OOLogInsertMarker()` (581) | `OOLogInsertMarker` → `Logger::insertMarker` `Core/OOLogging.cpp:227`, `oofnd/Log.hpp:345` | ✅ |
+| `OOLogInternal_()` (610) | `Logger::internal` `oofnd/Log.hpp:352` | ✅ |
+| `LoadExplicitSettings()` (650) | `LoadExplicitSettings` + `Logger::replaceSettings` (`oofnd/Log.hpp:246`) `Core/OOLogging.cpp:259` | ❌ |
+| `LoadExplicitSettingsFromDictionary()` (719) | `SettingsFromDictionary` (`Core/OOLogging.cpp:63`) + `Logger::replaceSettings` `oofnd/Log.hpp:246` | ⚠️ |
+| `OOLogAbbreviatedFileName()` (762) | `oo::log::abbreviatedFileName` (uncached) `oofnd/Log.hpp:134` | ✅ |
+| `ResolveDisplaySetting()` (783) | `Logger::resolve` `oofnd/Log.hpp:403` | ✅ |
+| `ResolveMetaClassReference()` (809) | `Logger::resolveMeta` `oofnd/Log.hpp:423` | ⚠️ |
+| *(added)* `kOOLog*` message-class constants (595-604) | `cxx_kOOLog*` `Core/OOLogging.cpp:232-241` | ✅ |
+| *(added)* `OOLOG_ERROR_PREFIX` / `OOLOG_WARNING_PREFIX` (`OOLogging.h:122-123`) | `kErrorPrefix` / `kWarningPrefix` `oofnd/Log.hpp:509-510` | ✅ |
+| *(added)* `OOLog()` macro / `OOLOG_FUNCTION_NAME` (`OOLogging.h:39-47,84-89`) | `OO_LOG` (`__FUNCTION__`) `oofnd/Log.hpp:516-520` | ❌ |
 
 **Differences:**
 
-- *pending*
+- ❌ **low** — `logging-show-function/-file-and-line/-time/-class` are read with `Defaults::boolForKey` (NSString `-boolValue`: leading Y/y/T/t or non-zero digit) when present, instead of `oo_boolForKey:defaultValue:` (`OOBooleanFromObject`: "yes"/"true"/"on"/non-zero number → YES, "no"/"false"/"off"/zero → NO, anything else → the default). A string "on" now gives NO, and an unrecognised string or non-number gives NO instead of the default (YES for time/class), dropping the time stamp / `[class]` prefix from every line. Only hand-edited or command-line string values are affected; values written by the game are booleans — upstream `Core/OOLogging.m:653-657`, `Core/OOCollectionExtractors.m:1099-1108,1124-1140` ↔ port `Core/OOLogging.cpp:262-267`, `oofnd/Defaults.hpp:90-101,474-480`
+- ❌ **low** — the function name in log lines is C++ `__FUNCTION__` (bare "prune", "init") where ObjC's was "-[OOCache prune]"; visible only with `logging-show-function` on (default NO) — upstream `Core/OOLogging.h:41,87`, `Core/OOLogging.m:407,415` ↔ port `oofnd/Log.hpp:171,175,519`
+- ⚠️ **low** — a `$metaclass` cycle now falls back to `_default` instead of recursing until the stack overflowed (documented "the one deliberate difference", `oofnd/Log.hpp:421-422`) — upstream `Core/OOLogging.m:809-832` ↔ port `oofnd/Log.hpp:423-442`
+- ⚠️ **low** — logcontrol dictionaries are walked in `oo::PList::Dict` key (byte) order instead of NSDictionary hash order (comment `Core/OOLogging.cpp:61-62`); this only reorders the "OOLogging internal - LoadExplicitSettingsFromDictionary: Bad setting value …" diagnostics, never the resulting settings — upstream `Core/OOLogging.m:722-755` ↔ port `Core/OOLogging.cpp:63-82`, `oofnd/Log.hpp:252-273`
+- ⚠️ **low** — the built-in logcontrol.plist pre-pass no longer logs `plist.wrongType` when that file's root is not a dictionary (comment `Core/OOLogging.cpp:283`) — upstream `Core/OOLogging.m:667-670` ↔ port `Core/OOLogging.cpp:277-285`
+- ✅ subtle — line layout is unchanged: prefix order function/file:line → "[class] " or "[class]: " → time "HH:MM:SS.mmm " (local, ms truncated) → indentation of 2 spaces per level capped at 64 placed before the time; internal diagnostics ("OOLogging internal - <fn>: …") and markers ("\n\n========== [Marker N] ==========") bypass prefixes and indentation; `_default` YES, `_override` sticky once set, settings/display defaults load after the header — upstream `Core/OOLogging.m:85-89,404-448,591,623` ↔ port `oofnd/Log.hpp:164-190,345-355,446-450`
+- ✅ subtle — internal diagnostics are collected under the lock and printed after it is released, in the same order and with the same function names (`Inited`, `LoadExplicitSettingsFromDictionary`, `LoadExplicitSettings`, `ResolveMetaClassReference`, `OOLogPopIndent`); the SETTING_SET/RETRIEVE diagnostics stay off (flags 0) — upstream `Core/OOLogging.m:58-65,132,275,692,705,742,748,815,826` ↔ port `oofnd/Log.hpp:265-286,294,330-331,469`
+- ✅ subtle — the `@catch` around formatting is gone (std::format strings are checked at compile time); before `OOLoggingInit` lines go to a stderr sink as `OOLogOutputHandlerPrint` did before its init — upstream `Core/OOLogging.m:452-454` ↔ port `oofnd/Log.hpp:28-29,215-217,377-381`
 
 
 ## OOPListParsing
@@ -891,23 +927,25 @@ Upstream `src/Core/OOLogging.m` ↔ `Core/OOLogging.cpp`
 <a id="ooplistparsing"></a>
 Upstream `src/Core/OOPListParsing.m` ↔ `Core/OOPListParsing.cpp`
 
-**Status:** pending
+**Status:** done — 9 rows: 3 ✅ 1 ⚠️ 0 ❌ 5 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOPropertyListFromData()` (48) | | |
-| `OOPropertyListFromFile()` (83) | | |
-| `ChangeDTDIfApplicable()` (103) | | |
-| `CopyDataFromFile()` (173) | | |
-| `OODictionaryFromData()` (201) | | |
-| `OODictionaryFromFile()` (207) | | |
-| `OOArrayFromData()` (213) | | |
-| `OOArrayFromFile()` (219) | | |
-| `ValueIfClass()` (226) | | |
+| `OOPropertyListFromData()` (48) | `cxx_OOPropertyListFromData` (+ `oo::parsePropertyList`, `oofnd/PListParsing.hpp:70`) `Core/OOPListParsing.cpp:34` | ⚠️ |
+| `OOPropertyListFromFile()` (83) | `cxx_OOPropertyListFromFile` `Core/OOPListParsing.cpp:61` | ✅ |
+| `ChangeDTDIfApplicable()` (103) | `oo::changeDTDIfApplicable` `oofnd/PListXML.hpp:64` | ✅ |
+| `CopyDataFromFile()` (173) | `OODataFromOXZFile` (`oofnd/FileSystem.hpp:24-25`) called at `Core/OOPListParsing.cpp:66` | ✅ |
+| `OODictionaryFromData()` (201) | — (callers test `isDict()` themselves) | ➖ |
+| `OODictionaryFromFile()` (207) | — (e.g. `Core/OOLogging.cpp:281-283`, `Core/ResourceManager.cpp:58-59`) | ➖ |
+| `OOArrayFromData()` (213) | — | ➖ |
+| `OOArrayFromFile()` (219) | — (e.g. `Core/Scripting/OOScript.cpp:46`) | ➖ |
+| `ValueIfClass()` (226) | — (`plist.wrongType` line dropped) | ➖ |
 
 **Differences:**
 
-- *pending*
+- ⚠️ **low** — binary property lists (Apple `bplist00`, GNUstep binary) now always fail with "binary property lists are not supported by oofnd", logged as `plist.parse.failed` "Failed to parse <path> as a property list.\n<error>" (ADR-0027 item 3, `oofnd/PListParsing.hpp:7`); for XML/old-style input the `<error>` text is oofnd's `PListError::description()`, so any golden that captures a parse failure depends on oofnd matching GNUstep's error wording — upstream `Core/OOPListParsing.m:66-79` ↔ port `Core/OOPListParsing.cpp:44-55`
+- ➖ **low** — `plist.wrongType` ("Property list is wrong type - expected NSDictionary, got …") is no longer logged anywhere; every former `OODictionaryFromFile`/`OOArrayFromFile` caller silently treats a wrong-typed root as missing (comments at `Core/OOLogging.cpp:283`, `Core/ResourceManager.cpp:58-59`, `Core/Scripting/OOJSScript.cpp:663`) — upstream `Core/OOPListParsing.m:226-232` ↔ port (none)
+- ✅ subtle — `plist.information` "Parsing %@ as a property list." still only when `UNIVERSE` exists; "<data in memory>" default and "<no error message>" for a nil-without-error result kept; a missing file is still silent — upstream `Core/OOPListParsing.m:53-57,73-76,94` ↔ port `Core/OOPListParsing.cpp:38-41,47-53,71`
 
 
 ## OOPriorityQueue
@@ -967,22 +1005,23 @@ Upstream `src/Core/OOPriorityQueue.m` ↔ *(absorbed — locate in `src/oofnd/` 
 <a id="ooprofilingstopwatch"></a>
 Upstream `src/Core/OOProfilingStopwatch.m` ↔ `Core/OOProfilingStopwatch.cpp`
 
-**Status:** pending
+**Status:** done — 8 rows: 7 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOProfilingStopwatch init]` (35) | | |
-| `+[OOProfilingStopwatch stopwatch]` (45) | | |
-| `-[OOProfilingStopwatch dealloc]` (50) | | |
-| `-[OOProfilingStopwatch start]` (58) | | |
-| `-[OOProfilingStopwatch stop]` (66) | | |
-| `-[OOProfilingStopwatch currentTime]` (74) | | |
-| `-[OOProfilingStopwatch reset]` (84) | | |
-| `OOHighResTimeDeltaInSeconds()` (102) | | |
+| `-[OOProfilingStopwatch init]` (35) | `OOProfilingStopwatch()` `Core/OOProfilingStopwatch.cpp:33` | ✅ |
+| `+[OOProfilingStopwatch stopwatch]` (45) | `OOProfilingStopwatch::stopwatch` `Core/OOProfilingStopwatch.cpp:40` | ✅ |
+| `-[OOProfilingStopwatch dealloc]` (50) | `~OOProfilingStopwatch` `Core/OOProfilingStopwatch.cpp:45` | ✅ |
+| `-[OOProfilingStopwatch start]` (58) | `OOProfilingStopwatch::start` `Core/OOProfilingStopwatch.cpp:51` | ✅ |
+| `-[OOProfilingStopwatch stop]` (66) | `OOProfilingStopwatch::stop` `Core/OOProfilingStopwatch.cpp:59` | ✅ |
+| `-[OOProfilingStopwatch currentTime]` (74) | `OOProfilingStopwatch::currentTime` `Core/OOProfilingStopwatch.cpp:67` | ✅ |
+| `-[OOProfilingStopwatch reset]` (84) | `OOProfilingStopwatch::reset` `Core/OOProfilingStopwatch.cpp:77` | ✅ |
+| `OOHighResTimeDeltaInSeconds()` (102) | `OOHighResTimeDeltaInSeconds` `Core/OOProfilingStopwatch.cpp:93` | ⚠️ |
 
 **Differences:**
 
-- *pending*
+- ⚠️ **low** — where upstream used SpiderMonkey's `JS_Now()` (wall-clock µs) the port uses `std::chrono::steady_clock` µs (header comment, following the JS engine swap); deltas have the same unit and differ only if the wall clock is adjusted mid-measurement. The mach / standalone-Windows `timeGetTime` / gettimeofday paths are unchanged — upstream `Core/OOProfilingStopwatch.h:81-121`, `Core/OOProfilingStopwatch.m:120-121` ↔ port `Core/OOProfilingStopwatch.h:98-142`, `Core/OOProfilingStopwatch.cpp:115-116`
+- ✅ subtle — `stop` still disposes `_start` rather than `_end` (upstream quirk kept; values are plain integers so harmless) — upstream `Core/OOProfilingStopwatch.m:66-72` ↔ port `Core/OOProfilingStopwatch.cpp:59-65`
 
 
 ## OORegExpMatcher
@@ -990,20 +1029,23 @@ Upstream `src/Core/OOProfilingStopwatch.m` ↔ `Core/OOProfilingStopwatch.cpp`
 <a id="ooregexpmatcher"></a>
 Upstream `src/Core/OORegExpMatcher.m` ↔ `Core/OORegExpMatcher.cpp`
 
-**Status:** pending
+**Status:** done — 6 rows: 5 ✅ 0 ⚠️ 0 ❌ 1 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OORegExpMatcher regExpMatcher]` (37) | | |
-| `-[OORegExpMatcher init]` (48) | | |
-| `-[OORegExpMatcher dealloc]` (76) | | |
-| `-[OORegExpMatcher string:matchesExpression:]` (88) | | |
-| `-[OORegExpMatcher string:matchesExpression:flags:]` (93) | | |
-| `-[NSString(OORegExpMatcher) oo_matchesRegularExpression:]` (135) | | |
+| `+[OORegExpMatcher regExpMatcher]` (37) | `OORegExpMatcher::regExpMatcher` `Core/OORegExpMatcher.cpp:58` | ✅ |
+| `-[OORegExpMatcher init]` (48) | `OORegExpMatcher::init` `Core/OORegExpMatcher.cpp:73` | ✅ |
+| `-[OORegExpMatcher dealloc]` (76) | `~OORegExpMatcher` `Core/OORegExpMatcher.cpp:99` | ✅ |
+| `-[OORegExpMatcher string:matchesExpression:]` (88) | `OORegExpMatcher::string(string, regExp)` `Core/OORegExpMatcher.cpp:108` | ✅ |
+| `-[OORegExpMatcher string:matchesExpression:flags:]` (93) | `OORegExpMatcher::string(string, regExp, flags)` `Core/OORegExpMatcher.cpp:113` | ✅ |
+| `-[NSString(OORegExpMatcher) oo_matchesRegularExpression:]` (135) | — (callers call `regExpMatcher()->string(...)`, e.g. `MatchesRegExp` `Core/OOOpenGLExtensionManager.cpp:664`) | ➖ |
 
 **Differences:**
 
-- *pending*
+- ✅ subtle — lifetime: the autoreleased pseudo-singleton lived until the pool drained; the port's `Ref` dies with its last holder, and the only caller holds one matcher per pass (ADR-0056 amendment oo-ct7c item 3, `Core/OOOpenGLExtensionManager.cpp:660-673`), so one tester is compiled per pass as before; a null matcher answers NO as `[nil string:…]` did — upstream `Core/OORegExpMatcher.m:37-46` ↔ port `Core/OORegExpMatcher.cpp:58-71`
+- ✅ subtle — pattern length is counted in UTF-16 units and the RegExp object is cached per (pattern, flags) as before; the result goes through the same to-boolean conversion as `-evaluatePredicateWithContext:` (`JS_ValueToBoolean`) — upstream `Core/OORegExpMatcher.m:97-131`, `Core/Scripting/OOJSFunction.m:226-239` ↔ port `Core/OORegExpMatcher.cpp:117-159`
+- ✅ subtle — the tester's script file name is now "OORegExpMatcher.cpp" (was "OORegExpMatcher.m") with its own `__LINE__`; visible only in a JS error report from `regexp.test(string)` — upstream `Core/OORegExpMatcher.m:52-64` ↔ port `Core/OORegExpMatcher.cpp:76-87`
+- ✅ subtle — the malloc-failure early return still skips `OOJSRelinquishContext` (upstream quirk kept) — upstream `Core/OORegExpMatcher.m:111-113` ↔ port `Core/OORegExpMatcher.cpp:128-130`
 
 
 ## OOWeakReference
@@ -1085,15 +1127,16 @@ Upstream `src/Core/OOWeakSet.m` ↔ *(absorbed — locate in `src/oofnd/` or cal
 <a id="ooxmlextensions"></a>
 Upstream `src/Core/OOXMLExtensions.m` ↔ `Core/OOXMLExtensions.cpp`
 
-**Status:** pending
+**Status:** done — 1 rows: 0 ✅ 0 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSDictionary(OOXMLExtensions) writeOOXMLToFile:atomically:errorDescription:]` (29) | | |
+| `-[NSDictionary(OOXMLExtensions) writeOOXMLToFile:atomically:errorDescription:]` (29) | `OOWriteXMLPListToFile` (+ `oo::writeXMLPList`, `oofnd/PListWriting.hpp`) `Core/OOXMLExtensions.cpp:30` | ❌ |
 
 **Differences:**
 
-- *pending*
+- ❌ **low** — serialisation-failure text: upstream passed `outErrorDesc` to the serializer but formatted its never-set local `errorDesc`, so the message was always "could not convert property list to XML: (null)"; the port appends oofnd's real error description. Visible only when a save game fails to serialise (e.g. a lone surrogate) — upstream `Core/OOXMLExtensions.m:31-38` ↔ port `Core/OOXMLExtensions.cpp:32-37`
+- ✅ subtle — the `atomically:` argument is ignored in both (always atomic); the XML bytes come from `oo::writeXMLPList`, which claims GNUstep's XML writer byte for byte (indentation, sorted keys, `%.16g` reals, escaping; `oofnd/PListWriting.hpp:26-34`) — this is the save-game writer, so its fidelity is worth a golden — upstream `Core/OOXMLExtensions.m:34,43` ↔ port `Core/OOXMLExtensions.cpp:32,40`
 
 
 ## OldSchoolPropertyListWriting
