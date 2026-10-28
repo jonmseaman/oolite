@@ -8,239 +8,232 @@ Each section: method coverage table (every upstream method / C function → C++ 
 ## NSBundle+Override
 
 <a id="nsbundleoverride"></a>
-Upstream `src/Core/NSBundle+Override.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSBundle+Override.m` ↔ `oofnd/Defaults.hpp` (`applicationDomainName`, `Defaults::forProcess`), `oofnd/ResourcePaths.hpp` (`builtInResourcesDirectory`), and per-caller `OoliteInfoString` readers
 
-**Status:** pending
+**Status:** done — 1 rows: 0 ✅ 0 ⚠️ 0 ❌ 1 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSBundle(Override) infoDictionary]` (20) | | |
+| `-[NSBundle(Override) infoDictionary]` (20) | No NSBundle. The Info-gnustep.plist lookup (`<cwd>/Resources`, else `<cwd>/../share/oolite/Resources`) is `ResourcePaths::builtInResourcesDirectory` oofnd/ResourcePaths.hpp:224. The defaults domain comes from `Defaults::forProcess` oofnd/Defaults.hpp:432 + `applicationDomainName` :396. `CFBundleVersion` is read by `OoliteInfoString` (Entities/PlayerEntity.cpp:317, Debug/OODebugTCPConsoleClient.cpp:198, OOCacheManager.cpp:90) | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ➖ **low** — When Info-gnustep.plist is missing, upstream `NSLog`s "[Oolite-Core] Warning: Failed to find info-gnustep.plist at calculated path: …" to stderr. The port is silent: `load()` returns an empty dict and the domain falls back to the process name. This is stderr only, not Latest.log — upstream `Core/NSBundle+Override.m:49` ↔ port `oofnd/Defaults.hpp:396`
+- subtle — The fallback path uses `lexically_normal()` where upstream used `-stringByStandardizingPath`, which also expands `~` and, in GNUstep, resolves symlinks. Only a non-standard Linux layout would see this — upstream `Core/NSBundle+Override.m:34` ↔ port `oofnd/ResourcePaths.hpp:229`
 
 ## NSDataOOExtensions
 
 <a id="nsdataooextensions"></a>
-Upstream `src/Core/NSDataOOExtensions.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSDataOOExtensions.m` ↔ `Core/OODataFromOXZFile.cpp` (declared in `oofnd/FileSystem.hpp:457`)
 
-**Status:** pending
+**Status:** done — 1 rows: 1 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[NSData(OOExtensions) oo_dataWithOXZFile:]` (37) | | |
+| `+[NSData(OOExtensions) oo_dataWithOXZFile:]` (37) | `OODataFromOXZFile` Core/OODataFromOXZFile.cpp:38 (statement for statement: the same .oxz component search, the same `files.notFound` log class and texts, the same unzip error paths; nil→`std::nullopt`) | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- subtle — The empty-file test uses `fs::fileSize`, i.e. `std::filesystem::file_size`, which follows symlinks. Upstream used `fileAttributesAtPath:traverseLink:NO`, which gives a symlink its own size. Only a symlinked plain file can tell the two apart — upstream `Core/NSDataOOExtensions.m:60` ↔ port `Core/OODataFromOXZFile.cpp:62`
 
 ## NSDictionaryOOExtensions
 
 <a id="nsdictionaryooextensions"></a>
-Upstream `src/Core/NSDictionaryOOExtensions.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSDictionaryOOExtensions.m` ↔ *(absorbed: value copies of `oo::PList::Dict` at the call sites)*
 
-**Status:** pending
+**Status:** done — 3 rows: 0 ✅ 0 ⚠️ 0 ❌ 3 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSDictionary(OOExtensions) dictionaryByAddingObject:forKey:]` (32) | | |
-| `-[NSDictionary(OOExtensions) dictionaryByRemovingObjectForKey:]` (46) | | |
-| `-[NSDictionary(OOExtensions) dictionaryByAddingEntriesFromDictionary:]` (60) | | |
+| `-[NSDictionary(OOExtensions) dictionaryByAddingObject:forKey:]` (32) | Callers copy the PList and assign the key, e.g. `AddingValue` Materials/OODefaultShaderSynthesizer.cpp:1003 and `dict[...] = …` Debug/OODebugTCPConsoleClient.cpp:693. Callers check for a missing value themselves (OODefaultShaderSynthesizer.cpp:1080) | ➖ |
+| `-[NSDictionary(OOExtensions) dictionaryByRemovingObjectForKey:]` (46) | `erase` on a copy (e.g. Materials/OODefaultShaderSynthesizer.cpp:1083) | ➖ |
+| `-[NSDictionary(OOExtensions) dictionaryByAddingEntriesFromDictionary:]` (60) | `AddEntries` on a copy (OOShipRegistry.cpp:816); OOLegacyScriptWhitelist alias merge | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- subtle — `AddingValue(spec, key, PList())` would insert a null entry, where upstream returned the dictionary unchanged for a nil object (`:35`). No caller passes null today — upstream `Core/NSDictionaryOOExtensions.m:35` ↔ port `Core/Materials/OODefaultShaderSynthesizer.cpp:1003`
 
 ## NSFileManagerOOExtensions
 
 <a id="nsfilemanagerooextensions"></a>
-Upstream `src/Core/NSFileManagerOOExtensions.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSFileManagerOOExtensions.m` ↔ `oofnd/FileSystem.hpp` (`oo::fs`), `oofnd/ResourcePaths.hpp`, `Core/OODataFromOXZFile.cpp`, and inlined call sites
 
-**Status:** pending
+**Status:** done — 16 rows: 9 ✅ 0 ⚠️ 1 ❌ 6 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSFileManager(OOExtensions) commanderContentsOfPath:]` (39) | | |
-| `-[NSFileManager(OOExtensions) defaultCommanderPath]` (79) | | |
-| `-[NSFileManager(OOExtensions) oo_directoryContentsAtPath:]` (113) | | |
-| `-[NSFileManager(OOExtensions) oo_createDirectoryAtPath:attributes:]` (118) | | |
-| `-[NSFileManager(OOExtensions) oo_fileAttributesAtPath:traverseLink:]` (123) | | |
-| `-[NSFileManager(OOExtensions) oo_fileSystemAttributesAtPath:]` (137) | | |
-| `-[NSFileManager(OOExtensions) oo_removeItemAtPath:]` (142) | | |
-| `-[NSFileManager(OOExtensions) oo_moveItemAtPath:toPath:]` (147) | | |
-| `-[NSFileManager(OOExtensions) oo_directoryContentsAtPath:]` (154) | | |
-| `-[NSFileManager(OOExtensions) oo_createDirectoryAtPath:attributes:]` (159) | | |
-| `-[NSFileManager(OOExtensions) oo_fileAttributesAtPath:traverseLink:]` (164) | | |
-| `-[NSFileManager(OOExtensions) oo_fileSystemAttributesAtPath:]` (169) | | |
-| `-[NSFileManager(OOExtensions) oo_removeItemAtPath:]` (174) | | |
-| `-[NSFileManager(OOExtensions) oo_moveItemAtPath:toPath:]` (179) | | |
-| `-[NSFileManager(OOExtensions) chdirToSnapshotPath]` (187) | | |
-| `-[NSFileManager(OOExtensions) oo_oxzFileExistsAtPath:]` (215) | | |
+| `-[NSFileManager(OOExtensions) commanderContentsOfPath:]` (39) | Inlined in the commander list, Entities/PlayerEntityLoadSave.cpp:935-947. The upstream per-entry filter `![… fileExistsAtPath:…] && pathIsDirectory` (`:51`) can never be true, so it only built full paths. The port builds the same paths and logs the same `savedGame.read.fail.fileNotFound` ERROR | ✅ |
+| `-[NSFileManager(OOExtensions) defaultCommanderPath]` (79) | `GameController::playerFileDirectory` Core/GameController.cpp:811-828 (`ResourcePaths::saveDirectory` oofnd/ResourcePaths.hpp:169), equivalent; second copy in `takeSnapShot` Scripting/OOJSGlobal.cpp:940-953 without the logs | ❌ |
+| `-[NSFileManager(OOExtensions) oo_directoryContentsAtPath:]` (113) | `#if OOLITE_MAC_OS_X`: not built | ➖ |
+| `-[NSFileManager(OOExtensions) oo_createDirectoryAtPath:attributes:]` (118) | Mac only: not built | ➖ |
+| `-[NSFileManager(OOExtensions) oo_fileAttributesAtPath:traverseLink:]` (123) | Mac only: not built | ➖ |
+| `-[NSFileManager(OOExtensions) oo_fileSystemAttributesAtPath:]` (137) | Mac only: not built | ➖ |
+| `-[NSFileManager(OOExtensions) oo_removeItemAtPath:]` (142) | Mac only: not built | ➖ |
+| `-[NSFileManager(OOExtensions) oo_moveItemAtPath:toPath:]` (147) | Mac only: not built | ➖ |
+| `-[NSFileManager(OOExtensions) oo_directoryContentsAtPath:]` (154) | `oo::fs::directoryContents` oofnd/FileSystem.hpp:264 (names, no `.`/`..`, OS order) | ✅ |
+| `-[NSFileManager(OOExtensions) oo_createDirectoryAtPath:attributes:]` (159) | `oo::fs::createDirectories` oofnd/FileSystem.hpp:283 | ✅ |
+| `-[NSFileManager(OOExtensions) oo_fileAttributesAtPath:traverseLink:]` (164) | `oo::fs::fileSize` :152 / `modificationTimeSince1970` :173 (both follow links) | ✅ |
+| `-[NSFileManager(OOExtensions) oo_fileSystemAttributesAtPath:]` (169) | `oo::fs::freeSpace` oofnd/FileSystem.hpp:162 (the only key read was NSFileSystemFreeSize) | ✅ |
+| `-[NSFileManager(OOExtensions) oo_removeItemAtPath:]` (174) | `oo::fs::removeItem` oofnd/FileSystem.hpp:297 (missing path is an error, as `removeFileAtPath:handler:`) | ✅ |
+| `-[NSFileManager(OOExtensions) oo_moveItemAtPath:toPath:]` (179) | `oo::fs::moveItem` oofnd/FileSystem.hpp:309 (refuses an existing destination) | ✅ |
+| `-[NSFileManager(OOExtensions) chdirToSnapshotPath]` (187) | Inlined in `MyOpenGLView::snapShot` SDL/MyOpenGLView.cpp:1156-1165 + `ResourcePaths::snapshotDirectory` oofnd/ResourcePaths.hpp:174. The same two log classes. The upstream BOOL was ignored by its only caller | ✅ |
+| `-[NSFileManager(OOExtensions) oo_oxzFileExistsAtPath:]` (215) | `OOOxzFileExistsAtPath` Core/OODataFromOXZFile.cpp:147 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — `takeSnapShot` re-implements `-defaultCommanderPath` inline without its two ERROR logs (`savedGame.defaultPath.create.failed`, `savedGame.defaultPath.notDirectory`). Upstream logged them whenever the JS call hit an uncreatable or non-directory save dir. The `GameController` copy does log — upstream `Core/NSFileManagerOOExtensions.m:97,104` (via `Core/Scripting/OOJSGlobal.m:711`) ↔ port `Core/Scripting/OOJSGlobal.cpp:940-953`
+- subtle — `directoryContents` returns an error, so the whole listing is lost, if iteration fails part-way. GNUstep's `directoryContentsAtPath:` returned what it had read — upstream `Core/NSFileManagerOOExtensions.m:156` ↔ port `oofnd/FileSystem.hpp:264-277`
+- subtle — `moveItem` is a bare `rename`. GNUstep's `movePath:toPath:handler:` falls back to copy+delete across volumes, so a cross-volume move now fails — upstream `Core/NSFileManagerOOExtensions.m:181` ↔ port `oofnd/FileSystem.hpp:309-321`
 
 ## NSMutableDictionaryOOExtensions
 
 <a id="nsmutabledictionaryooextensions"></a>
-Upstream `src/Core/NSMutableDictionaryOOExtensions.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSMutableDictionaryOOExtensions.m` ↔ `Core/ResourceManager.cpp` (`MergeEntries`)
 
-**Status:** pending
+**Status:** done — 1 rows: 1 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSMutableDictionary(OOExtensions) mergeEntriesFromDictionary:]` (30) | | |
+| `-[NSMutableDictionary(OOExtensions) mergeEntriesFromDictionary:]` (30) | `MergeEntries` Core/ResourceManager.cpp:258. It keeps the same rules: a missing key is added; unequal dicts merge recursively; unequal arrays concatenate; anything else is replaced. `-isEqual:` becomes `PListIsEqual` :188, where numbers compare by value | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- *none*
 
 ## NSNumberOOExtensions
 
 <a id="nsnumberooextensions"></a>
-Upstream `src/Core/NSNumberOOExtensions.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSNumberOOExtensions.m` ↔ *(absorbed: `oo::PList` node kinds)*
 
-**Status:** pending
+**Status:** done — 2 rows: 0 ✅ 0 ⚠️ 0 ❌ 2 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSNumber(OOExtensions) oo_isFloatingPointNumber]` (33) | | |
-| `-[NSNumber(OOExtensions) oo_isBoolean]` (47) | | |
+| `-[NSNumber(OOExtensions) oo_isFloatingPointNumber]` (33) | `PList::isReal()` oofnd/PList.hpp:219 (the `d`/`f` objCType test becomes the Real kind; `isSinglePrecision()` :227 keeps `f`) | ➖ |
+| `-[NSNumber(OOExtensions) oo_isBoolean]` (47) | `PList::isBool()` oofnd/PList.hpp:217 (the cached YES/NO identity test becomes the Bool kind) | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- *none* (the PList kind carries exactly what the objCType/identity tests recovered)
 
 ## NSObjectOOExtensions
 
 <a id="nsobjectooextensions"></a>
-Upstream `src/Core/NSObjectOOExtensions.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSObjectOOExtensions.m` ↔ *(absorbed: per-class `objectSize()` / `oo::EntityObjectSize`)*
 
-**Status:** pending
+**Status:** done — 2 rows: 0 ✅ 0 ⚠️ 0 ❌ 2 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[NSObject(OOExtensions) oo_instanceSize]` (38) | | |
-| `-[NSObject(OOExtensions) oo_objectSize]` (43) | | |
+| `+[NSObject(OOExtensions) oo_instanceSize]` (38) | `sizeof *this` in each class's `objectSize()` | ➖ |
+| `-[NSObject(OOExtensions) oo_objectSize]` (43) | virtual `objectSize()` (OODrawable.h:81, Materials/OOMaterial.h:72, OOMesh.h:146 …), `oo::EntityObjectSize` (Entities/EntityHelpers.cpp:104) | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ➖ **low** — The debug monitor's memory figures and `gTotalEntityMemory` now use the C++ `sizeof`. Upstream used `class_getInstanceSize` (isa plus ivars), so the numbers in the debug-console memory report differ. They are diagnostic only — upstream `Core/NSObjectOOExtensions.m:40` ↔ port `Core/OODrawable.h:81`
 
 ## NSScannerOOExtensions
 
 <a id="nsscannerooextensions"></a>
-Upstream `src/Core/NSScannerOOExtensions.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSScannerOOExtensions.m` ↔ `oofnd/Scanner.hpp`
 
-**Status:** pending
+**Status:** done — 2 rows: 2 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSScanner(OOExtensions) ooliteScanCharactersFromSet:intoString:]` (29) | | |
-| `-[NSScanner(OOExtensions) ooliteScanUpToCharactersFromSet:intoString:]` (54) | | |
+| `-[NSScanner(OOExtensions) ooliteScanCharactersFromSet:intoString:]` (29) | `Scanner::scanCharactersFromSetNoSkip` oofnd/Scanner.hpp:871 → `scanRun(set, true, false)` :895 | ✅ |
+| `-[NSScanner(OOExtensions) ooliteScanUpToCharactersFromSet:intoString:]` (54) | `Scanner::scanUpToCharactersFromSetNoSkip` :872 → `scanRun(set, false, false)` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- *none*. There is no skipping, the scan runs over UTF-16 units, and on an empty match it returns false with the location unchanged (upstream sets it to the same value).
 
 ## NSStringOOExtensions
 
 <a id="nsstringooextensions"></a>
-Upstream `src/Core/NSStringOOExtensions.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSStringOOExtensions.m` ↔ `oofnd/String.hpp`, `oofnd/Encoding.hpp`
 
-**Status:** pending
+**Status:** done — 13 rows: 8 ✅ 2 ⚠️ 0 ❌ 3 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[NSString(OOExtensions) stringWithContentsOfUnicodeFile:]` (31) | | |
-| `+[NSString(OOExtensions) stringWithUTF16String:]` (86) | | |
-| `-[NSString(OOExtensions) utf16DataWithBOM:]` (102) | | |
-| `-[NSString(OOExtensions) oo_hash]` (133) | | |
-| `-[NSString(OOExtensions) stringByTrimmingLeadingCharactersInSet:]` (143) | | |
-| `-[NSString(OOExtensions) stringByTrimmingLeadingWhitespaceAndNewlineCharacters]` (152) | | |
-| `-[NSString(OOExtensions) stringByTrimmingTrailingCharactersInSet:]` (157) | | |
-| `-[NSString(OOExtensions) stringByTrimmingTrailingWhitespaceAndNewlineCharacters]` (166) | | |
-| `-[NSMutableString(OOExtensions) appendLine:]` (175) | | |
-| `-[NSMutableString(OOExtensions) appendFormatLine:]` (180) | | |
-| `-[NSMutableString(OOExtensions) appendFormatLine:arguments:]` (188) | | |
-| `-[NSMutableString(OOExtensions) deleteCharacterAtIndex:]` (195) | | |
-| `OOTabString()` (202) | | |
+| `+[NSString(OOExtensions) stringWithContentsOfUnicodeFile:]` (31) | `oo::str::decodeUnicodeText` oofnd/Encoding.hpp:2096 over `OODataFromOXZFile` bytes (ResourceManager.cpp:1976, Scripting/OOJSScript.cpp:783, Debug/OODebugMonitor.cpp:696) | ⚠️ |
+| `+[NSString(OOExtensions) stringWithUTF16String:]` (86) | `oo::utf16ToUtf8` (its only caller, the SpiderMonkey error reporter, is gone with QuickJS) | ➖ |
+| `-[NSString(OOExtensions) utf16DataWithBOM:]` (102) | `oo::str::utf16Data` oofnd/String.hpp:444 (little-endian, optional U+FEFF) | ✅ |
+| `-[NSString(OOExtensions) oo_hash]` (133) | `oo::str::ooHash` oofnd/String.hpp:435 (djb2-xor over UTF-16 units; Entities/PlayerEntityLoadSave.cpp:1241) | ✅ |
+| `-[NSString(OOExtensions) stringByTrimmingLeadingCharactersInSet:]` (143) | `oo::str::trimLeading` oofnd/String.hpp:406 | ✅ |
+| `-[NSString(OOExtensions) stringByTrimmingLeadingWhitespaceAndNewlineCharacters]` (152) | `trimLeadingWhitespaceAndNewlines` oofnd/String.hpp:425 (OOOXZManager.cpp:550-591) | ✅ |
+| `-[NSString(OOExtensions) stringByTrimmingTrailingCharactersInSet:]` (157) | `oo::str::trimTrailing` oofnd/String.hpp:416 | ✅ |
+| `-[NSString(OOExtensions) stringByTrimmingTrailingWhitespaceAndNewlineCharacters]` (166) | `trimTrailingWhitespaceAndNewlines` oofnd/String.hpp:426 | ✅ |
+| `-[NSMutableString(OOExtensions) appendLine:]` (175) | `oo::str::appendLine` oofnd/String.hpp:551 | ✅ |
+| `-[NSMutableString(OOExtensions) appendFormatLine:]` (180) | Callers append `oo::str::format(…)` + `"\n"` | ➖ |
+| `-[NSMutableString(OOExtensions) appendFormatLine:arguments:]` (188) | as above | ➖ |
+| `-[NSMutableString(OOExtensions) deleteCharacterAtIndex:]` (195) | `oo::str::deleteUnitAt` oofnd/String.hpp:559 (SDL/MyOpenGLView+Input.cpp:883) | ⚠️ |
+| `OOTabString()` (202) | `oo::str::tabString` oofnd/String.hpp:548 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — After a UTF-8 BOM, upstream decoded `length + 3` bytes, six bytes past the buffer. Those heap bytes could flip the result to Latin-1 or append junk. The port decodes the file's own bytes. Documented in the `oofnd/Encoding.hpp` banner ("One deliberate difference") — upstream `Core/NSStringOOExtensions.m:67` ↔ port `oofnd/Encoding.hpp:41-49,2113-2116`
+- ⚠️ **low** — `deleteCharacterAtIndex:` past the end raised NSRangeException. `deleteUnitAt` ignores it, as its comment says ("oofnd does not throw") — upstream `Core/NSStringOOExtensions.m:197` ↔ port `oofnd/String.hpp:557-565`
+- subtle — Both readers treat a big-endian (FE FF) UTF-16 file as machine-order (byte-swapped) text. The port reproduces this on purpose, and the captures pin it — upstream `Core/NSStringOOExtensions.m:52-58` ↔ port `oofnd/Encoding.hpp:2100-2110`
 
 ## NSThreadOOExtensions
 
 <a id="nsthreadooextensions"></a>
-Upstream `src/Core/NSThreadOOExtensions.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSThreadOOExtensions.m` ↔ `oofnd/Thread.hpp`
 
-**Status:** pending
+**Status:** done — 1 rows: 1 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[NSThread(OOExtensions) ooSetCurrentThreadName:]` (36) | | |
+| `+[NSThread(OOExtensions) ooSetCurrentThreadName:]` (36) | `oo::thread::setCurrentName` oofnd/Thread.hpp:88 (SetThreadDescription on Windows, as GNUstep's `-setName:` measured). The callers keep the same names: "OOAsyncWorkManager thread N" (Core/OOAsyncWorkManager.cpp:202), "loggerThread" (oofnd/LogFile.hpp:203,242) | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- *none*
 
 ## NSUserDefaults+Override
 
 <a id="nsuserdefaultsoverride"></a>
-Upstream `src/Core/NSUserDefaults+Override.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/NSUserDefaults+Override.m` ↔ `oofnd/Defaults.hpp` (`Defaults::synchronize`, `writeOpenStepPList`)
 
-**Status:** pending
+**Status:** done — 1 rows: 0 ✅ 0 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSUserDefaults(Override) writeDictionary:]` (36) | | |
+| `-[NSUserDefaults(Override) writeDictionary:]` (36) | `Defaults::synchronize` oofnd/Defaults.hpp:539. Empty domain → `fs::removeItem`; otherwise OpenStep text via `writeOpenStepPList`, written atomically by `fs::writeFile` (default `WriteMode::atomic`, oofnd/FileSystem.hpp:398) | ❌ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — The failure logs are gone. Upstream logged `NSUserDefaultsOverride` "Failed to serialize defaults database for writing: …" and "Failed to write defaults database to file: …", plus the empty-filename message. `synchronize()` only returns `false`, so a failed preferences save no longer shows in Latest.log — upstream `Core/NSUserDefaults+Override.m:39-40,54,56` ↔ port `oofnd/Defaults.hpp:551-567`
 
 ## OOAsyncQueue
 
 <a id="ooasyncqueue"></a>
-Upstream `src/Core/OOAsyncQueue.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/OOAsyncQueue.m` ↔ `Core/OOAsyncWorkManager.cpp` (`TaskQueue`). The log writer's message queue moved to `oofnd/LogFile.hpp`, which the OOLogOutputHandler section audits.
 
-**Status:** pending
+**Status:** done — 14 rows: 4 ✅ 0 ⚠️ 0 ❌ 10 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `AllocElement()` (62) | | |
-| `FreeElement()` (67) | | |
-| `-[OOAsyncQueue init]` (82) | | |
-| `-[OOAsyncQueue dealloc]` (97) | | |
-| `-[OOAsyncQueue description]` (121) | | |
-| `-[OOAsyncQueue enqueue:]` (127) | | |
-| `-[OOAsyncQueue dequeue]` (175) | | |
-| `-[OOAsyncQueue tryDequeue]` (181) | | |
-| `-[OOAsyncQueue empty]` (202) | | |
-| `-[OOAsyncQueue count]` (207) | | |
-| `-[OOAsyncQueue emptyQueue]` (212) | | |
-| `-[OOAsyncQueue(OOPrivate) doEmptyQueueWithAcquiredLock]` (225) | | |
-| `-[OOAsyncQueue(OOPrivate) doDequeAndUnlockWithAcquiredLock]` (246) | | |
-| `-[OOAsyncQueue(OOPrivate) recycleElementWithAcquiredLock:]` (280) | | |
+| `AllocElement()` (62) | `std::deque` storage | ➖ |
+| `FreeElement()` (67) | `std::deque` storage | ➖ |
+| `-[OOAsyncQueue init]` (82) | `TaskQueue` default ctor Core/OOAsyncWorkManager.cpp:63 (mutex + condition_variable) | ➖ |
+| `-[OOAsyncQueue dealloc]` (97) | implicit dtor (the manager is an immortal singleton; the `asyncQueue.nonEmpty` WARN path was unreachable) | ➖ |
+| `-[OOAsyncQueue description]` (121) | none | ➖ |
+| `-[OOAsyncQueue enqueue:]` (127) | `TaskQueue::enqueue` Core/OOAsyncWorkManager.cpp:65 (nil→false, task retained by `oo::Ref`, FIFO) | ✅ |
+| `-[OOAsyncQueue dequeue]` (175) | `TaskQueue::dequeue` :77 (blocks until non-empty) | ✅ |
+| `-[OOAsyncQueue tryDequeue]` (181) | `TaskQueue::tryDequeue` :87 (null when empty) | ✅ |
+| `-[OOAsyncQueue empty]` (202) | none (no caller; upstream's answer was inverted, `_head != NULL`) | ➖ |
+| `-[OOAsyncQueue count]` (207) | none (no caller) | ➖ |
+| `-[OOAsyncQueue emptyQueue]` (212) | none (no caller) | ➖ |
+| `-[OOAsyncQueue(OOPrivate) doEmptyQueueWithAcquiredLock]` (225) | none | ➖ |
+| `-[OOAsyncQueue(OOPrivate) doDequeAndUnlockWithAcquiredLock]` (246) | folded into `dequeue`/`tryDequeue` :77-95 (returns `oo::Ref` where upstream autoreleased) | ✅ |
+| `-[OOAsyncQueue(OOPrivate) recycleElementWithAcquiredLock:]` (280) | `std::deque` storage | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- subtle — Upstream's `doDequeAndUnlockWithAcquiredLock` could return nil when the head was NULL despite the condition ("can happen if you enter debugger"). The port's `dequeue` waits in a loop until there is a task — upstream `Core/OOAsyncQueue.m:251-254` ↔ port `Core/OOAsyncWorkManager.cpp:80-81`
 
 ## OOAsyncWorkManager
 
@@ -434,238 +427,266 @@ Upstream `src/Core/OOCacheManager.m` ↔ `Core/OOCacheManager.cpp`
 ## OOCollectionExtractors
 
 <a id="oocollectionextractors"></a>
-Upstream `src/Core/OOCollectionExtractors.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/OOCollectionExtractors.m` (+ `.h` inlines) ↔ `oofnd/PListGet.hpp` (`PList::get<T>` / `at<T>`, `PListGet<T>`, `plist_get::*`), `Core/OOPListGameTypes.{h,cpp}` (Vector/HPVector/Quaternion/fuzzy boolean), and the NSUserDefaults call sites
 
-**Status:** pending
+**Status:** done — 203 rows: 120 ✅ 2 ⚠️ 5 ❌ 76 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSArray(OOExtractor) oo_charAtIndex:defaultValue:]` (41) | | |
-| `-[NSArray(OOExtractor) oo_shortAtIndex:defaultValue:]` (46) | | |
-| `-[NSArray(OOExtractor) oo_intAtIndex:defaultValue:]` (51) | | |
-| `-[NSArray(OOExtractor) oo_longAtIndex:defaultValue:]` (56) | | |
-| `-[NSArray(OOExtractor) oo_longLongAtIndex:defaultValue:]` (61) | | |
-| `-[NSArray(OOExtractor) oo_integerAtIndex:defaultValue:]` (66) | | |
-| `-[NSArray(OOExtractor) oo_unsignedCharAtIndex:defaultValue:]` (71) | | |
-| `-[NSArray(OOExtractor) oo_unsignedShortAtIndex:defaultValue:]` (76) | | |
-| `-[NSArray(OOExtractor) oo_unsignedIntAtIndex:defaultValue:]` (81) | | |
-| `-[NSArray(OOExtractor) oo_unsignedLongAtIndex:defaultValue:]` (86) | | |
-| `-[NSArray(OOExtractor) oo_unsignedLongLongAtIndex:defaultValue:]` (91) | | |
-| `-[NSArray(OOExtractor) oo_unsignedIntegerAtIndex:defaultValue:]` (96) | | |
-| `-[NSArray(OOExtractor) oo_boolAtIndex:defaultValue:]` (101) | | |
-| `-[NSArray(OOExtractor) oo_fuzzyBooleanAtIndex:defaultValue:]` (107) | | |
-| `-[NSArray(OOExtractor) oo_floatAtIndex:defaultValue:]` (113) | | |
-| `-[NSArray(OOExtractor) oo_doubleAtIndex:defaultValue:]` (118) | | |
-| `-[NSArray(OOExtractor) oo_nonNegativeFloatAtIndex:defaultValue:]` (123) | | |
-| `-[NSArray(OOExtractor) oo_nonNegativeDoubleAtIndex:defaultValue:]` (128) | | |
-| `-[NSArray(OOExtractor) oo_objectAtIndex:defaultValue:]` (133) | | |
-| `-[NSArray(OOExtractor) oo_objectOfClass:atIndex:defaultValue:]` (146) | | |
-| `-[NSArray(OOExtractor) oo_stringAtIndex:defaultValue:]` (159) | | |
-| `-[NSArray(OOExtractor) oo_arrayAtIndex:defaultValue:]` (164) | | |
-| `-[NSArray(OOExtractor) oo_setAtIndex:defaultValue:]` (169) | | |
-| `-[NSArray(OOExtractor) oo_dictionaryAtIndex:defaultValue:]` (174) | | |
-| `-[NSArray(OOExtractor) oo_dataAtIndex:defaultValue:]` (179) | | |
-| `-[NSArray(OOExtractor) oo_vectorAtIndex:defaultValue:]` (185) | | |
-| `-[NSArray(OOExtractor) oo_quaternionAtIndex:defaultValue:]` (190) | | |
-| `-[NSArray(OOExtractor) oo_charAtIndex:]` (196) | | |
-| `-[NSArray(OOExtractor) oo_shortAtIndex:]` (201) | | |
-| `-[NSArray(OOExtractor) oo_intAtIndex:]` (206) | | |
-| `-[NSArray(OOExtractor) oo_longAtIndex:]` (211) | | |
-| `-[NSArray(OOExtractor) oo_longLongAtIndex:]` (216) | | |
-| `-[NSArray(OOExtractor) oo_integerAtIndex:]` (221) | | |
-| `-[NSArray(OOExtractor) oo_unsignedCharAtIndex:]` (226) | | |
-| `-[NSArray(OOExtractor) oo_unsignedShortAtIndex:]` (231) | | |
-| `-[NSArray(OOExtractor) oo_unsignedIntAtIndex:]` (236) | | |
-| `-[NSArray(OOExtractor) oo_unsignedLongAtIndex:]` (241) | | |
-| `-[NSArray(OOExtractor) oo_unsignedLongLongAtIndex:]` (246) | | |
-| `-[NSArray(OOExtractor) oo_unsignedIntegerAtIndex:]` (251) | | |
-| `-[NSArray(OOExtractor) oo_boolAtIndex:]` (256) | | |
-| `-[NSArray(OOExtractor) oo_fuzzyBooleanAtIndex:]` (262) | | |
-| `-[NSArray(OOExtractor) oo_floatAtIndex:]` (268) | | |
-| `-[NSArray(OOExtractor) oo_doubleAtIndex:]` (273) | | |
-| `-[NSArray(OOExtractor) oo_nonNegativeFloatAtIndex:]` (278) | | |
-| `-[NSArray(OOExtractor) oo_nonNegativeDoubleAtIndex:]` (283) | | |
-| `-[NSArray(OOExtractor) oo_objectAtIndex:]` (288) | | |
-| `-[NSArray(OOExtractor) oo_objectOfClass:atIndex:]` (296) | | |
-| `-[NSArray(OOExtractor) oo_stringAtIndex:]` (301) | | |
-| `-[NSArray(OOExtractor) oo_arrayAtIndex:]` (306) | | |
-| `-[NSArray(OOExtractor) oo_setAtIndex:]` (311) | | |
-| `-[NSArray(OOExtractor) oo_dictionaryAtIndex:]` (316) | | |
-| `-[NSArray(OOExtractor) oo_dataAtIndex:]` (321) | | |
-| `-[NSArray(OOExtractor) oo_vectorAtIndex:]` (327) | | |
-| `-[NSArray(OOExtractor) oo_quaternionAtIndex:]` (332) | | |
-| `-[NSDictionary(OOExtractor) oo_charForKey:defaultValue:]` (342) | | |
-| `-[NSDictionary(OOExtractor) oo_shortForKey:defaultValue:]` (347) | | |
-| `-[NSDictionary(OOExtractor) oo_intForKey:defaultValue:]` (352) | | |
-| `-[NSDictionary(OOExtractor) oo_longForKey:defaultValue:]` (357) | | |
-| `-[NSDictionary(OOExtractor) oo_longLongForKey:defaultValue:]` (362) | | |
-| `-[NSDictionary(OOExtractor) oo_integerForKey:defaultValue:]` (367) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedCharForKey:defaultValue:]` (372) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedShortForKey:defaultValue:]` (377) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedIntForKey:defaultValue:]` (382) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedLongForKey:defaultValue:]` (387) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedLongLongForKey:defaultValue:]` (392) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedIntegerForKey:defaultValue:]` (397) | | |
-| `-[NSDictionary(OOExtractor) oo_boolForKey:defaultValue:]` (402) | | |
-| `-[NSDictionary(OOExtractor) oo_fuzzyBooleanForKey:defaultValue:]` (408) | | |
-| `-[NSDictionary(OOExtractor) oo_floatForKey:defaultValue:]` (414) | | |
-| `-[NSDictionary(OOExtractor) oo_doubleForKey:defaultValue:]` (419) | | |
-| `-[NSDictionary(OOExtractor) oo_nonNegativeFloatForKey:defaultValue:]` (424) | | |
-| `-[NSDictionary(OOExtractor) oo_nonNegativeDoubleForKey:defaultValue:]` (429) | | |
-| `-[NSDictionary(OOExtractor) oo_objectForKey:defaultValue:]` (434) | | |
-| `-[NSDictionary(OOExtractor) oo_objectOfClass:forKey:defaultValue:]` (447) | | |
-| `-[NSDictionary(OOExtractor) oo_stringForKey:defaultValue:]` (460) | | |
-| `-[NSDictionary(OOExtractor) oo_arrayForKey:defaultValue:]` (465) | | |
-| `-[NSDictionary(OOExtractor) oo_setForKey:defaultValue:]` (470) | | |
-| `-[NSDictionary(OOExtractor) oo_dictionaryForKey:defaultValue:]` (475) | | |
-| `-[NSDictionary(OOExtractor) oo_mutableDictionaryForKey:defaultValue:]` (480) | | |
-| `-[NSDictionary(OOExtractor) oo_dataForKey:defaultValue:]` (485) | | |
-| `-[NSDictionary(OOExtractor) oo_vectorForKey:defaultValue:]` (491) | | |
-| `-[NSDictionary(OOExtractor) oo_hpvectorForKey:defaultValue:]` (496) | | |
-| `-[NSDictionary(OOExtractor) oo_quaternionForKey:defaultValue:]` (501) | | |
-| `-[NSDictionary(OOExtractor) oo_charForKey:]` (507) | | |
-| `-[NSDictionary(OOExtractor) oo_shortForKey:]` (512) | | |
-| `-[NSDictionary(OOExtractor) oo_intForKey:]` (517) | | |
-| `-[NSDictionary(OOExtractor) oo_longForKey:]` (522) | | |
-| `-[NSDictionary(OOExtractor) oo_longLongForKey:]` (527) | | |
-| `-[NSDictionary(OOExtractor) oo_integerForKey:]` (532) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedCharForKey:]` (537) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedShortForKey:]` (542) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedIntForKey:]` (547) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedLongForKey:]` (552) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedIntegerForKey:]` (557) | | |
-| `-[NSDictionary(OOExtractor) oo_unsignedLongLongForKey:]` (562) | | |
-| `-[NSDictionary(OOExtractor) oo_boolForKey:]` (567) | | |
-| `-[NSDictionary(OOExtractor) oo_fuzzyBooleanForKey:]` (573) | | |
-| `-[NSDictionary(OOExtractor) oo_floatForKey:]` (579) | | |
-| `-[NSDictionary(OOExtractor) oo_doubleForKey:]` (584) | | |
-| `-[NSDictionary(OOExtractor) oo_nonNegativeFloatForKey:]` (589) | | |
-| `-[NSDictionary(OOExtractor) oo_nonNegativeDoubleForKey:]` (594) | | |
-| `-[NSDictionary(OOExtractor) oo_objectOfClass:forKey:]` (599) | | |
-| `-[NSDictionary(OOExtractor) oo_stringForKey:]` (604) | | |
-| `-[NSDictionary(OOExtractor) oo_arrayForKey:]` (609) | | |
-| `-[NSDictionary(OOExtractor) oo_setForKey:]` (614) | | |
-| `-[NSDictionary(OOExtractor) oo_dictionaryForKey:]` (619) | | |
-| `-[NSDictionary(OOExtractor) oo_mutableDictionaryForKey:]` (624) | | |
-| `-[NSDictionary(OOExtractor) oo_dataForKey:]` (629) | | |
-| `-[NSDictionary(OOExtractor) oo_vectorForKey:]` (635) | | |
-| `-[NSDictionary(OOExtractor) oo_hpvectorForKey:]` (640) | | |
-| `-[NSDictionary(OOExtractor) oo_quaternionForKey:]` (645) | | |
-| `-[NSUserDefaults(OOExtractor) oo_charForKey:defaultValue:]` (655) | | |
-| `-[NSUserDefaults(OOExtractor) oo_shortForKey:defaultValue:]` (660) | | |
-| `-[NSUserDefaults(OOExtractor) oo_intForKey:defaultValue:]` (665) | | |
-| `-[NSUserDefaults(OOExtractor) oo_longForKey:defaultValue:]` (670) | | |
-| `-[NSUserDefaults(OOExtractor) oo_longLongForKey:defaultValue:]` (675) | | |
-| `-[NSUserDefaults(OOExtractor) oo_integerForKey:defaultValue:]` (680) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedCharForKey:defaultValue:]` (685) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedShortForKey:defaultValue:]` (690) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedIntForKey:defaultValue:]` (695) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedLongForKey:defaultValue:]` (700) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedLongLongForKey:defaultValue:]` (705) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedIntegerForKey:defaultValue:]` (710) | | |
-| `-[NSUserDefaults(OOExtractor) oo_boolForKey:defaultValue:]` (715) | | |
-| `-[NSUserDefaults(OOExtractor) oo_fuzzyBooleanForKey:defaultValue:]` (721) | | |
-| `-[NSUserDefaults(OOExtractor) oo_floatForKey:defaultValue:]` (727) | | |
-| `-[NSUserDefaults(OOExtractor) oo_doubleForKey:defaultValue:]` (732) | | |
-| `-[NSUserDefaults(OOExtractor) oo_nonNegativeFloatForKey:defaultValue:]` (737) | | |
-| `-[NSUserDefaults(OOExtractor) oo_nonNegativeDoubleForKey:defaultValue:]` (742) | | |
-| `-[NSUserDefaults(OOExtractor) oo_objectForKey:defaultValue:]` (747) | | |
-| `-[NSUserDefaults(OOExtractor) oo_objectOfClass:forKey:defaultValue:]` (760) | | |
-| `-[NSUserDefaults(OOExtractor) oo_stringForKey:defaultValue:]` (773) | | |
-| `-[NSUserDefaults(OOExtractor) oo_arrayForKey:defaultValue:]` (778) | | |
-| `-[NSUserDefaults(OOExtractor) oo_setForKey:defaultValue:]` (783) | | |
-| `-[NSUserDefaults(OOExtractor) oo_dictionaryForKey:defaultValue:]` (788) | | |
-| `-[NSUserDefaults(OOExtractor) oo_dataForKey:defaultValue:]` (793) | | |
-| `-[NSUserDefaults(OOExtractor) oo_charForKey:]` (798) | | |
-| `-[NSUserDefaults(OOExtractor) oo_shortForKey:]` (803) | | |
-| `-[NSUserDefaults(OOExtractor) oo_intForKey:]` (808) | | |
-| `-[NSUserDefaults(OOExtractor) oo_longForKey:]` (813) | | |
-| `-[NSUserDefaults(OOExtractor) oo_longLongForKey:]` (818) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedCharForKey:]` (823) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedShortForKey:]` (828) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedIntForKey:]` (833) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedLongForKey:]` (838) | | |
-| `-[NSUserDefaults(OOExtractor) oo_unsignedLongLongForKey:]` (843) | | |
-| `-[NSUserDefaults(OOExtractor) oo_fuzzyBooleanForKey:]` (849) | | |
-| `-[NSUserDefaults(OOExtractor) oo_doubleForKey:]` (855) | | |
-| `-[NSUserDefaults(OOExtractor) oo_nonNegativeFloatForKey:]` (860) | | |
-| `-[NSUserDefaults(OOExtractor) oo_nonNegativeDoubleForKey:]` (865) | | |
-| `-[NSUserDefaults(OOExtractor) oo_objectOfClass:forKey:]` (870) | | |
-| `-[NSUserDefaults(OOExtractor) oo_setForKey:]` (875) | | |
-| `-[NSMutableArray(OOInserter) oo_addInteger:]` (884) | | |
-| `-[NSMutableArray(OOInserter) oo_addUnsignedInteger:]` (889) | | |
-| `-[NSMutableArray(OOInserter) oo_addFloat:]` (894) | | |
-| `-[NSMutableArray(OOInserter) oo_addBool:]` (899) | | |
-| `-[NSMutableArray(OOInserter) oo_addVector:]` (905) | | |
-| `-[NSMutableArray(OOInserter) oo_addQuaternion:]` (910) | | |
-| `-[NSMutableArray(OOInserter) oo_insertInteger:atIndex:]` (916) | | |
-| `-[NSMutableArray(OOInserter) oo_insertUnsignedInteger:atIndex:]` (921) | | |
-| `-[NSMutableArray(OOInserter) oo_insertFloat:atIndex:]` (926) | | |
-| `-[NSMutableArray(OOInserter) oo_insertBool:atIndex:]` (931) | | |
-| `-[NSMutableArray(OOInserter) oo_insertVector:atIndex:]` (937) | | |
-| `-[NSMutableArray(OOInserter) oo_insertQuaternion:atIndex:]` (942) | | |
-| `-[NSMutableDictionary(OOInserter) oo_setInteger:forKey:]` (952) | | |
-| `-[NSMutableDictionary(OOInserter) oo_setUnsignedInteger:forKey:]` (957) | | |
-| `-[NSMutableDictionary(OOInserter) oo_setLongLong:forKey:]` (962) | | |
-| `-[NSMutableDictionary(OOInserter) oo_setUnsignedLongLong:forKey:]` (967) | | |
-| `-[NSMutableDictionary(OOInserter) oo_setFloat:forKey:]` (972) | | |
-| `-[NSMutableDictionary(OOInserter) oo_setBool:forKey:]` (977) | | |
-| `-[NSMutableDictionary(OOInserter) oo_setVector:forKey:]` (983) | | |
-| `-[NSMutableDictionary(OOInserter) oo_setHPVector:forKey:]` (988) | | |
-| `-[NSMutableDictionary(OOInserter) oo_setQuaternion:forKey:]` (993) | | |
-| `-[NSMutableSet(OOInserter) oo_addInteger:]` (1003) | | |
-| `-[NSMutableSet(OOInserter) oo_addUnsignedInteger:]` (1008) | | |
-| `-[NSMutableSet(OOInserter) oo_addFloat:]` (1013) | | |
-| `-[NSMutableSet(OOInserter) oo_addBool:]` (1018) | | |
-| `-[NSMutableSet(OOInserter) oo_addVector:]` (1024) | | |
-| `-[NSMutableSet(OOInserter) oo_addQuaternion:]` (1029) | | |
-| `OOLongLongFromObject()` (1037) | | |
-| `OOUnsignedLongLongFromObject()` (1053) | | |
-| `IsSpaceOrTab()` (1071) | | |
-| `IsZeroString()` (1076) | | |
-| `BooleanFromString()` (1098) | | |
-| `FuzzyBooleanProbabilityFromString()` (1111) | | |
-| `OOBooleanFromObject()` (1124) | | |
-| `OOFuzzyBooleanFromObject()` (1143) | | |
-| `OOFloatFromObject()` (1167) | | |
-| `OODoubleFromObject()` (1185) | | |
-| `OONonNegativeFloatFromObject()` (1203) | | |
-| `OONonNegativeDoubleFromObject()` (1219) | | |
-| `OOVectorFromObject()` (1236) | | |
-| `OOHPVectorFromObject()` (1266) | | |
-| `OOQuaternionFromObject()` (1294) | | |
-| `OOPropertyListFromVector()` (1325) | | |
-| `OOPropertyListFromHPVector()` (1334) | | |
-| `OOPropertyListFromQuaternion()` (1343) | | |
-| `SetForObject()` (1354) | | |
-| `StringForObject()` (1364) | | |
+| `-[NSArray(OOExtractor) oo_charAtIndex:defaultValue:]` (41) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<char>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_shortAtIndex:defaultValue:]` (46) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<short>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_intAtIndex:defaultValue:]` (51) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<int>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_longAtIndex:defaultValue:]` (56) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_longLongAtIndex:defaultValue:]` (61) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_integerAtIndex:defaultValue:]` (66) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedCharAtIndex:defaultValue:]` (71) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<unsigned char>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedShortAtIndex:defaultValue:]` (76) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<unsigned short>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedIntAtIndex:defaultValue:]` (81) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<unsigned int>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedLongAtIndex:defaultValue:]` (86) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<unsigned long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedLongLongAtIndex:defaultValue:]` (91) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<unsigned long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedIntegerAtIndex:defaultValue:]` (96) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<unsigned long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_boolAtIndex:defaultValue:]` (101) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<bool>` oofnd/PListGet.hpp:577 | ✅ |
+| `-[NSArray(OOExtractor) oo_fuzzyBooleanAtIndex:defaultValue:]` (107) | no `at<>` form (no caller); `OOFuzzyBooleanFromPList` Core/OOPListGameTypes.cpp:135 | ➖ |
+| `-[NSArray(OOExtractor) oo_floatAtIndex:defaultValue:]` (113) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<float>` oofnd/PListGet.hpp:586 | ✅ |
+| `-[NSArray(OOExtractor) oo_doubleAtIndex:defaultValue:]` (118) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<double>` oofnd/PListGet.hpp:586 | ✅ |
+| `-[NSArray(OOExtractor) oo_nonNegativeFloatAtIndex:defaultValue:]` (123) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<NonNegative<float>>` oofnd/PListGet.hpp:594 | ✅ |
+| `-[NSArray(OOExtractor) oo_nonNegativeDoubleAtIndex:defaultValue:]` (128) | `PList::at<T>` oofnd/PListGet.hpp:661 → `PListGet<NonNegative<double>>` oofnd/PListGet.hpp:594 | ✅ |
+| `-[NSArray(OOExtractor) oo_objectAtIndex:defaultValue:]` (133) | `PList::at<T>` with T=`PList` → `PListGet<PList>` oofnd/PListGet.hpp:622 | ✅ |
+| `-[NSArray(OOExtractor) oo_objectOfClass:atIndex:defaultValue:]` (146) | none: a runtime `Class` has no PList form; callers test the node kind / `dynamic_cast` (e.g. Entities/PlanetEntity texture object) | ➖ |
+| `-[NSArray(OOExtractor) oo_stringAtIndex:defaultValue:]` (159) | `PList::at<T>` → `PListGet<std::string>` oofnd/PListGet.hpp:604 | ✅ |
+| `-[NSArray(OOExtractor) oo_arrayAtIndex:defaultValue:]` (164) | `PList::at<T>` T=`PList::Array` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSArray(OOExtractor) oo_setAtIndex:defaultValue:]` (169) | none: PList has no set; callers read the array (e.g. Core/ResourceManager.cpp:126 `get<PList::Array>`) | ➖ |
+| `-[NSArray(OOExtractor) oo_dictionaryAtIndex:defaultValue:]` (174) | `PList::at<T>` T=`PList::Dict` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSArray(OOExtractor) oo_dataAtIndex:defaultValue:]` (179) | `PList::at<T>` T=`PList::Data` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSArray(OOExtractor) oo_vectorAtIndex:defaultValue:]` (185) | `PList::at<T>` → `PListGet<Vector>` Core/OOPListGameTypes.h:59 → `OOVectorFromPList` Core/OOPListGameTypes.cpp:40 | ✅ |
+| `-[NSArray(OOExtractor) oo_quaternionAtIndex:defaultValue:]` (190) | `PList::at<T>` → `PListGet<Quaternion>` Core/OOPListGameTypes.h:75 → `OOQuaternionFromPList` Core/OOPListGameTypes.cpp:95 | ✅ |
+| `-[NSArray(OOExtractor) oo_charAtIndex:]` (196) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<char>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_shortAtIndex:]` (201) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<short>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_intAtIndex:]` (206) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<int>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_longAtIndex:]` (211) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_longLongAtIndex:]` (216) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_integerAtIndex:]` (221) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedCharAtIndex:]` (226) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<unsigned char>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedShortAtIndex:]` (231) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<unsigned short>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedIntAtIndex:]` (236) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<unsigned int>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedLongAtIndex:]` (241) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<unsigned long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedLongLongAtIndex:]` (246) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<unsigned long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_unsignedIntegerAtIndex:]` (251) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<unsigned long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSArray(OOExtractor) oo_boolAtIndex:]` (256) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<bool>` oofnd/PListGet.hpp:577 | ✅ |
+| `-[NSArray(OOExtractor) oo_fuzzyBooleanAtIndex:]` (262) | no `at<>` form (no caller); `OOFuzzyBooleanFromPList` Core/OOPListGameTypes.cpp:135 | ➖ |
+| `-[NSArray(OOExtractor) oo_floatAtIndex:]` (268) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<float>` oofnd/PListGet.hpp:586 | ✅ |
+| `-[NSArray(OOExtractor) oo_doubleAtIndex:]` (273) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<double>` oofnd/PListGet.hpp:586 | ✅ |
+| `-[NSArray(OOExtractor) oo_nonNegativeFloatAtIndex:]` (278) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<NonNegative<float>>` oofnd/PListGet.hpp:594 | ✅ |
+| `-[NSArray(OOExtractor) oo_nonNegativeDoubleAtIndex:]` (283) | `PList::at<T>` oofnd/PListGet.hpp:669 → `PListGet<NonNegative<double>>` oofnd/PListGet.hpp:594 | ✅ |
+| `-[NSArray(OOExtractor) oo_objectAtIndex:]` (288) | `PList::at(index)` oofnd/PList.hpp:258 (nullptr past the end) | ✅ |
+| `-[NSArray(OOExtractor) oo_objectOfClass:atIndex:]` (296) | none: a runtime `Class` has no PList form; callers test the node kind / `dynamic_cast` (e.g. Entities/PlanetEntity texture object) | ➖ |
+| `-[NSArray(OOExtractor) oo_stringAtIndex:]` (301) | `PList::at<T>` with fallback `""` oofnd/PListGet.hpp:607 (nil is not representable) | ⚠️ |
+| `-[NSArray(OOExtractor) oo_arrayAtIndex:]` (306) | `PList::at<T>` T=`PList::Array` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSArray(OOExtractor) oo_setAtIndex:]` (311) | none: PList has no set; callers read the array (e.g. Core/ResourceManager.cpp:126 `get<PList::Array>`) | ➖ |
+| `-[NSArray(OOExtractor) oo_dictionaryAtIndex:]` (316) | `PList::at<T>` T=`PList::Dict` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSArray(OOExtractor) oo_dataAtIndex:]` (321) | `PList::at<T>` T=`PList::Data` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSArray(OOExtractor) oo_vectorAtIndex:]` (327) | `PList::at<T>` → `PListGet<Vector>` Core/OOPListGameTypes.h:59 → `OOVectorFromPList` Core/OOPListGameTypes.cpp:40 (default kZeroVector, h:62) | ✅ |
+| `-[NSArray(OOExtractor) oo_quaternionAtIndex:]` (332) | `PList::at<T>` → `PListGet<Quaternion>` Core/OOPListGameTypes.h:75 → `OOQuaternionFromPList` Core/OOPListGameTypes.cpp:95 (default kIdentityQuaternion, h:78) | ✅ |
+| `-[NSDictionary(OOExtractor) oo_charForKey:defaultValue:]` (342) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<char>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_shortForKey:defaultValue:]` (347) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<short>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_intForKey:defaultValue:]` (352) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<int>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_longForKey:defaultValue:]` (357) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_longLongForKey:defaultValue:]` (362) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_integerForKey:defaultValue:]` (367) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedCharForKey:defaultValue:]` (372) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<unsigned char>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedShortForKey:defaultValue:]` (377) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<unsigned short>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedIntForKey:defaultValue:]` (382) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<unsigned int>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedLongForKey:defaultValue:]` (387) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<unsigned long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedLongLongForKey:defaultValue:]` (392) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<unsigned long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedIntegerForKey:defaultValue:]` (397) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<unsigned long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_boolForKey:defaultValue:]` (402) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<bool>` oofnd/PListGet.hpp:577 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_fuzzyBooleanForKey:defaultValue:]` (408) | `OOFuzzyBooleanFromPList(dict.find(k), d)` Core/OOPListGameTypes.cpp:135 (via `FuzzyBooleanForKey` Entities/ShipEntity.cpp:232, Entities/StationEntity.cpp:977) | ✅ |
+| `-[NSDictionary(OOExtractor) oo_floatForKey:defaultValue:]` (414) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<float>` oofnd/PListGet.hpp:586 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_doubleForKey:defaultValue:]` (419) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<double>` oofnd/PListGet.hpp:586 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_nonNegativeFloatForKey:defaultValue:]` (424) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<NonNegative<float>>` oofnd/PListGet.hpp:594 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_nonNegativeDoubleForKey:defaultValue:]` (429) | `PList::get<T>` oofnd/PListGet.hpp:647 → `PListGet<NonNegative<double>>` oofnd/PListGet.hpp:594 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_objectForKey:defaultValue:]` (434) | `PList::get<T>` with T=`PList` → `PListGet<PList>` oofnd/PListGet.hpp:622 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_objectOfClass:forKey:defaultValue:]` (447) | none: a runtime `Class` has no PList form; callers test the node kind / `dynamic_cast` (e.g. Entities/PlanetEntity texture object) | ➖ |
+| `-[NSDictionary(OOExtractor) oo_stringForKey:defaultValue:]` (460) | `PList::get<T>` → `PListGet<std::string>` oofnd/PListGet.hpp:604 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_arrayForKey:defaultValue:]` (465) | `PList::get<T>` T=`PList::Array` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_setForKey:defaultValue:]` (470) | none: PList has no set; callers read the array (e.g. Core/ResourceManager.cpp:126 `get<PList::Array>`) | ➖ |
+| `-[NSDictionary(OOExtractor) oo_dictionaryForKey:defaultValue:]` (475) | `PList::get<T>` T=`PList::Dict` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_mutableDictionaryForKey:defaultValue:]` (480) | none: PList has no mutable/immutable split; callers look up their own map (e.g. Core/OOCommodityMarket.cpp:332) | ➖ |
+| `-[NSDictionary(OOExtractor) oo_dataForKey:defaultValue:]` (485) | `PList::get<T>` T=`PList::Data` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_vectorForKey:defaultValue:]` (491) | `PList::get<T>` → `PListGet<Vector>` Core/OOPListGameTypes.h:59 → `OOVectorFromPList` Core/OOPListGameTypes.cpp:40 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_hpvectorForKey:defaultValue:]` (496) | `PList::get<T>` → `PListGet<HPVector>` Core/OOPListGameTypes.h:67 → `OOHPVectorFromPList` Core/OOPListGameTypes.cpp:71 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_quaternionForKey:defaultValue:]` (501) | `PList::get<T>` → `PListGet<Quaternion>` Core/OOPListGameTypes.h:75 → `OOQuaternionFromPList` Core/OOPListGameTypes.cpp:95 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_charForKey:]` (507) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<char>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_shortForKey:]` (512) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<short>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_intForKey:]` (517) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<int>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_longForKey:]` (522) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_longLongForKey:]` (527) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_integerForKey:]` (532) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedCharForKey:]` (537) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<unsigned char>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedShortForKey:]` (542) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<unsigned short>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedIntForKey:]` (547) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<unsigned int>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedLongForKey:]` (552) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<unsigned long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedIntegerForKey:]` (557) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<unsigned long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_unsignedLongLongForKey:]` (562) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<unsigned long long>::from` oofnd/PListGet.hpp:556 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_boolForKey:]` (567) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<bool>` oofnd/PListGet.hpp:577 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_fuzzyBooleanForKey:]` (573) | `OOFuzzyBooleanFromPList(dict.find(k), d)` Core/OOPListGameTypes.cpp:135 (via `FuzzyBooleanForKey` Entities/ShipEntity.cpp:232, Entities/StationEntity.cpp:977) | ✅ |
+| `-[NSDictionary(OOExtractor) oo_floatForKey:]` (579) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<float>` oofnd/PListGet.hpp:586 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_doubleForKey:]` (584) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<double>` oofnd/PListGet.hpp:586 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_nonNegativeFloatForKey:]` (589) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<NonNegative<float>>` oofnd/PListGet.hpp:594 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_nonNegativeDoubleForKey:]` (594) | `PList::get<T>` oofnd/PListGet.hpp:655 → `PListGet<NonNegative<double>>` oofnd/PListGet.hpp:594 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_objectOfClass:forKey:]` (599) | none: a runtime `Class` has no PList form; callers test the node kind / `dynamic_cast` (e.g. Entities/PlanetEntity texture object) | ➖ |
+| `-[NSDictionary(OOExtractor) oo_stringForKey:]` (604) | `PList::get<T>` with fallback `""` oofnd/PListGet.hpp:607 (nil is not representable) | ⚠️ |
+| `-[NSDictionary(OOExtractor) oo_arrayForKey:]` (609) | `PList::get<T>` T=`PList::Array` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_setForKey:]` (614) | none: PList has no set; callers read the array (e.g. Core/ResourceManager.cpp:126 `get<PList::Array>`) | ➖ |
+| `-[NSDictionary(OOExtractor) oo_dictionaryForKey:]` (619) | `PList::get<T>` T=`PList::Dict` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_mutableDictionaryForKey:]` (624) | none: PList has no mutable/immutable split; callers look up their own map (e.g. Core/OOCommodityMarket.cpp:332) | ➖ |
+| `-[NSDictionary(OOExtractor) oo_dataForKey:]` (629) | `PList::get<T>` T=`PList::Data` → oofnd/PListGet.hpp:634 | ✅ |
+| `-[NSDictionary(OOExtractor) oo_vectorForKey:]` (635) | `PList::get<T>` → `PListGet<Vector>` Core/OOPListGameTypes.h:59 → `OOVectorFromPList` Core/OOPListGameTypes.cpp:40 (default kZeroVector, h:62) | ✅ |
+| `-[NSDictionary(OOExtractor) oo_hpvectorForKey:]` (640) | `PList::get<T>` → `PListGet<HPVector>` Core/OOPListGameTypes.h:67 → `OOHPVectorFromPList` Core/OOPListGameTypes.cpp:71 (default kZeroHPVector, h:70) | ✅ |
+| `-[NSDictionary(OOExtractor) oo_quaternionForKey:]` (645) | `PList::get<T>` → `PListGet<Quaternion>` Core/OOPListGameTypes.h:75 → `OOQuaternionFromPList` Core/OOPListGameTypes.cpp:95 (default kIdentityQuaternion, h:78) | ✅ |
+| `-[NSUserDefaults(OOExtractor) oo_charForKey:defaultValue:]` (655) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_shortForKey:defaultValue:]` (660) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_intForKey:defaultValue:]` (665) | call sites: `detailLevel` via `Defaults::integerForKey` (Core/Universe.cpp:308); `jsruntime-size-mib`, `enforce-oxp-standards` via `PListGet<int>::from` (Scripting/OOJavaScriptEngine.cpp:306, Debug/OODebugStandards.cpp:86) | ❌ |
+| `-[NSUserDefaults(OOExtractor) oo_longForKey:defaultValue:]` (670) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_longLongForKey:defaultValue:]` (675) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_integerForKey:defaultValue:]` (680) | call site `sky-color-correction` via `Defaults::integerForKey` (Core/OOSkyDrawable.cpp:500) | ❌ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedCharForKey:defaultValue:]` (685) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedShortForKey:defaultValue:]` (690) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedIntForKey:defaultValue:]` (695) | call site `max-texture-size`: `PListGet<unsigned int>::from` (Materials/OOTextureLoader.cpp:319) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedLongForKey:defaultValue:]` (700) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedLongLongForKey:defaultValue:]` (705) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedIntegerForKey:defaultValue:]` (710) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_boolForKey:defaultValue:]` (715) | call sites: `Defaults::boolForKey` behind an `object(k).isNull()` test (Core/Universe.cpp:318-344, Core/OOLogging.cpp:264-267, Core/GameController.cpp:303,1159); `PListGet<bool>::from` elsewhere (SDL/MyOpenGLView.cpp:167,315-319, Core/Materials/OOTexture.cpp:571, OXPVerifier/OOOXPVerifier.cpp:706) | ❌ |
+| `-[NSUserDefaults(OOExtractor) oo_fuzzyBooleanForKey:defaultValue:]` (721) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_floatForKey:defaultValue:]` (727) | call sites: `Defaults::floatForKey` for `fov-value` (Core/Universe.cpp:338) and the volume (Core/OOALSound.cpp:62); `PListGet<float>::from` elsewhere (Entities/OOSunEntity.cpp:125, Entities/PlayerEntity.cpp:2382,3852, SDL/MyOpenGLView.cpp:260-262,406, Materials/OOTexture.cpp:554, Materials/OOPlanetTextureGenerator.cpp:425) | ❌ |
+| `-[NSUserDefaults(OOExtractor) oo_doubleForKey:defaultValue:]` (732) | call sites: `Defaults::doubleForKey` for `animation_timer_interval` (Core/GameController.cpp:235); `PListGet<double>::from` for `flight-arrow-key-precision-factor` (Entities/PlayerEntityControls.cpp:3843) | ❌ |
+| `-[NSUserDefaults(OOExtractor) oo_nonNegativeFloatForKey:defaultValue:]` (737) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_nonNegativeDoubleForKey:defaultValue:]` (742) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_objectForKey:defaultValue:]` (747) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_objectOfClass:forKey:defaultValue:]` (760) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_stringForKey:defaultValue:]` (773) | call sites: `PListGet<std::string>::from` (SDL/MyOpenGLView.cpp:65 `DefaultsString`, Entities/PlayerEntityKeyMapper.cpp:76 `KeyboardCode`, Entities/PlayerEntityControls.cpp:293) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_arrayForKey:defaultValue:]` (778) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_setForKey:defaultValue:]` (783) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_dictionaryForKey:defaultValue:]` (788) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_dataForKey:defaultValue:]` (793) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_charForKey:]` (798) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_shortForKey:]` (803) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_intForKey:]` (808) | call site `detailLevel` (see the defaultValue: row; Core/Universe.cpp:308) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_longForKey:]` (813) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_longLongForKey:]` (818) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedCharForKey:]` (823) | call site `js-gc-zeal`: `PListGet<unsigned char>::from(v, 0)` (Scripting/OOJavaScriptEngine.cpp:342) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedShortForKey:]` (828) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedIntForKey:]` (833) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedLongForKey:]` (838) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_unsignedLongLongForKey:]` (843) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_fuzzyBooleanForKey:]` (849) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_doubleForKey:]` (855) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_nonNegativeFloatForKey:]` (860) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_nonNegativeDoubleForKey:]` (865) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_objectOfClass:forKey:]` (870) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSUserDefaults(OOExtractor) oo_setForKey:]` (875) | no caller; a call site would use `PListGet<T>::from(defaults.object(k), d)` (oofnd/Defaults.hpp:446) | ➖ |
+| `-[NSMutableArray(OOInserter) oo_addInteger:]` (884) | callers store `PList::signedInteger` / `PList(int64)` oofnd/PList.hpp:202 | ➖ |
+| `-[NSMutableArray(OOInserter) oo_addUnsignedInteger:]` (889) | callers store `PList::unsignedInteger` oofnd/PList.hpp:203 | ➖ |
+| `-[NSMutableArray(OOInserter) oo_addFloat:]` (894) | callers store `oo::PList(double)` oofnd/PList.hpp:160 (+numberWithDouble:) | ➖ |
+| `-[NSMutableArray(OOInserter) oo_addBool:]` (899) | callers store `oo::PList(bool)` oofnd/PList.hpp:146 | ➖ |
+| `-[NSMutableArray(OOInserter) oo_addVector:]` (905) | callers store `OOPListFromVector(v)` Core/OOPListGameTypes.cpp:120 (single-precision reals) | ➖ |
+| `-[NSMutableArray(OOInserter) oo_addQuaternion:]` (910) | callers store `OOPListFromQuaternion(q)` Core/OOPListGameTypes.cpp:130 | ➖ |
+| `-[NSMutableArray(OOInserter) oo_insertInteger:atIndex:]` (916) | callers store `PList::signedInteger` / `PList(int64)` oofnd/PList.hpp:202 | ➖ |
+| `-[NSMutableArray(OOInserter) oo_insertUnsignedInteger:atIndex:]` (921) | callers store `PList::unsignedInteger` oofnd/PList.hpp:203 | ➖ |
+| `-[NSMutableArray(OOInserter) oo_insertFloat:atIndex:]` (926) | callers store `oo::PList(double)` oofnd/PList.hpp:160 (+numberWithDouble:) | ➖ |
+| `-[NSMutableArray(OOInserter) oo_insertBool:atIndex:]` (931) | callers store `oo::PList(bool)` oofnd/PList.hpp:146 | ➖ |
+| `-[NSMutableArray(OOInserter) oo_insertVector:atIndex:]` (937) | callers store `OOPListFromVector(v)` Core/OOPListGameTypes.cpp:120 (single-precision reals) | ➖ |
+| `-[NSMutableArray(OOInserter) oo_insertQuaternion:atIndex:]` (942) | callers store `OOPListFromQuaternion(q)` Core/OOPListGameTypes.cpp:130 | ➖ |
+| `-[NSMutableDictionary(OOInserter) oo_setInteger:forKey:]` (952) | callers store `PList::signedInteger` / `PList(int64)` oofnd/PList.hpp:202 | ➖ |
+| `-[NSMutableDictionary(OOInserter) oo_setUnsignedInteger:forKey:]` (957) | callers store `PList::unsignedInteger` oofnd/PList.hpp:203 | ➖ |
+| `-[NSMutableDictionary(OOInserter) oo_setLongLong:forKey:]` (962) | callers store `PList::signedInteger` / `PList(int64)` oofnd/PList.hpp:202 | ➖ |
+| `-[NSMutableDictionary(OOInserter) oo_setUnsignedLongLong:forKey:]` (967) | callers store `PList::unsignedInteger` oofnd/PList.hpp:203 | ➖ |
+| `-[NSMutableDictionary(OOInserter) oo_setFloat:forKey:]` (972) | callers store `oo::PList(double)` oofnd/PList.hpp:160 (+numberWithDouble:) | ➖ |
+| `-[NSMutableDictionary(OOInserter) oo_setBool:forKey:]` (977) | callers store `oo::PList(bool)` oofnd/PList.hpp:146 | ➖ |
+| `-[NSMutableDictionary(OOInserter) oo_setVector:forKey:]` (983) | callers store `OOPListFromVector(v)` Core/OOPListGameTypes.cpp:120 (single-precision reals) | ➖ |
+| `-[NSMutableDictionary(OOInserter) oo_setHPVector:forKey:]` (988) | callers store `OOPListFromHPVector(v)` Core/OOPListGameTypes.cpp:125 | ➖ |
+| `-[NSMutableDictionary(OOInserter) oo_setQuaternion:forKey:]` (993) | callers store `OOPListFromQuaternion(q)` Core/OOPListGameTypes.cpp:130 | ➖ |
+| `-[NSMutableSet(OOInserter) oo_addInteger:]` (1003) | no NSMutableSet of numbers in the port (no PList set); callers store `PList::signedInteger` / `PList(int64)` oofnd/PList.hpp:202 | ➖ |
+| `-[NSMutableSet(OOInserter) oo_addUnsignedInteger:]` (1008) | no NSMutableSet of numbers in the port (no PList set); callers store `PList::unsignedInteger` oofnd/PList.hpp:203 | ➖ |
+| `-[NSMutableSet(OOInserter) oo_addFloat:]` (1013) | no NSMutableSet of numbers in the port (no PList set); callers store `oo::PList(double)` oofnd/PList.hpp:160 (+numberWithDouble:) | ➖ |
+| `-[NSMutableSet(OOInserter) oo_addBool:]` (1018) | no NSMutableSet of numbers in the port (no PList set); callers store `oo::PList(bool)` oofnd/PList.hpp:146 | ➖ |
+| `-[NSMutableSet(OOInserter) oo_addVector:]` (1024) | no NSMutableSet of numbers in the port (no PList set); callers store `OOPListFromVector(v)` Core/OOPListGameTypes.cpp:120 (single-precision reals) | ➖ |
+| `-[NSMutableSet(OOInserter) oo_addQuaternion:]` (1029) | no NSMutableSet of numbers in the port (no PList set); callers store `OOPListFromQuaternion(q)` Core/OOPListGameTypes.cpp:130 | ➖ |
+| `OOLongLongFromObject()` (1037) | `plist_get::longLongFrom` oofnd/PListGet.hpp:325 | ✅ |
+| `OOUnsignedLongLongFromObject()` (1053) | `plist_get::unsignedLongLongFrom` oofnd/PListGet.hpp:340 | ✅ |
+| `IsSpaceOrTab()` (1071) | inlined in `plist_get::isZeroString` oofnd/PListGet.hpp:284 | ✅ |
+| `IsZeroString()` (1076) | `plist_get::isZeroString` oofnd/PListGet.hpp:281 (the `' '`-for-`-` slip reproduced) | ✅ |
+| `BooleanFromString()` (1098) | `plist_get::boolFrom` string branch oofnd/PListGet.hpp:360-368 | ✅ |
+| `FuzzyBooleanProbabilityFromString()` (1111) | `plist_get::fuzzyProbabilityFrom` oofnd/PListGet.hpp:513-517 | ✅ |
+| `OOBooleanFromObject()` (1124) | `plist_get::boolFrom` oofnd/PListGet.hpp:356 | ✅ |
+| `OOFuzzyBooleanFromObject()` (1143) | `OOFuzzyBooleanFromPList` Core/OOPListGameTypes.cpp:135 + `fuzzyProbabilityFrom` oofnd/PListGet.hpp:503 | ✅ |
+| `OOFloatFromObject()` (1167) | `plist_get::realFrom<float>` oofnd/PListGet.hpp:385 | ✅ |
+| `OODoubleFromObject()` (1185) | `plist_get::realFrom<double>` oofnd/PListGet.hpp:385 | ✅ |
+| `OONonNegativeFloatFromObject()` (1203) | `plist_get::nonNegativeRealFrom<float>` oofnd/PListGet.hpp:404 | ✅ |
+| `OONonNegativeDoubleFromObject()` (1219) | `plist_get::nonNegativeRealFrom<double>` oofnd/PListGet.hpp:404 | ✅ |
+| `OOVectorFromObject()` (1236) | `OOVectorFromPList` Core/OOPListGameTypes.cpp:40 + `tupleFrom` oofnd/PListGet.hpp:440 | ✅ |
+| `OOHPVectorFromObject()` (1266) | `OOHPVectorFromPList` Core/OOPListGameTypes.cpp:71 + `tupleFrom` oofnd/PListGet.hpp:440 | ✅ |
+| `OOQuaternionFromObject()` (1294) | `OOQuaternionFromPList` Core/OOPListGameTypes.cpp:95 + `tupleFrom` oofnd/PListGet.hpp:440 | ✅ |
+| `OOPropertyListFromVector()` (1325) | `OOPListFromVector` Core/OOPListGameTypes.cpp:120 + `tuplePList` oofnd/PListGet.hpp:486 | ✅ |
+| `OOPropertyListFromHPVector()` (1334) | `OOPListFromHPVector` Core/OOPListGameTypes.cpp:125 | ✅ |
+| `OOPropertyListFromQuaternion()` (1343) | `OOPListFromQuaternion` Core/OOPListGameTypes.cpp:130 | ✅ |
+| `SetForObject()` (1354) | none (no PList set kind) | ➖ |
+| `StringForObject()` (1364) | `PListGet<std::string>::from` oofnd/PListGet.hpp:608 + `numberStringValue` oofnd/PListGet.hpp:521 | ✅ |
+| `OOClampInteger()` (OOCollectionExtractors.h:386) | clamp in `PListGet<integral>::from` oofnd/PListGet.hpp:568-571 | ✅ |
+| `OOCharFromObject()` / `OOUnsignedCharFromObject()` / `OOShortFromObject()` / `OOUnsignedShortFromObject()` (h:417-418, `OO_DEFINE_CLAMP_PAIR`) | `PListGet<integral>::from` narrow branch oofnd/PListGet.hpp:566-572 | ✅ |
+| `OOIntFromObject()` / `OOUnsignedIntFromObject()` / `OOLongFromObject()` / `OOUnsignedLongFromObject()` (h:440, 446; LLP64: clamped) | `PListGet<integral>::from` narrow branch oofnd/PListGet.hpp:566-572 (sizeof(long)==4 on Windows) | ✅ |
+| `OOIntegerFromObject()` / `OOUIntegerFromObject()` (h:450-457, OOLITE_64_BIT) | `PListGet<long long>` / `<unsigned long long>` oofnd/PListGet.hpp:562-565 | ✅ |
 
 **Differences:**
 
-- *pending*
+- ❌ **low** — **NSUserDefaults `oo_boolForKey:defaultValue:` at 12 call sites is now `Defaults::boolForKey`.** That is GNUstep's `-[NSString boolValue]` (the first non-space/`0`/sign char is y/Y/t/T/1-9), not `OOBooleanFromObject`. Examples:
+  - a prefs or argument value of `"on"` was YES and is now NO;
+  - `".5"` / `"0.5"` was YES (non-zero `-doubleValue`) and is now NO;
+  - an unrecognised word (`"maybe"`) was the default (YES for `ecoqos`, `logging-show-time`, `logging-show-class`, `procedurally-textured-planets`, `ecm-visual-fx`) and is now NO; `" yes"` was the default and is now YES.
 
+  Values the game writes itself (setBool → YES/NO/1/0) read the same, so this needs a hand-edited plist or a `-key value` argument — upstream `Core/OOCollectionExtractors.m:715-718,1098-1108,1124-1140` (callers `Core/Universe.m:718-740`, `Core/OOLogging.m:654-657`, `Core/GameController.m:142,895`) ↔ port `oofnd/Defaults.hpp:90-101,474-479` (callers `Core/Universe.cpp:318-344`, `Core/OOLogging.cpp:264-267`, `Core/GameController.cpp:303,1159`)
+- ❌ **low** — **NSUserDefaults `oo_floatForKey:` / `oo_doubleForKey:` with a default are now `Defaults::floatForKey` / `doubleForKey`.** An unparseable string such as `"abc"` gave the default (`OOFloatFromObject`'s IsZeroString test) and now gives 0:
+  - `fov-value` 57.2 → 0, then clamped up to MIN_FOV;
+  - volume 0.5 → 0 (silent);
+  - `animation_timer_interval` MINIMUM_ANIMATION_TICK → 0.
+
+  Upstream `Core/OOCollectionExtractors.m:727-735,1167-1201`, callers `Core/Universe.m:736`, `Core/OOALSound.m:53`, `Core/GameController.m:89` ↔ port `oofnd/Defaults.hpp:490-497`, callers `Core/Universe.cpp:338`, `Core/OOALSound.cpp:62`, `Core/GameController.cpp:235`
+- ❌ **low** — **The port has two `-[NSString doubleValue]` implementations, and they disagree.** `plist_get::scanDoubleAt` ports NSScanner and keeps 18 digits, so `"9223372036854775807"` → 9.2233720368547758e17 and an exponent over 511 is no number. `defaults_detail::stringDoubleValue` uses `from_chars`, which rounds correctly, takes unlimited digits and turns overflow into inf. At most one can match GNUstep 1.31.1 for long mantissas and huge exponents. The Defaults call sites in the bullet above go through the second one; everything that used `OO*FromObject` goes through the first — port `oofnd/PListGet.hpp:149-263` ↔ port `oofnd/Defaults.hpp:163-191`
+- ❌ **low** — **NSUserDefaults `oo_intForKey:` (`detailLevel`) and `oo_integerForKey:` (`sky-color-correction`) now use `Defaults::integerForKey`.** That has no 20-character `intBuf` limit, so `"000000000000000000001"` now reads 1 (upstream 0), and on positive overflow it reinterprets as -1 instead of saturating then clamping to INT_MAX. Ordinary values read the same — upstream `Core/OOCollectionExtractors.m:1037-1050` + h:440, callers `Core/Universe.m:707`, `Core/OOSkyDrawable.m:510` ↔ port `oofnd/Defaults.hpp:106-124,481-488`, callers `Core/Universe.cpp:308`, `Core/OOSkyDrawable.cpp:500`
+- ⚠️ **low** — The no-default `oo_stringForKey:` / `oo_stringAtIndex:` returned nil for a missing or non-string value. `get<std::string>(k)` returns `""`, as documented in PListGet.hpp ("use get<PList> to test presence"). A converted caller that tested for nil now sees an empty string — upstream `Core/OOCollectionExtractors.m:301,604` ↔ port `oofnd/PListGet.hpp:601-618`
+- subtle (✅) — `PList::get` / `at` on a **null** PList return `Result{}` (0, NO, `""`, nullptr, zero Vector/Quaternion), not the fallback. That is the faithful translation of messaging nil, including a zeroed (not identity) Quaternion — port `oofnd/PListGet.hpp:649-650,663-664`
+- subtle (low) — `get<T>` on a non-dict, or `at<T>` on a non-array, returns the fallback. Upstream sent `oo_*ForKey:` to an NSArray/NSString and raised "unrecognized selector". Only reachable when a caller skipped the `get<PList::Dict>` kind check that upstream's `oo_dictionaryForKey:` forced — port `oofnd/PList.hpp:244-262`
+- subtle (✅) — Exact on LLP64 Windows (ADR-0017): `long`/`unsigned long` are 32-bit and clamp through `OOLongLongFromObject`, as `OO_DEFINE_CLAMP_PAIR(long…)` did. PListGet.hpp notes that on LP64 upstream's `unsigned long` aliased the *signed* reading, and the port's size dispatch would read unsigned there. That is a Phase 5 concern — port `oofnd/PListGet.hpp:53-57,560-573`
+- subtle (✅) — These conversions are replicated byte for byte and pinned by tests/unit/oofnd/test_plist_get.cpp:
+  - the `IsZeroString` slip that tests `' '` instead of `'-'` (`"-0"` is not a zero string);
+  - the redundant `doubleValue != 0` in `FuzzyBooleanProbabilityFromString` (`"1e-50"` → probability 1);
+  - `fmax`'s NaN/-0 → +0 in the non-negative readers, with the default left unclamped;
+  - the unsigned 64-bit reading of a string through `-intValue` (`"5000000000"` → 2147483647).
+
+  Upstream `Core/OOCollectionExtractors.m:1091,1111-1120,1203-1233,1053-1068` ↔ port `oofnd/PListGet.hpp:281-287,503-518,404-420,350-352`
+- subtle (✅) — `tupleFrom` skips null array elements and dict values ("as oo::ObjectFromPList dropped them"). Upstream never saw NSNull in plists, so this is equivalent. The dict path uses 0 for missing components, not the default's, as upstream did — upstream `Core/OOCollectionExtractors.m:1236-1322` ↔ port `oofnd/PListGet.hpp:439-481`
+- note — The NSMutableArray/Dictionary `oo_addInteger:` / `oo_setInteger:forKey:` family stored `+numberWithLong:`, which is 32-bit on Windows, so a 64-bit value was truncated. Port callers build `PList::signedInteger(int64)` directly. Not audited per caller; any caller that passed a value over 2^31 now stores it whole — upstream `Core/OOCollectionExtractors.m:884-998`
 
 ## OODeepCopy
 
 <a id="oodeepcopy"></a>
-Upstream `src/Core/OODeepCopy.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/OODeepCopy.m` ↔ *(absorbed: `oo::PList` value copies)*
 
-**Status:** pending
+**Status:** done — 7 rows: 0 ✅ 0 ⚠️ 1 ❌ 6 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OODeepCopy()` (30) | | |
-| `-[NSObject(OODeepCopy) ooDeepCopyWithSharedObjects:]` (50) | | |
-| `-[NSString(OODeepCopy) ooDeepCopyWithSharedObjects:]` (63) | | |
-| `-[NSValue(OODeepCopy) ooDeepCopyWithSharedObjects:]` (85) | | |
-| `-[NSArray(OODeepCopy) ooDeepCopyWithSharedObjects:]` (101) | | |
-| `-[NSSet(OODeepCopy) ooDeepCopyWithSharedObjects:]` (152) | | |
-| `-[NSDictionary(OODeepCopy) ooDeepCopyWithSharedObjects:]` (205) | | |
+| `OODeepCopy()` (30) | PList copy-construction at the former call sites: OOShipRegistry.cpp:233, OOCacheManager.cpp:484, Scripting/OOLegacyScriptWhitelist.cpp:69,110 | ➖ |
+| `-[NSObject(OODeepCopy) ooDeepCopyWithSharedObjects:]` (50) | PList copy (Object nodes share the `oo::Ref`, as `-retain` for non-NSCopying) | ➖ |
+| `-[NSString(OODeepCopy) ooDeepCopyWithSharedObjects:]` (63) | `std::string` copy (no interning; not observable) | ➖ |
+| `-[NSValue(OODeepCopy) ooDeepCopyWithSharedObjects:]` (85) | PList copy keeps each number's own kind | ❌ |
+| `-[NSArray(OODeepCopy) ooDeepCopyWithSharedObjects:]` (101) | `std::vector<PList>` copy | ➖ |
+| `-[NSSet(OODeepCopy) ooDeepCopyWithSharedObjects:]` (152) | none (no PList set) | ➖ |
+| `-[NSDictionary(OODeepCopy) ooDeepCopyWithSharedObjects:]` (205) | `std::map` copy | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** (suspected) — Upstream uniqued NSNumbers through `[objects member:self]`, which uses `-hash`/`-isEqual:`. GNUstep's NSNumber compares by value across types, so in one deep copy a later `<true/>` could be replaced by an earlier integer `1`, or `1.0` by `1`. That changes the kind JS later sees (boolean vs number) and the single/double flag. The PList copy keeps every node's kind. Only XML plists carry typed numbers (old-style plists hold strings), so shipdata/effectdata from XML OXPs is the exposure — upstream `Core/OODeepCopy.m:87-95` ↔ port `Core/OOShipRegistry.cpp:233`
 
 ## OOEncodingConverter
 
@@ -698,56 +719,54 @@ Upstream `src/Core/OOEncodingConverter.m` ↔ `Core/OOEncodingConverter.cpp`
 ## OOExcludeObjectEnumerator
 
 <a id="ooexcludeobjectenumerator"></a>
-Upstream `src/Core/OOExcludeObjectEnumerator.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/OOExcludeObjectEnumerator.m` ↔ *(absorbed: its one caller, `ShipEntity::escorts`)*
 
-**Status:** pending
+**Status:** done — 5 rows: 0 ✅ 0 ⚠️ 0 ❌ 5 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOExcludeObjectEnumerator initWithEnumerator:]` (30) | | |
-| `-[OOExcludeObjectEnumerator dealloc]` (41) | | |
-| `+[OOExcludeObjectEnumerator enumeratorWithEnumerator:]` (49) | | |
-| `-[OOExcludeObjectEnumerator nextObject]` (60) | | |
-| `-[NSEnumerator(OOExcludingObject) ooExcludingObject:]` (74) | | |
+| `-[OOExcludeObjectEnumerator initWithEnumerator:]` (30) | `ShipEntity::escorts()` Entities/ShipEntity.cpp:6522-6534: a snapshot of `_escortGroup->memberArray()` with `member == this` skipped | ➖ |
+| `-[OOExcludeObjectEnumerator dealloc]` (41) | — | ➖ |
+| `+[OOExcludeObjectEnumerator enumeratorWithEnumerator:]` (49) | (as above; upstream passed `self`, never nil) | ➖ |
+| `-[OOExcludeObjectEnumerator nextObject]` (60) | the `continue` at Entities/ShipEntity.cpp:6531 | ➖ |
+| `-[NSEnumerator(OOExcludingObject) ooExcludingObject:]` (74) | (as above; upstream `[[_escortGroup mutationSafeEnumerator] ooExcludingObject:self]`, ShipEntity.m:6034) | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- *none* (the same order and exclusion; upstream's enumerator was also over a snapshot)
 
 ## OOFilteringEnumerator
 
 <a id="oofilteringenumerator"></a>
-Upstream `src/Core/OOFilteringEnumerator.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/OOFilteringEnumerator.m` ↔ *(absorbed: typed filter loops at each caller)*
 
-**Status:** pending
+**Status:** done — 19 rows: 0 ✅ 0 ⚠️ 0 ❌ 19 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OOFilteringEnumerator filterEnumerator:withSelector:]` (36) | | |
-| `+[OOFilteringEnumerator filterEnumerator:withSelector:andArgument:]` (48) | | |
-| `-[OOFilteringEnumerator initWithUnderlyingEnumerator:]` (60) | | |
-| `-[OOFilteringEnumerator dealloc]` (77) | | |
-| `-[OOFilteringEnumerator descriptionComponents]` (85) | | |
-| `-[OOFilteringEnumerator shortDescriptionComponents]` (95) | | |
-| `-[OOFilteringEnumerator nextObject]` (100) | | |
-| `-[NSEnumerator(OOFilteringEnumerator) filteredWithSelector:]` (141) | | |
-| `-[NSEnumerator(OOFilteringEnumerator) filteredWithSelector:andArgument:]` (146) | | |
-| `-[NSArray(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:]` (155) | | |
-| `-[NSArray(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:andArgument:]` (160) | | |
-| `-[NSSet(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:]` (169) | | |
-| `-[NSSet(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:andArgument:]` (174) | | |
-| `-[NSDictionary(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:]` (183) | | |
-| `-[NSDictionary(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:andArgument:]` (188) | | |
-| `-[NSDictionary(OOFilteringEnumerator) keyEnumeratorFilteredWithSelector:]` (193) | | |
-| `-[NSDictionary(OOFilteringEnumerator) keyEnumeratorFilteredWithSelector:andArgument:]` (198) | | |
-| `-[NSEnumerator(OOMakeObjectsPerformSelector) makeObjectsPerformSelector:]` (207) | | |
-| `-[NSEnumerator(OOMakeObjectsPerformSelector) makeObjectsPerformSelector:withObject:]` (217) | | |
+| `+[OOFilteringEnumerator filterEnumerator:withSelector:]` (36) | Typed loops that return `std::vector<oo::EntityHold>`: e.g. `ShipEntity::shipSubEntities` Entities/ShipEntity.cpp:1512 (`isShip`), flasher/exhaust/visual-effect/dock forms, `system.planets` Scripting/OOJSSystem.cpp:438-441 (`isVisibleToScripts`) | ➖ |
+| `+[OOFilteringEnumerator filterEnumerator:withSelector:andArgument:]` (48) | none (no caller used an argument) | ➖ |
+| `-[OOFilteringEnumerator initWithUnderlyingEnumerator:]` (60) | — | ➖ |
+| `-[OOFilteringEnumerator dealloc]` (77) | — | ➖ |
+| `-[OOFilteringEnumerator descriptionComponents]` (85) | — | ➖ |
+| `-[OOFilteringEnumerator shortDescriptionComponents]` (95) | — | ➖ |
+| `-[OOFilteringEnumerator nextObject]` (100) | the `if (oo::EntityIsShip(sub)) push_back` test in each loop | ➖ |
+| `-[NSEnumerator(OOFilteringEnumerator) filteredWithSelector:]` (141) | (as above) | ➖ |
+| `-[NSEnumerator(OOFilteringEnumerator) filteredWithSelector:andArgument:]` (146) | none | ➖ |
+| `-[NSArray(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:]` (155) | (as above) | ➖ |
+| `-[NSArray(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:andArgument:]` (160) | none | ➖ |
+| `-[NSSet(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:]` (169) | none | ➖ |
+| `-[NSSet(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:andArgument:]` (174) | none | ➖ |
+| `-[NSDictionary(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:]` (183) | none | ➖ |
+| `-[NSDictionary(OOFilteringEnumerator) objectEnumeratorFilteredWithSelector:andArgument:]` (188) | none | ➖ |
+| `-[NSDictionary(OOFilteringEnumerator) keyEnumeratorFilteredWithSelector:]` (193) | none | ➖ |
+| `-[NSDictionary(OOFilteringEnumerator) keyEnumeratorFilteredWithSelector:andArgument:]` (198) | none | ➖ |
+| `-[NSEnumerator(OOMakeObjectsPerformSelector) makeObjectsPerformSelector:]` (207) | range-for at callers | ➖ |
+| `-[NSEnumerator(OOMakeObjectsPerformSelector) makeObjectsPerformSelector:withObject:]` (217) | range-for at callers | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- subtle — Upstream filtered lazily: an entity added to `subEntities` during the enumeration could be seen. The port's loops return a snapshot vector. The callers were not mutating during iteration — upstream `Core/OOFilteringEnumerator.m:100-138` ↔ port `Core/Entities/ShipEntity.cpp:1512-1520`
 
 ## OOFoundation
 
@@ -951,54 +970,54 @@ Upstream `src/Core/OOPListParsing.m` ↔ `Core/OOPListParsing.cpp`
 ## OOPriorityQueue
 
 <a id="oopriorityqueue"></a>
-Upstream `src/Core/OOPriorityQueue.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/OOPriorityQueue.m` ↔ `Core/OOPriorityQueue.h` (`OOPriorityQueueOf<T>`, header-only; the sole user is `Scripting/OOScriptTimer.cpp`)
 
-**Status:** pending
+**Status:** done — 37 rows: 13 ✅ 1 ⚠️ 0 ❌ 23 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `PQLeftChild()` (68) | | |
-| `PQRightChild()` (73) | | |
-| `PQParent()` (78) | | |
-| `PQCompare()` (85) | | |
-| `+[OOPriorityQueue queueWithComparator:]` (127) | | |
-| `-[OOPriorityQueue initWithComparator:]` (132) | | |
-| `-[OOPriorityQueue init]` (147) | | |
-| `-[OOPriorityQueue dealloc]` (152) | | |
-| `-[OOPriorityQueue description]` (160) | | |
-| `-[OOPriorityQueue debugDescription]` (166) | | |
-| `-[OOPriorityQueue isEqual:]` (184) | | |
-| `-[OOPriorityQueue hash]` (215) | | |
-| `-[OOPriorityQueue copyWithZone:]` (222) | | |
-| `-[OOPriorityQueue addObject:]` (245) | | |
-| `-[OOPriorityQueue removeObject:]` (273) | | |
-| `-[OOPriorityQueue removeExactObject:]` (292) | | |
-| `-[OOPriorityQueue count]` (306) | | |
-| `-[OOPriorityQueue nextObject]` (311) | | |
-| `-[OOPriorityQueue peekAtNextObject]` (318) | | |
-| `-[OOPriorityQueue removeNextObject]` (326) | | |
-| `-[OOPriorityQueue addObjects:]` (331) | | |
-| `-[OOPriorityQueue sortedObjects]` (344) | | |
-| `-[OOPriorityQueue objectEnumerator]` (349) | | |
-| `-[OOPriorityQueue(Private) makeObjectsPerformSelector:]` (358) | | |
-| `-[OOPriorityQueue(Private) bubbleUpFrom:]` (370) | | |
-| `-[OOPriorityQueue(Private) bubbleDownFrom:]` (389) | | |
-| `-[OOPriorityQueue(Private) growBuffer]` (417) | | |
-| `-[OOPriorityQueue(Private) shrinkBuffer]` (446) | | |
-| `-[OOPriorityQueue(Private) removeObjectAtIndex:]` (466) | | |
-| `-[OOPriorityQueue(Private) appendDebugDataToString:index:depth:]` (490) | | |
-| `-[OOPriorityQueueEnumerator initWithPriorityQueue:]` (512) | | |
-| `-[OOPriorityQueueEnumerator dealloc]` (526) | | |
-| `-[OOPriorityQueueEnumerator nextObject]` (533) | | |
-| `EscapedString()` (549) | | |
-| `-[OOPriorityQueue(DebugGraphViz) generateGraphViz]` (581) | | |
-| `-[OOPriorityQueue(DebugGraphViz) writeGraphVizToURL:]` (621) | | |
-| `-[OOPriorityQueue(DebugGraphViz) writeGraphVizToPath:]` (634) | | |
+| `PQLeftChild()` (68) | `LeftChild` Core/OOPriorityQueue.h:107 | ✅ |
+| `PQRightChild()` (73) | `RightChild` :108 | ✅ |
+| `PQParent()` (78) | `Parent` :109 | ✅ |
+| `PQCompare()` (85) | `_comparator(a, b)` function pointer (`CompareByNextFireTime`, Scripting/OOScriptTimer.cpp:168) | ✅ |
+| `+[OOPriorityQueue queueWithComparator:]` (127) | `new OOPriorityQueueOf<T>(cmp)` (OOScriptTimer.cpp:168) | ➖ |
+| `-[OOPriorityQueue initWithComparator:]` (132) | ctor :65 | ✅ |
+| `-[OOPriorityQueue init]` (147) | none (upstream raised/returned nil without a comparator) | ➖ |
+| `-[OOPriorityQueue dealloc]` (152) | implicit dtor (vector of `oo::Ref`) | ➖ |
+| `-[OOPriorityQueue description]` (160) | none | ➖ |
+| `-[OOPriorityQueue debugDescription]` (166) | none | ➖ |
+| `-[OOPriorityQueue isEqual:]` (184) | none (no caller) | ➖ |
+| `-[OOPriorityQueue hash]` (215) | none | ➖ |
+| `-[OOPriorityQueue copyWithZone:]` (222) | none | ➖ |
+| `-[OOPriorityQueue addObject:]` (245) | `addObject` :70 (bubble up from the end) | ⚠️ |
+| `-[OOPriorityQueue removeObject:]` (273) | none (comparator-equality removal had no caller) | ➖ |
+| `-[OOPriorityQueue removeExactObject:]` (292) | `removeExactObject` :78 (the scan continues past a match from i+1, as upstream) | ✅ |
+| `-[OOPriorityQueue count]` (306) | `count` :88 | ✅ |
+| `-[OOPriorityQueue nextObject]` (311) | `removeNextObject` :94 returns the element | ➖ |
+| `-[OOPriorityQueue peekAtNextObject]` (318) | `peekAtNextObject` :90 | ✅ |
+| `-[OOPriorityQueue removeNextObject]` (326) | `removeNextObject` :94 | ✅ |
+| `-[OOPriorityQueue addObjects:]` (331) | loop of `addObject` over `sDeferredTimers` in order (OOScriptTimer.cpp:222-225) | ➖ |
+| `-[OOPriorityQueue sortedObjects]` (344) | `sortedObjects` :97 (drains the queue, as upstream's enumerator did) | ✅ |
+| `-[OOPriorityQueue objectEnumerator]` (349) | none | ➖ |
+| `-[OOPriorityQueue(Private) makeObjectsPerformSelector:]` (358) | none | ➖ |
+| `-[OOPriorityQueue(Private) bubbleUpFrom:]` (370) | `bubbleUpFrom` :111 | ✅ |
+| `-[OOPriorityQueue(Private) bubbleDownFrom:]` (389) | `bubbleDownFrom` :123 (same child choice `li == end ‖ cmp(li,ri) < 0`) | ✅ |
+| `-[OOPriorityQueue(Private) growBuffer]` (417) | `std::vector` growth | ➖ |
+| `-[OOPriorityQueue(Private) shrinkBuffer]` (446) | `std::vector` (never shrinks) | ➖ |
+| `-[OOPriorityQueue(Private) removeObjectAtIndex:]` (466) | `removeObjectAtIndex` :140 (last element moved in, bubble down only) | ✅ |
+| `-[OOPriorityQueue(Private) appendDebugDataToString:index:depth:]` (490) | none (OO_DEBUG only) | ➖ |
+| `-[OOPriorityQueueEnumerator initWithPriorityQueue:]` (512) | none | ➖ |
+| `-[OOPriorityQueueEnumerator dealloc]` (526) | none | ➖ |
+| `-[OOPriorityQueueEnumerator nextObject]` (533) | (folded into `sortedObjects`) | ➖ |
+| `EscapedString()` (549) | none (DebugGraphViz) | ➖ |
+| `-[OOPriorityQueue(DebugGraphViz) generateGraphViz]` (581) | none | ➖ |
+| `-[OOPriorityQueue(DebugGraphViz) writeGraphVizToURL:]` (621) | none | ➖ |
+| `-[OOPriorityQueue(DebugGraphViz) writeGraphVizToPath:]` (634) | none | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `addObject(nullptr)` is ignored, as the comment at :70 says. Upstream raised NSInvalidArgumentException, both for nil and for an object without the comparator — upstream `Core/OOPriorityQueue.m:251-260` ↔ port `Core/OOPriorityQueue.h:70-73`
+- subtle — A removed element was `-autorelease`d and lived until the pool drained. `removeObjectAtIndex` now returns an `oo::Ref`, and `removeExactObject` discards it, so the element can be destroyed inside the loop (the header says this is safe from the element's destructor). The timer's own `-dealloc` called `removeExactObject:`, so it was never the last reference there — upstream `Core/OOPriorityQueue.m:484` ↔ port `Core/OOPriorityQueue.h:82-85,140-156`
 
 ## OOProfilingStopwatch
 
@@ -1051,76 +1070,76 @@ Upstream `src/Core/OORegExpMatcher.m` ↔ `Core/OORegExpMatcher.cpp`
 ## OOWeakReference
 
 <a id="ooweakreference"></a>
-Upstream `src/Core/OOWeakReference.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/OOWeakReference.m` ↔ `oofnd/Ref.hpp` (`oo::WeakRef<T>`, `detail::WeakControl`, `RefCounted`)
 
-**Status:** pending
+**Status:** done — 20 rows: 6 ✅ 2 ⚠️ 0 ❌ 12 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OOWeakReference weakRefWithObject:]` (24) | | |
-| `-[OOWeakReference dealloc]` (35) | | |
-| `-[OOWeakReference description]` (42) | | |
-| `-[OOWeakReference weakRefUnderlyingObject]` (50) | | |
-| `-[OOWeakReference weakRetain]` (55) | | |
-| `-[OOWeakReference weakRefDrop]` (60) | | |
-| `-[OOWeakReference class]` (67) | | |
-| `-[OOWeakReference isProxy]` (72) | | |
-| `-[OOWeakReference forwardInvocation:]` (77) | | |
-| `-[OOWeakReference methodSignatureForSelector:]` (83) | | |
-| `-[OOWeakReference respondsToSelector:]` (102) | | |
-| `-[OOWeakReference forwardingTargetForSelector:]` (115) | | |
-| `-[NSObject(OOWeakReference) weakRefUnderlyingObject]` (124) | | |
-| `-[OOWeakRefObject weakRetain]` (133) | | |
-| `-[OOWeakRefObject weakRefDied:]` (140) | | |
-| `-[OOWeakRefObject dealloc]` (146) | | |
-| `-[OOWeakRefObject weakSelf]` (152) | | |
-| `+[OOWeakReferenceTemplates weakRefDrop]` (162) | | |
-| `+[OOWeakReferenceTemplates weakRefUnderlyingObject]` (165) | | |
-| `+[OOWeakReferenceTemplates nilMethod]` (169) | | |
+| `+[OOWeakReference weakRefWithObject:]` (24) | `WeakRef(T*)` oofnd/Ref.hpp:387 + lazy `WeakControl` (`RefCounted::weakControl` :184), one control block per object like the one `weakSelf` proxy | ✅ |
+| `-[OOWeakReference dealloc]` (35) | `~WeakRef` :434 → `WeakControl::release` (the object's own count keeps the block, replacing `-weakRefDied:`) | ✅ |
+| `-[OOWeakReference description]` (42) | none | ➖ |
+| `-[OOWeakReference weakRefUnderlyingObject]` (50) | `WeakRef::get` :467 (nullptr once dead) | ✅ |
+| `-[OOWeakReference weakRetain]` (55) | WeakRef copy ctor :402 | ✅ |
+| `-[OOWeakReference weakRefDrop]` (60) | `RefCounted::dropWeakControl` :175 (from `dispose` :165 or `dropWeakReferences` :153) | ⚠️ |
+| `-[OOWeakReference class]` (67) | none (no proxy; `lock()` :471 gives the real object) | ➖ |
+| `-[OOWeakReference isProxy]` (72) | none | ➖ |
+| `-[OOWeakReference forwardInvocation:]` (77) | none: nil-safe forwarding becomes `if (auto t = w.lock())` at callers | ➖ |
+| `-[OOWeakReference methodSignatureForSelector:]` (83) | none | ➖ |
+| `-[OOWeakReference respondsToSelector:]` (102) | none | ➖ |
+| `-[OOWeakReference forwardingTargetForSelector:]` (115) | none | ➖ |
+| `-[NSObject(OOWeakReference) weakRefUnderlyingObject]` (124) | none (callers hold typed pointers) | ➖ |
+| `-[OOWeakRefObject weakRetain]` (133) | `WeakRef(this)` via `RefCounted::weakControl` :184 | ✅ |
+| `-[OOWeakRefObject weakRefDied:]` (140) | `WeakControl` refcount (`release` deletes the block) | ✅ |
+| `-[OOWeakRefObject dealloc]` (146) | `RefCounted::dispose` :165-173 (`willDispose`, then zero the weak refs, then `delete`) | ⚠️ |
+| `-[OOWeakRefObject weakSelf]` (152) | `oo::WeakRef<T>(this)` at callers | ➖ |
+| `+[OOWeakReferenceTemplates weakRefDrop]` (162) | none | ➖ |
+| `+[OOWeakReferenceTemplates weakRefUnderlyingObject]` (165) | none | ➖ |
+| `+[OOWeakReferenceTemplates nilMethod]` (169) | none | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — Weak references are zeroed *before* any destructor body runs. Upstream's `-weakRefDrop` ran inside `OOWeakRefObject -dealloc`, after the subclass `-dealloc` bodies, so a weak ref could still reach a half-dealloc'd object. The `Ref.hpp` banner documents this as "stricter than OOWeakReference" (ADR-0026). `willDispose` still runs with the weak refs live — upstream `Core/OOWeakReference.m:146-150` ↔ port `oofnd/Ref.hpp:165-173`
+- subtle — The proxy forwarded any message to nil once dead, which returned 0/nil. Callers now `get()`/`lock()` and must check for null. A missed check is a null deref, not a no-op. This is a per-caller property, not one this section can audit — upstream `Core/OOWeakReference.m:77-81` ↔ port `oofnd/Ref.hpp:467-473`
 
 ## OOWeakSet
 
 <a id="ooweakset"></a>
-Upstream `src/Core/OOWeakSet.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/OOWeakSet.m` ↔ `oofnd/WeakSet.hpp`
 
-**Status:** pending
+**Status:** done — 24 rows: 15 ✅ 4 ⚠️ 0 ❌ 5 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOWeakSet init]` (31) | | |
-| `-[OOWeakSet initWithCapacity:]` (36) | | |
-| `+[OOWeakSet set]` (48) | | |
-| `+[OOWeakSet setWithCapacity:]` (53) | | |
-| `-[OOWeakSet dealloc]` (58) | | |
-| `-[OOWeakSet description]` (65) | | |
-| `-[OOWeakSet copyWithZone:]` (92) | | |
-| `-[OOWeakSet mutableCopyWithZone:]` (100) | | |
-| `-[OOWeakSet isEqual:]` (105) | | |
-| `-[OOWeakSet count]` (129) | | |
-| `-[OOWeakSet containsObject:]` (135) | | |
-| `-[OOWeakSet objectEnumerator]` (144) | | |
-| `-[OOWeakSet addObject:]` (149) | | |
-| `-[OOWeakSet removeObject:]` (160) | | |
-| `-[OOWeakSet addObjectsByEnumerating:]` (167) | | |
-| `-[OOWeakSet makeObjectsPerformSelector:]` (176) | | |
-| `-[OOWeakSet makeObjectsPerformSelector:withObject:]` (184) | | |
-| `-[OOWeakSet allObjects]` (192) | | |
-| `-[OOWeakSet removeAllObjects]` (209) | | |
-| `-[OOWeakSet compact]` (214) | | |
-| `-[OOWeakRefUnpackingEnumerator initWithEnumerator:]` (242) | | |
-| `+[OOWeakRefUnpackingEnumerator enumeratorWithCollection:]` (256) | | |
-| `-[OOWeakRefUnpackingEnumerator dealloc]` (261) | | |
-| `-[OOWeakRefUnpackingEnumerator nextObject]` (268) | | |
+| `-[OOWeakSet init]` (31) | `WeakSet()` oofnd/WeakSet.hpp:51 | ✅ |
+| `-[OOWeakSet initWithCapacity:]` (36) | `WeakSet(capacityHint)` :52 | ✅ |
+| `+[OOWeakSet set]` (48) | `WeakSet()` | ✅ |
+| `+[OOWeakSet setWithCapacity:]` (53) | `WeakSet(capacityHint)` | ✅ |
+| `-[OOWeakSet dealloc]` (58) | `~WeakSet` :69 | ✅ |
+| `-[OOWeakSet description]` (65) | none | ➖ |
+| `-[OOWeakSet copyWithZone:]` (92) | copy ctor :58 → `addLiveFrom` :169 (live members only, as compact + add) | ✅ |
+| `-[OOWeakSet mutableCopyWithZone:]` (100) | copy ctor | ✅ |
+| `-[OOWeakSet isEqual:]` (105) | `operator==` :143 (count, then membership) | ✅ |
+| `-[OOWeakSet count]` (129) | `count` :71 (compacts first) | ✅ |
+| `-[OOWeakSet containsObject:]` (135) | `contains` :79 (identity; nil → false) | ✅ |
+| `-[OOWeakSet objectEnumerator]` (144) | `allObjects` :124 / `forEach` :137 | ⚠️ |
+| `-[OOWeakSet addObject:]` (149) | `add` :88 (nil ignored, identity-uniqued) | ✅ |
+| `-[OOWeakSet removeObject:]` (160) | `remove` :100 | ✅ |
+| `-[OOWeakSet addObjectsByEnumerating:]` (167) | `addAll` :111 | ✅ |
+| `-[OOWeakSet makeObjectsPerformSelector:]` (176) | `forEach` :137 | ⚠️ |
+| `-[OOWeakSet makeObjectsPerformSelector:withObject:]` (184) | `forEach` :137 | ⚠️ |
+| `-[OOWeakSet allObjects]` (192) | `allObjects` :124 (live, retained) | ⚠️ |
+| `-[OOWeakSet removeAllObjects]` (209) | `removeAll` :117 | ✅ |
+| `-[OOWeakSet compact]` (214) | `compact` :157 | ✅ |
+| `-[OOWeakRefUnpackingEnumerator initWithEnumerator:]` (242) | none (snapshot vector) | ➖ |
+| `+[OOWeakRefUnpackingEnumerator enumeratorWithCollection:]` (256) | none | ➖ |
+| `-[OOWeakRefUnpackingEnumerator dealloc]` (261) | none | ➖ |
+| `-[OOWeakRefUnpackingEnumerator nextObject]` (268) | the live-member filter in `allObjects` :127-129 | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — Members are now visited in insertion order. Upstream used NSMutableSet order, which follows pointer hashes and varies between runs. The banner calls this "One deliberate strengthening". Whatever iterates a WeakSet now runs in a fixed, different order — upstream `Core/OOWeakSet.m:176-206` ↔ port `oofnd/WeakSet.hpp:22-24,124-141`
+- ⚠️ **low** — `forEach` iterates a retained snapshot, so a callback may mutate the set. Upstream's `foreach` over `_objects` raised on mutation, and members died mid-loop could be messaged as nil. Documented in the banner — upstream `Core/OOWeakSet.m:176-190` ↔ port `oofnd/WeakSet.hpp:26-28,137-141`
 
 ## OOXMLExtensions
 
@@ -1142,75 +1161,75 @@ Upstream `src/Core/OOXMLExtensions.m` ↔ `Core/OOXMLExtensions.cpp`
 ## OldSchoolPropertyListWriting
 
 <a id="oldschoolpropertylistwriting"></a>
-Upstream `src/Core/OldSchoolPropertyListWriting.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/OldSchoolPropertyListWriting.m` ↔ `oofnd/PListWriting.hpp` (`plist_detail::OldStyleWriter`, `oo::writeOldStylePList`)
 
-**Status:** pending
+**Status:** done — 8 rows: 5 ✅ 3 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSString(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (30) | | |
-| `-[NSNumber(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (89) | | |
-| `-[NSData(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (121) | | |
-| `-[NSArray(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (169) | | |
-| `-[NSDictionary(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (211) | | |
-| `-[NSObject(OldSchoolPropertyListWriting) oldSchoolPListFormatWithErrorDescription:]` (278) | | |
-| `-[NSObject(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (286) | | |
-| `AppendNewLineAndIndent()` (296) | | |
+| `-[NSString(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (30) | `OldStyleWriter::formatString` oofnd/PListWriting.hpp:181 (the bug that drops the text between two escaped characters is reproduced) | ⚠️ |
+| `-[NSNumber(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (89) | `format` Bool/Integer/Real cases :131-148 (true/false, `%lld`/`%llu`, `%.8g`) | ✅ |
+| `-[NSData(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (121) | `formatData` :238 | ⚠️ |
+| `-[NSArray(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (169) | `formatArray` :258 (the same "non-plist object in dictionary" text) | ✅ |
+| `-[NSDictionary(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (211) | `formatDict` :295 + `caseInsensitiveLess` :281 | ⚠️ |
+| `-[NSObject(OldSchoolPropertyListWriting) oldSchoolPListFormatWithErrorDescription:]` (278) | `oo::writeOldStylePList` :522 (appends "\n") | ✅ |
+| `-[NSObject(OldSchoolPropertyListWriting) oldSchoolPListFormatWithIndentation:errorDescription:]` (286) | `format` Date/Object cases :157-163 ("Class X does not support OldSchoolPropertyListWriting") | ✅ |
+| `AppendNewLineAndIndent()` (296) | `newLineAndIndent` :173 | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — A non-ASCII alphanumeric string such as `Zürich`, which GNUstep's Unicode `alphanumericCharacterSet` left bare, is always quoted (ADR-0027 item 5, cited in the banner). Saved games and caches written by the port quote such strings where upstream did not. Both parse back the same — upstream `Core/OldSchoolPropertyListWriting.m:40` ↔ port `oofnd/PListWriting.hpp:188-195`
+- ⚠️ **low** — Upstream's NSData writer under-sized its buffer for 5-7 and 9+ bytes (truncation, uninitialised bytes) and looped forever at indentation 0 past 32 bytes (`while (--j)` with j=0). The port writes the intended form (ADR-0027 item 4) — upstream `Core/OldSchoolPropertyListWriting.m:132,149` ↔ port `oofnd/PListWriting.hpp:238-256`
+- ⚠️ **low** — Key order: two keys equal but for case keep NSDictionary hash order upstream and UTF-16 unit order in the port (banner, ADR-0027). The fold is also ASCII-only, where GNUstep's `caseInsensitiveCompare:` folds Unicode, so non-ASCII keys differing only in case (`Ä`/`ä`) may sort differently — upstream `Core/OldSchoolPropertyListWriting.m:220` ↔ port `oofnd/PListWriting.hpp:281-293`
 
 ## ReleaseLockProxy
 
 <a id="releaselockproxy"></a>
-Upstream `src/Core/ReleaseLockProxy.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/Core/ReleaseLockProxy.m` ↔ *(removed: a debugging proxy with no user in upstream or the port)*
 
-**Status:** pending
+**Status:** done — 17 rows: 0 ✅ 0 ⚠️ 0 ❌ 17 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[ReleaseLockProxy proxyWithObject:name:]` (32) | | |
-| `+[ReleaseLockProxy proxyWithRetainedObject:name:]` (37) | | |
-| `-[ReleaseLockProxy initWithObject:name:]` (42) | | |
-| `-[ReleaseLockProxy initWithRetainedObject:name:]` (47) | | |
-| `-[ReleaseLockProxy dealloc]` (64) | | |
-| `-[ReleaseLockProxy rlpAllowRelease]` (78) | | |
-| `-[ReleaseLockProxy rlpObjectDescription]` (83) | | |
-| `-[ReleaseLockProxy release]` (90) | | |
-| `-[ReleaseLockProxy autorelease]` (109) | | |
-| `-[ReleaseLockProxy forwardInvocation:]` (117) | | |
-| `-[ReleaseLockProxy methodSignatureForSelector:]` (122) | | |
-| `+[ReleaseLockProxy instancesRespondToSelector:]` (135) | | |
-| `-[ReleaseLockProxy respondsToSelector:]` (144) | | |
-| `+[ReleaseLockProxy_SignatureTemplateClass initWithObject:name:]` (153) | | |
-| `+[ReleaseLockProxy_SignatureTemplateClass initWithRetainedObject:name:]` (157) | | |
-| `+[ReleaseLockProxy_SignatureTemplateClass rlpAllowRelease]` (161) | | |
-| `+[ReleaseLockProxy_SignatureTemplateClass rlpObjectDescription]` (164) | | |
+| `+[ReleaseLockProxy proxyWithObject:name:]` (32) | none (no caller upstream) | ➖ |
+| `+[ReleaseLockProxy proxyWithRetainedObject:name:]` (37) | none | ➖ |
+| `-[ReleaseLockProxy initWithObject:name:]` (42) | none | ➖ |
+| `-[ReleaseLockProxy initWithRetainedObject:name:]` (47) | none | ➖ |
+| `-[ReleaseLockProxy dealloc]` (64) | none | ➖ |
+| `-[ReleaseLockProxy rlpAllowRelease]` (78) | none | ➖ |
+| `-[ReleaseLockProxy rlpObjectDescription]` (83) | none | ➖ |
+| `-[ReleaseLockProxy release]` (90) | none | ➖ |
+| `-[ReleaseLockProxy autorelease]` (109) | none | ➖ |
+| `-[ReleaseLockProxy forwardInvocation:]` (117) | none | ➖ |
+| `-[ReleaseLockProxy methodSignatureForSelector:]` (122) | none | ➖ |
+| `+[ReleaseLockProxy instancesRespondToSelector:]` (135) | none | ➖ |
+| `-[ReleaseLockProxy respondsToSelector:]` (144) | none | ➖ |
+| `+[ReleaseLockProxy_SignatureTemplateClass initWithObject:name:]` (153) | none | ➖ |
+| `+[ReleaseLockProxy_SignatureTemplateClass initWithRetainedObject:name:]` (157) | none | ➖ |
+| `+[ReleaseLockProxy_SignatureTemplateClass rlpAllowRelease]` (161) | none | ➖ |
+| `+[ReleaseLockProxy_SignatureTemplateClass rlpObjectDescription]` (164) | none | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- *none* (dead code upstream: a grep of `src/` finds no use outside the file)
 
 ## Comparison
 
 <a id="comparison"></a>
-Upstream `src/SDL/Comparison.m` ↔ *(absorbed — locate in `src/oofnd/` or callers)*
+Upstream `src/SDL/Comparison.m` ↔ *(absorbed: `==` on `std::optional<std::string>` at the call sites)*
 
-**Status:** pending
+**Status:** done — 6 rows: 0 ✅ 0 ⚠️ 0 ❌ 6 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSObject(OLComparison) isEqualTo:]` (50) | | |
-| `-[NSObject(OLComparison) isGreaterThan:]` (55) | | |
-| `-[NSObject(OLComparison) isGreaterThanOrEqualTo:]` (60) | | |
-| `-[NSObject(OLComparison) isLessThan:]` (65) | | |
-| `-[NSObject(OLComparison) isLessThanOrEqualTo:]` (70) | | |
-| `-[NSObject(OLComparison) isNotEqualTo:]` (75) | | |
+| `-[NSObject(OLComparison) isEqualTo:]` (50) | `==` on identifiers: Entities/ShipEntity.cpp:3766-3770, :11335 (EQ_MISSILE), Core/Universe.cpp:3146 (route), :8854 (naval energy unit). nil on either side → false, as `object != nil` and messaging nil did | ➖ |
+| `-[NSObject(OLComparison) isGreaterThan:]` (55) | none (no caller) | ➖ |
+| `-[NSObject(OLComparison) isGreaterThanOrEqualTo:]` (60) | none | ➖ |
+| `-[NSObject(OLComparison) isLessThan:]` (65) | none | ➖ |
+| `-[NSObject(OLComparison) isLessThanOrEqualTo:]` (70) | none | ➖ |
+| `-[NSObject(OLComparison) isNotEqualTo:]` (75) | none | ➖ |
 
 **Differences:**
 
-- *pending*
+- subtle — `isEqualTo:` used `-compare:`, which in GNUstep (no `NSLiteralSearch`) can treat a precomposed and a decomposed form of the same character as equal. Port `==` compares bytes. Only non-ASCII equipment identifiers in different normal forms could differ — upstream `SDL/Comparison.m:52` ↔ port `Core/Entities/ShipEntity.cpp:3770`
 

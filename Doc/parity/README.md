@@ -6,24 +6,26 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 49 / 241 upstream `.m` files · extra rows below
+**Progress:** 71 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
 Patterns that recur across files. Each instance is also recorded in its own file's section.
 
-1. **Preference defaults: `oo_*ForKey:defaultValue:` → `isNull() ? default : xForKey()`** (❌ low, 9 sites). Upstream's extractor returned `defaultValue` whenever the stored value could not be converted, such as a non-numeric or unrecognised string. The port returns the default only when the key is absent; otherwise the converter yields 0/NO. Sites:
+1. **Preference defaults: `oo_*ForKey:defaultValue:` → `isNull() ? default : xForKey()`** (❌ low, about 15 sites; see [foundation.md#oocollectionextractors](foundation.md#oocollectionextractors)). Upstream's extractor returned `defaultValue` whenever the stored value could not be converted, such as a non-numeric or unrecognised string. The port returns the default only when the key is absent; otherwise the converter yields 0/NO. Sites:
    - `OOALSound.cpp:62` (volume_control → 0 mutes the game)
    - `OOLogging.cpp:262-267` (logging-show-time/class → NO drops the log prefixes)
    - `GameController.cpp:235,303`
    - `Universe.cpp:308,333,338,344`
 
-   Fix candidate: a `Defaults::get<T>(key, fallback)` with `oo_*ForKey` semantics (cf. `PListGet.hpp`).
+   Bools also differ in parsing. `Defaults::boolForKey` uses GNUstep `-[NSString boolValue]`, where "on" and ".5" read NO; upstream's `OOBooleanFromObject` read them as YES or fell back to the default. Fix candidate: a `Defaults::get<T>(key, fallback)` with `oo_*ForKey` semantics (cf. `PListGet.hpp`).
 2. **Hash-order → sorted-order iteration.** Dictionaries and sets that upstream walked in GNUstep hash order are walked in key/byte order. This reorders log lines and warnings: OXP verifier stages, shipdata key warnings, AI states, OOEncodingConverter substitutions. It is intentional where cited (oo-qps.51), unintended elsewhere, and visible only where order reaches output or RNG.
-3. **Log text drift.** Some log messages lost an argument or changed class:
+3. **Two `doubleValue` ports.** `PListGet.hpp:149` (NSScanner style) and `Defaults.hpp:163` (`from_chars`) disagree on long mantissas and huge exponents, so at most one matches GNUstep (❌ low).
+4. **Log text drift.** Some log messages lost an argument or changed class:
    - `verifyOXP.scanFiles.nonStandardFile` lost "(type)";
    - log-setup NSLog calls became `OO_LOG("unclassified")`;
-   - `plist.wrongType` is no longer emitted.
+   - `plist.wrongType` is no longer emitted;
+   - `savedGame.defaultPath.*` and `NSUserDefaultsOverride` failure logs are gone.
 
 ## Suspected divergences (ranked)
 
@@ -33,42 +35,42 @@ Patterns that recur across files. Each instance is also recorded in its own file
 
 ### Foundation replacements, logging, collections, async — [foundation.md](foundation.md)
 
-- [ ] `Core/NSBundle+Override.m` → *(absorbed — locate in `src/oofnd/` or callers)* (59 / — lines) — *pending* — [findings](foundation.md#nsbundleoverride)
-- [ ] `Core/NSDataOOExtensions.m` → *(absorbed — locate in `src/oofnd/` or callers)* (147 / — lines) — *pending* — [findings](foundation.md#nsdataooextensions)
-- [ ] `Core/NSDictionaryOOExtensions.m` → *(absorbed — locate in `src/oofnd/` or callers)* (74 / — lines) — *pending* — [findings](foundation.md#nsdictionaryooextensions)
-- [ ] `Core/NSFileManagerOOExtensions.m` → *(absorbed — locate in `src/oofnd/` or callers)* (271 / — lines) — *pending* — [findings](foundation.md#nsfilemanagerooextensions)
-- [ ] `Core/NSMutableDictionaryOOExtensions.m` → *(absorbed — locate in `src/oofnd/` or callers)* (63 / — lines) — *pending* — [findings](foundation.md#nsmutabledictionaryooextensions)
-- [ ] `Core/NSNumberOOExtensions.m` → *(absorbed — locate in `src/oofnd/` or callers)* (70 / — lines) — *pending* — [findings](foundation.md#nsnumberooextensions)
-- [ ] `Core/NSObjectOOExtensions.m` → *(absorbed — locate in `src/oofnd/` or callers)* (50 / — lines) — *pending* — [findings](foundation.md#nsobjectooextensions)
-- [ ] `Core/NSScannerOOExtensions.m` → *(absorbed — locate in `src/oofnd/` or callers)* (79 / — lines) — *pending* — [findings](foundation.md#nsscannerooextensions)
-- [ ] `Core/NSStringOOExtensions.m` → *(absorbed — locate in `src/oofnd/` or callers)* (224 / — lines) — *pending* — [findings](foundation.md#nsstringooextensions)
-- [ ] `Core/NSThreadOOExtensions.m` → *(absorbed — locate in `src/oofnd/` or callers)* (53 / — lines) — *pending* — [findings](foundation.md#nsthreadooextensions)
-- [ ] `Core/NSUserDefaults+Override.m` → *(absorbed — locate in `src/oofnd/` or callers)* (68 / — lines) — *pending* — [findings](foundation.md#nsuserdefaultsoverride)
-- [ ] `Core/OOAsyncQueue.m` → *(absorbed — locate in `src/oofnd/` or callers)* (293 / — lines) — *pending* — [findings](foundation.md#ooasyncqueue)
+- [x] `Core/NSBundle+Override.m` → *(absorbed — 1➖ — [findings](foundation.md#nsbundleoverride)
+- [x] `Core/NSDataOOExtensions.m` → *(absorbed — 1✅ — [findings](foundation.md#nsdataooextensions)
+- [x] `Core/NSDictionaryOOExtensions.m` → *(absorbed — 3➖ — [findings](foundation.md#nsdictionaryooextensions)
+- [x] `Core/NSFileManagerOOExtensions.m` → *(absorbed — 9✅ 1❌ 6➖ — [findings](foundation.md#nsfilemanagerooextensions)
+- [x] `Core/NSMutableDictionaryOOExtensions.m` → *(absorbed — 1✅ — [findings](foundation.md#nsmutabledictionaryooextensions)
+- [x] `Core/NSNumberOOExtensions.m` → *(absorbed — 2➖ — [findings](foundation.md#nsnumberooextensions)
+- [x] `Core/NSObjectOOExtensions.m` → *(absorbed — 2➖ — [findings](foundation.md#nsobjectooextensions)
+- [x] `Core/NSScannerOOExtensions.m` → *(absorbed — 2✅ — [findings](foundation.md#nsscannerooextensions)
+- [x] `Core/NSStringOOExtensions.m` → *(absorbed — 8✅ 2⚠️ 3➖ — [findings](foundation.md#nsstringooextensions)
+- [x] `Core/NSThreadOOExtensions.m` → *(absorbed — 1✅ — [findings](foundation.md#nsthreadooextensions)
+- [x] `Core/NSUserDefaults+Override.m` → *(absorbed — 1❌ — [findings](foundation.md#nsuserdefaultsoverride)
+- [x] `Core/OOAsyncQueue.m` → *(absorbed — 4✅ 10➖ — [findings](foundation.md#ooasyncqueue)
 - [x] `Core/OOAsyncWorkManager.m` → `Core/OOAsyncWorkManager.cpp` (423 / 481 lines) — 15✅ 4⚠️ 5➖ — [findings](foundation.md#ooasyncworkmanager)
 - [x] `Core/OOCPUInfo.m` → `Core/OOCPUInfo.cpp` (226 / 228 lines) — 7✅ — [findings](foundation.md#oocpuinfo)
 - [x] `Core/OOCache.m` → `Core/OOCache.cpp` (1048 / 994 lines) — 44✅ 3⚠️ 1➖ — [findings](foundation.md#oocache)
 - [x] `Core/OOCacheManager.m` → `Core/OOCacheManager.cpp` (668 / 561 lines) — 28✅ 2⚠️ 6➖ — [findings](foundation.md#oocachemanager)
-- [ ] `Core/OOCollectionExtractors.m` → *(absorbed — locate in `src/oofnd/` or callers)* (1372 / — lines) — *pending* — [findings](foundation.md#oocollectionextractors)
-- [ ] `Core/OODeepCopy.m` → *(absorbed — locate in `src/oofnd/` or callers)* (262 / — lines) — *pending* — [findings](foundation.md#oodeepcopy)
+- [x] `Core/OOCollectionExtractors.m` → *(absorbed — 120✅ 2⚠️ 5❌ 76➖ — [findings](foundation.md#oocollectionextractors)
+- [x] `Core/OODeepCopy.m` → *(absorbed — 1❌ 6➖ — [findings](foundation.md#oodeepcopy)
 - [x] `Core/OOEncodingConverter.m` → `Core/OOEncodingConverter.cpp` (242 / 214 lines) — 8✅ 2⚠️ — [findings](foundation.md#ooencodingconverter)
-- [ ] `Core/OOExcludeObjectEnumerator.m` → *(absorbed — locate in `src/oofnd/` or callers)* (79 / — lines) — *pending* — [findings](foundation.md#ooexcludeobjectenumerator)
-- [ ] `Core/OOFilteringEnumerator.m` → *(absorbed — locate in `src/oofnd/` or callers)* (227 / — lines) — *pending* — [findings](foundation.md#oofilteringenumerator)
+- [x] `Core/OOExcludeObjectEnumerator.m` → *(absorbed — 5➖ — [findings](foundation.md#ooexcludeobjectenumerator)
+- [x] `Core/OOFilteringEnumerator.m` → *(absorbed — 19➖ — [findings](foundation.md#oofilteringenumerator)
 - [x] `Core/OOFoundation.m` → `Core/OOFoundation.cpp` (92 / 35 lines) — 6➖ — [findings](foundation.md#oofoundation)
 - [x] `Core/OOIsNumberLiteral.m` → `Core/OOIsNumberLiteral.cpp` (135 / 134 lines) — 1✅ — [findings](foundation.md#ooisnumberliteral)
 - [x] `Core/OOLogHeader.m` → `Core/OOLogHeader.cpp` (355 / 370 lines) — 7✅ — [findings](foundation.md#oologheader)
 - [x] `Core/OOLogOutputHandler.m` → `Core/OOLogOutputHandler.cpp` (649 / 567 lines) — 17✅ 2⚠️ 4❌ 1➖ — [findings](foundation.md#oologoutputhandler)
 - [x] `Core/OOLogging.m` → `Core/OOLogging.cpp` (832 / 289 lines) — 40✅ 2⚠️ 2❌ — [findings](foundation.md#oologging)
 - [x] `Core/OOPListParsing.m` → `Core/OOPListParsing.cpp` (233 / 74 lines) — 3✅ 1⚠️ 5➖ — [findings](foundation.md#ooplistparsing)
-- [ ] `Core/OOPriorityQueue.m` → *(absorbed — locate in `src/oofnd/` or callers)* (640 / — lines) — *pending* — [findings](foundation.md#oopriorityqueue)
+- [x] `Core/OOPriorityQueue.m` → *(absorbed — 13✅ 1⚠️ 23➖ — [findings](foundation.md#oopriorityqueue)
 - [x] `Core/OOProfilingStopwatch.m` → `Core/OOProfilingStopwatch.cpp` (129 / 120 lines) — 7✅ 1⚠️ — [findings](foundation.md#ooprofilingstopwatch)
 - [x] `Core/OORegExpMatcher.m` → `Core/OORegExpMatcher.cpp` (140 / 164 lines) — 5✅ 1➖ — [findings](foundation.md#ooregexpmatcher)
-- [ ] `Core/OOWeakReference.m` → *(absorbed — locate in `src/oofnd/` or callers)* (174 / — lines) — *pending* — [findings](foundation.md#ooweakreference)
-- [ ] `Core/OOWeakSet.m` → *(absorbed — locate in `src/oofnd/` or callers)* (280 / — lines) — *pending* — [findings](foundation.md#ooweakset)
+- [x] `Core/OOWeakReference.m` → *(absorbed — 6✅ 2⚠️ 12➖ — [findings](foundation.md#ooweakreference)
+- [x] `Core/OOWeakSet.m` → *(absorbed — 15✅ 4⚠️ 5➖ — [findings](foundation.md#ooweakset)
 - [x] `Core/OOXMLExtensions.m` → `Core/OOXMLExtensions.cpp` (55 / 48 lines) — 1❌ — [findings](foundation.md#ooxmlextensions)
-- [ ] `Core/OldSchoolPropertyListWriting.m` → *(absorbed — locate in `src/oofnd/` or callers)* (301 / — lines) — *pending* — [findings](foundation.md#oldschoolpropertylistwriting)
-- [ ] `Core/ReleaseLockProxy.m` → *(absorbed — locate in `src/oofnd/` or callers)* (169 / — lines) — *pending* — [findings](foundation.md#releaselockproxy)
-- [ ] `SDL/Comparison.m` → *(absorbed — locate in `src/oofnd/` or callers)* (82 / — lines) — *pending* — [findings](foundation.md#comparison)
+- [x] `Core/OldSchoolPropertyListWriting.m` → *(absorbed — 5✅ 3⚠️ — [findings](foundation.md#oldschoolpropertylistwriting)
+- [x] `Core/ReleaseLockProxy.m` → *(absorbed — 17➖ — [findings](foundation.md#releaselockproxy)
+- [x] `SDL/Comparison.m` → *(absorbed — 6➖ — [findings](foundation.md#comparison)
 
 ### Maths, geometry, collision — [math.md](math.md)
 
