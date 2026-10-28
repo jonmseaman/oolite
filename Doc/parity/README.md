@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 172 / 241 upstream `.m` files · extra rows below
+**Progress:** 175 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -285,9 +285,9 @@ Patterns that recur across files. Each instance is also recorded in its own file
 - [x] `Core/OOJoystickProfile.m` → `Core/OOJoystickProfile.cpp` (549 / 509 lines) — 40✅ — [findings](platform.md#oojoystickprofile)
 - [x] `SDL/GameController+SDLFullScreen.m` → `SDL/GameController+SDLFullScreen.cpp` (155 / 155 lines) — 8✅ 1⚠️ — [findings](platform.md#gamecontrollersdlfullscreen)
 - [x] `SDL/MyOpenGLView+Input.m` → `SDL/MyOpenGLView+Input.cpp` (889 / 914 lines) — 33✅ 1❌ — [findings](platform.md#myopenglviewinput)
-- [ ] `SDL/MyOpenGLView.m` → `SDL/MyOpenGLView.cpp` (1397 / 1387 lines) — *pending* — [findings](platform.md#myopenglview)
-- [ ] `SDL/OOSDLJoystickManager.m` → `SDL/OOSDLJoystickManager.cpp` (290 / 165 lines) — *pending* — [findings](platform.md#oosdljoystickmanager)
-- [ ] `SDL/main.m` → `SDL/main.cpp` (232 / 256 lines) — *pending* — [findings](platform.md#main)
+- [x] `SDL/MyOpenGLView.m` → `SDL/MyOpenGLView.cpp` (1397 / 1387 lines) — 62✅ 2⚠️ 1❌ — [findings](platform.md#myopenglview)
+- [x] `SDL/OOSDLJoystickManager.m` → `SDL/OOSDLJoystickManager.cpp` (290 / 165 lines) — 11✅ 1⚠️ 1➖ — [findings](platform.md#oosdljoystickmanager)
+- [x] `SDL/main.m` → `SDL/main.cpp` (232 / 256 lines) — 1❌ — [findings](platform.md#main)
 
 ### Game data, resources, registries, AI, strings — [gamedata.md](gamedata.md)
 
