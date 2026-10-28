@@ -10,211 +10,233 @@ Each section: method coverage table (every upstream method / C function → C++ 
 <a id="oojsconsole"></a>
 Upstream `src/Core/Debug/OOJSConsole.m` ↔ `Core/Debug/OOJSConsole.cpp`
 
-**Status:** pending
+**Status:** done — 31 rows: 24 ✅ 5 ⚠️ 2 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSConsole()` (224) | | |
-| `OOJSConsoleDestroy()` (233) | | |
-| `DebugMonitorToJSConsole()` (238) | | |
-| `ConsoleGetProperty()` (287) | | |
-| `ConsoleSetProperty()` (382) | | |
-| `DoWeDefineAllDebugFlags()` (461) | | |
-| `ConsoleFinalize()` (489) | | |
-| `ConsoleSettingsDeleteProperty()` (499) | | |
-| `ConsoleSettingsGetProperty()` (523) | | |
-| `ConsoleSettingsSetProperty()` (553) | | |
-| `ConsoleConsoleMessage()` (594) | | |
-| `ConsoleClearConsole()` (648) | | |
-| `ConsoleScriptStack()` (667) | | |
-| `ConsoleInspectEntity()` (677) | | |
-| `ConsoleCallObjCMethod()` (698) | | |
-| `ConsoleSetUpCallObjC()` (724) | | |
-| `ConsoleIsExecutableJavaScript()` (742) | | |
-| `ConsoleDisplayMessagesInClass()` (769) | | |
-| `ConsoleSetDisplayMessagesInClass()` (782) | | |
-| `ConsoleWriteLogMarker()` (799) | | |
-| `ConsoleWriteMemoryStats()` (810) | | |
-| `ConsoleWriteJSMemoryStats()` (824) | | |
-| `ConsoleGarbageCollect()` (838) | | |
-| `DumpCallback()` (858) | | |
-| `ConsoleDumpNamedRoots()` (880) | | |
-| `ConsoleDumpHeap()` (905) | | |
-| `ConsoleProfile()` (926) | | |
-| `ConsoleGetProfile()` (950) | | |
-| `ConsoleTrace()` (974) | | |
-| `PerformProfiling()` (997) | | |
+| `sConsoleClass` / `sConsoleProperties` / `sConsoleMethods` / `sConsoleSettingsClass` tables (98–222) | same names `Core/Debug/OOJSConsole.cpp:110-240` (same names, IDs, flags, min-args, `#if` guards) | ✅ |
+| `InitOOJSConsole()` (224) | `InitOOJSConsole` `Core/Debug/OOJSConsole.cpp:242` (`ConsoleConverter` :298 replaces `OOJSBasicPrivateObjectConverter`) | ✅ |
+| `OOJSConsoleDestroy()` (233) | `OOJSConsoleDestroy` `Core/Debug/OOJSConsole.cpp:251` | ✅ |
+| `DebugMonitorToJSConsole()` (238) | `DebugMonitorToJSConsole` `Core/Debug/OOJSConsole.cpp:308` (+ `SetMonitorPrivate` :262) | ⚠️ |
+| `ConsoleGetProperty()` (287) | `ConsoleGetProperty` `Core/Debug/OOJSConsole.cpp:354` | ✅ |
+| `ConsoleSetProperty()` (382) | `ConsoleSetProperty` `Core/Debug/OOJSConsole.cpp:451` | ✅ |
+| `DoWeDefineAllDebugFlags()` (461) | `DoWeDefineAllDebugFlags` `Core/Debug/OOJSConsole.cpp:534` | ✅ |
+| `ConsoleFinalize()` (489) | `ConsoleFinalize` `Core/Debug/OOJSConsole.cpp:564` | ✅ |
+| `ConsoleSettingsDeleteProperty()` (499) | `ConsoleSettingsDeleteProperty` `Core/Debug/OOJSConsole.cpp:578` (+ `MonitorFromJSObject` :274) | ✅ |
+| `ConsoleSettingsGetProperty()` (523) | `ConsoleSettingsGetProperty` `Core/Debug/OOJSConsole.cpp:603` | ✅ |
+| `ConsoleSettingsSetProperty()` (553) | `ConsoleSettingsSetProperty` `Core/Debug/OOJSConsole.cpp:632` | ✅ |
+| `ConsoleConsoleMessage()` (594) | `ConsoleConsoleMessage` `Core/Debug/OOJSConsole.cpp:673` | ✅ |
+| `ConsoleClearConsole()` (648) | `ConsoleClearConsole` `Core/Debug/OOJSConsole.cpp:728` (+ `ReportNotTheMonitor` :287) | ❌ |
+| `ConsoleScriptStack()` (667) | `ConsoleScriptStack` `Core/Debug/OOJSConsole.cpp:747` | ✅ |
+| `ConsoleInspectEntity()` (677) | `ConsoleInspectEntity` `Core/Debug/OOJSConsole.cpp:761` | ⚠️ |
+| `ConsoleCallObjCMethod()` (698) | `ConsoleCallObjCMethod` `Core/Debug/OOJSConsole.cpp:913` (+ `kMonitorMethods` :809, `CallMonitorMethod` :826) | ❌ |
+| `ConsoleSetUpCallObjC()` (724) | `ConsoleSetUpCallObjC` `Core/Debug/OOJSConsole.cpp:956` | ✅ |
+| `ConsoleIsExecutableJavaScript()` (742) | `ConsoleIsExecutableJavaScript` `Core/Debug/OOJSConsole.cpp:974` | ✅ |
+| `ConsoleDisplayMessagesInClass()` (769) | `ConsoleDisplayMessagesInClass` `Core/Debug/OOJSConsole.cpp:1000` | ✅ |
+| `ConsoleSetDisplayMessagesInClass()` (782) | `ConsoleSetDisplayMessagesInClass` `Core/Debug/OOJSConsole.cpp:1013` | ✅ |
+| `ConsoleWriteLogMarker()` (799) | `ConsoleWriteLogMarker` `Core/Debug/OOJSConsole.cpp:1030` | ✅ |
+| `ConsoleWriteMemoryStats()` (810) | `ConsoleWriteMemoryStats` `Core/Debug/OOJSConsole.cpp:1041` | ✅ |
+| `ConsoleWriteJSMemoryStats()` (824) | `ConsoleWriteJSMemoryStats` `Core/Debug/OOJSConsole.cpp:1055` | ✅ |
+| `ConsoleGarbageCollect()` (838) | `ConsoleGarbageCollect` `Core/Debug/OOJSConsole.cpp:1069` | ⚠️ |
+| `DumpCallback()` (858) | `DumpCallback` `Core/Debug/OOJSConsole.cpp:1089` | ✅ |
+| `ConsoleDumpNamedRoots()` (880) | `ConsoleDumpNamedRoots` `Core/Debug/OOJSConsole.cpp:1111` | ⚠️ |
+| `ConsoleDumpHeap()` (905) | `ConsoleDumpHeap` `Core/Debug/OOJSConsole.cpp:1136` | ⚠️ |
+| `ConsoleProfile()` (926) | `ConsoleProfile` `Core/Debug/OOJSConsole.cpp:1158` | ✅ |
+| `ConsoleGetProfile()` (950) | `ConsoleGetProfile` `Core/Debug/OOJSConsole.cpp:1184` | ✅ |
+| `ConsoleTrace()` (974) | `ConsoleTrace` `Core/Debug/OOJSConsole.cpp:1210` | ✅ |
+| `PerformProfiling()` (997) | `PerformProfiling` `Core/Debug/OOJSConsole.cpp:1236` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — `callObjC()` on a console object: error texts begin `.callObjC(): …` (port `className` is `""`); upstream passed `[monitor oo_jsClassName]`, which is `nil` for OODebugMonitor (NSObject default, `Core/Scripting/OOJavaScriptEngine.m:1284`), so upstream's text began `(null).callObjC(): …`. Debug builds only — upstream `Core/Debug/OOJSConsole.m:714`, `Core/Scripting/OOJSCall.m:79,102,159,168` ↔ port `Core/Debug/OOJSConsole.cpp:828-901`
+- ❌ **low** — "Expected OODebugMonitor, got %s" internal error when `clearConsole` is called with a foreign `this` (`clearConsole.call(x)`): port prints `Entity` for any entity and `(null)` for every other object; upstream printed the class of the object its registered converter returned (e.g. `ShipEntity`, `PlayerEntity`, `OOJSScript`), and `(null)` only for objects without a converter — upstream `Core/Debug/OOJSConsole.m:654-657` ↔ port `Core/Debug/OOJSConsole.cpp:287-294, 734-737`
+- ⚠️ **low** — `callObjC()` is no longer a generic selector call: console objects answer only the fixed `kMonitorMethods` table, entities go through the entity name table (`OOJSCallEntityMethod`), and any other converter-backed object (scripts, sounds, timers, equipment info…) now gets "Attempt to call __callObjCMethod() for non-Objective-C object" where upstream called its ObjC method (beads oo-9ht.74, oo-9ht.44, oo-4aq6a.5; proposed ADR-0056 amendment oo-9ht.74, code comments). Debug builds only — upstream `Core/Debug/OOJSConsole.m:698-721` ↔ port `Core/Debug/OOJSConsole.cpp:779-953`
+- ⚠️ **low** — console and settings objects hold a strong retain of the monitor (released in `ConsoleFinalize`) instead of `[monitor weakRetain]`; the monitor is a never-released singleton, so no observable lifetime change (code comment, bead oo-9ht.74). `JS_EnterLocalRootScope`/`Leave` and its `NSCAssert` are gone (the QuickJS façade has no local root scopes) — upstream `Core/Debug/OOJSConsole.m:247-279` ↔ port `Core/Debug/OOJSConsole.cpp:256-271, 308-352`
+- ⚠️ **low** — `inspectEntity()` calls `oo::InspectEntity()` (virtual, no-op unless overridden) instead of `-inspect` added by the Mac Debug OXP's category; on non-Mac upstream it was already a no-op (code comment, bead oo-dpyk8) — upstream `Core/Debug/OOJSConsole.m:683-689` ↔ port `Core/Debug/OOJSConsole.cpp:767-771`
+- ⚠️ **low** — engine replacement (SpiderMonkey → QuickJS-ng, `ooscript/README.md`): `garbageCollect()` keeps the text `Bytes before: %u Bytes after: %u` but the numbers are QuickJS `malloc_size`; `dumpNamedRoots()` writes an empty `js-roots.txt` and still returns `true` (`ooscript::dumpNamedRoots` is a stub; its result is ignored, as upstream ignored `JS_DumpNamedRoots`'s); `dumpHeap()` writes `JS_DumpMemoryUsage` output instead of a heap dump — upstream `Core/Debug/OOJSConsole.m:842-846, 894, 913` ↔ port `Core/Debug/OOJSConsole.cpp:1073-1077, 1125, 1145`, `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3824-3828, 4103-4110`
+- Message protocol unchanged: `consoleMessage(colour, message [, start, length])` reads args in the same order; emphasis only with argc > 3 and both numbers convertible; the one-argument form becomes colour `command-result`; the zero-argument form warns `Console.consoleMessage() called with no parameters.`; the time limiter is paused/resumed on every path as upstream.
+- Settings object: get answers `undefined` for a missing key; set with `null`/`undefined` deletes the key; unconvertible values warn `debugConsole.settings: could not convert %s to native object.` with `(null)` for a nil string as `%@` printed; delete answers `true`. Values now pass through `oo::PList` instead of arbitrary ObjC objects.
+- `isExecutableJavaScript()` now depends on `ooscript::bufferIsCompilableUnit` (QuickJS compile-only eval, "ended early" check); the binding is identical but the engines may disagree on edge inputs — port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:3967`
+- Debug-flag constants, `pedanticMode` (maps to `ContextOption::Strict`), `detailLevel` (nil/unknown string → `DETAIL_LEVEL_MINIMUM` on both sides) and the `UNIVERSE == nullptr` guards match upstream's nil-messaging results.
 
 ## PlayerEntityLegacyScriptEngine
 
 <a id="playerentitylegacyscriptengine"></a>
 Upstream `src/Core/Entities/PlayerEntityLegacyScriptEngine.m` ↔ `Core/Entities/PlayerEntityLegacyScriptEngine.cpp`
 
-**Status:** pending
+**Status:** done — 153 rows: 146 ✅ 6 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `CurrentScriptNameOr()` (112) | | |
-| `CurrentScriptDesc()` (120) | | |
-| `PerformScriptActions()` (130) | | |
-| `PerformConditionalStatment()` (142) | | |
-| `PerformActionStatment()` (165) | | |
-| `TestScriptConditions()` (209) | | |
-| `-[PlayerEntity(Scripting) setScriptTarget:]` (223) | | |
-| `-[PlayerEntity(Scripting) scriptTarget]` (228) | | |
-| `RecursiveRemapStatus()` (233) | | |
-| `-[PlayerEntity(Scripting) worldScriptsRequiringTickle]` (247) | | |
-| `-[PlayerEntity(Scripting) checkScript]` (266) | | |
-| `-[PlayerEntity(Scripting) runScriptActions:withContextName:forTarget:]` (321) | | |
-| `-[PlayerEntity(Scripting) runUnsanitizedScriptActions:allowingAIMethods:withContextName:forTarget:]` (349) | | |
-| `-[PlayerEntity(Scripting) scriptTestConditions:]` (356) | | |
-| `-[PlayerEntity(Scripting) scriptTestCondition:]` (374) | | |
-| `-[PlayerEntity(Scripting) expandScriptRightHandSide:]` (542) | | |
-| `-[PlayerEntity(Scripting) missionVariables]` (574) | | |
-| `-[PlayerEntity(Scripting) missionVariableForKey:]` (579) | | |
-| `-[PlayerEntity(Scripting) setMissionVariable:forKey:]` (587) | | |
-| `-[PlayerEntity(Scripting) localVariablesForMission:]` (597) | | |
-| `-[PlayerEntity(Scripting) localVariableForKey:andMission:]` (613) | | |
-| `-[PlayerEntity(Scripting) setLocalVariable:forKey:andMission:]` (618) | | |
-| `-[PlayerEntity(Scripting) missionsList]` (632) | | |
-| `-[PlayerEntity(Scripting) replaceVariablesInString:]` (691) | | |
-| `-[PlayerEntity(Scripting) setMissionDescription:]` (724) | | |
-| `-[PlayerEntity(Scripting) setMissionDescription:forMission:]` (729) | | |
-| `-[PlayerEntity(Scripting) setMissionInstructions:forMission:]` (742) | | |
-| `-[PlayerEntity(Scripting) setMissionInstructionsList:forMission:]` (755) | | |
-| `-[PlayerEntity(Scripting) clearMissionDescription]` (777) | | |
-| `-[PlayerEntity(Scripting) clearMissionDescriptionForMission:]` (782) | | |
-| `-[PlayerEntity(Scripting) mission_string]` (795) | | |
-| `-[PlayerEntity(Scripting) status_string]` (800) | | |
-| `-[PlayerEntity(Scripting) gui_screen_string]` (805) | | |
-| `-[PlayerEntity(Scripting) galaxy_number]` (810) | | |
-| `-[PlayerEntity(Scripting) planet_number]` (815) | | |
-| `-[PlayerEntity(Scripting) score_number]` (820) | | |
-| `-[PlayerEntity(Scripting) credits_number]` (825) | | |
-| `-[PlayerEntity(Scripting) scriptTimer_number]` (830) | | |
-| `-[PlayerEntity(Scripting) shipsFound_number]` (836) | | |
-| `-[PlayerEntity(Scripting) commanderLegalStatus_number]` (841) | | |
-| `-[PlayerEntity(Scripting) setLegalStatus:]` (846) | | |
-| `-[PlayerEntity(Scripting) commanderLegalStatus_string]` (851) | | |
-| `-[PlayerEntity(Scripting) d100_number]` (856) | | |
-| `-[PlayerEntity(Scripting) pseudoFixedD100_number]` (862) | | |
-| `-[PlayerEntity(Scripting) d256_number]` (867) | | |
-| `-[PlayerEntity(Scripting) pseudoFixedD256_number]` (873) | | |
-| `-[PlayerEntity(Scripting) clock_number]` (878) | | |
-| `-[PlayerEntity(Scripting) clock_secs_number]` (883) | | |
-| `-[PlayerEntity(Scripting) clock_mins_number]` (888) | | |
-| `-[PlayerEntity(Scripting) clock_hours_number]` (893) | | |
-| `-[PlayerEntity(Scripting) clock_days_number]` (898) | | |
-| `-[PlayerEntity(Scripting) fuelLevel_number]` (903) | | |
-| `-[PlayerEntity(Scripting) dockedAtMainStation_bool]` (908) | | |
-| `-[PlayerEntity(Scripting) foundEquipment_bool]` (916) | | |
-| `-[PlayerEntity(Scripting) sunWillGoNova_bool]` (921) | | |
-| `-[PlayerEntity(Scripting) sunGoneNova_bool]` (926) | | |
-| `-[PlayerEntity(Scripting) missionChoice_string]` (931) | | |
-| `-[PlayerEntity(Scripting) missionKeyPress_string]` (936) | | |
-| `-[PlayerEntity(Scripting) dockedTechLevel_number]` (941) | | |
-| `-[PlayerEntity(Scripting) dockedStationName_string]` (950) | | |
-| `-[PlayerEntity(Scripting) systemGovernment_string]` (962) | | |
-| `-[PlayerEntity(Scripting) systemGovernment_number]` (972) | | |
-| `-[PlayerEntity(Scripting) systemEconomy_string]` (978) | | |
-| `-[PlayerEntity(Scripting) systemEconomy_number]` (988) | | |
-| `-[PlayerEntity(Scripting) systemTechLevel_number]` (994) | | |
-| `-[PlayerEntity(Scripting) systemPopulation_number]` (1000) | | |
-| `-[PlayerEntity(Scripting) systemProductivity_number]` (1006) | | |
-| `-[PlayerEntity(Scripting) commanderName_string]` (1012) | | |
-| `-[PlayerEntity(Scripting) commanderRank_string]` (1017) | | |
-| `-[PlayerEntity(Scripting) commanderShip_string]` (1022) | | |
-| `-[PlayerEntity(Scripting) commanderShipDisplayName_string]` (1027) | | |
-| `-[PlayerEntity(Scripting) expandMessage:]` (1034) | | |
-| `-[PlayerEntity(Scripting) commsMessage:]` (1048) | | |
-| `-[PlayerEntity(Scripting) commsMessageByUnpiloted:]` (1056) | | |
-| `-[PlayerEntity(Scripting) consoleMessage3s:]` (1061) | | |
-| `-[PlayerEntity(Scripting) consoleMessage6s:]` (1066) | | |
-| `-[PlayerEntity(Scripting) awardCredits:]` (1071) | | |
-| `-[PlayerEntity(Scripting) awardShipKills:]` (1088) | | |
-| `-[PlayerEntity(Scripting) awardEquipment:]` (1098) | | |
-| `-[PlayerEntity(Scripting) removeEquipment:]` (1120) | | |
-| `-[PlayerEntity(Scripting) setPlanetinfo:]` (1140) | | |
-| `-[PlayerEntity(Scripting) setSpecificPlanetInfo:]` (1160) | | |
-| `-[PlayerEntity(Scripting) awardCargo:]` (1180) | | |
-| `-[PlayerEntity(Scripting) removeAllCargo]` (1216) | | |
-| `-[PlayerEntity(Scripting) removeAllCargo:]` (1221) | | |
-| `-[PlayerEntity(Scripting) useSpecialCargo:]` (1259) | | |
-| `-[PlayerEntity(Scripting) testForEquipment:]` (1269) | | |
-| `-[PlayerEntity(Scripting) awardFuel:]` (1274) | | |
-| `-[PlayerEntity(Scripting) messageShipAIs:]` (1286) | | |
-| `-[PlayerEntity(Scripting) ejectItem:]` (1312) | | |
-| `-[PlayerEntity(Scripting) addShips:]` (1319) | | |
-| `-[PlayerEntity(Scripting) addSystemShips:]` (1345) | | |
-| `-[PlayerEntity(Scripting) addShipsAt:]` (1374) | | |
-| `-[PlayerEntity(Scripting) addShipsAtPrecisely:]` (1412) | | |
-| `-[PlayerEntity(Scripting) addShipsWithinRadius:]` (1450) | | |
-| `-[PlayerEntity(Scripting) spawnShip:]` (1480) | | |
-| `-[PlayerEntity(Scripting) set:]` (1489) | | |
-| `-[PlayerEntity(Scripting) reset:]` (1522) | | |
-| `-[PlayerEntity(Scripting) increment:]` (1539) | | |
-| `-[PlayerEntity(Scripting) decrement:]` (1560) | | |
-| `-[PlayerEntity(Scripting) add:]` (1581) | | |
-| `-[PlayerEntity(Scripting) subtract:]` (1614) | | |
-| `-[PlayerEntity(Scripting) checkForShips:]` (1647) | | |
-| `-[PlayerEntity(Scripting) resetScriptTimer]` (1652) | | |
-| `-[PlayerEntity(Scripting) addMissionText:]` (1659) | | |
-| `-[PlayerEntity(Scripting) addLiteralMissionText:]` (1678) | | |
-| `-[PlayerEntity(Scripting) setMissionChoiceByTextEntry:]` (1690) | | |
-| `-[PlayerEntity(Scripting) setMissionChoices:]` (1697) | | |
-| `-[PlayerEntity(Scripting) setMissionChoicesDictionary:]` (1706) | | |
-| `-[PlayerEntity(Scripting) resetMissionChoice]` (1828) | | |
-| `-[PlayerEntity(Scripting) clearMissionScreen]` (1833) | | |
-| `-[PlayerEntity(Scripting) addMissionDestination:]` (1843) | | |
-| `-[PlayerEntity(Scripting) removeMissionDestination:]` (1858) | | |
-| `-[PlayerEntity(Scripting) showShipModel:]` (1873) | | |
-| `-[PlayerEntity(Scripting) setMissionMusic:]` (1884) | | |
-| `-[PlayerEntity(Scripting) missionTitle]` (1892) | | |
-| `-[PlayerEntity(Scripting) setMissionTitle:]` (1897) | | |
-| `-[PlayerEntity(Scripting) setMissionImage:]` (1905) | | |
-| `-[PlayerEntity(Scripting) setMissionBackground:]` (1914) | | |
-| `-[PlayerEntity(Scripting) setFuelLeak:]` (1923) | | |
-| `-[PlayerEntity(Scripting) fuelLeakRate_number]` (1938) | | |
-| `-[PlayerEntity(Scripting) setSunNovaIn:]` (1943) | | |
-| `-[PlayerEntity(Scripting) launchFromStation]` (1949) | | |
-| `-[PlayerEntity(Scripting) blowUpStation]` (1959) | | |
-| `-[PlayerEntity(Scripting) sendAllShipsAway]` (1970) | | |
-| `-[PlayerEntity(Scripting) addPlanet:]` (2005) | | |
-| `-[PlayerEntity(Scripting) addMoon:]` (2049) | | |
-| `-[PlayerEntity(Scripting) debugOn]` (2091) | | |
-| `-[PlayerEntity(Scripting) debugOff]` (2097) | | |
-| `-[PlayerEntity(Scripting) debugMessage:]` (2103) | | |
-| `-[PlayerEntity(Scripting) playSound:]` (2108) | | |
-| `-[PlayerEntity(Scripting) doMissionCallback]` (2115) | | |
-| `-[PlayerEntity(Scripting) clearMissionScreenID]` (2122) | | |
-| `-[PlayerEntity(Scripting) setMissionScreenID:]` (2128) | | |
-| `-[PlayerEntity(Scripting) missionScreenID]` (2133) | | |
-| `-[PlayerEntity(Scripting) endMissionScreenAndNoteOpportunity]` (2138) | | |
-| `-[PlayerEntity(Scripting) setGuiToMissionScreen]` (2149) | | |
-| `-[PlayerEntity(Scripting) refreshMissionScreenTextEntry]` (2160) | | |
-| `-[PlayerEntity(Scripting) setGuiToMissionScreenWithCallback:]` (2176) | | |
-| `-[PlayerEntity(Scripting) setBackgroundFromDescriptionsKey:]` (2228) | | |
-| `-[PlayerEntity(Scripting) addScene:atOffset:]` (2240) | | |
-| `-[PlayerEntity(Scripting) processSceneDictionary:atOffset:]` (2259) | | |
-| `-[PlayerEntity(Scripting) processSceneString:atOffset:]` (2292) | | |
-| `-[PlayerEntity(Scripting) addEqScriptForKey:]` (2483) | | |
-| `-[PlayerEntity(Scripting) removeEqScriptForKey:]` (2520) | | |
-| `-[PlayerEntity(Scripting) eqScriptIndexForKey:]` (2545) | | |
-| `-[PlayerEntity(Scripting) targetNearestHostile]` (2560) | | |
-| `-[PlayerEntity(Scripting) targetNearestIncomingMissile]` (2571) | | |
-| `-[PlayerEntity(Scripting) setGalacticHyperspaceBehaviourTo:]` (2582) | | |
-| `-[PlayerEntity(Scripting) setGalacticHyperspaceFixedCoordsTo:]` (2592) | | |
-| `OOComparisonTypeToString()` (2608) | | |
+| Log-class constants `kOOLog*` (56–91) | `kOOLog*` `Core/Entities/PlayerEntityLegacyScriptEngine.cpp:65-100` (all 32 strings identical) | ✅ |
+| `ACTIONS_TEMP_PREFIX`, `sMissionStringValue`, `sCurrentMissionKey`, `scriptTarget`, `sRunningScript`, `shipsFound` (93–98, 244, 835) | same names `PlayerEntityLegacyScriptEngine.cpp:102-113, 379, 971` (nil → `std::nullopt`) | ✅ |
+| `CurrentScriptNameOr()` (112) | `CurrentScriptNameOr` `PlayerEntityLegacyScriptEngine.cpp:116` | ✅ |
+| `CurrentScriptDesc()` (120) | `CurrentScriptDescription` `PlayerEntityLegacyScriptEngine.cpp:124` | ✅ |
+| `PerformScriptActions()` (130) | `PerformScriptActions` `PlayerEntityLegacyScriptEngine.cpp:259` | ✅ |
+| `PerformConditionalStatment()` (142) | `PerformConditionalStatment` `PlayerEntityLegacyScriptEngine.cpp:273` | ✅ |
+| `PerformActionStatment()` (165) | `PerformActionStatment` `PlayerEntityLegacyScriptEngine.cpp:291` | ⚠️ |
+| `TestScriptConditions()` (209) | `TestScriptConditions` `PlayerEntityLegacyScriptEngine.cpp:338` | ✅ |
+| `-[PlayerEntity(Scripting) setScriptTarget:]` (223) | `PlayerEntity::setScriptTarget` `PlayerEntityLegacyScriptEngine.cpp:353` (plus port-only `setScriptTargetToSelf` :358) | ✅ |
+| `-[PlayerEntity(Scripting) scriptTarget]` (228) | `PlayerEntity::scriptTarget` `PlayerEntityLegacyScriptEngine.cpp:363` | ✅ |
+| `RecursiveRemapStatus()` (233) | `RecursiveRemapStatus` `PlayerEntityLegacyScriptEngine.cpp:368` | ✅ |
+| `-[PlayerEntity(Scripting) worldScriptsRequiringTickle]` (247) | `PlayerEntity::getWorldScriptsRequiringTickle` `PlayerEntityLegacyScriptEngine.cpp:382` | ⚠️ |
+| `-[PlayerEntity(Scripting) checkScript]` (266) | `PlayerEntity::checkScript` `PlayerEntityLegacyScriptEngine.cpp:399` | ⚠️ |
+| `-[PlayerEntity(Scripting) runScriptActions:withContextName:forTarget:]` (321) | `PlayerEntity::runScriptActions` `PlayerEntityLegacyScriptEngine.cpp:460` | ✅ |
+| `-[PlayerEntity(Scripting) runUnsanitizedScriptActions:allowingAIMethods:withContextName:forTarget:]` (349) | `PlayerEntity::runUnsanitizedScriptActions` `PlayerEntityLegacyScriptEngine.cpp:488` | ✅ |
+| `-[PlayerEntity(Scripting) scriptTestConditions:]` (356) | `PlayerEntity::scriptTestConditions` `PlayerEntityLegacyScriptEngine.cpp:493` | ✅ |
+| `-[PlayerEntity(Scripting) scriptTestCondition:]` (374) | `PlayerEntity::scriptTestCondition` `PlayerEntityLegacyScriptEngine.cpp:513` | ⚠️ |
+| `-[PlayerEntity(Scripting) expandScriptRightHandSide:]` (542) | `PlayerEntity::expandScriptRightHandSide` `PlayerEntityLegacyScriptEngine.cpp:676` | ✅ |
+| `-[PlayerEntity(Scripting) missionVariables]` (574) | `PlayerEntity::missionVariables` `PlayerEntityLegacyScriptEngine.cpp:709` | ✅ |
+| `-[PlayerEntity(Scripting) missionVariableForKey:]` (579) | `PlayerEntity::missionVariableForKey` `PlayerEntityLegacyScriptEngine.cpp:714` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionVariable:forKey:]` (587) | `PlayerEntity::setMissionVariable` `PlayerEntityLegacyScriptEngine.cpp:721` | ✅ |
+| `-[PlayerEntity(Scripting) localVariablesForMission:]` (597) | `PlayerEntity::localVariablesForMission` `PlayerEntityLegacyScriptEngine.cpp:736` | ⚠️ |
+| `-[PlayerEntity(Scripting) localVariableForKey:andMission:]` (613) | `PlayerEntity::localVariableForKey` `PlayerEntityLegacyScriptEngine.cpp:748` | ✅ |
+| `-[PlayerEntity(Scripting) setLocalVariable:forKey:andMission:]` (618) | `PlayerEntity::setLocalVariable` `PlayerEntityLegacyScriptEngine.cpp:759` | ✅ |
+| `-[PlayerEntity(Scripting) missionsList]` (632) | `PlayerEntity::missionsList` `PlayerEntityLegacyScriptEngine.cpp:773` | ⚠️ |
+| `-[PlayerEntity(Scripting) replaceVariablesInString:]` (691) | `PlayerEntity::replaceVariablesInString` `PlayerEntityLegacyScriptEngine.cpp:829` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionDescription:]` (724) | `PlayerEntity::setMissionDescription(textKey)` `PlayerEntityLegacyScriptEngine.cpp:866` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionDescription:forMission:]` (729) | `PlayerEntity::setMissionDescription(textKey, key)` `PlayerEntityLegacyScriptEngine.cpp:871` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionInstructions:forMission:]` (742) | `PlayerEntity::setMissionInstructions` `PlayerEntityLegacyScriptEngine.cpp:884` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionInstructionsList:forMission:]` (755) | `PlayerEntity::setMissionInstructionsList` `PlayerEntityLegacyScriptEngine.cpp:895` | ✅ |
+| `-[PlayerEntity(Scripting) clearMissionDescription]` (777) | `PlayerEntity::clearMissionDescription` `PlayerEntityLegacyScriptEngine.cpp:915` | ✅ |
+| `-[PlayerEntity(Scripting) clearMissionDescriptionForMission:]` (782) | `PlayerEntity::clearMissionDescriptionForMission` `PlayerEntityLegacyScriptEngine.cpp:925` | ✅ |
+| `-[PlayerEntity(Scripting) mission_string]` (795) | `PlayerEntity::mission_string` `PlayerEntityLegacyScriptEngine.cpp:931` | ✅ |
+| `-[PlayerEntity(Scripting) status_string]` (800) | `PlayerEntity::status_string` `PlayerEntityLegacyScriptEngine.cpp:936` | ✅ |
+| `-[PlayerEntity(Scripting) gui_screen_string]` (805) | `PlayerEntity::gui_screen_string` `PlayerEntityLegacyScriptEngine.cpp:941` | ✅ |
+| `-[PlayerEntity(Scripting) galaxy_number]` (810) | `PlayerEntity::getGalaxy_number` `PlayerEntityLegacyScriptEngine.cpp:946` (by-name table maps `"galaxy_number"` to it, `OOEntityCalledByNameTable.h:2819`) | ✅ |
+| `-[PlayerEntity(Scripting) planet_number]` (815) | `PlayerEntity::planet_number` `PlayerEntityLegacyScriptEngine.cpp:951` | ✅ |
+| `-[PlayerEntity(Scripting) score_number]` (820) | `PlayerEntity::score_number` `PlayerEntityLegacyScriptEngine.cpp:956` | ✅ |
+| `-[PlayerEntity(Scripting) credits_number]` (825) | `PlayerEntity::credits_number` `PlayerEntityLegacyScriptEngine.cpp:961` | ✅ |
+| `-[PlayerEntity(Scripting) scriptTimer_number]` (830) | `PlayerEntity::scriptTimer_number` `PlayerEntityLegacyScriptEngine.cpp:966` | ✅ |
+| `-[PlayerEntity(Scripting) shipsFound_number]` (836) | `PlayerEntity::shipsFound_number` `PlayerEntityLegacyScriptEngine.cpp:972` | ✅ |
+| `-[PlayerEntity(Scripting) commanderLegalStatus_number]` (841) | `PlayerEntity::commanderLegalStatus_number` `PlayerEntityLegacyScriptEngine.cpp:977` | ✅ |
+| `-[PlayerEntity(Scripting) setLegalStatus:]` (846) | `PlayerEntity::setLegalStatus` `PlayerEntityLegacyScriptEngine.cpp:982` | ✅ |
+| `-[PlayerEntity(Scripting) commanderLegalStatus_string]` (851) | `PlayerEntity::commanderLegalStatus_string` `PlayerEntityLegacyScriptEngine.cpp:987` | ✅ |
+| `-[PlayerEntity(Scripting) d100_number]` (856) | `PlayerEntity::d100_number` `PlayerEntityLegacyScriptEngine.cpp:992` | ✅ |
+| `-[PlayerEntity(Scripting) pseudoFixedD100_number]` (862) | `PlayerEntity::pseudoFixedD100_number` `PlayerEntityLegacyScriptEngine.cpp:998` | ✅ |
+| `-[PlayerEntity(Scripting) d256_number]` (867) | `PlayerEntity::d256_number` `PlayerEntityLegacyScriptEngine.cpp:1003` | ✅ |
+| `-[PlayerEntity(Scripting) pseudoFixedD256_number]` (873) | `PlayerEntity::pseudoFixedD256_number` `PlayerEntityLegacyScriptEngine.cpp:1009` | ✅ |
+| `-[PlayerEntity(Scripting) clock_number]` (878) | `PlayerEntity::clock_number` `PlayerEntityLegacyScriptEngine.cpp:1014` | ✅ |
+| `-[PlayerEntity(Scripting) clock_secs_number]` (883) | `PlayerEntity::clock_secs_number` `PlayerEntityLegacyScriptEngine.cpp:1019` | ✅ |
+| `-[PlayerEntity(Scripting) clock_mins_number]` (888) | `PlayerEntity::clock_mins_number` `PlayerEntityLegacyScriptEngine.cpp:1024` | ✅ |
+| `-[PlayerEntity(Scripting) clock_hours_number]` (893) | `PlayerEntity::clock_hours_number` `PlayerEntityLegacyScriptEngine.cpp:1029` | ✅ |
+| `-[PlayerEntity(Scripting) clock_days_number]` (898) | `PlayerEntity::clock_days_number` `PlayerEntityLegacyScriptEngine.cpp:1034` | ✅ |
+| `-[PlayerEntity(Scripting) fuelLevel_number]` (903) | `PlayerEntity::fuelLevel_number` `PlayerEntityLegacyScriptEngine.cpp:1039` | ✅ |
+| `-[PlayerEntity(Scripting) dockedAtMainStation_bool]` (908) | `PlayerEntity::dockedAtMainStation_bool` `PlayerEntityLegacyScriptEngine.cpp:1044` | ✅ |
+| `-[PlayerEntity(Scripting) foundEquipment_bool]` (916) | `PlayerEntity::foundEquipment_bool` `PlayerEntityLegacyScriptEngine.cpp:1052` | ✅ |
+| `-[PlayerEntity(Scripting) sunWillGoNova_bool]` (921) | `PlayerEntity::sunWillGoNova_bool` `PlayerEntityLegacyScriptEngine.cpp:1057` | ✅ |
+| `-[PlayerEntity(Scripting) sunGoneNova_bool]` (926) | `PlayerEntity::sunGoneNova_bool` `PlayerEntityLegacyScriptEngine.cpp:1062` | ✅ |
+| `-[PlayerEntity(Scripting) missionChoice_string]` (931) | `PlayerEntity::missionChoice_string` `PlayerEntityLegacyScriptEngine.cpp:1067` | ✅ |
+| `-[PlayerEntity(Scripting) missionKeyPress_string]` (936) | `PlayerEntity::missionKeyPress_string` `PlayerEntityLegacyScriptEngine.cpp:1072` | ✅ |
+| `-[PlayerEntity(Scripting) dockedTechLevel_number]` (941) | `PlayerEntity::dockedTechLevel_number` `PlayerEntityLegacyScriptEngine.cpp:1077` | ✅ |
+| `-[PlayerEntity(Scripting) dockedStationName_string]` (950) | `PlayerEntity::dockedStationName_string` `PlayerEntityLegacyScriptEngine.cpp:1086` | ✅ |
+| `-[PlayerEntity(Scripting) systemGovernment_string]` (962) | `PlayerEntity::systemGovernment_string` `PlayerEntityLegacyScriptEngine.cpp:1094` | ✅ |
+| `-[PlayerEntity(Scripting) systemGovernment_number]` (972) | `PlayerEntity::systemGovernment_number` `PlayerEntityLegacyScriptEngine.cpp:1100` | ✅ |
+| `-[PlayerEntity(Scripting) systemEconomy_string]` (978) | `PlayerEntity::systemEconomy_string` `PlayerEntityLegacyScriptEngine.cpp:1105` | ✅ |
+| `-[PlayerEntity(Scripting) systemEconomy_number]` (988) | `PlayerEntity::systemEconomy_number` `PlayerEntityLegacyScriptEngine.cpp:1111` | ✅ |
+| `-[PlayerEntity(Scripting) systemTechLevel_number]` (994) | `PlayerEntity::systemTechLevel_number` `PlayerEntityLegacyScriptEngine.cpp:1116` | ✅ |
+| `-[PlayerEntity(Scripting) systemPopulation_number]` (1000) | `PlayerEntity::systemPopulation_number` `PlayerEntityLegacyScriptEngine.cpp:1121` | ✅ |
+| `-[PlayerEntity(Scripting) systemProductivity_number]` (1006) | `PlayerEntity::systemProductivity_number` `PlayerEntityLegacyScriptEngine.cpp:1126` | ✅ |
+| `-[PlayerEntity(Scripting) commanderName_string]` (1012) | `PlayerEntity::commanderName_string` `PlayerEntityLegacyScriptEngine.cpp:1131` | ✅ |
+| `-[PlayerEntity(Scripting) commanderRank_string]` (1017) | `PlayerEntity::commanderRank_string` `PlayerEntityLegacyScriptEngine.cpp:1136` | ✅ |
+| `-[PlayerEntity(Scripting) commanderShip_string]` (1022) | `PlayerEntity::commanderShip_string` `PlayerEntityLegacyScriptEngine.cpp:1141` | ✅ |
+| `-[PlayerEntity(Scripting) commanderShipDisplayName_string]` (1027) | `PlayerEntity::commanderShipDisplayName_string` `PlayerEntityLegacyScriptEngine.cpp:1146` | ✅ |
+| `-[PlayerEntity(Scripting) expandMessage:]` (1034) | `PlayerEntity::expandMessage` `PlayerEntityLegacyScriptEngine.cpp:1153` | ✅ |
+| `-[PlayerEntity(Scripting) commsMessage:]` (1048) | `PlayerEntity::commsMessage` `PlayerEntityLegacyScriptEngine.cpp:1166` | ✅ |
+| `-[PlayerEntity(Scripting) commsMessageByUnpiloted:]` (1056) | `PlayerEntity::commsMessageByUnpiloted` `PlayerEntityLegacyScriptEngine.cpp:1175` | ✅ |
+| `-[PlayerEntity(Scripting) consoleMessage3s:]` (1061) | `PlayerEntity::consoleMessage3s` `PlayerEntityLegacyScriptEngine.cpp:1180` | ✅ |
+| `-[PlayerEntity(Scripting) consoleMessage6s:]` (1066) | `PlayerEntity::consoleMessage6s` `PlayerEntityLegacyScriptEngine.cpp:1186` | ✅ |
+| `-[PlayerEntity(Scripting) awardCredits:]` (1071) | `PlayerEntity::awardCredits` `PlayerEntityLegacyScriptEngine.cpp:1192` | ✅ |
+| `-[PlayerEntity(Scripting) awardShipKills:]` (1088) | `PlayerEntity::awardShipKills` `PlayerEntityLegacyScriptEngine.cpp:1209` | ✅ |
+| `-[PlayerEntity(Scripting) awardEquipment:]` (1098) | `PlayerEntity::awardEquipment` `PlayerEntityLegacyScriptEngine.cpp:1219` | ✅ |
+| `-[PlayerEntity(Scripting) removeEquipment:]` (1120) | `PlayerEntity::removeEquipment` `PlayerEntityLegacyScriptEngine.cpp:1244` | ✅ |
+| `-[PlayerEntity(Scripting) setPlanetinfo:]` (1140) | `PlayerEntity::setPlanetinfo` `PlayerEntityLegacyScriptEngine.cpp:1265` | ✅ |
+| `-[PlayerEntity(Scripting) setSpecificPlanetInfo:]` (1160) | `PlayerEntity::setSpecificPlanetInfo` `PlayerEntityLegacyScriptEngine.cpp:1285` | ✅ |
+| `-[PlayerEntity(Scripting) awardCargo:]` (1180) | `PlayerEntity::awardCargo` `PlayerEntityLegacyScriptEngine.cpp:1306` | ✅ |
+| `-[PlayerEntity(Scripting) removeAllCargo]` (1216) | `PlayerEntity::removeAllCargo()` `PlayerEntityLegacyScriptEngine.cpp:1343` | ✅ |
+| `-[PlayerEntity(Scripting) removeAllCargo:]` (1221) | `PlayerEntity::removeAllCargo(bool)` `PlayerEntityLegacyScriptEngine.cpp:1348` | ✅ |
+| `-[PlayerEntity(Scripting) useSpecialCargo:]` (1259) | `PlayerEntity::useSpecialCargo` `PlayerEntityLegacyScriptEngine.cpp:1385` | ✅ |
+| `-[PlayerEntity(Scripting) testForEquipment:]` (1269) | `PlayerEntity::testForEquipment` `PlayerEntityLegacyScriptEngine.cpp:1396` | ✅ |
+| `-[PlayerEntity(Scripting) awardFuel:]` (1274) | `PlayerEntity::awardFuel` `PlayerEntityLegacyScriptEngine.cpp:1401` | ✅ |
+| `-[PlayerEntity(Scripting) messageShipAIs:]` (1286) | `PlayerEntity::messageShipAIs` `PlayerEntityLegacyScriptEngine.cpp:1415` | ✅ |
+| `-[PlayerEntity(Scripting) ejectItem:]` (1312) | `PlayerEntity::ejectItem` `PlayerEntityLegacyScriptEngine.cpp:1434` | ✅ |
+| `-[PlayerEntity(Scripting) addShips:]` (1319) | `PlayerEntity::addShips` `PlayerEntityLegacyScriptEngine.cpp:1442` | ✅ |
+| `-[PlayerEntity(Scripting) addSystemShips:]` (1345) | `PlayerEntity::addSystemShips` `PlayerEntityLegacyScriptEngine.cpp:1467` | ✅ |
+| `-[PlayerEntity(Scripting) addShipsAt:]` (1374) | `PlayerEntity::addShipsAt` `PlayerEntityLegacyScriptEngine.cpp:1493` | ✅ |
+| `-[PlayerEntity(Scripting) addShipsAtPrecisely:]` (1412) | `PlayerEntity::addShipsAtPrecisely` `PlayerEntityLegacyScriptEngine.cpp:1521` | ✅ |
+| `-[PlayerEntity(Scripting) addShipsWithinRadius:]` (1450) | `PlayerEntity::addShipsWithinRadius` `PlayerEntityLegacyScriptEngine.cpp:1549` | ✅ |
+| `-[PlayerEntity(Scripting) spawnShip:]` (1480) | `PlayerEntity::spawnShip` `PlayerEntityLegacyScriptEngine.cpp:1580` | ✅ |
+| `-[PlayerEntity(Scripting) set:]` (1489) | `PlayerEntity::set` `PlayerEntityLegacyScriptEngine.cpp:1589` | ✅ |
+| `-[PlayerEntity(Scripting) reset:]` (1522) | `PlayerEntity::reset` `PlayerEntityLegacyScriptEngine.cpp:1622` | ✅ |
+| `-[PlayerEntity(Scripting) increment:]` (1539) | `PlayerEntity::increment` `PlayerEntityLegacyScriptEngine.cpp:1639` | ✅ |
+| `-[PlayerEntity(Scripting) decrement:]` (1560) | `PlayerEntity::decrement` `PlayerEntityLegacyScriptEngine.cpp:1661` | ✅ |
+| `-[PlayerEntity(Scripting) add:]` (1581) | `PlayerEntity::add` `PlayerEntityLegacyScriptEngine.cpp:1683` | ✅ |
+| `-[PlayerEntity(Scripting) subtract:]` (1614) | `PlayerEntity::subtract` `PlayerEntityLegacyScriptEngine.cpp:1716` | ✅ |
+| `-[PlayerEntity(Scripting) checkForShips:]` (1647) | `PlayerEntity::checkForShips` `PlayerEntityLegacyScriptEngine.cpp:1749` | ✅ |
+| `-[PlayerEntity(Scripting) resetScriptTimer]` (1652) | `PlayerEntity::resetScriptTimer` `PlayerEntityLegacyScriptEngine.cpp:1754` | ✅ |
+| `-[PlayerEntity(Scripting) addMissionText:]` (1659) | `PlayerEntity::addMissionText` `PlayerEntityLegacyScriptEngine.cpp:1761` | ✅ |
+| `-[PlayerEntity(Scripting) addLiteralMissionText:]` (1678) | `PlayerEntity::addLiteralMissionText` `PlayerEntityLegacyScriptEngine.cpp:1780` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionChoiceByTextEntry:]` (1690) | `PlayerEntity::setMissionChoiceByTextEntry` `PlayerEntityLegacyScriptEngine.cpp:1789` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionChoices:]` (1697) | `PlayerEntity::setMissionChoices` `PlayerEntityLegacyScriptEngine.cpp:1797` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionChoicesDictionary:]` (1706) | `PlayerEntity::setMissionChoicesDictionary` `PlayerEntityLegacyScriptEngine.cpp:1808` | ❌ |
+| `-[PlayerEntity(Scripting) resetMissionChoice]` (1828) | `PlayerEntity::resetMissionChoice` `PlayerEntityLegacyScriptEngine.cpp:1923` | ✅ |
+| `-[PlayerEntity(Scripting) clearMissionScreen]` (1833) | `PlayerEntity::clearMissionScreen` `PlayerEntityLegacyScriptEngine.cpp:1928` | ✅ |
+| `-[PlayerEntity(Scripting) addMissionDestination:]` (1843) | `PlayerEntity::addMissionDestination` `PlayerEntityLegacyScriptEngine.cpp:1938` | ✅ |
+| `-[PlayerEntity(Scripting) removeMissionDestination:]` (1858) | `PlayerEntity::removeMissionDestination` `PlayerEntityLegacyScriptEngine.cpp:1949` | ✅ |
+| `-[PlayerEntity(Scripting) showShipModel:]` (1873) | `PlayerEntity::showShipModel` `PlayerEntityLegacyScriptEngine.cpp:1960` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionMusic:]` (1884) | `PlayerEntity::setMissionMusic` `PlayerEntityLegacyScriptEngine.cpp:1973` | ✅ |
+| `-[PlayerEntity(Scripting) missionTitle]` (1892) | `PlayerEntity::missionTitle` `PlayerEntityLegacyScriptEngine.cpp:1979` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionTitle:]` (1897) | `PlayerEntity::setMissionTitle` `PlayerEntityLegacyScriptEngine.cpp:1984` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionImage:]` (1905) | `PlayerEntity::setMissionImage` `PlayerEntityLegacyScriptEngine.cpp:1991` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionBackground:]` (1914) | `PlayerEntity::setMissionBackground` `PlayerEntityLegacyScriptEngine.cpp:2002` | ✅ |
+| `-[PlayerEntity(Scripting) setFuelLeak:]` (1923) | `PlayerEntity::setFuelLeak` `PlayerEntityLegacyScriptEngine.cpp:2012` | ✅ |
+| `-[PlayerEntity(Scripting) fuelLeakRate_number]` (1938) | `PlayerEntity::fuelLeakRate_number` `PlayerEntityLegacyScriptEngine.cpp:2029` | ✅ |
+| `-[PlayerEntity(Scripting) setSunNovaIn:]` (1943) | `PlayerEntity::setSunNovaIn` `PlayerEntityLegacyScriptEngine.cpp:2034` | ✅ |
+| `-[PlayerEntity(Scripting) launchFromStation]` (1949) | `PlayerEntity::launchFromStation` `PlayerEntityLegacyScriptEngine.cpp:2041` | ✅ |
+| `-[PlayerEntity(Scripting) blowUpStation]` (1959) | `PlayerEntity::blowUpStation` `PlayerEntityLegacyScriptEngine.cpp:2053` | ✅ |
+| `-[PlayerEntity(Scripting) sendAllShipsAway]` (1970) | `PlayerEntity::sendAllShipsAway` `PlayerEntityLegacyScriptEngine.cpp:2066` | ✅ |
+| `-[PlayerEntity(Scripting) addPlanet:]` (2005) | `PlayerEntity::addPlanet` :2106 (by-name, void) + `PlayerEntity::addPlanetEntity` `PlayerEntityLegacyScriptEngine.cpp:2111` | ✅ |
+| `-[PlayerEntity(Scripting) addMoon:]` (2049) | `PlayerEntity::addMoon` :2170 + `PlayerEntity::addMoonEntity` `PlayerEntityLegacyScriptEngine.cpp:2175` | ✅ |
+| `-[PlayerEntity(Scripting) debugOn]` (2091) | `PlayerEntity::debugOn` `PlayerEntityLegacyScriptEngine.cpp:2234` | ✅ |
+| `-[PlayerEntity(Scripting) debugOff]` (2097) | `PlayerEntity::debugOff` `PlayerEntityLegacyScriptEngine.cpp:2240` | ✅ |
+| `-[PlayerEntity(Scripting) debugMessage:]` (2103) | `PlayerEntity::debugMessage` `PlayerEntityLegacyScriptEngine.cpp:2246` | ✅ |
+| `-[PlayerEntity(Scripting) playSound:]` (2108) | `PlayerEntity::playSound` `PlayerEntityLegacyScriptEngine.cpp:2251` | ✅ |
+| `-[PlayerEntity(Scripting) doMissionCallback]` (2115) | `PlayerEntity::doMissionCallback` `PlayerEntityLegacyScriptEngine.cpp:2258` | ✅ |
+| `-[PlayerEntity(Scripting) clearMissionScreenID]` (2122) | `PlayerEntity::clearMissionScreenID` `PlayerEntityLegacyScriptEngine.cpp:2265` | ✅ |
+| `-[PlayerEntity(Scripting) setMissionScreenID:]` (2128) | `PlayerEntity::setMissionScreenID` `PlayerEntityLegacyScriptEngine.cpp:2270` | ✅ |
+| `-[PlayerEntity(Scripting) missionScreenID]` (2133) | `PlayerEntity::missionScreenID` `PlayerEntityLegacyScriptEngine.cpp:2275` | ✅ |
+| `-[PlayerEntity(Scripting) endMissionScreenAndNoteOpportunity]` (2138) | `PlayerEntity::endMissionScreenAndNoteOpportunity` `PlayerEntityLegacyScriptEngine.cpp:2280` | ✅ |
+| `-[PlayerEntity(Scripting) setGuiToMissionScreen]` (2149) | `PlayerEntity::setGuiToMissionScreen` `PlayerEntityLegacyScriptEngine.cpp:2292` | ✅ |
+| `-[PlayerEntity(Scripting) refreshMissionScreenTextEntry]` (2160) | `PlayerEntity::refreshMissionScreenTextEntry` `PlayerEntityLegacyScriptEngine.cpp:2303` | ✅ |
+| `-[PlayerEntity(Scripting) setGuiToMissionScreenWithCallback:]` (2176) | `PlayerEntity::setGuiToMissionScreenWithCallback` `PlayerEntityLegacyScriptEngine.cpp:2321` | ✅ |
+| `-[PlayerEntity(Scripting) setBackgroundFromDescriptionsKey:]` (2228) | `PlayerEntity::setBackgroundFromDescriptionsKey` `PlayerEntityLegacyScriptEngine.cpp:2370` | ✅ |
+| `-[PlayerEntity(Scripting) addScene:atOffset:]` (2240) | `PlayerEntity::addScene` `PlayerEntityLegacyScriptEngine.cpp:2383` | ✅ |
+| `-[PlayerEntity(Scripting) processSceneDictionary:atOffset:]` (2259) | `PlayerEntity::processSceneDictionary` `PlayerEntityLegacyScriptEngine.cpp:2400` | ✅ |
+| `-[PlayerEntity(Scripting) processSceneString:atOffset:]` (2292) | `PlayerEntity::processSceneString` `PlayerEntityLegacyScriptEngine.cpp:2434` | ✅ |
+| `-[PlayerEntity(Scripting) addEqScriptForKey:]` (2483) | `PlayerEntity::addEqScriptForKey` `PlayerEntityLegacyScriptEngine.cpp:2647` | ✅ |
+| `-[PlayerEntity(Scripting) removeEqScriptForKey:]` (2520) | `PlayerEntity::removeEqScriptForKey` `PlayerEntityLegacyScriptEngine.cpp:2677` | ✅ |
+| `-[PlayerEntity(Scripting) eqScriptIndexForKey:]` (2545) | `PlayerEntity::eqScriptIndexForKey` `PlayerEntityLegacyScriptEngine.cpp:2698` | ✅ |
+| `-[PlayerEntity(Scripting) targetNearestHostile]` (2560) | `PlayerEntity::targetNearestHostile` `PlayerEntityLegacyScriptEngine.cpp:2710` | ✅ |
+| `-[PlayerEntity(Scripting) targetNearestIncomingMissile]` (2571) | `PlayerEntity::targetNearestIncomingMissile` `PlayerEntityLegacyScriptEngine.cpp:2721` | ✅ |
+| `-[PlayerEntity(Scripting) setGalacticHyperspaceBehaviourTo:]` (2582) | `PlayerEntity::setGalacticHyperspaceBehaviourTo` `PlayerEntityLegacyScriptEngine.cpp:2732` | ✅ |
+| `-[PlayerEntity(Scripting) setGalacticHyperspaceFixedCoordsTo:]` (2592) | `PlayerEntity::setGalacticHyperspaceFixedCoordsTo` `PlayerEntityLegacyScriptEngine.cpp:2742` | ✅ |
+| `OOComparisonTypeToString()` (2608) | `cxx_OOComparisonTypeToString` `PlayerEntityLegacyScriptEngine.cpp:2755` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — when every mission choice is blank, the fallback row is set to `" "` (one space); upstream sets `@"  "` (two spaces). Visibly blank either way; row text differs (GUI snapshot/row-text comparisons) — upstream `Core/Entities/PlayerEntityLegacyScriptEngine.m:1817` ↔ port `Core/Entities/PlayerEntityLegacyScriptEngine.cpp:1912`
+- ⚠️ **low** — choice keys sorted with `std::stable_sort` over the Dict's byte-ordered keys; upstream `-sortedArrayUsingSelector:caseInsensitiveCompare:` (unstable, from hash order). Only case-insensitively equal keys can order differently. Upstream's non-string-key check and `test.script.error` log gone (a Dict cannot hold non-string keys; code comment) — upstream `PlayerEntityLegacyScriptEngine.m:1728-1742` ↔ port `PlayerEntityLegacyScriptEngine.cpp:1828-1836`
+- ⚠️ **low** — `checkScript` runs tickle scripts in load order; upstream `-allValues` hash order (code comment "ORDER-SENSITIVE (decision D)"). Tickle cache is a vector of (name, script) instead of an NSDictionary. Only OOException is caught; other C++ exceptions rethrow — upstream `PlayerEntityLegacyScriptEngine.m:247-319` ↔ port `PlayerEntityLegacyScriptEngine.cpp:382-458`
+- ⚠️ **low** — `missionsList` walks world scripts in load order (`worldScriptNames()`); upstream `-keyEnumerator` hash order (decision D). Changes the order of mission-description lines on the manifest screen. Header merging (`removeObject:` then append) matches via `std::erase` — upstream `PlayerEntityLegacyScriptEngine.m:661-687` ↔ port `PlayerEntityLegacyScriptEngine.cpp:798-824`
+- ⚠️ **low** — "unhandled condition" internal-error log prints the condition via `oo::writeOldStylePList` (decision C, code comment) instead of `%@` NSArray `-description`; number formatting may differ in this never-expected path. Class and other text unchanged — upstream `PlayerEntityLegacyScriptEngine.m:538` ↔ port `PlayerEntityLegacyScriptEngine.cpp:667-672`
+- ⚠️ **low** — actions and condition queries dispatch through the by-name table (`oo::EntityRespondsToName`/`oo::CallEntityByName`, ADR-0055 item 5, bead oo-9ht.39.7.1) instead of `respondsToSelector:`/`performSelector:`. Fallback to the player when the target lacks the method matches. Equivalent only if the table covers every whitelisted selector (table completeness not audited here) — upstream `PlayerEntityLegacyScriptEngine.m:191-206, 440, 477, 517, 563, 708-709` ↔ port `PlayerEntityLegacyScriptEngine.cpp:316-334, 577, 611, 647, 696, 851-852`
+- ⚠️ **low** — `localVariablesForMission` returns a snapshot and no longer creates and stores an empty table on read; `setLocalVariable` writes the table back (code comment). Upstream never saved `localVariables` (`PlayerEntity.m:1761,2166` only reset it), so nothing observable changes — upstream `PlayerEntityLegacyScriptEngine.m:597-611` ↔ port `PlayerEntityLegacyScriptEngine.cpp:736-771`
+- Condition evaluation checked operator by operator and equivalent, including nil: string `undefined` true only for nil; `equal` false and `notequal` true for nil; `<`/`>` via `DOUBLEVAL` (nil → 0); string `oneof` splits on `,` and trims whitespace-without-newlines, nil matches nothing; number `oneof` splits on `,` without trimming, items read with `doubleValue`; bool `== "YES"` on both sides; `script.error.unexpectedOperator` text and `OOComparisonTypeToString` names identical.
+- A non-string mission/local variable (e.g. an array) now compares or substitutes as its description (`ConditionString`); upstream sent it `-isEqualToString:`/`-intValue` and raised, which `script.error.exception` caught and which aborted the action list. JS mission variables are always stored as strings (`OOJSMissionVariables.m:139-143`), so practically unreachable — upstream `PlayerEntityLegacyScriptEngine.m:426-430, 702-705, 1548` ↔ port `PlayerEntityLegacyScriptEngine.cpp:235-242, 560-566, 845-847, 1649`
+- All action log messages compared character by character and identical in class and text, including upstream's typos (`in %@,* CANNOT addShipsAtPrecisely`, `SCRIPT ERROR :in`, double space in `WARNING in %@  Tried`). Covers set/reset/increment/decrement/add/subtract, addShips*/spawnShip, awardCargo/awardEquipment/removeEquipment, setPlanetinfo/setSpecificPlanetInfo, messageShipAIs, removeAllCargo/useSpecialCargo, setFuelLeak, debugOn/Off/Message, showShipModel, addPlanet/addMoon, the processSceneString logs, the missionDescription errors and EXPANSION. `%d`/`%i`/`%u`/`%.3f`/`%.2f` became `{}`/`{:.3f}`/`{:.2f}` with the same casts; `set`/`add`/`subtract` store `"%d"`/`"%f"` strings as upstream — port `PlayerEntityLegacyScriptEngine.cpp:1415-1747`
+- Subtle (nil messaging, practically unreachable): `addLiteralMissionText`, `refreshMissionScreenTextEntry`, `setGuiToMissionScreenWithCallback` and `setMissionChoicesDictionary` call `gui->` without a null check, and `setBackgroundFromDescriptionsKey` and the `scene` branch dereference `UNIVERSE->descriptions()`; upstream messaged nil and carried on (and guards `if (gui)` at `.m:2211`) — port `PlayerEntityLegacyScriptEngine.cpp:1785, 1844, 2314, 2332, 2372, 2470`
+- Subtle edge cases where upstream raised and the port carries on: an all-whitespace `processSceneString` returns NO (upstream raised on `objectAtIndex:0`); non-array `addScene`/`scene` items are ignored (upstream raised on `-count`); a non-string planet `orientation` is ignored (upstream passed it to `ScanQuaternionFromString`) — upstream `PlayerEntityLegacyScriptEngine.m:2299-2302, 2244-2247, 2022` ↔ port `PlayerEntityLegacyScriptEngine.cpp:2440-2441, 2385-2387, 2139`
+- `setGalacticHyperspaceFixedCoordsTo` with fewer than 2 tokens sets 0x60, then overwrites it with `(0,0)` from the missing elements; the port keeps this upstream bug — upstream `PlayerEntityLegacyScriptEngine.m:2595-2603` ↔ port `PlayerEntityLegacyScriptEngine.cpp:2745-2752`
 
 ## EntityOOJavaScriptExtensions
 
@@ -292,20 +314,32 @@ Upstream `src/Core/Scripting/OOJSCall.m` ↔ `Core/Scripting/OOJSCall.cpp`
 <a id="oojsclock"></a>
 Upstream `src/Core/Scripting/OOJSClock.m` ↔ `Core/Scripting/OOJSClock.cpp`
 
-**Status:** pending
+**Status:** done — 8 rows: 8 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSClock()` (100) | | |
-| `ClockGetProperty()` (106) | | |
-| `JSClockToString()` (175) | | |
-| `ClockClockStringForTime()` (185) | | |
-| `ClockAddSeconds()` (205) | | |
+| `sClockClass` JSClass (42) | `sClockClass` ClassDef `Core/Scripting/OOJSClock.cpp:86` (HasPrivate; getProperty only) | ✅ |
+| enum + `sClockProperties[]` (57, 74) | enum `:105`, `sClockPropertiesFacade[]` `:150` (13 names, all Permanent\|Enumerate\|ReadOnly\|Shared = READONLY_CB); reporter mirror `sClockProperties[]` `:126` | ✅ |
+| `sClockMethods[]` (92) | `sClockMethods[]` `Core/Scripting/OOJSClock.cpp:170` (toString 0, clockStringForTime 1, addSeconds 1) | ✅ |
+| `InitOOJSClock()` (100) | `InitOOJSClock` `Core/Scripting/OOJSClock.cpp:183` (`clock` object Permanent\|Enumerate\|ReadOnly) | ✅ |
+| `ClockGetProperty()` (106) | `ClockGetProperty` `Core/Scripting/OOJSClock.cpp:190` | ✅ |
+| `JSClockToString()` (175) | `JSClockToString` `Core/Scripting/OOJSClock.cpp:263` | ✅ |
+| `ClockClockStringForTime()` (185) | `ClockClockStringForTime` `Core/Scripting/OOJSClock.cpp:276` | ✅ |
+| `ClockAddSeconds()` (205) | `ClockAddSeconds` `Core/Scripting/OOJSClock.cpp:298` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ✅ **low** — the clock units and types match case by case:
+  - `absoluteSeconds` = `Universe getTime`.
+  - `seconds` = `PlayerEntity::clockTime` (game seconds, a double).
+  - `adjustedSeconds` = `clockTimeAdjusted` (a double).
+  - `minutes` and `hours` = `floor(t/60)` and `floor(t/3600)`, as doubles.
+  - The `*Component` properties and `days` are int32 values from the same `fmod`/`floor` expressions, truncated by the implicit double→`int32_t` conversion (`INT_TO_JSVAL` ↔ `int32Value(std::int32_t)`, `ooscript/JSEngine.hpp:81`). So `secondsComponent` is an integer in both, despite its "double" comment.
+  - `days` and `daysComponent` share one case.
+  - `legacy_scriptTimer` logs the same deprecation text.
 
+  upstream `Core/Scripting/OOJSClock.m:116-162` ↔ port `Core/Scripting/OOJSClock.cpp:203-248`
+- ✅ **low** — `clockStringForTime` and `addSeconds` report bad arguments the same way (`Clock`, `"number"`, the argument or undefined). `addSeconds` returns false for values above 30 days, below 1 s or not finite, and otherwise calls `addToAdjustTime` and returns true. When there is no player, the port's `clockString`/`toString()` answer `""` where upstream's nil message gave null; `OOPlayerForScripting()` is never nil while scripts run — upstream `Core/Scripting/OOJSClock.m:150`, `:179`, `:191-226` ↔ port `Core/Scripting/OOJSClock.cpp:236`, `:268`, `:282-320`
 
 ## OOJSDock
 
@@ -633,38 +667,48 @@ Upstream `src/Core/Scripting/OOJSFunction.m` ↔ `Core/Scripting/OOJSFunction.cp
 <a id="oojsglobal"></a>
 Upstream `src/Core/Scripting/OOJSGlobal.m` ↔ `Core/Scripting/OOJSGlobal.cpp`
 
-**Status:** pending
+**Status:** done — 26 rows: 24 ✅ 0 ⚠️ 2 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `CreateOOJSGlobal()` (151) | | |
-| `SetUpOOJSGlobal()` (161) | | |
-| `GlobalGetProperty()` (167) | | |
-| `GlobalSetProperty()` (199) | | |
-| `GlobalLog()` (230) | | |
-| `GlobalExpandDescription()` (269) | | |
-| `GlobalKeyBindingDescription()` (295) | | |
-| `GlobalExpandMissionText()` (319) | | |
-| `GlobalDisplayNameForCommodity()` (345) | | |
-| `GlobalRandomName()` (363) | | |
-| `GlobalRandomInhabitantsDescription()` (384) | | |
-| `GlobalClearExtraGuiScreenKeys()` (404) | | |
-| `GlobalSetExtraGuiScreenKeys()` (436) | | |
-| `GlobalSetScreenBackground()` (517) | | |
-| `GlobalGetScreenBackgroundForKey()` (547) | | |
-| `GlobalSetScreenBackgroundForKey()` (568) | | |
-| `GlobalSetScreenOverlay()` (598) | | |
-| `GlobalGetGuiColorSettingForKey()` (624) | | |
-| `GlobalSetGuiColorSettingForKey()` (651) | | |
-| `GlobalTakeSnapShot()` (693) | | |
-| `GlobalAutoAIForRole()` (734) | | |
-| `GlobalPauseGame()` (756) | | |
-| `GlobalQuitGame()` (778) | | |
+| `sGlobalClass` (85) | `sGlobalClass` `Core/Scripting/OOJSGlobal.cpp:190` | ✅ |
+| `sGlobalProperties` (114) | `sGlobalProperties` `Core/Scripting/OOJSGlobal.cpp:229` (+ `sGlobalPropertiesRaw` :245 for error reporters) | ✅ |
+| `sGlobalMethods` (124) | `sGlobalMethods` `Core/Scripting/OOJSGlobal.cpp:257` | ✅ |
+| `CreateOOJSGlobal()` (151) | `CreateOOJSGlobal` `Core/Scripting/OOJSGlobal.cpp:289` | ✅ |
+| `SetUpOOJSGlobal()` (161) | `SetUpOOJSGlobal` `Core/Scripting/OOJSGlobal.cpp:302` | ✅ |
+| `GlobalGetProperty()` (167) | `GlobalGetProperty` `Core/Scripting/OOJSGlobal.cpp:311` | ✅ |
+| `GlobalSetProperty()` (199) | `GlobalSetProperty` `Core/Scripting/OOJSGlobal.cpp:348` | ✅ |
+| `GlobalLog()` (230) | `GlobalLog` `Core/Scripting/OOJSGlobal.cpp:385` | ❌ |
+| `GlobalExpandDescription()` (269) | `GlobalExpandDescription` `Core/Scripting/OOJSGlobal.cpp:432` | ✅ |
+| `GlobalKeyBindingDescription()` (295) | `GlobalKeyBindingDescription` `Core/Scripting/OOJSGlobal.cpp:461` | ✅ |
+| `GlobalExpandMissionText()` (319) | `GlobalExpandMissionText` `Core/Scripting/OOJSGlobal.cpp:488` | ✅ |
+| `GlobalDisplayNameForCommodity()` (345) | `GlobalDisplayNameForCommodity` `Core/Scripting/OOJSGlobal.cpp:519` | ✅ |
+| `GlobalRandomName()` (363) | `GlobalRandomName` `Core/Scripting/OOJSGlobal.cpp:540` | ✅ |
+| `GlobalRandomInhabitantsDescription()` (384) | `GlobalRandomInhabitantsDescription` `Core/Scripting/OOJSGlobal.cpp:564` | ✅ |
+| `GlobalClearExtraGuiScreenKeys()` (404) | `GlobalClearExtraGuiScreenKeys` `Core/Scripting/OOJSGlobal.cpp:587` | ✅ |
+| `GlobalSetExtraGuiScreenKeys()` (436) | `GlobalSetExtraGuiScreenKeys` `Core/Scripting/OOJSGlobal.cpp:623` | ✅ |
+| `GlobalSetScreenBackground()` (517) | `GlobalSetScreenBackground` `Core/Scripting/OOJSGlobal.cpp:714` | ✅ |
+| `GlobalGetScreenBackgroundForKey()` (547) | `GlobalGetScreenBackgroundForKey` `Core/Scripting/OOJSGlobal.cpp:749` | ✅ |
+| `GlobalSetScreenBackgroundForKey()` (568) | `GlobalSetScreenBackgroundForKey` `Core/Scripting/OOJSGlobal.cpp:771` | ✅ |
+| `GlobalSetScreenOverlay()` (598) | `GlobalSetScreenOverlay` `Core/Scripting/OOJSGlobal.cpp:805` | ✅ |
+| `GlobalGetGuiColorSettingForKey()` (624) | `GlobalGetGuiColorSettingForKey` `Core/Scripting/OOJSGlobal.cpp:834` | ✅ |
+| `GlobalSetGuiColorSettingForKey()` (651) | `GlobalSetGuiColorSettingForKey` `Core/Scripting/OOJSGlobal.cpp:869` | ✅ |
+| `GlobalTakeSnapShot()` (693) | `GlobalTakeSnapShot` `Core/Scripting/OOJSGlobal.cpp:914` | ❌ |
+| `GlobalAutoAIForRole()` (734) | `GlobalAutoAIForRole` `Core/Scripting/OOJSGlobal.cpp:978` | ✅ |
+| `GlobalPauseGame()` (756) | `GlobalPauseGame` `Core/Scripting/OOJSGlobal.cpp:1003` | ✅ |
+| `GlobalQuitGame()` (778) | `GlobalQuitGame` `Core/Scripting/OOJSGlobal.cpp:1029` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — takeSnapShot(): the port copies `-defaultCommanderPath` inline but drops its two error logs, `savedGame.defaultPath.create.failed` and `savedGame.defaultPath.notDirectory`. `GameController.cpp:820,824` still has them. The fallback path is the same; only the log lines are missing (debug-monitor builds only). — upstream `Core/NSFileManagerOOExtensions.m:97,104` (via `Core/Scripting/OOJSGlobal.m:711`) ↔ port `Core/Scripting/OOJSGlobal.cpp:940-953`
+- ❌ **low** — log(class, a, b, …): this only differs when an argument's `toString()` throws. Upstream `+concatenationOfStringsFromJavaScriptValues:` skips a nil first element without adding a separator. A nil later element raises NSInvalidArgumentException on `appendString:nil`, so the error goes to JS and no log line is written. The port turns any nil into `""`, always adds `", "`, and still logs. — upstream `Core/Scripting/OOJavaScriptEngine.m:1647-1655` (via `Core/Scripting/OOJSGlobal.m:250`) ↔ port `Core/Scripting/OOJSGlobal.cpp:407-413`
+- ✅ **low** — note: these all match upstream:
+  - The property flags: `galaxyNumber` and `guiScreen` are READONLY_CB; `timeAccelerationFactor` is READWRITE_CB (debug only); `global` is READONLY.
+  - Function arg counts.
+  - All warning and bad-argument texts, including upstream's "idenfifier" typo and clearExtraGuiScreenKeys reporting as "setExtraGuiScreenKeys" when argc < 2. The only change is the format specifier, `%@` to `%s`.
+  - The rules for which GUI screens are excluded.
+  - The pauseGame screen conditions. — upstream `Core/Scripting/OOJSGlobal.m:114-149,412,469,766` ↔ port `Core/Scripting/OOJSGlobal.cpp:225-282,596,661,1014`
+- ✅ **low** — note: setting timeAccelerationFactor clamps the same way: a value outside [MIN, MAX] becomes DEFAULT, in `Universe` in both. expandMissionText with a missing key returns null in both: upstream passes nil to OOExpandDescriptionString, which returns nil; the port skips the call. — upstream `Core/Universe.m:6666`, `Core/OOStringExpander.m:162` ↔ port `Core/Universe.cpp:7101`, `Core/Scripting/OOJSGlobal.cpp:508`
 
 ## OOJSGuiScreenKeyDefinition
 
@@ -727,99 +771,151 @@ Upstream `src/Core/Scripting/OOJSInterfaceDefinition.m` ↔ `Core/Scripting/OOJS
 <a id="oojsmanifest"></a>
 Upstream `src/Core/Scripting/OOJSManifest.m` ↔ `Core/Scripting/OOJSManifest.cpp`
 
-**Status:** pending
+**Status:** done — 14 rows: 10 ✅ 0 ⚠️ 1 ❌ 3 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOManifest dealloc]` (87) | | |
-| `-[OOManifest oo_jsClassName]` (92) | | |
-| `-[OOManifest oo_jsValueInContext:]` (97) | | |
-| `InitOOJSManifest()` (115) | | |
-| `ManifestDeleteProperty()` (129) | | |
-| `ManifestGetProperty()` (135) | | |
-| `ManifestSetProperty()` (172) | | |
-| `ManifestComment()` (202) | | |
-| `ManifestSetComment()` (224) | | |
-| `ManifestShortComment()` (248) | | |
-| `ManifestSetShortComment()` (270) | | |
+| `sManifestClass` JSClass (47) | `sManifestClass` ClassDef `Core/Scripting/OOJSManifest.cpp:102` (HasPrivate; del/get/set hooks; finalize `OOJSObjectWrapperFinalize`) | ✅ |
+| enum + `sManifestProperties[]` (62, 66) | enum `:121`, `sManifestProperties[]` `:126` (`list`, ReadOnly\|Permanent\|Enumerate\|Shared = READONLY_CB) | ✅ |
+| `sManifestMethods[]` (72) | `sManifestMethods[]` `Core/Scripting/OOJSManifest.cpp:134` (shortComment 1, setShortComment 2, comment 1, setComment 2) | ✅ |
+| `-[OOManifest dealloc]` (87) | — removed (port comment `Core/Scripting/OOJSManifest.cpp:144`) | ➖ |
+| `-[OOManifest oo_jsClassName]` (92) | — removed | ➖ |
+| `-[OOManifest oo_jsValueInContext:]` (97) | — removed | ➖ |
+| `InitOOJSManifest()` (115) | `InitOOJSManifest` `Core/Scripting/OOJSManifest.cpp:148` | ✅ |
+| `ManifestDeleteProperty()` (129) | `ManifestDeleteProperty` `Core/Scripting/OOJSManifest.cpp:162` (body equal; the engine calls it less often) | ❌ |
+| `ManifestGetProperty()` (135) | `ManifestGetProperty` `Core/Scripting/OOJSManifest.cpp:170` | ✅ |
+| `ManifestSetProperty()` (172) | `ManifestSetProperty` `Core/Scripting/OOJSManifest.cpp:213` | ✅ |
+| `ManifestComment()` (202) | `ManifestComment` `Core/Scripting/OOJSManifest.cpp:254` | ✅ |
+| `ManifestSetComment()` (224) | `ManifestSetComment` `Core/Scripting/OOJSManifest.cpp:282` | ✅ |
+| `ManifestShortComment()` (248) | `ManifestShortComment` `Core/Scripting/OOJSManifest.cpp:311` | ✅ |
+| `ManifestSetShortComment()` (270) | `ManifestSetShortComment` `Core/Scripting/OOJSManifest.cpp:339` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ❌ **low** — `delete manifest.<commodity>` reaches the delProperty hook only if that name was assigned on the same object first; this is the QuickJS `ExDeleteProperty` own-slot gate (see OOJSMissionVariables). Upstream always ran the hook, which calls `ManifestSetProperty(undefined)`: `JS_ValueToInt32(undefined)` fails and the bad-value report fires, so the cargo is unchanged. The port returns `true` silently. The cargo outcome is the same; only the error report differs — upstream `Core/Scripting/OOJSManifest.m:129-133`, `:189-195` ↔ port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:1599-1606`
+- ➖ **low** — `OOManifest` is gone. Upstream never instantiated it (no reference outside `OOJSManifest.m`), and both Manifest objects carry a NULL private, so nothing changes in behaviour — upstream `Core/Scripting/OOJSManifest.m:82-113` ↔ port `Core/Scripting/OOJSManifest.cpp:144-146`
+- ✅ **low** — init:
+  - The port no longer registers `OOJSBasicPrivateObjectConverter` for the class. Upstream's converter answered nil for the NULL private, and an unregistered class makes `cxx_OOJSPListFromJSObject` answer a null PList (`OOJavaScriptEngine.cpp:2072-2076`), so any conversion of a Manifest object, including as a Timer's `this`, gives the same nothing.
+  - `player.ship.manifest` (private explicitly set to NULL) and the global `manifest` are both defined READONLY, as before.
 
+  upstream `Core/Scripting/OOJSManifest.m:115-127` ↔ port `Core/Scripting/OOJSManifest.cpp:148-159`
+- ✅ **low** — get, set and the comment methods:
+  - **Get:** `list` is `cargoListForScripting`. A defined commodity name gives an int32 quantity; any other string leaves the value untouched (undefined or the stored slot).
+  - **Set, special cargo:** with special cargo aboard, a tonnage good warns "PlayerShip.manifest['foo'] - cannot modify cargo tonnage when Special Cargo is in use.". `getSpecialCargo().has_value()` is the test where upstream tested for a non-nil NSString, and a nil market defaults to `UNITS_TONS` (0), as before.
+  - **Set, value:** the value is rounded and validated by `ValueToInt32`, clamped at 0, and stored for any string key. A failure triggers the bad-value report.
+  - **Comments:** `comment`/`shortComment` return the string or null; `setComment`/`setShortComment` return the bool, false without a player market. The bad-argument texts and the `MIN(argc, n)` counts are identical.
+
+  upstream `Core/Scripting/OOJSManifest.m:135-291` ↔ port `Core/Scripting/OOJSManifest.cpp:170-363`
 
 ## OOJSMission
 
 <a id="oojsmission"></a>
 Upstream `src/Core/Scripting/OOJSMission.m` ↔ `Core/Scripting/OOJSMission.cpp`
 
-**Status:** pending
+**Status:** done — 18 rows: 17 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSMission()` (100) | | |
-| `MissionRunCallback()` (113) | | |
-| `MissionGetProperty()` (176) | | |
-| `MissionSetProperty()` (213) | | |
-| `MissionMarkSystem()` (242) | | |
-| `MissionUnmarkSystem()` (283) | | |
-| `MissionAddMessageText()` (330) | | |
-| `MissionSetInstructionsKey()` (352) | | |
-| `MissionSetInstructions()` (358) | | |
-| `MissionSetInstructionsInternal()` (363) | | |
-| `GetParameterDictionary()` (406) | | |
-| `GetParameterString()` (417) | | |
-| `GetParameterImageDescriptor()` (426) | | |
-| `MissionRunScreen()` (437) | | |
-| `MissionRunShipLibrary()` (652) | | |
+| `sMissionClass` (60) | `sMissionClass` `Core/Scripting/OOJSMission.cpp:135` | ✅ |
+| `sMissionProperties` (80) | `sMissionProperties` `Core/Scripting/OOJSMission.cpp:163` | ✅ |
+| `sMissionMethods` (88) | `sMissionMethods` `Core/Scripting/OOJSMission.cpp:173` | ✅ |
+| `InitOOJSMission()` (100) | `InitOOJSMission` `Core/Scripting/OOJSMission.cpp:186` | ✅ |
+| `MissionRunCallback()` (113) | `MissionRunCallback` `Core/Scripting/OOJSMission.cpp:199` | ✅ |
+| `MissionGetProperty()` (176) | `MissionGetProperty` `Core/Scripting/OOJSMission.cpp:263` | ⚠️ |
+| `MissionSetProperty()` (213) | `MissionSetProperty` `Core/Scripting/OOJSMission.cpp:313` | ✅ |
+| `MissionMarkSystem()` (242) | `MissionMarkSystem` `Core/Scripting/OOJSMission.cpp:347` | ✅ |
+| `MissionUnmarkSystem()` (283) | `MissionUnmarkSystem` `Core/Scripting/OOJSMission.cpp:393` | ✅ |
+| `MissionAddMessageText()` (330) | `MissionAddMessageText` `Core/Scripting/OOJSMission.cpp:443` | ✅ |
+| `MissionSetInstructionsKey()` (352) | `MissionSetInstructionsKey` `Core/Scripting/OOJSMission.cpp:471` | ✅ |
+| `MissionSetInstructions()` (358) | `MissionSetInstructions` `Core/Scripting/OOJSMission.cpp:479` | ✅ |
+| `MissionSetInstructionsInternal()` (363) | `MissionSetInstructionsInternal` `Core/Scripting/OOJSMission.cpp:486` | ✅ |
+| `GetParameterDictionary()` (406) | `GetParameterDictionary` `Core/Scripting/OOJSMission.cpp:541` | ✅ |
+| `GetParameterString()` (417) | `GetParameterString` `Core/Scripting/OOJSMission.cpp:554` | ✅ |
+| `GetParameterImageDescriptor()` (426) | `GetParameterImageDescriptor` `Core/Scripting/OOJSMission.cpp:574` | ✅ |
+| `MissionRunScreen()` (437) | `MissionRunScreen` `Core/Scripting/OOJSMission.cpp:587` | ✅ |
+| `MissionRunShipLibrary()` (652) | `MissionRunShipLibrary` `Core/Scripting/OOJSMission.cpp:840` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ⚠️ **low** — mission.markedSystems: the port returns the marker values in the destinations Dict's key order. Upstream `-allValues` gave NSDictionary hash order. The port comment says so ("-allValues gave hash order"). Scripts that index the array can see a different order. — upstream `Core/Scripting/OOJSMission.m:188-191` ↔ port `Core/Scripting/OOJSMission.cpp:277-288`
+- ✅ **low** — note: setInstructions/setInstructionsKey with null or no text and no missionKey (no running script). Upstream `clearMissionDescriptionForMission:nil` logged `kOOLogScriptMissionDescNoKey` "in %@, mission key not set". The port gets the same log by calling `setMissionInstructions("", nullopt)`. With a key, `clearMissionDescriptionForMission` is called directly, as before. — upstream `Core/Scripting/OOJSMission.m:398`, `Core/Entities/PlayerEntityLegacyScriptEngine.m:784-786` ↔ port `Core/Scripting/OOJSMission.cpp:525-531`, `Core/Entities/PlayerEntityLegacyScriptEngine.cpp:886-888`
+- ✅ **low** — note on runScreen:
+  - The keys read, and their order, are the same: title / titleKey (title wins whenever it is not undefined, even if null), music, overlay, background, backgroundSpecial, customChartZoom/Centre/CentreInLY, model / spinModel / modelPersonality, allowInterrupt (forced on in flight), exitScreen (default STATUS), screenID, registerKeys, textEntry, then message / messageKey, choices / choicesKey (skipped when textEntry is on), and initialChoicesKey.
+  - Where upstream passed nil for backgroundSpecial, choicesKey and the closing setMissionMusic, the port passes `""`; the callees treat `""` as nil.
+  - The model role nil becomes `""` before `newShipWithRole`.
+  - Neither version has an "already running" check.
+  - The warning texts match. — upstream `Core/Scripting/OOJSMission.m:487-643` ↔ port `Core/Scripting/OOJSMission.cpp:640-829`, `Core/Entities/PlayerEntity.cpp:11792`, `Core/Entities/PlayerEntityLegacyScriptEngine.cpp:1975`
+- ✅ **low** — note on MissionRunCallback: the order is unchanged:
+  1. Copy the callback statics to rooted locals.
+  2. Clear the statics.
+  3. Read the choice and key-press strings.
+  4. Reset the choice silently.
+  5. Push the script and call the function.
+  6. Pop the script, release it and unroot.
 
+  Upstream caught only NSException; the port catches only OOException, logs the same text, and rethrows anything else. — upstream `Core/Scripting/OOJSMission.m:130-173` ↔ port `Core/Scripting/OOJSMission.cpp:216-259`
+- ✅ **low** — note on markSystem/unmarkSystem: the façade's `valueToInt32` copies SpiderMonkey's old non-ECMA JS_ValueToInt32. It rounds to nearest and raises "can't convert … to an integer" for NaN and out-of-range values. So object arguments still take the marker-dict path, and null still means system 0. `marker.get<int>("system", -1)` on a null marker gives 0, the same as messaging nil. — upstream `Core/Scripting/OOJSMission.m:251-275` ↔ port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:2435-2458`, `Core/Scripting/OOJSMission.cpp:357-383`
 
 ## OOJSMissionVariables
 
 <a id="oojsmissionvariables"></a>
 Upstream `src/Core/Scripting/OOJSMissionVariables.m` ↔ `Core/Scripting/OOJSMissionVariables.cpp`
 
-**Status:** pending
+**Status:** done — 8 rows: 6 ✅ 1 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `KeyForPropertyID()` (34) | | |
-| `InitOOJSMissionVariables()` (67) | | |
-| `MissionVariablesConverter()` (78) | | |
-| `MissionVariablesDeleteProperty()` (84) | | |
-| `MissionVariablesGetProperty()` (99) | | |
-| `MissionVariablesSetProperty()` (126) | | |
-| `MissionVariablesEnumerate()` (150) | | |
+| `KeyForPropertyID()` (34) | `KeyForPropertyID` `Core/Scripting/OOJSMissionVariables.cpp:71` (`"_"` prefix → nullopt; else `"mission_" + key`) | ✅ |
+| `sMissionVariablesClass` JSClass (53) | `sMissionVariablesClass` ClassDef `Core/Scripting/OOJSMissionVariables.cpp:109` (NewEnumerate; del/get/set hooks; enumerate in `newEnumerate`) | ✅ |
+| `InitOOJSMissionVariables()` (67) | `InitOOJSMissionVariables` `Core/Scripting/OOJSMissionVariables.cpp:128` | ✅ |
+| `MissionVariablesConverter()` (78) | `MissionVariablesConverter` `Core/Scripting/OOJSMissionVariables.cpp:140` (debug-monitor only; answers a PList copy of the dictionary) | ✅ |
+| `MissionVariablesDeleteProperty()` (84) | `MissionVariablesDeleteProperty` `Core/Scripting/OOJSMissionVariables.cpp:150` (body equal; the engine calls it less often) | ❌ |
+| `MissionVariablesGetProperty()` (99) | `MissionVariablesGetProperty` `Core/Scripting/OOJSMissionVariables.cpp:176` | ✅ |
+| `MissionVariablesSetProperty()` (126) | `MissionVariablesSetProperty` `Core/Scripting/OOJSMissionVariables.cpp:211` | ✅ |
+| `MissionVariablesEnumerate()` (150) | `MissionVariablesEnumerate` `Core/Scripting/OOJSMissionVariables.cpp:245` (state struct `:83` replaces the retained NSEnumerator) | ⚠️ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **high** — `delete missionVariables.foo` no longer clears the variable unless `foo` was assigned through this JS object since the context was created. That rules out variables loaded from a saved game, set by a legacy plist script or set before an engine reset. In SpiderMonkey, delete on a missing or non-own property still called the class delProperty hook (`upstream/spidermonkey-ff4/js/src/jsobj.cpp:5880`), so the hook ran `setMissionVariable:nil`. The QuickJS `ExDeleteProperty` returns true without calling the hook when there is no own slot; a get creates no slot (`ExGetProperty` `:1343`), only an assignment does (`ExSetProperty` `:1531-1544`). The variable silently survives and is written to the next save. The unit tests cover only the "assigned first" case (`tests/unit/core/test_OOJSMissionVariables.cpp:333-336`) — upstream `Core/Scripting/OOJSMissionVariables.m:84-97` ↔ port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:1599-1620`
+- ⚠️ **low** — `for…in`/`Object.keys(missionVariables)` lists names in sorted key order (PList::Dict) instead of NSDictionary `-allKeys` hash order. The port comment says so ("In key order (-allKeys gave them in hash order)"). The INIT count still includes the non-`mission_` keys that NEXT skips, as upstream did — upstream `Core/Scripting/OOJSMissionVariables.m:161` ↔ port `Core/Scripting/OOJSMissionVariables.cpp:259-266`
+- ✅ **low** — the type coercion round-trip is unchanged:
+  - **Set** stores `ToString(value)` for anything except null/undefined, so a number becomes its JS string and a boolean becomes `"true"`/`"false"`. `cxx_OOStringFromJSValue` returns nullopt for null/undefined, which removes the key, as nil did.
+  - **Get** returns a JS number when the stored string passes `OOIsNumberLiteral(s, allowSpaces=YES)`, converted with `-doubleValue` (`oo::str::doubleValue`). Any other stored value goes through the PList/native conversion. An unset variable is **null**, not undefined (`OOJSValueFromPList(Null)` `OOJavaScriptEngine.cpp:1224`).
+  - A `_`-prefixed name returns undefined on get (the hook leaves the value alone), is a no-op on delete, and on set raises `Invalid mission variable name "%s".` with the JS-escaped name. The setter's dropped `NSNull` test could never match a string — upstream `Core/Scripting/OOJSMissionVariables.m:99-148` ↔ port `Core/Scripting/OOJSMissionVariables.cpp:176-241`
+- ✅ **low** — the debug-monitor converter now answers a copy (`PLAYER->missionVariables()`) instead of the live `NSMutableDictionary`. Upstream needed the live dictionary so that `callObjC` could reach it; the port's `callObjC` (`Core/Scripting/OOJSCall.cpp`) dispatches only entity methods, so nothing can mutate through it — upstream `Core/Scripting/OOJSMissionVariables.m:78-81` ↔ port `Core/Scripting/OOJSMissionVariables.cpp:140-145`
 
 ## OOJSOolite
 
 <a id="oojsoolite"></a>
 Upstream `src/Core/Scripting/OOJSOolite.m` ↔ `Core/Scripting/OOJSOolite.cpp`
 
-**Status:** pending
+**Status:** done — 9 rows: 8 ✅ 0 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSOolite()` (100) | | |
-| `OoliteGetProperty()` (106) | | |
-| `OoliteSetProperty()` (185) | | |
-| `VersionString()` (262) | | |
-| `VersionComponents()` (267) | | |
-| `OoliteCompareVersion()` (279) | | |
+| `sOoliteClass` JSClass (44) | `sOoliteClass` ClassDef `Core/Scripting/OOJSOolite.cpp:109` (flags None; get/set hooks; stubs → nullptr) | ✅ |
+| `sOoliteProperties[]` + enum (59, 76) | enum `:128`, `sOoliteProperties[]` `:151` (RO = Permanent\|Enumerate\|ReadOnly\|Shared, RW = Permanent\|Enumerate\|Shared; same 10 names + debug `timeAccelerationFactor`), reporter mirror `sOolitePropertiesRaw[]` `:173` | ✅ |
+| `sOoliteMethods[]` (94) | `sOoliteMethods[]` `Core/Scripting/OOJSOolite.cpp:193` (compareVersion, 1) | ✅ |
+| `InitOOJSOolite()` (100) | `InitOOJSOolite` `Core/Scripting/OOJSOolite.cpp:204` (`oolite` object Permanent\|Enumerate\|ReadOnly = OOJS_PROP_READONLY) | ✅ |
+| `OoliteGetProperty()` (106) | `OoliteGetProperty` `Core/Scripting/OOJSOolite.cpp:211` | ❌ |
+| `OoliteSetProperty()` (185) | `OoliteSetProperty` `Core/Scripting/OOJSOolite.cpp:311` | ✅ |
+| `VersionString()` (262) | `VersionString` `Core/Scripting/OOJSOolite.cpp:399` → `OoliteInfoString("CFBundleVersion")` `:46` | ✅ |
+| `VersionComponents()` (267) | `VersionComponents` `Core/Scripting/OOJSOolite.cpp:406` (`oo::str::versionComponents`) | ✅ |
+| `OoliteCompareVersion()` (279) | `OoliteCompareVersion` `Core/Scripting/OOJSOolite.cpp:433` (+ `UnsignedIntValue` `:415` for `-unsignedIntValue`) | ✅ |
 
 **Differences:**
 
-- *pending*
+- ❌ **low** — `oolite.gameSettings` is a `PList::Dict`, so its keys enumerate in sorted order. Upstream's `[UNIVERSE gameSettings]` NSDictionary enumerated in hash order. This shows in `for…in`, `Object.keys` and `JSON.stringify` of the object; the values are the same — upstream `Core/Scripting/OOJSOolite.m:134` ↔ port `Core/Scripting/OOJSOolite.cpp:251`
+- ✅ **low** — the version is read from `Info-gnustep.plist` in the built-in resources directory, and the file is read again on every `version`/`versionString`/`compareVersion` access. Upstream used `[[NSBundle mainBundle] infoDictionary]`, which GNUstep caches. The value is the same; if the file is missing or unparsable, `versionString` is null and `version` is `[]`, as `ComponentsFromVersionString(nil)` gave. Other ported files use the same helper (`Core/Entities/PlayerEntity.cpp:317`) — upstream `Core/Scripting/OOJSOolite.m:264` ↔ port `Core/Scripting/OOJSOolite.cpp:46-58`
+- ✅ **low** — `jsVersion` and `jsVersionString` still answer 185 and `"ECMAv5"`. The façade emulates `JS_GetVersion`/`JS_VersionToString`, and init still sets `OOJSENGINE_JSVERSION` — upstream `Core/Scripting/OOJSOolite.m:126-130`, `OOJavaScriptEngine.m:307` ↔ port `Core/Scripting/OOJSOolite.cpp:243-248`, `ooscript/JSEngine.hpp:531-539`, `ooscript/JSEngine_quickjs.cpp:3793-3811`
+- ✅ **low** — `compareVersion`:
+  - With no argument, it returns undefined.
+  - An array counts only if every element is a number. Bool counts as a number in both (`isNumber` / `isKindOfClass:NSNumber`), and each element goes through a C cast to unsigned.
+  - A string goes through version-string parsing.
+  - Anything else returns undefined.
+  - The `(int32_t)CompareVersions` result is the same.
 
+  Setters: `postFX` clamps with `MAX(iValue, 0)`; the tone mappers reject non-strings with a bad-value report. The HDR warning is Windows-only, and the warning texts are identical — upstream `Core/Scripting/OOJSOolite.m:198-257`, `:287-308` ↔ port `Core/Scripting/OOJSOolite.cpp:327-394`, `:440-465`
 
 ## OOJSPlanet
 
@@ -1015,46 +1111,50 @@ Upstream `src/Core/Scripting/OOJSPopulatorDefinition.m` ↔ `Core/Scripting/OOJS
 <a id="oojsquaternion"></a>
 Upstream `src/Core/Scripting/OOJSQuaternion.m` ↔ `Core/Scripting/OOJSQuaternion.cpp`
 
-**Status:** pending
+**Status:** done — 32 rows: 32 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSQuaternion()` (185) | | |
-| `JSQuaternionWithQuaternion()` (190) | | |
-| `QuaternionToJSValue()` (218) | | |
-| `JSValueToQuaternion()` (236) | | |
-| `-[PlayerEntity(JSQuaternionStatistics) reportJSQuaternionStatistics]` (262) | | |
-| `-[PlayerEntity(JSQuaternionStatistics) clearJSQuaternionStatistics]` (286) | | |
-| `JSObjectGetQuaternion()` (306) | | |
-| `GetThisQuaternion()` (384) | | |
-| `JSQuaternionSetQuaternion()` (394) | | |
-| `QuaternionFromArgumentListNoErrorInternal()` (420) | | |
-| `QuaternionFromArgumentList()` (470) | | |
-| `QuaternionFromArgumentListNoError()` (482) | | |
-| `QuaternionGetProperty()` (489) | | |
-| `QuaternionSetProperty()` (529) | | |
-| `QuaternionFinalize()` (573) | | |
-| `QuaternionConstruct()` (584) | | |
-| `QuaternionToString()` (626) | | |
-| `QuaternionToSource()` (641) | | |
-| `QuaternionMultiply()` (657) | | |
-| `QuaternionDot()` (676) | | |
-| `QuaternionRotate()` (696) | | |
-| `QuaternionRotateX()` (725) | | |
-| `QuaternionRotateY()` (745) | | |
-| `QuaternionRotateZ()` (765) | | |
-| `QuaternionNormalize()` (785) | | |
-| `QuaternionConjugate()` (802) | | |
-| `QuaternionVectorForward()` (819) | | |
-| `QuaternionVectorUp()` (837) | | |
-| `QuaternionVectorRight()` (855) | | |
-| `QuaternionToArray()` (873) | | |
-| `QuaternionStaticRandom()` (918) | | |
+| `sQuaternionClass` / `sQuaternionProperties` / `sQuaternionMethods` / `sQuaternionStaticMethods` tables (66–181) | same names `Core/Scripting/OOJSQuaternion.cpp:99-164` (w/x/y/z `Permanent \| Enumerate \| Shared` = `OOJS_PROP_READWRITE_CB`; same method names, min-args, order) | ✅ |
+| `InitOOJSQuaternion()` (185) | `InitOOJSQuaternion` `Core/Scripting/OOJSQuaternion.cpp:168` (ctor nargs 4) | ✅ |
+| `JSQuaternionWithQuaternion()` (190) | `JSQuaternionWithQuaternion` `Core/Scripting/OOJSQuaternion.cpp:176` | ✅ |
+| `QuaternionToJSValue()` (218) | `QuaternionToJSValue` `Core/Scripting/OOJSQuaternion.cpp:203` | ✅ |
+| `JSValueToQuaternion()` (236) | `JSValueToQuaternion` `Core/Scripting/OOJSQuaternion.cpp:221` | ✅ |
+| `-[PlayerEntity(JSQuaternionStatistics) reportJSQuaternionStatistics]` (262) | `reportJSQuaternionStatistics` `Core/Scripting/OOJSQuaternion.cpp:246` (free function, bead oo-9ht.15) | ✅ |
+| `-[PlayerEntity(JSQuaternionStatistics) clearJSQuaternionStatistics]` (286) | `clearJSQuaternionStatistics` `Core/Scripting/OOJSQuaternion.cpp:270` | ✅ |
+| `JSObjectGetQuaternion()` (306) | `JSObjectGetQuaternion` `Core/Scripting/OOJSQuaternion.cpp:288` | ✅ |
+| `GetThisQuaternion()` (384) | `GetThisQuaternion` `Core/Scripting/OOJSQuaternion.cpp:368` | ✅ |
+| `JSQuaternionSetQuaternion()` (394) | `JSQuaternionSetQuaternion` `Core/Scripting/OOJSQuaternion.cpp:379` | ✅ |
+| `QuaternionFromArgumentListNoErrorInternal()` (420) | `QuaternionFromArgumentListNoErrorInternal` `Core/Scripting/OOJSQuaternion.cpp:408` | ✅ |
+| `QuaternionFromArgumentList()` (470) | `QuaternionFromArgumentList` `Core/Scripting/OOJSQuaternion.cpp:460` | ✅ |
+| `QuaternionFromArgumentListNoError()` (482) | `QuaternionFromArgumentListNoError` `Core/Scripting/OOJSQuaternion.cpp:472` | ✅ |
+| `QuaternionGetProperty()` (489) | `QuaternionGetProperty` `Core/Scripting/OOJSQuaternion.cpp:480` | ✅ |
+| `QuaternionSetProperty()` (529) | `QuaternionSetProperty` `Core/Scripting/OOJSQuaternion.cpp:525` | ✅ |
+| `QuaternionFinalize()` (573) | `QuaternionFinalize` `Core/Scripting/OOJSQuaternion.cpp:574` | ✅ |
+| `QuaternionConstruct()` (584) | `QuaternionConstruct` `Core/Scripting/OOJSQuaternion.cpp:590` | ✅ |
+| `QuaternionToString()` (626) | `QuaternionToString` `Core/Scripting/OOJSQuaternion.cpp:636` | ✅ |
+| `QuaternionToSource()` (641) | `QuaternionToSource` `Core/Scripting/OOJSQuaternion.cpp:654` | ✅ |
+| `QuaternionMultiply()` (657) | `QuaternionMultiply` `Core/Scripting/OOJSQuaternion.cpp:672` | ✅ |
+| `QuaternionDot()` (676) | `QuaternionDot` `Core/Scripting/OOJSQuaternion.cpp:694` | ✅ |
+| `QuaternionRotate()` (696) | `QuaternionRotate` `Core/Scripting/OOJSQuaternion.cpp:717` | ✅ |
+| `QuaternionRotateX()` (725) | `QuaternionRotateX` `Core/Scripting/OOJSQuaternion.cpp:750` | ✅ |
+| `QuaternionRotateY()` (745) | `QuaternionRotateY` `Core/Scripting/OOJSQuaternion.cpp:773` | ✅ |
+| `QuaternionRotateZ()` (765) | `QuaternionRotateZ` `Core/Scripting/OOJSQuaternion.cpp:796` | ✅ |
+| `QuaternionNormalize()` (785) | `QuaternionNormalize` `Core/Scripting/OOJSQuaternion.cpp:819` | ✅ |
+| `QuaternionConjugate()` (802) | `QuaternionConjugate` `Core/Scripting/OOJSQuaternion.cpp:839` | ✅ |
+| `QuaternionVectorForward()` (819) | `QuaternionVectorForward` `Core/Scripting/OOJSQuaternion.cpp:859` | ✅ |
+| `QuaternionVectorUp()` (837) | `QuaternionVectorUp` `Core/Scripting/OOJSQuaternion.cpp:880` | ✅ |
+| `QuaternionVectorRight()` (855) | `QuaternionVectorRight` `Core/Scripting/OOJSQuaternion.cpp:901` | ✅ |
+| `QuaternionToArray()` (873) | `QuaternionToArray` `Core/Scripting/OOJSQuaternion.cpp:922` | ✅ |
+| `QuaternionStaticRandom()` (918) | `QuaternionStaticRandom` `Core/Scripting/OOJSQuaternion.cpp:971` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- No behaviour differences found. Constructor forms match: no args → identity; a Quaternion; an entity (its orientation; a dead/absent entity → all-zero quaternion, as the message to nil, `OOJSEntityOrientationOfJSObject` `Core/Scripting/OOJSEntity.cpp:238-243`); a 4-element array `[w,x,y,z]` (each element through `valueToNumber`, no NaN check); `Quaternion.prototype` → zero quaternion; or four numbers, each rejected if NaN. Error texts identical, including the constructor's "Quaternion, Entity or array of four numbers" vs the argument list's "Quaternion, Entity or four numbers".
+- `toString()` uses the shared `QuaternionDescription` `(%g %c %gi %c %gj %c %gk)` with signs from `>= 0.0f` and `fabsf` magnitudes, byte-identical to upstream (`Core/OOQuaternion.m:361-375` ↔ `Core/OOQuaternion.cpp:365-379`); `toSource()` is `Quaternion(%g, %g, %g, %g)`. Property getters return the component through a `GLfloat` as upstream.
+- Maths: `multiply`, `dot`, `rotate` (axis via `VectorFromArgumentList`; angle optional, value passed through unchanged when absent), `rotateX/Y/Z`, `normalize`, `conjugate`, `vectorForward/Up/Right`, `random` call the same `OOQuaternion` functions; `OOQuaternion.cpp`/`.h` differ from upstream only in the description's string type (checked by diff).
+- Subtle, kept from upstream: `reportJSQuaternionStatistics` has no `sum == 0` guard (unlike the Vector one), so percentages print `nan` on an empty count; `toArray()` ignores `setElement` failures exactly as upstream — upstream `Core/Scripting/OOJSQuaternion.m:266-267, 890-905` ↔ port `Core/Scripting/OOJSQuaternion.cpp:250-251, 941-956`
+- The constructor now frees its buffer when `newObject` fails (upstream leaked); not observable — port `Core/Scripting/OOJSQuaternion.cpp:604-606`
 
 ## OOJSScript
 
@@ -1411,183 +1511,227 @@ Upstream `src/Core/Scripting/OOJSSun.m` ↔ `Core/Scripting/OOJSSun.cpp`
 <a id="oojssystem"></a>
 Upstream `src/Core/Scripting/OOJSSystem.m` ↔ `Core/Scripting/OOJSSystem.cpp`
 
-**Status:** pending
+**Status:** done — 42 rows: 40 ✅ 0 ⚠️ 2 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSSystem()` (214) | | |
-| `SystemGetProperty()` (222) | | |
-| `SystemSetProperty()` (439) | | |
-| `SystemToString()` (571) | | |
-| `SystemAddPlanet()` (585) | | |
-| `SystemAddMoon()` (610) | | |
-| `SystemSendAllShipsAway()` (635) | | |
-| `SystemCountShipsWithPrimaryRole()` (648) | | |
-| `SystemCountShipsWithRole()` (680) | | |
-| `SystemShipsWithPrimaryRole()` (712) | | |
-| `SystemShipsWithRole()` (745) | | |
-| `SystemCountEntitiesWithScanClass()` (778) | | |
-| `SystemEntitiesWithScanClass()` (810) | | |
-| `SystemFilteredEntities()` (843) | | |
-| `SystemLocationFromCode()` (881) | | |
-| `SystemAddShips()` (908) | | |
-| `SystemAddGroup()` (914) | | |
-| `SystemAddShipsToRoute()` (920) | | |
-| `SystemAddGroupToRoute()` (926) | | |
-| `SystemLegacyAddShips()` (932) | | |
-| `SystemLegacyAddSystemShips()` (958) | | |
-| `SystemLegacyAddShipsAt()` (985) | | |
-| `SystemLegacyAddShipsAtPrecisely()` (1016) | | |
-| `SystemLegacyAddShipsWithinRadius()` (1047) | | |
-| `SystemLegacySpawnShip()` (1081) | | |
-| `SystemStaticSystemNameForID()` (1108) | | |
-| `SystemStaticSystemIDForName()` (1129) | | |
-| `SystemStaticInfoForSystem()` (1155) | | |
-| `SystemAddVisualEffect()` (1182) | | |
-| `SystemSetPopulator()` (1216) | | |
-| `SystemSetWaypoint()` (1273) | | |
-| `SystemAddShipsOrGroup()` (1324) | | |
-| `SystemAddShipsOrGroupToRoute()` (1383) | | |
-| `GetRelativeToAndRange()` (1445) | | |
-| `FindJSVisibleEntities()` (1477) | | |
-| `FindShips()` (1502) | | |
-| `CompareEntitiesByDistance()` (1515) | | |
+| `sSystemClass` JSClass (93) | `sSystemClass` ClassDef `Core/Scripting/OOJSSystem.cpp:208` | ✅ |
+| property-ID enum `kSystem_*` (107) | enum `kSystem_*` `Core/Scripting/OOJSSystem.cpp:227` | ✅ |
+| `sSystemProperties[]` JSPropertySpec (141) | `sSystemProperties[]` `Core/Scripting/OOJSSystem.cpp:267` (+ error-reporter mirror `sSystemPropertiesRaw[]` `:308`) | ✅ |
+| `sSystemMethods[]` JSFunctionSpec (175) | `sSystemMethods[]` `Core/Scripting/OOJSSystem.cpp:344` | ✅ |
+| `sSystemStaticMethods[]` (207) | `sSystemStaticMethods[]` `Core/Scripting/OOJSSystem.cpp:378` | ✅ |
+| `InitOOJSSystem()` (214) | `InitOOJSSystem` `Core/Scripting/OOJSSystem.cpp:386` | ✅ |
+| `SystemGetProperty()` (222) | `SystemGetProperty` `Core/Scripting/OOJSSystem.cpp:396` | ❌ |
+| `SystemSetProperty()` (439) | `SystemSetProperty` `Core/Scripting/OOJSSystem.cpp:628` | ✅ |
+| `SystemToString()` (571) | `SystemToString` `Core/Scripting/OOJSSystem.cpp:782` | ✅ |
+| `SystemAddPlanet()` (585) | `SystemAddPlanet` `Core/Scripting/OOJSSystem.cpp:801` | ✅ |
+| `SystemAddMoon()` (610) | `SystemAddMoon` `Core/Scripting/OOJSSystem.cpp:829` | ✅ |
+| `SystemSendAllShipsAway()` (635) | `SystemSendAllShipsAway` `Core/Scripting/OOJSSystem.cpp:857` | ✅ |
+| `SystemCountShipsWithPrimaryRole()` (648) | `SystemCountShipsWithPrimaryRole` `Core/Scripting/OOJSSystem.cpp:874` | ✅ |
+| `SystemCountShipsWithRole()` (680) | `SystemCountShipsWithRole` `Core/Scripting/OOJSSystem.cpp:909` | ✅ |
+| `SystemShipsWithPrimaryRole()` (712) | `SystemShipsWithPrimaryRole` `Core/Scripting/OOJSSystem.cpp:944` | ✅ |
+| `SystemShipsWithRole()` (745) | `SystemShipsWithRole` `Core/Scripting/OOJSSystem.cpp:980` | ✅ |
+| `SystemCountEntitiesWithScanClass()` (778) | `SystemCountEntitiesWithScanClass` `Core/Scripting/OOJSSystem.cpp:1016` | ✅ |
+| `SystemEntitiesWithScanClass()` (810) | `SystemEntitiesWithScanClass` `Core/Scripting/OOJSSystem.cpp:1051` | ✅ |
+| `SystemFilteredEntities()` (843) | `SystemFilteredEntities` `Core/Scripting/OOJSSystem.cpp:1087` | ✅ |
+| `SystemLocationFromCode()` (881) | `SystemLocationFromCode` `Core/Scripting/OOJSSystem.cpp:1128` | ✅ |
+| `SystemAddShips()` (908) | `SystemAddShips` `Core/Scripting/OOJSSystem.cpp:1158` | ✅ |
+| `SystemAddGroup()` (914) | `SystemAddGroup` `Core/Scripting/OOJSSystem.cpp:1166` | ✅ |
+| `SystemAddShipsToRoute()` (920) | `SystemAddShipsToRoute` `Core/Scripting/OOJSSystem.cpp:1174` | ✅ |
+| `SystemAddGroupToRoute()` (926) | `SystemAddGroupToRoute` `Core/Scripting/OOJSSystem.cpp:1182` | ✅ |
+| `SystemLegacyAddShips()` (932) | `SystemLegacyAddShips` `Core/Scripting/OOJSSystem.cpp:1190` | ✅ |
+| `SystemLegacyAddSystemShips()` (958) | `SystemLegacyAddSystemShips` `Core/Scripting/OOJSSystem.cpp:1221` | ✅ |
+| `SystemLegacyAddShipsAt()` (985) | `SystemLegacyAddShipsAt` `Core/Scripting/OOJSSystem.cpp:1253` | ✅ |
+| `SystemLegacyAddShipsAtPrecisely()` (1016) | `SystemLegacyAddShipsAtPrecisely` `Core/Scripting/OOJSSystem.cpp:1288` | ✅ |
+| `SystemLegacyAddShipsWithinRadius()` (1047) | `SystemLegacyAddShipsWithinRadius` `Core/Scripting/OOJSSystem.cpp:1323` | ✅ |
+| `SystemLegacySpawnShip()` (1081) | `SystemLegacySpawnShip` `Core/Scripting/OOJSSystem.cpp:1361` | ✅ |
+| `SystemStaticSystemNameForID()` (1108) | `SystemStaticSystemNameForID` `Core/Scripting/OOJSSystem.cpp:1392` | ✅ |
+| `SystemStaticSystemIDForName()` (1129) | `SystemStaticSystemIDForName` `Core/Scripting/OOJSSystem.cpp:1416` | ✅ |
+| `SystemStaticInfoForSystem()` (1155) | `SystemStaticInfoForSystem` `Core/Scripting/OOJSSystem.cpp:1445` | ✅ |
+| `SystemAddVisualEffect()` (1182) | `SystemAddVisualEffect` `Core/Scripting/OOJSSystem.cpp:1475` | ✅ |
+| `SystemSetPopulator()` (1216) | `SystemSetPopulator` `Core/Scripting/OOJSSystem.cpp:1512` | ✅ |
+| `SystemSetWaypoint()` (1273) | `SystemSetWaypoint` `Core/Scripting/OOJSSystem.cpp:1578` | ❌ |
+| `SystemAddShipsOrGroup()` (1324) | `SystemAddShipsOrGroup` `Core/Scripting/OOJSSystem.cpp:1637` | ✅ |
+| `SystemAddShipsOrGroupToRoute()` (1383) | `SystemAddShipsOrGroupToRoute` `Core/Scripting/OOJSSystem.cpp:1704` | ✅ |
+| `GetRelativeToAndRange()` (1445) | `GetRelativeToAndRange` `Core/Scripting/OOJSSystem.cpp:1772` | ✅ |
+| `FindJSVisibleEntities()` (1477) | `FindJSVisibleEntities` `Core/Scripting/OOJSSystem.cpp:1808` | ✅ |
+| `FindShips()` (1502) | `FindShips` `Core/Scripting/OOJSSystem.cpp:1833` | ✅ |
+| `CompareEntitiesByDistance()` (1515) | `CompareEntitiesByDistance` `Core/Scripting/OOJSSystem.cpp:1848` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — `system.waypoints` and `system.populatorSettings` are now built from `oo::PList::Dict` (a `std::map`), so the JS object's keys enumerate in sorted order. Upstream converted an `NSDictionary`, which enumerates in GNUstep hash order. This shows in `for…in`/`Object.keys` order. The port also skips null waypoint holds (upstream's dictionary could hold no nil) — upstream `Core/Scripting/OOJSSystem.m:271` ↔ port `Core/Scripting/OOJSSystem.cpp:455`; upstream `Core/Scripting/OOJSSystem.m:324` ↔ port `Core/Scripting/OOJSSystem.cpp:515`
+- ❌ **low** — `setWaypoint(key, pos, ori, def)` where `def` is a JS array (or another non-dictionary convertible object): upstream `-mutableCopy` gives an NSMutableArray, `-setObject:forKey:` throws, and `OOJS_NATIVE_EXIT` turns that into a JS exception. The port's `getIf<Dict>()` is null, so it skips the position/orientation keys and calls `defineWaypoint(<array>, key)` without raising — upstream `Core/Scripting/OOJSSystem.m:1309` ↔ port `Core/Scripting/OOJSSystem.cpp:1616`
+- ✅ **low** — the property, method and static tables match upstream entry for entry: 29 properties with the same IDs and `READONLY_CB`/`READWRITE_CB` (`kSystemPropertyFlagsRO/RW` expand to the same Permanent|Enumerate|[ReadOnly]|Shared); 25 methods and 3 statics with the same arities. `info` is read-only in both, although its enum comment says read/write. The port keeps a second copy, `sSystemPropertiesRaw`, for the bad-property reporters; it is currently identical but must be kept in sync by hand — upstream `Core/Scripting/OOJSSystem.m:141` ↔ port `Core/Scripting/OOJSSystem.cpp:267`, `:308`
+- ✅ **low** — upstream's copy-paste mistakes in error-message function names are kept exactly: `shipsWithPrimaryRole` reports `countShipsWithRole`, `entitiesWithScanClass` reports `countEntitiesWithScanClass`, `addShipsToRoute`/`addGroupToRoute` report `addShips`/`addGroup`, and `legacy_addShipsWithinRadius` reports `legacy_addShipWithinRadius` — upstream `Core/Scripting/OOJSSystem.m:724`, `:822`, `:1394`, `:1066` ↔ port `Core/Scripting/OOJSSystem.cpp:957`, `:1064`, `:1718`, `:1343`
+- ✅ **low** — ship spawning matches: the count must be 1–64 via `ValueToInt32`, and a missing vector means the witchpoint with `SCANNER_MAX_RANGE` radius. The `NSNotFound` sentinel radius/route fraction is still passed as `GLfloat`/`double` and matches Universe's sentinel checks (`Core/Universe.cpp:3008`, `:10031`). The route fraction must be finite and in [0,1]; the route is lower-cased and must be one of `wp pw ws sw sp ps`, default `st`. Return shape is unchanged: an empty spawn gives null, and for groups the first ship's group (or null). This file makes no RNG calls; the randomisation lives in `Universe::addShipsAt`/`addShipsToRoute`/`addShipAt` — upstream `Core/Scripting/OOJSSystem.m:1324-1443` ↔ port `Core/Scripting/OOJSSystem.cpp:1637-1768`
+- ✅ **low** — the distance sort only runs when `relativeTo` is a non-player entity, in both. The port uses `std::stable_sort` with the same float `HPdistance2` comparison. Upstream used GNUstep `-sortUsingFunction:context:` (the port's comment says that is timsort, which is stable; Apple Foundation builds may differ). Order can differ only for entities at exactly equal float distance — upstream `Core/Scripting/OOJSSystem.m:1492` ↔ port `Core/Scripting/OOJSSystem.cpp:1820`
+- ✅ **low** — the search predicate parameters changed type to match the C++ predicates: `entitiesWithScanClass` passes an `OOScanClass*` instead of an `NSNumber`, and the role searches pass a `std::string*` instead of an `NSString`. `HasScanClassPredicate`/`HasRolePredicate`/`HasPrimaryRolePredicate` (`Core/OOEntityFilterPredicate.cpp:111-160`) read those types, so the filtering is the same — upstream `Core/Scripting/OOJSSystem.m:834` ↔ port `Core/Scripting/OOJSSystem.cpp:1076`
+- ✅ **low** — `systemIDForName` still stores the `OOSystemID` in an `unsigned` and returns it through `int32Value`, so "not found" still comes back as -1. `toString` still prints the system with `%u` (4294967295 in interstellar space) and a missing name as `(null)` (`oo::describe`) — upstream `Core/Scripting/OOJSSystem.m:1134-1149`, `:578` ↔ port `Core/Scripting/OOJSSystem.cpp:1422-1437`, `:792`
 
 ## OOJSSystemInfo
 
 <a id="oojssysteminfo"></a>
 Upstream `src/Core/Scripting/OOJSSystemInfo.m` ↔ `Core/Scripting/OOJSSystemInfo.cpp`
 
-**Status:** pending
+**Status:** done — 35 rows: 30 ✅ 1 ⚠️ 2 ❌ 2 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOSystemInfo init]` (128) | | |
-| `-[OOSystemInfo initWithGalaxy:system:]` (134) | | |
-| `-[OOSystemInfo dealloc]` (149) | | |
-| `-[OOSystemInfo descriptionComponents]` (156) | | |
-| `-[OOSystemInfo shortDescriptionComponents]` (161) | | |
-| `-[OOSystemInfo oo_jsClassName]` (166) | | |
-| `-[OOSystemInfo isEqual:]` (171) | | |
-| `-[OOSystemInfo hash]` (176) | | |
-| `-[OOSystemInfo valueForKey:]` (184) | | |
-| `-[OOSystemInfo setValue:forKey:]` (192) | | |
-| `-[OOSystemInfo allKeys]` (199) | | |
-| `-[OOSystemInfo galaxy]` (207) | | |
-| `-[OOSystemInfo system]` (212) | | |
-| `-[OOSystemInfo coordinates]` (223) | | |
-| `-[OOSystemInfo oo_jsValueInContext:]` (231) | | |
-| `InitOOJSSystemInfo()` (249) | | |
-| `GetJSSystemInfoForSystem()` (255) | | |
-| `SystemInfoFinalize()` (287) | | |
-| `SystemInfoEnumerate()` (301) | | |
-| `SystemInfoDeleteProperty()` (350) | | |
-| `SystemInfoGetProperty()` (360) | | |
-| `SystemInfoSetProperty()` (435) | | |
-| `SystemInfoDistanceToSystem()` (456) | | |
-| `SystemInfoRouteToSystem()` (486) | | |
-| `SystemInfoSamplePrice()` (523) | | |
-| `SystemInfoSetPropertyMethod()` (550) | | |
-| `SystemInfoStaticFilteredSystems()` (597) | | |
-| `SystemInfoStaticSetInterstellarProperty()` (662) | | |
+| `sSystemInfoClass` JSClass (54) | `sSystemInfoClass` ClassDef — `Core/Scripting/OOJSSystemInfo.cpp:170` (HasPrivate\|NewEnumerate; stubs → nullptr engine defaults; enumerate in `newEnumerate` slot) | ✅ |
+| property-ID enum + `sSystemInfoProperties` (69, 77) | enum + `sSystemInfoProperties` — `Core/Scripting/OOJSSystemInfo.cpp:189`, `:198` (Permanent\|Enumerate\|ReadOnly\|Shared = OOJS_PROP_READONLY_CB; raw mirror for the bad-selector reporter `:213`) | ✅ |
+| `sSystemInfoMethods` (86) | `sSystemInfoMethods` — `Core/Scripting/OOJSSystemInfo.cpp:224` (toString 0, distanceToSystem 1, routeToSystem 1, samplePrice 1, setProperty 3; toString → `SystemInfoToString` `:500` → `OOJSCxxObjectWrapperToString`) | ✅ |
+| `sSystemInfoStaticMethods` (96) | `sSystemInfoStaticMethods` — `Core/Scripting/OOJSSystemInfo.cpp:236` (filteredSystems 2, setInterstellarProperty 4) | ✅ |
+| statics `sSystemInfoPrototype`/`sCachedSystemInfo`/`sCachedGalaxy`/`sCachedSystem` (35–38) | same names — `Core/Scripting/OOJSSystemInfo.cpp:109–119` | ✅ |
+| `DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo…)` (124) | `JSSystemInfoGetSystemInfo` → `OOJSGetCxxPrivate` — `Core/Scripting/OOJSSystemInfo.cpp:280` (same "Native method expected %s, got %s." check, `Core/Scripting/OOJSPrivateObject.cpp:60`); `SystemInfoOfJSObject` `:287` for OOJSNativeObjectOfClassFromJSObject | ✅ |
+| `-[OOSystemInfo init]` (128) | — (no default constructor; only private `OOSystemInfo(galaxy, system)` `Core/Scripting/OOJSSystemInfo.cpp:297`) | ➖ |
+| `-[OOSystemInfo initWithGalaxy:system:]` (134) | `OOSystemInfo::initWithGalaxy` factory — `Core/Scripting/OOJSSystemInfo.cpp:304` (same range checks, null instead of nil; `_planetKey` "%u %i") | ✅ |
+| `-[OOSystemInfo dealloc]` (149) | — (`std::string _planetKey` RAII) | ➖ |
+| `-[OOSystemInfo descriptionComponents]` (156) | `OOSystemInfo::descriptionComponents` — `Core/Scripting/OOJSSystemInfo.cpp:313` | ✅ |
+| `-[OOSystemInfo shortDescriptionComponents]` (161) | `OOSystemInfo::shortDescriptionComponents` — `Core/Scripting/OOJSSystemInfo.cpp:318` | ✅ |
+| `-[OOSystemInfo oo_jsClassName]` (166) | `OOSystemInfo::oo_jsClassName` — `Core/Scripting/OOJSSystemInfo.cpp:323` | ✅ |
+| `-[OOSystemInfo isEqual:]` (171) | `OOSystemInfo::isEqual` — `Core/Scripting/OOJSSystemInfo.cpp:328` | ✅ |
+| `-[OOSystemInfo hash]` (176) | `OOSystemInfo::hash` — `Core/Scripting/OOJSSystemInfo.cpp:333` | ✅ |
+| `-[OOSystemInfo valueForKey:]` (184) | `OOSystemInfo::valueForKey` — `Core/Scripting/OOJSSystemInfo.cpp:341` (interstellar && -1 → currentSystemData lookup; else `Universe::systemDataForGalaxy` → `getProperty(key, s, g)` cache read, `Core/Universe.cpp:7939`) | ✅ |
+| `-[OOSystemInfo setValue:forKey:]` (192) | `OOSystemInfo::setValue` — `Core/Scripting/OOJSSystemInfo.cpp:352` (running script's manifest, `OO_LAYER_OXP_DYNAMIC`) | ✅ |
+| `-[OOSystemInfo allKeys]` (199) | `OOSystemInfo::allKeys` — `Core/Scripting/OOJSSystemInfo.cpp:361` | ⚠️ |
+| `-[OOSystemInfo galaxy]` (207) | `OOSystemInfo::galaxy` — `Core/Scripting/OOJSSystemInfo.cpp:377` | ✅ |
+| `-[OOSystemInfo system]` (212) | `OOSystemInfo::system` — `Core/Scripting/OOJSSystemInfo.cpp:382` | ✅ |
+| `-[OOSystemInfo coordinates]` (223) | `OOSystemInfo::coordinates` — `Core/Scripting/OOJSSystemInfo.cpp:393` (interstellar && -1 → player galaxy_coordinates) | ✅ |
+| `-[OOSystemInfo oo_jsValueInContext:]` (231) | `OOSystemInfo::jsValueInContext` — `Core/Scripting/OOJSSystemInfo.cpp:401` (new object every call; `_jsSelf` only recorded) | ✅ |
+| (inherited) `-description` / `-oo_jsDescription` | `OOSystemInfo::className`/`description`/`jsDescription` — `Core/Scripting/OOJSSystemInfo.cpp:428`, `:433`, `:439` | ❌ |
+| `InitOOJSSystemInfo()` (249) | `InitOOJSSystemInfo` — `Core/Scripting/OOJSSystemInfo.cpp:460` (converter `SystemInfoConverter` `:451` = OOJSBasicPrivateObjectConverter) | ✅ |
+| `GetJSSystemInfoForSystem()` (255) | `GetJSSystemInfoForSystem` — `Core/Scripting/OOJSSystemInfo.cpp:467` | ✅ |
+| `SystemInfoFinalize()` (287) | `SystemInfoFinalize` — `Core/Scripting/OOJSSystemInfo.cpp:507` (→ `OOJSCxxObjectWrapperFinalize`, then cache clear) | ✅ |
+| `SystemInfoEnumerate()` (301) | `SystemInfoEnumerate` — `Core/Scripting/OOJSSystemInfo.cpp:524` | ✅ |
+| `SystemInfoDeleteProperty()` (350) | `SystemInfoDeleteProperty` — `Core/Scripting/OOJSSystemInfo.cpp:575` (body equal; engine calls it less often) | ❌ |
+| `SystemInfoGetProperty()` (360) | `SystemInfoGetProperty` — `Core/Scripting/OOJSSystemInfo.cpp:587` | ✅ |
+| `SystemInfoSetProperty()` (435) | `SystemInfoSetProperty` — `Core/Scripting/OOJSSystemInfo.cpp:670` | ✅ |
+| `SystemInfoDistanceToSystem()` (456) | `SystemInfoDistanceToSystem` — `Core/Scripting/OOJSSystemInfo.cpp:698` | ✅ |
+| `SystemInfoRouteToSystem()` (486) | `SystemInfoRouteToSystem` — `Core/Scripting/OOJSSystemInfo.cpp:731` | ✅ |
+| `SystemInfoSamplePrice()` (523) | `SystemInfoSamplePrice` — `Core/Scripting/OOJSSystemInfo.cpp:771` | ✅ |
+| `SystemInfoSetPropertyMethod()` (550) | `SystemInfoSetPropertyMethod` — `Core/Scripting/OOJSSystemInfo.cpp:804` | ✅ |
+| `SystemInfoStaticFilteredSystems()` (597) | `SystemInfoStaticFilteredSystems` — `Core/Scripting/OOJSSystemInfo.cpp:855` | ✅ |
+| `SystemInfoStaticSetInterstellarProperty()` (662) | `SystemInfoStaticSetInterstellarProperty` — `Core/Scripting/OOJSSystemInfo.cpp:929` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **med** — `delete info.<prop>` no longer clears the scripted (OXP_DYNAMIC) override unless that name was first assigned on the same JS object. SpiderMonkey called the class delProperty hook for any missing or non-own property (`upstream/spidermonkey-ff4/js/src/jsobj.cpp:5880`), so delete → SetProperty(undefined) → `setValue:nil` cleared the layer. The QuickJS `ExDeleteProperty` returns true without calling the hook when there is no own slot. It also answers `true` for `delete info.coordinates`, where SpiderMonkey answered `false` (shared-permanent) — upstream `Core/Scripting/OOJSSystemInfo.m:350` ↔ port `Core/Scripting/ooscript/JSEngine_quickjs.cpp:1604`
+- ⚠️ **low** — `for…in` / `Object.keys` over a SystemInfo lists keys in byte order (PList::Dict) instead of NSDictionary `-allKeys` hash order, for both the interstellar `currentSystemData` path and the `systemDataKeysForGalaxy` path. The port's comments say this on purpose ("in key order (-allKeys gave hash order)", "Byte order of the key") — upstream `Core/Scripting/OOJSSystemInfo.m:202`, `Core/Universe.m:7494` ↔ port `Core/Scripting/OOJSSystemInfo.cpp:364`, `Core/Universe.cpp:7926`
+- ❌ **low** — `OOSystemInfo::description()` gives `<OOSystemInfo>{galaxy g, system s}` without the `0x…` address that the inherited NSObject `-description` printed (`<OOSystemInfo 0x…>{…}`, the oofnd README convention). It shows only in logs that print a PList holding a SystemInfo; JS `toString()` (`jsDescription`) matches upstream exactly — upstream `Core/Scripting/OOJSSystemInfo.m:156` ↔ port `Core/Scripting/OOJSSystemInfo.cpp:433`
+- ✅ **low** — subtle: the manifest argument (running script's `kLocalManifestProperty`) and samplePrice's `commodity_script` go through `ManifestString`, which keeps only strings. A non-string value becomes "none" (no scripted-change save, no price script), where upstream passed the object on as-is. Normal paths (string manifest, string script) are identical — upstream `Core/Scripting/OOJSSystemInfo.m:194`, `:543`, `:586`, `:728` ↔ port `Core/Scripting/OOJSSystemInfo.cpp:253`, `:794`
+- ✅ **low** — subtle: routeToSystem returns the same dict as upstream: `route`, `distance`, `time` (doubles) and `jumps` (int); null for interstellar or no route. Route type parsing is the same: NONE/JUMPS/TIME, otherwise `kOORouteTypeDefault`; a missing argument becomes `""` instead of nil, with the same result. The JS object's key order follows PList::Dict (distance, jumps, route, time) instead of NSDictionary hash order — upstream `Core/Universe.m:7876`, `Core/OOConstToString.m:498` ↔ port `Core/Universe.cpp:8364`, `Core/OOConstToString.cpp:527`
+- ✅ — the layer semantics match. The string-key get reads the merged cache through `getProperty(key, system, galaxy)` (with the same "invalid system key" log for system -1 outside interstellar space). The setter and the delete hook write `OO_LAYER_OXP_DYNAMIC`. `setProperty(layer,…)` checks `0 ≤ layer < OO_SYSTEM_LAYERS` with the same messages. `setInterstellarProperty` builds the key `"interstellar: %u %u %u"` and calls `OOSystemDescriptionManager::setProperty` with the same 4-token save rule — upstream `Core/OOSystemDescriptionManager.m:158`, `:325` ↔ port `Core/OOSystemDescriptionManager.cpp:173`, `:345`
+- ✅ — the number-literal coercion in GetProperty is preserved. `PList::isNumber()` counts Bool, as NSNumber did (`oofnd/PList.hpp:220`). `DescriptionOf` of a string is the string itself, and string → double goes through `plist_get::doubleValue` — upstream `Core/Scripting/OOJSSystemInfo.m:419` ↔ port `Core/Scripting/OOJSSystemInfo.cpp:649`
+- ✅ — the cache and filteredSystems object identity match. The cache stores null on a failed create (`toObject(nullValue)` = nullptr) and is cleared in finalize. `jsValueInContext` always makes a new JS object (`Core/Scripting/OOJSPrivateObject.cpp:39`), so filteredSystems' result elements are new objects, not the ones passed to the predicate, as upstream did — upstream `Core/Scripting/OOJSSystemInfo.m:231`, `:649` ↔ port `Core/Scripting/OOJSSystemInfo.cpp:401`, `:915`
+- ✅ — error, warning and bad-argument texts and counts match verbatim. This includes setInterstellarProperty's `MIN(argc, 3U)` and its "setProperty(galaxy, fromsystem, tosystem, layer, property, value [,manifest])" text, filteredSystems' unclamped argc, and the "Cannot read systemInfo values for %s." / "…in other galaxies." messages. The nil-messaging defaults (0 galaxy/system, zero point, null) are kept by `GalaxyOf`/`SystemOf`/`CoordinatesOf`/`ValueForKey` — port `Core/Scripting/OOJSSystemInfo.cpp:262–265`
 
 ## OOJSTimer
 
 <a id="oojstimer"></a>
 Upstream `src/Core/Scripting/OOJSTimer.m` ↔ `Core/Scripting/OOJSTimer.cpp`
 
-**Status:** pending
+**Status:** done — 19 rows: 17 ✅ 1 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOJSTimer initWithDelay:]` (48) | | |
-| `-[OOJSTimer deleteJSPointers]` (85) | | |
-| `-[OOJSTimer dealloc]` (104) | | |
-| `-[OOJSTimer descriptionComponents]` (113) | | |
-| `-[OOJSTimer oo_jsClassName]` (133) | | |
-| `-[OOJSTimer timerFired]` (138) | | |
-| `-[OOJSTimer oo_jsValueInContext:]` (171) | | |
-| `InitOOJSTimer()` (227) | | |
-| `TimerGetProperty()` (233) | | |
-| `TimerSetProperty()` (264) | | |
-| `TimerFinalize()` (305) | | |
-| `TimerConstruct()` (324) | | |
-| `TimerStart()` (391) | | |
-| `TimerStop()` (406) | | |
+| `sTimerClass` JSClass (187) | `sTimerClass` ClassDef `Core/Scripting/OOJSTimer.cpp:115` (HasPrivate; get/set; finalize = `OOJSCxxObjectWrapperFinalize`) | ✅ |
+| enum + `sTimerProperties[]` (202, 209) | enum `:134`, `sTimerProperties[]` `:142` (interval RW, isRunning RO, nextTime RW; all Permanent\|Enumerate\|Shared); reporter mirror `sTimerPropertiesRaw[]` `:155` | ✅ |
+| `sTimerMethods[]` (217) | `sTimerMethods[]` `Core/Scripting/OOJSTimer.cpp:164` (toString → `TimerToString` `:541` → `OOJSCxxObjectWrapperToString`; start 0; stop 0) | ✅ |
+| `DEFINE_JS_OBJECT_GETTER(JSTimerGetTimer…)` (225) | `JSTimerGetTimer` → `OOJSGetCxxPrivate` `Core/Scripting/OOJSTimer.cpp:176` (null for the prototype) | ✅ |
+| `-[OOJSTimer initWithDelay:…]` (48) | `OOJSTimer::timerWithDelay` `:182` + `initWithDelay` `Core/Scripting/OOJSTimer.cpp:190` | ✅ |
+| `-[OOJSTimer deleteJSPointers]` (85) | `OOJSTimer::deleteJSPointers` `Core/Scripting/OOJSTimer.cpp:223` | ✅ |
+| `-[OOJSTimer dealloc]` (104) | `OOJSTimer::~OOJSTimer` `Core/Scripting/OOJSTimer.cpp:241` | ✅ |
+| `-[OOJSTimer descriptionComponents]` (113) | `OOJSTimer::descriptionComponents` `Core/Scripting/OOJSTimer.cpp:248` | ❌ |
+| `-[OOJSTimer oo_jsClassName]` (133) | `OOJSTimer::oo_jsClassName` `Core/Scripting/OOJSTimer.cpp:268` | ✅ |
+| `-[OOJSTimer timerFired]` (138) | `OOJSTimer::timerFired` `Core/Scripting/OOJSTimer.cpp:273` | ✅ |
+| `-[OOJSTimer oo_jsValueInContext:]` (171) | `OOJSTimer::jsValueInContext` `Core/Scripting/OOJSTimer.cpp:306` | ✅ |
+| (inherited) `-oo_jsDescription` | `OOJSTimer::jsDescription` `Core/Scripting/OOJSTimer.cpp:325` (`"[Timer <components>]"`, else `"[object Timer]"`) | ✅ |
+| `InitOOJSTimer()` (227) | `InitOOJSTimer` `Core/Scripting/OOJSTimer.cpp:346` (converter `TimerConverter` `:337`: timer as a PList Object node, null for the prototype) | ✅ |
+| `TimerGetProperty()` (233) | `TimerGetProperty` `Core/Scripting/OOJSTimer.cpp:354` | ✅ |
+| `TimerSetProperty()` (264) | `TimerSetProperty` `Core/Scripting/OOJSTimer.cpp:390` | ✅ |
+| `TimerFinalize()` (305) | `OOJSTimer::clearJSSelf` `Core/Scripting/OOJSTimer.cpp:312` (via `OOJSCxxObjectWrapperFinalize`) | ⚠️ |
+| `TimerConstruct()` (324) | `TimerConstruct` `Core/Scripting/OOJSTimer.cpp:438` | ✅ |
+| `TimerStart()` (391) | `TimerStart` `Core/Scripting/OOJSTimer.cpp:503` | ✅ |
+| `TimerStop()` (406) | `TimerStop` `Core/Scripting/OOJSTimer.cpp:521` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ❌ **low** — the function name in the timer's description comes from QuickJS `fn.name` (`getFunctionId`, which treats `""` as anonymous). ES2015 infers that name for `var f = function () {}` and for object-literal methods, where SpiderMonkey 1.8.5 `JS_GetFunctionId` returned NULL and the description said "anonymous". It shows in `Timer.toString()` and in the "Ignoring attempt to change next fire time for running timer %s." warning — upstream `Core/Scripting/OOJSTimer.m:123-128` ↔ port `Core/Scripting/OOJSTimer.cpp:258-263`, `ooscript/JSEngine_quickjs.cpp:3121-3137`
+- ⚠️ **low** — the warning for a timer collected while still running ("Timer %s is being garbage-collected while still running…", class `script.javaScript.unrootedTimer`) now describes the timer with the base components only, without `, function: <name>`, because reading the name during GC corrupted the heap (port comment, bead oo-r1ci7). It also clears `_jsSelf`, where upstream left it dangling — upstream `Core/Scripting/OOJSTimer.m:312-318` ↔ port `Core/Scripting/OOJSTimer.cpp:312-321`
+- ✅ **low** — interval at or below 0, and the construct path:
+  - The constructor's interval defaults to -1, or to -1 if the fourth argument is not a number. An interval in (0, 0.25) is raised to `kMinInterval` 0.25. An interval ≤ 0 becomes -1, a one-shot (`OOScriptTimer::initWithNextTime`); `timer.interval = x` does the same (`setInterval`).
+  - A negative delay on a one-shot timer fails init. The native then returns false with no exception set, which is SpiderMonkey's uncatchable abort; the façade emulates it (`ooscript/JSEngine_quickjs.cpp:744`).
+  - A negative delay on a repeating timer creates it stopped. `delay >= 0` schedules it.
+  - The texts match: the bad-argument text "Invalid arguments in constructor" / "(object, function, number [, number])", and the "Timer() cannot be called as a function…" error.
 
+  upstream `Core/Scripting/OOJSTimer.m:328-383` ↔ port `Core/Scripting/OOJSTimer.cpp:443-493`
+- ✅ **low** — the firing test is preserved. The timer stops itself, without calling the function, when `this` converts to nothing. That covers a dead entity (the `OOJSEntityHolder` weak ref, `OOJSEntity.cpp:224-228`) and also `this` = null, so `new Timer(null, f, 1)` never fires in either version (`OOJSNativeObjectFromJSObject(NULL)` = nil ↔ `cxx_OOJSPListFromJSObject` null, `OOJavaScriptEngine.cpp:2066`). Otherwise the call is wrapped in push/pop of the owning script, as upstream did — upstream `Core/Scripting/OOJSTimer.m:147-166` ↔ port `Core/Scripting/OOJSTimer.cpp:282-301`
+- ✅ **low** — the property semantics match. On the prototype, nextTime/interval read 0 and isRunning reads false. Setting nextTime on a running timer warns and leaves the value (`%@` description ↔ `description()`, which is `<OOJSTimer 0x…>{…}`). A non-number triggers the bad-value report and returns false. `start()` returns `scheduleTimer()`; `stop()` returns undefined — upstream `Core/Scripting/OOJSTimer.m:233-303`, `:391-418` ↔ port `Core/Scripting/OOJSTimer.cpp:354-433`, `:503-536`
 
 ## OOJSVector
 
 <a id="oojsvector"></a>
 Upstream `src/Core/Scripting/OOJSVector.m` ↔ `Core/Scripting/OOJSVector.cpp`
 
-**Status:** pending
+**Status:** done — 45 rows: 42 ✅ 3 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSVector()` (231) | | |
-| `JSVectorWithVector()` (236) | | |
-| `VectorToJSValue()` (264) | | |
-| `JSVectorWithHPVector()` (282) | | |
-| `HPVectorToJSValue()` (310) | | |
-| `NSPointToVectorJSValue()` (328) | | |
-| `JSValueToHPVector()` (333) | | |
-| `JSValueToVector()` (341) | | |
-| `-[PlayerEntity(JSVectorStatistics) reportJSVectorStatistics]` (369) | | |
-| `-[PlayerEntity(JSVectorStatistics) clearJSVectorStatistics]` (395) | | |
-| `JSObjectGetVector()` (415) | | |
-| `GetThisVector()` (483) | | |
-| `JSVectorSetVector()` (493) | | |
-| `JSVectorSetHPVector()` (498) | | |
-| `VectorFromArgumentListNoErrorInternal()` (525) | | |
-| `VectorFromArgumentList()` (573) | | |
-| `VectorFromArgumentListNoError()` (585) | | |
-| `VectorGetProperty()` (592) | | |
-| `VectorSetProperty()` (628) | | |
-| `VectorFinalize()` (668) | | |
-| `VectorConstruct()` (683) | | |
-| `VectorToString()` (725) | | |
-| `VectorToSource()` (740) | | |
-| `VectorAdd()` (756) | | |
-| `VectorSubtract()` (775) | | |
-| `VectorDistanceTo()` (794) | | |
-| `VectorSquaredDistanceTo()` (814) | | |
-| `VectorMultiply()` (834) | | |
-| `VectorDot()` (854) | | |
-| `VectorAngleTo()` (874) | | |
-| `VectorCross()` (901) | | |
-| `VectorTripleProduct()` (920) | | |
-| `VectorDirection()` (946) | | |
-| `VectorMagnitude()` (963) | | |
-| `VectorSquaredMagnitude()` (981) | | |
-| `VectorRotationTo()` (999) | | |
-| `VectorRotateBy()` (1036) | | |
-| `VectorToArray()` (1056) | | |
-| `VectorToCoordinateSystem()` (1085) | | |
-| `VectorFromCoordinateSystem()` (1111) | | |
-| `VectorStaticInterpolate()` (1140) | | |
-| `VectorStaticRandom()` (1183) | | |
-| `VectorStaticRandomDirection()` (1198) | | |
-| `VectorStaticRandomDirectionAndLength()` (1213) | | |
+| `sVectorClass` / `sVectorProperties` / `sVectorMethods` / `sVectorStaticMethods` tables (74–227) | same names `Core/Scripting/OOJSVector.cpp:177-248` (x/y/z `Permanent \| Enumerate \| Shared` = `OOJS_PROP_READWRITE_CB`; same method names, min-args, order) | ✅ |
+| `InitOOJSVector()` (231) | `InitOOJSVector` `Core/Scripting/OOJSVector.cpp:252` | ✅ |
+| `JSVectorWithVector()` (236) | `JSVectorWithVector` `Core/Scripting/OOJSVector.cpp:260` | ✅ |
+| `VectorToJSValue()` (264) | `VectorToJSValue` `Core/Scripting/OOJSVector.cpp:287` | ✅ |
+| `JSVectorWithHPVector()` (282) | `JSVectorWithHPVector` `Core/Scripting/OOJSVector.cpp:305` | ✅ |
+| `HPVectorToJSValue()` (310) | `HPVectorToJSValue` `Core/Scripting/OOJSVector.cpp:332` | ✅ |
+| `NSPointToVectorJSValue()` (328) | `NSPointToVectorJSValue` `Core/Scripting/OOJSVector.cpp:350` | ✅ |
+| `JSValueToHPVector()` (333) | `JSValueToHPVector` `Core/Scripting/OOJSVector.cpp:355` | ✅ |
+| `JSValueToVector()` (341) | `JSValueToVector` `Core/Scripting/OOJSVector.cpp:363` | ✅ |
+| `-[PlayerEntity(JSVectorStatistics) reportJSVectorStatistics]` (369) | `reportJSVectorStatistics` `Core/Scripting/OOJSVector.cpp:390` (free function, bead oo-9ht.15) | ✅ |
+| `-[PlayerEntity(JSVectorStatistics) clearJSVectorStatistics]` (395) | `clearJSVectorStatistics` `Core/Scripting/OOJSVector.cpp:416` | ✅ |
+| `JSObjectGetVector()` (415) | `JSObjectGetVector` `Core/Scripting/OOJSVector.cpp:434` | ✅ |
+| `GetThisVector()` (483) | `GetThisVector` `Core/Scripting/OOJSVector.cpp:504` | ✅ |
+| `JSVectorSetVector()` (493) | `JSVectorSetVector` `Core/Scripting/OOJSVector.cpp:515` | ✅ |
+| `JSVectorSetHPVector()` (498) | `JSVectorSetHPVector` `Core/Scripting/OOJSVector.cpp:520` | ✅ |
+| `VectorFromArgumentListNoErrorInternal()` (525) | `VectorFromArgumentListNoErrorInternal` `Core/Scripting/OOJSVector.cpp:550` | ✅ |
+| `VectorFromArgumentList()` (573) | `VectorFromArgumentList` `Core/Scripting/OOJSVector.cpp:600` | ✅ |
+| `VectorFromArgumentListNoError()` (585) | `VectorFromArgumentListNoError` `Core/Scripting/OOJSVector.cpp:612` | ✅ |
+| `VectorGetProperty()` (592) | `VectorGetProperty` `Core/Scripting/OOJSVector.cpp:620` | ✅ |
+| `VectorSetProperty()` (628) | `VectorSetProperty` `Core/Scripting/OOJSVector.cpp:661` | ✅ |
+| `VectorFinalize()` (668) | `VectorFinalize` `Core/Scripting/OOJSVector.cpp:706` | ✅ |
+| `VectorConstruct()` (683) | `VectorConstruct` `Core/Scripting/OOJSVector.cpp:722` | ✅ |
+| `VectorToString()` (725) | `VectorToString` `Core/Scripting/OOJSVector.cpp:768` | ✅ |
+| `VectorToSource()` (740) | `VectorToSource` `Core/Scripting/OOJSVector.cpp:786` | ✅ |
+| `VectorAdd()` (756) | `VectorAdd` `Core/Scripting/OOJSVector.cpp:804` | ✅ |
+| `VectorSubtract()` (775) | `VectorSubtract` `Core/Scripting/OOJSVector.cpp:826` | ✅ |
+| `VectorDistanceTo()` (794) | `VectorDistanceTo` `Core/Scripting/OOJSVector.cpp:848` | ✅ |
+| `VectorSquaredDistanceTo()` (814) | `VectorSquaredDistanceTo` `Core/Scripting/OOJSVector.cpp:871` | ✅ |
+| `VectorMultiply()` (834) | `VectorMultiply` `Core/Scripting/OOJSVector.cpp:894` | ✅ |
+| `VectorDot()` (854) | `VectorDot` `Core/Scripting/OOJSVector.cpp:917` | ✅ |
+| `VectorAngleTo()` (874) | `VectorAngleTo` `Core/Scripting/OOJSVector.cpp:940` | ✅ |
+| `VectorCross()` (901) | `VectorCross` `Core/Scripting/OOJSVector.cpp:970` | ✅ |
+| `VectorTripleProduct()` (920) | `VectorTripleProduct` `Core/Scripting/OOJSVector.cpp:992` | ✅ |
+| `VectorDirection()` (946) | `VectorDirection` `Core/Scripting/OOJSVector.cpp:1022` | ✅ |
+| `VectorMagnitude()` (963) | `VectorMagnitude` `Core/Scripting/OOJSVector.cpp:1042` | ✅ |
+| `VectorSquaredMagnitude()` (981) | `VectorSquaredMagnitude` `Core/Scripting/OOJSVector.cpp:1063` | ✅ |
+| `VectorRotationTo()` (999) | `VectorRotationTo` `Core/Scripting/OOJSVector.cpp:1084` | ✅ |
+| `VectorRotateBy()` (1036) | `VectorRotateBy` `Core/Scripting/OOJSVector.cpp:1125` | ✅ |
+| `VectorToArray()` (1056) | `VectorToArray` `Core/Scripting/OOJSVector.cpp:1148` | ✅ |
+| `VectorToCoordinateSystem()` (1085) | `VectorToCoordinateSystem` `Core/Scripting/OOJSVector.cpp:1181` | ✅ |
+| `VectorFromCoordinateSystem()` (1111) | `VectorFromCoordinateSystem` `Core/Scripting/OOJSVector.cpp:1212` | ✅ |
+| `VectorStaticInterpolate()` (1140) | `VectorStaticInterpolate` `Core/Scripting/OOJSVector.cpp:1246` | ✅ |
+| `VectorStaticRandom()` (1183) | `VectorStaticRandom` `Core/Scripting/OOJSVector.cpp:1293` | ⚠️ |
+| `VectorStaticRandomDirection()` (1198) | `VectorStaticRandomDirection` `Core/Scripting/OOJSVector.cpp:1311` | ⚠️ |
+| `VectorStaticRandomDirectionAndLength()` (1213) | `VectorStaticRandomDirectionAndLength` `Core/Scripting/OOJSVector.cpp:1329` | ⚠️ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `Vector3D.random()`, `randomDirection()`, `randomDirectionAndLength()`: the bindings are identical, but the helpers they call (`OOHPVectorRandomSpatial`, `OORandomUnitHPVector`, `OOHPVectorRandomRadial`) now draw `randf()` on separate lines in Clang's left-to-right order (x, y, z; direction before length) per ADR-0063 item 5. Upstream drew them inside one call's argument list (unspecified order), so a GCC-built upstream can consume the RNG in a different order and give different vectors from the same seed — upstream `Core/OOHPVector.m:68, 81, 90` ↔ port `Core/OOHPVector.cpp:66-69, 82-85, 94-96`
+- Constructor forms match: no args → `(0, 0, 0)`; a Vector3D; an entity (its position; a dead/absent entity → zero, as the message to nil, `OOJSEntityPositionOfJSObject` `Core/Scripting/OOJSEntity.cpp:231-236`); an array of exactly 3 elements (each through `valueToNumber`, no NaN check); `Vector3D.prototype` → zero; or three numbers, each rejected if NaN. `null` counts as an object and then fails, as upstream (`isObjectOrNull` = SM 1.8.5 `JSVAL_IS_OBJECT`). Error texts and argument counts identical: `Invalid target object`, `Could not construct vector from parameters` / `Vector, Entity or array of three numbers`, `Insufficient parameters` / `vector expression, vector expression and number`.
+- `toString()` is `(%g, %g, %g)` (`cxx_HPVectorDescription`, `Core/OOHPVector.cpp:39-42`), `toSource()` is `Vector3D(%g, %g, %g)`; both via `vsnprintf`, whose `%g` matches GNUstep (the ADR-0034 differences listed at `oofnd/String.hpp:568-573` do not include `%g`). `fromCoordinateSystem` builds `"%s %f %f %f"`; `%f` of magnitudes above ~1e22 is where GNUstep dropped digits (ADR-0034), not reachable with real coordinates.
+- Maths: `add`, `subtract`, `distanceTo`, `squaredDistanceTo`, `multiply`, `dot`, `angleTo` (clamped to ±1 before `acos`), `cross` (`HPtrue_cross_product`), `tripleProduct`, `direction`, `magnitude`, `squaredMagnitude`, `rotationTo` (optional limit → `quaternion_limited_rotation_between`, on single-precision vectors as upstream), `rotateBy`, `interpolate` call the same functions; `OOHPVector.h`/`OOQuaternion.h` inline maths are unchanged (checked by diff). `random*` default to 1.0 when the argument is missing or not a number.
+- `toCoordinateSystem`/`fromCoordinateSystem` return `(0,0,0)` when `UNIVERSE` is null, matching upstream's struct return from a nil message — port `Core/Scripting/OOJSVector.cpp:1201, 1233`
+- The constructor now frees its buffer when `newObject` fails (upstream leaked); not observable — port `Core/Scripting/OOJSVector.cpp:736-739`
 
 ## OOJSVisualEffect
 
@@ -1670,18 +1814,19 @@ Upstream `src/Core/Scripting/OOJSWaypoint.m` ↔ `Core/Scripting/OOJSWaypoint.cp
 <a id="oojsworldscripts"></a>
 Upstream `src/Core/Scripting/OOJSWorldScripts.m` ↔ `Core/Scripting/OOJSWorldScripts.cpp`
 
-**Status:** pending
+**Status:** done — 4 rows: 3 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSWorldScripts()` (48) | | |
-| `WorldScriptsGetProperty()` (53) | | |
-| `WorldScriptsEnumerate()` (84) | | |
+| `sWorldScriptsClass` JSClass (34) | `sWorldScriptsClass` ClassDef `Core/Scripting/OOJSWorldScripts.cpp:67` (flags None; getProperty + enumerate) | ✅ |
+| `InitOOJSWorldScripts()` (48) | `InitOOJSWorldScripts` `Core/Scripting/OOJSWorldScripts.cpp:86` (no prototype; ReadOnly\|Enumerate\|Permanent = OOJS_PROP_READONLY) | ✅ |
+| `WorldScriptsGetProperty()` (53) | `WorldScriptsGetProperty` `Core/Scripting/OOJSWorldScripts.cpp:92` | ✅ |
+| `WorldScriptsEnumerate()` (84) | `WorldScriptsEnumerate` `Core/Scripting/OOJSWorldScripts.cpp:136` (defines each name with null + the getter, ReadOnly\|Shared\|Permanent\|Enumerate = READONLY_CB) | ⚠️ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `for (name in worldScripts)` lists scripts in load order, the order `ResourceManager::loadScripts` first saw each name (port comment "in the order each name was first loaded"). Upstream listed `[worldScripts allKeys]`, NSDictionary hash order — upstream `Core/Entities/PlayerEntity.m:11284`, `Core/ResourceManager.m:1860` ↔ port `Core/Entities/PlayerEntity.cpp:11866-11873`, `Core/ResourceManager.cpp:1990-2014`
+- ✅ **low** — the getter now scans a `vector<pair<name, script>>` and takes "the last of a name". `loadScripts` replaces a duplicate name in place, so names are unique and the result is what `-objectForKey:` returned. A JS script gives its Script object, another `OOScript` gives null, and an unknown name gives undefined, as upstream did — upstream `Core/Scripting/OOJSWorldScripts.m:65-76` ↔ port `Core/Scripting/OOJSWorldScripts.cpp:109-126`, `Core/ResourceManager.cpp:2010-2014`
 
 ## OOJSWormhole
 
@@ -1931,28 +2076,46 @@ Upstream `src/Core/Scripting/OOScript.m` ↔ `Core/Scripting/OOScript.cpp`
 <a id="ooscripttimer"></a>
 Upstream `src/Core/Scripting/OOScriptTimer.m` ↔ `Core/Scripting/OOScriptTimer.cpp`
 
-**Status:** pending
+**Status:** done — 18 rows: 18 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOScriptTimer initWithNextTime:]` (39) | | |
-| `-[OOScriptTimer initOneShotTimerWithDelay:]` (66) | | |
-| `-[OOScriptTimer dealloc]` (71) | | |
-| `-[OOScriptTimer descriptionComponents]` (79) | | |
-| `-[OOScriptTimer nextTime]` (91) | | |
-| `-[OOScriptTimer setNextTime:]` (96) | | |
-| `-[OOScriptTimer interval]` (105) | | |
-| `-[OOScriptTimer setInterval:]` (110) | | |
-| `-[OOScriptTimer timerFired]` (117) | | |
-| `-[OOScriptTimer scheduleTimer]` (122) | | |
-| `-[OOScriptTimer unscheduleTimer]` (143) | | |
-| `-[OOScriptTimer isScheduled]` (150) | | |
-| `+[OOScriptTimer updateTimers]` (155) | | |
-| `+[OOScriptTimer noteGameReset]` (189) | | |
-| `-[OOScriptTimer isValidForScheduling]` (201) | | |
-| `-[OOScriptTimer compareByNextFireTime:]` (224) | | |
+| statics `sTimers`/`sUpdating`/`sDeferredTimers` (31–35) | same names `Core/Scripting/OOScriptTimer.cpp:41-45` (+ comparator adapter `CompareByNextFireTime` `:35`) | ✅ |
+| `-[OOScriptTimer initWithNextTime:]` (39) | `OOScriptTimer::initWithNextTime` `Core/Scripting/OOScriptTimer.cpp:65` (+ factory `timerWithNextTime` `:49`) | ✅ |
+| `-[OOScriptTimer initOneShotTimerWithDelay:]` (66) | `OOScriptTimer::initOneShotTimerWithDelay` `Core/Scripting/OOScriptTimer.cpp:90` (+ factory `:57`) | ✅ |
+| `-[OOScriptTimer dealloc]` (71) | `OOScriptTimer::~OOScriptTimer` `Core/Scripting/OOScriptTimer.cpp:95` | ✅ |
+| (inherited) `-description` | `OOScriptTimer::description` / `descriptionWithComponents` `Core/Scripting/OOScriptTimer.cpp:101`, `:108` (`<Class 0x…>{components}`) | ✅ |
+| `-[OOScriptTimer descriptionComponents]` (79) | `OOScriptTimer::descriptionComponents` `Core/Scripting/OOScriptTimer.cpp:116` | ✅ |
+| `-[OOScriptTimer nextTime]` (91) | `OOScriptTimer::nextTime` `Core/Scripting/OOScriptTimer.cpp:128` | ✅ |
+| `-[OOScriptTimer setNextTime:]` (96) | `OOScriptTimer::setNextTime` `Core/Scripting/OOScriptTimer.cpp:133` | ✅ |
+| `-[OOScriptTimer interval]` (105) | `OOScriptTimer::interval` `Core/Scripting/OOScriptTimer.cpp:142` | ✅ |
+| `-[OOScriptTimer setInterval:]` (110) | `OOScriptTimer::setInterval` `Core/Scripting/OOScriptTimer.cpp:147` | ✅ |
+| `-[OOScriptTimer timerFired]` (117) | `OOScriptTimer::timerFired` `Core/Scripting/OOScriptTimer.cpp:154` | ✅ |
+| `-[OOScriptTimer scheduleTimer]` (122) | `OOScriptTimer::scheduleTimer` `Core/Scripting/OOScriptTimer.cpp:159` | ✅ |
+| `-[OOScriptTimer unscheduleTimer]` (143) | `OOScriptTimer::unscheduleTimer` `Core/Scripting/OOScriptTimer.cpp:180` | ✅ |
+| `-[OOScriptTimer isScheduled]` (150) | `OOScriptTimer::isScheduled` `Core/Scripting/OOScriptTimer.cpp:190` | ✅ |
+| `+[OOScriptTimer updateTimers]` (155) | `OOScriptTimer::updateTimers` `Core/Scripting/OOScriptTimer.cpp:195` | ✅ |
+| `+[OOScriptTimer noteGameReset]` (189) | `OOScriptTimer::noteGameReset` `Core/Scripting/OOScriptTimer.cpp:233` | ✅ |
+| `-[OOScriptTimer isValidForScheduling]` (201) | `OOScriptTimer::isValidForScheduling` `Core/Scripting/OOScriptTimer.cpp:242` | ✅ |
+| `-[OOScriptTimer compareByNextFireTime:]` (224) | `OOScriptTimer::compareByNextFireTime` `Core/Scripting/OOScriptTimer.cpp:265` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ✅ **low** — scheduling order is unchanged:
+  - `updateTimers` peeks and pops while `now >= nextTime`, fires the timer, sets `_hasBeenRun`, and reschedules only if the callback did not stop the timer. Reschedules and new timers created during the update go to `sDeferredTimers` and are appended in order afterwards, so a repeating timer fires at most once per update.
+  - `OOPriorityQueueOf` is the same binary heap: the same child/parent indexing, the same strict `< 0` tests in bubble-up and bubble-down, and the same last-into-hole removal. So timers with equal `nextTime` pop in the same order, and `removeExactObject` keeps upstream's skip-after-removal loop.
+
+  upstream `Core/Scripting/OOScriptTimer.m:155-187`, `Core/OOPriorityQueue.m:292-490` ↔ port `Core/Scripting/OOScriptTimer.cpp:195-231`, `Core/OOPriorityQueue.h:70-160`
+- ✅ **low** — interval at or below 0 is handled as upstream did:
+  - Init and `setInterval` map an interval ≤ 0 to -1.
+  - A negative `nextTime` becomes `now + interval`.
+  - `nextTime < now` with a negative interval fails init (nil ↔ false/nullptr).
+  - `isValidForScheduling` refuses an expired one-shot only after it has run. Otherwise it does the same `ceil((now - next)/interval)` advance; for an unrun one-shot that is a division by -1 giving -0, so `nextTime` stays put. The extra `+= interval` applies when it is still not in the future.
+
+  upstream `Core/Scripting/OOScriptTimer.m:39-63`, `:110-115`, `:201-222` ↔ port `Core/Scripting/OOScriptTimer.cpp:65-87`, `:147-152`, `:242-263`
+- ✅ **low** — lifetime and nil-safety:
+  - The queue holds `oo::Ref`s (`OOPriorityQueue.h:74`), as the NSObject queue retained.
+  - `updateTimers` holds the popped timer in a `Ref` while it fires (`:209`), as `-removeNextObject`'s autorelease did.
+  - `unscheduleTimer` null-checks `sTimers`, where upstream messaged nil.
+  - The `@try` around `[other nextTime]` in `compareByNextFireTime` is gone: the getter cannot throw, and it logged only on an exception.
 
