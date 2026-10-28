@@ -221,25 +221,26 @@ Upstream `src/Core/Entities/PlayerEntityLegacyScriptEngine.m` ↔ `Core/Entities
 <a id="entityoojavascriptextensions"></a>
 Upstream `src/Core/Scripting/EntityOOJavaScriptExtensions.m` ↔ `Core/Scripting/EntityOOJavaScriptExtensions.cpp`
 
-**Status:** pending
+**Status:** done — 10 rows: 9 ✅ 0 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[Entity(OOJavaScriptExtensions) isVisibleToScripts]` (39) | | |
-| `-[Entity(OOJavaScriptExtensions) oo_jsClassName]` (44) | | |
-| `-[Entity(OOJavaScriptExtensions) oo_jsValueInContext:]` (49) | | |
-| `-[Entity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (81) | | |
-| `-[Entity(OOJavaScriptExtensions) deleteJSSelf]` (87) | | |
-| `-[ShipEntity(OOJavaScriptExtensions) isVisibleToScripts]` (105) | | |
-| `-[ShipEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (110) | | |
-| `-[ShipEntity(OOJavaScriptExtensions) oo_jsClassName]` (116) | | |
-| `-[ShipEntity(OOJavaScriptExtensions) subEntitiesForScript]` (121) | | |
-| `-[ShipEntity(OOJavaScriptExtensions) setTargetForScript:]` (126) | | |
+| `-[Entity(OOJavaScriptExtensions) isVisibleToScripts]` (39) | `EntityJSIsVisibleToScripts` `Core/Scripting/EntityOOJavaScriptExtensions.cpp:50`, via virtual `Entity::isVisibleToScripts` `Core/Entities/Entity.cpp:1126` | ✅ |
+| `-[Entity(OOJavaScriptExtensions) oo_jsClassName]` (44) | `EntityJSClassName` `Core/Scripting/EntityOOJavaScriptExtensions.cpp:55`, via `Entity::jsClassName` `Core/Entities/Entity.cpp:1121` | ✅ |
+| `-[Entity(OOJavaScriptExtensions) oo_jsValueInContext:]` (49) | `EntityJSValueInContext` `Core/Scripting/EntityOOJavaScriptExtensions.cpp:100`, via `Entity::jsValueInContext` `Core/Entities/Entity.cpp:1133` | ✅ |
+| `-[Entity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (81) | `EntityJSGetJSClass` `Core/Scripting/EntityOOJavaScriptExtensions.cpp:131`, via `Entity::getJSClass` `Core/Entities/Entity.cpp:1116` | ✅ |
+| `-[Entity(OOJavaScriptExtensions) deleteJSSelf]` (87) | `EntityJSDeleteJSSelf` `Core/Scripting/EntityOOJavaScriptExtensions.cpp:137`, via `Entity::deleteJSSelf` `Core/Entities/Entity.cpp:1149` | ✅ |
+| `-[ShipEntity(OOJavaScriptExtensions) isVisibleToScripts]` (105) | `ShipEntityJSIsVisibleToScripts` `Core/Scripting/EntityOOJavaScriptExtensions.cpp:170`, via `ShipEntity::isVisibleToScripts` `Core/Entities/ShipEntity.cpp:6927` | ✅ |
+| `-[ShipEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (110) | `ShipEntityJSGetJSClass` `Core/Scripting/EntityOOJavaScriptExtensions.cpp:175`, via `Core/Entities/ShipEntity.cpp:6917` | ✅ |
+| `-[ShipEntity(OOJavaScriptExtensions) oo_jsClassName]` (116) | `ShipEntityJSClassName` `Core/Scripting/EntityOOJavaScriptExtensions.cpp:181`, via `ShipEntity::jsClassName` `Core/Entities/ShipEntity.cpp:6920` | ✅ |
+| `-[ShipEntity(OOJavaScriptExtensions) subEntitiesForScript]` (121) | `ShipEntityJSSubEntitiesForScript` `Core/Scripting/EntityOOJavaScriptExtensions.cpp:186` (over `ShipEntity::shipSubEntities` `Core/Entities/ShipEntity.cpp:1512`, `EntityIsShip` filter) | ✅ |
+| `-[ShipEntity(OOJavaScriptExtensions) setTargetForScript:]` (126) | `ShipEntityJSSetTargetForScript` `Core/Scripting/EntityOOJavaScriptExtensions.cpp:195` | ❌ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — When the owner walk for `target` reaches a non-ship owner, upstream casts it to `ShipEntity*` and calls `addTarget:` with it. The port's `oo::ToShip()` turns that owner into `nullptr`, so the call takes the `else` branch and `removeTarget(primaryTarget())` clears the current target instead. The `me` walk is equivalent: both return early. Nearly unreachable, since a ship subentity's owner is always a ship — upstream `Core/Scripting/EntityOOJavaScriptExtensions.m:136-146` ↔ port `Core/Scripting/EntityOOJavaScriptExtensions.cpp:205-218`
+- ✅ subtle — `oo_jsValueInContext:` stores an `OOJSEntityHolder` (weak; `oo::makeRef` plus an `OOJSSetCxxPrivate` retain) instead of `[self weakRetain]`. The GC root name "Entity jsSelf" and the reset-notification observer are kept (bead oo-9ht.39.3). `deleteJSSelf` keeps upstream's order: it nulls `_jsSelf`, then removes the root — upstream `:87-98` ↔ port `:137-148`
+- ✅ subtle — The port adds `EntityJSDescription` (`:155`), which holds the body of upstream `OOObject -oo_jsDescription` (`OOJavaScriptEngine.m:1289-1306`). It returns the same "[<jsClassName> <components>]" or "[object <jsClassName>]".
 
 ## OOConstToJSString
 
@@ -311,23 +312,27 @@ Upstream `src/Core/Scripting/OOJSClock.m` ↔ `Core/Scripting/OOJSClock.cpp`
 <a id="oojsdock"></a>
 Upstream `src/Core/Scripting/OOJSDock.m` ↔ `Core/Scripting/OOJSDock.cpp`
 
-**Status:** pending
+**Status:** done — 11 rows: 11 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSDock()` (82) | | |
-| `JSDockGetDockEntity()` (89) | | |
-| `JSDockGetShipEntity()` (113) | | |
-| `-[DockEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (139) | | |
-| `-[DockEntity(OOJavaScriptExtensions) oo_jsClassName]` (145) | | |
-| `DockGetProperty()` (152) | | |
-| `DockSetProperty()` (195) | | |
-| `DockIsQueued()` (246) | | |
+| `sDockClass` JSClass (42) | `sDockClass` ClassDef `Core/Scripting/OOJSDock.cpp:93` | ✅ |
+| `sDockProperties` JSPropertySpec table (66) | `sDockProperties` `Core/Scripting/OOJSDock.cpp:122` (+ `sDockPropertiesRaw` :137) | ✅ |
+| `sDockMethods` JSFunctionSpec table (76) | `sDockMethods` `Core/Scripting/OOJSDock.cpp:148` | ✅ |
+| `InitOOJSDock()` (82) | `InitOOJSDock` `Core/Scripting/OOJSDock.cpp:155` | ✅ |
+| `JSDockGetDockEntity()` (89) | `JSDockGetDockEntity` `Core/Scripting/OOJSDock.cpp:164` | ✅ |
+| `JSDockGetShipEntity()` (113) | `JSDockGetShipEntity` `Core/Scripting/OOJSDock.cpp:193` | ✅ |
+| `-[DockEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (139) | `OOJSDockGetJSClass` `Core/Scripting/OOJSDock.cpp:220` | ✅ |
+| `-[DockEntity(OOJavaScriptExtensions) oo_jsClassName]` (145) | `OOJSDockJSClassName` `Core/Scripting/OOJSDock.cpp:226` | ✅ |
+| `DockGetProperty()` (152) | `DockGetProperty` `Core/Scripting/OOJSDock.cpp:232` | ✅ |
+| `DockSetProperty()` (195) | `DockSetProperty` `Core/Scripting/OOJSDock.cpp:281` | ✅ |
+| `DockIsQueued()` (246) | `DockIsQueued` `Core/Scripting/OOJSDock.cpp:340` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ subtle — `isQueued(x)` with a non-object `x` (a number, say): upstream applies `JSVAL_TO_OBJECT` to a primitive, which is undefined behaviour (a garbage pointer passed to the entity getter). The port's `ooscript::toObject` returns nullptr, so `ship` stays nil and the call returns `false`. Well-formed calls behave the same — upstream `Core/Scripting/OOJSDock.m:259` ↔ port `Core/Scripting/OOJSDock.cpp:354`
+- ✅ subtle — `JSDockGetDockEntity` uses `oo::ToDock` where upstream used `-isKindOfClass:[DockEntity class]`. A stale (nil) entity still fails the lookup and returns false, so the `entity == nil` branch is unreachable in both — upstream `Core/Scripting/OOJSDock.m:104` ↔ port `Core/Scripting/OOJSDock.cpp:181`
+- ✅ subtle — The property table matches upstream: 5 entries, same names, same tinyid order, same flags. The method table has `isQueued` with min-args 1 in both. The error text (`"Dock"`, `"isQueued"`, `"ship"`) is identical — upstream `Core/Scripting/OOJSDock.m:66-80,255` ↔ port `Core/Scripting/OOJSDock.cpp:122-152,350`
 
 ## OOJSEngineDebuggerHelpers
 
@@ -428,21 +433,31 @@ Upstream `src/Core/Scripting/OOJSEngineTimeManagement.m` ↔ `Core/Scripting/OOJ
 <a id="oojsentity"></a>
 Upstream `src/Core/Scripting/OOJSEntity.m` ↔ `Core/Scripting/OOJSEntity.cpp`
 
-**Status:** pending
+**Status:** done — 14 rows: 14 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSEntity()` (127) | | |
-| `JSValueToEntity()` (133) | | |
-| `EntityFromArgumentList()` (142) | | |
-| `EntityGetProperty()` (171) | | |
-| `EntitySetProperty()` (296) | | |
-| `EntityDumpState()` (376) | | |
+| `gOOEntityJSClass` JSClass "Entity" (44) | `sEntityClass` `Core/Scripting/OOJSEntity.cpp:95` (finalize `OOJSCxxObjectWrapperFinalize`; slot holds `OOJSEntityHolder`) | ✅ |
+| `sEntityProperties[]` (88): 25 props; read-write: energy, maxEnergy, orientation, position, scanClass (all `_CB`) | `sEntityProperties` `Core/Scripting/OOJSEntity.cpp:149`: same names, order, tinyids (enum `:119` identical) and flags | ✅ |
+| `sEntityMethods[]` (118): `toString` 0, `dumpState` 0 (debug monitor) | `sEntityMethods` `Core/Scripting/OOJSEntity.cpp:181`: `toString`→`OOJSEntityToString`, `dumpState` 0 | ✅ |
+| `InitOOJSEntity()` (127) | `InitOOJSEntity` `Core/Scripting/OOJSEntity.cpp:191` (converter `OOJSEntityObjectConverter` `:224`: entity node or null, as the weak-ref converter gave) | ✅ |
+| `JSValueToEntity()` (133) | `JSValueToEntity` `Core/Scripting/OOJSEntity.cpp:256` (`isObjectOrNull` = SM `JSVAL_IS_OBJECT`) | ✅ |
+| `EntityFromArgumentList()` (142) | `EntityFromArgumentList` `Core/Scripting/OOJSEntity.cpp:265`: same "%s.%s(): expected entity, got %s." text with "(desc)"; a nil class keeps the fall-through success quirk | ✅ |
+| `EntityGetProperty()` (171) | `EntityGetProperty` `Core/Scripting/OOJSEntity.cpp:297` | ✅ |
+| `EntitySetProperty()` (296) | `EntitySetProperty` `Core/Scripting/OOJSEntity.cpp:429` | ✅ |
+| `EntityDumpState()` (376) | `EntityDumpState` `Core/Scripting/OOJSEntity.cpp:517` | ✅ |
+| `OOJSEntityGetEntity` (DEFINE_JS_OBJECT_GETTER, `OOJSEntity.h:40`) | `OOJSEntityGetEntity`/`OOJSEntityGetEntityOfClass` `Core/Scripting/OOJSEntity.h:65,74` → `OOJSGetCxxPrivateImpl` `Core/Scripting/OOJSPrivateObject.cpp:60` ("Native method expected %s, got %s.") | ✅ |
+| `JSEntityClass()` / `JSEntityPrototype()` (`OOJSEntity.h:42-43`) | `JSEntityClass` `Core/Scripting/OOJSEntity.cpp:114`; `JSEntityPrototype` `Core/Scripting/OOJSEntity.h:102` | ✅ |
+| `OOIsPlayerStale()` (`OOJSEntity.h:63`) | `OOIsPlayerStale` `Core/Scripting/OOJSEntity.h:132` | ✅ |
+| `OOIsStaleEntity()` (`OOJSEntity.h:69`) | `OOIsStaleEntity` `Core/Scripting/OOJSEntity.h:139` (adds a `gOOJSPlayerIfStale != nullptr` guard; same result for a non-null entity) | ✅ |
+| `toString` → `OOJSObjectWrapperToString` (`OOJavaScriptEngine.m:1840`) | `OOJSEntityToString` → `OOJSCxxObjectWrapperToString` `Core/Scripting/OOJSPrivateObject.cpp:97` (jsDescription, else "[object <class>]") | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ subtle — For a stale entity, the getter gives `false` for `isValid` and `undefined` for every other property, and the setter returns true silently. This matches upstream — upstream `Core/Scripting/OOJSEntity.m:183-190,310-311` ↔ port `Core/Scripting/OOJSEntity.cpp:312-319,446-447`
+- ✅ subtle — The `owner` getter gives null when the owner is the entity itself or is not visible to scripts (port: `ownerEntity()` + `OOJSValueFromCxxObject`). The `default` case keeps upstream's quirk: it reports the bad selector, then still writes `null` and returns true — upstream `:216-220,286-291` ↔ port `:347-351,417-422`
+- ✅ subtle — All setter error texts match exactly: "entity.maxEnergy must be positive.", "entity.scanClass cannot be set to that value." and "entity.scanClass is read-only except on NPC ships.". The set of forbidden scan classes is the same, and energy is still clamped to [0, maxEnergy] — upstream `:332-363` ↔ port `:471-502`
+- ✅ subtle — When `JSValueToEntity(null)` passes a null object to the getter, the port hits `OOCParameterAssert(object != NULL)`. Upstream hit `NSCParameterAssert`, or `JS_GetClass(NULL)` in release, so nothing regresses — upstream `OOJavaScriptEngine.m:1999` ↔ port `Core/Scripting/OOJSPrivateObject.cpp:64`
 
 ## OOJSEquipmentInfo
 
@@ -483,46 +498,63 @@ Upstream `src/Core/Scripting/OOJSEquipmentInfo.m` ↔ `Core/Scripting/OOJSEquipm
 <a id="oojsexhaustplume"></a>
 Upstream `src/Core/Scripting/OOJSExhaustPlume.m` ↔ `Core/Scripting/OOJSExhaustPlume.cpp`
 
-**Status:** pending
+**Status:** done — 10 rows: 10 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSExhaustPlume()` (74) | | |
-| `JSExhaustPlumeGetExhaustPlumeEntity()` (81) | | |
-| `-[OOExhaustPlumeEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (107) | | |
-| `-[OOExhaustPlumeEntity(OOJavaScriptExtensions) oo_jsClassName]` (113) | | |
-| `-[OOExhaustPlumeEntity(OOJavaScriptExtensions) isVisibleToScripts]` (118) | | |
-| `ExhaustPlumeGetProperty()` (125) | | |
-| `ExhaustPlumeSetProperty()` (157) | | |
-| `ExhaustPlumeRemove()` (201) | | |
+| `sExhaustPlumeProperties[]` (61): `size` (tinyid 0) READWRITE_CB | `sExhaustPlumeProperties` `Core/Scripting/OOJSExhaustPlume.cpp:131` (+ `sExhaustPlumePropertiesRaw` :123) | ✅ |
+| `sExhaustPlumeMethods[]` (67): `remove` 0 | `sExhaustPlumeMethods` `Core/Scripting/OOJSExhaustPlume.cpp:139` | ✅ |
+| `InitOOJSExhaustPlume()` (74) | `InitOOJSExhaustPlume` `Core/Scripting/OOJSExhaustPlume.cpp:147` | ✅ |
+| `JSExhaustPlumeGetExhaustPlumeEntity()` (81) | `JSExhaustPlumeGetExhaustPlumeEntity` `Core/Scripting/OOJSExhaustPlume.cpp:156` (`dynamic_cast` for `-isKindOfClass:`) | ✅ |
+| `-[OOExhaustPlumeEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (107) | `OOJSExhaustPlumeGetJSClass` `Core/Scripting/OOJSExhaustPlume.cpp:186` | ✅ |
+| `-[OOExhaustPlumeEntity(OOJavaScriptExtensions) oo_jsClassName]` (113) | `OOJSExhaustPlumeJSClassName` `Core/Scripting/OOJSExhaustPlume.cpp:192` ("ExhaustPlume") | ✅ |
+| `-[OOExhaustPlumeEntity(OOJavaScriptExtensions) isVisibleToScripts]` (118) | `OOJSExhaustPlumeIsVisibleToScripts` `Core/Scripting/OOJSExhaustPlume.cpp:197` | ✅ |
+| `ExhaustPlumeGetProperty()` (125) | `ExhaustPlumeGetProperty` `Core/Scripting/OOJSExhaustPlume.cpp:203` | ✅ |
+| `ExhaustPlumeSetProperty()` (157) | `ExhaustPlumeSetProperty` `Core/Scripting/OOJSExhaustPlume.cpp:240` | ✅ |
+| `ExhaustPlumeRemove()` (201) | `ExhaustPlumeRemove` `Core/Scripting/OOJSExhaustPlume.cpp:290` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ subtle — The `size` getter returns a Vector from `scale()`. The setter takes a `JSValueToVector` value, and anything else goes to `OOJSReportBadPropertyValue` with false. The unreachable `entity == nil` → `undefined` branch is kept — upstream `:137-149,172-186` ↔ port `:218-230,259-273`
+- ✅ subtle — In `remove()`, upstream messages `[thisEnt owner]` statically typed as `ShipEntity*`; the port uses `oo::ToShip(owner())` with a null guard. A nil owner is a no-op in both. A non-ship owner, which never occurs, would have raised an unrecognized-selector exception upstream and is a silent no-op in the port — upstream `:208-209` ↔ port `:298-300`
 
 ## OOJSFlasher
 
 <a id="oojsflasher"></a>
 Upstream `src/Core/Scripting/OOJSFlasher.m` ↔ `Core/Scripting/OOJSFlasher.cpp`
 
-**Status:** pending
+**Status:** done — 10 rows: 10 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSFlasher()` (85) | | |
-| `JSFlasherGetFlasherEntity()` (92) | | |
-| `-[OOFlasherEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (118) | | |
-| `-[OOFlasherEntity(OOJavaScriptExtensions) oo_jsClassName]` (124) | | |
-| `-[OOFlasherEntity(OOJavaScriptExtensions) isVisibleToScripts]` (129) | | |
-| `FlasherGetProperty()` (136) | | |
-| `FlasherSetProperty()` (185) | | |
-| `FlasherRemove()` (273) | | |
+| `sFlasherProperties[]` (67): active, color, fraction, frequency, phase, size (tinyids 0-5), all READWRITE_CB | `sFlasherProperties` `Core/Scripting/OOJSFlasher.cpp:138` (+ `sFlasherPropertiesRaw` :153) | ✅ |
+| `sFlasherMethods[]` (78): `remove` 0 | `sFlasherMethods` `Core/Scripting/OOJSFlasher.cpp:166` | ✅ |
+| `InitOOJSFlasher()` (85) | `InitOOJSFlasher` `Core/Scripting/OOJSFlasher.cpp:174` | ✅ |
+| `JSFlasherGetFlasherEntity()` (92) | `JSFlasherGetFlasherEntity` `Core/Scripting/OOJSFlasher.cpp:183` (`dynamic_cast` for `-isKindOfClass:`) | ✅ |
+| `-[OOFlasherEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (118) | `OOJSFlasherGetJSClass` `Core/Scripting/OOJSFlasher.cpp:213` | ✅ |
+| `-[OOFlasherEntity(OOJavaScriptExtensions) oo_jsClassName]` (124) | `OOJSFlasherJSClassName` `Core/Scripting/OOJSFlasher.cpp:219` ("Flasher") | ✅ |
+| `-[OOFlasherEntity(OOJavaScriptExtensions) isVisibleToScripts]` (129) | `OOJSFlasherIsVisibleToScripts` `Core/Scripting/OOJSFlasher.cpp:224` | ✅ |
+| `FlasherGetProperty()` (136) | `FlasherGetProperty` `Core/Scripting/OOJSFlasher.cpp:230` | ✅ |
+| `FlasherSetProperty()` (185) | `FlasherSetProperty` `Core/Scripting/OOJSFlasher.cpp:285` | ✅ |
+| `FlasherRemove()` (273) | `FlasherRemove` `Core/Scripting/OOJSFlasher.cpp:379` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ✅ subtle — The getter types match:
+  - `active` is a boolean.
+  - `color` is the `normalizedArray` of 4 floats, or null for no colour; the port uses `NormalizedColorComponents` with `singleReal`.
+  - `frequency`, `fraction` and `phase` are numbers, and `size` is `diameter()`.
 
+  upstream `:154-172` ↔ port `:252-270`
+- ✅ subtle — The setter validation is the same:
+  - `frequency` must be `>= 0`.
+  - `fraction` must satisfy `0 < f <= 1`.
+  - `size` must be `> 0`.
+  - `phase` takes any number.
+  - `color` takes an `OOColor` description, or `null` to clear it.
+
+  NaN fails every range test, and failure goes to `OOJSReportBadPropertyValue` and returns false — upstream `:203-258` ↔ port `:307-362`
+- ✅ subtle — `remove()`: for a ship owner the port calls `removeFlasher`. Otherwise it calls `removeSubEntity` on `oo::ToEffect(owner)`, guarded against null. A nil owner is a no-op in both (upstream `[nil removeSubEntity:]`). An owner that is neither a ship nor an effect, which never occurs, is a no-op in the port where upstream would have sent an unrecognized selector — upstream `:280-285` ↔ port `:386-393`
 
 ## OOJSFont
 
@@ -794,110 +826,167 @@ Upstream `src/Core/Scripting/OOJSOolite.m` ↔ `Core/Scripting/OOJSOolite.cpp`
 <a id="oojsplanet"></a>
 Upstream `src/Core/Scripting/OOJSPlanet.m` ↔ `Core/Scripting/OOJSPlanet.cpp`
 
-**Status:** pending
+**Status:** done — 8 rows: 8 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSPlanet()` (87) | | |
-| `-[OOPlanetEntity(OOJavaScriptExtensions) isVisibleToScripts]` (96) | | |
-| `-[OOPlanetEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (102) | | |
-| `-[OOPlanetEntity(OOJavaScriptExtensions) oo_jsClassName]` (108) | | |
-| `PlanetGetProperty()` (122) | | |
-| `PlanetSetProperty()` (184) | | |
+| `sPlanetProperties[]` (68): 12 props; read-only: hasAtmosphere, isMainPlanet, radius; the rest READWRITE_CB; no method table | `sPlanetProperties` `Core/Scripting/OOJSPlanet.cpp:137` (+ `sPlanetPropertiesRaw` :158); `initClass` methods `nullptr` | ✅ |
+| `DEFINE_JS_OBJECT_GETTER(JSPlanetGetPlanetEntity, …)` (85) | `JSPlanetGetPlanetEntity` `Core/Scripting/OOJSPlanet.cpp:182` (`OOJSEntityGetEntityOfClass` + `dynamic_cast`) | ✅ |
+| `InitOOJSPlanet()` (87) | `InitOOJSPlanet` `Core/Scripting/OOJSPlanet.cpp:192` | ✅ |
+| `-[OOPlanetEntity(OOJavaScriptExtensions) isVisibleToScripts]` (96) | `OOJSPlanetIsVisibleToScripts` `Core/Scripting/OOJSPlanet.cpp:203` | ✅ |
+| `-[OOPlanetEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (102) | `OOJSPlanetGetJSClass` `Core/Scripting/OOJSPlanet.cpp:209` | ✅ |
+| `-[OOPlanetEntity(OOJavaScriptExtensions) oo_jsClassName]` (108) | `OOJSPlanetJSClassName` `Core/Scripting/OOJSPlanet.cpp:215` ("Planet"/"Moon"/"Unknown") | ✅ |
+| `PlanetGetProperty()` (122) | `PlanetGetProperty` `Core/Scripting/OOJSPlanet.cpp:228` | ✅ |
+| `PlanetSetProperty()` (184) | `PlanetSetProperty` `Core/Scripting/OOJSPlanet.cpp:303` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ subtle — Unlike the other entity classes, the Planet getter has no `entity == nil → undefined` branch. A stale planet therefore gives the values a message to nil gives: null colours, texture and name; 0 for the numbers; zero vector and quaternion; `false` for `hasAtmosphere`; and `isMainPlanet` = `nil == [UNIVERSE planet]`. The port reproduces each one with explicit null guards — upstream `:129-175` ↔ port `:239-291`
+- ✅ subtle — The `orientation` getter: upstream `[planet normalOrientation]`, which `OOPlanetEntity.m` does not override; the port calls `Entity::normalOrientation()` qualified. The setter normalises the quaternion and then calls `OOPlanetEntity::setOrientation`, which upstream overrides at `OOPlanetEntity.m:482` — upstream `:167-168,262-268` ↔ port `:281-285,391-400`
+- ✅ subtle — The `texture` setter warnings are identical: "Expected texture string. Value not set." and "Cannot find texture \"%s\". Value not set." (`%@`→`%s`). It is wrapped in pause/resume of the time limiter and always returns true. `-isKindOfClass:` became `planet != nullptr` (false only for nil in both) — upstream `:237-260` ↔ port `:365-389`
+- ✅ subtle — The `name` setter accepts any value: `OOStringFromJSValue`, where nil/nullopt clears the name, and it never reports a bad value. The colour setters accept a description, or `null` to clear — upstream `:202-235` ↔ port `:325-363`
 
 ## OOJSPlayer
 
 <a id="oojsplayer"></a>
 Upstream `src/Core/Scripting/OOJSPlayer.m` ↔ `Core/Scripting/OOJSPlayer.cpp`
 
-**Status:** pending
+**Status:** done — 25 rows: 25 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSPlayer()` (151) | | |
-| `JSPlayerClass()` (160) | | |
-| `JSPlayerPrototype()` (165) | | |
-| `JSPlayerObject()` (170) | | |
-| `OOPlayerForScripting()` (175) | | |
-| `PlayerGetProperty()` (183) | | |
-| `PlayerSetProperty()` (288) | | |
-| `PlayerCommsMessage()` (354) | | |
-| `PlayerConsoleMessage()` (379) | | |
-| `PlayerEndScenario()` (403) | | |
-| `PlayerIncreaseContractReputation()` (422) | | |
-| `PlayerDecreaseContractReputation()` (433) | | |
-| `PlayerIncreaseParcelReputation()` (444) | | |
-| `PlayerDecreaseParcelReputation()` (455) | | |
-| `PlayerIncreasePassengerReputation()` (466) | | |
-| `PlayerDecreasePassengerReputation()` (477) | | |
-| `PlayerAddMessageToArrivalReport()` (488) | | |
-| `PlayerAudioMessage()` (508) | | |
-| `PlayerReplaceShip()` (530) | | |
-| `PlayerSetEscapePodDestination()` (571) | | |
-| `PlayerSetPlayerRole()` (648) | | |
-| `PlayerStopAudioMessage()` (675) | | |
+| `sPlayerClass` JSClass "Player" (63) | `sPlayerClass` `Core/Scripting/OOJSPlayer.cpp:119` (finalize `OOJSObjectWrapperFinalize`) | ✅ |
+| `sPlayerProperties[]` (104): 22 props; read-write: bounty, credits, escapePodRescueTime, name, score | `sPlayerProperties` `Core/Scripting/OOJSPlayer.cpp:165` (+ `sPlayerPropertiesRaw` `:199`): same names, order, tinyids (enum `:138`) and flags | ✅ |
+| `sPlayerMethods[]` (131): 15 methods | `sPlayerMethods` `Core/Scripting/OOJSPlayer.cpp:228`: same names and min-args (1,1,1,1,0,0,0,1,0,0,0,1,1,1,0) | ✅ |
+| `InitOOJSPlayer()` (151) | `InitOOJSPlayer` `Core/Scripting/OOJSPlayer.cpp:251` (global `player`, `OOJS_PROP_READONLY`; `OOJSBasicPrivateObjectConverter`; the private is never set in either) | ✅ |
+| `JSPlayerClass()` (160) | `JSPlayerClass` `Core/Scripting/OOJSPlayer.cpp:264` | ✅ |
+| `JSPlayerPrototype()` (165) | `JSPlayerPrototype` `Core/Scripting/OOJSPlayer.cpp:269` | ✅ |
+| `JSPlayerObject()` (170) | `JSPlayerObject` `Core/Scripting/OOJSPlayer.cpp:274` | ✅ |
+| `OOPlayerForScripting()` (175) | `OOPlayerForScripting` `Core/Scripting/OOJSPlayer.cpp:279` (`setScriptTargetToSelf` = `setScriptTarget(this)`, `Core/Entities/PlayerEntityLegacyScriptEngine.cpp:358`) | ✅ |
+| `PlayerGetProperty()` (183) | `PlayerGetProperty` `Core/Scripting/OOJSPlayer.cpp:289` | ✅ |
+| `PlayerSetProperty()` (288) | `PlayerSetProperty` `Core/Scripting/OOJSPlayer.cpp:404` | ✅ |
+| `PlayerCommsMessage()` (354) | `PlayerCommsMessage` `Core/Scripting/OOJSPlayer.cpp:485` | ✅ |
+| `PlayerConsoleMessage()` (379) | `PlayerConsoleMessage` `Core/Scripting/OOJSPlayer.cpp:515` | ✅ |
+| `PlayerEndScenario()` (403) | `PlayerEndScenario` `Core/Scripting/OOJSPlayer.cpp:543` | ✅ |
+| `PlayerIncreaseContractReputation()` (422) | `PlayerIncreaseContractReputation` `Core/Scripting/OOJSPlayer.cpp:565` | ✅ |
+| `PlayerDecreaseContractReputation()` (433) | `PlayerDecreaseContractReputation` `Core/Scripting/OOJSPlayer.cpp:580` | ✅ |
+| `PlayerIncreaseParcelReputation()` (444) | `PlayerIncreaseParcelReputation` `Core/Scripting/OOJSPlayer.cpp:595` | ✅ |
+| `PlayerDecreaseParcelReputation()` (455) | `PlayerDecreaseParcelReputation` `Core/Scripting/OOJSPlayer.cpp:610` | ✅ |
+| `PlayerIncreasePassengerReputation()` (466) | `PlayerIncreasePassengerReputation` `Core/Scripting/OOJSPlayer.cpp:625` | ✅ |
+| `PlayerDecreasePassengerReputation()` (477) | `PlayerDecreasePassengerReputation` `Core/Scripting/OOJSPlayer.cpp:640` | ✅ |
+| `PlayerAddMessageToArrivalReport()` (488) | `PlayerAddMessageToArrivalReport` `Core/Scripting/OOJSPlayer.cpp:655` | ✅ |
+| `PlayerAudioMessage()` (508) | `PlayerAudioMessage` `Core/Scripting/OOJSPlayer.cpp:679` | ✅ |
+| `PlayerReplaceShip()` (530) | `PlayerReplaceShip` `Core/Scripting/OOJSPlayer.cpp:706` | ✅ |
+| `PlayerSetEscapePodDestination()` (571) | `PlayerSetEscapePodDestination` `Core/Scripting/OOJSPlayer.cpp:757` | ✅ |
+| `PlayerSetPlayerRole()` (648) | `PlayerSetPlayerRole` `Core/Scripting/OOJSPlayer.cpp:848` | ✅ |
+| `PlayerStopAudioMessage()` (675) | `PlayerStopAudioMessage` `Core/Scripting/OOJSPlayer.cpp:882` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ✅ subtle — The getter types match:
+  - `score`, `alertCondition` and `bounty` are int32 (`INT_TO_JSVAL` → `int32Value`).
+  - The three reputations are `(int)((float)x/10.0)`; the `*Precise` variants are `(float)x/10.0`.
+  - `name`, `rank` and `legalStatus` are strings, or null when nil.
+  - `dockingClearanceStatus` falls back to "DOCKING_CLEARANCE_STATUS_UNKNOWN".
+  - `roleWeights` is an array of strings.
 
+  upstream `Core/Scripting/OOJSPlayer.m:193-283` ↔ port `Core/Scripting/OOJSPlayer.cpp:301-397`
+- ✅ subtle — The setters match:
+  - `score` and `bounty` use ValueToInt32, clamp at 0, and use `kOOLegalStatusReasonByScript`.
+  - `credits` and `escapePodRescueTime` use ValueToNumber.
+  - A non-string `name` goes to `OOJSReportBadPropertyValue`.
+
+  upstream `:300-345` ↔ port `:418-474`
+- ✅ subtle — The bad-argument texts all match:
+  - "message and optional duration"
+  - "scenario key"
+  - "string (arrival message)", with argc capped at `MIN(argc,1)`
+  - "audiomessage (string)"
+  - "string (shipyard key)"
+  - "a valid station, null, or 'NEARBY_SYSTEM'"
+  - "string (role) [, number (index)]"
+
+  The errors "Player.replaceShip() only works while the player is docked." and "Player.setEscapePodDestination() only works while the escape pod is in flight." also match.
+- ✅ subtle — Some calls are qualified and skip virtual dispatch: `PlayerEntity::score`, `setBounty`, `setTargetSystemID`, `addRoleToPlayer` and `ShipEntity::doScriptEvent` (bead oo-9ht.177). The vector overload of `ShipEntity::doScriptEvent` still dispatches virtually to `PlayerEntity::doScriptEvent(...context...)` (`Core/Entities/ShipEntity.cpp:13551`, `Core/Entities/PlayerEntity.h:861`). World scripts therefore still get `commsMessageReceived`, `playerReplacedShip` and `playerBoughtNewShip(player, 0)` — upstream `:372,560-562` ↔ port `:506,743-746`
+- ✅ subtle — `setEscapePodDestination` behaves the same:
+  - `undefined`/`null` (and a stale entity) count as nil and are accepted.
+  - A station (`ToShip` && `getIsStation`) is accepted.
+  - The string "NEARBY_SYSTEM" removes nova systems from the end down to index 1 and adds the time adjustment `(.2+d²)*3600+5400*(ranrot&127)`. It keeps upstream's quirk of calling `setTargetSystemID(i)` with the list index.
+  - Any other value is accepted only if it is falsy.
+
+  upstream `:584-642` ↔ port `:771-840`
 
 ## OOJSPlayerShip
 
 <a id="oojsplayership"></a>
 Upstream `src/Core/Scripting/OOJSPlayerShip.m` ↔ `Core/Scripting/OOJSPlayerShip.cpp`
 
-**Status:** pending
+**Status:** done — 40 rows: 38 ✅ 1 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSPlayerShip()` (269) | | |
-| `JSPlayerShipClass()` (284) | | |
-| `JSPlayerShipPrototype()` (289) | | |
-| `JSPlayerShipObject()` (294) | | |
-| `-[PlayerEntity(OOJavaScriptExtensions) oo_jsClassName]` (301) | | |
-| `-[PlayerEntity(OOJavaScriptExtensions) setJSSelf:context:]` (306) | | |
-| `-[PlayerEntity(OOJavaScriptExtensions) javaScriptEngineWillReset:]` (317) | | |
-| `PlayerShipGetProperty()` (334) | | |
-| `PlayerShipSetProperty()` (606) | | |
-| `PlayerShipLaunch()` (1003) | | |
-| `PlayerShipRemoveAllCargo()` (1017) | | |
-| `PlayerShipUseSpecialCargo()` (1038) | | |
-| `PlayerShipEngageAutopilotToStation()` (1062) | | |
-| `PlayerShipDisengageAutopilot()` (1085) | | |
-| `PlayerShipRequestDockingClearance()` (1098) | | |
-| `PlayerShipCancelDockingRequest()` (1121) | | |
-| `PlayerShipAwardEquipmentToCurrentPylon()` (1145) | | |
-| `PlayerShipAddPassenger()` (1171) | | |
-| `PlayerShipRemovePassenger()` (1206) | | |
-| `PlayerShipAddParcel()` (1231) | | |
-| `PlayerShipRemoveParcel()` (1264) | | |
-| `PlayerShipAwardContract()` (1289) | | |
-| `PlayerShipRemoveContract()` (1325) | | |
-| `PlayerShipSetCustomView()` (1357) | | |
-| `PlayerShipResetCustomView()` (1411) | | |
-| `PlayerShipResetScannerZoom()` (1431) | | |
-| `PlayerShipTakeInternalDamage()` (1444) | | |
-| `PlayerShipBeginHyperspaceCountdown()` (1457) | | |
-| `PlayerShipCancelHyperspaceCountdown()` (1491) | | |
-| `PlayerShipBeginGalacticHyperspaceCountdown()` (1508) | | |
-| `PlayerShipSetMultiFunctionDisplay()` (1542) | | |
-| `PlayerShipSetMultiFunctionText()` (1570) | | |
-| `PlayerShipSetPrimedEquipment()` (1608) | | |
-| `PlayerShipSetCustomHUDDial()` (1634) | | |
-| `PlayerShipHideHUDSelector()` (1662) | | |
-| `PlayerShipShowHUDSelector()` (1683) | | |
-| `ValidateContracts()` (1704) | | |
+| `sPlayerShipClass` JSClass (84) | `sPlayerShipClass` ClassDef `Core/Scripting/OOJSPlayerShip.cpp:236` | ✅ |
+| `enum kPlayerShip_*` + `sPlayerShipProperties[]` (99, 167): 64 props | `enum` + `sPlayerShipProperties[]` / `sPlayerShipPropertiesRaw[]` `Core/Scripting/OOJSPlayerShip.cpp:255,324,400` | ✅ |
+| `sPlayerShipMethods[]` (237): 27 methods | `sPlayerShipMethods[]` `Core/Scripting/OOJSPlayerShip.cpp:472` | ✅ |
+| `InitOOJSPlayerShip()` (269) | `InitOOJSPlayerShip` `Core/Scripting/OOJSPlayerShip.cpp:505` | ⚠️ |
+| `JSPlayerShipClass()` (284) | `JSPlayerShipClass` `Core/Scripting/OOJSPlayerShip.cpp:523` | ✅ |
+| `JSPlayerShipPrototype()` (289) | `JSPlayerShipPrototype` `Core/Scripting/OOJSPlayerShip.cpp:528` | ✅ |
+| `JSPlayerShipObject()` (294) | `JSPlayerShipObject` `Core/Scripting/OOJSPlayerShip.cpp:533` | ✅ |
+| `-[PlayerEntity(OOJavaScriptExtensions) oo_jsClassName]` (301) | `OOJSPlayerShipJSClassName` `Core/Scripting/OOJSPlayerShip.cpp:541` | ✅ |
+| `-[PlayerEntity(OOJavaScriptExtensions) setJSSelf:context:]` (306) | `OOJSPlayerShipSetJSSelf` `Core/Scripting/OOJSPlayerShip.cpp:546` | ✅ |
+| `-[PlayerEntity(OOJavaScriptExtensions) javaScriptEngineWillReset:]` (317) | `OOJSPlayerShipJavaScriptEngineWillReset` `Core/Scripting/OOJSPlayerShip.cpp:556` | ✅ |
+| `PlayerShipGetProperty()` (334) | `PlayerShipGetProperty` `Core/Scripting/OOJSPlayerShip.cpp:571` | ✅ |
+| `PlayerShipSetProperty()` (606) | `PlayerShipSetProperty` `Core/Scripting/OOJSPlayerShip.cpp:853` | ✅ |
+| `PlayerShipLaunch()` (1003) | `PlayerShipLaunch` `Core/Scripting/OOJSPlayerShip.cpp:1295` | ✅ |
+| `PlayerShipRemoveAllCargo()` (1017) | `PlayerShipRemoveAllCargo` `Core/Scripting/OOJSPlayerShip.cpp:1313` | ✅ |
+| `PlayerShipUseSpecialCargo()` (1038) | `PlayerShipUseSpecialCargo` `Core/Scripting/OOJSPlayerShip.cpp:1338` | ✅ |
+| `PlayerShipEngageAutopilotToStation()` (1062) | `PlayerShipEngageAutopilotToStation` `Core/Scripting/OOJSPlayerShip.cpp:1366` | ✅ |
+| `PlayerShipDisengageAutopilot()` (1085) | `PlayerShipDisengageAutopilot` `Core/Scripting/OOJSPlayerShip.cpp:1392` | ✅ |
+| `PlayerShipRequestDockingClearance()` (1098) | `PlayerShipRequestDockingClearance` `Core/Scripting/OOJSPlayerShip.cpp:1409` | ✅ |
+| `PlayerShipCancelDockingRequest()` (1121) | `PlayerShipCancelDockingRequest` `Core/Scripting/OOJSPlayerShip.cpp:1436` | ✅ |
+| `PlayerShipAwardEquipmentToCurrentPylon()` (1145) | `PlayerShipAwardEquipmentToCurrentPylon` `Core/Scripting/OOJSPlayerShip.cpp:1464` | ✅ |
+| `PlayerShipAddPassenger()` (1171) | `PlayerShipAddPassenger` `Core/Scripting/OOJSPlayerShip.cpp:1493` | ✅ |
+| `PlayerShipRemovePassenger()` (1206) | `PlayerShipRemovePassenger` `Core/Scripting/OOJSPlayerShip.cpp:1531` | ✅ |
+| `PlayerShipAddParcel()` (1231) | `PlayerShipAddParcel` `Core/Scripting/OOJSPlayerShip.cpp:1559` | ✅ |
+| `PlayerShipRemoveParcel()` (1264) | `PlayerShipRemoveParcel` `Core/Scripting/OOJSPlayerShip.cpp:1595` | ✅ |
+| `PlayerShipAwardContract()` (1289) | `PlayerShipAwardContract` `Core/Scripting/OOJSPlayerShip.cpp:1623` | ✅ |
+| `PlayerShipRemoveContract()` (1325) | `PlayerShipRemoveContract` `Core/Scripting/OOJSPlayerShip.cpp:1662` | ✅ |
+| `PlayerShipSetCustomView()` (1357) | `PlayerShipSetCustomView` `Core/Scripting/OOJSPlayerShip.cpp:1697` | ✅ |
+| `PlayerShipResetCustomView()` (1411) | `PlayerShipResetCustomView` `Core/Scripting/OOJSPlayerShip.cpp:1756` | ✅ |
+| `PlayerShipResetScannerZoom()` (1431) | `PlayerShipResetScannerZoom` `Core/Scripting/OOJSPlayerShip.cpp:1781` | ✅ |
+| `PlayerShipTakeInternalDamage()` (1444) | `PlayerShipTakeInternalDamage` `Core/Scripting/OOJSPlayerShip.cpp:1798` | ✅ |
+| `PlayerShipBeginHyperspaceCountdown()` (1457) | `PlayerShipBeginHyperspaceCountdown` `Core/Scripting/OOJSPlayerShip.cpp:1814` | ✅ |
+| `PlayerShipCancelHyperspaceCountdown()` (1491) | `PlayerShipCancelHyperspaceCountdown` `Core/Scripting/OOJSPlayerShip.cpp:1852` | ✅ |
+| `PlayerShipBeginGalacticHyperspaceCountdown()` (1508) | `PlayerShipBeginGalacticHyperspaceCountdown` `Core/Scripting/OOJSPlayerShip.cpp:1874` | ✅ |
+| `PlayerShipSetMultiFunctionDisplay()` (1542) | `PlayerShipSetMultiFunctionDisplay` `Core/Scripting/OOJSPlayerShip.cpp:1916` | ✅ |
+| `PlayerShipSetMultiFunctionText()` (1570) | `PlayerShipSetMultiFunctionText` `Core/Scripting/OOJSPlayerShip.cpp:1947` | ✅ |
+| `PlayerShipSetPrimedEquipment()` (1608) | `PlayerShipSetPrimedEquipment` `Core/Scripting/OOJSPlayerShip.cpp:1989` | ✅ |
+| `PlayerShipSetCustomHUDDial()` (1634) | `PlayerShipSetCustomHUDDial` `Core/Scripting/OOJSPlayerShip.cpp:2018` | ❌ |
+| `PlayerShipHideHUDSelector()` (1662) | `PlayerShipHideHUDSelector` `Core/Scripting/OOJSPlayerShip.cpp:2050` | ✅ |
+| `PlayerShipShowHUDSelector()` (1683) | `PlayerShipShowHUDSelector` `Core/Scripting/OOJSPlayerShip.cpp:2075` | ✅ |
+| `ValidateContracts()` (1704) | `ValidateContracts` `Core/Scripting/OOJSPlayerShip.cpp:2100` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — `setCustomHUDDial(key, null|undefined)`: upstream converts the value to `nil`, and `-setDialCustom:forKey:` then does `[customDialSettings setObject:nil …]`, which raises NSInvalidArgumentException; the native wrapper turns that into a JS exception. The port stores a null PList entry without error, so the dial is silently set to null where upstream threw — upstream `Core/Scripting/OOJSPlayerShip.m:1650`, `Core/Entities/PlayerEntity.m:4129` ↔ port `Core/Scripting/OOJSPlayerShip.cpp:2035`, `Core/Entities/PlayerEntity.cpp:4450`
+- ⚠️ **low** — In Init, the `player.ship` private slot holds `oo::makeRef<OOJSEntityHolder>(player)` instead of `[player weakRetain]`, and the converter is `OOJSEntityObjectConverter` instead of `OOJSBasicPrivateObjectConverter` (bead oo-9ht.39.3, cited in the code comment). Scripts see the same object, the same `ship` property (`OOJS_PROP_READONLY`) and the same prototype chain — upstream `Core/Scripting/OOJSPlayerShip.m:271-279` ↔ port `Core/Scripting/OOJSPlayerShip.cpp:509-520`
+- ✅ note (low, nil-messaging) — In the getter and setter, `messageGuiTextColor` and `messageGuiTextCommsColor` call `UNIVERSE->messageGUI()->…` with no null guard; upstream messaging nil gave null or a no-op. Every other player/HUD access is null-guarded through `AskHud`/`HudOf`. Reachable only if `UNIVERSE` or the message GUI is missing — upstream `Core/Scripting/OOJSPlayerShip.m:589,955` ↔ port `Core/Scripting/OOJSPlayerShip.cpp:834,1245`
+- ✅ note (low, nil-messaging) — `setMultiFunctionText(key, text, true)` with a null `UNIVERSE->getGui()` dereferences null in the port. Upstream `[nil reflowTextForMFD:]` gave nil, which cleared the MFD text. Unreachable in practice — upstream `Core/Scripting/OOJSPlayerShip.m:1597-1599` ↔ port `Core/Scripting/OOJSPlayerShip.cpp:1976-1978`
+- ✅ note — These upstream quirks are kept verbatim:
+  - The getter's `default:` reports a bad selector, then still returns null with `true`.
+  - In the setter, `serviceLevel` falls through into `currentWeapon` when number conversion fails, and `targetSystem` falls through into `infoSystem` when int conversion fails.
+  - `showHUDSelector` reports bad arguments under the name "hideHUDSelector".
+  - The `setMultiFunctionText` reflow error uses class "setMultiFunctionText", method "reflow".
+  - The `engageAutopilotToStation` error names "engageAutopilot".
+  - The typos "orientiation", "hightlight" and `"string (key), value]"` are kept.
+- ✅ note — All error and warning texts match exactly:
+  - the `removeAllCargo` docked check;
+  - `setCustomView`/`resetCustomView` "…only works when custom view is active.";
+  - `targetSystem` "read-only unless called when docked.";
+  - the compass type and compass target errors, and the advanced-compass warning;
+  - the crosshair warning (`%@`→`%s`).
+- ✅ note — `setCustomView` with a non-string third argument: the port raises `OOInvalidArgumentException` "Tried to add nil value for key 'weapon_facing' to dictionary", matching the exception upstream's `-setObject:forKey:` raised.
+- ✅ note — `crosshairs = null` with a HUD that has no name: the port skips `switchHudTo`. Upstream called `switchHudTo:nil`, which returns NO at once (`Core/Entities/PlayerEntity.m:4061`), so the behaviour is the same.
 
 ## OOJSPopulatorDefinition
 
@@ -1246,64 +1335,76 @@ Upstream `src/Core/Scripting/OOJSSpecialFunctions.m` ↔ `Core/Scripting/OOJSSpe
 <a id="oojsstation"></a>
 Upstream `src/Core/Scripting/OOJSStation.m` ↔ `Core/Scripting/OOJSStation.cpp`
 
-**Status:** pending
+**Status:** done — 31 rows: 29 ✅ 0 ⚠️ 2 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSStation()` (151) | | |
-| `JSStationGetStationEntity()` (158) | | |
-| `JSStationGetShipEntity()` (182) | | |
-| `-[StationEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (208) | | |
-| `-[StationEntity(OOJavaScriptExtensions) oo_jsClassName]` (214) | | |
-| `StationGetProperty()` (221) | | |
-| `StationSetProperty()` (330) | | |
-| `StationAbortAllDockings()` (434) | | |
-| `StationAbortDockingForShip()` (447) | | |
-| `StationCanDockShip()` (472) | | |
-| `StationDockPlayer()` (503) | | |
-| `StationIncreaseAlertLevel()` (531) | | |
-| `StationDecreaseAlertLevel()` (548) | | |
-| `StationLaunchShipWithRole()` (566) | | |
-| `StationLaunchDefenseShip()` (598) | | |
-| `StationLaunchEscort()` (615) | | |
-| `StationLaunchScavenger()` (632) | | |
-| `StationLaunchMiner()` (649) | | |
-| `StationLaunchPirateShip()` (665) | | |
-| `StationLaunchShuttle()` (682) | | |
-| `StationLaunchPatrol()` (698) | | |
-| `StationLaunchPolice()` (714) | | |
-| `StationSetInterface()` (730) | | |
-| `StationSetMarketPrice()` (827) | | |
-| `StationSetMarketQuantity()` (864) | | |
-| `StationAddShipToShipyard()` (901) | | |
-| `StationRemoveShipFromShipyard()` (1048) | | |
+| `sStationClass` JSClass (66) | `sStationClass` ClassDef `Core/Scripting/OOJSStation.cpp:210` | ✅ |
+| `sStationProperties` JSPropertySpec table (103) | `sStationProperties` `Core/Scripting/OOJSStation.cpp:252` (+ `sStationPropertiesRaw` :281 for the error reporters) | ✅ |
+| `sStationMethods` JSFunctionSpec table (126) | `sStationMethods` `Core/Scripting/OOJSStation.cpp:306` | ✅ |
+| `InitOOJSStation()` (151) | `InitOOJSStation` `Core/Scripting/OOJSStation.cpp:332` | ✅ |
+| `JSStationGetStationEntity()` (158) | `JSStationGetStationEntity` `Core/Scripting/OOJSStation.cpp:341` | ✅ |
+| `JSStationGetShipEntity()` (182) | `JSStationGetShipEntity` `Core/Scripting/OOJSStation.cpp:370` | ✅ |
+| `-[StationEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (208) | `OOJSStationGetJSClass` `Core/Scripting/OOJSStation.cpp:397` | ✅ |
+| `-[StationEntity(OOJavaScriptExtensions) oo_jsClassName]` (214) | `OOJSStationJSClassName` `Core/Scripting/OOJSStation.cpp:403` | ✅ |
+| `StationGetProperty()` (221) | `StationGetProperty` `Core/Scripting/OOJSStation.cpp:409` | ✅ |
+| `StationSetProperty()` (330) | `StationSetProperty` `Core/Scripting/OOJSStation.cpp:525` | ✅ |
+| `StationAbortAllDockings()` (434) | `StationAbortAllDockings` `Core/Scripting/OOJSStation.cpp:644` | ✅ |
+| `StationAbortDockingForShip()` (447) | `StationAbortDockingForShip` `Core/Scripting/OOJSStation.cpp:660` | ✅ |
+| `StationCanDockShip()` (472) | `StationCanDockShip` `Core/Scripting/OOJSStation.cpp:688` | ✅ |
+| `StationDockPlayer()` (503) | `StationDockPlayer` `Core/Scripting/OOJSStation.cpp:723` | ✅ |
+| `StationIncreaseAlertLevel()` (531) | `StationIncreaseAlertLevel` `Core/Scripting/OOJSStation.cpp:759` | ✅ |
+| `StationDecreaseAlertLevel()` (548) | `StationDecreaseAlertLevel` `Core/Scripting/OOJSStation.cpp:780` | ✅ |
+| `StationLaunchShipWithRole()` (566) | `StationLaunchShipWithRole` `Core/Scripting/OOJSStation.cpp:802` | ✅ |
+| `StationLaunchDefenseShip()` (598) | `StationLaunchDefenseShip` `Core/Scripting/OOJSStation.cpp:838` | ✅ |
+| `StationLaunchEscort()` (615) | `StationLaunchEscort` `Core/Scripting/OOJSStation.cpp:857` | ✅ |
+| `StationLaunchScavenger()` (632) | `StationLaunchScavenger` `Core/Scripting/OOJSStation.cpp:876` | ✅ |
+| `StationLaunchMiner()` (649) | `StationLaunchMiner` `Core/Scripting/OOJSStation.cpp:895` | ✅ |
+| `StationLaunchPirateShip()` (665) | `StationLaunchPirateShip` `Core/Scripting/OOJSStation.cpp:913` | ✅ |
+| `StationLaunchShuttle()` (682) | `StationLaunchShuttle` `Core/Scripting/OOJSStation.cpp:932` | ✅ |
+| `StationLaunchPatrol()` (698) | `StationLaunchPatrol` `Core/Scripting/OOJSStation.cpp:950` | ✅ |
+| `StationLaunchPolice()` (714) | `StationLaunchPolice` `Core/Scripting/OOJSStation.cpp:968` | ✅ |
+| `StationSetInterface()` (730) | `StationSetInterface` `Core/Scripting/OOJSStation.cpp:988` | ❌ |
+| `StationSetMarketPrice()` (827) | `StationSetMarketPrice` `Core/Scripting/OOJSStation.cpp:1089` | ✅ |
+| `StationSetMarketQuantity()` (864) | `StationSetMarketQuantity` `Core/Scripting/OOJSStation.cpp:1132` | ✅ |
+| `StationAddShipToShipyard()` (901) | `StationAddShipToShipyard` `Core/Scripting/OOJSStation.cpp:1188` (+ port helpers `StringForKey`/`StringAtIndex`/`RaiseNilValueForKey`/`ValueForKey` :169-199, `WeaponThreatAssessment` :1179) | ❌ |
+| `StationRemoveShipFromShipyard()` (1048) | `StationRemoveShipFromShipyard` `Core/Scripting/OOJSStation.cpp:1354` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — `setInterface(key, def)` with a null/undefined `key`: upstream's `OOStringFromJSValue` gives nil, so `setObject:definition forKey:nil` raises and the script gets "Native exception: …". On the removal path, `removeObjectForKey:nil` is warned about and ignored by GNUstep. The port uses `key.value_or("")`, so it silently stores the definition under `""` (or erases `""`) and returns undefined with no error — upstream `Core/Scripting/OOJSStation.m:742,745,818` ↔ port `Core/Scripting/OOJSStation.cpp:1000,1004,1080`
+- ❌ **low** — `addShipToShipyard()` given a JS array, or any object that does not convert to a dictionary: upstream sends `-objectForKey:` to that object and raises an NSException, so the script sees "Native exception: <unrecognized-selector reason>". The port reports the fixed text "Unidentified native exception" instead. Its comment claims to reproduce the raise, but `OOJSReportWrappedException` gives that text only for non-NSException objects — upstream `Core/Scripting/OOJSStation.m:935` + `OOJavaScriptEngine.m:976-979` ↔ port `Core/Scripting/OOJSStation.cpp:1226-1228`
+- ✅ subtle — `addShipToShipyard()`: the port drops the "Invalid shipdata_key provided." warning, rightly, since it can never fire: `+dictionaryWithDictionary:nil` gives an empty dictionary, never nil. An unknown key therefore falls through the `roles` test (a nil receiver gives `location` 0) to "No shipyard information found for shipdata_key.", and the port matches that path — upstream `Core/Scripting/OOJSStation.m:947-961` ↔ port `Core/Scripting/OOJSStation.cpp:1242-1258`
+- ✅ subtle — `addShipToShipyard()` without `personality`: upstream `setObject:0 forKey:` raises on the nil value, and the port raises the same way through `RaiseNilValueForKey`, with GNUstep's text. The side-effect order matches: `Ranrot()` has already been consumed in both — upstream `Core/Scripting/OOJSStation.m:969,989` ↔ port `Core/Scripting/OOJSStation.cpp:1266,1286`
+- ✅ subtle — `addShipToShipyard()` with no shipyard reports its warning under the method name `removeShipFromShipyard`. This upstream copy-paste slip is kept as is — upstream `Core/Scripting/OOJSStation.m:917` ↔ port `Core/Scripting/OOJSStation.cpp:1204`
+- ✅ subtle — The `market` getter: upstream converts an `NSDictionary` (`localMarketForScripting`), so `for…in` order follows the hash order. The port converts an `oo::PList` dict, whose iteration order may differ. This belongs to the shared converter, not to this file — upstream `Core/Scripting/OOJSStation.m:317` ↔ port `Core/Scripting/OOJSStation.cpp:511`
+- ✅ subtle — The `roll` getter and `increase/decreaseAlertLevel` call `ShipEntity::getFlightRoll()` and `ShipEntity::alertCondition()` qualified, which skips virtual dispatch. Upstream `StationEntity.m` overrides neither, so the result is the same — upstream `Core/Scripting/OOJSStation.m:266,540,557` ↔ port `Core/Scripting/OOJSStation.cpp:458,768,789`
+- ✅ subtle — The property table matches upstream: 18 entries, same names, same tinyid order, same READWRITE_CB/READONLY_CB flags. The method table matches too: 20 entries with the same names and min-args — upstream `Core/Scripting/OOJSStation.m:103-149` ↔ port `Core/Scripting/OOJSStation.cpp:252-329`
 
 ## OOJSSun
 
 <a id="oojssun"></a>
 Upstream `src/Core/Scripting/OOJSSun.m` ↔ `Core/Scripting/OOJSSun.cpp`
 
-**Status:** pending
+**Status:** done — 10 rows: 10 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSSun()` (79) | | |
-| `-[OOSunEntity(OOJavaScriptExtensions) isVisibleToScripts]` (88) | | |
-| `-[OOSunEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (93) | | |
-| `-[OOSunEntity(OOJavaScriptExtensions) oo_jsClassName]` (99) | | |
-| `SunGetProperty()` (106) | | |
-| `SunGoNova()` (145) | | |
-| `SunCancelNova()` (164) | | |
+| `sSunClass` (38; setProperty `JS_StrictPropertyStub`) + `sSunProperties[]` (61): hasGoneNova, isGoingNova, name, radius, all READONLY_CB | `sSunClass` `Core/Scripting/OOJSSun.cpp:75` (setProperty `nullptr`) + `sSunProperties` :103 | ✅ |
+| `sSunMethods[]` (70): `cancelNova` 0, `goNova` 1 | `sSunMethods` `Core/Scripting/OOJSSun.cpp:114` | ✅ |
+| `DEFINE_JS_OBJECT_GETTER(JSSunGetSunEntity, …)` (77) | `JSSunGetSunEntity` `Core/Scripting/OOJSSun.cpp:128` (`OOJSEntityGetEntityOfClass` + `dynamic_cast`) | ✅ |
+| `InitOOJSSun()` (79) | `InitOOJSSun` `Core/Scripting/OOJSSun.cpp:138` | ✅ |
+| `-[OOSunEntity(OOJavaScriptExtensions) isVisibleToScripts]` (88) | `OOJSSunIsVisibleToScripts` `Core/Scripting/OOJSSun.cpp:149` | ✅ |
+| `-[OOSunEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (93) | `OOJSSunGetJSClass` `Core/Scripting/OOJSSun.cpp:154` | ✅ |
+| `-[OOSunEntity(OOJavaScriptExtensions) oo_jsClassName]` (99) | `OOJSSunJSClassName` `Core/Scripting/OOJSSun.cpp:160` ("Sun") | ✅ |
+| `SunGetProperty()` (106) | `SunGetProperty` `Core/Scripting/OOJSSun.cpp:166` | ✅ |
+| `SunGoNova()` (145) | `SunGoNova` `Core/Scripting/OOJSSun.cpp:212` | ✅ |
+| `SunCancelNova()` (164) | `SunCancelNova` `Core/Scripting/OOJSSun.cpp:235` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ subtle — Like Planet, the getter has no stale→`undefined` branch. A stale sun gives radius 0, a null name and `false` for both nova flags. `isGoingNova` = `willGoNova && !goneNova` — upstream `:118-137` ↔ port `:181-202`
+- ✅ subtle — `goNova([delay])`: when `argc > 0` and number conversion fails, it returns false with no extra report. Otherwise it calls `setGoingNova(true, delay)` with a default delay of 0 and returns undefined. `cancelNova()` only acts when `willGoNova && !goneNova`. A stale sun is a no-op in both — upstream `:145-179` ↔ port `:212-252`
 
 ## OOJSSystem
 
@@ -1493,53 +1594,76 @@ Upstream `src/Core/Scripting/OOJSVector.m` ↔ `Core/Scripting/OOJSVector.cpp`
 <a id="oojsvisualeffect"></a>
 Upstream `src/Core/Scripting/OOJSVisualEffect.m` ↔ `Core/Scripting/OOJSVisualEffect.cpp`
 
-**Status:** pending
+**Status:** done — 18 rows: 18 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSVisualEffect()` (132) | | |
-| `JSVisualEffectGetVisualEffectEntity()` (139) | | |
-| `-[OOVisualEffectEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (165) | | |
-| `-[OOVisualEffectEntity(OOJavaScriptExtensions) oo_jsClassName]` (171) | | |
-| `-[OOVisualEffectEntity(OOJavaScriptExtensions) isVisibleToScripts]` (176) | | |
-| `-[OOVisualEffectEntity(OOJavaScriptExtensions) subEntitiesForScript]` (181) | | |
-| `VisualEffectGetProperty()` (188) | | |
-| `VisualEffectSetProperty()` (297) | | |
-| `VisualEffectRemove()` (467) | | |
-| `VisualEffectGetMaterials()` (487) | | |
-| `VisualEffectGetShaders()` (505) | | |
-| `VisualEffectSetMaterials()` (523) | | |
-| `VisualEffectSetShaders()` (542) | | |
-| `VisualEffectSetMaterialsInternal()` (569) | | |
-| `VisualEffectScale()` (632) | | |
-| `VisualEffectRestoreSubEntities()` (662) | | |
+| `sVisualEffectProperties[]` (92): 22 props; read-only: dataKey, script, scriptInfo, subEntities, vectorForward/Right/Up; the rest READWRITE_CB (enum order of tinyids identical) | `sVisualEffectProperties` `Core/Scripting/OOJSVisualEffect.cpp:178` (+ `sVisualEffectPropertiesRaw` :209; enum :151) | ✅ |
+| `sVisualEffectMethods[]` (119): getMaterials 0, getShaders 0, remove 0, restoreSubEntities 0, scale 1, setMaterials 1, setShaders 2 | `sVisualEffectMethods` `Core/Scripting/OOJSVisualEffect.cpp:238` | ✅ |
+| `InitOOJSVisualEffect()` (132) | `InitOOJSVisualEffect` `Core/Scripting/OOJSVisualEffect.cpp:252` | ✅ |
+| `JSVisualEffectGetVisualEffectEntity()` (139) | `JSVisualEffectGetVisualEffectEntity` `Core/Scripting/OOJSVisualEffect.cpp:261` (`oo::ToEffect` for `-isKindOfClass:`) | ✅ |
+| `-[OOVisualEffectEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (165) | `OOJSVisualEffectGetJSClass` `Core/Scripting/OOJSVisualEffect.cpp:290` | ✅ |
+| `-[OOVisualEffectEntity(OOJavaScriptExtensions) oo_jsClassName]` (171) | `OOJSVisualEffectJSClassName` `Core/Scripting/OOJSVisualEffect.cpp:296` ("VisualEffect") | ✅ |
+| `-[OOVisualEffectEntity(OOJavaScriptExtensions) isVisibleToScripts]` (176) | `OOJSVisualEffectIsVisibleToScripts` `Core/Scripting/OOJSVisualEffect.cpp:301` | ✅ |
+| `-[OOVisualEffectEntity(OOJavaScriptExtensions) subEntitiesForScript]` (181) | `OOJSVisualEffectSubEntitiesForScript` `Core/Scripting/OOJSVisualEffect.cpp:306` (over `visualEffectSubEntityEnumerator` `Core/Entities/OOVisualEffectEntity.cpp:385`) | ✅ |
+| `VisualEffectGetProperty()` (188) | `VisualEffectGetProperty` `Core/Scripting/OOJSVisualEffect.cpp:320` | ✅ |
+| `VisualEffectSetProperty()` (297) | `VisualEffectSetProperty` `Core/Scripting/OOJSVisualEffect.cpp:439` | ✅ |
+| `VisualEffectRemove()` (467) | `VisualEffectRemove` `Core/Scripting/OOJSVisualEffect.cpp:651` | ✅ |
+| `VisualEffectGetMaterials()` (487) | `VisualEffectGetMaterials` `Core/Scripting/OOJSVisualEffect.cpp:677` (+ helper `MeshMaterials` :629) | ✅ |
+| `VisualEffectGetShaders()` (505) | `VisualEffectGetShaders` `Core/Scripting/OOJSVisualEffect.cpp:699` (+ helper `MeshShaders` :635) | ✅ |
+| `VisualEffectSetMaterials()` (523) | `VisualEffectSetMaterials` `Core/Scripting/OOJSVisualEffect.cpp:721` | ✅ |
+| `VisualEffectSetShaders()` (542) | `VisualEffectSetShaders` `Core/Scripting/OOJSVisualEffect.cpp:744` | ✅ |
+| `VisualEffectSetMaterialsInternal()` (569) | `VisualEffectSetMaterialsInternal` `Core/Scripting/OOJSVisualEffect.cpp:775` | ✅ |
+| `VisualEffectScale()` (632) | `VisualEffectScale` `Core/Scripting/OOJSVisualEffect.cpp:851` | ✅ |
+| `VisualEffectRestoreSubEntities()` (662) | `VisualEffectRestoreSubEntities` `Core/Scripting/OOJSVisualEffect.cpp:888` | ✅ |
 
 **Differences:**
 
-- *pending*
+- ✅ subtle — The getter types match:
+  - `beaconCode`, `beaconLabel` and `dataKey` are strings, or null.
+  - `isBreakPattern` is a boolean.
+  - The scales, `hullHeatLevel` and `shaderFloat*` are numbers; `shaderInt*` are int32.
+  - The vectors are Vectors.
+  - The scanner colours are 4-float arrays, or null.
+  - `subEntities` is null before the first subentity (a nil `subEntities` array), otherwise an array.
+  - `script` is the script object, or null.
+  - `scriptInfo` falls back to an empty dict (`OOVisualEffectEntity.m:651` ↔ `Core/Entities/OOVisualEffectEntity.cpp:771`).
 
+  upstream `:205-289` ↔ port `:341-429`
+- ✅ subtle — The setter validation is the same:
+  - The scales must be `> 0`.
+  - `hullHeatLevel` and `shaderFloat*` take any number; `shaderInt*` use ValueToInt32.
+  - `beaconLabel` must be a non-nil string.
+  - An empty or nil `beaconCode` clears the beacon, and sets the compass to planet mode if it was the player's next beacon. A new code on a non-beacon also calls `setNextBeacon`.
+
+  upstream `:318-451` ↔ port `:464-617`
+- ✅ subtle — The warning texts are identical ("VisualEffect.%s: expected %s instead of '%s'.", with "setShaders"/"setMaterials" and "object"/"object as second parameter"), as are the bad-argument texts "parameter object", "scale factor needed" and "scale factor must be positive". Order is preserved: `setShaders` gets `this` before checking argc, `setMaterials` after. `OOJS_ARGV[1] = OOJS_ARGV[0]` is safe because the trampoline pads argv to the declared nargs of 2 (`Core/Scripting/ooscript/JSEngine_quickjs.cpp:1827-1828`) — upstream `:529-591` ↔ port `:729-797`
+- ✅ subtle — `scale(n)` returns `true` without setting an rval in both, so the JS result is the callee (see the header note). `restoreSubEntities()` keeps the unsigned `count - subCount > 0` test, which is true whenever the count changed in either direction: `NSUInteger` = `uintptr_t` (`oofnd/objc/OOFoundationTypes.h:64`) — upstream `:653-679` ↔ port `:874-911`
+- ✅ subtle — In `setMaterials`/`setShaders`, the mesh is built from `oo_stringForKey:@"model"`. The port takes it only when the value is a string or number, else the empty string where upstream passed nil; whether `""` and nil fail alike is down to the OOMesh audit. `smooth` uses `get<bool>` (documented as `oo_boolForKey`, `oofnd/PListGet.hpp:14`), and the macros come from `ship-prefix-macros` read as a dictionary. `remove()` uses `oo::LiveOwner` for `[thisEnt owner]` — upstream `:609-625,474-479` ↔ port `:815-842,660-667`
 
 ## OOJSWaypoint
 
 <a id="oojswaypoint"></a>
 Upstream `src/Core/Scripting/OOJSWaypoint.m` ↔ `Core/Scripting/OOJSWaypoint.cpp`
 
-**Status:** pending
+**Status:** done — 9 rows: 9 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSWaypoint()` (77) | | |
-| `JSWaypointGetWaypointEntity()` (84) | | |
-| `-[OOWaypointEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (110) | | |
-| `-[OOWaypointEntity(OOJavaScriptExtensions) oo_jsClassName]` (116) | | |
-| `-[OOWaypointEntity(OOJavaScriptExtensions) isVisibleToScripts]` (121) | | |
-| `WaypointGetProperty()` (128) | | |
-| `WaypointSetProperty()` (176) | | |
+| `sWaypointProperties[]` (62): beaconCode, beaconLabel, orientation, size (tinyids 0-3), all READWRITE_CB | `sWaypointProperties` `Core/Scripting/OOJSWaypoint.cpp:119` (+ `sWaypointPropertiesRaw` :134) | ✅ |
+| `sWaypointMethods[]` (71): empty | `sWaypointMethods` `Core/Scripting/OOJSWaypoint.cpp:145` | ✅ |
+| `InitOOJSWaypoint()` (77) | `InitOOJSWaypoint` `Core/Scripting/OOJSWaypoint.cpp:152` | ✅ |
+| `JSWaypointGetWaypointEntity()` (84) | `JSWaypointGetWaypointEntity` `Core/Scripting/OOJSWaypoint.cpp:161` (`dynamic_cast` for `-isKindOfClass:`) | ✅ |
+| `-[OOWaypointEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (110) | `OOJSWaypointGetJSClass` `Core/Scripting/OOJSWaypoint.cpp:192` | ✅ |
+| `-[OOWaypointEntity(OOJavaScriptExtensions) oo_jsClassName]` (116) | `OOJSWaypointJSClassName` `Core/Scripting/OOJSWaypoint.cpp:198` ("Waypoint") | ✅ |
+| `-[OOWaypointEntity(OOJavaScriptExtensions) isVisibleToScripts]` (121) | `OOJSWaypointIsVisibleToScripts` `Core/Scripting/OOJSWaypoint.cpp:203` | ✅ |
+| `WaypointGetProperty()` (128) | `WaypointGetProperty` `Core/Scripting/OOJSWaypoint.cpp:209` | ✅ |
+| `WaypointSetProperty()` (176) | `WaypointSetProperty` `Core/Scripting/OOJSWaypoint.cpp:264` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ subtle — The port drops the getter's `entity == nil → undefined` and the setter's `entity == nil → true` branches. Both are unreachable: `JSWaypointGetWaypointEntity` already returns false for nil in both versions (`[nil isKindOfClass:]` is NO; `dynamic_cast` of null) — upstream `:99-100,141-144,190-191` ↔ port `:178-180,225-226,280-281`
+- ✅ subtle — The `orientation` getter gives `kZeroQuaternion` when the waypoint is unoriented. The setter calls `Entity::setNormalOrientation` qualified, which still dispatches virtually to the `OOWaypointEntity::setOrientation` override that sets `oriented` (`Core/Entities/Entity.cpp:737-740`, upstream `OOWaypointEntity.m:80-89`). `size` must be `> 0`; a nil `beaconLabel` is reported as a bad value; `beaconCode` follows the same clear/set logic as VisualEffect — upstream `:155-237` ↔ port `:241-331`
 
 ## OOJSWorldScripts
 
@@ -1564,22 +1688,23 @@ Upstream `src/Core/Scripting/OOJSWorldScripts.m` ↔ `Core/Scripting/OOJSWorldSc
 <a id="oojswormhole"></a>
 Upstream `src/Core/Scripting/OOJSWormhole.m` ↔ `Core/Scripting/OOJSWormhole.cpp`
 
-**Status:** pending
+**Status:** done — 9 rows: 9 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `InitOOJSWormhole()` (77) | | |
-| `JSWormholeGetWormholeEntity()` (84) | | |
-| `-[WormholeEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (110) | | |
-| `-[WormholeEntity(OOJavaScriptExtensions) oo_jsClassName]` (116) | | |
-| `-[WormholeEntity(OOJavaScriptExtensions) isVisibleToScripts]` (121) | | |
-| `WormholeGetProperty()` (128) | | |
-| `WormholeSetProperty()` (169) | | |
+| `sWormholeProperties[]` (62): arrivalTime, destination, expiryTime, origin (tinyids 0-3), all READONLY_CB | `sWormholeProperties` `Core/Scripting/OOJSWormhole.cpp:111` (+ `sWormholePropertiesRaw` :124) | ✅ |
+| `sWormholeMethods[]` (71): empty | `sWormholeMethods` `Core/Scripting/OOJSWormhole.cpp:135` | ✅ |
+| `InitOOJSWormhole()` (77) | `InitOOJSWormhole` `Core/Scripting/OOJSWormhole.cpp:142` | ✅ |
+| `JSWormholeGetWormholeEntity()` (84) | `JSWormholeGetWormholeEntity` `Core/Scripting/OOJSWormhole.cpp:151` (`dynamic_cast`; returns false for nil/other as `-isKindOfClass:` did) | ✅ |
+| `-[WormholeEntity(OOJavaScriptExtensions) getJSClass:andPrototype:]` (110) | `OOJSWormholeGetJSClass` `Core/Scripting/OOJSWormhole.cpp:177` | ✅ |
+| `-[WormholeEntity(OOJavaScriptExtensions) oo_jsClassName]` (116) | `OOJSWormholeJSClassName` `Core/Scripting/OOJSWormhole.cpp:183` ("Wormhole") | ✅ |
+| `-[WormholeEntity(OOJavaScriptExtensions) isVisibleToScripts]` (121) | `OOJSWormholeIsVisibleToScripts` `Core/Scripting/OOJSWormhole.cpp:188` | ✅ |
+| `WormholeGetProperty()` (128) | `WormholeGetProperty` `Core/Scripting/OOJSWormhole.cpp:194` | ✅ |
+| `WormholeSetProperty()` (169) | `WormholeSetProperty` `Core/Scripting/OOJSWormhole.cpp:240` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ✅ subtle — All four getters return numbers: `arrivalTime()`, `getDestination()`, `expiryTime()` and `getOrigin()`. The setter has only the `default:` bad-selector path. The unreachable trailing `OOJSValueFromNativeObject(nil)` became `nullValue()` — upstream `:145-191` ↔ port `:214-266`
 
 ## OOJavaScriptEngine
 
