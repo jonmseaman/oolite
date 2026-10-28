@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 14 / 241 upstream `.m` files · extra rows below
+**Progress:** 34 / 241 upstream `.m` files · extra rows below
 
 ## Suspected divergences (ranked)
 
@@ -55,31 +55,31 @@ a row is checked when every method in its coverage table has been compared and i
 
 ### Maths, geometry, collision — [math.md](math.md)
 
-- [ ] `Core/CollisionRegion.m` → `Core/CollisionRegion.cpp` (633 / 670 lines) — *pending* — [findings](math.md#collisionregion)
-- [ ] `Core/OOHPVector.m` → `Core/OOHPVector.cpp` (129 / 139 lines) — *pending* — [findings](math.md#oohpvector)
-- [ ] `Core/OOMatrix.m` → `Core/OOMatrix.cpp` (424 / 435 lines) — *pending* — [findings](math.md#oomatrix)
-- [ ] `Core/OOMeshToOctreeConverter.m` → `Core/OOMeshToOctreeConverter.cpp` (825 / 821 lines) — *pending* — [findings](math.md#oomeshtooctreeconverter)
-- [ ] `Core/OOQuaternion.m` → `Core/OOQuaternion.cpp` (408 / 412 lines) — *pending* — [findings](math.md#ooquaternion)
-- [ ] `Core/OOSpatialReference.m` → *(absorbed — locate in `src/oofnd/` or callers)* (26 / — lines) — *pending* — [findings](math.md#oospatialreference)
-- [ ] `Core/OOVector.m` → `Core/OOVector.cpp` (139 / 151 lines) — *pending* — [findings](math.md#oovector)
-- [x] `Core/OOVoxel.m` → `Core/OOVoxel.c` (197 / 197 lines) — ✅ verbatim (`#import`→`#include`) — [findings](math.md#oovoxel)
-- [ ] `Core/Octree.m` → `Core/Octree.cpp` (906 / 866 lines) — *pending* — [findings](math.md#octree)
+- [x] `Core/CollisionRegion.m` → `Core/CollisionRegion.cpp` (633 / 670 lines) — 19✅ 1⚠️ — [findings](math.md#collisionregion)
+- [x] `Core/OOHPVector.m` → `Core/OOHPVector.cpp` (129 / 139 lines) — 36✅ — [findings](math.md#oohpvector)
+- [x] `Core/OOMatrix.m` → `Core/OOMatrix.cpp` (424 / 435 lines) — 44✅ — [findings](math.md#oomatrix)
+- [x] `Core/OOMeshToOctreeConverter.m` → `Core/OOMeshToOctreeConverter.cpp` (825 / 821 lines) — 19✅ — [findings](math.md#oomeshtooctreeconverter)
+- [x] `Core/OOQuaternion.m` → `Core/OOQuaternion.cpp` (408 / 412 lines) — 26✅ — [findings](math.md#ooquaternion)
+- [x] `Core/OOSpatialReference.m` → *(absorbed — 1✅ 2➖ — [findings](math.md#oospatialreference)
+- [x] `Core/OOVector.m` → `Core/OOVector.cpp` (139 / 151 lines) — 33✅ — [findings](math.md#oovector)
+- [x] `Core/OOVoxel.m` → `Core/OOVoxel.c` (197 / 197 lines) — 7✅ — [findings](math.md#oovoxel)
+- [x] `Core/Octree.m` → `Core/Octree.cpp` (906 / 866 lines) — 34✅ 2⚠️ 2➖ — [findings](math.md#octree)
 
 ### OXP verifier — [oxpverifier.md](oxpverifier.md)
 
-- [ ] `Core/OXPVerifier/OOAIStateMachineVerifierStage.m` → `Core/OXPVerifier/OOAIStateMachineVerifierStage.cpp` (201 / 199 lines) — *pending* — [findings](oxpverifier.md#ooaistatemachineverifierstage)
-- [ ] `Core/OXPVerifier/OOCheckDemoShipsPListVerifierStage.m` → `Core/OXPVerifier/OOCheckDemoShipsPListVerifierStage.cpp` (114 / 93 lines) — *pending* — [findings](oxpverifier.md#oocheckdemoshipsplistverifierstage)
-- [ ] `Core/OXPVerifier/OOCheckEquipmentPListVerifierStage.m` → `Core/OXPVerifier/OOCheckEquipmentPListVerifierStage.cpp` (158 / 153 lines) — *pending* — [findings](oxpverifier.md#oocheckequipmentplistverifierstage)
-- [ ] `Core/OXPVerifier/OOCheckJSSyntaxVerifierStage.m` → `Core/OXPVerifier/OOCheckJSSyntaxVerifierStage.cpp` (90 / 96 lines) — *pending* — [findings](oxpverifier.md#oocheckjssyntaxverifierstage)
-- [ ] `Core/OXPVerifier/OOCheckPListSyntaxVerifierStage.m` → `Core/OXPVerifier/OOCheckPListSyntaxVerifierStage.cpp` (91 / 102 lines) — *pending* — [findings](oxpverifier.md#oocheckplistsyntaxverifierstage)
-- [ ] `Core/OXPVerifier/OOCheckRequiresPListVerifierStage.m` → `Core/OXPVerifier/OOCheckRequiresPListVerifierStage.cpp` (143 / 168 lines) — *pending* — [findings](oxpverifier.md#oocheckrequiresplistverifierstage)
-- [ ] `Core/OXPVerifier/OOCheckShipDataPListVerifierStage.m` → `Core/OXPVerifier/OOCheckShipDataPListVerifierStage.cpp` (363 / 359 lines) — *pending* — [findings](oxpverifier.md#oocheckshipdataplistverifierstage)
-- [ ] `Core/OXPVerifier/OOFileScannerVerifierStage.m` → `Core/OXPVerifier/OOFileScannerVerifierStage.cpp` (701 / 662 lines) — *pending* — [findings](oxpverifier.md#oofilescannerverifierstage)
-- [ ] `Core/OXPVerifier/OOModelVerifierStage.m` → `Core/OXPVerifier/OOModelVerifierStage.cpp` (191 / 114 lines) — *pending* — [findings](oxpverifier.md#oomodelverifierstage)
-- [ ] `Core/OXPVerifier/OOOXPVerifier.m` → `Core/OXPVerifier/OOOXPVerifier.cpp` (690 / 733 lines) — *pending* — [findings](oxpverifier.md#oooxpverifier)
-- [ ] `Core/OXPVerifier/OOOXPVerifierStage.m` → `Core/OXPVerifier/OOOXPVerifierStage.cpp` (211 / 237 lines) — *pending* — [findings](oxpverifier.md#oooxpverifierstage)
+- [x] `Core/OXPVerifier/OOAIStateMachineVerifierStage.m` → `Core/OXPVerifier/OOAIStateMachineVerifierStage.cpp` (201 / 199 lines) — 5✅ 1❌ 1➖ — [findings](oxpverifier.md#ooaistatemachineverifierstage)
+- [x] `Core/OXPVerifier/OOCheckDemoShipsPListVerifierStage.m` → `Core/OXPVerifier/OOCheckDemoShipsPListVerifierStage.cpp` (114 / 93 lines) — 4✅ — [findings](oxpverifier.md#oocheckdemoshipsplistverifierstage)
+- [x] `Core/OXPVerifier/OOCheckEquipmentPListVerifierStage.m` → `Core/OXPVerifier/OOCheckEquipmentPListVerifierStage.cpp` (158 / 153 lines) — 4✅ — [findings](oxpverifier.md#oocheckequipmentplistverifierstage)
+- [x] `Core/OXPVerifier/OOCheckJSSyntaxVerifierStage.m` → `Core/OXPVerifier/OOCheckJSSyntaxVerifierStage.cpp` (90 / 96 lines) — 2✅ 1⚠️ — [findings](oxpverifier.md#oocheckjssyntaxverifierstage)
+- [x] `Core/OXPVerifier/OOCheckPListSyntaxVerifierStage.m` → `Core/OXPVerifier/OOCheckPListSyntaxVerifierStage.cpp` (91 / 102 lines) — 3✅ — [findings](oxpverifier.md#oocheckplistsyntaxverifierstage)
+- [x] `Core/OXPVerifier/OOCheckRequiresPListVerifierStage.m` → `Core/OXPVerifier/OOCheckRequiresPListVerifierStage.cpp` (143 / 168 lines) — 2✅ 1❌ — [findings](oxpverifier.md#oocheckrequiresplistverifierstage)
+- [x] `Core/OXPVerifier/OOCheckShipDataPListVerifierStage.m` → `Core/OXPVerifier/OOCheckShipDataPListVerifierStage.cpp` (363 / 359 lines) — 12✅ 2❌ — [findings](oxpverifier.md#oocheckshipdataplistverifierstage)
+- [x] `Core/OXPVerifier/OOFileScannerVerifierStage.m` → `Core/OXPVerifier/OOFileScannerVerifierStage.cpp` (701 / 662 lines) — 20✅ 1⚠️ 3❌ 2➖ — [findings](oxpverifier.md#oofilescannerverifierstage)
+- [x] `Core/OXPVerifier/OOModelVerifierStage.m` → `Core/OXPVerifier/OOModelVerifierStage.cpp` (191 / 114 lines) — 4✅ 2❌ 3➖ — [findings](oxpverifier.md#oomodelverifierstage)
+- [x] `Core/OXPVerifier/OOOXPVerifier.m` → `Core/OXPVerifier/OOOXPVerifier.cpp` (690 / 733 lines) — 15✅ 3⚠️ 4❌ 1➖ — [findings](oxpverifier.md#oooxpverifier)
+- [x] `Core/OXPVerifier/OOOXPVerifierStage.m` → `Core/OXPVerifier/OOOXPVerifierStage.cpp` (211 / 237 lines) — 18✅ 1⚠️ 2➖ — [findings](oxpverifier.md#oooxpverifierstage)
 - [ ] `Core/OXPVerifier/OOPListSchemaVerifier.m` → `Core/OXPVerifier/OOPListSchemaVerifier.cpp` (1393 / 1456 lines) — *pending* — [findings](oxpverifier.md#ooplistschemaverifier)
-- [ ] `Core/OXPVerifier/OOTextureVerifierStage.m` → `Core/OXPVerifier/OOTextureVerifierStage.cpp` (187 / 143 lines) — *pending* — [findings](oxpverifier.md#ootextureverifierstage)
+- [x] `Core/OXPVerifier/OOTextureVerifierStage.m` → `Core/OXPVerifier/OOTextureVerifierStage.cpp` (187 / 143 lines) — 5✅ 2❌ 3➖ — [findings](oxpverifier.md#ootextureverifierstage)
 
 ### Scripting (JS engine, OOJS*, legacy scripts, JS console) — [scripting.md](scripting.md)
 
@@ -298,4 +298,5 @@ a row is checked when every method in its coverage table has been compared and i
 
 - [x] C sources and tables (`*.c`, `Tables/*.tbl`, `OOSaveEXRSnapshot.cpp`) verbatim check — ✅ identical except include/NDEBUG plumbing — [c-and-tables.md](c-and-tables.md)
 - [ ] C++-only files (`EntityHelpers`, `OOEntityCalledByName`, `OODataFromOXZFile`, `OOPListGameTypes`, `OOJSEngineNativeWrappers`, `OOJSPrivateObject`, `ooscript/JSEngine_quickjs.cpp`, `oofnd/Exception.cpp`, `oofnd/objc/OOAssert.cpp`) reviewed against what they replace — *pending* — [cpp-only.md](cpp-only.md)
+- [x] Maths headers (`OOMaths.h`, `OOFastArithmetic.h`, inline functions in `OOVector.h`/`OOHPVector.h`/`OOQuaternion.h`/`OOMatrix.h`) — 11✅ 2⚠️ — [findings](math.md#oomaths)
 - [ ] Header constants sweep (`#define`, enums, default values across paired `.h`) — *pending* — [headers.md](headers.md)
