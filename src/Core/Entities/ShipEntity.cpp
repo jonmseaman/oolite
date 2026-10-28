@@ -2555,7 +2555,9 @@ void ShipEntity::update(OOTimeDelta delta_t) {
           subEntities;  // a snapshot, as -subEntities copied
       for (const auto& sub : subs) {
         ::ShipEntity* se = oo::ToShip(sub.get());
-        if (se != nullptr) se->update(delta_t);
+        // every subentity, as [se update:] went to each: flashers and
+        // exhaust plumes too
+        if (sub.get() != nullptr) sub.get()->update(delta_t);
         if ((se != nullptr ? se->getIsShip() : false)) {
           BoundingBox sebb =
               (se != nullptr ? se->findSubentityBoundingBox() : BoundingBox{});
@@ -2869,8 +2871,9 @@ void ShipEntity::update(OOTimeDelta delta_t) {
         const std::vector<oo::EntityHold> subs =
             subEntities;  // a snapshot, as -subEntities copied
         for (const auto& sub : subs) {
-          ::ShipEntity* se = oo::ToShip(sub.get());
-          if (se != nullptr) se->update(delta_t);
+          // every subentity, as [se update:] went to each: flashers and
+          // exhaust plumes too
+          if (sub.get() != nullptr) sub.get()->update(delta_t);
         }
       }
       // super update
@@ -2976,7 +2979,9 @@ void ShipEntity::update(OOTimeDelta delta_t) {
         subEntities;  // a snapshot, as -subEntities copied
     for (const auto& sub : subs) {
       ::ShipEntity* se = oo::ToShip(sub.get());
-      if (se != nullptr) se->update(delta_t);
+      // every subentity, as [se update:] went to each: flashers and
+      // exhaust plumes too
+      if (sub.get() != nullptr) sub.get()->update(delta_t);
       if ((se != nullptr ? se->getIsShip() : false)) {
         BoundingBox sebb =
             (se != nullptr ? se->findSubentityBoundingBox() : BoundingBox{});

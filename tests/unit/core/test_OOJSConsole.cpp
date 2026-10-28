@@ -613,12 +613,13 @@ OO_TEST(theSettingsAreTheMonitorsConfiguration) {
   OO_CHECK_EVAL("console.settings['font-size'] = 14", "14");
   OO_CHECK_EVAL("console.settings['font-face'] = 'Courier'", "Courier");
   OO_CHECK_EVAL("console.settings['gone'] = null", "null");
-  // delete of a setting is true, but the backend does not call the class's
-  // delete hook for a property the object does not have, so the monitor is not
-  // told.
+  // delete of a setting is true and clears it on the monitor: the class's
+  // delete hook runs whether or not the object has the property, as
+  // SpiderMonkey ran it (upstream's ConsoleSettingsDeleteProperty sent
+  // -setConfigurationValue:nil forKey:).
   OO_CHECK_EVAL("delete console.settings['also-gone']", "true");
-  OO_CHECK(sMonitor.configurationSets.size() == 3);
-  if (sMonitor.configurationSets.size() == 3) {
+  OO_CHECK(sMonitor.configurationSets.size() == 4);
+  if (sMonitor.configurationSets.size() == 4) {
     OO_CHECK(sMonitor.configurationSets[0].first == "font-size" &&
              sMonitor.configurationSets[0].second == oo::PList(14.0));
     OO_CHECK(sMonitor.configurationSets[1].first == "font-face" &&
@@ -626,12 +627,14 @@ OO_TEST(theSettingsAreTheMonitorsConfiguration) {
                  oo::PList(std::string("Courier")));
     OO_CHECK(sMonitor.configurationSets[2].first == "gone" &&
              sMonitor.configurationSets[2].second.isNull());
+    OO_CHECK(sMonitor.configurationSets[3].first == "also-gone" &&
+             sMonitor.configurationSets[3].second.isNull());
   }
 
   // A value the engine cannot convert is a warning, not a setting.
   sWarnings.clear();
   OO_CHECK_EVAL("console.settings['f'] = {}", "[object Object]");
-  OO_CHECK(sMonitor.configurationSets.size() == 3);
+  OO_CHECK(sMonitor.configurationSets.size() == 4);
   OO_CHECK(sWarnings.size() == 1);
 }
 
