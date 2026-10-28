@@ -10,48 +10,49 @@ Each section: method coverage table (every upstream method / C function → C++ 
 <a id="oobasicmaterial"></a>
 Upstream `src/Core/Materials/OOBasicMaterial.m` ↔ `Core/Materials/OOBasicMaterial.cpp`
 
-**Status:** pending
+**Status:** done — 33 rows: 32 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOBasicMaterial initWithName:]` (41) | | |
-| `-[OOBasicMaterial initWithName:configuration:]` (57) | | |
-| `-[OOBasicMaterial dealloc]` (94) | | |
-| `-[OOBasicMaterial name]` (102) | | |
-| `-[OOBasicMaterial doApply]` (107) | | |
-| `-[OOBasicMaterial unapplyWithNext:]` (121) | | |
-| `-[OOBasicMaterial diffuseColor]` (130) | | |
-| `-[OOBasicMaterial setDiffuseColor:]` (138) | | |
-| `-[OOBasicMaterial setAmbientAndDiffuseColor:]` (148) | | |
-| `-[OOBasicMaterial specularColor]` (154) | | |
-| `-[OOBasicMaterial setSpecularColor:]` (162) | | |
-| `-[OOBasicMaterial ambientColor]` (172) | | |
-| `-[OOBasicMaterial setAmbientColor:]` (180) | | |
-| `-[OOBasicMaterial emmisionColor]` (190) | | |
-| `-[OOBasicMaterial setEmissionColor:]` (198) | | |
-| `-[OOBasicMaterial getDiffuseComponents:]` (208) | | |
-| `-[OOBasicMaterial setDiffuseComponents:]` (213) | | |
-| `-[OOBasicMaterial setAmbientAndDiffuseComponents:]` (218) | | |
-| `-[OOBasicMaterial getSpecularComponents:]` (224) | | |
-| `-[OOBasicMaterial setSpecularComponents:]` (229) | | |
-| `-[OOBasicMaterial getAmbientComponents:]` (234) | | |
-| `-[OOBasicMaterial setAmbientComponents:]` (239) | | |
-| `-[OOBasicMaterial getEmissionComponents:]` (244) | | |
-| `-[OOBasicMaterial setEmissionComponents:]` (249) | | |
-| `-[OOBasicMaterial setDiffuseRed:green:blue:alpha:]` (254) | | |
-| `-[OOBasicMaterial setAmbientAndDiffuseRed:green:blue:alpha:]` (262) | | |
-| `-[OOBasicMaterial setSpecularRed:green:blue:alpha:]` (268) | | |
-| `-[OOBasicMaterial setAmbientRed:green:blue:alpha:]` (276) | | |
-| `-[OOBasicMaterial setEmissionRed:green:blue:alpha:]` (284) | | |
-| `-[OOBasicMaterial shininess]` (292) | | |
-| `-[OOBasicMaterial setShininess:]` (297) | | |
-| `-[OOBasicMaterial permitSpecular]` (302) | | |
-| `-[OOBasicMaterial allTextures]` (308) | | |
+| `-[OOBasicMaterial initWithName:]` (41) | `OOBasicMaterial::initWithName(name)` `Core/Materials/OOBasicMaterial.cpp:61` | ✅ |
+| `-[OOBasicMaterial initWithName:configuration:]` (57) | `OOBasicMaterial::initWithName(name, configuration)` `Core/Materials/OOBasicMaterial.cpp:71` | ✅ |
+| `-[OOBasicMaterial dealloc]` (94) | none (implicit destructor; `willDealloc` not called) | ⚠️ |
+| `-[OOBasicMaterial name]` (102) | `OOBasicMaterial::name` `Core/Materials/OOBasicMaterial.cpp:108` | ✅ |
+| `-[OOBasicMaterial doApply]` (107) | `OOBasicMaterial::doApply` `Core/Materials/OOBasicMaterial.cpp:113` | ✅ |
+| `-[OOBasicMaterial unapplyWithNext:]` (121) | `OOBasicMaterial::unapplyWithNext` `Core/Materials/OOBasicMaterial.cpp:128` | ✅ |
+| `-[OOBasicMaterial diffuseColor]` (130) | `OOBasicMaterial::diffuseColor` `Core/Materials/OOBasicMaterial.cpp:138` | ✅ |
+| `-[OOBasicMaterial setDiffuseColor:]` (138) | `OOBasicMaterial::setDiffuseColor` `Core/Materials/OOBasicMaterial.cpp:146` | ✅ |
+| `-[OOBasicMaterial setAmbientAndDiffuseColor:]` (148) | `OOBasicMaterial::setAmbientAndDiffuseColor` `Core/Materials/OOBasicMaterial.cpp:156` | ✅ |
+| `-[OOBasicMaterial specularColor]` (154) | `OOBasicMaterial::specularColor` `Core/Materials/OOBasicMaterial.cpp:162` | ✅ |
+| `-[OOBasicMaterial setSpecularColor:]` (162) | `OOBasicMaterial::setSpecularColor` `Core/Materials/OOBasicMaterial.cpp:170` | ✅ |
+| `-[OOBasicMaterial ambientColor]` (172) | `OOBasicMaterial::ambientColor` `Core/Materials/OOBasicMaterial.cpp:180` | ✅ |
+| `-[OOBasicMaterial setAmbientColor:]` (180) | `OOBasicMaterial::setAmbientColor` `Core/Materials/OOBasicMaterial.cpp:188` | ✅ |
+| `-[OOBasicMaterial emmisionColor]` (190) | `OOBasicMaterial::emmisionColor` `Core/Materials/OOBasicMaterial.cpp:198` | ✅ |
+| `-[OOBasicMaterial setEmissionColor:]` (198) | `OOBasicMaterial::setEmissionColor` `Core/Materials/OOBasicMaterial.cpp:206` | ✅ |
+| `-[OOBasicMaterial getDiffuseComponents:]` (208) | `OOBasicMaterial::getDiffuseComponents` `Core/Materials/OOBasicMaterial.cpp:216` | ✅ |
+| `-[OOBasicMaterial setDiffuseComponents:]` (213) | `OOBasicMaterial::setDiffuseComponents` `Core/Materials/OOBasicMaterial.cpp:221` | ✅ |
+| `-[OOBasicMaterial setAmbientAndDiffuseComponents:]` (218) | `OOBasicMaterial::setAmbientAndDiffuseComponents` `Core/Materials/OOBasicMaterial.cpp:226` | ✅ |
+| `-[OOBasicMaterial getSpecularComponents:]` (224) | `OOBasicMaterial::getSpecularComponents` `Core/Materials/OOBasicMaterial.cpp:232` | ✅ |
+| `-[OOBasicMaterial setSpecularComponents:]` (229) | `OOBasicMaterial::setSpecularComponents` `Core/Materials/OOBasicMaterial.cpp:237` | ✅ |
+| `-[OOBasicMaterial getAmbientComponents:]` (234) | `OOBasicMaterial::getAmbientComponents` `Core/Materials/OOBasicMaterial.cpp:242` | ✅ |
+| `-[OOBasicMaterial setAmbientComponents:]` (239) | `OOBasicMaterial::setAmbientComponents` `Core/Materials/OOBasicMaterial.cpp:247` | ✅ |
+| `-[OOBasicMaterial getEmissionComponents:]` (244) | `OOBasicMaterial::getEmissionComponents` `Core/Materials/OOBasicMaterial.cpp:252` | ✅ |
+| `-[OOBasicMaterial setEmissionComponents:]` (249) | `OOBasicMaterial::setEmissionComponents` `Core/Materials/OOBasicMaterial.cpp:257` | ✅ |
+| `-[OOBasicMaterial setDiffuseRed:green:blue:alpha:]` (254) | `OOBasicMaterial::setDiffuseRed` `Core/Materials/OOBasicMaterial.cpp:262` | ✅ |
+| `-[OOBasicMaterial setAmbientAndDiffuseRed:green:blue:alpha:]` (262) | `OOBasicMaterial::setAmbientAndDiffuseRed` `Core/Materials/OOBasicMaterial.cpp:270` | ✅ |
+| `-[OOBasicMaterial setSpecularRed:green:blue:alpha:]` (268) | `OOBasicMaterial::setSpecularRed` `Core/Materials/OOBasicMaterial.cpp:276` | ✅ |
+| `-[OOBasicMaterial setAmbientRed:green:blue:alpha:]` (276) | `OOBasicMaterial::setAmbientRed` `Core/Materials/OOBasicMaterial.cpp:284` | ✅ |
+| `-[OOBasicMaterial setEmissionRed:green:blue:alpha:]` (284) | `OOBasicMaterial::setEmissionRed` `Core/Materials/OOBasicMaterial.cpp:292` | ✅ |
+| `-[OOBasicMaterial shininess]` (292) | `OOBasicMaterial::shininess` `Core/Materials/OOBasicMaterial.cpp:300` | ✅ |
+| `-[OOBasicMaterial setShininess:]` (297) | `OOBasicMaterial::setShininess` `Core/Materials/OOBasicMaterial.cpp:305` | ✅ |
+| `-[OOBasicMaterial permitSpecular]` (302) | `OOBasicMaterial::permitSpecular` `Core/Materials/OOBasicMaterial.cpp:310` | ✅ |
+| `-[OOBasicMaterial allTextures]` (308) | `OOBasicMaterial::allTextures` `Core/Materials/OOBasicMaterial.cpp:316` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `-dealloc`'s `[super willDealloc]` has no counterpart. The current-material slot holds an `oo::Ref`, so a material cannot be destroyed while it is current, and nothing calls `willDealloc()`. This is documented at `Core/Materials/OOMaterial.h:111-116` (proposed ADR-0056, amendments oo-smy and oo-9ht.8) — upstream `Core/Materials/OOBasicMaterial.m:94-100` ↔ port `Core/Materials/OOMaterial.h:116`
+- Subtle (✅): the configuration defaults are the same. Diffuse and ambient default to white; specular and emission default to (0,0,0,1); shininess defaults to 0. With no exponent key the specular exponent defaults to 10, `setShininess` clamps to 128, and an exponent above 255 wraps through `uint8_t` exactly as upstream did. The specular colour defaults to 0.2 grey. Ambient falls back to the diffuse colour. A white `diffuse_color` and a black `emission_color` are dropped by the specifier. — upstream `Core/Materials/OOBasicMaterial.m:57-92` ↔ port `Core/Materials/OOBasicMaterial.cpp:71-106`
+- Subtle (✅): `-isMemberOfClass:` became `typeid(*this) == typeid(OOBasicMaterial)` and `-isKindOfClass:` became `dynamic_cast`. For a null `next`, `dynamic_cast` gives null, so the default material is applied as it was for nil — port `Core/Materials/OOBasicMaterial.cpp:121,131`
 
 ## OOCombinedEmissionMapGenerator
 
@@ -128,185 +129,194 @@ Upstream `src/Core/Materials/OOConcreteTexture.m` ↔ `Core/Materials/OOConcrete
 <a id="oodefaultshadersynthesizer"></a>
 Upstream `src/Core/Materials/OODefaultShaderSynthesizer.m` ↔ `Core/Materials/OODefaultShaderSynthesizer.cpp`
 
-**Status:** pending
+**Status:** done — 47 rows: 46 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOSynthesizeMaterialShader()` (264) | | |
-| `-[OODefaultShaderSynthesizer initWithMaterialConfiguration:]` (301) | | |
-| `-[OODefaultShaderSynthesizer dealloc]` (314) | | |
-| `-[OODefaultShaderSynthesizer vertexShader]` (327) | | |
-| `-[OODefaultShaderSynthesizer fragmentShader]` (332) | | |
-| `-[OODefaultShaderSynthesizer textureSpecifications]` (337) | | |
-| `-[OODefaultShaderSynthesizer uniformSpecifications]` (346) | | |
-| `-[OODefaultShaderSynthesizer run]` (355) | | |
-| `-[OODefaultShaderSynthesizer materialKey]` (379) | | |
-| `-[OODefaultShaderSynthesizer entityName]` (384) | | |
-| `AppendIfNotEmpty()` (391) | | |
-| `GetExtractMode()` (402) | | |
-| `-[OODefaultShaderSynthesizer appendVariable:ofType:withPrefix:to:]` (424) | | |
-| `-[OODefaultShaderSynthesizer addAttribute:ofType:]` (431) | | |
-| `-[OODefaultShaderSynthesizer addVarying:ofType:]` (436) | | |
-| `-[OODefaultShaderSynthesizer addVertexUniform:ofType:]` (441) | | |
-| `-[OODefaultShaderSynthesizer addFragmentUniform:ofType:]` (446) | | |
-| `-[OODefaultShaderSynthesizer defineBindingUniform:ofType:]` (451) | | |
-| `-[OODefaultShaderSynthesizer composeVertexShader]` (484) | | |
-| `-[OODefaultShaderSynthesizer composeFragmentShader]` (505) | | |
-| `KeyFromTextureParameters()` (537) | | |
-| `KeyFromTextureSpec()` (549) | | |
-| `-[OODefaultShaderSynthesizer assignIDForTexture:]` (562) | | |
-| `-[OODefaultShaderSynthesizer textureIDForSpec:]` (613) | | |
-| `-[OODefaultShaderSynthesizer setUpOneTexture:]` (618) | | |
-| `-[OODefaultShaderSynthesizer getSampleName:andSwizzleOp:forTextureSpec:]` (632) | | |
-| `-[OODefaultShaderSynthesizer readRGBForTextureSpec:mapName:]` (643) | | |
-| `-[OODefaultShaderSynthesizer readOneChannelForTextureSpec:mapName:]` (664) | | |
-| `-[OODefaultShaderSynthesizer performStage:]` (684) | | |
-| `-[OODefaultShaderSynthesizer createTemporaries]` (700) | | |
-| `-[OODefaultShaderSynthesizer destroyTemporaries]` (725) | | |
-| `-[OODefaultShaderSynthesizer writeTextureCoordRead]` (757) | | |
-| `-[OODefaultShaderSynthesizer writeDiffuseColorTermIfNeeded]` (806) | | |
-| `-[OODefaultShaderSynthesizer writeDiffuseColorTerm]` (843) | | |
-| `-[OODefaultShaderSynthesizer writeDiffuseLighting]` (852) | | |
-| `-[OODefaultShaderSynthesizer writeLightVector]` (874) | | |
-| `-[OODefaultShaderSynthesizer writeEyeVector]` (887) | | |
-| `-[OODefaultShaderSynthesizer writeVertexTangentBasis]` (898) | | |
-| `-[OODefaultShaderSynthesizer writeNormalIfNeeded]` (910) | | |
-| `-[OODefaultShaderSynthesizer writeNormal]` (936) | | |
-| `-[OODefaultShaderSynthesizer writeSpecularLighting]` (945) | | |
-| `-[OODefaultShaderSynthesizer writeLightMaps]` (1059) | | |
-| `-[OODefaultShaderSynthesizer writeVertexPosition]` (1163) | | |
-| `-[OODefaultShaderSynthesizer writeTotalColor]` (1170) | | |
-| `-[OODefaultShaderSynthesizer writeFinalColorComposite]` (1175) | | |
-| `CanonicalizeMaterialSpecifier()` (1198) | | |
-| `FormatFloat()` (1443) | | |
+| `OOSynthesizeMaterialShader()` (264) | `OOSynthesizeMaterialShader` `Core/Materials/OODefaultShaderSynthesizer.cpp:81` | ✅ |
+| `-[OODefaultShaderSynthesizer initWithMaterialConfiguration:]` (301) | `OODefaultShaderSynthesizer::OODefaultShaderSynthesizer` `Core/Materials/OODefaultShaderSynthesizer.cpp:105` | ✅ |
+| `-[OODefaultShaderSynthesizer dealloc]` (314) | implicit destructor (comment `Core/Materials/OODefaultShaderSynthesizer.cpp:112`) | ✅ |
+| `-[OODefaultShaderSynthesizer vertexShader]` (327) | `vertexShader` `Core/Materials/OODefaultShaderSynthesizer.cpp:116` | ✅ |
+| `-[OODefaultShaderSynthesizer fragmentShader]` (332) | `fragmentShader` `Core/Materials/OODefaultShaderSynthesizer.cpp:121` | ✅ |
+| `-[OODefaultShaderSynthesizer textureSpecifications]` (337) | `textureSpecifications` `Core/Materials/OODefaultShaderSynthesizer.cpp:126` | ✅ |
+| `-[OODefaultShaderSynthesizer uniformSpecifications]` (346) | `uniformSpecifications` `Core/Materials/OODefaultShaderSynthesizer.cpp:131` | ✅ |
+| `-[OODefaultShaderSynthesizer run]` (355) | `run` `Core/Materials/OODefaultShaderSynthesizer.cpp:136` | ✅ |
+| `-[OODefaultShaderSynthesizer materialKey]` (379) | `materialKey` `Core/Materials/OODefaultShaderSynthesizer.cpp:160` | ✅ |
+| `-[OODefaultShaderSynthesizer entityName]` (384) | `entityName` `Core/Materials/OODefaultShaderSynthesizer.cpp:165` | ✅ |
+| `AppendIfNotEmpty()` (391) | `AppendIfNotEmpty` `Core/Materials/OODefaultShaderSynthesizer.cpp:174` | ✅ |
+| `GetExtractMode()` (402) | `GetExtractMode` `Core/Materials/OODefaultShaderSynthesizer.cpp:196` | ✅ |
+| `-[OODefaultShaderSynthesizer appendVariable:ofType:withPrefix:to:]` (424) | `appendVariable` `Core/Materials/OODefaultShaderSynthesizer.cpp:223` | ✅ |
+| `-[OODefaultShaderSynthesizer addAttribute:ofType:]` (431) | `addAttribute` `Core/Materials/OODefaultShaderSynthesizer.cpp:230` | ✅ |
+| `-[OODefaultShaderSynthesizer addVarying:ofType:]` (436) | `addVarying` `Core/Materials/OODefaultShaderSynthesizer.cpp:235` | ✅ |
+| `-[OODefaultShaderSynthesizer addVertexUniform:ofType:]` (441) | `addVertexUniform` `Core/Materials/OODefaultShaderSynthesizer.cpp:240` | ✅ |
+| `-[OODefaultShaderSynthesizer addFragmentUniform:ofType:]` (446) | `addFragmentUniform` `Core/Materials/OODefaultShaderSynthesizer.cpp:245` | ✅ |
+| `-[OODefaultShaderSynthesizer defineBindingUniform:ofType:]` (451) | `defineBindingUniform` `Core/Materials/OODefaultShaderSynthesizer.cpp:250` | ✅ |
+| `-[OODefaultShaderSynthesizer composeVertexShader]` (484) | `composeVertexShader` `Core/Materials/OODefaultShaderSynthesizer.cpp:287` | ✅ |
+| `-[OODefaultShaderSynthesizer composeFragmentShader]` (505) | `composeFragmentShader` `Core/Materials/OODefaultShaderSynthesizer.cpp:304` | ✅ |
+| `KeyFromTextureParameters()` (537) | `KeyFromTextureParameters` `Core/Materials/OODefaultShaderSynthesizer.cpp:334` | ✅ |
+| `KeyFromTextureSpec()` (549) | `KeyFromTextureSpec` `Core/Materials/OODefaultShaderSynthesizer.cpp:346` | ✅ |
+| `-[OODefaultShaderSynthesizer assignIDForTexture:]` (562) | `assignIDForTexture` `Core/Materials/OODefaultShaderSynthesizer.cpp:361` | ✅ |
+| `-[OODefaultShaderSynthesizer textureIDForSpec:]` (613) | `textureIDForSpec` `Core/Materials/OODefaultShaderSynthesizer.cpp:413` | ✅ |
+| `-[OODefaultShaderSynthesizer setUpOneTexture:]` (618) | `setUpOneTexture` `Core/Materials/OODefaultShaderSynthesizer.cpp:419` | ✅ |
+| `-[OODefaultShaderSynthesizer getSampleName:andSwizzleOp:forTextureSpec:]` (632) | `getSampleName` `Core/Materials/OODefaultShaderSynthesizer.cpp:432` | ✅ |
+| `-[OODefaultShaderSynthesizer readRGBForTextureSpec:mapName:]` (643) | `readRGBForTextureSpec` `Core/Materials/OODefaultShaderSynthesizer.cpp:443` | ✅ |
+| `-[OODefaultShaderSynthesizer readOneChannelForTextureSpec:mapName:]` (664) | `readOneChannelForTextureSpec` `Core/Materials/OODefaultShaderSynthesizer.cpp:464` | ✅ |
+| `-[OODefaultShaderSynthesizer performStage:]` (684) | `performStage` `Core/Materials/OODefaultShaderSynthesizer.cpp:484` | ✅ |
+| `-[OODefaultShaderSynthesizer createTemporaries]` (700) | `createTemporaries` `Core/Materials/OODefaultShaderSynthesizer.cpp:500` | ✅ |
+| `-[OODefaultShaderSynthesizer destroyTemporaries]` (725) | `destroyTemporaries` `Core/Materials/OODefaultShaderSynthesizer.cpp:525` | ✅ |
+| `-[OODefaultShaderSynthesizer writeTextureCoordRead]` (757) | `writeTextureCoordRead` `Core/Materials/OODefaultShaderSynthesizer.cpp:553` | ✅ |
+| `-[OODefaultShaderSynthesizer writeDiffuseColorTermIfNeeded]` (806) | `writeDiffuseColorTermIfNeeded` `Core/Materials/OODefaultShaderSynthesizer.cpp:602` | ✅ |
+| `-[OODefaultShaderSynthesizer writeDiffuseColorTerm]` (843) | `writeDiffuseColorTerm` `Core/Materials/OODefaultShaderSynthesizer.cpp:639` | ✅ |
+| `-[OODefaultShaderSynthesizer writeDiffuseLighting]` (852) | `writeDiffuseLighting` `Core/Materials/OODefaultShaderSynthesizer.cpp:648` | ✅ |
+| `-[OODefaultShaderSynthesizer writeLightVector]` (874) | `writeLightVector` `Core/Materials/OODefaultShaderSynthesizer.cpp:670` | ✅ |
+| `-[OODefaultShaderSynthesizer writeEyeVector]` (887) | `writeEyeVector` `Core/Materials/OODefaultShaderSynthesizer.cpp:682` | ✅ |
+| `-[OODefaultShaderSynthesizer writeVertexTangentBasis]` (898) | `writeVertexTangentBasis` `Core/Materials/OODefaultShaderSynthesizer.cpp:693` | ✅ |
+| `-[OODefaultShaderSynthesizer writeNormalIfNeeded]` (910) | `writeNormalIfNeeded` `Core/Materials/OODefaultShaderSynthesizer.cpp:704` | ✅ |
+| `-[OODefaultShaderSynthesizer writeNormal]` (936) | `writeNormal` `Core/Materials/OODefaultShaderSynthesizer.cpp:730` | ✅ |
+| `-[OODefaultShaderSynthesizer writeSpecularLighting]` (945) | `writeSpecularLighting` `Core/Materials/OODefaultShaderSynthesizer.cpp:739` | ✅ |
+| `-[OODefaultShaderSynthesizer writeLightMaps]` (1059) | `writeLightMaps` `Core/Materials/OODefaultShaderSynthesizer.cpp:850` | ✅ |
+| `-[OODefaultShaderSynthesizer writeVertexPosition]` (1163) | `writeVertexPosition` `Core/Materials/OODefaultShaderSynthesizer.cpp:957` | ✅ |
+| `-[OODefaultShaderSynthesizer writeTotalColor]` (1170) | `writeTotalColor` `Core/Materials/OODefaultShaderSynthesizer.cpp:963` | ✅ |
+| `-[OODefaultShaderSynthesizer writeFinalColorComposite]` (1175) | `writeFinalColorComposite` `Core/Materials/OODefaultShaderSynthesizer.cpp:968` | ✅ |
+| `CanonicalizeMaterialSpecifier()` (1198) | `CanonicalizeMaterialSpecifier` `Core/Materials/OODefaultShaderSynthesizer.cpp:1033` | ⚠️ |
+| `FormatFloat()` (1443) | `FormatFloat` `Core/Materials/OODefaultShaderSynthesizer.cpp:1255` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `light_map` entry whose `color` is a non-array description that is not a colour: upstream did `setObject:nil` (throws `NSInvalidArgumentException` outside `-run`'s `@try`); port erases the key and continues. Also nil `materialKey` / non-string diffuse `name` no longer throw (port uses `""` / keeps the dict). Commented at `:1181,1086` — upstream `Core/Materials/OODefaultShaderSynthesizer.m:1236-1252,1368-1372` ↔ port `Core/Materials/OODefaultShaderSynthesizer.cpp:1069-1088,1177-1186`
+- Subtle (✅) — **emitted GLSL**: every format string, the indentation and tabs (`appendVariable` padding `(23-len)/4`), the section headers (`// Attributes`, `// Uniforms`, …), the trimming of trailing `"\t\n"`, `FormatFloat` (`%lli.0`, else `%g`), the `%.1f` specular exponent, the `uTexture%zu`/`tex%zuSample` naming and the stage order all match line for line. No change in the emitted shader text was found.
+- Subtle (✅): upstream bugs are kept. The second texture with an existing key looks up its ID by `texName` and so gets 0 (commented at `:405`). `_entityName` stays nil (`:109`). `defineBindingUniform` declares the uniform with the *binding* type (`float`/`vector`/`color`), not the GLSL type, so the emitted `uniform vector uX;` is invalid GLSL. `OOSynthesizeMaterialShader` returns YES even when synthesis fails. — upstream `Core/Materials/OODefaultShaderSynthesizer.m:296,308,607,1143` ↔ port `Core/Materials/OODefaultShaderSynthesizer.cpp:102,109,406,937`
+- Subtle (✅): `run` catches only game exceptions (`oo::CurrentOOException`) and rethrows the rest; upstream `@catch (NSException*)`. Every raise inside the stages is `OORaiseException`, so all of them are caught — port `Core/Materials/OODefaultShaderSynthesizer.cpp:149-155`
+- Note: the synthesizer is not reached in either tree. `USE_NEW_SHADER_SYNTHESIZER` is 0 (`OOMaterialConvenienceCreators.m:29` ↔ `.cpp:29`), so none of the above is live today.
+- Subtle (✅ low): the `material.canonicalForm` log prints `oo::DescriptionOf()` of the dictionaries, not `-[NSDictionary description]`. The text can differ in formatting and key order — port `Core/Materials/OODefaultShaderSynthesizer.cpp:1250`
 
 ## OOMaterial
 
 <a id="oomaterial"></a>
 Upstream `src/Core/Materials/OOMaterial.m` ↔ `Core/Materials/OOMaterial.cpp`
 
-**Status:** pending
+**Status:** done — 16 rows: 15 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OOMaterial setUp]` (36) | | |
-| `-[OOMaterial dealloc]` (41) | | |
-| `-[OOMaterial descriptionComponents]` (49) | | |
-| `-[OOMaterial name]` (54) | | |
-| `-[OOMaterial apply]` (61) | | |
-| `+[OOMaterial applyNone]` (72) | | |
-| `+[OOMaterial current]` (79) | | |
-| `-[OOMaterial ensureFinishedLoading]` (84) | | |
-| `-[OOMaterial isFinishedLoading]` (88) | | |
-| `-[OOMaterial setBindingTarget:]` (93) | | |
-| `-[OOMaterial wantsNormalsAsTextureCoordinates]` (97) | | |
-| `-[OOMaterial countOfTextureUnitsWithBaseCoordinates]` (103) | | |
-| `-[OOMaterial allTextures]` (110) | | |
-| `-[OOMaterial(OOSubclassInterface) doApply]` (120) | | |
-| `-[OOMaterial(OOSubclassInterface) unapplyWithNext:]` (126) | | |
-| `-[OOMaterial(OOSubclassInterface) willDealloc]` (131) | | |
+| `+[OOMaterial setUp]` (36) | `OOMaterial::setUp` `Core/Materials/OOMaterial.cpp:53` | ✅ |
+| `-[OOMaterial dealloc]` (41) | none (no destructor calls `willDealloc`) | ⚠️ |
+| `-[OOMaterial descriptionComponents]` (49) | `OOMaterial::descriptionComponents` `Core/Materials/OOMaterial.cpp:59` | ✅ |
+| `-[OOMaterial name]` (54) | `OOMaterial::name` `Core/Materials/OOMaterial.cpp:76` | ✅ |
+| `-[OOMaterial apply]` (61) | `OOMaterial::apply` `Core/Materials/OOMaterial.cpp:83` | ✅ |
+| `+[OOMaterial applyNone]` (72) | `OOMaterial::applyNone` `Core/Materials/OOMaterial.cpp:94` | ✅ |
+| `+[OOMaterial current]` (79) | `OOMaterial::current` `Core/Materials/OOMaterial.cpp:101` | ✅ |
+| `-[OOMaterial ensureFinishedLoading]` (84) | `OOMaterial::ensureFinishedLoading` `Core/Materials/OOMaterial.cpp:124` | ✅ |
+| `-[OOMaterial isFinishedLoading]` (88) | `OOMaterial::isFinishedLoading` `Core/Materials/OOMaterial.cpp:128` | ✅ |
+| `-[OOMaterial setBindingTarget:]` (93) | `OOMaterial::setBindingTarget` `Core/Materials/OOMaterial.cpp:133` | ✅ |
+| `-[OOMaterial wantsNormalsAsTextureCoordinates]` (97) | `OOMaterial::wantsNormalsAsTextureCoordinates` `Core/Materials/OOMaterial.cpp:137` | ✅ |
+| `-[OOMaterial countOfTextureUnitsWithBaseCoordinates]` (103) | `OOMaterial::countOfTextureUnitsWithBaseCoordinates` `Core/Materials/OOMaterial.cpp:143` | ✅ |
+| `-[OOMaterial allTextures]` (110) | `OOMaterial::allTextures` `Core/Materials/OOMaterial.cpp:150` | ✅ |
+| `-[OOMaterial(OOSubclassInterface) doApply]` (120) | `OOMaterial::doApply` `Core/Materials/OOMaterial.cpp:156` | ✅ |
+| `-[OOMaterial(OOSubclassInterface) unapplyWithNext:]` (126) | `OOMaterial::unapplyWithNext` `Core/Materials/OOMaterial.cpp:162` | ✅ |
+| `-[OOMaterial(OOSubclassInterface) willDealloc]` (131) | `OOMaterial::willDealloc` `Core/Materials/OOMaterial.cpp:167` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `-dealloc`'s `[self willDealloc]` is gone. `willDealloc()` has the same body (it logs `shader.dealloc.imbalance`, unapplies, and detaches the slot without releasing it) but nothing calls it, because the `oo::Ref` slot makes the imbalance impossible. This is documented at `Core/Materials/OOMaterial.h:111-116` (proposed ADR-0056, amendments oo-smy and oo-9ht.8) — upstream `Core/Materials/OOMaterial.m:41-47` ↔ port `Core/Materials/OOMaterial.cpp:167-174`
+- Subtle (✅): `allTextures` answers an empty vector where upstream answered nil (debug monitor only). `descriptionComponents` prints `"(null)"` in quotes for a nil name, which is what `%@` printed — port `Core/Materials/OOMaterial.cpp:61,150-153`
 
 ## OOMaterialConvenienceCreators
 
 <a id="oomaterialconveniencecreators"></a>
 Upstream `src/Core/Materials/OOMaterialConvenienceCreators.m` ↔ `Core/Materials/OOMaterialConvenienceCreators.cpp`
 
-**Status:** pending
+**Status:** done — 15 rows: 14 ✅ 0 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OOMaterial(OOConvenienceCreators) synthesizeMaterialDictionaryWithName:]` (88) | | |
-| `+[OOMaterial(OOConvenienceCreators) defaultShaderMaterialWithName:]` (142) | | |
-| `+[OOMaterial(OOConvenienceCreators) initialize]` (194) | | |
-| `+[OOMaterial(OOConvenienceCreators) defaultShaderMaterialWithName:]` (200) | | |
-| `+[OOMaterial(OOConvenienceCreators) materialWithName:]` (254) | | |
-| `+[OOMaterial(OOConvenienceCreators) materialWithName:]` (309) | | |
-| `SetUniform()` (352) | | |
-| `SetUniformFloat()` (357) | | |
-| `AddTexture()` (362) | | |
-| `AddColorIfAppropriate()` (377) | | |
-| `AddMacroColorIfAppropriate()` (388) | | |
-| `SynthDiffuse()` (402) | | |
-| `SynthEmissionAndIllumination()` (421) | | |
-| `SynthNormalMap()` (467) | | |
-| `SynthSpecular()` (489) | | |
+| `+[OOMaterial(OOConvenienceCreators) synthesizeMaterialDictionaryWithName:]` (88) | `OOMaterial::synthesizeMaterialDictionaryWithName` `Core/Materials/OOMaterialConvenienceCreators.cpp:93` | ✅ |
+| `+[OOMaterial(OOConvenienceCreators) defaultShaderMaterialWithName:]` (142) | `OOMaterial::defaultShaderMaterialWithName` `Core/Materials/OOMaterialConvenienceCreators.cpp:151` | ✅ |
+| `+[OOMaterial(OOConvenienceCreators) initialize]` (194) | `DumpShaderSource` `Core/Materials/OOMaterialConvenienceCreators.cpp:212` | ✅ |
+| `+[OOMaterial(OOConvenienceCreators) defaultShaderMaterialWithName:]` (200) | `OOMaterial::defaultShaderMaterialWithName` (new-synthesizer branch) `Core/Materials/OOMaterialConvenienceCreators.cpp:221` | ❌ |
+| `+[OOMaterial(OOConvenienceCreators) materialWithName:]` (254) | `OOMaterial::materialWithName(…configuration…)` `Core/Materials/OOMaterialConvenienceCreators.cpp:282` | ✅ |
+| `+[OOMaterial(OOConvenienceCreators) materialWithName:]` (309) | `OOMaterial::materialWithName(…materialDict, shadersDict…)` `Core/Materials/OOMaterialConvenienceCreators.cpp:334` | ✅ |
+| `SetUniform()` (352) | `SetUniform` `Core/Materials/OOMaterialConvenienceCreators.cpp:380` | ✅ |
+| `SetUniformFloat()` (357) | `SetUniformFloat` `Core/Materials/OOMaterialConvenienceCreators.cpp:387` | ✅ |
+| `AddTexture()` (362) | `AddTexture` `Core/Materials/OOMaterialConvenienceCreators.cpp:392` | ✅ |
+| `AddColorIfAppropriate()` (377) | `AddColorIfAppropriate` `Core/Materials/OOMaterialConvenienceCreators.cpp:408` | ✅ |
+| `AddMacroColorIfAppropriate()` (388) | `AddMacroColorIfAppropriate` `Core/Materials/OOMaterialConvenienceCreators.cpp:421` | ✅ |
+| `SynthDiffuse()` (402) | `SynthDiffuse` `Core/Materials/OOMaterialConvenienceCreators.cpp:433` | ✅ |
+| `SynthEmissionAndIllumination()` (421) | `SynthEmissionAndIllumination` `Core/Materials/OOMaterialConvenienceCreators.cpp:452` | ✅ |
+| `SynthNormalMap()` (467) | `SynthNormalMap` `Core/Materials/OOMaterialConvenienceCreators.cpp:498` | ✅ |
+| `SynthSpecular()` (489) | `SynthSpecular` `Core/Materials/OOMaterialConvenienceCreators.cpp:520` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — the dead `USE_NEW_SHADER_SYNTHESIZER` branch would not compile if it were enabled: `ResourceManager::writeDiagnosticString(synthesized ?, std::string(), …)`. Its intent also writes empty strings where upstream dumped the vertex and fragment sources. The branch is disabled (`#define USE_NEW_SHADER_SYNTHESIZER 0`), so there is no runtime effect today — upstream `Core/Materials/OOMaterialConvenienceCreators.m:227-228` ↔ port `Core/Materials/OOMaterialConvenienceCreators.cpp:255-256`
+- Subtle (✅ low) — the synthesized-config cache key is `cacheKey/name/<oo::DescriptionOf(config)>` where upstream used `%@` of the NSDictionary, and a nil name gives `""` where upstream gave `(null)`. Only cache hits are affected; old cache entries keyed upstream's way will not match — upstream `Core/Materials/OOMaterialConvenienceCreators.m:162` ↔ port `Core/Materials/OOMaterialConvenienceCreators.cpp:174-177`
+- Subtle (✅): upstream reassigned `cacheKey` to the long key before passing it to `+materialWithName:…`; the port passes the original. The only reader is `defaultShaderMaterialWithName`, which returns early on the loop check (`_oo_is_synthesized_config`) before it uses the key, so there is no observable difference — port `Core/Materials/OOMaterialConvenienceCreators.cpp:195-200`
+- Subtle (✅): the synthesized defaults are kept. `diffuse_map = ""` when there is no diffuse map. `AddTexture` with a non-nil `nonShaderKey` always writes `diffuse_map`, so a specular map also overwrites `diffuse_map` (upstream bug, comment `:400`). The texture budget is 3 under reducedDetail. The hull-heat, time and fog uniforms appear only at DETAIL_LEVEL_SHADERS. `uGammaCorrect` is a float 0/1. `shininess` is unsigned. — port `Core/Materials/OOMaterialConvenienceCreators.cpp:113-146,392-406,520-572`
 
 ## OOMaterialSpecifier
 
 <a id="oomaterialspecifier"></a>
 Upstream `src/Core/Materials/OOMaterialSpecifier.m` ↔ `Core/Materials/OOMaterialSpecifier.cpp`
 
-**Status:** pending
+**Status:** done — 24 rows: 24 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[NSDictionary(OOMateralProperties) oo_rawSpecularExponentValue]` (73) | | |
-| `-[NSDictionary(OOMateralProperties) oo_diffuseColor]` (81) | | |
-| `-[NSDictionary(OOMateralProperties) oo_ambientColor]` (92) | | |
-| `-[NSDictionary(OOMateralProperties) oo_specularColor]` (100) | | |
-| `-[NSDictionary(OOMateralProperties) oo_specularModulateColor]` (111) | | |
-| `-[NSDictionary(OOMateralProperties) oo_emissionColor]` (120) | | |
-| `-[NSDictionary(OOMateralProperties) oo_emissionModulateColor]` (131) | | |
-| `-[NSDictionary(OOMateralProperties) oo_illuminationModulateColor]` (140) | | |
-| `-[NSDictionary(OOMateralProperties) oo_diffuseMapSpecifierWithDefaultName:]` (149) | | |
-| `-[NSDictionary(OOMateralProperties) oo_combinedSpecularMapSpecifier]` (154) | | |
-| `-[NSDictionary(OOMateralProperties) oo_specularColorMapSpecifier]` (161) | | |
-| `-[NSDictionary(OOMateralProperties) oo_specularExponentMapSpecifier]` (171) | | |
-| `-[NSDictionary(OOMateralProperties) oo_normalMapSpecifier]` (181) | | |
-| `-[NSDictionary(OOMateralProperties) oo_parallaxMapSpecifier]` (188) | | |
-| `-[NSDictionary(OOMateralProperties) oo_normalAndParallaxMapSpecifier]` (200) | | |
-| `-[NSDictionary(OOMateralProperties) oo_emissionMapSpecifier]` (205) | | |
-| `-[NSDictionary(OOMateralProperties) oo_illuminationMapSpecifier]` (210) | | |
-| `-[NSDictionary(OOMateralProperties) oo_emissionAndIlluminationMapSpecifier]` (215) | | |
-| `-[NSDictionary(OOMateralProperties) oo_parallaxScale]` (222) | | |
-| `-[NSDictionary(OOMateralProperties) oo_parallaxBias]` (227) | | |
-| `-[NSDictionary(OOMateralProperties) oo_gammaCorrect]` (232) | | |
-| `-[NSDictionary(OOMateralProperties) oo_gloss]` (237) | | |
-| `-[NSDictionary(OOMateralProperties) oo_specularExponent]` (242) | | |
+| key constants `kOOMaterial*Name` (35-68) *(added)* | `cxx_kOOMaterial*Name` `Core/Materials/OOMaterialSpecifier.h:71-98`, `kOOMaterialDefaultParallaxScale` `:100` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_rawSpecularExponentValue]` (73) | `RawSpecularExponentValue` `Core/Materials/OOMaterialSpecifier.cpp:64` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_diffuseColor]` (81) | `cxx_OOMaterialDiffuseColor` `Core/Materials/OOMaterialSpecifier.cpp:74` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_ambientColor]` (92) | `cxx_OOMaterialAmbientColor` `Core/Materials/OOMaterialSpecifier.cpp:85` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_specularColor]` (100) | `cxx_OOMaterialSpecularColor` `Core/Materials/OOMaterialSpecifier.cpp:93` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_specularModulateColor]` (111) | `cxx_OOMaterialSpecularModulateColor` `Core/Materials/OOMaterialSpecifier.cpp:104` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_emissionColor]` (120) | `cxx_OOMaterialEmissionColor` `Core/Materials/OOMaterialSpecifier.cpp:113` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_emissionModulateColor]` (131) | `cxx_OOMaterialEmissionModulateColor` `Core/Materials/OOMaterialSpecifier.cpp:124` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_illuminationModulateColor]` (140) | `cxx_OOMaterialIlluminationModulateColor` `Core/Materials/OOMaterialSpecifier.cpp:133` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_diffuseMapSpecifierWithDefaultName:]` (149) | `cxx_OOMaterialDiffuseMapSpecifier` `Core/Materials/OOMaterialSpecifier.cpp:142` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_combinedSpecularMapSpecifier]` (154) | `cxx_OOMaterialCombinedSpecularMapSpecifier` `Core/Materials/OOMaterialSpecifier.cpp:147` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_specularColorMapSpecifier]` (161) | `cxx_OOMaterialSpecularColorMapSpecifier` `Core/Materials/OOMaterialSpecifier.cpp:154` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_specularExponentMapSpecifier]` (171) | `cxx_OOMaterialSpecularExponentMapSpecifier` `Core/Materials/OOMaterialSpecifier.cpp:164` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_normalMapSpecifier]` (181) | `cxx_OOMaterialNormalMapSpecifier` `Core/Materials/OOMaterialSpecifier.cpp:174` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_parallaxMapSpecifier]` (188) | `cxx_OOMaterialParallaxMapSpecifier` `Core/Materials/OOMaterialSpecifier.cpp:181` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_normalAndParallaxMapSpecifier]` (200) | `cxx_OOMaterialNormalAndParallaxMapSpecifier` `Core/Materials/OOMaterialSpecifier.cpp:192` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_emissionMapSpecifier]` (205) | `cxx_OOMaterialEmissionMapSpecifier` `Core/Materials/OOMaterialSpecifier.cpp:197` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_illuminationMapSpecifier]` (210) | `cxx_OOMaterialIlluminationMapSpecifier` `Core/Materials/OOMaterialSpecifier.cpp:202` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_emissionAndIlluminationMapSpecifier]` (215) | `cxx_OOMaterialEmissionAndIlluminationMapSpecifier` `Core/Materials/OOMaterialSpecifier.cpp:207` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_parallaxScale]` (222) | `cxx_OOMaterialParallaxScale` `Core/Materials/OOMaterialSpecifier.cpp:214` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_parallaxBias]` (227) | `cxx_OOMaterialParallaxBias` `Core/Materials/OOMaterialSpecifier.cpp:219` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_gammaCorrect]` (232) | `cxx_OOMaterialGammaCorrect` `Core/Materials/OOMaterialSpecifier.cpp:224` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_gloss]` (237) | `cxx_OOMaterialGloss` `Core/Materials/OOMaterialSpecifier.cpp:229` | ✅ |
+| `-[NSDictionary(OOMateralProperties) oo_specularExponent]` (242) | `cxx_OOMaterialSpecularExponent` `Core/Materials/OOMaterialSpecifier.cpp:234` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- Subtle (✅): every key spelling (`diffuse_color`/`diffuse`, `ambient_color`/`ambient`, `specular_color`/`specular`, `specular_modulate_color`, `emission_color`/`emission`, `emission_modulate_color`, `illumination_modulate_color`, the ten `*_map` keys, `parallax_scale`, `parallax_bias`, `gamma_correct`, `gloss`, `specular_exponent`/`shininess`, `light_map`) matches. So do the texture-specifier keys in `OOTexture.h:316-333`, including `illumination_mode`, `color`, `self_color`, `scale_factor`, `binding` and `extract_channel`.
+- Subtle (✅): the defaults are the same. The raw exponent is -1 when absent. The exponent then becomes 128 if shaders are on and an exponent map exists, otherwise 10. The specular colour is 0.2 grey, alpha 1. The specular modulate colour is white. Parallax scale is 0.01 and bias is 0. Gloss is 0.375, clamped to 0–1. `gamma_correct` is `!no-gamma-correct`. White diffuse, emission-modulate and illumination-modulate colours are dropped, and so is a black emission colour. "nil is not white/black" is kept explicitly (`:80,119,128,137`).
+- Subtle (✅): a nil `UNIVERSE` now answers `useShaders` false, where a message to nil gave NO — port `Core/Materials/OOMaterialSpecifier.cpp:238`
 
 ## OOMultiTextureMaterial
 
 <a id="oomultitexturematerial"></a>
 Upstream `src/Core/Materials/OOMultiTextureMaterial.m` ↔ `Core/Materials/OOMultiTextureMaterial.cpp`
 
-**Status:** pending
+**Status:** done — 9 rows: 7 ✅ 1 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOMultiTextureMaterial initWithName:configuration:]` (40) | | |
-| `-[OOMultiTextureMaterial dealloc]` (108) | | |
-| `-[OOMultiTextureMaterial descriptionComponents]` (118) | | |
-| `-[OOMultiTextureMaterial textureUnitCount]` (132) | | |
-| `-[OOMultiTextureMaterial countOfTextureUnitsWithBaseCoordinates]` (137) | | |
-| `-[OOMultiTextureMaterial ensureFinishedLoading]` (142) | | |
-| `-[OOMultiTextureMaterial apply]` (148) | | |
-| `-[OOMultiTextureMaterial unapplyWithNext:]` (177) | | |
-| `-[OOMultiTextureMaterial allTextures]` (194) | | |
+| `-[OOMultiTextureMaterial initWithName:configuration:]` (40) | `OOMultiTextureMaterial::initWithName` `Core/Materials/OOMultiTextureMaterial.cpp:46` (factory `:38`) | ✅ |
+| `-[OOMultiTextureMaterial dealloc]` (108) | none (Refs release maps; comment `:119`) | ⚠️ |
+| `-[OOMultiTextureMaterial descriptionComponents]` (118) | `OOMultiTextureMaterial::descriptionComponents` `Core/Materials/OOMultiTextureMaterial.cpp:122` | ✅ |
+| `-[OOMultiTextureMaterial textureUnitCount]` (132) | `OOMultiTextureMaterial::textureUnitCount` `Core/Materials/OOMultiTextureMaterial.cpp:140` | ✅ |
+| `-[OOMultiTextureMaterial countOfTextureUnitsWithBaseCoordinates]` (137) | `OOMultiTextureMaterial::countOfTextureUnitsWithBaseCoordinates` `Core/Materials/OOMultiTextureMaterial.cpp:145` | ✅ |
+| `-[OOMultiTextureMaterial ensureFinishedLoading]` (142) | `OOMultiTextureMaterial::ensureFinishedLoading` `Core/Materials/OOMultiTextureMaterial.cpp:150` | ✅ |
+| `-[OOMultiTextureMaterial apply]` (148) | `OOMultiTextureMaterial::apply` `Core/Materials/OOMultiTextureMaterial.cpp:158` | ✅ |
+| `-[OOMultiTextureMaterial unapplyWithNext:]` (177) | `OOMultiTextureMaterial::unapplyWithNext` `Core/Materials/OOMultiTextureMaterial.cpp:189` | ✅ |
+| `-[OOMultiTextureMaterial allTextures]` (194) | `OOMultiTextureMaterial::allTextures` `Core/Materials/OOMultiTextureMaterial.cpp:208` | ❌ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `-dealloc`'s `[self willDealloc]` has no counterpart (proposed ADR-0056 amendment oo-smy item 3, comment `:119`). See OOMaterial — upstream `Core/Materials/OOMultiTextureMaterial.m:108-116` ↔ port `Core/Materials/OOMultiTextureMaterial.cpp:119-120`
+- ❌ **low** — `allTextures` (debug monitor only) pushes a null `Ref` when `_emissionMap` is nil. Upstream's `+setWithObject:nil` raised, and `setWithObjects:diffuse, nil` dropped the emission entry. The debug inspector may now see a null texture entry — upstream `Core/Materials/OOMultiTextureMaterial.m:194-199` ↔ port `Core/Materials/OOMultiTextureMaterial.cpp:208-218`
+- Subtle (✅): the emission/illumination generator choice is unchanged, and so is the `optionsSpecifier` fallback (`emissionSpec ?: illuminationSpec`). Stripping `emission_color`/`emission` from the configuration given to OOBasicMaterial is also unchanged, as are the texture-unit counts — port `Core/Materials/OOMultiTextureMaterial.cpp:63-116`
 
 ## OONullTexture
 
@@ -502,155 +512,168 @@ Upstream `src/Core/Materials/OOPlanetTextureGenerator.m` ↔ `Core/Materials/OOP
 <a id="ooshadermaterial"></a>
 Upstream `src/Core/Materials/OOShaderMaterial.m` ↔ `Core/Materials/OOShaderMaterial.cpp`
 
-**Status:** pending
+**Status:** done — 24 rows: 20 ✅ 3 ⚠️ 1 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OOShaderMaterial configurationDictionarySpecifiesShaderMaterial:]` (71) | | |
-| `+[OOShaderMaterial shaderMaterialWithName:]` (88) | | |
-| `-[OOShaderMaterial initWithName:]` (96) | | |
-| `-[OOShaderMaterial dealloc]` (265) | | |
-| `-[OOShaderMaterial bindUniform:]` (286) | | |
-| `-[OOShaderMaterial bindSafeUniform:]` (313) | | |
-| `-[OOShaderMaterial setUniform:intValue:]` (334) | | |
-| `-[OOShaderMaterial setUniform:floatValue:]` (354) | | |
-| `-[OOShaderMaterial setUniform:vectorValue:]` (374) | | |
-| `-[OOShaderMaterial setUniform:vectorObjectValue:]` (394) | | |
-| `-[OOShaderMaterial setUniform:quaternionValue:asMatrix:]` (425) | | |
-| `-[OOShaderMaterial addUniformsFromDictionary:withBindingTarget:]` (446) | | |
-| `-[OOShaderMaterial doApply]` (589) | | |
-| `-[OOShaderMaterial ensureFinishedLoading]` (617) | | |
-| `-[OOShaderMaterial isFinishedLoading]` (628) | | |
-| `-[OOShaderMaterial unapplyWithNext:]` (642) | | |
-| `-[OOShaderMaterial setBindingTarget:]` (669) | | |
-| `-[OOShaderMaterial permitSpecular]` (676) | | |
-| `-[OOShaderMaterial allTextures]` (682) | | |
-| `-[OOShaderMaterial(OOPrivate) loadTexturesFromArray:unitCount:]` (692) | | |
-| `-[OOShaderMaterial(OOPrivate) addTexturesFromArray:unitCount:]` (708) | | |
-| `MacrosToString()` (731) | | |
-| `GetShaderSource()` (761) | | |
+| key constants `kOO*Key` (46-54) *(added)* | `Core/Materials/OOShaderMaterial.h:211-219` | ✅ |
+| `+[OOShaderMaterial configurationDictionarySpecifiesShaderMaterial:]` (71) | `OOShaderMaterial::configurationDictionarySpecifiesShaderMaterial` `Core/Materials/OOShaderMaterial.cpp:74` | ✅ |
+| `+[OOShaderMaterial shaderMaterialWithName:]` (88) | `OOShaderMaterial::shaderMaterialWithName` `Core/Materials/OOShaderMaterial.cpp:110` | ✅ |
+| `-[OOShaderMaterial initWithName:]` (96) | `OOShaderMaterial::initWithName` `Core/Materials/OOShaderMaterial.cpp:121` | ✅ |
+| `-[OOShaderMaterial dealloc]` (265) | `OOShaderMaterial::~OOShaderMaterial` `Core/Materials/OOShaderMaterial.cpp:278` | ⚠️ |
+| `-[OOShaderMaterial bindUniform:]` (286) | `OOShaderMaterial::bindUniform` `Core/Materials/OOShaderMaterial.cpp:290` | ✅ |
+| `-[OOShaderMaterial bindSafeUniform:]` (313) | `OOShaderMaterial::bindSafeUniform` `Core/Materials/OOShaderMaterial.cpp:309` | ❌ |
+| `-[OOShaderMaterial setUniform:intValue:]` (334) | `OOShaderMaterial::setUniform(name, int)` `Core/Materials/OOShaderMaterial.cpp:329` | ✅ |
+| `-[OOShaderMaterial setUniform:floatValue:]` (354) | `OOShaderMaterial::setUniform(name, float)` `Core/Materials/OOShaderMaterial.cpp:343` | ✅ |
+| `-[OOShaderMaterial setUniform:vectorValue:]` (374) | `OOShaderMaterial::setUniform(name, GLfloat[4])` `Core/Materials/OOShaderMaterial.cpp:357` | ✅ |
+| `-[OOShaderMaterial setUniform:vectorObjectValue:]` (394) | `OOShaderMaterial::setUniform(name, const oo::PList&)` `Core/Materials/OOShaderMaterial.cpp:371` | ✅ |
+| `-[OOShaderMaterial setUniform:quaternionValue:asMatrix:]` (425) | `OOShaderMaterial::setUniform(name, Quaternion, bool)` `Core/Materials/OOShaderMaterial.cpp:396` | ✅ |
+| `-[OOShaderMaterial addUniformsFromDictionary:withBindingTarget:]` (446) | `OOShaderMaterial::addUniformsFromDictionary` `Core/Materials/OOShaderMaterial.cpp:410` | ✅ |
+| `-[OOShaderMaterial doApply]` (589) | `OOShaderMaterial::doApply` `Core/Materials/OOShaderMaterial.cpp:558` | ✅ |
+| `-[OOShaderMaterial ensureFinishedLoading]` (617) | `OOShaderMaterial::ensureFinishedLoading` `Core/Materials/OOShaderMaterial.cpp:589` | ✅ |
+| `-[OOShaderMaterial isFinishedLoading]` (628) | `OOShaderMaterial::isFinishedLoading` `Core/Materials/OOShaderMaterial.cpp:601` | ✅ |
+| `-[OOShaderMaterial unapplyWithNext:]` (642) | `OOShaderMaterial::unapplyWithNext` `Core/Materials/OOShaderMaterial.cpp:615` | ✅ |
+| `-[OOShaderMaterial setBindingTarget:]` (669) | `OOShaderMaterial::setBindingTarget` `Core/Materials/OOShaderMaterial.cpp:642` | ⚠️ |
+| `-[OOShaderMaterial permitSpecular]` (676) | `OOShaderMaterial::permitSpecular` `Core/Materials/OOShaderMaterial.cpp:649` | ✅ |
+| `-[OOShaderMaterial allTextures]` (682) | `OOShaderMaterial::allTextures` `Core/Materials/OOShaderMaterial.cpp:655` | ✅ |
+| `-[OOShaderMaterial(OOPrivate) loadTexturesFromArray:unitCount:]` (692) | `OOShaderMaterial::loadTexturesFromArray` `Core/Materials/OOShaderMaterial.cpp:666` | ✅ |
+| `-[OOShaderMaterial(OOPrivate) addTexturesFromArray:unitCount:]` (708) | `OOShaderMaterial::addTexturesFromArray` `Core/Materials/OOShaderMaterial.cpp:682` | ✅ |
+| `MacrosToString()` (731) | `MacrosToString` `Core/Materials/OOShaderMaterial.cpp:704` | ⚠️ |
+| `GetShaderSource()` (761) | `GetShaderSource` `Core/Materials/OOShaderMaterial.cpp:741` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **low** — `shader.uniform.unpermittedMethod` names the target class as `-[Entity foo]` for every entity (`TargetClassName` → hook `ShaderClassName`, which answers the literal `"Entity"`). Upstream printed `[target class]`, for example `ShipEntity` or `PlayerEntity`. The log text changes; the message class does not — upstream `Core/Materials/OOShaderMaterial.m:328` ↔ port `Core/Materials/OOShaderMaterial.cpp:323`, `Core/Entities/EntityShaderBindings.cpp:388-391`
+- ⚠️ **low** — the `#define` lines `MacrosToString` writes come out in `std::map` key order, where upstream used `NSDictionary` hash order (comment `:710`). The preprocessor result is the same. The prefix text, and therefore the program cache key, differs from upstream's — upstream `Core/Materials/OOShaderMaterial.m:740-747` ↔ port `Core/Materials/OOShaderMaterial.cpp:710-723`
+- ⚠️ **low** — the `bindingTarget` ivar is gone (it was stored and never read). `setBindingTarget` only forwards to the uniforms (bead oo-9ht.39.6, comment `:276-277`) — upstream `Core/Materials/OOShaderMaterial.m:669-674` ↔ port `Core/Materials/OOShaderMaterial.cpp:642-647`
+- Subtle (✅): `configurationDictionarySpecifiesShaderMaterial` keeps upstream's typo: it tests `vertex_shader` twice and never tests `fragment_shader`. A config with only `fragment_shader` is still not a shader material — port `Core/Materials/OOShaderMaterial.cpp:83-86`
+- Subtle (✅): the uniform parsing defaults are the same. The type defaults to `float`, or to `binding` when there is no value but there is a binding. A string that is not a number literal means `binding`. An array definition gives `vector` with a nil value, so it binds the zero vector (0,0,0,1), as upstream did. `scale` and `quatAsMatrix` carry over between keys (both are declared outside the loop). The option defaults are `clamped` NO, `normalized`/`normalised` NO, `asMatrix` YES and `bindToSubentity` NO, giving bind-to-super. Keys are walked in sorted order and the RANROT seed is saved and restored. `uGloss` defaults to 0.5 (not the specifier's 0.375) and `uGammaCorrect` to `!no-gamma-correct` — port `Core/Materials/OOShaderMaterial.cpp:410-556,257-269`
+- Subtle (✅ low): a string `float` value is now parsed as a double and then narrowed to float, where `-[NSString floatValue]` parsed it as a float directly. The last ulp can differ in rare halfway cases — port `Core/Materials/OOShaderMaterial.cpp:496`
+- Subtle (✅): `doApply` applies the uniforms in `std::map` name order where upstream used `-allValues` hash order. Each uniform has its own location, so GL state is the same. The early exit on an exception is kept — port `Core/Materials/OOShaderMaterial.cpp:576-584`
+- Subtle (✅ low): `shader.load.noShader` prints `oo::DescriptionOf(configuration)` instead of `-[NSDictionary description]` — port `Core/Materials/OOShaderMaterial.cpp:233`
 
 ## OOShaderProgram
 
 <a id="ooshaderprogram"></a>
 Upstream `src/Core/Materials/OOShaderProgram.m` ↔ `Core/Materials/OOShaderProgram.cpp`
 
-**Status:** pending
+**Status:** done — 12 rows: 12 ✅ 0 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `+[OOShaderProgram shaderProgramWithVertexShader:]` (66) | | |
-| `+[OOShaderProgram shaderProgramWithVertexShaderName:]` (105) | | |
-| `-[OOShaderProgram dealloc]` (149) | | |
-| `-[OOShaderProgram apply]` (174) | | |
-| `+[OOShaderProgram applyNone]` (186) | | |
-| `-[OOShaderProgram program]` (197) | | |
-| `ValidateShaderObject()` (204) | | |
-| `-[OOShaderProgram(OOPrivate) initWithVertexShaderSource:]` (269) | | |
-| `-[OOShaderProgram(OOPrivate) bindAttributes:]` (361) | | |
-| `-[OOShaderProgram(OOPrivate) bindStandardMatrixUniforms]` (373) | | |
-| `GetShaderSource()` (403) | | |
-| `GetGLSLInfoLog()` (443) | | |
+| `+[OOShaderProgram shaderProgramWithVertexShader:]` (66) | `OOShaderProgram::shaderProgramWithVertexShader` `Core/Materials/OOShaderProgram.cpp:101` | ✅ |
+| `+[OOShaderProgram shaderProgramWithVertexShaderName:]` (105) | `OOShaderProgram::shaderProgramWithVertexShaderName` `Core/Materials/OOShaderProgram.cpp:140` | ✅ |
+| `-[OOShaderProgram dealloc]` (149) | `OOShaderProgram::~OOShaderProgram` `Core/Materials/OOShaderProgram.cpp:184` | ✅ |
+| `-[OOShaderProgram apply]` (174) | `OOShaderProgram::apply` `Core/Materials/OOShaderProgram.cpp:207` | ✅ |
+| `+[OOShaderProgram applyNone]` (186) | `OOShaderProgram::applyNone` `Core/Materials/OOShaderProgram.cpp:218` | ✅ |
+| `-[OOShaderProgram program]` (197) | `OOShaderProgram::program` `Core/Materials/OOShaderProgram.cpp:228` | ✅ |
+| `ValidateShaderObject()` (204) | `ValidateShaderObject` `Core/Materials/OOShaderProgram.cpp:235` | ✅ |
+| `-[OOShaderProgram(OOPrivate) initWithVertexShaderSource:]` (269) | `OOShaderProgram::initWithVertexShaderSource` `Core/Materials/OOShaderProgram.cpp:300` | ✅ |
+| `-[OOShaderProgram(OOPrivate) bindAttributes:]` (361) | `OOShaderProgram::bindAttributes` `Core/Materials/OOShaderProgram.cpp:391` | ✅ |
+| `-[OOShaderProgram(OOPrivate) bindStandardMatrixUniforms]` (373) | `OOShaderProgram::bindStandardMatrixUniforms` `Core/Materials/OOShaderProgram.cpp:402` | ✅ |
+| `GetShaderSource()` (403) | `GetShaderSource` `Core/Materials/OOShaderProgram.cpp:435` | ✅ |
+| `GetGLSLInfoLog()` (443) | `GetGLSLInfoLog` `Core/Materials/OOShaderProgram.cpp:512` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- Subtle (✅): the shader sources are assembled from the same three strings: the prefix (or `""`), `"#line 0\n"` and the source. Both trees turn an empty prefix into nil. The weak (non-retaining) program cache keyed by `cacheKey` is kept, the cached program is removed in the destructor, and a nil key is never cached — port `Core/Materials/OOShaderProgram.cpp:101-138,309-329`
+- Subtle (✅): `bindStandardMatrixUniforms` keeps "a nil type string compares equal to `mat3`". The vertex-shader lookup failure still logs "failed to find fragment program", an upstream copy-paste kept as it was. The info log falls back to Latin-1 when it is not valid UTF-8 — port `Core/Materials/OOShaderProgram.cpp:414-417,455,533-545`
 
 ## OOShaderUniform
 
 <a id="ooshaderuniform"></a>
 Upstream `src/Core/Materials/OOShaderUniform.m` ↔ `Core/Materials/OOShaderUniform.cpp`
 
-**Status:** pending
+**Status:** done — 14 rows: 10 ✅ 2 ⚠️ 2 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOShaderUniform initWithName:shaderProgram:intValue:]` (50) | | |
-| `-[OOShaderUniform initWithName:shaderProgram:floatValue:]` (61) | | |
-| `-[OOShaderUniform initWithName:shaderProgram:vectorValue:]` (72) | | |
-| `-[OOShaderUniform initWithName:shaderProgram:colorValue:]` (83) | | |
-| `-[OOShaderUniform initWithName:shaderProgram:quaternionValue:asMatrix:]` (102) | | |
-| `-[OOShaderUniform initWithName:shaderProgram:matrixValue:]` (121) | | |
-| `-[OOShaderUniform initWithName:]` (132) | | |
-| `-[OOShaderUniform dealloc]` (179) | | |
-| `-[OOShaderUniform description]` (188) | | |
-| `-[OOShaderUniform apply]` (272) | | |
-| `-[OOShaderUniform setBindingTarget:]` (282) | | |
-| `-[OOShaderUniform(OOPrivate) initWithName:shaderProgram:]` (364) | | |
-| `-[OOShaderUniform(OOPrivate) applySimple]` (394) | | |
-| `-[OOShaderUniform(OOPrivate) applyBinding]` (414) | | |
+| `-[OOShaderUniform initWithName:shaderProgram:intValue:]` (50) | `OOShaderUniform::initWithName(…, GLint)` `Core/Materials/OOShaderUniform.cpp:45` | ✅ |
+| `-[OOShaderUniform initWithName:shaderProgram:floatValue:]` (61) | `OOShaderUniform::initWithName(…, GLfloat)` `Core/Materials/OOShaderUniform.cpp:58` | ✅ |
+| `-[OOShaderUniform initWithName:shaderProgram:vectorValue:]` (72) | `OOShaderUniform::initWithName(…, GLfloat[4])` `Core/Materials/OOShaderUniform.cpp:71` | ✅ |
+| `-[OOShaderUniform initWithName:shaderProgram:colorValue:]` (83) | `OOShaderUniform::initWithName(…, OOColor*)` `Core/Materials/OOShaderUniform.cpp:84` | ✅ |
+| `-[OOShaderUniform initWithName:shaderProgram:quaternionValue:asMatrix:]` (102) | `OOShaderUniform::initWithName(…, Quaternion, bool)` `Core/Materials/OOShaderUniform.cpp:104` | ✅ |
+| `-[OOShaderUniform initWithName:shaderProgram:matrixValue:]` (121) | `OOShaderUniform::initWithName(…, OOMatrix)` `Core/Materials/OOShaderUniform.cpp:125` | ✅ |
+| `-[OOShaderUniform initWithName:]` (132) (`…boundToObject:property:convertOptions:`) | `OOShaderUniform::initWithEntityTarget` `Core/Materials/OOShaderUniform.cpp:177` | ⚠️ |
+| `-[OOShaderUniform dealloc]` (179) | `OOShaderUniform::~OOShaderUniform` `Core/Materials/OOShaderUniform.cpp:212` | ✅ |
+| `-[OOShaderUniform description]` (188) | `OOShaderUniform::description` `Core/Materials/OOShaderUniform.cpp:217` | ❌ |
+| `-[OOShaderUniform apply]` (272) | `OOShaderUniform::apply` `Core/Materials/OOShaderUniform.cpp:315` | ✅ |
+| `-[OOShaderUniform setBindingTarget:]` (282) | `OOShaderUniform::setEntityBindingTarget` `Core/Materials/OOShaderUniform.cpp:325` | ❌ |
+| `-[OOShaderUniform(OOPrivate) initWithName:shaderProgram:]` (364) | `OOShaderUniform::initWithName(name, program)` `Core/Materials/OOShaderUniform.cpp:373` | ✅ |
+| `-[OOShaderUniform(OOPrivate) applySimple]` (394) | `OOShaderUniform::applySimple` `Core/Materials/OOShaderUniform.cpp:396` | ✅ |
+| `-[OOShaderUniform(OOPrivate) applyBinding]` (414) | `OOShaderUniform::applyBinding` `Core/Materials/OOShaderUniform.cpp:416` | ⚠️ |
 
 **Differences:**
 
-- *pending*
-
+- ❌ **med** — **`laserColor` can no longer be bound.** It is whitelisted in `shader_ship_binding_methods` (`Resources/Config/whitelist.plist:420`) and typed `color` in `shader-uniform-bindings.plist:57`. Upstream it bound through the selector: `-[ShipEntity laserColor]` returns `id`, which gives `kOOShaderUniformTypeObject`, and an OOColor becomes a vec4. The port resolves names only through the member table, which has no `laserColor` row, so the uniform is inactive and logs `shader.uniform.bind.failed … (target does not respond to selector)`. OXP shaders that read `laserColor` get the GLSL default, which is a visual change. `ShipEntity::laserColor()` exists (`Core/Entities/ShipEntity.h:806`). Every other whitelisted name (86 of 87 unique) has a row — upstream `Core/Materials/OOShaderUniform.m:282-357,506-518` ↔ port `Core/Materials/OOShaderUniform.cpp:349-369`, `Core/Entities/EntityShaderBindings.cpp:109,150-330`
+- ❌ **low** — the `shader.uniform.bind.failed` reason is always "target does not respond to selector". Upstream distinguished `unsupported type "<enc>"`, the argument-count problem and the missing-IMP problem. For example, on Win64 `missileCount`, `missileCapacity` and `trumbleCount` (`NSUInteger` = `"Q"`, which has no template) fail in both trees but now give a different reason. The class is also printed as `Entity`, not the target's real class — upstream `Core/Materials/OOShaderUniform.m:346-356` ↔ port `Core/Materials/OOShaderUniform.cpp:367-369`
+- ❌ **low** — in `description` (logged by `shader.uniform.set`), a binding prints `[<Entity 0x…> prop]` where upstream printed `[<ShipEntity 0x…> prop]`, the real class. The pointer is the entity, not the weak-reference proxy — upstream `Core/Materials/OOShaderUniform.m:197` ↔ port `Core/Materials/OOShaderUniform.cpp:227`
+- ⚠️ **low** — the selector initialiser became `initWithEntityTarget`, which keeps the property *name* and resolves it per target through the entity hooks and member table (beads oo-9ht.39.6, oo-4aq6a.7; comment `:183-186`). The checks (null property, location -1 with its log line), the convert-option bits and bind-to-super are the same — port `Core/Materials/OOShaderUniform.cpp:177-210`
+- ⚠️ **low** — in `applyBinding`, a binding of `kOOShaderUniformTypeObject` sets nothing. Upstream sent an `NSNumber` result as a float. The comment `:518-523` says no whitelisted method returns a number, and colour results now use the new `kOOShaderUniformTypeColor`. The int, float, vector, HPVector, quaternion, matrix and point paths, with clamp and normalize, are unchanged — upstream `Core/Materials/OOShaderUniform.m:506-519` ↔ port `Core/Materials/OOShaderUniform.cpp:518-533`
+- Subtle (✅): the description shows `valueType` `"(null)"` and value `INVALID` for an unknown type, as `%@` of nil did. The colour type prints `object-binding`, as it did while it was an object — port `Core/Materials/OOShaderUniform.cpp:296-304,312`
 
 ## OOShaderUniformMethodType
 
 <a id="ooshaderuniformmethodtype"></a>
 Upstream `src/Core/Materials/OOShaderUniformMethodType.m` ↔ `Core/Materials/OOShaderUniformMethodType.cpp`
 
-**Status:** pending
+**Status:** done — 21 rows: 0 ✅ 2 ⚠️ 0 ❌ 19 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `OOShaderUniformTypeFromMethodSignature()` (59) | | |
-| `InitTemplates()` (100) | | |
-| `CopyTemplateForSelector()` (127) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass signedCharMethod]` (143) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass unsignedCharMethod]` (148) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass signedShortMethod]` (153) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass unsignedShortMethod]` (158) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass signedIntMethod]` (163) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass unsignedIntMethod]` (168) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass signedLongMethod]` (173) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass unsignedLongMethod]` (178) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass floatMethod]` (183) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass doubleMethod]` (188) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass vectorMethod]` (193) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass hpvectorMethod]` (199) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass quaternionMethod]` (205) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass matrixMethod]` (211) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass pointMethod]` (216) | | |
-| `-[OOShaderUniformTypeMethodSignatureTemplateClass idMethod]` (221) | | |
-| `OOCallIntegerMethod()` (228) | | |
-| `OOCallFloatMethod()` (266) | | |
+| `OOShaderUniformTypeFromMethodSignature()` (59) | `OOShaderUniformTypeFromEncoding` `Core/Materials/OOShaderUniformMethodType.cpp:61` | ⚠️ |
+| `InitTemplates()` (100) | `InitTemplates` `Core/Materials/OOShaderUniformMethodType.cpp:94` | ⚠️ |
+| `CopyTemplateForSelector()` (127) | removed: templates are `kOOTypeEncoding<T>` literals (`Core/OOTypeEncodings.h`) | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass signedCharMethod]` (143) | removed: `kOOTypeEncoding<signed char>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass unsignedCharMethod]` (148) | removed: `kOOTypeEncoding<unsigned char>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass signedShortMethod]` (153) | removed: `kOOTypeEncoding<signed short>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass unsignedShortMethod]` (158) | removed: `kOOTypeEncoding<unsigned short>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass signedIntMethod]` (163) | removed: `kOOTypeEncoding<signed int>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass unsignedIntMethod]` (168) | removed: `kOOTypeEncoding<unsigned int>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass signedLongMethod]` (173) | removed: `kOOTypeEncoding<signed long>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass unsignedLongMethod]` (178) | removed: `kOOTypeEncoding<unsigned long>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass floatMethod]` (183) | removed: `kOOTypeEncoding<float>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass doubleMethod]` (188) | removed: `kOOTypeEncoding<double>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass vectorMethod]` (193) | removed: `kOOTypeEncoding<Vector>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass hpvectorMethod]` (199) | removed: `kOOTypeEncoding<HPVector>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass quaternionMethod]` (205) | removed: `kOOTypeEncoding<Quaternion>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass matrixMethod]` (211) | removed: `kOOTypeEncoding<OOMatrix>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass pointMethod]` (216) | removed: `kOOTypeEncoding<NSPoint>` | ➖ |
+| `-[OOShaderUniformTypeMethodSignatureTemplateClass idMethod]` (221) | removed: `kOOTypeEncoding<OOObjCId>` | ➖ |
+| `OOCallIntegerMethod()` (228) | removed: row getters + `StoreShaderBindingValue` `Core/Entities/EntityShaderBindings.cpp:119-141` → `OOShaderBindingValue::i` | ➖ |
+| `OOCallFloatMethod()` (266) | removed: same, → `OOShaderBindingValue::f` | ➖ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — selector dispatch by name is replaced by a static member table (beads oo-9ht.158, oo-9ht.39.6.1, oo-4aq6a.7; header `Core/Materials/OOShaderUniformMethodType.h:66-72,129-132`). Each row's type is `@encode()` of the replaced method's return type, as measured. The template set is unchanged, except for the new `kOOShaderUniformTypeColor` (`OOColor*`, `:119`), which is inserted before `Object` in the enum. As upstream, `long long`/`unsigned long long` have no template — upstream `Core/Materials/OOShaderUniformMethodType.m:59-125` ↔ port `Core/Materials/OOShaderUniformMethodType.cpp:61-123`
+- **Bindability check (emphasis):** every name in the four `shader_*_binding_methods` whitelists (identical in both trees) was compared with `kEntityShaderBindings`. 86 of the 87 unique names have a row. The one missing is **`laserColor`**; see OOShaderUniform ❌ med. No row exists that is not whitelisted.
+- Subtle (✅): integer conversion is the same. `StoreShaderBindingValue` sign-extends `signed char` (BOOL), as the `CharReturnMsgSend` call did, and widens other integers and enums to `long long`. `double` and `float` go to `f` — port `Core/Entities/EntityShaderBindings.cpp:135-140`
+- Subtle (✅ platform): `NSUInteger` rows (`missileCapacity`, `missileCount`, `trumbleCount`) are `"Q"` on Win64, which matches no template, so they cannot be bound there. Upstream GNUstep on Win64 also uses `unsigned long long`, so the behaviour is the same. On LP64 Linux they are `"L"` and can be bound in both — `Core/OOTypeEncodings.h` (NSUInteger → `unsigned long long`)
 
 ## OOSingleTextureMaterial
 
 <a id="oosingletexturematerial"></a>
 Upstream `src/Core/Materials/OOSingleTextureMaterial.m` ↔ `Core/Materials/OOSingleTextureMaterial.cpp`
 
-**Status:** pending
+**Status:** done — 10 rows: 9 ✅ 1 ⚠️ 0 ❌ 0 ➖
 
 | Upstream (line) | C++ counterpart | Verdict |
 |---|---|---|
-| `-[OOSingleTextureMaterial initWithName:configuration:]` (35) | | |
-| `-[OOSingleTextureMaterial initWithName:texture:configuration:]` (50) | | |
-| `-[OOSingleTextureMaterial dealloc]` (64) | | |
-| `-[OOSingleTextureMaterial descriptionComponents]` (72) | | |
-| `-[OOSingleTextureMaterial doApply]` (77) | | |
-| `-[OOSingleTextureMaterial unapplyWithNext:]` (86) | | |
-| `-[OOSingleTextureMaterial ensureFinishedLoading]` (93) | | |
-| `-[OOSingleTextureMaterial isFinishedLoading]` (98) | | |
-| `-[OOSingleTextureMaterial wantsNormalsAsTextureCoordinates]` (103) | | |
-| `-[OOSingleTextureMaterial allTextures]` (109) | | |
+| `-[OOSingleTextureMaterial initWithName:configuration:]` (35) | `OOSingleTextureMaterial::initWithName(name, configuration)` `Core/Materials/OOSingleTextureMaterial.cpp:48` (factory `:32`) | ✅ |
+| `-[OOSingleTextureMaterial initWithName:texture:configuration:]` (50) | `OOSingleTextureMaterial::initWithName(name, texture, configuration)` `Core/Materials/OOSingleTextureMaterial.cpp:65` (factory `:40`) | ✅ |
+| `-[OOSingleTextureMaterial dealloc]` (64) | none (`_texture` Ref; comment `:77`) | ⚠️ |
+| `-[OOSingleTextureMaterial descriptionComponents]` (72) | `OOSingleTextureMaterial::descriptionComponents` `Core/Materials/OOSingleTextureMaterial.cpp:80` | ✅ |
+| `-[OOSingleTextureMaterial doApply]` (77) | `OOSingleTextureMaterial::doApply` `Core/Materials/OOSingleTextureMaterial.cpp:88` | ✅ |
+| `-[OOSingleTextureMaterial unapplyWithNext:]` (86) | `OOSingleTextureMaterial::unapplyWithNext` `Core/Materials/OOSingleTextureMaterial.cpp:98` | ✅ |
+| `-[OOSingleTextureMaterial ensureFinishedLoading]` (93) | `OOSingleTextureMaterial::ensureFinishedLoading` `Core/Materials/OOSingleTextureMaterial.cpp:106` | ✅ |
+| `-[OOSingleTextureMaterial isFinishedLoading]` (98) | `OOSingleTextureMaterial::isFinishedLoading` `Core/Materials/OOSingleTextureMaterial.cpp:112` | ✅ |
+| `-[OOSingleTextureMaterial wantsNormalsAsTextureCoordinates]` (103) | `OOSingleTextureMaterial::wantsNormalsAsTextureCoordinates` `Core/Materials/OOSingleTextureMaterial.cpp:117` | ✅ |
+| `-[OOSingleTextureMaterial allTextures]` (109) | `OOSingleTextureMaterial::allTextures` `Core/Materials/OOSingleTextureMaterial.cpp:123` | ✅ |
 
 **Differences:**
 
-- *pending*
-
+- ⚠️ **low** — `-dealloc`'s `[self willDealloc]` has no counterpart (proposed ADR-0056 amendment oo-smy item 3, comment `:77`). See OOMaterial — upstream `Core/Materials/OOSingleTextureMaterial.m:64-70` ↔ port `Core/Materials/OOSingleTextureMaterial.cpp:77-78`
+- Subtle (✅): a nil name or a texture that failed to load still makes the initialiser fail, and the caller falls back to OOBasicMaterial (`OOMaterialConvenienceCreators.cpp:327-329`). With no configuration, the name itself is the texture specifier — port `Core/Materials/OOSingleTextureMaterial.cpp:52-73`
 
 ## OOStandaloneAtmosphereGenerator
 

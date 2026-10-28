@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 85 / 241 upstream `.m` files · extra rows below
+**Progress:** 100 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -220,25 +220,25 @@ Patterns that recur across files. Each instance is also recorded in its own file
 
 ### Materials, textures, meshes, drawables, OpenGL — [graphics.md](graphics.md)
 
-- [ ] `Core/Materials/OOBasicMaterial.m` → `Core/Materials/OOBasicMaterial.cpp` (314 / 320 lines) — *pending* — [findings](graphics.md#oobasicmaterial)
+- [x] `Core/Materials/OOBasicMaterial.m` → `Core/Materials/OOBasicMaterial.cpp` (314 / 320 lines) — 32✅ 1⚠️ — [findings](graphics.md#oobasicmaterial)
 - [x] `Core/Materials/OOCombinedEmissionMapGenerator.m` → `Core/Materials/OOCombinedEmissionMapGenerator.cpp` (446 / 441 lines) — 12✅ 1❌ — [findings](graphics.md#oocombinedemissionmapgenerator)
 - [x] `Core/Materials/OOConcreteTexture.m` → `Core/Materials/OOConcreteTexture.cpp` (641 / 638 lines) — 26✅ — [findings](graphics.md#ooconcretetexture)
-- [ ] `Core/Materials/OODefaultShaderSynthesizer.m` → `Core/Materials/OODefaultShaderSynthesizer.cpp` (1451 / 1265 lines) — *pending* — [findings](graphics.md#oodefaultshadersynthesizer)
-- [ ] `Core/Materials/OOMaterial.m` → `Core/Materials/OOMaterial.cpp` (140 / 184 lines) — *pending* — [findings](graphics.md#oomaterial)
-- [ ] `Core/Materials/OOMaterialConvenienceCreators.m` → `Core/Materials/OOMaterialConvenienceCreators.cpp` (539 / 575 lines) — *pending* — [findings](graphics.md#oomaterialconveniencecreators)
-- [ ] `Core/Materials/OOMaterialSpecifier.m` → `Core/Materials/OOMaterialSpecifier.cpp` (256 / 246 lines) — *pending* — [findings](graphics.md#oomaterialspecifier)
-- [ ] `Core/Materials/OOMultiTextureMaterial.m` → `Core/Materials/OOMultiTextureMaterial.cpp` (204 / 221 lines) — *pending* — [findings](graphics.md#oomultitexturematerial)
+- [x] `Core/Materials/OODefaultShaderSynthesizer.m` → `Core/Materials/OODefaultShaderSynthesizer.cpp` (1451 / 1265 lines) — 46✅ 1⚠️ — [findings](graphics.md#oodefaultshadersynthesizer)
+- [x] `Core/Materials/OOMaterial.m` → `Core/Materials/OOMaterial.cpp` (140 / 184 lines) — 15✅ 1⚠️ — [findings](graphics.md#oomaterial)
+- [x] `Core/Materials/OOMaterialConvenienceCreators.m` → `Core/Materials/OOMaterialConvenienceCreators.cpp` (539 / 575 lines) — 14✅ 1❌ — [findings](graphics.md#oomaterialconveniencecreators)
+- [x] `Core/Materials/OOMaterialSpecifier.m` → `Core/Materials/OOMaterialSpecifier.cpp` (256 / 246 lines) — 24✅ — [findings](graphics.md#oomaterialspecifier)
+- [x] `Core/Materials/OOMultiTextureMaterial.m` → `Core/Materials/OOMultiTextureMaterial.cpp` (204 / 221 lines) — 7✅ 1⚠️ 1❌ — [findings](graphics.md#oomultitexturematerial)
 - [x] `Core/Materials/OONullTexture.m` → `Core/Materials/OONullTexture.cpp` (116 / 78 lines) — 6✅ 6➖ — [findings](graphics.md#oonulltexture)
 - [x] `Core/Materials/OOPNGTextureLoader.m` → `Core/Materials/OOPNGTextureLoader.cpp` (221 / 225 lines) — 7✅ — [findings](graphics.md#oopngtextureloader)
 - [x] `Core/Materials/OOPixMap.m` → `Core/Materials/OOPixMap.cpp` (242 / 235 lines) — 12✅ — [findings](graphics.md#oopixmap)
 - [x] `Core/Materials/OOPixMapChannelOperations.m` → `Core/Materials/OOPixMapChannelOperations.cpp` (331 / 353 lines) — 11✅ — [findings](graphics.md#oopixmapchanneloperations)
 - [x] `Core/Materials/OOPixMapTextureLoader.m` → `Core/Materials/OOPixMapTextureLoader.cpp` (86 / 91 lines) — 4✅ — [findings](graphics.md#oopixmaptextureloader)
 - [x] `Core/Materials/OOPlanetTextureGenerator.m` → `Core/Materials/OOPlanetTextureGenerator.cpp` (1261 / 1258 lines) — 50✅ 1⚠️ 1❌ — [findings](graphics.md#ooplanettexturegenerator)
-- [ ] `Core/Materials/OOShaderMaterial.m` → `Core/Materials/OOShaderMaterial.cpp` (794 / 770 lines) — *pending* — [findings](graphics.md#ooshadermaterial)
-- [ ] `Core/Materials/OOShaderProgram.m` → `Core/Materials/OOShaderProgram.cpp` (472 / 553 lines) — *pending* — [findings](graphics.md#ooshaderprogram)
-- [ ] `Core/Materials/OOShaderUniform.m` → `Core/Materials/OOShaderUniform.cpp` (542 / 554 lines) — *pending* — [findings](graphics.md#ooshaderuniform)
-- [ ] `Core/Materials/OOShaderUniformMethodType.m` → `Core/Materials/OOShaderUniformMethodType.cpp` (280 / 125 lines) — *pending* — [findings](graphics.md#ooshaderuniformmethodtype)
-- [ ] `Core/Materials/OOSingleTextureMaterial.m` → `Core/Materials/OOSingleTextureMaterial.cpp` (115 / 129 lines) — *pending* — [findings](graphics.md#oosingletexturematerial)
+- [x] `Core/Materials/OOShaderMaterial.m` → `Core/Materials/OOShaderMaterial.cpp` (794 / 770 lines) — 20✅ 3⚠️ 1❌ — [findings](graphics.md#ooshadermaterial)
+- [x] `Core/Materials/OOShaderProgram.m` → `Core/Materials/OOShaderProgram.cpp` (472 / 553 lines) — 12✅ — [findings](graphics.md#ooshaderprogram)
+- [x] `Core/Materials/OOShaderUniform.m` → `Core/Materials/OOShaderUniform.cpp` (542 / 554 lines) — 10✅ 2⚠️ 2❌ — [findings](graphics.md#ooshaderuniform)
+- [x] `Core/Materials/OOShaderUniformMethodType.m` → `Core/Materials/OOShaderUniformMethodType.cpp` (280 / 125 lines) — 2⚠️ 19➖ — [findings](graphics.md#ooshaderuniformmethodtype)
+- [x] `Core/Materials/OOSingleTextureMaterial.m` → `Core/Materials/OOSingleTextureMaterial.cpp` (115 / 129 lines) — 9✅ 1⚠️ — [findings](graphics.md#oosingletexturematerial)
 - [x] `Core/Materials/OOStandaloneAtmosphereGenerator.m` → `Core/Materials/OOStandaloneAtmosphereGenerator.cpp` (753 / 758 lines) — 24✅ 1⚠️ 1❌ — [findings](graphics.md#oostandaloneatmospheregenerator)
 - [x] `Core/Materials/OOTexture.m` → `Core/Materials/OOTexture.cpp` (884 / 889 lines) — 41✅ 1⚠️ 2❌ 8➖ — [findings](graphics.md#ootexture)
 - [x] `Core/Materials/OOTextureGenerator.m` → `Core/Materials/OOTextureGenerator.cpp` (58 / 55 lines) — 5✅ — [findings](graphics.md#ootexturegenerator)
@@ -263,10 +263,10 @@ Patterns that recur across files. Each instance is also recorded in its own file
 
 ### HUD, GUI, crosshairs — [hud-gui.md](hud-gui.md)
 
-- [ ] `Core/GuiDisplayGen.m` → `Core/GuiDisplayGen.cpp` (2318 / 2407 lines) — *pending* — [findings](hud-gui.md#guidisplaygen)
-- [ ] `Core/HeadUpDisplay.m` → `Core/HeadUpDisplay.cpp` (4172 / 4302 lines) — *pending* — [findings](hud-gui.md#headupdisplay)
-- [ ] `Core/OOCrosshairs.m` → `Core/OOCrosshairs.cpp` (188 / 150 lines) — *pending* — [findings](hud-gui.md#oocrosshairs)
-- [ ] `Core/OOMouseInteractionMode.m` → `Core/OOMouseInteractionMode.cpp` (74 / 77 lines) — *pending* — [findings](hud-gui.md#oomouseinteractionmode)
+- [x] `Core/GuiDisplayGen.m` → `Core/GuiDisplayGen.cpp` (2318 / 2407 lines) — 84✅ 2⚠️ 2❌ — [findings](hud-gui.md#guidisplaygen)
+- [x] `Core/HeadUpDisplay.m` → `Core/HeadUpDisplay.cpp` (4172 / 4302 lines) — 133✅ 2❌ 4➖ — [findings](hud-gui.md#headupdisplay)
+- [x] `Core/OOCrosshairs.m` → `Core/OOCrosshairs.cpp` (188 / 150 lines) — 5✅ — [findings](hud-gui.md#oocrosshairs)
+- [x] `Core/OOMouseInteractionMode.m` → `Core/OOMouseInteractionMode.cpp` (74 / 77 lines) — 3✅ — [findings](hud-gui.md#oomouseinteractionmode)
 
 ### Universe and GameController — [universe.md](universe.md)
 
