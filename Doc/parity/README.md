@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 116 / 241 upstream `.m` files · extra rows below
+**Progress:** 145 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -275,14 +275,14 @@ Patterns that recur across files. Each instance is also recorded in its own file
 
 ### SDL platform, input devices, debug support — [platform.md](platform.md)
 
-- [ ] `Core/Debug/OODebugMonitor.m` → `Core/Debug/OODebugMonitor.cpp` (932 / 873 lines) — *pending* — [findings](platform.md#oodebugmonitor)
-- [ ] `Core/Debug/OODebugStandards.m` → `Core/Debug/OODebugStandards.cpp` (122 / 137 lines) — *pending* — [findings](platform.md#oodebugstandards)
-- [ ] `Core/Debug/OODebugSupport.m` → `Core/Debug/OODebugSupport.cpp` (135 / 87 lines) — *pending* — [findings](platform.md#oodebugsupport)
-- [ ] `Core/Debug/OODebugTCPConsoleClient.m` → `Core/Debug/OODebugTCPConsoleClient.cpp` (674 / 998 lines) — *pending* — [findings](platform.md#oodebugtcpconsoleclient)
-- [ ] `Core/Debug/OOTCPStreamDecoderAbstractionLayer.m` → `Core/Debug/OOTCPStreamDecoderAbstractionLayer.cpp` (112 / 192 lines) — *pending* — [findings](platform.md#ootcpstreamdecoderabstractionlayer)
-- [ ] `Core/OOFullScreenController.m` → `Core/OOFullScreenController.cpp` (95 / 88 lines) — *pending* — [findings](platform.md#oofullscreencontroller)
-- [ ] `Core/OOJoystickManager.m` → `Core/OOJoystickManager.cpp` (525 / 629 lines) — *pending* — [findings](platform.md#oojoystickmanager)
-- [ ] `Core/OOJoystickProfile.m` → `Core/OOJoystickProfile.cpp` (549 / 509 lines) — *pending* — [findings](platform.md#oojoystickprofile)
+- [x] `Core/Debug/OODebugMonitor.m` → `Core/Debug/OODebugMonitor.cpp` (932 / 873 lines) — 33✅ 3⚠️ 8➖ — [findings](platform.md#oodebugmonitor)
+- [x] `Core/Debug/OODebugStandards.m` → `Core/Debug/OODebugStandards.cpp` (122 / 137 lines) — 7✅ — [findings](platform.md#oodebugstandards)
+- [x] `Core/Debug/OODebugSupport.m` → `Core/Debug/OODebugSupport.cpp` (135 / 87 lines) — 1✅ 1➖ — [findings](platform.md#oodebugsupport)
+- [x] `Core/Debug/OODebugTCPConsoleClient.m` → `Core/Debug/OODebugTCPConsoleClient.cpp` (674 / 998 lines) — 28✅ 4⚠️ 1❌ 1➖ — [findings](platform.md#oodebugtcpconsoleclient)
+- [x] `Core/Debug/OOTCPStreamDecoderAbstractionLayer.m` → `Core/Debug/OOTCPStreamDecoderAbstractionLayer.cpp` (112 / 192 lines) — 12✅ 1⚠️ 1❌ — [findings](platform.md#ootcpstreamdecoderabstractionlayer)
+- [x] `Core/OOFullScreenController.m` → `Core/OOFullScreenController.cpp` (95 / 88 lines) — 9✅ 1❌ 1➖ — [findings](platform.md#oofullscreencontroller)
+- [x] `Core/OOJoystickManager.m` → `Core/OOJoystickManager.cpp` (525 / 629 lines) — 31✅ 2⚠️ — [findings](platform.md#oojoystickmanager)
+- [x] `Core/OOJoystickProfile.m` → `Core/OOJoystickProfile.cpp` (549 / 509 lines) — 40✅ — [findings](platform.md#oojoystickprofile)
 - [ ] `SDL/GameController+SDLFullScreen.m` → `SDL/GameController+SDLFullScreen.cpp` (155 / 155 lines) — *pending* — [findings](platform.md#gamecontrollersdlfullscreen)
 - [ ] `SDL/MyOpenGLView+Input.m` → `SDL/MyOpenGLView+Input.cpp` (889 / 914 lines) — *pending* — [findings](platform.md#myopenglviewinput)
 - [ ] `SDL/MyOpenGLView.m` → `SDL/MyOpenGLView.cpp` (1397 / 1387 lines) — *pending* — [findings](platform.md#myopenglview)
@@ -291,27 +291,27 @@ Patterns that recur across files. Each instance is also recorded in its own file
 
 ### Game data, resources, registries, AI, strings — [gamedata.md](gamedata.md)
 
-- [ ] `Core/AI.m` → `Core/AI.cpp` (930 / 948 lines) — *pending* — [findings](gamedata.md#ai)
-- [ ] `Core/AIGraphViz.m` → `Core/AIGraphViz.cpp` (233 / 243 lines) — *pending* — [findings](gamedata.md#aigraphviz)
-- [ ] `Core/OOCharacter.m` → `Core/OOCharacter.cpp` (450 / 491 lines) — *pending* — [findings](gamedata.md#oocharacter)
-- [ ] `Core/OOColor.m` → `Core/OOColor.cpp` (497 / 550 lines) — *pending* — [findings](gamedata.md#oocolor)
-- [ ] `Core/OOCommodities.m` → `Core/OOCommodities.cpp` (534 / 581 lines) — *pending* — [findings](gamedata.md#oocommodities)
-- [ ] `Core/OOCommodityMarket.m` → `Core/OOCommodityMarket.cpp` (354 / 350 lines) — *pending* — [findings](gamedata.md#oocommoditymarket)
-- [ ] `Core/OOConstToString.m` → `Core/OOConstToString.cpp` (592 / 621 lines) — *pending* — [findings](gamedata.md#ooconsttostring)
-- [ ] `Core/OOConvertSystemDescriptions.m` → `Core/OOConvertSystemDescriptions.cpp` (352 / 305 lines) — *pending* — [findings](gamedata.md#ooconvertsystemdescriptions)
-- [ ] `Core/OOEntityFilterPredicate.m` → `Core/OOEntityFilterPredicate.cpp` (169 / 185 lines) — *pending* — [findings](gamedata.md#ooentityfilterpredicate)
-- [ ] `Core/OOEquipmentType.m` → `Core/OOEquipmentType.cpp` (748 / 704 lines) — *pending* — [findings](gamedata.md#ooequipmenttype)
-- [ ] `Core/OOOXZManager.m` → `Core/OOOXZManager.cpp` (2066 / 2256 lines) — *pending* — [findings](gamedata.md#oooxzmanager)
-- [ ] `Core/OOProbabilitySet.m` → `Core/OOProbabilitySet.cpp` (957 / 753 lines) — *pending* — [findings](gamedata.md#ooprobabilityset)
-- [ ] `Core/OORoleSet.m` → `Core/OORoleSet.cpp` (331 / 280 lines) — *pending* — [findings](gamedata.md#ooroleset)
-- [ ] `Core/OOShipGroup.m` → `Core/OOShipGroup.cpp` (481 / 440 lines) — *pending* — [findings](gamedata.md#ooshipgroup)
-- [ ] `Core/OOShipLibraryDescriptions.m` → `Core/OOShipLibraryDescriptions.cpp` (156 / 174 lines) — *pending* — [findings](gamedata.md#ooshiplibrarydescriptions)
-- [ ] `Core/OOShipRegistry.m` → `Core/OOShipRegistry.cpp` (1626 / 1541 lines) — *pending* — [findings](gamedata.md#ooshipregistry)
-- [ ] `Core/OOStringExpander.m` → `Core/OOStringExpander.cpp` (1191 / 1452 lines) — *pending* — [findings](gamedata.md#oostringexpander)
-- [ ] `Core/OOStringParsing.m` → `Core/OOStringParsing.cpp` (528 / 443 lines) — *pending* — [findings](gamedata.md#oostringparsing)
-- [ ] `Core/OOSystemDescriptionManager.m` → `Core/OOSystemDescriptionManager.cpp` (615 / 616 lines) — *pending* — [findings](gamedata.md#oosystemdescriptionmanager)
-- [ ] `Core/OOTrumble.m` → `Core/OOTrumble.cpp` (970 / 957 lines) — *pending* — [findings](gamedata.md#ootrumble)
-- [ ] `Core/ResourceManager.m` → `Core/ResourceManager.cpp` (1996 / 2129 lines) — *pending* — [findings](gamedata.md#resourcemanager)
+- [x] `Core/AI.m` → `Core/AI.cpp` (930 / 948 lines) — 41✅ 6⚠️ 2❌ 2➖ — [findings](gamedata.md#ai)
+- [x] `Core/AIGraphViz.m` → `Core/AIGraphViz.cpp` (233 / 243 lines) — 4✅ 2⚠️ — [findings](gamedata.md#aigraphviz)
+- [x] `Core/OOCharacter.m` → `Core/OOCharacter.cpp` (450 / 491 lines) — 29✅ 1⚠️ 1➖ — [findings](gamedata.md#oocharacter)
+- [x] `Core/OOColor.m` → `Core/OOColor.cpp` (497 / 550 lines) — 47✅ 1⚠️ 1➖ — [findings](gamedata.md#oocolor)
+- [x] `Core/OOCommodities.m` → `Core/OOCommodities.cpp` (534 / 581 lines) — 16✅ 6⚠️ 1➖ — [findings](gamedata.md#oocommodities)
+- [x] `Core/OOCommodityMarket.m` → `Core/OOCommodityMarket.cpp` (354 / 350 lines) — 25✅ 3⚠️ 1➖ — [findings](gamedata.md#oocommoditymarket)
+- [x] `Core/OOConstToString.m` → `Core/OOConstToString.cpp` (592 / 621 lines) — 43✅ 5❌ — [findings](gamedata.md#ooconsttostring)
+- [x] `Core/OOConvertSystemDescriptions.m` → `Core/OOConvertSystemDescriptions.cpp` (352 / 305 lines) — 8✅ 3⚠️ — [findings](gamedata.md#ooconvertsystemdescriptions)
+- [x] `Core/OOEntityFilterPredicate.m` → `Core/OOEntityFilterPredicate.cpp` (169 / 185 lines) — 19✅ 1➖ — [findings](gamedata.md#ooentityfilterpredicate)
+- [x] `Core/OOEquipmentType.m` → `Core/OOEquipmentType.cpp` (748 / 704 lines) — 59✅ 1⚠️ 6❌ 6➖ — [findings](gamedata.md#ooequipmenttype)
+- [x] `Core/OOOXZManager.m` → `Core/OOOXZManager.cpp` (2066 / 2256 lines) — 61✅ 5⚠️ 3❌ 3➖ — [findings](gamedata.md#oooxzmanager)
+- [x] `Core/OOProbabilitySet.m` → `Core/OOProbabilitySet.cpp` (957 / 753 lines) — 53✅ 2⚠️ 1❌ 25➖ — [findings](gamedata.md#ooprobabilityset)
+- [x] `Core/OORoleSet.m` → `Core/OORoleSet.cpp` (331 / 280 lines) — 14✅ 4⚠️ 1❌ 3➖ — [findings](gamedata.md#ooroleset)
+- [x] `Core/OOShipGroup.m` → `Core/OOShipGroup.cpp` (481 / 440 lines) — 24✅ 1⚠️ 7➖ — [findings](gamedata.md#ooshipgroup)
+- [x] `Core/OOShipLibraryDescriptions.m` → `Core/OOShipLibraryDescriptions.cpp` (156 / 174 lines) — 11✅ — [findings](gamedata.md#ooshiplibrarydescriptions)
+- [x] `Core/OOShipRegistry.m` → `Core/OOShipRegistry.cpp` (1626 / 1541 lines) — 36✅ 7⚠️ 8➖ — [findings](gamedata.md#ooshipregistry)
+- [x] `Core/OOStringExpander.m` → `Core/OOStringExpander.cpp` (1191 / 1452 lines) — 33✅ 5⚠️ 3❌ — [findings](gamedata.md#oostringexpander)
+- [x] `Core/OOStringParsing.m` → `Core/OOStringParsing.cpp` (528 / 443 lines) — 21✅ 1⚠️ 2❌ — [findings](gamedata.md#oostringparsing)
+- [x] `Core/OOSystemDescriptionManager.m` → `Core/OOSystemDescriptionManager.cpp` (615 / 616 lines) — 28✅ 1⚠️ 2➖ — [findings](gamedata.md#oosystemdescriptionmanager)
+- [x] `Core/OOTrumble.m` → `Core/OOTrumble.cpp` (970 / 957 lines) — 39✅ 1❌ 1➖ — [findings](gamedata.md#ootrumble)
+- [x] `Core/ResourceManager.m` → `Core/ResourceManager.cpp` (1996 / 2129 lines) — 58✅ 8⚠️ 3❌ 2➖ — [findings](gamedata.md#resourcemanager)
 
 ### Extra rows
 
