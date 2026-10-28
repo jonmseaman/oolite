@@ -6,7 +6,7 @@ a row is checked when every method in its coverage table has been compared and i
 
 **Legend:** ✅ equivalent · ⚠️ intentional divergence (cited) · ❌ suspected behaviour difference · ➖ removed/replaced
 
-**Progress:** 229 / 241 upstream `.m` files · extra rows below
+**Progress:** 230 / 241 upstream `.m` files · extra rows below
 
 ## Cross-cutting findings
 
@@ -184,7 +184,7 @@ Recorded per file. The bulk falls into three groups:
 
 ### Player entity and its categories — [entities-player.md](entities-player.md)
 
-- [ ] `Core/Entities/PlayerEntity.m` → `Core/Entities/PlayerEntity.cpp` (11911 / 12466 lines) — *pending* — [findings](entities-player.md#playerentity)
+- [x] `Core/Entities/PlayerEntity.m` → `Core/Entities/PlayerEntity.cpp` (11911 / 12466 lines) — 468✅ 14⚠️ 7❌ 3➖ — [findings](entities-player.md#playerentity)
 - [ ] `Core/Entities/PlayerEntityContracts.m` → `Core/Entities/PlayerEntityContracts.cpp` (1775 / 1898 lines) — *pending* — [findings](entities-player.md#playerentitycontracts)
 - [ ] `Core/Entities/PlayerEntityControls.m` → `Core/Entities/PlayerEntityControls.cpp` (4813 / 4962 lines) — *pending* — [findings](entities-player.md#playerentitycontrols)
 - [ ] `Core/Entities/PlayerEntityKeyMapper.m` → `Core/Entities/PlayerEntityKeyMapper.cpp` (1611 / 1719 lines) — *pending* — [findings](entities-player.md#playerentitykeymapper)
