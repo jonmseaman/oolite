@@ -1,17 +1,16 @@
 # Component test tier
 
 Gherkin scenarios driven over the debug-console TCP channel, asserting named, tolerant invariants
-about simulated gameplay. Specified in [`docs/phases/0-component-tier.md`](../../../../docs/phases/0-component-tier.md),
-decided in [ADR-0018](../../../../docs/decisions/0018-component-test-tier.md). The seam and
-exemplar is [S1](../../../../docs/stories/S1-police-kills-pirate.md).
+about simulated gameplay. The seam and exemplar is
+[S1](features/s1_police_kills_pirate.feature).
 
 ```bash
-python3 -m pytest upstream/oolite/tests/component/ -x -q
+python3 -m pytest oolite-dev/tests/component/ -x -q
 ```
 
-It needs a built game. By default it uses `upstream/oolite/build/meson_test/oolite.app`; override
+It needs a built game. By default it uses `oolite-dev/build/meson_test/oolite.app`; override
 with `--oolite-app <path>` or `OO_APP_DIR`. Each scenario launches its own game process on its own
-free port, so scenarios do not collide and the suite can run per bead.
+free port, so scenarios do not collide and the suite can run in parallel.
 
 | Variable | Default | What it does |
 |---|---:|---|
@@ -22,8 +21,7 @@ free port, so scenarios do not collide and the suite can run per bead.
 
 **This table is the interface.** A new `.feature` file that uses only these steps is fleet work and
 scores 7/7 against S1. Needing a step that is not here is a *new interface*: sizing check 5 fails,
-so stop and file a bead rather than adding one inside a conversion story
-([ADR-0018](../../../../docs/decisions/0018-component-test-tier.md) §5).
+so stop and report it rather than adding one inside a conversion story.
 
 | Step | Kind | Notes |
 |---|---|---|
@@ -48,13 +46,12 @@ for the role: for `police`, `pirate`, `trader` and `escort` it asks for a litera
 (`[viper]`, `[sidewinder]`, `[boa]`, `[sidewinder-escort]`, `ROLE_SHIP_KEY` in
 `steps/world_steps.py`), then sets `primaryRole` back to the role. A role spawn is a RANROT draw
 between hulls, and the role path also draws a pirate's starting bounty (20-70) across policeAI's
-`fineThreshold()` gate, so the same seed gave a different, sometimes non-engageable cast each run
-(oo-sjvz; LEARNINGS oo-qwk5, oo-rkm). A spawned pirate's bounty is set to `PIRATE_BOUNTY` (100)
+`fineThreshold()` gate, so the same seed gave a different, sometimes non-engageable cast each run.
+A spawned pirate's bounty is set to `PIRATE_BOUNTY` (100)
 for the same reason. A role with no pinned key falls back to the plain role draw. The step text is
 unchanged; add a key here, not a new step, when a new role needs to be deterministic.
 Pinning removes the draw, not the fight: a scenario that asserts who survives a long dogfight (S6)
-can still lose it, because a real-time fight on a software renderer is not seed-deterministic
-(oo-9aq4).
+can still lose it, because a real-time fight on a software renderer is not seed-deterministic.
 
 ## What this tier deliberately cannot see
 
@@ -97,7 +94,7 @@ Why the presses are what they are:
 
 - **`SendInput` by scancode, into the foreground window**, the GUI tier's recipe restated in
   `keyboard.py`: the SDL3 build dispatches by scancode, and synthetic input goes to whichever
-  window is focused. The tier already holds `tools/gui-lock`, which is what lets it take the
+  window is focused. The tier runs alone on the desktop, which is what lets it take the
   foreground. **Windows only**, like `test_paused_console_priority.py`.
 - **Longer than the GUI tier's 0.15 s.** This tier renders on llvmpipe, which draws 6-9 frames a
   second in the tutorial's flight scenes; the game samples keys once per frame, so a 0.15 s tap

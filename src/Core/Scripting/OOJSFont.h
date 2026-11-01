@@ -32,12 +32,5 @@ SOFTWARE.
 #pragma once
 
 #include "ooscript/JSEngine.hpp"
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void InitOOJSFont(ooscript::Context context, ooscript::Object global);
-
-#ifdef __cplusplus
-}
-#endif

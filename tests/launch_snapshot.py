@@ -14,7 +14,7 @@ Three things here are not obvious and are the reason the file looks the way it d
 
 * Readiness is measured on the GAME's clock, never on this script's. See wait_until_rendering.
 
-* The DESKTOP LOCK is taken by the command-line entry point, NOT by ``run_test`` (bug oo-ccy9).
+* The DESKTOP LOCK is taken by the command-line entry point, NOT by ``run_test``.
   Running this file as a script is the build's single smoke launch, and one real window on the
   interactive desktop must exclude the GUI tier's. But ``run_test`` is the reusable half that the
   N-concurrent claim above is about, and an exclusive mutex inside it would serialise - or
@@ -22,7 +22,7 @@ Three things here are not obvious and are the reason the file looks the way it d
   and leaves the library function alone.
 
 * The PREFS ROOT is per-run, by STAGING A PRIVATE oolite.app - not by a lock and not by an
-  environment variable (bug oo-pzc1). ``src/SDL/main.m:119`` does
+  environment variable. ``src/SDL/main.m:119`` does
 
       SDL_setenv_unsafe("GNUSTEP_USERS_ROOT", currentWorkingDir, YES)
 
@@ -35,25 +35,20 @@ Three things here are not obvious and are the reason the file looks the way it d
   other runs' preferences are silently lost).
 
   The only thing the game reads is WHERE ITS OWN BINARY LIVES, so isolation has to be a private
-  directory holding the binary. That is exactly what ``tests/golden/golden_run.py`` does (bug
-  oo-16s) and why it is the desktop-lock exemption: junctions for read-only directories, hard
-  links for files, real copies for the three directories the game WRITES. A lock was the wrong
-  answer here for the same reason it is wrong there - ``run_test`` is the N-concurrent half, and
-  an exclusive mutex inside it would serialise or deadlock the fan-out. The staging code is
-  duplicated rather than imported because this subtree is also pushed to the fork on its own,
-  where ``tests/golden/`` does not exist (same reason ``_desktop_lock_helper`` locates tools/ at
-  runtime).
+  directory holding the binary. That is what the staging here does: junctions for read-only
+  directories, hard links for files, real copies for the three directories the game WRITES.
+  ``run_test`` is the N-concurrent half, so nothing in it locks the desktop.
 
   ``--check-isolation`` and ``--prefs-race`` prove both halves offline, with no built game.
 
-* PATHS FROM THE COMMAND LINE CROSS A BOUNDARY (bug oo-vyey). The repository's shell is MSYS2
+* PATHS FROM THE COMMAND LINE CROSS A BOUNDARY. The repository's shell is MSYS2
   bash, so the documented way to run this - ``--load "$SAVE"`` with ``$SAVE`` a natural
   ``/c/Users/...`` path - hands an MSYS path to a NATIVE Windows python. ``os.path.abspath`` then
   resolves it against the current DRIVE (``/c/Users/x`` becomes ``C:/c/Users/x``, a real directory
   on this machine, which is how the mistake survives), and the same string would go on to the
   native game binary's ``-load``. Every path that arrives as an argument is therefore converted at
-  the boundary with ``cygpath -m``, exactly as ``tests/golden/run.sh:124`` and ``tools/gui-lock``
-  do. ``--check-msys-paths`` proves both directions offline.
+  the boundary with ``cygpath -m``, with the same conversion
+  any MSYS-to-native boundary needs. ``--check-msys-paths`` proves both directions offline.
 """
 
 import argparse
@@ -86,7 +81,7 @@ OOLITE_VERSION_KEY = "Oolite version"
 IS_WINDOWS = sys.platform == "win32" or (os.name == "nt")
 
 
-# --- THE MSYS PATH BOUNDARY (bug oo-vyey) ------------------------------------------------------
+# --- THE MSYS PATH BOUNDARY ------------------------------------------------------
 #
 # This script is a NATIVE Windows python invoked from MSYS2 bash, and the two disagree about what
 # a path is. `/c/Users/jon/save.oolite-save` is what the shell means; os.path.abspath resolves it
@@ -94,7 +89,7 @@ IS_WINDOWS = sys.platform == "win32" or (os.name == "nt")
 # a real directory (C:\c exists), so the mistake does not announce itself - it silently reads the
 # wrong tree, or hands the wrong string to the game's -load. cygpath is the only thing that knows
 # the mapping (it reads /etc/fstab and the MSYS root), so it is what does the conversion, exactly
-# as tests/golden/run.sh:124 and tools/gui-lock:35 already do.
+# as every MSYS-to-native boundary does.
 #
 # Applied ONCE, at the argument boundary, never deeper: a path already in native form is left
 # alone (cygpath -m is idempotent on `C:/...`), and off Windows there is no boundary to cross.
@@ -355,10 +350,10 @@ def _console_config_dir(host, port):
     return root
 
 
-# --- per-run prefs isolation (bug oo-pzc1) -----------------------------------------------------
+# --- per-run prefs isolation -----------------------------------------------------
 #
 # Real copies rather than links: these are the directories the GAME WRITES, and sharing them is
-# the collision. Same list as tests/golden/golden_run.py:56 - GNUstep/ holds Defaults/oolite.plist
+# the collision. GNUstep/ holds Defaults/oolite.plist
 # (the raced file), Logs/ holds Latest.log, oolite-saves/ holds commanders.
 PRIVATE_SUBDIRS = ("GNUstep", "Logs", "oolite-saves")
 
@@ -371,6 +366,14 @@ def _link_dir(source, target):
         _winapi.CreateJunction(source, target)
     else:
         os.symlink(source, target)
+
+
+def _link_file(source, target):
+    """Hard link, falling back to a copy (a different volume)."""
+    try:
+        os.link(source, target)
+    except OSError:
+        shutil.copy2(source, target)
 
 
 def stage_app(app_dir, staged):
@@ -390,6 +393,11 @@ def stage_app(app_dir, staged):
         if os.path.isdir(source):
             if name in PRIVATE_SUBDIRS:
                 shutil.copytree(source, target, dirs_exist_ok=True)
+            elif name == "MacOS":
+                # A bundle's executable must sit in a real Contents/MacOS: the game finds its
+                # Resources from the real path of the binary, so a linked directory would resolve
+                # back into the shared build.
+                shutil.copytree(source, target, dirs_exist_ok=True, copy_function=_link_file)
             else:
                 _link_dir(source, target)
         else:
@@ -444,7 +452,7 @@ def _is_reparse_point(path):
 def prefs_file(app_root):
     """The defaults file the game writes: GNUSTEP_USERS_ROOT/GNUstep/Defaults/oolite.plist.
 
-    Learned on bead oo-5rsa: this is an OpenStep 'old-style' plist, NOT XML, so plistlib cannot
+    Note: this is an OpenStep 'old-style' plist, NOT XML, so plistlib cannot
     parse a real one. Nothing here parses it; only its PATH and its owner matter.
     """
     return os.path.join(app_root, "GNUstep", "Defaults", "oolite.plist")
@@ -475,18 +483,21 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
 
     config_dir = _console_config_dir(host, port)
 
-    # THE PREFS ROOT (bug oo-pzc1). Stage a private oolite.app and run the binary from THERE, so
+    # THE PREFS ROOT. Stage a private oolite.app and run the binary from THERE, so
     # main.m:119 derives this run's GNUSTEP_USERS_ROOT from a directory nobody else is using. Not
     # an env var - the game overwrites it (SDL_setenv_unsafe ..., YES) - and not a lock, which
     # would serialise the N-concurrent fan-out this function exists to support.
     staged_root = tempfile.mkdtemp(prefix=f"oolite-run-{port}-{os.getpid()}-")
-    staged_app = os.path.join(staged_root, "app")
+    # In a macOS bundle the game only looks for Resources when its binary is in .../Contents/MacOS.
+    in_bundle = os.path.basename(app_dir) == "Contents"
+    staged_app = os.path.join(staged_root, "Contents" if in_bundle else "app")
     stage_app(app_dir, staged_app)
     print(f"[*] Private prefs root: {staged_app}")
 
     # Environment configuration for pure headless software offscreen rendering
     env = os.environ.copy()
-    if not IS_WINDOWS:
+    # SDL's offscreen driver has no OpenGL on macOS, so a real window is used there
+    if not IS_WINDOWS and sys.platform != "darwin":
         env["SDL_VIDEODRIVER"] = "offscreen"
     env["LIBGL_ALWAYS_SOFTWARE"] = "1"
     env["GALLIUM_DRIVER"] = "llvmpipe"
@@ -506,9 +517,9 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
         # src/SDL/main.m:167 - the argument after -load is taken as the commander to load, and it
         # must end in .oolite-save for the game to accept it.
         #
-        # Converted HERE too, not only in __main__ (bug oo-vyey): this is the boundary where the
+        # Converted HERE too, not only in __main__: this is the boundary where the
         # string stops being python's and becomes a NATIVE Windows process's argv, and run_test is
-        # a library function that callers - tests/golden, the component tier - invoke directly
+        # a library function that callers - the component tier among them - invoke directly
         # with whatever their own MSYS shell handed them. native_path is a no-op on an
         # already-native path, so the CLI's conversion is not undone by a second one.
         cmd += ["-load", native_path(load_save)]
@@ -539,6 +550,9 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
 
         if not conn:
             print("[!] Failure: Oolite failed to connect.")
+            if sys.platform == "darwin" and proc.poll() is None:
+                # Show where a hung process is stuck
+                subprocess.run(["sample", str(proc.pid), "3"], stdout=sys.stdout, stderr=sys.stderr)
             return False
 
         # 2. THE HANDSHAKE
@@ -750,10 +764,10 @@ def parse_args(argv=None):
     return args
 
 
-# --- offline self-checks (bug oo-pzc1) ---------------------------------------------------------
+# --- offline self-checks ---------------------------------------------------------
 #
-# Both need no built game and no desktop, so they still gate something real in the detached,
-# build-less checkout accept.sh merges into (the tools/check-splash-off.py --self-test pattern).
+# Both need no built game and no desktop, so they still gate something real in a build-less
+# checkout.
 
 
 def _fake_app(root):
@@ -1161,12 +1175,12 @@ def _check_msys_paths():
                 failures.append("-load argument %r does not name the save at %r" % (handed, real))
             if not os.path.isfile(handed):
                 failures.append("-load argument %r is not an existing file" % handed)
-            # The staging from bug oo-pzc1 must still be intact: the binary launched must be the
+            # The per-run staging must still be intact: the binary launched must be the
             # PRIVATE staged copy, never the shared build.
             launched = os.path.dirname(os.path.abspath(argv[0]))
             if os.path.normcase(launched) == os.path.normcase(os.path.abspath(app)):
                 failures.append("the run launched out of the SHARED build %s - per-run staging "
-                                "(bug oo-pzc1) was undone" % app)
+                                " was undone" % app)
     finally:
         subprocess.Popen = real_popen
         os.chdir(previous_cwd)
@@ -1261,35 +1275,6 @@ def _settle_units_check():
     return 0
 
 
-def _desktop_lock_helper():
-    """tools/desktop_lock from the OUTER repository, or None when there is none.
-
-    This file lives in a subtree that is also pushed to the fork on its own, where tools/ does
-    not exist; there is no fleet to collide with there, so a missing helper is not an error. When
-    the outer repository IS around us, its tools/gui-lock is the desktop mutex every launcher on
-    this machine shares, and this launcher must take it (bug oo-ccy9).
-    """
-    here = os.path.dirname(os.path.abspath(__file__))
-    while True:
-        tools = os.path.join(here, "tools")
-        if os.path.isfile(os.path.join(tools, "gui-lock")) and os.path.isfile(
-            os.path.join(tools, "desktop_lock.py")
-        ):
-            if tools not in sys.path:
-                sys.path.insert(0, tools)
-            import desktop_lock  # noqa: F401  - located at runtime, on purpose
-
-            return desktop_lock
-        parent = os.path.dirname(here)
-        if parent == here:
-            print(
-                "[!] no tools/desktop_lock.py above this checkout; "
-                "launching WITHOUT the desktop mutex"
-            )
-            return None
-        here = parent
-
-
 if __name__ == "__main__":
     args = parse_args()
 
@@ -1309,7 +1294,7 @@ if __name__ == "__main__":
     bin_name = "oolite.exe" if IS_WINDOWS else "oolite"
     original_cwd = os.getcwd()
     # native_path FIRST, then abspath: abspath on an MSYS path silently invents a real-looking
-    # C:/c/... that exists on this machine (bug oo-vyey). The same reasoning applies to --path and
+    # C:/c/... that exists on this machine. The same reasoning applies to --path and
     # --output, which also arrive from the MSYS shell and also end up in the native game's world
     # (the app dir becomes the staging source and the cwd; the output dir becomes OO_SNAPSHOTSDIR
     # and OO_LOGSDIR, read by the game itself).
@@ -1319,6 +1304,11 @@ if __name__ == "__main__":
     if os.path.isfile(target_dir):
         bin_name = os.path.basename(target_dir)
         target_dir = os.path.dirname(target_dir)
+        if os.path.basename(target_dir) == "MacOS" and (
+                os.path.basename(os.path.dirname(target_dir)) == "Contents"):
+            # An app bundle: stage the whole Contents, and run MacOS/oolite from it.
+            bin_name = os.path.join("MacOS", bin_name)
+            target_dir = os.path.dirname(target_dir)
 
     # Resolved before the chdir below, so relative paths mean what the caller meant.
     test_output = os.path.abspath(native_path(args.output))
@@ -1336,45 +1326,23 @@ if __name__ == "__main__":
         print(f"[*] Moving to {target_dir}")
         os.chdir(target_dir)
 
-        # THE DESKTOP LOCK (bug oo-ccy9). This is the smoke test, and it launches ONE game -
-        # which on Windows means one real window on the interactive desktop, because
-        # SDL_VIDEODRIVER=offscreen is deliberately not set there. Two games on the desktop at
-        # once steal each other's foreground, so it queues behind the GUI tier rather than
-        # racing it.
+        # This is the smoke test, and it launches ONE game - which on Windows means one real
+        # window on the interactive desktop, because SDL_VIDEODRIVER=offscreen is deliberately
+        # not set there. Two games on the desktop at once steal each other's foreground, so run
+        # it alone (tests/run.sh smoke).
         #
-        # The lock lives in the OUTER repository (tools/gui-lock), not in this subtree, and this
-        # file must keep working when the subtree is pushed to the fork on its own - so the
-        # helper is located at runtime and a missing one is a warning, not a failure. It is also
-        # taken around run_test only: acquiring before the chdir above would hold the desktop
-        # while resolving paths, which is free but says the wrong thing about what the lock
-        # protects.
-        lock_helper = _desktop_lock_helper()
-        if lock_helper is None:
-            success = run_test(
-                bin_name,
-                test_output,
-                args.port,
-                args.host,
-                load_save,
-                args.settle_game_seconds,
-                args.ready_timeout,
-                app_dir=target_dir,
-                keep_staged=args.keep_staged,
-            )
-        else:
-            with lock_helper.desktop_lock("smoke", start=__file__, stream=sys.stdout):
-                # Run the test from within the Oolite directory
-                success = run_test(
-                    bin_name,
-                    test_output,
-                    args.port,
-                    args.host,
-                    load_save,
-                    args.settle_game_seconds,
-                    args.ready_timeout,
-                    app_dir=target_dir,
-                    keep_staged=args.keep_staged,
-                )
+        # Run the test from within the Oolite directory
+        success = run_test(
+            bin_name,
+            test_output,
+            args.port,
+            args.host,
+            load_save,
+            args.settle_game_seconds,
+            args.ready_timeout,
+            app_dir=target_dir,
+            keep_staged=args.keep_staged,
+        )
 
     except Exception as e:
         print(f"[!] Critical Error: {e}")

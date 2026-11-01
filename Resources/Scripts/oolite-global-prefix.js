@@ -209,10 +209,10 @@ if (global.timeAccelerationFactor === undefined)
 })(special);
 
 
-/*	Mozilla-compatibility polyfills for expansions written against SpiderMonkey (Phase 1 bead
-	oo-1gc.6, ADR-0023): toSource()/quote()/uneval(), exactly as tools/oxp-compat-shim ships them
-	(bead oo-864), now built in so an expansion whose author is unreachable keeps working without
-	the user installing the shim. Each install is guarded, so under SpiderMonkey this is a no-op.
+/*	Mozilla-compatibility polyfills for expansions written against SpiderMonkey:
+	toSource()/quote()/uneval(), exactly as tools/oxp-compat-shim ships them, built in
+	so an expansion whose author is unreachable keeps working without the user
+	installing the shim. Each install is guarded, so under SpiderMonkey this is a no-op.
 */
 (function ()
 {
@@ -369,8 +369,7 @@ if (global.timeAccelerationFactor === undefined)
 
 /*	SpiderMonkey's Array and String "generics" (Array.forEach(array, fn), String.replace(string,
 	...)): Mozilla-only statics that call the prototype method with the first argument as `this`.
-	Installed only where the engine lacks them, so they are a no-op under SpiderMonkey 1.8.5
-	(Phase 1 bead oo-1gc.6, ADR-0023).
+	Installed only where the engine lacks them, so they are a no-op under SpiderMonkey 1.8.5.
 */
 (function ()
 {

@@ -1,0 +1,13 @@
+{
+  // clangd does completion and diagnostics from the meson compile database; see .clangd.
+  // "clangd" must resolve to MSYS2's ucrt64/bin/clangd.exe (put ucrt64/bin on PATH, or set a
+  // full path here in your user settings).
+  "clangd.path": "clangd",
+  "clangd.arguments": ["--background-index", "--header-insertion=never"],
+  // Microsoft's C/C++ IntelliSense would fight clangd over the same files.
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "editor.formatOnSave": false,
+  "files.associations": {
+    "*.h": "cpp"
+  }
+}

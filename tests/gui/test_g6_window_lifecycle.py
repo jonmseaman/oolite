@@ -1,6 +1,6 @@
 """G6 - window lifecycle: resize, minimise/restore, fullscreen.
 
-docs/phases/0-gui-tier.md G6: "Resize, minimise/restore, fullscreen toggle. GL context survival."
+G6: "Resize, minimise/restore, fullscreen toggle. GL context survival."
 
 Written the way test_g3_exit_via_window_close.py is written: SHORT where it can be, and reusing
 conftest.py wholesale. The desktop lock, the readiness gate, DPI awareness, the pinned window,
@@ -87,10 +87,10 @@ Five agents share this machine. Two consequences, both handled rather than hoped
 Finally, the window is put back the way the tier hands it over - pinned at (0,0) at
 PINNED_CLIENT_SIZE - before the game is asked to exit, so nothing this test moved outlives it.
 
-    python3 -m pytest upstream/oolite/tests/gui/test_g6_window_lifecycle.py -x -q
+    python3 -m pytest oolite-dev/tests/gui/test_g6_window_lifecycle.py -x -q
 
-Needs the desktop: a real window, unlocked and logged in (ADR-0017). It takes tools/gui-lock for
-the duration, via the ``game`` fixture - this file launches nothing of its own.
+Needs the desktop: a real window, unlocked and logged in, left alone while it runs.
+The game is launched through the ``game`` fixture; this file launches nothing of its own.
 """
 
 import ast
@@ -120,7 +120,7 @@ SRC_DIR = os.path.join(OOLITE_ROOT, "src")
 if TESTS_DIR not in sys.path:
     sys.path.insert(0, TESTS_DIR)
 
-# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py, oo-7j3t).
+# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py).
 from source_paths import iter_source_files, resolve_source, source_stem  # noqa: E402
 
 # The staging helpers, imported rather than re-written - the same ones G7 uses. unstage_app in
@@ -613,7 +613,7 @@ def test_g6_window_lifecycle(window_witness, game):
         "back somewhere else the moment anything else restored it."
     )
 
-    # GL CONTEXT SURVIVAL, which is the reason G6 exists at all (docs/phases/0-gui-tier.md).
+    # GL CONTEXT SURVIVAL, which is the reason G6 exists at all.
     # Two separate claims: the game is still STEPPING FRAMES (UNIVERSE's clock only advances
     # inside the run loop, OOJSClock.m) and it still knows how big its drawable is. A game whose
     # context died on the minimise typically survives as a process, which is exactly why
@@ -876,7 +876,7 @@ def test_the_fullscreen_toggle_has_exactly_two_routes_and_g6_takes_only_the_key(
     callers = []
     for path, source in _tree_sources():
         for number, line in enumerate(source.splitlines(), 1):
-            if re.search(r"\btoggleScreenMode\s*\]", line):
+            if re.search(r"\btoggleScreenMode\s*\(\)\s*;", line) and not re.search(r"\bvoid\b", line):
                 callers.append((f"{os.path.relpath(path, SRC_DIR)}:{number}", line.strip()))
     assert callers, "nothing calls -toggleScreenMode any more; F12 would toggle nothing"
     assert len(callers) == 2, (
@@ -898,7 +898,7 @@ def test_the_fullscreen_toggle_has_exactly_two_routes_and_g6_takes_only_the_key(
     menu_site = by_file.get("Core/Entities/PlayerEntityControls")
     assert menu_site, f"no -toggleScreenMode call in PlayerEntityControls.m; callers: {callers}"
     guard = _source_window(menu_site, before=3)
-    assert "GUI_ROW(GAME,DISPLAYSTYLE)" in guard, (
+    assert "GUI_ROW(GAME,DISPLAYSTYLE)" in guard.replace(" ", ""), (
         f"the menu route to -toggleScreenMode ({menu_site}) is no longer gated on the Game "
         "Options Display Style row, so it may now be reachable from the start screen and G6's "
         "F12 would no longer be the only possible cause of a fullscreen transition. The lines "
@@ -922,7 +922,7 @@ def test_the_launching_test_proves_it_is_on_the_start_screen_before_f12():
     launching test must ESTABLISH that the game is on the start screen at the moment it presses
     F12 - otherwise "the game went fullscreen after F12" could in principle be the other route.
     Read off ast.Call nodes rather than by grep: a docstring naming gui_screen must not satisfy
-    this (the substring-guard defect a sibling bead shipped).
+    this (the substring-guard defect).
     """
     with open(os.path.join(HERE, os.path.basename(__file__)), "r", encoding="utf-8") as handle:
         tree = ast.parse(handle.read())
@@ -967,7 +967,11 @@ def test_the_fullscreen_flag_is_only_assigned_by_the_toggle_at_runtime():
     assignments = []
     for path, source in _tree_sources():
         for number, line in enumerate(source.splitlines(), 1):
-            if re.search(r"\bfullScreen\s*=(?!=)", line) and "==" not in line:
+            if (
+                re.search(r"\bfullScreen\s*=(?!=)", line)
+                and "==" not in line
+                and not re.match(r"\s*bool\s+fullScreen\b", line)  # the member declaration
+            ):
                 assignments.append((f"{os.path.relpath(path, SRC_DIR)}:{number}", line.strip()))
     assert assignments, "nothing assigns fullScreen; the observable does not exist"
     runtime = [
@@ -986,7 +990,7 @@ def test_the_fullscreen_flag_is_only_assigned_by_the_toggle_at_runtime():
     ]
     for line in startup_only:
         assert (
-            "NO;" in line
+            "false;" in line
             or "userDefaults" in line
             or "cmdline_arguments" in line
         ), (
@@ -1040,8 +1044,8 @@ def test_the_surface_log_line_spells_the_mode():
         source = handle.read()
     # Either spelling of the same log line: the ObjC OOLog format "...%d x %d, %@." with
     # @"fullscreen" : @"windowed", or the C++ OO_LOG format "...{} x {}, {}." with
-    # "fullscreen" : "windowed" it became in Phase 2 (oo-je2b). Jon approved accepting both,
-    # 2026-09-29 (bead oo-3rb.332).
+    # "fullscreen" : "windowed" it became. Jon approved accepting both,
+    # 2026-09-29.
     assert ("Requested a new surface of %d x %d, %@." in source
             or "Requested a new surface of {} x {}, {}." in source), (
         "the surface log line has been reworded; both this file's fullscreen witness and "
@@ -1159,8 +1163,8 @@ def test_the_test_measures_its_own_window_at_every_phase():
 
     Five agents share this desktop and conftest._pin_window parks every instance at (0,0) at the
     same size, so a sibling's window is indistinguishable by geometry alone. AST, never a
-    substring: a docstring naming the helper must not hold this guard green (the defect a
-    sibling bead shipped).
+    substring: a docstring naming the helper must not hold this guard green (the substring-guard
+    defect).
     """
     with open(os.path.join(HERE, os.path.basename(__file__)), "r", encoding="utf-8") as handle:
         tree = ast.parse(handle.read())
@@ -1243,7 +1247,7 @@ def test_g6_does_not_pretend_to_run_the_game_without_a_desktop():
     and report that the window lifecycle had been verified on a machine with no build. It must
     also carry no skip marker of its own: OO_GUI_REQUIRE=1 turns the fixture's legitimate
     platform skip into a failure (conftest.require_gui_platform), and a decorator here would sit
-    outside that mechanism (oo-7by1).
+    outside that mechanism.
     """
     with open(os.path.join(HERE, os.path.basename(__file__)), "r", encoding="utf-8") as handle:
         tree = ast.parse(handle.read())
@@ -1259,7 +1263,7 @@ def test_g6_does_not_pretend_to_run_the_game_without_a_desktop():
             f"the launching test is marked offline; it would pass with no build. {text}"
         )
         assert "skip" not in text, (
-            f"the launching test carries its own skip marker (oo-7by1). {text}"
+            f"the launching test carries its own skip marker. {text}"
         )
     calls = {
         node.func.attr
@@ -1267,5 +1271,5 @@ def test_g6_does_not_pretend_to_run_the_game_without_a_desktop():
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
     }
     assert "importorskip" not in calls, (
-        "no importorskip in this tier: a hard dependency must fail, not skip (oo-7by1)"
+        "no importorskip in this tier: a hard dependency must fail, not skip"
     )

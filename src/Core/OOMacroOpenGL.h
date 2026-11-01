@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#if OOLITE_MAC_OS_X && !defined(OOLITE_NO_CGL_MACRO)
+#if OOLITE_MAC_COCOA_UI && !defined(OOLITE_NO_CGL_MACRO)
 
 #if MAC_OS_X_VERSION_10_4 <= MAC_OS_X_VERSION_MAX_ALLOWED
 
@@ -44,12 +44,13 @@ MA 02110-1301, USA.
 
 #import <OpenGL/CGLMacro.h>
 
-#define OO_ENTER_OPENGL() CGLContextObj CGL_MACRO_CONTEXT = CGLGetCurrentContext();
+#define OO_ENTER_OPENGL() \
+  CGLContextObj CGL_MACRO_CONTEXT = CGLGetCurrentContext();
 
 #endif
 #else
 // Not OS X
 #define OO_ENTER_OPENGL() \
-    do {                  \
-    } while (0)
+  do {                    \
+  } while (0)
 #endif

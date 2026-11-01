@@ -1,6 +1,6 @@
 """G8 - the scenario screen, entered from start-screen row 22 and left again by its row 1.
 
-docs/phases/0-gui-tier.md G8: "Launch -> confirm row 22 -> confirm row 1 (``Return to Menu``) ->
+G8: "Launch -> confirm row 22 -> confirm row 1 (``Return to Menu``) ->
 verify start screen -> exit". The bug class is a GUI state machine that goes one way: a screen you
 can enter and cannot leave is a wedged game, and it is exactly what a rewrite of the screen
 dispatchers breaks without breaking anything that compiles.
@@ -21,7 +21,7 @@ Written the way the two merged tests closest to it are written, and reusing both
   own echo - it is split in the source and joined at runtime, and the answer is the text between
   the SECOND and third occurrence, hence ``count >= 2``) and the per-frame key sampling are G5's,
   restated here for the same reason G2 restated them: a shared helper added to conftest.py by two
-  concurrent GUI beads is a guaranteed merge conflict, and nothing below is needed by any other
+  concurrent GUI tests is a guaranteed merge conflict, and nothing below is needed by any other
   test.
 
 WHAT "ROW 1" ACTUALLY IS ON THE SCENARIO SCREEN. DERIVED, NOT ASSUMED.
@@ -93,10 +93,10 @@ This file reads no expansion content: nothing here opens an .oxp or .oxz, and th
 ever confirms are the start screen's scenario row, the scenario screen's ``exit`` row and the
 start screen's ` Exit Game ` row.
 
-    python3 -m pytest upstream/oolite/tests/gui/test_g8_scenario_screen_back_out.py -x -q
+    python3 -m pytest oolite-dev/tests/gui/test_g8_scenario_screen_back_out.py -x -q
 
-Needs the desktop: a real window, unlocked and logged in (ADR-0017). It takes tools/gui-lock for
-the duration, via the ``game`` fixture - this file launches nothing of its own.
+Needs the desktop: a real window, unlocked and logged in, left alone while it runs.
+The game is launched through the ``game`` fixture; this file launches nothing of its own.
 """
 
 import ast
@@ -125,7 +125,7 @@ TESTS_DIR = os.path.abspath(os.path.join(HERE, ".."))
 if TESTS_DIR not in sys.path:
     sys.path.insert(0, TESTS_DIR)
 
-# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py, oo-7j3t).
+# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py).
 from source_paths import iter_source_files, resolve_source  # noqa: E402
 PLAYER_ENTITY = resolve_source("Core", "Entities", "PlayerEntity")
 PLAYER_ENTITY_H = os.path.join(SRC_DIR, "Core", "Entities", "PlayerEntity.h")
@@ -181,7 +181,7 @@ def _method_body(source, signature):
 
 
 def _start_screen_row_zero(body):
-    # `int row_zero = N;` became `int row_zero; row_zero = N;` in the .m -> .mm switch (oo-x7o):
+    # `int row_zero = N;` became `int row_zero; row_zero = N;` in the .m -> .mm switch:
     # C++ forbids a case label jumping past an initialisation. Either spelling carries N.
     match = re.search(r"int\s+row_zero\s*(?:=|;\s*row_zero\s*=)\s*(\d+)\s*;", body)
     assert match, (
@@ -200,11 +200,11 @@ def scenario_screen_row():
     one this test wants, and ``K + row_zero`` is its row. Nothing is hardcoded, so a menu that
     gains or loses an entry above the scenario row fails loudly instead of opening Game Options.
     """
-    body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
+    body = _method_body(_read(PLAYER_CONTROLS), "void PlayerEntity::pollDemoControls(double")
     row_zero = _start_screen_row_zero(body)
     branch = re.search(
-        r"\[gui selectedRow\]\s*==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{(?:[^{}]*?)"
-        r"\[self setGuiToScenarioScreen:",
+        r"==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{(?:[^{}]*?)"
+        r"setGuiToScenarioScreen\(",
         body,
         re.S,
     )
@@ -222,14 +222,13 @@ def exit_row_dispatch():
     actually contains is what makes the final shutdown evidence attributable to THIS row rather
     than to one of the tree's other -exitAppWithContext: call sites.
     """
-    body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
+    body = _method_body(_read(PLAYER_CONTROLS), "void PlayerEntity::pollDemoControls(double")
     row_zero = _start_screen_row_zero(body)
     # Either spelling of the exit call: the ObjC -exitAppWithContext:@"..." or the C++
-    # -cxx_exitAppWithContext:"..." it became in Phase 2 (oo-6abg). Jon approved accepting
-    # both, 2026-09-29 (bead oo-3rb.332).
+    # -cxx_exitAppWithContext:"..." it became. Jon approved accepting
+    # both, 2026-09-29.
     branch = re.search(
-        r"\[gui selectedRow\]\s*==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{\s*"
-        r"\[\[UNIVERSE gameController\] (?:exitAppWithContext:@|cxx_exitAppWithContext:)\"([^\"]+)\"\]",
+        r"==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{[^{}]*?exitAppWithContext\(\s*\"([^\"]+)\"",
         body,
     )
     assert branch, (
@@ -264,7 +263,7 @@ def scenario_exit_row():
     disagree would mean this test confirms a row whose visible text is not the one the story
     names. The offset is subtracted from ``GUI_ROW_SCENARIOS_START`` rather than written as 1.
     """
-    body = _method_body(_read(PLAYER_LOADSAVE), "- (void) setGuiToScenarioScreen:(int)page")
+    body = _method_body(_read(PLAYER_LOADSAVE), "void PlayerEntity::setGuiToScenarioScreen(int page)")
     start_row_name = re.search(
         r"OOGUIRow\s+start_row\s*=\s*(GUI_ROW_SCENARIOS_START)\s*;", body
     )
@@ -272,10 +271,11 @@ def scenario_exit_row():
         "-setGuiToScenarioScreen: no longer builds its rows from GUI_ROW_SCENARIOS_START; G8's "
         "back-out row derivation no longer describes the screen"
     )
-    # Either spelling (Jon approved accepting both, 2026-09-30, bead oo-3rb.332): the ObjC
-    # form or the C++ form it became in Phase 2 (DESC(@"...") -> OO_DESC("..."), oo-3rb.321; setKey:@"exit" -> cxx_setKey:"exit", oo-q01b).
+    # Either spelling (Jon approved accepting both, 2026-09-30): the ObjC form or
+    # the C++ form it became (DESC(@"...") -> OO_DESC("..."); setKey:@"exit" ->
+    # cxx_setKey:"exit").
     label = re.search(
-        r'(?:DESC\(@"|OO_DESC\(")' + re.escape(SCENARIO_EXIT_DESC_KEY) + r'"\).*?forRow:start_row\s*-\s*(\d+)\]',
+        r'OO_DESC\("' + re.escape(SCENARIO_EXIT_DESC_KEY) + r'"\).*?,\s*start_row\s*-\s*(\d+)\)',
         body,
         re.S,
     )
@@ -284,7 +284,7 @@ def scenario_exit_row():
         "at a start_row-relative offset, so G8 cannot find the ` Return to Menu ` row"
     )
     key = re.search(
-        r'(?:setKey:@"|cxx_setKey:")' + re.escape(SCENARIO_EXIT_GUI_KEY) + r'"\s+forRow:start_row\s*-\s*(\d+)\]',
+        r'setKey\("' + re.escape(SCENARIO_EXIT_GUI_KEY) + r'",\s*start_row\s*-\s*(\d+)\)',
         body,
     )
     assert key, (
@@ -361,7 +361,7 @@ class ScreenWitness:
                 self._conn, _ = self._server.accept()
                 # An accepted socket INHERITS the listener's non-blocking mode on Windows, so
                 # _recv_exactly would raise WinError 10035 instead of waiting for the rest of a
-                # packet (oo-8yp). Every read is deadline-guarded by select(), so blocking is safe.
+                # packet. Every read is deadline-guarded by select(), so blocking is safe.
                 self._conn.setblocking(True)
                 self._handshake()
                 return self
@@ -561,7 +561,7 @@ def test_g8_scenario_screen_back_out(screen_witness, game):
 
     # Asked of the OS process table, not of proc.poll() - wait() above already stored that code.
     assert_no_surviving_game_processes(game.proc.pid)
-    # G9 hygiene, with the launch-time defaults mark the fixture recorded (oo-5rsa).
+    # G9 hygiene, with the launch-time defaults mark the fixture recorded.
     assert_clean_exit(game)
     # And the shutdown ran to its last line, for the START-SCREEN ` Exit Game ` row.
     assert_shutdown_path_completed(game, expected_context=EXPECTED_EXIT_CONTEXT)
@@ -625,25 +625,15 @@ def test_the_arrival_observable_has_exactly_two_assignment_sites_and_only_one_is
         "out of the live game; every assignment site must be shown unobservable or unreachable."
     )
 
-    setter = _method_body(_read(PLAYER_LOADSAVE), "- (void) setGuiToScenarioScreen:(int)page")
+    setter = _method_body(_read(PLAYER_LOADSAVE), "void PlayerEntity::setGuiToScenarioScreen(int page)")
     assert re.search(r"gui_screen\s*=\s*" + SCENARIO_SCREEN, setter), (
         "-setGuiToScenarioScreen: no longer assigns gui_screen = " + SCENARIO_SCREEN
     )
 
-    # Either spelling (Jon approved accepting both, 2026-09-30, bead oo-3rb.332): the ObjC
-    # form or the C++ form it became in Phase 2 (loadPlayerFromFile:(NSString *) -> (const std::string &), oo-3rb.177).
+    # Either spelling (Jon approved accepting both, 2026-09-30): the ObjC form or
+    # the C++ form it became (loadPlayerFromFile:(NSString *) -> (const std::string &)).
     loadsave = _read(PLAYER_LOADSAVE)
-    loader_signature = next(
-        (
-            sig
-            for sig in (
-                "- (BOOL) loadPlayerFromFile:(NSString *)fileToOpen asNew:",
-                "- (BOOL) loadPlayerFromFile:(const std::string &)fileToOpen asNew:",
-            )
-            if sig in loadsave
-        ),
-        "- (BOOL) loadPlayerFromFile:(NSString *)fileToOpen asNew:",
-    )
+    loader_signature = "bool PlayerEntity::loadPlayerFromFile("
     loader = _method_body(loadsave, loader_signature)
     assign = re.search(r"gui_screen\s*=\s*" + SCENARIO_SCREEN, loader)
     assert assign, (
@@ -651,7 +641,7 @@ def test_the_arrival_observable_has_exactly_two_assignment_sites_and_only_one_is
         "that it cannot be observed was made about THAT method and must be remade"
     )
     tail = loader[assign.end():]
-    status_call = tail.find("[self setGuiToStatusScreen]")
+    status_call = tail.find("setGuiToStatusScreen()")
     assert status_call >= 0, (
         "-loadPlayerFromFile:asNew: assigns gui_screen = " + SCENARIO_SCREEN + " and no longer "
         "calls -setGuiToStatusScreen afterwards. That value would now SURVIVE into the run loop, "
@@ -668,13 +658,13 @@ def test_the_arrival_observable_has_exactly_two_assignment_sites_and_only_one_is
     # And -setGuiToStatusScreen really is what overwrites it.
     assert re.search(
         r"gui_screen\s*=\s*GUI_SCREEN_STATUS",
-        _method_body(_read(PLAYER_ENTITY), "- (void) setGuiToStatusScreen"),
+        _method_body(_read(PLAYER_ENTITY), "void PlayerEntity::setGuiToStatusScreen()"),
     ), "-setGuiToStatusScreen no longer assigns gui_screen, so it cannot overwrite the load path's"
 
 
 @pytest.mark.offline
 def test_the_scenario_row_and_the_back_out_row_are_derived_and_agree_with_the_story():
-    """The two derived rows must equal the numbers docs/phases/0-gui-tier.md's G8 row names.
+    """The two derived rows must equal the numbers the G8 row names.
 
     NOT because the literals are the source of truth - the game's source is, and that is what the
     functions above read - but because a silent divergence is the failure this guards. If the
@@ -686,13 +676,13 @@ def test_the_scenario_row_and_the_back_out_row_are_derived_and_agree_with_the_st
     assert scenario_exit_row() == SCENARIO_EXIT_ROW
     assert SCENARIO_ROW == 22, (
         f"the derivation now puts the scenario screen on start-screen row {SCENARIO_ROW}, not "
-        "the 22 in docs/phases/0-gui-tier.md's G8 row. That is not necessarily a bug - the start "
+        "the 22 in the G8 row. That is not necessarily a bug - the start "
         "menu may have gained or lost an entry - but the story and this test must be updated "
         "together rather than the test silently confirming a different row."
     )
     assert SCENARIO_EXIT_ROW == 1, (
         f"the derivation now puts the scenario screen's ` {SCENARIO_EXIT_LABEL} ` on row "
-        f"{SCENARIO_EXIT_ROW}, not the 1 in docs/phases/0-gui-tier.md's G8 row. Same rule: "
+        f"{SCENARIO_EXIT_ROW}, not the 1 in the G8 row. Same rule: "
         "update the story and this test together."
     )
     # The back-out row must be distinct from every scenario row, or "confirm it" is ambiguous.
@@ -728,7 +718,7 @@ def test_the_back_out_row_is_the_row_the_story_names():
     )
     assert match.group(1) == SCENARIO_EXIT_LABEL, (
         f"{SCENARIO_EXIT_DESC_KEY!r} now reads {match.group(1)!r}, not {SCENARIO_EXIT_LABEL!r}. "
-        "docs/phases/0-gui-tier.md's G8 row names that text; the story and this test must be "
+        "the G8 row names that text; the story and this test must be "
         "updated together."
     )
 
@@ -748,9 +738,9 @@ def test_the_back_out_chain_is_the_only_way_off_the_scenario_screen_by_that_row(
     Without this, "confirm row 1 and the game came back" would be a coincidence this file has no
     account of.
     """
-    start_scenario = _method_body(_read(PLAYER_LOADSAVE), "- (BOOL) startScenario")
-    # Either spelling (Jon approved accepting both, 2026-09-30, bead oo-3rb.332): the ObjC
-    # form or the C++ form it became in Phase 2 ([key isEqualToString:@"exit"] -> key == "exit", oo-3rb.177).
+    start_scenario = _method_body(_read(PLAYER_LOADSAVE), "bool PlayerEntity::startScenario()")
+    # Either spelling (Jon approved accepting both, 2026-09-30): the ObjC form or
+    # the C++ form it became ([key isEqualToString:@"exit"] -> key == "exit").
     exit_branch = re.search(
         r'if\s*\(\s*(?:\[key isEqualToString:@"'
         + re.escape(SCENARIO_EXIT_GUI_KEY)
@@ -764,8 +754,8 @@ def test_the_back_out_chain_is_the_only_way_off_the_scenario_screen_by_that_row(
         f"-startScenario no longer has an `if ([key isEqualToString:@\"{SCENARIO_EXIT_GUI_KEY}\"])"
         "` branch, so confirming the back-out row no longer means 'do not start a scenario'"
     )
-    assert re.search(r"return\s+NO\s*;", exit_branch.group(1)), (
-        f"-startScenario's {SCENARIO_EXIT_GUI_KEY!r} branch no longer returns NO: "
+    assert re.search(r"return\s+(?:NO|false)\s*;", exit_branch.group(1)), (
+        f"-startScenario's {SCENARIO_EXIT_GUI_KEY!r} branch no longer returns false: "
         f"{exit_branch.group(1)!r}. The dispatcher backs out only on NO, so this row would now "
         "do something else entirely."
     )
@@ -776,18 +766,18 @@ def test_the_back_out_chain_is_the_only_way_off_the_scenario_screen_by_that_row(
         f"-pollGuiScreenControls has no `case {SCENARIO_SCREEN}:` any more; the scenario screen "
         "no longer has a dispatcher and G8's back-out has nothing to drive"
     )
-    case_end = controls.find("\n\t\tcase ", case_start + 1)
+    case_end = controls.find("\n    case ", case_start + 1)
     assert case_end > case_start, "could not find the end of the scenario screen's case block"
     case_body = controls[case_start:case_end]
     back_out = re.search(
-        r"if\s*\(\s*!\s*\[self startScenario\]\s*\)\s*\{(.*?)\}", case_body, re.S
+        r"if\s*\(\s*!\s*startScenario\(\)\s*\)\s*\{(.*?)\}", case_body, re.S
     )
     assert back_out, (
-        f"the {SCENARIO_SCREEN} dispatcher no longer has an `if (![self startScenario])` branch, "
+        f"the {SCENARIO_SCREEN} dispatcher no longer has an `if (!startScenario())` branch, "
         "so a NO from the exit row no longer returns the game to the start screen"
     )
-    assert "setGuiToIntroFirstGo:YES" in back_out.group(1), (
-        "the `if (![self startScenario])` branch no longer calls -setGuiToIntroFirstGo:YES: "
+    assert "setGuiToIntroFirstGo(true)" in back_out.group(1), (
+        "the `if (!startScenario())` branch no longer calls setGuiToIntroFirstGo(true): "
         f"{back_out.group(1)!r}. That call is what assigns {START_SCREEN}, which is G8's RETURN "
         "observable."
     )
@@ -801,8 +791,8 @@ def test_the_back_out_chain_is_the_only_way_off_the_scenario_screen_by_that_row(
         "or the select key, so game.confirm_row() would not reach -startScenario at all"
     )
     # And the screen does NOT preselect the back-out row: this is why the test selects it first.
-    setter = _method_body(_read(PLAYER_LOADSAVE), "- (void) setGuiToScenarioScreen:(int)page")
-    assert re.search(r"setSelectedRow:start_row\s*\]", setter), (
+    setter = _method_body(_read(PLAYER_LOADSAVE), "void PlayerEntity::setGuiToScenarioScreen(int page)")
+    assert re.search(r"setSelectedRow\(start_row\)", setter), (
         "-setGuiToScenarioScreen: no longer leaves the selection on start_row. G8 selects the "
         "back-out row explicitly BECAUSE it is not preselected; if that changed, the reason for "
         "the extra select_row call has changed too and should be re-read."
@@ -814,7 +804,7 @@ def test_g8_asserts_arrival_and_return_as_separate_properties():
     """THE ANTI-DECAY GUARD: two assertions, two messages, and the game asked both times.
 
     Read from this file's own AST, never its text: a docstring or a comment containing
-    "ARRIVAL FAILED" is not an assertion, and a sibling bead's substring guard was held green by
+    "ARRIVAL FAILED" is not an assertion, and a sibling test's substring guard was held green by
     exactly that. Every requirement below is checked against real ``ast.Assert``/``ast.Call``
     nodes inside the launching test.
 
@@ -974,7 +964,7 @@ def test_the_rows_are_derived_from_the_game_source_and_not_written_down():
         value, _index, _count = assigned[constant]
         assert isinstance(value, ast.Call) and isinstance(value.func, ast.Name), (
             f"{constant} is no longer the result of a call; a hardcoded row is exactly what this "
-            "bead forbids, because a renumbered menu would then confirm the wrong row silently"
+            "test forbids, because a renumbered menu would then confirm the wrong row silently"
         )
         assert value.func.id == function, (
             f"{constant} is derived by {value.func.id}(), not {function}()"

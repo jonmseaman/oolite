@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# macOS ships bash 3.2; the build scripts need bash 4+, e.g. from Homebrew.
+if ((BASH_VERSINFO[0] < 4)); then
+    for newer_bash in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+        if [[ -x "$newer_bash" ]]; then
+            exec "$newer_bash" "$0" "$@"
+        fi
+    done
+    echo "❌ bash 4 or later is required (on macOS: brew install bash)" >&2
+    exit 1
+fi
+
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 pushd "$SCRIPT_DIR" > /dev/null
 
@@ -77,6 +88,10 @@ meson_setup() {
             exit 1
         fi
     fi
+    # clangd and clang-tidy (-p .) read the compile database from this directory's root.
+    if [[ -f "$build_dir/compile_commands.json" ]]; then
+        cp -f "$build_dir/compile_commands.json" compile_commands.json
+    fi
 }
 
 meson_compile() {
@@ -144,9 +159,12 @@ show_help() {  # Script Help Menu
     echo -e "  \033[36mpkg-flatpak <build_type>\033[0m       Package a Flatpak application"
     echo -e "  \033[36mpkg-appimage <build_type>\033[0m      Package a Linux AppImage installer"
     echo -e "  \033[36mpkg-win <build_type>\033[0m           Package a Windows NSIS installer"
+    echo -e "  \033[36mpkg-dmg <build_type>\033[0m           Package a macOS disk image (.dmg)"
     echo ""
     echo "Global Actions:"
     echo -e "  \033[36mclean-all\033[0m                      Remove generated artifacts for all builds"
+    echo -e "  \033[36mformat\033[0m                         Reformat src/ in place with clang-format (as the CI check expects)"
+    echo -e "  \033[36mformat-check\033[0m                   Report src/ files clang-format would change, without editing"
     echo -e "  \033[36mhelp\033[0m                           Show this breakdown menu"
     echo ""
     echo "Build Types:"
@@ -276,6 +294,17 @@ execute_target() {  # Target Execution Logic
                 exit 1
             fi
             ;;
+        pkg-dmg)
+            validate_build_type "$build_type"
+            if ! source installers/macos/create_dmg_fn.sh; then
+                echo "❌ Failed to source create_dmg_fn.sh!" >&2
+                exit 1
+            fi
+            if ! create_dmg "$build_type" "meson_${build_type}/oolite.app"; then
+                echo "❌ DMG generation failed!" >&2
+                exit 1
+            fi
+            ;;
         *)
             echo "❌ Fatal structural error handling action '$action'" >&2
             exit 1
@@ -371,6 +400,35 @@ if [[ "$ACTION" == "clean-all" ]]; then
     exit 0
 fi
 
+# Intercept global actions 'format' and 'format-check', which mirror the CI clang-format check
+if [[ "$ACTION" == "format" || "$ACTION" == "format-check" ]]; then
+    if ! command -v clang-format > /dev/null; then
+        echo "❌ clang-format not found in PATH." >&2
+        exit 1
+    fi
+    # Keep in step with clang-format-version in .github/workflows/build-all.yaml:
+    # other major versions wrap some expressions differently and fail the CI check.
+    ci_clang_format_major=22
+    if [[ "$(clang-format --version)" != *"version $ci_clang_format_major."* ]]; then
+        echo "⚠️  CI uses clang-format $ci_clang_format_major; $(clang-format --version) may format differently." >&2
+    fi
+    format_files=()
+    while IFS= read -r -d '' file; do
+        format_files+=("$file")
+    done < <(git ls-files -z -- 'src/*.h' 'src/*.hpp' 'src/*.c' 'src/*.cpp' 'src/*.m' 'src/*.mm')
+    if [[ "$ACTION" == "format" ]]; then
+        echo "--> Formatting ${#format_files[@]} files with $(clang-format --version)"
+        clang-format -i "${format_files[@]}"
+    else
+        echo "--> Checking ${#format_files[@]} files with $(clang-format --version)"
+        clang-format --dry-run -Werror "${format_files[@]}"
+    fi
+    trap - ERR
+    popd > /dev/null
+    echo "✅ Oolite task '$ACTION' completed successfully"
+    exit 0
+fi
+
 # Everything past this point strictly requires a build_type parameter
 if [[ -z "$BUILD_TYPE" ]]; then
     echo "❌ Error: Action '$ACTION' requires a target build_type parameter." >&2
@@ -379,7 +437,11 @@ if [[ -z "$BUILD_TYPE" ]]; then
 fi
 
 if [[ -z "$NATIVE_FILE" ]]; then
-    NATIVE_FILE="clang.ini"  # Apply default if it wasn't passed as an option
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        NATIVE_FILE="darwin.ini"  # Apple clang with the system linker
+    else
+        NATIVE_FILE="clang.ini"  # Apply default if it wasn't passed as an option
+    fi
 fi
 
 execute_target "$ACTION" "$BUILD_TYPE"

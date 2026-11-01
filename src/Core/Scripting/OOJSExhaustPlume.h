@@ -29,20 +29,13 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void InitOOJSExhaustPlume(ooscript::Context context, ooscript::Object global);
 
-#ifdef __cplusplus
-}
-#endif
-
-/*	The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the engine reaches by
-        selector through the root's JS members: the C++ OOExhaustPlumeEntity's overrides call these
-        (bead oo-9ht.110; proposed ADR-0056 amendments oo-ppc, oo-ykoy, oo-6ia4 and oo-9ht.107).
+/*	The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the
+   engine reaches by selector through the root's JS members: the C++
+   OOExhaustPlumeEntity's overrides call these.
 */
-void OOJSExhaustPlumeGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+void OOJSExhaustPlumeGetJSClass(ooscript::ClassDef** outClass,
+                                ooscript::Object* outPrototype);
 std::optional<std::string> OOJSExhaustPlumeJSClassName(void);
 bool OOJSExhaustPlumeIsVisibleToScripts(void);

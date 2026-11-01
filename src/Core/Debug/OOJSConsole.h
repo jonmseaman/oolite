@@ -33,8 +33,9 @@ SOFTWARE.
 
 #include "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
-class OODebugMonitor; // C++ since bead oo-9ht.74 deleted its Objective-C facade
+class OODebugMonitor;
 
-ooscript::Object DebugMonitorToJSConsole(ooscript::Context context, OODebugMonitor* monitor);
+ooscript::Object DebugMonitorToJSConsole(ooscript::Context context,
+                                         OODebugMonitor* monitor);
 
 void OOJSConsoleDestroy(void);

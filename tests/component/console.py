@@ -1,19 +1,15 @@
 """Debug-console client: framing, handshake, and running JS inside a live Oolite.
 
-Transport only. The golden harness (item 0.4) is expected to share this file, so nothing here
+Transport only. Several callers may share this file, so nothing here
 knows anything about the component tier, Gherkin, or pytest - keep assertions and scenario
 vocabulary in steps/world_steps.py.
 
 The protocol is the one tests/launch_snapshot.py speaks: a 4-byte big-endian length followed by an
 XML property list. See src/Core/Debug/OODebugTCPConsoleProtocol.h for the packet types.
 
-NO DESKTOP LOCK here, deliberately (bug oo-ccy9). Every tool that launches the game on the
-interactive desktop must take tools/gui-lock - but this file is the shared TRANSPORT, not a tier,
-and it has two callers with opposite needs: the component tier spawns it once per scenario (and
-holds the lock for its whole session, in its conftest), while the golden harness spawns it N times
-CONCURRENTLY on purpose. An exclusive mutex in here would serialise or outright deadlock the
-harness. The lock therefore belongs to whoever decides how many games run at once, which is the
-caller. tools/check-desktop-lock.sh records this exemption and enforces it.
+NO DESKTOP LOCKING here, deliberately: this file is the shared TRANSPORT, not a tier. Whoever
+decides how many games run at once is the caller, and on Windows a game on the interactive
+desktop can take the foreground from another run, so callers run one at a time.
 """
 
 import os
@@ -41,8 +37,7 @@ IS_WINDOWS = sys.platform == "win32" or os.name == "nt"
 
 # How long evaluate() waits for an answer when the caller names no timeout. 15 s unless
 # OO_CONSOLE_EVAL_TIMEOUT says otherwise: the -O0 AddressSanitizer build answers far more slowly
-# than the test build, and tools/tier-c.sh raises it when its golden stage runs that build
-# (bead oo-tc08n).
+# than the test build, and tools/tier-c.sh raises it when its golden stage runs that build.
 DEFAULT_EVAL_TIMEOUT = 15
 
 
@@ -109,7 +104,8 @@ class DebugConsole:
         # Headless and silent, exactly as tests/launch_snapshot.py runs the game. The offscreen
         # video driver is deliberately not set on Windows: MSYS2's mesa ships no EGL, so SDL's
         # offscreen driver cannot create a context there and the game exits during init.
-        if not IS_WINDOWS:
+        # SDL's offscreen driver has no OpenGL on macOS either, so a real window is used there.
+        if not IS_WINDOWS and sys.platform != "darwin":
             env["SDL_VIDEODRIVER"] = "offscreen"
         env["LIBGL_ALWAYS_SOFTWARE"] = "1"
         env["GALLIUM_DRIVER"] = "llvmpipe"
@@ -127,16 +123,19 @@ class DebugConsole:
     def _spawn(self):
         binary = "oolite.exe" if IS_WINDOWS else "oolite"
         path = os.path.join(self.app_dir, binary)
+        bundled = os.path.join(self.app_dir, "Contents", "MacOS", binary)
+        if not os.path.isfile(path) and os.path.isfile(bundled):
+            path = bundled  # a macOS app bundle
         if not os.path.isfile(path):
             raise ConsoleError(f"no Oolite binary at {path}; build it first")
         argv = [path, "--no-splash"]
         # OO_GAME_EXTRA_ARGS: extra command-line arguments for the game, split on whitespace. A
         # sanitized run of the golden harness passes --nosound, as tier-c's sanitized launch does
-        # (oo-dg6vf: opening the OpenAL device trips a third-party ASan report that is fatal).
+        # (opening the OpenAL device trips a third-party ASan report that is fatal).
         argv += os.environ.get("OO_GAME_EXTRA_ARGS", "").split()
         if self.load_save:
             argv += ["-load", self.load_save]
-        # The game's stderr is kept in the output dir when there is one (oo-vdw34): a sanitized
+        # The game's stderr is kept in the output dir when there is one: a sanitized
         # build reports there, and a game that dies mid-run otherwise leaves no trace of why. Appended,
         # so a retried start keeps the attempt before it.
         stderr = subprocess.DEVNULL

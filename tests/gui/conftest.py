@@ -1,31 +1,27 @@
 """Fixtures for the GUI tier: one real, on-screen game window driven by synthetic OS input.
 
-Specified in docs/phases/0-gui-tier.md; the seam and exemplar is docs/stories/G1-exit-via-mouse.md.
-Launch, environment and timeout handling follow tests/launch_snapshot.py and the component tier's
+The exemplar is test_g1_exit_via_mouse.py. Launch, environment and timeout handling follow tests/launch_snapshot.py and the component tier's
 conftest.py - with SDL_VIDEODRIVER *unset*, because the whole point of this tier is that a real
 window opens and real clicks reach it.
 
-Three things live here, and G2-G9 reuse all three:
+Two things live here, and G2-G9 reuse both:
 
 * ``row_to_point`` - the row -> screen point helper. Computed from the window rect and Oolite's
-  fixed virtual grid, never image-matched (docs/phases/0-gui-tier.md, "compute, don't image-match").
+  fixed virtual grid, never image-matched ("compute, don't image-match").
 * ``game`` - the launch/kill fixture: starts the game, waits until it is actually *servicing input*
   rather than merely running, and kills it unconditionally on teardown.
-* ``desktop_lock`` - the session-scoped desktop mutex, tools/gui-lock. This tier takes the
-  interactive desktop exclusively while it runs.
+
+This tier takes the interactive desktop while it runs and does not lock it: ``tests/run.sh gui``
+documents that the mouse must be left alone, and that only one GUI run happens at a time.
 """
 
 import atexit
 import ctypes
 import math
 import os
-import platform
-import random
-import shutil
 import subprocess
 import sys
 import time
-import warnings
 
 import pytest
 
@@ -36,14 +32,14 @@ IS_WINDOWS = sys.platform == "win32" or os.name == "nt"
 # EVERY Win32 function this tier calls is declared here, and the functions are reached through
 # the module-level library handles below - never through ``ctypes.windll``.
 #
-# Why this table exists (bug oo-x2uy). A ctypes function object with no ``argtypes`` marshals a
+# Why this table exists. A ctypes function object with no ``argtypes`` marshals a
 # Python ``int`` argument as a 32-bit C ``int``, and with no ``restype`` it decodes the return
 # value as a 32-bit signed ``int``. On 64-bit Windows an HWND is a 64-bit pointer-sized handle,
 # so an undeclared call cannot carry one: a handle at or above 2**32 either raises
 # ``ArgumentError: int too long to convert`` (current CPython) or is silently truncated to its
 # low 32 bits (older CPython) - and an undeclared *return* of a handle is truncated and
 # sign-extended with no error at all. The tier appeared to work only because Windows hands out
-# small HWNDs most of the time; that is a coin toss, not a contract, and every GUI bead G2-G9
+# small HWNDs most of the time; that is a coin toss, not a contract, and every GUI test
 # inherits it.
 #
 # The table is a plain dict of TYPE NAMES rather than ctypes objects so that it can be imported
@@ -131,7 +127,7 @@ WIN32_SIGNATURES = {
     # RETURNS a HANDLE: undeclared, that 64-bit handle comes back truncated and sign-extended
     # through a 32-bit int, so the very first Process32First on it fails with
     # ERROR_INVALID_HANDLE - and the walk then reports "no survivors", which is the silent pass
-    # this bead exists to remove. The snapshot handle is HANDLE for the same reason an HWND is
+    # this check exists to remove. The snapshot handle is HANDLE for the same reason an HWND is
     # HWND: it is pointer-sized, and c_void_p/c_int would satisfy "has argtypes" while
     # reproducing the defect exactly.
     "kernel32.CreateToolhelp32Snapshot": ("HANDLE", ["DWORD", "DWORD"]),
@@ -480,7 +476,7 @@ FOCUS_TIMEOUT_SECONDS = float(os.environ.get("OO_GUI_FOCUS_TIMEOUT", "15"))
 # further apart than that are two single clicks to the game, and never activate a row.
 DOUBLE_CLICK_INTERVAL_SECONDS = 0.05
 
-# --- the cursor_row read-back (bug oo-3opg) ---------------------------------------------------
+# --- the cursor_row read-back ---------------------------------------------------
 #
 # A click does NOT carry the row it hit. PlayerEntityControls.m:771 and :782 activate
 # ``UNIVERSE->cursor_row``, and Universe.m:5343 is the ONLY assignment to it in the tree:
@@ -507,17 +503,16 @@ CURSOR_SETTLE_SECONDS = float(os.environ.get("OO_GUI_CURSOR_SETTLE", "1.0"))
 MOUSE_MOVE_DURATION_SECONDS = float(os.environ.get("OO_GUI_MOUSE_MOVE", "0.2"))
 
 # Prefixes a failure caused by the DESKTOP being unusable for GUI tests rather than by the game
-# being broken. An operator (and tools/gui-tier.sh) must be able to tell the two apart at a
+# being broken. An operator (and tests/run.sh gui) must be able to tell the two apart at a
 # glance: "G1 is broken" and "something elevated is sitting on your foreground" call for
 # completely different responses, and reporting the second as the first is how a real regression
-# gets ignored. Deliberately NOT a skip - a silent pass is what bead oo-7by1 just removed.
+# gets ignored. Deliberately NOT a skip - a silent pass is what this gate exists to prevent.
 DESKTOP_UNUSABLE_MARKER = "GUI TIER PRECONDITION FAILED"
 
 # How every GUI-tier launch is spelled. MyOpenGLView.m:363 matches the splash flag by exact
 # ``isEqual:`` against -nosplash / --nosplash only, so any other spelling (a hyphen between "no"
 # and "splash", say) is silently ignored and the splash runs; -windowed is matched at :1358 and
-# is correct as written. tools/check-splash-off.py imports this list so the behavioural check can
-# never drift from what the tier actually runs.
+# is correct as written. keep this list in step with what the tier actually runs.
 LAUNCH_ARGS = ["-nosplash", "-windowed"]
 
 # The window message a title-bar X click ends up delivering (winuser.h). SDL's Win32 backend
@@ -655,8 +650,8 @@ def _native_path(path):
 def _default_app_dir():
     """Where oolite.app is, for a checkout that may not be the one holding the build.
 
-    ``build/`` is gitignored (upstream/oolite/.gitignore:25), so a fresh worktree - the
-    orchestrator's per-bead worktrees, and the detached checkout accept.sh merges into - contains
+    ``build/`` is gitignored (oolite-dev/.gitignore:25), so a fresh worktree - the
+    orchestrator's per-task worktrees, and the detached checkout accept.sh merges into - contains
     the tests but no binary. Falling back to the main checkout's build makes the real G1 test
     runnable from those worktrees instead of being deselected, which is the failure that put this
     tier's only meaningful test outside its own acceptance. ``--oolite-app``/``$OO_APP_DIR`` still
@@ -681,7 +676,7 @@ def _default_app_dir():
     if common.returncode == 0 and common.stdout.strip():
         main_checkout = os.path.dirname(_native_path(common.stdout.strip()))
         shared = os.path.join(
-            main_checkout, "upstream", "oolite", "build", "meson_test", "oolite.app"
+            main_checkout, "oolite-dev", "build", "meson_test", "oolite.app"
         )
         if os.path.isdir(shared):
             return shared
@@ -781,21 +776,21 @@ class GameWindow:
         # Everything this window ever renamed aside, and everything it failed to rename back.
         # ``_parked`` is CONSUMED by the restore, so it cannot answer "did the restore happen?"
         # afterwards; these two can, and they are scoped to THIS run's own actions rather than
-        # to the state of the shared build directory (oo-e75).
+        # to the state of the shared build directory.
         self._parked_ever = []
         self._restore_failures = []
         # Live paths whose atexit unpark hook is still ARMED. A registration alone cannot answer
         # "may this hook still act?", because a hook can be reached by a direct call as well as
         # by the interpreter's exit handling; this set is the authoritative token and is emptied
-        # by the normal restore path (oo-992b review).
+        # by the normal restore path.
         self._atexit_armed = set()
         # Filled in by _park_software_gl: parked twins this run INHERITED from a dead earlier
-        # run and renamed back before parking anything of its own (oo-992b). Empty is the
+        # run and renamed back before parking anything of its own. Empty is the
         # healthy case.
         self.inherited_recovered = []
         # Filled in by start(): what the defaults files looked like BEFORE this run wrote
         # anything. assert_defaults_file_reparses needs it to tell "this run wrote the file"
-        # from "a file is lying there from an earlier run" (oo-5rsa).
+        # from "a file is lying there from an earlier run".
         self.defaults_launch_mark = None
 
     # --- lifecycle ----------------------------------------------------------------------------
@@ -817,8 +812,8 @@ class GameWindow:
     def _park_software_gl(self):
         # BEFORE the first rename: the shared build must not already be dirty. A parked twin we
         # find here is not ours - we have parked nothing yet - so it was stranded by an earlier
-        # run that died between its park and its unpark. This heals it and then fails loudly
-        # (oo-992b); see assert_no_inherited_parked_runtime_files for why that ordering.
+        # run that died between its park and its unpark. This heals it and then fails loudly;
+        # see assert_no_inherited_parked_runtime_files for why that ordering.
         self.inherited_recovered = assert_no_inherited_parked_runtime_files(
             self.app_dir, self.SOFTWARE_GL_DLLS, self._PARKED_SUFFIX
         )
@@ -835,7 +830,7 @@ class GameWindow:
                 # that space - SIGTERM-ish shutdowns and any unhandled exception that unwinds
                 # the interpreter - at the cost of one idempotent rename. It is NOT the whole
                 # answer: the setup guard above is, because it needs no cooperation from the
-                # process that died (oo-992b).
+                # process that died.
                 atexit.register(self._restore_one_at_exit, live)
                 self._atexit_armed.add(live)
 
@@ -843,7 +838,7 @@ class GameWindow:
         """Idempotent single-file unpark for the CRASH path only, disarmed by a normal restore.
 
         Registered with atexit at park time, and UNREGISTERED by ``_restore_software_gl`` as soon
-        as the ordinary path has put the file back (oo-992b review).
+        as the ordinary path has put the file back.
 
         WHY UNREGISTERING IS THE ACTUAL FIX AND A CONDITION IS NOT. This hook used to rely on
         "parked twin exists AND live name is free" to make itself safe after a normal restore.
@@ -851,21 +846,20 @@ class GameWindow:
         concurrent sibling's LEGITIMATE park creates - parking IS renaming the live name away, so
         a healthy sibling park leaves the parked twin present and the live name free. The
         condition is satisfied by the very race it claimed to exclude. Demonstrated across two
-        real OS processes: A parks, A's fixture restores, A releases the gui-lock, B acquires it
+        real OS processes: A parks, A's fixture restores, A's session ends, B starts
         and parks legitimately, A's interpreter exits and A's hook renames B's park back - after
         which B's own restore records both DLLs in ``_restore_failures``, B's
         ``assert_no_parked_runtime_files`` fails, and worst of all B's game is mid-flight on a
         build whose software GL it had deliberately parked, so B silently changes its own
-        rendering path DURING its run. The gui-lock does not serialise this: the lock is released
-        in the ``desktop_lock`` fixture's finally, while atexit fires later at interpreter
-        shutdown.
+        rendering path DURING its run. Nothing serialises this: A's session is over while atexit fires later,
+        at interpreter shutdown.
 
         So the condition is kept only as a cheap belt-and-braces check for the crash path (where
         it is genuinely about not clobbering something), and the REAL protection is that a run
         which restored normally no longer has a hook at all.
 
         Swallows OSError deliberately: this runs during interpreter shutdown, where raising buys
-        nothing and can mask the real exit status (oo-992b).
+        nothing and can mask the real exit status.
         """
         parked = live + self._PARKED_SUFFIX
         try:
@@ -885,7 +879,7 @@ class GameWindow:
 
         ``atexit.unregister`` removes all registrations equal to the given callable; a bound
         method compares by ``(__self__, __func__)``, so this disarms THIS window's hooks for all
-        of its DLLs and touches no other window's. Two bugs need this (oo-992b review):
+        of its DLLs and touches no other window's. Two bugs need this:
 
         * a hook that has already done its job must not fire later and clobber a sibling's park;
         * the hook was registered at every park and never unregistered, so a long pytest session
@@ -909,14 +903,14 @@ class GameWindow:
                     # The file this run moved aside is not where it put it. Recorded rather than
                     # ignored: app_dir is the SHARED build, so a DLL this run renamed and did not
                     # rename back is broken offscreen rendering for every other tier on the
-                    # machine, and the only run that can still report it is this one (oo-e75).
+                    # machine, and the only run that can still report it is this one.
                     self._restore_failures.append(parked)
         finally:
             # UNCONDITIONALLY, and in a finally so a raising os.replace cannot leave a live hook
             # behind: this run has been through its normal restore path, so its hooks must never
             # fire again. Leaving even one armed re-opens the sibling-clobber race above, and a
             # hook cannot help with a _restore_failures entry either - the parked source it would
-            # rename is already gone (oo-992b).
+            # rename is already gone.
             self._disarm_at_exit_hooks()
 
     def start(self):
@@ -931,7 +925,7 @@ class GameWindow:
         # BEFORE the process starts: record what is already on disk, so that after exit we can
         # tell a file THIS run wrote from one an earlier run left behind. app_dir is the
         # persistent build tree, so without this mark "the defaults file exists" is true
-        # forever and the G9 defaults check cannot fail (oo-5rsa). Taken before Popen so no
+        # forever and the G9 defaults check cannot fail. Taken before Popen so no
         # write of ours can land inside the window between stat and launch; mtime granularity
         # is not a worry because the game runs for seconds (startup gate + SETTLE_SECONDS)
         # before it can possibly synchronize its defaults.
@@ -1226,14 +1220,15 @@ class GameWindow:
                 "This is NOT a G1 failure and says nothing about the game: AttachThreadInput "
                 "cannot cross the UIPI boundary, so no retry can ever succeed while that window "
                 "is foreground. Close or minimise it (an elevated Task Manager is the usual "
-                "culprit) and re-run. tools/gui-tier.sh checks this precondition before it "
-                "starts, so the tier reports it up front rather than as a mystery click failure."
+                "culprit) and re-run. The gui_runtime fixture checks this precondition before "
+                "any game starts, so the tier reports it up front rather than as a mystery "
+                "click failure."
             )
         pytest.fail(
             f"could not give the Oolite window (hwnd {self.hwnd}) the foreground within "
             f"{FOCUS_TIMEOUT_SECONDS}s; foreground is hwnd {USER32.GetForegroundWindow()}. "
             "Synthetic clicks go to whatever is focused, so this tier cannot run on a desktop "
-            "whose foreground it cannot take (a screen locked or in use - ADR-0017)."
+            "whose foreground it cannot take (a screen locked or in use)."
         )
 
     def assert_focused(self):
@@ -1244,8 +1239,8 @@ class GameWindow:
         DoD command on an otherwise idle machine, 34 passed and one failed with "the Oolite
         window lost the foreground before a click". ANYTHING that transiently owns the
         foreground between start()'s settle and this assert - a notification, an installer, or
-        (caught red-handed on this machine) a sibling tool launching oolite.exe without taking
-        tools/gui-lock - hard-failed the whole run, even though the condition was gone a fraction
+        (caught red-handed on this machine) a sibling tool launching oolite.exe
+        - hard-failed the whole run, even though the condition was gone a fraction
         of a second later.
 
         focus() is the self-healing form select_row has always used, and it is not a softening:
@@ -1288,9 +1283,8 @@ class GameWindow:
         start() raises, the exception propagates through the ``yield window.start()`` expression
         inside the fixture generator and the ``finally:`` in the ``game`` fixture runs during the
         unwind, so the process was already being killed (instrumented on both trees; kill was
-        called, and the launched pid was dead at session end). One launcher that DOES bypass the
-        desktop lock has since been caught - tools/js_api_snapshot.py starts oolite.exe without
-        taking tools/gui-lock - but this assert does not depend on knowing the source. It is what
+        called, and the launched pid was dead at session end). One launcher that starts oolite.exe on the desktop
+        has since been caught, but this assert does not depend on knowing the source. It is what
         makes an occluded click point a named failure instead of a mystery miss, whatever put the
         window there.
         """
@@ -1314,8 +1308,8 @@ class GameWindow:
             "have been swallowed and the game would simply keep running.\n"
             + (
                 "That window is another Oolite instance (class SDL_app). Something else on this "
-                "machine is running the game concurrently - check for a launcher that does not "
-                "take tools/gui-lock. Kill any stray oolite.exe and re-run."
+                "machine is running the game concurrently - check for a stray launcher. "
+                "Kill any stray oolite.exe and re-run."
                 if same_binary
                 else "Move or close that window; this tier needs the game's rows unobscured."
             )
@@ -1329,7 +1323,7 @@ class GameWindow:
     def aim_at_row(self, row):
         """Put the pointer on ``row`` and WAIT for the game to have read it back.
 
-        THE ONE-FRAME LAG THIS EXISTS FOR (bug oo-3opg). Oolite does not decide which row a
+        THE ONE-FRAME LAG THIS EXISTS FOR. Oolite does not decide which row a
         click hit from the click's coordinates. It activates ``UNIVERSE->cursor_row``
         (PlayerEntityControls.m:771, :782), and that variable is written in exactly one place -
         ``Universe.m:5343``, ``cursor_row = [gui drawGUI:1.0 drawCursor:YES]`` - i.e. during the
@@ -1385,7 +1379,7 @@ class GameWindow:
         26, which is both the start-screen row that opened it and, on the manager itself,
         ``OXZ_GUI_ROW_UPDATE`` (OOOXZManager.m:110) - a live selectable action whose handler
         calls -updateManifests and starts a NETWORK DOWNLOAD (:622-634) instead of leaving. That
-        is bug oo-3opg's ~1-in-3 in-tier "RETURN FAILED for Expansion Manager".
+        is the ~1-in-3 in-tier "RETURN FAILED for Expansion Manager".
         """
         import pyautogui
 
@@ -1394,7 +1388,7 @@ class GameWindow:
         self.assert_focused()
         x, y = self.aim_at_row(row)
         # Focus is not enough: the click goes to whatever is topmost AT THIS POINT. See
-        # assert_click_point_is_ours - this is the third failure mode this bead was reworked for.
+        # assert_click_point_is_ours - this is the third failure mode this was reworked for.
         self.assert_focused()
         self.assert_click_point_is_ours(x, y)
         pyautogui.doubleClick(x, y, interval=DOUBLE_CLICK_INTERVAL_SECONDS)
@@ -1430,7 +1424,7 @@ class GameWindow:
             )
         # The foreground owns the keyboard: synthetic key events go to the focused window, not
         # to whatever is under the pointer. assert_focused() re-takes a transiently stolen
-        # foreground rather than failing outright (oo-0p8f).
+        # foreground rather than failing outright.
         self.assert_focused()
         scan = USER32.MapVirtualKeyW(vk, MAPVK_VK_TO_VSC)
         if not scan:
@@ -1491,307 +1485,6 @@ class GameWindow:
 # --- fixtures -----------------------------------------------------------------------------------
 
 
-def _lock_script():
-    """Absolute path to tools/gui-lock, or None if there is no checkout around us."""
-    repo = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
-    script = os.path.join(repo, "tools", "gui-lock")
-    return script if os.path.isfile(script) else None
-
-
-def _lock_path():
-    """The lock directory - the SAME string tools/gui-lock prints.
-
-    Sameness is not promised, it is delegated: we ask the script. Two halves each applying
-    "the same rules" is how this drifted before - the shell said ${TMPDIR:-/tmp}/... (an MSYS
-    path) while python said tempfile.gettempdir() (a native path), so a shell holder and a
-    pytest holder locked two different directories and the mutex silently stopped excluding.
-    The bash-less fallback below repeats the rules only because it must, and normalises to the
-    same native C:/... form the script emits via `cygpath -m`.
-    """
-    bash = shutil.which("bash")
-    script = _lock_script()
-    if bash and script:
-        out = subprocess.run(
-            [bash, script, "path"], capture_output=True, text=True
-        )
-        if out.returncode == 0 and out.stdout.strip():
-            return out.stdout.strip()
-    explicit = os.environ.get("OO_GUI_LOCK_DIR")
-    if explicit:
-        return _native(explicit)
-    local = os.environ.get("LOCALAPPDATA")
-    if local:
-        return _native(os.path.join(local, "Temp", "oolite-gui-desktop.lock"))
-    import tempfile
-
-    return _native(os.path.join(tempfile.gettempdir(), "oolite-gui-desktop.lock"))
-
-
-def _native(path):
-    """Forward-slash native form, matching `cygpath -m` output on this machine."""
-    return os.path.abspath(path).replace("\\", "/")
-
-
-def _lock_owner():
-    """This session's owner identity, passed explicitly to tools/gui-lock.
-
-    Not left to the script's default: the script's fallback identity is "<host>:<PPID>", and a
-    bash spawned by a *native* Windows python reports PPID=1, so every pytest session would
-    claim the identity "<host>:1" and could release another session's lock. We pass our own pid
-    in OO_GUI_LOCK_OWNER for both acquire and release, so the identity is ours and is stable
-    across the two invocations.
-    """
-    explicit = os.environ.get("OO_GUI_LOCK_OWNER")
-    if explicit:
-        return explicit
-    host = os.environ.get("HOSTNAME") or platform.node()
-    return f"{host}:py{os.getpid()}"
-
-
-def _lock_held_by(path):
-    """The owner recorded in the lock directory, or None."""
-    try:
-        with open(os.path.join(path, "owner"), "r", encoding="utf-8", errors="replace") as fh:
-            for line in fh:
-                if line.startswith("owner="):
-                    return line[len("owner=") :].strip()
-    except OSError:
-        return None
-    return None
-
-
-DEFAULT_LOCK_STALE = "600"
-"""Default OO_GUI_LOCK_STALE, kept in lockstep with tools/gui-lock's own default.
-
-MUST STAY BELOW THE DEFAULT ACQUIRE TIMEOUT (900s, OO_GUI_LOCK_TIMEOUT) - bug oo-c7bu. It was
-1800s, twice that timeout, so a lock left by a dead process could never be reclaimed inside one
-acquire and every acquirer burned its full 900s before failing.
-"""
-
-
-def _lock_live_record(path):
-    """The ``livepid=`` record in the lock directory as ``(host, [pid, ...])``, or None.
-
-    See tools/gui-lock's liveness block (bug oo-c7bu). These are the LONG-LIVED owner process's
-    pids - not the short-lived shell that wrote the file - and there is more than one because
-    MSYS and native Windows count pids differently; the holder is alive if ANY of them is.
-    """
-    try:
-        with open(os.path.join(path, "owner"), "r", encoding="utf-8", errors="replace") as fh:
-            for line in fh:
-                if line.startswith("livepid="):
-                    parts = line[len("livepid=") :].strip().split()
-                    pids = [int(p) for p in parts[1:] if p.isdigit()]
-                    if len(parts) >= 2 and pids:
-                        return parts[0], pids
-                    return None
-    except OSError:
-        return None
-    return None
-
-
-def _pid_alive(pid):
-    """Is ``pid`` in this machine's process table? UNKNOWN COUNTS AS ALIVE.
-
-    Every failure mode - an unreadable table, an unexpected exception, a platform we have no
-    reader for - returns True, because "cannot prove dead" must never reclaim a live holder's
-    lock. A false alive costs one age-out; a false dead costs the mutex.
-    """
-    try:
-        rows = _process_table()
-    except Exception:
-        return True
-    if not rows:
-        return True
-    return any(row[0] == pid for row in rows)
-
-
-def _lock_owner_is_dead(path):
-    """True only if the lock's recorded owner is PROVABLY gone from THIS machine.
-
-    Host-scoped on purpose: the record carries a hostname, and a pid on another machine tells
-    us nothing at all about whether that holder is still driving its own desktop.
-    """
-    rec = _lock_live_record(path)
-    if not rec:
-        return False
-    host, pids = rec
-    me = os.environ.get("HOSTNAME") or platform.node()
-    if not host or host != me:
-        return False
-    # Alive if ANY recorded pid is alive: the record names one process in two pid namespaces.
-    return not any(_pid_alive(pid) for pid in pids)
-
-
-def _lock_reclaimable(path, stale):
-    """Is this lock reclaimable - aged out OR owned by a process that is provably gone?
-
-    The liveness half is what makes a crashed holder's lock reclaimable IMMEDIATELY (bug
-    oo-c7bu): waiting out an age window does not make a dead owner any more dead, it just
-    burns the acquirer's whole timeout. The age half remains for holders this host cannot
-    judge (a foreign host, a record with no livepid=).
-
-    A FRESH LOCK IS NEVER CONDEMNED BY LIVENESS. Below OO_GUI_LOCK_LIVENESS_GRACE seconds of
-    age the answer is age-only, however dead the recorded pid looks - see rule 4 in
-    tools/gui-lock. Without it, a lock still inside its own acquire window (mkdir done,
-    livepid= not yet written) or one whose owning process exited right after acquire reads as
-    abandoned while it is legitimately held, and two runs land on the desktop at once.
-    """
-    try:
-        age = time.time() - os.path.getmtime(path)
-    except OSError:
-        return False
-    grace = float(os.environ.get("OO_GUI_LOCK_LIVENESS_GRACE", "15"))
-    if age >= grace and _lock_owner_is_dead(path):
-        return True
-    return age > stale
-
-
-def _lock_reclaim_stale(path, stale):
-    """Atomically reclaim a reclaimable lock directory, returning True only if WE now hold it.
-
-    This is the same protocol as tools/gui-lock's reclaim_stale(), down to the gate directory
-    name and the reclaimable() predicate, so the two halves interlock rather than each
-    reclaiming "their own way": a fallback session and a shell session racing the same lock
-    still produce exactly one winner.
-
-    The naive "if stale: rmtree; then mkdir" is a TOCTOU - two runs both judge the same
-    directory stale and the loser's rmtree deletes the winner's freshly created lock, so both
-    end up on the desktop. So we serialise reapers behind a short-lived ``<lock>.reap`` mkdir
-    gate, RE-CHECK reclaimability inside it, retire the directory with a single atomic rename,
-    and only drop the gate once the new lock exists. The liveness rule rides that same gate and
-    that same re-check: it changes WHICH locks are reclaimable, never HOW they are reclaimed.
-    """
-    reap = path + ".reap"
-    reap_stale = float(os.environ.get("OO_GUI_LOCK_REAP_STALE", "300"))
-    if not _lock_reclaimable(path, stale):
-        return False
-    try:
-        os.mkdir(reap)
-    except FileExistsError:
-        # A reaper died mid-reclaim? Retire the gate itself atomically; the rename has exactly
-        # one winner, and that winner does not assume it holds the gate - it just retries.
-        try:
-            if time.time() - os.path.getmtime(reap) > reap_stale:
-                dead = "%s.dead.%d.%d" % (reap, os.getpid(), random.randrange(1 << 30))
-                os.rename(reap, dead)
-                shutil.rmtree(dead, ignore_errors=True)
-        except OSError:
-            pass
-        return False
-    except OSError:
-        return False
-    try:
-        if os.path.isdir(path):
-            # RE-CHECK inside the gate, re-reading the owner record from disk: the holder we
-            # judged dead or aged-out a moment ago may since have been replaced by a live one.
-            if not _lock_reclaimable(path, stale):
-                return False
-            dead = "%s.stale.%d.%d" % (path, os.getpid(), random.randrange(1 << 30))
-            try:
-                os.rename(path, dead)
-            except OSError:
-                return False
-            shutil.rmtree(dead, ignore_errors=True)
-        try:
-            os.mkdir(path)
-        except OSError:
-            return False
-        return True
-    finally:
-        shutil.rmtree(reap, ignore_errors=True)
-
-
-
-@pytest.fixture(scope="session")
-def desktop_lock():
-    """Hold the GUI-tier desktop mutex for the whole session.
-
-    This tier drives the interactive desktop with synthetic input, so two runs at once steal
-    each other's focus and each other's clicks. tools/gui-lock is the mutex; it is a plain
-    mkdir lock so a shell step and a pytest run can share it.
-    """
-    script = _lock_script()
-    bash = shutil.which("bash")
-    me = _lock_owner()
-    if bash and script:
-        # OO_GUI_LOCK_OWNER is ours and is passed to BOTH calls, so release drops the lock this
-        # session took and the script refuses it if some other run holds it.
-        #
-        # OO_GUI_LOCK_OWNER_PID names THIS pytest process as the one whose life proves the hold
-        # is live (bug oo-c7bu). Without it the script would have to infer a pid, and the bash
-        # it would infer from is a child that exits the moment acquire returns - so the hold
-        # would read as dead to the next acquirer. This session is the long-lived process.
-        env = dict(
-            os.environ, OO_GUI_LOCK_OWNER=me, OO_GUI_LOCK_OWNER_PID=str(os.getpid())
-        )
-        held = subprocess.run(
-            [bash, script, "acquire", "--timeout", os.environ.get("OO_GUI_LOCK_TIMEOUT", "900")],
-            capture_output=True,
-            text=True,
-            env=env,
-        )
-        if held.returncode != 0:
-            pytest.fail(f"could not take the GUI desktop lock: {held.stderr.strip()}")
-        try:
-            yield _lock_path()
-        finally:
-            dropped = subprocess.run(
-                [bash, script, "release"], capture_output=True, text=True, env=env
-            )
-            if dropped.returncode != 0:
-                warnings.warn(
-                    f"gui-lock: release refused: {dropped.stderr.strip()}", stacklevel=1
-                )
-        return
-    # No bash (or no checkout around us): take the identical lock directly. Same protocol, same
-    # path, same ownership record, so it still excludes - and is still excluded by - a
-    # shell-side holder.
-    path = _lock_path()
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    deadline = time.time() + float(os.environ.get("OO_GUI_LOCK_TIMEOUT", "900"))
-    while True:
-        got = False
-        try:
-            os.mkdir(path)
-            got = True
-        except FileExistsError:
-            # Same stale rule as the script (OO_GUI_LOCK_STALE, age not liveness), so a
-            # crashed holder does not wedge the tier for ever here either - but the reclaim is
-            # ATOMIC (see _lock_reclaim_stale): an unconditional rmtree here would let two
-            # sessions both judge one lock stale and both take the desktop.
-            stale = float(os.environ.get("OO_GUI_LOCK_STALE", DEFAULT_LOCK_STALE))
-            got = _lock_reclaim_stale(path, stale)
-        if got:
-            with open(os.path.join(path, "owner"), "w", encoding="utf-8") as fh:
-                fh.write(f"owner={me}\ninfo=python pid={os.getpid()} {time.strftime('%FT%T%z')}\n")
-                # The liveness record (bug oo-c7bu): this session IS the long-lived holder, so
-                # its own pid is the one whose death makes this lock reclaimable at once.
-                host = os.environ.get("HOSTNAME") or platform.node()
-                fh.write(f"livepid={host} {os.getpid()}\n")
-            break
-        if time.time() >= deadline:
-            pytest.fail(
-                f"could not take the GUI desktop lock at {path}; "
-                f"held by {_lock_held_by(path) or 'unknown'}"
-            )
-        time.sleep(2)
-    try:
-        yield path
-    finally:
-        # Ownership-checked, never an unconditional rmtree: a teardown that ran after some
-        # other run had legitimately taken the lock would otherwise drop a live holder's lock
-        # and put two processes on the desktop at once.
-        holder = _lock_held_by(path)
-        if holder == me:
-            shutil.rmtree(path, ignore_errors=True)
-        else:
-            warnings.warn(
-                f"gui-lock: not releasing {path}: held by {holder or 'unknown'}, we are {me}",
-                stacklevel=1,
-            )
-
-
 @pytest.fixture(scope="session")
 def app_dir(pytestconfig):
     path = pytestconfig.getoption("--oolite-app") or _default_app_dir()
@@ -1829,7 +1522,7 @@ def require_gui_dependencies():
             "run, and a run that did not happen must not be reported as a pass. Install it:\n"
             f"    python3 -m pip install -r {GUI_REQUIREMENTS}\n"
             "or run the tier through its runner, which installs it for you:\n"
-            "    bash tools/gui-tier.sh"
+            "    tests/run.sh gui"
         )
     return pyautogui
 
@@ -1841,13 +1534,13 @@ def require_gui_platform():
     if GUI_REQUIRED:
         pytest.fail(
             "OO_GUI_REQUIRE is set but this is not Windows "
-            f"(sys.platform={sys.platform!r}). The GUI tier runs natively on Windows "
-            "(ADR-0017); a run asked to exercise G1 must not pass by skipping."
+            f"(sys.platform={sys.platform!r}). The GUI tier runs natively on Windows; "
+            "a run asked to exercise G1 must not pass by skipping."
         )
     # The one legitimate skip in this tier: a platform where G1 is genuinely not applicable.
     # Deliberate and explicit - not a missing dependency in disguise.
     pytest.skip(
-        "the GUI tier runs natively on Windows (ADR-0017); "
+        "the GUI tier runs natively on Windows; "
         "set OO_GUI_REQUIRE=1 to make this a failure instead"
     )
 
@@ -1892,7 +1585,7 @@ def assert_desktop_can_run_gui_tests():
     """Refuse to start when the desktop is known to be unusable, and say so distinguishably.
 
     A gate that any single elevated window on the desktop can wedge is not a gate accept.sh can
-    pass - but a SILENT PASS is not the answer either (that is exactly what bead oo-7by1 removed).
+    pass - but a SILENT PASS is not the answer either (the gate must never skip silently).
     So this fails, loudly, with DESKTOP_UNUSABLE_MARKER and the offending window named, up front
     and before a game is launched. The operator sees "your desktop is unusable for GUI tests"
     rather than "G1 is broken", which are the two things the reviewer could not tell apart.
@@ -1944,7 +1637,7 @@ def gui_runtime():
 
 
 @pytest.fixture
-def game(gui_runtime, app_dir, desktop_lock, tmp_path):
+def game(gui_runtime, app_dir, tmp_path):
     """One game process with a real window, killed unconditionally at the end.
 
     Teardown kills rather than asks: a test that has already failed is a test whose game is in
@@ -1955,7 +1648,7 @@ def game(gui_runtime, app_dir, desktop_lock, tmp_path):
         yield window.start()
     finally:
         window.kill()
-        # G9 (oo-e75): the one hygiene property that is true of EVERY test in this tier
+        # G9: the one hygiene property that is true of EVERY test in this tier
         # regardless of how it ended, so it is asserted here rather than left to each test to
         # remember. kill() has just run _restore_software_gl; this is the assertion that the
         # restore actually happened, because the DLLs it renames live in the SHARED build tree
@@ -2010,11 +1703,11 @@ def defaults_write_mark(app_dir):
 
     This is the half of the G9 defaults check that makes it falsifiable at all.
     ``app_dir`` is the PERSISTENT build tree (``_default_app_dir()`` ->
-    ``upstream/oolite/build/meson_test/oolite.app``), so a defaults file left behind by a run
+    ``oolite-dev/build/meson_test/oolite.app``), so a defaults file left behind by a run
     last month satisfies "exists and parses" forever, and this run could write nothing at all
-    without the check noticing. The story (docs/stories/G1-exit-via-mouse.md:52) asks for a
+    without the check noticing. The G1 exit test asks for a
     defaults file WRITTEN and re-parseable; without a launch-time mark the "written" half is
-    unfalsifiable - which is precisely the tautology class bug oo-5rsa exists to remove.
+    unfalsifiable - which is precisely the tautology class this check exists to remove.
 
     A path absent at launch is recorded as ``None``: its later EXISTENCE is then proof of a
     write, which is a stronger witness than any timestamp.
@@ -2192,7 +1885,7 @@ def assert_defaults_file_reparses(app_dir, launch_mark):
     assert launch_mark is not None, (
         "assert_defaults_file_reparses needs the launch-time mark from "
         "defaults_write_mark(app_dir); without it the check degrades to 'a defaults file "
-        "exists somewhere', which a plist left by an earlier run satisfies forever (oo-5rsa)"
+        "exists somewhere', which a plist left by an earlier run satisfies forever"
     )
     candidates = defaults_path_candidates(app_dir)
     found = [p for p in candidates if os.path.isfile(p)]
@@ -2227,7 +1920,7 @@ def assert_defaults_file_reparses(app_dir, launch_mark):
         "as it was at launch, so the -synchronize in GameController.m:905-906 never landed and "
         "what is on disk is a leftover from an earlier run. app_dir is the persistent build "
         "tree, so 'a defaults file exists and parses' is true forever and proves nothing "
-        "(oo-5rsa). Unwritten:\n  " + "\n  ".join(stale)
+        ". Unwritten:\n  " + "\n  ".join(stale)
     )
 
     path = fresh[0]
@@ -2251,8 +1944,8 @@ def assert_defaults_file_reparses(app_dir, launch_mark):
 def _windows_process_table():
     """``[(pid, parent_pid, exe_name_lowercased), ...]`` via CreateToolhelp32Snapshot.
 
-    Every call goes through KERNEL32 with the argtypes/restype declared in WIN32_SIGNATURES
-    (oo-x2uy). The snapshot HANDLE in particular must be declared: undeclared, ctypes decodes
+    Every call goes through KERNEL32 with the argtypes/restype declared in WIN32_SIGNATURES.
+    The snapshot HANDLE in particular must be declared: undeclared, ctypes decodes
     it through a 32-bit signed int, and the truncated handle makes Process32First fail - which
     this reader would report as an empty process table, i.e. "nothing survived".
     """
@@ -2293,7 +1986,7 @@ def _posix_process_table():
     on Windows, and the walk knows it (see that function). Linux reparents an orphan to init or
     to the nearest subreaper the moment its parent dies, so once the root process exits, a
     surviving grandchild's ppid is 1 and a tree walk rooted at the old pid finds nothing: a
-    silent pass, exactly the defect class oo-5rsa exists to remove. Windows does not do this -
+    silent pass, exactly the defect class these checks exist to remove. Windows does not do this -
     th32ParentProcessID retains the (possibly dead) creator's pid - which is why the walk is
     sound there and falls back to an unscoped image-name sweep here.
     """
@@ -2374,7 +2067,7 @@ def assert_no_surviving_game_processes(root_pid, timeout=10.0):
 def assert_clean_exit(game_or_output_dir, app_dir=None, defaults_launch_mark=None):
     """No core dump, no ERROR in Latest.log, and a defaults file THIS RUN wrote and can reparse.
 
-    docs/phases/0-gui-tier.md G9. A shutdown that leaves any of these behind has not worked,
+    G9. A shutdown that leaves any of these behind has not worked,
     however zero its exit status.
 
     Call it with the fixture: ``assert_clean_exit(game)``. Everything it needs - the output
@@ -2384,7 +2077,7 @@ def assert_clean_exit(game_or_output_dir, app_dir=None, defaults_launch_mark=Non
 
     A one-argument ``assert_clean_exit(output_dir)`` is NOT valid: without ``app_dir`` there is
     no defaults check at all, and without the launch mark the defaults check cannot fail. Both
-    raise here with instructions rather than silently checking less (oo-5rsa).
+    raise here with instructions rather than silently checking less.
 
     All checks are unconditional. An ABSENT Latest.log is a failure, not a pass: by the time
     any test reaches here, ``_await_startup_complete`` has already read ``startup.complete``
@@ -2437,18 +2130,18 @@ def _clean_exit_arguments(game_or_output_dir, app_dir, defaults_launch_mark):
     assert app_dir is not None, (
         "assert_clean_exit needs the app directory as well as the output directory: the G9 "
         "defaults check reads <app_dir>/GNUstep/Defaults/oolite.plist, and a one-argument "
-        "call would skip it entirely. Call assert_clean_exit(game) (oo-5rsa)."
+        "call would skip it entirely. Call assert_clean_exit(game)."
     )
     assert defaults_launch_mark is not None, (
         "assert_clean_exit needs the launch-time defaults mark (GameWindow.start() records it "
         "as game.defaults_launch_mark). Without it the defaults check can only say 'a file "
         "exists', which a plist from an earlier run satisfies forever. Call "
-        "assert_clean_exit(game) (oo-5rsa)."
+        "assert_clean_exit(game)."
     )
     return game_or_output_dir, app_dir, defaults_launch_mark
 
 
-# --- G9: the hygiene NOTHING in this tier asserted before (oo-e75) ------------------------------
+# --- G9: the hygiene NOTHING in this tier asserted before ------------------------------
 #
 # assert_clean_exit above is the tier's established baseline and every launching test already
 # calls it. Two properties of the shutdown are outside its reach, and BOTH were measured on this
@@ -2462,7 +2155,7 @@ def _clean_exit_arguments(game_or_output_dir, app_dir, defaults_launch_mark):
 #    the tail of -exitAppWithContext: ran.
 #      (Measured, and this is the honest limit of the claim: a game killed at the START SCREEN
 #      does NOT slip past assert_clean_exit - the plist mtime never moves, so the defaults check
-#      catches it. It reports it as "a leftover from an earlier run (oo-5rsa)", naming the wrong
+#      catches it. It reports it as "a leftover from an earlier run", naming the wrong
 #      cause, which is a diagnostic defect rather than missing coverage. Only a death AFTER the
 #      synchronize is invisible to it.)
 #
@@ -2557,7 +2250,7 @@ def assert_shutdown_path_completed(game_or_output_dir, expected_context=None):
         f"way out, and {SHUTDOWN_LOG_CLOSED_WITNESS!r} in particular comes AFTER the :906 "
         "defaults synchronize that assert_clean_exit infers the shutdown from - so a process "
         "that died in OOLoggingTerminate, SDL_Quit or the OpenAL shutdown passes every other "
-        "check in this tier and is caught only here (oo-e75)."
+        "check in this tier and is caught only here."
     )
     ordered = [at[w] for w in SHUTDOWN_WITNESSES]
     assert ordered == sorted(ordered), (
@@ -2577,7 +2270,7 @@ def assert_shutdown_path_completed(game_or_output_dir, expected_context=None):
             "from nine call sites in this tree and EVERY one of them synchronizes defaults, "
             "closes the log and exits 0 - so without this assertion a test whose gesture did "
             "nothing, while the game left by some other route, is green with its central claim "
-            "false (oo-e75)."
+            "false."
         )
     return line
 
@@ -2606,7 +2299,7 @@ def assert_no_parked_runtime_files(window):
     assert isinstance(window, GameWindow), (
         "assert_no_parked_runtime_files takes the GameWindow, not a path: the check is 'did THIS "
         "run put back what it moved', and only the window knows what it moved. A directory scan "
-        "fails on a concurrent sibling run's legitimate parking (oo-e75)."
+        "fails on a concurrent sibling run's legitimate parking."
     )
     assert not window._restore_failures, (
         "software-GL DLL(s) this run parked could not be renamed back: "
@@ -2614,7 +2307,7 @@ def assert_no_parked_runtime_files(window):
         + ". _park_software_gl moved them aside inside the SHARED build "
         f"{window.app_dir} and _restore_software_gl found nothing to move back, so the "
         "component tier's offscreen rendering is broken on disk for every other agent on this "
-        "machine until someone renames them by hand (oo-e75)."
+        "machine until someone renames them by hand."
     )
     lost = sorted(path for path in window._parked_ever if not os.path.isfile(path))
     assert not lost, (
@@ -2622,7 +2315,7 @@ def assert_no_parked_runtime_files(window):
         + ", ".join(lost)
         + f". The restore reported success, so no *{GameWindow._PARKED_SUFFIX} twin is left "
         "either: the rename lost the file rather than merely leaving it aside, and there is "
-        "nothing to rename back (oo-e75)."
+        "nothing to rename back."
     )
     return list(window._parked_ever)
 
@@ -2638,7 +2331,7 @@ def _append_inherited_parked_breadcrumb(app_dir, recovered, failed):
     reads a message is strictly worse than one loud red run. But the repair makes the incident
     NON-REPRODUCIBLE: run 1 heals and fails, a CI retry finds a clean baseline and goes GREEN,
     and the parked mtime that identifies WHICH run died is gone with run 1's output. This file is
-    the durable copy, so a retry cannot erase the evidence (oo-992b review).
+    the durable copy, so a retry cannot erase the evidence.
 
     Opened in APPEND mode: each incident adds lines and erases none, so a build that strands DLLs
     twice keeps both records. It lives in the app directory, which is gitignored build output, so
@@ -2673,9 +2366,9 @@ def _append_inherited_parked_breadcrumb(app_dir, recovered, failed):
 def assert_no_inherited_parked_runtime_files(app_dir, dlls, suffix):
     """Fail if the shared build was ALREADY dirty before this run parked anything.
 
-    THE GAP THIS CLOSES (oo-992b, the incident). ``assert_no_parked_runtime_files`` is scoped to
+    THE GAP THIS CLOSES (the incident). ``assert_no_parked_runtime_files`` is scoped to
     THIS run's own bookkeeping, deliberately and correctly: a directory scan at TEARDOWN fails on
-    a concurrent sibling's legitimate in-flight parking (oo-e75 measured that twice). But the
+    a concurrent sibling's legitimate in-flight parking (measured twice). But the
     consequence is that it passes happily when the DLLs were parked BEFORE the run began. A GUI
     run died between its park and its unpark on Sep 16 and stranded both software-GL DLLs; every
     run for a full day afterwards went green while the component tier's offscreen renderer was
@@ -2683,7 +2376,7 @@ def assert_no_inherited_parked_runtime_files(app_dir, dlls, suffix):
     is clean cannot, even in principle, see an INHERITED dirty baseline.
 
     WHY A DIRECTORY SCAN IS SOUND HERE AND NOT AT TEARDOWN. This runs at SETUP, and the GUI tier
-    holds the desktop lock (tools/gui-lock) for the whole of a session. Only one GUI run parks
+    owns the desktop for the whole of a session (tests/run.sh gui). Only one GUI run parks
     these DLLs at a time, so a parked twin visible at setup - before this run has renamed
     anything - cannot belong to a live sibling. It belongs to a dead one.
 
@@ -2703,7 +2396,7 @@ def assert_no_inherited_parked_runtime_files(app_dir, dlls, suffix):
     process. So every recovery is APPENDED to a durable file beside the build before the assert
     fires. Append, never truncate: a second incident must not erase the first. The breadcrumb is
     evidence only - nothing reads it to make a decision, so a failure to write it can never mask
-    the incident itself (oo-992b review).
+    the incident itself.
     """
     inherited = []
     for dll in dlls:
@@ -2722,7 +2415,7 @@ def assert_no_inherited_parked_runtime_files(app_dir, dlls, suffix):
                 recovered.append((live, when, size))
             else:
                 # Both names present: renaming would DESTROY the live file. Never delete either
-                # - the parked twin is a real 23MB DLL, not a backup (oo-992b).
+                # - the parked twin is a real 23MB DLL, not a backup.
                 failed.append((parked, when, size))
         except OSError as exc:  # pragma: no cover - a locked file on the shared build
             failed.append((parked, when, f"{size} ({exc})"))
@@ -2747,7 +2440,7 @@ def assert_no_inherited_parked_runtime_files(app_dir, dlls, suffix):
             else ""
         )
         + "This failure is deliberate even though the build is now repaired: a silent fix is a "
-        "fix nobody investigates (oo-992b). "
+        "fix nobody investigates. "
         f"The repair also makes this incident non-reproducible on a re-run, so it has been "
         f"APPENDED to {os.path.join(app_dir, INHERITED_PARKED_BREADCRUMB)} - read that file "
         "rather than re-running, because a retry will find a clean baseline and pass."
