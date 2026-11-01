@@ -14,10 +14,10 @@ endif
 if get_option('b_lto')
     if ccid == 'clang'
         add_project_arguments('-flto=thin', language: c_family)
-        oolite_link_args += [
-            '-flto=thin',
-            '-Wl,--thinlto-cache-dir=thinlto_cache',
-        ]
+        oolite_link_args += ['-flto=thin']
+        if host_os != 'darwin'
+            oolite_link_args += ['-Wl,--thinlto-cache-dir=thinlto_cache']
+        endif
     else
         add_project_arguments('-flto=auto', language: c_family)
         oolite_link_args += ['-flto=auto']

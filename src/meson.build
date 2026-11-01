@@ -55,6 +55,7 @@ subdir('Core')
 subdir('SDL')
 
 appname = 'oolite'
+exe_rpath = host_os == 'darwin' ? '@executable_path' : '$ORIGIN'
 oolite_bin = executable(
     appname,
     oolite_sources,
@@ -63,8 +64,8 @@ oolite_bin = executable(
     override_options: oolite_override_options,
     link_args: oolite_link_args,
     win_subsystem: 'windows',
-    build_rpath: '$ORIGIN',
-    install_rpath: '$ORIGIN',
+    build_rpath: exe_rpath,
+    install_rpath: exe_rpath,
     install: false,
 )
 
