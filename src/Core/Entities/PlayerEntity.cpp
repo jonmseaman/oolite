@@ -11448,11 +11448,12 @@ void PlayerEntity::showMarketScreenDataLine(OOGUIRow row,
       2.5);
 
   NSUInteger priceDecimal = pricePerUnit % 10;
-  const std::string price = oo::str::format(
-      " %s.%zu ",
-      cxx_OOPadStringToEms(oo::str::format("%" PRIu64, (pricePerUnit / 10)), 2.5)
-          .c_str(),
-      priceDecimal);
+  const std::string price =
+      oo::str::format(" %s.%zu ",
+                      cxx_OOPadStringToEms(
+                          oo::str::format("%" PRIu64, (pricePerUnit / 10)), 2.5)
+                          .c_str(),
+                      priceDecimal);
 
   // this works with up to 9999 tons of gemstones. Any more than that, they
   // deserve the formatting they get! :)

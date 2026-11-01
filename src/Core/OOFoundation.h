@@ -75,8 +75,8 @@ MA 02110-1301, USA.
   (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
 
-#include <limits.h>  // to get UINT_MAX
 #include <inttypes.h>
+#include <limits.h>  // to get UINT_MAX
 #include <stdint.h>
 
 #define OOLITE_SDL 1

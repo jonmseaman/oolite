@@ -176,6 +176,13 @@ You can install the build folder:
 
 Optionally you can pass `--install-flags` to pass specific options to meson.
 
+CI rejects code under `src` that `clang-format` would change. Reformat it before pushing, or only check it:
+
+```bash
+./mk.sh format
+./mk.sh format-check
+```
+
 ### Other Linux ./mk.sh Actions
 
 This action builds an AppImage for development which can be found in the `build` folder:
