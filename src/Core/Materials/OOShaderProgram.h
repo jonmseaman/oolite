@@ -106,7 +106,7 @@ class OOShaderProgram : public oo::RefCounted {
    are rewritten, so in/out parameter qualifiers inside functions are untouched.
    A vertex shader's layout(location = N) inputs are added to attributeBindings.
    The macOS legacy context only supports GLSL 1.20, so
-   shaderProgramWithVertexShaderName() calls this there (OOLITE_MAC_OS_X); it is
+   shaderProgramWithVertexShaderName() calls this there (OOLITE_MACOS); it is
    built everywhere so the unit tests run it.
 */
 std::optional<std::string> OOTranslateGLSL330To120(

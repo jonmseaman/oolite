@@ -76,6 +76,7 @@ MA 02110-1301, USA.
 #endif
 
 #include <limits.h>  // to get UINT_MAX
+#include <inttypes.h>
 #include <stdint.h>
 
 #define OOLITE_SDL 1
@@ -124,6 +125,15 @@ MA 02110-1301, USA.
 
 #ifndef OOLITE_MAC_OS_X
 #define OOLITE_MAC_OS_X 0
+#endif
+
+// macOS as a platform (SDL front end, Apple's GL and libc), without Apple
+// Foundation. OOLITE_MAC_OS_X above is the legacy Foundation/Cocoa switch and
+// stays 0.
+#ifdef __APPLE__
+#define OOLITE_MACOS 1
+#else
+#define OOLITE_MACOS 0
 #endif
 
 #ifndef OOLITE_WINDOWS

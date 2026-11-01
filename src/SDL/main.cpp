@@ -50,7 +50,7 @@ __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #elif OOLITE_LINUX
 #include <unistd.h>
-#elif OOLITE_MAC_OS_X
+#elif OOLITE_MACOS
 #include <mach-o/dyld.h>
 #include <unistd.h>
 #endif
@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
     // As before: if the executable's directory cannot be entered, the game
     // starts where it is.
   }
-#elif OOLITE_MAC_OS_X
+#elif OOLITE_MACOS
   // Run from the folder holding Resources and AddOns: Contents in an app bundle
   // (executable in Contents/MacOS), otherwise the folder holding the
   // executable.

@@ -3,6 +3,8 @@ ccid = cc.get_id()
 
 if (host_os == 'windows' or host_os == 'cygwin')
     subdir('windows')
+elif host_os == 'darwin'
+    subdir('darwin')
 else
     subdir('linux')
 endif

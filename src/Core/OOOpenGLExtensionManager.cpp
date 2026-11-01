@@ -300,7 +300,7 @@ void OOOpenGLExtensionManager::reset() {
            extensions.size(), extensionList);
   }
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
   /*	macOS only offers a 2.1 legacy context alongside fixed-function GL, but
           it provides what Oolite needs from 3.3 as extensions.
   */

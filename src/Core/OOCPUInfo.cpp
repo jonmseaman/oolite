@@ -33,7 +33,7 @@ MA 02110-1301, USA.
 
 #if OOLITE_MAC_OS_X
 #include <sys/sysctl.h>
-#elif (OOLITE_LINUX || OOLITE_WINDOWS)
+#elif (OOLITE_LINUX || OOLITE_WINDOWS || OOLITE_MACOS)
 // Workaround for clang/glibc incompatibility.
 #if !OOLITE_HAVE_CLANG
 #define __block __glibc_block

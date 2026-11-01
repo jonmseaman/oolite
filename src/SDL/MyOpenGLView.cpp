@@ -247,7 +247,7 @@ void MyOpenGLView::createWindowWithSize(NSSize size) {
     OO_LOG("sdl.create_context", "{}", "Could not create OpenGL context");
     exit(1);
   }
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_MACOS
   // On macOS a window surface replaces the OpenGL drawable, so it must not be
   // created there.
   SDL_Surface* surface = SDL_GetWindowSurface(window);
@@ -284,7 +284,7 @@ void MyOpenGLView::createWindowWithSize(NSSize size) {
 
 #endif  // OOLITE_WINDOWS
 
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_MACOS
   // On macOS SDL would set this 32x32 image as the Dock icon, replacing the
   // bundle's high-resolution oolite-icon.icns.
   const std::string imagesDir = oo::fs::utf8String(
@@ -321,7 +321,7 @@ void MyOpenGLView::createWindowWithSize(NSSize size) {
   _sdrToneMapper = cxx_OOSDRToneMapperFromString(
       DefaultsString("sdr-tone-mapper", "OOSDR_TONEMAPPER_ACES"));
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
   SDL_GL_SetSwapInterval(vSyncPreference ? 1 : 0);
 #else
   SDL_SetWindowSurfaceVSync(window, vSyncPreference);
@@ -353,7 +353,7 @@ void MyOpenGLView::createWindowWithSize(NSSize size) {
   // Verify V-sync successfully set - report it if not
 
   int hasVsync;
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
   if (vSyncPreference && (!SDL_GL_GetSwapInterval(&hasVsync) || !hasVsync)) {
 #else
   if (vSyncPreference &&
@@ -1201,7 +1201,7 @@ bool MyOpenGLView::snapShot(const std::optional<std::string>& filename) {
   bool snapShotOK = true;
   SDL_Surface* tmpSurface;
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
   // The back buffer is undefined after a swap on macOS, so read the frame
   // currently on screen.
   OOGL(glReadBuffer(GL_FRONT));
@@ -1265,7 +1265,7 @@ bool MyOpenGLView::snapShot(const std::optional<std::string>& filename) {
     imageNo = tmpImageNo;
   }
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
   // No window surface on macOS (see createWindowWithSize()); describe the GL
   // drawable instead.
   SDL_Surface* surface = NULL;
@@ -1353,7 +1353,7 @@ bool MyOpenGLView::snapShot(const std::optional<std::string>& filename) {
     free(pixlsf);
   }
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
   SDL_DestroySurface(surface);
   OOGL(glReadBuffer(GL_BACK));
 #endif

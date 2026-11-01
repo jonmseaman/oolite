@@ -43,8 +43,11 @@ MA 02110-1301, USA.
 
 // SDL OpenGL includes...
 
-// prevent the including of SDL_opengl.h loading a previous version of glext.h
+// prevent the including of SDL_opengl.h loading a previous version of glext.h.
+// Not on Apple: its glext.h is old, and SDL's supplies the GL 3.x names.
+#ifndef __APPLE__
 #define NO_SDL_GLEXT
+#endif
 
 // GL_GLEXT_PROTOTYPES must be defined for the Linux and macOS builds to use
 // shaders. A plain C++ unit (OO_PLAIN_CPP_UNIT) does not include

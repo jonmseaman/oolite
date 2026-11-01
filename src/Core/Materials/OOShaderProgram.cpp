@@ -165,7 +165,7 @@ oo::Ref<OOShaderProgram> OOShaderProgram::shaderProgramWithVertexShaderName(
     if (!GetShaderSource(fragmentShaderName, "fragment", &fragmentSource))
       return nullptr;
     oo::PList bindings = attributeBindings;
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
     /*	The macOS legacy OpenGL context only supports GLSL 1.20, so shaders
             written for #version 330 are translated when loaded.
     */

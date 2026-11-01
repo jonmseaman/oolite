@@ -79,7 +79,7 @@ void OOPrintLogHeader(void) {
 #endif
 #endif
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
 #define OS_TYPE_STRING "Mac OS X"
 #elif OOLITE_WINDOWS
 #define OS_TYPE_STRING "Windows"
@@ -151,7 +151,7 @@ void OOPrintLogHeader(void) {
   };
 
 // systemString: UTF-8 string with system type and possibly version.
-#if (OOLITE_MAC_OS_X || !OOLITE_WINDOWS)
+#if (OOLITE_MACOS || !OOLITE_WINDOWS)
   std::string systemString =
       oo::str::format(OS_TYPE_STRING " %s",
                       oo::process::operatingSystemVersionString().c_str());
@@ -197,7 +197,7 @@ void OOPrintLogHeader(void) {
 // A std::string, for OOJSConsole's console.platformDescription; the same
 // "<system> (<cpu><variant>)" text.
 std::string OOPlatformDescription(void) {
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
   const std::string platformSystem =
       OS_TYPE_STRING " " + oo::process::operatingSystemVersionString();
 #else
@@ -208,7 +208,8 @@ std::string OOPlatformDescription(void) {
 }
 
 // System-specific stuff to append to log header.
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
+#include <mach/machine.h>
 #include <sys/sysctl.h>
 
 static std::optional<std::string> GetSysCtlString(const char* name);
@@ -224,7 +225,7 @@ std::string AdditionalLogHeaderInfo(void) {
   sysPhysMem = GetSysCtlInt("hw.memsize");
 
   // "%@" printed a nil model as "(null)".
-  return oo::str::format("Machine type: %s, %zu MiB memory, %s.",
+  return oo::str::format("Machine type: %s, %llu MiB memory, %s.",
                          sysModel ? sysModel->c_str() : "(null)",
                          sysPhysMem >> 20, GetCPUDescription().c_str());
 }
@@ -314,17 +315,17 @@ static std::string GetCPUDescription(void) {
   }
 
   if (!typeStr.has_value())
-    typeStr = oo::str::format("CPU type %zu", sysCPUType);
+    typeStr = oo::str::format("CPU type %llu", sysCPUType);
 
   std::string countStr;
   if (sysCPUCount == sysLogicalCPUCount)
-    countStr = oo::str::format("%zu", sysCPUCount);
+    countStr = oo::str::format("%llu", sysCPUCount);
   else
     countStr =
-        oo::str::format("%zu (%zu logical)", sysCPUCount, sysLogicalCPUCount);
+        oo::str::format("%llu (%llu logical)", sysCPUCount, sysLogicalCPUCount);
 
   // "%@" printed a nil sub-type as "(null)".
-  return oo::str::format("%s x %s%s @ %zu MHz", countStr.c_str(),
+  return oo::str::format("%s x %s%s @ %llu MHz", countStr.c_str(),
                          typeStr->c_str(),
                          subTypeStr ? subTypeStr->c_str() : "(null)",
                          (sysCPUFrequency + 500000) / 1000000);
@@ -338,7 +339,7 @@ static std::optional<std::string> GetSysCtlString(const char* name) {
   sysctlbyname(name, NULL, &size, NULL, 0);
   if (size == 0) return std::nullopt;
 
-  buffer = alloca(size);
+  buffer = static_cast<char*>(alloca(size));
   if (sysctlbyname(name, buffer, &size, NULL, 0) != 0) return std::nullopt;
   return std::string(buffer);
 }
