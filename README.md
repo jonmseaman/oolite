@@ -176,7 +176,8 @@ You can install the build folder:
 
 Optionally you can pass `--install-flags` to pass specific options to meson.
 
-CI rejects code under `src` that `clang-format` would change. Reformat it before pushing, or only check it:
+CI rejects code under `src` that `clang-format` 22 would change (other major versions wrap some expressions
+differently; `pip install clang-format==22.1.2` gives you that version). Reformat it before pushing, or only check it:
 
 ```bash
 ./mk.sh format

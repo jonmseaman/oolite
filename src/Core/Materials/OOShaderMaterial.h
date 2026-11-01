@@ -56,8 +56,8 @@ enum {
   kOOUniformConvertToMatrix = 0x0004U,
   kOOUniformBindToSuperTarget = 0x0008U,
 
-  kOOUniformConvertDefaults = kOOUniformConvertToMatrix |
-      kOOUniformBindToSuperTarget
+  kOOUniformConvertDefaults =
+      kOOUniformConvertToMatrix | kOOUniformBindToSuperTarget
 };
 typedef uint16_t OOUniformConvertOptions;
 

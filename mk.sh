@@ -406,6 +406,12 @@ if [[ "$ACTION" == "format" || "$ACTION" == "format-check" ]]; then
         echo "❌ clang-format not found in PATH." >&2
         exit 1
     fi
+    # Keep in step with clang-format-version in .github/workflows/build-all.yaml:
+    # other major versions wrap some expressions differently and fail the CI check.
+    ci_clang_format_major=22
+    if [[ "$(clang-format --version)" != *"version $ci_clang_format_major."* ]]; then
+        echo "⚠️  CI uses clang-format $ci_clang_format_major; $(clang-format --version) may format differently." >&2
+    fi
     format_files=()
     while IFS= read -r -d '' file; do
         format_files+=("$file")
