@@ -62,7 +62,7 @@ MA 02110-1301, USA.
 #include <SDL3/SDL_init.h>
 #endif
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
 #import <Sparkle/Sparkle.h>
 
 #import "JAPersistentFileReference.h"
@@ -80,7 +80,7 @@ GameController* sSharedController = nullptr;
 
 }  // namespace
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
 // Only the fenced Mac category below still sends these; they are GameController
 // members.
 @interface GameController (OOPrivate)
@@ -268,7 +268,7 @@ GameController::GameController() {
 }
 
 GameController::~GameController() {
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
   [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:UNIVERSE];
 #endif
 
@@ -395,7 +395,7 @@ bool GameController::suppressClangStuff() {
 }
 #endif
 
-#if !OOLITE_MAC_OS_X  // the Mac -performGameTick: is in GameController (MacOSX)
+#if !OOLITE_MAC_COCOA_UI  // the Mac -performGameTick: is in GameController (MacOSX)
                       // at the end of the file
 
 void GameController::performGameTick() {
@@ -571,7 +571,7 @@ void GameController::applicationDidFinishLaunching() {
     beginSplashScreen();
 #endif
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
     [OOJoystickManager setStickHandlerClass:[OOMacJoystickManager class]];
     SetUpSparkle();
 #endif
@@ -626,7 +626,7 @@ void GameController::applicationDidFinishLaunching() {
   // Release anything allocated above that is not required.
   pool.reset();
 
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_MAC_COCOA_UI
   runFrameLoop();
 #endif
 }
@@ -648,7 +648,7 @@ void GameController::loadPlayerIfRequired() {
 }
 
 void GameController::beginSplashScreen() {
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_MAC_COCOA_UI
   if (!_gameView) {
     /*	[[MyOpenGLView alloc] init], whose answer was not kept: a view whose
        init() fails (SDL could not start) was released, which left _gameView
@@ -671,14 +671,14 @@ void GameController::beginSplashScreen() {
 // The Mac-only methods are in the GameController (MacOSX) category at the end
 // of the file. -snapshotsURLCreatingIfNeeded: is Mac-only: nothing on SDL
 // called it.
-#if !OOLITE_MAC_OS_X && !OOLITE_SDL
+#if !OOLITE_MAC_COCOA_UI && !OOLITE_SDL
 #error Unknown environment!
 #endif
 
 void GameController::logProgress(const std::string& message) {
   if (!(UNIVERSE != nullptr ? UNIVERSE->doingStartUp() : false)) return;
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
   [splashProgressTextField setStringValue:oo::NSStringFrom(message)];
   [splashProgressTextField display];
 #endif
@@ -689,7 +689,7 @@ void GameController::logProgress(const std::string& message) {
 }
 
 #if OO_DEBUG
-#if !OOLITE_MAC_OS_X  // the Mac arms are in GameController (MacOSX) at the end
+#if !OOLITE_MAC_COCOA_UI  // the Mac arms are in GameController (MacOSX) at the end
                       // of the file
 bool GameController::debugMessageTrackingIsOn() {
   return oo::log::willDisplay("startup.progress");
@@ -730,7 +730,7 @@ void GameController::debugPopProgressMessage() {
 void GameController::endSplashScreen() {
   oo::log::logger().setDisplay("startup.progress", false);
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
   // These views will be released when we replace the content view.
   splashProgressTextField = nullptr;
   splashView = nullptr;
@@ -766,7 +766,7 @@ void GameController::exitAppWithContext(const std::string& context) {
   exit(0);
 }
 
-#elif !OOLITE_MAC_OS_X
+#elif !OOLITE_MAC_COCOA_UI
 #error Unknown environment!
 #endif
 
@@ -851,7 +851,7 @@ void GameController::reportUnhandledStartupExceptionName(
          "***** Unhandled exception during startup: {} ({}).", name,
          reason.value_or("(null)"));
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
   // Display an error alert.
   // TODO: provide better information on reporting bugs in the manual, and refer
   // to it here.
@@ -863,7 +863,7 @@ void GameController::reportUnhandledStartupExceptionName(
 #endif
 }
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
 
 /*	The Mac-only methods, gathered into one category at the end of the file:
    the menu actions, the snapshots-folder and add-ons helpers, the dock menu,

@@ -40,7 +40,7 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OOObject.h"
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
 #import <Quartz/Quartz.h>  // For PDFKit.
 #endif
 
@@ -55,7 +55,7 @@ class OOFullScreenController;
 
 // TEMP: whether to use separate OOFullScreenController object, will hopefully
 // be used for all builds soon.
-#define OO_USE_FULLSCREEN_CONTROLLER OOLITE_MAC_OS_X
+#define OO_USE_FULLSCREEN_CONTROLLER OOLITE_MAC_COCOA_UI
 
 /*	The application controller: the class shell, its state and accessors;
    the frame loop and deferred calls; start-up, splash and progress messages,
@@ -101,7 +101,7 @@ class GameController : public oo::RefCounted {
 #endif
 
   // The frame loop.
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_MAC_COCOA_UI
   void performGameTick();
 #endif
   void startAnimationTimer();
@@ -171,7 +171,7 @@ class GameController : public oo::RefCounted {
  private:
   // Internal: the state, read and written by the members above (and by the
   // fenced Mac categories, not compiled).
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
   NSTextField* splashProgressTextField = {};
   NSView* splashView = {};
   NSWindow* gameWindow = {};
@@ -241,7 +241,7 @@ class GameController : public oo::RefCounted {
   void reportUnhandledStartupExceptionName(
       const std::string& name, const std::optional<std::string>&
                                    reason);  // reason nullopt: none (was nil)
-#if OO_DEBUG && !OOLITE_MAC_OS_X
+#if OO_DEBUG && !OOLITE_MAC_COCOA_UI
   bool debugMessageTrackingIsOn();
   std::string debugMessageCurrentString();
 #endif

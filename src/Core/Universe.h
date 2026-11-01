@@ -451,7 +451,7 @@ class Universe : public oo::RefCounted {
   NSUInteger drawCounter = 0;
 
 #if OOLITE_SPEECH_SYNTH
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
   NSSpeechSynthesizer* speechSynthesizer = nullptr;
 #elif OOLITE_ESPEAK
   const espeak_VOICE** espeak_voices = nullptr;

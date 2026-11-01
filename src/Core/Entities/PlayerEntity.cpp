@@ -9324,7 +9324,7 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
     }
 #endif
 #endif
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_MAC_COCOA_UI
     // window/fullscreen
     if ((gameView != nullptr ? gameView->inFullScreenMode() : false)) {
       gui->setText(OO_DESC("gameoptions-play-in-window"),

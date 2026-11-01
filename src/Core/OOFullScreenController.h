@@ -43,7 +43,7 @@ MA 02110-1301, USA.
 inline constexpr std::string_view kOODisplayWidth = "Width";
 inline constexpr std::string_view kOODisplayHeight = "Height";
 inline constexpr std::string_view kOODisplayRefreshRate = "RefreshRate";
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
 #define kOODisplayBitsPerPixel (@"BitsPerPixel")
 #define kOODisplayIOFlags (@"IOFlags")
 #endif
@@ -56,7 +56,7 @@ inline constexpr std::string_view kOODisplayRefreshRate = "RefreshRate";
 
 /*	The abstract base of the Mac full-screen controllers, which are Mac-only
    and not in this tree. Its callers (GameController, under
-   OO_USE_FULLSCREEN_CONTROLLER, which is OOLITE_MAC_OS_X) are never compiled
+   OO_USE_FULLSCREEN_CONTROLLER, which is OOLITE_MAC_COCOA_UI) are never compiled
    here. The "subclass responsibility" methods are virtual, so a C++ subclass
    overrides them; the base's bodies still log and answer the default.
 */

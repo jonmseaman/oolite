@@ -354,7 +354,7 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView) {
 
   // Set up speech synthesizer.
 #if OOLITE_SPEECH_SYNTH
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
     /*
             NSSpeechSynthesizer can take over a second on an SSD and several
@@ -499,7 +499,7 @@ void Universe::dealloc() {
 
 #if OOLITE_SPEECH_SYNTH
   speechArray = oo::PList();
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
   [speechSynthesizer release];
 #elif OOLITE_ESPEAK
   espeak_Cancel();
@@ -7252,7 +7252,7 @@ void Universe::speakWithSubstitutions(const std::optional<std::string>& text) {
               OptionalStringAt(thePair, 0);
 
           NSUInteger replacementIndex;
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
           replacementIndex = 1;
 #elif OOLITE_ESPEAK
           replacementIndex = thePair.count() > 2 ? 2 : 1;
@@ -10474,7 +10474,7 @@ void Universe::setAirResistanceFactor(GLfloat newFactor) {
 }
 
 // The speech arms. The Mac's is not built.
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
 
 void Universe::startSpeakingString(const std::string& text) {
   [speechSynthesizer
@@ -11676,9 +11676,9 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
   // fixes transparency issue for some reason
   OOGL(glDisable(GL_BLEND));
 
-  GLhandleARB program = textureProgram->program();
-  GLhandleARB blur = blurProgram->program();
-  GLhandleARB final = finalProgram->program();
+  GLuint program = OOGLProgramName(textureProgram->program());
+  GLuint blur = OOGLProgramName(blurProgram->program());
+  GLuint final = OOGLProgramName(finalProgram->program());
   NSSize viewSize =
       (gameView != nullptr ? gameView->backingViewSize() : NSSize{});
   float fboResolution[2] = {(float)viewSize.width, (float)viewSize.height};
@@ -11709,8 +11709,7 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
     OOGL(glBindTexture(GL_TEXTURE_2D, firstIteration
                                           ? passthroughTextureID[1]
                                           : pingpongColorbuffers[!horizontal]));
-    OOGL(glUniform1i(glGetUniformLocation(blurProgram->program(), "imageIn"),
-                     0));
+    OOGL(glUniform1i(glGetUniformLocation(blur, "imageIn"), 0));
     OOGL(glBindVertexArray(quadTextureVAO));
     OOGL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
     OOGL(glBindVertexArray(0));

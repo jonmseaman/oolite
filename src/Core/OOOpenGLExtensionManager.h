@@ -44,7 +44,7 @@ SOFTWARE.
 // The OpenGL feature switches and the Windows extension function pointers.
 #include "OOOpenGLExtensionPointers.h"
 
-#define OOOPENGLEXTMGR_LOCK_SET_ACCESS (!OOLITE_MAC_OS_X)
+#define OOOPENGLEXTMGR_LOCK_SET_ACCESS (!OOLITE_MAC_COCOA_UI)
 
 class OOOpenGLExtensionManager : public oo::RefCounted {
  public:

@@ -35,7 +35,7 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OOObject.h"
 
-#define OOLITE_ITUNES_SUPPORT OOLITE_MAC_OS_X
+#define OOLITE_ITUNES_SUPPORT OOLITE_MAC_COCOA_UI
 
 typedef enum {
   kOOMusicOff,
