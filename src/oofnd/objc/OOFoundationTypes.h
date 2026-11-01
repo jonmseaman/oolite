@@ -49,7 +49,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 typedef intptr_t NSInteger;
 typedef uintptr_t NSUInteger;
 #define NSIntegerMax INTPTR_MAX
@@ -159,8 +158,9 @@ static inline bool NSEqualPoints(NSPoint aPoint, NSPoint bPoint) {
 }
 
 static inline bool NSEqualSizes(NSSize aSize, NSSize bSize) {
-  return ((aSize.width == bSize.width) && (aSize.height == bSize.height)) ? true
-                                                                          : false;
+  return ((aSize.width == bSize.width) && (aSize.height == bSize.height))
+             ? true
+             : false;
 }
 
 static inline bool NSEqualRects(NSRect aRect, NSRect bRect) {
@@ -169,4 +169,3 @@ static inline bool NSEqualRects(NSRect aRect, NSRect bRect) {
              ? true
              : false;
 }
-

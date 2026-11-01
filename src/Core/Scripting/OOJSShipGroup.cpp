@@ -23,10 +23,11 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSShipGroup.h"
+
 #include <cstring>
 
 #include "OOJSEntity.h"
-#include "OOJSShipGroup.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
 #include "OOShipGroup.h"
@@ -441,7 +442,8 @@ static bool ShipGroupAddShip(ooscript::Context context,
         if (((cxxThatGroup != nullptr) ? cxxThatGroup->count() : 0) > 1 &&
             (((cxxThatGroup != nullptr) ? cxxThatGroup->leader() : nullptr) !=
                      nullptr
-                 ? ((cxxThatGroup != nullptr) ? cxxThatGroup->leader() : nullptr)
+                 ? ((cxxThatGroup != nullptr) ? cxxThatGroup->leader()
+                                              : nullptr)
                        ->escortGroup()
                  : (OOShipGroup*)nullptr) ==
                 thatGroup)  // new escort already escorting!

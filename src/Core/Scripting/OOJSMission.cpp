@@ -23,12 +23,13 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSMission.h"
+
 #include <cstring>
 
 #include "GuiDisplayGen.h"
 #include "OOConstToJSString.h"
 #include "OODebugStandards.h"
-#include "OOJSMission.h"
 #include "OOJSPlayer.h"
 #include "OOJSScript.h"
 #include "OOJSVector.h"

@@ -23,6 +23,7 @@ MA 02110-1301, USA.
 */
 
 #include "CollisionRegion.h"
+
 #include "Entity.h"
 #include "OODebugFlags.h"
 #include "OOMaths.h"

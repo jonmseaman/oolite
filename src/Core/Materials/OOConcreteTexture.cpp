@@ -24,8 +24,9 @@
 
 */
 
-#include "OOCPUInfo.h"
 #include "OOConcreteTexture.h"
+
+#include "OOCPUInfo.h"
 #include "OOLogging.h"
 #include "OOMacroOpenGL.h"
 #include "OOOpenGLExtensionManager.h"

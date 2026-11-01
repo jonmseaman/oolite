@@ -21,13 +21,14 @@ MA 02110-1301, USA.
 
  */
 
+#include "OOJSWormhole.h"
+
 #include <cstdint>
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJSVector.h"
-#include "OOJSWormhole.h"
 #include "OOJavaScriptEngine.h"
 #include "WormholeEntity.h"
 #include "ooscript/JSEngine.hpp"

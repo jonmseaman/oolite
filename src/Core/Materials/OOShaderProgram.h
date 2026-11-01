@@ -101,9 +101,9 @@ class OOShaderProgram : public oo::RefCounted {
   oo::PList standardMatrixUniformLocations = {};
 };
 
-/*	Translate the subset of GLSL 3.30 used by Oolite's post-processing shaders
-        to GLSL 1.20 (plus GL_EXT_gpu_shader4). Only top-level declarations are
-        rewritten, so in/out parameter qualifiers inside functions are untouched.
+/*	Translate the subset of GLSL 3.30 used by Oolite's post-processing
+   shaders to GLSL 1.20 (plus GL_EXT_gpu_shader4). Only top-level declarations
+   are rewritten, so in/out parameter qualifiers inside functions are untouched.
    A vertex shader's layout(location = N) inputs are added to attributeBindings.
    The macOS legacy context only supports GLSL 1.20, so
    shaderProgramWithVertexShaderName() calls this there (OOLITE_MAC_OS_X); it is

@@ -139,9 +139,10 @@ OOMatrix OOMatrixOrthogonalize(OOMatrix m) CONST_FUNC;
     OOMatrix m_ = M;                                           \
     OOGL(glLoadTransposeMatrixf(OOMatrixValuesForOpenGL(m_))); \
   } while (0)
-#define GLUniformMatrix(location, M)                                          \
-  do {                                                                        \
-    OOGL(glUniformMatrix4fvARB(location, 1, false, OOMatrixValuesForOpenGL(M))); \
+#define GLUniformMatrix(location, M)                         \
+  do {                                                       \
+    OOGL(glUniformMatrix4fvARB(location, 1, false,           \
+                               OOMatrixValuesForOpenGL(M))); \
   } while (0)
 void GLUniformMatrix3(GLint location, OOMatrix M);
 

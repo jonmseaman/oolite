@@ -41,7 +41,6 @@ typedef void (*OOTCPStreamDecoderErrorCallback)(void* cbInfo,
                                                 OOALStringRef errorDesc);
 typedef void (*OOTCPStreamDecoderFinalizeCallback)(void* cbInfo);
 
-
 OOTCPStreamDecoderRef OOTCPStreamDecoderCreate(
     OOTCPStreamDecoderPacketCallback packetCB,
     OOTCPStreamDecoderErrorCallback errorCB,
@@ -52,4 +51,3 @@ void OOTCPStreamDecoderReceiveData(OOTCPStreamDecoderRef decoder,
                                    OOALDataRef data);
 void OOTCPStreamDecoderReceiveBytes(OOTCPStreamDecoderRef decoder,
                                     const void* bytes, size_t length);
-

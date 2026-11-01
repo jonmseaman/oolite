@@ -56,13 +56,11 @@ MA 02110-1301, USA.
 #define OO_DEBUG 0
 #endif
 
+#include <assert.h>
 #include <math.h>
 #include <stdbool.h>
 
-#include <assert.h>
-
 #include "oofnd/objc/OOFoundationTypes.h"
-
 
 #ifdef __clang__
 #define OOLITE_HAVE_CLANG 1
@@ -123,7 +121,6 @@ MA 02110-1301, USA.
 #ifndef IBAction
 #define IBAction void
 #endif
-
 
 #ifndef OOLITE_MAC_OS_X
 #define OOLITE_MAC_OS_X 0

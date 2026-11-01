@@ -23,11 +23,12 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSEquipmentInfo.h"
+
 #include <cstring>
 
 #include "OODebugStandards.h"
 #include "OOEquipmentType.h"
-#include "OOJSEquipmentInfo.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"

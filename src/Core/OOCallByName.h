@@ -73,10 +73,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "oofnd/objc/OOObject.h"
-
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
+#include "oofnd/objc/OOObject.h"
 
 // The signatures above are the entity call's (below).
 
@@ -114,4 +113,3 @@ void ScheduleEntityCall(Entity* entity, void (*call)(Entity* entity),
                         double delay);
 
 }  // namespace oo
-

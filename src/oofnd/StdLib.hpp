@@ -14,7 +14,6 @@
 
 #pragma once
 
-
 #include <algorithm>
 #include <chrono>
 #include <condition_variable>
@@ -32,4 +31,3 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-

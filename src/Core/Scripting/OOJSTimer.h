@@ -81,6 +81,4 @@ class OOJSTimer : public OOScriptTimer, public ::OOJSPrivateObject {
       {};  // The JS Timer object proxy for this OOJSTimer.
 };
 
-
 void InitOOJSTimer(ooscript::Context context, ooscript::Object global);
-

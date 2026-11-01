@@ -25,9 +25,10 @@ SOFTWARE.
 
 */
 
+#include "OOLogHeader.h"
+
 #include "OOCPUInfo.h"
 #include "OOJavaScriptEngine.h"
-#include "OOLogHeader.h"
 #include "OOLogging.h"
 #include "OOOXPVerifier.h"
 #include "OOSound.h"

@@ -545,4 +545,3 @@ inline constexpr std::string_view kWarningPrefix = "----- WARNING: ";
   ::oo::log::messageWithPrefix((messageClass), __FUNCTION__, __FILE__, \
                                __LINE__, ::oo::log::kWarningPrefix,    \
                                __VA_ARGS__)
-

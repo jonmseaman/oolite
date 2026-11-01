@@ -34,4 +34,3 @@ SOFTWARE.
 #include "ooscript/JSEngine.hpp"
 
 void InitOOJSFont(ooscript::Context context, ooscript::Object global);
-

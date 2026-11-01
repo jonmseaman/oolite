@@ -25,8 +25,9 @@ SOFTWARE.
 
 */
 
-#include "OOColor.h"
 #include "OODefaultShaderSynthesizer.h"
+
+#include "OOColor.h"
 #include "OOMaterialSpecifier.h"
 #include "OOMesh.h"
 #include "OOTexture.h"
@@ -62,12 +63,12 @@ std::string FormatFloat(double value);
 #define REQUIRE_STAGE(NAME)                                 \
   if (!_completed_##NAME) {                                 \
     performStage(#NAME, &OODefaultShaderSynthesizer::NAME); \
-    _completed_##NAME = true;                                \
+    _completed_##NAME = true;                               \
   }
 #else
-#define REQUIRE_STAGE(NAME)  \
-  if (!_completed_##NAME) {  \
-    NAME();                  \
+#define REQUIRE_STAGE(NAME)   \
+  if (!_completed_##NAME) {   \
+    NAME();                   \
     _completed_##NAME = true; \
   }
 #endif

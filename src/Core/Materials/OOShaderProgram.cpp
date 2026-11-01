@@ -472,7 +472,8 @@ bool GetShaderSource(const std::optional<std::string>& fileName,
   std::optional<std::string> result;
 
   if (!fileName.has_value())
-    return true;  // It's OK for one or the other of the shaders to be undefined.
+    return true;  // It's OK for one or the other of the shaders to be
+                  // undefined.
 
   result = ResourceManager::stringFromFilesNamed(*fileName, "Shaders");
   if (!result.has_value()) {
@@ -628,9 +629,9 @@ std::optional<std::string> OOTranslateGLSL330To120(
     for (auto match = matches.rbegin(); match != matches.rend(); ++match) {
       const std::string location =
           (*match)[1].matched ? (*match)[1].str() : std::string("0");
-      result.replace(match->position(0), match->length(0),
-                     "#define " + (*match)[2].str() + " gl_FragData[" +
-                         location + "]");
+      result.replace(
+          match->position(0), match->length(0),
+          "#define " + (*match)[2].str() + " gl_FragData[" + location + "]");
     }
     source = result;
   }
@@ -647,7 +648,8 @@ std::optional<std::string> OOTranslateGLSL330To120(
   if (source.find("isnan(") != std::string::npos) {
     // isnan() is not available before GLSL 1.30.
     source =
-        "bool oo_isnan(float x) { return !(x < 0.0 || x > 0.0 || x == 0.0); }\n" +
+        "bool oo_isnan(float x) { return !(x < 0.0 || x > 0.0 || x == 0.0); "
+        "}\n" +
         ReplaceRegex(source, R"(\bisnan\s*\()", "oo_isnan(");
   }
 

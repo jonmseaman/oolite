@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "WormholeEntity.h"
+
 #include "AI.h"
 #include "OOJSWormhole.h"
 #include "OOLogging.h"
@@ -39,7 +41,6 @@ MA 02110-1301, USA.
 #include "ShipEntityLoadRestore.h"
 #include "StationEntity.h"
 #include "Universe.h"
-#include "WormholeEntity.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
 
@@ -514,7 +515,7 @@ void WormholeEntity::disgorgeShips() {
       if (!hasExitPosition) {
         hasExitPosition = true;
         hasShiftedExitPosition = true;  // exitPosition is shifted towards the
-                                       // lead ship update position.
+                                        // lead ship update position.
         if (ship != nullptr)
           ship->update(
               time_passed);  // do this only for one ship or the next ships

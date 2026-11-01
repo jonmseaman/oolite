@@ -34,6 +34,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOMesh.h"
+
 #include <cstring>
 
 #include "Entity.h"  // for NO_DRAW_DISTANCE_FACTOR.
@@ -46,7 +48,6 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "OOMacroOpenGL.h"
 #include "OOMaterialConvenienceCreators.h"
-#include "OOMesh.h"
 #include "OOMeshToOctreeConverter.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOProfilingStopwatch.h"

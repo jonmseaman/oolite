@@ -62,11 +62,9 @@ SOFTWARE.
   OOJSStartTimeLimiterWithTimeLimit_(limit, OOLOG_FILE_NAME, __LINE__)
 #define OOJSStopTimeLimiter() OOJSStopTimeLimiter_(OOLOG_FILE_NAME, __LINE__)
 
-
 void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta limit, const char* file,
                                         unsigned line);
 void OOJSStopTimeLimiter_(const char* file, unsigned line);
-
 
 #else
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit);
@@ -104,7 +102,6 @@ class OOTimeProfile;
 
 oo::Ref<OOTimeProfile> OOJSEndProfiling(void);
 
-
 void OOJSBeginProfiling(bool trace);
 bool OOJSIsProfiling(void);
 
@@ -113,7 +110,6 @@ OOHighResTimeValue OOJSCopyTimeLimiterNominalStartTime(void);
 void OOJSResetTimeLimiter(void);
 OOTimeDelta OOJSGetTimeLimiterLimit(void);
 void OOJSSetTimeLimiterLimit(OOTimeDelta limit);
-
 
 /*
         NOTE: the profiler declarations that need to be visible to functions
@@ -209,7 +205,5 @@ class OOTimeProfileEntry : public oo::RefCounted {
 
 class OOJavaScriptEngine;
 
-
 void OOJSTimeManagementInit(OOJavaScriptEngine* engine,
                             ooscript::Runtime runtime);
-

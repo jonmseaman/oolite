@@ -25,8 +25,9 @@ SOFTWARE.
 
 */
 
-#include "OOALSound.h"
 #include "OOALSoundChannel.h"
+
+#include "OOALSound.h"
 #include "OOLogging.h"
 #include "OOMaths.h"
 #include "oofnd/Log.hpp"

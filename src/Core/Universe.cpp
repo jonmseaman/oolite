@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "Universe.h"
+
 #include "AI.h"
 #include "CollisionRegion.h"
 #include "DockEntity.h"
@@ -88,7 +90,6 @@ MA 02110-1301, USA.
 #include "ShipEntityAI.h"
 #include "SkyEntity.h"
 #include "StationEntity.h"
-#include "Universe.h"
 #include "WormholeEntity.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
@@ -4951,8 +4952,8 @@ oo::PList Universe::gameSettings() {
   result["procedurallyTexturedPlanets"] =
       oo::PList(static_cast<bool>(doProcedurallyTexturedPlanets));
 
-  result["fovValue"] =
-      oo::PList::singleReal((gameView != nullptr ? gameView->fov(false) : 0.0f));
+  result["fovValue"] = oo::PList::singleReal(
+      (gameView != nullptr ? gameView->fov(false) : 0.0f));
 
 #if OOLITE_WINDOWS
   if ((gameView != nullptr ? gameView->hdrOutput() : false)) {
@@ -5710,7 +5711,8 @@ void Universe::drawUniverse() {
     } catch (...) {
       const auto exception = oo::CurrentOOException();
       if (!exception) throw;  // not an OOException: it goes on up, as before
-      no_update = false;  // make sure we don't get stuck in all subsequent frames.
+      no_update =
+          false;  // make sure we don't get stuck in all subsequent frames.
 
       if (strncmp(exception->name(), "Oolite", 6) == 0) {
         handleOoliteException(exception->object());
@@ -8331,8 +8333,8 @@ oo::PList Universe::explosionSetting(const std::string& explosion) {
 oo::PList Universe::scenarios() { return _scenarios; }
 
 void Universe::loadScenarios() {
-  _scenarios = ResourceManager::arrayFromFilesNamed("scenarios.plist",
-                                                    std::string("Config"), true);
+  _scenarios = ResourceManager::arrayFromFilesNamed(
+      "scenarios.plist", std::string("Config"), true);
 }
 
 oo::PList Universe::getCharacters() { return characters; }
@@ -8561,7 +8563,7 @@ void Universe::setSystemDataForGalaxy(
         }
       }
     } else if (the_sun != nullptr && (oo::str::hasPrefix(key, "sun_") ||
-                                  oo::str::hasPrefix(key, "corona_"))) {
+                                      oo::str::hasPrefix(key, "corona_"))) {
       if (the_sun != nullptr) the_sun->changeSunProperty(key, sysInfo);
     } else if (key == "texture") {
       const std::string* texture =
@@ -9412,7 +9414,8 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
           OptionalStringIn(dict, "condition_script");
       if (condition_script.has_value()) {
         ::OOScript* condScript = getConditionScript(*condition_script);
-        if (condScript != nullptr)  // should always be non-nil, but just in case
+        if (condScript !=
+            nullptr)  // should always be non-nil, but just in case
         {
           ooscript::Context context = OOJSAcquireContext();
           bool OK;
@@ -10864,7 +10867,8 @@ void Universe::setUpInitialUniverse() {
   OO_DEBUG_POP_PROGRESS();
 
   OO_DEBUG_PUSH_PROGRESS("Galaxy reset");
-  setGalaxyTo((player != nullptr ? player->galaxyNumber() : OOGalaxyID{}), true);
+  setGalaxyTo((player != nullptr ? player->galaxyNumber() : OOGalaxyID{}),
+              true);
   systemID = (player != nullptr ? player->systemID() : 0);
   OO_DEBUG_POP_PROGRESS();
 
@@ -10884,8 +10888,8 @@ void Universe::setUpInitialUniverse() {
   // properties. Now that the base mass is set, we can run setUpSpace!
   setUpSpace();
 
-  setDockingClearanceProtocolActive(
-      currentSystemData().get<bool>("stations_require_docking_clearance", true));
+  setDockingClearanceProtocolActive(currentSystemData().get<bool>(
+      "stations_require_docking_clearance", true));
 
   enterGUIViewModeWithMouseInteraction(false);
   if (player != nullptr)
@@ -11109,8 +11113,8 @@ void Universe::dumpSystemDescriptionGraphViz() {
   std::string label;
   oo::PList keyMap;
 
-  keyMap = ResourceManager::dictionaryFromFilesNamed("sysdesc_key_table.plist",
-                                                     std::string("Config"), false);
+  keyMap = ResourceManager::dictionaryFromFilesNamed(
+      "sysdesc_key_table.plist", std::string("Config"), false);
 
   graphViz =
       "// System description grammar:\n\n"

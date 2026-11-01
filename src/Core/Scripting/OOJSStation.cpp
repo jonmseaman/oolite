@@ -21,6 +21,8 @@ MA 02110-1301, USA.
 
  */
 
+#include "OOJSStation.h"
+
 #include <cstdint>
 #include <cstring>
 
@@ -33,7 +35,6 @@ MA 02110-1301, USA.
 #include "OOJSInterfaceDefinition.h"
 #include "OOJSPlayer.h"
 #include "OOJSShip.h"
-#include "OOJSStation.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
 #include "OOShipRegistry.h"
@@ -908,8 +909,8 @@ static bool StationLaunchDefenseShip(ooscript::Context context,
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
-  launched =
-      (station != nullptr ? station->launchDefenseShip() : (::ShipEntity*)nullptr);
+  launched = (station != nullptr ? station->launchDefenseShip()
+                                 : (::ShipEntity*)nullptr);
   OOJS_END_FULL_NATIVE
   OOJS_RETURN(
       OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
@@ -950,8 +951,8 @@ static bool StationLaunchScavenger(ooscript::Context context,
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
-  launched =
-      (station != nullptr ? station->launchScavenger() : (::ShipEntity*)nullptr);
+  launched = (station != nullptr ? station->launchScavenger()
+                                 : (::ShipEntity*)nullptr);
   OOJS_END_FULL_NATIVE
   OOJS_RETURN(
       OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
@@ -971,7 +972,8 @@ static bool StationLaunchMiner(ooscript::Context context,
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
-  launched = (station != nullptr ? station->launchMiner() : (::ShipEntity*)nullptr);
+  launched =
+      (station != nullptr ? station->launchMiner() : (::ShipEntity*)nullptr);
   OOJS_END_FULL_NATIVE
   OOJS_RETURN(
       OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
@@ -990,8 +992,8 @@ static bool StationLaunchPirateShip(ooscript::Context context,
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
-  launched =
-      (station != nullptr ? station->launchPirateShip() : (::ShipEntity*)nullptr);
+  launched = (station != nullptr ? station->launchPirateShip()
+                                 : (::ShipEntity*)nullptr);
   OOJS_END_FULL_NATIVE
   OOJS_RETURN(
       OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
@@ -1465,7 +1467,8 @@ static bool StationAddShipToShipyard(ooscript::Context context,
   if (!shipyardDefinition.get<oo::PList>(
           std::string(SHIPYARD_KEY_PERSONALITY))) {
     // default to 0 if not supplied
-    result[std::string(SHIPYARD_KEY_PERSONALITY)] = oo::PList::unsignedInteger(0);
+    result[std::string(SHIPYARD_KEY_PERSONALITY)] =
+        oo::PList::unsignedInteger(0);
   } else {
     result[std::string(SHIPYARD_KEY_PERSONALITY)] =
         oo::PList::unsignedInteger(shipyardDefinition.get<unsigned int>(

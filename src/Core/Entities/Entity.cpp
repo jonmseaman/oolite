@@ -22,9 +22,10 @@ MA 02110-1301, USA.
 
 */
 
+#include "Entity.h"
+
 #include "CollisionRegion.h"
 #include "DockEntity.h"
-#include "Entity.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
 #include "OOConstToString.h"

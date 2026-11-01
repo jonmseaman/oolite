@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "Octree.h"
+
 #include <cstring>
 
 #include "Entity.h"
@@ -30,7 +32,6 @@ MA 02110-1301, USA.
 #include "OOMacroOpenGL.h"
 #include "OOMaths.h"
 #include "OOOpenGL.h"
-#include "Octree.h"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
 

@@ -617,7 +617,6 @@ inline std::u16string utf8ToUtf16(std::string_view s) {
 
 }  // namespace oo
 
-
 #endif  // OOFND_PLIST_HPP
 
 // The definitions of get<T>/at<T>. Outside the include guard so that

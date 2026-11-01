@@ -22,13 +22,14 @@ MA 02110-1301, USA.
 
 */
 
+#include "MyOpenGLView.h"
+
 #include <SDL3/SDL_clipboard.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_timer.h>
 
 #include "GameController.h"
 #include "GuiDisplayGen.h"
-#include "MyOpenGLView.h"
 #include "OOConstToString.h"
 #include "OOFullScreenController.h"
 #include "OOGraphicsResetManager.h"
@@ -54,7 +55,7 @@ MA 02110-1301, USA.
 #define SNAPSHOTDIR "snapshots"
 
 int SaveEXRSnapshot(const char* outfilename, int width, int height,
-                               const float* rgb);
+                    const float* rgb);
 
 #include <ctype.h>
 
@@ -895,7 +896,6 @@ NSSize MyOpenGLView::modeAsSize(int sizeIndex) {
                     mode.get<int>(std::string(kOODisplayHeight)));
 }
 
-
 void MyOpenGLView::getDisplayDimensions(unsigned* width, unsigned* height) {
   SDL_DisplayID displayID = SDL_GetDisplayForWindow(window);
 
@@ -1272,7 +1272,8 @@ bool MyOpenGLView::snapShot(const std::optional<std::string>& filename) {
   {
     int pixelWidth, pixelHeight;
     SDL_GetWindowSizeInPixels(window, &pixelWidth, &pixelHeight);
-    surface = SDL_CreateSurface(pixelWidth, pixelHeight, SDL_PIXELFORMAT_ARGB8888);
+    surface =
+        SDL_CreateSurface(pixelWidth, pixelHeight, SDL_PIXELFORMAT_ARGB8888);
   }
 #else
   SDL_Surface* surface = SDL_GetWindowSurface(window);

@@ -25,8 +25,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "Entity.h"
 #include "OOEntityFilterPredicate.h"
+
+#include "Entity.h"
 #include "OOPlanetEntity.h"
 #include "OORoleSet.h"
 #include "ShipEntity.h"
@@ -139,7 +140,7 @@ bool HasPrimaryRolePredicate(Entity* ship, void* parameter) {
     if (ShipEntity* s = oo::ToShip(ship))
       (void)s->getPrimaryRole();  // still chooses a primary role if there is
                                   // none, as before
-    return false;                    // -isEqual: nil was NO
+    return false;                 // -isEqual: nil was NO
   }
   return (oo::ToShip(ship) != nullptr ? oo::ToShip(ship)->hasPrimaryRole(*role)
                                       : false);

@@ -25,10 +25,11 @@ SOFTWARE.
 
 */
 
+#include "OOMultiTextureMaterial.h"
+
 #include "OOCombinedEmissionMapGenerator.h"
 #include "OOMacroOpenGL.h"
 #include "OOMaterialSpecifier.h"
-#include "OOMultiTextureMaterial.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOTexture.h"
 #include "oofnd/objc/OOAssert.h"

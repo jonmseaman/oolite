@@ -54,7 +54,6 @@
 
 #include "oofnd/PrintfFormat.h"
 
-
 // Exception names. The text is Foundation's, so a name that reaches a log reads
 // as it did.
 extern const char* const OOGenericException;
@@ -123,4 +122,3 @@ class Finally {
 };
 
 }  // namespace oo
-

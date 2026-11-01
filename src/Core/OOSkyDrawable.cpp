@@ -25,12 +25,13 @@ SOFTWARE.
 
 */
 
+#include "OOSkyDrawable.h"
+
 #include "GameController.h"
 #include "OOColor.h"
 #include "OOGraphicsResetManager.h"
 #include "OOMacroOpenGL.h"
 #include "OOProbabilisticTextureManager.h"
-#include "OOSkyDrawable.h"
 #include "OOTexture.h"
 #include "ResourceManager.h"
 #include "Universe.h"
@@ -347,10 +348,10 @@ void OOSkyDrawable::setUpNebulae(OOColor* color1, OOColor* color2,
                                   nebulaAlpha * (0.5f + (float)r1 / 32.0f))
                             : nullptr;
 #endif
-      currQuad->texture =
-          (sNebulaTextures != nullptr)
-              ? sNebulaTextures->selectTexture()
-              : nullptr;  // Not retained, since sStarTextures is never released.
+      currQuad->texture = (sNebulaTextures != nullptr)
+                              ? sNebulaTextures->selectTexture()
+                              : nullptr;  // Not retained, since sStarTextures
+                                          // is never released.
 
       middle = vector_multiply_scalar(vk, BILLBOARD_DEPTH);
       offset = vector_multiply_scalar(vector_add(vi, vj), 0.5f * size);

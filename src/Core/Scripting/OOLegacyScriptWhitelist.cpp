@@ -23,8 +23,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOFoundation.h"
 #include "OOLegacyScriptWhitelist.h"
+
+#include "OOFoundation.h"
 #include "OOStringParsing.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "ResourceManager.h"

@@ -22,6 +22,8 @@
 
 */
 
+#include "StationEntity.h"
+
 #include "AI.h"
 #include "DockEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
@@ -43,7 +45,6 @@
 #include "OOStringParsing.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "ShipEntityAI.h"
-#include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
@@ -473,8 +474,9 @@ oo::PList StationEntity::launchPolice()  // called by name
   // count miners as scavengers...
   if (scavengers_launched >= max_scavengers) return nullptr;
 
-  miner_ship = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("miner")
-                                    : (::ShipEntity*)nullptr);  // retain count = 1
+  miner_ship =
+      (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("miner")
+                           : (::ShipEntity*)nullptr);  // retain count = 1
 
   if (!fitsInDock(miner_ship)) {
     if (miner_ship != nullptr) oo::ReleaseEntity(miner_ship);
@@ -526,7 +528,7 @@ oo::PList StationEntity::launchPolice()  // called by name
 
   if (defenders_launched >= max_defense_ships)
     return nullptr;  // shuttles are to rockhermits what police ships are to
-                 // stations
+                     // stations
 
   if ((UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(defense_target)
                            : nullptr) == nullptr) {
@@ -535,8 +537,9 @@ oo::PList StationEntity::launchPolice()  // called by name
   }
 
   // Yep! The standard hermit defence ships, even if they're the aggressor.
-  pirate_ship = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("pirate")
-                                     : (::ShipEntity*)nullptr);  // retain count = 1
+  pirate_ship =
+      (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("pirate")
+                           : (::ShipEntity*)nullptr);  // retain count = 1
   // Nope, use standard pirates in a generic method.
 
   if (!fitsInDock(pirate_ship)) {
@@ -636,8 +639,9 @@ oo::PList StationEntity::launchPolice()  // called by name
   }
   ::ShipEntity* escort_ship;
 
-  escort_ship = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("escort")
-                                     : (::ShipEntity*)nullptr);  // retain count = 1
+  escort_ship =
+      (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("escort")
+                           : (::ShipEntity*)nullptr);  // retain count = 1
 
   if (escort_ship && fitsInDock(escort_ship)) {
     if (!(escort_ship != nullptr
@@ -759,7 +763,8 @@ void StationEntity::launchShipWithRole(
   ::ShipEntity* object = oo::ToShip(
       oo::NewShipObject(oo::makeRef<StationEntity>(), key,
                         dict));  // [super cxx_initWithKey:key definition:dict]
-  if (object != nullptr) static_cast<StationEntity*>(object)->initStationDefaults();
+  if (object != nullptr)
+    static_cast<StationEntity*>(object)->initStationDefaults();
   return object;
 }
 
@@ -1016,7 +1021,8 @@ bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
   hasNPCTraffic = (unsigned char)OOFuzzyBooleanFromPList(
       dict.find("has_npc_traffic"),
       (maxFlightSpeed == 0));  // carriers default to NO
-  hasPatrolShips = OOFuzzyBooleanFromPList(dict.find("has_patrol_ships"), false);
+  hasPatrolShips =
+      OOFuzzyBooleanFromPList(dict.find("has_patrol_ships"), false);
   suppress_arrival_reports =
       (unsigned char)dict.get<bool>("suppress_arrival_reports", false);
   setAllegiance(OptionalStringValue(dict.find("allegiance")));
@@ -1040,9 +1046,11 @@ bool StationEntity::setUpShipFromDictionary(const oo::PList& dict) {
       (UNIVERSE != nullptr ? UNIVERSE->dockingClearanceProtocolActive()
                            : false));
 
-  allowsFastDocking = (unsigned char)dict.get<bool>("allows_fast_docking", false);
+  allowsFastDocking =
+      (unsigned char)dict.get<bool>("allows_fast_docking", false);
 
-  allowsAutoDocking = (unsigned char)dict.get<bool>("allows_auto_docking", true);
+  allowsAutoDocking =
+      (unsigned char)dict.get<bool>("allows_auto_docking", true);
 
   allowsSaving =
       (UNIVERSE != nullptr ? UNIVERSE->deterministicPopulation() : false);
@@ -1141,7 +1149,8 @@ bool StationEntity::setUpSubEntities() {
   virtualDockDict["allow_launching"] = oo::PList(true);
   virtualDockDict["_is_virtual_dock"] = oo::PList(true);
 
-  if (!setUpOneStandardSubentity(oo::PList(std::move(virtualDockDict)), false)) {
+  if (!setUpOneStandardSubentity(oo::PList(std::move(virtualDockDict)),
+                                 false)) {
     return false;
   }
   return true;
@@ -1153,7 +1162,9 @@ bool StationEntity::getInterstellarUndockingAllowed() {
 
 bool StationEntity::getHasNPCTraffic() { return hasNPCTraffic; }
 
-void StationEntity::setHasNPCTraffic(bool flag) { hasNPCTraffic = flag != false; }
+void StationEntity::setHasNPCTraffic(bool flag) {
+  hasNPCTraffic = flag != false;
+}
 
 bool StationEntity::getRequiresDockingClearance() {
   return requiresDockingClearance;
@@ -1203,7 +1214,8 @@ std::optional<std::string> StationEntity::marketOverrideName() {
 }
 
 bool StationEntity::hasShipyard() {
-  if ((UNIVERSE != nullptr ? UNIVERSE->station() : nullptr) == this) return true;
+  if ((UNIVERSE != nullptr ? UNIVERSE->station() : nullptr) == this)
+    return true;
   const oo::PList* determinantValue = shipinfoDictionary.find("has_shipyard");
 
   if (determinantValue == nullptr)

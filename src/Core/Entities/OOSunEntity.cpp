@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOSunEntity.h"
+
 #include <cstring>
 
 #include "AI.h"
@@ -35,7 +37,6 @@ MA 02110-1301, USA.
 #include "OOPlanetEntity.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
-#include "OOSunEntity.h"
 #include "PlayerEntity.h"
 #include "ShipEntityAI.h"
 #include "Universe.h"
@@ -299,8 +300,8 @@ void OOSunEntity::update(OOTimeDelta delta_t) {
 
         // reset at the new size
         resetNova();
-        throw_sparks =
-            true;  // keep throw_sparks at YES to indicate the higher temperature
+        throw_sparks = true;  // keep throw_sparks at YES to indicate the higher
+                              // temperature
       }
     }
   }

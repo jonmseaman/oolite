@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "SkyEntity.h"
+
 #include "MyOpenGLView.h"
 #include "OOColor.h"
 #include "OOMaterial.h"
@@ -29,7 +31,6 @@ MA 02110-1301, USA.
 #include "OOObjCPList.h"
 #include "OOSkyDrawable.h"
 #include "PlayerEntity.h"
-#include "SkyEntity.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/PListGet.hpp"

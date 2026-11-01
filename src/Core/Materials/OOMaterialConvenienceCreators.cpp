@@ -29,8 +29,9 @@ SOFTWARE.
 #define USE_NEW_SHADER_SYNTHESIZER 0
 #endif
 
-#include "OOColor.h"
 #include "OOMaterialConvenienceCreators.h"
+
+#include "OOColor.h"
 #include "OOMaterialSpecifier.h"
 
 #if USE_NEW_SHADER_SYNTHESIZER
@@ -492,9 +493,9 @@ void SynthEmissionAndIllumination(OOMaterialSynthContext* context) {
   if (emissionMapSpec.isNull() && !emissionAndIlluminationSpec.isNull()) {
     emissionMapSpec = emissionAndIlluminationSpec;
     if (illuminationMapSpec.isNull())
-      isCombinedSpec =
-          true;  // Else use only emission part of emission_and_illumination_map,
-                // combined with full illumination_map.
+      isCombinedSpec = true;  // Else use only emission part of
+                              // emission_and_illumination_map, combined with
+                              // full illumination_map.
   }
 
   if (!emissionMapSpec.isNull() &&
@@ -573,7 +574,8 @@ void SynthSpecular(OOMaterialSynthContext* context) {
   GLfloat gloss = cxx_OOMaterialGloss(context->inConfig);
   if (gloss < 0.0f || gloss > 1.0f) return;
 
-  bool gammaCorrect = cxx_OOMaterialGammaCorrect(context->inConfig) ? true : false;
+  bool gammaCorrect =
+      cxx_OOMaterialGammaCorrect(context->inConfig) ? true : false;
 
   oo::PList specularMapSpec;
   oo::Ref<OOColor> specularColor;

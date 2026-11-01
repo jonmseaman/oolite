@@ -1539,4 +1539,3 @@ inline std::string formatRuntime(std::string_view fmt) {
 }
 
 }  // namespace oo::str
-

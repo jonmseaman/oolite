@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSPlayerShip.h"
+
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
@@ -34,7 +36,6 @@ MA 02110-1301, USA.
 #include "OOJSEntity.h"
 #include "OOJSEquipmentInfo.h"
 #include "OOJSPlayer.h"
-#include "OOJSPlayerShip.h"
 #include "OOJSQuaternion.h"
 #include "OOJSShip.h"
 #include "OOJSVector.h"

@@ -649,4 +649,3 @@ class Defaults {
 };
 
 }  // namespace oo
-

@@ -56,9 +56,9 @@ inline constexpr std::string_view kOODisplayRefreshRate = "RefreshRate";
 
 /*	The abstract base of the Mac full-screen controllers, which are Mac-only
    and not in this tree. Its callers (GameController, under
-   OO_USE_FULLSCREEN_CONTROLLER, which is OOLITE_MAC_COCOA_UI) are never compiled
-   here. The "subclass responsibility" methods are virtual, so a C++ subclass
-   overrides them; the base's bodies still log and answer the default.
+   OO_USE_FULLSCREEN_CONTROLLER, which is OOLITE_MAC_COCOA_UI) are never
+   compiled here. The "subclass responsibility" methods are virtual, so a C++
+   subclass overrides them; the base's bodies still log and answer the default.
 */
 class OOFullScreenController : public oo::RefCounted {
  public:

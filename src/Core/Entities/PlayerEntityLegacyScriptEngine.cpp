@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "PlayerEntityLegacyScriptEngine.h"
+
 #include "AI.h"
 #include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
@@ -46,7 +48,6 @@ MA 02110-1301, USA.
 #include "OOSystemDescriptionManager.h"
 #include "OOTexture.h"
 #include "PlayerEntityContracts.h"
-#include "PlayerEntityLegacyScriptEngine.h"
 #include "PlayerEntityScriptMethods.h"
 #include "PlayerEntitySound.h"
 #include "ResourceManager.h"
@@ -2719,7 +2720,8 @@ void PlayerEntity::setGuiToMissionScreenWithCallback(bool callback) {
   OOMusicController::sharedController()->playMissionMusic();
 
   // the following are necessary...
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
+  if (UNIVERSE != nullptr)
+    UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
   _missionWithCallback = callback;
   _missionAllowInterrupt = false;
   noteGUIDidChangeFrom(oldScreen, gui_screen);
@@ -2797,7 +2799,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
   const std::vector<std::string> i_info = oo::str::tokens(item);
   if (i_info.empty())
     return false;  // (nil returned NO; an all-blank string raised on
-                // -objectAtIndex:0)
+                   // -objectAtIndex:0)
   const std::string i_key = oo::str::lowercase(i_info[0]);
 
   // ("%@" of the token array: the same description)
@@ -2820,7 +2822,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
   //
   if (i_key == "scene") {
     if (i_info.size() != 5)  // must be scene_key_x_y_z
-      return false;             //		   0.... 1.. 2 3 4
+      return false;          //		   0.... 1.. 2 3 4
     const std::string& scene_key = i_info[1];
     Vector scene_offset = {};
     cxx_ScanVectorFromString(joined(2, 3), &scene_offset);
@@ -2890,7 +2892,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
   //
   if (i_key == "player") {
     if (i_info.size() != 9)  // must be player_x_y_z_W_X_Y_Z_align
-      return false;             //		   0..... 1 2 3 4 5 6 7 8....
+      return false;          //		   0..... 1 2 3 4 5 6 7 8....
 
     ::ShipEntity* doppelganger =
         (UNIVERSE != nullptr
@@ -2934,7 +2936,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
   //
   if (i_key == "local-planet" || i_key == "target-planet") {
     if (i_info.size() != 4)  // must be xxxxx-planet_x_y_z
-      return false;             //		   0........... 1 2 3
+      return false;          //		   0........... 1 2 3
 
     // sunlight position for F7 screen is chosen pseudo randomly from  4
     // different positions.

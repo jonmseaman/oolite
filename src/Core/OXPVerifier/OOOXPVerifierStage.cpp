@@ -28,9 +28,10 @@ SOFTWARE.
 
 */
 
+#include "OOOXPVerifierStage.h"
+
 #include <assert.h>
 
-#include "OOOXPVerifierStage.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
 

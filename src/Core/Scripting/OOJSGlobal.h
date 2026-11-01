@@ -33,5 +33,4 @@ MA 02110-1301, USA.
 void CreateOOJSGlobal(ooscript::Context context, ooscript::Object* outGlobal);
 void SetUpOOJSGlobal(ooscript::Context context, ooscript::Object global);
 
-
 #include "oofnd/StdLib.hpp"

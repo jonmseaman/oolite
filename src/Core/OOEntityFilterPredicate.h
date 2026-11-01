@@ -47,7 +47,6 @@ typedef struct {
   void* parameter2;
 } BinaryOperationPredicateParameter;
 
-
 bool YESPredicate(Entity* entity,
                   void* parameter);  // Parameter: ignored. Always returns YES.
 bool NOPredicate(Entity* entity,
@@ -109,4 +108,3 @@ bool HasPrimaryRoleInSetPredicate(
     void* parameter);  // Parameter: a std::vector<std::string> of roles
 bool IsHostileAgainstTargetPredicate(Entity* ship,
                                      void* parameter);  // Parameter: ShipEntity
-

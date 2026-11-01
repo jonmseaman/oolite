@@ -32,7 +32,6 @@ MA 02110-1301, USA.
 
 void InitOOJSSun(ooscript::Context context, ooscript::Object global);
 
-
 /*	The bodies of OOSunEntity (OOJavaScriptExtensions), which the engine
    reaches by selector.
 */

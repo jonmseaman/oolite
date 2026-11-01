@@ -198,13 +198,11 @@ typedef struct {
 bool JSFunctionPredicate(Entity* entity, void* parameter);
 
 // YES for ships and (normal) planets. Parameter: ignored.
-bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity,
-                                                        void* parameter);
+bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* parameter);
 
 // YES for ships other than sub-entities and menu-display ships, and planets
 // other than atmospheres and menu miniatures. Parameter: ignored.
-bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
-                                                           void* parameter);
+bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void* parameter);
 
 // YES for menu-display ships. Parameter: ignored
 bool JSEntityIsDemoShipPredicate(Entity* entity, void* parameter);

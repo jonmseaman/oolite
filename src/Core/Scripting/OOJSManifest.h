@@ -31,4 +31,3 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 void InitOOJSManifest(ooscript::Context context, ooscript::Object global);
-

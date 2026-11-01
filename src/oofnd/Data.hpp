@@ -123,4 +123,3 @@ class Data {
 };
 
 }  // namespace oo
-

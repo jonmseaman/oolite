@@ -25,8 +25,9 @@ SOFTWARE.
 
 */
 
-#include "OOObjCPList.h"
 #include "OOPListSchemaVerifier.h"
+
+#include "OOObjCPList.h"
 
 #if OO_OXP_VERIFIER_ENABLED
 
@@ -327,8 +328,8 @@ bool OOPListSchemaVerifier::verifyPropertyList(const oo::PList& plist,
   bool OK;
   bool stop = false;
 
-  OK =
-      verifyPList(plist, name, plist, _schema, BackLinkRoot(), false, NULL, &stop);
+  OK = verifyPList(plist, name, plist, _schema, BackLinkRoot(), false, NULL,
+                   &stop);
 
   return OK;
 }

@@ -88,11 +88,9 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
       {};  // The latest JS SystemInfo object made for this.
 };
 
-
 void InitOOJSSystemInfo(ooscript::Context context, ooscript::Object global);
 
 // Returns ooscript::nullValue() on failure (with a JS warning, but no
 // exception).
 ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context,
                                          OOGalaxyID galaxy, OOSystemID system);
-

@@ -22,12 +22,13 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOStringParsing.h"
+
 #include "HeadUpDisplay.h"
 #include "OOFunctionAttributes.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJavaScriptEngine.h"
 #include "OOLogging.h"
-#include "OOStringParsing.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "ResourceManager.h"

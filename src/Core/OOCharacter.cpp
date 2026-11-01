@@ -23,6 +23,7 @@ MA 02110-1301, USA.
 */
 
 #include "OOCharacter.h"
+
 #include "OOJSScript.h"
 #include "OOObjCPList.h"
 #include "OOStringExpander.h"
@@ -148,9 +149,9 @@ std::optional<std::string> OOCharacter::species() {
                 0x03;  // 0-1 native to home system, 2 human colonial, 3 other
   std::optional<std::string> speciesString;
   if (species == 3)
-    speciesString =
-        (UNIVERSE != nullptr ? UNIVERSE->getSystemInhabitants(genSeed().e, false)
-                             : std::optional<std::string>());
+    speciesString = (UNIVERSE != nullptr
+                         ? UNIVERSE->getSystemInhabitants(genSeed().e, false)
+                         : std::optional<std::string>());
   else
     speciesString = (UNIVERSE != nullptr ? UNIVERSE->getSystemInhabitants(
                                                planetIDOfOrigin(), false)

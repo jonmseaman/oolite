@@ -27,9 +27,10 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
+#include "OODebugSupport.h"
+
 #include "GameController.h"
 #include "OODebugMonitor.h"
-#include "OODebugSupport.h"
 #include "OODebugTCPConsoleClient.h"
 #include "OOJavaScriptEngine.h"
 #include "ResourceManager.h"

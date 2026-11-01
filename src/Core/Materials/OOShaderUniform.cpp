@@ -25,8 +25,9 @@ SOFTWARE.
 
 */
 
-#include "Entity.h"  // the shader binding targets' informal protocols (-superShaderBindingTarget)
 #include "OOShaderUniform.h"
+
+#include "Entity.h"  // the shader binding targets' informal protocols (-superShaderBindingTarget)
 
 #if OO_SHADERS
 
@@ -426,7 +427,8 @@ void OOShaderUniform::applyBinding() {
   OOMatrix mVal;
   Quaternion qVal;
   NSPoint pVal = {};
-  bool isInt = false, isFloat = false, isVector = false, isMatrix = false, isPoint = false;
+  bool isInt = false, isFloat = false, isVector = false, isMatrix = false,
+       isPoint = false;
 
   /*	Design note: if the object has been dealloced, or an exception occurs,
           do nothing. Shaders can specify a default value for uniforms, which

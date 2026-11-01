@@ -23,6 +23,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOStringExpander.h"
+
 #include <map>
 #include <optional>
 #include <set>
@@ -32,7 +34,6 @@ MA 02110-1301, USA.
 #include "OOCallByName.h"
 #include "OOFoundation.h"
 #include "OOJavaScriptEngine.h"
-#include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityScriptMethods.h"

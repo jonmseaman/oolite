@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "PlayerEntityStickProfile.h"
+
 #include "HeadUpDisplay.h"
 #include "OOJoystickManager.h"
 #include "OOJoystickProfile.h"
@@ -31,7 +33,6 @@ MA 02110-1301, USA.
 #include "PlayerEntityControls.h"
 #include "PlayerEntitySound.h"
 #include "PlayerEntityStickMapper.h"
-#include "PlayerEntityStickProfile.h"
 #include "oofnd/String.hpp"
 
 #define GUI_ROW_STICKPROFILE_BACK 20

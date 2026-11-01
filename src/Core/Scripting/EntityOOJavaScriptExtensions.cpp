@@ -26,8 +26,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "DockEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
+
+#include "DockEntity.h"
 #include "OOJSDock.h"
 #include "OOJSEntity.h"
 #include "OOJSPrivateObject.h"

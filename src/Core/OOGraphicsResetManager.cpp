@@ -26,6 +26,7 @@ SOFTWARE.
 */
 
 #include "OOGraphicsResetManager.h"
+
 #include "OOOpenGLExtensionManager.h"
 #include "OOTexture.h"
 #include "oofnd/Log.hpp"

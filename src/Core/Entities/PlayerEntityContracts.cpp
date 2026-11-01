@@ -1285,8 +1285,8 @@ void PlayerEntity::setGuiToManifestScreen() {
     NSInteger page_offset = 0;
     bool multi_page = false;
     //		NSUInteger total_rows = cargoRowCount +
-    //MAX(1U,[passengerManifest count]) + MAX(1U,[contractManifest count]) +
-    //mmRows + MAX(1U,[parcelManifest count]) + 5;
+    // MAX(1U,[passengerManifest count]) + MAX(1U,[contractManifest count]) +
+    // mmRows + MAX(1U,[parcelManifest count]) + 5;
     NSUInteger total_rows = cargoRowCount + mmRows + 5;
     if (total_rows > max_rows) {
       max_rows -= 2;
@@ -1417,7 +1417,8 @@ void PlayerEntity::setGuiToManifestScreen() {
   lastTextKey.reset();
 
   setShowDemoShips(false);
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
+  if (UNIVERSE != nullptr)
+    UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
   if (guiChanged) {
     gui->setForegroundTextureKey(std::optional<std::string>(
@@ -1467,10 +1468,10 @@ void PlayerEntity::setGuiToDockingReportScreen() {
     gui->setTitle(cxx_OOExpandKey("arrival-report-title"));
 
     for (i = 1; i <= 18; i++) {
-      gui->setColor(
-          gui->colorFromSetting(std::string(cxx_kGuiDockingReportColor), nullptr)
-              .get(),
-          21);
+      gui->setColor(gui->colorFromSetting(
+                           std::string(cxx_kGuiDockingReportColor), nullptr)
+                        .get(),
+                    21);
     }
 
     // dockingReport might be a multi-line message
@@ -1505,10 +1506,10 @@ void PlayerEntity::setGuiToDockingReportScreen() {
         GUI_ROW_MARKET_CASH);
 
     gui->setText(OO_DESC("press-space-commander"), 21, GUI_ALIGN_CENTER);
-    gui->setColor(
-        gui->colorFromSetting(std::string(cxx_kGuiDockingContinueColor), nullptr)
-            .get(),
-        21);
+    gui->setColor(gui->colorFromSetting(
+                         std::string(cxx_kGuiDockingContinueColor), nullptr)
+                      .get(),
+                  21);
     gui->setShowTextCursor(false);
   }
   /* ends */
@@ -1516,7 +1517,8 @@ void PlayerEntity::setGuiToDockingReportScreen() {
   lastTextKey.reset();
 
   setShowDemoShips(false);
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
+  if (UNIVERSE != nullptr)
+    UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
   if (guiChanged) {
     gui->setForegroundTextureKey(
@@ -1856,10 +1858,12 @@ void PlayerEntity::showTradeInInformationFooter() {
   OOCreditsQuantity total = tradeIn + credits;
   const oo::PList shipType = oo::PList(getDisplayName().value_or(""));
 
-  gui->setColor(gui->colorFromSetting(cxx_kGuiShipyardTradeinColor, nullptr).get(),
-                GUI_ROW_MARKET_CASH - 1);
-  gui->setColor(gui->colorFromSetting(cxx_kGuiShipyardTradeinColor, nullptr).get(),
-                GUI_ROW_MARKET_CASH);
+  gui->setColor(
+      gui->colorFromSetting(cxx_kGuiShipyardTradeinColor, nullptr).get(),
+      GUI_ROW_MARKET_CASH - 1);
+  gui->setColor(
+      gui->colorFromSetting(cxx_kGuiShipyardTradeinColor, nullptr).get(),
+      GUI_ROW_MARKET_CASH);
   gui->setText(ExpandKey("shipyard-trade-in-value",
                          {{"shipType", shipType},
                           {"tradeIn", oo::PList::unsignedInteger(tradeIn)}}),

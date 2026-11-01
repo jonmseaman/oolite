@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "PlayerEntityControls.h"
+
 #include <cstring>
 
 #include "AI.h"
@@ -50,7 +52,6 @@ MA 02110-1301, USA.
 #include "OOSystemDescriptionManager.h"
 #include "OOTexture.h"
 #include "PlayerEntityContracts.h"
-#include "PlayerEntityControls.h"
 #include "PlayerEntityKeyMapper.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "PlayerEntityLoadSave.h"
@@ -331,60 +332,85 @@ void PlayerEntity::initKeyConfigSettings() {
                           shift_2, mod1_2)                             \
   name = keySetting(#name)
 
-  LOAD_KEY_SETTING2(n_key_roll_left, gvArrowKeyLeft, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_roll_right, gvArrowKeyRight, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_pitch_forward, gvArrowKeyUp, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_pitch_back, gvArrowKeyDown, false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_roll_left, gvArrowKeyLeft, false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_roll_right, gvArrowKeyRight, false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_pitch_forward, gvArrowKeyUp, false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_pitch_back, gvArrowKeyDown, false, false, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_yaw_left, ',', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_yaw_right, '.', false, false, 0, false, false);
 
-  LOAD_KEY_SETTING2(n_key_view_forward, '1', false, false, gvFunctionKey1, false, false);
-  LOAD_KEY_SETTING2(n_key_view_aft, '2', false, false, gvFunctionKey2, false, false);
-  LOAD_KEY_SETTING2(n_key_view_port, '3', false, false, gvFunctionKey3, false, false);
-  LOAD_KEY_SETTING2(n_key_view_starboard, '4', false, false, gvFunctionKey4, false, false);
-
-  LOAD_KEY_SETTING2(n_key_launch_ship, '1', false, false, gvFunctionKey1, false, false);
-  LOAD_KEY_SETTING2(n_key_gui_screen_options, '2', false, false, gvFunctionKey2, false,
-                    false);
-  LOAD_KEY_SETTING2(n_key_gui_screen_equipship, '3', false, false, gvFunctionKey3, false,
-                    false);
-  LOAD_KEY_SETTING2(n_key_gui_screen_interfaces, '4', false, false, gvFunctionKey4,
+  LOAD_KEY_SETTING2(n_key_view_forward, '1', false, false, gvFunctionKey1,
                     false, false);
-  LOAD_KEY_SETTING2(n_key_gui_screen_status, '5', false, false, gvFunctionKey5, false,
+  LOAD_KEY_SETTING2(n_key_view_aft, '2', false, false, gvFunctionKey2, false,
                     false);
-  LOAD_KEY_SETTING2(n_key_gui_chart_screens, '6', false, false, gvFunctionKey6, false,
+  LOAD_KEY_SETTING2(n_key_view_port, '3', false, false, gvFunctionKey3, false,
                     false);
-  LOAD_KEY_SETTING2(n_key_gui_system_data, '7', false, false, gvFunctionKey7, false, false);
-  LOAD_KEY_SETTING2(n_key_gui_market, '8', false, false, gvFunctionKey8, false, false);
+  LOAD_KEY_SETTING2(n_key_view_starboard, '4', false, false, gvFunctionKey4,
+                    false, false);
 
-  LOAD_KEY_SETTING2(n_key_gui_arrow_left, gvArrowKeyLeft, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_gui_arrow_right, gvArrowKeyRight, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_gui_arrow_up, gvArrowKeyUp, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_gui_arrow_down, gvArrowKeyDown, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_gui_page_up, gvPageUpKey, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_gui_page_down, gvPageDownKey, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_gui_select, 13, false, false, gvNumberPadKeyEnter, false, false);
+  LOAD_KEY_SETTING2(n_key_launch_ship, '1', false, false, gvFunctionKey1, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_gui_screen_options, '2', false, false, gvFunctionKey2,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_gui_screen_equipship, '3', false, false,
+                    gvFunctionKey3, false, false);
+  LOAD_KEY_SETTING2(n_key_gui_screen_interfaces, '4', false, false,
+                    gvFunctionKey4, false, false);
+  LOAD_KEY_SETTING2(n_key_gui_screen_status, '5', false, false, gvFunctionKey5,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_gui_chart_screens, '6', false, false, gvFunctionKey6,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_gui_system_data, '7', false, false, gvFunctionKey7,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_gui_market, '8', false, false, gvFunctionKey8, false,
+                    false);
+
+  LOAD_KEY_SETTING2(n_key_gui_arrow_left, gvArrowKeyLeft, false, false, 0,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_gui_arrow_right, gvArrowKeyRight, false, false, 0,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_gui_arrow_up, gvArrowKeyUp, false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_gui_arrow_down, gvArrowKeyDown, false, false, 0,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_gui_page_up, gvPageUpKey, false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_gui_page_down, gvPageDownKey, false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_gui_select, 13, false, false, gvNumberPadKeyEnter,
+                    false, false);
 
   LOAD_KEY_SETTING2(n_key_increase_speed, 'w', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_decrease_speed, 's', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_inject_fuel, 'i', false, false, 0, false, false);
 
   LOAD_KEY_SETTING2(n_key_fire_lasers, 'a', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_weapons_online_toggle, '_', true, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_weapons_online_toggle, '_', true, false, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_launch_missile, 'm', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_next_missile, 'y', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_ecm, 'e', false, false, 0, false, false);
 
-  LOAD_KEY_SETTING2(n_key_prime_next_equipment, 'N', true, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_prime_previous_equipment, 'N', true, true, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_activate_equipment, 'n', false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_prime_next_equipment, 'N', true, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_prime_previous_equipment, 'N', true, true, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_activate_equipment, 'n', false, false, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_mode_equipment, 'b', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_fastactivate_equipment_a, '0', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_fastactivate_equipment_b, 9, false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_fastactivate_equipment_a, '0', false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_fastactivate_equipment_b, 9, false, false, 0, false,
+                    false);
 
   LOAD_KEY_SETTING2(n_key_target_missile, 't', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_untarget_missile, 'u', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_target_incoming_missile, 'T', true, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_target_incoming_missile, 'T', true, false, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_ident_system, 'r', false, false, 0, false, false);
 
   LOAD_KEY_SETTING2(n_key_scanner_zoom, 'z', false, false, 0, false, false);
@@ -392,7 +418,8 @@ void PlayerEntity::initKeyConfigSettings() {
 
   LOAD_KEY_SETTING2(n_key_launch_escapepod, 27, false, false, 0, false, false);
 
-  LOAD_KEY_SETTING2(n_key_galactic_hyperspace, 'g', false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_galactic_hyperspace, 'g', false, false, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_hyperspace, 'h', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_jumpdrive, 'j', false, false, 0, false, false);
 
@@ -401,27 +428,32 @@ void PlayerEntity::initKeyConfigSettings() {
 
   LOAD_KEY_SETTING2(n_key_autopilot, 'c', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_autodock, 'C', true, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_docking_clearance_request, 'L', true, false, 0, false, false);
-
-  LOAD_KEY_SETTING2(n_key_snapshot, '*', true, false, gvNumberPadKeyMultiply, false,
+  LOAD_KEY_SETTING2(n_key_docking_clearance_request, 'L', true, false, 0, false,
                     false);
+
+  LOAD_KEY_SETTING2(n_key_snapshot, '*', true, false, gvNumberPadKeyMultiply,
+                    false, false);
   LOAD_KEY_SETTING2(n_key_docking_music, 's', false, false, 0, false, false);
 
-  LOAD_KEY_SETTING2(n_key_advanced_nav_array_next, '^', true, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_advanced_nav_array_previous, '^', true, true, 0, false,
+  LOAD_KEY_SETTING2(n_key_advanced_nav_array_next, '^', true, false, 0, false,
                     false);
+  LOAD_KEY_SETTING2(n_key_advanced_nav_array_previous, '^', true, true, 0,
+                    false, false);
   LOAD_KEY_SETTING2(n_key_map_home, gvHomeKey, false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_map_end, gvEndKey, false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_map_next_system, gvArrowKeyRight, false, false,
                     gvArrowKeyDown, false, false);
   LOAD_KEY_SETTING2(n_key_map_previous_system, gvArrowKeyLeft, false, false,
                     gvArrowKeyUp, false, false);
-  LOAD_KEY_SETTING2(n_key_map_zoom_in, gvPageDownKey, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_map_zoom_out, gvPageUpKey, false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_map_zoom_in, gvPageDownKey, false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_map_zoom_out, gvPageUpKey, false, false, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_map_info, 'i', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_chart_highlight, '?', true, false, 0, false, false);
 
-  LOAD_KEY_SETTING2(n_key_system_home, gvHomeKey, false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_system_home, gvHomeKey, false, false, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_system_end, gvEndKey, false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_system_next_system, gvArrowKeyRight, false, false,
                     gvArrowKeyDown, false, false);
@@ -430,63 +462,83 @@ void PlayerEntity::initKeyConfigSettings() {
 
   LOAD_KEY_SETTING2(n_key_pausebutton, 'p', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_show_fps, 'F', true, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_bloom_toggle, gvFunctionKey9, true, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_mouse_control_roll, 'M', true, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_bloom_toggle, gvFunctionKey9, true, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_mouse_control_roll, 'M', true, false, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_mouse_control_yaw, 'M', true, true, 0, false, false);
   LOAD_KEY_SETTING2(n_key_hud_toggle, 'o', false, false, 0, false, false);
 
   LOAD_KEY_SETTING2(n_key_comms_log, '`', true, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_prev_compass_mode, '|', true, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_next_compass_mode, '\\', false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_next_compass_mode, '\\', false, false, 0, false,
+                    false);
 
-  LOAD_KEY_SETTING2(n_key_market_filter_cycle, '?', true, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_market_filter_cycle, '?', true, false, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_market_sorter_cycle, '/', false, false,
                     gvNumberPadKeyDivide, false, false);
-  LOAD_KEY_SETTING2(n_key_market_buy_one, gvArrowKeyRight, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_market_sell_one, gvArrowKeyLeft, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_market_buy_max, gvArrowKeyRight, true, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_market_sell_max, gvArrowKeyLeft, true, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_market_buy_one, gvArrowKeyRight, false, false, 0,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_market_sell_one, gvArrowKeyLeft, false, false, 0,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_market_buy_max, gvArrowKeyRight, true, false, 0,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_market_sell_max, gvArrowKeyLeft, true, false, 0,
+                    false, false);
 
   LOAD_KEY_SETTING2(n_key_cycle_next_mfd, ';', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_cycle_previous_mfd, ';', false, true, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_cycle_previous_mfd, ';', false, true, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_switch_next_mfd, ':', true, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_switch_previous_mfd, ':', true, true, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_switch_previous_mfd, ':', true, true, 0, false,
+                    false);
 
-  LOAD_KEY_SETTING2(n_key_next_target, '+', true, false, gvNumberPadKeyPlus, false,
-                    false);
-  LOAD_KEY_SETTING2(n_key_previous_target, '-', false, false, gvNumberPadKeyMinus, false,
-                    false);
+  LOAD_KEY_SETTING2(n_key_next_target, '+', true, false, gvNumberPadKeyPlus,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_previous_target, '-', false, false,
+                    gvNumberPadKeyMinus, false, false);
 
   LOAD_KEY_SETTING2(n_key_custom_view, 'v', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_custom_view_zoom_out, gvPageDownKey, false, false, 0, false,
-                    false);
-  LOAD_KEY_SETTING2(n_key_custom_view_zoom_in, gvPageUpKey, false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_custom_view_roll_left, gvArrowKeyLeft, false, false, 0, false,
-                    false);
-  LOAD_KEY_SETTING2(n_key_custom_view_pan_left, gvArrowKeyLeft, true, false, 0, false,
-                    false);
-  LOAD_KEY_SETTING2(n_key_custom_view_roll_right, gvArrowKeyRight, false, false, 0,
+  LOAD_KEY_SETTING2(n_key_custom_view_zoom_out, gvPageDownKey, false, false, 0,
                     false, false);
-  LOAD_KEY_SETTING2(n_key_custom_view_pan_right, gvArrowKeyRight, true, false, 0,
+  LOAD_KEY_SETTING2(n_key_custom_view_zoom_in, gvPageUpKey, false, false, 0,
                     false, false);
-  LOAD_KEY_SETTING2(n_key_custom_view_rotate_up, gvArrowKeyUp, false, false, 0, false,
-                    false);
-  LOAD_KEY_SETTING2(n_key_custom_view_pan_up, gvArrowKeyUp, true, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_custom_view_rotate_down, gvArrowKeyDown, false, false, 0,
+  LOAD_KEY_SETTING2(n_key_custom_view_roll_left, gvArrowKeyLeft, false, false,
+                    0, false, false);
+  LOAD_KEY_SETTING2(n_key_custom_view_pan_left, gvArrowKeyLeft, true, false, 0,
                     false, false);
-  LOAD_KEY_SETTING2(n_key_custom_view_pan_down, gvArrowKeyDown, true, false, 0, false,
+  LOAD_KEY_SETTING2(n_key_custom_view_roll_right, gvArrowKeyRight, false, false,
+                    0, false, false);
+  LOAD_KEY_SETTING2(n_key_custom_view_pan_right, gvArrowKeyRight, true, false,
+                    0, false, false);
+  LOAD_KEY_SETTING2(n_key_custom_view_rotate_up, gvArrowKeyUp, false, false, 0,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_custom_view_pan_up, gvArrowKeyUp, true, false, 0,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_custom_view_rotate_down, gvArrowKeyDown, false, false,
+                    0, false, false);
+  LOAD_KEY_SETTING2(n_key_custom_view_pan_down, gvArrowKeyDown, true, false, 0,
+                    false, false);
+  LOAD_KEY_SETTING2(n_key_custom_view_rotate_left, ',', false, false, 0, false,
                     false);
-  LOAD_KEY_SETTING2(n_key_custom_view_rotate_left, ',', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_custom_view_rotate_right, '.', false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_custom_view_rotate_right, '.', false, false, 0, false,
+                    false);
 
-  LOAD_KEY_SETTING2(n_key_oxzmanager_setfilter, 'f', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_oxzmanager_showinfo, 'i', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_oxzmanager_copyurl, 'c', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_oxzmanager_extract, 'x', false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_oxzmanager_setfilter, 'f', false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_oxzmanager_showinfo, 'i', false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_oxzmanager_copyurl, 'c', false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_oxzmanager_extract, 'x', false, false, 0, false,
+                    false);
 
 #if OO_FOV_INFLIGHT_CONTROL_ENABLED
-  LOAD_KEY_SETTING2(n_key_inc_field_of_view, 'l', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_dec_field_of_view, 'k', false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_inc_field_of_view, 'l', false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_dec_field_of_view, 'k', false, false, 0, false,
+                    false);
 #endif
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -494,8 +546,10 @@ void PlayerEntity::initKeyConfigSettings() {
   LOAD_KEY_SETTING2(n_key_dump_entity_list, '0', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_debug_full, 'd', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_debug_collision, 'b', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_debug_console_connect, 'c', false, false, 0, false, false);
-  LOAD_KEY_SETTING2(n_key_debug_bounding_boxes, 'x', false, false, 0, false, false);
+  LOAD_KEY_SETTING2(n_key_debug_console_connect, 'c', false, false, 0, false,
+                    false);
+  LOAD_KEY_SETTING2(n_key_debug_bounding_boxes, 'x', false, false, 0, false,
+                    false);
   LOAD_KEY_SETTING2(n_key_debug_shaders, 's', false, false, 0, false, false);
   LOAD_KEY_SETTING2(n_key_debug_off, 'n', false, false, 0, false, false);
 #endif
@@ -833,12 +887,14 @@ void PlayerEntity::switchToMainView() {
     if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
       UNIVERSE->getGameView()->resetMouse();
   }
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
+  if (UNIVERSE != nullptr)
+    UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
   noteGUIDidChangeFrom(oldScreen, gui_screen);
 }
 
 void PlayerEntity::noteSwitchToView(OOViewID toView, OOViewID fromView) {
-  switchToThisView(toView, fromView, false, true);  // no extra processing needed!
+  switchToThisView(toView, fromView, false,
+                   true);  // no extra processing needed!
 }
 
 void PlayerEntity::beginWitchspaceCountdown(int spin_time) {
@@ -933,7 +989,8 @@ void PlayerEntity::pollApplicationControls() {
       if ((gameView != nullptr ? gameView->isCommandQDown() : false)) {
         // On SDL the pair is kept, never performed: nil.
         if (gameController != nullptr)
-          gameController->pauseFullScreenModeToPerform("exitAppCommandQ", nullptr);
+          gameController->pauseFullScreenModeToPerform("exitAppCommandQ",
+                                                       nullptr);
       }
     }
 #endif
@@ -1052,13 +1109,14 @@ void PlayerEntity::pollApplicationControls() {
             if (gameView != nullptr) gameView->resetMouse();
             if (oo::Defaults::standard().boolForKey(
                     "grab-mouse-on-mouse-control")) {
-              if (gameView != nullptr) gameView->grabMouseInsideGameWindow(true);
+              if (gameView != nullptr)
+                gameView->grabMouseInsideGameWindow(true);
             }
             mouse_x_axis_map_to_yaw = checkKeyPress(n_key_mouse_control_yaw);
             keyboardRollOverride =
                 (mouse_x_axis_map_to_yaw !=
-                 false);  // Getafix: set keyboardRollOverride to TRUE only if yaw
-                       // is mapped to mouse x-axis
+                 false);  // Getafix: set keyboardRollOverride to TRUE only if
+                          // yaw is mapped to mouse x-axis
             keyboardPitchOverride = false;
             keyboardYawOverride = !keyboardRollOverride;
           } else {
@@ -2429,10 +2487,11 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
           pressedArrow = pressedArrow == 4 ? 0 : pressedArrow;
         if ((cursor_moving) && (!moving)) {
           if (found_system_id == -1) {
-            target_system_id = (UNIVERSE != nullptr
-                                    ? UNIVERSE->findSystemNumberAtCoords(
-                                          cursor_coordinates, galaxy_number, false)
-                                    : 0);
+            target_system_id =
+                (UNIVERSE != nullptr
+                     ? UNIVERSE->findSystemNumberAtCoords(cursor_coordinates,
+                                                          galaxy_number, false)
+                     : 0);
             setInfoSystemID(target_system_id, true);
           } else {
             // if found with a search string, don't recalculate! Required for
@@ -2447,8 +2506,8 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
                 fpos.y != cursor_coordinates.y) {
               target_system_id =
                   (UNIVERSE != nullptr
-                       ? UNIVERSE->findSystemNumberAtCoords(cursor_coordinates,
-                                                            galaxy_number, false)
+                       ? UNIVERSE->findSystemNumberAtCoords(
+                             cursor_coordinates, galaxy_number, false)
                        : 0);
               setInfoSystemID(target_system_id, true);
             }
@@ -2658,7 +2717,8 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
               if ((controller != nullptr ? controller->inFullScreenMode()
                                          : false)) {
                 if (controller != nullptr)
-                  controller->pauseFullScreenModeToPerform("savePlayer", nullptr);
+                  controller->pauseFullScreenModeToPerform("savePlayer",
+                                                           nullptr);
               }  // no target: the SDL build never performs it
               else
                 savePlayer();
@@ -2685,7 +2745,8 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             (!disc_operation_in_progress)) {
           disc_operation_in_progress = true;
           if (UNIVERSE != nullptr)
-            UNIVERSE->setUseAddOns(std::string(SCENARIO_OXP_DEFINITION_ALL), false,
+            UNIVERSE->setUseAddOns(std::string(SCENARIO_OXP_DEFINITION_ALL),
+                                   false,
                                    true);  // calls reinitAndShowDemo
         }
 
@@ -4190,9 +4251,9 @@ void PlayerEntity::pollCustomViewControls() {
           (customView.isDict() ? customView : oo::PList()),
           true);  // null unless a Dict
 
-      switchToThisView(
-          VIEW_CUSTOM,
-          false);  // weapon facing must not change, we just want an external view
+      switchToThisView(VIEW_CUSTOM,
+                       false);  // weapon facing must not change, we just want
+                                // an external view
     }
     customView_pressed = true;
   } else
@@ -4930,7 +4991,7 @@ void PlayerEntity::pollAutopilotControls(double delta_t) {
           OOMusicController::sharedController()->toggleDockingMusic();
         // normal flight controls can handle the rest.
         pause_pressed = false;  // pause button flag must be NO for
-                             // pollflightControls to react!
+                                // pollflightControls to react!
         pollFlightControls(delta_t);
       }
       autopilot_pause = true;

@@ -26,6 +26,8 @@ SOFTWARE.
 
 */
 
+#include "OOLogOutputHandler.h"
+
 #include <SDL3/SDL_stdinc.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +41,6 @@ SOFTWARE.
 #include <thread>
 
 #include "OOFoundation.h"
-#include "OOLogOutputHandler.h"
 #include "OOLogging.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"

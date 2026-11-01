@@ -102,7 +102,6 @@ typedef unsigned long long int ZPOS64_T;
 #endif
 #endif
 
-
 #define ZLIB_FILEFUNC_SEEK_CUR (1)
 #define ZLIB_FILEFUNC_SEEK_END (2)
 #define ZLIB_FILEFUNC_SEEK_SET (0)
@@ -211,4 +210,3 @@ void fill_zlib_filefunc64_32_def_from_filefunc32(
   (call_ztell64((&(filefunc)), (filestream)))
 #define ZSEEK64(filefunc, filestream, pos, mode) \
   (call_zseek64((&(filefunc)), (filestream), (pos), (mode)))
-

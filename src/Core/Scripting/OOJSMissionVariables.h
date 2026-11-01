@@ -32,4 +32,3 @@ MA 02110-1301, USA.
 
 void InitOOJSMissionVariables(ooscript::Context context,
                               ooscript::Object global);
-

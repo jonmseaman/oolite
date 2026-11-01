@@ -22,8 +22,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OODrawable.h"
 #include "OOEntityWithDrawable.h"
+
+#include "OODrawable.h"
 #include "OOTexture.h"  // allTextures() destroys oo::Ref<OOTexture>s
 #include "OOVisualEffectEntity.h"
 #include "ShipEntity.h"

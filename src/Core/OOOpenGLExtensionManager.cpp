@@ -25,12 +25,13 @@ SOFTWARE.
 
 */
 
+#include "OOOpenGLExtensionManager.h"
+
 #include <stdlib.h>
 
 #include "OOConstToString.h"
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"
-#include "OOOpenGLExtensionManager.h"
 #include "OORegExpMatcher.h"
 #include "ResourceManager.h"
 #include "oofnd/Log.hpp"
@@ -312,7 +313,7 @@ void OOOpenGLExtensionManager::reset() {
     // OK
   } else
 #endif
-  if (!versionIsAtLeastMajor(kMinMajorVersion, kMinMinorVersion)) {
+      if (!versionIsAtLeastMajor(kMinMajorVersion, kMinMinorVersion)) {
     OO_LOG("rendering.opengl.version.insufficient",
            "***** Oolite requires OpenGL version {}.{} or later.",
            static_cast<unsigned>(kMinMajorVersion),
@@ -382,7 +383,8 @@ void OOOpenGLExtensionManager::reset() {
     textureUnitCount_ = MAX(texUnitOverride, 0);
 #endif
 
-  usePointSmoothing_ = gpuConfig.get<bool>("smooth_points", true) ? true : false;
+  usePointSmoothing_ =
+      gpuConfig.get<bool>("smooth_points", true) ? true : false;
   useLineSmoothing_ = gpuConfig.get<bool>("smooth_lines", true) ? true : false;
   useDustShader_ = gpuConfig.get<bool>("use_dust_shader", true) ? true : false;
 }

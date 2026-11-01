@@ -22,6 +22,8 @@
 
  */
 
+#include "ShipEntityAI.h"
+
 #include "AI.h"
 #include "EntityOOJavaScriptExtensions.h"  // OOJSEntityJSValue
 #include "GameController.h"
@@ -43,7 +45,6 @@
 #include "PlayerEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "ResourceManager.h"
-#include "ShipEntityAI.h"
 #include "StationEntity.h"
 #include "Universe.h"
 #include "WormholeEntity.h"
@@ -384,7 +385,7 @@ void ShipEntity::requestDockingCoordinates() {
   // to a hold position outside the range, so also test for presence of
   // dockingInstructions. - Eric 20091130
   if (station != nullptr && (distanceToStation2 < SCANNER_MAX_RANGE2 * 6.25 ||
-                         !dockingInstructions.isNull())) {
+                             !dockingInstructions.isNull())) {
     // remember the instructions (the station's weak reference is kept as an
     // Object node)
     dockingInstructions =
@@ -2154,7 +2155,8 @@ void ShipEntity::recallStoredTarget() {
     setFoundTarget(oldTarget);
     if (shipAI != nullptr) shipAI->message("TARGET_FOUND");
   } else {
-    if (oldTarget == nullptr) _rememberedShip = nullptr;  // ship no longer exists
+    if (oldTarget == nullptr)
+      _rememberedShip = nullptr;  // ship no longer exists
     if (shipAI != nullptr) shipAI->message("NOTHING_FOUND");
   }
 }

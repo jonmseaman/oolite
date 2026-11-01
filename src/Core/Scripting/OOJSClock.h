@@ -29,6 +29,4 @@ MA 02110-1301, USA.
 
 #include "ooscript/JSEngine.hpp"
 
-
 void InitOOJSClock(ooscript::Context context, ooscript::Object global);
-

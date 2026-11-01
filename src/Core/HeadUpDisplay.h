@@ -393,9 +393,10 @@ class HeadUpDisplay : public oo::RefCounted {
   bool reticleTargetSensitive =
       {};  // TO DO: Move this into the propertiesReticleTargetSensitive
            // structure (Getafix - 2010/08/21)
-  oo::PList propertiesReticleTargetSensitive;  // isAccurate (bool),
-                                               // timeLastAccuracyProbabilityCalculation
-                                               // (double)
+  oo::PList
+      propertiesReticleTargetSensitive;  // isAccurate (bool),
+                                         // timeLastAccuracyProbabilityCalculation
+                                         // (double)
 
   bool cloakIndicatorOnStatusLight = {};
 

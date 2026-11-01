@@ -26,12 +26,13 @@ MA 02110-1301, USA.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
+#include "OOJSCall.h"
+
 #include "EntityPListForeign.h"  // oo::EntityObjectNode, oo::EntityShortDescription
 #include "OOCallByName.h"
 #include "OOColor.h"               // a colour result (kMethodTypeColorVoid)
 #include "OOEntityCalledByName.h"  // the entities' by-name methods
 #include "OOFunctionAttributes.h"
-#include "OOJSCall.h"
 #include "OOJSCallEntityMethods.h"  // callObjC()'s names for an entity (generated)
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"

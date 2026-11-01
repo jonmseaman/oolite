@@ -40,11 +40,12 @@ SOFTWARE.
         the icons we're likely to encounter.
 */
 
+#include "OOPolygonSprite.h"
+
 #include "OOGraphicsResetManager.h"
 #include "OOMacroOpenGL.h"
 #include "OOMaths.h"
 #include "OOPointMaths.h"
-#include "OOPolygonSprite.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
@@ -387,7 +388,8 @@ bool OOPolygonSprite::loadPolygons(const oo::PList& dataArray,
        contourIndex++) {
     const OOPolygonContour& contour = contours[contourIndex];
 
-    outlineContours.push_back(BuildOutlineContour(contour, outlineWidth, false));
+    outlineContours.push_back(
+        BuildOutlineContour(contour, outlineWidth, false));
     SubmitVertices(tesselator, &polygonData, outlineContours.back());
     outlineContours.push_back(BuildOutlineContour(contour, outlineWidth, true));
     SubmitVertices(tesselator, &polygonData, outlineContours.back());

@@ -29,9 +29,7 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
 
-
 void InitOOJSExhaustPlume(ooscript::Context context, ooscript::Object global);
-
 
 /*	The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the
    engine reaches by selector through the root's JS members: the C++

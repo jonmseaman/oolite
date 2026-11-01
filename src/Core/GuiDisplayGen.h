@@ -441,7 +441,7 @@ class GuiDisplayGen : public oo::RefCounted {
   OOGUITabSettings tabStops = {};
 
   // a mixed configuration: plist values and OOColors
-  oo::PList guiUserSettings;  
+  oo::PList guiUserSettings;
 
   NSRange rowRange = {};
 

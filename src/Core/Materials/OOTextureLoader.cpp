@@ -27,6 +27,8 @@ SOFTWARE.
 
 // Kept first, in a block of its own: which header comes first decides whether
 // MinGW's or the UCRT's printf/strtod family is used.
+#include "OOTextureLoader.h"
+
 #include <cxxabi.h>
 #include <stdlib.h>
 
@@ -43,7 +45,6 @@ SOFTWARE.
 #include "OOPixMapChannelOperations.h"
 #include "OOTexture.h"
 #include "OOTextureGenerator.h"
-#include "OOTextureLoader.h"
 #include "OOTextureScaling.h"
 #include "ResourceManager.h"
 #include "Universe.h"

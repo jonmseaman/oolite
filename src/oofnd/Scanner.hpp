@@ -573,4 +573,3 @@ class Scanner {
 };
 
 }  // namespace oo::str
-

@@ -25,9 +25,10 @@ SOFTWARE.
 
 */
 
+#include "OORegExpMatcher.h"
+
 #include "OOJSFunction.h"
 #include "OOJavaScriptEngine.h"
-#include "OORegExpMatcher.h"
 #include "oofnd/String.hpp"
 #include "oofnd/Thread.hpp"
 #include "oofnd/objc/OOAssert.h"

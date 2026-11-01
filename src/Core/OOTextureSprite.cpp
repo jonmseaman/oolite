@@ -22,10 +22,11 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOTextureSprite.h"
+
 #include "OOMacroOpenGL.h"
 #include "OOMaths.h"
 #include "OOTexture.h"
-#include "OOTextureSprite.h"
 
 oo::Ref<OOTextureSprite> OOTextureSprite::initWithTexture(
     OOTexture* inTexture) {

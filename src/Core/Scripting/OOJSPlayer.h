@@ -30,7 +30,6 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 class PlayerEntity;
 
-
 void InitOOJSPlayer(ooscript::Context context, ooscript::Object global);
 
 ooscript::ClassDef* JSPlayerClass(void);
@@ -44,4 +43,3 @@ ooscript::Object JSPlayerObject(void);
    ensure consistent state.
 */
 PlayerEntity* OOPlayerForScripting(void);
-

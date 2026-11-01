@@ -22,13 +22,14 @@ MA 02110-1301, USA.
 
 */
 
+#include "PlayerEntityScriptMethods.h"
+
 #include "OOCommodities.h"
 #include "OOConstToString.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "OOSystemDescriptionManager.h"
 #include "PlayerEntityLoadSave.h"
-#include "PlayerEntityScriptMethods.h"
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"

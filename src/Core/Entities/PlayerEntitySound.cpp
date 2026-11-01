@@ -22,13 +22,14 @@ MA 02110-1301, USA.
 
 */
 
+#include "PlayerEntitySound.h"
+
 #include "GameController.h"
 #include "OOCallByName.h"  // oo::ScheduleEntityCall
 #include "OOEquipmentType.h"
 #include "OOMaths.h"
 #include "OOSound.h"
 #include "OOSoundSourcePool.h"
-#include "PlayerEntitySound.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/String.hpp"

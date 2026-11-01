@@ -22,9 +22,10 @@ MA 02110-1301, USA.
 
 */
 
+#include "GameController.h"
+
 #include <stdlib.h>
 
-#include "GameController.h"
 #include "MyOpenGLView.h"
 #include "OODebugFlags.h"
 #include "OODebugSupport.h"
@@ -395,8 +396,9 @@ bool GameController::suppressClangStuff() {
 }
 #endif
 
-#if !OOLITE_MAC_COCOA_UI  // the Mac -performGameTick: is in GameController (MacOSX)
-                      // at the end of the file
+#if !OOLITE_MAC_COCOA_UI  // the Mac -performGameTick: is in GameController
+                          // (MacOSX)
+                          // at the end of the file
 
 void GameController::performGameTick() {
   oo::AutoreleaseScope pool;  // was an Objective-C autorelease pool
@@ -689,8 +691,9 @@ void GameController::logProgress(const std::string& message) {
 }
 
 #if OO_DEBUG
-#if !OOLITE_MAC_COCOA_UI  // the Mac arms are in GameController (MacOSX) at the end
-                      // of the file
+#if !OOLITE_MAC_COCOA_UI  // the Mac arms are in GameController (MacOSX) at the
+                          // end
+                          // of the file
 bool GameController::debugMessageTrackingIsOn() {
   return oo::log::willDisplay("startup.progress");
 }

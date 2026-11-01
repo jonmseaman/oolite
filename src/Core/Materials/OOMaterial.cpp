@@ -25,6 +25,8 @@ SOFTWARE.
 
 */
 
+#include "OOMaterial.h"
+
 #include <cxxabi.h>
 
 #include <cstdlib>
@@ -32,7 +34,6 @@ SOFTWARE.
 
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"
-#include "OOMaterial.h"
 #include "OOMaterialState.h"
 #include "oofnd/Ref.hpp"  // oo::autorelease
 #include "oofnd/String.hpp"

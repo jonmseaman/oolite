@@ -102,13 +102,15 @@ void cxx_OOJSReportWarningForCaller(
     const std::optional<std::string>& function, const char* format, ...)
     OO_PRINTF_FORMAT(4, 5);
 
-void OOJSReportBadPropertySelector(
-    ooscript::Context context, ooscript::Object thisObj,
-    ooscript::PropertyId propID, ooscript::PropertySpec* propertySpec);
-void OOJSReportBadPropertyValue(
-    ooscript::Context context, ooscript::Object thisObj,
-    ooscript::PropertyId propID, ooscript::PropertySpec* propertySpec,
-    ooscript::Value value);
+void OOJSReportBadPropertySelector(ooscript::Context context,
+                                   ooscript::Object thisObj,
+                                   ooscript::PropertyId propID,
+                                   ooscript::PropertySpec* propertySpec);
+void OOJSReportBadPropertyValue(ooscript::Context context,
+                                ooscript::Object thisObj,
+                                ooscript::PropertyId propID,
+                                ooscript::PropertySpec* propertySpec,
+                                ooscript::Value value);
 // A nullopt message is "Invalid arguments"; a nullopt expectedArgsDescription
 // adds no " -- expected ..." suffix.
 void cxx_OOJSReportBadArguments(
@@ -144,11 +146,9 @@ bool cxx_OOJSArgumentListGetNumber(
         Like cxx_OOJSArgumentListGetNumber(), but does not report an error on
    failure.
 */
-bool OOJSArgumentListGetNumberNoError(ooscript::Context context,
-                                                    unsigned argc,
-                                                    ooscript::Value* argv,
-                                                    double* outNumber,
-                                                    unsigned* outConsumed);
+bool OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc,
+                                      ooscript::Value* argv, double* outNumber,
+                                      unsigned* outConsumed);
 
 // Typed as int rather than bool to work with more general expressions such as
 // bitfield tests.
@@ -187,9 +187,8 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
       OOJSStrLiteralCachePRIVATE("" str, &strCache, &inited); \
     strCache;                                                 \
   })
-void OOJSStrLiteralCachePRIVATE(const char* string,
-                                              ooscript::Value* strCache,
-                                              bool* inited);
+void OOJSStrLiteralCachePRIVATE(const char* string, ooscript::Value* strCache,
+                                bool* inited);
 
 /*	The JS-to-string converters. Each
    returns std::nullopt where the Foundation form it replaces returned nil.
@@ -369,9 +368,9 @@ oo::PList OOJSDictionaryFromStringTable(ooscript::Context context,
    superclass or a registered subclass of superclass, recursively.
 */
 void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
-                                        ooscript::ClassDef* superclass);
+                          ooscript::ClassDef* superclass);
 bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
-                                  ooscript::ClassDef* superclass);
+                    ooscript::ClassDef* superclass);
 OOINLINE bool OOJSIsMemberOfSubclass(ooscript::Context context,
                                      ooscript::Object object,
                                      ooscript::ClassDef* superclass) {
@@ -397,8 +396,8 @@ typedef oo::PList (*OOJSClassConverterCallback)(ooscript::Context context,
 oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context context,
                                           ooscript::Object object);
 
-void OOJSRegisterObjectConverter(
-    ooscript::ClassDef* theClass, OOJSClassConverterCallback converter);
+void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
+                                 OOJSClassConverterCallback converter);
 
 /*	JS root handling
 
@@ -496,7 +495,7 @@ std::optional<std::string> OOJSDescribeLocation(
     ooscript::Context context,
     ooscript::StackFrame stackFrame);  // nullopt: no location
 void OOJSMarkConsoleEvalLocation(ooscript::Context context,
-                                               ooscript::StackFrame stackFrame);
+                                 ooscript::StackFrame stackFrame);
 #else
 #define OOJSDumpStack(cx) \
   do {                    \
@@ -516,7 +515,7 @@ void OOJSMarkConsoleEvalLocation(ooscript::Context context,
         Constructor callback for pseudo-classes which can't be constructed.
 */
 bool OOJSUnconstructableConstruct(ooscript::Context context,
-                                                ooscript::CallArgs& oojsArgs);
+                                  ooscript::CallArgs& oojsArgs);
 
 /*	OOJSObjectWrapperFinalize
 
@@ -525,7 +524,7 @@ bool OOJSUnconstructableConstruct(ooscript::Context context,
    the slot holds only a C++ object.
 */
 void OOJSObjectWrapperFinalize(ooscript::Context context,
-                                             ooscript::Object thisObj);
+                               ooscript::Object thisObj);
 
 /*	OOJSObjectWrapperToString
 
@@ -535,7 +534,7 @@ void OOJSObjectWrapperFinalize(ooscript::Context context,
         itself; no slot holds one.
 */
 bool OOJSObjectWrapperToString(ooscript::Context context,
-                                             ooscript::CallArgs& oojsArgs);
+                               ooscript::CallArgs& oojsArgs);
 
 /***** Appropriate flags for host-defined read/write and read-only properties
  * *****/

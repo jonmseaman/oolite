@@ -50,7 +50,6 @@ typedef struct RANROTSeed {
   uint32_t high, low;
 } RANROTSeed;
 
-
 extern const Random_Seed kNilRandomSeed;
 
 // checksum stuff
@@ -173,4 +172,3 @@ OOINLINE double travelTimeBetweenPlanetPositions(int x1, int y1, int x2,
   double distance = distanceBetweenPlanetPositions(x1, y1, x2, y2);
   return distance * distance;
 }
-

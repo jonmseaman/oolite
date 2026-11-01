@@ -22,12 +22,13 @@ MA 02110-1301, USA.
 
 */
 
+#include "PlayerEntityKeyMapper.h"
+
 #include "GameController.h"
 #include "HeadUpDisplay.h"
 #include "OOEquipmentType.h"
 #include "OOTexture.h"
 #include "PlayerEntityControls.h"
-#include "PlayerEntityKeyMapper.h"
 #include "PlayerEntityScriptMethods.h"
 #include "ResourceManager.h"
 #include "oofnd/Defaults.hpp"
@@ -777,7 +778,8 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen() {
   gui->setForegroundTextureKey(std::string(
       status() == STATUS_DOCKED ? "docked_overlay" : "paused_overlay"));
   gui->setBackgroundTextureKey(std::string("keyboardsettings"));
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
+  if (UNIVERSE != nullptr)
+    UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
   if (gameView != nullptr) gameView->clearMouse();
   if (gameView != nullptr) gameView->clearKeys();

@@ -92,7 +92,6 @@ OOALStringRef OOALGetConstantString(
 #define OOALSTR(string) OOALGetConstantString("" string "")
 #endif
 
-
 void OOALRelease(OOALObjectRef object);
 OOALStringRef OOTypeDescription(OOALObjectRef object);
 

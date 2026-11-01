@@ -41,13 +41,11 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 class PlayerEntity;
 
-
 void InitOOJSPlayerShip(ooscript::Context context, ooscript::Object global);
 
 ooscript::ClassDef* JSPlayerShipClass(void);
 ooscript::Object JSPlayerShipPrototype(void);
 ooscript::Object JSPlayerShipObject(void);
-
 
 /*	PlayerEntity (OOJavaScriptExtensions), whose methods the engine and the
    player send by selector: the bodies, as free functions. The C++ player calls

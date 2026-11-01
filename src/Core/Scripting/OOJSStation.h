@@ -30,9 +30,7 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 class StationEntity;
 
-
 void InitOOJSStation(ooscript::Context context, ooscript::Object global);
-
 
 /*	The bodies of StationEntity (OOJavaScriptExtensions), which the engine
    reaches by selector. StationEntity::getJSClass and ::jsClassName call these.

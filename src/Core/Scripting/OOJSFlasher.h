@@ -29,9 +29,7 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
 
-
 void InitOOJSFlasher(ooscript::Context context, ooscript::Object global);
-
 
 /*	The bodies of OOFlasherEntity (OOJavaScriptExtensions), which the engine
    reaches by selector through the root's JS members: the C++ OOFlasherEntity's

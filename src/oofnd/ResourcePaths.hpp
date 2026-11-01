@@ -277,4 +277,3 @@ class ResourcePaths {
 };
 
 }  // namespace oo
-

@@ -9,8 +9,9 @@
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-#include "OOFoundation.h"
 #include "OOTCPStreamDecoderAbstractionLayer.h"
+
+#include "OOFoundation.h"
 #include "OOTCPStreamDecoderFormat.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/Ref.hpp"  // oo::AutoreleaseScope (was objc-arc.h's pool functions)

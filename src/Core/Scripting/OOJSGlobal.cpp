@@ -23,13 +23,14 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSGlobal.h"
+
 #include <cstring>
 
 #include "GuiDisplayGen.h"
 #include "MyOpenGLView.h"
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
-#include "OOJSGlobal.h"
 #include "OOJSGuiScreenKeyDefinition.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"

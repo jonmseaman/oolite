@@ -25,6 +25,8 @@ SOFTWARE.
 
 */
 
+#include "OOShipRegistry.h"
+
 #include "GameController.h"
 #include "OOCacheManager.h"
 #include "OOColor.h"
@@ -36,7 +38,6 @@ SOFTWARE.
 #include "OOProbabilitySet.h"
 #include "OORoleSet.h"
 #include "OOShipLibraryDescriptions.h"
-#include "OOShipRegistry.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "ResourceManager.h"
@@ -377,8 +378,8 @@ void OOShipRegistry::loadShipData() {
 
   _effectData = oo::PList();
 
-  result = ResourceManager::dictionaryFromFilesNamed("effectdata.plist",
-                                                     "Config", MERGE_BASIC, false);
+  result = ResourceManager::dictionaryFromFilesNamed(
+      "effectdata.plist", "Config", MERGE_BASIC, false);
   if (result.isNull()) return;
 
   // Make each entry mutable to simplify later stages. Also removes any entries
@@ -484,7 +485,8 @@ void OOShipRegistry::loadDemoShips() {
           ::OOScript* condScript =
               (UNIVERSE != nullptr ? UNIVERSE->getConditionScript(*conditions)
                                    : nullptr);
-          if (condScript != nullptr)  // should always be non-nil, but just in case
+          if (condScript !=
+              nullptr)  // should always be non-nil, but just in case
           {
             ooscript::Context context = OOJSAcquireContext();
             bool OK;

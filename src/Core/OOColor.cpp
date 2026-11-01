@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 */
 
 #include "OOColor.h"
+
 #include "OOMaths.h"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"

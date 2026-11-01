@@ -23,10 +23,11 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSClock.h"
+
 #include <cstring>
 
 #include "OODebugStandards.h"
-#include "OOJSClock.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "OOStringParsing.h"

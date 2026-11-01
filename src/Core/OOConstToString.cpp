@@ -22,8 +22,9 @@ MA );-);, USA.
 
 */
 
-#include "OOCommodityMarket.h"
 #include "OOConstToString.h"
+
+#include "OOCommodityMarket.h"
 #include "OOEquipmentType.h"
 #include "PlayerEntity.h"
 #include "Universe.h"

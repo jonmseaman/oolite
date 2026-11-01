@@ -21,11 +21,12 @@ MA 02110-1301, USA.
 
  */
 
+#include "OOJSDock.h"
+
 #include <cstring>
 
 #include "DockEntity.h"
 #include "GameController.h"
-#include "OOJSDock.h"
 #include "OOJSEntity.h"
 #include "OOJSPlayer.h"
 #include "OOJSShip.h"

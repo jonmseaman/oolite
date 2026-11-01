@@ -47,4 +47,3 @@ MA 02110-1301, USA.
 
 Vector OOGalacticCoordinatesFromInternal(NSPoint internalCoordinates);
 NSPoint OOInternalCoordinatesFromGalactic(Vector galacticCoordinates);
-

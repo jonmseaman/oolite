@@ -22,11 +22,12 @@ MA 02110-1301, USA.
 
 */
 
+#include "GuiDisplayGen.h"
+
 #include <cstring>
 #include <map>
 
 #include "GameController.h"
-#include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"

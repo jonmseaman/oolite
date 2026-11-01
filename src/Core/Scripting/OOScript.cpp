@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOScript.h"
+
 #include <cxxabi.h>
 
 #include <cstdlib>
@@ -33,7 +35,6 @@ MA 02110-1301, USA.
 #include "OOLogging.h"
 #include "OOPListParsing.h"
 #include "OOPListScript.h"
-#include "OOScript.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/FileSystem.hpp"

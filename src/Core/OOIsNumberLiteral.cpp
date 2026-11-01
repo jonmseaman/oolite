@@ -32,18 +32,19 @@
   do {                                                                         \
     OO_LOG("unclassified", "OOIsNumberLiteral failed for \"{}\": {}.", string, \
            s);                                                                 \
-    return false;                                                                 \
+    return false;                                                              \
   } while (0)
 #else
-#define FAIL(s) \
-  do {          \
-    return false;  \
+#define FAIL(s)   \
+  do {            \
+    return false; \
   } while (0)
 #endif
 
 bool OOIsNumberLiteral(const std::string& string, bool allowSpaces) {
   bool leadingSpace = allowSpaces, trailingSpace = false, allowSign = true,
-       allowE = false, hadE = false, hadExp = false, allowDec = true, hadNumber = false;
+       allowE = false, hadE = false, hadExp = false, allowDec = true,
+       hadNumber = false;
   std::size_t i, count;
 
   count = string.size();

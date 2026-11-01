@@ -24,6 +24,8 @@ SOFTWARE.
 
 */
 
+#include "OOALSound.h"
+
 #include <cxxabi.h>
 
 #include <cstdlib>
@@ -31,7 +33,6 @@ SOFTWARE.
 #include <typeinfo>
 
 #include "OOALBufferedSound.h"
-#include "OOALSound.h"
 #include "OOALSoundDecoder.h"
 #include "OOALSoundMixer.h"
 #include "OOALStreamedSound.h"

@@ -25,8 +25,9 @@ SOFTWARE.
 
 */
 
-#include "OOFunctionAttributes.h"
 #include "OOSingleTextureMaterial.h"
+
+#include "OOFunctionAttributes.h"
 #include "OOTexture.h"
 
 oo::Ref<OOSingleTextureMaterial> OOSingleTextureMaterial::materialWithName(

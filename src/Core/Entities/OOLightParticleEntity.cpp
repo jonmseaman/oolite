@@ -23,11 +23,12 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOLightParticleEntity.h"
+
 #include "MyOpenGLView.h"
 #include "OOColor.h"
 #include "OOFunctionAttributes.h"
 #include "OOGraphicsResetManager.h"
-#include "OOLightParticleEntity.h"
 #include "OOMacroOpenGL.h"
 #include "OOTexture.h"
 #include "PlayerEntity.h"

@@ -23,8 +23,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOColor.h"
 #include "OOFlasherEntity.h"
+
+#include "OOColor.h"
 #include "OOJSFlasher.h"
 #include "PlayerEntity.h"
 #include "Universe.h"

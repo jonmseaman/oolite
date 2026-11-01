@@ -29,9 +29,7 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
 
-
 void InitOOJSWaypoint(ooscript::Context context, ooscript::Object global);
-
 
 /*	The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the
    engine reaches through the root's JS members: the C++ class's overrides call

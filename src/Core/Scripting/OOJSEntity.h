@@ -35,7 +35,6 @@ MA 02110-1301, USA.
 
 class Entity;
 
-
 void InitOOJSEntity(ooscript::Context context, ooscript::Object global);
 
 // The C++ entity the slot holds, or null for a stale one.
@@ -46,7 +45,6 @@ bool JSValueToEntity(ooscript::Context context, ooscript::Value value,
 // JSEntityClass() returns it. Declared as a real function rather than
 // OOINLINE so the class definition stays private to OOJSEntity.mm.
 ooscript::ClassDef* JSEntityClass(void);
-
 
 extern ooscript::Object gOOEntityJSPrototype;
 

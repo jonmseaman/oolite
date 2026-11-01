@@ -23,6 +23,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "ShipEntityLoadRestore.h"
+
 #include "AI.h"
 #include "OOConstToString.h"
 #include "OOEquipmentType.h"
@@ -31,7 +33,6 @@ MA 02110-1301, USA.
 #include "OOShipGroup.h"
 #include "OOShipRegistry.h"
 #include "ShipEntityAI.h"
-#include "ShipEntityLoadRestore.h"
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/PListGet.hpp"
@@ -164,8 +165,9 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
      witchspace. But it is needed in the save file to correctly restore an
      escorted group.
   */
-  else if (_group != nullptr && (_group != nullptr ? _group->leader()
-                                               : (::ShipEntity*)nullptr) == this) {
+  else if (_group != nullptr &&
+           (_group != nullptr ? _group->leader() : (::ShipEntity*)nullptr) ==
+               this) {
     result[KEY_ESCORT_GROUP_ID] =
         oo::PList::unsignedInteger(GroupIDForGroup(_group.get(), *context));
   }

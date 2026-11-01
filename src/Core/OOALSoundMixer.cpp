@@ -25,11 +25,12 @@ SOFTWARE.
 
 */
 
+#include "OOALSoundMixer.h"
+
 #include <assert.h>
 
 #include "OOALSound.h"
 #include "OOALSoundChannel.h"
-#include "OOALSoundMixer.h"
 #include "OOFoundation.h"
 
 namespace {

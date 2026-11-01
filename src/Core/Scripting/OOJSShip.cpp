@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSShip.h"
+
 #include "AI.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
@@ -36,7 +38,6 @@ MA 02110-1301, USA.
 #include "OOJSEquipmentInfo.h"
 #include "OOJSPlayer.h"
 #include "OOJSQuaternion.h"
-#include "OOJSShip.h"
 #include "OOJSVector.h"
 #include "OOJSWormhole.h"
 #include "OOJavaScriptEngine.h"
@@ -2211,7 +2212,7 @@ playerReadOnly:
 #define GET_THIS_SHIP(THISENT)                                          \
   do {                                                                  \
     if (EXPECT_NOT(!JSShipGetShipEntity(context, OOJS_THIS, &THISENT))) \
-      return false; /* Exception */                                        \
+      return false; /* Exception */                                     \
     if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID;                     \
   } while (0)
 

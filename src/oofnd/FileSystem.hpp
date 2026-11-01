@@ -445,4 +445,3 @@ std::optional<oo::Data> OODataFromOXZFile(const std::string& path);
    (OODataFromOXZFile.mm).
 */
 bool OOOxzFileExistsAtPath(const std::string& path);
-

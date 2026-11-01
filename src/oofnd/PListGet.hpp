@@ -670,4 +670,3 @@ typename PListGet<T>::Result PList::at(std::size_t index) const {
 }
 
 }  // namespace oo
-

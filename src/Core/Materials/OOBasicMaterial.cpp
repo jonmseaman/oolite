@@ -25,10 +25,11 @@ SOFTWARE.
 
 */
 
+#include "OOBasicMaterial.h"
+
 #include <cstring>
 #include <typeinfo>
 
-#include "OOBasicMaterial.h"
 #include "OOFunctionAttributes.h"
 #include "OOMaterialSpecifier.h"
 #include "OOObjCPList.h"

@@ -25,8 +25,9 @@ SOFTWARE.
 
 */
 
-#include "OOObjCPList.h"
 #include "OOShaderMaterial.h"
+
+#include "OOObjCPList.h"
 #include "OOShaderUniformMethodType.h"  // the binding target's hooks
 
 #if OO_SHADERS
@@ -760,7 +761,8 @@ bool GetShaderSource(
     const std::optional<std::string>& /* prefix: unused, as before */,
     std::optional<std::string>* outResult) {
   if (!fileName.has_value())
-    return true;  // It's OK for one or the other of the shaders to be undefined.
+    return true;  // It's OK for one or the other of the shaders to be
+                  // undefined.
 
   std::optional<std::string> result =
       ResourceManager::stringFromFilesNamed(*fileName, std::string("Shaders"));

@@ -22,12 +22,13 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSEntity.h"
+
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToJSString.h"
 #include "OOJSCall.h"
-#include "OOJSEntity.h"
 #include "OOJSPlayer.h"
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"

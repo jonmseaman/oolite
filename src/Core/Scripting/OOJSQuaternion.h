@@ -31,7 +31,6 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
 
-
 void InitOOJSQuaternion(ooscript::Context context, ooscript::Object global);
 
 ooscript::Object JSQuaternionWithQuaternion(ooscript::Context context,
@@ -84,7 +83,6 @@ bool QuaternionFromArgumentListNoError(ooscript::Context context, unsigned argc,
                                        Quaternion* outVector,
                                        unsigned* outConsumed)
     GCC_ATTR((nonnull(1, 3, 4)));
-
 
 #if OO_DEBUG
 #include "oofnd/PList.hpp"

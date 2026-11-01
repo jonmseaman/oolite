@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "ResourceManager.h"
+
 #include "HeadUpDisplay.h"
 #include "MyOpenGLView.h"
 #include "OOALMusic.h"
@@ -37,7 +39,6 @@ MA 02110-1301, USA.
 #include "OOSound.h"
 #include "OOStringParsing.h"
 #include "OOSystemDescriptionManager.h"
-#include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Encoding.hpp"

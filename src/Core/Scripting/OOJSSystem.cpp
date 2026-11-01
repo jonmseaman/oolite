@@ -23,6 +23,8 @@
 
  */
 
+#include "OOJSSystem.h"
+
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
@@ -35,7 +37,6 @@
 #include "OOJSPopulatorDefinition.h"
 #include "OOJSQuaternion.h"
 #include "OOJSScript.h"
-#include "OOJSSystem.h"
 #include "OOJSSystemInfo.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"

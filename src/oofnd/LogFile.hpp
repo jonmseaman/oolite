@@ -273,4 +273,3 @@ class FileWriter {
 };
 
 }  // namespace oo::log
-

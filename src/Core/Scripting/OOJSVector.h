@@ -31,7 +31,6 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
 
-
 void InitOOJSVector(ooscript::Context context, ooscript::Object global);
 
 ooscript::Object JSVectorWithVector(ooscript::Context context,
@@ -91,7 +90,6 @@ bool VectorFromArgumentListNoError(ooscript::Context context, unsigned argc,
                                    ooscript::Value* argv, HPVector* outVector,
                                    unsigned* outConsumed)
     GCC_ATTR((nonnull(1, 3, 4)));
-
 
 #if OO_DEBUG
 #include "oofnd/PList.hpp"

@@ -25,9 +25,10 @@ SOFTWARE.
 
 */
 
+#include "OORoleSet.h"
+
 #include "OOLogging.h"
 #include "OOMaths.h"  // randf()
-#include "OORoleSet.h"
 #include "oofnd/String.hpp"
 
 oo::Ref<OORoleSet> OORoleSet::roleSetWithString(const std::string& roleString) {

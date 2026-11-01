@@ -557,4 +557,3 @@ inline Expected<Data, PListError> writeXMLPList(const PList& plist) {
 }
 
 }  // namespace oo
-

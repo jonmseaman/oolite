@@ -31,9 +31,7 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 class OOPlanetEntity;
 
-
 void InitOOJSPlanet(ooscript::Context context, ooscript::Object global);
-
 
 /*	The bodies of OOPlanetEntity (OOJavaScriptExtensions), which the engine
    reaches through the root Entity's virtual members: the C++ planet's overrides

@@ -23,6 +23,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOVisualEffectEntity.h"
+
 #include "HeadUpDisplay.h"
 #include "MyOpenGLView.h"
 #include "OOColor.h"
@@ -42,7 +44,6 @@ MA 02110-1301, USA.
 #include "OOShaderMaterial.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
-#include "OOVisualEffectEntity.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/PListGet.hpp"

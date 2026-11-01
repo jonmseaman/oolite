@@ -22,9 +22,10 @@ MA 02110-1301, USA.
 
 */
 
+#include "HeadUpDisplay.h"
+
 #include "GameController.h"
 #include "GuiDisplayGen.h"
-#include "HeadUpDisplay.h"
 #include "OOColor.h"
 #include "OOConstToString.h"
 #include "OOCrosshairs.h"
@@ -1445,7 +1446,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
     // GLDrawNonlinearCascadeWeapon( scanner_cx, scanner_cy, z1, siz, p, 2000,
     // zoom, alpha ); 	p = OOVectorMultiplyMatrix(make_vector(0.0, 0.0,
     // 20000.0), rotMatrix); 	GLDrawNonlinearCascadeWeapon( scanner_cx,
-    //scanner_cy, z1, siz, p, 6000, zoom, alpha );
+    // scanner_cy, z1, siz, p, 6000, zoom, alpha );
     //}
     for (i = 0; i < ent_count; i++)  // scanner lollypops
     {
@@ -1944,7 +1945,8 @@ void HeadUpDisplay::drawTargetReticle(const oo::PList& info) {
   GLfloat alpha =
       info.get<oo::NonNegative<float>>(ALPHA_KEY, 1.0f) * overallAlpha;
 
-  if ((PLAYER != nullptr ? PLAYER->primaryTarget() : (Entity*)nullptr) != nullptr) {
+  if ((PLAYER != nullptr ? PLAYER->primaryTarget() : (Entity*)nullptr) !=
+      nullptr) {
     hudDrawReticleOnTarget(
         (PLAYER != nullptr ? PLAYER->primaryTarget() : (Entity*)nullptr),
         PLAYER, z1, alpha, reticleTargetSensitive,
@@ -2949,8 +2951,8 @@ void HeadUpDisplay::drawMissileDisplay(const oo::PList& info) {
         (PLAYER != nullptr ? PLAYER->dialMissileStatus() : OOMissileStatus{});
     NSUInteger i, n_mis = (PLAYER != nullptr ? PLAYER->dialMaxMissiles() : 0);
     for (i = 0; i < n_mis; i++) {
-      ::ShipEntity* missile =
-          (PLAYER != nullptr ? PLAYER->missileForPylon(i) : (::ShipEntity*)nullptr);
+      ::ShipEntity* missile = (PLAYER != nullptr ? PLAYER->missileForPylon(i)
+                                                 : (::ShipEntity*)nullptr);
       if (missile) {
         drawIconForMissile(
             missile,

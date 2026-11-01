@@ -23,6 +23,7 @@ MA 02110-1301, USA.
 */
 
 #include "DustEntity.h"
+
 #include "MyOpenGLView.h"
 #include "OODebugFlags.h"
 #include "OOGraphicsResetManager.h"

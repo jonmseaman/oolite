@@ -24,8 +24,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOObjCPList.h"
 #include "OOPListGameTypes.h"
+
+#include "OOObjCPList.h"
 #include "OOStringParsing.h"
 #include "OOVector.h"
 #include "legacy_random.h"

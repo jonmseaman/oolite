@@ -133,7 +133,7 @@ void OOJSReportCurrentException(ooscript::Context context);
 
 #ifndef NDEBUG
 void OOJSUnreachable(const char* function, const char* file,
-                                   unsigned line) NO_RETURN_FUNC;
+                     unsigned line) NO_RETURN_FUNC;
 #else
 #define OOJSUnreachable(function, file, line) OO_UNREACHABLE()
 #endif
@@ -211,8 +211,7 @@ struct OOJSProfileStackFrame {
 };
 
 #define OOJS_DECLARE_PROFILE_STACK_FRAME(name) OOJSProfileStackFrame name;
-void OOJSProfileEnter(OOJSProfileStackFrame* frame,
-                                    const char* function);
+void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function);
 void OOJSProfileExit(OOJSProfileStackFrame* frame);
 
 // The scope OOJS_PROFILE_ENTER opens: enters the frame, and exits it however

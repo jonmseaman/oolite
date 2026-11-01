@@ -21,6 +21,8 @@ MA 02110-1301, USA.
 
  */
 
+#include "OOJSFlasher.h"
+
 #include <cstdint>
 #include <cstring>
 
@@ -28,7 +30,6 @@ MA 02110-1301, USA.
 #include "OOColor.h"
 #include "OOFlasherEntity.h"
 #include "OOJSEntity.h"
-#include "OOJSFlasher.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOVisualEffectEntity.h"

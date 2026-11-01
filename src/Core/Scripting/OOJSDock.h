@@ -30,9 +30,7 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 class DockEntity;
 
-
 void InitOOJSDock(ooscript::Context context, ooscript::Object global);
-
 
 /*	The bodies of Entity (OOJavaScriptExtensions)'s class questions for a
    dock, which the C++ DockEntity's overrides call.

@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 */
 
 #include "OOECMBlastEntity.h"
+
 #include "OOEntityFilterPredicate.h"
 #include "OOJavaScriptEngine.h"
 #include "ShipEntity.h"

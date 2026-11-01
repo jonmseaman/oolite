@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 #define OO_CACHE_JS_SCRIPTS 1
 #endif
 
+#include "OOJSScript.h"
+
 #include <cstring>
 
 #include "Entity.h"
@@ -35,7 +37,6 @@ MA 02110-1301, USA.
 #include "OODebugStandards.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSPrivateObject.h"
-#include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
 #include "OOLogging.h"
 #include "OOManifestProperties.h"

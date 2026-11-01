@@ -22,10 +22,11 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSSound.h"
+
 #include <cstring>
 
 #include "OOJSPrivateObject.h"
-#include "OOJSSound.h"
 #include "OOJSSoundSource.h"
 #include "OOJavaScriptEngine.h"
 #include "OOMusicController.h"

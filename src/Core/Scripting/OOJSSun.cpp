@@ -23,11 +23,12 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSSun.h"
+
 #include <cstdint>
 #include <cstring>
 
 #include "OOJSEntity.h"
-#include "OOJSSun.h"
 #include "OOJavaScriptEngine.h"
 #include "OOSunEntity.h"
 #include "ooscript/JSEngine.hpp"

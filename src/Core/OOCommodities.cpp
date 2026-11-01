@@ -22,9 +22,10 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOCommodities.h"
+
 #include <string_view>
 
-#include "OOCommodities.h"
 #include "OOCommodityMarket.h"
 #include "OOJSScript.h"
 #include "OOStringExpander.h"

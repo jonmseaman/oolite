@@ -37,7 +37,6 @@ MA 02110-1301, USA.
 #include "OOTypes.h"
 #include "ooscript/JSEngine.hpp"
 
-
 void OOConstToJSStringInit(ooscript::Context context);
 void OOConstToJSStringDestroy(void);
 
@@ -55,7 +54,6 @@ NSUInteger OOConstantFromJSValuePRIVATE(ooscript::Context context,
                                         ooscript::Value value,
                                         struct ConstTable* table,
                                         NSInteger defaultValue);
-
 
 /*	ooscript::String OOJSStringFromEntityStatus(ooscript::Context,
    OOEntityStatus) ooscript::Value OOJSValueFromEntityStatus(ooscript::Context,

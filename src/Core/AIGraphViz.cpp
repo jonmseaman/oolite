@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 #if DEBUG_GRAPHVIZ
 
 #include "AIGraphViz.h"
+
 #include "OOStringParsing.h"
 #include "ResourceManager.h"
 #include "oofnd/String.hpp"
@@ -176,7 +177,8 @@ void HandleOneCommand(std::string& graphViz, const std::string& stateKey,
       std::string targetLabel =
           HandlerToken(targetState, "ENTER", handlerKeys, uniqueSet);
       bool constraint = true;
-      if (targetState == stateKey || targetState == "GLOBAL") constraint = false;
+      if (targetState == stateKey || targetState == "GLOBAL")
+        constraint = false;
 
       graphViz += oo::str::format("\t%s -> %s [lhead=cluster_%s%s]\n",
                                   handlerToken.c_str(), targetLabel.c_str(),

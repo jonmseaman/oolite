@@ -28,6 +28,8 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
+#include "OOJSConsole.h"
+
 #include <stdint.h>
 
 #include "Entity.h"                        // an entity's -inspect
@@ -36,7 +38,6 @@ SOFTWARE.
 #include "OODebugFlags.h"
 #include "OODebugMonitor.h"
 #include "OOJSCall.h"
-#include "OOJSConsole.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSEntity.h"
 #include "OOJSScript.h"

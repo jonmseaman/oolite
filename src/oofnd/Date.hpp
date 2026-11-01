@@ -142,4 +142,3 @@ inline std::string description(Clock::time_point t = Clock::now()) {
 }
 
 }  // namespace oo::date
-

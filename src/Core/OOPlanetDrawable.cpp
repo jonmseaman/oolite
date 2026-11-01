@@ -22,11 +22,12 @@
 
  */
 
+#include "OOPlanetDrawable.h"
+
 #include "MyOpenGLView.h"
 #include "OOMacroOpenGL.h"
 #include "OOOpenGL.h"
 #include "OOPlanetData.h"
-#include "OOPlanetDrawable.h"
 #include "OOSingleTextureMaterial.h"
 #include "OOStellarBody.h"
 #include "OOTexture.h"  // allTextures() destroys oo::Ref<OOTexture>s

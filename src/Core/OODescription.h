@@ -64,10 +64,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "oofnd/objc/OOObject.h"
-
 #include "oofnd/PListDescription.hpp"
 #include "oofnd/StdLib.hpp"
+#include "oofnd/objc/OOObject.h"
 
 namespace oo {
 
@@ -79,4 +78,3 @@ inline std::string DescriptionOf(const oo::PList& plist) {
 }
 
 }  // namespace oo
-

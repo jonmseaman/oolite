@@ -65,10 +65,8 @@ SOFTWARE.
 #define OOLOG_SHORT_CIRCUIT 1
 #endif
 
-
 void OOLogIndent(void);
 void OOLogOutdent(void);
-
 
 // Remember/restore indent levels, for cases where an exception may occur while
 // indented.
@@ -89,7 +87,6 @@ void OOLogGenericParameterErrorForFunction(const char* inFunction);
 #define OOLogGenericSubclassResponsibility() \
   OOLogGenericSubclassResponsibilityForFunction(OOLOG_FUNCTION_NAME)
 void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction);
-
 
 // *** Predefined message classes.
 /*	These are general coding error types. Generally a subclass should be

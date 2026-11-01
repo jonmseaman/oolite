@@ -23,6 +23,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "ShipEntity.h"
+
 #include <string_view>
 
 #include "AI.h"
@@ -78,7 +80,6 @@ MA 02110-1301, USA.
 #include "PlayerEntitySound.h"
 #include "ProxyPlayerEntity.h"
 #include "ResourceManager.h"
-#include "ShipEntity.h"
 #include "ShipEntityAI.h"
 #include "ShipEntityScriptMethods.h"
 #include "StationEntity.h"
@@ -2443,15 +2444,15 @@ bool ShipEntity::checkCloseCollisionWith(Entity* otherPart) {
                    [otherPart](const oo::EntityHold& e) {
                      return e.get() == otherPart;
                    }) != collidingEntities.end())
-    return false;  // we know about this already! (-containsObject:, identity for
-                // entities)
+    return false;  // we know about this already! (-containsObject:, identity
+                   // for entities)
 
   ::ShipEntity* otherShip = nullptr;
   if (oo::EntityIsShip(otherPart)) otherShip = oo::ToShip(otherPart);
 
   if (canScoop(otherShip))
     return true;  // quick test - could this improve scooping for small ships? I
-                 // think so!
+                  // think so!
 
   if (otherShip != nullptr && trackCloseContacts) {
     // in update we check if close contacts have gone out of touch range (origin
@@ -3342,7 +3343,8 @@ bool ShipEntity::hasEquipmentItemProviding(const std::string& equipmentType) {
     } else {
       ::OOEquipmentType* et =
           OOEquipmentType::equipmentTypeWithIdentifier(key).get();
-      if (et != nullptr && (et != nullptr ? et->provides(equipmentType) : false)) {
+      if (et != nullptr &&
+          (et != nullptr ? et->provides(equipmentType) : false)) {
         return true;
       }
     }
@@ -3359,7 +3361,8 @@ std::optional<std::string> ShipEntity::equipmentItemProviding(
     } else {
       ::OOEquipmentType* et =
           OOEquipmentType::equipmentTypeWithIdentifier(key).get();
-      if (et != nullptr && (et != nullptr ? et->provides(equipmentType) : false)) {
+      if (et != nullptr &&
+          (et != nullptr ? et->provides(equipmentType) : false)) {
         return key;
       }
     }
@@ -3692,7 +3695,8 @@ bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey,
   }
 
   if (getIsPlayer()) {
-    if (!(eqType != nullptr ? eqType->isAvailableToPlayer() : false)) return false;
+    if (!(eqType != nullptr ? eqType->isAvailableToPlayer() : false))
+      return false;
     if (!(eqType != nullptr ? eqType->isAvailableToAll() : false)) {
       // find options that agree with this ship. Only player ships have these
       // options. (Membership only: the string elements of the two arrays.)
@@ -3716,7 +3720,8 @@ bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey,
       if (!options.contains(equipmentKey)) return false;
     }
   } else {
-    if (!(eqType != nullptr ? eqType->isAvailableToNPCs() : false)) return false;
+    if (!(eqType != nullptr ? eqType->isAvailableToNPCs() : false))
+      return false;
   }
 
   return true;
@@ -5363,7 +5368,8 @@ void ShipEntity::behaviour_attack_fly_to_target(double delta_t) {
   }
 
   double last_success_factor = success_factor;
-  success_factor = trackPrimaryTarget(delta_t, false);  // do the actual piloting
+  success_factor =
+      trackPrimaryTarget(delta_t, false);  // do the actual piloting
 
   if ((success_factor > 0.999) || (success_factor > last_success_factor)) {
     frustration -= delta_t;
@@ -5756,7 +5762,7 @@ void ShipEntity::behaviour_formation_form_up(double delta_t) {
       else if (distance > 0.5 * scannerRange && !pitching_over) {
         pitching_over =
             true;  // Force the ship in a 180 degree turn. Do it here to allow
-                  // escorts to break out formation for some seconds.
+                   // escorts to break out formation for some seconds.
       }
       frustration = 0;
     }
@@ -8024,10 +8030,10 @@ void ShipEntity::setCargoFlag(OOCargoFlag flag) {
                           : std::vector<oo::EntityHold>());
           break;
         case CARGO_FLAG_PIRATE:
-          newCargo =
-              (UNIVERSE != nullptr ? UNIVERSE->getContainersOfGoods(
-                                         (Ranrot() % (1 + num / 2)), true, false)
-                                   : std::vector<oo::EntityHold>());
+          newCargo = (UNIVERSE != nullptr
+                          ? UNIVERSE->getContainersOfGoods(
+                                (Ranrot() % (1 + num / 2)), true, false)
+                          : std::vector<oo::EntityHold>());
           break;
         case CARGO_FLAG_FULL_PASSENGERS:
           // TODO: allow passengers to survive
@@ -9155,7 +9161,8 @@ void ShipEntity::checkScanner() {
   }
   //
   scan = z_next;
-  while ((scan) && (scan->isShip == false)) scan = scan->z_next;  // skip non-ships
+  while ((scan) && (scan->isShip == false))
+    scan = scan->z_next;  // skip non-ships
   while ((scan) && (scan->position.z < position.z + scannerRange) &&
          (n_scanned_ships < MAX_SCAN_NUMBER)) {
     if (scan->isShip &&
@@ -9181,8 +9188,9 @@ void ShipEntity::checkScannerIgnoringUnpowered() {
   //
   GLfloat scannerRange2 = scannerRange * scannerRange;
   scan = z_previous;
-  while ((scan) && ((scan->isShip == false) || (scan->scanClass == CLASS_ROCK) ||
-                    (scan->scanClass == CLASS_CARGO))) {
+  while ((scan) &&
+         ((scan->isShip == false) || (scan->scanClass == CLASS_ROCK) ||
+          (scan->scanClass == CLASS_CARGO))) {
     scan = scan->z_previous;  // skip non-ships
   }
   while ((scan) && (scan->position.z > position.z - scannerRange) &&
@@ -9196,15 +9204,17 @@ void ShipEntity::checkScannerIgnoringUnpowered() {
         scanned_ships[n_scanned_ships++] = oo::ToShip(scan);
     }
     scan = scan->z_previous;
-    while ((scan) && ((scan->isShip == false) || (scan->scanClass == CLASS_ROCK) ||
-                      (scan->scanClass == CLASS_CARGO))) {
+    while ((scan) &&
+           ((scan->isShip == false) || (scan->scanClass == CLASS_ROCK) ||
+            (scan->scanClass == CLASS_CARGO))) {
       scan = scan->z_previous;  // skip non-ships
     }
   }
   //
   scan = z_next;
-  while ((scan) && ((scan->isShip == false) || (scan->scanClass == CLASS_ROCK) ||
-                    (scan->scanClass == CLASS_CARGO))) {
+  while ((scan) &&
+         ((scan->isShip == false) || (scan->scanClass == CLASS_ROCK) ||
+          (scan->scanClass == CLASS_CARGO))) {
     scan = scan->z_next;  // skip non-ships
   }
 
@@ -9219,8 +9229,9 @@ void ShipEntity::checkScannerIgnoringUnpowered() {
         scanned_ships[n_scanned_ships++] = oo::ToShip(scan);
     }
     scan = scan->z_next;
-    while ((scan) && ((scan->isShip == false) || (scan->scanClass == CLASS_ROCK) ||
-                      (scan->scanClass == CLASS_CARGO))) {
+    while ((scan) &&
+           ((scan->isShip == false) || (scan->scanClass == CLASS_ROCK) ||
+            (scan->scanClass == CLASS_CARGO))) {
       scan = scan->z_next;  // skip non-ships
     }
   }
@@ -9460,8 +9471,8 @@ bool ShipEntity::isFriendlyTo(::ShipEntity* otherShip) {
        (otherShip != nullptr ? otherShip->isThargoid() : false)) ||
       (myGroup != nullptr && otherGroup != nullptr &&
        (myGroup == otherGroup ||
-        (otherGroup != nullptr ? otherGroup->leader() : (::ShipEntity*)nullptr) ==
-            this)) ||
+        (otherGroup != nullptr ? otherGroup->leader()
+                               : (::ShipEntity*)nullptr) == this)) ||
       (getScanClass() == CLASS_MILITARY &&
        (otherShip != nullptr ? otherShip->getScanClass() : OOScanClass{}) ==
            CLASS_MILITARY)) {
@@ -10602,8 +10613,8 @@ bool ShipEntity::onTarget(OOWeaponFacing direction, OOWeaponType weapon_type) {
   if (oo::EntityStatus(target) == STATUS_DEAD) return false;
 
   if (isSunlit && (target->isSunlit == false) && (randf() < 0.75)) {
-    return false;  // 3/4 of the time you can't see from a lit place into a darker
-                // place
+    return false;  // 3/4 of the time you can't see from a lit place into a
+                   // darker place
   }
   radius = target->collision_radius;
   rel_pos =
@@ -10947,7 +10958,8 @@ bool ShipEntity::fireSubentityLaserShot(double range) {
         victim->takeEnergyDamage(
             0.01 * weapon_damage, this, parent,
             (weaponTypeForFacing(WEAPON_FACING_FORWARD, true) != nullptr
-                 ? weaponTypeForFacing(WEAPON_FACING_FORWARD, true)->identifier()
+                 ? weaponTypeForFacing(WEAPON_FACING_FORWARD, true)
+                       ->identifier()
                  : std::optional<std::string>())
                 .value_or(std::string()));
       victim = subent;
@@ -10958,7 +10970,8 @@ bool ShipEntity::fireSubentityLaserShot(double range) {
         victim->takeEnergyDamage(
             weapon_damage, this, parent,
             (weaponTypeForFacing(WEAPON_FACING_FORWARD, true) != nullptr
-                 ? weaponTypeForFacing(WEAPON_FACING_FORWARD, true)->identifier()
+                 ? weaponTypeForFacing(WEAPON_FACING_FORWARD, true)
+                       ->identifier()
                  : std::optional<std::string>())
                 .value_or(std::string()));  // a very palpable hit
 
@@ -11089,7 +11102,8 @@ bool ShipEntity::fireDirectLaserShotAt(Entity* my_target) {
         victim->takeEnergyDamage(
             0.01 * weapon_damage, this, this,
             (weaponTypeForFacing(WEAPON_FACING_FORWARD, true) != nullptr
-                 ? weaponTypeForFacing(WEAPON_FACING_FORWARD, true)->identifier()
+                 ? weaponTypeForFacing(WEAPON_FACING_FORWARD, true)
+                       ->identifier()
                  : std::optional<std::string>())
                 .value_or(std::string()));
       victim = subent;
@@ -11100,7 +11114,8 @@ bool ShipEntity::fireDirectLaserShotAt(Entity* my_target) {
         victim->takeEnergyDamage(
             weapon_damage, this, this,
             (weaponTypeForFacing(WEAPON_FACING_FORWARD, true) != nullptr
-                 ? weaponTypeForFacing(WEAPON_FACING_FORWARD, true)->identifier()
+                 ? weaponTypeForFacing(WEAPON_FACING_FORWARD, true)
+                       ->identifier()
                  : std::optional<std::string>())
                 .value_or(std::string()));  // a very palpable hit
 
@@ -12097,7 +12112,7 @@ bool ShipEntity::canScoop(::ShipEntity* other) {
     return false;  // Must be in front of us
   if (getIsPlayer() && dot_product(v_up, HPVectorToVector(loc)) > 0.0f)
     return false;  // player has to scoop on underside, give more flexibility to
-                // NPCs
+                   // NPCs
 
   return true;
 }
@@ -12359,7 +12374,7 @@ bool ShipEntity::cascadeIfAppropriateWithDamageAmount(double amount,
       // of energy.
       if (energy < amount && energy > 10 && countsAsKill()) {
         cascade = true;  // confirm we're cascading, then try to add our cascade
-                        // to UNIVERSE.
+                         // to UNIVERSE.
         if (UNIVERSE != nullptr)
           UNIVERSE->addEntity(oo::MadeEntity(
               OOQuiriumCascadeEntity::quiriumCascadeFromShip(this)));
@@ -12578,8 +12593,8 @@ bool ShipEntity::abandonShip() {
   }
 
   if (EXPECT(launchEscapeCapsule() !=
-             nullptr))  // oo::ToShip(NO_TARGET)	// -launchEscapeCapsule takes
-                    // care of everything for the player
+             nullptr))  // oo::ToShip(NO_TARGET)	// -launchEscapeCapsule
+                        // takes care of everything for the player
   {
     if (!getIsPlayer()) {
       OK = true;

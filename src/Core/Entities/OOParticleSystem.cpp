@@ -28,10 +28,11 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOParticleSystem.h"
+
 #include "MyOpenGLView.h"
 #include "OOLightParticleEntity.h"
 #include "OOMacroOpenGL.h"
-#include "OOParticleSystem.h"
 #include "OOTexture.h"
 #include "OOVector.h"  // make_vector
 #include "PlayerEntity.h"

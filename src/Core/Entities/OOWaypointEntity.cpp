@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOWaypointEntity.h"
+
 #include "Entity.h"
 #include "HeadUpDisplay.h"
 #include "OOJSWaypoint.h"
@@ -30,7 +32,6 @@ MA 02110-1301, USA.
 #include "OOPListGameTypes.h"
 #include "OOPolygonSprite.h"
 #include "OOStringExpander.h"
-#include "OOWaypointEntity.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oofnd/PListGet.hpp"

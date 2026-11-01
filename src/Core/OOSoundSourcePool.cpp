@@ -25,8 +25,9 @@ SOFTWARE.
 
 */
 
-#include "OOSound.h"
 #include "OOSoundSourcePool.h"
+
+#include "OOSound.h"
 #include "Universe.h"
 
 enum { kNoSlot = UINT8_MAX };

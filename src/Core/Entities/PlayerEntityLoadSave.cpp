@@ -22,6 +22,8 @@
 
  */
 
+#include "PlayerEntityLoadSave.h"
+
 #include <algorithm>
 
 #include "GameController.h"
@@ -38,7 +40,6 @@
 #include "OOXMLExtensions.h"
 #include "PlayerEntityContracts.h"
 #include "PlayerEntityControls.h"
-#include "PlayerEntityLoadSave.h"
 #include "PlayerEntitySound.h"
 #include "ProxyPlayerEntity.h"
 #include "ResourceManager.h"
@@ -755,7 +756,8 @@ bool PlayerEntity::loadPlayerFromFile(const std::string& fileToOpen,
   setDockedAtMainStation();
   ::StationEntity* dockedStation = this->dockedStation();
 
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
+  if (UNIVERSE != nullptr)
+    UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
   if (dockedStation) {
     position =
@@ -1013,9 +1015,9 @@ void PlayerEntity::setGuiToOverwriteScreen(const std::string& cdrName) {
   if (gameView != nullptr) gameView->setStringInput(gvStringInputNo);
   if (UNIVERSE != nullptr)
     UNIVERSE->enterGUIViewModeWithMouseInteraction(
-        false);  // FIXME: should be YES, but was NO before introducing new mouse
-              // mode stuff. If set to YES, choices can be selected but not
-              // activated.
+        false);  // FIXME: should be YES, but was NO before introducing new
+                 // mouse mode stuff. If set to YES, choices can be selected but
+                 // not activated.
 }
 
 void PlayerEntity::lsCommanders(

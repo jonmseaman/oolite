@@ -33,7 +33,6 @@ MA 02110-1301, USA.
 // reachable through OOMaths.h.
 #define INCLUDED_OOMATHS_h
 
-
 #ifndef OOMATHS_STANDALONE
 #define OOMATHS_STANDALONE 0
 #endif
@@ -152,4 +151,3 @@ typedef double OOHPScalar;
 #include "OOVoxel.h"
 #include "legacy_random.h"
 #endif
-

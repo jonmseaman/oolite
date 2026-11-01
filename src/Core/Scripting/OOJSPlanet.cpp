@@ -23,11 +23,12 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOJSPlanet.h"
+
 #include <cstdint>
 #include <cstring>
 
 #include "OOJSEntity.h"
-#include "OOJSPlanet.h"
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"

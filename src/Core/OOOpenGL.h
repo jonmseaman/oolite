@@ -116,7 +116,6 @@ typedef enum {
   OPENGL_STATE_INTERNAL_USE_ONLY
 } OOOpenGLStateID;
 
-
 #if OO_GL_STATE_VERIFICATION
 void OOSetOpenGLState_(OOOpenGLStateID state, const char* function,
                        unsigned line);
@@ -173,8 +172,8 @@ void GLDrawBallBillboard(GLfloat radius, GLfloat step, GLfloat z_distance);
         Draw axis-alligned ellipses, as outline and fill respectively.
 */
 #ifndef OO_PLAIN_CPP_UNIT
-                                 // plain C++ unit (OODebugGLDrawing.cpp) does
-                                 // not see these
+// plain C++ unit (OODebugGLDrawing.cpp) does
+// not see these
 void GLDrawOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz, GLfloat step);
 void GLDrawFilledOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
                       GLfloat step);
@@ -193,7 +192,6 @@ typedef struct {
 void GLDrawPoints(OOGLVector* points, int n);
 void GLDrawFilledPoints(OOGLVector* points, int n);
 void GLDrawQuadStrip(OOGLVector* points, int n);
-
 
 enum { kOOShaderSettingDefault = SHADERS_NOT_SUPPORTED };
 

@@ -593,4 +593,3 @@ class Download {
 };
 
 }  // namespace oo::http
-

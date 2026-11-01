@@ -21,13 +21,14 @@ MA 02110-1301, USA.
 
  */
 
+#include "OOJSVisualEffect.h"
+
 #include <cstdint>
 #include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJSVector.h"
-#include "OOJSVisualEffect.h"
 #include "OOJavaScriptEngine.h"
 #include "OOMesh.h"
 #include "OOObjCPList.h"

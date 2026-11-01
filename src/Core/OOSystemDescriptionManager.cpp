@@ -24,8 +24,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOStringParsing.h"
 #include "OOSystemDescriptionManager.h"
+
+#include "OOStringParsing.h"
 #include "OOTypes.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"

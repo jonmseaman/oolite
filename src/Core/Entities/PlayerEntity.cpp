@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "PlayerEntity.h"
+
 #include <assert.h>
 
 #include <string_view>
@@ -69,7 +71,6 @@ MA 02110-1301, USA.
 #include "OOTexture.h"
 #include "OOTrumble.h"
 #include "Octree.h"
-#include "PlayerEntity.h"
 #include "PlayerEntityContracts.h"
 #include "PlayerEntityControls.h"
 #include "PlayerEntityKeyMapper.h"
@@ -1469,12 +1470,12 @@ oo::PList PlayerEntity::commanderDataDictionary() {
 
   // docked station
   ::StationEntity* dockedStation = this->dockedStation();
-  result["docked_station_role"] =
-      oo::PList(dockedStation != nullptr ? (dockedStation != nullptr
-                                            ? dockedStation->getPrimaryRole()
-                                            : std::optional<std::string>())
-                                           .value_or(std::string())
-                                     : std::string());
+  result["docked_station_role"] = oo::PList(
+      dockedStation != nullptr
+          ? (dockedStation != nullptr ? dockedStation->getPrimaryRole()
+                                      : std::optional<std::string>())
+                .value_or(std::string())
+          : std::string());
   if (dockedStation) {
     HPVector dpos =
         (dockedStation != nullptr ? dockedStation->getPosition() : HPVector{});
@@ -2225,9 +2226,9 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
       missile_entity[i] = oo::EntityHold::adopt(
           (UNIVERSE != nullptr
                ? UNIVERSE->newShipWithRole("EQ_MISSILE")
-               : (::ShipEntity*)nullptr));  // retain count = 1 - should be okay as
-                                        // long as we keep a missile with this
-                                        // role in the base package.
+               : (::ShipEntity*)nullptr));  // retain count = 1 - should be okay
+                                            // as long as we keep a missile with
+                                            // this role in the base package.
     }
   }
 
@@ -6719,8 +6720,8 @@ void PlayerEntity::dumpCargo() {
   ::ShipEntity* jetto = dumpCargoItem(std::nullopt);
   const std::optional<std::string> result =
       jetto != nullptr ? (jetto != nullptr ? jetto->commodityType()
-                                       : std::optional<std::string>())
-                   : std::nullopt;
+                                           : std::optional<std::string>())
+                       : std::nullopt;
   if (result.has_value()) {
     const std::string commodity =
         (UNIVERSE != nullptr ? UNIVERSE->displayNameForCommodity(*result)
@@ -6889,7 +6890,7 @@ void PlayerEntity::collectBountyFor(::ShipEntity* other) {
               ? other->hasRole("tharglet")
               : false))  // okay, we'll count tharglets as proper kills
     {
-      score /= 10;     // reduce bounty awarded
+      score /= 10;        // reduce bounty awarded
       killAward = false;  // don't award a kill
     }
   }
@@ -6987,7 +6988,8 @@ bool PlayerEntity::takeInternalDamage() {
 
     const std::string damagedKey =
         oo::str::format("%s_DAMAGED", system_key->c_str());
-    addEquipmentItem(damagedKey, false, "damage");  // for possible future repair.
+    addEquipmentItem(damagedKey, false,
+                     "damage");  // for possible future repair.
     doScriptEvent(OOJSID("equipmentDamaged"), {oo::PList(*system_key)});
 
     if (!hasEquipmentItem(oo::PList(*system_name)) &&
@@ -7057,7 +7059,7 @@ void PlayerEntity::getDestroyedBy(Entity* whom, OOShipDamageType type) {
   playGameOver();
   if (UNIVERSE != nullptr)
     UNIVERSE->setBlockJSPlayerShipProps(
-        true);            // Treat JS player as stale entity.
+        true);           // Treat JS player as stale entity.
   removeAllEquipment();  // No scooping / equipment damage when dead.
   loseTargetStatus();
   showGameOver();
@@ -7147,7 +7149,8 @@ void PlayerEntity::docked() {
   }
 
   setStatus(STATUS_DOCKED);
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
+  if (UNIVERSE != nullptr)
+    UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
   loseTargetStatus();
 
@@ -7187,9 +7190,9 @@ void PlayerEntity::docked() {
                                 : false)) {
     OOCreditsQuantity oldbounty = getBounty();
     markAsOffender(
-        (dockedStation != nullptr
-             ? dockedStation->legalStatusOfManifest(shipCommodityData.get(), false)
-             : 0),
+        (dockedStation != nullptr ? dockedStation->legalStatusOfManifest(
+                                        shipCommodityData.get(), false)
+                                  : 0),
         kOOLegalStatusReasonIllegalImports);
     if (getBounty() > oldbounty) {
       addRoleToPlayer("trader-smuggler");
@@ -8101,18 +8104,19 @@ void PlayerEntity::setGuiToStatusScreen() {
     gui->setArray(RowOf(OO_DESC("status-legal-status"), legal_desc), 6);
     gui->setArray(RowOf(OO_DESC("status-rating"), rating_desc), 7);
 
-    gui->setColor(gui->colorFromSetting(cxx_kGuiStatusShipnameColor, nullptr).get(),
-                  0);
+    gui->setColor(
+        gui->colorFromSetting(cxx_kGuiStatusShipnameColor, nullptr).get(), 0);
     for (i = 1; i <= 7; ++i) {
       // nil default = fall back to global default colour
-      gui->setColor(gui->colorFromSetting(cxx_kGuiStatusDataColor, nullptr).get(),
-                    i);
+      gui->setColor(
+          gui->colorFromSetting(cxx_kGuiStatusDataColor, nullptr).get(), i);
     }
 
     gui->setText(OO_DESC("status-equipment"), 9);
 
     gui->setColor(
-        gui->colorFromSetting(cxx_kGuiStatusEquipmentHeadingColor, nullptr).get(),
+        gui->colorFromSetting(cxx_kGuiStatusEquipmentHeadingColor, nullptr)
+            .get(),
         9);
 
     gui->setShowTextCursor(false);
@@ -8138,7 +8142,8 @@ void PlayerEntity::setGuiToStatusScreen() {
     setShowDemoShips(false);
   }
 
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
+  if (UNIVERSE != nullptr)
+    UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
   if (guiChanged) {
     oo::PList fgDescriptor, bgDescriptor;
@@ -8918,7 +8923,8 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
       for (i = 1; i <= 14; ++i) {
         // nil default = fall back to global default colour
         gui->setColor(
-            gui->colorFromSetting(cxx_kGuiSystemdataFactsColor, nullptr).get(), i);
+            gui->colorFromSetting(cxx_kGuiSystemdataFactsColor, nullptr).get(),
+            i);
       }
     }
 
@@ -8932,7 +8938,8 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
     UNIVERSE->getGameView()->clearMouse();
 
   setShowDemoShips(false);
-  if (UNIVERSE != nullptr) UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
+  if (UNIVERSE != nullptr)
+    UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
 
   // if the system has gone nova, there's no planet to display
   if (!sunGoneNova && concealment < OO_SYSTEMCONCEALMENT_NODATA) {
@@ -9788,8 +9795,9 @@ void PlayerEntity::setGuiToEquipShipScreen(
     gui->clearAndKeepBackground(!guiChanged);
     gui->setTitle(OO_DESC("equip-title"));
 
-    gui->setColor(gui->colorFromSetting(cxx_kGuiEquipmentCashColor, nullptr).get(),
-                  GUI_ROW_EQUIPMENT_CASH);
+    gui->setColor(
+        gui->colorFromSetting(cxx_kGuiEquipmentCashColor, nullptr).get(),
+        GUI_ROW_EQUIPMENT_CASH);
     gui->setText(
         cxx_OOExpandKey("equip-cash-value", credits).value_or(std::string()),
         GUI_ROW_EQUIPMENT_CASH);
@@ -9851,7 +9859,8 @@ void PlayerEntity::setGuiToEquipShipScreen(
                                       ? eqInfo->displayColor().get()
                                       : (OOColor*)nullptr));
         if (dispCol == nullptr)
-          dispCol = gui->colorFromSetting(cxx_kGuiEquipmentOptionColor, nullptr);
+          dispCol =
+              gui->colorFromSetting(cxx_kGuiEquipmentOptionColor, nullptr);
         gui->setColor(dispCol.get(), row);
 
         if (eqKey == "EQ_FUEL") {
@@ -10196,7 +10205,8 @@ void PlayerEntity::setGuiToInterfacesScreen(int skip) {
             interfaces->find(interfaceKey)->second.get();
 
         gui->setColor(
-            gui->colorFromSetting(cxx_kGuiInterfaceEntryColor, nullptr).get(), row);
+            gui->colorFromSetting(cxx_kGuiInterfaceEntryColor, nullptr).get(),
+            row);
         gui->setKey(interfaceKey, row);
         // title, category: the list ends at the first nil, as arrayWithObjects:
         // did
@@ -11484,8 +11494,8 @@ void PlayerEntity::showMarketScreenDataLine(OOGUIRow row,
            : std::optional<std::string>());
 
   gui->setKey(good, row);
-  gui->setColor(gui->colorFromSetting(cxx_kGuiMarketCommodityColor, nullptr).get(),
-                row);
+  gui->setColor(
+      gui->colorFromSetting(cxx_kGuiMarketCommodityColor, nullptr).get(), row);
   if (extradesc.has_value())
     gui->setArray(
         {desc, *extradesc, price, units_available, units_owned, legaldesc},
@@ -11875,7 +11885,8 @@ void PlayerEntity::setGuiToMarketInfoScreen() {
     }
     for (i--; i > GUI_ROW_MARKET_START + 2; --i) {
       gui->setColor(
-          gui->colorFromSetting(cxx_kGuiMarketDescriptionColor, nullptr).get(), i);
+          gui->colorFromSetting(cxx_kGuiMarketDescriptionColor, nullptr).get(),
+          i);
     }
 
     showMarketCashAndLoadLine();
@@ -12085,8 +12096,9 @@ bool PlayerEntity::canAddEquipment(const std::string& equipmentKey,
   ::OOEquipmentType* eqType =
       OOEquipmentType::equipmentTypeWithIdentifier(equipmentKey).get();
   const oo::PList conditions =
-      (eqType != nullptr) ? (eqType != nullptr ? eqType->conditions() : oo::PList())
-                      : oo::PList();
+      (eqType != nullptr)
+          ? (eqType != nullptr ? eqType->conditions() : oo::PList())
+          : oo::PList();
   if (!conditions.isNull() && !scriptTestConditions(conditions)) return false;
 
   return true;
@@ -12359,7 +12371,7 @@ bool PlayerEntity::removeExternalStore(::OOEquipmentType* eqType) {
                           ? missileForPylon(i)->getPrimaryRole()
                           : std::optional<std::string>()),
                false))  // nil: NO, after still choosing a primary role, as
-                     // -hasPrimaryRole: did
+                        // -hasPrimaryRole: did
     {
       removeFromPylon(i);
 

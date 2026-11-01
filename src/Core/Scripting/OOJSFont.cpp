@@ -27,11 +27,12 @@ SOFTWARE.
 
 #define OO_PLAIN_CPP_UNIT \
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
+#include "OOJSFont.h"
+
 #include <algorithm>
 #include <optional>
 
 #include "OOJSEngineCore.h"
-#include "OOJSFont.h"
 #include "OOStringWidth.h"
 #include "ooscript/JSEngine.hpp"
 

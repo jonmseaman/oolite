@@ -3,11 +3,11 @@
    (see oofnd/Exception.hpp).
 */
 
+#include "oofnd/Exception.hpp"
+
 #include <cstdarg>
 #include <cstdio>
 #include <string>
-
-#include "oofnd/Exception.hpp"
 
 const char* const OOGenericException = "NSGenericException";
 const char* const OOInvalidArgumentException = "NSInvalidArgumentException";

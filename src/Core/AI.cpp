@@ -22,10 +22,11 @@ MA 02110-1301, USA.
 
 */
 
+#include "AI.h"
+
 #include <cstring>
 #include <functional>
 
-#include "AI.h"
 #include "GameController.h"
 #include "OOCacheManager.h"
 #include "OOCallByName.h"
@@ -417,7 +418,7 @@ void AI::reactToMessage(
            -- Ahruman, 20070706
   */
   if (owner == nullptr || (owner != nullptr ? owner->getUniversalID()
-                                        : OOUniversalID{}) == NO_TARGET)
+                                            : OOUniversalID{}) == NO_TARGET)
     return;
 
 #ifndef NDEBUG

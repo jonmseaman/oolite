@@ -31,10 +31,8 @@ SOFTWARE.
 
 #include "OOJavaScriptEngine.h"
 
-
 void InitOOJSFrameCallbacks(ooscript::Context context, ooscript::Object global);
 
 void OOJSFrameCallbacksInvoke(OOTimeDelta delta);
 
 void OOJSFrameCallbacksRemoveAll(void);
-

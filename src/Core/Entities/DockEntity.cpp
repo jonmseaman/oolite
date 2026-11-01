@@ -792,7 +792,7 @@ void DockEntity::addShipToShipsOnApproach(::ShipEntity* ship) {
       rz += ssize * ((float)offset_id3 / 4.0);
 
       //			// docking.debug: Adjusted coordinates by
-      //c2/s2/ssize factors
+      // c2/s2/ssize factors
     }
 
     // add the lenght inside the station to the corridor, except for the final
@@ -1295,9 +1295,8 @@ bool DockEntity::dockingCorridorIsEmpty() {
   bool isEmpty = true;
   int ent_count = UNIVERSE->n_entities;
   Entity** uni_entities =
-      UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(
-      ent_count);  // each one's object retained
+      UNIVERSE->sortedEntities;                 // grab the public sorted list
+  std::vector<Entity*> my_entities(ent_count);  // each one's object retained
   int i;
   int ship_count = 0;
 
@@ -1366,9 +1365,8 @@ void DockEntity::clearDockingCorridor() {
   bool isClear = true;
   int ent_count = UNIVERSE->n_entities;
   Entity** uni_entities =
-      UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(
-      ent_count);  // each one's object retained
+      UNIVERSE->sortedEntities;                 // grab the public sorted list
+  std::vector<Entity*> my_entities(ent_count);  // each one's object retained
   int i;
   int ship_count = 0;
 

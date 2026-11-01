@@ -23,9 +23,10 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOLaserShotEntity.h"
+
 #include "MyOpenGLView.h"
 #include "OOGraphicsResetManager.h"
-#include "OOLaserShotEntity.h"
 #include "OOMacroOpenGL.h"
 #include "OOTexture.h"
 #include "ShipEntity.h"

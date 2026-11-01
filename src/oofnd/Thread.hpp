@@ -141,4 +141,3 @@ inline bool setCurrentPriority(double p) {
 }
 
 }  // namespace oo::thread
-

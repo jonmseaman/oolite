@@ -25,8 +25,9 @@ MA 02110-1301, USA.
 
 #define OO_PLAIN_CPP_UNIT \
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
-#include "OOJSEngineCore.h"  // OOJSValue
 #include "OOJSSpecialFunctions.h"
+
+#include "OOJSEngineCore.h"  // OOJSValue
 #include "oofnd/Ref.hpp"
 #include "ooscript/JSEngine.hpp"  // ooscript::Context, ooscript::Object (InitOOJSSpecialFunctions)
 

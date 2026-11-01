@@ -22,8 +22,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJoystickManager.h"
 #include "OOJoystickProfile.h"
+
+#include "OOJoystickManager.h"
 #include "OOLoggingExtended.h"
 #include "OOMaths.h"
 #include "Universe.h"

@@ -26,6 +26,7 @@ SOFTWARE.
 */
 
 #include "OOProbabilisticTextureManager.h"
+
 #include "OOTexture.h"
 #include "PlayerEntityScriptMethods.h"
 #include "ResourceManager.h"
