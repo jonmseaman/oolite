@@ -50,6 +50,9 @@ __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #elif OOLITE_LINUX
 #include <unistd.h>
+#elif OOLITE_MAC_OS_X
+#include <mach-o/dyld.h>
+#include <unistd.h>
 #endif
 
 namespace {
@@ -164,6 +167,30 @@ int main(int argc, char* argv[]) {
   if (chdir(result) != 0) {
     // As before: if the executable's directory cannot be entered, the game
     // starts where it is.
+  }
+#elif OOLITE_MAC_OS_X
+  // Run from the folder holding Resources and AddOns: Contents in an app bundle
+  // (executable in Contents/MacOS), otherwise the folder holding the
+  // executable.
+  char result[PATH_MAX];
+  uint32_t resultSize = sizeof(result);
+  char resolved[PATH_MAX];
+  if (_NSGetExecutablePath(result, &resultSize) == 0 &&
+      realpath(result, resolved) != NULL) {
+    char* last_slash = strrchr(resolved, '/');
+    if (last_slash != NULL) {
+      *last_slash = '\0';
+    }
+    if (chdir(resolved) != 0) {
+      // As on Linux: the game starts where it is.
+    }
+    size_t length = strlen(resolved);
+    if (length >= 15 &&
+        strcmp(resolved + length - 15, "/Contents/MacOS") == 0) {
+      if (chdir("..") != 0) {
+        // The game starts in Contents/MacOS.
+      }
+    }
   }
 #endif
 #define OO_SHOW_MSG(ooMsg, ooTitle, ooFlags) fprintf(stdout, "%s", ooMsg)

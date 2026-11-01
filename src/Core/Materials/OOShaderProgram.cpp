@@ -29,6 +29,9 @@ SOFTWARE.
 
 #if OO_SHADERS
 
+#include <regex>
+#include <vector>
+
 #include "MyOpenGLView.h"
 #include "OODebugFlags.h"
 #include "OOFunctionAttributes.h"
@@ -161,10 +164,31 @@ oo::Ref<OOShaderProgram> OOShaderProgram::shaderProgramWithVertexShaderName(
       return nullptr;
     if (!GetShaderSource(fragmentShaderName, "fragment", &fragmentSource))
       return nullptr;
+    oo::PList bindings = attributeBindings;
+#if OOLITE_MAC_OS_X
+    /*	The macOS legacy OpenGL context only supports GLSL 1.20, so shaders
+            written for #version 330 are translated when loaded.
+    */
+    const std::string version330 = "#version 330";
+    if (prefixString.has_value() &&
+        oo::str::hasPrefix(*prefixString, version330)) {
+      oo::PList::Dict translatedBindings;
+      if (const oo::PList::Dict* given =
+              attributeBindings.getIf<oo::PList::Dict>())
+        translatedBindings = *given;
+      vertexSource =
+          OOTranslateGLSL330To120(vertexSource, true, translatedBindings);
+      fragmentSource =
+          OOTranslateGLSL330To120(fragmentSource, false, translatedBindings);
+      bindings = oo::PList(std::move(translatedBindings));
+      prefixString = "#version 120\n#extension GL_EXT_gpu_shader4 : enable\n" +
+                     prefixString->substr(version330.length());
+    }
+#endif
     result = oo::adopt(new OOShaderProgram());
     if (!result->initWithVertexShaderSource(
             vertexSource, fragmentSource, prefixString, vertexShaderName,
-            fragmentShaderName, attributeBindings, cacheKey))
+            fragmentShaderName, bindings, cacheKey))
       result = nullptr;
 
     if (result != nullptr) {
@@ -560,5 +584,74 @@ std::string GetGLSLInfoLog(GLhandleARB shaderObject) {
 }
 
 }  // namespace
+
+namespace {
+
+constexpr std::regex::flag_type kGLSLRegexFlags =
+    std::regex::ECMAScript | std::regex::multiline;
+
+std::string ReplaceRegex(const std::string& source, const char* pattern,
+                         const char* replacement) {
+  return std::regex_replace(source, std::regex(pattern, kGLSLRegexFlags),
+                            replacement);
+}
+
+}  // namespace
+
+std::optional<std::string> OOTranslateGLSL330To120(
+    const std::optional<std::string>& inSource, bool isVertexShader,
+    oo::PList::Dict& attributeBindings) {
+  if (!inSource.has_value()) return std::nullopt;
+  std::string source = *inSource;
+
+  if (isVertexShader) {
+    // layout(location = N) in TYPE NAME;  ->  attribute binding NAME = N
+    const std::regex location(
+        R"(^\s*layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s*in\s+\w+\s+(\w+)\s*;)",
+        kGLSLRegexFlags);
+    for (std::sregex_iterator match(source.begin(), source.end(), location),
+         end;
+         match != end; ++match) {
+      attributeBindings[(*match)[2].str()] =
+          oo::PList::signedInteger(std::stoi((*match)[1].str()));
+    }
+  } else {
+    // [layout(location = N)] out vec4 NAME;  ->  #define NAME gl_FragData[N]
+    const std::regex output(
+        R"(^\s*(?:layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s*)?out\s+vec4\s+(\w+)\s*;)",
+        kGLSLRegexFlags);
+    std::vector<std::smatch> matches;
+    for (std::sregex_iterator match(source.begin(), source.end(), output), end;
+         match != end; ++match)
+      matches.push_back(*match);
+    std::string result = source;
+    for (auto match = matches.rbegin(); match != matches.rend(); ++match) {
+      const std::string location =
+          (*match)[1].matched ? (*match)[1].str() : std::string("0");
+      result.replace(match->position(0), match->length(0),
+                     "#define " + (*match)[2].str() + " gl_FragData[" +
+                         location + "]");
+    }
+    source = result;
+  }
+
+  source = ReplaceRegex(source, R"(layout\s*\([^)]*\)\s*)", "");
+  if (isVertexShader) {
+    source = ReplaceRegex(source, R"(^(\s*)in\s+)", "$1attribute ");
+    source = ReplaceRegex(source, R"(^(\s*)out\s+)", "$1varying ");
+  } else {
+    source = ReplaceRegex(source, R"(^(\s*)in\s+)", "$1varying ");
+  }
+  source = ReplaceRegex(source, R"(\btexture\s*\()", "texture2D(");
+  source = ReplaceRegex(source, R"(\btextureSize\s*\()", "textureSize2D(");
+  if (source.find("isnan(") != std::string::npos) {
+    // isnan() is not available before GLSL 1.30.
+    source =
+        "bool oo_isnan(float x) { return !(x < 0.0 || x > 0.0 || x == 0.0); }\n" +
+        ReplaceRegex(source, R"(\bisnan\s*\()", "oo_isnan(");
+  }
+
+  return source;
+}
 
 #endif  // OO_SHADERS
