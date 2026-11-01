@@ -203,14 +203,6 @@ This action builds a Windows NSIS installer for development which can be found i
 Intel-based Macs can run old builds of Oolite, but current Macs are unsupported. It is hoped that they can be supported
 in future.
 
-### Objective-C
-
-Oolite is written in Objective-C although there is also some C and C++ code in the codebase. It was
-originally coded on Mac, but was ported to Windows and Linux by way of the GNUstep runtime which
-provides a similar API to what is available on Mac. Objective-C is supported by modern IDEs like
-CLion and Visual Studio Code. The language can be easily picked up by programmers familiar with C
-or C++ with which it is interoperable.
-
 ## Contents of repository
 
 Oolite for all platforms can be built from this repository. Here is a quick
@@ -223,8 +215,9 @@ guide to the source tree.
 - **installers**:  Files used to create various installers
 - **Resources**:  Game assets and resource files for Mac and GNUstep application bundles
     - **Schemata**:  Plist schema files for the [OXP Verifier](http://wiki.alioth.net/index.php/OXP_howto#OXP_Verifier)
-- **src**:  Objective-C and C sources, incuding header files
+- **src**:  C++ sources, incuding header files
     - **Core**:  Files that are compiled on all platforms
+    - **oofnd**: Files that replaced Objective-C libraries as part of a C++ migration.
     - **SDL**:  Files that are only compiled for platforms that use SDL
 - **tests**:  A mixed bag of test cases for manual testing and ad-hoc code tests.
 - **tools**:  Various historical tools for preparing files.
