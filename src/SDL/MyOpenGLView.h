@@ -364,7 +364,6 @@ class MyOpenGLView : public oo::RefCounted {
   NSSize currentWindowSize = {};
 
   bool showSplashScreen = {};
-  SDL_Window* splashWindow = {};
   SDL_Window* window = {};
   SDL_GLContext glContext = {};
   int bitsPerColorComponent = {};
