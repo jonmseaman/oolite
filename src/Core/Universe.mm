@@ -39,7 +39,6 @@ MA 02110-1301, USA.
 #import "OOMaterial.h"
 #import "OOOpenGLExtensionManager.h"
 #import "OOOpenGLMatrixManager.h"
-#import "OOPListView.h"
 #import "OORoleSet.h"
 #import "OOShipGroup.h"
 #import "OOSound.h"
@@ -81,12 +80,12 @@ MA 02110-1301, USA.
 #import "OOLightParticleEntity.h"
 #import "OOLoggingExtended.h"
 #import "OOMusicController.h"
+#import "OOObjCPList.h"
 #import "OOOpenGL.h"
 #import "OOPlanetEntity.h"
 #import "OORingEffectEntity.h"
 #import "OOScriptTimer.h"
 #import "OOShaderProgram.h"
-#import "OOStringBridge.h"
 #import "OOSunEntity.h"
 #import "OOSystemDescriptionManager.h"
 #import "OOVisualEffectEntity.h"
@@ -104,7 +103,6 @@ MA 02110-1301, USA.
 
 #if OO_LOCALIZATION_TOOLS
 #import "OOConvertSystemDescriptions.h"
-#import "OOFoundationBridge.h"
 #import "OOPListGameTypes.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/PListParsing.hpp"
@@ -214,7 +212,22 @@ OOINLINE BOOL EntityInRange(HPVector p1, Entity* e2, float range);
 
 @end
 
+/*	Carries -cxx_addDelayedMessage:forCount:afterDelay:'s dictionary through
+        OOScheduleDeferredCall(), which retains it until the call fires, as it did the dictionary
+        (the AI deferred-call trampoline's holder is the exemplar).
+*/
+@interface OOUniverseDelayedMessage : OOObject {
+@public
+    oo::PList message;
+}
+@end
+
+@implementation OOUniverseDelayedMessage
+@end
+
 @interface Universe (OOPrivate)
+
+- (void)addDelayedMessage:(OOUniverseDelayedMessage*)holder; // the deferred call of -cxx_addDelayedMessage:forCount:afterDelay:
 
 - (void)initTargetFramebufferWithViewSize:(NSSize)viewSize;
 - (void)deleteOpenGLObjects;
@@ -284,7 +297,7 @@ OOGraphicsDetail OOGraphicsDetailFromNumber(unsigned int number)
 }
 
 // Defined with the configuration readers and the shipyard helpers below.
-id ObjectForKeyIn(const oo::PList& dict, std::string_view key);
+oo::PList PListForKeyIn(const oo::PList& dict, std::string_view key);
 std::string ExpandKeyWith(const std::string& key, const char* name, const oo::PList& value);
 
 // -addObject: on a set of objects (identity, as Entity keeps NSObject's -isEqual:): once each, in
@@ -304,6 +317,35 @@ void AutoreleaseAll(std::vector<oo::ObjCRef<T>>& objects)
     for (oo::ObjCRef<T>& object : objects)
         [object.leakRef() autorelease];
     objects.clear();
+}
+
+// A script-event argument: the string, or null for nullopt (what oo::NSStringOrNil's nil gave).
+oo::PList StringOrNull(const std::optional<std::string>& string)
+{
+    return string.has_value() ? oo::PList(*string) : oo::PList();
+}
+
+// A script value's -doubleValue / -floatValue / -intValue, as the NSString or NSNumber it was
+// answered them (anything else, which does not answer them, reads 0 as nil did).
+double ScriptValueDouble(const oo::PList& value)
+{
+    if (const std::string* text = value.getIf<std::string>())
+        return oo::plist_get::doubleValue(oo::utf8ToUtf16(*text));
+    return value.doubleValue();
+}
+
+float ScriptValueFloat(const oo::PList& value)
+{
+    if (const std::string* text = value.getIf<std::string>())
+        return static_cast<float>(oo::plist_get::doubleValue(oo::utf8ToUtf16(*text)));
+    return value.isNumber() ? oo::plist_get::numberFloatValue(value) : 0.0f;
+}
+
+int ScriptValueInt(const oo::PList& value)
+{
+    if (const std::string* text = value.getIf<std::string>())
+        return oo::plist_get::intValue(oo::utf8ToUtf16(*text));
+    return static_cast<int>(value.int64Value());
 }
 
 // -removeObjectAtIndex:0 on the wormhole list: an empty list raised a range exception.
@@ -1097,7 +1139,7 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
     JSContext* context = OOJSAcquireContext();
     [player cxx_setJumpCause:"carried"];
     [player setPreviousSystemID:[player systemID]];
-    ShipScriptEvent(context, player, "shipWillEnterWitchspace", OOJSValueFromNativeObject(context, oo::NSStringOrNil([player cxx_jumpCause])), OOJSValueFromDouble(context, dest));
+    ShipScriptEvent(context, player, "shipWillEnterWitchspace", OOJSValueFromPList(context, [player cxx_jumpCause].has_value() ? oo::PList(*[player cxx_jumpCause]) : oo::PList()), OOJSValueFromDouble(context, dest));
     OOJSRelinquishContext(context);
 
     [self cxx_allShipsDoScriptEvent:OOJSID("playerWillEnterWitchspace") andReactToAIMessage:"PLAYER WITCHSPACE"];
@@ -1140,8 +1182,8 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
                        alpha:0.0f];
 
     [self setWitchspaceBreakPattern:YES];
-    [player doScriptEvent:OOJSID("shipWillExitWitchspace") withArgument:oo::NSStringOrNil([player cxx_jumpCause])];
-    [player doScriptEvent:OOJSID("shipExitedWitchspace") withArgument:oo::NSStringOrNil([player cxx_jumpCause])];
+    [player cxx_doScriptEvent:OOJSID("shipWillExitWitchspace") withPListArguments:{ StringOrNull([player cxx_jumpCause]) }];
+    [player cxx_doScriptEvent:OOJSID("shipExitedWitchspace") withPListArguments:{ StringOrNull([player cxx_jumpCause]) }];
     [player setWormhole:nil];
 }
 
@@ -1202,8 +1244,8 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
                 }
                 [self setWitchspaceBreakPattern:YES];
                 [player cxx_setJumpCause:"carried"];
-                [player doScriptEvent:OOJSID("shipWillExitWitchspace") withArgument:oo::NSStringOrNil([player cxx_jumpCause])];
-                [player doScriptEvent:OOJSID("shipExitedWitchspace") withArgument:oo::NSStringOrNil([player cxx_jumpCause])];
+                [player cxx_doScriptEvent:OOJSID("shipWillExitWitchspace") withPListArguments:{ StringOrNull([player cxx_jumpCause]) }];
+                [player cxx_doScriptEvent:OOJSID("shipExitedWitchspace") withPListArguments:{ StringOrNull([player cxx_jumpCause]) }];
             }
         }
     }
@@ -1409,7 +1451,7 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
     HPVector stationPos;
 
     Vector vf;
-    id dict_object;
+    oo::PList dict_object;
 
     const oo::PList systeminfo = [systemManager cxx_getPropertiesForCurrentSystem];
     unsigned techlevel = systeminfo.get<unsigned int>(std::string(KEY_TECHLEVEL));
@@ -1477,9 +1519,9 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
 
     // pick a main sequence colour
 
-    dict_object = ObjectForKeyIn(systeminfo, "sun_color");
-    if (dict_object != nil) {
-        bgcolor = [OOColor colorWithDescription:dict_object];
+    dict_object = PListForKeyIn(systeminfo, "sun_color");
+    if (!dict_object.isNull()) {
+        bgcolor = [OOColor cxx_colorWithDescription:dict_object];
     } else {
         bgcolor = [OOColor colorWithHue:h1 saturation:0.75 * randf() brightness:0.65 + randf() / 5.0 alpha:1.0];
     }
@@ -1831,8 +1873,8 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
                 }
             }
             // location now contains a Vector coordinate, one way or another
-            pdef = ObjectForKeyIn(populator, "callbackObj"); // an Object node: the populator definition itself
-            [pdef runCallback:location];
+            pdef = oo::ObjectIn(PListForKeyIn(populator, "callbackObj")); // an Object node: the populator definition itself
+            [pdef runPopulatorCallback:location];
         }
     }
     // nothing is deterministic once the populator is done
@@ -2522,13 +2564,12 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
     return ([self addShipWithRole:desc launchPos:pos rfactor:0.0] != nil);
 }
 
-- (BOOL)spawnShip:(id)shipdescObject // shared selector (proposed ADR-0043)
+- (BOOL)cxx_spawnShip:(const std::string&)shipdesc // the legacy spawnShip: action's ship key
 {
-    const std::string shipdesc = oo::StdString(shipdescObject);
 
     // no need to do any more than log - enforcing modes wouldn't even have
     // loaded the legacy script
-    cxx_OOStandardsDeprecated(oo::str::format("'spawn' via legacy script is deprecated as a way of adding ships for %s", oo::DescriptionOf(shipdescObject).c_str()));
+    cxx_OOStandardsDeprecated(oo::str::format("'spawn' via legacy script is deprecated as a way of adding ships for %s", shipdesc.c_str()));
 
     ShipEntity* ship;
     oo::PList shipdict;
@@ -2552,14 +2593,14 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
     positionString = OptionalStringIn(spawndict, "position");
     if (positionString.has_value()) {
         if (oo::str::hasPrefix(*positionString, "abs ") && ([self planet] != nil || [self sun] != nil)) {
-            OO_LOG_WARN("script.deprecated", "setting {} for {} '{}' in 'abs' inside .plists can cause compatibility issues across Oolite versions. Use coordinates relative to main system objects instead.", "position", "entity", oo::DescriptionOf(shipdescObject));
+            OO_LOG_WARN("script.deprecated", "setting {} for {} '{}' in 'abs' inside .plists can cause compatibility issues across Oolite versions. Use coordinates relative to main system objects instead.", "position", "entity", shipdesc);
         }
 
         pos = [self cxx_coordinatesFromCoordinateSystemString:*positionString];
     } else {
         // without position defined, the ship will be added on top of the witchpoint buoy.
         pos = OOHPVectorRandomRadial(SCANNER_MAX_RANGE);
-        OO_LOG_ERR("universe.spawnShip.error", "***** ERROR: failed to find a spawn position for ship {}.", oo::DescriptionOf(shipdescObject));
+        OO_LOG_ERR("universe.spawnShip.error", "***** ERROR: failed to find a spawn position for ship {}.", shipdesc);
     }
     [ship setPosition:pos];
 
@@ -2567,7 +2608,7 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
     positionString = OptionalStringIn(spawndict, "facing_position");
     if (positionString.has_value()) {
         if (oo::str::hasPrefix(*positionString, "abs ") && ([self planet] != nil || [self sun] != nil)) {
-            OO_LOG_WARN("script.deprecated", "setting {} for {} '{}' in 'abs' inside .plists can cause compatibility issues across Oolite versions. Use coordinates relative to main system objects instead.", "facing_position", "entity", oo::DescriptionOf(shipdescObject));
+            OO_LOG_WARN("script.deprecated", "setting {} for {} '{}' in 'abs' inside .plists can cause compatibility issues across Oolite versions. Use coordinates relative to main system objects instead.", "facing_position", "entity", shipdesc);
         }
 
         spos = [ship position];
@@ -2622,7 +2663,7 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
                 [ship setCargoFlag:CARGO_FLAG_FULL_PLENTIFUL];
                 [self makeSunSkimmer:ship andSetAI:YES];
             } else {
-                [ship switchAITo:@"oolite-traderAI.js"];
+                [ship switchAITo:"oolite-traderAI.js"];
             }
 
             if (([ship pendingEscortCount] > 0) && ((Ranrot() % 7) < government)) // remove escorts if we feel safe
@@ -2757,7 +2798,7 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
                     [ship setCargoFlag:CARGO_FLAG_FULL_PLENTIFUL];
                     [self makeSunSkimmer:ship andSetAI:YES];
                 } else {
-                    [ship switchAITo:@"oolite-traderAI.js"];
+                    [ship switchAITo:"oolite-traderAI.js"];
                 }
             } else if (role == "pirate") {
                 [ship setBounty:(Ranrot() & 7) + (Ranrot() & 7) + ((randf() < 0.05) ? 63 : 23) withReason:kOOLegalStatusReasonSetup]; // they already have a price on their heads
@@ -2936,7 +2977,7 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
 {
     int i;
     OOBreakPatternEntity* ring = nil;
-    id colorDesc = nil;
+    oo::PList colorDesc;
     OOColor* color = nil;
 
     [self setViewDirection:VIEW_FORWARD];
@@ -2951,18 +2992,18 @@ static GLfloat docked_light_specular[4] = { DOCKED_ILLUM_LEVEL, DOCKED_ILLUM_LEV
     OOColor* col1 = [OOColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5]; // standard tunnel colour
     OOColor* col2 = [OOColor colorWithRed:0.0 green:0.0 blue:1.0 alpha:0.25]; // standard tunnel colour
 
-    colorDesc = ObjectForKeyIn(globalSettings, "hyperspace_tunnel_color_1"); // +colorWithDescription: takes any description object
-    if (colorDesc != nil) {
-        color = [OOColor colorWithDescription:colorDesc];
+    colorDesc = PListForKeyIn(globalSettings, "hyperspace_tunnel_color_1"); // +cxx_colorWithDescription: takes any description
+    if (!colorDesc.isNull()) {
+        color = [OOColor cxx_colorWithDescription:colorDesc];
         if (color != nil)
             col1 = color;
         else
             OO_LOG_WARN("hyperspaceTunnel.fromDict", "could not interpret \"{}\" as a colour.", oo::DescriptionOf(colorDesc));
     }
 
-    colorDesc = ObjectForKeyIn(globalSettings, "hyperspace_tunnel_color_2");
-    if (colorDesc != nil) {
-        color = [OOColor colorWithDescription:colorDesc];
+    colorDesc = PListForKeyIn(globalSettings, "hyperspace_tunnel_color_2");
+    if (!colorDesc.isNull()) {
+        color = [OOColor cxx_colorWithDescription:colorDesc];
         if (color != nil)
             col2 = color;
         else
@@ -3180,7 +3221,7 @@ std::vector<std::string> FieldsUpToNil(std::initializer_list<std::optional<std::
         [ship setDemoShip:1.0f];
         [ship setDemoStartTime:universal_time];
         [ship setScanClass:CLASS_NO_DRAW];
-        [ship switchAITo:@"nullAI.plist"];
+        [ship switchAITo:"nullAI.plist"];
         if ([ship pendingEscortCount] > 0)
             [ship setPendingEscortCount:0];
         [self addEntity:ship]; // STATUS_IN_FLIGHT, AI state GLOBAL
@@ -3729,7 +3770,7 @@ static BOOL IsFriendlyStationPredicate(Entity* entity, void* parameter)
 
     OOShipRegistry* registry = [OOShipRegistry sharedRegistry];
     std::optional<std::string> shipKey;
-    OOMutableProbabilitySet* pset = nil;
+    oo::Ref<OOMutableProbabilitySet> pset;
 
 #if PROFILE_SHIP_SELECTION
     static unsigned long profTotal = 0, profSlowPath = 0;
@@ -3758,18 +3799,19 @@ static BOOL IsFriendlyStationPredicate(Entity* entity, void* parameter)
     }
 #endif
 
-    pset = [[[registry cxx_probabilitySetForRole:role] mutableCopy] autorelease];
+    if (OOProbabilitySet* set = [registry cxx_probabilitySetForRole:role])
+        pset = set->mutableCopy();
 
-    while ([pset count] > 0) {
+    while (pset != nullptr && pset->count() > 0) {
         // Select a ship, check conditions and return it if possible.
-        const oo::PList shipKeyObject = [pset randomObject]; // a ship key (a string); null when no weight is positive
+        const oo::PList shipKeyObject = pset->randomObject(); // a ship key (a string); null when no weight is positive
         const std::string* shipKeyString = shipKeyObject.getIf<std::string>();
         std::string candidate = (shipKeyString != nullptr) ? *shipKeyString : std::string(); // "" as StdString(nil) gave
         if ([self canInstantiateShip:candidate])
             return candidate;
 
         // Condition failed -> remove ship from consideration.
-        [pset cxx_removeObject:shipKeyObject];
+        pset->removeObject(shipKeyObject);
     }
 
     // If we got here, some ships existed but all failed conditions test.
@@ -3791,14 +3833,14 @@ static BOOL IsFriendlyStationPredicate(Entity* entity, void* parameter)
     if (shipKey.has_value()) {
         ship = [self cxx_newShipWithName:*shipKey];
         if (ship != nil) {
-            [ship setPrimaryRole:oo::NSStringFrom(role)];
+            [ship setPrimaryRole:role];
 
             shipInfo = [[OOShipRegistry sharedRegistry] cxx_shipInfoForKey:*shipKey];
             if (FuzzyBooleanIn(shipInfo, "auto_ai", YES)) {
                 // Set AI based on role
                 autoAI = [self defaultAIForRole:role];
                 if (autoAI.has_value()) {
-                    [ship setAITo:oo::NSStringFrom(*autoAI)];
+                    [ship setAITo:*autoAI];
                     // Nikos 20090604
                     // Pirate, trader or police with auto_ai? Follow populator rules for them.
                     if (role == "pirate")
@@ -3809,7 +3851,7 @@ static BOOL IsFriendlyStationPredicate(Entity* entity, void* parameter)
                         [ship setScanClass:CLASS_POLICE];
                     if (role == "interceptor") {
                         [ship setScanClass:CLASS_POLICE];
-                        [ship setPrimaryRole:@"police"]; // to make sure interceptors get the correct pilot later on.
+                        [ship setPrimaryRole:"police"]; // to make sure interceptors get the correct pilot later on.
                     }
                 }
                 if (role == "thargoid")
@@ -3902,7 +3944,7 @@ static BOOL IsFriendlyStationPredicate(Entity* entity, void* parameter)
     // Set primary role to same as ship name, if ship name is also a role.
     // Otherwise, if caller doesn't set a role, one will be selected randomly.
     if ([ship hasRole:shipKey])
-        [ship setPrimaryRole:oo::NSStringFrom(shipKey)];
+        [ship setPrimaryRole:shipKey];
 
     return ship;
 
@@ -3937,7 +3979,7 @@ static BOOL IsFriendlyStationPredicate(Entity* entity, void* parameter)
     // Set primary role to same as name, if ship name is also a role.
     // Otherwise, if caller doesn't set a role, one will be selected randomly.
     if ([dock hasRole:shipDataKey])
-        [dock setPrimaryRole:oo::NSStringFrom(shipDataKey)];
+        [dock setPrimaryRole:shipDataKey];
 
     return dock;
 
@@ -5408,7 +5450,7 @@ static BOOL MaintainLinkedLists(Universe* uni)
         [ship setOrientation:q2];
         [ship setPositionX:0.0f y:0.0f z:3.6f * cr];
         [ship setScanClass:CLASS_NO_DRAW];
-        [ship switchAITo:@"nullAI.plist"];
+        [ship switchAITo:"nullAI.plist"];
         [ship setPendingEscortCount:0];
 
         [UNIVERSE addEntity:ship]; // STATUS_IN_FLIGHT, AI state GLOBAL
@@ -5971,11 +6013,11 @@ static BOOL MaintainLinkedLists(Universe* uni)
                                     ofEntity:entity];
 }
 
-// HasScanClassPredicate reads the scan class as a number object's -intValue.
+// HasScanClassPredicate reads the scan class as an OOScanClass.
 - (unsigned)countShipsWithScanClass:(OOScanClass)scanClass inRange:(double)range ofEntity:(Entity*)entity
 {
     return [self countShipsMatchingPredicate:HasScanClassPredicate
-                                   parameter:oo::ObjectFromPList(oo::PList(std::int64_t(scanClass)))
+                                   parameter:&scanClass
                                      inRange:range
                                     ofEntity:entity];
 }
@@ -6361,7 +6403,10 @@ bool SameMessage(const std::optional<std::string>& current, const std::optional<
         object = nullptr;
     }
 
-    result = oo::OptionalString([[OOCacheManager sharedCache] cxx_objectForKey:key.value_or(std::string()) inCache:"resolved custom sounds"]);
+    // the cache holds the resolved names as strings (set below)
+    const oo::PList cachedName = [[OOCacheManager sharedCache] cxx_pListForKey:key.value_or(std::string()) inCache:"resolved custom sounds"];
+    if (const std::string* name = cachedName.getIf<std::string>())
+        result = *name;
     if (!result.has_value()) {
         // Resolve sound, allowing indirection within customsounds.plist
         result = key;
@@ -6391,7 +6436,7 @@ bool SameMessage(const std::optional<std::string>& current, const std::optional<
 
         if (!result.has_value())
             result = std::string("__oolite-no-sound");
-        [[OOCacheManager sharedCache] cxx_setObject:oo::NSStringFrom(*result) forKey:key.value_or(std::string()) inCache:"resolved custom sounds"];
+        [[OOCacheManager sharedCache] cxx_setPList:oo::PList(*result) forKey:key.value_or(std::string()) inCache:"resolved custom sounds"];
     }
 
     if (*result == "__oolite-no-sound") {
@@ -6464,22 +6509,25 @@ bool SameMessage(const std::optional<std::string>& current, const std::optional<
     }
 }
 
-// The deferred call's argument is the dictionary -addDelayedMessage: reads (a missing text leaves
-// the message out: the delayed call then shows nothing; setting a nil text raised).
+// The deferred call's argument carries the dictionary -addDelayedMessage: reads (a missing text
+// leaves the message out: the delayed call then shows nothing; setting a nil text raised).
 - (void)cxx_addDelayedMessage:(const std::optional<std::string>&)text forCount:(OOTimeDelta)count afterDelay:(double)delay
 {
     oo::PList::Dict msgDict;
     if (text.has_value())
         msgDict["message"] = oo::PList(*text);
     msgDict["duration"] = oo::PList(count);
-    OOScheduleDeferredCall(self, @selector(addDelayedMessage:), oo::ObjectFromPList(oo::PList(std::move(msgDict))), delay);
+    OOUniverseDelayedMessage* holder = [[OOUniverseDelayedMessage alloc] init];
+    holder->message = oo::PList(std::move(msgDict));
+    OOScheduleDeferredCall(self, @selector(addDelayedMessage:), holder, delay);
+    [holder release];
 }
 
-- (void)addDelayedMessage:(id)textdict // called by name (ADR-0043 item 21): the deferred call above
+- (void)addDelayedMessage:(OOUniverseDelayedMessage*)holder // the deferred call above
 {
     std::optional<std::string> msg;
     OOTimeDelta msg_duration;
-    const oo::PList message = oo::PListFrom(textdict);
+    const oo::PList message = (holder != nil) ? holder->message : oo::PList();
 
     msg = OptionalStringIn(message, "message");
     if (!msg.has_value())
@@ -6552,7 +6600,7 @@ bool SameMessage(const std::optional<std::string>& current, const std::optional<
 
         [self showGUIMessage:text withScroll:YES andColor:[message_gui textColor] overDuration:count];
 
-        [PLAYER doScriptEvent:OOJSID("consoleMessageReceived") withArgument:oo::NSStringOrNil(text)];
+        [PLAYER cxx_doScriptEvent:OOJSID("consoleMessageReceived") withPListArguments:{ StringOrNull(text) }];
 
         currentMessage = text;
         messageRepeatTime = universal_time + 6.0;
@@ -6698,7 +6746,7 @@ bool SameMessage(const std::optional<std::string>& current, const std::optional<
                                 [demo_ship removeEquipmentItem:"EQ_SHIELD_BOOSTER"];
                                 [demo_ship removeEquipmentItem:"EQ_SHIELD_ENHANCER"];
 
-                                [demo_ship switchAITo:@"nullAI.plist"];
+                                [demo_ship switchAITo:"nullAI.plist"];
                                 [demo_ship setOrientation:q2];
                                 [demo_ship setScanClass:CLASS_NO_DRAW];
                                 [demo_ship setStatus:STATUS_COCKPIT_DISPLAY]; // prevents it getting escorts on addition
@@ -7422,13 +7470,13 @@ std::optional<std::string> OptionalStringIn(const oo::PList& dict, std::string_v
     return dict.get<std::string>(key);
 }
 
-/*	The object -objectForKey: gave for a configuration value (nil when absent), for callees that
-        still take Objective-C objects (+[OOColor colorWithDescription:]).
+/*	A configuration value as -objectForKey: gave it, a null PList where that gave nil (the key is
+        absent), for +[OOColor cxx_colorWithDescription:] (null gives nil, as nil did) and Object nodes.
 */
-id ObjectForKeyIn(const oo::PList& dict, std::string_view key)
+oo::PList PListForKeyIn(const oo::PList& dict, std::string_view key)
 {
     const oo::PList* value = dict.find(key);
-    return (value != nullptr) ? oo::ObjectFromPList(*value) : nil;
+    return (value != nullptr) ? *value : oo::PList();
 }
 
 // get<Vector> / get<HPVector>: OOVectorFromPList / OOHPVectorFromPList of the
@@ -7747,13 +7795,14 @@ void VerifyDesc(const std::string& key, const oo::PList& desc)
 
 // layer 2
 // used by legacy script engine and sun going nova
-- (void)cxx_setSystemDataKey:(const std::string&)key value:(id)object fromManifest:(const std::optional<std::string>&)manifest
+- (void)cxx_setSystemDataKey:(const std::string&)key value:(const oo::PList&)value fromManifest:(const std::optional<std::string>&)manifest
 {
-    [self cxx_setSystemDataForGalaxy:galaxyID planet:systemID key:key value:object fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
+    [self cxx_setSystemDataForGalaxy:galaxyID planet:systemID key:key value:value fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
 }
 
-- (void)cxx_setSystemDataForGalaxy:(OOGalaxyID)gnum planet:(OOSystemID)pnum key:(const std::string&)key value:(id)object fromManifest:(const std::optional<std::string>&)manifest forLayer:(OOSystemLayer)layer
+- (void)cxx_setSystemDataForGalaxy:(OOGalaxyID)gnum planet:(OOSystemID)pnum key:(const std::string&)key value:(const oo::PList&)value fromManifest:(const std::optional<std::string>&)manifest forLayer:(OOSystemLayer)layer
 {
+    oo::PList object = value; // the script value, as the Objective-C object it was (null: nil)
     static BOOL sysdataLocked = NO;
     if (sysdataLocked) {
         OO_LOG_ERR("script.error", "{}", "System properties cannot be set during 'systemInformationChanged' events to avoid infinite loops.");
@@ -7782,26 +7831,27 @@ void VerifyDesc(const std::string& key, const oo::PList& desc)
     // short range map fix
     [gui refreshStarChart];
 
-    if (object != nil) {
+    if (!object.isNull()) {
         // long range map fixes
         if (key == std::string(KEY_NAME)) {
             // -lowercaseString / -capitalizedString of the name (a script string)
-            const std::string name = oo::str::capitalized(oo::str::lowercase(oo::StdString(object)));
-            object = oo::NSStringFrom(name);
+            const std::string* text = object.getIf<std::string>();
+            const std::string name = oo::str::capitalized(oo::str::lowercase(text != nullptr ? *text : std::string()));
+            object = oo::PList(name);
             if (sameGalaxy) {
                 system_names[pnum] = name;
             }
         } else if (key == "sun_radius") {
-            if ([object doubleValue] < 1000.0 || [object doubleValue] > 10000000.0) {
-                object = oo::NSStringFrom([object doubleValue] < 1000.0 ? "1000.0" : "10000000.0"); // works!
+            if (ScriptValueDouble(object) < 1000.0 || ScriptValueDouble(object) > 10000000.0) {
+                object = oo::PList(ScriptValueDouble(object) < 1000.0 ? "1000.0" : "10000000.0"); // works!
             }
         } else if (oo::str::hasPrefix(key, "corona_")) {
-            object = oo::NSStringFrom(oo::str::format("%f", OOClamp_0_1_f([object floatValue])));
+            object = oo::PList(oo::str::format("%f", OOClamp_0_1_f(ScriptValueFloat(object))));
         }
     }
 
-    // the value read once (nil -> a null PList, which removes the property as nil did)
-    [systemManager cxx_setProperty:key forSystemKey:overrideKey andLayer:layer toValue:oo::PListFrom(object) fromManifest:manifest];
+    // a null value removes the property, as nil did
+    [systemManager cxx_setProperty:key forSystemKey:overrideKey andLayer:layer toValue:object fromManifest:manifest];
 
     // Apply changes that can be effective immediately, issue warning if they can't be changed just now
     if (sameSystem) {
@@ -7814,9 +7864,9 @@ void VerifyDesc(const std::string& key, const oo::PList& desc)
          * - CIM */
         if (key == std::string(KEY_TECHLEVEL)) {
             if ([self station]) {
-                [[self station] setEquivalentTechLevel:[object intValue]];
+                [[self station] setEquivalentTechLevel:ScriptValueInt(object)];
                 const oo::PList shipyard = [self cxx_shipsForSaleForSystem:systemID
-                                                                    withTL:[object intValue]
+                                                                    withTL:ScriptValueInt(object)
                                                                     atTime:[PLAYER clockTime]];
                 const oo::PList::Array* entries = shipyard.getIf<oo::PList::Array>();
                 [[self station] cxx_setLocalShipyard:entries != nullptr ? *entries : oo::PList::Array()];
@@ -7847,13 +7897,14 @@ void VerifyDesc(const std::string& key, const oo::PList& desc)
         } else if (the_sun != nil && (oo::str::hasPrefix(key, "sun_") || oo::str::hasPrefix(key, "corona_"))) {
             [the_sun changeSunProperty:key withDictionary:sysInfo];
         } else if (key == "texture") {
-            [[self planet] setUpPlanetFromTexture:oo::OptionalString(object)];
+            const std::string* texture = object.getIf<std::string>(); // a texture name (a script string)
+            [[self planet] setUpPlanetFromTexture:(texture != nullptr) ? std::optional<std::string>(*texture) : std::nullopt];
         } else if (key == "texture_hsb_color") {
             [[self planet] setUpPlanetFromTexture:[[self planet] textureFileName]];
         } else if (key == "air_color") {
-            [[self planet] setAirColor:[OOColor brightColorWithDescription:object]];
+            [[self planet] setAirColor:[OOColor cxx_brightColorWithDescription:object]];
         } else if (key == "illumination_color") {
-            [[self planet] setIlluminationColor:[OOColor colorWithDescription:object]];
+            [[self planet] setIlluminationColor:[OOColor cxx_colorWithDescription:object]];
         } else if (key == "air_color_mix_ratio") {
             [[self planet] setAirColorMixRatio:sysInfo.get<float>(key)];
         }
@@ -7861,7 +7912,10 @@ void VerifyDesc(const std::string& key, const oo::PList& desc)
 
     sysdataLocked = YES;
     // the same arguments (a nil value ends the list, as it did)
-    [PLAYER cxx_doScriptEvent:OOJSID("systemInformationChanged") withArguments:oo::ObjCRefsFrom<id>(oo::ObjectFromPList(oo::PList(oo::PList::Array { oo::PList::signedInteger(gnum), oo::PList::signedInteger(pnum), oo::PList(key), oo::PListObject(object) })))];
+    std::vector<oo::PList> arguments { oo::PList::signedInteger(gnum), oo::PList::signedInteger(pnum), oo::PList(key) };
+    if (!object.isNull())
+        arguments.push_back(object);
+    [PLAYER cxx_doScriptEvent:OOJSID("systemInformationChanged") withPListArguments:arguments];
     sysdataLocked = NO;
 }
 
@@ -7884,9 +7938,9 @@ void VerifyDesc(const std::string& key, const oo::PList& desc)
 }
 
 /* Only called from OOJSSystemInfo. */
-- (id)cxx_systemDataForGalaxy:(OOGalaxyID)gnum planet:(OOSystemID)pnum key:(const std::string&)key
+- (oo::PList)cxx_systemDataForGalaxy:(OOGalaxyID)gnum planet:(OOSystemID)pnum key:(const std::string&)key
 {
-    return oo::ObjectFromPList([systemManager cxx_getProperty:key forSystem:pnum inGalaxy:gnum]);
+    return [systemManager cxx_getProperty:key forSystem:pnum inGalaxy:gnum];
 }
 
 - (std::optional<std::string>)cxx_getSystemName:(OOSystemID)sys
@@ -7901,7 +7955,8 @@ void VerifyDesc(const std::string& key, const oo::PList& desc)
 
 - (OOGovernmentID)getSystemGovernment:(OOSystemID)sys
 {
-    return [oo::ObjectFromPList([systemManager cxx_getProperty:"government" forSystem:sys inGalaxy:galaxyID]) unsignedCharValue];
+    // -unsignedCharValue of the number (nil, where there is none, gave 0)
+    return static_cast<unsigned char>([systemManager cxx_getProperty:"government" forSystem:sys inGalaxy:galaxyID].int64Value());
 }
 
 - (std::optional<std::string>)cxx_getSystemInhabitants:(OOSystemID)sys
@@ -8424,7 +8479,7 @@ void VerifyDesc(const std::string& key, const oo::PList& desc)
 - (void)makeSunSkimmer:(ShipEntity*)ship andSetAI:(BOOL)setAI
 {
     if (setAI)
-        [ship switchAITo:@"oolite-traderAI.js"]; // perfectly acceptable for both route 2 & 3
+        [ship switchAITo:"oolite-traderAI.js"]; // perfectly acceptable for both route 2 & 3
     [ship setFuel:(Ranrot() & 31)];
     // slow ships need extra insulation or they will burn up when sunskimming. (Tested at biggest sun in G3: Aenqute)
     float minInsulation = 1000 / [ship maxFlightSpeed] + 1;
@@ -8731,7 +8786,7 @@ int compareName(const oo::PList& offer1, const oo::PList& offer2)
                 if (item != nil) {
                     OOTechLevelID eqTechLevel = [item techLevel];
                     OOCreditsQuantity eqPrice = [item price] / 10; // all amounts are x/10 due to being represented in tenths of credits.
-                    std::optional<std::string> eqShortDesc = oo::OptionalString([item name]);
+                    std::optional<std::string> eqShortDesc = [item cxx_name];
 
                     if ([item techLevel] > techlevel) {
                         // Cap maximum tech level.
@@ -9702,7 +9757,7 @@ int compareName(const oo::PList& offer1, const oo::PList& offer2)
     gui = [[GuiDisplayGen alloc] init];
     const oo::PList guiSettings = [gui cxx_userSettings];
     const oo::PList* defaultTextColor = guiSettings.find(cxx_kGuiDefaultTextColor);
-    [gui setTextColor:[OOColor colorWithDescription:(defaultTextColor != nullptr) ? oo::ObjectFromPList(*defaultTextColor) : nil]];
+    [gui setTextColor:[OOColor cxx_colorWithDescription:(defaultTextColor != nullptr) ? *defaultTextColor : oo::PList()]];
 
     // message_gui and comm_log_gui defaults are set up inside [hud resetGuis:] ( via [player deferredInit], called from the code that calls this method).
     [message_gui autorelease];
@@ -10146,16 +10201,14 @@ static void PreloadOneSound(const std::string& soundName)
 
 namespace {
 
-/*	EscapedGraphVizString(OOStringifySystemDescriptionLine(line, keyMap, NO)): the stringifier is
-        the unmigrated OOConvertSystemDescriptions' (oo-xh1g), given Objective-C objects at the call;
-        a nil line or result escaped to nil, which %@ printed as "(null)".
+/*	EscapedGraphVizString(OOStringifySystemDescriptionLine(line, keyMap, NO)); a missing line
+        escaped to nil, which %@ printed as "(null)".
 */
-std::string StringifiedLabel(id line, id keyMap)
+std::string StringifiedLabel(const std::optional<std::string>& line, const oo::PList& keyMap)
 {
-    // oo-xh1g: stringify takes std::string / oo::PList; nil line still prints as "(null)".
-    if (line == nil)
+    if (!line.has_value())
         return "(null)";
-    return cxx_EscapedGraphVizString(OOStringifySystemDescriptionLine(oo::StdString(line), oo::PListFrom(keyMap), NO));
+    return cxx_EscapedGraphVizString(OOStringifySystemDescriptionLine(*line, keyMap, NO));
 }
 
 } // namespace
@@ -10174,7 +10227,6 @@ std::string StringifiedLabel(id line, id keyMap)
     keyMap = [ResourceManager cxx_dictionaryFromFilesNamed:"sysdesc_key_table.plist"
                                                   inFolder:std::string("Config")
                                                   andMerge:NO];
-    const id keyMapObject = oo::ObjectFromPList(keyMap); // for the unmigrated stringifier
 
     graphViz = "// System description grammar:\n\n"
                "digraph system_descriptions\n"
@@ -10188,7 +10240,7 @@ std::string StringifiedLabel(id line, id keyMap)
 
     // Add system-description-string as special node (it's the one thing that ties [14] to everything else).
     descLine = cxx_OOLookUpDescriptionPRIV("system-description-string");
-    graphViz += oo::str::format("\tsystem_description_string [label=\"%s\" shape=ellipse]\n", StringifiedLabel(oo::NSStringFrom(descLine), keyMapObject).c_str());
+    graphViz += oo::str::format("\tsystem_description_string [label=\"%s\" shape=ellipse]\n", StringifiedLabel(descLine, keyMap).c_str());
     [self addNumericRefsInString:descLine
                       toGraphViz:graphViz
                         fromNode:"system_description_string"
@@ -10207,7 +10259,7 @@ std::string StringifiedLabel(id line, id keyMap)
     curses = [self cxx_descriptions]->get<oo::PList::Array>("thargoid_curses");
     subCount = (curses != nullptr) ? curses->count() : 0;
     for (j = 0; j < subCount; ++j) {
-        graphViz += oo::str::format("\t\tthargoid_curse_%zu [label=\"%s\"]\n", j, StringifiedLabel(oo::NSStringOrNil(OptionalStringAt(*curses, j)), keyMapObject).c_str());
+        graphViz += oo::str::format("\t\tthargoid_curse_%zu [label=\"%s\"]\n", j, StringifiedLabel(OptionalStringAt(*curses, j), keyMap).c_str());
     }
     graphViz += "\t}\n";
     for (j = 0; j < subCount; ++j) {
@@ -10233,7 +10285,7 @@ std::string StringifiedLabel(id line, id keyMap)
         thisDesc = systemDescriptions->at<oo::PList::Array>(i);
         subCount = (thisDesc != nullptr) ? thisDesc->count() : 0;
         for (j = 0; j < subCount; ++j) {
-            graphViz += oo::str::format("\t\tn%zu_%zu [label=\"\\\"%s\\\"\"]\n", i, j, StringifiedLabel(oo::NSStringOrNil(OptionalStringAt(*thisDesc, j)), keyMapObject).c_str());
+            graphViz += oo::str::format("\t\tn%zu_%zu [label=\"\\\"%s\\\"\"]\n", i, j, StringifiedLabel(OptionalStringAt(*thisDesc, j), keyMap).c_str());
         }
 
         graphViz += "\t}\n";
@@ -10344,15 +10396,34 @@ std::string StringifiedLabel(id line, id keyMap)
 }
 #endif
 
+namespace {
+
+// A cached array of condition script names: its strings, as oo::StringsFrom kept them (none when
+// absent).
+std::vector<std::string> CachedConditionScripts(const std::string& key)
+{
+    std::vector<std::string> scripts;
+    const oo::PList names = [[OOCacheManager sharedCache] cxx_pListForKey:key inCache:"condition scripts"];
+    if (const oo::PList::Array* entries = names.getIf<oo::PList::Array>()) {
+        for (const oo::PList& entry : *entries) {
+            if (const std::string* name = entry.getIf<std::string>())
+                scripts.push_back(*name);
+        }
+    }
+    return scripts;
+}
+
+} // namespace
+
 - (void)loadConditionScripts
 {
     conditionScripts.clear();
-    // get list of names from cache manager (the cache is not migrated yet: its arrays of names arrive as strings)
-    [self addConditionScripts:oo::StringsFrom([[OOCacheManager sharedCache] cxx_objectForKey:"equipment conditions" inCache:"condition scripts"])];
+    // get list of names from cache manager (arrays of script names)
+    [self addConditionScripts:CachedConditionScripts("equipment conditions")];
 
-    [self addConditionScripts:oo::StringsFrom([[OOCacheManager sharedCache] cxx_objectForKey:"ship conditions" inCache:"condition scripts"])];
+    [self addConditionScripts:CachedConditionScripts("ship conditions")];
 
-    [self addConditionScripts:oo::StringsFrom([[OOCacheManager sharedCache] cxx_objectForKey:"demoship conditions" inCache:"condition scripts"])];
+    [self addConditionScripts:CachedConditionScripts("demoship conditions")];
 }
 
 - (void)addConditionScripts:(const std::vector<std::string>&)scripts
@@ -10416,7 +10487,7 @@ std::string StringifiedLabel(id line, id keyMap)
 {
     OOSound* theSound = [OOSound cxx_soundWithCustomSoundKey:key];
     if (theSound != nil)
-        [self playSound:theSound];
+        [self playOOSound:theSound];
 }
 
 @end
