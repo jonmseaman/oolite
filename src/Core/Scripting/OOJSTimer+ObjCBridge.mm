@@ -49,7 +49,7 @@ cxx::OOJSTimer* oo::ToCxx(::OOJSTimer* timer)
 }
 - (ooscript::Value)oo_jsValueInContext:(ooscript::Context)context
 {
-    return oo::ToCxx(self)->oo_jsValueInContext(context);
+    return oo::ToCxx(self)->jsValueInContext(context);
 }
 
 @end

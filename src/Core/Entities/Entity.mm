@@ -1042,4 +1042,21 @@ bool Entity::getIsImmuneToBreakPatternHide()
     return isImmuneToBreakPatternHide;
 }
 
+// Entity (OOJavaScriptExtensions)'s answers for the class, which the root category forwards here
+// (ADR-0056 amendment oo-9ht.107): the category's bodies, which a C++ subclass overrides.
+void Entity::getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
+{
+    ::EntityJSGetJSClass(outClass, outPrototype);
+}
+
+std::optional<std::string> Entity::jsClassName()
+{
+    return ::EntityJSClassName();
+}
+
+bool Entity::isVisibleToScripts()
+{
+    return ::EntityJSIsVisibleToScripts();
+}
+
 } // namespace cxx
