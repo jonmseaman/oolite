@@ -34,12 +34,11 @@ MA 02110-1301, USA.
 #import "Universe.h"
 #import "legacy_random.h"
 
-#import "OOFoundationBridge.h"
 #import "OOJSEngineTimeManagement.h"
 #import "OOJavaScriptEngine.h"
-#import "OOStringBridge.h"
 
 #include "oofnd/Scanner.hpp"
+#include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
 
 /*

@@ -30,11 +30,8 @@ MA 02110-1301, USA.
 #import "MyOpenGLView.h"
 #import "OOConstToJSString.h"
 #import "OOConstToString.h"
-#import "OOFoundationBridge.h"
 #import "OOJSGuiScreenKeyDefinition.h"
 #import "OOJSPlayer.h"
-#import "OOPListView.h"
-#import "OOStringBridge.h"
 #import "OOStringExpander.h"
 #import "OOSystemDescriptionManager.h"
 #import "OOTexture.h"
@@ -44,6 +41,7 @@ MA 02110-1301, USA.
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/Scanner.hpp"
 
+#include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 
@@ -118,12 +116,6 @@ static std::optional<std::string> StringFromPList(const oo::PList* value)
     if (value == nullptr || !(value->isString() || value->isNumber()))
         return std::nullopt;
     return oo::PListGet<std::string>::from(value, std::string());
-}
-
-static std::optional<std::string> StringFromObject(id object)
-{
-    const oo::PList value = oo::PListFrom(object);
-    return StringFromPList(&value);
 }
 } // namespace
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -459,7 +451,7 @@ static bool GlobalExpandDescription(ooscript::Context context, ooscript::CallArg
     string = cxx_OOExpandDescriptionString(kNilRandomSeed, *string, overrides, oo::PList(), std::nullopt, kOOExpandForJavaScript | kOOExpandGoodRNG);
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_OBJECT(oo::NSStringOrNil(string));
+    OOJS_RETURN_STRING_OR_NULL(string);
 
     OOJS_NATIVE_EXIT
 }
@@ -485,7 +477,7 @@ static bool GlobalKeyBindingDescription(ooscript::Context context, ooscript::Cal
     string = [player cxx_keyBindingDescription2:*string];
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_OBJECT(oo::NSStringOrNil(string));
+    OOJS_RETURN_STRING_OR_NULL(string);
 
     OOJS_NATIVE_EXIT
 }
@@ -511,11 +503,12 @@ static bool GlobalExpandMissionText(ooscript::Context context, ooscript::CallArg
         overrides = OOJSDictionaryFromStringTable(context, OOJS_ARGV[1]);
     }
 
-    string = StringFromObject([oo::ObjectFromPList([UNIVERSE cxx_missiontext]) objectForKey:oo::NSStringFrom(*string)]);
+    const oo::PList missionText = [UNIVERSE cxx_missiontext];
+    string = StringFromPList(missionText.find(*string)); // -objectForKey:
     if (string.has_value())
         string = cxx_OOExpandDescriptionString(kNilRandomSeed, *string, overrides, oo::PList(), std::nullopt, kOOExpandForJavaScript | kOOExpandBackslashN | kOOExpandGoodRNG); // nil expanded to nil
 
-    OOJS_RETURN_OBJECT(oo::NSStringOrNil(string));
+    OOJS_RETURN_STRING_OR_NULL(string);
 
     OOJS_NATIVE_EXIT
 }
@@ -536,7 +529,7 @@ static bool GlobalDisplayNameForCommodity(ooscript::Context context, ooscript::C
         cxx_OOJSReportBadArguments(context, std::nullopt, "displayNameForCommodity", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string");
         return NO;
     }
-    OOJS_RETURN_OBJECT(oo::NSStringFrom(cxx_CommodityDisplayNameForSymbolicName(*string)));
+    OOJS_RETURN_PLIST(oo::PList(cxx_CommodityDisplayNameForSymbolicName(*string)));
 
     OOJS_NATIVE_EXIT
 }
@@ -560,7 +553,7 @@ static bool GlobalRandomName(ooscript::Context context, ooscript::CallArgs& oojs
     // Restore seed.
     setRandomSeed(savedSeed);
 
-    OOJS_RETURN_OBJECT(oo::NSStringOrNil(result));
+    OOJS_RETURN_STRING_OR_NULL(result);
 
     OOJS_NATIVE_EXIT
 }
@@ -584,7 +577,7 @@ static bool GlobalRandomInhabitantsDescription(ooscript::Context context, ooscri
 
     make_pseudo_random_seed(&aSeed);
     string = [UNIVERSE cxx_getSystemInhabitants:Ranrot() % OO_SYSTEMS_PER_GALAXY plural:(isPlural ? YES : NO)];
-    OOJS_RETURN_OBJECT(oo::NSStringOrNil(string));
+    OOJS_RETURN_STRING_OR_NULL(string);
 
     OOJS_NATIVE_EXIT
 }
@@ -763,7 +756,7 @@ static bool GlobalGetScreenBackgroundForKey(ooscript::Context context, ooscript:
         cxx_OOJSReportBadArguments(context, std::nullopt, "getScreenBackgroundDefault", 0, OOJS_ARGV, std::nullopt, "key");
         return NO;
     }
-    OOJS_RETURN_OBJECT(oo::ObjectFromPList([UNIVERSE cxx_screenTextureDescriptorForKey:*key]));
+    OOJS_RETURN_PLIST([UNIVERSE cxx_screenTextureDescriptorForKey:*key]);
 
     OOJS_NATIVE_EXIT
 }
@@ -793,7 +786,7 @@ static bool GlobalSetScreenBackgroundForKey(ooscript::Context context, ooscript:
     GuiDisplayGen* gui = [UNIVERSE gui];
     oo::PList descriptor = [gui cxx_textureDescriptorFromJSValue:value inContext:context callerDescription:"setScreenBackgroundDefault()"];
 
-    [UNIVERSE cxx_setScreenTextureDescriptorForKey:*key descriptor:oo::PListFrom(oo::ObjectFromPList(descriptor))];
+    [UNIVERSE cxx_setScreenTextureDescriptorForKey:*key descriptor:descriptor]; // (its Foundation round trip was the identity for this JavaScript-derived dictionary)
     result = YES;
 
     OOJS_RETURN_BOOL(result);
@@ -859,7 +852,7 @@ static bool GlobalGetGuiColorSettingForKey(ooscript::Context context, ooscript::
     oo::PList::Array components;
     for (float component : [col cxx_normalizedArray])
         components.push_back(oo::PList::singleReal(component));
-    OOJS_RETURN_OBJECT(col != nil ? oo::ObjectFromPList(oo::PList(std::move(components))) : nil);
+    OOJS_RETURN_PLIST(col != nil ? oo::PList(std::move(components)) : oo::PList());
 
     OOJS_NATIVE_EXIT
 }
@@ -892,7 +885,7 @@ static bool GlobalSetGuiColorSettingForKey(ooscript::Context context, ooscript::
     }
 
     if (!ooscript::isNull(value)) {
-        col = [OOColor colorWithDescription:oo::ObjectFromPList(cxx_OOJSPListFromJSValue(context, value))];
+        col = [OOColor cxx_colorWithDescription:cxx_OOJSPListFromJSValue(context, value)];
         if (col == nil) {
             cxx_OOJSReportBadArguments(context, std::nullopt, "setGuiColorForKey", 1, OOJS_ARGV, std::nullopt, "color descriptor");
             return NO;
@@ -993,7 +986,7 @@ static bool GlobalAutoAIForRole(ooscript::Context context, ooscript::CallArgs& o
     const oo::PList autoAIMap = [ResourceManager cxx_dictionaryFromFilesNamed:"autoAImap.plist" inFolder:"Config" andMerge:YES];
     std::optional<std::string> autoAI = StringFromPList(autoAIMap.find(*string));
 
-    OOJS_RETURN_OBJECT(oo::NSStringOrNil(autoAI));
+    OOJS_RETURN_STRING_OR_NULL(autoAI);
 
     OOJS_NATIVE_EXIT
 }

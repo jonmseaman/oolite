@@ -24,7 +24,6 @@ MA 02110-1301, USA.
 
 #import "PlayerEntityStickMapper.h"
 #import "HeadUpDisplay.h"
-#import "OOFoundationBridge.h"
 #import "OOJoystickManager.h"
 #import "OOTexture.h"
 #import "PlayerEntityControls.h"
@@ -71,11 +70,30 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dict, std::stri
     return dict.get<std::string>(key);
 }
 
-// The object a dictionary held under key (nil when absent), for -intValue / -boolValue as before.
-id ObjectForKey(const oo::PList& dict, std::string_view key)
+// -intValue of a value a dictionary held: a string's leading integer, a number truncated.
+int IntValueOf(const oo::PList& value)
+{
+    if (const std::string* string = value.getIf<std::string>())
+        return oo::str::intValue(*string);
+    return static_cast<int>(value.int64Value());
+}
+
+// -intValue of the value a dictionary held under key (nil when absent: 0).
+int IntValueForKey(const oo::PList& dict, std::string_view key)
 {
     const oo::PList* value = dict.find(key);
-    return value != nullptr ? oo::ObjectFromPList(*value) : nil;
+    return value != nullptr ? IntValueOf(*value) : 0;
+}
+
+// -boolValue of the value a dictionary held under key (NSString's rule for a string; nil: NO).
+bool BoolValueForKey(const oo::PList& dict, std::string_view key)
+{
+    const oo::PList* value = dict.find(key);
+    if (value == nullptr)
+        return false;
+    if (const std::string* string = value->getIf<std::string>())
+        return oo::defaults_detail::stringBoolValue(*string);
+    return value->boolValue();
 }
 
 // The string's -length - 5 characters of a stick name, then "..." (UTF-16 units, as before).
@@ -94,7 +112,7 @@ int NumberAfterColon(const std::string& key)
     const std::size_t next = part.find(':');
     if (next != std::string::npos)
         part.resize(next);
-    return [oo::NSStringFrom(part) intValue];
+    return oo::str::intValue(part);
 }
 
 // -oo_integerForKey: of an entry that may be absent (nil: 0).
@@ -246,7 +264,7 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
         }
 
         const oo::PList& entry = StickFunctionAt(stickFunctions, selFunctionIdx);
-        int hw = [ObjectForKey(entry, KEY_ALLOWABLE) intValue];
+        int hw = IntValueForKey(entry, KEY_ALLOWABLE);
         [stickHandler setCallback:@selector(updateFunction:)
                            object:self
                          hardware:hw];
@@ -275,9 +293,8 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
 
 // Callback function, called by JoystickHandler when the callback
 // is set. The dictionary contains the thing that was pressed/moved.
-- (void)updateFunction:(id)hwDictObject // called by name with an Objective-C dictionary
+- (void)updateFunction:(const oo::PList&)hwDict // called by name (joystick callback, ADR-0055 item 5)
 {
-    const oo::PList hwDict = oo::PListFrom(hwDictObject);
     OOJoystickManager* stickHandler = [OOJoystickManager sharedStickHandler];
     waitingForStickCallback = NO;
 
@@ -384,17 +401,17 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
 {
     OOJoystickManager* stickHandler = [OOJoystickManager sharedStickHandler];
     const oo::PList& entry = StickFunctionAt(stickFunctions, idx);
-    id butfunc = ObjectForKey(entry, KEY_BUTTONFN); // -intValue as before
-    id axfunc = ObjectForKey(entry, KEY_AXISFN);
+    const oo::PList* butfunc = entry.find(KEY_BUTTONFN); // -intValue as before
+    const oo::PList* axfunc = entry.find(KEY_AXISFN);
     BOOL custom = NO;
     selFunctionIdx = idx;
 
     // Some things can have either axis or buttons - make sure we clear
     // both!
-    if (butfunc) {
+    if (butfunc != nullptr) {
         // special case for OXP equipment buttons
-        if ([butfunc intValue] >= 10000) {
-            int bf = [butfunc intValue];
+        if (IntValueOf(*butfunc) >= 10000) {
+            int bf = IntValueOf(*butfunc);
             custom = YES;
             std::string key = std::string(CUSTOMEQUIP_BUTTONACTIVATE);
             bf -= 10000;
@@ -406,11 +423,11 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
             if (oo::PList::Dict* custEquipDict = CustomEquipFields(customEquipActivation, bf))
                 custEquipDict->erase(key);
         } else {
-            [stickHandler unsetButtonFunction:[butfunc intValue]];
+            [stickHandler unsetButtonFunction:IntValueOf(*butfunc)];
         }
     }
-    if (axfunc) {
-        [stickHandler unsetAxisFunction:[axfunc intValue]];
+    if (axfunc != nullptr) {
+        [stickHandler unsetAxisFunction:IntValueOf(*axfunc)];
     }
     if (!custom) {
         [stickHandler saveStickSettings];
@@ -496,7 +513,7 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
                 case HW_BUTTON:
                     allowedThings = "Button";
                     int bf;
-                    bf = [oo::NSStringOrNil(butFuncKey) integerValue];
+                    bf = butFuncKey.has_value() ? static_cast<int>(oo::str::longLongValue(*butFuncKey)) : 0; // -integerValue (nil: 0)
                     if (bf < 10000) {
                         assignment = [self describeStickDict:assignedButton];
                     } else {
@@ -546,12 +563,10 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
     std::optional<std::string> desc;
     if (stickDict != nullptr) {
         // -intValue / -boolValue of the objects the dictionary held, as before
-        int thingNumber = [ObjectForKey(*stickDict, std::string(STICK_AXBUT))
-            intValue];
-        int stickNumber = [ObjectForKey(*stickDict, std::string(STICK_NUMBER))
-            intValue];
+        int thingNumber = IntValueForKey(*stickDict, STICK_AXBUT);
+        int stickNumber = IntValueForKey(*stickDict, STICK_NUMBER);
         // Button or axis?
-        if ([ObjectForKey(*stickDict, std::string(STICK_ISAXIS)) boolValue]) {
+        if (BoolValueForKey(*stickDict, STICK_ISAXIS)) {
             desc = oo::str::format("Stick %d axis %d",
                 stickNumber + 1, thingNumber + 1);
         } else if (thingNumber >= MAX_REAL_BUTTONS) {
@@ -879,12 +894,12 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
         int i;
         for (i = 0; i < customEquipActivation.size(); i++) {
             funcList.push_back(
-                [self makeStickGuiDict:oo::str::format("Activate '%s'", oo::DescriptionOf(oo::NSStringOrNil(OptionalStringForKey(customEquipActivation[i], std::string(CUSTOMEQUIP_EQUIPNAME)))).c_str())
+                [self makeStickGuiDict:oo::str::format("Activate '%s'", OptionalStringForKey(customEquipActivation[i], std::string(CUSTOMEQUIP_EQUIPNAME)).value_or("(null)").c_str())
                              allowable:HW_BUTTON
                                 axisfn:STICK_NOFUNCTION
                                  butfn:(i + 10000)]);
             funcList.push_back(
-                [self makeStickGuiDict:oo::str::format("Mode '%s'", oo::DescriptionOf(oo::NSStringOrNil(OptionalStringForKey(customEquipActivation[i], std::string(CUSTOMEQUIP_EQUIPNAME)))).c_str())
+                [self makeStickGuiDict:oo::str::format("Mode '%s'", OptionalStringForKey(customEquipActivation[i], std::string(CUSTOMEQUIP_EQUIPNAME)).value_or("(null)").c_str())
                              allowable:HW_BUTTON
                                 axisfn:STICK_NOFUNCTION
                                  butfn:(i + 20000)]);

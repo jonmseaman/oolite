@@ -33,7 +33,6 @@ MA 02110-1301, USA.
 #import "PlayerEntity.h"
 #import "ShipEntity.h"
 
-#import "OOFoundationBridge.h"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 

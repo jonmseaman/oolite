@@ -59,22 +59,31 @@ MA 02110-1301, USA.
 
 #define OOJS_PROFILE OOLITE_DEBUG
 
+/*
+        C++ since bead oo-ppc (the Phase 3 scripting-bindings pattern; proposed ADR-0056 amendment
+        oo-ppc). The pairs below were Objective-C try, catch (id) and finally blocks. They are now a
+        C++ try, a catch (...) and scope guards, so a binding file that uses them contains no
+        Objective-C exception syntax. What each one does is unchanged:
+          * OOJS_NATIVE_EXIT catches whatever the body throws and hands it to
+            OOJSReportCurrentException() (OOJSEngineNativeWrappers.mm), which reports an Objective-C
+            exception exactly as OOJSReportWrappedException() did. It also reports a C++ exception
+            ("Native exception: <what()>"), which the Objective-C catch (id) could not catch: that
+            path ended in std::terminate (ADR-0029 measurement 10).
+          * The profiler frame is exited, and the time limiter and request are resumed, when the
+            scope ends, by return or by exception, as the finally blocks did.
+*/
+
 #if OOJS_PROFILE
 
-#define OOJS_PROFILE_ENTER_NAMED(NAME)                           \
-    {                                                            \
-        OOJS_DECLARE_PROFILE_STACK_FRAME(oojsProfilerStackFrame) \
-        @try {                                                   \
-            OOJSProfileEnter(&oojsProfilerStackFrame, NAME);
+#define OOJS_PROFILE_ENTER_NAMED(NAME)           \
+    {                                            \
+        OOJSProfileScope oojsProfileScope(NAME); \
+        {
 
 #define OOJS_PROFILE_ENTER \
     OOJS_PROFILE_ENTER_NAMED(__FUNCTION__)
 
 #define OOJS_PROFILE_EXIT_VAL(rval)                    \
-    }                                                  \
-    @finally                                           \
-    {                                                  \
-        OOJSProfileExit(&oojsProfilerStackFrame);      \
     }                                                  \
     OOJSUnreachable(__FUNCTION__, __FILE__, __LINE__); \
     return rval;                                       \
@@ -83,7 +92,10 @@ MA 02110-1301, USA.
     return;                    \
     OOJS_PROFILE_EXIT_VAL()
 
-#define OOJS_PROFILE_ENTER_FOR_NATIVE OOJS_PROFILE_ENTER
+#define OOJS_PROFILE_ENTER_FOR_NATIVE                    \
+    {                                                    \
+        OOJSProfileScope oojsProfileScope(__FUNCTION__); \
+        try {
 
 #else
 
@@ -95,7 +107,7 @@ MA 02110-1301, USA.
 #define OOJS_PROFILE_EXIT_VOID \
     }                          \
     return;
-#define OOJS_PROFILE_ENTER_FOR_NATIVE @try {
+#define OOJS_PROFILE_ENTER_FOR_NATIVE try {
 
 #endif // OOJS_PROFILE
 
@@ -104,16 +116,25 @@ MA 02110-1301, USA.
         ooscript::Context oojsNativeContext = (cx); \
         OOJS_PROFILE_ENTER_FOR_NATIVE
 
-#define OOJS_NATIVE_EXIT                                          \
-    }                                                             \
-    @catch (id exception)                                         \
-    {                                                             \
-        OOJSReportWrappedException(oojsNativeContext, exception); \
-        return NO;                                                \
-        OOJS_PROFILE_EXIT_VAL(NO)                                 \
+#define OOJS_NATIVE_EXIT                               \
+    }                                                  \
+    catch (...)                                        \
+    {                                                  \
+        OOJSReportCurrentException(oojsNativeContext); \
+        return false;                                  \
+        OOJS_PROFILE_EXIT_VAL(false)                   \
     }
 
+/*	OOJSReportCurrentException()
+        Call only inside a catch handler. Reports the exception being handled as a JS error unless
+        one is already pending: an Objective-C exception as OOJSReportWrappedException() does, a C++
+        one as "Native exception: <what()>" (std::exception) or "Unidentified native exception".
+*/
+void OOJSReportCurrentException(ooscript::Context context);
+
+#ifdef __OBJC__
 OOJS_EXTERN_C void OOJSReportWrappedException(ooscript::Context context, id exception);
+#endif
 
 #ifndef NDEBUG
 OOJS_EXTERN_C void OOJSUnreachable(const char* function, const char* file, unsigned line) NO_RETURN_FUNC;
@@ -136,21 +157,39 @@ OOJS_EXTERN_C void OOJSUnreachable(const char* function, const char* file, unsig
         Script engine functions may not be used, directly or indirectily, between these
         macros unless explicitly opening a request first.
 */
-#define OOJS_BEGIN_FULL_NATIVE(context)                                              \
-    {                                                                                \
-        OOJSPauseTimeLimiter();                                                      \
-        ooscript::Context oojsRequestContext = (context);                            \
-        unsigned oojsRequestRefCount = ooscript::suspendRequest(oojsRequestContext); \
-        @try {
+#define OOJS_BEGIN_FULL_NATIVE(context)                   \
+    {                                                     \
+        OOJSFullNativeScope oojsFullNativeScope(context); \
+        {
 
-#define OOJS_END_FULL_NATIVE                                              \
-    }                                                                     \
-    @finally                                                              \
-    {                                                                     \
-        ooscript::resumeRequest(oojsRequestContext, oojsRequestRefCount); \
-        OOJSResumeTimeLimiter();                                          \
-    }                                                                     \
+#define OOJS_END_FULL_NATIVE \
+    }                        \
     }
+
+// The scope OOJS_BEGIN_FULL_NATIVE opens: what its Objective-C try and finally did, in the same order.
+OOJS_EXTERN_C void OOJSPauseTimeLimiter(void);
+OOJS_EXTERN_C void OOJSResumeTimeLimiter(void);
+
+class OOJSFullNativeScope {
+public:
+    explicit OOJSFullNativeScope(ooscript::Context context)
+    {
+        OOJSPauseTimeLimiter();
+        _context = context;
+        _refCount = ooscript::suspendRequest(_context);
+    }
+    ~OOJSFullNativeScope()
+    {
+        ooscript::resumeRequest(_context, _refCount);
+        OOJSResumeTimeLimiter();
+    }
+    OOJSFullNativeScope(const OOJSFullNativeScope&) = delete;
+    OOJSFullNativeScope& operator=(const OOJSFullNativeScope&) = delete;
+
+private:
+    ooscript::Context _context = { };
+    unsigned _refCount = { };
+};
 
 #if OOJS_PROFILE
 
@@ -176,6 +215,18 @@ struct OOJSProfileStackFrame {
 #define OOJS_DECLARE_PROFILE_STACK_FRAME(name) OOJSProfileStackFrame name;
 OOJS_EXTERN_C void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function);
 OOJS_EXTERN_C void OOJSProfileExit(OOJSProfileStackFrame* frame);
+
+// The scope OOJS_PROFILE_ENTER opens: enters the frame, and exits it however the scope ends.
+class OOJSProfileScope {
+public:
+    explicit OOJSProfileScope(const char* function) { OOJSProfileEnter(&_frame, function); }
+    ~OOJSProfileScope() { OOJSProfileExit(&_frame); }
+    OOJSProfileScope(const OOJSProfileScope&) = delete;
+    OOJSProfileScope& operator=(const OOJSProfileScope&) = delete;
+
+private:
+    OOJSProfileStackFrame _frame = { };
+};
 
 #else
 

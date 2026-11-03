@@ -192,9 +192,8 @@ OOINLINE ooscript::Value OOJSValueFromBOOL(int b)
     return ooscript::booleanValue(b != NO);
 }
 
-/*	The root-class JS glue for classes rooted on OOObject (ADR-0029). A Foundation object has
-        none: OOJSValueFromNativeObject() converts it through its property-list form (proposed
-        ADR-0051).
+/*	The root-class JS glue for classes rooted on OOObject (ADR-0029). An object on another root
+        has none: OOJSValueFromNativeObject() gives undefined for it (oo-qps.72).
 
         -oo_jsValueInContext:
 
@@ -229,10 +228,10 @@ OOINLINE ooscript::Value OOJSValueFromBOOL(int b)
 
 /*	OOJSValueFromNativeObject()
         Return a JavaScript value representation of an object, or null if passed
-        nil. An object whose root class is not OOObject (a Foundation object) is
-        converted through oo::PListFrom() and OOJSValueFromPList(), which give what
-        its Foundation JS glue gave; one that is not property-list data gives
-        undefined, as the NSObject glue did (proposed ADR-0051).
+        nil. An object whose root class is not OOObject gives undefined, as the
+        NSObject glue did; oo-qps.72 deleted the Foundation branch that converted
+        one through its property-list form (proposed ADR-0051). Plist data is
+        OOJSValueFromPList()'s.
 
         Requires a request on context.
 */
@@ -385,7 +384,9 @@ OOJS_EXTERN_C BOOL JSEntityIsDemoShipPredicate(Entity* entity, void* parameter);
         -> dictionary (see cxx_OOJSDictionaryFromJSObject()); an object of a class
         with a registered converter -> oo::PListFrom() of what the converter
         returns (a private object -> a PList::Object node holding it). The id
-        functions below return oo::ObjectFromPList() of these.
+        functions below return the object of a PList::Object node of these (nil
+        for plist data): oo-qps.72 deleted their Foundation form (ADR-0055
+        Amendment 2); every caller asks for a native object.
 
         These require a request on context.
 */
@@ -530,17 +531,18 @@ OOINLINE BOOL OOJSIsMemberOfSubclass(ooscript::Context context, ooscript::Object
 /*	Support for OOJSNativeObjectFromJSValue() family
 
         OOJSClassConverterCallback specifies the prototype for a callback function
-        which converts a JavaScript object to an Objective-C object.
+        which converts a JavaScript object to its property-list form: plist data,
+        or a PList::Object node holding a native object (proposed ADR-0055 item 4).
 
         OOJSBasicPrivateObjectConverter() is a OOJSClassConverterCallback which
-        returns the JS object's private storage value. It automatically unpacks
-        OOWeakReferences if relevant.
+        returns the JS object's private storage value as an Object node (a null
+        PList for nil). It automatically unpacks OOWeakReferences if relevant.
 
         OOJSRegisterObjectConverter() registers a callback for a specific JS class.
         It is not automatically propagated to subclasses.
 */
-typedef id (*OOJSClassConverterCallback)(ooscript::Context context, ooscript::Object object);
-OOJS_EXTERN_C id OOJSBasicPrivateObjectConverter(ooscript::Context context, ooscript::Object object);
+typedef oo::PList (*OOJSClassConverterCallback)(ooscript::Context context, ooscript::Object object);
+oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context context, ooscript::Object object);
 
 OOJS_EXTERN_C void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass, OOJSClassConverterCallback converter);
 

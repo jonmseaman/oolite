@@ -26,7 +26,6 @@ SOFTWARE.
 */
 
 #import "OOJSEngineTimeManagement.h"
-#import "OOFoundationBridge.h"
 #import "OOJSScript.h"
 #import "OOLoggingExtended.h"
 #import "OOProfilingStopwatch.h"
@@ -42,6 +41,8 @@ SOFTWARE.
 #endif
 #define __block __glibc_block
 #endif
+#import "OOObjCPList.h"
+#include "oofnd/String.hpp"
 #include <unistd.h>
 
 #if OOLITE_LINUX
@@ -399,7 +400,7 @@ static void CleanUpJSFrame(OOJSProfileStackFrame* frame)
 
 static void TraceEnterJSFunction(ooscript::Context context, ooscript::Function function, OOTimeProfileEntry* profileEntry)
 {
-    std::string name = oo::str::format("%s(", oo::DescriptionOf([profileEntry function]).c_str());
+    std::string name = oo::str::format("%s(", [profileEntry cxx_function].value_or("(null)").c_str());
     BOOL isNative = ooscript::getFunctionNative(context, function) != NULL;
     std::string frameTag;
     std::string logMsgClass;
@@ -631,7 +632,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
             double selfPc = [entry selfTimeSum] * 100.0 / totalTime;
 
             result += oo::str::format("\n%60s  %c%7lu %8.2f %8.2f   %5.1f   %5.1f %8.2f",
-                oo::DescriptionOf([entry function]).c_str(),
+                [entry cxx_function].value_or("(null)").c_str(),
                 [entry isJavaScriptFrame] ? 'J' : 'N',
                 (unsigned long)[entry hitCount], [entry totalTimeSum] * 1000.0, [entry selfTimeSum] * 1000.0, totalPc, selfPc, [entry selfTimeMax] * 1000.0);
         }
@@ -823,11 +824,6 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
             return oo::str::format("%s: %lu times, total %g ms (self %g ms), avg %g ms (self %g ms), max %g ms, max self %g ms", function, _hitCount, totalTimeSum, selfTimeSum, totalTimeSum / _hitCount, selfTimeSum / _hitCount, totalTimeMax, selfTimeMax);
         }
     }
-}
-
-- (id)function // shared selector (Foundation declares -function too; retires with oo-qps)
-{
-    return oo::NSStringOrNil([self cxx_function]);
 }
 
 - (std::optional<std::string>)cxx_function

@@ -23,7 +23,6 @@ MA 02110-1301, USA.
 
 #import "OOJSWaypoint.h"
 #import "EntityOOJavaScriptExtensions.h"
-#import "OOFoundationBridge.h"
 #import "OOJSEntity.h"
 #import "OOJSQuaternion.h"
 #import "OOJSVector.h"
@@ -203,7 +202,8 @@ static bool WaypointGetProperty(Context cx, Object obj, PropertyId propID, Value
     OOJS_NATIVE_ENTER(context)
 
     OOWaypointEntity* entity = nil;
-    id result = nil;
+    oo::PList result; // null: nil
+    std::optional<std::string> text;
     Quaternion q = kIdentityQuaternion;
 
     if (!JSWaypointGetWaypointEntity(context, thisObj, &entity))
@@ -215,11 +215,15 @@ static bool WaypointGetProperty(Context cx, Object obj, PropertyId propID, Value
 
     switch (ooscript::idToInt32(propID)) {
     case kWaypoint_beaconCode:
-        result = oo::NSStringOrNil([entity beaconCode]);
+        text = [entity beaconCode];
+        if (text.has_value())
+            result = oo::PList(*text);
         break;
 
     case kWaypoint_beaconLabel:
-        result = oo::NSStringOrNil([entity beaconLabel]);
+        text = [entity beaconLabel];
+        if (text.has_value())
+            result = oo::PList(*text);
         break;
 
     case kWaypoint_orientation:
@@ -237,7 +241,7 @@ static bool WaypointGetProperty(Context cx, Object obj, PropertyId propID, Value
         return NO;
     }
 
-    *value_raw = OOJSValueFromNativeObject(context, result);
+    *value_raw = OOJSValueFromPList(context, result);
     return YES;
 
     OOJS_NATIVE_EXIT

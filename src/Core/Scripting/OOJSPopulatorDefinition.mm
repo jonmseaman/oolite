@@ -121,7 +121,7 @@ static inline Object* OOJSFOBJP(ooscript::Object* o) { return reinterpret_cast<O
     OOJSRelinquishContext(context);
 }
 
-- (void)runCallback:(HPVector)location
+- (void)runPopulatorCallback:(HPVector)location
 {
     OOJavaScriptEngine* engine = [OOJavaScriptEngine sharedEngine];
     ooscript::Context context = OOJSAcquireContext();

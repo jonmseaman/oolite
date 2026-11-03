@@ -24,7 +24,6 @@ MA 02110-1301, USA.
 */
 
 #import "OOJSSun.h"
-#import "OOFoundationBridge.h"
 #import "OOJSEntity.h"
 #import "OOJavaScriptEngine.h"
 
@@ -160,9 +159,11 @@ static bool SunGetProperty(Context cx, Object obj, PropertyId propID, Value* val
     case kSun_radius:
         return ooscript::newNumberValue(cx, [sun radius], value);
 
-    case kSun_name:
-        *value = OOJSValueFromNativeObject(context, oo::NSStringOrNil([sun cxx_name]));
+    case kSun_name: {
+        const std::optional<std::string> name = [sun cxx_name];
+        *value = OOJSValueFromPList(context, name.has_value() ? oo::PList(*name) : oo::PList());
         return YES;
+    }
 
     case kSun_hasGoneNova:
         *value = OOJSValueFromBOOL([sun goneNova]);

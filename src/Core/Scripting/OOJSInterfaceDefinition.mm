@@ -24,10 +24,10 @@ MA 02110-1301, USA.
 */
 
 #import "OOJSInterfaceDefinition.h"
-#import "OOFoundationBridge.h"
 #import "OOJavaScriptEngine.h"
 
 #include "oofnd/Notification.hpp"
+#include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
 
 /*
@@ -92,19 +92,9 @@ static OOComparisonResult CaseInsensitiveCompare(const std::optional<std::string
     [super dealloc];
 }
 
-- (id)title // shared selector (Foundation declares -title too; retires with oo-qps)
-{
-    return oo::NSStringOrNil([self cxx_title]);
-}
-
 - (std::optional<std::string>)cxx_title
 {
     return _title;
-}
-
-- (void)setTitle:(id)title // shared selector (Foundation declares -setTitle: too; retires with oo-qps)
-{
-    [self cxx_setTitle:oo::OptionalString(title)];
 }
 
 - (void)cxx_setTitle:(const std::optional<std::string>&)title
@@ -160,13 +150,13 @@ static OOComparisonResult CaseInsensitiveCompare(const std::optional<std::string
     OOJSRelinquishContext(context);
 }
 
-- (void)runCallback:(id)key // shared selector (proposed ADR-0043)
+- (void)runCallback:(const std::string&)key
 {
     OOJavaScriptEngine* engine = [OOJavaScriptEngine sharedEngine];
     ooscript::Context context = OOJSAcquireContext();
     ooscript::Value rval = ooscript::undefinedValue();
 
-    ooscript::Value cKey = OOJSValueFromNativeObject(context, key);
+    ooscript::Value cKey = OOJSValueFromPList(context, oo::PList(key));
 
     OOJSScript* owner = [_owningScript retain]; // local copy needed
     [OOJSScript pushScript:owner];

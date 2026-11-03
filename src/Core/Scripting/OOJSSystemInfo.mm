@@ -28,12 +28,12 @@ MA 02110-1301, USA.
 #import "OOJSScript.h"
 #import "OOJSVector.h"
 #import "OOJavaScriptEngine.h"
-#import "OOStringBridge.h"
 #import "OOSystemDescriptionManager.h"
 #import "PlayerEntityScriptMethods.h"
 #import "Universe.h"
 
-#import "OOFoundationBridge.h"
+#import "OOObjCPList.h"
+#include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
@@ -207,6 +207,32 @@ static FunctionSpec sSystemInfoStaticMethods[] = {
 };
 } // namespace
 
+namespace {
+
+// A string, or null for none.
+oo::PList StringOrNull(const std::optional<std::string>& string)
+{
+    return string.has_value() ? oo::PList(*string) : oo::PList();
+}
+
+// A manifest identifier as the -fromManifest: arguments read it: a string, else none.
+std::optional<std::string> ManifestString(const oo::PList& manifest)
+{
+    if (const std::string* text = manifest.getIf<std::string>())
+        return *text;
+    return std::nullopt;
+}
+
+// -intValue of a system property (an NSNumber or an NSString; 0 for nil).
+int PropertyIntValue(const oo::PList& value)
+{
+    if (const std::string* text = value.getIf<std::string>())
+        return oo::plist_get::intValue(oo::utf8ToUtf16(*text));
+    return static_cast<int>(value.int64Value());
+}
+
+} // namespace
+
 // Helper class wrapped by JS SystemInfo objects
 @interface OOSystemInfo : OOObject {
 @private
@@ -217,10 +243,10 @@ static FunctionSpec sSystemInfoStaticMethods[] = {
 
 - (id)initWithGalaxy:(OOGalaxyID)galaxy system:(OOSystemID)system;
 
-- (id)valueForKey:(id)key; // shared selector (proposed ADR-0043): key is an Objective-C string
-- (void)setValue:(id)value forKey:(id)key; // shared selector (proposed ADR-0043): key is an Objective-C string
+- (oo::PList)cxx_valueForKey:(const std::optional<std::string>&)key; // null for none
+- (void)cxx_setValue:(const oo::PList&)value forKey:(const std::string&)key; // a null value removes
 
-- (id)allKeys; // shared selector (proposed ADR-0043): an Objective-C array of strings
+- (std::vector<std::string>)cxx_allKeys;
 
 - (OOGalaxyID)galaxy;
 - (OOSystemID)system;
@@ -284,28 +310,37 @@ DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, &sSystemInfoClass, sSystemInf
     return hash;
 }
 
-- (id)valueForKey:(id)key // shared selector (proposed ADR-0043)
+- (oo::PList)cxx_valueForKey:(const std::optional<std::string>&)key
 {
     if ([UNIVERSE inInterstellarSpace] && _system == -1) {
-        return [oo::ObjectFromPList([UNIVERSE cxx_currentSystemData]) objectForKey:key];
+        // -objectForKey: (a nil key found nothing)
+        const oo::PList systemData = [UNIVERSE cxx_currentSystemData];
+        const oo::PList* value = key.has_value() ? systemData.find(*key) : nullptr;
+        return (value != nullptr) ? *value : oo::PList();
     }
-    return [UNIVERSE cxx_systemDataForGalaxy:_galaxy planet:_system key:oo::StdString(key)];
+    return [UNIVERSE cxx_systemDataForGalaxy:_galaxy planet:_system key:key.value_or("")]; // (a nil key as "")
 }
 
-- (void)setValue:(id)value forKey:(id)key // shared selector (proposed ADR-0043)
+- (void)cxx_setValue:(const oo::PList&)value forKey:(const std::string&)key
 {
     // The running script's manifest identifier, handed on as it was read.
     const oo::PList manifest = [[OOJSScript currentlyRunningScript] cxx_propertyNamed:kLocalManifestProperty];
 
-    [UNIVERSE cxx_setSystemDataForGalaxy:_galaxy planet:_system key:oo::StdString(key) value:value fromManifest:oo::OptionalString(oo::ObjectFromPList(manifest)) forLayer:OO_LAYER_OXP_DYNAMIC];
+    [UNIVERSE cxx_setSystemDataForGalaxy:_galaxy planet:_system key:key value:value fromManifest:ManifestString(manifest) forLayer:OO_LAYER_OXP_DYNAMIC];
 }
 
-- (id)allKeys // shared selector (proposed ADR-0043)
+- (std::vector<std::string>)cxx_allKeys
 {
     if ([UNIVERSE inInterstellarSpace] && _system == -1) {
-        return [oo::ObjectFromPList([UNIVERSE cxx_currentSystemData]) allKeys];
+        // the dictionary's keys, in key order (-allKeys gave hash order)
+        std::vector<std::string> keys;
+        if (const oo::PList::Dict* systemData = [UNIVERSE cxx_currentSystemData].getIf<oo::PList::Dict>()) {
+            for (const auto& entry : *systemData)
+                keys.push_back(entry.first);
+        }
+        return keys;
     }
-    return oo::NSArrayFromStrings([UNIVERSE cxx_systemDataKeysForGalaxy:_galaxy planet:_system]);
+    return [UNIVERSE cxx_systemDataKeysForGalaxy:_galaxy planet:_system];
 }
 
 - (OOGalaxyID)galaxy
@@ -421,7 +456,7 @@ static bool SystemInfoEnumerate(Context cx, Object obj, EnumerateOp enumOp, Valu
     case EnumerateOp::InitAll: // For ES5 Object.getOwnPropertyNames(). Since we have no non-enumerable properties, this is the same as Init.
     {
         OOSystemInfo* info = (id)ooscript::getPrivate(cx, obj);
-        enumerator = new SystemInfoEnumerationState { oo::StringsFrom([info allKeys]) };
+        enumerator = new SystemInfoEnumerationState { [info cxx_allKeys] };
         *state = ooscript::privateValue(enumerator);
 
         NSUInteger count = enumerator->keys.size();
@@ -524,23 +559,26 @@ static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID, Val
         std::optional<std::string> key = cxx_OOStringFromJSString(context, (ooscript::idToString(propID)));
 
         OOSystemDescriptionManager* systemManager = [UNIVERSE systemManager];
-        id propValue = nil;
+        oo::PList propValue;
         // interstellar space needs more work at this stage
         if ([info system] != -1) {
-            propValue = oo::ObjectFromPList([systemManager cxx_getProperty:key.value_or("") forSystem:[info system] inGalaxy:[info galaxy]]);
+            propValue = [systemManager cxx_getProperty:key.value_or("") forSystem:[info system] inGalaxy:[info galaxy]];
         } else {
-            propValue = [info valueForKey:oo::NSStringOrNil(key)];
+            propValue = [info cxx_valueForKey:key];
         }
 
-        if (propValue != nil) {
-            if (oo::IsNSNumber(propValue) || OOIsNumberLiteral(oo::DescriptionOf(propValue), YES)) {
-                BOOL OK = ooscript::newNumberValue(cx, [propValue doubleValue], value);
+        if (!propValue.isNull()) {
+            if (propValue.isNumber() || OOIsNumberLiteral(oo::DescriptionOf(propValue), YES)) {
+                // -doubleValue: an NSNumber's, or an NSString's (a number literal)
+                const std::string* text = propValue.getIf<std::string>();
+                const double number = (text != nullptr) ? oo::plist_get::doubleValue(oo::utf8ToUtf16(*text)) : propValue.doubleValue();
+                BOOL OK = ooscript::newNumberValue(cx, number, value);
                 if (!OK) {
                     *value = ooscript::undefinedValue();
                     return NO;
                 }
             } else {
-                *value = OOJSValueFromNativeObject(context, propValue); // non-nil: as its own glue gave
+                *value = OOJSValueFromPList(context, propValue); // non-null: as its own glue gave
             }
         }
     }
@@ -567,7 +605,7 @@ static bool SystemInfoSetProperty(Context cx, Object obj, PropertyId propID, boo
         std::optional<std::string> key = cxx_OOStringFromJSString(context, (ooscript::idToString(propID)));
         OOSystemInfo* info = OOJSNativeObjectOfClassFromJSObject(context, thisObj, [OOSystemInfo class]);
 
-        [info setValue:oo::NSStringOrNil(cxx_OOStringFromJSValue(context, *(value))) forKey:oo::NSStringOrNil(key)];
+        [info cxx_setValue:StringOrNull(cxx_OOStringFromJSValue(context, *(value))) forKey:key.value_or("")]; // (a nil key as "")
     }
     return YES;
 
@@ -642,7 +680,7 @@ static bool SystemInfoRouteToSystem(ooscript::Context context, ooscript::CallArg
     result = [UNIVERSE cxx_routeFromSystem:[thisInfo system] toSystem:[otherInfo system] optimizedBy:routeType];
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_OBJECT(oo::ObjectFromPList(result));
+    OOJS_RETURN_PLIST(result);
 
     OOJS_NATIVE_EXIT
 }
@@ -671,7 +709,7 @@ static bool SystemInfoSamplePrice(ooscript::Context context, ooscript::CallArgs&
         return NO;
     }
 
-    OOCreditsQuantity price = [[UNIVERSE commodities] cxx_samplePriceForCommodity:commodity.value_or("") inEconomy:[[thisInfo valueForKey:@"economy"] intValue] withScript:oo::OptionalString([thisInfo valueForKey:@"commodity_script"]) inSystem:[thisInfo system]];
+    OOCreditsQuantity price = [[UNIVERSE commodities] cxx_samplePriceForCommodity:commodity.value_or("") inEconomy:PropertyIntValue([thisInfo cxx_valueForKey:std::string("economy")]) withScript:ManifestString([thisInfo cxx_valueForKey:std::string("commodity_script")]) inSystem:[thisInfo system]];
 
     return ooscript::newNumberValue(context, price, oojsArgs.rawVp());
 
@@ -715,12 +753,12 @@ static bool SystemInfoSetPropertyMethod(ooscript::Context context, ooscript::Cal
         value = cxx_OOJSPListFromJSValue(context, OOJS_ARGV[2]);
     }
     if (oojsArgs.count() >= 4) {
-        manifest = oo::PListFrom(oo::NSStringOrNil(cxx_OOStringFromJSValue(context, OOJS_ARGV[3])));
+        manifest = StringOrNull(cxx_OOStringFromJSValue(context, OOJS_ARGV[3]));
     } else {
         manifest = [[OOJSScript currentlyRunningScript] cxx_propertyNamed:kLocalManifestProperty];
     }
 
-    [UNIVERSE cxx_setSystemDataForGalaxy:[thisInfo galaxy] planet:[thisInfo system] key:property.value_or("") value:oo::ObjectFromPList(value) fromManifest:oo::OptionalString(oo::ObjectFromPList(manifest)) forLayer:layer];
+    [UNIVERSE cxx_setSystemDataForGalaxy:[thisInfo galaxy] planet:[thisInfo system] key:property.value_or("") value:value fromManifest:ManifestString(manifest) forLayer:layer];
 
     OOJS_RETURN_VOID;
 
@@ -868,14 +906,14 @@ static bool SystemInfoStaticSetInterstellarProperty(ooscript::Context context, o
         value = cxx_OOJSPListFromJSValue(context, OOJS_ARGV[5]);
     }
     if (oojsArgs.count() >= 7) {
-        manifest = oo::PListFrom(oo::NSStringOrNil(cxx_OOStringFromJSValue(context, OOJS_ARGV[6])));
+        manifest = StringOrNull(cxx_OOStringFromJSValue(context, OOJS_ARGV[6]));
     } else {
         manifest = [[OOJSScript currentlyRunningScript] cxx_propertyNamed:kLocalManifestProperty];
     }
 
     std::string key = oo::str::format("interstellar: %u %u %u", g, s1, s2);
 
-    [[UNIVERSE systemManager] cxx_setProperty:property.value_or("") forSystemKey:key andLayer:layer toValue:value fromManifest:oo::OptionalString(oo::ObjectFromPList(manifest))];
+    [[UNIVERSE systemManager] cxx_setProperty:property.value_or("") forSystemKey:key andLayer:layer toValue:value fromManifest:ManifestString(manifest)];
 
     OOJS_RETURN_VOID;
 

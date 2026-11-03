@@ -27,9 +27,9 @@ MA 02110-1301, USA.
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
 
-@implementation OOSDLJoystickManager
+namespace cxx {
 
-- (id)init
+OOSDLJoystickManager::OOSDLJoystickManager()
 {
     int i;
 
@@ -60,15 +60,9 @@ MA 02110-1301, USA.
     }
     SDL_free(joystickIds);
     joystickIdMap = std::move(idMap);
-    return [super init];
 }
 
-- (void)dealloc
-{
-    [super dealloc];
-}
-
-- (NSInteger)getJoystickIndexFromId:(SDL_JoystickID)joystickId
+NSInteger OOSDLJoystickManager::getJoystickIndexFromId(SDL_JoystickID joystickId)
 {
     const auto index = joystickIdMap.find(oo::str::format("%d", joystickId));
     if (index != joystickIdMap.end()) {
@@ -77,46 +71,46 @@ MA 02110-1301, USA.
     return -1;
 }
 
-- (JoyAxisEvent)makeJoyAxisEvent:(SDL_JoyAxisEvent*)sdlevt
+JoyAxisEvent OOSDLJoystickManager::makeJoyAxisEvent(SDL_JoyAxisEvent* sdlevt)
 {
     JoyAxisEvent evt;
     evt.type = sdlevt->type;
-    evt.which = [self getJoystickIndexFromId:sdlevt->which];
+    evt.which = getJoystickIndexFromId(sdlevt->which);
     evt.axis = sdlevt->axis;
     evt.value = sdlevt->value;
     return evt;
 }
 
-- (JoyButtonEvent)makeJoyButtonEvent:(SDL_JoyButtonEvent*)sdlevt
+JoyButtonEvent OOSDLJoystickManager::makeJoyButtonEvent(SDL_JoyButtonEvent* sdlevt)
 {
     JoyButtonEvent evt;
     evt.type = sdlevt->type;
-    evt.which = [self getJoystickIndexFromId:sdlevt->which];
+    evt.which = getJoystickIndexFromId(sdlevt->which);
     evt.button = sdlevt->button;
     evt.down = sdlevt->down;
     return evt;
 }
 
-- (JoyHatEvent)makeJoyHatEvent:(SDL_JoyHatEvent*)sdlevt
+JoyHatEvent OOSDLJoystickManager::makeJoyHatEvent(SDL_JoyHatEvent* sdlevt)
 {
     JoyHatEvent evt;
     evt.type = sdlevt->type;
-    evt.which = [self getJoystickIndexFromId:sdlevt->which];
+    evt.which = getJoystickIndexFromId(sdlevt->which);
     evt.hat = sdlevt->hat;
     evt.value = sdlevt->value;
     return evt;
 }
 
-- (BOOL)handleSDLEvent:(SDL_Event*)evt
+bool OOSDLJoystickManager::handleSDLEvent(SDL_Event* evt)
 {
-    BOOL rc = NO;
+    bool rc = false;
     switch (evt->type) {
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
     case SDL_EVENT_JOYSTICK_AXIS_MOTION: {
-        JoyAxisEvent joyEvt = [self makeJoyAxisEvent:(SDL_JoyAxisEvent*)evt];
+        JoyAxisEvent joyEvt = makeJoyAxisEvent((SDL_JoyAxisEvent*)evt);
         if (joyEvt.which >= 0) {
-            [self decodeAxisEvent:&joyEvt];
-            rc = YES;
+            [oo::ToObjC(this) decodeAxisEvent:&joyEvt]; // OOJoystickManager's, on the facade
+            rc = true;
         }
         break;
     }
@@ -125,19 +119,19 @@ MA 02110-1301, USA.
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
     case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
     case SDL_EVENT_JOYSTICK_BUTTON_UP: {
-        JoyButtonEvent joyEvt = [self makeJoyButtonEvent:(SDL_JoyButtonEvent*)evt];
+        JoyButtonEvent joyEvt = makeJoyButtonEvent((SDL_JoyButtonEvent*)evt);
         if (joyEvt.which >= 0) {
-            [self decodeButtonEvent:&joyEvt];
-            rc = YES;
+            [oo::ToObjC(this) decodeButtonEvent:&joyEvt]; // OOJoystickManager's, on the facade
+            rc = true;
         }
         break;
     }
 
     case SDL_EVENT_JOYSTICK_HAT_MOTION: {
-        JoyHatEvent joyEvt = [self makeJoyHatEvent:(SDL_JoyHatEvent*)evt];
+        JoyHatEvent joyEvt = makeJoyHatEvent((SDL_JoyHatEvent*)evt);
         if (joyEvt.which >= 0) {
-            [self decodeHatEvent:&joyEvt];
-            rc = YES;
+            [oo::ToObjC(this) decodeHatEvent:&joyEvt]; // OOJoystickManager's, on the facade
+            rc = true;
         }
         break;
     }
@@ -150,12 +144,12 @@ MA 02110-1301, USA.
 
 // Overrides
 
-- (NSUInteger)joystickCount
+NSUInteger OOSDLJoystickManager::joystickCount()
 {
     return stickCount;
 }
 
-- (std::optional<std::string>)nameOfJoystick:(NSUInteger)stickNumber
+std::optional<std::string> OOSDLJoystickManager::nameOfJoystick(NSUInteger stickNumber)
 {
     if (stickNumber >= stickCount)
         return std::string("(unknown joystick)");
@@ -165,9 +159,9 @@ MA 02110-1301, USA.
     return std::string(name);
 }
 
-- (int16_t)getAxisWithStick:(NSUInteger)stickNum axis:(NSUInteger)axisNum
+int16_t OOSDLJoystickManager::getAxisWithStick(NSUInteger stickNum, NSUInteger axisNum)
 {
     return SDL_GetJoystickAxis(stick[stickNum], axisNum);
 }
 
-@end
+} // namespace cxx

@@ -29,11 +29,10 @@ MA 02110-1301, USA.
 #import "OOIsNumberLiteral.h"
 #import "OOJavaScriptEngine.h"
 
-#import "OOFoundationBridge.h"
 #import "OOJSPlayer.h"
-#import "OOStringBridge.h"
 #include "oofnd/objc/OOAssert.h"
 
+#include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 
@@ -93,7 +92,7 @@ static bool MissionVariablesEnumerate(Context cx, Object obj, EnumerateOp enumOp
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 namespace {
-static id MissionVariablesConverter(ooscript::Context context, ooscript::Object object);
+static oo::PList MissionVariablesConverter(ooscript::Context context, ooscript::Object object);
 } // namespace
 #endif
 
@@ -129,11 +128,11 @@ void InitOOJSMissionVariables(ooscript::Context context, ooscript::Object global
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 namespace {
-static id MissionVariablesConverter(ooscript::Context context, ooscript::Object object)
+static oo::PList MissionVariablesConverter(ooscript::Context context, ooscript::Object object)
 {
     (void)context;
     (void)object;
-    return oo::ObjectFromPList([PLAYER cxx_missionVariables]);
+    return [PLAYER cxx_missionVariables];
 }
 } // namespace
 #endif
@@ -180,16 +179,16 @@ static bool MissionVariablesGetProperty(Context cx, Object obj, PropertyId propI
         if (!key.has_value())
             return YES;
 
-        id mvar = oo::ObjectFromPList([player cxx_missionVariableForKey:*key]);
+        const oo::PList mvar = [player cxx_missionVariableForKey:*key];
 
-        if (oo::IsNSString(mvar)) // Currently there should only be strings, but we may want to change this.
+        if (const std::string* string = mvar.getIf<std::string>()) // Currently there should only be strings, but we may want to change this.
         {
-            if (OOIsNumberLiteral(oo::StdString(mvar), YES)) {
-                return ooscript::newNumberValue(cx, [mvar doubleValue], value);
+            if (OOIsNumberLiteral(*string, YES)) {
+                return ooscript::newNumberValue(cx, oo::str::doubleValue(*string), value); // -[NSString doubleValue]
             }
         }
 
-        *jsvalue = OOJSValueFromNativeObject(context, mvar);
+        *jsvalue = OOJSValueFromPList(context, mvar);
     }
     return YES;
 
@@ -245,8 +244,15 @@ static bool MissionVariablesEnumerate(Context cx, Object /*obj*/, EnumerateOp en
     case EnumerateOp::Init:
     case EnumerateOp::InitAll: // For ES5 Object.getOwnPropertyNames(). Since we have no non-enumerable properties, this is the same as _INIT.
     {
-        // -allKeys implicitly makes a copy, which is good since the enumerating code might mutate.
-        enumerator = new MissionVariablesEnumerationState { oo::StringsFrom([oo::ObjectFromPList([PLAYER cxx_missionVariables]) allKeys]) };
+        // A copy of the keys, which is good since the enumerating code might mutate. In key order
+        // (-allKeys gave them in hash order).
+        std::vector<std::string> keys;
+        const oo::PList missionVariables = [PLAYER cxx_missionVariables];
+        if (const oo::PList::Dict* dict = missionVariables.getIf<oo::PList::Dict>()) {
+            for (const auto& entry : *dict)
+                keys.push_back(entry.first);
+        }
+        enumerator = new MissionVariablesEnumerationState { std::move(keys) };
         *jsstate = ooscript::privateValue(enumerator);
 
         NSUInteger count = enumerator->keys.size();

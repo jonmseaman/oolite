@@ -143,3 +143,6 @@ subdir('src')
 
 # Unit tests that need no game build (meson test --suite oofnd).
 subdir('tests/unit/oofnd')
+
+# Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
+subdir('tests/unit/core')

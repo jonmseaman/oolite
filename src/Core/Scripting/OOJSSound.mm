@@ -23,12 +23,12 @@ MA 02110-1301, USA.
 */
 
 #import "OOJSSound.h"
-#import "OOFoundationBridge.h"
 #import "OOJavaScriptEngine.h"
 #import "OOMusicController.h"
 #import "ResourceManager.h"
 #import "Universe.h"
 
+#include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 
@@ -210,9 +210,11 @@ static bool SoundGetProperty(Context cx, Object obj, PropertyId propID, Value* v
         return NO;
 
     switch (ooscript::idToInt32(propID)) {
-    case kSound_name:
-        *value = OOJSValueFromNativeObject(context, oo::NSStringOrNil([sound cxx_name]));
+    case kSound_name: {
+        const std::optional<std::string> name = [sound cxx_name];
+        *value = OOJSValueFromPList(context, name.has_value() ? oo::PList(*name) : oo::PList());
         return YES;
+    }
 
     default:
         OOJSReportBadPropertySelector(context, thisObj, (propID), sSoundProperties);

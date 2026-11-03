@@ -24,7 +24,6 @@ MA 02110-1301, USA.
 #import "OOJSExhaustPlume.h"
 #import "EntityOOJavaScriptExtensions.h"
 #import "OOExhaustPlumeEntity.h"
-#import "OOFoundationBridge.h"
 #import "OOJSEntity.h"
 #import "OOJSVector.h"
 #import "OOJavaScriptEngine.h"

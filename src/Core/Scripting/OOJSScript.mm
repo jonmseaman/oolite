@@ -36,16 +36,15 @@ MA 02110-1301, USA.
 #import "OOConstToJSString.h"
 #import "OOConstToString.h"
 #import "OODebugStandards.h"
-#import "OOFoundationBridge.h"
 #import "OOLogging.h"
 #import "OOManifestProperties.h"
 #import "OOPListParsing.h"
-#import "OOPListView.h"
 #include "oofnd/Encoding.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
 
+#include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 
@@ -125,7 +124,7 @@ static std::optional<std::string> DescriptionOrNil(const oo::PList& value);
 
 // -oo_stringForKey: with its nil; a string value for -setObject:forKey:, which raised on nil.
 static std::optional<std::string> StringForKey(const oo::PList& dictionary, const std::string& key);
-static std::string ValueForKey(const std::optional<std::string>& value, id key);
+static std::string ValueForKey(const std::optional<std::string>& value, std::string_view key);
 } // namespace
 
 namespace {
@@ -239,10 +238,10 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
         for (const auto& [key, property] : defaultProperties) {
             if (key == kLocalManifestProperty) {
                 // this must not be editable
-                [self defineProperty:oo::ObjectFromPList(property) named:key];
+                [self defineProperty:property named:key];
             } else {
                 // can be overwritten by script itself
-                [self setProperty:oo::ObjectFromPList(property) named:key];
+                [self setProperty:property named:key];
             }
         }
 
@@ -251,7 +250,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
         if (!problem.has_value() && !properties.isNull()) {
             if (const oo::PList::Dict* propertyDict = properties.getIf<oo::PList::Dict>()) {
                 for (const auto& [key, property] : *propertyDict) {
-                    [self defineProperty:oo::ObjectFromPList(property) named:key];
+                    [self defineProperty:property named:key];
                 }
             }
         }
@@ -263,7 +262,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
                 probably also be achieved by fiddling with JS property attributes.
         */
         ooscript::PropertyId nameID = OOJSID("name");
-        [self setProperty:oo::NSStringFrom([self scriptNameFromPath:path]) withID:nameID inContext:context];
+        [self setProperty:oo::PList([self scriptNameFromPath:path]) withID:nameID inContext:context];
 
         // Run the script (allowing it to set up the properties we need, as well as setting up those event handlers)
         if (!problem.has_value()) {
@@ -287,7 +286,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
             name = StrippedName(DescriptionOrNil([self cxx_propertyWithID:nameID inContext:context]));
             if (!name.has_value()) {
                 name = [self scriptNameFromPath:path];
-                [self setProperty:oo::NSStringFrom(*name) withID:nameID inContext:context];
+                [self setProperty:oo::PList(*name) withID:nameID inContext:context];
             }
 
             version = DescriptionOrNil([self cxx_propertyWithID:OOJSID("version") inContext:context]);
@@ -486,23 +485,23 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
     return oo::PList();
 }
 
-- (BOOL)setProperty:(id)value withID:(ooscript::PropertyId)propID inContext:(ooscript::Context)context
+- (BOOL)setProperty:(const oo::PList&)value withID:(ooscript::PropertyId)propID inContext:(ooscript::Context)context
 {
     OOParameterAssert(context != NULL && ooscript::isInRequest((context)));
     if (_jsSelf == NULL)
         return NO;
 
-    ooscript::Value jsValue = OOJSValueFromNativeObject(context, value);
+    ooscript::Value jsValue = OOJSValueFromPList(context, value);
     return ooscript::setPropertyById((context), (_jsSelf), (propID), (&jsValue));
 }
 
-- (BOOL)defineProperty:(id)value withID:(ooscript::PropertyId)propID inContext:(ooscript::Context)context
+- (BOOL)defineProperty:(const oo::PList&)value withID:(ooscript::PropertyId)propID inContext:(ooscript::Context)context
 {
     OOParameterAssert(context != NULL && ooscript::isInRequest((context)));
     if (_jsSelf == NULL)
         return NO;
 
-    ooscript::Value jsValue = OOJSValueFromNativeObject(context, value);
+    ooscript::Value jsValue = OOJSValueFromPList(context, value);
     return ooscript::definePropertyById((context), (_jsSelf), (propID), (jsValue), nullptr, nullptr, kScriptDefinePropertyFlags);
 }
 
@@ -518,9 +517,9 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
     return result;
 }
 
-- (BOOL)setProperty:(id)value named:(const std::string&)propName
+- (BOOL)setProperty:(const oo::PList&)value named:(const std::string&)propName
 {
-    if (value == nil)
+    if (value.isNull())
         return NO;
     if (_jsSelf == NULL)
         return NO;
@@ -532,9 +531,9 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
     return result;
 }
 
-- (BOOL)defineProperty:(id)value named:(const std::string&)propName
+- (BOOL)defineProperty:(const oo::PList&)value named:(const std::string&)propName
 {
-    if (value == nil)
+    if (value.isNull())
         return NO;
     if (_jsSelf == NULL)
         return NO;
@@ -642,17 +641,17 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
     const std::optional<std::string> identifier = StringForKey(manifest, std::string(kOOManifestIdentifier));
     if (manifest && !(identifier.has_value() && oo::str::hasPrefix(*identifier, "__oolite.tmp."))) {
         if (manifest.get<oo::PList>(std::string(kOOManifestVersion)) != nullptr) {
-            properties["version"] = ValueForKey(StringForKey(manifest, std::string(kOOManifestVersion)), @"version");
+            properties["version"] = ValueForKey(StringForKey(manifest, std::string(kOOManifestVersion)), "version");
         }
         if (manifest.get<oo::PList>(std::string(kOOManifestIdentifier)) != nullptr) {
             // used for system info
-            properties[kLocalManifestProperty] = ValueForKey(identifier, oo::NSStringFrom(kLocalManifestProperty));
+            properties[kLocalManifestProperty] = ValueForKey(identifier, kLocalManifestProperty);
         }
         if (manifest.get<oo::PList>(std::string(kOOManifestAuthor)) != nullptr) {
-            properties["author"] = ValueForKey(StringForKey(manifest, std::string(kOOManifestAuthor)), @"author");
+            properties["author"] = ValueForKey(StringForKey(manifest, std::string(kOOManifestAuthor)), "author");
         }
         if (manifest.get<oo::PList>(std::string(kOOManifestLicense)) != nullptr) {
-            properties["license"] = ValueForKey(StringForKey(manifest, std::string(kOOManifestLicense)), @"license");
+            properties["license"] = ValueForKey(StringForKey(manifest, std::string(kOOManifestLicense)), "license");
         }
     }
     return properties;
@@ -728,7 +727,7 @@ static Script LoadScriptWithName(ooscript::Context context, const std::optional<
 #if OO_CACHE_JS_SCRIPTS
     // Look for cached compiled script (a nil path is the key "", as the cache read it)
     cache = [OOCacheManager sharedCache];
-    const oo::PList cached = oo::PListFrom([cache cxx_objectForKey:path.value_or("") inCache:"compiled JavaScript scripts"]);
+    const oo::PList cached = [cache cxx_pListForKey:path.value_or("") inCache:"compiled JavaScript scripts"];
     if (const oo::Data* cachedData = cached.getIf<oo::PList::Data>()) {
         script = ScriptWithCompiledData(context, *cachedData);
     }
@@ -748,7 +747,7 @@ static Script LoadScriptWithName(ooscript::Context context, const std::optional<
              * definition, but it seems unlikely anyone is actually doing
              * that here. */
             if (fileContents->find("\"use strict\";") == std::string::npos && fileContents->find("'use strict';") == std::string::npos) {
-                cxx_OOStandardsDeprecated("Script " + oo::DescriptionOf(oo::NSStringOrNil(path)) + " does not \"use strict\";");
+                cxx_OOStandardsDeprecated("Script " + path.value_or("(null)") + " does not \"use strict\";"); // "%@" of the path
                 if (OOEnforceStandards()) {
                     // prepend it anyway
                     // TODO: some time after 1.82, make this required
@@ -772,7 +771,7 @@ static Script LoadScriptWithName(ooscript::Context context, const std::optional<
         if (script != NULL) {
             // Write compiled script to cache
             const std::optional<oo::Data> compiled = CompiledScriptData(context, script);
-            [cache cxx_setObject:(compiled.has_value() ? oo::ObjectFromPList(oo::PList(*compiled)) : nil) forKey:path.value_or("") inCache:"compiled JavaScript scripts"];
+            [cache cxx_setPList:(compiled.has_value() ? oo::PList(*compiled) : oo::PList()) forKey:path.value_or("") inCache:"compiled JavaScript scripts"]; // (null asserts, as nil did)
         }
 #endif
     }
@@ -837,10 +836,10 @@ static std::optional<std::string> StringForKey(const oo::PList& dictionary, cons
 }
 
 // A string value for -setObject:forKey:, which raised on nil (GNUstep 1.31.1's text).
-static std::string ValueForKey(const std::optional<std::string>& value, id key)
+static std::string ValueForKey(const std::optional<std::string>& value, std::string_view key)
 {
     if (!value.has_value())
-        [OOException raise:OOInvalidArgumentException format:"Tried to add nil value for key '%s' to dictionary", oo::DescriptionOf(key).c_str()];
+        [OOException raise:OOInvalidArgumentException format:"Tried to add nil value for key '%s' to dictionary", std::string(key).c_str()];
     return *value;
 }
 } // namespace

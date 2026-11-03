@@ -23,15 +23,14 @@ MA 02110-1301, USA.
 
 #import "OOJSVisualEffect.h"
 #import "EntityOOJavaScriptExtensions.h"
-#import "OOFoundationBridge.h"
 #import "OOJSEntity.h"
 #import "OOJSVector.h"
 #import "OOJavaScriptEngine.h"
 #import "OOMesh.h"
-#import "OOPListView.h"
 #import "OOVisualEffectEntity.h"
 #import "ResourceManager.h"
 
+#import "OOObjCPList.h"
 #include "ooscript/JSEngine.hpp"
 #include <cstdint>
 #include <cstring>
@@ -314,7 +313,7 @@ static bool VisualEffectGetProperty(Context cx, Object obj, PropertyId propID, V
     OOJS_NATIVE_ENTER(context)
 
     OOVisualEffectEntity* entity = nil;
-    id result = nil;
+    oo::PList result; // null maps to null
 
     if (!JSVisualEffectGetVisualEffectEntity(context, thisObj, &entity))
         return NO;
@@ -325,15 +324,18 @@ static bool VisualEffectGetProperty(Context cx, Object obj, PropertyId propID, V
 
     switch (ooscript::idToInt32(propID)) {
     case kVisualEffect_beaconCode:
-        result = oo::NSStringOrNil([entity beaconCode]);
+        if (const std::optional<std::string> text = [entity beaconCode])
+            result = oo::PList(*text);
         break;
 
     case kVisualEffect_beaconLabel:
-        result = oo::NSStringOrNil([entity beaconLabel]);
+        if (const std::optional<std::string> text = [entity beaconLabel])
+            result = oo::PList(*text);
         break;
 
     case kVisualEffect_dataKey:
-        result = oo::NSStringOrNil([entity effectKey]);
+        if (const std::optional<std::string> text = [entity effectKey])
+            result = oo::PList(*text);
         break;
 
     case kVisualEffect_isBreakPattern:
@@ -360,11 +362,11 @@ static bool VisualEffectGetProperty(Context cx, Object obj, PropertyId propID, V
         return ooscript::newNumberValue(cx, [entity scaleZ], value);
 
     case kVisualEffect_scannerDisplayColor1:
-        result = oo::ObjectFromPList(NormalizedColorComponents([entity scannerDisplayColor1]));
+        result = NormalizedColorComponents([entity scannerDisplayColor1]);
         break;
 
     case kVisualEffect_scannerDisplayColor2:
-        result = oo::ObjectFromPList(NormalizedColorComponents([entity scannerDisplayColor2]));
+        result = NormalizedColorComponents([entity scannerDisplayColor2]);
         break;
 
     case kVisualEffect_hullHeatLevel:
@@ -393,15 +395,16 @@ static bool VisualEffectGetProperty(Context cx, Object obj, PropertyId propID, V
     case kVisualEffect_subEntities: {
         // nil before the first subentity (was [subEntitiesForScript] == nil)
         const auto subs = [entity visualEffectSubEntityEnumerator];
-        result = subs.has_value() ? oo::NSArrayFromObjects(*subs) : nil;
+        if (subs.has_value())
+            result = oo::PListFromObjects(*subs);
     } break;
 
     case kVisualEffect_script:
-        result = [entity script];
+        result = oo::PListObject([entity script]);
         break;
 
     case kVisualEffect_scriptInfo:
-        result = oo::ObjectFromPList([entity scriptInfo]); // empty dict, never null
+        result = [entity scriptInfo]; // empty dict, never null
         break;
 
     default:
@@ -409,7 +412,7 @@ static bool VisualEffectGetProperty(Context cx, Object obj, PropertyId propID, V
         return NO;
     }
 
-    *value_raw = OOJSValueFromNativeObject(context, result);
+    *value_raw = OOJSValueFromPList(context, result);
     return YES;
 
     OOJS_NATIVE_EXIT
@@ -479,7 +482,7 @@ static bool VisualEffectSetProperty(Context cx, Object obj, PropertyId propID, b
         break;
 
     case kVisualEffect_scannerDisplayColor1:
-        colorForScript = [OOColor colorWithDescription:oo::ObjectFromPList(cxx_OOJSPListFromJSValue(context, *value_raw))];
+        colorForScript = [OOColor cxx_colorWithDescription:cxx_OOJSPListFromJSValue(context, *value_raw)];
         if (colorForScript != nil || ooscript::isNull(*value_raw)) {
             [entity setScannerDisplayColor1:colorForScript];
             return YES;
@@ -487,7 +490,7 @@ static bool VisualEffectSetProperty(Context cx, Object obj, PropertyId propID, b
         break;
 
     case kVisualEffect_scannerDisplayColor2:
-        colorForScript = [OOColor colorWithDescription:oo::ObjectFromPList(cxx_OOJSPListFromJSValue(context, *value_raw))];
+        colorForScript = [OOColor cxx_colorWithDescription:cxx_OOJSPListFromJSValue(context, *value_raw)];
         if (colorForScript != nil || ooscript::isNull(*value_raw)) {
             [entity setScannerDisplayColor2:colorForScript];
             return YES;
@@ -623,15 +626,15 @@ static bool VisualEffectGetMaterials(ooscript::Context cx, ooscript::CallArgs& o
 
     OOJS_PROFILE_ENTER
 
-    OOObject* result = nil;
+    oo::PList result;
     OOVisualEffectEntity* thisEnt = nil;
 
     GET_THIS_EFFECT(thisEnt);
 
-    result = oo::ObjectFromPList([[thisEnt mesh] materials]);
-    if (result == nil)
-        result = oo::ObjectFromPList(oo::PList(oo::PList::Dict { })); // an empty dictionary
-    OOJS_RETURN_OBJECT(result);
+    result = [[thisEnt mesh] materials];
+    if (result.isNull())
+        result = oo::PList(oo::PList::Dict { }); // an empty dictionary
+    OOJS_RETURN_PLIST(result);
 
     OOJS_PROFILE_EXIT
 }
@@ -645,15 +648,15 @@ static bool VisualEffectGetShaders(ooscript::Context cx, ooscript::CallArgs& ooj
 
     OOJS_PROFILE_ENTER
 
-    OOObject* result = nil;
+    oo::PList result;
     OOVisualEffectEntity* thisEnt = nil;
 
     GET_THIS_EFFECT(thisEnt);
 
-    result = oo::ObjectFromPList([[thisEnt mesh] shaders]);
-    if (result == nil)
-        result = oo::ObjectFromPList(oo::PList(oo::PList::Dict { })); // an empty dictionary
-    OOJS_RETURN_OBJECT(result);
+    result = [[thisEnt mesh] shaders];
+    if (result.isNull())
+        result = oo::PList(oo::PList::Dict { }); // an empty dictionary
+    OOJS_RETURN_PLIST(result);
 
     OOJS_PROFILE_EXIT
 }
