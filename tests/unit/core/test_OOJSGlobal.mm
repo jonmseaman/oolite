@@ -7,8 +7,8 @@
 	context on the game's own façade backend (ooscript/JSEngine_quickjs.cpp) with the file's own
 	CreateOOJSGlobal()/SetUpOOJSGlobal(), and links the game's own objects for the binding, the
 	engine's exception translator (OOJSEngineNativeWrappers.mm) and the converted classes it uses
-	(OOColor, OOJSGuiScreenKeyDefinition, reached through their façades, linked as their own tests
-	link them). It stands in for the player, the universe, its GUI and game view, the resource
+	(OOColor, C++ since bead oo-9ht.1 deleted its façade, and OOJSGuiScreenKeyDefinition, C++ since bead oo-9ht.62
+	deleted its façade, linked as their own tests link them). It stands in for the player, the universe, its GUI (C++ since bead oo-9ht.143: the members the binding calls) and game view, the resource
 	manager, the script engine (its monitor and JS calls), the running script, the string
 	expander, the GUI screen names and the commodity names, with the engine headers' linkage.
 	The expectations were written against the Objective-C file and run on it first; they pin the
@@ -22,6 +22,8 @@
 #import "oofnd/objc/OOObject.h"
 #import "OOWeakReference.h"
 #import "OOColor.h"
+#import "GuiDisplayGen.h"
+#import "OOTextureSprite.h"	// the GUI stand-in's destructor destroys its sprite members
 #import "OOJSGuiScreenKeyDefinition.h"
 #import "OOStringExpander.h"
 #include <objc/runtime.h>
@@ -38,27 +40,30 @@
 
 // MARK: The classes, as far as the binding sees them ----------------------------------------------
 
-@class GuiDisplayGen, MyOpenGLView;
+@class MyOpenGLView;
 
 /*	The player: its galaxy and screen, key binding descriptions, extra GUI screen keys and the
 	equipment screen's background.
 */
-@interface PlayerEntity: OOObject
+// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood in for: the members
+// the code under test calls, declared as the game headers declare them (the test imports none
+// that defines the classes), with the stand-in's answers.
+class PlayerEntity
 {
-@public
-	OOGalaxyID _galaxy;
-	OOGUIScreenID _screen;
+public:
+	OOGalaxyID currentGalaxyID();
+	OOGUIScreenID guiScreen();
+	std::optional<std::string> keyBindingDescription2(const std::string &binding);
+	void clearExtraGuiScreenKeys(OOGUIScreenID gui, const std::string &key);
+	void setEquipScreenBackgroundDescriptor(const oo::PList &descriptor);
+	bool setExtraGuiScreenKeys(OOGUIScreenID gui, ::OOJSGuiScreenKeyDefinition *definition);
+
+	OOGalaxyID _galaxy = {};
+	OOGUIScreenID _screen = {};
 	std::string _lastKeys;
-	oo::ObjCRef<OOJSGuiScreenKeyDefinition *> _definition;
+	oo::Ref<OOJSGuiScreenKeyDefinition> _definition;
 	oo::PList _equipBackground;
-}
-- (OOGalaxyID) currentGalaxyID;
-- (OOGUIScreenID) guiScreen;
-- (std::optional<std::string>) cxx_keyBindingDescription2:(const std::string &)binding;
-- (void) cxx_clearExtraGuiScreenKeys:(OOGUIScreenID)gui key:(const std::string &)key;
-- (BOOL) setExtraGuiScreenKeys:(OOGUIScreenID)gui definition:(OOJSGuiScreenKeyDefinition *)definition;
-- (void) cxx_setEquipScreenBackgroundDescriptor:(const oo::PList &)descriptor;
-@end
+};
 
 /*	The universe: time acceleration, mission text (whose lookup raises while _raise is set),
 	inhabitants, the view, the GUI, screen textures by key, the game view, pause and quit.
@@ -88,20 +93,8 @@
 - (void) quitGame;
 @end
 
-// The GUI: a texture descriptor from JS is {name: <string>}; the backgrounds and colours it holds.
-@interface GuiDisplayGen: OOObject
-{
-@public
-	oo::PList _background;
-	oo::PList _foreground;
-	std::map<std::string, oo::ObjCRef<OOColor *>> _colors;
-}
-- (oo::PList) cxx_textureDescriptorFromJSValue:(ooscript::Value)value inContext:(ooscript::Context)context callerDescription:(const std::optional<std::string> &)callerDescription;
-- (BOOL) cxx_setBackgroundTextureDescriptor:(const oo::PList &)descriptor;
-- (BOOL) cxx_setForegroundTextureDescriptor:(const oo::PList &)descriptor;
-- (OOColor *) cxx_colorFromSetting:(const std::optional<std::string> &)setting defaultValue:(OOColor *)def;
-- (void) cxx_setGuiColorSettingFromKey:(const std::string &)key color:(OOColor *)col;
-@end
+// The GUI is C++ since bead oo-9ht.143 deleted its facade: the members OOJSGlobal.mm calls are
+// defined below (a C++ stand-in with the facade stand-in's answers).
 
 @interface MyOpenGLView: OOObject
 - (BOOL) cxx_snapShot:(const std::optional<std::string> &)filename;
@@ -117,11 +110,6 @@
 + (OOJavaScriptEngine *) sharedEngine;
 @end
 
-@interface OOJSScript: OOWeakRefObject
-+ (OOJSScript *) currentlyRunningScript;
-@end
-
-
 #import "OOJSGlobal.h"
 
 #include "oo_test.hpp"
@@ -136,28 +124,34 @@
 
 
 namespace {
-PlayerEntity *sPlayer = nil;
+PlayerEntity *sPlayer = nullptr;
 Universe *sUniverse = nil;
-GuiDisplayGen *sGui = nil;
+oo::Ref<GuiDisplayGen> sGui;
+// The GUI stand-in's state: a texture descriptor from JS is {name: <string>}; the backgrounds and
+// colours it holds (the facade stand-in's ivars).
+oo::PList sGuiBackground;
+oo::PList sGuiForeground;
+std::map<std::string, oo::Ref<OOColor>> sGuiColors;
 }
 
 
-@implementation PlayerEntity
-
-- (OOGalaxyID) currentGalaxyID  { return _galaxy; }
-- (OOGUIScreenID) guiScreen  { return _screen; }
-- (std::optional<std::string>) cxx_keyBindingDescription2:(const std::string &)binding  { if (binding == "none")  return std::nullopt; return "key for " + binding; }
-- (void) cxx_clearExtraGuiScreenKeys:(OOGUIScreenID)gui key:(const std::string &)key  { _lastKeys = "clear " + std::to_string(static_cast<int>(gui)) + " " + key; }
-- (void) cxx_setEquipScreenBackgroundDescriptor:(const oo::PList &)descriptor  { _equipBackground = descriptor; }
-
-- (BOOL) setExtraGuiScreenKeys:(OOGUIScreenID)gui definition:(OOJSGuiScreenKeyDefinition *)definition
+OOGalaxyID PlayerEntity::currentGalaxyID()  { return _galaxy; }
+OOGUIScreenID PlayerEntity::guiScreen()  { return _screen; }
+std::optional<std::string> PlayerEntity::keyBindingDescription2(const std::string &binding)
 {
-	_lastKeys = "set " + std::to_string(static_cast<int>(gui)) + " " + [definition cxx_name].value_or("(none)") + " " + oo::DescriptionOf([definition registerKeys]);
-	_definition = oo::ObjCRef<OOJSGuiScreenKeyDefinition *>(definition);
+	if (binding == "none")  return std::nullopt; return "key for " + binding;
+}
+void PlayerEntity::clearExtraGuiScreenKeys(OOGUIScreenID gui, const std::string &key)
+{
+	_lastKeys = "clear " + std::to_string(static_cast<int>(gui)) + " " + key;
+}
+void PlayerEntity::setEquipScreenBackgroundDescriptor(const oo::PList &descriptor)  { _equipBackground = descriptor; }
+bool PlayerEntity::setExtraGuiScreenKeys(OOGUIScreenID gui, ::OOJSGuiScreenKeyDefinition *definition)
+{
+	_lastKeys = "set " + std::to_string(static_cast<int>(gui)) + " " + definition->name().value_or("(none)") + " " + oo::DescriptionOf(definition->registerKeys());
+	_definition = oo::Ref<OOJSGuiScreenKeyDefinition>(definition);
 	return gui != GUI_SCREEN_SHIPYARD;	// the player refuses the shipyard here
 }
-
-@end
 
 
 @implementation Universe
@@ -201,9 +195,10 @@ GuiDisplayGen *sGui = nil;
 @end
 
 
-@implementation GuiDisplayGen
+GuiDisplayGen::GuiDisplayGen() {}
+GuiDisplayGen::~GuiDisplayGen() {}
 
-- (oo::PList) cxx_textureDescriptorFromJSValue:(ooscript::Value)value inContext:(ooscript::Context)context callerDescription:(const std::optional<std::string> &)callerDescription
+oo::PList GuiDisplayGen::textureDescriptorFromJSValue(ooscript::Value value, ooscript::Context context, const std::optional<std::string> &callerDescription)
 {
 	(void)callerDescription;
 	ooscript::Value name = ooscript::undefinedValue();
@@ -216,22 +211,39 @@ GuiDisplayGen *sGui = nil;
 	return oo::PList(oo::PList::Dict{ { "name", oo::PList(text) } });
 }
 
-- (BOOL) cxx_setBackgroundTextureDescriptor:(const oo::PList &)descriptor  { _background = descriptor; return !descriptor.isNull(); }
-- (BOOL) cxx_setForegroundTextureDescriptor:(const oo::PList &)descriptor  { _foreground = descriptor; return !descriptor.isNull(); }
+bool GuiDisplayGen::setBackgroundTextureDescriptor(const oo::PList &descriptor)  { sGuiBackground = descriptor; return !descriptor.isNull(); }
+bool GuiDisplayGen::setForegroundTextureDescriptor(const oo::PList &descriptor)  { sGuiForeground = descriptor; return !descriptor.isNull(); }
 
-- (OOColor *) cxx_colorFromSetting:(const std::optional<std::string> &)setting defaultValue:(OOColor *)def
+oo::Ref<OOColor> GuiDisplayGen::colorFromSetting(const std::optional<std::string> &setting, OOColor *def)
 {
-	auto found = _colors.find(setting.value_or(""));
-	return found != _colors.end() ? found->second.get() : def;
+	auto found = sGuiColors.find(setting.value_or(""));
+	return found != sGuiColors.end() ? found->second : oo::Ref<OOColor>(def);
 }
 
-- (void) cxx_setGuiColorSettingFromKey:(const std::string &)key color:(OOColor *)col
+void GuiDisplayGen::setGuiColorSettingFromKey(const std::string &key, OOColor *col)
 {
-	if (col == nil)  _colors.erase(key);
-	else  _colors[key] = oo::ObjCRef<OOColor *>(col);
+	if (col == nullptr)  sGuiColors.erase(key);
+	else  sGuiColors[key] = oo::Ref<OOColor>(col);
 }
 
-@end
+// The GUI's virtual members the binding does not call (its vtable needs them): never run.
+void GuiDisplayGen::setTitle(const std::optional<std::string> &)  { std::abort(); }
+OOColor *GuiDisplayGen::getTextColor()  { std::abort(); }
+void GuiDisplayGen::setTextColor(OOColor *)  { std::abort(); }
+OOColor *GuiDisplayGen::getTextCommsColor()  { std::abort(); }
+void GuiDisplayGen::setTextCommsColor(OOColor *)  { std::abort(); }
+void GuiDisplayGen::setColor(OOColor *, OOGUIRow)  { std::abort(); }
+OOGUIRow GuiDisplayGen::getSelectedRow()  { std::abort(); }
+bool GuiDisplayGen::setSelectedRow(OOGUIRow)  { std::abort(); }
+void GuiDisplayGen::setSelectableRange(NSRange)  { std::abort(); }
+void GuiDisplayGen::setTabStops(OOGUITabSettings)  { std::abort(); }
+void GuiDisplayGen::clearAndKeepBackground(bool)  { std::abort(); }
+void GuiDisplayGen::setKey(const std::string &, OOGUIRow)  { std::abort(); }
+void GuiDisplayGen::setText(const std::string &, OOGUIRow)  { std::abort(); }
+void GuiDisplayGen::setText(const std::optional<std::string> &, OOGUIRow, OOGUIAlignment)  { std::abort(); }
+std::optional<std::string> GuiDisplayGen::reflowTextForMFD(const std::optional<std::string> &)  { std::abort(); }
+OOGUIRow GuiDisplayGen::addLongText(const std::optional<std::string> &, OOGUIRow, OOGUIAlignment)  { std::abort(); }
+void GuiDisplayGen::setArray(const std::vector<std::string> &, OOGUIRow)  { std::abort(); }
 
 
 @implementation MyOpenGLView
@@ -288,9 +300,25 @@ void cxx::OOJavaScriptEngine::sendMonitorLogMessage(const std::optional<std::str
 }
 
 
-@implementation OOJSScript
-+ (OOJSScript *) currentlyRunningScript  { return nil; }
-@end
+#import "OOScript.h"
+
+
+// OOJSScript (OOJSScript.h), which the code under test calls. Since bead oo-9ht.133 deleted the
+// OOScript root's facade (a script's object since bead oo-9ht.137) a script is the C++ object, so
+// the stand-in is a C++ subclass of OOScript declaring the members that code calls.
+class OOJSScript : public OOScript
+{
+public:
+	static OOJSScript *currentlyRunningScript();
+	static void pushScript(const oo::WeakRef<OOJSScript> &script);
+	static void popScript(OOJSScript *script);
+};
+
+OOJSScript *OOJSScript::currentlyRunningScript()  { return nullptr; }
+// The GUI-screen key definition linked here pushes its owner when its callback runs, which no case does
+// (the class methods were never sent; as C++ statics they must be defined).
+void OOJSScript::pushScript(const oo::WeakRef<OOJSScript> &)  { std::abort(); }
+void OOJSScript::popScript(OOJSScript *)  { std::abort(); }
 
 
 // MARK: What the rest of the game provides --------------------------------------------------------
@@ -457,7 +485,7 @@ oo::PList OOJSDictionaryFromStringTable(ooscript::Context context, ooscript::Val
 ooscript::Context gOOJSMainThreadContext = nullptr;
 extern const char * const kOOJavaScriptEngineWillResetNotificationName;
 const char * const kOOJavaScriptEngineWillResetNotificationName = "org.aegidian.oolite OOJavaScriptEngine will reset";
-PlayerEntity *gOOPlayer = nil;
+PlayerEntity *gOOPlayer = nullptr;
 Universe *gSharedUniverse = nil;
 
 
@@ -524,15 +552,15 @@ void SetUpContext()
 	SetUpOOJSGlobal(sContext, sGlobal);
 	oo::log::logger().setInitialized(true);	// as OOLoggingInit() does
 
-	sPlayer = [[PlayerEntity alloc] init];	// kept for the life of the test
+	sPlayer = new PlayerEntity;	// kept for the life of the test
 	sPlayer->_galaxy = 3;
 	sPlayer->_screen = GUI_SCREEN_STATUS;
 	gOOPlayer = sPlayer;
 	sUniverse = [[Universe alloc] init];
 	sUniverse->_timeAcceleration = 1;
 	sUniverse->_view = VIEW_GUI_DISPLAY;
-	sGui = [[GuiDisplayGen alloc] init];
-	sUniverse->_gui = sGui;
+	sGui = oo::makeRef<GuiDisplayGen>();	// kept for the life of the test
+	sUniverse->_gui = sGui.get();
 	gSharedUniverse = sUniverse;
 }
 
@@ -642,7 +670,7 @@ OO_TEST(screens)
 	SetUpContext();
 	sLastWarning.clear();
 	OO_CHECK_EVAL("setScreenBackground({name: 'bg.png'})", "true");
-	OO_CHECK_EQ(oo::DescriptionOf(sGui->_background), oo::DescriptionOf(oo::PList(oo::PList::Dict{ { "name", oo::PList(std::string("bg.png")) } })));
+	OO_CHECK_EQ(oo::DescriptionOf(sGuiBackground), oo::DescriptionOf(oo::PList(oo::PList::Dict{ { "name", oo::PList(std::string("bg.png")) } })));
 	OO_CHECK(sPlayer->_equipBackground.isNull());
 	sPlayer->_screen = GUI_SCREEN_EQUIP_SHIP;
 	OO_CHECK_EVAL("setScreenBackground({name: 'eq.png'})", "true");
@@ -653,13 +681,13 @@ OO_TEST(screens)
 	OO_CHECK_EQ(sLastWarning, std::string("Usage error: setScreenBackground() called with no arguments. Treating as setScreenBackground(null). This call may fail in a future version of Oolite."));
 	OO_CHECK_EVAL("setScreenBackground(undefined)", "threw: bad arguments: -.setScreenBackground(1) - / GUI texture descriptor");
 	OO_CHECK_EVAL("setScreenOverlay({name: 'fg.png'})", "true");
-	OO_CHECK(!sGui->_foreground.isNull());
+	OO_CHECK(!sGuiForeground.isNull());
 	OO_CHECK_EVAL("setScreenOverlay(undefined)", "threw: bad arguments: -.setScreenOverlay(1) - / GUI texture descriptor");
 	// Not on a GUI view: nothing is set.
 	sUniverse->_view = VIEW_FORWARD;
-	sGui->_foreground = oo::PList();
+	sGuiForeground = oo::PList();
 	OO_CHECK_EVAL("setScreenOverlay({name: 'fg.png'})", "false");
-	OO_CHECK(sGui->_foreground.isNull());
+	OO_CHECK(sGuiForeground.isNull());
 	sUniverse->_view = VIEW_GUI_DISPLAY;
 	// Backgrounds by key.
 	OO_CHECK_EVAL("setScreenBackgroundForKey('long_range_chart', {name: 'lrc.png'})", "true");
@@ -697,9 +725,9 @@ OO_TEST(extraGuiScreenKeys)
 	SetUpContext();
 	OO_CHECK_EVAL("setExtraGuiScreenKeys('myKeys', {guiScreen: 'GUI_SCREEN_STATUS', registerKeys: {keys: ['a', 'b']}, callback: function () {}})", "true");
 	OO_CHECK_EQ(sPlayer->_lastKeys, std::string("set ") + std::to_string(static_cast<int>(GUI_SCREEN_STATUS)) + " myKeys " + oo::DescriptionOf(oo::PList(oo::PList::Dict{ { "keys", oo::PList(oo::PList::Array{ oo::PList(std::string("a")), oo::PList(std::string("b")) }) } })));
-	OO_CHECK(sPlayer->_definition.get() != nil && ooscript::isObject([sPlayer->_definition.get() callback]) && [sPlayer->_definition.get() callbackThis] == nullptr);
+	OO_CHECK(sPlayer->_definition.get() != nullptr && ooscript::isObject(sPlayer->_definition->callback()) && sPlayer->_definition->callbackThis() == nullptr);
 	OO_CHECK_EVAL("setExtraGuiScreenKeys('myKeys', {guiScreen: 'GUI_SCREEN_STATUS', registerKeys: null, callback: function () {}, cbThis: global})", "true");
-	OO_CHECK([sPlayer->_definition.get() callbackThis] == sGlobal);
+	OO_CHECK(sPlayer->_definition->callbackThis() == sGlobal);
 	OO_CHECK_EVAL("setExtraGuiScreenKeys('myKeys', {guiScreen: 'GUI_SCREEN_SHIPYARD', registerKeys: {}, callback: function () {}})", "false");
 	OO_CHECK_EVAL("setExtraGuiScreenKeys('k')", "threw: bad arguments: global.setExtraGuiScreenKeys(2) - / key, definition: definition is not a valid dictionary.");
 	OO_CHECK_EVAL("setExtraGuiScreenKeys()", "threw: bad arguments: -.setExtraGuiScreenKeys(0) - / key, definition");

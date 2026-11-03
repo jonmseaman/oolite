@@ -79,9 +79,10 @@ MA 02110-1301, USA.
         ADR-0056 amendment oo-ppc). The JS class was already C++ on the ooscript façade;
         OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
         (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. log() calls the C++ engine's
-        monitor member directly (bead oo-9ht.98; amendments oo-9ht.66 and oo-6ia4 item 6). OOColor and OOJSGuiScreenKeyDefinition, which are C++ since beads oo-11m and oo-xg7g,
-        are reached as cxx:: classes through oo::ToCxx/oo::ToObjC (amendment oo-ppc, item 4); the key
-        definition is still made as its façade, which the player keeps (amendment oo-q9q4 item 1).
+        monitor member directly (bead oo-9ht.98; amendments oo-9ht.66 and oo-6ia4 item 6). OOColor, which
+        is C++ since bead oo-11m, is reached as a cxx:: class through oo::ToCxx/oo::ToObjC (amendment
+        oo-ppc, item 4); OOJSGuiScreenKeyDefinition is C++ since bead oo-xg7g and has no façade since
+        bead oo-9ht.62: the key definition is made with oo::makeRef and the player keeps it.
         Messages to classes that are still Objective-C (PlayerEntity, Universe, GuiDisplayGen,
         MyOpenGLView, ResourceManager) stay as they are, which is why the file is still .mm until Phase
         4.
@@ -321,11 +322,11 @@ static bool GlobalGetProperty(Context cx, Object obj, PropertyId propID, Value* 
 
     switch (ooscript::idToInt32(propID)) {
     case kGlobal_galaxyNumber:
-        *value = ooscript::int32Value([player currentGalaxyID]);
+        *value = ooscript::int32Value((player != nullptr ? player->PlayerEntity::currentGalaxyID() : OOGalaxyID { })); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
         return true;
 
     case kGlobal_guiScreen:
-        *value = (OOJSValueFromGUIScreenID(context, [player guiScreen]));
+        *value = (OOJSValueFromGUIScreenID(context, (player != nullptr ? player->guiScreen() : OOGUIScreenID { })));
         return true;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -472,7 +473,7 @@ static bool GlobalKeyBindingDescription(ooscript::Context context, ooscript::Cal
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    string = [player cxx_keyBindingDescription2:*string];
+    string = (player != nullptr ? player->keyBindingDescription2(*string) : std::optional<std::string>());
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_STRING_OR_NULL(string);
@@ -607,7 +608,8 @@ static bool GlobalClearExtraGuiScreenKeys(ooscript::Context context, ooscript::C
         return false;
     }
 
-    [player cxx_clearExtraGuiScreenKeys:gui key:*key];
+    if (player != nullptr)
+        player->clearExtraGuiScreenKeys(gui, *key);
 
     result = true;
     OOJS_RETURN_BOOL(result);
@@ -682,10 +684,9 @@ static bool GlobalSetExtraGuiScreenKeys(ooscript::Context context, ooscript::Cal
         return false;
     }
 
-    // The definition is still made as its façade (its superclass, OOWeakRefObject, is Objective-C:
-    // amendment oo-q9q4 item 1), which the player keeps; its members are reached as C++.
-    OOJSGuiScreenKeyDefinition* definition = [[OOJSGuiScreenKeyDefinition alloc] init];
-    cxx::OOJSGuiScreenKeyDefinition* cxxDefinition = oo::ToCxx(definition);
+    // C++ since bead oo-9ht.62 deleted its façade; the player keeps it (oo::Ref).
+    const oo::Ref<OOJSGuiScreenKeyDefinition> definition = oo::makeRef<OOJSGuiScreenKeyDefinition>();
+    OOJSGuiScreenKeyDefinition* cxxDefinition = definition.get();
     cxxDefinition->setName(key);
     cxxDefinition->setRegisterKeys(keydefs);
     cxxDefinition->setCallback(callback);
@@ -699,8 +700,7 @@ static bool GlobalSetExtraGuiScreenKeys(ooscript::Context context, ooscript::Cal
         // can do .bind(this) for callback instead
     }
 
-    result = [player setExtraGuiScreenKeys:gui definition:definition];
-    [definition release];
+    result = (player != nullptr ? player->setExtraGuiScreenKeys(gui, definition.get()) : false);
 
     OOJS_RETURN_BOOL(result);
 
@@ -727,13 +727,15 @@ static bool GlobalSetScreenBackground(ooscript::Context context, ooscript::CallA
 
     if ([UNIVERSE viewDirection] == VIEW_GUI_DISPLAY) {
         GuiDisplayGen* gui = [UNIVERSE gui];
-        oo::PList descriptor = [gui cxx_textureDescriptorFromJSValue:value inContext:context callerDescription:"setScreenBackground()"];
+        oo::PList descriptor = gui->textureDescriptorFromJSValue(value, context, "setScreenBackground()");
 
-        result = [gui cxx_setBackgroundTextureDescriptor:descriptor];
+        result = gui->setBackgroundTextureDescriptor(descriptor);
 
         // add some permanence to the override if we're in the equip ship screen
-        if (result && [PLAYER guiScreen] == GUI_SCREEN_EQUIP_SHIP)
-            [PLAYER cxx_setEquipScreenBackgroundDescriptor:descriptor];
+        if (result && (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID { }) == GUI_SCREEN_EQUIP_SHIP) {
+            if (PLAYER != nullptr)
+                PLAYER->setEquipScreenBackgroundDescriptor(descriptor);
+        }
     }
 
     OOJS_RETURN_BOOL(result);
@@ -785,7 +787,7 @@ static bool GlobalSetScreenBackgroundForKey(ooscript::Context context, ooscript:
     }
 
     GuiDisplayGen* gui = [UNIVERSE gui];
-    oo::PList descriptor = [gui cxx_textureDescriptorFromJSValue:value inContext:context callerDescription:"setScreenBackgroundDefault()"];
+    oo::PList descriptor = gui->textureDescriptorFromJSValue(value, context, "setScreenBackgroundDefault()");
 
     [UNIVERSE cxx_setScreenTextureDescriptorForKey:*key descriptor:descriptor]; // (its Foundation round trip was the identity for this JavaScript-derived dictionary)
     result = true;
@@ -815,9 +817,9 @@ static bool GlobalSetScreenOverlay(ooscript::Context context, ooscript::CallArgs
 
     if ([UNIVERSE viewDirection] == VIEW_GUI_DISPLAY) {
         GuiDisplayGen* gui = [UNIVERSE gui];
-        oo::PList descriptor = [gui cxx_textureDescriptorFromJSValue:value inContext:context callerDescription:"setScreenOverlay()"];
+        oo::PList descriptor = gui->textureDescriptorFromJSValue(value, context, "setScreenOverlay()");
 
-        result = [gui cxx_setForegroundTextureDescriptor:descriptor];
+        result = gui->setForegroundTextureDescriptor(descriptor);
     }
 
     OOJS_RETURN_BOOL(result);
@@ -847,7 +849,7 @@ static bool GlobalGetGuiColorSettingForKey(ooscript::Context context, ooscript::
     }
 
     GuiDisplayGen* gui = [UNIVERSE gui];
-    cxx::OOColor* col = oo::ToCxx([gui cxx_colorFromSetting:key defaultValue:nil]);
+    oo::Ref<OOColor> col = gui->colorFromSetting(key, nil);
 
     // The components as the colour's -normalizedArray gave them: floats, nil for no colour.
     oo::PList::Array components;
@@ -868,7 +870,7 @@ static bool GlobalSetGuiColorSettingForKey(ooscript::Context context, ooscript::
     OOJS_NATIVE_ENTER(context)
 
     bool result = false;
-    oo::Ref<cxx::OOColor> col;
+    oo::Ref<OOColor> col;
 
     if (EXPECT_NOT(oojsArgs.count() != 2)) {
         cxx_OOJSReportBadArguments(context, std::nullopt, "setGuiColorForKey", 0, OOJS_ARGV, std::nullopt, "missing arguments");
@@ -887,7 +889,7 @@ static bool GlobalSetGuiColorSettingForKey(ooscript::Context context, ooscript::
     }
 
     if (!ooscript::isNull(value)) {
-        col = cxx::OOColor::colorWithDescription(cxx_OOJSPListFromJSValue(context, value));
+        col = OOColor::colorWithDescription(cxx_OOJSPListFromJSValue(context, value));
         if (col == nullptr) {
             cxx_OOJSReportBadArguments(context, std::nullopt, "setGuiColorForKey", 1, OOJS_ARGV, std::nullopt, "color descriptor");
             return false;
@@ -895,7 +897,7 @@ static bool GlobalSetGuiColorSettingForKey(ooscript::Context context, ooscript::
     }
 
     GuiDisplayGen* gui = [UNIVERSE gui];
-    [gui cxx_setGuiColorSettingFromKey:*key color:oo::ToObjC(col.get())];
+    gui->setGuiColorSettingFromKey(*key, col.get());
     result = true;
 
     OOJS_RETURN_BOOL(result);
@@ -1005,7 +1007,7 @@ static bool GlobalPauseGame(ooscript::Context context, ooscript::CallArgs& oojsA
     PlayerEntity* player = PLAYER;
 
     if (player) {
-        OOGUIScreenID guiScreen = [player guiScreen];
+        OOGUIScreenID guiScreen = (player != nullptr ? player->guiScreen() : OOGUIScreenID { });
 
         if (guiScreen != GUI_SCREEN_LONG_RANGE_CHART && guiScreen != GUI_SCREEN_MISSION && guiScreen != GUI_SCREEN_REPORT && guiScreen != GUI_SCREEN_KEYBOARD_ENTRY && guiScreen != GUI_SCREEN_SAVE) {
             [UNIVERSE pauseGame];

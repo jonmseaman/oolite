@@ -9,7 +9,9 @@
 	objects for the binding and the engine's exception translator
 	(OOJSEngineNativeWrappers.mm), and stands in for the classes the binding messages (Entity and
 	OOWaypointEntity, and the universe's beacon list and the player's compass, answer only the
-	selectors the binding sends), for the Quaternion conversions (a quaternion is the array
+	selectors the binding sends; since bead oo-9ht.108 deleted the OOWaypointEntity facade the
+	waypoint is a C++ stand-in under the root's object, which answers the beacon selectors and
+	asks the C++ part the JS questions, as the game's does), for the Quaternion conversions (a quaternion is the array
 	[w, x, y, z] here) and for the engine functions the binding links against, with the engine
 	headers' linkage. The expectations were written against the Objective-C file and run on it
 	first; they pin the JS-visible behaviour (the four properties, a beacon code that registers or
@@ -30,11 +32,47 @@
 
 // MARK: The classes, as far as the binding sees them ----------------------------------------------
 
-@class Universe, PlayerEntity;
+@class Universe;
+class PlayerEntity;
 
+namespace cxx {
+
+// The C++ root, as far as the binding and the root's JS category reach it.
+class Entity : public oo::RefCounted
+{
+public:
+	virtual ~Entity();
+	virtual void getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype);
+	virtual std::optional<std::string> jsClassName();
+	virtual bool isVisibleToScripts();
+};
+
+}	// namespace cxx
+
+/*	The waypoint (C++ since bead oo-9ht.108). One whose size is 99 raises from size(), one whose
+	size is 98 throws a C++ exception, so the test sees what an exception under a native becomes.
+*/
+class OOWaypointEntity : public cxx::Entity
+{
+public:
+	void getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype) override;
+	std::optional<std::string> jsClassName() override;
+	bool isVisibleToScripts() override;
+
+	bool getOriented();
+	OOScalar size();
+	void setSize(OOScalar newSize);
+
+	BOOL _oriented = NO;
+	OOScalar _size = 0;
+};
+
+// The root's object, which holds the waypoint's C++ part (oo::ToCxx reads it) and answers the
+// beacon selectors for it (the game's Entity (OOWaypointBeacon)).
 @interface Entity: OOObject
 {
 @public
+	oo::Ref<cxx::Entity> _cxxEntity;
 	std::optional<std::string> _beaconCode;
 	std::optional<std::string> _beaconLabel;
 	Quaternion _orientation;
@@ -47,20 +85,6 @@
 - (BOOL) isBeacon;
 - (Quaternion) orientation;
 - (void) setNormalOrientation:(Quaternion)quat;
-@end
-
-/*	A waypoint whose size is 99 raises from -size, one whose size is 98 throws a C++ exception, so
-	the test sees what an exception under a native becomes.
-*/
-@interface OOWaypointEntity: Entity
-{
-@public
-	BOOL _oriented;
-	OOScalar _size;
-}
-- (BOOL) oriented;
-- (OOScalar) size;
-- (void) setSize:(OOScalar)newSize;
 @end
 
 // The universe's beacon list and the player's compass: what the binding tells them.
@@ -77,6 +101,23 @@
 - (Entity *) nextBeacon;
 - (void) setCompassMode:(OOCompassMode)mode;
 @end
+
+// PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player the fake game stood in for: the
+// compass members the binding calls (declared as the game headers declare them; the test imports
+// none that defines the classes), which ask the fake game as the binding asked it.
+class ShipEntity : public cxx::Entity	// C++ since bead oo-9ht.144
+{
+public:
+	::Entity *nextBeacon();
+};
+
+class PlayerEntity : public ShipEntity
+{
+public:
+	void setCompassMode(OOCompassMode value);
+
+	FakeGame *_game = nil;
+};
 
 @interface Entity (OOJavaScriptExtensions)
 - (void) getJSClass:(ooscript::ClassDef **)outClass andPrototype:(ooscript::Object *)outPrototype;
@@ -111,27 +152,35 @@
 @end
 
 
-@implementation OOWaypointEntity
+// The root's JS category, as the game's asks the C++ part (EntityOOJavaScriptExtensions+ObjCBridge.mm,
+// bead oo-9ht.107): the engine sends these selectors to the wrapped object.
+@implementation Entity (OOJavaScriptExtensions)
 
-- (BOOL) oriented  { return _oriented; }
-- (void) setSize:(OOScalar)newSize  { _size = newSize; }
+- (void) getJSClass:(ooscript::ClassDef **)outClass andPrototype:(ooscript::Object *)outPrototype  { _cxxEntity->getJSClass(outClass, outPrototype); }
+- (std::optional<std::string>) cxx_oo_jsClassName  { return _cxxEntity->jsClassName(); }
+- (BOOL) isVisibleToScripts  { return _cxxEntity->isVisibleToScripts(); }
 
-- (OOScalar) size
+@end
+
+
+cxx::Entity::~Entity()  {}
+void cxx::Entity::getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype)  { *outClass = nullptr; *outPrototype = nullptr; }
+std::optional<std::string> cxx::Entity::jsClassName()  { return std::string("Entity"); }
+bool cxx::Entity::isVisibleToScripts()  { return false; }
+
+// The binding's category, as the C++ class's overrides call it (OOWaypointEntity.mm, bead oo-9ht.108).
+void OOWaypointEntity::getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype)  { ::OOJSWaypointGetJSClass(outClass, outPrototype); }
+std::optional<std::string> OOWaypointEntity::jsClassName()  { return ::OOJSWaypointJSClassName(); }
+bool OOWaypointEntity::isVisibleToScripts()  { return ::OOJSWaypointIsVisibleToScripts(); }
+
+bool OOWaypointEntity::getOriented()  { return _oriented; }
+void OOWaypointEntity::setSize(OOScalar newSize)  { _size = newSize; }
+OOScalar OOWaypointEntity::size()
 {
 	if (_size == 99)  [OOException raise:OOInvalidArgumentException format:"size %s", "boom"];
 	if (_size == 98)  throw std::runtime_error("cxx boom");
 	return _size;
 }
-
-
-// The binding's category, as the OOWaypointEntity facade forwards it
-// (OOWaypointEntity+ObjCBridge.mm, bead oo-9ht.50): the engine sends these selectors to the wrapped
-// object.
-- (void) getJSClass:(ooscript::ClassDef **)outClass andPrototype:(ooscript::Object *)outPrototype  { ::OOJSWaypointGetJSClass(outClass, outPrototype); }
-- (std::optional<std::string>) cxx_oo_jsClassName  { return ::OOJSWaypointJSClassName(); }
-- (BOOL) isVisibleToScripts  { return ::OOJSWaypointIsVisibleToScripts(); }
-
-@end
 
 
 @implementation FakeGame
@@ -142,6 +191,9 @@
 - (void) setCompassMode:(OOCompassMode)mode  { _compassMode = static_cast<int>(mode); }
 
 @end
+
+::Entity *ShipEntity::nextBeacon()  { return [static_cast<PlayerEntity *>(this)->_game nextBeacon]; }
+void PlayerEntity::setCompassMode(OOCompassMode value)  { [static_cast<PlayerEntity *>(this)->_game setCompassMode:value]; }
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
@@ -204,7 +256,7 @@ std::map<ooscript::ClassDef *, int> sConverters;
 
 ooscript::Object gOOEntityJSPrototype = nullptr;
 Universe *gSharedUniverse = nil;
-PlayerEntity *gOOPlayer = nil;
+PlayerEntity *gOOPlayer = nullptr;
 
 
 extern "C" {
@@ -347,7 +399,8 @@ namespace {
 ooscript::Runtime sRuntime;
 ooscript::Context sContext;
 ooscript::Object sGlobal;
-OOWaypointEntity *sWaypoint = nil;
+Entity *sWaypoint = nil;			// the waypoint's object
+OOWaypointEntity *sWaypointPart = nullptr;	// its C++ part
 FakeGame *sGame = nil;
 
 
@@ -389,12 +442,15 @@ void SetUpContext()
 
 	sGame = [[FakeGame alloc] init];	// kept for the life of the test
 	gSharedUniverse = (Universe *)sGame;
-	gOOPlayer = (PlayerEntity *)sGame;
-	sWaypoint = [[OOWaypointEntity alloc] init];
+	gOOPlayer = new PlayerEntity;	// never deleted
+	gOOPlayer->_game = sGame;
+	sWaypoint = [[Entity alloc] init];	// kept for the life of the test
+	sWaypoint->_cxxEntity = oo::makeRef<OOWaypointEntity>();
+	sWaypointPart = static_cast<OOWaypointEntity *>(sWaypoint->_cxxEntity.get());
 	sWaypoint->_beaconLabel = "Label";
 	sWaypoint->_orientation = make_quaternion(0, 1, 0, 0);
-	sWaypoint->_oriented = YES;
-	sWaypoint->_size = 20;
+	sWaypointPart->_oriented = YES;
+	sWaypointPart->_size = 20;
 	Define("waypoint", JSValueForEntity(sWaypoint));
 	Define("plainEntity", JSValueForObject(&sFakeEntityClass, gOOEntityJSPrototype, [[Entity alloc] init]));
 }
@@ -455,9 +511,9 @@ OO_TEST(properties)
 	OO_CHECK_EVAL("waypoint.orientation", "0,1,0,0");
 	OO_CHECK_EVAL("waypoint.size", "20");
 	OO_CHECK_EVAL("Object.keys(Waypoint.prototype).join()", "beaconCode,beaconLabel,orientation,size");
-	sWaypoint->_oriented = NO;
+	sWaypointPart->_oriented = NO;
 	OO_CHECK_EVAL("waypoint.orientation", "0,0,0,0");	// unoriented: the zero quaternion
-	sWaypoint->_oriented = YES;
+	sWaypointPart->_oriented = YES;
 }
 
 
@@ -510,11 +566,11 @@ OO_TEST(nativeExceptions)
 	SetUpContext();
 	// The property getter is a native (OOJS_NATIVE_ENTER): a raise from the entity is a JS error,
 	// and so is a C++ exception.
-	sWaypoint->_size = 99;
+	sWaypointPart->_size = 99;
 	OO_CHECK_EVAL("waypoint.size", "threw: Native exception: size boom");
-	sWaypoint->_size = 98;
+	sWaypointPart->_size = 98;
 	OO_CHECK_EVAL("waypoint.size", "threw: Native exception: cxx boom");
-	sWaypoint->_size = 20;
+	sWaypointPart->_size = 20;
 	OO_CHECK_EVAL("waypoint.size", "20");
 	OO_CHECK_EQ(sLimiterPauses, 0);
 	OO_CHECK_EQ(sProfileDepth, 0);

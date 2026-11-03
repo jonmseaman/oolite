@@ -120,7 +120,19 @@ static FunctionSpec sSunMethods[] = {
 }
 
 namespace {
-DEFINE_JS_OBJECT_GETTER(JSSunGetSunEntity, &sSunClass, sSunPrototype, OOSunEntity)
+DEFINE_JS_OBJECT_GETTER(JSSunGetSunObject, &sSunClass, sSunPrototype, Entity)
+
+// The sun is C++ behind the root's facade since bead oo-9ht.111: the getter checks the JS class
+// (a Sun object's private slot holds the sun's Objective-C object, so -isKindOfClass: of the
+// facade class always held) and answers the C++ sun; null for a stale entity, as nil before.
+bool JSSunGetSunEntity(ooscript::Context context, ooscript::Object inObject, OOSunEntity** outObject)
+{
+    Entity* object = nil;
+    if (!JSSunGetSunObject(context, inObject, &object))
+        return false;
+    *outObject = (object != nil) ? dynamic_cast<OOSunEntity*>(oo::ToCxx(object)) : nullptr;
+    return true;
+}
 }
 
 void InitOOJSSun(ooscript::Context context, ooscript::Object global)
@@ -168,20 +180,20 @@ static bool SunGetProperty(Context cx, Object obj, PropertyId propID, Value* val
 
     switch (ooscript::idToInt32(propID)) {
     case kSun_radius:
-        return ooscript::newNumberValue(cx, [sun radius], value);
+        return ooscript::newNumberValue(cx, (sun != nullptr ? sun->radius() : 0.0), value);
 
     case kSun_name: {
-        const std::optional<std::string> name = [sun cxx_name];
+        const std::optional<std::string> name = (sun != nullptr ? sun->name() : std::optional<std::string>());
         *value = OOJSValueFromPList(context, name.has_value() ? oo::PList(*name) : oo::PList());
         return true;
     }
 
     case kSun_hasGoneNova:
-        *value = OOJSValueFromBOOL([sun goneNova]);
+        *value = OOJSValueFromBOOL((sun != nullptr ? sun->goneNova() : false));
         return true;
 
     case kSun_isGoingNova:
-        *value = OOJSValueFromBOOL([sun willGoNova] && ![sun goneNova]);
+        *value = OOJSValueFromBOOL((sun != nullptr ? sun->willGoNova() : false) && !(sun != nullptr ? sun->goneNova() : false));
         return true;
 
     default:
@@ -210,7 +222,8 @@ static bool SunGoNova(ooscript::Context context, ooscript::CallArgs& oojsArgs)
     if (oojsArgs.count() > 0 && EXPECT_NOT(!ooscript::valueToNumber(context, (OOJS_ARGV[0]), &delay)))
         return false;
 
-    [sun setGoingNova:true inTime:delay];
+    if (sun != nullptr)
+        sun->setGoingNova(true, delay);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -229,8 +242,9 @@ static bool SunCancelNova(ooscript::Context context, ooscript::CallArgs& oojsArg
     if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun)))
         return false;
 
-    if ([sun willGoNova] && ![sun goneNova]) {
-        [sun setGoingNova:false inTime:0];
+    if ((sun != nullptr ? sun->willGoNova() : false) && !(sun != nullptr ? sun->goneNova() : false)) {
+        if (sun != nullptr)
+            sun->setGoingNova(false, 0);
     }
     OOJS_RETURN_VOID;
 

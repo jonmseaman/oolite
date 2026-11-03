@@ -32,11 +32,11 @@ SOFTWARE.
 #import "OODebugMonitor.h"
 #include <stdint.h>
 
+#import "Entity.h" // an entity's -inspect
 #import "OOConstToString.h"
 #import "OODebugFlags.h"
 #import "OODebugMonitor.h"
 #import "OOJSCall.h"
-#import "OOJSConsole+ObjCBridge.h" // an entity's -inspect
 #import "OOJSEngineTimeManagement.h"
 #import "OOJSEntity.h"
 #import "OOJSScript.h"
@@ -49,6 +49,17 @@ SOFTWARE.
 #import "ResourceManager.h"
 
 #include "oofnd/String.hpp"
+
+// The Mac debug OXP's inspector adds -inspect to entities (a category on Entity); inspectEntity()
+// sends it to an entity that answers it. OOJSConsole+ObjCBridge.mm held the send until bead
+// oo-9ht.96 (ADR-0056 amendment oo-9ht.181): it is a message while the entity's object is the
+// root's facade (oo-9ht.39).
+@interface Entity (OODebugInspector)
+
+// Method added by inspector in Debug OXP under OS X only.
+- (void)inspect;
+
+@end
 
 static ooscript::Object sConsolePrototype = NULL;
 static ooscript::Object sConsoleSettingsPrototype = NULL;
@@ -89,7 +100,7 @@ static bool ConsoleSettingsSetProperty(ooscript::Context context, ooscript::Obje
 
 #if OOJS_PROFILE
 namespace {
-bool PerformProfiling(ooscript::Context context, const char* nominalFunction, unsigned argc, ooscript::Value* argv, ooscript::Value* rval, bool trace, OOTimeProfile** profile);
+bool PerformProfiling(ooscript::Context context, const char* nominalFunction, unsigned argc, ooscript::Value* argv, ooscript::Value* rval, bool trace, oo::Ref<OOTimeProfile>* profile);
 } // namespace
 #endif
 
@@ -675,7 +686,11 @@ static bool ConsoleScriptStack(ooscript::Context context, ooscript::CallArgs& oo
 {
     OOJS_NATIVE_ENTER(context)
 
-    OOJS_RETURN_PLIST(oo::PListFromObjects([OOJSScript scriptStack]));
+    // The scripts' nodes (a script that has gone, which a timer or definition pushed weakly, is null).
+    oo::PList::Array stack;
+    for (const oo::Ref<OOJSScript>& script : OOJSScript::scriptStack())
+        stack.push_back(OOScriptObjectNode(script.get()));
+    OOJS_RETURN_PLIST(oo::PList(std::move(stack)));
 
     OOJS_NATIVE_EXIT
 }
@@ -689,7 +704,8 @@ static bool ConsoleInspectEntity(ooscript::Context context, ooscript::CallArgs& 
 
     if (JSValueToEntity(context, OOJS_ARGV[0], &entity)) {
         OOJS_BEGIN_FULL_NATIVE(context)
-        OOJSConsoleInspect(entity); // -inspect, if the entity has it
+        if ([entity respondsToSelector:@selector(inspect)])
+            [entity inspect]; // -inspect, if the entity has it (nothing for nil)
         OOJS_END_FULL_NATIVE
     }
 
@@ -939,11 +955,11 @@ static bool ConsoleProfile(ooscript::Context context, ooscript::CallArgs& oojsAr
 
     bool result;
     @autoreleasepool {
-        OOTimeProfile* profile = nil;
+        oo::Ref<OOTimeProfile> profile;
 
         result = PerformProfiling(context, "profile", oojsArgs.count(), OOJS_ARGV, NULL, false, &profile);
         if (result) {
-            OOJS_SET_RVAL(OOJSValueFromPList(context, profile != nil ? oo::PList(oo::DescriptionOf(profile)) : oo::PList()));
+            OOJS_SET_RVAL(OOJSValueFromPList(context, profile ? oo::PList(profile->description().value_or("(null)")) : oo::PList()));
         }
     }
 
@@ -964,11 +980,11 @@ static bool ConsoleGetProfile(ooscript::Context context, ooscript::CallArgs& ooj
 
     bool result;
     @autoreleasepool {
-        OOTimeProfile* profile = nil;
+        oo::Ref<OOTimeProfile> profile;
 
         result = PerformProfiling(context, "getProfile", oojsArgs.count(), OOJS_ARGV, NULL, false, &profile);
         if (result) {
-            OOJS_SET_RVAL(OOJSValueFromNativeObject(context, profile));
+            OOJS_SET_RVAL(profile ? profile->oo_jsValueInContext(context) : ooscript::undefinedValue());
         }
     }
 
@@ -1003,7 +1019,7 @@ static bool ConsoleTrace(ooscript::Context context, ooscript::CallArgs& oojsArgs
 
 namespace {
 
-bool PerformProfiling(ooscript::Context context, const char* nominalFunction, unsigned argc, ooscript::Value* argv, ooscript::Value* outRval, bool trace, OOTimeProfile** outProfile)
+bool PerformProfiling(ooscript::Context context, const char* nominalFunction, unsigned argc, ooscript::Value* argv, ooscript::Value* outRval, bool trace, oo::Ref<OOTimeProfile>* outProfile)
 {
     // Get function.
     ooscript::Value function = argv[0];
@@ -1044,9 +1060,9 @@ bool PerformProfiling(ooscript::Context context, const char* nominalFunction, un
     bool result = ooscript::callFunctionValue(context, thisObj, function, 0, NULL, outRval);
 
     // Get results.
-    OOTimeProfile* profile = OOJSEndProfiling();
+    oo::Ref<OOTimeProfile> profile = OOJSEndProfiling();
     if (outProfile != NULL)
-        *outProfile = profile;
+        *outProfile = std::move(profile);
 
     // Restore original timer state.
     OOJSSetTimeLimiterLimit(originalLimit);

@@ -5,10 +5,8 @@ OOJSEngineTimeManagement.h
 Functionality related to time limiting and profiling of JavaScript code.
 
 C++20 since bead oo-cn4o (proposed ADR-0056; amendment oo-ppc for the scripting files): the
-profile classes are cxx::OOTimeProfile and cxx::OOTimeProfileEntry, and
-OOJSEngineTimeManagement+ObjCBridge.h, imported at the end of this header, keeps their
-Objective-C facades, which the debug console holds and the engine converts to JavaScript
-(-oo_jsValueInContext:). The watchdog is a function of this file; it was a category of the engine
+profile classes are OOTimeProfile and OOTimeProfileEntry (no Objective-C facades since bead
+oo-9ht.63). The watchdog is a function of this file; it was a category of the engine
 that nothing else sent.
 
 
@@ -108,14 +106,15 @@ void OOJSStopTimeLimiter(void);
         Manipulate the timeout.
 */
 
-@class OOTimeProfile, OOTimeProfileEntry;
+class OOTimeProfile;
+
+oo::Ref<OOTimeProfile> OOJSEndProfiling(void);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 void OOJSBeginProfiling(bool trace);
-OOTimeProfile* OOJSEndProfiling(void); // +1: the caller owns the facade
 bool OOJSIsProfiling(void);
 
 OOHighResTimeValue OOJSCopyTimeLimiterNominalStartTime(void);
@@ -132,8 +131,6 @@ void OOJSSetTimeLimiterLimit(OOTimeDelta limit);
         NOTE: the profiler declarations that need to be visible to functions that
         are profiled are found in OOJSEngineNativeWrappers.h.
 */
-
-namespace cxx {
 
 class OOTimeProfileEntry;
 
@@ -205,10 +202,9 @@ public:
     OOComparisonResult compareBySelfTimeReverse(OOTimeProfileEntry* other);
 
     ooscript::Value oo_jsValueInContext(ooscript::Context context);
-
-private:
     oo::PList propertyListRepresentation();
 
+private:
     std::optional<std::string> _function; // nullopt when created without a name
     unsigned long _hitCount = { };
     double _totalTimeSum = { };
@@ -219,8 +215,6 @@ private:
     ooscript::Function _jsFunction = { };
 #endif
 };
-
-} // namespace cxx
 
 #endif
 
@@ -235,7 +229,3 @@ void OOJSTimeManagementInit(OOJavaScriptEngine* engine, ooscript::Runtime runtim
 #ifdef __cplusplus
 }
 #endif
-
-// Transitional: the Objective-C OOTimeProfile and OOTimeProfileEntry, for callers not yet converted.
-// Deleted, with namespace cxx above, by the bridge's deletion bead.
-#import "OOJSEngineTimeManagement+ObjCBridge.h"

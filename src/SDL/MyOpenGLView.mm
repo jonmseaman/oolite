@@ -414,7 +414,7 @@ bool cxx::MyOpenGLView::init()
 #endif
 #endif
 
-    matrixManager = oo::makeRef<cxx::OOOpenGLMatrixManager>();
+    matrixManager = oo::makeRef<OOOpenGLMatrixManager>();
 
     // TODO: This code up to and including stickHandler really ought
     // not to be in this class.
@@ -1219,7 +1219,7 @@ void cxx::MyOpenGLView::setMsaa(bool newMsaa)
     _msaa = !!newMsaa;
 }
 
-cxx::OOOpenGLMatrixManager* cxx::MyOpenGLView::getOpenGLMatrixManager()
+OOOpenGLMatrixManager* cxx::MyOpenGLView::getOpenGLMatrixManager()
 {
     return matrixManager.get(); // borrowed
 }

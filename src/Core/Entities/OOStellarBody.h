@@ -50,3 +50,12 @@ typedef enum {
 - (void)cxx_setName:(const std::optional<std::string>&)name;
 
 @end
+
+/*	-radius and -planetType of a stellar body's Objective-C object (bead oo-9ht.111): the sun and the
+        planet, C++ since their facades were deleted (beads oo-9ht.111, oo-9ht.129), are asked directly
+        (their object is the root Entity's facade, which does not answer them); any other body by
+        selector, as before. Nil answers 0, as the message to nil did. Defined in OOSunEntity.mm.
+*/
+@class Entity;
+double OOStellarBodyRadius(Entity* body);
+OOStellarBodyType OOStellarBodyPlanetType(Entity* body);

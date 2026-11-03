@@ -28,6 +28,8 @@ MA 02110-1301, USA.
 #import "GameController.h"
 #import "OOCallByName.h"
 #import "OOCharacter.h"
+#import "OOColor.h"
+#import "OOCommodities.h"
 #import "OOConstToString.h"
 #import "OOEntityFilterPredicate.h"
 #import "OOEquipmentType.h"
@@ -41,18 +43,43 @@ MA 02110-1301, USA.
 #import "OOMesh.h"
 #import "OOObjCPList.h"
 #import "OORoleSet.h"
+#import "OOScript.h"
 #import "OOShipGroup.h"
 #import "OOShipRegistry.h"
 #import "OOStringParsing.h"
 #import "PlayerEntity.h"
+#import "PlayerEntityLegacyScriptEngine.h"
 #import "PlayerEntityScriptMethods.h"
 #import "ResourceManager.h"
 #import "ShipEntityAI.h"
 #import "ShipEntityScriptMethods.h"
 #import "StationEntity.h"
+#import "Universe.h"
 #import "WormholeEntity.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
+
+/*
+        Converted slice by slice to C++20 (docs/phases/3-slices/OOJSShip.md; proposed ADR-0056,
+        amendments oo-ppc, oo-luhd, oo-ft5n and oo-9ht.139). A converted native or helper has no
+        Objective-C: BOOL/YES/NO/nil are bool/true/false/nullptr; the ship it wraps is reached as
+        ShipEntity through oo::ToCxx (its members an Objective-C subclass overrides are virtual,
+        so dispatch is as before), the converted classes the ship hands out (AI, OORoleSet,
+        OOShipGroup, OOColor, OONativeVector) as cxx:: classes, null-guarded where a message to nil
+        answered; and a send to a class that was still Objective-C (the player, the universe) was a
+        one-line function in the binding's bridge file until bead oo-9ht.181 inlined each one at its
+        call (a member call on the C++ player, a message to the universe) and deleted the file.
+        Slice 1 (bead oo-18mg2): ShipGetProperty() and
+        its helpers. Slice 2 (bead oo-chjz4): ShipSetProperty(). Slice 3 (bead oo-08plt): the AI and
+        script, escort, role, cargo, spawn, damage, removal, legacy-action, comms, ECM and abandon
+        natives. Slice 4 (bead oo-hqe5l): equipment, missiles, nearest station, bounty, cargo, crew,
+        materials and shaders. Slice 5 (bead oo-qzn25): system exit, escort formation, defence targets,
+        collision exceptions, cascades, group, escort and patrol, wormholes, docking instructions,
+        distress and course. Slice 6 (bead oo-ljuy1): the perform* behaviours, the scanner, cargo
+        adjustment, damage and threat assessment, and the static methods (the ship registry is
+        cxx::OOShipRegistry). Since oo-9ht.181 the file sends the universe its messages directly, as
+        OOJSStation.mm does, until the universe is C++ (oo-pas).
+*/
 
 namespace {
 
@@ -63,8 +90,8 @@ oo::PList NativeVectorArray(const std::vector<Vector>& vectors)
     oo::PList::Array result;
     result.reserve(vectors.size());
     for (Vector v : vectors) {
-        const oo::ObjCRef<OONativeVector*> vector = oo::adoptObjC([[OONativeVector alloc] initWithVector:v]);
-        result.push_back(oo::PListObject(vector.get()));
+        // The box is the Object node's foreign object; the engine gives JavaScript its Vector3D.
+        result.push_back(oo::PList(oo::PList::Object(oo::makeRef<OONativeVector>(v))));
     }
     return oo::PList(std::move(result));
 }
@@ -161,8 +188,10 @@ static double ShipThreatAssessmentWeapon(OOWeaponType wt);
 static bool ShipSetCargoType(ooscript::Context context, ooscript::CallArgs& oojsArgs);
 static bool ShipSetCrew(ooscript::Context context, ooscript::CallArgs& oojsArgs);
 
-static BOOL RemoveOrExplodeShip(ooscript::Context context, ooscript::CallArgs& oojsArgs, BOOL explode);
-static bool ShipSetMaterialsInternal(ooscript::Context context, ooscript::CallArgs& oojsArgs, ShipEntity* thisEnt, BOOL fromShaders);
+namespace {
+bool RemoveOrExplodeShip(ooscript::Context context, ooscript::CallArgs& oojsArgs, bool explode);
+bool ShipSetMaterialsInternal(ooscript::Context context, ooscript::CallArgs& oojsArgs, ShipEntity* thisEnt, bool fromShaders);
+}
 
 static bool ShipStaticKeysForRole(ooscript::Context context, ooscript::CallArgs& oojsArgs);
 static bool ShipStaticKeys(ooscript::Context context, ooscript::CallArgs& oojsArgs);
@@ -594,7 +623,23 @@ static ooscript::FunctionSpec sShipStaticMethods[] = {
     { 0 }
 };
 
-DEFINE_JS_OBJECT_GETTER(JSShipGetShipEntity, &sShipClass, sShipPrototype, ShipEntity)
+namespace {
+DEFINE_JS_OBJECT_GETTER(JSShipGetShipObject, &sShipClass, sShipPrototype, Entity)
+
+/*	The ship a JS Ship object holds. DEFINE_JS_OBJECT_GETTER's getter answered the ship's object until
+        bead oo-9ht.144 deleted the ship's facade (the object is now the drawable's facade, so the getter
+        checks the root's class); this answers its C++ ship, null where the object was nil.
+*/
+BOOL JSShipGetShipEntity(ooscript::Context context, ooscript::Object inObject, ShipEntity** outShip)
+{
+    OOCParameterAssert(outShip != NULL);
+    Entity* object = nil;
+    if (EXPECT_NOT(!JSShipGetShipObject(context, inObject, &object)))
+        return NO;
+    *outShip = oo::ToShip(object);
+    return YES;
+}
+} // namespace
 
 void InitOOJSShip(ooscript::Context context, ooscript::Object global)
 {
@@ -618,12 +663,56 @@ namespace {
 // A colour's components as its -normalizedArray gave them to JavaScript: floats, null for no colour.
 oo::PList NormalizedColorComponents(OOColor* color)
 {
-    if (color == nil)
+    if (color == nullptr)
         return oo::PList();
     oo::PList::Array components;
-    for (float component : [color cxx_normalizedArray])
+    for (float component : color->normalizedArray())
         components.push_back(oo::PList::singleReal(component));
     return oo::PList(std::move(components));
+}
+
+/*	The ship's AI is converted (cxx::AI), and the ship answers its facade. A ship with no AI
+        answered none or false to what the getter sent the AI; so does a null AI here (ADR-0056
+        amendment oo-6ia4 item 2).
+*/
+std::optional<std::string> AIName(ShipEntity* ship)
+{
+    cxx::AI* ai = oo::ToCxx(ship->getAI());
+    return (ai != nullptr) ? ai->name() : std::nullopt;
+}
+
+std::optional<std::string> AIState(ShipEntity* ship)
+{
+    cxx::AI* ai = oo::ToCxx(ship->getAI());
+    return (ai != nullptr) ? ai->state() : std::nullopt;
+}
+
+bool AIHasSuspendedStateMachines(ShipEntity* ship)
+{
+    cxx::AI* ai = oo::ToCxx(ship->getAI());
+    return ai != nullptr && ai->hasSuspendedStateMachines();
+}
+
+// Whether an entity is a ship, as -isKindOfClass:[ShipEntity class] answered: a ship's C++ part is a
+// ShipEntity (Entity+ObjCBridge.mm picks the facade class from it). False for none.
+bool IsShip(Entity* entity)
+{
+    return dynamic_cast<ShipEntity*>(oo::ToCxx(entity)) != nullptr;
+}
+
+/*	The ship's mesh is C++ (OOMesh, global since bead oo-9ht.132). A ship with no mesh answered
+        null to -materials and -shaders; so does a null mesh here.
+*/
+oo::PList MeshMaterials(ShipEntity* ship)
+{
+    OOMesh* mesh = ship->mesh();
+    return (mesh != nullptr) ? mesh->getMaterials() : oo::PList();
+}
+
+oo::PList MeshShaders(ShipEntity* ship)
+{
+    OOMesh* mesh = ship->mesh();
+    return (mesh != nullptr) ? mesh->shaders() : oo::PList();
 }
 
 // A string, or null for none (what a Foundation string or nil gave JavaScript).
@@ -643,49 +732,51 @@ oo::PList StringArray(const std::vector<std::string>& strings)
 static bool ShipGetProperty(ooscript::Context context, ooscript::Object thisObject, ooscript::PropertyId propID, ooscript::Value* value)
 {
     if (!ooscript::isInt32Id(propID))
-        return YES;
+        return true;
 
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* entity = nil;
+    ShipEntity* entity = nullptr;
     oo::PList result; // null maps to null
 
     if (EXPECT_NOT(!JSShipGetShipEntity(context, thisObject, &entity)))
-        return NO;
-    if (OOIsStaleEntity(entity)) {
+        return false;
+    if (OOIsStaleEntity(oo::ToObjC(entity))) {
         *value = ooscript::undefinedValue();
-        return YES;
+        return true;
     }
+    ShipEntity* ship = entity; // not null: entity is not
 
     switch (ooscript::idToInt32(propID)) {
     case kShip_name:
-        result = StringOrNull([entity cxx_name]);
+        result = StringOrNull(ship->getName());
         break;
 
     case kShip_displayName:
-        result = StringOrNull([entity displayName]);
+        result = StringOrNull(ship->getDisplayName());
         break;
 
     case kShip_shipUniqueName:
-        result = StringOrNull([entity cxx_shipUniqueName]);
+        result = StringOrNull(ship->getShipUniqueName());
         break;
 
     case kShip_shipClassName:
-        result = StringOrNull([entity cxx_shipClassName]);
+        result = StringOrNull(ship->getShipClassName());
         break;
 
     case kShip_scanDescription:
-        result = StringOrNull([entity cxx_scanDescriptionForScripting]);
+        result = StringOrNull(ship->scanDescriptionForScripting());
         break;
 
     case kShip_roles: {
-        OORoleSet* roleSet = [entity roleSet];
-        result = roleSet != nil ? StringArray([roleSet sortedRoles]) : oo::PList();
+        const oo::Ref<OORoleSet> roleSet = ship->getRoleSet();
+        result = roleSet != nullptr ? StringArray(roleSet->sortedRoles()) : oo::PList();
     } break;
 
     case kShip_roleWeights: {
         // Floats, as numberWithFloat: made them; nil when there is no role set.
-        if (const auto roleWeights = [[entity roleSet] rolesAndProbabilities]) {
+        const oo::Ref<OORoleSet> roleSet = ship->getRoleSet();
+        if (const auto roleWeights = (roleSet != nullptr) ? roleSet->rolesAndProbabilities() : std::nullopt) {
             oo::PList::Dict weights;
             for (const auto& [role, weight] : *roleWeights) {
                 weights[role] = oo::PList::singleReal(weight);
@@ -695,83 +786,87 @@ static bool ShipGetProperty(ooscript::Context context, ooscript::Object thisObje
     } break;
 
     case kShip_primaryRole:
-        result = StringOrNull([entity cxx_primaryRole]);
+        result = StringOrNull(ship->getPrimaryRole());
         break;
 
     case kShip_AI:
-        result = StringOrNull([[entity getAI] cxx_name]);
+        result = StringOrNull(AIName(ship));
         break;
 
     case kShip_AIState:
-        result = StringOrNull([[entity getAI] cxx_state]);
+        result = StringOrNull(AIState(ship));
         break;
 
     case kShip_AIFoundTarget:
-        result = oo::PListObject([entity foundTarget]);
+        result = oo::PListObject(ship->foundTarget());
         break;
 
     case kShip_AIPrimaryAggressor:
-        result = oo::PListObject([entity primaryAggressor]);
+        result = oo::PListObject(ship->primaryAggressor());
         break;
 
     case kShip_alertCondition:
-        return ooscript::newNumberValue(context, [entity realAlertCondition], value);
+        return ooscript::newNumberValue(context, ship->realAlertCondition(), value);
 
     case kShip_autoAI:
-        *value = OOJSValueFromBOOL([entity hasAutoAI]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->hasAutoAI());
+        return true;
 
     case kShip_autoWeapons:
-        *value = OOJSValueFromBOOL([entity hasAutoWeapons]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->hasAutoWeapons());
+        return true;
 
     case kShip_accuracy:
-        return ooscript::newNumberValue(context, [entity accuracy], value);
+        return ooscript::newNumberValue(context, ship->getAccuracy(), value);
 
     case kShip_fuel:
-        return ooscript::newNumberValue(context, [entity fuel] * 0.1, value);
+        return ooscript::newNumberValue(context, ship->getFuel() * 0.1, value);
 
     case kShip_fuelChargeRate:
-        return ooscript::newNumberValue(context, [entity fuelChargeRate], value);
+        return ooscript::newNumberValue(context, ship->fuelChargeRate(), value);
 
     case kShip_bounty:
-        return ooscript::newNumberValue(context, [entity bounty], value);
-        return YES;
+        return ooscript::newNumberValue(context, ship->getBounty(), value);
+        return true;
 
     case kShip_subEntities:
-        result = oo::PListFromObjects([entity subEntitiesForScript]);
+        // What -subEntitiesForScript answered: ShipEntity's (OOJavaScriptExtensions) method, which no
+        // subclass overrides, forwards to this function.
+        result = oo::PListFromObjects(ShipEntityJSSubEntitiesForScript(entity));
         break;
 
     case kShip_exhausts:
-        result = oo::PListFromObjects([entity cxx_exhausts]);
+        result = oo::PListFromObjects(ship->exhausts());
         break;
 
     case kShip_flashers:
-        result = oo::PListFromObjects([entity flasherEnumerator]);
+        result = oo::PListFromObjects(ship->flasherEnumerator());
         break;
 
     case kShip_subEntityCapacity:
-        return ooscript::newNumberValue(context, [entity maxShipSubEntities], value);
-        return YES;
+        return ooscript::newNumberValue(context, ship->maxShipSubEntities(), value);
+        return true;
 
     case kShip_subEntityRotation:
-        return QuaternionToJSValue(context, [entity subEntityRotationalVelocity], value);
+        return QuaternionToJSValue(context, ship->subEntityRotationalVelocity(), value);
 
     case kShip_hasSuspendedAI:
-        *value = OOJSValueFromBOOL([[entity getAI] hasSuspendedStateMachines]);
-        return YES;
+        *value = OOJSValueFromBOOL(AIHasSuspendedStateMachines(ship));
+        return true;
 
     case kShip_target:
-        result = oo::PListObject([entity primaryTarget]);
+        result = oo::PListObject(ship->primaryTarget());
         break;
 
     case kShip_defenseTargets: {
-        [entity validateDefenseTargets];
-        std::vector<oo::ObjCRef<Entity*>> targets;
-        targets.reserve([entity defenseTargetCount]);
-        for (const auto& candidate : [entity cxx_defenseTargets]) {
-            Entity* target = [candidate.get() weakRefUnderlyingObject];
-            if (target == nil)
+        ship->validateDefenseTargets();
+        std::vector<oo::ObjCRef<::Entity*>> targets;
+        targets.reserve(ship->defenseTargetCount());
+        for (const auto& candidate : ship->defenseTargets()) {
+            // The set's snapshot holds the ships themselves, whose -weakRefUnderlyingObject (OOObject's)
+            // was self.
+            Entity* target = candidate.get();
+            if (target == nullptr)
                 break; // the old loop stopped at the first zeroed reference
             targets.emplace_back(target);
         }
@@ -780,448 +875,449 @@ static bool ShipGetProperty(ooscript::Context context, ooscript::Object thisObje
     }
 
     case kShip_crew:
-        if ([entity cxx_crew].has_value()) // unpiloted: nil, as before
+        if (ship->getCrew().has_value()) // unpiloted: nil, as before
         {
-            const std::vector<oo::PList> entries = [entity cxx_crewForScripting];
+            const std::vector<oo::PList> entries = ship->crewForScripting();
             result = oo::PList(oo::PList::Array(entries.begin(), entries.end()));
         }
         break;
 
-    case kShip_escorts:
-        result = ([entity escortGroup] != nil) ? oo::PListFromObjects([[entity escortGroup] cxx_memberArrayExcludingLeader]) : oo::PList();
-        break;
+    case kShip_escorts: {
+        OOShipGroup* escortGroup = ship->escortGroup();
+        result = (escortGroup != nullptr) ? oo::PListFromObjects(escortGroup->memberArrayExcludingLeader()) : oo::PList();
+    } break;
 
     case kShip_group:
-        result = oo::PListObject([entity group]);
+        result = OOShipGroupObjectNode(ship->group());
         break;
 
     case kShip_escortGroup:
-        result = oo::PListObject([entity escortGroup]);
+        result = OOShipGroupObjectNode(ship->escortGroup());
         break;
 
     case kShip_temperature:
-        return ooscript::newNumberValue(context, [entity temperature] / SHIP_MAX_CABIN_TEMP, value);
+        return ooscript::newNumberValue(context, ship->temperature() / SHIP_MAX_CABIN_TEMP, value);
 
     case kShip_heatInsulation:
-        return ooscript::newNumberValue(context, [entity heatInsulation], value);
+        return ooscript::newNumberValue(context, ship->heatInsulation(), value);
 
     case kShip_heading:
-        return VectorToJSValue(context, [entity forwardVector], value);
+        return VectorToJSValue(context, ship->forwardVector(), value);
 
     case kShip_energyRechargeRate:
-        return ooscript::newNumberValue(context, [entity energyRechargeRate], value);
+        return ooscript::newNumberValue(context, ship->energyRechargeRate(), value);
 
     case kShip_entityPersonality:
-        *value = ooscript::int32Value([entity entityPersonalityInt]);
-        return YES;
+        *value = ooscript::int32Value(ship->entityPersonalityInt());
+        return true;
 
     case kShip_isBeacon:
-        *value = OOJSValueFromBOOL([entity isBeacon]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isBeacon());
+        return true;
 
     case kShip_beaconCode:
-        result = StringOrNull([entity beaconCode]);
+        result = StringOrNull(ship->beaconCode());
         break;
 
     case kShip_beaconLabel:
-        result = StringOrNull([entity beaconLabel]);
+        result = StringOrNull(ship->beaconLabel());
         break;
 
     case kShip_isFrangible:
-        *value = OOJSValueFromBOOL([entity isFrangible]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->getIsFrangible());
+        return true;
 
     case kShip_isCloaked:
-        *value = OOJSValueFromBOOL([entity isCloaked]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isCloaked());
+        return true;
 
     case kShip_cloakAutomatic:
-        *value = OOJSValueFromBOOL([entity hasAutoCloak]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->hasAutoCloak());
+        return true;
 
     case kShip_isJamming:
-        *value = OOJSValueFromBOOL([entity isJammingScanning]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isJammingScanning());
+        return true;
 
     case kShip_potentialCollider:
-        result = oo::PListObject([entity proximityAlert]);
+        result = oo::PListObject(ship->proximityAlert());
         break;
 
     case kShip_hasHostileTarget:
-        *value = OOJSValueFromBOOL([entity hasHostileTarget]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->hasHostileTarget());
+        return true;
 
     case kShip_hasHyperspaceMotor:
-        *value = OOJSValueFromBOOL([entity hasHyperspaceMotor]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->hasHyperspaceMotor());
+        return true;
 
     case kShip_hyperspaceSpinTime:
-        return ooscript::newNumberValue(context, [entity hyperspaceSpinTime], value);
+        return ooscript::newNumberValue(context, ship->hyperspaceSpinTime(), value);
 
     case kShip_weaponRange:
-        return ooscript::newNumberValue(context, [entity weaponRange], value);
+        return ooscript::newNumberValue(context, ship->getWeaponRange(), value);
 
     case kShip_weaponFacings:
-        if ([entity isPlayer]) {
-            PlayerEntity* pent = (PlayerEntity*)entity;
-            return ooscript::newNumberValue(context, [pent availableFacings], value);
+        if (ship->getIsPlayer()) {
+            PlayerEntity* pent = static_cast<PlayerEntity*>(entity);
+            return ooscript::newNumberValue(context, (pent != nullptr ? pent->availableFacings() : OOWeaponFacingSet { }), value);
         }
-        return ooscript::newNumberValue(context, [entity weaponFacings], value);
+        return ooscript::newNumberValue(context, ship->weaponFacings(), value);
 
     case kShip_weaponPositionAft:
-        result = NativeVectorArray([entity cxx_aftWeaponOffset]);
+        result = NativeVectorArray(ship->getAftWeaponOffset());
         break;
 
     case kShip_weaponPositionForward:
-        result = NativeVectorArray([entity cxx_forwardWeaponOffset]);
+        result = NativeVectorArray(ship->getForwardWeaponOffset());
         break;
         //			return VectorToJSValue(context, [entity forwardWeaponOffset], value);
 
     case kShip_weaponPositionPort:
-        result = NativeVectorArray([entity cxx_portWeaponOffset]);
+        result = NativeVectorArray(ship->getPortWeaponOffset());
         break;
 
     case kShip_weaponPositionStarboard:
-        result = NativeVectorArray([entity cxx_starboardWeaponOffset]);
+        result = NativeVectorArray(ship->getStarboardWeaponOffset());
         break;
 
     case kShip_scannerRange:
-        return ooscript::newNumberValue(context, [entity scannerRange], value);
+        return ooscript::newNumberValue(context, ship->getScannerRange(), value);
 
     case kShip_reactionTime:
-        return ooscript::newNumberValue(context, [entity reactionTime], value);
+        return ooscript::newNumberValue(context, ship->getReactionTime(), value);
 
     case kShip_reportAIMessages:
-        *value = OOJSValueFromBOOL([entity reportAIMessages]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->getReportAIMessages());
+        return true;
 
     case kShip_withinStationAegis:
-        *value = OOJSValueFromBOOL([entity withinStationAegis]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->withinStationAegis());
+        return true;
 
     case kShip_cargoSpaceCapacity:
-        *value = ooscript::int32Value([entity maxAvailableCargoSpace]);
-        return YES;
+        *value = ooscript::int32Value(ship->maxAvailableCargoSpace());
+        return true;
 
     case kShip_cargoSpaceUsed:
-        *value = ooscript::int32Value([entity maxAvailableCargoSpace] - [entity availableCargoSpace]);
-        return YES;
+        *value = ooscript::int32Value(ship->maxAvailableCargoSpace() - ship->availableCargoSpace());
+        return true;
 
     case kShip_cargoSpaceAvailable:
-        *value = ooscript::int32Value([entity availableCargoSpace]);
-        return YES;
+        *value = ooscript::int32Value(ship->availableCargoSpace());
+        return true;
 
     case kShip_cargoList:
-        result = [entity cargoListForScripting];
+        result = ship->cargoListForScripting();
         break;
 
     case kShip_extraCargo:
-        return ooscript::newNumberValue(context, [entity extraCargo], value);
-        return YES;
+        return ooscript::newNumberValue(context, ship->extraCargo(), value);
+        return true;
 
     case kShip_commodity:
-        if ([entity commodityAmount] > 0) {
-            result = StringOrNull([entity cxx_commodityType]);
+        if (ship->commodityAmount() > 0) {
+            result = StringOrNull(ship->commodityType());
         }
         break;
 
     case kShip_commodityAmount:
-        *value = ooscript::int32Value([entity commodityAmount]);
-        return YES;
+        *value = ooscript::int32Value(ship->commodityAmount());
+        return true;
 
     case kShip_collisionExceptions:
-        result = oo::PListFromObjects([entity cxx_collisionExceptions]);
+        result = oo::PListFromObjects(ship->collisionExceptions());
         break;
 
     case kShip_speed:
-        return ooscript::newNumberValue(context, [entity flightSpeed], value);
+        return ooscript::newNumberValue(context, ship->getFlightSpeed(), value);
 
     case kShip_cruiseSpeed:
-        return ooscript::newNumberValue(context, [entity cruiseSpeed], value);
+        return ooscript::newNumberValue(context, ship->getCruiseSpeed(), value);
 
     case kShip_dataKey:
-        result = StringOrNull([entity cxx_shipDataKey]);
+        result = StringOrNull(ship->shipDataKey());
         break;
 
     case kShip_desiredRange:
-        return ooscript::newNumberValue(context, [entity desiredRange], value);
+        return ooscript::newNumberValue(context, ship->desiredRange(), value);
 
     case kShip_desiredSpeed:
-        return ooscript::newNumberValue(context, [entity desiredSpeed], value);
+        return ooscript::newNumberValue(context, ship->desiredSpeed(), value);
 
     case kShip_destination:
-        return HPVectorToJSValue(context, [entity destination], value);
+        return HPVectorToJSValue(context, ship->destination(), value);
 
     case kShip_markedForFines:
-        *value = OOJSValueFromBOOL([entity markedForFines]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->markedForFines());
+        return true;
 
     case kShip_maxEscorts:
-        return ooscript::newNumberValue(context, [entity maxEscortCount], value);
+        return ooscript::newNumberValue(context, ship->maxEscortCount(), value);
 
     case kShip_maxPitch:
-        return ooscript::newNumberValue(context, [entity maxFlightPitch], value);
+        return ooscript::newNumberValue(context, ship->maxFlightPitch(), value);
 
     case kShip_maxSpeed:
-        return ooscript::newNumberValue(context, [entity maxFlightSpeed], value);
+        return ooscript::newNumberValue(context, ship->getMaxFlightSpeed(), value);
 
     case kShip_maxRoll:
-        return ooscript::newNumberValue(context, [entity maxFlightRoll], value);
+        return ooscript::newNumberValue(context, ship->maxFlightRoll(), value);
 
     case kShip_maxYaw:
-        return ooscript::newNumberValue(context, [entity maxFlightYaw], value);
+        return ooscript::newNumberValue(context, ship->maxFlightYaw(), value);
 
     case kShip_injectorBurnRate:
-        return ooscript::newNumberValue(context, [entity afterburnerRate], value);
+        return ooscript::newNumberValue(context, ship->afterburnerRate(), value);
 
     case kShip_injectorSpeedFactor:
-        return ooscript::newNumberValue(context, [entity afterburnerFactor], value);
+        return ooscript::newNumberValue(context, ship->afterburnerFactor(), value);
 
     case kShip_script:
-        result = oo::PListObject([entity shipScript]);
+        result = OOScriptObjectNode(ship->shipScript());
         break;
 
     case kShip_AIScript:
-        result = oo::PListObject([entity shipAIScript]);
+        result = OOScriptObjectNode(ship->shipAIScript());
         break;
 
     case kShip_AIScriptWakeTime:
-        return ooscript::newNumberValue(context, [entity shipAIScriptWakeTime], value);
+        return ooscript::newNumberValue(context, ship->shipAIScriptWakeTime(), value);
         break;
 
     case kShip_destinationSystem:
-        return ooscript::newNumberValue(context, [entity destinationSystem], value);
+        return ooscript::newNumberValue(context, ship->destinationSystem(), value);
         break;
 
     case kShip_homeSystem:
-        return ooscript::newNumberValue(context, [entity homeSystem], value);
+        return ooscript::newNumberValue(context, ship->homeSystem(), value);
         break;
 
     case kShip_isPirate:
-        *value = OOJSValueFromBOOL([entity isPirate]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isPirate());
+        return true;
 
     case kShip_isPolice:
-        *value = OOJSValueFromBOOL([entity isPolice]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isPolice());
+        return true;
 
     case kShip_isThargoid:
-        *value = OOJSValueFromBOOL([entity isThargoid]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isThargoid());
+        return true;
 
     case kShip_isTurret:
-        *value = OOJSValueFromBOOL([entity isTurret]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isTurret());
+        return true;
 
     case kShip_isTrader:
-        *value = OOJSValueFromBOOL([entity isTrader]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isTrader());
+        return true;
 
     case kShip_isPirateVictim:
-        *value = OOJSValueFromBOOL([entity isPirateVictim]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isPirateVictim());
+        return true;
 
     case kShip_isMissile:
-        *value = OOJSValueFromBOOL([entity isMissile]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->getIsMissile());
+        return true;
 
     case kShip_isMine:
-        *value = OOJSValueFromBOOL([entity isMine]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isMine());
+        return true;
 
     case kShip_isWeapon:
-        *value = OOJSValueFromBOOL([entity isWeapon]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isWeapon());
+        return true;
 
     case kShip_isRock:
-        *value = OOJSValueFromBOOL([entity scanClass] == CLASS_ROCK); // hermits and asteroids!
-        return YES;
+        *value = OOJSValueFromBOOL(ship->getScanClass() == CLASS_ROCK); // hermits and asteroids!
+        return true;
 
     case kShip_isMinable:
-        *value = OOJSValueFromBOOL([entity isMinable]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isMinable());
+        return true;
 
     case kShip_isBoulder:
-        *value = OOJSValueFromBOOL([entity isBoulder]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->isBoulder());
+        return true;
 
     case kShip_isFleeing:
-        if ([entity isPlayer]) {
-            *value = OOJSValueFromBOOL([(PlayerEntity*)entity fleeingStatus] >= PLAYER_FLEEING_CARGO);
+        if (ship->getIsPlayer()) {
+            *value = OOJSValueFromBOOL((static_cast<PlayerEntity*>(entity) != nullptr ? static_cast<PlayerEntity*>(entity)->fleeingStatus() : OOPlayerFleeingStatus { }) >= PLAYER_FLEEING_CARGO);
         } else {
-            *value = OOJSValueFromBOOL([entity behaviour] == BEHAVIOUR_FLEE_TARGET || [entity behaviour] == BEHAVIOUR_FLEE_EVASIVE_ACTION);
+            *value = OOJSValueFromBOOL(ship->getBehaviour() == BEHAVIOUR_FLEE_TARGET || ship->getBehaviour() == BEHAVIOUR_FLEE_EVASIVE_ACTION);
         }
-        return YES;
+        return true;
 
     case kShip_isCargo:
-        *value = OOJSValueFromBOOL([entity scanClass] == CLASS_CARGO && [entity commodityAmount] > 0);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->getScanClass() == CLASS_CARGO && ship->commodityAmount() > 0);
+        return true;
 
     case kShip_isDerelict:
-        *value = OOJSValueFromBOOL([entity isHulk]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->getIsHulk());
+        return true;
 
     case kShip_isPiloted:
-        *value = OOJSValueFromBOOL([entity isPlayer] || [entity cxx_crew].value_or(std::vector<oo::ObjCRef<OOCharacter*>>()).size() > 0);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->getIsPlayer() || ship->getCrew().value_or(std::vector<oo::Ref<OOCharacter>>()).size() > 0);
+        return true;
 
     case kShip_scriptedMisjump:
-        *value = OOJSValueFromBOOL([entity scriptedMisjump]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->scriptedMisjump());
+        return true;
 
     case kShip_scriptedMisjumpRange:
-        return ooscript::newNumberValue(context, [entity scriptedMisjumpRange], value);
+        return ooscript::newNumberValue(context, ship->scriptedMisjumpRange(), value);
 
     case kShip_scriptInfo:
-        result = [entity scriptInfo]; // empty dict, never null
+        result = ship->getScriptInfo(); // empty dict, never null
         break;
 
     case kShip_sunGlareFilter:
-        return ooscript::newNumberValue(context, [entity sunGlareFilter], value);
+        return ooscript::newNumberValue(context, ship->getSunGlareFilter(), value);
 
     case kShip_trackCloseContacts:
-        *value = OOJSValueFromBOOL([entity trackCloseContacts]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->getTrackCloseContacts());
+        return true;
 
     case kShip_passengerCount:
-        return ooscript::newNumberValue(context, [entity passengerCount], value);
+        return ooscript::newNumberValue(context, ship->passengerCount(), value);
 
     case kShip_parcelCount:
-        return ooscript::newNumberValue(context, [entity parcelCount], value);
+        return ooscript::newNumberValue(context, ship->parcelCount(), value);
 
     case kShip_passengerCapacity:
-        return ooscript::newNumberValue(context, [entity passengerCapacity], value);
+        return ooscript::newNumberValue(context, ship->passengerCapacity(), value);
 
     case kShip_missileCapacity:
-        return ooscript::newNumberValue(context, [entity missileCapacity], value);
+        return ooscript::newNumberValue(context, ship->missileCapacity(), value);
 
     case kShip_missileLoadTime:
-        return ooscript::newNumberValue(context, [entity missileLoadTime], value);
+        return ooscript::newNumberValue(context, ship->missileLoadTime(), value);
 
     case kShip_savedCoordinates:
-        return HPVectorToJSValue(context, [entity coordinates], value);
+        return HPVectorToJSValue(context, ship->getCoordinates(), value);
 
     case kShip_equipment:
-        result = oo::PListFromObjects([entity cxx_equipmentListForScripting]);
+        result = OOEquipmentTypeObjectNodes(ship->equipmentListForScripting());
         break;
 
     case kShip_currentWeapon:
-        result = oo::PListObject([entity weaponTypeForFacing:[entity currentWeaponFacing] strict:YES]);
+        result = OOEquipmentTypeObjectNode(ship->weaponTypeForFacing(ship->getCurrentWeaponFacing(), true));
         break;
 
     case kShip_forwardWeapon:
-        result = oo::PListObject([entity weaponTypeForFacing:WEAPON_FACING_FORWARD strict:YES]);
+        result = OOEquipmentTypeObjectNode(ship->weaponTypeForFacing(WEAPON_FACING_FORWARD, true));
         break;
 
     case kShip_aftWeapon:
-        result = oo::PListObject([entity weaponTypeForFacing:WEAPON_FACING_AFT strict:YES]);
+        result = OOEquipmentTypeObjectNode(ship->weaponTypeForFacing(WEAPON_FACING_AFT, true));
         break;
 
     case kShip_portWeapon:
-        result = oo::PListObject([entity weaponTypeForFacing:WEAPON_FACING_PORT strict:YES]);
+        result = OOEquipmentTypeObjectNode(ship->weaponTypeForFacing(WEAPON_FACING_PORT, true));
         break;
 
     case kShip_starboardWeapon:
-        result = oo::PListObject([entity weaponTypeForFacing:WEAPON_FACING_STARBOARD strict:YES]);
+        result = OOEquipmentTypeObjectNode(ship->weaponTypeForFacing(WEAPON_FACING_STARBOARD, true));
         break;
 
     case kShip_laserHeatLevel:
-        return ooscript::newNumberValue(context, [entity laserHeatLevel], value);
+        return ooscript::newNumberValue(context, ship->laserHeatLevel(), value);
 
     case kShip_laserHeatLevelAft:
-        return ooscript::newNumberValue(context, [entity laserHeatLevelAft], value);
+        return ooscript::newNumberValue(context, ship->laserHeatLevelAft(), value);
 
     case kShip_laserHeatLevelForward:
-        return ooscript::newNumberValue(context, [entity laserHeatLevelForward], value);
+        return ooscript::newNumberValue(context, ship->laserHeatLevelForward(), value);
 
     case kShip_laserHeatLevelPort:
-        return ooscript::newNumberValue(context, [entity laserHeatLevelPort], value);
+        return ooscript::newNumberValue(context, ship->laserHeatLevelPort(), value);
 
     case kShip_laserHeatLevelStarboard:
-        return ooscript::newNumberValue(context, [entity laserHeatLevelStarboard], value);
+        return ooscript::newNumberValue(context, ship->laserHeatLevelStarboard(), value);
 
     case kShip_missiles:
-        result = oo::PListFromObjects([entity missilesList]);
+        result = OOEquipmentTypeObjectNodes(ship->missilesList());
         break;
 
     case kShip_passengers:
-        result = [entity passengerListForScripting];
+        result = ship->passengerListForScripting();
         break;
 
     case kShip_parcels:
-        result = [entity parcelListForScripting];
+        result = ship->parcelListForScripting();
         break;
 
     case kShip_contracts:
-        result = [entity contractListForScripting];
+        result = ship->contractListForScripting();
         break;
 
     case kShip_dockingInstructions:
-        result = [entity cxx_dockingInstructions];
+        result = ship->getDockingInstructions();
         break;
 
     case kShip_scannerDisplayColor1:
-        result = NormalizedColorComponents([entity scannerDisplayColor1]);
+        result = NormalizedColorComponents(ship->scannerDisplayColor1());
         break;
 
     case kShip_scannerDisplayColor2:
-        result = NormalizedColorComponents([entity scannerDisplayColor2]);
+        result = NormalizedColorComponents(ship->scannerDisplayColor2());
         break;
 
     case kShip_scannerHostileDisplayColor1:
-        result = NormalizedColorComponents([entity scannerDisplayColorHostile1]);
+        result = NormalizedColorComponents(ship->scannerDisplayColorHostile1());
         break;
 
     case kShip_scannerHostileDisplayColor2:
-        result = NormalizedColorComponents([entity scannerDisplayColorHostile2]);
+        result = NormalizedColorComponents(ship->scannerDisplayColorHostile2());
         break;
 
     case kShip_exhaustEmissiveColor:
-        result = NormalizedColorComponents([entity exhaustEmissiveColor]);
+        result = NormalizedColorComponents(ship->exhaustEmissiveColor());
         break;
 
     case kShip_maxThrust:
-        return ooscript::newNumberValue(context, [entity maxThrust], value);
+        return ooscript::newNumberValue(context, ship->maxThrust(), value);
 
     case kShip_thrust:
-        return ooscript::newNumberValue(context, [entity thrust], value);
+        return ooscript::newNumberValue(context, ship->getThrust(), value);
 
     case kShip_lightsActive:
-        *value = OOJSValueFromBOOL([entity lightsActive]);
-        return YES;
+        *value = OOJSValueFromBOOL(ship->lightsActive());
+        return true;
 
     case kShip_vectorRight:
-        return VectorToJSValue(context, [entity rightVector], value);
+        return VectorToJSValue(context, ship->rightVector(), value);
 
     case kShip_vectorForward:
-        return VectorToJSValue(context, [entity forwardVector], value);
+        return VectorToJSValue(context, ship->forwardVector(), value);
 
     case kShip_vectorUp:
-        return VectorToJSValue(context, [entity upVector], value);
+        return VectorToJSValue(context, ship->upVector(), value);
 
     case kShip_velocity:
-        return VectorToJSValue(context, [entity velocity], value);
+        return VectorToJSValue(context, ship->getVelocity(), value);
 
     case kShip_thrustVector:
-        return VectorToJSValue(context, [entity thrustVector], value);
+        return VectorToJSValue(context, ship->thrustVector(), value);
 
     case kShip_pitch:
-        return ooscript::newNumberValue(context, [entity flightPitch], value);
+        return ooscript::newNumberValue(context, ship->getFlightPitch(), value);
 
     case kShip_roll:
-        return ooscript::newNumberValue(context, [entity flightRoll], value);
+        return ooscript::newNumberValue(context, ship->getFlightRoll(), value);
 
     case kShip_yaw:
-        return ooscript::newNumberValue(context, [entity flightYaw], value);
+        return ooscript::newNumberValue(context, ship->getFlightYaw(), value);
 
     case kShip_boundingBox: {
         Vector bbvect;
         BoundingBox box;
 
-        if ([entity isSubEntity]) {
-            box = [entity boundingBox];
+        if (ship->getIsSubEntity()) {
+            box = ship->getBoundingBox();
         } else {
-            box = [entity totalBoundingBox];
+            box = ship->getTotalBoundingBox();
         }
         bounding_box_get_dimensions(box, &bbvect.x, &bbvect.y, &bbvect.z);
         return VectorToJSValue(context, bbvect, value);
@@ -1229,11 +1325,11 @@ static bool ShipGetProperty(ooscript::Context context, ooscript::Object thisObje
 
     default:
         OOJSReportBadPropertySelector(context, thisObject, propID, sShipProperties);
-        return NO;
+        return false;
     }
 
     *value = OOJSValueFromPList(context, result);
-    return YES;
+    return true;
 
     OOJS_NATIVE_EXIT
 }
@@ -1241,12 +1337,12 @@ static bool ShipGetProperty(ooscript::Context context, ooscript::Object thisObje
 static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObject, ooscript::PropertyId propID, bool strict, ooscript::Value* value)
 {
     if (!ooscript::isInt32Id(propID))
-        return YES;
+        return true;
 
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* entity = nil;
-    ShipEntity* target = nil;
+    ShipEntity* entity = nullptr;
+    Entity* target = nil; // an object, as JSValueToEntity() answers (a ship's since bead oo-9ht.144 is the drawable's facade)
     std::optional<std::string> sValue;
     double fValue;
     int32_t iValue;
@@ -1254,134 +1350,137 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
     Vector vValue;
     Quaternion qValue;
     HPVector hpvValue;
-    OOShipGroup* group = nil;
-    OOColor* colorForScript = nil;
-    BOOL exists;
+    OOShipGroup* group = nullptr;
+    oo::Ref<OOColor> colorForScript;
+    BOOL exists; // JSValueToEquipmentKeyRelaxed()'s out parameter
 
     if (EXPECT_NOT(!JSShipGetShipEntity(context, thisObject, &entity)))
-        return NO;
-    if (OOIsStaleEntity(entity))
-        return YES;
+        return false;
+    if (OOIsStaleEntity(oo::ToObjC(entity)))
+        return true;
+    ShipEntity* ship = entity; // not null: entity is not
 
-    OOCAssert(![entity isTemplateCargoPod], "-OOJSShip: a template cargo pod has become accessible to Javascript");
+    OOCAssert(!ship->isTemplateCargoPod(), "-OOJSShip: a template cargo pod has become accessible to Javascript");
 
     switch (ooscript::idToInt32(propID)) {
     case kShip_name:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         sValue = cxx_OOStringFromJSValue(context, *value);
         if (sValue.has_value()) {
-            [entity cxx_setName:sValue];
-            return YES;
+            ship->setName(sValue);
+            return true;
         }
         break;
 
     case kShip_displayName:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         sValue = cxx_OOStringFromJSValue(context, *value);
         if (sValue.has_value()) {
-            [entity cxx_setDisplayName:*sValue];
-            return YES;
+            ship->setDisplayName(sValue);
+            return true;
         }
         break;
 
     case kShip_shipUniqueName:
         sValue = cxx_OOStringFromJSValue(context, *value);
         if (sValue.has_value()) {
-            [entity cxx_setShipUniqueName:*sValue];
-            return YES;
+            ship->setShipUniqueName(sValue);
+            return true;
         }
         break;
 
     case kShip_shipClassName:
         sValue = cxx_OOStringFromJSValue(context, *value);
         if (sValue.has_value()) {
-            [entity cxx_setShipClassName:*sValue];
-            return YES;
+            ship->setShipClassName(sValue);
+            return true;
         }
         break;
 
     case kShip_scanDescription:
         sValue = cxx_OOStringFromJSValue(context, *value);
         // can set to nil
-        [entity cxx_setScanDescription:sValue];
-        return YES;
+        ship->setScanDescription(sValue);
+        return true;
 
     case kShip_primaryRole:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         sValue = cxx_OOStringFromJSValue(context, *value);
         if (sValue.has_value()) {
-            [entity setPrimaryRole:*sValue];
-            return YES;
+            ship->setPrimaryRole(*sValue);
+            return true;
         }
         break;
 
     case kShip_AIState:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         sValue = cxx_OOStringFromJSValue(context, *value);
         if (sValue.has_value()) {
-            [[entity getAI] cxx_setState:*sValue];
-            return YES;
+            if (cxx::AI* ai = oo::ToCxx(ship->getAI()))
+                ai->setState(*sValue); // no AI: nothing, as a message to nil
+            return true;
         }
         break;
 
     case kShip_beaconCode:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         sValue = cxx_OOStringFromJSValue(context, *value);
         if (!sValue.has_value() || sValue->empty()) // nil and "" alike, as -length gave 0 for both
         {
-            if ([entity isBeacon]) {
-                [UNIVERSE clearBeacon:entity];
-                if ([PLAYER nextBeacon] == entity) {
-                    [PLAYER setCompassMode:COMPASS_MODE_PLANET];
+            if (ship->isBeacon()) {
+                [UNIVERSE clearBeacon:(::Entity<OOBeaconEntity>*)oo::ToObjC(entity)];
+                if ((PLAYER != nullptr ? (::Entity<OOBeaconEntity>*)PLAYER->nextBeacon() : (::Entity<OOBeaconEntity>*)nullptr) == oo::ToObjC(entity)) {
+                    if (PLAYER != nullptr)
+                        PLAYER->setCompassMode(COMPASS_MODE_PLANET);
                 }
             }
         } else {
-            if ([entity isBeacon]) {
-                [entity setBeaconCode:sValue];
+            if (ship->isBeacon()) {
+                ship->setBeaconCode(sValue);
             } else // Universe needs to update beacon lists in this case only
             {
-                [entity setBeaconCode:sValue];
-                [UNIVERSE setNextBeacon:entity];
+                ship->setBeaconCode(sValue);
+                [UNIVERSE setNextBeacon:(::Entity<OOBeaconEntity>*)oo::ToObjC(entity)];
             }
         }
-        return YES;
+        return true;
         break;
 
     case kShip_beaconLabel:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
         sValue = cxx_OOStringFromJSValue(context, *value);
         if (sValue.has_value()) {
-            [entity setBeaconLabel:sValue];
-            return YES;
+            ship->setBeaconLabel(sValue);
+            return true;
         }
         break;
 
     case kShip_accuracy:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         if (ooscript::valueToNumber(context, *value, &fValue)) {
-            [entity setAccuracy:fValue];
-            return YES;
+            ship->setAccuracy(fValue);
+            return true;
         }
         break;
 
     case kShip_fuel:
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             fValue = OOClamp_0_max_d(fValue, MAX_JUMP_RANGE);
-            [entity setFuel:lround(fValue * 10.0)];
-            return YES;
+            ship->setFuel(lround(fValue * 10.0));
+            return true;
         }
         break;
 
@@ -1389,16 +1488,16 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToInt32(context, *value, &iValue)) {
             if (iValue < 0 || iValue > (int32_t)ENTITY_PERSONALITY_MAX) {
                 cxx_OOJSReportError(context, "ship.%s must be >= 0 and <= %u.", cxx_OOStringFromJSPropertyIDAndSpec(context, propID, sShipProperties).value_or("(null)").c_str(), ENTITY_PERSONALITY_MAX);
-                return NO;
+                return false;
             }
-            [entity setEntityPersonalityInt:iValue];
-            return YES;
+            ship->setEntityPersonalityInt(iValue);
+            return true;
         }
 
     case kShip_hyperspaceSpinTime:
         if (ooscript::valueToNumber(context, *value, &fValue)) {
-            [entity setHyperspaceSpinTime:fValue];
-            return YES;
+            ship->setHyperspaceSpinTime(fValue);
+            return true;
         }
         break;
 
@@ -1406,8 +1505,8 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToInt32(context, *value, &iValue)) {
             if (iValue < 0)
                 iValue = 0;
-            [entity setBounty:iValue withReason:kOOLegalStatusReasonByScript];
-            return YES;
+            ship->setBounty(iValue, kOOLegalStatusReasonByScript);
+            return true;
         }
         break;
 
@@ -1417,13 +1516,13 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
                 iValue = 0;
             // OXPs using equipment with weight requirements may make us end up with more allocated
             // cargo space than what we have available. Do not let iValue become negative.
-            if ([entity maxAvailableCargoSpace] < [entity availableCargoSpace]) {
+            if (ship->maxAvailableCargoSpace() < ship->availableCargoSpace()) {
                 iValue = 0;
-            } else if ((OOCargoQuantity)iValue < [entity maxAvailableCargoSpace] - [entity availableCargoSpace]) {
-                iValue = [entity maxAvailableCargoSpace] - [entity availableCargoSpace];
+            } else if ((OOCargoQuantity)iValue < ship->maxAvailableCargoSpace() - ship->availableCargoSpace()) {
+                iValue = ship->maxAvailableCargoSpace() - ship->availableCargoSpace();
             }
-            [entity setMaxAvailableCargoSpace:iValue];
-            return YES;
+            ship->setMaxAvailableCargoSpace(iValue);
+            return true;
         }
         break;
 
@@ -1431,8 +1530,8 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToInt32(context, *value, &iValue)) {
             if (iValue < 0)
                 iValue = 0;
-            [entity setDestinationSystem:iValue];
-            return YES;
+            ship->setDestinationSystem(iValue);
+            return true;
         }
         break;
 
@@ -1440,152 +1539,152 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToInt32(context, *value, &iValue)) {
             if (iValue < 0)
                 iValue = 0;
-            [entity setHomeSystem:iValue];
-            return YES;
+            ship->setHomeSystem(iValue);
+            return true;
         }
         break;
 
     case kShip_target:
         if (ooscript::isNull(*value)) {
-            [entity setTargetForScript:nil];
-            return YES;
-        } else if (JSValueToEntity(context, *value, &target) && [target isKindOfClass:[ShipEntity class]]) {
-            [entity setTargetForScript:target];
-            return YES;
+            ShipEntityJSSetTargetForScript(entity, nullptr); // -setTargetForScript:, which no subclass overrides
+            return true;
+        } else if (JSValueToEntity(context, *value, &target) && IsShip(target)) {
+            ShipEntityJSSetTargetForScript(entity, oo::ToShip(target));
+            return true;
         }
         break;
 
     case kShip_AIFoundTarget:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         if (ooscript::isNull(*value)) {
-            [entity setFoundTarget:nil];
-            return YES;
-        } else if (JSValueToEntity(context, *value, &target) && [target isKindOfClass:[ShipEntity class]]) {
-            [entity setFoundTarget:target];
-            return YES;
+            ship->setFoundTarget(nullptr);
+            return true;
+        } else if (JSValueToEntity(context, *value, &target) && IsShip(target)) {
+            ship->setFoundTarget(target);
+            return true;
         }
         break;
 
     case kShip_AIPrimaryAggressor:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         if (ooscript::isNull(*value)) {
-            [entity setPrimaryAggressor:nil];
-            return YES;
-        } else if (JSValueToEntity(context, *value, &target) && [target isKindOfClass:[ShipEntity class]]) {
-            [entity setPrimaryAggressor:target];
-            return YES;
+            ship->setPrimaryAggressor(nullptr);
+            return true;
+        } else if (JSValueToEntity(context, *value, &target) && IsShip(target)) {
+            ship->setPrimaryAggressor(target);
+            return true;
         }
         break;
 
     case kShip_group:
-        group = OOJSNativeObjectOfClassFromJSValue(context, *value, [OOShipGroup class]);
-        if (group != nil || ooscript::isNull(*value)) {
-            [entity setGroup:group];
-            return YES;
+        group = OOShipGroupInObjectNode(cxx_OOJSPListFromJSValue(context, *value)); // a ShipGroup's group, else null
+        if (group != nullptr || ooscript::isNull(*value)) {
+            ship->setGroup(group);
+            return true;
         }
         break;
 
     case kShip_AIScriptWakeTime:
         if (ooscript::valueToNumber(context, *value, &fValue)) {
-            [entity setAIScriptWakeTime:fValue];
-            return YES;
+            ship->setAIScriptWakeTime(fValue);
+            return true;
         }
         break;
 
     case kShip_temperature:
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             fValue = fmax(fValue, 0.0);
-            [entity setTemperature:fValue * SHIP_MAX_CABIN_TEMP];
-            return YES;
+            ship->setTemperature(fValue * SHIP_MAX_CABIN_TEMP);
+            return true;
         }
         break;
 
     case kShip_heatInsulation:
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             fValue = fmax(fValue, 0.125);
-            [entity setHeatInsulation:fValue];
-            return YES;
+            ship->setHeatInsulation(fValue);
+            return true;
         }
         break;
 
     case kShip_isCloaked:
         if (ooscript::valueToBoolean(context, *value, &bValue)) {
-            [entity setCloaked:bValue];
-            return YES;
+            ship->setCloaked(bValue);
+            return true;
         }
         break;
 
     case kShip_cloakAutomatic:
         if (ooscript::valueToBoolean(context, *value, &bValue)) {
-            [entity setAutoCloak:bValue];
-            return YES;
+            ship->setAutoCloak(bValue);
+            return true;
         }
         break;
 
     case kShip_missileLoadTime:
         if (ooscript::valueToNumber(context, *value, &fValue)) {
-            [entity setMissileLoadTime:fmax(0.0, fValue)];
-            return YES;
+            ship->setMissileLoadTime(fmax(0.0, fValue));
+            return true;
         }
         break;
 
     case kShip_reactionTime:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         if (ooscript::valueToNumber(context, *value, &fValue)) {
-            [entity setReactionTime:fValue];
-            return YES;
+            ship->setReactionTime(fValue);
+            return true;
         }
         break;
 
     case kShip_reportAIMessages:
         if (ooscript::valueToBoolean(context, *value, &bValue)) {
-            [entity setReportAIMessages:bValue];
-            return YES;
+            ship->setReportAIMessages(bValue);
+            return true;
         }
         break;
 
     case kShip_trackCloseContacts:
         if (ooscript::valueToBoolean(context, *value, &bValue)) {
-            [entity setTrackCloseContacts:bValue];
-            return YES;
+            ship->setTrackCloseContacts(bValue);
+            return true;
         }
         break;
 
     case kShip_isBoulder:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         if (ooscript::valueToBoolean(context, *value, &bValue)) {
-            [entity setIsBoulder:bValue];
-            return YES;
+            ship->setIsBoulder(bValue);
+            return true;
         }
         break;
 
     case kShip_destination:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         if (JSValueToHPVector(context, *value, &hpvValue)) {
             // use setEscortDestination rather than setDestination as
             // scripted amendments shouldn't necessarily reset frustration
-            [entity setEscortDestination:hpvValue];
-            return YES;
+            ship->setEscortDestination(hpvValue);
+            return true;
         }
         break;
 
     case kShip_desiredSpeed:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         if (ooscript::valueToNumber(context, *value, &fValue)) {
-            [entity setDesiredSpeed:fmax(fValue, 0.0)];
-            return YES;
+            ship->setDesiredSpeed(fmax(fValue, 0.0));
+            return true;
         }
         break;
 
@@ -1605,7 +1704,7 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         // PLAYER: read-only, as for desiredSpeed just above. The player's flightSpeed is
         // driven by the throttle every frame through PlayerEntity's control path, so a write
         // here would be silently reverted - a setter that does not stick is worse than none.
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         if (ooscript::valueToNumber(context, *value, &fValue)) {
@@ -1618,7 +1717,7 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
             // into position on the next frame and poisons the entity beyond recovery.
             if (isnan(fValue) || fValue < 0) {
                 cxx_OOJSReportError(context, "ship.speed must be a number >= 0.");
-                return NO;
+                return false;
             }
             // NOT clamped to maxSpeed at the top end, deliberately. The engine itself puts
             // flightSpeed above maxFlightSpeed on purpose - missiles (ShipEntity.m:12381,
@@ -1627,112 +1726,112 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
             // rewrite a legal value. -applyThrust: already pulls flightSpeed back towards
             // desired_speed, which IS clamped to max_available_speed (ShipEntity.m:6756-6757),
             // so an over-speed write decays on its own rather than sticking.
-            [entity setSpeed:fValue];
-            return YES;
+            ship->setSpeed(fValue);
+            return true;
         }
         break;
 
     case kShip_desiredRange:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         if (ooscript::valueToNumber(context, *value, &fValue)) {
-            [entity setDesiredRange:fmax(fValue, 0.0)];
-            return YES;
+            ship->setDesiredRange(fmax(fValue, 0.0));
+            return true;
         }
         break;
 
     case kShip_savedCoordinates:
         if (JSValueToHPVector(context, *value, &hpvValue)) {
-            [entity setCoordinate:hpvValue];
-            return YES;
+            ship->setCoordinate(hpvValue);
+            return true;
         }
         break;
 
     case kShip_scannerDisplayColor1:
-        colorForScript = [OOColor cxx_colorWithDescription:cxx_OOJSPListFromJSValue(context, *value)];
-        if (colorForScript != nil || ooscript::isNull(*value)) {
-            [entity setScannerDisplayColor1:colorForScript];
-            return YES;
+        colorForScript = OOColor::colorWithDescription(cxx_OOJSPListFromJSValue(context, *value));
+        if (colorForScript != nullptr || ooscript::isNull(*value)) {
+            ship->setScannerDisplayColor1(colorForScript.get());
+            return true;
         }
         break;
 
     case kShip_scannerDisplayColor2:
-        colorForScript = [OOColor cxx_colorWithDescription:cxx_OOJSPListFromJSValue(context, *value)];
-        if (colorForScript != nil || ooscript::isNull(*value)) {
-            [entity setScannerDisplayColor2:colorForScript];
-            return YES;
+        colorForScript = OOColor::colorWithDescription(cxx_OOJSPListFromJSValue(context, *value));
+        if (colorForScript != nullptr || ooscript::isNull(*value)) {
+            ship->setScannerDisplayColor2(colorForScript.get());
+            return true;
         }
         break;
 
     case kShip_scannerHostileDisplayColor1:
-        colorForScript = [OOColor cxx_colorWithDescription:cxx_OOJSPListFromJSValue(context, *value)];
-        if (colorForScript != nil || ooscript::isNull(*value)) {
-            [entity setScannerDisplayColorHostile1:colorForScript];
-            return YES;
+        colorForScript = OOColor::colorWithDescription(cxx_OOJSPListFromJSValue(context, *value));
+        if (colorForScript != nullptr || ooscript::isNull(*value)) {
+            ship->setScannerDisplayColorHostile1(colorForScript.get());
+            return true;
         }
         break;
 
     case kShip_scannerHostileDisplayColor2:
-        colorForScript = [OOColor cxx_colorWithDescription:cxx_OOJSPListFromJSValue(context, *value)];
-        if (colorForScript != nil || ooscript::isNull(*value)) {
-            [entity setScannerDisplayColorHostile2:colorForScript];
-            return YES;
+        colorForScript = OOColor::colorWithDescription(cxx_OOJSPListFromJSValue(context, *value));
+        if (colorForScript != nullptr || ooscript::isNull(*value)) {
+            ship->setScannerDisplayColorHostile2(colorForScript.get());
+            return true;
         }
         break;
 
     case kShip_exhaustEmissiveColor:
-        colorForScript = [OOColor cxx_colorWithDescription:cxx_OOJSPListFromJSValue(context, *value)];
-        if (colorForScript != nil || ooscript::isNull(*value)) {
-            [entity setExhaustEmissiveColor:colorForScript];
-            return YES;
+        colorForScript = OOColor::colorWithDescription(cxx_OOJSPListFromJSValue(context, *value));
+        if (colorForScript != nullptr || ooscript::isNull(*value)) {
+            ship->setExhaustEmissiveColor(colorForScript.get());
+            return true;
         }
         break;
 
     case kShip_scriptedMisjump:
         if (ooscript::valueToBoolean(context, *value, &bValue)) {
-            [entity setScriptedMisjump:bValue];
-            return YES;
+            ship->setScriptedMisjump(bValue);
+            return true;
         }
         break;
 
     case kShip_scriptedMisjumpRange:
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             if (fValue > 0.0 && fValue < 1.0) {
-                [entity setScriptedMisjumpRange:fValue];
-                return YES;
+                ship->setScriptedMisjumpRange(fValue);
+                return true;
             } else {
                 cxx_OOJSReportError(context, "ship.%s must be > 0.0 and < 1.0.", cxx_OOStringFromJSPropertyIDAndSpec(context, propID, sShipProperties).value_or("(null)").c_str());
-                return NO;
+                return false;
             }
         }
         break;
 
     case kShip_subEntityRotation:
         if (JSValueToQuaternion(context, *value, &qValue)) {
-            [entity setSubEntityRotationalVelocity:qValue];
-            return YES;
+            ship->setSubEntityRotationalVelocity(qValue);
+            return true;
         }
         break;
 
     case kShip_sunGlareFilter:
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             if (fValue >= 0.0f && fValue <= 1.0f) {
-                [entity setSunGlareFilter:fValue];
-                return YES;
+                ship->setSunGlareFilter(fValue);
+                return true;
             } else {
                 cxx_OOJSReportError(context, "ship.%s must be > 0.0 and < 1.0.", cxx_OOStringFromJSPropertyIDAndSpec(context, propID, sShipProperties).value_or("(null)").c_str());
-                return NO;
+                return false;
             }
         }
         break;
 
     case kShip_thrust:
-        //			if (EXPECT_NOT([entity isPlayer]))  goto playerReadOnly;
+        //			if (EXPECT_NOT(ship->getIsPlayer()))  goto playerReadOnly;
 
         if (ooscript::valueToNumber(context, *value, &fValue)) {
-            [entity setThrust:OOClamp_0_max_f(fValue, [entity maxThrust])];
-            return YES;
+            ship->setThrust(OOClamp_0_max_f(fValue, ship->maxThrust()));
+            return true;
         }
         break;
 
@@ -1740,10 +1839,10 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             if (fValue < 0) {
                 cxx_OOJSReportError(context, "ship.maxPitch cannot be negative.");
-                return NO;
+                return false;
             }
-            [entity setMaxFlightPitch:fValue];
-            return YES;
+            ship->setMaxFlightPitch(fValue);
+            return true;
         }
         break;
 
@@ -1751,10 +1850,10 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             if (fValue < 0) {
                 cxx_OOJSReportError(context, "ship.maxSpeed cannot be negative.");
-                return NO;
+                return false;
             }
-            [entity setMaxFlightSpeed:fValue];
-            return YES;
+            ship->setMaxFlightSpeed(fValue);
+            return true;
         }
         break;
 
@@ -1762,10 +1861,10 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             if (fValue < 0) {
                 cxx_OOJSReportError(context, "ship.maxRoll cannot be negative.");
-                return NO;
+                return false;
             }
-            [entity setMaxFlightRoll:fValue];
-            return YES;
+            ship->setMaxFlightRoll(fValue);
+            return true;
         }
         break;
 
@@ -1773,10 +1872,10 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             if (fValue < 0) {
                 cxx_OOJSReportError(context, "ship.maxYaw cannot be negative.");
-                return NO;
+                return false;
             }
-            [entity setMaxFlightYaw:fValue];
-            return YES;
+            ship->setMaxFlightYaw(fValue);
+            return true;
         }
         break;
 
@@ -1784,10 +1883,10 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             if (fValue < 0) {
                 cxx_OOJSReportError(context, "ship.injectorBurnRate cannot be negative.");
-                return NO;
+                return false;
             }
-            [entity setAfterburnerRate:fValue];
-            return YES;
+            ship->setAfterburnerRate(fValue);
+            return true;
         }
         break;
 
@@ -1795,21 +1894,21 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             if (fValue < 1) {
                 cxx_OOJSReportError(context, "ship.injectorSpeedFactor cannot be less than 1.0.");
-                return NO;
+                return false;
             }
 #if OO_VARIABLE_TORUS_SPEED
             else if (fValue > MIN_HYPERSPEED_FACTOR) {
                 cxx_OOJSReportError(context, "ship.injectorSpeedFactor cannot be higher than minimum torus speed factor (%f).", MIN_HYPERSPEED_FACTOR);
-                return NO;
+                return false;
             }
 #else
             else if (fValue > HYPERSPEED_FACTOR) {
                 cxx_OOJSReportError(context, "ship.injectorSpeedFactor cannot be higher than torus speed factor (%f).", HYPERSPEED_FACTOR);
-                return NO;
+                return false;
             }
 #endif
-            [entity setAfterburnerFactor:fValue];
-            return YES;
+            ship->setAfterburnerFactor(fValue);
+            return true;
         }
         break;
 
@@ -1817,10 +1916,10 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             if (fValue < 0) {
                 cxx_OOJSReportError(context, "ship.maxThrust cannot be negative.");
-                return NO;
+                return false;
             }
-            [entity setMaxThrust:fValue];
-            return YES;
+            ship->setMaxThrust(fValue);
+            return true;
         }
         break;
 
@@ -1828,27 +1927,27 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
         if (ooscript::valueToNumber(context, *value, &fValue)) {
             if (fValue < 0) {
                 cxx_OOJSReportError(context, "ship.energyRechargeRate cannot be negative.");
-                return NO;
+                return false;
             }
-            [entity setEnergyRechargeRate:fValue];
-            return YES;
+            ship->setEnergyRechargeRate(fValue);
+            return true;
         }
         break;
 
     case kShip_lightsActive:
         if (ooscript::valueToBoolean(context, *value, &bValue)) {
             if (bValue)
-                [entity switchLightsOn];
+                ship->switchLightsOn();
             else
-                [entity switchLightsOff];
-            return YES;
+                ship->switchLightsOff();
+            return true;
         }
         break;
 
     case kShip_velocity:
         if (JSValueToVector(context, *value, &vValue)) {
-            [entity setTotalVelocity:vValue];
-            return YES;
+            ship->setTotalVelocity(vValue);
+            return true;
         }
         break;
 
@@ -1873,54 +1972,56 @@ static bool ShipSetProperty(ooscript::Context context, ooscript::Object thisObje
             facing = WEAPON_FACING_STARBOARD;
             break;
         case kShip_currentWeapon:
-            facing = [entity currentWeaponFacing];
+            facing = ship->getCurrentWeaponFacing();
             break;
         }
-        if ([entity isPlayer]) {
-            PlayerEntity* pent = (PlayerEntity*)entity;
-            [pent cxx_setWeaponMount:facing toWeapon:weaponKey inContext:"scripted"];
+        if (ship->getIsPlayer()) {
+            PlayerEntity* pent = static_cast<PlayerEntity*>(entity);
+            if (pent != nullptr)
+                pent->setWeaponMount(facing, weaponKey, "scripted");
         } else {
-            [entity setWeaponMount:facing toWeapon:weaponKey];
+            ship->setWeaponMount(facing, weaponKey);
         }
-        return YES;
+        return true;
     }
 
     case kShip_maxEscorts:
-        if (EXPECT_NOT([entity isPlayer]))
+        if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
         if (ooscript::valueToInt32(context, *value, &iValue)) {
-            if ((NSInteger)iValue < (NSInteger)[[entity escortGroup] count] - 1) {
+            OOShipGroup* escortGroup = ship->escortGroup();
+            if ((NSInteger)iValue < (NSInteger)(escortGroup != nullptr ? escortGroup->count() : 0) - 1) {
                 cxx_OOJSReportError(context, "ship.%s must be >= current escort numbers.", cxx_OOStringFromJSPropertyIDAndSpec(context, propID, sShipProperties).value_or("(null)").c_str());
-                return NO;
+                return false;
             }
             if (iValue > MAX_ESCORTS) {
                 cxx_OOJSReportError(context, "ship.%s must be <= %d.", cxx_OOStringFromJSPropertyIDAndSpec(context, propID, sShipProperties).value_or("(null)").c_str(), MAX_ESCORTS);
-                return NO;
+                return false;
             }
-            [entity setMaxEscortCount:iValue];
-            return YES;
+            ship->setMaxEscortCount(iValue);
+            return true;
         }
 
         break;
 
     default:
         OOJSReportBadPropertySelector(context, thisObject, propID, sShipProperties);
-        return NO;
+        return false;
     }
 
     OOJSReportBadPropertyValue(context, thisObject, propID, sShipProperties, *value);
-    return NO;
+    return false;
 
 playerReadOnly:
     cxx_OOJSReportError(context, "player.ship.%s is read-only.", cxx_OOStringFromJSPropertyIDAndSpec(context, propID, sShipProperties).value_or("(null)").c_str());
-    return NO;
+    return false;
 
     // Not used (yet)
     /*
     npcReadOnly:
             cxx_OOJSReportError(context, "npc.ship.%s is read-only.", cxx_OOStringFromJSPropertyIDAndSpec(context, propID, sShipProperties).value_or("(null)").c_str());
-            return NO;
+            return false;
     */
 
     OOJS_NATIVE_EXIT
@@ -1932,7 +2033,7 @@ playerReadOnly:
     do {                                                                    \
         if (EXPECT_NOT(!JSShipGetShipEntity(context, OOJS_THIS, &THISENT))) \
             return NO; /* Exception */                                      \
-        if (OOIsStaleEntity(THISENT))                                       \
+        if (OOIsStaleEntity(oo::ToObjC(THISENT)))                           \
             OOJS_RETURN_VOID;                                               \
     } while (0)
 
@@ -1941,22 +2042,23 @@ static bool ShipSetScript(ooscript::Context context, ooscript::CallArgs& oojsArg
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> name;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (oojsArgs.count() > 0)
         name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!name.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "setScript", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (script name)");
-        return NO;
+        return false;
     }
-    if (EXPECT_NOT([thisEnt isPlayer])) {
+    if (EXPECT_NOT(ship->getIsPlayer())) {
         cxx_OOJSReportErrorForCaller(context, "Ship", "setScript", "Not valid for player ship.");
-        return NO;
+        return false;
     }
 
-    [thisEnt cxx_setShipScript:*name];
+    ship->setShipScript(name);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -1967,22 +2069,23 @@ static bool ShipSetAI(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> name;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (oojsArgs.count() > 0)
         name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!name.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "setAI", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (AI name)");
-        return NO;
+        return false;
     }
-    if (EXPECT_NOT([thisEnt isPlayer])) {
+    if (EXPECT_NOT(ship->getIsPlayer())) {
         cxx_OOJSReportErrorForCaller(context, "Ship", "setAI", "Not valid for player ship.");
-        return NO;
+        return false;
     }
 
-    [thisEnt setAITo:*name];
+    ship->setAITo(*name);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -1993,22 +2096,23 @@ static bool ShipSwitchAI(ooscript::Context context, ooscript::CallArgs& oojsArgs
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> name;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (oojsArgs.count() > 0)
         name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!name.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "switchAI", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (AI name)");
-        return NO;
+        return false;
     }
-    if (EXPECT_NOT([thisEnt isPlayer])) {
+    if (EXPECT_NOT(ship->getIsPlayer())) {
         cxx_OOJSReportErrorForCaller(context, "Ship", "switchAI", "Not valid for player ship.");
-        return NO;
+        return false;
     }
 
-    [thisEnt switchAITo:*name];
+    ship->switchAITo(*name);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -2019,24 +2123,26 @@ static bool ShipExitAI(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
-    AI* thisAI = nil;
+    ShipEntity* thisEnt = nullptr;
+    cxx::AI* thisAI = nullptr;
     std::optional<std::string> message; // nullopt: the AI defaults to RESTARTED
 
     GET_THIS_SHIP(thisEnt);
-    if (EXPECT_NOT([thisEnt isPlayer])) {
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    if (EXPECT_NOT(ship->getIsPlayer())) {
         cxx_OOJSReportErrorForCaller(context, "Ship", "exitAI", "Not valid for player ship.");
-        return NO;
+        return false;
     }
-    thisAI = [thisEnt getAI];
+    thisAI = oo::ToCxx(ship->getAI());
 
-    if ([thisAI hasSuspendedStateMachines]) {
+    if (thisAI != nullptr && thisAI->hasSuspendedStateMachines()) // no AI: none, as a message to nil
+    {
         if (oojsArgs.count() > 0) {
             message = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
         }
         // Else AI will default to RESTARTED.
 
-        [thisAI cxx_exitStateMachineWithMessage:message];
+        thisAI->exitStateMachineWithMessage(message);
     } else {
         cxx_OOJSReportWarningForCaller(context, "Ship", "exitAI()", "Cannot exit current AI state machine because there are no suspended state machines.");
     }
@@ -2050,22 +2156,23 @@ static bool ShipReactToAIMessage(ooscript::Context context, ooscript::CallArgs& 
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> message;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (oojsArgs.count() > 0)
         message = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!message.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "reactToAIMessage", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string");
-        return NO;
+        return false;
     }
-    if (EXPECT_NOT([thisEnt isPlayer])) {
+    if (EXPECT_NOT(ship->getIsPlayer())) {
         cxx_OOJSReportErrorForCaller(context, "Ship", "reactToAIMessage", "Not valid for player ship.");
-        return NO;
+        return false;
     }
 
-    [thisEnt cxx_reactToAIMessage:*message context:"JavaScript reactToAIMessage()"];
+    ship->reactToAIMessage(*message, "JavaScript reactToAIMessage()");
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -2076,22 +2183,23 @@ static bool ShipSendAIMessage(ooscript::Context context, ooscript::CallArgs& ooj
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> message;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (oojsArgs.count() > 0)
         message = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!message.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "sendAIMessage", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string");
-        return NO;
+        return false;
     }
-    if (EXPECT_NOT([thisEnt isPlayer])) {
+    if (EXPECT_NOT(ship->getIsPlayer())) {
         cxx_OOJSReportErrorForCaller(context, "Ship", "sendAIMessage", "Not valid for player ship.");
-        return NO;
+        return false;
     }
 
-    [thisEnt sendAIMessage:*message];
+    ship->sendAIMessage(*message);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -2102,11 +2210,12 @@ static bool ShipDeployEscorts(ooscript::Context context, ooscript::CallArgs& ooj
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    [thisEnt deployEscorts];
+    ship->deployEscorts();
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -2117,11 +2226,12 @@ static bool ShipDockEscorts(ooscript::Context context, ooscript::CallArgs& oojsA
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    [thisEnt dockEscorts];
+    ship->dockEscorts();
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -2132,19 +2242,20 @@ static bool ShipHasEquipmentProviding(ooscript::Context context, ooscript::CallA
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> equipment;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         equipment = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!equipment.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "hasEquipmentProviding", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (equipment)");
-        return NO;
+        return false;
     }
 
-    OOJS_RETURN_BOOL([thisEnt cxx_hasEquipmentItemProviding:*equipment]);
+    OOJS_RETURN_BOOL(ship->hasEquipmentItemProviding(*equipment));
 
     OOJS_NATIVE_EXIT
 }
@@ -2154,19 +2265,20 @@ static bool ShipHasRole(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> role;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!role.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "hasRole", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (role)");
-        return NO;
+        return false;
     }
 
-    OOJS_RETURN_BOOL([thisEnt hasRole:*role]);
+    OOJS_RETURN_BOOL(ship->hasRole(*role));
 
     OOJS_NATIVE_EXIT
 }
@@ -2176,19 +2288,20 @@ static bool ShipEjectItem(ooscript::Context context, ooscript::CallArgs& oojsArg
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> role;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!role.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "ejectItem", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (role)");
-        return NO;
+        return false;
     }
 
-    OOJS_RETURN_OBJECT([thisEnt ejectShipOfRole:role]);
+    OOJS_RETURN_OBJECT(oo::ToObjC(ship->ejectShipOfRole(role)));
 
     OOJS_NATIVE_EXIT
 }
@@ -2197,44 +2310,46 @@ static bool ShipEjectItem(ooscript::Context context, ooscript::CallArgs& oojsArg
 static bool ShipAddCargoEntity(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
-    ShipEntity* thisEnt = nil;
-    ShipEntity* target = nil;
-    bool procEvents = NO;
-    bool procMessages = NO;
+    ShipEntity* thisEnt = nullptr;
+    ShipEntity* target = nullptr;
+    bool procEvents = false;
+    bool procMessages = false;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    if (EXPECT_NOT([thisEnt isPlayer] && [(PlayerEntity*)thisEnt isDocked])) {
+    if (EXPECT_NOT(ship->getIsPlayer() && (static_cast<PlayerEntity*>(thisEnt) != nullptr ? static_cast<PlayerEntity*>(thisEnt)->isDocked() : false))) {
         cxx_OOJSReportWarningForCaller(context, "PlayerShip", "addCargoEntity", "Can't add cargo entity while docked, ignoring.");
-        return NO;
+        return false;
     }
     if (EXPECT_NOT(oojsArgs.count() == 0 || ooscript::isNull(OOJS_ARGV[0]) || !ooscript::isObjectOrNull(OOJS_ARGV[0]) || !JSShipGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &target))) {
         cxx_OOJSReportBadArguments(context, "PlayerShip", "addCargoEntity", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "scoopable entity.");
-        return NO;
+        return false;
     }
-    if ([target scanClass] != CLASS_CARGO) {
+    if (target == nullptr || target->getScanClass() != CLASS_CARGO) // none: CLASS_NO_DRAW, as a message to nil
+    {
         cxx_OOJSReportWarningForCaller(context, "PlayerShip", "addCargoEntity", "Scoopable entity not cargo.");
-        return NO;
+        return false;
     }
-    if ([target status] != STATUS_IN_FLIGHT) {
+    if (target->status() != STATUS_IN_FLIGHT) {
         cxx_OOJSReportWarningForCaller(context, "PlayerShip", "addCargoEntity", "Scoopable entity not in flight.");
-        return NO;
+        return false;
     }
     if (oojsArgs.count() >= 2 && EXPECT_NOT(!ooscript::valueToBoolean(context, OOJS_ARGV[1], &procEvents))) {
         cxx_OOJSReportBadArguments(context, "PlayerShip", "addCargoEntity", MIN(oojsArgs.count(), 2U), OOJS_ARGV, std::nullopt, "boolean");
-        return NO;
+        return false;
     }
     if (oojsArgs.count() == 3 && EXPECT_NOT(!ooscript::valueToBoolean(context, OOJS_ARGV[2], &procMessages))) {
         cxx_OOJSReportBadArguments(context, "PlayerShip", "addCargoEntity", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "boolean");
-        return NO;
+        return false;
     }
 
     // scoop the object, but don't process any events/messages unless requested
     OOJS_BEGIN_FULL_NATIVE(context)
-    [thisEnt scoopUpProcess:target processEvents:procEvents processMessages:procMessages];
+    ship->scoopUpProcess(target, procEvents, procMessages);
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_BOOL([target status] == STATUS_IN_HOLD);
+    OOJS_RETURN_BOOL(target->status() == STATUS_IN_HOLD);
 
     OOJS_NATIVE_EXIT
 }
@@ -2244,19 +2359,20 @@ static bool ShipEjectSpecificItem(ooscript::Context context, ooscript::CallArgs&
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> itemKey;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         itemKey = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!itemKey.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "ejectSpecificItem", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (ship key)");
-        return NO;
+        return false;
     }
 
-    OOJS_RETURN_OBJECT([thisEnt ejectShipOfType:itemKey]);
+    OOJS_RETURN_OBJECT(oo::ToObjC(ship->ejectShipOfType(itemKey)));
 
     OOJS_NATIVE_EXIT
 }
@@ -2266,12 +2382,13 @@ static bool ShipDumpCargo(ooscript::Context context, ooscript::CallArgs& oojsArg
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> pref; // nullopt: no preference
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    if (EXPECT_NOT([thisEnt isPlayer] && [(PlayerEntity*)thisEnt isDocked])) {
+    if (EXPECT_NOT(ship->getIsPlayer() && (static_cast<PlayerEntity*>(thisEnt) != nullptr ? static_cast<PlayerEntity*>(thisEnt)->isDocked() : false))) {
         cxx_OOJSReportWarningForCaller(context, "PlayerShip", "dumpCargo", "Can't dump cargo while docked, ignoring.");
         OOJS_RETURN_NULL;
     }
@@ -2281,22 +2398,22 @@ static bool ShipDumpCargo(ooscript::Context context, ooscript::CallArgs& oojsArg
     }
 
     // NPCs can queue multiple items to dump
-    if (!EXPECT_NOT([thisEnt isPlayer])) {
+    if (!EXPECT_NOT(ship->getIsPlayer())) {
         int32_t i, count = 1;
-        BOOL gotCount = YES;
+        bool gotCount = true;
         if (oojsArgs.count() > 0)
             gotCount = ooscript::valueToInt32(context, OOJS_ARGV[0], &count);
         if (EXPECT_NOT(!gotCount || count < 1 || count > 64)) {
             cxx_OOJSReportBadArguments(context, "Ship", "dumpCargo", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "optional quantity (1 to 64), optional preferred commodity");
-            return NO;
+            return false;
         }
 
         for (i = 1; i < count; i++) {
-            OOScheduleDeferredCall(thisEnt, @selector(dumpCargo), nil, 0.75 * i); // drop 3 canisters per 2 seconds
+            OOScheduleDeferredCall(oo::ToObjC(thisEnt), @selector(dumpCargo), nil, (0.75 * i)); // drop 3 canisters per 2 seconds
         }
     }
 
-    OOJS_RETURN_OBJECT([thisEnt cxx_dumpCargoItem:pref]);
+    OOJS_RETURN_OBJECT(oo::ToObjC(ship->dumpCargoItem(pref)));
 
     OOJS_NATIVE_EXIT
 }
@@ -2306,13 +2423,14 @@ static bool ShipSpawn(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> role;
     int32_t count = 1;
-    BOOL gotCount = YES;
-    std::vector<oo::ObjCRef<ShipEntity*>> result;
+    bool gotCount = true;
+    std::vector<oo::ObjCRef<::Entity*>> result;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
@@ -2320,11 +2438,11 @@ static bool ShipSpawn(ooscript::Context context, ooscript::CallArgs& oojsArgs)
         gotCount = ooscript::valueToInt32(context, OOJS_ARGV[1], &count);
     if (EXPECT_NOT(!role.has_value() || !gotCount || count < 1 || count > 64)) {
         cxx_OOJSReportBadArguments(context, "Ship", "spawn", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "role and optional quantity (1 to 64)");
-        return NO;
+        return false;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = [thisEnt spawnShipsWithRole:*role count:count];
+    result = ship->spawnShipsWithRole(*role, count);
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_PLIST(oo::PListFromObjects(result));
@@ -2337,39 +2455,40 @@ static bool ShipDealEnergyDamage(ooscript::Context context, ooscript::CallArgs& 
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     double baseDamage;
     double range;
     double velocityBias = 0.0;
-    BOOL gotDamage;
-    BOOL gotRange;
-    BOOL gotVBias;
+    bool gotDamage;
+    bool gotRange;
+    bool gotVBias;
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() < 2) {
         cxx_OOJSReportBadArguments(context, "Ship", "dealEnergyDamage", oojsArgs.count(), OOJS_ARGV, std::nullopt, "damage and range needed");
-        return NO;
+        return false;
     }
 
     gotDamage = ooscript::valueToNumber(context, OOJS_ARGV[0], &baseDamage);
     if (EXPECT_NOT(!gotDamage || baseDamage < 0)) {
         cxx_OOJSReportBadArguments(context, "Ship", "dealEnergyDamage", oojsArgs.count(), OOJS_ARGV, std::nullopt, "damage must be positive");
-        return NO;
+        return false;
     }
     gotRange = ooscript::valueToNumber(context, OOJS_ARGV[1], &range);
     if (EXPECT_NOT(!gotRange || range < 0)) {
         cxx_OOJSReportBadArguments(context, "Ship", "dealEnergyDamage", oojsArgs.count(), OOJS_ARGV, std::nullopt, "range must be positive");
-        return NO;
+        return false;
     }
     if (oojsArgs.count() >= 3) {
         gotVBias = ooscript::valueToNumber(context, OOJS_ARGV[2], &velocityBias);
         if (!gotVBias) {
             cxx_OOJSReportBadArguments(context, "Ship", "dealEnergyDamage", oojsArgs.count(), OOJS_ARGV, std::nullopt, "velocity bias must be a number");
-            return NO;
+            return false;
         }
     }
 
-    [thisEnt dealEnergyDamage:(GLfloat)baseDamage atRange:(GLfloat)range withBias:(GLfloat)velocityBias];
+    ship->dealEnergyDamage((GLfloat)baseDamage, (GLfloat)range, (GLfloat)velocityBias);
 
     OOJS_RETURN_VOID;
 
@@ -2391,27 +2510,28 @@ static bool ShipRemove(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
-    bool suppressDeathEvent = NO;
+    ShipEntity* thisEnt = nullptr;
+    bool suppressDeathEvent = false;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    if ([thisEnt isPlayer]) {
+    if (ship->getIsPlayer()) {
         cxx_OOJSReportError(context, "Cannot remove() player's ship.");
-        return NO;
+        return false;
     }
 
     if (oojsArgs.count() > 0 && EXPECT_NOT(!ooscript::valueToBoolean(context, OOJS_ARGV[0], &suppressDeathEvent))) {
         cxx_OOJSReportBadArguments(context, "Ship", "remove", oojsArgs.count(), OOJS_ARGV, std::nullopt, "boolean");
-        return NO;
+        return false;
     }
 
-    [thisEnt cxx_doScriptEvent:OOJSID("shipRemoved") withPListArguments: { oo::PList(static_cast<bool>(suppressDeathEvent)) }];
+    ship->doScriptEvent(OOJSID("shipRemoved"), { oo::PList(static_cast<bool>(suppressDeathEvent)) });
 
     if (suppressDeathEvent) {
-        [thisEnt removeScript];
+        ship->removeScript();
     }
-    return RemoveOrExplodeShip(context, oojsArgs, NO);
+    return RemoveOrExplodeShip(context, oojsArgs, false);
 
     OOJS_NATIVE_EXIT
 }
@@ -2421,28 +2541,28 @@ static bool ShipRunLegacyScriptActions(ooscript::Context context, ooscript::Call
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
-    PlayerEntity* player = nil;
-    ShipEntity* target = nil;
+    ShipEntity* thisEnt = nullptr;
+    PlayerEntity* player = nullptr;
+    ShipEntity* target = nullptr;
     oo::PList actions; // null when absent
 
     player = OOPlayerForScripting();
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 1)
         actions = cxx_OOJSPListFromJSValue(context, OOJS_ARGV[1]);
     if (EXPECT_NOT(oojsArgs.count() != 2 || !ooscript::isObjectOrNull(OOJS_ARGV[0]) || !JSShipGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &target) || !actions.isArray())) {
         cxx_OOJSReportBadArguments(context, "Ship", "__runLegacyScriptActions", oojsArgs.count(), OOJS_ARGV, std::nullopt, "target and array of actions");
-        return NO;
+        return false;
     }
 
-    if (target != nil) // Not stale reference
+    if (target != nullptr) // Not stale reference
     {
-        [player setScriptTarget:thisEnt];
-        [player cxx_runUnsanitizedScriptActions:actions
-                              allowingAIMethods:YES
-                                withContextName:oo::str::format("<ship \"%s\" legacy actions>", [thisEnt cxx_name].value_or("(null)").c_str())
-                                      forTarget:target];
+        if (player != nullptr)
+            player->setScriptTarget(thisEnt);
+        if (player != nullptr)
+            player->runUnsanitizedScriptActions(actions, true, oo::str::format("<ship \"%s\" legacy actions>", ship->getName().value_or("(null)").c_str()), target);
     }
 
     OOJS_RETURN_VOID;
@@ -2455,24 +2575,25 @@ static bool ShipCommsMessage(ooscript::Context context, ooscript::CallArgs& oojs
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> message;
-    ShipEntity* target = nil;
+    ShipEntity* target = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         message = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!message.has_value() || (oojsArgs.count() > 1 && (ooscript::isNull(OOJS_ARGV[1]) || !ooscript::isObjectOrNull(OOJS_ARGV[1]) || !JSShipGetShipEntity(context, ooscript::toObject(OOJS_ARGV[1]), &target))))) {
         cxx_OOJSReportBadArguments(context, "Ship", "commsMessage", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "message and optional target");
-        return NO;
+        return false;
     }
 
     if (oojsArgs.count() < 2) {
-        [thisEnt cxx_commsMessage:*message withUnpilotedOverride:YES]; // generic broadcast
-    } else if (target != nil) // Not stale reference
+        ship->commsMessage(*message, true); // generic broadcast
+    } else if (target != nullptr) // Not stale reference
     {
-        [thisEnt cxx_sendMessage:*message toShip:target withUnpilotedOverride:YES]; // ship-to-ship narrowcast
+        ship->sendMessage(*message, target, true); // ship-to-ship narrowcast
     }
     OOJS_RETURN_VOID;
 
@@ -2484,14 +2605,15 @@ static bool ShipFireECM(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
-    BOOL OK;
+    ShipEntity* thisEnt = nullptr;
+    bool OK;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    OK = [thisEnt fireECM];
+    OK = ship->fireECM();
     if (!OK) {
-        cxx_OOJSReportWarning(context, "Ship %s was requested to fire ECM burst but does not carry ECM equipment.", [thisEnt cxx_oo_jsDescription].value_or("(null)").c_str());
+        cxx_OOJSReportWarning(context, "Ship %s was requested to fire ECM burst but does not carry ECM equipment.", OOObjectJSDescription(oo::ToObjC(thisEnt)).value_or("(null)").c_str());
     }
 
     OOJS_RETURN_BOOL(OK);
@@ -2504,10 +2626,11 @@ static bool ShipAbandonShip(ooscript::Context context, ooscript::CallArgs& oojsA
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
 
     GET_THIS_SHIP(thisEnt);
-    OOJS_RETURN_BOOL([thisEnt hasEscapePod] && [thisEnt abandonShip]);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    OOJS_RETURN_BOOL(ship->hasEscapePod() && ship->abandonShip());
 
     OOJS_NATIVE_EXIT
 }
@@ -2517,19 +2640,20 @@ static bool ShipCanAwardEquipment(ooscript::Context context, ooscript::CallArgs&
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> key;
     std::string ctx = "scripted"; // a nil context fails the check below, as "" does
-    BOOL result;
+    bool result;
     BOOL exists;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         key = JSValueToEquipmentKeyRelaxed(context, OOJS_ARGV[0], &exists);
     if (EXPECT_NOT(!key.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "canAwardEquipment", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "equipment type");
-        return NO;
+        return false;
     }
 
     if (exists) {
@@ -2537,20 +2661,20 @@ static bool ShipCanAwardEquipment(ooscript::Context context, ooscript::CallArgs&
             ctx = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]).value_or(std::string());
             if (ctx != "scripted" && ctx != "purchase" && ctx != "newShip" && ctx != "npc") {
                 cxx_OOJSReportBadArguments(context, "Ship", "canAwardEquipment", MIN(oojsArgs.count(), 2U), OOJS_ARGV, std::nullopt, "context");
-                return NO;
+                return false;
             }
         }
-        result = YES;
+        result = true;
 
         // can't add fuel as equipment.
         if (*key == "EQ_FUEL")
-            result = NO;
+            result = false;
 
         if (result)
-            result = [thisEnt canAddEquipment:*key inContext:ctx];
+            result = ship->canAddEquipment(*key, ctx);
     } else {
         // Unknown type.
-        result = NO;
+        result = false;
     }
 
     OOJS_RETURN_BOOL(result);
@@ -2563,61 +2687,63 @@ static bool ShipAwardEquipment(ooscript::Context context, ooscript::CallArgs& oo
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
-    OOEquipmentType* eqType = nil;
+    ShipEntity* thisEnt = nullptr;
+    OOEquipmentType* eqType = nullptr;
     std::string identifier;
-    BOOL OK = YES;
-    BOOL berth;
-    BOOL isRepair = NO;
+    bool OK = true;
+    bool berth;
+    bool isRepair = false;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         eqType = JSValueToEquipmentType(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(eqType == nil)) {
+    if (EXPECT_NOT(eqType == nullptr)) {
         cxx_OOJSReportBadArguments(context, "Ship", "awardEquipment", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "equipment type");
-        return NO;
+        return false;
     }
 
     // Check that equipment is permitted.
-    identifier = [eqType cxx_identifier].value_or("");
+    OOEquipmentType* cxxEqType = eqType; // not null: eqType is not
+    identifier = cxxEqType->identifier().value_or("");
     berth = identifier == "EQ_PASSENGER_BERTH";
     if (berth) {
-        OK = [thisEnt availableCargoSpace] >= [eqType requiredCargoSpace];
+        OK = ship->availableCargoSpace() >= cxxEqType->requiredCargoSpace();
     } else if (identifier == "EQ_FUEL") {
-        OK = NO;
+        OK = false;
     } else {
-        OK = [eqType canCarryMultiple] || ![thisEnt hasEquipmentItem:oo::PList(identifier)];
+        OK = cxxEqType->canCarryMultiple() || !ship->hasEquipmentItem(oo::PList(identifier));
     }
 
     if (OK) {
-        if ([thisEnt isPlayer]) {
-            PlayerEntity* player = (PlayerEntity*)thisEnt;
+        if (ship->getIsPlayer()) {
+            PlayerEntity* player = static_cast<PlayerEntity*>(thisEnt);
 
             if (identifier == "EQ_MISSILE_REMOVAL") {
-                [player removeMissiles];
-            } else if ([eqType isMissileOrMine]) {
-                OK = [player cxx_mountMissileWithRole:identifier];
+                ship->removeMissiles(); // PlayerEntity's, through the virtual
+            } else if (cxxEqType->isMissileOrMine()) {
+                OK = (player != nullptr ? player->mountMissileWithRole(identifier) : false);
             } else if (berth) {
-                OK = [player changePassengerBerths:+1];
+                OK = (player != nullptr ? player->changePassengerBerths(+1) : false);
             } else if (identifier == "EQ_PASSENGER_BERTH_REMOVAL") {
-                OK = [player changePassengerBerths:-1];
+                OK = (player != nullptr ? player->changePassengerBerths(-1) : false);
             } else {
-                isRepair = [thisEnt hasEquipmentItem:oo::PList(identifier + "_DAMAGED")];
-                OK = [player addEquipmentItem:identifier withValidation:YES inContext:"scripted"];
+                isRepair = ship->hasEquipmentItem(oo::PList(identifier + "_DAMAGED"));
+                OK = ship->addEquipmentItem(identifier, true, "scripted"); // PlayerEntity's, through the virtual
                 if (OK && isRepair) {
-                    [player cxx_doScriptEvent:OOJSID("equipmentRepaired") withPListArguments: { oo::PList(identifier) }];
+                    ship->doScriptEvent(OOJSID("equipmentRepaired"), { oo::PList(identifier) });
                 }
             }
         } else {
             if (identifier == "EQ_MISSILE_REMOVAL") {
-                [thisEnt removeMissiles];
+                ship->removeMissiles();
             }
             // no passenger handling for NPCs. EQ_CARGO_BAY is dealt with inside addEquipmentItem
             else if (!berth && identifier != "EQ_PASSENGER_BERTH_REMOVAL") {
-                OK = [thisEnt addEquipmentItem:identifier withValidation:YES inContext:"scripted"];
+                OK = ship->addEquipmentItem(identifier, true, "scripted");
             } else {
-                OK = NO;
+                OK = false;
             }
         }
     }
@@ -2632,45 +2758,46 @@ static bool ShipRemoveEquipment(ooscript::Context context, ooscript::CallArgs& o
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> key;
-    BOOL OK = YES;
+    bool OK = true;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         key = JSValueToEquipmentKey(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!key.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "removeEquipment", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "equipment type");
-        return NO;
+        return false;
     }
     // berths are not in hasOneEquipmentItem
-    OK = [thisEnt cxx_hasOneEquipmentItem:*key includeMissiles:YES whileLoading:NO] || (*key == "EQ_PASSENGER_BERTH" && [thisEnt passengerCapacity] > 0);
+    OK = ship->hasOneEquipmentItemIncludingMissiles(*key, true, false) || (*key == "EQ_PASSENGER_BERTH" && ship->passengerCapacity() > 0);
     if (!OK) {
         // Allow removal of damaged equipment.
         key = *key + "_DAMAGED";
-        OK = [thisEnt cxx_hasOneEquipmentItem:*key includeMissiles:NO whileLoading:NO];
+        OK = ship->hasOneEquipmentItemIncludingMissiles(*key, false, false);
     }
     if (OK) {
         // exceptions
         if (*key == "EQ_PASSENGER_BERTH" || *key == "EQ_CARGO_BAY") {
             if (*key == "EQ_PASSENGER_BERTH") {
-                if ([thisEnt passengerCapacity] > [thisEnt passengerCount]) {
+                if (ship->passengerCapacity() > ship->passengerCount()) {
                     // must be the player's ship!
-                    if ([thisEnt isPlayer])
-                        [(PlayerEntity*)thisEnt changePassengerBerths:-1];
+                    if (ship->getIsPlayer())
+                        static_cast<PlayerEntity*>(thisEnt)->changePassengerBerths(-1); // thisEnt is not null here
                 } else
-                    OK = NO;
+                    OK = false;
             } else // EQ_CARGO_BAY
             {
                 // player cargo bay removal handled in script
-                if ([thisEnt isPlayer] || [thisEnt extraCargo] <= [thisEnt availableCargoSpace]) {
-                    [thisEnt removeEquipmentItem:*key];
+                if (ship->getIsPlayer() || ship->extraCargo() <= ship->availableCargoSpace()) {
+                    ship->removeEquipmentItem(*key);
                 } else
-                    OK = NO;
+                    OK = false;
             }
         } else
-            [thisEnt removeEquipmentItem:*key];
+            ship->removeEquipmentItem(*key);
     }
 
     OOJS_RETURN_BOOL(OK);
@@ -2683,23 +2810,25 @@ static bool ShipRestoreSubEntities(ooscript::Context context, ooscript::CallArgs
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     NSUInteger numSubEntitiesRestored = 0U;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    NSUInteger subCount = [thisEnt subEntitiesForScript].size();
+    NSUInteger subCount = ShipEntityJSSubEntitiesForScript(thisEnt).size(); // -subEntitiesForScript
 
-    [thisEnt clearSubEntities];
-    [thisEnt setUpSubEntities];
+    ship->clearSubEntities();
+    ship->setUpSubEntities();
 
-    if ([thisEnt subEntitiesForScript].size() - subCount > 0)
-        numSubEntitiesRestored = [thisEnt subEntitiesForScript].size() - subCount;
+    if (ShipEntityJSSubEntitiesForScript(thisEnt).size() - subCount > 0)
+        numSubEntitiesRestored = ShipEntityJSSubEntitiesForScript(thisEnt).size() - subCount;
 
     // for each subentity restored, slightly increase the trade-in factor
-    if ([thisEnt isPlayer]) {
+    if (ship->getIsPlayer()) {
         int tradeInFactorChange = (int)MAX(PLAYER_SHIP_SUBENTITY_TRADE_IN_VALUE * numSubEntitiesRestored, 25U);
-        [(PlayerEntity*)thisEnt adjustTradeInFactorBy:tradeInFactorChange];
+        if (static_cast<PlayerEntity*>(thisEnt) != nullptr)
+            static_cast<PlayerEntity*>(thisEnt)->adjustTradeInFactorBy(tradeInFactorChange);
     }
 
     OOJS_RETURN_BOOL(numSubEntitiesRestored > 0);
@@ -2714,71 +2843,73 @@ static bool ShipSetEquipmentStatus(ooscript::Context context, ooscript::CallArgs
 
     // equipment status accepted: @"EQUIPMENT_OK", @"EQUIPMENT_DAMAGED"
 
-    ShipEntity* thisEnt = nil;
-    OOEquipmentType* eqType = nil;
+    ShipEntity* thisEnt = nullptr;
+    OOEquipmentType* eqType = nullptr;
     std::string key;
     std::string damagedKey;
     std::optional<std::string> status;
-    BOOL hasOK = NO, hasDamaged = NO;
+    bool hasOK = false, hasDamaged = false;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() < 2) {
         cxx_OOJSReportBadArguments(context, "Ship", "setEquipmentStatus", oojsArgs.count(), OOJS_ARGV, std::nullopt, "equipment type and status");
-        return NO;
+        return false;
     }
 
     eqType = JSValueToEquipmentType(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(eqType == nil)) {
+    if (EXPECT_NOT(eqType == nullptr)) {
         cxx_OOJSReportBadArguments(context, "Ship", "setEquipmentStatus", 1, &OOJS_ARGV[0], std::nullopt, "equipment type");
-        return NO;
+        return false;
     }
 
     status = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
     if (EXPECT_NOT(!status.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "setEquipmentStatus", 1, &OOJS_ARGV[1], std::nullopt, "equipment status");
-        return NO;
+        return false;
     }
 
     // EMMSTRAN: use interned strings.
     if (*status != "EQUIPMENT_OK" && *status != "EQUIPMENT_DAMAGED") {
         cxx_OOJSReportErrorForCaller(context, "Ship", "setEquipmentStatus", "Second parameter for setEquipmentStatus must be either \"EQUIPMENT_OK\" or \"EQUIPMENT_DAMAGED\".");
-        return NO;
+        return false;
     }
 
-    key = [eqType cxx_identifier].value_or("");
-    hasOK = [thisEnt hasEquipmentItem:oo::PList(key)];
-    BOOL setOK = *status == "EQUIPMENT_OK";
-    BOOL setDamaged = *status == "EQUIPMENT_DAMAGED";
-    if ([eqType canBeDamaged]) {
+    OOEquipmentType* cxxEqType = eqType; // not null: eqType is not
+    key = cxxEqType->identifier().value_or("");
+    hasOK = ship->hasEquipmentItem(oo::PList(key));
+    bool setOK = *status == "EQUIPMENT_OK";
+    bool setDamaged = *status == "EQUIPMENT_DAMAGED";
+    if (cxxEqType->canBeDamaged()) {
         damagedKey = key + "_DAMAGED";
-        hasDamaged = [thisEnt hasEquipmentItem:oo::PList(damagedKey)];
+        hasDamaged = ship->hasEquipmentItem(oo::PList(damagedKey));
 
         if ((setOK && hasDamaged) || (setDamaged && hasOK)) {
             // the implementation is identical between player and ship.
-            [thisEnt removeEquipmentItem:setDamaged ? key : damagedKey];
-            if ([thisEnt isPlayer]) {
+            ship->removeEquipmentItem(setDamaged ? key : damagedKey);
+            if (ship->getIsPlayer()) {
                 // these player methods are different to the ship ones.
-                [(PlayerEntity*)thisEnt addEquipmentItem:setDamaged ? damagedKey : key withValidation:NO inContext:"scripted"];
+                ship->addEquipmentItem(setDamaged ? damagedKey : key, false, "scripted"); // PlayerEntity's, through the virtual
                 if (setDamaged) {
-                    [(PlayerEntity*)thisEnt cxx_doScriptEvent:OOJSID("equipmentDamaged") withPListArguments: { oo::PList(key) }];
+                    ship->doScriptEvent(OOJSID("equipmentDamaged"), { oo::PList(key) });
                 } else if (setOK) {
-                    [(PlayerEntity*)thisEnt cxx_doScriptEvent:OOJSID("equipmentRepaired") withPListArguments: { oo::PList(key) }];
+                    ship->doScriptEvent(OOJSID("equipmentRepaired"), { oo::PList(key) });
                 }
 
                 // if player's Docking Computers are set to EQUIPMENT_DAMAGED while on, stop them
                 // this is now done in a different method
                 // if (hasOK && [key isEqualToString:@"EQ_DOCK_COMP"])  [(PlayerEntity*)thisEnt disengageAutopilot];
             } else {
-                [thisEnt addEquipmentItem:setDamaged ? damagedKey : key withValidation:NO inContext:"scripted"];
+                ship->addEquipmentItem(setDamaged ? damagedKey : key, false, "scripted");
                 if (hasOK)
-                    [thisEnt cxx_doScriptEvent:OOJSID("equipmentDamaged") withPListArguments: { oo::PList(key) }];
+                    ship->doScriptEvent(OOJSID("equipmentDamaged"), { oo::PList(key) });
             }
         }
     } else {
         if (hasOK && *status != "EQUIPMENT_OK") {
             cxx_OOJSReportWarningForCaller(context, "Ship", "setEquipmentStatus", "Equipment %s cannot be damaged.", key.c_str());
-            hasOK = NO;
+            hasOK = false;
         }
     }
 
@@ -2798,20 +2929,21 @@ static bool ShipEquipmentStatus(ooscript::Context context, ooscript::CallArgs& o
             runtime, which lasts as long as Oolite is running.
     */
     static ooscript::Value strOK, strDamaged, strUnavailable, strUnknown;
-    static BOOL inited = NO;
+    static bool inited = false;
     if (EXPECT_NOT(!inited)) {
-        inited = YES;
+        inited = true;
         strOK = ooscript::stringValue(ooscript::internString(context, "EQUIPMENT_OK"));
         strDamaged = ooscript::stringValue(ooscript::internString(context, "EQUIPMENT_DAMAGED"));
         strUnavailable = ooscript::stringValue(ooscript::internString(context, "EQUIPMENT_UNAVAILABLE"));
         strUnknown = ooscript::stringValue(ooscript::internString(context, "EQUIPMENT_UNKNOWN"));
     }
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> key;
-    bool asDict = NO;
+    bool asDict = false;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         key = JSValueToEquipmentKey(context, OOJS_ARGV[0]);
@@ -2827,18 +2959,18 @@ static bool ShipEquipmentStatus(ooscript::Context context, ooscript::CallArgs& o
         }
 
         cxx_OOJSReportBadArguments(context, "Ship", "equipmentStatus", MIN(oojsArgs.count(), 1U), &OOJS_ARGV[0], std::nullopt, "equipment type");
-        return NO;
+        return false;
     }
 
     if (asDict) {
         oo::PList::Dict dict;
-        dict["EQUIPMENT_OK"] = oo::PList::unsignedInteger([thisEnt cxx_countEquipmentItem:*key]);
-        dict["EQUIPMENT_DAMAGED"] = oo::PList::unsignedInteger([thisEnt cxx_countEquipmentItem:*key + "_DAMAGED"]);
+        dict["EQUIPMENT_OK"] = oo::PList::unsignedInteger(ship->countEquipmentItem(*key));
+        dict["EQUIPMENT_DAMAGED"] = oo::PList::unsignedInteger(ship->countEquipmentItem(*key + "_DAMAGED"));
         OOJS_RETURN_PLIST(oo::PList(std::move(dict)));
     } else {
-        if ([thisEnt hasEquipmentItem:oo::PList(*key) includeWeapons:YES whileLoading:NO])
+        if (ship->hasEquipmentItem(oo::PList(*key), true, false))
             OOJS_RETURN(strOK);
-        else if ([thisEnt hasEquipmentItem:oo::PList(*key + "_DAMAGED")])
+        else if (ship->hasEquipmentItem(oo::PList(*key + "_DAMAGED")))
             OOJS_RETURN(strDamaged);
 
         OOJS_RETURN(strUnavailable);
@@ -2851,12 +2983,14 @@ static bool ShipSelectNewMissile(ooscript::Context context, ooscript::CallArgs& 
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     // if there's a badly defined missile, selectMissile may return nil
-    const std::string result = [[thisEnt selectMissile] cxx_identifier].value_or("EQ_MISSILE");
+    OOEquipmentType* missile = ship->selectMissile();
+    const std::string result = ((missile != nullptr) ? missile->identifier() : std::nullopt).value_or("EQ_MISSILE");
 
     OOJS_RETURN_PLIST(oo::PList(result));
 
@@ -2868,15 +3002,16 @@ static bool ShipFireMissile(ooscript::Context context, ooscript::CallArgs& oojsA
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
-    id result = nil;
+    ShipEntity* thisEnt = nullptr;
+    id result = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
-        result = [thisEnt cxx_fireMissileWithIdentifier:cxx_OOStringFromJSValue(context, OOJS_ARGV[0]) andTarget:[thisEnt primaryTarget]];
+        result = oo::ToObjC(ship->fireMissileWithIdentifier(cxx_OOStringFromJSValue(context, OOJS_ARGV[0]), ship->primaryTarget()));
     else
-        result = [thisEnt fireMissile];
+        result = oo::ToObjC(ship->fireMissile());
 
     OOJS_RETURN_OBJECT(result);
 
@@ -2888,17 +3023,18 @@ static bool ShipFindNearestStation(ooscript::Context context, ooscript::CallArgs
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
-    StationEntity* result = nil;
+    ShipEntity* thisEnt = nullptr;
+    ShipEntity* result = nullptr; // a station (its object until bead oo-9ht.144)
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     double sdist, distance = 1E32;
 
-    StationEntity* se = nil;
+    ShipEntity* se = nullptr;
     for (const auto& stationRef : [UNIVERSE cxx_stations]) {
-        se = stationRef.get();
-        sdist = HPdistance2([thisEnt position], [se position]);
+        se = oo::ToShip(stationRef.get());
+        sdist = HPdistance2(ship->getPosition(), (se != nullptr ? se->getPosition() : kZeroHPVector)); // (a message to nil answered zero)
 
         if (sdist < distance) {
             distance = sdist;
@@ -2906,7 +3042,7 @@ static bool ShipFindNearestStation(ooscript::Context context, ooscript::CallArgs
         }
     }
 
-    OOJS_RETURN_OBJECT(result);
+    OOJS_RETURN_OBJECT(oo::ToObjC(result));
 
     OOJS_NATIVE_EXIT
 }
@@ -2916,12 +3052,13 @@ static bool ShipSetBounty(ooscript::Context context, ooscript::CallArgs& oojsArg
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> reason;
     int32_t newbounty = 0;
-    BOOL gotBounty = YES;
+    bool gotBounty = true;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         gotBounty = ooscript::valueToInt32(context, OOJS_ARGV[0], &newbounty);
@@ -2929,12 +3066,12 @@ static bool ShipSetBounty(ooscript::Context context, ooscript::CallArgs& oojsArg
         reason = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
     if (EXPECT_NOT(!reason.has_value() || !gotBounty || newbounty < 0)) {
         cxx_OOJSReportBadArguments(context, "Ship", "setBounty", oojsArgs.count(), OOJS_ARGV, std::nullopt, "new bounty and reason");
-        return NO;
+        return false;
     }
 
-    [thisEnt setBounty:(OOCreditsQuantity)newbounty withReasonAsString:*reason];
+    ship->setBounty((OOCreditsQuantity)newbounty, *reason);
 
-    return YES;
+    return true;
 
     OOJS_NATIVE_EXIT
 }
@@ -2944,12 +3081,13 @@ static bool ShipSetCargo(ooscript::Context context, ooscript::CallArgs& oojsArgs
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> commodity;
     int32_t count = 1;
-    BOOL gotCount = YES;
+    bool gotCount = true;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         commodity = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
@@ -2957,14 +3095,15 @@ static bool ShipSetCargo(ooscript::Context context, ooscript::CallArgs& oojsArgs
         gotCount = ooscript::valueToInt32(context, OOJS_ARGV[1], &count);
     if (EXPECT_NOT(!commodity.has_value() || !gotCount || count < 1)) {
         cxx_OOJSReportBadArguments(context, "Ship", "setCargo", oojsArgs.count(), OOJS_ARGV, std::nullopt, "cargo name and optional positive quantity");
-        return NO;
+        return false;
     }
 
-    if ([[UNIVERSE commodities] cxx_goodDefined:*commodity]) {
-        [thisEnt cxx_setCommodityForPod:*commodity andAmount:count];
+    OOCommodities* commodities = [UNIVERSE commodities]; // null: no good is defined, as a message to nil
+    if (commodities != nullptr && commodities->goodDefined(*commodity)) {
+        ship->setCommodityForPod(commodity, count);
     }
 
-    OOJS_RETURN_BOOL([[UNIVERSE commodities] cxx_goodDefined:*commodity]);
+    OOJS_RETURN_BOOL(commodities != nullptr && commodities->goodDefined(*commodity));
 
     OOJS_NATIVE_EXIT
 }
@@ -2976,29 +3115,30 @@ static bool ShipSetCrew(ooscript::Context context, ooscript::CallArgs& oojsArgs)
      * allow that to be set. Probably not necessary for now. */
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     ooscript::Object params = NULL;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() < 1 || (!ooscript::isNull(OOJS_ARGV[0]) && !ooscript::valueToObject(context, OOJS_ARGV[0], &params))) {
         cxx_OOJSReportBadArguments(context, "Ship", "setCrew", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "definition");
-        return NO;
+        return false;
     }
-    BOOL success = YES;
+    bool success = true;
 
-    if (![thisEnt isExplicitlyUnpiloted]) {
+    if (!ship->isExplicitlyUnpiloted()) {
         if (ooscript::isNull(OOJS_ARGV[0])) {
-            [thisEnt cxx_setCrew:std::nullopt];
+            ship->setCrew(std::nullopt);
         } else {
-            OOCharacter* crew = [OOCharacter characterWithDictionary:cxx_OOJSPListFromJSObject(context, ooscript::toObject(OOJS_ARGV[0]))];
-            std::vector<oo::ObjCRef<OOCharacter*>> members;
-            if (crew != nil)
+            const oo::Ref<OOCharacter> crew = OOCharacter::characterWithDictionary(cxx_OOJSPListFromJSObject(context, ooscript::toObject(OOJS_ARGV[0])));
+            std::vector<oo::Ref<OOCharacter>> members;
+            if (crew != nullptr)
                 members.emplace_back(crew); // a nil character was skipped (a Foundation array cannot hold nil)
-            [thisEnt cxx_setCrew:members];
+            ship->setCrew(members);
         }
     } else {
-        success = NO;
+        success = false;
     }
 
     OOJS_RETURN_BOOL(success);
@@ -3011,34 +3151,35 @@ static bool ShipSetCargoType(ooscript::Context context, ooscript::CallArgs& oojs
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> cargoType;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0)
         cargoType = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!cargoType.has_value())) {
         cxx_OOJSReportBadArguments(context, "Ship", "setCargoType", oojsArgs.count(), OOJS_ARGV, std::nullopt, "cargo type name");
-        return NO;
+        return false;
     }
-    if ([thisEnt cargoType] != CARGO_NOT_CARGO) {
-        cxx_OOJSReportBadArguments(context, "Ship", "setCargoType", oojsArgs.count(), OOJS_ARGV, std::nullopt, oo::str::format("Can only be used on cargo pod carriers, not cargo pods (%s)", [thisEnt cxx_shipDataKey].value_or("(null)").c_str()));
-        return NO;
+    if (ship->cargoType() != CARGO_NOT_CARGO) {
+        cxx_OOJSReportBadArguments(context, "Ship", "setCargoType", oojsArgs.count(), OOJS_ARGV, std::nullopt, oo::str::format("Can only be used on cargo pod carriers, not cargo pods (%s)", ship->shipDataKey().value_or("(null)").c_str()));
+        return false;
     }
-    BOOL ok = YES;
+    bool ok = true;
     if (*cargoType == "SCARCE_GOODS") {
-        [thisEnt setCargoFlag:CARGO_FLAG_FULL_SCARCE];
+        ship->setCargoFlag(CARGO_FLAG_FULL_SCARCE);
     } else if (*cargoType == "PLENTIFUL_GOODS") {
-        [thisEnt setCargoFlag:CARGO_FLAG_FULL_PLENTIFUL];
+        ship->setCargoFlag(CARGO_FLAG_FULL_PLENTIFUL);
     } else if (*cargoType == "MEDICAL_GOODS") {
-        [thisEnt setCargoFlag:CARGO_FLAG_FULL_MEDICAL];
+        ship->setCargoFlag(CARGO_FLAG_FULL_MEDICAL);
     } else if (*cargoType == "ILLEGAL_GOODS") {
-        [thisEnt setCargoFlag:CARGO_FLAG_FULL_CONTRABAND];
+        ship->setCargoFlag(CARGO_FLAG_FULL_CONTRABAND);
     } else if (*cargoType == "PIRATE_GOODS") {
-        [thisEnt setCargoFlag:CARGO_FLAG_PIRATE];
+        ship->setCargoFlag(CARGO_FLAG_PIRATE);
     } else {
-        ok = NO;
+        ok = false;
     }
     OOJS_RETURN_BOOL(ok);
 
@@ -3090,33 +3231,35 @@ static bool ShipSetShaders(ooscript::Context context, ooscript::CallArgs& oojsAr
     OOJS_NATIVE_EXIT
 }
 
-static bool ShipSetMaterialsInternal(ooscript::Context context, ooscript::CallArgs& oojsArgs, ShipEntity* thisEnt, BOOL fromShaders)
+namespace {
+bool ShipSetMaterialsInternal(ooscript::Context context, ooscript::CallArgs& oojsArgs, ShipEntity* thisEnt, bool fromShaders)
 {
     OOJS_PROFILE_ENTER
 
     ooscript::Object params = NULL;
     oo::PList materials;
     oo::PList shaders;
-    BOOL withShaders = NO;
-    BOOL success = NO;
+    bool withShaders = false;
+    bool success = false;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (ooscript::isNull(OOJS_ARGV[0]) || (!ooscript::isNull(OOJS_ARGV[0]) && !ooscript::isObjectOrNull(OOJS_ARGV[0]))) {
         cxx_OOJSReportWarning(context, "Ship.%s: expected %s instead of '%s'.", "setMaterials", "object", cxx_OOStringFromJSValueEvenIfNull(context, OOJS_ARGV[0]).value_or("(null)").c_str());
-        OOJS_RETURN_BOOL(NO);
+        OOJS_RETURN_BOOL(false);
     }
 
     if (oojsArgs.count() > 1) {
-        withShaders = YES;
+        withShaders = true;
         if (ooscript::isNull(OOJS_ARGV[1]) || (!ooscript::isNull(OOJS_ARGV[1]) && !ooscript::isObjectOrNull(OOJS_ARGV[1]))) {
             cxx_OOJSReportWarning(context, "Ship.%s: expected %s instead of '%s'.", "setMaterials", "object as second parameter", cxx_OOStringFromJSValueEvenIfNull(context, OOJS_ARGV[1]).value_or("(null)").c_str());
-            withShaders = NO;
+            withShaders = false;
         }
     }
 
     if (fromShaders) {
-        materials = [[thisEnt mesh] materials];
+        materials = MeshMaterials(ship);
         params = ooscript::toObject(OOJS_ARGV[0]);
         shaders = cxx_OOJSPListFromJSObject(context, params);
     } else {
@@ -3126,28 +3269,28 @@ static bool ShipSetMaterialsInternal(ooscript::Context context, ooscript::CallAr
             params = ooscript::toObject(OOJS_ARGV[1]);
             shaders = cxx_OOJSPListFromJSObject(context, params);
         } else {
-            shaders = [[thisEnt mesh] shaders];
+            shaders = MeshShaders(ship);
         }
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    const oo::PList shipDict = [thisEnt cxx_shipInfoDictionary];
+    const oo::PList shipDict = ship->shipInfoDictionary();
     // "ship-prefix-macros": a dictionary, else null (as the dictionary reader gave nil).
-    const oo::PList materialDefaults = [ResourceManager cxx_materialDefaults];
+    const oo::PList materialDefaults = cxx::ResourceManager::materialDefaults();
     const oo::PList* prefixMacros = materialDefaults.find("ship-prefix-macros");
 
     // First we test to see if we can create the mesh.
-    OOMesh* mesh = [OOMesh meshWithName:shipDict.get<std::string>("model")
-                               cacheKey:std::nullopt
-                     materialDictionary:materials
-                      shadersDictionary:shaders
-                                 smooth:shipDict.get<bool>("smooth", false)
-                           shaderMacros:(prefixMacros != nullptr && prefixMacros->isDict()) ? *prefixMacros : oo::PList()
-                    shaderBindingTarget:thisEnt];
+    const oo::Ref<OOMesh> mesh = OOMesh::meshWithName(shipDict.get<std::string>("model"),
+        std::nullopt,
+        materials,
+        shaders,
+        shipDict.get<bool>("smooth", false),
+        (prefixMacros != nullptr && prefixMacros->isDict()) ? *prefixMacros : oo::PList(),
+        oo::ToObjC(thisEnt));
 
-    if (mesh != nil) {
-        [thisEnt setMesh:mesh];
-        success = YES;
+    if (mesh != nullptr) {
+        ship->setMesh(mesh.get());
+        success = true;
     }
     OOJS_END_FULL_NATIVE
 
@@ -3155,30 +3298,32 @@ static bool ShipSetMaterialsInternal(ooscript::Context context, ooscript::CallAr
 
     OOJS_PROFILE_EXIT
 }
+}
 
 // exitSystem([int systemID])
 static bool ShipExitSystem(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     int32_t systemID = -1;
-    BOOL OK = NO;
+    bool OK = false;
 
     GET_THIS_SHIP(thisEnt);
-    if (EXPECT_NOT([thisEnt isPlayer])) {
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    if (EXPECT_NOT(ship->getIsPlayer())) {
         cxx_OOJSReportErrorForCaller(context, "Ship", "exitSystem", "Not valid for player ship.");
-        return NO;
+        return false;
     }
 
     if (oojsArgs.count() > 0) {
         if (!ooscript::valueToInt32(context, OOJS_ARGV[0], &systemID) || systemID < 0 || 255 < systemID) {
             cxx_OOJSReportBadArguments(context, "Ship", "exitSystem", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "system ID");
-            return NO;
+            return false;
         }
     }
 
-    OK = [thisEnt performHyperSpaceToSpecificSystem:systemID]; // -1 == random destination system
+    OK = ship->performHyperSpaceToSpecificSystem(systemID); // -1 == random destination system
 
     OOJS_RETURN_BOOL(OK);
 
@@ -3189,65 +3334,70 @@ static bool ShipUpdateEscortFormation(ooscript::Context context, ooscript::CallA
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt updateEscortFormation];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->updateEscortFormation();
 
     OOJS_RETURN_VOID;
 
     OOJS_PROFILE_EXIT
 }
 
-static BOOL RemoveOrExplodeShip(ooscript::Context context, ooscript::CallArgs& oojsArgs, BOOL explode)
+namespace {
+bool RemoveOrExplodeShip(ooscript::Context context, ooscript::CallArgs& oojsArgs, bool explode)
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    if (EXPECT_NOT([thisEnt isPlayer])) {
+    if (EXPECT_NOT(ship->getIsPlayer())) {
         OOCAssert(explode, "RemoveOrExplodeShip(): shouldn't be called for player with !explode."); // player.ship.remove() is blocked by caller.
-        PlayerEntity* player = (PlayerEntity*)thisEnt;
+        PlayerEntity* player = static_cast<PlayerEntity*>(thisEnt);
 
-        if ([player isDocked]) {
+        if ((player != nullptr ? player->isDocked() : false)) {
             cxx_OOJSReportError(context, "Cannot explode() player's ship while docked.");
-            return NO;
+            return false;
         }
     }
 
-    if (thisEnt == (ShipEntity*)[UNIVERSE station]) {
+    if (thisEnt == oo::ToShip(oo::ToObjC([UNIVERSE station]))) {
         // Allow exploding of main station (e.g. nova mission)
         [UNIVERSE unMagicMainStation];
     }
 
-    if (EXPECT_NOT([thisEnt status] == STATUS_DOCKED)) {
+    if (EXPECT_NOT(ship->status() == STATUS_DOCKED)) {
         /* If it's in the launch queue and hasn't yet been added to
          * the universe, set the status to DEAD (so it gets removed
          * from the launch queue) */
-        [thisEnt setStatus:STATUS_DEAD];
+        ship->setStatus(STATUS_DEAD);
         /* No shipDied event occurs in this place - it never really
          * existed. This case is just to prevent an error from the
          * usual code branch - removing ships while they're still
          * docked is not recommended. */
     } else {
-        [thisEnt setSuppressExplosion:!explode];
-        [thisEnt setEnergy:1];
-        [thisEnt takeEnergyDamage:500000000.0 from:nil becauseOf:nil weaponIdentifier:std::string()];
+        ship->setSuppressExplosion(!explode);
+        ship->setEnergy(1);
+        ship->takeEnergyDamage(500000000.0, nullptr, nullptr, std::string());
     }
 
     OOJS_RETURN_VOID;
 
     OOJS_PROFILE_EXIT
+}
 }
 
 static bool ShipClearDefenseTargets(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt removeAllDefenseTargets];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->removeAllDefenseTargets();
 
     OOJS_RETURN_VOID;
 
@@ -3258,16 +3408,17 @@ static bool ShipAddDefenseTarget(ooscript::Context context, ooscript::CallArgs& 
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
-    ShipEntity* target = nil;
+    ShipEntity* thisEnt = nullptr;
+    ShipEntity* target = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (EXPECT_NOT(oojsArgs.count() == 0 || (oojsArgs.count() > 0 && (ooscript::isNull(OOJS_ARGV[0]) || !ooscript::isObjectOrNull(OOJS_ARGV[0]) || !JSShipGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &target))))) {
         cxx_OOJSReportBadArguments(context, "Ship", "addDefenseTarget", 1U, OOJS_ARGV, std::nullopt, "target");
-        return NO;
+        return false;
     }
 
-    [thisEnt addDefenseTarget:target];
+    ship->addDefenseTarget(oo::ToObjC(target));
 
     OOJS_RETURN_VOID;
 
@@ -3278,16 +3429,17 @@ static bool ShipRemoveDefenseTarget(ooscript::Context context, ooscript::CallArg
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
-    ShipEntity* target = nil;
+    ShipEntity* thisEnt = nullptr;
+    ShipEntity* target = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (EXPECT_NOT(oojsArgs.count() == 0 || (oojsArgs.count() > 0 && (ooscript::isNull(OOJS_ARGV[0]) || !ooscript::isObjectOrNull(OOJS_ARGV[0]) || !JSShipGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &target))))) {
         cxx_OOJSReportBadArguments(context, "Ship", "removeDefenseTarget", 1U, OOJS_ARGV, std::nullopt, "target");
-        return NO;
+        return false;
     }
 
-    [thisEnt removeDefenseTarget:target];
+    ship->removeDefenseTarget(oo::ToObjC(target));
 
     OOJS_RETURN_VOID;
 
@@ -3298,20 +3450,22 @@ static bool ShipAddCollisionException(ooscript::Context context, ooscript::CallA
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
-    ShipEntity* target = nil;
+    ShipEntity* thisEnt = nullptr;
+    ShipEntity* target = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (EXPECT_NOT(oojsArgs.count() == 0 || (oojsArgs.count() > 0 && (ooscript::isNull(OOJS_ARGV[0]) || !ooscript::isObjectOrNull(OOJS_ARGV[0]) || !JSShipGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &target))))) {
         cxx_OOJSReportBadArguments(context, "Ship", "addCollisionException", 1U, OOJS_ARGV, std::nullopt, "other ship");
-        return NO;
+        return false;
     }
 
     // have to do it both ways because it's not defined which order
     // the collisions get tested in. More efficient to add both ways
     // than to test both ways
-    [thisEnt addCollisionException:target];
-    [target addCollisionException:thisEnt];
+    ship->addCollisionException(target);
+    if (target != nullptr)
+        target->addCollisionException(thisEnt); // none: nothing, as a message to nil
 
     OOJS_RETURN_VOID;
 
@@ -3322,18 +3476,20 @@ static bool ShipRemoveCollisionException(ooscript::Context context, ooscript::Ca
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
-    ShipEntity* target = nil;
+    ShipEntity* thisEnt = nullptr;
+    ShipEntity* target = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (EXPECT_NOT(oojsArgs.count() == 0 || (oojsArgs.count() > 0 && (ooscript::isNull(OOJS_ARGV[0]) || !ooscript::isObjectOrNull(OOJS_ARGV[0]) || !JSShipGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &target))))) {
         cxx_OOJSReportBadArguments(context, "Ship", "removeCollisionException", 1U, OOJS_ARGV, std::nullopt, "other ship");
-        return NO;
+        return false;
     }
 
     // doesn't need a check to see if it was already gone
-    [thisEnt removeCollisionException:target];
-    [target removeCollisionException:thisEnt];
+    ship->removeCollisionException(target);
+    if (target != nullptr)
+        target->removeCollisionException(thisEnt); // none: nothing, as a message to nil
 
     OOJS_RETURN_VOID;
 
@@ -3345,11 +3501,12 @@ static bool ShipGetMaterials(ooscript::Context context, ooscript::CallArgs& oojs
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    oo::PList result = [[thisEnt mesh] materials];
+    oo::PList result = MeshMaterials(ship);
     if (result.isNull())
         result = oo::PList(oo::PList::Dict { }); // empty rather than null
     OOJS_RETURN_PLIST(result);
@@ -3362,11 +3519,12 @@ static bool ShipGetShaders(ooscript::Context context, ooscript::CallArgs& oojsAr
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    oo::PList result = [[thisEnt mesh] shaders];
+    oo::PList result = MeshShaders(ship);
     if (result.isNull())
         result = oo::PList(oo::PList::Dict { }); // empty rather than null
     OOJS_RETURN_PLIST(result);
@@ -3378,9 +3536,10 @@ static bool ShipBroadcastCascadeImminent(ooscript::Context context, ooscript::Ca
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt broadcastEnergyBlastImminent];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->broadcastEnergyBlastImminent();
 
     OOJS_RETURN_VOID;
 
@@ -3391,9 +3550,10 @@ static bool ShipBecomeCascadeExplosion(ooscript::Context context, ooscript::Call
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt becomeEnergyBlast];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->becomeEnergyBlast();
 
     OOJS_RETURN_VOID;
 
@@ -3404,16 +3564,17 @@ static bool ShipOfferToEscort(ooscript::Context context, ooscript::CallArgs& ooj
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
-    ShipEntity* mother = nil;
+    ShipEntity* thisEnt = nullptr;
+    ShipEntity* mother = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (EXPECT_NOT(oojsArgs.count() == 0 || (oojsArgs.count() > 0 && (ooscript::isNull(OOJS_ARGV[0]) || !ooscript::isObjectOrNull(OOJS_ARGV[0]) || !JSShipGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &mother))))) {
         cxx_OOJSReportBadArguments(context, "Ship", "offerToEscort", 1U, OOJS_ARGV, std::nullopt, "target");
-        return NO;
+        return false;
     }
 
-    BOOL result = [thisEnt suggestEscortTo:mother];
+    bool result = ship->suggestEscortTo(mother);
 
     OOJS_RETURN_BOOL(result);
 
@@ -3424,11 +3585,12 @@ static bool ShipRequestHelpFromGroup(ooscript::Context context, ooscript::CallAr
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    [thisEnt groupAttackTarget];
+    ship->groupAttackTarget();
 
     OOJS_RETURN_VOID;
 
@@ -3439,17 +3601,18 @@ static bool ShipPatrolReportIn(ooscript::Context context, ooscript::CallArgs& oo
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
-    ShipEntity* target = nil;
+    ShipEntity* thisEnt = nullptr;
+    ShipEntity* target = nullptr;
 
     GET_THIS_SHIP(thisEnt);
     if (EXPECT_NOT(oojsArgs.count() == 0 || (oojsArgs.count() > 0 && (ooscript::isNull(OOJS_ARGV[0]) || !ooscript::isObjectOrNull(OOJS_ARGV[0]) || !JSShipGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &target))))) {
         cxx_OOJSReportBadArguments(context, "Ship", "addDefenseTarget", 1U, OOJS_ARGV, std::nullopt, "target");
-        return NO;
+        return false;
     }
-    if ([target isStation]) {
-        StationEntity* station = (StationEntity*)target;
-        [station acceptPatrolReportFrom:thisEnt];
+    if (target != nullptr && target->getIsStation()) // none: not a station, as a message to nil
+    {
+        StationEntity* station = oo::ToStation(oo::ToObjC(target));
+        station->acceptPatrolReportFrom(thisEnt);
     }
 
     OOJS_RETURN_VOID;
@@ -3461,14 +3624,14 @@ static bool ShipMarkTargetForFines(ooscript::Context context, ooscript::CallArgs
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
 
     GET_THIS_SHIP(thisEnt);
 
-    ShipEntity* ship = [thisEnt primaryTarget];
-    BOOL ok = NO;
-    if ((ship != nil) && ([ship status] != STATUS_DEAD) && ([ship status] != STATUS_DOCKED)) {
-        ok = [ship markForFines];
+    ShipEntity* ship = oo::ToShip(thisEnt->primaryTarget());
+    bool ok = false;
+    if ((ship != nullptr) && (ship->status() != STATUS_DEAD) && (ship->status() != STATUS_DOCKED)) {
+        ok = ship->markForFines();
     }
 
     OOJS_RETURN_BOOL(ok);
@@ -3480,24 +3643,26 @@ static bool ShipEnterWormhole(ooscript::Context context, ooscript::CallArgs& ooj
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
-    Entity* hole = nil;
+    ShipEntity* thisEnt = nullptr;
+    Entity* hole = nullptr;
 
-    if ([PLAYER status] != STATUS_ENTERING_WITCHSPACE) {
+    if ((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus { }) != STATUS_ENTERING_WITCHSPACE) {
         cxx_OOJSReportError(context, "Cannot use this function while player's ship not entering witchspace.");
-        return NO;
+        return false;
     }
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
     if (EXPECT_NOT(oojsArgs.count() == 0 || (oojsArgs.count() > 0 && !ooscript::isNull(OOJS_ARGV[0]) && (!ooscript::isObjectOrNull(OOJS_ARGV[0]) || !OOJSEntityGetEntity(context, ooscript::toObject(OOJS_ARGV[0]), &hole))))) {
-        [thisEnt enterPlayerWormhole];
+        ship->enterPlayerWormhole();
     } else {
-        if (![hole isWormhole]) {
+        if (hole == nullptr || !oo::ToCxx(hole)->getIsWormhole()) // none: not a wormhole, as a message to nil
+        {
             cxx_OOJSReportBadArguments(context, "Ship", "enterWormhole", 1U, OOJS_ARGV, std::nullopt, "[wormhole]");
-            return NO;
+            return false;
         }
 
-        [thisEnt enterWormhole:(WormholeEntity*)hole];
+        ship->enterWormhole(static_cast<WormholeEntity*>(oo::ToCxx(hole))); // the C++ wormhole (a C-style cast of its object until bead oo-9ht.144)
     }
 
     OOJS_RETURN_VOID;
@@ -3509,10 +3674,11 @@ static bool ShipNotifyGroupOfWormhole(ooscript::Context context, ooscript::CallA
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    [thisEnt wormholeEntireGroup];
+    ship->wormholeEntireGroup();
 
     OOJS_RETURN_VOID;
 
@@ -3523,9 +3689,10 @@ static bool ShipThrowSpark(ooscript::Context context, ooscript::CallArgs& oojsAr
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt setThrowSparks:YES];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->setThrowSparks(true);
 
     OOJS_RETURN_VOID;
 
@@ -3536,9 +3703,10 @@ static bool ShipPerformAttack(ooscript::Context context, ooscript::CallArgs& ooj
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performAttack];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performAttack();
 
     OOJS_RETURN_VOID;
 
@@ -3549,9 +3717,10 @@ static bool ShipPerformCollect(ooscript::Context context, ooscript::CallArgs& oo
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performCollect];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performCollect();
 
     OOJS_RETURN_VOID;
 
@@ -3562,9 +3731,10 @@ static bool ShipPerformEscort(ooscript::Context context, ooscript::CallArgs& ooj
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performEscort];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performEscort();
 
     OOJS_RETURN_VOID;
 
@@ -3575,9 +3745,10 @@ static bool ShipPerformFaceDestination(ooscript::Context context, ooscript::Call
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performFaceDestination];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performFaceDestination();
 
     OOJS_RETURN_VOID;
 
@@ -3588,9 +3759,10 @@ static bool ShipPerformFlee(ooscript::Context context, ooscript::CallArgs& oojsA
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performFlee];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performFlee();
 
     OOJS_RETURN_VOID;
 
@@ -3601,9 +3773,10 @@ static bool ShipPerformFlyToRangeFromDestination(ooscript::Context context, oosc
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performFlyToRangeFromDestination];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performFlyToRangeFromDestination();
 
     OOJS_RETURN_VOID;
 
@@ -3614,9 +3787,10 @@ static bool ShipPerformHold(ooscript::Context context, ooscript::CallArgs& oojsA
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performHold];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performHold();
 
     OOJS_RETURN_VOID;
 
@@ -3627,9 +3801,10 @@ static bool ShipPerformIdle(ooscript::Context context, ooscript::CallArgs& oojsA
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performIdle];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performIdle();
 
     OOJS_RETURN_VOID;
 
@@ -3640,9 +3815,10 @@ static bool ShipPerformIntercept(ooscript::Context context, ooscript::CallArgs& 
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performIntercept];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performIntercept();
 
     OOJS_RETURN_VOID;
 
@@ -3653,9 +3829,10 @@ static bool ShipPerformLandOnPlanet(ooscript::Context context, ooscript::CallArg
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performLandOnPlanet];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performLandOnPlanet();
 
     OOJS_RETURN_VOID;
 
@@ -3666,9 +3843,10 @@ static bool ShipPerformMining(ooscript::Context context, ooscript::CallArgs& ooj
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performMining];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performMining();
 
     OOJS_RETURN_VOID;
 
@@ -3679,9 +3857,10 @@ static bool ShipPerformScriptedAI(ooscript::Context context, ooscript::CallArgs&
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performScriptedAI];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performScriptedAI();
 
     OOJS_RETURN_VOID;
 
@@ -3692,9 +3871,10 @@ static bool ShipPerformScriptedAttackAI(ooscript::Context context, ooscript::Cal
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performScriptedAttackAI];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performScriptedAttackAI();
 
     OOJS_RETURN_VOID;
 
@@ -3705,9 +3885,10 @@ static bool ShipPerformStop(ooscript::Context context, ooscript::CallArgs& oojsA
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performStop];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performStop();
 
     OOJS_RETURN_VOID;
 
@@ -3718,9 +3899,10 @@ static bool ShipPerformTumble(ooscript::Context context, ooscript::CallArgs& ooj
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt performTumble];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->performTumble();
 
     OOJS_RETURN_VOID;
 
@@ -3731,11 +3913,12 @@ static bool ShipRequestDockingInstructions(ooscript::Context context, ooscript::
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt requestDockingCoordinates];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->requestDockingCoordinates();
 
-    OOJS_RETURN_PLIST([thisEnt cxx_dockingInstructions]); // nil maps to null
+    OOJS_RETURN_PLIST(ship->getDockingInstructions()); // nil maps to null
 
     OOJS_PROFILE_EXIT
 }
@@ -3744,11 +3927,12 @@ static bool ShipRecallDockingInstructions(ooscript::Context context, ooscript::C
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt recallDockingInstructions];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->recallDockingInstructions();
 
-    OOJS_RETURN_PLIST([thisEnt cxx_dockingInstructions]); // nil maps to null
+    OOJS_RETURN_PLIST(ship->getDockingInstructions()); // nil maps to null
 
     OOJS_PROFILE_EXIT
 }
@@ -3757,9 +3941,10 @@ static bool ShipBroadcastDistressMessage(ooscript::Context context, ooscript::Ca
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
-    [thisEnt broadcastDistressMessageWithDumping:NO];
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
+    ship->broadcastDistressMessageWithDumping(false);
 
     OOJS_RETURN_VOID;
 
@@ -3770,10 +3955,11 @@ static bool ShipCheckCourseToDestination(ooscript::Context context, ooscript::Ca
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    Entity* hazard = [UNIVERSE hazardOnRouteFromEntity:thisEnt toDistance:[thisEnt desiredRange] fromPoint:[thisEnt destination]];
+    Entity* hazard = [UNIVERSE hazardOnRouteFromEntity:oo::ToObjC(thisEnt) toDistance:ship->desiredRange() fromPoint:ship->destination()];
 
     OOJS_RETURN_OBJECT(hazard);
 
@@ -3784,10 +3970,11 @@ static bool ShipGetSafeCourseToDestination(ooscript::Context context, ooscript::
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    HPVector waypoint = [UNIVERSE getSafeVectorFromEntity:thisEnt toDistance:[thisEnt desiredRange] fromPoint:[thisEnt destination]];
+    HPVector waypoint = [UNIVERSE getSafeVectorFromEntity:oo::ToObjC(thisEnt) toDistance:ship->desiredRange() fromPoint:ship->destination()];
 
     OOJS_RETURN_HPVECTOR(waypoint);
 
@@ -3798,27 +3985,28 @@ static bool ShipCheckScanner(ooscript::Context context, ooscript::CallArgs& oojs
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
-    bool onlyCheckPowered = NO;
+    ShipEntity* thisEnt = nullptr;
+    bool onlyCheckPowered = false;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0 && EXPECT_NOT(!ooscript::valueToBoolean(context, OOJS_ARGV[0], &onlyCheckPowered))) {
         cxx_OOJSReportBadArguments(context, "Ship", "checkScanner", oojsArgs.count(), OOJS_ARGV, std::nullopt, "boolean");
-        return NO;
+        return false;
     }
 
     if (onlyCheckPowered) {
-        [thisEnt checkScannerIgnoringUnpowered];
+        ship->checkScannerIgnoringUnpowered();
     } else {
-        [thisEnt checkScanner];
+        ship->checkScanner();
     }
-    ShipEntity** scannedShips = [thisEnt scannedShips];
-    unsigned num = [thisEnt numberOfScannedShips];
+    ShipEntity** scannedShips = ship->scannedShips();
+    unsigned num = ship->numberOfScannedShips();
     oo::PList::Array scanResult;
     for (unsigned i = 0; i < num; i++) {
-        if (scannedShips[i] != nil)
-            scanResult.push_back(oo::PListObject(scannedShips[i])); // nil skipped, as a Foundation array skipped it
+        if (scannedShips[i] != nullptr)
+            scanResult.push_back(oo::PListObject(oo::ToObjC(scannedShips[i]))); // nil skipped, as a Foundation array skipped it
     }
     OOJS_RETURN_PLIST(oo::PList(std::move(scanResult)));
 
@@ -3829,35 +4017,36 @@ static bool ShipAdjustCargo(ooscript::Context context, ooscript::CallArgs& oojsA
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     std::optional<std::string> commodity;
     int32_t adjustment = 0;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() < 2) {
         cxx_OOJSReportBadArguments(context, "Ship", "adjustCargo", oojsArgs.count(), OOJS_ARGV, std::nullopt, "commodity, amount");
-        return NO;
+        return false;
     }
 
     commodity = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (!ooscript::valueToInt32(context, OOJS_ARGV[1], &adjustment)) {
         cxx_OOJSReportBadArguments(context, "Ship", "adjustCargo", oojsArgs.count(), OOJS_ARGV, std::nullopt, "commodity, amount");
-        return NO;
+        return false;
     }
 
-    if ([thisEnt cargoType] != CARGO_NOT_CARGO || [thisEnt isPlayer]) {
+    if (ship->cargoType() != CARGO_NOT_CARGO || ship->getIsPlayer()) {
         cxx_OOJSReportError(context, "ship.adjustCargo may only be used on NPC cargo carriers");
-        return NO;
+        return false;
     }
 
-    BOOL ok = YES;
+    bool ok = true;
 
     if (adjustment > 0) {
-        ok = [thisEnt cxx_addCargo:[UNIVERSE cxx_getContainersOfCommodity:commodity.value_or("") how_much:adjustment]]; // non-reified templates
+        ok = ship->addCargo([UNIVERSE cxx_getContainersOfCommodity:commodity.value_or(""):adjustment]); // non-reified templates
     } else if (adjustment < 0) {
         OOCargoQuantity r = (OOCargoQuantity)(-adjustment);
-        ok = [thisEnt cxx_removeCargo:commodity.value_or("") amount:r];
+        ok = ship->removeCargo(commodity.value_or(""), r);
     }
 
     OOJS_RETURN_BOOL(ok);
@@ -3870,18 +4059,19 @@ static bool ShipDamageAssessment(ooscript::Context context, ooscript::CallArgs& 
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
+    ShipEntity* thisEnt = nullptr;
     int assessment = 0;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     // if could have missiles but doesn't, consumables low
-    if ([thisEnt missileCapacity] > 0 && [thisEnt missilesList].empty()) {
+    if (ship->missileCapacity() > 0 && ship->missilesList().empty()) {
         assessment++;
     }
     // if has injectors but fuel is low, consumables low
     // if no injectors, not a problem
-    if ([thisEnt hasFuelInjection] && [thisEnt fuel] < 35) {
+    if (ship->hasFuelInjection() && ship->getFuel() < 35) {
         assessment++;
     }
 
@@ -3897,19 +4087,20 @@ static bool ShipThreatAssessment(ooscript::Context context, ooscript::CallArgs& 
 {
     OOJS_PROFILE_ENTER
 
-    ShipEntity* thisEnt = nil;
-    bool fullCheck = NO;
+    ShipEntity* thisEnt = nullptr;
+    bool fullCheck = false;
 
     GET_THIS_SHIP(thisEnt);
+    ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
     if (oojsArgs.count() > 0 && EXPECT_NOT(!ooscript::valueToBoolean(context, OOJS_ARGV[0], &fullCheck))) {
         cxx_OOJSReportBadArguments(context, "Ship", "threatAssessment", oojsArgs.count(), OOJS_ARGV, std::nullopt, "boolean");
-        return NO;
+        return false;
     }
     // start with 2.5 per ship
     double assessment = 2.5;
     // +/- 0.1 for speed, larger subtraction for very slow ships
-    GLfloat maxspeed = [thisEnt maxFlightSpeed];
+    GLfloat maxspeed = ship->getMaxFlightSpeed();
     assessment += (maxspeed - 300) / 1000;
     if (maxspeed < 200) {
         assessment += (maxspeed - 200) / 500;
@@ -3917,38 +4108,38 @@ static bool ShipThreatAssessment(ooscript::Context context, ooscript::CallArgs& 
 
     /* FIXME: at the moment this means NPCs can detect other NPCs shield
      * boosters, since they're implemented as extra energy */
-    assessment += ([thisEnt maxEnergy] - 200) / 1000;
+    assessment += (ship->getMaxEnergy() - 200) / 1000;
 
     // add on some for missiles. Mostly ignore 3rd and subsequent
     // missiles: either they can be ECMd or the first two are already
     // too many.
-    if ([thisEnt missileCapacity] > 2) {
+    if (ship->missileCapacity() > 2) {
         assessment += 0.5;
     } else {
-        assessment += ((double)[thisEnt missileCapacity]) / 5.0;
+        assessment += ((double)ship->missileCapacity()) / 5.0;
     }
 
     /* Turret count is public knowledge */
     /* TODO: consider making ship combat behaviour try to
      * stay at long range from enemies with turrets. Then
      * we could perhaps reduce this bonus a bit. */
-    assessment += [thisEnt turretCount];
+    assessment += ship->turretCount();
 
     if (fullCheck) {
         // consider pilot skill
-        if ([thisEnt isPlayer]) {
-            double score = (double)[PLAYER score];
+        if (ship->getIsPlayer()) {
+            double score = (double)(PLAYER != nullptr ? PLAYER->score() : unsigned { });
             if (score > 6400) {
                 score = 6400;
             }
             assessment += pow(score, 0.33) / 10;
             // 0 - 1.8
         } else {
-            assessment += [thisEnt accuracy] / 5;
+            assessment += ship->getAccuracy() / 5;
         }
 
         // check lasers
-        OOWeaponType wt = [thisEnt weaponTypeIDForFacing:WEAPON_FACING_FORWARD strict:NO];
+        OOWeaponType wt = ship->weaponTypeIDForFacing(WEAPON_FACING_FORWARD, false);
         /* Not affected by multiple mounts here: they're either just a
          * split of the power, or only more dangerous until they
          * overheat */
@@ -3957,38 +4148,38 @@ static bool ShipThreatAssessment(ooscript::Context context, ooscript::CallArgs& 
             assessment -= 1.5; // further penalty for ships with no forward laser
         }
 
-        wt = [thisEnt weaponTypeIDForFacing:WEAPON_FACING_AFT strict:NO];
+        wt = ship->weaponTypeIDForFacing(WEAPON_FACING_AFT, false);
         if (!isWeaponNone(wt)) {
             assessment += 1 + ShipThreatAssessmentWeapon(wt);
         }
         // port and starboard weapons less important
-        wt = [thisEnt weaponTypeIDForFacing:WEAPON_FACING_PORT strict:NO];
+        wt = ship->weaponTypeIDForFacing(WEAPON_FACING_PORT, false);
         if (!isWeaponNone(wt)) {
             assessment += 0.2 + ShipThreatAssessmentWeapon(wt) / 5.0;
         }
-        wt = [thisEnt weaponTypeIDForFacing:WEAPON_FACING_STARBOARD strict:NO];
+        wt = ship->weaponTypeIDForFacing(WEAPON_FACING_STARBOARD, false);
         if (!isWeaponNone(wt)) {
             assessment += 0.2 + ShipThreatAssessmentWeapon(wt) / 5.0;
         }
 
         // combat-related secondary equipment
-        if ([thisEnt hasECM]) {
+        if (ship->hasECM()) {
             assessment += 0.5;
         }
-        if ([thisEnt hasFuelInjection]) {
+        if (ship->hasFuelInjection()) {
             assessment += 0.5;
         }
 
     } else {
         // consider thargoids dangerous
-        if ([thisEnt isThargoid]) {
+        if (ship->isThargoid()) {
             assessment *= 1.5;
-            if ([thisEnt hasRole:"thargoid-mothership"]) {
+            if (ship->hasRole("thargoid-mothership")) {
                 assessment += 5;
             }
         } else {
             // consider that armed ships might have a trick or two
-            if ([thisEnt weaponFacings] == 1) {
+            if (ship->weaponFacings() == 1) {
                 assessment += 0.25;
             } else {
                 // and more than one trick if they can mount multiple lasers
@@ -3998,9 +4189,9 @@ static bool ShipThreatAssessment(ooscript::Context context, ooscript::CallArgs& 
     }
 
     // mostly ignore fleeing ships as threats
-    if ([thisEnt behaviour] == BEHAVIOUR_FLEE_TARGET || [thisEnt behaviour] == BEHAVIOUR_FLEE_EVASIVE_ACTION) {
+    if (ship->getBehaviour() == BEHAVIOUR_FLEE_TARGET || ship->getBehaviour() == BEHAVIOUR_FLEE_EVASIVE_ACTION) {
         assessment *= 0.2;
-    } else if ([thisEnt isPlayer] && [(PlayerEntity*)thisEnt fleeingStatus] >= PLAYER_FLEEING_CARGO) {
+    } else if (ship->getIsPlayer() && (static_cast<PlayerEntity*>(thisEnt) != nullptr ? static_cast<PlayerEntity*>(thisEnt)->fleeingStatus() : OOPlayerFleeingStatus { }) >= PLAYER_FLEEING_CARGO) {
         assessment *= 0.2;
     }
 
@@ -4016,10 +4207,10 @@ static bool ShipThreatAssessment(ooscript::Context context, ooscript::CallArgs& 
 
 static double ShipThreatAssessmentWeapon(OOWeaponType wt)
 {
-    if (wt == nil) {
+    if (wt == nullptr) {
         return -1.0;
     }
-    return [wt weaponThreatAssessment];
+    return wt->weaponThreatAssessment();
 }
 
 /** Static methods */
@@ -4027,9 +4218,9 @@ static double ShipThreatAssessmentWeapon(OOWeaponType wt)
 static bool ShipStaticKeys(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context);
-    OOShipRegistry* registry = [OOShipRegistry sharedRegistry];
+    cxx::OOShipRegistry* registry = cxx::OOShipRegistry::sharedRegistry();
 
-    OOJS_RETURN_PLIST(StringArray([registry cxx_shipKeys]));
+    OOJS_RETURN_PLIST(StringArray(registry->shipKeys()));
 
     OOJS_NATIVE_EXIT
 }
@@ -4037,17 +4228,17 @@ static bool ShipStaticKeys(ooscript::Context context, ooscript::CallArgs& oojsAr
 static bool ShipStaticKeysForRole(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context);
-    OOShipRegistry* registry = [OOShipRegistry sharedRegistry];
+    cxx::OOShipRegistry* registry = cxx::OOShipRegistry::sharedRegistry();
 
     if (oojsArgs.count() > 0) {
         const std::string role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]).value_or(std::string()); // nil as "", as the registry bridge sent it
         // null where there is no probability set for the role, as before
-        if ([registry cxx_probabilitySetForRole:role] == nil)
+        if (registry->probabilitySetForRole(role) == nullptr)
             OOJS_RETURN_NULL;
-        OOJS_RETURN_PLIST(StringArray([registry cxx_shipKeysWithRole:role]));
+        OOJS_RETURN_PLIST(StringArray(registry->shipKeysWithRole(role)));
     } else {
         cxx_OOJSReportBadArguments(context, "Ship", "shipKeysForRole", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "ship role");
-        return NO;
+        return false;
     }
 
     OOJS_NATIVE_EXIT
@@ -4064,7 +4255,7 @@ static bool ShipStaticRoleIsInCategory(ooscript::Context context, ooscript::Call
         OOJS_RETURN_BOOL(role.has_value() && category.has_value() && [UNIVERSE cxx_role:*role isInCategory:*category]); // a nil role or category matched nothing
     } else {
         cxx_OOJSReportBadArguments(context, "Ship", "roleIsInCategory", MIN(oojsArgs.count(), 2U), OOJS_ARGV, std::nullopt, "role, category");
-        return NO;
+        return false;
     }
 
     OOJS_NATIVE_EXIT
@@ -4073,9 +4264,9 @@ static bool ShipStaticRoleIsInCategory(ooscript::Context context, ooscript::Call
 static bool ShipStaticRoles(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context);
-    OOShipRegistry* registry = [OOShipRegistry sharedRegistry];
+    cxx::OOShipRegistry* registry = cxx::OOShipRegistry::sharedRegistry();
 
-    OOJS_RETURN_PLIST(StringArray([registry cxx_shipRoles]));
+    OOJS_RETURN_PLIST(StringArray(registry->shipRoles()));
 
     OOJS_NATIVE_EXIT
 }
@@ -4083,16 +4274,16 @@ static bool ShipStaticRoles(ooscript::Context context, ooscript::CallArgs& oojsA
 static bool ShipStaticShipDataForKey(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context);
-    OOShipRegistry* registry = [OOShipRegistry sharedRegistry];
+    cxx::OOShipRegistry* registry = cxx::OOShipRegistry::sharedRegistry();
 
     if (oojsArgs.count() > 0) {
         const std::optional<std::string> key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
         if (!key.has_value())
             OOJS_RETURN_NULL; // a nil key found nothing
-        OOJS_RETURN_PLIST([registry cxx_shipInfoForKey:*key]);
+        OOJS_RETURN_PLIST(registry->shipInfoForKey(*key));
     } else {
         cxx_OOJSReportBadArguments(context, "Ship", "shipDataForKey", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "key");
-        return NO;
+        return false;
     }
     OOJS_NATIVE_EXIT
 }
@@ -4100,14 +4291,14 @@ static bool ShipStaticShipDataForKey(ooscript::Context context, ooscript::CallAr
 static bool ShipStaticSetShipDataForKey(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context);
-    OOShipRegistry* registry = [OOShipRegistry sharedRegistry];
+    cxx::OOShipRegistry* registry = cxx::OOShipRegistry::sharedRegistry();
 
     if (oojsArgs.count() >= 2) {
-        [registry cxx_setShipInfoForKey:cxx_OOStringFromJSValue(context, OOJS_ARGV[0]).value_or(std::string()) with:cxx_OOJSPListFromJSObject(context, ooscript::toObject(OOJS_ARGV[1]))];
-        OOJS_RETURN_BOOL(YES);
+        registry->setShipInfoForKey(cxx_OOStringFromJSValue(context, OOJS_ARGV[0]).value_or(std::string()), cxx_OOJSPListFromJSObject(context, ooscript::toObject(OOJS_ARGV[1])));
+        OOJS_RETURN_BOOL(true);
     } else {
         cxx_OOJSReportBadArguments(context, "Ship", "setShipInfoForKey", MIN(oojsArgs.count(), 2U), OOJS_ARGV, std::nullopt, "key shipdata");
-        return NO;
+        return false;
     }
     OOJS_NATIVE_EXIT
 }

@@ -49,7 +49,7 @@ MA 02110-1301, USA.
         ADR-0056 amendment oo-ppc). The JS class was already C++ on the ooscript façade;
         OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
         (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The category on DockEntity
-        became two free functions, and its methods moved to OOJSDock+ObjCBridge.mm (amendment oo-
+        became two free functions, and its methods moved to DockEntity (amendment oo-
         ykoy). Messages to classes that are still Objective-C (DockEntity, ShipEntity, Entity) stay
         as they are, which is why the file is still .mm until Phase 4.
 */
@@ -176,10 +176,13 @@ static bool JSDockGetDockEntity(ooscript::Context context, ooscript::Object dock
     if (!result)
         return false;
 
-    if (![entity isKindOfClass:[DockEntity class]])
+    // A dock's object is a ship's since bead oo-9ht.180: its C++ part says it is a dock,
+    // where -isKindOfClass:[DockEntity class] did.
+    DockEntity* dock = oo::ToDock(entity);
+    if (dock == nullptr)
         return false;
 
-    *outEntity = (DockEntity*)entity;
+    *outEntity = dock;
     return true;
 
     OOJS_PROFILE_EXIT
@@ -202,18 +205,18 @@ static bool JSDockGetShipEntity(ooscript::Context context, ooscript::Object ship
     if (!result)
         return false;
 
-    if (![entity isKindOfClass:[ShipEntity class]])
+    if (!(oo::ToShip(entity) != nullptr))
         return false;
 
-    *outEntity = (ShipEntity*)entity;
+    *outEntity = oo::ToShip(entity);
     return true;
 
     OOJS_PROFILE_EXIT
 }
 } // namespace
 
-// The bodies of DockEntity (OOJavaScriptExtensions), whose methods are in OOJSDock+ObjCBridge.mm
-// until DockEntity converts (proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+// The bodies of DockEntity's class questions, which DockEntity's overrides call (bead
+// oo-9ht.47; proposed ADR-0056 amendments oo-ppc and oo-ykoy).
 void OOJSDockGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
 {
     *outClass = &sDockClass;
@@ -248,22 +251,22 @@ static bool DockGetProperty(Context cx, Object obj, PropertyId propID, Value* va
 
     switch (ooscript::idToInt32(propID)) {
     case kDock_allowsDocking:
-        *value_raw = OOJSValueFromBOOL([entity allowsDocking]);
+        *value_raw = OOJSValueFromBOOL((entity != nullptr ? entity->allowsDocking() : false));
         return true;
 
     case kDock_disallowedDockingCollides:
-        *value_raw = OOJSValueFromBOOL([entity disallowedDockingCollides]);
+        *value_raw = OOJSValueFromBOOL((entity != nullptr ? entity->disallowedDockingCollides() : false));
         return true;
 
     case kDock_allowsLaunching:
-        *value_raw = OOJSValueFromBOOL([entity allowsLaunching]);
+        *value_raw = OOJSValueFromBOOL((entity != nullptr ? entity->allowsLaunching() : false));
         return true;
 
     case kDock_dockingQueueLength:
-        return ooscript::newNumberValue(cx, [entity countOfShipsInDockingQueue], value);
+        return ooscript::newNumberValue(cx, (entity != nullptr ? entity->countOfShipsInDockingQueue() : 0), value);
 
     case kDock_launchingQueueLength:
-        return ooscript::newNumberValue(cx, [entity countOfShipsInLaunchQueue], value);
+        return ooscript::newNumberValue(cx, (entity != nullptr ? entity->countOfShipsInLaunchQueue() : 0), value);
 
     default:
         OOJSReportBadPropertySelector(context, thisObj, (propID), sDockPropertiesRaw);
@@ -297,21 +300,24 @@ static bool DockSetProperty(Context cx, Object obj, PropertyId propID, bool /*st
     switch (ooscript::idToInt32(propID)) {
     case kDock_allowsDocking:
         if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-            [entity setAllowsDocking:bValue];
+            if (entity != nullptr)
+                entity->setAllowsDocking(bValue);
             return true;
         }
         break;
 
     case kDock_allowsLaunching:
         if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-            [entity setAllowsLaunching:bValue];
+            if (entity != nullptr)
+                entity->setAllowsLaunching(bValue);
             return true;
         }
         break;
 
     case kDock_disallowedDockingCollides:
         if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-            [entity setDisallowedDockingCollides:bValue];
+            if (entity != nullptr)
+                entity->setDisallowedDockingCollides(bValue);
             return true;
         }
         break;
@@ -347,7 +353,7 @@ static bool DockIsQueued(ooscript::Context context, ooscript::CallArgs& oojsArgs
     ShipEntity* ship = nil;
     JSDockGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &ship);
     if (ship != nil) {
-        result = [dock shipIsInDockingQueue:ship];
+        result = (dock != nullptr ? dock->shipIsInDockingQueue(ship) : false);
     }
 
     OOJS_RETURN_BOOL(result);

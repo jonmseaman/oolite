@@ -52,19 +52,17 @@ static OOComparisonResult CaseInsensitiveCompare(const std::optional<std::string
 }
 } // namespace
 
-/*	C++20 since bead oo-8fpc (proposed ADR-0056 amendment oo-o89): cxx::OOJSInterfaceDefinition. -init after
+/*	C++20 since bead oo-8fpc (proposed ADR-0056 amendment oo-o89): OOJSInterfaceDefinition. -init after
         [super init] is the constructor, -dealloc the destructor; the engine, the script stack and the
         owning script's weak reference are Objective-C and are messaged as before.
 */
-
-namespace cxx {
 
 OOJSInterfaceDefinition::OOJSInterfaceDefinition()
 {
     _callback = ooscript::undefinedValue();
     _callbackThis = NULL;
 
-    _owningScript = oo::adoptObjC(static_cast<::OOJSScript*>([[::OOJSScript currentlyRunningScript] weakRetain]));
+    _owningScript = OOJSScript::currentlyRunningScript();
 
     oo::NotificationCenter::defaultCenter().addObserver(this, kOOJavaScriptEngineWillResetNotificationName,
         [::OOJavaScriptEngine sharedEngine],
@@ -159,8 +157,8 @@ void OOJSInterfaceDefinition::runCallback(const std::string& key)
 
     ooscript::Value cKey = OOJSValueFromPList(context, oo::PList(key));
 
-    const oo::ObjCRef<::OOJSScript*> owner = _owningScript; // local copy needed
-    [::OOJSScript pushScript:owner.get()];
+    const oo::WeakRef<OOJSScript> owner = _owningScript; // local copy needed
+    OOJSScript::pushScript(owner);
 
     [engine callJSFunction:_callback
                  forObject:_callbackThis
@@ -168,7 +166,7 @@ void OOJSInterfaceDefinition::runCallback(const std::string& key)
                       argv:&cKey
                     result:&rval];
 
-    [::OOJSScript popScript:owner.get()];
+    OOJSScript::popScript(owner.get());
 
     OOJSRelinquishContext(context);
 }
@@ -182,5 +180,3 @@ OOComparisonResult OOJSInterfaceDefinition::interfaceCompare(OOJSInterfaceDefini
         return byCategory;
     }
 }
-
-} // namespace cxx

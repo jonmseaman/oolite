@@ -31,6 +31,7 @@
 #import "OOEntityWithDrawable.h"
 #import "OOJSPropID.h"
 #import "OOPlanetEntity.h"
+#import "OOPolygonSprite.h" // OOHUDBeaconIcon (bead oo-7ae4p): the beacon drawable is oo::Ref
 #import "OOWeakReference.h"
 #include "ooscript/JSEngine.hpp"
 
@@ -38,7 +39,9 @@
 #include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OOObjCRef.h"
 
-@class OOColor, OOMesh, OOScript, OOJSScript;
+class OOMesh; // C++ since bead oo-9ht.132
+#include "OOScript.h" // oo::Ref<OOScript> members and results (bead oo-9ht.133)
+class OOColor;
 class OOFlasherEntity; // C++ only since bead oo-9ht.107
 
 /*	Foundation sweep (proposed ADR-0043, bead oo-ensq). The effect definition and script_info are
@@ -53,23 +56,25 @@ typedef Entity<OOSubEntity> OOVisualEffectSubEntity;
 typedef Entity<OOBeaconEntity> OOVisualEffectBeaconEntity;
 using OOVisualEffectSubEntities = std::vector<oo::ObjCRef<Entity<OOSubEntity>*>>;
 
-@class OOVisualEffectEntity; // the façade (OOVisualEffectEntity+ObjCBridge.h)
-
-namespace cxx {
-
 /*	A visual effect (bead oo-ukxy8, slice 1 of docs/phases/3-slices/OOVisualEffectEntity.md): the
         class shell, its state and the entity side (construction from the effect definition, the mesh,
         subentities and flashers, scaling, orientation vectors, drawing, update, the break pattern flag,
         the subentity relationship), and its scripted surface (bead oo-xkf6c, slice 2: scanner colours,
         the script and its events, the beacons and the shader uniforms).
 */
-class OOVisualEffectEntity : public OOEntityWithDrawable {
+/*	Since bead oo-9ht.165 the global C++ class, with no Objective-C class of its own: an effect's
+        Objective-C object is the root's facade (OOEntityWithDrawable's until bead oo-9ht.40), made by oo::NewVisualEffectObject(), and
+        the selectors found on it by name are the root's facade's (Entity
+        (OOVisualEffectSelectorsCalledByName), ADR-0056 amendment oo-9ht.165).
+*/
+class OOVisualEffectEntity : public OOEntityWithDrawable, public cxx::OOSubEntityInterface // <OOSubEntity, OOBeaconEntity>
+{
 public:
     ~OOVisualEffectEntity();
 
     /*	-cxx_initWithKey:definition:'s body after [super init] (the constructor ran Entity's): false
-            where the initialiser released itself and answered nil. The façade runs it once it holds this
-            object (amendment oo-0mxi item 2), because the universe allocates effects.
+            where the initialiser released itself and answered nil. oo::NewVisualEffectObject() runs it
+            once the object holds this effect (amendment oo-0mxi item 2; bead oo-9ht.165).
     */
     bool initWithKey(const std::string& key, const oo::PList& dict);
     bool setUpVisualEffectFromDictionary(const oo::PList& effectDict);
@@ -87,11 +92,11 @@ public:
     void setNoDrawDistance();
     std::vector<oo::ObjCRef<::Entity*>> subEntities(); // a snapshot; empty before the first subentity (was nil)
     NSUInteger subEntityCount();
-    std::optional<std::vector<oo::ObjCRef<::OOVisualEffectEntity*>>> visualEffectSubEntityEnumerator(); // the visual-effect subentities; nullopt where the array was nil
+    std::optional<std::vector<oo::ObjCRef<::Entity*>>> visualEffectSubEntityEnumerator(); // the visual-effect subentities' objects; nullopt where the array was nil
     bool hasSubEntity(OOVisualEffectSubEntity* sub);
 
     std::vector<oo::ObjCRef<::Entity*>> subEntityEnumerator(); // snapshot, same as subEntities()
-    std::vector<oo::ObjCRef<::OOVisualEffectEntity*>> effectSubEntityEnumerator();
+    std::vector<oo::ObjCRef<::Entity*>> effectSubEntityEnumerator(); // the visual-effect subentities' objects
     std::vector<oo::ObjCRef<::Entity*>> flasherEnumerator(); // flasher subentities' objects (the nearest façade left), a snapshot
 
     void orientationChanged() override;
@@ -112,12 +117,12 @@ public:
 
     oo::PList effectInfoDictionary();
 
-    // OOSubEntity, answered by the façade.
-    void rescaleBy(GLfloat factor);
-    void rescaleBy(GLfloat factor, bool writeToCache);
-    void drawSubEntityImmediate(bool immediate, bool translucent);
+    // OOSubEntity: owners call these through cxx::OOSubEntityInterface (bead oo-9ht.165).
+    void rescaleBy(GLfloat factor) override;
+    void rescaleBy(GLfloat factor, bool writeToCache) override;
+    void drawSubEntityImmediate(bool immediate, bool translucent) override;
 
-    // Entity (SubEntityRelationship), answered by the façade.
+    // Entity (SubEntityRelationship): the root's facade answers it for an effect's part.
     bool isShipWithSubEntityShip(::Entity* other);
 
     bool isEffect() override;
@@ -127,26 +132,32 @@ public:
     void drawImmediate(bool immediate, bool translucent) override;
     void update(OOTimeDelta delta_t) override;
 
-    cxx::OOColor* scannerDisplayColor1();
-    cxx::OOColor* scannerDisplayColor2();
-    void setScannerDisplayColor1(cxx::OOColor* color);
-    void setScannerDisplayColor2(cxx::OOColor* color);
-    GLfloat* scannerDisplayColorForShip(bool flash, cxx::OOColor* scannerDisplayColor1, cxx::OOColor* scannerDisplayColor2);
+    // The JS questions the engine asks the object (Entity (OOJavaScriptExtensions)), which the
+    // effect's facade answered until bead oo-9ht.165: the binding's functions (OOJSVisualEffect.h).
+    void getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype) override;
+    std::optional<std::string> jsClassName() override;
+    bool isVisibleToScripts() override;
+
+    OOColor* scannerDisplayColor1();
+    OOColor* scannerDisplayColor2();
+    void setScannerDisplayColor1(OOColor* color);
+    void setScannerDisplayColor2(OOColor* color);
+    GLfloat* scannerDisplayColorForShip(bool flash, OOColor* scannerDisplayColor1, OOColor* scannerDisplayColor2);
 
     void setScript(const std::optional<std::string>& script_name);
-    ::OOJSScript* script();
+    ::OOScript* script();
     oo::PList scriptInfo();
     void doScriptEvent(ooscript::PropertyId message);
     void remove();
 
-    // OOBeaconEntity, answered by the façade.
+    // OOBeaconEntity: the root's facade (Entity (OOWaypointBeacon)) answers it for an effect's part.
     OOComparisonResult compareBeaconCodeWith(OOVisualEffectBeaconEntity* other);
     std::optional<std::string> beaconCode();
     void setBeaconCode(const std::optional<std::string>& bcode);
     std::optional<std::string> beaconLabel();
     void setBeaconLabel(const std::optional<std::string>& blabel);
     bool isBeacon();
-    id<OOHUDBeaconIcon> beaconDrawable();
+    OOHUDBeaconIcon* beaconDrawable(); // borrowed (the protocol type until bead oo-7ae4p)
     OOVisualEffectBeaconEntity* prevBeacon();
     OOVisualEffectBeaconEntity* nextBeacon();
     void setPrevBeacon(OOVisualEffectBeaconEntity* beaconShip);
@@ -177,8 +188,8 @@ public:
 
     GLfloat _profileRadius = { }; // for frustum culling
 
-    oo::Ref<cxx::OOColor> scanner_display_color1;
-    oo::Ref<cxx::OOColor> scanner_display_color2;
+    oo::Ref<OOColor> scanner_display_color1;
+    oo::Ref<OOColor> scanner_display_color2;
 
     GLfloat _hullHeatLevel = { };
     GLfloat _shaderFloat1 = { };
@@ -192,7 +203,7 @@ public:
     Vector _v_up = { };
     Vector _v_right = { };
 
-    ::OOJSScript* _script = { }; // retained; was script, named like its getter
+    oo::Ref<OOScript> _script; // was script, named like its getter
     oo::PList _scriptInfo; // was scriptInfo, named like its getter
 
     std::optional<std::string> _effectKey;
@@ -204,7 +215,7 @@ public:
     std::optional<std::string> _beaconLabel;
     ::OOWeakReference* _prevBeacon = { };
     ::OOWeakReference* _nextBeacon = { };
-    id<OOHUDBeaconIcon> _beaconDrawable = { }; // retained
+    oo::Ref<OOHUDBeaconIcon> _beaconDrawable;
 
     // scaling (were scaleX, scaleY, scaleZ, named like their getters)
     GLfloat _scaleX = { };
@@ -218,8 +229,18 @@ private:
     bool setUpOneStandardSubentity(const oo::PList& subentDict);
 };
 
-} // namespace cxx
+namespace oo {
 
-// Transitional: the Objective-C OOVisualEffectEntity, for code not yet converted. Deleted, with
-// namespace cxx above, by the bridge's deletion bead.
-#import "OOVisualEffectEntity+ObjCBridge.h"
+// An effect's Objective-C object (bead oo-9ht.165): the root's facade (OOEntityWithDrawable's until bead oo-9ht.40) holding a new
+// effect, after the effect's initialiser body (OOVisualEffectEntity::initWithKey()); nil where the
+// body failed, as [[OOVisualEffectEntity alloc] cxx_initWithKey:definition:] answered. +1, as +alloc gave.
+::Entity* NewVisualEffectObject(const std::string& key, const oo::PList& dict) OO_RETURNS_RETAINED;
+
+// The effect an object holds: nullptr for nil or another entity (what -isKindOfClass:
+// [OOVisualEffectEntity class] and the cast after it found).
+inline OOVisualEffectEntity* ToEffect(::Entity* entity)
+{
+    return dynamic_cast<OOVisualEffectEntity*>(ToCxx(entity));
+}
+
+} // namespace oo

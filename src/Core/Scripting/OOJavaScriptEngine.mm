@@ -60,6 +60,7 @@ MA 02110-1301, USA.
 
 #import "EntityOOJavaScriptExtensions.h"
 #import "OOConstToJSString.h"
+#include "OOJSPrivateObject.h"
 #import "OOObjCPList.h" // Object nodes (OOJSValueFromPList)
 #import "OOPlanetEntity.h"
 #import "OOVisualEffectEntity.h"
@@ -222,10 +223,10 @@ static void ReportJSError(ooscript::Context context, const char* message, const 
     if ((report->flags & static_cast<unsigned>(ooscript::ReportFlag::Warning)) == 0 || oo::log::willDisplay(messageClass)) {
         // First line: problem description
         // avoid windows DEP exceptions!
-        ::OOJSScript* runningScript = cxx::OOJSScript::currentlyRunningScript();
-        id thisScript = (runningScript != nil) ? oo::ToCxx(runningScript)->weakRetain() : nil; // a weak reference, retained
-        activeScript = OOJavaScriptEngineDisplayName(OOJavaScriptEngineWeakRefUnderlyingObject(thisScript)).value_or("<unidentified script>");
-        objc_release(thisScript);
+        // The running script (C++ since bead oo-9ht.133; null when none runs, or once a script a timer or
+        // definition pushed weakly has gone: a message to nil).
+        OOJSScript* runningScript = OOJSScript::currentlyRunningScript();
+        activeScript = ((runningScript != nullptr) ? runningScript->displayName() : std::nullopt).value_or("<unidentified script>");
 
         OO_LOG(messageClass, "{} JavaScript {} ({}): {}", highlight, severity, activeScript, messageText);
 
@@ -401,8 +402,8 @@ void OOJavaScriptEngine::createMainThreadContext()
     InitOOJSFont(gOOJSMainThreadContext, _globalObject);
 
     // Run prefix scripts.
-    [::OOJSScript cxx_jsScriptFromFileNamed:"oolite-global-prefix.js"
-                                 properties:oo::PList(oo::PList::Dict { { "special", oo::PListObject(JSSpecialFunctionsObjectWrapper(gOOJSMainThreadContext)) } })];
+    OOScriptAutorelease(OOScript::jsScriptFromFileNamed("oolite-global-prefix.js", // (nothing keeps it)
+        oo::PList(oo::PList::Dict { { "special", oo::PListObject(JSSpecialFunctionsObjectWrapper(gOOJSMainThreadContext)) } })));
 
     ooscript::endRequest((gOOJSMainThreadContext));
 
@@ -633,8 +634,8 @@ static void DebuggerHook(ooscript::Context context, void* /*closure*/)
 {
     OOJSPauseTimeLimiter();
 
-    ::OOJSScript* runningScript = cxx::OOJSScript::currentlyRunningScript();
-    OO_LOG("script.javaScript.debugger", "debugger invoked during {}:", ((runningScript != nil) ? oo::ToCxx(runningScript)->displayName() : std::nullopt).value_or("(null)"));
+    OOJSScript* runningScript = OOJSScript::currentlyRunningScript();
+    OO_LOG("script.javaScript.debugger", "debugger invoked during {}:", ((runningScript != nullptr) ? runningScript->displayName() : std::nullopt).value_or("(null)"));
     OOJSDumpStack(context);
 
     OOJSResumeTimeLimiter();
@@ -1335,8 +1336,19 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context, const oo::PList& p
     case oo::PList::Type::Dict:
         return JSObjectValueFromPList(context, *plist.getIf<oo::PList::Dict>());
 
-    case oo::PList::Type::Object:
-        return OOJSValueFromNativeObject(context, oo::ObjectIn(plist));
+    case oo::PList::Type::Object: {
+        // A C++ object that is its own JS glue (OOJSPrivateObject.h), else an Objective-C object.
+        if (const oo::PList::Object* node = plist.getIf<oo::PList::Object>()) {
+            if (OOJSPrivateObject* glue = dynamic_cast<OOJSPrivateObject*>(node->get()))
+                return OOJSValueFromCxxObject(context, glue);
+            if (OONativeVector* box = dynamic_cast<OONativeVector*>(node->get()))
+                return OONativeVectorJSValueInContext(box, context);
+        }
+        id object = oo::ObjectIn(plist);
+        if (object == nil)
+            return ooscript::undefinedValue(); // a node that holds no Objective-C object (a C++ one): no JS glue
+        return OOJSValueFromNativeObject(context, object);
+    }
     }
     return ooscript::undefinedValue();
 
@@ -1713,9 +1725,9 @@ std::string cxx_OOJSEscapedForJavaScriptLiteral(std::string_view string)
     return result;
 }
 
-// OONativeVector (OOJavaScriptConversion)'s -oo_jsValueInContext:, which forwards here from
-// OOJavaScriptEngine+ObjCBridge.mm (amendment oo-ppc item 3).
-ooscript::Value OONativeVectorJSValueInContext(cxx::OONativeVector* vector, ooscript::Context context)
+// A vector box's JS value, a Vector3D (was OONativeVector (OOJavaScriptConversion)'s
+// -oo_jsValueInContext:, amendment oo-ppc item 3; the box's facade was deleted by bead oo-9ht.5).
+ooscript::Value OONativeVectorJSValueInContext(OONativeVector* vector, ooscript::Context context)
 {
     ooscript::Value value = ooscript::undefinedValue();
     VectorToJSValue(context, vector->getVector(), &value);
@@ -1866,7 +1878,7 @@ BOOL JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void* /*parameter*/
             return NO; // Demo ship
         return YES;
     } else if (OOJavaScriptEngineIsPlanet(entity)) {
-        switch (oo::ToCxx((OOPlanetEntity*)entity)->planetType()) // a planet: not nil
+        switch (static_cast<OOPlanetEntity*>(oo::ToCxx(entity))->planetType()) // a planet: not nil (C++ since bead oo-9ht.129)
         {
         case STELLAR_TYPE_MOON:
         case STELLAR_TYPE_NORMAL_PLANET:

@@ -1,6 +1,6 @@
 /*	test_OOJSDock.mm
-	Unit tests for the Dock JS binding (src/Core/Scripting/OOJSDock.h/.mm) and its DockEntity
-	category (OOJSDock+ObjCBridge.mm): bead oo-zbx3, converted the way bead oo-ppc converted
+	Unit tests for the Dock JS binding (src/Core/Scripting/OOJSDock.h/.mm) and the DockEntity
+	answers that DockEntity's overrides give the engine (bead oo-9ht.47): bead oo-zbx3, converted the way bead oo-ppc converted
 	OOJSVector (proposed ADR-0056 amendments oo-ppc and oo-ykoy).
 
 	As test_OOJSWormhole.mm does (amendment oo-ykoy, item 4), it runs the JS class in a real
@@ -25,37 +25,62 @@
 
 // MARK: The entity classes, as far as the binding sees them ---------------------------------------
 
+namespace cxx {
+
+// The C++ root, as far as the binding and the root's JS category reach it.
+class Entity : public oo::RefCounted
+{
+public:
+	virtual ~Entity();
+	virtual void getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype);
+	virtual std::optional<std::string> jsClassName();
+};
+
+}	// namespace cxx
+
+// The ship: C++ since bead oo-9ht.144 deleted the Objective-C ship this stood in for (a ship's part
+// is a plain one, held by its object as a dock's is).
+class ShipEntity : public cxx::Entity
+{
+};
+
+// The object: the root's, which holds the C++ part (oo::ToCxx reads it) and asks it the JS questions.
 @interface Entity: OOObject
+{
+@public
+	oo::Ref<cxx::Entity> _cxxEntity;
+}
 - (id) weakRefUnderlyingObject;
 @end
 
-@interface ShipEntity: Entity
-@end
-
-/*	A dock whose docking queue holds 99 ships raises from -countOfShipsInDockingQueue, one whose
-	queue holds 98 throws a C++ exception, so the test sees what an exception under a native
-	becomes.
+/*	A dock: C++ since bead oo-9ht.180 deleted the Objective-C dock this stood in for (its object is the
+	ship's facade); the members the binding calls, declared as DockEntity.h declares them (the test
+	imports no game header that defines the class), with the stand-in's answers. A dock whose
+	docking queue holds 99 ships raises from countOfShipsInDockingQueue(), one whose queue holds 98
+	throws a C++ exception, so the test sees what an exception under a native becomes.
 */
-@interface DockEntity: ShipEntity
+class DockEntity : public ShipEntity
 {
-@public
-	BOOL _allowsDocking;
-	BOOL _disallowedDockingCollides;
-	BOOL _allowsLaunching;
-	NSUInteger _dockingQueue;
-	NSUInteger _launchQueue;
-	ShipEntity *_queued;
-}
-- (BOOL) allowsDocking;
-- (void) setAllowsDocking:(BOOL)allow;
-- (BOOL) disallowedDockingCollides;
-- (void) setDisallowedDockingCollides:(BOOL)ddc;
-- (BOOL) allowsLaunching;
-- (void) setAllowsLaunching:(BOOL)allow;
-- (NSUInteger) countOfShipsInDockingQueue;
-- (NSUInteger) countOfShipsInLaunchQueue;
-- (BOOL) shipIsInDockingQueue:(ShipEntity *)ship;
-@end
+public:
+	void getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype) override;
+	std::optional<std::string> jsClassName() override;
+	bool allowsDocking();
+	void setAllowsDocking(bool allowed);
+	bool disallowedDockingCollides();
+	void setDisallowedDockingCollides(bool ddc);
+	bool allowsLaunching();
+	void setAllowsLaunching(bool allowed);
+	NSUInteger countOfShipsInDockingQueue();
+	NSUInteger countOfShipsInLaunchQueue();
+	bool shipIsInDockingQueue(::ShipEntity *ship);
+
+	BOOL _allowsDocking = NO;
+	BOOL _disallowedDockingCollides = NO;
+	BOOL _allowsLaunching = NO;
+	NSUInteger _dockingQueue = 0;
+	NSUInteger _launchQueue = 0;
+	::ShipEntity *_queued = nullptr;
+};
 
 @interface Entity (OOJavaScriptExtensions)
 - (void) getJSClass:(ooscript::ClassDef **)outClass andPrototype:(ooscript::Object *)outPrototype;
@@ -74,6 +99,11 @@
 #include <string>
 
 
+cxx::Entity::~Entity() = default;
+void cxx::Entity::getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype)  { (void)outClass; (void)outPrototype; }
+std::optional<std::string> cxx::Entity::jsClassName()  { return std::nullopt; }
+
+
 @implementation Entity
 
 - (id) weakRefUnderlyingObject
@@ -81,32 +111,41 @@
 	return self;
 }
 
+// As the game's Entity (OOJavaScriptExtensions) answers for an entity made in C++: its C++ part's.
+- (void) getJSClass:(ooscript::ClassDef **)outClass andPrototype:(ooscript::Object *)outPrototype  { _cxxEntity->getJSClass(outClass, outPrototype); }
+- (std::optional<std::string>) cxx_oo_jsClassName  { return _cxxEntity->jsClassName(); }
+
 @end
 
 
-@implementation ShipEntity
-@end
+bool DockEntity::allowsDocking()  { return _allowsDocking; }
+void DockEntity::setAllowsDocking(bool allowed)  { _allowsDocking = allowed; }
+bool DockEntity::disallowedDockingCollides()  { return _disallowedDockingCollides; }
+void DockEntity::setDisallowedDockingCollides(bool ddc)  { _disallowedDockingCollides = ddc; }
+bool DockEntity::allowsLaunching()  { return _allowsLaunching; }
+void DockEntity::setAllowsLaunching(bool allowed)  { _allowsLaunching = allowed; }
+NSUInteger DockEntity::countOfShipsInLaunchQueue()  { return _launchQueue; }
+bool DockEntity::shipIsInDockingQueue(::ShipEntity *ship)  { return ship == _queued; }
 
-
-@implementation DockEntity
-
-- (BOOL) allowsDocking  { return _allowsDocking; }
-- (void) setAllowsDocking:(BOOL)allow  { _allowsDocking = allow; }
-- (BOOL) disallowedDockingCollides  { return _disallowedDockingCollides; }
-- (void) setDisallowedDockingCollides:(BOOL)ddc  { _disallowedDockingCollides = ddc; }
-- (BOOL) allowsLaunching  { return _allowsLaunching; }
-- (void) setAllowsLaunching:(BOOL)allow  { _allowsLaunching = allow; }
-- (NSUInteger) countOfShipsInLaunchQueue  { return _launchQueue; }
-- (BOOL) shipIsInDockingQueue:(ShipEntity *)ship  { return ship == _queued; }
-
-- (NSUInteger) countOfShipsInDockingQueue
+NSUInteger DockEntity::countOfShipsInDockingQueue()
 {
 	if (_dockingQueue == 99)  [OOException raise:OOInvalidArgumentException format:"queue %s", "boom"];
 	if (_dockingQueue == 98)  throw std::runtime_error("cxx boom");
 	return _dockingQueue;
 }
 
-@end
+
+// What the game's C++ DockEntity answers the engine (its overrides call these two functions).
+void DockEntity::getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype)
+{
+	::OOJSDockGetJSClass(outClass, outPrototype);
+}
+
+
+std::optional<std::string> DockEntity::jsClassName()
+{
+	return ::OOJSDockJSClassName();
+}
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
@@ -278,8 +317,19 @@ namespace {
 ooscript::Runtime sRuntime;
 ooscript::Context sContext;
 ooscript::Object sGlobal;
-DockEntity *sDock = nil;
-ShipEntity *sShip = nil;
+DockEntity *sDock = nullptr;	// the C++ dock (its object: sDockObject)
+Entity *sDockObject = nil;
+Entity *sShip = nil;	// a ship's object and its C++ part (the Objective-C ship until bead oo-9ht.144)
+ShipEntity *sShipPart = nullptr;
+
+
+// A ship's object holding its C++ part, kept for the life of the test.
+Entity *NewShipObject(oo::Ref<cxx::Entity> part)
+{
+	Entity *object = [[Entity alloc] init];
+	object->_cxxEntity = part;
+	return object;
+}
 
 
 ooscript::Value JSValueForObject(ooscript::ClassDef *jsClass, ooscript::Object prototype, Entity *entity)
@@ -320,16 +370,18 @@ void SetUpContext()
 	OOJSRegisterSubclass(&sFakeShipClass, &sFakeEntityClass);
 	InitOOJSDock(sContext, sGlobal);
 
-	sDock = [[DockEntity alloc] init];	// kept for the life of the test
+	sDockObject = NewShipObject(oo::makeRef<DockEntity>());	// a dock's object is a ship's since bead oo-9ht.180
+	sDock = static_cast<DockEntity *>(sDockObject->_cxxEntity.get());
 	sDock->_allowsDocking = YES;
 	sDock->_disallowedDockingCollides = NO;
 	sDock->_allowsLaunching = YES;
 	sDock->_dockingQueue = 3;
 	sDock->_launchQueue = 2;
-	sShip = [[ShipEntity alloc] init];
-	Define("dock", JSValueForEntity(sDock));
+	sShip = NewShipObject(oo::makeRef<ShipEntity>());
+	sShipPart = static_cast<ShipEntity *>(sShip->_cxxEntity.get());
+	Define("dock", JSValueForEntity(sDockObject));
 	Define("ship", JSValueForObject(&sFakeShipClass, sShipPrototype, sShip));
-	Define("otherShip", JSValueForObject(&sFakeShipClass, sShipPrototype, [[ShipEntity alloc] init]));
+	Define("otherShip", JSValueForObject(&sFakeShipClass, sShipPrototype, NewShipObject(oo::makeRef<ShipEntity>())));
 	Define("plainEntity", JSValueForObject(&sFakeEntityClass, gOOEntityJSPrototype, [[Entity alloc] init]));
 }
 
@@ -368,12 +420,12 @@ OO_TEST(registration)
 	SetUpContext();
 	ooscript::ClassDef *dockClass = nullptr;
 	ooscript::Object prototype = nullptr;
-	[sDock getJSClass:&dockClass andPrototype:&prototype];
+	[sDockObject getJSClass:&dockClass andPrototype:&prototype];
 	OO_CHECK(dockClass != nullptr && std::strcmp(dockClass->name, "Dock") == 0);
 	OO_CHECK(prototype != nullptr);
 	OO_CHECK(OOJSIsSubclass(dockClass, &sFakeShipClass));
 	OO_CHECK_EQ(sConverters[dockClass], 1);
-	OO_CHECK([sDock cxx_oo_jsClassName] == std::optional<std::string>("Dock"));
+	OO_CHECK([sDockObject cxx_oo_jsClassName] == std::optional<std::string>("Dock"));
 	OO_CHECK_EVAL("typeof Dock", "function");
 	OO_CHECK_EVAL("new Dock()", "threw: unconstructable");
 	OO_CHECK_EVAL("Object.getPrototypeOf(Dock.prototype) === Ship.prototype", "true");
@@ -403,11 +455,11 @@ OO_TEST(properties)
 OO_TEST(isQueued)
 {
 	SetUpContext();
-	sDock->_queued = sShip;
+	sDock->_queued = sShipPart;
 	OO_CHECK_EVAL("dock.isQueued(ship)", "true");
 	OO_CHECK_EVAL("dock.isQueued(otherShip)", "false");
 	OO_CHECK_EVAL("dock.isQueued()", "threw: bad arguments: Dock.isQueued (0): ; expected ship");
-	sDock->_queued = nil;
+	sDock->_queued = nullptr;
 	OO_CHECK_EVAL("dock.isQueued(ship)", "false");
 }
 

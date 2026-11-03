@@ -279,7 +279,8 @@ ooscript::Object JSPlayerObject(void)
 PlayerEntity* OOPlayerForScripting(void)
 {
     PlayerEntity* player = PLAYER;
-    [player setScriptTarget:player];
+    if (player != nullptr)
+        player->setScriptTargetToSelf();
 
     return player;
 }
@@ -299,91 +300,91 @@ static bool PlayerGetProperty(Context cx, Object obj, PropertyId propID, Value* 
 
     switch (ooscript::idToInt32(propID)) {
     case kPlayer_name:
-        if (const std::optional<std::string> name = [player cxx_commanderName])
+        if (const std::optional<std::string> name = (player != nullptr ? player->commanderName() : std::optional<std::string>()))
             result = oo::PList(*name);
         break;
 
     case kPlayer_score:
-        *(value) = ooscript::int32Value([player score]);
+        *(value) = ooscript::int32Value((player != nullptr ? player->PlayerEntity::score() : unsigned { })); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
         return true;
 
     case kPlayer_credits:
-        return ooscript::newNumberValue(cx, [player creditBalance], value);
+        return ooscript::newNumberValue(cx, (player != nullptr ? player->creditBalance() : 0.0), value);
 
     case kPlayer_rank: {
-        const std::optional<std::string> text = cxx_OODisplayRatingStringFromKillCount([player score]);
+        const std::optional<std::string> text = cxx_OODisplayRatingStringFromKillCount((player != nullptr ? player->PlayerEntity::score() : unsigned { })); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
         *(value) = OOJSValueFromPList(context, text.has_value() ? oo::PList(*text) : oo::PList());
     }
         return true;
 
     case kPlayer_legalStatus: {
-        const std::optional<std::string> text = cxx_OODisplayStringFromLegalStatus([player legalStatus]);
+        const std::optional<std::string> text = cxx_OODisplayStringFromLegalStatus((player != nullptr ? player->getLegalStatus() : int { }));
         *(value) = OOJSValueFromPList(context, text.has_value() ? oo::PList(*text) : oo::PList());
     }
         return true;
 
     case kPlayer_alertCondition:
-        *(value) = ooscript::int32Value([player alertCondition]);
+        *(value) = ooscript::int32Value((player != nullptr ? player->PlayerEntity::getAlertCondition() : OOAlertCondition { })); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
         return true;
 
     case kPlayer_alertTemperature:
-        *(value) = OOJSValueFromBOOL([player alertFlags] & ALERT_FLAG_TEMP);
+        *(value) = OOJSValueFromBOOL((player != nullptr ? player->getAlertFlags() : int { }) & ALERT_FLAG_TEMP);
         return true;
 
     case kPlayer_alertMassLocked:
-        *(value) = OOJSValueFromBOOL([player alertFlags] & ALERT_FLAG_MASS_LOCK);
+        *(value) = OOJSValueFromBOOL((player != nullptr ? player->getAlertFlags() : int { }) & ALERT_FLAG_MASS_LOCK);
         return true;
 
     case kPlayer_alertAltitude:
-        *(value) = OOJSValueFromBOOL([player alertFlags] & ALERT_FLAG_ALT);
+        *(value) = OOJSValueFromBOOL((player != nullptr ? player->getAlertFlags() : int { }) & ALERT_FLAG_ALT);
         return true;
 
     case kPlayer_alertEnergy:
-        *(value) = OOJSValueFromBOOL([player alertFlags] & ALERT_FLAG_ENERGY);
+        *(value) = OOJSValueFromBOOL((player != nullptr ? player->getAlertFlags() : int { }) & ALERT_FLAG_ENERGY);
         return true;
 
     case kPlayer_alertHostiles:
-        *(value) = OOJSValueFromBOOL([player alertFlags] & ALERT_FLAG_HOSTILES);
+        *(value) = OOJSValueFromBOOL((player != nullptr ? player->getAlertFlags() : int { }) & ALERT_FLAG_HOSTILES);
         return true;
 
     case kPlayer_escapePodRescueTime:
-        return ooscript::newNumberValue(cx, [player escapePodRescueTime], value);
+        return ooscript::newNumberValue(cx, (player != nullptr ? player->escapePodRescueTime() : 0.0), value);
 
     case kPlayer_trumbleCount:
-        return ooscript::newNumberValue(cx, [player trumbleCount], value);
+        return ooscript::newNumberValue(cx, (player != nullptr ? player->PlayerEntity::getTrumbleCount() : 0), value); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
 
         /* For compatibility with previous versions, these are still on
          * a -7 to +7 scale */
     case kPlayer_contractReputation:
-        return ooscript::newNumberValue(cx, (int)(((float)[player contractReputation]) / 10.0), value);
+        return ooscript::newNumberValue(cx, (int)(((float)(player != nullptr ? player->contractReputation() : int { })) / 10.0), value);
 
     case kPlayer_passengerReputation:
-        return ooscript::newNumberValue(cx, (int)(((float)[player passengerReputation]) / 10.0), value);
+        return ooscript::newNumberValue(cx, (int)(((float)(player != nullptr ? player->passengerReputation() : int { })) / 10.0), value);
 
     case kPlayer_parcelReputation:
-        return ooscript::newNumberValue(cx, (int)(((float)[player parcelReputation]) / 10.0), value);
+        return ooscript::newNumberValue(cx, (int)(((float)(player != nullptr ? player->parcelReputation() : int { })) / 10.0), value);
 
         /* Full-precision reputations */
     case kPlayer_contractReputationPrecise:
-        return ooscript::newNumberValue(cx, ((float)[player contractReputation]) / 10.0, value);
+        return ooscript::newNumberValue(cx, ((float)(player != nullptr ? player->contractReputation() : int { })) / 10.0, value);
 
     case kPlayer_passengerReputationPrecise:
-        return ooscript::newNumberValue(cx, ((float)[player passengerReputation]) / 10.0, value);
+        return ooscript::newNumberValue(cx, ((float)(player != nullptr ? player->passengerReputation() : int { })) / 10.0, value);
 
     case kPlayer_parcelReputationPrecise:
-        return ooscript::newNumberValue(cx, ((float)[player parcelReputation]) / 10.0, value);
+        return ooscript::newNumberValue(cx, ((float)(player != nullptr ? player->parcelReputation() : int { })) / 10.0, value);
 
     case kPlayer_dockingClearanceStatus:
         // EMMSTRAN: OOConstToJSString-ify this.
-        *(value) = OOJSValueFromPList(context, oo::PList(cxx_DockingClearanceStatusToString([player getDockingClearanceStatus])));
+        *(value) = OOJSValueFromPList(context, oo::PList(cxx_DockingClearanceStatusToString((player != nullptr ? player->getDockingClearanceStatus() : OODockingClearanceStatus { }))));
         return true;
 
     case kPlayer_bounty:
-        *(value) = ooscript::int32Value([player legalStatus]);
+        *(value) = ooscript::int32Value((player != nullptr ? player->getLegalStatus() : int { }));
         return true;
 
     case kPlayer_roleWeights: {
-        const std::vector<std::string> roleWeights = [player cxx_roleWeights];
+        const std::vector<std::string> roleWeights = (player != nullptr ? player->getRoleWeights() : std::vector<std::string>());
         result = oo::PList(oo::PList::Array(roleWeights.begin(), roleWeights.end()));
     } break;
 
@@ -418,7 +419,8 @@ static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     case kPlayer_name:
         sValue = cxx_OOStringFromJSValue(context, *(value));
         if (sValue.has_value()) {
-            [player cxx_setCommanderName:*sValue];
+            if (player != nullptr)
+                player->setCommanderName(sValue);
             return true;
         }
         break;
@@ -428,7 +430,8 @@ static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID, bool /*
         if (ooscript::valueToInt32(cx, *value, &iValue32)) {
             iValue = (int32_t)iValue32;
             iValue = MAX(iValue, 0);
-            [player setScore:iValue];
+            if (player != nullptr)
+                player->setScore(iValue);
             return true;
         }
         break;
@@ -436,7 +439,8 @@ static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID, bool /*
 
     case kPlayer_credits:
         if (ooscript::valueToNumber(cx, *value, &fValue)) {
-            [player setCreditBalance:fValue];
+            if (player != nullptr)
+                player->setCreditBalance(fValue);
             return true;
         }
         break;
@@ -447,7 +451,8 @@ static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID, bool /*
             iValue = (int32_t)iValue32;
             if (iValue < 0)
                 iValue = 0;
-            [player setBounty:iValue withReason:kOOLegalStatusReasonByScript];
+            if (player != nullptr)
+                player->PlayerEntity::setBounty(iValue, kOOLegalStatusReasonByScript); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
             return true;
         }
         break;
@@ -455,7 +460,8 @@ static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID, bool /*
 
     case kPlayer_escapePodRescueTime:
         if (ooscript::valueToNumber(cx, *value, &fValue)) {
-            [player setEscapePodRescueTime:fValue];
+            if (player != nullptr)
+                player->setEscapePodRescueTime(fValue);
             return true;
         }
         break;
@@ -495,7 +501,8 @@ static bool PlayerCommsMessage(ooscript::Context context, ooscript::CallArgs& oo
     }
 
     [UNIVERSE cxx_addCommsMessage:*message forCount:time];
-    [PLAYER cxx_doScriptEvent:OOJSID("commsMessageReceived") withPListArguments: { oo::PList(*message), oo::PList() }];
+    if (PLAYER != nullptr)
+        PLAYER->ShipEntity::doScriptEvent(OOJSID("commsMessageReceived"), { oo::PList(*message), oo::PList() }); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -545,7 +552,7 @@ static bool PlayerEndScenario(ooscript::Context context, ooscript::CallArgs& ooj
         return false;
     }
 
-    OOJS_RETURN_BOOL([PLAYER cxx_endScenario:*scenario]);
+    OOJS_RETURN_BOOL((PLAYER != nullptr ? PLAYER->endScenario(*scenario) : false));
 
     OOJS_NATIVE_EXIT
 }
@@ -558,7 +565,8 @@ static bool PlayerIncreaseContractReputation(ooscript::Context context, ooscript
 
     OOJS_NATIVE_ENTER(context)
 
-    [OOPlayerForScripting() increaseContractReputation:1];
+    if (PlayerEntity* player = OOPlayerForScripting())
+        player->increaseContractReputation(1);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -572,7 +580,8 @@ static bool PlayerDecreaseContractReputation(ooscript::Context context, ooscript
 
     OOJS_NATIVE_ENTER(context)
 
-    [OOPlayerForScripting() decreaseContractReputation:1];
+    if (PlayerEntity* player = OOPlayerForScripting())
+        player->decreaseContractReputation(1);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -586,7 +595,8 @@ static bool PlayerIncreaseParcelReputation(ooscript::Context context, ooscript::
 
     OOJS_NATIVE_ENTER(context)
 
-    [OOPlayerForScripting() increaseParcelReputation:1];
+    if (PlayerEntity* player = OOPlayerForScripting())
+        player->increaseParcelReputation(1);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -600,7 +610,8 @@ static bool PlayerDecreaseParcelReputation(ooscript::Context context, ooscript::
 
     OOJS_NATIVE_ENTER(context)
 
-    [OOPlayerForScripting() decreaseParcelReputation:1];
+    if (PlayerEntity* player = OOPlayerForScripting())
+        player->decreaseParcelReputation(1);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -614,7 +625,8 @@ static bool PlayerIncreasePassengerReputation(ooscript::Context context, ooscrip
 
     OOJS_NATIVE_ENTER(context)
 
-    [OOPlayerForScripting() increasePassengerReputation:1];
+    if (PlayerEntity* player = OOPlayerForScripting())
+        player->increasePassengerReputation(1);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -628,7 +640,8 @@ static bool PlayerDecreasePassengerReputation(ooscript::Context context, ooscrip
 
     OOJS_NATIVE_ENTER(context)
 
-    [OOPlayerForScripting() decreasePassengerReputation:1];
+    if (PlayerEntity* player = OOPlayerForScripting())
+        player->decreasePassengerReputation(1);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -652,7 +665,8 @@ static bool PlayerAddMessageToArrivalReport(ooscript::Context context, ooscript:
         return false;
     }
 
-    [player cxx_addMessageToReport:*report];
+    if (player != nullptr)
+        player->addMessageToReport(*report);
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -675,7 +689,7 @@ static bool PlayerAudioMessage(ooscript::Context context, ooscript::CallArgs& oo
         return false;
     }
 
-    if ([player isSpeechOn] >= OOSPEECHSETTINGS_COMMS)
+    if ((player != nullptr ? player->getIsSpeechOn() : OOSpeechSettings { }) >= OOSPEECHSETTINGS_COMMS)
         [UNIVERSE cxx_startSpeakingString:*audioMessage];
     OOJS_RETURN_VOID;
 
@@ -702,25 +716,28 @@ static bool PlayerReplaceShip(ooscript::Context context, ooscript::CallArgs& ooj
         return false;
     }
 
-    if (EXPECT_NOT(!([player status] == STATUS_DOCKED))) {
+    if (EXPECT_NOT(!((player != nullptr ? player->status() : OOEntityStatus { }) == STATUS_DOCKED))) {
         cxx_OOJSReportError(context, "Player.replaceShip() only works while the player is docked.");
         return false;
     }
 
-    success = [player cxx_replaceShipWithNamedShip:*shipKey];
+    success = (player != nullptr ? player->replaceShipWithNamedShip(*shipKey) : false);
     if (oojsArgs.count() > 1) {
         std::int32_t personality32 = 0;
         ooscript::valueToInt32((context), (OOJS_ARGV[1]), &personality32);
         personality = personality32;
         if (personality >= 0 && (uint16_t)personality < ENTITY_PERSONALITY_MAX) {
-            [player setEntityPersonalityInt:(uint16_t)personality];
+            if (player != nullptr)
+                player->setEntityPersonalityInt((uint16_t)personality);
         }
     }
 
     if (success) {
-        [player doScriptEvent:OOJSID("playerReplacedShip") withArgument:player];
+        if (player != nullptr)
+            player->doScriptEvent(OOJSID("playerReplacedShip"), oo::ToObjC(player));
         // slightly misnamed world event now - to be deprecated
-        [player cxx_doScriptEvent:OOJSID("playerBoughtNewShip") withPListArguments: { oo::PListObject(player), oo::PList::signedInteger(0) }];
+        if (player != nullptr)
+            player->ShipEntity::doScriptEvent(OOJSID("playerBoughtNewShip"), { oo::PListObject(oo::ToObjC(player)), oo::PList::signedInteger(0) }); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
     }
 
     OOJS_RETURN_BOOL(success);
@@ -750,15 +767,18 @@ static bool PlayerSetEscapePodDestination(ooscript::Context context, ooscript::C
         id destObject = oo::ObjectIn(destValue);
 
         if (destValue.isNull()) {
-            [player setDockTarget:NULL];
+            if (player != nullptr)
+                player->setDockTarget(NULL);
             OK = true;
-        } else if ([destObject isKindOfClass:[ShipEntity class]] && [destObject isStation]) {
-            [player setDockTarget:destObject];
+        } else if ((oo::ToShip(destObject) != nullptr) && [destObject isStation]) {
+            if (player != nullptr)
+                player->setDockTarget(oo::ToShip(destObject));
             OK = true;
         } else if (const std::string* destString = destValue.getIf<std::string>()) {
             if (*destString == "NEARBY_SYSTEM") {
                 // find the nearest system with a main station, or die in the attempt!
-                [player setDockTarget:NULL];
+                if (player != nullptr)
+                    player->setDockTarget(NULL);
 
                 double rescueRange = MAX_JUMP_RANGE; // reach at least 1 other system!
                 if ([UNIVERSE inInterstellarSpace]) {
@@ -788,17 +808,20 @@ static bool PlayerSetEscapePodDestination(ooscript::Context context, ooscript::C
 
                     // add more time until rescue, with overheads for entering witchspace in case of overlapping systems.
                     double dist = dest.get<double>("distance");
-                    [player addToAdjustTime:(.2 + dist * dist) * 3600.0 + 5400.0 * (ranrot_rand() & 127)];
+                    if (player != nullptr)
+                        player->addToAdjustTime((.2 + dist * dist) * 3600.0 + 5400.0 * (ranrot_rand() & 127));
 
                     // at the end of the docking sequence we'll check if the target system is the same as the system we're in...
-                    [player setTargetSystemID:i];
+                    if (player != nullptr)
+                        player->PlayerEntity::setTargetSystemID(i); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
                 }
                 OK = true;
             }
         } else {
             bool bValue;
             if (ooscript::valueToBoolean((context), (OOJS_ARGV[0]), &bValue) && bValue == false) {
-                [player setDockTarget:NULL];
+                if (player != nullptr)
+                    player->setDockTarget(NULL);
                 OK = true;
             }
         }
@@ -835,11 +858,13 @@ static bool PlayerSetPlayerRole(ooscript::Context context, ooscript::CallArgs& o
         std::uint32_t index32 = 0;
         if (ooscript::valueToECMAUint32((context), (OOJS_ARGV[1]), &index32)) {
             index = index32;
-            [player cxx_addRoleToPlayer:*role inSlot:index];
+            if (player != nullptr)
+                player->PlayerEntity::addRoleToPlayer(*role, index); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
             return true;
         }
     }
-    [player cxx_addRoleToPlayer:*role];
+    if (player != nullptr)
+        player->PlayerEntity::addRoleToPlayer(*role); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
     return true;
 
     OOJS_NATIVE_EXIT

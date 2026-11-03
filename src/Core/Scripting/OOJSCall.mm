@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 
 #import "OOJSCall.h"
 #import "OOCallByName.h"
+#import "OOColor.h" // a colour result (kMethodTypeColorVoid)
 #import "OOJavaScriptEngine.h"
 #import "OOObjCPList.h"
 #include "oofnd/objc/OORuntime.h"
@@ -36,6 +37,7 @@ MA 02110-1301, USA.
 #import "OOJSQuaternion.h"
 #import "OOJSVector.h"
 #import "OOShaderUniformMethodType.h"
+#import "PlayerEntity.h" // the statistics members of callObjC's name table
 #import "ShipEntity.h"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
@@ -57,6 +59,7 @@ typedef enum {
     kMethodTypeQuaternionVoid = kOOShaderUniformTypeQuaternion,
     kMethodTypeMatrixVoid = kOOShaderUniformTypeMatrix,
     kMethodTypePointVoid = kOOShaderUniformTypePoint,
+    kMethodTypeColorVoid = kOOShaderUniformTypeColor, // a colour (OOColor *) since bead oo-9ht.1
 
     kMethodTypeObjectVoid = kOOShaderUniformTypeObject,
     kMethodTypeObjectObject,
@@ -69,6 +72,38 @@ static MethodType GetMethodType(id object, SEL selector);
 
 namespace {
 OOINLINE bool MethodExpectsParameter(MethodType type) { return type == kMethodTypeVoidObject || type == kMethodTypeObjectObject; }
+
+#if OO_DEBUG
+/*	callObjC()'s names that are C++ members (ADR-0056 amendment oo-9ht.15): exactly the selectors
+        of the deleted categories PlayerEntity (JSVectorStatistics) and (JSQuaternionStatistics), with
+        the signatures they had (a property-list result, or void), answered by the player only.
+*/
+struct CxxMethod {
+    const char* name;
+    oo::PList (*pListVoid)(); // a -(oo::PList)name method, else null
+    void (*voidVoid)(); // a -(void)name method
+};
+
+const CxxMethod kPlayerMethods[] = {
+    { "reportJSVectorStatistics", &PlayerEntity::reportJSVectorStatistics, nullptr },
+    { "clearJSVectorStatistics", nullptr, &PlayerEntity::clearJSVectorStatistics },
+    { "reportJSQuaternionStatistics", &PlayerEntity::reportJSQuaternionStatistics, nullptr },
+    { "clearJSQuaternionStatistics", nullptr, &PlayerEntity::clearJSQuaternionStatistics },
+};
+
+// The table's entry for name when object is the player (it answered the categories), else null.
+// The player is C++ since bead oo-9ht.177; object is its Objective-C object (a ship's).
+const CxxMethod* CxxMethodNamed(id object, const std::optional<std::string>& name)
+{
+    if (!name.has_value() || PLAYER == nullptr || object != oo::ToObjC(PLAYER))
+        return nullptr;
+    for (const CxxMethod& method : kPlayerMethods) {
+        if (*name == method.name)
+            return &method;
+    }
+    return nullptr;
+}
+#endif
 } // namespace
 
 bool OOJSCallObjCObjectMethod(ooscript::Context context, id object, const std::string& oo_jsClassName, unsigned argc, ooscript::Value* argv, ooscript::Value* outResult)
@@ -88,8 +123,9 @@ bool OOJSCallObjCObjectMethod(ooscript::Context context, id object, const std::s
         return false;
     }
 
-    if ([object isKindOfClass:[ShipEntity class]]) {
-        [PLAYER setScriptTarget:object];
+    if ((oo::ToShip(object) != nullptr)) {
+        if (PLAYER != nullptr)
+            PLAYER->PlayerEntity::setScriptTarget(oo::ToShip(object)); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
     }
 
     selectorString = cxx_OOStringFromJSValue(context, argv[0]);
@@ -109,7 +145,19 @@ bool OOJSCallObjCObjectMethod(ooscript::Context context, id object, const std::s
 
     selector = OOSelectorFromName(selectorString.has_value() ? selectorString->c_str() : NULL);
 
-    if ([object respondsToSelector:selector]) {
+#if OO_DEBUG
+    if (const CxxMethod* cxxMethod = CxxMethodNamed(object, selectorString)) {
+        // As the category's method was called: a property-list result as kMethodTypePListVoid's
+        // (no name in the table ends in "_bool"), a void method leaves the result alone.
+        if (cxxMethod->pListVoid != nullptr)
+            result = cxxMethod->pListVoid();
+        else
+            cxxMethod->voidVoid();
+        if (!result.isNull())
+            *outResult = OOJSValueFromPList(context, result);
+    } else
+#endif
+        if ([object respondsToSelector:selector]) {
         // Validate signature.
         type = GetMethodType(object, selector);
 
@@ -123,6 +171,13 @@ bool OOJSCallObjCObjectMethod(ooscript::Context context, id object, const std::s
             case kMethodTypeObjectObject:
                 // Called by name with the joined string (ADR-0055 item 5); a void method gives null.
                 result = OOCallByName(object, selector, *paramString);
+                break;
+
+            case kMethodTypeColorVoid:
+                // A colour result is its PList::Object node, as the colour's facade's was (bead oo-9ht.1).
+                result = OOColorObjectNode(((ColorReturnMsgSend)method)(object, selector));
+                if (selectorString.has_value() && oo::str::hasSuffix(*selectorString, "_bool"))
+                    result = oo::PList(false); // a colour answered neither -boolValue nor -intValue
                 break;
 
             case kMethodTypeObjectVoid:

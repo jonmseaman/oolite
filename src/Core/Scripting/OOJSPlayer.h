@@ -28,7 +28,7 @@ MA 02110-1301, USA.
 
 #import "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
-@class PlayerEntity;
+class PlayerEntity;
 
 #ifdef __cplusplus
 extern "C" {

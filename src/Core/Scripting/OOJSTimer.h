@@ -5,12 +5,11 @@ OOJSTimer.h
 JavaScript timer class.
 
 C++20 since bead oo-kdyh (proposed ADR-0056; amendment oo-ppc for the binding), converted with
-its superclass OOScriptTimer. cxx::OOJSTimer has no caller outside OOJSTimer.mm, and since bead
-oo-6symp a Timer's private slot holds it (OOJSPrivateObject.h), but Objective-C code still sends
-its facade the JS glue selectors (-oo_jsValueInContext:, -cxx_oo_jsClassName) and the timer queue
-holds the facade, so it keeps an Objective-C facade,
-OOJSTimer+ObjCBridge.h, imported at the end of this header: the facade of the root's peer table,
-of this class, with no ivars (ADR-0056 amendment oo-up4b item 3).
+its superclass OOScriptTimer. OOJSTimer has no caller outside OOJSTimer.mm, and since bead
+oo-6symp a Timer's private slot holds it (OOJSPrivateObject.h). Its own facade was deleted by bead
+oo-9ht.37 (ADR-0056 amendment oo-9ht.37): the timer queue and Objective-C code hold the root's
+OOScriptTimer facade, which answers the JS glue selectors (-oo_jsValueInContext:,
+-cxx_oo_jsClassName) for it and describes it as "<OOJSTimer 0x...>" (className()).
 
 
 Oolite
@@ -41,9 +40,7 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOObjCRef.h"
 #include "ooscript/JSEngine.hpp"
 
-@class OOJSScript;
-
-namespace cxx {
+class OOJSScript;
 
 // A Timer JS object's private slot holds the timer (proposed ADR-0056 amendment oo-6symp).
 class OOJSTimer : public OOScriptTimer, public ::OOJSPrivateObject {
@@ -55,7 +52,8 @@ public:
     ~OOJSTimer() override;
 
     std::optional<std::string> descriptionComponents() const override;
-    std::optional<std::string> oo_jsClassName();
+    std::string className() const override { return "OOJSTimer"; }
+    std::optional<std::string> oo_jsClassName() override;
 
     void timerFired() override;
 
@@ -74,12 +72,10 @@ private:
     ooscript::Value _function = { };
     ooscript::Object _jsThis = { }; // The object that is 'this' in the function call.
 
-    oo::ObjCRef<::OOJSScript*> _owningScript; // a weak reference (-weakRetain)
+    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was -weakRetain)
 
     ooscript::Object _jsSelf = { }; // The JS Timer object proxy for this OOJSTimer.
 };
-
-} // namespace cxx
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,9 +86,5 @@ void InitOOJSTimer(ooscript::Context context, ooscript::Object global);
 #ifdef __cplusplus
 }
 #endif
-
-// Transitional: the Objective-C OOJSTimer facade. Deleted, with namespace cxx above, by the
-// bridge's deletion bead.
-#import "OOJSTimer+ObjCBridge.h"
 
 #endif // OOJSTIMER_H

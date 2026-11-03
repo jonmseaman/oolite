@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #import "OOJSWorldScripts.h"
 #import "OOJSPlayer.h"
 #import "OOJavaScriptEngine.h"
+#import "OOScript.h"
 #import "PlayerEntity.h"
 
 #include "ooscript/JSEngine.hpp"
@@ -99,26 +100,27 @@ static bool WorldScriptsGetProperty(Context cx, Object obj, PropertyId propID, V
 
     PlayerEntity* player = OOPlayerForScripting();
     std::optional<std::string> scriptName;
-    id script = nil;
+    OOScript* script = nullptr;
 
     if (!ooscript::isStringId(jsPropID))
         return YES;
     scriptName = cxx_OOStringFromJSString(context, ooscript::idToString(jsPropID));
 
     if (scriptName.has_value()) {
-        script = nil;
-        for (const auto& [name, scriptRef] : [player cxx_worldScriptsByName]) // the last of a name, as the dictionary kept
+        script = nullptr;
+        const auto worldScripts = (player != nullptr ? player->worldScriptsByName() : std::vector<std::pair<std::string, oo::Ref<OOScript>>>()); // kept while script is used
+        for (const auto& [name, scriptRef] : worldScripts) // the last of a name, as the dictionary kept
         {
-            if (name == *scriptName && scriptRef.get() != nil)
+            if (name == *scriptName && scriptRef.get() != nullptr)
                 script = scriptRef.get();
         }
-        if (script != nil) {
+        if (script != nullptr) {
             /*	If script is an OOJSScript, this should return a JS Script
                     object. For other OOScript subclasses, it will return
                     ooscript::nullValue(). If no script exists, the value will be
                     ooscript::undefinedValue().
             */
-            *jsValue = [script oo_jsValueInContext:context];
+            *jsValue = script->jsValueInContext(context);
         } else {
             *jsValue = ooscript::undefinedValue();
         }
@@ -146,7 +148,8 @@ static bool WorldScriptsEnumerate(Context cx, Object obj)
             we define the value as null here.
     */
 
-    const std::vector<std::string> names = [OOPlayerForScripting() cxx_worldScriptNames];
+    PlayerEntity* player = OOPlayerForScripting();
+    const std::vector<std::string> names = (player != nullptr ? player->worldScriptNames() : std::vector<std::string>());
 
     for (const std::string& name : names) {
         Value nullVal = ooscript::nullValue();

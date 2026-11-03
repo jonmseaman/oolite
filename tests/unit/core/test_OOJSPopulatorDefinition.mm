@@ -21,7 +21,6 @@
 
 #import "OOJSPopulatorDefinition.h"
 #import "OOWeakReference.h"
-#import "OODescription.h"
 #include "ooscript/JSEngine.hpp"
 #include "oofnd/Notification.hpp"
 #include "oofnd/String.hpp"
@@ -35,9 +34,11 @@
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
 
+class OOJSScript;
+
 namespace {
 ooscript::Object sGlobal;
-std::vector<id> sPushed;
+std::vector<OOJSScript *> sPushed;
 int sScriptDepth = 0;
 int sCalls = 0;
 } // namespace
@@ -85,21 +86,41 @@ extern "C" bool VectorToJSValue(ooscript::Context context, Vector vector, ooscri
 
 
 // The script stack: the running script (set by the test) and what was pushed.
-@interface OOJSScript: OOWeakRefObject
-+ (OOJSScript *) currentlyRunningScript;
-+ (void) pushScript:(OOJSScript *)script;
-+ (void) popScript:(OOJSScript *)script;
-@end
-
 namespace {
-OOJSScript *sRunningScript = nil;
+OOJSScript *sRunningScript = nullptr;
 } // namespace
 
-@implementation OOJSScript
-+ (OOJSScript *) currentlyRunningScript  { return sRunningScript; }
-+ (void) pushScript:(OOJSScript *)script  { sPushed.push_back([script weakRefUnderlyingObject]); sScriptDepth++; }
-+ (void) popScript:(OOJSScript *)script  { (void)script; sScriptDepth--; }
-@end
+
+#import "OOScript.h"
+
+
+// OOJSScript (OOJSScript.h), which the code under test calls. Since bead oo-9ht.133 deleted the
+// OOScript root's facade (a script's object since bead oo-9ht.137) a script is the C++ object, so
+// the stand-in is a C++ subclass of OOScript declaring the members that code calls.
+class OOJSScript : public OOScript
+{
+public:
+	static OOJSScript *currentlyRunningScript();
+	static void pushScript(const oo::WeakRef<OOJSScript> &script);
+	static void popScript(OOJSScript *script);
+};
+
+// OOScript's virtual members (OOScript.mm reaches the whole game), for the test's scripts' vtable.
+std::optional<std::string> OOScript::descriptionComponents()	{ return std::nullopt; }
+std::optional<std::string> OOScript::name()					{ return std::nullopt; }
+std::optional<std::string> OOScript::scriptDescription()		{ return std::nullopt; }
+std::optional<std::string> OOScript::version()				{ return std::nullopt; }
+bool OOScript::requiresTickle()								{ return false; }
+void OOScript::runWithTarget(::Entity *)						{}
+bool OOScript::callMethod(ooscript::PropertyId, ooscript::Context, ooscript::Value *, int, ooscript::Value *)	{ return false; }
+std::string OOScript::className() const						{ return "OOScript"; }
+std::string OOScript::description() const						{ return "<OOScript>"; }
+ooscript::Value OOScript::jsValueInContext(ooscript::Context)	{ return ooscript::undefinedValue(); }
+void OOScript::clearJSSelf(ooscript::Object)					{}
+
+OOJSScript *OOJSScript::currentlyRunningScript()  { return sRunningScript; }
+void OOJSScript::pushScript(const oo::WeakRef<OOJSScript> &script)  { sPushed.push_back(script.get()); sScriptDepth++; }
+void OOJSScript::popScript(OOJSScript *script)  { (void)script; sScriptDepth--; }
 
 
 // MARK: The context -------------------------------------------------------------------------------
@@ -149,12 +170,10 @@ OO_TEST(initialState)
 	@autoreleasepool
 	{
 		Context();
-		OOJSPopulatorDefinition *definition = [[[OOJSPopulatorDefinition alloc] init] autorelease];
-		OO_CHECK(definition != nil);
-		OO_CHECK(ooscript::isUndefined([definition callback]));
-		OO_CHECK([definition callbackThis] == NULL);
-		OO_CHECK([definition isKindOfClass:[OOWeakRefObject class]]);
-		OO_CHECK(oo::DescriptionOf(definition).find("OOJSPopulatorDefinition") != std::string::npos);
+		const oo::Ref<OOJSPopulatorDefinition> definition = oo::makeRef<OOJSPopulatorDefinition>();
+		OO_CHECK(definition.get() != nullptr);
+		OO_CHECK(ooscript::isUndefined(definition->callback()));
+		OO_CHECK(definition->callbackThis() == NULL);
 	}
 }
 
@@ -163,38 +182,38 @@ OO_TEST(runCallback)
 {
 	@autoreleasepool
 	{
-		OOJSScript *owner = [[[OOJSScript alloc] init] autorelease];
-		sRunningScript = owner;
-		OOJSPopulatorDefinition *definition = [[[OOJSPopulatorDefinition alloc] init] autorelease];
-		sRunningScript = nil;
+		const oo::Ref<OOJSScript> owner = oo::makeRef<OOJSScript>();
+		sRunningScript = owner.get();
+		const oo::Ref<OOJSPopulatorDefinition> definition = oo::makeRef<OOJSPopulatorDefinition>();
+		sRunningScript = nullptr;
 
 		// Neither the function nor `this` has another reference: the definition keeps them alive.
-		[definition setCallback:Evaluate("(function (where) { globalThis.ran = this.tag + ':' + where.join(); })")];
-		[definition setCallbackThis:ooscript::toObject(Evaluate("({ tag: 'me' })"))];
-		OO_CHECK(ooscript::isObject([definition callback]));
-		OO_CHECK([definition callbackThis] != NULL);
+		definition->setCallback(Evaluate("(function (where) { globalThis.ran = this.tag + ':' + where.join(); })"));
+		definition->setCallbackThis(ooscript::toObject(Evaluate("({ tag: 'me' })")));
+		OO_CHECK(ooscript::isObject(definition->callback()));
+		OO_CHECK(definition->callbackThis() != NULL);
 		ooscript::gc(Context());
 
 		sPushed.clear();
 		sCalls = 0;
-		[definition runPopulatorCallback:make_HPvector(1, 2.5, -3)];
+		definition->runPopulatorCallback(make_HPvector(1, 2.5, -3));
 		OO_CHECK_EQ(String(Evaluate("globalThis.ran")), "me:1,2.5,-3");
 		OO_CHECK_EQ(sCalls, 1);
 		OO_CHECK_EQ(sScriptDepth, 0);
-		OO_CHECK(sPushed.size() == 1 && sPushed[0] == owner);	// the script that made it
+		OO_CHECK(sPushed.size() == 1 && sPushed[0] == owner.get());	// the script that made it
 
 		// Replacing the callback: the new one runs.
-		[definition setCallback:Evaluate("(function () { globalThis.ran = 'second'; })")];
-		[definition runPopulatorCallback:make_HPvector(0, 0, 0)];
+		definition->setCallback(Evaluate("(function () { globalThis.ran = 'second'; })"));
+		definition->runPopulatorCallback(make_HPvector(0, 0, 0));
 		OO_CHECK_EQ(String(Evaluate("globalThis.ran")), "second");
 
 		// A definition made with no running script pushes nil.
-		OOJSPopulatorDefinition *orphan = [[[OOJSPopulatorDefinition alloc] init] autorelease];
-		[orphan setCallback:Evaluate("(function () { globalThis.ran = 'orphan'; })")];
+		const oo::Ref<OOJSPopulatorDefinition> orphan = oo::makeRef<OOJSPopulatorDefinition>();
+		orphan->setCallback(Evaluate("(function () { globalThis.ran = 'orphan'; })"));
 		sPushed.clear();
-		[orphan runPopulatorCallback:make_HPvector(0, 0, 0)];
+		orphan->runPopulatorCallback(make_HPvector(0, 0, 0));
 		OO_CHECK_EQ(String(Evaluate("globalThis.ran")), "orphan");
-		OO_CHECK(sPushed.size() == 1 && sPushed[0] == nil);
+		OO_CHECK(sPushed.size() == 1 && sPushed[0] == nullptr);
 	}
 }
 
@@ -203,12 +222,12 @@ OO_TEST(engineReset)
 {
 	@autoreleasepool
 	{
-		OOJSPopulatorDefinition *definition = [[[OOJSPopulatorDefinition alloc] init] autorelease];
-		[definition setCallback:Evaluate("(function () {})")];
-		[definition setCallbackThis:ooscript::toObject(Evaluate("({})"))];
+		const oo::Ref<OOJSPopulatorDefinition> definition = oo::makeRef<OOJSPopulatorDefinition>();
+		definition->setCallback(Evaluate("(function () {})"));
+		definition->setCallbackThis(ooscript::toObject(Evaluate("({})")));
 		oo::NotificationCenter::defaultCenter().post(kOOJavaScriptEngineWillResetNotificationName, [OOJavaScriptEngine sharedEngine]);
-		OO_CHECK(ooscript::isUndefined([definition callback]));
-		OO_CHECK([definition callbackThis] == NULL);
+		OO_CHECK(ooscript::isUndefined(definition->callback()));
+		OO_CHECK(definition->callbackThis() == NULL);
 	}
 	// A definition that is gone no longer observes: another reset is harmless.
 	oo::NotificationCenter::defaultCenter().post(kOOJavaScriptEngineWillResetNotificationName, [OOJavaScriptEngine sharedEngine]);
@@ -218,40 +237,24 @@ OO_TEST(engineReset)
 
 OO_TEST(weakReference)
 {
-	id reference = nil;
-	@autoreleasepool
+	oo::WeakRef<OOJSPopulatorDefinition> reference;
 	{
-		OOJSPopulatorDefinition *definition = [[OOJSPopulatorDefinition alloc] init];
-		reference = [definition weakRetain];
-		OO_CHECK([reference weakRefUnderlyingObject] == definition);
-		[definition release];
+		oo::Ref<OOJSPopulatorDefinition> definition = oo::makeRef<OOJSPopulatorDefinition>();
+		reference = definition;
+		OO_CHECK(reference.lock().get() == definition.get());
 	}
-	OO_CHECK([reference weakRefUnderlyingObject] == nil);
-	[reference release];
+	OO_CHECK(!reference.lock());
 }
 
 
-OO_TEST(facade)
+OO_TEST(plistCarrier)
 {
-	@autoreleasepool
-	{
-		OOJSPopulatorDefinition *facade = [[[OOJSPopulatorDefinition alloc] init] autorelease];
-		cxx::OOJSPopulatorDefinition *definition = oo::ToCxx(facade);
-		OO_CHECK(definition != nullptr);
-		OO_CHECK(oo::ToObjC(definition) == facade);
-		OO_CHECK(oo::ToCxx(static_cast<OOJSPopulatorDefinition *>(nil)) == nullptr);
-
-		// The facade forwards: what the C++ object holds is what the facade answers.
-		definition->setCallback(Evaluate("(function () {})"));
-		OO_CHECK(ooscript::isObject([facade callback]));
-		definition->setCallback(ooscript::undefinedValue());
-		OO_CHECK(ooscript::isUndefined([facade callback]));
-
-		// ToObjC never makes a facade: a C++ definition with none answers nil.
-		const oo::Ref<cxx::OOJSPopulatorDefinition> bare = oo::makeRef<cxx::OOJSPopulatorDefinition>();
-		OO_CHECK(oo::ToObjC(bare.get()) == nil);
-		OO_CHECK(ooscript::isUndefined(bare->callback()));
-	}
+	const oo::Ref<OOJSPopulatorDefinition> definition = oo::makeRef<OOJSPopulatorDefinition>();
+	const oo::PList node = OOJSPopulatorDefinitionToPList(definition);
+	OO_CHECK(node.isObject());
+	OO_CHECK(OOJSPopulatorDefinitionIn(node) == definition.get());
+	OO_CHECK(OOJSPopulatorDefinitionIn(oo::PList()) == nullptr);
+	OO_CHECK(OOJSPopulatorDefinitionToPList(nullptr).isNull());
 }
 
 

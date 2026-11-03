@@ -56,19 +56,17 @@ namespace {
 static inline Object* OOJSFOBJP(ooscript::Object* o) { return reinterpret_cast<Object*>(o); }
 } // namespace
 
-/*	C++20 since bead oo-xg7g (proposed ADR-0056 amendment oo-o89): cxx::OOJSGuiScreenKeyDefinition. -init after
+/*	C++20 since bead oo-xg7g (proposed ADR-0056 amendment oo-o89): OOJSGuiScreenKeyDefinition. -init after
         [super init] is the constructor, -dealloc the destructor; the engine, the script stack and the
         owning script's weak reference are Objective-C and are messaged as before.
 */
-
-namespace cxx {
 
 OOJSGuiScreenKeyDefinition::OOJSGuiScreenKeyDefinition()
 {
     _callback = ooscript::undefinedValue();
     _callbackThis = NULL;
 
-    _owningScript = oo::adoptObjC(static_cast<::OOJSScript*>([[::OOJSScript currentlyRunningScript] weakRetain]));
+    _owningScript = OOJSScript::currentlyRunningScript();
 
     oo::NotificationCenter::defaultCenter().addObserver(this, kOOJavaScriptEngineWillResetNotificationName,
         [::OOJavaScriptEngine sharedEngine],
@@ -153,8 +151,8 @@ void OOJSGuiScreenKeyDefinition::runCallback(const std::string& key)
 
     ooscript::Value cKey = OOJSValueFromPList(context, oo::PList(key));
 
-    const oo::ObjCRef<::OOJSScript*> owner = _owningScript; // local copy needed
-    [::OOJSScript pushScript:owner.get()];
+    const oo::WeakRef<OOJSScript> owner = _owningScript; // local copy needed
+    OOJSScript::pushScript(owner);
 
     [engine callJSFunction:_callback
                  forObject:_callbackThis
@@ -162,7 +160,7 @@ void OOJSGuiScreenKeyDefinition::runCallback(const std::string& key)
                       argv:&cKey
                     result:&rval];
 
-    [::OOJSScript popScript:owner.get()];
+    OOJSScript::popScript(owner.get());
 
     OOJSRelinquishContext(context);
 }
@@ -176,5 +174,3 @@ OOComparisonResult OOJSGuiScreenKeyDefinition::interfaceCompare(OOJSGuiScreenKey
     int order = oo::str::caseInsensitiveCompare(*_name, ((other != nullptr) ? other->name() : std::nullopt).value_or(std::string()));
     return (order < 0) ? OOOrderedAscending : ((order > 0) ? OOOrderedDescending : OOOrderedSame);
 }
-
-} // namespace cxx

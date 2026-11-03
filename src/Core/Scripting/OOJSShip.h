@@ -29,7 +29,7 @@ MA 02110-1301, USA.
 #import "OOFoundation.h"
 #import "ShipEntity.h"
 #include "ooscript/JSEngine.hpp"
-@class ShipEntity;
+class ShipEntity; // C++ since bead oo-9ht.144
 
 #ifdef __cplusplus
 extern "C" {

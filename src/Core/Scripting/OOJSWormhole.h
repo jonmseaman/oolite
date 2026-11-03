@@ -28,7 +28,7 @@ MA 02110-1301, USA.
 
 #import "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
-@class WormholeEntity;
+class WormholeEntity; // C++ since bead oo-9ht.112
 
 #ifdef __cplusplus
 extern "C" {

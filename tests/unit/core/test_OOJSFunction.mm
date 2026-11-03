@@ -115,15 +115,21 @@ void OOJSStopTimeLimiter(void)  { sLimiterDepth--; }
 @end
 
 
-@interface OOJSScript: OOObject
-+ (void) pushScript:(OOJSScript *)script;
-+ (void) popScript:(OOJSScript *)script;
-@end
+#import "OOScript.h"
 
-@implementation OOJSScript
-+ (void) pushScript:(OOJSScript *)script  { (void)script; sScriptDepth++; sScriptPushes++; }
-+ (void) popScript:(OOJSScript *)script  { (void)script; sScriptDepth--; }
-@end
+
+// OOJSScript (OOJSScript.h), which the code under test calls. Since bead oo-9ht.133 deleted the
+// OOScript root's facade (a script's object since bead oo-9ht.137) a script is the C++ object, so
+// the stand-in is a C++ subclass of OOScript declaring the members that code calls.
+class OOJSScript : public OOScript
+{
+public:
+	static void pushScript(OOJSScript *script);
+	static void popScript(OOJSScript *script);
+};
+
+void OOJSScript::pushScript(OOJSScript *script)  { (void)script; sScriptDepth++; sScriptPushes++; }
+void OOJSScript::popScript(OOJSScript *script)  { (void)script; sScriptDepth--; }
 
 
 // MARK: The context -------------------------------------------------------------------------------

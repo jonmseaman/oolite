@@ -136,26 +136,82 @@ extern "C" void OOJSUnreachable(const char *function, const char *, unsigned)
 
 
 // The ship and player classes, as far as the call sees them: a ship becomes the player's script
-// target.
-@interface ShipEntity: OOObject
-@end
+// target. The ship is C++ since bead oo-9ht.144 deleted the Objective-C ship: a ship's object is the
+// root's, which holds the C++ part (oo::ToCxx reads it); declared as Entity.h and ShipEntity.h
+// declare them (the test imports neither).
+namespace cxx {
+class Entity : public oo::RefCounted
+{
+public:
+	virtual ~Entity();
+};
+}	// namespace cxx
 
-@implementation ShipEntity
-@end
-
-@interface PlayerEntity: ShipEntity
+@interface Entity: OOObject
 {
 @public
-	id scriptTarget;
+	oo::Ref<cxx::Entity> _cxxEntity;
 }
-- (void) setScriptTarget:(id)target;
 @end
 
-@implementation PlayerEntity
-- (void) setScriptTarget:(id)target  { scriptTarget = target; }
+@implementation Entity
 @end
 
-PlayerEntity *gOOPlayer = nil;
+class ShipEntity : public cxx::Entity
+{
+};
+
+cxx::Entity::~Entity() = default;
+
+// The player is C++ since bead oo-9ht.177 deleted its Objective-C class: the C++ player as far as
+// the call sees it (declared as PlayerEntity.h declares it; the test imports no game header that
+// defines the class) and its Objective-C object, a ship (the ship's facade in the game), which
+// oo::ToObjC answers.
+@interface TestPlayerObject: Entity
+@end
+
+@implementation TestPlayerObject
+@end
+
+class PlayerEntity : public ShipEntity
+{
+public:
+	void setScriptTarget(::ShipEntity *target);
+#if OO_DEBUG
+	// The statistics members, which callObjC's name table calls by name (bead oo-9ht.15), as far
+	// as the table sees them: each records its call and answers a marker.
+	static oo::PList reportJSVectorStatistics();
+	static void clearJSVectorStatistics();
+	static oo::PList reportJSQuaternionStatistics();
+	static void clearJSQuaternionStatistics();
+#endif
+
+	::ShipEntity *scriptTarget = nullptr;
+};
+
+void PlayerEntity::setScriptTarget(::ShipEntity *target)  { scriptTarget = target; }
+
+PlayerEntity *gOOPlayer = nullptr;
+TestPlayerObject *sPlayerObject = nil;	// the player's Objective-C object
+
+@class Entity;
+namespace cxx { class Entity; }
+namespace oo {
+::Entity *ToObjC(cxx::Entity *entity)  { return entity != nullptr ? (::Entity *)sPlayerObject : nil; }	// only the player crosses
+}
+
+
+#if OO_DEBUG
+
+namespace {
+std::vector<std::string> sStatisticsCalls;
+}	// namespace
+
+oo::PList PlayerEntity::reportJSVectorStatistics()		{ sStatisticsCalls.push_back("reportJSVectorStatistics"); return oo::PList(std::string("vector statistics")); }
+void PlayerEntity::clearJSVectorStatistics()			{ sStatisticsCalls.push_back("clearJSVectorStatistics"); }
+oo::PList PlayerEntity::reportJSQuaternionStatistics()	{ sStatisticsCalls.push_back("reportJSQuaternionStatistics"); return oo::PList(std::string("quaternion statistics")); }
+void PlayerEntity::clearJSQuaternionStatistics()		{ sStatisticsCalls.push_back("clearJSQuaternionStatistics"); }
+#endif
 
 
 // MARK: The object called -------------------------------------------------------------------------
@@ -219,11 +275,17 @@ PlayerEntity *gOOPlayer = nil;
 @end
 
 
-@interface TestShip: ShipEntity
+@interface TestShip: Entity
 - (int) answer;
 @end
 
 @implementation TestShip
+// Every test ship has its C++ part (the ship).
+- (id) init
+{
+	if ((self = [super init]))  _cxxEntity = oo::makeRef<ShipEntity>();
+	return self;
+}
 - (int) answer  { return 1; }
 @end
 
@@ -240,7 +302,10 @@ ooscript::Context Context()
 		sContext = ooscript::newContext(runtime, 8192);
 		ooscript::beginRequest(sContext);
 		ooscript::initStandardClasses(sContext, ooscript::getGlobalObject(sContext));
-		gOOPlayer = [[PlayerEntity alloc] init];
+		oo::Ref<PlayerEntity> player = oo::makeRef<PlayerEntity>();
+		gOOPlayer = player.get();	// never deleted: its object holds it
+		sPlayerObject = [[TestPlayerObject alloc] init];
+		sPlayerObject->_cxxEntity = player;
 	}
 	return sContext;
 }
@@ -350,14 +415,48 @@ OO_TEST(shipBecomesScriptTarget)
 	{
 		Context();
 		TestShip *ship = [[[TestShip alloc] init] autorelease];
-		gOOPlayer->scriptTarget = nil;
+		gOOPlayer->scriptTarget = nullptr;
 		OO_CHECK_EQ(Call(ship, "answer"), "1");
-		OO_CHECK(gOOPlayer->scriptTarget == ship);
+		OO_CHECK(gOOPlayer->scriptTarget == ship->_cxxEntity.get());
 		TestTarget *target = [[[TestTarget alloc] init] autorelease];
 		OO_CHECK_EQ(Call(target, "answer"), "42");
-		OO_CHECK(gOOPlayer->scriptTarget == ship);	// not a ship: unchanged
+		OO_CHECK(gOOPlayer->scriptTarget == ship->_cxxEntity.get());	// not a ship: unchanged
 	}
 }
+
+
+#if OO_DEBUG
+// The player's conversion statistics by name (PS.callObjC("reportJSVectorStatistics")): the
+// categories' selectors, now C++ members reached through callObjC's name table (bead oo-9ht.15),
+// with the categories' signatures; only the player answers them.
+OO_TEST(playerStatisticsByName)
+{
+	@autoreleasepool
+	{
+		Context();
+		sStatisticsCalls.clear();
+		OO_CHECK_EQ(Call(sPlayerObject, "reportJSVectorStatistics"), "vector statistics");
+		OO_CHECK_EQ(Call(sPlayerObject, "clearJSVectorStatistics"), "<unchanged>");	// void
+		OO_CHECK_EQ(Call(sPlayerObject, "reportJSQuaternionStatistics"), "quaternion statistics");
+		OO_CHECK_EQ(Call(sPlayerObject, { StringValue("clearJSQuaternionStatistics"), StringValue("x") }), "<unchanged>");	// parameters ignored
+		OO_CHECK_EQ(sStatisticsCalls.size(), 4u);
+		if (sStatisticsCalls.size() == 4)
+		{
+			OO_CHECK_EQ(sStatisticsCalls[0], "reportJSVectorStatistics");
+			OO_CHECK_EQ(sStatisticsCalls[1], "clearJSVectorStatistics");
+			OO_CHECK_EQ(sStatisticsCalls[2], "reportJSQuaternionStatistics");
+			OO_CHECK_EQ(sStatisticsCalls[3], "clearJSQuaternionStatistics");
+		}
+		OO_CHECK(gOOPlayer->scriptTarget == gOOPlayer);	// the player is a ship: its own script target
+
+		TestShip *ship = [[[TestShip alloc] init] autorelease];
+		OO_CHECK(Call(ship, "reportJSVectorStatistics").find("> does not respond to method reportJSVectorStatistics.") != std::string::npos);
+		TestTarget *target = [[[TestTarget alloc] init] autorelease];
+		OO_CHECK(Call(target, "clearJSQuaternionStatistics").find("> does not respond to method clearJSQuaternionStatistics.") != std::string::npos);
+		OO_CHECK_EQ(sStatisticsCalls.size(), 4u);
+	}
+}
+#endif
 
 #else
 
