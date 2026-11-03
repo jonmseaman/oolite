@@ -24,6 +24,7 @@ MA 02110-1301, USA.
 #import "OOJSFlasher.h"
 #import "EntityOOJavaScriptExtensions.h"
 #import "OOFlasherEntity.h"
+#import "OOFoundationBridge.h"
 #import "OOJSEntity.h"
 #import "OOJSVector.h"
 #import "OOJavaScriptEngine.h"
@@ -61,6 +62,22 @@ static BOOL JSFlasherGetFlasherEntity(ooscript::Context context, ooscript::Objec
 } // namespace
 
 namespace {
+
+namespace {
+
+    // A colour's components as its -normalizedArray gave them to JavaScript: floats, null for no colour.
+    oo::PList NormalizedColorComponents(OOColor* color)
+    {
+        if (color == nil)
+            return oo::PList();
+        oo::PList::Array components;
+        for (float component : [color cxx_normalizedArray])
+            components.push_back(oo::PList::singleReal(component));
+        return oo::PList(std::move(components));
+    }
+
+} // namespace
+
 static bool FlasherGetProperty(Context cx, Object obj, PropertyId propID, Value* value);
 } // namespace
 namespace {
@@ -180,9 +197,9 @@ static BOOL JSFlasherGetFlasherEntity(ooscript::Context context, ooscript::Objec
     *outPrototype = sFlasherPrototype;
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_oo_jsClassName
 {
-    return @"Flasher";
+    return std::string("Flasher");
 }
 
 - (BOOL)isVisibleToScripts
@@ -220,7 +237,7 @@ static bool FlasherGetProperty(Context cx, Object obj, PropertyId propID, Value*
         return YES;
 
     case kFlasher_color:
-        result = [[entity color] normalizedArray];
+        result = oo::ObjectFromPList(NormalizedColorComponents([entity color]));
         break;
 
     case kFlasher_frequency:
@@ -278,7 +295,7 @@ static bool FlasherSetProperty(Context cx, Object obj, PropertyId propID, bool /
         break;
 
     case kFlasher_color:
-        colorForScript = [OOColor colorWithDescription:OOJSNativeObjectFromJSValue(context, *value_raw)];
+        colorForScript = [OOColor colorWithDescription:oo::ObjectFromPList(cxx_OOJSPListFromJSValue(context, *value_raw))];
         if (colorForScript != nil || ooscript::isNull(*value_raw)) {
             [entity setColor:colorForScript];
             return YES;

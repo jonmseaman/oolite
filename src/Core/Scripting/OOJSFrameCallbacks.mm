@@ -203,7 +203,7 @@ static bool GlobalAddFrameCallback(ooscript::Context context, ooscript::CallArgs
     // Get callback argument and verify that it's a function.
     ooscript::Value callback = OOJS_ARGV[0];
     if (EXPECT_NOT(oojsArgs.count() < 1 || !OOJSValueIsFunction(context, callback))) {
-        OOJSReportBadArguments(context, nil, @"addFrameCallback", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"function");
+        cxx_OOJSReportBadArguments(context, std::nullopt, "addFrameCallback", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "function");
         return NO;
     }
 
@@ -215,7 +215,7 @@ static bool GlobalAddFrameCallback(ooscript::Context context, ooscript::CallArgs
         // Add to list immediately.
         std::optional<std::string> errorString;
         if (EXPECT_NOT(!AddCallback(context, callback, trackingID, &errorString))) {
-            OOJSReportError(context, @"%@", oo::NSStringOrNil(errorString));
+            cxx_OOJSReportError(context, "%s", (errorString ? errorString->c_str() : "(null)"));
             return NO;
         }
     } else {
@@ -237,14 +237,14 @@ static bool GlobalRemoveFrameCallback(ooscript::Context context, ooscript::CallA
     // Get tracking ID argument.
     uint32_t trackingID;
     if (EXPECT_NOT(oojsArgs.count() < 1 || !ooscript::valueToECMAUint32(context, OOJS_ARGV[0], &trackingID))) {
-        OOJSReportBadArguments(context, nil, @"removeFrameCallback", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"frame callback tracking ID");
+        cxx_OOJSReportBadArguments(context, std::nullopt, "removeFrameCallback", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "frame callback tracking ID");
         return NO;
     }
 
     if (EXPECT(!sRunning)) {
         // Remove it.
         if (EXPECT_NOT(!RemoveCallbackWithTrackingID(context, trackingID))) {
-            OOJSReportWarning(context, @"removeFrameCallback(): invalid tracking ID.");
+            cxx_OOJSReportWarning(context, "removeFrameCallback(): invalid tracking ID.");
         }
     } else {
         // Defer mutations during callback invocation.
@@ -263,7 +263,7 @@ static bool GlobalIsValidFrameCallback(ooscript::Context context, ooscript::Call
     OOJS_NATIVE_ENTER(context)
 
     if (EXPECT_NOT(oojsArgs.count() < 1)) {
-        OOJSReportBadArguments(context, nil, @"isValidFrameCallback", 0, OOJS_ARGV, nil, @"frame callback tracking ID");
+        cxx_OOJSReportBadArguments(context, std::nullopt, "isValidFrameCallback", 0, OOJS_ARGV, std::nullopt, "frame callback tracking ID");
         return NO;
     }
 

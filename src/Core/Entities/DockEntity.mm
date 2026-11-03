@@ -152,13 +152,15 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
         [player getDockingClearanceStatus] >= DOCKING_CLEARANCE_STATUS_REQUESTED) {
         if (HPmagnitude2(HPvector_subtract([player position], [self absolutePositionForSubentity])) > 2250000) // within 1500m of the dock
         {
-            [station sendExpandedMessage:@"[station-docking-clearance-abort-cancelled]" toShip:player];
+            [station cxx_sendExpandedMessage:"[station-docking-clearance-abort-cancelled]" toShip:player];
             [player setDockingClearanceStatus:DOCKING_CLEARANCE_STATUS_NONE];
             [player doScriptEvent:OOJSID("stationWithdrewDockingClearance")];
         } else {
             playerExtraTime = 10; // when very close to the port, give the player a few seconds to react on the abort message.
             int seconds = round(playerExtraTime);
-            [station sendExpandedMessage:OOExpandKey(@"station-docking-clearance-abort-cancelled-in-time", seconds) toShip:player];
+            const std::optional<std::string> message = cxx_OOExpandKey("station-docking-clearance-abort-cancelled-in-time", seconds);
+            if (message.has_value())
+                [station cxx_sendExpandedMessage:*message toShip:player]; // nil: nothing sent, as before
             [player setDockingClearanceStatus:DOCKING_CLEARANCE_STATUS_TIMING_OUT];
         }
     }
@@ -394,7 +396,7 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
     const std::optional<std::string> comms_message = OptionalStringValue(next.find("comms_message"));
 
     if (comms_message) {
-        [station sendExpandedMessage:oo::NSStringFrom(*comms_message) toShip:ship];
+        [station cxx_sendExpandedMessage:*comms_message toShip:ship];
     }
 
     // calculate world coordinates from relative coordinates
@@ -437,7 +439,7 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
     if (next.find("hold_message_given") == nullptr) {
         // COMM-CHATTER
         [UNIVERSE clearPreviousMessage];
-        [self sendExpandedMessage:@"[station-hold-position]" toShip:ship];
+        [self cxx_sendExpandedMessage:"[station-hold-position]" toShip:ship];
         auto stack = shipsOnApproach.find(shipID);
         if (stack != shipsOnApproach.end() && stack->second.size() > 1) {
             if (oo::PList::Dict* held = stack->second[1].getIf<oo::PList::Dict>())
@@ -566,9 +568,9 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
 
     // COMM-CHATTER
     if (station == [UNIVERSE station]) {
-        [station sendExpandedMessage:@"[station-welcome]" toShip:ship];
+        [station cxx_sendExpandedMessage:"[station-welcome]" toShip:ship];
     } else {
-        [station sendExpandedMessage:@"[docking-welcome]" toShip:ship];
+        [station cxx_sendExpandedMessage:"[docking-welcome]" toShip:ship];
     }
 }
 
@@ -594,11 +596,13 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
             [player getDockingClearanceStatus] >= DOCKING_CLEARANCE_STATUS_REQUESTED) {
             if (HPmagnitude2(HPvector_subtract([player position], [self absolutePositionForSubentity])) > 2250000) // within 1500m of the dock
             {
-                [[self parentEntity] sendExpandedMessage:@"[station-docking-clearance-abort-cancelled]" toShip:player];
+                [[self parentEntity] cxx_sendExpandedMessage:"[station-docking-clearance-abort-cancelled]" toShip:player];
                 [player setDockingClearanceStatus:DOCKING_CLEARANCE_STATUS_NONE];
             } else {
                 int seconds = 10; // when very close to the port, give the player a few seconds to react on the abort message.
-                [[self parentEntity] sendExpandedMessage:OOExpandKey(@"station-docking-clearance-abort-cancelled-in-time", seconds) toShip:player];
+                const std::optional<std::string> message = cxx_OOExpandKey("station-docking-clearance-abort-cancelled-in-time", seconds);
+                if (message.has_value())
+                    [[self parentEntity] cxx_sendExpandedMessage:*message toShip:player]; // nil: nothing sent, as before
                 [player setDockingClearanceStatus:DOCKING_CLEARANCE_STATUS_TIMING_OUT];
             }
         }
@@ -731,7 +735,7 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
             if ((0.90 * arbb.max.z + 0.10 * arbb.min.z < 3000) && (dot_product(vk, [ship forwardVector]) < -0.9)) {
                 // player is in docking corridor and facing dock
                 // and within 3km
-                [UNIVERSE addMessage:DESC(@"oolite-station-docking-requires-clearance") forCount:3];
+                [UNIVERSE cxx_addMessage:OO_DESC("oolite-station-docking-requires-clearance") forCount:3];
             }
         }
     }
@@ -895,14 +899,14 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
     [ship resetExhaustPlumes]; // resets stuff for tracking/exhausts
 
     [ship doScriptEvent:OOJSID("shipWillLaunchFromStation") withArgument:station];
-    [station doScriptEvent:OOJSID("stationLaunchedShip") withArgument:ship andReactToAIMessage:@"STATION_LAUNCHED_SHIP"];
+    [station cxx_doScriptEvent:OOJSID("stationLaunchedShip") withArgument:ship andReactToAIMessage:"STATION_LAUNCHED_SHIP"];
 }
 
 - (NSUInteger)countOfShipsInLaunchQueueWithPrimaryRole:(const std::string&)role
 {
     NSUInteger count = 0;
     for (const oo::ObjCRef<ShipEntity*>& ship : launchQueue) {
-        if ([ship.get() hasPrimaryRole:oo::NSStringFrom(role)])
+        if ([ship.get() cxx_hasPrimaryRole:role])
             count++;
     }
     return count;
@@ -1106,11 +1110,11 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
     return YES;
 }
 
-- (id)initWithKey:(id)key definition:(id)dict // shared selector (proposed ADR-0043): an Objective-C string and dictionary
+- (id)cxx_initWithKey:(const std::string&)key definition:(const oo::PList&)dict
 {
     OOJS_PROFILE_ENTER
 
-    self = [super initWithKey:key definition:dict];
+    self = [super cxx_initWithKey:key definition:dict];
     if (self != nil) {
         allow_docking = YES;
         disallowed_docking_collides = NO;
@@ -1148,7 +1152,7 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
     }
 }
 
-- (BOOL)setUpShipFromDictionary:(id)dict // shared selector (proposed ADR-0043): an Objective-C dictionary
+- (BOOL)setUpShipFromDictionary:(const oo::PList&)dict
 {
     OOJS_PROFILE_ENTER
 
@@ -1191,7 +1195,7 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
     [super noteTakingDamage:amount from:entity type:type];
 }
 
-- (void)takeEnergyDamage:(double)amount from:(Entity*)ent becauseOf:(Entity*)other weaponIdentifier:(id)weaponIdentifier // shared selector (proposed ADR-0043)
+- (void)takeEnergyDamage:(double)amount from:(Entity*)ent becauseOf:(Entity*)other weaponIdentifier:(const std::string&)weaponIdentifier
 {
     if (virtual_dock) // can't be damaged
     {

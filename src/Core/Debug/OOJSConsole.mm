@@ -306,11 +306,11 @@ static bool ConsoleGetProperty(ooscript::Context context, ooscript::Object thisO
 #endif
 
     case kConsole_detailLevel:
-        *value = [OOStringFromGraphicsDetail([UNIVERSE detailLevel]) oo_jsValueInContext:context];
+        *value = OOJSValueFromPList(context, oo::PList(cxx_OOStringFromGraphicsDetail([UNIVERSE detailLevel])));
         break;
 
     case kConsole_maximumDetailLevel:
-        *value = [OOStringFromGraphicsDetail([[OOOpenGLExtensionManager sharedManager] maximumDetailLevel]) oo_jsValueInContext:context];
+        *value = OOJSValueFromPList(context, oo::PList(cxx_OOStringFromGraphicsDetail([[OOOpenGLExtensionManager sharedManager] maximumDetailLevel])));
         break;
 
     case kConsole_displayFPS:
@@ -318,7 +318,7 @@ static bool ConsoleGetProperty(ooscript::Context context, ooscript::Object thisO
         break;
 
     case kConsole_platformDescription:
-        *value = OOJSValueFromNativeObject(context, oo::NSStringFrom(OOPlatformDescription()));
+        *value = OOJSValueFromPList(context, oo::PList(OOPlatformDescription()));
         break;
 
     case kConsole_pedanticMode: {
@@ -342,13 +342,15 @@ static bool ConsoleGetProperty(ooscript::Context context, ooscript::Object thisO
         *value = OOJSValueFromBOOL([[OOJavaScriptEngine sharedEngine] dumpStackForWarnings]);
         break;
 
-    case kConsole_glVendorString:
-        *value = OOJSValueFromNativeObject(context, oo::NSStringOrNil([[OOOpenGLExtensionManager sharedManager] vendorString]));
-        break;
+    case kConsole_glVendorString: {
+        const std::optional<std::string> vendor = [[OOOpenGLExtensionManager sharedManager] vendorString];
+        *value = OOJSValueFromPList(context, vendor.has_value() ? oo::PList(*vendor) : oo::PList());
+    } break;
 
-    case kConsole_glRendererString:
-        *value = OOJSValueFromNativeObject(context, oo::NSStringOrNil([[OOOpenGLExtensionManager sharedManager] rendererString]));
-        break;
+    case kConsole_glRendererString: {
+        const std::optional<std::string> renderer = [[OOOpenGLExtensionManager sharedManager] rendererString];
+        *value = OOJSValueFromPList(context, renderer.has_value() ? oo::PList(*renderer) : oo::PList());
+    } break;
 
     case kConsole_glFixedFunctionTextureUnitCount:
         *value = ooscript::int32Value([[OOOpenGLExtensionManager sharedManager] textureUnitCount]);
@@ -406,9 +408,9 @@ static bool ConsoleSetProperty(ooscript::Context context, ooscript::Object thisO
         break;
 #endif
     case kConsole_detailLevel:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, *value));
+        sValue = cxx_OOStringFromJSValue(context, *value);
         OOJS_BEGIN_FULL_NATIVE(context)
-        [UNIVERSE setDetailLevel:OOGraphicsDetailFromString(oo::NSStringOrNil(sValue))];
+        [UNIVERSE setDetailLevel:cxx_OOGraphicsDetailFromString(sValue.value_or(""))];
         OOJS_END_FULL_NATIVE
         break;
 
@@ -512,15 +514,16 @@ static bool ConsoleSettingsDeleteProperty(ooscript::Context context, ooscript::O
 
     if (!ooscript::isStringId(propID))
         return NO;
-    key = oo::OptionalString(OOStringFromJSString(context, ooscript::idToString(propID)));
+    key = cxx_OOStringFromJSString(context, ooscript::idToString(propID));
 
     monitor = OOJSNativeObjectFromJSObject(context, thisObject);
     if (![monitor isKindOfClass:[OODebugMonitor class]]) {
-        OOJSReportError(context, @"Expected OODebugMonitor, got %@ in %s. %@", [monitor class], __PRETTY_FUNCTION__, @"This is an internal error, please report it.");
+        cxx_OOJSReportError(context, "Expected OODebugMonitor, got %s in %s. %s", oo::DescriptionOf([monitor class]).c_str(), __PRETTY_FUNCTION__, "This is an internal error, please report it.");
         return NO;
     }
 
-    [monitor setConfigurationValue:nil forKey:oo::NSStringOrNil(key)];
+    if (key.has_value())
+        [monitor setConfigurationValue:oo::PList() forKey:*key];
     *value = ooscript::trueValue();
     return YES;
 
@@ -538,17 +541,18 @@ static bool ConsoleSettingsGetProperty(ooscript::Context context, ooscript::Obje
     id settingValue = nil;
     id monitor = nil;
 
-    key = oo::OptionalString(OOStringFromJSString(context, ooscript::idToString(propID)));
+    key = cxx_OOStringFromJSString(context, ooscript::idToString(propID));
 
     monitor = OOJSNativeObjectFromJSObject(context, thisObject);
     if (![monitor isKindOfClass:[OODebugMonitor class]]) {
-        OOJSReportError(context, @"Expected OODebugMonitor, got %@ in %s. %@", [monitor class], __PRETTY_FUNCTION__, @"This is an internal error, please report it.");
+        cxx_OOJSReportError(context, "Expected OODebugMonitor, got %s in %s. %s", oo::DescriptionOf([monitor class]).c_str(), __PRETTY_FUNCTION__, "This is an internal error, please report it.");
         return NO;
     }
 
-    settingValue = [monitor configurationValueForKey:oo::NSStringOrNil(key)];
+    const oo::PList setting = key.has_value() ? [monitor configurationValueForKey:*key] : oo::PList();
+    settingValue = oo::ObjectFromPList(setting);
     if (settingValue != NULL)
-        *value = [settingValue oo_jsValueInContext:context];
+        *value = OOJSValueFromPList(context, setting);
     else
         *value = ooscript::undefinedValue();
 
@@ -565,27 +569,27 @@ static bool ConsoleSettingsSetProperty(ooscript::Context context, ooscript::Obje
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> key;
-    id settingValue = nil;
     id monitor = nil;
 
-    key = oo::OptionalString(OOStringFromJSString(context, ooscript::idToString(propID)));
+    key = cxx_OOStringFromJSString(context, ooscript::idToString(propID));
 
     monitor = OOJSNativeObjectFromJSObject(context, thisObject);
     if (![monitor isKindOfClass:[OODebugMonitor class]]) {
-        OOJSReportError(context, @"Expected OODebugMonitor, got %@ in %s. %@", [monitor class], __PRETTY_FUNCTION__, @"This is an internal error, please report it.");
+        cxx_OOJSReportError(context, "Expected OODebugMonitor, got %s in %s. %s", oo::DescriptionOf([monitor class]).c_str(), __PRETTY_FUNCTION__, "This is an internal error, please report it.");
         return NO;
     }
 
     // Not OOJS_BEGIN_FULL_NATIVE() - we use JSAPI while paused.
     OOJSPauseTimeLimiter();
     if (ooscript::isNull(*value) || ooscript::isUndefined(*value)) {
-        [monitor setConfigurationValue:nil forKey:oo::NSStringOrNil(key)];
+        if (key.has_value())
+            [monitor setConfigurationValue:oo::PList() forKey:*key];
     } else {
-        settingValue = OOJSNativeObjectFromJSValue(context, *value);
-        if (settingValue != nil) {
-            [monitor setConfigurationValue:settingValue forKey:oo::NSStringOrNil(key)];
+        const oo::PList settingValue = cxx_OOJSPListFromJSValue(context, *value);
+        if (!settingValue.isNull() && key.has_value()) {
+            [monitor setConfigurationValue:settingValue forKey:*key];
         } else {
-            OOJSReportWarning(context, @"debugConsole.settings: could not convert %@ to native object.", OOStringFromJSValue(context, *value));
+            cxx_OOJSReportWarning(context, "debugConsole.settings: could not convert %s to native object.", cxx_OOStringFromJSValue(context, *value).value_or("(null)").c_str());
         }
     }
     OOJSResumeTimeLimiter();
@@ -613,15 +617,15 @@ static bool ConsoleConsoleMessage(ooscript::Context context, ooscript::CallArgs&
     OOJSPauseTimeLimiter();
     monitor = OOJSNativeObjectOfClassFromJSObject(context, OOJS_THIS, [OODebugMonitor class]);
     if (monitor == nil) {
-        OOJSReportError(context, @"Expected OODebugMonitor, got %@ in %s. %@", [monitor class], __PRETTY_FUNCTION__, @"This is an internal error, please report it.");
+        cxx_OOJSReportError(context, "Expected OODebugMonitor, got %s in %s. %s", oo::DescriptionOf([monitor class]).c_str(), __PRETTY_FUNCTION__, "This is an internal error, please report it.");
         OOJSResumeTimeLimiter();
         return NO;
     }
 
     if (oojsArgs.count() > 0)
-        colorKey = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        colorKey = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (oojsArgs.count() > 1)
-        message = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[1]));
+        message = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
 
     if (oojsArgs.count() > 3) {
         // Attempt to get two numbers, specifying an emphasis range.
@@ -632,7 +636,7 @@ static bool ConsoleConsoleMessage(ooscript::Context context, ooscript::CallArgs&
 
     if (!message.has_value()) {
         if (!colorKey.has_value()) {
-            OOJSReportWarning(context, @"Console.consoleMessage() called with no parameters.");
+            cxx_OOJSReportWarning(context, "Console.consoleMessage() called with no parameters.");
         } else {
             message = colorKey;
             colorKey = "command-result";
@@ -660,7 +664,7 @@ static bool ConsoleClearConsole(ooscript::Context context, ooscript::CallArgs& o
 
     monitor = OOJSNativeObjectFromJSObject(context, OOJS_THIS);
     if (![monitor isKindOfClass:[OODebugMonitor class]]) {
-        OOJSReportError(context, @"Expected OODebugMonitor, got %@ in %s. %@", [monitor class], __PRETTY_FUNCTION__, @"This is an internal error, please report it.");
+        cxx_OOJSReportError(context, "Expected OODebugMonitor, got %s in %s. %s", oo::DescriptionOf([monitor class]).c_str(), __PRETTY_FUNCTION__, "This is an internal error, please report it.");
         return NO;
     }
 
@@ -712,13 +716,13 @@ static bool ConsoleCallObjCMethod(ooscript::Context context, ooscript::CallArgs&
 
     object = OOJSNativeObjectFromJSObject(context, OOJS_THIS);
     if (object == nil) {
-        OOJSReportError(context, @"Attempt to call __callObjCMethod() for non-Objective-C object %@.", OOStringFromJSValueEvenIfNull(context, ooscript::objectValue(OOJS_THIS)));
+        cxx_OOJSReportError(context, "Attempt to call __callObjCMethod() for non-Objective-C object %s.", cxx_OOStringFromJSValueEvenIfNull(context, ooscript::objectValue(OOJS_THIS)).value_or("(null)").c_str());
         return NO;
     }
 
     OOJSPauseTimeLimiter();
     result = ooscript::undefinedValue();
-    OK = OOJSCallObjCObjectMethod(context, object, oo::StdString([object oo_jsClassName]), oojsArgs.count(), OOJS_ARGV, &result);
+    OK = OOJSCallObjCObjectMethod(context, object, [object cxx_oo_jsClassName].value_or(std::string()), oojsArgs.count(), OOJS_ARGV, &result);
     OOJSResumeTimeLimiter();
 
     OOJS_SET_RVAL(result);
@@ -733,7 +737,7 @@ static bool ConsoleSetUpCallObjC(ooscript::Context context, ooscript::CallArgs& 
     OOJS_NATIVE_ENTER(context)
 
     if (EXPECT_NOT(!ooscript::isObjectOrNull(OOJS_ARGV[0]))) {
-        OOJSReportBadArguments(context, @"Console", @"__setUpCallObjC", oojsArgs.count(), OOJS_ARGV, nil, @"Object.prototype");
+        cxx_OOJSReportBadArguments(context, "Console", "__setUpCallObjC", oojsArgs.count(), OOJS_ARGV, std::nullopt, "Object.prototype");
         return NO;
     }
 
@@ -761,7 +765,7 @@ static bool ConsoleIsExecutableJavaScript(ooscript::Context context, ooscript::C
     OOJSPauseTimeLimiter();
 
     // FIXME: this must be possible using just JSAPI functions.
-    const std::string string = oo::StdString(OOStringFromJSValue(context, OOJS_ARGV[1])); // its UTF-8 bytes
+    const std::string string = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]).value_or(std::string()); // its UTF-8 bytes
     result = ooscript::bufferIsCompilableUnit(context, target, string.data(), string.size());
 
     OOJSResumeTimeLimiter();
@@ -778,8 +782,8 @@ static bool ConsoleDisplayMessagesInClass(ooscript::Context context, ooscript::C
 
     std::optional<std::string> messageClass;
 
-    messageClass = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    OOJS_RETURN_BOOL(messageClass.has_value() && OOLogWillDisplayMessagesInClass(oo::NSStringFrom(*messageClass)));
+    messageClass = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+    OOJS_RETURN_BOOL(messageClass.has_value() && oo::log::willDisplay(*messageClass));
 
     OOJS_NATIVE_EXIT
 }
@@ -792,9 +796,9 @@ static bool ConsoleSetDisplayMessagesInClass(ooscript::Context context, ooscript
     std::optional<std::string> messageClass;
     bool flag;
 
-    messageClass = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    messageClass = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (messageClass.has_value() && ooscript::valueToBoolean(context, OOJS_ARGV[1], &flag)) {
-        OOLogSetDisplayMessagesInClass(oo::NSStringFrom(*messageClass), flag);
+        oo::log::logger().setDisplay(*messageClass, flag);
     }
     OOJS_RETURN_VOID;
 
@@ -880,7 +884,7 @@ static void DumpCallback(const char* name, void* rp, ooscript::RootKind type, vo
         value = ooscript::objectValue(*(ooscript::Object*)rp);
     }
 
-    fprintf(data->file, "%s @ %p (%s): %s\n", name, rp, typeString, [OOJSDescribeValue(data->context, value, NO) UTF8String]);
+    fprintf(data->file, "%s @ %p (%s): %s\n", name, rp, typeString, cxx_OOJSDescribeValue(data->context, value, NO).c_str());
 }
 
 static bool ConsoleDumpNamedRoots(ooscript::Context context, ooscript::CallArgs& oojsArgs)
@@ -889,7 +893,8 @@ static bool ConsoleDumpNamedRoots(ooscript::Context context, ooscript::CallArgs&
 
     BOOL OK = NO;
     @autoreleasepool {
-        const std::string path = oo::StdString([[ResourceManager diagnosticFileLocation] stringByAppendingPathComponent:@"js-roots.txt"]);
+        const std::optional<std::string> diagnosticDirectory = [ResourceManager cxx_diagnosticFileLocation];
+        const std::string path = diagnosticDirectory.has_value() ? oo::str::appendingPathComponent(*diagnosticDirectory, "js-roots.txt") : std::string();
         FILE* file = fopen(path.c_str(), "w");
         if (file != NULL) {
             DumpCallbackData data = {
@@ -912,7 +917,8 @@ static bool ConsoleDumpHeap(ooscript::Context context, ooscript::CallArgs& oojsA
     OOJS_NATIVE_ENTER(context)
 
     BOOL OK = NO;
-    const std::string path = oo::StdString([[ResourceManager diagnosticFileLocation] stringByAppendingPathComponent:@"js-heaps.txt"]);
+    const std::optional<std::string> diagnosticDirectory = [ResourceManager cxx_diagnosticFileLocation];
+    const std::string path = diagnosticDirectory.has_value() ? oo::str::appendingPathComponent(*diagnosticDirectory, "js-heaps.txt") : std::string();
     FILE* file = fopen(path.c_str(), "w");
     if (file != NULL) {
         OK = ooscript::dumpHeap(context, file);
@@ -933,7 +939,7 @@ static bool ConsoleProfile(ooscript::Context context, ooscript::CallArgs& oojsAr
     OOJS_NATIVE_ENTER(context)
 
     if (EXPECT_NOT(OOJSIsProfiling())) {
-        OOJSReportError(context, @"Profiling functions may not be called while already profiling.");
+        cxx_OOJSReportError(context, "Profiling functions may not be called while already profiling.");
         return NO;
     }
 
@@ -943,7 +949,7 @@ static bool ConsoleProfile(ooscript::Context context, ooscript::CallArgs& oojsAr
 
         result = PerformProfiling(context, "profile", oojsArgs.count(), OOJS_ARGV, NULL, NO, &profile);
         if (result) {
-            OOJS_SET_RVAL(OOJSValueFromNativeObject(context, [profile description]));
+            OOJS_SET_RVAL(OOJSValueFromPList(context, profile != nil ? oo::PList(oo::DescriptionOf(profile)) : oo::PList()));
         }
     }
 
@@ -958,7 +964,7 @@ static bool ConsoleGetProfile(ooscript::Context context, ooscript::CallArgs& ooj
     OOJS_NATIVE_ENTER(context)
 
     if (EXPECT_NOT(OOJSIsProfiling())) {
-        OOJSReportError(context, @"Profiling functions may not be called while already profiling.");
+        cxx_OOJSReportError(context, "Profiling functions may not be called while already profiling.");
         return NO;
     }
 
@@ -983,7 +989,7 @@ static bool ConsoleTrace(ooscript::Context context, ooscript::CallArgs& oojsArgs
     OOJS_NATIVE_ENTER(context)
 
     if (EXPECT_NOT(OOJSIsProfiling())) {
-        OOJSReportError(context, @"Profiling functions may not be called while already profiling.");
+        cxx_OOJSReportError(context, "Profiling functions may not be called while already profiling.");
         return NO;
     }
 
@@ -1008,7 +1014,7 @@ bool PerformProfiling(ooscript::Context context, const char* nominalFunction, un
     // Get function.
     ooscript::Value function = argv[0];
     if (!OOJSValueIsFunction(context, function)) {
-        OOJSReportBadArguments(context, @"Console", oo::NSStringFrom(nominalFunction), 1, argv, nil, @"function");
+        cxx_OOJSReportBadArguments(context, "Console", nominalFunction, 1, argv, std::nullopt, "function");
         return NO;
     }
 

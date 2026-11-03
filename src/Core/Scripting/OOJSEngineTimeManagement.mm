@@ -26,7 +26,6 @@ SOFTWARE.
 */
 
 #import "OOJSEngineTimeManagement.h"
-#import "OOCollectionExtractors.h"
 #import "OOFoundationBridge.h"
 #import "OOJSScript.h"
 #import "OOLoggingExtended.h"
@@ -219,7 +218,7 @@ static bool OperationCallback(ooscript::Context context)
     if (elapsed <= sLimiterTimeLimit)
         return YES;
 
-    OO_LOG_ERR("script.javaScript.timeLimit", "Script \"{}\" ran for {:g} seconds and has been terminated.", oo::DescriptionOf([[OOJSScript currentlyRunningScript] name]), elapsed);
+    OO_LOG_ERR("script.javaScript.timeLimit", "Script \"{}\" ran for {:g} seconds and has been terminated.", [[OOJSScript currentlyRunningScript] cxx_name].value_or("(null)"), elapsed);
 #ifdef OO_DEBUG_MONITOR_ENABLED
     OOJSDumpStack(context);
 #endif
@@ -423,7 +422,7 @@ static void TraceEnterJSFunction(ooscript::Context context, ooscript::Function f
             }
 
             if (ooscript::frameThis(context, frame, &thisVal)) {
-                name += oo::str::format("this: %s", oo::DescriptionOf(OOJSDescribeValue(context, thisVal, YES)).c_str());
+                name += oo::str::format("this: %s", (cxx_OOJSDescribeValue(context, thisVal, YES)).c_str());
                 first = NO;
             }
 
@@ -439,7 +438,7 @@ static void TraceEnterJSFunction(ooscript::Context context, ooscript::Function f
 
                         ooscript::Value propName = ooscript::undefinedValue();
                         ooscript::idToValue(context, prop->id, &propName);
-                        name += oo::str::format("%s: %s", oo::DescriptionOf(OOStringFromJSValueEvenIfNull(context, propName)).c_str(), oo::DescriptionOf(OOJSDescribeValue(context, prop->value, YES)).c_str());
+                        name += oo::str::format("%s: %s", (cxx_OOStringFromJSValueEvenIfNull(context, propName)).value_or("(null)").c_str(), (cxx_OOJSDescribeValue(context, prop->value, YES)).c_str());
                     }
                 }
             }
@@ -605,7 +604,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 
 @implementation OOTimeProfile
 
-- (id)description // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_description
 {
     double totalTime = [self totalTime];
 
@@ -638,7 +637,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
         }
     }
 
-    return oo::NSStringFrom(result);
+    return result;
 }
 
 - (double)totalTime
@@ -714,7 +713,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 
 - (ooscript::Value)oo_jsValueInContext:(ooscript::Context)context
 {
-    return OOJSValueFromNativeObject(context, oo::ObjectFromPList([self propertyListRepresentation]));
+    return OOJSValueFromPList(context, [self propertyListRepresentation]);
 }
 
 - (oo::PList)propertyListRepresentation
@@ -765,7 +764,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
         std::string funcName;
         ooscript::String jsName = ooscript::getFunctionId(_jsFunction);
         if (jsName != NULL)
-            funcName = oo::StdString(OOStringFromJSString(context, jsName));
+            funcName = cxx_OOStringFromJSString(context, jsName).value_or(std::string());
         else
             funcName = "<anonymous>";
 
@@ -799,11 +798,11 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
     _selfTimeMax = fmax(_selfTimeMax, selfTime);
 }
 
-- (id)description // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_description
 {
     const char* function = _function.has_value() ? _function->c_str() : "(null)"; // as %@ printed nil
     if (_hitCount == 0)
-        return oo::NSStringFrom(oo::str::format("%s: --", function));
+        return oo::str::format("%s: --", function);
 
     // Convert everything to milliseconds.
     float totalTimeSum = _totalTimeSum * 1000.0;
@@ -813,15 +812,15 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 
     if (totalTimeSum == selfTimeSum && totalTimeMax == selfTimeMax) {
         if (_hitCount == 1) {
-            return oo::NSStringFrom(oo::str::format("%s: 1 time, %g ms", function, totalTimeSum));
+            return oo::str::format("%s: 1 time, %g ms", function, totalTimeSum);
         } else {
-            return oo::NSStringFrom(oo::str::format("%s: %lu times, total %g ms, avg %g ms, max %g ms", function, _hitCount, totalTimeSum, totalTimeSum / _hitCount, totalTimeMax));
+            return oo::str::format("%s: %lu times, total %g ms, avg %g ms, max %g ms", function, _hitCount, totalTimeSum, totalTimeSum / _hitCount, totalTimeMax);
         }
     } else {
         if (_hitCount == 1) {
-            return oo::NSStringFrom(oo::str::format("%s: 1 time, %g ms (self %g ms)", function, totalTimeSum, selfTimeSum));
+            return oo::str::format("%s: 1 time, %g ms (self %g ms)", function, totalTimeSum, selfTimeSum);
         } else {
-            return oo::NSStringFrom(oo::str::format("%s: %lu times, total %g ms (self %g ms), avg %g ms (self %g ms), max %g ms, max self %g ms", function, _hitCount, totalTimeSum, selfTimeSum, totalTimeSum / _hitCount, selfTimeSum / _hitCount, totalTimeMax, selfTimeMax));
+            return oo::str::format("%s: %lu times, total %g ms (self %g ms), avg %g ms (self %g ms), max %g ms, max self %g ms", function, _hitCount, totalTimeSum, selfTimeSum, totalTimeSum / _hitCount, selfTimeSum / _hitCount, totalTimeMax, selfTimeMax);
         }
     }
 }
@@ -916,7 +915,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 
 - (ooscript::Value)oo_jsValueInContext:(ooscript::Context)context
 {
-    return OOJSValueFromNativeObject(context, oo::ObjectFromPList([self propertyListRepresentation]));
+    return OOJSValueFromPList(context, [self propertyListRepresentation]);
 }
 
 - (oo::PList)propertyListRepresentation

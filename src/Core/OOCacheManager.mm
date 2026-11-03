@@ -72,7 +72,7 @@ enum {
 namespace {
 static OOCacheManager* sSingleton = nil;
 
-using CacheEntries = std::map<std::string, oo::ObjCRef<id>, std::less<>>;
+using CacheEntries = std::map<std::string, oo::PList, std::less<>>;
 
 // The cache named <name>, or nullptr (no such cache, or no caches at all), as -objectForKey: on
 // the dictionary of caches (or on nil) answered.
@@ -160,9 +160,9 @@ std::optional<std::string> OoliteInfoString(std::string_view key)
 
 // OOObject's -description wraps this as "<OOCacheManager 0x...>{dirty=...}", which is what this
 // class's own -description printed.
-- (id)descriptionComponents
+- (std::optional<std::string>)cxx_descriptionComponents
 {
-    return oo::NSStringFrom(oo::str::format("dirty=%s", [self dirty] ? "yes" : "no"));
+    return oo::str::format("dirty=%s", [self dirty] ? "yes" : "no");
 }
 
 + (OOCacheManager*)sharedCache
@@ -175,16 +175,16 @@ std::optional<std::string> OoliteInfoString(std::string_view key)
     return sSingleton;
 }
 
-- (id)cxx_objectForKey:(const std::string&)inKey inCache:(const std::string&)inCacheKey
+- (oo::PList)cxx_pListForKey:(const std::string&)inKey inCache:(const std::string&)inCacheKey
 {
-    id result = nil;
+    oo::PList result;
 
     CacheEntries* cache = FindCache(_caches, inCacheKey);
     if (cache != nullptr) {
         const auto entry = cache->find(inKey);
         if (entry != cache->end())
-            result = entry->second.get();
-        if (result != nil) {
+            result = entry->second;
+        if (!result.isNull()) {
 #if OO_DEBUG
             OO_LOG("dataCache.retrieve.success", "Retrieved \"{}\" cache object {}.", inCacheKey, inKey);
 #endif
@@ -202,15 +202,27 @@ std::optional<std::string> OoliteInfoString(std::string_view key)
     return result;
 }
 
+- (id)cxx_objectForKey:(const std::string&)inKey inCache:(const std::string&)inCacheKey
+{
+    return oo::ObjectFromPList([self cxx_pListForKey:inKey inCache:inCacheKey]);
+}
+
 - (void)cxx_setObject:(id)inObject forKey:(const std::string&)inKey inCache:(const std::string&)inCacheKey
 {
     OOParameterAssert(inObject != nil);
+
+    [self cxx_setPList:oo::PListFrom(inObject) forKey:inKey inCache:inCacheKey];
+}
+
+- (void)cxx_setPList:(const oo::PList&)inValue forKey:(const std::string&)inKey inCache:(const std::string&)inCacheKey
+{
+    OOParameterAssert(!inValue.isNull());
 
     if (EXPECT_NOT(!_caches.has_value()))
         return;
 
     // A missing cache is created, empty, as before.
-    (*_caches)[inCacheKey][inKey] = oo::ObjCRef<id>(inObject);
+    (*_caches)[inCacheKey][inKey] = inValue;
     _dirty = YES;
 #if OO_DEBUG
     OO_LOG("dataCache.set.success", "Updated entry {} in cache \"{}\".", inKey, inCacheKey);
@@ -296,7 +308,7 @@ std::optional<std::string> OoliteInfoString(std::string_view key)
             ~/Library/Caches has the particular advantage of not being indexed by
             Spotlight or backed up by Time Machine.
     */
-    std::string cachePath = oo::StdString([NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0]);
+    std::string cachePath = oo::fs::utf8String(oo::ResourcePaths::current().cachesDirectory());
     if (![self directoryExists:cachePath create:create])
         return std::nullopt;
 
@@ -334,13 +346,13 @@ std::optional<std::string> OoliteInfoString(std::string_view key)
         const std::string* cacheVersionString = cacheVersion != nullptr ? cacheVersion->getIf<std::string>() : nullptr;
         // -isEqual: between the two; a missing version on either side never matched.
         if (cacheVersionString == nullptr || !ooliteVersion.has_value() || *cacheVersionString != *ooliteVersion) {
-            OO_LOG("dataCache.rebuild", "Data cache version ({}) does not match Oolite version ({}), rebuilding cache.", oo::DescriptionOf(oo::ObjectFromPList(cacheVersion != nullptr ? *cacheVersion : oo::PList())), ooliteVersion.value_or("(null)"));
+            OO_LOG("dataCache.rebuild", "Data cache version ({}) does not match Oolite version ({}), rebuilding cache.", oo::DescriptionOf(cacheVersion != nullptr ? *cacheVersion : oo::PList()), ooliteVersion.value_or("(null)"));
             accept = NO;
         }
 
         const oo::PList* formatVersion = cache.find(kCacheKeyFormatVersion);
         if (accept && (formatVersion != nullptr ? static_cast<unsigned>(formatVersion->uint64Value()) : 0U) != kFormatVersionValue) {
-            OO_LOG("dataCache.rebuild", "Data cache format ({}) is not supported format ({}), rebuilding cache.", oo::DescriptionOf(oo::ObjectFromPList(formatVersion != nullptr ? *formatVersion : oo::PList())), static_cast<std::size_t>(kFormatVersionValue));
+            OO_LOG("dataCache.rebuild", "Data cache format ({}) is not supported format ({}), rebuilding cache.", oo::DescriptionOf(formatVersion != nullptr ? *formatVersion : oo::PList()), static_cast<std::size_t>(kFormatVersionValue));
             accept = NO;
         }
 
@@ -520,22 +532,21 @@ std::optional<std::string> OoliteInfoString(std::string_view key)
         if (cache != nullptr) {
             CacheEntries& entries = (*_caches)[key];
             for (const auto& [entryKey, entryValue] : *cache) {
-                id object = oo::ObjectFromPList(entryValue);
-                if (object != nil)
-                    entries.emplace(entryKey, oo::ObjCRef<id>(object));
+                if (!entryValue.isNull())
+                    entries.emplace(entryKey, entryValue);
             }
         }
     }
 }
 
-// A deep copy of the caches as property-list data (was OODeepCopy of the dictionary of caches).
+// A deep copy of the caches as property-list data (was a deep-copy of the dictionary of caches).
 - (oo::PList)dictionaryOfCaches
 {
     oo::PList::Dict result;
     for (const auto& [cacheKey, cache] : *_caches) {
         oo::PList::Dict entries;
-        for (const auto& [key, object] : cache)
-            entries.emplace(key, oo::PListFrom(object.get()));
+        for (const auto& [key, value] : cache)
+            entries.emplace(key, value);
         result.emplace(cacheKey, oo::PList(std::move(entries)));
     }
     return oo::PList(std::move(result));

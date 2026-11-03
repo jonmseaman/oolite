@@ -37,6 +37,7 @@ SOFTWARE.
 #import "OOStringBridge.h"
 #import "ResourceManager.h"
 
+#include "oofnd/Defaults.hpp"
 #include "oofnd/Log.hpp"
 
 #include <string>
@@ -80,7 +81,7 @@ std::vector<std::pair<std::string, oo::log::RawSetting>> SettingsFromDictionary(
             entries.emplace_back(name, oo::log::RawSetting::boolean(value.boolValue()));
         } else {
             // the text %@ printed
-            entries.emplace_back(name, oo::log::RawSetting::other(oo::DescriptionOf(oo::ObjectFromPList(value))));
+            entries.emplace_back(name, oo::log::RawSetting::other(oo::DescriptionOf(value)));
         }
     }
     return entries;
@@ -133,7 +134,7 @@ void OOLogSetShowFunction(BOOL flag)
     if (flag != options.showFunction) {
         options.showFunction = flag;
         oo::log::logger().setOptions(options);
-        [[NSUserDefaults standardUserDefaults] setBool:flag forKey:@"logging-show-function"];
+        oo::Defaults::standard().setBool("logging-show-function", flag);
     }
 }
 
@@ -150,7 +151,7 @@ void OOLogSetShowFileAndLine(BOOL flag)
     if (flag != options.showFileAndLine) {
         options.showFileAndLine = flag;
         oo::log::logger().setOptions(options);
-        [[NSUserDefaults standardUserDefaults] setBool:flag forKey:@"logging-show-file-and-line"];
+        oo::Defaults::standard().setBool("logging-show-file-and-line", flag);
     }
 }
 
@@ -167,7 +168,7 @@ void OOLogSetShowTime(BOOL flag)
     if (flag != options.showTime) {
         options.showTime = flag;
         oo::log::logger().setOptions(options);
-        [[NSUserDefaults standardUserDefaults] setBool:flag forKey:@"logging-show-time"];
+        oo::Defaults::standard().setBool("logging-show-time", flag);
     }
 }
 
@@ -184,7 +185,7 @@ void OOLogSetShowMessageClass(BOOL flag)
     if (flag != options.showClass) {
         options.showClass = flag;
         oo::log::logger().setOptions(options);
-        [[NSUserDefaults standardUserDefaults] setBool:flag forKey:@"logging-show-class"];
+        oo::Defaults::standard().setBool("logging-show-class", flag);
     }
 }
 
@@ -264,12 +265,12 @@ const char* const cxx_kOOLogUnconvertedNSLog = "unclassified";
 static void LoadExplicitSettings(void)
 {
     // Load display settings.
-    NSUserDefaults* prefs = [NSUserDefaults standardUserDefaults];
+    oo::Defaults& prefs = oo::Defaults::standard();
     oo::log::Options options;
-    options.showFunction = oo::PListView(prefs).get<BOOL>(@"logging-show-function", NO);
-    options.showFileAndLine = oo::PListView(prefs).get<BOOL>(@"logging-show-file-and-line", NO);
-    options.showTime = oo::PListView(prefs).get<BOOL>(@"logging-show-time", YES);
-    options.showClass = oo::PListView(prefs).get<BOOL>(@"logging-show-class", YES);
+    options.showFunction = prefs.object("logging-show-function").isNull() ? NO : prefs.boolForKey("logging-show-function");
+    options.showFileAndLine = prefs.object("logging-show-file-and-line").isNull() ? NO : prefs.boolForKey("logging-show-file-and-line");
+    options.showTime = prefs.object("logging-show-time").isNull() ? YES : prefs.boolForKey("logging-show-time");
+    options.showClass = prefs.object("logging-show-class").isNull() ? YES : prefs.boolForKey("logging-show-class");
     oo::log::logger().setOptions(options);
 
     /*
@@ -283,8 +284,9 @@ static void LoadExplicitSettings(void)
     oo::PList builtInSettings;
     if (builtInPath.has_value()) {
         const std::string path = oo::str::appendingPathComponent(oo::str::appendingPathComponent(*builtInPath, "Config"), "logcontrol.plist");
-        // OODictionaryFromFile (OOPListParsing) is an unmigrated callee: convert at the call.
-        builtInSettings = oo::PListFrom(OODictionaryFromFile(oo::NSStringFrom(path)));
+        builtInSettings = cxx_OOPropertyListFromFile(path);
+        if (!builtInSettings.isDict())
+            builtInSettings = oo::PList(); // a dictionary or nothing, as OODictionaryFromFile answered (its plist.wrongType line, which named the Foundation class, is not kept)
     }
     oo::log::logger().replaceSettings(SettingsFromDictionary(builtInSettings), false);
 

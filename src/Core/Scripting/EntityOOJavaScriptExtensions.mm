@@ -24,6 +24,7 @@ MA 02110-1301, USA.
 
 #import "EntityOOJavaScriptExtensions.h"
 #import "DockEntity.h"
+#import "OOFoundationBridge.h"
 #import "OOJSDock.h"
 #import "OOJSEntity.h"
 #import "OOJSShip.h"
@@ -42,9 +43,9 @@ MA 02110-1301, USA.
     return NO;
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_oo_jsClassName
 {
-    return @"Entity";
+    return std::string("Entity");
 }
 
 - (ooscript::Value)oo_jsValueInContext:(ooscript::Context)context
@@ -112,14 +113,18 @@ MA 02110-1301, USA.
     *outPrototype = JSShipPrototype();
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_oo_jsClassName
 {
-    return @"Ship";
+    return std::string("Ship");
 }
 
-- (id)subEntitiesForScript // shared selector (proposed ADR-0043)
+- (std::vector<oo::ObjCRef<Entity*>>)subEntitiesForScript
 {
-    return [[self shipSubEntityEnumerator] allObjects];
+    std::vector<oo::ObjCRef<Entity*>> result;
+    for (const auto& sub : [self cxx_shipSubEntities]) {
+        result.emplace_back(sub.get());
+    }
+    return result;
 }
 
 - (void)setTargetForScript:(ShipEntity*)target

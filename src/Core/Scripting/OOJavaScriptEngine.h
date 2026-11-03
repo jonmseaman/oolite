@@ -168,7 +168,7 @@ void cxx_OOJSReportBadArguments(ooscript::Context context, const std::optional<s
 */
 OOJS_EXTERN_C void OOJSSetWarningOrErrorStackSkip(unsigned skip);
 
-/*	OOJSArgumentListGetNumber()
+/*	cxx_OOJSArgumentListGetNumber()
 
         Get a single number from an argument list. The optional outConsumed
         argument can be used to find out how many parameters were used (currently,
@@ -192,9 +192,9 @@ OOINLINE ooscript::Value OOJSValueFromBOOL(int b)
     return ooscript::booleanValue(b != NO);
 }
 
-/*	The root-class JS glue for classes rooted on OOObject (ADR-0029). The same methods on the
-        Foundation root class are declared in OOJavaScriptEngine+FoundationBridge.h until
-        gnustep-base goes.
+/*	The root-class JS glue for classes rooted on OOObject (ADR-0029). A Foundation object has
+        none: OOJSValueFromNativeObject() converts it through its property-list form (proposed
+        ADR-0051).
 
         -oo_jsValueInContext:
 
@@ -207,12 +207,11 @@ OOINLINE ooscript::Value OOJSValueFromBOOL(int b)
 
         Requires a request on context.
 
-        -oo_jsDescription
-        -oo_jsDescriptionWithClassName:
-        -oo_jsClassName
+        -cxx_oo_jsDescription
+        -cxx_oo_jsDescriptionWithClassName:
+        -cxx_oo_jsClassName
 
-        See comments for -descriptionComponents in OOFoundation.h. Strings, typed id: the selectors are
-        shared with the Foundation root class and every class that overrides them.
+        They wrap -cxx_descriptionComponents (OODescription.h) as [jsClassName components]. C++ string twins on OOObject.
 
         oo_clearJSSelf:
         This is called by OOJSObjectWrapperFinalize() when a JS object wrapper is
@@ -221,25 +220,37 @@ OOINLINE ooscript::Value OOJSValueFromBOOL(int b)
 @interface OOObject (OOJavaScript)
 
 - (ooscript::Value)oo_jsValueInContext:(ooscript::Context)context;
-- (id)oo_jsDescription; // shared selector (proposed ADR-0043)
-- (id)oo_jsDescriptionWithClassName:(id)className; // shared selector (proposed ADR-0043)
-- (id)oo_jsClassName; // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_oo_jsDescription;
+- (std::optional<std::string>)cxx_oo_jsDescriptionWithClassName:(const std::optional<std::string>&)className;
+- (std::optional<std::string>)cxx_oo_jsClassName;
 - (void)oo_clearJSSelf:(ooscript::Object)selfVal;
 
 @end
 
 /*	OOJSValueFromNativeObject()
         Return a JavaScript value representation of an object, or null if passed
-        nil.
+        nil. An object whose root class is not OOObject (a Foundation object) is
+        converted through oo::PListFrom() and OOJSValueFromPList(), which give what
+        its Foundation JS glue gave; one that is not property-list data gives
+        undefined, as the NSObject glue did (proposed ADR-0051).
 
         Requires a request on context.
 */
-OOINLINE ooscript::Value OOJSValueFromNativeObject(ooscript::Context context, id object)
-{
-    if (object != nil)
-        return [object oo_jsValueInContext:context];
-    return ooscript::nullValue();
-}
+OOJS_EXTERN_C ooscript::Value OOJSValueFromNativeObject(ooscript::Context context, id object);
+
+/*	OOJSValueFromPList()
+        Return the JavaScript value representation of a property list, exactly as
+        OOJSValueFromNativeObject(context, oo::ObjectFromPList(plist)) gave it
+        (proposed ADR-0051): null for a null PList; a bool as the number 1 or 0; an
+        integer as an int32 when it fits, else a double; a real as a double (a
+        single-precision one as the double of its float); a string as a string;
+        data and dates undefined; an array as an Array and a dictionary as an
+        Object (null elements and values dropped, empty keys skipped, key order);
+        a PList::Object node as OOJSValueFromNativeObject() of its object.
+
+        Requires a request on context.
+*/
+ooscript::Value OOJSValueFromPList(ooscript::Context context, const oo::PList& plist);
 
 /*	OOJSObjectFromNativeObject()
         Return a JavaScript object representation of an object, or null if passed
@@ -365,6 +376,22 @@ OOJS_EXTERN_C BOOL JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void*
 // YES for menu-display ships. Parameter: ignored
 OOJS_EXTERN_C BOOL JSEntityIsDemoShipPredicate(Entity* entity, void* parameter);
 
+/*	cxx_OOJSPListFromJSValue(context, value) / cxx_OOJSPListFromJSObject(context, object)
+        The oo::PList form of the native-object family: exactly what oo::PListFrom()
+        made of OOJSNativeObjectFromJSValue()'s result (proposed ADR-0051): null for
+        null, undefined or an unconvertible value; int32 -> signed integer, double
+        -> real, boolean -> bool, string -> string; a JS Array -> array (a null or
+        undefined element -> a PList::Object holding [OONull null]); a plain Object
+        -> dictionary (see cxx_OOJSDictionaryFromJSObject()); an object of a class
+        with a registered converter -> oo::PListFrom() of what the converter
+        returns (a private object -> a PList::Object node holding it). The id
+        functions below return oo::ObjectFromPList() of these.
+
+        These require a request on context.
+*/
+oo::PList cxx_OOJSPListFromJSValue(ooscript::Context context, ooscript::Value value);
+oo::PList cxx_OOJSPListFromJSObject(ooscript::Context context, ooscript::Object object);
+
 // These require a request on context.
 OOJS_EXTERN_C id OOJSNativeObjectFromJSValue(ooscript::Context context, ooscript::Value value);
 OOJS_EXTERN_C id OOJSNativeObjectFromJSObject(ooscript::Context context, ooscript::Object object);
@@ -404,18 +431,17 @@ OOINLINE BOOL OOJSValueIsArray(ooscript::Context context, ooscript::Value value)
         cxx_OOJSDictionaryFromJSObject(context, object)
 
         Converts a JavaScript value to a dictionary by calling
-        OOJSNativeObjectFromJSValue() on each of its values (a live object such as
-        an entity or OONull stays a PList::Object node).
+        cxx_OOJSPListFromJSValue() on each of its values (a live object such as
+        an entity or OONull stays a PList::Object node); a value that converts to
+        null is left out.
 
-        Only enumerable own (i.e., not inherited) properties with string keys are
-        included; an object with an integer-like property gives a null PList, as
-        does a value that is not an object or cannot be enumerated.
+        Only enumerable own (i.e., not inherited) properties are included; an
+        integer-like property is keyed by its decimal text, as JS itself names it
+        (proposed ADR-0051). A value that is not an object or cannot be enumerated
+        gives a null PList. This is also how the native-object family converts a
+        plain JS Object.
 
         Requires a request on context.
-
-        The converter for plain JS Objects that OOJSNativeObjectFromJSValue() uses
-        is the Foundation OOJSDictionaryFromJSObject() in the bridge
-        (OOJavaScriptEngine+FoundationBridge.h), until bead oo-vp0y.
 */
 oo::PList OOJSDictionaryFromJSValue(ooscript::Context context, ooscript::Value value);
 oo::PList cxx_OOJSDictionaryFromJSObject(ooscript::Context context, ooscript::Object object);
@@ -544,21 +570,21 @@ OOJS_EXTERN_C void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass, OOJ
         is provided with debugging information by the OOJavaScriptEngine.
 */
 
-@protocol OOJavaScriptEngineMonitor <NSObject>
+@protocol OOJavaScriptEngineMonitor <OOObject>
 
 // Sent for JS errors or warnings.
-- (oneway void)jsEngine:(in byref OOJavaScriptEngine*)engine
-                context:(in ooscript::Context)context
-                  error:(in ooscript::ErrorReport*)errorReport
-              stackSkip:(in unsigned)stackSkip
-        showingLocation:(in BOOL)showLocation
-            withMessage:(in id)message; // shared selector (proposed ADR-0043): OODebugMonitor implements it with a string
+- (void)jsEngine:(OOJavaScriptEngine*)engine
+            context:(ooscript::Context)context
+              error:(ooscript::ErrorReport*)errorReport
+          stackSkip:(unsigned)stackSkip
+    showingLocation:(BOOL)showLocation
+        withMessage:(const std::string&)message;
 
-// Sent for JS log messages. Note: messageClass will be nil if Log() is used rather than LogWithClass().
-- (oneway void)jsEngine:(in byref OOJavaScriptEngine*)engine
-                context:(in ooscript::Context)context
-             logMessage:(in id)message
-                ofClass:(in id)messageClass; // shared selector (proposed ADR-0043): OODebugMonitor implements it with strings
+// Sent for JS log messages. Note: messageClass is nullopt if Log() is used rather than LogWithClass().
+- (void)jsEngine:(OOJavaScriptEngine*)engine
+         context:(ooscript::Context)context
+      logMessage:(const std::string&)message
+         ofClass:(const std::optional<std::string>&)messageClass;
 
 @end
 
@@ -625,7 +651,7 @@ OOJS_EXTERN_C void OOJSObjectWrapperFinalize(ooscript::Context context, ooscript
         Implementation of toString() for JS classes whose private storage is an
         Objective-C object reference (generally an OOWeakReference).
 
-        Calls -oo_jsDescription and, if that fails, -description.
+        Calls -cxx_oo_jsDescription and, if that fails, -description.
 */
 OOJS_EXTERN_C bool OOJSObjectWrapperToString(ooscript::Context context, ooscript::CallArgs& oojsArgs);
 
@@ -668,6 +694,31 @@ OOJS_EXTERN_C bool OOJSObjectWrapperToString(ooscript::Context context, ooscript
 #define OOJS_RETURN_INT(v) OOJS_RETURN(ooscript::int32Value(v))
 #define OOJS_RETURN_OBJECT(o) OOJS_RETURN(OOJSValueFromNativeObject(context, o))
 
+/*	PList return slots (proposed ADR-0055 item 4). A native returns C++ values as
+        oo::PList, converted by OOJSValueFromPList() (the same JS value
+        OOJSValueFromNativeObject() gave for the Foundation object it replaces):
+
+        OOJS_RETURN_PLIST(plist)            the value of <plist> (null for a null PList)
+        OOJS_RETURN_STRING_OR_NULL(opt)     a std::optional<std::string>: the string,
+                                            or null for nullopt (what nil gave)
+
+        The recipe the chunks follow:
+
+        OOJS_RETURN_OBJECT(oo::NSStringFrom(s))           OOJS_RETURN_PLIST(oo::PList(s))
+        OOJS_RETURN_OBJECT(oo::NSStringOrNil(o))          OOJS_RETURN_STRING_OR_NULL(o)
+        OOJS_RETURN_OBJECT(oo::ObjectFromPList(p))        OOJS_RETURN_PLIST(p)
+        OOJS_RETURN_OBJECT(oo::NSArrayFromObjects(v))     OOJS_RETURN_PLIST(oo::PListFromObjects(v))  (OOObjCPList.h)
+        OOJSValueFromNativeObject(context, oo::ObjectFromPList(p))    OOJSValueFromPList(context, p)
+
+        Exemplar: OOJSObjectWrapperToString() in OOJavaScriptEngine.mm.
+*/
+#define OOJS_RETURN_PLIST(plist) OOJS_RETURN(OOJSValueFromPList(context, (plist)))
+#define OOJS_RETURN_STRING_OR_NULL(opt)                                                                     \
+    do {                                                                                                    \
+        const std::optional<std::string>& oojsOptionalString_ = (opt);                                      \
+        OOJS_RETURN_PLIST(oojsOptionalString_.has_value() ? oo::PList(*oojsOptionalString_) : oo::PList()); \
+    } while (0)
+
 #define OOJS_RETURN_WITH_HELPER(helper, value)       \
     do {                                             \
         ooscript::Value jsresult;                    \
@@ -680,10 +731,3 @@ OOJS_EXTERN_C bool OOJSObjectWrapperToString(ooscript::Context context, ooscript
 #define OOJS_RETURN_HPVECTOR(value) OOJS_RETURN_WITH_HELPER(HPVectorToJSValue, value)
 #define OOJS_RETURN_QUATERNION(value) OOJS_RETURN_WITH_HELPER(QuaternionToJSValue, value)
 #define OOJS_RETURN_DOUBLE(value) OOJS_RETURN_WITH_HELPER(ooscript::newNumberValue, value)
-
-/*	TRANSITIONAL (proposed ADR-0043, "Transitional bridges"): the Foundation-typed API this header
-        declared before its sweep (beads oo-3rb.198 onwards, chunks of oo-rbqc), forwarding to the cxx_
-        functions above, so unmigrated callers compile unchanged. Callers move to the cxx_ API in their
-        own sweep beads; the bridge goes in its own bead.
-*/
-#import "OOJavaScriptEngine+FoundationBridge.h"

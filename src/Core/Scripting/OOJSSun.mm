@@ -24,6 +24,7 @@ MA 02110-1301, USA.
 */
 
 #import "OOJSSun.h"
+#import "OOFoundationBridge.h"
 #import "OOJSEntity.h"
 #import "OOJavaScriptEngine.h"
 
@@ -132,9 +133,9 @@ void InitOOJSSun(ooscript::Context context, ooscript::Object global)
     *outPrototype = sSunPrototype;
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_oo_jsClassName
 {
-    return @"Sun";
+    return std::string("Sun");
 }
 
 @end
@@ -160,7 +161,7 @@ static bool SunGetProperty(Context cx, Object obj, PropertyId propID, Value* val
         return ooscript::newNumberValue(cx, [sun radius], value);
 
     case kSun_name:
-        *value = OOJSValueFromNativeObject(context, [sun name]);
+        *value = OOJSValueFromNativeObject(context, oo::NSStringOrNil([sun cxx_name]));
         return YES;
 
     case kSun_hasGoneNova:

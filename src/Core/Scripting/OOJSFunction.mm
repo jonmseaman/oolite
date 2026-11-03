@@ -46,7 +46,7 @@ MA 02110-1301, USA.
     if ((self = [super init])) {
         _function = function;
         OOJSAddGCObjectRoot(context, (ooscript::Object*)&_function, "OOJSFunction._function");
-        _name = oo::OptionalString(OOStringFromJSString(context, ooscript::getFunctionId(function)));
+        _name = cxx_OOStringFromJSString(context, ooscript::getFunctionId(function));
 
         oo::NotificationCenter::defaultCenter().addObserver(self, kOOJavaScriptEngineWillResetNotificationName,
             [OOJavaScriptEngine sharedEngine],
@@ -136,14 +136,19 @@ MA 02110-1301, USA.
     [super dealloc];
 }
 
-- (id)descriptionComponents // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_descriptionComponents
 {
-    return oo::NSStringFrom(oo::str::format("%s()", _name.value_or("<anonymous>").c_str()));
+    return oo::str::format("%s()", _name.value_or("<anonymous>").c_str());
 }
 
-- (id)name // shared selector (proposed ADR-0043)
+- (id)name // shared selector (Foundation declares -name too; retires with oo-qps)
 {
-    return oo::NSStringOrNil(_name);
+    return oo::NSStringOrNil([self cxx_name]);
+}
+
+- (std::optional<std::string>)cxx_name
+{
+    return _name;
 }
 
 - (ooscript::Function)function
@@ -187,14 +192,14 @@ MA 02110-1301, USA.
     ooscript::Value* argv = argvBuffer.data();
 
     for (i = 0; i < argc; i++) {
-        argv[i] = [arguments[i].get() oo_jsValueInContext:context];
+        argv[i] = arguments[i].get() != nil ? OOJSValueFromNativeObject(context, arguments[i].get()) : ooscript::Value { 0 }; // (a message to nil gave the zero value)
         OOJSAddGCValueRoot(context, &argv[i], "OOJSFunction argv");
     }
 
     ooscript::Object scopeObj = NULL;
     BOOL OK = YES;
     if (jsThis != nil)
-        OK = ooscript::valueToObject(context, [jsThis oo_jsValueInContext:context], &scopeObj);
+        OK = ooscript::valueToObject(context, OOJSValueFromNativeObject(context, jsThis), &scopeObj);
     if (OK)
         OK = [self evaluateWithContext:context
                                  scope:scopeObj
@@ -207,21 +212,6 @@ MA 02110-1301, USA.
     }
 
     return OK;
-}
-
-- (id)evaluateWithContext:(ooscript::Context)context
-                    scope:(id)jsThis
-                arguments:(const std::vector<oo::ObjCRef<id>>&)arguments
-{
-    ooscript::Value result;
-    BOOL OK = [self evaluateWithContext:context
-                                  scope:jsThis
-                              arguments:arguments
-                                 result:&result];
-    if (!OK)
-        return nil;
-
-    return OOJSNativeObjectFromJSValue(context, result);
 }
 
 - (BOOL)evaluatePredicateWithContext:(ooscript::Context)context

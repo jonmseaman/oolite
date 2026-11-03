@@ -373,7 +373,7 @@ static BOOL GetThisQuaternion(ooscript::Context context, ooscript::Object quater
         return YES;
 
     ooscript::Value arg = ooscript::objectValue(quaternionObj);
-    OOJSReportBadArguments(context, @"Quaternion", oo::NSStringFrom(method), 1, &arg, @"Invalid target object", @"Quaternion");
+    cxx_OOJSReportBadArguments(context, "Quaternion", method, 1, &arg, "Invalid target object", "Quaternion");
     return NO;
 }
 } // namespace
@@ -464,9 +464,9 @@ BOOL QuaternionFromArgumentList(ooscript::Context context, const std::string& sc
     if (QuaternionFromArgumentListNoErrorInternal(context, argc, argv, outQuaternion, outConsumed, NO))
         return YES;
     else {
-        OOJSReportBadArguments(context, oo::NSStringFrom(scriptClass), oo::NSStringFrom(function), argc, argv,
-            @"Could not construct quaternion from parameters",
-            @"Quaternion, Entity or four numbers");
+        cxx_OOJSReportBadArguments(context, scriptClass, function, argc, argv,
+            "Could not construct quaternion from parameters",
+            "Quaternion, Entity or four numbers");
         return NO;
     }
 }
@@ -609,9 +609,9 @@ static bool QuaternionConstruct(ooscript::Context context, ooscript::CallArgs& o
     if (oojsArgs.count() != 0) {
         if (EXPECT_NOT(!QuaternionFromArgumentListNoErrorInternal(context, oojsArgs.count(), OOJS_ARGV, &quaternion, NULL, YES))) {
             free(priv);
-            OOJSReportBadArguments(context, NULL, NULL, oojsArgs.count(), OOJS_ARGV,
-                @"Could not construct quaternion from parameters",
-                @"Quaternion, Entity or array of four numbers");
+            cxx_OOJSReportBadArguments(context, std::nullopt, std::nullopt, oojsArgs.count(), OOJS_ARGV,
+                "Could not construct quaternion from parameters",
+                "Quaternion, Entity or array of four numbers");
             return NO;
         }
     }
@@ -733,7 +733,7 @@ static bool QuaternionRotate(ooscript::Context context, ooscript::CallArgs& oojs
     argv += consumed;
     argc -= consumed;
     if (argc > 0) {
-        if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, @"Quaternion", @"rotate", argc, argv, &angle, NULL)))
+        if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion", "rotate", argc, argv, &angle, NULL)))
             return NO;
         quaternion_rotate_about_axis(&thisq, HPVectorToVector(axis), angle);
     }
@@ -757,7 +757,7 @@ static bool QuaternionRotateX(ooscript::Context context, ooscript::CallArgs& ooj
 
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateX")))
         return NO;
-    if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, @"Quaternion", @"rotateX", oojsArgs.count(), OOJS_ARGV, &angle, NULL)))
+    if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion", "rotateX", oojsArgs.count(), OOJS_ARGV, &angle, NULL)))
         return NO;
 
     quaternion_rotate_about_x(&quat, angle);
@@ -780,7 +780,7 @@ static bool QuaternionRotateY(ooscript::Context context, ooscript::CallArgs& ooj
 
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateY")))
         return NO;
-    if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, @"Quaternion", @"rotateY", oojsArgs.count(), OOJS_ARGV, &angle, NULL)))
+    if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion", "rotateY", oojsArgs.count(), OOJS_ARGV, &angle, NULL)))
         return NO;
 
     quaternion_rotate_about_y(&quat, angle);
@@ -803,7 +803,7 @@ static bool QuaternionRotateZ(ooscript::Context context, ooscript::CallArgs& ooj
 
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateZ")))
         return NO;
-    if (EXPECT_NOT(!OOJSArgumentListGetNumber(context, @"Quaternion", @"rotateZ", oojsArgs.count(), OOJS_ARGV, &angle, NULL)))
+    if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion", "rotateZ", oojsArgs.count(), OOJS_ARGV, &angle, NULL)))
         return NO;
 
     quaternion_rotate_about_z(&quat, angle);

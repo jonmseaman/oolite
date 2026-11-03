@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 */
 
 #import "OOJoystickManager.h"
+#import "OOCallByName.h"
 #import "OOFoundationBridge.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Log.hpp"
@@ -221,11 +222,11 @@ static id sSharedStickHandler = nil;
         dict["Type"] = oo::PList("Standard");
     }
     if (axis == AXIS_ROLL) {
-        defaults.setObject(oo::StdString(STICK_ROLL_AXIS_PROFILE_SETTING), oo::PList(std::move(dict)));
+        defaults.setObject(std::string(STICK_ROLL_AXIS_PROFILE_SETTING), oo::PList(std::move(dict)));
     } else if (axis == AXIS_PITCH) {
-        defaults.setObject(oo::StdString(STICK_PITCH_AXIS_PROFILE_SETTING), oo::PList(std::move(dict)));
+        defaults.setObject(std::string(STICK_PITCH_AXIS_PROFILE_SETTING), oo::PList(std::move(dict)));
     } else if (axis == AXIS_YAW) {
-        defaults.setObject(oo::StdString(STICK_YAW_AXIS_PROFILE_SETTING), oo::PList(std::move(dict)));
+        defaults.setObject(std::string(STICK_YAW_AXIS_PROFILE_SETTING), oo::PList(std::move(dict)));
     }
     return;
 }
@@ -238,11 +239,11 @@ static id sSharedStickHandler = nil;
     OOJoystickSplineAxisProfile* spline_profile;
 
     if (axis == AXIS_ROLL) {
-        dict = defaults.object(oo::StdString(STICK_ROLL_AXIS_PROFILE_SETTING));
+        dict = defaults.object(std::string(STICK_ROLL_AXIS_PROFILE_SETTING));
     } else if (axis == AXIS_PITCH) {
-        dict = defaults.object(oo::StdString(STICK_PITCH_AXIS_PROFILE_SETTING));
+        dict = defaults.object(std::string(STICK_PITCH_AXIS_PROFILE_SETTING));
     } else if (axis == AXIS_YAW) {
-        dict = defaults.object(oo::StdString(STICK_YAW_AXIS_PROFILE_SETTING));
+        dict = defaults.object(std::string(STICK_YAW_AXIS_PROFILE_SETTING));
     } else {
         return;
     }
@@ -295,9 +296,9 @@ static id sSharedStickHandler = nil;
         for (j = 0; j < MAX_STICKS; j++) {
             if (axismap[j][i] >= 0) {
                 oo::PList::Dict fnDict;
-                fnDict[oo::StdString(STICK_ISAXIS)] = oo::PList(static_cast<bool>(YES));
-                fnDict[oo::StdString(STICK_NUMBER)] = oo::PList(j);
-                fnDict[oo::StdString(STICK_AXBUT)] = oo::PList(i);
+                fnDict[std::string(STICK_ISAXIS)] = oo::PList(static_cast<bool>(YES));
+                fnDict[std::string(STICK_NUMBER)] = oo::PList(j);
+                fnDict[std::string(STICK_AXBUT)] = oo::PList(i);
                 fnList[ENUMKEY(axismap[j][i])] = oo::PList(std::move(fnDict));
             }
         }
@@ -315,9 +316,9 @@ static id sSharedStickHandler = nil;
         for (j = 0; j < MAX_STICKS; j++) {
             if (buttonmap[j][i] >= 0) {
                 oo::PList::Dict fnDict;
-                fnDict[oo::StdString(STICK_ISAXIS)] = oo::PList(static_cast<bool>(NO));
-                fnDict[oo::StdString(STICK_NUMBER)] = oo::PList(j);
-                fnDict[oo::StdString(STICK_AXBUT)] = oo::PList(i);
+                fnDict[std::string(STICK_ISAXIS)] = oo::PList(static_cast<bool>(NO));
+                fnDict[std::string(STICK_NUMBER)] = oo::PList(j);
+                fnDict[std::string(STICK_AXBUT)] = oo::PList(i);
                 fnList[ENUMKEY(buttonmap[j][i])] = oo::PList(std::move(fnDict));
             }
         }
@@ -327,9 +328,9 @@ static id sSharedStickHandler = nil;
 
 - (void)setFunction:(int)function withDict:(const oo::PList&)stickFn
 {
-    BOOL isAxis = stickFn.get<bool>(oo::StdString(STICK_ISAXIS)) ? YES : NO;
-    int stickNum = stickFn.get<int>(oo::StdString(STICK_NUMBER));
-    int stickAxBt = stickFn.get<int>(oo::StdString(STICK_AXBUT));
+    BOOL isAxis = stickFn.get<bool>(std::string(STICK_ISAXIS)) ? YES : NO;
+    int stickNum = stickFn.get<int>(std::string(STICK_NUMBER));
+    int stickAxBt = stickFn.get<int>(std::string(STICK_AXBUT));
 
     if (isAxis) {
         [self setFunctionForAxis:stickAxBt
@@ -473,11 +474,11 @@ static id sSharedStickHandler = nil;
         // ...then check if axis moved more than AXCBTHRESH - (fix for BUG #17482)
         if (axisvalue > AXCBTHRESH) {
             oo::PList::Dict fnDict;
-            fnDict[oo::StdString(STICK_ISAXIS)] = oo::PList(static_cast<bool>(YES));
-            fnDict[oo::StdString(STICK_NUMBER)] = oo::PList(static_cast<int>(evt->which));
-            fnDict[oo::StdString(STICK_AXBUT)] = oo::PList(static_cast<int>(evt->axis));
+            fnDict[std::string(STICK_ISAXIS)] = oo::PList(static_cast<bool>(YES));
+            fnDict[std::string(STICK_NUMBER)] = oo::PList(static_cast<int>(evt->which));
+            fnDict[std::string(STICK_AXBUT)] = oo::PList(static_cast<int>(evt->axis));
             cbHardware = 0;
-            [cbObject performSelector:cbSelector withObject:oo::ObjectFromPList(oo::PList(std::move(fnDict)))];
+            OOCallByName(cbObject, cbSelector, oo::PList(std::move(fnDict))); // called by name (ADR-0055 item 5)
             cbObject = nil;
         }
 
@@ -530,11 +531,11 @@ static id sSharedStickHandler = nil;
     // Is there a callback we need to make?
     if (cbObject && (cbHardware & HW_BUTTON)) {
         oo::PList::Dict fnDict;
-        fnDict[oo::StdString(STICK_ISAXIS)] = oo::PList(static_cast<bool>(NO));
-        fnDict[oo::StdString(STICK_NUMBER)] = oo::PList(static_cast<int>(evt->which));
-        fnDict[oo::StdString(STICK_AXBUT)] = oo::PList(static_cast<int>(evt->button));
+        fnDict[std::string(STICK_ISAXIS)] = oo::PList(static_cast<bool>(NO));
+        fnDict[std::string(STICK_NUMBER)] = oo::PList(static_cast<int>(evt->which));
+        fnDict[std::string(STICK_AXBUT)] = oo::PList(static_cast<int>(evt->button));
         cbHardware = 0;
-        [cbObject performSelector:cbSelector withObject:oo::ObjectFromPList(oo::PList(std::move(fnDict)))];
+        OOCallByName(cbObject, cbSelector, oo::PList(std::move(fnDict))); // called by name (ADR-0055 item 5)
         cbObject = nil;
 
         // we are done.
@@ -589,8 +590,8 @@ static id sSharedStickHandler = nil;
 {
     oo::Defaults& defaults = oo::Defaults::standard();
 
-    defaults.setObject(oo::StdString(AXIS_SETTINGS), [self axisFunctions]);
-    defaults.setObject(oo::StdString(BUTTON_SETTINGS), [self buttonFunctions]);
+    defaults.setObject(std::string(AXIS_SETTINGS), [self axisFunctions]);
+    defaults.setObject(std::string(BUTTON_SETTINGS), [self buttonFunctions]);
     [self saveProfileForAxis:AXIS_ROLL];
     [self saveProfileForAxis:AXIS_PITCH];
     [self saveProfileForAxis:AXIS_YAW];
@@ -601,8 +602,8 @@ static id sSharedStickHandler = nil;
 {
     [self clearMappings];
     oo::Defaults& defaults = oo::Defaults::standard();
-    const oo::PList axisSettings = defaults.object(oo::StdString(AXIS_SETTINGS));
-    const oo::PList buttonSettings = defaults.object(oo::StdString(BUTTON_SETTINGS));
+    const oo::PList axisSettings = defaults.object(std::string(AXIS_SETTINGS));
+    const oo::PList buttonSettings = defaults.object(std::string(BUTTON_SETTINGS));
     // Keys are visited in byte order (they came in hash order): where two settings claim the
     // same stick axis or button, the last one still wins (proposed ADR-0043).
     if (axisSettings) {

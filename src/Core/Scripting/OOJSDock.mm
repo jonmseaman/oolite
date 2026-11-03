@@ -22,6 +22,7 @@ MA 02110-1301, USA.
  */
 
 #import "OOJSDock.h"
+#import "OOFoundationBridge.h"
 #import "OOJSEntity.h"
 #import "OOJSPlayer.h"
 #import "OOJSShip.h"
@@ -208,9 +209,9 @@ static BOOL JSDockGetShipEntity(ooscript::Context context, ooscript::Object ship
     *outPrototype = sDockPrototype;
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_oo_jsClassName
 {
-    return @"Dock";
+    return std::string("Dock");
 }
 
 @end
@@ -331,7 +332,7 @@ static bool DockIsQueued(ooscript::Context context, ooscript::CallArgs& oojsArgs
 
     JSDockGetDockEntity(context, OOJS_THIS, &dock);
     if (oojsArgs.count() == 0) {
-        OOJSReportBadArguments(context, @"Dock", @"isQueued", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"ship");
+        cxx_OOJSReportBadArguments(context, "Dock", "isQueued", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "ship");
         return NO;
     }
     ShipEntity* ship = nil;

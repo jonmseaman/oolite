@@ -216,7 +216,7 @@ static bool ShipGroupGetProperty(Context cx, Object obj, PropertyId propID, Valu
         break;
 
     case kShipGroup_name:
-        result = [group name];
+        result = oo::NSStringOrNil([group cxx_name]);
         if (result == nil)
             result = [OONull null];
         break;
@@ -263,7 +263,7 @@ static bool ShipGroupSetProperty(Context cx, Object obj, PropertyId propID, bool
         break;
 
     case kShipGroup_name:
-        [group setName:OOStringFromJSValueEvenIfNull(context, *(value))];
+        [group cxx_setName:cxx_OOStringFromJSValueEvenIfNull(context, *(value))];
         return YES;
         break;
 
@@ -287,7 +287,7 @@ static bool ShipGroupConstruct(ooscript::Context context, ooscript::CallArgs& oo
     OOJS_NATIVE_ENTER(context)
 
     if (EXPECT_NOT(!oojsArgs.isConstructing())) {
-        OOJSReportError(context, @"ShipGroup() cannot be called as a function, it must be used as a constructor (as in new ShipGroup(...)).");
+        cxx_OOJSReportError(context, "ShipGroup() cannot be called as a function, it must be used as a constructor (as in new ShipGroup(...)).");
         return NO;
     }
 
@@ -296,16 +296,16 @@ static bool ShipGroupConstruct(ooscript::Context context, ooscript::CallArgs& oo
 
     if (oojsArgs.count() >= 1) {
         if (!ooscript::isString(OOJS_ARGV[0])) {
-            OOJSReportBadArguments(context, nil, @"ShipGroup()", 1, OOJS_ARGV, @"Could not create ShipGroup", @"group name");
+            cxx_OOJSReportBadArguments(context, std::nullopt, "ShipGroup()", 1, OOJS_ARGV, "Could not create ShipGroup", "group name");
             return NO;
         }
-        name = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     }
 
     if (oojsArgs.count() >= 2) {
         leader = OOJSNativeObjectOfClassFromJSValue(context, OOJS_ARGV[1], [ShipEntity class]);
         if (leader == nil && !ooscript::isNull(OOJS_ARGV[1])) {
-            OOJSReportBadArguments(context, nil, @"ShipGroup()", 1, OOJS_ARGV + 1, @"Could not create ShipGroup", @"ship");
+            cxx_OOJSReportBadArguments(context, std::nullopt, "ShipGroup()", 1, OOJS_ARGV + 1, "Could not create ShipGroup", "ship");
             return NO;
         }
     }
@@ -366,7 +366,7 @@ static bool ShipGroupAddShip(ooscript::Context context, ooscript::CallArgs& oojs
         if (oojsArgs.count() > 0 && ooscript::isNull(OOJS_ARGV[0]))
             OOJS_RETURN_VOID; // OK, do nothing for null ship.
 
-        OOJSReportBadArguments(context, @"ShipGroup", @"addShip", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"ship");
+        cxx_OOJSReportBadArguments(context, "ShipGroup", "addShip", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "ship");
         return NO;
     }
 
@@ -383,7 +383,7 @@ static bool ShipGroupAddShip(ooscript::Context context, ooscript::CallArgs& oojs
                 OOShipGroup* thatGroup = [ship group];
                 if ([thatGroup count] > 1 && [[thatGroup leader] escortGroup] == thatGroup) // new escort already escorting!
                 {
-                    OOJSReportWarningForCaller(context, @"ShipGroup", @"addShip", @"Ship %@ cannot be assigned to two escort groups, ignoring.", ship);
+                    cxx_OOJSReportWarningForCaller(context, "ShipGroup", "addShip", "Ship %s cannot be assigned to two escort groups, ignoring.", oo::DescriptionOf(ship).c_str());
                     OK = NO;
                 } else {
                     OK = [thisGroupLeader acceptAsEscort:ship];
@@ -392,7 +392,7 @@ static bool ShipGroupAddShip(ooscript::Context context, ooscript::CallArgs& oojs
             {
                 if ([thisGroupLeader escortGroup] == [thisGroupLeader group]) {
                     // Default unescorted, unescortable, ship. Create new group and use that instead.
-                    [thisGroupLeader setGroup:[[OOShipGroup alloc] initWithName:@"ship group"]];
+                    [thisGroupLeader setGroup:[[OOShipGroup alloc] cxx_initWithName:std::string("ship group")]];
                     thisGroup = [thisGroupLeader group];
                 } else {
                     // Unescorted ship with custom group. See if it accepts escorts.
@@ -429,7 +429,7 @@ static bool ShipGroupRemoveShip(ooscript::Context context, ooscript::CallArgs& o
         if (oojsArgs.count() > 0 && ooscript::isNull(OOJS_ARGV[0]))
             OOJS_RETURN_VOID; // OK, do nothing for null ship.
 
-        OOJSReportBadArguments(context, @"ShipGroup", @"removeShip", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"ship");
+        cxx_OOJSReportBadArguments(context, "ShipGroup", "removeShip", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "ship");
         return NO;
     }
 
@@ -458,7 +458,7 @@ static bool ShipGroupContainsShip(ooscript::Context context, ooscript::CallArgs&
         if (oojsArgs.count() > 0 && ooscript::isNull(OOJS_ARGV[0]))
             OOJS_RETURN_BOOL(NO); // OK, return false for null ship.
 
-        OOJSReportBadArguments(context, @"ShipGroup", @"containsShip", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"ship");
+        cxx_OOJSReportBadArguments(context, "ShipGroup", "containsShip", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "ship");
         return NO;
     }
 

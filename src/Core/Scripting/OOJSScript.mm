@@ -120,8 +120,8 @@ static Script ScriptWithCompiledData(ooscript::Context context, const oo::Data& 
 
 static std::optional<std::string> StrippedName(const std::optional<std::string>& string);
 
-// [[object description] copy]: nil stays nil.
-static std::optional<std::string> DescriptionOrNil(id object);
+// The value as text (its -description as an object; a string is itself): null stays nullopt.
+static std::optional<std::string> DescriptionOrNil(const oo::PList& value);
 
 // -oo_stringForKey: with its nil; a string value for -setObject:forKey:, which raised on nil.
 static std::optional<std::string> StringForKey(const oo::PList& dictionary, const std::string& key);
@@ -284,16 +284,16 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
         if (!problem.has_value()) {
             // Get display attributes from script
             name.reset();
-            name = StrippedName(DescriptionOrNil([self propertyWithID:nameID inContext:context]));
+            name = StrippedName(DescriptionOrNil([self cxx_propertyWithID:nameID inContext:context]));
             if (!name.has_value()) {
                 name = [self scriptNameFromPath:path];
                 [self setProperty:oo::NSStringFrom(*name) withID:nameID inContext:context];
             }
 
-            version = DescriptionOrNil([self propertyWithID:OOJSID("version") inContext:context]);
-            description = DescriptionOrNil([self propertyWithID:OOJSID("description") inContext:context]);
+            version = DescriptionOrNil([self cxx_propertyWithID:OOJSID("version") inContext:context]);
+            description = DescriptionOrNil([self cxx_propertyWithID:OOJSID("description") inContext:context]);
 
-            OO_LOG("script.javaScript.load.success", "Loaded JavaScript: {} -- {}", oo::DescriptionOf([self displayName]), description.value_or("(no description)"));
+            OO_LOG("script.javaScript.load.success", "Loaded JavaScript: {} -- {}", [self displayName].value_or("(null)"), description.value_or("(no description)"));
         }
 
         oo::log::outdentIf("script.javaScript.willLoad");
@@ -337,17 +337,17 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
     [super dealloc];
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_oo_jsClassName
 {
-    return @"Script";
+    return std::string("Script");
 }
 
-- (id)descriptionComponents // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_descriptionComponents
 {
     if (_jsSelf != NULL)
-        return [super descriptionComponents];
+        return [super cxx_descriptionComponents];
     else
-        return @"invalid script";
+        return "invalid script";
 }
 
 - (void)javaScriptEngineWillReset:(const oo::Notification&)notification
@@ -389,14 +389,14 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
         weakSelf = nil;
 }
 
-- (id)name // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_name
 {
     // (the property as text: a string is itself, anything else its -description)
     if (!name.has_value())
-        name = DescriptionOrNil([self propertyNamed:"name"]);
+        name = DescriptionOrNil([self cxx_propertyNamed:"name"]);
     if (!name.has_value())
-        return oo::NSStringFrom([self scriptNameFromPath:filePath]); // Special case for parse errors during load.
-    return oo::NSStringFrom(*name);
+        return [self scriptNameFromPath:filePath]; // Special case for parse errors during load.
+    return name;
 }
 
 - (std::optional<std::string>)scriptDescription
@@ -439,7 +439,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
             ooscript::clearPendingException((context));
         }
 
-        OO_LOG("script.javaScript.call", "Calling [{}].{}()", oo::DescriptionOf([self name]), oo::DescriptionOf(OOStringFromJSID(methodID)));
+        OO_LOG("script.javaScript.call", "Calling [{}].{}()", [self cxx_name].value_or("(null)"), (cxx_OOStringFromJSID(methodID)).value_or("(null)"));
         oo::log::indentIf("script.javaScript.call");
 #endif
 
@@ -473,17 +473,17 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
     return OK;
 }
 
-- (id)propertyWithID:(ooscript::PropertyId)propID inContext:(ooscript::Context)context
+- (oo::PList)cxx_propertyWithID:(ooscript::PropertyId)propID inContext:(ooscript::Context)context
 {
     OOParameterAssert(context != NULL && ooscript::isInRequest((context)));
     if (_jsSelf == NULL)
-        return nil;
+        return oo::PList();
 
     ooscript::Value jsValue = ooscript::undefinedValue();
     if (ooscript::getPropertyById((context), (_jsSelf), (propID), (&jsValue))) {
-        return OOJSNativeObjectFromJSValue(context, jsValue);
+        return cxx_OOJSPListFromJSValue(context, jsValue);
     }
-    return nil;
+    return oo::PList();
 }
 
 - (BOOL)setProperty:(id)value withID:(ooscript::PropertyId)propID inContext:(ooscript::Context)context
@@ -506,13 +506,13 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
     return ooscript::definePropertyById((context), (_jsSelf), (propID), (jsValue), nullptr, nullptr, kScriptDefinePropertyFlags);
 }
 
-- (id)propertyNamed:(const std::string&)propName
+- (oo::PList)cxx_propertyNamed:(const std::string&)propName
 {
     if (_jsSelf == NULL)
-        return nil;
+        return oo::PList();
 
     ooscript::Context context = OOJSAcquireContext();
-    id result = [self propertyWithID:OOJSIDFromString(oo::NSStringFrom(propName)) inContext:context];
+    oo::PList result = [self cxx_propertyWithID:cxx_OOJSIDFromString(propName) inContext:context];
     OOJSRelinquishContext(context);
 
     return result;
@@ -526,7 +526,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
         return NO;
 
     ooscript::Context context = OOJSAcquireContext();
-    BOOL result = [self setProperty:value withID:OOJSIDFromString(oo::NSStringFrom(propName)) inContext:context];
+    BOOL result = [self setProperty:value withID:cxx_OOJSIDFromString(propName) inContext:context];
     OOJSRelinquishContext(context);
 
     return result;
@@ -540,7 +540,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
         return NO;
 
     ooscript::Context context = OOJSAcquireContext();
-    BOOL result = [self defineProperty:value withID:OOJSIDFromString(oo::NSStringFrom(propName)) inContext:context];
+    BOOL result = [self defineProperty:value withID:cxx_OOJSIDFromString(propName) inContext:context];
     OOJSRelinquishContext(context);
 
     return result;
@@ -633,24 +633,26 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
 - (oo::PList::Dict)defaultPropertiesFromPath:(const std::optional<std::string>&)path
 {
     // remove file name, remove OXP subfolder, add manifest.plist (a nil path messaged nil: no manifest)
-    const oo::PList manifest = path.has_value() ? oo::PListFrom(OODictionaryFromFile(oo::NSStringFrom(oo::str::appendingPathComponent(oo::str::deletingLastPathComponent(oo::str::deletingLastPathComponent(*path)), "manifest.plist")))) : oo::PList();
+    oo::PList manifest = path.has_value() ? cxx_OOPropertyListFromFile(oo::str::appendingPathComponent(oo::str::deletingLastPathComponent(oo::str::deletingLastPathComponent(*path)), "manifest.plist")) : oo::PList();
+    if (!manifest.isDict())
+        manifest = oo::PList(); // a dictionary or nothing, as OODictionaryFromFile answered (its plist.wrongType line, which named the Foundation class, is not kept)
     oo::PList::Dict properties;
     /* __oolite.tmp.* is allocated for OXPs without manifests. Its
      * values are meaningless and shouldn't be used here */
-    const std::optional<std::string> identifier = StringForKey(manifest, oo::StdString(kOOManifestIdentifier));
+    const std::optional<std::string> identifier = StringForKey(manifest, std::string(kOOManifestIdentifier));
     if (manifest && !(identifier.has_value() && oo::str::hasPrefix(*identifier, "__oolite.tmp."))) {
-        if (manifest.get<oo::PList>(oo::StdString(kOOManifestVersion)) != nullptr) {
-            properties["version"] = ValueForKey(StringForKey(manifest, oo::StdString(kOOManifestVersion)), @"version");
+        if (manifest.get<oo::PList>(std::string(kOOManifestVersion)) != nullptr) {
+            properties["version"] = ValueForKey(StringForKey(manifest, std::string(kOOManifestVersion)), @"version");
         }
-        if (manifest.get<oo::PList>(oo::StdString(kOOManifestIdentifier)) != nullptr) {
+        if (manifest.get<oo::PList>(std::string(kOOManifestIdentifier)) != nullptr) {
             // used for system info
             properties[kLocalManifestProperty] = ValueForKey(identifier, oo::NSStringFrom(kLocalManifestProperty));
         }
-        if (manifest.get<oo::PList>(oo::StdString(kOOManifestAuthor)) != nullptr) {
-            properties["author"] = ValueForKey(StringForKey(manifest, oo::StdString(kOOManifestAuthor)), @"author");
+        if (manifest.get<oo::PList>(std::string(kOOManifestAuthor)) != nullptr) {
+            properties["author"] = ValueForKey(StringForKey(manifest, std::string(kOOManifestAuthor)), @"author");
         }
-        if (manifest.get<oo::PList>(oo::StdString(kOOManifestLicense)) != nullptr) {
-            properties["license"] = ValueForKey(StringForKey(manifest, oo::StdString(kOOManifestLicense)), @"license");
+        if (manifest.get<oo::PList>(std::string(kOOManifestLicense)) != nullptr) {
+            properties["license"] = ValueForKey(StringForKey(manifest, std::string(kOOManifestLicense)), @"license");
         }
     }
     return properties;
@@ -689,7 +691,7 @@ static bool ScriptAddProperty(Context cx, Object obj, PropertyId propID, Value* 
         bool match = false;
         if (ooscript::stringEqualsAscii(cx, propNameStr, "tickle", &match) && match) {
             OOJSScript* thisScript = OOJSNativeObjectOfClassFromJSObject(context, thisObj, [OOJSScript class]);
-            OOJSReportWarning(context, @"Script %@ appears to use the tickle() event handler, which is no longer supported.", [thisScript name]);
+            cxx_OOJSReportWarning(context, "Script %s appears to use the tickle() event handler, which is no longer supported.", [thisScript cxx_name].value_or("(null)").c_str());
         }
     }
 
@@ -815,11 +817,14 @@ static std::optional<std::string> StrippedName(const std::optional<std::string>&
     return string->substr(first, last - first + 1);
 }
 
-static std::optional<std::string> DescriptionOrNil(id object)
+static std::optional<std::string> DescriptionOrNil(const oo::PList& value)
 {
-    if (object == nil)
+    if (value.isNull())
         return std::nullopt;
-    return oo::OptionalString([object description]);
+    if (const std::string* string = value.getIf<std::string>())
+        return *string; // a string's -description is itself
+    // Anything else prints as the object form did (cxx_OOJSPListFromJSValue() is oo::PListFrom() of it).
+    return oo::DescriptionOf(value);
 }
 
 // -oo_stringForKey: with its nil: the string, a number's -stringValue, or nothing.

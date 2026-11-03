@@ -29,8 +29,8 @@ SOFTWARE.
 
 */
 
+#import "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
-#import <Foundation/Foundation.h>
 @class OODebugMonitor;
 
 ooscript::Object DebugMonitorToJSConsole(ooscript::Context context, OODebugMonitor* monitor);
