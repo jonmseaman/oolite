@@ -35,7 +35,7 @@ SOFTWARE.
 #import "OOJSConsole.h"
 #import "OOJSEngineTimeManagement.h"
 #import "OOJSScript.h"
-#import "OOJSSpecialFunctions.h"
+#import "OOJSSpecialFunctions+ObjCBridge.h"
 #import "OOObjCPList.h"
 
 #import "NSObjectOOExtensions.h"
@@ -73,15 +73,15 @@ namespace cxx {
 void OODebugMonitor::init()
 {
     {
-        _configFromOXPs = normalizeConfigDictionary([ResourceManager cxx_dictionaryFromFilesNamed:"debugConfig.plist"
-                                                                                         inFolder:"Config"
-                                                                                         andMerge:YES]);
+        _configFromOXPs = normalizeConfigDictionary([::ResourceManager cxx_dictionaryFromFilesNamed:"debugConfig.plist"
+                                                                                           inFolder:"Config"
+                                                                                           andMerge:YES]);
 
         _configOverrides = normalizeConfigDictionary(oo::Defaults::standard().dictionaryForKey("debug-settings-override"));
 
         _TCPIgnoresDroppedPackets = false;
 
-        OOJavaScriptEngine* jsEng = [OOJavaScriptEngine sharedEngine];
+        ::OOJavaScriptEngine* jsEng = [::OOJavaScriptEngine sharedEngine];
 #if OOJSENGINE_MONITOR_SUPPORT
         id monitor = oo::ToObjC(this); // the facade adopts OOJavaScriptEngineMonitor (OODebugMonitor+ObjCBridge.mm)
         [jsEng setMonitor:monitor];
@@ -219,7 +219,7 @@ oo::PList OODebugMonitor::configurationValueForKey(const std::string& key)
     const oo::PList* result = _configOverrides.find(key);
     if (isNil(result))
         result = _configFromOXPs.find(key);
-    if (isNil(result) || oo::ObjectIn(*result) == [OONull null])
+    if (isNil(result) || oo::ObjectIn(*result) == [::OONull null])
         return oo::PList();
     return *result;
 }
@@ -389,7 +389,7 @@ void OODebugMonitor::dumpEntity(id entity, EntityDumpState* state, bool parentVi
 
     oo::log::indent();
     if ([entity isShip]) {
-        for (const auto& subRef : [(ShipEntity*)entity subEntityEnumerator]) {
+        for (const auto& subRef : [(::ShipEntity*)entity subEntityEnumerator]) {
             dumpEntity(subRef.get(), state, visible);
         }
 
@@ -410,7 +410,7 @@ void OODebugMonitor::dumpEntity(id entity, EntityDumpState* state, bool parentVi
         if (const oo::PList::Array* shipInfos = shipsInTransit.getIf<oo::PList::Array>()) {
             for (const oo::PList& shipInfo : *shipInfos) {
                 const oo::PList* shipNode = shipInfo.find("ship");
-                ShipEntity* ship = (shipNode != nullptr) ? oo::ObjectIn(*shipNode) : nil;
+                ::ShipEntity* ship = (shipNode != nullptr) ? oo::ObjectIn(*shipNode) : nil;
                 dumpEntity(ship, state, false);
             }
         }
@@ -622,7 +622,7 @@ void OODebugMonitor::setUpDebugConsoleScript()
     static std::optional<std::string> path;
 
     if (!path) {
-        path = [ResourceManager cxx_pathForFileNamed:"oolite-debug-console.js" inFolder:std::string("Scripts")];
+        path = [::ResourceManager cxx_pathForFileNamed:"oolite-debug-console.js" inFolder:std::string("Scripts")];
     }
     if (path) {
         // Live objects as Object nodes; a nil special-functions wrapper leaves "special" out, as the nil-terminated list did.
@@ -636,7 +636,7 @@ void OODebugMonitor::setUpDebugConsoleScript()
 
     // If no script, just make console visible globally as debugConsole.
     if (!_script) {
-        ooscript::Object global = [[OOJavaScriptEngine sharedEngine] globalObject];
+        ooscript::Object global = [[::OOJavaScriptEngine sharedEngine] globalObject];
         ooscript::defineProperty(context, global, "debugConsole", oo_jsValueInContext(context), NULL, NULL, ooscript::PropertyFlag::Enumerate);
     }
 
@@ -731,7 +731,7 @@ oo::PList OODebugMonitor::normalizeConfigValue(const oo::PList& value, const std
     return value;
 }
 
-void OODebugMonitor::jsEngine(OOJavaScriptEngine* /*engine*/,
+void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
     ooscript::Context /*context*/,
     ooscript::ErrorReport* errorReport,
     unsigned stackSkip,
@@ -808,7 +808,7 @@ void OODebugMonitor::jsEngine(OOJavaScriptEngine* /*engine*/,
     }
 }
 
-void OODebugMonitor::jsEngine(OOJavaScriptEngine* /*engine*/,
+void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
     ooscript::Context /*context*/,
     const std::string& message,
     const std::optional<std::string>& /*messageClass*/)

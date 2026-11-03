@@ -35,7 +35,10 @@ MA 02110-1301, USA.
 
 #import "OOFoundation.h"
 #import "PlayerEntity.h"
+#include "oofnd/Notification.hpp"
 #include "ooscript/JSEngine.hpp"
+#include <optional>
+#include <string>
 @class PlayerEntity;
 
 #ifdef __cplusplus
@@ -51,3 +54,11 @@ ooscript::Object JSPlayerShipObject(void);
 #ifdef __cplusplus
 }
 #endif
+
+/*	PlayerEntity (OOJavaScriptExtensions), whose methods the engine and the player send by selector:
+        the bodies, as free functions (ADR-0056 amendments oo-ppc item 3, oo-ykoy). The category's
+        implementation forwards to them from OOJSPlayerShip+ObjCBridge.mm until PlayerEntity is C++.
+*/
+std::optional<std::string> OOJSPlayerShipJSClassName(void);
+void OOJSPlayerShipSetJSSelf(PlayerEntity* player, ooscript::Object val, ooscript::Context context);
+void OOJSPlayerShipJavaScriptEngineWillReset(PlayerEntity* player, const oo::Notification& notification);
