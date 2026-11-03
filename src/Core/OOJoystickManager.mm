@@ -550,7 +550,7 @@ static id sSharedStickHandler = nil;
         OOLog(@"decodeButtonEvent", @"Joystick button out of range: %d", evt->button);
         return;
     }
-    if (evt->type == JOYBUTTONDOWN) {
+    if (evt->type == static_cast<SDL_EventType>(JOYBUTTONDOWN)) {
         bs = YES;
         if (function == BUTTON_PRECISION)
             precisionMode = !precisionMode;

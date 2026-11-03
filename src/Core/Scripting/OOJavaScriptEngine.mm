@@ -763,109 +763,107 @@ static void DumpVariable(ooscript::Context context, ooscript::Variable* prop)
 
 void OOJSDumpStack(ooscript::Context context)
 {
-    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+    @autoreleasepool {
+        @try {
+            ooscript::StackFrame frame = NULL;
+            unsigned idx = 0;
+            unsigned skip = sErrorHandlerStackSkip;
 
-    @try {
-        ooscript::StackFrame frame = NULL;
-        unsigned idx = 0;
-        unsigned skip = sErrorHandlerStackSkip;
+            while (ooscript::frameIterator(context, &frame) != NULL) {
+                ooscript::Script script = ooscript::frameScript(context, frame);
+                NSString* desc = nil;
+                ooscript::VariableList properties = { 0, NULL, NULL };
+                BOOL gotProperties = NO;
 
-        while (ooscript::frameIterator(context, &frame) != NULL) {
-            ooscript::Script script = ooscript::frameScript(context, frame);
-            NSString* desc = nil;
-            ooscript::VariableList properties = { 0, NULL, NULL };
-            BOOL gotProperties = NO;
+                idx++;
 
-            idx++;
+                if (!ooscript::frameIsScript(context, frame)) {
+                    continue;
+                }
 
-            if (!ooscript::frameIsScript(context, frame)) {
-                continue;
-            }
+                if (skip != 0) {
+                    skip--;
+                    continue;
+                }
 
-            if (skip != 0) {
-                skip--;
-                continue;
-            }
+                if (script != NULL) {
+                    NSString* location = OOJSDescribeLocation(context, frame);
+                    ooscript::Object scope = ooscript::frameScopeChain(context, frame);
 
-            if (script != NULL) {
-                NSString* location = OOJSDescribeLocation(context, frame);
-                ooscript::Object scope = ooscript::frameScopeChain(context, frame);
+                    if (scope != NULL)
+                        gotProperties = ooscript::getScopeVariables(context, scope, &properties);
 
-                if (scope != NULL)
-                    gotProperties = ooscript::getScopeVariables(context, scope, &properties);
+                    NSString* funcDesc = nil;
+                    ooscript::Function function = ooscript::frameFunction(context, frame);
+                    if (function != NULL) {
+                        ooscript::String funcName = ooscript::getFunctionId(function);
+                        if (funcName != NULL) {
+                            funcDesc = OOStringFromJSString(context, funcName);
+                            if (!ooscript::frameIsConstructor(context, frame)) {
+                                funcDesc = [funcDesc stringByAppendingString:@"()"];
+                            } else {
+                                funcDesc = [NSString stringWithFormat:@"new %@()", funcDesc];
+                            }
 
-                NSString* funcDesc = nil;
-                ooscript::Function function = ooscript::frameFunction(context, frame);
-                if (function != NULL) {
-                    ooscript::String funcName = ooscript::getFunctionId(function);
-                    if (funcName != NULL) {
-                        funcDesc = OOStringFromJSString(context, funcName);
-                        if (!ooscript::frameIsConstructor(context, frame)) {
-                            funcDesc = [funcDesc stringByAppendingString:@"()"];
                         } else {
-                            funcDesc = [NSString stringWithFormat:@"new %@()", funcDesc];
+                            funcDesc = @"<anonymous function>";
                         }
-
                     } else {
-                        funcDesc = @"<anonymous function>";
+                        funcDesc = @"<not a function frame>";
                     }
+
+                    desc = [NSString stringWithFormat:@"(%@) %@", location, funcDesc];
+                } else if (ooscript::frameIsDebugger(context, frame)) {
+                    desc = @"<debugger frame>";
                 } else {
-                    funcDesc = @"<not a function frame>";
+                    desc = @"<Oolite native>";
                 }
 
-                desc = [NSString stringWithFormat:@"(%@) %@", location, funcDesc];
-            } else if (ooscript::frameIsDebugger(context, frame)) {
-                desc = @"<debugger frame>";
-            } else {
-                desc = @"<Oolite native>";
-            }
+                OOLog(@"script.javaScript.stackTrace", @"%2u %@", idx - 1, desc);
 
-            OOLog(@"script.javaScript.stackTrace", @"%2u %@", idx - 1, desc);
-
-            if (gotProperties) {
-                ooscript::Value thisVal;
-                if (ooscript::frameThis(context, frame, &thisVal)) {
-                    static BOOL haveThis = NO;
-                    static ooscript::PropertyId thisAtom;
-                    if (EXPECT_NOT(!haveThis)) {
-                        ooscript::valueToId(context, ooscript::stringValue((ooscript::internString((context), "this"))), &thisAtom);
-                        haveThis = YES;
+                if (gotProperties) {
+                    ooscript::Value thisVal;
+                    if (ooscript::frameThis(context, frame, &thisVal)) {
+                        static BOOL haveThis = NO;
+                        static ooscript::PropertyId thisAtom;
+                        if (EXPECT_NOT(!haveThis)) {
+                            ooscript::valueToId(context, ooscript::stringValue((ooscript::internString((context), "this"))), &thisAtom);
+                            haveThis = YES;
+                        }
+                        ooscript::Variable thisDesc = { .id = thisAtom, .value = thisVal, .flags = 0, .alias = ooscript::undefinedValue() };
+                        DumpVariable(context, &thisDesc);
                     }
-                    ooscript::Variable thisDesc = { .id = thisAtom, .value = thisVal, .flags = 0, .alias = ooscript::undefinedValue() };
-                    DumpVariable(context, &thisDesc);
-                }
 
-                // Dump arguments.
-                unsigned i;
-                for (i = 0; i < properties.length; i++) {
-                    ooscript::Variable* prop = &properties.vars[i];
-                    if (prop->flags & static_cast<unsigned>(ooscript::VariableFlag::Argument))
-                        DumpVariable(context, prop);
-                }
+                    // Dump arguments.
+                    unsigned i;
+                    for (i = 0; i < properties.length; i++) {
+                        ooscript::Variable* prop = &properties.vars[i];
+                        if (prop->flags & static_cast<unsigned>(ooscript::VariableFlag::Argument))
+                            DumpVariable(context, prop);
+                    }
 
-                // Dump locals.
-                for (i = 0; i < properties.length; i++) {
-                    ooscript::Variable* prop = &properties.vars[i];
-                    if (prop->flags & static_cast<unsigned>(ooscript::VariableFlag::Variable))
-                        DumpVariable(context, prop);
-                }
+                    // Dump locals.
+                    for (i = 0; i < properties.length; i++) {
+                        ooscript::Variable* prop = &properties.vars[i];
+                        if (prop->flags & static_cast<unsigned>(ooscript::VariableFlag::Variable))
+                            DumpVariable(context, prop);
+                    }
 
-                // Dump anything else.
-                for (i = 0; i < properties.length; i++) {
-                    ooscript::Variable* prop = &properties.vars[i];
-                    if (!(prop->flags & (static_cast<unsigned>(ooscript::VariableFlag::Argument) | static_cast<unsigned>(ooscript::VariableFlag::Variable))))
-                        DumpVariable(context, prop);
-                }
+                    // Dump anything else.
+                    for (i = 0; i < properties.length; i++) {
+                        ooscript::Variable* prop = &properties.vars[i];
+                        if (!(prop->flags & (static_cast<unsigned>(ooscript::VariableFlag::Argument) | static_cast<unsigned>(ooscript::VariableFlag::Variable))))
+                            DumpVariable(context, prop);
+                    }
 
-                ooscript::destroyScopeVariables(context, &properties);
+                    ooscript::destroyScopeVariables(context, &properties);
+                }
             }
         }
+        @catch (NSException* exception) {
+            OOLog(kOOLogException, @"Exception during JavaScript stack trace: %@:%@", [exception name], [exception reason]);
+        }
     }
-    @catch (NSException* exception) {
-        OOLog(kOOLogException, @"Exception during JavaScript stack trace: %@:%@", [exception name], [exception reason]);
-    }
-
-    [pool release];
 }
 
 namespace {
@@ -1760,57 +1758,56 @@ NSString* OOJSDescribeValue(ooscript::Context context, ooscript::Value value, BO
     NSMutableString* result = nil;
     NSUInteger i, length;
     unichar c;
-    NSAutoreleasePool* pool = nil;
 
     length = [self length];
     result = [NSMutableString stringWithCapacity:length];
 
     // Not hugely efficient.
-    pool = [[NSAutoreleasePool alloc] init];
-    for (i = 0; i != length; ++i) {
-        c = [self characterAtIndex:i];
-        switch (c) {
-        case '\\':
-            [result appendString:@"\\\\"];
-            break;
+    @autoreleasepool {
+        for (i = 0; i != length; ++i) {
+            c = [self characterAtIndex:i];
+            switch (c) {
+            case '\\':
+                [result appendString:@"\\\\"];
+                break;
 
-        case '\b':
-            [result appendString:@"\\b"];
-            break;
+            case '\b':
+                [result appendString:@"\\b"];
+                break;
 
-        case '\f':
-            [result appendString:@"\\f"];
-            break;
+            case '\f':
+                [result appendString:@"\\f"];
+                break;
 
-        case '\n':
-            [result appendString:@"\\n"];
-            break;
+            case '\n':
+                [result appendString:@"\\n"];
+                break;
 
-        case '\r':
-            [result appendString:@"\\r"];
-            break;
+            case '\r':
+                [result appendString:@"\\r"];
+                break;
 
-        case '\t':
-            [result appendString:@"\\t"];
-            break;
+            case '\t':
+                [result appendString:@"\\t"];
+                break;
 
-        case '\v':
-            [result appendString:@"\\v"];
-            break;
+            case '\v':
+                [result appendString:@"\\v"];
+                break;
 
-        case '\'':
-            [result appendString:@"\\\'"];
-            break;
+            case '\'':
+                [result appendString:@"\\\'"];
+                break;
 
-        case '\"':
-            [result appendString:@"\\\""];
-            break;
+            case '\"':
+                [result appendString:@"\\\""];
+                break;
 
-        default:
-            [result appendString:[NSString stringWithCharacters:&c length:1]];
+            default:
+                [result appendString:[NSString stringWithCharacters:&c length:1]];
+            }
         }
     }
-    [pool release];
     return result;
 
     OOJS_PROFILE_EXIT

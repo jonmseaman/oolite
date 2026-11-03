@@ -29,6 +29,7 @@ SOFTWARE.
 #import "OOJSFunction.h"
 #import "OOJavaScriptEngine.h"
 
+#include "oofnd/Thread.hpp"
 #include "ooscript/JSEngine.hpp"
 
 /*
@@ -56,7 +57,7 @@ static OORegExpMatcher* sActiveInstance;
 
 + (instancetype)regExpMatcher
 {
-    NSAssert(![NSThread respondsToSelector:@selector(isMainThread)] || [[NSThread currentThread] isMainThread], @"OORegExpMatcher may only be used on the main thread.");
+    NSAssert(oo::thread::isMainThread(), @"OORegExpMatcher may only be used on the main thread.");
 
     if (sActiveInstance == nil) {
         sActiveInstance = [[[self alloc] init] autorelease];
@@ -113,7 +114,7 @@ static OORegExpMatcher* sActiveInstance;
 
 - (BOOL)string:(NSString*)string matchesExpression:(NSString*)regExp flags:(NSUInteger)flags
 {
-    NSAssert(![NSThread respondsToSelector:@selector(isMainThread)] || [[NSThread currentThread] isMainThread], @"OORegExpMatcher may only be used on the main thread.");
+    NSAssert(oo::thread::isMainThread(), @"OORegExpMatcher may only be used on the main thread.");
 
     size_t expLength = [regExp length];
     if (EXPECT_NOT(expLength == 0))

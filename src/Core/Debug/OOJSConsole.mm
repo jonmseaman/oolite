@@ -884,22 +884,21 @@ static bool ConsoleDumpNamedRoots(ooscript::Context context, ooscript::CallArgs&
 {
     OOJS_NATIVE_ENTER(context)
 
-    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-
     BOOL OK = NO;
-    NSString* path = [[ResourceManager diagnosticFileLocation] stringByAppendingPathComponent:@"js-roots.txt"];
-    FILE* file = fopen([path UTF8String], "w");
-    if (file != NULL) {
-        DumpCallbackData data = {
-            .context = context,
-            .file = file
-        };
-        ooscript::dumpNamedRoots(ooscript::getRuntime(context), DumpCallback, &data);
-        fclose(file);
-        OK = YES;
+    @autoreleasepool {
+        NSString* path = [[ResourceManager diagnosticFileLocation] stringByAppendingPathComponent:@"js-roots.txt"];
+        FILE* file = fopen([path UTF8String], "w");
+        if (file != NULL) {
+            DumpCallbackData data = {
+                .context = context,
+                .file = file
+            };
+            ooscript::dumpNamedRoots(ooscript::getRuntime(context), DumpCallback, &data);
+            fclose(file);
+            OK = YES;
+        }
     }
 
-    [pool release];
     OOJS_RETURN_BOOL(OK);
 
     OOJS_NATIVE_EXIT
@@ -935,15 +934,16 @@ static bool ConsoleProfile(ooscript::Context context, ooscript::CallArgs& oojsAr
         return NO;
     }
 
-    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-    OOTimeProfile* profile = nil;
+    bool result;
+    @autoreleasepool {
+        OOTimeProfile* profile = nil;
 
-    bool result = PerformProfiling(context, @"profile", oojsArgs.count(), OOJS_ARGV, NULL, NO, &profile);
-    if (result) {
-        OOJS_SET_RVAL(OOJSValueFromNativeObject(context, [profile description]));
+        result = PerformProfiling(context, @"profile", oojsArgs.count(), OOJS_ARGV, NULL, NO, &profile);
+        if (result) {
+            OOJS_SET_RVAL(OOJSValueFromNativeObject(context, [profile description]));
+        }
     }
 
-    [pool release];
     return result;
 
     OOJS_NATIVE_EXIT
@@ -959,15 +959,16 @@ static bool ConsoleGetProfile(ooscript::Context context, ooscript::CallArgs& ooj
         return NO;
     }
 
-    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-    OOTimeProfile* profile = nil;
+    bool result;
+    @autoreleasepool {
+        OOTimeProfile* profile = nil;
 
-    bool result = PerformProfiling(context, @"getProfile", oojsArgs.count(), OOJS_ARGV, NULL, NO, &profile);
-    if (result) {
-        OOJS_SET_RVAL(OOJSValueFromNativeObject(context, profile));
+        result = PerformProfiling(context, @"getProfile", oojsArgs.count(), OOJS_ARGV, NULL, NO, &profile);
+        if (result) {
+            OOJS_SET_RVAL(OOJSValueFromNativeObject(context, profile));
+        }
     }
 
-    [pool release];
     return result;
 
     OOJS_NATIVE_EXIT
@@ -983,15 +984,15 @@ static bool ConsoleTrace(ooscript::Context context, ooscript::CallArgs& oojsArgs
         return NO;
     }
 
-    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
     ooscript::Value rval;
-
-    bool result = PerformProfiling(context, @"trace", oojsArgs.count(), OOJS_ARGV, &rval, YES, NULL);
-    if (result) {
-        OOJS_SET_RVAL(rval);
+    bool result;
+    @autoreleasepool {
+        result = PerformProfiling(context, @"trace", oojsArgs.count(), OOJS_ARGV, &rval, YES, NULL);
+        if (result) {
+            OOJS_SET_RVAL(rval);
+        }
     }
 
-    [pool release];
     return result;
 
     OOJS_NATIVE_EXIT
