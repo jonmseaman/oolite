@@ -82,8 +82,8 @@ public:
     std::optional<std::string> name() override;
     bool doApply() override;
     void unapplyWithNext(OOMaterial* next) override;
-#ifndef NDEBUG
-    std::vector<oo::ObjCRef<OOTexture*>> allTextures() override;
+#ifdef OO_DEBUG_MONITOR_ENABLED
+    std::vector<oo::ObjCRef<::OOTexture*>> allTextures() override;
 #endif
 
     oo::Ref<OOColor> diffuseColor();

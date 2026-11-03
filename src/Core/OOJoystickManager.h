@@ -14,6 +14,17 @@ representation and a property-list dictionary (for loading/saving user defaults
 and for use in areas where portability/ease of coding are more important
 than performance such as the GUI)
 
+C++20 since bead oo-6bux (proposed ADR-0056, Amendment 1 of bead oo-cwz: a hierarchy root). The
+manager is cxx::OOJoystickManager. Its one subclass, the SDL manager's facade
+(OOSDLJoystickManager+ObjCBridge.h), is still Objective-C, as are the callers, so the Objective-C
+OOJoystickManager in OOJoystickManager+ObjCBridge.h (imported at the end of this header) is both
+their facade and the subclass's superclass. The methods a subclass overrides (joystickCount,
+nameOfJoystick, getAxisWithStick) are virtual; an Objective-C subclass's C++ part is an adapter
+whose overrides message it. -init's body is init(), run after construction because it reaches
+those virtual members (amendment oo-vl43 item 2). The event decoders are the SDL manager's
+(upstream #742): they read and set this class's state, which cxx::OOSDLJoystickManager, until it
+derives from this class, reaches as a friend in its facade's C++ part.
+
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -41,6 +52,7 @@ MA 02110-1301, USA.
 #import "oofnd/objc/OOObject.h"
 
 #include "oofnd/PList.hpp"
+#include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 #include <string_view>
 
@@ -162,94 +174,114 @@ inline constexpr std::string_view STICK_YAW_AXIS_PROFILE_SETTING = "YawAxisProfi
 #import "OOJoystickProfile.h"
 #include "oofnd/String.hpp"
 
-@interface OOJoystickManager : OOObject {
-    // Axis/button mapping arrays
-    int8_t axismap[MAX_STICKS][MAX_AXES];
-    int8_t buttonmap[MAX_STICKS][MAX_BUTTONS];
-    BOOL true_butstate[MAX_STICKS][MAX_BUTTONS];
-    double axstate[AXIS_end];
-    BOOL butstate[BUTTON_end];
-    uint8_t hatstate[MAX_STICKS][MAX_HATS];
-    BOOL precisionMode;
+namespace cxx {
+
+class OOSDLJoystickManager;
+
+class OOJoystickManager : public oo::RefCounted {
+public:
+    OOJoystickManager() = default;
+
+    // General.
+    // Note: handleSDLEvent returns a BOOL (YES we handled it or NO we
+    // didn't) so in the future when more handler classes are written,
+    // the GameView event loop can just go through an array of handlers
+    // until it finds a handler that handles the event.
+    void init(); // -init's body; the facade (or whoever makes the manager) runs it once, right after construction
+
+    // Roll/pitch axis
+    NSPoint rollPitchAxis();
+
+    // View axis
+    NSPoint viewAxis();
+
+    // convert a dictionary into the internal function map
+    void setFunction(int function, const oo::PList& stickFn);
+    void unsetAxisFunction(int function);
+    void unsetButtonFunction(int function);
+
+    // Accessors and discovery about the hardware.
+    // These work directly on the internal lookup table so to be fast
+    // since they are likely to be called by the game loop.
+    bool isButtonDown(int button, int stickNum);
+    bool getButtonState(int function);
+    double getAxisState(int function);
+    double getSensitivity();
+
+    // Axis profile handling
+    void setProfile(OOJoystickAxisProfile* profile, int axis);
+    OOJoystickAxisProfile* getProfileForAxis(int axis); // borrowed; null for an axis with none
+    void saveProfileForAxis(int axis);
+    void loadProfileForAxis(int axis);
+
+    // This one just returns a pointer to the entire state array to
+    // allow for multiple lookups with only one objc_sendMsg
+    const BOOL* getAllButtonStates();
+
+    // Hardware introspection.
+    std::vector<std::string> listSticks();
+
+    // These use property-list dictionaries since they are used outside the game
+    // loop and are needed for loading/saving defaults.
+    oo::PList axisFunctions();
+    oo::PList buttonFunctions();
+
+    // Set a callback for the next moved axis/pressed button. hwflags
+    // is in the form HW_AXIS | HW_BUTTON (or just one of). obj is an Objective-C object, called
+    // by name (OOCallByName) with the stick function's dictionary.
+    void setCallback(SEL selector, id obj, char hwflags);
+    void clearCallback();
+
+    // Methods generally only used by this class.
+    void setDefaultMapping();
+    void clearMappings();
+    void clearStickStates();
+    void clearStickButtonState(int stickButton);
+    void saveStickSettings();
+    void loadStickSettings();
+
+    // Methods that should be overridden by all subclasses
+    virtual NSUInteger joystickCount();
+    virtual std::optional<std::string> nameOfJoystick(NSUInteger stickNumber); // nullopt: the device has no name
+    virtual int16_t getAxisWithStick(NSUInteger stickNum, NSUInteger axisNum);
+
+private:
+    // Setting button and axis functions
+    void setFunctionForAxis(int axis, int function, int stickNum);
+    void setFunctionForButton(int button, int function, int stickNum);
+
+    // Transitional: the SDL manager's event decoders read and set the state below, as they did
+    // OOJoystickManager's ivars. cxx::OOSDLJoystickManager does not derive from this class yet
+    // (its facade, an Objective-C subclass, does), so it reaches the state of its facade's C++
+    // part as a friend. Removed when cxx::OOSDLJoystickManager derives from this class.
+    friend class OOSDLJoystickManager;
+
+protected:
+    // Axis/button mapping arrays (the platform manager's event decoders read
+    // and set them, as the Objective-C ivars were)
+    int8_t axismap[MAX_STICKS][MAX_AXES] = { };
+    int8_t buttonmap[MAX_STICKS][MAX_BUTTONS] = { };
+    bool true_butstate[MAX_STICKS][MAX_BUTTONS] = { };
+    double axstate[AXIS_end] = { };
+    BOOL butstate[BUTTON_end] = { }; // still BOOL: getAllButtonStates() hands unconverted callers a const BOOL *
+    uint8_t hatstate[MAX_STICKS][MAX_HATS] = { };
+    bool precisionMode = { };
 
     // Handle callbacks - the object, selector to call
     // the desired function, and the hardware (axis or button etc.)
-    id cbObject;
-    SEL cbSelector;
-    char cbHardware;
-    BOOL invertPitch;
+    id cbObject = { }; // not retained, as before
+    SEL cbSelector = { };
+    char cbHardware = { };
+    bool invertPitch = { };
 
-@private
-    OOJoystickAxisProfile* roll_profile;
-    OOJoystickAxisProfile* pitch_profile;
-    OOJoystickAxisProfile* yaw_profile;
-}
+private:
+    oo::Ref<OOJoystickAxisProfile> roll_profile = { };
+    oo::Ref<OOJoystickAxisProfile> pitch_profile = { };
+    oo::Ref<OOJoystickAxisProfile> yaw_profile = { };
+};
 
-+ (id)sharedStickHandler;
-+ (BOOL)setStickHandlerClass:(Class)aClass;
+} // namespace cxx
 
-// General.
-// Note: handleSDLEvent returns a BOOL (YES we handled it or NO we
-// didn't) so in the future when more handler classes are written,
-// the GameView event loop can just go through an array of handlers
-// until it finds a handler that handles the event.
-- (id)init;
-
-// Roll/pitch axis
-- (NSPoint)rollPitchAxis;
-
-// View axis
-- (NSPoint)viewAxis;
-
-// convert a dictionary into the internal function map
-- (void)setFunction:(int)function withDict:(const oo::PList&)stickFn;
-- (void)unsetAxisFunction:(int)function;
-- (void)unsetButtonFunction:(int)function;
-
-// Accessors and discovery about the hardware.
-// These work directly on the internal lookup table so to be fast
-// since they are likely to be called by the game loop.
-- (BOOL)isButtonDown:(int)button stick:(int)stickNum;
-- (BOOL)getButtonState:(int)function;
-- (double)getAxisState:(int)function;
-- (double)getSensitivity;
-
-// Axis profile handling
-- (void)setProfile:(OOJoystickAxisProfile*)profile forAxis:(int)axis;
-- (OOJoystickAxisProfile*)getProfileForAxis:(int)axis;
-- (void)saveProfileForAxis:(int)axis;
-- (void)loadProfileForAxis:(int)axis;
-
-// This one just returns a pointer to the entire state array to
-// allow for multiple lookups with only one objc_sendMsg
-- (const BOOL*)getAllButtonStates;
-
-// Hardware introspection.
-- (std::vector<std::string>)listSticks;
-
-// These use property-list dictionaries since they are used outside the game
-// loop and are needed for loading/saving defaults. A nil manager answers a null PList.
-- (oo::PList)axisFunctions;
-- (oo::PList)buttonFunctions;
-
-// Set a callback for the next moved axis/pressed button. hwflags
-// is in the form HW_AXIS | HW_BUTTON (or just one of).
-- (void)setCallback:(SEL)selector
-             object:(id)obj
-           hardware:(char)hwflags;
-- (void)clearCallback;
-
-// Methods generally only used by this class.
-- (void)setDefaultMapping;
-- (void)clearMappings;
-- (void)clearStickStates;
-- (void)clearStickButtonState:(int)stickButton;
-- (void)saveStickSettings;
-- (void)loadStickSettings;
-
-// Methods that should be overridden by all subclasses
-- (NSUInteger)joystickCount;
-- (std::optional<std::string>)nameOfJoystick:(NSUInteger)stickNumber; // nullopt: the device has no name
-- (int16_t)getAxisWithStick:(NSUInteger)stickNum axis:(NSUInteger)axisNum;
-
-@end
+// Transitional: the Objective-C OOJoystickManager, the facade of its callers and the superclass of
+// the SDL manager's facade. Deleted, with namespace cxx above, by the bridge's deletion bead.
+#import "OOJoystickManager+ObjCBridge.h"
