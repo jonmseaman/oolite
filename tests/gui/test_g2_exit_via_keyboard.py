@@ -170,7 +170,7 @@ def start_screen_layout():
     numbers are READ FROM THE SOURCE rather than copied into this file, which is what makes the
     Down count a derivation instead of a magic 5.
     """
-    body = _method_body(_read(PLAYER_ENTITY), "- (void) setupStartScreenGui")
+    body = _method_body(_read(PLAYER_ENTITY), "void PlayerEntity::setupStartScreenGui()")
     match = re.search(r"int\s+initialRow\s*=\s*(\d+)\s*;", body)
     assert match, (
         "-setupStartScreenGui no longer declares `int initialRow = N;`, so G2 cannot derive "
@@ -192,7 +192,7 @@ def exit_row_dispatch():
     branch that calls ``-exitAppWithContext:`` gives us BOTH the ` Exit Game ` row and the exact
     context string the game will log, so neither is hardcoded here.
     """
-    body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
+    body = _method_body(_read(PLAYER_CONTROLS), "void PlayerEntity::pollDemoControls(double")
     # `int row_zero = N;` became `int row_zero; row_zero = N;` in the .m -> .mm switch:
     # C++ forbids a case label jumping past an initialisation. Either spelling carries N.
     match = re.search(r"int\s+row_zero\s*(?:=|;\s*row_zero\s*=)\s*(\d+)\s*;", body)
@@ -205,8 +205,7 @@ def exit_row_dispatch():
     # -cxx_exitAppWithContext:"..." it became. Jon approved accepting
     # both, 2026-09-29.
     branch = re.search(
-        r"\[gui selectedRow\]\s*==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{\s*"
-        r"\[\[UNIVERSE gameController\] (?:exitAppWithContext:@|cxx_exitAppWithContext:)\"([^\"]+)\"\]",
+        r"==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{[^{}]*?exitAppWithContext\(\s*\"([^\"]+)\"",
         body,
     )
     assert branch, (
@@ -223,11 +222,10 @@ def ship_library_row():
     row here is: a menu that gains or loses an entry must fail loudly, not silently calibrate
     against the wrong row.
     """
-    body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
+    body = _method_body(_read(PLAYER_CONTROLS), "void PlayerEntity::pollDemoControls(double")
     row_zero = int(re.search(r"int\s+row_zero\s*(?:=|;\s*row_zero\s*=)\s*(\d+)\s*;", body).group(1))
     branch = re.search(
-        r"\[gui selectedRow\]\s*==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{\s*"
-        r"\[self setGuiToIntroFirstGo:NO\]",
+        r"==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{[^{}]*?setGuiToIntroFirstGo\(NO\)",
         body,
     )
     assert branch, (
@@ -572,9 +570,11 @@ def _grep(pattern):
     hits = []
     for path in _objc_sources():
         with open(path, "r", encoding="utf-8", errors="replace") as handle:
-            for number, line in enumerate(handle, 1):
-                if regex.search(line):
-                    hits.append((os.path.relpath(path, OOLITE_ROOT), number, line.strip()))
+            text = handle.read()
+        # Searched over the whole file: clang-format wraps a call's arguments onto the next line.
+        for match in regex.finditer(text):
+            number = text.count("\n", 0, match.start()) + 1
+            hits.append((os.path.relpath(path, OOLITE_ROOT), number, " ".join(match.group(0).split())))
     return hits
 
 
@@ -590,7 +590,7 @@ def test_the_start_screen_exit_context_is_unique_in_the_tree():
     # Either spelling of the exit call: the ObjC -exitAppWithContext:@"..." or the C++
     # -cxx_exitAppWithContext:"..." it became. Jon approved accepting
     # both, 2026-09-29.
-    hits = _grep(r'(?:exitAppWithContext:@|cxx_exitAppWithContext:)"' + re.escape(EXPECTED_EXIT_CONTEXT) + r'"')
+    hits = _grep(r'exitAppWithContext\(\s*"' + re.escape(EXPECTED_EXIT_CONTEXT) + r'"')
     assert len(hits) == 1, (
         f"{EXPECTED_EXIT_CONTEXT!r} is passed to -exitAppWithContext: from {len(hits)} places, "
         f"not 1: {hits}. G2 asserts that string to prove the start-screen ` Exit Game ` row ran."
@@ -599,8 +599,8 @@ def test_the_start_screen_exit_context_is_unique_in_the_tree():
     # would let a different path satisfy it.
     others = {
         match
-        for _path, _number, line in _grep(r'(?:exitAppWithContext:@|cxx_exitAppWithContext:)"')
-        for match in re.findall(r'(?:exitAppWithContext:@|cxx_exitAppWithContext:)"([^"]+)"', line)
+        for _path, _number, line in _grep(r'exitAppWithContext\(\s*"[^"]+"')
+        for match in re.findall(r'"([^"]+)"', line)
     } - {EXPECTED_EXIT_CONTEXT}
     assert others, "no other exit contexts found at all; this guard is not reading the tree"
     for other in others:
@@ -619,12 +619,11 @@ def test_the_keyboard_and_mouse_exit_paths_converge_on_one_call_site():
     context. If a future edit ever split them, this test goes RED and whoever sees it gets to
     replace G2's navigation evidence with the far simpler context assertion.
     """
-    body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
+    body = _method_body(_read(PLAYER_CONTROLS), "void PlayerEntity::pollDemoControls(double")
     # Either spelling of the exit call (ObjC or the cxx_ form); Jon approved
     # accepting both, 2026-09-29.
     branch = re.search(
-        r"(\([^\n]*\)[^\n]*\[gui selectedRow\]\s*==\s*\d+\s*\+\s*row_zero\s*\))\s*\{\s*"
-        r"\[\[UNIVERSE gameController\] (?:cxx_)?exitAppWithContext:",
+        r"if\s*\(([^{}]*?==\s*\d+\s*\+\s*row_zero\s*)\)\s*\{[^{}]*?exitAppWithContext\(",
         body,
     )
     assert branch, "the start screen's exit branch is no longer recognisable"
@@ -647,7 +646,7 @@ def test_a_single_row_step_is_reachable_only_from_the_arrow_keys():
     method jumping ABSOLUTELY to the cursor's row instead. Both are checked over the whole tree,
     so a future call site added anywhere silently weakens nothing.
     """
-    calls = [hit for hit in _grep(r"\[\s*gui\s+setNextRow:") if not hit[0].endswith(".h")]
+    calls = [hit for hit in _grep(r"\bgui->setNextRow\(") if not hit[0].endswith(".h")]
     assert len(calls) == 2, (
         f"-setNextRow: is called from {len(calls)} places, not 2: {calls}. G2 reads a one-row "
         "walk as proof that an arrow key was pressed; a third call site would have to be shown "
@@ -657,16 +656,16 @@ def test_a_single_row_step_is_reachable_only_from_the_arrow_keys():
         os.path.relpath(PLAYER_CONTROLS, OOLITE_ROOT)
     }, f"-setNextRow: is now called from outside PlayerEntityControls.m: {calls}"
 
-    body = _method_body(_read(PLAYER_CONTROLS), "- (BOOL) handleGUIUpDownArrowKeys")
-    assert body.count("[gui setNextRow:") == 2, (
+    body = _method_body(_read(PLAYER_CONTROLS), "bool PlayerEntity::handleGUIUpDownArrowKeys()")
+    assert body.count("gui->setNextRow(") == 2, (
         "-handleGUIUpDownArrowKeys no longer contains both -setNextRow: calls, so the two the "
         "tree-wide grep found are somewhere else entirely"
     )
     for direction, key in ((r"\+1", "n_key_gui_arrow_down"), (r"-1", "n_key_gui_arrow_up")):
-        guard = re.search(r"BOOL\s+(\w+)\s*=\s*\[self checkKeyPress:" + key + r"\]", body)
+        guard = re.search(r"BOOL\s+(\w+)\s*=\s*checkKeyPress\(" + key + r"\)", body)
         assert guard, f"-handleGUIUpDownArrowKeys no longer reads {key}"
         block = re.search(
-            r"if\s*\(\s*" + guard.group(1) + r"\s*\)(.*?)\[gui setNextRow:\s*" + direction,
+            r"if\s*\(\s*" + guard.group(1) + r"\s*\)(.*?)gui->setNextRow\(\s*" + direction,
             body,
             re.S,
         )
@@ -677,9 +676,9 @@ def test_a_single_row_step_is_reachable_only_from_the_arrow_keys():
 
     # And the mouse cannot step: its branches set an ABSOLUTE row from the cursor.
     for mouse in ("mouse_click", "mouse_dbl_click"):
-        block = re.search(r"if\s*\(\s*" + mouse + r"\s*\)\s*\{(.*?)\n\t\}", body, re.S)
+        block = re.search(r"if\s*\(\s*" + mouse + r"\s*\)\s*\{(.*?)\n  \}\n", body, re.S)
         assert block, f"-handleGUIUpDownArrowKeys no longer has an `if ({mouse})` branch"
-        assert "setSelectedRow:click_row" in block.group(1), (
+        assert "setSelectedRow(click_row)" in block.group(1), (
             f"the {mouse} branch no longer jumps to the cursor's row absolutely: "
             f"{block.group(1)!r}"
         )
@@ -697,20 +696,22 @@ def test_each_calibration_screen_is_reachable_from_exactly_one_start_row():
     holds only while each S is reachable from a single start-screen row, so the dispatcher is
     read and its row->screen map checked for collisions.
     """
-    body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
+    body = _method_body(_read(PLAYER_CONTROLS), "void PlayerEntity::pollDemoControls(double")
     row_zero = int(re.search(r"int\s+row_zero\s*(?:=|;\s*row_zero\s*=)\s*(\d+)\s*;", body).group(1))
-    dispatches = re.findall(
-        r"\[gui selectedRow\]\s*==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{(.*?)\n\t\t\t\t\}",
-        body,
-        re.S,
-    )
+    dispatches = []
+    for opener in re.finditer(r"==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{", body):
+        depth, end = 1, opener.end()
+        while depth and end < len(body):
+            depth += {"{": 1, "}": -1}.get(body[end], 0)
+            end += 1
+        dispatches.append((opener.group(1), body[opener.end():end]))
     assert dispatches, "the start-screen dispatcher has no `selectedRow == N+row_zero` branches"
     rows_for = {}
     for offset, block in dispatches:
         row = row_zero + int(offset)
         for setter, screen in (
             ("setGuiToScenarioScreen", NO_ADVANCE_SCREEN),
-            ("setGuiToIntroFirstGo:NO", CALIBRATION_SCREEN),
+            ("setGuiToIntroFirstGo(NO)", CALIBRATION_SCREEN),
             ("setGuiToGameOptionsScreen", OVER_ADVANCE_SCREEN),
         ):
             if setter in block:
