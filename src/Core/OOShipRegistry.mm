@@ -1097,7 +1097,7 @@ bool OOShipRegistry::preloadShipMeshes(oo::PList& ioData)
         const oo::PList& shipEntry = ship->second;
         const std::optional<std::string> modelName = StringForKey(&shipEntry, "model");
         @autoreleasepool {
-            [[GameController sharedController] setProgressBarValue:(float)i++ / (float)count];
+            [[::GameController sharedController] setProgressBarValue:(float)i++ / (float)count];
 
             // (PRELOAD is 0: this names a -meshWithName: form OOMesh no longer has.)
             const oo::PList* materials = shipEntry.get<oo::PList::Dict>("materials");
@@ -1119,7 +1119,7 @@ bool OOShipRegistry::preloadShipMeshes(oo::PList& ioData)
         }
     }
 
-    [[GameController sharedController] setProgressBarValue:-1.0f];
+    [[::GameController sharedController] setProgressBarValue:-1.0f];
 
     return true;
 }
