@@ -196,7 +196,7 @@ static FunctionSpec sSystemInfoStaticMethods[] = {
 } // namespace
 
 // Helper class wrapped by JS SystemInfo objects
-@interface OOSystemInfo : NSObject {
+@interface OOSystemInfo : OOObject {
 @private
     OOGalaxyID _galaxy;
     OOSystemID _system;

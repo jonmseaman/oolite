@@ -36,13 +36,13 @@
 #import "Universe.h"
 
 #import "EntityOOJavaScriptExtensions.h"
-#import "OOCollectionExtractors.h"
 #import "OOConstToJSString.h"
 #import "OOConstToString.h"
 #import "OODebugStandards.h"
 #import "OOEntityFilterPredicate.h"
 #import "OOFilteringEnumerator.h"
 #import "OOJSPopulatorDefinition.h"
+#import "OOPListView.h"
 
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
@@ -520,35 +520,35 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* 
                 break;
 
             case kSystem_government:
-                *value_raw = ooscript::int32Value([systemData oo_intForKey:KEY_GOVERNMENT]);
+                *value_raw = ooscript::int32Value(oo::PListView(systemData).get<int>(KEY_GOVERNMENT));
                 return YES;
 
             case kSystem_governmentDescription:
-                result = OODisplayStringFromGovernmentID([systemData oo_intForKey:KEY_GOVERNMENT]);
+                result = OODisplayStringFromGovernmentID(oo::PListView(systemData).get<int>(KEY_GOVERNMENT));
                 if (result == nil)
                     result = DESC(@"not-applicable");
                 break;
 
             case kSystem_economy:
-                *value_raw = ooscript::int32Value([systemData oo_intForKey:KEY_ECONOMY]);
+                *value_raw = ooscript::int32Value(oo::PListView(systemData).get<int>(KEY_ECONOMY));
                 return YES;
 
             case kSystem_economyDescription:
-                result = OODisplayStringFromEconomyID([systemData oo_intForKey:KEY_ECONOMY]);
+                result = OODisplayStringFromEconomyID(oo::PListView(systemData).get<int>(KEY_ECONOMY));
                 if (result == nil)
                     result = DESC(@"not-applicable");
                 break;
 
             case kSystem_techLevel:
-                *value_raw = ooscript::int32Value([systemData oo_intForKey:KEY_TECHLEVEL]);
+                *value_raw = ooscript::int32Value(oo::PListView(systemData).get<int>(KEY_TECHLEVEL));
                 return YES;
 
             case kSystem_population:
-                *value_raw = ooscript::int32Value([systemData oo_intForKey:KEY_POPULATION]);
+                *value_raw = ooscript::int32Value(oo::PListView(systemData).get<int>(KEY_POPULATION));
                 return YES;
 
             case kSystem_productivity:
-                *value_raw = ooscript::int32Value([systemData oo_intForKey:KEY_PRODUCTIVITY]);
+                *value_raw = ooscript::int32Value(oo::PListView(systemData).get<int>(KEY_PRODUCTIVITY));
                 return YES;
 
             default:

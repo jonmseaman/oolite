@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 #import "OOJavaScriptEngine.h"
 #import "Universe.h"
 
+#include "oofnd/Notification.hpp"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 
@@ -200,10 +201,9 @@ DEFINE_JS_OBJECT_GETTER(JSTimerGetTimer, &sTimerClass, sTimerPrototype, OOJSTime
 
         _owningScript = [[OOJSScript currentlyRunningScript] weakRetain];
 
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(deleteJSPointers)
-                                                     name:kOOJavaScriptEngineWillResetNotification
-                                                   object:[OOJavaScriptEngine sharedEngine]];
+        oo::NotificationCenter::defaultCenter().addObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+            [OOJavaScriptEngine sharedEngine],
+            [self](const oo::Notification&) { [self deleteJSPointers]; });
     }
 
     return self;
@@ -222,9 +222,8 @@ DEFINE_JS_OBJECT_GETTER(JSTimerGetTimer, &sTimerClass, sTimerPrototype, OOJSTime
         ooscript::removeValueRoot((context), (&_function));
         OOJSRelinquishContext(context);
 
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                        name:kOOJavaScriptEngineWillResetNotification
-                                                      object:[OOJavaScriptEngine sharedEngine]];
+        oo::NotificationCenter::defaultCenter().removeObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+            [OOJavaScriptEngine sharedEngine]);
     }
 }
 

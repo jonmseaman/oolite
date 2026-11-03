@@ -119,7 +119,7 @@ void OOJSSetTimeLimiterLimit(OOTimeDelta limit);
         are profiled are found in OOJSEngineNativeWrappers.h.
 */
 
-@interface OOTimeProfile : NSObject {
+@interface OOTimeProfile : OOObject {
 @private
     double _totalTime;
     double _nativeTime;
@@ -144,7 +144,7 @@ void OOJSSetTimeLimiterLimit(OOTimeDelta limit);
 
 @end
 
-@interface OOTimeProfileEntry : NSObject {
+@interface OOTimeProfileEntry : OOObject {
 @private
     NSString* _function;
     unsigned long _hitCount;

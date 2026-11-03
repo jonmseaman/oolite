@@ -132,7 +132,7 @@ static FunctionSpec sManifestMethods[] = {
 } // namespace
 
 // Helper class wrapped by JS Manifest objects
-@interface OOManifest : NSObject
+@interface OOManifest : OOObject
 @end
 
 @implementation OOManifest

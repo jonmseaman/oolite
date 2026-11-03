@@ -36,6 +36,7 @@ MA 02110-1301, USA.
 */
 
 #import "OOFoundation.h"
+#import "oofnd/objc/OOObject.h"
 
 // Enums are used here rather than a more complex ObjC object because
 // these are required very frequently (once per frame) so must be light
@@ -236,7 +237,7 @@ typedef struct
 
 #import "OOJoystickProfile.h"
 
-@interface OOJoystickManager : NSObject {
+@interface OOJoystickManager : OOObject {
 @private
     // Axis/button mapping arrays
     int8_t axismap[MAX_STICKS][MAX_AXES];

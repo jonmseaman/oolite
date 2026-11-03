@@ -34,9 +34,10 @@ SOFTWARE.
 #import "OOScript.h"
 #import "OOTypes.h"
 #import "Universe.h"
+#import "oofnd/objc/OOObject.h"
 #include "ooscript/JSEngine.hpp"
 
-@interface OOEquipmentType : NSObject <NSCopying> {
+@interface OOEquipmentType : OOObject <OOCopying> {
 @private
     OOTechLevelID _techLevel;
     OOCreditsQuantity _price;
