@@ -44,6 +44,18 @@ MA 02110-1301, USA.
         &sExhaustPlumeClass itself. `this` is renamed to `thisObj` because it is a reserved word
         once this file compiles as Objective-C++ (ADR-0001).
 */
+
+/*
+        C++20 since bead oo-utlm, converted the way bead oo-ppc converted OOJSVector.mm (proposed
+        ADR-0056 amendment oo-ppc). The JS class was already C++ on the ooscript façade;
+        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
+        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The category on
+        OOExhaustPlumeEntity became three free functions, and its methods and interface moved to
+        OOJSExhaustPlume+ObjCBridge.mm (amendment oo-ykoy). Messages to classes that are still
+        Objective-C (OOExhaustPlumeEntity, ShipEntity, Entity) stay as they are, which is why the
+        file is still .mm until Phase 4.
+*/
+
 namespace ooscript {
 }
 using ooscript::CallArgs;
@@ -62,7 +74,7 @@ static ooscript::Object sExhaustPlumePrototype;
 } // namespace
 
 namespace {
-static BOOL JSExhaustPlumeGetExhaustPlumeEntity(ooscript::Context context, ooscript::Object jsobj, OOExhaustPlumeEntity** outEntity);
+static bool JSExhaustPlumeGetExhaustPlumeEntity(ooscript::Context context, ooscript::Object jsobj, OOExhaustPlumeEntity** outEntity);
 } // namespace
 
 namespace {
@@ -138,56 +150,55 @@ void InitOOJSExhaustPlume(ooscript::Context context, ooscript::Object global)
 }
 
 namespace {
-static BOOL JSExhaustPlumeGetExhaustPlumeEntity(ooscript::Context context, ooscript::Object jsobj, OOExhaustPlumeEntity** outEntity)
+static bool JSExhaustPlumeGetExhaustPlumeEntity(ooscript::Context context, ooscript::Object jsobj, OOExhaustPlumeEntity** outEntity)
 {
     OOJS_PROFILE_ENTER
 
-    BOOL result;
+    bool result;
     Entity* entity = nil;
 
     if (outEntity == NULL)
-        return NO;
+        return false;
     *outEntity = nil;
 
     result = OOJSEntityGetEntity(context, jsobj, &entity);
     if (!result)
-        return NO;
+        return false;
 
     if (![entity isKindOfClass:[OOExhaustPlumeEntity class]])
-        return NO;
+        return false;
 
     *outEntity = (OOExhaustPlumeEntity*)entity;
-    return YES;
+    return true;
 
     OOJS_PROFILE_EXIT
 }
 } // namespace
 
-@implementation OOExhaustPlumeEntity (OOJavaScriptExtensions)
-
-- (void)getJSClass:(ooscript::ClassDef**)outClass andPrototype:(ooscript::Object*)outPrototype
+// The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), whose methods are in
+// OOJSExhaustPlume+ObjCBridge.mm until OOExhaustPlumeEntity converts (proposed ADR-0056 amendments
+// oo-ppc and oo-ykoy).
+void OOJSExhaustPlumeGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
 {
     *outClass = &sExhaustPlumeClass;
     *outPrototype = sExhaustPlumePrototype;
 }
 
-- (std::optional<std::string>)cxx_oo_jsClassName
+std::optional<std::string> OOJSExhaustPlumeJSClassName(void)
 {
     return std::string("ExhaustPlume");
 }
 
-- (BOOL)isVisibleToScripts
+bool OOJSExhaustPlumeIsVisibleToScripts(void)
 {
-    return YES;
+    return true;
 }
-
-@end
 
 namespace {
 static bool ExhaustPlumeGetProperty(Context cx, Object obj, PropertyId propID, Value* value)
 {
     if (!ooscript::isInt32Id(propID))
-        return YES;
+        return true;
 
     ooscript::Context context = (cx);
     ooscript::Object thisObj = (obj);
@@ -199,10 +210,10 @@ static bool ExhaustPlumeGetProperty(Context cx, Object obj, PropertyId propID, V
     id result = nil;
 
     if (!JSExhaustPlumeGetExhaustPlumeEntity(context, thisObj, &entity))
-        return NO;
+        return false;
     if (entity == nil) {
         *value_raw = ooscript::undefinedValue();
-        return YES;
+        return true;
     }
 
     switch (ooscript::idToInt32(propID)) {
@@ -211,11 +222,11 @@ static bool ExhaustPlumeGetProperty(Context cx, Object obj, PropertyId propID, V
 
     default:
         OOJSReportBadPropertySelector(context, thisObj, (propID), sExhaustPlumePropertiesRaw);
-        return NO;
+        return false;
     }
 
     *value_raw = OOJSValueFromNativeObject(context, result);
-    return YES;
+    return true;
 
     OOJS_NATIVE_EXIT
 }
@@ -225,7 +236,7 @@ namespace {
 static bool ExhaustPlumeSetProperty(Context cx, Object obj, PropertyId propID, bool /*strict*/, Value* value)
 {
     if (!ooscript::isInt32Id(propID))
-        return YES;
+        return true;
 
     ooscript::Context context = (cx);
     ooscript::Object thisObj = (obj);
@@ -237,25 +248,25 @@ static bool ExhaustPlumeSetProperty(Context cx, Object obj, PropertyId propID, b
     Vector vValue;
 
     if (!JSExhaustPlumeGetExhaustPlumeEntity(context, thisObj, &entity))
-        return NO;
+        return false;
     if (entity == nil)
-        return YES;
+        return true;
 
     switch (ooscript::idToInt32(propID)) {
     case kExhaustPlume_size:
         if (JSValueToVector(context, *value_raw, &vValue)) {
             [entity setScale:vValue];
-            return YES;
+            return true;
         }
         break;
 
     default:
         OOJSReportBadPropertySelector(context, thisObj, (propID), sExhaustPlumePropertiesRaw);
-        return NO;
+        return false;
     }
 
     OOJSReportBadPropertyValue(context, thisObj, (propID), sExhaustPlumePropertiesRaw, *value_raw);
-    return NO;
+    return false;
 
     OOJS_NATIVE_EXIT
 }
@@ -266,7 +277,7 @@ static bool ExhaustPlumeSetProperty(Context cx, Object obj, PropertyId propID, b
 #define GET_THIS_EXHAUSTPLUME(THISENT)                                                        \
     do {                                                                                      \
         if (EXPECT_NOT(!JSExhaustPlumeGetExhaustPlumeEntity(context, OOJS_THIS, &(THISENT)))) \
-            return NO; /* Exception */                                                        \
+            return false; /* Exception */                                                     \
         if (OOIsStaleEntity(THISENT))                                                         \
             OOJS_RETURN_VOID;                                                                 \
     } while (0)

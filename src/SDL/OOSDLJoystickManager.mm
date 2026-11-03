@@ -108,7 +108,9 @@ bool OOSDLJoystickManager::handleSDLEvent(SDL_Event* evt)
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
     case SDL_EVENT_JOYSTICK_AXIS_MOTION: {
         JoyAxisEvent joyEvt = makeJoyAxisEvent((SDL_JoyAxisEvent*)evt);
-        if (joyEvt.which >= 0) {
+        // The index, not joyEvt.which: an unknown stick's -1 is 0xFFFFFFFF in the unsigned
+        // SDL_JoystickID, which passed a `which >= 0` test (bead oo-9ht.3).
+        if (getJoystickIndexFromId(((SDL_JoyAxisEvent*)evt)->which) >= 0) {
             [oo::ToObjC(this) decodeAxisEvent:&joyEvt]; // OOJoystickManager's, on the facade
             rc = true;
         }
@@ -120,7 +122,7 @@ bool OOSDLJoystickManager::handleSDLEvent(SDL_Event* evt)
     case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
     case SDL_EVENT_JOYSTICK_BUTTON_UP: {
         JoyButtonEvent joyEvt = makeJoyButtonEvent((SDL_JoyButtonEvent*)evt);
-        if (joyEvt.which >= 0) {
+        if (getJoystickIndexFromId(((SDL_JoyButtonEvent*)evt)->which) >= 0) {
             [oo::ToObjC(this) decodeButtonEvent:&joyEvt]; // OOJoystickManager's, on the facade
             rc = true;
         }
@@ -129,7 +131,7 @@ bool OOSDLJoystickManager::handleSDLEvent(SDL_Event* evt)
 
     case SDL_EVENT_JOYSTICK_HAT_MOTION: {
         JoyHatEvent joyEvt = makeJoyHatEvent((SDL_JoyHatEvent*)evt);
-        if (joyEvt.which >= 0) {
+        if (getJoystickIndexFromId(((SDL_JoyHatEvent*)evt)->which) >= 0) {
             [oo::ToObjC(this) decodeHatEvent:&joyEvt]; // OOJoystickManager's, on the facade
             rc = true;
         }

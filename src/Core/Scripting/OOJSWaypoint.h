@@ -26,7 +26,6 @@ MA 02110-1301, USA.
 
 #pragma once
 #import "OOFoundation.h"
-#import "OOWaypointEntity.h"
 #include "ooscript/JSEngine.hpp"
 @class OOWaypointEntity;
 
@@ -40,10 +39,10 @@ void InitOOJSWaypoint(ooscript::Context context, ooscript::Object global);
 }
 #endif
 
-@interface OOWaypointEntity (OOJavaScriptExtensions)
-
-- (void)getJSClass:(ooscript::ClassDef**)outClass andPrototype:(ooscript::Object*)outPrototype;
-- (std::optional<std::string>)cxx_oo_jsClassName;
-- (BOOL)isVisibleToScripts;
-
-@end
+/*	The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the engine reaches by
+        selector. Its methods are one-line forwarders to these in OOJSWaypoint+ObjCBridge.mm until
+        OOWaypointEntity converts (proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+*/
+void OOJSWaypointGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+std::optional<std::string> OOJSWaypointJSClassName(void);
+bool OOJSWaypointIsVisibleToScripts(void);

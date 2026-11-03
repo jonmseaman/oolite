@@ -676,6 +676,21 @@ std::string ExpandKeyWithArguments(const char* key, const oo::PList::Dict& args)
     }
 }
 
+// The GUI row a mouse click activates (bead oo-3rb.348). UNIVERSE->cursor_row is only recomputed
+// when the GUI is RENDERED, so after a stall the motion events and the click arrive in one tick and
+// cursor_row is still the row of the last render, not the row under the pointer (a click aimed at
+// row 26 activated row 22, which the pointer had crossed on its way). On an interactive GUI screen,
+// ask the GUI for the row under the pointer as it is now, with the same maths the render uses.
+static int ClickedGUIRow(GuiDisplayGen* gui)
+{
+    if (!UNIVERSE)
+        return 0;
+    if ([[UNIVERSE gameController] mouseInteractionMode] == MOUSE_MODE_UI_SCREEN_WITH_INTERACTION && gui != nil) {
+        return [gui rowAtVirtualJoystickPosition:[[UNIVERSE gameView] virtualJoystickPosition]];
+    }
+    return UNIVERSE->cursor_row;
+}
+
 // DJS + aegidian: Moved from the big switch/case block in pollGuiArrowKeyControls
 - (BOOL)handleGUIUpDownArrowKeys
 {
@@ -725,18 +740,14 @@ std::string ExpandKeyWithArguments(const char* key, const oo::PList::Dict& args)
 
     if (mouse_click) {
         if (!upDownKeyPressed) {
-            int click_row = 0;
-            if (UNIVERSE)
-                click_row = UNIVERSE->cursor_row;
+            int click_row = ClickedGUIRow(gui);
             if ([gui setSelectedRow:click_row]) {
                 result = YES;
             }
         }
     }
     if (mouse_dbl_click) {
-        int click_row = 0;
-        if (UNIVERSE)
-            click_row = UNIVERSE->cursor_row;
+        int click_row = ClickedGUIRow(gui);
         if ([gui setSelectedRow:click_row]) {
             result = YES;
         } else {
@@ -3248,22 +3259,6 @@ std::string ExpandKeyWithArguments(const char* key, const oo::PList::Dict& args)
     }
 #endif
 
-#if !NEW_PLANETS
-    if ((guiSelectedRow == GUI_ROW(GAME, PROCEDURALLYTEXTUREDPLANETS)) && (([self checkKeyPress:n_key_gui_arrow_right]) || ([self checkKeyPress:n_key_gui_arrow_left]))) {
-        if ([self checkKeyPress:n_key_gui_arrow_right] != [UNIVERSE doProcedurallyTexturedPlanets]) {
-            [UNIVERSE setDoProcedurallyTexturedPlanets:[self checkKeyPress:n_key_gui_arrow_right]];
-            [self playChangedOption];
-            if ([UNIVERSE planet]) {
-                [UNIVERSE setUpPlanet];
-            }
-        }
-        if ([UNIVERSE doProcedurallyTexturedPlanets])
-            [gui cxx_setText:OO_DESC("gameoptions-procedurally-textured-planets-yes") forRow:GUI_ROW(GAME, PROCEDURALLYTEXTUREDPLANETS) align:GUI_ALIGN_CENTER];
-        else
-            [gui cxx_setText:OO_DESC("gameoptions-procedurally-textured-planets-no") forRow:GUI_ROW(GAME, PROCEDURALLYTEXTUREDPLANETS) align:GUI_ALIGN_CENTER];
-    }
-#endif
-
     if (guiSelectedRow == GUI_ROW(GAME, SHADEREFFECTS) && ([self checkKeyPress:n_key_gui_arrow_right] || [self checkKeyPress:n_key_gui_arrow_left])) {
         if (!shaderSelectKeyPressed || (script_time > timeLastKeyPress + KEY_REPEAT_INTERVAL)) {
             int direction = ([self checkKeyPress:n_key_gui_arrow_right]) ? 1 : -1;
@@ -4679,7 +4674,7 @@ static BOOL autopilot_pause;
         unsigned i;
 
         for (i = 0; i < uni->n_entities && nStations < 2; i++) {
-            if (entities[i]->isStation && [entities[i] isKindOfClass:[StationEntity class]] && entities[i]->zero_distance <= SCANNER_MAX_RANGE2) {
+            if (entities[i]->_cxxEntity->isStation && [entities[i] isKindOfClass:[StationEntity class]] && entities[i]->_cxxEntity->zero_distance <= SCANNER_MAX_RANGE2) {
                 nStations++;
                 target = entities[i];
             }

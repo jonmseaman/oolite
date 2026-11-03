@@ -26,7 +26,6 @@ MA 02110-1301, USA.
 
 #pragma once
 #import "OOFoundation.h"
-#import "OOSound.h"
 #include "ooscript/JSEngine.hpp"
 
 @class OOSound;
@@ -47,3 +46,11 @@ OOSound* SoundFromJSValue(ooscript::Context context, ooscript::Value value);
 #ifdef __cplusplus
 }
 #endif
+
+/*	The bodies of OOSound (OOJavaScriptExtentions), which the engine reaches by selector. Its
+        methods are one-line forwarders to these in OOJSSound+ObjCBridge.mm until OOSound converts
+        (proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+*/
+ooscript::Value OOJSSoundJSValueInContext(OOSound* sound, ooscript::Context context);
+std::optional<std::string> OOJSSoundJSDescription(OOSound* sound);
+std::optional<std::string> OOJSSoundJSClassName(void);

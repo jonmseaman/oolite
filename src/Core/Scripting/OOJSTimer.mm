@@ -203,7 +203,7 @@ bool OOJSTimer::initWithDelay(OOTimeAbsolute delay, OOTimeDelta interval, ooscri
             return false;
         }
 
-        _owningScript = oo::adoptObjC(static_cast<OOJSScript*>([[OOJSScript currentlyRunningScript] weakRetain]));
+        _owningScript = oo::adoptObjC(static_cast<::OOJSScript*>([[::OOJSScript currentlyRunningScript] weakRetain]));
 
         oo::NotificationCenter::defaultCenter().addObserver(this, kOOJavaScriptEngineWillResetNotificationName,
             [OOJavaScriptEngine sharedEngine],
@@ -290,13 +290,13 @@ void OOJSTimer::timerFired()
         return;
     }
 
-    [OOJSScript pushScript:_owningScript.get()];
+    [::OOJSScript pushScript:_owningScript.get()];
     [engine callJSFunction:_function
                  forObject:_jsThis
                       argc:0
                       argv:NULL
                     result:&rval];
-    [OOJSScript popScript:_owningScript.get()];
+    [::OOJSScript popScript:_owningScript.get()];
 
     OOJSRelinquishContext(context);
 }
@@ -410,7 +410,9 @@ static void TimerFinalize(Context cx, Object obj)
 
     if (timer != nil) {
         if (oo::ToCxx(timer)->isScheduled()) {
-            OO_LOG_WARN("script.javaScript.unrootedTimer", "Timer {} is being garbage-collected while still running. You must keep a reference to all running timers, or they will stop unpredictably!", oo::DescriptionOf(timer));
+            // Described from the timer's own state: its full description reads the function's
+            // name, which runs script inside the collection and corrupts the heap (bead oo-r1ci7).
+            OO_LOG_WARN("script.javaScript.unrootedTimer", "Timer {} is being garbage-collected while still running. You must keep a reference to all running timers, or they will stop unpredictably!", oo::DescriptionWithComponents(timer, oo::ToCxx(timer)->OOScriptTimer::descriptionComponents()));
         }
         objc_release(timer); // the private slot's retain
         ooscript::setPrivate(cx, obj, NULL);

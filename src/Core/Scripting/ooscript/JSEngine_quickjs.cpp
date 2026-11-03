@@ -1489,7 +1489,12 @@ namespace {
             freeDesc(ctx, &d);
             if (!writable)
                 return readOnlyFail(ctx, flags, atom);
-            if (own)
+            // A data property the resolve hook put on the shape keeps its own attributes. Anything else
+            // here is a name the hooks only REPORT (the last newEnumerate listing, the tinyid registry):
+            // the object does not have it, so SpiderMonkey's assignment added it -- addProperty, then
+            // the class's setProperty, then a slot -- which is the path below. Defining it on the shape
+            // instead skipped the setter and left a read-only, permanent shadow (bead oo-f1yi3).
+            if (own && fromShape)
                 return JS_DefineProperty(ctx, obj, atom, val, JS_UNDEFINED, JS_UNDEFINED, JS_PROP_HAS_VALUE | JS_PROP_NO_EXOTIC);
         } else {
             JSValue p = JS_GetPrototype(ctx, obj);

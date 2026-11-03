@@ -47,6 +47,15 @@ MA 02110-1301, USA.
         setProperty) and the new-enumerate protocol hook now take the façade's Context/Object/
         PropertyId/Value signature directly, so no conversion is needed anywhere in the file.
 */
+/*
+        C++20 since bead oo-s4ns, converted the way bead oo-ppc converted OOJSVector.mm (proposed
+        ADR-0056 amendment oo-ppc). The JS class was already C++ on the ooscript façade;
+        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
+        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. Nothing else in the file was
+        Objective-C: the player (PlayerEntity), which is not converted, is still messaged, which is why
+        the file is still .mm until Phase 4.
+*/
+
 namespace ooscript {
 }
 using ooscript::ClassDef;
@@ -155,7 +164,7 @@ static bool MissionVariablesDeleteProperty(Context cx, Object obj, PropertyId pr
         if (key.has_value())
             [player cxx_setMissionVariable:oo::PList() forKey:*key];
     }
-    return YES;
+    return true;
 
     OOJS_NATIVE_EXIT
 }
@@ -177,20 +186,20 @@ static bool MissionVariablesGetProperty(Context cx, Object obj, PropertyId propI
     if (ooscript::isStringId(jsPropID)) {
         std::optional<std::string> key = KeyForPropertyID(context, jsPropID);
         if (!key.has_value())
-            return YES;
+            return true;
 
         const oo::PList mvar = [player cxx_missionVariableForKey:*key];
 
         if (const std::string* string = mvar.getIf<std::string>()) // Currently there should only be strings, but we may want to change this.
         {
-            if (OOIsNumberLiteral(*string, YES)) {
+            if (OOIsNumberLiteral(*string, true)) {
                 return ooscript::newNumberValue(cx, oo::str::doubleValue(*string), value); // -[NSString doubleValue]
             }
         }
 
         *jsvalue = OOJSValueFromPList(context, mvar);
     }
-    return YES;
+    return true;
 
     OOJS_NATIVE_EXIT
 }
@@ -214,7 +223,7 @@ static bool MissionVariablesSetProperty(Context cx, Object obj, PropertyId propI
         if (!key.has_value()) {
             const std::optional<std::string> badName = cxx_OOStringFromJSID(jsPropID);
             cxx_OOJSReportError(context, "Invalid mission variable name \"%s\".", badName.has_value() ? cxx_OOJSEscapedForJavaScriptLiteral(*badName).c_str() : "(null)");
-            return NO;
+            return false;
         }
 
         // nil (a value with no string form) clears the variable. (The old OONull test could not match
@@ -223,7 +232,7 @@ static bool MissionVariablesSetProperty(Context cx, Object obj, PropertyId propI
 
         [player cxx_setMissionVariable:objValue.has_value() ? oo::PList(*objValue) : oo::PList() forKey:*key];
     }
-    return YES;
+    return true;
 
     OOJS_NATIVE_EXIT
 }
@@ -259,7 +268,7 @@ static bool MissionVariablesEnumerate(Context cx, Object /*obj*/, EnumerateOp en
         assert(count <= INT32_MAX);
         if (jsidp != NULL)
             *jsidp = ooscript::int32Id((uint32_t)count);
-        return YES;
+        return true;
     }
 
     case EnumerateOp::Next: {
@@ -288,7 +297,7 @@ static bool MissionVariablesEnumerate(Context cx, Object /*obj*/, EnumerateOp en
 
         if (jsidp != NULL)
             *jsidp = ooscript::voidId();
-        return YES;
+        return true;
     }
     }
 

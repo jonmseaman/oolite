@@ -27,7 +27,6 @@ MA 02110-1301, USA.
 #pragma once
 
 #import "OOFoundation.h"
-#import "WormholeEntity.h"
 #include "ooscript/JSEngine.hpp"
 @class WormholeEntity;
 
@@ -41,10 +40,10 @@ void InitOOJSWormhole(ooscript::Context context, ooscript::Object global);
 }
 #endif
 
-@interface WormholeEntity (OOJavaScriptExtensions)
-
-- (void)getJSClass:(ooscript::ClassDef**)outClass andPrototype:(ooscript::Object*)outPrototype;
-- (std::optional<std::string>)cxx_oo_jsClassName;
-- (BOOL)isVisibleToScripts;
-
-@end
+/*	The bodies of WormholeEntity (OOJavaScriptExtensions), which the engine reaches by selector.
+        Its methods are one-line forwarders to these in OOJSWormhole+ObjCBridge.mm until
+        WormholeEntity converts (proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+*/
+void OOJSWormholeGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+std::optional<std::string> OOJSWormholeJSClassName(void);
+bool OOJSWormholeIsVisibleToScripts(void);

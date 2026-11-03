@@ -26,7 +26,6 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#import "DockEntity.h"
 #import "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
 @class DockEntity;
@@ -40,3 +39,10 @@ void InitOOJSDock(ooscript::Context context, ooscript::Object global);
 #ifdef __cplusplus
 }
 #endif
+
+/*	The bodies of DockEntity (OOJavaScriptExtensions), which the engine reaches by selector. Its
+        methods are one-line forwarders to these in OOJSDock+ObjCBridge.mm until DockEntity converts
+        (proposed ADR-0056 amendments oo-ppc and oo-ykoy).
+*/
+void OOJSDockGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+std::optional<std::string> OOJSDockJSClassName(void);

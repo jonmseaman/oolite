@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 #import "OOJSQuaternion.h"
 #import "OOJSVector.h"
 #import "OOJavaScriptEngine.h"
+#import "OOWaypointEntity.h"
 
 #include "ooscript/JSEngine.hpp"
 #include <cstdint>
@@ -43,6 +44,18 @@ MA 02110-1301, USA.
         Waypoint is registered as an Entity subclass and object converter with &sWaypointClass, the
         same ooscript::ClassDef that ooscript::getClass() reports for its instances.
 */
+
+/*
+        C++20 since bead oo-mae5, converted the way bead oo-ppc converted OOJSVector.mm (proposed
+        ADR-0056 amendment oo-ppc). The JS class was already C++ on the ooscript façade;
+        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
+        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The category on
+        OOWaypointEntity became three free functions, and its methods and interface moved to
+        OOJSWaypoint+ObjCBridge.mm (amendment oo-ykoy). Messages to classes that are still
+        Objective-C (OOWaypointEntity, Entity, Universe, PlayerEntity) stay as they are, which is
+        why the file is still .mm until Phase 4.
+*/
+
 namespace ooscript {
 }
 using ooscript::CallArgs;
@@ -63,7 +76,7 @@ static ooscript::Object sWaypointPrototype;
 } // namespace
 
 namespace {
-static BOOL JSWaypointGetWaypointEntity(ooscript::Context context, ooscript::Object stationObj, OOWaypointEntity** outEntity);
+static bool JSWaypointGetWaypointEntity(ooscript::Context context, ooscript::Object stationObj, OOWaypointEntity** outEntity);
 } // namespace
 
 namespace {
@@ -144,56 +157,55 @@ void InitOOJSWaypoint(ooscript::Context context, ooscript::Object global)
 }
 
 namespace {
-static BOOL JSWaypointGetWaypointEntity(ooscript::Context context, ooscript::Object wormholeObj, OOWaypointEntity** outEntity)
+static bool JSWaypointGetWaypointEntity(ooscript::Context context, ooscript::Object wormholeObj, OOWaypointEntity** outEntity)
 {
     OOJS_PROFILE_ENTER
 
-    BOOL result;
+    bool result;
     Entity* entity = nil;
 
     if (outEntity == NULL)
-        return NO;
+        return false;
     *outEntity = nil;
 
     result = OOJSEntityGetEntity(context, wormholeObj, &entity);
     if (!result)
-        return NO;
+        return false;
 
     if (![entity isKindOfClass:[OOWaypointEntity class]])
-        return NO;
+        return false;
 
     *outEntity = (OOWaypointEntity*)entity;
-    return YES;
+    return true;
 
     OOJS_PROFILE_EXIT
 }
 } // namespace
 
-@implementation OOWaypointEntity (OOJavaScriptExtensions)
-
-- (void)getJSClass:(ooscript::ClassDef**)outClass andPrototype:(ooscript::Object*)outPrototype
+// The bodies of OOWaypointEntity (OOJavaScriptExtensions), whose methods are in
+// OOJSWaypoint+ObjCBridge.mm until OOWaypointEntity converts (proposed ADR-0056 amendments oo-ppc
+// and oo-ykoy).
+void OOJSWaypointGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
 {
     *outClass = &sWaypointClass;
     *outPrototype = sWaypointPrototype;
 }
 
-- (std::optional<std::string>)cxx_oo_jsClassName
+std::optional<std::string> OOJSWaypointJSClassName(void)
 {
     return std::string("Waypoint");
 }
 
-- (BOOL)isVisibleToScripts
+bool OOJSWaypointIsVisibleToScripts(void)
 {
-    return YES;
+    return true;
 }
-
-@end
 
 namespace {
 static bool WaypointGetProperty(Context cx, Object obj, PropertyId propID, Value* value)
 {
     if (!ooscript::isInt32Id(propID))
-        return YES;
+        return true;
 
     ooscript::Context context = reinterpret_cast<ooscript::Context>(cx);
     ooscript::Object thisObj = (obj);
@@ -207,10 +219,10 @@ static bool WaypointGetProperty(Context cx, Object obj, PropertyId propID, Value
     Quaternion q = kIdentityQuaternion;
 
     if (!JSWaypointGetWaypointEntity(context, thisObj, &entity))
-        return NO;
+        return false;
     if (entity == nil) {
         *value_raw = ooscript::undefinedValue();
-        return YES;
+        return true;
     }
 
     switch (ooscript::idToInt32(propID)) {
@@ -238,11 +250,11 @@ static bool WaypointGetProperty(Context cx, Object obj, PropertyId propID, Value
 
     default:
         OOJSReportBadPropertySelector(context, thisObj, (propID), sWaypointPropertiesRaw);
-        return NO;
+        return false;
     }
 
     *value_raw = OOJSValueFromPList(context, result);
-    return YES;
+    return true;
 
     OOJS_NATIVE_EXIT
 }
@@ -252,7 +264,7 @@ namespace {
 static bool WaypointSetProperty(Context cx, Object obj, PropertyId propID, bool /*strict*/, Value* value)
 {
     if (!ooscript::isInt32Id(propID))
-        return YES;
+        return true;
 
     ooscript::Context context = reinterpret_cast<ooscript::Context>(cx);
     ooscript::Object thisObj = (obj);
@@ -266,9 +278,9 @@ static bool WaypointSetProperty(Context cx, Object obj, PropertyId propID, bool 
     Quaternion qValue;
 
     if (!JSWaypointGetWaypointEntity(context, thisObj, &entity))
-        return NO;
+        return false;
     if (entity == nil)
-        return YES;
+        return true;
 
     switch (ooscript::idToInt32(propID)) {
     case kWaypoint_beaconCode:
@@ -289,21 +301,21 @@ static bool WaypointSetProperty(Context cx, Object obj, PropertyId propID, bool 
                 [UNIVERSE setNextBeacon:entity];
             }
         }
-        return YES;
+        return true;
         break;
 
     case kWaypoint_beaconLabel:
         sValue = cxx_OOStringFromJSValue(context, *value_raw);
         if (sValue.has_value()) {
             [entity setBeaconLabel:sValue];
-            return YES;
+            return true;
         }
         break;
 
     case kWaypoint_orientation:
         if (JSValueToQuaternion(context, *value_raw, &qValue)) {
             [entity setNormalOrientation:qValue];
-            return YES;
+            return true;
         }
         break;
 
@@ -311,18 +323,18 @@ static bool WaypointSetProperty(Context cx, Object obj, PropertyId propID, bool 
         if (ooscript::valueToNumber(cx, *value, &fValue)) {
             if (fValue > 0.0) {
                 [entity setSize:fValue];
-                return YES;
+                return true;
             }
         }
         break;
 
     default:
         OOJSReportBadPropertySelector(context, thisObj, (propID), sWaypointPropertiesRaw);
-        return NO;
+        return false;
     }
 
     OOJSReportBadPropertyValue(context, thisObj, (propID), sWaypointPropertiesRaw, *value_raw);
-    return NO;
+    return false;
 
     OOJS_NATIVE_EXIT
 }
