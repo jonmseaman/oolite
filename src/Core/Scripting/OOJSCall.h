@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
+#include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
 /*	OOJSCallObjCObjectMethod()
@@ -44,6 +45,6 @@ MA 02110-1301, USA.
 
         argv is assumed to contain at least one value.
 */
-BOOL OOJSCallObjCObjectMethod(ooscript::Context context, id object, NSString* oo_jsClassName, unsigned argc, ooscript::Value* argv, ooscript::Value* outResult);
+BOOL OOJSCallObjCObjectMethod(ooscript::Context context, id object, const std::string& oo_jsClassName, unsigned argc, ooscript::Value* argv, ooscript::Value* outResult);
 
 #endif

@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #import "OOJavaScriptEngine.h"
 #import "PlayerEntity.h"
 
+#import "OOFoundationBridge.h"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 
@@ -98,15 +99,15 @@ static bool WorldScriptsGetProperty(Context cx, Object obj, PropertyId propID, V
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    NSString* scriptName = nil;
+    std::optional<std::string> scriptName;
     id script = nil;
 
     if (!ooscript::isStringId(jsPropID))
         return YES;
-    scriptName = OOStringFromJSString(context, ooscript::idToString(jsPropID));
+    scriptName = oo::OptionalString(OOStringFromJSString(context, ooscript::idToString(jsPropID)));
 
-    if (scriptName != nil) {
-        script = [[player worldScriptsByName] objectForKey:scriptName];
+    if (scriptName.has_value()) {
+        script = [[player worldScriptsByName] objectForKey:oo::NSStringFrom(*scriptName)];
         if (script != nil) {
             /*	If script is an OOJSScript, this should return a JS Script
                     object. For other OOScript subclasses, it will return
@@ -141,14 +142,11 @@ static bool WorldScriptsEnumerate(Context cx, Object obj)
             we define the value as null here.
     */
 
-    NSArray* names = nil;
-    NSString* name = nil;
+    const std::vector<std::string> names = oo::StringsFrom([OOPlayerForScripting() worldScriptNames]);
 
-    names = [OOPlayerForScripting() worldScriptNames];
-
-    foreach (name, names) {
+    for (const std::string& name : names) {
         Value nullVal = ooscript::nullValue();
-        if (!ooscript::defineProperty(cx, obj, [name UTF8String], nullVal, WorldScriptsGetProperty, nullptr, kWorldScriptsPropertyFlags))
+        if (!ooscript::defineProperty(cx, obj, name.c_str(), nullVal, WorldScriptsGetProperty, nullptr, kWorldScriptsPropertyFlags))
             return NO;
     }
 

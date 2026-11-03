@@ -399,7 +399,7 @@ static bool SoundSourcePlayOrRepeat(ooscript::Context context, ooscript::CallArg
     return result;
 }
 
-- (NSString*)oo_jsClassName
+- (id)oo_jsClassName // shared selector (proposed ADR-0043)
 {
     return @"SoundSource";
 }

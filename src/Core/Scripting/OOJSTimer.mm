@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 #import "OOJavaScriptEngine.h"
 #import "Universe.h"
 
+#import "OOFoundationBridge.h"
 #include "oofnd/Notification.hpp"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
@@ -236,9 +237,9 @@ DEFINE_JS_OBJECT_GETTER(JSTimerGetTimer, &sTimerClass, sTimerPrototype, OOJSTime
     [super dealloc];
 }
 
-- (NSString*)descriptionComponents
+- (id)descriptionComponents // shared selector (proposed ADR-0043)
 {
-    NSString* funcName = nil;
+    std::optional<std::string> funcName;
     ooscript::Context context = NULL;
 
     if (ooscript::isUndefined(_function) || ooscript::isNull(_function)) {
@@ -246,17 +247,17 @@ DEFINE_JS_OBJECT_GETTER(JSTimerGetTimer, &sTimerClass, sTimerPrototype, OOJSTime
     }
 
     context = OOJSAcquireContext();
-    funcName = OOStringFromJSString(context, (ooscript::getFunctionId(ooscript::valueToFunction((context), (_function)))));
+    funcName = oo::OptionalString(OOStringFromJSString(context, (ooscript::getFunctionId(ooscript::valueToFunction((context), (_function))))));
     OOJSRelinquishContext(context);
 
-    if (funcName == nil) {
-        funcName = @"anonymous";
+    if (!funcName.has_value()) {
+        funcName = "anonymous";
     }
 
-    return [NSString stringWithFormat:@"%@, function: %@", [super descriptionComponents], funcName];
+    return oo::NSStringFrom(oo::str::format("%s, function: %s", oo::DescriptionOf([super descriptionComponents]).c_str(), funcName->c_str()));
 }
 
-- (NSString*)oo_jsClassName
+- (id)oo_jsClassName // shared selector (proposed ADR-0043)
 {
     return @"Timer";
 }
@@ -264,7 +265,7 @@ DEFINE_JS_OBJECT_GETTER(JSTimerGetTimer, &sTimerClass, sTimerPrototype, OOJSTime
 - (void)timerFired
 {
     ooscript::Value rval = ooscript::undefinedValue();
-    NSString* description = nil;
+    bool described = false; // was the description itself, used only to test for nil
 
     OOJavaScriptEngine* engine = [OOJavaScriptEngine sharedEngine];
     ooscript::Context context = OOJSAcquireContext();
@@ -272,12 +273,12 @@ DEFINE_JS_OBJECT_GETTER(JSTimerGetTimer, &sTimerClass, sTimerPrototype, OOJSTime
     // stop and remove the timer if _jsThis (the first parameter in the constructor) dies.
     id object = OOJSNativeObjectFromJSObject(context, _jsThis);
     if (object != nil) {
-        description = [object oo_jsDescription];
-        if (description == nil)
-            description = [object description];
+        described = [object oo_jsDescription] != nil;
+        if (!described)
+            described = [object description] != nil;
     }
 
-    if (description == nil) {
+    if (!described) {
         [self unscheduleTimer];
         OOJSRelinquishContext(context);
         return;

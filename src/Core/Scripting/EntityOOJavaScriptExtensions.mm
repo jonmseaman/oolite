@@ -41,7 +41,7 @@ MA 02110-1301, USA.
     return NO;
 }
 
-- (NSString*)oo_jsClassName
+- (id)oo_jsClassName // shared selector (proposed ADR-0043)
 {
     return @"Entity";
 }
@@ -113,12 +113,12 @@ MA 02110-1301, USA.
     *outPrototype = JSShipPrototype();
 }
 
-- (NSString*)oo_jsClassName
+- (id)oo_jsClassName // shared selector (proposed ADR-0043)
 {
     return @"Ship";
 }
 
-- (NSArray*)subEntitiesForScript
+- (id)subEntitiesForScript // shared selector (proposed ADR-0043)
 {
     return [[self shipSubEntityEnumerator] allObjects];
 }

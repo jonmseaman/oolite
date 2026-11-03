@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 */
 
 #import "OOMaths.h"
+#include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
 
@@ -60,7 +61,9 @@ BOOL JSQuaternionSetQuaternion(ooscript::Context context, ooscript::Object quate
         On failure, it will return NO and raise an error. If the caller is a JS
         callback, it must return NO to signal an error.
 */
-BOOL QuaternionFromArgumentList(ooscript::Context context, NSString* scriptClass, NSString* function, unsigned argc, ooscript::Value* argv, Quaternion* outQuaternion, unsigned* outConsumed) GCC_ATTR((nonnull(1, 5, 6)));
+extern "C++" { // C++ parameters (proposed ADR-0043, bead oo-38bp)
+BOOL QuaternionFromArgumentList(ooscript::Context context, const std::string& scriptClass, const std::string& function, unsigned argc, ooscript::Value* argv, Quaternion* outQuaternion, unsigned* outConsumed) GCC_ATTR((nonnull(1, 5, 6)));
+}
 
 /*	QuaternionFromArgumentList()
 

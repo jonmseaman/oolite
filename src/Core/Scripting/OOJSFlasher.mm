@@ -180,7 +180,7 @@ static BOOL JSFlasherGetFlasherEntity(ooscript::Context context, ooscript::Objec
     *outPrototype = sFlasherPrototype;
 }
 
-- (NSString*)oo_jsClassName
+- (id)oo_jsClassName // shared selector (proposed ADR-0043)
 {
     return @"Flasher";
 }

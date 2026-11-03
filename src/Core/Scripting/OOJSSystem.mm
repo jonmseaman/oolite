@@ -44,6 +44,7 @@
 #import "OOJSPopulatorDefinition.h"
 #import "OOPListView.h"
 
+#import "OOFoundationBridge.h"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 
@@ -86,13 +87,13 @@ static inline Object* OOJSFOBJP(ooscript::Object* o) { return reinterpret_cast<O
 
 // Support functions for entity search methods.
 namespace {
-static BOOL GetRelativeToAndRange(ooscript::Context context, NSString* methodName, unsigned* ioArgc, ooscript::Value** ioArgv, Entity** outRelativeTo, double* outRange);
+static BOOL GetRelativeToAndRange(ooscript::Context context, const std::string& methodName, unsigned* ioArgc, ooscript::Value** ioArgv, Entity** outRelativeTo, double* outRange);
 } // namespace
 namespace {
-static NSArray* FindJSVisibleEntities(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range);
+static std::vector<oo::ObjCRef<Entity*>> FindJSVisibleEntities(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range);
 } // namespace
 namespace {
-static NSArray* FindShips(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range);
+static std::vector<oo::ObjCRef<Entity*>> FindShips(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range);
 } // namespace
 namespace {
 static NSComparisonResult CompareEntitiesByDistance(id a, id b, void* relativeTo);
@@ -403,7 +404,6 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* 
 
     id result = nil;
     PlayerEntity* player = nil;
-    NSDictionary* systemData = nil;
     BOOL handled = NO;
 
     player = OOPlayerForScripting();
@@ -504,51 +504,51 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* 
     if (!handled) {
         // Handle cases which do require systemData.
         if (EXPECT(![UNIVERSE inInterstellarSpace])) {
-            systemData = [UNIVERSE currentSystemData];
+            const oo::PListView systemData([UNIVERSE currentSystemData]);
 
             switch (ooscript::idToInt32(propID)) {
             case kSystem_name:
-                result = [systemData objectForKey:KEY_NAME];
+                result = systemData.get<NSObject*>(KEY_NAME); // -objectForKey:
                 break;
 
             case kSystem_description:
-                result = [systemData objectForKey:KEY_DESCRIPTION];
+                result = systemData.get<NSObject*>(KEY_DESCRIPTION); // -objectForKey:
                 break;
 
             case kSystem_inhabitantsDescription:
-                result = [systemData objectForKey:KEY_INHABITANTS];
+                result = systemData.get<NSObject*>(KEY_INHABITANTS); // -objectForKey:
                 break;
 
             case kSystem_government:
-                *value_raw = ooscript::int32Value(oo::PListView(systemData).get<int>(KEY_GOVERNMENT));
+                *value_raw = ooscript::int32Value(systemData.get<int>(KEY_GOVERNMENT));
                 return YES;
 
             case kSystem_governmentDescription:
-                result = OODisplayStringFromGovernmentID(oo::PListView(systemData).get<int>(KEY_GOVERNMENT));
+                result = OODisplayStringFromGovernmentID(systemData.get<int>(KEY_GOVERNMENT));
                 if (result == nil)
                     result = DESC(@"not-applicable");
                 break;
 
             case kSystem_economy:
-                *value_raw = ooscript::int32Value(oo::PListView(systemData).get<int>(KEY_ECONOMY));
+                *value_raw = ooscript::int32Value(systemData.get<int>(KEY_ECONOMY));
                 return YES;
 
             case kSystem_economyDescription:
-                result = OODisplayStringFromEconomyID(oo::PListView(systemData).get<int>(KEY_ECONOMY));
+                result = OODisplayStringFromEconomyID(systemData.get<int>(KEY_ECONOMY));
                 if (result == nil)
                     result = DESC(@"not-applicable");
                 break;
 
             case kSystem_techLevel:
-                *value_raw = ooscript::int32Value(oo::PListView(systemData).get<int>(KEY_TECHLEVEL));
+                *value_raw = ooscript::int32Value(systemData.get<int>(KEY_TECHLEVEL));
                 return YES;
 
             case kSystem_population:
-                *value_raw = ooscript::int32Value(oo::PListView(systemData).get<int>(KEY_POPULATION));
+                *value_raw = ooscript::int32Value(systemData.get<int>(KEY_POPULATION));
                 return YES;
 
             case kSystem_productivity:
-                *value_raw = ooscript::int32Value(oo::PListView(systemData).get<int>(KEY_PRODUCTIVITY));
+                *value_raw = ooscript::int32Value(systemData.get<int>(KEY_PRODUCTIVITY));
                 return YES;
 
             default:
@@ -624,8 +624,8 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     PlayerEntity* player = nil;
     OOGalaxyID galaxy;
     OOSystemID system;
-    NSString* stringValue = nil;
-    NSString* manifest = nil;
+    std::optional<std::string> stringValue;
+    oo::PList manifest; // the running script's manifest identifier, handed on as it was read
     double fValue;
     int32_t iValue;
     bool bValue;
@@ -658,29 +658,29 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     if (system == -1)
         return YES; // Can't change anything else in interstellar space.
 
-    manifest = [[OOJSScript currentlyRunningScript] propertyNamed:kLocalManifestProperty];
+    manifest = oo::PListFrom([[OOJSScript currentlyRunningScript] propertyNamed:kLocalManifestProperty]);
 
     switch (ooscript::idToInt32(propID)) {
     case kSystem_name:
-        stringValue = OOStringFromJSValue(context, *value_raw);
-        if (stringValue != nil) {
-            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_NAME value:stringValue fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
+        stringValue = oo::OptionalString(OOStringFromJSValue(context, *value_raw));
+        if (stringValue.has_value()) {
+            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_NAME value:oo::NSStringFrom(*stringValue) fromManifest:oo::ObjectFromPList(manifest) forLayer:OO_LAYER_OXP_DYNAMIC];
             return YES;
         }
         break;
 
     case kSystem_description:
-        stringValue = OOStringFromJSValue(context, *value_raw);
-        if (stringValue != nil) {
-            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_DESCRIPTION value:stringValue fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
+        stringValue = oo::OptionalString(OOStringFromJSValue(context, *value_raw));
+        if (stringValue.has_value()) {
+            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_DESCRIPTION value:oo::NSStringFrom(*stringValue) fromManifest:oo::ObjectFromPList(manifest) forLayer:OO_LAYER_OXP_DYNAMIC];
             return YES;
         }
         break;
 
     case kSystem_inhabitantsDescription:
-        stringValue = OOStringFromJSValue(context, *value_raw);
-        if (stringValue != nil) {
-            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_INHABITANTS value:stringValue fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
+        stringValue = oo::OptionalString(OOStringFromJSValue(context, *value_raw));
+        if (stringValue.has_value()) {
+            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_INHABITANTS value:oo::NSStringFrom(*stringValue) fromManifest:oo::ObjectFromPList(manifest) forLayer:OO_LAYER_OXP_DYNAMIC];
             return YES;
         }
         break;
@@ -691,7 +691,7 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
                 iValue = 0;
             if (7 < iValue)
                 iValue = 7;
-            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_GOVERNMENT value:[NSNumber numberWithInt:iValue] fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
+            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_GOVERNMENT value:oo::ObjectFromPList(oo::PList::signedInteger(iValue)) fromManifest:oo::ObjectFromPList(manifest) forLayer:OO_LAYER_OXP_DYNAMIC];
             return YES;
         }
         break;
@@ -702,7 +702,7 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
                 iValue = 0;
             if (7 < iValue)
                 iValue = 7;
-            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_ECONOMY value:[NSNumber numberWithInt:iValue] fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
+            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_ECONOMY value:oo::ObjectFromPList(oo::PList::signedInteger(iValue)) fromManifest:oo::ObjectFromPList(manifest) forLayer:OO_LAYER_OXP_DYNAMIC];
             return YES;
         }
         break;
@@ -713,21 +713,21 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
                 iValue = 0;
             if (15 < iValue)
                 iValue = 15;
-            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_TECHLEVEL value:[NSNumber numberWithInt:iValue] fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
+            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_TECHLEVEL value:oo::ObjectFromPList(oo::PList::signedInteger(iValue)) fromManifest:oo::ObjectFromPList(manifest) forLayer:OO_LAYER_OXP_DYNAMIC];
             return YES;
         }
         break;
 
     case kSystem_population:
         if (ooscript::valueToInt32(cx, *value, &iValue)) {
-            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_POPULATION value:[NSNumber numberWithInt:iValue] fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
+            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_POPULATION value:oo::ObjectFromPList(oo::PList::signedInteger(iValue)) fromManifest:oo::ObjectFromPList(manifest) forLayer:OO_LAYER_OXP_DYNAMIC];
             return YES;
         }
         break;
 
     case kSystem_productivity:
         if (ooscript::valueToInt32(cx, *value, &iValue)) {
-            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_PRODUCTIVITY value:[NSNumber numberWithInt:iValue] fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
+            [UNIVERSE setSystemDataForGalaxy:galaxy planet:system key:KEY_PRODUCTIVITY value:oo::ObjectFromPList(oo::PList::signedInteger(iValue)) fromManifest:oo::ObjectFromPList(manifest) forLayer:OO_LAYER_OXP_DYNAMIC];
             return YES;
         }
         break;
@@ -754,10 +754,10 @@ static bool SystemToString(ooscript::Context context, ooscript::CallArgs& oojsAr
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    NSString* systemDesc = nil;
+    std::string systemDesc;
 
-    systemDesc = [NSString stringWithFormat:@"[System %u:%u \"%@\"]", [player currentGalaxyID], [player currentSystemID], [[UNIVERSE currentSystemData] objectForKey:KEY_NAME]];
-    OOJS_RETURN_OBJECT(systemDesc);
+    systemDesc = oo::str::format("[System %u:%u \"%s\"]", [player currentGalaxyID], [player currentSystemID], oo::DescriptionOf([[UNIVERSE currentSystemData] objectForKey:KEY_NAME]).c_str());
+    OOJS_RETURN_OBJECT(oo::NSStringFrom(systemDesc));
 
     OOJS_NATIVE_EXIT
 }
@@ -771,18 +771,18 @@ static bool SystemAddPlanet(ooscript::Context context, ooscript::CallArgs& oojsA
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    NSString* key = nil;
+    std::optional<std::string> key;
     OOPlanetEntity* planet = nil;
 
     if (oojsArgs.count() > 0)
-        key = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(key == nil)) {
+        key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (EXPECT_NOT(!key.has_value())) {
         OOJSReportBadArguments(context, @"System", @"addPlanet", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"string (planet key)");
         return NO;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    planet = [player addPlanet:key];
+    planet = [player addPlanet:oo::NSStringFrom(*key)];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_OBJECT(planet);
@@ -799,18 +799,18 @@ static bool SystemAddMoon(ooscript::Context context, ooscript::CallArgs& oojsArg
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    NSString* key = nil;
+    std::optional<std::string> key;
     OOPlanetEntity* planet = nil;
 
     if (oojsArgs.count() > 0)
-        key = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(key == nil)) {
+        key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (EXPECT_NOT(!key.has_value())) {
         OOJSReportBadArguments(context, @"System", @"addMoon", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"string (planet key)");
         return NO;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    planet = [player addMoon:key];
+    planet = [player addMoon:oo::NSStringFrom(*key)];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_OBJECT(planet);
@@ -842,14 +842,14 @@ static bool SystemCountShipsWithPrimaryRole(ooscript::Context context, ooscript:
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* role = nil;
+    std::optional<std::string> role;
     Entity* relativeTo = nil;
     double range = -1;
     unsigned result;
 
     if (oojsArgs.count() > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(role == nil)) {
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (EXPECT_NOT(!role.has_value())) {
         OOJSReportBadArguments(context, @"System", @"countShipsWithPrimaryRole", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"string (role)");
         return NO;
     }
@@ -857,11 +857,11 @@ static bool SystemCountShipsWithPrimaryRole(ooscript::Context context, ooscript:
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* argv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, @"countShipsWithPrimaryRole", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "countShipsWithPrimaryRole", &argc, &argv, &relativeTo, &range)))
         return NO;
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = [UNIVERSE countShipsWithPrimaryRole:role inRange:range ofEntity:relativeTo];
+    result = [UNIVERSE countShipsWithPrimaryRole:oo::NSStringFrom(*role) inRange:range ofEntity:relativeTo];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_INT(result);
@@ -877,14 +877,14 @@ static bool SystemCountShipsWithRole(ooscript::Context context, ooscript::CallAr
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* role = nil;
+    std::optional<std::string> role;
     Entity* relativeTo = nil;
     double range = -1;
     unsigned result;
 
     if (oojsArgs.count() > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(role == nil)) {
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (EXPECT_NOT(!role.has_value())) {
         OOJSReportBadArguments(context, @"System", @"countShipsWithRole", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"string (role)");
         return NO;
     }
@@ -892,11 +892,11 @@ static bool SystemCountShipsWithRole(ooscript::Context context, ooscript::CallAr
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* argv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, @"countShipsWithRole", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "countShipsWithRole", &argc, &argv, &relativeTo, &range)))
         return NO;
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = [UNIVERSE countShipsWithRole:role inRange:range ofEntity:relativeTo];
+    result = [UNIVERSE countShipsWithRole:oo::NSStringFrom(*role) inRange:range ofEntity:relativeTo];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_INT(result);
@@ -912,14 +912,14 @@ static bool SystemShipsWithPrimaryRole(ooscript::Context context, ooscript::Call
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* role = nil;
+    std::optional<std::string> role;
     Entity* relativeTo = nil;
     double range = -1;
-    NSArray* result = nil;
+    std::vector<oo::ObjCRef<Entity*>> result;
 
     if (oojsArgs.count() > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(role == nil)) {
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (EXPECT_NOT(!role.has_value())) {
         OOJSReportBadArguments(context, @"System", @"countShipsWithRole", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"string (role)");
         return NO;
     }
@@ -927,15 +927,15 @@ static bool SystemShipsWithPrimaryRole(ooscript::Context context, ooscript::Call
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* argv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, @"shipsWithPrimaryRole", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "shipsWithPrimaryRole", &argc, &argv, &relativeTo, &range)))
         return NO;
 
     // Search for entities
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = FindShips(HasPrimaryRolePredicate, role, relativeTo, range);
+    result = FindShips(HasPrimaryRolePredicate, oo::NSStringFrom(*role), relativeTo, range);
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_OBJECT(result);
+    OOJS_RETURN_OBJECT(oo::NSArrayFromObjects(result));
 
     OOJS_NATIVE_EXIT
 }
@@ -948,14 +948,14 @@ static bool SystemShipsWithRole(ooscript::Context context, ooscript::CallArgs& o
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* role = nil;
+    std::optional<std::string> role;
     Entity* relativeTo = nil;
     double range = -1;
-    NSArray* result = nil;
+    std::vector<oo::ObjCRef<Entity*>> result;
 
     if (oojsArgs.count() > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(role == nil)) {
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (EXPECT_NOT(!role.has_value())) {
         OOJSReportBadArguments(context, @"System", @"shipsWithRole", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"string (role)");
         return NO;
     }
@@ -963,15 +963,15 @@ static bool SystemShipsWithRole(ooscript::Context context, ooscript::CallArgs& o
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* subargv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, @"shipsWithRole", &argc, &subargv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "shipsWithRole", &argc, &subargv, &relativeTo, &range)))
         return NO;
 
     // Search for entities
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = FindShips(HasRolePredicate, role, relativeTo, range);
+    result = FindShips(HasRolePredicate, oo::NSStringFrom(*role), relativeTo, range);
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_OBJECT(result);
+    OOJS_RETURN_OBJECT(oo::NSArrayFromObjects(result));
 
     OOJS_NATIVE_EXIT
 }
@@ -999,7 +999,7 @@ static bool SystemCountEntitiesWithScanClass(ooscript::Context context, ooscript
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* argv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, @"countEntitiesWithScanClass", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "countEntitiesWithScanClass", &argc, &argv, &relativeTo, &range)))
         return NO;
 
     OOJS_BEGIN_FULL_NATIVE(context)
@@ -1022,7 +1022,7 @@ static bool SystemEntitiesWithScanClass(ooscript::Context context, ooscript::Cal
     OOScanClass scanClass = CLASS_NOT_SET;
     Entity* relativeTo = nil;
     double range = -1;
-    NSArray* result = nil;
+    std::vector<oo::ObjCRef<Entity*>> result;
 
     if (oojsArgs.count() > 0)
         scanClass = OOScanClassFromJSValue(context, OOJS_ARGV[0]);
@@ -1034,15 +1034,15 @@ static bool SystemEntitiesWithScanClass(ooscript::Context context, ooscript::Cal
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* argv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, @"entitiesWithScanClass", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "entitiesWithScanClass", &argc, &argv, &relativeTo, &range)))
         return NO;
 
     // Search for entities
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = FindJSVisibleEntities(HasScanClassPredicate, [NSNumber numberWithInt:scanClass], relativeTo, range);
+    result = FindJSVisibleEntities(HasScanClassPredicate, oo::ObjectFromPList(oo::PList::signedInteger(scanClass)), relativeTo, range);
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_OBJECT(result);
+    OOJS_RETURN_OBJECT(oo::NSArrayFromObjects(result));
 
     OOJS_NATIVE_EXIT
 }
@@ -1059,7 +1059,7 @@ static bool SystemFilteredEntities(ooscript::Context context, ooscript::CallArgs
     ooscript::Value predicate;
     Entity* relativeTo = nil;
     double range = -1;
-    NSArray* result = nil;
+    std::vector<oo::ObjCRef<Entity*>> result;
 
     // Get this and predicate arguments
     if (oojsArgs.count() < 2 || !OOJSValueIsFunction(context, OOJS_ARGV[1]) || !ooscript::valueToObject(context, (OOJS_ARGV[0]), OOJSFOBJP(&jsThis))) {
@@ -1071,7 +1071,7 @@ static bool SystemFilteredEntities(ooscript::Context context, ooscript::CallArgs
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 2;
     ooscript::Value* argv = OOJS_ARGV + 2;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, @"filteredEntities", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "filteredEntities", &argc, &argv, &relativeTo, &range)))
         return NO;
 
     // Search for entities
@@ -1083,7 +1083,7 @@ static bool SystemFilteredEntities(ooscript::Context context, ooscript::CallArgs
     if (EXPECT_NOT(param.errorFlag))
         return NO;
 
-    OOJS_RETURN_OBJECT(result);
+    OOJS_RETURN_OBJECT(oo::NSArrayFromObjects(result));
 
     OOJS_NATIVE_EXIT
 }
@@ -1096,11 +1096,11 @@ static bool SystemLocationFromCode(ooscript::Context context, ooscript::CallArgs
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* code = nil;
+    std::optional<std::string> code;
     if (oojsArgs.count() > 0) {
-        code = OOStringFromJSValue(context, OOJS_ARGV[0]);
+        code = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
     }
-    if (EXPECT_NOT(code == nil)) {
+    if (EXPECT_NOT(!code.has_value())) {
         OOJSReportBadArguments(context, @"System", @"locationFromCode", oojsArgs.count(), OOJS_ARGV, nil, @"location code");
         return NO;
     }
@@ -1110,7 +1110,7 @@ static bool SystemLocationFromCode(ooscript::Context context, ooscript::CallArgs
     if (sun == nil || planet == nil) {
         position = [UNIVERSE locationByCode:@"WITCHPOINT" withSun:nil andPlanet:nil];
     } else {
-        position = [UNIVERSE locationByCode:code withSun:sun andPlanet:planet];
+        position = [UNIVERSE locationByCode:oo::NSStringFrom(*code) withSun:sun andPlanet:planet];
     }
 
     OOJS_RETURN_HPVECTOR(position);
@@ -1159,19 +1159,19 @@ static bool SystemLegacyAddShips(ooscript::Context context, ooscript::CallArgs& 
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* role = nil;
+    std::optional<std::string> role;
     int32_t count;
 
     if (oojsArgs.count() > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(role == nil || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || oojsArgs.count() < 2 || count < 1 || 64 < count)) {
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (EXPECT_NOT(!role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || oojsArgs.count() < 2 || count < 1 || 64 < count)) {
         OOJSReportBadArguments(context, @"System", @"legacy_addShips", oojsArgs.count(), OOJS_ARGV, nil, @"role and positive count no greater than 64");
         return NO;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
     while (count--)
-        [UNIVERSE witchspaceShipWithPrimaryRole:role];
+        [UNIVERSE witchspaceShipWithPrimaryRole:oo::NSStringFrom(*role)];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_VOID;
@@ -1189,19 +1189,19 @@ static bool SystemLegacyAddSystemShips(ooscript::Context context, ooscript::Call
     OOJS_NATIVE_ENTER(context)
 
     double position;
-    NSString* role = nil;
+    std::optional<std::string> role;
     int32_t count;
 
     if (oojsArgs.count() > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(role == nil || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || oojsArgs.count() < 3 || !ooscript::valueToNumber(context, (OOJS_ARGV[2]), &position))) {
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (EXPECT_NOT(!role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || oojsArgs.count() < 3 || !ooscript::valueToNumber(context, (OOJS_ARGV[2]), &position))) {
         OOJSReportBadArguments(context, @"System", @"legacy_addSystemShips", oojsArgs.count(), OOJS_ARGV, nil, @"role, positive count no greater than 64, and position along route");
         return NO;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
     while (count--)
-        [UNIVERSE addShipWithRole:role nearRouteOneAt:position];
+        [UNIVERSE addShipWithRole:oo::NSStringFrom(*role) nearRouteOneAt:position];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_VOID;
@@ -1220,22 +1220,22 @@ static bool SystemLegacyAddShipsAt(ooscript::Context context, ooscript::CallArgs
 
     PlayerEntity* player = OOPlayerForScripting();
     HPVector where;
-    NSString* role = nil;
+    std::optional<std::string> role;
     int32_t count;
-    NSString* coordScheme = nil;
-    NSString* arg = nil;
+    std::optional<std::string> coordScheme;
+    std::string arg;
 
     if (oojsArgs.count() > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    coordScheme = OOStringFromJSValue(context, OOJS_ARGV[2]);
-    if (EXPECT_NOT(role == nil || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || coordScheme == nil || oojsArgs.count() < 4 || !VectorFromArgumentListNoError(context, oojsArgs.count() - 3, OOJS_ARGV + 3, &where, NULL))) {
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    coordScheme = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[2]));
+    if (EXPECT_NOT(!role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || !coordScheme.has_value() || oojsArgs.count() < 4 || !VectorFromArgumentListNoError(context, oojsArgs.count() - 3, OOJS_ARGV + 3, &where, NULL))) {
         OOJSReportBadArguments(context, @"System", @"legacy_addShipsAt", oojsArgs.count(), OOJS_ARGV, nil, @"role, positive count no greater than 64, coordinate scheme and coordinates");
         return NO;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    arg = [NSString stringWithFormat:@"%@ %d %@ %f %f %f", role, count, coordScheme, where.x, where.y, where.z];
-    [player addShipsAt:arg];
+    arg = oo::str::format("%s %d %s %f %f %f", role->c_str(), count, coordScheme->c_str(), where.x, where.y, where.z);
+    [player addShipsAt:oo::NSStringFrom(arg)];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_VOID;
@@ -1254,22 +1254,22 @@ static bool SystemLegacyAddShipsAtPrecisely(ooscript::Context context, ooscript:
 
     PlayerEntity* player = OOPlayerForScripting();
     HPVector where;
-    NSString* role = nil;
+    std::optional<std::string> role;
     int32_t count;
-    NSString* coordScheme = nil;
-    NSString* arg = nil;
+    std::optional<std::string> coordScheme;
+    std::string arg;
 
     if (oojsArgs.count() > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    coordScheme = OOStringFromJSValue(context, OOJS_ARGV[2]);
-    if (EXPECT_NOT(role == nil || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || coordScheme == nil || oojsArgs.count() < 4 || !VectorFromArgumentListNoError(context, oojsArgs.count() - 3, OOJS_ARGV + 3, &where, NULL))) {
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    coordScheme = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[2]));
+    if (EXPECT_NOT(!role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || !coordScheme.has_value() || oojsArgs.count() < 4 || !VectorFromArgumentListNoError(context, oojsArgs.count() - 3, OOJS_ARGV + 3, &where, NULL))) {
         OOJSReportBadArguments(context, @"System", @"legacy_addShipsAtPrecisely", oojsArgs.count(), OOJS_ARGV, nil, @"role, positive count no greater than 64, coordinate scheme and coordinates");
         return NO;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    arg = [NSString stringWithFormat:@"%@ %d %@ %f %f %f", role, count, coordScheme, where.x, where.y, where.z];
-    [player addShipsAtPrecisely:arg];
+    arg = oo::str::format("%s %d %s %f %f %f", role->c_str(), count, coordScheme->c_str(), where.x, where.y, where.z);
+    [player addShipsAtPrecisely:oo::NSStringFrom(arg)];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_VOID;
@@ -1289,24 +1289,24 @@ static bool SystemLegacyAddShipsWithinRadius(ooscript::Context context, ooscript
     PlayerEntity* player = OOPlayerForScripting();
     HPVector where;
     double radius;
-    NSString* role = nil;
+    std::optional<std::string> role;
     int32_t count;
-    NSString* coordScheme = nil;
-    NSString* arg = nil;
+    std::optional<std::string> coordScheme;
+    std::string arg;
     unsigned consumed = 0;
 
     if (oojsArgs.count() > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
     if (oojsArgs.count() > 2)
-        coordScheme = OOStringFromJSValue(context, OOJS_ARGV[2]);
-    if (EXPECT_NOT(role == nil || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || coordScheme == nil || oojsArgs.count() < 5 || !VectorFromArgumentListNoError(context, oojsArgs.count() - 3, OOJS_ARGV + 3, &where, &consumed) || !ooscript::valueToNumber(context, (OOJS_ARGV[3 + consumed]), &radius))) {
+        coordScheme = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[2]));
+    if (EXPECT_NOT(!role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || !coordScheme.has_value() || oojsArgs.count() < 5 || !VectorFromArgumentListNoError(context, oojsArgs.count() - 3, OOJS_ARGV + 3, &where, &consumed) || !ooscript::valueToNumber(context, (OOJS_ARGV[3 + consumed]), &radius))) {
         OOJSReportBadArguments(context, @"System", @"legacy_addShipWithinRadius", oojsArgs.count(), OOJS_ARGV, nil, @"role, positive count no greater than 64, coordinate scheme, coordinates and radius");
         return NO;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    arg = [NSString stringWithFormat:@"%@ %d %@ %f %f %f %f", role, count, coordScheme, where.x, where.y, where.z, radius];
-    [player addShipsWithinRadius:arg];
+    arg = oo::str::format("%s %d %s %f %f %f %f", role->c_str(), count, coordScheme->c_str(), where.x, where.y, where.z, radius);
+    [player addShipsWithinRadius:oo::NSStringFrom(arg)];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_VOID;
@@ -1323,18 +1323,18 @@ static bool SystemLegacySpawnShip(ooscript::Context context, ooscript::CallArgs&
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* key = nil;
+    std::optional<std::string> key;
     OOPlayerForScripting(); // For backwards-compatibility
 
     if (oojsArgs.count() > 0)
-        key = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (key == nil) {
+        key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (!key.has_value()) {
         OOJSReportBadArguments(context, @"System", @"legacy_spawnShip", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"string (ship key)");
         return NO;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    [UNIVERSE spawnShip:key];
+    [UNIVERSE spawnShip:oo::NSStringFrom(*key)];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_VOID;
@@ -1376,19 +1376,19 @@ static bool SystemStaticSystemIDForName(ooscript::Context context, ooscript::Cal
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* name = nil;
+    std::optional<std::string> name;
     unsigned result;
 
     if (oojsArgs.count() > 0)
-        name = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (name == nil) {
+        name = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (!name.has_value()) {
         OOJSReportBadArguments(context, @"System", @"systemIDForName", MIN(oojsArgs.count(), 1U), OOJS_ARGV, nil, @"string");
         return NO;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
 
-    result = [UNIVERSE findSystemFromName:name];
+    result = [UNIVERSE findSystemFromName:oo::NSStringFrom(*name)];
 
     OOJS_END_FULL_NATIVE
 
@@ -1414,12 +1414,12 @@ static bool SystemStaticInfoForSystem(ooscript::Context context, ooscript::CallA
     }
 
     if (galaxyID < 0 || galaxyID > kOOMaximumGalaxyID) {
-        OOJSReportBadArguments(context, @"System", @"infoForSystem", 1, OOJS_ARGV, @"Invalid galaxy ID", [NSString stringWithFormat:@"number in the range 0 to %u", kOOMaximumGalaxyID]);
+        OOJSReportBadArguments(context, @"System", @"infoForSystem", 1, OOJS_ARGV, @"Invalid galaxy ID", oo::NSStringFrom(oo::str::format("number in the range 0 to %u", kOOMaximumGalaxyID)));
         return NO;
     }
 
     if (systemID < kOOMinimumSystemID || systemID > kOOMaximumSystemID) {
-        OOJSReportBadArguments(context, @"System", @"infoForSystem", 1, OOJS_ARGV + 1, @"Invalid system ID", [NSString stringWithFormat:@"number in the range %i to %i", kOOMinimumSystemID, kOOMaximumSystemID]);
+        OOJSReportBadArguments(context, @"System", @"infoForSystem", 1, OOJS_ARGV + 1, @"Invalid system ID", oo::NSStringFrom(oo::str::format("number in the range %i to %i", kOOMinimumSystemID, kOOMaximumSystemID)));
         return NO;
     }
 
@@ -1435,14 +1435,14 @@ static bool SystemAddVisualEffect(ooscript::Context context, ooscript::CallArgs&
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* key = nil;
+    std::optional<std::string> key;
     HPVector where;
 
     unsigned consumed = 0;
 
     if (oojsArgs.count() > 0)
-        key = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (key == nil) {
+        key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (!key.has_value()) {
         OOJSReportBadArguments(context, @"System", @"addVisualEffect", MIN(oojsArgs.count(), 1U), &OOJS_ARGV[0], nil, @"string (key)");
         return NO;
     }
@@ -1456,7 +1456,7 @@ static bool SystemAddVisualEffect(ooscript::Context context, ooscript::CallArgs&
 
     OOJS_BEGIN_FULL_NATIVE(context)
 
-    result = [UNIVERSE addVisualEffectAt:where withKey:key];
+    result = [UNIVERSE addVisualEffectAt:where withKey:oo::NSStringFrom(*key)];
 
     OOJS_END_FULL_NATIVE
 
@@ -1472,22 +1472,22 @@ static bool SystemSetPopulator(ooscript::Context context, ooscript::CallArgs& oo
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* key;
-    NSMutableDictionary* settings;
+    std::optional<std::string> key;
+    oo::PList settings;
     ooscript::Object params = NULL;
 
     if (oojsArgs.count() < 1) {
         OOJSReportBadArguments(context, @"System", @"setPopulator", MIN(oojsArgs.count(), 0U), &OOJS_ARGV[0], nil, @"string (key), object (settings)");
         return NO;
     }
-    key = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (key == nil) {
+    key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (!key.has_value()) {
         OOJSReportBadArguments(context, @"System", @"setPopulator", MIN(oojsArgs.count(), 0U), &OOJS_ARGV[0], nil, @"key, settings");
         return NO;
     }
     if (oojsArgs.count() < 2 || ooscript::isNull(OOJS_ARGV[1])) {
         // clearing
-        [UNIVERSE setPopulatorSetting:key to:nil];
+        [UNIVERSE setPopulatorSetting:oo::NSStringFrom(*key) to:nil];
     } else {
         // adding
         if (!ooscript::valueToObject(context, (OOJS_ARGV[1]), OOJSFOBJP(&params))) {
@@ -1503,21 +1503,24 @@ static bool SystemSetPopulator(ooscript::Context context, ooscript::CallArgs& oo
         OOJSPopulatorDefinition* populator = [[OOJSPopulatorDefinition alloc] init];
         [populator setCallback:callback];
 
-        settings = OOJSNativeObjectFromJSObject(context, ooscript::toObject(OOJS_ARGV[1]));
-        [settings setObject:populator forKey:@"callbackObj"];
+        settings = oo::PListFrom(OOJSNativeObjectFromJSObject(context, ooscript::toObject(OOJS_ARGV[1])));
+        oo::PList::Dict* settingsDict = settings.getIf<oo::PList::Dict>(); // messages to a nil dictionary did nothing
+        if (settingsDict != nullptr)
+            (*settingsDict)["callbackObj"] = oo::PListObject(populator);
 
         ooscript::Value coords = ooscript::nullValue();
         if (ooscript::getProperty(context, (params), "coordinates", (&coords)) && !ooscript::isUndefined(coords)) {
             Vector coordinates = kZeroVector;
             if (JSValueToVector(context, coords, &coordinates)) {
-                // convert vector in NS-storable form
-                [settings setObject:[NSArray arrayWithObjects:[NSNumber numberWithFloat:coordinates.x], [NSNumber numberWithFloat:coordinates.y], [NSNumber numberWithFloat:coordinates.z], nil] forKey:@"coordinates"];
+                // convert vector in NS-storable form (three floats)
+                if (settingsDict != nullptr)
+                    (*settingsDict)["coordinates"] = oo::PList(oo::PList::Array { oo::PList::singleReal(coordinates.x), oo::PList::singleReal(coordinates.y), oo::PList::singleReal(coordinates.z) });
             }
         }
 
         [populator release];
 
-        [UNIVERSE setPopulatorSetting:key to:settings];
+        [UNIVERSE setPopulatorSetting:oo::NSStringFrom(*key) to:oo::ObjectFromPList(settings)];
     }
 
     OOJS_RETURN_VOID;
@@ -1532,8 +1535,8 @@ static bool SystemSetWaypoint(ooscript::Context context, ooscript::CallArgs& ooj
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* key;
-    NSMutableDictionary* settings;
+    std::optional<std::string> key;
+    oo::PList settings;
     HPVector position;
     Quaternion orientation;
 
@@ -1541,14 +1544,14 @@ static bool SystemSetWaypoint(ooscript::Context context, ooscript::CallArgs& ooj
         OOJSReportBadArguments(context, @"System", @"setWaypoint", MIN(oojsArgs.count(), 0U), &OOJS_ARGV[0], nil, @"key, position, orientation, definition");
         return NO;
     }
-    key = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (key == nil) {
+    key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (!key.has_value()) {
         OOJSReportBadArguments(context, @"System", @"setWaypoint", MIN(oojsArgs.count(), 0U), &OOJS_ARGV[0], nil, @"key, position, orientation, definition");
         return NO;
     }
     if (oojsArgs.count() < 4 || ooscript::isNull(OOJS_ARGV[3])) {
         // clearing
-        [UNIVERSE defineWaypoint:nil forKey:key];
+        [UNIVERSE defineWaypoint:nil forKey:oo::NSStringFrom(*key)];
     } else {
         // adding
         if (!JSValueToHPVector(context, OOJS_ARGV[1], &position)) {
@@ -1564,11 +1567,14 @@ static bool SystemSetWaypoint(ooscript::Context context, ooscript::CallArgs& ooj
             return NO;
         }
 
-        settings = [[OOJSNativeObjectFromJSObject(context, ooscript::toObject(OOJS_ARGV[3])) mutableCopy] autorelease];
-        [settings setObject:[NSArray arrayWithObjects:[NSNumber numberWithDouble:position.x], [NSNumber numberWithDouble:position.y], [NSNumber numberWithDouble:position.z], nil] forKey:@"position"];
-        [settings setObject:[NSArray arrayWithObjects:[NSNumber numberWithDouble:orientation.w], [NSNumber numberWithDouble:orientation.x], [NSNumber numberWithDouble:orientation.y], [NSNumber numberWithDouble:orientation.z], nil] forKey:@"orientation"];
+        settings = oo::PListFrom(OOJSNativeObjectFromJSObject(context, ooscript::toObject(OOJS_ARGV[3]))); // a copy, as -mutableCopy was
+        if (oo::PList::Dict* settingsDict = settings.getIf<oo::PList::Dict>()) // messages to a nil copy did nothing
+        {
+            (*settingsDict)["position"] = oo::PList(oo::PList::Array { oo::PList(position.x), oo::PList(position.y), oo::PList(position.z) });
+            (*settingsDict)["orientation"] = oo::PList(oo::PList::Array { oo::PList(orientation.w), oo::PList(orientation.x), oo::PList(orientation.y), oo::PList(orientation.z) });
+        }
 
-        [UNIVERSE defineWaypoint:settings forKey:key];
+        [UNIVERSE defineWaypoint:oo::ObjectFromPList(settings) forKey:oo::NSStringFrom(*key)];
     }
 
     OOJS_RETURN_VOID;
@@ -1588,23 +1594,23 @@ static bool SystemAddShipsOrGroup(Context cx, CallArgs& oojsArgs, BOOL isGroup)
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* role = nil;
+    std::optional<std::string> role;
     int32_t count = 0;
     unsigned consumed = 0;
     HPVector where;
     double radius = static_cast<double>(NSNotFound); // a negative value means
     id result = nil;
 
-    NSString* func = isGroup ? @"addGroup" : @"addShips";
+    std::string func = isGroup ? "addGroup" : "addShips";
 
     if (argc > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (role == nil) {
-        OOJSReportBadArguments(context, @"System", func, MIN(argc, 1U), &OOJS_ARGV[0], nil, @"string (role)");
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (!role.has_value()) {
+        OOJSReportBadArguments(context, @"System", oo::NSStringFrom(func), MIN(argc, 1U), &OOJS_ARGV[0], nil, @"string (role)");
         return NO;
     }
     if (argc < 2 || !ooscript::valueToInt32(cx, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count) {
-        OOJSReportBadArguments(context, @"System", func, MIN(argc - 1, 1U), &OOJS_ARGV[1], nil, @"number (positive count no greater than 64)");
+        OOJSReportBadArguments(context, @"System", oo::NSStringFrom(func), MIN(argc - 1, 1U), &OOJS_ARGV[1], nil, @"number (positive count no greater than 64)");
         return NO;
     }
 
@@ -1613,13 +1619,13 @@ static bool SystemAddShipsOrGroup(Context cx, CallArgs& oojsArgs, BOOL isGroup)
         radius = SCANNER_MAX_RANGE;
     } else {
         if (!VectorFromArgumentListNoError(context, argc - 2, OOJS_ARGV + 2, &where, &consumed)) {
-            OOJSReportBadArguments(context, @"System", func, MIN(argc - 2, 1U), &OOJS_ARGV[2], nil, @"vector");
+            OOJSReportBadArguments(context, @"System", oo::NSStringFrom(func), MIN(argc - 2, 1U), &OOJS_ARGV[2], nil, @"vector");
             return NO;
         }
 
         if (argc > 2 + consumed) {
             if (!ooscript::valueToNumber(cx, (OOJS_ARGV[2 + consumed]), &radius)) {
-                OOJSReportBadArguments(context, @"System", func, MIN(argc - 2 - consumed, 1U), &OOJS_ARGV[2 + consumed], nil, @"number (radius)");
+                OOJSReportBadArguments(context, @"System", oo::NSStringFrom(func), MIN(argc - 2 - consumed, 1U), &OOJS_ARGV[2 + consumed], nil, @"number (radius)");
                 return NO;
             }
         }
@@ -1627,12 +1633,12 @@ static bool SystemAddShipsOrGroup(Context cx, CallArgs& oojsArgs, BOOL isGroup)
 
     OOJS_BEGIN_FULL_NATIVE(context)
     // Note: the use of witchspace-in effects (as in legacy_addShips) depends on proximity to the witchpoint.
-    result = [UNIVERSE addShipsAt:where withRole:role quantity:count withinRadius:radius asGroup:isGroup];
+    result = [UNIVERSE addShipsAt:where withRole:oo::NSStringFrom(*role) quantity:count withinRadius:radius asGroup:isGroup];
 
     if (isGroup) {
-        NSArray* array = result;
-        if ([array count] > 0)
-            result = [(ShipEntity*)[array objectAtIndex:0] group];
+        const std::vector<oo::ObjCRef<ShipEntity*>> ships = oo::ObjCRefsFrom<ShipEntity*>(result);
+        if (ships.size() > 0)
+            result = [ships[0].get() group];
         else
             result = nil;
     }
@@ -1652,41 +1658,39 @@ static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs, BOOL is
 
     OOJS_NATIVE_ENTER(context)
 
-    NSString* role = nil;
-    NSString* route = @"st"; // default route witchpoint -> station. ("st" itself is not selectable by script)
-    static NSSet* validRoutes = nil;
+    std::optional<std::string> role;
+    std::optional<std::string> route = "st"; // default route witchpoint -> station. ("st" itself is not selectable by script)
+    static const std::set<std::string> validRoutes = { "wp", "pw", "ws", "sw", "sp", "ps" };
     int32_t count = 0;
     double where = static_cast<double>(NSNotFound); // a negative value means random positioning!
     id result = nil;
 
-    NSString* func = isGroup ? @"addGroup" : @"addShips";
+    std::string func = isGroup ? "addGroup" : "addShips";
 
     if (argc > 0)
-        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (role == nil) {
-        OOJSReportBadArguments(context, @"System", func, MIN(argc, 1U), &OOJS_ARGV[0], nil, @"string (role)");
+        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    if (!role.has_value()) {
+        OOJSReportBadArguments(context, @"System", oo::NSStringFrom(func), MIN(argc, 1U), &OOJS_ARGV[0], nil, @"string (role)");
         return NO;
     }
     if (argc < 2 || !ooscript::valueToInt32(cx, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count) {
-        OOJSReportBadArguments(context, @"System", func, MIN(argc - 1, 1U), &OOJS_ARGV[1], nil, @"number (positive count no greater than 64)");
+        OOJSReportBadArguments(context, @"System", oo::NSStringFrom(func), MIN(argc - 1, 1U), &OOJS_ARGV[1], nil, @"number (positive count no greater than 64)");
         return NO;
     }
 
     if (argc > 2) {
         if (!ooscript::valueToNumber(cx, (OOJS_ARGV[2]), &where) || !isfinite(where) || where < 0.0f || where > 1.0f) {
-            OOJSReportBadArguments(context, @"System", func, MIN(argc - 2, 1U), &OOJS_ARGV[2], nil, @"number (position along route)");
+            OOJSReportBadArguments(context, @"System", oo::NSStringFrom(func), MIN(argc - 2, 1U), &OOJS_ARGV[2], nil, @"number (position along route)");
             return NO;
         }
 
         if (argc > 3) {
-            route = [OOStringFromJSValue(context, OOJS_ARGV[3]) lowercaseString];
+            route = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[3]));
+            if (route.has_value())
+                route = oo::str::lowercase(*route);
 
-            if (validRoutes == nil) {
-                validRoutes = [[NSSet alloc] initWithObjects:@"wp", @"pw", @"ws", @"sw", @"sp", @"ps", nil];
-            }
-
-            if (route == nil || ![validRoutes containsObject:route]) {
-                OOJSReportBadArguments(context, @"System", func, MIN(argc - 3, 1U), &OOJS_ARGV[3], nil, @"string (route specifier)");
+            if (!route.has_value() || validRoutes.count(*route) == 0) {
+                OOJSReportBadArguments(context, @"System", oo::NSStringFrom(func), MIN(argc - 3, 1U), &OOJS_ARGV[3], nil, @"string (route specifier)");
                 return NO;
             }
         }
@@ -1694,12 +1698,12 @@ static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs, BOOL is
 
     OOJS_BEGIN_FULL_NATIVE(context)
     // Note: the use of witchspace-in effects (as in legacy_addShips) depends on proximity to the witchpoint.
-    result = [UNIVERSE addShipsToRoute:route withRole:role quantity:count routeFraction:where asGroup:isGroup];
+    result = [UNIVERSE addShipsToRoute:oo::NSStringFrom(*route) withRole:oo::NSStringFrom(*role) quantity:count routeFraction:where asGroup:isGroup];
 
     if (isGroup) {
-        NSArray* array = result;
-        if ([array count] > 0)
-            result = [(ShipEntity*)[array objectAtIndex:0] group];
+        const std::vector<oo::ObjCRef<ShipEntity*>> ships = oo::ObjCRefsFrom<ShipEntity*>(result);
+        if (ships.size() > 0)
+            result = [ships[0].get() group];
         else
             result = nil;
     }
@@ -1712,7 +1716,7 @@ static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs, BOOL is
 } // namespace
 
 namespace {
-static BOOL GetRelativeToAndRange(ooscript::Context context, NSString* methodName, unsigned* ioArgc, ooscript::Value** ioArgv, Entity** outRelativeTo, double* outRange)
+static BOOL GetRelativeToAndRange(ooscript::Context context, const std::string& methodName, unsigned* ioArgc, ooscript::Value** ioArgv, Entity** outRelativeTo, double* outRange)
 {
     OOJS_PROFILE_ENTER
 
@@ -1722,7 +1726,7 @@ static BOOL GetRelativeToAndRange(ooscript::Context context, NSString* methodNam
     // Get optional argument relativeTo : Entity
     if (*ioArgc != 0) {
         if (EXPECT_NOT(ooscript::isNull(**ioArgv) || !JSValueToEntity(context, **ioArgv, outRelativeTo))) {
-            OOJSReportBadArguments(context, @"System", methodName, 1, *ioArgv, nil, @"entity");
+            OOJSReportBadArguments(context, @"System", oo::NSStringFrom(methodName), 1, *ioArgv, nil, @"entity");
             return NO;
         }
         (*ioArgv)++;
@@ -1732,7 +1736,7 @@ static BOOL GetRelativeToAndRange(ooscript::Context context, NSString* methodNam
     // Get optional argument range : Number
     if (*ioArgc != 0) {
         if (!EXPECT_NOT(ooscript::valueToNumber((context), (**ioArgv), outRange))) {
-            OOJSReportBadArguments(context, @"System", methodName, 1, *ioArgv, nil, @"number");
+            OOJSReportBadArguments(context, @"System", oo::NSStringFrom(methodName), 1, *ioArgv, nil, @"number");
             return NO;
         }
         (*ioArgv)++;
@@ -1746,34 +1750,35 @@ static BOOL GetRelativeToAndRange(ooscript::Context context, NSString* methodNam
 } // namespace
 
 namespace {
-static NSArray* FindJSVisibleEntities(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range)
+static std::vector<oo::ObjCRef<Entity*>> FindJSVisibleEntities(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range)
 {
     OOJS_PROFILE_ENTER
 
-    NSMutableArray* result = nil;
+    std::vector<oo::ObjCRef<Entity*>> result;
     BinaryOperationPredicateParameter param = {
         JSEntityIsJavaScriptSearchablePredicate, NULL,
         predicate, parameter
     };
 
-    result = [UNIVERSE findEntitiesMatchingPredicate:ANDPredicate
-                                           parameter:&param
-                                             inRange:range
-                                            ofEntity:relativeTo];
+    result = oo::ObjCRefsFrom<Entity*>([UNIVERSE findEntitiesMatchingPredicate:ANDPredicate
+                                                                     parameter:&param
+                                                                       inRange:range
+                                                                      ofEntity:relativeTo]);
 
-    if (result != nil && relativeTo != nil && ![relativeTo isPlayer]) {
-        [result sortUsingFunction:CompareEntitiesByDistance context:relativeTo];
+    if (relativeTo != nil && ![relativeTo isPlayer]) {
+        // -sortUsingFunction:context: with the same comparison (a stable sort: GNUstep's is timsort).
+        std::stable_sort(result.begin(), result.end(), [relativeTo](const oo::ObjCRef<Entity*>& a, const oo::ObjCRef<Entity*>& b) {
+            return CompareEntitiesByDistance(a.get(), b.get(), relativeTo) == NSOrderedAscending;
+        });
     }
-    if (result == nil)
-        return [NSArray array];
-    return result;
+    return result; // empty for no matches, as the empty array was
 
-    OOJS_PROFILE_EXIT
+    OOJS_PROFILE_EXIT_VAL(std::vector<oo::ObjCRef<Entity*>>())
 }
 } // namespace
 
 namespace {
-static NSArray* FindShips(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range)
+static std::vector<oo::ObjCRef<Entity*>> FindShips(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range)
 {
     OOJS_PROFILE_ENTER
 
@@ -1783,7 +1788,7 @@ static NSArray* FindShips(EntityFilterPredicate predicate, void* parameter, Enti
     };
     return FindJSVisibleEntities(ANDPredicate, &param, relativeTo, range);
 
-    OOJS_PROFILE_EXIT
+    OOJS_PROFILE_EXIT_VAL(std::vector<oo::ObjCRef<Entity*>>())
 }
 } // namespace
 

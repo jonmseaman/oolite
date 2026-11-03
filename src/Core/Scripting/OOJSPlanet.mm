@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 #import "OOJSVector.h"
 #import "OOJavaScriptEngine.h"
 
+#import "OOFoundationBridge.h"
 #include "ooscript/JSEngine.hpp"
 #include <cstdint>
 #include <cstring>
@@ -167,7 +168,7 @@ void InitOOJSPlanet(ooscript::Context context, ooscript::Object global)
     *outPrototype = sPlanetPrototype;
 }
 
-- (NSString*)oo_jsClassName
+- (id)oo_jsClassName // shared selector (proposed ADR-0043)
 {
     switch ([self planetType]) {
     case STELLAR_TYPE_NORMAL_PLANET:
@@ -262,7 +263,7 @@ static bool PlanetSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     OOJS_NATIVE_ENTER(context)
 
     OOPlanetEntity* planet = nil;
-    NSString* sValue = nil;
+    std::optional<std::string> sValue;
     Quaternion qValue;
     Vector vValue;
     double dValue;
@@ -303,18 +304,18 @@ static bool PlanetSetProperty(Context cx, Object obj, PropertyId propID, bool /*
         break;
 
     case kPlanet_name:
-        sValue = OOStringFromJSValue(context, *value_raw);
-        [planet setName:sValue];
+        sValue = oo::OptionalString(OOStringFromJSValue(context, *value_raw));
+        [planet setName:oo::NSStringOrNil(sValue)];
         return YES;
 
     case kPlanet_texture: {
         BOOL OK = NO;
-        sValue = OOStringFromJSValue(context, *value_raw);
+        sValue = oo::OptionalString(OOStringFromJSValue(context, *value_raw));
 
         OOJSPauseTimeLimiter();
 
         if ([planet isKindOfClass:[OOPlanetEntity class]]) {
-            if (sValue == nil) {
+            if (!sValue.has_value()) {
                 OOJSReportWarning(context, @"Expected texture string. Value not set.");
             } else {
                 OK = YES;
@@ -322,9 +323,9 @@ static bool PlanetSetProperty(Context cx, Object obj, PropertyId propID, bool /*
         }
 
         if (OK) {
-            OK = [planet setUpPlanetFromTexture:sValue];
+            OK = [planet setUpPlanetFromTexture:oo::NSStringFrom(*sValue)];
             if (!OK)
-                OOJSReportWarning(context, @"Cannot find texture \"%@\". Value not set.", sValue);
+                OOJSReportWarning(context, @"Cannot find texture \"%@\". Value not set.", oo::NSStringFrom(*sValue));
         }
 
         OOJSResumeTimeLimiter();

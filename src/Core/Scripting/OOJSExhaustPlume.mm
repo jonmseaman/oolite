@@ -171,7 +171,7 @@ static BOOL JSExhaustPlumeGetExhaustPlumeEntity(ooscript::Context context, ooscr
     *outPrototype = sExhaustPlumePrototype;
 }
 
-- (NSString*)oo_jsClassName
+- (id)oo_jsClassName // shared selector (proposed ADR-0043)
 {
     return @"ExhaustPlume";
 }
