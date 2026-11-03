@@ -1,6 +1,6 @@
 project(
     'oolite',
-    ['c', 'cpp', 'objc'],
+    ['c', 'cpp', 'objc', 'objcpp'],
     meson_version: '>= 1.4.0',
     version: run_command(
         'bash',
@@ -16,14 +16,11 @@ project(
         # goldens under goldens/<platform>/ were produced at, and
         # tests/golden/check_build_flags.py asserts the configured build really uses it.
         'optimization=2',
-        # Always use the bundled, patched QuickJS-ng (see subprojects/quickjs-ng.wrap):
-        # an unpatched system build breaks OXPs that rely on SpiderMonkey behaviour.
-        'force_fallback_for=quickjs-ng',
     ],
 )
 
 host_os = host_machine.system()
-c_family = ['c', 'cpp', 'objc']
+c_family = ['c', 'cpp', 'objc', 'objcpp']
 
 version_string = meson.project_version()
 cat_cmd = find_program('cat', required: true)
@@ -75,7 +72,11 @@ endif
 #
 # It is applied UNCONDITIONALLY, not only for golden builds: a flag that is only on in one
 # configuration is a flag whose absence nobody notices.
-add_project_arguments('-ffp-contract=off', language: c_family)
+#
+# GLOBAL, not project, arguments (bead oo-5pr): QuickJS-ng is a meson subproject linked into the
+# game binary, its number code produces floats that land in the dumps, and project arguments do
+# not reach a subproject (nor does a subproject() c_args default option).
+add_global_arguments('-ffp-contract=off', language: c_family)
 
 if get_option('no_shaders')
     add_project_arguments('-DNO_SHADERS=1', language: c_family)
@@ -129,7 +130,3 @@ endif
 gnustep_folder = ''  # Not needed for Windows
 # dependencies, compiler/linker flags and build
 subdir('src')
-
-if get_option('quickjs_poc')
-    subdir('src/Core/Scripting/poc')
-endif

@@ -1,6 +1,6 @@
 /*
 
-OOJSEntity.h (QuickJS-ng)
+OOJSEntity.h
 
 JavaScript proxy for entities.
 
@@ -21,6 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
+
 */
 
 #import "EntityOOJavaScriptExtensions.h"
@@ -30,12 +31,27 @@ MA 02110-1301, USA.
 
 @class Entity;
 
-void InitOOJSEntity(JSContext* context, JSValueConst global);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-BOOL JSValueToEntity(JSContext* context, JSValueConst value, Entity** outEntity);
+void InitOOJSEntity(ooscript::Context context, ooscript::Object global);
 
-JSClassID JSEntityClassID(void);
-DEFINE_JS_OBJECT_GETTER(OOJSEntityGetEntity, JSEntityClassID(), Entity)
+BOOL JSValueToEntity(ooscript::Context context, ooscript::Value value, Entity** outEntity);
+
+// The Entity class is an ooscript::ClassDef owned by OOJSEntity.mm (bead oo-oap); JSEntityClass()
+// returns it. Declared as a real function rather than OOINLINE so the class definition stays
+// private to OOJSEntity.mm.
+ooscript::ClassDef* JSEntityClass(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+extern ooscript::Object gOOEntityJSPrototype;
+DEFINE_JS_OBJECT_GETTER(OOJSEntityGetEntity, JSEntityClass(), gOOEntityJSPrototype, Entity)
+
+OOINLINE ooscript::Object JSEntityPrototype(void) { return gOOEntityJSPrototype; }
 
 /*	EntityFromArgumentList()
 
@@ -47,7 +63,13 @@ DEFINE_JS_OBJECT_GETTER(OOJSEntityGetEntity, JSEntityClassID(), Entity)
         scriptClass and function are non-nil, a warning will be reported to the
         log.
 */
-BOOL EntityFromArgumentList(JSContext* context, NSString* scriptClass, NSString* function, int argc, JSValueConst* argv, Entity** outEntity, int* outConsumed);
+#ifdef __cplusplus
+extern "C" {
+#endif
+BOOL EntityFromArgumentList(ooscript::Context context, NSString* scriptClass, NSString* function, unsigned argc, ooscript::Value* argv, Entity** outEntity, unsigned* outConsumed);
+#ifdef __cplusplus
+}
+#endif
 
 /*
         For scripting purposes, a JS entity object is a stale reference if its

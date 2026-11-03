@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 #import "OOJSPropID.h"
 #import "OOTypes.h"
 #import "legacy_random.h"
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
 
 @class OOJSScript;
@@ -72,7 +73,7 @@ MA 02110-1301, USA.
 - (void)setLegacyScript:(NSArray*)scriptActions;
 - (OOJSScript*)script;
 - (void)setCharacterScript:(NSString*)scriptName;
-- (void)doScriptEvent:(OOJSPropID)message;
+- (void)doScriptEvent:(ooscript::PropertyId)message;
 
 - (NSDictionary*)infoForScripting;
 

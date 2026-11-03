@@ -29,11 +29,10 @@ SOFTWARE.
 
 */
 
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-
 @class OODebugMonitor;
 
-#include <quickjs.h>
+ooscript::Object DebugMonitorToJSConsole(ooscript::Context context, OODebugMonitor* monitor);
 
-// Create the JS console object for the debug monitor. The caller owns the result.
-JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor);
+void OOJSConsoleDestroy(void);

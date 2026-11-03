@@ -1,6 +1,6 @@
 /*
 
-OOJSEquipmentInfo.h (QuickJS-ng)
+OOJSEquipmentInfo.h
 
 JavaScript equipment introspection class, wrapper for OOEquipmentType.
 
@@ -29,20 +29,36 @@ MA 02110-1301, USA.
 
 #import "OOEquipmentType.h"
 #import "OOFoundation.h"
-#include <quickjs.h>
+#include "ooscript/JSEngine.hpp"
 
 @class OOEquipmentType;
 
-void InitOOJSEquipmentInfo(JSContext* context, JSValueConst global);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/*	Given a JSValue representing a string (equipment key) or a JS EquipmentInfo,
+void InitOOJSEquipmentInfo(ooscript::Context context, ooscript::Object global);
+
+#ifdef __cplusplus
+}
+#endif
+
+/*	Given a ooscript::Value representing a string (equipment key) or a JS EquipmentInfo,
         return the corresponding EquipmentType or key. Note that
         JSValueToEquipmentKey() will not return arbitrary strings, only valid
         equipment keys.
         JSValueToEquipmentKeyRelaxed() will return any string that does not end
         with _DAMAGED.
  */
-OOEquipmentType* JSValueToEquipmentType(JSContext* context, JSValueConst value);
-NSString* JSValueToEquipmentKey(JSContext* context, JSValueConst value);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-NSString* JSValueToEquipmentKeyRelaxed(JSContext* context, JSValueConst value, BOOL* outExists);
+OOEquipmentType* JSValueToEquipmentType(ooscript::Context context, ooscript::Value value);
+NSString* JSValueToEquipmentKey(ooscript::Context context, ooscript::Value value);
+
+NSString* JSValueToEquipmentKeyRelaxed(ooscript::Context context, ooscript::Value value, BOOL* outExists);
+
+#ifdef __cplusplus
+}
+#endif

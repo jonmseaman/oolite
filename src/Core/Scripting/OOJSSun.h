@@ -1,6 +1,6 @@
 /*
 
-OOJSSun.h (QuickJS-ng)
+OOJSSun.h
 
 JavaScript proxy for suns.
 
@@ -25,9 +25,14 @@ MA 02110-1301, USA.
 
 */
 
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-#include <quickjs.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void InitOOJSSun(JSContext* context, JSValueConst global);
+void InitOOJSSun(ooscript::Context context, ooscript::Object global);
 
-JSClassID JSSunClassID(void);
+#ifdef __cplusplus
+}
+#endif

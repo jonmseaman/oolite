@@ -62,7 +62,8 @@ typedef uint64_t OOHighResTimeValue;
 
 #elif OOLITE_WINDOWS
 
-// Windows: use timeGetTime.
+// Windows: if standalone, use timeGetTime...
+#if OOSTOPWATCH_STANDALONE
 #define OO_PROFILING_STOPWATCH_WINDOWS 1
 typedef DWORD OOHighResTimeValue; // Rolls over once every 50 days, but we can live with that.
 
@@ -75,6 +76,14 @@ typedef DWORD OOHighResTimeValue; // Rolls over once every 50 days, but we can l
         (void)time;                \
     } while (0)
 #define OOCopyHighResTime(time) ((OOHighResTimeValue)time)
+
+#else
+/*	...otherwise, use a microsecond count from std::chrono::steady_clock for higher
+        precision (formerly the script engine's own clock; bead oo-1gc.3). Only
+        differences between two readings are ever used.
+*/
+#define OO_PROFILING_STOPWATCH_MICROSECONDS 1
+#endif
 
 #else
 
@@ -98,6 +107,22 @@ OOINLINE OOHighResTimeValue OOGetHighResTime(void)
     } while (0)
 #define OOCopyHighResTime(time) ((OOHighResTimeValue)time)
 
+#endif
+
+#if OO_PROFILING_STOPWATCH_MICROSECONDS
+#include <chrono>
+#include <cstdint>
+typedef int64_t OOHighResTimeValue;
+
+OOINLINE OOHighResTimeValue OOGetHighResTime(void)
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+#define OODisposeHighResTime(time) \
+    do {                           \
+        (void)time;                \
+    } while (0)
+#define OOCopyHighResTime(time) ((OOHighResTimeValue)time)
 #endif
 
 OOTimeDelta OOHighResTimeDeltaInSeconds(OOHighResTimeValue startTime, OOHighResTimeValue endTime);

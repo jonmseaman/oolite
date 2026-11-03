@@ -1,6 +1,6 @@
 /*
 
-OOJSVector.h (QuickJS-ng proof of concept)
+OOJSVector.h
 
 JavaScript proxy for vectors.
 
@@ -22,36 +22,37 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
 
-
 */
 
 #import "OOMaths.h"
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-#include <quickjs.h>
 
-void InitOOJSVector(JSContext* context, JSValueConst global);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// Return an owned Vector3D object, or JS_EXCEPTION.
-JSValue JSVectorWithVector(JSContext* context, Vector vector) NONNULL_FUNC;
-JSValue JSVectorWithHPVector(JSContext* context, HPVector vector) NONNULL_FUNC;
+void InitOOJSVector(ooscript::Context context, ooscript::Object global);
 
-// *outValue is owned by the caller on success.
-BOOL VectorToJSValue(JSContext* context, Vector vector, JSValue* outValue) NONNULL_FUNC;
-BOOL HPVectorToJSValue(JSContext* context, HPVector vector, JSValue* outValue) NONNULL_FUNC;
-BOOL NSPointToVectorJSValue(JSContext* context, NSPoint point, JSValue* outValue) NONNULL_FUNC;
-BOOL JSValueToVector(JSContext* context, JSValueConst value, Vector* outVector) NONNULL_FUNC;
-BOOL JSValueToHPVector(JSContext* context, JSValueConst value, HPVector* outVector) NONNULL_FUNC;
+ooscript::Object JSVectorWithVector(ooscript::Context context, Vector vector) NONNULL_FUNC;
+ooscript::Object JSVectorWithHPVector(ooscript::Context context, HPVector vector) NONNULL_FUNC;
+
+BOOL VectorToJSValue(ooscript::Context context, Vector vector, ooscript::Value* outValue) NONNULL_FUNC;
+BOOL HPVectorToJSValue(ooscript::Context context, HPVector vector, ooscript::Value* outValue) NONNULL_FUNC;
+BOOL NSPointToVectorJSValue(ooscript::Context context, NSPoint point, ooscript::Value* outValue) NONNULL_FUNC;
+BOOL JSValueToVector(ooscript::Context context, ooscript::Value value, Vector* outVector) NONNULL_FUNC;
+BOOL JSValueToHPVector(ooscript::Context context, ooscript::Value value, HPVector* outVector) NONNULL_FUNC;
 
 /*	Given a JS Vector object, get the corresponding Vector struct. Given a JS
         Entity, get its position. Given a JS Array with exactly three elements,
         all of them numbers, treat them as [x, y, z]  components. For anything
         else, return NO. (Other implicit conversions may be added in future.)
 */
-BOOL JSObjectGetVector(JSContext* context, JSValueConst vectorObj, HPVector* outVector) GCC_ATTR((nonnull(1, 3)));
+BOOL JSObjectGetVector(ooscript::Context context, ooscript::Object vectorObj, HPVector* outVector) GCC_ATTR((nonnull(1, 3)));
 
 //	Set the value of a JS vector object.
-BOOL JSVectorSetVector(JSContext* context, JSValueConst vectorObj, Vector vector) GCC_ATTR((nonnull(1)));
-BOOL JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj, HPVector vector) GCC_ATTR((nonnull(1)));
+BOOL JSVectorSetVector(ooscript::Context context, ooscript::Object vectorObj, Vector vector) GCC_ATTR((nonnull(1)));
+BOOL JSVectorSetHPVector(ooscript::Context context, ooscript::Object vectorObj, HPVector vector) GCC_ATTR((nonnull(1)));
 
 /*	VectorFromArgumentList()
 
@@ -61,15 +62,19 @@ BOOL JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj, HPVector ve
         (currently, this will be 0 on failure, otherwise 1).
 
         On failure, it will return NO and raise an error. If the caller is a JS
-        callback, it must return JS_EXCEPTION to signal an error.
+        callback, it must return NO to signal an error.
 
         DEPRECATED in favour of JSObjectGetVector(), since the list-of-number form
         is no longer used.
 */
-BOOL VectorFromArgumentList(JSContext* context, NSString* scriptClass, NSString* function, int argc, JSValueConst* argv, HPVector* outVector, int* outConsumed) GCC_ATTR((nonnull(1, 6)));
+BOOL VectorFromArgumentList(ooscript::Context context, NSString* scriptClass, NSString* function, unsigned argc, ooscript::Value* argv, HPVector* outVector, unsigned* outConsumed) GCC_ATTR((nonnull(1, 5, 6)));
 
 /*	VectorFromArgumentListNoError()
 
         Like VectorFromArgumentList(), but does not report an error on failure.
 */
-BOOL VectorFromArgumentListNoError(JSContext* context, int argc, JSValueConst* argv, HPVector* outVector, int* outConsumed) GCC_ATTR((nonnull(1, 4)));
+BOOL VectorFromArgumentListNoError(ooscript::Context context, unsigned argc, ooscript::Value* argv, HPVector* outVector, unsigned* outConsumed) GCC_ATTR((nonnull(1, 3, 4)));
+
+#ifdef __cplusplus
+}
+#endif

@@ -26,45 +26,41 @@ MA 02110-1301, USA.
 */
 
 #import "OOFoundation.h"
-#include <quickjs.h>
-
+#include "ooscript/JSEngine.hpp"
 @interface OOJSFunction : NSObject {
 @private
-    JSValue _function; // Owned; zero-filled (not an object) when invalid.
+    ooscript::Function _function;
     NSString* _name;
 }
 
-// function must be a function value; the OOJSFunction takes its own reference.
-- (id)initWithFunction:(JSValueConst)function context:(JSContext*)context;
+- (id)initWithFunction:(ooscript::Function)function context:(ooscript::Context)context;
 - (id)initWithName:(NSString*)name
-             scope:(JSValueConst)scope // Ignored; QuickJS compiles functions in the global scope. Pass JS_UNDEFINED.
-              code:(NSString*)code // Function body.
+             scope:(ooscript::Object)scope // may be NULL, in which case global object is used.
+              code:(NSString*)code // full JS code for function, including function declaration.
      argumentCount:(NSUInteger)argCount
      argumentNames:(const char**)argNames
           fileName:(NSString*)fileName
         lineNumber:(NSUInteger)lineNumber
-           context:(JSContext*)context; // may be NULL.
+           context:(ooscript::Context)context; // may be NULL. If not null, must be in a request.
 
 - (NSString*)name;
-// Borrowed; valid while the receiver is alive and the engine is not reset. JS_NULL if invalid.
-- (JSValueConst)function;
-// Owned (caller must free). JS_NULL if invalid.
-- (JSValue)functionValue;
+- (ooscript::Function)function;
+- (ooscript::Value)functionValue;
 
-// Raw evaluation. *result is owned by the caller on success. On failure, any exception is left pending (not reported).
-- (BOOL)evaluateWithContext:(JSContext*)context
-                      scope:(JSValueConst)jsThis
-                       argc:(int)argc
-                       argv:(JSValueConst*)argv
-                     result:(JSValue*)result;
+// Raw evaluation. Context may not be NULL and must be in a request.
+- (BOOL)evaluateWithContext:(ooscript::Context)context
+                      scope:(ooscript::Object)jsThis
+                       argc:(unsigned)argc
+                       argv:(ooscript::Value*)argv
+                     result:(ooscript::Value*)result;
 
 // Object-wrapper evaluation.
-- (id)evaluateWithContext:(JSContext*)context
+- (id)evaluateWithContext:(ooscript::Context)context
                     scope:(id)jsThis
                 arguments:(NSArray*)arguments;
 
 // As above, but converts result to a boolean.
-- (BOOL)evaluatePredicateWithContext:(JSContext*)context
+- (BOOL)evaluatePredicateWithContext:(ooscript::Context)context
                                scope:(id)jsThis
                            arguments:(NSArray*)arguments;
 

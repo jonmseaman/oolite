@@ -16,6 +16,25 @@ if get_option('espeak')
     add_project_arguments('-DHAVE_LIBESPEAK=1', language: c_family)
 endif
 
+# The JavaScript engine behind ooscript/JSEngine.hpp: the vendored QuickJS-ng, linked statically
+# (Phase 1; SpiderMonkey 1.8.5 and NSPR were removed by bead oo-7wx).
+# QuickJS-ng is part of the game binary, so it is held to the same golden flag policy as Oolite's own
+# code (meson.build; tests/golden/check_build_flags.py): its dtoa/number code produces floats that
+# land in the dumps. Its own project defaults to buildtype=release (-O3); meson lets a parent
+# override a subproject's buildtype but not its optimization or c_args, so debugoptimized (-O2)
+# with b_ndebug keeps release semantics at the pinned level. -ffp-contract=off reaches it through
+# the add_global_arguments in meson.build.
+# QuickJS-ng adds dependency('threads') (-pthread) to its link line, and every target
+# that links it. The MinGW clang driver does not use -pthread when linking (cutils.h takes Win32
+# threads under _WIN32), so each link printed "argument unused during compilation: '-pthread'".
+# On Windows the threads dependency is the same compile flag without the unused link flag, so the
+# objects and the links are unchanged and the driver has nothing to report.
+if host_machine.system() == 'windows'
+    meson.override_dependency('threads', declare_dependency(compile_args: ['-pthread']))
+endif
+quickjs_ng_proj = subproject('quickjs-ng', default_options: ['default_library=static', 'buildtype=debugoptimized', 'b_ndebug=true'])
+oolite_dependencies += [quickjs_ng_proj.get_variable('qjs_dep')]
+
 subdir('meson')
 subdir('Core')
 subdir('SDL')

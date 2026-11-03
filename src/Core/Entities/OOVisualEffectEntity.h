@@ -31,6 +31,7 @@
 #import "OOJSPropID.h"
 #import "OOPlanetEntity.h"
 #import "OOWeakReference.h"
+#include "ooscript/JSEngine.hpp"
 
 @class OOColor, OOMesh, OOScript, OOJSScript;
 
@@ -114,7 +115,7 @@
 - (void)setScript:(NSString*)script_name;
 - (OOJSScript*)script;
 - (NSDictionary*)scriptInfo;
-- (void)doScriptEvent:(OOJSPropID)message;
+- (void)doScriptEvent:(ooscript::PropertyId)message;
 - (void)remove;
 
 - (GLfloat)scaleMax; // used for calculating frustum cull size

@@ -1,5 +1,5 @@
 {
-    "ignorePatterns": ["deps/**/*.js", "tools/oxp-upgrade/**"],
+    "ignorePatterns": ["deps/**/*.js"],
     "overrides": [
       {
         "files": ["DebugOXP", "Resources"]

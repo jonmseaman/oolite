@@ -1,6 +1,6 @@
 /*
 
-OOJSGuiScreenKeyDefinition.h (QuickJS-ng)
+OOJSGuiScreenKeyDefinition.h
 
 
 Oolite
@@ -24,15 +24,11 @@ MA 02110-1301, USA.
 */
 
 #import "OOJSScript.h"
-#include <quickjs.h>
-
-/*	The definition owns references to its callback and callbackThis, which are
-        released on dealloc and when the JavaScript engine is reset.
-*/
+#include "ooscript/JSEngine.hpp"
 @interface OOJSGuiScreenKeyDefinition : OOWeakRefObject {
 @private
-    JSValue _callback; // Owned.
-    JSValue _callbackThis; // Owned.
+    ooscript::Value _callback;
+    ooscript::Object _callbackThis;
     OOJSScript* _owningScript;
 
     NSString* _name;
@@ -43,11 +39,10 @@ MA 02110-1301, USA.
 - (void)setName:(NSString*)name;
 - (NSDictionary*)registerKeys;
 - (void)setRegisterKeys:(NSDictionary*)registerKeys;
-// Returned values are owned by the caller.
-- (JSValue)callback;
-- (void)setCallback:(JSValueConst)callback;
-- (JSValue)callbackThis;
-- (void)setCallbackThis:(JSValueConst)callbackthis;
+- (ooscript::Value)callback;
+- (void)setCallback:(ooscript::Value)callback;
+- (ooscript::Object)callbackThis;
+- (void)setCallbackThis:(ooscript::Object)callbackthis;
 
 - (void)runCallback:(NSString*)key;
 

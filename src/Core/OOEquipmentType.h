@@ -34,8 +34,7 @@ SOFTWARE.
 #import "OOScript.h"
 #import "OOTypes.h"
 #import "Universe.h"
-
-#include <quickjs.h>
+#include "ooscript/JSEngine.hpp"
 
 @interface OOEquipmentType : NSObject <NSCopying> {
 @private
@@ -78,7 +77,7 @@ SOFTWARE.
     NSString* _script;
     NSString* _condition_script;
 
-    JSValue _jsSelf; // Zero-filled (not an object) until created; test with JS_IsObject().
+    ooscript::Object _jsSelf;
 }
 
 + (void)loadEquipment; // Load equipment data; called on loading and when changing to/from strict mode.

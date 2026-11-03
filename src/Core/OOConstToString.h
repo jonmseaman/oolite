@@ -31,6 +31,7 @@ MA 02110-1301, USA.
 #import "MyOpenGLView.h"
 #import "OOFunctionAttributes.h"
 #import "OOTypes.h"
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
 
 enum {
@@ -82,6 +83,12 @@ declaration, in particular:
 
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+NSString* JSTypeToString(int /* ooscript::Type */ type) CONST_FUNC;
+
 NSString* CargoTypeToString(OOCargoType cargo) CONST_FUNC;
 OOCargoType StringToCargoType(NSString* string) PURE_FUNC;
 
@@ -118,3 +125,7 @@ OOHDRToneMapper OOHDRToneMapperFromString(NSString* string);
 
 NSString* OOStringFromSDRToneMapper(OOSDRToneMapper toneMapper);
 OOSDRToneMapper OOSDRToneMapperFromString(NSString* string);
+
+#ifdef __cplusplus
+}
+#endif

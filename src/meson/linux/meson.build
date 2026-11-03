@@ -1,5 +1,5 @@
 # Linux specific
-add_project_arguments('-ggdb3', '-DLINUX', language: c_family)
+add_project_arguments('-ggdb3', '-DLINUX', '-DXP_UNIX', language: c_family)
 oolite_link_args += ['-ggdb3']
 
 oolite_dependencies += [
@@ -45,8 +45,12 @@ else
     error('Required dependency "gnustep-base" was not found in SEARCH_ROOTS.')
 endif
 
-inc_dir = include_directories(found_gs_inc, is_system: true)
+# GNUstep only: the JavaScript engine is the vendored QuickJS-ng subproject (bead oo-7wx).
+gs_inc_dirs = [found_gs_inc]
+gs_libs = [gs_lib, objc_lib]
+
+inc_dir = include_directories(gs_inc_dirs, is_system: true)
 oolite_dependencies += declare_dependency(
-    dependencies: [gs_lib, objc_lib],
+    dependencies: gs_libs,
     include_directories: inc_dir,
 )

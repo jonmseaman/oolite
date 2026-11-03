@@ -1,6 +1,6 @@
 /*
 
-OOJSSystemInfo.h (QuickJS-ng)
+OOJSSystemInfo.h
 
 JavaScript object representing system info overrides.
 
@@ -26,10 +26,18 @@ MA 02110-1301, USA.
 */
 
 #import "OOTypes.h"
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-#include <quickjs.h>
 
-void InitOOJSSystemInfo(JSContext* context, JSValueConst global);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// Returns an owned value, or JS_NULL on failure (with a JS warning, but no exception).
-JSValue GetJSSystemInfoForSystem(JSContext* context, OOGalaxyID galaxy, OOSystemID system);
+void InitOOJSSystemInfo(ooscript::Context context, ooscript::Object global);
+
+// Returns ooscript::nullValue() on failure (with a JS warning, but no exception).
+ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context, OOGalaxyID galaxy, OOSystemID system);
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,6 +1,6 @@
 /*
 
-OOJSFont.h (QuickJS-ng)
+OOJSFont.h
 
 JavaScript interface for introspecting fonts. Well, the font. Designed so that
 expanding to multiple font support would be reasonably elegant from the JS
@@ -29,7 +29,14 @@ SOFTWARE.
 
 */
 
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-#include <quickjs.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void InitOOJSFont(JSContext* context, JSValueConst global);
+void InitOOJSFont(ooscript::Context context, ooscript::Object global);
+
+#ifdef __cplusplus
+}
+#endif

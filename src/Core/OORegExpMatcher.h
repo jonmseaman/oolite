@@ -32,13 +32,12 @@ SOFTWARE.
 */
 
 #import "OOFoundation.h"
-
+#include "ooscript/JSEngine.hpp"
 @class OOJSFunction, OOJSValue;
 
-// Same values as SpiderMonkey's JSREG_FOLD and JSREG_MULTILINE.
 enum {
-    kOORegExpCaseInsensitive = 0x01,
-    kOORegExpMultiLine = 0x04
+    kOORegExpCaseInsensitive = ooscript::RegExpFoldCase,
+    kOORegExpMultiLine = ooscript::RegExpMultiline
 };
 
 @interface OORegExpMatcher : NSObject {

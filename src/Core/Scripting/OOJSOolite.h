@@ -25,7 +25,14 @@ MA 02110-1301, USA.
 
 */
 
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-#include <quickjs.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void InitOOJSOolite(JSContext* context, JSValueConst global);
+void InitOOJSOolite(ooscript::Context context, ooscript::Object global);
+
+#ifdef __cplusplus
+}
+#endif

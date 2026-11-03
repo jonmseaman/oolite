@@ -26,8 +26,7 @@ MA 02110-1301, USA.
 
 #import "OOFoundation.h"
 #import "OOWeakReference.h"
-
-#include <quickjs.h>
+#include "ooscript/JSEngine.hpp"
 
 @class ShipEntity;
 
@@ -39,7 +38,7 @@ MA 02110-1301, USA.
     OOWeakReference* _leader;
     NSString* _name;
 
-    JSValue _jsSelf; // Zero-filled (not an object) until created; test with JS_IsObject().
+    ooscript::Object _jsSelf;
 }
 
 - (id)init;

@@ -34,6 +34,7 @@ MA 02110-1301, USA.
 #import "OOTypes.h"
 #import "ShipEntity.h"
 #import "WormholeEntity.h"
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
 
 @class GuiDisplayGen, OOTrumble, MyOpenGLView, HeadUpDisplay, ShipEntity;
@@ -914,10 +915,10 @@ typedef enum {
 - (float)forwardShieldRechargeRate;
 - (float)aftShieldRechargeRate;
 
-- (void)setMaxForwardShieldLevel:(float)new;
-- (void)setMaxAftShieldLevel:(float)new;
-- (void)setForwardShieldRechargeRate:(float)new;
-- (void)setAftShieldRechargeRate:(float)new;
+- (void)setMaxForwardShieldLevel:(float)newValue;
+- (void)setMaxAftShieldLevel:(float)newValue;
+- (void)setForwardShieldRechargeRate:(float)newValue;
+- (void)setAftShieldRechargeRate:(float)newValue;
 
 // return keyconfig.plist settings for scripting
 - (NSDictionary*)keyConfig;
@@ -1227,9 +1228,8 @@ typedef enum {
 // *** World script events.
 // In general, script events should be sent through doScriptEvent:..., which
 // will forward to the world scripts.
-- (BOOL)doWorldEventUntilMissionScreen:(OOJSPropID)message;
-// argv is borrowed: the caller remains responsible for freeing the values.
-- (void)doWorldScriptEvent:(OOJSPropID)message inContext:(JSContext*)context withArguments:(JSValue*)argv count:(int)argc timeLimit:(OOTimeDelta)limit;
+- (BOOL)doWorldEventUntilMissionScreen:(ooscript::PropertyId)message;
+- (void)doWorldScriptEvent:(ooscript::PropertyId)message inContext:(ooscript::Context)context withArguments:(ooscript::Value*)argv count:(unsigned)argc timeLimit:(OOTimeDelta)limit;
 
 - (BOOL)showInfoFlag;
 
@@ -1296,9 +1296,15 @@ OOINLINE PlayerEntity* OOGetPlayer(void)
 #define GRAMS_PER_POD (KILOGRAMS_PER_POD * 1000)
 #define MAX_GRAMS_IN_SAFE ((GRAMS_PER_POD / 2) - 1)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 NSString* OODisplayRatingStringFromKillCount(unsigned kills);
 NSString* KillCountToRatingAndKillString(unsigned kills);
 NSString* OODisplayStringFromLegalStatus(int legalStatus);
+#ifdef __cplusplus
+}
+#endif
 
 NSString* OOStringFromGUIScreenID(OOGUIScreenID screen) CONST_FUNC;
 OOGUIScreenID OOGUIScreenIDFromString(NSString* string) PURE_FUNC;

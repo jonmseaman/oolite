@@ -25,11 +25,15 @@ MA 02110-1301, USA.
 
 */
 
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-#include <quickjs.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/*	QuickJS's global object is an ordinary object created with the context,
-        so there is no CreateOOJSGlobal(). SetUpOOJSGlobal() defines Oolite's
-        global properties and functions on it.
-*/
-void SetUpOOJSGlobal(JSContext* context, JSValueConst global);
+void CreateOOJSGlobal(ooscript::Context context, ooscript::Object* outGlobal);
+void SetUpOOJSGlobal(ooscript::Context context, ooscript::Object global);
+
+#ifdef __cplusplus
+}
+#endif

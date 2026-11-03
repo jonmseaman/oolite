@@ -32,7 +32,13 @@ MA 02110-1301, USA.
 
 #import "OOJavaScriptEngine.h"
 
-void InitOOJSSpecialFunctions(JSContext* context, JSValueConst global);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// Returns a new (owned) frozen object holding the special functions.
-JSValue JSSpecialFunctionsObjectWrapper(JSContext* context);
+void InitOOJSSpecialFunctions(ooscript::Context context, ooscript::Object global);
+OOJSValue* JSSpecialFunctionsObjectWrapper(ooscript::Context context);
+
+#ifdef __cplusplus
+}
+#endif

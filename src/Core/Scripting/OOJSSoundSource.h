@@ -1,6 +1,6 @@
 /*
 
-OOJSSoundSource.h (QuickJS-ng)
+OOJSSoundSource.h
 
 JavaScript sound source object.
 
@@ -24,9 +24,16 @@ MA 02110-1301, USA.
 
 */
 
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-#include <quickjs.h>
-
 @class OOSoundSource;
 
-void InitOOJSSoundSource(JSContext* context, JSValueConst global);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void InitOOJSSoundSource(ooscript::Context context, ooscript::Object global);
+
+#ifdef __cplusplus
+}
+#endif

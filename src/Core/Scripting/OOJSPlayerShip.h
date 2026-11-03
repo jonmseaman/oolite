@@ -1,6 +1,6 @@
 /*
 
-OOJSPlayerShip.h (QuickJS-ng)
+OOJSPlayerShip.h
 
 JavaScript proxy for the player's ship.
 While the player and player's ship are not differentiated in Oolite, such a
@@ -34,18 +34,20 @@ MA 02110-1301, USA.
 #pragma once
 
 #import "PlayerEntity.h"
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-#include <quickjs.h>
-
 @class PlayerEntity;
 
-void InitOOJSPlayerShip(JSContext* context, JSValueConst global);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-JSClassID JSPlayerShipClassID(void);
+void InitOOJSPlayerShip(ooscript::Context context, ooscript::Object global);
 
-/*	The player's ship object (player.ship), which is also the PlayerEntity's
-        -oo_jsValueInContext:. The returned value is owned by the caller, who must
-        JS_FreeValue() it. (SpiderMonkey's JSPlayerShipPrototype() is no longer
-        needed; use JS_GetClassProto(context, JSPlayerShipClassID()).)
-*/
-JSValue JSPlayerShipObject(void);
+ooscript::ClassDef* JSPlayerShipClass(void);
+ooscript::Object JSPlayerShipPrototype(void);
+ooscript::Object JSPlayerShipObject(void);
+
+#ifdef __cplusplus
+}
+#endif

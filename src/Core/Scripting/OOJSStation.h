@@ -1,6 +1,6 @@
 /*
 
-OOJSStation.h (QuickJS-ng)
+OOJSStation.h
 
 JavaScript proxy for StationEntities.
 
@@ -27,11 +27,16 @@ MA 02110-1301, USA.
 #pragma once
 
 #import "StationEntity.h"
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-#include <quickjs.h>
-
 @class StationEntity;
 
-void InitOOJSStation(JSContext* context, JSValueConst global);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-JSClassID JSStationClassID(void);
+void InitOOJSStation(ooscript::Context context, ooscript::Object global);
+
+#ifdef __cplusplus
+}
+#endif

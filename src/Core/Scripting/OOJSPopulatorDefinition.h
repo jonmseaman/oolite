@@ -1,6 +1,6 @@
 /*
 
-OOJSPopulatorDefinition.h (QuickJS-ng)
+OOJSPopulatorDefinition.h
 
 
 Oolite
@@ -25,23 +25,19 @@ MA 02110-1301, USA.
 
 #import "OOJSScript.h"
 #import "OOMaths.h"
-#include <quickjs.h>
+#include "ooscript/JSEngine.hpp"
 
-/*	The definition owns references to its callback and callbackThis, which are
-        released on dealloc and when the JavaScript engine is reset.
-*/
 @interface OOJSPopulatorDefinition : OOWeakRefObject {
 @private
-    JSValue _callback; // Owned.
-    JSValue _callbackThis; // Owned.
+    ooscript::Value _callback;
+    ooscript::Object _callbackThis;
     OOJSScript* _owningScript;
 }
 
-// Returned values are owned by the caller.
-- (JSValue)callback;
-- (void)setCallback:(JSValueConst)callback;
-- (JSValue)callbackThis;
-- (void)setCallbackThis:(JSValueConst)callbackthis;
+- (ooscript::Value)callback;
+- (void)setCallback:(ooscript::Value)callback;
+- (ooscript::Object)callbackThis;
+- (void)setCallbackThis:(ooscript::Object)callbackthis;
 
 - (void)runCallback:(HPVector)location;
 

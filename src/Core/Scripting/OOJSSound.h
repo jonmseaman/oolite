@@ -1,6 +1,6 @@
 /*
 
-OOJSSound.h (QuickJS-ng)
+OOJSSound.h
 
 JavaScript sound object.
 
@@ -26,16 +26,24 @@ MA 02110-1301, USA.
 
 #pragma once
 #import "OOSound.h"
+#include "ooscript/JSEngine.hpp"
 #import <Foundation/Foundation.h>
-#include <quickjs.h>
 
 @class OOSound;
 
-void InitOOJSSound(JSContext* context, JSValueConst global);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void InitOOJSSound(ooscript::Context context, ooscript::Object global);
 
 /*	SoundFromJSValue()
 
         Convert a JS value to a sound. The value may be either a Sound object or a
         string specifying a sound name.
  */
-OOSound* SoundFromJSValue(JSContext* context, JSValueConst value);
+OOSound* SoundFromJSValue(ooscript::Context context, ooscript::Value value);
+
+#ifdef __cplusplus
+}
+#endif
