@@ -31,8 +31,10 @@ SOFTWARE.
 #import "OOJSScript.h"
 #import "OOLoggingExtended.h"
 #import "OOProfilingStopwatch.h"
+#include "oofnd/Log.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/Thread.hpp"
+#include "oofnd/objc/OOAssert.h"
 
 #if OOLITE_LINUX
 // Workaround for clang/glibc incompatibility.
@@ -85,7 +87,7 @@ void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit)
 #endif
 {
 #if OOJS_DEBUG_LIMITER
-    OOLog(@"script.javaScript.timeLimit.debug", @"Limiter starting: %u => %u", sLimiterStartDepth, sLimiterStartDepth + 1);
+    OO_LOG("script.javaScript.timeLimit.debug", "Limiter starting: {} => {}", sLimiterStartDepth, sLimiterStartDepth + 1);
 #endif
     if (sLimiterStartDepth++ == 0) {
         if (limit <= 0.0)
@@ -111,7 +113,7 @@ void OOJSStopTimeLimiter(void)
 {
 #ifndef NDEBUG
     if (sLimiterStartDepth == 0) {
-        OOLog(@"bug.javaScript.limiterDepth", @"Attempt to stop JavaScript time limiter while it is already fully stopped. This is an internal bug, please report it. (Last start: %@:%u, last valid stop: %@:%u, this stop attempt: %@:%u.)", OOLogAbbreviatedFileName(sLastStartedFile), sLastStartedLine, OOLogAbbreviatedFileName(sLastStoppedFile), sLastStoppedLine, OOLogAbbreviatedFileName(file), line);
+        OO_LOG("bug.javaScript.limiterDepth", "Attempt to stop JavaScript time limiter while it is already fully stopped. This is an internal bug, please report it. (Last start: {}:{}, last valid stop: {}:{}, this stop attempt: {}:{}.)", oo::log::abbreviatedFileName(sLastStartedFile), sLastStartedLine, oo::log::abbreviatedFileName(sLastStoppedFile), sLastStoppedLine, oo::log::abbreviatedFileName(file), line);
         return;
     }
 
@@ -119,7 +121,7 @@ void OOJSStopTimeLimiter(void)
     sLastStoppedLine = line;
 
 #if OOJS_DEBUG_LIMITER
-    OOLog(@"script.javaScript.timeLimit.debug", @"Limiter ending: %u <= %u", sLimiterStartDepth - 1, sLimiterStartDepth);
+    OO_LOG("script.javaScript.timeLimit.debug", "Limiter ending: {} <= {}", sLimiterStartDepth - 1, sLimiterStartDepth);
 #endif
 
 #endif
@@ -217,7 +219,7 @@ static bool OperationCallback(ooscript::Context context)
     if (elapsed <= sLimiterTimeLimit)
         return YES;
 
-    OOLogERR(@"script.javaScript.timeLimit", @"Script \"%@\" ran for %g seconds and has been terminated.", [[OOJSScript currentlyRunningScript] name], elapsed);
+    OO_LOG_ERR("script.javaScript.timeLimit", "Script \"{}\" ran for {:g} seconds and has been terminated.", oo::DescriptionOf([[OOJSScript currentlyRunningScript] name]), elapsed);
 #ifdef OO_DEBUG_MONITOR_ENABLED
     OOJSDumpStack(context);
 #endif
@@ -290,7 +292,7 @@ static OOHighResTimeValue sProfilerStartTime;
 - (void)setExtensionTime:(double)value;
 - (void)setProfileEntries:(const std::vector<oo::ObjCRef<OOTimeProfileEntry*>>&)value;
 
-- (id)propertyListRepresentation; // shared selector (proposed ADR-0043): an Objective-C dictionary
+- (oo::PList)propertyListRepresentation;
 
 @end
 
@@ -303,7 +305,7 @@ static OOHighResTimeValue sProfilerStartTime;
 
 - (void)addSampleWithTotalTime:(OOTimeDelta)totalTime selfTime:(OOTimeDelta)selfTime;
 
-- (id)propertyListRepresentation; // shared selector (proposed ADR-0043): an Objective-C dictionary
+- (oo::PList)propertyListRepresentation;
 
 @end
 
@@ -325,8 +327,8 @@ void OOJSBeginProfiling(BOOL trace)
     sProfilerStartTime = OOGetHighResTime();
 
     if (trace) {
-        OOLog(@"script.javaScript.trace", @"%@", @">>>> Beginning trace.");
-        OOLogIndent();
+        OO_LOG("script.javaScript.trace", "{}", ">>>> Beginning trace.");
+        oo::log::indent();
     }
 }
 
@@ -357,12 +359,12 @@ OOTimeProfile* OOJSEndProfiling(void)
     entries.reserve(sProfileInfo->size());
     for (const auto& keyAndEntry : *sProfileInfo)
         entries.emplace_back(keyAndEntry.second);
-    std::stable_sort(entries.begin(), entries.end(), [](const auto& a, const auto& b) { return [a.get() compareBySelfTimeReverse:b.get()] == NSOrderedAscending; });
+    std::stable_sort(entries.begin(), entries.end(), [](const auto& a, const auto& b) { return [a.get() compareBySelfTimeReverse:b.get()] == OOOrderedAscending; });
     [result setProfileEntries:entries];
 
     if (sTracing) {
-        OOLogOutdent();
-        OOLog(@"script.javaScript.trace", @"%@", @"<<<< End of trace.");
+        oo::log::outdent();
+        OO_LOG("script.javaScript.trace", "{}", "<<<< End of trace.");
         sTracing = NO;
     }
 
@@ -453,8 +455,8 @@ static void TraceEnterJSFunction(ooscript::Context context, ooscript::Function f
     }
 
     name += ")";
-    OOLog(oo::NSStringFrom(logMsgClass), @">> %@ [%@]", oo::NSStringFrom(name), oo::NSStringFrom(frameTag));
-    OOLogIndent();
+    OO_LOG(logMsgClass, ">> {} [{}]", name, frameTag);
+    oo::log::indent();
 }
 
 static void FunctionCallback(ooscript::Function function, ooscript::Script script, ooscript::Context context, int entering)
@@ -520,8 +522,8 @@ void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function)
         return;
     if (EXPECT_NOT(sTracing)) {
         // We use EXPECT_NOT here because profiles are time-critical and traces are not.
-        OOLog(@"script.javaScript.trace.ON", @">> %s [ON]", function);
-        OOLogIndent();
+        OO_LOG("script.javaScript.trace.ON", ">> {} [ON]", function);
+        oo::log::indent();
     }
 
     *frame = (OOJSProfileStackFrame) {
@@ -598,7 +600,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
         frame->cleanup(frame);
 
     if (EXPECT_NOT(sTracing))
-        OOLogOutdent();
+        oo::log::outdent();
 }
 
 @implementation OOTimeProfile
@@ -712,10 +714,10 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 
 - (ooscript::Value)oo_jsValueInContext:(ooscript::Context)context
 {
-    return OOJSValueFromNativeObject(context, [self propertyListRepresentation]);
+    return OOJSValueFromNativeObject(context, oo::ObjectFromPList([self propertyListRepresentation]));
 }
 
-- (id)propertyListRepresentation // shared selector (proposed ADR-0043)
+- (oo::PList)propertyListRepresentation
 {
     // "profiles" holds the entry objects themselves, as it always did (the converted forms the old
     // code built were never used; converting each entry to JavaScript calls this method on it).
@@ -732,7 +734,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
     result.emplace("extensionTime", oo::PList([self extensionTime]));
     result.emplace("nonExtensionTime", oo::PList([self nonExtensionTime]));
     result.emplace("profilerOverhead", oo::PList([self profilerOverhead]));
-    return oo::ObjectFromPList(oo::PList(std::move(result)));
+    return oo::PList(std::move(result));
 }
 
 @end
@@ -741,7 +743,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 
 - (id)initWithCName:(const char*)name
 {
-    NSAssert(sProfiling, @"Can't create profile entries while not profiling.");
+    OOAssert(sProfiling, "Can't create profile entries while not profiling.");
 
     if ((self = [super init])) {
         if (name != NULL) {
@@ -772,7 +774,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
         if (ooscript::getFunctionNative(context, function) == NULL) {
             ooscript::StackFrame frame = NULL;
             if (ooscript::frameIterator(context, &frame) != NULL) {
-                location = oo::OptionalString(OOJSDescribeLocation(context, frame));
+                location = OOJSDescribeLocation(context, frame);
             }
         }
 
@@ -824,9 +826,14 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
     }
 }
 
-- (id)function // shared selector (proposed ADR-0043)
+- (id)function // shared selector (Foundation declares -function too; retires with oo-qps)
 {
-    return oo::NSStringOrNil(_function);
+    return oo::NSStringOrNil([self cxx_function]);
+}
+
+- (std::optional<std::string>)cxx_function
+{
+    return _function;
 }
 
 - (NSUInteger)hitCount
@@ -873,46 +880,46 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 #endif
 }
 
-- (NSComparisonResult)compareByTotalTime:(OOTimeProfileEntry*)other
+- (OOComparisonResult)compareByTotalTime:(OOTimeProfileEntry*)other
 {
-    return (NSComparisonResult) - [self compareByTotalTimeReverse:other];
+    return (OOComparisonResult) - [self compareByTotalTimeReverse:other];
 }
 
-- (NSComparisonResult)compareByTotalTimeReverse:(OOTimeProfileEntry*)other
+- (OOComparisonResult)compareByTotalTimeReverse:(OOTimeProfileEntry*)other
 {
     double selfTotal = [self totalTimeSum];
     double otherTotal = [other totalTimeSum];
 
     if (selfTotal < otherTotal)
-        return NSOrderedDescending;
+        return OOOrderedDescending;
     if (selfTotal > otherTotal)
-        return NSOrderedAscending;
-    return NSOrderedSame;
+        return OOOrderedAscending;
+    return OOOrderedSame;
 }
 
-- (NSComparisonResult)compareBySelfTime:(OOTimeProfileEntry*)other
+- (OOComparisonResult)compareBySelfTime:(OOTimeProfileEntry*)other
 {
-    return (NSComparisonResult) - [self compareBySelfTimeReverse:other];
+    return (OOComparisonResult) - [self compareBySelfTimeReverse:other];
 }
 
-- (NSComparisonResult)compareBySelfTimeReverse:(OOTimeProfileEntry*)other
+- (OOComparisonResult)compareBySelfTimeReverse:(OOTimeProfileEntry*)other
 {
     double selfTotal = [self selfTimeSum];
     double otherTotal = [other selfTimeSum];
 
     if (selfTotal < otherTotal)
-        return NSOrderedDescending;
+        return OOOrderedDescending;
     if (selfTotal > otherTotal)
-        return NSOrderedAscending;
-    return NSOrderedSame;
+        return OOOrderedAscending;
+    return OOOrderedSame;
 }
 
 - (ooscript::Value)oo_jsValueInContext:(ooscript::Context)context
 {
-    return OOJSValueFromNativeObject(context, [self propertyListRepresentation]);
+    return OOJSValueFromNativeObject(context, oo::ObjectFromPList([self propertyListRepresentation]));
 }
 
-- (id)propertyListRepresentation // shared selector (proposed ADR-0043)
+- (oo::PList)propertyListRepresentation
 {
     oo::PList::Dict result;
     // A nameless entry gave an empty dictionary: its nil name ended the object/key list.
@@ -927,7 +934,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
         result.emplace("selfTimeMax", oo::PList([self selfTimeMax]));
         result.emplace("isJavaScriptFrame", oo::PList(static_cast<bool>([self isJavaScriptFrame])));
     }
-    return oo::ObjectFromPList(oo::PList(std::move(result)));
+    return oo::PList(std::move(result));
 }
 
 @end

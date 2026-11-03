@@ -25,9 +25,9 @@ MA 02110-1301, USA.
 
 */
 
+#import "OOFoundation.h"
 #import "OOTypes.h"
 #include "ooscript/JSEngine.hpp"
-#import <Foundation/Foundation.h>
 
 #ifdef __cplusplus
 extern "C" {

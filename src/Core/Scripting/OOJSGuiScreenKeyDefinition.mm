@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 // #import "OOJavaScriptEngine.h"
 
 #import "OOFoundationBridge.h"
+#include "oofnd/Notification.hpp"
 #include "ooscript/JSEngine.hpp"
 
 /*
@@ -64,10 +65,9 @@ static inline Object* OOJSFOBJP(ooscript::Object* o) { return reinterpret_cast<O
 
     _owningScript = [[OOJSScript currentlyRunningScript] weakRetain];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(deleteJSPointers)
-                                                 name:kOOJavaScriptEngineWillResetNotification
-                                               object:[OOJavaScriptEngine sharedEngine]];
+    oo::NotificationCenter::defaultCenter().addObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+        [OOJavaScriptEngine sharedEngine],
+        [self](const oo::Notification&) { [self deleteJSPointers]; });
 
     return self;
 }
@@ -83,9 +83,8 @@ static inline Object* OOJSFOBJP(ooscript::Object* o) { return reinterpret_cast<O
 
     OOJSRelinquishContext(context);
 
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:kOOJavaScriptEngineWillResetNotification
-                                                  object:[OOJavaScriptEngine sharedEngine]];
+    oo::NotificationCenter::defaultCenter().removeObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+        [OOJavaScriptEngine sharedEngine]);
 }
 
 - (void)dealloc
@@ -168,14 +167,14 @@ static inline Object* OOJSFOBJP(ooscript::Object* o) { return reinterpret_cast<O
     OOJSRelinquishContext(context);
 }
 
-- (NSComparisonResult)interfaceCompare:(OOJSGuiScreenKeyDefinition*)other
+- (OOComparisonResult)interfaceCompare:(OOJSGuiScreenKeyDefinition*)other
 {
-    // -caseInsensitiveCompare: as it was sent: a nil name answers NSOrderedSame (a message to nil); a
+    // -caseInsensitiveCompare: as it was sent: a nil name answers OOOrderedSame (a message to nil); a
     // nil other name compares as the empty string.
     if (!_name.has_value())
-        return NSOrderedSame;
+        return OOOrderedSame;
     int order = oo::str::caseInsensitiveCompare(*_name, oo::OptionalString([other name]).value_or(std::string()));
-    return (order < 0) ? NSOrderedAscending : ((order > 0) ? NSOrderedDescending : NSOrderedSame);
+    return (order < 0) ? OOOrderedAscending : ((order > 0) ? OOOrderedDescending : OOOrderedSame);
 }
 
 @end

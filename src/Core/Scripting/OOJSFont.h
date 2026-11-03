@@ -29,8 +29,8 @@ SOFTWARE.
 
 */
 
+#import "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
-#import <Foundation/Foundation.h>
 #ifdef __cplusplus
 extern "C" {
 #endif

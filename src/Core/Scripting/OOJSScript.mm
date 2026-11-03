@@ -29,11 +29,10 @@ MA 02110-1301, USA.
 #import "OOJSScript.h"
 #import "OOJSEngineTimeManagement.h"
 #import "OOJavaScriptEngine.h"
+#include "oofnd/Notification.hpp"
 
 #import "Entity.h"
 #import "EntityOOJavaScriptExtensions.h"
-#import "NSDataOOExtensions.h"
-#import "NSStringOOExtensions.h"
 #import "OOConstToJSString.h"
 #import "OOConstToString.h"
 #import "OODebugStandards.h"
@@ -43,6 +42,9 @@ MA 02110-1301, USA.
 #import "OOPListParsing.h"
 #import "OOPListView.h"
 #include "oofnd/Encoding.hpp"
+#include "oofnd/FileSystem.hpp"
+#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/OOException.h"
 
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
@@ -192,7 +194,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
 
         if (ooscript::isExceptionPending((context))) {
             ooscript::clearPendingException((context));
-            OOLogERR(@"script.javaScript.load.waitingException", @"Prior to loading script %@, there was a pending JavaScript exception, which has been cleared. This is an internal error, please report it.", oo::NSStringOrNil(path));
+            OO_LOG_ERR("script.javaScript.load.waitingException", "Prior to loading script {}, there was a pending JavaScript exception, which has been cleared. This is an internal error, please report it.", path.value_or("(null)"));
         }
 
         // Set up JS object
@@ -226,10 +228,10 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
         filePath = path;
 
         if (!problem.has_value()) {
-            OOLog(@"script.javaScript.willLoad", @"About to load JavaScript %@", oo::NSStringOrNil(path));
+            OO_LOG("script.javaScript.willLoad", "About to load JavaScript {}", path.value_or("(null)"));
             script = LoadScriptWithName(context, path, _jsSelf, &scriptObject, &problem);
         }
-        OOLogIndentIf(@"script.javaScript.willLoad");
+        oo::log::indentIf("script.javaScript.willLoad");
 
         // Set default properties from manifest.plist
         // Order-sensitive: the properties are set in key order (they were set in hash order).
@@ -291,16 +293,16 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
             version = DescriptionOrNil([self propertyWithID:OOJSID("version") inContext:context]);
             description = DescriptionOrNil([self propertyWithID:OOJSID("description") inContext:context]);
 
-            OOLog(@"script.javaScript.load.success", @"Loaded JavaScript: %@ -- %@", [self displayName], oo::NSStringFrom(description.value_or("(no description)")));
+            OO_LOG("script.javaScript.load.success", "Loaded JavaScript: {} -- {}", oo::DescriptionOf([self displayName]), description.value_or("(no description)"));
         }
 
-        OOLogOutdentIf(@"script.javaScript.willLoad");
+        oo::log::outdentIf("script.javaScript.willLoad");
 
         filePath.reset(); // Only used for error reporting during startup.
     }
 
     if (problem.has_value()) {
-        OOLog(@"script.javaScript.load.failed", @"***** Error loading JavaScript script %@ -- %@", oo::NSStringOrNil(path), oo::NSStringFrom(*problem));
+        OO_LOG("script.javaScript.load.failed", "***** Error loading JavaScript script {} -- {}", path.value_or("(null)"), *problem);
         ooscript::reportPendingException((context));
         DESTROY(self);
     }
@@ -308,10 +310,9 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
     OOJSRelinquishContext(context);
 
     if (self != nil) {
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(javaScriptEngineWillReset:)
-                                                     name:kOOJavaScriptEngineWillResetNotification
-                                                   object:[OOJavaScriptEngine sharedEngine]];
+        oo::NotificationCenter::defaultCenter().addObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+            [OOJavaScriptEngine sharedEngine],
+            [self](const oo::Notification& notification) { [self javaScriptEngineWillReset:notification]; });
     }
 
     return self;
@@ -319,9 +320,8 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
 
 - (void)dealloc
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:kOOJavaScriptEngineWillResetNotification
-                                                  object:[OOJavaScriptEngine sharedEngine]];
+    oo::NotificationCenter::defaultCenter().removeObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+        [OOJavaScriptEngine sharedEngine]);
 
     if (_jsSelf != NULL) {
         ooscript::Context context = OOJSAcquireContext();
@@ -350,7 +350,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
         return @"invalid script";
 }
 
-- (void)javaScriptEngineWillReset:(NSNotification*)notification
+- (void)javaScriptEngineWillReset:(const oo::Notification&)notification
 {
     // All scripts become invalid when the JS engine resets.
     if (_jsSelf != NULL) {
@@ -399,14 +399,14 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
     return oo::NSStringFrom(*name);
 }
 
-- (id)scriptDescription // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)scriptDescription
 {
-    return oo::NSStringOrNil(description);
+    return description;
 }
 
-- (id)version // shared selector (proposed ADR-0043)
+- (std::optional<std::string>)cxx_version
 {
-    return oo::NSStringOrNil(version);
+    return version;
 }
 
 - (void)runWithTarget:(Entity*)target
@@ -419,7 +419,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
              count:(int)argc
             result:(ooscript::Value*)outResult
 {
-    NSParameterAssert(name.has_value() && (argv != NULL || argc == 0) && context != NULL && ooscript::isInRequest((context)));
+    OOParameterAssert(name.has_value() && (argv != NULL || argc == 0) && context != NULL && ooscript::isInRequest((context)));
     if (_jsSelf == NULL)
         return NO;
 
@@ -435,12 +435,12 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
     if (EXPECT(ooscript::getMethodById((context), (_jsSelf), (methodID), &root, (&method)) && !ooscript::isUndefined(method))) {
 #ifndef NDEBUG
         if (ooscript::isExceptionPending((context))) {
-            OOLog(@"script.internalBug", @"Exception pending on context before calling method in %s, clearing. This is an internal error, please report it.", __PRETTY_FUNCTION__);
+            OO_LOG("script.internalBug", "Exception pending on context before calling method in {}, clearing. This is an internal error, please report it.", __PRETTY_FUNCTION__);
             ooscript::clearPendingException((context));
         }
 
-        OOLog(@"script.javaScript.call", @"Calling [%@].%@()", [self name], OOStringFromJSID(methodID));
-        OOLogIndentIf(@"script.javaScript.call");
+        OO_LOG("script.javaScript.call", "Calling [{}].{}()", oo::DescriptionOf([self name]), oo::DescriptionOf(OOStringFromJSID(methodID)));
+        oo::log::indentIf("script.javaScript.call");
 #endif
 
         // Push self on stack of running scripts.
@@ -464,7 +464,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
         sRunningStack = stackElement.back;
 
 #ifndef NDEBUG
-        OOLogOutdentIf(@"script.javaScript.call");
+        oo::log::outdentIf("script.javaScript.call");
 #endif
     }
 
@@ -475,7 +475,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
 
 - (id)propertyWithID:(ooscript::PropertyId)propID inContext:(ooscript::Context)context
 {
-    NSParameterAssert(context != NULL && ooscript::isInRequest((context)));
+    OOParameterAssert(context != NULL && ooscript::isInRequest((context)));
     if (_jsSelf == NULL)
         return nil;
 
@@ -488,7 +488,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
 
 - (BOOL)setProperty:(id)value withID:(ooscript::PropertyId)propID inContext:(ooscript::Context)context
 {
-    NSParameterAssert(context != NULL && ooscript::isInRequest((context)));
+    OOParameterAssert(context != NULL && ooscript::isInRequest((context)));
     if (_jsSelf == NULL)
         return NO;
 
@@ -498,7 +498,7 @@ static constexpr PropertyFlag kScriptDefinePropertyFlags = PropertyFlag::Permane
 
 - (BOOL)defineProperty:(id)value withID:(ooscript::PropertyId)propID inContext:(ooscript::Context)context
 {
-    NSParameterAssert(context != NULL && ooscript::isInRequest((context)));
+    OOParameterAssert(context != NULL && ooscript::isInRequest((context)));
     if (_jsSelf == NULL)
         return NO;
 
@@ -704,7 +704,7 @@ static void AddStackToArrayReversed(std::vector<oo::ObjCRef<OOJSScript*>>& array
         AddStackToArrayReversed(array, stack->back);
         // -addObject: raised on the nil a script-less push leaves (GNUstep 1.31.1's text).
         if (stack->current == nil)
-            [NSException raise:NSInvalidArgumentException format:@"Tried to add nil to array"];
+            [OOException raise:OOInvalidArgumentException format:"Tried to add nil to array"];
         array.emplace_back(stack->current);
     }
 }
@@ -720,7 +720,7 @@ static Script LoadScriptWithName(ooscript::Context context, const std::optional<
     std::optional<std::u16string> data; // the script's UTF-16 units
     Script script = NULL;
 
-    NSCParameterAssert(outScriptObject != NULL && outErrorMessage != NULL);
+    OOCParameterAssert(outScriptObject != NULL && outErrorMessage != NULL);
     outErrorMessage->reset();
 
 #if OO_CACHE_JS_SCRIPTS
@@ -733,7 +733,7 @@ static Script LoadScriptWithName(ooscript::Context context, const std::optional<
 #endif
 
     if (script == NULL) {
-        // +stringWithContentsOfUnicodeFile: (it read through .oxz archives)
+        // decodeUnicodeText (it read through .oxz archives)
         if (path.has_value()) {
             if (const std::optional<oo::Data> bytes = OODataFromOXZFile(*path))
                 fileContents = oo::str::decodeUnicodeText(bytes->stringView());
@@ -835,7 +835,7 @@ static std::optional<std::string> StringForKey(const oo::PList& dictionary, cons
 static std::string ValueForKey(const std::optional<std::string>& value, id key)
 {
     if (!value.has_value())
-        [NSException raise:NSInvalidArgumentException format:@"Tried to add nil value for key '%@' to dictionary", key];
+        [OOException raise:OOInvalidArgumentException format:"Tried to add nil value for key '%s' to dictionary", oo::DescriptionOf(key).c_str()];
     return *value;
 }
 } // namespace

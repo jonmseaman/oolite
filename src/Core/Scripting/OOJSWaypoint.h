@@ -25,9 +25,9 @@ MA 02110-1301, USA.
 */
 
 #pragma once
+#import "OOFoundation.h"
 #import "OOWaypointEntity.h"
 #include "ooscript/JSEngine.hpp"
-#import <Foundation/Foundation.h>
 @class OOWaypointEntity;
 
 #ifdef __cplusplus

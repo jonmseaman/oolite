@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 
 #import "OOFoundationBridge.h"
 #include "oofnd/Notification.hpp"
+#include "oofnd/objc/OOAssert.h"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 
@@ -182,7 +183,7 @@ DEFINE_JS_OBJECT_GETTER(JSTimerGetTimer, &sTimerClass, sTimerPrototype, OOJSTime
 {
     self = [super initWithNextTime:[UNIVERSE getTime] + delay interval:interval];
     if (self != nil) {
-        NSAssert(OOJSValueIsFunction(context, function), @"Attempt to init OOJSTimer with a function that isn't.");
+        OOAssert(OOJSValueIsFunction(context, function), "Attempt to init OOJSTimer with a function that isn't.");
 
         _jsThis = jsThis;
         OOJSAddGCObjectRoot(context, &_jsThis, "OOJSTimer this");
@@ -401,7 +402,7 @@ static void TimerFinalize(Context cx, Object obj)
 
     if (timer != nil) {
         if ([timer isScheduled]) {
-            OOLogWARN(@"script.javaScript.unrootedTimer", @"Timer %@ is being garbage-collected while still running. You must keep a reference to all running timers, or they will stop unpredictably!", timer);
+            OO_LOG_WARN("script.javaScript.unrootedTimer", "Timer {} is being garbage-collected while still running. You must keep a reference to all running timers, or they will stop unpredictably!", oo::DescriptionOf(timer));
         }
         [timer release];
         ooscript::setPrivate(cx, obj, NULL);

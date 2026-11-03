@@ -34,7 +34,7 @@ extern "C" {
 #endif
 
 #ifdef __OBJC__
-#import <Foundation/Foundation.h>
+#import "OOFoundation.h"
 #endif
 
 #include "OOFunctionAttributes.h"

@@ -34,6 +34,7 @@ MA 02110-1301, USA.
 #import "Universe.h"
 
 #import "OOFoundationBridge.h"
+#include "oofnd/objc/OOAssert.h"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 
@@ -319,7 +320,7 @@ DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, &sSystemInfoClass, sSystemInf
 
 /*- (Random_Seed) systemSeed
 {
-        NSAssert([PLAYER currentGalaxyID] == _galaxy, @"Attempt to use -[OOSystemInfo systemSeed] from a different galaxy.");
+        OOAssert([PLAYER currentGalaxyID] == _galaxy, "Attempt to use -[OOSystemInfo systemSeed] from a different galaxy.");
         return [UNIVERSE systemSeedForSystemNumber:_system];
         }*/
 

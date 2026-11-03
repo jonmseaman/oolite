@@ -37,6 +37,7 @@ MA 02110-1301, USA.
 
 #import "OOFoundationBridge.h"
 #import "OOStringBridge.h"
+#include "oofnd/objc/OOException.h"
 #include "ooscript/JSEngine.hpp"
 #include <cstdint>
 #include <cstring>
@@ -167,7 +168,7 @@ std::optional<std::string> StringAtIndex(const oo::PList& array, std::size_t ind
 // and the calling script saw it as "Native exception: <reason>". (Exceptions have their own beads.)
 void RaiseNilValueForKey(id key)
 {
-    [NSException raise:NSInvalidArgumentException format:@"Tried to add nil value for key '%@' to dictionary", key];
+    [OOException raise:OOInvalidArgumentException format:"Tried to add nil value for key '%s' to dictionary", oo::DescriptionOf(key).c_str()];
 }
 
 // A string value for -setObject:forKey:, which raised on nil.

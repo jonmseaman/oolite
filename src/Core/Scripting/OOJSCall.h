@@ -26,9 +26,9 @@ MA 02110-1301, USA.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
+#import "OOFoundation.h"
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
-#import <Foundation/Foundation.h>
 /*	OOJSCallObjCObjectMethod()
 
         Function for implementing JavaScript call() methods.

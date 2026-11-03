@@ -29,12 +29,14 @@ MA 02110-1301, USA.
 #import "OOFoundationBridge.h"
 #import "OOJSEngineTimeManagement.h"
 #import "OOJSScript.h"
+#include "oofnd/Notification.hpp"
+#include "oofnd/objc/OOAssert.h"
 
 @implementation OOJSFunction
 
 - (id)initWithFunction:(ooscript::Function)function context:(ooscript::Context)context
 {
-    NSParameterAssert(context != NULL);
+    OOParameterAssert(context != NULL);
 
     if (function == NULL) {
         [self release];
@@ -46,10 +48,9 @@ MA 02110-1301, USA.
         OOJSAddGCObjectRoot(context, (ooscript::Object*)&_function, "OOJSFunction._function");
         _name = oo::OptionalString(OOStringFromJSString(context, ooscript::getFunctionId(function)));
 
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(deleteJSValue)
-                                                     name:kOOJavaScriptEngineWillResetNotification
-                                                   object:[OOJavaScriptEngine sharedEngine]];
+        oo::NotificationCenter::defaultCenter().addObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+            [OOJavaScriptEngine sharedEngine],
+            [self](const oo::Notification&) { [self deleteJSValue]; });
     }
 
     return self;
@@ -123,9 +124,8 @@ MA 02110-1301, USA.
         OOJSRelinquishContext(context);
 
         _function = NULL;
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                        name:kOOJavaScriptEngineWillResetNotification
-                                                      object:[OOJavaScriptEngine sharedEngine]];
+        oo::NotificationCenter::defaultCenter().removeObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+            [OOJavaScriptEngine sharedEngine]);
     }
 }
 

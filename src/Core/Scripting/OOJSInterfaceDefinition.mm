@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 #import "OOFoundationBridge.h"
 #import "OOJavaScriptEngine.h"
 
+#include "oofnd/Notification.hpp"
 #include "ooscript/JSEngine.hpp"
 
 /*
@@ -40,13 +41,13 @@ MA 02110-1301, USA.
 
 namespace {
 // -caseInsensitiveCompare: as the definitions used it: a nil receiver answers
-// NSOrderedSame (a message to nil); a nil argument compares as the empty string.
-static NSComparisonResult CaseInsensitiveCompare(const std::optional<std::string>& a, const std::optional<std::string>& b)
+// OOOrderedSame (a message to nil); a nil argument compares as the empty string.
+static OOComparisonResult CaseInsensitiveCompare(const std::optional<std::string>& a, const std::optional<std::string>& b)
 {
     if (!a.has_value())
-        return NSOrderedSame;
+        return OOOrderedSame;
     int order = oo::str::caseInsensitiveCompare(*a, b.value_or(std::string()));
-    return (order < 0) ? NSOrderedAscending : ((order > 0) ? NSOrderedDescending : NSOrderedSame);
+    return (order < 0) ? OOOrderedAscending : ((order > 0) ? OOOrderedDescending : OOOrderedSame);
 }
 } // namespace
 
@@ -60,10 +61,9 @@ static NSComparisonResult CaseInsensitiveCompare(const std::optional<std::string
 
     _owningScript = [[OOJSScript currentlyRunningScript] weakRetain];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(deleteJSPointers)
-                                                 name:kOOJavaScriptEngineWillResetNotification
-                                               object:[OOJavaScriptEngine sharedEngine]];
+    oo::NotificationCenter::defaultCenter().addObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+        [OOJavaScriptEngine sharedEngine],
+        [self](const oo::Notification&) { [self deleteJSPointers]; });
 
     return self;
 }
@@ -79,9 +79,8 @@ static NSComparisonResult CaseInsensitiveCompare(const std::optional<std::string
 
     OOJSRelinquishContext(context);
 
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:kOOJavaScriptEngineWillResetNotification
-                                                  object:[OOJavaScriptEngine sharedEngine]];
+    oo::NotificationCenter::defaultCenter().removeObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+        [OOJavaScriptEngine sharedEngine]);
 }
 
 - (void)dealloc
@@ -174,10 +173,10 @@ static NSComparisonResult CaseInsensitiveCompare(const std::optional<std::string
     OOJSRelinquishContext(context);
 }
 
-- (NSComparisonResult)interfaceCompare:(OOJSInterfaceDefinition*)other
+- (OOComparisonResult)interfaceCompare:(OOJSInterfaceDefinition*)other
 {
-    NSComparisonResult byCategory = CaseInsensitiveCompare(_category, [other category]);
-    if (byCategory == NSOrderedSame) {
+    OOComparisonResult byCategory = CaseInsensitiveCompare(_category, [other category]);
+    if (byCategory == OOOrderedSame) {
         return CaseInsensitiveCompare(_title, oo::OptionalString([other title]));
     } else {
         return byCategory;

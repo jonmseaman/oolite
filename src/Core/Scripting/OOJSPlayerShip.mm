@@ -47,6 +47,9 @@ MA 02110-1301, USA.
 #import "OOJSEquipmentInfo.h"
 
 #import "OOFoundationBridge.h"
+#include "oofnd/Notification.hpp"
+#include "oofnd/objc/OOAssert.h"
+#include "oofnd/objc/OOException.h"
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
 
@@ -496,17 +499,15 @@ ooscript::Object JSPlayerShipObject(void)
     _jsSelf = val;
     OOJSAddGCObjectRoot(context, &_jsSelf, "Player jsSelf");
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(javaScriptEngineWillReset:)
-                                                 name:kOOJavaScriptEngineWillResetNotification
-                                               object:[OOJavaScriptEngine sharedEngine]];
+    oo::NotificationCenter::defaultCenter().addObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+        [OOJavaScriptEngine sharedEngine],
+        [self](const oo::Notification& notification) { [self javaScriptEngineWillReset:notification]; });
 }
 
-- (void)javaScriptEngineWillReset:(NSNotification*)notification
+- (void)javaScriptEngineWillReset:(const oo::Notification&)notification
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:kOOJavaScriptEngineWillResetNotification
-                                                  object:[OOJavaScriptEngine sharedEngine]];
+    oo::NotificationCenter::defaultCenter().removeObserver(self, kOOJavaScriptEngineWillResetNotificationName,
+        [OOJavaScriptEngine sharedEngine]);
 
     if (_jsSelf != NULL) {
 
@@ -1639,7 +1640,7 @@ static bool PlayerShipSetCustomView(ooscript::Context context, ooscript::CallArg
         std::optional<std::string> facing = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[2]));
         // -setObject:forKey: raised on a nil facing (GNUstep 1.31.1's text).
         if (!facing.has_value())
-            [NSException raise:NSInvalidArgumentException format:@"Tried to add nil value for key '%@' to dictionary", @"weapon_facing"];
+            [OOException raise:OOInvalidArgumentException format:"Tried to add nil value for key '%s' to dictionary", "weapon_facing"];
         viewData["weapon_facing"] = *facing;
     }
 
@@ -1985,7 +1986,7 @@ static BOOL ValidateContracts(ooscript::Context context, ooscript::CallArgs& ooj
 {
     OOJS_PROFILE_ENTER
 
-    NSCParameterAssert(context != NULL && oojsArgs.rawVp() != NULL && start != NULL && destination != NULL && eta != NULL && fee != NULL);
+    OOCParameterAssert(context != NULL && oojsArgs.rawVp() != NULL && start != NULL && destination != NULL && eta != NULL && fee != NULL);
 
     Context cx = (context);
     unsigned uValue, offset = isCargo ? 2 : 1;

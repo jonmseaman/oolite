@@ -96,7 +96,7 @@ namespace {
 static std::vector<oo::ObjCRef<Entity*>> FindShips(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range);
 } // namespace
 namespace {
-static NSComparisonResult CompareEntitiesByDistance(id a, id b, void* relativeTo);
+static OOComparisonResult CompareEntitiesByDistance(id a, id b, void* relativeTo);
 } // namespace
 
 namespace {
@@ -1155,7 +1155,7 @@ static bool SystemAddGroupToRoute(ooscript::Context cx, ooscript::CallArgs& oojs
 namespace {
 static bool SystemLegacyAddShips(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
-    OOStandardsDeprecated(@"system.legacy_addShips() is deprecated");
+    cxx_OOStandardsDeprecated("system.legacy_addShips() is deprecated");
 
     OOJS_NATIVE_ENTER(context)
 
@@ -1184,7 +1184,7 @@ static bool SystemLegacyAddShips(ooscript::Context context, ooscript::CallArgs& 
 namespace {
 static bool SystemLegacyAddSystemShips(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
-    OOStandardsDeprecated(@"system.legacy_addSystemShips() is deprecated");
+    cxx_OOStandardsDeprecated("system.legacy_addSystemShips() is deprecated");
 
     OOJS_NATIVE_ENTER(context)
 
@@ -1214,7 +1214,7 @@ static bool SystemLegacyAddSystemShips(ooscript::Context context, ooscript::Call
 namespace {
 static bool SystemLegacyAddShipsAt(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
-    OOStandardsDeprecated(@"system.legacy_addShipsAt() is deprecated");
+    cxx_OOStandardsDeprecated("system.legacy_addShipsAt() is deprecated");
 
     OOJS_NATIVE_ENTER(context)
 
@@ -1248,7 +1248,7 @@ static bool SystemLegacyAddShipsAt(ooscript::Context context, ooscript::CallArgs
 namespace {
 static bool SystemLegacyAddShipsAtPrecisely(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
-    OOStandardsDeprecated(@"system.legacy_addShipsAtPrecisely() is deprecated");
+    cxx_OOStandardsDeprecated("system.legacy_addShipsAtPrecisely() is deprecated");
 
     OOJS_NATIVE_ENTER(context)
 
@@ -1282,7 +1282,7 @@ static bool SystemLegacyAddShipsAtPrecisely(ooscript::Context context, ooscript:
 namespace {
 static bool SystemLegacyAddShipsWithinRadius(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
-    OOStandardsDeprecated(@"system.legacy_addShipsWithinRadius() is deprecated");
+    cxx_OOStandardsDeprecated("system.legacy_addShipsWithinRadius() is deprecated");
 
     OOJS_NATIVE_ENTER(context)
 
@@ -1319,7 +1319,7 @@ static bool SystemLegacyAddShipsWithinRadius(ooscript::Context context, ooscript
 namespace {
 static bool SystemLegacySpawnShip(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
-    OOStandardsDeprecated(@"system.legacy_spawnShip() is deprecated");
+    cxx_OOStandardsDeprecated("system.legacy_spawnShip() is deprecated");
 
     OOJS_NATIVE_ENTER(context)
 
@@ -1768,7 +1768,7 @@ static std::vector<oo::ObjCRef<Entity*>> FindJSVisibleEntities(EntityFilterPredi
     if (relativeTo != nil && ![relativeTo isPlayer]) {
         // -sortUsingFunction:context: with the same comparison (a stable sort: GNUstep's is timsort).
         std::stable_sort(result.begin(), result.end(), [relativeTo](const oo::ObjCRef<Entity*>& a, const oo::ObjCRef<Entity*>& b) {
-            return CompareEntitiesByDistance(a.get(), b.get(), relativeTo) == NSOrderedAscending;
+            return CompareEntitiesByDistance(a.get(), b.get(), relativeTo) == OOOrderedAscending;
         });
     }
     return result; // empty for no matches, as the empty array was
@@ -1793,7 +1793,7 @@ static std::vector<oo::ObjCRef<Entity*>> FindShips(EntityFilterPredicate predica
 } // namespace
 
 namespace {
-static NSComparisonResult CompareEntitiesByDistance(id a, id b, void* relativeTo)
+static OOComparisonResult CompareEntitiesByDistance(id a, id b, void* relativeTo)
 {
     OOJS_PROFILE_ENTER
 
@@ -1806,12 +1806,12 @@ static NSComparisonResult CompareEntitiesByDistance(id a, id b, void* relativeTo
     d2 = HPdistance2(eb->position, r->position);
 
     if (d1 < d2)
-        return NSOrderedAscending;
+        return OOOrderedAscending;
     else if (d1 > d2)
-        return NSOrderedDescending;
+        return OOOrderedDescending;
     else
-        return NSOrderedSame;
+        return OOOrderedSame;
 
-    OOJS_PROFILE_EXIT_VAL(NSOrderedSame)
+    OOJS_PROFILE_EXIT_VAL(OOOrderedSame)
 }
 } // namespace

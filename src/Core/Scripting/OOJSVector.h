@@ -24,10 +24,10 @@ MA 02110-1301, USA.
 
 */
 
+#import "OOFoundation.h"
 #import "OOMaths.h"
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
-#import <Foundation/Foundation.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -26,9 +26,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#import "OOFoundation.h"
 #import "WormholeEntity.h"
 #include "ooscript/JSEngine.hpp"
-#import <Foundation/Foundation.h>
 @class WormholeEntity;
 
 #ifdef __cplusplus

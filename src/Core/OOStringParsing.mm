@@ -26,7 +26,6 @@ MA 02110-1301, USA.
 
 #include <vector>
 #import "HeadUpDisplay.h"
-#import "NSScannerOOExtensions.h"
 #import "OOCollectionExtractors.h"
 #import "OOFunctionAttributes.h"
 #import "OOLogging.h"
@@ -41,6 +40,7 @@ MA 02110-1301, USA.
 #import "OOJavaScriptEngine.h"
 #import "OOStringBridge.h"
 
+#include "oofnd/Scanner.hpp"
 #include "ooscript/JSEngine.hpp"
 
 /*
@@ -64,16 +64,14 @@ BOOL cxx_ScanVectorFromString(const std::optional<std::string>& xyzString, Vecto
     GLfloat xyz[] = { 0.0, 0.0, 0.0 };
     int i = 0;
     const char* error = nullptr;
-    NSScanner* scanner = nil;
 
     assert(outVector != NULL);
     if (!xyzString.has_value())
         return NO;
 
-    if (!error)
-        scanner = [NSScanner scannerWithString:oo::NSStringFrom(*xyzString)]; // the NSScanner family (oo-3rb.12) retires this
-    while (![scanner isAtEnd] && i < 3 && !error) {
-        if (![scanner scanFloat:&xyz[i++]])
+    oo::str::Scanner scanner(*xyzString);
+    while (!scanner.isAtEnd() && i < 3 && !error) {
+        if (!scanner.scanFloat(&xyz[i++]))
             error = "could not scan a float value.";
     }
 
@@ -84,7 +82,7 @@ BOOL cxx_ScanVectorFromString(const std::optional<std::string>& xyzString, Vecto
         *outVector = make_vector(xyz[0], xyz[1], xyz[2]);
         return YES;
     } else {
-        OOLogERR(@"strings.conversion.vector", @"cannot make vector from '%@': %s", oo::NSStringFrom(*xyzString), error);
+        OO_LOG_ERR("strings.conversion.vector", "cannot make vector from '{}': {}", *xyzString, error);
         return NO;
     }
 }
@@ -106,16 +104,14 @@ BOOL cxx_ScanQuaternionFromString(const std::optional<std::string>& wxyzString, 
     GLfloat wxyz[] = { 1.0, 0.0, 0.0, 0.0 };
     int i = 0;
     const char* error = nullptr;
-    NSScanner* scanner = nil;
 
     assert(outQuaternion != NULL);
     if (!wxyzString.has_value())
         return NO;
 
-    if (!error)
-        scanner = [NSScanner scannerWithString:oo::NSStringFrom(*wxyzString)]; // the NSScanner family (oo-3rb.12) retires this
-    while (![scanner isAtEnd] && i < 4 && !error) {
-        if (![scanner scanFloat:&wxyz[i++]])
+    oo::str::Scanner scanner(*wxyzString);
+    while (!scanner.isAtEnd() && i < 4 && !error) {
+        if (!scanner.scanFloat(&wxyz[i++]))
             error = "could not scan a float value.";
     }
 
@@ -130,7 +126,7 @@ BOOL cxx_ScanQuaternionFromString(const std::optional<std::string>& wxyzString, 
         quaternion_normalize(outQuaternion);
         return YES;
     } else {
-        OOLogERR(@"strings.conversion.quaternion", @"cannot make quaternion from '%@': %s", oo::NSStringFrom(*wxyzString), error);
+        OO_LOG_ERR("strings.conversion.quaternion", "cannot make quaternion from '{}': {}", *wxyzString, error);
         return NO;
     }
 }
@@ -140,16 +136,14 @@ BOOL cxx_ScanVectorAndQuaternionFromString(const std::optional<std::string>& xyz
     GLfloat xyzwxyz[] = { 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0 };
     int i = 0;
     const char* error = nullptr;
-    NSScanner* scanner = nil;
 
     assert(outVector != NULL && outQuaternion != NULL);
     if (!xyzwxyzString.has_value())
         return NO;
 
-    if (!error)
-        scanner = [NSScanner scannerWithString:oo::NSStringFrom(*xyzwxyzString)]; // the NSScanner family (oo-3rb.12) retires this
-    while (![scanner isAtEnd] && i < 7 && !error) {
-        if (![scanner scanFloat:&xyzwxyz[i++]])
+    oo::str::Scanner scanner(*xyzwxyzString);
+    while (!scanner.isAtEnd() && i < 7 && !error) {
+        if (!scanner.scanFloat(&xyzwxyz[i++]))
             error = "Could not scan a float value.";
     }
 
@@ -157,7 +151,7 @@ BOOL cxx_ScanVectorAndQuaternionFromString(const std::optional<std::string>& xyz
         error = "Found less than seven float values.";
 
     if (error) {
-        OOLogERR(@"strings.conversion.quaternion", @"cannot make vector and quaternion from '%@': %s", oo::NSStringFrom(*xyzwxyzString), error);
+        OO_LOG_ERR("strings.conversion.quaternion", "cannot make vector and quaternion from '{}': {}", *xyzwxyzString, error);
         return NO;
     }
 
@@ -211,11 +205,10 @@ Random_Seed cxx_RandomSeedFromString(const std::optional<std::string>& abcdefStr
     int abcdef[] = { 0, 0, 0, 0, 0, 0 };
     int i = 0;
     const char* error = nullptr;
-    // the NSScanner family (oo-3rb.12) retires this; a nil string scans as it did
-    NSScanner* scanner = [NSScanner scannerWithString:oo::NSStringOrNil(abcdefString)];
+    oo::str::Scanner scanner(abcdefString.value_or("")); // a nil string scans as an empty one (proposed ADR-0039)
 
-    while (![scanner isAtEnd] && i < 6 && !error) {
-        if (![scanner scanInt:&abcdef[i++]])
+    while (!scanner.isAtEnd() && i < 6 && !error) {
+        if (!scanner.scanInt(&abcdef[i++]))
             error = "could not scan a int value.";
     }
 
@@ -230,7 +223,7 @@ Random_Seed cxx_RandomSeedFromString(const std::optional<std::string>& abcdefStr
         result.e = abcdef[4];
         result.f = abcdef[5];
     } else {
-        OOLogERR(@"strings.conversion.randomSeed", @"cannot make Random_Seed from '%@': %s", oo::NSStringOrNil(abcdefString), error);
+        OO_LOG_ERR("strings.conversion.randomSeed", "cannot make Random_Seed from '{}': {}", abcdefString.value_or("(null)"), error);
         result = kNilRandomSeed;
     }
 
@@ -319,14 +312,14 @@ std::vector<unsigned> cxx_ComponentsFromVersionString(const std::string& string)
     return oo::str::versionComponents(string);
 }
 
-NSComparisonResult cxx_CompareVersions(const std::vector<unsigned>& version1, const std::vector<unsigned>& version2)
+OOComparisonResult cxx_CompareVersions(const std::vector<unsigned>& version1, const std::vector<unsigned>& version2)
 {
     const int order = oo::str::compareVersions(version1, version2);
     if (order < 0)
-        return NSOrderedAscending;
+        return OOOrderedAscending;
     if (order > 0)
-        return NSOrderedDescending;
-    return NSOrderedSame;
+        return OOOrderedDescending;
+    return OOOrderedSame;
 }
 
 std::string cxx_ClockToString(double clock, BOOL adjusting)

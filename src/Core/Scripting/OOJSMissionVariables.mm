@@ -32,6 +32,7 @@ MA 02110-1301, USA.
 #import "OOFoundationBridge.h"
 #import "OOJSPlayer.h"
 #import "OOStringBridge.h"
+#include "oofnd/objc/OOAssert.h"
 
 #include "ooscript/JSEngine.hpp"
 #include <cstring>
@@ -61,7 +62,7 @@ using ooscript::Value;
 namespace {
 static std::optional<std::string> KeyForPropertyID(ooscript::Context context, ooscript::PropertyId propID)
 {
-    NSCParameterAssert(ooscript::isStringId(propID));
+    OOCParameterAssert(ooscript::isStringId(propID));
 
     std::string key = oo::StdString(OOStringFromJSString(context, ooscript::idToString(propID)));
     if (oo::str::hasPrefix(key, "_"))

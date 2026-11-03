@@ -27,8 +27,8 @@ MA 02110-1301, USA.
 #pragma once
 
 #import "OOFlasherEntity.h"
+#import "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
-#import <Foundation/Foundation.h>
 
 #ifdef __cplusplus
 extern "C" {
