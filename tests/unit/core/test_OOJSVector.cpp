@@ -14,7 +14,7 @@
    JS-visible behaviour: construction, x/y/z, every method and static method,
    the errors, Vector3D.prototype reading as zero, and how a native's exception
    reaches JS (an Objective-C OOException and a C++ exception both become a JS
-   error). Run: bash tools/check-core-tests.sh
+   error). Run: tests/run.sh unit
 */
 
 #include <cmath>
@@ -87,26 +87,26 @@ std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
   return result;
 }
 
-BOOL cxx_OOJSArgumentListGetNumber(
+bool cxx_OOJSArgumentListGetNumber(
     ooscript::Context context, const std::optional<std::string>& scriptClass,
     const std::optional<std::string>& function, unsigned argc,
     ooscript::Value* argv, double* outNumber, unsigned* outConsumed) {
   if (OOJSArgumentListGetNumberNoError(context, argc, argv, outNumber,
                                        outConsumed))
-    return YES;
+    return true;
   cxx_OOJSReportBadArguments(context, scriptClass, function, argc, argv,
                              "Expected number, got", std::nullopt);
-  return NO;
+  return false;
 }
 
-BOOL OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc,
+bool OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc,
                                       ooscript::Value* argv, double* outNumber,
                                       unsigned* outConsumed) {
   if (argc == 0 || !ooscript::valueToNumber(context, argv[0], outNumber) ||
       std::isnan(*outNumber))
-    return NO;
+    return false;
   if (outConsumed != NULL) *outConsumed = 1;
-  return YES;
+  return true;
 }
 
 ooscript::Value OOJSValueFromPList(ooscript::Context context,
@@ -118,7 +118,7 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
   return js != nullptr ? ooscript::stringValue(js) : ooscript::nullValue();
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
 }
@@ -228,7 +228,7 @@ HPVector Universe::coordinatesFromCoordinateSystemString(
 
 alignas(Universe) unsigned char sUniverseStorage[sizeof(Universe)];
 
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 // MARK: The context
 // -------------------------------------------------------------------------------

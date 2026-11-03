@@ -1046,7 +1046,7 @@ void exerciseFacade(Runtime rt, Context cx) {
              &rv) &&
         valIs(cx, rv, u"undefined"));  // sloppy: ignored
 
-  CHECK(std::strcmp(backendName(), "quickjs-ng-0.16.2") == 0);
+  CHECK(std::strcmp(backendName(), "quickjs-ng-0.17.0") == 0);
   setErrorReporter(cx, nullptr);
 }
 
@@ -1346,10 +1346,10 @@ int main() {
 
   runFullSurface();  // the rest of JSEngine.hpp, on a runtime of its own
 
-  CHECK(std::strcmp(backendName(), "quickjs-ng-0.16.2") == 0);
+  CHECK(std::strcmp(backendName(), "quickjs-ng-0.17.0") == 0);
 
   if (gFailures == 0)
-    std::printf("PASS: ooscript façade on %s\n", "quickjs-ng-0.16.2");
+    std::printf("PASS: ooscript façade on %s\n", "quickjs-ng-0.17.0");
   else
     std::printf("%d check(s) failed\n", gFailures);
   return gFailures == 0 ? 0 : 1;

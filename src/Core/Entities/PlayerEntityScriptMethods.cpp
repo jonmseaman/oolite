@@ -53,10 +53,10 @@ oo::PList MarkerFor(OOSystemID system, const char* color, const char* shape)
 // What -boolValue / -integerValue of the value an Objective-C dictionary held
 // gave (NO / 0 for none): NSString's and NSNumber's own conversions, as
 // NSUserDefaults -boolForKey: / -integerForKey: read them.
-BOOL BoolValueOf(const oo::PList* value)
+bool BoolValueOf(const oo::PList* value)
 {
     if (value == nullptr)
-        return NO;
+        return false;
     if (const std::string* string = value->getIf<std::string>())
         return oo::defaults_detail::stringBoolValue(*string);
     return value->isNumber() && value->boolValue();
@@ -139,7 +139,7 @@ void PlayerEntity::awardCommodityType(const std::string& type,
                         if (cargo.size() < maxAvailableCargoSpace()) {
                             ::ShipEntity* container = (UNIVERSE != nullptr
                                     ? UNIVERSE->newShipWithRole("1t-cargopod")
-                                    : (::ShipEntity*)nil);
+                                    : (::ShipEntity*)nullptr);
                             if (container) {
                                 // the cargopod ship is just being set up. If ejected,  will
                                 // call UNIVERSE addEntity [container wasAddedToUniverse]; //
@@ -165,7 +165,7 @@ void PlayerEntity::awardCommodityType(const std::string& type,
                 while (amount) {
                     if (cargo.size() < maxAvailableCargoSpace()) {
                         ::ShipEntity* container = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("1t-cargopod")
-                                                                       : (::ShipEntity*)nil);
+                                                                       : (::ShipEntity*)nullptr);
                         if (container) {
                             // the cargopod ship is just being set up. If ejected, will call
                             // UNIVERSE addEntity [container wasAddedToUniverse]; // seems to
@@ -210,7 +210,7 @@ OOGalaxyID PlayerEntity::currentGalaxyID() { return galaxy_number; }
 
 OOSystemID PlayerEntity::currentSystemID()
 {
-    if ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) == nil)
+    if ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) == nullptr)
         return -1; // Interstellar space
     return (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0);
 }
@@ -239,7 +239,7 @@ void PlayerEntity::setMissionChoice(const std::optional<std::string>& newChoice,
     bool withEvent)
 {
     const std::optional<std::string> oldChoice = missionChoice;
-    BOOL equal = newChoice == oldChoice; // Catch both being nil as well
+    bool equal = newChoice == oldChoice; // Catch both being nil as well
     if (!equal) {
         if (!newChoice.has_value()) {
             missionChoice.reset();
@@ -257,7 +257,7 @@ void PlayerEntity::setMissionChoice(const std::optional<std::string>& newChoice,
     }
 }
 
-void PlayerEntity::allowMissionInterrupt() { _missionAllowInterrupt = YES; }
+void PlayerEntity::allowMissionInterrupt() { _missionAllowInterrupt = true; }
 
 OOTimeDelta PlayerEntity::scriptTimer() { return script_time; }
 
@@ -346,7 +346,7 @@ oo::PList PlayerEntity::validatedMarker(const oo::PList& marker)
 std::optional<std::string> PlayerEntity::creditsFormattedForSubstitution()
 {
     return std::optional<std::string>(
-        cxx_OOStringFromDeciCredits(deciCredits(), YES, NO));
+        cxx_OOStringFromDeciCredits(deciCredits(), true, false));
 }
 
 /*	Implements string expansion code [_oo_legacy_credits_number].
@@ -406,11 +406,11 @@ std::optional<std::string> PlayerEntity::getKeyBindingDescription(
         const std::string desc = keyCodeDescription(k_int).value_or("(null)"); // %@ of nil
         // 0 = key not set
         if (k_int != 0) {
-            if (BoolValueOf(def->find("mod2")) == YES)
+            if (BoolValueOf(def->find("mod2")) == true)
                 final += keyMod2Text + "+";
-            if (BoolValueOf(def->find("mod1")) == YES)
+            if (BoolValueOf(def->find("mod1")) == true)
                 final += keyMod1Text + "+";
-            if (BoolValueOf(def->find("shift")) == YES)
+            if (BoolValueOf(def->find("shift")) == true)
                 final += keyShiftText + "+";
             final += desc;
         }

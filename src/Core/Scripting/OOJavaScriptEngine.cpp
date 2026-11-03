@@ -739,7 +739,7 @@ static void DumpVariable(ooscript::Context context, ooscript::Variable* prop)
     ooscript::idToValue(context, prop->id, &nameVal);
     // ("%@" of a nil name printed "(null)")
     const std::string name = cxx_OOStringFromJSValueEvenIfNull(context, nameVal).value_or("(null)");
-    const std::string value = cxx_OOJSDescribeValue(context, prop->value, YES);
+    const std::string value = cxx_OOJSDescribeValue(context, prop->value, true);
 
     enum // NOLINT(performance-enum-size): kInterestingFlags is a bitwise
          // complement of small flag values; forcing a narrow base type would
@@ -754,7 +754,7 @@ static void DumpVariable(ooscript::Context context, ooscript::Variable* prop)
         if (prop->flags & static_cast<unsigned>(ooscript::VariableFlag::ReadOnly))
             flags.emplace_back("read-only");
         if (prop->flags & static_cast<unsigned>(ooscript::VariableFlag::Alias))
-            flags.push_back("alias (" + cxx_OOJSDescribeValue(context, prop->alias, YES) + ")");
+            flags.push_back("alias (" + cxx_OOJSDescribeValue(context, prop->alias, true) + ")");
         if (prop->flags & static_cast<unsigned>(ooscript::VariableFlag::Exception))
             flags.emplace_back("exception");
         if (prop->flags & static_cast<unsigned>(ooscript::VariableFlag::Error))
@@ -786,7 +786,7 @@ void OOJSDumpStack(ooscript::Context context)
                 ooscript::Script script = ooscript::frameScript(context, frame);
                 std::string desc;
                 ooscript::VariableList properties = { 0, NULL, NULL };
-                BOOL gotProperties = NO;
+                bool gotProperties = false;
 
                 idx++;
 
@@ -839,14 +839,14 @@ void OOJSDumpStack(ooscript::Context context)
                 if (gotProperties) {
                     ooscript::Value thisVal;
                     if (ooscript::frameThis(context, frame, &thisVal)) {
-                        static BOOL haveThis = NO;
+                        static bool haveThis = false;
                         static ooscript::PropertyId thisAtom;
                         if (EXPECT_NOT(!haveThis)) {
                             ooscript::valueToId(context,
                                 ooscript::stringValue((ooscript::internString(
                                     (context), "this"))),
                                 &thisAtom);
-                            haveThis = YES;
+                            haveThis = true;
                         }
                         ooscript::Variable thisDesc = { .id = thisAtom,
                             .value = thisVal,
@@ -1150,7 +1150,7 @@ void OOJSReportBadPropertyValue(ooscript::Context context,
 {
     std::optional<std::string> propName = cxx_OOStringFromJSPropertyIDAndSpec(context, propID, propertySpec);
     const char* className = OOJSGetClass(context, thisObj)->name;
-    std::string valueDesc = cxx_OOJSDescribeValue(context, value, YES);
+    std::string valueDesc = cxx_OOJSDescribeValue(context, value, true);
 
     cxx_OOJSReportError(
         context, "Cannot set property %s of instance of %s to invalid value %s.",
@@ -1183,23 +1183,23 @@ void OOJSSetWarningOrErrorStackSkip(unsigned skip)
     sErrorHandlerStackSkip = skip;
 }
 
-BOOL cxx_OOJSArgumentListGetNumber(
+bool cxx_OOJSArgumentListGetNumber(
     ooscript::Context context, const std::optional<std::string>& scriptClass,
     const std::optional<std::string>& function, unsigned argc,
     ooscript::Value* argv, double* outNumber, unsigned* outConsumed)
 {
     if (OOJSArgumentListGetNumberNoError(context, argc, argv, outNumber,
             outConsumed)) {
-        return YES;
+        return true;
     } else {
         cxx_OOJSReportBadArguments(context, scriptClass, function, argc, argv,
             std::string("Expected number, got"),
             std::nullopt);
-        return NO;
+        return false;
     }
 }
 
-BOOL OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc,
+bool OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc,
     ooscript::Value* argv, double* outNumber,
     unsigned* outConsumed)
 {
@@ -1213,14 +1213,14 @@ BOOL OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc,
     if (EXPECT_NOT(!ooscript::valueToNumber((context), (argv[0]), &value) || isnan(value))) {
         if (outConsumed != NULL)
             *outConsumed = 0;
-        return NO;
+        return false;
     }
 
     // Success.
     *outNumber = value;
     if (outConsumed != NULL)
         *outConsumed = 1;
-    return YES;
+    return true;
 
     OOJS_PROFILE_EXIT
 }
@@ -1506,7 +1506,7 @@ std::string OOJSValue::description() const
 }
 
 void OOJSStrLiteralCachePRIVATE(const char* string, ooscript::Value* strCache,
-    BOOL* inited)
+    bool* inited)
 {
     OOCParameterAssert(string != NULL && strCache != NULL && inited != NULL && !*inited);
 
@@ -1523,7 +1523,7 @@ void OOJSStrLiteralCachePRIVATE(const char* string, ooscript::Value* strCache,
     }
 
     *strCache = ooscript::stringValue(jsString);
-    *inited = YES;
+    *inited = true;
 
     OOJSRelinquishContext(context);
 }
@@ -1600,8 +1600,8 @@ std::optional<std::string> cxx_OOStringFromJSPropertyIDAndSpec(
 
 namespace {
 static std::string DescribeValue(ooscript::Context context,
-    ooscript::Value value, BOOL abbreviateObjects,
-    BOOL recursing)
+    ooscript::Value value, bool abbreviateObjects,
+    bool recursing)
 {
     OOJS_PROFILE_ENTER
 
@@ -1658,8 +1658,8 @@ static std::string DescribeValue(ooscript::Context context,
                     std::string itemDesc = "?";
                     if (ooscript::getElement((context), (obj), i, (&item))) {
                         itemDesc = DescribeValue(
-                            context, item, YES /* always abbreviate objects in arrays */,
-                            YES);
+                            context, item, true /* always abbreviate objects in arrays */,
+                            true);
                     }
                     if (i != 0)
                         arrayDesc += ", ";
@@ -1699,9 +1699,9 @@ static std::string DescribeValue(ooscript::Context context,
 
 std::string cxx_OOJSDescribeValue(ooscript::Context context,
     ooscript::Value value,
-    BOOL abbreviateObjects)
+    bool abbreviateObjects)
 {
-    return DescribeValue(context, value, abbreviateObjects, NO);
+    return DescribeValue(context, value, abbreviateObjects, false);
 }
 
 std::optional<std::string> cxx_OOJSStringWithJavaScriptParameters(
@@ -1718,7 +1718,7 @@ std::optional<std::string> cxx_OOJSStringWithJavaScriptParameters(
     for (i = 0; i < count; ++i) {
         if (i != 0)
             result += ", ";
-        result += cxx_OOJSDescribeValue(context, params[i], NO);
+        result += cxx_OOJSDescribeValue(context, params[i], false);
     }
 
     result += ")";
@@ -1850,7 +1850,7 @@ bool OOJSUnconstructableConstruct(ooscript::Context context,
     // %@ of a nil name printed "(null)".
     cxx_OOJSReportError(context, "%s cannot be used as a constructor.",
         name ? name->c_str() : "(null)");
-    return NO;
+    return false;
 
     OOJS_NATIVE_EXIT
 }
@@ -1884,21 +1884,21 @@ bool OOJSObjectWrapperToString(ooscript::Context context,
     OOJS_NATIVE_EXIT
 }
 
-BOOL JSFunctionPredicate(Entity* entity, void* parameter)
+bool JSFunctionPredicate(Entity* entity, void* parameter)
 {
     OOJS_PROFILE_ENTER
 
     JSFunctionPredicateParameter* param = static_cast<JSFunctionPredicateParameter*>(parameter);
     ooscript::Value args[1];
     ooscript::Value rval = ooscript::undefinedValue();
-    bool result = NO;
+    bool result = false;
 
-    OOCParameterAssert(entity != nil && param != NULL);
+    OOCParameterAssert(entity != nullptr && param != NULL);
     OOCParameterAssert(param->context != NULL && ooscript::isInRequest((param->context)));
     OOCParameterAssert(OOJSValueIsFunction(param->context, param->function));
 
     if (EXPECT_NOT(param->errorFlag))
-        return NO;
+        return false;
 
     args[0] = OOJSEntityJSValue(
         entity,
@@ -1907,7 +1907,7 @@ BOOL JSFunctionPredicate(Entity* entity, void* parameter)
 
     OOJSStartTimeLimiter();
     OOJSResumeTimeLimiter();
-    BOOL success = ooscript::callFunctionValue(
+    bool success = ooscript::callFunctionValue(
         (param->context), (param->jsThis), (param->function), 1, (args), (&rval));
     OOJSPauseTimeLimiter();
     OOJSStopTimeLimiter();
@@ -1919,10 +1919,10 @@ BOOL JSFunctionPredicate(Entity* entity, void* parameter)
         result = static_cast<bool>(static_cast<unsigned char>(boolResult));
         if (ooscript::isExceptionPending((param->context))) {
             ooscript::reportPendingException((param->context));
-            param->errorFlag = YES;
+            param->errorFlag = true;
         }
     } else {
-        param->errorFlag = YES;
+        param->errorFlag = true;
     }
 
     return result;
@@ -1961,7 +1961,7 @@ OOEntityStatus OOJavaScriptEngineStatus(Entity* entity)
 
 } // namespace
 
-BOOL JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* /*parameter*/)
+bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* /*parameter*/)
 {
     OOJS_PROFILE_ENTER
 
@@ -1970,19 +1970,19 @@ BOOL JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* /*parameter*/)
     OOJS_PROFILE_EXIT
 }
 
-BOOL JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
+bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
     void* /*parameter*/)
 {
     OOJS_PROFILE_ENTER
 
     if (!OOJavaScriptEngineIsVisibleToScripts(entity))
-        return NO;
+        return false;
     if (OOJavaScriptEngineIsShip(entity)) {
         if (OOJavaScriptEngineIsSubEntity(entity))
-            return NO;
+            return false;
         if (OOJavaScriptEngineStatus(entity) == STATUS_COCKPIT_DISPLAY)
-            return NO; // Demo ship
-        return YES;
+            return false; // Demo ship
+        return true;
     } else if (OOJavaScriptEngineIsPlanet(entity)) {
         switch (static_cast<OOPlanetEntity*>(entity)
                 ->planetType()) // a planet: not nil
@@ -1990,19 +1990,19 @@ BOOL JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
         case STELLAR_TYPE_MOON:
         case STELLAR_TYPE_NORMAL_PLANET:
         case STELLAR_TYPE_SUN:
-            return YES;
+            return true;
 
         case STELLAR_TYPE_MINIATURE:
-            return NO;
+            return false;
         }
     }
 
-    return YES; // would happen if we added a new script-visible class
+    return true; // would happen if we added a new script-visible class
 
     OOJS_PROFILE_EXIT
 }
 
-BOOL JSEntityIsDemoShipPredicate(Entity* entity, void* /*parameter*/)
+bool JSEntityIsDemoShipPredicate(Entity* entity, void* /*parameter*/)
 {
     return (OOJavaScriptEngineIsVisibleToScripts(entity) && OOJavaScriptEngineIsShip(entity) && OOJavaScriptEngineStatus(entity) == STATUS_COCKPIT_DISPLAY && !OOJavaScriptEngineIsSubEntity(entity));
 }
@@ -2037,7 +2037,7 @@ static void UnregisterSubclasses(void)
 }
 } // namespace
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
     ooscript::ClassDef* superclass)
 {
     OOCParameterAssert(putativeSubclass != NULL && superclass != NULL);
@@ -2047,7 +2047,7 @@ BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
 
     do {
         if (putativeSubclass == superclass)
-            return YES;
+            return true;
 
         auto registered = sRegisteredSubClasses->find(putativeSubclass);
         putativeSubclass = (registered != sRegisteredSubClasses->end())
@@ -2055,7 +2055,7 @@ BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
             : NULL;
     } while (putativeSubclass != NULL);
 
-    return NO;
+    return false;
 }
 
 oo::PList OOJSDictionaryFromJSValue(ooscript::Context context,

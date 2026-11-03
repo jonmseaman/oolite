@@ -21,7 +21,7 @@
    a native's exception) and what the category answers the engine. The binding
    makes and asks a C++ mesh, so the stand-in for it is a C++ class OOMesh with
    the members the binding calls and the same answers. Run: bash
-   tools/check-core-tests.sh
+   tests/run.sh unit
 */
 
 #include "EntityPListForeign.h"  // an entity's node
@@ -57,7 +57,7 @@ class Entity : public oo::RefCounted {
   bool getIsSubEntity();
   Entity* owner();  // the C++ entity
 
-  BOOL _isSubEntity = NO;
+  bool _isSubEntity = false;
   ::TestEntityObject* _owner = nullptr;
   ::TestEntityObject* _object =
       nullptr;  // the object holding this part (not retained)
@@ -168,7 +168,7 @@ class OOVisualEffectEntity : public Entity {
   bool isVisibleToScripts() override;
 
   std::optional<std::string> _effectKey;
-  BOOL _isBreakPattern = NO;
+  bool _isBreakPattern = false;
   float _scaleX = 0, _scaleY = 0, _scaleZ = 0;
   oo::Ref<OOColor> _color1;
   oo::Ref<OOColor> _color2;
@@ -236,10 +236,10 @@ class PlayerEntity : public ShipEntity {
  public:
   void setCompassMode(OOCompassMode value);
 
-  FakeGame* _game = nil;
+  FakeGame* _game = nullptr;
 };
 
-extern "C" void InitOOJSVisualEffect(ooscript::Context context,
+void InitOOJSVisualEffect(ooscript::Context context,
                                      ooscript::Object global);
 // The category's bodies, which the stand-in's overrides call as the C++ class's
 // do (declared in OOJSVisualEffect.h).
@@ -338,7 +338,7 @@ std::optional<std::string> sMeshCacheKey;
 oo::PList sMeshMaterials;
 oo::PList sMeshShaders;
 oo::PList sMeshMacros;
-BOOL sMeshSmooth = NO;
+bool sMeshSmooth = false;
 ::TestEntityObject* sMeshTarget = nullptr;
 int sMeshesMade = 0;
 }  // namespace
@@ -471,7 +471,7 @@ bool OOVisualEffectEntity::setUpSubEntities() {
   for (int i = 0; i < _subsAfterSetUp; i++)
     subs.emplace_back(NewEffectObject()->_cxxEntity.get());
   if (!subs.empty()) _subs = subs;
-  return YES;
+  return true;
 }
 
 // The JS questions the engine asks the object, which the effect's C++ class's
@@ -492,7 +492,7 @@ bool OOVisualEffectEntity::isVisibleToScripts() {
 }
 Entity* ShipEntity::nextBeaconEntity() {
   ::TestEntityObject* object = nextBeacon();
-  return object != nil ? object->_cxxEntity.get() : nullptr;
+  return object != nullptr ? object->_cxxEntity.get() : nullptr;
 }  // as the game's (oo::ToCxx of it)
 void PlayerEntity::setCompassMode(OOCompassMode value) {
   static_cast<PlayerEntity*>(this)->_game->setCompassMode(value);
@@ -656,10 +656,9 @@ std::map<ooscript::ClassDef*, int> sConverters;
 
 ooscript::Object gOOEntityJSPrototype = nullptr;
 Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 PlayerEntity* gOOPlayer = nullptr;
 
-extern "C" {
 
 // A vector is the array [x, y, z] here.
 bool VectorToJSValue(ooscript::Context context, Vector vector,
@@ -709,13 +708,13 @@ void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
   sSuperclasses[subclass] = superclass;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
@@ -763,7 +762,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();
@@ -787,11 +785,11 @@ namespace {
 ooscript::Runtime sRuntime;
 ooscript::Context sContext;
 ooscript::Object sGlobal;
-TestEntityObject* sEffect = nil;  // an effect's object and its C++ part
+TestEntityObject* sEffect = nullptr;  // an effect's object and its C++ part
 OOVisualEffectEntity* sEffectPart = nullptr;
-TestEntityObject* sSub = nil;
+TestEntityObject* sSub = nullptr;
 OOVisualEffectEntity* sSubPart = nullptr;
-FakeGame* sGame = nil;
+FakeGame* sGame = nullptr;
 
 ooscript::Value JSValueForObject(ooscript::ClassDef* jsClass,
                                  ooscript::Object prototype,
@@ -861,7 +859,7 @@ void SetUpContext() {
   sSub = NewEffectObject();
   sSub->retain();
   sSubPart = static_cast<OOVisualEffectEntity*>(sSub->_cxxEntity.get());
-  sSubPart->_isSubEntity = YES;
+  sSubPart->_isSubEntity = true;
   sSubPart->_owner = sEffect;
   Define("effect", JSValueForEntity(sEffect));
   Define("sub", JSValueForEntity(sSub));

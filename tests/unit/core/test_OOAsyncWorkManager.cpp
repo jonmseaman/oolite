@@ -8,7 +8,7 @@
    that was never added returns at once; an exception thrown by
    -performAsyncTask is swallowed and the task still completes; every priority
    is accepted and performed. The tasks are C++ tasks implementing
-   OOAsyncWorkTask. Run: bash tools/check-core-tests.sh
+   OOAsyncWorkTask. Run: tests/run.sh unit
 */
 
 #include <atomic>

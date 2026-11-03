@@ -8,9 +8,9 @@ argument helpers, the value/PList/string converters, subclass and converter
 registration, GC root macros, the native wrappers and the OOJS_* property flags
 and return macros. Nothing here declares an Objective-C class, so a binding
 translation unit that is C++ (not Objective-C++) includes this header instead of
-OOJavaScriptEngine.h, which includes it back. id, Class and BOOL are libobjc2's
+OOJavaScriptEngine.h, which includes it back. id, Class and bool are libobjc2's
 C types. OOJS_RETURN returns true and OOJS_RETURN_WITH_HELPER keeps its result
-in a bool (they were YES and BOOL; natives return bool).
+in a bool (they were YES and bool; natives return bool).
 
 JavaScript support for Oolite
 Copyright (C) 2007-2013 David Taylor and Jens Ayton.
@@ -34,6 +34,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <cstdarg>
+
 #include "OOFunctionAttributes.h"
 #include "OOJSPropID.h"
 #include "oofnd/PList.hpp"
@@ -43,19 +45,13 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOFoundationTypes.h"
 #include "ooscript/JSEngine.hpp"
 
-#include <cstdarg>
-
-#ifdef __cplusplus
-#define OOJS_EXTERN_C extern "C"
-#else
-#define OOJS_EXTERN_C
-#endif
-
 // Get the main thread's JS context, and begin a request on it.
 OOINLINE ooscript::Context OOJSAcquireContext(void)
 {
     extern ooscript::Context gOOJSMainThreadContext;
-    OOCAssert(gOOJSMainThreadContext != NULL, "Attempt to use JavaScript context before JavaScript engine is initialized.");
+    OOCAssert(gOOJSMainThreadContext != NULL,
+        "Attempt to use JavaScript context before JavaScript engine is "
+        "initialized.");
     ooscript::beginRequest(gOOJSMainThreadContext);
     return gOOJSMainThreadContext;
 }
@@ -84,21 +80,45 @@ extern const char* const kOOJavaScriptEngineDidResetNotificationName;
         must return NO to signal an error.
         The cxx_ forms take printf formats (no %@: pass an object's text as %s
    with oo::DescriptionOf), formatted by oo::str::vformat. A nullopt function
-   means no caller prefix; a nullopt scriptClass prefixes "function: ". Plain
-   C++, not OOJS_EXTERN_C.
+   means no caller prefix; a nullopt scriptClass prefixes "function: ".
 */
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) OO_PRINTF_FORMAT(2, 3);
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context, const char* format, va_list args) OO_PRINTF_FORMAT(2, 0);
-void cxx_OOJSReportErrorForCaller(ooscript::Context context, const std::optional<std::string>& scriptClass, const std::optional<std::string>& function, const char* format, ...) OO_PRINTF_FORMAT(4, 5);
+void cxx_OOJSReportError(ooscript::Context context, const char* format, ...)
+    OO_PRINTF_FORMAT(2, 3);
+void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
+    const char* format, va_list args)
+    OO_PRINTF_FORMAT(2, 0);
+void cxx_OOJSReportErrorForCaller(ooscript::Context context,
+    const std::optional<std::string>& scriptClass,
+    const std::optional<std::string>& function,
+    const char* format, ...)
+    OO_PRINTF_FORMAT(4, 5);
 
-void cxx_OOJSReportWarning(ooscript::Context context, const char* format, ...) OO_PRINTF_FORMAT(2, 3);
-void cxx_OOJSReportWarningWithArguments(ooscript::Context context, const char* format, va_list args) OO_PRINTF_FORMAT(2, 0);
-void cxx_OOJSReportWarningForCaller(ooscript::Context context, const std::optional<std::string>& scriptClass, const std::optional<std::string>& function, const char* format, ...) OO_PRINTF_FORMAT(4, 5);
+void cxx_OOJSReportWarning(ooscript::Context context, const char* format, ...)
+    OO_PRINTF_FORMAT(2, 3);
+void cxx_OOJSReportWarningWithArguments(ooscript::Context context,
+    const char* format, va_list args)
+    OO_PRINTF_FORMAT(2, 0);
+void cxx_OOJSReportWarningForCaller(
+    ooscript::Context context, const std::optional<std::string>& scriptClass,
+    const std::optional<std::string>& function, const char* format, ...)
+    OO_PRINTF_FORMAT(4, 5);
 
-OOJS_EXTERN_C void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object thisObj, ooscript::PropertyId propID, ooscript::PropertySpec* propertySpec);
-OOJS_EXTERN_C void OOJSReportBadPropertyValue(ooscript::Context context, ooscript::Object thisObj, ooscript::PropertyId propID, ooscript::PropertySpec* propertySpec, ooscript::Value value);
-// A nullopt message is "Invalid arguments"; a nullopt expectedArgsDescription adds no " -- expected ..." suffix.
-void cxx_OOJSReportBadArguments(ooscript::Context context, const std::optional<std::string>& scriptClass, const std::optional<std::string>& function, unsigned argc, ooscript::Value* argv, const std::optional<std::string>& message, const std::optional<std::string>& expectedArgsDescription);
+void OOJSReportBadPropertySelector(ooscript::Context context,
+    ooscript::Object thisObj,
+    ooscript::PropertyId propID,
+    ooscript::PropertySpec* propertySpec);
+void OOJSReportBadPropertyValue(ooscript::Context context,
+    ooscript::Object thisObj,
+    ooscript::PropertyId propID,
+    ooscript::PropertySpec* propertySpec,
+    ooscript::Value value);
+// A nullopt message is "Invalid arguments"; a nullopt expectedArgsDescription
+// adds no " -- expected ..." suffix.
+void cxx_OOJSReportBadArguments(
+    ooscript::Context context, const std::optional<std::string>& scriptClass,
+    const std::optional<std::string>& function, unsigned argc,
+    ooscript::Value* argv, const std::optional<std::string>& message,
+    const std::optional<std::string>& expectedArgsDescription);
 
 /*	OOJSSetWarningOrErrorStackSkip()
 
@@ -106,30 +126,37 @@ void cxx_OOJSReportBadArguments(ooscript::Context context, const std::optional<s
         Currently, if non-zero, no call site information is provided.
         Ideally, we'd stack crawl instead.
 */
-OOJS_EXTERN_C void OOJSSetWarningOrErrorStackSkip(unsigned skip);
+void OOJSSetWarningOrErrorStackSkip(unsigned skip);
 
 /*	cxx_OOJSArgumentListGetNumber()
 
         Get a single number from an argument list. The optional outConsumed
-        argument can be used to find out how many parameters were used (currently,
-        this will be 0 on failure, otherwise 1).
+        argument can be used to find out how many parameters were used
+   (currently, this will be 0 on failure, otherwise 1).
 
         On failure, it will return NO and raise an error. If the caller is a JS
         callback, it must return NO to signal an error.
 */
-BOOL cxx_OOJSArgumentListGetNumber(ooscript::Context context, const std::optional<std::string>& scriptClass, const std::optional<std::string>& function, unsigned argc, ooscript::Value* argv, double* outNumber, unsigned* outConsumed);
+bool cxx_OOJSArgumentListGetNumber(
+    ooscript::Context context, const std::optional<std::string>& scriptClass,
+    const std::optional<std::string>& function, unsigned argc,
+    ooscript::Value* argv, double* outNumber, unsigned* outConsumed);
 
 /*	OOJSArgumentListGetNumberNoError()
 
-        Like cxx_OOJSArgumentListGetNumber(), but does not report an error on failure.
+        Like cxx_OOJSArgumentListGetNumber(), but does not report an error on
+   failure.
 */
-OOJS_EXTERN_C BOOL OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc, ooscript::Value* argv, double* outNumber, unsigned* outConsumed);
+bool OOJSArgumentListGetNumberNoError(ooscript::Context context, unsigned argc,
+    ooscript::Value* argv, double* outNumber,
+    unsigned* outConsumed);
 
-// Typed as int rather than BOOL to work with more general expressions such as bitfield tests.
+// Typed as int rather than bool to work with more general expressions such as
+// bitfield tests.
 OOINLINE ooscript::Value OOJSValueFromBOOL(int b) INLINE_CONST_FUNC;
 OOINLINE ooscript::Value OOJSValueFromBOOL(int b)
 {
-    return ooscript::booleanValue(b != NO);
+    return ooscript::booleanValue(b != false);
 }
 
 /*	OOJSValueFromPList()
@@ -144,60 +171,69 @@ OOINLINE ooscript::Value OOJSValueFromBOOL(int b)
 
         Requires a request on context.
 */
-ooscript::Value OOJSValueFromPList(ooscript::Context context, const oo::PList& plist);
+ooscript::Value OOJSValueFromPList(ooscript::Context context,
+    const oo::PList& plist);
 
 /**** String utilities ****/
 
 /*	OOJSSTR(const char * [literal])
 
-        Create and cache a ooscript::Value referring to an interned string literal.
+        Create and cache a ooscript::Value referring to an interned string
+   literal.
 */
 #define OOJSSTR(str)                                                \
     ({                                                              \
         static ooscript::Value strCache;                            \
-        static BOOL inited;                                         \
+        static bool inited;                                         \
         if (EXPECT_NOT(!inited))                                    \
             OOJSStrLiteralCachePRIVATE("" str, &strCache, &inited); \
         strCache;                                                   \
     })
-OOJS_EXTERN_C void OOJSStrLiteralCachePRIVATE(const char* string,
-    ooscript::Value* strCache,
-    BOOL* inited);
+void OOJSStrLiteralCachePRIVATE(const char* string, ooscript::Value* strCache,
+    bool* inited);
 
 /*	The JS-to-string converters. Each
    returns std::nullopt where the Foundation form it replaces returned nil.
-   Plain C++ (not OOJS_EXTERN_C): a C-linkage function cannot return
-   std::optional.
 */
 
-// Convert a JSString to a UTF-8 string (nullopt for a NULL string or no characters).
-std::optional<std::string> cxx_OOStringFromJSString(ooscript::Context context, ooscript::String string);
+// Convert a JSString to a UTF-8 string (nullopt for a NULL string or no
+// characters).
+std::optional<std::string> cxx_OOStringFromJSString(ooscript::Context context,
+    ooscript::String string);
 
-/*	Convert an arbitrary JS object to a string, calling ooscript::valueToString.
-        cxx_OOStringFromJSValue() returns nullopt if value is null or undefined,
-        cxx_OOStringFromJSValueEvenIfNull() returns "null" or "undefined".
+/*	Convert an arbitrary JS object to a string, calling
+   ooscript::valueToString. cxx_OOStringFromJSValue() returns nullopt if value
+   is null or undefined, cxx_OOStringFromJSValueEvenIfNull() returns "null" or
+   "undefined".
 */
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context, ooscript::Value value);
-std::optional<std::string> cxx_OOStringFromJSValueEvenIfNull(ooscript::Context context, ooscript::Value value);
+std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
+    ooscript::Value value);
+std::optional<std::string> cxx_OOStringFromJSValueEvenIfNull(
+    ooscript::Context context, ooscript::Value value);
 
 /*	cxx_OOStringFromJSPropertyIDAndSpec(context, propID, propertySpec)
 
-        Returns the name of a property given either a name or a tinyid. (Intended
-        for error reporting inside JSPropertyOps.)
+        Returns the name of a property given either a name or a tinyid.
+   (Intended for error reporting inside JSPropertyOps.)
 */
-std::optional<std::string> cxx_OOStringFromJSPropertyIDAndSpec(ooscript::Context context, ooscript::PropertyId propID, ooscript::PropertySpec* propertySpec);
+std::optional<std::string> cxx_OOStringFromJSPropertyIDAndSpec(
+    ooscript::Context context, ooscript::PropertyId propID,
+    ooscript::PropertySpec* propertySpec);
 
 /*	Describe a value for debugging or error reporting. Strings are quoted,
         escaped and limited in length. Functions are described as "function foo"
         (or just "function" if they're anonymous). Up to four elements of arrays
         are included, followed by total count of there are more than four.
         If abbreviateObjects, the description "[object Object]" is replaced with
-        "{...}", which may or may not be clearer depending on context. Never empty of meaning:
-        the last fallback is "?".
+        "{...}", which may or may not be clearer depending on context. Never
+   empty of meaning: the last fallback is "?".
 */
-std::string cxx_OOJSDescribeValue(ooscript::Context context, ooscript::Value value, BOOL abbreviateObjects);
+std::string cxx_OOJSDescribeValue(ooscript::Context context,
+    ooscript::Value value,
+    bool abbreviateObjects);
 
-// Convert a ooscript::PropertyId to a UTF-8 string (nullopt if it has no string value).
+// Convert a ooscript::PropertyId to a UTF-8 string (nullopt if it has no string
+// value).
 std::optional<std::string> cxx_OOStringFromJSID(ooscript::PropertyId propID);
 
 // Convert a UTF-8 string to a ooscript::PropertyId.
@@ -208,14 +244,19 @@ ooscript::PropertyId cxx_OOJSIDFromString(const std::string& string);
    nullopt where the category method returned nil.
 */
 
-// For diagnostic messages; produces things like "(42, true, "a string", an object description)".
-// nullopt if params is NULL and count is not zero.
-std::optional<std::string> cxx_OOJSStringWithJavaScriptParameters(ooscript::Value* params, unsigned count, ooscript::Context context);
+// For diagnostic messages; produces things like "(42, true, "a string", an
+// object description)". nullopt if params is NULL and count is not zero.
+std::optional<std::string> cxx_OOJSStringWithJavaScriptParameters(
+    ooscript::Value* params, unsigned count, ooscript::Context context);
 
-// Concatenate sequence of arbitrary JS objects into string (nullopt if count < 1 or values is NULL).
-std::optional<std::string> cxx_OOJSConcatenationOfStringsFromJavaScriptValues(ooscript::Value* values, size_t count, const std::string& separator, ooscript::Context context);
+// Concatenate sequence of arbitrary JS objects into string (nullopt if count <
+// 1 or values is NULL).
+std::optional<std::string> cxx_OOJSConcatenationOfStringsFromJavaScriptValues(
+    ooscript::Value* values, size_t count, const std::string& separator,
+    ooscript::Context context);
 
-// Add escape codes for string so that it's a valid JavaScript literal (if you put "" or '' around it).
+// Add escape codes for string so that it's a valid JavaScript literal (if you
+// put "" or '' around it).
 std::string cxx_OOJSEscapedForJavaScriptLiteral(std::string_view string);
 
 /*	cxx_OOJSPListFromJSValue(context, value) /
@@ -235,34 +276,41 @@ std::string cxx_OOJSEscapedForJavaScriptLiteral(std::string_view string);
 
         These require a request on context.
 */
-oo::PList cxx_OOJSPListFromJSValue(ooscript::Context context, ooscript::Value value);
-oo::PList cxx_OOJSPListFromJSObject(ooscript::Context context, ooscript::Object object);
+oo::PList cxx_OOJSPListFromJSValue(ooscript::Context context,
+    ooscript::Value value);
+oo::PList cxx_OOJSPListFromJSObject(ooscript::Context context,
+    ooscript::Object object);
 
-OOINLINE ooscript::ClassDef* OOJSGetClass(ooscript::Context cx, ooscript::Object obj) ALWAYS_INLINE_FUNC;
-OOINLINE ooscript::ClassDef* OOJSGetClass(ooscript::Context cx, ooscript::Object obj)
+OOINLINE ooscript::ClassDef* OOJSGetClass(
+    ooscript::Context cx, ooscript::Object obj) ALWAYS_INLINE_FUNC;
+OOINLINE ooscript::ClassDef* OOJSGetClass(ooscript::Context cx,
+    ooscript::Object obj)
 {
     return const_cast<ooscript::ClassDef*>(ooscript::getObjectClass(cx, obj));
 }
 
 /*	OOJSValueIsFunction(context, value)
 
-        Test whether a ooscript::Value is a function object. The main tripping point here
-        is that ooscript::isObjectOrNull() is true for ooscript::nullValue(), but ooscript::objectIsFunction()
-        crashes if passed null.
+        Test whether a ooscript::Value is a function object. The main tripping
+   point here is that ooscript::isObjectOrNull() is true for
+   ooscript::nullValue(), but ooscript::objectIsFunction() crashes if passed
+   null.
 */
-OOINLINE BOOL OOJSValueIsFunction(ooscript::Context context, ooscript::Value value)
+OOINLINE bool OOJSValueIsFunction(ooscript::Context context,
+    ooscript::Value value)
 {
     return ooscript::isObjectOrNull(value) && !ooscript::isNull(value) && ooscript::objectIsFunction(context, ooscript::toObject(value));
 }
 
 /*	OOJSValueIsArray(context, value)
 
-        Test whether a ooscript::Value is an array object. The main tripping point here
-        is that ooscript::isObjectOrNull() is true for ooscript::nullValue(), but ooscript::isArrayObject()
-        crashes if passed null.
+        Test whether a ooscript::Value is an array object. The main tripping
+   point here is that ooscript::isObjectOrNull() is true for
+   ooscript::nullValue(), but ooscript::isArrayObject() crashes if passed null.
 
 */
-OOINLINE BOOL OOJSValueIsArray(ooscript::Context context, ooscript::Value value)
+OOINLINE bool OOJSValueIsArray(ooscript::Context context,
+    ooscript::Value value)
 {
     return ooscript::isObjectOrNull(value) && !ooscript::isNull(value) && ooscript::isArrayObject(context, ooscript::toObject(value));
 }
@@ -272,8 +320,8 @@ OOINLINE BOOL OOJSValueIsArray(ooscript::Context context, ooscript::Value value)
 
         Converts a JavaScript value to a dictionary by calling
         cxx_OOJSPListFromJSValue() on each of its values (a live object such as
-        an entity or OONull stays a PList::Object node); a value that converts to
-        null is left out.
+        an entity or OONull stays a PList::Object node); a value that converts
+   to null is left out.
 
         Only enumerable own (i.e., not inherited) properties are included; an
         integer-like property is keyed by its decimal text, as JS itself names
@@ -283,45 +331,52 @@ OOINLINE BOOL OOJSValueIsArray(ooscript::Context context, ooscript::Value value)
 
         Requires a request on context.
 */
-oo::PList OOJSDictionaryFromJSValue(ooscript::Context context, ooscript::Value value);
-oo::PList cxx_OOJSDictionaryFromJSObject(ooscript::Context context, ooscript::Object object);
+oo::PList OOJSDictionaryFromJSValue(ooscript::Context context,
+    ooscript::Value value);
+oo::PList cxx_OOJSDictionaryFromJSObject(ooscript::Context context,
+    ooscript::Object object);
 
 /*	OOJSDictionaryFromStringTable(context, value)
 
         Treat an arbitrary JavaScript object as a dictionary mapping strings to
         strings, and convert to a corresponding dictionary. The values are
-        converted to strings using ooscript::valueToString(). A null PList if the
-        value is null or not an object, or cannot be enumerated.
+        converted to strings using ooscript::valueToString(). A null PList if
+   the value is null or not an object, or cannot be enumerated.
 
-        Only enumerable own (i.e., not inherited) properties with string keys are
-        included.
+        Only enumerable own (i.e., not inherited) properties with string keys
+   are included.
 
         Requires a request on context.
 */
-oo::PList OOJSDictionaryFromStringTable(ooscript::Context context, ooscript::Value value);
+oo::PList OOJSDictionaryFromStringTable(ooscript::Context context,
+    ooscript::Value value);
 
 /*
         Subclass relationships.
 
-        JSAPI doesn't have a concept of subclassing, as JavaScript doesn't have a
-        concept of classes, but Oolite reflects part of its class hierarchy as
+        JSAPI doesn't have a concept of subclassing, as JavaScript doesn't have
+   a concept of classes, but Oolite reflects part of its class hierarchy as
         related JSClasses whose prototypes inherit each other. For instance,
         JS Entity methods work on JS Ships. In order for this to work,
         OOJSEntityGetEntity() must be able to know that Ship is a subclass of
         Entity. This is done using OOJSIsSubclass().
 
-        void OOJSRegisterSubclass(ooscript::ClassDef *subclass, ooscript::ClassDef *superclass)
-        Register subclass as a subclass of superclass. Subclass must not previously
-        have been registered as a subclass of any class (i.e., single inheritance
-        is required).
+        void OOJSRegisterSubclass(ooscript::ClassDef *subclass,
+   ooscript::ClassDef *superclass) Register subclass as a subclass of
+   superclass. Subclass must not previously have been registered as a subclass
+   of any class (i.e., single inheritance is required).
 
-        BOOL OOJSIsSubclass(ooscript::ClassDef *putativeSubclass, ooscript::ClassDef *superclass)
-        Test whether putativeSubclass is a equal to superclass or a registered
-        subclass of superclass, recursively.
+        bool OOJSIsSubclass(ooscript::ClassDef *putativeSubclass,
+   ooscript::ClassDef *superclass) Test whether putativeSubclass is a equal to
+   superclass or a registered subclass of superclass, recursively.
 */
-OOJS_EXTERN_C void OOJSRegisterSubclass(ooscript::ClassDef* subclass, ooscript::ClassDef* superclass);
-OOJS_EXTERN_C BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass, ooscript::ClassDef* superclass);
-OOINLINE BOOL OOJSIsMemberOfSubclass(ooscript::Context context, ooscript::Object object, ooscript::ClassDef* superclass)
+void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
+    ooscript::ClassDef* superclass);
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+    ooscript::ClassDef* superclass);
+OOINLINE bool OOJSIsMemberOfSubclass(ooscript::Context context,
+    ooscript::Object object,
+    ooscript::ClassDef* superclass)
 {
     return OOJSIsSubclass(OOJSGetClass(context, object), superclass);
 }
@@ -337,37 +392,46 @@ OOINLINE BOOL OOJSIsMemberOfSubclass(ooscript::Context context, ooscript::Object
         PList for none). The slot holds a C++ object: a node
         is made of it when it is a PList::Object's foreign object, else none.
 
-        OOJSRegisterObjectConverter() registers a callback for a specific JS class.
-        It is not automatically propagated to subclasses.
+        OOJSRegisterObjectConverter() registers a callback for a specific JS
+   class. It is not automatically propagated to subclasses.
 */
-typedef oo::PList (*OOJSClassConverterCallback)(ooscript::Context context, ooscript::Object object);
-oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context context, ooscript::Object object);
+typedef oo::PList (*OOJSClassConverterCallback)(ooscript::Context context,
+    ooscript::Object object);
+oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context context,
+    ooscript::Object object);
 
-OOJS_EXTERN_C void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass, OOJSClassConverterCallback converter);
+void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
+    OOJSClassConverterCallback converter);
 
 /*	JS root handling
 
-        The name parameter to the façade's addNamed*Root is assigned with no overhead, not
-        copied, but the strings serve no purpose in a release build so we may as
-        well strip them out.
+        The name parameter to the façade's addNamed*Root is assigned with no
+   overhead, not copied, but the strings serve no purpose in a release build so
+   we may as well strip them out.
 
         In debug builds, this will deliberately cause an error if name is not a
         string literal.
 */
 #ifdef NDEBUG
-#define OOJSAddGCValueRoot(context, root, name) ooscript::addNamedValueRoot((context), (root), nullptr)
-#define OOJSAddGCStringRoot(context, root, name) ooscript::addNamedStringRoot((context), (root), nullptr)
-#define OOJSAddGCObjectRoot(context, root, name) ooscript::addNamedObjectRoot((context), (root), nullptr)
+#define OOJSAddGCValueRoot(context, root, name) \
+    ooscript::addNamedValueRoot((context), (root), nullptr)
+#define OOJSAddGCStringRoot(context, root, name) \
+    ooscript::addNamedStringRoot((context), (root), nullptr)
+#define OOJSAddGCObjectRoot(context, root, name) \
+    ooscript::addNamedObjectRoot((context), (root), nullptr)
 #else
-#define OOJSAddGCValueRoot(context, root, name) ooscript::addNamedValueRoot((context), (root), "" name)
-#define OOJSAddGCStringRoot(context, root, name) ooscript::addNamedStringRoot((context), (root), "" name)
-#define OOJSAddGCObjectRoot(context, root, name) ooscript::addNamedObjectRoot((context), (root), "" name)
+#define OOJSAddGCValueRoot(context, root, name) \
+    ooscript::addNamedValueRoot((context), (root), "" name)
+#define OOJSAddGCStringRoot(context, root, name) \
+    ooscript::addNamedStringRoot((context), (root), "" name)
+#define OOJSAddGCObjectRoot(context, root, name) \
+    ooscript::addNamedObjectRoot((context), (root), "" name)
 #endif
 
-/*	OOJSValue: an object whose purpose in life is to hold a JavaScript value.
-        This is somewhat useful for putting JavaScript objects in property lists,
-        for instance to pass as properties to script loaders. The value is
-        GC rooted for the lifetime of the OOJSValue.
+/*	OOJSValue: an object whose purpose in life is to hold a JavaScript
+   value. This is somewhat useful for putting JavaScript objects in property
+   lists, for instance to pass as properties to script loaders. The value is GC
+   rooted for the lifetime of the OOJSValue.
 
         All methods take a context parameter, which must either be nil or a
    context in a request. A property list holds it as an Object node: it is its
@@ -375,29 +439,36 @@ OOJS_EXTERN_C void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass, OOJ
 */
 class OOJSValue : public oo::PListForeign {
 public:
-    static oo::Ref<OOJSValue> valueWithJSValue(ooscript::Value value, ooscript::Context context);
-    static oo::Ref<OOJSValue> valueWithJSObject(ooscript::Object object, ooscript::Context context);
+    static oo::Ref<OOJSValue> valueWithJSValue(ooscript::Value value,
+        ooscript::Context context);
+    static oo::Ref<OOJSValue> valueWithJSObject(ooscript::Object object,
+        ooscript::Context context);
 
     ~OOJSValue();
 
-    ooscript::Value jsValueInContext(ooscript::Context context); // the held value
+    ooscript::Value jsValueInContext(
+        ooscript::Context context); // the held value
 
-    // oo::PListForeign: what the facade answered (its class, and "%@" as <OOJSValue 0x...>).
+    // oo::PListForeign: what the facade answered (its class, and "%@" as
+    // <OOJSValue 0x...>).
     std::string className() const override;
     std::string description() const override;
 
 private:
-    // The initialisers after [super init], which could not fail: run by the factories.
+    // The initialisers after [super init], which could not fail: run by the
+    // factories.
     void initWithJSValue(ooscript::Value value, ooscript::Context context);
     void initWithJSObject(ooscript::Object object, ooscript::Context context);
 
     void deleteJSValue();
 
     ooscript::Value _val = { };
-    const void* _resetSender = { }; // the engine, the sender of its reset notifications, while _val is rooted
+    const void* _resetSender = { }; // the engine, the sender of its reset
+                                    // notifications, while _val is rooted
 };
 
-// A held value as a PList::Object node (what oo::PListObject() did for the facade); null -> null PList.
+// A held value as a PList::Object node (what oo::PListObject() did for the
+// facade); null -> null PList.
 inline oo::PList OOJSValueObjectNode(OOJSValue* value)
 {
     if (value == nullptr)
@@ -409,8 +480,8 @@ inline oo::PList OOJSValueObjectNode(OOJSValue* value)
 
 /*	See comments on time limiter in OOJSEngineTimeManagement.h.
  */
-OOJS_EXTERN_C void OOJSPauseTimeLimiter(void);
-OOJS_EXTERN_C void OOJSResumeTimeLimiter(void);
+void OOJSPauseTimeLimiter(void);
+void OOJSResumeTimeLimiter(void);
 
 /*	OOJSDumpStack()
         Write JavaScript stack to log.
@@ -424,10 +495,13 @@ OOJS_EXTERN_C void OOJSResumeTimeLimiter(void);
         OOJSDescribeLocation().
 */
 #if OOLITE_DEBUG || defined(OO_DEBUG_MONITOR_ENABLED)
-OOJS_EXTERN_C void OOJSDumpStack(ooscript::Context context);
+void OOJSDumpStack(ooscript::Context context);
 
-std::optional<std::string> OOJSDescribeLocation(ooscript::Context context, ooscript::StackFrame stackFrame); // nullopt: no location
-OOJS_EXTERN_C void OOJSMarkConsoleEvalLocation(ooscript::Context context, ooscript::StackFrame stackFrame);
+std::optional<std::string> OOJSDescribeLocation(
+    ooscript::Context context,
+    ooscript::StackFrame stackFrame); // nullopt: no location
+void OOJSMarkConsoleEvalLocation(ooscript::Context context,
+    ooscript::StackFrame stackFrame);
 #else
 #define OOJSDumpStack(cx) \
     do {                  \
@@ -446,7 +520,8 @@ OOJS_EXTERN_C void OOJSMarkConsoleEvalLocation(ooscript::Context context, ooscri
 
         Constructor callback for pseudo-classes which can't be constructed.
 */
-OOJS_EXTERN_C bool OOJSUnconstructableConstruct(ooscript::Context context, ooscript::CallArgs& oojsArgs);
+bool OOJSUnconstructableConstruct(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs);
 
 /*	OOJSObjectWrapperFinalize
 
@@ -454,7 +529,8 @@ OOJS_EXTERN_C bool OOJSUnconstructableConstruct(ooscript::Context context, ooscr
         reference: OOJSCxxObjectWrapperFinalize() (OOJSPrivateObject.h), since
    the slot holds only a C++ object.
 */
-OOJS_EXTERN_C void OOJSObjectWrapperFinalize(ooscript::Context context, ooscript::Object thisObj);
+void OOJSObjectWrapperFinalize(ooscript::Context context,
+    ooscript::Object thisObj);
 
 /*	OOJSObjectWrapperToString
 
@@ -463,30 +539,41 @@ OOJS_EXTERN_C void OOJSObjectWrapperFinalize(ooscript::Context context, ooscript
         Only an Objective-C object found through the class's converter described
         itself; no slot holds one.
 */
-OOJS_EXTERN_C bool OOJSObjectWrapperToString(ooscript::Context context, ooscript::CallArgs& oojsArgs);
+bool OOJSObjectWrapperToString(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs);
 
-/***** Appropriate flags for host-defined read/write and read-only properties *****/
+/***** Appropriate flags for host-defined read/write and read-only properties
+ * *****/
 
-// Slot-based (defined with ooscript::defineProperty/defineObject/defineFunction and no callbacks)
-#define OOJS_PROP_READWRITE (ooscript::PropertyFlag::Permanent | ooscript::PropertyFlag::Enumerate)
-#define OOJS_PROP_READONLY (ooscript::PropertyFlag::Permanent | ooscript::PropertyFlag::Enumerate | ooscript::PropertyFlag::ReadOnly)
+// Slot-based (defined with ooscript::defineProperty/defineObject/defineFunction
+// and no callbacks)
+#define OOJS_PROP_READWRITE \
+    (ooscript::PropertyFlag::Permanent | ooscript::PropertyFlag::Enumerate)
+#define OOJS_PROP_READONLY \
+    (ooscript::PropertyFlag::Permanent | ooscript::PropertyFlag::Enumerate | ooscript::PropertyFlag::ReadOnly)
 
 // Non-enumerable properties
 #define OOJS_PROP_HIDDEN_READWRITE (ooscript::PropertyFlag::Permanent)
-#define OOJS_PROP_HIDDEN_READONLY (ooscript::PropertyFlag::Permanent | ooscript::PropertyFlag::ReadOnly)
+#define OOJS_PROP_HIDDEN_READONLY \
+    (ooscript::PropertyFlag::Permanent | ooscript::PropertyFlag::ReadOnly)
 
 // Methods should be non-enumerable
 #define OOJS_METHOD_READONLY OOJS_PROP_HIDDEN_READONLY
 
 // Callback-based (includes all properties specified in JSPropertySpecs)
-#define OOJS_PROP_READWRITE_CB (OOJS_PROP_READWRITE | ooscript::PropertyFlag::Shared)
-#define OOJS_PROP_READONLY_CB (OOJS_PROP_READONLY | ooscript::PropertyFlag::Shared)
+#define OOJS_PROP_READWRITE_CB \
+    (OOJS_PROP_READWRITE | ooscript::PropertyFlag::Shared)
+#define OOJS_PROP_READONLY_CB \
+    (OOJS_PROP_READONLY | ooscript::PropertyFlag::Shared)
 
-#define OOJS_PROP_HIDDEN_READWRITE_CB (OOJS_PROP_HIDDEN_READWRITE | ooscript::PropertyFlag::Shared)
-#define OOJS_PROP_HIDDEN_READONLY_CB (OOJS_PROP_HIDDEN_READONLY | ooscript::PropertyFlag::Shared)
+#define OOJS_PROP_HIDDEN_READWRITE_CB \
+    (OOJS_PROP_HIDDEN_READWRITE | ooscript::PropertyFlag::Shared)
+#define OOJS_PROP_HIDDEN_READONLY_CB \
+    (OOJS_PROP_HIDDEN_READONLY | ooscript::PropertyFlag::Shared)
 
 /***** Helpers for native callbacks. *****/
-// Every native is `bool Name(ooscript::Context context, ooscript::CallArgs &oojsArgs)`.
+// Every native is `bool Name(ooscript::Context context, ooscript::CallArgs
+// &oojsArgs)`.
 #define OOJS_THIS (oojsArgs.thisObject())
 #define OOJS_ARGV (oojsArgs.argv())
 #define OOJS_RVAL (oojsArgs.rval())
@@ -507,25 +594,28 @@ OOJS_EXTERN_C bool OOJSObjectWrapperToString(ooscript::Context context, ooscript
    values as oo::PList, converted by OOJSValueFromPList() (the same JS value
         OOJSValueFromNativeObject() gave for the Foundation object it replaces):
 
-        OOJS_RETURN_PLIST(plist)            the value of <plist> (null for a null PList)
-        OOJS_RETURN_STRING_OR_NULL(opt)     a std::optional<std::string>: the string,
-                                            or null for nullopt (what nil gave)
+        OOJS_RETURN_PLIST(plist)            the value of <plist> (null for a
+   null PList) OOJS_RETURN_STRING_OR_NULL(opt)     a std::optional<std::string>:
+   the string, or null for nullopt (what nil gave)
 
         The recipe the chunks followed (OOJS_RETURN_OBJECT,
    OOJSValueFromNativeObject(), oo::PListFromObjects() and the Foundation
    bridges are deleted):
 
-        OOJS_RETURN_OBJECT(oo::NSStringFrom(s))           OOJS_RETURN_PLIST(oo::PList(s))
-        OOJS_RETURN_OBJECT(oo::NSStringOrNil(o))          OOJS_RETURN_STRING_OR_NULL(o)
+        OOJS_RETURN_OBJECT(oo::NSStringFrom(s)) OOJS_RETURN_PLIST(oo::PList(s))
+        OOJS_RETURN_OBJECT(oo::NSStringOrNil(o)) OOJS_RETURN_STRING_OR_NULL(o)
         OOJS_RETURN_OBJECT(oo::ObjectFromPList(p))        OOJS_RETURN_PLIST(p)
 
         Exemplar: OOJSObjectWrapperToString() in OOJavaScriptEngine.mm.
 */
-#define OOJS_RETURN_PLIST(plist) OOJS_RETURN(OOJSValueFromPList(context, (plist)))
-#define OOJS_RETURN_STRING_OR_NULL(opt)                                                                     \
-    do {                                                                                                    \
-        const std::optional<std::string>& oojsOptionalString_ = (opt);                                      \
-        OOJS_RETURN_PLIST(oojsOptionalString_.has_value() ? oo::PList(*oojsOptionalString_) : oo::PList()); \
+#define OOJS_RETURN_PLIST(plist) \
+    OOJS_RETURN(OOJSValueFromPList(context, (plist)))
+#define OOJS_RETURN_STRING_OR_NULL(opt)                                \
+    do {                                                               \
+        const std::optional<std::string>& oojsOptionalString_ = (opt); \
+        OOJS_RETURN_PLIST(oojsOptionalString_.has_value()              \
+                ? oo::PList(*oojsOptionalString_)                      \
+                : oo::PList());                                        \
     } while (0)
 
 #define OOJS_RETURN_WITH_HELPER(helper, value)       \
@@ -536,7 +626,11 @@ OOJS_EXTERN_C bool OOJSObjectWrapperToString(ooscript::Context context, ooscript
         return OK;                                   \
     } while (0)
 
-#define OOJS_RETURN_VECTOR(value) OOJS_RETURN_WITH_HELPER(VectorToJSValue, value)
-#define OOJS_RETURN_HPVECTOR(value) OOJS_RETURN_WITH_HELPER(HPVectorToJSValue, value)
-#define OOJS_RETURN_QUATERNION(value) OOJS_RETURN_WITH_HELPER(QuaternionToJSValue, value)
-#define OOJS_RETURN_DOUBLE(value) OOJS_RETURN_WITH_HELPER(ooscript::newNumberValue, value)
+#define OOJS_RETURN_VECTOR(value) \
+    OOJS_RETURN_WITH_HELPER(VectorToJSValue, value)
+#define OOJS_RETURN_HPVECTOR(value) \
+    OOJS_RETURN_WITH_HELPER(HPVectorToJSValue, value)
+#define OOJS_RETURN_QUATERNION(value) \
+    OOJS_RETURN_WITH_HELPER(QuaternionToJSValue, value)
+#define OOJS_RETURN_DOUBLE(value) \
+    OOJS_RETURN_WITH_HELPER(ooscript::newNumberValue, value)

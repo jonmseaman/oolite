@@ -19,7 +19,7 @@
    JS-visible behaviour (the constructor, the four properties both ways,
    addShip() with its escort rules, removeShip(), containsShip(), a non-group, a
    native's exception) and what the category answers the engine (one JS object
-   per group until the engine clears it). Run: bash tools/check-core-tests.sh
+   per group until the engine clears it). Run: tests/run.sh unit
 */
 
 #include "EntityPListForeign.h"  // an entity's node
@@ -62,7 +62,7 @@ class ShipEntity : public Entity {
   std::string _name;
   oo::Ref<OOShipGroup> _group;
   oo::Ref<OOShipGroup> _escortGroup;
-  BOOL _acceptsEscorts = NO;
+  bool _acceptsEscorts = false;
   int _accepted = 0;
 };
 
@@ -118,9 +118,9 @@ OOShipGroup* ShipEntity::escortGroup() { return _escortGroup.get(); }
 bool ShipEntity::acceptAsEscort(::ShipEntity* other_ship) {
   if (other_ship->_name == "boom")
     OORaiseException(OOInvalidArgumentException, "escort %s", "boom");
-  if (!_acceptsEscorts) return NO;
+  if (!_acceptsEscorts) return false;
   _accepted++;
-  return YES;
+  return true;
 }
 
 ::TestEntityObject* TestObjectOf(Entity* entity) {
@@ -258,7 +258,6 @@ namespace {
 std::map<ooscript::ClassDef*, int> sConverters;
 }  // namespace
 
-extern "C" {
 
 void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
                                    ooscript::PropertyId,
@@ -280,7 +279,7 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
 
 // The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked;
 // its slot holds the C++ group): no subclass of ShipGroup is registered.
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
 }
@@ -323,7 +322,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 // OOJSEntity.mm's (not linked): the C++ entity of an entity's JS object, null
 // for any other value, with no error
@@ -562,11 +560,11 @@ OO_TEST(escorts) {
   leader->_escortGroup = escorts;
   leader->_group = escorts;
   Define("escorts", escorts->jsValueInContext(sContext));
-  leader->_acceptsEscorts = NO;
+  leader->_acceptsEscorts = false;
   OO_CHECK_EVAL(
       "[escorts.addShip(escort), escorts.containsShip(escort)].join()",
       "false,false");
-  leader->_acceptsEscorts = YES;
+  leader->_acceptsEscorts = true;
   OO_CHECK_EVAL(
       "[escorts.addShip(escort), escorts.containsShip(escort)].join()",
       "true,true");
@@ -606,9 +604,9 @@ OO_TEST(escorts) {
   custom->_escortGroup = customGroup;
   custom->_group = OOShipGroup::groupWithName(std::string("elsewhere"));
   Define("customGroup", customGroup->jsValueInContext(sContext));
-  custom->_acceptsEscorts = NO;
+  custom->_acceptsEscorts = false;
   OO_CHECK_EVAL("customGroup.addShip(escort)", "false");
-  custom->_acceptsEscorts = YES;
+  custom->_acceptsEscorts = true;
   OO_CHECK_EVAL("customGroup.addShip(escort)", "true");
   OO_CHECK_EQ(custom->_accepted, 1);
 }

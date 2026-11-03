@@ -19,7 +19,7 @@
    The cases make the C++ planet and its Objective-C object
    (oo::NewEntityFacade) and ask the C++ class, and the facade case pins the
    crossing: its object is the root Entity's, which answers the shader binding
-   selectors for a planet only. Run: bash tools/check-core-tests.sh
+   selectors for a planet only. Run: tests/run.sh unit
 */
 
 #include <cmath>
@@ -83,12 +83,12 @@ class TestUniverse : public Universe {
   oo::PList generateSystemData(OOSystemID /*s*/, bool /*useCache*/) override {
     return _systemData;
   }
-  bool reducedDetail() override { return YES; }
+  bool reducedDetail() override { return true; }
 };
 
 namespace {
 
-TestUniverse* sUniverse = nil;
+TestUniverse* sUniverse = nullptr;
 TestPlayer* sPlayer = nullptr;
 std::vector<std::string> sTexturesAsked;
 
@@ -100,7 +100,7 @@ oo::Ref<OOTexture> NoTexture(const oo::PList& configuration) {
 }
 
 void SetUp() {
-  if (sUniverse == nil) {
+  if (sUniverse == nullptr) {
     sUniverse = new TestUniverse();  // never released
     new (&sUniverse->_systemData) oo::PList();
     sPlayer = NewTestPlayer<TestPlayer>();
@@ -145,7 +145,7 @@ oo::PList PlanetDict(int radiusKm) {
 
 // alloc/initFromDictionary:withAtmosphere:andSeed:forSystem:/autorelease: a new
 // C++ planet, owned by its autoreleased Objective-C object.
-OOPlanetEntity* Planet(BOOL atmosphere, int radiusKm = 5000) {
+OOPlanetEntity* Planet(bool atmosphere, int radiusKm = 5000) {
   Random_Seed seed = {1, 2, 3, 4, 5, 6};
   oo::Ref<OOPlanetEntity> planet = oo::makeRef<OOPlanetEntity>();
   (void)oo::MadeEntity(planet);
@@ -166,7 +166,7 @@ OOPlanetEntity* Miniature(OOPlanetEntity* planet) {
 OO_TEST(moon) {
   {
     SetUp();
-    OOPlanetEntity* moon = Planet(NO);
+    OOPlanetEntity* moon = Planet(false);
     OO_CHECK(moon != nullptr && dynamic_cast<OOPlanetEntity*>(
                                     static_cast<Entity*>(moon)) != nullptr);
     OO_CHECK(moon->radius() == 50000.0);
@@ -181,10 +181,10 @@ OO_TEST(moon) {
     OO_CHECK(
         QuaternionNear(moon->getOrientation(),
                        (Quaternion){(float)M_SQRT1_2, (float)M_SQRT1_2, 0, 0}));
-    OO_CHECK(moon->airColor() == nil);
+    OO_CHECK(moon->airColor() == nullptr);
     OO_CHECK(moon->airColorMixRatio() == 0.5f && moon->airDensity() == 0.75f);
     // The land parameters always set an illumination colour.
-    OO_CHECK(moon->illuminationColor() != nil);
+    OO_CHECK(moon->illuminationColor() != nullptr);
     Vector threshold = moon->terminatorThresholdVector();
     OO_CHECK(Near(threshold.x, 0.105) && Near(threshold.y, 0.18) &&
              Near(threshold.z, 0.28));
@@ -192,8 +192,8 @@ OO_TEST(moon) {
     // found.
     OO_CHECK(sTexturesAsked.size() == 1 && sTexturesAsked[0] == "missing.png");
     OO_CHECK(!moon->textureFileName().has_value());
-    OO_CHECK(moon->material() == nil && moon->atmosphereMaterial() == nil &&
-             moon->atmosphereShaderMaterial() == nil);
+    OO_CHECK(moon->material() == nullptr && moon->atmosphereMaterial() == nullptr &&
+             moon->atmosphereShaderMaterial() == nullptr);
     OO_CHECK(moon->isFinishedLoading());
     // The system data's planet name, expanded.
     OO_CHECK(moon->name() == std::optional<std::string>("Lave"));
@@ -203,13 +203,13 @@ OO_TEST(moon) {
 OO_TEST(planetWithAtmosphere) {
   {
     SetUp();
-    OOPlanetEntity* planet = Planet(YES);
+    OOPlanetEntity* planet = Planet(true);
     OO_CHECK(planet->planetType() == STELLAR_TYPE_NORMAL_PLANET);
     OO_CHECK(planet->hasAtmosphere());
     // The dictionary's air colour, through its hue, saturation and brightness.
     OOColor* air = planet->airColor();
-    OO_CHECK(air != nil);
-    OO_CHECK(air != nil && Near(air->redComponent(), 0.2, 1e-3) &&
+    OO_CHECK(air != nullptr);
+    OO_CHECK(air != nullptr && Near(air->redComponent(), 0.2, 1e-3) &&
              Near(air->greenComponent(), 0.4, 1e-3) &&
              Near(air->blueComponent(), 0.6, 1e-3));
     Vector airVector = planet->airColorAsVector();
@@ -227,7 +227,7 @@ OO_TEST(clockTurnsThePlanet) {
   {
     SetUp();
     sPlayer->_clock = 86400.0 * 3 + 100.0;  // 100 s into the day
-    OOPlanetEntity* planet = Planet(NO);
+    OOPlanetEntity* planet = Planet(false);
     Quaternion expected =
         (Quaternion){(float)M_SQRT1_2, (float)M_SQRT1_2, 0, 0};
     quaternion_rotate_about_axis(&expected, vector_up_from_quaternion(expected),
@@ -239,7 +239,7 @@ OO_TEST(clockTurnsThePlanet) {
 OO_TEST(shaderValues) {
   {
     SetUp();
-    OOPlanetEntity* planet = Planet(NO);
+    OOPlanetEntity* planet = Planet(false);
 
     oo::Ref<OOColor> red = OOColor::colorWithRed(1.0f, 0.0f, 0.0f, 1.0f);
     planet->setAirColor(red.get());
@@ -281,7 +281,7 @@ OO_TEST(shaderValues) {
 OO_TEST(miniature) {
   {
     SetUp();
-    OOPlanetEntity* planet = Planet(YES);
+    OOPlanetEntity* planet = Planet(true);
     OOPlanetEntity* mini = Miniature(planet);
     OO_CHECK(mini != nullptr && mini != planet &&
              dynamic_cast<OOPlanetEntity*>(static_cast<Entity*>(mini)) !=
@@ -304,7 +304,7 @@ OO_TEST(miniature) {
 OO_TEST(updateTurnsThePlanet) {
   {
     SetUp();
-    OOPlanetEntity* moon = Planet(NO);
+    OOPlanetEntity* moon = Planet(false);
     Quaternion before = moon->getOrientation();
     moon->update(10.0);
     Quaternion expected = before;
@@ -332,7 +332,7 @@ OO_TEST(updateTurnsThePlanet) {
 OO_TEST(orientationSetsTheAxis) {
   {
     SetUp();
-    OOPlanetEntity* moon = Planet(NO);
+    OOPlanetEntity* moon = Planet(false);
     Quaternion q = kIdentityQuaternion;
     moon->setOrientation(q);
     moon->update(5.0);
@@ -347,7 +347,7 @@ OO_TEST(orientationSetsTheAxis) {
 OO_TEST(closeCollision) {
   {
     SetUp();
-    OOPlanetEntity* moon = Planet(NO);
+    OOPlanetEntity* moon = Planet(false);
     OO_CHECK(!moon->checkCloseCollisionWith(nullptr));
     Entity* rock = oo::MadeEntity(oo::makeRef<Entity>());
     OO_CHECK(moon->checkCloseCollisionWith(rock));
@@ -357,7 +357,7 @@ OO_TEST(closeCollision) {
 OO_TEST(description) {
   {
     SetUp();
-    OOPlanetEntity* moon = Planet(NO, 3000);
+    OOPlanetEntity* moon = Planet(false, 3000);
     std::string description = oo::EntityDescription(moon);
     OO_CHECK(description.find("OOPlanetEntity") != std::string::npos);
     OO_CHECK(description.find("radius: 30000 m") != std::string::npos);
@@ -370,9 +370,9 @@ OO_TEST(description) {
 OO_TEST(facade) {
   {
     SetUp();
-    OOPlanetEntity* moon = Planet(NO);
+    OOPlanetEntity* moon = Planet(false);
     Entity* object = moon;
-    OO_CHECK(object != nil);
+    OO_CHECK(object != nullptr);
     // A C++ entity, not an Objective-C entity's adapter.
     OO_CHECK(object == moon);
     OOPlanetEntity* mini = Miniature(moon);
@@ -393,7 +393,7 @@ OO_TEST(facade) {
 OO_TEST(jsExtensions) {
   {
     SetUp();
-    OOPlanetEntity* moon = Planet(NO);
+    OOPlanetEntity* moon = Planet(false);
     ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
     ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
     Entity* object = moon;
@@ -403,7 +403,7 @@ OO_TEST(jsExtensions) {
              prototype == expectedPrototype);
     OO_CHECK(OOJSEntityJSClassName(object) ==
              std::optional<std::string>("Moon"));
-    OO_CHECK(OOJSEntityIsVisibleToScripts(object) == YES);
+    OO_CHECK(OOJSEntityIsVisibleToScripts(object) == true);
   }
 }
 

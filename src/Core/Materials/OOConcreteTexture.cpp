@@ -53,7 +53,7 @@
 #error Neither OOLITE_BIG_ENDIAN nor OOLITE_LITTLE_ENDIAN is defined as nonzero!
 #endif
 
-static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options,
+static bool DecodeFormat(OOTextureDataFormat format, uint32_t options,
     GLenum* outFormat, GLenum* outInternalFormat,
     GLenum* outType);
 
@@ -389,7 +389,7 @@ void OOConcreteTexture::setUpTexture()
 
 #if OO_TEXTURE_CUBE_MAP
         if (_options & kOOTextureAllowCubeMap && _height == _width * 6 && gOOTextureInfo.cubeMapAvailable) {
-            _isCubeMap = YES;
+            _isCubeMap = true;
         }
 #endif
 
@@ -406,11 +406,11 @@ void OOConcreteTexture::setUpTexture()
         uploadTexture();
     } else {
         _textureName = 0;
-        _valid = NO;
-        _uploaded = YES;
+        _valid = false;
+        _uploaded = true;
     }
 
-    _loaded = YES;
+    _loaded = true;
 
     _loader = nullptr;
 }
@@ -418,7 +418,7 @@ void OOConcreteTexture::setUpTexture()
 void OOConcreteTexture::uploadTexture()
 {
     GLint filter;
-    BOOL mipMap = NO;
+    bool mipMap = false;
 
     OO_ENTER_OPENGL();
 
@@ -448,7 +448,7 @@ void OOConcreteTexture::uploadTexture()
         if (filter == kOOTextureMinFilterNearest)
             filter = GL_NEAREST;
         else if (filter == kOOTextureMinFilterMipMap) {
-            mipMap = YES;
+            mipMap = true;
             filter = GL_LINEAR_MIPMAP_LINEAR;
         } else
             filter = GL_LINEAR;
@@ -489,8 +489,8 @@ void OOConcreteTexture::uploadTexture()
                 "Unhandled texture target 0x%X.", texTarget);
         }
 
-        _valid = YES;
-        _uploaded = YES;
+        _valid = true;
+        _uploaded = true;
 
 #if OOTEXTURE_RELOADABLE
         if (isReloadable()) {
@@ -582,7 +582,7 @@ void OOConcreteTexture::forceRebind()
     if (_loaded && _uploaded && _valid) {
         OO_ENTER_OPENGL();
 
-        _uploaded = NO;
+        _uploaded = false;
         OOGL(glDeleteTextures(1, &_textureName));
         _textureName = 0;
 
@@ -592,9 +592,9 @@ void OOConcreteTexture::forceRebind()
 
             free(_bytes);
             _bytes = NULL;
-            _loaded = NO;
-            _uploaded = NO;
-            _valid = NO;
+            _loaded = false;
+            _uploaded = false;
+            _valid = false;
 
             _loader = OOTextureLoader::loaderWithPath(_path, _options);
         }
@@ -608,7 +608,7 @@ bool OOConcreteTexture::isReloadable() { return _path.has_value(); }
 
 #endif
 
-static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options,
+static bool DecodeFormat(OOTextureDataFormat format, uint32_t options,
     GLenum* outFormat, GLenum* outInternalFormat,
     GLenum* outType)
 {
@@ -619,7 +619,7 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options,
         *outFormat = GL_RGBA;
         *outInternalFormat = options & kOOTextureSRGBA ? GL_SRGB_ALPHA : GL_RGBA;
         *outType = RGBA_IMAGE_TYPE;
-        return YES;
+        return true;
 
     case kOOTextureDataGrayscale:
         if (options & kOOTextureAlphaMask) {
@@ -630,17 +630,17 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options,
             *outInternalFormat = GL_LUMINANCE8;
         }
         *outType = GL_UNSIGNED_BYTE;
-        return YES;
+        return true;
 
     case kOOTextureDataGrayscaleAlpha:
         *outFormat = GL_LUMINANCE_ALPHA;
         *outInternalFormat = GL_LUMINANCE8_ALPHA8;
         *outType = GL_UNSIGNED_BYTE;
-        return YES;
+        return true;
 
     default:
         OO_LOG(cxx_kOOLogParameterError, "Unexpected texture format {}.",
             static_cast<unsigned>(format));
-        return NO;
+        return false;
     }
 }

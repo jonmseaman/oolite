@@ -33,15 +33,7 @@ MA 02110-1301, USA.
 class Entity;
 class OOVisualEffectEntity;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void InitOOJSVisualEffect(ooscript::Context context, ooscript::Object global);
-
-#ifdef __cplusplus
-}
-#endif
 
 /*	The bodies of OOVisualEffectEntity (OOJavaScriptExtensions), which the
    engine reaches by selector: the C++ effect's

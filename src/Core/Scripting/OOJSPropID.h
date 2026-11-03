@@ -35,10 +35,4 @@ MA 02110-1301, USA.
 */
 
 #define OOJSID(str) ({ static ooscript::PropertyId idCache; static bool inited; if (EXPECT_NOT(!inited)) { OOJSInitJSIDCachePRIVATE("" str, &idCache); inited = true; } idCache; })
-#ifdef __cplusplus
-extern "C" {
-#endif
 void OOJSInitJSIDCachePRIVATE(const char* name, ooscript::PropertyId* idCache);
-#ifdef __cplusplus
-}
-#endif

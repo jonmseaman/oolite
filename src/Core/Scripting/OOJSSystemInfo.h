@@ -87,17 +87,9 @@ private:
     ooscript::Object _jsSelf = { }; // The latest JS SystemInfo object made for this.
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void InitOOJSSystemInfo(ooscript::Context context, ooscript::Object global);
 
 // Returns ooscript::nullValue() on failure (with a JS warning, but no
 // exception).
 ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context,
     OOGalaxyID galaxy, OOSystemID system);
-
-#ifdef __cplusplus
-}
-#endif

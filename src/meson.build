@@ -18,9 +18,9 @@ endif
 
 # The JavaScript engine behind ooscript/JSEngine.hpp: the vendored QuickJS-ng, linked statically
 # (QuickJS-ng is the only engine).
-# QuickJS-ng is part of the game binary, so it is held to the same golden flag policy as Oolite's own
-# code (meson.build; tests/golden/check_build_flags.py): its dtoa/number code produces floats that
-# land in the dumps. Its own project() defaults to buildtype=release (-O3). Passing only
+# QuickJS-ng is part of the game binary, so it is held to the same pinned optimisation level as
+# Oolite's own code (meson.build): its dtoa/number code produces floats that land in recorded
+# results. Its own project() defaults to buildtype=release (-O3). Passing only
 # buildtype=debugoptimized from the parent is NOT enough on current meson: the subproject still
 # emits an effective -O3 (measured 2026-09-27; 10 TUs). Pass optimization=2 explicitly
 # so the last -O on each QuickJS compile line is the pinned level. b_ndebug=true keeps release

@@ -1,6 +1,6 @@
 """G8 - the scenario screen, entered from start-screen row 22 and left again by its row 1.
 
-docs/phases/0-gui-tier.md G8: "Launch -> confirm row 22 -> confirm row 1 (``Return to Menu``) ->
+G8: "Launch -> confirm row 22 -> confirm row 1 (``Return to Menu``) ->
 verify start screen -> exit". The bug class is a GUI state machine that goes one way: a screen you
 can enter and cannot leave is a wedged game, and it is exactly what a rewrite of the screen
 dispatchers breaks without breaking anything that compiles.
@@ -95,8 +95,8 @@ start screen's ` Exit Game ` row.
 
     python3 -m pytest oolite-dev/tests/gui/test_g8_scenario_screen_back_out.py -x -q
 
-Needs the desktop: a real window, unlocked and logged in. It takes tools/gui-lock for
-the duration, via the ``game`` fixture - this file launches nothing of its own.
+Needs the desktop: a real window, unlocked and logged in, left alone while it runs.
+The game is launched through the ``game`` fixture; this file launches nothing of its own.
 """
 
 import ast
@@ -664,7 +664,7 @@ def test_the_arrival_observable_has_exactly_two_assignment_sites_and_only_one_is
 
 @pytest.mark.offline
 def test_the_scenario_row_and_the_back_out_row_are_derived_and_agree_with_the_story():
-    """The two derived rows must equal the numbers docs/phases/0-gui-tier.md's G8 row names.
+    """The two derived rows must equal the numbers the G8 row names.
 
     NOT because the literals are the source of truth - the game's source is, and that is what the
     functions above read - but because a silent divergence is the failure this guards. If the
@@ -676,13 +676,13 @@ def test_the_scenario_row_and_the_back_out_row_are_derived_and_agree_with_the_st
     assert scenario_exit_row() == SCENARIO_EXIT_ROW
     assert SCENARIO_ROW == 22, (
         f"the derivation now puts the scenario screen on start-screen row {SCENARIO_ROW}, not "
-        "the 22 in docs/phases/0-gui-tier.md's G8 row. That is not necessarily a bug - the start "
+        "the 22 in the G8 row. That is not necessarily a bug - the start "
         "menu may have gained or lost an entry - but the story and this test must be updated "
         "together rather than the test silently confirming a different row."
     )
     assert SCENARIO_EXIT_ROW == 1, (
         f"the derivation now puts the scenario screen's ` {SCENARIO_EXIT_LABEL} ` on row "
-        f"{SCENARIO_EXIT_ROW}, not the 1 in docs/phases/0-gui-tier.md's G8 row. Same rule: "
+        f"{SCENARIO_EXIT_ROW}, not the 1 in the G8 row. Same rule: "
         "update the story and this test together."
     )
     # The back-out row must be distinct from every scenario row, or "confirm it" is ambiguous.
@@ -718,7 +718,7 @@ def test_the_back_out_row_is_the_row_the_story_names():
     )
     assert match.group(1) == SCENARIO_EXIT_LABEL, (
         f"{SCENARIO_EXIT_DESC_KEY!r} now reads {match.group(1)!r}, not {SCENARIO_EXIT_LABEL!r}. "
-        "docs/phases/0-gui-tier.md's G8 row names that text; the story and this test must be "
+        "the G8 row names that text; the story and this test must be "
         "updated together."
     )
 
@@ -754,8 +754,8 @@ def test_the_back_out_chain_is_the_only_way_off_the_scenario_screen_by_that_row(
         f"-startScenario no longer has an `if ([key isEqualToString:@\"{SCENARIO_EXIT_GUI_KEY}\"])"
         "` branch, so confirming the back-out row no longer means 'do not start a scenario'"
     )
-    assert re.search(r"return\s+NO\s*;", exit_branch.group(1)), (
-        f"-startScenario's {SCENARIO_EXIT_GUI_KEY!r} branch no longer returns NO: "
+    assert re.search(r"return\s+(?:NO|false)\s*;", exit_branch.group(1)), (
+        f"-startScenario's {SCENARIO_EXIT_GUI_KEY!r} branch no longer returns false: "
         f"{exit_branch.group(1)!r}. The dispatcher backs out only on NO, so this row would now "
         "do something else entirely."
     )
@@ -773,11 +773,11 @@ def test_the_back_out_chain_is_the_only_way_off_the_scenario_screen_by_that_row(
         r"if\s*\(\s*!\s*startScenario\(\)\s*\)\s*\{(.*?)\}", case_body, re.S
     )
     assert back_out, (
-        f"the {SCENARIO_SCREEN} dispatcher no longer has an `if (![self startScenario])` branch, "
+        f"the {SCENARIO_SCREEN} dispatcher no longer has an `if (!startScenario())` branch, "
         "so a NO from the exit row no longer returns the game to the start screen"
     )
-    assert "setGuiToIntroFirstGo(YES)" in back_out.group(1), (
-        "the `if (![self startScenario])` branch no longer calls -setGuiToIntroFirstGo:YES: "
+    assert "setGuiToIntroFirstGo(true)" in back_out.group(1), (
+        "the `if (!startScenario())` branch no longer calls setGuiToIntroFirstGo(true): "
         f"{back_out.group(1)!r}. That call is what assigns {START_SCREEN}, which is G8's RETURN "
         "observable."
     )

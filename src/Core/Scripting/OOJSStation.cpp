@@ -390,7 +390,7 @@ static bool JSStationGetStationEntity(ooscript::Context context,
 
     if (outEntity == NULL)
         return false;
-    *outEntity = nil;
+    *outEntity = nullptr;
 
     result = OOJSEntityGetEntity(context, stationObj, &entity);
     if (!result)
@@ -420,7 +420,7 @@ static bool JSStationGetShipEntity(ooscript::Context context,
 
     if (outEntity == NULL)
         return false;
-    *outEntity = nil;
+    *outEntity = nullptr;
 
     result = OOJSEntityGetEntity(context, shipObj, &entity);
     if (!result)
@@ -463,11 +463,11 @@ static bool StationGetProperty(Context cx, Object obj, PropertyId propID,
 
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* entity = nil;
+    StationEntity* entity = nullptr;
 
     if (!JSStationGetStationEntity(context, thisObj, &entity))
         return false;
-    if (entity == nil) {
+    if (entity == nullptr) {
         *value_raw = ooscript::undefinedValue();
         return true;
     }
@@ -607,7 +607,7 @@ static bool StationSetProperty(Context cx, Object obj, PropertyId propID,
 
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* entity = nil;
+    StationEntity* entity = nullptr;
     bool bValue;
     int32_t iValue;
     double fValue;
@@ -615,7 +615,7 @@ static bool StationSetProperty(Context cx, Object obj, PropertyId propID,
 
     if (!JSStationGetStationEntity(context, thisObj, &entity))
         return false;
-    if (entity == nil)
+    if (entity == nullptr)
         return true;
 
     switch (ooscript::idToInt32(propID)) {
@@ -724,7 +724,7 @@ static bool StationAbortAllDockings(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     JSStationGetStationEntity(context, OOJS_THIS, &station);
     if (station != nullptr)
         station->abortAllDockings();
@@ -741,7 +741,7 @@ static bool StationAbortDockingForShip(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     JSStationGetStationEntity(context, OOJS_THIS, &station);
     if (oojsArgs.count() == 0) {
         cxx_OOJSReportBadArguments(context, "Station", "abortDockingForShip",
@@ -751,9 +751,9 @@ static bool StationAbortDockingForShip(ooscript::Context context,
     }
     if (!ooscript::isObjectOrNull(OOJS_ARGV[0]))
         return false;
-    ShipEntity* ship = nil;
+    ShipEntity* ship = nullptr;
     JSStationGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &ship);
-    if (ship != nil) {
+    if (ship != nullptr) {
         if (station != nullptr)
             station->abortDockingForShip(ship);
     }
@@ -774,21 +774,21 @@ static bool StationCanDockShip(ooscript::Context context,
     OOJS_NATIVE_ENTER(context)
 
     bool result = true;
-    ShipEntity* shipToCheck = nil;
+    ShipEntity* shipToCheck = nullptr;
 
     if (oojsArgs.count() > 0) {
         if (!ooscript::isObjectOrNull(OOJS_ARGV[0]) || !JSStationGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &shipToCheck)) {
             return false;
         }
     }
-    if (EXPECT_NOT(shipToCheck == nil)) {
+    if (EXPECT_NOT(shipToCheck == nullptr)) {
         cxx_OOJSReportBadArguments(context, "Station", "canDockShip",
             MIN(oojsArgs.count(), 1U), OOJS_ARGV,
             std::nullopt, "shipEntity");
         return false;
     }
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
@@ -827,7 +827,7 @@ static bool StationDockPlayer(ooscript::Context context,
                 : false))) // qualified: the final overrider, so the binding
                            // test stands in for it
     {
-        StationEntity* stationForDockingPlayer = nil;
+        StationEntity* stationForDockingPlayer = nullptr;
         JSStationGetStationEntity(context, OOJS_THIS, &stationForDockingPlayer);
         if (player != nullptr)
             player->setDockingClearanceStatus(DOCKING_CLEARANCE_STATUS_GRANTED);
@@ -853,7 +853,7 @@ static bool StationIncreaseAlertLevel(ooscript::Context context,
     ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
 
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
@@ -879,7 +879,7 @@ static bool StationDecreaseAlertLevel(ooscript::Context context,
     ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
 
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
@@ -908,8 +908,8 @@ static bool StationLaunchShipWithRole(ooscript::Context context,
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> shipRole;
-    StationEntity* station = nil;
-    ShipEntity* result = nil;
+    StationEntity* station = nullptr;
+    ShipEntity* result = nullptr;
     bool abortAllDockings = false;
 
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
@@ -949,13 +949,14 @@ static bool StationLaunchDefenseShip(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
-    ShipEntity* launched = nil;
+    ShipEntity* launched = nullptr;
     OOJS_BEGIN_FULL_NATIVE(context)
-    launched = (station != nullptr ? station->launchDefenseShip() : (::ShipEntity*)nil);
+    launched = (station != nullptr ? station->launchDefenseShip()
+                                   : (::ShipEntity*)nullptr);
     OOJS_END_FULL_NATIVE
     OOJS_RETURN(
         OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value
@@ -970,13 +971,13 @@ static bool StationLaunchEscort(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
-    ShipEntity* launched = nil;
+    ShipEntity* launched = nullptr;
     OOJS_BEGIN_FULL_NATIVE(context)
-    launched = (station != nullptr ? station->launchEscort() : (::ShipEntity*)nil);
+    launched = (station != nullptr ? station->launchEscort() : (::ShipEntity*)nullptr);
     OOJS_END_FULL_NATIVE
     OOJS_RETURN(
         OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value
@@ -991,13 +992,14 @@ static bool StationLaunchScavenger(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
-    ShipEntity* launched = nil;
+    ShipEntity* launched = nullptr;
     OOJS_BEGIN_FULL_NATIVE(context)
-    launched = (station != nullptr ? station->launchScavenger() : (::ShipEntity*)nil);
+    launched = (station != nullptr ? station->launchScavenger()
+                                   : (::ShipEntity*)nullptr);
     OOJS_END_FULL_NATIVE
     OOJS_RETURN(
         OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value
@@ -1012,13 +1014,13 @@ static bool StationLaunchMiner(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
-    ShipEntity* launched = nil;
+    ShipEntity* launched = nullptr;
     OOJS_BEGIN_FULL_NATIVE(context)
-    launched = (station != nullptr ? station->launchMiner() : (::ShipEntity*)nil);
+    launched = (station != nullptr ? station->launchMiner() : (::ShipEntity*)nullptr);
     OOJS_END_FULL_NATIVE
     OOJS_RETURN(
         OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value
@@ -1032,13 +1034,14 @@ static bool StationLaunchPirateShip(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
-    ShipEntity* launched = nil;
+    ShipEntity* launched = nullptr;
     OOJS_BEGIN_FULL_NATIVE(context)
-    launched = (station != nullptr ? station->launchPirateShip() : (::ShipEntity*)nil);
+    launched = (station != nullptr ? station->launchPirateShip()
+                                   : (::ShipEntity*)nullptr);
     OOJS_END_FULL_NATIVE
     OOJS_RETURN(
         OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value
@@ -1053,13 +1056,13 @@ static bool StationLaunchShuttle(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
-    ShipEntity* launched = nil;
+    ShipEntity* launched = nullptr;
     OOJS_BEGIN_FULL_NATIVE(context)
-    launched = (station != nullptr ? station->launchShuttle() : (::ShipEntity*)nil);
+    launched = (station != nullptr ? station->launchShuttle() : (::ShipEntity*)nullptr);
     OOJS_END_FULL_NATIVE
     OOJS_RETURN(
         OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value
@@ -1073,13 +1076,13 @@ static bool StationLaunchPatrol(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
-    ShipEntity* launched = nil;
+    ShipEntity* launched = nullptr;
     OOJS_BEGIN_FULL_NATIVE(context)
-    launched = (station != nullptr ? station->launchPatrol() : (::ShipEntity*)nil);
+    launched = (station != nullptr ? station->launchPatrol() : (::ShipEntity*)nullptr);
     OOJS_END_FULL_NATIVE
     OOJS_RETURN(
         OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value
@@ -1093,7 +1096,7 @@ static bool StationLaunchPolice(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
@@ -1114,7 +1117,7 @@ static bool StationSetInterface(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
@@ -1243,7 +1246,7 @@ static bool StationSetMarketPrice(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
@@ -1296,7 +1299,7 @@ static bool StationSetMarketQuantity(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
@@ -1367,7 +1370,7 @@ static bool StationAddShipToShipyard(ooscript::Context context,
     OOJS_NATIVE_ENTER(context)
 
     ooscript::Object params = NULL;
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
@@ -1578,7 +1581,7 @@ static bool StationRemoveShipFromShipyard(ooscript::Context context,
 {
     OOJS_NATIVE_ENTER(context)
 
-    StationEntity* station = nil;
+    StationEntity* station = nullptr;
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 

@@ -15,7 +15,7 @@
    system and in interstellar space), toString(), addPlanet()/addMoon(),
    sendAllShipsAway(), the counts and the entity searches (filtering, ordering
    by distance, the optional reference entity and range, and their errors) and
-   locationFromCode(). Run: bash tools/check-core-tests.sh test_OOJSSystem
+   locationFromCode(). Run: meson test -C build/meson_test test_OOJSSystem
 */
 
 #include <process.h>
@@ -150,7 +150,7 @@ std::string PredicateName(EntityFilterPredicate predicate) {
 }
 
 std::string Describe(Entity* entity) {
-  return entity == nil ? "nil" : oo::str::format("%g", entity->position.x);
+  return entity == nullptr ? "nil" : oo::str::format("%g", entity->position.x);
 }
 
 }  // namespace
@@ -162,14 +162,14 @@ namespace stdfs = std::filesystem;
 stdfs::path sRoot;
 class FakeUniverse : public Universe {
  public:
-  BOOL _interstellar = {};
+  bool _interstellar = {};
   Entity *_station, *_planet, *_sun;
   std::vector<oo::EntityHold> _planets, _stations, _wormholes, _entities;
   std::map<std::string, oo::EntityHold, std::less<>>
       _waypoints;  // the waypoints' objects
   float _ambient = {};
   int _lightings = {};
-  BOOL _breakPattern = {};
+  bool _breakPattern = {};
   oo::PList _populatorSettings = {};
   oo::PList _systemData = {};
   oo::PList _descriptions = {};
@@ -286,7 +286,7 @@ class FakeUniverse : public Universe {
   }
   bool spawnShip(const std::string& shipdesc) override {
     _log.push_back("spawnShip " + shipdesc);
-    return YES;
+    return true;
   }
   std::optional<std::string> getSystemName(OOSystemID sys,
                                            OOGalaxyID /*gnum*/) override {
@@ -338,13 +338,13 @@ class FakeUniverse : public Universe {
   }
 };
 
-FakeUniverse* sUniverse = nil;
+FakeUniverse* sUniverse = nullptr;
 FakePlayer* sPlayer = nullptr;
 
 // Its object (the test keeps entities as their objects), +1 as +alloc's was.
-Entity* MakeEntity(double x, BOOL visible) {
+Entity* MakeEntity(double x, bool visible) {
   oo::Ref<TestEntity> part = oo::makeRef<TestEntity>();
-  Entity* entity = nil;
+  Entity* entity = nullptr;
   {
     entity = oo::RetainEntity(
         oo::MadeEntity(part));  // kept for the life of the test
@@ -401,26 +401,26 @@ void SetUp() {
   sPlayer->_galaxy = 3;
   sPlayer->_system = 17;
 
-  sUniverse->_station = MakeEntity(10, YES);
-  sUniverse->_planet = MakeEntity(20, YES);
-  sUniverse->_sun = MakeEntity(30, YES);
+  sUniverse->_station = MakeEntity(10, true);
+  sUniverse->_planet = MakeEntity(20, true);
+  sUniverse->_sun = MakeEntity(30, true);
   sUniverse->_planets = {oo::EntityHold(sUniverse->_planet),
-                         oo::EntityHold(MakeEntity(21, NO)),
-                         oo::EntityHold(MakeEntity(22, YES))};
+                         oo::EntityHold(MakeEntity(21, false)),
+                         oo::EntityHold(MakeEntity(22, true))};
   sUniverse->_stations = {oo::EntityHold(sUniverse->_station),
-                          oo::EntityHold(MakeEntity(1000, YES))};
-  sUniverse->_wormholes = {oo::EntityHold(MakeEntity(40, YES))};
-  sUniverse->_waypoints["nav-a"] = oo::EntityHold(MakeEntity(50, YES));
-  sUniverse->_waypoints["nav-b"] = oo::EntityHold(MakeEntity(51, YES));
+                          oo::EntityHold(MakeEntity(1000, true))};
+  sUniverse->_wormholes = {oo::EntityHold(MakeEntity(40, true))};
+  sUniverse->_waypoints["nav-a"] = oo::EntityHold(MakeEntity(50, true));
+  sUniverse->_waypoints["nav-b"] = oo::EntityHold(MakeEntity(51, true));
 
   // The searchable entities, out of distance order; one is invisible.
-  Entity* farthest = MakeEntity(300, YES);
+  Entity* farthest = MakeEntity(300, true);
   farthest->setScanClass(CLASS_BUOY);
-  Entity* nearest = MakeEntity(100, YES);
+  Entity* nearest = MakeEntity(100, true);
   nearest->setScanClass(CLASS_NEUTRAL);
-  Entity* hidden = MakeEntity(150, NO);
+  Entity* hidden = MakeEntity(150, false);
   hidden->setScanClass(CLASS_NEUTRAL);
-  Entity* middle = MakeEntity(200, YES);
+  Entity* middle = MakeEntity(200, true);
   middle->setScanClass(CLASS_NEUTRAL);
   sUniverse->_entities = {oo::EntityHold(farthest), oo::EntityHold(nearest),
                           oo::EntityHold(hidden), oo::EntityHold(middle)};
@@ -578,7 +578,7 @@ OO_TEST(propertiesWithoutSystemData) {
       "system.allShips.map(function (p) { return p.position.x; }).join()",
       "300,100,200");
   OO_CHECK_EQ(sUniverse->_lastShipsPredicate, "ships:searchable");
-  OO_CHECK(sUniverse->_lastRange == -1 && sUniverse->_lastRelativeTo == nil);
+  OO_CHECK(sUniverse->_lastRange == -1 && sUniverse->_lastRelativeTo == nullptr);
   OO_CHECK_EVAL("system.allDemoShips.length", "0");
   OO_CHECK_EQ(sUniverse->_lastShipsPredicate, "ships:demo");
   OO_CHECK_EVAL("system.allVisualEffects.length", "3");
@@ -592,7 +592,7 @@ OO_TEST(propertiesWithoutSystemData) {
 
   // No station, planet or sun: null.
   Entity* station = sUniverse->_station;
-  sUniverse->_station = nil;
+  sUniverse->_station = nullptr;
   OO_CHECK_EVAL("system.mainStation", "null");
   sUniverse->_station = station;
 }
@@ -623,7 +623,7 @@ OO_TEST(propertiesFromSystemData) {
 
 OO_TEST(propertiesInInterstellarSpace) {
   SetUp();
-  sUniverse->_interstellar = YES;
+  sUniverse->_interstellar = true;
   OO_CHECK_EVAL("system.isInterstellarSpace", "true");
   OO_CHECK_EVAL("system.name", "Interstellar space");
   OO_CHECK_EVAL("JSON.stringify(system.description)", "\"\"");
@@ -636,7 +636,7 @@ OO_TEST(propertiesInInterstellarSpace) {
   OO_CHECK_EVAL("system.population", "0");
   OO_CHECK_EVAL("system.productivity", "0");
   OO_CHECK_EVAL("system.ID", "17");  // still the player's
-  sUniverse->_interstellar = NO;
+  sUniverse->_interstellar = false;
 }
 
 OO_TEST(setters) {
@@ -651,7 +651,7 @@ OO_TEST(setters) {
       "})()",
       "true");
   OO_CHECK(sUniverse->_breakPattern);
-  sUniverse->_breakPattern = NO;
+  sUniverse->_breakPattern = false;
   sUniverse->_ambient = 0.5f;
 
   Log(sUniverse->_log);
@@ -687,7 +687,7 @@ OO_TEST(methods) {
   SetUp();
   OO_CHECK_EVAL("system.toString()", "[System 3:17 \"Lave\"]");
 
-  sPlayer->_planetToAdd = nil;
+  sPlayer->_planetToAdd = nullptr;
   OO_CHECK_EVAL("system.addPlanet('rock')", "null");
   sPlayer->_planetToAdd = sUniverse->_planet;
   OO_CHECK_EVAL("system.addMoon('pebble').position.x", "20");
@@ -702,7 +702,7 @@ OO_TEST(methods) {
   OO_CHECK_EVAL("system.locationFromCode('OUTSIDE_SUN')", "(1, 2, 3)");
   OO_CHECK_LOG(sUniverse->_log, "location OUTSIDE_SUN 30 20");
   Entity* sun = sUniverse->_sun;
-  sUniverse->_sun = nil;
+  sUniverse->_sun = nullptr;
   OO_CHECK_EVAL("system.locationFromCode('OUTSIDE_SUN')", "(1, 2, 3)");
   OO_CHECK_LOG(sUniverse->_log, "location WITCHPOINT nil nil");
   sUniverse->_sun = sun;
@@ -748,7 +748,7 @@ OO_TEST(searches) {
       "system.filteredEntities(this, function (e) { return true; "
       "}).map(function (p) { return p.position.x; }).join()",
       "300,100,200");
-  OO_CHECK(sUniverse->_lastRange == -1 && sUniverse->_lastRelativeTo == nil);
+  OO_CHECK(sUniverse->_lastRange == -1 && sUniverse->_lastRelativeTo == nullptr);
   OO_CHECK_EVAL(
       "system.filteredEntities(this, function (e) { return true; }, "
       "system.sun, 500).map(function (p) { return p.position.x; }).join()",
@@ -853,7 +853,7 @@ OO_TEST(staticLookups) {
 OO_TEST(visualEffects) {
   SetUp();
   Log(sUniverse->_log);
-  sUniverse->_effectToAdd = nil;
+  sUniverse->_effectToAdd = nullptr;
   OO_CHECK_EVAL("system.addVisualEffect('fx', [1, 2, 3])", "null");
   sUniverse->_effectToAdd = sUniverse->_sun;
   OO_CHECK_EVAL(

@@ -11,7 +11,7 @@
    key, a new one once it has gone), the files asked for, and apply() /
    applyNone() (the program in use, kept while it is). There is no game view
    here, so no standard matrix uniforms are bound. The cases use null for nil
-   and a held Ref for retain/release. Run: bash tools/check-core-tests.sh
+   and a held Ref for retain/release. Run: tests/run.sh unit
 */
 
 #include <map>
@@ -73,7 +73,7 @@ OOShaderSetting cxx_OOShaderSettingFromString(const std::string& string) {
 // manager. The view is C++ (MyOpenGLView), and its manager accessor is never
 // reached.
 class Universe;
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
 OOOpenGLMatrixManager* MyOpenGLView::getOpenGLMatrixManager() {
   return matrixManager.get();

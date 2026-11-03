@@ -13,7 +13,7 @@
    pattern, the cache (one compiled RegExp per pattern and flags), and the
    pseudo-singleton (one matcher per autorelease pool, a new one after the pool
    drains; nil, and asked again, when the tester does not compile). See the note
-   above the tests. Run: bash tools/check-core-tests.sh
+   above the tests. Run: tests/run.sh unit
 */
 
 #include <string>

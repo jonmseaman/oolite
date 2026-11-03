@@ -15,14 +15,14 @@
    The expectations were written against the Objective-C file and run on it
    first; they pin the JS-visible behaviour: the oolite object and its class,
    every property both ways, compareVersion() with each kind of argument, the
-   errors, and a native's exception. Run: bash tools/check-core-tests.sh
+   errors, and a native's exception. Run: tests/run.sh unit
 */
 
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
-#include "oofnd/objc/OOFoundationTypes.h"  // BOOL
+#include "oofnd/objc/OOFoundationTypes.h"  // bool
 #include "oofnd/objc/OOObject.h"
 #include "ooscript/JSEngine.hpp"
 
@@ -53,7 +53,7 @@ typedef enum {
 class MyOpenGLView : public oo::RefCounted {
  public:
   float _colorSaturation = {};
-  BOOL _hdrOutput = {};
+  bool _hdrOutput = {};
   OOHDRToneMapper _hdrToneMapper = {};
   OOSDRToneMapper _sdrToneMapper = {};
   int _hdrSets = {};
@@ -85,8 +85,8 @@ class Universe : public oo::RefCounted {
   MyOpenGLView* _gameView;
   int _currentPostFX;
   double _timeAccelerationFactor;
-  BOOL _raise;
-  BOOL _throwCxx;
+  bool _raise;
+  bool _throwCxx;
 
   oo::PList gameSettings();
   int currentPostFX();
@@ -321,9 +321,8 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
   return ooscript::nullValue();
 }
 
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
-extern "C" {
 
 void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
                                    ooscript::PropertyId,
@@ -361,7 +360,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 // MARK: The context
 // -------------------------------------------------------------------------------
@@ -371,8 +369,8 @@ namespace {
 ooscript::Runtime sRuntime;
 ooscript::Context sContext;
 ooscript::Object sGlobal;
-Universe* sUniverse = nil;
-MyOpenGLView* sView = nil;
+Universe* sUniverse = nullptr;
+MyOpenGLView* sView = nullptr;
 std::filesystem::path sResources;
 
 // The built-in resources directory is ./Resources: the test runs in a directory
@@ -568,7 +566,7 @@ OO_TEST(toneMappers) {
   SetUpContext();
   // SDR output: the SDR mapper is read and set, the HDR one is undefined and
   // refused with a warning.
-  sView->_hdrOutput = NO;
+  sView->_hdrOutput = false;
   OO_CHECK_EVAL("oolite.sdrToneMapper", "OOSDR_TONEMAPPER_AGX");
   OO_CHECK_EVAL("oolite.hdrToneMapper", "OOHDR_TONEMAPPER_UNDEFINED");
   OO_CHECK_EVAL(
@@ -590,7 +588,7 @@ OO_TEST(toneMappers) {
   OO_CHECK_EQ(sView->_sdrSets, 1);
 
   // HDR output: the other way round.
-  sView->_hdrOutput = YES;
+  sView->_hdrOutput = true;
   OO_CHECK_EVAL("oolite.hdrToneMapper", "OOHDR_TONEMAPPER_DICE");
   OO_CHECK_EVAL("oolite.sdrToneMapper", "OOSDR_TONEMAPPER_UNDEFINED");
   OO_CHECK_EVAL(
@@ -610,18 +608,18 @@ OO_TEST(toneMappers) {
   OO_CHECK_EVAL(
       "(function () { oolite.hdrToneMapper = null; return 'set'; })()",
       "threw: bad property value");
-  sView->_hdrOutput = NO;
+  sView->_hdrOutput = false;
 }
 
 OO_TEST(nativeExceptions) {
   SetUpContext();
-  sUniverse->_raise = YES;
+  sUniverse->_raise = true;
   OO_CHECK_EVAL("oolite.gameSettings",
                 "threw: Native exception: settings boom");
-  sUniverse->_raise = NO;
-  sUniverse->_throwCxx = YES;
+  sUniverse->_raise = false;
+  sUniverse->_throwCxx = true;
   OO_CHECK_EVAL("oolite.gameSettings", "threw: Native exception: cxx boom");
-  sUniverse->_throwCxx = NO;
+  sUniverse->_throwCxx = false;
   OO_CHECK_EVAL("typeof oolite.gameSettings", "object");
   OO_CHECK_EQ(sLimiterPauses, 0);
   OO_CHECK_EQ(sProfileDepth, 0);

@@ -22,7 +22,7 @@
    their errors, system data both ways, enumeration, the four methods and the
    two static ones, interstellar space, a native's exception) and what the
    wrapped object answers the engine (its class name, description and equality).
-   Run: bash tools/check-core-tests.sh
+   Run: tests/run.sh unit
 */
 
 #include "OOCommodities.h"
@@ -59,7 +59,7 @@ class Universe : public oo::RefCounted {
  public:
   OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
 
-  BOOL _interstellar;
+  bool _interstellar;
   std::map<std::string, oo::PList> _data;
   oo::PList _currentSystemData;
   oo::Ref<OOSystemDescriptionManager> _systemManager;
@@ -204,7 +204,7 @@ NSPoint PlayerEntity::getGalaxy_coordinates() { return _coordinates; }
 ::OOScript* PlayerEntity::commodityScriptNamed(
     const std::optional<std::string>& script) {
   (void)script;
-  return nil;
+  return nullptr;
 }
 
 class OOJSScript;
@@ -318,7 +318,7 @@ OORouteType cxx_StringToRouteType(const std::string& string) {
 }
 
 // Galactic coordinates: x / 4, y / 2 here, so system s is at (s, s).
-extern "C" Vector OOGalacticCoordinatesFromInternal(
+Vector OOGalacticCoordinatesFromInternal(
     NSPoint internalCoordinates) {
   return make_vector(internalCoordinates.x / 4, internalCoordinates.y / 2, 0);
 }
@@ -453,9 +453,8 @@ std::map<ooscript::ClassDef*, int> sConverters;
 }
 
 PlayerEntity* gOOPlayer = nullptr;
-Universe* gSharedUniverse = nil;
+Universe* gSharedUniverse = nullptr;
 
-extern "C" {
 
 void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
                                    ooscript::PropertyId,
@@ -472,7 +471,7 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
 // The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked
 // whose slot holds the C++ system info): no subclass of SystemInfo is
 // registered.
-extern "C" BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                                ooscript::ClassDef* superclass) {
   return putativeSubclass == superclass;
 }
@@ -527,7 +526,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();
@@ -541,7 +539,7 @@ namespace {
 ooscript::Runtime sRuntime;
 ooscript::Context sContext;
 ooscript::Object sGlobal;
-Universe* sUniverse = nil;
+Universe* sUniverse = nullptr;
 PlayerEntity* sPlayer = nullptr;
 
 void Define(const char* name, ooscript::Value value) {
@@ -749,7 +747,7 @@ OO_TEST(systemData) {
 
 OO_TEST(interstellar) {
   SetUpContext();
-  sUniverse->_interstellar = YES;
+  sUniverse->_interstellar = true;
   sUniverse->_currentSystemData = Dict(
       {{"name", oo::PList("Interstellar space")}, {"economy", oo::PList(3.0)}});
   sPlayer->_coordinates = NSMakePoint(40, 20);
@@ -758,7 +756,7 @@ OO_TEST(interstellar) {
   OO_CHECK_EVAL(
       "Object.keys(info(0, -1)).join()",
       "economy,name,coordinates,internalCoordinates,galaxyID,systemID");
-  sUniverse->_interstellar = NO;
+  sUniverse->_interstellar = false;
   sUniverse->_currentSystemData = oo::PList();
 }
 
@@ -779,11 +777,11 @@ OO_TEST(interstellar_keys_of_a_fresh_snapshot) {
     expected += ",";
   }
   expected += "coordinates,internalCoordinates,galaxyID,systemID";
-  sUniverse->_interstellar = YES;
+  sUniverse->_interstellar = true;
   sUniverse->_currentSystemData = oo::PList(std::move(data));
   OO_CHECK_EVAL("Object.keys(info(0, -1)).join()", expected.c_str());
   OO_CHECK_EVAL("Object.keys(info(0, -1)).length", "44");
-  sUniverse->_interstellar = NO;
+  sUniverse->_interstellar = false;
   sUniverse->_currentSystemData = oo::PList();
 }
 

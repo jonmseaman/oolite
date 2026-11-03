@@ -1543,9 +1543,9 @@ private:
     NSInteger /*OOGUIRow*/ missionTextRow = { };
     std::optional<std::string> missionChoice;
     std::optional<std::string> missionKeyPress;
-    BOOL _missionWithCallback = { };
-    BOOL _missionAllowInterrupt = { };
-    BOOL _missionTextEntry = { };
+    bool _missionWithCallback = { };
+    bool _missionAllowInterrupt = { };
+    bool _missionTextEntry = { };
     OOGUIScreenID _missionExitScreen = { };
 
     std::optional<std::string> specialCargo;
@@ -1561,7 +1561,7 @@ private:
     oo::PList _equipScreenBackgroundDescriptor;
     std::optional<std::string> _missionScreenID;
 
-    BOOL found_equipment = { };
+    bool found_equipment = { };
 
     oo::PList::Dict
         reputation; // signed integers by key (PlayerEntity (Contracts))
@@ -1607,7 +1607,7 @@ private:
 
     OOMatrix playerRotMatrix = { };
 
-    BOOL showingLongRangeChart = { };
+    bool showingLongRangeChart = { };
 
     // For OO-GUI based save screen
     std::string commanderNameString; // owned; the save screen refreshes it from
@@ -1615,7 +1615,7 @@ private:
     std::vector<oo::PList> cdrDetailArray; // the load/save screen's entries
                                            // (PlayerEntity (LoadSave))
     int currentPage = { };
-    BOOL pollControls = { };
+    bool pollControls = { };
     // ...end save screen
 
     NSInteger marketOffset = { };
@@ -1877,8 +1877,8 @@ private:
     std::vector<oo::PList>
         customEquipActivation; // Dict entries, edited in place by
                                // KeyMapper/StickMapper/Controls
-    std::vector<BOOL> customActivatePressed; // parallel to customEquipActivation
-    std::vector<BOOL> customModePressed;
+    std::vector<bool> customActivatePressed; // parallel to customEquipActivation
+    std::vector<bool> customModePressed;
 
     // dict to hold extra keys for missions screen.
     std::map<std::string, oo::PList, std::less<>>
@@ -1960,7 +1960,7 @@ private:
           massLockable : 1 = 0;
 #if OOLITE_ESPEAK
     unsigned int voice_no = { };
-    BOOL voice_gender_m = { };
+    bool voice_gender_m = { };
 #endif
     OOSpeechSettings isSpeechOn = { };
 

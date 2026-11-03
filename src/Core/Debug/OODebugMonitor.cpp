@@ -73,7 +73,7 @@ void OODebugMonitor::init()
 {
     {
         _configFromOXPs = normalizeConfigDictionary(ResourceManager::dictionaryFromFilesNamed(
-            "debugConfig.plist", "Config", YES));
+            "debugConfig.plist", "Config", true));
 
         _configOverrides = normalizeConfigDictionary(
             oo::Defaults::standard().dictionaryForKey("debug-settings-override"));
@@ -129,14 +129,14 @@ bool OODebugMonitor::setDebugger(OODebuggerInterface* newDebugger)
 
     if (newDebugger != _debugger.get()) {
         // Disconnect existing debugger, if any.
-        if (newDebugger != nil) {
+        if (newDebugger != nullptr) {
             disconnectDebuggerWithMessage("New debugger set.");
         } else {
             disconnectDebuggerWithMessage("Debugger disconnected programatically.");
         }
 
         // If a new debugger was specified, try to connect it.
-        if (newDebugger != nil) {
+        if (newDebugger != nullptr) {
             try {
                 if (newDebugger->connectDebugMonitor(this, &error)) {
                     newDebugger->debugMonitor(this, mergedConfiguration());
@@ -661,13 +661,11 @@ void OODebugMonitor::disconnectDebugger(
     }
 }
 
-#if OOLITE_SDL
 void OODebugMonitor::applicationWillTerminate()
 {
     oo::NotificationCenter::defaultCenter().post(
         kOODebugMonitorApplicationWillTerminateNotificationName, nullptr);
 }
-#endif
 
 void OODebugMonitor::applicationWillTerminate(
     const oo::Notification& /*notification*/)
@@ -795,14 +793,14 @@ oo::PList OODebugMonitor::normalizeConfigValue(const oo::PList& value,
     const std::string& key)
 {
     oo::Ref<OOColor> color;
-    BOOL boolValue;
+    bool boolValue;
 
     if (value) {
         if (oo::str::hasSuffix(key, "-color") || oo::str::hasSuffix(key, "-colour")) {
             // OOColor reads the same object; the normalized array holds
             // +numberWithFloat: values.
             color = OOColor::colorWithDescription(value);
-            if (color == nil)
+            if (color == nullptr)
                 return oo::PList();
             oo::PList::Array components;
             for (float component : color->normalizedArray())
@@ -810,7 +808,7 @@ oo::PList OODebugMonitor::normalizeConfigValue(const oo::PList& value,
             return oo::PList(std::move(components));
         } else if (oo::str::hasPrefix(key, "show-console")) {
             boolValue = oo::plist_get::boolFrom(
-                &value, NO); // OOBooleanFromObject (a null value: NO)
+                &value, false); // OOBooleanFromObject (a null value: NO)
             return oo::PList(static_cast<bool>(boolValue));
         }
     }
@@ -888,7 +886,7 @@ void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
     else
         showKey = "show-console-on-error"; // if not a warning, it's a proper error.
     const oo::PList showValue = configurationValueForKey(showKey);
-    if (oo::plist_get::boolFrom(&showValue, NO)) // OOBooleanFromObject
+    if (oo::plist_get::boolFrom(&showValue, false)) // OOBooleanFromObject
     {
         showJSConsole();
     }
@@ -901,7 +899,7 @@ void OODebugMonitor::jsEngine(
 {
     appendJSConsoleLine(message, "log");
     const oo::PList showValue = configurationValueForKey("show-console-on-log");
-    if (oo::plist_get::boolFrom(&showValue, NO)) // OOBooleanFromObject
+    if (oo::plist_get::boolFrom(&showValue, false)) // OOBooleanFromObject
     {
         showJSConsole();
     }

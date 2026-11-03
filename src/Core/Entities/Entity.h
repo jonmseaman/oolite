@@ -438,7 +438,6 @@ public:
 
 } // namespace cxx
 
-#ifdef __cplusplus
 #include "oofnd/StdLib.hpp"
 
 // C++ forms, defined in OOConstToString.mm: std::string results (never nil),
@@ -510,7 +509,6 @@ inline Entity* EntityInWeakNode(const PList& plist)
 }
 
 } // namespace oo
-#endif
 
 // What the deleted facade's header kept for its callers: the questions it
 // answered.

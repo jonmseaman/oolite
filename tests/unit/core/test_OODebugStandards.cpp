@@ -12,7 +12,7 @@
         The game controller would bring the whole game into the link, so it is
    this file's stand-in: it answers sharedController() and records the contexts
    it is asked to exit with. The defaults are set in memory (setObject; nothing
-   is written without synchronize()). Run: bash tools/check-core-tests.sh
+   is written without synchronize()). Run: tests/run.sh unit
    test_OODebugStandards
 */
 

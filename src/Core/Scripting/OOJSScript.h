@@ -112,4 +112,5 @@ private:
     std::optional<std::string> _filePath;
 };
 
-OOJS_EXTERN_C void InitOOJSScript(ooscript::Context context, ooscript::Object global);
+void InitOOJSScript(ooscript::Context context,
+    ooscript::Object global);

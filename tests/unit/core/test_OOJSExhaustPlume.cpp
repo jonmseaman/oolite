@@ -20,7 +20,7 @@
    declared here. The expectations were written against
    the Objective-C file and run on it first; they pin the JS-visible behaviour
    (size, remove(), a stale plume, a non-plume, a native's exception) and what
-   the category answers the engine. Run: bash tools/check-core-tests.sh
+   the category answers the engine. Run: tests/run.sh unit
 */
 
 #include "OOFoundation.h"
@@ -85,7 +85,7 @@ class ShipEntity : public Entity {
   OOExhaustPlumeEntity* _removed = nullptr;
 };
 
-extern "C" void InitOOJSExhaustPlume(ooscript::Context context,
+void InitOOJSExhaustPlume(ooscript::Context context,
                                      ooscript::Object global);
 // The category's bodies, which the stand-in's overrides call as the C++ class's
 // do (declared in OOJSExhaustPlume.h).
@@ -192,7 +192,6 @@ std::map<ooscript::ClassDef*, int> sConverters;
 ooscript::Object gOOEntityJSPrototype = nullptr;
 Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
 
-extern "C" {
 
 ooscript::ClassDef* JSEntityClass(void) { return &sFakeEntityClass; }
 
@@ -213,13 +212,13 @@ void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
   sSuperclasses[subclass] = superclass;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
@@ -296,7 +295,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();

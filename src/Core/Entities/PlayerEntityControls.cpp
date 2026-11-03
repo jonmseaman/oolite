@@ -86,87 +86,87 @@ static bool AnyKeyPressed(std::initializer_list<bool> keys)
     return false;
 }
 
-static BOOL jump_pressed;
-static BOOL hyperspace_pressed;
-static BOOL galhyperspace_pressed;
-static BOOL pause_pressed;
-static BOOL prev_compass_mode_pressed;
-static BOOL next_compass_mode_pressed;
-static BOOL next_target_pressed;
-static BOOL previous_target_pressed;
-static BOOL prime_equipment_pressed;
-static BOOL activate_equipment_pressed;
-static BOOL mode_equipment_pressed;
-static BOOL fastactivate_a_pressed;
-static BOOL fastactivate_b_pressed;
-static BOOL next_missile_pressed;
-static BOOL fire_missile_pressed;
-static BOOL target_missile_pressed;
-static BOOL target_incoming_missile_pressed;
-static BOOL ident_pressed;
-static BOOL safety_pressed;
-static BOOL rotateCargo_pressed;
-static BOOL autopilot_key_pressed;
-static BOOL fast_autopilot_key_pressed;
-static BOOL docking_clearance_request_key_pressed;
+static bool jump_pressed;
+static bool hyperspace_pressed;
+static bool galhyperspace_pressed;
+static bool pause_pressed;
+static bool prev_compass_mode_pressed;
+static bool next_compass_mode_pressed;
+static bool next_target_pressed;
+static bool previous_target_pressed;
+static bool prime_equipment_pressed;
+static bool activate_equipment_pressed;
+static bool mode_equipment_pressed;
+static bool fastactivate_a_pressed;
+static bool fastactivate_b_pressed;
+static bool next_missile_pressed;
+static bool fire_missile_pressed;
+static bool target_missile_pressed;
+static bool target_incoming_missile_pressed;
+static bool ident_pressed;
+static bool safety_pressed;
+static bool rotateCargo_pressed;
+static bool autopilot_key_pressed;
+static bool fast_autopilot_key_pressed;
+static bool docking_clearance_request_key_pressed;
 #ifdef OO_DEBUG_MONITOR_ENABLED
-static BOOL dump_target_state_pressed;
-static BOOL dump_entity_list_pressed;
+static bool dump_target_state_pressed;
+static bool dump_entity_list_pressed;
 #endif
-static BOOL taking_snapshot;
-static BOOL hide_hud_pressed;
-static BOOL f_key_pressed;
-static BOOL m_key_pressed;
-static BOOL pling_pressed;
-static BOOL cursor_moving;
-static BOOL disc_operation_in_progress;
-static BOOL f9_key_pressed;
+static bool taking_snapshot;
+static bool hide_hud_pressed;
+static bool f_key_pressed;
+static bool m_key_pressed;
+static bool pling_pressed;
+static bool cursor_moving;
+static bool disc_operation_in_progress;
+static bool f9_key_pressed;
 #if OO_RESOLUTION_OPTION
-static BOOL switching_resolution;
+static bool switching_resolution;
 #endif
 #if OOLITE_SPEECH_SYNTH
-static BOOL speech_settings_pressed;
+static bool speech_settings_pressed;
 #if OOLITE_ESPEAK
-static BOOL speechVoiceSelectKeyPressed;
-static BOOL speechGenderSelectKeyPressed;
+static bool speechVoiceSelectKeyPressed;
+static bool speechGenderSelectKeyPressed;
 #endif
 #endif
-static BOOL wait_for_key_up;
-static BOOL upDownKeyPressed;
-static BOOL pageUpDownKeyPressed;
-static BOOL leftRightKeyPressed;
-static BOOL musicModeKeyPressed;
-static BOOL volumeControlPressed;
-static BOOL fovControlPressed;
+static bool wait_for_key_up;
+static bool upDownKeyPressed;
+static bool pageUpDownKeyPressed;
+static bool leftRightKeyPressed;
+static bool musicModeKeyPressed;
+static bool volumeControlPressed;
+static bool fovControlPressed;
 #if OOLITE_WINDOWS
-static BOOL hdrMaxBrightnessControlPressed;
-static BOOL hdrPaperWhiteControlPressed;
+static bool hdrMaxBrightnessControlPressed;
+static bool hdrPaperWhiteControlPressed;
 #endif
-static BOOL colorblindModeControlPressed;
-static BOOL shaderSelectKeyPressed;
-static BOOL selectPressed;
-static BOOL queryPressed;
-static BOOL spacePressed;
-static BOOL chartInfoPressed;
-static BOOL switching_chart_screens;
-static BOOL switching_status_screens;
-// static BOOL				switching_market_screens;
-static BOOL switching_equipship_screens;
-static BOOL switching_interface_screens;
-static BOOL zoom_pressed;
-static BOOL customView_pressed;
-static BOOL weaponsOnlineToggle_pressed;
-static BOOL escapePodKey_pressed;
-static BOOL cycleMFD_pressed;
-static BOOL switchMFD_pressed;
-static BOOL mouse_left_down;
-static BOOL oxz_manager_pressed;
-static BOOL next_planet_info_pressed;
-static BOOL previous_planet_info_pressed;
-static BOOL home_info_pressed;
-static BOOL target_info_pressed;
-static BOOL extra_key_pressed;
-static BOOL extra_gui_key_pressed;
+static bool colorblindModeControlPressed;
+static bool shaderSelectKeyPressed;
+static bool selectPressed;
+static bool queryPressed;
+static bool spacePressed;
+static bool chartInfoPressed;
+static bool switching_chart_screens;
+static bool switching_status_screens;
+// static bool				switching_market_screens;
+static bool switching_equipship_screens;
+static bool switching_interface_screens;
+static bool zoom_pressed;
+static bool customView_pressed;
+static bool weaponsOnlineToggle_pressed;
+static bool escapePodKey_pressed;
+static bool cycleMFD_pressed;
+static bool switchMFD_pressed;
+static bool mouse_left_down;
+static bool oxz_manager_pressed;
+static bool next_planet_info_pressed;
+static bool previous_planet_info_pressed;
+static bool home_info_pressed;
+static bool target_info_pressed;
+static bool extra_key_pressed;
+static bool extra_gui_key_pressed;
 static NSPoint mouse_click_position;
 static NSPoint centre_at_mouse_click;
 
@@ -178,7 +178,7 @@ static double saved_script_time;
 static int saved_gui_screen;
 static OOWeaponFacing saved_weapon_facing;
 static int pressedArrow = 0;
-static BOOL mouse_x_axis_map_to_yaw = NO;
+static bool mouse_x_axis_map_to_yaw = false;
 static NSTimeInterval time_last_frame;
 
 namespace {
@@ -284,13 +284,13 @@ void PlayerEntity::initControls()
     initKeyConfigSettings();
 
     // Enable polling
-    pollControls = YES;
+    pollControls = true;
 }
 
 void PlayerEntity::initKeyConfigSettings()
 {
     const oo::PList kdicmaster = ResourceManager::dictionaryFromFilesNamed(
-        "keyconfig2.plist", "Config", MERGE_BASIC, NO);
+        "keyconfig2.plist", "Config", MERGE_BASIC, false);
     oo::Defaults& defaults = oo::Defaults::standard();
     // the stored keyboard code (oo_stringForKey:defaultValue: over the value)
     const oo::PList kbdValue = defaults.object("keyboard-code");
@@ -310,8 +310,8 @@ void PlayerEntity::initKeyConfigSettings()
     const oo::PList savedCustomEquip = defaults.arrayForKey(std::string(KEYCONFIG_CUSTOMEQUIP));
     const oo::PList::Array* customEntries = savedCustomEquip.getIf<oo::PList::Array>();
     customEquipActivation = (customEntries != nullptr) ? *customEntries : std::vector<oo::PList>();
-    customActivatePressed.assign(customEquipActivation.size(), NO);
-    customModePressed.assign(customEquipActivation.size(), NO);
+    customActivatePressed.assign(customEquipActivation.size(), false);
+    customModePressed.assign(customEquipActivation.size(), false);
 
     // update with overrides from defaults file (unprocessed, as before)
     const oo::PList overrides = defaults.object(std::string(KEYCONFIG_OVERRIDES));
@@ -336,173 +336,226 @@ void PlayerEntity::initKeyConfigSettings()
     shift_2, mod1_2)                                                   \
     name = keySetting(#name)
 
-    LOAD_KEY_SETTING2(n_key_roll_left, gvArrowKeyLeft, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_roll_right, gvArrowKeyRight, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_pitch_forward, gvArrowKeyUp, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_pitch_back, gvArrowKeyDown, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_yaw_left, ',', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_yaw_right, '.', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_roll_left, gvArrowKeyLeft, false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_roll_right, gvArrowKeyRight, false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_pitch_forward, gvArrowKeyUp, false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_pitch_back, gvArrowKeyDown, false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_yaw_left, ',', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_yaw_right, '.', false, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_view_forward, '1', NO, NO, gvFunctionKey1, NO, NO);
-    LOAD_KEY_SETTING2(n_key_view_aft, '2', NO, NO, gvFunctionKey2, NO, NO);
-    LOAD_KEY_SETTING2(n_key_view_port, '3', NO, NO, gvFunctionKey3, NO, NO);
-    LOAD_KEY_SETTING2(n_key_view_starboard, '4', NO, NO, gvFunctionKey4, NO, NO);
+    LOAD_KEY_SETTING2(n_key_view_forward, '1', false, false, gvFunctionKey1,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_view_aft, '2', false, false, gvFunctionKey2, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_view_port, '3', false, false, gvFunctionKey3, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_view_starboard, '4', false, false, gvFunctionKey4,
+        false, false);
 
-    LOAD_KEY_SETTING2(n_key_launch_ship, '1', NO, NO, gvFunctionKey1, NO, NO);
-    LOAD_KEY_SETTING2(n_key_gui_screen_options, '2', NO, NO, gvFunctionKey2, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_gui_screen_equipship, '3', NO, NO, gvFunctionKey3, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_gui_screen_interfaces, '4', NO, NO, gvFunctionKey4,
-        NO, NO);
-    LOAD_KEY_SETTING2(n_key_gui_screen_status, '5', NO, NO, gvFunctionKey5, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_gui_chart_screens, '6', NO, NO, gvFunctionKey6, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_gui_system_data, '7', NO, NO, gvFunctionKey7, NO, NO);
-    LOAD_KEY_SETTING2(n_key_gui_market, '8', NO, NO, gvFunctionKey8, NO, NO);
+    LOAD_KEY_SETTING2(n_key_launch_ship, '1', false, false, gvFunctionKey1, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_gui_screen_options, '2', false, false, gvFunctionKey2,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_gui_screen_equipship, '3', false, false,
+        gvFunctionKey3, false, false);
+    LOAD_KEY_SETTING2(n_key_gui_screen_interfaces, '4', false, false,
+        gvFunctionKey4, false, false);
+    LOAD_KEY_SETTING2(n_key_gui_screen_status, '5', false, false, gvFunctionKey5,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_gui_chart_screens, '6', false, false, gvFunctionKey6,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_gui_system_data, '7', false, false, gvFunctionKey7,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_gui_market, '8', false, false, gvFunctionKey8, false,
+        false);
 
-    LOAD_KEY_SETTING2(n_key_gui_arrow_left, gvArrowKeyLeft, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_gui_arrow_right, gvArrowKeyRight, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_gui_arrow_up, gvArrowKeyUp, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_gui_arrow_down, gvArrowKeyDown, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_gui_page_up, gvPageUpKey, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_gui_page_down, gvPageDownKey, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_gui_select, 13, NO, NO, gvNumberPadKeyEnter, NO, NO);
+    LOAD_KEY_SETTING2(n_key_gui_arrow_left, gvArrowKeyLeft, false, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_gui_arrow_right, gvArrowKeyRight, false, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_gui_arrow_up, gvArrowKeyUp, false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_gui_arrow_down, gvArrowKeyDown, false, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_gui_page_up, gvPageUpKey, false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_gui_page_down, gvPageDownKey, false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_gui_select, 13, false, false, gvNumberPadKeyEnter,
+        false, false);
 
-    LOAD_KEY_SETTING2(n_key_increase_speed, 'w', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_decrease_speed, 's', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_inject_fuel, 'i', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_increase_speed, 'w', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_decrease_speed, 's', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_inject_fuel, 'i', false, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_fire_lasers, 'a', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_weapons_online_toggle, '_', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_launch_missile, 'm', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_next_missile, 'y', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_ecm, 'e', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_fire_lasers, 'a', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_weapons_online_toggle, '_', true, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_launch_missile, 'm', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_next_missile, 'y', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_ecm, 'e', false, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_prime_next_equipment, 'N', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_prime_previous_equipment, 'N', YES, YES, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_activate_equipment, 'n', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_mode_equipment, 'b', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_fastactivate_equipment_a, '0', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_fastactivate_equipment_b, 9, NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_prime_next_equipment, 'N', true, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_prime_previous_equipment, 'N', true, true, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_activate_equipment, 'n', false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_mode_equipment, 'b', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_fastactivate_equipment_a, '0', false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_fastactivate_equipment_b, 9, false, false, 0, false,
+        false);
 
-    LOAD_KEY_SETTING2(n_key_target_missile, 't', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_untarget_missile, 'u', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_target_incoming_missile, 'T', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_ident_system, 'r', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_target_missile, 't', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_untarget_missile, 'u', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_target_incoming_missile, 'T', true, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_ident_system, 'r', false, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_scanner_zoom, 'z', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_scanner_unzoom, 'Z', YES, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_scanner_zoom, 'z', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_scanner_unzoom, 'Z', true, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_launch_escapepod, 27, NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_launch_escapepod, 27, false, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_galactic_hyperspace, 'g', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_hyperspace, 'h', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_jumpdrive, 'j', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_galactic_hyperspace, 'g', false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_hyperspace, 'h', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_jumpdrive, 'j', false, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_dump_cargo, 'D', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_rotate_cargo, 'R', YES, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_dump_cargo, 'D', true, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_rotate_cargo, 'R', true, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_autopilot, 'c', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_autodock, 'C', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_docking_clearance_request, 'L', YES, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_autopilot, 'c', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_autodock, 'C', true, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_docking_clearance_request, 'L', true, false, 0, false,
+        false);
 
-    LOAD_KEY_SETTING2(n_key_snapshot, '*', YES, NO, gvNumberPadKeyMultiply, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_docking_music, 's', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_snapshot, '*', true, false, gvNumberPadKeyMultiply,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_docking_music, 's', false, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_advanced_nav_array_next, '^', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_advanced_nav_array_previous, '^', YES, YES, 0, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_map_home, gvHomeKey, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_map_end, gvEndKey, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_map_next_system, gvArrowKeyRight, NO, NO,
-        gvArrowKeyDown, NO, NO);
-    LOAD_KEY_SETTING2(n_key_map_previous_system, gvArrowKeyLeft, NO, NO,
-        gvArrowKeyUp, NO, NO);
-    LOAD_KEY_SETTING2(n_key_map_zoom_in, gvPageDownKey, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_map_zoom_out, gvPageUpKey, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_map_info, 'i', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_chart_highlight, '?', YES, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_advanced_nav_array_next, '^', true, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_advanced_nav_array_previous, '^', true, true, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_map_home, gvHomeKey, false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_map_end, gvEndKey, false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_map_next_system, gvArrowKeyRight, false, false,
+        gvArrowKeyDown, false, false);
+    LOAD_KEY_SETTING2(n_key_map_previous_system, gvArrowKeyLeft, false, false,
+        gvArrowKeyUp, false, false);
+    LOAD_KEY_SETTING2(n_key_map_zoom_in, gvPageDownKey, false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_map_zoom_out, gvPageUpKey, false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_map_info, 'i', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_chart_highlight, '?', true, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_system_home, gvHomeKey, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_system_end, gvEndKey, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_system_next_system, gvArrowKeyRight, NO, NO,
-        gvArrowKeyDown, NO, NO);
-    LOAD_KEY_SETTING2(n_key_system_previous_system, gvArrowKeyLeft, NO, NO,
-        gvArrowKeyUp, NO, NO);
+    LOAD_KEY_SETTING2(n_key_system_home, gvHomeKey, false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_system_end, gvEndKey, false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_system_next_system, gvArrowKeyRight, false, false,
+        gvArrowKeyDown, false, false);
+    LOAD_KEY_SETTING2(n_key_system_previous_system, gvArrowKeyLeft, false, false,
+        gvArrowKeyUp, false, false);
 
-    LOAD_KEY_SETTING2(n_key_pausebutton, 'p', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_show_fps, 'F', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_bloom_toggle, gvFunctionKey9, YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_mouse_control_roll, 'M', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_mouse_control_yaw, 'M', YES, YES, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_hud_toggle, 'o', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_pausebutton, 'p', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_show_fps, 'F', true, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_bloom_toggle, gvFunctionKey9, true, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_mouse_control_roll, 'M', true, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_mouse_control_yaw, 'M', true, true, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_hud_toggle, 'o', false, false, 0, false, false);
 
-    LOAD_KEY_SETTING2(n_key_comms_log, '`', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_prev_compass_mode, '|', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_next_compass_mode, '\\', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_comms_log, '`', true, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_prev_compass_mode, '|', true, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_next_compass_mode, '\\', false, false, 0, false,
+        false);
 
-    LOAD_KEY_SETTING2(n_key_market_filter_cycle, '?', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_market_sorter_cycle, '/', NO, NO,
-        gvNumberPadKeyDivide, NO, NO);
-    LOAD_KEY_SETTING2(n_key_market_buy_one, gvArrowKeyRight, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_market_sell_one, gvArrowKeyLeft, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_market_buy_max, gvArrowKeyRight, YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_market_sell_max, gvArrowKeyLeft, YES, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_market_filter_cycle, '?', true, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_market_sorter_cycle, '/', false, false,
+        gvNumberPadKeyDivide, false, false);
+    LOAD_KEY_SETTING2(n_key_market_buy_one, gvArrowKeyRight, false, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_market_sell_one, gvArrowKeyLeft, false, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_market_buy_max, gvArrowKeyRight, true, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_market_sell_max, gvArrowKeyLeft, true, false, 0,
+        false, false);
 
-    LOAD_KEY_SETTING2(n_key_cycle_next_mfd, ';', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_cycle_previous_mfd, ';', NO, YES, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_switch_next_mfd, ':', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_switch_previous_mfd, ':', YES, YES, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_cycle_next_mfd, ';', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_cycle_previous_mfd, ';', false, true, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_switch_next_mfd, ':', true, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_switch_previous_mfd, ':', true, true, 0, false,
+        false);
 
-    LOAD_KEY_SETTING2(n_key_next_target, '+', YES, NO, gvNumberPadKeyPlus, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_previous_target, '-', NO, NO, gvNumberPadKeyMinus, NO,
-        NO);
+    LOAD_KEY_SETTING2(n_key_next_target, '+', true, false, gvNumberPadKeyPlus,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_previous_target, '-', false, false,
+        gvNumberPadKeyMinus, false, false);
 
-    LOAD_KEY_SETTING2(n_key_custom_view, 'v', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_zoom_out, gvPageDownKey, NO, NO, 0, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_zoom_in, gvPageUpKey, NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_roll_left, gvArrowKeyLeft, NO, NO, 0, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_pan_left, gvArrowKeyLeft, YES, NO, 0, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_roll_right, gvArrowKeyRight, NO, NO, 0,
-        NO, NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_pan_right, gvArrowKeyRight, YES, NO, 0,
-        NO, NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_rotate_up, gvArrowKeyUp, NO, NO, 0, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_pan_up, gvArrowKeyUp, YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_rotate_down, gvArrowKeyDown, NO, NO, 0,
-        NO, NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_pan_down, gvArrowKeyDown, YES, NO, 0, NO,
-        NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_rotate_left, ',', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_custom_view_rotate_right, '.', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_custom_view, 'v', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_zoom_out, gvPageDownKey, false, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_zoom_in, gvPageUpKey, false, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_roll_left, gvArrowKeyLeft, false, false,
+        0, false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_pan_left, gvArrowKeyLeft, true, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_roll_right, gvArrowKeyRight, false, false,
+        0, false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_pan_right, gvArrowKeyRight, true, false,
+        0, false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_rotate_up, gvArrowKeyUp, false, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_pan_up, gvArrowKeyUp, true, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_rotate_down, gvArrowKeyDown, false, false,
+        0, false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_pan_down, gvArrowKeyDown, true, false, 0,
+        false, false);
+    LOAD_KEY_SETTING2(n_key_custom_view_rotate_left, ',', false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_custom_view_rotate_right, '.', false, false, 0, false,
+        false);
 
-    LOAD_KEY_SETTING2(n_key_oxzmanager_setfilter, 'f', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_oxzmanager_showinfo, 'i', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_oxzmanager_copyurl, 'c', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_oxzmanager_extract, 'x', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_oxzmanager_setfilter, 'f', false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_oxzmanager_showinfo, 'i', false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_oxzmanager_copyurl, 'c', false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_oxzmanager_extract, 'x', false, false, 0, false,
+        false);
 
 #if OO_FOV_INFLIGHT_CONTROL_ENABLED
-    LOAD_KEY_SETTING2(n_key_inc_field_of_view, 'l', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_dec_field_of_view, 'k', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_inc_field_of_view, 'l', false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_dec_field_of_view, 'k', false, false, 0, false,
+        false);
 #endif
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    LOAD_KEY_SETTING2(n_key_dump_target_state, 'H', YES, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_dump_entity_list, '0', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_debug_full, 'd', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_debug_collision, 'b', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_debug_console_connect, 'c', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_debug_bounding_boxes, 'x', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_debug_shaders, 's', NO, NO, 0, NO, NO);
-    LOAD_KEY_SETTING2(n_key_debug_off, 'n', NO, NO, 0, NO, NO);
+    LOAD_KEY_SETTING2(n_key_dump_target_state, 'H', true, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_dump_entity_list, '0', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_debug_full, 'd', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_debug_collision, 'b', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_debug_console_connect, 'c', false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_debug_bounding_boxes, 'x', false, false, 0, false,
+        false);
+    LOAD_KEY_SETTING2(n_key_debug_shaders, 's', false, false, 0, false, false);
+    LOAD_KEY_SETTING2(n_key_debug_off, 'n', false, false, 0, false, false);
 #endif
 
     keyconfig2_settings = std::move(kdic2);
@@ -534,8 +587,8 @@ oo::PList PlayerEntity::processKeyCode(const oo::PList& key_def)
         }
 
         //	for '0' '1' '2' '3' '4' '5' '6' '7' '8' '9' - we want to interpret those
-        // as strings - not numbers 	alphabetical characters and symbols will return
-        // an intValue of 0.
+        // as strings - not numbers 	alphabetical characters and symbols will
+        // return an intValue of 0.
 
         if (value != nullptr && value->isString() && (iValue < 10)) {
             const std::string& keystring = *value->getIf<std::string>();
@@ -562,7 +615,7 @@ oo::PList PlayerEntity::processKeyCode(const oo::PList& key_def)
                 keychar = iValue;
             else {
                 OO_LOG_WARN("testing", "continue hit for key {}.",
-                    oo::DescriptionOf(nil));
+                    oo::DescriptionOf(nullptr));
                 defNew["key"] = *value;
                 newList.push_back(oo::PList(std::move(defNew)));
                 continue;
@@ -590,25 +643,25 @@ bool PlayerEntity::checkNavKeyPress(const oo::PList& key_def)
         if (def == nullptr)
             continue; // not an array of definitions
         if ((gameView != nullptr ? gameView->isDown(def->get<int>("key")) : false))
-            return YES;
+            return true;
     }
-    return NO;
+    return false;
 }
 
 bool PlayerEntity::checkKeyPress(const oo::PList& key_def)
 {
-    return checkKeyPress(key_def, NO, NO);
+    return checkKeyPress(key_def, false, false);
 }
 
 bool PlayerEntity::checkKeyPress(const oo::PList& key_def, bool fKey_only)
 {
-    return checkKeyPress(key_def, fKey_only, NO);
+    return checkKeyPress(key_def, fKey_only, false);
 }
 
 bool PlayerEntity::checkKeyPressIgnoreCtrl(const oo::PList& key_def,
     bool ignore_ctrl)
 {
-    return checkKeyPress(key_def, NO, ignore_ctrl);
+    return checkKeyPress(key_def, false, ignore_ctrl);
 }
 
 bool PlayerEntity::checkKeyPress(const oo::PList& key_def, bool fKey_only,
@@ -629,12 +682,12 @@ bool PlayerEntity::checkKeyPress(const oo::PList& key_def, bool fKey_only,
         // when all settings are off. This means, if the player presses two
         // functions at once, one that requires a modifier and one that doesn't, the
         // one that doesn't will not be triggered.
-        if (fKey_only == YES && (keycode < gvFunctionKey1 || keycode > gvFunctionKey11))
+        if (fKey_only == true && (keycode < gvFunctionKey1 || keycode > gvFunctionKey11))
             continue;
         if ((gameView != nullptr ? gameView->isDown(keycode) : false) && (def->get<bool>("shift") == static_cast<bool>((gameView != nullptr ? gameView->isShiftDown() : false))) && (ignore_ctrl || (def->get<bool>("mod1") == static_cast<bool>((gameView != nullptr ? gameView->isCtrlDown() : false)))) && (def->get<bool>("mod2") == static_cast<bool>((gameView != nullptr ? gameView->isOptDown() : false))))
-            return YES;
+            return true;
     }
-    return NO;
+    return false;
 }
 
 int PlayerEntity::getFirstKeyCode(const oo::PList& key_def)
@@ -724,19 +777,19 @@ bool PlayerEntity::handleGUIUpDownArrowKeys()
 {
     ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
-    BOOL result = NO;
-    BOOL arrow_up = checkKeyPress(n_key_gui_arrow_up);
-    BOOL arrow_down = checkKeyPress(n_key_gui_arrow_down);
-    BOOL mouse_click = (gameView != nullptr ? gameView->isDown(gvMouseLeftButton) : false);
-    BOOL mouse_dbl_click = (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false);
+    bool result = false;
+    bool arrow_up = checkKeyPress(n_key_gui_arrow_up);
+    bool arrow_down = checkKeyPress(n_key_gui_arrow_down);
+    bool mouse_click = (gameView != nullptr ? gameView->isDown(gvMouseLeftButton) : false);
+    bool mouse_dbl_click = (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false);
 
     if (arrow_down) {
         if ((!upDownKeyPressed) || (script_time > timeLastKeyPress + KEY_REPEAT_INTERVAL)) {
             if (gui->setNextRow(+1)) {
-                result = YES;
+                result = true;
             } else {
                 if (gui->setFirstSelectableRow())
-                    result = YES;
+                    result = true;
             }
 
             if (result && gui->getSelectableRange().length > 1)
@@ -751,10 +804,10 @@ bool PlayerEntity::handleGUIUpDownArrowKeys()
     if (arrow_up) {
         if ((!upDownKeyPressed) || (script_time > timeLastKeyPress + KEY_REPEAT_INTERVAL)) {
             if (gui->setNextRow(-1)) {
-                result = YES;
+                result = true;
             } else {
                 if (gui->setLastSelectableRow())
-                    result = YES;
+                    result = true;
             }
 
             if (result && gui->getSelectableRange().length > 1)
@@ -770,14 +823,14 @@ bool PlayerEntity::handleGUIUpDownArrowKeys()
         if (!upDownKeyPressed) {
             int click_row = ClickedGUIRow(gui);
             if (gui->setSelectedRow(click_row)) {
-                result = YES;
+                result = true;
             }
         }
     }
     if (mouse_dbl_click) {
         int click_row = ClickedGUIRow(gui);
         if (gui->setSelectedRow(click_row)) {
-            result = YES;
+            result = true;
         } else {
             // if double-clicked on an unselectable row, clear the
             // state so it doesn't activate whatever was last
@@ -795,7 +848,7 @@ bool PlayerEntity::handleGUIUpDownArrowKeys()
 void PlayerEntity::targetNewSystem(int direction, bool whileTyping)
 {
     target_system_id = UNIVERSE->getGui()->targetNextFoundSystem(direction);
-    setInfoSystemID(target_system_id, YES);
+    setInfoSystemID(target_system_id, true);
     cursor_coordinates = ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) != nullptr
             ? UNIVERSE->getSystemManager()->getCoordinatesForSystem(
                   target_system_id, galaxy_number)
@@ -805,7 +858,7 @@ void PlayerEntity::targetNewSystem(int direction, bool whileTyping)
     if (!whileTyping) {
         clearPlanetSearchString();
     }
-    cursor_moving = YES;
+    cursor_moving = true;
 }
 
 void PlayerEntity::clearPlanetSearchString()
@@ -817,7 +870,7 @@ void PlayerEntity::clearPlanetSearchString()
 
 void PlayerEntity::targetNewSystem(int direction)
 {
-    targetNewSystem(direction, NO);
+    targetNewSystem(direction, false);
 }
 
 void PlayerEntity::switchToMainView()
@@ -825,24 +878,25 @@ void PlayerEntity::switchToMainView()
     OOGUIScreenID oldScreen = gui_screen;
     gui_screen = GUI_SCREEN_MAIN;
     if (showDemoShips) {
-        setShowDemoShips(NO);
+        setShowDemoShips(false);
         if (UNIVERSE != nullptr)
             UNIVERSE->removeDemoShips();
     }
     if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
-        UNIVERSE->getGameView()->allowStringInput(NO);
+        UNIVERSE->getGameView()->allowStringInput(false);
     if (isMouseControlOn()) {
         if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
             UNIVERSE->getGameView()->resetMouse();
     }
     if (UNIVERSE != nullptr)
-        UNIVERSE->enterGUIViewModeWithMouseInteraction(NO);
+        UNIVERSE->enterGUIViewModeWithMouseInteraction(false);
     noteGUIDidChangeFrom(oldScreen, gui_screen);
 }
 
 void PlayerEntity::noteSwitchToView(OOViewID toView, OOViewID fromView)
 {
-    switchToThisView(toView, fromView, NO, YES); // no extra processing needed!
+    switchToThisView(toView, fromView, false,
+        true); // no extra processing needed!
 }
 
 void PlayerEntity::beginWitchspaceCountdown(int spin_time)
@@ -915,7 +969,7 @@ void PlayerEntity::pollApplicationControls()
     ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
     ::GameController* gameController = (UNIVERSE != nullptr ? UNIVERSE->gameController() : nullptr);
 
-    BOOL onTextEntryScreen = (gui_screen == GUI_SCREEN_LONG_RANGE_CHART) || (gui_screen == GUI_SCREEN_MISSION) || (gui_screen == GUI_SCREEN_SAVE) || (gui_screen == GUI_SCREEN_OXZMANAGER || (gui_screen == GUI_SCREEN_KEYBOARD_ENTRY));
+    bool onTextEntryScreen = (gui_screen == GUI_SCREEN_LONG_RANGE_CHART) || (gui_screen == GUI_SCREEN_MISSION) || (gui_screen == GUI_SCREEN_SAVE) || (gui_screen == GUI_SCREEN_OXZMANAGER || (gui_screen == GUI_SCREEN_KEYBOARD_ENTRY));
 
     try {
 //  command-key controls
@@ -932,14 +986,15 @@ void PlayerEntity::pollApplicationControls()
                 if (mouse_control_on) {
                     if (UNIVERSE != nullptr)
                         UNIVERSE->addMessage(OO_DESC("mouse-off"), 3.0);
-                    mouse_control_on = NO;
+                    mouse_control_on = false;
                 }
             }
 
             if ((gameView != nullptr ? gameView->isCommandQDown() : false)) {
                 // On SDL the pair is kept, never performed: nil.
                 if (gameController != nullptr)
-                    gameController->pauseFullScreenModeToPerform("exitAppCommandQ", nil);
+                    gameController->pauseFullScreenModeToPerform("exitAppCommandQ",
+                        nullptr);
             }
         }
 #endif
@@ -969,19 +1024,19 @@ void PlayerEntity::pollApplicationControls()
                 // In all other cases we can't handle pause. Unpause immediately.
                 script_time = saved_script_time;
                 if (gameView != nullptr)
-                    gameView->allowStringInput(NO);
+                    gameView->allowStringInput(false);
                 if ((UNIVERSE != nullptr ? UNIVERSE->pauseMessageVisible() : false)) {
                     if (UNIVERSE != nullptr)
                         UNIVERSE->clearPreviousMessage(); // remove the 'paused' message.
                 }
                 if (gameController != nullptr)
-                    gameController->setGamePaused(NO);
+                    gameController->setGamePaused(false);
             } break;
             }
         }
 
         // snapshot
-        const BOOL* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+        const bool* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
 
         if ((checkKeyPress(n_key_snapshot) || joyButtonState[BUTTON_SNAPSHOT]) && ((gameView != nullptr ? gameView->getAllowingStringInput() : StringInput { }) <= gvStringInputAlpha) && // not while entering text on the keyboard
                                                                                                                                                                                           // config screens
@@ -991,13 +1046,13 @@ void PlayerEntity::pollApplicationControls()
         {
             exceptionContext = "snapshot";
             if (!taking_snapshot) {
-                taking_snapshot = YES;
+                taking_snapshot = true;
                 if (gameView != nullptr)
                     gameView->snapShot(std::nullopt); // nil filename so that the program
                                                       // auto-names the snapshot
             }
         } else {
-            taking_snapshot = NO;
+            taking_snapshot = false;
         }
 
         // FPS display
@@ -1009,27 +1064,27 @@ void PlayerEntity::pollApplicationControls()
                     UNIVERSE->setDisplayFPS(
                         !(UNIVERSE != nullptr ? UNIVERSE->getDisplayFPS() : false));
             }
-            f_key_pressed = YES;
+            f_key_pressed = true;
         } else {
-            f_key_pressed = NO;
+            f_key_pressed = false;
         }
 
         // bloom toggle
         if (checkKeyPress(n_key_bloom_toggle)) {
             if (!f9_key_pressed) {
-                BOOL oldBloom = (UNIVERSE != nullptr ? UNIVERSE->bloom() : false);
+                bool oldBloom = (UNIVERSE != nullptr ? UNIVERSE->bloom() : false);
                 if (UNIVERSE != nullptr)
                     UNIVERSE->setBloom(!oldBloom);
             }
-            f9_key_pressed = YES;
+            f9_key_pressed = true;
         } else {
-            f9_key_pressed = NO;
+            f9_key_pressed = false;
         }
 
         // Mouse control
-        BOOL allowMouseControl;
+        bool allowMouseControl;
 #if OO_DEBUG
-        allowMouseControl = YES;
+        allowMouseControl = true;
 #else
         allowMouseControl = (gameController != nullptr ? gameController->inFullScreenMode()
                                                        : false)
@@ -1053,18 +1108,18 @@ void PlayerEntity::pollApplicationControls()
                         if (oo::Defaults::standard().boolForKey(
                                 "grab-mouse-on-mouse-control")) {
                             if (gameView != nullptr)
-                                gameView->grabMouseInsideGameWindow(YES);
+                                gameView->grabMouseInsideGameWindow(true);
                         }
                         mouse_x_axis_map_to_yaw = checkKeyPress(n_key_mouse_control_yaw);
-                        keyboardRollOverride = (mouse_x_axis_map_to_yaw != NO); // Getafix: set keyboardRollOverride to TRUE only if yaw
-                                                                                // is mapped to mouse x-axis
-                        keyboardPitchOverride = NO;
+                        keyboardRollOverride = (mouse_x_axis_map_to_yaw != false); // Getafix: set keyboardRollOverride to TRUE only if
+                                                                                   // yaw is mapped to mouse x-axis
+                        keyboardPitchOverride = false;
                         keyboardYawOverride = !keyboardRollOverride;
                     } else {
                         if (UNIVERSE != nullptr)
                             UNIVERSE->addMessage(OO_DESC("mouse-off"), 3.0);
                         if (gameView != nullptr)
-                            gameView->grabMouseInsideGameWindow(NO);
+                            gameView->grabMouseInsideGameWindow(false);
                     }
                 }
                 if (OOMouseInteractionModeIsFlightMode(
@@ -1074,17 +1129,17 @@ void PlayerEntity::pollApplicationControls()
                     if (gameController != nullptr)
                         gameController->setMouseInteractionModeForFlight();
                 }
-                m_key_pressed = YES;
+                m_key_pressed = true;
             } else {
-                m_key_pressed = NO;
+                m_key_pressed = false;
             }
         } else {
             if (mouse_control_on) {
-                mouse_control_on = NO;
+                mouse_control_on = false;
                 if (UNIVERSE != nullptr)
                     UNIVERSE->addMessage(OO_DESC("mouse-off"), 3.0);
                 if (gameView != nullptr)
-                    gameView->grabMouseInsideGameWindow(NO);
+                    gameView->grabMouseInsideGameWindow(false);
 
                 if (OOMouseInteractionModeIsFlightMode(
                         (gameController != nullptr
@@ -1108,9 +1163,9 @@ void PlayerEntity::pollApplicationControls()
                     setGuiToStatusScreen();
                 }
             }
-            hide_hud_pressed = YES;
+            hide_hud_pressed = true;
         } else {
-            hide_hud_pressed = NO;
+            hide_hud_pressed = false;
         }
     } catch (...) {
         const auto exception = oo::CurrentOOException();
@@ -1130,9 +1185,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
 
     try {
         exceptionContext = "joystick handling";
-        const BOOL* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+        const bool* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
 
-        BOOL paused = (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr
+        bool paused = (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr
                 ? UNIVERSE->gameController()->isGamePaused()
                 : false);
         double speed_delta = SHIP_THRUST_FACTOR * thrust;
@@ -1200,7 +1255,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if (fuel > 0 && !afterburner_engaged) {
                         if (UNIVERSE != nullptr)
                             UNIVERSE->addMessage(OO_DESC("fuel-inject-on"), 1.5);
-                        afterburner_engaged = YES;
+                        afterburner_engaged = true;
                         startAfterburnerSound();
                     } else {
                         if (fuel <= 0.0)
@@ -1209,7 +1264,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     }
                     afterburner_engaged = (fuel > 0);
                 } else
-                    afterburner_engaged = NO;
+                    afterburner_engaged = false;
 
                 if ((!afterburner_engaged) && (afterburnerSoundLooping))
                     stopAfterburnerSound();
@@ -1231,7 +1286,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                 if ((checkKeyPress(n_key_decrease_speed) || joyButtonState[BUTTON_DECTHRUST] || ((mouse_control_on) && ((gameView != nullptr ? gameView->mouseWheelState() : 0) == gvMouseWheelDown) && ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }) <= VIEW_STARBOARD || !(gameView != nullptr ? gameView->isCapsLockOn() : false)))) && (!afterburner_engaged)) {
                     flightSpeed -= speed_delta * delta_t * mouseWheelDeltaFactor;
                     // ** tgape ** - decrease obviously means no hyperspeed
-                    hyperspeed_engaged = NO;
+                    hyperspeed_engaged = false;
                 }
 
                 const oo::PList thrustAxes = stickHandler->axisFunctions();
@@ -1257,7 +1312,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                 {
                     if (!jump_pressed) {
                         if (!hyperspeed_engaged) {
-                            hyperspeed_locked = (massLocked() != NO);
+                            hyperspeed_locked = (massLocked() != false);
                             hyperspeed_engaged = !hyperspeed_locked;
                             if (hyperspeed_locked) {
                                 playJumpMassLocked();
@@ -1265,12 +1320,12 @@ void PlayerEntity::pollFlightControls(double delta_t)
                                     UNIVERSE->addMessage(OO_DESC("jump-mass-locked"), 1.5);
                             }
                         } else {
-                            hyperspeed_engaged = NO;
+                            hyperspeed_engaged = false;
                         }
                     }
-                    jump_pressed = YES;
+                    jump_pressed = true;
                 } else {
-                    jump_pressed = NO;
+                    jump_pressed = false;
                 }
 
                 exceptionContext = "shoot";
@@ -1278,7 +1333,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                 if (((checkNavKeyPress(n_key_fire_lasers)) || ((mouse_control_on) && ((gameView != nullptr ? gameView->isDown(gvMouseLeftButton) : false)) && ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }) <= VIEW_STARBOARD || !(gameView != nullptr ? gameView->isCapsLockOn() : false))) || joyButtonState[BUTTON_FIRE]) && (shot_time > weapon_recharge_rate)) {
                     if (fireMainWeapon()) {
                         playLaserHit(
-                            (shipHitByLaser() != nil), currentLaserOffset().at(0),
+                            (shipHitByLaser() != nullptr), currentLaserOffset().at(0),
                             (currentWeapon() != nullptr ? currentWeapon()->identifier()
                                                         : std::optional<std::string>())
                                 .value_or(""));
@@ -1303,10 +1358,10 @@ void PlayerEntity::pollFlightControls(double delta_t)
                             UNIVERSE->addMessage(weaponsOnlineToggleMsg, 2.0);
                         doScriptEvent(OOJSID("weaponsSystemsToggled"),
                             { oo::PList(static_cast<bool>(weaponsOnline())) });
-                        weaponsOnlineToggle_pressed = YES;
+                        weaponsOnlineToggle_pressed = true;
                     }
                 } else
-                    weaponsOnlineToggle_pressed = NO;
+                    weaponsOnlineToggle_pressed = false;
 
                 exceptionContext = "missile fire";
                 //  shoot 'm'   // launch missile
@@ -1314,10 +1369,10 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     // launch here
                     if (!fire_missile_pressed) {
                         fireMissile();
-                        fire_missile_pressed = YES;
+                        fire_missile_pressed = true;
                     }
                 } else
-                    fire_missile_pressed = NO;
+                    fire_missile_pressed = false;
 
                 exceptionContext = "next missile";
                 //  shoot 'y'   // next missile
@@ -1326,9 +1381,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                         playNextMissileSelected();
                         selectNextMissile();
                     }
-                    next_missile_pressed = YES;
+                    next_missile_pressed = true;
                 } else
-                    next_missile_pressed = NO;
+                    next_missile_pressed = false;
 
                 exceptionContext = "next target";
                 //	'+' // next target
@@ -1336,9 +1391,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if ((!next_target_pressed) && (hasEquipmentItemProviding("EQ_TARGET_MEMORY"))) {
                         moveTargetMemoryBy(+1);
                     }
-                    next_target_pressed = YES;
+                    next_target_pressed = true;
                 } else
-                    next_target_pressed = NO;
+                    next_target_pressed = false;
 
                 exceptionContext = "previous target";
                 //	'-' // previous target
@@ -1346,9 +1401,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if ((!previous_target_pressed) && (hasEquipmentItemProviding("EQ_TARGET_MEMORY"))) {
                         moveTargetMemoryBy(-1);
                     }
-                    previous_target_pressed = YES;
+                    previous_target_pressed = true;
                 } else
-                    previous_target_pressed = NO;
+                    previous_target_pressed = false;
 
                 exceptionContext = "ident R";
                 //  shoot 'r'   // switch on ident system
@@ -1357,9 +1412,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if (!ident_pressed) {
                         handleButtonIdent();
                     }
-                    ident_pressed = YES;
+                    ident_pressed = true;
                 } else
-                    ident_pressed = NO;
+                    ident_pressed = false;
 
                 exceptionContext = "prime equipment";
                 // prime equipment 'N' - selects equipment to use with keypress
@@ -1413,10 +1468,10 @@ void PlayerEntity::pollFlightControls(double delta_t)
                         doScriptEvent(OOJSID("playerChangedPrimedEquipment"),
                             { oo::PList(eqKey) });
                     }
-                    prime_equipment_pressed = YES;
+                    prime_equipment_pressed = true;
 
                 } else
-                    prime_equipment_pressed = NO;
+                    prime_equipment_pressed = false;
 
                 exceptionContext = "activate equipment";
                 // activate equipment 'n' - runs the activated() function inside the
@@ -1425,9 +1480,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if (!activate_equipment_pressed) {
                         activatePrimableEquipment(primedEquipment, OOPRIMEDEQUIP_ACTIVATED);
                     }
-                    activate_equipment_pressed = YES;
+                    activate_equipment_pressed = true;
                 } else
-                    activate_equipment_pressed = NO;
+                    activate_equipment_pressed = false;
 
                 exceptionContext = "mode equipment";
                 // mode equipment 'b' - runs the mode() function inside the equipment's
@@ -1436,9 +1491,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if (!mode_equipment_pressed) {
                         activatePrimableEquipment(primedEquipment, OOPRIMEDEQUIP_MODE);
                     }
-                    mode_equipment_pressed = YES;
+                    mode_equipment_pressed = true;
                 } else
-                    mode_equipment_pressed = NO;
+                    mode_equipment_pressed = false;
 
                 exceptionContext = "fast equipment A";
                 if (checkKeyPress(n_key_fastactivate_equipment_a) || joyButtonState[BUTTON_CLOAK]) {
@@ -1447,9 +1502,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                             eqScriptIndexForKey(fastEquipmentA().value_or("")),
                             OOPRIMEDEQUIP_ACTIVATED);
                     }
-                    fastactivate_a_pressed = YES;
+                    fastactivate_a_pressed = true;
                 } else
-                    fastactivate_a_pressed = NO;
+                    fastactivate_a_pressed = false;
 
                 exceptionContext = "fast equipment B";
                 if (checkKeyPress(n_key_fastactivate_equipment_b) || joyButtonState[BUTTON_ENERGYBOMB]) {
@@ -1458,9 +1513,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                             eqScriptIndexForKey(fastEquipmentB().value_or("")),
                             OOPRIMEDEQUIP_ACTIVATED);
                     }
-                    fastactivate_b_pressed = YES;
+                    fastactivate_b_pressed = true;
                 } else
-                    fastactivate_b_pressed = NO;
+                    fastactivate_b_pressed = false;
 
                 exceptionContext = "custom equipment";
                 // loop through all the objects in the customEquipActivation array
@@ -1468,7 +1523,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     const oo::PList& item = customEquipActivation[i];
                     const std::string equipKey = item.get<std::string>(std::string(CUSTOMEQUIP_EQUIPKEY));
                     // check if the player has the equip item installed
-                    if (hasOneEquipmentItem(equipKey, NO, NO)) {
+                    if (hasOneEquipmentItem(equipKey, false, false)) {
                         const oo::PList* key_act = item.get<oo::PList::Array>(
                             std::string(CUSTOMEQUIP_KEYACTIVATE));
                         const oo::PList* key_mod = item.get<oo::PList::Array>(std::string(CUSTOMEQUIP_KEYMODE));
@@ -1483,9 +1538,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                                 activatePrimableEquipment(eqScriptIndexForKey(equipKey),
                                     OOPRIMEDEQUIP_ACTIVATED);
                             }
-                            customActivatePressed[i] = YES;
+                            customActivatePressed[i] = true;
                         } else
-                            customActivatePressed[i] = NO;
+                            customActivatePressed[i] = false;
 
                         // check to see if the key or button was pressed for mode
                         if ((key_mod != nullptr && checkKeyPress(*key_mod)) || (but_mod != nullptr && OOJoystickManager::sharedStickHandler()->isButtonDown(but_mod->get<int>(std::string(STICK_AXBUT)), but_mod->get<int>(std::string(STICK_NUMBER))))) {
@@ -1494,9 +1549,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                                 activatePrimableEquipment(eqScriptIndexForKey(equipKey),
                                     OOPRIMEDEQUIP_MODE);
                             }
-                            customModePressed[i] = YES;
+                            customModePressed[i] = true;
                         } else
-                            customModePressed[i] = NO;
+                            customModePressed[i] = false;
                     }
                 }
 
@@ -1507,9 +1562,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if (!target_incoming_missile_pressed) {
                         targetNearestIncomingMissile();
                     }
-                    target_incoming_missile_pressed = YES;
+                    target_incoming_missile_pressed = true;
                 } else
-                    target_incoming_missile_pressed = NO;
+                    target_incoming_missile_pressed = false;
 
                 exceptionContext = "missile T";
                 //  shoot 't'   // switch on missile targeting
@@ -1518,16 +1573,16 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if (!target_missile_pressed) {
                         handleButtonTargetMissile();
                     }
-                    target_missile_pressed = YES;
+                    target_missile_pressed = true;
                 } else
-                    target_missile_pressed = NO;
+                    target_missile_pressed = false;
 
                 exceptionContext = "missile U";
                 //  shoot 'u'   // disarm missile targeting
                 if (checkKeyPress(n_key_untarget_missile) || joyButtonState[BUTTON_UNARM]) {
                     if (!safety_pressed) {
                         // targeting off in both cases!
-                        if (primaryTarget() != nil)
+                        if (primaryTarget() != nullptr)
                             noteLostTarget();
                         _primaryTarget = nullptr;
                         safeAllMissiles();
@@ -1540,11 +1595,11 @@ void PlayerEntity::pollFlightControls(double delta_t)
                                 UNIVERSE->addMessage(OO_DESC("ident-off"), 2.0);
                             playIdentOff();
                         }
-                        ident_engaged = NO;
+                        ident_engaged = false;
                     }
-                    safety_pressed = YES;
+                    safety_pressed = true;
                 } else
-                    safety_pressed = NO;
+                    safety_pressed = false;
 
                 exceptionContext = "ECM";
                 //  shoot 'e'   // ECM
@@ -1565,13 +1620,13 @@ void PlayerEntity::pollFlightControls(double delta_t)
                 // "escape-pod-activation-immediate" override is in the user defaults
                 // file.
                 if ((checkKeyPress(n_key_launch_escapepod) || joyButtonState[BUTTON_ESCAPE]) && hasEscapePod()) {
-                    BOOL goodToLaunch = oo::Defaults::standard().boolForKey(
+                    bool goodToLaunch = oo::Defaults::standard().boolForKey(
                         "escape-pod-activation-immediate");
                     static OOTimeDelta escapePodKeyResetTime;
 
                     if (!goodToLaunch) {
                         if (!escapePodKey_pressed) {
-                            escapePodKey_pressed = YES;
+                            escapePodKey_pressed = true;
                             // first keypress will unregister in KEY_REPEAT_INTERVAL seconds
                             escapePodKeyResetTime = oo::date::monotonicSeconds() + KEY_REPEAT_INTERVAL;
                             //[gameView clearKey:key_launch_escapepod];
@@ -1583,9 +1638,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                         } else {
                             OOTimeDelta timeNow = oo::date::monotonicSeconds(); // same clock as
                                                                                 // escapePodKeyResetTime
-                            escapePodKey_pressed = NO;
+                            escapePodKey_pressed = false;
                             if (timeNow < escapePodKeyResetTime)
-                                goodToLaunch = YES;
+                                goodToLaunch = true;
                         }
                     }
                     if (goodToLaunch) {
@@ -1604,9 +1659,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                 if (checkKeyPress(n_key_rotate_cargo) || joyButtonState[BUTTON_ROTATECARGO]) {
                     if ((!rotateCargo_pressed) && (cargoCount() > 0))
                         rotateCargo();
-                    rotateCargo_pressed = YES;
+                    rotateCargo_pressed = true;
                 } else
-                    rotateCargo_pressed = NO;
+                    rotateCargo_pressed = false;
 
                 exceptionContext = "autopilot C";
                 // autopilot 'c'
@@ -1615,9 +1670,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if (hasDockingComputer() && (!autopilot_key_pressed)) {
                         handleAutopilotOn(false);
                     }
-                    autopilot_key_pressed = YES;
+                    autopilot_key_pressed = true;
                 } else
-                    autopilot_key_pressed = NO;
+                    autopilot_key_pressed = false;
 
                 exceptionContext = "autopilot shift-C";
                 // autopilot 'C' - fast-autopilot
@@ -1626,9 +1681,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if (hasDockingComputer() && (!fast_autopilot_key_pressed)) {
                         handleAutopilotOn(true);
                     }
-                    fast_autopilot_key_pressed = YES;
+                    fast_autopilot_key_pressed = true;
                 } else {
-                    fast_autopilot_key_pressed = NO;
+                    fast_autopilot_key_pressed = false;
                 }
 
                 exceptionContext = "docking clearance request";
@@ -1638,9 +1693,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                         Entity* primeTarget = primaryTarget();
                         performDockingRequest(oo::ToStation(primeTarget));
                     }
-                    docking_clearance_request_key_pressed = YES;
+                    docking_clearance_request_key_pressed = true;
                 } else {
-                    docking_clearance_request_key_pressed = NO;
+                    docking_clearance_request_key_pressed = false;
                 }
 
                 exceptionContext = "hyperspace";
@@ -1651,7 +1706,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                         if (status() == STATUS_WITCHSPACE_COUNTDOWN) {
                             cancelWitchspaceCountdown();
                             if (galactic_witchjump) {
-                                galactic_witchjump = NO;
+                                galactic_witchjump = false;
                                 if (UNIVERSE != nullptr)
                                     UNIVERSE->addMessage(OO_DESC("witch-user-galactic-abort"),
                                         3.0);
@@ -1663,9 +1718,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                             beginWitchspaceCountdown(hyperspaceMotorSpinTime);
                         }
                     }
-                    hyperspace_pressed = YES;
+                    hyperspace_pressed = true;
                 } else
-                    hyperspace_pressed = NO;
+                    hyperspace_pressed = false;
 
                 exceptionContext = "galactic hyperspace";
                 // Galactic hyperspace 'g'
@@ -1675,7 +1730,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                         if (status() == STATUS_WITCHSPACE_COUNTDOWN) {
                             cancelWitchspaceCountdown();
                             if (galactic_witchjump) {
-                                galactic_witchjump = NO;
+                                galactic_witchjump = false;
                                 if (UNIVERSE != nullptr)
                                     UNIVERSE->addMessage(OO_DESC("witch-user-galactic-abort"),
                                         3.0);
@@ -1684,7 +1739,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                                     UNIVERSE->addMessage(OO_DESC("witch-user-abort"), 3.0);
                             }
                         } else {
-                            galactic_witchjump = YES;
+                            galactic_witchjump = true;
 
                             // even if we don't have a witchspace motor, we can still do a
                             // default galactic jump (!)
@@ -1709,9 +1764,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                                         static_cast<float>(witchspaceCountdown)) });
                         }
                     }
-                    galhyperspace_pressed = YES;
+                    galhyperspace_pressed = true;
                 } else
-                    galhyperspace_pressed = NO;
+                    galhyperspace_pressed = false;
             }
 
 #if OO_FOV_INFLIGHT_CONTROL_ENABLED
@@ -1753,14 +1808,14 @@ void PlayerEntity::pollFlightControls(double delta_t)
             exceptionContext = "dump target state";
             if (checkKeyPress(n_key_dump_target_state)) {
                 if (!dump_target_state_pressed) {
-                    dump_target_state_pressed = YES;
+                    dump_target_state_pressed = true;
                     Entity* target = primaryTarget();
                     if (target == nullptr)
                         target = this;
                     target->dumpState();
                 }
             } else
-                dump_target_state_pressed = NO;
+                dump_target_state_pressed = false;
 #endif
 
             //  text displays
@@ -1811,9 +1866,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if (UNIVERSE != nullptr)
                         UNIVERSE->addMessage("Entity List dumped. Debugging OFF", 3);
                 }
-                dump_entity_list_pressed = YES;
+                dump_entity_list_pressed = true;
             } else
-                dump_entity_list_pressed = NO;
+                dump_entity_list_pressed = false;
 
             // look for debugging keys
             if (checkKeyPress(n_key_debug_full) && !(gameView != nullptr ? gameView->getAllowingStringInput() : StringInput { })) // look for the 'd' key
@@ -1846,9 +1901,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                             UNIVERSE->addMessage("Disconnected from debug console.", 3);
                     }
                 }
-                autopilot_key_pressed = YES;
+                autopilot_key_pressed = true;
             } else
-                autopilot_key_pressed = NO;
+                autopilot_key_pressed = false;
 
             if (checkKeyPress(n_key_debug_bounding_boxes) && !(gameView != nullptr ? gameView->getAllowingStringInput() : StringInput { })) // look for the 'x' key
             {
@@ -1880,9 +1935,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     if (UNIVERSE != nullptr)
                         UNIVERSE->setTimeAccelerationFactor(newTimeAccelerationFactor);
                 }
-                leftRightKeyPressed = YES;
+                leftRightKeyPressed = true;
             } else
-                leftRightKeyPressed = NO;
+                leftRightKeyPressed = false;
 
             if (checkKeyPress(n_key_debug_off) && !(gameView != nullptr ? gameView->getAllowingStringInput() : StringInput { })) // look for the 'n' key
             {
@@ -1936,7 +1991,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                         break;
                     }
                     if (gameView != nullptr)
-                        gameView->allowStringInput(NO);
+                        gameView->allowStringInput(false);
                     if (UNIVERSE != nullptr)
                         UNIVERSE->clearPreviousMessage();
                     if (UNIVERSE != nullptr)
@@ -1950,7 +2005,7 @@ void PlayerEntity::pollFlightControls(double delta_t)
                     }
                     UNIVERSE->getGui()->setForegroundTextureKey("overlay");
                     if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
-                        UNIVERSE->gameController()->setGamePaused(NO);
+                        UNIVERSE->gameController()->setGamePaused(false);
                 } else {
                     saved_view_direction = (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { });
                     saved_script_time = script_time;
@@ -1960,9 +2015,9 @@ void PlayerEntity::pollFlightControls(double delta_t)
                         UNIVERSE->pauseGame(); // pause handler
                 }
             }
-            pause_pressed = YES;
+            pause_pressed = true;
         } else {
-            pause_pressed = NO;
+            pause_pressed = false;
         }
     } catch (...) {
         const auto exception = oo::CurrentOOException();
@@ -1977,8 +2032,8 @@ void PlayerEntity::pollFlightControls(double delta_t)
 void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
 {
     ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
-    BOOL moving = NO;
-    BOOL dragging = NO;
+    bool moving = false;
+    bool dragging = false;
     double cursor_speed = ((gameView != nullptr ? gameView->isCtrlDown() : false) ? 20.0 : 10.0) * chart_zoom;
     ::GameController* controller = (UNIVERSE != nullptr ? UNIVERSE->gameController() : nullptr);
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
@@ -2008,11 +2063,11 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
 #endif
     else {
         if (gameView != nullptr)
-            gameView->allowStringInput(NO);
+            gameView->allowStringInput(false);
         // If we have entered this screen with the injectors key pressed, make sure
         // that injectors switch off when we release it - Nikos.
         if (afterburner_engaged && !checkKeyPress(n_key_inject_fuel)) {
-            afterburner_engaged = NO;
+            afterburner_engaged = false;
         }
     }
 
@@ -2037,7 +2092,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                         UNIVERSE->getGui()->targetNextFoundSystem(0);
 
                     // Always select the right one out of 2 overlapping systems.
-                    targetNewSystem(0, YES);
+                    targetNewSystem(0, true);
                 } else {
                     found_system_id = -1;
                     clearPlanetSearchString();
@@ -2073,18 +2128,18 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                     { oo::PList(cxx_OOStringFromLongRangeChartMode(
                         getLongRangeChartMode())) });
             }
-            queryPressed = YES;
+            queryPressed = true;
         } else {
-            queryPressed = NO;
+            queryPressed = false;
         }
 
         if (checkKeyPress(n_key_map_info) && chart_zoom <= CHART_ZOOM_SHOW_LABELS) {
             if (!chartInfoPressed) {
                 show_info_flag = !show_info_flag;
-                chartInfoPressed = YES;
+                chartInfoPressed = true;
             }
         } else {
-            chartInfoPressed = NO;
+            chartInfoPressed = false;
         }
 
         if (status() != STATUS_WITCHSPACE_COUNTDOWN) {
@@ -2117,12 +2172,12 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                             }
                         }
                         if (ANA_mode == OPTIMIZED_BY_NONE || !infoSystemOnRoute()) {
-                            setInfoSystemID(target_system_id, NO);
+                            setInfoSystemID(target_system_id, false);
                         }
                     }
-                    pling_pressed = YES;
+                    pling_pressed = true;
                 } else {
-                    pling_pressed = NO;
+                    pling_pressed = false;
                 }
             } else {
                 ANA_mode = OPTIMIZED_BY_NONE;
@@ -2132,7 +2187,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                                      : false)) {
                 if (gameView != nullptr)
                     gameView->clearMouse();
-                mouse_left_down = NO;
+                mouse_left_down = false;
                 noteGUIWillChangeTo(GUI_SCREEN_SYSTEM_DATA);
                 showingLongRangeChart = (gui_screen == GUI_SCREEN_LONG_RANGE_CHART);
                 setGuiToSystemDataScreen();
@@ -2145,7 +2200,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                 double vadjust = MAIN_GUI_PIXEL_HEIGHT / 2.0 - CHART_SCREEN_VERTICAL_CENTRE;
                 double hscale = MAIN_GUI_PIXEL_WIDTH / (64.0 * chart_zoom);
                 double vscale = MAIN_GUI_PIXEL_HEIGHT / (128.0 * chart_zoom);
-                if (mouse_left_down == NO) {
+                if (mouse_left_down == false) {
                     NSPoint centre = adjusted_chart_centre();
                     centre_at_mouse_click = chart_centre_coordinates;
                     mouse_click_position = maus;
@@ -2164,22 +2219,22 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                         centre_at_mouse_click.y - (maus.y - mouse_click_position.y) * MAIN_GUI_PIXEL_HEIGHT / vscale,
                         256.0);
                     target_chart_centre = chart_centre_coordinates;
-                    dragging = YES;
+                    dragging = true;
                 }
                 if (gui_screen == GUI_SCREEN_LONG_RANGE_CHART)
                     if (gameView != nullptr)
                         gameView->resetTypedString();
-                mouse_left_down = YES;
-            } else if (mouse_left_down == YES) {
+                mouse_left_down = true;
+            } else if (mouse_left_down == true) {
                 NSPoint maus = (gameView != nullptr ? gameView->getVirtualJoystickPosition()
                                                     : NSPoint { });
                 if (fabs(maus.x - mouse_click_position.x) * MAIN_GUI_PIXEL_WIDTH <= 2 && fabs(maus.y - mouse_click_position.y) * MAIN_GUI_PIXEL_HEIGHT <= 2) {
                     cursor_coordinates = chart_focus_coordinates;
-                    moving = YES;
+                    moving = true;
                 } else {
-                    dragging = YES;
+                    dragging = true;
                 }
-                mouse_left_down = NO;
+                mouse_left_down = false;
             }
             if (checkKeyPress(n_key_map_home)) {
                 if ((gameView != nullptr ? gameView->isOptDown() : false)) {
@@ -2194,7 +2249,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                     found_system_id = -1;
                     if (UNIVERSE != nullptr)
                         UNIVERSE->findSystemCoordinatesWithPrefix("");
-                    moving = YES;
+                    moving = true;
                 }
             }
             if (checkKeyPress(n_key_map_end)) {
@@ -2220,8 +2275,8 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                 target_chart_focus = target_chart_centre;
             }
 
-            BOOL nextSystem = (gameView != nullptr ? gameView->isShiftDown() : false);
-            BOOL nextSystemOnRoute = (gameView != nullptr ? gameView->isOptDown() : false);
+            bool nextSystem = (gameView != nullptr ? gameView->isShiftDown() : false);
+            bool nextSystemOnRoute = (gameView != nullptr ? gameView->isOptDown() : false);
 
             if (checkNavKeyPress(n_key_gui_arrow_left)) {
                 if ((nextSystem || nextSystemOnRoute) && pressedArrow != 1) {
@@ -2245,7 +2300,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                     cursor_coordinates.x -= cursor_speed * delta_t;
                     if (cursor_coordinates.x < 0.0)
                         cursor_coordinates.x = 0.0;
-                    moving = YES;
+                    moving = true;
                     target_chart_focus = cursor_coordinates;
                 }
             } else
@@ -2273,7 +2328,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                     cursor_coordinates.x += cursor_speed * delta_t;
                     if (cursor_coordinates.x > 256.0)
                         cursor_coordinates.x = 256.0;
-                    moving = YES;
+                    moving = true;
                     target_chart_focus = cursor_coordinates;
                 }
             } else
@@ -2289,7 +2344,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                     cursor_coordinates.y += cursor_speed * delta_t * 2.0;
                     if (cursor_coordinates.y > 256.0)
                         cursor_coordinates.y = 256.0;
-                    moving = YES;
+                    moving = true;
                 }
                 target_chart_focus = cursor_coordinates;
             } else
@@ -2305,7 +2360,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                     cursor_coordinates.y -= cursor_speed * delta_t * 2.0;
                     if (cursor_coordinates.y < 0.0)
                         cursor_coordinates.y = 0.0;
-                    moving = YES;
+                    moving = true;
                 }
                 target_chart_focus = cursor_coordinates;
             } else
@@ -2313,10 +2368,10 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
             if ((cursor_moving) && (!moving)) {
                 if (found_system_id == -1) {
                     target_system_id = (UNIVERSE != nullptr
-                            ? UNIVERSE->findSystemNumberAtCoords(
-                                  cursor_coordinates, galaxy_number, NO)
+                            ? UNIVERSE->findSystemNumberAtCoords(cursor_coordinates,
+                                  galaxy_number, false)
                             : 0);
-                    setInfoSystemID(target_system_id, YES);
+                    setInfoSystemID(target_system_id, true);
                 } else {
                     // if found with a search string, don't recalculate! Required for
                     // overlapping systems, like Divees & Tezabi in galaxy 5
@@ -2328,10 +2383,10 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                             : NSMakePoint(0, 0));
                     if (fpos.x != cursor_coordinates.x && fpos.y != cursor_coordinates.y) {
                         target_system_id = (UNIVERSE != nullptr
-                                ? UNIVERSE->findSystemNumberAtCoords(cursor_coordinates,
-                                      galaxy_number, NO)
+                                ? UNIVERSE->findSystemNumberAtCoords(
+                                      cursor_coordinates, galaxy_number, false)
                                 : 0);
-                        setInfoSystemID(target_system_id, YES);
+                        setInfoSystemID(target_system_id, true);
                     }
                 }
                 cursor_coordinates = ((UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr) != nullptr
@@ -2364,34 +2419,34 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
         if (checkKeyPress(n_key_system_next_system)) {
             if (!next_planet_info_pressed) {
                 nextInfoSystem();
-                next_planet_info_pressed = YES;
+                next_planet_info_pressed = true;
             }
         } else {
-            next_planet_info_pressed = NO;
+            next_planet_info_pressed = false;
         }
         if (checkKeyPress(n_key_system_previous_system)) {
             if (!previous_planet_info_pressed) {
                 previousInfoSystem();
-                previous_planet_info_pressed = YES;
+                previous_planet_info_pressed = true;
             }
         } else {
-            previous_planet_info_pressed = NO;
+            previous_planet_info_pressed = false;
         }
         if (checkKeyPress(n_key_system_home)) {
             if (!home_info_pressed) {
                 homeInfoSystem();
-                home_info_pressed = YES;
+                home_info_pressed = true;
             }
         } else {
-            home_info_pressed = NO;
+            home_info_pressed = false;
         }
         if (checkKeyPress(n_key_system_end)) {
             if (!target_info_pressed) {
                 targetInfoSystem();
-                target_info_pressed = YES;
+                target_info_pressed = true;
             }
         } else {
-            target_info_pressed = NO;
+            target_info_pressed = false;
         }
         break;
 
@@ -2403,21 +2458,21 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
             // noteGUIDidChangeFrom)
             demoShip = nullptr;
 
-            loadPlayerFromFile(*commanderFile, NO);
+            loadPlayerFromFile(*commanderFile, false);
         }
         break;
     }
 
     case GUI_SCREEN_SAVE:
-        pollGuiScreenControlsWithFKeyAlias(NO);
+        pollGuiScreenControlsWithFKeyAlias(false);
         /* Only F1 works for launch on this screen, not '1' or
          * whatever it has been bound to */
-        if (checkKeyPress(n_key_launch_ship, YES))
+        if (checkKeyPress(n_key_launch_ship, true))
             handleUndockControl();
         if (gui_screen == GUI_SCREEN_SAVE) {
             saveCommanderInputHandler();
         } else
-            pollControls = YES;
+            pollControls = true;
         break;
 
     case GUI_SCREEN_SAVE_OVERWRITE:
@@ -2500,14 +2555,14 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
         handleGUIUpDownArrowKeys();
         OOGUIRow guiSelectedRow;
         guiSelectedRow = gui->getSelectedRow();
-        BOOL selectKeyPress;
+        bool selectKeyPress;
         selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
 
         if (selectKeyPress) // 'enter'
         {
             if ((guiSelectedRow == GUI_ROW(, QUICKSAVE)) && (!disc_operation_in_progress)) {
                 try {
-                    disc_operation_in_progress = YES;
+                    disc_operation_in_progress = true;
                     quicksavePlayer();
                 } catch (...) {
                     const auto exception = oo::CurrentOOException();
@@ -2523,7 +2578,8 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                         if ((controller != nullptr ? controller->inFullScreenMode()
                                                    : false)) {
                             if (controller != nullptr)
-                                controller->pauseFullScreenModeToPerform("savePlayer", nil);
+                                controller->pauseFullScreenModeToPerform("savePlayer",
+                                    nullptr);
                         } // no target: the SDL build never performs it
                         else
                             savePlayer();
@@ -2533,22 +2589,23 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                 }
             }
             if ((guiSelectedRow == GUI_ROW(, SAVE)) && (!disc_operation_in_progress)) {
-                disc_operation_in_progress = YES;
+                disc_operation_in_progress = true;
                 savePlayer();
             }
             if ((guiSelectedRow == GUI_ROW(, LOAD)) && (!disc_operation_in_progress)) {
-                disc_operation_in_progress = YES;
+                disc_operation_in_progress = true;
                 if (!loadPlayer()) {
-                    disc_operation_in_progress = NO;
+                    disc_operation_in_progress = false;
                     setGuiToStatusScreen();
                 }
             }
 
             if ((guiSelectedRow == GUI_ROW(, BEGIN_NEW)) && (!disc_operation_in_progress)) {
-                disc_operation_in_progress = YES;
+                disc_operation_in_progress = true;
                 if (UNIVERSE != nullptr)
-                    UNIVERSE->setUseAddOns(std::string(SCENARIO_OXP_DEFINITION_ALL), NO,
-                        YES); // calls reinitAndShowDemo
+                    UNIVERSE->setUseAddOns(std::string(SCENARIO_OXP_DEFINITION_ALL),
+                        false,
+                        true); // calls reinitAndShowDemo
             }
 
             if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
@@ -2556,7 +2613,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                 if (gameView != nullptr)
                     gameView->clearMouse();
         } else {
-            disc_operation_in_progress = NO;
+            disc_operation_in_progress = false;
         }
 
 #if OOLITE_SDL
@@ -2582,7 +2639,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
         if (handleGUIUpDownArrowKeys()) {
             std::optional<std::string> itemText = gui->selectedRowText(); // nil compares unequal, as -isEqual: on
                                                                           // nil
-            OOWeaponType weaponType = nil;
+            OOWeaponType weaponType = nullptr;
 
             if (itemText == FORWARD_FACING_STRING)
                 weaponType = forward_weapon_type;
@@ -2593,8 +2650,8 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
             if (itemText == STARBOARD_FACING_STRING)
                 weaponType = starboard_weapon_type;
 
-            if (weaponType != nil) {
-                BOOL sameAs = cxx_OOWeaponTypeFromEquipmentIdentifierSloppy(
+            if (weaponType != nullptr) {
+                bool sameAs = cxx_OOWeaponTypeFromEquipmentIdentifierSloppy(
                                   gui->selectedRowKey().value_or(""))
                     == weaponType;
                 // override showInformation _completely_ with itemText
@@ -2661,16 +2718,16 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
         if (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
             if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                      : false)) {
-                selectPressed = NO;
+                selectPressed = false;
                 if (gameView != nullptr)
                     gameView->clearMouse();
             }
             if ((!selectPressed) && (gui->getSelectedRow() > -1)) {
                 buySelectedItem();
-                selectPressed = YES;
+                selectPressed = true;
             }
         } else {
-            selectPressed = NO;
+            selectPressed = false;
         }
         break;
 
@@ -2710,16 +2767,16 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
         {
             if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                      : false)) {
-                selectPressed = NO;
+                selectPressed = false;
                 if (gameView != nullptr)
                     gameView->clearMouse();
             }
             if ((!selectPressed) && (gui->getSelectedRow() > -1)) {
                 activateSelectedInterface();
-                selectPressed = YES;
+                selectPressed = true;
             }
         } else {
-            selectPressed = NO;
+            selectPressed = false;
         }
         break;
 
@@ -2732,7 +2789,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
 
         if (checkKeyPress(n_key_market_filter_cycle) || checkKeyPress(n_key_market_sorter_cycle)) {
             if (!queryPressed) {
-                queryPressed = YES;
+                queryPressed = true;
                 if (checkKeyPress(n_key_market_filter_cycle)) {
                     if (marketFilterMode >= MARKET_FILTER_MODE_MAX) {
                         marketFilterMode = MARKET_FILTER_MODE_OFF;
@@ -2750,7 +2807,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                 setGuiToMarketScreen();
             }
         } else {
-            queryPressed = NO;
+            queryPressed = false;
         }
 
         break;
@@ -2759,7 +2816,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
         if ((gameView != nullptr ? gameView->isDown(32) : false)) // spacebar
         {
             if (!spacePressed) {
-                BOOL reportEnded = dockingReport.empty();
+                bool reportEnded = dockingReport.empty();
                 playDismissedReportScreen();
                 if (reportEnded) {
                     setGuiToStatusScreen();
@@ -2771,9 +2828,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                     setGuiToDockingReportScreen();
                 }
             }
-            spacePressed = YES;
+            spacePressed = true;
         } else
-            spacePressed = NO;
+            spacePressed = false;
         break;
     case GUI_SCREEN_STATUS:
         handleGUIUpDownArrowKeys();
@@ -2810,7 +2867,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
         if (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
             if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                      : false)) {
-                selectPressed = NO;
+                selectPressed = false;
                 if (gameView != nullptr)
                     gameView->clearMouse();
             }
@@ -2819,10 +2876,10 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                     (gui->getSelectedRow() == STATUS_EQUIPMENT_FIRST_ROW ? -1 : +1));
                 setGuiToStatusScreen();
 
-                selectPressed = YES;
+                selectPressed = true;
             }
         } else {
-            selectPressed = NO;
+            selectPressed = false;
         }
 
         break;
@@ -2862,7 +2919,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
         if (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
             if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                      : false)) {
-                selectPressed = NO;
+                selectPressed = false;
                 if (gameView != nullptr)
                     gameView->clearMouse();
             }
@@ -2871,10 +2928,10 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                     (gui->getSelectedRow() == MANIFEST_SCREEN_ROW_BACK ? -1 : +1));
                 setGuiToManifestScreen();
 
-                selectPressed = YES;
+                selectPressed = true;
             }
         } else {
-            selectPressed = NO;
+            selectPressed = false;
         }
 
         break;
@@ -2944,9 +3001,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                     playCantBuyShip();
                 }
             }
-            selectPressed = YES;
+            selectPressed = true;
         } else {
-            selectPressed = NO;
+            selectPressed = false;
         }
         if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                  : false)) {
@@ -3002,9 +3059,9 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t)
                                 key);
                         }
                     }
-                    extra_gui_key_pressed = YES;
+                    extra_gui_key_pressed = true;
                 } else
-                    extra_gui_key_pressed = NO;
+                    extra_gui_key_pressed = false;
             }
         }
     }
@@ -3057,8 +3114,8 @@ void PlayerEntity::pollMarketScreenControls()
         handleGUIUpDownArrowKeys();
         marketSelectedCommodity = gui->selectedRowKey();
 
-        BOOL page_up = checkKeyPress(n_key_gui_page_up);
-        BOOL page_down = checkKeyPress(n_key_gui_page_down);
+        bool page_up = checkKeyPress(n_key_gui_page_up);
+        bool page_down = checkKeyPress(n_key_gui_page_down);
         if (page_up || page_down) {
             if ((!pageUpDownKeyPressed) || (script_time > timeLastKeyPress + KEY_REPEAT_INTERVAL)) {
                 ::OOCommodityMarket* localMarket = this->localMarket();
@@ -3107,15 +3164,15 @@ void PlayerEntity::pollMarketScreenControls()
                     setGuiToMarketScreen();
                 }
             }
-            pageUpDownKeyPressed = YES;
+            pageUpDownKeyPressed = true;
             timeLastKeyPress = script_time;
         } else {
-            pageUpDownKeyPressed = NO;
+            pageUpDownKeyPressed = false;
         }
     } else {
         // handle up and down slightly differently
-        BOOL arrow_up = checkKeyPress(n_key_gui_arrow_up);
-        BOOL arrow_down = checkKeyPress(n_key_gui_arrow_down);
+        bool arrow_up = checkKeyPress(n_key_gui_arrow_up);
+        bool arrow_down = checkKeyPress(n_key_gui_arrow_down);
         if (arrow_up || arrow_down) {
             if ((!upDownKeyPressed) || (script_time > timeLastKeyPress + KEY_REPEAT_INTERVAL)) {
                 ::OOCommodityMarket* localMarket = this->localMarket();
@@ -3142,14 +3199,14 @@ void PlayerEntity::pollMarketScreenControls()
                     setGuiToMarketInfoScreen();
                 }
             }
-            upDownKeyPressed = YES;
+            upDownKeyPressed = true;
             timeLastKeyPress = script_time;
         } else {
-            upDownKeyPressed = NO;
+            upDownKeyPressed = false;
         }
     }
 
-    BOOL isdocked = isDocked();
+    bool isdocked = isDocked();
 
     if ((checkNavKeyPress(n_key_gui_arrow_right)) || (checkNavKeyPress(n_key_gui_arrow_left)) || (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false))) {
         if (checkNavKeyPress(n_key_gui_arrow_right)) // -->
@@ -3173,7 +3230,7 @@ void PlayerEntity::pollMarketScreenControls()
                         playCantBuyCommodity();
                     }
                 }
-                wait_for_key_up = YES;
+                wait_for_key_up = true;
             }
         }
         if (checkNavKeyPress(n_key_gui_arrow_left)) // <--
@@ -3197,14 +3254,14 @@ void PlayerEntity::pollMarketScreenControls()
                         playCantSellCommodity();
                     }
                 }
-                wait_for_key_up = YES;
+                wait_for_key_up = true;
             }
         }
         if ((gui_screen == GUI_SCREEN_MARKET && (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) || checkKeyPress(n_key_gui_select)) // 'enter'
         {
             if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                      : false)) {
-                wait_for_key_up = NO;
+                wait_for_key_up = false;
                 if (gameView != nullptr)
                     gameView->clearMouse();
             }
@@ -3214,13 +3271,13 @@ void PlayerEntity::pollMarketScreenControls()
                         ? shipCommodityData->quantityForGood(item.value_or(""))
                         : 0);
                 if (item == ">>>") {
-                    tryBuyingCommodity(item.value_or(""), YES);
+                    tryBuyingCommodity(item.value_or(""), true);
                     setGuiToMarketScreen();
                 } else if (item == "<<<") {
-                    trySellingCommodity(item.value_or(""), YES);
+                    trySellingCommodity(item.value_or(""), true);
                     setGuiToMarketScreen();
                 } else if (isdocked && (gameView != nullptr ? gameView->isShiftDown() : false) && tryBuyingCommodity(item.value_or(""),
-                               YES)) // buy as much as possible (with Shift)
+                               true)) // buy as much as possible (with Shift)
                 {
                     playBuyCommodity();
                     if (gui_screen == GUI_SCREEN_MARKET) {
@@ -3229,7 +3286,7 @@ void PlayerEntity::pollMarketScreenControls()
                         setGuiToMarketInfoScreen();
                     }
                 } else if (isdocked && (yours > 0) && trySellingCommodity(item.value_or(""),
-                               YES)) // sell all you can
+                               true)) // sell all you can
                 {
                     playSellCommodity();
                     if (gui_screen == GUI_SCREEN_MARKET) {
@@ -3238,7 +3295,7 @@ void PlayerEntity::pollMarketScreenControls()
                         setGuiToMarketInfoScreen();
                     }
                 } else if (isdocked && tryBuyingCommodity(item.value_or(""),
-                               YES)) // buy as much as possible
+                               true)) // buy as much as possible
                 {
                     playBuyCommodity();
                     if (gui_screen == GUI_SCREEN_MARKET) {
@@ -3249,11 +3306,11 @@ void PlayerEntity::pollMarketScreenControls()
                 } else if (isdocked) {
                     playCantBuyCommodity();
                 }
-                wait_for_key_up = YES;
+                wait_for_key_up = true;
             }
         }
     } else {
-        wait_for_key_up = NO;
+        wait_for_key_up = false;
     }
 }
 
@@ -3265,7 +3322,7 @@ void PlayerEntity::handleGameOptionsScreenKeys()
 
     handleGUIUpDownArrowKeys();
     OOGUIRow guiSelectedRow = gui->getSelectedRow();
-    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
+    bool selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
     if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
         if (gameView != nullptr)
             gameView->clearMouse();
@@ -3275,13 +3332,13 @@ void PlayerEntity::handleGameOptionsScreenKeys()
         selFunctionIdx = 0;
         resetStickFunctions(); // reset the list of stick functions, so changes in
                                // oxp equipment are reflected
-        setGuiToStickMapperScreen(0, YES);
+        setGuiToStickMapperScreen(0, true);
     }
     if ((guiSelectedRow == GUI_ROW(GAME, KEYMAPPER)) && selectKeyPress) {
         selFunctionIdx = 0;
         resetKeyFunctions(); // reset the list of key functions, so changes in oxp
                              // equipment are reflected
-        setGuiToKeyMapperScreen(0, YES);
+        setGuiToKeyMapperScreen(0, true);
     }
 
 #if OOLITE_WINDOWS
@@ -3338,10 +3395,10 @@ void PlayerEntity::handleGameOptionsScreenKeys()
                 gui->setText(maxBrightnessString, GUI_ROW(GAME, HDRMAXBRIGHTNESS),
                     GUI_ALIGN_CENTER);
 
-                hdrMaxBrightnessControlPressed = YES;
+                hdrMaxBrightnessControlPressed = true;
             }
         } else
-            hdrMaxBrightnessControlPressed = NO;
+            hdrMaxBrightnessControlPressed = false;
     }
 #endif
 
@@ -3379,7 +3436,7 @@ void PlayerEntity::handleGameOptionsScreenKeys()
 
         playChangedOption();
         gui->setText(displayModeString, GUI_ROW(GAME, DISPLAY), GUI_ALIGN_CENTER);
-        switching_resolution = YES;
+        switching_resolution = true;
 
 #if OOLITE_SDL
         /*	TODO: The gameView for the SDL game currently holds and
@@ -3391,7 +3448,7 @@ void PlayerEntity::handleGameOptionsScreenKeys()
 #endif
     }
     if (switching_resolution && !checkKeyPress(n_key_gui_arrow_right) && !checkKeyPress(n_key_gui_arrow_left) && !selectKeyPress) {
-        switching_resolution = NO;
+        switching_resolution = false;
     }
 #endif // OO_RESOLUTION_OPTION
 
@@ -3402,9 +3459,9 @@ void PlayerEntity::handleGameOptionsScreenKeys()
             if (checkKeyPress(n_key_gui_arrow_right) && isSpeechOn < OOSPEECHSETTINGS_ALL) {
                 isSpeechOn = (OOSpeechSettings)(isSpeechOn + 1);
                 playChangedOption();
-                speech_settings_pressed = YES;
+                speech_settings_pressed = true;
             } else if (checkKeyPress(n_key_gui_arrow_left) && isSpeechOn > OOSPEECHSETTINGS_OFF) {
-                speech_settings_pressed = YES;
+                speech_settings_pressed = true;
                 isSpeechOn = (OOSpeechSettings)(isSpeechOn - 1);
                 playChangedOption();
             }
@@ -3434,7 +3491,7 @@ void PlayerEntity::handleGameOptionsScreenKeys()
             }
         }
     } else {
-        speech_settings_pressed = NO;
+        speech_settings_pressed = false;
     }
 #if OOLITE_ESPEAK
     if (guiSelectedRow == GUI_ROW(GAME, SPEECH_LANGUAGE)) {
@@ -3464,16 +3521,16 @@ void PlayerEntity::handleGameOptionsScreenKeys()
                 }
                 timeLastKeyPress = script_time;
             }
-            speechVoiceSelectKeyPressed = YES;
+            speechVoiceSelectKeyPressed = true;
         } else
-            speechVoiceSelectKeyPressed = NO;
+            speechVoiceSelectKeyPressed = false;
     }
 
     if (guiSelectedRow == GUI_ROW(GAME, SPEECH_GENDER)) {
         if (checkKeyPress(n_key_gui_arrow_right) || checkKeyPress(n_key_gui_arrow_left)) {
             if (!speechGenderSelectKeyPressed) {
                 playChangedOption();
-                BOOL m = checkKeyPress(n_key_gui_arrow_right);
+                bool m = checkKeyPress(n_key_gui_arrow_right);
                 if (m != voice_gender_m) {
                     voice_gender_m = m;
                     if (UNIVERSE != nullptr)
@@ -3492,9 +3549,9 @@ void PlayerEntity::handleGameOptionsScreenKeys()
                     }
                 }
             }
-            speechGenderSelectKeyPressed = YES;
+            speechGenderSelectKeyPressed = true;
         } else
-            speechGenderSelectKeyPressed = NO;
+            speechGenderSelectKeyPressed = false;
     }
 #endif
 #endif
@@ -3525,9 +3582,9 @@ void PlayerEntity::handleGameOptionsScreenKeys()
                 gui->setText(message, GUI_ROW(GAME, MUSIC), GUI_ALIGN_CENTER);
             }
         }
-        musicModeKeyPressed = YES;
+        musicModeKeyPressed = true;
     } else
-        musicModeKeyPressed = NO;
+        musicModeKeyPressed = false;
 
     if ((guiSelectedRow == GUI_ROW(GAME, AUTOSAVE)) && ((checkKeyPress(n_key_gui_arrow_right)) || (checkKeyPress(n_key_gui_arrow_left)))) {
         if (checkKeyPress(n_key_gui_arrow_right) != (UNIVERSE != nullptr ? UNIVERSE->getAutoSave() : false))
@@ -3537,12 +3594,12 @@ void PlayerEntity::handleGameOptionsScreenKeys()
         if ((UNIVERSE != nullptr ? UNIVERSE->getAutoSave() : false)) {
             // if just enabled, we want to autosave immediately
             if (UNIVERSE != nullptr)
-                UNIVERSE->setAutoSaveNow(YES);
+                UNIVERSE->setAutoSaveNow(true);
             gui->setText(OO_DESC("gameoptions-autosave-yes"), GUI_ROW(GAME, AUTOSAVE),
                 GUI_ALIGN_CENTER);
         } else {
             if (UNIVERSE != nullptr)
-                UNIVERSE->setAutoSaveNow(NO);
+                UNIVERSE->setAutoSaveNow(false);
             gui->setText(OO_DESC("gameoptions-autosave-no"), GUI_ROW(GAME, AUTOSAVE),
                 GUI_ALIGN_CENTER);
         }
@@ -3553,8 +3610,8 @@ void PlayerEntity::handleGameOptionsScreenKeys()
                                                                                                                                         // was always YES)
     {
         if ((!volumeControlPressed) || (script_time > timeLastKeyPress + KEY_REPEAT_INTERVAL)) {
-            BOOL rightKeyDown = checkKeyPress(n_key_gui_arrow_right);
-            BOOL leftKeyDown = checkKeyPress(n_key_gui_arrow_left);
+            bool rightKeyDown = checkKeyPress(n_key_gui_arrow_right);
+            bool leftKeyDown = checkKeyPress(n_key_gui_arrow_left);
             double volume = 100.0 * ::OOSound::masterVolume();
             int vol = (volume / 5.0 + 0.5);
             if (rightKeyDown)
@@ -3581,15 +3638,15 @@ void PlayerEntity::handleGameOptionsScreenKeys()
                     GUI_ROW(GAME, VOLUME), GUI_ALIGN_CENTER);
             timeLastKeyPress = script_time;
         }
-        volumeControlPressed = YES;
+        volumeControlPressed = true;
     } else
-        volumeControlPressed = NO;
+        volumeControlPressed = false;
 
     if ((guiSelectedRow == GUI_ROW(GAME, FOV)) && ((checkKeyPress(n_key_gui_arrow_right)) || (checkKeyPress(n_key_gui_arrow_left)))) {
         if (!fovControlPressed || (script_time > timeLastKeyPress + KEY_REPEAT_INTERVAL)) {
-            BOOL rightKeyDown = checkKeyPress(n_key_gui_arrow_right);
-            BOOL leftKeyDown = checkKeyPress(n_key_gui_arrow_left);
-            float fov = (gameView != nullptr ? gameView->fov(NO) : 0.0f);
+            bool rightKeyDown = checkKeyPress(n_key_gui_arrow_right);
+            bool leftKeyDown = checkKeyPress(n_key_gui_arrow_left);
+            float fov = (gameView != nullptr ? gameView->fov(false) : 0.0f);
             float fovStep = (MAX_FOV_DEG - MIN_FOV_DEG) / 20.0f;
             fov += (((rightKeyDown && (fov < MAX_FOV_DEG)) ? fovStep : 0.0f) - ((leftKeyDown && (fov > MIN_FOV_DEG)) ? fovStep : 0.0f));
             if (fov > MAX_FOV_DEG)
@@ -3597,8 +3654,8 @@ void PlayerEntity::handleGameOptionsScreenKeys()
             if (fov < MIN_FOV_DEG)
                 fov = MIN_FOV_DEG;
             if (gameView != nullptr)
-                gameView->setFov(fov, NO);
-            fieldOfView = (gameView != nullptr ? gameView->fov(YES) : 0.0f);
+                gameView->setFov(fov, false);
+            fieldOfView = (gameView != nullptr ? gameView->fov(true) : 0.0f);
             int fovTicks = (int)((fov - MIN_FOV_DEG) / fovStep);
             const std::string fovWordDesc = OO_DESC("gameoptions-fov-value");
             std::string v1_string = "|||||||||||||||||||||||||";
@@ -3612,12 +3669,12 @@ void PlayerEntity::handleGameOptionsScreenKeys()
                              (int)fov, "\xC2\xB0" /*the degrees symbol*/),
                 GUI_ROW(GAME, FOV), GUI_ALIGN_CENTER);
             oo::Defaults::standard().setFloat(
-                "fov-value", (gameView != nullptr ? gameView->fov(NO) : 0.0f));
+                "fov-value", (gameView != nullptr ? gameView->fov(false) : 0.0f));
             timeLastKeyPress = script_time;
         }
-        fovControlPressed = YES;
+        fovControlPressed = true;
     } else
-        fovControlPressed = NO;
+        fovControlPressed = false;
 
     // color blind mode
     if ((guiSelectedRow == GUI_ROW(GAME, COLORBLINDMODE)) && ((checkKeyPress(n_key_gui_arrow_right)) || (checkKeyPress(n_key_gui_arrow_left)))) {
@@ -3649,9 +3706,9 @@ void PlayerEntity::handleGameOptionsScreenKeys()
             gui->setText(colorblindModeMsg, GUI_ROW(GAME, COLORBLINDMODE),
                 GUI_ALIGN_CENTER);
         }
-        colorblindModeControlPressed = YES;
+        colorblindModeControlPressed = true;
     } else
-        colorblindModeControlPressed = NO;
+        colorblindModeControlPressed = false;
 
     if (!(gameView != nullptr ? gameView->hdrOutput() : false)) {
         if ((guiSelectedRow == GUI_ROW(GAME, WIREFRAMEGRAPHICS)) && ((checkKeyPress(n_key_gui_arrow_right)) || (checkKeyPress(n_key_gui_arrow_left)))) {
@@ -3671,8 +3728,8 @@ void PlayerEntity::handleGameOptionsScreenKeys()
     else {
         if ((guiSelectedRow == GUI_ROW(GAME, HDRPAPERWHITE)) && ((checkKeyPress(n_key_gui_arrow_right)) || (checkKeyPress(n_key_gui_arrow_left)))) {
             if (!hdrPaperWhiteControlPressed) {
-                BOOL rightKeyDown = checkKeyPress(n_key_gui_arrow_right);
-                BOOL leftKeyDown = checkKeyPress(n_key_gui_arrow_left);
+                bool rightKeyDown = checkKeyPress(n_key_gui_arrow_right);
+                bool leftKeyDown = checkKeyPress(n_key_gui_arrow_left);
                 float paperWhite = (gameView != nullptr ? gameView->hdrPaperWhiteBrightness() : 0.0f);
                 paperWhite += (((rightKeyDown && (paperWhite < MAX_HDR_PAPERWHITE)) ? 10.0f
                                                                                     : 0.0f)
@@ -3695,9 +3752,9 @@ void PlayerEntity::handleGameOptionsScreenKeys()
                                  (int)paperWhite),
                     GUI_ROW(GAME, HDRPAPERWHITE), GUI_ALIGN_CENTER);
             }
-            hdrPaperWhiteControlPressed = YES;
+            hdrPaperWhiteControlPressed = true;
         } else
-            hdrPaperWhiteControlPressed = NO;
+            hdrPaperWhiteControlPressed = false;
     }
 #endif
 
@@ -3755,9 +3812,9 @@ void PlayerEntity::handleGameOptionsScreenKeys()
             setGuiToGameOptionsScreen();
             gui->setSelectedRow(GUI_ROW(GAME, SHADEREFFECTS));
         }
-        shaderSelectKeyPressed = YES;
+        shaderSelectKeyPressed = true;
     } else
-        shaderSelectKeyPressed = NO;
+        shaderSelectKeyPressed = false;
 
 #if OOLITE_SDL
     if ((guiSelectedRow == GUI_ROW(GAME, DISPLAYSTYLE)) && selectKeyPress) {
@@ -3813,7 +3870,7 @@ void PlayerEntity::handleKeyMapperScreenKeys()
             if (from_function < 0)
                 from_function = 0;
 
-            setGuiToKeyMapperScreen(from_function, YES);
+            setGuiToKeyMapperScreen(from_function, true);
             if (UNIVERSE->getGui()->getSelectedRow() < GUI_ROW_KC_FUNCSTART) {
                 UNIVERSE->getGui()->setSelectedRow(GUI_ROW_KC_FUNCSTART);
             }
@@ -3847,7 +3904,7 @@ void PlayerEntity::handleKeyboardLayoutKeys()
             if (from_function < 0)
                 from_function = 0;
 
-            setGuiToKeyboardLayoutScreen(from_function, YES);
+            setGuiToKeyboardLayoutScreen(from_function, true);
             if (UNIVERSE->getGui()->getSelectedRow() < GUI_ROW_KC_FUNCSTART) {
                 UNIVERSE->getGui()->setSelectedRow(GUI_ROW_KC_FUNCSTART);
             }
@@ -3881,7 +3938,7 @@ void PlayerEntity::handleStickMapperScreenKeys()
             if (from_function < 0)
                 from_function = 0;
 
-            setGuiToStickMapperScreen(from_function, YES);
+            setGuiToStickMapperScreen(from_function, true);
             if (UNIVERSE->getGui()->getSelectedRow() < GUI_ROW_FUNCSTART) {
                 UNIVERSE->getGui()->setSelectedRow(GUI_ROW_FUNCSTART);
             }
@@ -3901,13 +3958,13 @@ void PlayerEntity::pollCustomViewControls()
     static Vector rotationCenter;
     static Vector up;
     static Vector right;
-    static BOOL mouse_clicked = NO;
+    static bool mouse_clicked = false;
     static NSPoint mouse_clicked_position;
-    static BOOL shift_down;
-    static BOOL caps_on = NO;
+    static bool shift_down;
+    static bool caps_on = false;
     static NSTimeInterval last_time = 0.0;
     ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
-    const BOOL* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+    const bool* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
 
     if (checkKeyPress(n_key_custom_view) || joyButtonState[BUTTON_EXTVIEWCYCLE]) {
         if (!customView_pressed && !_customViews.empty() && gui_screen != GUI_SCREEN_LONG_RANGE_CHART && !(gameView != nullptr ? gameView->getAllowingStringInput() : StringInput { })) {
@@ -3922,18 +3979,18 @@ void PlayerEntity::pollCustomViewControls()
                 : oo::PList();
             setCustomViewDataFromDictionary(
                 (customView.isDict() ? customView : oo::PList()),
-                YES); // null unless a Dict
+                true); // null unless a Dict
 
-            switchToThisView(
-                VIEW_CUSTOM,
-                NO); // weapon facing must not change, we just want an external view
+            switchToThisView(VIEW_CUSTOM,
+                false); // weapon facing must not change, we just want
+                        // an external view
         }
-        customView_pressed = YES;
+        customView_pressed = true;
     } else
-        customView_pressed = NO;
+        customView_pressed = false;
     NSTimeInterval this_time = oo::date::monotonicSeconds(); // intervals only (last_time)
     if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }) > VIEW_STARBOARD && (gameView != nullptr ? gameView->isCapsLockOn() : false)) {
-        BOOL ctrl_down = (gameView != nullptr ? gameView->isCtrlDown() : false);
+        bool ctrl_down = (gameView != nullptr ? gameView->isCtrlDown() : false);
         float customViewZoomSpeed = ctrl_down ? CUSTOM_VIEW_ZOOM_SPEED * CUSTOM_VIEW_SPEED_REDUCTION_FACTOR
                                               : CUSTOM_VIEW_ZOOM_SPEED;
         float customViewRotateSpeed = ctrl_down
@@ -3941,48 +3998,48 @@ void PlayerEntity::pollCustomViewControls()
             : CUSTOM_VIEW_ROTATE_SPEED;
 
         if (!caps_on)
-            caps_on = YES;
+            caps_on = true;
 
         OOTimeDelta delta_t = this_time - last_time;
-        if ((checkKeyPressIgnoreCtrl(n_key_custom_view_zoom_out, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_zoom_in, YES)) || (gameView != nullptr ? gameView->mouseWheelState() : 0) == gvMouseWheelDown) {
+        if ((checkKeyPressIgnoreCtrl(n_key_custom_view_zoom_out, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_zoom_in, true)) || (gameView != nullptr ? gameView->mouseWheelState() : 0) == gvMouseWheelDown) {
             customViewZoomOut(pow(customViewZoomSpeed, delta_t));
         }
-        if ((checkKeyPressIgnoreCtrl(n_key_custom_view_zoom_in, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_zoom_out, YES)) || (gameView != nullptr ? gameView->mouseWheelState() : 0) == gvMouseWheelUp) {
+        if ((checkKeyPressIgnoreCtrl(n_key_custom_view_zoom_in, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_zoom_out, true)) || (gameView != nullptr ? gameView->mouseWheelState() : 0) == gvMouseWheelUp) {
             customViewZoomIn(pow(customViewZoomSpeed, delta_t));
         }
-        if (checkKeyPressIgnoreCtrl(n_key_custom_view_roll_left, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_roll_right, YES)) {
+        if (checkKeyPressIgnoreCtrl(n_key_custom_view_roll_left, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_roll_right, true)) {
             customViewRollLeft(customViewRotateSpeed * delta_t);
         }
-        if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_left, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_right, YES)) {
+        if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_left, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_right, true)) {
             customViewPanLeft(customViewRotateSpeed * delta_t);
         }
-        if (checkKeyPressIgnoreCtrl(n_key_custom_view_roll_right, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_roll_left, YES)) {
+        if (checkKeyPressIgnoreCtrl(n_key_custom_view_roll_right, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_roll_left, true)) {
             customViewRollRight(customViewRotateSpeed * delta_t);
         }
-        if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_right, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_left, YES)) {
+        if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_right, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_left, true)) {
             customViewPanRight(customViewRotateSpeed * delta_t);
         }
-        if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_up, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_down, YES)) {
+        if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_up, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_down, true)) {
             customViewRotateUp(customViewRotateSpeed * delta_t);
         }
-        if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_down, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_up, YES)) {
+        if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_down, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_up, true)) {
             customViewPanDown(customViewRotateSpeed * delta_t);
         }
-        if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_down, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_up, YES)) {
+        if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_down, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_up, true)) {
             customViewRotateDown(customViewRotateSpeed * delta_t);
         }
-        if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_up, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_down, YES)) {
+        if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_up, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_down, true)) {
             customViewPanUp(customViewRotateSpeed * delta_t);
         }
-        if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_left, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_right, YES)) {
+        if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_left, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_right, true)) {
             customViewRotateLeft(customViewRotateSpeed * delta_t);
         }
-        if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_right, YES) && !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_left, YES)) {
+        if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_right, true) && !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_left, true)) {
             customViewRotateRight(customViewRotateSpeed * delta_t);
         }
         if ((gameView != nullptr ? gameView->isDown(gvMouseLeftButton) : false)) {
             if (!mouse_clicked || shift_down != (gameView != nullptr ? gameView->isShiftDown() : false)) {
-                mouse_clicked = YES;
+                mouse_clicked = true;
                 viewQuaternion = (PLAYER != nullptr ? PLAYER->getCustomViewQuaternion()
                                                     : Quaternion { });
                 viewOffset = (PLAYER != nullptr ? PLAYER->getCustomViewOffset() : Vector { });
@@ -4030,12 +4087,12 @@ void PlayerEntity::pollCustomViewControls()
                     PLAYER->setCustomViewOffset(vector_add(offset, rotationCenter));
             }
         } else {
-            mouse_clicked = NO;
+            mouse_clicked = false;
         }
     } else {
-        mouse_clicked = NO;
+        mouse_clicked = false;
         if (caps_on) {
-            caps_on = NO;
+            caps_on = false;
             if (isMouseControlOn()) {
                 if (gameView != nullptr)
                     gameView->resetMouse();
@@ -4068,7 +4125,7 @@ void PlayerEntity::pollViewControls()
             virtualView.y = 0.0;
     }
 
-    const BOOL* joyButtonState = stickHandler->getAllButtonStates();
+    const bool* joyButtonState = stickHandler->getAllButtonStates();
 
     //  view keys
     if ((checkKeyPress(n_key_view_forward)) || (virtualView.y < -view_threshold) || joyButtonState[BUTTON_VIEWFORWARD] || (((checkKeyPress(n_key_hyperspace) && gui_screen != GUI_SCREEN_LONG_RANGE_CHART) || joyButtonState[BUTTON_HYPERDRIVE]) && (UNIVERSE != nullptr ? UNIVERSE->getDisplayGUI() : false))) {
@@ -4100,9 +4157,9 @@ void PlayerEntity::pollViewControls()
                     scanner_zoom_rate = SCANNER_ZOOM_RATE_DOWN;
             }
         }
-        zoom_pressed = YES;
+        zoom_pressed = true;
     } else
-        zoom_pressed = NO;
+        zoom_pressed = false;
 
     // Unzoom scanner 'Z'
     if ((checkKeyPress(n_key_scanner_unzoom) && ((gameView != nullptr ? gameView->getAllowingStringInput() : StringInput { }) == gvStringInputNo)) || joyButtonState[BUTTON_SCANNERUNZOOM]) // look for the 'Z' key
@@ -4119,18 +4176,18 @@ void PlayerEntity::pollViewControls()
         {
             if ((!prev_compass_mode_pressed) && (compassMode != COMPASS_MODE_BASIC))
                 setPrevCompassMode();
-            prev_compass_mode_pressed = YES;
+            prev_compass_mode_pressed = true;
         } else {
-            prev_compass_mode_pressed = NO;
+            prev_compass_mode_pressed = false;
         }
         // Compass mode '\'
         if (checkKeyPress(n_key_next_compass_mode) || joyButtonState[BUTTON_COMPASSMODE]) // look for the '\' key
         {
             if ((!next_compass_mode_pressed) && (compassMode != COMPASS_MODE_BASIC))
                 setNextCompassMode();
-            next_compass_mode_pressed = YES;
+            next_compass_mode_pressed = true;
         } else {
-            next_compass_mode_pressed = NO;
+            next_compass_mode_pressed = false;
         }
     }
 
@@ -4144,9 +4201,9 @@ void PlayerEntity::pollViewControls()
                 cyclePreviousMultiFunctionDisplay(activeMFD);
             }
         }
-        cycleMFD_pressed = YES;
+        cycleMFD_pressed = true;
     } else {
-        cycleMFD_pressed = NO;
+        cycleMFD_pressed = false;
     }
 
     //  ':' // Select next MFD
@@ -4161,9 +4218,9 @@ void PlayerEntity::pollViewControls()
                 }
             }
         }
-        switchMFD_pressed = YES;
+        switchMFD_pressed = true;
     } else {
-        switchMFD_pressed = NO;
+        switchMFD_pressed = false;
     }
 
     //  show comms log '`'
@@ -4202,7 +4259,7 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t)
             virtualStick.x = 0;
         } else if (virtualStick.x != 0) {
             // cancel keyboard override, stick has been waggled
-            keyboardRollOverride = NO;
+            keyboardRollOverride = false;
         }
         // handle pitch separately (fix for BUG #17490)
         if (virtualStick.y == STICK_AXISUNASSIGNED) {
@@ -4210,7 +4267,7 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t)
             virtualStick.y = 0;
         } else if (virtualStick.y != 0) {
             // cancel keyboard override, stick has been waggled
-            keyboardPitchOverride = NO;
+            keyboardPitchOverride = false;
         }
         // handle yaw separately from pitch/roll
         reqYaw = stickHandler->getAxisState(AXIS_YAW);
@@ -4219,16 +4276,16 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t)
             reqYaw = 0;
         } else if (reqYaw != 0) {
             // cancel keyboard override, stick has been waggled
-            keyboardYawOverride = NO;
+            keyboardYawOverride = false;
         }
     }
 
     double roll_dampner = ROLL_DAMPING_FACTOR * delta_t;
     double pitch_dampner = PITCH_DAMPING_FACTOR * delta_t;
     double yaw_dampner = YAW_DAMPING_FACTOR * delta_t;
-    BOOL capsLockCustomView = (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }) == VIEW_CUSTOM && (gameView != nullptr ? gameView->isCapsLockOn() : false);
+    bool capsLockCustomView = (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }) == VIEW_CUSTOM && (gameView != nullptr ? gameView->isCapsLockOn() : false);
 
-    BOOL isCtrlDown = (gameView != nullptr ? gameView->isCtrlDown() : false);
+    bool isCtrlDown = (gameView != nullptr ? gameView->isCtrlDown() : false);
 
     const oo::PList arrowPrec = oo::Defaults::standard().object("flight-arrow-key-precision-factor");
     double flightArrowKeyPrecisionFactor = oo::PListGet<double>::from(
@@ -4238,26 +4295,26 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t)
     if (flightArrowKeyPrecisionFactor > 1.0)
         flightArrowKeyPrecisionFactor = 1.0;
 
-    rolling = NO;
+    rolling = false;
     // if we have yaw on the mouse x-axis, then allow using the keyboard roll keys
     if (!mouse_control_on || (mouse_control_on && mouse_x_axis_map_to_yaw)) {
         if (checkNavKeyPress(n_key_roll_left) && checkNavKeyPress(n_key_roll_right)) {
-            keyboardRollOverride = YES;
+            keyboardRollOverride = true;
             flightRoll = 0.0;
         } else if (checkNavKeyPress(n_key_roll_left) && !capsLockCustomView) {
-            keyboardRollOverride = YES;
+            keyboardRollOverride = true;
             if (flightRoll > 0.0)
                 flightRoll = 0.0;
             decrease_flight_roll(isCtrlDown ? flightArrowKeyPrecisionFactor * roll_dampner * roll_delta
                                             : delta_t * roll_delta);
-            rolling = YES;
+            rolling = true;
         } else if (checkNavKeyPress(n_key_roll_right) && !capsLockCustomView) {
-            keyboardRollOverride = YES;
+            keyboardRollOverride = true;
             if (flightRoll < 0.0)
                 flightRoll = 0.0;
             increase_flight_roll(isCtrlDown ? flightArrowKeyPrecisionFactor * roll_dampner * roll_delta
                                             : delta_t * roll_delta);
-            rolling = YES;
+            rolling = true;
         }
     }
     if (((mouse_control_on && !mouse_x_axis_map_to_yaw) || numSticks) && !keyboardRollOverride && !capsLockCustomView) {
@@ -4289,27 +4346,27 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t)
         }
     }
 
-    pitching = NO;
+    pitching = false;
     // we don't care about pitch keyboard overrides when mouse control is on, only
     // when using joystick
     if (!mouse_control_on) {
         if (checkNavKeyPress(n_key_pitch_back) && checkNavKeyPress(n_key_pitch_forward)) {
-            keyboardPitchOverride = YES;
+            keyboardPitchOverride = true;
             flightPitch = 0.0;
         } else if (checkNavKeyPress(n_key_pitch_back) && !capsLockCustomView) {
-            keyboardPitchOverride = YES;
+            keyboardPitchOverride = true;
             if (flightPitch < 0.0)
                 flightPitch = 0.0;
             increase_flight_pitch(isCtrlDown ? flightArrowKeyPrecisionFactor * pitch_dampner * pitch_delta
                                              : delta_t * pitch_delta);
-            pitching = YES;
+            pitching = true;
         } else if (checkNavKeyPress(n_key_pitch_forward) && !capsLockCustomView) {
-            keyboardPitchOverride = YES;
+            keyboardPitchOverride = true;
             if (flightPitch > 0.0)
                 flightPitch = 0.0;
             decrease_flight_pitch(isCtrlDown ? flightArrowKeyPrecisionFactor * pitch_dampner * pitch_delta
                                              : delta_t * pitch_delta);
-            pitching = YES;
+            pitching = true;
         }
     }
     if ((mouse_control_on || (numSticks && !keyboardPitchOverride)) && !capsLockCustomView) {
@@ -4341,26 +4398,26 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t)
         }
     }
 
-    yawing = NO;
+    yawing = false;
     // if we have roll on the mouse x-axis, then allow using the keyboard yaw keys
     if (!mouse_control_on || (mouse_control_on && !mouse_x_axis_map_to_yaw)) {
         if (checkNavKeyPress(n_key_yaw_left) && checkNavKeyPress(n_key_yaw_right)) {
-            keyboardYawOverride = YES;
+            keyboardYawOverride = true;
             flightYaw = 0.0;
         } else if (checkNavKeyPress(n_key_yaw_left) && !capsLockCustomView) {
-            keyboardYawOverride = YES;
+            keyboardYawOverride = true;
             if (flightYaw < 0.0)
                 flightYaw = 0.0;
             increase_flight_yaw(isCtrlDown ? flightArrowKeyPrecisionFactor * yaw_dampner * yaw_delta
                                            : delta_t * yaw_delta);
-            yawing = YES;
+            yawing = true;
         } else if (checkNavKeyPress(n_key_yaw_right) && !capsLockCustomView) {
-            keyboardYawOverride = YES;
+            keyboardYawOverride = true;
             if (flightYaw > 0.0)
                 flightYaw = 0.0;
             decrease_flight_yaw(isCtrlDown ? flightArrowKeyPrecisionFactor * yaw_dampner * yaw_delta
                                            : delta_t * yaw_delta);
-            yawing = YES;
+            yawing = true;
         }
     }
     if (((mouse_control_on && mouse_x_axis_map_to_yaw) || numSticks) && !keyboardYawOverride && !capsLockCustomView) {
@@ -4397,7 +4454,7 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t)
 
 void PlayerEntity::pollGuiScreenControls()
 {
-    pollGuiScreenControlsWithFKeyAlias(YES);
+    pollGuiScreenControlsWithFKeyAlias(true);
 }
 
 void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias)
@@ -4407,12 +4464,12 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias)
 
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
-    BOOL docked_okay = (status() == STATUS_DOCKED);
+    bool docked_okay = (status() == STATUS_DOCKED);
 
     //  text displays
     if (checkKeyPress(n_key_gui_screen_status, !fKeyAlias)) {
         if (!switching_status_screens) {
-            switching_status_screens = YES;
+            switching_status_screens = true;
             if (gui_screen == GUI_SCREEN_STATUS) {
                 noteGUIWillChangeTo(GUI_SCREEN_MANIFEST);
                 setGuiToManifestScreen();
@@ -4421,19 +4478,19 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias)
             checkScript();
         }
     } else {
-        switching_status_screens = NO;
+        switching_status_screens = false;
     }
 
     if (checkKeyPress(n_key_gui_chart_screens, !fKeyAlias)) {
-        mouse_left_down = NO;
+        mouse_left_down = false;
         if (gameView != nullptr)
             gameView->clearMouse();
         if (!switching_chart_screens) {
-            switching_chart_screens = YES;
+            switching_chart_screens = true;
             // handles http://aegidian.org/bb/viewtopic.php?p=233189#p233189
             if (EXPECT_NOT(status() == STATUS_WITCHSPACE_COUNTDOWN && gui_screen == GUI_SCREEN_SHORT_RANGE_CHART)) {
                 // don't switch to LRC if countdown in progress
-                switching_chart_screens = NO;
+                switching_chart_screens = false;
             } else if (gui_screen == GUI_SCREEN_SHORT_RANGE_CHART || (gui_screen == GUI_SCREEN_SYSTEM_DATA && showingLongRangeChart)) {
                 if (target_chart_zoom != CHART_MAX_ZOOM) {
                     saved_chart_zoom = target_chart_zoom;
@@ -4452,7 +4509,7 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias)
             }
         }
     } else {
-        switching_chart_screens = NO;
+        switching_chart_screens = false;
     }
 
     if (checkKeyPress(n_key_gui_system_data, !fKeyAlias)) {
@@ -4488,7 +4545,7 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias)
 
         if (checkKeyPress(n_key_gui_screen_equipship, !fKeyAlias)) {
             if (!switching_equipship_screens) {
-                if (dockedStation() == nil)
+                if (dockedStation() == nullptr)
                     setDockedAtMainStation();
                 OOGUIScreenID oldScreen = gui_screen;
 
@@ -4511,9 +4568,9 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias)
 
                 noteGUIDidChangeFrom(oldScreen, gui_screen);
             }
-            switching_equipship_screens = YES;
+            switching_equipship_screens = true;
         } else {
-            switching_equipship_screens = NO;
+            switching_equipship_screens = false;
         }
 
         if (checkKeyPress(n_key_gui_screen_interfaces, !fKeyAlias)) {
@@ -4522,9 +4579,9 @@ void PlayerEntity::pollGuiScreenControlsWithFKeyAlias(bool fKeyAlias)
                 setGuiToInterfacesScreen(0);
                 gui->setSelectedRow(GUI_ROW_INTERFACES_START);
             }
-            switching_interface_screens = YES;
+            switching_interface_screens = true;
         } else {
-            switching_interface_screens = NO;
+            switching_interface_screens = false;
         }
     }
 }
@@ -4540,14 +4597,14 @@ void PlayerEntity::pollGameOverControls(double /*delta_t*/)
                 UNIVERSE->displayMessage("", 1.0);
             shot_time = INITIAL_SHOT_TIME; // forces immediate restart
         }
-        spacePressed = YES;
+        spacePressed = true;
     } else
-        spacePressed = NO;
+        spacePressed = false;
 }
 
-static BOOL toggling_music;
-static BOOL playing_music;
-static BOOL autopilot_pause;
+static bool toggling_music;
+static bool playing_music;
+static bool autopilot_pause;
 
 void PlayerEntity::pollAutopilotControls(double delta_t)
 {
@@ -4555,7 +4612,7 @@ void PlayerEntity::pollAutopilotControls(double delta_t)
     if (gui_screen == GUI_SCREEN_KEYBOARD_ENTRY || gui_screen == GUI_SCREEN_KEYBOARD_CONFIG || gui_screen == GUI_SCREEN_KEYBOARD_LAYOUT || gui_screen == GUI_SCREEN_KEYBOARD || gui_screen == GUI_SCREEN_KEYBOARD_CONFIRMCLEAR)
         return;
 
-    const BOOL* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+    const bool* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
 
     // controls polled while the autopilot is active
     if (!(UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr
@@ -4577,13 +4634,13 @@ void PlayerEntity::pollAutopilotControls(double delta_t)
                 if (UNIVERSE != nullptr)
                     UNIVERSE->addMessage(OO_DESC("autopilot-off"), 4.5);
             }
-            autopilot_key_pressed = YES;
+            autopilot_key_pressed = true;
             if (checkKeyPress(n_key_autodock) || joyButtonState[BUTTON_DOCKCPUFAST]) {
-                fast_autopilot_key_pressed = YES;
+                fast_autopilot_key_pressed = true;
             }
         } else {
-            autopilot_key_pressed = NO;
-            fast_autopilot_key_pressed = NO;
+            autopilot_key_pressed = false;
+            fast_autopilot_key_pressed = false;
         }
 
         if ((checkKeyPress(n_key_docking_music) || joyButtonState[BUTTON_DOCKINGMUSIC])) // look for the 's' key
@@ -4591,9 +4648,9 @@ void PlayerEntity::pollAutopilotControls(double delta_t)
             if (!toggling_music) {
                 OOMusicController::sharedController()->toggleDockingMusic();
             }
-            toggling_music = YES;
+            toggling_music = true;
         } else {
-            toggling_music = NO;
+            toggling_music = false;
         }
         // look for the pause game, 'p' key
         if ((checkKeyPress(n_key_pausebutton) || joyButtonState[BUTTON_PAUSE]) && gui_screen != GUI_SCREEN_SHORT_RANGE_CHART && gui_screen != GUI_SCREEN_MISSION && gui_screen != GUI_SCREEN_KEYBOARD_ENTRY) {
@@ -4602,13 +4659,13 @@ void PlayerEntity::pollAutopilotControls(double delta_t)
                 if (playing_music)
                     OOMusicController::sharedController()->toggleDockingMusic();
                 // normal flight controls can handle the rest.
-                pause_pressed = NO; // pause button flag must be NO for
-                                    // pollflightControls to react!
+                pause_pressed = false; // pause button flag must be NO for
+                                       // pollflightControls to react!
                 pollFlightControls(delta_t);
             }
-            autopilot_pause = YES;
+            autopilot_pause = true;
         } else {
-            autopilot_pause = NO;
+            autopilot_pause = false;
         }
     } else {
         // paused
@@ -4617,9 +4674,9 @@ void PlayerEntity::pollAutopilotControls(double delta_t)
                 if (playing_music)
                     OOMusicController::sharedController()->toggleDockingMusic();
             }
-            autopilot_pause = YES;
+            autopilot_pause = true;
         } else {
-            autopilot_pause = NO;
+            autopilot_pause = false;
         }
         // let the normal flight controls handle paused commands.
         pollFlightControls(delta_t);
@@ -4630,27 +4687,27 @@ void PlayerEntity::pollDockedControls(double delta_t)
 {
     ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
     ::GameController* gameController = (UNIVERSE != nullptr ? UNIVERSE->gameController() : nullptr);
-    const BOOL* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+    const bool* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
     const char* exceptionContext = "setup";
 
     try {
         // Pause game, 'p' key
         exceptionContext = "pause key";
         if ((checkKeyPress(n_key_pausebutton) || joyButtonState[BUTTON_PAUSE]) && (gui_screen != GUI_SCREEN_LONG_RANGE_CHART && gui_screen != GUI_SCREEN_REPORT && gui_screen != GUI_SCREEN_SAVE && gui_screen != GUI_SCREEN_KEYBOARD_ENTRY)) {
-            BOOL isMissionScreenWithTextEntry = gui_screen == GUI_SCREEN_MISSION && _missionTextEntry;
+            bool isMissionScreenWithTextEntry = gui_screen == GUI_SCREEN_MISSION && _missionTextEntry;
             if (!pause_pressed) {
                 if ((gameController != nullptr ? gameController->isGamePaused()
                                                : false)) {
                     script_time = saved_script_time;
                     if (gameView != nullptr)
-                        gameView->allowStringInput(NO);
+                        gameView->allowStringInput(false);
                     if ((UNIVERSE != nullptr ? UNIVERSE->pauseMessageVisible() : false)) {
                         if (UNIVERSE != nullptr)
                             UNIVERSE->clearPreviousMessage(); // remove the 'paused' message.
                     }
                     UNIVERSE->getGui()->setForegroundTextureKey("docked_overlay");
                     if (gameController != nullptr)
-                        gameController->setGamePaused(NO);
+                        gameController->setGamePaused(false);
                 } else {
                     if (!isMissionScreenWithTextEntry) {
                         saved_script_time = script_time;
@@ -4662,10 +4719,10 @@ void PlayerEntity::pollDockedControls(double delta_t)
                 }
             }
             if (!isMissionScreenWithTextEntry) {
-                pause_pressed = YES;
+                pause_pressed = true;
             }
         } else {
-            pause_pressed = NO;
+            pause_pressed = false;
         }
 
         if ((gameController != nullptr ? gameController->isGamePaused() : false))
@@ -4709,7 +4766,7 @@ void PlayerEntity::handleUndockControl()
     // -- Ahruman 20080308
     if (UNIVERSE != nullptr)
         UNIVERSE->setUpUniverseFromStation(); // player pre-launch
-    if (dockedStation() == nil)
+    if (dockedStation() == nullptr)
         setDockedAtMainStation();
 
     ::StationEntity* dockedStation = this->dockedStation();
@@ -4738,12 +4795,12 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
                                           : false)
                         || checkKeyPress(n_key_gui_select))
                     && (gui != nullptr ? gui->getSelectedRow() : 0) == 2 + row_zero) {
-                    disc_operation_in_progress = YES;
+                    disc_operation_in_progress = true;
                     if (UNIVERSE != nullptr)
                         UNIVERSE->removeDemoShips();
                     gui->clearBackground();
                     if (!loadPlayer()) {
-                        setGuiToIntroFirstGo(YES);
+                        setGuiToIntroFirstGo(true);
                     }
                     break;
                 }
@@ -4758,7 +4815,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
                                              : false)
                            || checkKeyPress(n_key_gui_select))
                 && (gui != nullptr ? gui->getSelectedRow() : 0) == 3 + row_zero) {
-                setGuiToIntroFirstGo(NO);
+                setGuiToIntroFirstGo(false);
             } else if (((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                              : false)
                            || checkKeyPress(n_key_gui_select))
@@ -4777,7 +4834,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
                     UNIVERSE->gameController()->exitAppWithContext(
                         "Exit Game selected on start screen");
             } else {
-                disc_operation_in_progress = NO;
+                disc_operation_in_progress = false;
             }
         }
         selectPressed = checkKeyPress(n_key_gui_select);
@@ -4828,7 +4885,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
         if ((gameView != nullptr ? gameView->isDown(' ') : false)) //  '<space>'
         {
             // viewed from start screen, return to it
-            setGuiToIntroFirstGo(YES);
+            setGuiToIntroFirstGo(true);
         }
         if (checkKeyPress(n_key_gui_arrow_up)) //  '<--'
         {
@@ -4896,7 +4953,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
                 if (!startScenario()) {
                     if (UNIVERSE != nullptr)
                         UNIVERSE->removeDemoShips();
-                    setGuiToIntroFirstGo(YES);
+                    setGuiToIntroFirstGo(true);
                 }
             }
         }
@@ -4923,7 +4980,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
                             .value_or(std::string()));
                 } else {
                     if (gameView != nullptr)
-                        gameView->allowStringInput(NO);
+                        gameView->allowStringInput(false);
                 }
                 if (handleGUIUpDownArrowKeys()) {
                     // only has an effect on install/remove selection screens
@@ -4967,7 +5024,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
             } // endif isAcceptingGUIInput
             if (checkKeyPress(n_key_oxzmanager_setfilter) || checkKeyPress(n_key_oxzmanager_showinfo) || checkKeyPress(n_key_oxzmanager_copyurl) || checkKeyPress(n_key_oxzmanager_extract)) {
                 if (!oxz_manager_pressed) {
-                    oxz_manager_pressed = YES;
+                    oxz_manager_pressed = true;
                     if (checkKeyPress(n_key_oxzmanager_setfilter)) {
                         oxzmanager->processFilterKey();
                     } else if (checkKeyPress(n_key_oxzmanager_showinfo)) {
@@ -4979,7 +5036,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
                     }
                 }
             } else {
-                oxz_manager_pressed = NO;
+                oxz_manager_pressed = false;
             }
         }
         break;
@@ -5001,11 +5058,11 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
                 handleMissionCallback();
 
                 checkScript();
-                selectPressed = YES;
-                pollControls = YES;
+                selectPressed = true;
+                pollControls = true;
             } else {
-                pollControls = NO;
-                selectPressed = NO;
+                pollControls = false;
+                selectPressed = false;
                 pollMissionInterruptControls();
             }
         } else if (gui->keyForRow(end_row) == "spacebar") {
@@ -5015,9 +5072,9 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
                     OOMusicController::sharedController()->stopMissionMusic();
                     handleMissionCallback();
                 }
-                spacePressed = YES;
+                spacePressed = true;
             } else {
-                spacePressed = NO;
+                spacePressed = false;
                 pollMissionInterruptControls();
             }
         } else {
@@ -5032,16 +5089,16 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
                         if (!extra_key_pressed) {
                             extraKey = key;
                         }
-                        extra_key_pressed = YES;
+                        extra_key_pressed = true;
                     } else
-                        extra_key_pressed = NO;
+                        extra_key_pressed = false;
                 }
             }
             if (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false) || !extraKey.empty()) //  '<enter/return>' or double click
             {
                 if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
                                          : false)) {
-                    selectPressed = NO;
+                    selectPressed = false;
                     if (gameView != nullptr)
                         gameView->clearMouse();
                 }
@@ -5056,9 +5113,9 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
 
                     checkScript();
                 }
-                selectPressed = YES;
+                selectPressed = true;
             } else {
-                selectPressed = NO;
+                selectPressed = false;
                 pollMissionInterruptControls();
             }
         }
@@ -5072,7 +5129,7 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/)
             // noteGUIDidChangeFrom)
             demoShip = nullptr;
 
-            loadPlayerFromFile(*commanderFile, NO);
+            loadPlayerFromFile(*commanderFile, false);
         }
         break;
     }
@@ -5086,7 +5143,7 @@ void PlayerEntity::pollMissionInterruptControls()
 {
     if (_missionAllowInterrupt) {
         if (gui_screen == GUI_SCREEN_MISSION && _missionTextEntry) {
-            pollGuiScreenControlsWithFKeyAlias(NO);
+            pollGuiScreenControlsWithFKeyAlias(false);
         } else {
             pollGuiScreenControls();
         }
@@ -5195,7 +5252,7 @@ void PlayerEntity::setGuiToMissionEndScreen()
 
 void PlayerEntity::switchToThisView(OOViewID viewDirection)
 {
-    switchToThisView(viewDirection, YES);
+    switchToThisView(viewDirection, true);
 }
 
 void PlayerEntity::switchToThisView(OOViewID viewDirection,
@@ -5204,7 +5261,7 @@ void PlayerEntity::switchToThisView(OOViewID viewDirection,
     switchToThisView(
         viewDirection,
         (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }),
-        processWeaponFacing, NO);
+        processWeaponFacing, false);
 }
 
 void PlayerEntity::switchToThisView(OOViewID viewDirection,
@@ -5373,7 +5430,7 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking)
         if (UNIVERSE != nullptr)
             UNIVERSE->forceWitchspaceEntries();
         ship_clock_adjust += 1200.0; // 20 minutes penalty to enter dock
-        ident_engaged = NO;
+        ident_engaged = false;
         safeAllMissiles();
         if (UNIVERSE != nullptr)
             UNIVERSE->setViewDirection(VIEW_FORWARD);
@@ -5400,14 +5457,14 @@ void PlayerEntity::handleButtonIdent()
         noteLostTarget();
 
     safeAllMissiles();
-    ident_engaged = YES;
-    if (primaryTarget() == nil) {
+    ident_engaged = true;
+    if (primaryTarget() == nullptr) {
         playIdentOn();
         if (UNIVERSE != nullptr)
             UNIVERSE->addMessage(cxx_OOExpandKey("ident-on"), 2.0);
     } else {
         playIdentLockedOn();
-        printIdentLockedOnForMissile(NO);
+        printIdentLockedOnForMissile(false);
     }
 }
 
@@ -5433,11 +5490,11 @@ void PlayerEntity::handleButtonTargetMissile()
             if (oo::ToShip(missile_entity[activeMissile].get()) != nullptr)
                 oo::ToShip(missile_entity[activeMissile].get())
                     ->addTarget(primaryTarget());
-            printIdentLockedOnForMissile(YES);
+            printIdentLockedOnForMissile(true);
             playMissileLockedOn();
         } else {
             // if it's nil, that means it was lost earlier
-            if (primaryTarget() != nil) {
+            if (primaryTarget() != nullptr) {
                 noteLostTarget();
             }
             if (oo::ToShip(missile_entity[activeMissile].get()) != nullptr)
@@ -5467,5 +5524,5 @@ void PlayerEntity::handleButtonTargetMissile()
                 2.0);
         playMineArmed();
     }
-    ident_engaged = NO;
+    ident_engaged = false;
 }

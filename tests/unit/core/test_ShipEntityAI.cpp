@@ -9,7 +9,7 @@
         invisible to scripts, so the AI messages and script events the methods
    send go nowhere. Each group of cases sits under a comment naming it, written
    against the Objective-C API and run on the unconverted class first. Ivars go
-   through the helpers below. Run: bash tools/check-core-tests.sh
+   through the helpers below. Run: tests/run.sh unit
    test_ShipEntityAI
 */
 
@@ -55,9 +55,9 @@ class TestAIShip : public ShipEntity {
  public:
   bool setUpShipFromDictionary(const oo::PList& dict) override {
     (void)dict;
-    return YES;
+    return true;
   }
-  bool isVisibleToScripts() override { return NO; }
+  bool isVisibleToScripts() override { return false; }
 };
 
 // A station whose virtual dock is not made (the dock is a shipdata entry),
@@ -66,9 +66,9 @@ class TestAIStation : public StationEntity {
  public:
   bool setUpOneStandardSubentity(const oo::PList& /*subentDict*/,
                                  bool /*asTurret*/) override {
-    return YES;
+    return true;
   }
-  bool isVisibleToScripts() override { return NO; }
+  bool isVisibleToScripts() override { return false; }
 };
 
 // Made as StationEntity::newStationObject() makes a station; answers its object
@@ -115,8 +115,8 @@ void SetPrimaryTarget(ShipEntity* s, Entity* target) {
 }
 
 void SetUp() {
-  static Universe* universe = nil;
-  if (universe == nil) {
+  static Universe* universe = nullptr;
+  if (universe == nullptr) {
     universe = new Universe();  // never released
   }
   gSharedUniverse = universe;
@@ -137,7 +137,7 @@ TestAIShip* MakeShip(const char* key) {
           oo::makeRef<TestAIShip>(), key, oo::PList(oo::PList::Dict{})))));
 }
 
-BOOL AlwaysYes(Entity*, void*) { return YES; }
+bool AlwaysYes(Entity*, void*) { return true; }
 
 }  // namespace
 
@@ -295,24 +295,24 @@ OO_TEST(slice1ScansFindNothing) {
 
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr) ship->scanForHostiles();
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
 
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr) ship->scanForNearestShipWithPredicate(AlwaysYes, NULL);
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
 
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr)
       ship->scanForNearestShipWithNegatedPredicate(AlwaysYes, NULL);
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
 
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr) ship->scanForNearestShipWithPredicate(NULL, NULL);
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
 
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr) ship->scanForNearestIncomingMissile();
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
 
     if (ship != nullptr) ship->checkFoundTarget();  // no AI: nothing to tell
   }
@@ -331,13 +331,13 @@ OO_TEST(slice1NothingToActOn) {
 
     // No aggressor: no distress call.
     if (ship != nullptr) ship->broadcastDistressMessage();
-    if (ship != nullptr) ship->broadcastDistressMessageWithDumping(NO);
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    if (ship != nullptr) ship->broadcastDistressMessageWithDumping(false);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
 
     // No primary target: no group attack, and a target that is not a wormhole:
     // no escorts sent.
     if (ship != nullptr) ship->groupAttackTarget();
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
     SetPrimaryTarget(ship, other);
     if (ship != nullptr) ship->wormholeEscorts();
     OO_CHECK((ship != nullptr ? ship->primaryTarget() : (Entity*)nullptr) ==
@@ -355,8 +355,8 @@ OO_TEST(slice1NothingToActOn) {
     OO_CHECK(!(ship != nullptr ? ship->performHyperSpaceToSpecificSystem(7)
                                : false));
     OO_CHECK(
-        !(ship != nullptr ? ship->performHyperSpaceExitReplace(NO) : false));
-    OO_CHECK(!(ship != nullptr ? ship->performHyperSpaceExitReplace(YES, 3)
+        !(ship != nullptr ? ship->performHyperSpaceExitReplace(false) : false));
+    OO_CHECK(!(ship != nullptr ? ship->performHyperSpaceExitReplace(true, 3)
                                : false));
     OO_CHECK((ship != nullptr ? ship->status() : OOEntityStatus{}) ==
              STATUS_ENTERING_WITCHSPACE);
@@ -379,10 +379,10 @@ OO_TEST(slice1AcceptDistressMessage) {
 
     ShipEntity* station = NewTestAIStation(
         "station", oo::PList(oo::PList::Dict{{"unpiloted", oo::PList(true)}}));
-    OO_CHECK(station != nil);
+    OO_CHECK(station != nullptr);
     if (station != nullptr) station->acceptDistressMessageFrom(caller);
     OO_CHECK((station != nullptr ? station->foundTarget() : (Entity*)nullptr) ==
-             nil);
+             nullptr);
   }
 }
 
@@ -426,7 +426,7 @@ OO_TEST(slice1MembersFromCxx) {
     stationAsShip->acceptDistressMessageFrom(
         caller);  // the station's: not the main station, so nothing
     OO_CHECK((station != nullptr ? station->foundTarget() : (Entity*)nullptr) ==
-             nil);
+             nullptr);
   }
 }
 
@@ -529,13 +529,13 @@ OO_TEST(slice2TargetsAndScans) {
     if (ship != nullptr) ship->setTargetToPrimaryAggressor();
     if (ship != nullptr) ship->addPrimaryAggressorAsDefenseTarget();
     OO_CHECK((ship != nullptr ? ship->primaryTarget() : (Entity*)nullptr) ==
-                 nil &&
+                 nullptr &&
              !(ship != nullptr ? ship->isDefenseTarget(other) : false));
 
     // The found target becomes the primary target; none found, none taken.
     if (ship != nullptr) ship->setTargetToFoundTarget();
     OO_CHECK((ship != nullptr ? ship->primaryTarget() : (Entity*)nullptr) ==
-             nil);
+             nullptr);
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr) ship->setTargetToFoundTarget();
     OO_CHECK((ship != nullptr ? ship->primaryTarget() : (Entity*)nullptr) ==
@@ -544,10 +544,10 @@ OO_TEST(slice2TargetsAndScans) {
     // Scans in an empty universe forget the found target.
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr) ship->scanForNearestMerchantman();
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr) ship->scanForRandomMerchantman();
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr)
       ship->scanForRandomLoot();  // no scoop: gives up before the scan
@@ -654,18 +654,18 @@ OO_TEST(slice3ChecksAndScans) {
 
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr) ship->scanForThargoid();
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr) ship->scanForNonThargoid();
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr) ship->scanForFormationLeader();
-    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nil);
+    OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) == nullptr);
     if (ship != nullptr) ship->setFoundTarget(other);
     if (ship != nullptr)
       ship->thargonCheckMother();  // no mother and none to be found
     OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) ==
-                 nil &&
+                 nullptr &&
              (ship != nullptr ? ship->owner() : nullptr) != other);
   }
 }
@@ -730,7 +730,7 @@ OO_TEST(slice3TargetsAndFighting) {
     if (ship != nullptr) ship->storeTarget();
     OO_CHECK((ship != nullptr ? ship->rememberedShip() : (Entity*)nullptr) ==
              other);
-    SetPrimaryTarget(ship, nil);
+    SetPrimaryTarget(ship, nullptr);
     if (ship != nullptr) ship->storeTarget();
     OO_CHECK((ship != nullptr ? ship->rememberedShip() : (Entity*)nullptr) ==
              nullptr);
@@ -739,7 +739,7 @@ OO_TEST(slice3TargetsAndFighting) {
     if (ship != nullptr) ship->sendTargetCommsMessage("[hello]");
     if (ship != nullptr) ship->markTargetForFines();
     OO_CHECK((ship != nullptr ? ship->primaryTarget() : (Entity*)nullptr) ==
-             nil);
+             nullptr);
 
     // Full energy, no escorts, no missiles: fight the found target.
     SetEnergy3(ship, 100, 100);
@@ -803,7 +803,7 @@ OO_TEST(slice4StoredTargetsAndScans) {
     if (ship != nullptr) ship->setFoundTarget(nullptr);
     if (ship != nullptr) ship->recallStoredTarget();
     OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) ==
-                 nil &&
+                 nullptr &&
              (ship != nullptr ? ship->rememberedShip() : (Entity*)nullptr) ==
                  nullptr);
 
@@ -851,7 +851,7 @@ OO_TEST(slice4StoredTargetsAndScans) {
       if (ship != nullptr) ship->setFoundTarget(other);
       scan(ship);
       OO_CHECK((ship != nullptr ? ship->foundTarget() : (Entity*)nullptr) ==
-               nil);
+               nullptr);
     }
 
     // No group, so no mother to defend: the found target stays.
@@ -879,11 +879,11 @@ OO_TEST(slice4StationsAndCoordinates) {
     // No stations in range, and a last station that is not one: no target.
     if (ship != nullptr) ship->setTargetToRandomStation();
     OO_CHECK((ship != nullptr ? ship->primaryTarget() : (Entity*)nullptr) ==
-             nil);
+             nullptr);
     if (ship != nullptr) ship->setTargetStation(other);
     if (ship != nullptr) ship->setTargetToLastStation();
     OO_CHECK((ship != nullptr ? ship->primaryTarget() : (Entity*)nullptr) ==
-                 nil &&
+                 nullptr &&
              (ship != nullptr ? ship->targetStation() : (Entity*)nullptr) ==
                  nullptr);
 

@@ -11,7 +11,7 @@
    linkage. The expectations were written against the Objective-C file and run
    on it first; they pin the JS-visible behaviour (the five properties, the
    three writable ones, isQueued(), a non-dock, a native's exception) and what
-   the category answers the engine. Run: bash tools/check-core-tests.sh
+   the category answers the engine. Run: tests/run.sh unit
 */
 
 #include "OOFoundation.h"
@@ -72,9 +72,9 @@ class DockEntity : public ShipEntity {
   NSUInteger countOfShipsInLaunchQueue();
   bool shipIsInDockingQueue(::ShipEntity* ship);
 
-  BOOL _allowsDocking = NO;
-  BOOL _disallowedDockingCollides = NO;
-  BOOL _allowsLaunching = NO;
+  bool _allowsDocking = false;
+  bool _disallowedDockingCollides = false;
+  bool _allowsLaunching = false;
   NSUInteger _dockingQueue = 0;
   NSUInteger _launchQueue = 0;
   ::ShipEntity* _queued = nullptr;
@@ -195,7 +195,6 @@ std::map<ooscript::ClassDef*, int> sConverters;
 
 ooscript::Object gOOEntityJSPrototype = nullptr;
 
-extern "C" {
 
 ooscript::ClassDef* JSEntityClass(void) { return &sFakeEntityClass; }
 
@@ -220,13 +219,13 @@ void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
   sSuperclasses[subclass] = superclass;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
@@ -273,7 +272,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object) {
   return oo::PList();
@@ -357,9 +355,9 @@ void SetUpContext() {
   sDockObject =
       NewShipObject(oo::makeRef<DockEntity>());  // a dock's object is a ship's
   sDock = static_cast<DockEntity*>(sDockObject->_cxxEntity.get());
-  sDock->_allowsDocking = YES;
-  sDock->_disallowedDockingCollides = NO;
-  sDock->_allowsLaunching = YES;
+  sDock->_allowsDocking = true;
+  sDock->_disallowedDockingCollides = false;
+  sDock->_allowsLaunching = true;
   sDock->_dockingQueue = 3;
   sDock->_launchQueue = 2;
   sShip = NewShipObject(oo::makeRef<ShipEntity>());
@@ -439,7 +437,7 @@ OO_TEST(properties) {
       "(function () { dock.allowsDocking = false; return dock.allowsDocking; "
       "})()",
       "false");
-  OO_CHECK(sDock->_allowsDocking == NO);
+  OO_CHECK(sDock->_allowsDocking == false);
   OO_CHECK_EVAL(
       "(function () { dock.allowsLaunching = 0; return dock.allowsLaunching; "
       "})()",

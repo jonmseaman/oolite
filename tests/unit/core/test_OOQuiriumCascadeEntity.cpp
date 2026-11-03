@@ -13,7 +13,7 @@
    expansion, the energy it deals to what it collides with, and its removal
    after twenty seconds; its description. Making a cascade goes through the
    helper below: it is made by its factory and handed to Objective-C as an
-   Entity facade. Run: bash tools/check-core-tests.sh
+   Entity facade. Run: tests/run.sh unit
 */
 
 #include <cmath>
@@ -51,14 +51,14 @@ T* NewTestPlayer() {
   return player.get();
 }
 
-static Entity* sRemoved = nil;
+static Entity* sRemoved = nullptr;
 
 // UNIVERSE: never initialised; records what is removed.
 class TestUniverse : public Universe {
  public:
   bool removeEntity(Entity* entity) override {
     sRemoved = entity;
-    return YES;
+    return true;
   }  // the C++ entity; the record is its object
 };
 
@@ -95,8 +95,8 @@ Entity* MakeCascade(ShipEntity* ship) {
 // --------------------------------------------------------------------------------------------------
 
 void SetUp() {
-  static Universe* universe = nil;
-  if (universe == nil) {
+  static Universe* universe = nullptr;
+  if (universe == nullptr) {
     universe = new TestUniverse();  // never released
   }
   gSharedUniverse = universe;
@@ -109,7 +109,7 @@ void SetUp() {
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
         ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
-  sRemoved = nil;
+  sRemoved = nullptr;
 }
 
 }  // namespace
@@ -117,7 +117,7 @@ void SetUp() {
 OO_TEST(fromShip) {
   {
     SetUp();
-    OO_CHECK(MakeCascade(nil) == nil);
+    OO_CHECK(MakeCascade(nullptr) == nullptr);
 
     Entity* ship = oo::MadeEntity(
         oo::makeRef<::ShipEntity>());  // a C++ ship, never set up
@@ -126,7 +126,7 @@ OO_TEST(fromShip) {
     ship->setOwner(shipOwner);
 
     Entity* cascade = MakeCascade(oo::ToShip(ship));
-    OO_CHECK(cascade != nil);
+    OO_CHECK(cascade != nullptr);
     OO_CHECK(HPvector_equal(cascade->getPosition(), make_HPvector(5, 6, 7)));
     OO_CHECK(cascade->status() == STATUS_EFFECT &&
              cascade->getScanClass() == CLASS_MINE);
@@ -134,7 +134,7 @@ OO_TEST(fromShip) {
     OO_CHECK(cascade->isEffect() &&
              OOEntityIsCascadeWeapon(cascade));  // -isCascadeWeapon
     OO_CHECK(!OOEntityIsCascadeWeapon(ship));
-    OO_CHECK(!cascade->canCollide() && cascade->checkCloseCollisionWith(nil) &&
+    OO_CHECK(!cascade->canCollide() && cascade->checkCloseCollisionWith(nullptr) &&
              cascade->checkCloseCollisionWith(ship));
     OO_CHECK(oo::EntityDescription(cascade).starts_with(
         "<OOQuiriumCascadeEntity 0x"));
@@ -170,7 +170,7 @@ OO_TEST(update) {
              victim->_weapon == "EQ_QC_MINE");
     OO_CHECK(oo::EntityDescription(cascade).ends_with(
         "{0.100000 seconds passed of 20.000000}"));
-    OO_CHECK(sRemoved == nil);
+    OO_CHECK(sRemoved == nullptr);
 
     // Twenty seconds: removed.
     cascade->update(20.0);

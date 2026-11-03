@@ -17,7 +17,7 @@
         The console's callObjC() is given only entities and monitors. The
    test's entity objects are C++: its by-name stand-ins answer the names the
    entity's object answers from a table of the test's own.
-        Run: bash tools/check-core-tests.sh
+        Run: tests/run.sh unit
 */
 
 #include <cstdarg>
@@ -98,12 +98,12 @@ ooscript::Object ArrayOf(ooscript::Context context,
 
 }  // namespace
 
-extern "C" ooscript::Object JSVectorWithVector(ooscript::Context context,
+ooscript::Object JSVectorWithVector(ooscript::Context context,
                                                Vector vector) {
   return ArrayOf(context, {vector.x, vector.y, vector.z});
 }
 
-extern "C" ooscript::Object JSQuaternionWithQuaternion(
+ooscript::Object JSQuaternionWithQuaternion(
     ooscript::Context context, Quaternion quaternion) {
   return ArrayOf(context,
                  {quaternion.w, quaternion.x, quaternion.y, quaternion.z});
@@ -112,14 +112,14 @@ extern "C" ooscript::Object JSQuaternionWithQuaternion(
 // Link stub: OOShaderUniformMethodType.mm's matrix
 // reader answers it for a nil object; the test calls no matrix method, and
 // OOMatrix.mm would bring OpenGL.
-extern "C" const OOMatrix kZeroMatrix = {};
+const OOMatrix kZeroMatrix = {};
 
 #if OOJS_PROFILE
-extern "C" void OOJSProfileEnter(OOJSProfileStackFrame*, const char*) {}
-extern "C" void OOJSProfileExit(OOJSProfileStackFrame*) {}
+void OOJSProfileEnter(OOJSProfileStackFrame*, const char*) {}
+void OOJSProfileExit(OOJSProfileStackFrame*) {}
 #endif
 
-extern "C" void OOJSUnreachable(const char* function, const char*, unsigned) {
+void OOJSUnreachable(const char* function, const char*, unsigned) {
   std::printf("unreachable reached in %s\n", function);
   abort();
 }

@@ -60,7 +60,7 @@ OOECMBlastEntity::OOECMBlastEntity(ShipEntity* ship)
 
 oo::Ref<OOECMBlastEntity> OOECMBlastEntity::initFromShip(ShipEntity* ship)
 {
-    if (ship == nil) {
+    if (ship == nullptr) {
         return nullptr;
     }
     return oo::adopt(new OOECMBlastEntity(ship));
@@ -70,7 +70,7 @@ void OOECMBlastEntity::update(OOTimeDelta delta_t)
 {
     _nextBlast -= delta_t;
     ShipEntity* ship = oo::ToShip(_ship.get());
-    BOOL validShip = (ship != nil) && ((ship != nullptr ? ship->status() : OOEntityStatus { }) != STATUS_DEAD);
+    bool validShip = (ship != nullptr) && ((ship != nullptr ? ship->status() : OOEntityStatus { }) != STATUS_DEAD);
 
     if (_nextBlast <= 0.0 && validShip) {
         // Do ECM stuff.

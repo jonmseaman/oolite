@@ -225,7 +225,7 @@ public:
 
     unsigned no_docking_while_launching : 1 = 0,
                                           hasNPCTraffic : 1 = 0;
-    BOOL hasPatrolShips = { };
+    bool hasPatrolShips = { };
 
     OOUniversalID planet = { };
 
@@ -283,5 +283,5 @@ inline ::StationEntity* ToStation(Entity* entity)
 oo::PList cxx_OOMakeDockingInstructions(
     StationEntity* station, HPVector coords, float speed, float range,
     const std::optional<std::string>& ai_message,
-    const std::optional<std::string>& comms_message, BOOL match_rotation,
+    const std::optional<std::string>& comms_message, bool match_rotation,
     int docking_stage);

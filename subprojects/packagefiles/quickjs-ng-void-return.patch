@@ -1,10 +1,10 @@
-QuickJS-ng 0.16.2 returns a void expression from four void functions, which clang reports
+QuickJS-ng 0.17.0 returns a void expression from four void functions, which clang reports
 under the subproject's warning_level=3 (-Wpedantic). Drop the return keyword; behaviour is
 unchanged. Remove this patch once upstream fixes it.
 
 --- a/quickjs.c
 +++ b/quickjs.c
-@@ -4990,22 +4990,22 @@
+@@ -5006,22 +5006,22 @@
  
  void JS_FreeCString(JSContext *ctx, const char *ptr)
  {

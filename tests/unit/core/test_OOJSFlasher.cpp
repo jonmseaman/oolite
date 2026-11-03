@@ -21,7 +21,7 @@
    they pin the JS-visible behaviour (the six properties and their ranges, the
    colour both ways, remove() from a ship and from a visual effect, a stale
    flasher, a native's exception) and what the category answers the engine. Run:
-   bash tools/check-core-tests.sh
+   tests/run.sh unit
 */
 
 #include "OOColor.h"
@@ -102,7 +102,7 @@ class TestEntityObject final : public oo::RefCounted {
   oo::Ref<Entity> _cxxEntity;  // the flasher's C++ part (oo::ToCxx reads it)
   ::TestEntityObject* _owner = nullptr;
   ::TestEntityObject* _removed = nullptr;
-  BOOL _isShip = NO;
+  bool _isShip = false;
 };
 
 // A ship: the C++ part of its object, with the one member the binding calls
@@ -127,7 +127,7 @@ class OOVisualEffectEntity : public Entity {
   ::TestEntityObject* _removed = nullptr;
 };
 
-extern "C" void InitOOJSFlasher(ooscript::Context context,
+void InitOOJSFlasher(ooscript::Context context,
                                 ooscript::Object global);
 // The category's bodies, which the stand-in's overrides call as the C++ class's
 // do (declared in OOJSFlasher.h).
@@ -286,7 +286,6 @@ std::map<ooscript::ClassDef*, int> sConverters;
 ooscript::Object gOOEntityJSPrototype = nullptr;
 Entity* gOOJSPlayerIfStale = nullptr;  // the player's C++ entity
 
-extern "C" {
 
 ooscript::ClassDef* JSEntityClass(void) { return &sFakeEntityClass; }
 
@@ -307,13 +306,13 @@ void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
   sSuperclasses[subclass] = superclass;
 }
 
-BOOL OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
+bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
                     ooscript::ClassDef* superclass) {
   for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
        c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return YES;
+    if (c == superclass) return true;
   }
-  return NO;
+  return false;
 }
 
 void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
@@ -360,7 +359,6 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-}  // extern "C"
 
 // A JS value's plist form, as far as a colour description needs one: a string,
 // a number, an array of those, or null.
@@ -484,7 +482,7 @@ void SetUpContext() {
               .leakRef();  // kept for the life of the test
   sShip->_cxxEntity = oo::makeRef<ShipEntity>();
   sShipPart = static_cast<ShipEntity*>(sShip->_cxxEntity.get());
-  sShip->_isShip = YES;
+  sShip->_isShip = true;
   sEffect = oo::makeRef<TestEntityObject>().leakRef();
   sEffect->_cxxEntity = oo::makeRef<OOVisualEffectEntity>();
   sEffectPart = static_cast<OOVisualEffectEntity*>(sEffect->_cxxEntity.get());
@@ -492,7 +490,7 @@ void SetUpContext() {
   const oo::Ref<OOFlasherEntity> part = oo::makeRef<OOFlasherEntity>();
   sFlasher->_cxxEntity = part;
   sFlasherPart = part.get();
-  sFlasherPart->_active = YES;
+  sFlasherPart->_active = true;
   sFlasherPart->_color = OOColor::colorWithRed(1, 0.5f, 0.25f, 1);
   sFlasherPart->_frequency = 2;
   sFlasherPart->_fraction = 0.5f;

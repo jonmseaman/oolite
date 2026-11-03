@@ -82,7 +82,7 @@ void Entity::init()
 
     spawnTime = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
 
-    isSunlit = YES;
+    isSunlit = true;
 
     atmosphereFogging = OOColor::colorWithRed(0.0, 0.0, 0.0, 0.0);
 
@@ -160,7 +160,7 @@ NSUInteger Entity::sessionID() { return _sessionID; }
 
 bool Entity::getIsShip() { return isShip; }
 
-bool Entity::isDock() { return NO; }
+bool Entity::isDock() { return false; }
 
 bool Entity::getIsStation() { return isStation; }
 
@@ -168,23 +168,23 @@ bool Entity::getIsSubEntity() { return isSubEntity; }
 
 bool Entity::getIsPlayer() { return isPlayer; }
 
-bool Entity::isPlanet() { return NO; }
+bool Entity::isPlanet() { return false; }
 
-bool Entity::isSun() { return NO; }
+bool Entity::isSun() { return false; }
 
 bool Entity::getIsSunlit() { return isSunlit; }
 
 bool Entity::isStellarObject() { return isPlanet() || isSun(); }
 
-bool Entity::isSky() { return NO; }
+bool Entity::isSky() { return false; }
 
 bool Entity::getIsWormhole() { return isWormhole; }
 
-bool Entity::isEffect() { return NO; }
+bool Entity::isEffect() { return false; }
 
-bool Entity::getIsVisualEffect() { return NO; }
+bool Entity::getIsVisualEffect() { return false; }
 
-bool Entity::isWaypoint() { return NO; }
+bool Entity::isWaypoint() { return false; }
 
 bool Entity::validForAddToUniverse()
 {
@@ -197,10 +197,10 @@ bool Entity::validForAddToUniverse()
             oo::EntityShortDescription(this),
             static_cast<size_t>(mySessionID),
             static_cast<size_t>(currentSessionID));
-        return NO;
+        return false;
     }
 
-    return YES;
+    return true;
 }
 
 void Entity::addToLinkedLists()
@@ -213,7 +213,7 @@ void Entity::addToLinkedLists()
     //
     // insert at the start
     if (UNIVERSE) {
-        x_previous = nil;
+        x_previous = nullptr;
         x_next = UNIVERSE->x_list_start;
         // move UP the list
         while ((x_next) && (x_next->position.x - x_next->collision_radius < position.x - collision_radius)) {
@@ -227,7 +227,7 @@ void Entity::addToLinkedLists()
         else
             UNIVERSE->x_list_start = this;
 
-        y_previous = nil;
+        y_previous = nullptr;
         y_next = UNIVERSE->y_list_start;
         // move UP the list
         while ((y_next) && (y_next->position.y - y_next->collision_radius < position.y - collision_radius)) {
@@ -241,7 +241,7 @@ void Entity::addToLinkedLists()
         else
             UNIVERSE->y_list_start = this;
 
-        z_previous = nil;
+        z_previous = nullptr;
         z_next = UNIVERSE->z_list_start;
         // move UP the list
         while ((z_next) && (z_next->position.z - z_next->collision_radius < position.z - collision_radius)) {
@@ -279,7 +279,7 @@ void Entity::removeFromLinkedLists()
             oo::EntityDescription(this));
 #endif
 
-    if ((x_next == nil) && (x_previous == nil)) // removed already!
+    if ((x_next == nullptr) && (x_previous == nullptr)) // removed already!
         return;
 
     // make sure the starting point is still correct
@@ -307,12 +307,12 @@ void Entity::removeFromLinkedLists()
     if (z_next)
         z_next->z_previous = z_previous;
     //
-    x_previous = nil;
-    x_next = nil;
-    y_previous = nil;
-    y_next = nil;
-    z_previous = nil;
-    z_next = nil;
+    x_previous = nullptr;
+    x_next = nullptr;
+    y_previous = nullptr;
+    y_next = nullptr;
+    z_previous = nullptr;
+    z_next = nullptr;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if (gDebugFlags & DEBUG_LINKED_LISTS) {
@@ -335,7 +335,7 @@ bool Entity::checkLinkedLists()
         int n;
         Entity *check, *last;
         //
-        last = nil;
+        last = nullptr;
         //
         n = UNIVERSE->n_entities;
         check = UNIVERSE->x_list_start;
@@ -346,7 +346,7 @@ bool Entity::checkLinkedLists()
         if ((check) || (n > 0)) {
             OO_LOG(kOOLogEntityVerificationError, "Broken x_next {} list ({}) ***",
                 oo::EntityDescription(UNIVERSE->x_list_start), n);
-            return NO;
+            return false;
         }
         //
         n = UNIVERSE->n_entities;
@@ -357,7 +357,7 @@ bool Entity::checkLinkedLists()
             OO_LOG(kOOLogEntityVerificationError,
                 "Broken x_previous {} list ({}) ***",
                 oo::EntityDescription(UNIVERSE->x_list_start), n);
-            return NO;
+            return false;
         }
         //
         n = UNIVERSE->n_entities;
@@ -369,7 +369,7 @@ bool Entity::checkLinkedLists()
         if ((check) || (n > 0)) {
             OO_LOG(kOOLogEntityVerificationError, "Broken y_next {} list ({}) ***",
                 oo::EntityDescription(UNIVERSE->y_list_start), n);
-            return NO;
+            return false;
         }
         //
         n = UNIVERSE->n_entities;
@@ -380,7 +380,7 @@ bool Entity::checkLinkedLists()
             OO_LOG(kOOLogEntityVerificationError,
                 "Broken y_previous {} list ({}) ***",
                 oo::EntityDescription(UNIVERSE->y_list_start), n);
-            return NO;
+            return false;
         }
         //
         n = UNIVERSE->n_entities;
@@ -392,7 +392,7 @@ bool Entity::checkLinkedLists()
         if ((check) || (n > 0)) {
             OO_LOG(kOOLogEntityVerificationError, "Broken z_next {} list ({}) ***",
                 oo::EntityDescription(UNIVERSE->z_list_start), n);
-            return NO;
+            return false;
         }
         //
         n = UNIVERSE->n_entities;
@@ -403,17 +403,17 @@ bool Entity::checkLinkedLists()
             OO_LOG(kOOLogEntityVerificationError,
                 "Broken z_previous {} list ({}) ***",
                 oo::EntityDescription(UNIVERSE->z_list_start), n);
-            return NO;
+            return false;
         }
     }
-    return YES;
+    return true;
 }
 
 void Entity::updateLinkedLists()
 {
     if (!UNIVERSE)
         return; // not in the UNIVERSE - don't do this!
-    if ((x_next == nil) && (x_previous == nil))
+    if ((x_next == nullptr) && (x_previous == nullptr))
         return; // not in the lists - don't do this!
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -449,7 +449,7 @@ void Entity::updateLinkedLists()
         x_next->x_previous = this;
     if (x_previous) // insert self into the list after x_previous..
         x_previous->x_next = this;
-    if ((x_previous == nil) && (UNIVERSE)) // if we're the first then tell the UNIVERSE!
+    if ((x_previous == nullptr) && (UNIVERSE)) // if we're the first then tell the UNIVERSE!
         UNIVERSE->x_list_start = this;
 
     // update position in linked list for position.y
@@ -472,7 +472,7 @@ void Entity::updateLinkedLists()
         y_next->y_previous = this;
     if (y_previous) // insert self into the list after y_previous..
         y_previous->y_next = this;
-    if ((y_previous == nil) && (UNIVERSE)) // if we're the first then tell the UNIVERSE!
+    if ((y_previous == nullptr) && (UNIVERSE)) // if we're the first then tell the UNIVERSE!
         UNIVERSE->y_list_start = this;
 
     // update position in linked list for position.z
@@ -495,7 +495,7 @@ void Entity::updateLinkedLists()
         z_next->z_previous = this;
     if (z_previous) // insert self into the list after z_previous..
         z_previous->z_next = this;
-    if ((z_previous == nil) && (UNIVERSE)) // if we're the first then tell the UNIVERSE!
+    if ((z_previous == nullptr) && (UNIVERSE)) // if we're the first then tell the UNIVERSE!
         UNIVERSE->z_list_start = this;
 
     // done
@@ -656,10 +656,10 @@ HPVector Entity::absolutePositionForSubentity()
 HPVector Entity::absolutePositionForSubentityOffset(HPVector offset)
 {
     HPVector abspos = HPvector_add(position, OOHPVectorMultiplyMatrix(offset, rotMatrix));
-    Entity* last = nil;
+    Entity* last = nullptr;
     Entity* father = parentEntity();
 
-    while (father != nil && father != last) {
+    while (father != nullptr && father != last) {
         abspos = HPvector_add(
             OOHPVectorMultiplyMatrix(abspos, father->drawRotationMatrix()),
             father->getPosition());
@@ -783,7 +783,7 @@ OOMatrix Entity::drawTransformationMatrix()
     return OOMatrixHPTranslate(result, position);
 }
 
-bool Entity::canCollide() { return YES; }
+bool Entity::canCollide() { return true; }
 
 GLfloat Entity::collisionRadius() { return collision_radius; }
 
@@ -834,7 +834,7 @@ void Entity::applyVelocity(OOTimeDelta delta_t)
         position, HPvector_multiply_scalar(vectorToHPVector(velocity), delta_t));
 }
 
-bool Entity::checkCloseCollisionWith(Entity* other) { return other != nil; }
+bool Entity::checkCloseCollisionWith(Entity* other) { return other != nullptr; }
 
 double Entity::findCollisionRadius()
 {
@@ -1000,9 +1000,9 @@ bool Entity::isInSpace()
     case STATUS_BEING_SCOOPED:
     case STATUS_EFFECT:
     case STATUS_ACTIVE:
-        return YES;
+        return true;
     default:
-        return NO;
+        return false;
     }
 }
 

@@ -12,7 +12,7 @@
    the test links every game object but main's (tests/unit/core/meson.build
    entry ['*'], as test_OOJSScript does) and points the user's directories at a
    scratch folder. The expectations pin what the scripts and the log see. Run:
-   bash tools/check-core-tests.sh test_OOJavaScriptEngine
+   meson test -C build/meson_test test_OOJavaScriptEngine
 */
 
 #include <process.h>
@@ -93,7 +93,7 @@ struct TestMonitorRecord {
   int _errors = 0;
   int _logs = 0;
   OOJavaScriptEngine* _engine = nullptr;
-  BOOL _showLocation = NO;
+  bool _showLocation = false;
   std::string _message;
   std::optional<std::string> _messageClass;
 };
@@ -192,7 +192,7 @@ ooscript::Value Eval(ooscript::Context context, const std::string& source) {
 }
 
 std::string Describe(ooscript::Context context, const std::string& source,
-                     BOOL abbreviate) {
+                     bool abbreviate) {
   return cxx_OOJSDescribeValue(context, Eval(context, source), abbreviate);
 }
 
@@ -275,10 +275,10 @@ OO_TEST(flags) {
   SetUp();
   {
     OOJavaScriptEngine* engine = OOJavaScriptEngine::sharedEngine();
-    const BOOL show = engine->showErrorLocations();
-    engine->setShowErrorLocations(YES);
+    const bool show = engine->showErrorLocations();
+    engine->setShowErrorLocations(true);
     OO_CHECK(engine->showErrorLocations());
-    engine->setShowErrorLocations(NO);
+    engine->setShowErrorLocations(false);
     OO_CHECK(!engine->showErrorLocations());
     engine->setShowErrorLocations(show);
 
@@ -286,13 +286,13 @@ OO_TEST(flags) {
     // Off unless the preferences say otherwise (the scratch home has none).
     OO_CHECK(!engine->dumpStackForErrors());
     OO_CHECK(!engine->dumpStackForWarnings());
-    engine->setDumpStackForErrors(YES);
+    engine->setDumpStackForErrors(true);
     OO_CHECK(engine->dumpStackForErrors());
     OO_CHECK(!engine->dumpStackForWarnings());
-    engine->setDumpStackForWarnings(YES);
+    engine->setDumpStackForWarnings(true);
     OO_CHECK(engine->dumpStackForWarnings());
-    engine->setDumpStackForErrors(NO);
-    engine->setDumpStackForWarnings(NO);
+    engine->setDumpStackForErrors(false);
+    engine->setDumpStackForWarnings(false);
     OO_CHECK(!engine->dumpStackForErrors());
     OO_CHECK(!engine->dumpStackForWarnings());
 #endif
@@ -346,8 +346,8 @@ OO_TEST(gcRoots) {
         ooscript::addNamedObjectRoot(context, &object, "test object root"));
     OOJSRelinquishContext(context);
 
-    engine->garbageCollectionOpportunity(YES);
-    engine->garbageCollectionOpportunity(NO);
+    engine->garbageCollectionOpportunity(true);
+    engine->garbageCollectionOpportunity(false);
     context = OOJSAcquireContext();
     OO_CHECK(cxx_OOStringFromJSValue(context, Eval(context, "1, 'ok'"))
                  .value_or("") == "ok");
@@ -355,7 +355,7 @@ OO_TEST(gcRoots) {
 
     engine->removeGCValueRoot(&value);
     engine->removeGCObjectRoot(&object);
-    engine->garbageCollectionOpportunity(YES);
+    engine->garbageCollectionOpportunity(true);
   }
 }
 
@@ -366,7 +366,7 @@ OO_TEST(errorReporting) {
   SetUp();
   {
     OOJavaScriptEngine* engine = OOJavaScriptEngine::sharedEngine();
-    const BOOL show = engine->showErrorLocations();
+    const bool show = engine->showErrorLocations();
 #if OOJSENGINE_MONITOR_SUPPORT
     TestMonitor monitorObject;  // set while the test runs, then cleared (the
                                 // engine borrows it)
@@ -376,7 +376,7 @@ OO_TEST(errorReporting) {
 
     // An error reported by a native, with the caller's prefix.
     StartLog();
-    engine->setShowErrorLocations(NO);
+    engine->setShowErrorLocations(false);
     ooscript::Context context = OOJSAcquireContext();
     cxx_OOJSReportErrorForCaller(context, std::string("TestClass"),
                                  std::string("doThing"), "bad %s %d", "input",
@@ -410,7 +410,7 @@ OO_TEST(errorReporting) {
 
     // An uncaught exception with locations shown: two lines.
     StartLog();
-    engine->setShowErrorLocations(YES);
+    engine->setShowErrorLocations(true);
     context = OOJSAcquireContext();
     ooscript::Value result = ooscript::undefinedValue();
     const char* source = "\n\nthrow new Error('located boom');";
@@ -440,7 +440,7 @@ OO_TEST(errorReporting) {
 
     // A warning: dashes, and nothing pending.
     StartLog();
-    engine->setShowErrorLocations(NO);
+    engine->setShowErrorLocations(false);
     context = OOJSAcquireContext();
     cxx_OOJSReportWarningForCaller(
         context, std::nullopt, std::string("warnFunc"), "careful %s", "now");
@@ -458,7 +458,7 @@ OO_TEST(errorReporting) {
     OO_CHECK(monitor->_logs == logs + 1);
     OO_CHECK(monitor->_message == "monitored message");
     OO_CHECK(!monitor->_messageClass.has_value());
-    engine->setMonitor(nil);
+    engine->setMonitor(nullptr);
 #endif
     engine->setShowErrorLocations(show);
   }
@@ -540,22 +540,22 @@ OO_TEST(describeValue) {
   SetUp();
   {
     ooscript::Context context = OOJSAcquireContext();
-    OO_CHECK_EQ(Describe(context, "'a\"b\\n'", NO), "\"a\\\"b\\n\"");
-    OO_CHECK_EQ(Describe(context, "new String('boxed')", NO), "\"boxed\"");
-    OO_CHECK_EQ(Describe(context, "new Array(251).join('x')", NO),
+    OO_CHECK_EQ(Describe(context, "'a\"b\\n'", false), "\"a\\\"b\\n\"");
+    OO_CHECK_EQ(Describe(context, "new String('boxed')", false), "\"boxed\"");
+    OO_CHECK_EQ(Describe(context, "new Array(251).join('x')", false),
                 "\"" + std::string(200, 'x') + "...\"");
-    OO_CHECK_EQ(Describe(context, "[1, 2, 3]", NO), "[1, 2, 3]");
-    OO_CHECK_EQ(Describe(context, "[1, 'two', 3, 4, 5, 6]", NO),
+    OO_CHECK_EQ(Describe(context, "[1, 2, 3]", false), "[1, 2, 3]");
+    OO_CHECK_EQ(Describe(context, "[1, 'two', 3, 4, 5, 6]", false),
                 "[1, \"two\", 3, 4, ... <6 items total>]");
-    OO_CHECK_EQ(Describe(context, "[[1, 2], {}]", NO), "[[<2 items>], {...}]");
-    OO_CHECK_EQ(Describe(context, "({ a: 1 })", YES), "{...}");
-    OO_CHECK_EQ(Describe(context, "({ a: 1 })", NO), "[object Object]");
-    OO_CHECK_EQ(Describe(context, "(function namedFn() {})", NO),
+    OO_CHECK_EQ(Describe(context, "[[1, 2], {}]", false), "[[<2 items>], {...}]");
+    OO_CHECK_EQ(Describe(context, "({ a: 1 })", true), "{...}");
+    OO_CHECK_EQ(Describe(context, "({ a: 1 })", false), "[object Object]");
+    OO_CHECK_EQ(Describe(context, "(function namedFn() {})", false),
                 "function namedFn");
-    OO_CHECK_EQ(Describe(context, "3.5", NO), "3.5");
-    OO_CHECK_EQ(Describe(context, "null", NO), "null");
-    OO_CHECK_EQ(Describe(context, "undefined", NO), "undefined");
-    OO_CHECK_EQ(Describe(context, "true", NO), "true");
+    OO_CHECK_EQ(Describe(context, "3.5", false), "3.5");
+    OO_CHECK_EQ(Describe(context, "null", false), "null");
+    OO_CHECK_EQ(Describe(context, "undefined", false), "undefined");
+    OO_CHECK_EQ(Describe(context, "true", false), "true");
 
     ooscript::Value params[2] = {ooscript::int32Value(1), Eval(context, "'p'")};
     OO_CHECK_EQ(cxx_OOJSStringWithJavaScriptParameters(params, 2, context)
@@ -645,7 +645,7 @@ OO_TEST(jsValueHolder) {
     OO_CHECK(ooscript::isUndefined(undefinedHolder->jsValueInContext(NULL)));
 
     OOJavaScriptEngine::sharedEngine()->garbageCollectionOpportunity(
-        YES);  // the held object survives
+        true);  // the held object survives
     context = OOJSAcquireContext();
     OO_CHECK_EQ(cxx_OOStringFromJSValue(
                     context, ooscript::objectValue(ooscript::toObject(
@@ -735,23 +735,23 @@ OO_TEST(entityPredicates) {
         entity, NULL));  // neither ship nor planet
     OO_CHECK(!JSEntityIsDemoShipPredicate(entity, NULL));
 
-    entity->isShip = YES;
+    entity->isShip = true;
     OO_CHECK(JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
     OO_CHECK(!JSEntityIsDemoShipPredicate(entity, NULL));
-    entity->isSubEntity = YES;
+    entity->isSubEntity = true;
     OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
-    entity->isSubEntity = NO;
+    entity->isSubEntity = false;
     entity->setStatus(STATUS_COCKPIT_DISPLAY);
     OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
     OO_CHECK(JSEntityIsDemoShipPredicate(entity, NULL));
-    entity->isSubEntity = YES;
+    entity->isSubEntity = true;
     OO_CHECK(!JSEntityIsDemoShipPredicate(entity, NULL));
 
     // A JS function as a predicate: called with the entity's JS value.
     ooscript::Context context = OOJSAcquireContext();
     JSFunctionPredicateParameter param = {
         context, Eval(context, "(function (e) { return e === 42; })"), NULL,
-        NO};
+        false};
     OO_CHECK(JSFunctionPredicate(entity, &param));
     OO_CHECK(!param.errorFlag);
     param.function = Eval(context, "(function (e) { return e !== 42; })");

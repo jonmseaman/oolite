@@ -790,7 +790,7 @@ static bool ScriptAddProperty(Context cx, Object obj, PropertyId propID,
         }
     }
 
-    return YES;
+    return true;
 }
 } // namespace
 

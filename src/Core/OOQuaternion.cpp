@@ -369,7 +369,6 @@ void quaternion_rotate_about_axis(Quaternion* quat, Vector axis,
     *quat = quaternion_multiply(*quat, q2);
 }
 
-#ifdef __cplusplus
 std::string QuaternionDescription(Quaternion quaternion)
 {
     float x, y, z;
@@ -386,7 +385,6 @@ std::string QuaternionDescription(Quaternion quaternion)
     return oo::str::format("(%g %c %gi %c %gj %c %gk)", quaternion.w, xs, x, ys,
         y, zs, z);
 }
-#endif
 
 Vector quaternion_rotate_vector(Quaternion q, Vector v)
 {

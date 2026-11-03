@@ -355,7 +355,7 @@ void OOShipRegistry::loadShipData()
 
     // Load shipdata.plist.
     oo::PList result = ResourceManager::dictionaryFromFilesNamed(
-        "shipdata.plist", "Config", MERGE_BASIC, NO);
+        "shipdata.plist", "Config", MERGE_BASIC, false);
     if (result.isNull())
         return;
 
@@ -419,8 +419,8 @@ void OOShipRegistry::loadShipData()
 
     _effectData = oo::PList();
 
-    result = ResourceManager::dictionaryFromFilesNamed("effectdata.plist",
-        "Config", MERGE_BASIC, NO);
+    result = ResourceManager::dictionaryFromFilesNamed(
+        "effectdata.plist", "Config", MERGE_BASIC, false);
     if (result.isNull())
         return;
 
@@ -468,7 +468,7 @@ void OOShipRegistry::loadDemoShipConditions()
 
     // OOCacheManager is an unmigrated callee: convert at the call.
     const oo::PList initialDemoShips = ResourceManager::arrayFromFilesNamed(
-        "shiplibrary.plist", "Config", YES, NO);
+        "shiplibrary.plist", "Config", true, false);
 
     if (const oo::PList::Array* entries = initialDemoShips.getIf<oo::PList::Array>()) {
         for (const oo::PList& key : *entries) {
@@ -499,7 +499,7 @@ void OOShipRegistry::loadDemoShips()
     _demoShips = oo::PList();
 
     const oo::PList initialDemoShips = ResourceManager::arrayFromFilesNamed(
-        "shiplibrary.plist", "Config", YES, NO);
+        "shiplibrary.plist", "Config", true, false);
     const oo::PList::Array noShips;
     const oo::PList::Array* initialArray = initialDemoShips.getIf<oo::PList::Array>(); // null unless isArray()
     const oo::PList::Array& initialEntries = initialArray != nullptr ? *initialArray : noShips;
@@ -525,10 +525,10 @@ void OOShipRegistry::loadDemoShips()
                 } else {
                     ::OOScript* condScript = (UNIVERSE != nullptr ? UNIVERSE->getConditionScript(*conditions)
                                                                   : nullptr);
-                    if (condScript != nil) // should always be non-nil, but just in case
+                    if (condScript != nullptr) // should always be non-nil, but just in case
                     {
                         ooscript::Context context = OOJSAcquireContext();
-                        BOOL OK;
+                        bool OK;
                         bool allow_use;
                         ooscript::Value result;
                         ooscript::Value args[] = {
@@ -840,7 +840,7 @@ bool OOShipRegistry::loadAndApplyShipDataOverrides(oo::PList& ioData)
 {
     oo::PList::Dict& ships = Entries(ioData);
     const oo::PList overrides = ResourceManager::dictionaryFromFilesNamed(
-        "shipdata-overrides.plist", "Config", MERGE_SMART, NO);
+        "shipdata-overrides.plist", "Config", MERGE_SMART, false);
 
     if (const oo::PList::Dict* overrideEntries = overrides.getIf<oo::PList::Dict>()) {
         for (const auto& [shipKey, overridesEntry] : *overrideEntries) {
@@ -890,9 +890,9 @@ bool OOShipRegistry::loadAndMergeShipyard(oo::PList& ioData)
     }
 
     const oo::PList shipyard = ResourceManager::dictionaryFromFilesNamed(
-        "shipyard.plist", "Config", MERGE_BASIC, NO);
+        "shipyard.plist", "Config", MERGE_BASIC, false);
     const oo::PList shipyardOverrides = ResourceManager::dictionaryFromFilesNamed(
-        "shipyard-overrides.plist", "Config", MERGE_SMART, NO);
+        "shipyard-overrides.plist", "Config", MERGE_SMART, false);
 
     playerShips.reserve(shipyard.count());
 
@@ -941,15 +941,15 @@ bool OOShipRegistry::removeUnusableEntries(oo::PList& ioData, bool shipMode)
     for (auto ship = ships.begin(); ship != ships.end();) {
         const std::string& shipKey = ship->first;
         const oo::PList& shipEntry = ship->second;
-        BOOL remove = NO;
+        bool remove = false;
 
         if (shipEntry.get<bool>("is_template") || shipEntry.get<bool>("_oo_deferred_remove"))
-            remove = YES;
+            remove = true;
         else if (shipMode && StringForKey(&shipEntry, "roles").value_or("").empty() && !shipEntry.get<bool>("_oo_is_subentity") && !shipEntry.get<bool>("_oo_is_effect")) {
             OO_LOG_ERR("shipData.load.error",
                 "the shipdata.plist entry \"{}\" specifies no {}.", shipKey,
                 "roles");
-            remove = YES;
+            remove = true;
             cxx_OOStandardsError("Error in shipdata.plist");
         } else {
             const std::string modelName = StringForKey(&shipEntry, "model").value_or("");
@@ -958,14 +958,14 @@ bool OOShipRegistry::removeUnusableEntries(oo::PList& ioData, bool shipMode)
                     "the shipdata.plist entry \"{}\" specifies no {}.", shipKey,
                     "model");
                 cxx_OOStandardsError("Error in shipdata.plist");
-                remove = YES;
+                remove = true;
             } else if (!modelName.empty() && !ResourceManager::pathForFileNamed(modelName, "Models").has_value()) {
                 OO_LOG_ERR("shipData.load.error",
                     "the shipdata.plist entry \"{}\" specifies non-existent "
                     "model \"{}\".",
                     shipKey, modelName);
                 cxx_OOStandardsError("Error in shipdata.plist");
-                remove = YES;
+                remove = true;
             }
         }
         if (remove)
@@ -1104,7 +1104,7 @@ bool OOShipRegistry::sanitizeConditions(oo::PList& ioData)
 bool OOShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData)
 {
     oo::PList::Dict& ships = Entries(ioData);
-    BOOL remove, fatal;
+    bool remove, fatal;
 
     // Convert all subentity declarations to dictionaries and add
     // _oo_is_subentity=YES to all entries used as subentities.
@@ -1113,7 +1113,7 @@ bool OOShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData)
     // The declaration helpers read only "frangible" and "setup_actions" of the
     // ship data, which this loop never writes.)
     for (auto& [shipKey, shipEntry] : ships) {
-        remove = NO;
+        remove = false;
         std::set<std::string> badSubentities;
 
         // Iterate over each subentity declaration of each ship
@@ -1130,7 +1130,7 @@ bool OOShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData)
                 // If entry is broken, we need to kill this ship.
                 if (fatal) {
                     cxx_OOStandardsError("Bad subentity definition found");
-                    remove = YES;
+                    remove = true;
                 } else if (!subentityDict.isNull()) {
                     // Tag subentities.
                     if (StringForKey(&subentityDict, "type") != "flasher") {
@@ -1175,7 +1175,7 @@ bool OOShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData)
                         shipKey, (badCount == 1) ? "y" : "ies", badSubentitiesList);
                     cxx_OOStandardsError("Bad subentity definition found");
                 }
-                remove = YES;
+                remove = true;
             }
 
             if (remove) {
@@ -1192,7 +1192,7 @@ bool OOShipRegistry::canonicalizeAndTagSubentities(oo::PList& ioData)
 bool OOShipRegistry::preloadShipMeshes(oo::PList& ioData)
 {
     oo::PList::Dict& ships = Entries(ioData);
-    OOMesh* mesh = nil;
+    OOMesh* mesh = nullptr;
     std::size_t i = 0, count;
 
     count = ships.size();
@@ -1214,11 +1214,11 @@ bool OOShipRegistry::preloadShipMeshes(oo::PList& ioData)
                  materialDictionary:(materials != nullptr ? *materials : oo::PList())
                   shadersDictionary:(shaders != nullptr ? *shaders : oo::PList())
                              smooth:shipEntry.get<bool>("smooth")
-                       shaderMacros:nil
-                shaderBindingTarget:nil];
+                       shaderMacros:nullptr
+                shaderBindingTarget:nullptr];
         } // NOTE: mesh is now invalid, but pointer nil check is OK.
 
-        if (mesh == nil) {
+        if (mesh == nullptr) {
             // FIXME: what if it's a subentity? Need to rearrange things.
             OO_LOG_ERR("shipData.load.error",
                 "model \"{}\" could not be loaded for ship \"{}\", removing.",
@@ -1273,12 +1273,12 @@ void OOShipRegistry::mergeShipRoles(
 
 oo::PList OOShipRegistry::canonicalizeSubentityDeclaration(
     const oo::PList& declaration, const std::string& shipKey,
-    const oo::PList& shipData, BOOL* outFatalError)
+    const oo::PList& shipData, bool* outFatalError)
 {
     oo::PList result;
 
     assert(outFatalError != NULL);
-    *outFatalError = NO;
+    *outFatalError = false;
 
     if (declaration.isString()) {
         // Update old-style string-based declaration.
@@ -1304,24 +1304,24 @@ oo::PList OOShipRegistry::canonicalizeSubentityDeclaration(
             "subentity declaration for ship {} should be string or "
             "dictionary, found {}.",
             shipKey, oo::typeName(declaration.type()));
-        *outFatalError = YES;
+        *outFatalError = true;
     }
 
     // For frangible ships, bad subentities are non-fatal.
     const oo::PList* shipEntry = shipData.get<oo::PList::Dict>(shipKey);
     if (*outFatalError && shipEntry != nullptr && shipEntry->get<bool>("frangible"))
-        *outFatalError = NO;
+        *outFatalError = false;
 
     return result;
 }
 
 oo::PList OOShipRegistry::translateOldStyleSubentityDeclaration(
     const std::string& declaration, const std::string& shipKey,
-    const oo::PList& shipData, BOOL* outFatalError)
+    const oo::PList& shipData, bool* outFatalError)
 {
     const std::vector<std::string> tokenStrings = oo::str::tokens(declaration);
     std::string subentityKey;
-    BOOL isFlasher;
+    bool isFlasher;
 
     subentityKey = FirstToken(tokenStrings);
     isFlasher = subentityKey == "*FLASHER*";
@@ -1333,7 +1333,7 @@ oo::PList OOShipRegistry::translateOldStyleSubentityDeclaration(
                 "the shipdata.plist entry \"{}\" has a broken subentity "
                 "definition \"{}\" (should have 8 tokens, has {}).",
                 shipKey, subentityKey, tokenStrings.size());
-            *outFatalError = YES;
+            *outFatalError = true;
         } else {
             OO_LOG_WARN(
                 "shipData.load.warning.badFlasher",
@@ -1362,7 +1362,7 @@ oo::PList OOShipRegistry::translateOldStyleSubentityDeclaration(
 
 oo::PList OOShipRegistry::translateOldStyleFlasherDeclaration(
     const oo::PList& tokens, const std::string& /*shipKey*/,
-    BOOL* /*outFatalError*/)
+    bool* /*outFatalError*/)
 {
     Vector position;
     float size, frequency, phase, hue;
@@ -1401,12 +1401,12 @@ oo::PList OOShipRegistry::translateOldStyleFlasherDeclaration(
 
 oo::PList OOShipRegistry::translateOldStandardBasicSubentityDeclaration(
     const oo::PList& tokens, const std::string& shipKey,
-    const oo::PList& shipData, BOOL* /*outFatalError*/)
+    const oo::PList& shipData, bool* /*outFatalError*/)
 {
     std::string subentityKey;
     Vector position;
     Quaternion orientation;
-    BOOL isTurret, isDock = NO;
+    bool isTurret, isDock = false;
 
     subentityKey = tokens.at<std::string>(0);
 
@@ -1456,7 +1456,7 @@ oo::PList OOShipRegistry::translateOldStandardBasicSubentityDeclaration(
 
 oo::PList OOShipRegistry::validateNewStyleSubentityDeclaration(
     const oo::PList& declaration, const std::string& shipKey,
-    BOOL* outFatalError)
+    bool* outFatalError)
 {
     const std::string type = StringForKey(&declaration, "type").value_or("standard");
 
@@ -1471,18 +1471,18 @@ oo::PList OOShipRegistry::validateNewStyleSubentityDeclaration(
             "subentity declaration for ship {} does not declare a valid "
             "type (must be standard, flasher or ball_turret).",
             shipKey);
-        *outFatalError = YES;
+        *outFatalError = true;
         return oo::PList();
     }
 }
 
 oo::PList OOShipRegistry::validateNewStyleFlasherDeclaration(
     const oo::PList& declaration, const std::string& shipKey,
-    BOOL* /*outFatalError*/)
+    bool* /*outFatalError*/)
 {
     Vector position = kZeroVector;
     float size, frequency, phase, brightfraction;
-    BOOL initiallyOn;
+    bool initiallyOn;
 
 #define kDefaultFlasherColor "redColor"
 
@@ -1563,12 +1563,12 @@ oo::PList OOShipRegistry::validateNewStyleFlasherDeclaration(
 
 oo::PList OOShipRegistry::validateNewStyleStandardSubentityDeclaration(
     const oo::PList& declaration, const std::string& shipKey,
-    BOOL* outFatalError)
+    bool* outFatalError)
 {
     Vector position = kZeroVector;
     Quaternion orientation = kIdentityQuaternion;
-    BOOL isTurret;
-    BOOL isDock = NO;
+    bool isTurret;
+    bool isDock = false;
     float fireRate = -1.0f; // out of range constants
     float weaponRange = -1.0f;
     float weaponEnergy = -1.0f;
@@ -1578,7 +1578,7 @@ oo::PList OOShipRegistry::validateNewStyleStandardSubentityDeclaration(
         OO_LOG_ERR("shipData.load.error.badSubentity",
             "subentity declaration for ship {} specifies no subentity_key.",
             shipKey);
-        *outFatalError = YES;
+        *outFatalError = true;
         return oo::PList();
     }
 
@@ -1632,9 +1632,9 @@ oo::PList OOShipRegistry::validateNewStyleStandardSubentityDeclaration(
 
         result["dock_label"] = declaration.get<std::string>("dock_label", "the docking bay");
 
-        BOOL dockable = declaration.get<bool>("allow_docking", true);
-        BOOL playerdockable = declaration.get<bool>("disallowed_docking_collides", false);
-        BOOL undockable = declaration.get<bool>("allow_launching", true);
+        bool dockable = declaration.get<bool>("allow_docking", true);
+        bool playerdockable = declaration.get<bool>("disallowed_docking_collides", false);
+        bool undockable = declaration.get<bool>("allow_launching", true);
 
         result["allow_docking"] = dockable ? true : false;
         result["disallowed_docking_collides"] = playerdockable ? true : false;

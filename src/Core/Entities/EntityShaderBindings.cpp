@@ -132,7 +132,8 @@ void StoreShaderBindingValue(OOShaderBindingValue& out, R value)
         out.color = value; // borrowed (fogUniform)
     else if constexpr (std::is_floating_point_v<R>)
         out.f = value;
-    // BOOL (signed char): sign-extended, as the selector path's call returning signed char was.
+    // bool (signed char): sign-extended, as the selector path's call returning
+    // signed char was.
     else if constexpr (std::is_same_v<R, signed char>)
         out.i = value < 0 ? static_cast<long long>(static_cast<unsigned char>(value)) - 256 : static_cast<long long>(static_cast<unsigned char>(value));
     else
@@ -160,17 +161,41 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
     { "mass", kOOTypeEncoding<GLfloat>, [](Entity*) -> bool { return true; },
         [](Entity* part, OOShaderBindingValue& out) { StoreShaderBindingValue(out, [part]() -> GLfloat { return part->getMass(); }()); } },
     { "energy", kOOTypeEncoding<GLfloat>, [](Entity*) -> bool { return true; },
-        [](Entity* part, OOShaderBindingValue& out) { StoreShaderBindingValue(out, [part]() -> GLfloat { return part->getEnergy(); }()); } },
-    { "maxEnergy", kOOTypeEncoding<GLfloat>, [](Entity*) -> bool { return true; },
-        [](Entity* part, OOShaderBindingValue& out) { StoreShaderBindingValue(out, [part]() -> GLfloat { return part->getMaxEnergy(); }()); } },
-    { "universalTime", kOOTypeEncoding<GLfloat>, [](Entity*) -> bool { return true; },
-        [](Entity* part, OOShaderBindingValue& out) { StoreShaderBindingValue(out, [part]() -> GLfloat { return part->universalTime(); }()); } },
-    { "spawnTime", kOOTypeEncoding<GLfloat>, [](Entity*) -> bool { return true; },
-        [](Entity* part, OOShaderBindingValue& out) { StoreShaderBindingValue(out, [part]() -> GLfloat { return part->getSpawnTime(); }()); } },
-    { "timeElapsedSinceSpawn", kOOTypeEncoding<GLfloat>, [](Entity*) -> bool { return true; },
-        [](Entity* part, OOShaderBindingValue& out) { StoreShaderBindingValue(out, [part]() -> GLfloat { return part->timeElapsedSinceSpawn(); }()); } },
-    { "throwingSparks", kOOTypeEncoding<BOOL>, [](Entity*) -> bool { return true; },
-        [](Entity* part, OOShaderBindingValue& out) { StoreShaderBindingValue(out, [part]() -> BOOL { return part->throwingSparks(); }()); } },
+        [](Entity* part, OOShaderBindingValue& out) {
+            StoreShaderBindingValue(
+                out, [part]() -> GLfloat { return part->getEnergy(); }());
+        } },
+    { "maxEnergy", kOOTypeEncoding<GLfloat>,
+        [](Entity*) -> bool { return true; },
+        [](Entity* part, OOShaderBindingValue& out) {
+            StoreShaderBindingValue(
+                out, [part]() -> GLfloat { return part->getMaxEnergy(); }());
+        } },
+    { "universalTime", kOOTypeEncoding<GLfloat>,
+        [](Entity*) -> bool { return true; },
+        [](Entity* part, OOShaderBindingValue& out) {
+            StoreShaderBindingValue(
+                out, [part]() -> GLfloat { return part->universalTime(); }());
+        } },
+    { "spawnTime", kOOTypeEncoding<GLfloat>,
+        [](Entity*) -> bool { return true; },
+        [](Entity* part, OOShaderBindingValue& out) {
+            StoreShaderBindingValue(
+                out, [part]() -> GLfloat { return part->getSpawnTime(); }());
+        } },
+    { "timeElapsedSinceSpawn", kOOTypeEncoding<GLfloat>,
+        [](Entity*) -> bool { return true; },
+        [](Entity* part, OOShaderBindingValue& out) {
+            StoreShaderBindingValue(out, [part]() -> GLfloat {
+                return part->timeElapsedSinceSpawn();
+            }());
+        } },
+    { "throwingSparks", kOOTypeEncoding<bool>,
+        [](Entity*) -> bool { return true; },
+        [](Entity* part, OOShaderBindingValue& out) {
+            StoreShaderBindingValue(
+                out, [part]() -> bool { return part->throwingSparks(); }());
+        } },
     { "clock", kOOTypeEncoding<GLfloat>, [](Entity*) -> bool { return true; },
         [](Entity* part, OOShaderBindingValue& out) {
             StoreShaderBindingValue(out,
@@ -218,56 +243,56 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
             StoreShaderBindingValue(
                 out, [part]() -> unsigned { return part->systemProductivity(); }());
         } },
-    { "isBeacon", kOOTypeEncoding<BOOL>,
+    { "isBeacon", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool {
             return dynamic_cast<OOWaypointEntity*>(part) != nullptr || ShipPart(part) != nullptr || EffectPart(part) != nullptr;
         },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 if (ShipEntity* ship = ShipPart(part))
                     return ship->isBeacon();
                 if (OOVisualEffectEntity* effect = EffectPart(part))
                     return effect->isBeacon();
                 OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(part);
-                return waypoint != nullptr ? waypoint->isBeacon() : NO;
+                return waypoint != nullptr ? waypoint->isBeacon() : false;
             }());
         } },
-    { "isFrangible", kOOTypeEncoding<BOOL>,
+    { "isFrangible", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 ShipEntity* ship = ShipPart(part);
-                return ship != nullptr ? ship->getIsFrangible() : NO;
+                return ship != nullptr ? ship->getIsFrangible() : false;
             }());
         } },
-    { "isCloaked", kOOTypeEncoding<BOOL>,
+    { "isCloaked", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 ShipEntity* ship = ShipPart(part);
-                return ship != nullptr ? ship->isCloaked() : NO;
+                return ship != nullptr ? ship->isCloaked() : false;
             }());
         } },
-    { "isJammingScanning", kOOTypeEncoding<BOOL>,
+    { "isJammingScanning", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool {
             return dynamic_cast<OOWaypointEntity*>(part) != nullptr || ShipPart(part) != nullptr || EffectPart(part) != nullptr;
         },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 if (ShipEntity* ship = ShipPart(part))
                     return ship->isJammingScanning();
                 if (OOVisualEffectEntity* effect = EffectPart(part))
                     return effect->isJammingScanning();
                 OOWaypointEntity* waypoint = dynamic_cast<OOWaypointEntity*>(part);
-                return waypoint != nullptr ? waypoint->isJammingScanning() : NO;
+                return waypoint != nullptr ? waypoint->isJammingScanning() : false;
             }());
         } },
-    { "hasMilitaryScannerFilter", kOOTypeEncoding<BOOL>,
+    { "hasMilitaryScannerFilter", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 ShipEntity* ship = ShipPart(part);
-                return ship != nullptr ? ship->hasMilitaryScannerFilter() : NO;
+                return ship != nullptr ? ship->hasMilitaryScannerFilter() : false;
             }());
         } },
     { "messageTime", kOOTypeEncoding<double>,
@@ -286,12 +311,12 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
                 return ship != nullptr ? ship->escortCount() : uint8_t { };
             }());
         } },
-    { "hasHostileTarget", kOOTypeEncoding<BOOL>,
+    { "hasHostileTarget", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 ShipEntity* ship = ShipPart(part);
-                return ship != nullptr ? ship->hasHostileTarget() : NO;
+                return ship != nullptr ? ship->hasHostileTarget() : false;
             }());
         } },
     { "weaponRange", kOOTypeEncoding<GLfloat>,
@@ -310,12 +335,12 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
                 return ship != nullptr ? ship->getScannerRange() : GLfloat { };
             }());
         } },
-    { "withinStationAegis", kOOTypeEncoding<BOOL>,
+    { "withinStationAegis", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 ShipEntity* ship = ShipPart(part);
-                return ship != nullptr ? ship->withinStationAegis() : NO;
+                return ship != nullptr ? ship->withinStationAegis() : false;
             }());
         } },
     { "fuel", kOOTypeEncoding<OOFuelQuantity>,
@@ -450,20 +475,20 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
                 return ship != nullptr ? ship->rangeToPrimaryTarget() : double { };
             }());
         } },
-    { "isHulk", kOOTypeEncoding<BOOL>,
+    { "isHulk", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 ShipEntity* ship = ShipPart(part);
-                return ship != nullptr ? ship->getIsHulk() : NO;
+                return ship != nullptr ? ship->getIsHulk() : false;
             }());
         } },
-    { "lightsActive", kOOTypeEncoding<BOOL>,
+    { "lightsActive", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool { return ShipPart(part) != nullptr; },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 ShipEntity* ship = ShipPart(part);
-                return ship != nullptr ? ship->lightsActive() : NO;
+                return ship != nullptr ? ship->lightsActive() : false;
             }());
         } },
     { "legalStatus", kOOTypeEncoding<int>,
@@ -507,28 +532,28 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
                 return player != nullptr ? player->fuelLeakRate() : float { };
             }());
         } },
-    { "massLocked", kOOTypeEncoding<BOOL>,
+    { "massLocked", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool {
             return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
         },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 if (ProxyPlayerEntity* proxy = ProxyPart(part))
                     return proxy->massLocked();
                 PlayerEntity* player = PlayerEntityPart(part);
-                return player != nullptr ? player->massLocked() : NO;
+                return player != nullptr ? player->massLocked() : false;
             }());
         } },
-    { "atHyperspeed", kOOTypeEncoding<BOOL>,
+    { "atHyperspeed", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool {
             return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
         },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 if (ProxyPlayerEntity* proxy = ProxyPart(part))
                     return proxy->atHyperspeed();
                 PlayerEntity* player = PlayerEntityPart(part);
-                return player != nullptr ? player->atHyperspeed() : NO;
+                return player != nullptr ? player->atHyperspeed() : false;
             }());
         } },
     { "dialForwardShield", kOOTypeEncoding<GLfloat>,
@@ -593,16 +618,16 @@ constexpr EntityShaderBindingRow kEntityShaderBindings[] = {
                 return player != nullptr ? player->getCompassMode() : OOCompassMode { };
             }());
         } },
-    { "dialIdentEngaged", kOOTypeEncoding<BOOL>,
+    { "dialIdentEngaged", kOOTypeEncoding<bool>,
         [](Entity* part) -> bool {
             return ProxyPart(part) != nullptr || PlayerEntityPart(part) != nullptr;
         },
         [](Entity* part, OOShaderBindingValue& out) {
-            StoreShaderBindingValue(out, [part]() -> BOOL {
+            StoreShaderBindingValue(out, [part]() -> bool {
                 if (ProxyPlayerEntity* proxy = ProxyPart(part))
                     return proxy->dialIdentEngaged();
                 PlayerEntity* player = PlayerEntityPart(part);
-                return player != nullptr ? player->dialIdentEngaged() : NO;
+                return player != nullptr ? player->dialIdentEngaged() : false;
             }());
         } },
     { "alertCondition", kOOTypeEncoding<OOAlertCondition>,

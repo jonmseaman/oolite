@@ -18,13 +18,7 @@
    every former caller through them). meson test --suite oofnd-plist
 */
 
-// Included as Objective-C++ game code includes it, after OOCocoa.h's true/false
-// macros.
-#define true 1
-#define false 0
 #include "oofnd/PListGet.hpp"
-#undef true
-#undef false
 
 #include <array>
 #include <cmath>

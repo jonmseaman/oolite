@@ -36,10 +36,6 @@ MA 02110-1301, USA.
 
 class Entity;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void InitOOJSEntity(ooscript::Context context, ooscript::Object global);
 
 // The C++ entity the slot holds, or null for a stale one.
@@ -50,10 +46,6 @@ bool JSValueToEntity(ooscript::Context context, ooscript::Value value,
 // JSEntityClass() returns it. Declared as a real function rather than
 // OOINLINE so the class definition stays private to OOJSEntity.mm.
 ooscript::ClassDef* JSEntityClass(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 extern ooscript::Object gOOEntityJSPrototype;
 
@@ -120,19 +112,11 @@ OOINLINE ooscript::Object JSEntityPrototype(void)
         scriptClass and function are non-nil, a warning will be reported to the
         log.
 */
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern "C++" { // C++ parameters; nullopt class or function: no warning
 bool EntityFromArgumentList(ooscript::Context context,
     const std::optional<std::string>& scriptClass,
     const std::optional<std::string>& function,
     unsigned argc, ooscript::Value* argv,
     Entity** outEntity, unsigned* outConsumed);
-}
-#ifdef __cplusplus
-}
-#endif
 
 /*
         For scripting purposes, a JS entity object is a stale reference if its

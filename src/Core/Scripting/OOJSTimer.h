@@ -71,12 +71,4 @@ private:
     ooscript::Object _jsSelf = { }; // The JS Timer object proxy for this OOJSTimer.
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void InitOOJSTimer(ooscript::Context context, ooscript::Object global);
-
-#ifdef __cplusplus
-}
-#endif

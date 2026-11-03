@@ -13,7 +13,7 @@
    deallocated ship ends it at once; it is an ECM blast and the ship is not
    (the check asks the C++ member). The blasts are made through the one helper
    below: the blast is a C++ entity whose object is the Entity facade
-   oo::NewEntityFacade made. Run: bash tools/check-core-tests.sh
+   oo::NewEntityFacade made. Run: tests/run.sh unit
 */
 
 #include <vector>
@@ -42,7 +42,7 @@ class TestUniverse : public Universe {
 
   bool removeEntity(Entity* entity) override {
     _removed = entity;
-    return YES;
+    return true;
   }
   std::vector<oo::EntityHold> findEntitiesMatchingPredicate(
       EntityFilterPredicate /*predicate*/, void* /*parameter*/, double range,
@@ -58,7 +58,7 @@ extern ooscript::Context
 
 namespace {
 
-TestUniverse* sUniverse = nil;
+TestUniverse* sUniverse = nullptr;
 std::vector<double> sRanges;
 
 // PLAYER: the debug build asserts it is set (OOGetPlayer()), so
@@ -85,13 +85,13 @@ void SetUpTestPlayer() {
 }
 
 void SetUp() {
-  if (sUniverse == nil) {
+  if (sUniverse == nullptr) {
     sUniverse = new TestUniverse();  // never released
   }
   sRanges.clear();
   sUniverse->_ranges = &sRanges;
-  sUniverse->_removed = nil;
-  sUniverse->_searchedFrom = nil;
+  sUniverse->_removed = nullptr;
+  sUniverse->_searchedFrom = nullptr;
   gSharedUniverse = sUniverse;
   SetUpTestPlayer();
   // The ship's -dealloc sends its (absent) scripts entityDestroyed in a request
@@ -131,7 +131,7 @@ OO_TEST(noShipNoBlast) {
   {
     oo::AutoreleaseScope scope;
     SetUp();
-    OO_CHECK(Blast(nil) == nil);
+    OO_CHECK(Blast(nullptr) == nullptr);
   }
 }
 
@@ -141,11 +141,11 @@ OO_TEST(blastAtTheShip) {
     SetUp();
     Entity* ship = Ship();
     Entity* blast = Blast(ship);
-    OO_CHECK(blast != nil);
+    OO_CHECK(blast != nullptr);
     OO_CHECK(HPvector_equal(blast->getPosition(), make_HPvector(10, 20, 30)));
     OO_CHECK(blast->status() == STATUS_EFFECT &&
              blast->getScanClass() == CLASS_NO_DRAW);
-    OO_CHECK(blast->owner() == nil);
+    OO_CHECK(blast->owner() == nullptr);
     OO_CHECK(IsECMBlast(blast) && !IsECMBlast(ship));
   }
 }
@@ -158,7 +158,7 @@ OO_TEST(fourPulsesThenGone) {
     Entity* blast = Blast(ship);
 
     blast->update(0.25);
-    OO_CHECK(sRanges.empty() && sUniverse->_removed == nil);
+    OO_CHECK(sRanges.empty() && sUniverse->_removed == nullptr);
     blast->update(0.25);
     OO_CHECK(sRanges.size() == 1 && sRanges[0] == SCANNER_MAX_RANGE * 0.25);
     OO_CHECK(sUniverse->_searchedFrom == blast);
@@ -166,7 +166,7 @@ OO_TEST(fourPulsesThenGone) {
     blast->update(0.5);
     OO_CHECK(sRanges.size() == 3 && sRanges[1] == SCANNER_MAX_RANGE * 0.5 &&
              sRanges[2] == SCANNER_MAX_RANGE * 0.75);
-    OO_CHECK(sUniverse->_removed == nil);
+    OO_CHECK(sUniverse->_removed == nullptr);
     blast->update(0.5);
     OO_CHECK(sRanges.size() == 4 && sRanges[3] == SCANNER_MAX_RANGE);
     OO_CHECK(sUniverse->_removed == blast);
@@ -184,7 +184,7 @@ OO_TEST(deadShipEndsIt) {
     OO_CHECK(sRanges.empty() && sUniverse->_removed == blast);
   }
 
-  Entity* blast = nil;
+  Entity* blast = nullptr;
   {
     oo::AutoreleaseScope scope;
     SetUp();
