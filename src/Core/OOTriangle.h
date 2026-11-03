@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 */
 
+#pragma once
+
 typedef struct
 {
     Vector v[3];

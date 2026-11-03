@@ -25,9 +25,12 @@
 */
 
 #include "OOTexture.h"
+// Before OOConcreteTexture.h, in a block of its own: OOTextureInternal.h tests OOTEXTURE_RELOADABLE,
+// which OOConcreteTexture.h defines (bead oo-we7mm).
+#include "OOTextureInternal.h"
+
 #include "OOConcreteTexture.h"
 #include "OONullTexture.h"
-#include "OOTextureInternal.h"
 
 #include "OOTextureGenerator.h"
 #include "OOTextureLoader.h"
@@ -101,8 +104,8 @@ OOCache* sRecentTextures;
 static BOOL sCheckedExtensions;
 OOTextureInfo gOOTextureInfo;
 
-// The ObjC tree kept a trace context here for the debug monitor; nothing reads it, so the
-// markers are no-ops in every build.
+// The ObjC tree kept a trace context here for the debug monitor; nothing in the C++ tree reads
+// it, so the markers are no-ops in every build.
 #define SET_TRACE_CONTEXT(str) \
     do {                       \
     } while (0)

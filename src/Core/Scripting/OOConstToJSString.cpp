@@ -59,6 +59,7 @@ typedef struct ConstTable {
 
 #define TABLE(entries) { sizeof entries / sizeof *entries, entries }
 
+// Unconditional, as upstream's: OOCAssert reads it in every flavour (bead oo-pdsng).
 static BOOL sInited = NO;
 
 /*

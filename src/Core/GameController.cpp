@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #include "MyOpenGLView.h"
 #include "OODebugFlags.h"
 #include "OODebugSupport.h"
+#include "OOFoundation.h" // OOLITE_GNUSTEP
 #include "OOJSFrameCallbacks.h"
 #include "OOLogOutputHandler.h"
 #include "OOLoggingExtended.h"
@@ -41,7 +42,7 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "legacy_random.h"
 #include <stdlib.h>
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
 #include "OODebugTCPConsoleClient.h"
 #endif
 #include "oofnd/Date.hpp"
@@ -66,7 +67,7 @@ MA 02110-1301, USA.
 #import <Sparkle/Sparkle.h>
 
 static void SetUpSparkle(void);
-#elif (OOLITE_GNUSTEP && !defined(NDEBUG))
+#elif (OOLITE_GNUSTEP && defined(OO_DEBUG_MONITOR_ENABLED))
 #include "OODebugMonitor.h"
 #endif
 
@@ -289,7 +290,7 @@ void GameController::setGamePaused(bool value)
 void GameController::setEcoQoS(bool efficiencyModeRequested)
 {
 #if OOLITE_WINDOWS
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     /*	A paused game a debug console is driving is not idle (bug oo-37zzy). Efficiency mode puts
             the process in IDLE_PRIORITY_CLASS, which runs only when no other thread wants a CPU: on a
             loaded machine every frame - and so every console command, serviced between frames - then
@@ -504,7 +505,7 @@ void GameController::runFrameLoop()
             // The OXZ download's callbacks, which the run loop delivered (proposed ADR-0044).
             OOOXZManager::sharedManager()->processDownloadEvents();
 
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
             if (OODebugTCPConsoleIsWaitingForInput()) {
                 /*	The debug console's socket is no longer on the run loop (bead oo-3rb.14,
                         proposed ADR-0041): wait on the socket as the run loop waited on the

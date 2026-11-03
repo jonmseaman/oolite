@@ -2222,9 +2222,9 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame)
     // Most of this is probably also set more than once
 
     setCommanderName(std::string(PLAYER_DEFAULT_NAME));
-    const oo::PList savedName = oo::Defaults::standard().object("last_savename");
-    if (const std::string* name = savedName.getIf<std::string>()) {
-        setLastsaveName(*name);
+    const std::optional<std::string> savedName = oo::Defaults::standard().stringForKey("last_savename");
+    if (savedName.has_value()) {
+        _lastsaveName = savedName;
     }
 
     galaxy_coordinates = NSMakePoint(0x14, 0xAD); // 20,173

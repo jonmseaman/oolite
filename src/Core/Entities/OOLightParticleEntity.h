@@ -65,7 +65,7 @@ public:
     bool isEffect() override;
     bool canCollide() override;
 
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     std::vector<oo::Ref<OOTexture>> allTextures() override;
 #endif
 

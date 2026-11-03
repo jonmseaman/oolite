@@ -160,7 +160,7 @@ static PropertySpec sOoliteProperties[] = {
     { "postFX", kOolite_postFX, kOolitePropertyFlagsRW, nullptr, nullptr },
     { "hdrToneMapper", kOolite_hdrToneMapper, kOolitePropertyFlagsRW, nullptr, nullptr },
     { "sdrToneMapper", kOolite_sdrToneMapper, kOolitePropertyFlagsRW, nullptr, nullptr },
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     { "timeAccelerationFactor", kOolite_timeAccelerationFactor, kOolitePropertyFlagsRW, nullptr, nullptr },
 #endif
     { 0 }

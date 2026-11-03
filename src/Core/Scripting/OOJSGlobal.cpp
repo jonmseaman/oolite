@@ -223,14 +223,14 @@ enum : std::int8_t {
 
 namespace {
 static constexpr PropertyFlag kGlobalROPropFlags = PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared;
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
 static constexpr PropertyFlag kGlobalRWPropFlags = PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared;
 #endif
 static PropertySpec sGlobalProperties[] = {
     // JS name					ID							flags									getter	setter
     { "galaxyNumber", kGlobal_galaxyNumber, kGlobalROPropFlags, nullptr, nullptr },
     { "guiScreen", kGlobal_guiScreen, kGlobalROPropFlags, nullptr, nullptr },
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     { "timeAccelerationFactor", kGlobal_timeAccelerationFactor, kGlobalRWPropFlags, nullptr, nullptr },
 #endif
     { 0 }

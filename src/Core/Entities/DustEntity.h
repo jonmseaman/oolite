@@ -75,7 +75,7 @@ public:
     // OOGraphicsResetClient.
     void resetGraphicsState() override;
 
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     std::optional<std::string> descriptionForObjDump() override;
 #endif
 

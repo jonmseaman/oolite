@@ -73,7 +73,9 @@ typedef enum {
 #define STANDARDS_ENFORCEMENT_DEFAULT STANDARDS_ENFORCEMENT_WARN
 #endif
 
-static OOStandardsEnforcement sEnforcement = STANDARDS_ENFORCEMENT_DEFAULT;
+namespace {
+OOStandardsEnforcement sEnforcement = STANDARDS_ENFORCEMENT_DEFAULT;
+} // namespace
 
 void OOStandardsSetup()
 {

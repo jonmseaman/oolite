@@ -388,7 +388,6 @@ void InitOOJSSystem(ooscript::Context context, ooscript::Object global)
     Object proto = ooscript::initClass((context), (global), nullptr, &sSystemClass,
         OOJSUnconstructableConstruct, 0, sSystemProperties, sSystemMethods,
         nullptr, sSystemStaticMethods);
-
     // Create system object as a property of the global object.
     ooscript::defineObject((context), (global), "system", &sSystemClass, proto, OOJS_PROP_READONLY);
 }

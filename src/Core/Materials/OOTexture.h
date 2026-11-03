@@ -258,7 +258,7 @@ public:
     static OOTexture* existingTextureForKey(const std::optional<std::string>& key); // borrowed; null for nullopt
 
 protected:
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     bool _trace = { }; // was the facade's @protected ivar; the subclasses read it (bead oo-qa7c)
 #endif
 

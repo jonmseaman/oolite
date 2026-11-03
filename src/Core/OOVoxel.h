@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 
 */
 
+#pragma once
+
 #define CUBE_FACE_RIGHT 0x01
 #define CUBE_FACE_LEFT 0x02
 #define CUBE_FACE_TOP 0x04

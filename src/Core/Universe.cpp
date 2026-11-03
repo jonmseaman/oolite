@@ -100,13 +100,14 @@ MA 02110-1301, USA.
 #include "WormholeEntity.h"
 #include "oofnd/objc/OOException.h"
 
-#if OO_LOCALIZATION_TOOLS
-#include "OOConvertSystemDescriptions.h"
-#include "OOPListGameTypes.h"
+#include "OOPListGameTypes.h" // used by every build, not only OO_LOCALIZATION_TOOLS ones (bead oo-we7mm)
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
+#if OO_LOCALIZATION_TOOLS
+#include "OOConvertSystemDescriptions.h"
+#include <cstring>
 #endif
 
 enum {
@@ -125,8 +126,10 @@ enum {
 
 static const char* const kOOLogUniversePopulateError = "universe.populate.error";
 static const char* const kOOLogUniversePopulateWitchspace = "universe.populate.witchspace";
+#ifndef NDEBUG // read only by the #ifndef NDEBUG list checks below (unused, and so a warning, in deployment builds)
 static const char* const kOOLogEntityVerificationError = "entity.linkedList.verify.error";
 static const char* const kOOLogEntityVerificationRebuild = "entity.linkedList.verify.rebuild";
+#endif
 
 const GLfloat framebufferQuadVertices[] = {
     // positions  // texture coords
@@ -10847,7 +10850,7 @@ NSUInteger Universe::entityCount()
     return entities.size();
 }
 
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
 void Universe::debugDumpEntities()
 {
     int i;

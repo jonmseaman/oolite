@@ -34,6 +34,7 @@ SOFTWARE.
 #ifndef OOCONCRETETEXTURE_H
 #define OOCONCRETETEXTURE_H
 
+#include "OOOpenGLExtensionManager.h" // OO_TEXTURE_CUBE_MAP, which the members below test (upstream #748)
 #include "OOTexture.h"
 #include "OOTextureLoader.h"
 
@@ -71,7 +72,7 @@ public:
     std::optional<std::string> descriptionComponents() const override;
     std::optional<std::string> shortDescriptionComponents() const override;
 
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     std::optional<std::string> name() override;
 #endif
 

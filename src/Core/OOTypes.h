@@ -33,7 +33,7 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #else
 /*	A plain C or C++ translation unit (bead oo-9ht.64: OOConstToJSString) needs only the C types
-        OOCocoa.h's floor gives (NSInteger, NSUInteger). OOCocoa.h itself declares @interfaces.
+        OOFoundation.h's floor gives (NSInteger, NSUInteger). OOFoundation.h itself declares @interfaces.
 */
 #include "oofnd/objc/OOFoundationTypes.h"
 #include <limits.h>

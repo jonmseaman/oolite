@@ -26,11 +26,14 @@ SOFTWARE.
 */
 
 #include "OOPNGTextureLoader.h"
-#include "OOCPUInfo.h"
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"
+// After OOLogging.h, in a block of its own: which header comes first decides whether MinGW's or
+// the UCRT's printf family is used (bead oo-we7mm).
+#include "OOCPUInfo.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/String.hpp"
+#include <cstring>
 
 // void png_error(png_structp, png_const_charp) NO_RETURN_FUNC;
 

@@ -69,7 +69,7 @@ class Entity;
                     std::optional<std::string>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               \
                         jsDescription() override VALUE_BODY
 
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
 #define OO_ENTITY_DEBUG_VIRTUAL_MEMBERS(VOID_BODY, VALUE_BODY) \
     virtual std::optional<std::string> descriptionForObjDump() VALUE_BODY virtual std::vector<oo::Ref<OOTexture>> allTextures() VALUE_BODY
 #else

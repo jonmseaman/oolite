@@ -105,12 +105,27 @@ typedef double OOHPScalar;
 #endif
 #endif
 
-#include "OOBoundingBox.h"
+// Each of these builds on the ones before it, so each is its own include block: clang-format sorts
+// only within a block (upstream #748 made its headers self-contained for the same reason).
+#include "OOFastArithmetic.h"
+
+#include "OOVector.h"
+
 #include "OOHPVector.h"
+
+#include "OOQuaternion.h"
+
 #include "OOMatrix.h"
-#include "OOTriangle.h"
+
+#if !OOMATHS_STANDALONE
 #include "OOVoxel.h"
+
+#include "OOTriangle.h"
+
+#include "OOBoundingBox.h"
+
 #include "legacy_random.h"
+#endif
 
 #ifdef __cplusplus
 }

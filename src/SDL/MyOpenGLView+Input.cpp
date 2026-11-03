@@ -6,8 +6,10 @@ Oolite
 
 */
 
-#include "MyOpenGLView.h"
+// Kept first, in a block of its own: which header comes first decides whether MinGW's or the UCRT's printf/strtod family is used (bead oo-we7mm).
 #include <SDL3/SDL_init.h>
+
+#include "MyOpenGLView.h"
 
 #include "GameController.h"
 #include "OOSDLJoystickManager.h"

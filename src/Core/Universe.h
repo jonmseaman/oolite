@@ -252,7 +252,7 @@ public:
     bool setUseAddOns(const std::string& newUse, bool saveGame);
     bool setUseAddOns(const std::string& newUse, bool saveGame, bool force);
     NSUInteger entityCount();
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     void debugDumpEntities();
     std::vector<oo::EntityHold> entityList();
 #endif

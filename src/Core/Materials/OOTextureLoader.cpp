@@ -25,21 +25,24 @@ SOFTWARE.
 
 */
 
-#include "OOTextureLoader.h"
+// Kept first, in a block of its own: which header comes first decides whether MinGW's or the UCRT's printf/strtod family is used (bead oo-we7mm).
+#include "OOPNGTextureLoader.h"
+
 #include "OOConvertCubeMapToLatLong.h"
 #include "OODebugStandards.h"
 #include "OOFunctionAttributes.h"
 #include "OOMaths.h"
 #include "OOOpenGLExtensionManager.h"
-#include "OOPNGTextureLoader.h"
 #include "OOPixMapChannelOperations.h"
 #include "OOTexture.h"
+#include "OOTextureLoader.h"
 #include "OOTextureScaling.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/objc/OOException.h"
+#include <cstring>
 #include <stdlib.h>
 
 #include "OOTextureGenerator.h"

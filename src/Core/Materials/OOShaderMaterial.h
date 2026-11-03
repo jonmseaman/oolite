@@ -173,7 +173,7 @@ public:
     size_t objectSize() const override { return sizeof *this; }
     void setBindingTarget(Entity* target) override;
     bool permitSpecular() override;
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     std::vector<oo::Ref<OOTexture>> allTextures() override;
 #endif
 

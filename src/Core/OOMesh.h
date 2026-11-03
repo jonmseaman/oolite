@@ -139,7 +139,7 @@ public:
     GLfloat maxDrawDistance() override;
     void setBindingTarget(Entity* target) override;
     std::optional<std::string> descriptionComponents() const override;
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     void dumpSelfState() override;
     std::vector<oo::Ref<OOTexture>> allTextures() override;
     size_t totalSize() override;
@@ -258,7 +258,7 @@ private:
     oo::PList modelData(); // null: incomplete
     bool setModelFromModelData(const oo::PList& dict, const std::string& fileName);
 
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     void debugDrawNormals();
 #endif
     unsigned octreeDepth();

@@ -131,7 +131,7 @@ void Entity::willDispose() noexcept
     setOwner(nullptr); // [self setOwner:nil]
     setAtmosphereFogging(nullptr); // [atmosphereFogging release]
 
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
     gLiveEntityCount--;
     gTotalEntityMemory -= oo::EntityObjectSize(this);
 #endif

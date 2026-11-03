@@ -13281,7 +13281,7 @@ void ShipEntity::setTrackCloseContacts(bool value)
     closeContactsInfo.clear();
 }
 
-#if OO_SALVAGE_SUPPORT || !defined(NDEBUG)
+#if OO_SALVAGE_SUPPORT || defined(OO_DEBUG_MONITOR_ENABLED)
 // What oo::DescriptionOf printed for the deleted facade: "(null)" for none, else
 // <OORoleSet 0x...>{roles} (OODescription.h).
 namespace {

@@ -135,8 +135,24 @@ gnustep_folder = ''  # Not needed for Windows
 # dependencies, compiler/linker flags and build
 subdir('src')
 
-# Unit tests that need no game build (meson test --suite oofnd).
-subdir('tests/unit/oofnd')
-
-# Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
-subdir('tests/unit/core')
+# The unit tests are built by every flavour but deployment (bead oo-we7mm): they test the live
+# assertion and debug paths, which a deployment build (NDEBUG) compiles out, and upstream's CI
+# builds `./mk.sh build deployment` (since #756), which builds every default target.
+# They are Windows-only for now (bead oo-cpohc): they were written and verified on the native
+# Windows toolchain (ADR-0017) and use its headers and LLP64 types (<process.h>, _putenv_s,
+# <winsock2.h>, long == 32 bits), so the Linux CI flavours build the game without them.
+#
+# deployment_unit_tests (bead oo-pdsng, proposed ADR-0066) builds the oofnd suite under the
+# deployment macros as well, in a separate non-LTO build directory (tools/check-deployment-tests.sh):
+# OOCAssert compiled out under NDEBUG, and with it PlayerEntity::deferredInit's ship set-up, passed
+# every test-flavour suite and broke the shipped game. The core suite joins it once its test files
+# build under NDEBUG (bead oo-pdsng follow-up: 78 executables still guard their gDebugFlags
+# definition on !NDEBUG, which upstream #756 moved to OO_DEBUG_MONITOR_ENABLED, and the like).
+if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows'
+    # Unit tests that need no game build (meson test --suite oofnd).
+    subdir('tests/unit/oofnd')
+endif
+if not get_option('deployment_release') and host_machine.system() == 'windows'
+    # Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
+    subdir('tests/unit/core')
+endif

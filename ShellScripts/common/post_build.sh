@@ -52,6 +52,7 @@ run_script() {
         return 1
     fi
     generate_manifest "$resourcesdir/manifest.plist" "$debug_monitor" "$ver_full" "$ver_quad" "$ver_githash" "$buildtime"
+    local addonsdir="$progdir/AddOns"
     mkdir -p "$addonsdir"
     rm -rf "$addonsdir/Basic-debug.oxp"
     cp -rf DebugOXP/Debug.oxp "$addonsdir/Basic-debug.oxp"
@@ -170,7 +171,11 @@ run_script() {
         if [ ! -f "$gnustep_conf" ] && [ "$gnustep_folder" = "/usr" ] && [ -f "/etc/GNUstep/GNUstep.conf" ]; then
             gnustep_conf="/etc/GNUstep/GNUstep.conf"
         fi
-        install -D "$gnustep_conf" "$resourcesdir/GNUstep.conf.orig" || { echo "$err_msg GNUstep config" >&2; return 1; }
+        # The game no longer links GNUstep-base (meson.build sets gnustep_folder to ''), so there is
+        # usually no GNUstep.conf to copy; run_oolite.sh copes with GNUstep.conf.orig being absent.
+        if [ -f "$gnustep_conf" ]; then
+            install -D "$gnustep_conf" "$resourcesdir/GNUstep.conf.orig" || { echo "$err_msg GNUstep config" >&2; return 1; }
+        fi
 
         # If we're using GNUstep libraries that aren't in a system folder copy them
         ldd "$progpath" | \

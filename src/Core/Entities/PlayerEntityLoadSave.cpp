@@ -117,8 +117,6 @@ unsigned char FirstUnitLowByte(const std::string& string)
 
 } // namespace
 
-#if OO_USE_CUSTOM_LOAD_SAVE
-
 namespace {
 
 /*	Formerly -[MyOpenGLView isCommandModifierKeyDown], the file's category on the view's facade (bead
@@ -1228,8 +1226,6 @@ int PlayerEntity::findIndexOfCommander(const std::string& cdrName)
     // not found!
     return -1;
 }
-
-#endif
 
 namespace {
 
