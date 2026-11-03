@@ -26,7 +26,7 @@ SOFTWARE.
 */
 
 #define OO_PLAIN_CPP_UNIT \
-    1 // a plain C++ unit: the shared headers' game-unit parts stay out of it
+  1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
 #include "OOJSFont.h"
 
 #include <algorithm>
@@ -36,8 +36,7 @@ SOFTWARE.
 #include "OOStringWidth.h"
 #include "ooscript/JSEngine.hpp"
 
-namespace ooscript {
-}
+namespace ooscript {}
 using ooscript::CallArgs;
 using ooscript::Context;
 using ooscript::Object;
@@ -45,46 +44,46 @@ using ooscript::PropertyFlag;
 
 namespace {
 static bool FontMeasureString(ooscript::Context context,
-    ooscript::CallArgs& oojsArgs);
-} // namespace
+                              ooscript::CallArgs& oojsArgs);
+}  // namespace
 
 namespace {
-constexpr PropertyFlag kFontObjectFlags = PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly;
-} // namespace
+constexpr PropertyFlag kFontObjectFlags =
+    PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly;
+}  // namespace
 namespace {
-constexpr PropertyFlag kFontMethodFlags = PropertyFlag::Permanent | PropertyFlag::ReadOnly;
-} // namespace
+constexpr PropertyFlag kFontMethodFlags =
+    PropertyFlag::Permanent | PropertyFlag::ReadOnly;
+}  // namespace
 
 // MARK: Public
 
-void InitOOJSFont(ooscript::Context context, ooscript::Object global)
-{
-    Object fontObject = ooscript::defineObject(
-        (context), (global), "defaultFont", nullptr, nullptr, kFontObjectFlags);
-    ooscript::defineFunction((context), fontObject, "measureString",
-        FontMeasureString, 1, kFontMethodFlags);
+void InitOOJSFont(ooscript::Context context, ooscript::Object global) {
+  Object fontObject = ooscript::defineObject(
+      (context), (global), "defaultFont", nullptr, nullptr, kFontObjectFlags);
+  ooscript::defineFunction((context), fontObject, "measureString",
+                           FontMeasureString, 1, kFontMethodFlags);
 }
 
 // MARK: Methods
 
 namespace {
 static bool FontMeasureString(ooscript::Context context,
-    ooscript::CallArgs& oojsArgs)
-{
-    OOJS_NATIVE_ENTER(context)
+                              ooscript::CallArgs& oojsArgs) {
+  OOJS_NATIVE_ENTER(context)
 
-    if (EXPECT_NOT(oojsArgs.count() < 1) || ooscript::isUndefined(OOJS_ARGV[0])) {
-        ooscript::Value undefined = ooscript::undefinedValue();
-        cxx_OOJSReportBadArguments(
-            context, std::nullopt, "defaultFont.measureString",
-            std::min(oojsArgs.count(), 1U), &undefined, std::nullopt, "string");
-        return false;
-    }
+  if (EXPECT_NOT(oojsArgs.count() < 1) || ooscript::isUndefined(OOJS_ARGV[0])) {
+    ooscript::Value undefined = ooscript::undefinedValue();
+    cxx_OOJSReportBadArguments(
+        context, std::nullopt, "defaultFont.measureString",
+        std::min(oojsArgs.count(), 1U), &undefined, std::nullopt, "string");
+    return false;
+  }
 
-    OOJS_RETURN_DOUBLE(cxx_OOStringWidthInEm(
-        cxx_OOStringFromJSValue(context, OOJS_ARGV[0])
-            .value_or(std::string()))); // nil measured as ""
+  OOJS_RETURN_DOUBLE(cxx_OOStringWidthInEm(
+      cxx_OOStringFromJSValue(context, OOJS_ARGV[0])
+          .value_or(std::string())));  // nil measured as ""
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace

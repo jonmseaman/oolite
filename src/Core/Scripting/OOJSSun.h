@@ -36,5 +36,6 @@ void InitOOJSSun(ooscript::Context context, ooscript::Object global);
    reaches by selector.
 */
 bool OOJSSunIsVisibleToScripts(void);
-void OOJSSunGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+void OOJSSunGetJSClass(ooscript::ClassDef** outClass,
+                       ooscript::Object* outPrototype);
 std::optional<std::string> OOJSSunJSClassName(void);

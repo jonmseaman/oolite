@@ -49,23 +49,24 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 
 class OOSDLJoystickManager : public OOJoystickManager {
-public:
-    OOSDLJoystickManager(); // opens the sticks SDL reports (at most MAX_STICKS)
+ public:
+  OOSDLJoystickManager();  // opens the sticks SDL reports (at most MAX_STICKS)
 
-    bool handleSDLEvent(SDL_Event* evt);
-    std::optional<std::string> nameOfJoystick(
-        NSUInteger stickNumber) override; // nullopt: the device has no name
-    int16_t getAxisWithStick(NSUInteger stickNum, NSUInteger axisNum) override;
-    JoyAxisEvent makeJoyAxisEvent(SDL_JoyAxisEvent* sdlevt);
-    JoyButtonEvent makeJoyButtonEvent(SDL_JoyButtonEvent* sdlevt);
-    JoyHatEvent makeJoyHatEvent(SDL_JoyHatEvent* sdlevt);
-    NSInteger getJoystickIndexFromId(SDL_JoystickID joystickId);
+  bool handleSDLEvent(SDL_Event* evt);
+  std::optional<std::string> nameOfJoystick(
+      NSUInteger stickNumber) override;  // nullopt: the device has no name
+  int16_t getAxisWithStick(NSUInteger stickNum, NSUInteger axisNum) override;
+  JoyAxisEvent makeJoyAxisEvent(SDL_JoyAxisEvent* sdlevt);
+  JoyButtonEvent makeJoyButtonEvent(SDL_JoyButtonEvent* sdlevt);
+  JoyHatEvent makeJoyHatEvent(SDL_JoyHatEvent* sdlevt);
+  NSInteger getJoystickIndexFromId(SDL_JoystickID joystickId);
 
-    // Overrides of OOJoystickManager.
-    NSUInteger joystickCount() override;
+  // Overrides of OOJoystickManager.
+  NSUInteger joystickCount() override;
 
-private:
-    std::map<std::string, int, std::less<>> joystickIdMap = { }; // "%d" of an SDL joystick id -> stick index
-    SDL_Joystick* stick[MAX_STICKS] = { };
-    int stickCount = { };
+ private:
+  std::map<std::string, int, std::less<>> joystickIdMap =
+      {};  // "%d" of an SDL joystick id -> stick index
+  SDL_Joystick* stick[MAX_STICKS] = {};
+  int stickCount = {};
 };

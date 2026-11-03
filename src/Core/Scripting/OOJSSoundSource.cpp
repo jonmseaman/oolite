@@ -40,8 +40,7 @@ MA 02110-1301, USA.
    natives are used as-is in the class and method tables.
 */
 
-namespace ooscript {
-}
+namespace ooscript {}
 using ooscript::CallArgs;
 using ooscript::ClassDef;
 using ooscript::ClassFlag;
@@ -55,66 +54,66 @@ using ooscript::Value;
 
 namespace {
 static ooscript::Object sSoundSourcePrototype;
-} // namespace
+}  // namespace
 
 namespace {
 static bool SoundSourceGetProperty(Context cx, Object obj, PropertyId propID,
-    Value* value);
-} // namespace
+                                   Value* value);
+}  // namespace
 namespace {
 static bool SoundSourceSetProperty(Context cx, Object obj, PropertyId propID,
-    bool strict, Value* value);
-} // namespace
+                                   bool strict, Value* value);
+}  // namespace
 namespace {
 static bool SoundSourceConstruct(ooscript::Context cx,
-    ooscript::CallArgs& oojsArgs);
-} // namespace
+                                 ooscript::CallArgs& oojsArgs);
+}  // namespace
 
 // Methods
 namespace {
 static bool SoundSourceToString(ooscript::Context cx,
-    ooscript::CallArgs& oojsArgs);
-} // namespace
+                                ooscript::CallArgs& oojsArgs);
+}  // namespace
 namespace {
 static bool SoundSourcePlay(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-} // namespace
+}  // namespace
 namespace {
 static bool SoundSourceStop(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-} // namespace
+}  // namespace
 namespace {
 static bool SoundSourcePlayOrRepeat(ooscript::Context cx,
-    ooscript::CallArgs& oojsArgs);
-} // namespace
+                                    ooscript::CallArgs& oojsArgs);
+}  // namespace
 
 namespace {
 static ClassDef sSoundSourceClass = {
     "SoundSource",
     ClassFlag::HasPrivate,
 
-    nullptr, // addProperty (engine default: PropertyStub)
-    nullptr, // delProperty (engine default: PropertyStub)
-    SoundSourceGetProperty, // getProperty
-    SoundSourceSetProperty, // setProperty
-    nullptr, // enumerate (engine default: EnumerateStub)
-    nullptr, // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
-    nullptr, // resolve (engine default: ResolveStub)
-    nullptr, // convert (engine default: ConvertStub)
-    OOJSCxxObjectWrapperFinalize, // finalize
-    nullptr, // call
-    nullptr, // construct
-    nullptr, // backend: owned by the façade backend, must start null
+    nullptr,                 // addProperty (engine default: PropertyStub)
+    nullptr,                 // delProperty (engine default: PropertyStub)
+    SoundSourceGetProperty,  // getProperty
+    SoundSourceSetProperty,  // setProperty
+    nullptr,                 // enumerate (engine default: EnumerateStub)
+    nullptr,  // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
+    nullptr,  // resolve (engine default: ResolveStub)
+    nullptr,  // convert (engine default: ConvertStub)
+    OOJSCxxObjectWrapperFinalize,  // finalize
+    nullptr,                       // call
+    nullptr,                       // construct
+    nullptr,  // backend: owned by the façade backend, must start null
 };
-} // namespace
+}  // namespace
 
 enum : std::uint8_t {
-    // Property IDs
-    kSoundSource_sound,
-    kSoundSource_isPlaying,
-    kSoundSource_loop,
-    kSoundSource_position,
-    kSoundSource_positional,
-    kSoundSource_repeatCount,
-    kSoundSource_volume
+  // Property IDs
+  kSoundSource_sound,
+  kSoundSource_isPlaying,
+  kSoundSource_loop,
+  kSoundSource_position,
+  kSoundSource_positional,
+  kSoundSource_repeatCount,
+  kSoundSource_volume
 };
 
 namespace {
@@ -122,67 +121,62 @@ static PropertySpec sSoundSourceProperties[] = {
     // JS name					ID
     // flags								getter
     // setter
-    { "isPlaying", kSoundSource_isPlaying,
-        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared,
-        nullptr, nullptr },
-    { "loop", kSoundSource_loop,
-        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-        nullptr, nullptr },
-    { "position", kSoundSource_position,
-        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-        nullptr, nullptr },
-    { "positional", kSoundSource_positional,
-        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-        nullptr, nullptr },
-    { "repeatCount", kSoundSource_repeatCount,
-        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-        nullptr, nullptr },
-    { "sound", kSoundSource_sound,
-        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-        nullptr, nullptr },
-    { "volume", kSoundSource_volume,
-        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-        nullptr, nullptr },
-    { 0 }
-};
-} // namespace
+    {"isPlaying", kSoundSource_isPlaying,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate |
+         PropertyFlag::ReadOnly | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {"loop", kSoundSource_loop,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {"position", kSoundSource_position,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {"positional", kSoundSource_positional,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {"repeatCount", kSoundSource_repeatCount,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {"sound", kSoundSource_sound,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {"volume", kSoundSource_volume,
+     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {0}};
+}  // namespace
 
 namespace {
 static FunctionSpec sSoundSourceMethods[] = {
     // JS name					Function
     // min args	flags
-    { "toString", SoundSourceToString, 0, 0 },
-    { "play", SoundSourcePlay, 0, 0 },
-    { "playOrRepeat", SoundSourcePlayOrRepeat, 0, 0 },
+    {"toString", SoundSourceToString, 0, 0},
+    {"play", SoundSourcePlay, 0, 0},
+    {"playOrRepeat", SoundSourcePlayOrRepeat, 0, 0},
     // playSound is defined in oolite-global-prefix.js.
-    { "stop", SoundSourceStop, 0, 0 },
-    { 0 }
-};
-} // namespace
+    {"stop", SoundSourceStop, 0, 0},
+    {0}};
+}  // namespace
 
 // OOJSSoundSourceHolder (OOJSSoundSource.h): the JS glue of a SoundSource
 // object's slot.
 OOJSSoundSourceHolder::OOJSSoundSourceHolder(OOSoundSource* inSource)
-    : _source(inSource)
-{
-}
+    : _source(inSource) {}
 OOJSSoundSourceHolder::~OOJSSoundSourceHolder() = default;
 OOSoundSource* OOJSSoundSourceHolder::source() const { return _source.get(); }
 ooscript::Value OOJSSoundSourceHolder::jsValueInContext(
-    ooscript::Context context)
-{
-    return OOJSSoundSourceJSValueInContext(_source.get(), context);
+    ooscript::Context context) {
+  return OOJSSoundSourceJSValueInContext(_source.get(), context);
 }
-void OOJSSoundSourceHolder::clearJSSelf(ooscript::Object)
-{
-} // no wrapper is kept
+void OOJSSoundSourceHolder::clearJSSelf(ooscript::Object) {
+}  // no wrapper is kept
 
-std::optional<std::string> OOJSSoundSourceHolder::jsDescription()
-{
-    const std::optional<std::string> components = _source->descriptionComponents();
-    if (components.has_value())
-        return oo::str::format("[SoundSource %s]", components->c_str());
-    return std::string("[object SoundSource]");
+std::optional<std::string> OOJSSoundSourceHolder::jsDescription() {
+  const std::optional<std::string> components =
+      _source->descriptionComponents();
+  if (components.has_value())
+    return oo::str::format("[SoundSource %s]", components->c_str());
+  return std::string("[object SoundSource]");
 }
 
 namespace {
@@ -190,325 +184,301 @@ namespace {
 // (OOJSPrivateObject.h): the source, or null for SoundSource.prototype, which
 // has none.
 static bool JSSoundSourceGetSoundSource(ooscript::Context context,
-    ooscript::Object object,
-    OOSoundSource** outSource)
-{
-    OOJSSoundSourceHolder* holder = nullptr;
-    if (!OOJSGetCxxPrivate(context, object, &sSoundSourceClass, &holder))
-        return false;
-    *outSource = (holder != nullptr) ? holder->source() : nullptr;
-    return true;
+                                        ooscript::Object object,
+                                        OOSoundSource** outSource) {
+  OOJSSoundSourceHolder* holder = nullptr;
+  if (!OOJSGetCxxPrivate(context, object, &sSoundSourceClass, &holder))
+    return false;
+  *outSource = (holder != nullptr) ? holder->source() : nullptr;
+  return true;
 }
 
 // The class's converter: no Objective-C object is left to hand over, and
 // nothing asks for one.
-static oo::PList SoundSourceConverter(ooscript::Context, ooscript::Object)
-{
-    return oo::PList();
+static oo::PList SoundSourceConverter(ooscript::Context, ooscript::Object) {
+  return oo::PList();
 }
-} // namespace
+}  // namespace
 
 // *** Public ***
 
-void InitOOJSSoundSource(ooscript::Context context, ooscript::Object global)
-{
-    Object proto = ooscript::initClass(
-        (context), (global), nullptr, &sSoundSourceClass, SoundSourceConstruct, 0,
-        sSoundSourceProperties, sSoundSourceMethods, nullptr, nullptr);
-    sSoundSourcePrototype = (proto);
-    OOJSRegisterObjectConverter(&sSoundSourceClass, SoundSourceConverter);
+void InitOOJSSoundSource(ooscript::Context context, ooscript::Object global) {
+  Object proto = ooscript::initClass(
+      (context), (global), nullptr, &sSoundSourceClass, SoundSourceConstruct, 0,
+      sSoundSourceProperties, sSoundSourceMethods, nullptr, nullptr);
+  sSoundSourcePrototype = (proto);
+  OOJSRegisterObjectConverter(&sSoundSourceClass, SoundSourceConverter);
 }
 
 namespace {
 static bool SoundSourceConstruct(ooscript::Context context,
-    ooscript::CallArgs& oojsArgs)
-{
-    OOJS_NATIVE_ENTER(context)
+                                 ooscript::CallArgs& oojsArgs) {
+  OOJS_NATIVE_ENTER(context)
 
-    if (EXPECT_NOT(!oojsArgs.isConstructing())) {
-        cxx_OOJSReportError(context,
-            "SoundSource() cannot be called as a function, it must "
-            "be used as a constructor (as in new SoundSource()).");
-        return false;
-    }
+  if (EXPECT_NOT(!oojsArgs.isConstructing())) {
+    cxx_OOJSReportError(context,
+                        "SoundSource() cannot be called as a function, it must "
+                        "be used as a constructor (as in new SoundSource()).");
+    return false;
+  }
 
-    const oo::Ref<OOSoundSource> source = oo::makeRef<OOSoundSource>(); // [[[OOSoundSource alloc] init]
-                                                                        // autorelease]
-    OOJS_RETURN(OOJSSoundSourceJSValueInContext(source.get(), context));
+  const oo::Ref<OOSoundSource> source =
+      oo::makeRef<OOSoundSource>();  // [[[OOSoundSource alloc] init]
+                                     // autorelease]
+  OOJS_RETURN(OOJSSoundSourceJSValueInContext(source.get(), context));
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 // *** Implementation stuff ***
 
 namespace {
 static bool SoundSourceGetProperty(Context cx, Object obj, PropertyId propID,
-    Value* value)
-{
-    if (!ooscript::isInt32Id(propID))
-        return true;
+                                   Value* value) {
+  if (!ooscript::isInt32Id(propID)) return true;
 
-    ooscript::Context context = (cx);
-    ooscript::Object thisObj = (obj);
+  ooscript::Context context = (cx);
+  ooscript::Object thisObj = (obj);
 
-    OOJS_NATIVE_ENTER(context)
+  OOJS_NATIVE_ENTER(context)
 
-    OOSoundSource* soundSource = nullptr; // null for SoundSource.prototype
+  OOSoundSource* soundSource = nullptr;  // null for SoundSource.prototype
 
-    if (!JSSoundSourceGetSoundSource(context, thisObj, &soundSource))
-        return false;
+  if (!JSSoundSourceGetSoundSource(context, thisObj, &soundSource))
+    return false;
 
-    switch (ooscript::idToInt32(propID)) {
+  switch (ooscript::idToInt32(propID)) {
     // (Each answers what a message to nil did for the prototype, which has no
     // source.)
     case kSoundSource_sound:
-        *value = OOJSSoundJSValueInContext(
-            (soundSource != nullptr) ? soundSource->sound() : nullptr, context);
-        return true;
+      *value = OOJSSoundJSValueInContext(
+          (soundSource != nullptr) ? soundSource->sound() : nullptr, context);
+      return true;
 
     case kSoundSource_isPlaying:
-        *value = OOJSValueFromBOOL(soundSource != nullptr && soundSource->isPlaying());
-        return true;
+      *value =
+          OOJSValueFromBOOL(soundSource != nullptr && soundSource->isPlaying());
+      return true;
 
     case kSoundSource_loop:
-        *value = OOJSValueFromBOOL(soundSource != nullptr && soundSource->loop());
-        return true;
+      *value = OOJSValueFromBOOL(soundSource != nullptr && soundSource->loop());
+      return true;
 
     case kSoundSource_repeatCount:
-        *value = ooscript::int32Value(
-            (soundSource != nullptr) ? soundSource->repeatCount() : 0);
-        return true;
+      *value = ooscript::int32Value(
+          (soundSource != nullptr) ? soundSource->repeatCount() : 0);
+      return true;
 
     case kSoundSource_position:
-        return VectorToJSValue(
-            context,
-            (soundSource != nullptr) ? soundSource->position() : Vector { },
-            value); // a zeroed struct, as from nil
+      return VectorToJSValue(
+          context,
+          (soundSource != nullptr) ? soundSource->position() : Vector{},
+          value);  // a zeroed struct, as from nil
 
     case kSoundSource_positional:
-        *value = OOJSValueFromBOOL(soundSource != nullptr && soundSource->positional());
-        return true;
+      *value = OOJSValueFromBOOL(soundSource != nullptr &&
+                                 soundSource->positional());
+      return true;
 
     case kSoundSource_volume:
-        return ooscript::newNumberValue(
-            cx, (soundSource != nullptr) ? soundSource->gain() : 0.0f, value);
+      return ooscript::newNumberValue(
+          cx, (soundSource != nullptr) ? soundSource->gain() : 0.0f, value);
 
     default:
-        OOJSReportBadPropertySelector(context, thisObj, (propID),
-            sSoundSourceProperties);
-        return false;
-    }
+      OOJSReportBadPropertySelector(context, thisObj, (propID),
+                                    sSoundSourceProperties);
+      return false;
+  }
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 namespace {
 static bool SoundSourceSetProperty(Context cx, Object obj, PropertyId propID,
-    bool /*strict*/, Value* value)
-{
-    if (!ooscript::isInt32Id(propID))
-        return true;
+                                   bool /*strict*/, Value* value) {
+  if (!ooscript::isInt32Id(propID)) return true;
 
-    ooscript::Context context = (cx);
-    ooscript::Object thisObj = (obj);
+  ooscript::Context context = (cx);
+  ooscript::Object thisObj = (obj);
 
-    OOJS_NATIVE_ENTER(context)
+  OOJS_NATIVE_ENTER(context)
 
-    OOSoundSource* soundSource = nullptr; // null for SoundSource.prototype
-    int32_t iValue;
-    bool bValue;
-    Vector vValue;
-    double fValue;
+  OOSoundSource* soundSource = nullptr;  // null for SoundSource.prototype
+  int32_t iValue;
+  bool bValue;
+  Vector vValue;
+  double fValue;
 
-    if (!JSSoundSourceGetSoundSource(context, thisObj, &soundSource))
-        return false;
-
-    switch (ooscript::idToInt32(propID)) {
-    case kSoundSource_sound:
-        if (soundSource != nullptr)
-            soundSource->setSound(SoundFromJSValue(context, *value));
-        return true;
-        break;
-
-    case kSoundSource_loop:
-        if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-            if (soundSource != nullptr)
-                soundSource->setLoop(bValue);
-            return true;
-        }
-        break;
-
-    case kSoundSource_repeatCount:
-        if (ooscript::valueToInt32(cx, *value, &iValue)) {
-            if (iValue > 100)
-                iValue = 100;
-            if (100 < 1)
-                iValue = 1;
-            if (soundSource != nullptr)
-                soundSource->setRepeatCount(iValue);
-            return true;
-        }
-        break;
-
-    case kSoundSource_position:
-        if (JSValueToVector(context, *value, &vValue)) {
-            if (soundSource != nullptr)
-                soundSource->setPosition(vValue);
-            return true;
-        }
-        break;
-
-    case kSoundSource_positional:
-        if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-            if (soundSource != nullptr)
-                soundSource->setPositional(bValue);
-            return true;
-        }
-        break;
-
-    case kSoundSource_volume:
-        if (ooscript::valueToNumber(cx, *value, &fValue)) {
-            fValue = OOClamp_0_max_d(fValue, 1);
-            if (soundSource != nullptr)
-                soundSource->setGain(fValue);
-            return true;
-        }
-        break;
-
-    default:
-        OOJSReportBadPropertySelector(context, thisObj, (propID),
-            sSoundSourceProperties);
-        return false;
-    }
-
-    OOJSReportBadPropertyValue(context, thisObj, (propID), sSoundSourceProperties,
-        *value);
+  if (!JSSoundSourceGetSoundSource(context, thisObj, &soundSource))
     return false;
 
-    OOJS_NATIVE_EXIT
+  switch (ooscript::idToInt32(propID)) {
+    case kSoundSource_sound:
+      if (soundSource != nullptr)
+        soundSource->setSound(SoundFromJSValue(context, *value));
+      return true;
+      break;
+
+    case kSoundSource_loop:
+      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
+        if (soundSource != nullptr) soundSource->setLoop(bValue);
+        return true;
+      }
+      break;
+
+    case kSoundSource_repeatCount:
+      if (ooscript::valueToInt32(cx, *value, &iValue)) {
+        if (iValue > 100) iValue = 100;
+        if (100 < 1) iValue = 1;
+        if (soundSource != nullptr) soundSource->setRepeatCount(iValue);
+        return true;
+      }
+      break;
+
+    case kSoundSource_position:
+      if (JSValueToVector(context, *value, &vValue)) {
+        if (soundSource != nullptr) soundSource->setPosition(vValue);
+        return true;
+      }
+      break;
+
+    case kSoundSource_positional:
+      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
+        if (soundSource != nullptr) soundSource->setPositional(bValue);
+        return true;
+      }
+      break;
+
+    case kSoundSource_volume:
+      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+        fValue = OOClamp_0_max_d(fValue, 1);
+        if (soundSource != nullptr) soundSource->setGain(fValue);
+        return true;
+      }
+      break;
+
+    default:
+      OOJSReportBadPropertySelector(context, thisObj, (propID),
+                                    sSoundSourceProperties);
+      return false;
+  }
+
+  OOJSReportBadPropertyValue(context, thisObj, (propID), sSoundSourceProperties,
+                             *value);
+  return false;
+
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 // *** Methods ***
 
 // toString() : String
 namespace {
 static bool SoundSourceToString(ooscript::Context cx,
-    ooscript::CallArgs& oojsArgs)
-{
-    return OOJSCxxObjectWrapperToString(cx, oojsArgs, &sSoundSourceClass);
+                                ooscript::CallArgs& oojsArgs) {
+  return OOJSCxxObjectWrapperToString(cx, oojsArgs, &sSoundSourceClass);
 }
-} // namespace
+}  // namespace
 
 // play([count : Number])
 namespace {
 static bool SoundSourcePlay(ooscript::Context context,
-    ooscript::CallArgs& oojsArgs)
-{
-    OOJS_NATIVE_ENTER(context)
+                            ooscript::CallArgs& oojsArgs) {
+  OOJS_NATIVE_ENTER(context)
 
-    OOSoundSource* thisv = nullptr; // null for SoundSource.prototype
-    int32_t count = 0;
+  OOSoundSource* thisv = nullptr;  // null for SoundSource.prototype
+  int32_t count = 0;
 
-    if (EXPECT_NOT(!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)))
-        return false;
-    if (oojsArgs.count() > 0 && !ooscript::isUndefined(OOJS_ARGV[0]) && !ooscript::valueToInt32(context, (OOJS_ARGV[0]), &count)) {
-        cxx_OOJSReportBadArguments(context, "SoundSource", "play", 1, OOJS_ARGV,
-            std::nullopt, "integer count or no argument");
-        return false;
-    }
+  if (EXPECT_NOT(!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)))
+    return false;
+  if (oojsArgs.count() > 0 && !ooscript::isUndefined(OOJS_ARGV[0]) &&
+      !ooscript::valueToInt32(context, (OOJS_ARGV[0]), &count)) {
+    cxx_OOJSReportBadArguments(context, "SoundSource", "play", 1, OOJS_ARGV,
+                               std::nullopt, "integer count or no argument");
+    return false;
+  }
 
-    if (count > 0) {
-        if (count > 100)
-            count = 100;
-        if (thisv != nullptr)
-            thisv->setRepeatCount(count);
-    }
+  if (count > 0) {
+    if (count > 100) count = 100;
+    if (thisv != nullptr) thisv->setRepeatCount(count);
+  }
 
-    OOJS_BEGIN_FULL_NATIVE(context)
-    if (thisv != nullptr)
-        thisv->play();
-    OOJS_END_FULL_NATIVE
+  OOJS_BEGIN_FULL_NATIVE(context)
+  if (thisv != nullptr) thisv->play();
+  OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_VOID;
+  OOJS_RETURN_VOID;
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 // stop()
 namespace {
 static bool SoundSourceStop(ooscript::Context context,
-    ooscript::CallArgs& oojsArgs)
-{
-    OOJS_NATIVE_ENTER(context)
+                            ooscript::CallArgs& oojsArgs) {
+  OOJS_NATIVE_ENTER(context)
 
-    OOSoundSource* thisv = nullptr; // null for SoundSource.prototype
+  OOSoundSource* thisv = nullptr;  // null for SoundSource.prototype
 
-    if (EXPECT_NOT(!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)))
-        return false;
+  if (EXPECT_NOT(!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)))
+    return false;
 
-    OOJS_BEGIN_FULL_NATIVE(context)
-    if (thisv != nullptr)
-        thisv->stop();
-    OOJS_END_FULL_NATIVE
+  OOJS_BEGIN_FULL_NATIVE(context)
+  if (thisv != nullptr) thisv->stop();
+  OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_VOID;
+  OOJS_RETURN_VOID;
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 // playOrRepeat()
 namespace {
 static bool SoundSourcePlayOrRepeat(ooscript::Context context,
-    ooscript::CallArgs& oojsArgs)
-{
-    OOJS_NATIVE_ENTER(context)
+                                    ooscript::CallArgs& oojsArgs) {
+  OOJS_NATIVE_ENTER(context)
 
-    OOSoundSource* thisv = nullptr; // null for SoundSource.prototype
+  OOSoundSource* thisv = nullptr;  // null for SoundSource.prototype
 
-    if (EXPECT_NOT(!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)))
-        return false;
+  if (EXPECT_NOT(!JSSoundSourceGetSoundSource(context, OOJS_THIS, &thisv)))
+    return false;
 
-    OOJS_BEGIN_FULL_NATIVE(context)
-    if (thisv != nullptr)
-        thisv->playOrRepeat();
-    OOJS_END_FULL_NATIVE
+  OOJS_BEGIN_FULL_NATIVE(context)
+  if (thisv != nullptr) thisv->playOrRepeat();
+  OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_VOID;
+  OOJS_RETURN_VOID;
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 // The bodies of OOSoundSource (OOJavaScriptExtentions). A null source is JS
 // null.
 ooscript::Value OOJSSoundSourceJSValueInContext(OOSoundSource* source,
-    ooscript::Context context)
-{
-    ooscript::Object jsSelf = NULL;
-    ooscript::Value result = ooscript::nullValue();
+                                                ooscript::Context context) {
+  ooscript::Object jsSelf = NULL;
+  ooscript::Value result = ooscript::nullValue();
 
-    if (source == nullptr)
-        return result;
+  if (source == nullptr) return result;
 
-    jsSelf = (ooscript::newObject((context), &sSoundSourceClass,
-        (sSoundSourcePrototype), nullptr));
-    if (jsSelf != NULL) {
-        const oo::Ref<OOJSSoundSourceHolder> holder = oo::makeRef<OOJSSoundSourceHolder>(source);
-        if (!OOJSSetCxxPrivate(context, jsSelf, holder.get()))
-            jsSelf = NULL;
-    }
-    if (jsSelf != NULL)
-        result = ooscript::objectValue(jsSelf);
+  jsSelf = (ooscript::newObject((context), &sSoundSourceClass,
+                                (sSoundSourcePrototype), nullptr));
+  if (jsSelf != NULL) {
+    const oo::Ref<OOJSSoundSourceHolder> holder =
+        oo::makeRef<OOJSSoundSourceHolder>(source);
+    if (!OOJSSetCxxPrivate(context, jsSelf, holder.get())) jsSelf = NULL;
+  }
+  if (jsSelf != NULL) result = ooscript::objectValue(jsSelf);
 
-    return result;
+  return result;
 }
 
-std::optional<std::string> OOJSSoundSourceJSClassName(void)
-{
-    return std::string("SoundSource");
+std::optional<std::string> OOJSSoundSourceJSClassName(void) {
+  return std::string("SoundSource");
 }

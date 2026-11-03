@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 #endif
 #endif
 
-#if OOLITE_MAC_OS_X && !OOLITE_SDL // the Cocoa (AppKit) front end
+#if OOLITE_MAC_OS_X && !OOLITE_SDL  // the Cocoa (AppKit) front end
 
 // Apple OpenGL includes...
 #include <OpenGL/OpenGL.h>
@@ -56,8 +56,8 @@ MA 02110-1301, USA.
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
 #define __DEFINED_GL_GLEXT_PROTOTYPES
-#endif // GL_GLEXT_PROTOTYPES
-#endif // OOLITE_LINUX && !OOLITE_WINDOWS
+#endif  // GL_GLEXT_PROTOTYPES
+#endif  // OOLITE_LINUX && !OOLITE_WINDOWS
 
 // the standard SDL_opengl.h
 #include <SDL3/SDL_opengl.h>
@@ -89,7 +89,7 @@ MA 02110-1301, USA.
 #undef __DEFINED_GL_GLEXT_PROTOTYPES
 #endif
 
-#else // Not OS X or SDL
+#else  // Not OS X or SDL
 
 #error OOOpenGL.h: unknown target!
 

@@ -52,92 +52,93 @@ MA 02110-1301, USA.
    context. A global class; it is the sender of its reset notifications.
 */
 class OOJavaScriptEngine : public oo::RefCounted {
-public:
-    // The shared engine, made on first use; borrowed, never released.
-    static OOJavaScriptEngine* sharedEngine();
+ public:
+  // The shared engine, made on first use; borrowed, never released.
+  static OOJavaScriptEngine* sharedEngine();
 
-    ~OOJavaScriptEngine();
+  ~OOJavaScriptEngine();
 
-    void runMissionCallback();
+  void runMissionCallback();
 
-    /*	Tear down context and global object and rebuild them from scratch. This
-            invalidates -globalObject and the main thread context.
-    */
-    bool reset();
+  /*	Tear down context and global object and rebuild them from scratch. This
+          invalidates -globalObject and the main thread context.
+  */
+  bool reset();
 
-    ooscript::Object globalObject();
+  ooscript::Object globalObject();
 
-    // Call a JS function, setting up new contexts as necessary. Caller is
-    // responsible for ensuring the ooscript::Value passed really is a function.
-    bool callJSFunction(ooscript::Value function, ooscript::Object jsThis,
-        unsigned argc, ooscript::Value* argv,
-        ooscript::Value* outResult);
+  // Call a JS function, setting up new contexts as necessary. Caller is
+  // responsible for ensuring the ooscript::Value passed really is a function.
+  bool callJSFunction(ooscript::Value function, ooscript::Object jsThis,
+                      unsigned argc, ooscript::Value* argv,
+                      ooscript::Value* outResult);
 
-    void removeGCObjectRoot(ooscript::Object* rootPtr);
-    void removeGCValueRoot(ooscript::Value* rootPtr);
+  void removeGCObjectRoot(ooscript::Object* rootPtr);
+  void removeGCValueRoot(ooscript::Value* rootPtr);
 
-    void garbageCollectionOpportunity(bool force);
+  void garbageCollectionOpportunity(bool force);
 
-    bool showErrorLocations();
-    void setShowErrorLocations(bool value);
+  bool showErrorLocations();
+  void setShowErrorLocations(bool value);
 
-    ooscript::ClassDef* objectClass();
-    ooscript::ClassDef* stringClass();
-    ooscript::ClassDef* arrayClass();
-    ooscript::ClassDef* numberClass();
-    ooscript::ClassDef* booleanClass();
+  ooscript::ClassDef* objectClass();
+  ooscript::ClassDef* stringClass();
+  ooscript::ClassDef* arrayClass();
+  ooscript::ClassDef* numberClass();
+  ooscript::ClassDef* booleanClass();
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    bool dumpStackForErrors();
-    void setDumpStackForErrors(bool value);
+  bool dumpStackForErrors();
+  void setDumpStackForErrors(bool value);
 
-    bool dumpStackForWarnings();
-    void setDumpStackForWarnings(bool value);
+  bool dumpStackForWarnings();
+  void setDumpStackForWarnings(bool value);
 
-    // Install handler for JS "debugger" statment.
-    void enableDebuggerStatement();
+  // Install handler for JS "debugger" statment.
+  void enableDebuggerStatement();
 #endif
 
 #if OOJSENGINE_MONITOR_SUPPORT
-    // (OOMonitorSupport)
-    void setMonitor(OOJavaScriptEngineMonitor* monitor); // borrowed
+  // (OOMonitorSupport)
+  void setMonitor(OOJavaScriptEngineMonitor* monitor);  // borrowed
 
-    // (OOMonitorSupportInternal)
-    void sendMonitorError(ooscript::ErrorReport* errorReport,
-        const std::string& message, ooscript::Context context);
-    // nullopt is meaningful to the monitor (Log() with a null message; no class
-    // for Log()).
-    void sendMonitorLogMessage(const std::optional<std::string>& message,
-        const std::optional<std::string>& messageClass,
-        ooscript::Context context);
+  // (OOMonitorSupportInternal)
+  void sendMonitorError(ooscript::ErrorReport* errorReport,
+                        const std::string& message, ooscript::Context context);
+  // nullopt is meaningful to the monitor (Log() with a null message; no class
+  // for Log()).
+  void sendMonitorLogMessage(const std::optional<std::string>& message,
+                             const std::optional<std::string>& messageClass,
+                             ooscript::Context context);
 #endif
 
-private:
-    void init(); // -init's body after [super init]: run by sharedEngine() on the
-                 // new object
+ private:
+  void init();  // -init's body after [super init]: run by sharedEngine() on the
+                // new object
 
-    bool lookUpStandardClassPointers();
-    void registerStandardObjectConverters();
+  bool lookUpStandardClassPointers();
+  void registerStandardObjectConverters();
 
-    void createMainThreadContext();
-    void destroyMainThreadContext();
+  void createMainThreadContext();
+  void destroyMainThreadContext();
 
-    ooscript::Runtime _runtime = { };
-    ooscript::Object _globalObject = { };
-    bool _showErrorLocations = { };
+  ooscript::Runtime _runtime = {};
+  ooscript::Object _globalObject = {};
+  bool _showErrorLocations = {};
 
-    ooscript::ClassDef* _objectClass = { };
-    ooscript::ClassDef* _stringClass = { };
-    ooscript::ClassDef* _arrayClass = { };
-    ooscript::ClassDef* _numberClass = { };
-    ooscript::ClassDef* _booleanClass = { };
+  ooscript::ClassDef* _objectClass = {};
+  ooscript::ClassDef* _stringClass = {};
+  ooscript::ClassDef* _arrayClass = {};
+  ooscript::ClassDef* _numberClass = {};
+  ooscript::ClassDef* _booleanClass = {};
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    bool _dumpStackForErrors = { };
-    bool _dumpStackForWarnings = { };
+  bool _dumpStackForErrors = {};
+  bool _dumpStackForWarnings = {};
 #endif
 #if OOJSENGINE_MONITOR_SUPPORT
-    OOJavaScriptEngineMonitor* _monitor = nullptr; // borrowed: the debug monitor lives as long as the process
+  OOJavaScriptEngineMonitor* _monitor =
+      nullptr;  // borrowed: the debug monitor lives as long as the process
 #endif
 };
 
@@ -145,7 +146,7 @@ private:
 // one).
 class OONativeVector;
 ooscript::Value OONativeVectorJSValueInContext(OONativeVector* vector,
-    ooscript::Context context);
+                                               ooscript::Context context);
 
 /*	OONull: the placeholder for null inside native collections, which cannot
    hold nil. A JS array element that is null or undefined becomes [OONull null]
@@ -156,31 +157,29 @@ ooscript::Value OONativeVectorJSValueInContext(OONativeVector* vector,
    node whose foreign object it is (OONullObjectNode()).
 */
 class OONull : public oo::PListForeign {
-public:
-    // The one null, made on first use; borrowed, never released.
-    static OONull* null();
+ public:
+  // The one null, made on first use; borrowed, never released.
+  static OONull* null();
 
-    ooscript::Value jsValueInContext(ooscript::Context context); // JS null
+  ooscript::Value jsValueInContext(ooscript::Context context);  // JS null
 
-    // oo::PListForeign: what the facade answered (its class, and "%@" as
-    // "<null>").
-    std::string className() const override;
-    std::string description() const override; // "<null>"
+  // oo::PListForeign: what the facade answered (its class, and "%@" as
+  // "<null>").
+  std::string className() const override;
+  std::string description() const override;  // "<null>"
 };
 
 // The one null as a PList::Object node ([OONull null] through
 // oo::PListObject()), and whether a node is that null (oo::ObjectIn(node) ==
 // [OONull null]).
-inline oo::PList OONullObjectNode()
-{
-    return oo::PList(
-        oo::PList::Object(oo::Ref<oo::PListForeign>(OONull::null())));
+inline oo::PList OONullObjectNode() {
+  return oo::PList(
+      oo::PList::Object(oo::Ref<oo::PListForeign>(OONull::null())));
 }
 
-inline bool OOIsNullObjectNode(const oo::PList& plist)
-{
-    const oo::PList::Object* node = plist.getIf<oo::PList::Object>();
-    return node != nullptr && node->get() == OONull::null();
+inline bool OOIsNullObjectNode(const oo::PList& plist) {
+  const oo::PList::Object* node = plist.getIf<oo::PList::Object>();
+  return node != nullptr && node->get() == OONull::null();
 }
 
 // OOJSValue is declared in OOJSEngineCore.h (a plain C++ header, so C++-only
@@ -188,24 +187,22 @@ inline bool OOIsNullObjectNode(const oo::PList& plist)
 
 // OOEntityFilterPredicate wrapping a JavaScript function.
 typedef struct {
-    ooscript::Context context;
-    ooscript::Value function; // Caller is responsible for ensuring this is a
-                              // function object (using OOJSValueIsFunction()).
-    ooscript::Object jsThis;
-    bool errorFlag; // Set if a JS exception occurs. The
-                    // exception will have been reported.
-                    // This also supresses further filtering.
+  ooscript::Context context;
+  ooscript::Value function;  // Caller is responsible for ensuring this is a
+                             // function object (using OOJSValueIsFunction()).
+  ooscript::Object jsThis;
+  bool errorFlag;  // Set if a JS exception occurs. The
+                   // exception will have been reported.
+                   // This also supresses further filtering.
 } JSFunctionPredicateParameter;
 bool JSFunctionPredicate(Entity* entity, void* parameter);
 
 // YES for ships and (normal) planets. Parameter: ignored.
-bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity,
-    void* parameter);
+bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* parameter);
 
 // YES for ships other than sub-entities and menu-display ships, and planets
 // other than atmospheres and menu miniatures. Parameter: ignored.
-bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
-    void* parameter);
+bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void* parameter);
 
 // YES for menu-display ships. Parameter: ignored
 bool JSEntityIsDemoShipPredicate(Entity* entity, void* parameter);

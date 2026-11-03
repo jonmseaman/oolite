@@ -34,22 +34,22 @@ MA 02110-1301, USA.
    oo::NewEntityFacade, whose object is an OOLightParticleEntity.
 */
 class OOPlasmaShotEntity : public OOLightParticleEntity {
-public:
-    // [[OOPlasmaShotEntity alloc] initWithPosition:...]: a new shot, initialised.
-    static oo::Ref<OOPlasmaShotEntity> shotWithPosition(HPVector position,
-        Vector velocity,
-        float energy,
-        OOTimeDelta duration,
-        OOColor* color);
+ public:
+  // [[OOPlasmaShotEntity alloc] initWithPosition:...]: a new shot, initialised.
+  static oo::Ref<OOPlasmaShotEntity> shotWithPosition(HPVector position,
+                                                      Vector velocity,
+                                                      float energy,
+                                                      OOTimeDelta duration,
+                                                      OOColor* color);
 
-    // -initWithPosition:...'s body, run once right after construction.
-    void initWithPosition(HPVector position, Vector velocity, float energy,
-        OOTimeDelta duration, OOColor* color);
+  // -initWithPosition:...'s body, run once right after construction.
+  void initWithPosition(HPVector position, Vector velocity, float energy,
+                        OOTimeDelta duration, OOColor* color);
 
-    bool canCollide() override;
-    bool checkCloseCollisionWith(Entity* other) override;
-    void update(double delta_t) override;
+  bool canCollide() override;
+  bool checkCloseCollisionWith(Entity* other) override;
+  void update(double delta_t) override;
 
-private:
-    OOTimeDelta _duration = { };
+ private:
+  OOTimeDelta _duration = {};
 };

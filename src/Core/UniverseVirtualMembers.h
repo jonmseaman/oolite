@@ -38,11 +38,11 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOEntityEnums.h" // OOScanClass
-#include "OOEntityHold.h" // owning entity references
+#include "OOEntityEnums.h"  // OOScanClass
+#include "OOEntityHold.h"   // owning entity references
 #include "OOFoundation.h"
 #include "OOMaths.h"
-#include "OOSystemDescriptionManager.h" // OOSystemLayer
+#include "OOSystemDescriptionManager.h"  // OOSystemLayer
 #include "OOTypes.h"
 #include "oofnd/PList.hpp"
 
@@ -54,7 +54,7 @@ class OOSunEntity;
 class GuiDisplayGen;
 class Entity;
 typedef bool (*EntityFilterPredicate)(Entity* entity,
-    void* parameter); // the C++ entity
+                                      void* parameter);  // the C++ entity
 
 /*	VOID_BODY ends each member answering nothing, VALUE_BODY each member
    answering a value: ";" and ";" in the class, "{}" and "{ return {}; }" in a

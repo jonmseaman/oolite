@@ -35,29 +35,32 @@ MA 02110-1301, USA.
 #include "oofnd/Ref.hpp"
 #include "ooscript/JSEngine.hpp"
 
-class OOJSScript; // imported by the .mm, so that a test can stand in for it
+class OOJSScript;  // imported by the .mm, so that a test can stand in for it
 
 class OOJSPopulatorDefinition : public oo::RefCounted {
-public:
-    OOJSPopulatorDefinition();
-    ~OOJSPopulatorDefinition() override;
+ public:
+  OOJSPopulatorDefinition();
+  ~OOJSPopulatorDefinition() override;
 
-    ooscript::Value callback();
-    void setCallback(ooscript::Value callback);
-    ooscript::Object callbackThis();
-    void setCallbackThis(ooscript::Object callbackthis);
+  ooscript::Value callback();
+  void setCallback(ooscript::Value callback);
+  ooscript::Object callbackThis();
+  void setCallbackThis(ooscript::Object callbackthis);
 
-    void runPopulatorCallback(HPVector location);
+  void runPopulatorCallback(HPVector location);
 
-private:
-    void deleteJSPointers();
+ private:
+  void deleteJSPointers();
 
-    ooscript::Value _callback = { };
-    ooscript::Object _callbackThis = { };
-    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's weak reference proxy)
+  ooscript::Value _callback = {};
+  ooscript::Object _callbackThis = {};
+  oo::WeakRef<OOJSScript> _owningScript;  // a weak reference (was the facade's
+                                          // weak reference proxy)
 };
 
-// A PList::Object node holding the definition (strongly), as the settings' callbackObj.
-oo::PList OOJSPopulatorDefinitionToPList(oo::Ref<OOJSPopulatorDefinition> definition);
+// A PList::Object node holding the definition (strongly), as the settings'
+// callbackObj.
+oo::PList OOJSPopulatorDefinitionToPList(
+    oo::Ref<OOJSPopulatorDefinition> definition);
 // The definition inside such a node; nullptr for any other node.
 OOJSPopulatorDefinition* OOJSPopulatorDefinitionIn(const oo::PList& plist);

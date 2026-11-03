@@ -36,6 +36,7 @@ void InitOOJSWormhole(ooscript::Context context, ooscript::Object global);
    reaches by selector. Its methods are one-line forwarders to these on the
    WormholeEntity facade, in WormholeEntity+ObjCBridge.mm.
 */
-void OOJSWormholeGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+void OOJSWormholeGetJSClass(ooscript::ClassDef** outClass,
+                            ooscript::Object* outPrototype);
 std::optional<std::string> OOJSWormholeJSClassName(void);
 bool OOJSWormholeIsVisibleToScripts(void);

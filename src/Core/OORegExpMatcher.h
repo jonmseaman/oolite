@@ -35,43 +35,44 @@ SOFTWARE.
 #pragma once
 
 #include "OOFoundation.h"
-#include "OOJSEngineCore.h" // OOJSValue, which the matcher holds
+#include "OOJSEngineCore.h"  // OOJSValue, which the matcher holds
 #include "OOJSFunction.h"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
 
 enum {
-    kOORegExpCaseInsensitive = ooscript::RegExpFoldCase,
-    kOORegExpMultiLine = ooscript::RegExpMultiline
+  kOORegExpCaseInsensitive = ooscript::RegExpFoldCase,
+  kOORegExpMultiLine = ooscript::RegExpMultiline
 };
 
 class OORegExpMatcher : public oo::RefCounted {
-public:
-    /*	Pseudo-singleton: a single instance exists at a given time, but can be
-       released. While one is alive (held by a Ref) this returns it; otherwise a
-       new one. Null if the tester function could not be compiled.
-    */
-    static oo::Ref<OORegExpMatcher> regExpMatcher();
+ public:
+  /*	Pseudo-singleton: a single instance exists at a given time, but can be
+     released. While one is alive (held by a Ref) this returns it; otherwise a
+     new one. Null if the tester function could not be compiled.
+  */
+  static oo::Ref<OORegExpMatcher> regExpMatcher();
 
-    // Strings are UTF-8. The Objective-C string category
-    // -oo_matchesRegularExpression: was [[OORegExpMatcher regExpMatcher]
-    // string:self matchesExpression:regExp]; its callers now send that message
-    // themselves.
-    bool string(const std::string& string, const std::string& regExp);
-    bool string(const std::string& string, const std::string& regExp,
-        NSUInteger flags);
+  // Strings are UTF-8. The Objective-C string category
+  // -oo_matchesRegularExpression: was [[OORegExpMatcher regExpMatcher]
+  // string:self matchesExpression:regExp]; its callers now send that message
+  // themselves.
+  bool string(const std::string& string, const std::string& regExp);
+  bool string(const std::string& string, const std::string& regExp,
+              NSUInteger flags);
 
-    ~OORegExpMatcher() override;
+  ~OORegExpMatcher() override;
 
-private:
-    // The old -init, which could fail: regExpMatcher()
-    // calls it right after making the object, and drops the object when it
-    // returns false.
-    bool init();
+ private:
+  // The old -init, which could fail: regExpMatcher()
+  // calls it right after making the object, and drops the object when it
+  // returns false.
+  bool init();
 
-    oo::Ref<OOJSFunction> _tester = { };
-    std::optional<std::string> _cachedRegExpString = { }; // UTF-8; nullopt: nothing cached
-    oo::Ref<OOJSValue> _cachedRegExpObject = { };
-    NSUInteger _cachedFlags = { };
+  oo::Ref<OOJSFunction> _tester = {};
+  std::optional<std::string> _cachedRegExpString =
+      {};  // UTF-8; nullopt: nothing cached
+  oo::Ref<OOJSValue> _cachedRegExpObject = {};
+  NSUInteger _cachedFlags = {};
 };

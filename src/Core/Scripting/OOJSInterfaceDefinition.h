@@ -36,38 +36,38 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
 
-class OOJSScript; // imported by the .mm, so that a test can stand in for it
+class OOJSScript;  // imported by the .mm, so that a test can stand in for it
 
 class OOJSInterfaceDefinition : public oo::RefCounted {
-public:
-    // The old -init after [super init] (oo::makeRef).
-    OOJSInterfaceDefinition();
-    ~OOJSInterfaceDefinition() override;
+ public:
+  // The old -init after [super init] (oo::makeRef).
+  OOJSInterfaceDefinition();
+  ~OOJSInterfaceDefinition() override;
 
-    std::optional<std::string> title(); // nullopt: none
-    void setTitle(const std::optional<std::string>& title);
-    std::optional<std::string> category();
-    void setCategory(const std::string& category);
-    std::optional<std::string> summary();
-    void setSummary(const std::string& summary);
-    ooscript::Value callback();
-    void setCallback(ooscript::Value callback);
-    ooscript::Object callbackThis();
-    void setCallbackThis(ooscript::Object callbackthis);
+  std::optional<std::string> title();  // nullopt: none
+  void setTitle(const std::optional<std::string>& title);
+  std::optional<std::string> category();
+  void setCategory(const std::string& category);
+  std::optional<std::string> summary();
+  void setSummary(const std::string& summary);
+  ooscript::Value callback();
+  void setCallback(ooscript::Value callback);
+  ooscript::Object callbackThis();
+  void setCallbackThis(ooscript::Object callbackthis);
 
-    void runCallback(const std::string& key);
+  void runCallback(const std::string& key);
 
-    OOComparisonResult interfaceCompare(OOJSInterfaceDefinition* other);
+  OOComparisonResult interfaceCompare(OOJSInterfaceDefinition* other);
 
-private:
-    void deleteJSPointers();
+ private:
+  void deleteJSPointers();
 
-    ooscript::Value _callback = { };
-    ooscript::Object _callbackThis = { };
-    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's
-                                           // weak reference proxy)
+  ooscript::Value _callback = {};
+  ooscript::Object _callbackThis = {};
+  oo::WeakRef<OOJSScript> _owningScript;  // a weak reference (was the facade's
+                                          // weak reference proxy)
 
-    std::optional<std::string> _title; // nullopt until set (was nil)
-    std::optional<std::string> _summary;
-    std::optional<std::string> _category;
+  std::optional<std::string> _title;  // nullopt until set (was nil)
+  std::optional<std::string> _summary;
+  std::optional<std::string> _category;
 };

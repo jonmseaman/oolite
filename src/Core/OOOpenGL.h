@@ -36,11 +36,11 @@ MA 02110-1301, USA.
 #include "OOOpenGLOnly.h"
 
 typedef enum {
-    // NOTE: numerical values are available to scripts.
-    SHADERS_NOT_SUPPORTED = 0,
-    SHADERS_OFF = 1,
-    SHADERS_SIMPLE = 2,
-    SHADERS_FULL = 3
+  // NOTE: numerical values are available to scripts.
+  SHADERS_NOT_SUPPORTED = 0,
+  SHADERS_OFF = 1,
+  SHADERS_SIMPLE = 2,
+  SHADERS_FULL = 3
 } OOShaderSetting;
 
 #define NULL_SHADER ((GLhandleARB)0)
@@ -108,25 +108,25 @@ typedef enum {
                 GL_CULL_FACE is off
 */
 typedef enum {
-    OPENGL_STATE_OPAQUE,
-    OPENGL_STATE_TRANSLUCENT_PASS,
-    OPENGL_STATE_ADDITIVE_BLENDING,
-    OPENGL_STATE_OVERLAY,
+  OPENGL_STATE_OPAQUE,
+  OPENGL_STATE_TRANSLUCENT_PASS,
+  OPENGL_STATE_ADDITIVE_BLENDING,
+  OPENGL_STATE_OVERLAY,
 
-    OPENGL_STATE_INTERNAL_USE_ONLY
+  OPENGL_STATE_INTERNAL_USE_ONLY
 } OOOpenGLStateID;
 
 #if OO_GL_STATE_VERIFICATION
 void OOSetOpenGLState_(OOOpenGLStateID state, const char* function,
-    unsigned line);
+                       unsigned line);
 void OOVerifyOpenGLState_(const char* function, unsigned line);
 #define OOSetOpenGLState(STATE) OOSetOpenGLState_(STATE, __FUNCTION__, __LINE__)
 #define OOVerifyOpenGLState() OOVerifyOpenGLState_(__FUNCTION__, __LINE__)
 #else
 void OOSetOpenGLState(OOOpenGLStateID state);
 #define OOVerifyOpenGLState() \
-    do {                      \
-    } while (0)
+  do {                        \
+  } while (0)
 #endif
 
 // Inform the SetState/VerifyState mechanism that the OpenGL context has been
@@ -176,7 +176,7 @@ void GLDrawBallBillboard(GLfloat radius, GLfloat step, GLfloat z_distance);
 // not see these
 void GLDrawOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz, GLfloat step);
 void GLDrawFilledOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
-    GLfloat step);
+                      GLfloat step);
 #endif
 
 /*	GLDrawPoints(), GLDrawFilledPoints()
@@ -184,9 +184,9 @@ void GLDrawFilledOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
 */
 
 typedef struct {
-    GLfloat x;
-    GLfloat y;
-    GLfloat z;
+  GLfloat x;
+  GLfloat y;
+  GLfloat z;
 } OOGLVector;
 
 void GLDrawPoints(OOGLVector* points, int n);

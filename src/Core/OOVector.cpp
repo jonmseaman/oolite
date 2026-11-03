@@ -23,25 +23,24 @@ MA 02110-1301, USA.
 */
 
 #include "OOMaths.h"
-#include "legacy_random.h" // randf
+#include "legacy_random.h"  // randf
 #include "oofnd/String.hpp"
 
-const Vector kZeroVector = { 0.0f, 0.0f, 0.0f };
-const Vector kBasisXVector = { 1.0f, 0.0f, 0.0f };
-const Vector kBasisYVector = { 0.0f, 1.0f, 0.0f };
-const Vector kBasisZVector = { 0.0f, 0.0f, 1.0f };
+const Vector kZeroVector = {0.0f, 0.0f, 0.0f};
+const Vector kBasisXVector = {1.0f, 0.0f, 0.0f};
+const Vector kBasisYVector = {0.0f, 1.0f, 0.0f};
+const Vector kBasisZVector = {0.0f, 0.0f, 1.0f};
 
-const Vector2D kZeroVector2D = { 0.0f, 0.0f };
-const Vector2D kBasisXVector2D = { 1.0f, 0.0f };
-const Vector2D kBasisYVector2D = { 0.0f, 1.0f };
+const Vector2D kZeroVector2D = {0.0f, 0.0f};
+const Vector2D kBasisXVector2D = {1.0f, 0.0f};
+const Vector2D kBasisYVector2D = {0.0f, 1.0f};
 
 #if !OOMATHS_STANDALONE
-const BoundingBox kZeroBoundingBox = { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f } };
+const BoundingBox kZeroBoundingBox = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
 #endif
 
-std::string VectorDescription(Vector vector)
-{
-    return oo::str::format("(%g, %g, %g)", vector.x, vector.y, vector.z);
+std::string VectorDescription(Vector vector) {
+  return oo::str::format("(%g, %g, %g)", vector.x, vector.y, vector.z);
 }
 
 OONativeVector::OONativeVector(Vector vect) { v = vect; }
@@ -50,10 +49,9 @@ Vector OONativeVector::getVector() { return v; }
 
 std::string OONativeVector::className() const { return "OONativeVector"; }
 
-std::string OONativeVector::description() const
-{
-    return oo::str::format("<OONativeVector %s>",
-        oo::str::pointerDescription(this).c_str());
+std::string OONativeVector::description() const {
+  return oo::str::format("<OONativeVector %s>",
+                         oo::str::pointerDescription(this).c_str());
 }
 
 #if !OOMATHS_STANDALONE
@@ -67,58 +65,55 @@ std::string OONativeVector::description() const
         normalizing the result) would provide the right result without looping,
    but I don't trust bellf() so I'll go with the simple approach for now.
 */
-Vector OORandomUnitVector(void)
-{
-    Vector v;
-    float m;
+Vector OORandomUnitVector(void) {
+  Vector v;
+  float m;
 
-    do {
-        float x = randf() - 0.5f; // one draw per local, in the order Clang
-                                  // evaluates the arguments
-        float y = randf() - 0.5f;
-        float z = randf() - 0.5f;
-        v = make_vector(x, y, z);
-        m = magnitude2(v);
-    } while (m > 0.25f || m == 0.0f); // We're confining to a sphere of radius 0.5 using the
-                                      // sqared magnitude; 0.5 squared is 0.25.
+  do {
+    float x = randf() - 0.5f;  // one draw per local, in the order Clang
+                               // evaluates the arguments
+    float y = randf() - 0.5f;
+    float z = randf() - 0.5f;
+    v = make_vector(x, y, z);
+    m = magnitude2(v);
+  } while (m > 0.25f ||
+           m == 0.0f);  // We're confining to a sphere of radius 0.5 using the
+                        // sqared magnitude; 0.5 squared is 0.25.
 
-    return vector_normal(v);
+  return vector_normal(v);
 }
 
-Vector OOVectorRandomSpatial(OOScalar maxLength)
-{
-    Vector v;
-    float m;
+Vector OOVectorRandomSpatial(OOScalar maxLength) {
+  Vector v;
+  float m;
 
-    do {
-        float x = randf() - 0.5f; // one draw per local, in the order Clang
-                                  // evaluates the arguments
-        float y = randf() - 0.5f;
-        float z = randf() - 0.5f;
-        v = make_vector(x, y, z);
-        m = magnitude2(v);
-    } while (m > 0.25f); // We're confining to a sphere of radius 0.5 using the
-                         // sqared magnitude; 0.5 squared is 0.25.
+  do {
+    float x = randf() - 0.5f;  // one draw per local, in the order Clang
+                               // evaluates the arguments
+    float y = randf() - 0.5f;
+    float z = randf() - 0.5f;
+    v = make_vector(x, y, z);
+    m = magnitude2(v);
+  } while (m > 0.25f);  // We're confining to a sphere of radius 0.5 using the
+                        // sqared magnitude; 0.5 squared is 0.25.
 
-    return vector_multiply_scalar(
-        v, maxLength * 2.0f); // 2.0 is to compensate for the 0.5-radius sphere.
+  return vector_multiply_scalar(
+      v, maxLength * 2.0f);  // 2.0 is to compensate for the 0.5-radius sphere.
 }
 
-Vector OOVectorRandomRadial(OOScalar maxLength)
-{
-    Vector direction = OORandomUnitVector(); // one draw per local, in the order
-                                             // Clang evaluates the arguments
-    OOScalar length = randf() * maxLength;
-    return vector_multiply_scalar(direction, length);
+Vector OOVectorRandomRadial(OOScalar maxLength) {
+  Vector direction = OORandomUnitVector();  // one draw per local, in the order
+                                            // Clang evaluates the arguments
+  OOScalar length = randf() * maxLength;
+  return vector_multiply_scalar(direction, length);
 }
 
-Vector OORandomPositionInBoundingBox(BoundingBox bb)
-{
-    Vector result;
-    result.x = bb.min.x + randf() * (bb.max.x - bb.min.x);
-    result.y = bb.min.y + randf() * (bb.max.y - bb.min.y);
-    result.z = bb.min.z + randf() * (bb.max.z - bb.min.z);
-    return result;
+Vector OORandomPositionInBoundingBox(BoundingBox bb) {
+  Vector result;
+  result.x = bb.min.x + randf() * (bb.max.x - bb.min.x);
+  result.y = bb.min.y + randf() * (bb.max.y - bb.min.y);
+  result.z = bb.min.z + randf() * (bb.max.z - bb.min.z);
+  return result;
 }
 
 // only need high precision versions of these

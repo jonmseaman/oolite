@@ -20,8 +20,6 @@
    watchdog stopping an endless script. Run: tests/run.sh unit
 */
 
-#include "test_OOJSEngineTimeManagement.hpp"
-
 #include <chrono>
 #include <cstring>
 #include <string>
@@ -37,6 +35,7 @@
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/OOObject.h"
 #include "ooscript/JSEngine.hpp"
+#include "test_OOJSEngineTimeManagement.hpp"
 
 // MARK: The file's API, as its header declares it
 // ----------------------------------------------

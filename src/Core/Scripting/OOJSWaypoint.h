@@ -36,6 +36,6 @@ void InitOOJSWaypoint(ooscript::Context context, ooscript::Object global);
    these.
 */
 void OOJSWaypointGetJSClass(ooscript::ClassDef** outClass,
-    ooscript::Object* outPrototype);
+                            ooscript::Object* outPrototype);
 std::optional<std::string> OOJSWaypointJSClassName(void);
 bool OOJSWaypointIsVisibleToScripts(void);

@@ -33,12 +33,12 @@ MA 02110-1301, USA.
    OOLightParticleEntity.
 */
 class OOPlasmaBurstEntity : public OOLightParticleEntity {
-public:
-    // [[OOPlasmaBurstEntity alloc] initWithPosition:]: a new burst, initialised.
-    static oo::Ref<OOPlasmaBurstEntity> burstWithPosition(HPVector position);
+ public:
+  // [[OOPlasmaBurstEntity alloc] initWithPosition:]: a new burst, initialised.
+  static oo::Ref<OOPlasmaBurstEntity> burstWithPosition(HPVector position);
 
-    // -initWithPosition:'s body, run once right after construction.
-    void initWithPosition(HPVector position);
+  // -initWithPosition:'s body, run once right after construction.
+  void initWithPosition(HPVector position);
 
-    void update(OOTimeDelta delta_t) override;
+  void update(OOTimeDelta delta_t) override;
 };

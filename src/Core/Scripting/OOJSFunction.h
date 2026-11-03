@@ -37,42 +37,42 @@ MA 02110-1301, USA.
 #include "ooscript/JSEngine.hpp"
 
 class OOJSFunction : public oo::RefCounted {
-public:
-    // The initialisers' factories: null where the initialiser answered nil (a
-    // NULL function; no code, missing argument names, or a compile error).
-    static oo::Ref<OOJSFunction> initWithFunction(ooscript::Function function,
-        ooscript::Context context);
-    static oo::Ref<OOJSFunction> initWithName(
-        const std::optional<std::string>& name,
-        ooscript::Object
-            scope, // may be NULL, in which case global object is used.
-        const std::optional<std::string>&
-            code, // full JS code for function, including function declaration.
-        NSUInteger argCount, const char** argNames,
-        const std::optional<std::string>& fileName, NSUInteger lineNumber,
-        ooscript::Context
-            context); // may be NULL. If not null, must be in a request.
+ public:
+  // The initialisers' factories: null where the initialiser answered nil (a
+  // NULL function; no code, missing argument names, or a compile error).
+  static oo::Ref<OOJSFunction> initWithFunction(ooscript::Function function,
+                                                ooscript::Context context);
+  static oo::Ref<OOJSFunction> initWithName(
+      const std::optional<std::string>& name,
+      ooscript::Object
+          scope,  // may be NULL, in which case global object is used.
+      const std::optional<std::string>&
+          code,  // full JS code for function, including function declaration.
+      NSUInteger argCount, const char** argNames,
+      const std::optional<std::string>& fileName, NSUInteger lineNumber,
+      ooscript::Context
+          context);  // may be NULL. If not null, must be in a request.
 
-    ~OOJSFunction() override;
+  ~OOJSFunction() override;
 
-    std::optional<std::string> descriptionComponents() const;
+  std::optional<std::string> descriptionComponents() const;
 
-    std::optional<std::string> name(); // nullopt: anonymous
-    ooscript::Function function();
-    ooscript::Value functionValue();
+  std::optional<std::string> name();  // nullopt: anonymous
+  ooscript::Function function();
+  ooscript::Value functionValue();
 
-    // Raw evaluation. Context may not be NULL and must be in a request.
-    bool evaluateWithContext(ooscript::Context context, ooscript::Object jsThis,
-        unsigned argc, ooscript::Value* argv,
-        ooscript::Value* result);
+  // Raw evaluation. Context may not be NULL and must be in a request.
+  bool evaluateWithContext(ooscript::Context context, ooscript::Object jsThis,
+                           unsigned argc, ooscript::Value* argv,
+                           ooscript::Value* result);
 
-private:
-    // The part of -initWithFunction:context: that cannot fail.
-    OOJSFunction(ooscript::Function function, ooscript::Context context);
+ private:
+  // The part of -initWithFunction:context: that cannot fail.
+  OOJSFunction(ooscript::Function function, ooscript::Context context);
 
-    void deleteJSValue();
+  void deleteJSValue();
 
-    ooscript::Function _function = { };
-    std::optional<std::string>
-        _name; // nullopt for an anonymous function (was nil)
+  ooscript::Function _function = {};
+  std::optional<std::string>
+      _name;  // nullopt for an anonymous function (was nil)
 };

@@ -51,7 +51,7 @@ MA 02110-1301, USA.
 */
 class Entity;
 bool OOJSCallEntityMethod(ooscript::Context context, Entity* entity,
-    const std::string& oo_jsClassName, unsigned argc,
-    ooscript::Value* argv, ooscript::Value* outResult);
+                          const std::string& oo_jsClassName, unsigned argc,
+                          ooscript::Value* argv, ooscript::Value* outResult);
 
 #endif

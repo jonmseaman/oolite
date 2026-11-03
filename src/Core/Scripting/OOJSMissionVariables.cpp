@@ -36,8 +36,7 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOAssert.h"
 #include "ooscript/JSEngine.hpp"
 
-namespace ooscript {
-}
+namespace ooscript {}
 using ooscript::ClassDef;
 using ooscript::ClassFlag;
 using ooscript::Context;
@@ -49,49 +48,48 @@ using ooscript::Value;
 
 namespace {
 static std::optional<std::string> KeyForPropertyID(
-    ooscript::Context context, ooscript::PropertyId propID)
-{
-    OOCParameterAssert(ooscript::isStringId(propID));
+    ooscript::Context context, ooscript::PropertyId propID) {
+  OOCParameterAssert(ooscript::isStringId(propID));
 
-    std::string key = cxx_OOStringFromJSString(context, ooscript::idToString(propID))
-                          .value_or(std::string());
-    if (oo::str::hasPrefix(key, "_"))
-        return std::nullopt;
-    return "mission_" + key;
+  std::string key =
+      cxx_OOStringFromJSString(context, ooscript::idToString(propID))
+          .value_or(std::string());
+  if (oo::str::hasPrefix(key, "_")) return std::nullopt;
+  return "mission_" + key;
 }
 
 // The state of a missionVariables enumeration, kept in the enumeration's
 // private slot (was a retained Foundation enumerator over a copy of the keys).
 struct MissionVariablesEnumerationState {
-    std::vector<std::string> keys;
-    std::size_t next = 0;
+  std::vector<std::string> keys;
+  std::size_t next = 0;
 };
-} // namespace
+}  // namespace
 
 namespace {
 static bool MissionVariablesDeleteProperty(Context cx, Object obj,
-    PropertyId propID, Value* value);
-} // namespace
+                                           PropertyId propID, Value* value);
+}  // namespace
 namespace {
 static bool MissionVariablesGetProperty(Context cx, Object obj,
-    PropertyId propID, Value* value);
-} // namespace
+                                        PropertyId propID, Value* value);
+}  // namespace
 namespace {
 static bool MissionVariablesSetProperty(Context cx, Object obj,
-    PropertyId propID, bool strict,
-    Value* value);
-} // namespace
+                                        PropertyId propID, bool strict,
+                                        Value* value);
+}  // namespace
 namespace {
 static bool MissionVariablesEnumerate(Context cx, Object obj,
-    EnumerateOp enumOp, Value* state,
-    PropertyId* idp);
-} // namespace
+                                      EnumerateOp enumOp, Value* state,
+                                      PropertyId* idp);
+}  // namespace
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 namespace {
 static oo::PList MissionVariablesConverter(ooscript::Context context,
-    ooscript::Object object);
-} // namespace
+                                           ooscript::Object object);
+}  // namespace
 #endif
 
 namespace {
@@ -99,226 +97,220 @@ static ClassDef sMissionVariablesClass = {
     "MissionVariables",
     ClassFlag::NewEnumerate,
 
-    nullptr, // addProperty (engine default: PropertyStub)
-    MissionVariablesDeleteProperty, // delProperty
-    MissionVariablesGetProperty, // getProperty
-    MissionVariablesSetProperty, // setProperty
-    nullptr, // enumerate (ooscript::ClassFlag::NewEnumerate: newEnumerate used
-             // instead)
-    MissionVariablesEnumerate, // newEnumerate
-    nullptr, // resolve (engine default: ResolveStub)
-    nullptr, // convert (engine default: ConvertStub)
-    nullptr, // finalize (engine default: FinalizeStub)
-    nullptr, // call
-    nullptr, // construct
-    nullptr, // backend: owned by the façade backend, must start null
+    nullptr,  // addProperty (engine default: PropertyStub)
+    MissionVariablesDeleteProperty,  // delProperty
+    MissionVariablesGetProperty,     // getProperty
+    MissionVariablesSetProperty,     // setProperty
+    nullptr,  // enumerate (ooscript::ClassFlag::NewEnumerate: newEnumerate used
+              // instead)
+    MissionVariablesEnumerate,  // newEnumerate
+    nullptr,                    // resolve (engine default: ResolveStub)
+    nullptr,                    // convert (engine default: ConvertStub)
+    nullptr,                    // finalize (engine default: FinalizeStub)
+    nullptr,                    // call
+    nullptr,                    // construct
+    nullptr,  // backend: owned by the façade backend, must start null
 };
-} // namespace
+}  // namespace
 
 void InitOOJSMissionVariables(ooscript::Context context,
-    ooscript::Object global)
-{
-    ooscript::defineObject((context), (global), "missionVariables",
-        &sMissionVariablesClass, nullptr, OOJS_PROP_READONLY);
+                              ooscript::Object global) {
+  ooscript::defineObject((context), (global), "missionVariables",
+                         &sMissionVariablesClass, nullptr, OOJS_PROP_READONLY);
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    // Allow callObjC() on missionVariables to call methods on the mission
-    // variables dictionary.
-    OOJSRegisterObjectConverter(&sMissionVariablesClass,
-        MissionVariablesConverter);
+  // Allow callObjC() on missionVariables to call methods on the mission
+  // variables dictionary.
+  OOJSRegisterObjectConverter(&sMissionVariablesClass,
+                              MissionVariablesConverter);
 #endif
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 namespace {
 static oo::PList MissionVariablesConverter(ooscript::Context context,
-    ooscript::Object object)
-{
-    (void)context;
-    (void)object;
-    return (PLAYER != nullptr ? PLAYER->missionVariables() : oo::PList());
+                                           ooscript::Object object) {
+  (void)context;
+  (void)object;
+  return (PLAYER != nullptr ? PLAYER->missionVariables() : oo::PList());
 }
-} // namespace
+}  // namespace
 #endif
 
 namespace {
 static bool MissionVariablesDeleteProperty(Context cx, Object obj,
-    PropertyId propID, Value* value)
-{
-    ooscript::Context context = (cx);
-    ooscript::Object thisObj = (obj);
-    ooscript::PropertyId jsPropID = (propID);
-    (void)thisObj;
-    (void)value;
+                                           PropertyId propID, Value* value) {
+  ooscript::Context context = (cx);
+  ooscript::Object thisObj = (obj);
+  ooscript::PropertyId jsPropID = (propID);
+  (void)thisObj;
+  (void)value;
 
-    OOJS_NATIVE_ENTER(context)
+  OOJS_NATIVE_ENTER(context)
 
-    PlayerEntity* player = OOPlayerForScripting();
+  PlayerEntity* player = OOPlayerForScripting();
 
-    if (ooscript::isStringId(jsPropID)) {
-        std::optional<std::string> key = KeyForPropertyID(context, jsPropID);
-        if (key.has_value()) {
-            if (player != nullptr)
-                player->setMissionVariable(oo::PList(), *key);
-        }
+  if (ooscript::isStringId(jsPropID)) {
+    std::optional<std::string> key = KeyForPropertyID(context, jsPropID);
+    if (key.has_value()) {
+      if (player != nullptr) player->setMissionVariable(oo::PList(), *key);
     }
-    return true;
+  }
+  return true;
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 namespace {
 static bool MissionVariablesGetProperty(Context cx, Object obj,
-    PropertyId propID, Value* value)
-{
-    ooscript::Context context = (cx);
-    ooscript::Object thisObj = (obj);
-    ooscript::PropertyId jsPropID = (propID);
-    ooscript::Value* jsvalue = (value);
-    (void)thisObj;
+                                        PropertyId propID, Value* value) {
+  ooscript::Context context = (cx);
+  ooscript::Object thisObj = (obj);
+  ooscript::PropertyId jsPropID = (propID);
+  ooscript::Value* jsvalue = (value);
+  (void)thisObj;
 
-    OOJS_NATIVE_ENTER(context)
+  OOJS_NATIVE_ENTER(context)
 
-    PlayerEntity* player = OOPlayerForScripting();
+  PlayerEntity* player = OOPlayerForScripting();
 
-    if (ooscript::isStringId(jsPropID)) {
-        std::optional<std::string> key = KeyForPropertyID(context, jsPropID);
-        if (!key.has_value())
-            return true;
+  if (ooscript::isStringId(jsPropID)) {
+    std::optional<std::string> key = KeyForPropertyID(context, jsPropID);
+    if (!key.has_value()) return true;
 
-        const oo::PList mvar = (player != nullptr ? player->missionVariableForKey(*key) : oo::PList());
+    const oo::PList mvar =
+        (player != nullptr ? player->missionVariableForKey(*key) : oo::PList());
 
-        if (const std::string* string = mvar.getIf<std::string>()) // Currently there should only be
-                                                                   // strings, but we may want to change
-                                                                   // this.
-        {
-            if (OOIsNumberLiteral(*string, true)) {
-                return ooscript::newNumberValue(cx, oo::str::doubleValue(*string),
-                    value); // -[NSString doubleValue]
-            }
-        }
-
-        *jsvalue = OOJSValueFromPList(context, mvar);
+    if (const std::string* string =
+            mvar.getIf<std::string>())  // Currently there should only be
+                                        // strings, but we may want to change
+                                        // this.
+    {
+      if (OOIsNumberLiteral(*string, true)) {
+        return ooscript::newNumberValue(cx, oo::str::doubleValue(*string),
+                                        value);  // -[NSString doubleValue]
+      }
     }
-    return true;
 
-    OOJS_NATIVE_EXIT
+    *jsvalue = OOJSValueFromPList(context, mvar);
+  }
+  return true;
+
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 namespace {
 static bool MissionVariablesSetProperty(Context cx, Object obj,
-    PropertyId propID, bool /*strict*/,
-    Value* value)
-{
-    ooscript::Context context = (cx);
-    ooscript::Object thisObj = (obj);
-    ooscript::PropertyId jsPropID = (propID);
-    ooscript::Value* jsvalue = (value);
-    (void)thisObj;
+                                        PropertyId propID, bool /*strict*/,
+                                        Value* value) {
+  ooscript::Context context = (cx);
+  ooscript::Object thisObj = (obj);
+  ooscript::PropertyId jsPropID = (propID);
+  ooscript::Value* jsvalue = (value);
+  (void)thisObj;
 
-    OOJS_NATIVE_ENTER(context)
+  OOJS_NATIVE_ENTER(context)
 
-    PlayerEntity* player = OOPlayerForScripting();
+  PlayerEntity* player = OOPlayerForScripting();
 
-    if (ooscript::isStringId(jsPropID)) {
-        std::optional<std::string> key = KeyForPropertyID(context, jsPropID);
-        if (!key.has_value()) {
-            const std::optional<std::string> badName = cxx_OOStringFromJSID(jsPropID);
-            cxx_OOJSReportError(
-                context, "Invalid mission variable name \"%s\".",
-                badName.has_value()
-                    ? cxx_OOJSEscapedForJavaScriptLiteral(*badName).c_str()
-                    : "(null)");
-            return false;
-        }
-
-        // nil (a value with no string form) clears the variable. (The old OONull
-        // test could not match a string and is gone.)
-        std::optional<std::string> objValue = cxx_OOStringFromJSValue(context, *jsvalue);
-
-        if (player != nullptr)
-            player->setMissionVariable(
-                objValue.has_value() ? oo::PList(*objValue) : oo::PList(), *key);
+  if (ooscript::isStringId(jsPropID)) {
+    std::optional<std::string> key = KeyForPropertyID(context, jsPropID);
+    if (!key.has_value()) {
+      const std::optional<std::string> badName = cxx_OOStringFromJSID(jsPropID);
+      cxx_OOJSReportError(
+          context, "Invalid mission variable name \"%s\".",
+          badName.has_value()
+              ? cxx_OOJSEscapedForJavaScriptLiteral(*badName).c_str()
+              : "(null)");
+      return false;
     }
-    return true;
 
-    OOJS_NATIVE_EXIT
+    // nil (a value with no string form) clears the variable. (The old OONull
+    // test could not match a string and is gone.)
+    std::optional<std::string> objValue =
+        cxx_OOStringFromJSValue(context, *jsvalue);
+
+    if (player != nullptr)
+      player->setMissionVariable(
+          objValue.has_value() ? oo::PList(*objValue) : oo::PList(), *key);
+  }
+  return true;
+
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 namespace {
 static bool MissionVariablesEnumerate(Context cx, Object /*obj*/,
-    EnumerateOp enumOp, Value* state,
-    PropertyId* idp)
-{
-    ooscript::Context context = (cx);
-    ooscript::Value* jsstate = (state);
-    ooscript::PropertyId* jsidp = idp;
+                                      EnumerateOp enumOp, Value* state,
+                                      PropertyId* idp) {
+  ooscript::Context context = (cx);
+  ooscript::Value* jsstate = (state);
+  ooscript::PropertyId* jsidp = idp;
 
-    OOJS_NATIVE_ENTER(context)
+  OOJS_NATIVE_ENTER(context)
 
-    MissionVariablesEnumerationState* enumerator = nullptr;
+  MissionVariablesEnumerationState* enumerator = nullptr;
 
-    switch (enumOp) {
+  switch (enumOp) {
     case EnumerateOp::Init:
-    case EnumerateOp::InitAll: // For ES5 Object.getOwnPropertyNames(). Since
-                               // we have no non-enumerable properties, this is
-                               // the same as _INIT.
+    case EnumerateOp::InitAll:  // For ES5 Object.getOwnPropertyNames(). Since
+                                // we have no non-enumerable properties, this is
+                                // the same as _INIT.
     {
-        // A copy of the keys, which is good since the enumerating code might
-        // mutate. In key order
-        // (-allKeys gave them in hash order).
-        std::vector<std::string> keys;
-        const oo::PList missionVariables = (PLAYER != nullptr ? PLAYER->missionVariables() : oo::PList());
-        if (const oo::PList::Dict* dict = missionVariables.getIf<oo::PList::Dict>()) {
-            for (const auto& entry : *dict)
-                keys.push_back(entry.first);
-        }
-        enumerator = new MissionVariablesEnumerationState { std::move(keys) };
-        *jsstate = ooscript::privateValue(enumerator);
+      // A copy of the keys, which is good since the enumerating code might
+      // mutate. In key order
+      // (-allKeys gave them in hash order).
+      std::vector<std::string> keys;
+      const oo::PList missionVariables =
+          (PLAYER != nullptr ? PLAYER->missionVariables() : oo::PList());
+      if (const oo::PList::Dict* dict =
+              missionVariables.getIf<oo::PList::Dict>()) {
+        for (const auto& entry : *dict) keys.push_back(entry.first);
+      }
+      enumerator = new MissionVariablesEnumerationState{std::move(keys)};
+      *jsstate = ooscript::privateValue(enumerator);
 
-        NSUInteger count = enumerator->keys.size();
-        assert(count <= INT32_MAX);
-        if (jsidp != NULL)
-            *jsidp = ooscript::int32Id((uint32_t)count);
-        return true;
+      NSUInteger count = enumerator->keys.size();
+      assert(count <= INT32_MAX);
+      if (jsidp != NULL) *jsidp = ooscript::int32Id((uint32_t)count);
+      return true;
     }
 
     case EnumerateOp::Next: {
-        enumerator = static_cast<MissionVariablesEnumerationState*>(
-            ooscript::toPrivate(*jsstate));
-        while (enumerator->next < enumerator->keys.size()) {
-            std::string next = enumerator->keys[enumerator->next++];
-            if (!oo::str::hasPrefix(next, "mission_"))
-                continue; // Skip mission instructions, which aren't visible through
-                          // missionVariables.
+      enumerator = static_cast<MissionVariablesEnumerationState*>(
+          ooscript::toPrivate(*jsstate));
+      while (enumerator->next < enumerator->keys.size()) {
+        std::string next = enumerator->keys[enumerator->next++];
+        if (!oo::str::hasPrefix(next, "mission_"))
+          continue;  // Skip mission instructions, which aren't visible through
+                     // missionVariables.
 
-            next = next.substr(8); // Cut off "mission_".
+        next = next.substr(8);  // Cut off "mission_".
 
-            ooscript::Value val = OOJSValueFromPList(context, oo::PList(next));
-            return ooscript::valueToId(cx, (val), jsidp);
-        }
+        ooscript::Value val = OOJSValueFromPList(context, oo::PList(next));
+        return ooscript::valueToId(cx, (val), jsidp);
+      }
 
-        // If we got here, we've hit the end of the enumerator.
-        *jsstate = ooscript::nullValue();
-        // Fall through.
+      // If we got here, we've hit the end of the enumerator.
+      *jsstate = ooscript::nullValue();
+      // Fall through.
     }
 
     case EnumerateOp::Destroy: {
-        if (enumerator == nullptr && ooscript::isDouble(*jsstate)) {
-            enumerator = static_cast<MissionVariablesEnumerationState*>(
-                ooscript::toPrivate(*jsstate));
-        }
-        delete enumerator;
+      if (enumerator == nullptr && ooscript::isDouble(*jsstate)) {
+        enumerator = static_cast<MissionVariablesEnumerationState*>(
+            ooscript::toPrivate(*jsstate));
+      }
+      delete enumerator;
 
-        if (jsidp != NULL)
-            *jsidp = ooscript::voidId();
-        return true;
+      if (jsidp != NULL) *jsidp = ooscript::voidId();
+      return true;
     }
-    }
+  }
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace

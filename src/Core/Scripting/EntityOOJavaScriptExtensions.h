@@ -41,8 +41,10 @@ class ShipEntity;
 // JS glue members call them; the engine asks those members).
 bool EntityJSIsVisibleToScripts(void);
 std::optional<std::string> EntityJSClassName(void);
-ooscript::Value EntityJSValueInContext(Entity* entity, ooscript::Context context);
-void EntityJSGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+ooscript::Value EntityJSValueInContext(Entity* entity,
+                                       ooscript::Context context);
+void EntityJSGetJSClass(ooscript::ClassDef** outClass,
+                        ooscript::Object* outPrototype);
 void EntityJSDeleteJSSelf(Entity* entity);
 std::optional<std::string> EntityJSDescription(Entity* entity);
 
@@ -55,12 +57,13 @@ std::optional<std::string> OOJSEntityJSClassName(Entity* entity);
 // own JS object; null for no entity): what the engine asked an entity's object
 // by -getJSClass:andPrototype: and -oo_jsValueInContext:.
 void OOJSEntityGetJSClass(Entity* entity, ooscript::ClassDef** outClass,
-    ooscript::Object* outPrototype);
+                          ooscript::Object* outPrototype);
 ooscript::Value OOJSEntityJSValue(Entity* entity, ooscript::Context context);
 
 // ShipEntity (OOJavaScriptExtensions)
 bool ShipEntityJSIsVisibleToScripts(void);
-void ShipEntityJSGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+void ShipEntityJSGetJSClass(ooscript::ClassDef** outClass,
+                            ooscript::Object* outPrototype);
 std::optional<std::string> ShipEntityJSClassName(void);
 std::vector<oo::EntityHold> ShipEntityJSSubEntitiesForScript(ShipEntity* ship);
 void ShipEntityJSSetTargetForScript(ShipEntity* ship, ShipEntity* target);

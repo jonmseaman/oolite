@@ -28,8 +28,7 @@ MA 02110-1301, USA.
 #pragma once
 
 #include "Entity.h"
-#include "OOPolygonSprite.h" // OOHUDBeaconIcon: the beacon drawable is oo::Ref
-
+#include "OOPolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is oo::Ref
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 
@@ -45,54 +44,54 @@ MA 02110-1301, USA.
    Entity+ObjCBridge.mm).
 */
 class OOWaypointEntity : public Entity {
-public:
-    // +waypointWithDictionary:: a new waypoint, initialised. Callers hand it to
-    // Objective-C with oo::NewEntityFacade.
-    static oo::Ref<OOWaypointEntity> waypointWithDictionary(
-        const oo::PList& info);
+ public:
+  // +waypointWithDictionary:: a new waypoint, initialised. Callers hand it to
+  // Objective-C with oo::NewEntityFacade.
+  static oo::Ref<OOWaypointEntity> waypointWithDictionary(
+      const oo::PList& info);
 
-    // -cxx_initWithDictionary:'s body after [super init] (the constructor ran
-    // Entity's), run once right after construction: it
-    // calls members a subclass overrides.
-    void initWithDictionary(const oo::PList& info);
+  // -cxx_initWithDictionary:'s body after [super init] (the constructor ran
+  // Entity's), run once right after construction: it
+  // calls members a subclass overrides.
+  void initWithDictionary(const oo::PList& info);
 
-    bool getOriented(); // -oriented (the ivar keeps the name)
-    OOScalar size();
-    void setSize(OOScalar newSize);
+  bool getOriented();  // -oriented (the ivar keeps the name)
+  OOScalar size();
+  void setSize(OOScalar newSize);
 
-    void setOrientation(Quaternion q) override;
-    bool isEffect() override;
-    bool isWaypoint() override;
-    void drawImmediate(bool immediate, bool translucent) override;
+  void setOrientation(Quaternion q) override;
+  bool isEffect() override;
+  bool isWaypoint() override;
+  void drawImmediate(bool immediate, bool translucent) override;
 
-    // The binding's bodies (OOJSWaypoint.mm), which the facade forwarded to.
-    void getJSClass(ooscript::ClassDef** outClass,
-        ooscript::Object* outPrototype) override;
-    std::optional<std::string> jsClassName() override;
-    bool isVisibleToScripts() override;
+  // The binding's bodies (OOJSWaypoint.mm), which the facade forwarded to.
+  void getJSClass(ooscript::ClassDef** outClass,
+                  ooscript::Object* outPrototype) override;
+  std::optional<std::string> jsClassName() override;
+  bool isVisibleToScripts() override;
 
-    // OOBeaconEntity, answered for the waypoint by the root facade's category
-    // (the facade's). Other beacons stay their Objective-C objects.
-    OOComparisonResult compareBeaconCodeWith(Entity* other);
-    std::optional<std::string> beaconCode();
-    void setBeaconCode(const std::optional<std::string>& bcode);
-    std::optional<std::string> beaconLabel();
-    void setBeaconLabel(const std::optional<std::string>& blabel);
-    bool isBeacon();
-    OOHUDBeaconIcon* beaconDrawable(); // borrowed
-    Entity* prevBeacon(); // the C++ entity (null once its object has gone)
-    Entity* nextBeacon();
-    void setPrevBeacon(Entity* beaconShip);
-    void setNextBeacon(Entity* beaconShip);
-    bool isJammingScanning();
+  // OOBeaconEntity, answered for the waypoint by the root facade's category
+  // (the facade's). Other beacons stay their Objective-C objects.
+  OOComparisonResult compareBeaconCodeWith(Entity* other);
+  std::optional<std::string> beaconCode();
+  void setBeaconCode(const std::optional<std::string>& bcode);
+  std::optional<std::string> beaconLabel();
+  void setBeaconLabel(const std::optional<std::string>& blabel);
+  bool isBeacon();
+  OOHUDBeaconIcon* beaconDrawable();  // borrowed
+  Entity* prevBeacon();  // the C++ entity (null once its object has gone)
+  Entity* nextBeacon();
+  void setPrevBeacon(Entity* beaconShip);
+  void setNextBeacon(Entity* beaconShip);
+  bool isJammingScanning();
 
-private:
-    OOScalar _size = { };
+ private:
+  OOScalar _size = {};
 
-    std::optional<std::string> _beaconCode; // nullopt: nil
-    std::optional<std::string> _beaconLabel;
-    oo::WeakRef<Entity> _prevBeacon; // the beacons' C++ parts
-    oo::WeakRef<Entity> _nextBeacon;
-    oo::Ref<OOHUDBeaconIcon> _beaconDrawable;
-    bool oriented = { };
+  std::optional<std::string> _beaconCode;  // nullopt: nil
+  std::optional<std::string> _beaconLabel;
+  oo::WeakRef<Entity> _prevBeacon;  // the beacons' C++ parts
+  oo::WeakRef<Entity> _nextBeacon;
+  oo::Ref<OOHUDBeaconIcon> _beaconDrawable;
+  bool oriented = {};
 };

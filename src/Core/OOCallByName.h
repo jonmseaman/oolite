@@ -73,10 +73,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "oofnd/objc/OOObject.h"
-
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
+#include "oofnd/objc/OOObject.h"
 
 // The signatures above are the entity call's (below).
 
@@ -98,9 +97,9 @@ namespace oo {
 bool EntityRespondsToName(Entity* entity, const std::string& name);
 PList CallEntityByName(Entity* entity, const std::string& name);
 PList CallEntityByName(Entity* entity, const std::string& name,
-    const std::string& argument);
+                       const std::string& argument);
 PList CallEntityByName(Entity* entity, const std::string& name,
-    const PList& argument);
+                       const PList& argument);
 
 /*	An entity's method called after <delay> seconds: what
    OOScheduleDeferredCall() of the method's selector on the entity's object did
@@ -111,6 +110,6 @@ PList CallEntityByName(Entity* entity, const std::string& name,
    Defined in OOEntityCalledByName.mm.
 */
 void ScheduleEntityCall(Entity* entity, void (*call)(Entity* entity),
-    double delay);
+                        double delay);
 
-} // namespace oo
+}  // namespace oo

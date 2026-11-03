@@ -101,27 +101,27 @@ typedef double OOHPScalar;
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #ifndef MIN
-#define MIN(A, B)                \
-    ({                           \
-        __typeof__(A) __a = (A); \
-        __typeof__(B) __b = (B); \
-        __a < __b ? __a : __b;   \
-    })
+#define MIN(A, B)            \
+  ({                         \
+    __typeof__(A) __a = (A); \
+    __typeof__(B) __b = (B); \
+    __a < __b ? __a : __b;   \
+  })
 #endif
 #if !defined(MAX)
-#define MAX(A, B)                \
-    ({                           \
-        __typeof__(A) __a = (A); \
-        __typeof__(B) __b = (B); \
-        __a < __b ? __b : __a;   \
-    })
+#define MAX(A, B)            \
+  ({                         \
+    __typeof__(A) __a = (A); \
+    __typeof__(B) __b = (B); \
+    __a < __b ? __b : __a;   \
+  })
 #endif
 #if !defined(ABS)
-#define ABS(A)                   \
-    ({                           \
-        __typeof__(A) __a = (A); \
-        __a < 0 ? -__a : __a;    \
-    })
+#define ABS(A)               \
+  ({                         \
+    __typeof__(A) __a = (A); \
+    __a < 0 ? -__a : __a;    \
+  })
 #endif
 #else
 /* These definitions are unsafe in that the "winning" expression is evaluated

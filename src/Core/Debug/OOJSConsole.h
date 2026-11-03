@@ -35,6 +35,7 @@ SOFTWARE.
 #include "ooscript/JSEngine.hpp"
 class OODebugMonitor;
 
-ooscript::Object DebugMonitorToJSConsole(ooscript::Context context, OODebugMonitor* monitor);
+ooscript::Object DebugMonitorToJSConsole(ooscript::Context context,
+                                         OODebugMonitor* monitor);
 
 void OOJSConsoleDestroy(void);

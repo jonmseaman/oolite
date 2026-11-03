@@ -33,19 +33,19 @@ MA 02110-1301, USA.
 
 void InitOOJSEquipmentInfo(ooscript::Context context, ooscript::Object global);
 
-/*	Given a ooscript::Value representing a string (equipment key) or a JS EquipmentInfo,
-        return the corresponding EquipmentType or key. Note that
+/*	Given a ooscript::Value representing a string (equipment key) or a JS
+   EquipmentInfo, return the corresponding EquipmentType or key. Note that
         JSValueToEquipmentKey() will not return arbitrary strings, only valid
         equipment keys.
         JSValueToEquipmentKeyRelaxed() will return any string that does not end
         with _DAMAGED.
  */
-class OOEquipmentType; // OOEquipmentType.h
+class OOEquipmentType;  // OOEquipmentType.h
 
 OOEquipmentType* JSValueToEquipmentType(ooscript::Context context,
-    ooscript::Value value);
+                                        ooscript::Value value);
 std::optional<std::string> JSValueToEquipmentKey(ooscript::Context context,
-    ooscript::Value value);
+                                                 ooscript::Value value);
 
 // outExists is bool *: its callers pass the address of a bool of their own.
 std::optional<std::string> JSValueToEquipmentKeyRelaxed(

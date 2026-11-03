@@ -72,11 +72,11 @@ MA 02110-1301, USA.
 // GCC version; for instance, 40300 for 4.3.0. Deliberately undefined in Clang
 // (which defines fake __GNUC__ macros for compatibility).
 #define OOLITE_GCC_VERSION \
-    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+  (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
 
 #include <inttypes.h>
-#include <limits.h> // to get UINT_MAX
+#include <limits.h>  // to get UINT_MAX
 #include <stdint.h>
 
 #define OOLITE_SDL 1
@@ -93,21 +93,21 @@ MA 02110-1301, USA.
 #endif
 
 #if !defined(MAX)
-#define MAX(A, B)                \
-    ({                           \
-        __typeof__(A) __a = (A); \
-        __typeof__(B) __b = (B); \
-        __a > __b ? __a : __b;   \
-    })
+#define MAX(A, B)            \
+  ({                         \
+    __typeof__(A) __a = (A); \
+    __typeof__(B) __b = (B); \
+    __a > __b ? __a : __b;   \
+  })
 #endif
 
 #if !defined(MIN)
-#define MIN(A, B)                \
-    ({                           \
-        __typeof__(A) __a = (A); \
-        __typeof__(B) __b = (B); \
-        __a < __b ? __a : __b;   \
-    })
+#define MIN(A, B)            \
+  ({                         \
+    __typeof__(A) __a = (A); \
+    __typeof__(B) __b = (B); \
+    __a < __b ? __a : __b;   \
+  })
 #endif
 
 #ifdef HAVE_LIBESPEAK
@@ -191,9 +191,9 @@ inline constexpr OOComparisonResult OOOrderedSame = NSOrderedSame;
 inline constexpr OOComparisonResult OOOrderedDescending = NSOrderedDescending;
 #else
 enum OOComparisonResult : NSInteger {
-    OOOrderedAscending = -1,
-    OOOrderedSame = 0,
-    OOOrderedDescending = 1
+  OOOrderedAscending = -1,
+  OOOrderedSame = 0,
+  OOOrderedDescending = 1
 };
 #endif
 

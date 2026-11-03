@@ -38,10 +38,10 @@ MA 02110-1301, USA.
 #include <string>
 #include <vector>
 
-#include "OOEntityEnums.h" // OOEntityStatus, OOScanClass
+#include "OOEntityEnums.h"  // OOEntityStatus, OOScanClass
 #include "OOFoundation.h"
 #include "OOMaths.h"
-#include "OOTexture.h" // allTextures() answers oo::Ref<OOTexture>
+#include "OOTexture.h"  // allTextures() answers oo::Ref<OOTexture>
 #include "OOTypes.h"
 #include "oofnd/Ref.hpp"
 #include "ooscript/JSEngine.hpp"

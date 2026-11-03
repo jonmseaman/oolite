@@ -38,37 +38,47 @@ class OOJSScript;
 
 // A Timer JS object's private slot holds the timer.
 class OOJSTimer : public OOScriptTimer, public ::OOJSPrivateObject {
-public:
-    // [[OOJSTimer alloc] initWithDelay:interval:context:function:this:], for the Timer
-    // constructor: null where the initialiser answered nil.
-    static oo::Ref<OOJSTimer> timerWithDelay(OOTimeAbsolute delay, OOTimeDelta interval, ooscript::Context context, ooscript::Value function, ooscript::Object jsThis);
+ public:
+  // [[OOJSTimer alloc] initWithDelay:interval:context:function:this:], for the
+  // Timer constructor: null where the initialiser answered nil.
+  static oo::Ref<OOJSTimer> timerWithDelay(OOTimeAbsolute delay,
+                                           OOTimeDelta interval,
+                                           ooscript::Context context,
+                                           ooscript::Value function,
+                                           ooscript::Object jsThis);
 
-    ~OOJSTimer() override;
+  ~OOJSTimer() override;
 
-    std::optional<std::string> descriptionComponents() const override;
-    std::string className() const override { return "OOJSTimer"; }
-    std::optional<std::string> oo_jsClassName() override;
+  std::optional<std::string> descriptionComponents() const override;
+  std::string className() const override { return "OOJSTimer"; }
+  std::optional<std::string> oo_jsClassName() override;
 
-    void timerFired() override;
+  void timerFired() override;
 
-    // The JS glue (OOJSPrivateObject): the Timer object, made by the initialiser; forgetting it
-    // when it is finalized, with a warning if the timer still runs; "[Timer <components>]".
-    ooscript::Value jsValueInContext(ooscript::Context context) override;
-    void clearJSSelf(ooscript::Object selfVal) override;
-    std::optional<std::string> jsDescription() override;
+  // The JS glue (OOJSPrivateObject): the Timer object, made by the initialiser;
+  // forgetting it when it is finalized, with a warning if the timer still runs;
+  // "[Timer <components>]".
+  ooscript::Value jsValueInContext(ooscript::Context context) override;
+  void clearJSSelf(ooscript::Object selfVal) override;
+  std::optional<std::string> jsDescription() override;
 
-private:
-    OOJSTimer() = default;
+ private:
+  OOJSTimer() = default;
 
-    bool initWithDelay(OOTimeAbsolute delay, OOTimeDelta interval, ooscript::Context context, ooscript::Value function, ooscript::Object jsThis);
-    void deleteJSPointers();
+  bool initWithDelay(OOTimeAbsolute delay, OOTimeDelta interval,
+                     ooscript::Context context, ooscript::Value function,
+                     ooscript::Object jsThis);
+  void deleteJSPointers();
 
-    ooscript::Value _function = { };
-    ooscript::Object _jsThis = { }; // The object that is 'this' in the function call.
+  ooscript::Value _function = {};
+  ooscript::Object _jsThis =
+      {};  // The object that is 'this' in the function call.
 
-    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's weak reference proxy)
+  oo::WeakRef<OOJSScript> _owningScript;  // a weak reference (was the facade's
+                                          // weak reference proxy)
 
-    ooscript::Object _jsSelf = { }; // The JS Timer object proxy for this OOJSTimer.
+  ooscript::Object _jsSelf =
+      {};  // The JS Timer object proxy for this OOJSTimer.
 };
 
 void InitOOJSTimer(ooscript::Context context, ooscript::Object global);

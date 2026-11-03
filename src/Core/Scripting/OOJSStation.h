@@ -35,5 +35,6 @@ void InitOOJSStation(ooscript::Context context, ooscript::Object global);
 /*	The bodies of StationEntity (OOJavaScriptExtensions), which the engine
    reaches by selector. StationEntity::getJSClass and ::jsClassName call these.
 */
-void OOJSStationGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+void OOJSStationGetJSClass(ooscript::ClassDef** outClass,
+                           ooscript::Object* outPrototype);
 std::optional<std::string> OOJSStationJSClassName(void);

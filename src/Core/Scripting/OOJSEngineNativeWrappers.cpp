@@ -37,19 +37,18 @@ MA 02110-1301, USA.
    still is. A C++ exception is reported from its what() in the same words, so
    a raise site that is a C++ throw reads the same in JS.
 */
-void OOJSReportCurrentException(ooscript::Context context)
-{
-    try {
-        throw;
-    } catch (const oo::Exception& exception) {
-        if (!ooscript::isExceptionPending((context)))
-            cxx_OOJSReportError(context, "Native exception: %s", exception.reason());
-        // Else, let the pending exception propagate.
-    } catch (const std::exception& exception) {
-        if (!ooscript::isExceptionPending((context)))
-            cxx_OOJSReportError(context, "Native exception: %s", exception.what());
-    } catch (...) {
-        if (!ooscript::isExceptionPending((context)))
-            cxx_OOJSReportError(context, "Unidentified native exception");
-    }
+void OOJSReportCurrentException(ooscript::Context context) {
+  try {
+    throw;
+  } catch (const oo::Exception& exception) {
+    if (!ooscript::isExceptionPending((context)))
+      cxx_OOJSReportError(context, "Native exception: %s", exception.reason());
+    // Else, let the pending exception propagate.
+  } catch (const std::exception& exception) {
+    if (!ooscript::isExceptionPending((context)))
+      cxx_OOJSReportError(context, "Native exception: %s", exception.what());
+  } catch (...) {
+    if (!ooscript::isExceptionPending((context)))
+      cxx_OOJSReportError(context, "Unidentified native exception");
+  }
 }

@@ -35,6 +35,7 @@ void InitOOJSExhaustPlume(ooscript::Context context, ooscript::Object global);
    engine reaches by selector through the root's JS members: the C++
    OOExhaustPlumeEntity's overrides call these.
 */
-void OOJSExhaustPlumeGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+void OOJSExhaustPlumeGetJSClass(ooscript::ClassDef** outClass,
+                                ooscript::Object* outPrototype);
 std::optional<std::string> OOJSExhaustPlumeJSClassName(void);
 bool OOJSExhaustPlumeIsVisibleToScripts(void);

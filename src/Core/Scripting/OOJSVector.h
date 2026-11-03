@@ -34,20 +34,20 @@ MA 02110-1301, USA.
 void InitOOJSVector(ooscript::Context context, ooscript::Object global);
 
 ooscript::Object JSVectorWithVector(ooscript::Context context,
-    Vector vector) NONNULL_FUNC;
+                                    Vector vector) NONNULL_FUNC;
 ooscript::Object JSVectorWithHPVector(ooscript::Context context,
-    HPVector vector) NONNULL_FUNC;
+                                      HPVector vector) NONNULL_FUNC;
 
 bool VectorToJSValue(ooscript::Context context, Vector vector,
-    ooscript::Value* outValue) NONNULL_FUNC;
+                     ooscript::Value* outValue) NONNULL_FUNC;
 bool HPVectorToJSValue(ooscript::Context context, HPVector vector,
-    ooscript::Value* outValue) NONNULL_FUNC;
+                       ooscript::Value* outValue) NONNULL_FUNC;
 bool NSPointToVectorJSValue(ooscript::Context context, NSPoint point,
-    ooscript::Value* outValue) NONNULL_FUNC;
+                            ooscript::Value* outValue) NONNULL_FUNC;
 bool JSValueToVector(ooscript::Context context, ooscript::Value value,
-    Vector* outVector) NONNULL_FUNC;
+                     Vector* outVector) NONNULL_FUNC;
 bool JSValueToHPVector(ooscript::Context context, ooscript::Value value,
-    HPVector* outVector) NONNULL_FUNC;
+                       HPVector* outVector) NONNULL_FUNC;
 
 /*	Given a JS Vector object, get the corresponding Vector struct. Given a
    JS Entity, get its position. Given a JS Array with exactly three elements,
@@ -55,13 +55,13 @@ bool JSValueToHPVector(ooscript::Context context, ooscript::Value value,
         else, return NO. (Other implicit conversions may be added in future.)
 */
 bool JSObjectGetVector(ooscript::Context context, ooscript::Object vectorObj,
-    HPVector* outVector) GCC_ATTR((nonnull(1, 3)));
+                       HPVector* outVector) GCC_ATTR((nonnull(1, 3)));
 
 //	Set the value of a JS vector object.
 bool JSVectorSetVector(ooscript::Context context, ooscript::Object vectorObj,
-    Vector vector) GCC_ATTR((nonnull(1)));
+                       Vector vector) GCC_ATTR((nonnull(1)));
 bool JSVectorSetHPVector(ooscript::Context context, ooscript::Object vectorObj,
-    HPVector vector) GCC_ATTR((nonnull(1)));
+                         HPVector vector) GCC_ATTR((nonnull(1)));
 
 /*	VectorFromArgumentList()
 
@@ -77,18 +77,18 @@ bool JSVectorSetHPVector(ooscript::Context context, ooscript::Object vectorObj,
    form is no longer used.
 */
 bool VectorFromArgumentList(ooscript::Context context,
-    const std::string& scriptClass,
-    const std::string& function, unsigned argc,
-    ooscript::Value* argv, HPVector* outVector,
-    unsigned* outConsumed) GCC_ATTR((nonnull(1, 5, 6)));
+                            const std::string& scriptClass,
+                            const std::string& function, unsigned argc,
+                            ooscript::Value* argv, HPVector* outVector,
+                            unsigned* outConsumed) GCC_ATTR((nonnull(1, 5, 6)));
 
 /*	VectorFromArgumentListNoError()
 
         Like VectorFromArgumentList(), but does not report an error on failure.
 */
 bool VectorFromArgumentListNoError(ooscript::Context context, unsigned argc,
-    ooscript::Value* argv, HPVector* outVector,
-    unsigned* outConsumed)
+                                   ooscript::Value* argv, HPVector* outVector,
+                                   unsigned* outConsumed)
     GCC_ATTR((nonnull(1, 3, 4)));
 
 #if OO_DEBUG

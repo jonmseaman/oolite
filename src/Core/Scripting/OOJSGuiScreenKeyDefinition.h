@@ -36,36 +36,36 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
 
-class OOJSScript; // imported by the .mm, so that a test can stand in for it
+class OOJSScript;  // imported by the .mm, so that a test can stand in for it
 
 class OOJSGuiScreenKeyDefinition : public oo::RefCounted {
-public:
-    // The old -init after [super init] (oo::makeRef).
-    OOJSGuiScreenKeyDefinition();
-    ~OOJSGuiScreenKeyDefinition() override;
+ public:
+  // The old -init after [super init] (oo::makeRef).
+  OOJSGuiScreenKeyDefinition();
+  ~OOJSGuiScreenKeyDefinition() override;
 
-    std::optional<std::string> name(); // nullopt until set
-    void setName(const std::optional<std::string>& name);
-    oo::PList registerKeys();
-    void setRegisterKeys(const oo::PList& registerKeys);
-    ooscript::Value callback();
-    void setCallback(ooscript::Value callback);
-    ooscript::Object callbackThis();
-    void setCallbackThis(ooscript::Object callbackthis);
+  std::optional<std::string> name();  // nullopt until set
+  void setName(const std::optional<std::string>& name);
+  oo::PList registerKeys();
+  void setRegisterKeys(const oo::PList& registerKeys);
+  ooscript::Value callback();
+  void setCallback(ooscript::Value callback);
+  ooscript::Object callbackThis();
+  void setCallbackThis(ooscript::Object callbackthis);
 
-    void runCallback(const std::string& key);
+  void runCallback(const std::string& key);
 
-    OOComparisonResult interfaceCompare(OOJSGuiScreenKeyDefinition* other);
+  OOComparisonResult interfaceCompare(OOJSGuiScreenKeyDefinition* other);
 
-private:
-    void deleteJSPointers();
+ private:
+  void deleteJSPointers();
 
-    ooscript::Value _callback = { };
-    ooscript::Object _callbackThis = { };
-    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's
-                                           // weak reference proxy)
+  ooscript::Value _callback = {};
+  ooscript::Object _callbackThis = {};
+  oo::WeakRef<OOJSScript> _owningScript;  // a weak reference (was the facade's
+                                          // weak reference proxy)
 
-    std::optional<std::string> _name; // nullopt until set (was nil)
-    oo::PList
-        _registerKeys; // key name -> key definitions; null until set (was nil)
+  std::optional<std::string> _name;  // nullopt until set (was nil)
+  oo::PList
+      _registerKeys;  // key name -> key definitions; null until set (was nil)
 };

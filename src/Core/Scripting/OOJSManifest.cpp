@@ -38,8 +38,7 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "ooscript/JSEngine.hpp"
 
-namespace ooscript {
-}
+namespace ooscript {}
 using ooscript::CallArgs;
 using ooscript::ClassDef;
 using ooscript::ClassFlag;
@@ -53,337 +52,338 @@ using ooscript::Value;
 
 namespace {
 static bool ManifestComment(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-} // namespace
+}  // namespace
 namespace {
 static bool ManifestSetComment(ooscript::Context cx,
-    ooscript::CallArgs& oojsArgs);
-} // namespace
+                               ooscript::CallArgs& oojsArgs);
+}  // namespace
 namespace {
 static bool ManifestShortComment(ooscript::Context cx,
-    ooscript::CallArgs& oojsArgs);
-} // namespace
+                                 ooscript::CallArgs& oojsArgs);
+}  // namespace
 namespace {
 static bool ManifestSetShortComment(ooscript::Context cx,
-    ooscript::CallArgs& oojsArgs);
-} // namespace
+                                    ooscript::CallArgs& oojsArgs);
+}  // namespace
 
 namespace {
 static bool ManifestDeleteProperty(Context cx, Object obj, PropertyId propID,
-    Value* /*value*/);
-} // namespace
+                                   Value* /*value*/);
+}  // namespace
 namespace {
 static bool ManifestGetProperty(Context cx, Object obj, PropertyId propID,
-    Value* value);
-} // namespace
+                                Value* value);
+}  // namespace
 namespace {
 static bool ManifestSetProperty(Context cx, Object obj, PropertyId propID,
-    bool /*strict*/, Value* value);
-} // namespace
+                                bool /*strict*/, Value* value);
+}  // namespace
 
 namespace {
 static ClassDef sManifestClass = {
     "Manifest",
     ClassFlag::HasPrivate,
 
-    nullptr, // addProperty (engine default: PropertyStub)
-    ManifestDeleteProperty, // delProperty
-    ManifestGetProperty, // getProperty
-    ManifestSetProperty, // setProperty
-    nullptr, // enumerate (engine default: EnumerateStub)
-    nullptr, // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
-    nullptr, // resolve (engine default: ResolveStub)
-    nullptr, // convert (engine default: ConvertStub)
-    OOJSObjectWrapperFinalize, // finalize
-    nullptr, // call
-    nullptr, // construct
-    nullptr, // backend: owned by the façade backend, must start null
+    nullptr,                 // addProperty (engine default: PropertyStub)
+    ManifestDeleteProperty,  // delProperty
+    ManifestGetProperty,     // getProperty
+    ManifestSetProperty,     // setProperty
+    nullptr,                 // enumerate (engine default: EnumerateStub)
+    nullptr,  // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
+    nullptr,  // resolve (engine default: ResolveStub)
+    nullptr,  // convert (engine default: ConvertStub)
+    OOJSObjectWrapperFinalize,  // finalize
+    nullptr,                    // call
+    nullptr,                    // construct
+    nullptr,  // backend: owned by the façade backend, must start null
 };
-} // namespace
+}  // namespace
 
 enum : std::uint8_t {
-    kManifest_list // manifest list, array of commodities: name, unit, quantity,
-                   // displayName - read-only
+  kManifest_list  // manifest list, array of commodities: name, unit, quantity,
+                  // displayName - read-only
 };
 
 namespace {
 static PropertySpec sManifestProperties[] = {
     // JS name					ID
     // flags					getter	setter
-    { "list", kManifest_list,
-        PropertyFlag::ReadOnly | PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-        nullptr, nullptr },
-    { 0 }
-};
-} // namespace
+    {"list", kManifest_list,
+     PropertyFlag::ReadOnly | PropertyFlag::Permanent |
+         PropertyFlag::Enumerate | PropertyFlag::Shared,
+     nullptr, nullptr},
+    {0}};
+}  // namespace
 
 namespace {
 static FunctionSpec sManifestMethods[] = {
     // JS name					Function
     // min args	flags
-    { "shortComment", ManifestShortComment, 1, 0 },
-    { "setShortComment", ManifestSetShortComment, 2, 0 },
-    { "comment", ManifestComment, 1, 0 },
-    { "setComment", ManifestSetComment, 2, 0 },
-    { 0 }
-};
-} // namespace
+    {"shortComment", ManifestShortComment, 1, 0},
+    {"setShortComment", ManifestSetShortComment, 2, 0},
+    {"comment", ManifestComment, 1, 0},
+    {"setComment", ManifestSetComment, 2, 0},
+    {0}};
+}  // namespace
 
 // Both Manifest objects are defined with no private object (InitOOJSManifest).
 
-void InitOOJSManifest(ooscript::Context context, ooscript::Object global)
-{
-    Object proto = ooscript::initClass((context), (global), nullptr, &sManifestClass,
-        OOJSUnconstructableConstruct, 0, sManifestProperties,
-        sManifestMethods, nullptr, nullptr);
+void InitOOJSManifest(ooscript::Context context, ooscript::Object global) {
+  Object proto =
+      ooscript::initClass((context), (global), nullptr, &sManifestClass,
+                          OOJSUnconstructableConstruct, 0, sManifestProperties,
+                          sManifestMethods, nullptr, nullptr);
 
-    // Create manifest object as a property of the player.ship object.
-    Object manifestObj = ooscript::defineObject((context), (JSPlayerShipObject()), "manifest",
-        &sManifestClass, proto, OOJS_PROP_READONLY);
-    ooscript::setPrivate((context), manifestObj, NULL);
+  // Create manifest object as a property of the player.ship object.
+  Object manifestObj =
+      ooscript::defineObject((context), (JSPlayerShipObject()), "manifest",
+                             &sManifestClass, proto, OOJS_PROP_READONLY);
+  ooscript::setPrivate((context), manifestObj, NULL);
 
-    // Also define manifest object as a property of the global object.
-    // Wait, what? Why? Oh well, too late now. Deprecate for EMMSTRAN? -- Ahruman
-    // 2011-02-10
-    ooscript::defineObject((context), (global), "manifest", &sManifestClass,
-        proto, OOJS_PROP_READONLY);
+  // Also define manifest object as a property of the global object.
+  // Wait, what? Why? Oh well, too late now. Deprecate for EMMSTRAN? -- Ahruman
+  // 2011-02-10
+  ooscript::defineObject((context), (global), "manifest", &sManifestClass,
+                         proto, OOJS_PROP_READONLY);
 }
 
 namespace {
 static bool ManifestDeleteProperty(Context cx, Object obj, PropertyId propID,
-    Value* /*value*/)
-{
-    ooscript::Value v = ooscript::undefinedValue();
-    return ManifestSetProperty(cx, obj, propID, false, &v);
+                                   Value* /*value*/) {
+  ooscript::Value v = ooscript::undefinedValue();
+  return ManifestSetProperty(cx, obj, propID, false, &v);
 }
-} // namespace
+}  // namespace
 
 namespace {
 static bool ManifestGetProperty(Context cx, Object obj, PropertyId propID,
-    Value* value)
-{
-    ooscript::Context context = (cx);
-    ooscript::Object thisObj = (obj);
+                                Value* value) {
+  ooscript::Context context = (cx);
+  ooscript::Object thisObj = (obj);
 
-    OOJS_NATIVE_ENTER(context)
+  OOJS_NATIVE_ENTER(context)
 
-    oo::PList result; // null: nil
-    PlayerEntity* entity = OOPlayerForScripting();
+  oo::PList result;  // null: nil
+  PlayerEntity* entity = OOPlayerForScripting();
 
-    if (ooscript::isInt32Id(propID)) {
-        switch (ooscript::idToInt32(propID)) {
-        case kManifest_list:
-            result = (entity != nullptr
-                    ? entity->PlayerEntity::cargoListForScripting()
-                    : oo::PList()); // qualified: the final overrider, so
-                                    // the binding test stands in for it
-            break;
+  if (ooscript::isInt32Id(propID)) {
+    switch (ooscript::idToInt32(propID)) {
+      case kManifest_list:
+        result = (entity != nullptr
+                      ? entity->PlayerEntity::cargoListForScripting()
+                      : oo::PList());  // qualified: the final overrider, so
+                                       // the binding test stands in for it
+        break;
 
-        default:
-            OOJSReportBadPropertySelector(context, thisObj, propID,
-                sManifestProperties);
-            return false;
-        }
-    } else if (ooscript::isStringId(propID)) {
-        /* 'list' property is hard-coded
-         * others map to the commodity keys in trade-goods.plist
-         * compatible-ish with 1.80 and earlier except that
-         * alienItems and similar aliases don't work */
-        std::string key = cxx_OOStringFromJSString(context, ooscript::idToString(propID))
-                              .value_or(std::string());
-        OOCommodities* commodities = (UNIVERSE != nullptr
-                ? UNIVERSE->getCommodities()
-                : nullptr); // null: no good is defined, as a message to nil
-        if (commodities != nullptr && commodities->goodDefined(key)) {
-            *value = ooscript::int32Value(
-                (entity != nullptr ? entity->cargoQuantityForType(key) : 0));
-            return true;
-        } else {
-            return true;
-        }
+      default:
+        OOJSReportBadPropertySelector(context, thisObj, propID,
+                                      sManifestProperties);
+        return false;
     }
+  } else if (ooscript::isStringId(propID)) {
+    /* 'list' property is hard-coded
+     * others map to the commodity keys in trade-goods.plist
+     * compatible-ish with 1.80 and earlier except that
+     * alienItems and similar aliases don't work */
+    std::string key =
+        cxx_OOStringFromJSString(context, ooscript::idToString(propID))
+            .value_or(std::string());
+    OOCommodities* commodities =
+        (UNIVERSE != nullptr
+             ? UNIVERSE->getCommodities()
+             : nullptr);  // null: no good is defined, as a message to nil
+    if (commodities != nullptr && commodities->goodDefined(key)) {
+      *value = ooscript::int32Value(
+          (entity != nullptr ? entity->cargoQuantityForType(key) : 0));
+      return true;
+    } else {
+      return true;
+    }
+  }
 
-    *value = OOJSValueFromPList(context, result);
-    return true;
+  *value = OOJSValueFromPList(context, result);
+  return true;
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 namespace {
 static bool ManifestSetProperty(Context cx, Object obj, PropertyId propID,
-    bool /*strict*/, Value* value)
-{
-    ooscript::Context context = (cx);
-    ooscript::Object thisObj = (obj);
+                                bool /*strict*/, Value* value) {
+  ooscript::Context context = (cx);
+  ooscript::Object thisObj = (obj);
 
-    OOJS_NATIVE_ENTER(context)
+  OOJS_NATIVE_ENTER(context)
 
-    PlayerEntity* entity = OOPlayerForScripting();
-    int32_t iValue;
+  PlayerEntity* entity = OOPlayerForScripting();
+  int32_t iValue;
 
-    if (ooscript::isStringId(propID)) {
-        std::string key = cxx_OOStringFromJSString(context, ooscript::idToString(propID))
-                              .value_or(std::string());
+  if (ooscript::isStringId(propID)) {
+    std::string key =
+        cxx_OOStringFromJSString(context, ooscript::idToString(propID))
+            .value_or(std::string());
 
-        OOCommodityMarket* market = (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket() : nullptr);
-        OOMassUnit unit = (market != nullptr)
+    OOCommodityMarket* market =
+        (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket() : nullptr);
+    OOMassUnit unit =
+        (market != nullptr)
             ? market->massUnitForGood(key)
-            : UNITS_TONS; // UNITS_TONS (0): what a message to nil answered
-        // we can always change gold, platinum & gem-stones quantities, even with
-        // special cargo
-        if (unit == UNITS_TONS && (entity != nullptr ? entity->PlayerEntity::getSpecialCargo() : std::optional<std::string>()).has_value()) // qualified: the final overrider, so the binding
-                                                                                                                                            // test stands in for it
-        {
-            cxx_OOJSReportWarning(context,
-                "PlayerShip.manifest['foo'] - cannot modify cargo "
-                "tonnage when Special Cargo is in use.");
-            return true;
-        }
-
-        std::int32_t iValue32 = 0;
-        if (ooscript::valueToInt32(cx, *value, &iValue32)) {
-            iValue = (int32_t)iValue32;
-            if (iValue < 0)
-                iValue = 0;
-            if (entity != nullptr)
-                entity->setCargoQuantityForType(key, iValue);
-        } else {
-            OOJSReportBadPropertyValue(context, thisObj, propID, sManifestProperties,
-                *value);
-        }
+            : UNITS_TONS;  // UNITS_TONS (0): what a message to nil answered
+    // we can always change gold, platinum & gem-stones quantities, even with
+    // special cargo
+    if (unit == UNITS_TONS &&
+        (entity != nullptr ? entity->PlayerEntity::getSpecialCargo()
+                           : std::optional<std::string>())
+            .has_value())  // qualified: the final overrider, so the binding
+                           // test stands in for it
+    {
+      cxx_OOJSReportWarning(context,
+                            "PlayerShip.manifest['foo'] - cannot modify cargo "
+                            "tonnage when Special Cargo is in use.");
+      return true;
     }
-    return true;
 
-    OOJS_NATIVE_EXIT
+    std::int32_t iValue32 = 0;
+    if (ooscript::valueToInt32(cx, *value, &iValue32)) {
+      iValue = (int32_t)iValue32;
+      if (iValue < 0) iValue = 0;
+      if (entity != nullptr) entity->setCargoQuantityForType(key, iValue);
+    } else {
+      OOJSReportBadPropertyValue(context, thisObj, propID, sManifestProperties,
+                                 *value);
+    }
+  }
+  return true;
+
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 // comment(good : String) : String
 namespace {
 static bool ManifestComment(ooscript::Context context,
-    ooscript::CallArgs& oojsArgs)
-{
-    OOJS_NATIVE_ENTER(context)
+                            ooscript::CallArgs& oojsArgs) {
+  OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> good;
-    std::optional<std::string> information;
+  std::optional<std::string> good;
+  std::optional<std::string> information;
 
-    if (oojsArgs.count() > 0) {
-        good = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
-    }
-    if (!good.has_value()) {
-        cxx_OOJSReportBadArguments(context, "Manifest", "comment",
-            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-            std::nullopt, "good");
-        return false;
-    }
+  if (oojsArgs.count() > 0) {
+    good = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  }
+  if (!good.has_value()) {
+    cxx_OOJSReportBadArguments(context, "Manifest", "comment",
+                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+                               std::nullopt, "good");
+    return false;
+  }
 
-    OOCommodityMarket* market = (PLAYER != nullptr ? PLAYER->getShipCommodityData()
-                                                   : (OOCommodityMarket*)nullptr); // null: no comment,
-                                                                                   // as a message to nil
-    if (market != nullptr)
-        information = market->commentForGood(*good);
+  OOCommodityMarket* market =
+      (PLAYER != nullptr ? PLAYER->getShipCommodityData()
+                         : (OOCommodityMarket*)nullptr);  // null: no comment,
+                                                          // as a message to nil
+  if (market != nullptr) information = market->commentForGood(*good);
 
-    OOJS_RETURN_STRING_OR_NULL(information);
+  OOJS_RETURN_STRING_OR_NULL(information);
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 // setComment(good : String, information : String) : Boolean
 namespace {
 static bool ManifestSetComment(ooscript::Context context,
-    ooscript::CallArgs& oojsArgs)
-{
-    OOJS_NATIVE_ENTER(context)
+                               ooscript::CallArgs& oojsArgs) {
+  OOJS_NATIVE_ENTER(context)
 
-    bool OK;
-    std::optional<std::string> good;
-    std::optional<std::string> information;
+  bool OK;
+  std::optional<std::string> good;
+  std::optional<std::string> information;
 
-    if (oojsArgs.count() > 1) {
-        good = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
-        information = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
-    }
-    if (!good.has_value() || !information.has_value()) {
-        cxx_OOJSReportBadArguments(context, "Manifest", "setComment",
-            MIN(oojsArgs.count(), 2U), OOJS_ARGV,
-            std::nullopt, "good and information text");
-        return false;
-    }
+  if (oojsArgs.count() > 1) {
+    good = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+    information = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
+  }
+  if (!good.has_value() || !information.has_value()) {
+    cxx_OOJSReportBadArguments(context, "Manifest", "setComment",
+                               MIN(oojsArgs.count(), 2U), OOJS_ARGV,
+                               std::nullopt, "good and information text");
+    return false;
+  }
 
-    OOCommodityMarket* market = (PLAYER != nullptr
-            ? PLAYER->getShipCommodityData()
-            : (OOCommodityMarket*)nullptr); // null: false, as a message to nil
-    OK = market != nullptr && market->setComment(*information, *good);
+  OOCommodityMarket* market =
+      (PLAYER != nullptr
+           ? PLAYER->getShipCommodityData()
+           : (OOCommodityMarket*)nullptr);  // null: false, as a message to nil
+  OK = market != nullptr && market->setComment(*information, *good);
 
-    OOJS_RETURN_BOOL(OK);
+  OOJS_RETURN_BOOL(OK);
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 // shortComment(good : String) : String
 namespace {
 static bool ManifestShortComment(ooscript::Context context,
-    ooscript::CallArgs& oojsArgs)
-{
-    OOJS_NATIVE_ENTER(context)
+                                 ooscript::CallArgs& oojsArgs) {
+  OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> good;
-    std::optional<std::string> information;
+  std::optional<std::string> good;
+  std::optional<std::string> information;
 
-    if (oojsArgs.count() > 0) {
-        good = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
-    }
-    if (!good.has_value()) {
-        cxx_OOJSReportBadArguments(context, "Manifest", "shortComment",
-            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-            std::nullopt, "good");
-        return false;
-    }
+  if (oojsArgs.count() > 0) {
+    good = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  }
+  if (!good.has_value()) {
+    cxx_OOJSReportBadArguments(context, "Manifest", "shortComment",
+                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+                               std::nullopt, "good");
+    return false;
+  }
 
-    OOCommodityMarket* market = (PLAYER != nullptr ? PLAYER->getShipCommodityData()
-                                                   : (OOCommodityMarket*)nullptr); // null: no comment,
-                                                                                   // as a message to nil
-    if (market != nullptr)
-        information = market->shortCommentForGood(*good);
+  OOCommodityMarket* market =
+      (PLAYER != nullptr ? PLAYER->getShipCommodityData()
+                         : (OOCommodityMarket*)nullptr);  // null: no comment,
+                                                          // as a message to nil
+  if (market != nullptr) information = market->shortCommentForGood(*good);
 
-    OOJS_RETURN_STRING_OR_NULL(information);
+  OOJS_RETURN_STRING_OR_NULL(information);
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace
 
 // setShortComment(good : String, information : String) : Boolean
 namespace {
 static bool ManifestSetShortComment(ooscript::Context context,
-    ooscript::CallArgs& oojsArgs)
-{
-    OOJS_NATIVE_ENTER(context)
+                                    ooscript::CallArgs& oojsArgs) {
+  OOJS_NATIVE_ENTER(context)
 
-    bool OK;
-    std::optional<std::string> good;
-    std::optional<std::string> information;
+  bool OK;
+  std::optional<std::string> good;
+  std::optional<std::string> information;
 
-    if (oojsArgs.count() > 1) {
-        good = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
-        information = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
-    }
-    if (!good.has_value() || !information.has_value()) {
-        cxx_OOJSReportBadArguments(context, "Manifest", "setShortComment",
-            MIN(oojsArgs.count(), 2U), OOJS_ARGV,
-            std::nullopt, "good and information text");
-        return false;
-    }
+  if (oojsArgs.count() > 1) {
+    good = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+    information = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
+  }
+  if (!good.has_value() || !information.has_value()) {
+    cxx_OOJSReportBadArguments(context, "Manifest", "setShortComment",
+                               MIN(oojsArgs.count(), 2U), OOJS_ARGV,
+                               std::nullopt, "good and information text");
+    return false;
+  }
 
-    OOCommodityMarket* market = (PLAYER != nullptr
-            ? PLAYER->getShipCommodityData()
-            : (OOCommodityMarket*)nullptr); // null: false, as a message to nil
-    OK = market != nullptr && market->setShortComment(*information, *good);
+  OOCommodityMarket* market =
+      (PLAYER != nullptr
+           ? PLAYER->getShipCommodityData()
+           : (OOCommodityMarket*)nullptr);  // null: false, as a message to nil
+  OK = market != nullptr && market->setShortComment(*information, *good);
 
-    OOJS_RETURN_BOOL(OK);
+  OOJS_RETURN_BOOL(OK);
 
-    OOJS_NATIVE_EXIT
+  OOJS_NATIVE_EXIT
 }
-} // namespace
+}  // namespace

@@ -30,4 +30,5 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
 
-void InitOOJSMissionVariables(ooscript::Context context, ooscript::Object global);
+void InitOOJSMissionVariables(ooscript::Context context,
+                              ooscript::Object global);

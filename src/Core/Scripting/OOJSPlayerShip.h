@@ -33,11 +33,12 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <optional>
+#include <string>
+
 #include "OOFoundation.h"
 #include "oofnd/Notification.hpp"
 #include "ooscript/JSEngine.hpp"
-#include <optional>
-#include <string>
 class PlayerEntity;
 
 void InitOOJSPlayerShip(ooscript::Context context, ooscript::Object global);
@@ -51,5 +52,7 @@ ooscript::Object JSPlayerShipObject(void);
    them (PlayerEntity::jsClassName()).
 */
 std::optional<std::string> OOJSPlayerShipJSClassName(void);
-void OOJSPlayerShipSetJSSelf(PlayerEntity* player, ooscript::Object val, ooscript::Context context);
-void OOJSPlayerShipJavaScriptEngineWillReset(PlayerEntity* player, const oo::Notification& notification);
+void OOJSPlayerShipSetJSSelf(PlayerEntity* player, ooscript::Object val,
+                             ooscript::Context context);
+void OOJSPlayerShipJavaScriptEngineWillReset(
+    PlayerEntity* player, const oo::Notification& notification);

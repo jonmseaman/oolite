@@ -38,5 +38,6 @@ void InitOOJSPlanet(ooscript::Context context, ooscript::Object global);
    call these.
 */
 bool OOJSPlanetIsVisibleToScripts(OOPlanetEntity* planet);
-void OOJSPlanetGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+void OOJSPlanetGetJSClass(ooscript::ClassDef** outClass,
+                          ooscript::Object* outPrototype);
 std::optional<std::string> OOJSPlanetJSClassName(OOPlanetEntity* planet);

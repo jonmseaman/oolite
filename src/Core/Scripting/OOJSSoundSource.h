@@ -38,7 +38,8 @@ void InitOOJSSoundSource(ooscript::Context context, ooscript::Object global);
    object for the source (JS null for none) and the JS class name. The binding
    and the Sound binding call them.
 */
-ooscript::Value OOJSSoundSourceJSValueInContext(OOSoundSource* source, ooscript::Context context);
+ooscript::Value OOJSSoundSourceJSValueInContext(OOSoundSource* source,
+                                                ooscript::Context context);
 std::optional<std::string> OOJSSoundSourceJSClassName(void);
 
 /*	What a SoundSource object's private slot holds. Each SoundSource object
@@ -48,17 +49,18 @@ std::optional<std::string> OOJSSoundSourceJSClassName(void);
    source's components. Defined in OOJSSoundSource.mm; only the binding makes
    one.
 */
-class OOJSSoundSourceHolder final : public oo::RefCounted, public OOJSPrivateObject {
-public:
-    explicit OOJSSoundSourceHolder(OOSoundSource* inSource);
-    ~OOJSSoundSourceHolder() override;
+class OOJSSoundSourceHolder final : public oo::RefCounted,
+                                    public OOJSPrivateObject {
+ public:
+  explicit OOJSSoundSourceHolder(OOSoundSource* inSource);
+  ~OOJSSoundSourceHolder() override;
 
-    OOSoundSource* source() const;
+  OOSoundSource* source() const;
 
-    ooscript::Value jsValueInContext(ooscript::Context context) override;
-    void clearJSSelf(ooscript::Object selfVal) override;
-    std::optional<std::string> jsDescription() override;
+  ooscript::Value jsValueInContext(ooscript::Context context) override;
+  void clearJSSelf(ooscript::Object selfVal) override;
+  std::optional<std::string> jsDescription() override;
 
-private:
-    oo::Ref<OOSoundSource> _source;
+ private:
+  oo::Ref<OOSoundSource> _source;
 };

@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 */
 
 #include "EntityOOJavaScriptExtensions.h"
+
 #include "DockEntity.h"
 #include "OOJSDock.h"
 #include "OOJSEntity.h"
@@ -44,14 +45,10 @@ MA 02110-1301, USA.
 
 // MARK: Entity (OOJavaScriptExtensions)
 
-bool EntityJSIsVisibleToScripts(void)
-{
-    return false;
-}
+bool EntityJSIsVisibleToScripts(void) { return false; }
 
-std::optional<std::string> EntityJSClassName(void)
-{
-    return std::string("Entity");
+std::optional<std::string> EntityJSClassName(void) {
+  return std::string("Entity");
 }
 
 /*	The entity's JS object: made on first use for an entity that scripts can
@@ -65,149 +62,142 @@ std::optional<std::string> EntityJSClassName(void)
    object (OOJSSystem's planets filter, callObjC()'s class name).
 */
 
-bool OOJSEntityIsVisibleToScripts(Entity* entity)
-{
-    if (entity == nullptr)
-        return false; // nil's answer
-    return entity->isVisibleToScripts();
+bool OOJSEntityIsVisibleToScripts(Entity* entity) {
+  if (entity == nullptr) return false;  // nil's answer
+  return entity->isVisibleToScripts();
 }
 
-std::optional<std::string> OOJSEntityJSClassName(Entity* entity)
-{
-    if (entity == nullptr)
-        return std::nullopt; // nil's answer
-    return entity->jsClassName();
+std::optional<std::string> OOJSEntityJSClassName(Entity* entity) {
+  if (entity == nullptr) return std::nullopt;  // nil's answer
+  return entity->jsClassName();
 }
 
-void OOJSEntityGetJSClass(Entity* entity, ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
-{
-    entity->getJSClass(outClass, outPrototype);
+void OOJSEntityGetJSClass(Entity* entity, ooscript::ClassDef** outClass,
+                          ooscript::Object* outPrototype) {
+  entity->getJSClass(outClass, outPrototype);
 }
 
-ooscript::Value OOJSEntityJSValue(Entity* entity, ooscript::Context context)
-{
-    if (entity == nullptr)
-        return ooscript::nullValue(); // OOJSValueFromNativeObject()'s for nil
-    return entity->jsValueInContext(context);
+ooscript::Value OOJSEntityJSValue(Entity* entity, ooscript::Context context) {
+  if (entity == nullptr)
+    return ooscript::nullValue();  // OOJSValueFromNativeObject()'s for nil
+  return entity->jsValueInContext(context);
 }
 
-ooscript::Value EntityJSValueInContext(Entity* entity, ooscript::Context context)
-{
-    ooscript::ClassDef* jsClass = NULL;
-    ooscript::Object prototype = NULL;
-    ooscript::Value result = ooscript::nullValue();
+ooscript::Value EntityJSValueInContext(Entity* entity,
+                                       ooscript::Context context) {
+  ooscript::ClassDef* jsClass = NULL;
+  ooscript::Object prototype = NULL;
+  ooscript::Value result = ooscript::nullValue();
 
-    if (entity->_jsSelf == NULL && OOJSEntityIsVisibleToScripts(entity)) {
-        // Create JS object
-        OOJSEntityGetJSClass(entity, &jsClass, &prototype);
+  if (entity->_jsSelf == NULL && OOJSEntityIsVisibleToScripts(entity)) {
+    // Create JS object
+    OOJSEntityGetJSClass(entity, &jsClass, &prototype);
 
-        entity->_jsSelf = ooscript::newObject(context, jsClass, prototype, NULL);
-        if (entity->_jsSelf != NULL) {
-            const oo::Ref<OOJSEntityHolder> holder = oo::makeRef<OOJSEntityHolder>(entity);
-            if (!OOJSSetCxxPrivate(context, entity->_jsSelf, holder.get()))
-                entity->_jsSelf = NULL;
-        }
-
-        if (entity->_jsSelf != NULL) {
-            OOJSAddGCObjectRoot(context, &entity->_jsSelf, "Entity jsSelf");
-            oo::NotificationCenter::defaultCenter().addObserver(entity, kOOJavaScriptEngineWillResetNotificationName,
-                OOJavaScriptEngine::sharedEngine(),
-                [entity](const oo::Notification&) { entity->deleteJSSelf(); });
-        }
-    }
-
-    if (entity->_jsSelf != NULL)
-        result = ooscript::objectValue(entity->_jsSelf);
-
-    return result;
-}
-
-void EntityJSGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
-{
-    *outClass = JSEntityClass();
-    *outPrototype = JSEntityPrototype();
-}
-
-void EntityJSDeleteJSSelf(Entity* entity)
-{
+    entity->_jsSelf = ooscript::newObject(context, jsClass, prototype, NULL);
     if (entity->_jsSelf != NULL) {
+      const oo::Ref<OOJSEntityHolder> holder =
+          oo::makeRef<OOJSEntityHolder>(entity);
+      if (!OOJSSetCxxPrivate(context, entity->_jsSelf, holder.get()))
         entity->_jsSelf = NULL;
-        ooscript::Context context = OOJSAcquireContext();
-        ooscript::removeObjectRoot(context, &entity->_jsSelf);
-        OOJSRelinquishContext(context);
-
-        oo::NotificationCenter::defaultCenter().removeObserver(entity, kOOJavaScriptEngineWillResetNotificationName,
-            OOJavaScriptEngine::sharedEngine());
     }
+
+    if (entity->_jsSelf != NULL) {
+      OOJSAddGCObjectRoot(context, &entity->_jsSelf, "Entity jsSelf");
+      oo::NotificationCenter::defaultCenter().addObserver(
+          entity, kOOJavaScriptEngineWillResetNotificationName,
+          OOJavaScriptEngine::sharedEngine(),
+          [entity](const oo::Notification&) { entity->deleteJSSelf(); });
+    }
+  }
+
+  if (entity->_jsSelf != NULL) result = ooscript::objectValue(entity->_jsSelf);
+
+  return result;
 }
 
-/*	What the facade's -cxx_oo_jsDescription answered (OOObject (OOJavaScriptConversion)'s
-        OOObjectJSDescription): "[<JS class name> <components>]", or "[object <JS class name>]" with no
-        components; the JS class name is -cxx_oo_jsClassName's (the C++ entity's jsClassName()), else
+void EntityJSGetJSClass(ooscript::ClassDef** outClass,
+                        ooscript::Object* outPrototype) {
+  *outClass = JSEntityClass();
+  *outPrototype = JSEntityPrototype();
+}
+
+void EntityJSDeleteJSSelf(Entity* entity) {
+  if (entity->_jsSelf != NULL) {
+    entity->_jsSelf = NULL;
+    ooscript::Context context = OOJSAcquireContext();
+    ooscript::removeObjectRoot(context, &entity->_jsSelf);
+    OOJSRelinquishContext(context);
+
+    oo::NotificationCenter::defaultCenter().removeObserver(
+        entity, kOOJavaScriptEngineWillResetNotificationName,
+        OOJavaScriptEngine::sharedEngine());
+  }
+}
+
+/*	What the facade's -cxx_oo_jsDescription answered (OOObject
+   (OOJavaScriptConversion)'s OOObjectJSDescription): "[<JS class name>
+   <components>]", or "[object <JS class name>]" with no components; the JS
+   class name is -cxx_oo_jsClassName's (the C++ entity's jsClassName()), else
         the root facade's class name, "Entity".
 */
-std::optional<std::string> EntityJSDescription(Entity* entity)
-{
-    if (entity == nullptr)
-        return std::nullopt; // (the holder asks only a live entity)
-    std::optional<std::string> name = entity->jsClassName();
-    if (!name.has_value())
-        name = std::string("Entity"); // the root facade's class
-    if (const std::optional<std::string> components = entity->descriptionComponents()) {
-        return oo::str::format("[%s %s]", name->c_str(), components->c_str());
-    }
-    return oo::str::format("[object %s]", name->c_str());
+std::optional<std::string> EntityJSDescription(Entity* entity) {
+  if (entity == nullptr)
+    return std::nullopt;  // (the holder asks only a live entity)
+  std::optional<std::string> name = entity->jsClassName();
+  if (!name.has_value())
+    name = std::string("Entity");  // the root facade's class
+  if (const std::optional<std::string> components =
+          entity->descriptionComponents()) {
+    return oo::str::format("[%s %s]", name->c_str(), components->c_str());
+  }
+  return oo::str::format("[object %s]", name->c_str());
 }
 
 // MARK: ShipEntity (OOJavaScriptExtensions)
 
-bool ShipEntityJSIsVisibleToScripts(void)
-{
-    return true;
+bool ShipEntityJSIsVisibleToScripts(void) { return true; }
+
+void ShipEntityJSGetJSClass(ooscript::ClassDef** outClass,
+                            ooscript::Object* outPrototype) {
+  *outClass = JSShipClass();
+  *outPrototype = JSShipPrototype();
 }
 
-void ShipEntityJSGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
-{
-    *outClass = JSShipClass();
-    *outPrototype = JSShipPrototype();
+std::optional<std::string> ShipEntityJSClassName(void) {
+  return std::string("Ship");
 }
 
-std::optional<std::string> ShipEntityJSClassName(void)
-{
-    return std::string("Ship");
+std::vector<oo::EntityHold> ShipEntityJSSubEntitiesForScript(ShipEntity* ship) {
+  std::vector<oo::EntityHold> result;
+  for (const auto& sub : (ship != nullptr ? ship->shipSubEntities()
+                                          : std::vector<oo::EntityHold>())) {
+    result.emplace_back(sub.get());
+  }
+  return result;
 }
 
-std::vector<oo::EntityHold> ShipEntityJSSubEntitiesForScript(ShipEntity* ship)
-{
-    std::vector<oo::EntityHold> result;
-    for (const auto& sub : (ship != nullptr ? ship->shipSubEntities() : std::vector<oo::EntityHold>())) {
-        result.emplace_back(sub.get());
-    }
-    return result;
-}
+void ShipEntityJSSetTargetForScript(ShipEntity* ship, ShipEntity* target) {
+  ShipEntity* me = ship;
 
-void ShipEntityJSSetTargetForScript(ShipEntity* ship, ShipEntity* target)
-{
-    ShipEntity* me = ship;
-
-    // Ensure coherence by not fiddling with subentities.
-    while ((me != nullptr ? me->getIsSubEntity() : false)) {
-        if (me == oo::ToShip((me != nullptr ? me->owner() : nullptr)) || (me != nullptr ? me->owner() : nullptr) == nullptr)
-            break; // its own object: the ship, not its object
-        me = oo::ToShip((me != nullptr ? me->owner() : nullptr));
-    }
-    while ((target != nullptr ? target->getIsSubEntity() : false)) {
-        if (target == oo::ToShip((target != nullptr ? target->owner() : nullptr)) || (target != nullptr ? target->owner() : nullptr) == nullptr)
-            break; // its own object: the ship, not its object
-        target = oo::ToShip((target != nullptr ? target->owner() : nullptr));
-    }
-    if (me == nullptr)
-        return; // what ToShip(ToObjC(me)) asked
-    if (target != nullptr) {
-        if (me != nullptr)
-            me->addTarget(target);
-    } else {
-        if (me != nullptr)
-            me->removeTarget((me != nullptr ? me->primaryTarget() : (Entity*)nullptr));
-    }
+  // Ensure coherence by not fiddling with subentities.
+  while ((me != nullptr ? me->getIsSubEntity() : false)) {
+    if (me == oo::ToShip((me != nullptr ? me->owner() : nullptr)) ||
+        (me != nullptr ? me->owner() : nullptr) == nullptr)
+      break;  // its own object: the ship, not its object
+    me = oo::ToShip((me != nullptr ? me->owner() : nullptr));
+  }
+  while ((target != nullptr ? target->getIsSubEntity() : false)) {
+    if (target == oo::ToShip((target != nullptr ? target->owner() : nullptr)) ||
+        (target != nullptr ? target->owner() : nullptr) == nullptr)
+      break;  // its own object: the ship, not its object
+    target = oo::ToShip((target != nullptr ? target->owner() : nullptr));
+  }
+  if (me == nullptr) return;  // what ToShip(ToObjC(me)) asked
+  if (target != nullptr) {
+    if (me != nullptr) me->addTarget(target);
+  } else {
+    if (me != nullptr)
+      me->removeTarget(
+          (me != nullptr ? me->primaryTarget() : (Entity*)nullptr));
+  }
 }

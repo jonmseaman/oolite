@@ -35,6 +35,7 @@ void InitOOJSFlasher(ooscript::Context context, ooscript::Object global);
    reaches by selector through the root's JS members: the C++ OOFlasherEntity's
    overrides call these.
 */
-void OOJSFlasherGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
+void OOJSFlasherGetJSClass(ooscript::ClassDef** outClass,
+                           ooscript::Object* outPrototype);
 std::optional<std::string> OOJSFlasherJSClassName(void);
 bool OOJSFlasherIsVisibleToScripts(void);
