@@ -54,8 +54,3 @@ if get_option('b_lto')
         oolite_link_args += ['-flto=auto']
     endif
 endif
-
-add_project_arguments(
-    '-DGNUSTEP_BASE_LIBRARY=1',
-    language: c_family,
-)
