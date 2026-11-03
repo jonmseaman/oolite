@@ -219,10 +219,7 @@ bool DockEntity::isDock() { return true; }
 
 // The binding's bodies (OOJSDock.mm), which a category on the façade forwarded
 // to.
-void DockEntity::getJSClass(ooscript::ClassDef** outClass,
-                            ooscript::Object* outPrototype) {
-  ::OOJSDockGetJSClass(outClass, outPrototype);
-}
+JSClassID DockEntity::jsClassID() { return ::JSDockClassID(); }
 
 bool DockEntity::isVisibleToScripts() {
   return ::ShipEntityJSIsVisibleToScripts();
@@ -439,17 +436,20 @@ std::optional<std::string> DockEntity::canAcceptShipForDocking(
   }
 
   // callback to allow more complex filtering on accept/reject
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Value rval = ooscript::undefinedValue();
-  ooscript::Value args[] = {OOJSValueFromCxxObject(context, ship)};
+  JSContext* context = OOJSAcquireContext();
+  OOJSVal rval = OOJSUndefinedValue();
+  OOJSVal args[] = {OOJSValueFromCxxObject(context, ship)};
   bool accept = true;
 
   bool OK = (getScript() != nullptr
                  ? getScript()->callMethod(OOJSID("acceptDockingRequestFrom"),
                                            context, args, 1, &rval)
                  : false);
-  if (OK) OK = ooscript::valueToBoolean(context, rval, &accept);
+  if (OK) accept = OOJSValueToBOOL(context, rval);
   if (!OK) accept = true;  // default to permreject
+
+  OOJSFreeValue(context, rval);
+  OOJSFreeValue(context, args[0]);
   OOJSRelinquishContext(context);
 
   if (!accept) {
@@ -1257,17 +1257,20 @@ bool DockEntity::allowsLaunchingOf(::ShipEntity* ship) {
   }
 
   // callback to allow more complex filtering on accept/reject
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Value rval = ooscript::undefinedValue();
-  ooscript::Value args[] = {OOJSValueFromCxxObject(context, ship)};
+  JSContext* context = OOJSAcquireContext();
+  OOJSVal rval = OOJSUndefinedValue();
+  OOJSVal args[] = {OOJSValueFromCxxObject(context, ship)};
   bool accept = true;
 
   bool OK = (getScript() != nullptr
                  ? getScript()->callMethod(OOJSID("acceptLaunchingRequestFrom"),
                                            context, args, 1, &rval)
                  : false);
-  if (OK) OK = ooscript::valueToBoolean(context, rval, &accept);
+  if (OK) accept = OOJSValueToBOOL(context, rval);
   if (!OK) accept = true;  // default to permreject
+
+  OOJSFreeValue(context, rval);
+  OOJSFreeValue(context, args[0]);
   OOJSRelinquishContext(context);
   if (!accept) {
     return false;

@@ -38,7 +38,6 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class ShipEntity;
 class Entity;  // the members are held as weak references to the ships' C++
@@ -82,8 +81,8 @@ class OOShipGroup : public oo::PListForeign, public ::OOJSPrivateObject {
   // The JS glue (OOJSPrivateObject), defined in OOJSShipGroup.mm: the ShipGroup
   // object, made on first use; forgetting it when it is finalized;
   // "[OOShipGroup <components>]".
-  ooscript::Value jsValueInContext(ooscript::Context context) override;
-  void clearJSSelf(ooscript::Object selfVal) override;
+  JSValue jsValueInContext(JSContext* context) override;  // owned
+  void clearJSSelf(JSValueConst selfVal) override;
   std::optional<std::string> jsDescription() override;
 
   // oo::PListForeign: what the facade answered (its class, and "%@" as
@@ -112,8 +111,10 @@ class OOShipGroup : public oo::PListForeign, public ::OOJSPrivateObject {
   std::vector<oo::WeakRef<Entity>> _members = {};
   oo::WeakRef<Entity> _leader = {};
   std::optional<std::string> _name = {};
-  ooscript::Object _jsSelf =
-      {};  // The JS ShipGroup object proxy for this group.
+  // The JS ShipGroup object proxy for this group: a weak (uncounted)
+  // reference, as the JS object retains the group, cleared by clearJSSelf()
+  // when the JS object is finalized. Not an object until created.
+  JSValue _jsSelf = JS_UNDEFINED;
 };
 
 /*	OOShipGroupCursor: steps through a group's live members in its internal

@@ -255,19 +255,18 @@ oo::PList OOCommodities::createDefinitionFrom(
 oo::PList OOCommodities::modifyGood(const oo::PList& good, ::OOScript* script,
                                     ::StationEntity* station, OOSystemID system,
                                     bool localMode) {
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Value rval;
+  JSContext* context = OOJSAcquireContext();
+  JSValue rval = JS_UNDEFINED;
   // The JS boundary takes and gives property-list objects: the info crosses as
   // one, and an accepted result comes back through oo::PListFrom (an exact
   // round trip).
-  ooscript::Value args[] = {
-      OOJSValueFromPList(context, good),
-      station != nullptr
-          ? station->jsValueInContext(context)
-          : ooscript::nullValue(),  // the C++ station's JS value, which
+  JSValue args[] = {OOJSValueFromPList(context, good),
+                    station != nullptr
+                        ? station->jsValueInContext(context)
+                        : JS_NULL,  // the C++ station's JS value, which
                                     // OOJSValueFromNativeObject() of its object
                                     // reached
-      ooscript::int32Value(system)};
+                    JS_NewInt32(context, system)};
   bool OK = true;
   const char* errorType = nullptr;
 
@@ -284,27 +283,34 @@ oo::PList OOCommodities::modifyGood(const oo::PList& good, ::OOScript* script,
                                    context, args, 3, &rval)
               : false);
   }
+  JS_FreeValue(context, args[0]);
+  JS_FreeValue(context, args[1]);
+  JS_FreeValue(context, args[2]);
 
   if (!OK) {
     OO_LOG("script.commodityScript.error",
            "Could not update {} commodity definition for {} - unable to call "
            "updateLocalCommodityDefinition",
            errorType, StringFor(good, kOOCommodityName).value_or("(null)"));
+    JS_FreeValue(context, rval);
     OOJSRelinquishContext(context);
     return good;
   }
 
-  if (!ooscript::isObjectOrNull(rval)) {
+  // Unlike the old object-or-null test, false for null, which gets the same
+  // message below.
+  if (!JS_IsObject(rval)) {
     OO_LOG("script.commodityScript.error",
            "Could not update {} commodity definition for {} - return value "
            "invalid",
            errorType, StringFor(good, kOOCommodityKey).value_or("(null)"));
+    JS_FreeValue(context, rval);
     OOJSRelinquishContext(context);
     return good;
   }
 
-  oo::PList result =
-      cxx_OOJSPListFromJSObject(context, ooscript::toObject(rval));
+  oo::PList result = cxx_OOJSPListFromJSObject(context, rval);
+  JS_FreeValue(context, rval);
   OOJSRelinquishContext(context);
   if (result.getIf<oo::PList::Dict>() == nullptr) {
     OO_LOG("script.commodityScript.error",

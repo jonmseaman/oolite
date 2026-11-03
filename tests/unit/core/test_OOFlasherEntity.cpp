@@ -24,6 +24,7 @@
 #include <cmath>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "OOJSEntity.h"
 #include "OOColor.h"
 #include "OOFlasherEntity.h"
 #include "OOJSFlasher.h"
@@ -307,18 +308,30 @@ OO_TEST(facade) {
   }
 }
 
+// Registers Entity's JS class and the given class (a child of Entity) in the
+// test's context, as the engine's start does; the context is made here if the
+// test has none yet.
+static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
+  extern JSContext* gOOJSMainThreadContext;
+  if (gOOJSMainThreadContext == nullptr)
+    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+  JSContext* context = OOJSAcquireContext();
+  JSValue global = JS_GetGlobalObject(context);
+  InitOOJSEntity(context, global);
+  initClass(context, global);
+  JS_FreeValue(context, global);
+}
+
 // The C++ class's overrides of the root's JS members: what the engine asks a
 // flasher's object for by selector is what OOJSFlasher.mm answers.
 OO_TEST(jsExtensions) {
   {
     SetUp();
     Entity* flasher = Flasher(WhiteBlack(1, 0.5));
-    ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
-    ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
-    OOJSEntityGetJSClass(flasher, &jsClass, &prototype);
-    OOJSFlasherGetJSClass(&expectedClass, &expectedPrototype);
-    OO_CHECK(jsClass != nullptr && jsClass == expectedClass &&
-             prototype == expectedPrototype);
+    RegisterJSClasses(InitOOJSFlasher);
+    const JSClassID jsClass = OOJSEntityJSClassID(flasher);
+    const JSClassID expectedClass = JSFlasherClassID();
+    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
     OO_CHECK(OOJSEntityJSClassName(flasher) ==
              std::optional<std::string>("Flasher"));
     OO_CHECK(OOJSEntityIsVisibleToScripts(flasher) == true);

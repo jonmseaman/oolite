@@ -488,12 +488,11 @@ void OOShipRegistry::loadDemoShips() {
           if (condScript !=
               nullptr)  // should always be non-nil, but just in case
           {
-            ooscript::Context context = OOJSAcquireContext();
+            JSContext* context = OOJSAcquireContext();
             bool OK;
-            bool allow_use;
-            ooscript::Value result;
-            ooscript::Value args[] = {
-                OOJSValueFromPList(context, oo::PList(*shipKey))};
+            bool allow_use = false;
+            OOJSVal result = OOJSUndefinedValue();
+            OOJSVal args[] = {OOJSValueFromPList(context, oo::PList(*shipKey))};
 
             OK = (condScript != nullptr
                       ? condScript->callMethod(
@@ -501,8 +500,10 @@ void OOShipRegistry::loadDemoShips() {
                             sizeof args / sizeof *args, &result)
                       : false);
 
-            if (OK) OK = ooscript::valueToBoolean(context, result, &allow_use);
+            if (OK) allow_use = OOJSValueToBOOL(context, result);
 
+            OOJSFreeValue(context, result);
+            OOJSFreeValue(context, args[0]);
             OOJSRelinquishContext(context);
             if (OK && !allow_use) {
               /* if the script exists, the function exists, the function

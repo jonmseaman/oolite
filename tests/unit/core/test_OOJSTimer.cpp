@@ -1,18 +1,17 @@
-/*	test_OOJSTimer.mm
+/*	test_OOJSTimer.cpp
         Unit tests for the Timer JS binding
-   (src/Core/Scripting/OOJSTimer.h/.mm), covering OOScriptTimer and its one
+   (src/Core/Scripting/OOJSTimer.h/.cpp), covering OOScriptTimer and its one
    subclass OOJSTimer.
 
-        The binding's test runs its JS class in a real context on the game's own
-   façade backend (ooscript/JSEngine_quickjs.cpp), and links the game's own
-   objects for the binding, its base class OOScriptTimer, the priority queue
-   that schedules it and the engine's exception translator
-   (OOJSEngineNativeWrappers.mm), and, as the C++ timer is in the Timer's
+        The binding's test runs its JS class in a real QuickJS-ng context, and
+   links the game's own objects for the binding, its base class OOScriptTimer,
+   the priority queue that schedules it, the engine's class registry
+   (OOJSClasses.cpp) and its exception translator
+   (OOJSEngineNativeWrappers.cpp), and, as the C++ timer is in the Timer's
    private slot, the engine's C++ private-slot glue (OOJSPrivateObject.cpp: the
    getter, finalizer and toString()). What the rest of the engine would provide
    is defined below as the smallest stand-in that does the same thing: the error
-   and warning reporters, the object getter and converters, the JS glue that
-   OOObject gets from OOJavaScriptEngine.mm, the engine object (which calls the
+   and warning reporters, the converters, the engine object (which calls the
    timer's function), the script stack and the universe's clock. The engine's
    and OOJSScript's headers are not imported, because the test defines those
    classes. The expectations were written against the Objective-C files and run
@@ -32,14 +31,14 @@
 #include <vector>
 
 #include "OODescription.h"
-#include "OOJSEngineNativeWrappers.h"
+#include "OOJSEngineCore.h"
+#include "OOJSPrivateObject.h"
 #include "OOScriptTimer.h"
 #include "oo_test.hpp"
 #include "oofnd/Notification.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOObject.h"
-#include "ooscript/JSEngine.hpp"
 
 // EntityHelpers.mm's, which the test does not link: an entity's node (its hold
 // and its description) is reached only for an entity, which the test has none
@@ -56,8 +55,7 @@ void oo::detail::EntityRelease(Entity* entity) noexcept {
 }
 std::string oo::EntityDescription(Entity*) { std::abort(); }
 
-void InitOOJSTimer(ooscript::Context context,
-                              ooscript::Object global);
+void InitOOJSTimer(JSContext* context, JSValueConst global);
 
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
@@ -70,26 +68,24 @@ int sCalls = 0;
 bool sConverterRegistered = false;
 }  // namespace
 
-ooscript::Context gOOJSMainThreadContext = nullptr;
-extern const char* const kOOJavaScriptEngineWillResetNotificationName;
+JSContext* gOOJSMainThreadContext = nullptr;
 const char* const kOOJavaScriptEngineWillResetNotificationName =
     "org.aegidian.oolite OOJavaScriptEngine will reset";
 
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
-                                      const char* format, va_list args) {
+void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
+                                      va_list args) {
   std::string msg = oo::str::vformat(format, args);
-  ooscript::reportError(context, msg.c_str());
+  JS_ThrowPlainError(context, "%s", msg.c_str());
 }
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportErrorWithArguments(context, format, args);
   va_end(args);
 }
 
-void cxx_OOJSReportWarning(ooscript::Context context, const char* format, ...) {
-  (void)context;
+void cxx_OOJSReportWarning(JSContext*, const char* format, ...) {
   va_list args;
   va_start(args, format);
   sWarnings.push_back(oo::str::vformat(format, args));
@@ -97,90 +93,92 @@ void cxx_OOJSReportWarning(ooscript::Context context, const char* format, ...) {
 }
 
 void cxx_OOJSReportBadArguments(
-    ooscript::Context context, const std::optional<std::string>& scriptClass,
-    const std::optional<std::string>& function, unsigned argc, ooscript::Value*,
+    JSContext* context, const std::optional<std::string>& scriptClass,
+    const std::optional<std::string>& function, int argc, JSValueConst*,
     const std::optional<std::string>& message,
     const std::optional<std::string>& expectedArgsDescription) {
-  cxx_OOJSReportError(context, "bad arguments: %s.%s (%u): %s; expected %s",
+  cxx_OOJSReportError(context, "bad arguments: %s.%s (%d): %s; expected %s",
                       scriptClass.value_or("").c_str(),
                       function.value_or("").c_str(), argc,
                       message.value_or("").c_str(),
                       expectedArgsDescription.value_or("").c_str());
 }
 
-void OOJSReportBadPropertySelector(ooscript::Context context,
-                                              ooscript::Object,
-                                              ooscript::PropertyId,
-                                              ooscript::PropertySpec*) {
+void OOJSReportBadPropertySelector(JSContext* context, JSValueConst, int,
+                                   const JSCFunctionListEntry*, size_t) {
   cxx_OOJSReportError(context, "bad property selector");
 }
 
-void OOJSReportBadPropertyValue(ooscript::Context context,
-                                           ooscript::Object,
-                                           ooscript::PropertyId,
-                                           ooscript::PropertySpec*,
-                                           ooscript::Value) {
+void OOJSReportBadPropertyValue(JSContext* context, JSValueConst, int,
+                                const JSCFunctionListEntry*, size_t,
+                                JSValueConst) {
   cxx_OOJSReportError(context, "bad property value");
 }
 
-std::optional<std::string> cxx_OOStringFromJSString(ooscript::Context context,
-                                                    ooscript::String string) {
-  if (string == nullptr) return std::nullopt;
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, string, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  return cxx_OOStringFromJSString(context,
-                                  ooscript::valueToString(context, value));
-}
-
-// A JS object as a property list: the test's `this` objects are plain, so any
-// object is a non-null value and no object is null (what the engine's
+// A JS value as a property list: the test's `this` objects are plain, so any
+// object is a non-null value and null or undefined is null (what the engine's
 // conversion gives them).
-oo::PList cxx_OOJSPListFromJSObject(ooscript::Context,
-                                    ooscript::Object object) {
-  if (object == nullptr) return oo::PList();
+oo::PList cxx_OOJSPListFromJSValue(JSContext*, JSValueConst value) {
+  if (!JS_IsObject(value)) return oo::PList();
   return oo::PList(std::string("object"));
 }
 
-typedef oo::PList (*OOJSClassConverterCallback)(ooscript::Context context,
-                                                ooscript::Object object);
-
-void OOJSRegisterObjectConverter(
-    ooscript::ClassDef* theClass, OOJSClassConverterCallback converter) {
-  sConverterRegistered = theClass != nullptr &&
-                         std::string(theClass->name) == "Timer" &&
+void OOJSRegisterObjectConverter(JSClassID classID,
+                                 OOJSClassConverterCallback converter) {
+  const char* className = OOJSClassName(classID);
+  sConverterRegistered = className != nullptr &&
+                         std::string(className) == "Timer" &&
                          converter != nullptr;
 }
 
-oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context, ooscript::Object) {
+oo::PList OOJSBasicPrivateObjectConverter(JSContext*, JSValueConst) {
   return oo::PList();
 }
 
-// The JS class check of the engine's C++ getter (OOJSPrivateObject.cpp, linked
-// whose slot holds the C++ timer): no subclass of Timer is registered.
-bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
-                               ooscript::ClassDef* superclass) {
-  return putativeSubclass == superclass;
+// The atom cache and the pending-exception reporter, which the class registry
+// calls.
+JSAtom cxx_OOJSIDFromString(const std::string& string) {
+  return JS_NewAtomLen(gOOJSMainThreadContext, string.data(), string.size());
 }
 
-// OOJavaScriptEngine.mm's toString() for object wrappers.
-bool OOJSObjectWrapperToString(ooscript::Context context,
-                                          ooscript::CallArgs& oojsArgs) {
-  // (Unreached: a timer's toString() is its own.)
-  std::string description("[object]");
-  ooscript::String str =
-      ooscript::newStringCopyN(context, description.data(), description.size());
-  oojsArgs.setRval(ooscript::stringValue(str));
-  return true;
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
+}
+
+// As the engine's: the pending exception, else an uncatchable one that ends
+// the script.
+JSValue OOJSNativeFailure(JSContext* context) {
+  if (JS_HasException(context)) return JS_EXCEPTION;
+  JSValue error = JS_NewError(context);
+  JS_SetUncatchableError(context, error);
+  return JS_Throw(context, error);
+}
+
+// The engine's finalizer for a slot that holds a C++ object: the glue's
+// (OOJSPrivateObject.cpp, linked).
+void OOJSObjectWrapperFinalize(JSRuntime* runtime, JSValueConst thisObj) {
+  OOJSCxxObjectWrapperFinalize(runtime, thisObj);
+}
+
+// OOJavaScriptEngine.cpp's toString() for object wrappers, which the timer's
+// hands a `this` of another class.
+JSValue OOJSObjectWrapperToString(JSContext* context, JSValueConst, int,
+                                  JSValueConst*) {
+  return JS_NewString(context, "[object]");
 }
 
 #if OOJS_PROFILE
@@ -207,9 +205,8 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
-  bool callJSFunction(ooscript::Value function, ooscript::Object jsThis,
-                      unsigned argc, ooscript::Value* argv,
-                      ooscript::Value* outResult);
+  bool callJSFunction(JSValueConst function, JSValueConst jsThis, int argc,
+                      JSValueConst* argv, JSValue* outResult);
 };
 
 OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
@@ -217,16 +214,19 @@ OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
   return engine;
 }
 
-bool OOJavaScriptEngine::callJSFunction(ooscript::Value function,
-                                        ooscript::Object jsThis, unsigned argc,
-                                        ooscript::Value* argv,
-                                        ooscript::Value* outResult) {
+bool OOJavaScriptEngine::callJSFunction(JSValueConst function,
+                                        JSValueConst jsThis, int argc,
+                                        JSValueConst* argv,
+                                        JSValue* outResult) {
   sCalls++;
-  ooscript::Context context = gOOJSMainThreadContext;
-  bool OK = ooscript::callFunctionValue(context, jsThis, function, argc, argv,
-                                        outResult);
-  if (!OK) ooscript::clearPendingException(context);
-  return OK;
+  JSContext* context = gOOJSMainThreadContext;
+  JSValue result = JS_Call(context, function, jsThis, argc, argv);
+  if (JS_IsException(result)) {
+    JS_FreeValue(context, JS_GetException(context));
+    return false;
+  }
+  *outResult = result;
+  return true;
 }
 
 #include "OOScript.h"
@@ -282,16 +282,14 @@ void OOLogGenericSubclassResponsibilityForFunction(const char* inFunction) {
 
 namespace {
 
-ooscript::Runtime sRuntime;
-ooscript::Object sGlobal;
+JSRuntime* sRuntime;
+JSValue sGlobal;
 
 void SetUpContext() {
   if (gOOJSMainThreadContext != nullptr) return;
-  sRuntime = ooscript::newRuntime(8u * 1024u * 1024u);
-  gOOJSMainThreadContext = ooscript::newContext(sRuntime, 8192);
-  ooscript::beginRequest(gOOJSMainThreadContext);
-  sGlobal = ooscript::getGlobalObject(gOOJSMainThreadContext);
-  ooscript::initStandardClasses(gOOJSMainThreadContext, sGlobal);
+  sRuntime = JS_NewRuntime();
+  gOOJSMainThreadContext = JS_NewContext(sRuntime);
+  sGlobal = JS_GetGlobalObject(gOOJSMainThreadContext);
   InitOOJSTimer(gOOJSMainThreadContext, sGlobal);
   gSharedUniverse = new FakeUniverse();
 }
@@ -310,20 +308,17 @@ std::string Eval(const char* src) {
       std::string("(function () { try { return String((0, eval)(\"") + quoted +
       "\")); } catch (e) { return 'threw: ' + (e && e.message !== undefined ? "
       "e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
-  bool OK = false;
-  {  // As the game's frame loop drains: nothing is left to the thread's pool
-     // at exit
-    OK = ooscript::evaluateScript(
-        gOOJSMainThreadContext, sGlobal, wrapped.c_str(),
-        static_cast<unsigned>(wrapped.size()), "test.js", 1, &result);
-  }
-  if (!OK) {
-    ooscript::clearPendingException(gOOJSMainThreadContext);
+  JSValue result = JS_Eval(gOOJSMainThreadContext, wrapped.c_str(),
+                           wrapped.size(), "test.js", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(gOOJSMainThreadContext,
+                 JS_GetException(gOOJSMainThreadContext));
     return "<evaluation failed>";
   }
-  return cxx_OOStringFromJSValue(gOOJSMainThreadContext, result)
-      .value_or("<not a string>");
+  std::string text = cxx_OOStringFromJSValue(gOOJSMainThreadContext, result)
+                         .value_or("<not a string>");
+  JS_FreeValue(gOOJSMainThreadContext, result);
+  return text;
 }
 
 void Update(double now) {
@@ -406,9 +401,11 @@ OO_TEST(properties) {
   OO_CHECK_EQ(Eval("t3.interval = -7; t3.interval"), "-1");
   OO_CHECK_EQ(Eval("t3.interval = 'abc'; t3.interval"), "NaN");
   OO_CHECK_EQ(Eval("t3.isRunning = true; t3.isRunning"), "false");
+  // As in #768, a read-only property has no setter, so strict code that
+  // assigns to one gets a TypeError (the façade ignored it even there).
   OO_CHECK_EQ(Eval("(function () { 'use strict'; t3.isRunning = true; return "
                    "t3.isRunning; })()"),
-              "false");  // ignored even in strict code
+              "threw: no setter for property");
 
   OO_CHECK_EQ(Eval("t1.stop(); t2.stop(); t1.isRunning"), "false");
   OO_CHECK_EQ(Eval("Timer.prototype.nextTime"),
@@ -528,8 +525,10 @@ OO_TEST(unrootedRunningTimerGC) {
            "Object.defineProperty(f, 'name', { get: function () { nameReads++; "
            "return 'spy'; } }); new Timer({}, f, 1, 1); })(); 'dropped'"),
       "dropped");
-  ooscript::gc(gOOJSMainThreadContext);
-  OO_CHECK_EQ(Eval("nameReads"), "0");
+  JS_RunGC(sRuntime);
+  // As in #768, the constructor reads the name once and keeps it, so the one
+  // read is the constructor's; the finalizer adds none.
+  OO_CHECK_EQ(Eval("nameReads"), "1");
 
   // Many collections in one process, then more script, so a corrupted heap
   // shows up here or at exit rather than one run in six.
@@ -537,12 +536,12 @@ OO_TEST(unrootedRunningTimerGC) {
     OO_CHECK_EQ(Eval("(function () { new Timer({}, function tick() {}, 1, 1); "
                      "new Timer({}, function () {}, 2); })(); 'dropped'"),
                 "dropped");
-    ooscript::gc(gOOJSMainThreadContext);
+    JS_RunGC(sRuntime);
   }
   OO_CHECK_EQ(Eval("var a = []; for (var i = 0; i < 1000; i++) a.push({ n: "
                    "String(i) }); a.length"),
               "1000");
-  ooscript::gc(gOOJSMainThreadContext);
+  JS_RunGC(sRuntime);
   OO_CHECK_EQ(Eval("String(new Timer({}, function after() {}, 1))"),
               "[Timer nextTime: 101, one-shot, running, function: after]");
 }

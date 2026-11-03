@@ -37,7 +37,6 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class OOCharacter : public oo::PListForeign {
  public:
@@ -76,7 +75,7 @@ class OOCharacter : public oo::PListForeign {
   void setLegacyScript(const oo::PList& scriptActions);
   ::OOScript* script();
   void setCharacterScript(const std::string& scriptName);
-  void doScriptEvent(ooscript::PropertyId message);
+  void doScriptEvent(OOJSPropID message);
 
   oo::PList infoForScripting();  // a dictionary
 

@@ -44,6 +44,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -53,7 +55,6 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class Entity;
 
@@ -98,11 +99,10 @@ class OOScript : public oo::PListForeign, public ::OOJSPrivateObject {
 
   /*	OOScript (JavaScriptEvents), which every script answered: call a method.
      For simplicity, calling methods on non-JS scripts works but does nothing
-     (false). Requires a request on context; outResult may be NULL.
+     (false). outResult may be NULL; if not, it is owned by the caller.
   */
-  virtual bool callMethod(ooscript::PropertyId methodID,
-                          ooscript::Context context, ooscript::Value* argv,
-                          int argc, ooscript::Value* outResult);
+  virtual bool callMethod(JSAtom methodID, JSContext* context,
+                          JSValueConst* argv, int argc, JSValue* outResult);
 
   // oo::PListForeign: the facade's class name, and its -description ("<C++
   // class address>{components}").
@@ -111,8 +111,8 @@ class OOScript : public oo::PListForeign, public ::OOJSPrivateObject {
 
   // OOJSPrivateObject: undefined (OOObject's -oo_jsValueInContext:); a JS
   // script answers its Script object.
-  ooscript::Value jsValueInContext(ooscript::Context context) override;
-  void clearJSSelf(ooscript::Object selfVal) override;
+  JSValue jsValueInContext(JSContext* context) override;
+  void clearJSSelf(JSValueConst selfVal) override;
 };
 
 /*	OOScriptAutorelease(): keeps the script until the current autorelease

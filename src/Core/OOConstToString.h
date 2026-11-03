@@ -34,7 +34,6 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "OOFunctionAttributes.h"
 #include "OOTypes.h"
-#include "ooscript/JSEngine.hpp"
 
 enum {
   // Values used for unknown strings.
@@ -86,7 +85,6 @@ declaration, each with its C++ (cxx_) form beside it, in particular:
 // C++ forms: std::string results (never nil)
 // and const std::string & parameters (the old nil arrived as "" and matched
 // nothing: the same defaults).
-std::string cxx_JSTypeToString(int /* ooscript::Type */ type);
 std::string cxx_CargoTypeToString(OOCargoType cargo);
 OOCargoType cxx_StringToCargoType(const std::string& string);
 std::string cxx_EnergyUnitTypeToString(OOEnergyUnitType unit);

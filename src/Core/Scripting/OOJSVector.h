@@ -26,41 +26,45 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
+#include <string>
+
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
-void InitOOJSVector(ooscript::Context context, ooscript::Object global);
+void InitOOJSVector(JSContext* context, JSValueConst global);
 
-ooscript::Object JSVectorWithVector(ooscript::Context context,
-                                    Vector vector) NONNULL_FUNC;
-ooscript::Object JSVectorWithHPVector(ooscript::Context context,
-                                      HPVector vector) NONNULL_FUNC;
+// New Vector3D objects, owned by the caller (JS_EXCEPTION on failure).
+JSValue JSVectorWithVector(JSContext* context, Vector vector) NONNULL_FUNC;
+JSValue JSVectorWithHPVector(JSContext* context, HPVector vector) NONNULL_FUNC;
 
-bool VectorToJSValue(ooscript::Context context, Vector vector,
-                     ooscript::Value* outValue) NONNULL_FUNC;
-bool HPVectorToJSValue(ooscript::Context context, HPVector vector,
-                       ooscript::Value* outValue) NONNULL_FUNC;
-bool NSPointToVectorJSValue(ooscript::Context context, NSPoint point,
-                            ooscript::Value* outValue) NONNULL_FUNC;
-bool JSValueToVector(ooscript::Context context, ooscript::Value value,
+// *outValue is owned by the caller on success.
+bool VectorToJSValue(JSContext* context, Vector vector,
+                     JSValue* outValue) NONNULL_FUNC;
+bool HPVectorToJSValue(JSContext* context, HPVector vector,
+                       JSValue* outValue) NONNULL_FUNC;
+bool NSPointToVectorJSValue(JSContext* context, NSPoint point,
+                            JSValue* outValue) NONNULL_FUNC;
+bool JSValueToVector(JSContext* context, JSValueConst value,
                      Vector* outVector) NONNULL_FUNC;
-bool JSValueToHPVector(ooscript::Context context, ooscript::Value value,
+bool JSValueToHPVector(JSContext* context, JSValueConst value,
                        HPVector* outVector) NONNULL_FUNC;
 
 /*	Given a JS Vector object, get the corresponding Vector struct. Given a
    JS Entity, get its position. Given a JS Array with exactly three elements,
         all of them numbers, treat them as [x, y, z]  components. For anything
-        else, return NO. (Other implicit conversions may be added in future.)
+        else (including null and primitives), return NO. (Other implicit
+        conversions may be added in future.)
 */
-bool JSObjectGetVector(ooscript::Context context, ooscript::Object vectorObj,
+bool JSObjectGetVector(JSContext* context, JSValueConst vectorObj,
                        HPVector* outVector) GCC_ATTR((nonnull(1, 3)));
 
 //	Set the value of a JS vector object.
-bool JSVectorSetVector(ooscript::Context context, ooscript::Object vectorObj,
+bool JSVectorSetVector(JSContext* context, JSValueConst vectorObj,
                        Vector vector) GCC_ATTR((nonnull(1)));
-bool JSVectorSetHPVector(ooscript::Context context, ooscript::Object vectorObj,
+bool JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj,
                          HPVector vector) GCC_ATTR((nonnull(1)));
 
 /*	VectorFromArgumentList()
@@ -71,25 +75,23 @@ bool JSVectorSetHPVector(ooscript::Context context, ooscript::Object vectorObj,
         (currently, this will be 0 on failure, otherwise 1).
 
         On failure, it will return NO and raise an error. If the caller is a JS
-        callback, it must return NO to signal an error.
+        callback, it must return JS_EXCEPTION to signal an error.
 
         DEPRECATED in favour of JSObjectGetVector(), since the list-of-number
    form is no longer used.
 */
-bool VectorFromArgumentList(ooscript::Context context,
-                            const std::string& scriptClass,
-                            const std::string& function, unsigned argc,
-                            ooscript::Value* argv, HPVector* outVector,
-                            unsigned* outConsumed) GCC_ATTR((nonnull(1, 5, 6)));
+bool VectorFromArgumentList(JSContext* context, const std::string& scriptClass,
+                            const std::string& function, int argc,
+                            JSValueConst* argv, HPVector* outVector,
+                            int* outConsumed) GCC_ATTR((nonnull(1, 6)));
 
 /*	VectorFromArgumentListNoError()
 
         Like VectorFromArgumentList(), but does not report an error on failure.
 */
-bool VectorFromArgumentListNoError(ooscript::Context context, unsigned argc,
-                                   ooscript::Value* argv, HPVector* outVector,
-                                   unsigned* outConsumed)
-    GCC_ATTR((nonnull(1, 3, 4)));
+bool VectorFromArgumentListNoError(JSContext* context, int argc,
+                                   JSValueConst* argv, HPVector* outVector,
+                                   int* outConsumed) GCC_ATTR((nonnull(1, 4)));
 
 #if OO_DEBUG
 #include "oofnd/PList.hpp"

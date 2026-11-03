@@ -1,6 +1,6 @@
 /*
 
-OOJSEngineDebuggerHelpers.mm
+OOJSEngineDebuggerHelpers.cpp (QuickJS-ng)
 
 JavaScript support for Oolite
 Copyright (C) 2007-2013 David Taylor and Jens Ayton.
@@ -30,55 +30,52 @@ MA 02110-1301, USA.
 
         The functions are:
 
-                const char *JSValueToStrDbg(ooscript::Value)
-                const char *JSObjectToStrDbg(ooscript::Object)
-                const char *JSStringToStrDbg(ooscript::String)
-                Converts any JS value/object/JSString to a string, using the
-   complete process and potentially calling into SpiderMonkey with a secondory
-                context and invoking JS toString() methods. This might mess up
-                SpiderMonkey internal state in some cases.
+                const char *JSValueToStrDbg(JSValue)
+                const char *JSObjectToStrDbg(JSValue)
+                const char *JSStringToStrDbg(JSValue)
+                Converts any JS value to a string, using the complete process
+   and potentially invoking JS toString() methods. This might mess up QuickJS
+   internal state in some cases (for instance, if called while an exception is
+   pending).
 
-                const char *JSValueToStrSafeDbg(ooscript::Value)
-                const char *JSObjectToStrSafeDbg(ooscript::Object)
-                const char *JSStringToStrSafeDbg(ooscript::String)
-                As above, but without calling into SpiderMonkey functions that
-   require a context. In particular, as of the FF4b9 version of SpiderMonkey
-   only interned strings can be converted, and for objects only the class name
-                is provided.
+                const char *JSValueToStrSafeDbg(JSValue)
+                const char *JSObjectToStrSafeDbg(JSValue)
+                const char *JSStringToStrSafeDbg(JSValue)
+                As above, but without calling any JavaScript code. Primitives
+                (including strings) are converted; for objects only the class
+   name is provided.
 
-                const char *JSIDToStrSafeDbg(ooscript::PropertyId)
-                Like JSValueToStrSafeDbg() for jsids. (String jsids must always
-   be interned, so this is generally sufficient.)
+                const char *JSIDToStrSafeDbg(JSAtom)
+                Like JSValueToStrSafeDbg() for property IDs (atoms).
 
-                const char *JSValueTypeDbg(ooscript::Value)
-                Returns the type of the ooscript::Value, or the class name if
-   it's an object.
+                const char *JSValueTypeDbg(JSValue)
+                Returns the type of the value, or the class name if it's an
+   object.
 
-        All dynamic strings are autoreleased.
+        The text a function returns stays valid until the next call of one of
+   them.
+
+        Changes from the SpiderMonkey version: QuickJS has no JSObject* or
+        JSString* handle types, so the Object and String variants take a
+   JSValue and are equivalent to the Value variants. Strings can always be read
+   without running JS code, so the Safe variants show string contents rather
+   than "string [n chars]". JS_ARRAY_HOLE and the other SpiderMonkey "magic"
+   values do not exist; QuickJS's internal tags are reported instead.
 
          Another useful function is OOJSDumpStack (results are found in the
    log):
 
                 call OOJSDumpStack(context)
 
-        A set of macros can be found in tools/gdb-macros.txt.
+        QuickJS has no stack frame API, so the dump is the stack property of a
+        new Error: function names and locations only.
+
         In almost all Oolite functions that deal with JavaScript, there is a
-   single ooscript::Context called "context". In engine functions, it's called
-   "cx".
+   single JSContext called "context". In QuickJS functions, it's called "ctx".
 
-
-        In addition to calling them from the debug console, Xcode users might
-   want to use them in data formatters (by double-clicking the "Summary" field
-   for a variable of the appropriate type). I recommend the following:
-
-                ooscript::Value:		{JSValueToStrSafeDbg($VAR)}:s
-                ooscript::Value*:		{JSValueToStrSafeDbg(*$VAR)}:s
-                ooscript::PropertyId:		{JSIDToStrSafeDbg($VAR)}:s
-                ooscript::Object :	{JSObjectToStrSafeDbg($VAR)}:s
-                ooscript::String :	{JSStringToStrSafeDbg($VAR)}:s
-
-        These, and a variety of Oolite type formatters, can be set up using
-        Mac-specific/DataFormatters.
+        The public functions keep external linkage on purpose: they are called
+   by name from gdb and Xcode data formatters, never through a declaration in
+   a header that clang-tidy's misc-use-internal-linkage could see.
 */
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -86,33 +83,22 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
-#include "ooscript/JSEngine.hpp"
 
-/*
-        Every value and id is inspected through the façade's predicates and
-   accessors. The façade cannot distinguish the engine's
-   internal value and id kinds, so the cases that read them directly are gone:
-   the debug-build magic-value switch in JSValueTypeDbg() (array hole, args
-   hole, native enumerate, ...), and the empty / zero / object /
-   default-XML-namespace id kinds and the raw id bits in JSIDToStrSafeDbg().
-   Such values now report "unknown". An object whose class is not one of
-   Oolite's own (the façade's getClass() answers null for the engine's built-in
-   classes) reports "object".
-
-        The public functions keep external linkage on purpose: they are called
-   by name from gdb and Xcode data formatters, per this file's own header
-   comment above, never through a declaration in a header that clang-tidy's
-   misc-use-internal-linkage could see.
-*/
-
-namespace ooscript {}
-using ooscript::String;
+// Exported for use from a debugger; not declared in a header.
+const char* JSValueToStrDbg(JSValue val);
+const char* JSObjectToStrDbg(JSValue obj);
+const char* JSStringToStrDbg(JSValue str);
+const char* JSValueTypeDbg(JSValue val);
+const char* JSValueToStrSafeDbg(JSValue val);
+const char* JSObjectToStrSafeDbg(JSValue obj);
+const char* JSStringToStrSafeDbg(JSValue str);
+const char* JSIDToStrSafeDbg(JSAtom anID);
 
 namespace {
-// The text a *SafeDbg function returns stays valid until the next such call (it
+// The text a *Dbg function returns stays valid until the next such call (it
 // was an autoreleased string's UTF-8 buffer, valid until the pool drained); the
 // debugger prints it straight away.
-static const char* DebuggerCString(std::string text) {
+const char* DebuggerCString(std::string text) {
   static std::string sText;
   sText = std::move(text);
   return sText.c_str();
@@ -120,10 +106,10 @@ static const char* DebuggerCString(std::string text) {
 }  // namespace
 
 const char* JSValueToStrDbg(
-    ooscript::Value val)  // NOLINT(misc-use-internal-linkage): called by name
-                          // from gdb, see file header.
+    JSValue val)  // NOLINT(misc-use-internal-linkage): called by name
+                  // from gdb, see file header.
 {
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   const std::optional<std::string> text =
       cxx_OOStringFromJSValueEvenIfNull(context, val);
   const char* result = text.has_value() ? DebuggerCString(*text) : NULL;
@@ -133,117 +119,136 @@ const char* JSValueToStrDbg(
 }
 
 const char* JSObjectToStrDbg(
-    ooscript::Object obj)  // NOLINT(misc-use-internal-linkage): called by name
-                           // from gdb, see file header.
+    JSValue obj)  // NOLINT(misc-use-internal-linkage): called by name
+                  // from gdb, see file header.
 {
-  if (obj == NULL) return "null";
-  return JSValueToStrDbg(ooscript::objectValue(obj));
+  return JSValueToStrDbg(obj);
 }
 
 const char* JSStringToStrDbg(
-    ooscript::String str)  // NOLINT(misc-use-internal-linkage): called by name
-                           // from gdb, see file header.
+    JSValue str)  // NOLINT(misc-use-internal-linkage): called by name
+                  // from gdb, see file header.
 {
-  if (str == NULL) return "null";
-  return JSValueToStrDbg(ooscript::stringValue(str));
+  return JSValueToStrDbg(str);
 }
 
 const char* JSValueTypeDbg(
-    ooscript::Value val)  // NOLINT(misc-use-internal-linkage): called by name
-                          // from gdb, see file header.
+    JSValue val)  // NOLINT(misc-use-internal-linkage): called by name
+                  // from gdb, see file header.
 {
-  if (ooscript::isInt32(val)) return "integer";
-  if (ooscript::isDouble(val)) return "double";
-  if (ooscript::isString(val)) return "string";
-  if (ooscript::isBoolean(val)) return "boolean";
-  if (ooscript::isNull(val)) return "null";
-  if (ooscript::isUndefined(val)) return "void";
-  if (ooscript::isObjectOrNull(val)) {
-    // Fun fact: although a context is required if the engine is built
-    // thread-safe, it isn't actually used.
-    const ooscript::ClassDef* objClass =
-        OOJSGetClass(NULL, ooscript::toObject(val));
-    return (objClass != NULL) ? objClass->name : "object";
+  switch (JS_VALUE_GET_TAG(val)) {
+    case JS_TAG_INT:
+      return "integer";
+    case JS_TAG_FLOAT64:
+      return "double";
+    case JS_TAG_STRING:
+    case JS_TAG_STRING_ROPE:
+      return "string";
+    case JS_TAG_BOOL:
+      return "boolean";
+    case JS_TAG_NULL:
+      return "null";
+    case JS_TAG_UNDEFINED:
+      return "void";
+    case JS_TAG_SYMBOL:
+      return "symbol";
+    case JS_TAG_BIG_INT:
+    case JS_TAG_SHORT_BIG_INT:
+      return "bigint";
+    case JS_TAG_UNINITIALIZED:
+      return "magic (uninitialized)";
+    case JS_TAG_CATCH_OFFSET:
+      return "magic (catch offset)";
+    case JS_TAG_EXCEPTION:
+      return "magic (exception)";
+    case JS_TAG_MODULE:
+      return "magic (module)";
+    case JS_TAG_FUNCTION_BYTECODE:
+      return "magic (function bytecode)";
+    case JS_TAG_OBJECT: {
+      const char* className = OOJSClassName(JS_GetClassID(val));
+      return (className != NULL) ? className : "object";
+    }
   }
   return "unknown";
 }
 
-// Doesn't follow pointers, mess with requests or otherwise poke the
-// SpiderMonkey.
+// Doesn't run JavaScript code.
 const char* JSValueToStrSafeDbg(
-    ooscript::Value val)  // NOLINT(misc-use-internal-linkage): called by name
-                          // from gdb, see file header.
+    JSValue val)  // NOLINT(misc-use-internal-linkage): called by name
+                  // from gdb, see file header.
 {
   std::string formatted;
 
-  if (ooscript::isInt32(val))
-    formatted = oo::str::format("%i", ooscript::toInt32(val));
-  else if (ooscript::isDouble(val))
-    formatted = oo::str::format("%g", ooscript::toDouble(val));
-  else if (ooscript::isBoolean(val))
-    formatted = (ooscript::toBoolean(val)) ? "true" : "false";
-  else if (ooscript::isString(val)) {
-    ooscript::String string = ooscript::toString(val);
-    const ooscript::Char16* chars = NULL;
-    size_t length = ooscript::getStringLength((string));
+  switch (JS_VALUE_GET_TAG(val)) {
+    case JS_TAG_INT:
+      formatted = oo::str::format("%i", JS_VALUE_GET_INT(val));
+      break;
 
-    if (ooscript::stringHasBeenInterned(nullptr, (string))) {
-      chars = ooscript::getInternedStringChars((string));
+    case JS_TAG_FLOAT64:
+      formatted = oo::str::format("%g", JS_VALUE_GET_FLOAT64(val));
+      break;
+
+    case JS_TAG_BOOL:
+      formatted = JS_VALUE_GET_BOOL(val) ? "true" : "false";
+      break;
+
+    case JS_TAG_STRING:
+    case JS_TAG_STRING_ROPE: {
+      // Converting a string primitive doesn't call into JS code.
+      JSContext* context = OOJSAcquireContext();
+      size_t length;
+      const char* chars = JS_ToCStringLen(context, &length, val);
+      if (chars != NULL) {
+        formatted = std::string(chars, length);
+        JS_FreeCString(context, chars);
+      } else {
+        JS_FreeValue(context, JS_GetException(context));
+        formatted = "string [unreadable]";
+      }
+      break;
     }
-    // Flat strings can be extracted without a context, but cannot be detected.
 
-    if (chars == NULL)
-      formatted = oo::str::format("string [%zu chars]", length);
-    else
-      formatted = oo::utf16ToUtf8(std::u16string_view(chars, length));
-  } else if (ooscript::isUndefined(val))
-    return "undefined";
-  else
-    return JSValueTypeDbg(val);
+    case JS_TAG_UNDEFINED:
+      return "undefined";
+
+    default:
+      return JSValueTypeDbg(val);
+  }
 
   return DebuggerCString(std::move(formatted));
 }
 
 const char* JSObjectToStrSafeDbg(
-    ooscript::Object obj)  // NOLINT(misc-use-internal-linkage): called by name
-                           // from gdb, see file header.
+    JSValue obj)  // NOLINT(misc-use-internal-linkage): called by name
+                  // from gdb, see file header.
 {
-  if (obj == NULL) return "null";
-  return JSValueToStrSafeDbg(ooscript::objectValue(obj));
+  return JSValueToStrSafeDbg(obj);
 }
 
 const char* JSStringToStrSafeDbg(
-    ooscript::String str)  // NOLINT(misc-use-internal-linkage): called by name
-                           // from gdb, see file header.
+    JSValue str)  // NOLINT(misc-use-internal-linkage): called by name
+                  // from gdb, see file header.
 {
-  if (str == NULL) return "null";
-  return JSValueToStrSafeDbg(ooscript::stringValue(str));
+  return JSValueToStrSafeDbg(str);
 }
 
 const char* JSIDToStrSafeDbg(
-    ooscript::PropertyId anID)  // NOLINT(misc-use-internal-linkage): called by
-                                // name from gdb, see file header.
+    JSAtom anID)  // NOLINT(misc-use-internal-linkage): called by name
+                  // from gdb, see file header.
 {
+  if (anID == JS_ATOM_NULL) return "void";
+
+  JSContext* context = OOJSAcquireContext();
   std::string formatted;
-
-  if (ooscript::isInt32Id(anID))
-    formatted = oo::str::format("%i", ooscript::idToInt32(anID));
-  else if (ooscript::isVoidId(anID))
-    return "void";
-  else if (ooscript::isStringId(anID)) {
-    ooscript::String string = ooscript::idToString(anID);
-    const ooscript::Char16* chars = NULL;
-    size_t length = ooscript::getStringLength((string));
-
-    if (ooscript::stringHasBeenInterned(nullptr, (string))) {
-      chars = ooscript::getInternedStringChars((string));
-    } else {
-      // Bug; ooscript::PropertyId strings must be interned.
-      return "*** uninterned string in ooscript::PropertyId! ***";
-    }
-    formatted = oo::utf16ToUtf8(std::u16string_view(chars, length));
-  } else
-    return "unknown";
+  const char* chars = JS_AtomToCString(context, anID);
+  if (chars != NULL) {
+    formatted = chars;
+    JS_FreeCString(context, chars);
+  } else {
+    JS_FreeValue(context, JS_GetException(context));
+    formatted = oo::str::format("unknown <0x%X>", static_cast<unsigned>(anID));
+  }
 
   return DebuggerCString(std::move(formatted));
 }

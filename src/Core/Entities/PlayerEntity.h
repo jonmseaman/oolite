@@ -46,7 +46,6 @@ MA 02110-1301, USA.
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OOAssert.h"
-#include "ooscript/JSEngine.hpp"
 
 class MyOpenGLView;
 class ShipEntity;
@@ -382,6 +381,7 @@ class PlayerEntity : public ShipEntity {
   OOAlertCondition alertCondition() override;
   int legalStatus() override;
   void suppressTargetLost() override;
+  JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
 
   // cargo pods, commodity data and credits, galaxy and chart coordinates, the
@@ -939,12 +939,11 @@ class PlayerEntity : public ShipEntity {
       const std::optional<std::string>& scriptName);
   using ShipEntity::doScriptEvent;  // the ship's other overloads, which the
                                     // player does not override
-  void doScriptEvent(ooscript::PropertyId message, ooscript::Context context,
-                     ooscript::Value* argv, unsigned argc) override;
-  bool doWorldEventUntilMissionScreen(ooscript::PropertyId message);
-  void doWorldScriptEvent(ooscript::PropertyId message,
-                          ooscript::Context context, ooscript::Value* argv,
-                          unsigned argc, OOTimeDelta limit);
+  void doScriptEvent(OOJSPropID message, JSContext* context, JSValue* argv,
+                     int argc) override;
+  bool doWorldEventUntilMissionScreen(OOJSPropID message);
+  void doWorldScriptEvent(OOJSPropID message, JSContext* context, JSValue* argv,
+                          int argc, OOTimeDelta limit);
   virtual void setGalacticHyperspaceBehaviour(
       OOGalacticHyperspaceBehaviour inBehaviour);
   virtual OOGalacticHyperspaceBehaviour getGalacticHyperspaceBehaviour();

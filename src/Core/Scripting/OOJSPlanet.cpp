@@ -33,24 +33,9 @@ MA 02110-1301, USA.
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOPlanetEntity.h"
-#include "ooscript/JSEngine.hpp"
-
-namespace ooscript {}
-using ooscript::CallArgs;
-using ooscript::ClassDef;
-using ooscript::ClassFlag;
-using ooscript::Context;
-using ooscript::Object;
-using ooscript::PropertyFlag;
-using ooscript::PropertyId;
-using ooscript::PropertySpec;
-using ooscript::Value;
-
-// Byte-identical facade <-> jsapi views, local to this call site (see
-// OOJSVector.mm).
 
 namespace {
-static ooscript::Object sPlanetPrototype;
+static JSClassID sPlanetClassID;
 }  // namespace
 
 namespace {
@@ -69,31 +54,16 @@ oo::PList NormalizedColorComponents(OOColor* color) {
 
 }  // namespace
 
-static bool PlanetGetProperty(Context cx, Object obj, PropertyId propID,
-                              Value* value);
+static JSValue PlanetGetProperty(OOJS_GETTER_ARGS);
 }  // namespace
 namespace {
-static bool PlanetSetProperty(Context cx, Object obj, PropertyId propID,
-                              bool strict, Value* value);
+static JSValue PlanetSetProperty(OOJS_SETTER_ARGS);
 }  // namespace
 
 namespace {
-static ClassDef sPlanetClass = {
-    "Planet",
-    ClassFlag::HasPrivate,
-
-    nullptr,            // addProperty
-    nullptr,            // delProperty
-    PlanetGetProperty,  // getProperty
-    PlanetSetProperty,  // setProperty
-    nullptr,            // enumerate
-    nullptr,  // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
-    nullptr,  // resolve
-    nullptr,  // convert
-    OOJSCxxObjectWrapperFinalize,  // finalize
-    nullptr,                       // call
-    nullptr,                       // construct
-    nullptr,  // backend: owned by the facade backend, must start null
+static JSClassDef sPlanetClass = {
+    .class_name = "Planet",
+    .finalizer = OOJSObjectWrapperFinalize,
 };
 }  // namespace
 
@@ -114,94 +84,63 @@ enum : std::uint8_t {
 };
 
 namespace {
-static PropertySpec sPlanetProperties[] = {
-    // JS name						ID
-    // flags
-    // getter	setter
-    {"airColor", kPlanet_airColor,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"airColorMixRatio", kPlanet_airColorMixRatio,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"airDensity", kPlanet_airDensity,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"hasAtmosphere", kPlanet_hasAtmosphere, OOJS_PROP_READONLY_CB, nullptr,
-     nullptr},
-    {"illuminationColor", kPlanet_illuminationColor,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"isMainPlanet", kPlanet_isMainPlanet, OOJS_PROP_READONLY_CB, nullptr,
-     nullptr},
-    {"name", kPlanet_name,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"radius", kPlanet_radius, OOJS_PROP_READONLY_CB, nullptr, nullptr},
-    {"rotationalVelocity", kPlanet_rotationalVelocity,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"texture", kPlanet_texture,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"orientation", kPlanet_orientation,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},  // Not documented since it's inherited from Entity
-    {"terminatorThresholdVector", kPlanet_terminatorThresholdVector,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {0}};
-}  // namespace
-
-// Raw jsapi mirror of sPlanetProperties for the shared error reporters that
-// still take a ooscript::PropertySpec* (see OOJSVector.mm's
-// sVectorPropertiesRaw).
-namespace {
-static ooscript::PropertySpec sPlanetPropertiesRaw[] = {
-    // JS name						ID
-    // flags
-    {"airColor", kPlanet_airColor, OOJS_PROP_READWRITE_CB},
-    {"airColorMixRatio", kPlanet_airColorMixRatio, OOJS_PROP_READWRITE_CB},
-    {"airDensity", kPlanet_airDensity, OOJS_PROP_READWRITE_CB},
-    {"hasAtmosphere", kPlanet_hasAtmosphere, OOJS_PROP_READONLY_CB},
-    {"illuminationColor", kPlanet_illuminationColor, OOJS_PROP_READWRITE_CB},
-    {"isMainPlanet", kPlanet_isMainPlanet, OOJS_PROP_READONLY_CB},
-    {"name", kPlanet_name, OOJS_PROP_READWRITE_CB},
-    {"radius", kPlanet_radius, OOJS_PROP_READONLY_CB},
-    {"rotationalVelocity", kPlanet_rotationalVelocity, OOJS_PROP_READWRITE_CB},
-    {"texture", kPlanet_texture, OOJS_PROP_READWRITE_CB},
-    {"orientation", kPlanet_orientation,
-     OOJS_PROP_READWRITE_CB},  // Not documented since it's inherited from
-                               // Entity
-    {"terminatorThresholdVector", kPlanet_terminatorThresholdVector,
-     OOJS_PROP_READWRITE_CB},
-    {0}};
+static const JSCFunctionListEntry sPlanetProperties[] = {
+    // JS name, getter, setter, ID
+    OOJS_PROPERTY_RW("airColor", PlanetGetProperty, PlanetSetProperty,
+                     kPlanet_airColor),
+    OOJS_PROPERTY_RW("airColorMixRatio", PlanetGetProperty, PlanetSetProperty,
+                     kPlanet_airColorMixRatio),
+    OOJS_PROPERTY_RW("airDensity", PlanetGetProperty, PlanetSetProperty,
+                     kPlanet_airDensity),
+    OOJS_PROPERTY_RO("hasAtmosphere", PlanetGetProperty, kPlanet_hasAtmosphere),
+    OOJS_PROPERTY_RW("illuminationColor", PlanetGetProperty, PlanetSetProperty,
+                     kPlanet_illuminationColor),
+    OOJS_PROPERTY_RO("isMainPlanet", PlanetGetProperty, kPlanet_isMainPlanet),
+    OOJS_PROPERTY_RW("name", PlanetGetProperty, PlanetSetProperty,
+                     kPlanet_name),
+    OOJS_PROPERTY_RO("radius", PlanetGetProperty, kPlanet_radius),
+    OOJS_PROPERTY_RW("rotationalVelocity", PlanetGetProperty, PlanetSetProperty,
+                     kPlanet_rotationalVelocity),
+    OOJS_PROPERTY_RW("texture", PlanetGetProperty, PlanetSetProperty,
+                     kPlanet_texture),
+    OOJS_PROPERTY_RW("orientation", PlanetGetProperty, PlanetSetProperty,
+                     kPlanet_orientation),  // Not documented since it's
+                                            // inherited from Entity
+    OOJS_PROPERTY_RW("terminatorThresholdVector", PlanetGetProperty,
+                     PlanetSetProperty, kPlanet_terminatorThresholdVector),
+};
 }  // namespace
 
 namespace {
-// The getter checks the JS class and answers the C++ planet (the slot holds the
-// C++ entity, read by OOJSEntityGetEntityOfClass for the Planet class); null
-// for a stale entity.
-bool JSPlanetGetPlanetEntity(ooscript::Context context,
-                             ooscript::Object inObject,
+// #768's DEFINE_JS_OBJECT_GETTER: the getter checks the JS class and answers
+// the C++ planet (the slot holds the C++ entity, read by
+// OOJSEntityGetEntityOfClass for the Planet class); null for a stale entity.
+bool JSPlanetGetPlanetEntity(JSContext* context, JSValueConst inObject,
                              OOPlanetEntity** outObject) {
   Entity* entity = nullptr;
-  if (!OOJSEntityGetEntityOfClass(context, inObject, &sPlanetClass, &entity))
+  if (!OOJSEntityGetEntityOfClass(context, inObject, sPlanetClassID, &entity))
     return false;
   *outObject = dynamic_cast<OOPlanetEntity*>(entity);
   return true;
 }
 }  // namespace
 
-void InitOOJSPlanet(ooscript::Context context, ooscript::Object global) {
-  Object proto =
-      ooscript::initClass((context), (global), (JSEntityPrototype()),
-                          &sPlanetClass, OOJSUnconstructableConstruct, 0,
-                          sPlanetProperties, nullptr, nullptr, nullptr);
-  sPlanetPrototype = (proto);
-  OOJSRegisterObjectConverter(&sPlanetClass, OOJSEntityObjectConverter);
-  OOJSRegisterSubclass(&sPlanetClass, JSEntityClass());
+void InitOOJSPlanet(JSContext* context, JSValueConst global) {
+  OOJSRegisterClass(&sPlanetClassID, &sPlanetClass);
+
+  JSValue parentPrototype = JS_GetClassProto(context, JSEntityClassID());
+  OOCAssert(JS_IsObject(parentPrototype),
+            "Entity must be initialized before Planet.");
+  OOJSInitClass(context, global, sPlanetClassID, parentPrototype,
+                OOJSUnconstructableConstruct, 0, sPlanetProperties,
+                OOJS_COUNT(sPlanetProperties), nullptr, 0, nullptr, 0);
+  JS_FreeValue(context, parentPrototype);
+
+  OOJSRegisterObjectConverter(sPlanetClassID, OOJSEntityObjectConverter);
+  OOJSRegisterSubclass(sPlanetClassID, JSEntityClassID());
 }
+
+JSClassID JSPlanetClassID(void) { return sPlanetClassID; }
 
 // The bodies of OOPlanetEntity (OOJavaScriptExtensions), called by the C++
 // planet's overrides.
@@ -209,12 +148,6 @@ bool OOJSPlanetIsVisibleToScripts(OOPlanetEntity* planet) {
   OOStellarBodyType type =
       (planet != nullptr ? planet->planetType() : (OOStellarBodyType)0);
   return type == STELLAR_TYPE_NORMAL_PLANET || type == STELLAR_TYPE_MOON;
-}
-
-void OOJSPlanetGetJSClass(ooscript::ClassDef** outClass,
-                          ooscript::Object* outPrototype) {
-  *outClass = &sPlanetClass;
-  *outPrototype = sPlanetPrototype;
 }
 
 std::optional<std::string> OOJSPlanetJSClassName(OOPlanetEntity* planet) {
@@ -229,98 +162,83 @@ std::optional<std::string> OOJSPlanetJSClassName(OOPlanetEntity* planet) {
 }
 
 namespace {
-static bool PlanetGetProperty(Context cx, Object obj, PropertyId propID,
-                              Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-  ooscript::Object thisObj = (obj);
-  ooscript::Value* value_raw = (value);
-
+static JSValue PlanetGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   OOPlanetEntity* planet = nullptr;
-  if (!JSPlanetGetPlanetEntity(context, thisObj, &planet)) return false;
+  if (!JSPlanetGetPlanetEntity(context, OOJS_THIS, &planet))
+    return OOJSNativeFailure(context);
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kPlanet_airColor:
-      *value_raw = OOJSValueFromPList(
+      return OOJSValueFromPList(
           context,
           NormalizedColorComponents(
               (planet != nullptr ? planet->airColor() : (OOColor*)nullptr)));
-      return true;
 
     case kPlanet_airColorMixRatio:
-      return ooscript::newNumberValue(
-          cx, (planet != nullptr ? planet->airColorMixRatio() : 0.0f), value);
+      return JS_NewNumber(
+          context, (planet != nullptr ? planet->airColorMixRatio() : 0.0f));
 
     case kPlanet_airDensity:
-      return ooscript::newNumberValue(
-          cx, (planet != nullptr ? planet->airDensity() : 0.0f), value);
+      return JS_NewNumber(context,
+                          (planet != nullptr ? planet->airDensity() : 0.0f));
 
     case kPlanet_illuminationColor:
-      *value_raw = OOJSValueFromPList(
+      return OOJSValueFromPList(
           context, NormalizedColorComponents((planet != nullptr
                                                   ? planet->illuminationColor()
                                                   : (OOColor*)nullptr)));
-      return true;
 
     case kPlanet_isMainPlanet:
-      *value_raw = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           planet == (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr));
-      return true;
 
     case kPlanet_radius:
-      return ooscript::newNumberValue(
-          cx, (planet != nullptr ? planet->radius() : 0.0), value);
+      return JS_NewNumber(context,
+                          (planet != nullptr ? planet->radius() : 0.0));
 
     case kPlanet_hasAtmosphere:
-      *value_raw = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           (planet != nullptr ? planet->hasAtmosphere() : false));
-      return true;
 
     case kPlanet_texture: {
       const std::optional<std::string> textureName =
           (planet != nullptr ? planet->textureFileName()
                              : std::optional<std::string>());
-      *value_raw = OOJSValueFromPList(context, textureName.has_value()
-                                                   ? oo::PList(*textureName)
-                                                   : oo::PList());
+      return OOJSValueFromPList(context, textureName.has_value()
+                                             ? oo::PList(*textureName)
+                                             : oo::PList());
     }
-      return true;
 
     case kPlanet_name: {
       const std::optional<std::string> name =
           (planet != nullptr ? planet->name() : std::optional<std::string>());
-      *value_raw = OOJSValueFromPList(
+      return OOJSValueFromPList(
           context, name.has_value() ? oo::PList(*name) : oo::PList());
     }
-      return true;
 
     case kPlanet_orientation:
       // The C++ member, qualified: the final overrider for a planet
       // (OOPlanetEntity has no subclass and does not override it), so the
       // binding test stands in for it; zero for none.
-      return QuaternionToJSValue(context,
-                                 planet != nullptr
-                                     ? planet->Entity::normalOrientation()
-                                     : Quaternion{},
-                                 value_raw);
+      OOJS_RETURN_QUATERNION(planet != nullptr
+                                 ? planet->Entity::normalOrientation()
+                                 : Quaternion{});
 
     case kPlanet_rotationalVelocity:
-      return ooscript::newNumberValue(
-          cx, (planet != nullptr ? planet->rotationalVelocity() : 0.0), value);
+      return JS_NewNumber(
+          context, (planet != nullptr ? planet->rotationalVelocity() : 0.0));
 
     case kPlanet_terminatorThresholdVector:
-      return VectorToJSValue(
-          context,
-          (planet != nullptr ? planet->terminatorThresholdVector() : Vector{}),
-          value_raw);
+      OOJS_RETURN_VECTOR(
+          (planet != nullptr ? planet->terminatorThresholdVector() : Vector{}));
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, (propID),
-                                    sPlanetPropertiesRaw);
-      return false;
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sPlanetProperties,
+                                    OOJS_COUNT(sPlanetProperties));
+      return OOJSNativeFailure(context);
   }
 
   OOJS_NATIVE_EXIT
@@ -328,14 +246,7 @@ static bool PlanetGetProperty(Context cx, Object obj, PropertyId propID,
 }  // namespace
 
 namespace {
-static bool PlanetSetProperty(Context cx, Object obj, PropertyId propID,
-                              bool /*strict*/, Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-  ooscript::Object thisObj = (obj);
-  ooscript::Value* value_raw = (value);
-
+static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   OOPlanetEntity* planet = nullptr;
@@ -345,50 +256,51 @@ static bool PlanetSetProperty(Context cx, Object obj, PropertyId propID,
   double dValue;
   oo::Ref<OOColor> colorForScript;
 
-  if (!JSPlanetGetPlanetEntity(context, thisObj, &planet)) return false;
+  if (!JSPlanetGetPlanetEntity(context, OOJS_THIS, &planet))
+    return OOJSNativeFailure(context);
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kPlanet_airColor:
       colorForScript = OOColor::colorWithDescription(
-          cxx_OOJSPListFromJSValue(context, *value_raw));
-      if (colorForScript != nullptr || ooscript::isNull(*value_raw)) {
+          cxx_OOJSPListFromJSValue(context, value));
+      if (colorForScript != nullptr || JS_IsNull(value)) {
         if (planet != nullptr) planet->setAirColor(colorForScript.get());
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlanet_airColorMixRatio:
-      if (ooscript::valueToNumber(cx, *value, &dValue)) {
+      if (JS_ToFloat64(context, &dValue, value) == 0) {
         if (planet != nullptr) planet->setAirColorMixRatio(dValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlanet_airDensity:
-      if (ooscript::valueToNumber(cx, *value, &dValue)) {
+      if (JS_ToFloat64(context, &dValue, value) == 0) {
         if (planet != nullptr) planet->setAirDensity(dValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlanet_illuminationColor:
       colorForScript = OOColor::colorWithDescription(
-          cxx_OOJSPListFromJSValue(context, *value_raw));
-      if (colorForScript != nullptr || ooscript::isNull(*value_raw)) {
+          cxx_OOJSPListFromJSValue(context, value));
+      if (colorForScript != nullptr || JS_IsNull(value)) {
         if (planet != nullptr)
           planet->setIlluminationColor(colorForScript.get());
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlanet_name:
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (planet != nullptr) planet->setName(sValue);
-      return true;
+      return JS_UNDEFINED;
 
     case kPlanet_texture: {
       bool OK = false;
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
 
       OOJSPauseTimeLimiter();
 
@@ -414,42 +326,43 @@ static bool PlanetSetProperty(Context cx, Object obj, PropertyId propID,
 
       OOJSResumeTimeLimiter();
 
-      return true;  // Even if !OK, no exception was raised.
+      return JS_UNDEFINED;  // Even if !OK, no exception was raised.
     }
 
     case kPlanet_orientation:
-      if (JSValueToQuaternion(context, *value_raw, &qValue)) {
+      if (JSValueToQuaternion(context, value, &qValue)) {
         quaternion_normalize(&qValue);
         // The C++ member, qualified: the final overrider (OOPlanetEntity has no
         // subclass), so the binding test stands in for it; nothing for none.
         if (planet != nullptr) planet->OOPlanetEntity::setOrientation(qValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlanet_rotationalVelocity:
-      if (ooscript::valueToNumber(cx, *value, &dValue)) {
+      if (JS_ToFloat64(context, &dValue, value) == 0) {
         if (planet != nullptr) planet->setRotationalVelocity(dValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlanet_terminatorThresholdVector:
-      if (JSValueToVector(context, *value_raw, &vValue)) {
+      if (JSValueToVector(context, value, &vValue)) {
         if (planet != nullptr) planet->setTerminatorThresholdVector(vValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, (propID),
-                                    sPlanetPropertiesRaw);
-      return false;
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sPlanetProperties,
+                                    OOJS_COUNT(sPlanetProperties));
+      return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, (propID), sPlanetPropertiesRaw,
-                             *value_raw);
-  return false;
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sPlanetProperties,
+                             OOJS_COUNT(sPlanetProperties), value);
+  return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }

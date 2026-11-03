@@ -16,8 +16,8 @@ if get_option('espeak')
     add_project_arguments('-DHAVE_LIBESPEAK=1', language: c_family)
 endif
 
-# The JavaScript engine behind ooscript/JSEngine.hpp: the vendored QuickJS-ng, linked statically
-# (QuickJS-ng is the only engine).
+# The JavaScript engine: the vendored QuickJS-ng, linked statically. The scripting layer
+# (src/Core/Scripting) calls it directly, as upstream's binding does.
 # QuickJS-ng is part of the game binary, so it is held to the same pinned optimisation level as
 # Oolite's own code (meson.build): its dtoa/number code produces floats that land in recorded
 # results. Its own project() defaults to buildtype=release (-O3). Passing only

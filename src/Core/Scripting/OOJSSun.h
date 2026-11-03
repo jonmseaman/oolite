@@ -27,15 +27,19 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
+#include <quickjs.h>
 
-void InitOOJSSun(ooscript::Context context, ooscript::Object global);
+#include <optional>
+#include <string>
+
+#include "OOFoundation.h"
+
+void InitOOJSSun(JSContext* context, JSValueConst global);
+
+JSClassID JSSunClassID(void);
 
 /*	The bodies of OOSunEntity (OOJavaScriptExtensions), which the engine
-   reaches by selector.
+   reaches by selector. (-oo_jsClassID answers JSSunClassID().)
 */
 bool OOJSSunIsVisibleToScripts(void);
-void OOJSSunGetJSClass(ooscript::ClassDef** outClass,
-                       ooscript::Object* outPrototype);
 std::optional<std::string> OOJSSunJSClassName(void);

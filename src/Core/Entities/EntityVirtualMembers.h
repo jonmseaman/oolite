@@ -34,6 +34,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -44,7 +46,6 @@ MA 02110-1301, USA.
 #include "OOTexture.h"  // allTextures() answers oo::Ref<OOTexture>
 #include "OOTypes.h"
 #include "oofnd/Ref.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class ShipEntity;
 class Entity;
@@ -120,18 +121,18 @@ class Entity;
     (OODescription.h). */                                                      \
   virtual std::optional<std::string> descriptionComponents() const VALUE_BODY  \
   /* Entity (OOJavaScriptExtensions)'s class questions (Entity.h). */          \
-  virtual void getJSClass(                                                     \
-      ooscript::ClassDef** /*outClass*/,                                       \
-      ooscript::Object* /*outPrototype*/) VOID_BODY                            \
+  /* The JS class of the entity's wrapper object (#768's -oo_jsClassID),       \
+    which subclasses override. */                                              \
+  virtual JSClassID jsClassID() VALUE_BODY                                     \
   virtual std::optional<std::string> jsClassName() VALUE_BODY                  \
   virtual bool isVisibleToScripts() VALUE_BODY                                 \
   /* The Mac debug OXP's inspector's -inspect (the console's inspectEntity()): \
     nothing unless overridden. */                                              \
   virtual void inspect() VOID_BODY                                             \
   /* The entity's JS glue (OOJSPrivateObject; Entity.h). */                    \
-  ooscript::Value jsValueInContext(                                            \
-      ooscript::Context /*context*/) override VALUE_BODY                       \
-  void clearJSSelf(ooscript::Object /*selfVal*/) override VOID_BODY            \
+  JSValue jsValueInContext(                                                    \
+      JSContext* /*context*/) override VALUE_BODY                              \
+  void clearJSSelf(JSValueConst /*selfVal*/) override VOID_BODY               \
   std::optional<std::string> jsDescription() override VALUE_BODY
 // clang-format on
 

@@ -288,25 +288,25 @@ void SetUp() {
 // "threw: <message>".
 std::string Eval(const std::string& src) {
   SetUp();
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Object global = OOJavaScriptEngine::sharedEngine()->globalObject();
-  ooscript::Value shipValue = sShip->jsValueInContext(context);
-  ooscript::setProperty(context, global, "ship", &shipValue);
-  ooscript::Value otherValue = sOther->jsValueInContext(context);
-  ooscript::setProperty(context, global, "other", &otherValue);
+  JSContext* context = OOJSAcquireContext();
+  JSValueConst global = OOJavaScriptEngine::sharedEngine()->globalObject();
+  // JS_SetPropertyStr takes the owned values.
+  JS_SetPropertyStr(context, global, "ship", sShip->jsValueInContext(context));
+  JS_SetPropertyStr(context, global, "other",
+                    sOther->jsValueInContext(context));
   std::string wrapped = "(function () { try { return String(" + src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
   std::string text;
-  if (!ooscript::evaluateScript(context, global, wrapped.c_str(),
-                                static_cast<unsigned>(wrapped.size()),
-                                "test.js", 1, &result)) {
-    ooscript::clearPendingException(context);
+  JSValue result = JS_Eval(context, wrapped.c_str(), wrapped.size(), "test.js",
+                           JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(context, JS_GetException(context));
     text = "<evaluation failed>";
   } else {
     text = cxx_OOStringFromJSValue(context, result).value_or("<not a string>");
   }
+  JS_FreeValue(context, result);
   OOJSRelinquishContext(context);
   return text;
 }
@@ -353,8 +353,12 @@ std::string LogShown(const std::string& expected) {
 
 OO_TEST(registration) {
   SetUp();
-  OO_CHECK(std::strcmp(JSShipClass()->name, "Ship") == 0);
-  OO_CHECK(JSShipPrototype() != nullptr);
+  OO_CHECK(OOJSClassName(JSShipClassID()) != nullptr &&
+           std::strcmp(OOJSClassName(JSShipClassID()), "Ship") == 0);
+  JSContext* context = OOJSAcquireContext();
+  JSValue prototype = JS_GetClassProto(context, JSShipClassID());
+  OO_CHECK(JS_IsObject(prototype));
+  JS_FreeValue(context, prototype);
   OO_CHECK_EVAL("typeof ship", "object");
   OO_CHECK_EVAL("ship instanceof Ship", "true");
   OO_CHECK_EVAL("Ship.prototype.name",
@@ -867,11 +871,9 @@ OO_TEST(methodsRemoveAndExplode) {
       oo::makeRef<PlainShip>(), "queued",
       oo::PList(oo::PList::Dict{{"name", oo::PList(std::string("Queued"))}}))));
   if (queued != nullptr) queued->setStatus(STATUS_DOCKED);
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Value queuedValue = queued->jsValueInContext(context);
-  ooscript::setProperty(context,
-                        OOJavaScriptEngine::sharedEngine()->globalObject(),
-                        "queued", &queuedValue);
+  JSContext* context = OOJSAcquireContext();
+  JS_SetPropertyStr(context, OOJavaScriptEngine::sharedEngine()->globalObject(),
+                    "queued", queued->jsValueInContext(context));
   OOJSRelinquishContext(context);
   Log();
   OO_CHECK_EVAL("queued.remove(true)", "undefined");

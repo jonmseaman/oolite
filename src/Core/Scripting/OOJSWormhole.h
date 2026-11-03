@@ -26,17 +26,23 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
+#include <optional>
+#include <string>
+
 #include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
+
 class WormholeEntity;
 
-void InitOOJSWormhole(ooscript::Context context, ooscript::Object global);
+void InitOOJSWormhole(JSContext* context, JSValueConst global);
+
+JSClassID JSWormholeClassID(void);
 
 /*	The bodies of WormholeEntity (OOJavaScriptExtensions), which the engine
    reaches by selector. Its methods are one-line forwarders to these on the
-   WormholeEntity facade, in WormholeEntity+ObjCBridge.mm.
+   WormholeEntity facade, in WormholeEntity+ObjCBridge.mm. (-oo_jsClassID
+   answers JSWormholeClassID().)
 */
-void OOJSWormholeGetJSClass(ooscript::ClassDef** outClass,
-                            ooscript::Object* outPrototype);
 std::optional<std::string> OOJSWormholeJSClassName(void);
 bool OOJSWormholeIsVisibleToScripts(void);

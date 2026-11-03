@@ -26,16 +26,21 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
+#include <quickjs.h>
 
-void InitOOJSExhaustPlume(ooscript::Context context, ooscript::Object global);
+#include <optional>
+#include <string>
+
+#include "OOFoundation.h"
+
+void InitOOJSExhaustPlume(JSContext* context, JSValueConst global);
+
+JSClassID JSExhaustPlumeClassID(void);
 
 /*	The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the
    engine reaches by selector through the root's JS members: the C++
-   OOExhaustPlumeEntity's overrides call these.
+   OOExhaustPlumeEntity's overrides call these. Its -oo_jsClassID is
+   JSExhaustPlumeClassID().
 */
-void OOJSExhaustPlumeGetJSClass(ooscript::ClassDef** outClass,
-                                ooscript::Object* outPrototype);
 std::optional<std::string> OOJSExhaustPlumeJSClassName(void);
 bool OOJSExhaustPlumeIsVisibleToScripts(void);

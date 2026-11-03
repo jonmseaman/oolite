@@ -5652,7 +5652,7 @@ void PlayerEntity::switchToThisView(OOViewID viewDirection,
       !(UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr
             ? UNIVERSE->gameController()->isGamePaused()
             : false)) {
-    ooscript::Context context = OOJSAcquireContext();
+    JSContext* context = OOJSAcquireContext();
     ShipScriptEvent(context, this, "viewDirectionChanged",
                     OOJSValueFromViewID(context, viewDirection),
                     OOJSValueFromViewID(context, oldViewDirection));

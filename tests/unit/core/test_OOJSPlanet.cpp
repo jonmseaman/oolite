@@ -4,9 +4,9 @@
    C++ class's overrides answer the engine, through the root's JS category, and
    this test's stand-ins are C++ the same way).
 
-   As test_OOJSWormhole.mm does, it runs the JS class in a real context on the
-   game's own façade backend (ooscript/JSEngine_quickjs.cpp), links the game's
-   own objects for the binding, the engine's exception translator
+   It runs the JS class in a real QuickJS-ng context, links the game's own
+   objects for the binding, the engine's class registry (OOJSClasses.cpp), its
+   private-slot glue (OOJSPrivateObject.cpp), the engine's exception translator
    (OOJSEngineNativeWrappers.mm) and OOColor (a converted class, reached through
    its façade), and stands in for the classes the binding messages (Entity,
    OOPlanetEntity and the universe answer only the selectors the binding sends),
@@ -26,7 +26,7 @@
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
-#include "ooscript/JSEngine.hpp"
+#include "OOJSEngineCore.h"
 
 // MARK: The classes, as far as the binding sees them
 // ----------------------------------------------
@@ -39,8 +39,7 @@ class TestEntityObject;
 class Entity : public oo::RefCounted {
  public:
   virtual ~Entity();
-  virtual void getJSClass(ooscript::ClassDef** outClass,
-                          ooscript::Object* outPrototype);
+  virtual JSClassID jsClassID();
   virtual std::optional<std::string> jsClassName();
   virtual bool isVisibleToScripts();
   Quaternion normalOrientation();  // the game's is virtual; the binding calls
@@ -78,8 +77,7 @@ class OOPlanetEntity : public Entity {
       Quaternion quat);  // the game's overrides the root's virtual; the binding
                          // calls it qualified
 
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype) override;
+  JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
   bool isVisibleToScripts() override;
 
@@ -106,8 +104,7 @@ class OOPlanetEntity : public Entity {
 // Its category's selectors are members of the same names.
 class TestEntityObject final : public oo::RefCounted {
  public:
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype);
+  JSClassID jsClassID();
   std::optional<std::string> cxx_oo_jsClassName();
   bool isVisibleToScripts();
 
@@ -148,10 +145,7 @@ class FakeUniverse : public Universe {
 // The root's JS category, as the game's asks the C++ part
 // (EntityOOJavaScriptExtensions+ObjCBridge.mm): the engine sends these
 // selectors to the wrapped object.
-void TestEntityObject::getJSClass(ooscript::ClassDef** outClass,
-                                  ooscript::Object* outPrototype) {
-  _cxxEntity->getJSClass(outClass, outPrototype);
-}
+JSClassID TestEntityObject::jsClassID() { return _cxxEntity->jsClassID(); }
 std::optional<std::string> TestEntityObject::cxx_oo_jsClassName() {
   return _cxxEntity->jsClassName();
 }
@@ -165,11 +159,7 @@ bool TestEntityObject::isVisibleToScripts() {
 }
 
 Entity::~Entity() {}
-void Entity::getJSClass(ooscript::ClassDef** outClass,
-                        ooscript::Object* outPrototype) {
-  *outClass = nullptr;
-  *outPrototype = nullptr;
-}
+JSClassID Entity::jsClassID() { return 0; }
 std::optional<std::string> Entity::jsClassName() {
   return std::string("Entity");
 }
@@ -237,10 +227,7 @@ double OOPlanetEntity::radius() {
 }
 
 // The binding's category, as the C++ class's overrides answer it.
-void OOPlanetEntity::getJSClass(ooscript::ClassDef** outClass,
-                                ooscript::Object* outPrototype) {
-  ::OOJSPlanetGetJSClass(outClass, outPrototype);
-}
+JSClassID OOPlanetEntity::jsClassID() { return ::JSPlanetClassID(); }
 std::optional<std::string> OOPlanetEntity::jsClassName() {
   return ::OOJSPlanetJSClassName(this);
 }
@@ -261,85 +248,103 @@ OOPlanetEntity* NewPlanet() {
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
 
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
-                                      const char* format, va_list args) {
+// The one context (OOJSAcquireContext(), which OOJSClasses.cpp registers
+// classes through).
+JSContext* gOOJSMainThreadContext = nullptr;
+
+void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
+                                      va_list args) {
   std::string msg = oo::str::vformat(format, args);
-  ooscript::reportError(context, msg.c_str());
+  JS_ThrowPlainError(context, "%s", msg.c_str());
 }
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportErrorWithArguments(context, format, args);
   va_end(args);
 }
 
+// The engine's: the pending exception, else an uncatchable error, which ends
+// the script.
+JSValue OOJSNativeFailure(JSContext* context) {
+  if (JS_HasException(context)) return JS_EXCEPTION;
+  JSValue error = JS_NewError(context);
+  JS_SetUncatchableError(context, error);
+  return JS_Throw(context, error);
+}
+
+// OOJSClasses.cpp reports what class set-up left pending; the test drops it.
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
+}
+
+// Property IDs, which OOJSClasses.cpp records: interned for the life of the
+// process, as the engine's.
+JSAtom cxx_OOJSIDFromString(const std::string& string) {
+  return JS_NewAtomLen(gOOJSMainThreadContext, string.data(), string.size());
+}
+
 namespace {
 std::string sLastWarning;
 }
 
-void cxx_OOJSReportWarning(ooscript::Context, const char* format, ...) {
+void cxx_OOJSReportWarning(JSContext*, const char* format, ...) {
   va_list args;
   va_start(args, format);
   sLastWarning = oo::str::vformat(format, args);
   va_end(args);
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  ooscript::String str = ooscript::valueToString(context, value);
-  if (str == nullptr) return std::nullopt;
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
 }
 
 // A property list as JavaScript, as far as the binding hands one over: null, a
 // string, a number, or an array of those.
-ooscript::Value OOJSValueFromPList(ooscript::Context context,
-                                   const oo::PList& plist) {
-  if (const std::string* str = plist.getIf<std::string>()) {
-    ooscript::String js =
-        ooscript::newStringCopyN(context, str->data(), str->size());
-    return js != nullptr ? ooscript::stringValue(js) : ooscript::nullValue();
-  }
-  if (plist.isNumber()) return ooscript::numberValue(plist.doubleValue());
+JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
+  if (const std::string* str = plist.getIf<std::string>())
+    return JS_NewStringLen(context, str->data(), str->size());
+  if (plist.isNumber()) return JS_NewNumber(context, plist.doubleValue());
   if (const oo::PList::Array* array = plist.getIf<oo::PList::Array>()) {
-    std::vector<ooscript::Value> values;
+    JSValue object = JS_NewArray(context);
+    std::uint32_t i = 0;
     for (const oo::PList& element : *array)
-      values.push_back(OOJSValueFromPList(context, element));
-    ooscript::Object object = ooscript::newArrayObject(
-        context, static_cast<unsigned>(values.size()), values.data());
-    return object != nullptr ? ooscript::objectValue(object)
-                             : ooscript::nullValue();
+      JS_SetPropertyUint32(context, object, i++,
+                           OOJSValueFromPList(context, element));
+    return object;
   }
-  return ooscript::nullValue();
+  return JS_NULL;
 }
 
 // A JS value's plist form, as far as a colour description needs one: a string,
 // a number, an array of those, or null.
-oo::PList cxx_OOJSPListFromJSValue(ooscript::Context context,
-                                   ooscript::Value value) {
+oo::PList cxx_OOJSPListFromJSValue(JSContext* context, JSValueConst value) {
   double number = 0;
-  if (ooscript::isString(value))
+  if (JS_IsString(value))
     return oo::PList(cxx_OOStringFromJSValue(context, value).value_or(""));
-  if (ooscript::isNumber(value) &&
-      ooscript::valueToNumber(context, value, &number))
+  if (JS_IsNumber(value) && JS_ToFloat64(context, &number, value) == 0)
     return oo::PList(number);
-  if (ooscript::isObject(value) &&
-      ooscript::isArrayObject(context, ooscript::toObject(value))) {
-    std::uint32_t length = 0;
-    ooscript::getArrayLength(context, ooscript::toObject(value), &length);
+  if (JS_IsArray(value)) {
+    std::int64_t length = 0;
+    JS_GetLength(context, value, &length);
     oo::PList::Array array;
-    for (std::uint32_t i = 0; i < length; i++) {
-      ooscript::Value element;
-      if (ooscript::getElement(context, ooscript::toObject(value), i, &element))
+    for (std::int64_t i = 0; i < length; i++) {
+      JSValue element =
+          JS_GetPropertyUint32(context, value, static_cast<std::uint32_t>(i));
+      if (!JS_IsException(element))
         array.push_back(cxx_OOJSPListFromJSValue(context, element));
+      JS_FreeValue(context, element);
     }
     return oo::PList(std::move(array));
   }
@@ -347,54 +352,49 @@ oo::PList cxx_OOJSPListFromJSValue(ooscript::Context context,
 }
 
 namespace {
-ooscript::ClassDef sFakeEntityClass = {"Entity",
-                                       ooscript::ClassFlag::HasPrivate};
-std::map<ooscript::ClassDef*, ooscript::ClassDef*> sSuperclasses;
-std::map<ooscript::ClassDef*, int> sConverters;
+JSClassID sFakeEntityClassID = 0;
+JSClassDef sFakeEntityClass = {
+    .class_name = "Entity",
+    .finalizer = OOJSObjectWrapperFinalize,
+};
+std::map<JSClassID, int> sConverters;
 
 // An array of numbers as JavaScript, and back: enough to see what the binding
 // hands over and takes.
-bool NumbersToJSValue(ooscript::Context context, const double* numbers,
-                      unsigned count, ooscript::Value* outValue) {
-  std::vector<ooscript::Value> parts;
+bool NumbersToJSValue(JSContext* context, const double* numbers,
+                      unsigned count, JSValue* outValue) {
+  JSValue array = JS_NewArray(context);
+  if (JS_IsException(array)) return false;
   for (unsigned i = 0; i < count; i++)
-    parts.push_back(ooscript::numberValue(numbers[i]));
-  ooscript::Object array =
-      ooscript::newArrayObject(context, count, parts.data());
-  if (array == nullptr) return false;
-  *outValue = ooscript::objectValue(array);
+    JS_SetPropertyUint32(context, array, i, JS_NewNumber(context, numbers[i]));
+  *outValue = array;
   return true;
 }
 
-bool JSValueToNumbers(ooscript::Context context, ooscript::Value value,
-                      double* numbers, unsigned count) {
-  ooscript::Value element;
-  if (!ooscript::isObject(value) ||
-      !ooscript::isArrayObject(context, ooscript::toObject(value)))
-    return false;
+bool JSValueToNumbers(JSContext* context, JSValueConst value, double* numbers,
+                      unsigned count) {
+  if (!JS_IsArray(value)) return false;
   for (unsigned i = 0; i < count; i++) {
-    if (!ooscript::getElement(context, ooscript::toObject(value), i,
-                              &element) ||
-        !ooscript::valueToNumber(context, element, &numbers[i]))
-      return false;
+    JSValue element = JS_GetPropertyUint32(context, value, i);
+    const bool ok = !JS_IsException(element) &&
+                    JS_ToFloat64(context, &numbers[i], element) == 0;
+    JS_FreeValue(context, element);
+    if (!ok) return false;
   }
   return true;
 }
 
 }  // namespace
 
-ooscript::Object gOOEntityJSPrototype = nullptr;
 Universe* gSharedUniverse = nullptr;
 
-
 // A vector is the array [x, y, z] here, a quaternion [w, x, y, z].
-bool VectorToJSValue(ooscript::Context context, Vector vector,
-                     ooscript::Value* outValue) {
+bool VectorToJSValue(JSContext* context, Vector vector, JSValue* outValue) {
   const double parts[3] = {vector.x, vector.y, vector.z};
   return NumbersToJSValue(context, parts, 3, outValue);
 }
 
-bool JSValueToVector(ooscript::Context context, ooscript::Value value,
+bool JSValueToVector(JSContext* context, JSValueConst value,
                      Vector* outVector) {
   double v[3] = {};
   if (!JSValueToNumbers(context, value, v, 3)) return false;
@@ -402,68 +402,55 @@ bool JSValueToVector(ooscript::Context context, ooscript::Value value,
   return true;
 }
 
-ooscript::ClassDef* JSEntityClass(void) { return &sFakeEntityClass; }
+JSClassID JSEntityClassID(void) { return sFakeEntityClassID; }
 
-void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
-                                   ooscript::PropertyId,
-                                   ooscript::PropertySpec*) {
+void OOJSReportBadPropertySelector(JSContext* context, JSValueConst, int,
+                                   const JSCFunctionListEntry*, size_t) {
   cxx_OOJSReportError(context, "bad property selector");
 }
 
-void OOJSReportBadPropertyValue(ooscript::Context context, ooscript::Object,
-                                ooscript::PropertyId, ooscript::PropertySpec*,
-                                ooscript::Value) {
+void OOJSReportBadPropertyValue(JSContext* context, JSValueConst, int,
+                                const JSCFunctionListEntry*, size_t,
+                                JSValueConst) {
   cxx_OOJSReportError(context, "bad property value");
 }
 
-void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
-                          ooscript::ClassDef* superclass) {
-  sSuperclasses[subclass] = superclass;
-}
-
-bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
-                    ooscript::ClassDef* superclass) {
-  for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
-       c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return true;
-  }
-  return false;
-}
-
-void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
-                                 oo::PList (*)(ooscript::Context,
-                                               ooscript::Object)) {
-  sConverters[theClass]++;
+void OOJSRegisterObjectConverter(JSClassID classID,
+                                 OOJSClassConverterCallback) {
+  sConverters[classID]++;
 }
 
 // The engine's object getter is OOJSPrivateObject.cpp's (linked): the JS class
 // must be a subclass of the required one, and the slot holds the entity's
-// holder.
+// holder. Class registration and the subclass table are OOJSClasses.cpp's
+// (linked).
+
+// The shared finalizer: OOJSPrivateObject.cpp's.
+void OOJSObjectWrapperFinalize(JSRuntime* runtime, JSValueConst thisObj) {
+  OOJSCxxObjectWrapperFinalize(runtime, thisObj);
+}
 
 // The shared toString(), which OOJSCxxObjectWrapperToString() hands a `this` of
 // another class.
-bool OOJSObjectWrapperToString(ooscript::Context context,
-                               ooscript::CallArgs& args) {
-  const std::string text = "[object]";
-  args.setRval(ooscript::stringValue(
-      ooscript::newStringCopyN(context, text.data(), text.size())));
-  return true;
+JSValue OOJSObjectWrapperToString(JSContext* context, JSValueConst, int,
+                                  JSValueConst*) {
+  return JS_NewString(context, "[object]");
 }
 
-bool OOJSUnconstructableConstruct(ooscript::Context context,
-                                  ooscript::CallArgs&) {
+JSValue OOJSUnconstructableConstruct(JSContext* context, JSValueConst, int,
+                                     JSValueConst*) {
   cxx_OOJSReportError(context, "unconstructable");
-  return false;
+  return JS_EXCEPTION;
 }
 
-bool QuaternionToJSValue(ooscript::Context context, Quaternion quaternion,
-                         ooscript::Value* outValue) {
+bool QuaternionToJSValue(JSContext* context, Quaternion quaternion,
+                         JSValue* outValue) {
   const double parts[4] = {quaternion.w, quaternion.x, quaternion.y,
                            quaternion.z};
   return NumbersToJSValue(context, parts, 4, outValue);
 }
 
-bool JSValueToQuaternion(ooscript::Context context, ooscript::Value value,
+bool JSValueToQuaternion(JSContext* context, JSValueConst value,
                          Quaternion* outQuaternion) {
   double q[4] = {};
   if (!JSValueToNumbers(context, value, q, 4)) return false;
@@ -489,17 +476,14 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-
-oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object) {
+oo::PList OOJSEntityObjectConverter(JSContext*, JSValueConst) {
   return oo::PList();
 }
 
 // The holder's glue is OOJSEntity.mm's, which the test does not link; the
 // binding never asks it.
-ooscript::Value OOJSEntityHolder::jsValueInContext(ooscript::Context) {
-  return ooscript::undefinedValue();
-}
-void OOJSEntityHolder::clearJSSelf(ooscript::Object) {}
+JSValue OOJSEntityHolder::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
+void OOJSEntityHolder::clearJSSelf(JSValueConst) {}
 std::optional<std::string> OOJSEntityHolder::jsDescription() {
   return std::nullopt;
 }
@@ -509,52 +493,51 @@ std::optional<std::string> OOJSEntityHolder::jsDescription() {
 
 namespace {
 
-ooscript::Runtime sRuntime;
-ooscript::Context sContext;
-ooscript::Object sGlobal;
+JSRuntime* sRuntime;
+JSContext* sContext;
+JSValue sGlobal = JS_UNDEFINED;
 OOPlanetEntity* sPlanet = nullptr;
 OOPlanetEntity* sMoon = nullptr;
 FakeUniverse* sUniverse = nullptr;
 
-ooscript::Value JSValueForObject(ooscript::ClassDef* jsClass,
-                                 ooscript::Object prototype,
-                                 TestEntityObject* entity) {
-  ooscript::Object object =
-      ooscript::newObject(sContext, jsClass, prototype, nullptr);
+// An owned JS object of the class (its prototype the class's), the entity's
+// holder in its slot.
+JSValue JSValueForObject(JSClassID jsClass, TestEntityObject* entity) {
+  JSValue object = JS_NewObjectClass(sContext, static_cast<int>(jsClass));
   if (entity->_cxxEntity == nullptr)
     entity->_cxxEntity = oo::makeRef<Entity>();  // a plain entity's C++ part
-  if (object == nullptr ||
+  if (JS_IsException(object) ||
       !OOJSSetCxxPrivate(
-          sContext, object,
-          oo::makeRef<OOJSEntityHolder>(entity->_cxxEntity.get()).get()))
-    return ooscript::nullValue();  // the slot holds the C++ entity
-  return ooscript::objectValue(object);
+          object,
+          oo::makeRef<OOJSEntityHolder>(entity->_cxxEntity.get()).get())) {
+    JS_FreeValue(sContext, object);
+    return JS_NULL;  // the slot holds the C++ entity
+  }
+  return object;
 }
 
 // A JS object for an entity, as -[TestEntityObject oo_jsValueInContext:] makes
-// it: the class and prototype the entity's category names, and the entity in
-// the private slot.
-ooscript::Value JSValueForEntity(TestEntityObject* entity) {
-  ooscript::ClassDef* jsClass = nullptr;
-  ooscript::Object prototype = nullptr;
-  entity->getJSClass(&jsClass, &prototype);
-  return JSValueForObject(jsClass, prototype, entity);
+// it: the class the entity's category names, and the entity in the private
+// slot.
+JSValue JSValueForEntity(TestEntityObject* entity) {
+  return JSValueForObject(entity->jsClassID(), entity);
 }
 
-void Define(const char* name, ooscript::Value value) {
-  ooscript::setProperty(sContext, sGlobal, name, &value);
+// Takes value.
+void Define(const char* name, JSValue value) {
+  JS_SetPropertyStr(sContext, sGlobal, name, value);
 }
 
 void SetUpContext() {
   if (sContext != nullptr) return;
-  sRuntime = ooscript::newRuntime(8u * 1024u * 1024u);
-  sContext = ooscript::newContext(sRuntime, 8192);
-  ooscript::beginRequest(sContext);
-  sGlobal = ooscript::getGlobalObject(sContext);
-  ooscript::initStandardClasses(sContext, sGlobal);
-  gOOEntityJSPrototype = ooscript::initClass(
-      sContext, sGlobal, nullptr, &sFakeEntityClass,
-      OOJSUnconstructableConstruct, 0, nullptr, nullptr, nullptr, nullptr);
+  sRuntime = JS_NewRuntime();
+  sContext = JS_NewContext(sRuntime);
+  gOOJSMainThreadContext = sContext;
+  sGlobal = JS_GetGlobalObject(sContext);
+  OOJSRegisterClass(&sFakeEntityClassID, &sFakeEntityClass);
+  OOJSInitClass(sContext, sGlobal, sFakeEntityClassID, JS_UNDEFINED,
+                OOJSUnconstructableConstruct, 0, nullptr, 0, nullptr, 0,
+                nullptr, 0);
   InitOOJSPlanet(sContext, sGlobal);
 
   sPlanet = NewPlanet();  // its object is kept for the life of the test
@@ -578,7 +561,7 @@ void SetUpContext() {
   Define("planet", JSValueForEntity(TestObjectOf(sPlanet)));
   Define("moon", JSValueForEntity(TestObjectOf(sMoon)));
   Define("plainEntity",
-         JSValueForObject(&sFakeEntityClass, gOOEntityJSPrototype,
+         JSValueForObject(sFakeEntityClassID,
                           oo::makeRef<TestEntityObject>().leakRef()));
 }
 
@@ -590,14 +573,16 @@ std::string Eval(const char* src) {
                         src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
-  if (!ooscript::evaluateScript(sContext, sGlobal, wrapped.c_str(),
-                                static_cast<unsigned>(wrapped.size()),
-                                "test.js", 1, &result)) {
-    ooscript::clearPendingException(sContext);
+  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(),
+                           "test.js", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(sContext, JS_GetException(sContext));
     return "<evaluation failed>";
   }
-  return cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  std::string text =
+      cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  JS_FreeValue(sContext, result);
+  return text;
 }
 
 // Eval, and print what came back when it is not what the check expects.
@@ -617,13 +602,13 @@ std::string EvalShown(const char* src, const char* expected) {
 
 OO_TEST(registration) {
   SetUpContext();
-  ooscript::ClassDef* planetClass = nullptr;
-  ooscript::Object prototype = nullptr;
-  TestObjectOf(sPlanet)->getJSClass(&planetClass, &prototype);
-  OO_CHECK(planetClass != nullptr &&
-           std::strcmp(planetClass->name, "Planet") == 0);
-  OO_CHECK(prototype != nullptr);
-  OO_CHECK(OOJSIsSubclass(planetClass, &sFakeEntityClass));
+  const JSClassID planetClass = TestObjectOf(sPlanet)->jsClassID();
+  OO_CHECK(planetClass != 0 && OOJSClassName(planetClass) != nullptr &&
+           std::strcmp(OOJSClassName(planetClass), "Planet") == 0);
+  JSValue prototype = JS_GetClassProto(sContext, planetClass);
+  OO_CHECK(JS_IsObject(prototype));
+  JS_FreeValue(sContext, prototype);
+  OO_CHECK(OOJSIsSubclass(planetClass, sFakeEntityClassID));
   OO_CHECK_EQ(sConverters[planetClass], 1);
   OO_CHECK_EVAL("typeof Planet", "function");
   OO_CHECK_EVAL("new Planet()", "threw: unconstructable");
@@ -797,13 +782,15 @@ OO_TEST(otherObjects) {
   OO_CHECK_EVAL(
       "Object.getOwnPropertyDescriptor(Planet.prototype, "
       "'radius').get.call(plainEntity)",
-      "threw: Native method expected Planet, got [object Entity].");
+      "threw: Native method expected Planet, got [object Object].");
   OO_CHECK_EVAL(
       "Object.getOwnPropertyDescriptor(Planet.prototype, 'name').set.call({}, "
       "'x')",
       "threw: Native method expected Planet, got [object Object].");
+  // No class tags its prototype with Symbol.toStringTag (the façade's
+  // backend did): the object is described as QuickJS describes it.
   OO_CHECK_EVAL("Object.create(Planet.prototype).radius",
-                "threw: Native method expected Planet, got [object Planet].");
+                "threw: Native method expected Planet, got [object Object].");
   OO_CHECK_EVAL("Planet.prototype.radius",
                 "0");  // the prototype has no planet: a message to nil
   OO_CHECK_EVAL("Planet.prototype.name", "null");
@@ -821,7 +808,6 @@ OO_TEST(nativeExceptions) {
   OO_CHECK_EVAL("planet.radius", "5000");
   OO_CHECK_EQ(sLimiterPauses, 0);
   OO_CHECK_EQ(sProfileDepth, 0);
-  OO_CHECK(ooscript::isInRequest(sContext));
 }
 
 OO_TEST_MAIN()

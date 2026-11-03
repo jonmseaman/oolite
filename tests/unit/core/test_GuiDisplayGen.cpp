@@ -690,9 +690,9 @@ OO_TEST(noTexturesWithoutAUniverse) {
 
     // A JS null is "no texture" (an empty descriptor), and an empty string the
     // same.
-    ooscript::Context context = OOJSAcquireContext();
+    JSContext* context = OOJSAcquireContext();
     const oo::PList none = gui->textureDescriptorFromJSValue(
-        ooscript::nullValue(), context, "test");
+        JS_NULL, context, "test");
     OO_CHECK(none.isDict() && none.count() == 0);
     OOJSRelinquishContext(context);
   }

@@ -3,9 +3,9 @@
    (src/Core/Scripting/OOJSOolite.h/.mm).
 
         As the other binding tests do, it runs the JS class
-   in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp), and links the game's own objects for the
-   binding and the engine's exception translator (OOJSEngineNativeWrappers.mm).
+   in a real QuickJS-ng context, and links the game's own objects for the
+   binding, the engine's class registration (OOJSClasses.cpp) and its
+   exception translator (OOJSEngineNativeWrappers.mm).
    It stands in for the universe (its game view, settings, post-processing
    effect and time acceleration), the game view (colour saturation and the tone
    mappers), the resource manager (its paths), the tone mapper names and the
@@ -18,13 +18,14 @@
    errors, and a native's exception. Run: tests/run.sh unit
 */
 
+#include <quickjs.h>
+
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
 #include "oofnd/objc/OOFoundationTypes.h"  // bool
 #include "oofnd/objc/OOObject.h"
-#include "ooscript/JSEngine.hpp"
 
 // MARK: The classes, as far as the binding sees them
 // ----------------------------------------------
@@ -100,7 +101,9 @@ class StandInUniverse : public Universe {
   ::MyOpenGLView* getGameView() override { return _gameView; }
 };
 
+#include <cmath>
 #include <cstdarg>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -109,6 +112,7 @@ class StandInUniverse : public Universe {
 #include <string>
 #include <vector>
 
+#include "OOJSEngineCore.h"
 #include "OOJSOolite.h"
 #include "ResourceManager.h"
 #include "oo_test.hpp"
@@ -217,13 +221,15 @@ OOSDRToneMapper cxx_OOSDRToneMapperFromString(const std::string& string) {
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
 
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
-                                      const char* format, va_list args) {
+JSContext* gOOJSMainThreadContext = nullptr;
+
+void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
+                                      va_list args) {
   std::string msg = oo::str::vformat(format, args);
-  ooscript::reportError(context, msg.c_str());
+  JS_ThrowPlainError(context, "%s", msg.c_str());
 }
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportErrorWithArguments(context, format, args);
@@ -234,112 +240,133 @@ namespace {
 std::string sLastWarning;
 }
 
-void cxx_OOJSReportWarning(ooscript::Context, const char* format, ...) {
+void cxx_OOJSReportWarning(JSContext*, const char* format, ...) {
   va_list args;
   va_start(args, format);
   sLastWarning = oo::str::vformat(format, args);
   va_end(args);
 }
 
-std::optional<std::string> cxx_OOStringFromJSString(ooscript::Context context,
-                                                    ooscript::String str) {
-  if (str == nullptr) return std::nullopt;
+// As the engine's: the pending exception is reported (here, dropped) and
+// cleared.
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
+}
+
+// As the engine's: the pending exception, else an uncatchable error that
+// stops the script.
+JSValue OOJSNativeFailure(JSContext* context) {
+  if (JS_HasException(context)) return JS_EXCEPTION;
+  JSValue error = JS_NewError(context);
+  JS_SetUncatchableError(context, error);
+  return JS_Throw(context, error);
+}
+
+// Property IDs are interned for the life of the process (never freed).
+JSAtom cxx_OOJSIDFromString(const std::string& string) {
+  return JS_NewAtomLen(OOJSAcquireContext(), string.data(), string.size());
+}
+
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  return cxx_OOStringFromJSString(context,
-                                  ooscript::valueToString(context, value));
+// As the engine's: to a number, rounded to nearest; NaN or out of range is an
+// error.
+bool OOJSValueToInt32(JSContext* context, JSValueConst value,
+                      int32_t* outValue) {
+  double number;
+  if (JS_ToFloat64(context, &number, value) < 0) return false;
+  number = std::floor(number + 0.5);
+  if (std::isnan(number) || number < INT32_MIN || number > INT32_MAX) {
+    cxx_OOJSReportError(context, "can't convert to an integer");
+    return false;
+  }
+  *outValue = static_cast<int32_t>(number);
+  return true;
 }
 
 // A JS value as a property list, as far as compareVersion() hands one over: a
 // string, a number, a boolean, an array of those, or null for anything else.
-oo::PList cxx_OOJSPListFromJSValue(ooscript::Context context,
-                                   ooscript::Value value) {
-  if (ooscript::isString(value))
+oo::PList cxx_OOJSPListFromJSValue(JSContext* context, JSValueConst value) {
+  if (JS_IsString(value))
     return oo::PList(
         cxx_OOStringFromJSValue(context, value).value_or(std::string()));
-  if (ooscript::isBoolean(value)) return oo::PList(ooscript::toBoolean(value));
-  if (ooscript::isNumber(value)) {
+  if (JS_IsBool(value)) return oo::PList(JS_ToBool(context, value) > 0);
+  if (JS_IsNumber(value)) {
     double number = 0;
-    ooscript::valueToNumber(context, value, &number);
+    JS_ToFloat64(context, &number, value);
     return oo::PList(number);
   }
-  if (ooscript::isObject(value) &&
-      ooscript::isArrayObject(context, ooscript::toObject(value))) {
-    ooscript::Object array = ooscript::toObject(value);
-    std::uint32_t length = 0;
-    ooscript::getArrayLength(context, array, &length);
+  if (JS_IsArray(value)) {
+    int64_t length = 0;
+    JS_GetLength(context, value, &length);
     oo::PList::Array elements;
-    for (std::uint32_t i = 0; i < length; i++) {
-      ooscript::Value element = ooscript::undefinedValue();
-      ooscript::getElement(context, array, static_cast<std::int32_t>(i),
-                           &element);
+    for (int64_t i = 0; i < length; i++) {
+      JSValue element =
+          JS_GetPropertyUint32(context, value, static_cast<uint32_t>(i));
       elements.push_back(cxx_OOJSPListFromJSValue(context, element));
+      JS_FreeValue(context, element);
     }
     return oo::PList(std::move(elements));
   }
   return oo::PList();
 }
 
-// A property list as JavaScript, as far as the binding hands one over: null, a
-// string, a number, or an array or dictionary of those.
-ooscript::Value OOJSValueFromPList(ooscript::Context context,
-                                   const oo::PList& plist) {
-  if (const std::string* str = plist.getIf<std::string>()) {
-    ooscript::String js =
-        ooscript::newStringCopyN(context, str->data(), str->size());
-    return js != nullptr ? ooscript::stringValue(js) : ooscript::nullValue();
-  }
-  if (plist.isNumber()) return ooscript::numberValue(plist.doubleValue());
+// A property list as JavaScript (owned), as far as the binding hands one over:
+// null, a string, a number, or an array or dictionary of those.
+JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
+  if (const std::string* str = plist.getIf<std::string>())
+    return JS_NewStringLen(context, str->data(), str->size());
+  if (plist.isNumber()) return JS_NewNumber(context, plist.doubleValue());
   if (const oo::PList::Array* array = plist.getIf<oo::PList::Array>()) {
-    std::vector<ooscript::Value> values;
+    JSValue object = JS_NewArray(context);
+    uint32_t index = 0;
     for (const oo::PList& element : *array)
-      values.push_back(OOJSValueFromPList(context, element));
-    ooscript::Object object = ooscript::newArrayObject(
-        context, static_cast<unsigned>(values.size()), values.data());
-    return object != nullptr ? ooscript::objectValue(object)
-                             : ooscript::nullValue();
+      JS_SetPropertyUint32(context, object, index++,
+                           OOJSValueFromPList(context, element));
+    return object;
   }
   if (const oo::PList::Dict* dict = plist.getIf<oo::PList::Dict>()) {
-    ooscript::Object object =
-        ooscript::newObject(context, nullptr, nullptr, nullptr);
-    for (const auto& entry : *dict) {
-      ooscript::Value value = OOJSValueFromPList(context, entry.second);
-      ooscript::setProperty(context, object, entry.first.c_str(), &value);
-    }
-    return ooscript::objectValue(object);
+    JSValue object = JS_NewObject(context);
+    for (const auto& entry : *dict)
+      JS_SetPropertyStr(context, object, entry.first.c_str(),
+                        OOJSValueFromPList(context, entry.second));
+    return object;
   }
-  return ooscript::nullValue();
+  return JS_NULL;
 }
 
 Universe* gSharedUniverse = nullptr;
 
 
-void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
-                                   ooscript::PropertyId,
-                                   ooscript::PropertySpec*) {
+void OOJSReportBadPropertySelector(JSContext* context, JSValueConst, int,
+                                   const JSCFunctionListEntry*, size_t) {
   cxx_OOJSReportError(context, "bad property selector");
 }
 
-void OOJSReportBadPropertyValue(ooscript::Context context, ooscript::Object,
-                                ooscript::PropertyId, ooscript::PropertySpec*,
-                                ooscript::Value) {
+void OOJSReportBadPropertyValue(JSContext* context, JSValueConst, int,
+                                const JSCFunctionListEntry*, size_t,
+                                JSValueConst) {
   cxx_OOJSReportError(context, "bad property value");
 }
 
-bool OOJSUnconstructableConstruct(ooscript::Context context,
-                                  ooscript::CallArgs&) {
+JSValue OOJSUnconstructableConstruct(OOJS_NATIVE_ARGS) {
+  (void)oojsThis;
+  (void)argc;
+  (void)oojsArgv;
   cxx_OOJSReportError(context, "unconstructable");
-  return false;
+  return JS_EXCEPTION;
 }
 
 int sLimiterPauses = 0;
@@ -366,9 +393,9 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 
 namespace {
 
-ooscript::Runtime sRuntime;
-ooscript::Context sContext;
-ooscript::Object sGlobal;
+JSRuntime* sRuntime;
+JSContext* sContext;
+JSValue sGlobal = JS_UNDEFINED;  // owned for the life of the test
 Universe* sUniverse = nullptr;
 MyOpenGLView* sView = nullptr;
 std::filesystem::path sResources;
@@ -392,11 +419,11 @@ void SetUpContext() {
   std::filesystem::current_path(home);
   WriteInfoPlist("1.91.0.7");
 
-  sRuntime = ooscript::newRuntime(8u * 1024u * 1024u);
-  sContext = ooscript::newContext(sRuntime, 8192);
-  ooscript::beginRequest(sContext);
-  sGlobal = ooscript::getGlobalObject(sContext);
-  ooscript::initStandardClasses(sContext, sGlobal);
+  sRuntime = JS_NewRuntime();
+  JS_SetMemoryLimit(sRuntime, 8u * 1024u * 1024u);
+  sContext = JS_NewContext(sRuntime);
+  gOOJSMainThreadContext = sContext;
+  sGlobal = JS_GetGlobalObject(sContext);
 
   sView = new MyOpenGLView();  // kept for the life of the test
   sView->_colorSaturation = 1.0f;
@@ -418,14 +445,16 @@ std::string Eval(const char* src) {
                         src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
-  if (!ooscript::evaluateScript(sContext, sGlobal, wrapped.c_str(),
-                                static_cast<unsigned>(wrapped.size()),
-                                "test.js", 1, &result)) {
-    ooscript::clearPendingException(sContext);
+  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(),
+                           "test.js", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(sContext, JS_GetException(sContext));
     return "<evaluation failed>";
   }
-  return cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  std::string text =
+      cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  JS_FreeValue(sContext, result);
+  return text;
 }
 
 // Eval, and print what came back when it is not what the check expects.
@@ -623,7 +652,6 @@ OO_TEST(nativeExceptions) {
   OO_CHECK_EVAL("typeof oolite.gameSettings", "object");
   OO_CHECK_EQ(sLimiterPauses, 0);
   OO_CHECK_EQ(sProfileDepth, 0);
-  OO_CHECK(ooscript::isInRequest(sContext));
 }
 
 OO_TEST_MAIN()

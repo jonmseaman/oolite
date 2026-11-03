@@ -36,23 +36,6 @@ MA 02110-1301, USA.
 #include "legacy_random.h"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
-#include "ooscript/JSEngine.hpp"
-
-/*
-        OOStringFromDeciCredits below goes through the ooscript façade
-   (JSEngine.hpp), the same call-site pattern OOJSVector.mm uses: the small set
-   of directly spelled engine calls it makes (retrieving and restoring a
-   pending exception, looking a method up by id, the numeric-conversion call,
-   and invoking a function value) use the façade's equivalents, taking and
-   returning the façade's own Context/Object/Value/PropertyId types directly,
-   while the OOJS_* helpers are unchanged.
-*/
-
-namespace ooscript {}
-using ooscript::Context;
-using ooscript::Object;
-using ooscript::PropertyId;
-using ooscript::Value;
 
 bool cxx_ScanVectorFromString(const std::optional<std::string>& xyzString,
                               Vector* outVector) {
@@ -243,12 +226,10 @@ std::string cxx_OOPadStringToEms(const std::string& string, float padEms) {
 std::string cxx_OOStringFromDeciCredits(OOCreditsQuantity tenthsOfCredits,
                                         bool includeDecimal,
                                         bool includeSymbol) {
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Object global = OOJavaScriptEngine::sharedEngine()->globalObject();
-  ooscript::Value method;
-  ooscript::Value rval;
+  JSContext* context = OOJSAcquireContext();
+  JSValueConst global = OOJavaScriptEngine::sharedEngine()->globalObject();
+  JSValue exception = JS_UNDEFINED;
   std::optional<std::string> result;
-  ooscript::Value exception;
   bool hadException;
 
   /*	Because the |cr etc. formatting operators call this, and the
@@ -260,31 +241,32 @@ std::string cxx_OOStringFromDeciCredits(OOCreditsQuantity tenthsOfCredits,
 
   reentrancyLock = true;
 
-  hadException = ooscript::getPendingException((context), (&exception));
-  ooscript::clearPendingException((context));
+  hadException = JS_HasException(context);
+  if (hadException) exception = JS_GetException(context);  // Clears it.
 
-  {
-    Object fakeRootFacade = NULL;
-    if (ooscript::getMethodById((context), (global), OOJSID("formatCredits"),
-                                &fakeRootFacade, (&method))) {
-      ooscript::Value args[3];
-      if (ooscript::newNumberValue((context), tenthsOfCredits * 0.1,
-                                   (&args[0]))) {
-        args[1] = OOJSValueFromBOOL(includeDecimal);
-        args[2] = OOJSValueFromBOOL(includeSymbol);
+  JSValue method = JS_GetProperty(context, global, OOJSID("formatCredits"));
+  if (!JS_IsException(method)) {
+    JSValue args[3] = {JS_NewNumber(context, tenthsOfCredits * 0.1),
+                       OOJSValueFromBOOL(includeDecimal),
+                       OOJSValueFromBOOL(includeSymbol)};
 
-        OOJSStartTimeLimiter();
-        ooscript::callFunctionValue((context), (global), (method), 3, (args),
-                                    (&rval));
-        OOJSStopTimeLimiter();
+    OOJSStartTimeLimiter();
+    JSValue rval = JS_Call(context, method, global, 3, args);
+    OOJSStopTimeLimiter();
 
-        // nullopt (was nil) for null or undefined
-        result = cxx_OOStringFromJSValue(context, rval);
-      }
+    if (JS_IsException(rval)) {
+      OOJSReportPendingException(context);
+    } else {
+      // nullopt (was nil) for null or undefined
+      result = cxx_OOStringFromJSValue(context, rval);
     }
+    JS_FreeValue(context, rval);
+  } else {
+    OOJSReportPendingException(context);
   }
+  JS_FreeValue(context, method);
 
-  if (hadException) ooscript::setPendingException((context), (exception));
+  if (hadException) JS_Throw(context, exception);  // Takes ownership.
 
   OOJSRelinquishContext(context);
 

@@ -26,27 +26,32 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
+#include <optional>
+#include <string>
+
 #include "OOFoundation.h"
 #include "OOJSPrivateObject.h"
 #include "oofnd/Ref.hpp"
-#include "ooscript/JSEngine.hpp"
+
 class OOSoundSource;
 
-void InitOOJSSoundSource(ooscript::Context context, ooscript::Object global);
+void InitOOJSSoundSource(JSContext* context, JSValueConst global);
 
 /*	The bodies of OOSoundSource (OOJavaScriptExtentions): a new SoundSource
-   object for the source (JS null for none) and the JS class name. The binding
-   and the Sound binding call them.
+   object for the source (owned by the caller; JS null for none) and the JS
+   class name. The binding and the Sound binding call them.
 */
-ooscript::Value OOJSSoundSourceJSValueInContext(OOSoundSource* source,
-                                                ooscript::Context context);
+JSValue OOJSSoundSourceJSValueInContext(OOSoundSource* source,
+                                        JSContext* context);
 std::optional<std::string> OOJSSoundSourceJSClassName(void);
 
 /*	What a SoundSource object's private slot holds. Each SoundSource object
    has its own holder, which retains the source; the slot retains the holder
    (OOJSSetCxxPrivate) and the finalizer releases it
    (OOJSCxxObjectWrapperFinalize). Its toString() is the JS class name and the
-   source's components. Defined in OOJSSoundSource.mm; only the binding makes
+   source's components. Defined in OOJSSoundSource.cpp; only the binding makes
    one.
 */
 class OOJSSoundSourceHolder final : public oo::RefCounted,
@@ -57,8 +62,8 @@ class OOJSSoundSourceHolder final : public oo::RefCounted,
 
   OOSoundSource* source() const;
 
-  ooscript::Value jsValueInContext(ooscript::Context context) override;
-  void clearJSSelf(ooscript::Object selfVal) override;
+  JSValue jsValueInContext(JSContext* context) override;  // owned
+  void clearJSSelf(JSValueConst selfVal) override;
   std::optional<std::string> jsDescription() override;
 
  private:

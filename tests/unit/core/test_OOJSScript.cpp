@@ -199,18 +199,21 @@ OO_TEST(callMethod) {
     OO_CHECK(script != nullptr);
     if (script == nullptr) return;
 
-    ooscript::Context context = OOJSAcquireContext();
-    ooscript::Value argv[1] = {ooscript::int32Value(5)};
-    ooscript::Value result = ooscript::undefinedValue();
+    JSContext* context = OOJSAcquireContext();
+    JSValue argv[1] = {JS_NewInt32(context, 5)};
+    JSValue result = JS_UNDEFINED;
     OO_CHECK(script->callMethod(OOJSID("bump"), context, argv, 1, &result));
     double number = 0;
-    OO_CHECK(ooscript::valueToNumber(context, result, &number) && number == 5);
+    OO_CHECK(JS_ToFloat64(context, &number, result) == 0 && number == 5);
+    JS_FreeValue(context, result);
     OO_CHECK(script->callMethod(OOJSID("bump"), context, argv, 1, NULL));
     OO_CHECK_EQ(Text(JS(script)->propertyWithID(OOJSID("counter"), context)),
                 "10");
     OO_CHECK(
         !script->callMethod(OOJSID("noSuchMethod"), context, NULL, 0, NULL));
-    OO_CHECK(!ooscript::isUndefined(script->jsValueInContext(context)));
+    JSValue self = script->jsValueInContext(context);
+    OO_CHECK(!JS_IsUndefined(self));
+    JS_FreeValue(context, self);
 
     // A script that is not JavaScript answers NO (OOScript (JavaScriptEvents)).
     const oo::Ref<OOScript> plain = oo::makeRef<OOScript>();
@@ -289,10 +292,9 @@ OO_TEST(crossing) {
 
     // The Script object converts back to the script (a plist Object node), and
     // its JS glue answers; any other script answers undefined.
-    ooscript::Context context = OOJSAcquireContext();
-    ooscript::Value value = script->jsValueInContext(context);
-    OOJSAddGCValueRoot(context, &value, "test_OOJSScript crossing");
-    OO_CHECK(!ooscript::isUndefined(value));
+    JSContext* context = OOJSAcquireContext();
+    JSValue value = script->jsValueInContext(context);  // owned: kept alive
+    OO_CHECK(!JS_IsUndefined(value));
     OO_CHECK(OOScriptInObjectNode(cxx_OOJSPListFromJSValue(context, value)) ==
              script.get());
     OO_CHECK(script->jsClassName() == std::optional<std::string>("Script"));
@@ -300,7 +302,9 @@ OO_TEST(crossing) {
         script->jsDescription() ==
         std::optional<std::string>("[Script \"test-script\" version 1.0]"));
     const oo::Ref<OOScript> plain = oo::makeRef<OOScript>();
-    OO_CHECK(ooscript::isUndefined(plain->jsValueInContext(context)));
+    JSValue plainValue = plain->jsValueInContext(context);
+    OO_CHECK(JS_IsUndefined(plainValue));
+    JS_FreeValue(context, plainValue);
 
     // The slot does not keep the script: once it goes, the object converts to
     // nothing, and a weak push answers no script.
@@ -312,7 +316,7 @@ OO_TEST(crossing) {
     OO_CHECK(OOJSScript::scriptStack().size() == 1 &&
              OOJSScript::scriptStack()[0] == nullptr);
     OOJSScript::popScript(nullptr);
-    ooscript::removeValueRoot(context, &value);
+    JS_FreeValue(context, value);
     OOJSRelinquishContext(context);
   }
 }
@@ -332,9 +336,11 @@ OO_TEST(engineReset) {
     OO_CHECK(script->description().find("invalid script") != std::string::npos);
     OO_CHECK(JS(script)->propertyNamed("counter").isNull());
     OO_CHECK(!JS(script)->setProperty(oo::PList(1), "counter"));
-    ooscript::Context context = OOJSAcquireContext();
+    JSContext* context = OOJSAcquireContext();
     OO_CHECK(!script->callMethod(OOJSID("bump"), context, NULL, 0, NULL));
-    OO_CHECK(ooscript::isUndefined(script->jsValueInContext(context)));
+    JSValue self = script->jsValueInContext(context);
+    OO_CHECK(JS_IsUndefined(self));
+    JS_FreeValue(context, self);
     OOJSRelinquishContext(context);
     OO_CHECK_EQ(script->name().value_or("<none>"),
                 "test-script");  // the name was kept

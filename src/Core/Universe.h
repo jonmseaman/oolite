@@ -45,7 +45,6 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class OOMaterial;
 
@@ -891,7 +890,7 @@ class Universe : public oo::RefCounted {
   HPVector getSunSkimStartPositionForShip(::ShipEntity* ship);
   HPVector getSunSkimEndPositionForShip(::ShipEntity* ship);
   std::vector<oo::EntityHold> listBeaconsWithCode(const std::string& code);
-  void allShipsDoScriptEvent(ooscript::PropertyId event,
+  void allShipsDoScriptEvent(OOJSPropID event,
                              const std::optional<std::string>& message);
   // getGui(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)

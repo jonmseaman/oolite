@@ -30,6 +30,7 @@
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "OOJSEntity.h"
 #include "OOColor.h"
 #include "OOExhaustPlumeEntity.h"
 #include "OOJSExhaustPlume.h"
@@ -89,7 +90,7 @@ class TestShip : public ::ShipEntity {
   bool _visible = true;
 };
 
-extern ooscript::Context
+extern JSContext*
     gOOJSMainThreadContext;  // the engine's (OOJavaScriptEngine.mm)
 
 namespace {
@@ -123,7 +124,7 @@ void SetUp(OOTimeAbsolute time) {
   // on the main thread's context, so there is one, with nothing in it.
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
-        ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
+        JS_NewContext(JS_NewRuntime());
   ranrot_srand(12345);
 }
 
@@ -294,18 +295,30 @@ OO_TEST(facade) {
   }
 }
 
+// Registers Entity's JS class and the given class (a child of Entity) in the
+// test's context, as the engine's start does; the context is made here if the
+// test has none yet.
+static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
+  extern JSContext* gOOJSMainThreadContext;
+  if (gOOJSMainThreadContext == nullptr)
+    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+  JSContext* context = OOJSAcquireContext();
+  JSValue global = JS_GetGlobalObject(context);
+  InitOOJSEntity(context, global);
+  initClass(context, global);
+  JS_FreeValue(context, global);
+}
+
 // The C++ class's overrides of the root's JS members: what the engine asks a
 // plume's object for by selector is what OOJSExhaustPlume.mm answers.
 OO_TEST(jsExtensions) {
   {
     SetUp(0.0);
     Entity* plume = Plume(Ship(), {"0", "0", "0", "1", "1", "1"}, 1.0f);
-    ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
-    ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
-    OOJSEntityGetJSClass(plume, &jsClass, &prototype);
-    OOJSExhaustPlumeGetJSClass(&expectedClass, &expectedPrototype);
-    OO_CHECK(jsClass != nullptr && jsClass == expectedClass &&
-             prototype == expectedPrototype);
+    RegisterJSClasses(InitOOJSExhaustPlume);
+    const JSClassID jsClass = OOJSEntityJSClassID(plume);
+    const JSClassID expectedClass = JSExhaustPlumeClassID();
+    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
     OO_CHECK(OOJSEntityJSClassName(plume) ==
              std::optional<std::string>("ExhaustPlume"));
     OO_CHECK(OOJSEntityIsVisibleToScripts(plume) == true);

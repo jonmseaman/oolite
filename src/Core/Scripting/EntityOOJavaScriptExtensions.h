@@ -41,10 +41,8 @@ class ShipEntity;
 // JS glue members call them; the engine asks those members).
 bool EntityJSIsVisibleToScripts(void);
 std::optional<std::string> EntityJSClassName(void);
-ooscript::Value EntityJSValueInContext(Entity* entity,
-                                       ooscript::Context context);
-void EntityJSGetJSClass(ooscript::ClassDef** outClass,
-                        ooscript::Object* outPrototype);
+// The entity's JS object, owned by the caller (JS null for none).
+JSValue EntityJSValueInContext(Entity* entity, JSContext* context);
 void EntityJSDeleteJSSelf(Entity* entity);
 std::optional<std::string> EntityJSDescription(Entity* entity);
 
@@ -53,17 +51,16 @@ std::optional<std::string> EntityJSDescription(Entity* entity);
 // virtual member otherwise.
 bool OOJSEntityIsVisibleToScripts(Entity* entity);
 std::optional<std::string> OOJSEntityJSClassName(Entity* entity);
-// The same for the JS class and prototype, and for the JS value (the entity's
-// own JS object; null for no entity): what the engine asked an entity's object
-// by -getJSClass:andPrototype: and -oo_jsValueInContext:.
-void OOJSEntityGetJSClass(Entity* entity, ooscript::ClassDef** outClass,
-                          ooscript::Object* outPrototype);
-ooscript::Value OOJSEntityJSValue(Entity* entity, ooscript::Context context);
+// The same for the JS class, and for the JS value (the entity's own JS object;
+// null for no entity): what the engine asked an entity's object by
+// -oo_jsClassID and -oo_jsValueInContext:. Entity's own class is
+// JSEntityClassID() (OOJSEntity.h), ShipEntity's JSShipClassID() (OOJSShip.h).
+JSClassID OOJSEntityJSClassID(Entity* entity);
+// Owned by the caller.
+JSValue OOJSEntityJSValue(Entity* entity, JSContext* context);
 
 // ShipEntity (OOJavaScriptExtensions)
 bool ShipEntityJSIsVisibleToScripts(void);
-void ShipEntityJSGetJSClass(ooscript::ClassDef** outClass,
-                            ooscript::Object* outPrototype);
 std::optional<std::string> ShipEntityJSClassName(void);
 std::vector<oo::EntityHold> ShipEntityJSSubEntitiesForScript(ShipEntity* ship);
 void ShipEntityJSSetTargetForScript(ShipEntity* ship, ShipEntity* target);

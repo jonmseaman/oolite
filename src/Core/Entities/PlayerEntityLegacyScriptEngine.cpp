@@ -2639,7 +2639,7 @@ void PlayerEntity::endMissionScreenAndNoteOpportunity() {
   clearMissionScreenID();
   // Older scripts might intercept missionScreenEnded first, and call secondary
   // mission screens.
-  const ooscript::PropertyId missionScreenEnded = OOJSID("missionScreenEnded");
+  const OOJSPropID missionScreenEnded = OOJSID("missionScreenEnded");
   if (!doWorldEventUntilMissionScreen(missionScreenEnded)) {
     // if we're here, no mission screen is running. Opportunity! :)
     doWorldEventUntilMissionScreen(OOJSID("missionScreenOpportunity"));

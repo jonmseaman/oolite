@@ -80,8 +80,7 @@ class OOExhaustPlumeEntity : public Entity, public cxx::OOSubEntityInterface {
   bool isExhaust();
 
   // Entity (OOJavaScriptExtensions): the binding's bodies (OOJSExhaustPlume.h).
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype) override;
+  JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
   bool isVisibleToScripts() override;
 

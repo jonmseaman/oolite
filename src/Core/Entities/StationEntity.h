@@ -79,8 +79,7 @@ class StationEntity : public ShipEntity {
 
   // Class shell, market and shipyard, flags and accessors.
   bool isUnpiloted() override;
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype) override;
+  JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
   // The ship's answer, which the facade inherited.
   bool isVisibleToScripts() override;

@@ -216,7 +216,7 @@ class FakePlayer : public PlayerEntity {
         oo::str::format("setLongRangeChartMode %d", static_cast<int>(mode)));
   }
   using PlayerEntity::doScriptEvent;
-  void doScriptEvent(ooscript::PropertyId /*message*/,
+  void doScriptEvent(OOJSPropID /*message*/,
                      const std::vector<oo::PList>& arguments) override {
     std::string event = "event(";
     for (std::size_t i = 0; i < arguments.size(); i++)
@@ -514,21 +514,20 @@ void SetUp() {
 // ...), or "threw: <message>".
 std::string Eval(const std::string& src) {
   SetUp();
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Object global = OOJavaScriptEngine::sharedEngine()->globalObject();
+  JSContext* context = OOJSAcquireContext();
   std::string wrapped = "(function () { try { return String(" + src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
   std::string text;
-  if (!ooscript::evaluateScript(context, global, wrapped.c_str(),
-                                static_cast<unsigned>(wrapped.size()),
-                                "test.js", 1, &result)) {
-    ooscript::clearPendingException(context);
+  JSValue result = JS_Eval(context, wrapped.c_str(), wrapped.size(), "test.js",
+                           JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(context, JS_GetException(context));
     text = "<evaluation failed>";
   } else {
     text = cxx_OOStringFromJSValue(context, result).value_or("<not a string>");
   }
+  JS_FreeValue(context, result);
   OOJSRelinquishContext(context);
   return text;
 }
@@ -569,8 +568,13 @@ OO_TEST(registration) {
   SetUp();
   OO_CHECK(sRealPlayer != nullptr);
   OO_CHECK_EVAL("typeof player.ship", "object");
-  OO_CHECK(std::strcmp(JSPlayerShipClass()->name, "PlayerShip") == 0);
-  OO_CHECK(JSPlayerShipPrototype() != nullptr);
+  OO_CHECK(OOJSClassName(JSPlayerShipClassID()) != nullptr &&
+           std::strcmp(OOJSClassName(JSPlayerShipClassID()), "PlayerShip") ==
+               0);
+  JSContext* context = OOJSAcquireContext();
+  JSValue prototype = JS_GetClassProto(context, JSPlayerShipClassID());
+  OO_CHECK(JS_IsObject(prototype));
+  JS_FreeValue(context, prototype);
   OO_CHECK_EVAL("player.ship instanceof Ship", "true");
   OO_CHECK_EVAL(
       "Object.getPrototypeOf(player.ship) === "
@@ -1139,29 +1143,39 @@ OO_TEST(mfdsAndDials) {
   OO_CHECK_LOG(sPlayer->_log, "");
 }
 
+// Whether two JS values are the same object.
+static bool SameObject(JSValueConst a, JSValueConst b) {
+  return JS_IsObject(a) && JS_IsObject(b) &&
+         JS_VALUE_GET_PTR(a) == JS_VALUE_GET_PTR(b);
+}
+
 // What the engine asks of the player (the ship's facade, which asks the C++
 // player): the class name, and the JS object.
 OO_TEST(playerCategory) {
   SetUp();
   OO_CHECK_EQ(OOJSEntityJSClassName(sRealPlayer).value_or("<none>"),
               "PlayerShip");
-  OO_CHECK(sRealPlayer->_jsSelf == JSPlayerShipObject());
-  ooscript::Context context = OOJSAcquireContext();
-  OO_CHECK(ooscript::isObject(OOJSEntityJSValue(sRealPlayer, context)) &&
-           ooscript::toObject(OOJSEntityJSValue(sRealPlayer, context)) ==
-               JSPlayerShipObject());
+  JSContext* context = OOJSAcquireContext();
+  JSValue shipObject = JSPlayerShipObject();
+  OO_CHECK(SameObject(sRealPlayer->_jsSelf, shipObject));
+  JSValue value = OOJSEntityJSValue(sRealPlayer, context);
+  OO_CHECK(JS_IsObject(value) && SameObject(value, shipObject));
+  JS_FreeValue(context, value);
+  JS_FreeValue(context, shipObject);
   OOJSRelinquishContext(context);
 
   // The engine's reset drops the player's JS object.
   oo::NotificationCenter::defaultCenter().post(
       kOOJavaScriptEngineWillResetNotificationName,
       OOJavaScriptEngine::sharedEngine());
-  OO_CHECK(sRealPlayer->_jsSelf == nullptr);
+  OO_CHECK(JS_IsUndefined(sRealPlayer->_jsSelf));
   context = OOJSAcquireContext();
-  OOJSPlayerShipSetJSSelf(sRealPlayer, JSPlayerShipObject(),
+  shipObject = JSPlayerShipObject();
+  OOJSPlayerShipSetJSSelf(sRealPlayer, shipObject,
                           context);  // as InitOOJSPlayerShip() did
+  OO_CHECK(SameObject(sRealPlayer->_jsSelf, shipObject));
+  JS_FreeValue(context, shipObject);
   OOJSRelinquishContext(context);
-  OO_CHECK(sRealPlayer->_jsSelf == JSPlayerShipObject());
 }
 
 OO_TEST(cleanUp) {

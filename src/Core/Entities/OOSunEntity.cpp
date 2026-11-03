@@ -768,10 +768,7 @@ void OOSunEntity::setName(const std::optional<std::string>& name) {
 }
 
 // The binding's bodies (OOJSSun.mm), which the facade forwarded to.
-void OOSunEntity::getJSClass(ooscript::ClassDef** outClass,
-                             ooscript::Object* outPrototype) {
-  ::OOJSSunGetJSClass(outClass, outPrototype);
-}
+JSClassID OOSunEntity::jsClassID() { return ::JSSunClassID(); }
 
 std::optional<std::string> OOSunEntity::jsClassName() {
   return ::OOJSSunJSClassName();

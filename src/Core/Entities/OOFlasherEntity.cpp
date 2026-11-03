@@ -168,10 +168,7 @@ void OOFlasherEntity::rescaleBy(GLfloat /*factor*/, bool /*writeToCache*/) {
 }
 
 // The binding's bodies (OOJSFlasher.mm), which the façade forwarded to.
-void OOFlasherEntity::getJSClass(ooscript::ClassDef** outClass,
-                                 ooscript::Object* outPrototype) {
-  ::OOJSFlasherGetJSClass(outClass, outPrototype);
-}
+JSClassID OOFlasherEntity::jsClassID() { return ::JSFlasherClassID(); }
 
 std::optional<std::string> OOFlasherEntity::jsClassName() {
   return ::OOJSFlasherJSClassName();

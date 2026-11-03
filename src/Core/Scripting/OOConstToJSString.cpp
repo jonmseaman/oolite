@@ -27,6 +27,8 @@ MA 02110-1301, USA.
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
 #include "OOConstToJSString.h"
 
+#include <cstdlib>
+
 #include "oofnd/objc/OOAssert.h"
 
 /*
@@ -34,11 +36,11 @@ MA 02110-1301, USA.
    of TableEntry structs plus a count.
 
         The list is statically initialized with the constant values and C
-   strings. OOConstToJSStringInit() (through InitTable()) replaces the C strings
-   with interned JSStrings (hence the void * type). These are subsequently
-        constant and no other strings with the same value should occur, i.e.
-   they should be comparable with pointer equality. Because I'm paranoid, we
-   fall back to full string comparison if this fails.
+   strings. OOConstToJSStringInit() (through InitTable()) adds an interned
+   JSAtom for each C string. Atoms are interned once per process (they belong
+   to the runtime, which survives engine resets) and are never freed. Two atoms
+   are equal if and only if their strings are equal, so lookups from JS strings
+   compare atoms.
 
         ConstTables are globals, which are accessed as local externs in the
    inlines in the header. All the advantages of globals with most of the
@@ -50,7 +52,7 @@ MA 02110-1301, USA.
 typedef struct {
   NSInteger value;
   const char* cString;
-  ooscript::String jsString;
+  JSAtom atom;
 } TableEntry;
 
 typedef struct ConstTable {
@@ -62,21 +64,25 @@ typedef struct ConstTable {
 
 // Unconditional, as upstream's: OOCAssert reads it in every flavour.
 static bool sInited = false;
+static bool sAtomsInterned = false;
 
 /*
         The interned string "UNDEFINED", returned by
-   OOJSStringFromConstantPRIVATE() if passed a bogus constant value.
+   OOJSValueFromConstantPRIVATE() if passed a bogus constant value.
 */
-static ooscript::String sUndefinedString;
+static JSAtom sUndefinedAtom = JS_ATOM_NULL;
 
 /*
         Initialize table contents (with C strings, see above) from table files.
 */
-#define ENTRY(label, val) {.value = (label), .cString = #label, .jsString = {}},
+#define ENTRY(label, val) \
+  {.value = (label), .cString = #label, .atom = JS_ATOM_NULL},
 #define GALACTIC_HYPERSPACE_ENTRY(label, val) \
-  {.value = GALACTIC_HYPERSPACE_##label, .cString = #label, .jsString = {}},
+  {.value = GALACTIC_HYPERSPACE_##label,      \
+   .cString = #label,                         \
+   .atom = JS_ATOM_NULL},
 #define DIFF_STRING_ENTRY(label, string) \
-  {.value = (label), .cString = (string), .jsString = {}},
+  {.value = (label), .cString = (string), .atom = JS_ATOM_NULL},
 
 static TableEntry sOOCompassModeTableEntries[] = {
 #include "OOCompassMode.tbl"
@@ -131,25 +137,30 @@ ConstTable gOOLegalStatusReasonConstTable =
 ConstTable gOOLongRangeChartModeConstTable =
     TABLE(sOOLongRangeChartModeTableEntries);
 
-static void InitTable(ooscript::Context context, ConstTable* table);
+static void InitTable(JSContext* context, ConstTable* table);
 
 // MARK: Initialization
 
-void OOConstToJSStringInit(ooscript::Context context) {
+void OOConstToJSStringInit(JSContext* context) {
   OOCAssert(!sInited, "OOConstToJSStringInit() called while already inited.");
-  OOCParameterAssert(context != NULL && ooscript::isInRequest(context));
+  OOCParameterAssert(context != NULL);
 
-  sUndefinedString = ooscript::internString(context, "UNDEFINED");
+  // Atoms survive engine resets, so they only need interning once.
+  if (!sAtomsInterned) {
+    sUndefinedAtom = JS_NewAtom(context, "UNDEFINED");
 
-  InitTable(context, &gOOEntityStatusConstTable);
-  InitTable(context, &gOOCompassModeConstTable);
-  InitTable(context, &gOOGalacticHyperspaceBehaviourConstTable);
-  InitTable(context, &gOOGUIScreenIDConstTable);
-  InitTable(context, &gOOScanClassConstTable);
-  InitTable(context, &gOOViewIDConstTable);
-  InitTable(context, &gOOShipDamageTypeConstTable);
-  InitTable(context, &gOOLegalStatusReasonConstTable);
-  InitTable(context, &gOOLongRangeChartModeConstTable);
+    InitTable(context, &gOOEntityStatusConstTable);
+    InitTable(context, &gOOCompassModeConstTable);
+    InitTable(context, &gOOGalacticHyperspaceBehaviourConstTable);
+    InitTable(context, &gOOGUIScreenIDConstTable);
+    InitTable(context, &gOOScanClassConstTable);
+    InitTable(context, &gOOViewIDConstTable);
+    InitTable(context, &gOOShipDamageTypeConstTable);
+    InitTable(context, &gOOLegalStatusReasonConstTable);
+    InitTable(context, &gOOLongRangeChartModeConstTable);
+
+    sAtomsInterned = true;
+  }
 
   sInited = true;
 }
@@ -157,7 +168,7 @@ void OOConstToJSStringInit(ooscript::Context context) {
 void OOConstToJSStringDestroy(void) {
   OOCAssert(sInited, "OOConstToJSStringDestroy() called while not inited.");
   sInited = false;
-  // jsString pointers are now officially junk.
+  // The atoms remain valid; they belong to the runtime.
 }
 
 static int CompareEntries(const void* a, const void* b) {
@@ -169,14 +180,12 @@ static int CompareEntries(const void* a, const void* b) {
   return 0;
 }
 
-static void InitTable(ooscript::Context context, ConstTable* table) {
-  OOCParameterAssert(context != NULL && ooscript::isInRequest(context) &&
-                     table != NULL);
+static void InitTable(JSContext* context, ConstTable* table) {
+  OOCParameterAssert(context != NULL && table != NULL);
 
   NSUInteger i;
   for (i = 0; i < table->count; i++) {
-    table->entries[i].jsString =
-        ooscript::internString(context, table->entries[i].cString);
+    table->entries[i].atom = JS_NewAtom(context, table->entries[i].cString);
   }
 
   qsort(table->entries, table->count, sizeof *table->entries, CompareEntries);
@@ -184,73 +193,58 @@ static void InitTable(ooscript::Context context, ConstTable* table) {
 
 // MARK: Lookup
 
-ooscript::String OOJSStringFromConstantPRIVATE(ooscript::Context context,
-                                               NSInteger value,
-                                               struct ConstTable* table) {
+JSValue OOJSValueFromConstantPRIVATE(JSContext* context, NSInteger value,
+                                     struct ConstTable* table) {
   OOCAssert(sInited, "%s called before OOConstToJSStringInit().",
             __PRETTY_FUNCTION__);
-  OOCParameterAssert(context != NULL && ooscript::isInRequest(context));
+  OOCParameterAssert(context != NULL);
   OOCParameterAssert(table != NULL && table->count > 0);
 
-  // Binary search.
-  NSUInteger min = 0, max = table->count - 1;
+  // Binary search. (Signed bounds: the SpiderMonkey version underflowed for
+  // values below the first entry.)
+  NSInteger min = 0, max = (NSInteger)table->count - 1;
   NSInteger current;
-  do {
-    NSUInteger mid = (min + max) / 2;
+  while (min <= max) {
+    NSInteger mid = (min + max) / 2;
     current = table->entries[mid].value;
     if (current < value) {
       min = mid + 1;
     } else if (current > value) {
       max = mid - 1;
     } else {
-      return table->entries[mid].jsString;
-    }
-  } while (min <= max);
-
-  return sUndefinedString;
-}
-
-NSUInteger OOConstantFromJSStringPRIVATE(ooscript::Context context,
-                                         ooscript::String string,
-                                         struct ConstTable* table,
-                                         NSInteger defaultValue) {
-  OOCAssert(sInited, "%s called before OOConstToJSStringInit().",
-            __PRETTY_FUNCTION__);
-  OOCParameterAssert(context != NULL && ooscript::isInRequest(context) &&
-                     table != NULL);
-
-  // Quick pass: look for pointer-equal string.
-  NSUInteger i, count = table->count;
-  for (i = 0; i < count; i++) {
-    if (table->entries[i].jsString == string) {
-      return table->entries[i].value;
+      return JS_AtomToString(context, table->entries[mid].atom);
     }
   }
 
-  // Slow pass: use string comparison. This is expected to fail.
-  if (string != NULL) {
-    for (i = 0; i < count; i++) {
-      int32_t result;
-      if (ooscript::compareStrings(context, string, table->entries[i].jsString,
-                                   &result) &&
-          result == 0) {
-        return table->entries[i].value;
-      }
-    }
-  }
-
-  // Fail.
-  return defaultValue;
+  return JS_AtomToString(context, sUndefinedAtom);
 }
 
-NSUInteger OOConstantFromJSValuePRIVATE(ooscript::Context context,
-                                        ooscript::Value value,
+NSUInteger OOConstantFromJSValuePRIVATE(JSContext* context, JSValueConst value,
                                         struct ConstTable* table,
                                         NSInteger defaultValue) {
-  if (EXPECT(ooscript::isString(value))) {
-    return OOConstantFromJSStringPRIVATE(context, ooscript::toString(value),
-                                         table, defaultValue);
-  } else {
+  OOCAssert(sInited, "%s called before OOConstToJSStringInit().",
+            __PRETTY_FUNCTION__);
+  OOCParameterAssert(context != NULL && table != NULL);
+
+  if (EXPECT_NOT(!JS_IsString(value))) return defaultValue;
+
+  // Interning a string yields the same atom as the table entry with the same
+  // contents.
+  JSAtom atom = JS_ValueToAtom(context, value);
+  if (EXPECT_NOT(atom == JS_ATOM_NULL)) {
+    JS_FreeValue(context, JS_GetException(context));
     return defaultValue;
   }
+
+  NSInteger result = defaultValue;
+  NSUInteger i, count = table->count;
+  for (i = 0; i < count; i++) {
+    if (table->entries[i].atom == atom) {
+      result = table->entries[i].value;
+      break;
+    }
+  }
+
+  JS_FreeAtom(context, atom);
+  return result;
 }

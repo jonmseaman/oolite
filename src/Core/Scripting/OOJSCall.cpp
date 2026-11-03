@@ -148,9 +148,8 @@ MethodType MethodTypeOfRow(const OOJSCallEntityMethodRow& row) {
    names the entity's object, whose address the text holds. The debug console's
    callObjC() is only given an entity or a monitor as `this`.
 */
-bool CallMethod(ooscript::Context context, const std::string& oo_jsClassName,
-                unsigned argc, ooscript::Value* argv,
-                ooscript::Value* outResult, Entity* entity) {
+bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
+                JSValueConst* argv, JSValue* outResult, Entity* entity) {
   OOJS_PROFILE_ENTER
 
   std::optional<std::string> selectorString;
@@ -185,7 +184,7 @@ bool CallMethod(ooscript::Context context, const std::string& oo_jsClassName,
     // As +concatenationOfStringsFromJavaScriptValues:count:separator:@" "
     // joined them.
     std::string joined;
-    for (unsigned i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
       if (i > 1) joined += " ";
       joined += cxx_OOStringFromJSValueEvenIfNull(context, argv[i])
                     .value_or(std::string());
@@ -308,14 +307,23 @@ bool CallMethod(ooscript::Context context, const std::string& oo_jsClassName,
 
         case kMethodTypeVectorVoid: {
           Vector v = typed.vector;
-          *outResult = ooscript::objectValue(JSVectorWithVector(context, v));
+          JSValue vectorValue = JSVectorWithVector(context, v);
+          if (JS_IsException(vectorValue)) {
+            error = true;
+          } else {
+            *outResult = vectorValue;
+          }
           break;
         }
 
         case kMethodTypeQuaternionVoid: {
           Quaternion q = typed.quaternion;
-          *outResult =
-              ooscript::objectValue(JSQuaternionWithQuaternion(context, q));
+          JSValue quaternionValue = JSQuaternionWithQuaternion(context, q);
+          if (JS_IsException(quaternionValue)) {
+            error = true;
+          } else {
+            *outResult = quaternionValue;
+          }
           break;
         }
 
@@ -355,9 +363,9 @@ bool CallMethod(ooscript::Context context, const std::string& oo_jsClassName,
 }
 }  // namespace
 
-bool OOJSCallEntityMethod(ooscript::Context context, Entity* entity,
-                          const std::string& oo_jsClassName, unsigned argc,
-                          ooscript::Value* argv, ooscript::Value* outResult) {
+bool OOJSCallEntityMethod(JSContext* context, Entity* entity,
+                          const std::string& oo_jsClassName, int argc,
+                          JSValueConst* argv, JSValue* outResult) {
   return CallMethod(context, oo_jsClassName, argc, argv, outResult,
                     entity);  // the C++ entity only
 }

@@ -5,12 +5,11 @@
         The file defines the global functions addFrameCallback(),
    removeFrameCallback() and isValidFrameCallback(), and
    OOJSFrameCallbacksInvoke(), which the game calls every frame. The test runs
-   them in a real context on the game's own façade backend
-        (ooscript/JSEngine_quickjs.cpp) and links the game's own objects for the
+   them in a real QuickJS-ng context and links the game's own objects for the
    file and the engine's exception translator (OOJSEngineNativeWrappers.mm).
    What the rest of the engine would provide is defined below as the smallest
    stand-in that does the same thing: the error and
-   warning reporters, OOJSValue (a rooted JS value, which a deferred add keeps),
+   warning reporters, OOJSValue (a held JS value, which a deferred add keeps),
    the time limiter and the universe's time acceleration. The engine's header is
    not imported, because the test defines OOJSValue.
    The expectations were written against the Objective-C file and run on it
@@ -32,10 +31,8 @@
 #include "oo_test.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOObject.h"
-#include "ooscript/JSEngine.hpp"
 
-void InitOOJSFrameCallbacks(ooscript::Context context,
-                                       ooscript::Object global);
+void InitOOJSFrameCallbacks(JSContext* context, JSValueConst global);
 void OOJSFrameCallbacksInvoke(OOTimeDelta delta);
 void OOJSFrameCallbacksRemoveAll(void);
 
@@ -46,25 +43,24 @@ namespace {
 std::vector<std::string> sWarnings;
 int sLimiterDepth = 0;
 double sLastLimit = -1;
-ooscript::Object sGlobal;
 }  // namespace
 
-ooscript::Context gOOJSMainThreadContext = nullptr;
+JSContext* gOOJSMainThreadContext = nullptr;
 
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
-                                      const char* format, va_list args) {
+void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
+                                      va_list args) {
   std::string msg = oo::str::vformat(format, args);
-  ooscript::reportError(context, msg.c_str());
+  JS_ThrowPlainError(context, "%s", msg.c_str());
 }
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportErrorWithArguments(context, format, args);
   va_end(args);
 }
 
-void cxx_OOJSReportWarning(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportWarning(JSContext* context, const char* format, ...) {
   (void)context;
   va_list args;
   va_start(args, format);
@@ -73,63 +69,59 @@ void cxx_OOJSReportWarning(ooscript::Context context, const char* format, ...) {
 }
 
 void cxx_OOJSReportBadArguments(
-    ooscript::Context context, const std::optional<std::string>& scriptClass,
-    const std::optional<std::string>& function, unsigned argc, ooscript::Value*,
+    JSContext* context, const std::optional<std::string>& scriptClass,
+    const std::optional<std::string>& function, int argc, JSValueConst*,
     const std::optional<std::string>& message,
     const std::optional<std::string>& expectedArgsDescription) {
-  cxx_OOJSReportError(context, "bad arguments: %s.%s (%u): %s; expected %s",
+  cxx_OOJSReportError(context, "bad arguments: %s.%s (%d): %s; expected %s",
                       scriptClass.value_or("").c_str(),
                       function.value_or("").c_str(), argc,
                       message.value_or("").c_str(),
                       expectedArgsDescription.value_or("").c_str());
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  ooscript::String str = ooscript::valueToString(context, value);
-  if (str == nullptr) return std::nullopt;
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
+}
+
+// The engine's reporter (a throwing callback's exception): the stand-in
+// clears it.
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
 }
 
 // A JS value kept alive for C++ (OOJSEngineCore.h): the members the deferred
 // add calls, defined here with the stand-in's answers.
-oo::Ref<OOJSValue> OOJSValue::valueWithJSValue(ooscript::Value value,
-                                               ooscript::Context context) {
+oo::Ref<OOJSValue> OOJSValue::valueWithJSValue(JSValueConst value,
+                                               JSContext* context) {
   oo::Ref<OOJSValue> result = oo::makeRef<OOJSValue>();
-  result->_val = value;
-  ooscript::addNamedValueRoot(context, &result->_val, "test OOJSValue");
+  result->_val = JS_DupValue(context, value);
   return result;
 }
 
-OOJSValue::~OOJSValue() {
-  ooscript::removeValueRoot(gOOJSMainThreadContext, &_val);
-}
+OOJSValue::~OOJSValue() { JS_FreeValue(gOOJSMainThreadContext, _val); }
 
-ooscript::Value OOJSValue::jsValueInContext(ooscript::Context) { return _val; }
+JSValue OOJSValue::jsValueInContext(JSContext* context) {
+  return JS_DupValue(context, _val);
+}
 std::string OOJSValue::className() const { return "OOJSValue"; }
 std::string OOJSValue::description() const { return "<OOJSValue>"; }
 
-#ifndef NDEBUG
-void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta limit,
-                                                   const char*, unsigned) {
-  sLimiterDepth++;
-  sLastLimit = limit;
-}
-void OOJSStopTimeLimiter_(const char*, unsigned) { sLimiterDepth--; }
-#else
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit) {
   sLimiterDepth++;
   sLastLimit = limit;
 }
 void OOJSStopTimeLimiter(void) { sLimiterDepth--; }
-#endif
 
 #if OOJS_PROFILE
 void OOJSProfileEnter(OOJSProfileStackFrame*, const char*) {}
@@ -167,12 +159,10 @@ namespace {
 
 void SetUpContext() {
   if (gOOJSMainThreadContext != nullptr) return;
-  ooscript::Runtime runtime = ooscript::newRuntime(8u * 1024u * 1024u);
-  gOOJSMainThreadContext = ooscript::newContext(runtime, 8192);
-  ooscript::beginRequest(gOOJSMainThreadContext);
-  sGlobal = ooscript::getGlobalObject(gOOJSMainThreadContext);
-  ooscript::initStandardClasses(gOOJSMainThreadContext, sGlobal);
-  InitOOJSFrameCallbacks(gOOJSMainThreadContext, sGlobal);
+  gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+  JSValue global = JS_GetGlobalObject(gOOJSMainThreadContext);
+  InitOOJSFrameCallbacks(gOOJSMainThreadContext, global);
+  JS_FreeValue(gOOJSMainThreadContext, global);
   gSharedUniverse = new FakeUniverse();
 }
 
@@ -189,19 +179,17 @@ std::string Eval(const char* src) {
       std::string("(function () { try { return String((0, eval)(\"") + quoted +
       "\")); } catch (e) { return 'threw: ' + (e && e.message !== undefined ? "
       "e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
-  bool OK = false;
-  {
-    OK = ooscript::evaluateScript(
-        gOOJSMainThreadContext, sGlobal, wrapped.c_str(),
-        static_cast<unsigned>(wrapped.size()), "test.js", 1, &result);
-  }
-  if (!OK) {
-    ooscript::clearPendingException(gOOJSMainThreadContext);
+  JSValue result = JS_Eval(gOOJSMainThreadContext, wrapped.c_str(),
+                           wrapped.size(), "test.js", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(gOOJSMainThreadContext,
+                 JS_GetException(gOOJSMainThreadContext));
     return "<evaluation failed>";
   }
-  return cxx_OOStringFromJSValue(gOOJSMainThreadContext, result)
-      .value_or("<not a string>");
+  std::string text = cxx_OOStringFromJSValue(gOOJSMainThreadContext, result)
+                         .value_or("<not a string>");
+  JS_FreeValue(gOOJSMainThreadContext, result);
+  return text;
 }
 
 void Frame(double delta) {
@@ -314,7 +302,6 @@ OO_TEST(throwingCallback) {
   Frame(1);
   OO_CHECK_EQ(Eval("log.join()"), "after");
   OO_CHECK_EQ(sLimiterDepth, 0);
-  OO_CHECK(ooscript::isInRequest(gOOJSMainThreadContext));
   OOJSFrameCallbacksRemoveAll();
 }
 

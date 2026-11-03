@@ -38,7 +38,6 @@
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/String.hpp"
-#include "ooscript/JSEngine.hpp"
 
 // main.mm defines the debug flags, and the test has its own main.
 #ifndef NDEBUG
@@ -46,7 +45,7 @@ uint32_t gDebugFlags = 0;
 #endif
 
 extern PlayerEntity* gOOPlayer;  // PlayerEntity.mm's, what PLAYER answers
-extern ooscript::Context
+extern JSContext*
     gOOJSMainThreadContext;  // the engine's; OOJSID needs it
 
 // PLAYER: the screen asks it for its status (docked: the root's member, which
@@ -55,7 +54,7 @@ extern ooscript::Context
 class StickProfileTestPlayer : public PlayerEntity {
  public:
   using PlayerEntity::doScriptEvent;
-  void doScriptEvent(ooscript::PropertyId /*message*/,
+  void doScriptEvent(OOJSPropID /*message*/,
                      const std::vector<oo::PList>& /*arguments*/) override {}
 };
 
@@ -93,7 +92,7 @@ void SetUp() {
       STATUS_DOCKED);  // the root's: what the Objective-C stand-in's -status
                        // answered
   gOOJSMainThreadContext =
-      ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
+      JS_NewContext(JS_NewRuntime());
 }
 
 OOJoystickManager* Handler() { return OOJoystickManager::sharedStickHandler(); }

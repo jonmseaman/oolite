@@ -29,7 +29,7 @@
 #include "OOJSPropID.h"
 #include "OOStringExpander.h"
 #include "oo_test.hpp"
-#include "ooscript/JSEngine.hpp"
+#include "OOJSEngineCore.h"
 
 // --- The game around the class
 // --------------------------------------------------------------
@@ -179,25 +179,10 @@ Random_Seed OOStringExpanderDefaultRandomSeed(void) { return Random_Seed{}; }
 
 // Link stubs: commodity scripts. The fakes answer no script, so the test never
 // runs one.
-ooscript::Context gOOJSMainThreadContext = nullptr;
-void ooscript::beginRequest(ooscript::Context) { std::abort(); }
-void ooscript::endRequest(ooscript::Context) { std::abort(); }
-bool ooscript::isInRequest(ooscript::Context) { std::abort(); }
-ooscript::Value ooscript::int32Value(std::int32_t) { std::abort(); }
-ooscript::Value ooscript::nullValue() {
-  std::abort();
-}  // the station argument's for none
-bool ooscript::isObjectOrNull(ooscript::Value) { std::abort(); }
-ooscript::Object ooscript::toObject(ooscript::Value) { std::abort(); }
-void OOJSInitJSIDCachePRIVATE(const char*, ooscript::PropertyId*) {
-  std::abort();
-}
-ooscript::Value OOJSValueFromPList(ooscript::Context, const oo::PList&) {
-  std::abort();
-}
-oo::PList cxx_OOJSPListFromJSObject(ooscript::Context, ooscript::Object) {
-  std::abort();
-}
+JSContext* gOOJSMainThreadContext = nullptr;
+JSAtom OOJSInternAtomPRIVATE(const char*) { std::abort(); }
+JSValue OOJSValueFromPList(JSContext*, const oo::PList&) { std::abort(); }
+oo::PList cxx_OOJSPListFromJSObject(JSContext*, JSValueConst) { std::abort(); }
 
 namespace {
 

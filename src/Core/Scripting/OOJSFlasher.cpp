@@ -34,27 +34,13 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "OOVisualEffectEntity.h"
 #include "ShipEntity.h"
-#include "ooscript/JSEngine.hpp"
-
-namespace ooscript {}
-using ooscript::CallArgs;
-using ooscript::ClassDef;
-using ooscript::ClassFlag;
-using ooscript::Context;
-using ooscript::FunctionSpec;
-using ooscript::Object;
-using ooscript::PropertyFlag;
-using ooscript::PropertyId;
-using ooscript::PropertySpec;
-using ooscript::Value;
 
 namespace {
-static ooscript::Object sFlasherPrototype;
+static JSClassID sFlasherClassID;
 }  // namespace
 
 namespace {
-static bool JSFlasherGetFlasherEntity(ooscript::Context context,
-                                      ooscript::Object jsobj,
+static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
                                       OOFlasherEntity** outEntity);
 }  // namespace
 
@@ -74,35 +60,20 @@ oo::PList NormalizedColorComponents(OOColor* color) {
 
 }  // namespace
 
-static bool FlasherGetProperty(Context cx, Object obj, PropertyId propID,
-                               Value* value);
+static JSValue FlasherGetProperty(OOJS_GETTER_ARGS);
 }  // namespace
 namespace {
-static bool FlasherSetProperty(Context cx, Object obj, PropertyId propID,
-                               bool /*strict*/, Value* value);
+static JSValue FlasherSetProperty(OOJS_SETTER_ARGS);
 }  // namespace
 
 namespace {
-static bool FlasherRemove(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static JSValue FlasherRemove(OOJS_NATIVE_ARGS);
 }  // namespace
 
 namespace {
-static ClassDef sFlasherClass = {
-    "Flasher",
-    ClassFlag::HasPrivate,
-
-    nullptr,             // addProperty
-    nullptr,             // delProperty
-    FlasherGetProperty,  // getProperty
-    FlasherSetProperty,  // setProperty
-    nullptr,             // enumerate
-    nullptr,  // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
-    nullptr,  // resolve
-    nullptr,  // convert
-    OOJSCxxObjectWrapperFinalize,  // finalize
-    nullptr,                       // call
-    nullptr,                       // construct
-    nullptr,  // backend: owned by the facade backend, must start null
+static JSClassDef sFlasherClass = {
+    .class_name = "Flasher",
+    .finalizer = OOJSObjectWrapperFinalize,
 };
 }  // namespace
 
@@ -117,68 +88,50 @@ enum : std::uint8_t {
 };
 
 namespace {
-static PropertySpec sFlasherProperties[] = {
-    // JS name							ID
-    // flags
-    {"active", kFlasher_active,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"color", kFlasher_color,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"fraction", kFlasher_fraction,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"frequency", kFlasher_frequency,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"phase", kFlasher_phase,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"size", kFlasher_size,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {0}};
-}  // namespace
-
-// Mirror of sFlasherProperties with the read-only/read-write flags the shared
-// error reporters describe the properties by (see OOJSVector.mm's
-// sVectorPropertiesRaw).
-namespace {
-static ooscript::PropertySpec sFlasherPropertiesRaw[] = {
-    // JS name							ID
-    // flags
-    {"active", kFlasher_active, OOJS_PROP_READWRITE_CB},
-    {"color", kFlasher_color, OOJS_PROP_READWRITE_CB},
-    {"fraction", kFlasher_fraction, OOJS_PROP_READWRITE_CB},
-    {"frequency", kFlasher_frequency, OOJS_PROP_READWRITE_CB},
-    {"phase", kFlasher_phase, OOJS_PROP_READWRITE_CB},
-    {"size", kFlasher_size, OOJS_PROP_READWRITE_CB},
-    {0}};
+static const JSCFunctionListEntry sFlasherProperties[] = {
+    // JS name, getter, setter, ID
+    OOJS_PROPERTY_RW("active", FlasherGetProperty, FlasherSetProperty,
+                     kFlasher_active),
+    OOJS_PROPERTY_RW("color", FlasherGetProperty, FlasherSetProperty,
+                     kFlasher_color),
+    OOJS_PROPERTY_RW("fraction", FlasherGetProperty, FlasherSetProperty,
+                     kFlasher_fraction),
+    OOJS_PROPERTY_RW("frequency", FlasherGetProperty, FlasherSetProperty,
+                     kFlasher_frequency),
+    OOJS_PROPERTY_RW("phase", FlasherGetProperty, FlasherSetProperty,
+                     kFlasher_phase),
+    OOJS_PROPERTY_RW("size", FlasherGetProperty, FlasherSetProperty,
+                     kFlasher_size),
+};
 }  // namespace
 
 namespace {
-static FunctionSpec sFlasherMethods[] = {
-    // JS name					Function
-    // min args	flags
-    {"remove", FlasherRemove, 0, 0},
-
-    {0}};
+static const JSCFunctionListEntry sFlasherMethods[] = {
+    // JS name, min args, function
+    JS_CFUNC_DEF("remove", 0, FlasherRemove),
+};
 }  // namespace
 
-void InitOOJSFlasher(ooscript::Context context, ooscript::Object global) {
-  Object proto =
-      ooscript::initClass((context), (global), (JSEntityPrototype()),
-                          &sFlasherClass, OOJSUnconstructableConstruct, 0,
-                          sFlasherProperties, sFlasherMethods, NULL, NULL);
-  sFlasherPrototype = (proto);
-  OOJSRegisterObjectConverter(&sFlasherClass, OOJSEntityObjectConverter);
-  OOJSRegisterSubclass(&sFlasherClass, JSEntityClass());
+void InitOOJSFlasher(JSContext* context, JSValueConst global) {
+  OOJSRegisterClass(&sFlasherClassID, &sFlasherClass);
+
+  JSValue parentPrototype = JS_GetClassProto(context, JSEntityClassID());
+  OOCAssert(JS_IsObject(parentPrototype),
+            "Entity must be initialized before Flasher.");
+  OOJSInitClass(context, global, sFlasherClassID, parentPrototype,
+                OOJSUnconstructableConstruct, 0, sFlasherProperties,
+                OOJS_COUNT(sFlasherProperties), sFlasherMethods,
+                OOJS_COUNT(sFlasherMethods), nullptr, 0);
+  JS_FreeValue(context, parentPrototype);
+
+  OOJSRegisterObjectConverter(sFlasherClassID, OOJSEntityObjectConverter);
+  OOJSRegisterSubclass(sFlasherClassID, JSEntityClassID());
 }
 
+JSClassID JSFlasherClassID(void) { return sFlasherClassID; }
+
 namespace {
-static bool JSFlasherGetFlasherEntity(ooscript::Context context,
-                                      ooscript::Object jsobj,
+static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
                                       OOFlasherEntity** outEntity) {
   OOJS_PROFILE_ENTER
 
@@ -205,12 +158,6 @@ static bool JSFlasherGetFlasherEntity(ooscript::Context context,
 
 // The bodies of OOFlasherEntity (OOJavaScriptExtensions), which the C++ class's
 // overrides of the root's JS members call.
-void OOJSFlasherGetJSClass(ooscript::ClassDef** outClass,
-                           ooscript::Object* outPrototype) {
-  *outClass = &sFlasherClass;
-  *outPrototype = sFlasherPrototype;
-}
-
 std::optional<std::string> OOJSFlasherJSClassName(void) {
   return std::string("Flasher");
 }
@@ -218,138 +165,123 @@ std::optional<std::string> OOJSFlasherJSClassName(void) {
 bool OOJSFlasherIsVisibleToScripts(void) { return true; }
 
 namespace {
-static bool FlasherGetProperty(Context cx, Object obj, PropertyId propID,
-                               Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-  ooscript::Object thisObj = (obj);
-  ooscript::Value* value_raw = value;
-
+static JSValue FlasherGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   OOFlasherEntity* entity = nullptr;
   oo::PList result;  // null: nil
 
-  if (!JSFlasherGetFlasherEntity(context, thisObj, &entity)) return false;
-  if (entity == nullptr) {
-    *value_raw = ooscript::undefinedValue();
-    return true;
-  }
+  if (!JSFlasherGetFlasherEntity(context, OOJS_THIS, &entity))
+    return OOJSNativeFailure(context);
+  if (entity == nullptr) return JS_UNDEFINED;
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kFlasher_active:
-      *value_raw = OOJSValueFromBOOL(entity->isActive());
-      return true;
+      return OOJSValueFromBOOL(entity->isActive());
 
     case kFlasher_color:
       result = NormalizedColorComponents(entity->color().get());
       break;
 
     case kFlasher_frequency:
-      return ooscript::newNumberValue(cx, entity->frequency(), value);
+      return JS_NewNumber(context, entity->frequency());
 
     case kFlasher_fraction:
-      return ooscript::newNumberValue(cx, entity->fraction(), value);
+      return JS_NewNumber(context, entity->fraction());
 
     case kFlasher_phase:
-      return ooscript::newNumberValue(cx, entity->phase(), value);
+      return JS_NewNumber(context, entity->phase());
 
     case kFlasher_size:
-      return ooscript::newNumberValue(cx, entity->diameter(), value);
+      return JS_NewNumber(context, entity->diameter());
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, (propID),
-                                    sFlasherPropertiesRaw);
-      return false;
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sFlasherProperties,
+                                    OOJS_COUNT(sFlasherProperties));
+      return OOJSNativeFailure(context);
   }
 
-  *value_raw = OOJSValueFromPList(context, result);
-  return true;
+  return OOJSValueFromPList(context, result);
 
   OOJS_NATIVE_EXIT
 }
 }  // namespace
 
 namespace {
-static bool FlasherSetProperty(Context cx, Object obj, PropertyId propID,
-                               bool /*strict*/, Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-  ooscript::Object thisObj = (obj);
-  ooscript::Value* value_raw = value;
-
+static JSValue FlasherSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   OOFlasherEntity* entity = nullptr;
   double fValue;
-  bool bValue;
+  int bValue;
   oo::Ref<OOColor> colorForScript;
 
-  if (!JSFlasherGetFlasherEntity(context, thisObj, &entity)) return false;
-  if (entity == nullptr) return true;
+  if (!JSFlasherGetFlasherEntity(context, OOJS_THIS, &entity))
+    return OOJSNativeFailure(context);
+  if (entity == nullptr) return JS_UNDEFINED;
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kFlasher_active:
-      if (ooscript::valueToBoolean(cx, (*value_raw), &bValue)) {
-        entity->setActive((bool)bValue);
-        return true;
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
+        entity->setActive(bValue != 0);
+        return JS_UNDEFINED;
       }
       break;
 
     case kFlasher_color:
       colorForScript = OOColor::colorWithDescription(
-          cxx_OOJSPListFromJSValue(context, *value_raw));
-      if (colorForScript != nullptr || ooscript::isNull(*value_raw)) {
+          cxx_OOJSPListFromJSValue(context, value));
+      if (colorForScript != nullptr || JS_IsNull(value)) {
         entity->setColor(colorForScript.get());
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kFlasher_frequency:
-      if (ooscript::valueToNumber(cx, (*value_raw), &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (fValue >= 0.0) {
           entity->setFrequency(fValue);
-          return true;
+          return JS_UNDEFINED;
         }
       }
       break;
 
     case kFlasher_fraction:
-      if (ooscript::valueToNumber(cx, (*value_raw), &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (fValue > 0.0 && fValue <= 1.0) {
           entity->setFraction(fValue);
-          return true;
+          return JS_UNDEFINED;
         }
       }
       break;
 
     case kFlasher_phase:
-      if (ooscript::valueToNumber(cx, (*value_raw), &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         entity->setPhase(fValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kFlasher_size:
-      if (ooscript::valueToNumber(cx, (*value_raw), &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (fValue > 0.0) {
           entity->setDiameter(fValue);
-          return true;
+          return JS_UNDEFINED;
         }
       }
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, (propID),
-                                    sFlasherPropertiesRaw);
-      return false;
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sFlasherProperties,
+                                    OOJS_COUNT(sFlasherProperties));
+      return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, (propID), sFlasherPropertiesRaw,
-                             *value_raw);
-  return false;
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sFlasherProperties,
+                             OOJS_COUNT(sFlasherProperties), value);
+  return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }
@@ -361,13 +293,12 @@ static bool FlasherSetProperty(Context cx, Object obj, PropertyId propID,
   do {                                                                      \
     if (EXPECT_NOT(                                                         \
             !JSFlasherGetFlasherEntity(context, OOJS_THIS, &(THISENT))))    \
-      return false;                                 /* Exception */         \
+      return OOJSNativeFailure(context);            /* Exception */         \
     if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID; /* the C++ flasher's */ \
   } while (0)
 
 namespace {
-static bool FlasherRemove(ooscript::Context context,
-                          ooscript::CallArgs& oojsArgs) {
+static JSValue FlasherRemove(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   OOFlasherEntity* thisEnt = nullptr;

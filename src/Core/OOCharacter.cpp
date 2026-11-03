@@ -404,8 +404,8 @@ void OOCharacter::setCharacterScript(const std::string& scriptName) {
            oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(this)))}}));
 }
 
-void OOCharacter::doScriptEvent(ooscript::PropertyId message) {
-  ooscript::Context context = OOJSAcquireContext();
+void OOCharacter::doScriptEvent(OOJSPropID message) {
+  JSContext* context = OOJSAcquireContext();
   if (_script != nullptr) _script->callMethod(message, context, NULL, 0, NULL);
   OOJSRelinquishContext(context);
 }

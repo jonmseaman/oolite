@@ -30,30 +30,15 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "OOMaths.h"
 #include "oofnd/Notification.hpp"
-#include "ooscript/JSEngine.hpp"
-
-/*
-        The two byte-identical façade <-> jsapi view helpers below are local to
-   this call site.
-*/
-
-namespace ooscript {}
-using ooscript::Context;
-using ooscript::Object;
-using ooscript::Value;
-
-namespace {
-static inline Object* OOJSFOBJP(ooscript::Object* o) {
-  return reinterpret_cast<Object*>(o);
-}
-}  // namespace
 
 OOJSPopulatorDefinition::OOJSPopulatorDefinition() {
-  _callback = ooscript::undefinedValue();
-  _callbackThis = NULL;
+  _callback = JS_UNDEFINED;
+  _callbackThis = JS_UNDEFINED;
 
   _owningScript = OOJSScript::currentlyRunningScript();
 
+  // Stays registered until destruction, so values set after a reset are also
+  // released on the next one.
   oo::NotificationCenter::defaultCenter().addObserver(
       this, kOOJavaScriptEngineWillResetNotificationName,
       OOJavaScriptEngine::sharedEngine(),
@@ -61,63 +46,78 @@ OOJSPopulatorDefinition::OOJSPopulatorDefinition() {
 }
 
 void OOJSPopulatorDefinition::deleteJSPointers() {
-  ooscript::Context context = OOJSAcquireContext();
-  _callback = ooscript::undefinedValue();
-  _callbackThis = NULL;
-  ooscript::removeValueRoot((context), (&_callback));
-  ooscript::removeObjectRoot((context), OOJSFOBJP(&_callbackThis));
-
+  JSContext* context = OOJSAcquireContext();
+  JS_FreeValue(context, _callback);
+  _callback = JS_UNDEFINED;
+  JS_FreeValue(context, _callbackThis);
+  _callbackThis = JS_UNDEFINED;
   OOJSRelinquishContext(context);
-
-  oo::NotificationCenter::defaultCenter().removeObserver(
-      this, kOOJavaScriptEngineWillResetNotificationName,
-      OOJavaScriptEngine::sharedEngine());
 }
 
 OOJSPopulatorDefinition::~OOJSPopulatorDefinition() {
+  oo::NotificationCenter::defaultCenter().removeObserver(
+      this, kOOJavaScriptEngineWillResetNotificationName,
+      OOJavaScriptEngine::sharedEngine());
+
   _owningScript = nullptr;
 
   deleteJSPointers();
 }
 
-ooscript::Value OOJSPopulatorDefinition::callback() { return _callback; }
+JSValue OOJSPopulatorDefinition::callback() {
+  return JS_DupValue(OOJSAcquireContext(), _callback);
+}
 
-void OOJSPopulatorDefinition::setCallback(ooscript::Value callback) {
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::removeValueRoot((context), (&_callback));
-  _callback = callback;
-  OOJSAddGCValueRoot(context, &_callback,
-                     "OOJSPopulatorDefinition callback function");
+void OOJSPopulatorDefinition::setCallback(JSValueConst callback) {
+  JSContext* context = OOJSAcquireContext();
+  JSValue old = _callback;
+  _callback = JS_DupValue(context, callback);
+  JS_FreeValue(context, old);
   OOJSRelinquishContext(context);
 }
 
-ooscript::Object OOJSPopulatorDefinition::callbackThis() {
-  return _callbackThis;
+JSValue OOJSPopulatorDefinition::callbackThis() {
+  return JS_DupValue(OOJSAcquireContext(), _callbackThis);
 }
 
-void OOJSPopulatorDefinition::setCallbackThis(ooscript::Object callbackThis) {
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::removeObjectRoot((context), OOJSFOBJP(&_callbackThis));
-  _callbackThis = callbackThis;
-  OOJSAddGCObjectRoot(context, &_callbackThis,
-                      "OOJSPopulatorDefinition callback this");
+void OOJSPopulatorDefinition::setCallbackThis(JSValueConst callbackThis) {
+  JSContext* context = OOJSAcquireContext();
+  JSValue old = _callbackThis;
+  _callbackThis = JS_DupValue(context, callbackThis);
+  JS_FreeValue(context, old);
   OOJSRelinquishContext(context);
 }
 
 void OOJSPopulatorDefinition::runPopulatorCallback(HPVector location) {
   ::OOJavaScriptEngine* engine = OOJavaScriptEngine::sharedEngine();
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Value loc, rval = ooscript::undefinedValue();
+  JSContext* context = OOJSAcquireContext();
+  JSValue rval = JS_UNDEFINED;
 
+  if (!JS_IsFunction(context, _callback)) {
+    // The callback was released by an engine reset.
+    OOJSRelinquishContext(context);
+    return;
+  }
+
+  JSValue loc = JS_UNDEFINED;
   VectorToJSValue(context, HPVectorToVector(location), &loc);
 
   const oo::WeakRef<OOJSScript> owner = _owningScript;  // local copy needed
   OOJSScript::pushScript(owner);
 
-  engine->callJSFunction(_callback, _callbackThis, 1, &loc, &rval);
+  // Hold our own references in case the callback replaces them.
+  JSValue callback = JS_DupValue(context, _callback);
+  JSValue callbackThis = JS_IsObject(_callbackThis)
+                             ? JS_DupValue(context, _callbackThis)
+                             : JS_UNDEFINED;
+  engine->callJSFunction(callback, callbackThis, 1, &loc, &rval);
+  JS_FreeValue(context, callback);
+  JS_FreeValue(context, callbackThis);
 
   OOJSScript::popScript(owner.get());
 
+  JS_FreeValue(context, rval);
+  JS_FreeValue(context, loc);
   OOJSRelinquishContext(context);
 }
 

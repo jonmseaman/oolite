@@ -152,16 +152,15 @@ std::optional<std::string> OOScript::scriptDescription() {
 std::optional<std::string> OOScript::version() { return std::nullopt; }
 bool OOScript::requiresTickle() { return false; }
 void OOScript::runWithTarget(Entity*) {}
-bool OOScript::callMethod(ooscript::PropertyId, ooscript::Context,
-                          ooscript::Value*, int, ooscript::Value*) {
+bool OOScript::callMethod(JSAtom, JSContext*, JSValueConst*, int, JSValue*) {
   return false;
 }
 std::string OOScript::className() const { return "OOScript"; }
 std::string OOScript::description() const { return "<OOScript>"; }
-ooscript::Value OOScript::jsValueInContext(ooscript::Context) {
+JSValue OOScript::jsValueInContext(JSContext*) {
   std::abort();
 }  // never reached (no engine is linked)
-void OOScript::clearJSSelf(ooscript::Object) {}
+void OOScript::clearJSSelf(JSValueConst) {}
 void OOScriptAutorelease(oo::Ref<OOScript>) {}
 oo::Ref<OOScript> OOScript::jsScriptFromFileNamed(const std::string&,
                                                   const oo::PList&) {
@@ -325,10 +324,8 @@ OO_TEST(massUnitOfACommodity) {
 
 // The JS glue of OOEquipmentType (OOJSPrivateObject), defined in
 // OOJSEquipmentInfo.mm, which this test does not link: the vtable names these.
-ooscript::Value OOEquipmentType::jsValueInContext(ooscript::Context) {
-  return ooscript::Value();
-}
-void OOEquipmentType::clearJSSelf(ooscript::Object) {}
+JSValue OOEquipmentType::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
+void OOEquipmentType::clearJSSelf(JSValueConst) {}
 std::optional<std::string> OOEquipmentType::jsDescription() {
   return std::nullopt;
 }

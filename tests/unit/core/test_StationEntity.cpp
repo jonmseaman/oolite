@@ -22,6 +22,8 @@
 #include "DockEntity.h"
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOCallByName.h"  // oo::EntityRespondsToName / oo::CallEntityByName
+#include "OOJSEntity.h"
+#include "OOJSShip.h"
 #include "OOJSStation.h"
 #include "OOObjCPList.h"
 #include "PlayerEntity.h"
@@ -37,7 +39,7 @@ uint32_t gDebugFlags = 0;
 class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
-extern ooscript::Context gOOJSMainThreadContext;
+extern JSContext* gOOJSMainThreadContext;
 
 class TestStationPlayer : public PlayerEntity {
  public:
@@ -96,7 +98,7 @@ void SetUp() {
   // on the main thread's context, so there is one, with nothing in it.
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
-        ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
+        JS_NewContext(JS_NewRuntime());
   sFailVirtualDock = false;
   sVirtualDocks = 0;
   sVirtualDockDict = oo::PList();
@@ -943,24 +945,26 @@ OO_TEST(stationAnswersTheStationJSClass) {
   {
     SetUp();
     TestStation* station = MakeStation("jsclass");
-    ooscript::ClassDef* stationClass = nullptr;
-    ooscript::Object stationPrototype = nullptr;
-    OOJSStationGetJSClass(&stationClass, &stationPrototype);
+    // The classes are registered by their Init functions, parents first, as
+    // the engine's start registers them.
+    JSContext* context = OOJSAcquireContext();
+    JSValue global = JS_GetGlobalObject(context);
+    InitOOJSEntity(context, global);
+    InitOOJSShip(context, global);
+    InitOOJSStation(context, global);
+    JS_FreeValue(context, global);
+    const JSClassID stationClass = JSStationClassID();
+    OO_CHECK(stationClass != 0 && stationClass != JSShipClassID());
 
     OO_CHECK(OOJSEntityJSClassName(station) ==
              std::optional<std::string>("Station"));
-    ooscript::ClassDef* jsClass = nullptr;
-    ooscript::Object prototype = reinterpret_cast<ooscript::Object>(1);
-    OOJSEntityGetJSClass(station, &jsClass, &prototype);
+    JSClassID jsClass = OOJSEntityJSClassID(station);
     OO_CHECK(jsClass == stationClass);
-    OO_CHECK(prototype == stationPrototype);
 
     ShipEntity* asShip = station;
     OO_CHECK(asShip->jsClassName() == std::optional<std::string>("Station"));
-    jsClass = nullptr;
-    prototype = reinterpret_cast<ooscript::Object>(1);
-    asShip->getJSClass(&jsClass, &prototype);
-    OO_CHECK(jsClass == stationClass && prototype == stationPrototype);
+    jsClass = asShip->jsClassID();
+    OO_CHECK(jsClass == stationClass);
   }
 }
 

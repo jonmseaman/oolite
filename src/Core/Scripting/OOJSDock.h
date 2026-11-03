@@ -26,15 +26,20 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
+#include <optional>
+#include <string>
+
 #include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
 class DockEntity;
 
-void InitOOJSDock(ooscript::Context context, ooscript::Object global);
+void InitOOJSDock(JSContext* context, JSValueConst global);
+
+JSClassID JSDockClassID(void);
 
 /*	The bodies of Entity (OOJavaScriptExtensions)'s class questions for a
    dock, which the C++ DockEntity's overrides call.
+   Its JS class is JSDockClassID() (#768's -oo_jsClassID).
 */
-void OOJSDockGetJSClass(ooscript::ClassDef** outClass,
-                        ooscript::Object* outPrototype);
 std::optional<std::string> OOJSDockJSClassName(void);

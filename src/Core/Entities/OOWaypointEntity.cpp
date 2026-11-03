@@ -263,10 +263,7 @@ void OOWaypointEntity::setNextBeacon(Entity* beaconShip) {
 bool OOWaypointEntity::isJammingScanning() { return false; }
 
 // The binding's category, which the facade forwarded.
-void OOWaypointEntity::getJSClass(ooscript::ClassDef** outClass,
-                                  ooscript::Object* outPrototype) {
-  ::OOJSWaypointGetJSClass(outClass, outPrototype);
-}
+JSClassID OOWaypointEntity::jsClassID() { return ::JSWaypointClassID(); }
 std::optional<std::string> OOWaypointEntity::jsClassName() {
   return ::OOJSWaypointJSClassName();
 }

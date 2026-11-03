@@ -29,31 +29,36 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class OOJSScript;  // imported by the .mm, so that a test can stand in for it
 
+/*	The definition owns references to its callback and callbackThis, which
+   are released on destruction and when the JavaScript engine is reset.
+*/
 class OOJSPopulatorDefinition : public oo::RefCounted {
  public:
   OOJSPopulatorDefinition();
   ~OOJSPopulatorDefinition() override;
 
-  ooscript::Value callback();
-  void setCallback(ooscript::Value callback);
-  ooscript::Object callbackThis();
-  void setCallbackThis(ooscript::Object callbackthis);
+  // Returned values are owned by the caller.
+  JSValue callback();
+  void setCallback(JSValueConst callback);
+  JSValue callbackThis();
+  void setCallbackThis(JSValueConst callbackthis);
 
   void runPopulatorCallback(HPVector location);
 
  private:
   void deleteJSPointers();
 
-  ooscript::Value _callback = {};
-  ooscript::Object _callbackThis = {};
+  JSValue _callback = JS_UNDEFINED;       // Owned.
+  JSValue _callbackThis = JS_UNDEFINED;   // Owned.
   oo::WeakRef<OOJSScript> _owningScript;  // a weak reference (was the facade's
                                           // weak reference proxy)
 };

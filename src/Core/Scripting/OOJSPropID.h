@@ -25,24 +25,27 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include "OOFunctionAttributes.h"
-#include "ooscript/JSEngine.hpp"
+
+/*	Engine-neutral names for a property ID and a value (jsid and jsval with
+        SpiderMonkey). Declared here, rather than in OOJavaScriptEngine.h, so
+   game headers included by OOJavaScriptEngine.h can use them.
+*/
+typedef JSAtom OOJSPropID;
+typedef JSValue OOJSVal;
 
 /*
         OOJSID(const char * [literal])
-        Macro to create a string-based ooscript::PropertyId. The string is
-   interned and converted into a string by a helper the first time the macro is
-   hit, then cached.
+        Macro to create a property ID. The string is interned the first time the
+        macro is hit, then cached; the atom lives as long as the runtime.
 */
-
-#define OOJSID(str)                               \
-  ({                                              \
-    static ooscript::PropertyId idCache;          \
-    static bool inited;                           \
-    if (EXPECT_NOT(!inited)) {                    \
-      OOJSInitJSIDCachePRIVATE("" str, &idCache); \
-      inited = true;                              \
-    }                                             \
-    idCache;                                      \
+#define OOJSID(str)                            \
+  ({                                           \
+    static JSAtom idCache = JS_ATOM_NULL;      \
+    if (EXPECT_NOT(idCache == JS_ATOM_NULL))   \
+      idCache = OOJSInternAtomPRIVATE("" str); \
+    idCache;                                   \
   })
-void OOJSInitJSIDCachePRIVATE(const char* name, ooscript::PropertyId* idCache);
+JSAtom OOJSInternAtomPRIVATE(const char* name);

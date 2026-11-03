@@ -32,7 +32,7 @@ uint32_t gDebugFlags = 0;
 class PlayerEntity;
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
-extern ooscript::Context gOOJSMainThreadContext;
+extern JSContext* gOOJSMainThreadContext;
 
 class TestAIPlayer : public PlayerEntity {
  public:
@@ -125,7 +125,7 @@ void SetUp() {
   gOOPlayer = player;
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
-        ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
+        JS_NewContext(JS_NewRuntime());
   ranrot_srand(
       20261007);  // as the game seeds it: an unseeded generator answers one
                   // value, and OOHPVectorRandomSpatial() never ends

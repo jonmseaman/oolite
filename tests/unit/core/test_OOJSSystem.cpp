@@ -464,28 +464,26 @@ void SetUp() {
 // is alive. With no pool it went to the main thread's implicit pool, which
 // libobjc drains at thread detach, after the C++ static destructors: an
 // OOJSValue freed there (the special-functions facade the engine makes as it
-// starts, in SetUp()) looked its context up in the destroyed ooscript context
-// table (heap-use-after-free; the test crashed at exit about 1 run in 6).
+// starts, in SetUp()) looked its context up in a destroyed context table
+// (heap-use-after-free; the test crashed at exit about 1 run in 6).
 std::string Eval(const std::string& src) {
   SetUp();
   std::string text;
   {
-    ooscript::Context context = OOJSAcquireContext();
-    ooscript::Object global =
-        OOJavaScriptEngine::sharedEngine()->globalObject();
+    JSContext* context = OOJSAcquireContext();
     std::string wrapped = "(function () { try { return String(" + src +
                           "); } catch (e) { return 'threw: ' + (e && e.message "
                           "!== undefined ? e.message : e); } })()";
-    ooscript::Value result = ooscript::undefinedValue();
-    if (!ooscript::evaluateScript(context, global, wrapped.c_str(),
-                                  static_cast<unsigned>(wrapped.size()),
-                                  "test.js", 1, &result)) {
-      ooscript::clearPendingException(context);
+    JSValue result = JS_Eval(context, wrapped.c_str(), wrapped.size(),
+                             "test.js", JS_EVAL_TYPE_GLOBAL);
+    if (JS_IsException(result)) {
+      JS_FreeValue(context, JS_GetException(context));
       text = "<evaluation failed>";
     } else {
       text =
           cxx_OOStringFromJSValue(context, result).value_or("<not a string>");
     }
+    JS_FreeValue(context, result);
     OOJSRelinquishContext(context);
   }
   return text;
@@ -774,11 +772,13 @@ OO_TEST(searches) {
   OO_CHECK_EVAL("system.shipsWithPrimaryRole('trader', system.sun).length",
                 "0");
 
-  // The predicate's exception ends the search with it.
+  // The predicate's exception ends the search: #768 reports it and stops the
+  // script (OOJSNativeFailure()), as SpiderMonkey's Oolite did, so the
+  // script's own catch does not see it.
   OO_CHECK_EVAL(
       "system.filteredEntities(this, function (e) { throw new Error('nope'); "
       "})",
-      "threw: nope");
+      "<evaluation failed>");
   OO_CHECK(Eval("system.filteredEntities(this)").rfind("threw: ", 0) == 0);
   OO_CHECK(Eval("system.entitiesWithScanClass()").rfind("threw: ", 0) == 0);
 }
@@ -897,7 +897,7 @@ OO_TEST(populators) {
   OO_CHECK(definition != nullptr);
   if (definition != nullptr) {
     {  // as Eval()
-      ooscript::Context context = OOJSAcquireContext();
+      JSContext* context = OOJSAcquireContext();
       OO_CHECK(OOJSValueIsFunction(context, definition->callback()));
       OOJSRelinquishContext(context);
     }

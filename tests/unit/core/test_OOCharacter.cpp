@@ -23,7 +23,7 @@
 #include "OOObjCPList.h"
 #include "OOStringExpander.h"
 #include "oo_test.hpp"
-#include "ooscript/JSEngine.hpp"
+#include "OOJSEngineCore.h"
 
 // --- The game around the class
 // --------------------------------------------------------------
@@ -101,10 +101,7 @@ Random_Seed cxx_RandomSeedFromString(
 }
 
 // Link stubs: character scripts. The test never runs one; a call is a test bug.
-ooscript::Context gOOJSMainThreadContext = nullptr;
-void ooscript::beginRequest(ooscript::Context) { std::abort(); }
-void ooscript::endRequest(ooscript::Context) { std::abort(); }
-bool ooscript::isInRequest(ooscript::Context) { std::abort(); }
+JSContext* gOOJSMainThreadContext = nullptr;
 
 #include "OOScript.h"
 

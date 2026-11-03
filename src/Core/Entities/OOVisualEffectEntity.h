@@ -34,7 +34,6 @@
 #include "OOPolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is oo::Ref
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class OOMesh;
 #include "OOScript.h"  // oo::Ref<OOScript> members and results
@@ -142,8 +141,7 @@ class OOVisualEffectEntity
   // The JS questions the engine asks the object (Entity
   // (OOJavaScriptExtensions)), which the effect's facade answered: the
   // binding's functions (OOJSVisualEffect.h).
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype) override;
+  JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
   bool isVisibleToScripts() override;
 
@@ -157,7 +155,7 @@ class OOVisualEffectEntity
   void setScript(const std::optional<std::string>& script_name);
   ::OOScript* script();
   oo::PList scriptInfo();
-  void doScriptEvent(ooscript::PropertyId message);
+  void doScriptEvent(OOJSPropID message);
   void remove();
 
   // OOBeaconEntity: the root's facade (Entity (OOWaypointBeacon)) answers it

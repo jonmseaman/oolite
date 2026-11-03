@@ -33,13 +33,18 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
+#include <set>
+#include <string>
+#include <vector>
+
 #include "OOFoundation.h"
 #include "OOJSPrivateObject.h"
 #include "OOTypes.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
 // The system a SystemInfo stands for, and its data through the universe.
 class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
@@ -63,15 +68,19 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
 
   std::vector<std::string> allKeys();
 
+  // Keys a script assigned null (see SystemInfoExoticSetProperty()).
+  void setNullAssigned(bool flag, const std::string& key);
+  bool isNullAssignedForKey(const std::string& key) const;
+
   OOGalaxyID galaxy() const;
   OOSystemID system() const;
   NSPoint coordinates();
 
-  // The JS glue (OOJSPrivateObject): a new SystemInfo object holding this,
-  // remembered as the latest; forgetting it when it is finalized; "[SystemInfo
-  // galaxy g, system s]".
-  ooscript::Value jsValueInContext(ooscript::Context context) override;
-  void clearJSSelf(ooscript::Object selfVal) override;
+  // The JS glue (OOJSPrivateObject): a new SystemInfo object holding this
+  // (no wrapper is remembered, so clearJSSelf() has nothing to forget);
+  // "[SystemInfo galaxy g, system s]".
+  JSValue jsValueInContext(JSContext* context) override;  // owned
+  void clearJSSelf(JSValueConst selfVal) override;
   std::optional<std::string> jsDescription() override;
 
   // oo::PListForeign: for the PList that carries this.
@@ -84,13 +93,13 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
   OOGalaxyID _galaxy;
   OOSystemID _system;
   std::string _planetKey;
-  ooscript::Object _jsSelf =
-      {};  // The latest JS SystemInfo object made for this.
+  std::set<std::string>
+      _nullAssignedKeys;  // See SystemInfoExoticSetProperty().
 };
 
-void InitOOJSSystemInfo(ooscript::Context context, ooscript::Object global);
+void InitOOJSSystemInfo(JSContext* context, JSValueConst global);
 
-// Returns ooscript::nullValue() on failure (with a JS warning, but no
+// Returns an owned value, or JS_NULL on failure (with a JS warning, but no
 // exception).
-ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context,
-                                         OOGalaxyID galaxy, OOSystemID system);
+JSValue GetJSSystemInfoForSystem(JSContext* context, OOGalaxyID galaxy,
+                                 OOSystemID system);

@@ -42,123 +42,82 @@ MA 02110-1301, USA.
 #include "StationEntity.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
-#include "ooscript/JSEngine.hpp"
 
 /*
         Station is registered as a Ship subclass and object converter with
-   &sStationClass, the same ooscript::ClassDef that ooscript::getClass() reports
-   for its instances.
+   sStationClassID, the class its instances are made with.
 */
-namespace ooscript {}
-using ooscript::CallArgs;
-using ooscript::ClassDef;
-using ooscript::ClassFlag;
-using ooscript::Context;
-using ooscript::FunctionSpec;
-using ooscript::Object;
-using ooscript::PropertyFlag;
-using ooscript::PropertyId;
-using ooscript::PropertySpec;
-using ooscript::Value;
 
-// Byte-identical façade <-> jsapi views, local to this call site (see
-// OOJSVector.mm).
 namespace {
-static inline Object* OOJSFOBJP(ooscript::Object* o) {
-  return reinterpret_cast<Object*>(o);
-}
+static JSClassID sStationClassID;
 }  // namespace
 
 namespace {
-static ooscript::Object sStationPrototype;
-}  // namespace
-
-namespace {
-static bool JSStationGetStationEntity(ooscript::Context context,
-                                      ooscript::Object stationObj,
+static bool JSStationGetStationEntity(JSContext* context,
+                                      JSValueConst stationObj,
                                       StationEntity** outEntity);
 }  // namespace
 
 namespace {
-static bool StationGetProperty(Context cx, Object obj, PropertyId propID,
-                               Value* value);
+static JSValue StationGetProperty(OOJS_GETTER_ARGS);
 }  // namespace
 namespace {
-static bool StationSetProperty(Context cx, Object obj, PropertyId propID,
-                               bool strict, Value* value);
+static JSValue StationSetProperty(OOJS_SETTER_ARGS);
 }  // namespace
 
 namespace {
-static bool StationAbortAllDockings(ooscript::Context cx,
-                                    ooscript::CallArgs& oojsArgs);
+static JSValue StationAbortAllDockings(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationAbortDockingForShip(ooscript::Context cx,
-                                       ooscript::CallArgs& oojsArgs);
+static JSValue StationAbortDockingForShip(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationCanDockShip(ooscript::Context cx,
-                               ooscript::CallArgs& oojsArgs);
+static JSValue StationCanDockShip(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationDockPlayer(ooscript::Context cx,
-                              ooscript::CallArgs& oojsArgs);
+static JSValue StationDockPlayer(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationIncreaseAlertLevel(ooscript::Context cx,
-                                      ooscript::CallArgs& oojsArgs);
+static JSValue StationIncreaseAlertLevel(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationDecreaseAlertLevel(ooscript::Context cx,
-                                      ooscript::CallArgs& oojsArgs);
+static JSValue StationDecreaseAlertLevel(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationLaunchShipWithRole(ooscript::Context cx,
-                                      ooscript::CallArgs& oojsArgs);
+static JSValue StationLaunchShipWithRole(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationLaunchDefenseShip(ooscript::Context cx,
-                                     ooscript::CallArgs& oojsArgs);
+static JSValue StationLaunchDefenseShip(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationLaunchEscort(ooscript::Context cx,
-                                ooscript::CallArgs& oojsArgs);
+static JSValue StationLaunchEscort(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationLaunchScavenger(ooscript::Context cx,
-                                   ooscript::CallArgs& oojsArgs);
+static JSValue StationLaunchScavenger(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationLaunchMiner(ooscript::Context cx,
-                               ooscript::CallArgs& oojsArgs);
+static JSValue StationLaunchMiner(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationLaunchPirateShip(ooscript::Context cx,
-                                    ooscript::CallArgs& oojsArgs);
+static JSValue StationLaunchPirateShip(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationLaunchShuttle(ooscript::Context cx,
-                                 ooscript::CallArgs& oojsArgs);
+static JSValue StationLaunchShuttle(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationLaunchPatrol(ooscript::Context cx,
-                                ooscript::CallArgs& oojsArgs);
+static JSValue StationLaunchPatrol(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationLaunchPolice(ooscript::Context cx,
-                                ooscript::CallArgs& oojsArgs);
+static JSValue StationLaunchPolice(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationSetInterface(ooscript::Context cx,
-                                ooscript::CallArgs& oojsArgs);
+static JSValue StationSetInterface(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationSetMarketPrice(ooscript::Context cx,
-                                  ooscript::CallArgs& oojsArgs);
+static JSValue StationSetMarketPrice(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationSetMarketQuantity(ooscript::Context cx,
-                                     ooscript::CallArgs& oojsArgs);
+static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
 // -oo_stringForKey: with its nil: the string, a number's -stringValue, or
@@ -198,31 +157,16 @@ std::string ValueForKey(const std::optional<std::string>& value,
 }  // namespace
 
 namespace {
-static bool StationAddShipToShipyard(ooscript::Context cx,
-                                     ooscript::CallArgs& oojsArgs);
+static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS);
 }  // namespace
 namespace {
-static bool StationRemoveShipFromShipyard(ooscript::Context cx,
-                                          ooscript::CallArgs& oojsArgs);
+static JSValue StationRemoveShipFromShipyard(OOJS_NATIVE_ARGS);
 }  // namespace
 
 namespace {
-static ClassDef sStationClass = {
-    "Station",
-    ClassFlag::HasPrivate,
-
-    nullptr,             // addProperty (engine default: PropertyStub)
-    nullptr,             // delProperty (engine default: PropertyStub)
-    StationGetProperty,  // getProperty
-    StationSetProperty,  // setProperty
-    nullptr,             // enumerate (engine default: EnumerateStub)
-    nullptr,  // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
-    nullptr,  // resolve (engine default: ResolveStub)
-    nullptr,  // convert (engine default: ConvertStub)
-    OOJSCxxObjectWrapperFinalize,  // finalize
-    nullptr,                       // call
-    nullptr,                       // construct
-    nullptr,  // backend: owned by the façade backend, must start null
+static JSClassDef sStationClass = {
+    .class_name = "Station",
+    .finalizer = OOJSObjectWrapperFinalize,
 };
 }  // namespace
 
@@ -249,128 +193,90 @@ enum : std::uint8_t {
 };
 
 namespace {
-static PropertySpec sStationProperties[] = {
-    // JS name ID
-    // flags							getter	setter
-    {"alertCondition", kStation_alertCondition,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"allegiance", kStation_allegiance,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"allowsAutoDocking", kStation_allowsAutoDocking,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"allowsFastDocking", kStation_allowsFastDocking,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"breakPattern", kStation_breakPattern,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"dockedContractors", kStation_dockedContractors, OOJS_PROP_READONLY_CB,
-     nullptr, nullptr},
-    {"dockedDefenders", kStation_dockedDefenders, OOJS_PROP_READONLY_CB,
-     nullptr, nullptr},
-    {"dockedPolice", kStation_dockedPolice, OOJS_PROP_READONLY_CB, nullptr,
-     nullptr},
-    {"equipmentPriceFactor", kStation_equipmentPriceFactor,
-     OOJS_PROP_READONLY_CB, nullptr, nullptr},
-    {"equivalentTechLevel", kStation_equivalentTechLevel, OOJS_PROP_READONLY_CB,
-     nullptr, nullptr},
-    {"hasNPCTraffic", kStation_hasNPCTraffic,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"hasShipyard", kStation_hasShipyard, OOJS_PROP_READONLY_CB, nullptr,
-     nullptr},
-    {"isMainStation", kStation_isMainStation, OOJS_PROP_READONLY_CB, nullptr,
-     nullptr},
-    {"market", kStation_market, OOJS_PROP_READONLY_CB, nullptr, nullptr},
-    {"requiresDockingClearance", kStation_requiresDockingClearance,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"roll", kStation_roll,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"suppressArrivalReports", kStation_suppressArrivalReports,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"shipyard", kStation_shipyard, OOJS_PROP_READONLY_CB, nullptr, nullptr},
-    {0}};
-}  // namespace
-
-// A raw jsapi mirror of sStationProperties, used only for the two bad-property
-// error reporters in OOJavaScriptEngine.m
-// (OOJSReportBadPropertySelector/Value), which are shared across every binding
-// file and take a ooscript::PropertySpec*.
-namespace {
-static ooscript::PropertySpec sStationPropertiesRaw[] = {
-    // JS name ID
-    // flags
-    {"alertCondition", kStation_alertCondition, OOJS_PROP_READWRITE_CB},
-    {"allegiance", kStation_allegiance, OOJS_PROP_READWRITE_CB},
-    {"allowsAutoDocking", kStation_allowsAutoDocking, OOJS_PROP_READWRITE_CB},
-    {"allowsFastDocking", kStation_allowsFastDocking, OOJS_PROP_READWRITE_CB},
-    {"breakPattern", kStation_breakPattern, OOJS_PROP_READWRITE_CB},
-    {"dockedContractors", kStation_dockedContractors, OOJS_PROP_READONLY_CB},
-    {"dockedDefenders", kStation_dockedDefenders, OOJS_PROP_READONLY_CB},
-    {"dockedPolice", kStation_dockedPolice, OOJS_PROP_READONLY_CB},
-    {"equipmentPriceFactor", kStation_equipmentPriceFactor,
-     OOJS_PROP_READONLY_CB},
-    {"equivalentTechLevel", kStation_equivalentTechLevel,
-     OOJS_PROP_READONLY_CB},
-    {"hasNPCTraffic", kStation_hasNPCTraffic, OOJS_PROP_READWRITE_CB},
-    {"hasShipyard", kStation_hasShipyard, OOJS_PROP_READONLY_CB},
-    {"isMainStation", kStation_isMainStation, OOJS_PROP_READONLY_CB},
-    {"market", kStation_market, OOJS_PROP_READONLY_CB},
-    {"requiresDockingClearance", kStation_requiresDockingClearance,
-     OOJS_PROP_READWRITE_CB},
-    {"roll", kStation_roll, OOJS_PROP_READWRITE_CB},
-    {"suppressArrivalReports", kStation_suppressArrivalReports,
-     OOJS_PROP_READWRITE_CB},
-    {"shipyard", kStation_shipyard, OOJS_PROP_READONLY_CB},
-    {0}};
+static const JSCFunctionListEntry sStationProperties[] = {
+    // JS name, getter, setter, ID
+    OOJS_PROPERTY_RW("alertCondition", StationGetProperty, StationSetProperty,
+                     kStation_alertCondition),
+    OOJS_PROPERTY_RW("allegiance", StationGetProperty, StationSetProperty,
+                     kStation_allegiance),
+    OOJS_PROPERTY_RW("allowsAutoDocking", StationGetProperty,
+                     StationSetProperty, kStation_allowsAutoDocking),
+    OOJS_PROPERTY_RW("allowsFastDocking", StationGetProperty,
+                     StationSetProperty, kStation_allowsFastDocking),
+    OOJS_PROPERTY_RW("breakPattern", StationGetProperty, StationSetProperty,
+                     kStation_breakPattern),
+    OOJS_PROPERTY_RO("dockedContractors", StationGetProperty,
+                     kStation_dockedContractors),
+    OOJS_PROPERTY_RO("dockedDefenders", StationGetProperty,
+                     kStation_dockedDefenders),
+    OOJS_PROPERTY_RO("dockedPolice", StationGetProperty, kStation_dockedPolice),
+    OOJS_PROPERTY_RO("equipmentPriceFactor", StationGetProperty,
+                     kStation_equipmentPriceFactor),
+    OOJS_PROPERTY_RO("equivalentTechLevel", StationGetProperty,
+                     kStation_equivalentTechLevel),
+    OOJS_PROPERTY_RW("hasNPCTraffic", StationGetProperty, StationSetProperty,
+                     kStation_hasNPCTraffic),
+    OOJS_PROPERTY_RO("hasShipyard", StationGetProperty, kStation_hasShipyard),
+    OOJS_PROPERTY_RO("isMainStation", StationGetProperty,
+                     kStation_isMainStation),
+    OOJS_PROPERTY_RO("market", StationGetProperty, kStation_market),
+    OOJS_PROPERTY_RW("requiresDockingClearance", StationGetProperty,
+                     StationSetProperty, kStation_requiresDockingClearance),
+    OOJS_PROPERTY_RW("roll", StationGetProperty, StationSetProperty,
+                     kStation_roll),
+    OOJS_PROPERTY_RW("suppressArrivalReports", StationGetProperty,
+                     StationSetProperty, kStation_suppressArrivalReports),
+    OOJS_PROPERTY_RO("shipyard", StationGetProperty, kStation_shipyard),
+};
 }  // namespace
 
 namespace {
-static FunctionSpec sStationMethods[] = {
-    // JS name					Function
-    // min args	flags
-    {"abortAllDockings", StationAbortAllDockings, 0, 0},
-    {"abortDockingForShip", StationAbortDockingForShip, 1, 0},
-    {"canDockShip", StationCanDockShip, 1, 0},
-    {"dockPlayer", StationDockPlayer, 0, 0},
-    {"increaseAlertLevel", StationIncreaseAlertLevel, 0, 0},
-    {"decreaseAlertLevel", StationDecreaseAlertLevel, 0, 0},
-    {"launchDefenseShip", StationLaunchDefenseShip, 0, 0},
-    {"launchEscort", StationLaunchEscort, 0, 0},
-    {"launchMiner", StationLaunchMiner, 0, 0},
-    {"launchPatrol", StationLaunchPatrol, 0, 0},
-    {"launchPirateShip", StationLaunchPirateShip, 0, 0},
-    {"launchPolice", StationLaunchPolice, 0, 0},
-    {"launchScavenger", StationLaunchScavenger, 0, 0},
-    {"launchShipWithRole", StationLaunchShipWithRole, 1, 0},
-    {"launchShuttle", StationLaunchShuttle, 0, 0},
-    {"setInterface", StationSetInterface, 0, 0},
-    {"setMarketPrice", StationSetMarketPrice, 2, 0},
-    {"setMarketQuantity", StationSetMarketQuantity, 2, 0},
-    {"addShipToShipyard", StationAddShipToShipyard, 1, 0},
-    {"removeShipFromShipyard", StationRemoveShipFromShipyard, 1, 0},
-    {0}};
+static const JSCFunctionListEntry sStationMethods[] = {
+    // JS name, min args, function
+    JS_CFUNC_DEF("abortAllDockings", 0, StationAbortAllDockings),
+    JS_CFUNC_DEF("abortDockingForShip", 1, StationAbortDockingForShip),
+    JS_CFUNC_DEF("canDockShip", 1, StationCanDockShip),
+    JS_CFUNC_DEF("dockPlayer", 0, StationDockPlayer),
+    JS_CFUNC_DEF("increaseAlertLevel", 0, StationIncreaseAlertLevel),
+    JS_CFUNC_DEF("decreaseAlertLevel", 0, StationDecreaseAlertLevel),
+    JS_CFUNC_DEF("launchDefenseShip", 0, StationLaunchDefenseShip),
+    JS_CFUNC_DEF("launchEscort", 0, StationLaunchEscort),
+    JS_CFUNC_DEF("launchMiner", 0, StationLaunchMiner),
+    JS_CFUNC_DEF("launchPatrol", 0, StationLaunchPatrol),
+    JS_CFUNC_DEF("launchPirateShip", 0, StationLaunchPirateShip),
+    JS_CFUNC_DEF("launchPolice", 0, StationLaunchPolice),
+    JS_CFUNC_DEF("launchScavenger", 0, StationLaunchScavenger),
+    JS_CFUNC_DEF("launchShipWithRole", 1, StationLaunchShipWithRole),
+    JS_CFUNC_DEF("launchShuttle", 0, StationLaunchShuttle),
+    JS_CFUNC_DEF("setInterface", 0, StationSetInterface),
+    JS_CFUNC_DEF("setMarketPrice", 2, StationSetMarketPrice),
+    JS_CFUNC_DEF("setMarketQuantity", 2, StationSetMarketQuantity),
+    JS_CFUNC_DEF("addShipToShipyard", 1, StationAddShipToShipyard),
+    JS_CFUNC_DEF("removeShipFromShipyard", 1, StationRemoveShipFromShipyard),
+};
 }  // namespace
 
-void InitOOJSStation(ooscript::Context context, ooscript::Object global) {
-  Object proto =
-      ooscript::initClass((context), (global), (JSShipPrototype()),
-                          &sStationClass, OOJSUnconstructableConstruct, 0,
-                          sStationProperties, sStationMethods, NULL, NULL);
-  sStationPrototype = (proto);
-  OOJSRegisterObjectConverter(&sStationClass, OOJSEntityObjectConverter);
-  OOJSRegisterSubclass(&sStationClass, JSShipClass());
+void InitOOJSStation(JSContext* context, JSValueConst global) {
+  OOJSRegisterClass(&sStationClassID, &sStationClass);
+
+  JSValue parentPrototype = JS_GetClassProto(context, JSShipClassID());
+  OOCAssert(JS_IsObject(parentPrototype),
+            "Ship must be initialized before Station.");
+  OOJSInitClass(context, global, sStationClassID, parentPrototype,
+                OOJSUnconstructableConstruct, 0, sStationProperties,
+                OOJS_COUNT(sStationProperties), sStationMethods,
+                OOJS_COUNT(sStationMethods), nullptr, 0);
+  JS_FreeValue(context, parentPrototype);
+
+  OOJSRegisterObjectConverter(sStationClassID, OOJSEntityObjectConverter);
+  OOJSRegisterSubclass(sStationClassID, JSShipClassID());
 }
 
+JSClassID JSStationClassID(void) { return sStationClassID; }
+
 namespace {
-static bool JSStationGetStationEntity(ooscript::Context context,
-                                      ooscript::Object stationObj,
+static bool JSStationGetStationEntity(JSContext* context,
+                                      JSValueConst stationObj,
                                       StationEntity** outEntity) {
   OOJS_PROFILE_ENTER
 
@@ -395,8 +301,7 @@ static bool JSStationGetStationEntity(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool JSStationGetShipEntity(ooscript::Context context,
-                                   ooscript::Object shipObj,
+static bool JSStationGetShipEntity(JSContext* context, JSValueConst shipObj,
                                    ShipEntity** outEntity) {
   OOJS_PROFILE_ENTER
 
@@ -418,155 +323,117 @@ static bool JSStationGetShipEntity(ooscript::Context context,
 }
 }  // namespace
 
-// The bodies of StationEntity (OOJavaScriptExtensions), which StationEntity's
-// getJSClass and jsClassName call.
-void OOJSStationGetJSClass(ooscript::ClassDef** outClass,
-                           ooscript::Object* outPrototype) {
-  *outClass = &sStationClass;
-  *outPrototype = sStationPrototype;
-}
+/*	The SpiderMonkey methods treated a failed lookup of this as a no-op (a
+        stale reference). If the lookup failed because this is not an Entity, an
+        error is pending, and QuickJS natives must not return normally with an
+        exception pending.
+*/
+#define GET_THIS_STATION(THISENT)                                     \
+  do {                                                                \
+    if (!JSStationGetStationEntity(context, OOJS_THIS, &(THISENT))) { \
+      if (JS_HasException(context)) return JS_EXCEPTION;              \
+      OOJS_RETURN_VOID; /* stale reference, no-op */                  \
+    }                                                                 \
+  } while (0)
 
+// The bodies of StationEntity (OOJavaScriptExtensions), which StationEntity's
+// jsClassName calls; its JS class is JSStationClassID().
 std::optional<std::string> OOJSStationJSClassName(void) {
   return std::string("Station");
 }
 
 namespace {
-static bool StationGetProperty(Context cx, Object obj, PropertyId propID,
-                               Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-  ooscript::Object thisObj = (obj);
-  ooscript::Value* value_raw = (value);
-
+static JSValue StationGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* entity = nullptr;
 
-  if (!JSStationGetStationEntity(context, thisObj, &entity)) return false;
-  if (entity == nullptr) {
-    *value_raw = ooscript::undefinedValue();
-    return true;
-  }
+  if (!JSStationGetStationEntity(context, OOJS_THIS, &entity))
+    return OOJSNativeFailure(context);
+  if (entity == nullptr) return JS_UNDEFINED;
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kStation_isMainStation:
-      *value_raw = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           entity == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr));
-      return true;
 
     case kStation_hasNPCTraffic:
-      *value_raw = OOJSValueFromBOOL(
-          (entity != nullptr ? entity->getHasNPCTraffic() : false));
-      return true;
+      return OOJSValueFromBOOL(entity->getHasNPCTraffic());
 
     case kStation_hasShipyard:
-      *value_raw = OOJSValueFromBOOL(
-          (entity != nullptr ? entity->hasShipyard() : false));
-      return true;
+      return OOJSValueFromBOOL(entity->hasShipyard());
 
     case kStation_alertCondition:
-      *value_raw = ooscript::int32Value(
-          entity != nullptr ? static_cast<std::int32_t>(entity->getAlertLevel())
-                            : 0);  // 0: a message to nil's answer
-      return true;
+      return JS_NewInt32(context,
+                         static_cast<std::int32_t>(entity->getAlertLevel()));
 
     case kStation_allegiance: {
-      const std::optional<std::string> allegiance =
-          (entity != nullptr ? entity->getAllegiance()
-                             : std::optional<std::string>());
-      *value_raw = OOJSValueFromPList(
-          context, allegiance.has_value() ? oo::PList(*allegiance)
-                                          : oo::PList());  // null for none
-      return true;
+      const std::optional<std::string> allegiance = entity->getAllegiance();
+      return OOJSValueFromPList(context, allegiance.has_value()
+                                             ? oo::PList(*allegiance)
+                                             : oo::PList());  // null for none
     }
 
     case kStation_requiresDockingClearance:
-      *value_raw = OOJSValueFromBOOL(
-          (entity != nullptr ? entity->getRequiresDockingClearance() : false));
-      return true;
+      return OOJSValueFromBOOL(entity->getRequiresDockingClearance());
 
     case kStation_roll:
       // same as in ship definition, but this time read/write below
-      return ooscript::newNumberValue(
-          cx, (entity != nullptr ? entity->ShipEntity::getFlightRoll() : 0.0f),
-          value);  // qualified: the final overrider, so the binding test stands
-                   // in for it
+      return JS_NewNumber(
+          context,
+          entity->ShipEntity::getFlightRoll());  // qualified: the final
+                                                 // overrider, so the binding
+                                                 // test stands in for it
 
     case kStation_allowsFastDocking:
-      *value_raw = OOJSValueFromBOOL(
-          (entity != nullptr ? entity->getAllowsFastDocking() : false));
-      return true;
+      return OOJSValueFromBOOL(entity->getAllowsFastDocking());
 
     case kStation_allowsAutoDocking:
-      *value_raw = OOJSValueFromBOOL(
-          (entity != nullptr ? entity->getAllowsAutoDocking() : false));
-      return true;
+      return OOJSValueFromBOOL(entity->getAllowsAutoDocking());
 
     case kStation_dockedContractors:
-      *value_raw = ooscript::int32Value((
-          entity != nullptr ? entity->countOfDockedContractors() : unsigned{}));
-      return true;
+      return JS_NewInt32(context, static_cast<std::int32_t>(
+                                      entity->countOfDockedContractors()));
 
     case kStation_dockedPolice:
-      *value_raw = ooscript::int32Value(
-          (entity != nullptr ? entity->countOfDockedPolice() : unsigned{}));
-      return true;
+      return JS_NewInt32(
+          context, static_cast<std::int32_t>(entity->countOfDockedPolice()));
 
     case kStation_dockedDefenders:
-      *value_raw = ooscript::int32Value(
-          (entity != nullptr ? entity->countOfDockedDefenders() : unsigned{}));
-      return true;
+      return JS_NewInt32(
+          context, static_cast<std::int32_t>(entity->countOfDockedDefenders()));
 
     case kStation_equivalentTechLevel:
-      *value_raw = ooscript::int32Value(
-          (int32_t)(entity != nullptr ? entity->getEquivalentTechLevel() : 0));
-      return true;
+      return JS_NewInt32(context, (int32_t)entity->getEquivalentTechLevel());
 
     case kStation_equipmentPriceFactor:
-      return ooscript::newNumberValue(
-          cx, (entity != nullptr ? entity->getEquipmentPriceFactor() : 0.0f),
-          value);
+      return JS_NewNumber(context, entity->getEquipmentPriceFactor());
 
     case kStation_suppressArrivalReports:
-      *value_raw = OOJSValueFromBOOL(
-          (entity != nullptr ? entity->suppressArrivalReports() : false));
-      return true;
+      return OOJSValueFromBOOL(entity->suppressArrivalReports());
 
     case kStation_breakPattern:
-      *value_raw = OOJSValueFromBOOL(
-          (entity != nullptr ? entity->getHasBreakPattern() : false));
-      return true;
+      return OOJSValueFromBOOL(entity->getHasBreakPattern());
 
     case kStation_shipyard: {
-      if (!(entity != nullptr ? entity->hasShipyard() : false)) {
+      if (!entity->hasShipyard()) {
         // return null if station has no shipyard
-        *value_raw = ooscript::nullValue();
-      } else {
-        if ((entity != nullptr ? entity->getLocalShipyard()
-                               : (std::vector<oo::PList>*)nullptr) == nullptr) {
-          if (entity != nullptr) entity->generateShipyard();
-        }
-        std::vector<oo::PList>* shipyard =
-            (entity != nullptr ? entity->getLocalShipyard()
-                               : (std::vector<oo::PList>*)nullptr);
-        *value_raw = OOJSValueFromPList(
-            context, shipyard != nullptr ? oo::PList(*shipyard) : oo::PList());
+        return JS_NULL;
       }
-      return true;
+      if (entity->getLocalShipyard() == nullptr) entity->generateShipyard();
+      std::vector<oo::PList>* shipyard = entity->getLocalShipyard();
+      return OOJSValueFromPList(
+          context, shipyard != nullptr ? oo::PList(*shipyard) : oo::PList());
     }
 
-    case kStation_market: {
-      *value_raw = OOJSValueFromPList(
-          context, (entity != nullptr ? entity->localMarketForScripting()
-                                      : oo::PList()));
-      return true;
-    }
+    case kStation_market:
+      return OOJSValueFromPList(context, entity->localMarketForScripting());
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, (propID),
-                                    sStationPropertiesRaw);
-      return false;
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sStationProperties,
+                                    OOJS_COUNT(sStationProperties));
+      return OOJSNativeFailure(context);
   }
 
   OOJS_NATIVE_EXIT
@@ -574,59 +441,52 @@ static bool StationGetProperty(Context cx, Object obj, PropertyId propID,
 }  // namespace
 
 namespace {
-static bool StationSetProperty(Context cx, Object obj, PropertyId propID,
-                               bool /*strict*/, Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-  ooscript::Object thisObj = (obj);
-  ooscript::Value* value_raw = (value);
-
+static JSValue StationSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* entity = nullptr;
-  bool bValue;
+  int bValue;
   int32_t iValue;
   double fValue;
   std::optional<std::string> sValue;
 
-  if (!JSStationGetStationEntity(context, thisObj, &entity)) return false;
-  if (entity == nullptr) return true;
+  if (!JSStationGetStationEntity(context, OOJS_THIS, &entity))
+    return OOJSNativeFailure(context);
+  if (entity == nullptr) return JS_UNDEFINED;
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kStation_hasNPCTraffic:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-        if (entity != nullptr) entity->setHasNPCTraffic(bValue);
-        return true;
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
+        entity->setHasNPCTraffic(bValue != 0);
+        return JS_UNDEFINED;
       }
       break;
 
     case kStation_alertCondition:
-      if (ooscript::valueToInt32(cx, *value, &iValue)) {
-        if (entity != nullptr)
-          entity->setAlertLevel((OOStationAlertLevel)iValue,
-                                false);  // Performs range checking
-        return true;
+      if (OOJSValueToInt32(context, value, &iValue)) {
+        entity->setAlertLevel((OOStationAlertLevel)iValue,
+                              false);  // Performs range checking
+        return JS_UNDEFINED;
       }
       break;
 
     case kStation_allegiance:
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
-        if (entity != nullptr) entity->setAllegiance(sValue);
-        return true;
+        entity->setAllegiance(sValue);
+        return JS_UNDEFINED;
       }
       break;
 
     case kStation_requiresDockingClearance:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-        if (entity != nullptr) entity->setRequiresDockingClearance(bValue);
-        return true;
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
+        entity->setRequiresDockingClearance(bValue != 0);
+        return JS_UNDEFINED;
       }
       break;
 
     case kStation_roll:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         /*				if (fValue < -2.0)  fValue = -2.0;
                                         if (fValue > 2.0)  fValue = 2.0;
            // clamping to -2.0...2.0 gives us ±M_PI actual maximum rotation
@@ -636,48 +496,49 @@ static bool StationSetProperty(Context cx, Object obj, PropertyId propID,
           fValue = -M_PI;
         else if (fValue > M_PI)
           fValue = M_PI;
-        if (entity != nullptr) entity->setRawRoll(fValue);
-        return true;
+        entity->setRawRoll(fValue);
+        return JS_UNDEFINED;
       }
       break;
 
     case kStation_allowsFastDocking:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-        if (entity != nullptr) entity->setAllowsFastDocking(bValue);
-        return true;
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
+        entity->setAllowsFastDocking(bValue != 0);
+        return JS_UNDEFINED;
       }
       break;
 
     case kStation_allowsAutoDocking:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-        if (entity != nullptr) entity->setAllowsAutoDocking(bValue);
-        return true;
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
+        entity->setAllowsAutoDocking(bValue != 0);
+        return JS_UNDEFINED;
       }
       break;
 
     case kStation_suppressArrivalReports:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-        if (entity != nullptr) entity->setSuppressArrivalReports(bValue);
-        return true;
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
+        entity->setSuppressArrivalReports(bValue != 0);
+        return JS_UNDEFINED;
       }
       break;
 
     case kStation_breakPattern:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
-        if (entity != nullptr) entity->setHasBreakPattern(bValue);
-        return true;
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
+        entity->setHasBreakPattern(bValue != 0);
+        return JS_UNDEFINED;
       }
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, (propID),
-                                    sStationPropertiesRaw);
-      return false;
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sStationProperties,
+                                    OOJS_COUNT(sStationProperties));
+      return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, (propID), sStationPropertiesRaw,
-                             *value_raw);
-  return false;
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sStationProperties,
+                             OOJS_COUNT(sStationProperties), value);
+  return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }
@@ -686,12 +547,14 @@ static bool StationSetProperty(Context cx, Object obj, PropertyId propID,
 // *** Methods ***
 
 namespace {
-static bool StationAbortAllDockings(ooscript::Context context,
-                                    ooscript::CallArgs& oojsArgs) {
+static JSValue StationAbortAllDockings(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
   JSStationGetStationEntity(context, OOJS_THIS, &station);
+  // SpiderMonkey tolerated returning normally with an error pending; QuickJS
+  // does not.
+  if (JS_HasException(context)) return JS_EXCEPTION;
   if (station != nullptr) station->abortAllDockings();
 
   OOJS_RETURN_VOID;
@@ -701,21 +564,25 @@ static bool StationAbortAllDockings(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationAbortDockingForShip(ooscript::Context context,
-                                       ooscript::CallArgs& oojsArgs) {
+static JSValue StationAbortDockingForShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
   JSStationGetStationEntity(context, OOJS_THIS, &station);
-  if (oojsArgs.count() == 0) {
+  if (JS_HasException(context)) return JS_EXCEPTION;
+  if (argc == 0) {
     cxx_OOJSReportBadArguments(context, "Station", "abortDockingForShip",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "ship in docking queue");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "ship in docking queue");
+    return OOJSNativeFailure(context);
   }
-  if (!ooscript::isObjectOrNull(OOJS_ARGV[0])) return false;
+  // (null was an object to SpiderMonkey, but passing it was not meaningful; it
+  // now fails like other non-objects.)
+  if (JS_IsNull(OOJS_ARGV[0]) || !JS_IsObject(OOJS_ARGV[0]))
+    return OOJSNativeFailure(context);
   ShipEntity* ship = nullptr;
-  JSStationGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]), &ship);
+  JSStationGetShipEntity(context, OOJS_ARGV[0], &ship);
+  if (JS_HasException(context)) return JS_EXCEPTION;
   if (ship != nullptr) {
     if (station != nullptr) station->abortDockingForShip(ship);
   }
@@ -729,32 +596,26 @@ static bool StationAbortDockingForShip(ooscript::Context context,
 // canDockShip(shipEntity) : boolean
 // Proposed by phkb (Nick Rogers) 20161206
 namespace {
-static bool StationCanDockShip(ooscript::Context context,
-                               ooscript::CallArgs& oojsArgs)
-
-{
+static JSValue StationCanDockShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   bool result = true;
   ShipEntity* shipToCheck = nullptr;
 
-  if (oojsArgs.count() > 0) {
-    if (!ooscript::isObjectOrNull(OOJS_ARGV[0]) ||
-        !JSStationGetShipEntity(context, ooscript::toObject(OOJS_ARGV[0]),
-                                &shipToCheck)) {
-      return false;
+  if (argc > 0) {
+    if (JS_IsNull(OOJS_ARGV[0]) || !JS_IsObject(OOJS_ARGV[0]) ||
+        !JSStationGetShipEntity(context, OOJS_ARGV[0], &shipToCheck)) {
+      return OOJSNativeFailure(context);
     }
   }
   if (EXPECT_NOT(shipToCheck == nullptr)) {
-    cxx_OOJSReportBadArguments(context, "Station", "canDockShip",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "shipEntity");
-    return false;
+    cxx_OOJSReportBadArguments(context, "Station", "canDockShip", MIN(argc, 1),
+                               OOJS_ARGV, std::nullopt, "shipEntity");
+    return OOJSNativeFailure(context);
   }
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   OOJS_BEGIN_FULL_NATIVE(context)
   result =
@@ -769,8 +630,7 @@ static bool StationCanDockShip(ooscript::Context context,
 // dockPlayer()
 // Proposed and written by Frame 20090729
 namespace {
-static bool StationDockPlayer(ooscript::Context context,
-                              ooscript::CallArgs& oojsArgs) {
+static JSValue StationDockPlayer(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -793,6 +653,9 @@ static bool StationDockPlayer(ooscript::Context context,
   {
     StationEntity* stationForDockingPlayer = nullptr;
     JSStationGetStationEntity(context, OOJS_THIS, &stationForDockingPlayer);
+    // SpiderMonkey tolerated returning normally with an error pending; QuickJS
+    // does not.
+    if (JS_HasException(context)) return JS_EXCEPTION;
     if (player != nullptr)
       player->setDockingClearanceStatus(DOCKING_CLEARANCE_STATUS_GRANTED);
     if (player != nullptr)
@@ -812,13 +675,10 @@ static bool StationDockPlayer(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationIncreaseAlertLevel(ooscript::Context context,
-                                      ooscript::CallArgs& oojsArgs) {
+static JSValue StationIncreaseAlertLevel(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
   StationEntity* station = nullptr;
-
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   OOJS_BEGIN_FULL_NATIVE(context)
   if ((station != nullptr
@@ -835,13 +695,10 @@ static bool StationIncreaseAlertLevel(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationDecreaseAlertLevel(ooscript::Context context,
-                                      ooscript::CallArgs& oojsArgs) {
+static JSValue StationDecreaseAlertLevel(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
   StationEntity* station = nullptr;
-
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   OOJS_BEGIN_FULL_NATIVE(context)
   if ((station != nullptr
@@ -859,8 +716,7 @@ static bool StationDecreaseAlertLevel(ooscript::Context context,
 
 // launchShipWithRole(role : String [, abortAllDockings : boolean]) : shipEntity
 namespace {
-static bool StationLaunchShipWithRole(ooscript::Context context,
-                                      ooscript::CallArgs& oojsArgs) {
+static JSValue StationLaunchShipWithRole(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> shipRole;
@@ -868,20 +724,17 @@ static bool StationLaunchShipWithRole(ooscript::Context context,
   ShipEntity* result = nullptr;
   bool abortAllDockings = false;
 
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
-  if (oojsArgs.count() > 0)
-    shipRole = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 0) shipRole = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!shipRole.has_value())) {
     cxx_OOJSReportBadArguments(context, "Station", "launchShipWithRole",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "string (role)");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "string (role)");
+    return OOJSNativeFailure(context);
   }
 
-  if (oojsArgs.count() > 1)
-    ooscript::valueToBoolean((context), (OOJS_ARGV[1]), &abortAllDockings);
+  if (argc > 1) abortAllDockings = JS_ToBool(context, OOJS_ARGV[1]) > 0;
 
   OOJS_BEGIN_FULL_NATIVE(context)
   result = oo::ToShip(oo::EntityIn(
@@ -899,13 +752,11 @@ static bool StationLaunchShipWithRole(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationLaunchDefenseShip(ooscript::Context context,
-                                     ooscript::CallArgs& oojsArgs) {
+static JSValue StationLaunchDefenseShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -920,13 +771,11 @@ static bool StationLaunchDefenseShip(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationLaunchEscort(ooscript::Context context,
-                                ooscript::CallArgs& oojsArgs) {
+static JSValue StationLaunchEscort(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -941,13 +790,11 @@ static bool StationLaunchEscort(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationLaunchScavenger(ooscript::Context context,
-                                   ooscript::CallArgs& oojsArgs) {
+static JSValue StationLaunchScavenger(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -962,13 +809,11 @@ static bool StationLaunchScavenger(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationLaunchMiner(ooscript::Context context,
-                               ooscript::CallArgs& oojsArgs) {
+static JSValue StationLaunchMiner(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -982,13 +827,11 @@ static bool StationLaunchMiner(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationLaunchPirateShip(ooscript::Context context,
-                                    ooscript::CallArgs& oojsArgs) {
+static JSValue StationLaunchPirateShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -997,19 +840,16 @@ static bool StationLaunchPirateShip(ooscript::Context context,
   OOJS_END_FULL_NATIVE
   OOJS_RETURN(
       OOJSValueFromCxxObject(context, launched));  // the C++ ship's JS value
-
   OOJS_NATIVE_EXIT
 }
 }  // namespace
 
 namespace {
-static bool StationLaunchShuttle(ooscript::Context context,
-                                 ooscript::CallArgs& oojsArgs) {
+static JSValue StationLaunchShuttle(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -1023,13 +863,11 @@ static bool StationLaunchShuttle(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationLaunchPatrol(ooscript::Context context,
-                                ooscript::CallArgs& oojsArgs) {
+static JSValue StationLaunchPatrol(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   ShipEntity* launched = nullptr;
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -1043,13 +881,11 @@ static bool StationLaunchPatrol(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationLaunchPolice(ooscript::Context context,
-                                ooscript::CallArgs& oojsArgs) {
+static JSValue StationLaunchPolice(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   oo::PList::Array launched;  // the launched ships' entity nodes, in order
   OOJS_BEGIN_FULL_NATIVE(context)
@@ -1064,68 +900,86 @@ static bool StationLaunchPolice(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationSetInterface(ooscript::Context context,
-                                ooscript::CallArgs& oojsArgs) {
+// Get a property of a definition object (owned). As before, a failed get is
+// treated like a missing property.
+JSValue GetParam(JSContext* context, JSValueConst object, const char* key) {
+  JSValue value = JS_GetPropertyStr(context, object, key);
+  if (JS_IsException(value)) {
+    OOJSReportPendingException(context);
+    return JS_UNDEFINED;
+  }
+  return value;
+}
+}  // namespace
+
+namespace {
+static JSValue StationSetInterface(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
-  if (oojsArgs.count() < 1) {
-    cxx_OOJSReportBadArguments(context, "Station", "setInterface",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "key [, definition]");
-    return false;
+  if (argc < 1) {
+    cxx_OOJSReportBadArguments(context, "Station", "setInterface", MIN(argc, 1),
+                               OOJS_ARGV, std::nullopt, "key [, definition]");
+    return OOJSNativeFailure(context);
   }
   std::optional<std::string> key =
       cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
 
-  if (oojsArgs.count() < 2 || ooscript::isNull(OOJS_ARGV[1])) {
+  if (argc < 2 || JS_IsNull(OOJS_ARGV[1])) {
     if (station != nullptr)
       station->setInterfaceDefinition(nullptr, key.value_or(""));
     OOJS_RETURN_VOID;
   }
 
-  ooscript::Value value = ooscript::nullValue();
-  ooscript::Value callback = ooscript::nullValue();
-  ooscript::Object callbackThis = NULL;
-  ooscript::Object params = NULL;
+  // Owned; freed on every path.
+  JSValue value = JS_UNDEFINED;
+  JSValue callback = JS_UNDEFINED;
+  JSValue params = JS_UNDEFINED;
 
   std::optional<std::string> title;
   std::optional<std::string> summary;
   std::optional<std::string> category;
 
-  if (!ooscript::valueToObject(context, (OOJS_ARGV[1]), OOJSFOBJP(&params))) {
-    cxx_OOJSReportBadArguments(context, "Station", "setInterface",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "key [, definition]");
-    return false;
+  // #768's fail label: free what is held, then report.
+  auto fail = [&](const char* errorDescription) -> JSValue {
+    JS_FreeValue(context, callback);
+    JS_FreeValue(context, value);
+    JS_FreeValue(context, params);
+    cxx_OOJSReportBadArguments(context, "Station", "setInterface", MIN(argc, 1),
+                               OOJS_ARGV, std::nullopt, errorDescription);
+    return OOJSNativeFailure(context);
+  };
+
+  // SpiderMonkey's JS_ValueToObject() boxed primitives. (It gave no object for
+  // undefined, which then could not work; treat it as invalid.)
+  if (!JS_IsUndefined(OOJS_ARGV[1])) {
+    params = JS_ToObject(context, OOJS_ARGV[1]);
+    if (JS_IsException(params)) {
+      JS_FreeValue(context, JS_GetException(context));
+      params = JS_UNDEFINED;
+    }
   }
+  if (!JS_IsObject(params)) return fail("key [, definition]");
 
   // get and validate title
-  if (!ooscript::getProperty(context, (params), "title", (&value)) ||
-      ooscript::isUndefined(value)) {
-    cxx_OOJSReportBadArguments(context, "Station", "setInterface",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt,
-                               "key [, definition]; if definition is set, it "
-                               "must have a 'title' property.");
-    return false;
-  }
+  value = GetParam(context, params, "title");
+  if (JS_IsUndefined(value))
+    return fail(
+        "key [, definition]; if definition is set, it must have a 'title' "
+        "property.");
   title = cxx_OOStringFromJSValue(context, value);
-  if (!title.has_value() || title->empty()) {
-    cxx_OOJSReportBadArguments(context, "Station", "setInterface",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt,
-                               "key [, definition]; if definition is set, "
-                               "'title' property must be a non-empty string.");
-    return false;
-  }
+  JS_FreeValue(context, value);
+  value = JS_UNDEFINED;
+  if (!title.has_value() || title->empty())
+    return fail(
+        "key [, definition]; if definition is set, 'title' property must be a "
+        "non-empty string.");
 
   // get category with default
-  if (!ooscript::getProperty(context, (params), "category", (&value)) ||
-      ooscript::isUndefined(value)) {
+  value = GetParam(context, params, "category");
+  if (JS_IsUndefined(value)) {
     category = OO_DESC("interfaces-category-uncategorised");
   } else {
     category = cxx_OOStringFromJSValue(context, value);
@@ -1133,44 +987,31 @@ static bool StationSetInterface(ooscript::Context context,
       category = OO_DESC("interfaces-category-uncategorised");
     }
   }
+  JS_FreeValue(context, value);
+  value = JS_UNDEFINED;
 
   // get and validate summary
-  if (!ooscript::getProperty(context, (params), "summary", (&value)) ||
-      ooscript::isUndefined(value)) {
-    cxx_OOJSReportBadArguments(context, "Station", "setInterface",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt,
-                               "key [, definition]; if definition is set, it "
-                               "must have a 'summary' property.");
-    return false;
-  }
+  value = GetParam(context, params, "summary");
+  if (JS_IsUndefined(value))
+    return fail(
+        "key [, definition]; if definition is set, it must have a 'summary' "
+        "property.");
   summary = cxx_OOStringFromJSValue(context, value);
-  if (!summary.has_value() || summary->empty()) {
-    cxx_OOJSReportBadArguments(
-        context, "Station", "setInterface", MIN(oojsArgs.count(), 1U),
-        OOJS_ARGV, std::nullopt,
+  JS_FreeValue(context, value);
+  value = JS_UNDEFINED;
+  if (!summary.has_value() || summary->empty())
+    return fail(
         "key [, definition]; if definition is set, 'summary' property must be "
         "a non-empty string.");
-    return false;
-  }
 
   // get and validate callback
-  if (!ooscript::getProperty(context, (params), "callback", (&callback)) ||
-      ooscript::isUndefined(callback)) {
-    cxx_OOJSReportBadArguments(context, "Station", "setInterface",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt,
-                               "key [, definition]; if definition is set, it "
-                               "must have a 'callback' property.");
-    return false;
-  }
-  if (!OOJSValueIsFunction(context, callback)) {
-    cxx_OOJSReportBadArguments(
-        context, "Station", "setInterface", MIN(oojsArgs.count(), 1U),
-        OOJS_ARGV, std::nullopt,
-        "key [, definition]; 'callback' property must be a function.");
-    return false;
-  }
+  callback = GetParam(context, params, "callback");
+  if (JS_IsUndefined(callback))
+    return fail(
+        "key [, definition]; if definition is set, it must have a 'callback' "
+        "property.");
+  if (!OOJSValueIsFunction(context, callback))
+    return fail("key [, definition]; 'callback' property must be a function.");
 
   // The station keeps it (oo::Ref).
   const oo::Ref<OOJSInterfaceDefinition> definition =
@@ -1179,15 +1020,29 @@ static bool StationSetInterface(ooscript::Context context,
   cxxDefinition->setTitle(title);
   cxxDefinition->setCategory(*category);
   cxxDefinition->setSummary(*summary);
-  cxxDefinition->setCallback(callback);
+  cxxDefinition->setCallback(callback);  // Takes its own reference.
+  JS_FreeValue(context, callback);
+  callback = JS_UNDEFINED;
 
   // get callback 'this'
-  if (ooscript::getProperty(context, (params), "cbThis", (&value)) &&
-      !ooscript::isUndefined(value)) {
-    ooscript::valueToObject(context, (value), OOJSFOBJP(&callbackThis));
-    cxxDefinition->setCallbackThis(callbackThis);
+  value = GetParam(context, params, "cbThis");
+  if (!JS_IsUndefined(value)) {
+    // As with SpiderMonkey's JS_ValueToObject(), null gives no object;
+    // primitives are boxed.
+    if (!JS_IsNull(value)) {
+      JSValue callbackThis = JS_ToObject(context, value);
+      if (JS_IsException(callbackThis)) {
+        JS_FreeValue(context, JS_GetException(context));
+      } else {
+        cxxDefinition->setCallbackThis(
+            callbackThis);  // Takes its own reference.
+      }
+      JS_FreeValue(context, callbackThis);
+    }
     // can do .bind(this) for callback instead
   }
+  JS_FreeValue(context, value);
+  JS_FreeValue(context, params);
 
   if (station != nullptr)
     station->setInterfaceDefinition(definition.get(), key.value_or(""));
@@ -1199,19 +1054,17 @@ static bool StationSetInterface(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationSetMarketPrice(ooscript::Context context,
-                                  ooscript::CallArgs& oojsArgs) {
+static JSValue StationSetMarketPrice(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
-  if (oojsArgs.count() < 2) {
+  if (argc < 2) {
     cxx_OOJSReportBadArguments(context, "Station", "setMarketPrice",
-                               MIN(oojsArgs.count(), 2U), OOJS_ARGV,
-                               std::nullopt, "commodity, credits");
-    return false;
+                               MIN(argc, 2), OOJS_ARGV, std::nullopt,
+                               "commodity, credits");
+    return OOJSNativeFailure(context);
   }
 
   std::optional<std::string> commodity =
@@ -1223,18 +1076,18 @@ static bool StationSetMarketPrice(ooscript::Context context,
   if (EXPECT_NOT(commodities == nullptr ||
                  !commodities->goodDefined(commodity.value_or("")))) {
     cxx_OOJSReportBadArguments(context, "Station", "setMarketPrice",
-                               MIN(oojsArgs.count(), 2U), OOJS_ARGV,
-                               std::nullopt, "Unrecognised commodity type");
-    return false;
+                               MIN(argc, 2), OOJS_ARGV, std::nullopt,
+                               "Unrecognised commodity type");
+    return OOJSNativeFailure(context);
   }
 
   int32_t price;
-  bool gotPrice = ooscript::valueToInt32((context), (OOJS_ARGV[1]), &price);
+  bool gotPrice = OOJSValueToInt32(context, OOJS_ARGV[1], &price);
   if (EXPECT_NOT(!gotPrice || price < 0)) {
-    cxx_OOJSReportBadArguments(
-        context, "Station", "setMarketPrice", MIN(oojsArgs.count(), 2U),
-        OOJS_ARGV, std::nullopt, "Price must be at least 0 decicredits");
-    return false;
+    cxx_OOJSReportBadArguments(context, "Station", "setMarketPrice",
+                               MIN(argc, 2), OOJS_ARGV, std::nullopt,
+                               "Price must be at least 0 decicredits");
+    return OOJSNativeFailure(context);
   }
 
   if (station != nullptr)
@@ -1256,19 +1109,17 @@ static bool StationSetMarketPrice(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationSetMarketQuantity(ooscript::Context context,
-                                     ooscript::CallArgs& oojsArgs) {
+static JSValue StationSetMarketQuantity(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
-  if (oojsArgs.count() < 2) {
+  if (argc < 2) {
     cxx_OOJSReportBadArguments(context, "Station", "setMarketQuantity",
-                               MIN(oojsArgs.count(), 2U), OOJS_ARGV,
-                               std::nullopt, "commodity, units");
-    return false;
+                               MIN(argc, 2), OOJS_ARGV, std::nullopt,
+                               "commodity, units");
+    return OOJSNativeFailure(context);
   }
 
   const std::string commodity =
@@ -1280,14 +1131,13 @@ static bool StationSetMarketQuantity(ooscript::Context context,
   if (EXPECT_NOT(commodities == nullptr ||
                  !commodities->goodDefined(commodity))) {
     cxx_OOJSReportBadArguments(context, "Station", "setMarketQuantity",
-                               MIN(oojsArgs.count(), 2U), OOJS_ARGV,
-                               std::nullopt, "Unrecognised commodity type");
-    return false;
+                               MIN(argc, 2), OOJS_ARGV, std::nullopt,
+                               "Unrecognised commodity type");
+    return OOJSNativeFailure(context);
   }
 
   int32_t quantity;
-  bool gotQuantity =
-      ooscript::valueToInt32((context), (OOJS_ARGV[1]), &quantity);
+  bool gotQuantity = OOJSValueToInt32(context, OOJS_ARGV[1], &quantity);
   OOCommodityMarket* market =
       (station != nullptr
            ? station->getLocalMarket()
@@ -1298,10 +1148,10 @@ static bool StationSetMarketQuantity(ooscript::Context context,
           (OOCargoQuantity)quantity >
               ((market != nullptr) ? market->capacityForGood(commodity) : 0))) {
     cxx_OOJSReportBadArguments(
-        context, "Station", "setMarketQuantity", MIN(oojsArgs.count(), 2U),
-        OOJS_ARGV, std::nullopt,
+        context, "Station", "setMarketQuantity", MIN(argc, 2), OOJS_ARGV,
+        std::nullopt,
         "Quantity must be between 0 and the station market capacity");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   if (station != nullptr)
@@ -1333,30 +1183,29 @@ GLfloat WeaponThreatAssessment(OOWeaponType weapon) {
 }  // namespace
 
 namespace {
-static bool StationAddShipToShipyard(ooscript::Context context,
-                                     ooscript::CallArgs& oojsArgs) {
+static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  ooscript::Object params = NULL;
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
-  if (oojsArgs.count() != 1 ||
-      (!ooscript::isNull(OOJS_ARGV[0]) &&
-       !ooscript::valueToObject((context), (OOJS_ARGV[0]),
-                                OOJSFOBJP(&params)))) {
+  /*	SpiderMonkey's JS_ValueToObject() accepted primitives (boxing them) and
+          undefined, but the definition was then read from argv[0] as an object
+          regardless, so only objects (and null) ever worked. Anything else is
+          now rejected as bad arguments.
+  */
+  if (argc != 1 || (!JS_IsNull(OOJS_ARGV[0]) && !JS_IsObject(OOJS_ARGV[0]))) {
     cxx_OOJSReportBadArguments(context, "Station", "addShipToShipyard",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "shipyard item definition");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "shipyard item definition");
+    return OOJSNativeFailure(context);
   }
 
   // make sure the station has a shipyard
   if (!(station != nullptr ? station->hasShipyard() : false)) {
     cxx_OOJSReportWarningForCaller(context, "Station", "removeShipFromShipyard",
                                    "Station does not have shipyard.");
-    return false;
+    return OOJSNativeFailure(context);
   }
   // make sure the shipyard has been generated
   if (!(station != nullptr ? station->getLocalShipyard()
@@ -1367,31 +1216,31 @@ static bool StationAddShipToShipyard(ooscript::Context context,
       (station != nullptr ? station->getLocalShipyard()
                           : (std::vector<oo::PList>*)nullptr);
 
-  if (ooscript::isNull(OOJS_ARGV[0]))
+  if (JS_IsNull(OOJS_ARGV[0]))
     OOJS_RETURN_VOID;  // OK, do nothing for null ship.
 
   oo::PList::Dict result;
   const oo::PList shipyardDefinition =
-      cxx_OOJSPListFromJSObject(context, ooscript::toObject(OOJS_ARGV[0]));
+      cxx_OOJSPListFromJSObject(context, OOJS_ARGV[0]);
   // validate each element of the dictionary
   if (shipyardDefinition.isNull()) {
     cxx_OOJSReportBadArguments(context, "Station", "addShipToShipyard",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "valid dictionary object");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "valid dictionary object");
+    return OOJSNativeFailure(context);
   }
   // This first test is -objectForKey: on the converted object, as it was:
   // anything but a dictionary (a JavaScript array converts to an array) raised,
   // which OOJS_NATIVE_EXIT reported.
   if (!shipyardDefinition.isDict()) {
     cxx_OOJSReportError(context, "Unidentified native exception");
-    return false;
+    return JS_EXCEPTION;
   }
   if (shipyardDefinition.find(KEY_SHORT_DESCRIPTION) == nullptr) {
-    cxx_OOJSReportBadArguments(
-        context, "Station", "addShipToShipyard", MIN(oojsArgs.count(), 1U),
-        OOJS_ARGV, std::nullopt, "'short_description' in dictionary");
-    return false;
+    cxx_OOJSReportBadArguments(context, "Station", "addShipToShipyard",
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "'short_description' in dictionary");
+    return OOJSNativeFailure(context);
   }
   result[std::string(KEY_SHORT_DESCRIPTION)] =
       ValueForKey(StringForKey(shipyardDefinition, "short_description"),
@@ -1399,9 +1248,9 @@ static bool StationAddShipToShipyard(ooscript::Context context,
   if (!shipyardDefinition.get<oo::PList>(
           std::string(SHIPYARD_KEY_SHIPDATA_KEY))) {
     cxx_OOJSReportBadArguments(context, "Station", "addShipToShipyard",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "'shipdata_key' in dictionary");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "'shipdata_key' in dictionary");
+    return OOJSNativeFailure(context);
   }
   // get the shipInfo and shipyardInfo for this key
   const std::optional<std::string> shipKey =
@@ -1423,13 +1272,13 @@ static bool StationAddShipToShipyard(ooscript::Context context,
     cxx_OOJSReportWarningForCaller(
         context, "Station", "addShipToShipyard",
         "shipdata_key not suitable for player role.");
-    return false;
+    return OOJSNativeFailure(context);
   }
   if (!shipyardInfo) {
     cxx_OOJSReportWarningForCaller(
         context, "Station", "addShipToShipyard",
         "No shipyard information found for shipdata_key.");
-    return false;
+    return OOJSNativeFailure(context);
   }
   // ok, feel pretty safe to include this ship now
   result[std::string(SHIPYARD_KEY_SHIPDATA_KEY)] =
@@ -1458,9 +1307,9 @@ static bool StationAddShipToShipyard(ooscript::Context context,
           oo::PList::unsignedInteger(price);
     } else {
       cxx_OOJSReportBadArguments(context, "Station", "addShipToShipyard",
-                                 MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                                 std::nullopt, "'price' in dictionary");
-      return false;
+                                 MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                                 "'price' in dictionary");
+      return OOJSNativeFailure(context);
     }
   }
 
@@ -1571,19 +1420,17 @@ static bool StationAddShipToShipyard(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool StationRemoveShipFromShipyard(ooscript::Context context,
-                                          ooscript::CallArgs& oojsArgs) {
+static JSValue StationRemoveShipFromShipyard(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
-  if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
-    OOJS_RETURN_VOID;  // stale reference, no-op
+  GET_THIS_STATION(station);
 
   // make sure the station has a shipyard
   if (!(station != nullptr ? station->hasShipyard() : false)) {
     cxx_OOJSReportWarningForCaller(context, "Station", "removeShipFromShipyard",
                                    "Station does not have shipyard.");
-    return false;
+    return OOJSNativeFailure(context);
   }
   // make sure the shipyard has been generated
   if (!(station != nullptr ? station->getLocalShipyard()
@@ -1596,16 +1443,17 @@ static bool StationRemoveShipFromShipyard(ooscript::Context context,
 
   int32_t shipIndex = -1;
   bool gotIndex = true;
-  gotIndex = ooscript::valueToInt32((context), (OOJS_ARGV[0]), &shipIndex);
+  gotIndex = OOJSValueToInt32(
+      context, OOJS_ARGV[0],
+      &shipIndex);  // argv[0] is undefined if argc is 0 (min args 1).
 
-  if (oojsArgs.count() != 1 || (!ooscript::isNull(OOJS_ARGV[0]) && !gotIndex) ||
-      shipIndex < 0 ||
+  if (argc != 1 || (!JS_IsNull(OOJS_ARGV[0]) && !gotIndex) || shipIndex < 0 ||
       static_cast<std::size_t>(shipIndex) + 1 >
           (shipyard != nullptr ? shipyard->size() : 0)) {
     cxx_OOJSReportBadArguments(context, "Station", "removeShipFromShipyard",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "valid ship index");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "valid ship index");
+    return OOJSNativeFailure(context);
   }
 
   shipyard->erase(shipyard->begin() + shipIndex);

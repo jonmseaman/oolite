@@ -50,6 +50,7 @@ MA 02110-1301, USA.
 #include "OOFlasherEntity.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
+#include "OOJSShip.h"
 #include "OOJSVector.h"
 #include "OOLaserShotEntity.h"
 #include "OOMaths.h"
@@ -3664,11 +3665,11 @@ bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey,
                                : nullptr);
       if (condScript != nullptr)  // should always be non-nil, but just in case
       {
-        ooscript::Context JScontext = OOJSAcquireContext();
+        JSContext* JScontext = OOJSAcquireContext();
         bool OK;
         bool allow_addition = false;
-        ooscript::Value result;
-        ooscript::Value args[] = {
+        OOJSVal result = OOJSUndefinedValue();
+        OOJSVal args[] = {
             OOJSValueFromPList(JScontext, oo::PList(equipmentKey)),
             OOJSValueFromCxxObject(JScontext, this),
             OOJSValueFromPList(JScontext, oo::PList(context))};
@@ -3679,9 +3680,12 @@ bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey,
                                            sizeof args / sizeof *args, &result)
                   : false);
 
-        if (OK)
-          OK = ooscript::valueToBoolean(JScontext, result, &allow_addition);
+        if (OK) allow_addition = OOJSValueToBOOL(JScontext, result);
 
+        OOJSFreeValue(JScontext, result);
+        OOJSFreeValue(JScontext, args[0]);
+        OOJSFreeValue(JScontext, args[1]);
+        OOJSFreeValue(JScontext, args[2]);
         OOJSRelinquishContext(JScontext);
 
         if (OK && !allow_addition) {
@@ -6068,39 +6072,41 @@ void ShipEntity::behaviour_fly_thru_navpoints(double delta_t) {
 }
 
 void ShipEntity::behaviour_scripted_ai(double delta_t) {
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Value rval = ooscript::undefinedValue();
-  ooscript::Value deltaJS = ooscript::undefinedValue();
+  JSContext* context = OOJSAcquireContext();
+  OOJSVal rval = OOJSUndefinedValue();
+  OOJSVal deltaJS = OOJSValueFromDouble(context, delta_t);
   oo::PList result;
 
-  bool OK = ooscript::newNumberValue(context, delta_t, &deltaJS);
-  if (OK) {
-    OK = (getScript() != nullptr
-              ? getScript()->callMethod(OOJSID("scriptedAI"), context, &deltaJS,
-                                        1, &rval)
-              : false);
-  }
+  bool OK = (getScript() != nullptr
+                 ? getScript()->callMethod(OOJSID("scriptedAI"), context,
+                                           &deltaJS, 1, &rval)
+                 : false);
+  OOJSFreeValue(context, deltaJS);
 
   if (!OK) {
     OO_LOG("ai.error",
            "Could not call scriptedAI in ship script of {}, reverting to idle",
            oo::EntityDescription(this));
     behaviour = BEHAVIOUR_IDLE;
+    OOJSFreeValue(context, rval);
     OOJSRelinquishContext(context);
     return;
   }
 
-  if (!ooscript::isObjectOrNull(rval)) {
+  // As with SpiderMonkey, null is accepted as an object.
+  if (!JS_IsObject(rval) && !JS_IsNull(rval)) {
     OO_LOG("ai.error",
            "Invalid return value of scriptedAI in ship script of {}, reverting "
            "to idle",
            oo::EntityDescription(this));
     behaviour = BEHAVIOUR_IDLE;
+    OOJSFreeValue(context, rval);
     OOJSRelinquishContext(context);
     return;
   }
 
-  result = cxx_OOJSPListFromJSObject(context, ooscript::toObject(rval));
+  result = cxx_OOJSPListFromJSObject(context, rval);
+  OOJSFreeValue(context, rval);
   OOJSRelinquishContext(context);
 
   // roll or roll factor
@@ -7133,10 +7139,7 @@ bool ShipEntity::isPirateVictim() {
 
 bool ShipEntity::isExplicitlyUnpiloted() { return _explicitlyUnpiloted; }
 
-void ShipEntity::getJSClass(ooscript::ClassDef** outClass,
-                            ooscript::Object* outPrototype) {
-  ::ShipEntityJSGetJSClass(outClass, outPrototype);
-}
+JSClassID ShipEntity::jsClassID() { return ::JSShipClassID(); }
 
 std::optional<std::string> ShipEntity::jsClassName() {
   return ::ShipEntityJSClassName();
@@ -7784,15 +7787,14 @@ void ShipEntity::setBounty(OOCreditsQuantity amount,
     if (oo::ToShip(parentEntity()) != nullptr)
       oo::ToShip(parentEntity())->setBounty(amount, reason);
   } else {
-    ooscript::Context context = OOJSAcquireContext();
+    JSContext* context = OOJSAcquireContext();
 
-    ooscript::Value amountVal = ooscript::undefinedValue();
-    ooscript::newNumberValue(context, (int)amount - (int)bounty, &amountVal);
+    OOJSVal amountVal = OOJSValueFromDouble(context, (int)amount - (int)bounty);
 
     bounty = amount;  // can't set the new bounty until the size of the change
                       // is known
 
-    ooscript::Value reasonVal = OOJSValueFromPList(context, oo::PList(reason));
+    OOJSVal reasonVal = OOJSValueFromPList(context, oo::PList(reason));
 
     ShipScriptEvent(context, this, "shipBountyChanged", amountVal, reasonVal);
 
@@ -8350,12 +8352,11 @@ void ShipEntity::noteTakingDamage(double amount, Entity* entity,
             : false)))
     return;
 
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
 
-  ooscript::Value amountVal = ooscript::undefinedValue();
-  ooscript::newNumberValue(context, amount, &amountVal);
-  ooscript::Value entityVal = OOJSEntityJSValue(entity, context);
-  ooscript::Value typeVal = OOJSValueFromShipDamageType(context, type);
+  OOJSVal amountVal = OOJSValueFromDouble(context, amount);
+  OOJSVal entityVal = OOJSEntityJSValue(entity, context);
+  OOJSVal typeVal = OOJSValueFromShipDamageType(context, type);
 
   ShipScriptEvent(context, this, "shipTakingDamage", amountVal, entityVal,
                   typeVal);
@@ -8386,16 +8387,18 @@ void ShipEntity::noteKilledBy(Entity* whom, OOShipDamageType type) {
 
   if (PLAYER != nullptr) PLAYER->setScriptTarget(this);
 
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
 
-  ooscript::Value whomVal = OOJSEntityJSValue(whom, context);
-  ooscript::Value typeVal = OOJSValueFromShipDamageType(context, type);
+  OOJSVal whomVal = OOJSEntityJSValue(whom, context);
+  OOJSVal typeVal = OOJSValueFromShipDamageType(context, type);
   OOEntityStatus originalStatus = status();
   setStatus(STATUS_DEAD);
 
+  // Frees whomVal and typeVal.
   ShipScriptEvent(context, this, "shipDied", whomVal, typeVal);
   if (oo::EntityIsShip(whom)) {
-    ooscript::Value selfVal = OOJSValueFromCxxObject(context, this);
+    OOJSVal selfVal = OOJSValueFromCxxObject(context, this);
+    typeVal = OOJSValueFromShipDamageType(context, type);
     ShipScriptEvent(context, oo::ToShip(whom), "shipKilledOther", selfVal,
                     typeVal);
   }
@@ -12858,17 +12861,15 @@ void ShipEntity::markAsOffender(int offence_value, OOLegalStatusReason reason) {
         return;  // no non-scripted bounties for thargoids and stations
       }
 
-      ooscript::Context context = OOJSAcquireContext();
+      JSContext* context = OOJSAcquireContext();
 
-      ooscript::Value amountVal = ooscript::undefinedValue();
-      ooscript::newNumberValue(context, (bounty | offence_value) - bounty,
-                               &amountVal);
+      OOJSVal amountVal =
+          OOJSValueFromDouble(context, (bounty | offence_value) - bounty);
 
       bounty |= offence_value;  // can't set the new bounty until the size of
                                 // the change is known
 
-      ooscript::Value reasonVal =
-          OOJSValueFromLegalStatusReason(context, reason);
+      OOJSVal reasonVal = OOJSValueFromLegalStatusReason(context, reason);
 
       ShipScriptEvent(context, this, "shipBountyChanged", amountVal, reasonVal);
 
@@ -13033,10 +13034,10 @@ void ShipEntity::updateEscortFormation() { _escortPositionsValid = false; }
 */
 void ShipEntity::refreshEscortPositions() {
   if (!_escortPositionsValid) {
-    ooscript::Context context = OOJSAcquireContext();
-    ooscript::Value result;
-    ooscript::Value args[] = {ooscript::int32Value(0),
-                              ooscript::int32Value(_maxEscortCount)};
+    JSContext* context = OOJSAcquireContext();
+    OOJSVal result;
+    OOJSVal args[] = {OOJSValueFromDouble(context, 0),
+                      OOJSValueFromDouble(context, _maxEscortCount)};
     bool OK;
 
     // Reset validity first so updateEscortFormation can be called from the
@@ -13045,7 +13046,8 @@ void ShipEntity::refreshEscortPositions() {
 
     uint8_t i;
     for (i = 0; i < _maxEscortCount; i++) {
-      args[0] = ooscript::int32Value(i);
+      args[0] = OOJSValueFromDouble(context, i);  // Numbers need not be freed.
+      result = OOJSUndefinedValue();
       OK = (script != nullptr
                 ? script->callMethod(OOJSID("coordinatesForEscortPosition"),
                                      context, args, sizeof args / sizeof *args,
@@ -13053,6 +13055,7 @@ void ShipEntity::refreshEscortPositions() {
                 : false);
 
       if (OK) OK = JSValueToVector(context, result, &_escortPositions[i]);
+      OOJSFreeValue(context, result);
 
       if (!OK) _escortPositions[i] = kZeroVector;
     }
@@ -13857,49 +13860,50 @@ void ShipEntity::setDemoStartTime(OOTimeAbsolute time) { demoStartTime = time; }
 OOTimeAbsolute ShipEntity::getDemoStartTime() { return demoStartTime; }
 
 // *** Script event dispatch.
-void ShipEntity::doScriptEvent(ooscript::PropertyId message) {
-  ooscript::Context context = OOJSAcquireContext();
+void ShipEntity::doScriptEvent(OOJSPropID message) {
+  JSContext* context = OOJSAcquireContext();
   doScriptEvent(message, context, NULL, 0);
   OOJSRelinquishContext(context);
 }
 
 // With entities: each entity's JS value, what OOJSValueFromNativeObject() gave
 // for its object (null for none).
-void ShipEntity::doScriptEvent(ooscript::PropertyId message, Entity* argument) {
-  ooscript::Context context = OOJSAcquireContext();
+void ShipEntity::doScriptEvent(OOJSPropID message, Entity* argument) {
+  JSContext* context = OOJSAcquireContext();
 
-  ooscript::Value value = OOJSEntityJSValue(argument, context);
+  OOJSVal value = OOJSEntityJSValue(argument, context);
   doScriptEvent(message, context, &value, 1);
+  OOJSFreeValue(context, value);
 
   OOJSRelinquishContext(context);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId message, Entity* argument1,
+void ShipEntity::doScriptEvent(OOJSPropID message, Entity* argument1,
                                Entity* argument2) {
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
 
-  ooscript::Value argv[2] = {OOJSEntityJSValue(argument1, context),
-                             OOJSEntityJSValue(argument2, context)};
+  OOJSVal argv[2] = {OOJSEntityJSValue(argument1, context),
+                     OOJSEntityJSValue(argument2, context)};
   doScriptEvent(message, context, argv, 2);
+  OOJSFreeValue(context, argv[0]);
+  OOJSFreeValue(context, argv[1]);
 
   OOJSRelinquishContext(context);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId message,
+void ShipEntity::doScriptEvent(OOJSPropID message,
                                const std::vector<oo::PList>& arguments) {
-  ooscript::Context context = OOJSAcquireContext();
-  unsigned i, argc;
-  ooscript::Value* argv = NULL;
+  JSContext* context = OOJSAcquireContext();
+  int i, argc;
+  OOJSVal* argv = NULL;
 
-  // Convert arguments to JS values and make them temporarily
-  // un-garbage-collectable.
-  argc = (unsigned)arguments.size();
+  // Convert arguments to JS values.
+  argc = (int)arguments.size();
   if (argc != 0) {
     argv = (decltype(argv))malloc(sizeof *argv * argc);
     if (argv != NULL) {
       for (i = 0; i != argc; ++i) {
         argv[i] = OOJSValueFromPList(context, arguments[i]);
-        OOJSAddGCValueRoot(context, &argv[i], "event parameter");
       }
     } else
       argc = 0;
@@ -13907,10 +13911,10 @@ void ShipEntity::doScriptEvent(ooscript::PropertyId message,
 
   doScriptEvent(message, context, argv, argc);
 
-  // Re-garbage-collectibalize the arguments and free the array.
+  // Release the arguments and free the array.
   if (argv != NULL) {
     for (i = 0; i != argc; ++i) {
-      ooscript::removeValueRoot(context, &argv[i]);
+      OOJSFreeValue(context, argv[i]);
     }
     free(argv);
   }
@@ -13918,16 +13922,14 @@ void ShipEntity::doScriptEvent(ooscript::PropertyId message,
   OOJSRelinquishContext(context);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId message,
-                               ooscript::Value* argv, unsigned argc) {
-  ooscript::Context context = OOJSAcquireContext();
+void ShipEntity::doScriptEvent(OOJSPropID message, JSValue* argv, int argc) {
+  JSContext* context = OOJSAcquireContext();
   doScriptEvent(message, context, argv, argc);
   OOJSRelinquishContext(context);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId message,
-                               ooscript::Context context, ooscript::Value* argv,
-                               unsigned argc) {
+void ShipEntity::doScriptEvent(OOJSPropID message, JSContext* context,
+                               JSValue* argv, int argc) {
   // This method is a bottleneck so that PlayerEntity can override at one point.
   if (script != nullptr) script->callMethod(message, context, argv, argc, NULL);
   if (aiScript != nullptr)
@@ -13944,14 +13946,14 @@ void ShipEntity::sendAIMessage(const std::string& message) {
   if (shipAI != nullptr) shipAI->message(message);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId scriptEvent,
+void ShipEntity::doScriptEvent(OOJSPropID scriptEvent,
                                const std::string& aiMessage) {
   doScriptEvent(scriptEvent);
   reactToAIMessage(aiMessage, std::nullopt);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId scriptEvent,
-                               Entity* argument, const std::string& aiMessage) {
+void ShipEntity::doScriptEvent(OOJSPropID scriptEvent, Entity* argument,
+                               const std::string& aiMessage) {
   doScriptEvent(scriptEvent, argument);
   reactToAIMessage(aiMessage, std::nullopt);
 }

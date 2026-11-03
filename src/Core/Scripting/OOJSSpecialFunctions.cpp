@@ -27,60 +27,53 @@ MA 02110-1301, USA.
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
 #include "OOJSSpecialFunctions.h"
 
-#include "OOJSEngineCore.h"  // OOJSValue
-#include "oofnd/Ref.hpp"
-#include "ooscript/JSEngine.hpp"  // ooscript::Context, ooscript::Object (InitOOJSSpecialFunctions)
+#include "OOJSEngineCore.h"
 
-static bool SpecialJSWarning(ooscript::Context context,
-                             ooscript::CallArgs& oojsArgs);
+static JSValue SpecialJSWarning(OOJS_NATIVE_ARGS);
 #ifdef OO_DEBUG_MONITOR_ENABLED
-static bool SpecialMarkConsoleEntryPoint(ooscript::Context context,
-                                         ooscript::CallArgs& oojsArgs);
+static JSValue SpecialMarkConsoleEntryPoint(OOJS_NATIVE_ARGS);
 #endif
 
-static ooscript::FunctionSpec sSpecialFunctionsMethods[] = {
-    // JS name					Function
-    // min args
-    {"jsWarning", SpecialJSWarning, 1},
+static const JSCFunctionListEntry sSpecialFunctionsMethods[] = {
+    // JS name					min args	Function
+    JS_CFUNC_DEF("jsWarning", 1, SpecialJSWarning),
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    {"markConsoleEntryPoint", SpecialMarkConsoleEntryPoint, 0},
+    JS_CFUNC_DEF("markConsoleEntryPoint", 0, SpecialMarkConsoleEntryPoint),
 #endif
-    {0}};
+};
 
-void InitOOJSSpecialFunctions(ooscript::Context /*context*/,
-                              ooscript::Object /*global*/) {}
+void InitOOJSSpecialFunctions(JSContext* /*context*/, JSValueConst /*global*/) {
+}
 
-oo::Ref<OOJSValue> JSSpecialFunctionsObjectWrapper(ooscript::Context context) {
+JSValue JSSpecialFunctionsObjectWrapper(JSContext* context) {
   /*
           Special object is created on the fly so it can be GCed (the debug
           console script keeps a reference to its copy, but the prefix script
           doesn't) and so we don't need to clean up a root on JS engine reset.
           -- Ahruman 2011-03-30
+
+          With QuickJS, the caller owns the returned object.
   */
 
-  ooscript::Object special = NULL;
-  OOJSAddGCObjectRoot(context, &special, "OOJSSpecialFunctions");
+  JSValue special = JS_NewObject(context);
+  if (JS_IsException(special)) {
+    OOJSReportPendingException(context);
+    return JS_NULL;
+  }
+  JS_SetPropertyFunctionList(context, special, sSpecialFunctionsMethods,
+                             OOJS_COUNT(sSpecialFunctionsMethods));
+  JS_FreezeObject(context, special);
 
-  special = ooscript::newObject(context, NULL, NULL, NULL);
-  ooscript::defineFunctions(context, special, sSpecialFunctionsMethods);
-  ooscript::freezeObject(context, special);
-
-  oo::Ref<OOJSValue> result = OOJSValue::valueWithJSObject(special, context);
-
-  ooscript::removeObjectRoot(context, &special);
-
-  return result;
+  return special;
 }
 
-static bool SpecialJSWarning(ooscript::Context context,
-                             ooscript::CallArgs& oojsArgs) {
+static JSValue SpecialJSWarning(OOJS_NATIVE_ARGS) {
   OOJS_PROFILE_ENTER  // These functions are exception-safe
 
-      if (EXPECT_NOT(oojsArgs.count() < 1)) {
-    cxx_OOJSReportBadArguments(context, "special", "jsWarning",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
-                               "string");
-    return false;
+      if (EXPECT_NOT(argc < 1)) {
+    cxx_OOJSReportBadArguments(context, "special", "jsWarning", argc, OOJS_ARGV,
+                               std::nullopt, "string");
+    return JS_EXCEPTION;
   }
 
   OOJSSetWarningOrErrorStackSkip(1);
@@ -92,20 +85,18 @@ static bool SpecialJSWarning(ooscript::Context context,
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-static bool SpecialMarkConsoleEntryPoint(ooscript::Context context,
-                                         ooscript::CallArgs& oojsArgs) {
-  // First stack frame will be in eval() in console.script.evaluate(), unless
-  // someone is playing silly buggers.
-
-  ooscript::StackFrame frame = NULL;
-  if (ooscript::frameIterator(context, &frame) != NULL) {
-    OOJSMarkConsoleEvalLocation(context, frame);
-  }
-
+static JSValue SpecialMarkConsoleEntryPoint(OOJS_NATIVE_ARGS) {
+  /*	The SpiderMonkey version recorded the calling stack frame (in eval() in
+          console.script.evaluate()) with OOJSMarkConsoleEvalLocation(), so that
+          OOJSDescribeLocation() could describe locations in console-evaluated
+          code specially. QuickJS has no stack frame API and the engine has no
+          OOJSDescribeLocation(), so this does nothing; locations in console
+          code are reported like any other.
+  */
   OOJS_RETURN_VOID;
 }
 #endif

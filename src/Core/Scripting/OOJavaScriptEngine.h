@@ -1,8 +1,10 @@
 /*
 
-OOJavaScriptEngine.h
+OOJavaScriptEngine.h (QuickJS-ng)
 
-JavaScript support for Oolite
+JavaScript support for Oolite, ported from SpiderMonkey 1.8.5 to QuickJS-ng
+(upstream #767/#768), in C++.
+
 Copyright (C) 2007-2013 David Taylor and Jens Ayton.
 
 This program is free software; you can redistribute it and/or
@@ -24,6 +26,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include "OOFoundation.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
@@ -36,11 +40,10 @@ MA 02110-1301, USA.
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OOAssert.h"
-#include "ooscript/JSEngine.hpp"
 
-/*	The plain C++ part of the engine API: reporters,
-   converters, argument and return macros, the native wrappers. A binding with
-   no Objective-C includes only that header.
+/*	The plain C++ part of the engine API: ownership conventions, reporters,
+   converters, class registration, argument and return macros, the native
+   wrappers. A binding with no game includes only that header.
 */
 #include "OOJSEngineCore.h"
 
@@ -58,34 +61,26 @@ class OOJavaScriptEngine : public oo::RefCounted {
 
   ~OOJavaScriptEngine();
 
+  JSContext* context();
+  // The global object, borrowed; invalidated by reset().
+  JSValueConst globalObject();
+
   void runMissionCallback();
 
   /*	Tear down context and global object and rebuild them from scratch. This
-          invalidates -globalObject and the main thread context.
+          invalidates globalObject() and all prototypes.
   */
   bool reset();
 
-  ooscript::Object globalObject();
-
-  // Call a JS function, setting up new contexts as necessary. Caller is
-  // responsible for ensuring the ooscript::Value passed really is a function.
-  bool callJSFunction(ooscript::Value function, ooscript::Object jsThis,
-                      unsigned argc, ooscript::Value* argv,
-                      ooscript::Value* outResult);
-
-  void removeGCObjectRoot(ooscript::Object* rootPtr);
-  void removeGCValueRoot(ooscript::Value* rootPtr);
+  // Call a JS function. *outResult (may be NULL) is owned by the caller.
+  // Exceptions are reported and cleared.
+  bool callJSFunction(JSValueConst function, JSValueConst jsThis, int argc,
+                      JSValueConst* argv, JSValue* outResult);
 
   void garbageCollectionOpportunity(bool force);
 
   bool showErrorLocations();
   void setShowErrorLocations(bool value);
-
-  ooscript::ClassDef* objectClass();
-  ooscript::ClassDef* stringClass();
-  ooscript::ClassDef* arrayClass();
-  ooscript::ClassDef* numberClass();
-  ooscript::ClassDef* booleanClass();
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   bool dumpStackForErrors();
@@ -94,43 +89,47 @@ class OOJavaScriptEngine : public oo::RefCounted {
   bool dumpStackForWarnings();
   void setDumpStackForWarnings(bool value);
 
-  // Install handler for JS "debugger" statment.
+  // Install handler for JS "debugger" statment. (Not supported by QuickJS;
+  // does nothing.)
   void enableDebuggerStatement();
 #endif
+
+  /*	Destroy the context and runtime. All native objects holding JSValues
+     must have released them first. Returns the number of JS objects still
+     alive after a final garbage collection; if it is non-zero, they are logged
+     and the runtime is abandoned rather than freed.
+  */
+  NSUInteger shutDown();
 
 #if OOJSENGINE_MONITOR_SUPPORT
   // (OOMonitorSupport)
   void setMonitor(OOJavaScriptEngineMonitor* monitor);  // borrowed
 
   // (OOMonitorSupportInternal)
-  void sendMonitorError(ooscript::ErrorReport* errorReport,
-                        const std::string& message, ooscript::Context context);
+  // QuickJS has no JSErrorReport, so problems are described by severity
+  // ("exception" or "warning") and the innermost location on the stack, if
+  // any (file is nullopt otherwise).
+  void sendMonitorProblem(const std::string& severity,
+                          const std::optional<std::string>& file, unsigned line,
+                          const std::string& message, JSContext* context);
   // nullopt is meaningful to the monitor (Log() with a null message; no class
   // for Log()).
   void sendMonitorLogMessage(const std::optional<std::string>& message,
                              const std::optional<std::string>& messageClass,
-                             ooscript::Context context);
+                             JSContext* context);
 #endif
 
  private:
   void init();  // -init's body after [super init]: run by sharedEngine() on the
                 // new object
 
-  bool lookUpStandardClassPointers();
-  void registerStandardObjectConverters();
-
   void createMainThreadContext();
   void destroyMainThreadContext();
 
-  ooscript::Runtime _runtime = {};
-  ooscript::Object _globalObject = {};
-  bool _showErrorLocations = {};
-
-  ooscript::ClassDef* _objectClass = {};
-  ooscript::ClassDef* _stringClass = {};
-  ooscript::ClassDef* _arrayClass = {};
-  ooscript::ClassDef* _numberClass = {};
-  ooscript::ClassDef* _booleanClass = {};
+  JSRuntime* _runtime = nullptr;
+  JSContext* _context = nullptr;
+  JSValue _globalObject = JS_UNDEFINED;  // owned
+  bool _showErrorLocations = true;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   bool _dumpStackForErrors = {};
@@ -143,10 +142,10 @@ class OOJavaScriptEngine : public oo::RefCounted {
 };
 
 // A vector box's JS value (OOJSValueFromPList, for an Object node that holds
-// one).
+// one), owned by the caller.
 class OONativeVector;
-ooscript::Value OONativeVectorJSValueInContext(OONativeVector* vector,
-                                               ooscript::Context context);
+JSValue OONativeVectorJSValueInContext(OONativeVector* vector,
+                                       JSContext* context);
 
 /*	OONull: the placeholder for null inside native collections, which cannot
    hold nil. A JS array element that is null or undefined becomes [OONull null]
@@ -161,7 +160,7 @@ class OONull : public oo::PListForeign {
   // The one null, made on first use; borrowed, never released.
   static OONull* null();
 
-  ooscript::Value jsValueInContext(ooscript::Context context);  // JS null
+  JSValue jsValueInContext(JSContext* context);  // JS null
 
   // oo::PListForeign: what the facade answered (its class, and "%@" as
   // "<null>").
@@ -187,10 +186,10 @@ inline bool OOIsNullObjectNode(const oo::PList& plist) {
 
 // OOEntityFilterPredicate wrapping a JavaScript function.
 typedef struct {
-  ooscript::Context context;
-  ooscript::Value function;  // Caller is responsible for ensuring this is a
-                             // function object (using OOJSValueIsFunction()).
-  ooscript::Object jsThis;
+  JSContext* context;
+  JSValueConst function;  // Caller is responsible for ensuring this is a
+                          // function object (using OOJSValueIsFunction()).
+  JSValueConst jsThis;
   bool errorFlag;  // Set if a JS exception occurs. The
                    // exception will have been reported.
                    // This also supresses further filtering.
@@ -210,4 +209,4 @@ bool JSEntityIsDemoShipPredicate(Entity* entity, void* parameter);
 /*	OOJSGetCxxPrivate() (OOJSPrivateObject.h) reads the C++ object every JS
    object's private slot holds.
 */
-#include "OOFoundation.h"
+#include "OOJSPrivateObject.h"

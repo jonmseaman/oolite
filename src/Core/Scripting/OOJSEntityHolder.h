@@ -6,7 +6,7 @@ What an entity's JS object holds in its private slot: a weak reference to the
 C++ entity (an oo::WeakRef), so the JS object does not keep the entity alive and
 reads as a stale reference once it has gone. The slot retains the holder
 (OOJSSetCxxPrivate) and the finalizer releases it
-(OOJSCxxObjectWrapperFinalize). EntityJSValueInContext() makes one per JS
+(OOJSObjectWrapperFinalize). EntityJSValueInContext() makes one per JS
 object.
 
 Include it after Entity's definition (Entity.h; a test's stand-in): oo::WeakRef
@@ -50,8 +50,8 @@ class OOJSEntityHolder final : public oo::RefCounted, public OOJSPrivateObject {
   // reference, which forwarded them to the facade: its JS value, nothing on
   // finalization (OOObject's -oo_clearJSSelf:), its description; null, nothing
   // and nullopt once it has gone.
-  ooscript::Value jsValueInContext(ooscript::Context context) override;
-  void clearJSSelf(ooscript::Object selfVal) override;
+  JSValue jsValueInContext(JSContext* context) override;
+  void clearJSSelf(JSValueConst selfVal) override;
   std::optional<std::string> jsDescription() override;
 
  private:

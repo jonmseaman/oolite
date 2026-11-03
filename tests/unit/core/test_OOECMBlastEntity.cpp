@@ -53,7 +53,7 @@ class TestUniverse : public Universe {
   }
 };
 
-extern ooscript::Context
+extern JSContext*
     gOOJSMainThreadContext;  // the engine's (OOJavaScriptEngine.mm)
 
 namespace {
@@ -98,7 +98,7 @@ void SetUp() {
   // on the main thread's context, so there is one, with nothing in it.
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
-        ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
+        JS_NewContext(JS_NewRuntime());
 }
 
 // A ship (the blast calls its members), under its object

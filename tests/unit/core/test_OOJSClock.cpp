@@ -2,9 +2,9 @@
         Unit tests for the clock JS binding
    (src/Core/Scripting/OOJSClock.h/.mm).
 
-        Like test_OOJSVector.mm, it runs the JS class in a real context on the
-   game's own façade backend (ooscript/JSEngine_quickjs.cpp) and links the
-   game's own objects for the binding and the engine's exception translator
+        Like test_OOJSVector.mm, it runs the JS class in a real QuickJS-ng
+   context and links the game's own objects for the binding, the class
+   registration (OOJSClasses.cpp) and the engine's exception translator
    (OOJSEngineNativeWrappers.mm). What the rest of the game would provide (the
    player's clock, the universe's time, the clock-string formatter, the
         deprecation warning, error reporting and the string helpers) is defined
@@ -33,13 +33,15 @@
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
 
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
-                                      const char* format, va_list args) {
+JSContext* gOOJSMainThreadContext = nullptr;  // the engine's
+
+void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
+                                      va_list args) {
   std::string msg = oo::str::vformat(format, args);
-  ooscript::reportError(context, msg.c_str());
+  JS_ThrowPlainError(context, "%s", msg.c_str());
 }
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportErrorWithArguments(context, format, args);
@@ -47,50 +49,51 @@ void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
 }
 
 void cxx_OOJSReportBadArguments(
-    ooscript::Context context, const std::optional<std::string>& scriptClass,
-    const std::optional<std::string>& function, unsigned argc, ooscript::Value*,
+    JSContext* context, const std::optional<std::string>& scriptClass,
+    const std::optional<std::string>& function, int argc, JSValueConst*,
     const std::optional<std::string>& message,
     const std::optional<std::string>& expectedArgsDescription) {
-  cxx_OOJSReportError(context, "bad arguments: %s.%s (%u): %s; expected %s",
+  cxx_OOJSReportError(context, "bad arguments: %s.%s (%d): %s; expected %s",
                       scriptClass.value_or("").c_str(),
                       function.value_or("").c_str(), argc,
                       message.value_or("").c_str(),
                       expectedArgsDescription.value_or("").c_str());
 }
 
-void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
-                                   ooscript::PropertyId,
-                                   ooscript::PropertySpec*) {
+void OOJSReportBadPropertySelector(JSContext* context, JSValueConst, int,
+                                   const JSCFunctionListEntry*, size_t) {
   cxx_OOJSReportError(context, "bad property selector");
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  ooscript::String str = ooscript::valueToString(context, value);
-  if (str == nullptr) return std::nullopt;
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
 }
 
-ooscript::Value OOJSValueFromPList(ooscript::Context context,
-                                   const oo::PList& plist) {
-  const std::string* str = plist.getIf<std::string>();
-  ooscript::String js = str != nullptr ? ooscript::newStringCopyN(
-                                             context, str->data(), str->size())
-                                       : nullptr;
-  return js != nullptr ? ooscript::stringValue(js) : ooscript::nullValue();
+JSValue OOJSUnconstructableConstruct(OOJS_NATIVE_ARGS) {
+  (void)oojsThis;
+  (void)argc;
+  (void)oojsArgv;
+  cxx_OOJSReportError(context, "unconstructable");
+  return JS_EXCEPTION;
 }
 
-bool OOJSUnconstructableConstruct(ooscript::Context context,
-                                  ooscript::CallArgs&) {
-  cxx_OOJSReportError(context, "unconstructable");
-  return false;
+// What the class registration (OOJSClasses.cpp) asks of the engine.
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
+}
+
+JSAtom cxx_OOJSIDFromString(const std::string& string) {
+  return JS_NewAtom(OOJSAcquireContext(), string.c_str());
 }
 
 #if OOJS_PROFILE
@@ -183,18 +186,15 @@ PlayerEntity* OOPlayerForScripting(void) {
 
 namespace {
 
-ooscript::Runtime sRuntime;
-ooscript::Context sContext;
-ooscript::Object sGlobal;
+JSContext* sContext;
 
 void SetUpContext() {
   if (sContext != nullptr) return;
-  sRuntime = ooscript::newRuntime(8u * 1024u * 1024u);
-  sContext = ooscript::newContext(sRuntime, 8192);
-  ooscript::beginRequest(sContext);
-  sGlobal = ooscript::getGlobalObject(sContext);
-  ooscript::initStandardClasses(sContext, sGlobal);
-  InitOOJSClock(sContext, sGlobal);
+  sContext = JS_NewContext(JS_NewRuntime());
+  gOOJSMainThreadContext = sContext;  // the class registration's runtime
+  JSValue global = JS_GetGlobalObject(sContext);
+  InitOOJSClock(sContext, global);
+  JS_FreeValue(sContext, global);
   sPlayer = new FakePlayer;  // never deleted
   gSharedUniverse = reinterpret_cast<Universe*>(sUniverseStorage);
 }
@@ -207,14 +207,16 @@ std::string Eval(const char* src) {
                         src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
-  if (!ooscript::evaluateScript(sContext, sGlobal, wrapped.c_str(),
-                                static_cast<unsigned>(wrapped.size()),
-                                "test.js", 1, &result)) {
-    ooscript::clearPendingException(sContext);
+  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(),
+                           "test.js", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(sContext, JS_GetException(sContext));
     return "<evaluation failed>";
   }
-  return cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  std::string text =
+      cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  JS_FreeValue(sContext, result);
+  return text;
 }
 
 // Eval, and print what came back when it is not what the check expects.
@@ -298,7 +300,6 @@ OO_TEST(nativeExceptions) {
   SetClock(0);
   OO_CHECK_EVAL("clock.seconds", "0");
   OO_CHECK_EQ(sLimiterPauses, 0);
-  OO_CHECK(ooscript::isInRequest(sContext));
 #if OOJS_PROFILE
   OO_CHECK_EQ(sProfileDepth, 0);
 #endif

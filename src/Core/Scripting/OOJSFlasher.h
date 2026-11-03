@@ -26,16 +26,21 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
+#include <quickjs.h>
 
-void InitOOJSFlasher(ooscript::Context context, ooscript::Object global);
+#include <optional>
+#include <string>
+
+#include "OOFoundation.h"
+
+void InitOOJSFlasher(JSContext* context, JSValueConst global);
+
+JSClassID JSFlasherClassID(void);
 
 /*	The bodies of OOFlasherEntity (OOJavaScriptExtensions), which the engine
    reaches by selector through the root's JS members: the C++ OOFlasherEntity's
    overrides call these.
+   Its JS class is JSFlasherClassID() (#768's -oo_jsClassID).
 */
-void OOJSFlasherGetJSClass(ooscript::ClassDef** outClass,
-                           ooscript::Object* outPrototype);
 std::optional<std::string> OOJSFlasherJSClassName(void);
 bool OOJSFlasherIsVisibleToScripts(void);

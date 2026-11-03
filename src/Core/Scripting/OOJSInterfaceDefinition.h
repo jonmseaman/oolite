@@ -27,6 +27,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include <optional>
 #include <string>
 
@@ -34,10 +36,12 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class OOJSScript;  // imported by the .mm, so that a test can stand in for it
 
+/*	The definition owns references to its callback and callbackThis, which
+   are released on destruction and when the JavaScript engine is reset.
+*/
 class OOJSInterfaceDefinition : public oo::RefCounted {
  public:
   // The old -init after [super init] (oo::makeRef).
@@ -50,10 +54,11 @@ class OOJSInterfaceDefinition : public oo::RefCounted {
   void setCategory(const std::string& category);
   std::optional<std::string> summary();
   void setSummary(const std::string& summary);
-  ooscript::Value callback();
-  void setCallback(ooscript::Value callback);
-  ooscript::Object callbackThis();
-  void setCallbackThis(ooscript::Object callbackthis);
+  // Returned values are owned by the caller.
+  JSValue callback();
+  void setCallback(JSValueConst callback);
+  JSValue callbackThis();
+  void setCallbackThis(JSValueConst callbackthis);
 
   void runCallback(const std::string& key);
 
@@ -62,8 +67,8 @@ class OOJSInterfaceDefinition : public oo::RefCounted {
  private:
   void deleteJSPointers();
 
-  ooscript::Value _callback = {};
-  ooscript::Object _callbackThis = {};
+  JSValue _callback = JS_UNDEFINED;       // Owned.
+  JSValue _callbackThis = JS_UNDEFINED;   // Owned.
   oo::WeakRef<OOJSScript> _owningScript;  // a weak reference (was the facade's
                                           // weak reference proxy)
 

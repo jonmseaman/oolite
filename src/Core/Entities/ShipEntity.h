@@ -41,7 +41,6 @@
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/WeakSet.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class StationEntity;
 class OOMesh;
@@ -605,9 +604,8 @@ class ShipEntity : public OOEntityWithDrawable,
   bool isTurret();
   bool isPirateVictim();
   bool isExplicitlyUnpiloted();
-  virtual bool isUnpiloted();  // StationEntity overrides
-  void getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
-      override;                                       // StationEntity overrides
+  virtual bool isUnpiloted();                         // StationEntity overrides
+  JSClassID jsClassID() override;                     // StationEntity overrides
   std::optional<std::string> jsClassName() override;  // StationEntity overrides
   // YES, as the Objective-C ShipEntity answered; StationEntity
   // and DockEntity override with the same answer
@@ -1002,25 +1000,22 @@ class ShipEntity : public OOEntityWithDrawable,
   bool getIsDemoShip();
   void setDemoStartTime(OOTimeAbsolute time);
   OOTimeAbsolute getDemoStartTime();
-  virtual void doScriptEvent(ooscript::PropertyId message);
+  virtual void doScriptEvent(OOJSPropID message);
   void doScriptEvent(
-      ooscript::PropertyId message,
+      OOJSPropID message,
       Entity* argument);  // the entity's JS value, as its object's
-  void doScriptEvent(ooscript::PropertyId message, Entity* argument1,
-                     Entity* argument2);
-  virtual void doScriptEvent(ooscript::PropertyId message,
+  void doScriptEvent(OOJSPropID message, Entity* argument1, Entity* argument2);
+  virtual void doScriptEvent(OOJSPropID message,
                              const std::vector<oo::PList>& arguments);
-  void doScriptEvent(ooscript::PropertyId message, ooscript::Value* argv,
-                     unsigned argc);
-  virtual void doScriptEvent(ooscript::PropertyId message,
-                             ooscript::Context context, ooscript::Value* argv,
-                             unsigned argc);
+  // argv is borrowed: the caller remains responsible for freeing the values.
+  void doScriptEvent(OOJSPropID message, JSValue* argv, int argc);
+  virtual void doScriptEvent(OOJSPropID message, JSContext* context,
+                             JSValue* argv, int argc);
   void reactToAIMessage(const std::string& message,
                         const std::optional<std::string>& debugContext);
   void sendAIMessage(const std::string& message);
-  void doScriptEvent(ooscript::PropertyId scriptEvent,
-                     const std::string& aiMessage);
-  void doScriptEvent(ooscript::PropertyId scriptEvent, Entity* argument,
+  void doScriptEvent(OOJSPropID scriptEvent, const std::string& aiMessage);
+  void doScriptEvent(OOJSPropID scriptEvent, Entity* argument,
                      const std::string& aiMessage);
   virtual OOAlertCondition alertCondition();
   virtual OOAlertCondition realAlertCondition();
@@ -1590,24 +1585,29 @@ class ShipEntity : public OOEntityWithDrawable,
 };
 
 /*	Script events with raw JS values, for example:
-        ShipScriptEventNoCx(ship, "doSomething", ooscript::int32Value(42));
-        The ship is the C++ ship; a null ship sends nothing, as the message to
-   nil did.
+        ShipScriptEvent(context, ship, "doSomething",
+                        OOJSValueFromDouble(context, 42));
+        The argument values are owned by the macro, which frees them (with
+   OOJSFreeValue()) after the event has been sent, so they must be fresh values
+   that are not used again afterwards. The ship is the C++ ship; a null ship
+   sends nothing, as the message to nil did.
 */
 #define ShipScriptEvent(context, ship, event, ...)                           \
   do {                                                                       \
-    ooscript::Value argv[] = {__VA_ARGS__};                                  \
-    unsigned argc = sizeof argv / sizeof *argv;                              \
+    OOJSVal argv[] = {__VA_ARGS__};                                          \
+    int argc = sizeof argv / sizeof *argv;                                   \
     if (ShipEntity* ooScriptEventShip_ = (ship))                             \
       ooScriptEventShip_->doScriptEvent(OOJSID(event), context, argv, argc); \
+    for (int oojsArgIndex = 0; oojsArgIndex < argc; oojsArgIndex++) {        \
+      OOJSFreeValue(context, argv[oojsArgIndex]);                            \
+    }                                                                        \
   } while (0)
 
-#define ShipScriptEventNoCx(ship, event, ...)                       \
-  do {                                                              \
-    ooscript::Value argv[] = {__VA_ARGS__};                         \
-    unsigned argc = sizeof argv / sizeof *argv;                     \
-    if (ShipEntity* ooScriptEventShip_ = (ship))                    \
-      ooScriptEventShip_->doScriptEvent(OOJSID(event), argv, argc); \
+#define ShipScriptEventNoCx(ship, event, ...)                      \
+  do {                                                             \
+    JSContext* oojsEventContext = OOJSAcquireContext();            \
+    ShipScriptEvent(oojsEventContext, ship, event, ##__VA_ARGS__); \
+    OOJSRelinquishContext(oojsEventContext);                       \
   } while (0)
 
 Vector cxx_positionOffsetForShipInRotationToAlignment(ShipEntity* ship,

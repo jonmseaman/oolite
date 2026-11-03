@@ -41,7 +41,6 @@ MA 02110-1301, USA.
 #include "OOTypes.h"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class Entity;
 class Universe;
@@ -302,12 +301,12 @@ class Entity : public oo::RefCounted, public ::OOJSPrivateObject {
      its class by overriding them (EntityOOJavaScriptExtensions.h). The defaults
      are the category's bodies. The engine asks the C++ entity
           (OOJSEntityIsVisibleToScripts(), OOJSEntityJSClassName(),
-     OOJSEntityGetJSClass()); an Objective-C entity's class that implements the
+     OOJSEntityJSClassID()); an Objective-C entity's class that implements the
      selectors still answers first. oo::ObjCEntity must not forward these: those
      functions reach them only for an Objective-C entity with no override of its
      own, and a forwarding adapter would send the selector back.
   */
-  // getJSClass(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
+  // jsClassID(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
   // (EntityVirtualMembers.h) jsClassName(): virtual, in
   // OO_ENTITY_VIRTUAL_MEMBERS (EntityVirtualMembers.h) isVisibleToScripts():
   // virtual, in OO_ENTITY_VIRTUAL_MEMBERS (EntityVirtualMembers.h)
@@ -402,7 +401,9 @@ class Entity : public oo::RefCounted, public ::OOJSPrivateObject {
 
   OOTimeAbsolute spawnTime = {};
 
-  ooscript::Object _jsSelf = {};
+  // The entity's JS object, owned while the entity lives; not an object until
+  // created (test with JS_IsObject()).
+  JSValue _jsSelf = JS_UNDEFINED;
   NSUInteger lastDrawCounter = {};
 
  private:

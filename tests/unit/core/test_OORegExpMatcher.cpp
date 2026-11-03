@@ -3,10 +3,10 @@
 
         The matcher compiles a JavaScript function, "return
    regexp.test(string);", and runs it on a RegExp object it caches by pattern
-   and flags. The test links the game's own OORegExpMatcher and the ooscript
-   engine (QuickJS), so every match below is the real engine's answer. The
+   and flags. The test links the game's own OORegExpMatcher and the QuickJS-ng
+   engine, so every match below is the real engine's answer. The
    Objective-C glue the matcher uses but whose files reach the whole game (the
-   engine singleton, OOJSFunction, OOJSValue and the two value converters;
+   engine singleton, OOJSFunction, OOJSValue and the exception reporter;
    OOJavaScriptEngine.mm links everything) is replaced by the minimal
    definitions below (OOJSFunction's C++ members), which count what the matcher
    asks of them. The expectations cover: what matches, the flags, the empty
@@ -22,18 +22,17 @@
 #include "OOJSFunction.h"
 #include "OORegExpMatcher.h"
 #include "oo_test.hpp"
-#include "oofnd/Encoding.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/OOObject.h"
 
 // --- Stand-ins for the engine glue (see the banner)
 // ---------------------------------------------
 
-ooscript::Context gOOJSMainThreadContext = nullptr;
+JSContext* gOOJSMainThreadContext = nullptr;
 
 namespace {
 
-ooscript::Object sGlobal = nullptr;
+JSValue sGlobal = JS_UNDEFINED;  // owned, for the life of the process
 unsigned sEngineCalls = 0;    // +OOJavaScriptEngine::sharedEngine()
 unsigned sFunctionsMade = 0;  // OOJSFunction inits: one per matcher
 unsigned sRegExpsMade =
@@ -41,14 +40,6 @@ unsigned sRegExpsMade =
 unsigned sEvaluations = 0;  // OOJSFunction evaluations: one per match
 bool sFailCompile =
     false;  // make the next OOJSFunction init fail, as a compile error does
-
-ooscript::ClassDef sGlobalClass = {"Global", ooscript::ClassFlag::Global,
-                                   nullptr,  nullptr,
-                                   nullptr,  nullptr,
-                                   nullptr,  nullptr,
-                                   nullptr,  nullptr,
-                                   nullptr,  nullptr,
-                                   nullptr,  nullptr};
 
 }  // namespace
 
@@ -62,86 +53,81 @@ class OOJavaScriptEngine {
 OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
   sEngineCalls++;
   if (gOOJSMainThreadContext == nullptr) {
-    ooscript::Runtime runtime = ooscript::newRuntime(64L * 1024L * 1024L);
-    gOOJSMainThreadContext = ooscript::newContext(runtime, 8192);
-    ooscript::beginRequest(gOOJSMainThreadContext);
-    sGlobal = ooscript::newGlobalObject(gOOJSMainThreadContext, &sGlobalClass);
-    ooscript::setGlobalObject(gOOJSMainThreadContext, sGlobal);
-    ooscript::initStandardClasses(gOOJSMainThreadContext, sGlobal);
-    ooscript::endRequest(gOOJSMainThreadContext);
+    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+    sGlobal = JS_GetGlobalObject(gOOJSMainThreadContext);
   }
   return nullptr;
 }
 
 // OOJSFunction (src/Core/Scripting/OOJSFunction.h): the members the matcher
-// calls, defined here in place of OOJSFunction.mm.
+// calls, defined here in place of OOJSFunction.cpp. The function is compiled
+// as a function expression in the global scope, as OOJSFunction.cpp does.
 oo::Ref<OOJSFunction> OOJSFunction::initWithName(
-    const std::optional<std::string>& name, ooscript::Object scope,
+    const std::optional<std::string>& name, JSValueConst /*scope*/,
     const std::optional<std::string>& code, NSUInteger argCount,
     const char** argNames, const std::optional<std::string>& fileName,
-    NSUInteger lineNumber, ooscript::Context context) {
+    NSUInteger /*lineNumber*/, JSContext* context) {
   sFunctionsMade++;
   if (sFailCompile) return nullptr;
-  const std::u16string units = oo::utf8ToUtf16(code.value_or(std::string()));
-  ooscript::Function function = ooscript::compileUCFunction(
-      context, (scope != nullptr) ? scope : sGlobal,
-      name ? name->c_str() : nullptr, static_cast<unsigned>(argCount), argNames,
-      units.data(), units.size(), fileName ? fileName->c_str() : nullptr,
-      static_cast<unsigned>(lineNumber));
-  if (function == nullptr) return nullptr;
-  return oo::adopt(new OOJSFunction(function, context));
+  std::string source = "(function " + name.value_or(std::string()) + "(";
+  for (NSUInteger i = 0; i < argCount; i++)
+    source += std::string(i != 0 ? "," : "") + argNames[i];
+  source += ") {\n" + code.value_or(std::string()) + "\n})";
+  JSValue function =
+      JS_Eval(context, source.c_str(), source.size(),
+              fileName ? fileName->c_str() : "<test>", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(function)) {
+    JS_FreeValue(context, JS_GetException(context));
+    return nullptr;
+  }
+  oo::Ref<OOJSFunction> result = oo::adopt(new OOJSFunction(function, context));
+  JS_FreeValue(context, function);
+  return result;
 }
 
-OOJSFunction::OOJSFunction(ooscript::Function function,
-                           ooscript::Context context) {
-  _function = function;
-  ooscript::addNamedObjectRoot(
-      context, reinterpret_cast<ooscript::Object*>(&_function),
-      "test OOJSFunction");  // a function is its object, as OOJSFunction.mm
-                             // roots it
+OOJSFunction::OOJSFunction(JSValueConst function, JSContext* context) {
+  _function = JS_DupValue(context, function);  // its own reference
 }
 
 OOJSFunction::~OOJSFunction() {
-  if (_function != nullptr)
-    ooscript::removeObjectRoot(gOOJSMainThreadContext,
-                               reinterpret_cast<ooscript::Object*>(&_function));
+  JS_FreeValue(gOOJSMainThreadContext, _function);
 }
 
-bool OOJSFunction::evaluateWithContext(ooscript::Context context,
-                                       ooscript::Object jsThis, unsigned argc,
-                                       ooscript::Value* argv,
-                                       ooscript::Value* result) {
+bool OOJSFunction::evaluateWithContext(JSContext* context, JSValueConst jsThis,
+                                       int argc, JSValueConst* argv,
+                                       JSValue* result) {
   sEvaluations++;
-  return ooscript::callFunction(context, (jsThis != nullptr) ? jsThis : sGlobal,
-                                _function, argc, argv, result);
+  JSValue rval = JS_Call(context, _function,
+                         JS_IsUndefined(jsThis) ? sGlobal : jsThis, argc, argv);
+  if (JS_IsException(rval)) return false;  // the exception is left pending
+  if (result != nullptr)
+    *result = rval;
+  else
+    JS_FreeValue(context, rval);
+  return true;
 }
 
 // The held value (OOJSEngineCore.h; a C++ class): the members the matcher
 // calls, defined here with the stand-in's answers.
-oo::Ref<OOJSValue> OOJSValue::valueWithJSObject(ooscript::Object object,
-                                                ooscript::Context context) {
+oo::Ref<OOJSValue> OOJSValue::valueWithJSValue(JSValueConst value,
+                                               JSContext* context) {
   oo::Ref<OOJSValue> result = oo::makeRef<OOJSValue>();
   sRegExpsMade++;
-  result->_val = ooscript::objectValue(object);
-  ooscript::addNamedValueRoot(context, &result->_val, "test OOJSValue");
+  result->_val = JS_DupValue(context, value);
   return result;
 }
 
-OOJSValue::~OOJSValue() {
-  ooscript::removeValueRoot(gOOJSMainThreadContext, &_val);
-}
+OOJSValue::~OOJSValue() { JS_FreeValue(gOOJSMainThreadContext, _val); }
 
-ooscript::Value OOJSValue::jsValueInContext(ooscript::Context) { return _val; }
+JSValue OOJSValue::jsValueInContext(JSContext* context) {
+  return JS_DupValue(context, _val);
+}
 std::string OOJSValue::className() const { return "OOJSValue"; }
 std::string OOJSValue::description() const { return "<OOJSValue>"; }
 
-ooscript::Value OOJSValueFromPList(ooscript::Context context,
-                                   const oo::PList& plist) {
-  const std::string* string = plist.getIf<std::string>();
-  if (string == nullptr) return ooscript::nullValue();
-  const std::u16string units = oo::utf8ToUtf16(*string);
-  return ooscript::stringValue(
-      ooscript::newUCStringCopyN(context, units.data(), units.size()));
+// The engine's reporter: the stand-in clears the exception.
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
 }
 
 // --- The tests
@@ -170,7 +156,7 @@ OO_TEST(matches) {
   OO_CHECK(Matches("one\ntwo", "^two", kOORegExpMultiLine));
   OO_CHECK(Matches("", "^$"));
   OO_CHECK(Matches("caf\xC3\xA9",
-                   "\xC3\xA9$"));  // UTF-8 in, UTF-16 units to the engine
+                   "\xC3\xA9$"));  // UTF-8 in, and UTF-8 to the engine
   OO_CHECK(OORegExpMatcher::regExpMatcher()->string("abc", "b"));  // flags 0
 }
 

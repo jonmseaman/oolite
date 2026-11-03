@@ -2,10 +2,9 @@
         Unit tests for OOJSPopulatorDefinition
    (src/Core/Scripting/OOJSPopulatorDefinition.h/.mm).
 
-   A populator definition keeps a JS callback and its `this` alive (GC roots)
+   A populator definition keeps a JS callback and its `this` alive (owned references)
    for the system populator, remembers the script that made it, and runs the
-   callback with a location. The test runs it in a real context on the game's
-   own façade backend (ooscript/JSEngine_quickjs.cpp) and links the game's own
+   callback with a location. The test runs it in a real QuickJS-ng context and links the game's own
    objects for the class. What the rest of the engine would provide is defined
    below as the smallest stand-in that does the same thing: the engine object
    (which calls the function), the script stack (OOJSScript) and Vector3D (a
@@ -18,6 +17,8 @@
    reference to a definition. Run: tests/run.sh unit
 */
 
+#include <quickjs.h>
+
 #include <cstring>
 #include <string>
 #include <vector>
@@ -26,7 +27,6 @@
 #include "oo_test.hpp"
 #include "oofnd/Notification.hpp"
 #include "oofnd/String.hpp"
-#include "ooscript/JSEngine.hpp"
 
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
@@ -34,27 +34,25 @@
 class OOJSScript;
 
 namespace {
-ooscript::Object sGlobal;
 std::vector<OOJSScript*> sPushed;
 int sScriptDepth = 0;
 int sCalls = 0;
 }  // namespace
 
-ooscript::Context gOOJSMainThreadContext = nullptr;
+JSContext* gOOJSMainThreadContext = nullptr;
 extern const char* const kOOJavaScriptEngineWillResetNotificationName;
 const char* const kOOJavaScriptEngineWillResetNotificationName =
     "org.aegidian.oolite OOJavaScriptEngine will reset";
 
 // A vector is the array [x, y, z] here: enough to see what the definition hands
 // over.
-bool VectorToJSValue(ooscript::Context context, Vector vector,
-                                ooscript::Value* outValue) {
-  ooscript::Value parts[3] = {ooscript::numberValue(vector.x),
-                              ooscript::numberValue(vector.y),
-                              ooscript::numberValue(vector.z)};
-  ooscript::Object array = ooscript::newArrayObject(context, 3, parts);
-  if (array == nullptr) return false;
-  *outValue = ooscript::objectValue(array);
+bool VectorToJSValue(JSContext* context, Vector vector, JSValue* outValue) {
+  JSValue array = JS_NewArray(context);
+  if (JS_IsException(array)) return false;
+  JS_SetPropertyUint32(context, array, 0, JS_NewFloat64(context, vector.x));
+  JS_SetPropertyUint32(context, array, 1, JS_NewFloat64(context, vector.y));
+  JS_SetPropertyUint32(context, array, 2, JS_NewFloat64(context, vector.z));
+  *outValue = array;
   return true;
 }
 
@@ -63,9 +61,8 @@ bool VectorToJSValue(ooscript::Context context, Vector vector,
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
-  bool callJSFunction(ooscript::Value function, ooscript::Object jsThis,
-                      unsigned argc, ooscript::Value* argv,
-                      ooscript::Value* outResult);
+  bool callJSFunction(JSValueConst function, JSValueConst jsThis, int argc,
+                      JSValueConst* argv, JSValue* outResult);
 };
 
 OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
@@ -73,15 +70,26 @@ OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
   return engine;
 }
 
-bool OOJavaScriptEngine::callJSFunction(ooscript::Value function,
-                                        ooscript::Object jsThis, unsigned argc,
-                                        ooscript::Value* argv,
-                                        ooscript::Value* outResult) {
+// As the engine's: the call, its result owned by the caller, and an exception
+// reported (here, dropped) and cleared.
+bool OOJavaScriptEngine::callJSFunction(JSValueConst function,
+                                        JSValueConst jsThis, int argc,
+                                        JSValueConst* argv,
+                                        JSValue* outResult) {
   sCalls++;
-  bool OK = ooscript::callFunctionValue(gOOJSMainThreadContext, jsThis,
-                                        function, argc, argv, outResult);
-  if (!OK) ooscript::clearPendingException(gOOJSMainThreadContext);
-  return OK;
+  JSValue result =
+      JS_Call(gOOJSMainThreadContext, function, jsThis, argc, argv);
+  if (JS_IsException(result)) {
+    JS_FreeValue(gOOJSMainThreadContext,
+                 JS_GetException(gOOJSMainThreadContext));
+    if (outResult != NULL) *outResult = JS_UNDEFINED;
+    return false;
+  }
+  if (outResult != NULL)
+    *outResult = result;
+  else
+    JS_FreeValue(gOOJSMainThreadContext, result);
+  return true;
 }
 
 // The script stack: the running script (set by the test) and what was pushed.
@@ -113,16 +121,13 @@ std::optional<std::string> OOScript::scriptDescription() {
 std::optional<std::string> OOScript::version() { return std::nullopt; }
 bool OOScript::requiresTickle() { return false; }
 void OOScript::runWithTarget(Entity*) {}
-bool OOScript::callMethod(ooscript::PropertyId, ooscript::Context,
-                          ooscript::Value*, int, ooscript::Value*) {
+bool OOScript::callMethod(JSAtom, JSContext*, JSValueConst*, int, JSValue*) {
   return false;
 }
 std::string OOScript::className() const { return "OOScript"; }
 std::string OOScript::description() const { return "<OOScript>"; }
-ooscript::Value OOScript::jsValueInContext(ooscript::Context) {
-  return ooscript::undefinedValue();
-}
-void OOScript::clearJSSelf(ooscript::Object) {}
+JSValue OOScript::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
+void OOScript::clearJSSelf(JSValueConst) {}
 
 OOJSScript* OOJSScript::currentlyRunningScript() { return sRunningScript; }
 void OOJSScript::pushScript(const oo::WeakRef<OOJSScript>& script) {
@@ -139,38 +144,64 @@ void OOJSScript::popScript(OOJSScript* script) {
 
 namespace {
 
-ooscript::Context Context() {
+JSContext* Context() {
   if (gOOJSMainThreadContext == nullptr) {
-    ooscript::Runtime runtime = ooscript::newRuntime(8u * 1024u * 1024u);
-    gOOJSMainThreadContext = ooscript::newContext(runtime, 8192);
-    ooscript::beginRequest(gOOJSMainThreadContext);
-    sGlobal = ooscript::getGlobalObject(gOOJSMainThreadContext);
-    ooscript::initStandardClasses(gOOJSMainThreadContext, sGlobal);
+    JSRuntime* runtime = JS_NewRuntime();
+    JS_SetMemoryLimit(runtime, 8u * 1024u * 1024u);
+    gOOJSMainThreadContext = JS_NewContext(runtime);
   }
   return gOOJSMainThreadContext;
 }
 
-ooscript::Value Evaluate(const char* src) {
-  ooscript::Value result = ooscript::undefinedValue();
-  if (!ooscript::evaluateScript(Context(), sGlobal, src,
-                                static_cast<unsigned>(std::strlen(src)),
-                                "test.js", 1, &result))
-    ooscript::clearPendingException(Context());
+// An owned value, freed when it goes: what Evaluate() gives, so that a value
+// handed to the definition has no other reference once the statement ends.
+class Owned {
+ public:
+  explicit Owned(JSValue value) : _value(value) {}
+  ~Owned() { JS_FreeValue(Context(), _value); }
+  Owned(const Owned&) = delete;
+  Owned& operator=(const Owned&) = delete;
+  operator JSValueConst() const { return _value; }
+
+ private:
+  JSValue _value;
+};
+
+Owned Evaluate(const char* src) {
+  JSValue result = JS_Eval(Context(), src, std::strlen(src), "test.js",
+                           JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(Context(), JS_GetException(Context()));
+    result = JS_UNDEFINED;
+  }
+  return Owned(result);
+}
+
+std::string String(JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value))
+    return JS_IsNull(value) ? "null" : "undefined";
+  std::size_t length = 0;
+  const char* chars = JS_ToCStringLen(Context(), &length, value);
+  if (chars == nullptr) return "<none>";
+  std::string result(chars, length);
+  JS_FreeCString(Context(), chars);
   return result;
 }
 
-std::string String(ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value))
-    return ooscript::isNull(value) ? "null" : "undefined";
-  ooscript::String str = ooscript::valueToString(Context(), value);
-  std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(Context(), str, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);
+// Whether an owned value (what callback() and callbackThis() answer) is
+// undefined, or an object; the value is freed.
+bool IsUndefined(JSValue value) {
+  bool result = JS_IsUndefined(value);
+  JS_FreeValue(Context(), value);
   return result;
 }
+bool IsObject(JSValue value) {
+  bool result = JS_IsObject(value);
+  JS_FreeValue(Context(), value);
+  return result;
+}
+
+void CollectGarbage() { JS_RunGC(JS_GetRuntime(Context())); }
 
 }  // namespace
 
@@ -183,8 +214,8 @@ OO_TEST(initialState) {
     const oo::Ref<OOJSPopulatorDefinition> definition =
         oo::makeRef<OOJSPopulatorDefinition>();
     OO_CHECK(definition.get() != nullptr);
-    OO_CHECK(ooscript::isUndefined(definition->callback()));
-    OO_CHECK(definition->callbackThis() == NULL);
+    OO_CHECK(IsUndefined(definition->callback()));
+    OO_CHECK(!IsObject(definition->callbackThis()));
   }
 }
 
@@ -202,10 +233,10 @@ OO_TEST(runCallback) {
         Evaluate("(function (where) { globalThis.ran = this.tag + ':' + "
                  "where.join(); })"));
     definition->setCallbackThis(
-        ooscript::toObject(Evaluate("({ tag: 'me' })")));
-    OO_CHECK(ooscript::isObject(definition->callback()));
-    OO_CHECK(definition->callbackThis() != NULL);
-    ooscript::gc(Context());
+        Evaluate("({ tag: 'me' })"));
+    OO_CHECK(IsObject(definition->callback()));
+    OO_CHECK(IsObject(definition->callbackThis()));
+    CollectGarbage();
 
     sPushed.clear();
     sCalls = 0;
@@ -239,12 +270,12 @@ OO_TEST(engineReset) {
     const oo::Ref<OOJSPopulatorDefinition> definition =
         oo::makeRef<OOJSPopulatorDefinition>();
     definition->setCallback(Evaluate("(function () {})"));
-    definition->setCallbackThis(ooscript::toObject(Evaluate("({})")));
+    definition->setCallbackThis(Evaluate("({})"));
     oo::NotificationCenter::defaultCenter().post(
         kOOJavaScriptEngineWillResetNotificationName,
         OOJavaScriptEngine::sharedEngine());
-    OO_CHECK(ooscript::isUndefined(definition->callback()));
-    OO_CHECK(definition->callbackThis() == NULL);
+    OO_CHECK(IsUndefined(definition->callback()));
+    OO_CHECK(!IsObject(definition->callbackThis()));
   }
   // A definition that is gone no longer observes: another reset is harmless.
   oo::NotificationCenter::defaultCenter().post(

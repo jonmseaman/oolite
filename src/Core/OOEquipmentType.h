@@ -36,6 +36,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include <map>
 #include <optional>
 #include <string>
@@ -49,7 +51,6 @@ SOFTWARE.
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/objc/OOObject.h"
-#include "ooscript/JSEngine.hpp"
 
 class OOEquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
  public:
@@ -160,8 +161,8 @@ class OOEquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
   // The JS glue (OOJSPrivateObject), defined in OOJSEquipmentInfo.mm: the
   // EquipmentInfo object, made on first use; forgetting it when it is
   // finalized; "[EquipmentInfo <components>]".
-  ooscript::Value jsValueInContext(ooscript::Context context) override;
-  void clearJSSelf(ooscript::Object selfVal) override;
+  JSValue jsValueInContext(JSContext* context) override;  // owned
+  void clearJSSelf(JSValueConst selfVal) override;
   std::optional<std::string> jsDescription() override;
 
   // oo::PListForeign: what the facade answered (its class, and "%@" as
@@ -211,8 +212,10 @@ class OOEquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
   oo::PList _weaponInfo;          // a dictionary (empty by default)
   std::optional<std::string> _script;
   std::optional<std::string> _condition_script;
-  ooscript::Object _jsSelf =
-      {};  // the EquipmentInfo object (OOJSEquipmentInfo.mm)
+  // The EquipmentInfo object (OOJSEquipmentInfo.cpp), a weak reference: the
+  // JS object retains the type, and clearJSSelf() forgets it when it is
+  // finalized. Not an object until created (test with JS_IsObject()).
+  JSValue _jsSelf = JS_UNDEFINED;
 };
 
 /*	A type carried through plist data as a PList::Object node: the type is

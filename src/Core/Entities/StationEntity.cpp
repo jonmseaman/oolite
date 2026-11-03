@@ -791,10 +791,7 @@ bool StationEntity::isUnpiloted() {
   return isExplicitlyUnpiloted() || getIsHulk();
 }
 
-void StationEntity::getJSClass(ooscript::ClassDef** outClass,
-                               ooscript::Object* outPrototype) {
-  ::OOJSStationGetJSClass(outClass, outPrototype);
-}
+JSClassID StationEntity::jsClassID() { return ::JSStationClassID(); }
 
 bool StationEntity::isVisibleToScripts() {
   return ::ShipEntityJSIsVisibleToScripts();
@@ -1559,10 +1556,10 @@ oo::PList StationEntity::dockingInstructionsForShip(::ShipEntity* ship) {
       docking = (sub != nullptr ? sub->canAcceptShipForDocking(ship)
                                 : std::optional<std::string>());
       if (docking == "DOCK_CLOSED") {
-        ooscript::Context context = OOJSAcquireContext();
-        ooscript::Value rval = ooscript::undefinedValue();
-        ooscript::Value args[] = {OOJSValueFromCxxObject(context, sub),
-                                  OOJSValueFromCxxObject(context, ship)};
+        JSContext* context = OOJSAcquireContext();
+        OOJSVal rval = OOJSUndefinedValue();
+        OOJSVal args[] = {OOJSValueFromCxxObject(context, sub),
+                          OOJSValueFromCxxObject(context, ship)};
         bool tempreject = false;
 
         bool OK =
@@ -1570,7 +1567,7 @@ oo::PList StationEntity::dockingInstructionsForShip(::ShipEntity* ship) {
                  ? getScript()->callMethod(OOJSID("willOpenDockingPortFor"),
                                            context, args, 2, &rval)
                  : false);
-        if (OK) OK = ooscript::valueToBoolean(context, rval, &tempreject);
+        if (OK) tempreject = OOJSValueToBOOL(context, rval);
         if (!OK) tempreject = false;  // default to permreject
         if (tempreject) {
           docking = "TRY_AGAIN_LATER";
@@ -1578,6 +1575,9 @@ oo::PList StationEntity::dockingInstructionsForShip(::ShipEntity* ship) {
           docking = "TOO_BIG_TO_DOCK";
         }
 
+        OOJSFreeValue(context, rval);
+        OOJSFreeValue(context, args[0]);
+        OOJSFreeValue(context, args[1]);
         OOJSRelinquishContext(context);
       }
 
@@ -2209,9 +2209,11 @@ void StationEntity::setAlertLevel(OOStationAlertLevel level,
     OOStationAlertLevel oldLevel = alertLevel;
     alertLevel = level;
     if (signallingScript) {
-      ShipScriptEventNoCx(self, "alertConditionChanged",
-                          ooscript::int32Value(level),
-                          ooscript::int32Value(oldLevel));
+      JSContext* context = OOJSAcquireContext();
+      ShipScriptEvent(context, self, "alertConditionChanged",
+                      OOJSValueFromDouble(context, level),
+                      OOJSValueFromDouble(context, oldLevel));
+      OOJSRelinquishContext(context);
     }
     switch (level) {
       case STATION_ALERT_LEVEL_GREEN:
@@ -2481,10 +2483,10 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
                             : std::optional<std::string>())
                 .value_or("");
         if (docking == "DOCK_CLOSED") {
-          ooscript::Context context = OOJSAcquireContext();
-          ooscript::Value rval = ooscript::undefinedValue();
-          ooscript::Value args[] = {OOJSValueFromCxxObject(context, sub),
-                                    OOJSValueFromCxxObject(context, other)};
+          JSContext* context = OOJSAcquireContext();
+          OOJSVal rval = OOJSUndefinedValue();
+          OOJSVal args[] = {OOJSValueFromCxxObject(context, sub),
+                            OOJSValueFromCxxObject(context, other)};
           bool tempreject = false;
 
           bool OK =
@@ -2492,11 +2494,14 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
                    ? getScript()->callMethod(OOJSID("willOpenDockingPortFor"),
                                              context, args, 2, &rval)
                    : false);
-          if (OK) OK = ooscript::valueToBoolean(context, rval, &tempreject);
+          if (OK) tempreject = OOJSValueToBOOL(context, rval);
           if (!OK) tempreject = false;  // default to permreject
           if (tempreject) {
             openLater = true;
           }
+          OOJSFreeValue(context, rval);
+          OOJSFreeValue(context, args[0]);
+          OOJSFreeValue(context, args[1]);
           OOJSRelinquishContext(context);
         }
         if (openLater) break;

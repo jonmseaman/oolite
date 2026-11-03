@@ -26,22 +26,26 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
+#include <optional>
+#include <string>
 #include <vector>
 
 #include "OOEntityHold.h"
 #include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
 class Entity;
 class OOVisualEffectEntity;
 
-void InitOOJSVisualEffect(ooscript::Context context, ooscript::Object global);
+void InitOOJSVisualEffect(JSContext* context, JSValueConst global);
+
+JSClassID JSVisualEffectClassID(void);
 
 /*	The bodies of OOVisualEffectEntity (OOJavaScriptExtensions), which the
    engine reaches by selector: the C++ effect's
-   getJSClass()/jsClassName()/isVisibleToScripts() overrides call them.
+   jsClassName()/isVisibleToScripts() overrides call them.
+   Its JS class is JSVisualEffectClassID() (#768's -oo_jsClassID).
 */
-void OOJSVisualEffectGetJSClass(ooscript::ClassDef** outClass,
-                                ooscript::Object* outPrototype);
 std::optional<std::string> OOJSVisualEffectJSClassName(void);
 bool OOJSVisualEffectIsVisibleToScripts(void);
 std::vector<oo::EntityHold> OOJSVisualEffectSubEntitiesForScript(

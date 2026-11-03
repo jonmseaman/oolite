@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #include "GameController.h"
 #include "OOConstToString.h"
 #include "OODebugFlags.h"
+#include "OOJSEntity.h"
 #include "OOMaths.h"
 #include "OOPlanetEntity.h"
 #include "PlayerEntity.h"
@@ -948,10 +949,7 @@ bool Entity::getIsImmuneToBreakPatternHide() {
 // Entity (OOJavaScriptExtensions)'s answers for the class, which the root
 // category forwards here: the category's bodies, which a C++ subclass
 // overrides.
-void Entity::getJSClass(ooscript::ClassDef** outClass,
-                        ooscript::Object* outPrototype) {
-  ::EntityJSGetJSClass(outClass, outPrototype);
-}
+JSClassID Entity::jsClassID() { return ::JSEntityClassID(); }
 
 std::optional<std::string> Entity::jsClassName() {
   return ::EntityJSClassName();
@@ -962,14 +960,14 @@ bool Entity::isVisibleToScripts() { return ::EntityJSIsVisibleToScripts(); }
 // The JS glue: the bodies are
 // EntityOOJavaScriptExtensions.mm's, as they were when the root facade answered
 // the selectors.
-ooscript::Value Entity::jsValueInContext(ooscript::Context context) {
+JSValue Entity::jsValueInContext(JSContext* context) {
   return ::EntityJSValueInContext(this, context);
 }
 
-// OOObject's -oo_clearJSSelf:, which the facade did not override: nothing (the
-// JS object is a GC root of the entity's, so it is finalized only after
-// deleteJSSelf() has let go of it).
-void Entity::clearJSSelf(ooscript::Object /*selfVal*/) {}
+// NSObject's -oo_clearJSSelf:, which #768's Entity does not override:
+// nothing (the entity owns a reference to its JS object, so it is finalized
+// only after deleteJSSelf() has let go of it).
+void Entity::clearJSSelf(JSValueConst /*selfVal*/) {}
 
 std::optional<std::string> Entity::jsDescription() {
   return ::EntityJSDescription(this);

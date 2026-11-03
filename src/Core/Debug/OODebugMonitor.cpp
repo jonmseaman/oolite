@@ -162,13 +162,14 @@ bool OODebugMonitor::setDebugger(OODebuggerInterface* newDebugger) {
 }
 
 void OODebugMonitor::performJSConsoleCommand(const std::string& command) {
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Value commandVal = OOJSValueFromPList(context, oo::PList(command));
+  JSContext* context = OOJSAcquireContext();
+  JSValue commandVal = OOJSValueFromPList(context, oo::PList(command));
   OOJSStartTimeLimiterWithTimeLimit(kOOJSLongTimeLimit);
   if (_script != nullptr)
     _script->callMethod(OOJSID("consolePerformJSCommand"), context, &commandVal,
                         1, NULL);
   OOJSStopTimeLimiter();
+  JS_FreeValue(context, commandVal);
   OOJSRelinquishContext(context);
 }
 
@@ -567,19 +568,23 @@ void OODebugMonitor::dumpMemoryStatistics() {
 }
 
 size_t OODebugMonitor::dumpJSMemoryStatistics() {
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
 
-  ooscript::Runtime runtime = ooscript::getRuntime(context);
-  size_t jsSize = ooscript::getGCParameter(runtime, ooscript::GCParam::Bytes);
-  size_t jsMax = ooscript::getGCParameter(runtime, ooscript::GCParam::MaxBytes);
-  uint32_t jsGCCount =
-      ooscript::getGCParameter(runtime, ooscript::GCParam::NumberOfGCs);
+  JSRuntime* runtime = JS_GetRuntime(context);
+  /*	QuickJS has no heap limit or collection count; report the allocated
+          size and the threshold for the next cycle collection instead.
+  */
+  JSMemoryUsage usage;
+  JS_ComputeMemoryUsage(runtime, &usage);
+  size_t jsSize = (size_t)usage.malloc_size;
+  size_t jsGCThreshold = JS_GetGCThreshold(runtime);
 
   OOJSRelinquishContext(context);
 
   writeMemStat(oo::str::format(
-      "JavaScript heap: %s (limit %s, %u collections to date)",
-      SizeString(jsSize).c_str(), SizeString(jsMax).c_str(), jsGCCount));
+      "JavaScript heap: %s (%lli objects, next collection at %s)",
+      SizeString(jsSize).c_str(), (long long)usage.obj_count,
+      SizeString(jsGCThreshold).c_str()));
   return jsSize;
 }
 
@@ -652,7 +657,7 @@ void OODebugMonitor::applicationWillTerminate(
 }
 
 void OODebugMonitor::setUpDebugConsoleScript() {
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   /*	The path to the console script is saved in this here static variable
           so that we can reload it when resetting into strict mode.
           -- Ahruman 2011-02-06
@@ -671,19 +676,21 @@ void OODebugMonitor::setUpDebugConsoleScript() {
     oo::PList::Dict jsProps;
     jsProps["console"] =
         oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(this)));
-    const oo::Ref<OOJSValue> special = JSSpecialFunctionsObjectWrapper(context);
-    if (special != nullptr)
-      jsProps["special"] = OOJSValueObjectNode(special.get());
+    JSValue special = JSSpecialFunctionsObjectWrapper(context);
+    if (JS_IsObject(special)) {
+      const oo::Ref<OOJSValue> specialWrapper =
+          OOJSValue::valueWithJSValue(special, context);
+      jsProps["special"] = OOJSValueObjectNode(specialWrapper.get());
+    }
+    JS_FreeValue(context, special);
     _script = OOJSScript::scriptWithPath(path, oo::PList(std::move(jsProps)));
   }
 
   // If no script, just make console visible globally as debugConsole.
   if (!_script) {
-    ooscript::Object global =
-        OOJavaScriptEngine::sharedEngine()->globalObject();
-    ooscript::defineProperty(context, global, "debugConsole",
-                             jsValueInContext(context), NULL, NULL,
-                             ooscript::PropertyFlag::Enumerate);
+    JS_DefinePropertyValueStr(
+        context, OOJavaScriptEngine::sharedEngine()->globalObject(),
+        "debugConsole", jsValueInContext(context), JS_PROP_ENUMERABLE);
   }
 
   OOJSRelinquishContext(context);
@@ -692,9 +699,8 @@ void OODebugMonitor::setUpDebugConsoleScript() {
 void OODebugMonitor::javaScriptEngineWillReset(
     const oo::Notification& /*notification*/) {
   _script = nullptr;
-  _jsSelf = NULL;
-
-  OOJSConsoleDestroy();
+  if (JS_IsObject(_jsSelf)) JS_FreeValue(OOJSAcquireContext(), _jsSelf);
+  _jsSelf = JS_UNDEFINED;
 }
 
 void OODebugMonitor::disconnectDebuggerWithMessage(
@@ -781,36 +787,31 @@ oo::PList OODebugMonitor::normalizeConfigValue(const oo::PList& value,
 }
 
 void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
-                              ooscript::Context /*context*/,
-                              ooscript::ErrorReport* errorReport,
-                              unsigned stackSkip, bool showLocation,
-                              const std::string& message) {
+                              JSContext* /*context*/,
+                              const std::string& severity,
+                              const std::optional<std::string>& file,
+                              unsigned line, unsigned stackSkip,
+                              bool showLocation, const std::string& message) {
   std::string colorKey;
   std::string prefix;
-  std::string filePath;
+  const std::string filePath = file.value_or("");
   std::optional<std::string> scriptLine;
   std::string formattedMessage;
   NSRange emphasisRange;
   const char* showKey = nullptr;
 
+  const bool isWarning = (severity == "warning");
+
   if (_debugger == nullptr) return;
 
-  if (errorReport->flags &
-      static_cast<unsigned>(ooscript::ReportFlag::Warning)) {
+  // QuickJS reports errors as exceptions; there are no non-exception errors or
+  // strict mode warnings.
+  if (isWarning) {
     colorKey = "warning";
     prefix = "Warning";
-  } else if (errorReport->flags &
-             static_cast<unsigned>(ooscript::ReportFlag::Exception)) {
+  } else {
     colorKey = "exception";
     prefix = "Exception";
-  } else {
-    colorKey = "error";
-    prefix = "Error";
-  }
-
-  if (errorReport->flags &
-      static_cast<unsigned>(ooscript::ReportFlag::Strict)) {
-    prefix += " (strict mode)";
   }
 
   // Prefix and subsequent colon should be bold (the prefixes are ASCII, so
@@ -831,23 +832,19 @@ void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
     formattedMessage += "\n    Active script: " + *scriptLine;
   }
 
-  if (showLocation && stackSkip == 0) {
+  if (showLocation && stackSkip == 0 && !filePath.empty()) {
     // Append file name and line
-    if (errorReport->filename != NULL) filePath = errorReport->filename;
-    if (!filePath.empty()) {
-      formattedMessage += oo::str::format(
-          "\n    %s, line %u", oo::str::lastPathComponent(filePath).c_str(),
-          errorReport->lineno);
+    formattedMessage +=
+        oo::str::format("\n    %s, line %u",
+                        oo::str::lastPathComponent(filePath).c_str(), line);
 
-      // Append source code
-      formattedMessage +=
-          ":\n    " + sourceCodeForFile(filePath, errorReport->lineno);
-    }
+    // Append source code
+    formattedMessage += ":\n    " + sourceCodeForFile(filePath, line);
   }
 
   appendJSConsoleLine(formattedMessage, colorKey, emphasisRange);
 
-  if (errorReport->flags & static_cast<unsigned>(ooscript::ReportFlag::Warning))
+  if (isWarning)
     showKey = "show-console-on-warning";
   else
     showKey =
@@ -860,7 +857,7 @@ void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
 }
 
 void OODebugMonitor::jsEngine(
-    ::OOJavaScriptEngine* /*engine*/, ooscript::Context /*context*/,
+    ::OOJavaScriptEngine* /*engine*/, JSContext* /*context*/,
     const std::string& message,
     const std::optional<std::string>& /*messageClass*/) {
   appendJSConsoleLine(message, "log");
@@ -871,25 +868,16 @@ void OODebugMonitor::jsEngine(
   }
 }
 
-ooscript::Value OODebugMonitor::jsValueInContext(ooscript::Context context) {
-  if (_jsSelf == NULL) {
+JSValue OODebugMonitor::jsValueInContext(JSContext* context) {
+  if (!JS_IsObject(_jsSelf)) {
     _jsSelf = DebugMonitorToJSConsole(context, this);
-    if (_jsSelf != NULL) {
-      if (!OOJSAddGCObjectRoot(context, &_jsSelf, "debug console")) {
-        _jsSelf = NULL;
-      }
-    }
   }
-
-  if (_jsSelf != NULL)
-    return ooscript::objectValue(_jsSelf);
-  else
-    return ooscript::nullValue();
+  return JS_DupValue(context, _jsSelf);
 }
 
-void OODebugMonitor::clearJSSelf(ooscript::Object /*selfVal*/) {
-  // OOObject's -oo_clearJSSelf:, which the facade did not override: the console
-  // object is kept (a GC root) until the engine resets.
+void OODebugMonitor::clearJSSelf(JSValueConst /*selfVal*/) {
+  // OOObject's -oo_clearJSSelf:, which #768 does not override: the console
+  // object is kept (owned) until the engine resets.
 }
 
 std::string OODebugMonitor::className() const { return "OODebugMonitor"; }

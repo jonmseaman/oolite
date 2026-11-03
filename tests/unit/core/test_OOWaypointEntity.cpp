@@ -27,6 +27,7 @@
 #include <cmath>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "OOJSEntity.h"
 #include "OOJSWaypoint.h"
 #include "OOWaypointEntity.h"
 #include "PlayerEntity.h"
@@ -297,6 +298,20 @@ OO_TEST(beaconSelectorsForAWaypointOnly) {
   }
 }
 
+// Registers Entity's JS class and the given class (a child of Entity) in the
+// test's context, as the engine's start does; the context is made here if the
+// test has none yet.
+static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
+  extern JSContext* gOOJSMainThreadContext;
+  if (gOOJSMainThreadContext == nullptr)
+    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+  JSContext* context = OOJSAcquireContext();
+  JSValue global = JS_GetGlobalObject(context);
+  InitOOJSEntity(context, global);
+  initClass(context, global);
+  JS_FreeValue(context, global);
+}
+
 // The binding's category: what the engine asks a waypoint's object for by
 // selector is what OOJSWaypoint.mm answers.
 OO_TEST(jsExtensions) {
@@ -304,12 +319,10 @@ OO_TEST(jsExtensions) {
     oo::AutoreleaseScope scope;
     SetUp();
     Entity* wp = Waypoint("W");
-    ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
-    ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
-    OOJSEntityGetJSClass(wp, &jsClass, &prototype);
-    OOJSWaypointGetJSClass(&expectedClass, &expectedPrototype);
-    OO_CHECK(jsClass != nullptr && jsClass == expectedClass &&
-             prototype == expectedPrototype);
+    RegisterJSClasses(InitOOJSWaypoint);
+    const JSClassID jsClass = OOJSEntityJSClassID(wp);
+    const JSClassID expectedClass = JSWaypointClassID();
+    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
     OO_CHECK(OOJSEntityJSClassName(wp) ==
              std::optional<std::string>("Waypoint"));
     OO_CHECK(OOJSEntityIsVisibleToScripts(wp) == true);

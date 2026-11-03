@@ -1340,18 +1340,17 @@ void Universe::carryPlayerOn(::StationEntity* /*carrier */,
 
   if (player != nullptr) player->setWormhole(wormhole);
   if (player != nullptr) player->addScannedWormhole(wormhole);
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   if (player != nullptr) player->setJumpCause("carried");
   if (player != nullptr)
     player->setPreviousSystemID((player != nullptr ? player->systemID() : 0));
   ShipScriptEvent(
       context, player, "shipWillEnterWitchspace",
-      ooscript::stringValue(ooscript::internString(
-          context, (player != nullptr ? player->jumpCause()
-                                      : std::optional<std::string>())
-                       .value_or("")
-                       .c_str())),
-      ooscript::int32Value(dest));
+      JS_NewString(context, (player != nullptr ? player->jumpCause()
+                                               : std::optional<std::string>())
+                                .value_or("")
+                                .c_str()),
+      JS_NewInt32(context, dest));
   OOJSRelinquishContext(context);
 
   allShipsDoScriptEvent(OOJSID("playerWillEnterWitchspace"),
@@ -1664,7 +1663,7 @@ void Universe::setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2) {
       systeminfo.get<std::string>("populator", "interstellarSpaceWillPopulate");
   system_repopulator = systeminfo.get<std::string>(
       "repopulator", "interstellarSpaceWillRepopulate");
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   if (PLAYER != nullptr)
     PLAYER->doWorldScriptEvent(cxx_OOJSIDFromString(populator), context, NULL,
                                0, kOOJSLongTimeLimit);
@@ -2174,7 +2173,7 @@ void Universe::populateNormalSpace() {
         "repopulator",
         (sunGoneNova) ? "novaSystemWillRepopulate" : "systemWillRepopulate");
 
-    ooscript::Context context = OOJSAcquireContext();
+    JSContext* context = OOJSAcquireContext();
     if (PLAYER != nullptr)
       PLAYER->doWorldScriptEvent(cxx_OOJSIDFromString(populator), context, NULL,
                                  0, kOOJSLongTimeLimit);
@@ -4329,21 +4328,21 @@ bool Universe::canInstantiateShip(const std::string& shipKey) {
     ::OOScript* condScript = getConditionScript(*condition_script);
     if (condScript != nullptr)  // should always be non-nil, but just in case
     {
-      ooscript::Context context = OOJSAcquireContext();
+      JSContext* context = OOJSAcquireContext();
       bool OK;
-      bool allow_instantiation;
-      ooscript::Value result;
-      ooscript::Value args[] = {
-          OOJSValueFromPList(context, oo::PList(shipKey))};
+      bool allow_instantiation = false;
+      OOJSVal result = OOJSUndefinedValue();
+      OOJSVal args[] = {OOJSValueFromPList(context, oo::PList(shipKey))};
 
       OK = (condScript != nullptr ? condScript->callMethod(
                                         OOJSID("allowSpawnShip"), context, args,
                                         sizeof args / sizeof *args, &result)
                                   : false);
 
-      if (OK)
-        OK = ooscript::valueToBoolean(context, result, &allow_instantiation);
+      if (OK) allow_instantiation = OOJSValueToBOOL(context, result);
 
+      OOJSFreeValue(context, result);
+      OOJSFreeValue(context, args[0]);
       OOJSRelinquishContext(context);
 
       if (OK && !allow_instantiation) {
@@ -7048,7 +7047,7 @@ void Universe::enterGUIViewModeWithMouseInteraction(bool mouseInteraction) {
   setViewDirection(VIEW_GUI_DISPLAY);
   if (viewDirection != vd) {
     ::PlayerEntity* player = PLAYER;
-    ooscript::Context context = OOJSAcquireContext();
+    JSContext* context = OOJSAcquireContext();
     ShipScriptEvent(context, player, "viewDirectionChanged",
                     OOJSValueFromViewID(context, viewDirection),
                     OOJSValueFromViewID(context, vd));
@@ -7389,11 +7388,11 @@ void Universe::repopulateSystem() {
                  STATUS_START_GAME)) {
     return;  // no need to be adding ships as this is not a "real" game
   }
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   if (PLAYER != nullptr)
     PLAYER->doWorldScriptEvent((system_repopulator.has_value()
                                     ? cxx_OOJSIDFromString(*system_repopulator)
-                                    : ooscript::voidId()),
+                                    : JS_ATOM_NULL),
                                context, NULL, 0, kOOJSLongTimeLimit);
   OOJSRelinquishContext(context);
   next_repopulation = SYSTEM_REPOPULATION_INTERVAL;
@@ -7688,31 +7687,14 @@ void Universe::update(OOTimeDelta inDeltaT) {
      * pause when it happens. Doing it here is better than doing
      * it in the middle of the update when it might slow a
      * function into the timelimiter through no fault of its
-     * own. ooscript::maybeGC will only run a GC when it's
+     * own. JS_MaybeGC will only run a GC when it's
      * necessary. Merely checking is not significant in terms of
      * time. - CIM: 4/8/2013
      */
     update_stage = "JS Garbage Collection";
     OO_LOG("universe.profile.update", "{}",
            const_cast<const char*>(update_stage));
-#ifndef NDEBUG
-    ooscript::Context context = OOJSAcquireContext();
-    uint32_t gcbytes1 = ooscript::getGCParameter(ooscript::getRuntime(context),
-                                                 ooscript::GCParam::Bytes);
-    OOJSRelinquishContext(context);
-#endif
     OOJavaScriptEngine::sharedEngine()->garbageCollectionOpportunity(false);
-#ifndef NDEBUG
-    context = OOJSAcquireContext();
-    uint32_t gcbytes2 = ooscript::getGCParameter(ooscript::getRuntime(context),
-                                                 ooscript::GCParam::Bytes);
-    OOJSRelinquishContext(context);
-    if (gcbytes2 < gcbytes1) {
-      OO_LOG("universe.profile.jsgc",
-             "Unplanned JS Garbage Collection from {} to {}", gcbytes1,
-             gcbytes2);
-    }
-#endif
 
   } else {
     // always perform player's dead updates: allows deferred JS resets.
@@ -9417,12 +9399,11 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
         if (condScript !=
             nullptr)  // should always be non-nil, but just in case
         {
-          ooscript::Context context = OOJSAcquireContext();
+          JSContext* context = OOJSAcquireContext();
           bool OK;
-          bool allow_purchase;
-          ooscript::Value result;
-          ooscript::Value args[] = {
-              OOJSValueFromPList(context, oo::PList(key))};
+          bool allow_purchase = false;
+          OOJSVal result = OOJSUndefinedValue();
+          OOJSVal args[] = {OOJSValueFromPList(context, oo::PList(key))};
 
           OK = (condScript != nullptr
                     ? condScript->callMethod(OOJSID("allowOfferShip"), context,
@@ -9430,9 +9411,10 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
                                              &result)
                     : false);
 
-          if (OK)
-            OK = ooscript::valueToBoolean(context, result, &allow_purchase);
+          if (OK) allow_purchase = OOJSValueToBOOL(context, result);
 
+          OOJSFreeValue(context, result);
+          OOJSFreeValue(context, args[0]);
           OOJSRelinquishContext(context);
 
           if (OK && !allow_purchase) {
@@ -9619,11 +9601,11 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
             if (condScript !=
                 nullptr)  // should always be non-nil, but just in case
             {
-              ooscript::Context JScontext = OOJSAcquireContext();
+              JSContext* JScontext = OOJSAcquireContext();
               bool OK;
-              bool allow_addition;
-              ooscript::Value result;
-              ooscript::Value args[] = {
+              bool allow_addition = false;
+              OOJSVal result = OOJSUndefinedValue();
+              OOJSVal args[] = {
                   OOJSValueFromPList(JScontext, oo::PList(*equipmentKey)),
                   OOJSValueFromCxxObject(JScontext, testship),
                   OOJSValueFromPList(JScontext, oo::PList("newShip"))};
@@ -9634,10 +9616,12 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
                               sizeof args / sizeof *args, &result)
                         : false);
 
-              if (OK)
-                OK = ooscript::valueToBoolean(JScontext, result,
-                                              &allow_addition);
+              if (OK) allow_addition = OOJSValueToBOOL(JScontext, result);
 
+              OOJSFreeValue(JScontext, result);
+              OOJSFreeValue(JScontext, args[0]);
+              OOJSFreeValue(JScontext, args[1]);
+              OOJSFreeValue(JScontext, args[2]);
               OOJSRelinquishContext(JScontext);
 
               if (OK && !allow_addition) {
@@ -10342,7 +10326,7 @@ std::vector<oo::EntityHold> Universe::listBeaconsWithCode(
 }
 
 void Universe::allShipsDoScriptEvent(
-    ooscript::PropertyId event, const std::optional<std::string>& message) {
+    OOJSPropID event, const std::optional<std::string>& message) {
   int i;
   int ent_count = n_entities;
   int ship_count = 0;

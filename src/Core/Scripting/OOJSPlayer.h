@@ -26,15 +26,18 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
+
 class PlayerEntity;
 
-void InitOOJSPlayer(ooscript::Context context, ooscript::Object global);
+void InitOOJSPlayer(JSContext* context, JSValueConst global);
 
-ooscript::ClassDef* JSPlayerClass(void);
-ooscript::Object JSPlayerPrototype(void);
-ooscript::Object JSPlayerObject(void);
+JSClassID JSPlayerClassID(void);
+// The global player object, owned by the caller (looked up on the global
+// object, which holds the only lasting reference).
+JSValue JSPlayerObject(void);
 
 /*	All JS functions which talk to the player entity should call
         OOOPlayerForScripting() to ensure that the script target (for the legacy

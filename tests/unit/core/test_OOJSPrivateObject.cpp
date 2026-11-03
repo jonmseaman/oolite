@@ -1,18 +1,18 @@
-/*	test_OOJSPrivateObject.mm
+/*	test_OOJSPrivateObject.cpp
         Unit tests for the engine's C++ private-slot glue
    (src/Core/Scripting/OOJSPrivateObject.h/.cpp).
 
-   As the binding tests do, it runs a JS class in a real context on the game's
-   own façade backend (ooscript/JSEngine_quickjs.cpp) and links the glue and the
-   engine's exception translator (OOJSEngineNativeWrappers.mm). The class is the
+   As the binding tests do, it runs a JS class in a real QuickJS-ng context and
+   links the glue, the engine's class registry (OOJSClasses.cpp) and its
+   exception translator (OOJSEngineNativeWrappers.cpp). The class is the
    test's own: a JS class "Thing" whose private slot holds a C++ Thing (an
    oo::RefCounted that implements OOJSPrivateObject), with
    OOJSCxxObjectWrapperFinalize as its finalizer, a toString() that is
    OOJSCxxObjectWrapperToString, and a "name" property read through
    OOJSGetCxxPrivate; a JS subclass "SubThing" is registered as the engine's
    subclasses are. What the rest of the engine provides (the error reporter, the
-   string conversion, the subclass test and the Objective-C toString() a foreign
-   `this` falls back to) is the smallest stand-in that does the same thing. The
+   string conversion, the atom cache and the shared toString() a foreign `this`
+   falls back to) is the smallest stand-in that does the same thing. The
    cases pin what replaced each selector the engine sent an id:
    -oo_jsValueInContext: (one JS object per object, null for null), the getter's
    class check and its error text, the finalizer's -oo_clearJSSelf: and release,
@@ -23,88 +23,70 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
-#include <map>
 #include <optional>
 #include <stdexcept>
 #include <string>
 
-#include "OOJSEngineNativeWrappers.h"
+#include "OOJSEngineCore.h"
 #include "OOJSPrivateObject.h"
 #include "oo_test.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/String.hpp"
-#include "ooscript/JSEngine.hpp"
 
 // MARK: The test's class
 // --------------------------------------------------------------------------
 
 namespace {
 
-ooscript::ClassDef sThingClass = {
-    "Thing",
-    ooscript::ClassFlag::HasPrivate,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    OOJSCxxObjectWrapperFinalize,  // finalize
-    nullptr,
-    nullptr,
-    nullptr,
+JSClassDef sThingClass = {
+    .class_name = "Thing",
+    .finalizer = OOJSCxxObjectWrapperFinalize,
 };
-ooscript::ClassDef sSubThingClass = {
-    "SubThing",
-    ooscript::ClassFlag::HasPrivate,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    OOJSCxxObjectWrapperFinalize,  // finalize
-    nullptr,
-    nullptr,
-    nullptr,
+JSClassDef sSubThingClass = {
+    .class_name = "SubThing",
+    .finalizer = OOJSCxxObjectWrapperFinalize,
 };
-ooscript::Object sThingPrototype = nullptr;
-ooscript::Object sSubThingPrototype = nullptr;
+JSClassID sThingClassID = 0;
+JSClassID sSubThingClassID = 0;
 int sDestroyed = 0;
 
 /*	A C++ object a JS object wraps: it makes its wrapper on first use, as
-   the bindings' classes do, and counts what the engine tells it. A Thing named
-   "boom" throws from jsDescription().
+   the bindings' classes do (a weak reference: the caller gets the only one),
+   and counts what the engine tells it. A Thing named "boom" throws from
+   jsDescription().
 */
 class Thing : public oo::RefCounted, public OOJSPrivateObject {
  public:
   Thing(std::string name, std::optional<std::string> description,
-        ooscript::ClassDef* jsClass = &sThingClass)
+        JSClassID* jsClassID = &sThingClassID)
       : _name(std::move(name)),
         _description(std::move(description)),
-        _jsClass(jsClass) {}
+        _jsClassID(jsClassID) {}
   ~Thing() override { sDestroyed++; }
 
-  ooscript::Value jsValueInContext(ooscript::Context context) override {
-    if (_jsSelf == nullptr) {
-      _jsSelf = ooscript::newObject(
-          context, _jsClass,
-          _jsClass == &sThingClass ? sThingPrototype : sSubThingPrototype,
-          nullptr);
-      if (_jsSelf != nullptr && !OOJSSetCxxPrivate(context, _jsSelf, this))
-        _jsSelf = nullptr;
+  JSValue jsValueInContext(JSContext* context) override {
+    if (!JS_IsObject(_jsSelf)) {
+      JSValue jsSelf = JS_NewObjectClass(context, static_cast<int>(*_jsClassID));
+      if (JS_IsException(jsSelf)) {
+        JS_FreeValue(context, JS_GetException(context));
+        return JS_NULL;
+      }
+      if (!OOJSSetCxxPrivate(jsSelf, this)) {
+        JS_FreeValue(context, jsSelf);
+        return JS_NULL;
+      }
+      _jsSelf = jsSelf;
+      return jsSelf;
     }
-    return ooscript::objectValue(_jsSelf);
+    return JS_DupValue(context, _jsSelf);
   }
 
-  void clearJSSelf(ooscript::Object selfVal) override {
+  void clearJSSelf(JSValueConst selfVal) override {
     _clearCalls++;
-    _lastCleared = selfVal;
-    if (_jsSelf == selfVal) _jsSelf = nullptr;
+    _lastCleared = JS_VALUE_GET_PTR(selfVal);
+    if (JS_IsObject(_jsSelf) &&
+        JS_VALUE_GET_PTR(_jsSelf) == JS_VALUE_GET_PTR(selfVal))
+      _jsSelf = JS_UNDEFINED;
   }
 
   std::optional<std::string> jsDescription() override {
@@ -114,10 +96,10 @@ class Thing : public oo::RefCounted, public OOJSPrivateObject {
 
   std::string _name;
   std::optional<std::string> _description;
-  ooscript::ClassDef* _jsClass;
-  ooscript::Object _jsSelf = nullptr;
+  JSClassID* _jsClassID;
+  JSValue _jsSelf = JS_UNDEFINED;  // weak
   int _clearCalls = 0;
-  ooscript::Object _lastCleared = nullptr;
+  void* _lastCleared = nullptr;
 };
 
 // A slot object that does not implement OOJSPrivateObject: the finalizer only
@@ -132,53 +114,55 @@ class PlainThing : public oo::RefCounted {
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
 
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
-                                      const char* format, va_list args) {
+JSContext* gOOJSMainThreadContext = nullptr;
+
+void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
+                                      va_list args) {
   std::string msg = oo::str::vformat(format, args);
-  ooscript::reportError(context, msg.c_str());
+  JS_ThrowPlainError(context, "%s", msg.c_str());
 }
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportErrorWithArguments(context, format, args);
   va_end(args);
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  ooscript::String str = ooscript::valueToString(context, value);
-  if (str == nullptr) return std::nullopt;
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::u16string units(reinterpret_cast<const char16_t*>(chars), length);
-  return oo::utf16ToUtf8(units);
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
+  return result;
+}
+
+// The atom cache and the pending-exception reporter, which the class registry
+// calls.
+JSAtom cxx_OOJSIDFromString(const std::string& string) {
+  return JS_NewAtomLen(gOOJSMainThreadContext, string.data(), string.size());
+}
+
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
 }
 
 namespace {
-std::map<ooscript::ClassDef*, ooscript::ClassDef*> sSuperclasses;
 int sForeignToStrings = 0;
 }  // namespace
 
-bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
-                               ooscript::ClassDef* superclass) {
-  for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
-       c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return true;
-  }
-  return false;
-}
-
-// The engine's Objective-C toString(), which a `this` of another class falls
-// back to.
-bool OOJSObjectWrapperToString(ooscript::Context context,
-                                          ooscript::CallArgs& oojsArgs) {
+// The engine's shared toString(), which a `this` of another class falls back
+// to.
+JSValue OOJSObjectWrapperToString(JSContext* context, JSValueConst, int,
+                                  JSValueConst*) {
   sForeignToStrings++;
-  oojsArgs.setRval(
-      ooscript::stringValue(ooscript::newStringCopyN(context, "foreign", 7)));
-  return true;
+  return JS_NewString(context, "foreign");
 }
 
 #if OOJS_PROFILE
@@ -198,52 +182,52 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 
 namespace {
 
-bool ThingToString(ooscript::Context context, ooscript::CallArgs& oojsArgs) {
-  return OOJSCxxObjectWrapperToString(context, oojsArgs, &sThingClass);
+JSValue ThingToString(OOJS_NATIVE_ARGS) {
+  return OOJSCxxObjectWrapperToString(context, OOJS_THIS, sThingClassID);
 }
 
 // thing.name(): the C++ object's name, "<none>" for a prototype.
-bool ThingName(ooscript::Context context, ooscript::CallArgs& oojsArgs) {
+JSValue ThingName(OOJS_NATIVE_ARGS) {
   Thing* thing = nullptr;
-  if (!OOJSGetCxxPrivate(context, oojsArgs.thisObject(), &sThingClass, &thing))
-    return false;
+  if (!OOJSGetCxxPrivate(context, OOJS_THIS, sThingClassID, &thing))
+    return JS_EXCEPTION;
   std::string name = thing != nullptr ? thing->_name : std::string("<none>");
-  oojsArgs.setRval(ooscript::stringValue(
-      ooscript::newStringCopyN(context, name.data(), name.size())));
-  return true;
+  return JS_NewStringLen(context, name.data(), name.size());
 }
 
-ooscript::FunctionSpec sThingMethods[] = {{"toString", ThingToString, 0, 0},
-                                          {"name", ThingName, 0, 0},
-                                          {nullptr, nullptr, 0, 0}};
+const JSCFunctionListEntry sThingMethods[] = {
+    JS_CFUNC_DEF("toString", 0, ThingToString),
+    JS_CFUNC_DEF("name", 0, ThingName),
+};
 
 // MARK: The context
 // -------------------------------------------------------------------------------
 
-ooscript::Runtime sRuntime;
-ooscript::Context sContext;
-ooscript::Object sGlobal;
+JSRuntime* sRuntime;
+JSContext* sContext;
+JSValue sGlobal;
 
 void SetUpContext() {
   if (sContext != nullptr) return;
-  sRuntime = ooscript::newRuntime(8u * 1024u * 1024u);
-  sContext = ooscript::newContext(sRuntime, 8192);
-  ooscript::beginRequest(sContext);
-  sGlobal = ooscript::getGlobalObject(sContext);
-  ooscript::initStandardClasses(sContext, sGlobal);
-  sThingPrototype =
-      ooscript::initClass(sContext, sGlobal, nullptr, &sThingClass, nullptr, 0,
-                          nullptr, sThingMethods, nullptr, nullptr);
-  sSubThingPrototype =
-      ooscript::initClass(sContext, sGlobal, sThingPrototype, &sSubThingClass,
-                          nullptr, 0, nullptr, nullptr, nullptr, nullptr);
-  sSuperclasses[&sSubThingClass] = &sThingClass;
-  ooscript::Value proto = ooscript::objectValue(sThingPrototype);
-  ooscript::setProperty(sContext, sGlobal, "thingPrototype", &proto);
+  sRuntime = JS_NewRuntime();
+  sContext = JS_NewContext(sRuntime);
+  gOOJSMainThreadContext = sContext;
+  sGlobal = JS_GetGlobalObject(sContext);
+  OOJSRegisterClass(&sThingClassID, &sThingClass);
+  OOJSRegisterClass(&sSubThingClassID, &sSubThingClass);
+  JSValueConst thingPrototype = OOJSInitClass(
+      sContext, sGlobal, sThingClassID, JS_UNDEFINED, nullptr, 0, nullptr, 0,
+      sThingMethods, OOJS_COUNT(sThingMethods), nullptr, 0);
+  OOJSInitClass(sContext, sGlobal, sSubThingClassID, thingPrototype, nullptr,
+                0, nullptr, 0, nullptr, 0, nullptr, 0);
+  OOJSRegisterSubclass(sSubThingClassID, sThingClassID);
+  JS_SetPropertyStr(sContext, sGlobal, "thingPrototype",
+                    JS_DupValue(sContext, thingPrototype));
 }
 
-void Define(const char* name, ooscript::Value value) {
-  ooscript::setProperty(sContext, sGlobal, name, &value);
+// Defines a global; takes value (owned).
+void Define(const char* name, JSValue value) {
+  JS_SetPropertyStr(sContext, sGlobal, name, value);
 }
 
 // Evaluates src and gives its result as a string ("undefined", "null", ...), or
@@ -254,14 +238,16 @@ std::string Eval(const char* src) {
                         src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
-  if (!ooscript::evaluateScript(sContext, sGlobal, wrapped.c_str(),
-                                static_cast<unsigned>(wrapped.size()),
-                                "test.js", 1, &result)) {
-    ooscript::clearPendingException(sContext);
+  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(),
+                           "test.js", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(sContext, JS_GetException(sContext));
     return "<evaluation failed>";
   }
-  return cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  std::string text =
+      cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  JS_FreeValue(sContext, result);
+  return text;
 }
 
 std::string EvalShown(const char* src, const char* expected) {
@@ -282,15 +268,16 @@ OO_TEST(jsValue) {
   SetUpContext();
   // -oo_jsValueInContext: of nil was null; of an object, its own JS object,
   // made once.
-  OO_CHECK(ooscript::isNull(OOJSValueFromCxxObject(sContext, nullptr)));
+  OO_CHECK(JS_IsNull(OOJSValueFromCxxObject(sContext, nullptr)));
   oo::Ref<Thing> thing = oo::adopt(new Thing("alpha", std::nullopt));
   OO_CHECK_EQ(thing->retainCount(), 1u);
-  ooscript::Value first = OOJSValueFromCxxObject(sContext, thing.get());
-  OO_CHECK(ooscript::isObject(first));
-  OO_CHECK(ooscript::toObject(OOJSValueFromCxxObject(sContext, thing.get())) ==
-           ooscript::toObject(first));
+  JSValue first = OOJSValueFromCxxObject(sContext, thing.get());
+  OO_CHECK(JS_IsObject(first));
+  JSValue again = OOJSValueFromCxxObject(sContext, thing.get());
+  OO_CHECK(JS_VALUE_GET_PTR(again) == JS_VALUE_GET_PTR(first));
+  JS_FreeValue(sContext, again);
   // The slot holds the object as an oo::RefCounted *, with one retain.
-  OO_CHECK(ooscript::getPrivate(sContext, ooscript::toObject(first)) ==
+  OO_CHECK(JS_GetOpaque(first, sThingClassID) ==
            static_cast<oo::RefCounted*>(thing.get()));
   OO_CHECK_EQ(thing->retainCount(), 2u);
   Define("alpha", first);
@@ -301,7 +288,7 @@ OO_TEST(jsValue) {
 OO_TEST(getter) {
   SetUpContext();
   oo::Ref<Thing> sub =
-      oo::adopt(new Thing("beta", std::nullopt, &sSubThingClass));
+      oo::adopt(new Thing("beta", std::nullopt, &sSubThingClassID));
   Define("beta", OOJSValueFromCxxObject(sContext, sub.get()));
   // A registered subclass passes the class check; the prototype has no object.
   OO_CHECK_EVAL("beta.name()", "beta");
@@ -321,36 +308,40 @@ OO_TEST(getter) {
 OO_TEST(finalize) {
   SetUpContext();
   // The engine's finalizer sends clearJSSelf() with the dying wrapper, then
-  // releases the slot.
+  // releases the slot. (QuickJS finalizes an object when its last reference
+  // goes, so the test drops its own before collecting.)
   Thing* thing =
       new Thing("gamma", std::nullopt);  // the test's reference, released below
-  ooscript::Object wrapper =
-      ooscript::toObject(OOJSValueFromCxxObject(sContext, thing));
-  OO_CHECK(wrapper != nullptr);
+  JSValue wrapperValue = OOJSValueFromCxxObject(sContext, thing);
+  void* wrapper = JS_VALUE_GET_PTR(wrapperValue);
+  OO_CHECK(JS_IsObject(wrapperValue));
   OO_CHECK_EQ(thing->retainCount(), 2u);
-  ooscript::gc(sContext);
+  JS_FreeValue(sContext, wrapperValue);
+  JS_RunGC(sRuntime);
   OO_CHECK_EQ(thing->_clearCalls, 1);
   OO_CHECK(thing->_lastCleared == wrapper);
-  OO_CHECK(thing->_jsSelf == nullptr);
+  OO_CHECK(!JS_IsObject(thing->_jsSelf));
   OO_CHECK_EQ(thing->retainCount(), 1u);
   // A new wrapper is made on the next use, and its finalizer's release is the
   // last one.
-  OO_CHECK(ooscript::isObject(OOJSValueFromCxxObject(sContext, thing)));
+  JSValue second = OOJSValueFromCxxObject(sContext, thing);
+  OO_CHECK(JS_IsObject(second));
   const int destroyed = sDestroyed;
   thing->release();
   OO_CHECK_EQ(sDestroyed, destroyed);
-  ooscript::gc(sContext);
+  JS_FreeValue(sContext, second);
+  JS_RunGC(sRuntime);
   OO_CHECK_EQ(sDestroyed, destroyed + 1);
 
   // A slot object without the JS glue is released all the same.
-  ooscript::Object plainWrapper =
-      ooscript::newObject(sContext, &sThingClass, sThingPrototype, nullptr);
+  JSValue plainWrapper =
+      JS_NewObjectClass(sContext, static_cast<int>(sThingClassID));
   PlainThing* plain = new PlainThing;
-  OO_CHECK(OOJSSetCxxPrivate(sContext, plainWrapper, plain));
+  OO_CHECK(OOJSSetCxxPrivate(plainWrapper, plain));
   OO_CHECK_EQ(plain->retainCount(), 2u);
   plain->release();
-  plainWrapper = nullptr;
-  ooscript::gc(sContext);
+  JS_FreeValue(sContext, plainWrapper);
+  JS_RunGC(sRuntime);
   OO_CHECK_EQ(sDestroyed, destroyed + 2);
 }
 
@@ -360,7 +351,7 @@ OO_TEST(toString) {
       oo::adopt(new Thing("delta", std::string("[Thing delta, caf\xC3\xA9]")));
   oo::Ref<Thing> plain = oo::adopt(new Thing("epsilon", std::nullopt));
   oo::Ref<Thing> sub =
-      oo::adopt(new Thing("zeta", std::nullopt, &sSubThingClass));
+      oo::adopt(new Thing("zeta", std::nullopt, &sSubThingClassID));
   Define("delta", OOJSValueFromCxxObject(sContext, described.get()));
   Define("epsilon", OOJSValueFromCxxObject(sContext, plain.get()));
   Define("zeta", OOJSValueFromCxxObject(sContext, sub.get()));
@@ -370,7 +361,7 @@ OO_TEST(toString) {
   OO_CHECK_EVAL("String(epsilon)", "[object Thing]");
   OO_CHECK_EVAL("String(zeta)", "[object SubThing]");
   OO_CHECK_EVAL("String(thingPrototype)", "[object Thing]");
-  // Another class's `this` is described by the engine's Objective-C toString().
+  // Another class's `this` is described by the engine's shared toString().
   sForeignToStrings = 0;
   OO_CHECK_EVAL("thingPrototype.toString.call({})", "foreign");
   OO_CHECK_EQ(sForeignToStrings, 1);
@@ -378,7 +369,6 @@ OO_TEST(toString) {
   oo::Ref<Thing> boom = oo::adopt(new Thing("boom", std::nullopt));
   Define("boom", OOJSValueFromCxxObject(sContext, boom.get()));
   OO_CHECK_EVAL("String(boom)", "threw: Native exception: description boom");
-  OO_CHECK(ooscript::isInRequest(sContext));
 }
 
 OO_TEST_MAIN()

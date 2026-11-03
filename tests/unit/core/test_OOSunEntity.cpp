@@ -25,6 +25,7 @@
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "OOJSEntity.h"
 #include "OOColor.h"
 #include "OODescription.h"
 #include "OOJSSun.h"
@@ -308,19 +309,31 @@ OO_TEST(facade) {
   }
 }
 
+// Registers Entity's JS class and the given class (a child of Entity) in the
+// test's context, as the engine's start does; the context is made here if the
+// test has none yet.
+static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
+  extern JSContext* gOOJSMainThreadContext;
+  if (gOOJSMainThreadContext == nullptr)
+    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+  JSContext* context = OOJSAcquireContext();
+  JSValue global = JS_GetGlobalObject(context);
+  InitOOJSEntity(context, global);
+  initClass(context, global);
+  JS_FreeValue(context, global);
+}
+
 // The binding's category, which the facade carries: what
 // the engine asks a OOSunEntity for by selector is what OOJSSun.mm answers.
 OO_TEST(jsExtensions) {
   {
     SetUp();
     OOSunEntity* sun = RedSun();
-    ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
-    ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
     Entity* object = sun;  // what the engine asks (the root's facade)
-    OOJSEntityGetJSClass(object, &jsClass, &prototype);
-    OOJSSunGetJSClass(&expectedClass, &expectedPrototype);
-    OO_CHECK(jsClass != nullptr && jsClass == expectedClass &&
-             prototype == expectedPrototype);
+    RegisterJSClasses(InitOOJSSun);
+    const JSClassID jsClass = OOJSEntityJSClassID(object);
+    const JSClassID expectedClass = JSSunClassID();
+    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
     OO_CHECK(OOJSEntityJSClassName(object) ==
              std::optional<std::string>("Sun"));
     OO_CHECK(OOJSEntityIsVisibleToScripts(object) == true);

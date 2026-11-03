@@ -241,7 +241,7 @@ void SyntaxIssue(OOStringExpansionContext* context, const char* function,
                  const char* fileName, NSUInteger line,
                  const char* logMessageClass, const char* prefix,
                  const char* format, ...) OO_PRINTF_FORMAT(7, 8);
-void ReportJavaScriptWarning(ooscript::Context jsc, const char* format, ...)
+void ReportJavaScriptWarning(JSContext* jsc, const char* format, ...)
     __attribute__((format(printf, 2, 3)));
 }  // namespace
 
@@ -1604,7 +1604,7 @@ void SyntaxIssue(OOStringExpansionContext* context, const char* function,
               because we don't want to start throwing exceptions when the old
               expander didn't.
       */
-      ooscript::Context jsc = OOJSAcquireContext();
+      JSContext* jsc = OOJSAcquireContext();
       ReportJavaScriptWarning(jsc, "%s", message.c_str());
       OOJSRelinquishContext(jsc);
     } else {
@@ -1616,7 +1616,7 @@ void SyntaxIssue(OOStringExpansionContext* context, const char* function,
 
 // cxx_OOJSReportWarningWithArguments with a printf format and its arguments
 // (the engine's va_list entry).
-void ReportJavaScriptWarning(ooscript::Context jsc, const char* format, ...) {
+void ReportJavaScriptWarning(JSContext* jsc, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportWarningWithArguments(jsc, format, args);

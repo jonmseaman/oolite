@@ -4,9 +4,9 @@
 
         OOJSCallObjCObjectMethod() implemented the debug-build callObjC(): it
    called an Objective-C method by name on an object, choosing how by the
-   method's signature. The test runs the call in a real context on the game's
-   own façade backend (ooscript/JSEngine_quickjs.cpp) and links the game's own
-   objects for the file and the signature reader (OOShaderUniformMethodType.mm).
+   method's signature. The test runs the call in a real QuickJS-ng context and
+   links the game's own objects for the file and the signature reader
+   (OOShaderUniformMethodType.mm).
    What the rest of the engine would provide is defined below as the smallest
    stand-in that does the same thing: the error
    reporter, the string and property-list converters, Vector3D and Quaternion
@@ -19,6 +19,8 @@
    entity's object answers from a table of the test's own.
         Run: tests/run.sh unit
 */
+
+#include <quickjs.h>
 
 #include <cstdarg>
 #include <cstring>
@@ -35,7 +37,6 @@
 #include "oo_test.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
-#include "ooscript/JSEngine.hpp"
 
 #ifndef NDEBUG
 
@@ -43,11 +44,11 @@
 // ------------------------------------------------------
 
 namespace {
-ooscript::Context sContext = nullptr;
+JSContext* sContext = nullptr;
 std::string sLastError;
 }  // namespace
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   (void)context;
   va_list args;
   va_start(args, format);
@@ -55,24 +56,24 @@ void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
   va_end(args);
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  ooscript::String str = ooscript::valueToString(context, value);
-  if (str == nullptr) return std::nullopt;
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
 }
 
 std::optional<std::string> cxx_OOStringFromJSValueEvenIfNull(
-    ooscript::Context context, ooscript::Value value) {
-  if (ooscript::isNull(value)) return std::string("null");
-  if (ooscript::isUndefined(value)) return std::string("undefined");
+    JSContext* context, JSValueConst value) {
+  if (JS_IsNull(value)) return std::string("null");
+  if (JS_IsUndefined(value)) return std::string("undefined");
   return cxx_OOStringFromJSValue(context, value);
 }
 
@@ -83,28 +84,26 @@ class TestEntityObject;
 // node as the string "<object CLASS>", which is enough to see which object came
 // back (an entity's node: its object's class; any other node held no
 // Objective-C object, nil's class "(null)").
-ooscript::Value OOJSValueFromPList(ooscript::Context context,
-                                   const oo::PList& plist);
+JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist);
 
 namespace {
 
-ooscript::Object ArrayOf(ooscript::Context context,
-                         std::vector<double> numbers) {
-  std::vector<ooscript::Value> values;
-  for (double n : numbers) values.push_back(ooscript::numberValue(n));
-  return ooscript::newArrayObject(context, static_cast<unsigned>(values.size()),
-                                  values.data());
+// An array of the numbers, owned by the caller.
+JSValue ArrayOf(JSContext* context, std::vector<double> numbers) {
+  JSValue array = JS_NewArray(context);
+  std::uint32_t index = 0;
+  for (double n : numbers)
+    JS_SetPropertyUint32(context, array, index++, JS_NewNumber(context, n));
+  return array;
 }
 
 }  // namespace
 
-ooscript::Object JSVectorWithVector(ooscript::Context context,
-                                               Vector vector) {
+JSValue JSVectorWithVector(JSContext* context, Vector vector) {
   return ArrayOf(context, {vector.x, vector.y, vector.z});
 }
 
-ooscript::Object JSQuaternionWithQuaternion(
-    ooscript::Context context, Quaternion quaternion) {
+JSValue JSQuaternionWithQuaternion(JSContext* context, Quaternion quaternion) {
   return ArrayOf(context,
                  {quaternion.w, quaternion.x, quaternion.y, quaternion.z});
 }
@@ -181,15 +180,14 @@ TestPlayerObject* sPlayerObject = nullptr;  // the player's object
 #define OO_ENTITY_HELPERS_STAND_IN_CXX 1
 #include "EntityHelpersStandIn.h"  // EntityHelpers.mm's, on the test's objects
 
-ooscript::Value OOJSValueFromPList(ooscript::Context context,
-                                   const oo::PList& plist) {
+JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
   std::string text;
   switch (plist.type()) {
     case oo::PList::Type::Bool:
-      return ooscript::booleanValue(plist.boolValue());
+      return JS_NewBool(context, plist.boolValue());
     case oo::PList::Type::Integer:
     case oo::PList::Type::Real:
-      return ooscript::numberValue(plist.doubleValue());
+      return JS_NewNumber(context, plist.doubleValue());
     case oo::PList::Type::String:
       text = *plist.getIf<std::string>();
       break;
@@ -202,10 +200,9 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
       break;
     }
     default:
-      return ooscript::nullValue();
+      return JS_NULL;
   }
-  return ooscript::stringValue(
-      ooscript::newStringCopyN(context, text.data(), text.size()));
+  return JS_NewStringLen(context, text.data(), text.size());
 }
 
 /*	OOEntityCalledByName.mm's, which the test does not
@@ -299,13 +296,11 @@ void PlayerEntity::clearJSQuaternionStatistics() {
 
 namespace {
 
-ooscript::Context Context() {
+JSContext* Context() {
   if (sContext == nullptr) {
-    ooscript::Runtime runtime = ooscript::newRuntime(8u * 1024u * 1024u);
-    sContext = ooscript::newContext(runtime, 8192);
-    ooscript::beginRequest(sContext);
-    ooscript::initStandardClasses(sContext,
-                                  ooscript::getGlobalObject(sContext));
+    JSRuntime* runtime = JS_NewRuntime();
+    JS_SetMemoryLimit(runtime, 8u * 1024u * 1024u);
+    sContext = JS_NewContext(runtime);
     oo::Ref<PlayerEntity> player = oo::makeRef<PlayerEntity>();
     gOOPlayer = player.get();  // never deleted: its object holds it
     sPlayerObject = new TestPlayerObject();  // never released, as the
@@ -315,29 +310,37 @@ ooscript::Context Context() {
   return sContext;
 }
 
-ooscript::Value StringValue(const char* text) {
-  return ooscript::stringValue(
-      ooscript::newStringCopyN(Context(), text, std::strlen(text)));
+// A string value, owned by the caller.
+JSValue StringValue(const char* text) {
+  return JS_NewStringLen(Context(), text, std::strlen(text));
 }
 
 // Calls the name (and arguments) on an entity by callObjC()'s entity name
 // table; gives the result as a string ("<unchanged>" when the call left it
-// alone), or "error: <message>".
-std::string CallEntity(Entity* entity, std::vector<ooscript::Value> argv) {
+// alone), or "error: <message>". Frees the arguments.
+std::string CallEntity(Entity* entity, std::vector<JSValue> argv) {
   sLastError.clear();
-  ooscript::Value result =
+  const JSValue marker =
       StringValue("<unchanged>");  // a marker no call writes
+  JSValue result = marker;
   bool OK = OOJSCallEntityMethod(Context(), entity, "Test",
-                                 static_cast<unsigned>(argv.size()),
-                                 argv.data(), &result);
-  if (!OK) return "error: " + sLastError;
-  return cxx_OOStringFromJSValueEvenIfNull(Context(), result)
-      .value_or("<none>");
+                                 static_cast<int>(argv.size()), argv.data(),
+                                 &result);
+  std::string text =
+      OK ? cxx_OOStringFromJSValueEvenIfNull(Context(), result)
+               .value_or("<none>")
+         : "error: " + sLastError;
+  // A result the call set is owned here, besides the marker.
+  if (JS_VALUE_GET_TAG(result) != JS_VALUE_GET_TAG(marker) ||
+      JS_VALUE_GET_PTR(result) != JS_VALUE_GET_PTR(marker))
+    JS_FreeValue(Context(), result);
+  JS_FreeValue(Context(), marker);
+  for (JSValue argument : argv) JS_FreeValue(Context(), argument);
+  return text;
 }
 
 std::string CallEntity(Entity* entity, const char* selector) {
-  return CallEntity(entity,
-                    std::vector<ooscript::Value>{StringValue(selector)});
+  return CallEntity(entity, std::vector<JSValue>{StringValue(selector)});
 }
 
 }  // namespace
@@ -366,7 +369,7 @@ OO_TEST(entityMethodsByTable) {
     OO_CHECK(CallEntity(gOOPlayer, "noSuchMethod")
                  .find("> does not respond to method noSuchMethod.") !=
              std::string::npos);
-    OO_CHECK_EQ(CallEntity(gOOPlayer, std::vector<ooscript::Value>{}),
+    OO_CHECK_EQ(CallEntity(gOOPlayer, std::vector<JSValue>{}),
                 "error: Test.callObjC(): no selector specified.");
   }
 }
@@ -386,7 +389,7 @@ OO_TEST(entityResultsByTable) {
     OO_CHECK_EQ(CallEntity(gOOPlayer, "removeScript"), "<unchanged>");
     OO_CHECK_EQ(
         CallEntity(gOOPlayer, {StringValue("addRole:"), StringValue("hello"),
-                               ooscript::int32Value(3), ooscript::nullValue()}),
+                               JS_NewInt32(Context(), 3), JS_NULL}),
         "<unchanged>");
     OO_CHECK_EQ(sEntityCalls.size(), 2u);
     if (sEntityCalls.size() == 2) {

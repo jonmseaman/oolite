@@ -31,11 +31,12 @@ MA 02110-1301, USA.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
+#include <quickjs.h>
+
 #include <string>
 
 #include "OOFoundation.h"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 /*	OOJSCallEntityMethod()
 
         Function for implementing JavaScript call() methods on an entity
@@ -47,11 +48,14 @@ MA 02110-1301, USA.
    leaves it unchanged. Only a name of kOOJSCallEntityMethods that the entity
    answers (its object's per-part -respondsToSelector:) is called, with the
    table's signature; any other name (a root-class or lifetime selector, one
-   with other arguments) does not respond.
+   with other arguments) does not respond. *outResult is owned by the caller
+   when set; the caller should initialize it (normally to JS_UNDEFINED). If it
+   returns false, an error has been reported and the caller (a native) should
+   return JS_EXCEPTION.
 */
 class Entity;
-bool OOJSCallEntityMethod(ooscript::Context context, Entity* entity,
-                          const std::string& oo_jsClassName, unsigned argc,
-                          ooscript::Value* argv, ooscript::Value* outResult);
+bool OOJSCallEntityMethod(JSContext* context, Entity* entity,
+                          const std::string& oo_jsClassName, int argc,
+                          JSValueConst* argv, JSValue* outResult);
 
 #endif

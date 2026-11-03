@@ -77,8 +77,7 @@ class OOFlasherEntity : public OOLightParticleEntity,
   bool isFlasher();
 
   // Entity (OOJavaScriptExtensions): the binding's bodies (OOJSFlasher.h).
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype) override;
+  JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
   bool isVisibleToScripts() override;
 

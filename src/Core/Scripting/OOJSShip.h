@@ -26,11 +26,14 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
+
 class ShipEntity;
 
-void InitOOJSShip(ooscript::Context context, ooscript::Object global);
+void InitOOJSShip(JSContext* context, JSValueConst global);
 
-ooscript::ClassDef* JSShipClass(void);
-ooscript::Object JSShipPrototype(void);
+// (SpiderMonkey's JSShipPrototype() is no longer needed; use
+// JS_GetClassProto(context, JSShipClassID()).)
+JSClassID JSShipClassID(void);

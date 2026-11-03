@@ -1,12 +1,12 @@
 /*
 
 OOJSEngineNativeWrappers.h
-(Included by OOJavaScriptEngine.h)
+(Included by OOJSEngineCore.h)
 
 Exception safety and profiling macros.
 
-Every JavaScript native callback that could concievably cause an
-Objective-C exception should begin with OOJS_NATIVE_ENTER() and end with
+Every JavaScript native callback that could concievably cause a native
+exception should begin with OOJS_NATIVE_ENTER() and end with
 OOJS_NATIVE_EXIT. Callbacks which have been carefully audited for potential
 exceptions, and support functions called from JavaScript native callbacks,
 may start with OOJS_PROFILE_ENTER and end with OOJS_PROFILE_EXIT to be
@@ -50,8 +50,9 @@ MA 02110-1301, USA.
    translation units through OOJSEngineCore.h. OOFoundation.h gave it
    OOLITE_DEBUG and the function attributes.
 */
+#include <quickjs.h>
+
 #include "OOFunctionAttributes.h"
-#include "ooscript/JSEngine.hpp"
 
 #ifndef OOLITE_DEBUG
 // As OOFoundation.h defines it (an identical redefinition there is harmless).
@@ -62,17 +63,24 @@ MA 02110-1301, USA.
 #endif
 #endif
 
+/*	Profiling of native functions (the debug console's profile(),
+   getProfile() and trace()), as in SpiderMonkey builds without
+   MOZ_TRACE_JSCALLS: time is attributed to natives bracketed by
+   OOJS_NATIVE_ENTER/EXIT or OOJS_PROFILE_ENTER/EXIT, and everything else counts
+   as JavaScript time.
+*/
 #define OOJS_PROFILE OOLITE_DEBUG
 
 /*
         The pairs below are a C++ try, a catch (...) and scope guards, so a
    binding file that uses them contains no Objective-C exception syntax:
           * OOJS_NATIVE_EXIT catches whatever the body throws and hands it to
-            OOJSReportCurrentException() (OOJSEngineNativeWrappers.mm), which
+            OOJSReportCurrentException() (OOJSEngineNativeWrappers.cpp), which
    reports the game's exception (oo::Exception). It also reports a C++
-   exception ("Native exception: <what()>").
-          * The profiler frame is exited, and the time limiter and request are
-   resumed, when the scope ends, by return or by exception.
+   exception ("Native exception: <what()>"). The native then returns
+   JS_EXCEPTION.
+          * The profiler frame is exited, and the time limiter is resumed, when
+   the scope ends, by return or by exception.
 */
 
 #if OOJS_PROFILE
@@ -109,17 +117,17 @@ MA 02110-1301, USA.
 #define OOJS_PROFILE_ENTER_FOR_NATIVE try {
 #endif  // OOJS_PROFILE
 
-#define OOJS_NATIVE_ENTER(cx)                   \
-  {                                             \
-    ooscript::Context oojsNativeContext = (cx); \
+#define OOJS_NATIVE_ENTER(cx)            \
+  {                                      \
+    JSContext* oojsNativeContext = (cx); \
     OOJS_PROFILE_ENTER_FOR_NATIVE
 
 #define OOJS_NATIVE_EXIT                           \
   }                                                \
   catch (...) {                                    \
     OOJSReportCurrentException(oojsNativeContext); \
-    return false;                                  \
-    OOJS_PROFILE_EXIT_VAL(false)                   \
+    return JS_EXCEPTION;                           \
+    OOJS_PROFILE_EXIT_VAL(JS_EXCEPTION)            \
   }
 
 /*	OOJSReportCurrentException()
@@ -129,7 +137,7 @@ MA 02110-1301, USA.
    as "Native exception: <what()>" (std::exception) or "Unidentified native
    exception".
 */
-void OOJSReportCurrentException(ooscript::Context context);
+void OOJSReportCurrentException(JSContext* context);
 
 #ifndef NDEBUG
 void OOJSUnreachable(const char* function, const char* file,
@@ -139,20 +147,15 @@ void OOJSUnreachable(const char* function, const char* file,
 #endif
 
 #define OOJS_PROFILE_EXIT OOJS_PROFILE_EXIT_VAL(0)
-#define OOJS_PROFILE_EXIT_JSVAL \
-  OOJS_PROFILE_EXIT_VAL(ooscript::undefinedValue())
+#define OOJS_PROFILE_EXIT_JSVAL OOJS_PROFILE_EXIT_VAL(JS_UNDEFINED)
 
 /*
         OOJS_BEGIN_FULL_NATIVE() and OOJS_END_FULL_NATIVE
         These macros are used to bracket sections of native Oolite code within
-   JS callbacks which may take a long time. Thet do two things: pause the time
-   limiter, and (in thread-safe engine builds) suspend the current JS context
-        request.
+   JS callbacks which may take a long time. They pause the time limiter.
+   (QuickJS is single-threaded, so there is no context request to suspend.)
 
         These macros must be used in balanced pairs. They introduce a scope.
-
-        Script engine functions may not be used, directly or indirectily,
-   between these macros unless explicitly opening a request first.
 */
 #define OOJS_BEGIN_FULL_NATIVE(context)               \
   {                                                   \
@@ -162,28 +165,18 @@ void OOJSUnreachable(const char* function, const char* file,
   }                          \
   }
 
-// The scope OOJS_BEGIN_FULL_NATIVE opens: what its Objective-C try and finally
-// did, in the same order.
+// The scope OOJS_BEGIN_FULL_NATIVE opens: what #768's try and finally do.
 void OOJSPauseTimeLimiter(void);
 void OOJSResumeTimeLimiter(void);
 
 class OOJSFullNativeScope {
  public:
-  explicit OOJSFullNativeScope(ooscript::Context context) {
+  explicit OOJSFullNativeScope(JSContext* /*context*/) {
     OOJSPauseTimeLimiter();
-    _context = context;
-    _refCount = ooscript::suspendRequest(_context);
   }
-  ~OOJSFullNativeScope() {
-    ooscript::resumeRequest(_context, _refCount);
-    OOJSResumeTimeLimiter();
-  }
+  ~OOJSFullNativeScope() { OOJSResumeTimeLimiter(); }
   OOJSFullNativeScope(const OOJSFullNativeScope&) = delete;
   OOJSFullNativeScope& operator=(const OOJSFullNativeScope&) = delete;
-
- private:
-  ooscript::Context _context = {};
-  unsigned _refCount = {};
 };
 
 #if OOJS_PROFILE
@@ -192,22 +185,18 @@ class OOJSFullNativeScope {
 
 /*
         Profiler implementation details. This should be internal to
-        OOJSTimeManagement.m, but needs to be declared on the stack by the
-   macros above when profiling is enabled.
+        OOJSEngineTimeManagement.cpp, but needs to be declared on the stack by
+   the macros above when profiling is enabled.
 */
 
 typedef struct OOJSProfileStackFrame OOJSProfileStackFrame;
 struct OOJSProfileStackFrame {
-  OOJSProfileStackFrame* back;  // Stack link
-  const void* key;       // Key to look up profile entries. May be any pointer;
-                         // currently const char * for native frames and
-                         // ooscript::Function  for JS frames.
-  const char* function;  // Name of function, for native frames.
+  OOJSProfileStackFrame* back;   // Stack link
+  const void* key;               // Key to look up profile entries: the name.
+  const char* function;          // Name of function.
   OOHighResTimeValue startTime;  // Time frame was entered.
   OOTimeDelta subTime;           // Time spent in subroutine calls.
   OOTimeDelta* total;  // Pointer to accumulator for this type of frame.
-  void (*cleanup)(OOJSProfileStackFrame*);  // Cleanup function if needed (used
-                                            // for JS frames).
 };
 
 #define OOJS_DECLARE_PROFILE_STACK_FRAME(name) OOJSProfileStackFrame name;

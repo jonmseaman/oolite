@@ -34,50 +34,36 @@ SOFTWARE.
 
 #include "OOJSEngineCore.h"
 #include "OOStringWidth.h"
-#include "ooscript/JSEngine.hpp"
-
-namespace ooscript {}
-using ooscript::CallArgs;
-using ooscript::Context;
-using ooscript::Object;
-using ooscript::PropertyFlag;
 
 namespace {
-static bool FontMeasureString(ooscript::Context context,
-                              ooscript::CallArgs& oojsArgs);
-}  // namespace
-
-namespace {
-constexpr PropertyFlag kFontObjectFlags =
-    PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly;
-}  // namespace
-namespace {
-constexpr PropertyFlag kFontMethodFlags =
-    PropertyFlag::Permanent | PropertyFlag::ReadOnly;
+JSValue FontMeasureString(OOJS_NATIVE_ARGS);
 }  // namespace
 
 // MARK: Public
 
-void InitOOJSFont(ooscript::Context context, ooscript::Object global) {
-  Object fontObject = ooscript::defineObject(
-      (context), (global), "defaultFont", nullptr, nullptr, kFontObjectFlags);
-  ooscript::defineFunction((context), fontObject, "measureString",
-                           FontMeasureString, 1, kFontMethodFlags);
+void InitOOJSFont(JSContext* context, JSValueConst global) {
+  JSValue fontObject = JS_NewObject(context);
+  // JS_DefinePropertyValueStr() takes ownership of the value it defines.
+  JS_DefinePropertyValueStr(
+      context, fontObject, "measureString",
+      JS_NewCFunction(context, FontMeasureString, "measureString", 1),
+      OOJS_METHOD_READONLY);
+  JS_DefinePropertyValueStr(context, global, "defaultFont", fontObject,
+                            OOJS_PROP_READONLY);
 }
 
 // MARK: Methods
 
 namespace {
-static bool FontMeasureString(ooscript::Context context,
-                              ooscript::CallArgs& oojsArgs) {
+JSValue FontMeasureString(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(oojsArgs.count() < 1) || ooscript::isUndefined(OOJS_ARGV[0])) {
-    ooscript::Value undefined = ooscript::undefinedValue();
-    cxx_OOJSReportBadArguments(
-        context, std::nullopt, "defaultFont.measureString",
-        std::min(oojsArgs.count(), 1U), &undefined, std::nullopt, "string");
-    return false;
+  if (EXPECT_NOT(argc < 1) || JS_IsUndefined(OOJS_ARGV[0])) {
+    JSValueConst undefined = JS_UNDEFINED;
+    cxx_OOJSReportBadArguments(context, std::nullopt,
+                               "defaultFont.measureString", std::min(argc, 1),
+                               &undefined, std::nullopt, "string");
+    return OOJSNativeFailure(context);
   }
 
   OOJS_RETURN_DOUBLE(cxx_OOStringWidthInEm(

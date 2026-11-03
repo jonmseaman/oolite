@@ -31,11 +31,11 @@ SOFTWARE.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
 class OODebugMonitor;
 
-ooscript::Object DebugMonitorToJSConsole(ooscript::Context context,
-                                         OODebugMonitor* monitor);
-
-void OOJSConsoleDestroy(void);
+// Create the JS console object for the debug monitor. The caller owns the
+// result (JS null on failure).
+JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor);

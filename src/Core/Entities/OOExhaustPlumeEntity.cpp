@@ -672,9 +672,8 @@ void OOExhaustPlumeEntity::resetGraphicsState() {
 }
 
 // The binding's bodies (OOJSExhaustPlume.mm), which the façade forwarded to.
-void OOExhaustPlumeEntity::getJSClass(ooscript::ClassDef** outClass,
-                                      ooscript::Object* outPrototype) {
-  ::OOJSExhaustPlumeGetJSClass(outClass, outPrototype);
+JSClassID OOExhaustPlumeEntity::jsClassID() {
+  return ::JSExhaustPlumeClassID();
 }
 
 std::optional<std::string> OOExhaustPlumeEntity::jsClassName() {

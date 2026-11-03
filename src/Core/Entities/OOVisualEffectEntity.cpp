@@ -725,8 +725,8 @@ oo::PList OOVisualEffectEntity::scriptInfo() {
 }
 
 // unlikely to need events with arguments
-void OOVisualEffectEntity::doScriptEvent(ooscript::PropertyId message) {
-  ooscript::Context context = OOJSAcquireContext();
+void OOVisualEffectEntity::doScriptEvent(OOJSPropID message) {
+  JSContext* context = OOJSAcquireContext();
   if (_script != nullptr) _script->callMethod(message, context, NULL, 0, NULL);
   OOJSRelinquishContext(context);
 }
@@ -875,9 +875,8 @@ void OOVisualEffectEntity::setShaderVector2(Vector value) {
 
 // The JS questions, which the effect's facade answered with the binding's
 // functions (the root's facade asks these now).
-void OOVisualEffectEntity::getJSClass(ooscript::ClassDef** outClass,
-                                      ooscript::Object* outPrototype) {
-  ::OOJSVisualEffectGetJSClass(outClass, outPrototype);
+JSClassID OOVisualEffectEntity::jsClassID() {
+  return ::JSVisualEffectClassID();
 }
 
 std::optional<std::string> OOVisualEffectEntity::jsClassName() {

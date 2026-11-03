@@ -27,6 +27,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include <string_view>
 
 #include "OOFoundation.h"
@@ -37,7 +39,6 @@ MA 02110-1301, USA.
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OOObject.h"
-#include "ooscript/JSEngine.hpp"
 #define GUI_DEFAULT_COLUMNS 6
 #define GUI_DEFAULT_ROWS 30
 
@@ -374,11 +375,10 @@ class GuiDisplayGen : public oo::RefCounted {
           called, generally a method name (like "mission.runScreen()") for
      warning generation.
 
-          Requires a request on context.
+          value is borrowed.
   */
-  oo::PList textureDescriptorFromJSValue(
-      ooscript::Value value, ooscript::Context context,
-      const std::optional<std::string>& callerDescription);
+  oo::PList textureDescriptorFromJSValue(JSValueConst value, JSContext* context,
+                                         const std::string& callerDescription);
 
   void clearBackground();
 

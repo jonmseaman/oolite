@@ -52,10 +52,9 @@ std::optional<std::string> EntityJSClassName(void) {
 }
 
 /*	The entity's JS object: made on first use for an entity that scripts can
-   see, of the class and prototype the entity names, its private slot an
-   OOJSEntityHolder (a weak reference to the entity: the JS object does not keep
-   the entity alive), rooted while the entity lives and dropped when the engine
-   resets.
+   see, of the class the entity names, its private slot an OOJSEntityHolder (a
+   weak reference to the entity: the JS object does not keep the entity alive),
+   held by the entity while it lives and dropped when the engine resets.
 */
 /*	The class questions about an entity's JS object, answered by the C++
    entity's members. Used by the engine's generic paths that ask an entity's
@@ -72,61 +71,51 @@ std::optional<std::string> OOJSEntityJSClassName(Entity* entity) {
   return entity->jsClassName();
 }
 
-void OOJSEntityGetJSClass(Entity* entity, ooscript::ClassDef** outClass,
-                          ooscript::Object* outPrototype) {
-  entity->getJSClass(outClass, outPrototype);
-}
+JSClassID OOJSEntityJSClassID(Entity* entity) { return entity->jsClassID(); }
 
-ooscript::Value OOJSEntityJSValue(Entity* entity, ooscript::Context context) {
+JSValue OOJSEntityJSValue(Entity* entity, JSContext* context) {
   if (entity == nullptr)
-    return ooscript::nullValue();  // OOJSValueFromNativeObject()'s for nil
+    return JS_NULL;  // OOJSValueFromNativeObject()'s for nil
   return entity->jsValueInContext(context);
 }
 
-ooscript::Value EntityJSValueInContext(Entity* entity,
-                                       ooscript::Context context) {
-  ooscript::ClassDef* jsClass = NULL;
-  ooscript::Object prototype = NULL;
-  ooscript::Value result = ooscript::nullValue();
-
-  if (entity->_jsSelf == NULL && OOJSEntityIsVisibleToScripts(entity)) {
-    // Create JS object
-    OOJSEntityGetJSClass(entity, &jsClass, &prototype);
-
-    entity->_jsSelf = ooscript::newObject(context, jsClass, prototype, NULL);
-    if (entity->_jsSelf != NULL) {
+JSValue EntityJSValueInContext(Entity* entity, JSContext* context) {
+  if (!JS_IsObject(entity->_jsSelf) && OOJSEntityIsVisibleToScripts(entity)) {
+    // Create JS object. The entity keeps a reference to it for as long as the
+    // entity exists.
+    JSValue jsSelf =
+        JS_NewObjectClass(context, (int)OOJSEntityJSClassID(entity));
+    if (JS_IsException(jsSelf)) {
+      JS_FreeValue(context, JS_GetException(context));
+    } else {
       const oo::Ref<OOJSEntityHolder> holder =
           oo::makeRef<OOJSEntityHolder>(entity);
-      if (!OOJSSetCxxPrivate(context, entity->_jsSelf, holder.get()))
-        entity->_jsSelf = NULL;
-    }
-
-    if (entity->_jsSelf != NULL) {
-      OOJSAddGCObjectRoot(context, &entity->_jsSelf, "Entity jsSelf");
-      oo::NotificationCenter::defaultCenter().addObserver(
-          entity, kOOJavaScriptEngineWillResetNotificationName,
-          OOJavaScriptEngine::sharedEngine(),
-          [entity](const oo::Notification&) { entity->deleteJSSelf(); });
+      if (!OOJSSetCxxPrivate(jsSelf, holder.get())) {
+        JS_FreeValue(context, jsSelf);
+      } else {
+        entity->_jsSelf = jsSelf;
+        oo::NotificationCenter::defaultCenter().addObserver(
+            entity, kOOJavaScriptEngineWillResetNotificationName,
+            OOJavaScriptEngine::sharedEngine(),
+            [entity](const oo::Notification&) { entity->deleteJSSelf(); });
+      }
     }
   }
 
-  if (entity->_jsSelf != NULL) result = ooscript::objectValue(entity->_jsSelf);
+  if (JS_IsObject(entity->_jsSelf))
+    return JS_DupValue(context, entity->_jsSelf);
 
-  return result;
-}
-
-void EntityJSGetJSClass(ooscript::ClassDef** outClass,
-                        ooscript::Object* outPrototype) {
-  *outClass = JSEntityClass();
-  *outPrototype = JSEntityPrototype();
+  return JS_NULL;
 }
 
 void EntityJSDeleteJSSelf(Entity* entity) {
-  if (entity->_jsSelf != NULL) {
-    entity->_jsSelf = NULL;
-    ooscript::Context context = OOJSAcquireContext();
-    ooscript::removeObjectRoot(context, &entity->_jsSelf);
-    OOJSRelinquishContext(context);
+  if (JS_IsObject(entity->_jsSelf)) {
+    /*	Scripts may still hold the JS object. Its private data is a weak
+            reference, so it becomes stale (isValid false) when the entity is
+            deallocated.
+    */
+    JS_FreeValue(OOJSAcquireContext(), entity->_jsSelf);
+    entity->_jsSelf = JS_UNDEFINED;
 
     oo::NotificationCenter::defaultCenter().removeObserver(
         entity, kOOJavaScriptEngineWillResetNotificationName,
@@ -156,12 +145,6 @@ std::optional<std::string> EntityJSDescription(Entity* entity) {
 // MARK: ShipEntity (OOJavaScriptExtensions)
 
 bool ShipEntityJSIsVisibleToScripts(void) { return true; }
-
-void ShipEntityJSGetJSClass(ooscript::ClassDef** outClass,
-                            ooscript::Object* outPrototype) {
-  *outClass = JSShipClass();
-  *outPrototype = JSShipPrototype();
-}
 
 std::optional<std::string> ShipEntityJSClassName(void) {
   return std::string("Ship");

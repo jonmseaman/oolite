@@ -27,10 +27,10 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
+#include <quickjs.h>
 
-void CreateOOJSGlobal(ooscript::Context context, ooscript::Object* outGlobal);
-void SetUpOOJSGlobal(ooscript::Context context, ooscript::Object global);
+#include "OOFoundation.h"
+
+void SetUpOOJSGlobal(JSContext* context, JSValueConst global);
 
 #include "oofnd/StdLib.hpp"

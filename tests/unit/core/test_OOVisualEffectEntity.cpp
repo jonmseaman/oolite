@@ -28,6 +28,7 @@
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "OOJSEntity.h"
 #include "OOColor.h"
 #include "OOFlasherEntity.h"
 #include "OOJSPropID.h"
@@ -503,19 +504,31 @@ OO_TEST(slice2Members) {
   }
 }
 
+// Registers Entity's JS class and the given class (a child of Entity) in the
+// test's context, as the engine's start does; the context is made here if the
+// test has none yet.
+static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
+  extern JSContext* gOOJSMainThreadContext;
+  if (gOOJSMainThreadContext == nullptr)
+    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+  JSContext* context = OOJSAcquireContext();
+  JSValue global = JS_GetGlobalObject(context);
+  InitOOJSEntity(context, global);
+  initClass(context, global);
+  JS_FreeValue(context, global);
+}
+
 // The binding's category: what the engine asks an effect's object for by
 // selector is what OOJSVisualEffect.mm answers.
 OO_TEST(jsExtensions) {
   SetUp();
   {
     OOVisualEffectEntity* effect = Effect("js-effect", Dict({}));
-    ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
-    ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
     Entity* object = effect;  // the engine asks the object
-    OOJSEntityGetJSClass(object, &jsClass, &prototype);
-    OOJSVisualEffectGetJSClass(&expectedClass, &expectedPrototype);
-    OO_CHECK(jsClass != nullptr && jsClass == expectedClass &&
-             prototype == expectedPrototype);
+    RegisterJSClasses(InitOOJSVisualEffect);
+    const JSClassID jsClass = OOJSEntityJSClassID(object);
+    const JSClassID expectedClass = JSVisualEffectClassID();
+    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
     OO_CHECK(OOJSEntityJSClassName(object) ==
              std::optional<std::string>("VisualEffect"));
     OO_CHECK(OOJSEntityIsVisibleToScripts(object) == true);

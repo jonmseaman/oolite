@@ -310,8 +310,9 @@ void OOScript::runWithTarget(Entity*) {
 
 // OOScript (JavaScriptEvents): NO for every script but a JS one (OOJSScript
 // overrides).
-bool OOScript::callMethod(ooscript::PropertyId, ooscript::Context,
-                          ooscript::Value*, int, ooscript::Value*) {
+bool OOScript::callMethod(JSAtom, JSContext*, JSValueConst*, int,
+                          JSValue* outResult) {
+  if (outResult != NULL) *outResult = JS_UNDEFINED;
   return false;
 }
 
@@ -333,12 +334,10 @@ std::string OOScript::description() const {
 
 // OOObject's -oo_jsValueInContext: (OOObjectJSValueInContext), which the facade
 // answered for every script but a JS one.
-ooscript::Value OOScript::jsValueInContext(ooscript::Context) {
-  return ooscript::undefinedValue();
-}
+JSValue OOScript::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
 
 // OOObject's -oo_clearJSSelf:, which did nothing.
-void OOScript::clearJSSelf(ooscript::Object) {}
+void OOScript::clearJSSelf(JSValueConst) {}
 
 /*	OOScriptAutorelease(): the script goes to the innermost
    oo::AutoreleaseScope, whose drain releases it where the keeper object that

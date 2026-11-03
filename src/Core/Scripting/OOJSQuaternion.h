@@ -26,34 +26,37 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
+#include <string>
+
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
-void InitOOJSQuaternion(ooscript::Context context, ooscript::Object global);
+void InitOOJSQuaternion(JSContext* context, JSValueConst global);
 
-ooscript::Object JSQuaternionWithQuaternion(ooscript::Context context,
-                                            Quaternion quaternion) NONNULL_FUNC;
+// A new Quaternion object, owned by the caller (JS_EXCEPTION on failure).
+JSValue JSQuaternionWithQuaternion(JSContext* context,
+                                   Quaternion quaternion) NONNULL_FUNC;
 
-bool QuaternionToJSValue(ooscript::Context context, Quaternion quaternion,
-                         ooscript::Value* outValue) NONNULL_FUNC;
-bool JSValueToQuaternion(ooscript::Context context, ooscript::Value value,
+// *outValue is owned by the caller on success.
+bool QuaternionToJSValue(JSContext* context, Quaternion quaternion,
+                         JSValue* outValue) NONNULL_FUNC;
+bool JSValueToQuaternion(JSContext* context, JSValueConst value,
                          Quaternion* outQuaternion) NONNULL_FUNC;
 
 /*	Given a JS Quaternion object, get the corresponding Vector struct. Given
    a JS Entity, get its orientation. Given a JS Array with exactly four
         elements, all of them numbers, treat them as [w, x, y, z]  components.
-   For anything else, return NO. (Other implicit conversions may be added in
-        future.)
+   For anything else (including null and primitives), return NO. (Other
+        implicit conversions may be added in future.)
 */
-bool JSObjectGetQuaternion(ooscript::Context context,
-                           ooscript::Object quaternionObj,
+bool JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj,
                            Quaternion* outQuaternion) GCC_ATTR((nonnull(1, 3)));
 
 //	Set the value of a JS quaternion object.
-bool JSQuaternionSetQuaternion(ooscript::Context context,
-                               ooscript::Object quaternionObj,
+bool JSQuaternionSetQuaternion(JSContext* context, JSValueConst quaternionObj,
                                Quaternion quaternion) GCC_ATTR((nonnull(1)));
 
 /*	QuaternionFromArgumentList()
@@ -64,25 +67,22 @@ bool JSQuaternionSetQuaternion(ooscript::Context context,
         were used (currently, this will be 0 on failure, otherwise 1 or 4).
 
         On failure, it will return NO and raise an error. If the caller is a JS
-        callback, it must return NO to signal an error.
+        callback, it must return JS_EXCEPTION to signal an error.
 */
-bool QuaternionFromArgumentList(ooscript::Context context,
+bool QuaternionFromArgumentList(JSContext* context,
                                 const std::string& scriptClass,
-                                const std::string& function, unsigned argc,
-                                ooscript::Value* argv,
-                                Quaternion* outQuaternion,
-                                unsigned* outConsumed)
-    GCC_ATTR((nonnull(1, 5, 6)));
+                                const std::string& function, int argc,
+                                JSValueConst* argv, Quaternion* outQuaternion,
+                                int* outConsumed) GCC_ATTR((nonnull(1, 6)));
 
 /*	QuaternionFromArgumentList()
 
         Like VectorFromArgumentList(), but does not report an error on failure.
 */
-bool QuaternionFromArgumentListNoError(ooscript::Context context, unsigned argc,
-                                       ooscript::Value* argv,
-                                       Quaternion* outVector,
-                                       unsigned* outConsumed)
-    GCC_ATTR((nonnull(1, 3, 4)));
+bool QuaternionFromArgumentListNoError(JSContext* context, int argc,
+                                       JSValueConst* argv,
+                                       Quaternion* outVector, int* outConsumed)
+    GCC_ATTR((nonnull(1, 4)));
 
 #if OO_DEBUG
 #include "oofnd/PList.hpp"

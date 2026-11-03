@@ -32,18 +32,6 @@ SOFTWARE.
 #include "oofnd/String.hpp"
 #include "oofnd/Thread.hpp"
 #include "oofnd/objc/OOAssert.h"
-#include "ooscript/JSEngine.hpp"
-
-/*
-        Compiling a RegExp object from a cached UTF-16 pattern goes through the
-   ooscript façade's regexp entry point (JSEngine.hpp). A tiny local
-   reinterpret_cast, the same shape as OOJSVector.mm's OOJSFCX/OOJSROBJ,
-   recovers the plain engine-context and engine-object pointer locals.
-*/
-
-namespace ooscript {}
-using ooscript::Context;
-using ooscript::Object;
 
 // Pseudo-singleton: a single instance exists at a given time, but can be
 // released.
@@ -73,10 +61,10 @@ bool OORegExpMatcher::init() {
 
   OOJavaScriptEngine::sharedEngine();  // Summon the beast from the Pit.
 
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   _tester = OOJSFunction::initWithName(
-      std::string("matchesRegExp"), NULL, std::string(code), 2, argumentNames,
-      oo::str::lastPathComponent(__FILE__), codeLine, context);
+      std::string("matchesRegExp"), JS_UNDEFINED, std::string(code), 2,
+      argumentNames, oo::str::lastPathComponent(__FILE__), codeLine, context);
 
   OOJSRelinquishContext(context);
 
@@ -102,51 +90,62 @@ bool OORegExpMatcher::string(const std::string& string,
   OOCAssert(oo::thread::isMainThread(),
             "OORegExpMatcher may only be used on the main thread.");
 
-  const std::u16string regExpUnits = oo::utf8ToUtf16(regExp);
-  size_t expLength = regExpUnits.size();
-  if (EXPECT_NOT(expLength == 0)) return false;
+  if (EXPECT_NOT(regExp.empty())) return false;
 
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
 
   // Create new RegExp object if necessary.
   if (flags != _cachedFlags || _cachedRegExpString != regExp) {
     _cachedRegExpString.reset();
     _cachedRegExpObject = nullptr;
 
-    uint16_t* buffer;
-    buffer = static_cast<uint16_t*>(malloc(expLength * sizeof *buffer));
-    if (EXPECT_NOT(buffer == NULL)) return false;
-    std::copy(regExpUnits.begin(), regExpUnits.end(), buffer);
-
+    // QuickJS has no API to create a RegExp directly, so call the RegExp
+    // constructor.
     _cachedRegExpString = regExp;
-    Object regExpFacadeObj = ooscript::newUCRegExpObjectNoStatics(
-        (context), reinterpret_cast<const ooscript::Char16*>(buffer), expLength,
-        static_cast<std::uint32_t>(flags));
-    ooscript::Object regExpObj = (regExpFacadeObj);
-    _cachedRegExpObject = OOJSValue::valueWithJSObject(regExpObj, context);
+    std::string flagString;
+    if (flags & kOORegExpCaseInsensitive) flagString += "i";
+    if (flags & kOORegExpMultiLine) flagString += "m";
+    JSValue global = JS_GetGlobalObject(context);
+    JSValue constructor = JS_GetPropertyStr(context, global, "RegExp");
+    JSValue args[2] = {
+        JS_NewStringLen(context, regExp.data(), regExp.size()),
+        JS_NewStringLen(context, flagString.data(), flagString.size())};
+    JSValue regExpObj = JS_CallConstructor(context, constructor, 2, args);
+    if (JS_IsException(regExpObj)) {
+      OOJSReportPendingException(context);
+      regExpObj = JS_NULL;
+    }
+    _cachedRegExpObject = OOJSValue::valueWithJSValue(regExpObj, context);
     _cachedFlags = flags;
 
-    free(buffer);
+    JS_FreeValue(context, regExpObj);
+    JS_FreeValue(context, args[0]);
+    JS_FreeValue(context, args[1]);
+    JS_FreeValue(context, constructor);
+    JS_FreeValue(context, global);
   }
 
-  // The arguments converted as -evaluatePredicateWithContext:scope:arguments:
-  // converted them (a JS string, as the string's Objective-C string gave; the
-  // cached RegExp object), rooted while the function runs, and the result
-  // converted to a boolean as it did.
-  ooscript::Value argv[2];
-  argv[0] = OOJSValueFromPList(context, oo::PList(string));
-  OOJSAddGCValueRoot(context, &argv[0], "OORegExpMatcher argv");
+  // -evaluatePredicateWithContext:scope:arguments: with the string and the
+  // cached RegExp object: the result converted to a boolean.
+  JSValue argv[2];
+  argv[0] = JS_NewStringLen(context, string.data(), string.size());
   argv[1] = (_cachedRegExpObject != nullptr)
                 ? _cachedRegExpObject->jsValueInContext(context)
-                : ooscript::Value{0};
-  OOJSAddGCValueRoot(context, &argv[1], "OORegExpMatcher argv");
-  ooscript::Value resultValue;
-  bool OK = _tester->evaluateWithContext(context, NULL, 2, argv, &resultValue);
-  bool matched = false;
-  if (OK) OK = ooscript::valueToBoolean(context, resultValue, &matched);
-  ooscript::removeValueRoot(context, &argv[0]);
-  ooscript::removeValueRoot(context, &argv[1]);
-  bool result = OK && matched;
+                : JS_NULL;
+  JSValue resultValue = JS_UNDEFINED;
+  bool OK = _tester->evaluateWithContext(context, JS_UNDEFINED, 2, argv,
+                                         &resultValue);
+  int truth = 0;
+  if (OK) {
+    truth = JS_ToBool(context, resultValue);
+    JS_FreeValue(context, resultValue);
+    if (truth < 0) OK = false;
+  }
+  // QuickJS leaves an uncaught exception pending.
+  if (!OK && JS_HasException(context)) OOJSReportPendingException(context);
+  bool result = OK && truth > 0;
+  JS_FreeValue(context, argv[0]);
+  JS_FreeValue(context, argv[1]);
 
   OOJSRelinquishContext(context);
 

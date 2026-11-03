@@ -28,51 +28,24 @@ MA 02110-1301, USA.
 #include <cstdint>
 #include <cstring>
 
+#include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJavaScriptEngine.h"
 #include "OOSunEntity.h"
-#include "ooscript/JSEngine.hpp"
 
-namespace ooscript {}
-using ooscript::CallArgs;
-using ooscript::ClassDef;
-using ooscript::ClassFlag;
-using ooscript::Context;
-using ooscript::FunctionSpec;
-using ooscript::Object;
-using ooscript::PropertyFlag;
-using ooscript::PropertyId;
-using ooscript::PropertySpec;
-using ooscript::Value;
+static JSClassID sSunClassID;
 
 namespace {
-static ooscript::Object sSunPrototype;
-}
-
-namespace {
-static bool SunGetProperty(Context cx, Object obj, PropertyId propID,
-                           Value* value);
-static bool SunGoNova(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool SunCancelNova(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static JSValue SunGetProperty(OOJS_GETTER_ARGS);
+static JSValue SunGoNova(OOJS_NATIVE_ARGS);
+static JSValue SunCancelNova(OOJS_NATIVE_ARGS);
 }  // namespace
 
 namespace {
-static ClassDef sSunClass = {
-    "Sun",
-    ClassFlag::HasPrivate,
-
-    nullptr,                       // addProperty
-    nullptr,                       // delProperty
-    SunGetProperty,                // getProperty
-    nullptr,                       // setProperty
-    nullptr,                       // enumerate
-    nullptr,                       // newEnumerate
-    nullptr,                       // resolve
-    nullptr,                       // convert
-    OOJSCxxObjectWrapperFinalize,  // finalize
-    nullptr,                       // call
-    nullptr,                       // construct
-    nullptr,                       // backend
+static JSClassDef sSunClass = {
+    .class_name = "Sun",
+    .finalizer =
+        OOJSObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
 };
 }
 
@@ -85,113 +58,93 @@ enum : std::uint8_t {
 };
 
 namespace {
-static PropertySpec sSunProperties[] = {
-    // JS name					ID
-    // flags
-    // getter	setter
-    {"hasGoneNova", kSun_hasGoneNova,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"isGoingNova", kSun_isGoingNova,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"name", kSun_name,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"radius", kSun_radius,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {0}};
+static const JSCFunctionListEntry sSunProperties[] = {
+    // JS name, getter, setter, ID
+    OOJS_PROPERTY_RO("hasGoneNova", SunGetProperty, kSun_hasGoneNova),
+    OOJS_PROPERTY_RO("isGoingNova", SunGetProperty, kSun_isGoingNova),
+    OOJS_PROPERTY_RO("name", SunGetProperty, kSun_name),
+    OOJS_PROPERTY_RO("radius", SunGetProperty, kSun_radius),
+};
 }
 
 namespace {
-static FunctionSpec sSunMethods[] = {
-    // JS name					Function
-    // min args	flags
-    {"cancelNova", SunCancelNova, 0, 0},
-    {"goNova", SunGoNova, 1, 0},
-    {0}};
+static const JSCFunctionListEntry sSunMethods[] = {
+    // JS name, min args, function
+    JS_CFUNC_DEF("cancelNova", 0, SunCancelNova),
+    JS_CFUNC_DEF("goNova", 1, SunGoNova),
+};
 }
 
 namespace {
 // The getter checks the JS class and answers the C++ sun (the slot holds the
 // C++ entity, read by OOJSEntityGetEntityOfClass for the Sun class); null for a
 // stale entity.
-bool JSSunGetSunEntity(ooscript::Context context, ooscript::Object inObject,
+bool JSSunGetSunEntity(JSContext* context, JSValueConst inObject,
                        OOSunEntity** outObject) {
   Entity* entity = nullptr;
-  if (!OOJSEntityGetEntityOfClass(context, inObject, &sSunClass, &entity))
+  if (!OOJSEntityGetEntityOfClass(context, inObject, sSunClassID, &entity))
     return false;
   *outObject = dynamic_cast<OOSunEntity*>(entity);
   return true;
 }
 }  // namespace
 
-void InitOOJSSun(ooscript::Context context, ooscript::Object global) {
-  Object proto = ooscript::initClass(
-      (context), (global), (JSEntityPrototype()), &sSunClass,
-      OOJSUnconstructableConstruct, 0, sSunProperties, sSunMethods, NULL, NULL);
-  sSunPrototype = (proto);
-  OOJSRegisterObjectConverter(&sSunClass, OOJSEntityObjectConverter);
-  OOJSRegisterSubclass(&sSunClass, JSEntityClass());
+void InitOOJSSun(JSContext* context, JSValueConst global) {
+  OOJSRegisterClass(&sSunClassID, &sSunClass);
+
+  JSValue parentPrototype = JS_GetClassProto(context, JSEntityClassID());
+  OOCAssert(JS_IsObject(parentPrototype),
+            "Entity must be initialized before Sun.");
+  OOJSInitClass(context, global, sSunClassID, parentPrototype,
+                OOJSUnconstructableConstruct, 0, sSunProperties,
+                OOJS_COUNT(sSunProperties), sSunMethods,
+                OOJS_COUNT(sSunMethods), NULL, 0);
+  JS_FreeValue(context, parentPrototype);
+
+  OOJSRegisterObjectConverter(sSunClassID, OOJSEntityObjectConverter);
+  OOJSRegisterSubclass(sSunClassID, JSEntityClassID());
 }
+
+JSClassID JSSunClassID(void) { return sSunClassID; }
 
 // The bodies of OOSunEntity (OOJavaScriptExtensions).
 bool OOJSSunIsVisibleToScripts(void) { return true; }
-
-void OOJSSunGetJSClass(ooscript::ClassDef** outClass,
-                       ooscript::Object* outPrototype) {
-  *outClass = &sSunClass;
-  *outPrototype = sSunPrototype;
-}
 
 std::optional<std::string> OOJSSunJSClassName(void) {
   return std::string("Sun");
 }
 
 namespace {
-static bool SunGetProperty(Context cx, Object obj, PropertyId propID,
-                           Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-  ooscript::Object thisObj = (obj);
-
+static JSValue SunGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   OOSunEntity* sun = nullptr;
 
-  if (EXPECT_NOT(!JSSunGetSunEntity(context, thisObj, &sun))) return false;
+  if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun)))
+    return OOJSNativeFailure(context);
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kSun_radius:
-      return ooscript::newNumberValue(
-          cx, (sun != nullptr ? sun->radius() : 0.0), value);
+      return JS_NewNumber(context, (sun != nullptr ? sun->radius() : 0.0));
 
     case kSun_name: {
       const std::optional<std::string> name =
           (sun != nullptr ? sun->name() : std::optional<std::string>());
-      *value = OOJSValueFromPList(
+      return OOJSValueFromPList(
           context, name.has_value() ? oo::PList(*name) : oo::PList());
-      return true;
     }
 
     case kSun_hasGoneNova:
-      *value = OOJSValueFromBOOL((sun != nullptr ? sun->goneNova() : false));
-      return true;
+      return OOJSValueFromBOOL((sun != nullptr ? sun->goneNova() : false));
 
     case kSun_isGoingNova:
-      *value = OOJSValueFromBOOL((sun != nullptr ? sun->willGoNova() : false) &&
-                                 !(sun != nullptr ? sun->goneNova() : false));
-      return true;
+      return OOJSValueFromBOOL((sun != nullptr ? sun->willGoNova() : false) &&
+                               !(sun != nullptr ? sun->goneNova() : false));
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, (propID), sSunProperties);
-      return false;
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic, sSunProperties,
+                                    OOJS_COUNT(sSunProperties));
+      return OOJSNativeFailure(context);
   }
 
   OOJS_NATIVE_EXIT
@@ -202,16 +155,16 @@ static bool SunGetProperty(Context cx, Object obj, PropertyId propID,
 
 // goNova([delay : Number])
 namespace {
-static bool SunGoNova(ooscript::Context context, ooscript::CallArgs& oojsArgs) {
+static JSValue SunGoNova(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   OOSunEntity* sun = nullptr;
   double delay = 0;
 
-  if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun))) return false;
-  if (oojsArgs.count() > 0 &&
-      EXPECT_NOT(!ooscript::valueToNumber(context, (OOJS_ARGV[0]), &delay)))
-    return false;
+  if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun)))
+    return OOJSNativeFailure(context);
+  if (argc > 0 && EXPECT_NOT(JS_ToFloat64(context, &delay, OOJS_ARGV[0]) != 0))
+    return OOJSNativeFailure(context);
 
   if (sun != nullptr) sun->setGoingNova(true, delay);
   OOJS_RETURN_VOID;
@@ -222,13 +175,13 @@ static bool SunGoNova(ooscript::Context context, ooscript::CallArgs& oojsArgs) {
 
 // cancelNova()
 namespace {
-static bool SunCancelNova(ooscript::Context context,
-                          ooscript::CallArgs& oojsArgs) {
+static JSValue SunCancelNova(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   OOSunEntity* sun = nullptr;
 
-  if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun))) return false;
+  if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun)))
+    return OOJSNativeFailure(context);
 
   if ((sun != nullptr ? sun->willGoNova() : false) &&
       !(sun != nullptr ? sun->goneNova() : false)) {

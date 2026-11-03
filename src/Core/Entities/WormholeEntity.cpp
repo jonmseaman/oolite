@@ -902,10 +902,7 @@ void WormholeEntity::dumpSelfState() {
 }
 
 // The binding's bodies (OOJSWormhole.mm).
-void WormholeEntity::getJSClass(ooscript::ClassDef** outClass,
-                                ooscript::Object* outPrototype) {
-  ::OOJSWormholeGetJSClass(outClass, outPrototype);
-}
+JSClassID WormholeEntity::jsClassID() { return ::JSWormholeClassID(); }
 
 std::optional<std::string> WormholeEntity::jsClassName() {
   return ::OOJSWormholeJSClassName();

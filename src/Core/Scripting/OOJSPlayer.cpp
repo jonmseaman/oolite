@@ -39,94 +39,49 @@ MA 02110-1301, USA.
 #include "PlayerEntityContracts.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "PlayerEntityScriptMethods.h"
-#include "ooscript/JSEngine.hpp"
 
 /*
-        JSPlayerClass() returns &sPlayerClass, the same ooscript::ClassDef that
-   ooscript::getClass() reports for the player object.
+        The Player class is a static JSClassDef registered with
+   OOJSRegisterClass(); JSPlayerClassID() is its class ID. The global player
+   object has no private data, as before. The global object owns the only
+   reference to it (a read-only, permanent property), so JSPlayerObject() looks
+   it up there instead of keeping a reference that would have to be dropped on
+   engine reset (#768).
 */
 
-namespace ooscript {}
-using ooscript::CallArgs;
-using ooscript::ClassDef;
-using ooscript::ClassFlag;
-using ooscript::Context;
-using ooscript::FunctionSpec;
-using ooscript::Object;
-using ooscript::PropertyFlag;
-using ooscript::PropertyId;
-using ooscript::PropertySpec;
-using ooscript::Value;
-
-// Byte-identical façade <-> jsapi views, local to this call site (see
-// OOJSVector.mm).
-
 namespace {
-static ooscript::Object sPlayerPrototype;
-}  // namespace
-namespace {
-static ooscript::Object sPlayerObject;
+static JSClassID sPlayerClassID;
 }  // namespace
 
 namespace {
-static bool PlayerGetProperty(Context cx, Object obj, PropertyId propID,
-                              Value* value);
+static JSValue PlayerGetProperty(OOJS_GETTER_ARGS);
 }  // namespace
 namespace {
-static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID,
-                              bool strict, Value* value);
+static JSValue PlayerSetProperty(OOJS_SETTER_ARGS);
 }  // namespace
 
 namespace {
-static bool PlayerAddMessageToArrivalReport(ooscript::Context cx,
-                                            ooscript::CallArgs& oojsArgs);
-static bool PlayerAudioMessage(ooscript::Context cx,
-                               ooscript::CallArgs& oojsArgs);
-static bool PlayerCommsMessage(ooscript::Context cx,
-                               ooscript::CallArgs& oojsArgs);
-static bool PlayerConsoleMessage(ooscript::Context cx,
-                                 ooscript::CallArgs& oojsArgs);
-static bool PlayerEndScenario(ooscript::Context cx,
-                              ooscript::CallArgs& oojsArgs);
-static bool PlayerIncreaseContractReputation(ooscript::Context cx,
-                                             ooscript::CallArgs& oojsArgs);
-static bool PlayerDecreaseContractReputation(ooscript::Context cx,
-                                             ooscript::CallArgs& oojsArgs);
-static bool PlayerIncreasePassengerReputation(ooscript::Context cx,
-                                              ooscript::CallArgs& oojsArgs);
-static bool PlayerDecreasePassengerReputation(ooscript::Context cx,
-                                              ooscript::CallArgs& oojsArgs);
-static bool PlayerIncreaseParcelReputation(ooscript::Context cx,
-                                           ooscript::CallArgs& oojsArgs);
-static bool PlayerDecreaseParcelReputation(ooscript::Context cx,
-                                           ooscript::CallArgs& oojsArgs);
-static bool PlayerReplaceShip(ooscript::Context cx,
-                              ooscript::CallArgs& oojsArgs);
-static bool PlayerSetEscapePodDestination(ooscript::Context cx,
-                                          ooscript::CallArgs& oojsArgs);
-static bool PlayerSetPlayerRole(ooscript::Context cx,
-                                ooscript::CallArgs& oojsArgs);
-static bool PlayerStopAudioMessage(ooscript::Context cx,
-                                   ooscript::CallArgs& oojsArgs);
+static JSValue PlayerAddMessageToArrivalReport(OOJS_NATIVE_ARGS);
+static JSValue PlayerAudioMessage(OOJS_NATIVE_ARGS);
+static JSValue PlayerCommsMessage(OOJS_NATIVE_ARGS);
+static JSValue PlayerConsoleMessage(OOJS_NATIVE_ARGS);
+static JSValue PlayerEndScenario(OOJS_NATIVE_ARGS);
+static JSValue PlayerIncreaseContractReputation(OOJS_NATIVE_ARGS);
+static JSValue PlayerDecreaseContractReputation(OOJS_NATIVE_ARGS);
+static JSValue PlayerIncreasePassengerReputation(OOJS_NATIVE_ARGS);
+static JSValue PlayerDecreasePassengerReputation(OOJS_NATIVE_ARGS);
+static JSValue PlayerIncreaseParcelReputation(OOJS_NATIVE_ARGS);
+static JSValue PlayerDecreaseParcelReputation(OOJS_NATIVE_ARGS);
+static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS);
+static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS);
+static JSValue PlayerSetPlayerRole(OOJS_NATIVE_ARGS);
+static JSValue PlayerStopAudioMessage(OOJS_NATIVE_ARGS);
 }  // namespace
 
 namespace {
-static ClassDef sPlayerClass = {
-    "Player",
-    ClassFlag::HasPrivate,
-
-    nullptr,            // addProperty (engine default: PropertyStub)
-    nullptr,            // delProperty (engine default: PropertyStub)
-    PlayerGetProperty,  // getProperty
-    PlayerSetProperty,  // setProperty
-    nullptr,            // enumerate (engine default: EnumerateStub)
-    nullptr,  // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
-    nullptr,  // resolve (engine default: ResolveStub)
-    nullptr,  // convert (engine default: ConvertStub)
-    OOJSObjectWrapperFinalize,  // finalize
-    nullptr,                    // call
-    nullptr,                    // construct
-    nullptr,  // backend: owned by the façade backend, must start null
+static JSClassDef sPlayerClass = {
+    .class_name = "Player",
+    .finalizer = OOJSObjectWrapperFinalize,
 };
 }  // namespace
 
@@ -165,176 +120,109 @@ enum : std::uint8_t {
 };
 
 namespace {
-static PropertySpec sPlayerProperties[] = {
-    // JS name					ID
-    // flags
-    {"alertAltitude", kPlayer_alertAltitude,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"alertCondition", kPlayer_alertCondition,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"alertEnergy", kPlayer_alertEnergy,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"alertHostiles", kPlayer_alertHostiles,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"alertMassLocked", kPlayer_alertMassLocked,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"alertTemperature", kPlayer_alertTemperature,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"bounty", kPlayer_bounty,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"contractReputation", kPlayer_contractReputation,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"contractReputationPrecise", kPlayer_contractReputationPrecise,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"credits", kPlayer_credits,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"dockingClearanceStatus", kPlayer_dockingClearanceStatus,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"escapePodRescueTime", kPlayer_escapePodRescueTime,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"legalStatus", kPlayer_legalStatus,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"name", kPlayer_name,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"parcelReputation", kPlayer_parcelReputation,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"parcelReputationPrecise", kPlayer_parcelReputationPrecise,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"passengerReputation", kPlayer_passengerReputation,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"passengerReputationPrecise", kPlayer_passengerReputationPrecise,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"rank", kPlayer_rank,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"roleWeights", kPlayer_roleWeights,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"score", kPlayer_score,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"trumbleCount", kPlayer_trumbleCount,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {0}};
-}  // namespace
-
-// A raw jsapi mirror of sPlayerProperties, used only for the bad-property error
-// reporters in OOJavaScriptEngine.m (OOJSReportBadPropertySelector/Value),
-// which are shared across every binding file and take a
-// ooscript::PropertySpec*.
-namespace {
-static ooscript::PropertySpec sPlayerPropertiesRaw[] = {
-    // JS name					ID
-    // flags
-    {"alertAltitude", kPlayer_alertAltitude, OOJS_PROP_READONLY_CB},
-    {"alertCondition", kPlayer_alertCondition, OOJS_PROP_READONLY_CB},
-    {"alertEnergy", kPlayer_alertEnergy, OOJS_PROP_READONLY_CB},
-    {"alertHostiles", kPlayer_alertHostiles, OOJS_PROP_READONLY_CB},
-    {"alertMassLocked", kPlayer_alertMassLocked, OOJS_PROP_READONLY_CB},
-    {"alertTemperature", kPlayer_alertTemperature, OOJS_PROP_READONLY_CB},
-    {"bounty", kPlayer_bounty, OOJS_PROP_READWRITE_CB},
-    {"contractReputation", kPlayer_contractReputation, OOJS_PROP_READONLY_CB},
-    {"contractReputationPrecise", kPlayer_contractReputationPrecise,
-     OOJS_PROP_READONLY_CB},
-    {"credits", kPlayer_credits, OOJS_PROP_READWRITE_CB},
-    {"dockingClearanceStatus", kPlayer_dockingClearanceStatus,
-     OOJS_PROP_READONLY_CB},
-    {"escapePodRescueTime", kPlayer_escapePodRescueTime,
-     OOJS_PROP_READWRITE_CB},
-    {"legalStatus", kPlayer_legalStatus, OOJS_PROP_READONLY_CB},
-    {"name", kPlayer_name, OOJS_PROP_READWRITE_CB},
-    {"parcelReputation", kPlayer_parcelReputation, OOJS_PROP_READONLY_CB},
-    {"parcelReputationPrecise", kPlayer_parcelReputationPrecise,
-     OOJS_PROP_READONLY_CB},
-    {"passengerReputation", kPlayer_passengerReputation, OOJS_PROP_READONLY_CB},
-    {"passengerReputationPrecise", kPlayer_passengerReputationPrecise,
-     OOJS_PROP_READONLY_CB},
-    {"rank", kPlayer_rank, OOJS_PROP_READONLY_CB},
-    {"roleWeights", kPlayer_roleWeights, OOJS_PROP_READONLY_CB},
-    {"score", kPlayer_score, OOJS_PROP_READWRITE_CB},
-    {"trumbleCount", kPlayer_trumbleCount, OOJS_PROP_READONLY_CB},
-    {0}};
+static const JSCFunctionListEntry sPlayerProperties[] = {
+    // JS name, getter, setter, ID
+    OOJS_PROPERTY_RO("alertAltitude", PlayerGetProperty, kPlayer_alertAltitude),
+    OOJS_PROPERTY_RO("alertCondition", PlayerGetProperty,
+                     kPlayer_alertCondition),
+    OOJS_PROPERTY_RO("alertEnergy", PlayerGetProperty, kPlayer_alertEnergy),
+    OOJS_PROPERTY_RO("alertHostiles", PlayerGetProperty, kPlayer_alertHostiles),
+    OOJS_PROPERTY_RO("alertMassLocked", PlayerGetProperty,
+                     kPlayer_alertMassLocked),
+    OOJS_PROPERTY_RO("alertTemperature", PlayerGetProperty,
+                     kPlayer_alertTemperature),
+    OOJS_PROPERTY_RW("bounty", PlayerGetProperty, PlayerSetProperty,
+                     kPlayer_bounty),
+    OOJS_PROPERTY_RO("contractReputation", PlayerGetProperty,
+                     kPlayer_contractReputation),
+    OOJS_PROPERTY_RO("contractReputationPrecise", PlayerGetProperty,
+                     kPlayer_contractReputationPrecise),
+    OOJS_PROPERTY_RW("credits", PlayerGetProperty, PlayerSetProperty,
+                     kPlayer_credits),
+    OOJS_PROPERTY_RO("dockingClearanceStatus", PlayerGetProperty,
+                     kPlayer_dockingClearanceStatus),
+    OOJS_PROPERTY_RW("escapePodRescueTime", PlayerGetProperty,
+                     PlayerSetProperty, kPlayer_escapePodRescueTime),
+    OOJS_PROPERTY_RO("legalStatus", PlayerGetProperty, kPlayer_legalStatus),
+    OOJS_PROPERTY_RW("name", PlayerGetProperty, PlayerSetProperty,
+                     kPlayer_name),
+    OOJS_PROPERTY_RO("parcelReputation", PlayerGetProperty,
+                     kPlayer_parcelReputation),
+    OOJS_PROPERTY_RO("parcelReputationPrecise", PlayerGetProperty,
+                     kPlayer_parcelReputationPrecise),
+    OOJS_PROPERTY_RO("passengerReputation", PlayerGetProperty,
+                     kPlayer_passengerReputation),
+    OOJS_PROPERTY_RO("passengerReputationPrecise", PlayerGetProperty,
+                     kPlayer_passengerReputationPrecise),
+    OOJS_PROPERTY_RO("rank", PlayerGetProperty, kPlayer_rank),
+    OOJS_PROPERTY_RO("roleWeights", PlayerGetProperty, kPlayer_roleWeights),
+    OOJS_PROPERTY_RW("score", PlayerGetProperty, PlayerSetProperty,
+                     kPlayer_score),
+    OOJS_PROPERTY_RO("trumbleCount", PlayerGetProperty, kPlayer_trumbleCount),
+};
 }  // namespace
 
 namespace {
-static FunctionSpec sPlayerMethods[] = {
-    // JS name							Function
-    // min args	flags
-    {"addMessageToArrivalReport", PlayerAddMessageToArrivalReport, 1, 0},
-    {"audioMessage", PlayerAudioMessage, 1, 0},
-    {"commsMessage", PlayerCommsMessage, 1, 0},
-    {"consoleMessage", PlayerConsoleMessage, 1, 0},
-    {"decreaseContractReputation", PlayerDecreaseContractReputation, 0, 0},
-    {"decreaseParcelReputation", PlayerDecreaseParcelReputation, 0, 0},
-    {"decreasePassengerReputation", PlayerDecreasePassengerReputation, 0, 0},
-    {"endScenario", PlayerEndScenario, 1, 0},
-    {"increaseContractReputation", PlayerIncreaseContractReputation, 0, 0},
-    {"increaseParcelReputation", PlayerIncreaseParcelReputation, 0, 0},
-    {"increasePassengerReputation", PlayerIncreasePassengerReputation, 0, 0},
-    {"replaceShip", PlayerReplaceShip, 1, 0},
-    {"setEscapePodDestination", PlayerSetEscapePodDestination, 1,
-     0},  // null destination must be set explicitly
-    {"setPlayerRole", PlayerSetPlayerRole, 1, 0},
-    {"stopAudioMessage", PlayerStopAudioMessage, 0, 0},
-    {0}};
+static const JSCFunctionListEntry sPlayerMethods[] = {
+    // JS name, min args, function
+    JS_CFUNC_DEF("addMessageToArrivalReport", 1,
+                 PlayerAddMessageToArrivalReport),
+    JS_CFUNC_DEF("audioMessage", 1, PlayerAudioMessage),
+    JS_CFUNC_DEF("commsMessage", 1, PlayerCommsMessage),
+    JS_CFUNC_DEF("consoleMessage", 1, PlayerConsoleMessage),
+    JS_CFUNC_DEF("decreaseContractReputation", 0,
+                 PlayerDecreaseContractReputation),
+    JS_CFUNC_DEF("decreaseParcelReputation", 0, PlayerDecreaseParcelReputation),
+    JS_CFUNC_DEF("decreasePassengerReputation", 0,
+                 PlayerDecreasePassengerReputation),
+    JS_CFUNC_DEF("endScenario", 1, PlayerEndScenario),
+    JS_CFUNC_DEF("increaseContractReputation", 0,
+                 PlayerIncreaseContractReputation),
+    JS_CFUNC_DEF("increaseParcelReputation", 0, PlayerIncreaseParcelReputation),
+    JS_CFUNC_DEF("increasePassengerReputation", 0,
+                 PlayerIncreasePassengerReputation),
+    JS_CFUNC_DEF("replaceShip", 1, PlayerReplaceShip),
+    JS_CFUNC_DEF("setEscapePodDestination", 1,
+                 PlayerSetEscapePodDestination),  // null destination must be
+                                                  // set explicitly
+    JS_CFUNC_DEF("setPlayerRole", 1, PlayerSetPlayerRole),
+    JS_CFUNC_DEF("stopAudioMessage", 0, PlayerStopAudioMessage),
+};
 }  // namespace
 
 // *** Public ***
 
-void InitOOJSPlayer(ooscript::Context context, ooscript::Object global) {
-  Object proto = ooscript::initClass(
-      (context), (global), nullptr, &sPlayerClass, OOJSUnconstructableConstruct,
-      0, sPlayerProperties, sPlayerMethods, nullptr, nullptr);
-  sPlayerPrototype = (proto);
-  OOJSRegisterObjectConverter(&sPlayerClass, OOJSBasicPrivateObjectConverter);
+void InitOOJSPlayer(JSContext* context, JSValueConst global) {
+  OOJSRegisterClass(&sPlayerClassID, &sPlayerClass);
+  OOJSInitClass(context, global, sPlayerClassID, JS_UNDEFINED,
+                OOJSUnconstructableConstruct, 0, sPlayerProperties,
+                OOJS_COUNT(sPlayerProperties), sPlayerMethods,
+                OOJS_COUNT(sPlayerMethods), nullptr, 0);
+  OOJSRegisterObjectConverter(sPlayerClassID, OOJSBasicPrivateObjectConverter);
 
-  // Create player object as a property of the global object.
-  Object playerObj = ooscript::defineObject(
-      (context), (global), "player", &sPlayerClass, proto, OOJS_PROP_READONLY);
-  sPlayerObject = (playerObj);
+  /*	Create player object as a property of the global object. As before, it
+          has no private data. The global object owns the only reference; the
+          property is read-only and permanent, so JSPlayerObject() can look it
+          up there rather than keeping a reference that must be dropped on
+          reset.
+  */
+  JSValue playerObject = JS_NewObjectClass(context, (int)sPlayerClassID);
+  JS_DefinePropertyValueStr(context, global, "player", playerObject,
+                            OOJS_PROP_READONLY);  // consumes playerObject
 }
 
-ooscript::ClassDef* JSPlayerClass(void) { return &sPlayerClass; }
+JSClassID JSPlayerClassID(void) { return sPlayerClassID; }
 
-ooscript::Object JSPlayerPrototype(void) { return sPlayerPrototype; }
-
-ooscript::Object JSPlayerObject(void) { return sPlayerObject; }
+JSValue JSPlayerObject(void) {
+  JSContext* context = OOJSAcquireContext();
+  // Not OOJavaScriptEngine::globalObject(): this is used while the engine is
+  // being set up.
+  JSValue global = JS_GetGlobalObject(context);
+  JSValue result = JS_GetPropertyStr(context, global, "player");
+  JS_FreeValue(context, global);
+  OOJSRelinquishContext(context);
+  return result;
+}
 
 PlayerEntity* OOPlayerForScripting(void) {
   PlayerEntity* player = PLAYER;
@@ -344,18 +232,13 @@ PlayerEntity* OOPlayerForScripting(void) {
 }
 
 namespace {
-static bool PlayerGetProperty(Context cx, Object obj, PropertyId propID,
-                              Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-
+static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   oo::PList result;  // null maps to null
   PlayerEntity* player = OOPlayerForScripting();
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kPlayer_name:
       if (const std::optional<std::string> name =
               (player != nullptr ? player->commanderName()
@@ -364,16 +247,16 @@ static bool PlayerGetProperty(Context cx, Object obj, PropertyId propID,
       break;
 
     case kPlayer_score:
-      *(value) = ooscript::int32Value(
+      return JS_NewInt32(
+          context,
           (player != nullptr ? player->PlayerEntity::score()
                              : unsigned{}));  // qualified: the final overrider,
                                               // so the binding test stands in
                                               // for it
-      return true;
 
     case kPlayer_credits:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->creditBalance() : 0.0), value);
+      return JS_NewNumber(context,
+                          (player != nullptr ? player->creditBalance() : 0.0));
 
     case kPlayer_rank: {
       const std::optional<std::string> text =
@@ -382,128 +265,113 @@ static bool PlayerGetProperty(Context cx, Object obj, PropertyId propID,
                    ? player->PlayerEntity::score()
                    : unsigned{}));  // qualified: the final overrider, so the
                                     // binding test stands in for it
-      *(value) = OOJSValueFromPList(
+      return OOJSValueFromPList(
           context, text.has_value() ? oo::PList(*text) : oo::PList());
     }
-      return true;
 
     case kPlayer_legalStatus: {
       const std::optional<std::string> text =
           cxx_OODisplayStringFromLegalStatus(
               (player != nullptr ? player->getLegalStatus() : int{}));
-      *(value) = OOJSValueFromPList(
+      return OOJSValueFromPList(
           context, text.has_value() ? oo::PList(*text) : oo::PList());
     }
-      return true;
 
     case kPlayer_alertCondition:
-      *(value) = ooscript::int32Value(
+      return JS_NewInt32(
+          context,
           (player != nullptr
                ? player->PlayerEntity::getAlertCondition()
                : OOAlertCondition{}));  // qualified: the final overrider, so
                                         // the binding test stands in for it
-      return true;
 
     case kPlayer_alertTemperature:
-      *(value) = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           (player != nullptr ? player->getAlertFlags() : int{}) &
           ALERT_FLAG_TEMP);
-      return true;
 
     case kPlayer_alertMassLocked:
-      *(value) = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           (player != nullptr ? player->getAlertFlags() : int{}) &
           ALERT_FLAG_MASS_LOCK);
-      return true;
 
     case kPlayer_alertAltitude:
-      *(value) = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           (player != nullptr ? player->getAlertFlags() : int{}) &
           ALERT_FLAG_ALT);
-      return true;
 
     case kPlayer_alertEnergy:
-      *(value) = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           (player != nullptr ? player->getAlertFlags() : int{}) &
           ALERT_FLAG_ENERGY);
-      return true;
 
     case kPlayer_alertHostiles:
-      *(value) = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           (player != nullptr ? player->getAlertFlags() : int{}) &
           ALERT_FLAG_HOSTILES);
-      return true;
 
     case kPlayer_escapePodRescueTime:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->escapePodRescueTime() : 0.0), value);
+      return JS_NewNumber(
+          context, (player != nullptr ? player->escapePodRescueTime() : 0.0));
 
     case kPlayer_trumbleCount:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->PlayerEntity::getTrumbleCount() : 0),
-          value);  // qualified: the final overrider, so the binding test stands
-                   // in for it
+      return JS_NewNumber(
+          context,
+          (player != nullptr ? player->PlayerEntity::getTrumbleCount()
+                             : 0));  // qualified: the final overrider, so the
+                                     // binding test stands in for it
 
       /* For compatibility with previous versions, these are still on
        * a -7 to +7 scale */
     case kPlayer_contractReputation:
-      return ooscript::newNumberValue(
-          cx,
+      return JS_NewNumber(
+          context,
           (int)(((float)(player != nullptr ? player->contractReputation()
                                            : int{})) /
-                10.0),
-          value);
+                10.0));
 
     case kPlayer_passengerReputation:
-      return ooscript::newNumberValue(
-          cx,
+      return JS_NewNumber(
+          context,
           (int)(((float)(player != nullptr ? player->passengerReputation()
                                            : int{})) /
-                10.0),
-          value);
+                10.0));
 
     case kPlayer_parcelReputation:
-      return ooscript::newNumberValue(
-          cx,
-          (int)(((float)(player != nullptr ? player->parcelReputation()
-                                           : int{})) /
-                10.0),
-          value);
+      return JS_NewNumber(
+          context, (int)(((float)(player != nullptr ? player->parcelReputation()
+                                                    : int{})) /
+                         10.0));
 
       /* Full-precision reputations */
     case kPlayer_contractReputationPrecise:
-      return ooscript::newNumberValue(
-          cx,
+      return JS_NewNumber(
+          context,
           ((float)(player != nullptr ? player->contractReputation() : int{})) /
-              10.0,
-          value);
+              10.0);
 
     case kPlayer_passengerReputationPrecise:
-      return ooscript::newNumberValue(
-          cx,
+      return JS_NewNumber(
+          context,
           ((float)(player != nullptr ? player->passengerReputation() : int{})) /
-              10.0,
-          value);
+              10.0);
 
     case kPlayer_parcelReputationPrecise:
-      return ooscript::newNumberValue(
-          cx,
+      return JS_NewNumber(
+          context,
           ((float)(player != nullptr ? player->parcelReputation() : int{})) /
-              10.0,
-          value);
+              10.0);
 
     case kPlayer_dockingClearanceStatus:
       // EMMSTRAN: OOConstToJSString-ify this.
-      *(value) = OOJSValueFromPList(
+      return OOJSValueFromPList(
           context, oo::PList(cxx_DockingClearanceStatusToString(
                        (player != nullptr ? player->getDockingClearanceStatus()
                                           : OODockingClearanceStatus{}))));
-      return true;
 
     case kPlayer_bounty:
-      *(value) = ooscript::int32Value(
-          (player != nullptr ? player->getLegalStatus() : int{}));
-      return true;
+      return JS_NewInt32(
+          context, (player != nullptr ? player->getLegalStatus() : int{}));
 
     case kPlayer_roleWeights: {
       const std::vector<std::string> roleWeights =
@@ -514,25 +382,20 @@ static bool PlayerGetProperty(Context cx, Object obj, PropertyId propID,
     } break;
 
     default:
-      OOJSReportBadPropertySelector(context, (obj), (propID),
-                                    sPlayerPropertiesRaw);
-      return false;
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sPlayerProperties,
+                                    OOJS_COUNT(sPlayerProperties));
+      return OOJSNativeFailure(context);
   }
 
-  *(value) = OOJSValueFromPList(context, result);
-  return true;
+  return OOJSValueFromPList(context, result);
 
   OOJS_NATIVE_EXIT
 }
 }  // namespace
 
 namespace {
-static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID,
-                              bool /*strict*/, Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-
+static JSValue PlayerSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -540,37 +403,32 @@ static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID,
   int32_t iValue;
   std::optional<std::string> sValue;
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kPlayer_name:
-      sValue = cxx_OOStringFromJSValue(context, *(value));
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         if (player != nullptr) player->setCommanderName(sValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
-    case kPlayer_score: {
-      std::int32_t iValue32 = 0;
-      if (ooscript::valueToInt32(cx, *value, &iValue32)) {
-        iValue = (int32_t)iValue32;
+    case kPlayer_score:
+      if (OOJSValueToInt32(context, value, &iValue)) {
         iValue = MAX(iValue, 0);
         if (player != nullptr) player->setScore(iValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
-    }
 
     case kPlayer_credits:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (player != nullptr) player->setCreditBalance(fValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
-    case kPlayer_bounty: {
-      std::int32_t iValue32 = 0;
-      if (ooscript::valueToInt32(cx, *value, &iValue32)) {
-        iValue = (int32_t)iValue32;
+    case kPlayer_bounty:
+      if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue < 0) iValue = 0;
         if (player != nullptr)
           player->PlayerEntity::setBounty(
@@ -578,27 +436,27 @@ static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID,
               kOOLegalStatusReasonByScript);  // qualified: the final overrider,
                                               // so the binding test stands in
                                               // for it
-        return true;
+        return JS_UNDEFINED;
       }
       break;
-    }
 
     case kPlayer_escapePodRescueTime:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (player != nullptr) player->setEscapePodRescueTime(fValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, (obj), (propID),
-                                    sPlayerPropertiesRaw);
-      return false;
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sPlayerProperties,
+                                    OOJS_COUNT(sPlayerProperties));
+      return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, (obj), (propID), sPlayerPropertiesRaw,
-                             *(value));
-  return false;
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sPlayerProperties,
+                             OOJS_COUNT(sPlayerProperties), value);
+  return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }
@@ -608,24 +466,20 @@ static bool PlayerSetProperty(Context cx, Object obj, PropertyId propID,
 
 // commsMessage(message : String [, duration : Number])
 namespace {
-static bool PlayerCommsMessage(ooscript::Context context,
-                               ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerCommsMessage(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> message;
   double time = 4.5;
   bool gotTime = true;
 
-  if (oojsArgs.count() > 0)
-    message = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (oojsArgs.count() > 1)
-    gotTime = ooscript::valueToNumber((context), (OOJS_ARGV[1]), &time) ? true
-                                                                        : false;
+  if (argc > 0) message = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 1) gotTime = (JS_ToFloat64(context, &time, OOJS_ARGV[1]) == 0);
   if (!message.has_value() || !gotTime) {
-    cxx_OOJSReportBadArguments(context, "Player", "commsMessage",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
+    cxx_OOJSReportBadArguments(context, "Player", "commsMessage", argc,
+                               OOJS_ARGV, std::nullopt,
                                "message and optional duration");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   if (UNIVERSE != nullptr) UNIVERSE->addCommsMessage(message, time);
@@ -643,24 +497,20 @@ static bool PlayerCommsMessage(ooscript::Context context,
 
 // consoleMessage(message : String [, duration : Number])
 namespace {
-static bool PlayerConsoleMessage(ooscript::Context context,
-                                 ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerConsoleMessage(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> message;
   double time = 3.0;
   bool gotTime = true;
 
-  if (oojsArgs.count() > 0)
-    message = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
-  if (oojsArgs.count() > 1)
-    gotTime = ooscript::valueToNumber((context), (OOJS_ARGV[1]), &time) ? true
-                                                                        : false;
+  if (argc > 0) message = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 1) gotTime = (JS_ToFloat64(context, &time, OOJS_ARGV[1]) == 0);
   if (!message.has_value() || !gotTime) {
-    cxx_OOJSReportBadArguments(context, "Player", "consoleMessage",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
+    cxx_OOJSReportBadArguments(context, "Player", "consoleMessage", argc,
+                               OOJS_ARGV, std::nullopt,
                                "message and optional duration");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   if (UNIVERSE != nullptr) UNIVERSE->addMessage(message, time);
@@ -672,19 +522,16 @@ static bool PlayerConsoleMessage(ooscript::Context context,
 
 // endScenario(scenario : String)
 namespace {
-static bool PlayerEndScenario(ooscript::Context context,
-                              ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerEndScenario(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> scenario;
 
-  if (oojsArgs.count() > 0)
-    scenario = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 0) scenario = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!scenario.has_value()) {
-    cxx_OOJSReportBadArguments(context, "Player", "endScenario",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
-                               "scenario key");
-    return false;
+    cxx_OOJSReportBadArguments(context, "Player", "endScenario", argc,
+                               OOJS_ARGV, std::nullopt, "scenario key");
+    return OOJSNativeFailure(context);
   }
 
   OOJS_RETURN_BOOL(
@@ -696,8 +543,7 @@ static bool PlayerEndScenario(ooscript::Context context,
 
 // increaseContractReputation()
 namespace {
-static bool PlayerIncreaseContractReputation(ooscript::Context context,
-                                             ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerIncreaseContractReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -710,8 +556,7 @@ static bool PlayerIncreaseContractReputation(ooscript::Context context,
 
 // decreaseContractReputation()
 namespace {
-static bool PlayerDecreaseContractReputation(ooscript::Context context,
-                                             ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerDecreaseContractReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -724,8 +569,7 @@ static bool PlayerDecreaseContractReputation(ooscript::Context context,
 
 // increaseParcelReputation()
 namespace {
-static bool PlayerIncreaseParcelReputation(ooscript::Context context,
-                                           ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerIncreaseParcelReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -738,8 +582,7 @@ static bool PlayerIncreaseParcelReputation(ooscript::Context context,
 
 // decreaseParcelReputation()
 namespace {
-static bool PlayerDecreaseParcelReputation(ooscript::Context context,
-                                           ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerDecreaseParcelReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -752,8 +595,7 @@ static bool PlayerDecreaseParcelReputation(ooscript::Context context,
 
 // increasePassengerReputation()
 namespace {
-static bool PlayerIncreasePassengerReputation(ooscript::Context context,
-                                              ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerIncreasePassengerReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -766,8 +608,7 @@ static bool PlayerIncreasePassengerReputation(ooscript::Context context,
 
 // decreasePassengerReputation()
 namespace {
-static bool PlayerDecreasePassengerReputation(ooscript::Context context,
-                                              ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerDecreasePassengerReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (PlayerEntity* player = OOPlayerForScripting())
@@ -780,20 +621,18 @@ static bool PlayerDecreasePassengerReputation(ooscript::Context context,
 
 // addMessageToArrivalReport(message : String)
 namespace {
-static bool PlayerAddMessageToArrivalReport(ooscript::Context context,
-                                            ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerAddMessageToArrivalReport(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> report;
   PlayerEntity* player = OOPlayerForScripting();
 
-  if (oojsArgs.count() > 0)
-    report = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 0) report = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!report.has_value()) {
     cxx_OOJSReportBadArguments(context, "Player", "addMessageToArrivalReport",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "string (arrival message)");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "string (arrival message)");
+    return OOJSNativeFailure(context);
   }
 
   if (player != nullptr) player->addMessageToReport(*report);
@@ -804,20 +643,18 @@ static bool PlayerAddMessageToArrivalReport(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool PlayerAudioMessage(ooscript::Context context,
-                               ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerAudioMessage(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> audioMessage;
   PlayerEntity* player = OOPlayerForScripting();
 
-  if (oojsArgs.count() > 0)
-    audioMessage = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 0) audioMessage = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!audioMessage.has_value()) {
-    cxx_OOJSReportBadArguments(context, "Player", "audioMessage",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
+    cxx_OOJSReportBadArguments(context, "Player", "audioMessage", argc,
+                               OOJS_ARGV, std::nullopt,
                                "audiomessage (string)");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   if ((player != nullptr ? player->getIsSpeechOn() : OOSpeechSettings{}) >=
@@ -832,37 +669,36 @@ static bool PlayerAudioMessage(ooscript::Context context,
 
 // replaceShip (shipyard-key : String)
 namespace {
-static bool PlayerReplaceShip(ooscript::Context context,
-                              ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> shipKey;
   PlayerEntity* player = OOPlayerForScripting();
   bool success = false;
-  int personality = 0;
+  int32_t personality = 0;
 
-  if (oojsArgs.count() > 0)
-    shipKey = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 0) shipKey = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!shipKey.has_value()) {
-    cxx_OOJSReportBadArguments(context, "Player", "replaceShip",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "string (shipyard key)");
-    return false;
+    cxx_OOJSReportBadArguments(context, "Player", "replaceShip", MIN(argc, 1),
+                               OOJS_ARGV, std::nullopt,
+                               "string (shipyard key)");
+    return OOJSNativeFailure(context);
   }
 
   if (EXPECT_NOT(!((player != nullptr ? player->status() : OOEntityStatus{}) ==
                    STATUS_DOCKED))) {
     cxx_OOJSReportError(
         context, "Player.replaceShip() only works while the player is docked.");
-    return false;
+    return JS_EXCEPTION;
   }
 
   success =
       (player != nullptr ? player->replaceShipWithNamedShip(*shipKey) : false);
-  if (oojsArgs.count() > 1) {
-    std::int32_t personality32 = 0;
-    ooscript::valueToInt32((context), (OOJS_ARGV[1]), &personality32);
-    personality = personality32;
+  if (argc > 1) {
+    // As before, an invalid personality is ignored (personality stays 0);
+    // don't leave the conversion error pending.
+    if (!OOJSValueToInt32(context, OOJS_ARGV[1], &personality))
+      JS_FreeValue(context, JS_GetException(context));
     if (personality >= 0 && (uint16_t)personality < ENTITY_PERSONALITY_MAX) {
       if (player != nullptr)
         player->setEntityPersonalityInt((uint16_t)personality);
@@ -893,22 +729,21 @@ static bool PlayerReplaceShip(ooscript::Context context,
 
 // setEscapePodDestination(Entity | 'NEARBY_SYSTEM')
 namespace {
-static bool PlayerSetEscapePodDestination(ooscript::Context context,
-                                          ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (EXPECT_NOT(!OOIsPlayerStale())) {
     cxx_OOJSReportError(context,
                         "Player.setEscapePodDestination() only works while the "
                         "escape pod is in flight.");
-    return false;
+    return JS_EXCEPTION;
   }
 
   bool OK = false;
   oo::PList destValue;
   PlayerEntity* player = OOPlayerForScripting();
 
-  if (oojsArgs.count() == 1) {
+  if (argc == 1) {
     destValue = cxx_OOJSPListFromJSValue(context, OOJS_ARGV[0]);
     Entity* destEntity = oo::EntityIn(destValue);  // the entity node's
 
@@ -972,9 +807,8 @@ static bool PlayerSetEscapePodDestination(ooscript::Context context,
         OK = true;
       }
     } else {
-      bool bValue;
-      if (ooscript::valueToBoolean((context), (OOJS_ARGV[0]), &bValue) &&
-          bValue == false) {
+      int bValue = JS_ToBool(context, OOJS_ARGV[0]);
+      if (bValue == 0) {
         if (player != nullptr) player->setDockTarget(NULL);
         OK = true;
       }
@@ -983,10 +817,11 @@ static bool PlayerSetEscapePodDestination(ooscript::Context context,
 
   if (OK == false) {
     cxx_OOJSReportBadArguments(context, "Player", "setEscapePodDestination",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
+                               argc, OOJS_ARGV, std::nullopt,
                                "a valid station, null, or 'NEARBY_SYSTEM'");
+    return OOJSNativeFailure(context);
   }
-  return OK;
+  OOJS_RETURN_VOID;
 
   OOJS_NATIVE_EXIT
 }
@@ -994,47 +829,45 @@ static bool PlayerSetEscapePodDestination(ooscript::Context context,
 
 // setPlayerRole (role-key : String [, index : Number])
 namespace {
-static bool PlayerSetPlayerRole(ooscript::Context context,
-                                ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerSetPlayerRole(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
   PlayerEntity* player = OOPlayerForScripting();
   uint32_t index = 0;
 
-  if (oojsArgs.count() > 0)
-    role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 0) role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (!role.has_value()) {
-    cxx_OOJSReportBadArguments(
-        context, "Player", "setPlayerRole", MIN(oojsArgs.count(), 1U),
-        OOJS_ARGV, std::nullopt, "string (role) [, number (index)]");
-    return false;
+    cxx_OOJSReportBadArguments(context, "Player", "setPlayerRole", MIN(argc, 1),
+                               OOJS_ARGV, std::nullopt,
+                               "string (role) [, number (index)]");
+    return OOJSNativeFailure(context);
   }
 
-  if (oojsArgs.count() > 1) {
-    std::uint32_t index32 = 0;
-    if (ooscript::valueToECMAUint32((context), (OOJS_ARGV[1]), &index32)) {
-      index = index32;
+  if (argc > 1) {
+    if (JS_ToUint32(context, &index, OOJS_ARGV[1]) == 0) {
       if (player != nullptr)
         player->PlayerEntity::addRoleToPlayer(
             *role, index);  // qualified: the final overrider, so the binding
                             // test stands in for it
-      return true;
+      OOJS_RETURN_VOID;
     }
+    // As before, fall back to the default slot if the index can't be
+    // converted.
+    JS_FreeValue(context, JS_GetException(context));
   }
   if (player != nullptr)
     player->PlayerEntity::addRoleToPlayer(
         *role);  // qualified: the final overrider, so the binding test stands
                  // in for it
-  return true;
+  OOJS_RETURN_VOID;
 
   OOJS_NATIVE_EXIT
 }
 }  // namespace
 
 namespace {
-static bool PlayerStopAudioMessage(ooscript::Context context,
-                                   ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerStopAudioMessage(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
   if ((UNIVERSE != nullptr ? UNIVERSE->isSpeaking() : false)) {
     if (UNIVERSE != nullptr) UNIVERSE->stopSpeaking();

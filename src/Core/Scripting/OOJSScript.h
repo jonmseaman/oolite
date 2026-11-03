@@ -76,23 +76,19 @@ class OOJSScript : public OOScript {
   static void popScript(OOJSScript* script);
 
   /*	Call a method.
-          Requires a request on context.
-          outResult may be NULL.
+          outResult may be NULL; if not, it is owned by the caller.
   */
-  bool callMethod(ooscript::PropertyId methodID, ooscript::Context context,
-                  ooscript::Value* argv, int argc,
-                  ooscript::Value* outResult) override;
+  bool callMethod(JSAtom methodID, JSContext* context, JSValueConst* argv,
+                  int argc, JSValue* outResult) override;
 
   // The property as cxx_OOJSPListFromJSValue() converts it; null when there is
   // no script object or it could not be read.
-  oo::PList propertyWithID(ooscript::PropertyId propID,
-                           ooscript::Context context);
+  oo::PList propertyWithID(JSAtom propID, JSContext* context);
   // Set a property which can be modified or deleted by the script.
-  bool setProperty(const oo::PList& value, ooscript::PropertyId propID,
-                   ooscript::Context context);
+  bool setProperty(const oo::PList& value, JSAtom propID, JSContext* context);
   // Set a special property which cannot be modified or deleted by the script.
-  bool defineProperty(const oo::PList& value, ooscript::PropertyId propID,
-                      ooscript::Context context);
+  bool defineProperty(const oo::PList& value, JSAtom propID,
+                      JSContext* context);
 
   oo::PList propertyNamed(const std::string& name);
   bool setProperty(const oo::PList& value, const std::string& name);
@@ -101,7 +97,7 @@ class OOJSScript : public OOScript {
   // The JS glue (OOJSPrivateObject; -cxx_oo_jsClassName, -oo_jsValueInContext:
   // and the -cxx_oo_jsDescription toString() answered).
   std::optional<std::string> jsClassName();
-  ooscript::Value jsValueInContext(ooscript::Context context) override;
+  JSValue jsValueInContext(JSContext* context) override;  // owned
   std::optional<std::string> jsDescription() override;
 
   // OOScript
@@ -116,8 +112,9 @@ class OOJSScript : public OOScript {
   std::string scriptNameFromPath(const std::optional<std::string>& path);
   oo::PList::Dict defaultPropertiesFromPath(
       const std::optional<std::string>& path);
+  void checkForTickle(JSContext* context);
 
-  ooscript::Object _jsSelf = {};
+  JSValue _jsSelf = JS_UNDEFINED;  // Owned.
 
   std::optional<std::string> _name;
   std::optional<std::string> _description;
@@ -125,4 +122,4 @@ class OOJSScript : public OOScript {
   std::optional<std::string> _filePath;
 };
 
-void InitOOJSScript(ooscript::Context context, ooscript::Object global);
+void InitOOJSScript(JSContext* context, JSValueConst global);

@@ -26,16 +26,21 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
+#include <quickjs.h>
 
-void InitOOJSWaypoint(ooscript::Context context, ooscript::Object global);
+#include <optional>
+#include <string>
+
+#include "OOFoundation.h"
+
+void InitOOJSWaypoint(JSContext* context, JSValueConst global);
+
+JSClassID JSWaypointClassID(void);
 
 /*	The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the
    engine reaches through the root's JS members: the C++ class's overrides call
    these.
+   Its JS class is JSWaypointClassID() (#768's -oo_jsClassID).
 */
-void OOJSWaypointGetJSClass(ooscript::ClassDef** outClass,
-                            ooscript::Object* outPrototype);
 std::optional<std::string> OOJSWaypointJSClassName(void);
 bool OOJSWaypointIsVisibleToScripts(void);

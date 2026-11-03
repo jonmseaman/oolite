@@ -38,7 +38,7 @@ uint32_t gDebugFlags = 0;
 
 extern PlayerEntity* gOOPlayer;
 extern Universe* gSharedUniverse;
-extern ooscript::Context gOOJSMainThreadContext;
+extern JSContext* gOOJSMainThreadContext;
 
 class TestProxyPlayer : public PlayerEntity {
  public:
@@ -93,7 +93,7 @@ void SetUp() {
   // on the main thread's context, so there is one, with nothing in it.
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
-        ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
+        JS_NewContext(JS_NewRuntime());
 }
 
 // An unpiloted ship (a crewed one would ask the universe for a pilot). The

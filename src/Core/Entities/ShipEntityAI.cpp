@@ -50,7 +50,6 @@
 #include "WormholeEntity.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
-#include "ooscript/JSEngine.hpp"
 
 namespace {
 
@@ -86,19 +85,6 @@ int RandArgument(const std::string& token) {
 }
 
 }  // namespace
-
-/*
-   This file's one remaining direct engine call, the pending-exception report
-   at the end of -scanForNearestShipMatchingPredicate:, goes through the
-   ooscript façade (JSEngine.hpp) the way OOJSVector.mm does: the façade's own
-   reportPendingException entry point. SpiderMonkey still does the work
-   underneath.
-*/
-namespace ooscript {}
-using ooscript::Context;
-
-// Byte-identical façade <-> jsapi view, local to this call site (see
-// OOJSVector.mm).
 
 // AI category, OOAIPrivate (ship and station) and the station stubs. Members of
 // ShipEntity defined in the category's file.
@@ -2378,7 +2364,7 @@ void ShipEntity::scanForNearestShipMatchingPredicate(
       scriptCache = nullptr;
   std::string key;
   oo::Ref<OOJSFunction> function;
-  ooscript::Context context = NULL;
+  JSContext* context = NULL;
 
   context = OOJSAcquireContext();
 
@@ -2408,8 +2394,8 @@ void ShipEntity::scanForNearestShipMatchingPredicate(
     // Stuff expression in a function.
     const std::string predicateCode = "return " + expression + ";";
     function = OOJSFunction::initWithName(std::string("_oo_AIScanPredicate"),
-                                          NULL, predicateCode, 1, argNames,
-                                          aiName, 0, context);
+                                          JS_UNDEFINED, predicateCode, 1,
+                                          argNames, aiName, 0, context);
 
     // Cache function.
     if (function != nullptr) {
@@ -2421,17 +2407,16 @@ void ShipEntity::scanForNearestShipMatchingPredicate(
   }
 
   if (function != nullptr) {
-    ooscript::Object jsThis =
-        nullptr;  // the ship's JS object, as OOJSObjectFromNativeObject() made
-                  // of its object
-    if (!ooscript::valueToObject(context, OOJSEntityJSValue(this, context),
-                                 &jsThis))
-      jsThis = nullptr;
-    JSFunctionPredicateParameter param = {.context = context,
-                                          .function = function->functionValue(),
-                                          .jsThis = jsThis,
-                                          .errorFlag = false};
+    // The ship's JS object, as OOJSObjectFromNativeObject() made of its
+    // object. Owned.
+    JSValue jsThis = OOJSEntityJSValue(this, context);
+    JSFunctionPredicateParameter param = {
+        .context = context,
+        .function = function->function(),  // Borrowed.
+        .jsThis = jsThis,
+        .errorFlag = false};
     scanForNearestShipWithPredicate(JSFunctionPredicate, &param);
+    JS_FreeValue(context, jsThis);
   } else {
     // Report error (once per occurrence)
     static std::set<std::string> errorCache;
@@ -2451,7 +2436,7 @@ void ShipEntity::scanForNearestShipMatchingPredicate(
     if (getAI() != nullptr) getAI()->message("NOTHING_FOUND");
   }
 
-  ooscript::reportPendingException((context));
+  OOJSReportPendingException(context);
   OOJSRelinquishContext(context);
 }
 

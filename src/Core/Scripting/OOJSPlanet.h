@@ -27,17 +27,22 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
+#include <optional>
+#include <string>
+
 #include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
 class OOPlanetEntity;
 
-void InitOOJSPlanet(ooscript::Context context, ooscript::Object global);
+void InitOOJSPlanet(JSContext* context, JSValueConst global);
+
+JSClassID JSPlanetClassID(void);
 
 /*	The bodies of OOPlanetEntity (OOJavaScriptExtensions), which the engine
    reaches through the root Entity's virtual members: the C++ planet's overrides
    call these.
+   Its JS class is JSPlanetClassID() (#768's -oo_jsClassID).
 */
 bool OOJSPlanetIsVisibleToScripts(OOPlanetEntity* planet);
-void OOJSPlanetGetJSClass(ooscript::ClassDef** outClass,
-                          ooscript::Object* outPrototype);
 std::optional<std::string> OOJSPlanetJSClassName(OOPlanetEntity* planet);

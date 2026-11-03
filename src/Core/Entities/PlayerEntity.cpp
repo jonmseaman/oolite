@@ -534,8 +534,10 @@ OOAlertCondition PlayerEntity::alertCondition() { return getAlertCondition(); }
 int PlayerEntity::legalStatus() { return getLegalStatus(); }
 void PlayerEntity::suppressTargetLost() { getSuppressTargetLost(); }
 
-// The player's JS class name, which its facade's category PlayerEntity
-// (OOJavaScriptExtensions) answered.
+// The player's JS class and class name, which its category PlayerEntity
+// (OOJavaScriptExtensions) answers.
+JSClassID PlayerEntity::jsClassID() { return JSPlayerShipClassID(); }
+
 std::optional<std::string> PlayerEntity::jsClassName() {
   return OOJSPlayerShipJSClassName();
 }
@@ -1038,10 +1040,10 @@ void PlayerEntity::setInfoSystemID(OOSystemID sid, bool moveChart) {
   if (sid != info_system_id) {
     OOSystemID old = info_system_id;
     info_system_id = sid;
-    ooscript::Context context = OOJSAcquireContext();
+    JSContext* context = OOJSAcquireContext();
     ShipScriptEvent(context, this, "infoSystemWillChange",
-                    ooscript::int32Value(info_system_id),
-                    ooscript::int32Value(old));
+                    OOJSValueFromDouble(context, info_system_id),
+                    OOJSValueFromDouble(context, old));
     if (gui_screen == GUI_SCREEN_LONG_RANGE_CHART ||
         gui_screen == GUI_SCREEN_SHORT_RANGE_CHART) {
       if (moveChart) {
@@ -1069,8 +1071,8 @@ void PlayerEntity::setInfoSystemID(OOSystemID sid, bool moveChart) {
       }
     }
     ShipScriptEvent(context, this, "infoSystemChanged",
-                    ooscript::int32Value(info_system_id),
-                    ooscript::int32Value(old));
+                    OOJSValueFromDouble(context, info_system_id),
+                    OOJSValueFromDouble(context, old));
     OOJSRelinquishContext(context);
   }
 }
@@ -2728,7 +2730,7 @@ void PlayerEntity::completeSetUpAndSetTarget(bool /*setTarget*/) {
     validateCustomEquipActivationArray();
   }
 
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   {
     const oo::PList startLimit =
         oo::Defaults::standard().object("start-script-limit-value");
@@ -2741,7 +2743,7 @@ void PlayerEntity::completeSetUpAndSetTarget(bool /*setTarget*/) {
 }
 
 void PlayerEntity::startUpComplete() {
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   doWorldScriptEvent(OOJSID("startUpComplete"), context, NULL, 0,
                      kOOJSLongTimeLimit);
   OOJSRelinquishContext(context);
@@ -3763,9 +3765,11 @@ void PlayerEntity::updateAlertCondition() {
   OOAlertCondition cond = getAlertCondition();
   OOTimeAbsolute t = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
   if (cond != lastScriptAlertCondition) {
-    ShipScriptEventNoCx(this, "alertConditionChanged",
-                        ooscript::int32Value(cond),
-                        ooscript::int32Value(lastScriptAlertCondition));
+    JSContext* context = OOJSAcquireContext();
+    ShipScriptEvent(context, this, "alertConditionChanged",
+                    OOJSValueFromDouble(context, cond),
+                    OOJSValueFromDouble(context, lastScriptAlertCondition));
+    OOJSRelinquishContext(context);
     lastScriptAlertCondition = cond;
   }
   /* Update heuristic assessment of whether player is fleeing */
@@ -5645,11 +5649,11 @@ void PlayerEntity::cycleNextMultiFunctionDisplay(NSUInteger index) {
       setMultiFunctionDisplay(index, key);
     }
   }
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Value keyVal = OOJSValueFromPList(
+  JSContext* context = OOJSAcquireContext();
+  OOJSVal keyVal = OOJSValueFromPList(
       context, key.has_value() ? oo::PList(*key) : oo::PList());
   ShipScriptEvent(context, this, "mfdKeyChanged",
-                  ooscript::int32Value(activeMFD), keyVal);
+                  OOJSValueFromDouble(context, activeMFD), keyVal);
   OOJSRelinquishContext(context);
 }
 
@@ -5683,11 +5687,11 @@ void PlayerEntity::cyclePreviousMultiFunctionDisplay(NSUInteger index) {
       setMultiFunctionDisplay(index, key);
     }
   }
-  ooscript::Context context = OOJSAcquireContext();
-  ooscript::Value keyVal = OOJSValueFromPList(
+  JSContext* context = OOJSAcquireContext();
+  OOJSVal keyVal = OOJSValueFromPList(
       context, key.has_value() ? oo::PList(*key) : oo::PList());
   ShipScriptEvent(context, this, "mfdKeyChanged",
-                  ooscript::int32Value(activeMFD), keyVal);
+                  OOJSValueFromDouble(context, activeMFD), keyVal);
   OOJSRelinquishContext(context);
 }
 
@@ -5697,9 +5701,9 @@ void PlayerEntity::selectNextMultiFunctionDisplay() {
   NSUInteger mfdID = activeMFD + 1;
   if (UNIVERSE != nullptr)
     UNIVERSE->addMessage(cxx_OOExpandKey("mfd-N-selected", mfdID), 3.0);
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   ShipScriptEvent(context, this, "selectedMFDChanged",
-                  ooscript::int32Value(activeMFD));
+                  OOJSValueFromDouble(context, activeMFD));
   OOJSRelinquishContext(context);
 }
 
@@ -5713,9 +5717,9 @@ void PlayerEntity::selectPreviousMultiFunctionDisplay() {
   NSUInteger mfdID = activeMFD + 1;
   if (UNIVERSE != nullptr)
     UNIVERSE->addMessage(cxx_OOExpandKey("mfd-N-selected", mfdID), 3.0);
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   ShipScriptEvent(context, this, "selectedMFDChanged",
-                  ooscript::int32Value(activeMFD));
+                  OOJSValueFromDouble(context, activeMFD));
   OOJSRelinquishContext(context);
 }
 
@@ -6803,16 +6807,15 @@ void PlayerEntity::setBounty(OOCreditsQuantity amount,
 
 void PlayerEntity::setBounty(OOCreditsQuantity amount,
                              const std::string& reason) {
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
 
-  ooscript::Value amountVal = ooscript::undefinedValue();
-  int amountVal2 = (int)amount - (int)legalStatusValue;
-  ooscript::newNumberValue(context, amountVal2, &amountVal);
+  OOJSVal amountVal =
+      OOJSValueFromDouble(context, (int)amount - (int)legalStatusValue);
 
   legalStatusValue = (int)
       amount;  // can't set the new bounty until the size of the change is known
 
-  ooscript::Value reasonVal = OOJSValueFromPList(context, oo::PList(reason));
+  OOJSVal reasonVal = OOJSValueFromPList(context, oo::PList(reason));
 
   ShipScriptEvent(context, this, "shipBountyChanged", amountVal, reasonVal);
 
@@ -6834,16 +6837,15 @@ void PlayerEntity::markAsOffender(int offence_value) {
 void PlayerEntity::markAsOffender(int offence_value,
                                   OOLegalStatusReason reason) {
   if (!isCloaked()) {
-    ooscript::Context context = OOJSAcquireContext();
+    JSContext* context = OOJSAcquireContext();
 
-    ooscript::Value amountVal = ooscript::undefinedValue();
-    int amountVal2 = (legalStatusValue | offence_value) - legalStatusValue;
-    ooscript::newNumberValue(context, amountVal2, &amountVal);
+    OOJSVal amountVal = OOJSValueFromDouble(
+        context, (legalStatusValue | offence_value) - legalStatusValue);
 
     legalStatusValue |= offence_value;  // can't set the new bounty until the
                                         // size of the change is known
 
-    ooscript::Value reasonVal = OOJSValueFromLegalStatusReason(context, reason);
+    OOJSVal reasonVal = OOJSValueFromLegalStatusReason(context, reason);
 
     ShipScriptEvent(context, this, "shipBountyChanged", amountVal, reasonVal);
 
@@ -7551,11 +7553,10 @@ bool PlayerEntity::hasSufficientFuelForJump() {
 void PlayerEntity::noteCompassLostTarget() {
   if (getHud() != nullptr && getHud()->isCompassActive()) {
     // "the compass, it says we're lost!" :)
-    ooscript::Context context = OOJSAcquireContext();
-    ooscript::Value jsmode =
-        OOJSValueFromCompassMode(context, getCompassMode());
-    ShipScriptEvent(context, this, "compassTargetChanged",
-                    ooscript::undefinedValue(), jsmode);
+    JSContext* context = OOJSAcquireContext();
+    OOJSVal jsmode = OOJSValueFromCompassMode(context, getCompassMode());
+    ShipScriptEvent(context, this, "compassTargetChanged", OOJSUndefinedValue(),
+                    jsmode);
     OOJSRelinquishContext(context);
 
     getHud()->setCompassActive(
@@ -7572,13 +7573,13 @@ void PlayerEntity::enterGalacticWitchspace() {
   }
 
   setStatus(STATUS_ENTERING_WITCHSPACE);
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   setJumpCause(std::string("galactic jump"));
   setPreviousSystemID(currentSystemID());
-  ShipScriptEvent(context, this, "shipWillEnterWitchspace",
-                  ooscript::stringValue(ooscript::internString(
-                      context, jumpCause().value_or(std::string()).c_str())),
-                  ooscript::int32Value(destGalaxy));
+  ShipScriptEvent(
+      context, this, "shipWillEnterWitchspace",
+      JS_NewString(context, jumpCause().value_or(std::string()).c_str()),
+      OOJSValueFromDouble(context, destGalaxy));
   OOJSRelinquishContext(context);
 
   noteCompassLostTarget();
@@ -7689,14 +7690,14 @@ void PlayerEntity::enterWormhole(::WormholeEntity* w_hole) {
   wormhole = w_hole;
   addScannedWormhole(wormhole);
   setStatus(STATUS_ENTERING_WITCHSPACE);
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   setJumpCause("wormhole");
   setPreviousSystemID(currentSystemID());
   ShipScriptEvent(
       context, this, "shipWillEnterWitchspace",
-      ooscript::stringValue(
-          ooscript::internString(context, jumpCause().value_or("").c_str())),
-      ooscript::int32Value((w_hole != nullptr ? w_hole->getDestination() : 0)));
+      JS_NewString(context, jumpCause().value_or("").c_str()),
+      OOJSValueFromDouble(context,
+                          (w_hole != nullptr ? w_hole->getDestination() : 0)));
   OOJSRelinquishContext(context);
   if (scriptedMisjump()) {
     misjump = true;  // a script could just have changed this to true;
@@ -7773,13 +7774,13 @@ void PlayerEntity::enterWitchspace() {
   addScannedWormhole(wormhole);
 
   setStatus(STATUS_ENTERING_WITCHSPACE);
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   setJumpCause(std::string("standard jump"));
   setPreviousSystemID(currentSystemID());
-  ShipScriptEvent(context, this, "shipWillEnterWitchspace",
-                  ooscript::stringValue(ooscript::internString(
-                      context, jumpCause().value_or(std::string()).c_str())),
-                  ooscript::int32Value(jumpTarget));
+  ShipScriptEvent(
+      context, this, "shipWillEnterWitchspace",
+      JS_NewString(context, jumpCause().value_or(std::string()).c_str()),
+      OOJSValueFromDouble(context, jumpTarget));
   OOJSRelinquishContext(context);
 
   updateSystemMemory();
@@ -8463,7 +8464,7 @@ void PlayerEntity::activatePrimableEquipment(NSUInteger index,
   // index == eqScripts.size() means we don't want to activate any equipment.
   if (index < eqScripts.size()) {
     ::OOScript* eqScript = eqScripts[index].second.get();
-    ooscript::Context context = OOJSAcquireContext();
+    JSContext* context = OOJSAcquireContext();
     OOCAssert(mode <= OOPRIMEDEQUIP_MODE,
               "Primable equipment mode %i out of range", (int)mode);
 
@@ -10547,7 +10548,7 @@ void PlayerEntity::setGuiToOXZManager() {
 }
 
 void PlayerEntity::noteGUIWillChangeTo(OOGUIScreenID toScreen) {
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   ShipScriptEvent(context, this, "guiScreenWillChange",
                   OOJSValueFromGUIScreenID(context, toScreen),
                   OOJSValueFromGUIScreenID(context, gui_screen));
@@ -10604,7 +10605,7 @@ void PlayerEntity::noteGUIDidChangeFrom(OOGUIScreenID fromScreen,
     if (!(UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr
               ? UNIVERSE->gameController()->isGamePaused()
               : false)) {
-      ooscript::Context context = OOJSAcquireContext();
+      JSContext* context = OOJSAcquireContext();
       ShipScriptEvent(context, this, "guiScreenChanged",
                       OOJSValueFromGUIScreenID(context, toScreen),
                       OOJSValueFromGUIScreenID(context, fromScreen));
@@ -10737,28 +10738,29 @@ OOCreditsQuantity PlayerEntity::adjustPriceByScriptForEqKey(
                              : nullptr);
     if (condScript != nullptr)  // should always be non-nil, but just in case
     {
-      ooscript::Context JScontext = OOJSAcquireContext();
+      JSContext* JScontext = OOJSAcquireContext();
       bool OK;
-      ooscript::Value result;
+      OOJSVal result = OOJSUndefinedValue();
       int32_t newPrice;
-      ooscript::Value args[] = {OOJSValueFromPList(JScontext, oo::PList(eqKey)),
-                                ooscript::nullValue()};
-      OK = ooscript::newNumberValue(JScontext, price, &args[1]);
+      OOJSVal args[] = {OOJSValueFromPList(JScontext, oo::PList(eqKey)),
+                        OOJSValueFromDouble(JScontext, price)};
+
+      OK = (condScript != nullptr
+                ? condScript->callMethod(OOJSID("updateEquipmentPrice"),
+                                         JScontext, args,
+                                         sizeof args / sizeof *args, &result)
+                : false);
 
       if (OK) {
-        OK = (condScript != nullptr
-                  ? condScript->callMethod(OOJSID("updateEquipmentPrice"),
-                                           JScontext, args,
-                                           sizeof args / sizeof *args, &result)
-                  : false);
-      }
-
-      if (OK) {
-        OK = ooscript::valueToInt32(JScontext, result, &newPrice);
+        OK = OOJSValueToInt32(JScontext, result, &newPrice);
         if (OK && newPrice >= 0) {
           price = (OOCreditsQuantity)newPrice;
         }
+        if (!OK) OOJSReportPendingException(JScontext);
       }
+      OOJSFreeValue(JScontext, result);
+      OOJSFreeValue(JScontext, args[0]);
+      OOJSFreeValue(JScontext, args[1]);
       OOJSRelinquishContext(JScontext);
     }
   }
@@ -13346,17 +13348,15 @@ PlayerEntity::worldScriptsByName() {
   return cscript;
 }
 
-void PlayerEntity::doScriptEvent(ooscript::PropertyId message,
-                                 ooscript::Context context,
-                                 ooscript::Value* argv, unsigned argc) {
+void PlayerEntity::doScriptEvent(OOJSPropID message, JSContext* context,
+                                 JSValue* argv, int argc) {
   ShipEntity::doScriptEvent(message, context, argv, argc);
   doWorldScriptEvent(message, context, argv, argc, 0.0);
 }
 
 // ORDER-SENSITIVE (decision D): the world scripts run in load order (was the
 // dictionary's order).
-bool PlayerEntity::doWorldEventUntilMissionScreen(
-    ooscript::PropertyId message) {
+bool PlayerEntity::doWorldEventUntilMissionScreen(OOJSPropID message) {
   const std::vector<std::pair<std::string, oo::Ref<OOScript>>> scripts =
       worldScripts;  // a snapshot, as the enumerator kept the dictionary
   auto scriptEntry = scripts.begin();
@@ -13371,7 +13371,7 @@ bool PlayerEntity::doWorldEventUntilMissionScreen(
     return true;
   }
 
-  ooscript::Context context = OOJSAcquireContext();
+  JSContext* context = OOJSAcquireContext();
   while (scriptEntry != scripts.end() && gui_screen != GUI_SCREEN_MISSION &&
          isDocked()) {
     if (scriptEntry->second.get() != nullptr)
@@ -13389,11 +13389,10 @@ bool PlayerEntity::doWorldEventUntilMissionScreen(
   return false;
 }
 
-void PlayerEntity::doWorldScriptEvent(ooscript::PropertyId message,
-                                      ooscript::Context context,
-                                      ooscript::Value* argv, unsigned argc,
+void PlayerEntity::doWorldScriptEvent(OOJSPropID message, JSContext* context,
+                                      JSValue* argv, int argc,
                                       OOTimeDelta limit) {
-  OOCParameterAssert(context != NULL && ooscript::isInRequest(context));
+  OOCParameterAssert(context != NULL);
 
   // ORDER-SENSITIVE (decision D): load order (was -allValues order); a
   // snapshot, as -allValues was.

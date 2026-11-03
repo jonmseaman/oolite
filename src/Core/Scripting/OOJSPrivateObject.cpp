@@ -3,8 +3,8 @@
 OOJSPrivateObject.cpp
 
 The engine glue for a JS object whose private slot holds a C++ object. Each
-function is the C++ counterpart of the Objective-C one named beside it in
-OOJavaScriptEngine.mm, dispatching to OOJSPrivateObject's virtual members where
+function is the C++ counterpart of the #768 one named beside it in
+OOJavaScriptEngine.m, dispatching to OOJSPrivateObject's virtual members where
 that one sent a selector to an id.
 
 Oolite
@@ -31,7 +31,6 @@ MA 02110-1301, USA.
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
 #include "OOJSPrivateObject.h"
 
-#include <cstdint>
 #include <string>
 
 #include "OOJSEngineCore.h"
@@ -39,46 +38,47 @@ MA 02110-1301, USA.
 
 // OOJSValueFromNativeObject(): nil is null, anything else answers
 // -oo_jsValueInContext:.
-ooscript::Value OOJSValueFromCxxObject(ooscript::Context context,
-                                       OOJSPrivateObject* object) {
-  if (object == nullptr) return ooscript::nullValue();
+JSValue OOJSValueFromCxxObject(JSContext* context, OOJSPrivateObject* object) {
+  if (object == nullptr) return JS_NULL;
   return object->jsValueInContext(context);
 }
 
-// ooscript::setPrivate(context, jsObject, [object retain]), without the retain
-// on failure.
-bool OOJSSetCxxPrivate(ooscript::Context context, ooscript::Object jsObject,
-                       oo::RefCounted* object) {
+// JS_SetOpaque(jsObject, [object retain]), without the retain on failure.
+bool OOJSSetCxxPrivate(JSValueConst jsObject, oo::RefCounted* object) {
   if (object != nullptr) object->retain();
-  if (ooscript::setPrivate(context, jsObject, object)) return true;
+  if (JS_SetOpaque(jsObject, object) == 0) return true;
   if (object != nullptr) object->release();
   return false;
 }
 
 // OOJSObjectGetterImplPRIVATE(): the same JS class check and error; the slot's
 // object is taken as it is (a C++ slot holds no weak reference to unpack).
-bool OOJSGetCxxPrivateImpl(ooscript::Context context, ooscript::Object object,
-                           ooscript::ClassDef* requiredJSClass,
+bool OOJSGetCxxPrivateImpl(JSContext* context, JSValueConst object,
+                           JSClassID requiredClassID,
                            oo::RefCounted** outObject) {
   OOJS_PROFILE_ENTER
 
-  OOCParameterAssert(context != NULL && object != NULL &&
-                     requiredJSClass != NULL && outObject != NULL);
+  OOCParameterAssert(context != NULL && requiredClassID != 0 &&
+                     outObject != NULL);
 
-  ooscript::ClassDef* actualClass = OOJSGetClass(context, object);
-  if (EXPECT_NOT(!OOJSIsSubclass(actualClass, requiredJSClass))) {
-    std::optional<std::string> got =
-        cxx_OOStringFromJSValue(context, ooscript::objectValue(object));
+  /*
+          Ensure it's a valid type of JS object. This is absolutely necessary,
+          because if we don't check it we'll crash trying to get the private
+          field of something that isn't a native object wrapper - for example,
+          Ship.setAI.call(new Vector3D, "") is valid JavaScript.
+  */
+  JSClassID actualClassID = JS_GetClassID(object);
+  if (EXPECT_NOT(!OOJSIsSubclass(actualClassID, requiredClassID))) {
+    const char* className = OOJSClassName(requiredClassID);
+    std::optional<std::string> got = cxx_OOStringFromJSValue(context, object);
     cxx_OOJSReportError(context, "Native method expected %s, got %s.",
-                        requiredJSClass->name, got ? got->c_str() : "(null)");
+                        className != NULL ? className : "(null)",
+                        got ? got->c_str() : "(null)");
     return false;
   }
-  OOCAssert(static_cast<std::uint32_t>(actualClass->flags) &
-                static_cast<std::uint32_t>(ooscript::ClassFlag::HasPrivate),
-            "Native object accessor requires JS class with private storage.");
 
-  *outObject =
-      static_cast<oo::RefCounted*>(ooscript::getPrivate(context, object));
+  JSClassID ignored;
+  *outObject = static_cast<oo::RefCounted*>(JS_GetAnyOpaque(object, &ignored));
   return true;
 
   OOJS_PROFILE_EXIT
@@ -86,48 +86,46 @@ bool OOJSGetCxxPrivateImpl(ooscript::Context context, ooscript::Object object,
 
 // OOJSObjectWrapperFinalize(): -oo_clearJSSelf: to the object, then the slot's
 // release.
-void OOJSCxxObjectWrapperFinalize(ooscript::Context context,
-                                  ooscript::Object thisObj) {
+void OOJSCxxObjectWrapperFinalize(JSRuntime* /*runtime*/,
+                                  JSValueConst thisObj) {
   OOJS_PROFILE_ENTER
 
+  JSClassID ignored;
   oo::RefCounted* object =
-      static_cast<oo::RefCounted*>(ooscript::getPrivate(context, thisObj));
+      static_cast<oo::RefCounted*>(JS_GetAnyOpaque(thisObj, &ignored));
   if (object != nullptr) {
     if (OOJSPrivateObject* glue = dynamic_cast<OOJSPrivateObject*>(object))
       glue->clearJSSelf(thisObj);
+    JS_SetOpaque(thisObj, nullptr);
     object->release();
-    ooscript::setPrivate(context, thisObj, nullptr);
   }
 
   OOJS_PROFILE_EXIT_VOID
 }
 
-// OOJSObjectWrapperToString(): the object's -cxx_oo_jsDescription, else
+// OOJSObjectWrapperToString(): the object's -oo_jsDescription, else
 // "[object <JS class name>]".
-bool OOJSCxxObjectWrapperToString(ooscript::Context context,
-                                  ooscript::CallArgs& oojsArgs,
-                                  ooscript::ClassDef* jsClass) {
+JSValue OOJSCxxObjectWrapperToString(JSContext* context, JSValueConst thisVal,
+                                     JSClassID jsClassID) {
   OOJS_NATIVE_ENTER(context)
 
-  ooscript::Object thisObj = OOJS_THIS;
-  if (thisObj == nullptr ||
-      !OOJSIsSubclass(OOJSGetClass(context, thisObj), jsClass)) {
-    return OOJSObjectWrapperToString(context, oojsArgs);
+  if (!OOJSIsMemberOfSubclass(context, thisVal, jsClassID)) {
+    return OOJSObjectWrapperToString(context, thisVal, 0, nullptr);
   }
 
   std::optional<std::string> description;
+  JSClassID ignored;
   oo::RefCounted* object =
-      static_cast<oo::RefCounted*>(ooscript::getPrivate(context, thisObj));
+      static_cast<oo::RefCounted*>(JS_GetAnyOpaque(thisVal, &ignored));
   if (OOJSPrivateObject* glue = dynamic_cast<OOJSPrivateObject*>(object))
     description = glue->jsDescription();
-  if (!description.has_value())
+  if (!description.has_value()) {
+    const char* className = OOJSClassName(JS_GetClassID(thisVal));
     description =
-        oo::str::format("[object %s]", OOJSGetClass(context, thisObj)->name);
+        oo::str::format("[object %s]", className != NULL ? className : "");
+  }
 
-  const std::u16string units = oo::utf8ToUtf16(*description);
-  OOJS_RETURN(ooscript::stringValue(ooscript::newUCStringCopyN(
-      context, reinterpret_cast<const ooscript::Char16*>(units.data()),
-      units.size())));
+  return JS_NewStringLen(context, description->data(), description->size());
 
   OOJS_NATIVE_EXIT
 }

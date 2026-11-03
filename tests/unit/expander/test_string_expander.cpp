@@ -121,13 +121,11 @@ void OOLogOutdent(void) {}
 void OOLogPushIndent(void) {}
 void OOLogPopIndent(void) {}
 
-ooscript::Context OOJSAcquireContext(void) {
-  return ooscript::Context{nullptr};
-}
-void OOJSRelinquishContext(ooscript::Context context) { (void)context; }
+JSContext* OOJSAcquireContext(void) { return nullptr; }
+void OOJSRelinquishContext(JSContext* context) { (void)context; }
 // The C++ form (printf format) the expander calls.
-void cxx_OOJSReportWarningWithArguments(ooscript::Context context,
-                                        const char* format, va_list args) {
+void cxx_OOJSReportWarningWithArguments(JSContext* context, const char* format,
+                                        va_list args) {
   (void)context;
   sLog.push_back(u"JS warning: " +
                  MaskPercentLc(U(oo::str::vformat(format, args))));

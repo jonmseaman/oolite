@@ -4,6 +4,7 @@ oolite_sources += files(
     'EntityOOJavaScriptExtensions.cpp',
     'OOConstToJSString.cpp',
     'OOJSCall.cpp',
+    'OOJSClasses.cpp',
     'OOJSClock.cpp',
     'OOJSDock.cpp',
     'OOJSEngineDebuggerHelpers.cpp',
@@ -51,9 +52,6 @@ oolite_sources += files(
     'OOScript.cpp',
     'OOScriptTimer.cpp',
 )
-
-# The facade's backend (QuickJS-ng is the only engine).
-oolite_sources += files('ooscript/JSEngine_quickjs.cpp')
 
 oolite_includes += include_directories('.')
 

@@ -57,11 +57,11 @@ extern PlayerEntity* gOOPlayer;
 // control is on.
 class TestPlayer : public PlayerEntity {
  public:
-  std::vector<ooscript::PropertyId> _events;
+  std::vector<OOJSPropID> _events;
   bool _mouseControlOn = false;
 
   using PlayerEntity::doScriptEvent;
-  void doScriptEvent(ooscript::PropertyId message) override {
+  void doScriptEvent(OOJSPropID message) override {
     _events.push_back(message);
   }
   bool isMouseControlOn() override { return _mouseControlOn; }
@@ -196,8 +196,8 @@ void SetUp() {
   gOOPlayer = sPlayer;
 }
 
-bool SameId(ooscript::PropertyId a, ooscript::PropertyId b) {
-  return a.bits == b.bits;
+bool SameId(OOJSPropID a, OOJSPropID b) {
+  return a == b;
 }
 
 oo::PList Mode(int width, int height, int refresh) {

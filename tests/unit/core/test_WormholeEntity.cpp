@@ -31,6 +31,7 @@
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "OOJSEntity.h"
 #include "OODescription.h"
 #include "OOJSWormhole.h"
 #include "OOSystemDescriptionManager.h"
@@ -97,7 +98,7 @@ class TestUniverse : public Universe {
   }
 };
 
-extern ooscript::Context
+extern JSContext*
     gOOJSMainThreadContext;  // the engine's (OOJavaScriptEngine.mm)
 
 namespace {
@@ -141,7 +142,7 @@ void SetUp() {
   // on the main thread's context, so there is one, with nothing in it.
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
-        ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
+        JS_NewContext(JS_NewRuntime());
 }
 
 // --- Ivars the test sets and reads, and nothing else
@@ -395,6 +396,20 @@ OO_TEST(facade) {
   }
 }
 
+// Registers Entity's JS class and the given class (a child of Entity) in the
+// test's context, as the engine's start does; the context is made here if the
+// test has none yet.
+static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
+  extern JSContext* gOOJSMainThreadContext;
+  if (gOOJSMainThreadContext == nullptr)
+    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+  JSContext* context = OOJSAcquireContext();
+  JSValue global = JS_GetGlobalObject(context);
+  InitOOJSEntity(context, global);
+  initClass(context, global);
+  JS_FreeValue(context, global);
+}
+
 // The binding's category, which the facade carries: what
 // the engine asks a WormholeEntity for by selector is what OOJSWormhole.mm
 // answers.
@@ -402,13 +417,11 @@ OO_TEST(jsExtensions) {
   {
     SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
-    ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
-    ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
     Entity* object = wh;  // what the engine asks (the root's facade)
-    OOJSEntityGetJSClass(object, &jsClass, &prototype);
-    OOJSWormholeGetJSClass(&expectedClass, &expectedPrototype);
-    OO_CHECK(jsClass != nullptr && jsClass == expectedClass &&
-             prototype == expectedPrototype);
+    RegisterJSClasses(InitOOJSWormhole);
+    const JSClassID jsClass = OOJSEntityJSClassID(object);
+    const JSClassID expectedClass = JSWormholeClassID();
+    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
     OO_CHECK(OOJSEntityJSClassName(object) ==
              std::optional<std::string>("Wormhole"));
     OO_CHECK(OOJSEntityIsVisibleToScripts(object) == true);

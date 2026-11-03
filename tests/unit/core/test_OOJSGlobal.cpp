@@ -1,12 +1,11 @@
-/*	test_OOJSGlobal.mm
+/*	test_OOJSGlobal.cpp
         Unit tests for the JS global object
-   (src/Core/Scripting/OOJSGlobal.h/.mm) and the engine monitor send it makes.
+   (src/Core/Scripting/OOJSGlobal.h/.cpp) and the engine monitor send it makes.
 
-   As the other binding tests do, it makes the global object in a real context
-   on the game's own façade backend (ooscript/JSEngine_quickjs.cpp) with the
-   file's own CreateOOJSGlobal()/SetUpOOJSGlobal(), and links the game's own
-   objects for the binding, the engine's exception translator
-   (OOJSEngineNativeWrappers.mm) and the converted classes it uses (OOColor and
+   As the other binding tests do, it sets up the global object of a real
+   QuickJS-ng context as the engine does (its "global" property) with the
+   file's own SetUpOOJSGlobal(), and links the game's own objects for the
+   binding, the engine's exception translator (OOJSEngineNativeWrappers.cpp) and the converted classes it uses (OOColor and
    OOJSGuiScreenKeyDefinition, linked as their own tests link them). It stands
    in for the player, the universe, its GUI (the members the binding calls) and
    game view, the resource manager, the script engine (its monitor and JS
@@ -19,6 +18,8 @@
    exception. takeSnapShot(), which reads the disk, is not run. Run: bash
    tests/run.sh unit
 */
+
+#include <quickjs.h>
 
 #include "GuiDisplayGen.h"
 #include "OOColor.h"
@@ -35,7 +36,6 @@
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
 #include "oofnd/objc/OOObject.h"
-#include "ooscript/JSEngine.hpp"
 
 // MARK: The classes, as far as the binding sees them
 // ----------------------------------------------
@@ -122,11 +122,13 @@ class MyOpenGLView : public oo::RefCounted {
 #include <cstdarg>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#include "OOJSEngineCore.h"
 #include "OOJSGlobal.h"
 #include "oo_test.hpp"
 
@@ -201,21 +203,19 @@ GuiDisplayGen::GuiDisplayGen() {}
 GuiDisplayGen::~GuiDisplayGen() {}
 
 oo::PList GuiDisplayGen::textureDescriptorFromJSValue(
-    ooscript::Value value, ooscript::Context context,
-    const std::optional<std::string>& callerDescription) {
+    JSValueConst value, JSContext* context,
+    const std::string& callerDescription) {
   (void)callerDescription;
-  ooscript::Value name = ooscript::undefinedValue();
-  if (!ooscript::isObject(value) || ooscript::isNull(value) ||
-      !ooscript::getProperty(context, ooscript::toObject(value), "name",
-                             &name) ||
-      !ooscript::isString(name))
+  if (!JS_IsObject(value)) return oo::PList();
+  JSValue name = JS_GetPropertyStr(context, value, "name");
+  if (!JS_IsString(name)) {
+    JS_FreeValue(context, name);
     return oo::PList();
-  ooscript::String str = ooscript::valueToString(context, name);
-  std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::string text;
-  for (std::size_t i = 0; i < length; i++) text += static_cast<char>(chars[i]);
+  }
+  const char* chars = JS_ToCString(context, name);
+  std::string text = chars != nullptr ? chars : "";
+  JS_FreeCString(context, chars);
+  JS_FreeValue(context, name);
   return oo::PList(oo::PList::Dict{{"name", oo::PList(text)}});
 }
 
@@ -303,12 +303,11 @@ oo::PList ResourceManager::dictionaryFromFilesNamed(
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
-  bool callJSFunction(ooscript::Value function, ooscript::Object jsThis,
-                      unsigned argc, ooscript::Value* argv,
-                      ooscript::Value* outResult);
+  bool callJSFunction(JSValueConst function, JSValueConst jsThis, int argc,
+                      JSValueConst* argv, JSValue* outResult);
   void sendMonitorLogMessage(const std::optional<std::string>& message,
                              const std::optional<std::string>& messageClass,
-                             ooscript::Context context);
+                             JSContext* context);
 };
 
 static std::vector<std::string> sMonitorMessages;
@@ -320,15 +319,14 @@ OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
 
 // The key definitions' callback call: never reached here (the Objective-C
 // stand-in did not answer it).
-bool OOJavaScriptEngine::callJSFunction(ooscript::Value, ooscript::Object,
-                                        unsigned, ooscript::Value*,
-                                        ooscript::Value*) {
+bool OOJavaScriptEngine::callJSFunction(JSValueConst, JSValueConst, int,
+                                        JSValueConst*, JSValue*) {
   std::abort();
 }
 
 void OOJavaScriptEngine::sendMonitorLogMessage(
     const std::optional<std::string>& message,
-    const std::optional<std::string>& messageClass, ooscript::Context context) {
+    const std::optional<std::string>& messageClass, JSContext* context) {
   (void)context;
   sMonitorMessages.push_back(messageClass.value_or("(no class)") + ": " +
                              message.value_or("(null)"));
@@ -381,13 +379,13 @@ std::string cxx_CommodityDisplayNameForSymbolicName(
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
 
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
-                                      const char* format, va_list args) {
+void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
+                                      va_list args) {
   std::string msg = oo::str::vformat(format, args);
-  ooscript::reportError(context, msg.c_str());
+  JS_ThrowPlainError(context, "%s", msg.c_str());
 }
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportErrorWithArguments(context, format, args);
@@ -398,7 +396,7 @@ namespace {
 std::string sLastWarning;
 }
 
-void cxx_OOJSReportWarning(ooscript::Context, const char* format, ...) {
+void cxx_OOJSReportWarning(JSContext*, const char* format, ...) {
   va_list args;
   va_start(args, format);
   sLastWarning = oo::str::vformat(format, args);
@@ -406,87 +404,87 @@ void cxx_OOJSReportWarning(ooscript::Context, const char* format, ...) {
 }
 
 void cxx_OOJSReportBadArguments(
-    ooscript::Context context, const std::optional<std::string>& scriptClass,
-    const std::optional<std::string>& function, unsigned argc, ooscript::Value*,
+    JSContext* context, const std::optional<std::string>& scriptClass,
+    const std::optional<std::string>& function, int argc, JSValueConst*,
     const std::optional<std::string>& message,
     const std::optional<std::string>& expectedArgsDescription) {
-  cxx_OOJSReportError(context, "bad arguments: %s.%s(%u) %s / %s",
+  cxx_OOJSReportError(context, "bad arguments: %s.%s(%d) %s / %s",
                       scriptClass.value_or("-").c_str(),
                       function.value_or("-").c_str(), argc,
                       message.value_or("-").c_str(),
                       expectedArgsDescription.value_or("-").c_str());
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  ooscript::String str = ooscript::valueToString(context, value);
-  if (str == nullptr) return std::nullopt;
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
+}
+
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
 }
 
 std::optional<std::string> cxx_OOStringFromJSValueEvenIfNull(
-    ooscript::Context context, ooscript::Value value) {
-  if (ooscript::isNull(value)) return std::string("null");
-  if (ooscript::isUndefined(value)) return std::string("undefined");
+    JSContext* context, JSValueConst value) {
+  if (JS_IsNull(value)) return std::string("null");
+  if (JS_IsUndefined(value)) return std::string("undefined");
   return cxx_OOStringFromJSValue(context, value);
 }
 
+JSAtom cxx_OOJSIDFromString(const std::string& string) {
+  return JS_NewAtomLen(OOJSAcquireContext(), string.data(), string.size());
+}
+
 // A property list as JavaScript, as far as the binding hands one over: null, a
-// string, a number, or an array or dictionary of those.
-ooscript::Value OOJSValueFromPList(ooscript::Context context,
-                                   const oo::PList& plist) {
-  if (const std::string* str = plist.getIf<std::string>()) {
-    ooscript::String js =
-        ooscript::newStringCopyN(context, str->data(), str->size());
-    return js != nullptr ? ooscript::stringValue(js) : ooscript::nullValue();
-  }
-  if (plist.isNumber()) return ooscript::numberValue(plist.doubleValue());
+// string, a number, or an array or dictionary of those. Owned by the caller.
+JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
+  if (const std::string* str = plist.getIf<std::string>())
+    return JS_NewStringLen(context, str->data(), str->size());
+  if (plist.isNumber()) return JS_NewNumber(context, plist.doubleValue());
   if (const oo::PList::Array* array = plist.getIf<oo::PList::Array>()) {
-    std::vector<ooscript::Value> values;
+    JSValue object = JS_NewArray(context);
+    std::uint32_t index = 0;
     for (const oo::PList& element : *array)
-      values.push_back(OOJSValueFromPList(context, element));
-    ooscript::Object object = ooscript::newArrayObject(
-        context, static_cast<unsigned>(values.size()), values.data());
-    return object != nullptr ? ooscript::objectValue(object)
-                             : ooscript::nullValue();
+      JS_SetPropertyUint32(context, object, index++,
+                           OOJSValueFromPList(context, element));
+    return object;
   }
   if (const oo::PList::Dict* dict = plist.getIf<oo::PList::Dict>()) {
-    ooscript::Object object =
-        ooscript::newObject(context, nullptr, nullptr, nullptr);
-    for (const auto& entry : *dict) {
-      ooscript::Value value = OOJSValueFromPList(context, entry.second);
-      ooscript::setProperty(context, object, entry.first.c_str(), &value);
-    }
-    return ooscript::objectValue(object);
+    JSValue object = JS_NewObject(context);
+    for (const auto& entry : *dict)
+      JS_SetPropertyStr(context, object, entry.first.c_str(),
+                        OOJSValueFromPList(context, entry.second));
+    return object;
   }
-  return ooscript::nullValue();
+  return JS_NULL;
 }
 
 // A JS value's plist form: a string, a number, an array of those, or null.
-oo::PList cxx_OOJSPListFromJSValue(ooscript::Context context,
-                                   ooscript::Value value) {
+oo::PList cxx_OOJSPListFromJSValue(JSContext* context, JSValueConst value) {
   double number = 0;
-  if (ooscript::isString(value))
+  if (JS_IsString(value))
     return oo::PList(cxx_OOStringFromJSValue(context, value).value_or(""));
-  if (ooscript::isNumber(value) &&
-      ooscript::valueToNumber(context, value, &number))
+  if (JS_IsNumber(value) && JS_ToFloat64(context, &number, value) == 0)
     return oo::PList(number);
-  if (ooscript::isObject(value) &&
-      ooscript::isArrayObject(context, ooscript::toObject(value))) {
-    std::uint32_t length = 0;
-    ooscript::getArrayLength(context, ooscript::toObject(value), &length);
+  if (JS_IsArray(value)) {
+    std::int64_t length = 0;
+    JS_GetLength(context, value, &length);
     oo::PList::Array array;
-    for (std::uint32_t i = 0; i < length; i++) {
-      ooscript::Value element;
-      if (ooscript::getElement(context, ooscript::toObject(value), i, &element))
+    for (std::int64_t i = 0; i < length; i++) {
+      JSValue element =
+          JS_GetPropertyUint32(context, value, static_cast<std::uint32_t>(i));
+      if (!JS_IsException(element))
         array.push_back(cxx_OOJSPListFromJSValue(context, element));
+      JS_FreeValue(context, element);
     }
     return oo::PList(std::move(array));
   }
@@ -495,50 +493,55 @@ oo::PList cxx_OOJSPListFromJSValue(ooscript::Context context,
 
 // An object's "keys" property, as far as the test registers keys: {keys:
 // [names]} -> {keys: [...]}.
-oo::PList cxx_OOJSPListFromJSObject(ooscript::Context context,
-                                    ooscript::Object object) {
+oo::PList cxx_OOJSPListFromJSObject(JSContext* context, JSValueConst object) {
   oo::PList::Dict dict;
-  ooscript::Value value = ooscript::undefinedValue();
-  if (ooscript::getProperty(context, object, "keys", &value) &&
-      !ooscript::isUndefined(value))
+  JSValue value = JS_GetPropertyStr(context, object, "keys");
+  if (!JS_IsException(value) && !JS_IsUndefined(value))
     dict["keys"] = cxx_OOJSPListFromJSValue(context, value);
+  JS_FreeValue(context, value);
   return oo::PList(std::move(dict));
 }
 
 // A string table: an object's "name" property, if any.
-oo::PList OOJSDictionaryFromStringTable(ooscript::Context context,
-                                        ooscript::Value value) {
+oo::PList OOJSDictionaryFromStringTable(JSContext* context,
+                                        JSValueConst value) {
   oo::PList::Dict dict;
-  ooscript::Value name = ooscript::undefinedValue();
-  if (ooscript::isObject(value) && !ooscript::isNull(value) &&
-      ooscript::getProperty(context, ooscript::toObject(value), "name",
-                            &name) &&
-      !ooscript::isUndefined(name)) {
-    dict["name"] =
-        oo::PList(cxx_OOStringFromJSValue(context, name).value_or(""));
+  if (JS_IsObject(value)) {
+    JSValue name = JS_GetPropertyStr(context, value, "name");
+    if (!JS_IsException(name) && !JS_IsUndefined(name))
+      dict["name"] =
+          oo::PList(cxx_OOStringFromJSValue(context, name).value_or(""));
+    JS_FreeValue(context, name);
   }
   return oo::PList(std::move(dict));
 }
 
-ooscript::Context gOOJSMainThreadContext = nullptr;
+JSContext* gOOJSMainThreadContext = nullptr;
 extern const char* const kOOJavaScriptEngineWillResetNotificationName;
 const char* const kOOJavaScriptEngineWillResetNotificationName =
     "org.aegidian.oolite OOJavaScriptEngine will reset";
 PlayerEntity* gOOPlayer = nullptr;
 Universe* gSharedUniverse = nullptr;
 
-
 PlayerEntity* OOPlayerForScripting(void) { return sPlayer; }
 
-void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
-                                   ooscript::PropertyId,
-                                   ooscript::PropertySpec*) {
+// GameController.cpp's: quitGame() defers the quit until the calling script
+// has returned (#768). The calls are kept for the test to run.
+namespace {
+std::vector<std::function<void()>> sDeferredCalls;
+}
+void OOScheduleDeferredCall(std::function<void()> call, NSTimeInterval) {
+  sDeferredCalls.push_back(std::move(call));
+}
+
+void OOJSReportBadPropertySelector(JSContext* context, JSValueConst, int,
+                                   const JSCFunctionListEntry*, size_t) {
   cxx_OOJSReportError(context, "bad property selector");
 }
 
-void OOJSReportBadPropertyValue(ooscript::Context context, ooscript::Object,
-                                ooscript::PropertyId, ooscript::PropertySpec*,
-                                ooscript::Value) {
+void OOJSReportBadPropertyValue(JSContext* context, JSValueConst, int,
+                                const JSCFunctionListEntry*, size_t,
+                                JSValueConst) {
   cxx_OOJSReportError(context, "bad property value");
 }
 
@@ -560,24 +563,24 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-
 // MARK: The context
 // -------------------------------------------------------------------------------
 
 namespace {
 
-ooscript::Runtime sRuntime;
-ooscript::Context sContext;
-ooscript::Object sGlobal;
+JSRuntime* sRuntime = nullptr;
+JSContext* sContext = nullptr;
+JSValue sGlobal = JS_UNDEFINED;  // held for the life of the test
 
 void SetUpContext() {
   if (sContext != nullptr) return;
-  sRuntime = ooscript::newRuntime(8u * 1024u * 1024u);
-  sContext = ooscript::newContext(sRuntime, 8192);
+  sRuntime = JS_NewRuntime();
+  sContext = JS_NewContext(sRuntime);
   gOOJSMainThreadContext = sContext;
-  ooscript::beginRequest(sContext);
-  CreateOOJSGlobal(sContext, &sGlobal);
-  ooscript::initStandardClasses(sContext, sGlobal);
+  sGlobal = JS_GetGlobalObject(sContext);
+  // The global object's "global", as the engine defines it at start-up.
+  JS_DefinePropertyValueStr(sContext, sGlobal, "global",
+                            JS_DupValue(sContext, sGlobal), OOJS_PROP_READONLY);
   OOConstToJSStringInit(
       sContext);  // the GUI screen names, as the engine does at start-up
   SetUpOOJSGlobal(sContext, sGlobal);
@@ -595,6 +598,21 @@ void SetUpContext() {
   gSharedUniverse = sUniverse;
 }
 
+// Whether value (owned, and freed here) is an object.
+bool IsObject(JSValue value) {
+  const bool result = JS_IsObject(value);
+  JS_FreeValue(sContext, value);
+  return result;
+}
+
+// Whether value (owned, and freed here) is the object other.
+bool IsSameObject(JSValue value, JSValueConst other) {
+  const bool result = JS_IsObject(value) && JS_IsObject(other) &&
+                      JS_VALUE_GET_PTR(value) == JS_VALUE_GET_PTR(other);
+  JS_FreeValue(sContext, value);
+  return result;
+}
+
 // Evaluates src and gives its result as a string ("undefined", "null", ...), or
 // "threw: <message>".
 std::string Eval(const char* src) {
@@ -603,14 +621,16 @@ std::string Eval(const char* src) {
                         src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
-  if (!ooscript::evaluateScript(sContext, sGlobal, wrapped.c_str(),
-                                static_cast<unsigned>(wrapped.size()),
-                                "test.js", 1, &result)) {
-    ooscript::clearPendingException(sContext);
+  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(),
+                           "test.js", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(sContext, JS_GetException(sContext));
     return "<evaluation failed>";
   }
-  return cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  std::string text =
+      cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  JS_FreeValue(sContext, result);
+  return text;
 }
 
 // Eval, and print what came back when it is not what the check expects.
@@ -815,47 +835,48 @@ OO_TEST(extraGuiScreenKeys) {
                oo::PList(oo::PList::Array{oo::PList(std::string("a")),
                                           oo::PList(std::string("b"))})}})));
   OO_CHECK(sPlayer->_definition.get() != nullptr &&
-           ooscript::isObject(sPlayer->_definition->callback()) &&
-           sPlayer->_definition->callbackThis() == nullptr);
+           IsObject(sPlayer->_definition->callback()) &&
+           !IsObject(sPlayer->_definition->callbackThis()));
   OO_CHECK_EVAL(
       "setExtraGuiScreenKeys('myKeys', {guiScreen: 'GUI_SCREEN_STATUS', "
       "registerKeys: null, callback: function () {}, cbThis: global})",
       "true");
-  OO_CHECK(sPlayer->_definition->callbackThis() == sGlobal);
+  OO_CHECK(IsSameObject(sPlayer->_definition->callbackThis(), sGlobal));
   OO_CHECK_EVAL(
       "setExtraGuiScreenKeys('myKeys', {guiScreen: 'GUI_SCREEN_SHIPYARD', "
       "registerKeys: {}, callback: function () {}})",
       "false");
+  // The count of definition arguments given, at most 2 (#768's defArgc).
   OO_CHECK_EVAL("setExtraGuiScreenKeys('k')",
-                "threw: bad arguments: global.setExtraGuiScreenKeys(2) - / "
+                "threw: bad arguments: global.setExtraGuiScreenKeys(0) - / "
                 "key, definition: definition is not a valid dictionary.");
   OO_CHECK_EVAL(
       "setExtraGuiScreenKeys()",
       "threw: bad arguments: -.setExtraGuiScreenKeys(0) - / key, definition");
   OO_CHECK_EVAL("setExtraGuiScreenKeys('k', {})",
-                "threw: bad arguments: global.setExtraGuiScreenKeys(2) - / "
+                "threw: bad arguments: global.setExtraGuiScreenKeys(1) - / "
                 "key, definition: must have a 'guiScreen' property.");
   OO_CHECK_EVAL("setExtraGuiScreenKeys('k', {guiScreen: 'GUI_SCREEN_SAVE'})",
-                "threw: bad arguments: global.setExtraGuiScreenKeys(2) - / "
+                "threw: bad arguments: global.setExtraGuiScreenKeys(1) - / "
                 "key, definition: 'guiScreen' property must be a permitted and "
                 "valid GUI_SCREEN idenfifier.");
   OO_CHECK_EVAL("setExtraGuiScreenKeys('k', {guiScreen: 'GUI_SCREEN_STATUS'})",
-                "threw: bad arguments: global.setExtraGuiScreenKeys(2) - / "
+                "threw: bad arguments: global.setExtraGuiScreenKeys(1) - / "
                 "key, definition: must have a 'registerKeys' property.");
   OO_CHECK_EVAL(
       "setExtraGuiScreenKeys('k', {guiScreen: 'GUI_SCREEN_STATUS', "
       "registerKeys: 5})",
-      "threw: bad arguments: global.setExtraGuiScreenKeys(2) - / key, "
+      "threw: bad arguments: global.setExtraGuiScreenKeys(1) - / key, "
       "definition: registerKeys is not a valid dictionary.");
   OO_CHECK_EVAL(
       "setExtraGuiScreenKeys('k', {guiScreen: 'GUI_SCREEN_STATUS', "
       "registerKeys: {}})",
-      "threw: bad arguments: global.setExtraGuiScreenKeys(2) - / key, "
+      "threw: bad arguments: global.setExtraGuiScreenKeys(1) - / key, "
       "definition; must have a 'callback' property.");
   OO_CHECK_EVAL(
       "setExtraGuiScreenKeys('k', {guiScreen: 'GUI_SCREEN_STATUS', "
       "registerKeys: {}, callback: 5})",
-      "threw: bad arguments: global.setExtraGuiScreenKeys(2) - / key, "
+      "threw: bad arguments: global.setExtraGuiScreenKeys(1) - / key, "
       "definition; 'callback' property must be a function.");
   OO_CHECK_EVAL("clearExtraGuiScreenKeys('myKeys', 'GUI_SCREEN_STATUS')",
                 "true");
@@ -882,6 +903,9 @@ OO_TEST(pauseAndQuit) {
   OO_CHECK_EQ(sUniverse->_paused, 1);
   sPlayer->_screen = GUI_SCREEN_STATUS;
   OO_CHECK_EVAL("quitGame()", "true");
+  OO_CHECK_EQ(sUniverse->_quit, 0);  // deferred until the script returns
+  for (const std::function<void()>& call : sDeferredCalls) call();
+  sDeferredCalls.clear();
   OO_CHECK_EQ(sUniverse->_quit, 1);
   OO_CHECK_EVAL(
       "takeSnapShot('bad name!')",
@@ -901,7 +925,6 @@ OO_TEST(nativeExceptions) {
   OO_CHECK_EVAL("expandMissionText('greeting')", "<Hello [name]>\\n");
   OO_CHECK_EQ(sLimiterPauses, 0);
   OO_CHECK_EQ(sProfileDepth, 0);
-  OO_CHECK(ooscript::isInRequest(sContext));
 }
 
 OO_TEST_MAIN()

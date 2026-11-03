@@ -27,6 +27,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -34,45 +36,48 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class OOJSFunction : public oo::RefCounted {
  public:
-  // The initialisers' factories: null where the initialiser answered nil (a
-  // NULL function; no code, missing argument names, or a compile error).
-  static oo::Ref<OOJSFunction> initWithFunction(ooscript::Function function,
-                                                ooscript::Context context);
+  // The initialisers' factories: null where the initialiser answered nil (not
+  // a function; no code, missing argument names, or a compile error).
+  // function must be a function value; the OOJSFunction takes its own
+  // reference.
+  static oo::Ref<OOJSFunction> initWithFunction(JSValueConst function,
+                                                JSContext* context);
   static oo::Ref<OOJSFunction> initWithName(
       const std::optional<std::string>& name,
-      ooscript::Object
-          scope,  // may be NULL, in which case global object is used.
-      const std::optional<std::string>&
-          code,  // full JS code for function, including function declaration.
+      JSValueConst scope,  // Ignored; QuickJS compiles functions in the global
+                           // scope. Pass JS_UNDEFINED.
+      const std::optional<std::string>& code,  // Function body.
       NSUInteger argCount, const char** argNames,
       const std::optional<std::string>& fileName, NSUInteger lineNumber,
-      ooscript::Context
-          context);  // may be NULL. If not null, must be in a request.
+      JSContext* context);  // may be NULL.
 
   ~OOJSFunction() override;
 
   std::optional<std::string> descriptionComponents() const;
 
   std::optional<std::string> name();  // nullopt: anonymous
-  ooscript::Function function();
-  ooscript::Value functionValue();
+  // Borrowed; valid while the receiver is alive and the engine is not reset.
+  // JS_NULL if invalid.
+  JSValueConst function();
+  // Owned (caller must free). JS_NULL if invalid.
+  JSValue functionValue();
 
-  // Raw evaluation. Context may not be NULL and must be in a request.
-  bool evaluateWithContext(ooscript::Context context, ooscript::Object jsThis,
-                           unsigned argc, ooscript::Value* argv,
-                           ooscript::Value* result);
+  // Raw evaluation. *result is owned by the caller on success. On failure, any
+  // exception is left pending (not reported).
+  bool evaluateWithContext(JSContext* context, JSValueConst jsThis, int argc,
+                           JSValueConst* argv, JSValue* result);
 
  private:
   // The part of -initWithFunction:context: that cannot fail.
-  OOJSFunction(ooscript::Function function, ooscript::Context context);
+  OOJSFunction(JSValueConst function, JSContext* context);
 
+  bool isValid() const;
   void deleteJSValue();
 
-  ooscript::Function _function = {};
+  JSValue _function = JS_NULL;  // Owned; JS_NULL when invalid.
   std::optional<std::string>
       _name;  // nullopt for an anonymous function (was nil)
 };

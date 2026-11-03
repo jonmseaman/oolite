@@ -225,31 +225,6 @@ std::optional<std::string> cxx_OODisplayStringFromEconomyID(
   return std::nullopt;
 }
 
-std::string cxx_JSTypeToString(int /* ooscript::Type */ type) {
-  // The strings are the engine's own type-constant names, as this function has
-  // always returned.
-  switch ((ooscript::Type)type) {
-    case ooscript::Type::Void:
-      return "JSTYPE_VOID";
-    case ooscript::Type::Object:
-      return "JSTYPE_OBJECT";
-    case ooscript::Type::Function:
-      return "JSTYPE_FUNCTION";
-    case ooscript::Type::String:
-      return "JSTYPE_STRING";
-    case ooscript::Type::Number:
-      return "JSTYPE_NUMBER";
-    case ooscript::Type::Boolean:
-      return "JSTYPE_BOOLEAN";
-    case ooscript::Type::Null:
-      return "JSTYPE_NULL";
-    case ooscript::Type::XML:
-      return "JSTYPE_XML";
-  }
-  if (type == (int)ooscript::Type::XML + 1) return "JSTYPE_LIMIT";
-  return oo::str::format("unknown (%u)", type);
-}
-
 std::optional<std::string> cxx_OOStringFromWeaponType(OOWeaponType weapon) {
   if (weapon == nullptr) {
     return "EQ_WEAPON_NONE";

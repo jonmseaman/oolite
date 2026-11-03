@@ -87,13 +87,15 @@ void OOECMBlastEntity::update(OOTimeDelta delta_t) {
                              : std::vector<oo::EntityHold>());
     NSUInteger i, count = targets.size();
     if (count > 0) {
-      ooscript::Context context = OOJSAcquireContext();
-      ooscript::Value ecmPulsesRemaining =
-          ooscript::int32Value(_blastsRemaining);
-      ooscript::Value whomVal = OOJSValueFromCxxObject(context, ship);
+      JSContext* context = OOJSAcquireContext();
 
       for (i = 0; i < count; i++) {
         ShipEntity* target = oo::ToShip(targets[i].get());
+        // ShipScriptEvent() frees its arguments, so they are created for each
+        // target.
+        OOJSVal ecmPulsesRemaining =
+            OOJSValueFromDouble(context, _blastsRemaining);
+        OOJSVal whomVal = OOJSValueFromCxxObject(context, ship);
         ShipScriptEvent(context, target, "shipHitByECM", ecmPulsesRemaining,
                         whomVal);
         if (target != nullptr) target->reactToAIMessage("ECM", std::nullopt);

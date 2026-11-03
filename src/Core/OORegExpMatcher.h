@@ -39,12 +39,9 @@ SOFTWARE.
 #include "OOJSFunction.h"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
-enum {
-  kOORegExpCaseInsensitive = ooscript::RegExpFoldCase,
-  kOORegExpMultiLine = ooscript::RegExpMultiline
-};
+// Same values as SpiderMonkey's JSREG_FOLD and JSREG_MULTILINE.
+enum { kOORegExpCaseInsensitive = 0x01, kOORegExpMultiLine = 0x04 };
 
 class OORegExpMatcher : public oo::RefCounted {
  public:

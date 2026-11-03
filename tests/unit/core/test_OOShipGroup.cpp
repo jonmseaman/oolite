@@ -28,10 +28,8 @@
 
 // The JS glue of OOShipGroup, which OOJSShipGroup.mm defines and this test does
 // not link: the vtable names them. Nothing here reaches the JS engine.
-ooscript::Value OOShipGroup::jsValueInContext(ooscript::Context) {
-  return ooscript::nullValue();
-}
-void OOShipGroup::clearJSSelf(ooscript::Object) {}
+JSValue OOShipGroup::jsValueInContext(JSContext*) { return JS_NULL; }
+void OOShipGroup::clearJSSelf(JSValueConst) {}
 std::optional<std::string> OOShipGroup::jsDescription() { return std::nullopt; }
 
 // --- A stand-in for ShipEntity (see the banner)

@@ -25,154 +25,145 @@ MA 02110-1301, USA.
 
 #include "OOJSWorldScripts.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "OOScript.h"
 #include "PlayerEntity.h"
-#include "ooscript/JSEngine.hpp"
 
-/*
-        Retargeted onto the ooscript facade (JSEngine.hpp): the class dispatch
-   table (PropertyStub / StrictPropertyStub / ResolveStub / ConvertStub /
-   FinalizeStub) is replaced by nullptr hooks in ooscript::ClassDef, and the two
-   directly-spelled engine calls (DefineObject, DefineProperty) go through the
-   facade. The hook functions (WorldScriptsGetProperty, WorldScriptsEnumerate)
-   take the facade's hook signature (ooscript::Context / Object / PropertyId)
-   directly rather than the engine's, so the OOJS_* macros and the rest of each
-   function body need no conversion. `this` is spelled `thisObj`.
+/*	SpiderMonkey called the WorldScripts class's getProperty hook for every
+        property access and its enumerate hook defined each script's name on
+        demand. QuickJS has no such hooks; instead, the class's exotic
+        get_own_property and get_own_property_names methods make every world
+        script appear as an enumerable, read-only own property.
 */
+static int WorldScriptsGetOwnProperty(JSContext* context,
+                                      JSPropertyDescriptor* desc,
+                                      JSValueConst object, JSAtom propID);
+static int WorldScriptsGetOwnPropertyNames(JSContext* context,
+                                           JSPropertyEnum** outTable,
+                                           uint32_t* outCount,
+                                           JSValueConst object);
 
-namespace ooscript {}
-using ooscript::ClassDef;
-using ooscript::ClassFlag;
-using ooscript::Context;
-using ooscript::Object;
-using ooscript::PropertyFlag;
-using ooscript::PropertyId;
-using ooscript::Value;
-
-namespace {
-static bool WorldScriptsGetProperty(Context context, Object thisObj,
-                                    PropertyId propID, Value* value);
-}  // namespace
-namespace {
-static bool WorldScriptsEnumerate(Context cx, Object obj);
-}  // namespace
-
-static const PropertyFlag kWorldScriptsObjectFlags =
-    PropertyFlag::ReadOnly | PropertyFlag::Enumerate | PropertyFlag::Permanent;
-static const PropertyFlag kWorldScriptsPropertyFlags =
-    PropertyFlag::ReadOnly | PropertyFlag::Shared | PropertyFlag::Permanent |
-    PropertyFlag::Enumerate;
-
-namespace {
-static ClassDef sWorldScriptsClass = {
-    "WorldScripts",
-    ClassFlag::None,
-
-    nullptr,                  // addProperty (engine default: PropertyStub)
-    nullptr,                  // delProperty (engine default: PropertyStub)
-    WorldScriptsGetProperty,  // getProperty
-    nullptr,                // setProperty (engine default: StrictPropertyStub)
-    WorldScriptsEnumerate,  // enumerate
-    nullptr,  // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
-    nullptr,  // resolve (engine default: ResolveStub)
-    nullptr,  // convert (engine default: ConvertStub)
-    nullptr,  // finalize (engine default: FinalizeStub)
-    nullptr,  // call
-    nullptr,  // construct
-    nullptr,  // backend: owned by the façade backend, must start null
+static JSClassExoticMethods sWorldScriptsExoticMethods = {
+    .get_own_property = WorldScriptsGetOwnProperty,
+    .get_own_property_names = WorldScriptsGetOwnPropertyNames,
 };
-}  // namespace
 
-void InitOOJSWorldScripts(ooscript::Context context, ooscript::Object global) {
-  ooscript::defineObject((context), (global), "worldScripts",
-                         &sWorldScriptsClass, nullptr,
-                         kWorldScriptsObjectFlags);
+static JSClassID sWorldScriptsClassID;
+static JSClassDef sWorldScriptsClass = {
+    .class_name = "WorldScripts",
+    .exotic = &sWorldScriptsExoticMethods,
+};
+
+void InitOOJSWorldScripts(JSContext* context, JSValueConst global) {
+  OOJSRegisterClass(&sWorldScriptsClassID, &sWorldScriptsClass);
+
+  // As with JS_DefineObject() with a NULL prototype, the prototype is
+  // Object.prototype.
+  JSValue objectPrototype = OOJSObjectPrototype(context);
+  JSValue worldScripts =
+      JS_NewObjectProtoClass(context, objectPrototype, sWorldScriptsClassID);
+  JS_FreeValue(context, objectPrototype);
+  JS_DefinePropertyValueStr(context, global, "worldScripts", worldScripts,
+                            OOJS_PROP_READONLY);
 }
 
-namespace {
-static bool WorldScriptsGetProperty(Context cx, Object obj, PropertyId propID,
-                                    Value* value) {
-  ooscript::Context context = (cx);
-  ooscript::PropertyId jsPropID = (propID);
-  ooscript::Value* jsValue = (value);
-  (void)obj;
-
-  OOJS_NATIVE_ENTER(context)
-
-  PlayerEntity* player = OOPlayerForScripting();
-  std::optional<std::string> scriptName;
-  OOScript* script = nullptr;
-
-  if (!ooscript::isStringId(jsPropID)) return true;
-  scriptName =
-      cxx_OOStringFromJSString(context, ooscript::idToString(jsPropID));
-
-  if (scriptName.has_value()) {
-    script = nullptr;
-    const auto worldScripts =
-        (player != nullptr
-             ? player->worldScriptsByName()
-             : std::vector<std::pair<std::string,
-                                     oo::Ref<OOScript>>>());  // kept while
-                                                              // script is used
-    for (const auto& [name, scriptRef] :
-         worldScripts)  // the last of a name, as the dictionary kept
-    {
-      if (name == *scriptName && scriptRef.get() != nullptr)
-        script = scriptRef.get();
-    }
-    if (script != nullptr) {
-      /*	If script is an OOJSScript, this should return a JS Script
-              object. For other OOScript subclasses, it will return
-              ooscript::nullValue(). If no script exists, the value will be
-              ooscript::undefinedValue().
-      */
-      *jsValue = script->jsValueInContext(context);
-    } else {
-      *jsValue = ooscript::undefinedValue();
-    }
+// Name of a world script for a string property ID, or nullopt for other IDs
+// (symbols and integers).
+static std::optional<std::string> ScriptNameForPropertyID(JSContext* context,
+                                                          JSAtom propID) {
+  std::optional<std::string> result;
+  JSValue idValue = JS_AtomToValue(context, propID);
+  if (JS_IsString(idValue)) {
+    result = cxx_OOStringFromJSValue(context, idValue);
   }
-
-  return true;
-
-  OOJS_NATIVE_EXIT
+  JS_FreeValue(context, idValue);
+  return result;
 }
-}  // namespace
 
-namespace {
-static bool WorldScriptsEnumerate(Context cx, Object obj) {
-  ooscript::Context context = (cx);
+static int WorldScriptsGetOwnProperty(JSContext* context,
+                                      JSPropertyDescriptor* desc,
+                                      JSValueConst /*object*/, JSAtom propID) {
+  try {
+    PlayerEntity* player = OOPlayerForScripting();
+    std::optional<std::string> scriptName;
+    OOScript* script = nullptr;
 
-  OOJS_NATIVE_ENTER(context)
+    scriptName = ScriptNameForPropertyID(context, propID);
 
+    if (scriptName.has_value()) {
+      const auto worldScripts =
+          (player != nullptr
+               ? player->worldScriptsByName()
+               : std::vector<std::pair<std::string,
+                                       oo::Ref<OOScript>>>());  // kept while
+                                                                // script is
+                                                                // used
+      for (const auto& [name, scriptRef] :
+           worldScripts)  // the last of a name, as the dictionary kept
+      {
+        if (name == *scriptName && scriptRef.get() != nullptr)
+          script = scriptRef.get();
+      }
+      if (script != nullptr) {
+        if (desc != NULL) {
+          /*	If script is an OOJSScript, this should return a JS Script
+                  object. For other OOScript subclasses, it will return
+                  null. If no script exists, the value will be
+                  undefined.
+          */
+          desc->flags = OOJS_PROP_READONLY;
+          desc->value = script->jsValueInContext(context);  // owned
+          desc->getter = JS_UNDEFINED;
+          desc->setter = JS_UNDEFINED;
+        }
+        return true;
+      }
+    }
+
+    return false;
+  } catch (...) {
+    OOJSReportCurrentException(context);
+    return -1;
+  }
+}
+
+static int WorldScriptsGetOwnPropertyNames(JSContext* context,
+                                           JSPropertyEnum** outTable,
+                                           uint32_t* outCount,
+                                           JSValueConst /*object*/) {
   /*	In order to support enumeration of world scripts (e.g.,
-          for (name in worldScripts) { ... }), define each property on demand.
-          Since world scripts cannot be deleted, we don't need to worry about
-          that case (as in OOJSMissionVariables).
-
-          Since WorldScriptsGetProperty() will be called for each access anyway,
-          we define the value as null here.
+          for (name in worldScripts) { ... }), report each name.
+          QuickJS frees the table and its atoms.
   */
+  try {
+    PlayerEntity* player = OOPlayerForScripting();
+    const std::vector<std::string> names =
+        (player != nullptr ? player->worldScriptNames()
+                           : std::vector<std::string>());
+    uint32_t count = static_cast<uint32_t>(names.size());
 
-  PlayerEntity* player = OOPlayerForScripting();
-  const std::vector<std::string> names =
-      (player != nullptr ? player->worldScriptNames()
-                         : std::vector<std::string>());
+    JSPropertyEnum* table = static_cast<JSPropertyEnum*>(
+        js_malloc(context, sizeof *table * std::max(count, 1U)));
+    if (table == NULL) return -1;
 
-  for (const std::string& name : names) {
-    Value nullVal = ooscript::nullValue();
-    if (!ooscript::defineProperty(cx, obj, name.c_str(), nullVal,
-                                  WorldScriptsGetProperty, nullptr,
-                                  kWorldScriptsPropertyFlags))
-      return false;
+    for (uint32_t i = 0; i < count; i++) {
+      table[i].is_enumerable = true;
+      table[i].atom = JS_NewAtom(context, names[i].c_str());
+      if (table[i].atom == JS_ATOM_NULL) {
+        JS_FreePropertyEnum(context, table, i);
+        return -1;
+      }
+    }
+
+    *outTable = table;
+    *outCount = count;
+    return 0;
+  } catch (...) {
+    OOJSReportCurrentException(context);
+    return -1;
   }
-
-  return true;
-
-  OOJS_NATIVE_EXIT
 }
-}  // namespace

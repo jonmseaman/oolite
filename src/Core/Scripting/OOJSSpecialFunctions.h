@@ -34,6 +34,6 @@ MA 02110-1301, USA.
 
 #include "OOJSEngineCore.h"
 
-void InitOOJSSpecialFunctions(ooscript::Context context,
-                              ooscript::Object global);
-oo::Ref<OOJSValue> JSSpecialFunctionsObjectWrapper(ooscript::Context context);
+void InitOOJSSpecialFunctions(JSContext* context, JSValueConst global);
+// Returns a new (owned) frozen object holding the special functions.
+JSValue JSSpecialFunctionsObjectWrapper(JSContext* context);

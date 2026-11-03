@@ -95,17 +95,16 @@ void OOJavaScriptEngine::enableDebuggerStatement() {
 // client's debugger interface members are never reached (the monitor is a
 // stand-in). The engine-monitor members, which give the C++ monitor its vtable
 // (they are virtual); never reached here.
-void OODebugMonitor::jsEngine(::OOJavaScriptEngine*, ooscript::Context,
-                              ooscript::ErrorReport*, unsigned, bool,
-                              const std::string&) {}
-void OODebugMonitor::jsEngine(::OOJavaScriptEngine*, ooscript::Context,
+void OODebugMonitor::jsEngine(::OOJavaScriptEngine*, JSContext*,
+                              const std::string&,
+                              const std::optional<std::string>&, unsigned,
+                              unsigned, bool, const std::string&) {}
+void OODebugMonitor::jsEngine(::OOJavaScriptEngine*, JSContext*,
                               const std::string&,
                               const std::optional<std::string>&) {}
 // The monitor's JS glue and description, also virtual; never reached here.
-ooscript::Value OODebugMonitor::jsValueInContext(ooscript::Context) {
-  return ooscript::Value{};
-}
-void OODebugMonitor::clearJSSelf(ooscript::Object) {}
+JSValue OODebugMonitor::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
+void OODebugMonitor::clearJSSelf(JSValueConst) {}
 std::string OODebugMonitor::className() const { return "OODebugMonitor"; }
 std::string OODebugMonitor::description() const { return "<OODebugMonitor>"; }
 

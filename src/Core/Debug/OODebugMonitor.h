@@ -40,6 +40,8 @@ SOFTWARE.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include <map>
 #include <optional>
 #include <string>
@@ -53,7 +55,6 @@ SOFTWARE.
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
 
 class OOJavaScriptEngine;
 #include "OOColor.h"   // the colour maps hold oo::Ref<OOColor>
@@ -117,10 +118,12 @@ class OODebugMonitor : public oo::PListForeign,
   // The JavaScript engine's monitor (OOJavaScriptEngineMonitor): errors and
   // warnings, and log messages (messageClass nullopt if Log() is used rather
   // than LogWithClass()).
-  void jsEngine(::OOJavaScriptEngine* engine, ooscript::Context context,
-                ooscript::ErrorReport* errorReport, unsigned stackSkip,
-                bool showLocation, const std::string& message) override;
-  void jsEngine(::OOJavaScriptEngine* engine, ooscript::Context context,
+  void jsEngine(::OOJavaScriptEngine* engine, JSContext* context,
+                const std::string& severity,
+                const std::optional<std::string>& file, unsigned line,
+                unsigned stackSkip, bool showLocation,
+                const std::string& message) override;
+  void jsEngine(::OOJavaScriptEngine* engine, JSContext* context,
                 const std::string& message,
                 const std::optional<std::string>& messageClass) override;
 
@@ -128,8 +131,8 @@ class OODebugMonitor : public oo::PListForeign,
   // first use and kept (what the facade's -oo_jsValueInContext: answered);
   // nothing when a wrapper is finalized, as OOObject's -oo_clearJSSelf: did for
   // the facade.
-  ooscript::Value jsValueInContext(ooscript::Context context) override;
-  void clearJSSelf(ooscript::Object selfVal) override;
+  JSValue jsValueInContext(JSContext* context) override;  // owned
+  void clearJSSelf(JSValueConst selfVal) override;
 
   // oo::PListForeign: what the facade answered (its class, and "%@" as
   // <OODebugMonitor 0x...>).
@@ -170,8 +173,8 @@ class OODebugMonitor : public oo::PListForeign,
   oo::Ref<OODebuggerInterface> _debugger;  // a C++ interface
 
   // JavaScript console support.
-  oo::Ref<OOScript> _script;  // the console script (an OOJSScript)
-  ooscript::Object _jsSelf = {};
+  oo::Ref<OOScript> _script;       // the console script (an OOJSScript)
+  JSValue _jsSelf = JS_UNDEFINED;  // Owned; released when the JS engine resets.
 
   oo::PList _configFromOXPs;   // Settings from debugConfig.plist (a Dict, never
                                // null after init())

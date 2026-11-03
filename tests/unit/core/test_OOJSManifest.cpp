@@ -2,9 +2,9 @@
         Unit tests for the Manifest JS binding
    (src/Core/Scripting/OOJSManifest.h/.mm).
 
-   As the other binding tests do, it runs the JS class in a real context on the
-   game's own façade backend (ooscript/JSEngine_quickjs.cpp), and links the
-   game's own objects for the binding, the engine's exception translator
+   As the other binding tests do, it runs the JS class in a real QuickJS-ng
+   context, and links the game's own objects for the binding, the engine's
+   class registration (OOJSClasses.cpp), its exception translator
    (OOJSEngineNativeWrappers.mm) and the commodity classes it asks
    (OOCommodities and OOCommodityMarket, as test_OOCommodities.mm links them,
    reading the trade goods below; the stand-ins hold them as oo::Ref). It stands
@@ -19,13 +19,14 @@
    native's exception. Run: tests/run.sh unit
 */
 
+#include <quickjs.h>
+
 #include "OOCommodities.h"
 #include "OOCommodityMarket.h"
 #include "OOStringExpander.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
-#include "ooscript/JSEngine.hpp"
 
 // MARK: The classes, as far as the binding and the commodities see them
 // ---------------------------
@@ -87,6 +88,7 @@ class StationEntity {
   bool getMarketMonitored();
 };
 
+#include <cmath>
 #include <cstdarg>
 #include <cstdint>
 #include <cstring>
@@ -95,6 +97,7 @@ class StationEntity {
 #include <string>
 #include <vector>
 
+#include "OOJSEngineCore.h"
 #include "OOJSManifest.h"
 #include "oo_test.hpp"
 
@@ -192,13 +195,13 @@ Random_Seed OOStringExpanderDefaultRandomSeed(void) { return Random_Seed{}; }
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
 
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
-                                      const char* format, va_list args) {
+void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
+                                      va_list args) {
   std::string msg = oo::str::vformat(format, args);
-  ooscript::reportError(context, msg.c_str());
+  JS_ThrowPlainError(context, "%s", msg.c_str());
 }
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportErrorWithArguments(context, format, args);
@@ -209,7 +212,7 @@ namespace {
 std::string sLastWarning;
 }
 
-void cxx_OOJSReportWarning(ooscript::Context, const char* format, ...) {
+void cxx_OOJSReportWarning(JSContext*, const char* format, ...) {
   va_list args;
   va_start(args, format);
   sLastWarning = oo::str::vformat(format, args);
@@ -217,78 +220,105 @@ void cxx_OOJSReportWarning(ooscript::Context, const char* format, ...) {
 }
 
 void cxx_OOJSReportBadArguments(
-    ooscript::Context context, const std::optional<std::string>& scriptClass,
-    const std::optional<std::string>& function, unsigned argc, ooscript::Value*,
+    JSContext* context, const std::optional<std::string>& scriptClass,
+    const std::optional<std::string>& function, int argc, JSValueConst*,
     const std::optional<std::string>& message,
     const std::optional<std::string>& expectedArgsDescription) {
-  cxx_OOJSReportError(context, "bad arguments: %s.%s(%u) %s / %s",
+  cxx_OOJSReportError(context, "bad arguments: %s.%s(%d) %s / %s",
                       scriptClass.value_or("-").c_str(),
                       function.value_or("-").c_str(), argc,
                       message.value_or("-").c_str(),
                       expectedArgsDescription.value_or("-").c_str());
 }
 
-std::optional<std::string> cxx_OOStringFromJSString(ooscript::Context context,
-                                                    ooscript::String str) {
-  if (str == nullptr) return std::nullopt;
+// As the engine's: the pending exception is reported (here, dropped) and
+// cleared.
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
+}
+
+// Property IDs are interned for the life of the process (never freed).
+JSAtom cxx_OOJSIDFromString(const std::string& string) {
+  return JS_NewAtomLen(OOJSAcquireContext(), string.data(), string.size());
+}
+
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  return cxx_OOStringFromJSString(context,
-                                  ooscript::valueToString(context, value));
+// As the engine's: to a number, rounded to nearest; NaN or out of range is an
+// error.
+bool OOJSValueToInt32(JSContext* context, JSValueConst value,
+                      int32_t* outValue) {
+  double number;
+  if (JS_ToFloat64(context, &number, value) < 0) return false;
+  number = std::floor(number + 0.5);
+  if (std::isnan(number) || number < INT32_MIN || number > INT32_MAX) {
+    cxx_OOJSReportError(context, "can't convert to an integer");
+    return false;
+  }
+  *outValue = static_cast<int32_t>(number);
+  return true;
 }
 
-// A property list as JavaScript, as far as the binding hands one over: null, a
-// string, a number, or an array or dictionary of those.
-ooscript::Value OOJSValueFromPList(ooscript::Context context,
-                                   const oo::PList& plist) {
-  if (const std::string* str = plist.getIf<std::string>()) {
-    ooscript::String js =
-        ooscript::newStringCopyN(context, str->data(), str->size());
-    return js != nullptr ? ooscript::stringValue(js) : ooscript::nullValue();
-  }
-  if (plist.isNumber()) return ooscript::numberValue(plist.doubleValue());
+// For the binding's invalid-value message: the class name and the value's
+// text.
+std::string OOJSClassNameOfValue(JSContext*, JSValueConst value) {
+  const char* name = OOJSClassName(JS_GetClassID(value));
+  return name != nullptr ? name : "Object";
+}
+
+std::string cxx_OOJSDescribeValue(JSContext* context, JSValueConst value,
+                                  bool) {
+  return cxx_OOStringFromJSValue(context, value).value_or("undefined");
+}
+
+// A property list as JavaScript (owned), as far as the binding hands one over:
+// null, a string, a number, or an array or dictionary of those.
+JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
+  if (const std::string* str = plist.getIf<std::string>())
+    return JS_NewStringLen(context, str->data(), str->size());
+  if (plist.isNumber()) return JS_NewNumber(context, plist.doubleValue());
   if (const oo::PList::Array* array = plist.getIf<oo::PList::Array>()) {
-    std::vector<ooscript::Value> values;
+    JSValue object = JS_NewArray(context);
+    uint32_t index = 0;
     for (const oo::PList& element : *array)
-      values.push_back(OOJSValueFromPList(context, element));
-    ooscript::Object object = ooscript::newArrayObject(
-        context, static_cast<unsigned>(values.size()), values.data());
-    return object != nullptr ? ooscript::objectValue(object)
-                             : ooscript::nullValue();
+      JS_SetPropertyUint32(context, object, index++,
+                           OOJSValueFromPList(context, element));
+    return object;
   }
   if (const oo::PList::Dict* dict = plist.getIf<oo::PList::Dict>()) {
-    ooscript::Object object =
-        ooscript::newObject(context, nullptr, nullptr, nullptr);
-    for (const auto& entry : *dict) {
-      ooscript::Value value = OOJSValueFromPList(context, entry.second);
-      ooscript::setProperty(context, object, entry.first.c_str(), &value);
-    }
-    return ooscript::objectValue(object);
+    JSValue object = JS_NewObject(context);
+    for (const auto& entry : *dict)
+      JS_SetPropertyStr(context, object, entry.first.c_str(),
+                        OOJSValueFromPList(context, entry.second));
+    return object;
   }
-  return ooscript::nullValue();
+  return JS_NULL;
 }
 
 // Link stubs: what the commodity classes reach for
 // commodity scripts. The player answers no script, so the test never runs one.
-oo::PList cxx_OOJSPListFromJSObject(ooscript::Context, ooscript::Object) {
-  std::abort();
+oo::PList cxx_OOJSPListFromJSObject(JSContext*, JSValueConst) { std::abort(); }
+JSAtom OOJSInternAtomPRIVATE(const char*) {
+  std::abort();  // link stub: the commodity classes' script path
 }
-ooscript::Context gOOJSMainThreadContext = nullptr;
+JSContext* gOOJSMainThreadContext = nullptr;
 
 namespace {
 PlayerEntity* sPlayer = nullptr;
-ooscript::Object sPlayerShip = nullptr;
-std::map<ooscript::ClassDef*, int> sConverters;
+JSValue sPlayerShip = JS_UNDEFINED;  // owned for the life of the test
+std::map<JSClassID, int> sConverters;
 }  // namespace
 
 PlayerEntity* gOOPlayer = nullptr;
@@ -297,31 +327,40 @@ Universe* gSharedUniverse = nullptr;
 
 PlayerEntity* OOPlayerForScripting(void) { return sPlayer; }
 
-ooscript::Object JSPlayerShipObject(void) { return sPlayerShip; }
+// The player ship's JS object, owned by the caller.
+JSValue JSPlayerShipObject(void) {
+  return JS_DupValue(OOJSAcquireContext(), sPlayerShip);
+}
 
-void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
-                                   ooscript::PropertyId,
-                                   ooscript::PropertySpec*) {
+void OOJSReportBadPropertySelector(JSContext* context, JSValueConst, int,
+                                   const JSCFunctionListEntry*, size_t) {
   cxx_OOJSReportError(context, "bad property selector");
 }
 
-void OOJSReportBadPropertyValue(ooscript::Context context, ooscript::Object,
-                                ooscript::PropertyId, ooscript::PropertySpec*,
-                                ooscript::Value) {
+void OOJSReportBadPropertyValue(JSContext* context, JSValueConst, int,
+                                const JSCFunctionListEntry*, size_t,
+                                JSValueConst) {
   cxx_OOJSReportError(context, "bad property value");
 }
 
-void OOJSInitJSIDCachePRIVATE(const char*, ooscript::PropertyId*) {
-  std::abort();  // link stub: the commodity classes' script path
+void OOJSRegisterObjectConverter(JSClassID classID,
+                                 OOJSClassConverterCallback) {
+  sConverters[classID]++;
 }
 
-bool OOJSUnconstructableConstruct(ooscript::Context context,
-                                  ooscript::CallArgs&) {
+oo::PList OOJSBasicPrivateObjectConverter(JSContext*, JSValueConst) {
+  return oo::PList();
+}
+
+JSValue OOJSUnconstructableConstruct(OOJS_NATIVE_ARGS) {
+  (void)oojsThis;
+  (void)argc;
+  (void)oojsArgv;
   cxx_OOJSReportError(context, "unconstructable");
-  return false;
+  return JS_EXCEPTION;
 }
 
-void OOJSObjectWrapperFinalize(ooscript::Context, ooscript::Object) {}
+void OOJSObjectWrapperFinalize(JSRuntime*, JSValueConst) {}
 
 int sLimiterPauses = 0;
 int sProfileDepth = 0;
@@ -347,18 +386,18 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 
 namespace {
 
-ooscript::Runtime sRuntime;
-ooscript::Context sContext;
-ooscript::Object sGlobal;
+JSRuntime* sRuntime;
+JSContext* sContext;
+JSValue sGlobal = JS_UNDEFINED;  // owned for the life of the test
 Universe* sUniverse = nullptr;
 
 void SetUpContext() {
   if (sContext != nullptr) return;
-  sRuntime = ooscript::newRuntime(8u * 1024u * 1024u);
-  sContext = ooscript::newContext(sRuntime, 8192);
-  ooscript::beginRequest(sContext);
-  sGlobal = ooscript::getGlobalObject(sContext);
-  ooscript::initStandardClasses(sContext, sGlobal);
+  sRuntime = JS_NewRuntime();
+  JS_SetMemoryLimit(sRuntime, 8u * 1024u * 1024u);
+  sContext = JS_NewContext(sRuntime);
+  gOOJSMainThreadContext = sContext;
+  sGlobal = JS_GetGlobalObject(sContext);
 
   sUniverse = new Universe();  // kept for the life of the test
   gSharedUniverse = sUniverse;
@@ -371,9 +410,9 @@ void SetUpContext() {
   sPlayer->_cargo["food"] = 3;
   sPlayer->_cargo["gems"] = 12;
 
-  sPlayerShip = ooscript::newObject(sContext, nullptr, nullptr, nullptr);
-  ooscript::Value ship = ooscript::objectValue(sPlayerShip);
-  ooscript::setProperty(sContext, sGlobal, "playerShip", &ship);
+  sPlayerShip = JS_NewObject(sContext);
+  JS_SetPropertyStr(sContext, sGlobal, "playerShip",
+                    JS_DupValue(sContext, sPlayerShip));
   InitOOJSManifest(sContext, sGlobal);
 }
 
@@ -385,14 +424,16 @@ std::string Eval(const char* src) {
                         src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
-  if (!ooscript::evaluateScript(sContext, sGlobal, wrapped.c_str(),
-                                static_cast<unsigned>(wrapped.size()),
-                                "test.js", 1, &result)) {
-    ooscript::clearPendingException(sContext);
+  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(),
+                           "test.js", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(sContext, JS_GetException(sContext));
     return "<evaluation failed>";
   }
-  return cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  std::string text =
+      cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  JS_FreeValue(sContext, result);
+  return text;
 }
 
 // Eval, and print what came back when it is not what the check expects.
@@ -444,15 +485,20 @@ OO_TEST(quantities) {
                 "0");  // clamped
   OO_CHECK_EVAL(
       "(function () { manifest.food = 4.6; return manifest.food; })()", "5");
-  // A value that is not a number, and delete (which sets undefined), change
-  // nothing.
-  OO_CHECK_EVAL(
-      "(function () { manifest.food = 'x'; return manifest.food; })()", "5");
+  // A value that is not a number, and delete (which sets undefined), throw
+  // and change nothing (upstream #768 throws where the error was reported and
+  // the assignment ignored).
+  OO_CHECK_EVAL("(function () { manifest.food = 'x'; return 'set'; })()",
+                "threw: Cannot set property food of instance of Manifest to "
+                "invalid value x.");
+  OO_CHECK_EVAL("manifest.food", "5");
   OO_CHECK_EQ(sPlayer->_sets, 3);
   OO_CHECK_EVAL(
       "(function () { manifest.food = 9; delete manifest.food; return "
-      "manifest.food; })()",
-      "9");
+      "'deleted'; })()",
+      "threw: Cannot set property food of instance of Manifest to invalid "
+      "value undefined.");
+  OO_CHECK_EVAL("manifest.food", "9");
   OO_CHECK_EQ(sPlayer->_sets, 4);
   // Any other name is set on the player as it is, commodity or not, and kept on
   // the object.
@@ -521,7 +567,6 @@ OO_TEST(nativeExceptions) {
   OO_CHECK_EVAL("manifest.gems", "12");
   OO_CHECK_EQ(sLimiterPauses, 0);
   OO_CHECK_EQ(sProfileDepth, 0);
-  OO_CHECK(ooscript::isInRequest(sContext));
 }
 
 OO_TEST_MAIN()

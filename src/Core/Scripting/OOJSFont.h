@@ -31,6 +31,6 @@ SOFTWARE.
 
 #pragma once
 
-#include "ooscript/JSEngine.hpp"
+#include <quickjs.h>
 
-void InitOOJSFont(ooscript::Context context, ooscript::Object global);
+void InitOOJSFont(JSContext* context, JSValueConst global);

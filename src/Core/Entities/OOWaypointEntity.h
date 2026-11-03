@@ -65,8 +65,7 @@ class OOWaypointEntity : public Entity {
   void drawImmediate(bool immediate, bool translucent) override;
 
   // The binding's bodies (OOJSWaypoint.mm), which the facade forwarded to.
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype) override;
+  JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
   bool isVisibleToScripts() override;
 

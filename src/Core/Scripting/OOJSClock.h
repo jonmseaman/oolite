@@ -27,6 +27,6 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "ooscript/JSEngine.hpp"
+#include <quickjs.h>
 
-void InitOOJSClock(ooscript::Context context, ooscript::Object global);
+void InitOOJSClock(JSContext* context, JSValueConst global);

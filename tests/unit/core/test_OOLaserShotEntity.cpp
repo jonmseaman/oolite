@@ -73,7 +73,7 @@ struct OOLaserShotEntityTestAccess {
 
 // --------------------------------------------------------------------------------------------------
 
-extern ooscript::Context
+extern JSContext*
     gOOJSMainThreadContext;  // the engine's (OOJavaScriptEngine.mm)
 
 namespace {
@@ -92,7 +92,7 @@ void SetUp() {
   // stand-in is C++, as test_StationEntity's ships are).
   if (gOOJSMainThreadContext == nullptr)
     gOOJSMainThreadContext =
-        ooscript::newContext(ooscript::newRuntime(8u * 1024u * 1024u), 8192);
+        JS_NewContext(JS_NewRuntime());
   sRemoved = nullptr;
 }
 

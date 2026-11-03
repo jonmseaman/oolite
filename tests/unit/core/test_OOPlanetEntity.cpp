@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "OOJSEntity.h"
 #include "OOColor.h"
 #include "OODescription.h"
 #include "OOJSPlanet.h"
@@ -388,19 +389,31 @@ OO_TEST(facade) {
   }
 }
 
+// Registers Entity's JS class and the given class (a child of Entity) in the
+// test's context, as the engine's start does; the context is made here if the
+// test has none yet.
+static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
+  extern JSContext* gOOJSMainThreadContext;
+  if (gOOJSMainThreadContext == nullptr)
+    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+  JSContext* context = OOJSAcquireContext();
+  JSValue global = JS_GetGlobalObject(context);
+  InitOOJSEntity(context, global);
+  initClass(context, global);
+  JS_FreeValue(context, global);
+}
+
 // The binding's category, which the C++ planet's overrides answer: what the
 // engine asks a planet's object for by selector is what OOJSPlanet.mm answers.
 OO_TEST(jsExtensions) {
   {
     SetUp();
     OOPlanetEntity* moon = Planet(false);
-    ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
-    ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
     Entity* object = moon;
-    OOJSEntityGetJSClass(object, &jsClass, &prototype);
-    OOJSPlanetGetJSClass(&expectedClass, &expectedPrototype);
-    OO_CHECK(jsClass != nullptr && jsClass == expectedClass &&
-             prototype == expectedPrototype);
+    RegisterJSClasses(InitOOJSPlanet);
+    const JSClassID jsClass = OOJSEntityJSClassID(object);
+    const JSClassID expectedClass = JSPlanetClassID();
+    OO_CHECK(jsClass != 0 && jsClass == expectedClass);
     OO_CHECK(OOJSEntityJSClassName(object) ==
              std::optional<std::string>("Moon"));
     OO_CHECK(OOJSEntityIsVisibleToScripts(object) == true);

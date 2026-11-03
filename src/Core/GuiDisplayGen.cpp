@@ -1059,21 +1059,20 @@ bool GuiDisplayGen::preloadGUITexture(const oo::PList& descriptor) {
 }
 
 oo::PList GuiDisplayGen::textureDescriptorFromJSValue(
-    ooscript::Value value, ooscript::Context context,
-    const std::optional<std::string>& callerDescription) {
+    JSValueConst value, JSContext* context,
+    const std::string& callerDescription) {
   OOJS_PROFILE_ENTER
 
   oo::PList result;
 
-  if (ooscript::isObjectOrNull(value)) {
-    // Null may be used to indicate no texture.
-    if (ooscript::isNull(value)) return oo::PList(oo::PList::Dict{});
+  // Null may be used to indicate no texture.
+  if (JS_IsNull(value)) return oo::PList(oo::PList::Dict{});
 
-    ooscript::Object objValue = ooscript::toObject(value);
-
-    if (OOJSGetClass(context, objValue) !=
-        OOJavaScriptEngine::sharedEngine()->stringClass()) {
-      result = cxx_OOJSDictionaryFromJSObject(context, objValue);
+  if (JS_IsObject(value)) {
+    // String objects are converted to strings; anything else is treated as a
+    // dictionary.
+    if (JS_GetClassID(value) != gOOJSStringClassID) {
+      result = cxx_OOJSDictionaryFromJSObject(context, value);
     }
   }
 
@@ -1091,10 +1090,9 @@ oo::PList GuiDisplayGen::textureDescriptorFromJSValue(
 
   // Start loading the texture, and return nil if it doesn't exist.
   if (!result.isNull() && !preloadGUITexture(result)) {
-    cxx_OOJSReportWarning(
-        context, "%s: texture \"%s\" could not be found.",
-        (callerDescription ? callerDescription->c_str() : "(null)"),
-        DescriptorName(result).value_or("(null)").c_str());
+    cxx_OOJSReportWarning(context, "%s: texture \"%s\" could not be found.",
+                          callerDescription.c_str(),
+                          DescriptorName(result).value_or("(null)").c_str());
     result = oo::PList();
   }
 

@@ -52,13 +52,10 @@ class Universe {
   ::OOScript* getConditionScript(const std::string& scriptname);
 };
 ::OOScript* Universe::getConditionScript(const std::string&) { return nullptr; }
-ooscript::Context gOOJSMainThreadContext = nullptr;
-void OOJSInitJSIDCachePRIVATE(const char*, ooscript::PropertyId*) {
-  std::abort();
-}
-ooscript::Value OOJSValueFromPList(ooscript::Context, const oo::PList&) {
-  std::abort();
-}
+JSContext* gOOJSMainThreadContext = nullptr;
+JSAtom OOJSInternAtomPRIVATE(const char*) { std::abort(); }
+JSValue OOJSValueFromPList(JSContext*, const oo::PList&) { std::abort(); }
+bool OOJSValueToBOOL(JSContext*, JSValueConst) { std::abort(); }
 oo::PList OOSanitizeLegacyScriptConditions(const oo::PList&,
                                            const std::optional<std::string>&) {
   std::abort();

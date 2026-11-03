@@ -110,8 +110,7 @@ class DockEntity : public ShipEntity {
   // From the superclass.
   bool isDock() override;
   // Entity (OOJavaScriptExtensions): the binding's bodies (OOJSDock.h).
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype) override;
+  JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
   // The ship's answer (ShipEntity (OOJavaScriptExtensions)), which the facade
   // inherited; a C++ part is asked.

@@ -1,35 +1,36 @@
 /*	test_OOJSFunction.mm
         Unit tests for OOJSFunction (src/Core/Scripting/OOJSFunction.h/.mm).
 
-   OOJSFunction keeps a JS function alive (a GC root) for Objective-C code: the
-   AI's scan predicates (ShipEntityAI) and the regular-expression tester
-   (OORegExpMatcher). The test runs it in a real context on the game's own
-   façade backend (ooscript/JSEngine_quickjs.cpp) and links the game's own
-   object for the class. What the rest of the engine would provide is defined
-   below as the smallest stand-in that does the same thing: the engine object
-   (its global object), the script stack, the time limiter, the value converter
-   and the string converter. The engine's and OOJSScript's headers are not
-   imported, because the test defines those classes. The expectations were
-   written against the Objective-C class and run on it first; they pin: both
-   initialisers (and when they answer nil), the name and the description, the
-   function value, raw evaluation (the script stack and the time limiter
-   balanced around each call, the arguments converted), the predicate's
-   truthiness, and what an engine reset does (commit 34d0592d1). Run: bash
-   tests/run.sh unit
+   OOJSFunction keeps a JS function alive (a reference it owns) for C++ code:
+   the AI's scan predicates (ShipEntityAI) and the regular-expression tester
+   (OORegExpMatcher). The test runs it in a real QuickJS-ng context and links
+   the game's own object for the class. What the rest of the engine would
+   provide is defined below as the smallest stand-in that does the same thing:
+   the engine object (the sender of its reset notification), the script stack,
+   the time limiter, the string converter and the pending-exception reporter.
+   The engine's and OOJSScript's headers are not included, because the test
+   defines those classes. The expectations were written against the
+   Objective-C class and run on it first; they pin: both initialisers (and
+   when they answer nil), the name and the description, the function value,
+   raw evaluation (the script stack and the time limiter balanced around each
+   call, the arguments converted), the predicate's truthiness, and what an
+   engine reset does (commit 34d0592d1). Run: bash tests/run.sh unit
 */
+
+#include <quickjs.h>
 
 #include <cstring>
 #include <string>
 #include <vector>
 
 #include "OODescription.h"
+#include "OOJSEngineCore.h"
 #include "OOJSFunction.h"
 #include "OOTypes.h"
 #include "oo_test.hpp"
 #include "oofnd/Notification.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOObject.h"
-#include "ooscript/JSEngine.hpp"
 
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
@@ -39,55 +40,50 @@ int sScriptDepth = 0;
 int sScriptPushes = 0;
 int sLimiterDepth = 0;
 int sLimiterStarts = 0;
-ooscript::Object sGlobal;
 }  // namespace
 
-ooscript::Context gOOJSMainThreadContext = nullptr;
-extern const char* const kOOJavaScriptEngineWillResetNotificationName;
+JSContext* gOOJSMainThreadContext = nullptr;
 const char* const kOOJavaScriptEngineWillResetNotificationName =
     "org.aegidian.oolite OOJavaScriptEngine will reset";
 
-std::optional<std::string> cxx_OOStringFromJSString(ooscript::Context context,
-                                                    ooscript::String string) {
-  if (string == nullptr) return std::nullopt;
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, string, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
 }
 
-#ifndef NDEBUG
-void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta, const char*,
-                                                   unsigned) {
-  sLimiterDepth++;
-  sLimiterStarts++;
+// As the engine's: the pending exception is reported (here, dropped) and
+// cleared.
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
 }
-void OOJSStopTimeLimiter_(const char*, unsigned) { sLimiterDepth--; }
-#else
+
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta) {
   sLimiterDepth++;
   sLimiterStarts++;
 }
 void OOJSStopTimeLimiter(void) { sLimiterDepth--; }
-#endif
 
 // The engine (OOJavaScriptEngine.h), declared with the header's names and
-// signatures but not its class; the stand-in's answers are kept.
+// signatures but not its class: the code under test names it only as the
+// sender of its reset notification.
 class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
-  ooscript::Object globalObject();
 };
 
 OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
   static OOJavaScriptEngine* engine = new OOJavaScriptEngine;
   return engine;
 }
-
-ooscript::Object OOJavaScriptEngine::globalObject() { return sGlobal; }
 
 #include "OOScript.h"
 
@@ -115,43 +111,50 @@ void OOJSScript::popScript(OOJSScript* script) {
 
 namespace {
 
-ooscript::Context Context() {
+JSContext* Context() {
   if (gOOJSMainThreadContext == nullptr) {
-    ooscript::Runtime runtime = ooscript::newRuntime(8u * 1024u * 1024u);
-    gOOJSMainThreadContext = ooscript::newContext(runtime, 8192);
-    ooscript::beginRequest(gOOJSMainThreadContext);
-    sGlobal = ooscript::getGlobalObject(gOOJSMainThreadContext);
-    ooscript::initStandardClasses(gOOJSMainThreadContext, sGlobal);
+    JSRuntime* runtime = JS_NewRuntime();
+    JS_SetMemoryLimit(runtime, 8u * 1024u * 1024u);
+    gOOJSMainThreadContext = JS_NewContext(runtime);
   }
   return gOOJSMainThreadContext;
 }
 
-// Evaluates src in the global scope and gives the value.
-ooscript::Value Evaluate(const char* src) {
-  ooscript::Value result = ooscript::undefinedValue();
-  if (!ooscript::evaluateScript(Context(), sGlobal, src,
-                                static_cast<unsigned>(std::strlen(src)),
-                                "test.js", 1, &result))
-    ooscript::clearPendingException(Context());
+// Evaluates src in the global scope and gives the value, owned (undefined if
+// it threw).
+JSValue Evaluate(const char* src) {
+  JSValue result = JS_Eval(Context(), src, std::strlen(src), "test.js",
+                           JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(Context(), JS_GetException(Context()));
+    return JS_UNDEFINED;
+  }
   return result;
 }
 
-ooscript::Function FunctionFrom(const char* src) {
-  return ooscript::valueToFunction(Context(), Evaluate(src));
+// The value as a string ("undefined", "null", ...); frees the value.
+std::string String(JSValue value) {
+  std::string result;
+  if (JS_IsNull(value) || JS_IsUndefined(value))
+    result = JS_IsNull(value) ? "null" : "undefined";
+  else
+    result = cxx_OOStringFromJSValue(Context(), value).value_or("<none>");
+  JS_FreeValue(Context(), value);
+  return result;
 }
 
-std::string String(ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value))
-    return ooscript::isNull(value) ? "null" : "undefined";
-  return cxx_OOStringFromJSString(Context(),
-                                  ooscript::valueToString(Context(), value))
-      .value_or("<none>");
+// Whether two values are the same object (identity, as the façade's object
+// pointers were compared).
+bool SameObject(JSValueConst a, JSValueConst b) {
+  return JS_IsObject(a) && JS_IsObject(b) &&
+         JS_VALUE_GET_PTR(a) == JS_VALUE_GET_PTR(b);
 }
 
 oo::Ref<OOJSFunction> Compile(const char* name, const char* code,
                               std::vector<const char*> args) {
   return OOJSFunction::initWithName(
-      (name != nullptr ? std::optional<std::string>(name) : std::nullopt), NULL,
+      (name != nullptr ? std::optional<std::string>(name) : std::nullopt),
+      JS_UNDEFINED,
       (code != nullptr ? std::optional<std::string>(code) : std::nullopt),
       args.size(), (args.empty() ? NULL : args.data()), std::string("test.js"),
       1, Context());
@@ -164,23 +167,26 @@ oo::Ref<OOJSFunction> Compile(const char* name, const char* code,
 
 OO_TEST(initWithFunction) {
   {
-    OO_CHECK(OOJSFunction::initWithFunction(NULL, Context()) == nullptr);
+    OO_CHECK(OOJSFunction::initWithFunction(JS_NULL, Context()) == nullptr);
 
-    ooscript::Function f =
-        FunctionFrom("(function double(x) { return 2 * x; })");
+    JSValue f = Evaluate("(function double(x) { return 2 * x; })");
     oo::Ref<OOJSFunction> function =
         OOJSFunction::initWithFunction(f, Context());
     OO_CHECK(function != nullptr);
-    OO_CHECK(function->function() == f);
+    OO_CHECK(SameObject(function->function(), f));
     OO_CHECK_EQ(function->name().value_or("<none>"), "double");
     OO_CHECK_EQ(function->descriptionComponents().value_or("<none>"),
                 "double()");
-    OO_CHECK(ooscript::isObject(function->functionValue()));
-    OO_CHECK(ooscript::toObject(function->functionValue()) ==
-             ooscript::getFunctionObject(f));
+    JSValue functionValue = function->functionValue();
+    OO_CHECK(JS_IsObject(functionValue));
+    OO_CHECK(SameObject(functionValue, f));
+    JS_FreeValue(Context(), functionValue);
+    JS_FreeValue(Context(), f);
 
-    oo::Ref<OOJSFunction> anonymous = OOJSFunction::initWithFunction(
-        FunctionFrom("(function () { return 1; })"), Context());
+    JSValue anonymousFunction = Evaluate("(function () { return 1; })");
+    oo::Ref<OOJSFunction> anonymous =
+        OOJSFunction::initWithFunction(anonymousFunction, Context());
+    JS_FreeValue(Context(), anonymousFunction);
     OO_CHECK(!anonymous->name().has_value());
     OO_CHECK_EQ(anonymous->descriptionComponents().value_or("<none>"),
                 "<anonymous>()");
@@ -193,33 +199,34 @@ OO_TEST(initWithName) {
         Compile("add", "return a + b;", {"a", "b"});
     OO_CHECK(function != nullptr);
     OO_CHECK_EQ(function->name().value_or("<none>"), "add");
-    ooscript::Value argv[2] = {ooscript::int32Value(2),
-                               ooscript::int32Value(3)};
-    ooscript::Value result = ooscript::undefinedValue();
-    OO_CHECK(function->evaluateWithContext(Context(), NULL, 2, argv, &result));
+    JSValueConst argv[2] = {JS_NewInt32(Context(), 2),
+                            JS_NewInt32(Context(), 3)};
+    JSValue result = JS_UNDEFINED;
+    OO_CHECK(function->evaluateWithContext(Context(), JS_UNDEFINED, 2, argv,
+                                           &result));
     OO_CHECK_EQ(String(result), "5");
 
     // No code, argument names missing, or a syntax error: nil.
     OO_CHECK(Compile("none", nullptr, {}) == nullptr);
-    OO_CHECK(OOJSFunction::initWithName(std::string("x"), NULL,
+    OO_CHECK(OOJSFunction::initWithName(std::string("x"), JS_UNDEFINED,
                                         std::string("return 1;"), 1, NULL,
                                         std::nullopt, 0, Context()) == nullptr);
     OO_CHECK(Compile("bad", "return (;", {}) == nullptr);
-    ooscript::clearPendingException(Context());
+    JS_FreeValue(Context(), JS_GetException(Context()));
 
     // A NULL context: the main thread's is acquired and released.
     oo::Ref<OOJSFunction> withoutContext = OOJSFunction::initWithName(
-        std::string("seven"), NULL, std::string("return 7;"), 0, NULL,
+        std::string("seven"), JS_UNDEFINED, std::string("return 7;"), 0, NULL,
         std::nullopt, 0, NULL);
     OO_CHECK(withoutContext != nullptr);
-    OO_CHECK(ooscript::isInRequest(Context()));
-    OO_CHECK(
-        withoutContext->evaluateWithContext(Context(), NULL, 0, NULL, &result));
+    OO_CHECK(withoutContext->evaluateWithContext(Context(), JS_UNDEFINED, 0,
+                                                 NULL, &result));
     OO_CHECK_EQ(String(result), "7");
 
     // An empty body answers undefined.
     oo::Ref<OOJSFunction> empty = Compile("empty", "", {});
-    OO_CHECK(empty->evaluateWithContext(Context(), NULL, 0, NULL, &result));
+    OO_CHECK(empty->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL,
+                                        &result));
     OO_CHECK_EQ(String(result), "undefined");
   }
 }
@@ -228,14 +235,18 @@ OO_TEST(evaluation) {
   {
     oo::Ref<OOJSFunction> function =
         Compile("thisName", "return this.name + ':' + arguments.length;", {});
-    Evaluate("globalThis.named = { name: 'n' }; globalThis.name = 'global';");
-    ooscript::Value result = ooscript::undefinedValue();
+    JS_FreeValue(Context(), Evaluate("globalThis.named = { name: 'n' }; "
+                                     "globalThis.name = 'global';"));
+    JSValue result = JS_UNDEFINED;
     sScriptPushes = 0;
     sLimiterStarts = 0;
-    OO_CHECK(function->evaluateWithContext(
-        Context(), ooscript::toObject(Evaluate("named")), 0, NULL, &result));
+    JSValue named = Evaluate("named");
+    OO_CHECK(
+        function->evaluateWithContext(Context(), named, 0, NULL, &result));
+    JS_FreeValue(Context(), named);
     OO_CHECK_EQ(String(result), "n:0");
-    OO_CHECK(function->evaluateWithContext(Context(), NULL, 0, NULL, &result));
+    OO_CHECK(function->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL,
+                                           &result));
     OO_CHECK_EQ(
         String(result),
         "global:0");  // no this: the global object (the function is not strict)
@@ -247,8 +258,9 @@ OO_TEST(evaluation) {
     // A throwing function answers NO, with the stack and the limiter balanced.
     oo::Ref<OOJSFunction> thrower =
         Compile("thrower", "throw new Error('boom');", {});
-    OO_CHECK(!thrower->evaluateWithContext(Context(), NULL, 0, NULL, &result));
-    ooscript::clearPendingException(Context());
+    OO_CHECK(!thrower->evaluateWithContext(Context(), JS_UNDEFINED, 0, NULL,
+                                           &result));
+    JS_FreeValue(Context(), JS_GetException(Context()));
     OO_CHECK_EQ(sScriptDepth, 0);
     OO_CHECK_EQ(sLimiterDepth, 0);
   }
@@ -257,12 +269,12 @@ OO_TEST(evaluation) {
 OO_TEST(engineReset) {
   {
     oo::Ref<OOJSFunction> function = Compile("resettable", "return 1;", {});
-    OO_CHECK(function->function() != NULL);
+    OO_CHECK(!JS_IsNull(function->function()));
     oo::NotificationCenter::defaultCenter().post(
         kOOJavaScriptEngineWillResetNotificationName,
         OOJavaScriptEngine::sharedEngine());
-    OO_CHECK(function->function() == NULL);
-    OO_CHECK(ooscript::isNull(function->functionValue()));
+    OO_CHECK(JS_IsNull(function->function()));
+    OO_CHECK(JS_IsNull(function->functionValue()));
     OO_CHECK_EQ(function->name().value_or("<none>"),
                 "resettable");  // the name stays
   }
@@ -271,17 +283,18 @@ OO_TEST(engineReset) {
 OO_TEST(cxxAndFacade) {
   {
     oo::Ref<OOJSFunction> function = OOJSFunction::initWithName(
-        std::string("triple"), NULL, std::string("return 3 * x;"), 1,
+        std::string("triple"), JS_UNDEFINED, std::string("return 3 * x;"), 1,
         (const char*[]){"x"}, std::nullopt, 0, Context());
     OO_CHECK(function != nullptr);
-    OO_CHECK(OOJSFunction::initWithFunction(NULL, Context()) == nullptr);
-    OO_CHECK(OOJSFunction::initWithName(std::string("bad"), NULL,
+    OO_CHECK(OOJSFunction::initWithFunction(JS_NULL, Context()) == nullptr);
+    OO_CHECK(OOJSFunction::initWithName(std::string("bad"), JS_UNDEFINED,
                                         std::string("return (;"), 0, NULL,
                                         std::nullopt, 0, Context()) == nullptr);
-    ooscript::clearPendingException(Context());
-    ooscript::Value argv[1] = {ooscript::int32Value(4)};
-    ooscript::Value result = ooscript::undefinedValue();
-    OO_CHECK(function->evaluateWithContext(Context(), NULL, 1, argv, &result));
+    JS_FreeValue(Context(), JS_GetException(Context()));
+    JSValueConst argv[1] = {JS_NewInt32(Context(), 4)};
+    JSValue result = JS_UNDEFINED;
+    OO_CHECK(function->evaluateWithContext(Context(), JS_UNDEFINED, 1, argv,
+                                           &result));
     OO_CHECK_EQ(String(result), "12");
     OO_CHECK_EQ(function->descriptionComponents().value_or("<none>"),
                 "triple()");

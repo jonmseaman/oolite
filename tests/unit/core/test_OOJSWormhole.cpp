@@ -1,29 +1,31 @@
-/*	test_OOJSWormhole.mm
+/*	test_OOJSWormhole.cpp
         Unit tests for the Wormhole JS binding
-   (src/Core/Scripting/OOJSWormhole.h/.mm) and its WormholeEntity category (the
+   (src/Core/Scripting/OOJSWormhole.h/.cpp) and its WormholeEntity category (the
    C++ class's overrides answer the engine, through the root's JS category, and
    this test's stand-ins are C++ the same way).
 
-        It runs the JS class in a real context on the game's own façade backend
-   (ooscript/JSEngine_quickjs.cpp) and links the game's own objects for the
-   binding and the engine's exception translator (OOJSEngineNativeWrappers.mm).
-   The entity classes it reads are stand-ins of the same names, so the test
-   imports neither their headers nor OOJavaScriptEngine.h (which imports them):
-   Entity and WormholeEntity answer only the selectors the binding sends, and
-   the JS side of an entity is a JS object of the binding's class whose private
-   slot is the entity. What the engine provides (the Entity JS class, the
-   subclass table, the object getter, error reporting) is defined below as the
-   smallest stand-in that does the same thing, with the engine header's linkage.
-   The expectations pin the JS-visible behaviour (the four properties,
-   read-only, a stale entity, the wrong kind of object, a native's exception)
-   and what the category answers the engine. Run: tests/run.sh unit
+        It runs the JS class in a real QuickJS-ng context and links the game's
+   own objects for the binding, the engine's private-slot glue, its class
+   registry (OOJSClasses.cpp) and its exception translator
+   (OOJSEngineNativeWrappers.cpp). The entity classes it reads are stand-ins of
+   the same names, so the test imports neither their headers nor
+   OOJavaScriptEngine.h (which imports them): Entity and WormholeEntity answer
+   only what the binding asks, and the JS side of an entity is a JS object of
+   the binding's class whose private slot holds the entity. What the engine
+   provides (the Entity JS class, the object converter, error reporting) is
+   defined below as the smallest stand-in that does the same thing, with the
+   engine header's linkage. The expectations pin the JS-visible behaviour (the
+   four properties, read-only, a stale entity, the wrong kind of object, a
+   native's exception) and what the category answers the engine. Run:
+   tests/run.sh unit
 */
 
 #include "OOTypes.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
-#include "ooscript/JSEngine.hpp"
+
+#include <quickjs.h>
 
 // MARK: The entity classes, as far as the binding sees them
 // ---------------------------------------
@@ -32,8 +34,7 @@
 class Entity : public oo::RefCounted {
  public:
   virtual ~Entity();
-  virtual void getJSClass(ooscript::ClassDef** outClass,
-                          ooscript::Object* outPrototype);
+  virtual JSClassID jsClassID();
   virtual std::optional<std::string> jsClassName();
   virtual bool isVisibleToScripts();
 };
@@ -49,8 +50,7 @@ class WormholeEntity : public Entity {
   OOSystemID getOrigin();
   OOSystemID getDestination();
 
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype) override;
+  JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
   bool isVisibleToScripts() override;
 
@@ -66,8 +66,7 @@ class WormholeEntity : public Entity {
 // Its category's selectors are members of the same names.
 class TestEntityObject final : public oo::RefCounted {
  public:
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype);
+  JSClassID jsClassID();
   std::optional<std::string> cxx_oo_jsClassName();
   bool isVisibleToScripts();
 
@@ -80,16 +79,18 @@ class TestEntityObject final : public oo::RefCounted {
 #include <stdexcept>
 #include <string>
 
+#include "OOJSEngineCore.h"
+#include "OOJSPrivateObject.h"
 #include "OOJSWormhole.h"
 #include "oo_test.hpp"
 
+namespace {
+JSClassID sFakeEntityClassID = 0;
+}  // namespace
+
 // The root's JS category, as the game's asks the C++ part
-// (EntityOOJavaScriptExtensions+ObjCBridge.mm): the engine sends these
-// selectors to the wrapped object.
-void TestEntityObject::getJSClass(ooscript::ClassDef** outClass,
-                                  ooscript::Object* outPrototype) {
-  _cxxEntity->getJSClass(outClass, outPrototype);
-}
+// (EntityOOJavaScriptExtensions.cpp): the engine asks the wrapped object.
+JSClassID TestEntityObject::jsClassID() { return _cxxEntity->jsClassID(); }
 std::optional<std::string> TestEntityObject::cxx_oo_jsClassName() {
   return _cxxEntity->jsClassName();
 }
@@ -98,11 +99,7 @@ bool TestEntityObject::isVisibleToScripts() {
 }
 
 Entity::~Entity() {}
-void Entity::getJSClass(ooscript::ClassDef** outClass,
-                        ooscript::Object* outPrototype) {
-  *outClass = nullptr;
-  *outPrototype = nullptr;
-}
+JSClassID Entity::jsClassID() { return sFakeEntityClassID; }
 std::optional<std::string> Entity::jsClassName() {
   return std::string("Entity");
 }
@@ -120,10 +117,7 @@ OOSystemID WormholeEntity::getOrigin() { return _origin; }
 OOSystemID WormholeEntity::getDestination() { return _destination; }
 
 // The binding's category, as the C++ class's overrides answer it.
-void WormholeEntity::getJSClass(ooscript::ClassDef** outClass,
-                                ooscript::Object* outPrototype) {
-  ::OOJSWormholeGetJSClass(outClass, outPrototype);
-}
+JSClassID WormholeEntity::jsClassID() { return ::JSWormholeClassID(); }
 std::optional<std::string> WormholeEntity::jsClassName() {
   return ::OOJSWormholeJSClassName();
 }
@@ -134,89 +128,88 @@ bool WormholeEntity::isVisibleToScripts() {
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
 
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
-                                      const char* format, va_list args) {
+JSContext* gOOJSMainThreadContext = nullptr;
+
+void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
+                                      va_list args) {
   std::string msg = oo::str::vformat(format, args);
-  ooscript::reportError(context, msg.c_str());
+  JS_ThrowPlainError(context, "%s", msg.c_str());
 }
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportErrorWithArguments(context, format, args);
   va_end(args);
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  ooscript::String str = ooscript::valueToString(context, value);
-  if (str == nullptr) return std::nullopt;
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
 }
 
+// The atom cache and the pending-exception reporter, which the class registry
+// calls.
+JSAtom cxx_OOJSIDFromString(const std::string& string) {
+  return JS_NewAtomLen(gOOJSMainThreadContext, string.data(), string.size());
+}
+
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
+}
+
+// As the engine's: the pending exception, else an uncatchable one that ends
+// the script.
+JSValue OOJSNativeFailure(JSContext* context) {
+  if (JS_HasException(context)) return JS_EXCEPTION;
+  JSValue error = JS_NewError(context);
+  JS_SetUncatchableError(context, error);
+  return JS_Throw(context, error);
+}
+
 namespace {
-ooscript::ClassDef sFakeEntityClass = {"Entity",
-                                       ooscript::ClassFlag::HasPrivate};
-std::map<ooscript::ClassDef*, ooscript::ClassDef*> sSuperclasses;
-std::map<ooscript::ClassDef*, int> sConverters;
+std::map<JSClassID, int> sConverters;
 }  // namespace
 
-ooscript::Object gOOEntityJSPrototype = nullptr;
+JSClassID JSEntityClassID(void) { return sFakeEntityClassID; }
 
-
-ooscript::ClassDef* JSEntityClass(void) { return &sFakeEntityClass; }
-
-void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
-                                   ooscript::PropertyId,
-                                   ooscript::PropertySpec*) {
+void OOJSReportBadPropertySelector(JSContext* context, JSValueConst, int,
+                                   const JSCFunctionListEntry*, size_t) {
   cxx_OOJSReportError(context, "bad property selector");
 }
 
-void OOJSRegisterSubclass(ooscript::ClassDef* subclass,
-                          ooscript::ClassDef* superclass) {
-  sSuperclasses[subclass] = superclass;
-}
-
-bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
-                    ooscript::ClassDef* superclass) {
-  for (ooscript::ClassDef* c = putativeSubclass; c != nullptr;
-       c = sSuperclasses.count(c) != 0 ? sSuperclasses[c] : nullptr) {
-    if (c == superclass) return true;
-  }
-  return false;
-}
-
-void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
-                                 oo::PList (*)(ooscript::Context,
-                                               ooscript::Object)) {
-  sConverters[theClass]++;
+void OOJSRegisterObjectConverter(JSClassID classID,
+                                 OOJSClassConverterCallback) {
+  sConverters[classID]++;
 }
 
 // The engine's object getter is OOJSPrivateObject.cpp's (linked): the JS class
 // must be a subclass of the required one, and the slot holds the entity's
-// holder.
+// holder. The finalizer is the engine's, which is the glue's.
+void OOJSObjectWrapperFinalize(JSRuntime* runtime, JSValueConst thisObj) {
+  OOJSCxxObjectWrapperFinalize(runtime, thisObj);
+}
 
 // The shared toString(), which OOJSCxxObjectWrapperToString() hands a `this` of
 // another class.
-bool OOJSObjectWrapperToString(ooscript::Context context,
-                               ooscript::CallArgs& args) {
-  const std::string text = "[object]";
-  args.setRval(ooscript::stringValue(
-      ooscript::newStringCopyN(context, text.data(), text.size())));
-  return true;
+JSValue OOJSObjectWrapperToString(JSContext* context, JSValueConst, int,
+                                  JSValueConst*) {
+  return JS_NewString(context, "[object]");
 }
 
-bool OOJSUnconstructableConstruct(ooscript::Context context,
-                                  ooscript::CallArgs&) {
+JSValue OOJSUnconstructableConstruct(JSContext* context, JSValueConst, int,
+                                     JSValueConst*) {
   cxx_OOJSReportError(context, "unconstructable");
-  return false;
+  return JS_EXCEPTION;
 }
 
 int sLimiterPauses = 0;
@@ -237,17 +230,14 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-
-oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object) {
+oo::PList OOJSEntityObjectConverter(JSContext*, JSValueConst) {
   return oo::PList();
 }
 
-// The holder's glue is OOJSEntity.mm's, which the test does not link; the
+// The holder's glue is OOJSEntity.cpp's, which the test does not link; the
 // binding never asks it.
-ooscript::Value OOJSEntityHolder::jsValueInContext(ooscript::Context) {
-  return ooscript::undefinedValue();
-}
-void OOJSEntityHolder::clearJSSelf(ooscript::Object) {}
+JSValue OOJSEntityHolder::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
+void OOJSEntityHolder::clearJSSelf(JSValueConst) {}
 std::optional<std::string> OOJSEntityHolder::jsDescription() {
   return std::nullopt;
 }
@@ -257,40 +247,41 @@ std::optional<std::string> OOJSEntityHolder::jsDescription() {
 
 namespace {
 
-ooscript::Runtime sRuntime;
-ooscript::Context sContext;
-ooscript::Object sGlobal;
+JSClassDef sFakeEntityClass = {.class_name = "Entity"};
+
+JSRuntime* sRuntime;
+JSContext* sContext;
+JSValue sGlobal;
 TestEntityObject* sWormhole =
     nullptr;  // the wormhole's object, which the JS object holds
 WormholeEntity* sWormholePart = nullptr;  // its C++ part
 
 // A JS object for an entity, as EntityJSValueInContext() makes it: the class
-// and prototype the entity's category names, and a holder of its C++ part in
-// the private slot.
-ooscript::Value JSValueForEntity(TestEntityObject* entity) {
-  ooscript::ClassDef* jsClass = nullptr;
-  ooscript::Object prototype = nullptr;
-  entity->getJSClass(&jsClass, &prototype);
-  ooscript::Object object =
-      ooscript::newObject(sContext, jsClass, prototype, nullptr);
-  if (object == nullptr ||
+// the entity's category names (its prototype is the class's), and a holder of
+// its C++ part in the private slot. Owned by the caller.
+JSValue JSValueForEntity(TestEntityObject* entity) {
+  JSValue object =
+      JS_NewObjectClass(sContext, static_cast<int>(entity->jsClassID()));
+  if (JS_IsException(object) ||
       !OOJSSetCxxPrivate(
-          sContext, object,
-          oo::makeRef<OOJSEntityHolder>(entity->_cxxEntity.get()).get()))
-    return ooscript::nullValue();
-  return ooscript::objectValue(object);
+          object,
+          oo::makeRef<OOJSEntityHolder>(entity->_cxxEntity.get()).get())) {
+    JS_FreeValue(sContext, object);
+    return JS_NULL;
+  }
+  return object;
 }
 
 void SetUpContext() {
   if (sContext != nullptr) return;
-  sRuntime = ooscript::newRuntime(8u * 1024u * 1024u);
-  sContext = ooscript::newContext(sRuntime, 8192);
-  ooscript::beginRequest(sContext);
-  sGlobal = ooscript::getGlobalObject(sContext);
-  ooscript::initStandardClasses(sContext, sGlobal);
-  gOOEntityJSPrototype = ooscript::initClass(
-      sContext, sGlobal, nullptr, &sFakeEntityClass,
-      OOJSUnconstructableConstruct, 0, nullptr, nullptr, nullptr, nullptr);
+  sRuntime = JS_NewRuntime();
+  sContext = JS_NewContext(sRuntime);
+  gOOJSMainThreadContext = sContext;
+  sGlobal = JS_GetGlobalObject(sContext);
+  OOJSRegisterClass(&sFakeEntityClassID, &sFakeEntityClass);
+  OOJSInitClass(sContext, sGlobal, sFakeEntityClassID, JS_UNDEFINED,
+                OOJSUnconstructableConstruct, 0, nullptr, 0, nullptr, 0,
+                nullptr, 0);
   InitOOJSWormhole(sContext, sGlobal);
 
   sWormhole = oo::makeRef<TestEntityObject>()
@@ -301,22 +292,14 @@ void SetUpContext() {
   sWormholePart->_expiryTime = 900.25;
   sWormholePart->_origin = 7;
   sWormholePart->_destination = 129;
-  ooscript::Value wormhole = JSValueForEntity(sWormhole);
-  ooscript::setProperty(sContext, sGlobal, "wormhole", &wormhole);
-  ooscript::Value entity = ooscript::nullValue();
-  ooscript::Object plain = ooscript::newObject(sContext, &sFakeEntityClass,
-                                               gOOEntityJSPrototype, nullptr);
+  JS_SetPropertyStr(sContext, sGlobal, "wormhole", JSValueForEntity(sWormhole));
   TestEntityObject* plainEntity =
       oo::makeRef<TestEntityObject>()
           .leakRef();  // kept for the life of the test
   plainEntity->_cxxEntity =
       oo::makeRef<Entity>();  // an entity that is not a wormhole
-  if (plain != nullptr &&
-      OOJSSetCxxPrivate(
-          sContext, plain,
-          oo::makeRef<OOJSEntityHolder>(plainEntity->_cxxEntity.get()).get()))
-    entity = ooscript::objectValue(plain);
-  ooscript::setProperty(sContext, sGlobal, "plainEntity", &entity);
+  JS_SetPropertyStr(sContext, sGlobal, "plainEntity",
+                    JSValueForEntity(plainEntity));
 }
 
 // Evaluates src and gives its result as a string ("undefined", "null", ...), or
@@ -327,14 +310,16 @@ std::string Eval(const char* src) {
                         src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
-  if (!ooscript::evaluateScript(sContext, sGlobal, wrapped.c_str(),
-                                static_cast<unsigned>(wrapped.size()),
-                                "test.js", 1, &result)) {
-    ooscript::clearPendingException(sContext);
+  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(),
+                           "test.js", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(sContext, JS_GetException(sContext));
     return "<evaluation failed>";
   }
-  return cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  std::string text =
+      cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  JS_FreeValue(sContext, result);
+  return text;
 }
 
 // Eval, and print what came back when it is not what the check expects.
@@ -354,14 +339,15 @@ std::string EvalShown(const char* src, const char* expected) {
 
 OO_TEST(registration) {
   SetUpContext();
-  ooscript::ClassDef* wormholeClass = nullptr;
-  ooscript::Object prototype = nullptr;
-  sWormhole->getJSClass(&wormholeClass, &prototype);
-  OO_CHECK(wormholeClass != nullptr &&
-           std::strcmp(wormholeClass->name, "Wormhole") == 0);
-  OO_CHECK(prototype != nullptr);
-  OO_CHECK(OOJSIsSubclass(wormholeClass, &sFakeEntityClass));
-  OO_CHECK_EQ(sConverters[wormholeClass], 1);
+  const JSClassID wormholeClassID = sWormhole->jsClassID();
+  const char* wormholeClassName = OOJSClassName(wormholeClassID);
+  OO_CHECK(wormholeClassID != 0 && wormholeClassName != nullptr &&
+           std::strcmp(wormholeClassName, "Wormhole") == 0);
+  JSValue prototype = JS_GetClassProto(sContext, wormholeClassID);
+  OO_CHECK(JS_IsObject(prototype));
+  JS_FreeValue(sContext, prototype);
+  OO_CHECK(OOJSIsSubclass(wormholeClassID, sFakeEntityClassID));
+  OO_CHECK_EQ(sConverters[wormholeClassID], 1);
   OO_CHECK(sWormhole->cxx_oo_jsClassName() ==
            std::optional<std::string>("Wormhole"));
   OO_CHECK(sWormhole->isVisibleToScripts());
@@ -379,13 +365,14 @@ OO_TEST(properties) {
   OO_CHECK_EVAL("wormhole.destination", "129");
   OO_CHECK_EVAL("Object.keys(Wormhole.prototype).join()",
                 "arrivalTime,destination,expiryTime,origin");
-  // Read-only.
+  // Read-only. As in #768, a read-only property has no setter, so strict code
+  // that assigns to one gets a TypeError (the façade's tolerated it silently).
   OO_CHECK_EVAL(
       "(function () { wormhole.origin = 3; return wormhole.origin; })()", "7");
   OO_CHECK_EVAL(
       "(function () { 'use strict'; try { wormhole.origin = 3; return 'no "
       "throw'; } catch (e) { return e instanceof TypeError; } })()",
-      "no throw");
+      "true");
 }
 
 OO_TEST(otherObjects) {
@@ -418,7 +405,6 @@ OO_TEST(nativeExceptions) {
   OO_CHECK_EVAL("wormhole.arrivalTime", "1000.5");
   OO_CHECK_EQ(sLimiterPauses, 0);
   OO_CHECK_EQ(sProfileDepth, 0);
-  OO_CHECK(ooscript::isInRequest(sContext));
 }
 
 OO_TEST_MAIN()

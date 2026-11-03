@@ -2,7 +2,7 @@
 
         The equipment-control world script
    (Resources/Scripts/oolite-equipment-control.js) on the game's JavaScript
-   engine (QuickJS-ng behind the ooscript facade, ooscript/JSEngine.hpp), with
+   engine (QuickJS-ng, through its own API), with
    the two game objects it reads stood in by plain JS objects
    (EquipmentInfo.infoForKey and player.ship.removeEquipment).
 
@@ -18,7 +18,7 @@
 #include <sstream>
 #include <string>
 
-#include "ooscript/JSEngine.hpp"
+#include <quickjs.h>
 
 namespace {
 
@@ -57,23 +57,26 @@ std::string ScriptSource() {
 
 // Evaluates JS in the global scope; true when it ran without an exception and,
 // when asked, gives the result's truth value in *result.
-bool Eval(ooscript::Context cx, const std::string& code,
-          bool* result = nullptr) {
-  ooscript::Value rval = ooscript::undefinedValue();
-  const bool ok = ooscript::evaluateScript(
-      cx, ooscript::getGlobalObject(cx), code.c_str(),
-      static_cast<unsigned>(code.size()), "test.js", 1, &rval);
-  if (!ok) {
+bool Eval(JSContext* cx, const std::string& code, bool* result = nullptr) {
+  JSValue rval = JS_Eval(cx, code.c_str(), code.size(), "test.js",
+                         JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(rval)) {
     std::printf("JS exception evaluating: %.120s\n", code.c_str());
-    ooscript::clearPendingException(cx);
+    JS_FreeValue(cx, JS_GetException(cx));
     return false;
   }
+  bool ok = true;
   if (result != nullptr) {
-    bool truth = false;
-    if (!ooscript::valueToBoolean(cx, rval, &truth)) return false;
-    *result = truth;
+    const int truth = JS_ToBool(cx, rval);
+    if (truth < 0) {
+      JS_FreeValue(cx, JS_GetException(cx));
+      ok = false;
+    } else {
+      *result = truth != 0;
+    }
   }
-  return true;
+  JS_FreeValue(cx, rval);
+  return ok;
 }
 
 // Evaluates an expression that must run and be true.
@@ -93,10 +96,11 @@ int main() {
   CHECK(!script.empty());
   if (script.empty()) return 1;
 
-  ooscript::Runtime rt = ooscript::newRuntime(8u * 1024u * 1024u);
-  ooscript::Context cx = ooscript::newContext(rt, 8192);
+  // A QuickJS-ng context has the standard classes from the start.
+  JSRuntime* rt = JS_NewRuntime();
+  JSContext* cx = rt != nullptr ? JS_NewContext(rt) : nullptr;
   CHECK(rt != nullptr && cx != nullptr);
-  CHECK(ooscript::initStandardClasses(cx, ooscript::getGlobalObject(cx)));
+  if (cx == nullptr) return 1;
 
   // The stand-ins: EQ_A and EQ_B are incompatible with each other; removals are
   // recorded.
@@ -137,8 +141,8 @@ int main() {
       "removed = []; ws.$equipmentEnabled = {}; ws.equipmentAdded('EQ_A'); "
       "ws.equipmentAdded('EQ_C'); removed.join(',') === ''");
 
-  ooscript::destroyContext(cx);
-  ooscript::destroyRuntime(rt);
+  JS_FreeContext(cx);
+  JS_FreeRuntime(rt);
 
   if (gFailures == 0) std::printf("test_OoliteEquipmentControlScript: OK\n");
   return gFailures == 0 ? 0 : 1;

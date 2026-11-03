@@ -25,92 +25,115 @@ MA 02110-1301, USA.
 
 #include "OOJSFunction.h"
 
+#include <climits>
+
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
 #include "oofnd/Notification.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 
-/*	OOJSFunction. The initialisers are static factories answering null for
-   their input; the part of -initWithFunction:context: that cannot fail is the
-   private constructor.
+/*	OOJSFunction (#768's design). The initialisers are static factories
+   answering null for their input; the part of -initWithFunction:context: that
+   cannot fail is the private constructor.
 */
 
-oo::Ref<OOJSFunction> OOJSFunction::initWithFunction(
-    ooscript::Function function, ooscript::Context context) {
+oo::Ref<OOJSFunction> OOJSFunction::initWithFunction(JSValueConst function,
+                                                     JSContext* context) {
   OOCParameterAssert(context != NULL);
 
-  if (function == NULL) {
+  if (!JS_IsFunction(context, function)) {
     return nullptr;
   }
 
   return oo::adopt(new OOJSFunction(function, context));
 }
 
-OOJSFunction::OOJSFunction(ooscript::Function function,
-                           ooscript::Context context) {
-  {
-    _function = function;
-    OOJSAddGCObjectRoot(context, (ooscript::Object*)&_function,
-                        "OOJSFunction._function");
-    _name =
-        cxx_OOStringFromJSString(context, ooscript::getFunctionId(function));
+OOJSFunction::OOJSFunction(JSValueConst function, JSContext* context) {
+  _function = JS_DupValue(context, function);
 
-    oo::NotificationCenter::defaultCenter().addObserver(
-        this, kOOJavaScriptEngineWillResetNotificationName,
-        OOJavaScriptEngine::sharedEngine(),
-        [this](const oo::Notification&) { deleteJSValue(); });
+  // QuickJS has no JS_GetFunctionId(); use the function's name property.
+  JSValue nameValue = JS_GetPropertyStr(context, function, "name");
+  if (JS_IsException(nameValue)) {
+    JS_FreeValue(context, JS_GetException(context));
+  } else {
+    std::optional<std::string> name =
+        cxx_OOStringFromJSValue(context, nameValue);
+    if (name.has_value() && !name->empty()) _name = std::move(name);
   }
+  JS_FreeValue(context, nameValue);
+
+  oo::NotificationCenter::defaultCenter().addObserver(
+      this, kOOJavaScriptEngineWillResetNotificationName,
+      OOJavaScriptEngine::sharedEngine(),
+      [this](const oo::Notification&) { deleteJSValue(); });
 }
 
 oo::Ref<OOJSFunction> OOJSFunction::initWithName(
-    const std::optional<std::string>& name, ooscript::Object scope,
+    const std::optional<std::string>& name, JSValueConst /*scope*/,
     const std::optional<std::string>& code, NSUInteger argCount,
     const char** argNames, const std::optional<std::string>& fileName,
-    NSUInteger lineNumber, ooscript::Context context) {
+    NSUInteger lineNumber, JSContext* context) {
   bool OK = true;
   bool releaseContext = false;
-  ooscript::Char16* buffer = NULL;
-  size_t length = 0;
-  ooscript::Function function = NULL;
+  JSValue function = JS_UNDEFINED;
   oo::Ref<OOJSFunction> result;
 
   if (context == NULL) {
     context = OOJSAcquireContext();
     releaseContext = true;
   }
-  if (scope == NULL) scope = OOJavaScriptEngine::sharedEngine()->globalObject();
+
+  /*	SpiderMonkey's JS_CompileUCFunction() could compile the function in an
+          arbitrary scope object. QuickJS has no equivalent, so the function is
+          always compiled in the global scope. (The only caller passed NULL,
+          meaning the global object, anyway.)
+  */
 
   if (!code.has_value() || (argCount > 0 && argNames == NULL)) OK = false;
 
-  // ooscript::Char16 is a 16-bit element; the code's UTF-16 units go in as
-  // -getCharacters: gave them.
-  std::u16string units;
   if (OK) {
-    units = oo::utf8ToUtf16(*code);
+    assert(argCount < INT_MAX && lineNumber < INT_MAX);
 
-    length = units.size();
-    buffer = (ooscript::Char16*)malloc(sizeof(ooscript::Char16) * length);
-    if (buffer == NULL) OK = false;
+    /*	QuickJS has no API to compile a function from a body and argument
+            names, so evaluate a function expression. The wrapper is kept on
+            the first line so that line numbers in the body are unchanged.
+    */
+    std::string source = "(function(";
+    for (NSUInteger i = 0; i < argCount; i++) {
+      if (i != 0) source += ",";
+      source += argNames[i];
+    }
+    source += "){" + *code + "\n})";
+
+    JSEvalOptions options = {
+        .version = JS_EVAL_OPTIONS_VERSION,
+        .eval_flags = JS_EVAL_TYPE_GLOBAL,
+        .filename = fileName.has_value() ? fileName->c_str() : "<anonymous>",
+        .line_num = static_cast<int>(lineNumber)};
+    // JS_Eval2() requires a NUL-terminated buffer, which c_str() is.
+    function = JS_Eval2(context, source.c_str(), source.size(), &options);
+    if (JS_IsException(function)) {
+      OOJSReportPendingException(context);
+      function = JS_UNDEFINED;
+      OK = false;
+    } else if (!JS_IsFunction(context, function)) {
+      OK = false;
+    }
   }
 
-  if (OK) {
-    assert(argCount < UINT32_MAX);
-
-    std::copy(units.begin(), units.end(), buffer);
-
-    function = ooscript::compileUCFunction(
-        context, scope, name.has_value() ? name->c_str() : NULL,
-        (uint32_t)argCount, argNames, buffer, length,
-        fileName.has_value() ? fileName->c_str() : NULL, (uint32_t)lineNumber);
-    if (function == NULL) OK = false;
-
-    free(buffer);
+  if (OK && name.has_value()) {
+    // Function expression names are read-only but configurable; redefine it.
+    JS_DefinePropertyValueStr(
+        context, function, "name",
+        JS_NewStringLen(context, name->data(), name->size()),
+        JS_PROP_CONFIGURABLE);
   }
 
   if (OK) {
     result = initWithFunction(function, context);
   }
+  JS_FreeValue(context, function);
 
   if (releaseContext) OOJSRelinquishContext(context);
 
@@ -118,12 +141,12 @@ oo::Ref<OOJSFunction> OOJSFunction::initWithName(
 }
 
 void OOJSFunction::deleteJSValue() {
-  if (_function != NULL) {
-    ooscript::Context context = OOJSAcquireContext();
-    ooscript::removeObjectRoot(context, (ooscript::Object*)&_function);
+  if (JS_IsObject(_function)) {
+    JSContext* context = OOJSAcquireContext();
+    JS_FreeValue(context, _function);
     OOJSRelinquishContext(context);
 
-    _function = NULL;
+    _function = JS_NULL;
     oo::NotificationCenter::defaultCenter().removeObserver(
         this, kOOJavaScriptEngineWillResetNotificationName,
         OOJavaScriptEngine::sharedEngine());
@@ -138,26 +161,49 @@ std::optional<std::string> OOJSFunction::descriptionComponents() const {
 
 std::optional<std::string> OOJSFunction::name() { return _name; }
 
-ooscript::Function OOJSFunction::function() { return _function; }
+bool OOJSFunction::isValid() const { return JS_IsObject(_function); }
 
-ooscript::Value OOJSFunction::functionValue() {
-  if (EXPECT(_function != NULL)) {
-    return ooscript::objectValue(ooscript::getFunctionObject(_function));
+JSValueConst OOJSFunction::function() {
+  return isValid() ? _function : JS_NULL;
+}
+
+JSValue OOJSFunction::functionValue() {
+  if (EXPECT(isValid())) {
+    return JS_DupValue(OOJSAcquireContext(), _function);
   } else {
-    return ooscript::nullValue();
+    return JS_NULL;
   }
 }
 
-bool OOJSFunction::evaluateWithContext(ooscript::Context context,
-                                       ooscript::Object jsThis, unsigned argc,
-                                       ooscript::Value* argv,
-                                       ooscript::Value* result) {
+bool OOJSFunction::evaluateWithContext(JSContext* context, JSValueConst jsThis,
+                                       int argc, JSValueConst* argv,
+                                       JSValue* result) {
+  OOCParameterAssert(result != NULL);
+
+  if (EXPECT_NOT(!isValid())) {
+    *result = JS_UNDEFINED;
+    return false;
+  }
+
+  // As with JS_CallFunction(), a missing this means the global object.
+  JSValue global = JS_UNDEFINED;
+  if (!JS_IsObject(jsThis)) {
+    global = JS_GetGlobalObject(context);
+    jsThis = global;
+  }
+
   OOJSScript::pushScript(nullptr);
   OOJSStartTimeLimiter();
-  bool OK =
-      ooscript::callFunction(context, jsThis, _function, argc, argv, result);
+  JSValue rval = JS_Call(context, _function, jsThis, argc, argv);
   OOJSStopTimeLimiter();
   OOJSScript::popScript(nullptr);
 
-  return OK;
+  JS_FreeValue(context, global);
+
+  if (JS_IsException(rval)) {
+    *result = JS_UNDEFINED;
+    return false;
+  }
+  *result = rval;
+  return true;
 }

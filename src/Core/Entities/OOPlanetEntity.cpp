@@ -1259,10 +1259,7 @@ void OOPlanetEntity::setName(const std::optional<std::string>& name) {
 }
 
 // The binding's bodies (OOJSPlanet.mm), which the facade forwarded to.
-void OOPlanetEntity::getJSClass(ooscript::ClassDef** outClass,
-                                ooscript::Object* outPrototype) {
-  ::OOJSPlanetGetJSClass(outClass, outPrototype);
-}
+JSClassID OOPlanetEntity::jsClassID() { return ::JSPlanetClassID(); }
 
 std::optional<std::string> OOPlanetEntity::jsClassName() {
   return ::OOJSPlanetJSClassName(this);

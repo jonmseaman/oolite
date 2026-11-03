@@ -54,33 +54,9 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
-#include "ooscript/JSEngine.hpp"
-
-namespace ooscript {}
-using ooscript::CallArgs;
-using ooscript::ClassDef;
-using ooscript::ClassFlag;
-using ooscript::Context;
-using ooscript::FunctionSpec;
-using ooscript::Object;
-using ooscript::PropertyFlag;
-using ooscript::PropertyId;
-using ooscript::PropertySpec;
-using ooscript::Value;
-
-// Byte-identical façade <-> jsapi views, local to this call site (see
-// OOJSVector.mm).
-namespace {
-static inline Object* OOJSFOBJP(ooscript::Object* o) {
-  return reinterpret_cast<Object*>(o);
-}
-}  // namespace
 
 namespace {
-static ooscript::Object sPlayerShipPrototype;
-}  // namespace
-namespace {
-static ooscript::Object sPlayerShipObject;
+static JSClassID sPlayerShipClassID;
 }  // namespace
 
 namespace {
@@ -124,148 +100,54 @@ oo::PList StringOrNull(const std::optional<std::string>& string) {
 
 }  // namespace
 
-static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
-                                  Value* value);
+static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS);
 }  // namespace
 namespace {
-static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
-                                  bool strict, Value* value);
+static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS);
 }  // namespace
 
 namespace {
-static bool PlayerShipLaunch(ooscript::Context cx,
-                             ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipRemoveAllCargo(ooscript::Context cx,
-                                     ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipUseSpecialCargo(ooscript::Context cx,
-                                      ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipEngageAutopilotToStation(ooscript::Context cx,
-                                               ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipDisengageAutopilot(ooscript::Context cx,
-                                         ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipRequestDockingClearance(ooscript::Context cx,
-                                              ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipCancelDockingRequest(ooscript::Context cx,
-                                           ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipAwardEquipmentToCurrentPylon(
-    ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipAddPassenger(ooscript::Context cx,
-                                   ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipRemovePassenger(ooscript::Context cx,
-                                      ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipAddParcel(ooscript::Context cx,
-                                ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipRemoveParcel(ooscript::Context cx,
-                                   ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipAwardContract(ooscript::Context cx,
-                                    ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipRemoveContract(ooscript::Context cx,
-                                     ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipSetCustomView(ooscript::Context cx,
-                                    ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipSetPrimedEquipment(ooscript::Context cx,
-                                         ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipResetCustomView(ooscript::Context cx,
-                                      ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipResetScannerZoom(ooscript::Context cx,
-                                       ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipTakeInternalDamage(ooscript::Context cx,
-                                         ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipBeginHyperspaceCountdown(ooscript::Context cx,
-                                               ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipCancelHyperspaceCountdown(ooscript::Context cx,
-                                                ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipBeginGalacticHyperspaceCountdown(
-    ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipSetMultiFunctionDisplay(ooscript::Context cx,
-                                              ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipSetMultiFunctionText(ooscript::Context cx,
-                                           ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipHideHUDSelector(ooscript::Context cx,
-                                      ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipShowHUDSelector(ooscript::Context cx,
-                                      ooscript::CallArgs& oojsArgs);
-}  // namespace
-namespace {
-static bool PlayerShipSetCustomHUDDial(ooscript::Context cx,
-                                       ooscript::CallArgs& oojsArgs);
+static JSValue PlayerShipLaunch(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipRemoveAllCargo(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipEngageAutopilotToStation(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipDisengageAutopilot(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipRequestDockingClearance(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipCancelDockingRequest(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipAwardEquipmentToCurrentPylon(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipAddPassenger(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipRemovePassenger(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipAddParcel(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipRemoveParcel(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipAwardContract(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipRemoveContract(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipSetCustomView(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipSetPrimedEquipment(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipResetCustomView(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipResetScannerZoom(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipTakeInternalDamage(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipBeginHyperspaceCountdown(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipCancelHyperspaceCountdown(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipBeginGalacticHyperspaceCountdown(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipSetMultiFunctionDisplay(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipHideHUDSelector(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipShowHUDSelector(OOJS_NATIVE_ARGS);
+static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS);
 }  // namespace
 
 namespace {
-static bool ValidateContracts(ooscript::Context context,
-                              ooscript::CallArgs& oojsArgs, bool isCargo,
-                              OOSystemID* start, OOSystemID* destination,
-                              double* eta, double* fee, double* premium,
-                              const std::string& functionName, unsigned* risk);
+static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
+                              bool isCargo, OOSystemID* start,
+                              OOSystemID* destination, double* eta, double* fee,
+                              double* premium, const std::string& functionName,
+                              unsigned* risk);
 }  // namespace
 
 namespace {
-static ClassDef sPlayerShipClass = {
-    "PlayerShip",
-    ClassFlag::HasPrivate,
-
-    nullptr,                // addProperty (engine default: PropertyStub)
-    nullptr,                // delProperty (engine default: PropertyStub)
-    PlayerShipGetProperty,  // getProperty
-    PlayerShipSetProperty,  // setProperty
-    nullptr,                // enumerate (engine default: EnumerateStub)
-    nullptr,  // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
-    nullptr,  // resolve (engine default: ResolveStub)
-    nullptr,  // convert (engine default: ConvertStub)
-    OOJSCxxObjectWrapperFinalize,  // finalize
-    nullptr,                       // call
-    nullptr,                       // construct
-    nullptr,  // backend: owned by the façade backend, must start null
+static JSClassDef sPlayerShipClass = {
+    .class_name = "PlayerShip",
+    .finalizer = OOJSObjectWrapperFinalize,
 };
 }  // namespace
 
@@ -372,372 +254,197 @@ enum : std::uint8_t {
 };
 
 namespace {
-static PropertySpec sPlayerShipProperties[] = {
-    // JS name								ID
-    // flags getter	setter
-    {"activeMissile", kPlayerShip_activeMissile,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"aftShield", kPlayerShip_aftShield,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"aftShieldRechargeRate", kPlayerShip_aftShieldRechargeRate,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"chartHighlightMode", kPlayerShip_chartHightlightMode,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"compassMode", kPlayerShip_compassMode,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"compassTarget", kPlayerShip_compassTarget,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"compassType", kPlayerShip_compassType,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"currentWeapon", kPlayerShip_currentWeapon,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"crosshairs", kPlayerShip_crosshairs,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"cursorCoordinates", kPlayerShip_cursorCoordinates,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"cursorCoordinatesInLY", kPlayerShip_cursorCoordinatesInLY,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"docked", kPlayerShip_docked,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"dockedStation", kPlayerShip_dockedStation,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"fastEquipmentA", kPlayerShip_fastEquipmentA,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"fastEquipmentB", kPlayerShip_fastEquipmentB,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"forwardShield", kPlayerShip_forwardShield,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"forwardShieldRechargeRate", kPlayerShip_forwardShieldRechargeRate,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"fuelLeakRate", kPlayerShip_fuelLeakRate,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"galacticHyperspaceBehaviour", kPlayerShip_galacticHyperspaceBehaviour,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"galacticHyperspaceFixedCoords", kPlayerShip_galacticHyperspaceFixedCoords,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"galacticHyperspaceFixedCoordsInLY",
-     kPlayerShip_galacticHyperspaceFixedCoordsInLY,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"galaxyCoordinates", kPlayerShip_galaxyCoordinates,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"galaxyCoordinatesInLY", kPlayerShip_galaxyCoordinatesInLY,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"hud", kPlayerShip_hud,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"hudAllowsBigGui", kPlayerShip_hudAllowsBigGui,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"hudHidden", kPlayerShip_hudHidden,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"injectorsEngaged", kPlayerShip_injectorsEngaged,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"massLockable", kPlayerShip_massLockable,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    // manifest defined in OOJSManifest.m
-    {"maxAftShield", kPlayerShip_maxAftShield,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"maxForwardShield", kPlayerShip_maxForwardShield,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"messageGuiTextColor", kPlayerShip_messageGuiTextColor,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"messageGuiTextCommsColor", kPlayerShip_messageGuiTextCommsColor,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"missilesOnline", kPlayerShip_missilesOnline,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"multiFunctionDisplays", kPlayerShip_multiFunctionDisplays,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"multiFunctionDisplayList", kPlayerShip_multiFunctionDisplayList,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"price", kPlayerShip_price,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"pitch", kPlayerShip_pitch,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"primedEquipment", kPlayerShip_primedEquipment,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"renovationCost", kPlayerShip_renovationCost,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"reticleColorTarget", kPlayerShip_reticleColorTarget,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"reticleColorTargetSensitive", kPlayerShip_reticleColorTargetSensitive,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"reticleColorWormhole", kPlayerShip_reticleColorWormhole,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"renovationMultiplier", kPlayerShip_renovationMultiplier,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"reticleTargetSensitive", kPlayerShip_reticleTargetSensitive,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"roll", kPlayerShip_roll,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"routeMode", kPlayerShip_routeMode,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"scannerMinimalistic", kPlayerShip_scannerMinimalistic,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"scannerNonLinear", kPlayerShip_scannerNonLinear,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"scannerUltraZoom", kPlayerShip_scannerUltraZoom,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"scoopOverride", kPlayerShip_scoopOverride,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"serviceLevel", kPlayerShip_serviceLevel,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"specialCargo", kPlayerShip_specialCargo,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"targetSystem", kPlayerShip_targetSystem,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"nextSystem", kPlayerShip_nextSystem,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"infoSystem", kPlayerShip_infoSystem,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"previousSystem", kPlayerShip_previousSystem,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"torusEngaged", kPlayerShip_torusEngaged,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"viewDirection", kPlayerShip_viewDirection,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"viewPositionAft", kPlayerShip_viewPositionAft,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"viewPositionForward", kPlayerShip_viewPositionForward,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"viewPositionPort", kPlayerShip_viewPositionPort,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"viewPositionStarboard", kPlayerShip_viewPositionStarboard,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"weaponsOnline", kPlayerShip_weaponsOnline,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate |
-         PropertyFlag::ReadOnly | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {"yaw", kPlayerShip_yaw,
-     PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
-     nullptr, nullptr},
-    {0}};
-}  // namespace
-
-// A raw jsapi mirror of sPlayerShipProperties, used only for the two
-// bad-property error reporters in OOJavaScriptEngine.m
-// (OOJSReportBadPropertySelector/Value), which are shared across every binding
-// file and take a ooscript::PropertySpec*.
-namespace {
-static ooscript::PropertySpec sPlayerShipPropertiesRaw[] = {
-    // JS name								ID
-    // flags
-    {"activeMissile", kPlayerShip_activeMissile, OOJS_PROP_READONLY_CB},
-    {"aftShield", kPlayerShip_aftShield, OOJS_PROP_READWRITE_CB},
-    {"aftShieldRechargeRate", kPlayerShip_aftShieldRechargeRate,
-     OOJS_PROP_READWRITE_CB},
-    {"chartHighlightMode", kPlayerShip_chartHightlightMode,
-     OOJS_PROP_READWRITE_CB},
-    {"compassMode", kPlayerShip_compassMode, OOJS_PROP_READWRITE_CB},
-    {"compassTarget", kPlayerShip_compassTarget, OOJS_PROP_READWRITE_CB},
-    {"compassType", kPlayerShip_compassType, OOJS_PROP_READWRITE_CB},
-    {"currentWeapon", kPlayerShip_currentWeapon, OOJS_PROP_READWRITE_CB},
-    {"crosshairs", kPlayerShip_crosshairs, OOJS_PROP_READWRITE_CB},
-    {"cursorCoordinates", kPlayerShip_cursorCoordinates, OOJS_PROP_READONLY_CB},
-    {"cursorCoordinatesInLY", kPlayerShip_cursorCoordinatesInLY,
-     OOJS_PROP_READONLY_CB},
-    {"docked", kPlayerShip_docked, OOJS_PROP_READONLY_CB},
-    {"dockedStation", kPlayerShip_dockedStation, OOJS_PROP_READONLY_CB},
-    {"fastEquipmentA", kPlayerShip_fastEquipmentA, OOJS_PROP_READWRITE_CB},
-    {"fastEquipmentB", kPlayerShip_fastEquipmentB, OOJS_PROP_READWRITE_CB},
-    {"forwardShield", kPlayerShip_forwardShield, OOJS_PROP_READWRITE_CB},
-    {"forwardShieldRechargeRate", kPlayerShip_forwardShieldRechargeRate,
-     OOJS_PROP_READWRITE_CB},
-    {"fuelLeakRate", kPlayerShip_fuelLeakRate, OOJS_PROP_READWRITE_CB},
-    {"galacticHyperspaceBehaviour", kPlayerShip_galacticHyperspaceBehaviour,
-     OOJS_PROP_READWRITE_CB},
-    {"galacticHyperspaceFixedCoords", kPlayerShip_galacticHyperspaceFixedCoords,
-     OOJS_PROP_READWRITE_CB},
-    {"galacticHyperspaceFixedCoordsInLY",
-     kPlayerShip_galacticHyperspaceFixedCoordsInLY, OOJS_PROP_READWRITE_CB},
-    {"galaxyCoordinates", kPlayerShip_galaxyCoordinates, OOJS_PROP_READONLY_CB},
-    {"galaxyCoordinatesInLY", kPlayerShip_galaxyCoordinatesInLY,
-     OOJS_PROP_READONLY_CB},
-    {"hud", kPlayerShip_hud, OOJS_PROP_READWRITE_CB},
-    {"hudAllowsBigGui", kPlayerShip_hudAllowsBigGui, OOJS_PROP_READONLY_CB},
-    {"hudHidden", kPlayerShip_hudHidden, OOJS_PROP_READWRITE_CB},
-    {"injectorsEngaged", kPlayerShip_injectorsEngaged, OOJS_PROP_READONLY_CB},
-    {"massLockable", kPlayerShip_massLockable, OOJS_PROP_READWRITE_CB},
-    // manifest defined in OOJSManifest.m
-    {"maxAftShield", kPlayerShip_maxAftShield, OOJS_PROP_READWRITE_CB},
-    {"maxForwardShield", kPlayerShip_maxForwardShield, OOJS_PROP_READWRITE_CB},
-    {"messageGuiTextColor", kPlayerShip_messageGuiTextColor,
-     OOJS_PROP_READWRITE_CB},
-    {"messageGuiTextCommsColor", kPlayerShip_messageGuiTextCommsColor,
-     OOJS_PROP_READWRITE_CB},
-    {"missilesOnline", kPlayerShip_missilesOnline, OOJS_PROP_READONLY_CB},
-    {"multiFunctionDisplays", kPlayerShip_multiFunctionDisplays,
-     OOJS_PROP_READONLY_CB},
-    {"multiFunctionDisplayList", kPlayerShip_multiFunctionDisplayList,
-     OOJS_PROP_READONLY_CB},
-    {"price", kPlayerShip_price, OOJS_PROP_READONLY_CB},
-    {"pitch", kPlayerShip_pitch, OOJS_PROP_READWRITE_CB},
-    {"primedEquipment", kPlayerShip_primedEquipment, OOJS_PROP_READWRITE_CB},
-    {"renovationCost", kPlayerShip_renovationCost, OOJS_PROP_READONLY_CB},
-    {"reticleColorTarget", kPlayerShip_reticleColorTarget,
-     OOJS_PROP_READWRITE_CB},
-    {"reticleColorTargetSensitive", kPlayerShip_reticleColorTargetSensitive,
-     OOJS_PROP_READWRITE_CB},
-    {"reticleColorWormhole", kPlayerShip_reticleColorWormhole,
-     OOJS_PROP_READWRITE_CB},
-    {"renovationMultiplier", kPlayerShip_renovationMultiplier,
-     OOJS_PROP_READONLY_CB},
-    {"reticleTargetSensitive", kPlayerShip_reticleTargetSensitive,
-     OOJS_PROP_READWRITE_CB},
-    {"roll", kPlayerShip_roll, OOJS_PROP_READWRITE_CB},
-    {"routeMode", kPlayerShip_routeMode, OOJS_PROP_READONLY_CB},
-    {"scannerMinimalistic", kPlayerShip_scannerMinimalistic,
-     OOJS_PROP_READWRITE_CB},
-    {"scannerNonLinear", kPlayerShip_scannerNonLinear, OOJS_PROP_READWRITE_CB},
-    {"scannerUltraZoom", kPlayerShip_scannerUltraZoom, OOJS_PROP_READWRITE_CB},
-    {"scoopOverride", kPlayerShip_scoopOverride, OOJS_PROP_READWRITE_CB},
-    {"serviceLevel", kPlayerShip_serviceLevel, OOJS_PROP_READWRITE_CB},
-    {"specialCargo", kPlayerShip_specialCargo, OOJS_PROP_READONLY_CB},
-    {"targetSystem", kPlayerShip_targetSystem, OOJS_PROP_READWRITE_CB},
-    {"nextSystem", kPlayerShip_nextSystem, OOJS_PROP_READONLY_CB},
-    {"infoSystem", kPlayerShip_infoSystem, OOJS_PROP_READWRITE_CB},
-    {"previousSystem", kPlayerShip_previousSystem, OOJS_PROP_READONLY_CB},
-    {"torusEngaged", kPlayerShip_torusEngaged, OOJS_PROP_READONLY_CB},
-    {"viewDirection", kPlayerShip_viewDirection, OOJS_PROP_READONLY_CB},
-    {"viewPositionAft", kPlayerShip_viewPositionAft, OOJS_PROP_READONLY_CB},
-    {"viewPositionForward", kPlayerShip_viewPositionForward,
-     OOJS_PROP_READONLY_CB},
-    {"viewPositionPort", kPlayerShip_viewPositionPort, OOJS_PROP_READONLY_CB},
-    {"viewPositionStarboard", kPlayerShip_viewPositionStarboard,
-     OOJS_PROP_READONLY_CB},
-    {"weaponsOnline", kPlayerShip_weaponsOnline, OOJS_PROP_READONLY_CB},
-    {"yaw", kPlayerShip_yaw, OOJS_PROP_READWRITE_CB},
-    {0}};
+static const JSCFunctionListEntry sPlayerShipProperties[] = {
+    // JS name, getter, setter, ID
+    OOJS_PROPERTY_RO("activeMissile", PlayerShipGetProperty,
+                     kPlayerShip_activeMissile),
+    OOJS_PROPERTY_RW("aftShield", PlayerShipGetProperty, PlayerShipSetProperty,
+                     kPlayerShip_aftShield),
+    OOJS_PROPERTY_RW("aftShieldRechargeRate", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_aftShieldRechargeRate),
+    OOJS_PROPERTY_RW("chartHighlightMode", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_chartHightlightMode),
+    OOJS_PROPERTY_RW("compassMode", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_compassMode),
+    OOJS_PROPERTY_RW("compassTarget", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_compassTarget),
+    OOJS_PROPERTY_RW("compassType", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_compassType),
+    OOJS_PROPERTY_RW("currentWeapon", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_currentWeapon),
+    OOJS_PROPERTY_RW("crosshairs", PlayerShipGetProperty, PlayerShipSetProperty,
+                     kPlayerShip_crosshairs),
+    OOJS_PROPERTY_RO("cursorCoordinates", PlayerShipGetProperty,
+                     kPlayerShip_cursorCoordinates),
+    OOJS_PROPERTY_RO("cursorCoordinatesInLY", PlayerShipGetProperty,
+                     kPlayerShip_cursorCoordinatesInLY),
+    OOJS_PROPERTY_RO("docked", PlayerShipGetProperty, kPlayerShip_docked),
+    OOJS_PROPERTY_RO("dockedStation", PlayerShipGetProperty,
+                     kPlayerShip_dockedStation),
+    OOJS_PROPERTY_RW("fastEquipmentA", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_fastEquipmentA),
+    OOJS_PROPERTY_RW("fastEquipmentB", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_fastEquipmentB),
+    OOJS_PROPERTY_RW("forwardShield", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_forwardShield),
+    OOJS_PROPERTY_RW("forwardShieldRechargeRate", PlayerShipGetProperty,
+                     PlayerShipSetProperty,
+                     kPlayerShip_forwardShieldRechargeRate),
+    OOJS_PROPERTY_RW("fuelLeakRate", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_fuelLeakRate),
+    OOJS_PROPERTY_RW("galacticHyperspaceBehaviour", PlayerShipGetProperty,
+                     PlayerShipSetProperty,
+                     kPlayerShip_galacticHyperspaceBehaviour),
+    OOJS_PROPERTY_RW("galacticHyperspaceFixedCoords", PlayerShipGetProperty,
+                     PlayerShipSetProperty,
+                     kPlayerShip_galacticHyperspaceFixedCoords),
+    OOJS_PROPERTY_RW("galacticHyperspaceFixedCoordsInLY", PlayerShipGetProperty,
+                     PlayerShipSetProperty,
+                     kPlayerShip_galacticHyperspaceFixedCoordsInLY),
+    OOJS_PROPERTY_RO("galaxyCoordinates", PlayerShipGetProperty,
+                     kPlayerShip_galaxyCoordinates),
+    OOJS_PROPERTY_RO("galaxyCoordinatesInLY", PlayerShipGetProperty,
+                     kPlayerShip_galaxyCoordinatesInLY),
+    OOJS_PROPERTY_RW("hud", PlayerShipGetProperty, PlayerShipSetProperty,
+                     kPlayerShip_hud),
+    OOJS_PROPERTY_RO("hudAllowsBigGui", PlayerShipGetProperty,
+                     kPlayerShip_hudAllowsBigGui),
+    OOJS_PROPERTY_RW("hudHidden", PlayerShipGetProperty, PlayerShipSetProperty,
+                     kPlayerShip_hudHidden),
+    OOJS_PROPERTY_RO("injectorsEngaged", PlayerShipGetProperty,
+                     kPlayerShip_injectorsEngaged),
+    OOJS_PROPERTY_RW("massLockable", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_massLockable),
+    // manifest defined in OOJSManifest.cpp
+    OOJS_PROPERTY_RW("maxAftShield", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_maxAftShield),
+    OOJS_PROPERTY_RW("maxForwardShield", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_maxForwardShield),
+    OOJS_PROPERTY_RW("messageGuiTextColor", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_messageGuiTextColor),
+    OOJS_PROPERTY_RW("messageGuiTextCommsColor", PlayerShipGetProperty,
+                     PlayerShipSetProperty,
+                     kPlayerShip_messageGuiTextCommsColor),
+    OOJS_PROPERTY_RO("missilesOnline", PlayerShipGetProperty,
+                     kPlayerShip_missilesOnline),
+    OOJS_PROPERTY_RO("multiFunctionDisplays", PlayerShipGetProperty,
+                     kPlayerShip_multiFunctionDisplays),
+    OOJS_PROPERTY_RO("multiFunctionDisplayList", PlayerShipGetProperty,
+                     kPlayerShip_multiFunctionDisplayList),
+    OOJS_PROPERTY_RO("price", PlayerShipGetProperty, kPlayerShip_price),
+    OOJS_PROPERTY_RW("pitch", PlayerShipGetProperty, PlayerShipSetProperty,
+                     kPlayerShip_pitch),
+    OOJS_PROPERTY_RW("primedEquipment", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_primedEquipment),
+    OOJS_PROPERTY_RO("renovationCost", PlayerShipGetProperty,
+                     kPlayerShip_renovationCost),
+    OOJS_PROPERTY_RW("reticleColorTarget", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_reticleColorTarget),
+    OOJS_PROPERTY_RW("reticleColorTargetSensitive", PlayerShipGetProperty,
+                     PlayerShipSetProperty,
+                     kPlayerShip_reticleColorTargetSensitive),
+    OOJS_PROPERTY_RW("reticleColorWormhole", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_reticleColorWormhole),
+    OOJS_PROPERTY_RO("renovationMultiplier", PlayerShipGetProperty,
+                     kPlayerShip_renovationMultiplier),
+    OOJS_PROPERTY_RW("reticleTargetSensitive", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_reticleTargetSensitive),
+    OOJS_PROPERTY_RW("roll", PlayerShipGetProperty, PlayerShipSetProperty,
+                     kPlayerShip_roll),
+    OOJS_PROPERTY_RO("routeMode", PlayerShipGetProperty, kPlayerShip_routeMode),
+    OOJS_PROPERTY_RW("scannerMinimalistic", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_scannerMinimalistic),
+    OOJS_PROPERTY_RW("scannerNonLinear", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_scannerNonLinear),
+    OOJS_PROPERTY_RW("scannerUltraZoom", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_scannerUltraZoom),
+    OOJS_PROPERTY_RW("scoopOverride", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_scoopOverride),
+    OOJS_PROPERTY_RW("serviceLevel", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_serviceLevel),
+    OOJS_PROPERTY_RO("specialCargo", PlayerShipGetProperty,
+                     kPlayerShip_specialCargo),
+    OOJS_PROPERTY_RW("targetSystem", PlayerShipGetProperty,
+                     PlayerShipSetProperty, kPlayerShip_targetSystem),
+    OOJS_PROPERTY_RO("nextSystem", PlayerShipGetProperty,
+                     kPlayerShip_nextSystem),
+    OOJS_PROPERTY_RW("infoSystem", PlayerShipGetProperty, PlayerShipSetProperty,
+                     kPlayerShip_infoSystem),
+    OOJS_PROPERTY_RO("previousSystem", PlayerShipGetProperty,
+                     kPlayerShip_previousSystem),
+    OOJS_PROPERTY_RO("torusEngaged", PlayerShipGetProperty,
+                     kPlayerShip_torusEngaged),
+    OOJS_PROPERTY_RO("viewDirection", PlayerShipGetProperty,
+                     kPlayerShip_viewDirection),
+    OOJS_PROPERTY_RO("viewPositionAft", PlayerShipGetProperty,
+                     kPlayerShip_viewPositionAft),
+    OOJS_PROPERTY_RO("viewPositionForward", PlayerShipGetProperty,
+                     kPlayerShip_viewPositionForward),
+    OOJS_PROPERTY_RO("viewPositionPort", PlayerShipGetProperty,
+                     kPlayerShip_viewPositionPort),
+    OOJS_PROPERTY_RO("viewPositionStarboard", PlayerShipGetProperty,
+                     kPlayerShip_viewPositionStarboard),
+    OOJS_PROPERTY_RO("weaponsOnline", PlayerShipGetProperty,
+                     kPlayerShip_weaponsOnline),
+    OOJS_PROPERTY_RW("yaw", PlayerShipGetProperty, PlayerShipSetProperty,
+                     kPlayerShip_yaw),
+};
 }  // namespace
 
 namespace {
-static FunctionSpec sPlayerShipMethods[] = {
-    // JS name							Function
-    // min args	flags
-    {"addParcel", PlayerShipAddParcel, 0, 0},
-    {"addPassenger", PlayerShipAddPassenger, 0, 0},
-    {"awardContract", PlayerShipAwardContract, 0, 0},
-    {"awardEquipmentToCurrentPylon", PlayerShipAwardEquipmentToCurrentPylon, 1,
-     0},
-    {"beginHyperspaceCountdown", PlayerShipBeginHyperspaceCountdown, 0, 0},
-    {"cancelDockingRequest", PlayerShipCancelDockingRequest, 1, 0},
-    {"cancelHyperspaceCountdown", PlayerShipCancelHyperspaceCountdown, 0, 0},
-    {"beginGalacticHyperspaceCountdown",
-     PlayerShipBeginGalacticHyperspaceCountdown, 1, 0},
-    {"disengageAutopilot", PlayerShipDisengageAutopilot, 0, 0},
-    {"engageAutopilotToStation", PlayerShipEngageAutopilotToStation, 1, 0},
-    {"hideHUDSelector", PlayerShipHideHUDSelector, 1, 0},
-    {"launch", PlayerShipLaunch, 0, 0},
-    {"removeAllCargo", PlayerShipRemoveAllCargo, 0, 0},
-    {"removeContract", PlayerShipRemoveContract, 2, 0},
-    {"removeParcel", PlayerShipRemoveParcel, 1, 0},
-    {"removePassenger", PlayerShipRemovePassenger, 1, 0},
-    {"requestDockingClearance", PlayerShipRequestDockingClearance, 1, 0},
-    {"resetCustomView", PlayerShipResetCustomView, 0, 0},
-    {"resetScannerZoom", PlayerShipResetScannerZoom, 0, 0},
-    {"setCustomView", PlayerShipSetCustomView, 2, 0},
-    {"setCustomHUDDial", PlayerShipSetCustomHUDDial, 2, 0},
-    {"setMultiFunctionDisplay", PlayerShipSetMultiFunctionDisplay, 1, 0},
-    {"setMultiFunctionText", PlayerShipSetMultiFunctionText, 1, 0},
-    {"setPrimedEquipment", PlayerShipSetPrimedEquipment, 1, 0},
-    {"showHUDSelector", PlayerShipShowHUDSelector, 1, 0},
-    {"takeInternalDamage", PlayerShipTakeInternalDamage, 0, 0},
-    {"useSpecialCargo", PlayerShipUseSpecialCargo, 1, 0},
-    {0}};
+static const JSCFunctionListEntry sPlayerShipMethods[] = {
+    // JS name, min args, function
+    JS_CFUNC_DEF("addParcel", 0, PlayerShipAddParcel),
+    JS_CFUNC_DEF("addPassenger", 0, PlayerShipAddPassenger),
+    JS_CFUNC_DEF("awardContract", 0, PlayerShipAwardContract),
+    JS_CFUNC_DEF("awardEquipmentToCurrentPylon", 1,
+                 PlayerShipAwardEquipmentToCurrentPylon),
+    JS_CFUNC_DEF("beginHyperspaceCountdown", 0,
+                 PlayerShipBeginHyperspaceCountdown),
+    JS_CFUNC_DEF("cancelDockingRequest", 1, PlayerShipCancelDockingRequest),
+    JS_CFUNC_DEF("cancelHyperspaceCountdown", 0,
+                 PlayerShipCancelHyperspaceCountdown),
+    JS_CFUNC_DEF("beginGalacticHyperspaceCountdown", 1,
+                 PlayerShipBeginGalacticHyperspaceCountdown),
+    JS_CFUNC_DEF("disengageAutopilot", 0, PlayerShipDisengageAutopilot),
+    JS_CFUNC_DEF("engageAutopilotToStation", 1,
+                 PlayerShipEngageAutopilotToStation),
+    JS_CFUNC_DEF("hideHUDSelector", 1, PlayerShipHideHUDSelector),
+    JS_CFUNC_DEF("launch", 0, PlayerShipLaunch),
+    JS_CFUNC_DEF("removeAllCargo", 0, PlayerShipRemoveAllCargo),
+    JS_CFUNC_DEF("removeContract", 2, PlayerShipRemoveContract),
+    JS_CFUNC_DEF("removeParcel", 1, PlayerShipRemoveParcel),
+    JS_CFUNC_DEF("removePassenger", 1, PlayerShipRemovePassenger),
+    JS_CFUNC_DEF("requestDockingClearance", 1,
+                 PlayerShipRequestDockingClearance),
+    JS_CFUNC_DEF("resetCustomView", 0, PlayerShipResetCustomView),
+    JS_CFUNC_DEF("resetScannerZoom", 0, PlayerShipResetScannerZoom),
+    JS_CFUNC_DEF("setCustomView", 2, PlayerShipSetCustomView),
+    JS_CFUNC_DEF("setCustomHUDDial", 2, PlayerShipSetCustomHUDDial),
+    JS_CFUNC_DEF("setMultiFunctionDisplay", 1,
+                 PlayerShipSetMultiFunctionDisplay),
+    JS_CFUNC_DEF("setMultiFunctionText", 1, PlayerShipSetMultiFunctionText),
+    JS_CFUNC_DEF("setPrimedEquipment", 1, PlayerShipSetPrimedEquipment),
+    JS_CFUNC_DEF("showHUDSelector", 1, PlayerShipShowHUDSelector),
+    JS_CFUNC_DEF("takeInternalDamage", 0, PlayerShipTakeInternalDamage),
+    JS_CFUNC_DEF("useSpecialCargo", 1, PlayerShipUseSpecialCargo),
+};
 }  // namespace
 
-void InitOOJSPlayerShip(ooscript::Context context, ooscript::Object global) {
-  Object proto = ooscript::initClass(
-      (context), (global), (JSShipPrototype()), &sPlayerShipClass,
-      OOJSUnconstructableConstruct, 0, sPlayerShipProperties,
-      sPlayerShipMethods, nullptr, nullptr);
-  sPlayerShipPrototype = (proto);
-  OOJSRegisterObjectConverter(&sPlayerShipClass, OOJSEntityObjectConverter);
-  OOJSRegisterSubclass(&sPlayerShipClass, JSShipClass());
+void InitOOJSPlayerShip(JSContext* context, JSValueConst global) {
+  OOJSRegisterClass(&sPlayerShipClassID, &sPlayerShipClass);
+
+  JSValue shipPrototype = JS_GetClassProto(context, JSShipClassID());
+  OOCAssert(JS_IsObject(shipPrototype),
+            "Ship must be initialized before PlayerShip.");
+  OOJSInitClass(context, global, sPlayerShipClassID, shipPrototype,
+                OOJSUnconstructableConstruct, 0, sPlayerShipProperties,
+                OOJS_COUNT(sPlayerShipProperties), sPlayerShipMethods,
+                OOJS_COUNT(sPlayerShipMethods), nullptr, 0);
+  JS_FreeValue(context, shipPrototype);
+
+  OOJSRegisterObjectConverter(sPlayerShipClassID, OOJSEntityObjectConverter);
+  OOJSRegisterSubclass(sPlayerShipClassID, JSShipClassID());
 
   PlayerEntity* player =
       PlayerEntity::sharedPlayer();  // NOTE: at time of writing, this creates
@@ -745,24 +452,36 @@ void InitOOJSPlayerShip(ooscript::Context context, ooscript::Object global) {
                                      // here.
 
   // Create ship object as a property of the player object.
-  Object shipObj =
-      ooscript::defineObject((context), (JSPlayerObject()), "ship",
-                             &sPlayerShipClass, proto, OOJS_PROP_READONLY);
-  sPlayerShipObject = (shipObj);
+  JSValue playerObject = JS_GetPropertyStr(context, global, "player");
+  OOCAssert(JS_IsObject(playerObject),
+            "Player must be initialized before PlayerShip.");
+
+  JSValue shipObject = JS_NewObjectClass(context, (int)sPlayerShipClassID);
   // The slot holds a weak reference to the C++ player, as every entity's JS
   // object's does.
-  OOJSSetCxxPrivate((context), shipObj,
-                    oo::makeRef<OOJSEntityHolder>(player).get());
-  OOJSPlayerShipSetJSSelf(
-      player, sPlayerShipObject,
-      context);  // -setJSSelf:context:, the category in this file
+  OOJSSetCxxPrivate(shipObject, oo::makeRef<OOJSEntityHolder>(player).get());
+  // The player object's property and the player entity each own a reference.
+  JS_DefinePropertyValueStr(context, playerObject, "ship",
+                            JS_DupValue(context, shipObject),
+                            OOJS_PROP_READONLY);
+  OOJSPlayerShipSetJSSelf(player, shipObject,
+                          context);  // -setJSSelf:context:, the category in
+                                     // this file
+
+  JS_FreeValue(context, shipObject);
+  JS_FreeValue(context, playerObject);
 }
 
-ooscript::ClassDef* JSPlayerShipClass(void) { return &sPlayerShipClass; }
+JSClassID JSPlayerShipClassID(void) { return sPlayerShipClassID; }
 
-ooscript::Object JSPlayerShipPrototype(void) { return sPlayerShipPrototype; }
-
-ooscript::Object JSPlayerShipObject(void) { return sPlayerShipObject; }
+JSValue JSPlayerShipObject(void) {
+  JSContext* context = OOJSAcquireContext();
+  JSValue playerObject = JSPlayerObject();
+  JSValue result = JS_GetPropertyStr(context, playerObject, "ship");
+  JS_FreeValue(context, playerObject);
+  OOJSRelinquishContext(context);
+  return result;
+}
 
 // PlayerEntity (OOJavaScriptExtensions): the bodies of the category's methods,
 // which the engine and the player sent by selector; the C++ player calls them.
@@ -770,10 +489,13 @@ std::optional<std::string> OOJSPlayerShipJSClassName(void) {
   return std::string("PlayerShip");
 }
 
-void OOJSPlayerShipSetJSSelf(PlayerEntity* player, ooscript::Object val,
-                             ooscript::Context context) {
-  player->_jsSelf = val;
-  OOJSAddGCObjectRoot(context, &player->_jsSelf, "Player jsSelf");
+void OOJSPlayerShipSetJSSelf(PlayerEntity* player, JSValueConst val,
+                             JSContext* context) {
+  // Drop any previous wrapper (and its reset observer).
+  player->deleteJSSelf();
+
+  // Released by deleteJSSelf() when the JavaScript engine resets.
+  player->_jsSelf = JS_DupValue(context, val);
 
   oo::NotificationCenter::defaultCenter().addObserver(
       player, kOOJavaScriptEngineWillResetNotificationName,
@@ -783,52 +505,40 @@ void OOJSPlayerShipSetJSSelf(PlayerEntity* player, ooscript::Object val,
       });
 }
 
+// #768's observer selector is -deleteJSSelf: free the held reference and stop
+// observing.
 void OOJSPlayerShipJavaScriptEngineWillReset(
     PlayerEntity* player, const oo::Notification& /*notification*/) {
-  oo::NotificationCenter::defaultCenter().removeObserver(
-      player, kOOJavaScriptEngineWillResetNotificationName,
-      OOJavaScriptEngine::sharedEngine());
-
-  if (player->_jsSelf != NULL) {
-    ooscript::Context context = OOJSAcquireContext();
-    ooscript::removeObjectRoot((context), OOJSFOBJP(&player->_jsSelf));
-    player->_jsSelf = NULL;
-    OOJSRelinquishContext(context);
-  }
+  player->deleteJSSelf();
 }
 
 namespace {
-static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
-                                  Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-  ooscript::Object thisObj = (obj);
-  ooscript::Value* value_raw = (value);
-
+static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale() || thisObj == sPlayerShipPrototype)) {
-    *value_raw = ooscript::undefinedValue();
-    return true;
+  /*	The façade compared this with the prototype. The prototype (like any
+     object that isn't player.ship, such as the this of a detached getter call)
+     has nothing in its private slot.
+  */
+  if (EXPECT_NOT(OOIsPlayerStale() ||
+                 JS_GetOpaque(OOJS_THIS, sPlayerShipClassID) == nullptr)) {
+    return JS_UNDEFINED;
   }
 
   oo::PList result;  // null maps to null
   PlayerEntity* player = OOPlayerForScripting();
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kPlayerShip_activeMissile:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->getActiveMissile() : 0), value);
+      return JS_NewNumber(context,
+                          (player != nullptr ? player->getActiveMissile() : 0));
 
     case kPlayerShip_fuelLeakRate:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->fuelLeakRate() : 0.0f), value);
+      return JS_NewNumber(context,
+                          (player != nullptr ? player->fuelLeakRate() : 0.0f));
 
     case kPlayerShip_docked:
-      *value_raw =
-          OOJSValueFromBOOL(player != nullptr ? player->isDocked() : false);
-      return true;
+      return OOJSValueFromBOOL(player != nullptr ? player->isDocked() : false);
 
     case kPlayerShip_dockedStation:
       result =
@@ -857,30 +567,24 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
       break;
 
     case kPlayerShip_reticleTargetSensitive:
-      *value_raw = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           AskHud(player, &HeadUpDisplay::getReticleTargetSensitive));
-      return true;
 
     case kPlayerShip_galacticHyperspaceBehaviour:
-      *value_raw = OOJSValueFromGalacticHyperspaceBehaviour(
+      return OOJSValueFromGalacticHyperspaceBehaviour(
           context, (player != nullptr ? player->getGalacticHyperspaceBehaviour()
                                       : OOGalacticHyperspaceBehaviour{}));
-      return true;
 
     case kPlayerShip_galacticHyperspaceFixedCoords:
-      return NSPointToVectorJSValue(
-          context,
+      OOJS_RETURN_WITH_HELPER(
+          NSPointToVectorJSValue,
           (player != nullptr ? player->getGalacticHyperspaceFixedCoords()
-                             : NSPoint{}),
-          value_raw);
+                             : NSPoint{}));
 
     case kPlayerShip_galacticHyperspaceFixedCoordsInLY:
-      return VectorToJSValue(
-          context,
-          OOGalacticCoordinatesFromInternal(
-              player != nullptr ? player->getGalacticHyperspaceFixedCoords()
-                                : NSPoint{}),
-          value_raw);
+      OOJS_RETURN_VECTOR(OOGalacticCoordinatesFromInternal(
+          player != nullptr ? player->getGalacticHyperspaceFixedCoords()
+                            : NSPoint{}));
 
     case kPlayerShip_fastEquipmentA:
       result = StringOrNull(player != nullptr ? player->fastEquipmentA()
@@ -898,37 +602,36 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
       break;
 
     case kPlayerShip_forwardShield:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->forwardShieldLevel() : 0.0f), value);
+      return JS_NewNumber(
+          context, (player != nullptr ? player->forwardShieldLevel() : 0.0f));
 
     case kPlayerShip_aftShield:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->aftShieldLevel() : 0.0f), value);
+      return JS_NewNumber(
+          context, (player != nullptr ? player->aftShieldLevel() : 0.0f));
 
     case kPlayerShip_maxForwardShield:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->maxForwardShieldLevel() : 0.0f),
-          value);
+      return JS_NewNumber(
+          context,
+          (player != nullptr ? player->maxForwardShieldLevel() : 0.0f));
 
     case kPlayerShip_maxAftShield:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->maxAftShieldLevel() : 0.0f), value);
+      return JS_NewNumber(
+          context, (player != nullptr ? player->maxAftShieldLevel() : 0.0f));
 
     case kPlayerShip_forwardShieldRechargeRate:
       // No distinction made internally
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->forwardShieldRechargeRate() : 0.0f),
-          value);
+      return JS_NewNumber(
+          context,
+          (player != nullptr ? player->forwardShieldRechargeRate() : 0.0f));
 
     case kPlayerShip_aftShieldRechargeRate:
       // No distinction made internally
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->aftShieldRechargeRate() : 0.0f),
-          value);
+      return JS_NewNumber(
+          context,
+          (player != nullptr ? player->aftShieldRechargeRate() : 0.0f));
 
     case kPlayerShip_multiFunctionDisplays:
-      return ooscript::newNumberValue(
-          cx, AskHud(player, &HeadUpDisplay::mfdCount), value);
+      return JS_NewNumber(context, AskHud(player, &HeadUpDisplay::mfdCount));
 
     case kPlayerShip_multiFunctionDisplayList: {
       oo::PList::Array list;  // [OONull null] for an inactive MFD
@@ -941,9 +644,8 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
     } break;
 
     case kPlayerShip_missilesOnline:
-      *value_raw = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           !(player != nullptr ? player->dialIdentEngaged() : false));
-      return true;
 
     case kPlayerShip_chartHightlightMode:
       result = oo::PList(cxx_OOStringFromLongRangeChartMode(
@@ -952,50 +654,38 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
       break;
 
     case kPlayerShip_galaxyCoordinates:
-      return NSPointToVectorJSValue(
-          context,
-          (player != nullptr ? player->getGalaxy_coordinates() : NSPoint{}),
-          value_raw);
+      OOJS_RETURN_WITH_HELPER(
+          NSPointToVectorJSValue,
+          (player != nullptr ? player->getGalaxy_coordinates() : NSPoint{}));
 
     case kPlayerShip_galaxyCoordinatesInLY:
-      return VectorToJSValue(
-          context,
-          OOGalacticCoordinatesFromInternal(
-              player != nullptr ? player->getGalaxy_coordinates() : NSPoint{}),
-          value_raw);
+      OOJS_RETURN_VECTOR(OOGalacticCoordinatesFromInternal(
+          player != nullptr ? player->getGalaxy_coordinates() : NSPoint{}));
 
     case kPlayerShip_cursorCoordinates:
-      return NSPointToVectorJSValue(
-          context,
-          (player != nullptr ? player->getCursor_coordinates() : NSPoint{}),
-          value_raw);
+      OOJS_RETURN_WITH_HELPER(
+          NSPointToVectorJSValue,
+          (player != nullptr ? player->getCursor_coordinates() : NSPoint{}));
 
     case kPlayerShip_cursorCoordinatesInLY:
-      return VectorToJSValue(
-          context,
-          OOGalacticCoordinatesFromInternal(
-              player != nullptr ? player->getCursor_coordinates() : NSPoint{}),
-          value_raw);
+      OOJS_RETURN_VECTOR(OOGalacticCoordinatesFromInternal(
+          player != nullptr ? player->getCursor_coordinates() : NSPoint{}));
 
     case kPlayerShip_targetSystem:
-      *value_raw = ooscript::int32Value(
-          player != nullptr ? player->targetSystemID() : 0);
-      return true;
+      return JS_NewInt32(context,
+                         player != nullptr ? player->targetSystemID() : 0);
 
     case kPlayerShip_nextSystem:
-      *value_raw = ooscript::int32Value(
-          player != nullptr ? player->nextHopTargetSystemID() : 0);
-      return true;
+      return JS_NewInt32(
+          context, player != nullptr ? player->nextHopTargetSystemID() : 0);
 
     case kPlayerShip_infoSystem:
-      *value_raw =
-          ooscript::int32Value(player != nullptr ? player->infoSystemID() : 0);
-      return true;
+      return JS_NewInt32(context,
+                         player != nullptr ? player->infoSystemID() : 0);
 
     case kPlayerShip_previousSystem:
-      *value_raw = ooscript::int32Value(
-          player != nullptr ? player->previousSystemID() : 0);
-      return true;
+      return JS_NewInt32(context,
+                         player != nullptr ? player->previousSystemID() : 0);
 
     case kPlayerShip_routeMode: {
       OORouteType route =
@@ -1015,39 +705,32 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
     }
 
     case kPlayerShip_scannerMinimalistic:
-      *value_raw = OOJSValueFromBOOL(
+      return OOJSValueFromBOOL(
           AskHud(player, &HeadUpDisplay::minimalisticScanner));
-      return true;
 
     case kPlayerShip_scannerNonLinear:
-      *value_raw =
-          OOJSValueFromBOOL(AskHud(player, &HeadUpDisplay::nonlinearScanner));
-      return true;
+      return OOJSValueFromBOOL(
+          AskHud(player, &HeadUpDisplay::nonlinearScanner));
 
     case kPlayerShip_scannerUltraZoom:
-      *value_raw =
-          OOJSValueFromBOOL(AskHud(player, &HeadUpDisplay::scannerUltraZoom));
-      return true;
+      return OOJSValueFromBOOL(
+          AskHud(player, &HeadUpDisplay::scannerUltraZoom));
 
     case kPlayerShip_scoopOverride:
-      *value_raw = OOJSValueFromBOOL(
-          player != nullptr ? player->getScoopOverride() : false);
-      return true;
+      return OOJSValueFromBOOL(player != nullptr ? player->getScoopOverride()
+                                                 : false);
 
     case kPlayerShip_injectorsEngaged:
-      *value_raw = OOJSValueFromBOOL(
-          player != nullptr ? player->injectorsEngaged() : false);
-      return true;
+      return OOJSValueFromBOOL(player != nullptr ? player->injectorsEngaged()
+                                                 : false);
 
     case kPlayerShip_massLockable:
-      *value_raw = OOJSValueFromBOOL(
-          player != nullptr ? player->getMassLockable() : false);
-      return true;
+      return OOJSValueFromBOOL(player != nullptr ? player->getMassLockable()
+                                                 : false);
 
     case kPlayerShip_torusEngaged:
-      *value_raw = OOJSValueFromBOOL(
-          player != nullptr ? player->hyperspeedEngaged() : false);
-      return true;
+      return OOJSValueFromBOOL(player != nullptr ? player->hyperspeedEngaged()
+                                                 : false);
 
     case kPlayerShip_compassTarget:
       result = oo::EntityObjectNode(
@@ -1066,10 +749,9 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
       break;
 
     case kPlayerShip_compassMode:
-      *value_raw = OOJSValueFromCompassMode(
+      return OOJSValueFromCompassMode(
           context,
           (player != nullptr ? player->getCompassMode() : OOCompassMode{}));
-      return true;
 
     case kPlayerShip_hud:
       result = StringOrNull(AskHud(player, &HeadUpDisplay::getHudName));
@@ -1081,48 +763,35 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
       break;
 
     case kPlayerShip_hudAllowsBigGui:
-      *value_raw =
-          OOJSValueFromBOOL(AskHud(player, &HeadUpDisplay::getAllowBigGui));
-      return true;
+      return OOJSValueFromBOOL(AskHud(player, &HeadUpDisplay::getAllowBigGui));
 
     case kPlayerShip_hudHidden:
-      *value_raw = OOJSValueFromBOOL(AskHud(player, &HeadUpDisplay::isHidden));
-      return true;
+      return OOJSValueFromBOOL(AskHud(player, &HeadUpDisplay::isHidden));
 
     case kPlayerShip_weaponsOnline:
-      *value_raw = OOJSValueFromBOOL(player != nullptr ? player->weaponsOnline()
-                                                       : false);
-      return true;
+      return OOJSValueFromBOOL(player != nullptr ? player->weaponsOnline()
+                                                 : false);
 
     case kPlayerShip_viewDirection:
-      *value_raw = OOJSValueFromViewID(
+      return OOJSValueFromViewID(
           context,
           (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}));
-      return true;
 
     case kPlayerShip_viewPositionAft:
-      return VectorToJSValue(
-          context,
-          (player != nullptr ? player->viewpointOffsetAft() : Vector{}),
-          value_raw);
+      OOJS_RETURN_VECTOR(
+          (player != nullptr ? player->viewpointOffsetAft() : Vector{}));
 
     case kPlayerShip_viewPositionForward:
-      return VectorToJSValue(
-          context,
-          (player != nullptr ? player->viewpointOffsetForward() : Vector{}),
-          value_raw);
+      OOJS_RETURN_VECTOR(
+          (player != nullptr ? player->viewpointOffsetForward() : Vector{}));
 
     case kPlayerShip_viewPositionPort:
-      return VectorToJSValue(
-          context,
-          (player != nullptr ? player->viewpointOffsetPort() : Vector{}),
-          value_raw);
+      OOJS_RETURN_VECTOR(
+          (player != nullptr ? player->viewpointOffsetPort() : Vector{}));
 
     case kPlayerShip_viewPositionStarboard:
-      return VectorToJSValue(
-          context,
-          (player != nullptr ? player->viewpointOffsetStarboard() : Vector{}),
-          value_raw);
+      OOJS_RETURN_VECTOR(
+          (player != nullptr ? player->viewpointOffsetStarboard() : Vector{}));
 
     case kPlayerShip_currentWeapon:
       result = OOEquipmentTypeObjectNode(
@@ -1135,40 +804,39 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
       break;
 
     case kPlayerShip_price:
-      return ooscript::newNumberValue(
-          cx,
+      return JS_NewNumber(
+          context,
           (UNIVERSE != nullptr
                ? UNIVERSE->tradeInValueForCommanderDictionary(
                      (player != nullptr ? player->commanderDataDictionary()
                                         : oo::PList()))
-               : 0),
-          value);
+               : 0));
 
     case kPlayerShip_serviceLevel:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->tradeInFactor() : int{}), value);
+      return JS_NewNumber(
+          context, (player != nullptr ? player->tradeInFactor() : int{}));
 
     case kPlayerShip_renovationCost:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->renovationCosts() : 0.0), value);
+      return JS_NewNumber(
+          context, (player != nullptr ? player->renovationCosts() : 0.0));
 
     case kPlayerShip_renovationMultiplier:
-      return ooscript::newNumberValue(
-          cx, (player != nullptr ? player->renovationFactor() : 0.0), value);
+      return JS_NewNumber(
+          context, (player != nullptr ? player->renovationFactor() : 0.0));
 
       // make roll, pitch, yaw reported to JS use same +/- convention as
       // for NPC ships
     case kPlayerShip_pitch:
-      return ooscript::newNumberValue(
-          cx, -(player != nullptr ? player->getFlightPitch() : 0.0f), value);
+      return JS_NewNumber(
+          context, -(player != nullptr ? player->getFlightPitch() : 0.0f));
 
     case kPlayerShip_roll:
-      return ooscript::newNumberValue(
-          cx, -(player != nullptr ? player->getFlightRoll() : 0.0f), value);
+      return JS_NewNumber(
+          context, -(player != nullptr ? player->getFlightRoll() : 0.0f));
 
     case kPlayerShip_yaw:
-      return ooscript::newNumberValue(
-          cx, -(player != nullptr ? player->getFlightYaw() : 0.0f), value);
+      return JS_NewNumber(context,
+                          -(player != nullptr ? player->getFlightYaw() : 0.0f));
 
     case kPlayerShip_messageGuiTextColor:
       result =
@@ -1181,33 +849,27 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID,
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, (propID),
-                                    sPlayerShipPropertiesRaw);
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sPlayerShipProperties,
+                                    OOJS_COUNT(sPlayerShipProperties));
+      return OOJSNativeFailure(context);
   }
 
-  *value_raw = OOJSValueFromPList(context, result);
-  return true;
+  return OOJSValueFromPList(context, result);
 
   OOJS_NATIVE_EXIT
 }
 }  // namespace
 
 namespace {
-static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
-                                  bool /*strict*/, Value* value) {
-  if (!ooscript::isInt32Id(propID)) return true;
-
-  ooscript::Context context = (cx);
-  ooscript::Object thisObj = (obj);
-  ooscript::Value* value_raw = (value);
-
+static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  if (EXPECT_NOT(OOIsPlayerStale())) return true;
+  if (EXPECT_NOT(OOIsPlayerStale())) return JS_UNDEFINED;
 
   PlayerEntity* player = OOPlayerForScripting();
   double fValue;
-  bool bValue;
+  int bValue;
   int32_t iValue;
   std::optional<std::string> sValue;
   OOGalacticHyperspaceBehaviour ghBehaviour;
@@ -1215,31 +877,31 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
   oo::Ref<OOColor> colorForScript;  // the colours are converted (OOColor)
   Entity* eValue = nullptr;  // as JSValueToEntity() answers (the C++ entity)
 
-  switch (ooscript::idToInt32(propID)) {
+  switch (magic) {
     case kPlayerShip_fuelLeakRate:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (player != nullptr) player->setFuelLeakRate(fValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_massLockable:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         if (player != nullptr) player->setMassLockable(bValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_reticleTargetSensitive:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         if (HeadUpDisplay* hud = HudOf(player))
           hud->setReticleTargetSensitive(bValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_chartHightlightMode:
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         OOLongRangeChartMode chartMode =
             cxx_OOLongRangeChartModeFromString(sValue.value_or(""));
@@ -1251,7 +913,7 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
                 {oo::PList(cxx_OOStringFromLongRangeChartMode(
                     player != nullptr ? player->getLongRangeChartMode()
                                       : OOLongRangeChartMode{}))});
-          return true;
+          return JS_UNDEFINED;
         } else {
           cxx_OOJSReportError(
               context,
@@ -1260,21 +922,21 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
               "or OOLRC_MODE_TECHLEVEL.");
         }
       }
-      return false;  // not reachable if successfully set
+      return OOJSNativeFailure(context);  // not reachable if successfully set
       break;
 
     case kPlayerShip_compassMode:
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
-        OOCompassMode mode = OOCompassModeFromJSValue(context, *value_raw);
+        OOCompassMode mode = OOCompassModeFromJSValue(context, value);
         if (player != nullptr) player->setCompassMode(mode);
         if (player != nullptr) player->validateCompassTarget();
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_compassType:
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         if (*sValue == "OO_COMPASSTYPE_BASIC") {
           if (player != nullptr) player->setCompassMode(COMPASS_MODE_BASIC);
@@ -1294,9 +956,9 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
               context,
               "Unknown compass type specified - must be either "
               "OO_COMPASSTYPE_BASIC or OO_COMPASSTYPE_ADVANCED.");
-          return false;
+          return OOJSNativeFailure(context);
         }
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
@@ -1307,11 +969,10 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
                 : false)) {
         cxx_OOJSReportError(
             context, "Compass target cannot be set with a basic compass.");
-        return false;
+        return OOJSNativeFailure(context);
       }
       // make sure we have a valid entity
-      if (!ooscript::isNull(*value_raw) &&
-          JSValueToEntity(context, *value_raw, &eValue)) {
+      if (!JS_IsNull(value) && JSValueToEntity(context, value, &eValue)) {
         Entity* current = (player != nullptr ? player->getCompassTargetEntity()
                                              : nullptr);  // the C++ entities
         if (player != nullptr) player->setNextCompassMode();
@@ -1326,66 +987,72 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
           if (player != nullptr) player->setNextCompassMode();
           if (player != nullptr) player->validateCompassTarget();
         }
-        return (player != nullptr ? player->getCompassTargetEntity()
-                                  : nullptr) != current;
+        // SpiderMonkey returned false (stopping the script without an error) if
+        // the target wasn't found.
+        if ((player != nullptr ? player->getCompassTargetEntity() : nullptr) ==
+            current)
+          return OOJSNativeFailure(context);
+        return JS_UNDEFINED;
       } else {
         cxx_OOJSReportError(context, "Invalid compass target entity provided.");
-        return false;
+        return OOJSNativeFailure(context);
       }
       break;
 
     case kPlayerShip_galacticHyperspaceBehaviour:
-      ghBehaviour =
-          OOGalacticHyperspaceBehaviourFromJSValue(context, *value_raw);
+      ghBehaviour = OOGalacticHyperspaceBehaviourFromJSValue(context, value);
       if (ghBehaviour != GALACTIC_HYPERSPACE_BEHAVIOUR_UNKNOWN) {
         if (player != nullptr)
           player->setGalacticHyperspaceBehaviour(ghBehaviour);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_galacticHyperspaceFixedCoords:
-      if (JSValueToVector(context, *value_raw, &vValue)) {
+      if (JSValueToVector(context, value, &vValue)) {
         NSPoint coords = {vValue.x, vValue.y};
         if (player != nullptr) player->setGalacticHyperspaceFixedCoords(coords);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_galacticHyperspaceFixedCoordsInLY:
-      if (JSValueToVector(context, *value_raw, &vValue)) {
+      if (JSValueToVector(context, value, &vValue)) {
         NSPoint coords = OOInternalCoordinatesFromGalactic(vValue);
         if (player != nullptr) player->setGalacticHyperspaceFixedCoords(coords);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_fastEquipmentA:
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         if (player != nullptr) player->setFastEquipmentA(sValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_fastEquipmentB:
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         if (player != nullptr) player->setFastEquipmentB(sValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_primedEquipment:
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
-        return (player != nullptr ? player->setPrimedEquipment(*sValue, false)
-                                  : false);
+        // As before, failure stops the script without an error.
+        if (!(player != nullptr ? player->setPrimedEquipment(*sValue, false)
+                                : false))
+          return OOJSNativeFailure(context);
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_pitch:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (!isnan(fValue))  // guard against undefined
         {
           if (player != nullptr)
@@ -1393,129 +1060,129 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
                 ((player != nullptr ? player->getFlightPitch() : 0.0f) +
                  fValue));
         }
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_roll:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (!isnan(fValue))  // guard against undefined
         {
           if (player != nullptr)
             player->decrease_flight_roll((
                 (player != nullptr ? player->getFlightRoll() : 0.0f) + fValue));
         }
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_yaw:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (!isnan(fValue))  // guard against undefined
         {
           if (player != nullptr)
             player->decrease_flight_yaw(
                 ((player != nullptr ? player->getFlightYaw() : 0.0f) + fValue));
         }
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_forwardShield:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (player != nullptr) player->setForwardShieldLevel(fValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_aftShield:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (player != nullptr) player->setAftShieldLevel(fValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_maxForwardShield:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (player != nullptr) player->setMaxForwardShieldLevel(fValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_maxAftShield:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (player != nullptr) player->setMaxAftShieldLevel(fValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_forwardShieldRechargeRate:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (player != nullptr) player->setForwardShieldRechargeRate(fValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_aftShieldRechargeRate:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         if (player != nullptr) player->setAftShieldRechargeRate(fValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_scannerMinimalistic:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         if (HeadUpDisplay* hud = HudOf(player))
           hud->setMinimalisticScanner(bValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_scannerNonLinear:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         if (HeadUpDisplay* hud = HudOf(player))
           hud->setNonlinearScanner(bValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_scannerUltraZoom:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         if (HeadUpDisplay* hud = HudOf(player))
           hud->setScannerUltraZoom(bValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_scoopOverride:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         if (player != nullptr) player->setScoopOverride(bValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_hud:
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         if (sValue.has_value() && player != nullptr)
           player->switchHudTo(
               *sValue);  // EMMSTRAN: logged error should be a JS warning.
-        return true;
+        return JS_UNDEFINED;
       } else {
         if (player != nullptr) player->resetHud();
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_crosshairs:
-      sValue = cxx_OOStringFromJSValue(context, *value_raw);
+      sValue = cxx_OOStringFromJSValue(context, value);
       if (!sValue.has_value()) {
         // reset HUD back to its plist settings
         std::optional<std::string> hud = AskHud(
             player,
             &HeadUpDisplay::getHudName);  // a copy, as the retain kept it
         if (hud.has_value() && player != nullptr) player->switchHudTo(*hud);
-        return true;
+        return JS_UNDEFINED;
       } else {
         if (!(HudOf(player) != nullptr &&
               HudOf(player)->setCrosshairDefinition(sValue.value_or("")))) {
@@ -1523,37 +1190,42 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
               context, "Crosshair definition file %s not found or invalid",
               (sValue ? sValue->c_str() : "(null)"));
         }
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_hudHidden:
-      if (ooscript::valueToBoolean(cx, *value, &bValue)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         if (HeadUpDisplay* hud = HudOf(player)) hud->setHidden(bValue);
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_serviceLevel:
-      if (ooscript::valueToNumber(cx, *value, &fValue)) {
+      if (JS_ToFloat64(context, &fValue, value) == 0) {
         int newLevel = (int)fValue;
         if (player != nullptr)
           player->adjustTradeInFactorBy(
               (newLevel -
                (player != nullptr ? player->tradeInFactor() : int{})));
-        return true;
+        return JS_UNDEFINED;
       }
+      /*	The SpiderMonkey version fell through to currentWeapon here
+         (which removed the current weapon) if the conversion threw. Report the
+         bad value instead (#768).
+      */
+      break;
 
     case kPlayerShip_currentWeapon: {
       bool exists = false;  // JSValueToEquipmentKeyRelaxed() takes a bool *
-      sValue = JSValueToEquipmentKeyRelaxed(context, *value_raw, &exists);
+      sValue = JSValueToEquipmentKeyRelaxed(context, value, &exists);
       if (!exists || !sValue.has_value()) {
         sValue = "EQ_WEAPON_NONE";
       }
       if (player != nullptr)
         player->setWeaponMount(player->getCurrentWeaponFacing(),
                                sValue.value_or(""), "scripted");
-      return true;
+      return JS_UNDEFINED;
     }
 
     case kPlayerShip_targetSystem:
@@ -1575,93 +1247,105 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
           cxx_OOJSReportError(context,
                               "player.ship.targetSystem is read-only unless "
                               "called when docked.");
-          return false;
+          return OOJSNativeFailure(context);
         }
 #endif
 
-        if (ooscript::valueToInt32(cx, *value, &iValue)) {
+        if (OOJSValueToInt32(context, value, &iValue)) {
           if (iValue >= 0 && iValue < OO_SYSTEMS_PER_GALAXY) {
             if (player != nullptr) player->setTargetSystemID(iValue);
-            return true;
+            return JS_UNDEFINED;
           } else {
-            return false;
+            return OOJSNativeFailure(context);
           }
         }
+        /*	The SpiderMonkey version fell through to infoSystem, which
+           converted the value again, failed again and reported the bad value
+           (#768).
+        */
+        break;
       } else {
         cxx_OOJSReportError(
             context,
             "player.ship.targetSystem is read-only unless called when docked.");
-        return false;
+        return OOJSNativeFailure(context);
       }
 
     case kPlayerShip_infoSystem:
-      if (ooscript::valueToInt32(cx, *value, &iValue)) {
+      if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue >= 0 && iValue < OO_SYSTEMS_PER_GALAXY) {
           if (player != nullptr) player->setInfoSystemID(iValue, true);
-          return true;
+          return JS_UNDEFINED;
         } else {
-          return false;
+          return OOJSNativeFailure(context);
         }
       }
       break;
 
     case kPlayerShip_messageGuiTextColor:
       colorForScript = OOColor::colorWithDescription(
-          cxx_OOJSPListFromJSValue(context, *value_raw));
-      if (colorForScript != nullptr || ooscript::isNull(*value_raw)) {
+          cxx_OOJSPListFromJSValue(context, value));
+      if (colorForScript != nullptr || JS_IsNull(value)) {
         UNIVERSE->messageGUI()->setTextColor(colorForScript.get());
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_messageGuiTextCommsColor:
       colorForScript = OOColor::colorWithDescription(
-          cxx_OOJSPListFromJSValue(context, *value_raw));
-      if (colorForScript != nullptr || ooscript::isNull(*value_raw)) {
+          cxx_OOJSPListFromJSValue(context, value));
+      if (colorForScript != nullptr || JS_IsNull(value)) {
         UNIVERSE->messageGUI()->setTextCommsColor(colorForScript.get());
-        return true;
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_reticleColorTarget:
       colorForScript = OOColor::colorWithDescription(
-          cxx_OOJSPListFromJSValue(context, *value_raw));
-      if (colorForScript != nullptr || ooscript::isNull(*value_raw)) {
-        return HudOf(player) != nullptr &&
-               HudOf(player)->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET,
-                                                      colorForScript.get());
+          cxx_OOJSPListFromJSValue(context, value));
+      if (colorForScript != nullptr || JS_IsNull(value)) {
+        if (!(HudOf(player) != nullptr &&
+              HudOf(player)->setReticleColorForIndex(OO_RETICLE_COLOR_TARGET,
+                                                     colorForScript.get())))
+          return OOJSNativeFailure(context);
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_reticleColorTargetSensitive:
       colorForScript = OOColor::colorWithDescription(
-          cxx_OOJSPListFromJSValue(context, *value_raw));
-      if (colorForScript != nullptr || ooscript::isNull(*value_raw)) {
-        return HudOf(player) != nullptr &&
-               HudOf(player)->setReticleColorForIndex(
-                   OO_RETICLE_COLOR_TARGET_SENSITIVE, colorForScript.get());
+          cxx_OOJSPListFromJSValue(context, value));
+      if (colorForScript != nullptr || JS_IsNull(value)) {
+        if (!(HudOf(player) != nullptr &&
+              HudOf(player)->setReticleColorForIndex(
+                  OO_RETICLE_COLOR_TARGET_SENSITIVE, colorForScript.get())))
+          return OOJSNativeFailure(context);
+        return JS_UNDEFINED;
       }
       break;
 
     case kPlayerShip_reticleColorWormhole:
       colorForScript = OOColor::colorWithDescription(
-          cxx_OOJSPListFromJSValue(context, *value_raw));
-      if (colorForScript != nullptr || ooscript::isNull(*value_raw)) {
-        return HudOf(player) != nullptr &&
-               HudOf(player)->setReticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE,
-                                                      colorForScript.get());
+          cxx_OOJSPListFromJSValue(context, value));
+      if (colorForScript != nullptr || JS_IsNull(value)) {
+        if (!(HudOf(player) != nullptr &&
+              HudOf(player)->setReticleColorForIndex(OO_RETICLE_COLOR_WORMHOLE,
+                                                     colorForScript.get())))
+          return OOJSNativeFailure(context);
+        return JS_UNDEFINED;
       }
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, (propID),
-                                    sPlayerShipPropertiesRaw);
-      return false;
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sPlayerShipProperties,
+                                    OOJS_COUNT(sPlayerShipProperties));
+      return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, (propID),
-                             sPlayerShipPropertiesRaw, *value_raw);
-  return false;
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sPlayerShipProperties,
+                             OOJS_COUNT(sPlayerShipProperties), value);
+  return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }
@@ -1671,8 +1355,7 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID,
 
 // launch()
 namespace {
-static bool PlayerShipLaunch(ooscript::Context context,
-                             ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipLaunch(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
@@ -1687,8 +1370,7 @@ static bool PlayerShipLaunch(ooscript::Context context,
 
 // removeAllCargo()
 namespace {
-static bool PlayerShipRemoveAllCargo(ooscript::Context context,
-                                     ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipRemoveAllCargo(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
@@ -1701,7 +1383,7 @@ static bool PlayerShipRemoveAllCargo(ooscript::Context context,
   } else {
     cxx_OOJSReportError(context,
                         "PlayerShip.removeAllCargo only works when docked.");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   OOJS_NATIVE_EXIT
@@ -1710,8 +1392,7 @@ static bool PlayerShipRemoveAllCargo(ooscript::Context context,
 
 // useSpecialCargo(name : String)
 namespace {
-static bool PlayerShipUseSpecialCargo(ooscript::Context context,
-                                      ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
@@ -1719,13 +1400,12 @@ static bool PlayerShipUseSpecialCargo(ooscript::Context context,
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> name;
 
-  if (oojsArgs.count() > 0)
-    name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 0) name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!name.has_value())) {
-    cxx_OOJSReportBadArguments(
-        context, "PlayerShip", "useSpecialCargo", MIN(oojsArgs.count(), 1U),
-        OOJS_ARGV, std::nullopt, "string (special cargo description)");
-    return false;
+    cxx_OOJSReportBadArguments(context, "PlayerShip", "useSpecialCargo",
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "string (special cargo description)");
+    return OOJSNativeFailure(context);
   }
 
   if (player != nullptr)
@@ -1739,8 +1419,7 @@ static bool PlayerShipUseSpecialCargo(ooscript::Context context,
 
 // engageAutopilotToStation(stationForDocking : Station) : Boolean
 namespace {
-static bool PlayerShipEngageAutopilotToStation(ooscript::Context context,
-                                               ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipEngageAutopilotToStation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
@@ -1748,15 +1427,15 @@ static bool PlayerShipEngageAutopilotToStation(ooscript::Context context,
   PlayerEntity* player = OOPlayerForScripting();
   StationEntity* stationForDocking = nullptr;
 
-  if (oojsArgs.count() > 0)
+  if (argc > 0)
     stationForDocking = oo::ToStation(
         OOJSEntityFromJSValue(context,
                               OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nullptr) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "engageAutopilot",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "station");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "station");
+    return OOJSNativeFailure(context);
   }
 
   OOJS_RETURN_BOOL(player != nullptr
@@ -1769,8 +1448,7 @@ static bool PlayerShipEngageAutopilotToStation(ooscript::Context context,
 
 // disengageAutopilot()
 namespace {
-static bool PlayerShipDisengageAutopilot(ooscript::Context context,
-                                         ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipDisengageAutopilot(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
@@ -1784,8 +1462,7 @@ static bool PlayerShipDisengageAutopilot(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool PlayerShipRequestDockingClearance(ooscript::Context context,
-                                              ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipRequestDockingClearance(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
@@ -1793,15 +1470,15 @@ static bool PlayerShipRequestDockingClearance(ooscript::Context context,
   PlayerEntity* player = OOPlayerForScripting();
   StationEntity* stationForDocking = nullptr;
 
-  if (oojsArgs.count() > 0)
+  if (argc > 0)
     stationForDocking = oo::ToStation(
         OOJSEntityFromJSValue(context,
                               OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nullptr) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "requestDockingClearance",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "station");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "station");
+    return OOJSNativeFailure(context);
   }
 
   if (player != nullptr) player->requestDockingClearance(stationForDocking);
@@ -1812,8 +1489,7 @@ static bool PlayerShipRequestDockingClearance(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool PlayerShipCancelDockingRequest(ooscript::Context context,
-                                           ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipCancelDockingRequest(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
@@ -1821,15 +1497,15 @@ static bool PlayerShipCancelDockingRequest(ooscript::Context context,
   PlayerEntity* player = OOPlayerForScripting();
   StationEntity* stationForDocking = nullptr;
 
-  if (oojsArgs.count() > 0)
+  if (argc > 0)
     stationForDocking = oo::ToStation(
         OOJSEntityFromJSValue(context,
                               OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nullptr) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "cancelDockingRequest",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "station");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "station");
+    return OOJSNativeFailure(context);
   }
 
   if (player != nullptr) player->cancelDockingRequest(stationForDocking);
@@ -1841,8 +1517,7 @@ static bool PlayerShipCancelDockingRequest(ooscript::Context context,
 
 // awardEquipmentToCurrentPylon(externalTank: equipmentInfoExpression) : Boolean
 namespace {
-static bool PlayerShipAwardEquipmentToCurrentPylon(
-    ooscript::Context context, ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipAwardEquipmentToCurrentPylon(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (EXPECT_NOT(OOIsPlayerStale())) OOJS_RETURN_VOID;
@@ -1852,15 +1527,14 @@ static bool PlayerShipAwardEquipmentToCurrentPylon(
   oo::Ref<OOEquipmentType>
       eqType;  // the equipment types are converted (OOEquipmentType)
 
-  if (oojsArgs.count() > 0) key = JSValueToEquipmentKey(context, OOJS_ARGV[0]);
+  if (argc > 0) key = JSValueToEquipmentKey(context, OOJS_ARGV[0]);
   if (key.has_value())
     eqType = OOEquipmentType::equipmentTypeWithIdentifier(*key);
   if (EXPECT_NOT(!(eqType != nullptr && eqType->isMissileOrMine()))) {
-    cxx_OOJSReportBadArguments(context, "PlayerShip",
-                               "awardEquipmentToCurrentPylon",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "equipment type (external store)");
-    return false;
+    cxx_OOJSReportBadArguments(
+        context, "PlayerShip", "awardEquipmentToCurrentPylon", MIN(argc, 1),
+        OOJS_ARGV, std::nullopt, "equipment type (external store)");
+    return OOJSNativeFailure(context);
   }
 
   OOJS_RETURN_BOOL(player != nullptr
@@ -1874,8 +1548,7 @@ static bool PlayerShipAwardEquipmentToCurrentPylon(
 // addPassenger(name: string, start: int, destination: int, ETA: double, fee:
 // double) : Boolean
 namespace {
-static bool PlayerShipAddPassenger(ooscript::Context context,
-                                   ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipAddPassenger(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1884,23 +1557,24 @@ static bool PlayerShipAddPassenger(ooscript::Context context,
   double eta = 0.0, fee = 0.0, advance = 0.0;
   unsigned risk = 0;
 
-  if (oojsArgs.count() < 5) {
-    cxx_OOJSReportBadArguments(context, "PlayerShip", "addPassenger",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
+  if (argc < 5) {
+    cxx_OOJSReportBadArguments(context, "PlayerShip", "addPassenger", argc,
+                               OOJS_ARGV, std::nullopt,
                                "name, start, destination, ETA, fee");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!name.has_value())) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "addPassenger", 1,
                                &OOJS_ARGV[0], std::nullopt, "string");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
-  if (!ValidateContracts(context, oojsArgs, false, &start, &destination, &eta,
-                         &fee, &advance, "addPassenger", &risk))
-    return false;  // always go through validate contracts (passenger)
+  if (!ValidateContracts(context, argc, OOJS_ARGV, false, &start, &destination,
+                         &eta, &fee, &advance, "addPassenger", &risk))
+    return OOJSNativeFailure(
+        context);  // always go through validate contracts (passenger)
 
   // Ensure there's space.
   if ((player != nullptr ? player->passengerCount() : 0) >=
@@ -1919,21 +1593,18 @@ static bool PlayerShipAddPassenger(ooscript::Context context,
 
 // removePassenger(name :string)
 namespace {
-static bool PlayerShipRemovePassenger(ooscript::Context context,
-                                      ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipRemovePassenger(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> name;
   bool OK = true;
 
-  if (oojsArgs.count() > 0)
-    name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 0) name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!name.has_value())) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "removePassenger",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "string");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt, "string");
+    return OOJSNativeFailure(context);
   }
 
   OK = (player != nullptr ? player->passengerCount() : 0) > 0 && !name->empty();
@@ -1950,8 +1621,7 @@ static bool PlayerShipRemovePassenger(ooscript::Context context,
 // addParcel(description: string, start: int, destination: int, ETA: double,
 // fee: double) : Boolean
 namespace {
-static bool PlayerShipAddParcel(ooscript::Context context,
-                                ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipAddParcel(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1960,24 +1630,24 @@ static bool PlayerShipAddParcel(ooscript::Context context,
   double eta = 0.0, fee = 0.0, premium = 0.0;
   unsigned risk = 0;
 
-  if (oojsArgs.count() < 5) {
-    cxx_OOJSReportBadArguments(context, "PlayerShip", "addParcel",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
+  if (argc < 5) {
+    cxx_OOJSReportBadArguments(context, "PlayerShip", "addParcel", argc,
+                               OOJS_ARGV, std::nullopt,
                                "name, start, destination, ETA, fee");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!name.has_value())) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "addParcel", 1,
                                &OOJS_ARGV[0], std::nullopt, "string");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
-  if (!ValidateContracts(context, oojsArgs, false, &start, &destination, &eta,
-                         &fee, &premium, "addParcel", &risk))
-    return false;  // always go through validate contracts (passenger/parcel
-                   // mode)
+  if (!ValidateContracts(context, argc, OOJS_ARGV, false, &start, &destination,
+                         &eta, &fee, &premium, "addParcel", &risk))
+    return OOJSNativeFailure(context);  // always go through validate contracts
+                                        // (passenger/parcel mode)
 
   // Ensure there's space.
 
@@ -1993,21 +1663,18 @@ static bool PlayerShipAddParcel(ooscript::Context context,
 
 // removeParcel(description :string)
 namespace {
-static bool PlayerShipRemoveParcel(ooscript::Context context,
-                                   ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipRemoveParcel(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> name;
   bool OK = true;
 
-  if (oojsArgs.count() > 0)
-    name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  if (argc > 0) name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   if (EXPECT_NOT(!name.has_value())) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "removeParcel",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "string");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt, "string");
+    return OOJSNativeFailure(context);
   }
 
   OK = (player != nullptr ? player->parcelCount() : 0) > 0 && !name->empty();
@@ -2023,8 +1690,7 @@ static bool PlayerShipRemoveParcel(ooscript::Context context,
 // awardContract(quantity: int, commodity: string, start: int, destination: int,
 // eta: double, fee: double) : Boolean
 namespace {
-static bool PlayerShipAwardContract(ooscript::Context context,
-                                    ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipAwardContract(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -2033,18 +1699,18 @@ static bool PlayerShipAwardContract(ooscript::Context context,
   OOSystemID start = 0, destination = 0;
   double eta = 0.0, fee = 0.0, premium = 0.0;
 
-  if (oojsArgs.count() < 6) {
+  if (argc < 6) {
     cxx_OOJSReportBadArguments(
-        context, "PlayerShip", "awardContract", oojsArgs.count(), OOJS_ARGV,
-        std::nullopt, "quantity, commodity, start, destination, ETA, fee");
-    return false;
+        context, "PlayerShip", "awardContract", argc, OOJS_ARGV, std::nullopt,
+        "quantity, commodity, start, destination, ETA, fee");
+    return OOJSNativeFailure(context);
   }
 
-  if (!ooscript::valueToInt32(context, (OOJS_ARGV[0]), &qty)) {
+  if (!OOJSValueToInt32(context, OOJS_ARGV[0], &qty)) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "awardContract", 1,
                                &OOJS_ARGV[0], std::nullopt,
                                "positive integer (cargo quantity)");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   key = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
@@ -2052,12 +1718,13 @@ static bool PlayerShipAwardContract(ooscript::Context context,
     cxx_OOJSReportBadArguments(context, "PlayerShip", "awardContract", 1,
                                &OOJS_ARGV[1], std::nullopt,
                                "string (commodity identifier)");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
-  if (!ValidateContracts(context, oojsArgs, true, &start, &destination, &eta,
-                         &fee, &premium, "awardContract", NULL))
-    return false;  // always go through validate contracts (cargo)
+  if (!ValidateContracts(context, argc, OOJS_ARGV, true, &start, &destination,
+                         &eta, &fee, &premium, "awardContract", NULL))
+    return OOJSNativeFailure(
+        context);  // always go through validate contracts (cargo)
 
   bool OK =
       (player != nullptr ? player->awardContract(qty, key.value_or(""), start,
@@ -2071,19 +1738,18 @@ static bool PlayerShipAwardContract(ooscript::Context context,
 
 // removeContract(commodity: string, destination: int)
 namespace {
-static bool PlayerShipRemoveContract(ooscript::Context context,
-                                     ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipRemoveContract(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
   std::optional<std::string> key;
   int32_t dest = 0;
 
-  if (oojsArgs.count() < 2) {
-    cxx_OOJSReportBadArguments(context, "PlayerShip", "removeContract",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
+  if (argc < 2) {
+    cxx_OOJSReportBadArguments(context, "PlayerShip", "removeContract", argc,
+                               OOJS_ARGV, std::nullopt,
                                "commodity, destination");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
@@ -2092,14 +1758,14 @@ static bool PlayerShipRemoveContract(ooscript::Context context,
     cxx_OOJSReportBadArguments(context, "PlayerShip", "removeContract", 1,
                                &OOJS_ARGV[0], std::nullopt,
                                "string (commodity identifier)");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
-  if (!ooscript::valueToInt32(context, (OOJS_ARGV[1]), &dest) || dest < 0 ||
+  if (!OOJSValueToInt32(context, OOJS_ARGV[1], &dest) || dest < 0 ||
       dest > 255) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "removeContract", 1,
                                &OOJS_ARGV[1], std::nullopt, "system ID");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   bool OK = (player != nullptr
@@ -2113,17 +1779,16 @@ static bool PlayerShipRemoveContract(ooscript::Context context,
 
 // setCustomView(position:vector, orientation:quaternion [, weapon:string])
 namespace {
-static bool PlayerShipSetCustomView(ooscript::Context context,
-                                    ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipSetCustomView(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
 
-  if (oojsArgs.count() < 2) {
-    cxx_OOJSReportBadArguments(context, "PlayerShip", "setCustomView",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
+  if (argc < 2) {
+    cxx_OOJSReportBadArguments(context, "PlayerShip", "setCustomView", argc,
+                               OOJS_ARGV, std::nullopt,
                                "position, orientiation, [weapon]");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   // must be in custom view
@@ -2132,7 +1797,7 @@ static bool PlayerShipSetCustomView(ooscript::Context context,
     cxx_OOJSReportError(
         context,
         "PlayerShip.setCustomView only works when custom view is active.");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   oo::PList::Dict viewData;
@@ -2140,10 +1805,10 @@ static bool PlayerShipSetCustomView(ooscript::Context context,
   Vector position = kZeroVector;
   bool gotpos = JSValueToVector(context, OOJS_ARGV[0], &position);
   if (!gotpos) {
-    cxx_OOJSReportBadArguments(context, "PlayerShip", "setCustomView",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
+    cxx_OOJSReportBadArguments(context, "PlayerShip", "setCustomView", argc,
+                               OOJS_ARGV, std::nullopt,
                                "position, orientiation, [weapon]");
-    return false;
+    return OOJSNativeFailure(context);
   }
   std::string positionstr =
       oo::str::format("%f %f %f", position.x, position.y, position.z);
@@ -2151,10 +1816,10 @@ static bool PlayerShipSetCustomView(ooscript::Context context,
   Quaternion orientation = kIdentityQuaternion;
   bool gotquat = JSValueToQuaternion(context, OOJS_ARGV[1], &orientation);
   if (!gotquat) {
-    cxx_OOJSReportBadArguments(context, "PlayerShip", "setCustomView",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
+    cxx_OOJSReportBadArguments(context, "PlayerShip", "setCustomView", argc,
+                               OOJS_ARGV, std::nullopt,
                                "position, orientiation, [weapon]");
-    return false;
+    return OOJSNativeFailure(context);
   }
   std::string orientationstr =
       oo::str::format("%f %f %f %f", orientation.w, orientation.x,
@@ -2163,7 +1828,7 @@ static bool PlayerShipSetCustomView(ooscript::Context context,
   viewData["view_position"] = positionstr;
   viewData["view_orientation"] = orientationstr;
 
-  if (oojsArgs.count() > 2) {
+  if (argc > 2) {
     std::optional<std::string> facing =
         cxx_OOStringFromJSValue(context, OOJS_ARGV[2]);
     // -setObject:forKey: raised on a nil facing (GNUstep 1.31.1's text).
@@ -2186,8 +1851,7 @@ static bool PlayerShipSetCustomView(ooscript::Context context,
 
 // resetCustomView()
 namespace {
-static bool PlayerShipResetCustomView(ooscript::Context context,
-                                      ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipResetCustomView(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -2198,7 +1862,7 @@ static bool PlayerShipResetCustomView(ooscript::Context context,
     cxx_OOJSReportError(
         context,
         "PlayerShip.setCustomView only works when custom view is active.");
-    return false;
+    return OOJSNativeFailure(context);
   }
 
   if (player != nullptr) player->resetCustomView();
@@ -2211,8 +1875,7 @@ static bool PlayerShipResetCustomView(ooscript::Context context,
 
 // resetScannerZoom()
 namespace {
-static bool PlayerShipResetScannerZoom(ooscript::Context context,
-                                       ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipResetScannerZoom(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -2226,8 +1889,7 @@ static bool PlayerShipResetScannerZoom(ooscript::Context context,
 
 // takeInternalDamage()
 namespace {
-static bool PlayerShipTakeInternalDamage(ooscript::Context context,
-                                         ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipTakeInternalDamage(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -2241,27 +1903,26 @@ static bool PlayerShipTakeInternalDamage(ooscript::Context context,
 
 // beginHyperspaceCountdown([int: spin_time])
 namespace {
-static bool PlayerShipBeginHyperspaceCountdown(ooscript::Context context,
-                                               ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipBeginHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
   int32_t spin_time;
   int32_t witchspaceSpinUpTime = 0;
   bool begun = false;
-  if (oojsArgs.count() < 1) {
+  if (argc < 1) {
     witchspaceSpinUpTime = 0;
 #ifdef OO_DUMP_PLANETINFO
     // quick intersystem jumps for debugging
     witchspaceSpinUpTime = 1;
 #endif
   } else {
-    if (!ooscript::valueToInt32(context, (OOJS_ARGV[0]), &spin_time) ||
-        spin_time < 5 || spin_time > 60) {
+    if (!OOJSValueToInt32(context, OOJS_ARGV[0], &spin_time) || spin_time < 5 ||
+        spin_time > 60) {
       cxx_OOJSReportBadArguments(context, "PlayerShip",
                                  "beginHyperspaceCountdown", 1, &OOJS_ARGV[0],
                                  std::nullopt, "between 5 and 60 seconds");
-      return false;
+      return OOJSNativeFailure(context);
     }
     if (spin_time < 5) {
       witchspaceSpinUpTime = 5;
@@ -2284,8 +1945,7 @@ static bool PlayerShipBeginHyperspaceCountdown(ooscript::Context context,
 
 // cancelHyperspaceCountdown()
 namespace {
-static bool PlayerShipCancelHyperspaceCountdown(ooscript::Context context,
-                                                ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipCancelHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -2305,21 +1965,20 @@ static bool PlayerShipCancelHyperspaceCountdown(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool PlayerShipBeginGalacticHyperspaceCountdown(
-    ooscript::Context context, ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipBeginGalacticHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
   int32_t spin_time;
   int32_t witchspaceSpinUpTime = 5;
   bool begun = false;
-  if (oojsArgs.count() == 1) {
-    if (!ooscript::valueToInt32(context, (OOJS_ARGV[0]), &spin_time) ||
-        spin_time < 5 || spin_time > 60) {
+  if (argc == 1) {
+    if (!OOJSValueToInt32(context, OOJS_ARGV[0], &spin_time) || spin_time < 5 ||
+        spin_time > 60) {
       cxx_OOJSReportBadArguments(
           context, "PlayerShip", "beginGalacticHyperspaceCountdown", 1,
           &OOJS_ARGV[0], std::nullopt, "between 5 and 60 seconds");
-      return false;
+      return OOJSNativeFailure(context);
     }
     if (spin_time < 5) {
       witchspaceSpinUpTime = 5;
@@ -2351,8 +2010,7 @@ static bool PlayerShipBeginGalacticHyperspaceCountdown(
 
 // setMultiFunctionDisplay(index,key)
 namespace {
-static bool PlayerShipSetMultiFunctionDisplay(ooscript::Context context,
-                                              ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipSetMultiFunctionDisplay(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
@@ -2360,17 +2018,16 @@ static bool PlayerShipSetMultiFunctionDisplay(ooscript::Context context,
   PlayerEntity* player = OOPlayerForScripting();
   bool OK = true;
 
-  if (oojsArgs.count() > 0) {
-    if (!ooscript::valueToECMAUint32(context, (OOJS_ARGV[0]), &index)) {
+  if (argc > 0) {
+    if (JS_ToUint32(context, &index, OOJS_ARGV[0]) != 0) {
       cxx_OOJSReportBadArguments(
-          context, "PlayerShip", "setMultiFunctionDisplay",
-          MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt,
-          "number (index) [, string (key)]");
-      return false;
+          context, "PlayerShip", "setMultiFunctionDisplay", MIN(argc, 1),
+          OOJS_ARGV, std::nullopt, "number (index) [, string (key)]");
+      return OOJSNativeFailure(context);
     }
   }
 
-  if (oojsArgs.count() > 1) {
+  if (argc > 1) {
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
   }
 
@@ -2385,33 +2042,30 @@ static bool PlayerShipSetMultiFunctionDisplay(ooscript::Context context,
 
 // setMultiFunctionText(key,value)
 namespace {
-static bool PlayerShipSetMultiFunctionText(ooscript::Context context,
-                                           ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
   std::optional<std::string> value;
   PlayerEntity* player = OOPlayerForScripting();
-  bool reflow = false;
+  int reflow = 0;  // JS_ToBool(): -1 if it throws
 
-  if (oojsArgs.count() > 0) {
+  if (argc > 0) {
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   }
   if (!key.has_value()) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "setMultiFunctionText",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "string (key) [, string (text)]");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "string (key) [, string (text)]");
+    return OOJSNativeFailure(context);
   }
-  if (oojsArgs.count() > 1) {
+  if (argc > 1) {
     value = cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
   }
-  if (oojsArgs.count() > 2 &&
-      EXPECT_NOT(!ooscript::valueToBoolean(context, (OOJS_ARGV[2]), &reflow))) {
-    cxx_OOJSReportBadArguments(context, "setMultiFunctionText", "reflow",
-                               oojsArgs.count(), OOJS_ARGV, std::nullopt,
-                               "boolean");
-    return false;
+  if (argc > 2 && EXPECT_NOT((reflow = JS_ToBool(context, OOJS_ARGV[2])) < 0)) {
+    cxx_OOJSReportBadArguments(context, "setMultiFunctionText", "reflow", argc,
+                               OOJS_ARGV, std::nullopt, "boolean");
+    return OOJSNativeFailure(context);
   }
 
   if (!reflow) {
@@ -2430,34 +2084,33 @@ static bool PlayerShipSetMultiFunctionText(ooscript::Context context,
 
 // setPrimedEquipment(key, [noMessage])
 namespace {
-static bool PlayerShipSetPrimedEquipment(ooscript::Context context,
-                                         ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipSetPrimedEquipment(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
   PlayerEntity* player = OOPlayerForScripting();
-  bool showMsg = true;
+  int showMsg = 1;  // JS_ToBool(): -1 if it throws
 
-  if (oojsArgs.count() > 0) {
+  if (argc > 0) {
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   }
   if (!key.has_value()) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "setPrimedEquipment",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "string (key)");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "string (key)");
+    return OOJSNativeFailure(context);
   }
-  if (oojsArgs.count() > 1 && EXPECT_NOT(!ooscript::valueToBoolean(
-                                  context, (OOJS_ARGV[1]), &showMsg))) {
+  if (argc > 1 &&
+      EXPECT_NOT((showMsg = JS_ToBool(context, OOJS_ARGV[1])) < 0)) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "setPrimedEquipment",
-                               MIN(oojsArgs.count(), 2U), OOJS_ARGV,
-                               std::nullopt, "boolean");
-    return false;
+                               MIN(argc, 2), OOJS_ARGV, std::nullopt,
+                               "boolean");
+    return OOJSNativeFailure(context);
   }
 
   OOJS_RETURN_BOOL(key.has_value()
                        ? (player != nullptr
-                              ? player->setPrimedEquipment(*key, showMsg)
+                              ? player->setPrimedEquipment(*key, showMsg != 0)
                               : false)
                        : false);
 
@@ -2467,24 +2120,23 @@ static bool PlayerShipSetPrimedEquipment(ooscript::Context context,
 
 // setCustomHUDDial(key,value)
 namespace {
-static bool PlayerShipSetCustomHUDDial(ooscript::Context context,
-                                       ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
   oo::PList value;
   PlayerEntity* player = OOPlayerForScripting();
 
-  if (oojsArgs.count() > 0) {
+  if (argc > 0) {
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   }
   if (!key.has_value()) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "setCustomHUDDial",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "string (key), value]");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "string (key), value]");
+    return OOJSNativeFailure(context);
   }
-  if (oojsArgs.count() > 1) {
+  if (argc > 1) {
     value = cxx_OOJSPListFromJSValue(context, OOJS_ARGV[1]);
   } else {
     value = oo::PList(std::string());
@@ -2499,21 +2151,20 @@ static bool PlayerShipSetCustomHUDDial(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool PlayerShipHideHUDSelector(ooscript::Context context,
-                                      ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipHideHUDSelector(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
   PlayerEntity* player = OOPlayerForScripting();
 
-  if (oojsArgs.count() > 0) {
+  if (argc > 0) {
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   }
   if (!key.has_value()) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "hideHUDSelector",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "string (selector)");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "string (selector)");
+    return OOJSNativeFailure(context);
   }
   if (HeadUpDisplay* hud = HudOf(player))
     hud->setHiddenSelector(key.value_or(""), true);
@@ -2525,21 +2176,20 @@ static bool PlayerShipHideHUDSelector(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool PlayerShipShowHUDSelector(ooscript::Context context,
-                                      ooscript::CallArgs& oojsArgs) {
+static JSValue PlayerShipShowHUDSelector(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
   PlayerEntity* player = OOPlayerForScripting();
 
-  if (oojsArgs.count() > 0) {
+  if (argc > 0) {
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
   }
   if (!key.has_value()) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "hideHUDSelector",
-                               MIN(oojsArgs.count(), 1U), OOJS_ARGV,
-                               std::nullopt, "string (selector)");
-    return false;
+                               MIN(argc, 1), OOJS_ARGV, std::nullopt,
+                               "string (selector)");
+    return OOJSNativeFailure(context);
   }
   if (HeadUpDisplay* hud = HudOf(player))
     hud->setHiddenSelector(key.value_or(""), false);
@@ -2551,70 +2201,71 @@ static bool PlayerShipShowHUDSelector(ooscript::Context context,
 }  // namespace
 
 namespace {
-static bool ValidateContracts(ooscript::Context context,
-                              ooscript::CallArgs& oojsArgs, bool isCargo,
-                              OOSystemID* start, OOSystemID* destination,
-                              double* eta, double* fee, double* premium,
-                              const std::string& functionName, unsigned* risk) {
+static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
+                              bool isCargo, OOSystemID* start,
+                              OOSystemID* destination, double* eta, double* fee,
+                              double* premium, const std::string& functionName,
+                              unsigned* risk) {
   OOJS_PROFILE_ENTER
 
-  OOCParameterAssert(context != NULL && oojsArgs.rawVp() != NULL &&
-                     start != NULL && destination != NULL && eta != NULL &&
-                     fee != NULL);
+  OOCParameterAssert(context != NULL && argv != NULL && start != NULL &&
+                     destination != NULL && eta != NULL && fee != NULL);
 
-  Context cx = (context);
-  unsigned uValue, offset = isCargo ? 2 : 1;
+  unsigned offset = isCargo ? 2 : 1;
+  uint32_t uValue;
   double fValue;
   int32_t iValue;
 
-  if (!ooscript::valueToInt32(cx, (OOJS_ARGV[offset + 0]), &iValue) ||
-      iValue < 0 || iValue > kOOMaximumSystemID) {
+  if (!OOJSValueToInt32(context, argv[offset + 0], &iValue) || iValue < 0 ||
+      iValue > kOOMaximumSystemID) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", functionName, 1,
-                               &OOJS_ARGV[offset + 0], std::nullopt,
-                               "system ID");
+                               &argv[offset + 0], std::nullopt, "system ID");
     return false;
   }
   *start = iValue;
 
-  if (!ooscript::valueToInt32(cx, (OOJS_ARGV[offset + 1]), &iValue) ||
-      iValue < 0 || iValue > kOOMaximumSystemID) {
+  if (!OOJSValueToInt32(context, argv[offset + 1], &iValue) || iValue < 0 ||
+      iValue > kOOMaximumSystemID) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", functionName, 1,
-                               &OOJS_ARGV[offset + 1], std::nullopt,
-                               "system ID");
+                               &argv[offset + 1], std::nullopt, "system ID");
     return false;
   }
   *destination = iValue;
 
-  if (!ooscript::valueToNumber(cx, (OOJS_ARGV[offset + 2]), &fValue) ||
+  if (JS_ToFloat64(context, &fValue, argv[offset + 2]) != 0 ||
       !isfinite(fValue) ||
       fValue <= (PLAYER != nullptr ? PLAYER->clockTime() : 0.0)) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", functionName, 1,
-                               &OOJS_ARGV[offset + 2], std::nullopt,
+                               &argv[offset + 2], std::nullopt,
                                "number (future time)");
     return false;
   }
   *eta = fValue;
 
-  if (!ooscript::valueToNumber(cx, (OOJS_ARGV[offset + 3]), &fValue) ||
+  if (JS_ToFloat64(context, &fValue, argv[offset + 3]) != 0 ||
       !isfinite(fValue) || fValue < 0.0) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", functionName, 1,
-                               &OOJS_ARGV[offset + 3], std::nullopt,
+                               &argv[offset + 3], std::nullopt,
                                "number (credits quantity)");
     return false;
   }
   *fee = fValue;
 
-  if (oojsArgs.count() > offset + 4 &&
-      ooscript::valueToNumber(cx, (OOJS_ARGV[offset + 4]), &fValue) &&
-      isfinite(fValue) && fValue >= 0.0) {
-    *premium = fValue;
+  // Optional arguments: as before, invalid values are ignored. Don't leave a
+  // conversion error pending.
+  if (argc > (int)offset + 4) {
+    if (JS_ToFloat64(context, &fValue, argv[offset + 4]) != 0)
+      JS_FreeValue(context, JS_GetException(context));
+    else if (isfinite(fValue) && fValue >= 0.0)
+      *premium = fValue;
   }
 
   if (!isCargo) {
-    if (oojsArgs.count() > offset + 5 &&
-        ooscript::valueToECMAUint32(cx, (OOJS_ARGV[offset + 5]), &uValue) &&
-        isfinite((double)uValue)) {
-      *risk = uValue;
+    if (argc > (int)offset + 5) {
+      if (JS_ToUint32(context, &uValue, argv[offset + 5]) != 0)
+        JS_FreeValue(context, JS_GetException(context));
+      else
+        *risk = uValue;
     }
   }
 

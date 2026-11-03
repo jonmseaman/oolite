@@ -4,13 +4,10 @@
 #include <cstdarg>
 
 #include "OOFoundation.h"
-namespace ooscript {
-struct Context {
-  void* p;
-};
-}  // namespace ooscript
-ooscript::Context OOJSAcquireContext(void);
-void OOJSRelinquishContext(ooscript::Context context);
+// QuickJS-ng's context, opaque here: the stub never touches it.
+struct JSContext;
+JSContext* OOJSAcquireContext(void);
+void OOJSRelinquishContext(JSContext* context);
 // The C++ form the expander calls (printf format).
-void cxx_OOJSReportWarningWithArguments(ooscript::Context context,
-                                        const char* format, va_list args);
+void cxx_OOJSReportWarningWithArguments(JSContext* context, const char* format,
+                                        va_list args);

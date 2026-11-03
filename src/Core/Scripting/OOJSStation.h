@@ -26,15 +26,20 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
+#include <optional>
+#include <string>
+
 #include "OOFoundation.h"
-#include "ooscript/JSEngine.hpp"
 class StationEntity;
 
-void InitOOJSStation(ooscript::Context context, ooscript::Object global);
+void InitOOJSStation(JSContext* context, JSValueConst global);
+
+JSClassID JSStationClassID(void);
 
 /*	The bodies of StationEntity (OOJavaScriptExtensions), which the engine
-   reaches by selector. StationEntity::getJSClass and ::jsClassName call these.
+   reaches by selector. StationEntity::jsClassName calls these.
+   Its JS class is JSStationClassID() (#768's -oo_jsClassID).
 */
-void OOJSStationGetJSClass(ooscript::ClassDef** outClass,
-                           ooscript::Object* outPrototype);
 std::optional<std::string> OOJSStationJSClassName(void);

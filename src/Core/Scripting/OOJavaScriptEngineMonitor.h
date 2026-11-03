@@ -31,23 +31,28 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include <optional>
 #include <string>
-
-#include "ooscript/JSEngine.hpp"
 
 class OOJavaScriptEngine;
 
 class OOJavaScriptEngineMonitor {
  public:
-  // Sent for JS errors or warnings.
-  virtual void jsEngine(::OOJavaScriptEngine* engine, ooscript::Context context,
-                        ooscript::ErrorReport* errorReport, unsigned stackSkip,
-                        bool showLocation, const std::string& message) = 0;
+  /*	Sent for JS errors or warnings. QuickJS has no JSErrorReport, so
+     problems are described by severity ("exception" or "warning") and the
+     innermost location on the stack, if any (file is nullopt otherwise).
+  */
+  virtual void jsEngine(::OOJavaScriptEngine* engine, JSContext* context,
+                        const std::string& severity,
+                        const std::optional<std::string>& file, unsigned line,
+                        unsigned stackSkip, bool showLocation,
+                        const std::string& message) = 0;
 
   // Sent for JS log messages. Note: messageClass is nullopt if Log() is used
   // rather than LogWithClass().
-  virtual void jsEngine(::OOJavaScriptEngine* engine, ooscript::Context context,
+  virtual void jsEngine(::OOJavaScriptEngine* engine, JSContext* context,
                         const std::string& message,
                         const std::optional<std::string>& messageClass) = 0;
 

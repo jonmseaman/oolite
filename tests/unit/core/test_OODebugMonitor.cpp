@@ -15,7 +15,7 @@
    monitor it is given), OOJSScript (the
    console script it makes, and the command it is asked to run), the console's
    JS wrapper, the time limiter, the universe and the player (no entities), the
-   texture registry (none). The JS context is a real one (ooscript on QuickJS),
+   texture registry (none). The JS context is a real one (QuickJS-ng),
    for the heap statistics and the wrapper object. The user's defaults are a
    scratch folder's (HOMEPATH). The monitor is a singleton, so the tests run in
    order on one monitor. Run: tests/run.sh unit
@@ -66,7 +66,6 @@ oo::PList sLastJSValuePList;
 int sTimeLimiterStarts = 0, sTimeLimiterStops = 0, sTimeLimiterPauses = 0,
     sTimeLimiterResumes = 0;
 int sConsoleWrappersMade = 0;
-int sConsoleDestroys = 0;
 std::vector<std::string> sDefinedGlobals;
 
 }  // namespace
@@ -146,7 +145,7 @@ std::vector<oo::EntityHold> PlayerEntity::getScannedWormholes() {
 
 PlayerEntity* gOOPlayer = nullptr;
 
-ooscript::Context gOOJSMainThreadContext = nullptr;
+JSContext* gOOJSMainThreadContext = nullptr;
 
 extern const char* const kOOJavaScriptEngineWillResetNotificationName;
 extern const char* const kOOJavaScriptEngineDidResetNotificationName;
@@ -181,10 +180,10 @@ class OOJavaScriptEngine {
  public:
   static OOJavaScriptEngine* sharedEngine();
   void setMonitor(OOJavaScriptEngineMonitor* monitor);
-  ooscript::Object globalObject();
-  void removeGCObjectRoot(ooscript::Object* rootPtr);
+  JSValueConst globalObject();
 
   OOJavaScriptEngineMonitor* _monitor = nullptr;  // the C++ monitor interface
+  JSValue _globalObject = JS_UNDEFINED;           // owned
 };
 
 OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
@@ -196,12 +195,11 @@ void OOJavaScriptEngine::setMonitor(OOJavaScriptEngineMonitor* monitor) {
   _monitor = monitor;
 }
 
-ooscript::Object OOJavaScriptEngine::globalObject() {
-  return ooscript::getGlobalObject(gOOJSMainThreadContext);
-}
-
-void OOJavaScriptEngine::removeGCObjectRoot(ooscript::Object* rootPtr) {
-  ooscript::removeObjectRoot(gOOJSMainThreadContext, rootPtr);
+// Borrowed, as the engine's.
+JSValueConst OOJavaScriptEngine::globalObject() {
+  if (JS_IsUndefined(_globalObject))
+    _globalObject = JS_GetGlobalObject(gOOJSMainThreadContext);
+  return _globalObject;
 }
 
 class OONull : public oo::PListForeign {
@@ -231,9 +229,8 @@ class OOJSScript : public OOScript {
       const std::optional<std::string>& path, const oo::PList& properties);
   static OOJSScript* currentlyRunningScript();
 
-  bool callMethod(ooscript::PropertyId methodID, ooscript::Context context,
-                  ooscript::Value* argv, int argc,
-                  ooscript::Value* outResult) override {
+  bool callMethod(JSAtom methodID, JSContext* context, JSValueConst* argv,
+                  int argc, JSValue* outResult) override {
     (void)methodID;
     (void)context;
     (void)argv;
@@ -255,16 +252,13 @@ std::optional<std::string> OOScript::scriptDescription() {
 std::optional<std::string> OOScript::version() { return std::nullopt; }
 bool OOScript::requiresTickle() { return false; }
 void OOScript::runWithTarget(Entity*) {}
-bool OOScript::callMethod(ooscript::PropertyId, ooscript::Context,
-                          ooscript::Value*, int, ooscript::Value*) {
+bool OOScript::callMethod(JSAtom, JSContext*, JSValueConst*, int, JSValue*) {
   return false;
 }
 std::string OOScript::className() const { return "OOScript"; }
 std::string OOScript::description() const { return "<OOScript>"; }
-ooscript::Value OOScript::jsValueInContext(ooscript::Context) {
-  return ooscript::undefinedValue();
-}
-void OOScript::clearJSSelf(ooscript::Object) {}
+JSValue OOScript::jsValueInContext(JSContext*) { return JS_UNDEFINED; }
+void OOScript::clearJSSelf(JSValueConst) {}
 std::optional<std::string> OOScript::displayName() { return "test script"; }
 
 oo::Ref<OOJSScript> OOJSScript::scriptWithPath(
@@ -280,48 +274,44 @@ OOJSScript* OOJSScript::currentlyRunningScript() { return nullptr; }
 
 // The special-functions object (OOJSSpecialFunctions.h): none, as the stand-in
 // gave (nil).
-oo::Ref<OOJSValue> JSSpecialFunctionsObjectWrapper(ooscript::Context context) {
+JSValue JSSpecialFunctionsObjectWrapper(JSContext* context) {
   (void)context;
-  return nullptr;
+  return JS_UNDEFINED;
 }
+
+// A held JS value (OOJSEngineCore.h): the special-functions object's wrapper,
+// which the monitor makes only for an object (never here).
+oo::Ref<OOJSValue> OOJSValue::valueWithJSValue(JSValueConst, JSContext*) {
+  std::abort();
+}
+OOJSValue::~OOJSValue() {}
+std::string OOJSValue::className() const { return "OOJSValue"; }
+std::string OOJSValue::description() const { return "<OOJSValue>"; }
 
 // The console's JS object: a plain object (OOJSConsole.mm gives it the Console
-// class).
-ooscript::Object DebugMonitorToJSConsole(ooscript::Context context,
-                                         OODebugMonitor* monitor) {
+// class), owned by the caller.
+JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor) {
   (void)monitor;
   sConsoleWrappersMade++;
-  return ooscript::newObject(context, nullptr, nullptr, nullptr);
+  return JS_NewObject(context);
 }
 
-void OOJSConsoleDestroy(void) { sConsoleDestroys++; }
-
-ooscript::Value OOJSValueFromPList(ooscript::Context context,
-                                   const oo::PList& plist) {
+JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
   (void)context;
   sLastJSValuePList = plist;
-  return ooscript::undefinedValue();
+  return JS_UNDEFINED;
 }
 
-void OOJSInitJSIDCachePRIVATE(const char* name,
-                                         ooscript::PropertyId* idCache) {
+JSAtom OOJSInternAtomPRIVATE(const char* name) {
   (void)name;
-  *idCache = ooscript::PropertyId();
+  return JS_ATOM_NULL;
 }
 
-void OOJSStartTimeLimiterWithTimeLimit_(double limit,
-                                                   const char* file,
-                                                   unsigned line) {
+void OOJSStartTimeLimiterWithTimeLimit(double limit) {
   (void)limit;
-  (void)file;
-  (void)line;
   sTimeLimiterStarts++;
 }
-void OOJSStopTimeLimiter_(const char* file, unsigned line) {
-  (void)file;
-  (void)line;
-  sTimeLimiterStops++;
-}
+void OOJSStopTimeLimiter(void) { sTimeLimiterStops++; }
 void OOJSPauseTimeLimiter(void) { sTimeLimiterPauses++; }
 void OOJSResumeTimeLimiter(void) { sTimeLimiterResumes++; }
 
@@ -441,8 +431,6 @@ class TestDebugger : public TestDebuggerRecord {
 
 namespace {
 
-ooscript::Runtime sRuntime;
-
 // The scratch home and the OXPs' configuration, before the monitor exists.
 void SetUp() {
   if (!sRoot.empty()) return;
@@ -454,12 +442,7 @@ void SetUp() {
   OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
   stdfs::current_path(sRoot);
 
-  sRuntime = ooscript::newRuntime(8u * 1024u * 1024u);
-  gOOJSMainThreadContext = ooscript::newContext(sRuntime, 8192);
-  ooscript::beginRequest(gOOJSMainThreadContext);
-  ooscript::initStandardClasses(
-      gOOJSMainThreadContext,
-      ooscript::getGlobalObject(gOOJSMainThreadContext));
+  gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
 
   oo::PList::Dict oxp;
   oxp.emplace("console-host", oo::PList("127.0.0.1"));
@@ -743,19 +726,17 @@ OO_TEST(engineErrorsAndLogLinesReachTheConsole) {
     OOJavaScriptEngineMonitor* engineMonitor = monitor;
     const std::string path = WriteSource("script.js", "line one\n  line two\n");
 
-    ooscript::ErrorReport report = {};
-    report.flags = static_cast<unsigned>(ooscript::ReportFlag::Warning);
-    report.filename = path.c_str();
-    report.lineno = 2;
+    // The engine reports a problem by severity ("warning" or "exception"),
+    // file and line.
 
     // No debugger: nothing at all.
-    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, &report, 0, true,
-                            std::string("ignored"));
+    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, "warning", path, 2,
+                            0, true, std::string("ignored"));
 
     TestDebugger* debugger = NewDebugger();
     OO_CHECK(monitor->setDebugger(debugger));
-    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, &report, 0, true,
-                            std::string("careful"));
+    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, "warning", path, 2,
+                            0, true, std::string("careful"));
     OO_CHECK(debugger->_output.size() == 1);
     OO_CHECK(debugger->_output.size() == 1 &&
              debugger->_output[0] ==
@@ -763,25 +744,18 @@ OO_TEST(engineErrorsAndLogLinesReachTheConsole) {
                  "two|0,8");
     OO_CHECK(debugger->_shows == 1);  // show-console-on-warning is yes
 
-    report.flags = static_cast<unsigned>(ooscript::ReportFlag::Exception) |
-                   static_cast<unsigned>(ooscript::ReportFlag::Strict);
-    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, &report, 1, true,
-                            std::string("boom"));
+    // QuickJS has no strict-mode reports and no errors that are not
+    // exceptions (#768): an exception is the only other severity.
+    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, "exception", path,
+                            2, 1, true, std::string("boom"));
     OO_CHECK(debugger->_output.size() == 2 &&
-             debugger->_output[1] ==
-                 "exception|Exception (strict mode): boom|0,24");
+             debugger->_output[1] == "exception|Exception: boom|0,10");
     OO_CHECK(debugger->_shows == 1);  // show-console-on-error is not set
-
-    report.flags = 0;
-    engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, &report, 0, false,
-                            std::string("bad"));
-    OO_CHECK(debugger->_output.size() == 3 &&
-             debugger->_output[2] == "error|Error: bad|0,6");
 
     engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, std::string("logged"),
                             std::nullopt);
-    OO_CHECK(debugger->_output.size() == 4 &&
-             debugger->_output[3] == "log|logged|0,0");
+    OO_CHECK(debugger->_output.size() == 3 &&
+             debugger->_output[2] == "log|logged|0,0");
     OO_CHECK(debugger->_shows == 1);  // show-console-on-log is no
     monitor->setConfigurationValue(oo::PList("yes"), "show-console-on-log");
     engineMonitor->jsEngine(nullptr, gOOJSMainThreadContext, std::string("again"),
@@ -868,21 +842,24 @@ OO_TEST(javaScriptValueAndEngineReset) {
   {
     oo::AutoreleaseScope pool;
     OODebugMonitor* monitor = OODebugMonitor::sharedDebugMonitor();
-    const ooscript::Value first =
-        monitor->jsValueInContext(gOOJSMainThreadContext);
-    OO_CHECK(ooscript::isObject(first));
+    JSValue first = monitor->jsValueInContext(gOOJSMainThreadContext);
+    OO_CHECK(JS_IsObject(first));
     OO_CHECK(sConsoleWrappersMade == 1);
-    const ooscript::Value again =
-        monitor->jsValueInContext(gOOJSMainThreadContext);
-    OO_CHECK(ooscript::toObject(again) == ooscript::toObject(first) &&
+    JSValue again = monitor->jsValueInContext(gOOJSMainThreadContext);
+    OO_CHECK(JS_IsObject(again) &&
+             JS_VALUE_GET_PTR(again) == JS_VALUE_GET_PTR(first) &&
              sConsoleWrappersMade == 1);
+    JS_FreeValue(gOOJSMainThreadContext, again);
+    JS_FreeValue(gOOJSMainThreadContext, first);
 
+    // The reset drops the console's JS object (#768 frees it; there is no
+    // OOJSConsoleDestroy()).
     OOJavaScriptEngine* engine = OOJavaScriptEngine::sharedEngine();
     const int scripts = sConsoleScriptsMade;
     oo::NotificationCenter::defaultCenter().post(
         kOOJavaScriptEngineWillResetNotificationName, engine);
-    OO_CHECK(sConsoleDestroys == 1);
-    monitor->jsValueInContext(gOOJSMainThreadContext);
+    JS_FreeValue(gOOJSMainThreadContext,
+                 monitor->jsValueInContext(gOOJSMainThreadContext));
     OO_CHECK(sConsoleWrappersMade == 2);  // made again
 
     oo::NotificationCenter::defaultCenter().post(

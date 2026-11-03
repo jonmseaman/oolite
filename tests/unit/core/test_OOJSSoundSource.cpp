@@ -1,12 +1,12 @@
-/*	test_OOJSSoundSource.mm
+/*	test_OOJSSoundSource.cpp
         Unit tests for the SoundSource JS binding
-   (src/Core/Scripting/OOJSSoundSource.h/.mm) and the bodies of its
+   (src/Core/Scripting/OOJSSoundSource.h/.cpp) and the bodies of its
    OOSoundSource category.
 
-   As test_OOJSWormhole.mm does, it runs the JS class in a real context on the
-   game's own façade backend (ooscript/JSEngine_quickjs.cpp), links the game's
-   own objects for the binding and the engine's exception translator
-   (OOJSEngineNativeWrappers.mm), and stands in for the classes the binding
+   As test_OOJSWormhole.cpp does, it runs the JS class in a real QuickJS-ng
+   context, links the game's own objects for the binding, the engine's class
+   registry (OOJSClasses.cpp) and its exception translator
+   (OOJSEngineNativeWrappers.cpp), and stands in for the classes the binding
    calls (the source and the sound answer only what the binding asks), for the
    Sound and Vector3D conversions (a vector is the array [x, y, z] here) and for
    the engine functions it links against, with the engine headers' linkage. The
@@ -26,19 +26,25 @@
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
 #include "oofnd/objc/OOObject.h"
-#include "ooscript/JSEngine.hpp"
+
+#include <quickjs.h>
 
 // MARK: The classes, as far as the binding sees them
 // ----------------------------------------------
 
+#include <cmath>
 #include <cstdarg>
+#include <cstdint>
 #include <cstring>
 #include <map>
 #include <stdexcept>
 #include <string>
 
+#include "OOJSEngineCore.h"
 #include "OOJSPrivateObject.h"
+#include "OOJSSound.h"
 #include "OOJSSoundSource.h"
+#include "OOJSVector.h"
 #include "OOSoundSource.h"
 #include "oo_test.hpp"
 
@@ -131,13 +137,15 @@ float OOSoundSource::gain() {
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
 
-void cxx_OOJSReportErrorWithArguments(ooscript::Context context,
-                                      const char* format, va_list args) {
+JSContext* gOOJSMainThreadContext = nullptr;
+
+void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
+                                      va_list args) {
   std::string msg = oo::str::vformat(format, args);
-  ooscript::reportError(context, msg.c_str());
+  JS_ThrowPlainError(context, "%s", msg.c_str());
 }
 
-void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
+void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
   va_start(args, format);
   cxx_OOJSReportErrorWithArguments(context, format, args);
@@ -145,85 +153,112 @@ void cxx_OOJSReportError(ooscript::Context context, const char* format, ...) {
 }
 
 void cxx_OOJSReportBadArguments(
-    ooscript::Context context, const std::optional<std::string>& scriptClass,
-    const std::optional<std::string>& function, unsigned argc, ooscript::Value*,
+    JSContext* context, const std::optional<std::string>& scriptClass,
+    const std::optional<std::string>& function, int argc, JSValueConst*,
     const std::optional<std::string>& message,
     const std::optional<std::string>& expectedArgsDescription) {
-  cxx_OOJSReportError(context, "bad arguments: %s.%s (%u): %s; expected %s",
+  cxx_OOJSReportError(context, "bad arguments: %s.%s (%d): %s; expected %s",
                       scriptClass.value_or("").c_str(),
                       function.value_or("").c_str(), argc,
                       message.value_or("").c_str(),
                       expectedArgsDescription.value_or("").c_str());
 }
 
-std::optional<std::string> cxx_OOStringFromJSValue(ooscript::Context context,
-                                                   ooscript::Value value) {
-  if (ooscript::isNullOrUndefined(value)) return std::nullopt;
-  ooscript::String str = ooscript::valueToString(context, value);
-  if (str == nullptr) return std::nullopt;
+std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
+                                                   JSValueConst value) {
+  if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
-  const ooscript::Char16* chars =
-      ooscript::getStringCharsAndLength(context, str, &length);
-  std::string result;
-  for (std::size_t i = 0; i < length; i++)
-    result += static_cast<char>(chars[i]);  // the test's strings are ASCII
+  const char* chars = JS_ToCStringLen(context, &length, value);
+  if (chars == nullptr) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
+  std::string result(chars, length);
+  JS_FreeCString(context, chars);
   return result;
 }
 
+// The atom cache and the pending-exception reporter, which the class registry
+// calls.
+JSAtom cxx_OOJSIDFromString(const std::string& string) {
+  return JS_NewAtomLen(gOOJSMainThreadContext, string.data(), string.size());
+}
+
+void OOJSReportPendingException(JSContext* context) {
+  JS_FreeValue(context, JS_GetException(context));
+}
+
+// As the engine's: the pending exception, else an uncatchable one that ends
+// the script.
+JSValue OOJSNativeFailure(JSContext* context) {
+  if (JS_HasException(context)) return JS_EXCEPTION;
+  JSValue error = JS_NewError(context);
+  JS_SetUncatchableError(context, error);
+  return JS_Throw(context, error);
+}
+
+// As the engine's: a number rounded to the nearest integer; NaN or out of
+// range is an error.
+bool OOJSValueToInt32(JSContext* context, JSValueConst value,
+                      int32_t* outValue) {
+  double number;
+  if (JS_ToFloat64(context, &number, value) < 0) return false;
+  number = std::floor(number + 0.5);
+  if (std::isnan(number) || number < INT32_MIN || number > INT32_MAX) {
+    cxx_OOJSReportError(context, "can't convert to an integer");
+    return false;
+  }
+  *outValue = static_cast<int32_t>(number);
+  return true;
+}
+
 namespace {
-std::map<ooscript::ClassDef*, int> sConverters;
-ooscript::ClassDef sFakeSoundClass = {"Sound", ooscript::ClassFlag::HasPrivate};
+std::map<JSClassID, int> sConverters;
+JSClassDef sFakeSoundClass = {.class_name = "Sound"};
+JSClassID sFakeSoundClassID = 0;
 }  // namespace
 
-
-void OOJSReportBadPropertySelector(ooscript::Context context, ooscript::Object,
-                                   ooscript::PropertyId,
-                                   ooscript::PropertySpec*) {
+void OOJSReportBadPropertySelector(JSContext* context, JSValueConst, int,
+                                   const JSCFunctionListEntry*, size_t) {
   cxx_OOJSReportError(context, "bad property selector");
 }
 
-void OOJSReportBadPropertyValue(ooscript::Context context, ooscript::Object,
-                                ooscript::PropertyId, ooscript::PropertySpec*,
-                                ooscript::Value) {
+void OOJSReportBadPropertyValue(JSContext* context, JSValueConst, int,
+                                const JSCFunctionListEntry*, size_t,
+                                JSValueConst) {
   cxx_OOJSReportError(context, "bad property value");
 }
 
-void OOJSRegisterObjectConverter(ooscript::ClassDef* theClass,
-                                 oo::PList (*)(ooscript::Context,
-                                               ooscript::Object)) {
-  sConverters[theClass]++;
+void OOJSRegisterObjectConverter(JSClassID classID,
+                                 OOJSClassConverterCallback) {
+  sConverters[classID]++;
 }
 
-bool OOJSIsSubclass(ooscript::ClassDef* putativeSubclass,
-                    ooscript::ClassDef* superclass) {
-  return putativeSubclass == superclass;
+oo::PList OOJSBasicPrivateObjectConverter(JSContext*, JSValueConst) {
+  return oo::PList();
 }
 
 // A vector is the array [x, y, z] here: enough to see what the binding hands
 // over and takes.
-bool VectorToJSValue(ooscript::Context context, Vector vector,
-                     ooscript::Value* outValue) {
-  ooscript::Value parts[3] = {ooscript::numberValue(vector.x),
-                              ooscript::numberValue(vector.y),
-                              ooscript::numberValue(vector.z)};
-  ooscript::Object array = ooscript::newArrayObject(context, 3, parts);
-  if (array == nullptr) return false;
-  *outValue = ooscript::objectValue(array);
+bool VectorToJSValue(JSContext* context, Vector vector, JSValue* outValue) {
+  JSValue array = JS_NewArray(context);
+  if (JS_IsException(array)) return false;
+  JS_SetPropertyUint32(context, array, 0, JS_NewNumber(context, vector.x));
+  JS_SetPropertyUint32(context, array, 1, JS_NewNumber(context, vector.y));
+  JS_SetPropertyUint32(context, array, 2, JS_NewNumber(context, vector.z));
+  *outValue = array;
   return true;
 }
 
-bool JSValueToVector(ooscript::Context context, ooscript::Value value,
+bool JSValueToVector(JSContext* context, JSValueConst value,
                      Vector* outVector) {
   double v[3] = {};
-  ooscript::Value element;
-  if (!ooscript::isObject(value) ||
-      !ooscript::isArrayObject(context, ooscript::toObject(value)))
-    return false;
-  for (int i = 0; i < 3; i++) {
-    if (!ooscript::getElement(context, ooscript::toObject(value), i,
-                              &element) ||
-        !ooscript::valueToNumber(context, element, &v[i]))
-      return false;
+  if (!JS_IsArray(value)) return false;
+  for (uint32_t i = 0; i < 3; i++) {
+    JSValue element = JS_GetPropertyUint32(context, value, i);
+    const int failed = JS_ToFloat64(context, &v[i], element);
+    JS_FreeValue(context, element);
+    if (failed != 0) return false;
   }
   *outVector = make_vector(v[0], v[1], v[2]);
   return true;
@@ -246,32 +281,23 @@ void OOJSUnreachable(const char* function, const char*, unsigned) {
 }
 #endif
 
-
 // A sound's JS value, as the Sound binding gives it: a JS Sound holding the
-// sound (OOJSSound.mm is not linked); null for none.
-ooscript::Value OOJSSoundJSValueInContext(OOSound* sound,
-                                          ooscript::Context context) {
-  if (sound == nullptr) return ooscript::nullValue();
-  ooscript::Object object =
-      ooscript::newObject(context, &sFakeSoundClass, nullptr, nullptr);
-  if (object == nullptr || !ooscript::setPrivate(context, object, sound))
-    return ooscript::nullValue();
-  return ooscript::objectValue(object);
+// sound (OOJSSound.cpp is not linked); null for none. Owned by the caller.
+JSValue OOJSSoundJSValueInContext(OOSound* sound, JSContext* context) {
+  if (sound == nullptr) return JS_NULL;
+  JSValue object =
+      JS_NewObjectClass(context, static_cast<int>(sFakeSoundClassID));
+  if (JS_IsException(object) || JS_SetOpaque(object, sound) != 0) {
+    JS_FreeValue(context, object);
+    return JS_NULL;
+  }
+  return object;
 }
 
 // A JS Sound's sound, or null for anything else (a name is not looked up here).
-// C linkage, as OOJSSound.h declares it.
-OOSound* SoundFromJSValue(ooscript::Context context,
-                                     ooscript::Value value);
-OOSound* SoundFromJSValue(ooscript::Context context,
-                                     ooscript::Value value) {
-  if (!ooscript::isObject(value) || ooscript::toObject(value) == nullptr)
-    return nullptr;
-  if (ooscript::getObjectClass(context, ooscript::toObject(value)) !=
-      &sFakeSoundClass)
-    return nullptr;
-  return static_cast<OOSound*>(
-      ooscript::getPrivate(context, ooscript::toObject(value)));
+OOSound* SoundFromJSValue(JSContext*, JSValueConst value) {
+  if (!JS_IsObject(value)) return nullptr;
+  return static_cast<OOSound*>(JS_GetOpaque(value, sFakeSoundClassID));
 }
 
 /*	The engine's C++ private-slot glue (OOJSPrivateObject.cpp), stood in for
@@ -279,41 +305,34 @@ OOSound* SoundFromJSValue(ooscript::Context context,
    getter checks the JS class and gives the slot's object; the finalizer does
    nothing (as the stub's did); toString() is the shared one's answer here.
 */
-bool OOJSSetCxxPrivate(ooscript::Context context, ooscript::Object jsObject,
-                       oo::RefCounted* object) {
+bool OOJSSetCxxPrivate(JSValueConst jsObject, oo::RefCounted* object) {
   if (object != nullptr) object->retain();
-  if (ooscript::setPrivate(context, jsObject, object)) return true;
+  if (JS_SetOpaque(jsObject, object) == 0) return true;
   if (object != nullptr) object->release();
   return false;
 }
 
-bool OOJSGetCxxPrivateImpl(ooscript::Context context, ooscript::Object object,
-                           ooscript::ClassDef* requiredJSClass,
+bool OOJSGetCxxPrivateImpl(JSContext* context, JSValueConst object,
+                           JSClassID requiredClassID,
                            oo::RefCounted** outObject) {
-  ooscript::ClassDef* actualClass = const_cast<ooscript::ClassDef*>(
-      ooscript::getObjectClass(context, object));
-  if (!OOJSIsSubclass(actualClass, requiredJSClass)) {
+  if (!OOJSIsSubclass(JS_GetClassID(object), requiredClassID)) {
+    const char* className = OOJSClassName(requiredClassID);
     cxx_OOJSReportError(
-        context, "Native method expected %s, got %s.", requiredJSClass->name,
-        cxx_OOStringFromJSValue(context, ooscript::objectValue(object))
-            .value_or("(null)")
-            .c_str());
+        context, "Native method expected %s, got %s.",
+        className != nullptr ? className : "(null)",
+        cxx_OOStringFromJSValue(context, object).value_or("(null)").c_str());
     return false;
   }
-  *outObject =
-      static_cast<oo::RefCounted*>(ooscript::getPrivate(context, object));
+  JSClassID ignored;
+  *outObject = static_cast<oo::RefCounted*>(JS_GetAnyOpaque(object, &ignored));
   return true;
 }
 
-void OOJSCxxObjectWrapperFinalize(ooscript::Context, ooscript::Object) {}
+void OOJSObjectWrapperFinalize(JSRuntime*, JSValueConst) {}
 
-bool OOJSCxxObjectWrapperToString(ooscript::Context context,
-                                  ooscript::CallArgs& args,
-                                  ooscript::ClassDef*) {
-  std::string text = "[SoundSource]";
-  args.setRval(ooscript::stringValue(
-      ooscript::newStringCopyN(context, text.data(), text.size())));
-  return true;
+JSValue OOJSCxxObjectWrapperToString(JSContext* context, JSValueConst,
+                                     JSClassID) {
+  return JS_NewString(context, "[SoundSource]");
 }
 
 // MARK: The context
@@ -321,27 +340,28 @@ bool OOJSCxxObjectWrapperToString(ooscript::Context context,
 
 namespace {
 
-ooscript::Runtime sRuntime;
-ooscript::Context sContext;
-ooscript::Object sGlobal;
+JSRuntime* sRuntime;
+JSContext* sContext;
+JSValue sGlobal;
 OOSoundSource* sSourceObject =
     nullptr;                      // the source the tests ask through `source`
 SourceRecord* sSource = nullptr;  // what it was asked
 TestSound* sSound = nullptr;
 
-void Define(const char* name, ooscript::Value value) {
-  ooscript::setProperty(sContext, sGlobal, name, &value);
+// Defines a global; takes value (owned).
+void Define(const char* name, JSValue value) {
+  JS_SetPropertyStr(sContext, sGlobal, name, value);
 }
 
 void SetUpContext() {
   if (sContext != nullptr) return;
-  sRuntime = ooscript::newRuntime(8u * 1024u * 1024u);
-  sContext = ooscript::newContext(sRuntime, 8192);
-  ooscript::beginRequest(sContext);
-  sGlobal = ooscript::getGlobalObject(sContext);
-  ooscript::initStandardClasses(sContext, sGlobal);
-  ooscript::initClass(sContext, sGlobal, nullptr, &sFakeSoundClass, nullptr, 0,
-                      nullptr, nullptr, nullptr, nullptr);
+  sRuntime = JS_NewRuntime();
+  sContext = JS_NewContext(sRuntime);
+  gOOJSMainThreadContext = sContext;
+  sGlobal = JS_GetGlobalObject(sContext);
+  OOJSRegisterClass(&sFakeSoundClassID, &sFakeSoundClass);
+  OOJSInitClass(sContext, sGlobal, sFakeSoundClassID, JS_UNDEFINED, nullptr, 0,
+                nullptr, 0, nullptr, 0, nullptr, 0);
   InitOOJSSoundSource(sContext, sGlobal);
 
   sSound = oo::makeRef<TestSound>().leakRef();  // kept for the life of the test
@@ -365,14 +385,16 @@ std::string Eval(const char* src) {
                         src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  ooscript::Value result = ooscript::undefinedValue();
-  if (!ooscript::evaluateScript(sContext, sGlobal, wrapped.c_str(),
-                                static_cast<unsigned>(wrapped.size()),
-                                "test.js", 1, &result)) {
-    ooscript::clearPendingException(sContext);
+  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(),
+                           "test.js", JS_EVAL_TYPE_GLOBAL);
+  if (JS_IsException(result)) {
+    JS_FreeValue(sContext, JS_GetException(sContext));
     return "<evaluation failed>";
   }
-  return cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  std::string text =
+      cxx_OOStringFromJSValue(sContext, result).value_or("<not a string>");
+  JS_FreeValue(sContext, result);
+  return text;
 }
 
 // Eval, and print what came back when it is not what the check expects.
@@ -399,10 +421,11 @@ OO_TEST(registration) {
   // -oo_jsValueInContext: makes a new SoundSource object each time, holding the
   // source retained.
   const std::uint32_t before = sSourceObject->retainCount();
-  ooscript::Value a = OOJSSoundSourceJSValueInContext(sSourceObject, sContext);
-  ooscript::Value b = OOJSSoundSourceJSValueInContext(sSourceObject, sContext);
-  OO_CHECK(ooscript::isObject(a) && ooscript::isObject(b) &&
-           ooscript::toObject(a) != ooscript::toObject(b));
+  JSValue a = OOJSSoundSourceJSValueInContext(sSourceObject, sContext);
+  JSValue b = OOJSSoundSourceJSValueInContext(sSourceObject, sContext);
+  OO_CHECK(JS_IsObject(a) && JS_IsObject(b) &&
+           JS_VALUE_GET_PTR(a) != JS_VALUE_GET_PTR(b));
+  JS_FreeValue(sContext, b);  // the stand-in finalizer keeps its holder
   Define(
       "sourceA",
       a);  // the slot's holder holds the source: the object answers its record
@@ -516,7 +539,6 @@ OO_TEST(nativeExceptions) {
   OO_CHECK_EVAL("source.volume", "0.5");
   OO_CHECK_EQ(sLimiterPauses, 0);
   OO_CHECK_EQ(sProfileDepth, 0);
-  OO_CHECK(ooscript::isInRequest(sContext));
 }
 
 OO_TEST_MAIN()

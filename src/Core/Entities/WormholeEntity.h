@@ -121,8 +121,7 @@ class WormholeEntity : public Entity {
   void dumpSelfState() override;
 
   // The binding's bodies (OOJSWormhole.mm).
-  void getJSClass(ooscript::ClassDef** outClass,
-                  ooscript::Object* outPrototype) override;
+  JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
   bool isVisibleToScripts() override;
 
