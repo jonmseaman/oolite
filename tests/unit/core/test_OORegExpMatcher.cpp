@@ -11,8 +11,7 @@
 	and run on the unconverted class first: what matches, the flags, the empty pattern, the cache
 	(one compiled RegExp per pattern and flags), and the pseudo-singleton (one matcher per
 	autorelease pool, a new one after the pool drains; nil, and asked again, when the tester does
-	not compile). The cases ask the C++ matcher: see the note above the tests. Run: bash
-	tools/check-core-tests.sh
+	not compile). The cases ask the C++ matcher: see the note above the tests. Run: tests/run.sh unit
 */
 
 #include "OORegExpMatcher.h"
@@ -109,10 +108,10 @@ bool OOJSFunction::evaluateWithContext(JSContext *context, JSValueConst jsThis, 
 	if (JS_IsException(rval))
 	{
 		*result = JS_UNDEFINED;
-		return NO;	// the exception is left pending
+		return false;	// the exception is left pending
 	}
 	*result = rval;
-	return YES;
+	return true;
 }
 
 

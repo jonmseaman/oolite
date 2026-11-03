@@ -55,13 +55,6 @@
 
 #pragma once
 
-// Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; suspend them for this header.
-#pragma push_macro("true")
-#pragma push_macro("false")
-#undef true
-#undef false
-
 #include "oofnd/Data.hpp"
 #include "oofnd/PList.hpp" // utf8ToUtf16 / utf16ToUtf8, and PListGet.hpp's GNUstep number readers
 #include "oofnd/PrintfFormat.h"
@@ -1806,6 +1799,3 @@ inline std::string formatRuntime(std::string_view fmt)
 }
 
 } // namespace oo::str
-
-#pragma pop_macro("false")
-#pragma pop_macro("true")

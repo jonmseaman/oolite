@@ -13,7 +13,7 @@
 	data; and the camera-relative position is pulled in to 1e9 for a far sun. The camera-relative
 	position is read through the one helper below. The cases make the C++ sun and its Objective-C
 	object (oo::NewEntityFacade) and ask the C++ class, and the facade case pins the crossing: its
-	object is the root Entity's. Run: bash tools/check-core-tests.sh
+	object is the root Entity's. Run: bash tests/run.sh unit
 */
 
 #include "OOSunEntity.h"
@@ -87,13 +87,13 @@ public:
 
 namespace {
 
-TestUniverse *sUniverse = nil;
+TestUniverse *sUniverse = nullptr;
 TestPlayer *sPlayer = nullptr;
 
 
 void SetUp()
 {
-	if (sUniverse == nil)
+	if (sUniverse == nullptr)
 	{
 		sUniverse = new TestUniverse();	// never released
 		new (&sUniverse->_systemData) std::map<std::string, oo::PList>();
@@ -234,7 +234,7 @@ OO_TEST(goingNova)
 	{
 		SetUp();
 		OOSunEntity *sun = RedSun();
-		sun->setGoingNova(YES, 1.0);
+		sun->setGoingNova(true, 1.0);
 		OO_CHECK(sun->willGoNova() && !sun->goneNova());
 		sun->update(0.5);
 		OO_CHECK(!sun->goneNova() && sUniverse->_skySets == 0);
@@ -259,7 +259,7 @@ OO_TEST(goingNova)
 
 		sun->resetNova();
 		OO_CHECK(sun->willGoNova() && sun->goneNova());	// reset keeps the higher temperature
-		sun->setGoingNova(NO, 0);
+		sun->setGoingNova(false, 0);
 		OO_CHECK(!sun->willGoNova());
 	}
 }
@@ -270,7 +270,7 @@ OO_TEST(description)
 	{
 		SetUp();
 		OOSunEntity *sun = RedSun();
-		sun->setGoingNova(YES, 10.0);
+		sun->setGoingNova(true, 10.0);
 		const std::string description = oo::EntityDescription(sun);
 		OO_CHECK(description.find("radius: 1.000km") != std::string::npos);
 		OO_CHECK(description.find("(will go nova)") != std::string::npos);
@@ -305,7 +305,7 @@ OO_TEST(facade)
 		OOSunEntity *sun = RedSun();
 		// Its Objective-C object is the root's facade.
 		Entity *object = sun;
-		OO_CHECK(object != nil);	// A C++ entity, not an Objective-C entity's adapter.
+		OO_CHECK(object != nullptr);	// A C++ entity, not an Objective-C entity's adapter.
 		OO_CHECK(dynamic_cast<OOSunEntity *>(object) == sun);
 	}
 }
@@ -338,7 +338,7 @@ OO_TEST(jsExtensions)
 		const JSClassID expectedClass = JSSunClassID();
 		OO_CHECK(jsClass != 0 && jsClass == expectedClass);
 		OO_CHECK(OOJSEntityJSClassName(object) == std::optional<std::string>("Sun"));
-		OO_CHECK(OOJSEntityIsVisibleToScripts(object) == YES);
+		OO_CHECK(OOJSEntityIsVisibleToScripts(object) == true);
 	}
 }
 

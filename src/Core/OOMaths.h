@@ -29,10 +29,6 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "OOBoundingBox.h"
 #include "OOHPVector.h"
 #include "OOMathsBase.h"
@@ -40,7 +36,3 @@ extern "C" {
 #include "OOTriangle.h"
 #include "OOVoxel.h"
 #include "legacy_random.h"
-
-#ifdef __cplusplus
-}
-#endif

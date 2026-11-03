@@ -26,12 +26,11 @@ oolite_dependencies += dependency(
     version: '>=0.17.0',
     # No LTO for QuickJS: with clang on Windows (MSYS2), the static library's
     # LTO objects are archived without a symbol index, so linking fails.
-    # QuickJS-ng is part of the game binary, so it is held to the same golden flag policy as
-    # Oolite's own code (meson.build; tests/golden/check_build_flags.py): its dtoa/number code
-    # produces floats that land in the dumps. Its own project() defaults to buildtype=release
-    # (-O3), which the project-wide optimization=2 does not reach. Pass optimization=2 explicitly
-    # so the last -O on each QuickJS compile line is the pinned level; b_ndebug=true keeps release
-    # NDEBUG semantics.
+    # QuickJS-ng is part of the game binary, so it is held to the same pinned optimisation level as
+    # Oolite's own code (meson.build): its dtoa/number code produces floats that land in recorded
+    # results. Its own project() defaults to buildtype=release (-O3), which the project-wide
+    # optimization=2 does not reach. Pass optimization=2 explicitly so the last -O on each QuickJS
+    # compile line is the pinned level; b_ndebug=true keeps release NDEBUG semantics.
     default_options: [
         'default_library=static',
         'libc=false',
@@ -54,8 +53,3 @@ if get_option('b_lto')
         oolite_link_args += ['-flto=auto']
     endif
 endif
-
-add_project_arguments(
-    '-DGNUSTEP_BASE_LIBRARY=1',
-    language: c_family,
-)

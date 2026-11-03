@@ -12,7 +12,7 @@
 	the Objective-C class and run on it first. They pin the initial state, the name and the keys,
 	the callback and its `this` (kept alive across a garbage collection), the run, the sort order
 	(interfaceCompare(), with its null cases) and an engine reset.
-	Run: bash tools/check-core-tests.sh
+	Run: tests/run.sh unit
 */
 
 #include "OOJSGuiScreenKeyDefinition.h"
@@ -80,11 +80,11 @@ bool OOJavaScriptEngine::callJSFunction(JSValueConst function, JSValueConst jsTh
 	{
 		JS_FreeValue(context, JS_GetException(context));
 		if (outResult != NULL)  *outResult = JS_UNDEFINED;
-		return NO;
+		return false;
 	}
 	if (outResult != NULL)  *outResult = result;
 	else  JS_FreeValue(context, result);
-	return YES;
+	return true;
 }
 
 

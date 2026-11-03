@@ -42,14 +42,6 @@
 
 #pragma once
 
-// Objective-C++ game code includes this after OOFoundation.h, whose `#define
-// true 1` / `#define false 0` break the standard headers' keywords. Suspend the
-// macros here (see Data.hpp).
-#pragma push_macro("true")
-#pragma push_macro("false")
-#undef true
-#undef false
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -192,6 +184,3 @@ private:
 };
 
 } // namespace oo
-
-#pragma pop_macro("false")
-#pragma pop_macro("true")

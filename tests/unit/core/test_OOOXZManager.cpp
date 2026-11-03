@@ -15,7 +15,7 @@
 	start to finish (the list replaced, the cache rewritten, the temporary file removed, the managed
 	list rebuilt), and the requests it then refuses. The expectations were written against the
 	Objective-C API and run on the unconverted class first. Every case asks the C++ singleton. Run:
-	bash tools/check-core-tests.sh test_OOOXZManager
+	bash meson test -C build/meson_test test_OOOXZManager
 */
 
 #include "OOOXZManager.h"
@@ -691,7 +691,7 @@ public:
 	std::optional<std::string> descriptionForKey(const std::string &key) override	{ (void)key; return std::nullopt; }
 	const oo::PList *descriptions() override	{ return &testDescriptions; }
 	::OOSystemDescriptionManager *getSystemManager() override	{ return nullptr; }
-	bool reinitAndShowDemo(bool showDemo) override	{ (void)showDemo; return YES; }
+	bool reinitAndShowDemo(bool showDemo) override	{ (void)showDemo; return true; }
 };
 
 
@@ -702,7 +702,7 @@ struct StandInUniverse
 {
 	TestUniverse *universe;
 	StandInUniverse()  { universe = new TestUniverse(); gSharedUniverse = universe; }
-	~StandInUniverse()  { gSharedUniverse = nil; }	// never released: a universe's teardown (the facade's -dealloc) flushes the caches and the GL objects
+	~StandInUniverse()  { gSharedUniverse = nullptr; }	// never released: a universe's teardown (the facade's -dealloc) flushes the caches and the GL objects
 	std::string Page()
 	{
 		std::string page;

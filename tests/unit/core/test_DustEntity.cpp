@@ -14,7 +14,7 @@
    universe can still find the dust. The universe makes it with
    oo::makeRef<DustEntity>() and init() and hands it over with
    oo::NewEntityFacade, so the test does the same and asks the C++ class.
-   Run: bash tools/check-core-tests.sh
+   Run: tests/run.sh unit
 */
 
 #include <cmath>
@@ -60,8 +60,8 @@ namespace {
 
 TestPlayer* SetUp() {
   OO_CHECK(OOTestGLContext());
-  static Universe* universe = nil;
-  if (universe == nil) {
+  static Universe* universe = nullptr;
+  if (universe == nullptr) {
     universe = new Universe();  // never released
   }
   gSharedUniverse = universe;
@@ -94,7 +94,7 @@ OO_TEST(init) {
     SetUp();
     DustEntity* dust = nullptr;
     Entity* object = MakeDust(&dust);
-    OO_CHECK(object != nil && dust != nullptr &&
+    OO_CHECK(object != nullptr && dust != nullptr &&
              dynamic_cast<DustEntity*>(object) == dust);
     OO_CHECK(dust->status() == STATUS_ACTIVE);
     OO_CHECK(dust->collisionRadius() == DUST_SCALE && !dust->canCollide());

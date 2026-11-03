@@ -1,6 +1,6 @@
 """G2 - exit the game from the start screen with the KEYBOARD: ``Down`` x5, then ``Enter``.
 
-docs/phases/0-gui-tier.md G2: "Launch -> ``Down``x5 -> ``Enter``", covering "the keyboard path
+G2: "Launch -> ``Down``x5 -> ``Enter``", covering "the keyboard path
 independently of mouse - a separate SDL3 code path from G1".
 
 Written the way test_g1_exit_via_mouse.py is written and kept SHORT the way
@@ -91,8 +91,8 @@ contains.
 
     python3 -m pytest oolite-dev/tests/gui/test_g2_exit_via_keyboard.py -x -q
 
-Needs the desktop: a real window, unlocked and logged in. It takes tools/gui-lock for
-the duration, via the ``game`` fixture.
+Needs the desktop: a real window, unlocked and logged in, left alone while it runs.
+The game is launched through the ``game`` fixture; this file launches nothing of its own.
 """
 
 import ast
@@ -216,7 +216,7 @@ def exit_row_dispatch():
 
 
 def ship_library_row():
-    """The row whose dispatch calls ``-setGuiToIntroFirstGo:NO``, derived the same way.
+    """The row whose dispatch calls ``setGuiToIntroFirstGo(false)``, derived the same way.
 
     The calibration's target. Derived rather than written as 24 for the same reason every other
     row here is: a menu that gains or loses an entry must fail loudly, not silently calibrate
@@ -225,11 +225,11 @@ def ship_library_row():
     body = _method_body(_read(PLAYER_CONTROLS), "void PlayerEntity::pollDemoControls(double")
     row_zero = int(re.search(r"int\s+row_zero\s*(?:=|;\s*row_zero\s*=)\s*(\d+)\s*;", body).group(1))
     branch = re.search(
-        r"==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{[^{}]*?setGuiToIntroFirstGo\(NO\)",
+        r"==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{[^{}]*?setGuiToIntroFirstGo\(false\)",
         body,
     )
     assert branch, (
-        "no start-screen row dispatches -setGuiToIntroFirstGo:NO any more, so G2 has no "
+        "no start-screen row dispatches setGuiToIntroFirstGo(false) any more, so G2 has no "
         "recoverable screen to calibrate its Down presses against"
     )
     return row_zero + int(branch.group(1))
@@ -662,7 +662,7 @@ def test_a_single_row_step_is_reachable_only_from_the_arrow_keys():
         "tree-wide grep found are somewhere else entirely"
     )
     for direction, key in ((r"\+1", "n_key_gui_arrow_down"), (r"-1", "n_key_gui_arrow_up")):
-        guard = re.search(r"BOOL\s+(\w+)\s*=\s*checkKeyPress\(" + key + r"\)", body)
+        guard = re.search(r"\b(?:BOOL|bool)\s+(\w+)\s*=\s*checkKeyPress\(" + key + r"\)", body)
         assert guard, f"-handleGUIUpDownArrowKeys no longer reads {key}"
         block = re.search(
             r"if\s*\(\s*" + guard.group(1) + r"\s*\)(.*?)gui->setNextRow\(\s*" + direction,
@@ -711,7 +711,7 @@ def test_each_calibration_screen_is_reachable_from_exactly_one_start_row():
         row = row_zero + int(offset)
         for setter, screen in (
             ("setGuiToScenarioScreen", NO_ADVANCE_SCREEN),
-            ("setGuiToIntroFirstGo(NO)", CALIBRATION_SCREEN),
+            ("setGuiToIntroFirstGo(false)", CALIBRATION_SCREEN),
             ("setGuiToGameOptionsScreen", OVER_ADVANCE_SCREEN),
         ):
             if setter in block:
@@ -753,7 +753,7 @@ def test_the_rows_are_derived_from_the_game_and_agree_with_each_other():
     )
     assert DOWN_PRESSES == 5, (
         f"the derivation now needs {DOWN_PRESSES} Down presses, not the 5 in "
-        "docs/phases/0-gui-tier.md's G2 row. That is not necessarily a bug - the menu may have "
+        "the G2 row. That is not necessarily a bug - the menu may have "
         "gained or lost an entry - but the story and this assertion must be updated together, "
         "deliberately, rather than the test silently pressing a different number of times."
     )

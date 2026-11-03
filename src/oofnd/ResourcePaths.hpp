@@ -62,15 +62,6 @@
 
 #pragma once
 
-// Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; C++20 needs the keywords (requires-clauses, <=> in the standard headers
-// this pulls in). Suspend the macros for this header and restore them at its
-// end.
-#pragma push_macro("true")
-#pragma push_macro("false")
-#undef true
-#undef false
-
 #include "oofnd/FileSystem.hpp"
 
 #include <cstdlib>
@@ -276,6 +267,3 @@ private:
 };
 
 } // namespace oo
-
-#pragma pop_macro("false")
-#pragma pop_macro("true")
