@@ -2,9 +2,7 @@
 
 OOJSInterfaceDefinition.h
 
-C++20 since bead oo-8fpc (proposed ADR-0056, the OOColor house style; amendment oo-o89). Bead
-oo-9ht.61 deleted its Objective-C facade (a weak-referenceable object) and moved it to the global namespace:
-the station keeps its definitions as oo::Ref, and the player reads them as C++.
+The station keeps its definitions as oo::Ref, and the player reads them as C++.
 
 
 Oolite
@@ -27,19 +25,18 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOJSINTERFACEDEFINITION_H
-#define OOJSINTERFACEDEFINITION_H
+#pragma once
 
-#include "OOFoundation.h"
-#include "oofnd/PList.hpp"
-#include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
-
-#include "oofnd/Ref.hpp"
 #include <optional>
 #include <string>
 
-class OOJSScript; // imported by the .mm, so that a test can stand in for it (ADR-0056 amendment oo-fg7i item 5)
+#include "OOFoundation.h"
+#include "oofnd/PList.hpp"
+#include "oofnd/Ref.hpp"
+#include "oofnd/StdLib.hpp"
+#include "ooscript/JSEngine.hpp"
+
+class OOJSScript; // imported by the .mm, so that a test can stand in for it
 
 class OOJSInterfaceDefinition : public oo::RefCounted {
 public:
@@ -47,8 +44,8 @@ public:
     OOJSInterfaceDefinition();
     ~OOJSInterfaceDefinition() override;
 
-    std::optional<std::string> title(); // nullopt: none (bead oo-3rb.290)
-    void setTitle(const std::optional<std::string>& title); // bead oo-3rb.290
+    std::optional<std::string> title(); // nullopt: none
+    void setTitle(const std::optional<std::string>& title);
     std::optional<std::string> category();
     void setCategory(const std::string& category);
     std::optional<std::string> summary();
@@ -67,11 +64,10 @@ private:
 
     ooscript::Value _callback = { };
     ooscript::Object _callbackThis = { };
-    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's weak reference proxy)
+    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's
+                                           // weak reference proxy)
 
     std::optional<std::string> _title; // nullopt until set (was nil)
     std::optional<std::string> _summary;
     std::optional<std::string> _category;
 };
-
-#endif // OOJSINTERFACEDEFINITION_H

@@ -31,15 +31,6 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
 
-/*
-        Retargeted (bead oo-mqb) onto the ooscript façade (JSEngine.hpp), same pattern as the
-        Phase 1 exemplar OOJSVector.mm (bead oo-sdz): the two directly spelled engine calls this
-        file makes (RemoveValueRoot, RemoveObjectRoot) go through ooscript::removeValueRoot/
-        removeObjectRoot. OOJSAddGCValueRoot/OOJSAddGCObjectRoot are OOJS_* macros, not engine calls, so
-        they are out of scope for this sweep and unchanged. The instance variables are façade
-        Value/Object values, so their addresses go to the façade calls directly.
-*/
-
 namespace {
 // -caseInsensitiveCompare: as the definitions used it: a nil receiver answers
 // OOOrderedSame (a message to nil); a nil argument compares as the empty string.
@@ -51,11 +42,6 @@ static OOComparisonResult CaseInsensitiveCompare(const std::optional<std::string
     return (order < 0) ? OOOrderedAscending : ((order > 0) ? OOOrderedDescending : OOOrderedSame);
 }
 } // namespace
-
-/*	C++20 since bead oo-8fpc (proposed ADR-0056 amendment oo-o89): OOJSInterfaceDefinition. -init after
-        [super init] is the constructor, -dealloc the destructor; the engine, the script stack and the
-        owning script's weak reference are Objective-C and are messaged as before.
-*/
 
 OOJSInterfaceDefinition::OOJSInterfaceDefinition()
 {

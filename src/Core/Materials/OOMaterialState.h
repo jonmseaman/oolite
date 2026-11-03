@@ -2,11 +2,11 @@
 
 OOMaterialState.h
 
-The current-material slot of OOMaterial (OOMaterial.h), for plain C++ translation units
-(bead oo-9ht.185, proposed ADR-0056 amendment oo-9ht.185). OOMaterial.h is Objective-C++ (it imports
-OOFoundation.h); a .cpp that only
-saves, clears and restores the current material, as OODebugGLDrawing.cpp does around its
-wireframes, includes this instead. Defined in OOMaterial.mm.
+The current-material slot of OOMaterial (OOMaterial.h), for plain C++
+translation units.
+OOMaterial.h is Objective-C++ (it imports OOFoundation.h); a .cpp that only
+saves, clears and restores the current material, as OODebugGLDrawing.cpp does
+around its wireframes, includes this instead. Defined in OOMaterial.mm.
 
 
 Copyright (C) 2007-2013 Jens Ayton and contributors
@@ -31,8 +31,7 @@ SOFTWARE.
 
 */
 
-#ifndef OOMATERIALSTATE_H
-#define OOMATERIALSTATE_H
+#pragma once
 
 class OOMaterial;
 
@@ -44,5 +43,3 @@ void OOMaterialApplyNone();
 
 // Makes material current again (apply(); nothing for null) and releases the caller's reference.
 void OOMaterialApplyAndRelease(OOMaterial* material);
-
-#endif // OOMATERIALSTATE_H

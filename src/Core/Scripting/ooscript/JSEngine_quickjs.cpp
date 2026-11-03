@@ -2,123 +2,138 @@
 
 ooscript/JSEngine_quickjs.cpp
 
-The QuickJS-ng backend of the façade in JSEngine.hpp (Phase 1 seams 1.4b/1.4c, beads oo-0kq and
-oo-s0y; full surface: bead oo-1gc.2). Every function JSEngine.hpp declares is defined here, so the
-game can link against this backend instead of JSEngine_spidermonkey.cpp. The SpiderMonkey backend
-plus SpiderMonkey 1.8.5's own semantics are the behavioural spec; where QuickJS-ng cannot match
-them the divergence is written down next to the code (grep "DIVERGENCE") and in the bead notes, so
-Phase 1's differential triage knows what to expect.
+The QuickJS-ng backend of the façade in JSEngine.hpp. Every function
+JSEngine.hpp declares is defined here. SpiderMonkey 1.8.5's own semantics are
+the behavioural spec; where QuickJS-ng cannot match them the divergence is
+written down next to the code (grep "DIVERGENCE").
 
 Value representation
-        ooscript::Value must stay an 8-byte POD, but QuickJS-ng's JSValue is 16 bytes on a 64-bit build.
-        So Value uses its own NaN-boxing: genuine doubles are stored as their literal bit pattern (NaN is
-        canonicalised to the positive quiet NaN), anything else uses the negative quiet-NaN space
-        (0xFFF8...) with a 3-bit tag in bits 48-50 and a 48-bit payload:
-          0 private pointer (privateValue)    4 true
-          1 undefined                         5 int32
-          2 null                              6 object (JSObject*)
-          3 false                             7 string (JSString*) / symbol (pointer | 1)
-        toJS() rebuilds a (borrowed) JSValue at the point of an engine call; fromJS()/take() go the
-        other way. Strings handed to the façade are always flat: a rope is linearised first.
+        ooscript::Value must stay an 8-byte POD, but QuickJS-ng's JSValue is 16
+bytes on a 64-bit build. So Value uses its own NaN-boxing: genuine doubles are
+stored as their literal bit pattern (NaN is canonicalised to the positive quiet
+NaN), anything else uses the negative quiet-NaN space (0xFFF8...) with a 3-bit
+tag in bits 48-50 and a 48-bit payload: 0 private pointer (privateValue)    4
+true 1 undefined                         5 int32 2 null 6 object (JSObject*) 3
+false                             7 string (JSString*) / symbol (pointer | 1)
+        toJS() rebuilds a (borrowed) JSValue at the point of an engine call;
+fromJS()/take() go the other way. Strings handed to the façade are always flat:
+a rope is linearised first.
 
 Value lifetime: the handle arena
-        SpiderMonkey 1.8.5 scans the C stack conservatively, so Oolite holds bare Values/Objects in
-        locals without rooting them and roots only heap-held ones (addNamed*Root). QuickJS-ng is
-        refcounted. The emulation: every heap thing (object, string, symbol, atom) that crosses into a
-        façade handle gets +1 reference recorded in a per-runtime arena. The arena is released only in
-        gc()/maybeGC() (and when the runtime's last context is destroyed), and only when no façade code
-        is running underneath the engine (no native/hook/finalizer frame active) and no context is more
-        than one request deep. At that point the value currently stored at every registered root
-        ADDRESS is re-referenced into the fresh arena first (roots are addresses read at flush time, as
-        SpiderMonkey's root scanning reads them), then the old arena is freed, then the cycle collector
-        runs. Values held inside JS objects are owned by QuickJS as usual.
-        DIVERGENCE (deliberate, from the bead's "request depth 0"): the flush is allowed at request
-        depth <= 1, because Oolite's only collection site (OOJavaScriptEngine
-        -garbageCollectionOpportunity:) acquires the context, i.e. opens a request, around its gc() /
-        maybeGC() call; at depth 0 the game would never reclaim anything. The hazard this admits is a
-        caller that holds an unrooted Value across gc() inside its own single request.
+        SpiderMonkey 1.8.5 scans the C stack conservatively, so Oolite holds
+bare Values/Objects in locals without rooting them and roots only heap-held ones
+(addNamed*Root). QuickJS-ng is refcounted. The emulation: every heap thing
+(object, string, symbol, atom) that crosses into a façade handle gets +1
+reference recorded in a per-runtime arena. The arena is released only in
+        gc()/maybeGC() (and when the runtime's last context is destroyed), and
+only when no façade code is running underneath the engine (no
+native/hook/finalizer frame active) and no context is more than one request
+deep. At that point the value currently stored at every registered root ADDRESS
+is re-referenced into the fresh arena first (roots are addresses read at flush
+time, as SpiderMonkey's root scanning reads them), then the old arena is freed,
+then the cycle collector runs. Values held inside JS objects are owned by
+QuickJS as usual. DIVERGENCE (deliberate, from a strict "request depth 0"):
+the flush is allowed at request depth <= 1, because Oolite's only collection
+site (OOJavaScriptEngine -garbageCollectionOpportunity:) acquires the context,
+i.e. opens a request, around its gc() / maybeGC() call; at depth 0 the game
+would never reclaim anything. The hazard this admits is a caller that holds an
+unrooted Value across gc() inside its own single request.
 
 Strings
-        String handles point at the QuickJS JSString. getStringCharsAndLength/getInternedStringChars
-        return a UTF-16 buffer cached per string in a side table that lives until the next arena flush
-        (entries for rooted and interned strings survive the flush). internString/internUCStringN keep
-        their string alive for the runtime's life, as SpiderMonkey keeps ATOM_INTERNED atoms.
+        String handles point at the QuickJS JSString.
+getStringCharsAndLength/getInternedStringChars return a UTF-16 buffer cached per
+string in a side table that lives until the next arena flush (entries for rooted
+and interned strings survive the flush). internString/internUCStringN keep their
+string alive for the runtime's life, as SpiderMonkey keeps ATOM_INTERNED atoms.
 
 Property ids
-        int ids as before (bit 63 | int32); string ids are atoms (bit 62 | atom), symbol-keyed ids from
-        enumeration are (bit 61 | atom); every atom id handed out is held by the arena.
+        int ids as before (bit 63 | int32); string ids are atoms (bit 62 |
+atom), symbol-keyed ids from enumeration are (bit 61 | atom); every atom id
+handed out is held by the arena.
 
 Classes
-        initClass creates a JSClassID per ClassDef (attach-on-first-use, registered per runtime), a
-        prototype object of that class, and a native constructor. PropertySpec entries with a getter
-        or setter -- or whose class has getProperty/setProperty hooks, Oolite's usual tinyid-dispatch
-        pattern -- become accessor properties built from C closures that call the hook with
-        int32Id(tinyid) and obj = the actual `this`; the rest are plain data properties. FunctionSpecs
-        become native functions. Classes with any of the addProperty/delProperty/getProperty/
-        setProperty/resolve/enumerate/newEnumerate hooks are "hooked": their instances get
-        JSClassExoticMethods, and their plain data properties live in a per-object slot table (as in
-        SpiderMonkey, where such properties carry the class hooks as their getter/setter) so that:
-          * getProperty runs on a get of an own slot property (with the slot value in *vp) and on a
-            get that misses everywhere (with undefined in *vp); a hit on the prototype chain is
-            returned as is.
-          * setProperty runs on a set of an own slot property and when a set adds one (after
-            addProperty), and the (possibly replaced) *vp is what gets stored.
-          * resolve runs on an own-lookup miss, re-entrancy guarded per (object, id), exactly where
-            SpiderMonkey's lookup would call it (including on hooked prototypes further down a chain).
-          * enumerate/newEnumerate feed get_own_property_names; delProperty runs on delete.
-        Private data and the slot table share the object's opaque pointer (ObjRec).
-        convert is mapped onto a Symbol.toPrimitive method on the class prototype; finalize onto the
-        class finalizer; call/construct onto the class call hook.
+        initClass creates a JSClassID per ClassDef (attach-on-first-use,
+registered per runtime), a prototype object of that class, and a native
+constructor. PropertySpec entries with a getter or setter -- or whose class has
+getProperty/setProperty hooks, Oolite's usual tinyid-dispatch pattern -- become
+accessor properties built from C closures that call the hook with
+        int32Id(tinyid) and obj = the actual `this`; the rest are plain data
+properties. FunctionSpecs become native functions. Classes with any of the
+addProperty/delProperty/getProperty/ setProperty/resolve/enumerate/newEnumerate
+hooks are "hooked": their instances get JSClassExoticMethods, and their plain
+data properties live in a per-object slot table (as in SpiderMonkey, where such
+properties carry the class hooks as their getter/setter) so that:
+          * getProperty runs on a get of an own slot property (with the slot
+value in *vp) and on a get that misses everywhere (with undefined in *vp); a hit
+on the prototype chain is returned as is.
+          * setProperty runs on a set of an own slot property and when a set
+adds one (after addProperty), and the (possibly replaced) *vp is what gets
+stored.
+          * resolve runs on an own-lookup miss, re-entrancy guarded per (object,
+id), exactly where SpiderMonkey's lookup would call it (including on hooked
+prototypes further down a chain).
+          * enumerate/newEnumerate feed get_own_property_names; delProperty runs
+on delete. Private data and the slot table share the object's opaque pointer
+(ObjRec). convert is mapped onto a Symbol.toPrimitive method on the class
+prototype; finalize onto the class finalizer; call/construct onto the class call
+hook.
 
 Natives
-        Native functions are objects of this backend's own callable class (the class call hook sees the
-        constructor flag, which QuickJS-ng's C functions and closures do not). The trampoline builds
-        Value vp[2 + max(argc, nargs)] (callee, this, args, undefined padding), wraps it in CallArgs and
-        calls the NativeFn. Constructor calls create the new object (class and prototype from the
+        Native functions are objects of this backend's own callable class (the
+class call hook sees the constructor flag, which QuickJS-ng's C functions and
+closures do not). The trampoline builds Value vp[2 + max(argc, nargs)] (callee,
+this, args, undefined padding), wraps it in CallArgs and calls the NativeFn.
+Constructor calls create the new object (class and prototype from the
         constructor) and pass it as `this`, with isConstructing() true.
 
 Scripts
-        evaluate* and executeScript run top-level code with the scope object as `this`
-        (JS_EvalThis2 with the filename and first line number). compileUCScript compiles to bytecode;
-        executing against the global object runs that bytecode, executing against any other scope
-        object re-evaluates the kept source with that `this` (QuickJS-ng can only run precompiled
-        global code with the global object as `this`). serializeScript writes a small header (line,
-        filename, source) plus the JS_WriteObject bytecode; deserializeScript reads it back.
-        DIVERGENCE: SpiderMonkey puts the scope object at the head of the scope chain, so top-level
-        `var`/function declarations become properties of the scope object and free identifiers resolve
-        against it; QuickJS-ng has no scope-object parameter, so those land on / resolve against the
-        global object. `this.foo = ...` (Oolite's script style) behaves identically.
+        evaluate* and executeScript run top-level code with the scope object as
+`this` (JS_EvalThis2 with the filename and first line number). compileUCScript
+compiles to bytecode; executing against the global object runs that bytecode,
+executing against any other scope object re-evaluates the kept source with that
+`this` (QuickJS-ng can only run precompiled global code with the global object
+as `this`). serializeScript writes a small header (line, filename, source) plus
+the JS_WriteObject bytecode; deserializeScript reads it back. DIVERGENCE:
+SpiderMonkey puts the scope object at the head of the scope chain, so top-level
+        `var`/function declarations become properties of the scope object and
+free identifiers resolve against it; QuickJS-ng has no scope-object parameter,
+so those land on / resolve against the global object. `this.foo = ...` (Oolite's
+script style) behaves identically.
 
 Errors
-        reportError while a script frame is active throws an Error(message) as the pending exception
-        (SpiderMonkey converts reported errors to exceptions when a frame is running); with no script
-        running it calls the ErrorReporter directly. reportPendingException builds an ErrorReport
-        (filename/line from the error's own fileName/lineNumber or its stack) and calls the reporter.
-        A failed top-level evaluate/execute/call/compile reports and clears the exception when a
-        reporter is installed and no script is running, as SpiderMonkey's LAST_FRAME_CHECKS do.
-        DIVERGENCE: with no reporter installed the exception stays pending (SpiderMonkey would clear it
-        silently); the pre-existing unit test pins that. A native or hook returning false with nothing
-        pending is SpiderMonkey's uncatchable abort; here it throws an uncatchable error which every
-        façade boundary clears, so callers see "false, nothing pending" exactly as before.
+        reportError while a script frame is active throws an Error(message) as
+the pending exception (SpiderMonkey converts reported errors to exceptions when
+a frame is running); with no script running it calls the ErrorReporter directly.
+reportPendingException builds an ErrorReport (filename/line from the error's own
+fileName/lineNumber or its stack) and calls the reporter. A failed top-level
+evaluate/execute/call/compile reports and clears the exception when a reporter
+is installed and no script is running, as SpiderMonkey's LAST_FRAME_CHECKS do.
+        DIVERGENCE: with no reporter installed the exception stays pending
+(SpiderMonkey would clear it silently); the pre-existing unit test pins that. A
+native or hook returning false with nothing pending is SpiderMonkey's
+uncatchable abort; here it throws an uncatchable error which every façade
+boundary clears, so callers see "false, nothing pending" exactly as before.
 
 Operation callback
-        setOperationCallback/triggerOperationCallback use JS_SetInterruptHandler and an atomic flag per
-        context; QuickJS-ng polls the handler every ~10k instructions, and a callback returning false
-        aborts the script uncatchably.
+        setOperationCallback/triggerOperationCallback use JS_SetInterruptHandler
+and an atomic flag per context; QuickJS-ng polls the handler every ~10k
+instructions, and a callback returning false aborts the script uncatchably.
 
 Global object
-        DIVERGENCE: QuickJS-ng contexts have a fixed global of a fixed class. newGlobalObject returns
-        it and records the ClassDef, so getClass/getPrivate/setPrivate/instanceOf and defineProperties'
-        default hooks (the tinyid getProperty/setProperty dispatch Oolite uses on the global) work;
-        the global's own class hooks are not called for string-id misses or adds.
+        DIVERGENCE: QuickJS-ng contexts have a fixed global of a fixed class.
+newGlobalObject returns it and records the ClassDef, so
+getClass/getPrivate/setPrivate/instanceOf and defineProperties' default hooks
+(the tinyid getProperty/setProperty dispatch Oolite uses on the global) work;
+        the global's own class hooks are not called for string-id misses or
+adds.
 
-Copyright (C) 2026 the Oolite migration project. GPL-2.0-or-later, as the rest of Oolite.
+Copyright (C) 2026 the Oolite migration project. GPL-2.0-or-later, as the rest
+of Oolite.
 
 */
 
-#define OO_PLAIN_CPP_UNIT 1 // a plain C++ unit: the shared headers' game-unit parts stay out of it (bead oo-dbz)
-#include "JSEngine.hpp"
-
+#define OO_PLAIN_CPP_UNIT \
+    1 // a plain C++ unit: the shared headers' game-unit parts stay out of it
 #include <quickjs.h>
 
 #include <algorithm>
@@ -134,35 +149,46 @@ Copyright (C) 2026 the Oolite migration project. GPL-2.0-or-later, as the rest o
 #include <utility>
 #include <vector>
 
+#include "JSEngine.hpp"
+
 namespace ooscript {
 
 namespace {
 
     static_assert(sizeof(Value) == 8, "ooscript::Value must stay 8 bytes");
-    static_assert(sizeof(Char16) == sizeof(std::uint16_t), "Char16 is a UTF-16 code unit");
+    static_assert(sizeof(Char16) == sizeof(std::uint16_t),
+        "Char16 is a UTF-16 code unit");
 
-    // MARK: Handle conversions ----------------------------------------------------------------------
+    // MARK: Handle conversions
+    // ----------------------------------------------------------------------
 
     inline JSContext* CX(Context cx) { return reinterpret_cast<JSContext*>(cx); }
     inline Context wrap(JSContext* cx) { return reinterpret_cast<Context>(cx); }
     inline JSRuntime* RT(Runtime rt) { return reinterpret_cast<JSRuntime*>(rt); }
     inline Runtime wrap(JSRuntime* rt) { return reinterpret_cast<Runtime>(rt); }
-    inline Object objOf(JSValueConst v) { return static_cast<Object>(JS_VALUE_GET_PTR(v)); }
+    inline Object objOf(JSValueConst v)
+    {
+        return static_cast<Object>(JS_VALUE_GET_PTR(v));
+    }
     inline JSValue OBJVAL(Object o) { return JS_MKPTR(JS_TAG_OBJECT, o); }
-    inline JSValue OBJVAL_OR_NULL(Object o) { return o != nullptr ? OBJVAL(o) : JS_NULL; }
+    inline JSValue OBJVAL_OR_NULL(Object o)
+    {
+        return o != nullptr ? OBJVAL(o) : JS_NULL;
+    }
     inline JSValue STRVAL(String s) { return JS_MKPTR(JS_TAG_STRING, s); }
     inline bool sameObject(JSValueConst a, JSValueConst b)
     {
         return JS_IsObject(a) && JS_IsObject(b) && JS_VALUE_GET_PTR(a) == JS_VALUE_GET_PTR(b);
     }
 
-    // MARK: Value NaN-boxing -------------------------------------------------------------------------
+    // MARK: Value NaN-boxing
+    // -------------------------------------------------------------------------
 
     constexpr std::uint64_t kQNanMask = 0xFFF8000000000000ULL;
     constexpr std::uint64_t kPtrMask = 0x0000FFFFFFFFFFFFULL;
     constexpr std::uint64_t kCanonicalNaN = 0x7FF8000000000000ULL;
-    constexpr int kTagPrivate = 0, kTagUndefined = 1, kTagNull = 2, kTagFalse = 3, kTagTrue = 4,
-                  kTagInt32 = 5, kTagObject = 6, kTagHeapPrim = 7;
+    constexpr int kTagPrivate = 0, kTagUndefined = 1, kTagNull = 2, kTagFalse = 3,
+                  kTagTrue = 4, kTagInt32 = 5, kTagObject = 6, kTagHeapPrim = 7;
     constexpr std::uint64_t kSymbolBit = 1; // in a kTagHeapPrim payload: the pointer is a symbol
 
     inline bool isBoxed(Value v) { return (v.bits & kQNanMask) == kQNanMask; }
@@ -174,37 +200,60 @@ namespace {
         return v;
     }
     inline std::uint64_t payloadOf(Value v) { return v.bits & kPtrMask; }
-    inline void* ptrOf(std::uint64_t payload) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(payload)); }
+    inline void* ptrOf(std::uint64_t payload)
+    {
+        return reinterpret_cast<void*>(static_cast<std::uintptr_t>(payload));
+    }
 
-    // MARK: Property id encoding ---------------------------------------------------------------------
+    // MARK: Property id encoding
+    // ---------------------------------------------------------------------
 
     constexpr std::uint64_t kIdInt = 1ULL << 63;
     constexpr std::uint64_t kIdString = 1ULL << 62;
     constexpr std::uint64_t kIdSymbol = 1ULL << 61;
-    // QuickJS-ng 0.16.2 encodes integer-index atoms (0 .. 2^31-2) inline with this tag bit
-    // (quickjs.c JS_ATOM_TAG_INT). The vendored version is pinned by the meson wrap.
+    // QuickJS-ng 0.16.2 encodes integer-index atoms (0 .. 2^31-2) inline with this
+    // tag bit (quickjs.c JS_ATOM_TAG_INT). The vendored version is pinned by the
+    // meson wrap.
     constexpr JSAtom kAtomTagInt = 1u << 31;
 
-    inline JSAtom atomOfId(PropertyId id) { return static_cast<JSAtom>(id.bits & 0xFFFFFFFFu); }
+    inline JSAtom atomOfId(PropertyId id)
+    {
+        return static_cast<JSAtom>(id.bits & 0xFFFFFFFFu);
+    }
 
 } // namespace
 
-// MARK: Value construction and inspection ------------------------------------------------------
+// MARK: Value construction and inspection
+// ------------------------------------------------------
 
 Value undefinedValue() { return boxed(kTagUndefined, 0); }
 Value nullValue() { return boxed(kTagNull, 0); }
 Value trueValue() { return boxed(kTagTrue, 0); }
 Value falseValue() { return boxed(kTagFalse, 0); }
 Value booleanValue(bool b) { return b ? trueValue() : falseValue(); }
-Value int32Value(std::int32_t i) { return boxed(kTagInt32, static_cast<std::uint32_t>(i)); }
-Value objectValue(Object obj) { return obj != nullptr ? boxed(kTagObject, reinterpret_cast<std::uintptr_t>(obj)) : nullValue(); }
-Value stringValue(String str) { return boxed(kTagHeapPrim, reinterpret_cast<std::uintptr_t>(str)); }
-Value privateValue(void* p) { return boxed(kTagPrivate, reinterpret_cast<std::uintptr_t>(p)); }
+Value int32Value(std::int32_t i)
+{
+    return boxed(kTagInt32, static_cast<std::uint32_t>(i));
+}
+Value objectValue(Object obj)
+{
+    return obj != nullptr
+        ? boxed(kTagObject, reinterpret_cast<std::uintptr_t>(obj))
+        : nullValue();
+}
+Value stringValue(String str)
+{
+    return boxed(kTagHeapPrim, reinterpret_cast<std::uintptr_t>(str));
+}
+Value privateValue(void* p)
+{
+    return boxed(kTagPrivate, reinterpret_cast<std::uintptr_t>(p));
+}
 
 Value numberValue(double d)
 {
-    // JS_NewNumberValue's canonicalisation (store an int32 where exact, never for -0), plus NaN
-    // canonicalisation so no double can ever alias the boxed space.
+    // JS_NewNumberValue's canonicalisation (store an int32 where exact, never for
+    // -0), plus NaN canonicalisation so no double can ever alias the boxed space.
     if (std::isnan(d)) {
         Value v;
         v.bits = kCanonicalNaN;
@@ -223,18 +272,42 @@ Value numberValue(double d)
 bool isUndefined(Value v) { return isBoxed(v) && tagOf(v) == kTagUndefined; }
 bool isNull(Value v) { return isBoxed(v) && tagOf(v) == kTagNull; }
 bool isNullOrUndefined(Value v) { return isNull(v) || isUndefined(v); }
-bool isObjectOrNull(Value v) { return isBoxed(v) && (tagOf(v) == kTagObject || tagOf(v) == kTagNull); }
-bool isObject(Value v) { return isBoxed(v) && tagOf(v) == kTagObject && payloadOf(v) != 0; }
-bool isBoolean(Value v) { return isBoxed(v) && (tagOf(v) == kTagTrue || tagOf(v) == kTagFalse); }
+bool isObjectOrNull(Value v)
+{
+    return isBoxed(v) && (tagOf(v) == kTagObject || tagOf(v) == kTagNull);
+}
+bool isObject(Value v)
+{
+    return isBoxed(v) && tagOf(v) == kTagObject && payloadOf(v) != 0;
+}
+bool isBoolean(Value v)
+{
+    return isBoxed(v) && (tagOf(v) == kTagTrue || tagOf(v) == kTagFalse);
+}
 bool isInt32(Value v) { return isBoxed(v) && tagOf(v) == kTagInt32; }
 bool isDouble(Value v) { return !isBoxed(v); }
 bool isNumber(Value v) { return isInt32(v) || isDouble(v); }
-bool isString(Value v) { return isBoxed(v) && tagOf(v) == kTagHeapPrim && (payloadOf(v) & kSymbolBit) == 0; }
-bool isPrimitive(Value v) { return !isObject(v); } // JSVAL_IS_PRIMITIVE: null is primitive
+bool isString(Value v)
+{
+    return isBoxed(v) && tagOf(v) == kTagHeapPrim && (payloadOf(v) & kSymbolBit) == 0;
+}
+bool isPrimitive(Value v)
+{
+    return !isObject(v);
+} // JSVAL_IS_PRIMITIVE: null is primitive
 
-Object toObject(Value v) { return isObject(v) ? static_cast<Object>(ptrOf(payloadOf(v))) : nullptr; }
-String toString(Value v) { return static_cast<String>(ptrOf(payloadOf(v) & ~kSymbolBit)); }
-std::int32_t toInt32(Value v) { return static_cast<std::int32_t>(v.bits & 0xFFFFFFFFu); }
+Object toObject(Value v)
+{
+    return isObject(v) ? static_cast<Object>(ptrOf(payloadOf(v))) : nullptr;
+}
+String toString(Value v)
+{
+    return static_cast<String>(ptrOf(payloadOf(v) & ~kSymbolBit));
+}
+std::int32_t toInt32(Value v)
+{
+    return static_cast<std::int32_t>(v.bits & 0xFFFFFFFFu);
+}
 double toDouble(Value v)
 {
     double d;
@@ -244,7 +317,8 @@ double toDouble(Value v)
 bool toBoolean(Value v) { return tagOf(v) == kTagTrue; }
 void* toPrivate(Value v) { return ptrOf(payloadOf(v)); }
 
-// MARK: Property ids ----------------------------------------------------------------------------
+// MARK: Property ids
+// ----------------------------------------------------------------------------
 
 PropertyId int32Id(std::int32_t i)
 {
@@ -261,10 +335,14 @@ PropertyId voidId()
 bool isInt32Id(PropertyId id) { return (id.bits & kIdInt) != 0; }
 bool isStringId(PropertyId id) { return (id.bits & kIdString) != 0; }
 bool isVoidId(PropertyId id) { return id.bits == 0; }
-std::int32_t idToInt32(PropertyId id) { return static_cast<std::int32_t>(id.bits & 0xFFFFFFFFu); }
+std::int32_t idToInt32(PropertyId id)
+{
+    return static_cast<std::int32_t>(id.bits & 0xFFFFFFFFu);
+}
 bool idsEqual(PropertyId a, PropertyId b) { return a.bits == b.bits; }
 
-// MARK: Backend state ------------------------------------------------------------------------------
+// MARK: Backend state
+// ------------------------------------------------------------------------------
 
 struct ExceptionState {
     bool hadException = false;
@@ -291,15 +369,21 @@ namespace {
     struct RuntimeState {
         JSRuntime* rt = nullptr;
         std::vector<JSValue> arena; // one reference per value handed to the façade
-        std::vector<JSAtom> arenaAtoms; // one reference per atom id handed to the façade
-        std::unordered_map<void*, RootSlot> roots; // root ADDRESSES, read at flush time
-        std::unordered_set<void*> permanentStrings; // interned strings, one reference each, runtime lifetime
-        std::unordered_set<void*> internedStrings; // atom strings handed out this arena generation
+        std::vector<JSAtom>
+            arenaAtoms; // one reference per atom id handed to the façade
+        std::unordered_map<void*, RootSlot>
+            roots; // root ADDRESSES, read at flush time
+        std::unordered_set<void*>
+            permanentStrings; // interned strings, one reference each, runtime
+                              // lifetime
+        std::unordered_set<void*>
+            internedStrings; // atom strings handed out this arena generation
         struct Chars {
             const std::uint16_t* p;
             std::size_t len;
         };
-        std::unordered_map<void*, Chars> chars; // JSString* -> UTF-16 view (holds a reference)
+        std::unordered_map<void*, Chars>
+            chars; // JSString* -> UTF-16 view (holds a reference)
         std::vector<ContextState*> contexts;
         std::vector<std::pair<void*, JSAtom>> resolving; // resolve re-entrancy guard
         int nativeDepth = 0; // façade code running under the engine
@@ -322,43 +406,54 @@ namespace {
         void* globalPrivate = nullptr;
         JSValue objectProto = JS_UNDEFINED; // owned
         std::vector<JSValue> held; // owned for the context's lifetime
-        std::unordered_map<void*, void*> ctorForProto; // initClass without a constructor
+        std::unordered_map<void*, void*>
+            ctorForProto; // initClass without a constructor
     };
 
-    // The process registries are immortal: allocated once and never destroyed (bead oo-9ht.173).
-    // libobjc drains a thread's open autorelease pools at thread detach, which on Windows runs after
-    // the CRT has destroyed namespace-scope objects; an autoreleased OOJSValue or script freed there
-    // still reaches them (beginRequest -> csOf, finalizers, roots). The same holds for every
-    // registry below that a finalizer or a façade call can reach.
+    // The process registries are immortal: allocated once and never destroyed.
+    // libobjc drains a thread's open autorelease pools at thread
+    // detach, which on Windows runs after the CRT has destroyed namespace-scope
+    // objects; an autoreleased OOJSValue or script freed there still reaches them
+    // (beginRequest -> csOf, finalizers, roots). The same holds for every registry
+    // below that a finalizer or a façade call can reach.
     std::unordered_map<JSContext*, ContextState*>& gContexts = *new std::unordered_map<JSContext*, ContextState*>;
-    std::unordered_map<JSRuntime*, JSContext*>& gCtxForRuntime = *new std::unordered_map<JSRuntime*, JSContext*>; // finalizers get only a JSRuntime*
+    std::unordered_map<JSRuntime*, JSContext*>& gCtxForRuntime = *new std::unordered_map<JSRuntime*,
+        JSContext*>; // finalizers get only a JSRuntime*
     JSContext* gDefaultCtx = nullptr; // for the ctx-less calls
-    ContextCallback gContextCallbackHook = nullptr; // setContextCallback (bead oo-1gc.3)
+    ContextCallback gContextCallbackHook = nullptr; // setContextCallback
     std::vector<const Value*>& gConstructing = *new std::vector<const Value*>; // vp blocks of constructor calls
 
     JSClassID gNativeClassId = 0;
     JSClassID gScriptClassId = 0;
 
-    // QuickJS-ng allocates class ids per runtime, but a ClassDef attaches once for the process and
-    // Oolite (and the unit test) can create more than one runtime. So this backend hands out its own
-    // process-wide ids, well above the engine's built-in classes, and registers them in each runtime.
+    // QuickJS-ng allocates class ids per runtime, but a ClassDef attaches once for
+    // the process and Oolite (and the unit test) can create more than one runtime.
+    // So this backend hands out its own process-wide ids, well above the engine's
+    // built-in classes, and registers them in each runtime.
     JSClassID allocClassId()
     {
         static JSClassID next = 512;
         return next++;
     }
 
-    inline RuntimeState* rsOf(JSRuntime* rt) { return static_cast<RuntimeState*>(JS_GetRuntimeOpaque(rt)); }
+    inline RuntimeState* rsOf(JSRuntime* rt)
+    {
+        return static_cast<RuntimeState*>(JS_GetRuntimeOpaque(rt));
+    }
     inline RuntimeState* rsOf(JSContext* ctx) { return rsOf(JS_GetRuntime(ctx)); }
     ContextState* csOf(JSContext* ctx)
     {
         auto it = gContexts.find(ctx);
         return it == gContexts.end() ? nullptr : it->second;
     }
-    inline JSContext* ctxOr(Context cx) { return cx != nullptr ? CX(cx) : gDefaultCtx; }
+    inline JSContext* ctxOr(Context cx)
+    {
+        return cx != nullptr ? CX(cx) : gDefaultCtx;
+    }
 
-    // Façade code is running underneath the engine (a native, hook or finalizer frame): arena
-    // flushing is unsafe while this is non-zero, because that frame's locals are unrooted handles.
+    // Façade code is running underneath the engine (a native, hook or finalizer
+    // frame): arena flushing is unsafe while this is non-zero, because that frame's
+    // locals are unrooted handles.
     struct NativeScope {
         RuntimeState* rs;
         explicit NativeScope(RuntimeState* r)
@@ -376,7 +471,8 @@ namespace {
         NativeScope& operator=(const NativeScope&) = delete;
     };
 
-    // MARK: Engine <-> façade value translation --------------------------------------------------
+    // MARK: Engine <-> façade value translation
+    // --------------------------------------------------
 
     JSValue toJS(Value v)
     {
@@ -399,7 +495,8 @@ namespace {
         case kTagInt32:
             return JS_MKVAL(JS_TAG_INT, toInt32(v));
         case kTagObject:
-            return payloadOf(v) != 0 ? JS_MKPTR(JS_TAG_OBJECT, ptrOf(payloadOf(v))) : JS_NULL;
+            return payloadOf(v) != 0 ? JS_MKPTR(JS_TAG_OBJECT, ptrOf(payloadOf(v)))
+                                     : JS_NULL;
         case kTagHeapPrim:
             if ((payloadOf(v) & kSymbolBit) != 0)
                 return JS_MKPTR(JS_TAG_SYMBOL, ptrOf(payloadOf(v) & ~kSymbolBit));
@@ -430,15 +527,20 @@ namespace {
             return int32Value(JS_VALUE_GET_INT(v));
         case JS_TAG_OBJECT:
             holdOwned(ctx, v);
-            return boxed(kTagObject, reinterpret_cast<std::uintptr_t>(JS_VALUE_GET_PTR(v)));
+            return boxed(kTagObject,
+                reinterpret_cast<std::uintptr_t>(JS_VALUE_GET_PTR(v)));
         case JS_TAG_STRING:
             holdOwned(ctx, v);
-            return boxed(kTagHeapPrim, reinterpret_cast<std::uintptr_t>(JS_VALUE_GET_PTR(v)));
+            return boxed(kTagHeapPrim,
+                reinterpret_cast<std::uintptr_t>(JS_VALUE_GET_PTR(v)));
         case JS_TAG_SYMBOL:
             holdOwned(ctx, v);
-            return boxed(kTagHeapPrim, reinterpret_cast<std::uintptr_t>(JS_VALUE_GET_PTR(v)) | kSymbolBit);
+            return boxed(
+                kTagHeapPrim,
+                reinterpret_cast<std::uintptr_t>(JS_VALUE_GET_PTR(v)) | kSymbolBit);
         case JS_TAG_STRING_ROPE: {
-            JSValue flat = JS_ToString(ctx, v); // linearise: a String handle is always a flat JSString
+            JSValue flat = JS_ToString(
+                ctx, v); // linearise: a String handle is always a flat JSString
             JS_FreeValue(ctx, v);
             if (JS_IsException(flat))
                 return undefinedValue();
@@ -447,13 +549,18 @@ namespace {
         default:
             if (JS_TAG_IS_FLOAT64(tag))
                 return numberValue(JS_VALUE_GET_FLOAT64(v));
-            JS_FreeValue(ctx, v); // BigInt and engine-internal tags have no façade representation
+            JS_FreeValue(
+                ctx,
+                v); // BigInt and engine-internal tags have no façade representation
             return undefinedValue();
         }
     }
 
     // Borrows `v`: the arena takes its own reference.
-    inline Value fromJS(JSContext* ctx, JSValueConst v) { return take(ctx, JS_DupValue(ctx, v)); }
+    inline Value fromJS(JSContext* ctx, JSValueConst v)
+    {
+        return take(ctx, JS_DupValue(ctx, v));
+    }
 
     Object takeObject(JSContext* ctx, JSValue v)
     {
@@ -484,7 +591,8 @@ namespace {
         return sym;
     }
 
-    // An atom (borrowed) as a façade PropertyId; the arena takes a reference for string/symbol atoms.
+    // An atom (borrowed) as a façade PropertyId; the arena takes a reference for
+    // string/symbol atoms.
     PropertyId idFromAtom(JSContext* ctx, JSAtom atom)
     {
         if ((atom & kAtomTagInt) != 0)
@@ -495,7 +603,8 @@ namespace {
         return id;
     }
 
-    // A façade PropertyId as a new atom reference (free it with JS_FreeAtom), JS_ATOM_NULL for void.
+    // A façade PropertyId as a new atom reference (free it with JS_FreeAtom),
+    // JS_ATOM_NULL for void.
     JSAtom atomFromId(JSContext* ctx, PropertyId id)
     {
         if (isInt32Id(id)) {
@@ -528,9 +637,11 @@ namespace {
         AtomRef& operator=(const AtomRef&) = delete;
     };
 
-    // MARK: UTF-16 helpers ----------------------------------------------------------------------------
+    // MARK: UTF-16 helpers
+    // ----------------------------------------------------------------------------
 
-    // UTF-16 -> UTF-8 (WTF-8 for unpaired surrogates, which QuickJS-ng's decoder passes through).
+    // UTF-16 -> UTF-8 (WTF-8 for unpaired surrogates, which QuickJS-ng's decoder
+    // passes through).
     std::string toUtf8(const Char16* s, std::size_t n)
     {
         std::string out;
@@ -616,7 +727,8 @@ namespace {
         return out;
     }
 
-    // The cached UTF-16 view of a flat string (see the file banner for its lifetime).
+    // The cached UTF-16 view of a flat string (see the file banner for its
+    // lifetime).
     const Char16* stringChars(JSContext* ctx, String str, std::size_t* length)
     {
         if (ctx == nullptr || str == nullptr) {
@@ -641,7 +753,8 @@ namespace {
         return reinterpret_cast<const Char16*>(it->second.p);
     }
 
-    // MARK: The arena flush ---------------------------------------------------------------------------
+    // MARK: The arena flush
+    // ---------------------------------------------------------------------------
 
     void flushArena(RuntimeState* rs, bool rescanRoots)
     {
@@ -651,8 +764,9 @@ namespace {
         oldArena.swap(rs->arena);
         oldAtoms.swap(rs->arenaAtoms);
 
-        // Re-reference whatever each root address holds NOW, into the fresh arena, before anything is
-        // released: a value reachable only from a root must not dip to a zero refcount in between.
+        // Re-reference whatever each root address holds NOW, into the fresh arena,
+        // before anything is released: a value reachable only from a root must not
+        // dip to a zero refcount in between.
         std::unordered_set<void*> rootedStrings;
         if (rescanRoots) {
             for (const auto& root : rs->roots) {
@@ -690,7 +804,8 @@ namespace {
             JS_FreeCStringRT_UTF16(rt, it->second.p);
             it = rs->chars.erase(it);
         }
-        for (auto it = rs->internedStrings.begin(); it != rs->internedStrings.end();) {
+        for (auto it = rs->internedStrings.begin();
+            it != rs->internedStrings.end();) {
             if (rootedStrings.count(*it) != 0)
                 ++it;
             else
@@ -714,13 +829,15 @@ namespace {
         return true;
     }
 
-    // MARK: Errors, frames and the uncatchable abort ---------------------------------------------------
+    // MARK: Errors, frames and the uncatchable abort
+    // ---------------------------------------------------
 
     bool scriptRunning(JSContext* ctx)
     {
-        // A bytecode frame anywhere near the top of the stack means script is running. Native façade
-        // functions push no frame of their own (they are class-call objects); the engine's own C
-        // builtins do, which is why a few levels are probed.
+        // A bytecode frame anywhere near the top of the stack means script is
+        // running. Native façade functions push no frame of their own (they are
+        // class-call objects); the engine's own C builtins do, which is why a few
+        // levels are probed.
         for (int level = 0; level < 16; ++level) {
             const JSAtom a = JS_GetScriptOrModuleName(ctx, level);
             if (a != JS_ATOM_NULL) {
@@ -736,13 +853,15 @@ namespace {
         JSValue e = JS_NewError(ctx);
         if (JS_IsException(e))
             return JS_EXCEPTION;
-        JS_DefinePropertyValueStr(ctx, e, "message", JS_NewString(ctx, "ooscript: script aborted"), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
+        JS_DefinePropertyValueStr(ctx, e, "message",
+            JS_NewString(ctx, "ooscript: script aborted"),
+            JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
         JS_SetUncatchableError(ctx, e);
         return JS_Throw(ctx, e);
     }
 
-    // A façade hook or native returned false: propagate its exception, or SpiderMonkey's uncatchable
-    // abort when it left none pending.
+    // A façade hook or native returned false: propagate its exception, or
+    // SpiderMonkey's uncatchable abort when it left none pending.
     JSValue failValue(JSContext* ctx)
     {
         if (!JS_HasException(ctx))
@@ -756,7 +875,8 @@ namespace {
         return -1;
     }
 
-    bool parseLocation(const std::string& stack, std::string* file, unsigned* line)
+    bool parseLocation(const std::string& stack, std::string* file,
+        unsigned* line)
     {
         std::size_t pos = 0;
         while (pos < stack.size()) {
@@ -791,9 +911,11 @@ namespace {
         return false;
     }
 
-    // Filename/line of an error value: its own fileName/lineNumber if it has them (scripts that
-    // build SpiderMonkey-style errors), else the first located frame of its stack.
-    bool errorLocation(JSContext* ctx, JSValueConst err, std::string* file, unsigned* line)
+    // Filename/line of an error value: its own fileName/lineNumber if it has them
+    // (scripts that build SpiderMonkey-style errors), else the first located frame
+    // of its stack.
+    bool errorLocation(JSContext* ctx, JSValueConst err, std::string* file,
+        unsigned* line)
     {
         if (!JS_IsObject(err))
             return false;
@@ -841,8 +963,9 @@ namespace {
         return ok;
     }
 
-    void invokeReporter(JSContext* ctx, const char* message, unsigned flags, const std::string* file,
-        unsigned line, const std::u16string* ucmessage, unsigned errorNumber = 0)
+    void invokeReporter(JSContext* ctx, const char* message, unsigned flags,
+        const std::string* file, unsigned line,
+        const std::u16string* ucmessage, unsigned errorNumber = 0)
     {
         ContextState* cs = csOf(ctx);
         if (cs == nullptr || cs->reporter == nullptr)
@@ -863,11 +986,13 @@ namespace {
         JSValue e = JS_NewError(ctx);
         if (JS_IsException(e))
             return;
-        JS_DefinePropertyValueStr(ctx, e, "message", JS_NewString(ctx, message), JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
+        JS_DefinePropertyValueStr(ctx, e, "message", JS_NewString(ctx, message),
+            JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
         JS_Throw(ctx, e);
     }
 
-    // SpiderMonkey's ReportError: an exception when a script frame is running, the reporter otherwise.
+    // SpiderMonkey's ReportError: an exception when a script frame is running, the
+    // reporter otherwise.
     void reportErrorImpl(JSContext* ctx, const char* message)
     {
         if (scriptRunning(ctx)) {
@@ -875,14 +1000,16 @@ namespace {
             return;
         }
         const std::u16string uc = utf8ToU16(message);
-        invokeReporter(ctx, message, static_cast<unsigned>(ReportFlag::Error), nullptr, 0, &uc);
+        invokeReporter(ctx, message, static_cast<unsigned>(ReportFlag::Error),
+            nullptr, 0, &uc);
     }
 
     bool reportPendingImpl(JSContext* ctx);
 
-    // The end of a façade call that ran the engine: clear an uncatchable abort (SpiderMonkey returns
-    // false with nothing pending), and apply SpiderMonkey's LAST_FRAME_CHECKS: report and clear an
-    // uncaught exception when no script is running and a reporter is installed.
+    // The end of a façade call that ran the engine: clear an uncatchable abort
+    // (SpiderMonkey returns false with nothing pending), and apply SpiderMonkey's
+    // LAST_FRAME_CHECKS: report and clear an uncaught exception when no script is
+    // running and a reporter is installed.
     bool finish(JSContext* ctx, bool ok)
     {
         if (ok)
@@ -933,12 +1060,15 @@ namespace {
             message = "uncaught exception: " + text;
             ucmessage = utf8ToU16(message.c_str());
         }
-        invokeReporter(ctx, message.c_str(), static_cast<unsigned>(ReportFlag::Exception), &file, line, &ucmessage);
+        invokeReporter(ctx, message.c_str(),
+            static_cast<unsigned>(ReportFlag::Exception), &file, line,
+            &ucmessage);
         JS_FreeValue(ctx, exc);
         return true;
     }
 
-    // MARK: Classes ---------------------------------------------------------------------------------------
+    // MARK: Classes
+    // ---------------------------------------------------------------------------------------
 
     struct Slot {
         JSAtom atom;
@@ -951,8 +1081,10 @@ namespace {
     // Every object of a façade class carries one of these as its opaque pointer.
     struct ObjRec {
         void* priv = nullptr;
-        std::vector<Slot> slots; // plain data properties of hooked classes (see the banner)
-        std::string scopeFile; // the script file this object is the scope of (registerScope)
+        std::vector<Slot>
+            slots; // plain data properties of hooked classes (see the banner)
+        std::string
+            scopeFile; // the script file this object is the scope of (registerScope)
 
         Slot* find(JSAtom atom)
         {
@@ -969,33 +1101,38 @@ namespace {
         bool hooked = false;
         JSClassExoticMethods exotic { };
         JSClassDef cdef { };
-        std::vector<std::pair<std::string, std::int32_t>> tinyidProps; // registerResolvableProperty
-        std::vector<std::pair<void*, JSAtom>> enumerated; // last newEnumerate listing
+        std::vector<std::pair<std::string, std::int32_t>>
+            tinyidProps; // registerResolvableProperty
+        std::vector<std::pair<void*, JSAtom>>
+            enumerated; // last newEnumerate listing
     };
 
     std::unordered_map<JSClassID, BackendClass*>& gClasses = *new std::unordered_map<JSClassID, BackendClass*>;
 
-    // Names an old-style enumerate hook defines while ExGetOwnPropertyNames runs it (bead oo-1gc.4):
-    // QuickJS-ng snapshots the shape's names before calling the exotic hook, so a name the hook adds
-    // would otherwise be missing from that enumeration.
+    // Names an old-style enumerate hook defines while ExGetOwnPropertyNames runs
+    // it: QuickJS-ng snapshots the shape's names before calling the exotic hook, so
+    // a name the hook adds would otherwise be missing from that enumeration.
     struct DefineCollector {
         void* target;
         std::vector<JSAtom> atoms;
     };
     DefineCollector* gDefineCollector = nullptr;
 
-    // SpiderMonkey's "shared permanent" rule (js_HasOwnProperty): a Shared|Permanent property found on
-    // a prototype of the SAME class as the object is reported as the object's own. That is why
-    // Object.keys(clock) lists clock's properties and hasOwnProperty("credits") is true for player.
-    // The PropertySpec accessors each class prototype carries are recorded here (atom, enumerable,
-    // read-only) so own-property queries and enumeration can report them the same way; property
-    // reads are unaffected. (bead oo-1gc.6)
+    // SpiderMonkey's "shared permanent" rule (js_HasOwnProperty): a
+    // Shared|Permanent property found on a prototype of the SAME class as the
+    // object is reported as the object's own. That is why Object.keys(clock) lists
+    // clock's properties and hasOwnProperty("credits") is true for player. The
+    // PropertySpec accessors each class prototype carries are recorded here (atom,
+    // enumerable, read-only) so own-property queries and enumeration can report
+    // them the same way; property reads are unaffected.
     struct SharedPermanent {
         JSAtom atom;
         bool enumerable;
         bool readOnly;
     };
-    std::unordered_map<void*, std::vector<SharedPermanent>>& gSharedPermanent = *new std::unordered_map<void*, std::vector<SharedPermanent>>; // prototype -> entries (atoms owned)
+    std::unordered_map<void*, std::vector<SharedPermanent>>& gSharedPermanent = *new std::unordered_map<
+        void*,
+        std::vector<SharedPermanent>>; // prototype -> entries (atoms owned)
 
     BackendClass* classOf(JSValueConst obj)
     {
@@ -1008,10 +1145,12 @@ namespace {
     ObjRec* recOf(JSValueConst obj)
     {
         BackendClass* bc = classOf(obj);
-        return bc != nullptr ? static_cast<ObjRec*>(JS_GetOpaque(obj, bc->id)) : nullptr;
+        return bc != nullptr ? static_cast<ObjRec*>(JS_GetOpaque(obj, bc->id))
+                             : nullptr;
     }
 
-    // The ClassDef whose hooks apply to `obj`: its own class, or the global's recorded ClassDef.
+    // The ClassDef whose hooks apply to `obj`: its own class, or the global's
+    // recorded ClassDef.
     ClassDef* classDefOf(JSContext* ctx, JSValueConst obj)
     {
         if (BackendClass* bc = classOf(obj))
@@ -1029,7 +1168,9 @@ namespace {
 
     bool resolvingNow(RuntimeState* rs, void* obj, JSAtom atom)
     {
-        return std::find(rs->resolving.begin(), rs->resolving.end(), std::make_pair(obj, atom)) != rs->resolving.end();
+        return std::find(rs->resolving.begin(), rs->resolving.end(),
+                   std::make_pair(obj, atom))
+            != rs->resolving.end();
     }
 
     struct ResolveGuard {
@@ -1044,7 +1185,8 @@ namespace {
         ResolveGuard& operator=(const ResolveGuard&) = delete;
     };
 
-    bool tinyidForAtom(BackendClass* bc, JSContext* ctx, JSAtom atom, std::int32_t* out)
+    bool tinyidForAtom(BackendClass* bc, JSContext* ctx, JSAtom atom,
+        std::int32_t* out)
     {
         if (bc->tinyidProps.empty())
             return false;
@@ -1065,7 +1207,8 @@ namespace {
         return found;
     }
 
-    void fillData(JSContext* ctx, JSPropertyDescriptor* desc, JSValueConst value, bool e, bool w, bool c)
+    void fillData(JSContext* ctx, JSPropertyDescriptor* desc, JSValueConst value,
+        bool e, bool w, bool c)
     {
         if (desc == nullptr)
             return;
@@ -1082,8 +1225,10 @@ namespace {
         JS_FreeValue(ctx, d->setter);
     }
 
-    // The engine's own lookup on the object's shape, with this backend's exotic part switched off.
-    int shapeLookup(JSContext* ctx, JSPropertyDescriptor* desc, JSValueConst obj, JSAtom atom)
+    // The engine's own lookup on the object's shape, with this backend's exotic
+    // part switched off.
+    int shapeLookup(JSContext* ctx, JSPropertyDescriptor* desc, JSValueConst obj,
+        JSAtom atom)
     {
         RuntimeState* rs = rsOf(ctx);
         ++rs->shapeOnly;
@@ -1092,10 +1237,12 @@ namespace {
         return r;
     }
 
-    // The exotic half of an own lookup (the engine has already missed on the shape): the slot table,
-    // the test-only tinyid registry, then resolve, then the names the last newEnumerate listed.
-    // *fromShape is set when the answer is a shape property the resolve hook just defined.
-    int ownLookup(JSContext* ctx, JSPropertyDescriptor* desc, JSValueConst obj, JSAtom atom, bool* fromShape)
+    // The exotic half of an own lookup (the engine has already missed on the
+    // shape): the slot table, the test-only tinyid registry, then resolve, then the
+    // names the last newEnumerate listed. *fromShape is set when the answer is a
+    // shape property the resolve hook just defined.
+    int ownLookup(JSContext* ctx, JSPropertyDescriptor* desc, JSValueConst obj,
+        JSAtom atom, bool* fromShape)
     {
         *fromShape = false;
         RuntimeState* rs = rsOf(ctx);
@@ -1105,7 +1252,8 @@ namespace {
         ObjRec* rec = recOf(obj);
         if (rec != nullptr) {
             if (Slot* s = rec->find(atom)) {
-                fillData(ctx, desc, s->value, s->enumerable, s->writable, s->configurable);
+                fillData(ctx, desc, s->value, s->enumerable, s->writable,
+                    s->configurable);
                 return 1;
             }
         }
@@ -1130,11 +1278,13 @@ namespace {
             rec = recOf(obj);
             if (rec != nullptr) {
                 if (Slot* s = rec->find(atom)) {
-                    fillData(ctx, desc, s->value, s->enumerable, s->writable, s->configurable);
+                    fillData(ctx, desc, s->value, s->enumerable, s->writable,
+                        s->configurable);
                     return 1;
                 }
             }
-            // The hook may have defined an accessor or function on the object's shape instead.
+            // The hook may have defined an accessor or function on the object's shape
+            // instead.
             const int r = shapeLookup(ctx, desc, obj, atom);
             if (r != 0) {
                 *fromShape = true;
@@ -1150,8 +1300,10 @@ namespace {
         return 0;
     }
 
-    // The first Shared|Permanent entry for `atom` on a same-class prototype of `obj`, or nullptr.
-    const SharedPermanent* sharedPermanentFor(JSContext* ctx, JSValueConst obj, JSAtom atom)
+    // The first Shared|Permanent entry for `atom` on a same-class prototype of
+    // `obj`, or nullptr.
+    const SharedPermanent* sharedPermanentFor(JSContext* ctx, JSValueConst obj,
+        JSAtom atom)
     {
         if (gSharedPermanent.empty())
             return nullptr;
@@ -1175,7 +1327,8 @@ namespace {
         return found;
     }
 
-    int ExGetOwnProperty(JSContext* ctx, JSPropertyDescriptor* desc, JSValueConst obj, JSAtom atom)
+    int ExGetOwnProperty(JSContext* ctx, JSPropertyDescriptor* desc,
+        JSValueConst obj, JSAtom atom)
     {
         bool fromShape = false;
         const int r = ownLookup(ctx, desc, obj, atom, &fromShape);
@@ -1185,7 +1338,8 @@ namespace {
         if (sp == nullptr)
             return 0;
         if (desc != nullptr) {
-            JSValue v = JS_GetProperty(ctx, obj, atom); // the class hook, as SpiderMonkey's lookup ran it
+            JSValue v = JS_GetProperty(
+                ctx, obj, atom); // the class hook, as SpiderMonkey's lookup ran it
             if (JS_IsException(v))
                 return -1;
             desc->flags = (sp->enumerable ? JS_PROP_ENUMERABLE : 0) | (sp->readOnly ? 0 : JS_PROP_WRITABLE);
@@ -1196,7 +1350,8 @@ namespace {
         return 1;
     }
 
-    int ExGetOwnPropertyNames(JSContext* ctx, JSPropertyEnum** ptab, std::uint32_t* plen, JSValueConst obj)
+    int ExGetOwnPropertyNames(JSContext* ctx, JSPropertyEnum** ptab,
+        std::uint32_t* plen, JSValueConst obj)
     {
         *ptab = nullptr;
         *plen = 0;
@@ -1206,7 +1361,8 @@ namespace {
         RuntimeState* rs = rsOf(ctx);
         void* key = JS_VALUE_GET_PTR(obj);
         std::vector<JSAtom> atoms; // owned references
-        std::vector<JSAtom> lateNames; // owned: defined by an old-style enumerate hook just now
+        std::vector<JSAtom>
+            lateNames; // owned: defined by an old-style enumerate hook just now
         auto addUnique = [&](JSAtom a) {
             if (std::find(atoms.begin(), atoms.end(), a) != atoms.end()) {
                 JS_FreeAtom(ctx, a);
@@ -1227,11 +1383,13 @@ namespace {
             NativeScope scope(rs);
             Value state = undefinedValue();
             PropertyId id = voidId();
-            if (!bc->def->newEnumerate(wrap(ctx), objOf(obj), EnumerateOp::Init, &state, &id))
+            if (!bc->def->newEnumerate(wrap(ctx), objOf(obj), EnumerateOp::Init, &state,
+                    &id))
                 return failInt(ctx);
             for (int guard = 0; !isNull(state) && guard < 1000000; ++guard) {
                 id = voidId();
-                if (!bc->def->newEnumerate(wrap(ctx), objOf(obj), EnumerateOp::Next, &state, &id)) {
+                if (!bc->def->newEnumerate(wrap(ctx), objOf(obj), EnumerateOp::Next,
+                        &state, &id)) {
                     for (JSAtom a : atoms)
                         JS_FreeAtom(ctx, a);
                     return failInt(ctx);
@@ -1262,7 +1420,8 @@ namespace {
         for (const auto& p : bc->tinyidProps)
             addUnique(JS_NewAtom(ctx, p.first.c_str()));
         {
-            // Same-class prototypes' Shared|Permanent properties are the object's own (SpiderMonkey).
+            // Same-class prototypes' Shared|Permanent properties are the object's own
+            // (SpiderMonkey).
             const JSClassID cls = JS_GetClassID(obj);
             JSValue p = JS_GetPrototype(ctx, obj);
             while (JS_IsObject(p) && JS_GetClassID(p) == cls) {
@@ -1281,7 +1440,8 @@ namespace {
             for (const Slot& s : rec->slots)
                 addUnique(JS_DupAtom(ctx, s.atom));
         }
-        // Names the engine already lists from the object's shape must not appear twice.
+        // Names the engine already lists from the object's shape must not appear
+        // twice.
         for (auto it = atoms.begin(); it != atoms.end();) {
             const int r = shapeLookup(ctx, nullptr, obj, *it);
             if (r < 0)
@@ -1292,12 +1452,13 @@ namespace {
             } else
                 ++it;
         }
-        // ...except those the enumerate hook added during this call: the engine's own listing was
-        // taken before the hook ran, so it does not have them.
+        // ...except those the enumerate hook added during this call: the engine's own
+        // listing was taken before the hook ran, so it does not have them.
         for (JSAtom a : lateNames)
             addUnique(a);
 
-        auto* tab = static_cast<JSPropertyEnum*>(js_mallocz(ctx, sizeof(JSPropertyEnum) * (atoms.empty() ? 1 : atoms.size())));
+        auto* tab = static_cast<JSPropertyEnum*>(js_mallocz(
+            ctx, sizeof(JSPropertyEnum) * (atoms.empty() ? 1 : atoms.size())));
         if (tab == nullptr) {
             for (JSAtom a : atoms)
                 JS_FreeAtom(ctx, a);
@@ -1326,11 +1487,15 @@ namespace {
         return r;
     }
 
-    // Read a found descriptor as a value (calling its getter on `receiver`); consumes `d`.
-    JSValue valueOfDesc(JSContext* ctx, JSPropertyDescriptor* d, JSValueConst receiver)
+    // Read a found descriptor as a value (calling its getter on `receiver`);
+    // consumes `d`.
+    JSValue valueOfDesc(JSContext* ctx, JSPropertyDescriptor* d,
+        JSValueConst receiver)
     {
         if (d->flags & JS_PROP_GETSET) {
-            JSValue r = JS_IsFunction(ctx, d->getter) ? JS_Call(ctx, d->getter, receiver, 0, nullptr) : JS_UNDEFINED;
+            JSValue r = JS_IsFunction(ctx, d->getter)
+                ? JS_Call(ctx, d->getter, receiver, 0, nullptr)
+                : JS_UNDEFINED;
             freeDesc(ctx, d);
             return r;
         }
@@ -1340,7 +1505,8 @@ namespace {
         return v;
     }
 
-    JSValue ExGetProperty(JSContext* ctx, JSValueConst obj, JSAtom atom, JSValueConst receiver)
+    JSValue ExGetProperty(JSContext* ctx, JSValueConst obj, JSAtom atom,
+        JSValueConst receiver)
     {
         BackendClass* bc = classOf(obj);
         const bool own = sameObject(obj, receiver);
@@ -1354,8 +1520,9 @@ namespace {
         if (r < 0)
             return JS_EXCEPTION;
         if (r > 0) {
-            // An own slot (or a placeholder name from the registry/newEnumerate) carries the class
-            // hooks; a shape property the resolve hook defined carries its own.
+            // An own slot (or a placeholder name from the registry/newEnumerate)
+            // carries the class hooks; a shape property the resolve hook defined
+            // carries its own.
             found = true;
             hookEligible = !fromShape && (d.flags & JS_PROP_GETSET) == 0;
             val = valueOfDesc(ctx, &d, receiver);
@@ -1406,7 +1573,8 @@ namespace {
         return -1;
     }
 
-    int callSetter(JSContext* ctx, JSPropertyDescriptor* d, JSValueConst receiver, JSValueConst val, int flags, JSAtom atom)
+    int callSetter(JSContext* ctx, JSPropertyDescriptor* d, JSValueConst receiver,
+        JSValueConst val, int flags, JSAtom atom)
     {
         int ret = 1;
         if (JS_IsFunction(ctx, d->setter)) {
@@ -1422,18 +1590,21 @@ namespace {
         return ret;
     }
 
-    int setSlot(JSContext* ctx, BackendClass* bc, JSValueConst obj, Slot* s, JSAtom atom, JSValueConst val, int flags, bool symbol)
+    int setSlot(JSContext* ctx, BackendClass* bc, JSValueConst obj, Slot* s,
+        JSAtom atom, JSValueConst val, int flags, bool symbol)
     {
         if (!s->writable)
             return readOnlyFail(ctx, flags, atom);
         Value v = fromJS(ctx, val);
         if (!symbol && bc->def->setProperty != nullptr) {
             NativeScope scope(rsOf(ctx));
-            if (!bc->def->setProperty(wrap(ctx), objOf(obj), idFromAtom(ctx, atom), false, &v))
+            if (!bc->def->setProperty(wrap(ctx), objOf(obj), idFromAtom(ctx, atom),
+                    false, &v))
                 return failInt(ctx);
         }
         ObjRec* rec = recOf(obj);
-        Slot* again = rec != nullptr ? rec->find(atom) : nullptr; // the hook may have deleted it
+        Slot* again = rec != nullptr ? rec->find(atom)
+                                     : nullptr; // the hook may have deleted it
         if (again == nullptr)
             return 1;
         JSValue old = again->value;
@@ -1442,7 +1613,8 @@ namespace {
         return 1;
     }
 
-    int addSlot(JSContext* ctx, BackendClass* bc, JSValueConst obj, JSAtom atom, Value v, bool e, bool w, bool c, bool symbol)
+    int addSlot(JSContext* ctx, BackendClass* bc, JSValueConst obj, JSAtom atom,
+        Value v, bool e, bool w, bool c, bool symbol)
     {
         if (!symbol) {
             NativeScope scope(rsOf(ctx));
@@ -1458,11 +1630,13 @@ namespace {
             JS_FreeValue(ctx, old);
             return 1;
         }
-        rec->slots.push_back(Slot { JS_DupAtom(ctx, atom), JS_DupValue(ctx, toJS(v)), e, w, c });
+        rec->slots.push_back(
+            Slot { JS_DupAtom(ctx, atom), JS_DupValue(ctx, toJS(v)), e, w, c });
         return 1;
     }
 
-    int ExSetProperty(JSContext* ctx, JSValueConst obj, JSAtom atom, JSValueConst val, JSValueConst receiver, int flags)
+    int ExSetProperty(JSContext* ctx, JSValueConst obj, JSAtom atom,
+        JSValueConst val, JSValueConst receiver, int flags)
     {
         BackendClass* bc = classOf(obj);
         if (bc == nullptr)
@@ -1476,9 +1650,10 @@ namespace {
         }
 
         JSPropertyDescriptor d;
-        // The object's own properties proper: the shared-permanent emulation in ExGetOwnProperty only
-        // changes how prototype properties are REPORTED; an assignment still reaches the prototype's
-        // setter, as it did under SpiderMonkey.
+        // The object's own properties proper: the shared-permanent emulation in
+        // ExGetOwnProperty only changes how prototype properties are REPORTED; an
+        // assignment still reaches the prototype's setter, as it did under
+        // SpiderMonkey.
         bool fromShape = false;
         int r = ownLookup(ctx, &d, obj, atom, &fromShape);
         if (r < 0)
@@ -1495,13 +1670,15 @@ namespace {
             freeDesc(ctx, &d);
             if (!writable)
                 return readOnlyFail(ctx, flags, atom);
-            // A data property the resolve hook put on the shape keeps its own attributes. Anything else
-            // here is a name the hooks only REPORT (the last newEnumerate listing, the tinyid registry):
-            // the object does not have it, so SpiderMonkey's assignment added it -- addProperty, then
-            // the class's setProperty, then a slot -- which is the path below. Defining it on the shape
-            // instead skipped the setter and left a read-only, permanent shadow (bead oo-f1yi3).
+            // A data property the resolve hook put on the shape keeps its own
+            // attributes. Anything else here is a name the hooks only REPORT (the last
+            // newEnumerate listing, the tinyid registry): the object does not have it,
+            // so SpiderMonkey's assignment added it -- addProperty, then the class's
+            // setProperty, then a slot -- which is the path below. Defining it on the
+            // shape instead skipped the setter and left a read-only, permanent shadow.
             if (own && fromShape)
-                return JS_DefineProperty(ctx, obj, atom, val, JS_UNDEFINED, JS_UNDEFINED, JS_PROP_HAS_VALUE | JS_PROP_NO_EXOTIC);
+                return JS_DefineProperty(ctx, obj, atom, val, JS_UNDEFINED, JS_UNDEFINED,
+                    JS_PROP_HAS_VALUE | JS_PROP_NO_EXOTIC);
         } else {
             JSValue p = JS_GetPrototype(ctx, obj);
             while (JS_IsObject(p)) {
@@ -1545,16 +1722,19 @@ namespace {
                 JS_FreeValue(ctx, old);
                 return 1;
             }
-            rec2->slots.push_back(Slot { JS_DupAtom(ctx, atom), JS_DupValue(ctx, toJS(v)), true, true, true });
+            rec2->slots.push_back(Slot { JS_DupAtom(ctx, atom), JS_DupValue(ctx, toJS(v)),
+                true, true, true });
             return 1;
         }
         if (!JS_IsObject(receiver))
             return readOnlyFail(ctx, flags, atom);
-        return JS_DefinePropertyValue(ctx, receiver, atom, JS_DupValue(ctx, val), JS_PROP_C_W_E);
+        return JS_DefinePropertyValue(ctx, receiver, atom, JS_DupValue(ctx, val),
+            JS_PROP_C_W_E);
     }
 
-    int ExDefineOwnProperty(JSContext* ctx, JSValueConst obj, JSAtom atom, JSValueConst val,
-        JSValueConst getter, JSValueConst setter, int flags)
+    int ExDefineOwnProperty(JSContext* ctx, JSValueConst obj, JSAtom atom,
+        JSValueConst val, JSValueConst getter,
+        JSValueConst setter, int flags)
     {
         BackendClass* bc = classOf(obj);
         ObjRec* rec = recOf(obj);
@@ -1562,18 +1742,25 @@ namespace {
         if (bc == nullptr || rec == nullptr || (flags & (JS_PROP_HAS_GET | JS_PROP_HAS_SET)) != 0) {
             if (s != nullptr) {
                 if (!s->configurable)
-                    return (flags & JS_PROP_THROW) ? (JS_ThrowTypeError(ctx, "property is not configurable"), -1) : 0;
+                    return (flags & JS_PROP_THROW)
+                        ? (JS_ThrowTypeError(ctx, "property is not configurable"),
+                              -1)
+                        : 0;
                 JS_FreeAtom(ctx, s->atom);
                 JS_FreeValue(ctx, s->value);
                 rec->slots.erase(rec->slots.begin() + (s - rec->slots.data()));
             }
-            return JS_DefineProperty(ctx, obj, atom, val, getter, setter, flags | JS_PROP_NO_EXOTIC);
+            return JS_DefineProperty(ctx, obj, atom, val, getter, setter,
+                flags | JS_PROP_NO_EXOTIC);
         }
         if (s != nullptr) {
             if (!s->configurable) {
                 const bool widen = ((flags & JS_PROP_HAS_CONFIGURABLE) && (flags & JS_PROP_CONFIGURABLE)) || ((flags & JS_PROP_HAS_ENUMERABLE) && ((flags & JS_PROP_ENUMERABLE) != 0) != s->enumerable) || ((flags & JS_PROP_HAS_VALUE) && !s->writable && !JS_IsStrictEqual(ctx, val, s->value));
                 if (widen)
-                    return (flags & JS_PROP_THROW) ? (JS_ThrowTypeError(ctx, "property is not configurable"), -1) : 0;
+                    return (flags & JS_PROP_THROW)
+                        ? (JS_ThrowTypeError(ctx, "property is not configurable"),
+                              -1)
+                        : 0;
             }
             if (flags & JS_PROP_HAS_VALUE) {
                 JSValue old = s->value;
@@ -1589,7 +1776,8 @@ namespace {
             return 1;
         }
         const Value v = (flags & JS_PROP_HAS_VALUE) ? fromJS(ctx, val) : undefinedValue();
-        return addSlot(ctx, bc, obj, atom, v,
+        return addSlot(
+            ctx, bc, obj, atom, v,
             (flags & JS_PROP_HAS_ENUMERABLE) && (flags & JS_PROP_ENUMERABLE),
             (flags & JS_PROP_HAS_WRITABLE) && (flags & JS_PROP_WRITABLE),
             (flags & JS_PROP_HAS_CONFIGURABLE) && (flags & JS_PROP_CONFIGURABLE),
@@ -1632,9 +1820,9 @@ namespace {
         if (bc == nullptr)
             return;
         if (bc->def->finalize != nullptr) {
-            // gCtxForRuntime holds the last live context for this runtime; destroyContext() erases it
-            // (bead oo-902s), so a finalizer running after its context went away sees a null Context
-            // rather than a dangling one.
+            // gCtxForRuntime holds the last live context for this runtime;
+            // destroyContext() erases it, so a finalizer running after
+            // its context went away sees a null Context rather than a dangling one.
             NativeScope scope(rsOf(rt));
             bc->def->finalize(wrap(finalizeContext(rt)), objOf(val));
         }
@@ -1668,17 +1856,25 @@ namespace {
             JS_MarkValue(rt, s.value, markFunc);
     }
 
-    JSValue runNative(JSContext* ctx, NativeFn fn, JSValueConst func, JSValueConst thisVal, int argc,
-        JSValueConst* argv, bool constructing, ClassDef* ctorClass, unsigned nargs);
+    JSValue runNative(JSContext* ctx, NativeFn fn, JSValueConst func,
+        JSValueConst thisVal, int argc, JSValueConst* argv,
+        bool constructing, ClassDef* ctorClass, unsigned nargs);
 
-    JSValue ClassCallTramp(JSContext* ctx, JSValueConst func, JSValueConst thisVal, int argc, JSValueConst* argv, int flags)
+    JSValue ClassCallTramp(JSContext* ctx, JSValueConst func, JSValueConst thisVal,
+        int argc, JSValueConst* argv, int flags)
     {
         BackendClass* bc = classOf(func);
         const bool constructing = (flags & JS_CALL_FLAG_CONSTRUCTOR) != 0;
-        NativeFn fn = bc == nullptr ? nullptr : (constructing ? bc->def->construct : bc->def->call);
+        NativeFn fn = bc == nullptr
+            ? nullptr
+            : (constructing ? bc->def->construct : bc->def->call);
         if (fn == nullptr)
-            return JS_ThrowTypeError(ctx, "%s", constructing ? "ooscript: object is not a constructor" : "ooscript: object is not callable");
-        return runNative(ctx, fn, func, thisVal, argc, argv, constructing, nullptr, 0);
+            return JS_ThrowTypeError(ctx, "%s",
+                constructing
+                    ? "ooscript: object is not a constructor"
+                    : "ooscript: object is not callable");
+        return runNative(ctx, fn, func, thisVal, argc, argv, constructing, nullptr,
+            0);
     }
 
     BackendClass* attach(ClassDef* def, JSContext* ctx)
@@ -1694,7 +1890,9 @@ namespace {
             bc->cdef.class_name = def->name;
             bc->cdef.finalizer = FinalizeTramp;
             bc->cdef.gc_mark = MarkTramp;
-            bc->cdef.call = (def->call != nullptr || def->construct != nullptr) ? ClassCallTramp : nullptr;
+            bc->cdef.call = (def->call != nullptr || def->construct != nullptr)
+                ? ClassCallTramp
+                : nullptr;
             if (bc->hooked) {
                 bc->exotic.get_own_property = ExGetOwnProperty;
                 bc->exotic.get_own_property_names = ExGetOwnPropertyNames;
@@ -1714,11 +1912,13 @@ namespace {
         return bc;
     }
 
-    // MARK: Natives ----------------------------------------------------------------------------------------
+    // MARK: Natives
+    // ----------------------------------------------------------------------------------------
 
     struct NativeRec {
         NativeFn fn;
-        ClassDef* ctorClass; // the class a constructor call instantiates (initClass), or null
+        ClassDef* ctorClass; // the class a constructor call instantiates
+                             // (initClass), or null
         unsigned nargs;
     };
 
@@ -1728,11 +1928,13 @@ namespace {
         return cs != nullptr ? cs->objectProto : JS_NULL;
     }
 
-    // A new object of `def` (or a plain object) with `proto`, or the class/Object prototype.
-    // Object.prototype.toString names a SpiderMonkey host object by its class ("[object Vector3D]",
-    // "[object Clock]"); scripts test for it. QuickJS-ng says "Object" unless Symbol.toStringTag says
-    // otherwise, so every class prototype -- and an instance whose prototype is plain Object.prototype
-    // -- carries the ClassDef's name as a non-enumerable, shape-level tag (bead oo-1gc.6).
+    // A new object of `def` (or a plain object) with `proto`, or the class/Object
+    // prototype. Object.prototype.toString names a SpiderMonkey host object by its
+    // class ("[object Vector3D]",
+    // "[object Clock]"); scripts test for it. QuickJS-ng says "Object" unless
+    // Symbol.toStringTag says otherwise, so every class prototype -- and an
+    // instance whose prototype is plain Object.prototype
+    // -- carries the ClassDef's name as a non-enumerable, shape-level tag.
     void tagWithClassName(JSContext* ctx, JSValueConst obj, const ClassDef* def)
     {
         if (def == nullptr || def->name == nullptr)
@@ -1742,7 +1944,8 @@ namespace {
         JSValue tagSym = JS_GetPropertyStr(ctx, symbolCtor, "toStringTag");
         const JSAtom atom = JS_ValueToAtom(ctx, tagSym);
         if (atom != JS_ATOM_NULL) {
-            if (JS_DefineProperty(ctx, obj, atom, JS_NewString(ctx, def->name), JS_UNDEFINED, JS_UNDEFINED,
+            if (JS_DefineProperty(ctx, obj, atom, JS_NewString(ctx, def->name),
+                    JS_UNDEFINED, JS_UNDEFINED,
                     JS_PROP_HAS_VALUE | JS_PROP_HAS_CONFIGURABLE | JS_PROP_CONFIGURABLE | JS_PROP_HAS_ENUMERABLE | JS_PROP_HAS_WRITABLE | JS_PROP_NO_EXOTIC)
                 < 0) {
                 JS_FreeValue(ctx, JS_GetException(ctx));
@@ -1757,10 +1960,12 @@ namespace {
     JSValue newObjectRaw(JSContext* ctx, ClassDef* def, JSValueConst proto)
     {
         if (def == nullptr) {
-            return JS_IsObject(proto) ? JS_NewObjectProto(ctx, proto) : JS_NewObject(ctx);
+            return JS_IsObject(proto) ? JS_NewObjectProto(ctx, proto)
+                                      : JS_NewObject(ctx);
         }
         BackendClass* bc = attach(def, ctx);
-        JSValue p = JS_IsObject(proto) ? JS_DupValue(ctx, proto) : JS_GetClassProto(ctx, bc->id);
+        JSValue p = JS_IsObject(proto) ? JS_DupValue(ctx, proto)
+                                       : JS_GetClassProto(ctx, bc->id);
         if (!JS_IsObject(p)) {
             JS_FreeValue(ctx, p);
             p = JS_DupValue(ctx, objectProto(ctx));
@@ -1795,8 +2000,9 @@ namespace {
         ConstructMark& operator=(const ConstructMark&) = delete;
     };
 
-    JSValue runNative(JSContext* ctx, NativeFn fn, JSValueConst func, JSValueConst thisVal, int argc,
-        JSValueConst* argv, bool constructing, ClassDef* ctorClass, unsigned nargs)
+    JSValue runNative(JSContext* ctx, NativeFn fn, JSValueConst func,
+        JSValueConst thisVal, int argc, JSValueConst* argv,
+        bool constructing, ClassDef* ctorClass, unsigned nargs)
     {
         RuntimeState* rs = rsOf(ctx);
         NativeScope scope(rs);
@@ -1812,7 +2018,8 @@ namespace {
 
         JSValue created = JS_UNDEFINED;
         if (constructing) {
-            // thisVal is new.target: the new object gets its `prototype` and the constructor's class.
+            // thisVal is new.target: the new object gets its `prototype` and the
+            // constructor's class.
             JSValue proto = JS_GetPropertyStr(ctx, thisVal, "prototype");
             if (JS_IsException(proto))
                 return proto;
@@ -1839,7 +2046,8 @@ namespace {
             return failValue(ctx);
         }
         if (constructing) {
-            // `new` yields the native's object result, or the created object when it returned none.
+            // `new` yields the native's object result, or the created object when it
+            // returned none.
             if (isObject(vp[0]) && !sameObject(toJS(vp[0]), func)) {
                 JS_FreeValue(ctx, created);
                 return JS_DupValue(ctx, toJS(vp[0]));
@@ -1849,13 +2057,18 @@ namespace {
         return JS_DupValue(ctx, toJS(vp[0]));
     }
 
-    JSValue NativeCallTramp(JSContext* ctx, JSValueConst func, JSValueConst thisVal, int argc, JSValueConst* argv, int flags)
+    JSValue NativeCallTramp(JSContext* ctx, JSValueConst func, JSValueConst thisVal,
+        int argc, JSValueConst* argv, int flags)
     {
         auto* rec = static_cast<NativeRec*>(JS_GetOpaque(func, gNativeClassId));
         if (rec == nullptr || rec->fn == nullptr) {
-            return JS_ThrowTypeError(ctx, "%s", "ooscript: native function is not registered with the façade");
+            return JS_ThrowTypeError(
+                ctx, "%s",
+                "ooscript: native function is not registered with the façade");
         }
-        return runNative(ctx, rec->fn, func, thisVal, argc, argv, (flags & JS_CALL_FLAG_CONSTRUCTOR) != 0, rec->ctorClass, rec->nargs);
+        return runNative(ctx, rec->fn, func, thisVal, argc, argv,
+            (flags & JS_CALL_FLAG_CONSTRUCTOR) != 0, rec->ctorClass,
+            rec->nargs);
     }
 
     void NativeFinalizer(JSRuntime* /*rt*/, JSValueConst val)
@@ -1863,7 +2076,9 @@ namespace {
         delete static_cast<NativeRec*>(JS_GetOpaque(val, gNativeClassId));
     }
 
-    JSValue newNativeFunction(JSContext* ctx, const char* name, NativeFn fn, unsigned nargs, ClassDef* ctorClass, bool constructor)
+    JSValue newNativeFunction(JSContext* ctx, const char* name, NativeFn fn,
+        unsigned nargs, ClassDef* ctorClass,
+        bool constructor)
     {
         JSValue fproto = JS_GetFunctionProto(ctx);
         JSValue f = JS_NewObjectProtoClass(ctx, fproto, gNativeClassId);
@@ -1871,14 +2086,19 @@ namespace {
         if (JS_IsException(f))
             return f;
         JS_SetOpaque(f, new NativeRec { fn, ctorClass, nargs });
-        JS_DefinePropertyValueStr(ctx, f, "length", JS_NewInt32(ctx, static_cast<std::int32_t>(nargs)), JS_PROP_CONFIGURABLE);
-        JS_DefinePropertyValueStr(ctx, f, "name", JS_NewString(ctx, name != nullptr ? name : ""), JS_PROP_CONFIGURABLE);
+        JS_DefinePropertyValueStr(ctx, f, "length",
+            JS_NewInt32(ctx, static_cast<std::int32_t>(nargs)),
+            JS_PROP_CONFIGURABLE);
+        JS_DefinePropertyValueStr(ctx, f, "name",
+            JS_NewString(ctx, name != nullptr ? name : ""),
+            JS_PROP_CONFIGURABLE);
         if (constructor)
             JS_SetConstructorBit(ctx, f, true);
         return f;
     }
 
-    // MARK: Accessors (PropertySpec entries and defineProperty with hooks) --------------------------------
+    // MARK: Accessors (PropertySpec entries and defineProperty with hooks)
+    // --------------------------------
 
     struct AccessorRec {
         JSRuntime* rt;
@@ -1906,22 +2126,26 @@ namespace {
         return rec->byTinyid ? int32Id(rec->tinyid) : idFromAtom(ctx, rec->atom);
     }
 
-    JSValue AccessorGetTramp(JSContext* ctx, JSValueConst thisVal, int /*argc*/, JSValueConst* /*argv*/, int /*magic*/, void* opaque)
+    JSValue AccessorGetTramp(JSContext* ctx, JSValueConst thisVal, int /*argc*/,
+        JSValueConst* /*argv*/, int /*magic*/, void* opaque)
     {
         auto* rec = static_cast<AccessorRec*>(opaque);
         if (rec->get == nullptr || !JS_IsObject(thisVal))
             return JS_UNDEFINED;
         NativeScope scope(rsOf(ctx));
-        Value v = undefinedValue(); // DIVERGENCE: no per-object slot value for non-Shared accessors
+        Value v = undefinedValue(); // DIVERGENCE: no per-object slot value for
+                                    // non-Shared accessors
         if (!rec->get(wrap(ctx), objOf(thisVal), accessorId(ctx, rec), &v))
             return failValue(ctx);
         return JS_DupValue(ctx, toJS(v));
     }
 
-    JSValue AccessorSetTramp(JSContext* ctx, JSValueConst thisVal, int argc, JSValueConst* argv, int /*magic*/, void* opaque)
+    JSValue AccessorSetTramp(JSContext* ctx, JSValueConst thisVal, int argc,
+        JSValueConst* argv, int /*magic*/, void* opaque)
     {
         auto* rec = static_cast<AccessorRec*>(opaque);
-        // Read-only accessors ignore assignment silently, as SpiderMonkey's non-strict set does.
+        // Read-only accessors ignore assignment silently, as SpiderMonkey's
+        // non-strict set does.
         if (rec->readOnly || rec->set == nullptr || !JS_IsObject(thisVal))
             return JS_UNDEFINED;
         NativeScope scope(rsOf(ctx));
@@ -1957,9 +2181,10 @@ namespace {
             gDefineCollector->atoms.push_back(JS_DupAtom(ctx, atom));
     }
 
-    // SpiderMonkey's native define overwrote an existing permanent property silently; QuickJS-ng
-    // refuses to redefine a non-configurable one. A repeat definition keeps the existing property
-    // (the game's repeats -- an enumerate hook redefining every name each time -- are identical).
+    // SpiderMonkey's native define overwrote an existing permanent property
+    // silently; QuickJS-ng refuses to redefine a non-configurable one. A repeat
+    // definition keeps the existing property (the game's repeats -- an enumerate
+    // hook redefining every name each time -- are identical).
     int keepsExisting(JSContext* ctx, JSValueConst obj, JSAtom atom)
     {
         JSPropertyDescriptor d;
@@ -1971,8 +2196,9 @@ namespace {
         return fixed ? 1 : 0;
     }
 
-    bool defineAccessor(JSContext* ctx, JSValueConst obj, JSAtom atom, PropertyGetter get, PropertySetter set,
-        bool byTinyid, std::int32_t tinyid, PropertyFlag flags)
+    bool defineAccessor(JSContext* ctx, JSValueConst obj, JSAtom atom,
+        PropertyGetter get, PropertySetter set, bool byTinyid,
+        std::int32_t tinyid, PropertyFlag flags)
     {
         noteDefined(ctx, obj, atom);
         const int keep = keepsExisting(ctx, obj, atom);
@@ -1982,12 +2208,17 @@ namespace {
             return true;
         const auto b = static_cast<std::uint8_t>(flags);
         // A read-only property gets no setter at all, so its descriptor
-        // says it is not writable and assignment behaves as SpiderMonkey's did for a read-only
-        // property: ignored in sloppy code, a TypeError in strict code (bead oo-1gc.6).
+        // says it is not writable and assignment behaves as SpiderMonkey's did for a
+        // read-only property: ignored in sloppy code, a TypeError in strict code
         const bool readOnly = (b & static_cast<std::uint8_t>(PropertyFlag::ReadOnly)) != 0;
-        auto* rec = new AccessorRec { JS_GetRuntime(ctx), get, set, byTinyid, tinyid,
+        auto* rec = new AccessorRec { JS_GetRuntime(ctx),
+            get,
+            set,
+            byTinyid,
+            tinyid,
             byTinyid ? JS_ATOM_NULL : JS_DupAtom(ctx, atom),
-            readOnly, readOnly ? 1 : 2 };
+            readOnly,
+            readOnly ? 1 : 2 };
         JSValue g = JS_NewCClosure(ctx, AccessorGetTramp, "", AccessorRelease, 0, 0, rec);
         if (JS_IsException(g)) {
             rec->refs = 1;
@@ -2008,7 +2239,8 @@ namespace {
             f |= JS_PROP_ENUMERABLE;
         if ((b & static_cast<std::uint8_t>(PropertyFlag::Permanent)) == 0)
             f |= JS_PROP_CONFIGURABLE;
-        // A hooked object may still hold a slot of that name; defining an accessor replaces it.
+        // A hooked object may still hold a slot of that name; defining an accessor
+        // replaces it.
         if (ObjRec* orec = recOf(obj)) {
             if (Slot* sl = orec->find(atom)) {
                 JS_FreeAtom(ctx, sl->atom);
@@ -2022,16 +2254,21 @@ namespace {
         return r >= 0;
     }
 
-    bool defineData(JSContext* ctx, JSValueConst obj, JSAtom atom, JSValueConst value, int flags)
+    bool defineData(JSContext* ctx, JSValueConst obj, JSAtom atom,
+        JSValueConst value, int flags)
     {
-        return JS_DefineProperty(ctx, obj, atom, value, JS_UNDEFINED, JS_UNDEFINED, flags | JS_PROP_THROW) >= 0;
+        return JS_DefineProperty(ctx, obj, atom, value, JS_UNDEFINED, JS_UNDEFINED,
+                   flags | JS_PROP_THROW)
+            >= 0;
     }
 
-    bool definePropertyImpl(JSContext* ctx, JSValueConst obj, JSAtom atom, JSValueConst value,
-        PropertyGetter getter, PropertySetter setter, PropertyFlag flags)
+    bool definePropertyImpl(JSContext* ctx, JSValueConst obj, JSAtom atom,
+        JSValueConst value, PropertyGetter getter,
+        PropertySetter setter, PropertyFlag flags)
     {
         if (getter != nullptr || setter != nullptr) {
-            // js_DefineNativeProperty's default: a hook left null falls back to the class's own.
+            // js_DefineNativeProperty's default: a hook left null falls back to the
+            // class's own.
             ClassDef* def = classDefOf(ctx, obj);
             if (getter == nullptr && def != nullptr)
                 getter = def->getProperty;
@@ -2048,32 +2285,40 @@ namespace {
         return defineData(ctx, obj, atom, value, jsFlags(flags));
     }
 
-    bool definePropertySpecs(JSContext* ctx, JSValueConst obj, const PropertySpec* ps)
+    bool definePropertySpecs(JSContext* ctx, JSValueConst obj,
+        const PropertySpec* ps)
     {
         ClassDef* def = classDefOf(ctx, obj);
         for (; ps != nullptr && ps->name != nullptr; ++ps) {
             AtomRef atom(ctx, JS_NewAtom(ctx, ps->name));
             if (atom.atom == JS_ATOM_NULL)
                 return false;
-            // A table that lists a name twice (Ship's has "homeSystem" twice, same tinyid) was a
-            // silent redefinition under SpiderMonkey's native define; QuickJS-ng refuses to redefine a
-            // permanent property, which failed the whole initClass. The first entry stands.
+            // A table that lists a name twice (Ship's has "homeSystem" twice, same
+            // tinyid) was a silent redefinition under SpiderMonkey's native define;
+            // QuickJS-ng refuses to redefine a permanent property, which failed the
+            // whole initClass. The first entry stands.
             const int exists = JS_GetOwnProperty(ctx, nullptr, obj, atom.atom);
             if (exists < 0)
                 return false;
             if (exists > 0)
                 continue;
-            PropertyGetter get = ps->getter != nullptr ? ps->getter : (def != nullptr ? def->getProperty : nullptr);
-            PropertySetter set = ps->setter != nullptr ? ps->setter : (def != nullptr ? def->setProperty : nullptr);
+            PropertyGetter get = ps->getter != nullptr
+                ? ps->getter
+                : (def != nullptr ? def->getProperty : nullptr);
+            PropertySetter set = ps->setter != nullptr
+                ? ps->setter
+                : (def != nullptr ? def->setProperty : nullptr);
             const bool ok = (get != nullptr || set != nullptr)
-                ? defineAccessor(ctx, obj, atom.atom, get, set, true, ps->tinyid, ps->flags)
+                ? defineAccessor(ctx, obj, atom.atom, get, set, true, ps->tinyid,
+                      ps->flags)
                 : defineData(ctx, obj, atom.atom, JS_UNDEFINED, jsFlags(ps->flags));
             if (!ok)
                 return false;
             const auto fb = static_cast<std::uint8_t>(ps->flags);
             const auto sp = static_cast<std::uint8_t>(PropertyFlag::Shared) | static_cast<std::uint8_t>(PropertyFlag::Permanent);
             if ((fb & sp) == sp && (get != nullptr || set != nullptr)) {
-                gSharedPermanent[JS_VALUE_GET_PTR(obj)].push_back(SharedPermanent { JS_DupAtom(ctx, atom.atom),
+                gSharedPermanent[JS_VALUE_GET_PTR(obj)].push_back(SharedPermanent {
+                    JS_DupAtom(ctx, atom.atom),
                     (fb & static_cast<std::uint8_t>(PropertyFlag::Enumerate)) != 0,
                     (fb & static_cast<std::uint8_t>(PropertyFlag::ReadOnly)) != 0 });
             }
@@ -2081,26 +2326,32 @@ namespace {
         return true;
     }
 
-    // Every native is constructible, as in SpiderMonkey 1.8.5: its InvokeConstructor created `this` from
-    // the callee's `prototype` (Object.prototype when it has none), called the native, and returned the
-    // native's object result or else that `this` (jsinterp.cpp, js_CreateThis then Invoke with
-    // JSINVOKE_CONSTRUCT). Expansions rely on it: `new Vector3D.random(n)` (bead oo-1gc.13) is a
-    // constructor call of a static method, which QuickJS-ng refuses without the constructor bit.
-    // runNative already implements exactly that construct path for a native with no ctorClass.
-    JSValue defineNative(JSContext* ctx, JSValueConst obj, const char* name, NativeFn call, unsigned nargs, std::uint16_t flags)
+    // Every native is constructible, as in SpiderMonkey 1.8.5: its
+    // InvokeConstructor created `this` from the callee's `prototype`
+    // (Object.prototype when it has none), called the native, and returned the
+    // native's object result or else that `this` (jsinterp.cpp, js_CreateThis then
+    // Invoke with JSINVOKE_CONSTRUCT). Expansions rely on it: `new
+    // Vector3D.random(n)` is a constructor call of a static
+    // method, which QuickJS-ng refuses without the constructor bit. runNative
+    // already implements exactly that construct path for a native with no
+    // ctorClass.
+    JSValue defineNative(JSContext* ctx, JSValueConst obj, const char* name,
+        NativeFn call, unsigned nargs, std::uint16_t flags)
     {
         JSValue f = newNativeFunction(ctx, name, call, nargs, nullptr, true);
         if (JS_IsException(f))
             return f;
         AtomRef atom(ctx, JS_NewAtom(ctx, name));
-        if (!defineData(ctx, obj, atom.atom, f, jsFlags(static_cast<PropertyFlag>(flags & 0xFF)) | JS_PROP_NO_EXOTIC)) {
+        if (!defineData(ctx, obj, atom.atom, f,
+                jsFlags(static_cast<PropertyFlag>(flags & 0xFF)) | JS_PROP_NO_EXOTIC)) {
             JS_FreeValue(ctx, f);
             return JS_EXCEPTION;
         }
         return f;
     }
 
-    bool defineFunctionSpecs(JSContext* ctx, JSValueConst obj, const FunctionSpec* fs)
+    bool defineFunctionSpecs(JSContext* ctx, JSValueConst obj,
+        const FunctionSpec* fs)
     {
         for (; fs != nullptr && fs->name != nullptr; ++fs) {
             JSValue f = defineNative(ctx, obj, fs->name, fs->call, fs->nargs, fs->flags);
@@ -2111,8 +2362,10 @@ namespace {
         return true;
     }
 
-    // SpiderMonkey's convert hook, as a Symbol.toPrimitive method on the class prototype.
-    JSValue ToPrimitiveTramp(JSContext* ctx, JSValueConst thisVal, int argc, JSValueConst* argv, int /*magic*/, void* opaque)
+    // SpiderMonkey's convert hook, as a Symbol.toPrimitive method on the class
+    // prototype.
+    JSValue ToPrimitiveTramp(JSContext* ctx, JSValueConst thisVal, int argc,
+        JSValueConst* argv, int /*magic*/, void* opaque)
     {
         auto* def = static_cast<ClassDef*>(opaque);
         if (!JS_IsObject(thisVal))
@@ -2151,7 +2404,8 @@ namespace {
                 JS_FreeValue(ctx, f);
             }
         }
-        return JS_ThrowTypeError(ctx, "%s", "cannot convert object to primitive value");
+        return JS_ThrowTypeError(ctx, "%s",
+            "cannot convert object to primitive value");
     }
 
     bool installConvert(JSContext* ctx, JSValueConst proto, ClassDef* def)
@@ -2167,13 +2421,17 @@ namespace {
         }
         AtomRef atom(ctx, JS_ValueToAtom(ctx, toPrim));
         JS_FreeValue(ctx, toPrim);
-        JSValue f = JS_NewCClosure(ctx, ToPrimitiveTramp, "[Symbol.toPrimitive]", nullptr, 1, 0, def);
+        JSValue f = JS_NewCClosure(ctx, ToPrimitiveTramp, "[Symbol.toPrimitive]",
+            nullptr, 1, 0, def);
         if (JS_IsException(f))
             return false;
-        return JS_DefinePropertyValue(ctx, proto, atom.atom, f, JS_PROP_CONFIGURABLE | JS_PROP_NO_EXOTIC) >= 0;
+        return JS_DefinePropertyValue(ctx, proto, atom.atom, f,
+                   JS_PROP_CONFIGURABLE | JS_PROP_NO_EXOTIC)
+            >= 0;
     }
 
-    // MARK: Scripts ----------------------------------------------------------------------------------------
+    // MARK: Scripts
+    // ----------------------------------------------------------------------------------------
 
     void releaseScript(JSRuntime* rt, ScriptRep* s)
     {
@@ -2198,28 +2456,32 @@ namespace {
         return o;
     }
 
-    // SpiderMonkey runs a script with its scope object at the head of the scope chain, so a bare name
-    // that the global lacks resolves through the script object -- at top level and in every closure
-    // the script creates (oolite-global-prefix.js reads the engine-provided `special` that way,
-    // oolite-priorityai.js its own `this.PriorityAIController`). QuickJS-ng global code has only the
-    // global scope. The global's prototype is therefore a "scope fallback" exotic object: a name the
-    // global does not have is looked up on the scope object of the script whose code is running,
-    // identified by the running function's filename (every script is registered under its file when
-    // it runs).
-    // The same file runs for several objects -- one ship script per ship -- and in SpiderMonkey each
-    // run's closures resolve through their own run's object. So a façade-class scope object is also
-    // marked with its file (ObjRec::scopeFile), and the lookup prefers the innermost `this` of a call
-    // the façade made (a handler call, a timer, the script's own run) that is marked with the running
-    // file; only when none is does it fall back to the object the file last ran for. Without that a
-    // ship script whose handler sets `this.list` and then reads `list` failed with a ReferenceError
-    // whenever another ship had run the same file since (bead oo-1gc.15: BUS_MegaBat_events.js).
-    // DIVERGENCE: an assignment to such a name defines it on the global rather than the script object;
-    // console-evaluated code (not from a script file) gets no fallback; a closure of one ship's run
-    // called directly from another ship's handler (no façade call in between) resolves through the
-    // caller's object. (beads oo-1gc.4, oo-1gc.15)
+    // SpiderMonkey runs a script with its scope object at the head of the scope
+    // chain, so a bare name that the global lacks resolves through the script
+    // object -- at top level and in every closure the script creates
+    // (oolite-global-prefix.js reads the engine-provided `special` that way,
+    // oolite-priorityai.js its own `this.PriorityAIController`). QuickJS-ng global
+    // code has only the global scope. The global's prototype is therefore a "scope
+    // fallback" exotic object: a name the global does not have is looked up on the
+    // scope object of the script whose code is running, identified by the running
+    // function's filename (every script is registered under its file when it runs).
+    // The same file runs for several objects -- one ship script per ship -- and in
+    // SpiderMonkey each run's closures resolve through their own run's object. So a
+    // façade-class scope object is also marked with its file (ObjRec::scopeFile),
+    // and the lookup prefers the innermost `this` of a call the façade made (a
+    // handler call, a timer, the script's own run) that is marked with the running
+    // file; only when none is does it fall back to the object the file last ran
+    // for. Without that a ship script whose handler sets `this.list` and then reads
+    // `list` failed with a ReferenceError whenever another ship had run the same
+    // file since. DIVERGENCE: an assignment
+    // to such a name defines it on the global rather than the script object;
+    // console-evaluated code (not from a script file) gets no fallback; a closure
+    // of one ship's run called directly from another ship's handler (no façade call
+    // in between) resolves through the caller's object.
     JSClassID gScopeFallbackClassId = 0;
     std::unordered_map<std::string, JSValue>& gScopeByFile = *new std::unordered_map<std::string, JSValue>; // owned references
-    std::vector<JSValue>& gCallThis = *new std::vector<JSValue>; // `this` of each façade call in progress (borrowed)
+    std::vector<JSValue>& gCallThis = *new std::vector<JSValue>; // `this` of each façade call in progress
+                                                                 // (borrowed)
 
     struct CallThisMark {
         explicit CallThisMark(JSValueConst thisVal) { gCallThis.push_back(thisVal); }
@@ -2249,9 +2511,10 @@ namespace {
     {
         if (gScopeByFile.empty())
             return false;
-        // The innermost frame that belongs to a registered script: code eval()ed inside a script (the
-        // debug console's evaluate) has its own pseudo-filename, and SpiderMonkey resolved its names
-        // through the calling script's scope chain.
+        // The innermost frame that belongs to a registered script: code eval()ed
+        // inside a script (the debug console's evaluate) has its own pseudo-filename,
+        // and SpiderMonkey resolved its names through the calling script's scope
+        // chain.
         for (int level = 0; level < 8; ++level) {
             const JSAtom a = JS_GetScriptOrModuleName(ctx, level);
             if (a == JS_ATOM_NULL)
@@ -2279,7 +2542,8 @@ namespace {
         return false;
     }
 
-    int ScopeFallbackGetOwnProperty(JSContext* ctx, JSPropertyDescriptor* desc, JSValueConst /*obj*/, JSAtom atom)
+    int ScopeFallbackGetOwnProperty(JSContext* ctx, JSPropertyDescriptor* desc,
+        JSValueConst /*obj*/, JSAtom atom)
     {
         JSValue scope;
         if (!runningScope(ctx, &scope))
@@ -2326,7 +2590,8 @@ namespace {
         gScopeByFile.clear();
     }
 
-    bool evalWithThis(JSContext* ctx, Object scope, const std::string& src, const char* filename, unsigned lineno, Value* rval)
+    bool evalWithThis(JSContext* ctx, Object scope, const std::string& src,
+        const char* filename, unsigned lineno, Value* rval)
     {
         JSValue global = JS_GetGlobalObject(ctx);
         JSValue thisObj = scope != nullptr ? OBJVAL(scope) : global;
@@ -2357,7 +2622,8 @@ namespace {
             out.push_back(static_cast<std::uint8_t>(v >> (8 * i)));
     }
 
-    bool readU32(const std::uint8_t*& p, const std::uint8_t* end, std::uint32_t* v)
+    bool readU32(const std::uint8_t*& p, const std::uint8_t* end,
+        std::uint32_t* v)
     {
         if (end - p < 4)
             return false;
@@ -2370,7 +2636,8 @@ namespace {
 
     constexpr char kScriptMagic[8] = { 'O', 'O', 'Q', 'J', 'S', 'X', '1', '\0' };
 
-    // MARK: Operation callback -----------------------------------------------------------------------------
+    // MARK: Operation callback
+    // -----------------------------------------------------------------------------
 
     int InterruptTramp(JSRuntime* /*rt*/, void* opaque)
     {
@@ -2389,7 +2656,8 @@ namespace {
 
 } // namespace
 
-// MARK: Value conversions that may run script ----------------------------------------------------
+// MARK: Value conversions that may run script
+// ----------------------------------------------------
 
 bool newNumberValue(Context /*cx*/, double d, Value* rval)
 {
@@ -2413,7 +2681,8 @@ bool valueToBoolean(Context cx, Value v, bool* out)
 
 bool valueToObject(Context cx, Value v, Object* out)
 {
-    // JS_ValueToObject: null and undefined convert to a null object without an error.
+    // JS_ValueToObject: null and undefined convert to a null object without an
+    // error.
     if (isNullOrUndefined(v)) {
         *out = nullptr;
         return true;
@@ -2434,8 +2703,8 @@ bool valueToObject(Context cx, Value v, Object* out)
 
 bool valueToInt32(Context cx, Value v, std::int32_t* out)
 {
-    // JS_ValueToInt32 is the old, non-ECMA conversion: round to nearest, and an error (not a
-    // wrap) when the number is not finite or out of int32 range.
+    // JS_ValueToInt32 is the old, non-ECMA conversion: round to nearest, and an
+    // error (not a wrap) when the number is not finite or out of int32 range.
     if (isInt32(v)) {
         *out = toInt32(v);
         return true;
@@ -2543,7 +2812,8 @@ Type typeOfValue(Context cx, Value v)
         return Type::String;
     if (isObject(v))
         return JS_IsFunction(ctxOr(cx), toJS(v)) ? Type::Function : Type::Object;
-    return Type::Void; // symbols and private values have no SpiderMonkey 1.8.5 type
+    return Type::Void; // symbols and private values have no SpiderMonkey 1.8.5
+                       // type
 }
 
 const char* typeName(Type t)
@@ -2580,7 +2850,8 @@ String idToString(PropertyId id)
     return s;
 }
 
-// MARK: Call arguments --------------------------------------------------------------------------
+// MARK: Call arguments
+// --------------------------------------------------------------------------
 
 Object CallArgs::thisObject() const
 {
@@ -2598,7 +2869,8 @@ bool CallArgs::isConstructing() const
     return std::find(gConstructing.begin(), gConstructing.end(), vp_) != gConstructing.end();
 }
 
-// MARK: Objects -----------------------------------------------------------------------------
+// MARK: Objects
+// -----------------------------------------------------------------------------
 
 Object newObject(Context cx, ClassDef* def, Object proto, Object /*parent*/)
 {
@@ -2611,7 +2883,8 @@ Object newObject(Context cx, ClassDef* def, Object proto, Object /*parent*/)
 
 Object newGlobalObject(Context cx, ClassDef* def)
 {
-    // DIVERGENCE: see the banner. The context's own global stands in; the ClassDef is recorded.
+    // DIVERGENCE: see the banner. The context's own global stands in; the
+    // ClassDef is recorded.
     JSContext* ctx = CX(cx);
     ContextState* cs = csOf(ctx);
     if (cs != nullptr)
@@ -2624,10 +2897,14 @@ Object newGlobalObject(Context cx, ClassDef* def)
 
 void setGlobalObject(Context /*cx*/, Object /*global*/)
 {
-    // A QuickJS-ng context's global object is fixed at creation; newGlobalObject hands that one out.
+    // A QuickJS-ng context's global object is fixed at creation; newGlobalObject
+    // hands that one out.
 }
 
-bool initStandardClasses(Context /*cx*/, Object /*global*/) { return true; } // JS_NewContext added them
+bool initStandardClasses(Context /*cx*/, Object /*global*/)
+{
+    return true;
+} // JS_NewContext added them
 
 void clearScope(Context cx, Object obj)
 {
@@ -2642,12 +2919,14 @@ void clearScope(Context cx, Object obj)
     }
     JSPropertyEnum* tab = nullptr;
     std::uint32_t len = 0;
-    if (JS_GetOwnPropertyNames(ctx, &tab, &len, o, JS_GPN_STRING_MASK | JS_GPN_SYMBOL_MASK) < 0) {
+    if (JS_GetOwnPropertyNames(ctx, &tab, &len, o,
+            JS_GPN_STRING_MASK | JS_GPN_SYMBOL_MASK)
+        < 0) {
         JS_FreeValue(ctx, JS_GetException(ctx));
         return;
     }
-    // DIVERGENCE: non-configurable (permanent) properties survive; SpiderMonkey's ClearScope
-    // empties the scope outright.
+    // DIVERGENCE: non-configurable (permanent) properties survive; SpiderMonkey's
+    // ClearScope empties the scope outright.
     for (std::uint32_t i = 0; i < len; ++i)
         JS_DeleteProperty(ctx, o, tab[i].atom, 0);
     JS_FreePropertyEnum(ctx, tab, len);
@@ -2656,9 +2935,9 @@ void clearScope(Context cx, Object obj)
 }
 
 Object initClass(Context cx, Object obj, Object parentProto, ClassDef* def,
-    NativeFn constructor, unsigned nargs,
-    const PropertySpec* ps, const FunctionSpec* fs,
-    const PropertySpec* staticPs, const FunctionSpec* staticFs)
+    NativeFn constructor, unsigned nargs, const PropertySpec* ps,
+    const FunctionSpec* fs, const PropertySpec* staticPs,
+    const FunctionSpec* staticFs)
 {
     JSContext* ctx = CX(cx);
     ContextState* cs = csOf(ctx);
@@ -2666,7 +2945,9 @@ Object initClass(Context cx, Object obj, Object parentProto, ClassDef* def,
     if (bc == nullptr || cs == nullptr)
         return nullptr;
 
-    JSValue proto = JS_NewObjectProtoClass(ctx, parentProto != nullptr ? OBJVAL(parentProto) : cs->objectProto, bc->id);
+    JSValue proto = JS_NewObjectProtoClass(
+        ctx, parentProto != nullptr ? OBJVAL(parentProto) : cs->objectProto,
+        bc->id);
     if (JS_IsException(proto))
         return nullptr;
     JS_SetOpaque(proto, new ObjRec());
@@ -2681,12 +2962,16 @@ Object initClass(Context cx, Object obj, Object parentProto, ClassDef* def,
             return nullptr;
         AtomRef protoAtom(ctx, JS_NewAtom(ctx, "prototype"));
         AtomRef ctorAtom(ctx, JS_NewAtom(ctx, "constructor"));
-        if (!defineData(ctx, ctor, protoAtom.atom, OBJVAL(protoObj), JS_PROP_HAS_VALUE | JS_PROP_HAS_WRITABLE | JS_PROP_HAS_ENUMERABLE | JS_PROP_HAS_CONFIGURABLE) || !defineData(ctx, OBJVAL(protoObj), ctorAtom.atom, ctor, JS_PROP_HAS_VALUE | JS_PROP_HAS_WRITABLE | JS_PROP_HAS_ENUMERABLE | JS_PROP_HAS_CONFIGURABLE | JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE | JS_PROP_NO_EXOTIC)) {
+        if (!defineData(ctx, ctor, protoAtom.atom, OBJVAL(protoObj),
+                JS_PROP_HAS_VALUE | JS_PROP_HAS_WRITABLE | JS_PROP_HAS_ENUMERABLE | JS_PROP_HAS_CONFIGURABLE)
+            || !defineData(ctx, OBJVAL(protoObj), ctorAtom.atom, ctor,
+                JS_PROP_HAS_VALUE | JS_PROP_HAS_WRITABLE | JS_PROP_HAS_ENUMERABLE | JS_PROP_HAS_CONFIGURABLE | JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE | JS_PROP_NO_EXOTIC)) {
             JS_FreeValue(ctx, ctor);
             return nullptr;
         }
     } else {
-        // JS_InitClass without a constructor names the prototype itself, and it is its own "constructor".
+        // JS_InitClass without a constructor names the prototype itself, and it is
+        // its own "constructor".
         ctor = JS_DupValue(ctx, OBJVAL(protoObj));
         cs->ctorForProto[protoObj] = protoObj;
     }
@@ -2694,7 +2979,8 @@ Object initClass(Context cx, Object obj, Object parentProto, ClassDef* def,
 
     if (obj != nullptr && def->name != nullptr) {
         AtomRef nameAtom(ctx, JS_NewAtom(ctx, def->name));
-        if (!defineData(ctx, OBJVAL(obj), nameAtom.atom, OBJVAL(ctorObj), JS_PROP_HAS_VALUE | JS_PROP_HAS_WRITABLE | JS_PROP_HAS_ENUMERABLE | JS_PROP_HAS_CONFIGURABLE | JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE))
+        if (!defineData(ctx, OBJVAL(obj), nameAtom.atom, OBJVAL(ctorObj),
+                JS_PROP_HAS_VALUE | JS_PROP_HAS_WRITABLE | JS_PROP_HAS_ENUMERABLE | JS_PROP_HAS_CONFIGURABLE | JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE))
             return nullptr;
     }
     if (!definePropertySpecs(ctx, OBJVAL(protoObj), ps))
@@ -2712,7 +2998,8 @@ Object initClass(Context cx, Object obj, Object parentProto, ClassDef* def,
     return protoObj;
 }
 
-Object defineObject(Context cx, Object obj, const char* name, ClassDef* def, Object proto, PropertyFlag flags)
+Object defineObject(Context cx, Object obj, const char* name, ClassDef* def,
+    Object proto, PropertyFlag flags)
 {
     JSContext* ctx = CX(cx);
     JSValue o = newObjectRaw(ctx, def, OBJVAL_OR_NULL(proto));
@@ -2750,12 +3037,19 @@ Object getPrototype(Context cx, Object obj)
     return takeObject(ctx, JS_GetPrototype(ctx, OBJVAL(obj)));
 }
 
-Object getParent(Context cx, Object /*obj*/) { return getGlobalObject(cx); } // every parent chain ends at the one global
-Object getGlobalForObject(Context cx, Object /*obj*/) { return getGlobalObject(cx); }
+Object getParent(Context cx, Object /*obj*/)
+{
+    return getGlobalObject(cx);
+} // every parent chain ends at the one global
+Object getGlobalForObject(Context cx, Object /*obj*/)
+{
+    return getGlobalObject(cx);
+}
 
 Object getGlobalObject(Context cx)
 {
-    // The context keeps the global alive for its whole life, so no arena reference is needed.
+    // The context keeps the global alive for its whole life, so no arena
+    // reference is needed.
     JSContext* ctx = CX(cx);
     JSValue g = JS_GetGlobalObject(ctx);
     Object out = objOf(g);
@@ -2763,13 +3057,15 @@ Object getGlobalObject(Context cx)
     return out;
 }
 
-// The engine's own classes (Object, Array, String, ...) answer a stable, hook-less descriptor per
-// engine class id, named as SpiderMonkey names them, so the game can key its object converters
-// on them exactly as it keyed on the engine's class pointer (bead oo-1gc.4). The name comes from
+// The engine's own classes (Object, Array, String, ...) answer a stable,
+// hook-less descriptor per engine class id, named as SpiderMonkey names them,
+// so the game can key its object converters on them exactly as it keyed on the
+// engine's class pointer. The name comes from
 // Object.prototype.toString's tag the first time an id is seen.
 const ClassDef* foreignClassDef(JSContext* ctx, JSValueConst obj)
 {
-    static std::unordered_map<JSClassID, ClassDef*>& sForeign = *new std::unordered_map<JSClassID, ClassDef*>; // immortal, as the registries above (bead oo-9ht.173)
+    static std::unordered_map<JSClassID, ClassDef*>& sForeign = *new std::unordered_map<JSClassID,
+        ClassDef*>; // immortal, as the registries above
     const JSClassID id = JS_GetClassID(obj);
     auto it = sForeign.find(id);
     if (it != sForeign.end())
@@ -2792,8 +3088,9 @@ const ClassDef* foreignClassDef(JSContext* ctx, JSValueConst obj)
     JS_FreeValue(ctx, objectProto);
     JS_FreeValue(ctx, objectCtor);
     JS_FreeValue(ctx, global);
-    auto* def = new ClassDef { nullptr, ClassFlag::None, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+    auto* def = new ClassDef { nullptr, ClassFlag::None, nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr, nullptr };
     def->name = (new std::string(name))->c_str();
     sForeign.emplace(id, def);
     return def;
@@ -2821,7 +3118,8 @@ const ClassDef* getObjectClass(Context cx, Object obj)
 
 namespace {
 
-    void reportIncompatible(JSContext* ctx, Object obj, ClassDef* def, Value* argv)
+    void reportIncompatible(JSContext* ctx, Object obj, ClassDef* def,
+        Value* argv)
     {
         std::string fn = "method";
         if (argv != nullptr && isObject(argv[-2])) {
@@ -2887,7 +3185,8 @@ bool objectIsFunction(Context cx, Object obj)
     return obj != nullptr && JS_IsFunction(ctxOr(cx), OBJVAL(obj));
 }
 
-// MARK: Properties ---------------------------------------------------------------------------------
+// MARK: Properties
+// ---------------------------------------------------------------------------------
 
 namespace {
 
@@ -2904,13 +3203,13 @@ namespace {
 
     bool setByAtom(JSContext* ctx, Object obj, JSAtom atom, Value* vp)
     {
-        // DIVERGENCE: the engine's set throws on a read-only property where SpiderMonkey's non-strict
-        // JS_SetProperty silently succeeds.
+        // DIVERGENCE: the engine's set throws on a read-only property where
+        // SpiderMonkey's non-strict JS_SetProperty silently succeeds.
         return JS_SetProperty(ctx, OBJVAL(obj), atom, JS_DupValue(ctx, toJS(*vp))) >= 0;
     }
 
-    // JS_LookupProperty: the value of a data property, true for an accessor, undefined when absent;
-    // runs resolve hooks but never getters.
+    // JS_LookupProperty: the value of a data property, true for an accessor,
+    // undefined when absent; runs resolve hooks but never getters.
     bool lookupByAtom(JSContext* ctx, Object obj, JSAtom atom, Value* vp)
     {
         JSValue p = JS_DupValue(ctx, OBJVAL(obj));
@@ -2972,19 +3271,23 @@ bool setPropertyById(Context cx, Object obj, PropertyId id, Value* vp)
 }
 
 bool definePropertyById(Context cx, Object obj, PropertyId id, Value value,
-    PropertyGetter getter, PropertySetter setter, PropertyFlag flags)
+    PropertyGetter getter, PropertySetter setter,
+    PropertyFlag flags)
 {
     JSContext* ctx = CX(cx);
     AtomRef atom(ctx, atomFromId(ctx, id));
-    return definePropertyImpl(ctx, OBJVAL(obj), atom.atom, toJS(value), getter, setter, flags);
+    return definePropertyImpl(ctx, OBJVAL(obj), atom.atom, toJS(value), getter,
+        setter, flags);
 }
 
 bool defineProperty(Context cx, Object obj, const char* name, Value value,
-    PropertyGetter getter, PropertySetter setter, PropertyFlag flags)
+    PropertyGetter getter, PropertySetter setter,
+    PropertyFlag flags)
 {
     JSContext* ctx = CX(cx);
     AtomRef atom(ctx, JS_NewAtom(ctx, name));
-    return definePropertyImpl(ctx, OBJVAL(obj), atom.atom, toJS(value), getter, setter, flags);
+    return definePropertyImpl(ctx, OBJVAL(obj), atom.atom, toJS(value), getter,
+        setter, flags);
 }
 
 bool lookupProperty(Context cx, Object obj, const char* name, Value* vp)
@@ -3014,13 +3317,15 @@ bool hasProperty(Context cx, Object obj, const char* name, bool* found)
 
 bool deleteProperty(Context cx, Object obj, const char* name)
 {
-    // JS_DeleteProperty succeeds (without deleting) on a permanent property in non-strict code.
+    // JS_DeleteProperty succeeds (without deleting) on a permanent property in
+    // non-strict code.
     JSContext* ctx = CX(cx);
     AtomRef atom(ctx, JS_NewAtom(ctx, name));
     return JS_DeleteProperty(ctx, OBJVAL(obj), atom.atom, 0) >= 0;
 }
 
-bool getMethodById(Context cx, Object obj, PropertyId id, Object* objp, Value* vp)
+bool getMethodById(Context cx, Object obj, PropertyId id, Object* objp,
+    Value* vp)
 {
     if (objp != nullptr)
         *objp = obj;
@@ -3032,10 +3337,12 @@ bool defineProperties(Context cx, Object obj, const PropertySpec* ps)
     return definePropertySpecs(CX(cx), OBJVAL(obj), ps);
 }
 
-Function defineFunction(Context cx, Object obj, const char* name, NativeFn call, unsigned nargs, PropertyFlag flags)
+Function defineFunction(Context cx, Object obj, const char* name, NativeFn call,
+    unsigned nargs, PropertyFlag flags)
 {
     JSContext* ctx = CX(cx);
-    JSValue f = defineNative(ctx, OBJVAL(obj), name, call, nargs, static_cast<std::uint8_t>(flags));
+    JSValue f = defineNative(ctx, OBJVAL(obj), name, call, nargs,
+        static_cast<std::uint8_t>(flags));
     if (JS_IsException(f))
         return nullptr;
     return reinterpret_cast<Function>(takeObject(ctx, f));
@@ -3046,11 +3353,21 @@ bool defineFunctions(Context cx, Object obj, const FunctionSpec* fs)
     return defineFunctionSpecs(CX(cx), OBJVAL(obj), fs);
 }
 
-// MARK: Elements and arrays -------------------------------------------------------------------------
+// MARK: Elements and arrays
+// -------------------------------------------------------------------------
 
-bool setElement(Context cx, Object obj, std::int32_t index, Value* vp) { return setPropertyById(cx, obj, int32Id(index), vp); }
-bool getElement(Context cx, Object obj, std::int32_t index, Value* vp) { return getPropertyById(cx, obj, int32Id(index), vp); }
-bool lookupElement(Context cx, Object obj, std::int32_t index, Value* vp) { return lookupPropertyById(cx, obj, int32Id(index), vp); }
+bool setElement(Context cx, Object obj, std::int32_t index, Value* vp)
+{
+    return setPropertyById(cx, obj, int32Id(index), vp);
+}
+bool getElement(Context cx, Object obj, std::int32_t index, Value* vp)
+{
+    return getPropertyById(cx, obj, int32Id(index), vp);
+}
+bool lookupElement(Context cx, Object obj, std::int32_t index, Value* vp)
+{
+    return lookupPropertyById(cx, obj, int32Id(index), vp);
+}
 
 Object newArrayObject(Context cx, std::int32_t length, Value* vector)
 {
@@ -3073,7 +3390,10 @@ Object newArrayObject(Context cx, std::int32_t length, Value* vector)
     return takeObject(ctx, arr);
 }
 
-bool isArrayObject(Context /*cx*/, Object obj) { return obj != nullptr && JS_IsArray(OBJVAL(obj)); }
+bool isArrayObject(Context /*cx*/, Object obj)
+{
+    return obj != nullptr && JS_IsArray(OBJVAL(obj));
+}
 
 bool getArrayLength(Context cx, Object obj, std::uint32_t* length)
 {
@@ -3089,14 +3409,17 @@ bool setArrayLength(Context cx, Object obj, std::uint32_t length)
     return JS_SetLength(CX(cx), OBJVAL(obj), length) >= 0;
 }
 
-// MARK: Enumeration ----------------------------------------------------------------------------------
+// MARK: Enumeration
+// ----------------------------------------------------------------------------------
 
 IdArray* enumerate(Context cx, Object obj)
 {
     JSContext* ctx = CX(cx);
     JSPropertyEnum* tab = nullptr;
     std::uint32_t len = 0;
-    if (JS_GetOwnPropertyNames(ctx, &tab, &len, OBJVAL(obj), JS_GPN_STRING_MASK | JS_GPN_ENUM_ONLY) < 0)
+    if (JS_GetOwnPropertyNames(ctx, &tab, &len, OBJVAL(obj),
+            JS_GPN_STRING_MASK | JS_GPN_ENUM_ONLY)
+        < 0)
         return nullptr;
     auto* out = new IdArray { };
     out->length = len;
@@ -3116,7 +3439,8 @@ void destroyIdArray(Context /*cx*/, IdArray* ida)
     delete ida;
 }
 
-// MARK: Functions ----------------------------------------------------------------------------------
+// MARK: Functions
+// ----------------------------------------------------------------------------------
 
 String getFunctionId(Function fn)
 {
@@ -3149,7 +3473,8 @@ NativeFn getFunctionNative(Context /*cx*/, Function fn)
     return rec != nullptr ? rec->fn : nullptr;
 }
 
-bool callFunctionValue(Context cx, Object thisObj, Value fn, unsigned argc, Value* argv, Value* rval)
+bool callFunctionValue(Context cx, Object thisObj, Value fn, unsigned argc,
+    Value* argv, Value* rval)
 {
     JSContext* ctx = CX(cx);
     std::vector<JSValue> args(argc);
@@ -3158,7 +3483,8 @@ bool callFunctionValue(Context cx, Object thisObj, Value fn, unsigned argc, Valu
     JSValue r;
     {
         CallThisMark mark(OBJVAL_OR_NULL(thisObj));
-        r = JS_Call(ctx, toJS(fn), OBJVAL_OR_NULL(thisObj), static_cast<int>(argc), args.data());
+        r = JS_Call(ctx, toJS(fn), OBJVAL_OR_NULL(thisObj), static_cast<int>(argc),
+            args.data());
     }
     if (JS_IsException(r)) {
         if (rval != nullptr)
@@ -3172,7 +3498,8 @@ bool callFunctionValue(Context cx, Object thisObj, Value fn, unsigned argc, Valu
     return true;
 }
 
-bool callFunctionName(Context cx, Object thisObj, const char* name, unsigned argc, Value* argv, Value* rval)
+bool callFunctionName(Context cx, Object thisObj, const char* name,
+    unsigned argc, Value* argv, Value* rval)
 {
     JSContext* ctx = CX(cx);
     Value fn = undefinedValue();
@@ -3181,21 +3508,29 @@ bool callFunctionName(Context cx, Object thisObj, const char* name, unsigned arg
     return callFunctionValue(cx, thisObj, fn, argc, argv, rval);
 }
 
-// MARK: Script evaluation ---------------------------------------------------------------------------
+// MARK: Script evaluation
+// ---------------------------------------------------------------------------
 
-bool evaluateScript(Context cx, Object scope, const char* src, unsigned length, const char* filename, unsigned lineno, Value* rval)
+bool evaluateScript(Context cx, Object scope, const char* src, unsigned length,
+    const char* filename, unsigned lineno, Value* rval)
 {
-    return evalWithThis(CX(cx), scope, std::string(src, length), filename, lineno, rval);
+    return evalWithThis(CX(cx), scope, std::string(src, length), filename, lineno,
+        rval);
 }
 
-bool evaluateUCScript(Context cx, Object scope, const Char16* src, unsigned length, const char* filename, unsigned lineno, Value* rval)
+bool evaluateUCScript(Context cx, Object scope, const Char16* src,
+    unsigned length, const char* filename, unsigned lineno,
+    Value* rval)
 {
-    return evalWithThis(CX(cx), scope, toUtf8(src, length), filename, lineno, rval);
+    return evalWithThis(CX(cx), scope, toUtf8(src, length), filename, lineno,
+        rval);
 }
 
-// MARK: Scripts -----------------------------------------------------------------------------
+// MARK: Scripts
+// -----------------------------------------------------------------------------
 
-Script compileUCScript(Context cx, Object scope, const Char16* src, unsigned length, const char* filename, unsigned lineno)
+Script compileUCScript(Context cx, Object scope, const Char16* src,
+    unsigned length, const char* filename, unsigned lineno)
 {
     JSContext* ctx = CX(cx);
     auto* s = new ScriptRep();
@@ -3204,8 +3539,10 @@ Script compileUCScript(Context cx, Object scope, const Char16* src, unsigned len
     s->filename = filename != nullptr ? filename : "";
     s->lineno = lineno != 0 ? static_cast<int>(lineno) : 1;
     JSValue global = JS_GetGlobalObject(ctx);
-    JSEvalOptions o = evalOptions(s->filename.c_str(), static_cast<unsigned>(s->lineno), JS_EVAL_FLAG_COMPILE_ONLY);
-    s->bytecode = JS_EvalThis2(ctx, scope != nullptr ? OBJVAL(scope) : global, s->source.c_str(), s->source.size(), &o);
+    JSEvalOptions o = evalOptions(s->filename.c_str(), static_cast<unsigned>(s->lineno),
+        JS_EVAL_FLAG_COMPILE_ONLY);
+    s->bytecode = JS_EvalThis2(ctx, scope != nullptr ? OBJVAL(scope) : global,
+        s->source.c_str(), s->source.size(), &o);
     JS_FreeValue(ctx, global);
     if (JS_IsException(s->bytecode)) {
         delete s;
@@ -3235,8 +3572,10 @@ bool executeScript(Context cx, Object obj, Script script, Value* rval)
         return false;
     Object global = getGlobalObject(cx);
     if (obj != nullptr && obj != global) {
-        // QuickJS-ng runs precompiled global code only with the global object as `this`.
-        return evalWithThis(ctx, obj, script->source, script->filename.c_str(), static_cast<unsigned>(script->lineno), rval);
+        // QuickJS-ng runs precompiled global code only with the global object as
+        // `this`.
+        return evalWithThis(ctx, obj, script->source, script->filename.c_str(),
+            static_cast<unsigned>(script->lineno), rval);
     }
     JSValue r = JS_EvalFunction(ctx, JS_DupValue(ctx, script->bytecode));
     if (JS_IsException(r)) {
@@ -3267,7 +3606,8 @@ bool serializeScript(Context cx, Script script, ByteBuffer* out)
     std::uint8_t* bc = JS_WriteObject(ctx, &bcLen, script->bytecode, JS_WRITE_OBJ_BYTECODE);
     if (bc == nullptr)
         return false;
-    std::vector<std::uint8_t> blob(kScriptMagic, kScriptMagic + sizeof kScriptMagic);
+    std::vector<std::uint8_t> blob(kScriptMagic,
+        kScriptMagic + sizeof kScriptMagic);
     writeU32(blob, static_cast<std::uint32_t>(script->lineno));
     writeU32(blob, static_cast<std::uint32_t>(script->filename.size()));
     blob.insert(blob.end(), script->filename.begin(), script->filename.end());
@@ -3285,7 +3625,8 @@ bool serializeScript(Context cx, Script script, ByteBuffer* out)
     return true;
 }
 
-Script deserializeScript(Context cx, const std::uint8_t* data, std::size_t length)
+Script deserializeScript(Context cx, const std::uint8_t* data,
+    std::size_t length)
 {
     JSContext* ctx = CX(cx);
     if (data == nullptr || length < sizeof kScriptMagic || std::memcmp(data, kScriptMagic, sizeof kScriptMagic) != 0)
@@ -3326,11 +3667,13 @@ void destroyByteBuffer(ByteBuffer* buf)
     buf->length = 0;
 }
 
-// MARK: Strings ---------------------------------------------------------------------------------
+// MARK: Strings
+// ---------------------------------------------------------------------------------
 
 namespace {
 
-    // Keeps an interned string for the runtime's life (SpiderMonkey never collects ATOM_INTERNED).
+    // Keeps an interned string for the runtime's life (SpiderMonkey never collects
+    // ATOM_INTERNED).
     String keepInterned(JSContext* ctx, JSAtom atom)
     {
         if (atom == JS_ATOM_NULL)
@@ -3382,7 +3725,9 @@ String newStringCopyN(Context cx, const char* s, std::size_t n)
 String newUCStringCopyN(Context cx, const Char16* s, std::size_t n)
 {
     JSContext* ctx = CX(cx);
-    return takeString(ctx, JS_NewStringUTF16(ctx, reinterpret_cast<const std::uint16_t*>(s), n));
+    return takeString(
+        ctx,
+        JS_NewStringUTF16(ctx, reinterpret_cast<const std::uint16_t*>(s), n));
 }
 
 Value emptyStringValue(Context cx)
@@ -3398,7 +3743,8 @@ std::size_t getStringLength(String str)
     return len;
 }
 
-const Char16* getStringCharsAndLength(Context cx, String str, std::size_t* length)
+const Char16* getStringCharsAndLength(Context cx, String str,
+    std::size_t* length)
 {
     return stringChars(ctxOr(cx), str, length);
 }
@@ -3432,12 +3778,15 @@ bool stringHasBeenInterned(Context cx, String str)
 
 void setCStringsAreUTF8() { } // QuickJS-ng always reads C strings as UTF-8
 
-// MARK: Regular expressions -----------------------------------------------------------------
+// MARK: Regular expressions
+// -----------------------------------------------------------------
 
-Object newUCRegExpObjectNoStatics(Context cx, const Char16* chars, std::size_t length, std::uint32_t flags)
+Object newUCRegExpObjectNoStatics(Context cx, const Char16* chars,
+    std::size_t length, std::uint32_t flags)
 {
-    // SpiderMonkey 1.8.5 regexp flag bits: JSREG_FOLD 1, JSREG_GLOB 2, JSREG_MULTILINE 4, JSREG_STICKY 8.
-    // QuickJS-ng has no RegExp statics at all, so every RegExp is a "no statics" one.
+    // SpiderMonkey 1.8.5 regexp flag bits: JSREG_FOLD 1, JSREG_GLOB 2,
+    // JSREG_MULTILINE 4, JSREG_STICKY 8. QuickJS-ng has no RegExp statics at all,
+    // so every RegExp is a "no statics" one.
     JSContext* ctx = CX(cx);
     std::string f;
     if (flags & 0x2)
@@ -3451,7 +3800,11 @@ Object newUCRegExpObjectNoStatics(Context cx, const Char16* chars, std::size_t l
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue ctor = JS_GetPropertyStr(ctx, global, "RegExp");
     JS_FreeValue(ctx, global);
-    JSValue args[2] = { JS_NewStringUTF16(ctx, reinterpret_cast<const std::uint16_t*>(chars), length), JS_NewStringLen(ctx, f.c_str(), f.size()) };
+    JSValue args[2] = {
+        JS_NewStringUTF16(ctx, reinterpret_cast<const std::uint16_t*>(chars),
+            length),
+        JS_NewStringLen(ctx, f.c_str(), f.size())
+    };
     JSValue re = JS_CallConstructor(ctx, ctor, 2, args);
     JS_FreeValue(ctx, args[0]);
     JS_FreeValue(ctx, args[1]);
@@ -3461,10 +3814,11 @@ Object newUCRegExpObjectNoStatics(Context cx, const Char16* chars, std::size_t l
     return takeObject(ctx, re);
 }
 
-// MARK: Exceptions and error reporting ----------------------------------------------------------
+// MARK: Exceptions and error reporting
+// ----------------------------------------------------------
 //
-// QuickJS-ng keeps one pending exception per runtime; JS_GetException both reads AND clears it,
-// so a read re-arms it with JS_Throw straight away.
+// QuickJS-ng keeps one pending exception per runtime; JS_GetException both
+// reads AND clears it, so a read re-arms it with JS_Throw straight away.
 
 bool isExceptionPending(Context cx) { return JS_HasException(CX(cx)); }
 
@@ -3494,7 +3848,10 @@ void clearPendingException(Context cx)
 
 bool reportPendingException(Context cx) { return reportPendingImpl(CX(cx)); }
 
-void reportError(Context cx, const char* message) { reportErrorImpl(CX(cx), message); }
+void reportError(Context cx, const char* message)
+{
+    reportErrorImpl(CX(cx), message);
+}
 
 bool reportWarning(Context cx, const char* message)
 {
@@ -3504,19 +3861,22 @@ bool reportWarning(Context cx, const char* message)
     unsigned line = 0;
     currentLocation(ctx, &file, &line);
     const std::u16string uc = utf8ToU16(message);
-    invokeReporter(ctx, message, static_cast<unsigned>(ReportFlag::Warning), &file, line, &uc);
+    invokeReporter(ctx, message, static_cast<unsigned>(ReportFlag::Warning),
+        &file, line, &uc);
     return true;
 }
 
 void reportOutOfMemory(Context cx)
 {
-    // js_ReportOutOfMemory: clear any pending exception and report; nothing is left pending, so a
-    // native returning false after this aborts the script uncatchably.
+    // js_ReportOutOfMemory: clear any pending exception and report; nothing is
+    // left pending, so a native returning false after this aborts the script
+    // uncatchably.
     JSContext* ctx = CX(cx);
     if (JS_HasException(ctx))
         JS_FreeValue(ctx, JS_GetException(ctx));
     const std::u16string uc = u"out of memory";
-    invokeReporter(ctx, "out of memory", static_cast<unsigned>(ReportFlag::Error), nullptr, 0, &uc);
+    invokeReporter(ctx, "out of memory", static_cast<unsigned>(ReportFlag::Error),
+        nullptr, 0, &uc);
 }
 
 ErrorReporter setErrorReporter(Context cx, ErrorReporter reporter)
@@ -3561,11 +3921,13 @@ void dropExceptionState(Context cx, ExceptionState* state)
     delete state;
 }
 
-// MARK: GC roots ----------------------------------------------------------------------------
+// MARK: GC roots
+// ----------------------------------------------------------------------------
 //
-// A root is an address; flushArena() reads it when it runs (see the banner). Adding a root also
-// takes an arena reference to the value there now, so a value rooted straight after it was
-// created stays alive even if the arena it came in on is flushed before the root is first read.
+// A root is an address; flushArena() reads it when it runs (see the banner).
+// Adding a root also takes an arena reference to the value there now, so a
+// value rooted straight after it was created stays alive even if the arena it
+// came in on is flushed before the root is first read.
 
 namespace {
 
@@ -3590,21 +3952,26 @@ namespace {
 
 bool addNamedObjectRoot(Context cx, Object* rp, const char* /*name*/)
 {
-    return addRoot(cx, rp, RootSlot::Object, (rp != nullptr && *rp != nullptr) ? OBJVAL(*rp) : JS_NULL);
+    return addRoot(cx, rp, RootSlot::Object,
+        (rp != nullptr && *rp != nullptr) ? OBJVAL(*rp) : JS_NULL);
 }
 bool addNamedValueRoot(Context cx, Value* vp, const char* /*name*/)
 {
-    return addRoot(cx, vp, RootSlot::Value, vp != nullptr ? toJS(*vp) : JS_UNDEFINED);
+    return addRoot(cx, vp, RootSlot::Value,
+        vp != nullptr ? toJS(*vp) : JS_UNDEFINED);
 }
 bool addNamedStringRoot(Context cx, String* sp, const char* /*name*/)
 {
-    return addRoot(cx, sp, RootSlot::String, (sp != nullptr && *sp != nullptr) ? STRVAL(*sp) : JS_UNDEFINED);
+    return addRoot(
+        cx, sp, RootSlot::String,
+        (sp != nullptr && *sp != nullptr) ? STRVAL(*sp) : JS_UNDEFINED);
 }
 bool removeObjectRoot(Context cx, Object* rp) { return removeRoot(cx, rp); }
 bool removeValueRoot(Context cx, Value* vp) { return removeRoot(cx, vp); }
 bool removeStringRoot(Context cx, String* sp) { return removeRoot(cx, sp); }
 
-// MARK: Runtime, contexts -------------------------------------------------------------------------
+// MARK: Runtime, contexts
+// -------------------------------------------------------------------------
 
 Runtime newRuntime(std::uint32_t maxBytes)
 {
@@ -3661,8 +4028,9 @@ void destroyRuntime(Runtime rt)
             JS_FreeValueRT(jrt, JS_MKPTR(JS_TAG_STRING, s));
         rs->permanentStrings.clear();
     }
-    // Erase after freeing: JS_FreeRuntime runs the pending finalizers, and FinalizeTramp looks up
-    // gCtxForRuntime (already erased by destroyContext() when the context went first, bead oo-902s).
+    // Erase after freeing: JS_FreeRuntime runs the pending finalizers, and
+    // FinalizeTramp looks up gCtxForRuntime (already erased by destroyContext()
+    // when the context went first).
     JS_FreeRuntime(jrt);
     gCtxForRuntime.erase(jrt);
     delete rs;
@@ -3701,11 +4069,14 @@ void destroyContext(Context cx)
     ContextState* cs = csOf(ctx);
     RuntimeState* rs = rsOf(ctx);
     if (cs != nullptr) {
-        rs->contexts.erase(std::remove(rs->contexts.begin(), rs->contexts.end(), cs), rs->contexts.end());
+        rs->contexts.erase(
+            std::remove(rs->contexts.begin(), rs->contexts.end(), cs),
+            rs->contexts.end());
         if (rs->contexts.empty()) {
-            // The last context: nothing can read a root again, so release everything. (With other
-            // contexts still alive the arena is left for the next gc(): the caller may be holding
-            // unrooted handles, which SpiderMonkey's conservative scan would have kept.)
+            // The last context: nothing can read a root again, so release everything.
+            // (With other contexts still alive the arena is left for the next gc():
+            // the caller may be holding unrooted handles, which SpiderMonkey's
+            // conservative scan would have kept.)
             rs->roots.clear();
             releaseScopes(JS_GetRuntime(ctx));
             flushArena(rs, false);
@@ -3717,9 +4088,9 @@ void destroyContext(Context cx)
         delete cs;
     }
 
-    // Erase gCtxForRuntime's entry for this context (bead oo-902s) before freeing it, so a
-    // finalizer that runs later (QuickJS-ng finalizes cycles lazily, in JS_FreeRuntime) sees no
-    // context rather than this dangling one.
+    // Erase gCtxForRuntime's entry for this context before freeing
+    // it, so a finalizer that runs later (QuickJS-ng finalizes cycles lazily, in
+    // JS_FreeRuntime) sees no context rather than this dangling one.
     JSRuntime* jrt = JS_GetRuntime(ctx);
     auto it = gCtxForRuntime.find(jrt);
     if (it != gCtxForRuntime.end() && it->second == ctx) {
@@ -3738,7 +4109,8 @@ Runtime getRuntime(Context cx) { return wrap(JS_GetRuntime(CX(cx))); }
 void* getContextPrivate(Context cx) { return JS_GetContextOpaque(CX(cx)); }
 void setContextPrivate(Context cx, void* d) { JS_SetContextOpaque(CX(cx), d); }
 
-// MARK: Requests ------------------------------------------------------------------------------------
+// MARK: Requests
+// ------------------------------------------------------------------------------------
 
 void beginRequest(Context cx)
 {
@@ -3760,9 +4132,13 @@ bool isInRequest(Context cx)
     return cs != nullptr && cs->requestDepth > 0;
 }
 
-bool isThreadsafeBuild() { return false; } // QuickJS-ng runtimes are single-threaded; requests are bookkeeping
+bool isThreadsafeBuild()
+{
+    return false;
+} // QuickJS-ng runtimes are single-threaded; requests are bookkeeping
 
-// MARK: Options and versions ------------------------------------------------------------------------
+// MARK: Options and versions
+// ------------------------------------------------------------------------
 
 ContextOption setOptions(Context cx, ContextOption options)
 {
@@ -3811,7 +4187,8 @@ const char* versionToString(Version v)
     return "unknown";
 }
 
-// MARK: Garbage collection ----------------------------------------------------------------------------
+// MARK: Garbage collection
+// ----------------------------------------------------------------------------
 
 std::uint32_t getGCParameter(Runtime rt, GCParam key)
 {
@@ -3825,7 +4202,11 @@ std::uint32_t getGCParameter(Runtime rt, GCParam key)
         JSMemoryUsage u { };
         JS_ComputeMemoryUsage(RT(rt), &u);
         const std::int64_t b = u.malloc_size;
-        return b < 0 ? 0 : (b > static_cast<std::int64_t>(std::numeric_limits<std::uint32_t>::max()) ? std::numeric_limits<std::uint32_t>::max() : static_cast<std::uint32_t>(b));
+        return b < 0 ? 0
+                     : (b > static_cast<std::int64_t>(
+                            std::numeric_limits<std::uint32_t>::max())
+                               ? std::numeric_limits<std::uint32_t>::max()
+                               : static_cast<std::uint32_t>(b));
     }
     case GCParam::NumberOfGCs:
         return rs->gcCount;
@@ -3864,8 +4245,9 @@ void gc(Context cx)
 
 void maybeGC(Context cx)
 {
-    // QuickJS-ng schedules its own cycle collection on allocation; what only the façade can do is
-    // drop the arena's references, which frees every acyclic unreachable value immediately.
+    // QuickJS-ng schedules its own cycle collection on allocation; what only the
+    // façade can do is drop the arena's references, which frees every acyclic
+    // unreachable value immediately.
     RuntimeState* rs = rsOf(CX(cx));
     if (canFlush(rs))
         flushArena(rs, true);
@@ -3874,7 +4256,8 @@ void maybeGC(Context cx)
 void setGCZeal(Context /*cx*/, std::uint8_t /*zeal*/) { }
 bool gcZealSupported() { return false; }
 
-// MARK: Operation callback ------------------------------------------------------------------------------
+// MARK: Operation callback
+// ------------------------------------------------------------------------------
 
 OperationCallback setOperationCallback(Context cx, OperationCallback cb)
 {
@@ -3899,15 +4282,18 @@ void triggerAllOperationCallbacks(Runtime rt)
         cs->triggered.store(true);
 }
 
-// MARK: Completing the retarget (bead oo-1gc.3) -------------------------------------------------
+// MARK: Completing the retarget
+// -------------------------------------------------
 
-// QuickJS-ng has no threads to hand a request to, so a suspension is a no-op token.
+// QuickJS-ng has no threads to hand a request to, so a suspension is a no-op
+// token.
 unsigned suspendRequest(Context) { return 0; }
 void resumeRequest(Context, unsigned) { }
 
 bool compareStrings(Context cx, String a, String b, std::int32_t* result)
 {
-    // SpiderMonkey compares UTF-16 code units lexicographically and returns their difference's sign.
+    // SpiderMonkey compares UTF-16 code units lexicographically and returns their
+    // difference's sign.
     JSContext* ctx = CX(cx);
     const std::u16string sa = toU16(ctx, toJS(stringValue(a)));
     const std::u16string sb = toU16(ctx, toJS(stringValue(b)));
@@ -3932,12 +4318,15 @@ bool freezeObject(Context cx, Object obj)
     return ok ? true : finish(ctx, false);
 }
 
-Function compileUCFunction(Context cx, Object scope, const char* name, unsigned nargs, const char** argnames,
-    const Char16* chars, std::size_t length, const char* filename, unsigned lineno)
+Function compileUCFunction(Context cx, Object scope, const char* name,
+    unsigned nargs, const char** argnames,
+    const Char16* chars, std::size_t length,
+    const char* filename, unsigned lineno)
 {
-    // The engine compiles a function from a body and a parameter list. The same source text is
-    // built here as one parenthesised function expression whose body starts on a new line, so the
-    // body's line numbers are the caller's `lineno` exactly (the header line is lineno - 1).
+    // The engine compiles a function from a body and a parameter list. The same
+    // source text is built here as one parenthesised function expression whose
+    // body starts on a new line, so the body's line numbers are the caller's
+    // `lineno` exactly (the header line is lineno - 1).
     std::string src = "(function ";
     if (name != nullptr)
         src += name;
@@ -3959,20 +4348,25 @@ Function compileUCFunction(Context cx, Object scope, const char* name, unsigned 
     return reinterpret_cast<Function>(toObject(fv));
 }
 
-bool callFunction(Context cx, Object thisObj, Function fn, unsigned argc, Value* argv, Value* rval)
+bool callFunction(Context cx, Object thisObj, Function fn, unsigned argc,
+    Value* argv, Value* rval)
 {
-    return callFunctionValue(cx, thisObj, objectValue(reinterpret_cast<Object>(fn)), argc, argv, rval);
+    return callFunctionValue(
+        cx, thisObj, objectValue(reinterpret_cast<Object>(fn)), argc, argv, rval);
 }
 
-bool bufferIsCompilableUnit(Context cx, Object obj, const char* bytes, std::size_t length)
+bool bufferIsCompilableUnit(Context cx, Object obj, const char* bytes,
+    std::size_t length)
 {
-    // "Would more input help?" SpiderMonkey answers false only when compilation fails because the
-    // text ended early; any other outcome (success, or a different syntax error) is a unit.
+    // "Would more input help?" SpiderMonkey answers false only when compilation
+    // fails because the text ended early; any other outcome (success, or a
+    // different syntax error) is a unit.
     JSContext* ctx = CX(cx);
     JSValue global = JS_GetGlobalObject(ctx);
     JSEvalOptions o = evalOptions("typein", 1, JS_EVAL_FLAG_COMPILE_ONLY);
     const std::string src(bytes, length);
-    JSValue r = JS_EvalThis2(ctx, obj != nullptr ? OBJVAL(obj) : global, src.c_str(), src.size(), &o);
+    JSValue r = JS_EvalThis2(ctx, obj != nullptr ? OBJVAL(obj) : global,
+        src.c_str(), src.size(), &o);
     JS_FreeValue(ctx, global);
     if (!JS_IsException(r)) {
         JS_FreeValue(ctx, r);
@@ -3983,17 +4377,18 @@ bool bufferIsCompilableUnit(Context cx, Object obj, const char* bytes, std::size
     const std::string msg = JS_IsString(m) ? toStdString(ctx, m) : std::string();
     JS_FreeValue(ctx, m);
     JS_FreeValue(ctx, e);
-    return msg.find("end of") == std::string::npos && msg.find("unexpected end") == std::string::npos
-        && msg.find("expecting") == std::string::npos;
+    return msg.find("end of") == std::string::npos && msg.find("unexpected end") == std::string::npos && msg.find("expecting") == std::string::npos;
 }
 
-// MARK: Debugging and profiling -----------------------------------------------------------------
+// MARK: Debugging and profiling
+// -----------------------------------------------------------------
 //
-// QuickJS-ng exposes no frame objects; the stack it can describe is the one an Error records. A
-// walk therefore snapshots `new Error().stack` when it starts and hands out 1-based indices into
-// that snapshot. Frames carry a filename and line only: no `this`, no scope chain, no variables,
-// and the debugger/profiler hooks have nothing to attach to. These are diagnostics only
-// (JSEngine.hpp: nothing here may affect what a golden observes).
+// QuickJS-ng exposes no frame objects; the stack it can describe is the one an
+// Error records. A walk therefore snapshots `new Error().stack` when it starts
+// and hands out 1-based indices into that snapshot. Frames carry a filename and
+// line only: no `this`, no scope chain, no variables, and the debugger/profiler
+// hooks have nothing to attach to. These are diagnostics only (JSEngine.hpp:
+// nothing here may affect what a golden observes).
 
 namespace {
     struct FrameSnapshot {
@@ -4004,7 +4399,8 @@ namespace {
         std::vector<Frame> frames;
     };
     std::unordered_map<JSContext*, FrameSnapshot>& gFrames = *new std::unordered_map<JSContext*, FrameSnapshot>;
-    std::unordered_map<std::string, ScriptRep*>& gFrameScripts = *new std::unordered_map<std::string, ScriptRep*>; // one stable Script token per filename
+    std::unordered_map<std::string, ScriptRep*>& gFrameScripts = *new std::unordered_map<std::string, ScriptRep*>; // one stable Script
+                                                                                                                   // token per filename
 
     void snapshotFrames(JSContext* ctx)
     {
@@ -4040,7 +4436,7 @@ namespace {
             return nullptr;
         return &it->second.frames[i - 1];
     }
-}
+} // namespace
 
 StackFrame frameIterator(Context cx, StackFrame* iter)
 {
@@ -4056,7 +4452,10 @@ StackFrame frameIterator(Context cx, StackFrame* iter)
     *iter = reinterpret_cast<StackFrame>(i);
     return *iter;
 }
-bool frameIsScript(Context cx, StackFrame fp) { return frameAt(CX(cx), fp) != nullptr; }
+bool frameIsScript(Context cx, StackFrame fp)
+{
+    return frameAt(CX(cx), fp) != nullptr;
+}
 bool frameIsConstructor(Context, StackFrame) { return false; }
 bool frameIsDebugger(Context, StackFrame) { return false; }
 Script frameScript(Context cx, StackFrame fp)
@@ -4066,12 +4465,16 @@ Script frameScript(Context cx, StackFrame fp)
         return nullptr;
     ScriptRep*& token = gFrameScripts[f->file];
     if (token == nullptr) {
-        token = new ScriptRep(); // never compiled and never freed: an identity for the filename
+        token = new ScriptRep(); // never compiled and never freed: an identity for
+                                 // the filename
         token->filename = f->file;
     }
     return token;
 }
-const char* scriptFilename(Context, Script script) { return script != nullptr ? script->filename.c_str() : nullptr; }
+const char* scriptFilename(Context, Script script)
+{
+    return script != nullptr ? script->filename.c_str() : nullptr;
+}
 unsigned frameLineNumber(Context cx, StackFrame fp)
 {
     const FrameSnapshot::Frame* f = frameAt(CX(cx), fp);
@@ -4109,18 +4512,22 @@ bool dumpHeap(Context cx, void* file)
     return true;
 }
 
-// MARK: Backend identity ----------------------------------------------------------------------
+// MARK: Backend identity
+// ----------------------------------------------------------------------
 
-// The pre-existing unit test pins this exact string (the engine and its vendored version).
+// The pre-existing unit test pins this exact string (the engine and its
+// vendored version).
 const char* backendName() { return "quickjs-ng-0.16.2"; }
 
-// MARK: Test-only glue (not part of the façade) ------------------------------------------------
+// MARK: Test-only glue (not part of the façade)
+// ------------------------------------------------
 //
-// A per-class (name -> tinyid) table consulted by get_own_property/get_own_property_names so the
-// resolve/enumerate hooks can be exercised with int ids before initClass existed (bead oo-0kq's
-// unit test). initClass does not use it.
+// A per-class (name -> tinyid) table consulted by
+// get_own_property/get_own_property_names so the resolve/enumerate hooks can be
+// exercised with int ids in unit tests. initClass does not use it.
 
-void registerResolvableProperty(Context cx, ClassDef* def, const char* name, std::int32_t tinyid)
+void registerResolvableProperty(Context cx, ClassDef* def, const char* name,
+    std::int32_t tinyid)
 {
     BackendClass* bc = attach(def, CX(cx));
     if (bc != nullptr)

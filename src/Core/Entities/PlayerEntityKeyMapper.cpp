@@ -50,9 +50,10 @@ oo::PList kdic_check; // keyconfig2.plist's definitions; null until -initCheckin
 std::vector<std::string> nav_keys; // functions that can't be used with mod keys
 std::vector<std::string> camera_keys; // functions that can't be used with ctrl
 
-// -oo_stringForKey: where the old code could read nil (proposed ADR-0043): a string, or a number's
+// -oo_stringForKey: where the old code could read nil: a string, or a number's
 // -stringValue; nullopt when the key is absent or holds anything else.
-std::optional<std::string> OptionalStringForKey(const oo::PList& dict, std::string_view key)
+std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
+    std::string_view key)
 {
     const oo::PList* value = dict.find(key);
     if (value == nullptr || !(value->isString() || value->isNumber()))
@@ -1085,8 +1086,12 @@ std::vector<oo::PList> PlayerEntity::keyFunctionList()
     funcList.push_back(makeKeyGuiDict(OO_DESC("oolite-keydesc-key_mouse_control_yaw"), "key_mouse_control_yaw"));
     funcList.push_back(makeKeyGuiDict(OO_DESC("oolite-keydesc-key_hud_toggle"), "key_hud_toggle"));
 #if OO_FOV_INFLIGHT_CONTROL_ENABLED
-    funcList.push_back(makeKeyGuiDict(OO_DESC("oolite-keydesc-key_inc_field_of_view"), "key_inc_field_of_view")); // the member (bead oo-w9pi2)
-    funcList.push_back(makeKeyGuiDict(OO_DESC("oolite-keydesc-key_dec_field_of_view"), "key_dec_field_of_view"));
+    funcList.push_back(
+        makeKeyGuiDict(OO_DESC("oolite-keydesc-key_inc_field_of_view"),
+            "key_inc_field_of_view"));
+    funcList.push_back(
+        makeKeyGuiDict(OO_DESC("oolite-keydesc-key_dec_field_of_view"),
+            "key_dec_field_of_view"));
 #endif
     funcList.push_back(makeKeyGuiDict(OO_DESC("oolite-keydesc-key_comms_log"), "key_comms_log"));
 
@@ -1285,13 +1290,15 @@ std::vector<oo::PList> PlayerEntity::keyboardLayoutList()
         }
     }
 
-    // Sorted by "description", ascending, with -compare:, stably: what the sort descriptor did
-    // (bead oo-3rb.20). A missing description never sorted ascending (-compare: to or from nil).
-    std::stable_sort(kbdList.begin(), kbdList.end(), [](const oo::PList& a, const oo::PList& b) {
-        const std::optional<std::string> descriptionA = OptionalStringForKey(a, "description");
-        const std::optional<std::string> descriptionB = OptionalStringForKey(b, "description");
-        return descriptionA && descriptionB && oo::str::compare(*descriptionA, *descriptionB) < 0;
-    });
+    // Sorted by "description", ascending, with -compare:, stably: what the sort
+    // descriptor did. A missing description never sorted
+    // ascending (-compare: to or from nil).
+    std::stable_sort(kbdList.begin(), kbdList.end(),
+        [](const oo::PList& a, const oo::PList& b) {
+            const std::optional<std::string> descriptionA = OptionalStringForKey(a, "description");
+            const std::optional<std::string> descriptionB = OptionalStringForKey(b, "description");
+            return descriptionA && descriptionB && oo::str::compare(*descriptionA, *descriptionB) < 0;
+        });
     std::vector<oo::PList> sorted;
     sorted.reserve(kbdList.size() + 1);
     sorted.push_back(def);

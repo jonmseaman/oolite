@@ -23,8 +23,10 @@ MA 02110-1301, USA.
 */
 
 #include "OOCommodities.h"
-#include "OOCommodityMarket.h"
 
+#include <string_view>
+
+#include "OOCommodityMarket.h"
 #include "OOJSScript.h"
 #include "OOStringExpander.h"
 #include "PlayerEntity.h"
@@ -33,12 +35,10 @@ MA 02110-1301, USA.
 #include "legacy_random.h"
 #include "oofnd/PListGet.hpp"
 
-#include <string_view>
-
 namespace {
 
-// keys in trade-goods.plist (moved from OOCommodities.h by bead oo-3rb.154; sort_order,
-// trumble_opinion, comment and short_comment are read only by OOCommodityMarket.mm)
+// keys in trade-goods.plist (sort_order, trumble_opinion, comment and
+// short_comment are read only by OOCommodityMarket.mm)
 constexpr std::string_view kOOCommodityName = "name";
 constexpr std::string_view kOOCommodityClasses = "classes";
 constexpr std::string_view kOOCommodityContainer = "quantity_unit";
@@ -81,7 +81,8 @@ constexpr std::string_view kOOCommodityMarketTypeValueGood = "good";
 
 // oo_stringForKey: on a commodity's info: a string, or a number's -stringValue;
 // nullopt (nil) otherwise.
-std::optional<std::string> StringFor(const oo::PList& info, std::string_view key)
+std::optional<std::string> StringFor(const oo::PList& info,
+    std::string_view key)
 {
     const oo::PList* value = info.find(key);
     if (value == nullptr || !(value->isString() || value->isNumber()))
@@ -89,16 +90,19 @@ std::optional<std::string> StringFor(const oo::PList& info, std::string_view key
     return info.get<std::string>(key);
 }
 
-// -setObject:forKey: on a copy of an info dictionary (a Dict node; the per-good infos are).
+// -setObject:forKey: on a copy of an info dictionary (a Dict node; the per-good
+// infos are).
 void Set(oo::PList& info, std::string_view key, oo::PList value)
 {
     if (oo::PList::Dict* entries = info.getIf<oo::PList::Dict>())
         (*entries)[std::string(key)] = std::move(value);
 }
 
-// -oo_setUnsignedInteger:forKey: / -oo_setInteger:forKey: (+numberWithUnsignedInteger: /
-// +numberWithInteger:, which oo::PListFrom reads as an unsigned / signed integer).
-void SetUnsigned(oo::PList& info, std::string_view key, unsigned long long value)
+// -oo_setUnsignedInteger:forKey: / -oo_setInteger:forKey:
+// (+numberWithUnsignedInteger: / +numberWithInteger:, which oo::PListFrom reads
+// as an unsigned / signed integer).
+void SetUnsigned(oo::PList& info, std::string_view key,
+    unsigned long long value)
 {
     Set(info, key, oo::PList::unsignedInteger(value));
 }
@@ -168,10 +172,12 @@ std::optional<std::string> OOCommodities::legacyCommodityType(NSUInteger i)
 
 OOCommodities::OOCommodities()
 {
-    // ResourceManager's dictionary API is not migrated: the merged table arrives through oo::PListFrom.
-    // TODO: validation of inputs; convert 't', 'kg', 'g' in quantity_unit to 0, 1, 2 (for now it
-    // needs them entering as the ints).
-    const oo::PList rawCommodityLists = ResourceManager::dictionaryFromFilesNamed("trade-goods.plist", "Config", MERGE_SMART, YES);
+    // ResourceManager's dictionary API is not migrated: the merged table arrives
+    // through oo::PListFrom.
+    // TODO: validation of inputs; convert 't', 'kg', 'g' in quantity_unit to 0,
+    // 1, 2 (for now it needs them entering as the ints).
+    const oo::PList rawCommodityLists = ResourceManager::dictionaryFromFilesNamed(
+        "trade-goods.plist", "Config", MERGE_SMART, YES);
     if (const oo::PList::Dict* entries = rawCommodityLists.getIf<oo::PList::Dict>())
         _commodityLists = *entries;
 }
@@ -180,9 +186,10 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateManifestForPlayer()
 {
     oo::Ref<OOCommodityMarket> market = oo::makeRef<OOCommodityMarket>();
 
-    for (const auto& [commodity, info] : _commodityLists) // key order (bead oo-3rb.154)
+    for (const auto& [commodity, info] : _commodityLists) // key order
     {
-        oo::PList good = info.isDict() ? info : oo::PList(oo::PList::Dict { }); // +dictionaryWithDictionary: of the entry
+        oo::PList good = info.isDict() ? info : oo::PList(oo::PList::Dict { }); // +dictionaryWithDictionary:
+                                                                                // of the entry
         SetUnsigned(good, kOOCommodityPriceCurrent, 0);
         SetUnsigned(good, kOOCommodityQuantityCurrent, 0);
         /* The actual capacity of the player ship is a total, not
@@ -199,9 +206,10 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateBlankMarket()
 {
     oo::Ref<OOCommodityMarket> market = oo::makeRef<OOCommodityMarket>();
 
-    for (const auto& [commodity, info] : _commodityLists) // key order (bead oo-3rb.154)
+    for (const auto& [commodity, info] : _commodityLists) // key order
     {
-        oo::PList good = info.isDict() ? info : oo::PList(oo::PList::Dict { }); // +dictionaryWithDictionary: of the entry
+        oo::PList good = info.isDict() ? info : oo::PList(oo::PList::Dict { }); // +dictionaryWithDictionary:
+                                                                                // of the entry
         SetUnsigned(good, kOOCommodityPriceCurrent, 0);
         SetUnsigned(good, kOOCommodityQuantityCurrent, 0);
         SetUnsigned(good, kOOCommodityCapacity, 0);
@@ -212,7 +220,9 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateBlankMarket()
     return market;
 }
 
-oo::PList OOCommodities::createDefinitionFrom(const oo::PList& good, OOCreditsQuantity p, OOCargoQuantity q, const std::string& key, ::StationEntity* station, OOSystemID system)
+oo::PList OOCommodities::createDefinitionFrom(
+    const oo::PList& good, OOCreditsQuantity p, OOCargoQuantity q,
+    const std::string& key, ::StationEntity* station, OOSystemID system)
 {
     oo::PList definition = good;
     SetUnsigned(definition, kOOCommodityPriceCurrent, p);
@@ -232,22 +242,30 @@ oo::PList OOCommodities::createDefinitionFrom(const oo::PList& good, OOCreditsQu
     if (!goodScriptName.has_value()) {
         return definition;
     }
-    ::OOScript* goodScript = (PLAYER != nullptr ? PLAYER->commodityScriptNamed(goodScriptName) : (OOScript*)nullptr); // (has a value: checked above)
+    ::OOScript* goodScript = (PLAYER != nullptr ? PLAYER->commodityScriptNamed(goodScriptName)
+                                                : (OOScript*)nullptr); // (has a value: checked above)
     if (goodScript == nil) {
         return definition;
     }
     return modifyGood(definition, goodScript, station, system, false);
 }
 
-oo::PList OOCommodities::modifyGood(const oo::PList& good, ::OOScript* script, ::StationEntity* station, OOSystemID system, bool localMode)
+oo::PList OOCommodities::modifyGood(const oo::PList& good, ::OOScript* script,
+    ::StationEntity* station, OOSystemID system,
+    bool localMode)
 {
     ooscript::Context context = OOJSAcquireContext();
     ooscript::Value rval;
-    // The JS boundary takes and gives property-list objects: the info crosses as one, and an
-    // accepted result comes back through oo::PListFrom (an exact round trip, Amendment 2 item 11).
+    // The JS boundary takes and gives property-list objects: the info crosses as
+    // one, and an accepted result comes back through oo::PListFrom (an exact
+    // round trip).
     ooscript::Value args[] = {
         OOJSValueFromPList(context, good),
-        station != nullptr ? station->jsValueInContext(context) : ooscript::nullValue(), // the C++ station's JS value, which OOJSValueFromNativeObject() of its object reached (bead oo-w9pi2)
+        station != nullptr
+            ? station->jsValueInContext(context)
+            : ooscript::nullValue(), // the C++ station's JS value, which
+                                     // OOJSValueFromNativeObject() of its object
+                                     // reached
         ooscript::int32Value(system)
     };
     BOOL OK = YES;
@@ -255,20 +273,32 @@ oo::PList OOCommodities::modifyGood(const oo::PList& good, ::OOScript* script, :
 
     if (localMode) {
         errorType = "local";
-        OK = (script != nullptr ? script->callMethod(OOJSID("updateLocalCommodityDefinition"), context, args, 3, &rval) : false);
+        OK = (script != nullptr
+                ? script->callMethod(OOJSID("updateLocalCommodityDefinition"),
+                      context, args, 3, &rval)
+                : false);
     } else {
         errorType = "general";
-        OK = (script != nullptr ? script->callMethod(OOJSID("updateGeneralCommodityDefinition"), context, args, 3, &rval) : false);
+        OK = (script != nullptr
+                ? script->callMethod(OOJSID("updateGeneralCommodityDefinition"),
+                      context, args, 3, &rval)
+                : false);
     }
 
     if (!OK) {
-        OO_LOG("script.commodityScript.error", "Could not update {} commodity definition for {} - unable to call updateLocalCommodityDefinition", errorType, StringFor(good, kOOCommodityName).value_or("(null)"));
+        OO_LOG("script.commodityScript.error",
+            "Could not update {} commodity definition for {} - unable to call "
+            "updateLocalCommodityDefinition",
+            errorType, StringFor(good, kOOCommodityName).value_or("(null)"));
         OOJSRelinquishContext(context);
         return good;
     }
 
     if (!ooscript::isObjectOrNull(rval)) {
-        OO_LOG("script.commodityScript.error", "Could not update {} commodity definition for {} - return value invalid", errorType, StringFor(good, kOOCommodityKey).value_or("(null)"));
+        OO_LOG("script.commodityScript.error",
+            "Could not update {} commodity definition for {} - return value "
+            "invalid",
+            errorType, StringFor(good, kOOCommodityKey).value_or("(null)"));
         OOJSRelinquishContext(context);
         return good;
     }
@@ -276,20 +306,25 @@ oo::PList OOCommodities::modifyGood(const oo::PList& good, ::OOScript* script, :
     oo::PList result = cxx_OOJSPListFromJSObject(context, ooscript::toObject(rval));
     OOJSRelinquishContext(context);
     if (result.getIf<oo::PList::Dict>() == nullptr) {
-        OO_LOG("script.commodityScript.error", "Could not update {} commodity definition for {} - return value invalid", errorType, StringFor(good, kOOCommodityKey).value_or("(null)"));
+        OO_LOG("script.commodityScript.error",
+            "Could not update {} commodity definition for {} - return value "
+            "invalid",
+            errorType, StringFor(good, kOOCommodityKey).value_or("(null)"));
         return good;
     }
 
     return result;
 }
 
-oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForSystemWithEconomy(OOEconomyID economy, const std::optional<std::string>& scriptName)
+oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForSystemWithEconomy(
+    OOEconomyID economy, const std::optional<std::string>& scriptName)
 {
-    ::OOScript* script = (PLAYER != nullptr ? PLAYER->commodityScriptNamed(scriptName) : (OOScript*)nullptr);
+    ::OOScript* script = (PLAYER != nullptr ? PLAYER->commodityScriptNamed(scriptName)
+                                            : (OOScript*)nullptr);
 
     oo::Ref<OOCommodityMarket> market = oo::makeRef<OOCommodityMarket>();
 
-    for (const auto& [commodity, info] : _commodityLists) // key order (bead oo-3rb.154)
+    for (const auto& [commodity, info] : _commodityLists) // key order
     {
         oo::PList good = info;
         OOCargoQuantity q = generateQuantityForGood(good, economy);
@@ -299,20 +334,29 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForSystemWithEconomy(OOE
             q = cap;
         }
         OOCreditsQuantity p = generatePriceForGood(good, economy);
-        good = createDefinitionFrom(good, p, q, commodity, nullptr, (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0));
+        good = createDefinitionFrom(
+            good, p, q, commodity, nullptr,
+            (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0));
 
         if (script != nil) {
-            good = modifyGood(good, script, nullptr, (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0), true);
+            good = modifyGood(good, script, nullptr,
+                (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0),
+                true);
         }
         market->setGood(commodity, good);
     }
     return market;
 }
 
-oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForStation(::StationEntity* station)
+oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForStation(
+    ::StationEntity* station)
 {
     const oo::PList marketDefinition = (station != nullptr ? station->getMarketDefinition() : oo::PList());
-    ::OOScript* marketScript = (PLAYER != nullptr ? PLAYER->commodityScriptNamed((station != nullptr ? station->getMarketScriptName() : std::optional<std::string>())) : (OOScript*)nullptr);
+    ::OOScript* marketScript = (PLAYER != nullptr
+            ? PLAYER->commodityScriptNamed((station != nullptr
+                      ? station->getMarketScriptName()
+                      : std::optional<std::string>()))
+            : (OOScript*)nullptr);
     if (!marketDefinition && marketScript == nil) {
         oo::Ref<OOCommodityMarket> market = generateBlankMarket();
         return market;
@@ -322,7 +366,7 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForStation(::StationEnti
     OOCargoQuantity capacity = (station != nullptr ? station->getMarketCapacity() : 0);
     OOCommodityMarket* mainMarket = (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket() : nullptr);
 
-    for (const auto& [commodity, info] : _commodityLists) // key order (bead oo-3rb.154)
+    for (const auto& [commodity, info] : _commodityLists) // key order
     {
         oo::PList good = info;
         OOCargoQuantity baseCapacity = good.get<unsigned int>(kOOCommodityCapacity, MAIN_SYSTEM_MARKET_LIMIT);
@@ -336,7 +380,9 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForStation(::StationEnti
 
         if (marketScript == nil) {
             const oo::PList* classes = good.get<oo::PList::Array>(kOOCommodityClasses);
-            const oo::PList modifier = firstModifierForGood(commodity, (classes != nullptr) ? *classes : oo::PList(), marketDefinition);
+            const oo::PList modifier = firstModifierForGood(
+                commodity, (classes != nullptr) ? *classes : oo::PList(),
+                marketDefinition);
             good = updateInfoFor(good, modifier, capacity);
             p = adjustPrice(p, modifier);
 
@@ -355,9 +401,13 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForStation(::StationEnti
             q = (q * capacity) / baseCapacity;
         }
 
-        good = createDefinitionFrom(good, p, q, commodity, station, (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0));
+        good = createDefinitionFrom(
+            good, p, q, commodity, station,
+            (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0));
         if (marketScript != nil) {
-            good = modifyGood(good, marketScript, station, (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0), true);
+            good = modifyGood(good, marketScript, station,
+                (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0),
+                true);
         }
 
         market->setGood(commodity, good);
@@ -365,10 +415,7 @@ oo::Ref<OOCommodityMarket> OOCommodities::generateMarketForStation(::StationEnti
     return market;
 }
 
-NSUInteger OOCommodities::count()
-{
-    return _commodityLists.size();
-}
+NSUInteger OOCommodities::count() { return _commodityLists.size(); }
 
 std::vector<std::string> OOCommodities::goods()
 {
@@ -387,7 +434,8 @@ bool OOCommodities::goodDefined(const std::string& key)
 
 std::optional<std::string> OOCommodities::goodNamed(const std::string& name)
 {
-    for (const auto& [key, info] : _commodityLists) // key order (was hash order): the first match wins
+    for (const auto& [key, info] :
+        _commodityLists) // key order (was hash order): the first match wins
     {
         const std::optional<std::string> commodityName = StringFor(info, kOOCommodityName);
         const std::optional<std::string> expanded = commodityName.has_value() ? cxx_OOExpand(*commodityName) : std::nullopt;
@@ -413,16 +461,19 @@ OOMassUnit OOCommodities::massUnitForGood(const std::string& good)
     if (entry == _commodityLists.end() || !entry->second.isDict()) {
         return UNITS_TONS;
     }
-    return OOMassUnitFromNumber(entry->second.get<unsigned int>(kOOCommodityContainer));
+    return OOMassUnitFromNumber(
+        entry->second.get<unsigned int>(kOOCommodityContainer));
 }
 
-OOCargoQuantity OOCommodities::generateQuantityForGood(const oo::PList& good, OOEconomyID economy)
+OOCargoQuantity OOCommodities::generateQuantityForGood(const oo::PList& good,
+    OOEconomyID economy)
 {
     float bias = economicBiasForGood(good, economy);
 
     float base = good.get<float>(kOOCommodityQuantityAverage);
     float econ = base * good.get<float>(kOOCommodityQuantityEconomic) * bias;
-    // Two draws, in the order clang evaluated the operands of the former (randf() - randf()).
+    // Two draws, in the order clang evaluated the operands of the former (randf()
+    // - randf()).
     float firstDraw = randf();
     float secondDraw = randf();
     float random = base * good.get<float>(kOOCommodityQuantityRandom) * (firstDraw - secondDraw);
@@ -434,13 +485,15 @@ OOCargoQuantity OOCommodities::generateQuantityForGood(const oo::PList& good, OO
     }
 }
 
-OOCreditsQuantity OOCommodities::generatePriceForGood(const oo::PList& good, OOEconomyID economy)
+OOCreditsQuantity OOCommodities::generatePriceForGood(const oo::PList& good,
+    OOEconomyID economy)
 {
     float bias = economicBiasForGood(good, economy);
 
     float base = good.get<float>(kOOCommodityPriceAverage);
     float econ = base * good.get<float>(kOOCommodityPriceEconomic) * -bias;
-    // Two draws, in the order clang evaluated the operands of the former (randf() - randf()).
+    // Two draws, in the order clang evaluated the operands of the former (randf()
+    // - randf()).
     float firstDraw = randf();
     float secondDraw = randf();
     float random = base * good.get<float>(kOOCommodityPriceRandom) * (firstDraw - secondDraw);
@@ -452,7 +505,9 @@ OOCreditsQuantity OOCommodities::generatePriceForGood(const oo::PList& good, OOE
     }
 }
 
-OOCreditsQuantity OOCommodities::samplePriceForCommodity(const std::string& commodity, OOEconomyID economy, const std::optional<std::string>& scriptName, OOSystemID system)
+OOCreditsQuantity OOCommodities::samplePriceForCommodity(
+    const std::string& commodity, OOEconomyID economy,
+    const std::optional<std::string>& scriptName, OOSystemID system)
 {
     const auto entry = _commodityLists.find(commodity);
     if (entry == _commodityLists.end() || !entry->second.isDict()) {
@@ -463,7 +518,9 @@ OOCreditsQuantity OOCommodities::samplePriceForCommodity(const std::string& comm
 
     good = createDefinitionFrom(good, p, 0, commodity, nullptr, system);
     if (scriptName.has_value()) {
-        ::OOScript* script = (PLAYER != nullptr ? PLAYER->commodityScriptNamed(scriptName) : (OOScript*)nullptr); // (has a value: checked above)
+        ::OOScript* script = (PLAYER != nullptr
+                ? PLAYER->commodityScriptNamed(scriptName)
+                : (OOScript*)nullptr); // (has a value: checked above)
         if (script != nil) {
             good = modifyGood(good, script, nullptr, system, true);
         }
@@ -472,7 +529,8 @@ OOCreditsQuantity OOCommodities::samplePriceForCommodity(const std::string& comm
 }
 
 // positive = exporter; negative = importer; range -1.0 .. +1.0
-float OOCommodities::economicBiasForGood(const oo::PList& good, OOEconomyID economy)
+float OOCommodities::economicBiasForGood(const oo::PList& good,
+    OOEconomyID economy)
 {
     OOEconomyID exporter = good.get<int>(kOOCommodityPeakExport);
     OOEconomyID importer = good.get<int>(kOOCommodityPeakImport);
@@ -494,19 +552,20 @@ float OOCommodities::economicBiasForGood(const oo::PList& good, OOEconomyID econ
     }
 }
 
-oo::PList OOCommodities::firstModifierForGood(const std::string& good, const oo::PList& classes, const oo::PList& definitions)
+oo::PList OOCommodities::firstModifierForGood(const std::string& good,
+    const oo::PList& classes,
+    const oo::PList& definitions)
 {
     NSUInteger i;
     for (i = 0; i < definitions.count(); i++) {
         const oo::PList* definition = definitions.at(i);
         if (definition != nullptr && definition->isDict()) {
-            const std::string applicationType = StringFor(*definition, kOOCommodityMarketType).value_or(std::string(kOOCommodityMarketTypeValueDefault));
-            const std::string applicationName = StringFor(*definition, kOOCommodityMarketName).value_or(std::string());
+            const std::string applicationType = StringFor(*definition, kOOCommodityMarketType)
+                                                    .value_or(std::string(kOOCommodityMarketTypeValueDefault));
+            const std::string applicationName = StringFor(*definition, kOOCommodityMarketName)
+                                                    .value_or(std::string());
 
-            if (
-                applicationType == kOOCommodityMarketTypeValueDefault
-                || (applicationType == kOOCommodityMarketTypeValueGood && applicationName == good)
-                || (applicationType == kOOCommodityMarketTypeValueClass && ContainsString(classes, applicationName))) {
+            if (applicationType == kOOCommodityMarketTypeValueDefault || (applicationType == kOOCommodityMarketTypeValueGood && applicationName == good) || (applicationType == kOOCommodityMarketTypeValueClass && ContainsString(classes, applicationName))) {
                 return *definition;
             }
         }
@@ -515,7 +574,8 @@ oo::PList OOCommodities::firstModifierForGood(const std::string& good, const oo:
     return oo::PList(oo::PList::Dict { });
 }
 
-OOCreditsQuantity OOCommodities::adjustPrice(OOCreditsQuantity price, const oo::PList& rule)
+OOCreditsQuantity OOCommodities::adjustPrice(OOCreditsQuantity price,
+    const oo::PList& rule)
 {
     float p = (float)price; // work in floats to avoid rounding problems
     float pa = rule.get<float>(kOOCommodityMarketPriceAdder, 0.0);
@@ -535,7 +595,8 @@ OOCreditsQuantity OOCommodities::adjustPrice(OOCreditsQuantity price, const oo::
     return (OOCreditsQuantity)p;
 }
 
-OOCargoQuantity OOCommodities::adjustQuantity(OOCargoQuantity quantity, const oo::PList& rule)
+OOCargoQuantity OOCommodities::adjustQuantity(OOCargoQuantity quantity,
+    const oo::PList& rule)
 {
     float q = (float)quantity; // work in floats to avoid rounding problems
     float qa = rule.get<float>(kOOCommodityMarketQuantityAdder, 0.0);
@@ -556,7 +617,9 @@ OOCargoQuantity OOCommodities::adjustQuantity(OOCargoQuantity quantity, const oo
     return (OOCargoQuantity)q;
 }
 
-oo::PList OOCommodities::updateInfoFor(const oo::PList& good, const oo::PList& rule, OOCargoQuantity maxCapacity)
+oo::PList OOCommodities::updateInfoFor(const oo::PList& good,
+    const oo::PList& rule,
+    OOCargoQuantity maxCapacity)
 {
     oo::PList tmp = good;
     long long import = rule.get<long long>(kOOCommodityMarketLegalityImport, -1);
@@ -566,7 +629,8 @@ oo::PList OOCommodities::updateInfoFor(const oo::PList& good, const oo::PList& r
 
     long long exportValue = rule.get<long long>(kOOCommodityMarketLegalityExport, -1);
     if (exportValue >= 0) {
-        SetSigned(tmp, kOOCommodityLegalityExport, import); // (sic: upstream writes the import value here)
+        SetSigned(tmp, kOOCommodityLegalityExport,
+            import); // (sic: upstream writes the import value here)
     }
 
     long long capacity = rule.get<long long>(kOOCommodityMarketCapacity, -1);

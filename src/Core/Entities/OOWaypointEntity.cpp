@@ -23,6 +23,7 @@ MA 02110-1301, USA.
 */
 
 #include "OOWaypointEntity.h"
+
 #include "Entity.h"
 #include "HeadUpDisplay.h"
 #include "OOJSWaypoint.h"
@@ -33,7 +34,6 @@ MA 02110-1301, USA.
 #include "OOStringExpander.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
 
@@ -43,7 +43,8 @@ MA 02110-1301, USA.
 #define OOWAYPOINT_KEY_CODE "beaconCode"
 #define OOWAYPOINT_KEY_LABEL "beaconLabel"
 
-oo::Ref<OOWaypointEntity> OOWaypointEntity::waypointWithDictionary(const oo::PList& info)
+oo::Ref<OOWaypointEntity> OOWaypointEntity::waypointWithDictionary(
+    const oo::PList& info)
 {
     const oo::Ref<OOWaypointEntity> waypoint = oo::makeRef<OOWaypointEntity>();
     waypoint->initWithDictionary(info);
@@ -54,14 +55,23 @@ void OOWaypointEntity::initWithDictionary(const oo::PList& info)
 {
     // self = [super init]: the constructor ran Entity's -init body.
 
-    // A nil dictionary read zero-filled values and nil strings (messaging nil), not the defaults.
+    // A nil dictionary read zero-filled values and nil strings (messaging nil),
+    // not the defaults.
     oriented = YES;
-    position = info ? OOHPVectorFromPList(info.find(OOWAYPOINT_KEY_POSITION), kZeroHPVector) : kZeroHPVector;
-    Quaternion q = info ? OOQuaternionFromPList(info.find(OOWAYPOINT_KEY_ORIENTATION), kIdentityQuaternion) : (Quaternion) { 0, 0, 0, 0 };
+    position = info ? OOHPVectorFromPList(info.find(OOWAYPOINT_KEY_POSITION),
+                          kZeroHPVector)
+                    : kZeroHPVector;
+    Quaternion q = info ? OOQuaternionFromPList(info.find(OOWAYPOINT_KEY_ORIENTATION),
+                              kIdentityQuaternion)
+                        : (Quaternion) { 0, 0, 0, 0 };
     setOrientation(q);
     setSize(info.get<oo::NonNegative<float>>(OOWAYPOINT_KEY_SIZE, 1000.0));
-    setBeaconCode(info ? std::optional<std::string>(info.get<std::string>(OOWAYPOINT_KEY_CODE, "W")) : std::nullopt);
-    setBeaconLabel(info ? std::optional<std::string>(info.get<std::string>(OOWAYPOINT_KEY_LABEL, "Waypoint")) : std::nullopt);
+    setBeaconCode(info ? std::optional<std::string>(
+                             info.get<std::string>(OOWAYPOINT_KEY_CODE, "W"))
+                       : std::nullopt);
+    setBeaconLabel(info ? std::optional<std::string>(info.get<std::string>(
+                              OOWAYPOINT_KEY_LABEL, "Waypoint"))
+                        : std::nullopt);
 
     setStatus(STATUS_EFFECT);
     setScanClass(CLASS_NO_DRAW);
@@ -79,15 +89,9 @@ void OOWaypointEntity::setOrientation(Quaternion q)
     Entity::setOrientation(q);
 }
 
-bool OOWaypointEntity::getOriented()
-{
-    return oriented;
-}
+bool OOWaypointEntity::getOriented() { return oriented; }
 
-OOScalar OOWaypointEntity::size()
-{
-    return _size;
-}
+OOScalar OOWaypointEntity::size() { return _size; }
 
 void OOWaypointEntity::setSize(OOScalar newSize)
 {
@@ -97,15 +101,9 @@ void OOWaypointEntity::setSize(OOScalar newSize)
     }
 }
 
-bool OOWaypointEntity::isEffect()
-{
-    return YES;
-}
+bool OOWaypointEntity::isEffect() { return YES; }
 
-bool OOWaypointEntity::isWaypoint()
-{
-    return YES;
-}
+bool OOWaypointEntity::isWaypoint() { return YES; }
 
 void OOWaypointEntity::drawImmediate(bool /*immediate*/, bool translucent)
 {
@@ -113,7 +111,9 @@ void OOWaypointEntity::drawImmediate(bool /*immediate*/, bool translucent)
         return;
     }
 
-    if (!(PLAYER != nullptr ? PLAYER->hasEquipmentItemProviding("EQ_ADVANCED_COMPASS") : false)) {
+    if (!(PLAYER != nullptr
+                ? PLAYER->hasEquipmentItemProviding("EQ_ADVANCED_COMPASS")
+                : false)) {
         return;
     }
 
@@ -177,7 +177,8 @@ void OOWaypointEntity::drawImmediate(bool /*immediate*/, bool translucent)
 
 OOComparisonResult OOWaypointEntity::compareBeaconCodeWith(Entity* other)
 {
-    return (OOComparisonResult)oo::str::caseInsensitiveCompare(beaconCode().value_or(""), oo::BeaconCode(other).value_or(""));
+    return (OOComparisonResult)oo::str::caseInsensitiveCompare(
+        beaconCode().value_or(""), oo::BeaconCode(other).value_or(""));
 }
 
 std::optional<std::string> OOWaypointEntity::beaconCode()
@@ -185,8 +186,9 @@ std::optional<std::string> OOWaypointEntity::beaconCode()
     return _beaconCode;
 }
 
-// bcode: optional string; empty is treated as none. The Foundation version compared the new string with the
-// old by pointer, so any new string (every string this class hands out is new) replaced it.
+// bcode: optional string; empty is treated as none. The Foundation version
+// compared the new string with the old by pointer, so any new string (every
+// string this class hands out is new) replaced it.
 void OOWaypointEntity::setBeaconCode(const std::optional<std::string>& bcode)
 {
     std::optional<std::string> code = bcode;
@@ -209,7 +211,8 @@ std::optional<std::string> OOWaypointEntity::beaconLabel()
     return _beaconLabel;
 }
 
-void OOWaypointEntity::setBeaconLabel(const std::optional<std::string>& blabel)
+void OOWaypointEntity::setBeaconLabel(
+    const std::optional<std::string>& blabel)
 {
     std::optional<std::string> label = blabel;
     if (label.has_value() && label->empty())
@@ -220,10 +223,7 @@ void OOWaypointEntity::setBeaconLabel(const std::optional<std::string>& blabel)
     }
 }
 
-bool OOWaypointEntity::isBeacon()
-{
-    return beaconCode().has_value();
-}
+bool OOWaypointEntity::isBeacon() { return beaconCode().has_value(); }
 
 OOHUDBeaconIcon* OOWaypointEntity::beaconDrawable()
 {
@@ -235,12 +235,14 @@ OOHUDBeaconIcon* OOWaypointEntity::beaconDrawable()
             const oo::PList* iconEntry = UNIVERSE->descriptions()->find(*_beaconCode);
             const oo::PList iconData = (iconEntry != nullptr) ? *iconEntry : oo::PList();
             if (iconData.isArray())
-                _beaconDrawable = OOPolygonSprite::initWithDataArray(iconData, 0.5, *_beaconCode); // null where it answered nil
+                _beaconDrawable = OOPolygonSprite::initWithDataArray(
+                    iconData, 0.5, *_beaconCode); // null where it answered nil
         }
 
         if (_beaconDrawable == nullptr) {
             if (length > 0)
-                _beaconDrawable = oo::makeRef<OOHUDBeaconCodeIcon>(oo::utf16ToUtf8(beaconCode.substr(0, 1))); // -substringToIndex:1
+                _beaconDrawable = oo::makeRef<OOHUDBeaconCodeIcon>(
+                    oo::utf16ToUtf8(beaconCode.substr(0, 1))); // -substringToIndex:1
             else
                 _beaconDrawable = oo::makeRef<OOHUDBeaconCodeIcon>(std::string());
         }
@@ -249,15 +251,9 @@ OOHUDBeaconIcon* OOWaypointEntity::beaconDrawable()
     return _beaconDrawable.get();
 }
 
-Entity* OOWaypointEntity::prevBeacon()
-{
-    return oo::LiveEntity(_prevBeacon);
-}
+Entity* OOWaypointEntity::prevBeacon() { return oo::LiveEntity(_prevBeacon); }
 
-Entity* OOWaypointEntity::nextBeacon()
-{
-    return oo::LiveEntity(_nextBeacon);
-}
+Entity* OOWaypointEntity::nextBeacon() { return oo::LiveEntity(_nextBeacon); }
 
 void OOWaypointEntity::setPrevBeacon(Entity* beaconShip)
 {
@@ -273,12 +269,19 @@ void OOWaypointEntity::setNextBeacon(Entity* beaconShip)
     }
 }
 
-bool OOWaypointEntity::isJammingScanning()
-{
-    return NO;
-}
+bool OOWaypointEntity::isJammingScanning() { return NO; }
 
-// The binding's category, which the facade forwarded (bead oo-9ht.50) until bead oo-9ht.108.
-void OOWaypointEntity::getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype) { ::OOJSWaypointGetJSClass(outClass, outPrototype); }
-std::optional<std::string> OOWaypointEntity::jsClassName() { return ::OOJSWaypointJSClassName(); }
-bool OOWaypointEntity::isVisibleToScripts() { return ::OOJSWaypointIsVisibleToScripts(); }
+// The binding's category, which the facade forwarded.
+void OOWaypointEntity::getJSClass(ooscript::ClassDef** outClass,
+    ooscript::Object* outPrototype)
+{
+    ::OOJSWaypointGetJSClass(outClass, outPrototype);
+}
+std::optional<std::string> OOWaypointEntity::jsClassName()
+{
+    return ::OOJSWaypointJSClassName();
+}
+bool OOWaypointEntity::isVisibleToScripts()
+{
+    return ::OOJSWaypointIsVisibleToScripts();
+}

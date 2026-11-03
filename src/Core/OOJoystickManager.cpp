@@ -25,12 +25,13 @@ MA 02110-1301, USA.
 */
 
 #include "OOJoystickManager.h"
+
+#include <cstring>
+
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Log.hpp"
-
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
-#include <cstring>
 
 namespace {
 
@@ -39,13 +40,15 @@ OOJoystickManager* sSharedStickHandler = nullptr; // never released, as before
 
 } // namespace
 
-// +sharedStickHandler and +setStickHandlerClass: (moved from the deleted facade, bead oo-9ht.69):
-// the class registered is a function that makes the manager; -init's body, init(), runs on the
-// new manager as [[class alloc] init] ran it.
+// +sharedStickHandler and +setStickHandlerClass: the class registered is a
+// function that makes the manager; -init's body, init(), runs on the new
+// manager as [[class alloc] init] ran it.
 OOJoystickManager* OOJoystickManager::sharedStickHandler()
 {
     if (sSharedStickHandler == nullptr) {
-        oo::Ref<OOJoystickManager> handler = (sStickHandlerFactory != nullptr) ? sStickHandlerFactory() : oo::makeRef<OOJoystickManager>();
+        oo::Ref<OOJoystickManager> handler = (sStickHandlerFactory != nullptr)
+            ? sStickHandlerFactory()
+            : oo::makeRef<OOJoystickManager>();
         handler->init();
         sSharedStickHandler = handler.leakRef();
     }
@@ -54,7 +57,9 @@ OOJoystickManager* OOJoystickManager::sharedStickHandler()
 
 bool OOJoystickManager::setStickHandlerFactory(StickHandlerFactory factory)
 {
-    OOCAssert(sStickHandlerFactory == nullptr && sSharedStickHandler == nullptr, "Can't set joystick handler class after joystick handler is initialized.");
+    OOCAssert(sStickHandlerFactory == nullptr && sSharedStickHandler == nullptr,
+        "Can't set joystick handler class after joystick handler is "
+        "initialized.");
 
     sStickHandlerFactory = factory;
     return true;
@@ -94,10 +99,7 @@ bool OOJoystickManager::getButtonState(int function)
     return butstate[function];
 }
 
-const BOOL* OOJoystickManager::getAllButtonStates()
-{
-    return butstate;
-}
+const BOOL* OOJoystickManager::getAllButtonStates() { return butstate; }
 
 bool OOJoystickManager::isButtonDown(int button, int stickNum)
 {
@@ -112,21 +114,32 @@ double OOJoystickManager::getAxisState(int function)
     switch (function) {
     case AXIS_ROLL:
         if (precisionMode) {
-            return (roll_profile != nullptr ? roll_profile->value(axstate[function]) : 0.0) / STICK_PRECISIONFAC;
+            return (roll_profile != nullptr ? roll_profile->value(axstate[function])
+                                            : 0.0)
+                / STICK_PRECISIONFAC;
         } else {
-            return (roll_profile != nullptr ? roll_profile->value(axstate[function]) : 0.0);
+            return (roll_profile != nullptr ? roll_profile->value(axstate[function])
+                                            : 0.0);
         }
     case AXIS_PITCH:
         if (precisionMode) {
-            return (pitch_profile != nullptr ? pitch_profile->value(axstate[function]) : 0.0) / STICK_PRECISIONFAC;
+            return (pitch_profile != nullptr
+                           ? pitch_profile->value(axstate[function])
+                           : 0.0)
+                / STICK_PRECISIONFAC;
         } else {
-            return (pitch_profile != nullptr ? pitch_profile->value(axstate[function]) : 0.0);
+            return (pitch_profile != nullptr
+                    ? pitch_profile->value(axstate[function])
+                    : 0.0);
         }
     case AXIS_YAW:
         if (precisionMode) {
-            return (yaw_profile != nullptr ? yaw_profile->value(axstate[function]) : 0.0) / STICK_PRECISIONFAC;
+            return (yaw_profile != nullptr ? yaw_profile->value(axstate[function])
+                                           : 0.0)
+                / STICK_PRECISIONFAC;
         } else {
-            return (yaw_profile != nullptr ? yaw_profile->value(axstate[function]) : 0.0);
+            return (yaw_profile != nullptr ? yaw_profile->value(axstate[function])
+                                           : 0.0);
         }
     default:
         return axstate[function];
@@ -197,8 +210,8 @@ void OOJoystickManager::saveProfileForAxis(int axis)
         points.reserve(controlPoints.size());
         for (i = 0; i < controlPoints.size(); i++) {
             point = controlPoints[i];
-            // +numberWithFloat: as before: single-precision reals, so the defaults file prints them
-            // with %.7g (proposed ADR-0043 Amendment 2).
+            // +numberWithFloat: as before: single-precision reals, so the defaults
+            // file prints them with %.7g.
             points.push_back(oo::PList(oo::PList::Array {
                 oo::PList::singleReal(static_cast<float>(point.x)),
                 oo::PList::singleReal(static_cast<float>(point.y)) }));
@@ -208,11 +221,14 @@ void OOJoystickManager::saveProfileForAxis(int axis)
         dict["Type"] = oo::PList("Standard");
     }
     if (axis == AXIS_ROLL) {
-        defaults.setObject(std::string(STICK_ROLL_AXIS_PROFILE_SETTING), oo::PList(std::move(dict)));
+        defaults.setObject(std::string(STICK_ROLL_AXIS_PROFILE_SETTING),
+            oo::PList(std::move(dict)));
     } else if (axis == AXIS_PITCH) {
-        defaults.setObject(std::string(STICK_PITCH_AXIS_PROFILE_SETTING), oo::PList(std::move(dict)));
+        defaults.setObject(std::string(STICK_PITCH_AXIS_PROFILE_SETTING),
+            oo::PList(std::move(dict)));
     } else if (axis == AXIS_YAW) {
-        defaults.setObject(std::string(STICK_YAW_AXIS_PROFILE_SETTING), oo::PList(std::move(dict)));
+        defaults.setObject(std::string(STICK_YAW_AXIS_PROFILE_SETTING),
+            oo::PList(std::move(dict)));
     }
     return;
 }
@@ -244,7 +260,8 @@ void OOJoystickManager::loadProfileForAxis(int axis)
     } else if (type != nullptr && type->isString() && *type->getIf<std::string>() == "Spline") {
         spline_profile = oo::makeRef<OOJoystickSplineAxisProfile>();
         spline_profile->setDeadzone(dict.get<double>("Deadzone"));
-        const oo::PList *points = dict.get<oo::PList::Array>("ControlPoints"), *pointArray;
+        const oo::PList *points = dict.get<oo::PList::Array>("ControlPoints"),
+                        *pointArray;
         NSPoint point;
         NSUInteger i;
 
@@ -267,7 +284,8 @@ std::vector<std::string> OOJoystickManager::listSticks()
 
     std::vector<std::string> stickList;
     for (i = 0; i < stickCount; i++) {
-        stickList.push_back(nameOfJoystick(i).value_or(std::string())); // a nameless stick lists as "", as before
+        stickList.push_back(nameOfJoystick(i).value_or(
+            std::string())); // a nameless stick lists as "", as before
     }
     return stickList;
 }
@@ -319,18 +337,13 @@ void OOJoystickManager::setFunction(int function, const oo::PList& stickFn)
     int stickAxBt = stickFn.get<int>(std::string(STICK_AXBUT));
 
     if (isAxis) {
-        setFunctionForAxis(stickAxBt,
-            function,
-            stickNum);
+        setFunctionForAxis(stickAxBt, function, stickNum);
     } else {
-        setFunctionForButton(stickAxBt,
-            function,
-            stickNum);
+        setFunctionForButton(stickAxBt, function, stickNum);
     }
 }
 
-void OOJoystickManager::setFunctionForAxis(int axis,
-    int function,
+void OOJoystickManager::setFunctionForAxis(int axis, int function,
     int stickNum)
 {
     OOCParameterAssert(axis < MAX_AXES && stickNum < MAX_STICKS);
@@ -349,8 +362,7 @@ void OOJoystickManager::setFunctionForAxis(int axis,
     }
 }
 
-void OOJoystickManager::setFunctionForButton(int button,
-    int function,
+void OOJoystickManager::setFunctionForButton(int button, int function,
     int stickNum)
 {
     OOCParameterAssert(button < MAX_BUTTONS && stickNum < MAX_STICKS);
@@ -434,8 +446,7 @@ void OOJoystickManager::clearStickButtonState(int stickButton)
     }
 }
 
-void OOJoystickManager::setCallback(StickCallback callback,
-    char hwflags)
+void OOJoystickManager::setCallback(StickCallback callback, char hwflags)
 {
     cbCallback = std::move(callback);
     cbHardware = hwflags;
@@ -482,7 +493,8 @@ void OOJoystickManager::decodeAxisEvent(JoyAxisEvent* evt)
     if (evt->axis < MAX_AXES) {
         function = axismap[evt->which][evt->axis];
     } else {
-        OO_LOG("decodeAxisEvent", "Stick axis out of range - axis was {}", evt->axis);
+        OO_LOG("decodeAxisEvent", "Stick axis out of range - axis was {}",
+            evt->axis);
         return;
     }
     switch (function) {
@@ -533,7 +545,8 @@ void OOJoystickManager::decodeButtonEvent(JoyButtonEvent* evt)
     if (evt->button < MAX_BUTTONS) {
         function = buttonmap[evt->which][evt->button];
     } else {
-        OO_LOG("decodeButtonEvent", "Joystick button out of range: {}", evt->button);
+        OO_LOG("decodeButtonEvent", "Joystick button out of range: {}",
+            evt->button);
         return;
     }
     if (evt->type == static_cast<SDL_EventType>(JOYBUTTONDOWN)) {
@@ -557,7 +570,8 @@ void OOJoystickManager::decodeHatEvent(JoyHatEvent* evt)
 
     for (i = 0; i < 4; ++i) {
         if ((evt->value ^ hatstate[evt->which][evt->hat]) & (1 << i)) {
-            btn.type = (SDL_EventType)((evt->value & (1 << i)) ? JOYBUTTONDOWN : JOYBUTTONUP);
+            btn.type = (SDL_EventType)((evt->value & (1 << i)) ? JOYBUTTONDOWN
+                                                               : JOYBUTTONUP);
             btn.button = MAX_REAL_BUTTONS + i + evt->which * 4;
             btn.down = (evt->value & (1 << i));
             decodeButtonEvent(&btn);
@@ -567,10 +581,7 @@ void OOJoystickManager::decodeHatEvent(JoyHatEvent* evt)
     hatstate[evt->which][evt->hat] = evt->value;
 }
 
-NSUInteger OOJoystickManager::joystickCount()
-{
-    return 0;
-}
+NSUInteger OOJoystickManager::joystickCount() { return 0; }
 
 void OOJoystickManager::saveStickSettings()
 {
@@ -590,21 +601,19 @@ void OOJoystickManager::loadStickSettings()
     oo::Defaults& defaults = oo::Defaults::standard();
     const oo::PList axisSettings = defaults.object(std::string(AXIS_SETTINGS));
     const oo::PList buttonSettings = defaults.object(std::string(BUTTON_SETTINGS));
-    // Keys are visited in byte order (they came in hash order): where two settings claim the
-    // same stick axis or button, the last one still wins (proposed ADR-0043).
+    // Keys are visited in byte order (they came in hash order): where two
+    // settings claim the same stick axis or button, the last one still wins.
     if (axisSettings) {
         if (const oo::PList::Dict* settings = axisSettings.getIf<oo::PList::Dict>()) {
             for (const auto& [key, stickFn] : *settings) {
-                setFunction(oo::str::intValue(key),
-                    stickFn);
+                setFunction(oo::str::intValue(key), stickFn);
             }
         }
     }
     if (buttonSettings) {
         if (const oo::PList::Dict* settings = buttonSettings.getIf<oo::PList::Dict>()) {
             for (const auto& [key, stickFn] : *settings) {
-                setFunction(oo::str::intValue(key),
-                    stickFn);
+                setFunction(oo::str::intValue(key), stickFn);
             }
         }
     } else {
@@ -618,12 +627,14 @@ void OOJoystickManager::loadStickSettings()
 
 // These get overidden by subclasses
 
-std::optional<std::string> OOJoystickManager::nameOfJoystick(NSUInteger /*stickNumber*/)
+std::optional<std::string> OOJoystickManager::nameOfJoystick(
+    NSUInteger /*stickNumber*/)
 {
     return std::string("Dummy joystick");
 }
 
-int16_t OOJoystickManager::getAxisWithStick(NSUInteger /*stickNum*/, NSUInteger /*axisNum*/)
+int16_t OOJoystickManager::getAxisWithStick(NSUInteger /*stickNum*/,
+    NSUInteger /*axisNum*/)
 {
     return 0;
 }

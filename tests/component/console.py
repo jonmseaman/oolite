@@ -7,7 +7,7 @@ vocabulary in steps/world_steps.py.
 The protocol is the one tests/launch_snapshot.py speaks: a 4-byte big-endian length followed by an
 XML property list. See src/Core/Debug/OODebugTCPConsoleProtocol.h for the packet types.
 
-NO DESKTOP LOCK here, deliberately (bug oo-ccy9). Every tool that launches the game on the
+NO DESKTOP LOCK here, deliberately. Every tool that launches the game on the
 interactive desktop must take tools/gui-lock - but this file is the shared TRANSPORT, not a tier,
 and it has two callers with opposite needs: the component tier spawns it once per scenario (and
 holds the lock for its whole session, in its conftest), while the golden harness spawns it N times
@@ -41,8 +41,7 @@ IS_WINDOWS = sys.platform == "win32" or os.name == "nt"
 
 # How long evaluate() waits for an answer when the caller names no timeout. 15 s unless
 # OO_CONSOLE_EVAL_TIMEOUT says otherwise: the -O0 AddressSanitizer build answers far more slowly
-# than the test build, and tools/tier-c.sh raises it when its golden stage runs that build
-# (bead oo-tc08n).
+# than the test build, and tools/tier-c.sh raises it when its golden stage runs that build.
 DEFAULT_EVAL_TIMEOUT = 15
 
 
@@ -132,11 +131,11 @@ class DebugConsole:
         argv = [path, "--no-splash"]
         # OO_GAME_EXTRA_ARGS: extra command-line arguments for the game, split on whitespace. A
         # sanitized run of the golden harness passes --nosound, as tier-c's sanitized launch does
-        # (oo-dg6vf: opening the OpenAL device trips a third-party ASan report that is fatal).
+        # (opening the OpenAL device trips a third-party ASan report that is fatal).
         argv += os.environ.get("OO_GAME_EXTRA_ARGS", "").split()
         if self.load_save:
             argv += ["-load", self.load_save]
-        # The game's stderr is kept in the output dir when there is one (oo-vdw34): a sanitized
+        # The game's stderr is kept in the output dir when there is one: a sanitized
         # build reports there, and a game that dies mid-run otherwise leaves no trace of why. Appended,
         # so a retried start keeps the attempt before it.
         stderr = subprocess.DEVNULL

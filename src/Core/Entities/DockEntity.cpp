@@ -61,8 +61,9 @@ std::vector<unsigned short> ShipIDsIn(const std::map<unsigned short, std::vector
     return shipIDs;
 }
 
-// %@ of the approach queue or a coordinates stack in the error logs (ADR-0043 item 23): the
-// old-style plist text, ship IDs as decimal keys; GNUstep's exact -description is not kept.
+// %@ of the approach queue or a coordinates stack in the error logs: the
+// old-style plist text, ship IDs as decimal keys; GNUstep's exact
+// -description is not kept.
 std::string DescriptionForLog(const oo::PList& plist)
 {
     const auto data = oo::writeOldStylePList(plist);
@@ -89,9 +90,8 @@ std::optional<std::string> OptionalStringValue(const oo::PList* value)
 
 } // namespace
 
-// Slice 1 of docs/phases/3-slices/DockEntity.md (bead oo-ao2d): class shell, flags, geometry and
-// lifecycle. The facade's initialiser and -dealloc are members since bead oo-9ht.180 deleted the
-// facade (ADR-0056 amendment oo-9ht.180).
+// Class shell, flags, geometry and lifecycle. The facade's initialiser and
+// -dealloc are members.
 
 ::ShipEntity* DockEntity::newDockObject(const std::string& key, const oo::PList& dict)
 {
@@ -229,9 +229,10 @@ bool DockEntity::isDock()
     return YES;
 }
 
-// The binding's bodies (OOJSDock.mm), which a category on the façade forwarded to
-// until bead oo-9ht.47.
-void DockEntity::getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
+// The binding's bodies (OOJSDock.mm), which a category on the façade forwarded
+// to.
+void DockEntity::getJSClass(ooscript::ClassDef** outClass,
+    ooscript::Object* outPrototype)
 {
     ::OOJSDockGetJSClass(outClass, outPrototype);
 }
@@ -326,8 +327,8 @@ void DockEntity::drawImmediate(bool immediate, bool translucent)
     ShipEntity::drawImmediate(immediate, translucent);
 }
 
-// Slice 2 of docs/phases/3-slices/DockEntity.md (bead oo-9ht.178): docking guidance, the approach
-// queue and docking instructions. The facade forwards each selector (DockEntity (OOSlice2)).
+// Docking guidance, the approach queue and docking instructions. The facade
+// forwards each selector (DockEntity (OOSlice2)).
 
 NSUInteger DockEntity::pruneAndCountShipsOnApproach()
 {
@@ -715,9 +716,10 @@ void DockEntity::addShipToShipsOnApproach(::ShipEntity* ship)
             //			// docking.debug: Adjusted coordinates by c2/s2/ssize factors
         }
 
-        // add the lenght inside the station to the corridor, except for the final position, inside the dock.
-        // (Upstream added port_corridor to corridor_length here when corridor_distance[i] > 0,
-        // after its last read: a dead store, dropped when slice 1 touched the line (bead oo-ao2d).)
+        // add the lenght inside the station to the corridor, except for the final
+        // position, inside the dock. (Upstream added port_corridor to
+        // corridor_length here when corridor_distance[i] > 0, after its last read:
+        // a dead store, dropped.)
 
         // -oo_setInteger: stored a signed integer, -oo_setFloat: a double
         nextCoords["docking_stage"] = oo::PList::signedInteger(corridor_count - i);
@@ -826,8 +828,8 @@ void DockEntity::pullInShipIfPermitted(::ShipEntity* ship)
     }
 }
 
-// Slice 3 of docs/phases/3-slices/DockEntity.md (bead oo-9ht.179): the docking corridor and
-// launching. The facade forwards each selector (DockEntity (OOSlice3)).
+// The docking corridor and launching. The facade forwards each selector
+// (DockEntity (OOSlice3)).
 
 void DockEntity::abortAllLaunches()
 {
@@ -1158,7 +1160,8 @@ bool DockEntity::dockingCorridorIsEmpty()
     BOOL isEmpty = YES;
     int ent_count = UNIVERSE->n_entities;
     Entity** uni_entities = UNIVERSE->sortedEntities; // grab the public sorted list
-    std::vector<Entity*> my_entities(ent_count); // each one's object retained (bead oo-9ht.39.26)
+    std::vector<Entity*> my_entities(
+        ent_count); // each one's object retained
     int i;
     int ship_count = 0;
 
@@ -1214,7 +1217,8 @@ void DockEntity::clearDockingCorridor()
     BOOL isClear = YES;
     int ent_count = UNIVERSE->n_entities;
     Entity** uni_entities = UNIVERSE->sortedEntities; // grab the public sorted list
-    std::vector<Entity*> my_entities(ent_count); // each one's object retained (bead oo-9ht.39.26)
+    std::vector<Entity*> my_entities(
+        ent_count); // each one's object retained
     int i;
     int ship_count = 0;
 

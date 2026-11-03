@@ -24,29 +24,14 @@ MA 02110-1301, USA.
 */
 
 #include "OOJSSun.h"
-#include "OOJSEntity.h"
-#include "OOJavaScriptEngine.h"
 
-#include "OOSunEntity.h"
-
-#include "ooscript/JSEngine.hpp"
 #include <cstdint>
 #include <cstring>
 
-// Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm does it (bead
-// oo-sdz, exemplar): a static ClassDef is the class table (stub hooks nullptr), initClass replaces
-// InitClass, natives take the façade's Context/Object/PropertyId/Value/CallArgs signature.
-
-/*
-        C++20 since bead oo-hgfh, converted the way bead oo-ppc converted OOJSVector.mm (proposed
-        ADR-0056 amendment oo-ppc). The JS class was already C++ on the ooscript façade;
-        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The category on OOSunEntity
-        became three free functions, and its methods moved to a bridge file of the binding (amendment
-        oo-ykoy), then onto the OOSunEntity facade in OOSunEntity+ObjCBridge.mm (bead oo-9ht.51,
-        amendment oo-6ia4 item 3). Messages to classes that are still Objective-C (OOSunEntity, Entity)
-        stay as they are, which is why the file is still .mm until Phase 4.
-*/
+#include "OOJSEntity.h"
+#include "OOJavaScriptEngine.h"
+#include "OOSunEntity.h"
+#include "ooscript/JSEngine.hpp"
 
 namespace ooscript {
 }
@@ -66,10 +51,11 @@ static ooscript::Object sSunPrototype;
 }
 
 namespace {
-static bool SunGetProperty(Context cx, Object obj, PropertyId propID, Value* value);
+static bool SunGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value);
 static bool SunGoNova(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
 static bool SunCancelNova(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-}
+} // namespace
 
 namespace {
 static ClassDef sSunClass = {
@@ -101,18 +87,29 @@ enum : std::uint8_t {
 
 namespace {
 static PropertySpec sSunProperties[] = {
-    // JS name					ID							flags														getter	setter
-    { "hasGoneNova", kSun_hasGoneNova, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared, nullptr, nullptr },
-    { "isGoingNova", kSun_isGoingNova, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared, nullptr, nullptr },
-    { "name", kSun_name, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared, nullptr, nullptr },
-    { "radius", kSun_radius, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared, nullptr, nullptr },
+    // JS name					ID
+    // flags
+    // getter	setter
+    { "hasGoneNova", kSun_hasGoneNova,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared,
+        nullptr, nullptr },
+    { "isGoingNova", kSun_isGoingNova,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared,
+        nullptr, nullptr },
+    { "name", kSun_name,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared,
+        nullptr, nullptr },
+    { "radius", kSun_radius,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared,
+        nullptr, nullptr },
     { 0 }
 };
 }
 
 namespace {
 static FunctionSpec sSunMethods[] = {
-    // JS name					Function					min args	flags
+    // JS name					Function
+    // min args	flags
     { "cancelNova", SunCancelNova, 0, 0 },
     { "goNova", SunGoNova, 1, 0 },
     { 0 }
@@ -120,12 +117,11 @@ static FunctionSpec sSunMethods[] = {
 }
 
 namespace {
-// The sun is C++ behind the root's facade since bead oo-9ht.111: the getter checks the JS class
-// (a Sun object's private slot holds the sun's Objective-C object, so -isKindOfClass: of the
-// facade class always held) and answers the C++ sun; null for a stale entity, as nil before.
-// Since bead oo-9ht.39.3 the slot holds the C++ entity (OOJSEntityGetEntityOfClass for the Sun
-// class, DEFINE_JS_OBJECT_GETTER(JSSunGetSunObject, &sSunClass, ...) before).
-bool JSSunGetSunEntity(ooscript::Context context, ooscript::Object inObject, OOSunEntity** outObject)
+// The getter checks the JS class and answers the C++ sun (the slot holds the
+// C++ entity, read by OOJSEntityGetEntityOfClass for the Sun class); null for a
+// stale entity.
+bool JSSunGetSunEntity(ooscript::Context context, ooscript::Object inObject,
+    OOSunEntity** outObject)
 {
     Entity* entity = nullptr;
     if (!OOJSEntityGetEntityOfClass(context, inObject, &sSunClass, &entity))
@@ -133,25 +129,23 @@ bool JSSunGetSunEntity(ooscript::Context context, ooscript::Object inObject, OOS
     *outObject = dynamic_cast<OOSunEntity*>(entity);
     return true;
 }
-}
+} // namespace
 
 void InitOOJSSun(ooscript::Context context, ooscript::Object global)
 {
-    Object proto = ooscript::initClass((context), (global), (JSEntityPrototype()), &sSunClass, OOJSUnconstructableConstruct, 0, sSunProperties, sSunMethods, NULL, NULL);
+    Object proto = ooscript::initClass(
+        (context), (global), (JSEntityPrototype()), &sSunClass,
+        OOJSUnconstructableConstruct, 0, sSunProperties, sSunMethods, NULL, NULL);
     sSunPrototype = (proto);
     OOJSRegisterObjectConverter(&sSunClass, OOJSEntityObjectConverter);
     OOJSRegisterSubclass(&sSunClass, JSEntityClass());
 }
 
-// The bodies of OOSunEntity (OOJavaScriptExtensions), whose methods are on the OOSunEntity facade,
-// in OOSunEntity+ObjCBridge.mm (bead oo-9ht.51), until that facade goes (oo-9ht.111; proposed
-// ADR-0056 amendments oo-ppc, oo-ykoy and oo-6ia4).
-bool OOJSSunIsVisibleToScripts(void)
-{
-    return true;
-}
+// The bodies of OOSunEntity (OOJavaScriptExtensions).
+bool OOJSSunIsVisibleToScripts(void) { return true; }
 
-void OOJSSunGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
+void OOJSSunGetJSClass(ooscript::ClassDef** outClass,
+    ooscript::Object* outPrototype)
 {
     *outClass = &sSunClass;
     *outPrototype = sSunPrototype;
@@ -163,7 +157,8 @@ std::optional<std::string> OOJSSunJSClassName(void)
 }
 
 namespace {
-static bool SunGetProperty(Context cx, Object obj, PropertyId propID, Value* value)
+static bool SunGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value)
 {
     if (!ooscript::isInt32Id(propID))
         return true;
@@ -180,11 +175,13 @@ static bool SunGetProperty(Context cx, Object obj, PropertyId propID, Value* val
 
     switch (ooscript::idToInt32(propID)) {
     case kSun_radius:
-        return ooscript::newNumberValue(cx, (sun != nullptr ? sun->radius() : 0.0), value);
+        return ooscript::newNumberValue(
+            cx, (sun != nullptr ? sun->radius() : 0.0), value);
 
     case kSun_name: {
         const std::optional<std::string> name = (sun != nullptr ? sun->name() : std::optional<std::string>());
-        *value = OOJSValueFromPList(context, name.has_value() ? oo::PList(*name) : oo::PList());
+        *value = OOJSValueFromPList(
+            context, name.has_value() ? oo::PList(*name) : oo::PList());
         return true;
     }
 
@@ -203,7 +200,7 @@ static bool SunGetProperty(Context cx, Object obj, PropertyId propID, Value* val
 
     OOJS_NATIVE_EXIT
 }
-}
+} // namespace
 
 // *** Methods ***
 
@@ -211,7 +208,6 @@ static bool SunGetProperty(Context cx, Object obj, PropertyId propID, Value* val
 namespace {
 static bool SunGoNova(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     OOSunEntity* sun = nil;
@@ -228,13 +224,13 @@ static bool SunGoNova(ooscript::Context context, ooscript::CallArgs& oojsArgs)
 
     OOJS_NATIVE_EXIT
 }
-}
+} // namespace
 
 // cancelNova()
 namespace {
-static bool SunCancelNova(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SunCancelNova(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     OOSunEntity* sun = nil;
@@ -250,4 +246,4 @@ static bool SunCancelNova(ooscript::Context context, ooscript::CallArgs& oojsArg
 
     OOJS_NATIVE_EXIT
 }
-}
+} // namespace

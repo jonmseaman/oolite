@@ -14,13 +14,12 @@ representation and a property-list dictionary (for loading/saving user defaults
 and for use in areas where portability/ease of coding are more important
 than performance such as the GUI)
 
-C++20 since bead oo-6bux (proposed ADR-0056, Amendment 1 of bead oo-cwz: a hierarchy root). The
-methods a subclass overrides (joystickCount, nameOfJoystick, getAxisWithStick) are virtual;
--init's body is init(), run after construction because it reaches those virtual members
-(amendment oo-vl43 item 2). Since beads oo-9ht.69 and oo-9ht.2 deleted the Objective-C facades
-the class is global, its one subclass is the C++ OOSDLJoystickManager, the shared handler is made
-by a registered factory function (was +setStickHandlerClass:) and the stick-mapper callback is a
-C++ function (was a selector and an object).
+The methods a subclass overrides (joystickCount, nameOfJoystick,
+getAxisWithStick) are virtual; -init's body is init(), run after construction
+because it reaches those virtual members. Its one subclass is the C++
+OOSDLJoystickManager, the shared handler is made by a registered factory
+function (was +setStickHandlerClass:) and the stick-mapper callback is a C++
+function.
 
 
 Oolite
@@ -45,14 +44,14 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFoundation.h"
-#include "oofnd/objc/OOObject.h"
+#include <functional>
+#include <string_view>
 
+#include "OOFoundation.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include <functional>
-#include <string_view>
+#include "oofnd/objc/OOObject.h"
 
 // Enums are used here rather than a more complex ObjC object because
 // these are required very frequently (once per frame) so must be light
@@ -219,16 +218,14 @@ enum {
 };
 
 // Abstracted SDL event types
-typedef struct
-{
+typedef struct {
     uint32_t type;
     int32_t which;
     uint8_t axis;
     int16_t value;
 } JoyAxisEvent;
 
-typedef struct
-{
+typedef struct {
     uint32_t type;
     int32_t which;
     uint8_t button;
@@ -236,8 +233,7 @@ typedef struct
 
 } JoyButtonEvent;
 
-typedef struct
-{
+typedef struct {
     uint32_t type;
     int32_t which;
     uint8_t hat;
@@ -254,11 +250,13 @@ class OOJoystickManager : public oo::RefCounted {
 public:
     OOJoystickManager() = default;
 
-    // The shared handler, made on first use by the registered factory (else a plain manager) and
-    // init()ed; never null, never destroyed. Was +sharedStickHandler.
+    // The shared handler, made on first use by the registered factory (else a
+    // plain manager) and init()ed; never null, never destroyed. Was
+    // +sharedStickHandler.
     static OOJoystickManager* sharedStickHandler();
-    // Registers the platform's handler, before the first sharedStickHandler(). Was
-    // +setStickHandlerClass: (the class is a function that makes the manager).
+    // Registers the platform's handler, before the first sharedStickHandler().
+    // Was +setStickHandlerClass: (the class is a function that makes the
+    // manager).
     using StickHandlerFactory = oo::Ref<OOJoystickManager> (*)();
     static bool setStickHandlerFactory(StickHandlerFactory factory);
 
@@ -267,7 +265,8 @@ public:
     // didn't) so in the future when more handler classes are written,
     // the GameView event loop can just go through an array of handlers
     // until it finds a handler that handles the event.
-    void init(); // -init's body; the facade (or whoever makes the manager) runs it once, right after construction
+    void init(); // -init's body; the facade (or whoever makes the manager) runs
+                 // it once, right after construction
 
     // Roll/pitch axis
     NSPoint rollPitchAxis();
@@ -291,7 +290,8 @@ public:
 
     // Axis profile handling
     void setProfile(OOJoystickAxisProfile* profile, int axis);
-    OOJoystickAxisProfile* getProfileForAxis(int axis); // borrowed; null for an axis with none
+    OOJoystickAxisProfile* getProfileForAxis(
+        int axis); // borrowed; null for an axis with none
     void saveProfileForAxis(int axis);
     void loadProfileForAxis(int axis);
 
@@ -308,8 +308,9 @@ public:
     oo::PList buttonFunctions();
 
     // Set a callback for the next moved axis/pressed button. hwflags
-    // is in the form HW_AXIS | HW_BUTTON (or just one of). The callback is called once, with the
-    // stick function's dictionary (was a selector called by name on an object).
+    // is in the form HW_AXIS | HW_BUTTON (or just one of). The callback is called
+    // once, with the stick function's dictionary (was a selector called by name
+    // on an object).
     using StickCallback = std::function<void(const oo::PList&)>;
     void setCallback(StickCallback callback, char hwflags);
     void clearCallback();
@@ -326,7 +327,8 @@ public:
     void loadStickSettings();
 
     // Methods that should be overridden by all subclasses
-    virtual std::optional<std::string> nameOfJoystick(NSUInteger stickNumber); // nullopt: the device has no name
+    virtual std::optional<std::string> nameOfJoystick(
+        NSUInteger stickNumber); // nullopt: the device has no name
     virtual int16_t getAxisWithStick(NSUInteger stickNum, NSUInteger axisNum);
 
 private:
@@ -339,7 +341,8 @@ private:
     int8_t buttonmap[MAX_STICKS][MAX_BUTTONS] = { };
     bool true_butstate[MAX_STICKS][MAX_BUTTONS] = { };
     double axstate[AXIS_end] = { };
-    BOOL butstate[BUTTON_end] = { }; // still BOOL: getAllButtonStates() hands unconverted callers a const BOOL *
+    BOOL butstate[BUTTON_end] = { }; // still BOOL: getAllButtonStates() hands
+                                     // unconverted callers a const BOOL *
     uint8_t hatstate[MAX_STICKS][MAX_HATS] = { };
     bool precisionMode = { };
     oo::Ref<OOJoystickAxisProfile> roll_profile = { };

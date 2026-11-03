@@ -52,7 +52,7 @@ oolite_sources += files(
     'OOScriptTimer.cpp',
 )
 
-# The façade's backend (bead oo-7wx: QuickJS-ng is the only engine).
+# The facade's backend (QuickJS-ng is the only engine).
 oolite_sources += files('ooscript/JSEngine_quickjs.cpp')
 
 oolite_includes += include_directories('.')

@@ -42,21 +42,25 @@ enum {
     kExhaustFrameCount = 16
 };
 
-/*	C++ only since bead oo-9ht.110 deleted its Objective-C façade (proposed ADR-0056 amendments
-        oo-9ht.12 and oo-9ht.107): the ships make it with exhaustForShip() and hand it to Objective-C
-        with oo::NewEntityFacade, which wraps it in the root's façade. The engine's JS questions reach it
-        through the root's virtual members, an owner's OOSubEntity messages through
-        cxx::OOSubEntityInterface, and the graphics reset manager through a C++ client in
-        OOExhaustPlumeEntity.mm.
+/*	The ships make it with exhaustForShip() and hand it to Objective-C with
+   oo::NewEntityFacade, which wraps it in the root's façade. The engine's JS
+   questions reach it through the root's virtual members, an owner's
+   OOSubEntity messages through cxx::OOSubEntityInterface, and the graphics
+   reset manager through a C++ client in OOExhaustPlumeEntity.mm.
 */
 class OOExhaustPlumeEntity : public Entity, public cxx::OOSubEntityInterface {
 public:
-    // definition: the exhaust's tokens (x y z scale_x scale_y scale_z), read as -oo_floatAtIndex: read them.
-    // A new plume, initialised; null for no tokens. oo::NewEntityFacade hands it to Objective-C.
-    static oo::Ref<OOExhaustPlumeEntity> exhaustForShip(::ShipEntity* ship, const std::vector<std::string>& definition, float scale);
-    // -initForShip:withDefinition:andScale:'s body, run once right after construction (amendment
-    // oo-vl43 item 2): false where the initialiser answered nil.
-    bool initForShip(::ShipEntity* ship, const std::vector<std::string>& definition, float scale);
+    // definition: the exhaust's tokens (x y z scale_x scale_y scale_z), read as
+    // -oo_floatAtIndex: read them. A new plume, initialised; null for no tokens.
+    // oo::NewEntityFacade hands it to Objective-C.
+    static oo::Ref<OOExhaustPlumeEntity> exhaustForShip(
+        ::ShipEntity* ship, const std::vector<std::string>& definition,
+        float scale);
+    // -initForShip:withDefinition:andScale:'s body, run once right after
+    // construction: false where the initialiser
+    // answered nil.
+    bool initForShip(::ShipEntity* ship,
+        const std::vector<std::string>& definition, float scale);
 
     void resetPlume();
 

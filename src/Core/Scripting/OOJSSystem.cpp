@@ -24,51 +24,37 @@
  */
 
 #include "OOJSSystem.h"
-#include "OOJavaScriptEngine.h"
-#include "OOSunEntity.h" // the sun is C++ since bead oo-9ht.111
 
-#include "OOJSEntity.h"
-#include "OOJSPlayer.h"
-#include "OOJSQuaternion.h"
-#include "OOJSSystemInfo.h"
-#include "OOJSVector.h"
-#include "OOPlanetEntity.h"
-#include "PlayerEntityLegacyScriptEngine.h"
-#include "PlayerEntityScriptMethods.h"
-#include "ShipEntity.h"
-#include "StationEntity.h"
-#include "Universe.h"
+#include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
 #include "OODebugStandards.h"
 #include "OOEntityFilterPredicate.h"
+#include "OOJSEntity.h"
+#include "OOJSPlayer.h"
 #include "OOJSPopulatorDefinition.h"
+#include "OOJSQuaternion.h"
 #include "OOJSScript.h"
-
+#include "OOJSSystemInfo.h"
+#include "OOJSVector.h"
+#include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
+#include "OOPlanetEntity.h"
+#include "OOSunEntity.h"
+#include "PlayerEntityLegacyScriptEngine.h"
+#include "PlayerEntityScriptMethods.h"
+#include "ShipEntity.h"
+#include "StationEntity.h"
+#include "Universe.h"
 #include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
-#include <cstring>
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm does it (bead
-        oo-sdz, the sweep exemplar): the class dispatch table becomes a static ooscript::ClassDef
-        (the stub hooks are nullptr), InitClass becomes ooscript::initClass, the engine's
-        DefineObject call becomes ooscript::defineObject (see OOJSClock.mm/OOJSPlayer.mm for the
-        same InitClass-then-defineObject pairing), native methods and class hooks take the
-        façade's hook signature (Context/Object/PropertyId/Value pointer/CallArgs reference), and
-        the directly spelled numeric- and object-conversion calls (NewNumberValue, ValueToNumber,
-        ValueToBoolean, ValueToInt32, ValueToObject, GetProperty) become their ooscript::
-        equivalents. Natives take the
-        façade signature directly (ooscript::Context and a CallArgs reference) and the OOJS_*
-        argument-marshalling macros expand to the CallArgs accessors, so the rest of each function
-        body is UNCHANGED. `this` is renamed to `thisObj`
-        because it is a reserved word once this file compiles as Objective-C++ (ADR-0001).
-
-        System's constructor is unconstructable, the same as Vector's and Station's: the shared
-        OOJSUnconstructableConstruct native is passed to ooscript::initClass directly.
+        System's constructor is unconstructable, the same as Vector's and
+   Station's: the shared OOJSUnconstructableConstruct native is passed to
+   ooscript::initClass directly.
 */
 namespace ooscript {
 }
@@ -83,37 +69,52 @@ using ooscript::PropertyId;
 using ooscript::PropertySpec;
 using ooscript::Value;
 
-// Byte-identical façade <-> jsapi views, local to this call site (see OOJSVector.mm).
+// Byte-identical façade <-> jsapi views, local to this call site (see
+// OOJSVector.mm).
 namespace {
-static inline Object* OOJSFOBJP(ooscript::Object* o) { return reinterpret_cast<Object*>(o); }
+static inline Object* OOJSFOBJP(ooscript::Object* o)
+{
+    return reinterpret_cast<Object*>(o);
+}
 } // namespace
 
 // Support functions for entity search methods.
 namespace {
-static BOOL GetRelativeToAndRange(ooscript::Context context, const std::string& methodName, unsigned* ioArgc, ooscript::Value** ioArgv, Entity** outRelativeTo, double* outRange);
+static BOOL GetRelativeToAndRange(ooscript::Context context,
+    const std::string& methodName,
+    unsigned* ioArgc, ooscript::Value** ioArgv,
+    Entity** outRelativeTo, double* outRange);
 } // namespace
 namespace {
-static std::vector<oo::EntityHold> FindJSVisibleEntities(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range);
+static std::vector<oo::EntityHold> FindJSVisibleEntities(
+    EntityFilterPredicate predicate, void* parameter, Entity* relativeTo,
+    double range);
 } // namespace
 namespace {
-static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range);
+static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate,
+    void* parameter,
+    Entity* relativeTo, double range);
 } // namespace
 namespace {
-static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b, Entity* relativeTo);
+static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
+    Entity* relativeTo);
 } // namespace
 
 namespace {
 static bool SystemAddShipsOrGroup(Context cx, CallArgs& oojsArgs, bool isGroup);
 } // namespace
 namespace {
-static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs, bool isGroup);
+static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs,
+    bool isGroup);
 } // namespace
 
 namespace {
-static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* value);
+static bool SystemGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value);
 } // namespace
 namespace {
-static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool strict, Value* value);
+static bool SystemSetProperty(Context cx, Object obj, PropertyId propID,
+    bool strict, Value* value);
 } // namespace
 
 namespace {
@@ -126,32 +127,41 @@ namespace {
 static bool SystemAddMoon(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemSendAllShipsAway(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemSendAllShipsAway(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemCountShipsWithPrimaryRole(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemCountShipsWithPrimaryRole(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemCountShipsWithRole(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemCountShipsWithRole(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemCountEntitiesWithScanClass(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemCountEntitiesWithScanClass(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemShipsWithPrimaryRole(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemShipsWithPrimaryRole(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemShipsWithRole(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemShipsWithRole(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemEntitiesWithScanClass(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemEntitiesWithScanClass(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemFilteredEntities(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemFilteredEntities(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 
 namespace {
-static bool SystemLocationFromCode(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemLocationFromCode(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
 static bool SystemAddShips(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
@@ -160,48 +170,62 @@ namespace {
 static bool SystemAddGroup(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemAddShipsToRoute(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemAddShipsToRoute(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemAddGroupToRoute(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemAddGroupToRoute(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemAddVisualEffect(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemAddVisualEffect(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemSetPopulator(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemSetPopulator(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemSetWaypoint(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-} // namespace
-
-namespace {
-static bool SystemLegacyAddShips(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-} // namespace
-namespace {
-static bool SystemLegacyAddSystemShips(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-} // namespace
-namespace {
-static bool SystemLegacyAddShipsAt(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-} // namespace
-namespace {
-static bool SystemLegacyAddShipsAtPrecisely(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-} // namespace
-namespace {
-static bool SystemLegacyAddShipsWithinRadius(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-} // namespace
-namespace {
-static bool SystemLegacySpawnShip(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemSetWaypoint(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 
 namespace {
-static bool SystemStaticSystemNameForID(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemLegacyAddShips(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemStaticSystemIDForName(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemLegacyAddSystemShips(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemStaticInfoForSystem(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemLegacyAddShipsAt(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+} // namespace
+namespace {
+static bool SystemLegacyAddShipsAtPrecisely(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+} // namespace
+namespace {
+static bool SystemLegacyAddShipsWithinRadius(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+} // namespace
+namespace {
+static bool SystemLegacySpawnShip(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+} // namespace
+
+namespace {
+static bool SystemStaticSystemNameForID(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+} // namespace
+namespace {
+static bool SystemStaticSystemIDForName(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+} // namespace
+namespace {
+static bool SystemStaticInfoForSystem(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 
 namespace {
@@ -235,10 +259,12 @@ enum : std::uint8_t {
     kSystem_economy, // economy ID, integer, read/write
     kSystem_economyDescription, // economy ID description, string, read-only
     kSystem_government, // government ID, integer, read/write
-    kSystem_governmentDescription, // government ID description, string, read-only
+    kSystem_governmentDescription, // government ID description, string,
+                                   // read-only
     kSystem_ID, // planet number, integer, read-only
     kSystem_info, // system info dictionary, SystemInfo, read/write
-    kSystem_inhabitantsDescription, // description of inhabitant species, string, read/write
+    kSystem_inhabitantsDescription, // description of inhabitant species, string,
+                                    // read/write
     kSystem_isInterstellarSpace, // is interstellar space, boolean, read-only
     kSystem_mainPlanet, // system's main planet, Planet, read-only
     kSystem_mainStation, // system's main station, Station, read-only
@@ -247,9 +273,12 @@ enum : std::uint8_t {
     kSystem_population, // population, integer, read/write
     kSystem_populatorSettings, // populator settings, dictionary, read-only
     kSystem_productivity, // productivity, integer, read/write
-    kSystem_pseudoRandom100, // constant-per-system pseudorandom number in [0..100), integer, read-only
-    kSystem_pseudoRandom256, // constant-per-system pseudorandom number in [0..256), integer, read-only
-    kSystem_pseudoRandomNumber, // constant-per-system pseudorandom number in [0..1), double, read-only
+    kSystem_pseudoRandom100, // constant-per-system pseudorandom number in
+                             // [0..100), integer, read-only
+    kSystem_pseudoRandom256, // constant-per-system pseudorandom number in
+                             // [0..256), integer, read-only
+    kSystem_pseudoRandomNumber, // constant-per-system pseudorandom number in
+                                // [0..1), double, read-only
     kSystem_sun, // system's sun, Planet, read-only
     kSystem_stations, // list of dockable entities, read-only
     kSystem_techLevel, // tech level ID, integer, read/write
@@ -265,31 +294,50 @@ constexpr PropertyFlag kSystemPropertyFlagsRW = PropertyFlag::Permanent | Proper
 
 namespace {
 static PropertySpec sSystemProperties[] = {
-    // JS name						ID							flags					getter	setter
-    { "allDemoShips", kSystem_allDemoShips, kSystemPropertyFlagsRO, nullptr, nullptr },
+    // JS name						ID
+    // flags					getter	setter
+    { "allDemoShips", kSystem_allDemoShips, kSystemPropertyFlagsRO, nullptr,
+        nullptr },
     { "allShips", kSystem_allShips, kSystemPropertyFlagsRO, nullptr, nullptr },
-    { "allVisualEffects", kSystem_allVisualEffects, kSystemPropertyFlagsRO, nullptr, nullptr },
-    { "ambientLevel", kSystem_ambientLevel, kSystemPropertyFlagsRW, nullptr, nullptr },
-    { "breakPattern", kSystem_breakPattern, kSystemPropertyFlagsRW, nullptr, nullptr },
-    { "description", kSystem_description, kSystemPropertyFlagsRW, nullptr, nullptr },
+    { "allVisualEffects", kSystem_allVisualEffects, kSystemPropertyFlagsRO,
+        nullptr, nullptr },
+    { "ambientLevel", kSystem_ambientLevel, kSystemPropertyFlagsRW, nullptr,
+        nullptr },
+    { "breakPattern", kSystem_breakPattern, kSystemPropertyFlagsRW, nullptr,
+        nullptr },
+    { "description", kSystem_description, kSystemPropertyFlagsRW, nullptr,
+        nullptr },
     { "economy", kSystem_economy, kSystemPropertyFlagsRW, nullptr, nullptr },
-    { "economyDescription", kSystem_economyDescription, kSystemPropertyFlagsRO, nullptr, nullptr },
-    { "government", kSystem_government, kSystemPropertyFlagsRW, nullptr, nullptr },
-    { "governmentDescription", kSystem_governmentDescription, kSystemPropertyFlagsRO, nullptr, nullptr },
+    { "economyDescription", kSystem_economyDescription, kSystemPropertyFlagsRO,
+        nullptr, nullptr },
+    { "government", kSystem_government, kSystemPropertyFlagsRW, nullptr,
+        nullptr },
+    { "governmentDescription", kSystem_governmentDescription,
+        kSystemPropertyFlagsRO, nullptr, nullptr },
     { "ID", kSystem_ID, kSystemPropertyFlagsRO, nullptr, nullptr },
     { "info", kSystem_info, kSystemPropertyFlagsRO, nullptr, nullptr },
-    { "inhabitantsDescription", kSystem_inhabitantsDescription, kSystemPropertyFlagsRW, nullptr, nullptr },
-    { "isInterstellarSpace", kSystem_isInterstellarSpace, kSystemPropertyFlagsRO, nullptr, nullptr },
-    { "mainPlanet", kSystem_mainPlanet, kSystemPropertyFlagsRO, nullptr, nullptr },
-    { "mainStation", kSystem_mainStation, kSystemPropertyFlagsRO, nullptr, nullptr },
+    { "inhabitantsDescription", kSystem_inhabitantsDescription,
+        kSystemPropertyFlagsRW, nullptr, nullptr },
+    { "isInterstellarSpace", kSystem_isInterstellarSpace, kSystemPropertyFlagsRO,
+        nullptr, nullptr },
+    { "mainPlanet", kSystem_mainPlanet, kSystemPropertyFlagsRO, nullptr,
+        nullptr },
+    { "mainStation", kSystem_mainStation, kSystemPropertyFlagsRO, nullptr,
+        nullptr },
     { "name", kSystem_name, kSystemPropertyFlagsRW, nullptr, nullptr },
     { "planets", kSystem_planets, kSystemPropertyFlagsRO, nullptr, nullptr },
-    { "population", kSystem_population, kSystemPropertyFlagsRW, nullptr, nullptr },
-    { "populatorSettings", kSystem_populatorSettings, kSystemPropertyFlagsRO, nullptr, nullptr },
-    { "productivity", kSystem_productivity, kSystemPropertyFlagsRW, nullptr, nullptr },
-    { "pseudoRandom100", kSystem_pseudoRandom100, kSystemPropertyFlagsRO, nullptr, nullptr },
-    { "pseudoRandom256", kSystem_pseudoRandom256, kSystemPropertyFlagsRO, nullptr, nullptr },
-    { "pseudoRandomNumber", kSystem_pseudoRandomNumber, kSystemPropertyFlagsRO, nullptr, nullptr },
+    { "population", kSystem_population, kSystemPropertyFlagsRW, nullptr,
+        nullptr },
+    { "populatorSettings", kSystem_populatorSettings, kSystemPropertyFlagsRO,
+        nullptr, nullptr },
+    { "productivity", kSystem_productivity, kSystemPropertyFlagsRW, nullptr,
+        nullptr },
+    { "pseudoRandom100", kSystem_pseudoRandom100, kSystemPropertyFlagsRO,
+        nullptr, nullptr },
+    { "pseudoRandom256", kSystem_pseudoRandom256, kSystemPropertyFlagsRO,
+        nullptr, nullptr },
+    { "pseudoRandomNumber", kSystem_pseudoRandomNumber, kSystemPropertyFlagsRO,
+        nullptr, nullptr },
     { "stations", kSystem_stations, kSystemPropertyFlagsRO, nullptr, nullptr },
     { "sun", kSystem_sun, kSystemPropertyFlagsRO, nullptr, nullptr },
     { "techLevel", kSystem_techLevel, kSystemPropertyFlagsRW, nullptr, nullptr },
@@ -299,14 +347,14 @@ static PropertySpec sSystemProperties[] = {
 };
 } // namespace
 
-// A raw jsapi mirror of sSystemProperties, used only for the two bad-property error
-// reporters in OOJavaScriptEngine.m (OOJSReportBadPropertySelector/Value): those helpers are
-// outside this bead's scope (shared across every binding file and are retargeted, if at all,
-// by a later seam) and still take a ooscript::PropertySpec*, not ooscript::PropertySpec* (see
-// OOJSVector.mm's sVectorPropertiesRaw).
+// A raw jsapi mirror of sSystemProperties, used only for the two bad-property
+// error reporters in OOJavaScriptEngine.m
+// (OOJSReportBadPropertySelector/Value), which are shared across every binding
+// file and take a ooscript::PropertySpec*.
 namespace {
 static ooscript::PropertySpec sSystemPropertiesRaw[] = {
-    // JS name						ID								flags
+    // JS name						ID
+    // flags
     { "allDemoShips", kSystem_allDemoShips, OOJS_PROP_READONLY_CB },
     { "allShips", kSystem_allShips, OOJS_PROP_READONLY_CB },
     { "allVisualEffects", kSystem_allVisualEffects, OOJS_PROP_READONLY_CB },
@@ -316,10 +364,12 @@ static ooscript::PropertySpec sSystemPropertiesRaw[] = {
     { "economy", kSystem_economy, OOJS_PROP_READWRITE_CB },
     { "economyDescription", kSystem_economyDescription, OOJS_PROP_READONLY_CB },
     { "government", kSystem_government, OOJS_PROP_READWRITE_CB },
-    { "governmentDescription", kSystem_governmentDescription, OOJS_PROP_READONLY_CB },
+    { "governmentDescription", kSystem_governmentDescription,
+        OOJS_PROP_READONLY_CB },
     { "ID", kSystem_ID, OOJS_PROP_READONLY_CB },
     { "info", kSystem_info, OOJS_PROP_READONLY_CB },
-    { "inhabitantsDescription", kSystem_inhabitantsDescription, OOJS_PROP_READWRITE_CB },
+    { "inhabitantsDescription", kSystem_inhabitantsDescription,
+        OOJS_PROP_READWRITE_CB },
     { "isInterstellarSpace", kSystem_isInterstellarSpace, OOJS_PROP_READONLY_CB },
     { "mainPlanet", kSystem_mainPlanet, OOJS_PROP_READONLY_CB },
     { "mainStation", kSystem_mainStation, OOJS_PROP_READONLY_CB },
@@ -342,7 +392,8 @@ static ooscript::PropertySpec sSystemPropertiesRaw[] = {
 
 namespace {
 static FunctionSpec sSystemMethods[] = {
-    // JS name								Function								min args
+    // JS name								Function
+    // min args
     { "toString", SystemToString, 0, 0 },
     { "addGroup", SystemAddGroup, 3, 0 },
     { "addGroupToRoute", SystemAddGroupToRoute, 2, 0 },
@@ -385,15 +436,17 @@ static FunctionSpec sSystemStaticMethods[] = {
 
 void InitOOJSSystem(ooscript::Context context, ooscript::Object global)
 {
-    Object proto = ooscript::initClass((context), (global), nullptr, &sSystemClass,
-        OOJSUnconstructableConstruct, 0, sSystemProperties, sSystemMethods,
-        nullptr, sSystemStaticMethods);
+    Object proto = ooscript::initClass(
+        (context), (global), nullptr, &sSystemClass, OOJSUnconstructableConstruct,
+        0, sSystemProperties, sSystemMethods, nullptr, sSystemStaticMethods);
     // Create system object as a property of the global object.
-    ooscript::defineObject((context), (global), "system", &sSystemClass, proto, OOJS_PROP_READONLY);
+    ooscript::defineObject((context), (global), "system", &sSystemClass, proto,
+        OOJS_PROP_READONLY);
 }
 
 namespace {
-static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* value)
+static bool SystemGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value)
 {
     if (!ooscript::isInt32Id(propID))
         return true;
@@ -413,33 +466,40 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* 
     // Handle cases which don't require systemData.
     switch (ooscript::idToInt32(propID)) {
     case kSystem_ID:
-        *value_raw = ooscript::int32Value(player != nullptr ? player->currentSystemID() : 0);
+        *value_raw = ooscript::int32Value(
+            player != nullptr ? player->currentSystemID() : 0);
         return true;
 
     case kSystem_isInterstellarSpace:
-        *value_raw = OOJSValueFromBOOL((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false));
+        *value_raw = OOJSValueFromBOOL(
+            (UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false));
         return true;
 
     case kSystem_mainStation:
-        result = oo::EntityObjectNode((UNIVERSE != nullptr ? UNIVERSE->station() : nullptr));
+        result = oo::EntityObjectNode(
+            (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr));
         handled = true;
         break;
 
     case kSystem_mainPlanet:
-        result = oo::EntityObjectNode((UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr)); // the planet is C++ since bead oo-9ht.129
+        result = oo::EntityObjectNode(
+            (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr));
         handled = true;
         break;
 
     case kSystem_sun:
-        result = oo::EntityObjectNode((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr));
+        result = oo::EntityObjectNode(
+            (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr));
         handled = true;
         break;
 
     case kSystem_planets: {
-        std::vector<oo::EntityHold> visible; // the planets (their objects held, bead oo-9ht.39.26)
-        for (const auto& r : (UNIVERSE != nullptr ? UNIVERSE->planets() : std::vector<oo::EntityHold>())) {
+        std::vector<oo::EntityHold> visible; // the planets (their objects held)
+        for (const auto& r :
+            (UNIVERSE != nullptr ? UNIVERSE->planets()
+                                 : std::vector<oo::EntityHold>())) {
             if (!OOJSEntityIsVisibleToScripts(r.get()))
-                continue; // the C++ planet's answer (bead oo-9ht.39.5.1)
+                continue; // the C++ planet's answer
             visible.push_back(r);
         }
         result = oo::EntityNodesFrom(visible);
@@ -448,14 +508,20 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* 
     }
 
     case kSystem_stations:
-        result = oo::EntityNodesFrom((UNIVERSE != nullptr ? UNIVERSE->stations() : std::vector<oo::EntityHold>()));
+        result = oo::EntityNodesFrom((UNIVERSE != nullptr
+                ? UNIVERSE->stations()
+                : std::vector<oo::EntityHold>()));
         handled = true;
         break;
 
     case kSystem_waypoints: {
-        // An immutable dictionary of the waypoints by key, as -currentWaypoints built it.
+        // An immutable dictionary of the waypoints by key, as -currentWaypoints
+        // built it.
         oo::PList::Dict waypoints;
-        for (const auto& [key, waypoint] : (UNIVERSE != nullptr ? UNIVERSE->currentWaypoints() : std::map<std::string, oo::EntityHold, std::less<>>())) {
+        for (const auto& [key, waypoint] :
+            (UNIVERSE != nullptr
+                    ? UNIVERSE->currentWaypoints()
+                    : std::map<std::string, oo::EntityHold, std::less<>>())) {
             if (waypoint.get() != nullptr)
                 waypoints[key] = oo::EntityObjectNode(waypoint.get());
         }
@@ -465,61 +531,87 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* 
     }
 
     case kSystem_wormholes:
-        result = oo::EntityNodesFrom((UNIVERSE != nullptr ? UNIVERSE->wormholes() : std::vector<oo::EntityHold>()));
+        result = oo::EntityNodesFrom((UNIVERSE != nullptr
+                ? UNIVERSE->wormholes()
+                : std::vector<oo::EntityHold>()));
         handled = true;
         break;
 
     case kSystem_allShips:
         OOJS_BEGIN_FULL_NATIVE(context)
-        result = oo::EntityNodesFrom((UNIVERSE != nullptr ? UNIVERSE->findShipsMatchingPredicate(JSEntityIsJavaScriptSearchablePredicate, NULL, -1, nullptr) : std::vector<oo::EntityHold>()));
+        result = oo::EntityNodesFrom(
+            (UNIVERSE != nullptr
+                    ? UNIVERSE->findShipsMatchingPredicate(
+                          JSEntityIsJavaScriptSearchablePredicate, NULL, -1, nullptr)
+                    : std::vector<oo::EntityHold>()));
         OOJS_END_FULL_NATIVE
         handled = true;
         break;
 
     case kSystem_allDemoShips:
         OOJS_BEGIN_FULL_NATIVE(context)
-        result = oo::EntityNodesFrom((UNIVERSE != nullptr ? UNIVERSE->findShipsMatchingPredicate(JSEntityIsDemoShipPredicate, NULL, -1, nullptr) : std::vector<oo::EntityHold>()));
+        result = oo::EntityNodesFrom(
+            (UNIVERSE != nullptr
+                    ? UNIVERSE->findShipsMatchingPredicate(
+                          JSEntityIsDemoShipPredicate, NULL, -1, nullptr)
+                    : std::vector<oo::EntityHold>()));
         OOJS_END_FULL_NATIVE
         handled = true;
         break;
 
     case kSystem_allVisualEffects:
         OOJS_BEGIN_FULL_NATIVE(context)
-        result = oo::EntityNodesFrom((UNIVERSE != nullptr ? UNIVERSE->findVisualEffectsMatchingPredicate(JSEntityIsJavaScriptSearchablePredicate, NULL, -1, nullptr) : std::vector<oo::EntityHold>()));
+        result = oo::EntityNodesFrom(
+            (UNIVERSE != nullptr
+                    ? UNIVERSE->findVisualEffectsMatchingPredicate(
+                          JSEntityIsJavaScriptSearchablePredicate, NULL, -1, nullptr)
+                    : std::vector<oo::EntityHold>()));
         OOJS_END_FULL_NATIVE
         handled = true;
         break;
 
     case kSystem_ambientLevel:
-        return ooscript::newNumberValue(cx, (UNIVERSE != nullptr ? UNIVERSE->getAmbientLightLevel() : 0.0f), value);
+        return ooscript::newNumberValue(
+            cx, (UNIVERSE != nullptr ? UNIVERSE->getAmbientLightLevel() : 0.0f),
+            value);
 
     case kSystem_info:
-        *value_raw = GetJSSystemInfoForSystem(context, (player != nullptr ? player->currentGalaxyID() : OOGalaxyID { }), (player != nullptr ? player->currentSystemID() : 0));
+        *value_raw = GetJSSystemInfoForSystem(
+            context,
+            (player != nullptr ? player->currentGalaxyID() : OOGalaxyID { }),
+            (player != nullptr ? player->currentSystemID() : 0));
         return true;
 
     case kSystem_pseudoRandomNumber:
-        return ooscript::newNumberValue(cx, (player != nullptr ? player->systemPseudoRandomFloat() : 0.0), value);
+        return ooscript::newNumberValue(
+            cx, (player != nullptr ? player->systemPseudoRandomFloat() : 0.0),
+            value);
 
     case kSystem_pseudoRandom100:
-        *value_raw = ooscript::int32Value(player != nullptr ? player->systemPseudoRandom100() : unsigned { });
+        *value_raw = ooscript::int32Value(
+            player != nullptr ? player->systemPseudoRandom100() : unsigned { });
         return true;
 
     case kSystem_pseudoRandom256:
-        *value_raw = ooscript::int32Value(player != nullptr ? player->systemPseudoRandom256() : unsigned { });
+        *value_raw = ooscript::int32Value(
+            player != nullptr ? player->systemPseudoRandom256() : unsigned { });
         return true;
 
     case kSystem_breakPattern:
-        *value_raw = OOJSValueFromBOOL((UNIVERSE != nullptr ? UNIVERSE->witchspaceBreakPattern() : false));
+        *value_raw = OOJSValueFromBOOL(
+            (UNIVERSE != nullptr ? UNIVERSE->witchspaceBreakPattern() : false));
         return true;
 
     case kSystem_populatorSettings:
-        *value_raw = OOJSValueFromPList(context, (UNIVERSE != nullptr ? UNIVERSE->getPopulatorSettings() : oo::PList()));
+        *value_raw = OOJSValueFromPList(
+            context, (UNIVERSE != nullptr ? UNIVERSE->getPopulatorSettings() : oo::PList()));
         return true;
     }
 
     if (!handled) {
         // Handle cases which do require systemData.
-        if (EXPECT(!(UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false))) {
+        if (EXPECT(
+                !(UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false))) {
             const oo::PList systemData = (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList());
 
             switch (ooscript::idToInt32(propID)) {
@@ -539,35 +631,45 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* 
                 break;
 
             case kSystem_government:
-                *value_raw = ooscript::int32Value(systemData.get<int>(std::string(KEY_GOVERNMENT)));
+                *value_raw = ooscript::int32Value(
+                    systemData.get<int>(std::string(KEY_GOVERNMENT)));
                 return true;
 
             case kSystem_governmentDescription:
-                result = oo::PList(cxx_OODisplayStringFromGovernmentID(systemData.get<int>(std::string(KEY_GOVERNMENT))).value_or(std::string(OO_DESC("not-applicable"))));
+                result = oo::PList(cxx_OODisplayStringFromGovernmentID(
+                    systemData.get<int>(std::string(KEY_GOVERNMENT)))
+                        .value_or(std::string(OO_DESC("not-applicable"))));
                 break;
 
             case kSystem_economy:
-                *value_raw = ooscript::int32Value(systemData.get<int>(std::string(KEY_ECONOMY)));
+                *value_raw = ooscript::int32Value(
+                    systemData.get<int>(std::string(KEY_ECONOMY)));
                 return true;
 
             case kSystem_economyDescription:
-                result = oo::PList(cxx_OODisplayStringFromEconomyID(systemData.get<int>(std::string(KEY_ECONOMY))).value_or(std::string(OO_DESC("not-applicable"))));
+                result = oo::PList(cxx_OODisplayStringFromEconomyID(
+                    systemData.get<int>(std::string(KEY_ECONOMY)))
+                        .value_or(std::string(OO_DESC("not-applicable"))));
                 break;
 
             case kSystem_techLevel:
-                *value_raw = ooscript::int32Value(systemData.get<int>(std::string(KEY_TECHLEVEL)));
+                *value_raw = ooscript::int32Value(
+                    systemData.get<int>(std::string(KEY_TECHLEVEL)));
                 return true;
 
             case kSystem_population:
-                *value_raw = ooscript::int32Value(systemData.get<int>(std::string(KEY_POPULATION)));
+                *value_raw = ooscript::int32Value(
+                    systemData.get<int>(std::string(KEY_POPULATION)));
                 return true;
 
             case kSystem_productivity:
-                *value_raw = ooscript::int32Value(systemData.get<int>(std::string(KEY_PRODUCTIVITY)));
+                *value_raw = ooscript::int32Value(
+                    systemData.get<int>(std::string(KEY_PRODUCTIVITY)));
                 return true;
 
             default:
-                OOJSReportBadPropertySelector(context, thisObj, (propID), sSystemPropertiesRaw);
+                OOJSReportBadPropertySelector(context, thisObj, (propID),
+                    sSystemPropertiesRaw);
                 return false;
             }
         } else {
@@ -611,7 +713,8 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* 
                 return true;
 
             default:
-                OOJSReportBadPropertySelector(context, thisObj, (propID), sSystemPropertiesRaw);
+                OOJSReportBadPropertySelector(context, thisObj, (propID),
+                    sSystemPropertiesRaw);
                 return false;
             }
         }
@@ -625,7 +728,8 @@ static bool SystemGetProperty(Context cx, Object obj, PropertyId propID, Value* 
 } // namespace
 
 namespace {
-static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*strict*/, Value* value)
+static bool SystemSetProperty(Context cx, Object obj, PropertyId propID,
+    bool /*strict*/, Value* value)
 {
     if (!ooscript::isInt32Id(propID))
         return true;
@@ -640,7 +744,8 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     OOGalaxyID galaxy;
     OOSystemID system;
     std::optional<std::string> stringValue;
-    oo::PList manifest; // the running script's manifest identifier, handed on as it was read
+    oo::PList manifest; // the running script's manifest identifier, handed on as
+                        // it was read
     double fValue;
     int32_t iValue;
     bool bValue;
@@ -676,19 +781,24 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     if (system == -1)
         return true; // Can't change anything else in interstellar space.
 
-    // The running script (C++ since bead oo-9ht.133 deleted its last facade): a message to no script
-    // answered null.
+    // The running script: null when no script runs.
     OOJSScript* runningScript = OOJSScript::currentlyRunningScript();
-    manifest = (runningScript != nullptr) ? runningScript->propertyNamed(kLocalManifestProperty) : oo::PList();
+    manifest = (runningScript != nullptr)
+        ? runningScript->propertyNamed(kLocalManifestProperty)
+        : oo::PList();
     // the identifier as -fromManifest: read it: a string, else none
-    const std::optional<std::string> manifestID = manifest.isString() ? std::optional<std::string>(*manifest.getIf<std::string>()) : std::nullopt;
+    const std::optional<std::string> manifestID = manifest.isString()
+        ? std::optional<std::string>(*manifest.getIf<std::string>())
+        : std::nullopt;
 
     switch (ooscript::idToInt32(propID)) {
     case kSystem_name:
         stringValue = cxx_OOStringFromJSValue(context, *value_raw);
         if (stringValue.has_value()) {
             if (UNIVERSE != nullptr)
-                UNIVERSE->setSystemDataForGalaxy(galaxy, system, std::string(KEY_NAME), oo::PList(*stringValue), manifestID, OO_LAYER_OXP_DYNAMIC);
+                UNIVERSE->setSystemDataForGalaxy(
+                    galaxy, system, std::string(KEY_NAME), oo::PList(*stringValue),
+                    manifestID, OO_LAYER_OXP_DYNAMIC);
             return true;
         }
         break;
@@ -697,7 +807,9 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
         stringValue = cxx_OOStringFromJSValue(context, *value_raw);
         if (stringValue.has_value()) {
             if (UNIVERSE != nullptr)
-                UNIVERSE->setSystemDataForGalaxy(galaxy, system, std::string(KEY_DESCRIPTION), oo::PList(*stringValue), manifestID, OO_LAYER_OXP_DYNAMIC);
+                UNIVERSE->setSystemDataForGalaxy(
+                    galaxy, system, std::string(KEY_DESCRIPTION),
+                    oo::PList(*stringValue), manifestID, OO_LAYER_OXP_DYNAMIC);
             return true;
         }
         break;
@@ -706,7 +818,9 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
         stringValue = cxx_OOStringFromJSValue(context, *value_raw);
         if (stringValue.has_value()) {
             if (UNIVERSE != nullptr)
-                UNIVERSE->setSystemDataForGalaxy(galaxy, system, std::string(KEY_INHABITANTS), oo::PList(*stringValue), manifestID, OO_LAYER_OXP_DYNAMIC);
+                UNIVERSE->setSystemDataForGalaxy(
+                    galaxy, system, std::string(KEY_INHABITANTS),
+                    oo::PList(*stringValue), manifestID, OO_LAYER_OXP_DYNAMIC);
             return true;
         }
         break;
@@ -718,7 +832,10 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
             if (7 < iValue)
                 iValue = 7;
             if (UNIVERSE != nullptr)
-                UNIVERSE->setSystemDataForGalaxy(galaxy, system, std::string(KEY_GOVERNMENT), oo::PList::signedInteger(iValue), manifestID, OO_LAYER_OXP_DYNAMIC);
+                UNIVERSE->setSystemDataForGalaxy(galaxy, system,
+                    std::string(KEY_GOVERNMENT),
+                    oo::PList::signedInteger(iValue),
+                    manifestID, OO_LAYER_OXP_DYNAMIC);
             return true;
         }
         break;
@@ -730,7 +847,10 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
             if (7 < iValue)
                 iValue = 7;
             if (UNIVERSE != nullptr)
-                UNIVERSE->setSystemDataForGalaxy(galaxy, system, std::string(KEY_ECONOMY), oo::PList::signedInteger(iValue), manifestID, OO_LAYER_OXP_DYNAMIC);
+                UNIVERSE->setSystemDataForGalaxy(galaxy, system,
+                    std::string(KEY_ECONOMY),
+                    oo::PList::signedInteger(iValue),
+                    manifestID, OO_LAYER_OXP_DYNAMIC);
             return true;
         }
         break;
@@ -742,7 +862,10 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
             if (15 < iValue)
                 iValue = 15;
             if (UNIVERSE != nullptr)
-                UNIVERSE->setSystemDataForGalaxy(galaxy, system, std::string(KEY_TECHLEVEL), oo::PList::signedInteger(iValue), manifestID, OO_LAYER_OXP_DYNAMIC);
+                UNIVERSE->setSystemDataForGalaxy(galaxy, system,
+                    std::string(KEY_TECHLEVEL),
+                    oo::PList::signedInteger(iValue),
+                    manifestID, OO_LAYER_OXP_DYNAMIC);
             return true;
         }
         break;
@@ -750,7 +873,10 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     case kSystem_population:
         if (ooscript::valueToInt32(cx, *value, &iValue)) {
             if (UNIVERSE != nullptr)
-                UNIVERSE->setSystemDataForGalaxy(galaxy, system, std::string(KEY_POPULATION), oo::PList::signedInteger(iValue), manifestID, OO_LAYER_OXP_DYNAMIC);
+                UNIVERSE->setSystemDataForGalaxy(galaxy, system,
+                    std::string(KEY_POPULATION),
+                    oo::PList::signedInteger(iValue),
+                    manifestID, OO_LAYER_OXP_DYNAMIC);
             return true;
         }
         break;
@@ -758,17 +884,22 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     case kSystem_productivity:
         if (ooscript::valueToInt32(cx, *value, &iValue)) {
             if (UNIVERSE != nullptr)
-                UNIVERSE->setSystemDataForGalaxy(galaxy, system, std::string(KEY_PRODUCTIVITY), oo::PList::signedInteger(iValue), manifestID, OO_LAYER_OXP_DYNAMIC);
+                UNIVERSE->setSystemDataForGalaxy(galaxy, system,
+                    std::string(KEY_PRODUCTIVITY),
+                    oo::PList::signedInteger(iValue),
+                    manifestID, OO_LAYER_OXP_DYNAMIC);
             return true;
         }
         break;
 
     default:
-        OOJSReportBadPropertySelector(context, thisObj, (propID), sSystemPropertiesRaw);
+        OOJSReportBadPropertySelector(context, thisObj, (propID),
+            sSystemPropertiesRaw);
         return false;
     }
 
-    OOJSReportBadPropertyValue(context, thisObj, (propID), sSystemPropertiesRaw, *value_raw);
+    OOJSReportBadPropertyValue(context, thisObj, (propID), sSystemPropertiesRaw,
+        *value_raw);
     return false;
 
     OOJS_NATIVE_EXIT
@@ -779,9 +910,9 @@ static bool SystemSetProperty(Context cx, Object obj, PropertyId propID, bool /*
 
 // toString() : String
 namespace {
-static bool SystemToString(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemToString(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
@@ -789,7 +920,12 @@ static bool SystemToString(ooscript::Context context, ooscript::CallArgs& oojsAr
 
     const oo::PList systemData = (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList());
     const oo::PList* systemName = systemData.find(KEY_NAME); // -objectForKey:; "(null)" for none
-    systemDesc = oo::str::format("[System %u:%u \"%s\"]", (player != nullptr ? player->currentGalaxyID() : OOGalaxyID { }), (player != nullptr ? player->currentSystemID() : 0), oo::DescriptionOf(systemName != nullptr ? *systemName : oo::PList()).c_str());
+    systemDesc = oo::str::format(
+        "[System %u:%u \"%s\"]",
+        (player != nullptr ? player->currentGalaxyID() : OOGalaxyID { }),
+        (player != nullptr ? player->currentSystemID() : 0),
+        oo::DescriptionOf(systemName != nullptr ? *systemName : oo::PList())
+            .c_str());
     OOJS_RETURN_PLIST(oo::PList(systemDesc));
 
     OOJS_NATIVE_EXIT
@@ -798,9 +934,9 @@ static bool SystemToString(ooscript::Context context, ooscript::CallArgs& oojsAr
 
 // addPlanet(key : String) : Planet
 namespace {
-static bool SystemAddPlanet(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemAddPlanet(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
@@ -810,15 +946,19 @@ static bool SystemAddPlanet(ooscript::Context context, ooscript::CallArgs& oojsA
     if (oojsArgs.count() > 0)
         key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!key.has_value())) {
-        cxx_OOJSReportBadArguments(context, "System", "addPlanet", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (planet key)");
+        cxx_OOJSReportBadArguments(context, "System", "addPlanet",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "string (planet key)");
         return false;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    planet = (player != nullptr ? player->addPlanetEntity(*key) : (OOPlanetEntity*)nullptr);
+    planet = (player != nullptr ? player->addPlanetEntity(*key)
+                                : (OOPlanetEntity*)nullptr);
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN(OOJSValueFromCxxObject(context, planet)); // the C++ planet's JS value (its object's until bead oo-9ht.39.8.1)
+    OOJS_RETURN(
+        OOJSValueFromCxxObject(context, planet)); // the C++ planet's JS value
 
     OOJS_NATIVE_EXIT
 }
@@ -826,9 +966,9 @@ static bool SystemAddPlanet(ooscript::Context context, ooscript::CallArgs& oojsA
 
 // addMoon(key : String) : Planet
 namespace {
-static bool SystemAddMoon(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemAddMoon(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
@@ -838,15 +978,19 @@ static bool SystemAddMoon(ooscript::Context context, ooscript::CallArgs& oojsArg
     if (oojsArgs.count() > 0)
         key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!key.has_value())) {
-        cxx_OOJSReportBadArguments(context, "System", "addMoon", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (planet key)");
+        cxx_OOJSReportBadArguments(context, "System", "addMoon",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "string (planet key)");
         return false;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    planet = (player != nullptr ? player->addMoonEntity(*key) : (OOPlanetEntity*)nullptr);
+    planet = (player != nullptr ? player->addMoonEntity(*key)
+                                : (OOPlanetEntity*)nullptr);
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN(OOJSValueFromCxxObject(context, planet)); // the C++ planet's JS value (its object's until bead oo-9ht.39.8.1)
+    OOJS_RETURN(
+        OOJSValueFromCxxObject(context, planet)); // the C++ planet's JS value
 
     OOJS_NATIVE_EXIT
 }
@@ -854,9 +998,9 @@ static bool SystemAddMoon(ooscript::Context context, ooscript::CallArgs& oojsArg
 
 // sendAllShipsAway()
 namespace {
-static bool SystemSendAllShipsAway(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemSendAllShipsAway(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
@@ -869,33 +1013,39 @@ static bool SystemSendAllShipsAway(ooscript::Context context, ooscript::CallArgs
 }
 } // namespace
 
-// countShipsWithPrimaryRole(role : String [, relativeTo : Entity [, range : Number]]) : Number
+// countShipsWithPrimaryRole(role : String [, relativeTo : Entity [, range :
+// Number]]) : Number
 namespace {
-static bool SystemCountShipsWithPrimaryRole(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemCountShipsWithPrimaryRole(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> role;
-    Entity* relativeTo = nullptr; // the C++ entity (bead oo-9ht.39.8.23)
+    Entity* relativeTo = nullptr; // the C++ entity
     double range = -1;
     unsigned result;
 
     if (oojsArgs.count() > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!role.has_value())) {
-        cxx_OOJSReportBadArguments(context, "System", "countShipsWithPrimaryRole", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (role)");
+        cxx_OOJSReportBadArguments(context, "System", "countShipsWithPrimaryRole",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "string (role)");
         return false;
     }
 
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* argv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, "countShipsWithPrimaryRole", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "countShipsWithPrimaryRole",
+            &argc, &argv, &relativeTo, &range)))
         return false;
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = (UNIVERSE != nullptr ? UNIVERSE->countShipsWithPrimaryRole(*role, range, relativeTo) : 0u);
+    result = (UNIVERSE != nullptr
+            ? UNIVERSE->countShipsWithPrimaryRole(*role, range, relativeTo)
+            : 0u);
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_INT(result);
@@ -904,33 +1054,39 @@ static bool SystemCountShipsWithPrimaryRole(ooscript::Context context, ooscript:
 }
 } // namespace
 
-// countShipsWithRole(role : String [, relativeTo : Entity [, range : Number]]) : Number
+// countShipsWithRole(role : String [, relativeTo : Entity [, range : Number]])
+// : Number
 namespace {
-static bool SystemCountShipsWithRole(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemCountShipsWithRole(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> role;
-    Entity* relativeTo = nullptr; // the C++ entity (bead oo-9ht.39.8.23)
+    Entity* relativeTo = nullptr; // the C++ entity
     double range = -1;
     unsigned result;
 
     if (oojsArgs.count() > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!role.has_value())) {
-        cxx_OOJSReportBadArguments(context, "System", "countShipsWithRole", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (role)");
+        cxx_OOJSReportBadArguments(context, "System", "countShipsWithRole",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "string (role)");
         return false;
     }
 
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* argv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, "countShipsWithRole", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "countShipsWithRole", &argc,
+            &argv, &relativeTo, &range)))
         return false;
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = (UNIVERSE != nullptr ? UNIVERSE->countShipsWithRole(*role, range, relativeTo) : 0u);
+    result = (UNIVERSE != nullptr
+            ? UNIVERSE->countShipsWithRole(*role, range, relativeTo)
+            : 0u);
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_INT(result);
@@ -939,29 +1095,33 @@ static bool SystemCountShipsWithRole(ooscript::Context context, ooscript::CallAr
 }
 } // namespace
 
-// shipsWithPrimaryRole(role : String [, relativeTo : Entity [, range : Number]]) : Array (Entity)
+// shipsWithPrimaryRole(role : String [, relativeTo : Entity [, range :
+// Number]]) : Array (Entity)
 namespace {
-static bool SystemShipsWithPrimaryRole(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemShipsWithPrimaryRole(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> role;
-    Entity* relativeTo = nullptr; // the C++ entity (bead oo-9ht.39.8.23)
+    Entity* relativeTo = nullptr; // the C++ entity
     double range = -1;
     std::vector<oo::EntityHold> result;
 
     if (oojsArgs.count() > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!role.has_value())) {
-        cxx_OOJSReportBadArguments(context, "System", "countShipsWithRole", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (role)");
+        cxx_OOJSReportBadArguments(context, "System", "countShipsWithRole",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "string (role)");
         return NO;
     }
 
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* argv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, "shipsWithPrimaryRole", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "shipsWithPrimaryRole", &argc,
+            &argv, &relativeTo, &range)))
         return NO;
 
     // Search for entities
@@ -975,29 +1135,33 @@ static bool SystemShipsWithPrimaryRole(ooscript::Context context, ooscript::Call
 }
 } // namespace
 
-// shipsWithRole(role : String [, relativeTo : Entity [, range : Number]]) : Array (Entity)
+// shipsWithRole(role : String [, relativeTo : Entity [, range : Number]]) :
+// Array (Entity)
 namespace {
-static bool SystemShipsWithRole(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemShipsWithRole(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> role;
-    Entity* relativeTo = nullptr; // the C++ entity (bead oo-9ht.39.8.23)
+    Entity* relativeTo = nullptr; // the C++ entity
     double range = -1;
     std::vector<oo::EntityHold> result;
 
     if (oojsArgs.count() > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!role.has_value())) {
-        cxx_OOJSReportBadArguments(context, "System", "shipsWithRole", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (role)");
+        cxx_OOJSReportBadArguments(context, "System", "shipsWithRole",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "string (role)");
         return NO;
     }
 
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* subargv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, "shipsWithRole", &argc, &subargv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "shipsWithRole", &argc,
+            &subargv, &relativeTo, &range)))
         return NO;
 
     // Search for entities
@@ -1011,33 +1175,39 @@ static bool SystemShipsWithRole(ooscript::Context context, ooscript::CallArgs& o
 }
 } // namespace
 
-// countEntitiesWithScanClass(scanClass : String [, relativeTo : Entity [, range : Number]]) : Number
+// countEntitiesWithScanClass(scanClass : String [, relativeTo : Entity [, range
+// : Number]]) : Number
 namespace {
-static bool SystemCountEntitiesWithScanClass(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemCountEntitiesWithScanClass(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     OOScanClass scanClass = CLASS_NOT_SET;
-    Entity* relativeTo = nullptr; // the C++ entity (bead oo-9ht.39.8.23)
+    Entity* relativeTo = nullptr; // the C++ entity
     double range = -1;
     unsigned result;
 
     if (oojsArgs.count() > 0)
         scanClass = OOScanClassFromJSValue(context, OOJS_ARGV[0]);
     if (scanClass == CLASS_NOT_SET) {
-        cxx_OOJSReportBadArguments(context, "System", "countEntitiesWithScanClass", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (scan class)");
+        cxx_OOJSReportBadArguments(context, "System", "countEntitiesWithScanClass",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "string (scan class)");
         return false;
     }
 
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* argv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, "countEntitiesWithScanClass", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "countEntitiesWithScanClass",
+            &argc, &argv, &relativeTo, &range)))
         return false;
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = (UNIVERSE != nullptr ? UNIVERSE->countShipsWithScanClass(scanClass, range, relativeTo) : 0u);
+    result = (UNIVERSE != nullptr ? UNIVERSE->countShipsWithScanClass(
+                                        scanClass, range, relativeTo)
+                                  : 0u);
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_INT(result);
@@ -1046,34 +1216,39 @@ static bool SystemCountEntitiesWithScanClass(ooscript::Context context, ooscript
 }
 } // namespace
 
-// entitiesWithScanClass(scanClass : String [, relativeTo : Entity [, range : Number]]) : Array (Entity)
+// entitiesWithScanClass(scanClass : String [, relativeTo : Entity [, range :
+// Number]]) : Array (Entity)
 namespace {
-static bool SystemEntitiesWithScanClass(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemEntitiesWithScanClass(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     OOScanClass scanClass = CLASS_NOT_SET;
-    Entity* relativeTo = nullptr; // the C++ entity (bead oo-9ht.39.8.23)
+    Entity* relativeTo = nullptr; // the C++ entity
     double range = -1;
     std::vector<oo::EntityHold> result;
 
     if (oojsArgs.count() > 0)
         scanClass = OOScanClassFromJSValue(context, OOJS_ARGV[0]);
     if (scanClass == CLASS_NOT_SET) {
-        cxx_OOJSReportBadArguments(context, "System", "countEntitiesWithScanClass", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (scan class)");
+        cxx_OOJSReportBadArguments(context, "System", "countEntitiesWithScanClass",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "string (scan class)");
         return NO;
     }
 
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 1;
     ooscript::Value* argv = OOJS_ARGV + 1;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, "entitiesWithScanClass", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "entitiesWithScanClass", &argc,
+            &argv, &relativeTo, &range)))
         return NO;
 
     // Search for entities
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = FindJSVisibleEntities(HasScanClassPredicate, &scanClass, relativeTo, range);
+    result = FindJSVisibleEntities(HasScanClassPredicate, &scanClass, relativeTo,
+        range);
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_PLIST(oo::EntityNodesFrom(result));
@@ -1082,22 +1257,26 @@ static bool SystemEntitiesWithScanClass(ooscript::Context context, ooscript::Cal
 }
 } // namespace
 
-// filteredEntities(this : Object, predicate : Function [, relativeTo : Entity [, range : Number]]) : Array (Entity)
+// filteredEntities(this : Object, predicate : Function [, relativeTo : Entity
+// [, range : Number]]) : Array (Entity)
 namespace {
-static bool SystemFilteredEntities(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemFilteredEntities(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     ooscript::Object jsThis = NULL;
     ooscript::Value predicate;
-    Entity* relativeTo = nullptr; // the C++ entity (bead oo-9ht.39.8.23)
+    Entity* relativeTo = nullptr; // the C++ entity
     double range = -1;
     std::vector<oo::EntityHold> result;
 
     // Get this and predicate arguments
     if (oojsArgs.count() < 2 || !OOJSValueIsFunction(context, OOJS_ARGV[1]) || !ooscript::valueToObject(context, (OOJS_ARGV[0]), OOJSFOBJP(&jsThis))) {
-        cxx_OOJSReportBadArguments(context, "System", "filteredEntities", oojsArgs.count(), OOJS_ARGV, std::nullopt, "this, predicate function, and optional reference entity and range");
+        cxx_OOJSReportBadArguments(
+            context, "System", "filteredEntities", oojsArgs.count(), OOJS_ARGV,
+            std::nullopt,
+            "this, predicate function, and optional reference entity and range");
         return NO;
     }
     predicate = OOJS_ARGV[1];
@@ -1105,7 +1284,8 @@ static bool SystemFilteredEntities(ooscript::Context context, ooscript::CallArgs
     // Get optional arguments
     unsigned argc = oojsArgs.count() - 2;
     ooscript::Value* argv = OOJS_ARGV + 2;
-    if (EXPECT_NOT(!GetRelativeToAndRange(context, "filteredEntities", &argc, &argv, &relativeTo, &range)))
+    if (EXPECT_NOT(!GetRelativeToAndRange(context, "filteredEntities", &argc,
+            &argv, &relativeTo, &range)))
         return NO;
 
     // Search for entities
@@ -1125,9 +1305,9 @@ static bool SystemFilteredEntities(ooscript::Context context, ooscript::CallArgs
 
 // locationFromCode(populator_named_region : String)
 namespace {
-static bool SystemLocationFromCode(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemLocationFromCode(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> code;
@@ -1135,16 +1315,21 @@ static bool SystemLocationFromCode(ooscript::Context context, ooscript::CallArgs
         code = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     }
     if (EXPECT_NOT(!code.has_value())) {
-        cxx_OOJSReportBadArguments(context, "System", "locationFromCode", oojsArgs.count(), OOJS_ARGV, std::nullopt, "location code");
+        cxx_OOJSReportBadArguments(context, "System", "locationFromCode",
+            oojsArgs.count(), OOJS_ARGV, std::nullopt,
+            "location code");
         return false;
     }
     OOSunEntity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
     OOPlanetEntity* planet = (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr);
     HPVector position = kZeroHPVector;
     if (sun == nil || planet == nil) {
-        position = (UNIVERSE != nullptr ? UNIVERSE->locationByCode("WITCHPOINT", nullptr, nullptr) : HPVector { });
+        position = (UNIVERSE != nullptr
+                ? UNIVERSE->locationByCode("WITCHPOINT", nullptr, nullptr)
+                : HPVector { });
     } else {
-        position = (UNIVERSE != nullptr ? UNIVERSE->locationByCode(*code, sun, planet) : HPVector { });
+        position = (UNIVERSE != nullptr ? UNIVERSE->locationByCode(*code, sun, planet)
+                                        : HPVector { });
     }
 
     OOJS_RETURN_HPVECTOR(position);
@@ -1153,7 +1338,8 @@ static bool SystemLocationFromCode(ooscript::Context context, ooscript::CallArgs
 }
 } // namespace
 
-// addShips(role : String, count : Number [, position: Vector [, radius: Number]]) : Array
+// addShips(role : String, count : Number [, position: Vector [, radius:
+// Number]]) : Array
 namespace {
 static bool SystemAddShips(ooscript::Context cx, ooscript::CallArgs& oojsArgs)
 {
@@ -1161,7 +1347,8 @@ static bool SystemAddShips(ooscript::Context cx, ooscript::CallArgs& oojsArgs)
 }
 } // namespace
 
-// addGroup(role : String, count : Number [, position: Vector [, radius: Number]]) : Array
+// addGroup(role : String, count : Number [, position: Vector [, radius:
+// Number]]) : Array
 namespace {
 static bool SystemAddGroup(ooscript::Context cx, ooscript::CallArgs& oojsArgs)
 {
@@ -1169,17 +1356,21 @@ static bool SystemAddGroup(ooscript::Context cx, ooscript::CallArgs& oojsArgs)
 }
 } // namespace
 
-// addShipsToRoute(role : String, count : Number [, position: Number [, route: String]])
+// addShipsToRoute(role : String, count : Number [, position: Number [, route:
+// String]])
 namespace {
-static bool SystemAddShipsToRoute(ooscript::Context cx, ooscript::CallArgs& oojsArgs)
+static bool SystemAddShipsToRoute(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs)
 {
     return SystemAddShipsOrGroupToRoute(cx, oojsArgs, NO);
 }
 } // namespace
 
-// addGroupToRoute(role : String, count : Number,  position: Number[, route: String])
+// addGroupToRoute(role : String, count : Number,  position: Number[, route:
+// String])
 namespace {
-static bool SystemAddGroupToRoute(ooscript::Context cx, ooscript::CallArgs& oojsArgs)
+static bool SystemAddGroupToRoute(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs)
 {
     return SystemAddShipsOrGroupToRoute(cx, oojsArgs, YES);
 }
@@ -1187,7 +1378,8 @@ static bool SystemAddGroupToRoute(ooscript::Context cx, ooscript::CallArgs& oojs
 
 // legacy_addShips(role : String, count : Number)
 namespace {
-static bool SystemLegacyAddShips(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemLegacyAddShips(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
     cxx_OOStandardsDeprecated("system.legacy_addShips() is deprecated");
 
@@ -1199,7 +1391,9 @@ static bool SystemLegacyAddShips(ooscript::Context context, ooscript::CallArgs& 
     if (oojsArgs.count() > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(!role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || oojsArgs.count() < 2 || count < 1 || 64 < count)) {
-        cxx_OOJSReportBadArguments(context, "System", "legacy_addShips", oojsArgs.count(), OOJS_ARGV, std::nullopt, "role and positive count no greater than 64");
+        cxx_OOJSReportBadArguments(context, "System", "legacy_addShips",
+            oojsArgs.count(), OOJS_ARGV, std::nullopt,
+            "role and positive count no greater than 64");
         return false;
     }
 
@@ -1218,7 +1412,8 @@ static bool SystemLegacyAddShips(ooscript::Context context, ooscript::CallArgs& 
 
 // legacy_addSystemShips(role : String, count : Number, location : Number)
 namespace {
-static bool SystemLegacyAddSystemShips(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemLegacyAddSystemShips(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
     cxx_OOStandardsDeprecated("system.legacy_addSystemShips() is deprecated");
 
@@ -1230,8 +1425,12 @@ static bool SystemLegacyAddSystemShips(ooscript::Context context, ooscript::Call
 
     if (oojsArgs.count() > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
-    if (EXPECT_NOT(!role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || oojsArgs.count() < 3 || !ooscript::valueToNumber(context, (OOJS_ARGV[2]), &position))) {
-        cxx_OOJSReportBadArguments(context, "System", "legacy_addSystemShips", oojsArgs.count(), OOJS_ARGV, std::nullopt, "role, positive count no greater than 64, and position along route");
+    if (EXPECT_NOT(
+            !role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || oojsArgs.count() < 3 || !ooscript::valueToNumber(context, (OOJS_ARGV[2]), &position))) {
+        cxx_OOJSReportBadArguments(
+            context, "System", "legacy_addSystemShips", oojsArgs.count(), OOJS_ARGV,
+            std::nullopt,
+            "role, positive count no greater than 64, and position along route");
         return false;
     }
 
@@ -1248,9 +1447,11 @@ static bool SystemLegacyAddSystemShips(ooscript::Context context, ooscript::Call
 }
 } // namespace
 
-// legacy_addShipsAt(role : String, count : Number, coordScheme : String, coords : vectorExpression)
+// legacy_addShipsAt(role : String, count : Number, coordScheme : String, coords
+// : vectorExpression)
 namespace {
-static bool SystemLegacyAddShipsAt(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemLegacyAddShipsAt(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
     cxx_OOStandardsDeprecated("system.legacy_addShipsAt() is deprecated");
 
@@ -1267,12 +1468,16 @@ static bool SystemLegacyAddShipsAt(ooscript::Context context, ooscript::CallArgs
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     coordScheme = cxx_OOStringFromJSValue(context, OOJS_ARGV[2]);
     if (EXPECT_NOT(!role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || !coordScheme.has_value() || oojsArgs.count() < 4 || !VectorFromArgumentListNoError(context, oojsArgs.count() - 3, OOJS_ARGV + 3, &where, NULL))) {
-        cxx_OOJSReportBadArguments(context, "System", "legacy_addShipsAt", oojsArgs.count(), OOJS_ARGV, std::nullopt, "role, positive count no greater than 64, coordinate scheme and coordinates");
+        cxx_OOJSReportBadArguments(context, "System", "legacy_addShipsAt",
+            oojsArgs.count(), OOJS_ARGV, std::nullopt,
+            "role, positive count no greater than 64, "
+            "coordinate scheme and coordinates");
         return false;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    arg = oo::str::format("%s %d %s %f %f %f", role->c_str(), count, coordScheme->c_str(), where.x, where.y, where.z);
+    arg = oo::str::format("%s %d %s %f %f %f", role->c_str(), count,
+        coordScheme->c_str(), where.x, where.y, where.z);
     if (player != nullptr)
         player->addShipsAt(arg);
     OOJS_END_FULL_NATIVE
@@ -1283,11 +1488,14 @@ static bool SystemLegacyAddShipsAt(ooscript::Context context, ooscript::CallArgs
 }
 } // namespace
 
-// legacy_addShipsAtPrecisely(role : String, count : Number, coordScheme : String, coords : vectorExpression)
+// legacy_addShipsAtPrecisely(role : String, count : Number, coordScheme :
+// String, coords : vectorExpression)
 namespace {
-static bool SystemLegacyAddShipsAtPrecisely(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemLegacyAddShipsAtPrecisely(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-    cxx_OOStandardsDeprecated("system.legacy_addShipsAtPrecisely() is deprecated");
+    cxx_OOStandardsDeprecated(
+        "system.legacy_addShipsAtPrecisely() is deprecated");
 
     OOJS_NATIVE_ENTER(context)
 
@@ -1302,12 +1510,16 @@ static bool SystemLegacyAddShipsAtPrecisely(ooscript::Context context, ooscript:
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     coordScheme = cxx_OOStringFromJSValue(context, OOJS_ARGV[2]);
     if (EXPECT_NOT(!role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || !coordScheme.has_value() || oojsArgs.count() < 4 || !VectorFromArgumentListNoError(context, oojsArgs.count() - 3, OOJS_ARGV + 3, &where, NULL))) {
-        cxx_OOJSReportBadArguments(context, "System", "legacy_addShipsAtPrecisely", oojsArgs.count(), OOJS_ARGV, std::nullopt, "role, positive count no greater than 64, coordinate scheme and coordinates");
+        cxx_OOJSReportBadArguments(context, "System", "legacy_addShipsAtPrecisely",
+            oojsArgs.count(), OOJS_ARGV, std::nullopt,
+            "role, positive count no greater than 64, "
+            "coordinate scheme and coordinates");
         return false;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    arg = oo::str::format("%s %d %s %f %f %f", role->c_str(), count, coordScheme->c_str(), where.x, where.y, where.z);
+    arg = oo::str::format("%s %d %s %f %f %f", role->c_str(), count,
+        coordScheme->c_str(), where.x, where.y, where.z);
     if (player != nullptr)
         player->addShipsAtPrecisely(arg);
     OOJS_END_FULL_NATIVE
@@ -1318,11 +1530,14 @@ static bool SystemLegacyAddShipsAtPrecisely(ooscript::Context context, ooscript:
 }
 } // namespace
 
-// legacy_addShipsWithinRadius(role : String, count : Number, coordScheme : String, coords : vectorExpression, radius : Number)
+// legacy_addShipsWithinRadius(role : String, count : Number, coordScheme :
+// String, coords : vectorExpression, radius : Number)
 namespace {
-static bool SystemLegacyAddShipsWithinRadius(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemLegacyAddShipsWithinRadius(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-    cxx_OOStandardsDeprecated("system.legacy_addShipsWithinRadius() is deprecated");
+    cxx_OOStandardsDeprecated(
+        "system.legacy_addShipsWithinRadius() is deprecated");
 
     OOJS_NATIVE_ENTER(context)
 
@@ -1340,12 +1555,16 @@ static bool SystemLegacyAddShipsWithinRadius(ooscript::Context context, ooscript
     if (oojsArgs.count() > 2)
         coordScheme = cxx_OOStringFromJSValue(context, OOJS_ARGV[2]);
     if (EXPECT_NOT(!role.has_value() || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count || !coordScheme.has_value() || oojsArgs.count() < 5 || !VectorFromArgumentListNoError(context, oojsArgs.count() - 3, OOJS_ARGV + 3, &where, &consumed) || !ooscript::valueToNumber(context, (OOJS_ARGV[3 + consumed]), &radius))) {
-        cxx_OOJSReportBadArguments(context, "System", "legacy_addShipWithinRadius", oojsArgs.count(), OOJS_ARGV, std::nullopt, "role, positive count no greater than 64, coordinate scheme, coordinates and radius");
+        cxx_OOJSReportBadArguments(context, "System", "legacy_addShipWithinRadius",
+            oojsArgs.count(), OOJS_ARGV, std::nullopt,
+            "role, positive count no greater than 64, "
+            "coordinate scheme, coordinates and radius");
         return false;
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    arg = oo::str::format("%s %d %s %f %f %f %f", role->c_str(), count, coordScheme->c_str(), where.x, where.y, where.z, radius);
+    arg = oo::str::format("%s %d %s %f %f %f %f", role->c_str(), count,
+        coordScheme->c_str(), where.x, where.y, where.z, radius);
     if (player != nullptr)
         player->addShipsWithinRadius(arg);
     OOJS_END_FULL_NATIVE
@@ -1358,7 +1577,8 @@ static bool SystemLegacyAddShipsWithinRadius(ooscript::Context context, ooscript
 
 // legacy_spawnShip(key : string)
 namespace {
-static bool SystemLegacySpawnShip(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemLegacySpawnShip(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
     cxx_OOStandardsDeprecated("system.legacy_spawnShip() is deprecated");
 
@@ -1370,7 +1590,9 @@ static bool SystemLegacySpawnShip(ooscript::Context context, ooscript::CallArgs&
     if (oojsArgs.count() > 0)
         key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (!key.has_value()) {
-        cxx_OOJSReportBadArguments(context, "System", "legacy_spawnShip", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string (ship key)");
+        cxx_OOJSReportBadArguments(context, "System", "legacy_spawnShip",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "string (ship key)");
         return false;
     }
 
@@ -1389,23 +1611,27 @@ static bool SystemLegacySpawnShip(ooscript::Context context, ooscript::CallArgs&
 
 // systemNameForID(ID : Number) : String
 namespace {
-static bool SystemStaticSystemNameForID(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemStaticSystemNameForID(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     int32_t systemID;
 
     if (oojsArgs.count() < 1 || !ooscript::valueToInt32(context, (OOJS_ARGV[0]), &systemID) || systemID < -1 || kOOMaximumSystemID < systemID) // -1 interstellar space!
     {
-        cxx_OOJSReportBadArguments(context, "System", "systemNameForID", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "system ID");
+        cxx_OOJSReportBadArguments(context, "System", "systemNameForID",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "system ID");
         return false;
     }
 
     if (systemID == -1)
         OOJS_RETURN_PLIST(oo::PList(std::string(OO_DESC("interstellar-space"))));
     else
-        OOJS_RETURN_STRING_OR_NULL((UNIVERSE != nullptr ? UNIVERSE->getSystemName(systemID) : std::optional<std::string>()));
+        OOJS_RETURN_STRING_OR_NULL((UNIVERSE != nullptr
+                ? UNIVERSE->getSystemName(systemID)
+                : std::optional<std::string>()));
 
     OOJS_NATIVE_EXIT
 }
@@ -1413,9 +1639,9 @@ static bool SystemStaticSystemNameForID(ooscript::Context context, ooscript::Cal
 
 // systemIDForName(name : String) : Number
 namespace {
-static bool SystemStaticSystemIDForName(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemStaticSystemIDForName(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> name;
@@ -1424,7 +1650,9 @@ static bool SystemStaticSystemIDForName(ooscript::Context context, ooscript::Cal
     if (oojsArgs.count() > 0)
         name = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (!name.has_value()) {
-        cxx_OOJSReportBadArguments(context, "System", "systemIDForName", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "string");
+        cxx_OOJSReportBadArguments(context, "System", "systemIDForName",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "string");
         return false;
     }
 
@@ -1442,26 +1670,34 @@ static bool SystemStaticSystemIDForName(ooscript::Context context, ooscript::Cal
 
 // infoForSystem(galaxyID : Number, systemID : Number) : SystemInfo
 namespace {
-static bool SystemStaticInfoForSystem(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemStaticInfoForSystem(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     int32_t galaxyID;
     int32_t systemID;
 
     if (oojsArgs.count() < 2 || !ooscript::valueToInt32(context, (OOJS_ARGV[0]), &galaxyID) || !ooscript::valueToInt32(context, (OOJS_ARGV[1]), &systemID)) {
-        cxx_OOJSReportBadArguments(context, "System", "infoForSystem", oojsArgs.count(), OOJS_ARGV, std::nullopt, "galaxy ID and system ID");
+        cxx_OOJSReportBadArguments(context, "System", "infoForSystem",
+            oojsArgs.count(), OOJS_ARGV, std::nullopt,
+            "galaxy ID and system ID");
         return NO;
     }
 
     if (galaxyID < 0 || galaxyID > kOOMaximumGalaxyID) {
-        cxx_OOJSReportBadArguments(context, "System", "infoForSystem", 1, OOJS_ARGV, "Invalid galaxy ID", oo::str::format("number in the range 0 to %u", kOOMaximumGalaxyID));
+        cxx_OOJSReportBadArguments(
+            context, "System", "infoForSystem", 1, OOJS_ARGV, "Invalid galaxy ID",
+            oo::str::format("number in the range 0 to %u", kOOMaximumGalaxyID));
         return NO;
     }
 
     if (systemID < kOOMinimumSystemID || systemID > kOOMaximumSystemID) {
-        cxx_OOJSReportBadArguments(context, "System", "infoForSystem", 1, OOJS_ARGV + 1, "Invalid system ID", oo::str::format("number in the range %i to %i", kOOMinimumSystemID, kOOMaximumSystemID));
+        cxx_OOJSReportBadArguments(
+            context, "System", "infoForSystem", 1, OOJS_ARGV + 1,
+            "Invalid system ID",
+            oo::str::format("number in the range %i to %i", kOOMinimumSystemID,
+                kOOMaximumSystemID));
         return NO;
     }
 
@@ -1472,9 +1708,9 @@ static bool SystemStaticInfoForSystem(ooscript::Context context, ooscript::CallA
 } // namespace
 
 namespace {
-static bool SystemAddVisualEffect(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemAddVisualEffect(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> key;
@@ -1485,33 +1721,39 @@ static bool SystemAddVisualEffect(ooscript::Context context, ooscript::CallArgs&
     if (oojsArgs.count() > 0)
         key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (!key.has_value()) {
-        cxx_OOJSReportBadArguments(context, "System", "addVisualEffect", MIN(oojsArgs.count(), 1U), &OOJS_ARGV[0], std::nullopt, "string (key)");
+        cxx_OOJSReportBadArguments(context, "System", "addVisualEffect",
+            MIN(oojsArgs.count(), 1U), &OOJS_ARGV[0],
+            std::nullopt, "string (key)");
         return false;
     }
 
-    if (!VectorFromArgumentListNoError(context, oojsArgs.count() - 1, OOJS_ARGV + 1, &where, &consumed)) {
-        cxx_OOJSReportBadArguments(context, "System", "addVisualEffect", MIN(oojsArgs.count() - 1, 1U), &OOJS_ARGV[1], std::nullopt, "vector");
+    if (!VectorFromArgumentListNoError(context, oojsArgs.count() - 1,
+            OOJS_ARGV + 1, &where, &consumed)) {
+        cxx_OOJSReportBadArguments(context, "System", "addVisualEffect",
+            MIN(oojsArgs.count() - 1, 1U), &OOJS_ARGV[1],
+            std::nullopt, "vector");
         return false;
     }
 
-    Entity* result = nullptr; // the C++ effect (beads oo-9ht.165, oo-9ht.39.26)
+    Entity* result = nullptr; // the C++ effect
 
     OOJS_BEGIN_FULL_NATIVE(context)
 
-    result = (UNIVERSE != nullptr ? UNIVERSE->addVisualEffectAt(where, *key) : nullptr);
+    result = (UNIVERSE != nullptr ? UNIVERSE->addVisualEffectAt(where, *key)
+                                  : nullptr);
 
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN(OOJSEntityJSValue(result, context)); // what OOJSValueFromNativeObject() gave for its object (amendment oo-9ht.39.16)
+    OOJS_RETURN(OOJSEntityJSValue(result, context));
 
     OOJS_NATIVE_EXIT
 }
 } // namespace
 
 namespace {
-static bool SystemSetPopulator(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemSetPopulator(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> key;
@@ -1519,12 +1761,16 @@ static bool SystemSetPopulator(ooscript::Context context, ooscript::CallArgs& oo
     ooscript::Object params = NULL;
 
     if (oojsArgs.count() < 1) {
-        cxx_OOJSReportBadArguments(context, "System", "setPopulator", MIN(oojsArgs.count(), 0U), &OOJS_ARGV[0], std::nullopt, "string (key), object (settings)");
+        cxx_OOJSReportBadArguments(context, "System", "setPopulator",
+            MIN(oojsArgs.count(), 0U), &OOJS_ARGV[0],
+            std::nullopt, "string (key), object (settings)");
         return false;
     }
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (!key.has_value()) {
-        cxx_OOJSReportBadArguments(context, "System", "setPopulator", MIN(oojsArgs.count(), 0U), &OOJS_ARGV[0], std::nullopt, "key, settings");
+        cxx_OOJSReportBadArguments(context, "System", "setPopulator",
+            MIN(oojsArgs.count(), 0U), &OOJS_ARGV[0],
+            std::nullopt, "key, settings");
         return false;
     }
     if (oojsArgs.count() < 2 || ooscript::isNull(OOJS_ARGV[1])) {
@@ -1534,12 +1780,16 @@ static bool SystemSetPopulator(ooscript::Context context, ooscript::CallArgs& oo
     } else {
         // adding
         if (!ooscript::valueToObject(context, (OOJS_ARGV[1]), OOJSFOBJP(&params))) {
-            cxx_OOJSReportBadArguments(context, "System", "setPopulator", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "key, settings");
+            cxx_OOJSReportBadArguments(context, "System", "setPopulator",
+                MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+                std::nullopt, "key, settings");
             return false;
         }
         ooscript::Value callback = ooscript::nullValue();
         if (!ooscript::getProperty(context, (params), "callback", (&callback)) || ooscript::isUndefined(callback)) {
-            cxx_OOJSReportBadArguments(context, "System", "setPopulator", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "settings must have a 'callback' property.");
+            cxx_OOJSReportBadArguments(
+                context, "System", "setPopulator", MIN(oojsArgs.count(), 1U),
+                OOJS_ARGV, std::nullopt, "settings must have a 'callback' property.");
             return false;
         }
 
@@ -1548,7 +1798,8 @@ static bool SystemSetPopulator(ooscript::Context context, ooscript::CallArgs& oo
         populator->setCallback(callback);
 
         settings = cxx_OOJSPListFromJSObject(context, ooscript::toObject(OOJS_ARGV[1]));
-        oo::PList::Dict* settingsDict = settings.getIf<oo::PList::Dict>(); // messages to a nil dictionary did nothing
+        oo::PList::Dict* settingsDict = settings.getIf<oo::PList::Dict>(); // messages to a nil dictionary did
+                                                                           // nothing
         if (settingsDict != nullptr)
             (*settingsDict)["callbackObj"] = OOJSPopulatorDefinitionToPList(populator);
 
@@ -1558,7 +1809,9 @@ static bool SystemSetPopulator(ooscript::Context context, ooscript::CallArgs& oo
             if (JSValueToVector(context, coords, &coordinates)) {
                 // convert vector in NS-storable form (three floats)
                 if (settingsDict != nullptr)
-                    (*settingsDict)["coordinates"] = oo::PList(oo::PList::Array { oo::PList::singleReal(coordinates.x), oo::PList::singleReal(coordinates.y), oo::PList::singleReal(coordinates.z) });
+                    (*settingsDict)["coordinates"] = oo::PList(oo::PList::Array { oo::PList::singleReal(coordinates.x),
+                        oo::PList::singleReal(coordinates.y),
+                        oo::PList::singleReal(coordinates.z) });
             }
         }
 
@@ -1575,9 +1828,9 @@ static bool SystemSetPopulator(ooscript::Context context, ooscript::CallArgs& oo
 } // namespace
 
 namespace {
-static bool SystemSetWaypoint(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemSetWaypoint(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> key;
@@ -1586,12 +1839,16 @@ static bool SystemSetWaypoint(ooscript::Context context, ooscript::CallArgs& ooj
     Quaternion orientation;
 
     if (oojsArgs.count() < 1) {
-        cxx_OOJSReportBadArguments(context, "System", "setWaypoint", MIN(oojsArgs.count(), 0U), &OOJS_ARGV[0], std::nullopt, "key, position, orientation, definition");
+        cxx_OOJSReportBadArguments(
+            context, "System", "setWaypoint", MIN(oojsArgs.count(), 0U),
+            &OOJS_ARGV[0], std::nullopt, "key, position, orientation, definition");
         return false;
     }
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (!key.has_value()) {
-        cxx_OOJSReportBadArguments(context, "System", "setWaypoint", MIN(oojsArgs.count(), 0U), &OOJS_ARGV[0], std::nullopt, "key, position, orientation, definition");
+        cxx_OOJSReportBadArguments(
+            context, "System", "setWaypoint", MIN(oojsArgs.count(), 0U),
+            &OOJS_ARGV[0], std::nullopt, "key, position, orientation, definition");
         return false;
     }
     if (oojsArgs.count() < 4 || ooscript::isNull(OOJS_ARGV[3])) {
@@ -1601,23 +1858,35 @@ static bool SystemSetWaypoint(ooscript::Context context, ooscript::CallArgs& ooj
     } else {
         // adding
         if (!JSValueToHPVector(context, OOJS_ARGV[1], &position)) {
-            cxx_OOJSReportBadArguments(context, "System", "setWaypoint", MIN(oojsArgs.count(), 2U), OOJS_ARGV, std::nullopt, "key, position, orientation, definition");
+            cxx_OOJSReportBadArguments(
+                context, "System", "setWaypoint", MIN(oojsArgs.count(), 2U),
+                OOJS_ARGV, std::nullopt, "key, position, orientation, definition");
             return false;
         }
         if (!JSValueToQuaternion(context, OOJS_ARGV[2], &orientation)) {
-            cxx_OOJSReportBadArguments(context, "System", "setWaypoint", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "key, position, orientation, definition");
+            cxx_OOJSReportBadArguments(
+                context, "System", "setWaypoint", MIN(oojsArgs.count(), 3U),
+                OOJS_ARGV, std::nullopt, "key, position, orientation, definition");
             return false;
         }
         if (!ooscript::isObjectOrNull(OOJS_ARGV[3]) || ooscript::isNull(OOJS_ARGV[3])) {
-            cxx_OOJSReportBadArguments(context, "System", "setWaypoint", MIN(oojsArgs.count(), 4U), OOJS_ARGV, std::nullopt, "key, position, orientation, definition");
+            cxx_OOJSReportBadArguments(
+                context, "System", "setWaypoint", MIN(oojsArgs.count(), 4U),
+                OOJS_ARGV, std::nullopt, "key, position, orientation, definition");
             return false;
         }
 
-        settings = cxx_OOJSPListFromJSObject(context, ooscript::toObject(OOJS_ARGV[3])); // a copy, as -mutableCopy was
-        if (oo::PList::Dict* settingsDict = settings.getIf<oo::PList::Dict>()) // messages to a nil copy did nothing
+        settings = cxx_OOJSPListFromJSObject(
+            context,
+            ooscript::toObject(OOJS_ARGV[3])); // a copy, as -mutableCopy was
+        if (oo::PList::Dict* settingsDict = settings.getIf<oo::PList::Dict>()) // messages to a nil copy did
+                                                                               // nothing
         {
-            (*settingsDict)["position"] = oo::PList(oo::PList::Array { oo::PList(position.x), oo::PList(position.y), oo::PList(position.z) });
-            (*settingsDict)["orientation"] = oo::PList(oo::PList::Array { oo::PList(orientation.w), oo::PList(orientation.x), oo::PList(orientation.y), oo::PList(orientation.z) });
+            (*settingsDict)["position"] = oo::PList(oo::PList::Array {
+                oo::PList(position.x), oo::PList(position.y), oo::PList(position.z) });
+            (*settingsDict)["orientation"] = oo::PList(
+                oo::PList::Array { oo::PList(orientation.w), oo::PList(orientation.x),
+                    oo::PList(orientation.y), oo::PList(orientation.z) });
         }
 
         if (UNIVERSE != nullptr)
@@ -1634,7 +1903,8 @@ static bool SystemSetWaypoint(ooscript::Context context, ooscript::CallArgs& ooj
 
 // Shared implementation of addShips() and addGroup().
 namespace {
-static bool SystemAddShipsOrGroup(Context cx, CallArgs& oojsArgs, bool isGroup)
+static bool SystemAddShipsOrGroup(Context cx, CallArgs& oojsArgs,
+    bool isGroup)
 {
     ooscript::Context context = (cx);
     unsigned argc = oojsArgs.count();
@@ -1653,39 +1923,50 @@ static bool SystemAddShipsOrGroup(Context cx, CallArgs& oojsArgs, bool isGroup)
     if (argc > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (!role.has_value()) {
-        cxx_OOJSReportBadArguments(context, "System", func, MIN(argc, 1U), &OOJS_ARGV[0], std::nullopt, "string (role)");
+        cxx_OOJSReportBadArguments(context, "System", func, MIN(argc, 1U),
+            &OOJS_ARGV[0], std::nullopt, "string (role)");
         return false;
     }
     if (argc < 2 || !ooscript::valueToInt32(cx, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count) {
-        cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 1, 1U), &OOJS_ARGV[1], std::nullopt, "number (positive count no greater than 64)");
+        cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 1, 1U),
+            &OOJS_ARGV[1], std::nullopt,
+            "number (positive count no greater than 64)");
         return false;
     }
 
     if (argc < 3) {
-        where = (UNIVERSE != nullptr ? UNIVERSE->getWitchspaceExitPosition() : HPVector { });
+        where = (UNIVERSE != nullptr ? UNIVERSE->getWitchspaceExitPosition()
+                                     : HPVector { });
         radius = SCANNER_MAX_RANGE;
     } else {
-        if (!VectorFromArgumentListNoError(context, argc - 2, OOJS_ARGV + 2, &where, &consumed)) {
-            cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 2, 1U), &OOJS_ARGV[2], std::nullopt, "vector");
+        if (!VectorFromArgumentListNoError(context, argc - 2, OOJS_ARGV + 2, &where,
+                &consumed)) {
+            cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 2, 1U),
+                &OOJS_ARGV[2], std::nullopt, "vector");
             return false;
         }
 
         if (argc > 2 + consumed) {
             if (!ooscript::valueToNumber(cx, (OOJS_ARGV[2 + consumed]), &radius)) {
-                cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 2 - consumed, 1U), &OOJS_ARGV[2 + consumed], std::nullopt, "number (radius)");
+                cxx_OOJSReportBadArguments(
+                    context, "System", func, MIN(argc - 2 - consumed, 1U),
+                    &OOJS_ARGV[2 + consumed], std::nullopt, "number (radius)");
                 return false;
             }
         }
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    // Note: the use of witchspace-in effects (as in legacy_addShips) depends on proximity to the witchpoint.
-    const std::vector<oo::EntityHold> added = (UNIVERSE != nullptr ? UNIVERSE->addShipsAt(where, *role, count, radius, isGroup) : std::vector<oo::EntityHold>());
+    // Note: the use of witchspace-in effects (as in legacy_addShips) depends on
+    // proximity to the witchpoint.
+    const std::vector<oo::EntityHold> added = (UNIVERSE != nullptr
+            ? UNIVERSE->addShipsAt(where, *role, count, radius, isGroup)
+            : std::vector<oo::EntityHold>());
     if (!added.empty())
         result = oo::EntityNodesFrom(added); // null where no ship was added, as before
 
     if (isGroup) {
-        const std::vector<Entity*> ships = oo::EntitiesIn(result); // borrowed: result holds them (bead oo-9ht.39.5.3)
+        const std::vector<Entity*> ships = oo::EntitiesIn(result); // borrowed: result holds them
         ShipEntity* first = (ships.size() > 0 ? oo::ToShip(ships[0]) : nullptr);
         if (ships.size() > 0)
             result = OOShipGroupObjectNode(first != nullptr ? first->group() : nullptr);
@@ -1701,7 +1982,8 @@ static bool SystemAddShipsOrGroup(Context cx, CallArgs& oojsArgs, bool isGroup)
 } // namespace
 
 namespace {
-static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs, bool isGroup)
+static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs,
+    bool isGroup)
 {
     ooscript::Context context = (cx);
     unsigned argc = oojsArgs.count();
@@ -1709,10 +1991,13 @@ static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs, bool is
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> role;
-    std::optional<std::string> route = "st"; // default route witchpoint -> station. ("st" itself is not selectable by script)
-    static const std::set<std::string> validRoutes = { "wp", "pw", "ws", "sw", "sp", "ps" };
+    std::optional<std::string> route = "st"; // default route witchpoint -> station. ("st" itself is not
+                                             // selectable by script)
+    static const std::set<std::string> validRoutes = { "wp", "pw", "ws",
+        "sw", "sp", "ps" };
     int32_t count = 0;
-    double where = static_cast<double>(NSNotFound); // a negative value means random positioning!
+    double where = static_cast<double>(
+        NSNotFound); // a negative value means random positioning!
     oo::PList result;
 
     std::string func = isGroup ? "addGroup" : "addShips";
@@ -1720,17 +2005,22 @@ static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs, bool is
     if (argc > 0)
         role = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (!role.has_value()) {
-        cxx_OOJSReportBadArguments(context, "System", func, MIN(argc, 1U), &OOJS_ARGV[0], std::nullopt, "string (role)");
+        cxx_OOJSReportBadArguments(context, "System", func, MIN(argc, 1U),
+            &OOJS_ARGV[0], std::nullopt, "string (role)");
         return false;
     }
     if (argc < 2 || !ooscript::valueToInt32(cx, (OOJS_ARGV[1]), &count) || count < 1 || 64 < count) {
-        cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 1, 1U), &OOJS_ARGV[1], std::nullopt, "number (positive count no greater than 64)");
+        cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 1, 1U),
+            &OOJS_ARGV[1], std::nullopt,
+            "number (positive count no greater than 64)");
         return false;
     }
 
     if (argc > 2) {
         if (!ooscript::valueToNumber(cx, (OOJS_ARGV[2]), &where) || !isfinite(where) || where < 0.0f || where > 1.0f) {
-            cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 2, 1U), &OOJS_ARGV[2], std::nullopt, "number (position along route)");
+            cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 2, 1U),
+                &OOJS_ARGV[2], std::nullopt,
+                "number (position along route)");
             return false;
         }
 
@@ -1740,20 +2030,25 @@ static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs, bool is
                 route = oo::str::lowercase(*route);
 
             if (!route.has_value() || validRoutes.count(*route) == 0) {
-                cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 3, 1U), &OOJS_ARGV[3], std::nullopt, "string (route specifier)");
+                cxx_OOJSReportBadArguments(context, "System", func, MIN(argc - 3, 1U),
+                    &OOJS_ARGV[3], std::nullopt,
+                    "string (route specifier)");
                 return false;
             }
         }
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    // Note: the use of witchspace-in effects (as in legacy_addShips) depends on proximity to the witchpoint.
-    const std::vector<oo::EntityHold> added = (UNIVERSE != nullptr ? UNIVERSE->addShipsToRoute(*route, *role, count, where, isGroup) : std::vector<oo::EntityHold>());
+    // Note: the use of witchspace-in effects (as in legacy_addShips) depends on
+    // proximity to the witchpoint.
+    const std::vector<oo::EntityHold> added = (UNIVERSE != nullptr
+            ? UNIVERSE->addShipsToRoute(*route, *role, count, where, isGroup)
+            : std::vector<oo::EntityHold>());
     if (!added.empty())
         result = oo::EntityNodesFrom(added); // null where no ship was added, as before
 
     if (isGroup) {
-        const std::vector<Entity*> ships = oo::EntitiesIn(result); // borrowed: result holds them (bead oo-9ht.39.5.3)
+        const std::vector<Entity*> ships = oo::EntitiesIn(result); // borrowed: result holds them
         ShipEntity* first = (ships.size() > 0 ? oo::ToShip(ships[0]) : nullptr);
         if (ships.size() > 0)
             result = OOShipGroupObjectNode(first != nullptr ? first->group() : nullptr);
@@ -1769,7 +2064,10 @@ static bool SystemAddShipsOrGroupToRoute(Context cx, CallArgs& oojsArgs, bool is
 } // namespace
 
 namespace {
-static BOOL GetRelativeToAndRange(ooscript::Context context, const std::string& methodName, unsigned* ioArgc, ooscript::Value** ioArgv, Entity** outRelativeTo, double* outRange)
+static BOOL GetRelativeToAndRange(ooscript::Context context,
+    const std::string& methodName,
+    unsigned* ioArgc, ooscript::Value** ioArgv,
+    Entity** outRelativeTo, double* outRange)
 {
     OOJS_PROFILE_ENTER
 
@@ -1778,9 +2076,10 @@ static BOOL GetRelativeToAndRange(ooscript::Context context, const std::string& 
 
     // Get optional argument relativeTo : Entity
     if (*ioArgc != 0) {
-        Entity* relativeTo = nullptr; // the C++ entity since bead oo-9ht.39.3, which goes out since bead oo-9ht.39.8.23
+        Entity* relativeTo = nullptr; // the C++ entity
         if (EXPECT_NOT(ooscript::isNull(**ioArgv) || !JSValueToEntity(context, **ioArgv, &relativeTo))) {
-            cxx_OOJSReportBadArguments(context, "System", methodName, 1, *ioArgv, std::nullopt, "entity");
+            cxx_OOJSReportBadArguments(context, "System", methodName, 1, *ioArgv,
+                std::nullopt, "entity");
             return NO;
         }
         *outRelativeTo = relativeTo;
@@ -1791,7 +2090,8 @@ static BOOL GetRelativeToAndRange(ooscript::Context context, const std::string& 
     // Get optional argument range : Number
     if (*ioArgc != 0) {
         if (!EXPECT_NOT(ooscript::valueToNumber((context), (**ioArgv), outRange))) {
-            cxx_OOJSReportBadArguments(context, "System", methodName, 1, *ioArgv, std::nullopt, "number");
+            cxx_OOJSReportBadArguments(context, "System", methodName, 1, *ioArgv,
+                std::nullopt, "number");
             return NO;
         }
         (*ioArgv)++;
@@ -1805,23 +2105,29 @@ static BOOL GetRelativeToAndRange(ooscript::Context context, const std::string& 
 } // namespace
 
 namespace {
-static std::vector<oo::EntityHold> FindJSVisibleEntities(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range)
+static std::vector<oo::EntityHold> FindJSVisibleEntities(
+    EntityFilterPredicate predicate, void* parameter, Entity* relativeTo,
+    double range)
 {
     OOJS_PROFILE_ENTER
 
     std::vector<oo::EntityHold> result;
     BinaryOperationPredicateParameter param = {
-        JSEntityIsJavaScriptSearchablePredicate, NULL,
-        predicate, parameter
+        JSEntityIsJavaScriptSearchablePredicate, NULL, predicate, parameter
     };
 
-    result = (UNIVERSE != nullptr ? UNIVERSE->findEntitiesMatchingPredicate(ANDPredicate, &param, range, relativeTo) : std::vector<oo::EntityHold>());
+    result = (UNIVERSE != nullptr ? UNIVERSE->findEntitiesMatchingPredicate(
+                                        ANDPredicate, &param, range, relativeTo)
+                                  : std::vector<oo::EntityHold>());
 
     if (relativeTo != nullptr && !relativeTo->getIsPlayer()) {
-        // -sortUsingFunction:context: with the same comparison (a stable sort: GNUstep's is timsort).
-        std::stable_sort(result.begin(), result.end(), [relativeTo](const oo::EntityHold& a, const oo::EntityHold& b) {
-            return CompareEntitiesByDistance(a.get(), b.get(), relativeTo) == OOOrderedAscending;
-        });
+        // -sortUsingFunction:context: with the same comparison (a stable sort:
+        // GNUstep's is timsort).
+        std::stable_sort(
+            result.begin(), result.end(),
+            [relativeTo](const oo::EntityHold& a, const oo::EntityHold& b) {
+                return CompareEntitiesByDistance(a.get(), b.get(), relativeTo) == OOOrderedAscending;
+            });
     }
     return result; // empty for no matches, as the empty array was
 
@@ -1830,14 +2136,14 @@ static std::vector<oo::EntityHold> FindJSVisibleEntities(EntityFilterPredicate p
 } // namespace
 
 namespace {
-static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate, void* parameter, Entity* relativeTo, double range)
+static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate,
+    void* parameter,
+    Entity* relativeTo, double range)
 {
     OOJS_PROFILE_ENTER
 
-    BinaryOperationPredicateParameter param = {
-        IsShipPredicate, NULL,
-        predicate, parameter
-    };
+    BinaryOperationPredicateParameter param = { IsShipPredicate, NULL, predicate,
+        parameter };
     return FindJSVisibleEntities(ANDPredicate, &param, relativeTo, range);
 
     OOJS_PROFILE_EXIT_VAL(std::vector<oo::EntityHold>())
@@ -1845,13 +2151,14 @@ static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate, vo
 } // namespace
 
 namespace {
-static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b, Entity* relativeTo)
+static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
+    Entity* relativeTo)
 {
     OOJS_PROFILE_ENTER
 
-    Entity *ea = a, // the C++ entities (bead oo-9ht.39.25)
+    Entity *ea = a, // the C++ entities
         *eb = b;
-    Entity* r = relativeTo; // the C++ entity (bead oo-9ht.39.8.23)
+    Entity* r = relativeTo; // the C++ entity
     float d1, d2;
 
     d1 = HPdistance2(ea->position, r->position);

@@ -20,9 +20,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
 
-C++20 since bead oo-mp0d (proposed ADR-0056, amendments oo-bj8 item 12, oo-0mxi and oo-ubjo), a
-leaf of Entity. Its Objective-C facade was deleted by bead oo-9ht.129 (amendments oo-9ht.12,
-oo-9ht.107, oo-9ht.23 and oo-9ht.129): the class is global and its object is the root's facade.
+A leaf of Entity. The class is global and its object is the root's facade.
 
 */
 
@@ -74,10 +72,10 @@ void SetInfo(oo::PList& info, const std::string& key, oo::PList value)
         (*dict)[key] = std::move(value);
 }
 
-// The live object an Object node for <key> holds (nil when absent, or for any other value, which
-// the callers never store there: the colours this class puts in the planet info).
-// The colour an Object node of the planet info holds (the colour is the node's foreign object since
-// bead oo-9ht.1); null for none.
+// The live object an Object node for <key> holds (nil when absent, or for any
+// other value, which the callers never store there: the colours this class puts
+// in the planet info). The colour an Object node of the planet info holds (the
+// colour is the node's foreign object); null for none.
 OOColor* ColorForKey(const oo::PList& dict, std::string_view key)
 {
     const oo::PList* value = dict.find(key);
@@ -358,7 +356,7 @@ Vector HSBColorWithColor(OOColor* color)
     return (Vector) { c.h / 360, c.s, c.b };
 }
 
-// The planet info's colours are Object nodes of the colour (bead oo-9ht.1).
+// The planet info's colours are Object nodes of the colour.
 oo::PList ColorWithHSBColor(Vector c)
 {
     return OOColorObjectNode(OOColor::colorWithHue(c.x, c.y, c.z, 1.0).get());
@@ -499,8 +497,8 @@ void OOPlanetEntity::setUpColorParametersWithSourceInfo(const oo::PList& sourceI
     SetInfo(targetInfo, "terminator_threshold_vector", oo::str::format("%f %f %f", terminatorThreshold.x, terminatorThreshold.y, terminatorThreshold.z));
 }
 
-// -initAsMiniatureVersionOfPlanet:, run by miniatureVersion() on the object it made (amendment
-// oo-novu): false where the initialiser answered nil.
+// -initAsMiniatureVersionOfPlanet:, run by miniatureVersion() on the object it
+// made: false where the initialiser answered nil.
 bool OOPlanetEntity::initAsMiniatureVersionOfPlanet(OOPlanetEntity* planet)
 {
     // Nasty, nasty. I'd really prefer to have a separate entity class for this.
@@ -989,9 +987,11 @@ void OOPlanetEntity::setTextureFileName(const std::optional<std::string>& textur
     BOOL isMoon = _atmosphereDrawable == nullptr;
 
     std::optional<std::string> textureName = textureFileName;
-    oo::Ref<OOTexture> diffuseMap; // held: the factories answer the texture retained (bead oo-9ht.99)
+    oo::Ref<OOTexture> diffuseMap; // held: the factories answer the texture
+                                   // retained
     oo::Ref<OOTexture> normalMap;
-    oo::Ref<OOTexture> generatedDiffuseMap, generatedNormalMap; // the C++ generator answers them retained (bead oo-kyje)
+    oo::Ref<OOTexture> generatedDiffuseMap,
+        generatedNormalMap; // the C++ generator answers them retained
     oo::PList macros; // null: nil
     const oo::PList materialDefaults = ResourceManager::materialDefaults();
 
@@ -1049,7 +1049,7 @@ void OOPlanetEntity::setTextureFileName(const std::optional<std::string>& textur
     if (!isMoon) {
         OO_LOG("texture.planet.generate", "Preparing atmosphere for planet {}", oo::EntityDescription(this));
         /* Generate a standalone atmosphere texture */
-        // (the C++ generator answers it retained: bead oo-y3dd)
+        // (the C++ generator answers it retained)
         oo::Ref<OOTexture> generatedAtmosphere;
         OOStandaloneAtmosphereGenerator::generateAtmosphereTexture(&generatedAtmosphere,
             _materialParameters,
@@ -1066,10 +1066,8 @@ void OOPlanetEntity::setTextureFileName(const std::optional<std::string>& textur
 
             const oo::PList amacros = DictionaryForKey(materialDefaults, "atmosphere-dynamic-macros");
 
-            oo::Ref<OOShaderMaterial> dynamicShaderMaterial = OOShaderMaterial::shaderMaterialWithName("dynamic",
-                aConfig,
-                amacros,
-                this); // the C++ planet (bead oo-9ht.39.6)
+            oo::Ref<OOShaderMaterial> dynamicShaderMaterial = OOShaderMaterial::shaderMaterialWithName("dynamic", aConfig, amacros,
+                this); // the C++ planet
 
             if (dynamicShaderMaterial == nullptr) {
                 _atmosphereShaderDrawable = nullptr;
@@ -1081,10 +1079,9 @@ void OOPlanetEntity::setTextureFileName(const std::optional<std::string>& textur
             const oo::PList cloudConfig = MaterialConfigWithTextures(DictionaryForKey(materialDefaults, "clouds-dynamic-material"), { atmosphere });
             const oo::PList cloudMacros = DictionaryForKey(materialDefaults, "clouds-dynamic-macros");
 
-            oo::Ref<OOShaderMaterial> cloudsMaterial = OOShaderMaterial::shaderMaterialWithName("dynamic",
-                cloudConfig,
+            oo::Ref<OOShaderMaterial> cloudsMaterial = OOShaderMaterial::shaderMaterialWithName("dynamic", cloudConfig,
                 cloudMacros,
-                this); // the C++ planet (bead oo-9ht.39.6)
+                this); // the C++ planet
             if (cloudsMaterial == nullptr) {
                 _cloudsShaderDrawable = nullptr;
             } else {
@@ -1102,10 +1099,8 @@ void OOPlanetEntity::setTextureFileName(const std::optional<std::string>& textur
     if (shadersOn) {
         const oo::PList config = MaterialConfigWithTextures(DictionaryForKey(materialDefaults, "planet-material"), { diffuseMap.get(), normalMap.get() });
 
-        material = OOShaderMaterial::shaderMaterialWithName(textureName,
-            config,
-            macros,
-            this); // the C++ planet (bead oo-9ht.39.6)
+        material = OOShaderMaterial::shaderMaterialWithName(textureName, config, macros,
+            this); // the C++ planet
     }
 #endif
     if (material == nullptr) {
@@ -1147,8 +1142,9 @@ void OOPlanetEntity::setName(const std::optional<std::string>& name)
     _name = name;
 }
 
-// The binding's bodies (OOJSPlanet.mm), which the facade forwarded to until bead oo-9ht.129.
-void OOPlanetEntity::getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
+// The binding's bodies (OOJSPlanet.mm), which the facade forwarded to.
+void OOPlanetEntity::getJSClass(ooscript::ClassDef** outClass,
+    ooscript::Object* outPrototype)
 {
     ::OOJSPlanetGetJSClass(outClass, outPrototype);
 }

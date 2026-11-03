@@ -24,6 +24,9 @@ MA 02110-1301, USA.
 */
 
 #include "OOJSClock.h"
+
+#include <cstring>
+
 #include "OODebugStandards.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
@@ -31,29 +34,8 @@ MA 02110-1301, USA.
 #include "PlayerEntity.h"
 #include "PlayerEntityScriptMethods.h"
 #include "Universe.h"
-
 #include "ooscript/JSEngine.hpp"
-#include <cstring>
 
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm does it (bead
-        oo-sdz, the sweep exemplar): the class dispatch table becomes a static ooscript::ClassDef
-        (the stub hooks are nullptr), InitClass becomes ooscript::initClass, the engine's
-        DefineObject call becomes ooscript::defineObject, and the directly spelled numeric-conversion call becomes
-        ooscript::newNumberValue. `this` is renamed to `thisObj` because it is a reserved word once
-        this file compiles as Objective-C++ (ADR-0001). Natives take the façade signature
-        (Context, CallArgs reference) directly, and the OOJS_* argument-marshalling macros
-        (OOJS_NATIVE_ENTER, OOJS_ARGV, OOJS_RETURN_*) expand to the CallArgs accessors.
-*/
-
-/*
-        C++20 since bead oo-xy5r, converted the way bead oo-ppc converted OOJSVector.mm (proposed
-        ADR-0056 amendment oo-ppc). The JS class was already C++ on the ooscript façade;
-        OOJS_NATIVE_ENTER/EXIT are a C++ try/catch (OOJSEngineNativeWrappers.h) and BOOL/YES/NO are
-        bool/true/false. The file has no category, so there is no bridge. Messages to classes that are
-        still Objective-C (PlayerEntity, Universe) stay as they are, which is why the file is still
-        .mm until Phase 4.
-*/
 namespace ooscript {
 }
 using ooscript::CallArgs;
@@ -68,7 +50,8 @@ using ooscript::PropertySpec;
 using ooscript::Value;
 
 namespace {
-static bool ClockGetProperty(Context cx, Object obj, PropertyId propID, Value* value);
+static bool ClockGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value);
 } // namespace
 
 // Methods
@@ -76,7 +59,8 @@ namespace {
 static bool JSClockToString(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool ClockClockStringForTime(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool ClockClockStringForTime(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
 static bool ClockAddSeconds(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
@@ -106,25 +90,34 @@ enum : std::uint8_t {
     // Property IDs
     kClock_absoluteSeconds, // game real time clock, double, read-only
     kClock_seconds, // game clock time, double, read-only
-    kClock_minutes, // game clock time minutes (rounded down), integer double, read-only
-    kClock_hours, // game clock time hours (rounded down), integer double, read-only
+    kClock_minutes, // game clock time minutes (rounded down), integer double,
+    // read-only
+    kClock_hours, // game clock time hours (rounded down), integer double,
+    // read-only
     kClock_days, // game clock time days (rounded down), int, read-only
-    kClock_secondsComponent, // second component of game clock time, double, read-only
-    kClock_minutesComponent, // minute component of game clock time (rounded down), int, read-only
-    kClock_hoursComponent, // hour component of game clock time (rounded down), int, read-only
-    kClock_daysComponent, // day component of game clock time (rounded down), int, read-only
+    kClock_secondsComponent, // second component of game clock time, double,
+                             // read-only
+    kClock_minutesComponent, // minute component of game clock time (rounded
+                             // down), int, read-only
+    kClock_hoursComponent, // hour component of game clock time (rounded down),
+                           // int, read-only
+    kClock_daysComponent, // day component of game clock time (rounded down),
+                          // int, read-only
     kClock_clockString, // game clock time as display string, string, read-only
     kClock_isAdjusting, // clock is adjusting, boolean, read-only
-    kClock_adjustedSeconds, // game clock time, including adjustments, double, read-only
+    kClock_adjustedSeconds, // game clock time, including adjustments, double,
+                            // read-only
     kClock_legacy_scriptTimer // legacy scriptTimer_number, double, read-only
 };
 
-// A mirror of the property table with the read-only flags the property-selector error reporter
-// in OOJavaScriptEngine.mm (OOJSReportBadPropertySelector) describes the properties by (see
-// OOJSVector.mm's sVectorPropertiesRaw); initClass() is given sClockPropertiesFacade.
+// A mirror of the property table with the read-only flags the property-selector
+// error reporter in OOJavaScriptEngine.mm (OOJSReportBadPropertySelector)
+// describes the properties by (see OOJSVector.mm's sVectorPropertiesRaw);
+// initClass() is given sClockPropertiesFacade.
 namespace {
 static ooscript::PropertySpec sClockProperties[] = {
-    // JS name					ID							flags
+    // JS name					ID
+    // flags
     { "absoluteSeconds", kClock_absoluteSeconds, OOJS_PROP_READONLY_CB },
     { "seconds", kClock_seconds, OOJS_PROP_READONLY_CB },
     { "minutes", kClock_minutes, OOJS_PROP_READONLY_CB },
@@ -148,27 +141,36 @@ constexpr PropertyFlag kClockPropertyFlags = PropertyFlag::Permanent | PropertyF
 
 namespace {
 static PropertySpec sClockPropertiesFacade[] = {
-    // JS name					ID							flags					getter	setter
-    { "absoluteSeconds", kClock_absoluteSeconds, kClockPropertyFlags, nullptr, nullptr },
+    // JS name					ID
+    // flags					getter	setter
+    { "absoluteSeconds", kClock_absoluteSeconds, kClockPropertyFlags, nullptr,
+        nullptr },
     { "seconds", kClock_seconds, kClockPropertyFlags, nullptr, nullptr },
     { "minutes", kClock_minutes, kClockPropertyFlags, nullptr, nullptr },
     { "hours", kClock_hours, kClockPropertyFlags, nullptr, nullptr },
     { "days", kClock_days, kClockPropertyFlags, nullptr, nullptr },
-    { "secondsComponent", kClock_secondsComponent, kClockPropertyFlags, nullptr, nullptr },
-    { "minutesComponent", kClock_minutesComponent, kClockPropertyFlags, nullptr, nullptr },
-    { "hoursComponent", kClock_hoursComponent, kClockPropertyFlags, nullptr, nullptr },
-    { "daysComponent", kClock_daysComponent, kClockPropertyFlags, nullptr, nullptr },
+    { "secondsComponent", kClock_secondsComponent, kClockPropertyFlags, nullptr,
+        nullptr },
+    { "minutesComponent", kClock_minutesComponent, kClockPropertyFlags, nullptr,
+        nullptr },
+    { "hoursComponent", kClock_hoursComponent, kClockPropertyFlags, nullptr,
+        nullptr },
+    { "daysComponent", kClock_daysComponent, kClockPropertyFlags, nullptr,
+        nullptr },
     { "clockString", kClock_clockString, kClockPropertyFlags, nullptr, nullptr },
     { "isAdjusting", kClock_isAdjusting, kClockPropertyFlags, nullptr, nullptr },
-    { "adjustedSeconds", kClock_adjustedSeconds, kClockPropertyFlags, nullptr, nullptr },
-    { "legacy_scriptTimer", kClock_legacy_scriptTimer, kClockPropertyFlags, nullptr, nullptr },
+    { "adjustedSeconds", kClock_adjustedSeconds, kClockPropertyFlags, nullptr,
+        nullptr },
+    { "legacy_scriptTimer", kClock_legacy_scriptTimer, kClockPropertyFlags,
+        nullptr, nullptr },
     { 0 }
 };
 } // namespace
 
 namespace {
 static FunctionSpec sClockMethods[] = {
-    // JS name						Function						min args
+    // JS name						Function
+    // min args
     { "toString", JSClockToString, 0 },
     { "clockStringForTime", ClockClockStringForTime, 1 },
     { "addSeconds", ClockAddSeconds, 1 },
@@ -182,12 +184,16 @@ constexpr PropertyFlag kClockObjectFlags = PropertyFlag::Permanent | PropertyFla
 
 void InitOOJSClock(ooscript::Context context, ooscript::Object global)
 {
-    Object clockPrototype = ooscript::initClass((context), (global), nullptr, &sClockClass, OOJSUnconstructableConstruct, 0, sClockPropertiesFacade, sClockMethods, nullptr, nullptr);
-    ooscript::defineObject((context), (global), "clock", &sClockClass, clockPrototype, kClockObjectFlags);
+    Object clockPrototype = ooscript::initClass(
+        (context), (global), nullptr, &sClockClass, OOJSUnconstructableConstruct,
+        0, sClockPropertiesFacade, sClockMethods, nullptr, nullptr);
+    ooscript::defineObject((context), (global), "clock", &sClockClass,
+        clockPrototype, kClockObjectFlags);
 }
 
 namespace {
-static bool ClockGetProperty(Context cx, Object obj, PropertyId propID, Value* value)
+static bool ClockGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value)
 {
     if (!ooscript::isInt32Id(propID))
         return true;
@@ -200,11 +206,14 @@ static bool ClockGetProperty(Context cx, Object obj, PropertyId propID, Value* v
     PlayerEntity* player = OOPlayerForScripting();
     double clockTime;
 
-    clockTime = (player != nullptr ? player->PlayerEntity::clockTime() : 0.0); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
+    clockTime = (player != nullptr ? player->PlayerEntity::clockTime()
+                                   : 0.0); // qualified: the final overrider, so
+                                           // the binding test stands in for it
 
     switch (ooscript::idToInt32(propID)) {
     case kClock_absoluteSeconds:
-        return ooscript::newNumberValue(cx, (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0), value);
+        return ooscript::newNumberValue(
+            cx, (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0), value);
 
     case kClock_seconds:
         return ooscript::newNumberValue(cx, clockTime, value);
@@ -233,22 +242,32 @@ static bool ClockGetProperty(Context cx, Object obj, PropertyId propID, Value* v
         return true;
 
     case kClock_clockString:
-        *value = OOJSValueFromPList(context, oo::PList((player != nullptr ? player->dial_clock() : std::string())));
+        *value = OOJSValueFromPList(
+            context, oo::PList((player != nullptr ? player->dial_clock() : std::string())));
         return true;
 
     case kClock_isAdjusting:
-        *value = OOJSValueFromBOOL((player != nullptr ? player->clockAdjusting() : false));
+        *value = OOJSValueFromBOOL(
+            (player != nullptr ? player->clockAdjusting() : false));
         return true;
 
     case kClock_adjustedSeconds:
-        return ooscript::newNumberValue(cx, (player != nullptr ? player->PlayerEntity::clockTimeAdjusted() : 0.0), value); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
+        return ooscript::newNumberValue(
+            cx,
+            (player != nullptr ? player->PlayerEntity::clockTimeAdjusted() : 0.0),
+            value); // qualified: the final overrider, so the binding test stands
+                    // in for it
 
     case kClock_legacy_scriptTimer:
-        cxx_OOStandardsDeprecated("The legacy_scriptTimer property is deprecated");
-        return ooscript::newNumberValue(cx, (player != nullptr ? player->scriptTimer() : OOTimeDelta { }), value);
+        cxx_OOStandardsDeprecated(
+            "The legacy_scriptTimer property is deprecated");
+        return ooscript::newNumberValue(
+            cx, (player != nullptr ? player->scriptTimer() : OOTimeDelta { }),
+            value);
 
     default:
-        OOJSReportBadPropertySelector(context, thisObj, (propID), sClockProperties);
+        OOJSReportBadPropertySelector(context, thisObj, (propID),
+            sClockProperties);
         return false;
     }
 
@@ -260,12 +279,14 @@ static bool ClockGetProperty(Context cx, Object obj, PropertyId propID, Value* v
 
 // toString() : String
 namespace {
-static bool JSClockToString(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool JSClockToString(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    OOJS_RETURN_PLIST(oo::PList(player != nullptr ? player->dial_clock() : std::string()));
+    OOJS_RETURN_PLIST(
+        oo::PList(player != nullptr ? player->dial_clock() : std::string()));
 
     OOJS_NATIVE_EXIT
 }
@@ -273,7 +294,8 @@ static bool JSClockToString(ooscript::Context context, ooscript::CallArgs& oojsA
 
 // clockStringForTime(time : Number) : String
 namespace {
-static bool ClockClockStringForTime(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool ClockClockStringForTime(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
 
@@ -283,11 +305,13 @@ static bool ClockClockStringForTime(ooscript::Context context, ooscript::CallArg
         ooscript::Value arg = ooscript::undefinedValue();
         if (oojsArgs.count() > 0)
             arg = OOJS_ARGV[0];
-        cxx_OOJSReportBadArguments(context, "Clock", "clockStringForTime", 1, &arg, std::nullopt, "number");
+        cxx_OOJSReportBadArguments(context, "Clock", "clockStringForTime", 1, &arg,
+            std::nullopt, "number");
         return false;
     }
 
-    OOJS_RETURN(OOJSValueFromPList(context, oo::PList(cxx_ClockToString(time, false))));
+    OOJS_RETURN(
+        OOJSValueFromPList(context, oo::PList(cxx_ClockToString(time, false))));
 
     OOJS_NATIVE_EXIT
 }
@@ -295,7 +319,8 @@ static bool ClockClockStringForTime(ooscript::Context context, ooscript::CallArg
 
 // addSeconds(seconds : Number) : String
 namespace {
-static bool ClockAddSeconds(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool ClockAddSeconds(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
     OOJS_NATIVE_ENTER(context)
 
@@ -306,7 +331,8 @@ static bool ClockAddSeconds(ooscript::Context context, ooscript::CallArgs& oojsA
         ooscript::Value arg = ooscript::undefinedValue();
         if (oojsArgs.count() > 0)
             arg = OOJS_ARGV[0];
-        cxx_OOJSReportBadArguments(context, "Clock", "addSeconds", 1, &arg, std::nullopt, "number");
+        cxx_OOJSReportBadArguments(context, "Clock", "addSeconds", 1, &arg,
+            std::nullopt, "number");
         return false;
     }
 

@@ -5,8 +5,7 @@
    the game's own OOJSEngineTimeManagement.mm.
 */
 
-#ifndef TEST_OOJSENGINETIMEMANAGEMENT_HPP
-#define TEST_OOJSENGINETIMEMANAGEMENT_HPP
+#pragma once
 
 #include <optional>
 #include <string>
@@ -47,5 +46,3 @@ class OOTimeProfile : public oo::RefCounted {
   std::vector<oo::Ref<OOTimeProfileEntry>> profileEntries();
   ooscript::Value oo_jsValueInContext(ooscript::Context context);
 };
-
-#endif

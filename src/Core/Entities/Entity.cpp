@@ -23,24 +23,22 @@ MA 02110-1301, USA.
 */
 
 #include "Entity.h"
-#include "DockEntity.h"
-#include "EntityOOJavaScriptExtensions.h"
-#include "OOPlanetEntity.h"
-#include "PlayerEntity.h"
-#include "StationEntity.h" // willDispose(): the station's and the dock's parts (bead oo-dpyk8)
-#include "oofnd/objc/OOException.h" // oo::CurrentOOException (beads oo-rskgl, oo-rskgl.1)
-
-#include "GameController.h"
-#include "OOConstToString.h"
-#include "OOMaths.h"
-#include "ResourceManager.h"
-#include "Universe.h"
 
 #include "CollisionRegion.h"
-
+#include "DockEntity.h"
+#include "EntityOOJavaScriptExtensions.h"
+#include "GameController.h"
+#include "OOConstToString.h"
 #include "OODebugFlags.h"
+#include "OOMaths.h"
+#include "OOPlanetEntity.h"
+#include "PlayerEntity.h"
+#include "ResourceManager.h"
+#include "StationEntity.h" // willDispose(): the station's and the dock's parts
+#include "Universe.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
+#include "oofnd/objc/OOException.h" // oo::CurrentOOException
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 uint32_t gLiveEntityCount = 0;
@@ -57,15 +55,14 @@ constexpr const char* kOOLogEntityUpdateError = "entity.linkedList.update.error"
 #endif
 constexpr const char* kOOLogEntityVerificationError = "entity.linkedList.verify.error";
 
-// -init's body is init(), which the facade runs again when an initialised entity is sent -init.
-Entity::Entity()
-{
-    init();
-}
+// -init's body is init(), which the facade runs again when an initialised
+// entity is sent -init.
+Entity::Entity() { init(); }
 
-/*	-init. What needed the Objective-C object as self (counting the entity with its instance
-        size) is in the facade's initialiser. Run by the constructor, and again when an initialised
-        entity is sent -init (PlayerEntity's -deferredInit sends it through -[ShipEntity
+/*	-init. What needed the Objective-C object as self (counting the entity
+   with its instance size) is in the facade's initialiser. Run by the
+   constructor, and again when an initialised entity is sent -init
+   (PlayerEntity's -deferredInit sends it through -[ShipEntity
         cxx_initWithKey:...]).
 */
 void Entity::init()
@@ -79,7 +76,9 @@ void Entity::init()
     no_draw_distance = 100000.0; //  10 km
 
     scanClass = CLASS_NOT_SET;
-    Entity::setStatus(STATUS_COCKPIT_DISPLAY); // the base's own: ShipEntity's override does the same for this status
+    Entity::setStatus(
+        STATUS_COCKPIT_DISPLAY); // the base's own: ShipEntity's override does
+                                 // the same for this status
 
     spawnTime = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
 
@@ -90,11 +89,13 @@ void Entity::init()
     lastDrawCounter = 0;
 }
 
-/*	What the root facade's -dealloc ran before the C++ part went (bead oo-dpyk8, oo-9ht.39 step 5k.4):
-        the last release runs it, with the entity whole (oo::RefCounted::willDispose()), in the same order.
-        An entity that never had its object (no creator made its facade) ran none of it, so it runs none.
-        From its first line the entity no longer has its object (hasObject()), as oo::ToObjC() answered
-        nil for an object being deallocated: holds and retains of it are null and nothing.
+/*	What the root facade's -dealloc ran before the C++ part went: the last
+   release runs it, with the entity whole (oo::RefCounted::willDispose()), in
+   the same order. An entity that
+   never had its object (no creator made its facade) ran none of it, so it runs
+   none. From its first line the entity no longer has its object (hasObject()),
+   as oo::ToObjC() answered nil for an object being deallocated: holds and
+   retains of it are null and nothing.
 */
 void Entity::willDispose() noexcept
 {
@@ -102,10 +103,10 @@ void Entity::willDispose() noexcept
         return;
     _disposing = true;
 
-    /*	A ship's -dealloc ran first: its facade was a subclass of the root's until bead oo-9ht.144.
-            The player's, a station's or a dock's part first, as their facades' -dealloc ran before the
-            ship's (beads oo-9ht.177, oo-9ht.175, oo-9ht.180); then the weak references, dropped before
-            entityDestroyed (see ShipEntity::shipWillDealloc()); then the ship's body.
+    /*	A ship's -dealloc ran first. The player's, a station's or a dock's part
+       first, as their facades' -dealloc ran before the ship's; then the weak
+       references, dropped before entityDestroyed (see
+       ShipEntity::shipWillDealloc()); then the ship's body.
     */
     if (::ShipEntity* ship = dynamic_cast<::ShipEntity*>(this)) {
         if (::PlayerEntity* player = dynamic_cast<::PlayerEntity*>(ship))
@@ -119,10 +120,13 @@ void Entity::willDispose() noexcept
     }
 
     if (UNIVERSE != nullptr) {
-        // The log line describes the entity before it goes (the facade's described its object; the
-        // address is the entity's since bead oo-dpyk8).
+        // The log line describes the entity before it goes (the facade's described
+        // its object; the address is the entity's).
         if (getUniversalID() != NO_TARGET) {
-            OO_LOG("universe.unremovedEntity", "Entity {} dealloced without being removed from universe! (This is an internal programming error, please report it.)", oo::EntityOwnDescription(this));
+            OO_LOG("universe.unremovedEntity",
+                "Entity {} dealloced without being removed from universe! (This "
+                "is an internal programming error, please report it.)",
+                oo::EntityOwnDescription(this));
         }
         UNIVERSE->ensureEntityReallyRemoved(this);
     }
@@ -136,98 +140,63 @@ void Entity::willDispose() noexcept
     gTotalEntityMemory -= oo::EntityObjectSize(this);
 #endif
 
-    // The weak references read null from here, where the facade's superclass's -dealloc dropped the
-    // object's (bead oo-9ht.39.5.2).
+    // The weak references read null from here, where the facade's superclass's
+    // -dealloc dropped the object's.
     dropWeakReferences();
 }
 
 std::optional<std::string> Entity::descriptionComponents() const
 {
     // The getters read these ivars.
-    return oo::str::format("position: %s scanClass: %s status: %s", cxx_HPVectorDescription(position).c_str(), cxx_OOStringFromScanClass(const_cast<Entity*>(this)->getScanClass()).c_str(), cxx_OOStringFromEntityStatus(_status).c_str());
+    return oo::str::format(
+        "position: %s scanClass: %s status: %s",
+        cxx_HPVectorDescription(position).c_str(),
+        cxx_OOStringFromScanClass(const_cast<Entity*>(this)->getScanClass())
+            .c_str(),
+        cxx_OOStringFromEntityStatus(_status).c_str());
 }
 
-NSUInteger Entity::sessionID()
-{
-    return _sessionID;
-}
+NSUInteger Entity::sessionID() { return _sessionID; }
 
-bool Entity::getIsShip()
-{
-    return isShip;
-}
+bool Entity::getIsShip() { return isShip; }
 
-bool Entity::isDock()
-{
-    return NO;
-}
+bool Entity::isDock() { return NO; }
 
-bool Entity::getIsStation()
-{
-    return isStation;
-}
+bool Entity::getIsStation() { return isStation; }
 
-bool Entity::getIsSubEntity()
-{
-    return isSubEntity;
-}
+bool Entity::getIsSubEntity() { return isSubEntity; }
 
-bool Entity::getIsPlayer()
-{
-    return isPlayer;
-}
+bool Entity::getIsPlayer() { return isPlayer; }
 
-bool Entity::isPlanet()
-{
-    return NO;
-}
+bool Entity::isPlanet() { return NO; }
 
-bool Entity::isSun()
-{
-    return NO;
-}
+bool Entity::isSun() { return NO; }
 
-bool Entity::getIsSunlit()
-{
-    return isSunlit;
-}
+bool Entity::getIsSunlit() { return isSunlit; }
 
-bool Entity::isStellarObject()
-{
-    return isPlanet() || isSun();
-}
+bool Entity::isStellarObject() { return isPlanet() || isSun(); }
 
-bool Entity::isSky()
-{
-    return NO;
-}
+bool Entity::isSky() { return NO; }
 
-bool Entity::getIsWormhole()
-{
-    return isWormhole;
-}
+bool Entity::getIsWormhole() { return isWormhole; }
 
-bool Entity::isEffect()
-{
-    return NO;
-}
+bool Entity::isEffect() { return NO; }
 
-bool Entity::getIsVisualEffect()
-{
-    return NO;
-}
+bool Entity::getIsVisualEffect() { return NO; }
 
-bool Entity::isWaypoint()
-{
-    return NO;
-}
+bool Entity::isWaypoint() { return NO; }
 
 bool Entity::validForAddToUniverse()
 {
     NSUInteger mySessionID = sessionID();
     NSUInteger currentSessionID = (UNIVERSE != nullptr ? UNIVERSE->sessionID() : 0);
     if (EXPECT_NOT(mySessionID != currentSessionID)) {
-        OO_LOG_ERR("entity.invalidSession", "Entity {} from session {} cannot be added to universe in session {}. This is an internal error, please report it.", oo::EntityShortDescription(this), static_cast<size_t>(mySessionID), static_cast<size_t>(currentSessionID));
+        OO_LOG_ERR("entity.invalidSession",
+            "Entity {} from session {} cannot be added to universe in "
+            "session {}. This is an internal error, please report it.",
+            oo::EntityShortDescription(this),
+            static_cast<size_t>(mySessionID),
+            static_cast<size_t>(currentSessionID));
         return NO;
     }
 
@@ -238,7 +207,8 @@ void Entity::addToLinkedLists()
 {
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if (gDebugFlags & DEBUG_LINKED_LISTS)
-        OO_LOG(kOOLogEntityAddToList, "DEBUG adding entity {} to linked lists", oo::EntityDescription(this));
+        OO_LOG(kOOLogEntityAddToList, "DEBUG adding entity {} to linked lists",
+            oo::EntityDescription(this));
 #endif
     //
     // insert at the start
@@ -289,7 +259,10 @@ void Entity::addToLinkedLists()
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if (gDebugFlags & DEBUG_LINKED_LISTS) {
         if (!checkLinkedLists()) {
-            OO_LOG(kOOLogEntityAddToListError, "DEBUG LINKED LISTS - problem encountered while adding {} to linked lists", oo::EntityDescription(this));
+            OO_LOG(kOOLogEntityAddToListError,
+                "DEBUG LINKED LISTS - problem encountered while adding {} to "
+                "linked lists",
+                oo::EntityDescription(this));
             if (UNIVERSE != nullptr)
                 UNIVERSE->debugDumpEntities();
         }
@@ -301,7 +274,9 @@ void Entity::removeFromLinkedLists()
 {
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if (gDebugFlags & DEBUG_LINKED_LISTS)
-        OO_LOG(kOOLogEntityRemoveFromList, "DEBUG removing entity {} from linked lists", oo::EntityDescription(this));
+        OO_LOG(kOOLogEntityRemoveFromList,
+            "DEBUG removing entity {} from linked lists",
+            oo::EntityDescription(this));
 #endif
 
     if ((x_next == nil) && (x_previous == nil)) // removed already!
@@ -342,7 +317,10 @@ void Entity::removeFromLinkedLists()
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if (gDebugFlags & DEBUG_LINKED_LISTS) {
         if (!checkLinkedLists()) {
-            OO_LOG(kOOLogEntityRemoveFromListError, "DEBUG LINKED LISTS - problem encountered while removing {} from linked lists", oo::EntityDescription(this));
+            OO_LOG(kOOLogEntityRemoveFromListError,
+                "DEBUG LINKED LISTS - problem encountered while removing {} from "
+                "linked lists",
+                oo::EntityDescription(this));
             if (UNIVERSE != nullptr)
                 UNIVERSE->debugDumpEntities();
         }
@@ -366,7 +344,8 @@ bool Entity::checkLinkedLists()
             check = check->x_next;
         }
         if ((check) || (n > 0)) {
-            OO_LOG(kOOLogEntityVerificationError, "Broken x_next {} list ({}) ***", oo::EntityDescription(UNIVERSE->x_list_start), n);
+            OO_LOG(kOOLogEntityVerificationError, "Broken x_next {} list ({}) ***",
+                oo::EntityDescription(UNIVERSE->x_list_start), n);
             return NO;
         }
         //
@@ -375,7 +354,9 @@ bool Entity::checkLinkedLists()
         while ((n--) && (check))
             check = check->x_previous;
         if ((check) || (n > 0)) {
-            OO_LOG(kOOLogEntityVerificationError, "Broken x_previous {} list ({}) ***", oo::EntityDescription(UNIVERSE->x_list_start), n);
+            OO_LOG(kOOLogEntityVerificationError,
+                "Broken x_previous {} list ({}) ***",
+                oo::EntityDescription(UNIVERSE->x_list_start), n);
             return NO;
         }
         //
@@ -386,7 +367,8 @@ bool Entity::checkLinkedLists()
             check = check->y_next;
         }
         if ((check) || (n > 0)) {
-            OO_LOG(kOOLogEntityVerificationError, "Broken y_next {} list ({}) ***", oo::EntityDescription(UNIVERSE->y_list_start), n);
+            OO_LOG(kOOLogEntityVerificationError, "Broken y_next {} list ({}) ***",
+                oo::EntityDescription(UNIVERSE->y_list_start), n);
             return NO;
         }
         //
@@ -395,7 +377,9 @@ bool Entity::checkLinkedLists()
         while ((n--) && (check))
             check = check->y_previous;
         if ((check) || (n > 0)) {
-            OO_LOG(kOOLogEntityVerificationError, "Broken y_previous {} list ({}) ***", oo::EntityDescription(UNIVERSE->y_list_start), n);
+            OO_LOG(kOOLogEntityVerificationError,
+                "Broken y_previous {} list ({}) ***",
+                oo::EntityDescription(UNIVERSE->y_list_start), n);
             return NO;
         }
         //
@@ -406,7 +390,8 @@ bool Entity::checkLinkedLists()
             check = check->z_next;
         }
         if ((check) || (n > 0)) {
-            OO_LOG(kOOLogEntityVerificationError, "Broken z_next {} list ({}) ***", oo::EntityDescription(UNIVERSE->z_list_start), n);
+            OO_LOG(kOOLogEntityVerificationError, "Broken z_next {} list ({}) ***",
+                oo::EntityDescription(UNIVERSE->z_list_start), n);
             return NO;
         }
         //
@@ -415,7 +400,9 @@ bool Entity::checkLinkedLists()
         while ((n--) && (check))
             check = check->z_previous;
         if ((check) || (n > 0)) {
-            OO_LOG(kOOLogEntityVerificationError, "Broken z_previous {} list ({}) ***", oo::EntityDescription(UNIVERSE->z_list_start), n);
+            OO_LOG(kOOLogEntityVerificationError,
+                "Broken z_previous {} list ({}) ***",
+                oo::EntityDescription(UNIVERSE->z_list_start), n);
             return NO;
         }
     }
@@ -432,7 +419,10 @@ void Entity::updateLinkedLists()
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if (gDebugFlags & DEBUG_LINKED_LISTS) {
         if (!checkLinkedLists()) {
-            OO_LOG(kOOLogEntityVerificationError, "DEBUG LINKED LISTS problem encountered before updating linked lists for {}", oo::EntityDescription(this));
+            OO_LOG(kOOLogEntityVerificationError,
+                "DEBUG LINKED LISTS problem encountered before updating linked "
+                "lists for {}",
+                oo::EntityDescription(this));
             if (UNIVERSE != nullptr)
                 UNIVERSE->debugDumpEntities();
         }
@@ -512,7 +502,10 @@ void Entity::updateLinkedLists()
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if (gDebugFlags & DEBUG_LINKED_LISTS) {
         if (!checkLinkedLists()) {
-            OO_LOG(kOOLogEntityUpdateError, "DEBUG LINKED LISTS problem encountered after updating linked lists for {}", oo::EntityDescription(this));
+            OO_LOG(kOOLogEntityUpdateError,
+                "DEBUG LINKED LISTS problem encountered after updating linked "
+                "lists for {}",
+                oo::EntityDescription(this));
             if (UNIVERSE != nullptr)
                 UNIVERSE->debugDumpEntities();
         }
@@ -533,38 +526,24 @@ void Entity::wasRemovedFromUniverse()
 void Entity::warnAboutHostiles()
 {
     // do nothing for now, this can be expanded in sub classes
-    OO_LOG("general.error.subclassResponsibility.Entity-warnAboutHostiles", "{}", "***** Entity does nothing in warnAboutHostiles");
+    OO_LOG("general.error.subclassResponsibility.Entity-warnAboutHostiles", "{}",
+        "***** Entity does nothing in warnAboutHostiles");
 }
 
-CollisionRegion* Entity::getCollisionRegion()
-{
-    return collisionRegion.get();
-}
+CollisionRegion* Entity::getCollisionRegion() { return collisionRegion.get(); }
 
 void Entity::setCollisionRegion(CollisionRegion* region)
 {
     collisionRegion = oo::Ref<CollisionRegion>(region);
 }
 
-void Entity::setUniversalID(OOUniversalID uid)
-{
-    universalID = uid;
-}
+void Entity::setUniversalID(OOUniversalID uid) { universalID = uid; }
 
-OOUniversalID Entity::getUniversalID()
-{
-    return universalID;
-}
+OOUniversalID Entity::getUniversalID() { return universalID; }
 
-bool Entity::throwingSparks()
-{
-    return throw_sparks;
-}
+bool Entity::throwingSparks() { return throw_sparks; }
 
-void Entity::setThrowSparks(bool value)
-{
-    throw_sparks = value;
-}
+void Entity::setThrowSparks(bool value) { throw_sparks = value; }
 
 void Entity::throwSparks()
 {
@@ -573,30 +552,31 @@ void Entity::throwSparks()
 
 void Entity::setOwner(Entity* ent)
 {
-    _owner = oo::WithObject(ent); // an entity without its object was nil's empty reference (bead oo-dpyk8)
+    _owner = oo::WithObject(ent); // an entity without its object was nil's empty
+                                  // reference
 }
 
 Entity* Entity::owner()
 {
-    return oo::WithObject(_owner.get()); // +0, null once it has gone, as the object read (bead oo-dpyk8)
+    return oo::WithObject(_owner.get()); // +0, null once it has gone, as the
+                                         // object read
 }
 
-Entity* Entity::ownerEntity()
-{
-    return _owner.get();
-}
+Entity* Entity::ownerEntity() { return _owner.get(); }
 
 std::string oo::EntityWeakPListForeign::description() const
 {
-    // What "%@" printed for the weak reference: its object's description, or <Dead ...> once gone.
+    // What "%@" printed for the weak reference: its object's description, or
+    // <Dead ...> once gone.
     if (Entity* entity = _entity.get())
         return EntityDescription(entity);
-    return str::format("<Dead OOWeakReference %s>", str::pointerDescription(this).c_str());
+    return str::format("<Dead OOWeakReference %s>",
+        str::pointerDescription(this).c_str());
 }
 
 Entity* Entity::parentEntity()
 {
-    Entity* owner = oo::LiveOwner(this); // the owner's object's part, +0 (bead oo-w9pi2)
+    Entity* owner = oo::LiveOwner(this); // the owner's object's part, +0
     if (oo::EntityIsShipWithSubEntityShip(owner, this))
         return owner;
     return nullptr;
@@ -604,7 +584,7 @@ Entity* Entity::parentEntity()
 
 Entity* Entity::superShaderBindingTarget()
 {
-    return oo::WithObject(parentEntity()); // +0, as the owner was read (beads oo-9ht.39.24, oo-dpyk8)
+    return oo::WithObject(parentEntity()); // +0, as the owner was read
 }
 
 Entity* Entity::rootShipEntity()
@@ -617,15 +597,9 @@ Entity* Entity::rootShipEntity()
     return nullptr;
 }
 
-HPVector Entity::getPosition()
-{
-    return position;
-}
+HPVector Entity::getPosition() { return position; }
 
-Vector Entity::getCameraRelativePosition()
-{
-    return cameraRelativePosition;
-}
+Vector Entity::getCameraRelativePosition() { return cameraRelativePosition; }
 
 GLfloat Entity::cameraRangeFront()
 {
@@ -641,13 +615,16 @@ GLfloat Entity::cameraRangeBack()
 // so needs to remain at OpenGL precision levels
 Vector Entity::relativePosition()
 {
-    return HPVectorToVector(HPvector_subtract(getPosition(), (PLAYER != nullptr ? PLAYER->getPosition() : HPVector { })));
+    return HPVectorToVector(HPvector_subtract(
+        getPosition(), (PLAYER != nullptr ? PLAYER->getPosition() : HPVector { })));
 }
 
 Vector Entity::vectorTo(Entity* entity)
 {
     // A message to nil answered the zero vector.
-    return HPVectorToVector(HPvector_subtract(entity != nullptr ? entity->getPosition() : kZeroHPVector, getPosition()));
+    return HPVectorToVector(HPvector_subtract(
+        entity != nullptr ? entity->getPosition() : kZeroHPVector,
+        getPosition()));
 }
 
 void Entity::setPosition(HPVector posn)
@@ -666,7 +643,9 @@ void Entity::setPositionX(OOHPScalar x, OOHPScalar y, OOHPScalar z)
 
 void Entity::updateCameraRelativePosition()
 {
-    cameraRelativePosition = HPVectorToVector(HPvector_subtract(absolutePositionForSubentity(), (PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector { })));
+    cameraRelativePosition = HPVectorToVector(HPvector_subtract(
+        absolutePositionForSubentity(),
+        (PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector { })));
 }
 
 HPVector Entity::absolutePositionForSubentity()
@@ -681,7 +660,9 @@ HPVector Entity::absolutePositionForSubentityOffset(HPVector offset)
     Entity* father = parentEntity();
 
     while (father != nil && father != last) {
-        abspos = HPvector_add(OOHPVectorMultiplyMatrix(abspos, father->drawRotationMatrix()), father->getPosition());
+        abspos = HPvector_add(
+            OOHPVectorMultiplyMatrix(abspos, father->drawRotationMatrix()),
+            father->getPosition());
         last = father;
         if (!last->getIsSubEntity())
             break;
@@ -690,15 +671,9 @@ HPVector Entity::absolutePositionForSubentityOffset(HPVector offset)
     return abspos;
 }
 
-double Entity::zeroDistance()
-{
-    return zero_distance;
-}
+double Entity::zeroDistance() { return zero_distance; }
 
-double Entity::camZeroDistance()
-{
-    return cam_zero_distance;
-}
+double Entity::camZeroDistance() { return cam_zero_distance; }
 
 OOComparisonResult Entity::compareZeroDistance(Entity* otherEntity)
 {
@@ -708,15 +683,9 @@ OOComparisonResult Entity::compareZeroDistance(Entity* otherEntity)
         return OOOrderedDescending;
 }
 
-BoundingBox Entity::getBoundingBox()
-{
-    return boundingBox;
-}
+BoundingBox Entity::getBoundingBox() { return boundingBox; }
 
-GLfloat Entity::getMass()
-{
-    return mass;
-}
+GLfloat Entity::getMass() { return mass; }
 
 void Entity::setOrientation(Quaternion quat)
 {
@@ -724,20 +693,11 @@ void Entity::setOrientation(Quaternion quat)
     orientationChanged();
 }
 
-Quaternion Entity::getOrientation()
-{
-    return orientation;
-}
+Quaternion Entity::getOrientation() { return orientation; }
 
-Quaternion Entity::normalOrientation()
-{
-    return getOrientation();
-}
+Quaternion Entity::normalOrientation() { return getOrientation(); }
 
-void Entity::setNormalOrientation(Quaternion quat)
-{
-    setOrientation(quat);
-}
+void Entity::setNormalOrientation(Quaternion quat) { setOrientation(quat); }
 
 void Entity::orientationChanged()
 {
@@ -745,70 +705,31 @@ void Entity::orientationChanged()
     rotMatrix = OOMatrixForQuaternionRotation(orientation);
 }
 
-void Entity::setVelocity(Vector vel)
-{
-    velocity = vel;
-}
+void Entity::setVelocity(Vector vel) { velocity = vel; }
 
-Vector Entity::getVelocity()
-{
-    return velocity;
-}
+Vector Entity::getVelocity() { return velocity; }
 
-double Entity::speed()
-{
-    return magnitude(getVelocity());
-}
+double Entity::speed() { return magnitude(getVelocity()); }
 
-GLfloat Entity::getDistanceTravelled()
-{
-    return distanceTravelled;
-}
+GLfloat Entity::getDistanceTravelled() { return distanceTravelled; }
 
-void Entity::setDistanceTravelled(GLfloat value)
-{
-    distanceTravelled = value;
-}
+void Entity::setDistanceTravelled(GLfloat value) { distanceTravelled = value; }
 
-void Entity::setStatus(OOEntityStatus stat)
-{
-    _status = stat;
-}
+void Entity::setStatus(OOEntityStatus stat) { _status = stat; }
 
-OOEntityStatus Entity::status()
-{
-    return _status;
-}
+OOEntityStatus Entity::status() { return _status; }
 
-void Entity::setScanClass(OOScanClass sClass)
-{
-    scanClass = sClass;
-}
+void Entity::setScanClass(OOScanClass sClass) { scanClass = sClass; }
 
-OOScanClass Entity::getScanClass()
-{
-    return scanClass;
-}
+OOScanClass Entity::getScanClass() { return scanClass; }
 
-void Entity::setEnergy(GLfloat amount)
-{
-    energy = amount;
-}
+void Entity::setEnergy(GLfloat amount) { energy = amount; }
 
-GLfloat Entity::getEnergy()
-{
-    return energy;
-}
+GLfloat Entity::getEnergy() { return energy; }
 
-void Entity::setMaxEnergy(GLfloat amount)
-{
-    maxEnergy = amount;
-}
+void Entity::setMaxEnergy(GLfloat amount) { maxEnergy = amount; }
 
-GLfloat Entity::getMaxEnergy()
-{
-    return maxEnergy;
-}
+GLfloat Entity::getMaxEnergy() { return maxEnergy; }
 
 void Entity::applyRoll(GLfloat roll, GLfloat climb)
 {
@@ -840,20 +761,15 @@ void Entity::applyRoll(GLfloat roll, GLfloat climb, GLfloat yaw)
 
 void Entity::moveForward(double amount)
 {
-    HPVector forward = HPvector_multiply_scalar(HPvector_forward_from_quaternion(orientation), amount);
+    HPVector forward = HPvector_multiply_scalar(
+        HPvector_forward_from_quaternion(orientation), amount);
     position = HPvector_add(position, forward);
     distanceTravelled += amount;
 }
 
-OOMatrix Entity::rotationMatrix()
-{
-    return rotMatrix;
-}
+OOMatrix Entity::rotationMatrix() { return rotMatrix; }
 
-OOMatrix Entity::drawRotationMatrix()
-{
-    return rotMatrix;
-}
+OOMatrix Entity::drawRotationMatrix() { return rotMatrix; }
 
 OOMatrix Entity::transformationMatrix()
 {
@@ -867,25 +783,13 @@ OOMatrix Entity::drawTransformationMatrix()
     return OOMatrixHPTranslate(result, position);
 }
 
-bool Entity::canCollide()
-{
-    return YES;
-}
+bool Entity::canCollide() { return YES; }
 
-GLfloat Entity::collisionRadius()
-{
-    return collision_radius;
-}
+GLfloat Entity::collisionRadius() { return collision_radius; }
 
-GLfloat Entity::frustumRadius()
-{
-    return collision_radius;
-}
+GLfloat Entity::frustumRadius() { return collision_radius; }
 
-void Entity::setCollisionRadius(GLfloat amount)
-{
-    collision_radius = amount;
-}
+void Entity::setCollisionRadius(GLfloat amount) { collision_radius = amount; }
 
 std::vector<oo::EntityHold>* Entity::getCollidingEntities()
 {
@@ -903,7 +807,9 @@ void Entity::update(OOTimeDelta delta_t)
             updateCameraRelativePosition();
         } else {
             zero_distance = HPdistance2(PLAYER->position, position);
-            cam_zero_distance = HPdistance2((PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector { }), position);
+            cam_zero_distance = HPdistance2(
+                (PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector { }),
+                position);
             updateCameraRelativePosition();
         }
     } else {
@@ -924,13 +830,11 @@ void Entity::update(OOTimeDelta delta_t)
 
 void Entity::applyVelocity(OOTimeDelta delta_t)
 {
-    position = HPvector_add(position, HPvector_multiply_scalar(vectorToHPVector(velocity), delta_t));
+    position = HPvector_add(
+        position, HPvector_multiply_scalar(vectorToHPVector(velocity), delta_t));
 }
 
-bool Entity::checkCloseCollisionWith(Entity* other)
-{
-    return other != nil;
-}
+bool Entity::checkCloseCollisionWith(Entity* other) { return other != nil; }
 
 double Entity::findCollisionRadius()
 {
@@ -943,9 +847,9 @@ void Entity::drawImmediate(bool /*immediate*/, bool /*translucent*/)
     OOLogGenericSubclassResponsibility();
 }
 
-void Entity::takeEnergyDamage(double /*amount*/, Entity* /*ent*/, Entity* /*other*/, const std::string& /*weaponIdentifier*/)
-{
-}
+void Entity::takeEnergyDamage(double /*amount*/, Entity* /*ent*/,
+    Entity* /*other*/,
+    const std::string& /*weaponIdentifier*/) { }
 
 void Entity::dumpState()
 {
@@ -958,7 +862,8 @@ void Entity::dumpState()
         } catch (...) {
             if (!oo::CurrentOOException())
                 throw;
-        } // was @catch (id exception) {}: the game's exceptions only (oo::Exception since oo-rskgl.1)
+        } // was @catch (id exception) {}: the game's exceptions only
+          // (oo::Exception)
         oo::log::popIndent();
     }
 }
@@ -971,17 +876,21 @@ void Entity::dumpSelfState()
     std::string ownerDescription; // the literals were @"self" and @"none"
 
     if (owner == oo::WithObject(this))
-        ownerDescription = "self"; // the objects compared (bead oo-dpyk8)
+        ownerDescription = "self"; // the objects compared
     else if (owner == nullptr)
         ownerDescription = "none";
     else
         ownerDescription = oo::EntityDescription(owner);
 
-    OO_LOG("dumpState.entity", "Universal ID: {}", static_cast<unsigned>(universalID));
-    OO_LOG("dumpState.entity", "Scan class: {}", cxx_OOStringFromScanClass(scanClass));
-    OO_LOG("dumpState.entity", "Status: {}", cxx_OOStringFromEntityStatus(status()));
+    OO_LOG("dumpState.entity", "Universal ID: {}",
+        static_cast<unsigned>(universalID));
+    OO_LOG("dumpState.entity", "Scan class: {}",
+        cxx_OOStringFromScanClass(scanClass));
+    OO_LOG("dumpState.entity", "Status: {}",
+        cxx_OOStringFromEntityStatus(status()));
     OO_LOG("dumpState.entity", "Position: {}", cxx_HPVectorDescription(position));
-    OO_LOG("dumpState.entity", "Orientation: {}", QuaternionDescription(orientation));
+    OO_LOG("dumpState.entity", "Orientation: {}",
+        QuaternionDescription(orientation));
     OO_LOG("dumpState.entity", "Distance travelled: {:g}", distanceTravelled);
     OO_LOG("dumpState.entity", "Energy: {:g} of {:g}", energy, maxEnergy);
     OO_LOG("dumpState.entity", "Mass: {:g}", mass);
@@ -1008,23 +917,22 @@ void Entity::dumpSelfState()
     if (flags.empty())
         flagsString = "none";
     OO_LOG("dumpState.entity", "Flags: {}", flagsString);
-    OO_LOG("dumpState.entity", "Collision Test Filter: {}", static_cast<unsigned>(collisionTestFilter));
+    OO_LOG("dumpState.entity", "Collision Test Filter: {}",
+        static_cast<unsigned>(collisionTestFilter));
 }
 
-// The Mac debug OXP's inspector added -inspect to entities; no class answers it in this build (bead oo-dpyk8).
-void Entity::inspect()
-{
-}
+// The Mac debug OXP's inspector added -inspect to entities; no class answers it
+// in this build.
+void Entity::inspect() { }
 
 void Entity::subEntityReallyDied(::ShipEntity* sub)
 {
-    OO_LOG("entity.bug", "{} called for non-ship entity {} by {}", __PRETTY_FUNCTION__, oo::str::pointerDescription(oo::WithObject(this)), oo::str::pointerDescription(sub)); // the entity's address (its object's until bead oo-dpyk8)
+    OO_LOG("entity.bug", "{} called for non-ship entity {} by {}",
+        __PRETTY_FUNCTION__, oo::str::pointerDescription(oo::WithObject(this)),
+        oo::str::pointerDescription(sub)); // the entity's address
 }
 
-NSUInteger Entity::getLastDrawCounter()
-{
-    return lastDrawCounter;
-}
+NSUInteger Entity::getLastDrawCounter() { return lastDrawCounter; }
 
 void Entity::setLastDrawCounter(NSUInteger drawCounter)
 {
@@ -1038,10 +946,7 @@ GLfloat Entity::universalTime()
     return (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
 }
 
-GLfloat Entity::getSpawnTime()
-{
-    return spawnTime;
-}
+GLfloat Entity::getSpawnTime() { return spawnTime; }
 
 GLfloat Entity::timeElapsedSinceSpawn()
 {
@@ -1053,17 +958,15 @@ void Entity::setAtmosphereFogging(OOColor* fogging)
     atmosphereFogging = oo::Ref<OOColor>(fogging);
 }
 
-oo::Ref<OOColor> Entity::fogUniform()
-{
-    return atmosphereFogging;
-}
+oo::Ref<OOColor> Entity::fogUniform() { return atmosphereFogging; }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 std::optional<std::string> Entity::descriptionForObjDumpBasic()
 {
     const std::optional<std::string> components = descriptionComponents();
     if (components.has_value())
-        return oo::str::format("%s %s", oo::EntityClassName(this).c_str(), components->c_str());
+        return oo::str::format("%s %s", oo::EntityClassName(this).c_str(),
+            components->c_str());
     if (!hasObject())
         return std::nullopt; // -cxx_description sent to nil
     return oo::EntityDescription(this);
@@ -1078,10 +981,7 @@ std::optional<std::string> Entity::descriptionForObjDump()
     return *result + oo::str::format(" range: %g (visible: %s)", HPdistance(getPosition(), (PLAYER != nullptr ? PLAYER->getPosition() : HPVector { })), isVisible() ? "yes" : "no");
 }
 
-std::vector<oo::Ref<OOTexture>> Entity::allTextures()
-{
-    return { };
-}
+std::vector<oo::Ref<OOTexture>> Entity::allTextures() { return { }; }
 #endif
 
 bool Entity::isVisible()
@@ -1111,9 +1011,11 @@ bool Entity::getIsImmuneToBreakPatternHide()
     return isImmuneToBreakPatternHide;
 }
 
-// Entity (OOJavaScriptExtensions)'s answers for the class, which the root category forwards here
-// (ADR-0056 amendment oo-9ht.107): the category's bodies, which a C++ subclass overrides.
-void Entity::getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
+// Entity (OOJavaScriptExtensions)'s answers for the class, which the root
+// category forwards here: the category's bodies, which a C++ subclass
+// overrides.
+void Entity::getJSClass(ooscript::ClassDef** outClass,
+    ooscript::Object* outPrototype)
 {
     ::EntityJSGetJSClass(outClass, outPrototype);
 }
@@ -1123,30 +1025,24 @@ std::optional<std::string> Entity::jsClassName()
     return ::EntityJSClassName();
 }
 
-bool Entity::isVisibleToScripts()
-{
-    return ::EntityJSIsVisibleToScripts();
-}
+bool Entity::isVisibleToScripts() { return ::EntityJSIsVisibleToScripts(); }
 
-// The JS glue (bead oo-9ht.39.3): the bodies are EntityOOJavaScriptExtensions.mm's, as they were
-// when the root facade answered the selectors.
+// The JS glue: the bodies are
+// EntityOOJavaScriptExtensions.mm's, as they were when the root facade answered
+// the selectors.
 ooscript::Value Entity::jsValueInContext(ooscript::Context context)
 {
     return ::EntityJSValueInContext(this, context);
 }
 
-// OOObject's -oo_clearJSSelf:, which the facade did not override: nothing (the JS object is a GC
-// root of the entity's, so it is finalized only after deleteJSSelf() has let go of it).
-void Entity::clearJSSelf(ooscript::Object /*selfVal*/)
-{
-}
+// OOObject's -oo_clearJSSelf:, which the facade did not override: nothing (the
+// JS object is a GC root of the entity's, so it is finalized only after
+// deleteJSSelf() has let go of it).
+void Entity::clearJSSelf(ooscript::Object /*selfVal*/) { }
 
 std::optional<std::string> Entity::jsDescription()
 {
     return ::EntityJSDescription(this);
 }
 
-void Entity::deleteJSSelf()
-{
-    ::EntityJSDeleteJSSelf(this);
-}
+void Entity::deleteJSSelf() { ::EntityJSDeleteJSSelf(this); }

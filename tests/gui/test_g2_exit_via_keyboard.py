@@ -91,7 +91,7 @@ contains.
 
     python3 -m pytest oolite-dev/tests/gui/test_g2_exit_via_keyboard.py -x -q
 
-Needs the desktop: a real window, unlocked and logged in (ADR-0017). It takes tools/gui-lock for
+Needs the desktop: a real window, unlocked and logged in. It takes tools/gui-lock for
 the duration, via the ``game`` fixture.
 """
 
@@ -122,7 +122,7 @@ TESTS_DIR = os.path.abspath(os.path.join(HERE, ".."))
 if TESTS_DIR not in sys.path:
     sys.path.insert(0, TESTS_DIR)
 
-# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py, oo-7j3t).
+# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py).
 from source_paths import iter_source_files, resolve_source  # noqa: E402
 PLAYER_ENTITY = resolve_source("Core", "Entities", "PlayerEntity")
 PLAYER_CONTROLS = resolve_source("Core", "Entities", "PlayerEntityControls")
@@ -193,7 +193,7 @@ def exit_row_dispatch():
     context string the game will log, so neither is hardcoded here.
     """
     body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
-    # `int row_zero = N;` became `int row_zero; row_zero = N;` in the .m -> .mm switch (oo-x7o):
+    # `int row_zero = N;` became `int row_zero; row_zero = N;` in the .m -> .mm switch:
     # C++ forbids a case label jumping past an initialisation. Either spelling carries N.
     match = re.search(r"int\s+row_zero\s*(?:=|;\s*row_zero\s*=)\s*(\d+)\s*;", body)
     assert match, (
@@ -202,8 +202,8 @@ def exit_row_dispatch():
     )
     row_zero = int(match.group(1))
     # Either spelling of the exit call: the ObjC -exitAppWithContext:@"..." or the C++
-    # -cxx_exitAppWithContext:"..." it became in Phase 2 (oo-6abg). Jon approved accepting
-    # both, 2026-09-29 (bead oo-3rb.332).
+    # -cxx_exitAppWithContext:"..." it became. Jon approved accepting
+    # both, 2026-09-29.
     branch = re.search(
         r"\[gui selectedRow\]\s*==\s*(\d+)\s*\+\s*row_zero\s*\)\s*\{\s*"
         r"\[\[UNIVERSE gameController\] (?:exitAppWithContext:@|cxx_exitAppWithContext:)\"([^\"]+)\"\]",
@@ -303,7 +303,7 @@ class ScreenWitness:
                 self._conn, _ = self._server.accept()
                 # An accepted socket INHERITS the listener's non-blocking mode on Windows, so
                 # _recv_exactly would raise WinError 10035 instead of waiting for the rest of a
-                # packet (oo-8yp). Every read is deadline-guarded by select(), so blocking is safe.
+                # packet. Every read is deadline-guarded by select(), so blocking is safe.
                 self._conn.setblocking(True)
                 self._handshake()
                 return self
@@ -457,7 +457,7 @@ def test_g2_exit_via_keyboard(screen_witness, game):
     witness = screen_witness.accept()
     assert game.proc.poll() is None, "the game exited before the test could press anything"
     # Synthetic key input is delivered to the FOCUSED window, so this is the precondition for
-    # every press below. assert_focused() self-heals a transiently stolen foreground (oo-0p8f).
+    # every press below. assert_focused() self-heals a transiently stolen foreground.
     game.assert_focused()
 
     screen = witness.gui_screen()
@@ -543,8 +543,8 @@ def test_g2_exit_via_keyboard(screen_witness, game):
     assert returncode == 0, f"the game exited with {returncode}, not 0"
 
     # 4. No orphaned process. Asked of the OS process table, not of proc.poll(): wait() above has
-    #    already reaped and stored that returncode, so re-reading it is true by construction
-    #    (oo-5rsa). Scoped to the tree we launched so a concurrent sibling's oolite.exe is not
+    #    already reaped and stored that returncode, so re-reading it is true by construction.
+    #    Scoped to the tree we launched so a concurrent sibling's oolite.exe is not
     #    mistaken for our leak.
     assert_no_surviving_game_processes(game.proc.pid)
 
@@ -588,8 +588,8 @@ def test_the_start_screen_exit_context_is_unique_in_the_tree():
     the launching test's final assertion a weaker claim than its message says.
     """
     # Either spelling of the exit call: the ObjC -exitAppWithContext:@"..." or the C++
-    # -cxx_exitAppWithContext:"..." it became in Phase 2 (oo-6abg). Jon approved accepting
-    # both, 2026-09-29 (bead oo-3rb.332).
+    # -cxx_exitAppWithContext:"..." it became. Jon approved accepting
+    # both, 2026-09-29.
     hits = _grep(r'(?:exitAppWithContext:@|cxx_exitAppWithContext:)"' + re.escape(EXPECTED_EXIT_CONTEXT) + r'"')
     assert len(hits) == 1, (
         f"{EXPECTED_EXIT_CONTEXT!r} is passed to -exitAppWithContext: from {len(hits)} places, "
@@ -620,8 +620,8 @@ def test_the_keyboard_and_mouse_exit_paths_converge_on_one_call_site():
     replace G2's navigation evidence with the far simpler context assertion.
     """
     body = _method_body(_read(PLAYER_CONTROLS), "- (void) pollDemoControls:(double)delta_t")
-    # Either spelling of the exit call (ObjC or the Phase 2 cxx_ form, oo-6abg); Jon approved
-    # accepting both, 2026-09-29 (bead oo-3rb.332).
+    # Either spelling of the exit call (ObjC or the cxx_ form); Jon approved
+    # accepting both, 2026-09-29.
     branch = re.search(
         r"(\([^\n]*\)[^\n]*\[gui selectedRow\]\s*==\s*\d+\s*\+\s*row_zero\s*\))\s*\{\s*"
         r"\[\[UNIVERSE gameController\] (?:cxx_)?exitAppWithContext:",
@@ -827,7 +827,7 @@ def test_g2_presses_keys_and_never_touches_the_mouse():
     """THE ANTI-DECAY GUARD: G2 must remain a KEYBOARD test.
 
     Read from this file's own AST, not its text, so a docstring or a comment cannot hold it green
-    (the sibling-bead defect G5 documents). A future edit that reached ` Exit Game ` with
+    (the defect G5 documents). A future edit that reached ` Exit Game ` with
     ``select_row``/``confirm_row`` - or that killed the process instead of pressing Enter - would
     leave every assertion in the launching test passing while the keyboard path could be deleted
     outright without anything going red.

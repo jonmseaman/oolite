@@ -103,9 +103,9 @@ std::string OOScriptTimer::description() const
     return descriptionWithComponents(descriptionComponents());
 }
 
-// The deleted facade's description (bead oo-9ht.35): oo::DescriptionWithComponents() of an object
-// of the C++ class's name.
-std::string OOScriptTimer::descriptionWithComponents(const std::optional<std::string>& components) const
+// oo::DescriptionWithComponents() of an object of the C++ class's name.
+std::string OOScriptTimer::descriptionWithComponents(
+    const std::optional<std::string>& components) const
 {
     std::string result = oo::str::format("<%s %s>", className().c_str(), oo::str::pointerDescription(this).c_str());
     if (components.has_value())

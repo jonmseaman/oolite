@@ -2,9 +2,7 @@
 
 OOJSGuiScreenKeyDefinition.h
 
-C++20 since bead oo-xg7g (proposed ADR-0056, the OOColor house style; amendment oo-o89). Bead
-oo-9ht.62 deleted its Objective-C facade (a weak-referenceable object) and moved it to the global namespace:
-the JS global object makes it and the player keeps it as oo::Ref.
+The JS global object makes it and the player keeps it as oo::Ref.
 
 
 Oolite
@@ -27,19 +25,18 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOJSGUISCREENKEYDEFINITION_H
-#define OOJSGUISCREENKEYDEFINITION_H
+#pragma once
 
-#include "OOFoundation.h"
-#include "oofnd/PList.hpp"
-#include "oofnd/StdLib.hpp"
-#include "ooscript/JSEngine.hpp"
-
-#include "oofnd/Ref.hpp"
 #include <optional>
 #include <string>
 
-class OOJSScript; // imported by the .mm, so that a test can stand in for it (ADR-0056 amendment oo-fg7i item 5)
+#include "OOFoundation.h"
+#include "oofnd/PList.hpp"
+#include "oofnd/Ref.hpp"
+#include "oofnd/StdLib.hpp"
+#include "ooscript/JSEngine.hpp"
+
+class OOJSScript; // imported by the .mm, so that a test can stand in for it
 
 class OOJSGuiScreenKeyDefinition : public oo::RefCounted {
 public:
@@ -47,7 +44,7 @@ public:
     OOJSGuiScreenKeyDefinition();
     ~OOJSGuiScreenKeyDefinition() override;
 
-    std::optional<std::string> name(); // nullopt until set (bead oo-3rb.289.7)
+    std::optional<std::string> name(); // nullopt until set
     void setName(const std::optional<std::string>& name);
     oo::PList registerKeys();
     void setRegisterKeys(const oo::PList& registerKeys);
@@ -65,10 +62,10 @@ private:
 
     ooscript::Value _callback = { };
     ooscript::Object _callbackThis = { };
-    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's weak reference proxy)
+    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's
+                                           // weak reference proxy)
 
     std::optional<std::string> _name; // nullopt until set (was nil)
-    oo::PList _registerKeys; // key name -> key definitions; null until set (was nil)
+    oo::PList
+        _registerKeys; // key name -> key definitions; null until set (was nil)
 };
-
-#endif // OOJSGUISCREENKEYDEFINITION_H

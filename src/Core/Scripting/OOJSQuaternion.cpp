@@ -23,32 +23,15 @@ MA 02110-1301, USA.
 */
 
 #include "OOJSQuaternion.h"
-#include "OOJavaScriptEngine.h"
+
+#include <cstring>
 
 #include "OOConstToString.h"
 #include "OOJSEntity.h"
 #include "OOJSVector.h"
-
+#include "OOJavaScriptEngine.h"
 #include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
-#include <cstring>
-
-/*
-        Retargeted onto the ooscript façade (JSEngine.hpp) per bead oo-45g, the same way bead oo-sdz
-        retargeted OOJSVector.mm (the exemplar for this sweep; see its header comment for the full
-        rationale). `this` and `private` are renamed to `thisObj`/`priv` because both are reserved
-        words once this file compiles as Objective-C++ (ADR-0001).
-*/
-
-/*
-        C++20 since bead oo-hwae, converted the way bead oo-ppc converted OOJSVector.mm (proposed
-        ADR-0056 amendment oo-ppc). The JS class was already C++ on the ooscript façade;
-        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false; the debug-build category on
-        PlayerEntity became two free functions, which the C++ PlayerEntity's members call (oo-9ht.15).
-        Messages to classes that are still Objective-C (Entity) stay as they are, which is why the
-        file is still .mm until Phase 4.
-*/
 
 namespace ooscript {
 }
@@ -68,31 +51,51 @@ static ooscript::Object sQuaternionPrototype;
 } // namespace
 
 namespace {
-static bool GetThisQuaternion(ooscript::Context context, ooscript::Object quaternionObj, Quaternion* outQuaternion, const std::string& method) NONNULL_FUNC;
+static bool GetThisQuaternion(ooscript::Context context,
+    ooscript::Object quaternionObj,
+    Quaternion* outQuaternion,
+    const std::string& method) NONNULL_FUNC;
 
-static bool QuaternionGetProperty(Context cx, Object obj, PropertyId propID, Value* value);
-static bool QuaternionSetProperty(Context cx, Object obj, PropertyId propID, bool strict, Value* value);
+static bool QuaternionGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value);
+static bool QuaternionSetProperty(Context cx, Object obj, PropertyId propID,
+    bool strict, Value* value);
 static void QuaternionFinalize(Context cx, Object obj);
-static bool QuaternionConstruct(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool QuaternionConstruct(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 
 // Methods
-static bool QuaternionToString(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionToSource(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionMultiply(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool QuaternionToString(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionToSource(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionMultiply(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 static bool QuaternionDot(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionRotate(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionRotateX(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionRotateY(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionRotateZ(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionNormalize(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionConjugate(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionVectorForward(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionVectorUp(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionVectorRight(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
-static bool QuaternionToArray(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool QuaternionRotate(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionRotateX(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionRotateY(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionRotateZ(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionNormalize(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionConjugate(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionVectorForward(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionVectorUp(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionVectorRight(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
+static bool QuaternionToArray(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 
 // Static methods
-static bool QuaternionStaticRandom(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool QuaternionStaticRandom(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 
 namespace {
@@ -125,18 +128,29 @@ enum : std::uint8_t {
 
 namespace {
 static PropertySpec sQuaternionProperties[] = {
-    // JS name						ID							flags										getter		setter
-    { "w", kQuaternion_w, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared, nullptr, nullptr },
-    { "x", kQuaternion_x, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared, nullptr, nullptr },
-    { "y", kQuaternion_y, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared, nullptr, nullptr },
-    { "z", kQuaternion_z, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared, nullptr, nullptr },
+    // JS name						ID
+    // flags
+    // getter		setter
+    { "w", kQuaternion_w,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+        nullptr, nullptr },
+    { "x", kQuaternion_x,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+        nullptr, nullptr },
+    { "y", kQuaternion_y,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+        nullptr, nullptr },
+    { "z", kQuaternion_z,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+        nullptr, nullptr },
     { 0 }
 };
 } // namespace
 
 namespace {
 static FunctionSpec sQuaternionMethods[] = {
-    // JS name						Function					min args	flags
+    // JS name						Function
+    // min args	flags
     { "toString", QuaternionToString, 0, 0 },
     { "toSource", QuaternionToSource, 0, 0 },
     { "dot", QuaternionDot, 1, 0 },
@@ -157,7 +171,8 @@ static FunctionSpec sQuaternionMethods[] = {
 
 namespace {
 static FunctionSpec sQuaternionStaticMethods[] = {
-    // JS name						Function					min args	flags
+    // JS name						Function
+    // min args	flags
     { "random", QuaternionStaticRandom, 0, 0 },
     { 0 }
 };
@@ -167,13 +182,15 @@ static FunctionSpec sQuaternionStaticMethods[] = {
 
 void InitOOJSQuaternion(ooscript::Context context, ooscript::Object global)
 {
-    Object proto = ooscript::initClass((context), (global), nullptr, &sQuaternionClass,
-        QuaternionConstruct, 4, sQuaternionProperties, sQuaternionMethods,
+    Object proto = ooscript::initClass((context), (global), nullptr,
+        &sQuaternionClass, QuaternionConstruct, 4,
+        sQuaternionProperties, sQuaternionMethods,
         nullptr, sQuaternionStaticMethods);
     sQuaternionPrototype = (proto);
 }
 
-ooscript::Object JSQuaternionWithQuaternion(ooscript::Context context, Quaternion quaternion)
+ooscript::Object JSQuaternionWithQuaternion(ooscript::Context context,
+    Quaternion quaternion)
 {
     OOJS_PROFILE_ENTER
 
@@ -186,7 +203,8 @@ ooscript::Object JSQuaternionWithQuaternion(ooscript::Context context, Quaternio
 
     *priv = quaternion;
 
-    result = (ooscript::newObject((context), &sQuaternionClass, (sQuaternionPrototype), nullptr));
+    result = (ooscript::newObject((context), &sQuaternionClass,
+        (sQuaternionPrototype), nullptr));
     if (result != NULL) {
         if (EXPECT_NOT(!ooscript::setPrivate((context), (result), priv)))
             result = NULL;
@@ -200,7 +218,8 @@ ooscript::Object JSQuaternionWithQuaternion(ooscript::Context context, Quaternio
     OOJS_PROFILE_EXIT
 }
 
-bool QuaternionToJSValue(ooscript::Context context, Quaternion quaternion, ooscript::Value* outValue)
+bool QuaternionToJSValue(ooscript::Context context, Quaternion quaternion,
+    ooscript::Value* outValue)
 {
     OOJS_PROFILE_ENTER
 
@@ -218,18 +237,19 @@ bool QuaternionToJSValue(ooscript::Context context, Quaternion quaternion, ooscr
     OOJS_PROFILE_EXIT
 }
 
-bool JSValueToQuaternion(ooscript::Context context, ooscript::Value value, Quaternion* outQuaternion)
+bool JSValueToQuaternion(ooscript::Context context, ooscript::Value value,
+    Quaternion* outQuaternion)
 {
     if (EXPECT_NOT(!ooscript::isObjectOrNull(value)))
         return false;
 
-    return JSObjectGetQuaternion(context, ooscript::toObject(value), outQuaternion);
+    return JSObjectGetQuaternion(context, ooscript::toObject(value),
+        outQuaternion);
 }
 
 #if OO_DEBUG
 
-typedef struct
-{
+typedef struct {
     NSUInteger quatCount;
     NSUInteger entityCount;
     NSUInteger arrayCount;
@@ -241,8 +261,7 @@ namespace {
 static QuaternionStatistics sQuaternionConversionStats;
 } // namespace
 
-// The bodies of the C++ PlayerEntity's statistics members, which were the category PlayerEntity
-// (JSQuaternionStatistics) until bead oo-9ht.15 (proposed ADR-0056 amendments oo-ppc, oo-9ht.15).
+// The bodies of the C++ PlayerEntity's statistics members.
 oo::PList reportJSQuaternionStatistics(void)
 {
     QuaternionStatistics* stats = &sQuaternionConversionStats;
@@ -263,8 +282,7 @@ oo::PList reportJSQuaternionStatistics(void)
         (size_t)stats->arrayCount, stats->arrayCount * convFac,
         (size_t)stats->protoCount, stats->protoCount * convFac,
         (size_t)stats->nullCount, stats->nullCount * convFac,
-        (size_t)stats->failCount, stats->failCount * convFac,
-        (size_t)sum));
+        (size_t)stats->failCount, stats->failCount * convFac, (size_t)sum));
 }
 
 void clearJSQuaternionStatistics(void)
@@ -285,7 +303,9 @@ void clearJSQuaternionStatistics(void)
 
 #endif
 
-bool JSObjectGetQuaternion(ooscript::Context context, ooscript::Object quaternionObj, Quaternion* outQuaternion)
+bool JSObjectGetQuaternion(ooscript::Context context,
+    ooscript::Object quaternionObj,
+    Quaternion* outQuaternion)
 {
     OOJS_PROFILE_ENTER
 
@@ -299,14 +319,16 @@ bool JSObjectGetQuaternion(ooscript::Context context, ooscript::Object quaternio
     Context cx = (context);
     Object obj = (quaternionObj);
 
-    // quaternionObj can legitimately be NULL, e.g. when a null value is converted to a ooscript::Object .
+    // quaternionObj can legitimately be NULL, e.g. when a null value is converted
+    // to a ooscript::Object .
     if (EXPECT_NOT(quaternionObj == NULL)) {
         COUNT(nullCount);
         return false;
     }
 
     // If this is a (JS) Quaternion...
-    priv = static_cast<Quaternion*>(ooscript::getInstancePrivate(cx, obj, &sQuaternionClass, nullptr));
+    priv = static_cast<Quaternion*>(
+        ooscript::getInstancePrivate(cx, obj, &sQuaternionClass, nullptr));
     if (EXPECT(priv != NULL)) {
         COUNT(quatCount);
         *outQuaternion = *priv;
@@ -341,16 +363,18 @@ bool JSObjectGetQuaternion(ooscript::Context context, ooscript::Object quaternio
     // If it's an entity, use its orientation.
     if (OOJSIsMemberOfSubclass(context, quaternionObj, JSEntityClass())) {
         COUNT(entityCount);
-        *outQuaternion = OOJSEntityOrientationOfJSObject(context, quaternionObj); // the C++ entity's (bead oo-9ht.39.8.12)
+        *outQuaternion = OOJSEntityOrientationOfJSObject(
+            context, quaternionObj); // the C++ entity's
         return true;
     }
 
     /*
-            If it's actually a Quaternion but with no private field (this happens for
-            Quaternion.prototype)...
+            If it's actually a Quaternion but with no private field (this happens
+       for Quaternion.prototype)...
 
             NOTE: it would be prettier to do this at the top when we handle normal
-            Quaternions, but it's a rare case which should be kept off the fast path.
+            Quaternions, but it's a rare case which should be kept off the fast
+       path.
     */
     if (ooscript::instanceOf(cx, obj, &sQuaternionClass, nullptr)) {
         COUNT(protoCount);
@@ -365,18 +389,24 @@ bool JSObjectGetQuaternion(ooscript::Context context, ooscript::Object quaternio
 }
 
 namespace {
-static bool GetThisQuaternion(ooscript::Context context, ooscript::Object quaternionObj, Quaternion* outQuaternion, const std::string& method)
+static bool GetThisQuaternion(ooscript::Context context,
+    ooscript::Object quaternionObj,
+    Quaternion* outQuaternion,
+    const std::string& method)
 {
     if (EXPECT(JSObjectGetQuaternion(context, quaternionObj, outQuaternion)))
         return true;
 
     ooscript::Value arg = ooscript::objectValue(quaternionObj);
-    cxx_OOJSReportBadArguments(context, "Quaternion", method, 1, &arg, "Invalid target object", "Quaternion");
+    cxx_OOJSReportBadArguments(context, "Quaternion", method, 1, &arg,
+        "Invalid target object", "Quaternion");
     return false;
 }
 } // namespace
 
-bool JSQuaternionSetQuaternion(ooscript::Context context, ooscript::Object quaternionObj, Quaternion quaternion)
+bool JSQuaternionSetQuaternion(ooscript::Context context,
+    ooscript::Object quaternionObj,
+    Quaternion quaternion)
 {
     OOJS_PROFILE_ENTER
 
@@ -387,7 +417,8 @@ bool JSQuaternionSetQuaternion(ooscript::Context context, ooscript::Object quate
     Context cx = (context);
     Object obj = (quaternionObj);
 
-    priv = static_cast<Quaternion*>(ooscript::getInstancePrivate(cx, obj, &sQuaternionClass, nullptr));
+    priv = static_cast<Quaternion*>(
+        ooscript::getInstancePrivate(cx, obj, &sQuaternionClass, nullptr));
     if (priv != NULL) // If this is a (JS) Quaternion...
     {
         *priv = quaternion;
@@ -405,7 +436,9 @@ bool JSQuaternionSetQuaternion(ooscript::Context context, ooscript::Object quate
 }
 
 namespace {
-static bool QuaternionFromArgumentListNoErrorInternal(ooscript::Context context, unsigned argc, ooscript::Value* argv, Quaternion* outQuaternion, unsigned* outConsumed, bool permitNumberList)
+static bool QuaternionFromArgumentListNoErrorInternal(
+    ooscript::Context context, unsigned argc, ooscript::Value* argv,
+    Quaternion* outQuaternion, unsigned* outConsumed, bool permitNumberList)
 {
     OOJS_PROFILE_ENTER
 
@@ -420,7 +453,8 @@ static bool QuaternionFromArgumentListNoErrorInternal(ooscript::Context context,
 
     // Is first object a quaternion or entity?
     if (ooscript::isObjectOrNull(argv[0])) {
-        if (JSObjectGetQuaternion(context, ooscript::toObject(argv[0]), outQuaternion)) {
+        if (JSObjectGetQuaternion(context, ooscript::toObject(argv[0]),
+                outQuaternion)) {
             if (outConsumed != NULL)
                 *outConsumed = 1;
             return true;
@@ -434,7 +468,8 @@ static bool QuaternionFromArgumentListNoErrorInternal(ooscript::Context context,
     if (EXPECT_NOT(argc < 4))
         return false;
 
-    // Given a string, ooscript::valueToNumber() returns YES but provides a NaN number.
+    // Given a string, ooscript::valueToNumber() returns YES but provides a NaN
+    // number.
     Context cx = (context);
     if (EXPECT_NOT(!ooscript::valueToNumber(cx, (argv[0]), &w) || isnan(w)))
         return false;
@@ -456,10 +491,18 @@ static bool QuaternionFromArgumentListNoErrorInternal(ooscript::Context context,
 }
 } // namespace
 
-// EMMSTRAN: remove outConsumed, since it can only be 1 except in failure (constructor is an exception, but it uses QuaternionFromArgumentListNoErrorInternal() directly).
-bool QuaternionFromArgumentList(ooscript::Context context, const std::string& scriptClass, const std::string& function, unsigned argc, ooscript::Value* argv, Quaternion* outQuaternion, unsigned* outConsumed)
+// EMMSTRAN: remove outConsumed, since it can only be 1 except in failure
+// (constructor is an exception, but it uses
+// QuaternionFromArgumentListNoErrorInternal() directly).
+bool QuaternionFromArgumentList(ooscript::Context context,
+    const std::string& scriptClass,
+    const std::string& function, unsigned argc,
+    ooscript::Value* argv,
+    Quaternion* outQuaternion,
+    unsigned* outConsumed)
 {
-    if (QuaternionFromArgumentListNoErrorInternal(context, argc, argv, outQuaternion, outConsumed, false))
+    if (QuaternionFromArgumentListNoErrorInternal(
+            context, argc, argv, outQuaternion, outConsumed, false))
         return true;
     else {
         cxx_OOJSReportBadArguments(context, scriptClass, function, argc, argv,
@@ -469,15 +512,20 @@ bool QuaternionFromArgumentList(ooscript::Context context, const std::string& sc
     }
 }
 
-bool QuaternionFromArgumentListNoError(ooscript::Context context, unsigned argc, ooscript::Value* argv, Quaternion* outQuaternion, unsigned* outConsumed)
+bool QuaternionFromArgumentListNoError(ooscript::Context context, unsigned argc,
+    ooscript::Value* argv,
+    Quaternion* outQuaternion,
+    unsigned* outConsumed)
 {
-    return QuaternionFromArgumentListNoErrorInternal(context, argc, argv, outQuaternion, outConsumed, false);
+    return QuaternionFromArgumentListNoErrorInternal(
+        context, argc, argv, outQuaternion, outConsumed, false);
 }
 
 // *** Implementation stuff ***
 
 namespace {
-static bool QuaternionGetProperty(Context cx, Object obj, PropertyId propID, Value* value)
+static bool QuaternionGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value)
 {
     if (!ooscript::isInt32Id(propID))
         return true;
@@ -511,7 +559,8 @@ static bool QuaternionGetProperty(Context cx, Object obj, PropertyId propID, Val
         break;
 
     default:
-        OOJSReportBadPropertySelector(context, thisObj, (propID), sQuaternionProperties);
+        OOJSReportBadPropertySelector(context, thisObj, (propID),
+            sQuaternionProperties);
         return false;
     }
 
@@ -522,7 +571,8 @@ static bool QuaternionGetProperty(Context cx, Object obj, PropertyId propID, Val
 } // namespace
 
 namespace {
-static bool QuaternionSetProperty(Context cx, Object obj, PropertyId propID, bool /*strict*/, Value* value)
+static bool QuaternionSetProperty(Context cx, Object obj, PropertyId propID,
+    bool /*strict*/, Value* value)
 {
     if (!ooscript::isInt32Id(propID))
         return true;
@@ -538,7 +588,8 @@ static bool QuaternionSetProperty(Context cx, Object obj, PropertyId propID, boo
     if (EXPECT_NOT(!JSObjectGetQuaternion(context, thisObj, &quaternion)))
         return false;
     if (EXPECT_NOT(!ooscript::valueToNumber(cx, *value, &dval))) {
-        OOJSReportBadPropertyValue(context, thisObj, (propID), sQuaternionProperties, *(value));
+        OOJSReportBadPropertyValue(context, thisObj, (propID),
+            sQuaternionProperties, *(value));
         return false;
     }
 
@@ -560,7 +611,8 @@ static bool QuaternionSetProperty(Context cx, Object obj, PropertyId propID, boo
         break;
 
     default:
-        OOJSReportBadPropertySelector(context, thisObj, (propID), sQuaternionProperties);
+        OOJSReportBadPropertySelector(context, thisObj, (propID),
+            sQuaternionProperties);
         return false;
     }
 
@@ -577,7 +629,8 @@ static void QuaternionFinalize(Context cx, Object obj)
 
     Quaternion* priv = NULL;
 
-    priv = static_cast<Quaternion*>(ooscript::getInstancePrivate(cx, obj, &sQuaternionClass, nullptr));
+    priv = static_cast<Quaternion*>(
+        ooscript::getInstancePrivate(cx, obj, &sQuaternionClass, nullptr));
     if (priv != NULL) {
         free(priv);
     }
@@ -587,9 +640,9 @@ static void QuaternionFinalize(Context cx, Object obj)
 } // namespace
 
 namespace {
-static bool QuaternionConstruct(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionConstruct(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion quaternion = kIdentityQuaternion;
@@ -602,14 +655,16 @@ static bool QuaternionConstruct(ooscript::Context context, ooscript::CallArgs& o
 
     thisObj = (ooscript::newObject(context, &sQuaternionClass, nullptr, nullptr));
     if (EXPECT_NOT(thisObj == NULL)) {
-        free(priv); // leaked before bead oo-hwae; the analyser sees this path now that it is not in an Objective-C try
+        free(priv);
         return false;
     }
 
     if (oojsArgs.count() != 0) {
-        if (EXPECT_NOT(!QuaternionFromArgumentListNoErrorInternal(context, oojsArgs.count(), OOJS_ARGV, &quaternion, NULL, true))) {
+        if (EXPECT_NOT(!QuaternionFromArgumentListNoErrorInternal(
+                context, oojsArgs.count(), OOJS_ARGV, &quaternion, NULL, true))) {
             free(priv);
-            cxx_OOJSReportBadArguments(context, std::nullopt, std::nullopt, oojsArgs.count(), OOJS_ARGV,
+            cxx_OOJSReportBadArguments(
+                context, std::nullopt, std::nullopt, oojsArgs.count(), OOJS_ARGV,
                 "Could not construct quaternion from parameters",
                 "Quaternion, Entity or array of four numbers");
             return false;
@@ -633,9 +688,9 @@ static bool QuaternionConstruct(ooscript::Context context, ooscript::CallArgs& o
 
 // toString() : String
 namespace {
-static bool QuaternionToString(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionToString(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     Quaternion thisq;
@@ -651,9 +706,9 @@ static bool QuaternionToString(ooscript::Context context, ooscript::CallArgs& oo
 
 // toSource() : String
 namespace {
-static bool QuaternionToSource(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionToSource(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     Quaternion thisq;
@@ -661,7 +716,8 @@ static bool QuaternionToSource(ooscript::Context context, ooscript::CallArgs& oo
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "toSource")))
         return false;
 
-    OOJS_RETURN_PLIST(oo::PList(oo::str::format("Quaternion(%g, %g, %g, %g)", thisq.w, thisq.x, thisq.y, thisq.z)));
+    OOJS_RETURN_PLIST(oo::PList(oo::str::format(
+        "Quaternion(%g, %g, %g, %g)", thisq.w, thisq.x, thisq.y, thisq.z)));
 
     OOJS_NATIVE_EXIT
 }
@@ -669,16 +725,18 @@ static bool QuaternionToSource(ooscript::Context context, ooscript::CallArgs& oo
 
 // multiply(q : quaternionExpression) : Quaternion
 namespace {
-static bool QuaternionMultiply(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionMultiply(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion thisq, thatq, result;
 
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "multiply")))
         return false;
-    if (EXPECT_NOT(!QuaternionFromArgumentList(context, "Quaternion", "multiply", oojsArgs.count(), OOJS_ARGV, &thatq, NULL)))
+    if (EXPECT_NOT(!QuaternionFromArgumentList(context, "Quaternion", "multiply",
+            oojsArgs.count(), OOJS_ARGV,
+            &thatq, NULL)))
         return false;
 
     result = quaternion_multiply(thisq, thatq);
@@ -691,9 +749,9 @@ static bool QuaternionMultiply(ooscript::Context context, ooscript::CallArgs& oo
 
 // dot(q : quaternionExpression) : Number
 namespace {
-static bool QuaternionDot(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionDot(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion thisq, thatq;
@@ -701,7 +759,9 @@ static bool QuaternionDot(ooscript::Context context, ooscript::CallArgs& oojsArg
 
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "dot")))
         return false;
-    if (EXPECT_NOT(!QuaternionFromArgumentList(context, "Quaternion", "dot", oojsArgs.count(), OOJS_ARGV, &thatq, NULL)))
+    if (EXPECT_NOT(!QuaternionFromArgumentList(context, "Quaternion", "dot",
+            oojsArgs.count(), OOJS_ARGV,
+            &thatq, NULL)))
         return false;
 
     result = quaternion_dot_product(thisq, thatq);
@@ -714,9 +774,9 @@ static bool QuaternionDot(ooscript::Context context, ooscript::CallArgs& oojsArg
 
 // rotate(axis : vectorExpression, angle : Number) : Quaternion
 namespace {
-static bool QuaternionRotate(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionRotate(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion thisq;
@@ -728,12 +788,14 @@ static bool QuaternionRotate(ooscript::Context context, ooscript::CallArgs& oojs
 
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "rotate")))
         return false;
-    if (EXPECT_NOT(!VectorFromArgumentList(context, "Quaternion", "rotate", argc, argv, &axis, &consumed)))
+    if (EXPECT_NOT(!VectorFromArgumentList(context, "Quaternion", "rotate", argc,
+            argv, &axis, &consumed)))
         return false;
     argv += consumed;
     argc -= consumed;
     if (argc > 0) {
-        if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion", "rotate", argc, argv, &angle, NULL)))
+        if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(
+                context, "Quaternion", "rotate", argc, argv, &angle, NULL)))
             return false;
         quaternion_rotate_about_axis(&thisq, HPVectorToVector(axis), angle);
     }
@@ -747,9 +809,9 @@ static bool QuaternionRotate(ooscript::Context context, ooscript::CallArgs& oojs
 
 // rotateX(angle : Number) : Quaternion
 namespace {
-static bool QuaternionRotateX(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionRotateX(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion quat;
@@ -757,7 +819,9 @@ static bool QuaternionRotateX(ooscript::Context context, ooscript::CallArgs& ooj
 
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateX")))
         return false;
-    if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion", "rotateX", oojsArgs.count(), OOJS_ARGV, &angle, NULL)))
+    if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion",
+            "rotateX", oojsArgs.count(),
+            OOJS_ARGV, &angle, NULL)))
         return false;
 
     quaternion_rotate_about_x(&quat, angle);
@@ -770,9 +834,9 @@ static bool QuaternionRotateX(ooscript::Context context, ooscript::CallArgs& ooj
 
 // rotateY(angle : Number) : Quaternion
 namespace {
-static bool QuaternionRotateY(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionRotateY(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion quat;
@@ -780,7 +844,9 @@ static bool QuaternionRotateY(ooscript::Context context, ooscript::CallArgs& ooj
 
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateY")))
         return false;
-    if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion", "rotateY", oojsArgs.count(), OOJS_ARGV, &angle, NULL)))
+    if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion",
+            "rotateY", oojsArgs.count(),
+            OOJS_ARGV, &angle, NULL)))
         return false;
 
     quaternion_rotate_about_y(&quat, angle);
@@ -793,9 +859,9 @@ static bool QuaternionRotateY(ooscript::Context context, ooscript::CallArgs& ooj
 
 // rotateZ(angle : Number) : Quaternion
 namespace {
-static bool QuaternionRotateZ(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionRotateZ(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion quat;
@@ -803,7 +869,9 @@ static bool QuaternionRotateZ(ooscript::Context context, ooscript::CallArgs& ooj
 
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &quat, "rotateZ")))
         return false;
-    if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion", "rotateZ", oojsArgs.count(), OOJS_ARGV, &angle, NULL)))
+    if (EXPECT_NOT(!cxx_OOJSArgumentListGetNumber(context, "Quaternion",
+            "rotateZ", oojsArgs.count(),
+            OOJS_ARGV, &angle, NULL)))
         return false;
 
     quaternion_rotate_about_z(&quat, angle);
@@ -816,9 +884,9 @@ static bool QuaternionRotateZ(ooscript::Context context, ooscript::CallArgs& ooj
 
 // normalize() : Quaternion
 namespace {
-static bool QuaternionNormalize(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionNormalize(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion quat;
@@ -836,9 +904,9 @@ static bool QuaternionNormalize(ooscript::Context context, ooscript::CallArgs& o
 
 // conjugate() : Quaternion
 namespace {
-static bool QuaternionConjugate(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionConjugate(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion quat, result;
@@ -856,15 +924,16 @@ static bool QuaternionConjugate(ooscript::Context context, ooscript::CallArgs& o
 
 // vectorForward() : Vector
 namespace {
-static bool QuaternionVectorForward(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionVectorForward(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion thisq;
     Vector result;
 
-    if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "vectorForward")))
+    if (EXPECT_NOT(
+            !GetThisQuaternion(context, OOJS_THIS, &thisq, "vectorForward")))
         return false;
 
     result = vector_forward_from_quaternion(thisq);
@@ -877,9 +946,9 @@ static bool QuaternionVectorForward(ooscript::Context context, ooscript::CallArg
 
 // vectorUp() : Vector
 namespace {
-static bool QuaternionVectorUp(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionVectorUp(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion thisq;
@@ -898,9 +967,9 @@ static bool QuaternionVectorUp(ooscript::Context context, ooscript::CallArgs& oo
 
 // vectorRight() : Vector
 namespace {
-static bool QuaternionVectorRight(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionVectorRight(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion thisq;
@@ -919,9 +988,9 @@ static bool QuaternionVectorRight(ooscript::Context context, ooscript::CallArgs&
 
 // toArray() : Array
 namespace {
-static bool QuaternionToArray(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionToArray(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     Quaternion thisq;
@@ -968,9 +1037,9 @@ static bool QuaternionToArray(ooscript::Context context, ooscript::CallArgs& ooj
 
 // random() : Quaternion
 namespace {
-static bool QuaternionStaticRandom(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool QuaternionStaticRandom(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_PROFILE_ENTER
 
     OOJS_RETURN_QUATERNION(OORandomQuaternion());

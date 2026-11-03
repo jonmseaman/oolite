@@ -22,42 +22,17 @@ MA 02110-1301, USA.
  */
 
 #include "OOJSExhaustPlume.h"
+
+#include <cstdint>
+#include <cstring>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOExhaustPlumeEntity.h"
 #include "OOJSEntity.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "ShipEntity.h"
-
 #include "ooscript/JSEngine.hpp"
-#include <cstdint>
-#include <cstring>
-
-/*
-        Retargeted onto the ooscript facade (JSEngine.hpp) the way OOJSVector.mm and
-        OOJSWaypoint.mm do it (bead oo-sdz, the sweep exemplar): the class dispatch table is a
-        static ooscript::ClassDef (the stub hooks are nullptr), and the property getter/setter
-        and native methods take the facade's own signatures (ooscript::Context / Object /
-        PropertyId / Value pointer / CallArgs reference) directly. The shared OOJavaScriptEngine
-        helpers (OOJSObjectWrapperFinalize, OOJSUnconstructableConstruct, OOJSRegisterSubclass,
-        OOJSRegisterObjectConverter) are used as the class's hooks and registrations with
-        &sExhaustPlumeClass itself. `this` is renamed to `thisObj` because it is a reserved word
-        once this file compiles as Objective-C++ (ADR-0001).
-*/
-
-/*
-        C++20 since bead oo-utlm, converted the way bead oo-ppc converted OOJSVector.mm (proposed
-        ADR-0056 amendment oo-ppc). The JS class was already C++ on the ooscript façade;
-        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. The category on
-        OOExhaustPlumeEntity became three free functions, and its methods and interface moved to a
-        bridge file of the binding (amendment oo-ykoy), then onto the OOExhaustPlumeEntity facade (bead
-        oo-9ht.48, amendment oo-6ia4 item 3), and with that facade's deletion (bead oo-9ht.110) into
-        the C++ class's overrides of the root's JS members. The plume is the C++ OOExhaustPlumeEntity,
-        found through its entity's C++ part (amendment oo-9ht.12 item 6). Messages to classes that are
-        still Objective-C (ShipEntity, Entity) stay as they are, which is why the file is still .mm
-        until Phase 4.
-*/
 
 namespace ooscript {
 }
@@ -77,18 +52,23 @@ static ooscript::Object sExhaustPlumePrototype;
 } // namespace
 
 namespace {
-static bool JSExhaustPlumeGetExhaustPlumeEntity(ooscript::Context context, ooscript::Object jsobj, OOExhaustPlumeEntity** outEntity);
+static bool JSExhaustPlumeGetExhaustPlumeEntity(
+    ooscript::Context context, ooscript::Object jsobj,
+    OOExhaustPlumeEntity** outEntity);
 } // namespace
 
 namespace {
-static bool ExhaustPlumeGetProperty(Context cx, Object obj, PropertyId propID, Value* value);
+static bool ExhaustPlumeGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value);
 } // namespace
 namespace {
-static bool ExhaustPlumeSetProperty(Context cx, Object obj, PropertyId propID, bool strict, Value* value);
+static bool ExhaustPlumeSetProperty(Context cx, Object obj, PropertyId propID,
+    bool strict, Value* value);
 } // namespace
 
 namespace {
-static bool ExhaustPlumeRemove(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool ExhaustPlumeRemove(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 
 namespace {
@@ -116,12 +96,14 @@ enum : std::uint8_t {
     kExhaustPlume_size
 };
 
-// A mirror of sExhaustPlumeProperties with the read-only/read-write flags the two
-// bad-property error reporters in OOJavaScriptEngine.mm (OOJSReportBadPropertySelector/Value)
-// describe the properties by (see OOJSVector.mm's sVectorPropertiesRaw).
+// A mirror of sExhaustPlumeProperties with the read-only/read-write flags the
+// two bad-property error reporters in OOJavaScriptEngine.mm
+// (OOJSReportBadPropertySelector/Value) describe the properties by (see
+// OOJSVector.mm's sVectorPropertiesRaw).
 namespace {
 static ooscript::PropertySpec sExhaustPlumePropertiesRaw[] = {
-    // JS name							ID									flags
+    // JS name							ID
+    // flags
     { "size", kExhaustPlume_size, OOJS_PROP_READWRITE_CB },
     { 0 }
 };
@@ -129,15 +111,19 @@ static ooscript::PropertySpec sExhaustPlumePropertiesRaw[] = {
 
 namespace {
 static PropertySpec sExhaustPlumeProperties[] = {
-    // JS name							ID								flags									getter		setter
-    { "size", kExhaustPlume_size, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared, nullptr, nullptr },
+    // JS name							ID
+    // flags getter		setter
+    { "size", kExhaustPlume_size,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::Shared,
+        nullptr, nullptr },
     { 0 }
 };
 } // namespace
 
 namespace {
 static FunctionSpec sExhaustPlumeMethods[] = {
-    // JS name					Function						min args	flags
+    // JS name					Function
+    // min args	flags
     { "remove", ExhaustPlumeRemove, 0, 0 },
 
     { 0 }
@@ -146,19 +132,24 @@ static FunctionSpec sExhaustPlumeMethods[] = {
 
 void InitOOJSExhaustPlume(ooscript::Context context, ooscript::Object global)
 {
-    Object proto = ooscript::initClass((context), (global), (JSEntityPrototype()), &sExhaustPlumeClass, OOJSUnconstructableConstruct, 0, sExhaustPlumeProperties, sExhaustPlumeMethods, nullptr, nullptr);
+    Object proto = ooscript::initClass(
+        (context), (global), (JSEntityPrototype()), &sExhaustPlumeClass,
+        OOJSUnconstructableConstruct, 0, sExhaustPlumeProperties,
+        sExhaustPlumeMethods, nullptr, nullptr);
     sExhaustPlumePrototype = (proto);
     OOJSRegisterObjectConverter(&sExhaustPlumeClass, OOJSEntityObjectConverter);
     OOJSRegisterSubclass(&sExhaustPlumeClass, JSEntityClass());
 }
 
 namespace {
-static bool JSExhaustPlumeGetExhaustPlumeEntity(ooscript::Context context, ooscript::Object jsobj, OOExhaustPlumeEntity** outEntity)
+static bool JSExhaustPlumeGetExhaustPlumeEntity(
+    ooscript::Context context, ooscript::Object jsobj,
+    OOExhaustPlumeEntity** outEntity)
 {
     OOJS_PROFILE_ENTER
 
     bool result;
-    Entity* entity = nullptr; // the slot holds the C++ entity (bead oo-9ht.39.3)
+    Entity* entity = nullptr; // the slot holds the C++ entity
 
     if (outEntity == NULL)
         return false;
@@ -168,7 +159,7 @@ static bool JSExhaustPlumeGetExhaustPlumeEntity(ooscript::Context context, ooscr
     if (!result)
         return false;
 
-    // A plume is the C++ OOExhaustPlumeEntity; the natives no longer ask its object (bead oo-9ht.39.8.19).
+    // A plume is the C++ OOExhaustPlumeEntity.
     OOExhaustPlumeEntity* exhaust = dynamic_cast<OOExhaustPlumeEntity*>(entity);
     if (exhaust == nullptr)
         return false;
@@ -180,10 +171,10 @@ static bool JSExhaustPlumeGetExhaustPlumeEntity(ooscript::Context context, ooscr
 }
 } // namespace
 
-// The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the C++ class's overrides of
-// the root's JS members call (bead oo-9ht.110; proposed ADR-0056 amendments oo-ppc, oo-ykoy,
-// oo-6ia4 and oo-9ht.107).
-void OOJSExhaustPlumeGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
+// The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the C++
+// class's overrides of the root's JS members call.
+void OOJSExhaustPlumeGetJSClass(ooscript::ClassDef** outClass,
+    ooscript::Object* outPrototype)
 {
     *outClass = &sExhaustPlumeClass;
     *outPrototype = sExhaustPlumePrototype;
@@ -194,13 +185,11 @@ std::optional<std::string> OOJSExhaustPlumeJSClassName(void)
     return std::string("ExhaustPlume");
 }
 
-bool OOJSExhaustPlumeIsVisibleToScripts(void)
-{
-    return true;
-}
+bool OOJSExhaustPlumeIsVisibleToScripts(void) { return true; }
 
 namespace {
-static bool ExhaustPlumeGetProperty(Context cx, Object obj, PropertyId propID, Value* value)
+static bool ExhaustPlumeGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value)
 {
     if (!ooscript::isInt32Id(propID))
         return true;
@@ -225,11 +214,12 @@ static bool ExhaustPlumeGetProperty(Context cx, Object obj, PropertyId propID, V
         return VectorToJSValue(context, entity->scale(), value_raw);
 
     default:
-        OOJSReportBadPropertySelector(context, thisObj, (propID), sExhaustPlumePropertiesRaw);
+        OOJSReportBadPropertySelector(context, thisObj, (propID),
+            sExhaustPlumePropertiesRaw);
         return false;
     }
 
-    *value_raw = ooscript::nullValue(); // what OOJSValueFromNativeObject() gave for the nil result (unreached: every case returns; bead oo-4aq6a.6)
+    *value_raw = ooscript::nullValue(); // unreached: every case returns
     return true;
 
     OOJS_NATIVE_EXIT
@@ -237,7 +227,8 @@ static bool ExhaustPlumeGetProperty(Context cx, Object obj, PropertyId propID, V
 } // namespace
 
 namespace {
-static bool ExhaustPlumeSetProperty(Context cx, Object obj, PropertyId propID, bool /*strict*/, Value* value)
+static bool ExhaustPlumeSetProperty(Context cx, Object obj, PropertyId propID,
+    bool /*strict*/, Value* value)
 {
     if (!ooscript::isInt32Id(propID))
         return true;
@@ -265,11 +256,13 @@ static bool ExhaustPlumeSetProperty(Context cx, Object obj, PropertyId propID, b
         break;
 
     default:
-        OOJSReportBadPropertySelector(context, thisObj, (propID), sExhaustPlumePropertiesRaw);
+        OOJSReportBadPropertySelector(context, thisObj, (propID),
+            sExhaustPlumePropertiesRaw);
         return false;
     }
 
-    OOJSReportBadPropertyValue(context, thisObj, (propID), sExhaustPlumePropertiesRaw, *value_raw);
+    OOJSReportBadPropertyValue(context, thisObj, (propID),
+        sExhaustPlumePropertiesRaw, *value_raw);
     return false;
 
     OOJS_NATIVE_EXIT
@@ -278,24 +271,25 @@ static bool ExhaustPlumeSetProperty(Context cx, Object obj, PropertyId propID, b
 
 // *** Methods ***
 
-#define GET_THIS_EXHAUSTPLUME(THISENT)                                                        \
-    do {                                                                                      \
-        if (EXPECT_NOT(!JSExhaustPlumeGetExhaustPlumeEntity(context, OOJS_THIS, &(THISENT)))) \
-            return false; /* Exception */                                                     \
-        if (OOIsStaleEntity(THISENT))                                                         \
-            OOJS_RETURN_VOID; /* the C++ plume's (bead oo-9ht.39.8.19) */                     \
+#define GET_THIS_EXHAUSTPLUME(THISENT)                                          \
+    do {                                                                        \
+        if (EXPECT_NOT(!JSExhaustPlumeGetExhaustPlumeEntity(context, OOJS_THIS, \
+                &(THISENT))))                                                   \
+            return false; /* Exception */                                       \
+        if (OOIsStaleEntity(THISENT))                                           \
+            OOJS_RETURN_VOID; /* the C++ plume's */                             \
     } while (0)
 
 namespace {
-static bool ExhaustPlumeRemove(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool ExhaustPlumeRemove(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     OOExhaustPlumeEntity* thisEnt = nullptr;
     GET_THIS_EXHAUSTPLUME(thisEnt);
 
-    ShipEntity* parent = oo::ToShip(thisEnt->owner()); // the C++ member its object's -owner answered (bead oo-9ht.39.8.19)
+    ShipEntity* parent = oo::ToShip(thisEnt->owner()); // the C++ member
     if (parent != nullptr)
         parent->removeExhaust(thisEnt);
 

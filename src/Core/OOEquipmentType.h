@@ -2,11 +2,11 @@
 
 OOEquipmentType.h
 
-C++20 since bead oo-fg7i (Phase 3, proposed ADR-0056). Its Objective-C facade was deleted by bead
-oo-9ht.28 (batch F, ADR-0056 amendment oo-9ht.19). The registries of types are the class's and
-keep each registered type alive while it is registered; ships keep weapon and missile types
-unretained (OOWeaponType, null: no weapon). A type is its own PList::Object payload
-(oo::PListForeign) and its own JS glue (OOJSPrivateObject).
+The registries of types are the class's and
+keep each registered type alive while it is registered; ships keep weapon and
+missile types unretained (OOWeaponType, null: no weapon). A type is its own
+PList::Object payload (oo::PListForeign) and its own JS glue
+(OOJSPrivateObject).
 
 Class representing a type of ship equipment. Exposed to JavaScript as
 EquipmentInfo.
@@ -36,41 +36,45 @@ SOFTWARE.
 
 #pragma once
 
-#ifndef OOEQUIPMENTTYPE_H
-#define OOEQUIPMENTTYPE_H
-
-#include "OOColor.h"
-#include "OOFoundation.h"
-#include "OOOpenGL.h"
-#include "OOTypes.h"
-#include "oofnd/Ref.hpp"
-#include "oofnd/objc/OOObject.h"
-#include "ooscript/JSEngine.hpp"
-
 #include <map>
 #include <optional>
 #include <string>
 #include <vector>
 
+#include "OOColor.h"
+#include "OOFoundation.h"
+#include "OOOpenGL.h"
+#include "OOTypes.h"
 #include "Scripting/OOJSPrivateObject.h"
 #include "oofnd/PList.hpp"
+#include "oofnd/Ref.hpp"
+#include "oofnd/objc/OOObject.h"
+#include "ooscript/JSEngine.hpp"
 
 class OOEquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
 public:
-    static void loadEquipment(); // Load equipment data; called on loading and when changing to/from strict mode.
-    static void addEquipmentWithInfo(const oo::PList& itemInfo); // Used to generate equipment from missile_role entries.
+    static void loadEquipment(); // Load equipment data; called on loading and
+                                 // when changing to/from strict mode.
+    static void addEquipmentWithInfo(
+        const oo::PList&
+            itemInfo); // Used to generate equipment from missile_role entries.
 
-    static std::optional<std::string> getMissileRegistryRoleForShip(const std::string& shipKey); // nullopt: none registered
-    static void setMissileRegistryRole(const std::string& role, const std::string& shipKey);
+    static std::optional<std::string> getMissileRegistryRoleForShip(
+        const std::string& shipKey); // nullopt: none registered
+    static void setMissileRegistryRole(const std::string& role,
+        const std::string& shipKey);
 
-    static std::vector<oo::Ref<OOEquipmentType>> allEquipmentTypes(); // a snapshot, in equipment.plist order
-    static std::vector<oo::Ref<OOEquipmentType>> allEquipmentTypesOutfitting(); // the outfitting dataset
+    static std::vector<oo::Ref<OOEquipmentType>>
+    allEquipmentTypes(); // a snapshot, in equipment.plist order
+    static std::vector<oo::Ref<OOEquipmentType>>
+    allEquipmentTypesOutfitting(); // the outfitting dataset
 
-    static oo::Ref<OOEquipmentType> equipmentTypeWithIdentifier(const std::string& identifier); // null: none
+    static oo::Ref<OOEquipmentType> equipmentTypeWithIdentifier(
+        const std::string& identifier); // null: none
 
     std::optional<std::string> identifier();
     std::optional<std::string> damagedIdentifier();
-    std::optional<std::string> name(); // localized (bead oo-3rb.289.10)
+    std::optional<std::string> name(); // localized
     std::optional<std::string> descriptiveText(); // localized
     OOTechLevelID techLevel();
     OOCreditsQuantity price(); // Tenths of credits
@@ -99,12 +103,17 @@ public:
     bool isAvailableToNPCs();
 
     OOCargoQuantity requiredCargoSpace();
-    // Equipment identifiers, sorted and de-duplicated; nullopt when not specified.
-    std::optional<std::vector<std::string>> requiresEquipment(); // all items required
-    std::optional<std::vector<std::string>> requiresAnyEquipment(); // any item required
-    std::optional<std::vector<std::string>> incompatibleEquipment(); // all items prohibited
+    // Equipment identifiers, sorted and de-duplicated; nullopt when not
+    // specified.
+    std::optional<std::vector<std::string>>
+    requiresEquipment(); // all items required
+    std::optional<std::vector<std::string>>
+    requiresAnyEquipment(); // any item required
+    std::optional<std::vector<std::string>>
+    incompatibleEquipment(); // all items prohibited
 
-    // FIXME: should have general mechanism to handle scripts or legacy conditions.
+    // FIXME: should have general mechanism to handle scripts or legacy
+    // conditions.
     oo::PList conditions(); // an array; null: none
 
     std::optional<std::string> conditionScript();
@@ -144,55 +153,53 @@ public:
     // Conveniences
     OOTechLevelID effectiveTechLevel();
 
-    // What "%@" prints between the braces of <OOEquipmentType 0x...>{...} (OODescription.h).
+    // What "%@" prints between the braces of <OOEquipmentType 0x...>{...}
+    // (OODescription.h).
     std::optional<std::string> descriptionComponents() const;
 
-    // The JS glue (OOJSPrivateObject), defined in OOJSEquipmentInfo.mm: the EquipmentInfo object,
-    // made on first use; forgetting it when it is finalized; "[EquipmentInfo <components>]".
+    // The JS glue (OOJSPrivateObject), defined in OOJSEquipmentInfo.mm: the
+    // EquipmentInfo object, made on first use; forgetting it when it is
+    // finalized; "[EquipmentInfo <components>]".
     ooscript::Value jsValueInContext(ooscript::Context context) override;
     void clearJSSelf(ooscript::Object selfVal) override;
     std::optional<std::string> jsDescription() override;
 
-    // oo::PListForeign: what the facade answered (its class, and "%@" as <OOEquipmentType 0x...>{...}).
+    // oo::PListForeign: what the facade answered (its class, and "%@" as
+    // <OOEquipmentType 0x...>{...}).
     std::string className() const override;
     std::string description() const override;
 
 private:
     OOEquipmentType() = default;
 
-    // -initWithInfo:, which could fail: createWithInfo() runs it on a new object (ADR-0056
-    // amendment oo-fg7i).
+    // -initWithInfo:, which could fail: createWithInfo() runs it on a new object.
     static oo::Ref<OOEquipmentType> createWithInfo(const oo::PList& info);
-    bool initWithInfo(const oo::PList& info); // an equipment.plist entry (an array)
+    bool initWithInfo(
+        const oo::PList& info); // an equipment.plist entry (an array)
 
     OOTechLevelID _techLevel = { };
     OOCreditsQuantity _price = { };
-    std::string _name; // never empty-for-nil: initWithInfo() fails without all three
+    std::string
+        _name; // never empty-for-nil: initWithInfo() fails without all three
     std::string _identifier;
     std::string _description;
-    unsigned _isAvailableToAll : 1 = 0,
-                                 _requiresEmptyPylon : 1 = 0,
-                                 _requiresMountedPylon : 1 = 0,
-                                 _requiresClean : 1 = 0,
-                                 _requiresNotClean : 1 = 0,
-                                 _portableBetweenShips : 1 = 0,
-                                 _requiresFreePassengerBerth : 1 = 0,
-                                 _requiresFullFuel : 1 = 0,
-                                 _requiresNonFullFuel : 1 = 0,
-                                 _isMissileOrMine : 1 = 0,
-                                 _isVisible : 1 = 0,
-                                 _isAvailableToPlayer : 1 = 0,
-                                 _isAvailableToNPCs : 1 = 0,
-                                 _fastAffinityA : 1 = 0,
-                                 _fastAffinityB : 1 = 0,
-                                 _canCarryMultiple : 1 = 0,
-                                 _hideValues : 1 = 0;
+    unsigned _isAvailableToAll
+        : 1 = 0,
+          _requiresEmptyPylon : 1 = 0, _requiresMountedPylon : 1 = 0,
+          _requiresClean : 1 = 0, _requiresNotClean : 1 = 0,
+          _portableBetweenShips : 1 = 0, _requiresFreePassengerBerth : 1 = 0,
+          _requiresFullFuel : 1 = 0, _requiresNonFullFuel : 1 = 0,
+          _isMissileOrMine : 1 = 0, _isVisible : 1 = 0,
+          _isAvailableToPlayer : 1 = 0, _isAvailableToNPCs : 1 = 0,
+          _fastAffinityA : 1 = 0, _fastAffinityB : 1 = 0,
+          _canCarryMultiple : 1 = 0, _hideValues : 1 = 0;
     oo::Ref<OOColor> _displayColor;
     NSUInteger _installTime = { };
     NSUInteger _repairTime = { };
     GLfloat _damageProbability = { };
     OOCargoQuantity _requiredCargoSpace = { };
-    // Sorted, de-duplicated equipment keys; nullopt when the key is absent (was nil).
+    // Sorted, de-duplicated equipment keys; nullopt when the key is absent (was
+    // nil).
     std::optional<std::vector<std::string>> _requiresEquipment;
     std::optional<std::vector<std::string>> _requiresAnyEquipment;
     std::optional<std::vector<std::string>> _incompatibleEquipment;
@@ -207,26 +214,29 @@ private:
     ooscript::Object _jsSelf = { }; // the EquipmentInfo object (OOJSEquipmentInfo.mm)
 };
 
-/*	A type carried through plist data as a PList::Object node (proposed ADR-0043 Amendment 2):
-        the type is the node's foreign object (bead oo-9ht.28; what oo::PListObject() and
-        oo::ObjectIn() did for the facade).
+/*	A type carried through plist data as a PList::Object node: the type is
+   the node's foreign object.
 */
-inline oo::PList OOEquipmentTypeObjectNode(OOEquipmentType* type) // null type -> null PList
+inline oo::PList OOEquipmentTypeObjectNode(
+    OOEquipmentType* type) // null type -> null PList
 {
     if (type == nullptr)
         return oo::PList();
     return oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(type)));
 }
 
-inline OOEquipmentType* OOEquipmentTypeInObjectNode(const oo::PList& plist) // null for any other node
+inline OOEquipmentType* OOEquipmentTypeInObjectNode(
+    const oo::PList& plist) // null for any other node
 {
     const oo::PList::Object* node = plist.getIf<oo::PList::Object>();
-    return (node != nullptr) ? dynamic_cast<OOEquipmentType*>(node->get()) : nullptr;
+    return (node != nullptr) ? dynamic_cast<OOEquipmentType*>(node->get())
+                             : nullptr;
 }
 
-// An array of Object nodes, one per non-null type, in order (what oo::PListFromObjects() made of
-// the facades).
-inline oo::PList OOEquipmentTypeObjectNodes(const std::vector<oo::Ref<OOEquipmentType>>& types)
+// An array of Object nodes, one per non-null type, in order (what
+// oo::PListFromObjects() made of the facades).
+inline oo::PList OOEquipmentTypeObjectNodes(
+    const std::vector<oo::Ref<OOEquipmentType>>& types)
 {
     oo::PList::Array result;
     result.reserve(types.size());
@@ -236,5 +246,3 @@ inline oo::PList OOEquipmentTypeObjectNodes(const std::vector<oo::Ref<OOEquipmen
     }
     return oo::PList(std::move(result));
 }
-
-#endif // OOEQUIPMENTTYPE_H

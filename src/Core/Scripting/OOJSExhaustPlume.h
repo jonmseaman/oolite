@@ -39,9 +39,9 @@ void InitOOJSExhaustPlume(ooscript::Context context, ooscript::Object global);
 }
 #endif
 
-/*	The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the engine reaches by
-        selector through the root's JS members: the C++ OOExhaustPlumeEntity's overrides call these
-        (bead oo-9ht.110; proposed ADR-0056 amendments oo-ppc, oo-ykoy, oo-6ia4 and oo-9ht.107).
+/*	The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the
+   engine reaches by selector through the root's JS members: the C++
+   OOExhaustPlumeEntity's overrides call these.
 */
 void OOJSExhaustPlumeGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
 std::optional<std::string> OOJSExhaustPlumeJSClassName(void);

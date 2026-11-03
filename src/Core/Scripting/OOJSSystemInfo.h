@@ -4,12 +4,11 @@ OOJSSystemInfo.h
 
 JavaScript object representing system info overrides.
 
-C++20 since bead oo-6ia4 (proposed ADR-0056; amendment oo-ppc for the binding). OOSystemInfo,
-the object a SystemInfo wraps, was an Objective-C class private to OOJSSystemInfo.mm. Only that
-file makes one. Since bead oo-6symp.2 a SystemInfo's private slot holds it directly
-(OOJSPrivateObject.h; proposed ADR-0056 amendment oo-6symp), and since bead oo-9ht.95 its
-Objective-C facade is gone: it is a oo::PListForeign, so a PList can carry it (the engine turns
-one back into its JS object with OOJSValueFromCxxObject).
+OOSystemInfo, the object a SystemInfo wraps, is private to OOJSSystemInfo.cpp,
+which is the only file that makes one. A SystemInfo's private slot holds it
+directly (OOJSPrivateObject.h), and it is a oo::PListForeign, so a PList can
+carry it (the engine turns one back into its JS object with
+OOJSValueFromCxxObject).
 
 
 Oolite
@@ -32,8 +31,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOJSSYSTEMINFO_H
-#define OOJSSYSTEMINFO_H
+#pragma once
 
 #include "OOFoundation.h"
 #include "OOJSPrivateObject.h"
@@ -46,9 +44,10 @@ MA 02110-1301, USA.
 // The system a SystemInfo stands for, and its data through the universe.
 class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
 public:
-    // -initWithGalaxy:system:, as a factory: null for a galaxy or system out of range (it answered
-    // nil; amendment oo-novu item 1).
-    static oo::Ref<OOSystemInfo> initWithGalaxy(OOGalaxyID galaxy, OOSystemID system);
+    // -initWithGalaxy:system:, as a factory: null for a galaxy or system out of
+    // range.
+    static oo::Ref<OOSystemInfo> initWithGalaxy(OOGalaxyID galaxy,
+        OOSystemID system);
 
     std::optional<std::string> descriptionComponents() const;
     std::optional<std::string> shortDescriptionComponents() const;
@@ -57,8 +56,10 @@ public:
     bool isEqual(const OOSystemInfo* other) const; // null: not equal
     NSUInteger hash() const;
 
-    oo::PList valueForKey(const std::optional<std::string>& key); // null for none
-    void setValue(const oo::PList& value, const std::string& key); // a null value removes
+    oo::PList valueForKey(
+        const std::optional<std::string>& key); // null for none
+    void setValue(const oo::PList& value,
+        const std::string& key); // a null value removes
 
     std::vector<std::string> allKeys();
 
@@ -66,8 +67,9 @@ public:
     OOSystemID system() const;
     NSPoint coordinates();
 
-    // The JS glue (OOJSPrivateObject): a new SystemInfo object holding this, remembered as the
-    // latest; forgetting it when it is finalized; "[SystemInfo galaxy g, system s]".
+    // The JS glue (OOJSPrivateObject): a new SystemInfo object holding this,
+    // remembered as the latest; forgetting it when it is finalized; "[SystemInfo
+    // galaxy g, system s]".
     ooscript::Value jsValueInContext(ooscript::Context context) override;
     void clearJSSelf(ooscript::Object selfVal) override;
     std::optional<std::string> jsDescription() override;
@@ -91,11 +93,11 @@ extern "C" {
 
 void InitOOJSSystemInfo(ooscript::Context context, ooscript::Object global);
 
-// Returns ooscript::nullValue() on failure (with a JS warning, but no exception).
-ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context, OOGalaxyID galaxy, OOSystemID system);
+// Returns ooscript::nullValue() on failure (with a JS warning, but no
+// exception).
+ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context,
+    OOGalaxyID galaxy, OOSystemID system);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif // OOJSSYSTEMINFO_H

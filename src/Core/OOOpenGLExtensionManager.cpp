@@ -26,18 +26,18 @@ SOFTWARE.
 */
 
 #include "OOOpenGLExtensionManager.h"
-#include "OOFunctionAttributes.h"
-#include "OOLogging.h"
-#include "oofnd/Process.hpp"
+
 #include <stdlib.h>
 
 #include "OOConstToString.h"
+#include "OOFunctionAttributes.h"
+#include "OOLogging.h"
 #include "OORegExpMatcher.h"
 #include "ResourceManager.h"
-#include "oofnd/objc/OOException.h"
-
 #include "oofnd/Log.hpp"
+#include "oofnd/Process.hpp"
 #include "oofnd/String.hpp"
+#include "oofnd/objc/OOException.h"
 
 /*	OpenGL version required, currently 1.1 or later (basic stuff like
         glBindTexture(), glDrawArrays()). We probably have implicit requirements
@@ -47,10 +47,8 @@ SOFTWARE.
         well go all the way to 3.3.
         -- Nikos 20220817
 */
-enum {
-    kMinMajorVersion = 3,
-    kMinMinorVersion = 3
-};
+enum { kMinMajorVersion = 3,
+    kMinMinorVersion = 3 };
 
 #if OOLITE_WINDOWS
 /*	Define the function pointers for the OpenGL extensions used in the game
@@ -159,7 +157,8 @@ static unsigned IntegerFromString(const GLubyte** ioString);
 
 namespace {
 
-std::vector<std::string> ArrayOfExtensions(const std::optional<std::string>& extensionString)
+std::vector<std::string> ArrayOfExtensions(
+    const std::optional<std::string>& extensionString)
 {
     std::vector<std::string> result;
     if (!extensionString.has_value())
@@ -218,29 +217,47 @@ void OOOpenGLExtensionManager::reset()
      */
     ResourceManager::paths();
 
-    OO_LOG("rendering.opengl.version", "OpenGL renderer version: {}.{}.{} (\"{}\"). Vendor: \"{}\". Renderer: \"{}\".", major, minor, release_, versionString ? reinterpret_cast<const char*>(versionString) : "(null)", vendor.value_or("(null)"), renderer.value_or("(null)"));
+    OO_LOG(
+        "rendering.opengl.version",
+        "OpenGL renderer version: {}.{}.{} (\"{}\"). Vendor: \"{}\". Renderer: "
+        "\"{}\".",
+        major, minor, release_,
+        versionString ? reinterpret_cast<const char*>(versionString) : "(null)",
+        vendor.value_or("(null)"), renderer.value_or("(null)"));
     {
-        // Listed in byte order of the name (the set's hash order before; proposed ADR-0043).
+        // Listed in byte order of the name (the set's hash order before).
         std::string extensionList;
         for (const std::string& extension : extensions) {
             if (!extensionList.empty())
                 extensionList += ", ";
             extensionList += extension;
         }
-        OO_LOG("rendering.opengl.extensions", "OpenGL extensions ({}):\n{}", extensions.size(), extensionList);
+        OO_LOG("rendering.opengl.extensions", "OpenGL extensions ({}):\n{}",
+            extensions.size(), extensionList);
     }
 
 #if OOLITE_MAC_OS_X
     /*	macOS only offers a 2.1 legacy context alongside fixed-function GL, but
             it provides what Oolite needs from 3.3 as extensions.
     */
-    if ([self versionIsAtLeastMajor:2 minor:1] && [self haveExtension:@"GL_ARB_framebuffer_object"] && [self haveExtension:@"GL_APPLE_vertex_array_object"] && [self haveExtension:@"GL_ARB_texture_float"] && [self haveExtension:@"GL_ARB_color_buffer_float"] && [self haveExtension:@"GL_ARB_draw_buffers"]) {
+    if ([self versionIsAtLeastMajor:2 minor:1] &&
+        [self haveExtension:@"GL_ARB_framebuffer_object"] &&
+        [self haveExtension:@"GL_APPLE_vertex_array_object"] &&
+        [self haveExtension:@"GL_ARB_texture_float"] &&
+        [self haveExtension:@"GL_ARB_color_buffer_float"] &&
+        [self haveExtension:@"GL_ARB_draw_buffers"]) {
         // OK
     } else
 #endif
         if (!versionIsAtLeastMajor(kMinMajorVersion, kMinMinorVersion)) {
-        OO_LOG("rendering.opengl.version.insufficient", "***** Oolite requires OpenGL version {}.{} or later.", static_cast<unsigned>(kMinMajorVersion), static_cast<unsigned>(kMinMinorVersion));
-        OORaiseException("OoliteOpenGLTooOldException", "Oolite requires at least OpenGL %u.%u. You have %u.%u (\"%s\").", kMinMajorVersion, kMinMinorVersion, major, minor, versionString);
+        OO_LOG("rendering.opengl.version.insufficient",
+            "***** Oolite requires OpenGL version {}.{} or later.",
+            static_cast<unsigned>(kMinMajorVersion),
+            static_cast<unsigned>(kMinMinorVersion));
+        OORaiseException(
+            "OoliteOpenGLTooOldException",
+            "Oolite requires at least OpenGL %u.%u. You have %u.%u (\"%s\").",
+            kMinMajorVersion, kMinMinorVersion, major, minor, versionString);
     }
 
     const std::optional<std::string> versionStr = OptionalGLString(versionString);
@@ -250,18 +267,22 @@ void OOOpenGLExtensionManager::reset()
     checkShadersSupported();
 
     if (shadersAvailable) {
-        defaultShaderSetting = cxx_OOShaderSettingFromString(gpuConfig.get<std::string>("default_shader_level",
-            "SHADERS_FULL"));
-        maximumShaderSetting = cxx_OOShaderSettingFromString(gpuConfig.get<std::string>("maximum_shader_level",
-            "SHADERS_FULL"));
+        defaultShaderSetting = cxx_OOShaderSettingFromString(
+            gpuConfig.get<std::string>("default_shader_level", "SHADERS_FULL"));
+        maximumShaderSetting = cxx_OOShaderSettingFromString(
+            gpuConfig.get<std::string>("maximum_shader_level", "SHADERS_FULL"));
         if (maximumShaderSetting <= SHADERS_OFF) {
             shadersAvailable = NO;
             maximumShaderSetting = SHADERS_NOT_SUPPORTED;
             {
-                // A name that is not a string fell back to the renderer, which may itself be nil.
+                // A name that is not a string fell back to the renderer, which may
+                // itself be nil.
                 const oo::PList* name = gpuConfig.find("name");
                 const bool hasName = name != nullptr && (name->isString() || name->isNumber());
-                OO_LOG(kOOLogOpenGLShaderSupport, "Shaders will not be used (disallowed for GPU type \"{}\").", hasName ? gpuConfig.get<std::string>("name") : renderer.value_or("(null)"));
+                OO_LOG(kOOLogOpenGLShaderSupport,
+                    "Shaders will not be used (disallowed for GPU type \"{}\").",
+                    hasName ? gpuConfig.get<std::string>("name")
+                            : renderer.value_or("(null)"));
             }
         }
         if (maximumShaderSetting < defaultShaderSetting) {
@@ -309,8 +330,8 @@ OOOpenGLExtensionManager* OOOpenGLExtensionManager::sharedManager()
 {
     // NOTE: assumes single-threaded first access. See header.
     if (sSingleton == nullptr) {
-        // The singleton category's +allocWithZone: recorded the instance before -init ran
-        // -reset, so it is recorded here before reset() runs too.
+        // The singleton category's +allocWithZone: recorded the instance before
+        // -init ran -reset, so it is recorded here before reset() runs too.
         sSingleton = oo::makeRef<OOOpenGLExtensionManager>().leakRef();
         sSingleton->reset();
     }
@@ -319,7 +340,8 @@ OOOpenGLExtensionManager* OOOpenGLExtensionManager::sharedManager()
 
 bool OOOpenGLExtensionManager::haveExtension(const std::string& extension)
 {
-// The Foundation set was documented as thread-safe under OS X, but I'm not sure about GNUstep. -- Ahruman
+// The Foundation set was documented as thread-safe under OS X, but I'm not sure
+// about GNUstep. -- Ahruman
 #if OOOPENGLEXTMGR_LOCK_SET_ACCESS
     lock.lock();
 #endif
@@ -422,22 +444,15 @@ GLint OOOpenGLExtensionManager::textureUnitCount()
 #endif
 }
 
-NSUInteger OOOpenGLExtensionManager::majorVersionNumber()
-{
-    return major;
-}
+NSUInteger OOOpenGLExtensionManager::majorVersionNumber() { return major; }
 
-NSUInteger OOOpenGLExtensionManager::minorVersionNumber()
-{
-    return minor;
-}
+NSUInteger OOOpenGLExtensionManager::minorVersionNumber() { return minor; }
 
-NSUInteger OOOpenGLExtensionManager::releaseVersionNumber()
-{
-    return release_;
-}
+NSUInteger OOOpenGLExtensionManager::releaseVersionNumber() { return release_; }
 
-void OOOpenGLExtensionManager::getVersionMajor(unsigned* outMajor, unsigned* outMinor, unsigned* outRelease)
+void OOOpenGLExtensionManager::getVersionMajor(unsigned* outMajor,
+    unsigned* outMinor,
+    unsigned* outRelease)
 {
     if (outMajor != NULL)
         *outMajor = major;
@@ -447,7 +462,8 @@ void OOOpenGLExtensionManager::getVersionMajor(unsigned* outMajor, unsigned* out
         *outRelease = release_;
 }
 
-bool OOOpenGLExtensionManager::versionIsAtLeastMajor(unsigned maj, unsigned min)
+bool OOOpenGLExtensionManager::versionIsAtLeastMajor(unsigned maj,
+    unsigned min)
 {
     return major > maj || (major == maj && minor >= min);
 }
@@ -467,15 +483,9 @@ bool OOOpenGLExtensionManager::usePointSmoothing()
     return usePointSmoothing_;
 }
 
-bool OOOpenGLExtensionManager::useLineSmoothing()
-{
-    return useLineSmoothing_;
-}
+bool OOOpenGLExtensionManager::useLineSmoothing() { return useLineSmoothing_; }
 
-bool OOOpenGLExtensionManager::useDustShader()
-{
-    return useDustShader_;
-}
+bool OOOpenGLExtensionManager::useDustShader() { return useDustShader_; }
 
 static unsigned IntegerFromString(const GLubyte** ioString)
 {
@@ -513,7 +523,8 @@ void OOOpenGLExtensionManager::checkShadersSupported()
     for (const std::string& arg : oo::process::arguments()) {
         if (arg == "-noshaders" || arg == "--noshaders") {
             shadersForceDisabled_ = YES;
-            OO_LOG(kOOLogOpenGLShaderSupport, "{}", "Shaders will not be used (disabled on command line).");
+            OO_LOG(kOOLogOpenGLShaderSupport, "{}",
+                "Shaders will not be used (disabled on command line).");
             return;
         }
     }
@@ -530,16 +541,21 @@ void OOOpenGLExtensionManager::checkShadersSupported()
 
     for (required = requiredExtension; *required != NULL; ++required) {
         if (!haveExtension(*required)) {
-            OO_LOG(kOOLogOpenGLShaderSupport, "Shaders will not be used (OpenGL extension {} is not available).", *required);
+            OO_LOG(kOOLogOpenGLShaderSupport,
+                "Shaders will not be used (OpenGL extension {} is not available).",
+                *required);
             return;
         }
     }
 
 #if OOLITE_WINDOWS
-    glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)wglGetProcAddress("glGetObjectParameterivARB");
-    glCreateShaderObjectARB = (PFNGLCREATESHADEROBJECTARBPROC)wglGetProcAddress("glCreateShaderObjectARB");
+    glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)wglGetProcAddress(
+        "glGetObjectParameterivARB");
+    glCreateShaderObjectARB = (PFNGLCREATESHADEROBJECTARBPROC)wglGetProcAddress(
+        "glCreateShaderObjectARB");
     glGetInfoLogARB = (PFNGLGETINFOLOGARBPROC)wglGetProcAddress("glGetInfoLogARB");
-    glCreateProgramObjectARB = (PFNGLCREATEPROGRAMOBJECTARBPROC)wglGetProcAddress("glCreateProgramObjectARB");
+    glCreateProgramObjectARB = (PFNGLCREATEPROGRAMOBJECTARBPROC)wglGetProcAddress(
+        "glCreateProgramObjectARB");
     glAttachObjectARB = (PFNGLATTACHOBJECTARBPROC)wglGetProcAddress("glAttachObjectARB");
     glDeleteObjectARB = (PFNGLDELETEOBJECTARBPROC)wglGetProcAddress("glDeleteObjectARB");
     glLinkProgramARB = (PFNGLLINKPROGRAMARBPROC)wglGetProcAddress("glLinkProgramARB");
@@ -547,17 +563,22 @@ void OOOpenGLExtensionManager::checkShadersSupported()
     glShaderSourceARB = (PFNGLSHADERSOURCEARBPROC)wglGetProcAddress("glShaderSourceARB");
     glUseProgramObjectARB = (PFNGLUSEPROGRAMOBJECTARBPROC)wglGetProcAddress("glUseProgramObjectARB");
     glActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)wglGetProcAddress("glActiveTextureARB");
-    glGetUniformLocationARB = (PFNGLGETUNIFORMLOCATIONARBPROC)wglGetProcAddress("glGetUniformLocationARB");
+    glGetUniformLocationARB = (PFNGLGETUNIFORMLOCATIONARBPROC)wglGetProcAddress(
+        "glGetUniformLocationARB");
     glUniform1iARB = (PFNGLUNIFORM1IARBPROC)wglGetProcAddress("glUniform1iARB");
     glUniform1fARB = (PFNGLUNIFORM1FARBPROC)wglGetProcAddress("glUniform1fARB");
     glUniformMatrix3fvARB = (PFNGLUNIFORMMATRIX3FVARBPROC)wglGetProcAddress("glUniformMatrix3fvARB");
     glUniformMatrix4fvARB = (PFNGLUNIFORMMATRIX4FVARBPROC)wglGetProcAddress("glUniformMatrix4fvARB");
     glUniform4fvARB = (PFNGLUNIFORM4FVARBPROC)wglGetProcAddress("glUniform4fvARB");
     glUniform2fvARB = (PFNGLUNIFORM2FVARBPROC)wglGetProcAddress("glUniform2fvARB");
-    glBindAttribLocationARB = (PFNGLBINDATTRIBLOCATIONARBPROC)wglGetProcAddress("glBindAttribLocationARB");
-    glEnableVertexAttribArrayARB = (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)wglGetProcAddress("glEnableVertexAttribArrayARB");
-    glVertexAttribPointerARB = (PFNGLVERTEXATTRIBPOINTERARBPROC)wglGetProcAddress("glVertexAttribPointerARB");
-    glDisableVertexAttribArrayARB = (PFNGLDISABLEVERTEXATTRIBARRAYARBPROC)wglGetProcAddress("glDisableVertexAttribArrayARB");
+    glBindAttribLocationARB = (PFNGLBINDATTRIBLOCATIONARBPROC)wglGetProcAddress(
+        "glBindAttribLocationARB");
+    glEnableVertexAttribArrayARB = (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)wglGetProcAddress(
+        "glEnableVertexAttribArrayARB");
+    glVertexAttribPointerARB = (PFNGLVERTEXATTRIBPOINTERARBPROC)wglGetProcAddress(
+        "glVertexAttribPointerARB");
+    glDisableVertexAttribArrayARB = (PFNGLDISABLEVERTEXATTRIBARRAYARBPROC)wglGetProcAddress(
+        "glDisableVertexAttribArrayARB");
     glValidateProgramARB = (PFNGLVALIDATEPROGRAMARBPROC)wglGetProcAddress("glValidateProgramARB");
 #endif
 
@@ -600,28 +621,41 @@ void OOOpenGLExtensionManager::checkFBOSupported()
     if (fboSupported_) {
         glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)wglGetProcAddress("glGenFramebuffersEXT");
         glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)wglGetProcAddress("glBindFramebufferEXT");
-        glGenRenderbuffersEXT = (PFNGLGENRENDERBUFFERSEXTPROC)wglGetProcAddress("glGenRenderbuffersEXT");
-        glBindRenderbufferEXT = (PFNGLBINDRENDERBUFFEREXTPROC)wglGetProcAddress("glBindRenderbufferEXT");
-        glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC)wglGetProcAddress("glRenderbufferStorageEXT");
-        glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)wglGetProcAddress("glFramebufferRenderbufferEXT");
-        glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)wglGetProcAddress("glFramebufferTexture2DEXT");
-        glCheckFramebufferStatusEXT = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)wglGetProcAddress("glCheckFramebufferStatusEXT");
-        glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSEXTPROC)wglGetProcAddress("glDeleteFramebuffersEXT");
-        glDeleteRenderbuffersEXT = (PFNGLDELETERENDERBUFFERSEXTPROC)wglGetProcAddress("glDeleteRenderbuffersEXT");
+        glGenRenderbuffersEXT = (PFNGLGENRENDERBUFFERSEXTPROC)wglGetProcAddress(
+            "glGenRenderbuffersEXT");
+        glBindRenderbufferEXT = (PFNGLBINDRENDERBUFFEREXTPROC)wglGetProcAddress(
+            "glBindRenderbufferEXT");
+        glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC)wglGetProcAddress(
+            "glRenderbufferStorageEXT");
+        glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)wglGetProcAddress(
+            "glFramebufferRenderbufferEXT");
+        glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)wglGetProcAddress(
+            "glFramebufferTexture2DEXT");
+        glCheckFramebufferStatusEXT = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)wglGetProcAddress(
+            "glCheckFramebufferStatusEXT");
+        glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSEXTPROC)wglGetProcAddress(
+            "glDeleteFramebuffersEXT");
+        glDeleteRenderbuffersEXT = (PFNGLDELETERENDERBUFFERSEXTPROC)wglGetProcAddress(
+            "glDeleteRenderbuffersEXT");
         glGenRenderbuffers = (PFNGLGENRENDERBUFFERSPROC)wglGetProcAddress("glGenRenderbuffers");
         glBindRenderbuffer = (PFNGLBINDRENDERBUFFERPROC)wglGetProcAddress("glBindRenderbuffer");
-        glRenderbufferStorage = (PFNGLRENDERBUFFERSTORAGEPROC)wglGetProcAddress("glRenderbufferStorage");
+        glRenderbufferStorage = (PFNGLRENDERBUFFERSTORAGEPROC)wglGetProcAddress(
+            "glRenderbufferStorage");
         glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)wglGetProcAddress("glGenFramebuffers");
         glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)wglGetProcAddress("glBindFramebuffer");
-        glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)wglGetProcAddress("glFramebufferRenderbuffer");
-        glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC)wglGetProcAddress("glFramebufferTexture2D");
+        glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)wglGetProcAddress(
+            "glFramebufferRenderbuffer");
+        glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC)wglGetProcAddress(
+            "glFramebufferTexture2D");
         glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)wglGetProcAddress("glGenVertexArrays");
         glGenBuffers = (PFNGLGENBUFFERSPROC)wglGetProcAddress("glGenBuffers");
         glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)wglGetProcAddress("glBindVertexArray");
         glBindBuffer = (PFNGLBINDBUFFERPROC)wglGetProcAddress("glBindBuffer");
         glBufferData = (PFNGLBUFFERDATAPROC)wglGetProcAddress("glBufferData");
-        glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)wglGetProcAddress("glVertexAttribPointer");
-        glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)wglGetProcAddress("glEnableVertexAttribArray");
+        glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)wglGetProcAddress(
+            "glVertexAttribPointer");
+        glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)wglGetProcAddress(
+            "glEnableVertexAttribArray");
         glUseProgram = (PFNGLUSEPROGRAMPROC)wglGetProcAddress("glUseProgram");
         glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)wglGetProcAddress("glGetUniformLocation");
         glUniform1i = (PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i");
@@ -634,9 +668,12 @@ void OOOpenGLExtensionManager::checkFBOSupported()
         glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)wglGetProcAddress("glDeleteVertexArrays");
         glDeleteBuffers = (PFNGLDELETEBUFFERSPROC)wglGetProcAddress("glDeleteBuffers");
         glDrawBuffers = (PFNGLDRAWBUFFERSPROC)wglGetProcAddress("glDrawBuffers");
-        glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)wglGetProcAddress("glCheckFramebufferStatus");
-        glTexImage2DMultisample = (PFNGLTEXIMAGE2DMULTISAMPLEPROC)wglGetProcAddress("glTexImage2DMultisample");
-        glRenderbufferStorageMultisample = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)wglGetProcAddress("glRenderbufferStorageMultisample");
+        glCheckFramebufferStatus = (PFNGLCHECKFRAMEBUFFERSTATUSPROC)wglGetProcAddress(
+            "glCheckFramebufferStatus");
+        glTexImage2DMultisample = (PFNGLTEXIMAGE2DMULTISAMPLEPROC)wglGetProcAddress(
+            "glTexImage2DMultisample");
+        glRenderbufferStorageMultisample = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)wglGetProcAddress(
+            "glRenderbufferStorageMultisample");
         glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC)wglGetProcAddress("glBlitFramebuffer");
         glClampColor = (PFNGLCLAMPCOLORPROC)wglGetProcAddress("glClampColor");
     }
@@ -656,7 +693,8 @@ void OOOpenGLExtensionManager::checkTextureCombinersSupported()
         // Duplicated in checkShadersSupported. but that's not really a problem.
         glActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)wglGetProcAddress("glActiveTextureARB");
 
-        glClientActiveTextureARB = (PFNGLCLIENTACTIVETEXTUREARBPROC)wglGetProcAddress("glClientActiveTextureARB");
+        glClientActiveTextureARB = (PFNGLCLIENTACTIVETEXTUREARBPROC)wglGetProcAddress(
+            "glClientActiveTextureARB");
 #endif
     } else {
         textureUnitCount_ = 1;
@@ -666,11 +704,14 @@ void OOOpenGLExtensionManager::checkTextureCombinersSupported()
 
 namespace {
 
-// The regexp test sent to a string that may be nil (a nil string matched nothing). matcher is the
-// one pass's matcher, taken on first use and held by the caller: the autoreleased Objective-C
-// matcher lived until the pool drained, so one pass compiled one tester (ADR-0056 amendment
-// oo-ct7c item 3). A null matcher (the tester did not compile) answers NO and is asked again.
-BOOL MatchesRegExp(oo::Ref<::OORegExpMatcher>& matcher, const std::optional<std::string>& string, const std::string& regexp)
+// The regexp test sent to a string that may be nil (a nil string matched
+// nothing). matcher is the one pass's matcher, taken on first use and held by
+// the caller: the autoreleased Objective-C matcher lived until the pool
+// drained, so one pass compiled one tester.
+// A null matcher (the tester did not compile) answers NO and is asked again.
+BOOL MatchesRegExp(oo::Ref<::OORegExpMatcher>& matcher,
+    const std::optional<std::string>& string,
+    const std::string& regexp)
 {
     if (!string.has_value())
         return NO;
@@ -681,8 +722,11 @@ BOOL MatchesRegExp(oo::Ref<::OORegExpMatcher>& matcher, const std::optional<std:
     return matcher->string(*string, regexp);
 }
 
-// regexps may be a single string or an array of strings (in which case results are ANDed).
-BOOL CheckRegExps(oo::Ref<::OORegExpMatcher>& matcher, const std::optional<std::string>& string, const oo::PList& regexps)
+// regexps may be a single string or an array of strings (in which case results
+// are ANDed).
+BOOL CheckRegExps(oo::Ref<::OORegExpMatcher>& matcher,
+    const std::optional<std::string>& string,
+    const oo::PList& regexps)
 {
     if (regexps.isNull())
         return YES; // No restriction == match.
@@ -707,7 +751,8 @@ BOOL CheckRegExps(oo::Ref<::OORegExpMatcher>& matcher, const std::optional<std::
     return NO;
 }
 
-// oo_stringForKey: on a dictionary that may be nil: a string, a number's string value, or nil.
+// oo_stringForKey: on a dictionary that may be nil: a string, a number's string
+// value, or nil.
 oo::PList StringForKey(const oo::PList* dict, std::string_view key)
 {
     const oo::PList* value = (dict != nullptr) ? dict->find(key) : nullptr;
@@ -718,27 +763,33 @@ oo::PList StringForKey(const oo::PList* dict, std::string_view key)
 
 } // namespace
 
-oo::PList OOOpenGLExtensionManager::lookUpPerGPUSettingsWithVersionString(const std::optional<std::string>& versionStr, const std::optional<std::string>& extensionsStr)
+oo::PList OOOpenGLExtensionManager::lookUpPerGPUSettingsWithVersionString(
+    const std::optional<std::string>& versionStr,
+    const std::optional<std::string>& extensionsStr)
 {
-    const oo::PList configurations = ResourceManager::dictionaryFromFilesNamed("gpu-settings.plist", "Config", YES);
+    const oo::PList configurations = ResourceManager::dictionaryFromFilesNamed(
+        "gpu-settings.plist", "Config", YES);
 
-    // Highest precedence first, then case-insensitive name order (keys were taken in hash order
-    // before sorting; ties between names equal but for case now keep byte order).
+    // Highest precedence first, then case-insensitive name order (keys were taken
+    // in hash order before sorting; ties between names equal but for case now
+    // keep byte order).
     std::vector<std::string> keys;
     if (const oo::PList::Dict* dict = configurations.getIf<oo::PList::Dict>()) {
         for (const auto& entry : *dict)
             keys.push_back(entry.first);
     }
-    std::stable_sort(keys.begin(), keys.end(), [&configurations](const std::string& keyA, const std::string& keyB) {
-        const oo::PList* dictA = configurations.get<oo::PList::Dict>(keyA);
-        const oo::PList* dictB = configurations.get<oo::PList::Dict>(keyB);
-        const double precedenceA = dictA != nullptr ? dictA->get<double>("precedence", 1) : 0;
-        const double precedenceB = dictB != nullptr ? dictB->get<double>("precedence", 1) : 0;
+    std::stable_sort(
+        keys.begin(), keys.end(),
+        [&configurations](const std::string& keyA, const std::string& keyB) {
+            const oo::PList* dictA = configurations.get<oo::PList::Dict>(keyA);
+            const oo::PList* dictB = configurations.get<oo::PList::Dict>(keyB);
+            const double precedenceA = dictA != nullptr ? dictA->get<double>("precedence", 1) : 0;
+            const double precedenceB = dictB != nullptr ? dictB->get<double>("precedence", 1) : 0;
 
-        if (precedenceA != precedenceB)
-            return precedenceA > precedenceB;
-        return oo::str::caseInsensitiveCompare(keyA, keyB) < 0;
-    });
+            if (precedenceA != precedenceB)
+                return precedenceA > precedenceB;
+            return oo::str::caseInsensitiveCompare(keyA, keyB) < 0;
+        });
 
     oo::Ref<::OORegExpMatcher> matcher; // one for the pass (see MatchesRegExp)
     for (const std::string& key : keys) {
@@ -749,7 +800,8 @@ oo::PList OOOpenGLExtensionManager::lookUpPerGPUSettingsWithVersionString(const 
         const oo::PList* match = config->get<oo::PList::Dict>("match");
         const oo::PList* vendorExpr = (match != nullptr) ? match->find("vendor") : nullptr;
 
-        if (!CheckRegExps(matcher, vendor, vendorExpr != nullptr ? *vendorExpr : oo::PList()))
+        if (!CheckRegExps(matcher, vendor,
+                vendorExpr != nullptr ? *vendorExpr : oo::PList()))
             continue;
 
         if (!CheckRegExps(matcher, renderer, StringForKey(match, "renderer")))
@@ -758,25 +810,29 @@ oo::PList OOOpenGLExtensionManager::lookUpPerGPUSettingsWithVersionString(const 
         if (!CheckRegExps(matcher, versionStr, StringForKey(match, "version")))
             continue;
 
-        if (!CheckRegExps(matcher, extensionsStr, StringForKey(match, "extensions")))
+        if (!CheckRegExps(matcher, extensionsStr,
+                StringForKey(match, "extensions")))
             continue;
 
-        OO_LOG("rendering.opengl.gpuSpecific", "Matched GPU configuration \"{}\".", key);
+        OO_LOG("rendering.opengl.gpuSpecific", "Matched GPU configuration \"{}\".",
+            key);
         return *config;
     }
 
     return oo::PList(oo::PList::Dict { });
 }
 
-// The singleton category (+allocWithZone:, and -retain/-release/-autorelease doing nothing) is
-// not translated: the one instance is made only by sharedManager() and never released (proposed
-// ADR-0056 amendment oo-r7m0).
+// The singleton category (+allocWithZone:, and -retain/-release/-autorelease
+// doing nothing) is not translated: the one instance is made only by
+// sharedManager() and never released.
 
 #if OOLITE_WINDOWS
 
 static void OOBadOpenGLExtensionUsed(void)
 {
-    OO_LOG("rendering.opengl.badExtension", "{}", "***** An uninitialized OpenGL extension function has been called, terminating. This is a serious error, please report it. *****");
+    OO_LOG("rendering.opengl.badExtension", "{}",
+        "***** An uninitialized OpenGL extension function has been called, "
+        "terminating. This is a serious error, please report it. *****");
     exit(EXIT_FAILURE);
 }
 

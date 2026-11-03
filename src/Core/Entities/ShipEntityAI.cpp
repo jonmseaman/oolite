@@ -23,51 +23,53 @@
  */
 
 #include "ShipEntityAI.h"
+
 #include "AI.h"
-#include "OOMaths.h"
-#include "Universe.h"
-
-#include "EntityOOJavaScriptExtensions.h" // OOJSEntityJSValue (bead oo-9ht.39.16)
-#include "OOJSFunction.h"
-#include "OOJSScript.h"
-#include "OOJavaScriptEngine.h"
-#include "OOPlanetEntity.h"
-#include "OOShipGroup.h"
-#include "OOSunEntity.h"
-#include "PlayerEntity.h"
-#include "PlayerEntityLegacyScriptEngine.h"
-#include "StationEntity.h"
-#include "WormholeEntity.h"
-
+#include "EntityOOJavaScriptExtensions.h" // OOJSEntityJSValue
 #include "GameController.h"
 #include "OOCallByName.h" // oo::ScheduleEntityCall
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
 #include "OOEntityFilterPredicate.h"
-#include "OOStringExpander.h"
-#include "OOStringParsing.h"
-#include "ResourceManager.h"
-
+#include "OOJSFunction.h"
+#include "OOJSScript.h"
+#include "OOJavaScriptEngine.h"
+#include "OOMaths.h"
 #include "OOObjCPList.h"
 #include "OOPListGameTypes.h"
+#include "OOPlanetEntity.h"
+#include "OOShipGroup.h"
+#include "OOStringExpander.h"
+#include "OOStringParsing.h"
+#include "OOSunEntity.h"
+#include "PlayerEntity.h"
+#include "PlayerEntityLegacyScriptEngine.h"
+#include "ResourceManager.h"
+#include "StationEntity.h"
+#include "Universe.h"
+#include "WormholeEntity.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
 #include "ooscript/JSEngine.hpp"
 
 namespace {
 
-// Whitespace without newlines: whiteSpaceAndNewline without U+000A-U+000D, U+0085, U+2028, U+2029
-// (matches GNUstep's whitespaceCharacterSet table).
+// Whitespace without newlines: whiteSpaceAndNewline without U+000A-U+000D,
+// U+0085, U+2028, U+2029 (matches GNUstep's whitespaceCharacterSet table).
 bool IsWhitespace(char16_t c)
 {
     return oo::str::isWhitespaceOrNewline(c) && !((c >= 0x000A && c <= 0x000D) || c == 0x0085 || c == 0x2028 || c == 0x2029);
 }
 
-// A debug context "<description> suffix" in debug builds, nil (nullopt) otherwise.
-std::optional<std::string> DebugContext(Entity* entity, const char* suffix) // the entity's object's short description (bead oo-9ht.39.16)
+// A debug context "<description> suffix" in debug builds, nil (nullopt)
+// otherwise.
+std::optional<std::string> DebugContext(
+    Entity* entity,
+    const char* suffix) // the entity's object's short description
 {
 #ifndef NDEBUG
-    return oo::str::format("%s %s", oo::EntityShortDescription(entity).c_str(), suffix);
+    return oo::str::format("%s %s", oo::EntityShortDescription(entity).c_str(),
+        suffix);
 #else
     (void)entity;
     (void)suffix;
@@ -75,7 +77,8 @@ std::optional<std::string> DebugContext(Entity* entity, const char* suffix) // t
 #endif
 }
 
-// [[s componentsSeparatedByString:@":"] objectAtIndex:1] -intValue, for a "rand:N" coordinate.
+// [[s componentsSeparatedByString:@":"] objectAtIndex:1] -intValue, for a
+// "rand:N" coordinate.
 int RandArgument(const std::string& token)
 {
     const std::vector<std::string> parts = oo::str::split(token, ":");
@@ -85,24 +88,23 @@ int RandArgument(const std::string& token)
 } // namespace
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm does it (bead
-        oo-sdz, the sweep exemplar): this file's one remaining direct engine call, the pending-
-        exception report at the end of -scanForNearestShipMatchingPredicate:, becomes the façade's
-        own reportPendingException entry point. SpiderMonkey still does the work underneath; only
-        the call target changes.
+   This file's one remaining direct engine call, the pending-exception report
+   at the end of -scanForNearestShipMatchingPredicate:, goes through the
+   ooscript façade (JSEngine.hpp) the way OOJSVector.mm does: the façade's own
+   reportPendingException entry point. SpiderMonkey still does the work
+   underneath.
 */
 namespace ooscript {
 }
 using ooscript::Context;
 
-// Byte-identical façade <-> jsapi view, local to this call site (see OOJSVector.mm).
+// Byte-identical façade <-> jsapi view, local to this call site (see
+// OOJSVector.mm).
 
-// Slice 1 of docs/phases/3-slices/ShipEntityAI.md (bead oo-iebuz): AI category, OOAIPrivate (ship
-// and station) and the station stubs. Members of ShipEntity defined in the category's file
-// (ADR-0056 amendment oo-o89 item 4); called directly since bead oo-9ht.144 deleted the facade
-// (amendment oo-9ht.144).
+// AI category, OOAIPrivate (ship and station) and the station stubs. Members of
+// ShipEntity defined in the category's file.
 
-void ShipEntity::setAITo(const std::string& aiString) // called by name (ADR-0055 item 5)
+void ShipEntity::setAITo(const std::string& aiString) // called by name
 {
     std::string ai = aiString;
     // don't try to load real AIs if the game hasn't started yet
@@ -130,12 +132,16 @@ void ShipEntity::setAITo(const std::string& aiString) // called by name (ADR-005
 
 void ShipEntity::setAIScript(const std::string& aiString)
 {
-    const oo::PList properties(oo::PList::Dict { { "ship", oo::EntityObjectNode(this) } });
+    const oo::PList properties(
+        oo::PList::Dict { { "ship", oo::EntityObjectNode(this) } });
 
     OOScriptAutorelease(std::move(aiScript)); // [aiScript autorelease]
     aiScript = OOScript::jsAIScriptFromFileNamed(aiString, properties);
     if (aiScript == nullptr) {
-        OO_LOG("ai.load.failed.unknownAI", "Unable to load JS AI {} for ship {} ({} for role {})", aiString, oo::EntityDescription(this), shipDataKey().value_or("(null)"), getPrimaryRole().value_or("(null)"));
+        OO_LOG("ai.load.failed.unknownAI",
+            "Unable to load JS AI {} for ship {} ({} for role {})", aiString,
+            oo::EntityDescription(this), shipDataKey().value_or("(null)"),
+            getPrimaryRole().value_or("(null)"));
         aiScript = OOScript::jsAIScriptFromFileNamed("oolite-nullAI.js", properties);
     } else {
         aiScriptWakeTime = 0;
@@ -143,7 +149,7 @@ void ShipEntity::setAIScript(const std::string& aiString)
     }
 }
 
-void ShipEntity::switchAITo(const std::string& aiString) // called by name (ADR-0055 item 5)
+void ShipEntity::switchAITo(const std::string& aiString) // called by name
 {
     setAITo(aiString);
     if (getAI() != nullptr)
@@ -152,7 +158,8 @@ void ShipEntity::switchAITo(const std::string& aiString) // called by name (ADR-
 
 void ShipEntity::scanForHostiles()
 {
-    /*-- Locates all the ships in range targeting the receiver and chooses the nearest --*/
+    /*-- Locates all the ships in range targeting the receiver and chooses the
+     * nearest --*/
     _foundTarget = nullptr;
 
     checkScanner();
@@ -161,9 +168,7 @@ void ShipEntity::scanForHostiles()
     for (i = 0; i < n_scanned_ships; i++) {
         ::ShipEntity* thing = scanned_ships[i];
         GLfloat d2 = distance2_scanned_ships[i];
-        if ((d2 < found_d2)
-            && ((thing != nullptr ? thing->isThargoid() : false) || (((thing != nullptr ? thing->primaryTarget() : (Entity*)nullptr) == this) && (thing != nullptr ? thing->hasHostileTarget() : false)) || (thing != nullptr ? thing->isDefenseTarget(this) : false))
-            && !(thing != nullptr ? thing->isCloaked() : false)) {
+        if ((d2 < found_d2) && ((thing != nullptr ? thing->isThargoid() : false) || (((thing != nullptr ? thing->primaryTarget() : (Entity*)nullptr) == this) && (thing != nullptr ? thing->hasHostileTarget() : false)) || (thing != nullptr ? thing->isDefenseTarget(this) : false)) && !(thing != nullptr ? thing->isCloaked() : false)) {
             setFoundTarget(thing);
             found_d2 = d2;
         }
@@ -190,7 +195,9 @@ void ShipEntity::groupAttackTarget()
         return;
     }
 
-    for (const oo::EntityHold& member : (group() != nullptr ? group()->memberArray() : std::vector<oo::EntityHold>())) {
+    for (const oo::EntityHold& member :
+        (group() != nullptr ? group()->memberArray()
+                            : std::vector<oo::EntityHold>())) {
         ship = oo::ToShip(member.get());
         if (ship != nullptr)
             ship->setFoundTarget(target);
@@ -201,7 +208,12 @@ void ShipEntity::groupAttackTarget()
 
         if ((ship != nullptr ? ship->escortGroup() : (OOShipGroup*)nullptr) != (ship != nullptr ? ship->group() : (OOShipGroup*)nullptr) && ((ship != nullptr ? ship->escortGroup() : (OOShipGroup*)nullptr) != nullptr ? (ship != nullptr ? ship->escortGroup() : (OOShipGroup*)nullptr)->count() : 0) > 1) // Ship has a seperate escort group.
         {
-            for (const oo::EntityHold& escortRef : ((ship != nullptr ? ship->escortGroup() : (OOShipGroup*)nullptr) != nullptr ? (ship != nullptr ? ship->escortGroup() : (OOShipGroup*)nullptr)->memberArrayExcludingLeader() : std::vector<oo::EntityHold>())) {
+            for (const oo::EntityHold& escortRef :
+                ((ship != nullptr ? ship->escortGroup() : (OOShipGroup*)nullptr) != nullptr
+                        ? (ship != nullptr ? ship->escortGroup()
+                                           : (OOShipGroup*)nullptr)
+                              ->memberArrayExcludingLeader()
+                        : std::vector<oo::EntityHold>())) {
                 ::ShipEntity* escort = oo::ToShip(escortRef.get());
                 if (escort != nullptr)
                     escort->setFoundTarget(target);
@@ -252,7 +264,8 @@ void ShipEntity::performFlee()
         if (accuracy > COMBAT_AI_ISNT_AWFUL) {
             // alert! they've got us in their sights! react!!
             if (approachAspectToPrimaryTarget() > 0.9995) {
-                behaviour = randf() < 0.15 ? BEHAVIOUR_EVASIVE_ACTION : BEHAVIOUR_FLEE_EVASIVE_ACTION;
+                behaviour = randf() < 0.15 ? BEHAVIOUR_EVASIVE_ACTION
+                                           : BEHAVIOUR_FLEE_EVASIVE_ACTION;
             }
         }
     }
@@ -302,7 +315,8 @@ void ShipEntity::performLandOnPlanet()
 void ShipEntity::performMining()
 {
     Entity* target = primaryTarget();
-    // mining is not seen as hostile behaviour, so ensure it is only used against rocks.
+    // mining is not seen as hostile behaviour, so ensure it is only used against
+    // rocks.
     if (target && (target != nullptr ? target->getScanClass() : OOScanClass { }) == CLASS_ROCK) {
         behaviour = BEHAVIOUR_ATTACK_MINING_TARGET;
         frustration = 0.0;
@@ -365,23 +379,32 @@ void ShipEntity::requestDockingCoordinates()
     if (targStation != nullptr && targStation->getIsStation()) {
         station = oo::ToStation(targStation);
     } else {
-        station = oo::ToStation((UNIVERSE != nullptr ? UNIVERSE->nearestShipMatchingPredicate(IsStationPredicate, nullptr, this) : nullptr));
+        station = oo::ToStation((UNIVERSE != nullptr
+                ? UNIVERSE->nearestShipMatchingPredicate(
+                      IsStationPredicate, nullptr, this)
+                : nullptr));
     }
 
-    distanceToStation2 = HPdistance2((station != nullptr ? station->getPosition() : HPVector { }), getPosition());
+    distanceToStation2 = HPdistance2((station != nullptr ? station->getPosition() : HPVector { }),
+        getPosition());
 
-    // Player check for being inside the aegis already exists in PlayerEntityControls. We just
-    // check here that distance to station is less than 2.5 times scanner range to avoid problems with
-    // NPC ships getting stuck with a dockingAI while just outside the aegis - Nikos 20090630, as proposed by Eric
-    // On very busy systems (> 50 docking ships) docking ships can be sent to a hold position outside the range,
-    // so also test for presence of dockingInstructions. - Eric 20091130
+    // Player check for being inside the aegis already exists in
+    // PlayerEntityControls. We just check here that distance to station is less
+    // than 2.5 times scanner range to avoid problems with NPC ships getting stuck
+    // with a dockingAI while just outside the aegis - Nikos 20090630, as proposed
+    // by Eric On very busy systems (> 50 docking ships) docking ships can be sent
+    // to a hold position outside the range, so also test for presence of
+    // dockingInstructions. - Eric 20091130
     if (station != nil && (distanceToStation2 < SCANNER_MAX_RANGE2 * 6.25 || !dockingInstructions.isNull())) {
-        // remember the instructions (the station's weak reference is kept as an Object node)
-        dockingInstructions = (station != nullptr ? station->dockingInstructionsForShip(this) : oo::PList());
+        // remember the instructions (the station's weak reference is kept as an
+        // Object node)
+        dockingInstructions = (station != nullptr ? station->dockingInstructionsForShip(this)
+                                                  : oo::PList());
         if (!dockingInstructions.isNull()) {
             recallDockingInstructions();
 
-            // the strings the instructions hold (StationEntity -dockingInstructionsForShip:), sent as before (absent: nothing)
+            // the strings the instructions hold (StationEntity
+            // -dockingInstructionsForShip:), sent as before (absent: nothing)
             const oo::PList* aiMessage = dockingInstructions.find("ai_message");
             if (aiMessage != nullptr && aiMessage->isString()) {
                 if (shipAI != nullptr)
@@ -390,7 +413,8 @@ void ShipEntity::requestDockingCoordinates()
             const oo::PList* commsMessage = dockingInstructions.find("comms_message");
             if (commsMessage != nullptr && commsMessage->isString()) {
                 if (station != nullptr)
-                    station->sendExpandedMessage(*commsMessage->getIf<std::string>(), this);
+                    station->sendExpandedMessage(*commsMessage->getIf<std::string>(),
+                        this);
             }
         }
     } else {
@@ -427,7 +451,8 @@ void ShipEntity::scanForNearestIncomingMissile()
 {
     OOScanClass missileClass = CLASS_MISSILE;
     BinaryOperationPredicateParameter param = {
-        HasScanClassPredicate, &missileClass, // the predicate reads an OOScanClass
+        HasScanClassPredicate,
+        &missileClass, // the predicate reads an OOScanClass
         IsHostileAgainstTargetPredicate, this
     };
     scanForNearestShipWithPredicate(ANDPredicate, &param);
@@ -435,27 +460,31 @@ void ShipEntity::scanForNearestIncomingMissile()
 
 void ShipEntity::enterPlayerWormhole()
 {
-    enterWormhole((PLAYER != nullptr ? PLAYER->getWormhole() : (WormholeEntity*)nullptr), NO);
+    enterWormhole(
+        (PLAYER != nullptr ? PLAYER->getWormhole() : (WormholeEntity*)nullptr),
+        NO);
 }
 
 void ShipEntity::enterTargetWormhole()
 {
-    WormholeEntity* whole = nullptr; // C++ since bead oo-9ht.112
-    Entity* targEnt = primaryTarget(); // any entity: a wormhole is the one sought (the ship's object was typed ShipEntity until bead oo-9ht.144)
+    WormholeEntity* whole = nullptr;
+    Entity* targEnt = primaryTarget(); // any entity: a wormhole is the one sought
     double found_d2 = scannerRange * scannerRange;
 
     if (targEnt && (HPdistance2(position, targEnt->getPosition()) < found_d2)) {
         if (targEnt->getIsWormhole())
             whole = static_cast<WormholeEntity*>(targEnt);
         else if (targEnt->getIsPlayer())
-            whole = (PLAYER != nullptr ? PLAYER->getWormhole() : (WormholeEntity*)nullptr);
+            whole = (PLAYER != nullptr ? PLAYER->getWormhole()
+                                       : (WormholeEntity*)nullptr);
     }
 
     if (!whole) {
         // locate nearest wormhole
         int ent_count = UNIVERSE->n_entities;
         Entity** uni_entities = UNIVERSE->sortedEntities; // grab the public sorted list
-        std::vector<oo::Ref<Entity>> wormholes(ent_count); // kept for the loop, as the objects were retained (bead oo-9ht.39.16)
+        std::vector<oo::Ref<Entity>> wormholes(
+            ent_count); // kept for the loop, as the objects were retained
         int i;
         int wh_count = 0;
         for (i = 0; i < ent_count; i++)
@@ -481,7 +510,7 @@ void ShipEntity::enterTargetWormhole()
 void ShipEntity::wormholeEscorts()
 {
     ::ShipEntity* ship = nil;
-    Entity* whole = nullptr; // the wormhole (bead oo-9ht.39.16)
+    Entity* whole = nullptr; // the wormhole
 
     whole = primaryTarget();
     if (!(whole != nullptr && whole->getIsWormhole()))
@@ -515,7 +544,8 @@ bool ShipEntity::suggestEscortTo(::ShipEntity* mother)
     if (mother) {
 #ifdef OO_DEBUG_MONITOR_ENABLED
         if (reportAIMessages) {
-            OO_LOG("ai.suggestEscort", "DEBUG: {} suggests escorting {}", oo::EntityDescription(this), oo::EntityDescription(mother));
+            OO_LOG("ai.suggestEscort", "DEBUG: {} suggests escorting {}",
+                oo::EntityDescription(this), oo::EntityDescription(mother));
         }
 #endif
 
@@ -523,13 +553,16 @@ bool ShipEntity::suggestEscortTo(::ShipEntity* mother)
             // copy legal status across
             if (((mother != nullptr ? mother->legalStatus() : int { }) > 0) && (bounty <= 0)) {
                 int extra = 1 | (ranrot_rand() & 15);
-                //				[mother setBounty: [mother legalStatus] + extra withReason:kOOLegalStatusReasonAssistingOffender];
+                //				[mother setBounty: [mother legalStatus]
+                //+ extra withReason:kOOLegalStatusReasonAssistingOffender];
                 markAsOffender(extra, kOOLegalStatusReasonAssistingOffender);
-                //				bounty += extra;	// obviously we're dodgier than we thought!
+                //				bounty += extra;	// obviously
+                // we're dodgier than we thought!
             }
 
             setOwner(mother);
-            setGroup((mother != nullptr ? mother->escortGroup() : (OOShipGroup*)nullptr));
+            setGroup(
+                (mother != nullptr ? mother->escortGroup() : (OOShipGroup*)nullptr));
             if (shipAI != nullptr)
                 shipAI->message("ESCORTING");
             return YES;
@@ -537,7 +570,8 @@ bool ShipEntity::suggestEscortTo(::ShipEntity* mother)
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
         if (reportAIMessages) {
-            OO_LOG("ai.suggestEscort.refused", "DEBUG: {} refused by {}", oo::EntityDescription(this), oo::EntityDescription(mother));
+            OO_LOG("ai.suggestEscort.refused", "DEBUG: {} refused by {}",
+                oo::EntityDescription(this), oo::EntityDescription(mother));
         }
 #endif
     }
@@ -550,7 +584,8 @@ bool ShipEntity::suggestEscortTo(::ShipEntity* mother)
 
 void ShipEntity::broadcastDistressMessage()
 {
-    /*-- Locates all the stations, bounty hunters and police ships in range and tells them that you are under attack --*/
+    /*-- Locates all the stations, bounty hunters and police ships in range and
+     * tells them that you are under attack --*/
     broadcastDistressMessageWithDumping(YES);
 }
 
@@ -584,7 +619,8 @@ void ShipEntity::broadcastDistressMessageWithDumping(bool dumpCargo)
         // expected to handle their own)
         if (ship->isPlayer && !hasNewAI()) {
             if (ship != nullptr)
-                ship->doScriptEvent(OOJSID("distressMessageReceived"), aggressor_ship, this);
+                ship->doScriptEvent(OOJSID("distressMessageReceived"), aggressor_ship,
+                    this);
 
             if (!is_buoy && primaryAggressor() == ship && energy < 0.375 * maxEnergy) {
                 sendExpandedMessage("[beg-for-mercy]", ship);
@@ -596,13 +632,16 @@ void ShipEntity::broadcastDistressMessageWithDumping(bool dumpCargo)
 
             // reset the thanked_ship_id
             _thankedShip = nullptr;
-        } else if (getBounty() == 0 && (ship != nullptr ? ship->getCrew() : std::optional<std::vector<oo::Ref<OOCharacter>>>()).has_value()) // Only clean ships can have their distress calls accepted
+        } else if (getBounty() == 0 && (ship != nullptr ? ship->getCrew() : std::optional<std::vector<oo::Ref<OOCharacter>>>()).has_value()) // Only clean ships can have their distress
+                                                                                                                                             // calls accepted
         {
             if (ship != nullptr)
-                ship->doScriptEvent(OOJSID("distressMessageReceived"), aggressor_ship, this);
+                ship->doScriptEvent(OOJSID("distressMessageReceived"), aggressor_ship,
+                    this);
 
-            // we only can send distressMessages to ships that are known to have a "ACCEPT_DISTRESS_CALL" reaction
-            // in their AI, or they might react wrong on the added found_target.
+            // we only can send distressMessages to ships that are known to have a
+            // "ACCEPT_DISTRESS_CALL" reaction in their AI, or they might react wrong
+            // on the added found_target.
 
             // ship must have a plist AI for this next bit. JS AIs
             // should already have done something sensible on
@@ -634,7 +673,8 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace)
     return performHyperSpaceExitReplace(replace, -1);
 }
 
-bool ShipEntity::performHyperSpaceExitReplace(bool replace, OOSystemID systemID)
+bool ShipEntity::performHyperSpaceExitReplace(bool replace,
+    OOSystemID systemID)
 {
     if (!hasHyperspaceMotor()) {
         if (shipAI != nullptr)
@@ -650,7 +690,9 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace, OOSystemID systemID)
     NSUInteger i = 0;
 
     // get a list of destinations within range
-    const oo::PList sDests = (UNIVERSE != nullptr ? UNIVERSE->nearbyDestinationsWithinRange(0.1f * fuel) : oo::PList());
+    const oo::PList sDests = (UNIVERSE != nullptr
+            ? UNIVERSE->nearbyDestinationsWithinRange(0.1f * fuel)
+            : oo::PList());
     NSUInteger n_dests = sDests.count();
 
     // if none available report to the AI and exit
@@ -658,13 +700,16 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace, OOSystemID systemID)
         if (shipAI != nullptr)
             shipAI->reactToMessage("WITCHSPACE UNAVAILABLE", "performHyperSpaceExit");
 
-        // If no systems exist near us, the AI is switched to a different state, so we do not need
-        // the nearby destinations array anymore.
+        // If no systems exist near us, the AI is switched to a different state, so
+        // we do not need the nearby destinations array anymore.
         return NO;
     }
 
     // check if we're clear of nearby masses
-    ::ShipEntity* blocker = oo::ToShip((UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(checkShipsInVicinityForWitchJumpExit()) : nullptr));
+    ::ShipEntity* blocker = oo::ToShip(
+        (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(
+                                   checkShipsInVicinityForWitchJumpExit())
+                             : nullptr));
     if (blocker) {
         setFoundTarget(blocker);
         if (shipAI != nullptr)
@@ -696,15 +741,17 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace, OOSystemID systemID)
     }
     float dist = sDests.at(i)->get<float>("distance");
     if (dist > maxHyperspaceDistance() || dist > fuel / 10.0f) {
-        OO_LOG_WARN("script.debug", "DEBUG: {} Jumping {:f} which is further than allowed.  I have {} fuel", oo::EntityDescription(this), dist, fuel);
+        OO_LOG_WARN(
+            "script.debug",
+            "DEBUG: {} Jumping {:f} which is further than allowed.  I have {} fuel",
+            oo::EntityDescription(this), dist, fuel);
     }
     fuel -= 10 * dist;
 
     // create wormhole
-    // +alloc/-initWormholeTo:fromShip:/-autorelease: a new C++ wormhole and its autoreleased
-    // Objective-C object (bead oo-9ht.112).
+    // A new C++ wormhole and its autoreleased Objective-C object.
     oo::Ref<WormholeEntity> whRef = oo::makeRef<WormholeEntity>();
-    Entity* wholeObject = oo::MadeEntity(whRef); // the wormhole, given its object (bead oo-9ht.39.26)
+    Entity* wholeObject = oo::MadeEntity(whRef); // the wormhole, given its object
     whRef->initWormholeTo(targetSystem, this);
     WormholeEntity* whole = whRef.get();
     if (UNIVERSE != nullptr)
@@ -716,9 +763,11 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace, OOSystemID systemID)
     return YES;
 }
 
-void ShipEntity::scanForNearestShipWithPredicate(EntityFilterPredicate predicate, void* parameter)
+void ShipEntity::scanForNearestShipWithPredicate(
+    EntityFilterPredicate predicate, void* parameter)
 {
-    // Locates all the ships in range for which predicate returns YES, and chooses the nearest.
+    // Locates all the ships in range for which predicate returns YES, and chooses
+    // the nearest.
     unsigned i;
     ::ShipEntity* candidate;
     float d2, found_d2 = scannerRange * scannerRange;
@@ -732,8 +781,7 @@ void ShipEntity::scanForNearestShipWithPredicate(EntityFilterPredicate predicate
     for (i = 0; i < n_scanned_ships; i++) {
         candidate = scanned_ships[i];
         d2 = distance2_scanned_ships[i];
-        if ((d2 < found_d2) && (candidate->scanClass != CLASS_CARGO) && ((candidate != nullptr ? candidate->status() : OOEntityStatus { }) != STATUS_DOCKED)
-            && predicate(candidate, parameter) && !(candidate != nullptr ? candidate->isCloaked() : false)) {
+        if ((d2 < found_d2) && (candidate->scanClass != CLASS_CARGO) && ((candidate != nullptr ? candidate->status() : OOEntityStatus { }) != STATUS_DOCKED) && predicate(candidate, parameter) && !(candidate != nullptr ? candidate->isCloaked() : false)) {
             setFoundTarget(candidate);
             found_d2 = d2;
         }
@@ -742,7 +790,8 @@ void ShipEntity::scanForNearestShipWithPredicate(EntityFilterPredicate predicate
     checkFoundTarget();
 }
 
-void ShipEntity::scanForNearestShipWithNegatedPredicate(EntityFilterPredicate predicate, void* parameter)
+void ShipEntity::scanForNearestShipWithNegatedPredicate(
+    EntityFilterPredicate predicate, void* parameter)
 {
     ChainedEntityPredicateParameter param = { predicate, parameter };
     scanForNearestShipWithPredicate(NOTPredicate, &param);
@@ -750,41 +799,61 @@ void ShipEntity::scanForNearestShipWithNegatedPredicate(EntityFilterPredicate pr
 
 void ShipEntity::acceptDistressMessageFrom(::ShipEntity* other)
 {
-    setFoundTarget((other != nullptr ? other->primaryTarget() : (Entity*)nullptr));
+    setFoundTarget(
+        (other != nullptr ? other->primaryTarget() : (Entity*)nullptr));
     if (isPolice()) {
         if (oo::ToShip(foundTarget()) != nullptr)
-            oo::ToShip(foundTarget())->markAsOffender(8, kOOLegalStatusReasonDistressCall); // you have been warned!!
+            oo::ToShip(foundTarget())
+                ->markAsOffender(
+                    8, kOOLegalStatusReasonDistressCall); // you have been warned!!
     }
 
     if (shipAI != nullptr)
-        shipAI->reactToMessage("ACCEPT_DISTRESS_CALL", DebugContext(other, "broadcastDistressMessage"));
+        shipAI->reactToMessage("ACCEPT_DISTRESS_CALL",
+            DebugContext(other, "broadcastDistressMessage"));
 }
 
-// The category ShipEntity (OOAIStationStubs): AI methods for stations, which have no effect on
-// normal ships (StationEntity's own answer them for a station). They were generated by the
-// STATION_STUB_* macros; as members they are written out.
+// The category ShipEntity (OOAIStationStubs): AI methods for stations, which
+// have no effect on normal ships (StationEntity's own answer them for a
+// station). They were generated by the STATION_STUB_* macros; as members they
+// are written out.
 namespace {
 
 void LogNotAStation(ShipEntity* ship, const char* method)
 {
-    OO_LOG("ai.invalid.notAStation", "Attempt to use station AI method \"{}\" on non-station {}.", method, oo::EntityDescription(ship));
+    OO_LOG("ai.invalid.notAStation",
+        "Attempt to use station AI method \"{}\" on non-station {}.", method,
+        oo::EntityDescription(ship));
 }
 
 } // namespace
 
-void ShipEntity::increaseAlertLevel() { LogNotAStation(this, "increaseAlertLevel"); }
-void ShipEntity::decreaseAlertLevel() { LogNotAStation(this, "decreaseAlertLevel"); }
+void ShipEntity::increaseAlertLevel()
+{
+    LogNotAStation(this, "increaseAlertLevel");
+}
+void ShipEntity::decreaseAlertLevel()
+{
+    LogNotAStation(this, "decreaseAlertLevel");
+}
 
-oo::PList ShipEntity::launchPolice() // called by name (ADR-0055 item 5): StationEntity's returns the ships launched
+oo::PList ShipEntity::launchPolice() // called by name: StationEntity's
+                                     // returns the ships launched
 {
     LogNotAStation(this, "launchPolice");
     return oo::PList();
 }
 
-void ShipEntity::launchDefenseShip() { LogNotAStation(this, "launchDefenseShip"); }
+void ShipEntity::launchDefenseShip()
+{
+    LogNotAStation(this, "launchDefenseShip");
+}
 void ShipEntity::launchScavenger() { LogNotAStation(this, "launchScavenger"); }
 void ShipEntity::launchMiner() { LogNotAStation(this, "launchMiner"); }
-void ShipEntity::launchPirateShip() { LogNotAStation(this, "launchPirateShip"); }
+void ShipEntity::launchPirateShip()
+{
+    LogNotAStation(this, "launchPirateShip");
+}
 void ShipEntity::launchShuttle() { LogNotAStation(this, "launchShuttle"); }
 void ShipEntity::launchTrader() { LogNotAStation(this, "launchTrader"); }
 void ShipEntity::launchEscort() { LogNotAStation(this, "launchEscort"); }
@@ -795,47 +864,61 @@ bool ShipEntity::launchPatrol()
     return NO;
 }
 
-void ShipEntity::launchShipWithRole(const std::string& /* param */) { LogNotAStation(this, "launchShipWithRole:"); } // called by name (ADR-0055 item 5)
-void ShipEntity::abortAllDockings() { LogNotAStation(this, "abortAllDockings"); }
+void ShipEntity::launchShipWithRole(const std::string& /* param */)
+{
+    LogNotAStation(this, "launchShipWithRole:");
+} // called by name
+void ShipEntity::abortAllDockings()
+{
+    LogNotAStation(this, "abortAllDockings");
+}
 
-// The station's unit of the category StationEntity (OOAIPrivate), overriding the ship's.
+// The station's unit of the category StationEntity (OOAIPrivate), overriding
+// the ship's.
 void StationEntity::acceptDistressMessageFrom(::ShipEntity* other)
 {
     if (this != (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr))
         return;
 
     const oo::WeakRef<Entity> old_target = _primaryTarget;
-    _primaryTarget = oo::WeakRef<Entity>(other != nullptr ? other->primaryTarget() : (Entity*)nullptr);
-    if (oo::ToShip((other != nullptr ? other->primaryTarget() : (Entity*)nullptr)) != nullptr)
-        oo::ToShip((other != nullptr ? other->primaryTarget() : (Entity*)nullptr))->markAsOffender(8, kOOLegalStatusReasonDistressCall); // mark their card
+    _primaryTarget = oo::WeakRef<Entity>(other != nullptr ? other->primaryTarget()
+                                                          : (Entity*)nullptr);
+    if (oo::ToShip((other != nullptr ? other->primaryTarget()
+                                     : (Entity*)nullptr))
+        != nullptr)
+        oo::ToShip((other != nullptr ? other->primaryTarget() : (Entity*)nullptr))
+            ->markAsOffender(8,
+                kOOLegalStatusReasonDistressCall); // mark their card
     launchDefenseShip();
     _primaryTarget = old_target;
 }
 
-// Slice 2 of docs/phases/3-slices/ShipEntityAI.md (bead oo-xurzn): PureAI part 1: state, speed,
-// scans for prey and loot, planets, legal status. Members of ShipEntity defined in the category's
-// file (ADR-0056 amendment oo-o89 item 4); called directly since bead oo-9ht.144 deleted the facade
-// (amendment oo-9ht.144).
+// PureAI part 1: state, speed, scans for prey and loot, planets, legal status.
+// Members of ShipEntity defined in the category's file.
 
-void ShipEntity::setStateTo(const std::string& state) // called by name (ADR-0055 item 5)
+void ShipEntity::setStateTo(const std::string& state) // called by name
 {
     if (getAI() != nullptr)
         getAI()->setState(state);
 }
 
-void ShipEntity::pauseAI(const std::string& intervalString) // called by name (ADR-0055 item 5)
+void ShipEntity::pauseAI(const std::string& intervalString) // called by name
 {
     if (shipAI != nullptr)
         shipAI->setNextThinkTime((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) + oo::str::doubleValue(intervalString));
 }
 
-void ShipEntity::randomPauseAI(const std::string& intervalString) // called by name (ADR-0055 item 5)
+void ShipEntity::randomPauseAI(
+    const std::string& intervalString) // called by name
 {
     const std::vector<std::string> tokens = oo::str::tokens(intervalString);
     double start, end;
 
     if (tokens.size() != 2) {
-        OO_LOG("ai.syntax.randomPauseAI", "***** ERROR: cannot read min and max value for randomPauseAI:, needs 2 values: '{}'.", intervalString);
+        OO_LOG("ai.syntax.randomPauseAI",
+            "***** ERROR: cannot read min and max value for randomPauseAI:, "
+            "needs 2 values: '{}'.",
+            intervalString);
         return;
     }
 
@@ -846,11 +929,13 @@ void ShipEntity::randomPauseAI(const std::string& intervalString) // called by n
         shipAI->setNextThinkTime((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) + (start + (end - start) * randf()));
 }
 
-void ShipEntity::dropMessages(const std::string& messageString) // called by name (ADR-0055 item 5)
+void ShipEntity::dropMessages(
+    const std::string& messageString) // called by name
 {
     for (const std::string& message : oo::str::split(messageString, ",")) {
         if (shipAI != nullptr)
-            shipAI->dropMessage(oo::str::trimTrailing(oo::str::trimLeading(message, IsWhitespace), IsWhitespace));
+            shipAI->dropMessage(oo::str::trimTrailing(
+                oo::str::trimLeading(message, IsWhitespace), IsWhitespace));
     }
 }
 
@@ -868,37 +953,41 @@ void ShipEntity::setDestinationToCurrentLocation()
 
 void ShipEntity::setDestinationToJinkPosition()
 {
-    Vector front = vector_multiply_scalar(forwardVector(), flightSpeed / max_flight_pitch * 2);
-    _destination = HPvector_add(position, vectorToHPVector(vector_add(front, OOVectorRandomSpatial(100))));
+    Vector front = vector_multiply_scalar(forwardVector(),
+        flightSpeed / max_flight_pitch * 2);
+    _destination = HPvector_add(
+        position,
+        vectorToHPVector(vector_add(front, OOVectorRandomSpatial(100))));
     pitching_over = YES; // don't complete roll first, but immediately start with pitching.
 }
 
-void ShipEntity::setDesiredRangeTo(const std::string& rangeString) // called by name (ADR-0055 item 5)
+void ShipEntity::setDesiredRangeTo(
+    const std::string& rangeString) // called by name
 {
     desired_range = oo::str::doubleValue(rangeString);
 }
 
 void ShipEntity::setDesiredRangeForWaypoint()
 {
-    desired_range = fmax(maxFlightSpeed / max_flight_pitch / 6, 50.0); // some ships need a longer range to reach a waypoint.
+    desired_range = fmax(maxFlightSpeed / max_flight_pitch / 6,
+        50.0); // some ships need a longer range to reach a waypoint.
 }
 
-void ShipEntity::setSpeedTo(const std::string& speedString) // called by name (ADR-0055 item 5)
+void ShipEntity::setSpeedTo(const std::string& speedString) // called by name
 {
     desired_speed = oo::str::doubleValue(speedString);
 }
 
-void ShipEntity::setSpeedFactorTo(const std::string& speedString) // called by name (ADR-0055 item 5)
+void ShipEntity::setSpeedFactorTo(
+    const std::string& speedString) // called by name
 {
     desired_speed = maxFlightSpeed * oo::str::doubleValue(speedString);
 }
 
-void ShipEntity::setSpeedToCruiseSpeed()
-{
-    desired_speed = cruiseSpeed;
-}
+void ShipEntity::setSpeedToCruiseSpeed() { desired_speed = cruiseSpeed; }
 
-void ShipEntity::setThrustFactorTo(const std::string& thrustFactorString) // called by name (ADR-0055 item 5)
+void ShipEntity::setThrustFactorTo(
+    const std::string& thrustFactorString) // called by name
 {
     thrust = OOClamp_0_1_f(oo::str::doubleValue(thrustFactorString)) * max_thrust;
 }
@@ -912,7 +1001,8 @@ void ShipEntity::setTargetToPrimaryAggressor()
         return;
 
     // a more considered approach here:
-    // if we're already busy attacking a target we don't necessarily want to break off
+    // if we're already busy attacking a target we don't necessarily want to break
+    // off
     //
     if (hasHostileTarget() && randf() < 0.75) // if I'm attacking, ignore 75% of new aggressor's attacks
     {
@@ -928,9 +1018,15 @@ void ShipEntity::setTargetToPrimaryAggressor()
         if ((primeTarget) && (primeTarget->isShip)) {
             ::ShipEntity* currentShip = oo::ToShip(primaryTarget());
             if (currentShip != nullptr && currentShip->getAI() != nullptr)
-                currentShip->getAI()->message(oo::str::format("%s %d %d", std::string(AIMS_AGGRESSOR_SWITCHED_TARGET).c_str(), universalID, (primaryAggressor() != nullptr ? primaryAggressor()->getUniversalID() : OOUniversalID { })));
+                currentShip->getAI()->message(oo::str::format(
+                    "%s %d %d", std::string(AIMS_AGGRESSOR_SWITCHED_TARGET).c_str(),
+                    universalID,
+                    (primaryAggressor() != nullptr
+                            ? primaryAggressor()->getUniversalID()
+                            : OOUniversalID { })));
             if (currentShip != nullptr)
-                currentShip->doScriptEvent(OOJSID("shipAttackerDistracted"), primaryAggressor());
+                currentShip->doScriptEvent(OOJSID("shipAttackerDistracted"),
+                    primaryAggressor());
         }
 
         // okay, so let's now target the aggressor
@@ -1012,7 +1108,8 @@ void ShipEntity::scanForLoot()
     if (!isStation) {
         if (!hasCargoScoop()) {
             if (shipAI != nullptr)
-                shipAI->message("NOTHING_FOUND"); // can't collect loot if you have no scoop!
+                shipAI->message(
+                    "NOTHING_FOUND"); // can't collect loot if you have no scoop!
             return;
         }
         if (cargoCount() >= maxAvailableCargoSpace()) {
@@ -1021,13 +1118,15 @@ void ShipEntity::scanForLoot()
                     shipAI->message("HOLD_FULL");
             } // can't collect loot if holds are full!
             if (shipAI != nullptr)
-                shipAI->message("NOTHING_FOUND"); // can't collect loot if holds are full!
+                shipAI->message(
+                    "NOTHING_FOUND"); // can't collect loot if holds are full!
             return;
         }
     } else {
         if (magnitude2(getVelocity())) {
             if (shipAI != nullptr)
-                shipAI->message("NOTHING_FOUND"); // can't collect loot if you're a moving station
+                shipAI->message(
+                    "NOTHING_FOUND"); // can't collect loot if you're a moving station
             return;
         }
     }
@@ -1055,10 +1154,12 @@ void ShipEntity::scanForLoot()
 
 void ShipEntity::scanForRandomLoot()
 {
-    /*-- Locates the all debris in range and chooses a piece at random from the first sixteen found --*/
+    /*-- Locates the all debris in range and chooses a piece at random from the
+     * first sixteen found --*/
     if (!getIsStation() && !hasCargoScoop()) {
         if (shipAI != nullptr)
-            shipAI->message("NOTHING_FOUND"); // can't collect loot if you have no scoop!
+            shipAI->message(
+                "NOTHING_FOUND"); // can't collect loot if you have no scoop!
         return;
     }
     //
@@ -1091,7 +1192,9 @@ void ShipEntity::setTargetToFoundTarget()
         addTarget(foundTarget());
     } else {
         if (shipAI != nullptr)
-            shipAI->message("TARGET_LOST"); // to prevent the ship going for a wrong, previous target. Should not be a reactToMessage.
+            shipAI->message(
+                "TARGET_LOST"); // to prevent the ship going for a wrong, previous
+                                // target. Should not be a reactToMessage.
     }
 }
 
@@ -1121,39 +1224,45 @@ void ShipEntity::checkForFullHold()
 
 void ShipEntity::getWitchspaceEntryCoordinates()
 {
-    /*- calculates coordinates from the nearest station it can find, or just fly 10s forward -*/
+    /*- calculates coordinates from the nearest station it can find, or just fly
+     * 10s forward -*/
     if (!UNIVERSE) {
-        Vector vr = vector_multiply_scalar(v_forward, maxFlightSpeed * 10.0); // 10 second flying away
+        Vector vr = vector_multiply_scalar(
+            v_forward, maxFlightSpeed * 10.0); // 10 second flying away
         coordinates = HPvector_add(position, vectorToHPVector(vr));
         return;
     }
     //
     // find the nearest station...
     //
-    // we don't use "checkScanner" because we must rely on finding a present station.
+    // we don't use "checkScanner" because we must rely on finding a present
+    // station.
     //
     ::StationEntity* station = nil;
-    station = oo::ToStation((UNIVERSE != nullptr ? UNIVERSE->nearestShipMatchingPredicate(IsStationPredicate, nullptr, this) : nullptr));
+    station = oo::ToStation((UNIVERSE != nullptr
+            ? UNIVERSE->nearestShipMatchingPredicate(
+                  IsStationPredicate, nullptr, this)
+            : nullptr));
 
-    if (station && HPdistance2((station != nullptr ? station->getPosition() : HPVector { }), position) < SCANNER_MAX_RANGE2) // there is a station in range.
+    if (station && HPdistance2((station != nullptr ? station->getPosition() : HPVector { }),
+                       position)
+            < SCANNER_MAX_RANGE2) // there is a station in range.
     {
-        Vector vr = vector_multiply_scalar((station != nullptr ? station->rightVector() : Vector { }), 10000); // 10km from station
-        coordinates = HPvector_add((station != nullptr ? station->getPosition() : HPVector { }), vectorToHPVector(vr));
+        Vector vr = vector_multiply_scalar(
+            (station != nullptr ? station->rightVector() : Vector { }),
+            10000); // 10km from station
+        coordinates = HPvector_add((station != nullptr ? station->getPosition() : HPVector { }),
+            vectorToHPVector(vr));
     } else {
-        Vector vr = vector_multiply_scalar(v_forward, maxFlightSpeed * 10.0); // 10 second flying away
+        Vector vr = vector_multiply_scalar(
+            v_forward, maxFlightSpeed * 10.0); // 10 second flying away
         coordinates = HPvector_add(position, vectorToHPVector(vr));
     }
 }
 
-void ShipEntity::setDestinationFromCoordinates()
-{
-    _destination = coordinates;
-}
+void ShipEntity::setDestinationFromCoordinates() { _destination = coordinates; }
 
-void ShipEntity::setCoordinatesFromPosition()
-{
-    coordinates = position;
-}
+void ShipEntity::setCoordinatesFromPosition() { coordinates = position; }
 
 void ShipEntity::fightOrFleeMissile()
 {
@@ -1168,7 +1277,8 @@ void ShipEntity::fightOrFleeMissile()
     for (i = 0; (i < n_scanned_ships) && (missile == nil); i++) {
         ::ShipEntity* thing = scanned_ships[i];
         if (thing->scanClass == CLASS_MISSILE) {
-            target = oo::ToShip((thing != nullptr ? thing->primaryTarget() : (Entity*)nullptr));
+            target = oo::ToShip(
+                (thing != nullptr ? thing->primaryTarget() : (Entity*)nullptr));
 
             if (target == this) {
                 missile = thing;
@@ -1200,7 +1310,9 @@ void ShipEntity::fightOrFleeMissile()
         // Note: prior to 1.73 this was done only if we had ECM.
         ::ShipEntity* police = nil;
 
-        for (const oo::EntityHold& member : (group() != nullptr ? group()->memberArray() : std::vector<oo::EntityHold>())) {
+        for (const oo::EntityHold& member :
+            (group() != nullptr ? group()->memberArray()
+                                : std::vector<oo::EntityHold>())) {
             police = oo::ToShip(member.get());
             if (police != nullptr)
                 police->setFoundTarget(hunter);
@@ -1237,8 +1349,10 @@ void ShipEntity::setCourseToPlanet()
     /*- selects the nearest planet it can find -*/
     ::OOPlanetEntity* the_planet = findNearestPlanetExcludingMoons();
     if (the_planet) {
-        double variation = (aegis_status == AEGIS_NONE ? 0.5 : 0.2); // more random deviation when far from planet.
-        HPVector p_pos = the_planet->position; // the planet is C++ since bead oo-9ht.129
+        double variation = (aegis_status == AEGIS_NONE
+                ? 0.5
+                : 0.2); // more random deviation when far from planet.
+        HPVector p_pos = the_planet->position;
         double p_cr = the_planet->collision_radius; // the surface
         HPVector p1 = HPvector_between(p_pos, position);
         p1 = HPvector_normal(p1); // vector towards ship
@@ -1259,10 +1373,18 @@ void ShipEntity::setTakeOffFromPlanet()
     /*- selects the nearest planet it can find -*/
     ::OOPlanetEntity* the_planet = findNearestPlanet();
     if (the_planet) {
-        _destination = HPvector_add((the_planet != nullptr ? the_planet->getPosition() : HPVector { }), HPvector_multiply_scalar(HPvector_normal(HPvector_subtract((the_planet != nullptr ? the_planet->getPosition() : HPVector { }), position)), -10000.0 - the_planet->collision_radius)); // 10km straight up
+        _destination = HPvector_add(
+            (the_planet != nullptr ? the_planet->getPosition() : HPVector { }),
+            HPvector_multiply_scalar(
+                HPvector_normal(HPvector_subtract(
+                    (the_planet != nullptr ? the_planet->getPosition()
+                                           : HPVector { }),
+                    position)),
+                -10000.0 - the_planet->collision_radius)); // 10km straight up
         desired_range = 50.0;
     } else {
-        OO_LOG("ai.setTakeOffFromPlanet.noPlanet", "{}", "***** Error. Planet not found during take off!");
+        OO_LOG("ai.setTakeOffFromPlanet.noPlanet", "{}",
+            "***** Error. Planet not found during take off!");
     }
 }
 
@@ -1328,10 +1450,12 @@ void ShipEntity::checkOwnLegalStatus()
         shipAI->message("SELF_CLEAN");
 }
 
-void ShipEntity::exitAIWithMessage(const std::string& message) // called by name (ADR-0055 item 5)
+void ShipEntity::exitAIWithMessage(
+    const std::string& message) // called by name
 {
     if (shipAI != nullptr)
-        shipAI->exitStateMachineWithMessage(message.empty() ? std::string("RESTARTED") : message);
+        shipAI->exitStateMachineWithMessage(
+            message.empty() ? std::string("RESTARTED") : message);
 }
 
 void ShipEntity::setDestinationToTarget()
@@ -1349,35 +1473,41 @@ void ShipEntity::setDestinationWithinTarget()
         Quaternion q;
         quaternion_set_random(&q);
         Vector v = vector_forward_from_quaternion(q);
-        GLfloat d = (randf() - randf()) * the_target->collision_radius; // NOLINT(misc-redundant-expression): two independent randf() draws, pre-existing; behaviour unchanged by this retarget.
+        GLfloat d = (randf() - randf()) * the_target->collision_radius; // NOLINT(misc-redundant-expression): two
+                                                                        // independent randf() draws, pre-existing;
+                                                                        // behaviour unchanged by this retarget.
         _destination = make_HPvector(pos.x + d * v.x, pos.y + d * v.y, pos.z + d * v.z);
     }
 }
 
 void ShipEntity::checkCourseToDestination()
 {
-    Entity* hazard = (UNIVERSE != nullptr ? UNIVERSE->hazardOnRouteFromEntity(this, desired_range, _destination) : nullptr); // the C++ entities (bead oo-9ht.39.8.6); asked what its object answered (bead oo-9ht.39.16)
+    Entity* hazard = (UNIVERSE != nullptr ? UNIVERSE->hazardOnRouteFromEntity(
+                                                this, desired_range, _destination)
+                                          : nullptr);
 
     if (hazard == nullptr || (oo::EntityIsShip(hazard) && HPdistance(position, hazard->getPosition()) > scannerRange) || (oo::EntityIsPlanet(hazard) && aegis_status == AEGIS_NONE)) {
         if (shipAI != nullptr)
             shipAI->message("COURSE_OK");
-    } // Avoid going into a waypoint.plist for far away objects, it cripples the main AI a bit in its funtionality.
+    } // Avoid going into a waypoint.plist for far away objects, it cripples the
+      // main AI a bit in its funtionality.
     else {
         if (oo::EntityIsShip(hazard) && (weapon_damage * 24.0 > hazard->getEnergy())) {
             if (shipAI != nullptr)
-                shipAI->reactToMessage("HAZARD_CAN_BE_DESTROYED", "checkCourseToDestination");
+                shipAI->reactToMessage("HAZARD_CAN_BE_DESTROYED",
+                    "checkCourseToDestination");
         }
 
-        _destination = (UNIVERSE != nullptr ? UNIVERSE->getSafeVectorFromEntity(this, desired_range, _destination) : HPVector { }); // the C++ ship (bead oo-9ht.39.8.6)
+        _destination = (UNIVERSE != nullptr ? UNIVERSE->getSafeVectorFromEntity(
+                                                  this, desired_range, _destination)
+                                            : HPVector { });
         if (shipAI != nullptr)
             shipAI->message("WAYPOINT_SET");
     }
 }
 
-// Slice 3 of docs/phases/3-slices/ShipEntityAI.md (bead oo-wc9o3): PureAI part 2: checks, comms,
-// Thargoids, escorts, patrols, target marking. Members of ShipEntity defined in the category's file
-// (ADR-0056 amendment oo-o89 item 4); called directly since bead oo-9ht.144 deleted the facade
-// (amendment oo-9ht.144).
+// PureAI part 2: checks, comms, Thargoids, escorts, patrols, target marking.
+// Members of ShipEntity defined in the category's file.
 
 void ShipEntity::checkAegis()
 {
@@ -1385,11 +1515,13 @@ void ShipEntity::checkAegis()
     case AEGIS_CLOSE_TO_MAIN_PLANET:
         if (shipAI != nullptr)
             shipAI->message("AEGIS_CLOSE_TO_MAIN_PLANET");
-        // It's been a few years since 1.71 - it should be safe enough to comment out the line below for 1.77/1.78 -- Kaks 20120917
-        //[shipAI message:@"AEGIS_CLOSE_TO_PLANET"];	     // fires only for main planets, kept for compatibility with pre-1.72 AI plists.
+        // It's been a few years since 1.71 - it should be safe enough to comment
+        // out the line below for 1.77/1.78 -- Kaks 20120917
+        //[shipAI message:@"AEGIS_CLOSE_TO_PLANET"];	     // fires only for
+        // main planets, kept for compatibility with pre-1.72 AI plists.
         return;
     case AEGIS_CLOSE_TO_ANY_PLANET: {
-        Entity* nearest = findNearestStellarBody(); // the C++ entity (bead oo-al52f)
+        Entity* nearest = findNearestStellarBody();
 
         if (nearest != nullptr && nearest->isSun()) {
             if (shipAI != nullptr)
@@ -1417,7 +1549,10 @@ void ShipEntity::checkAegis()
         return;
     }
 
-    OO_LOG("unclassified", "Aegis status for {} has taken on invalid value {}. This is an internal error, please report it.", oo::EntityDescription(this), static_cast<int>(aegis_status));
+    OO_LOG("unclassified",
+        "Aegis status for {} has taken on invalid value {}. This is an "
+        "internal error, please report it.",
+        oo::EntityDescription(this), static_cast<int>(aegis_status));
     aegis_status = AEGIS_NONE;
     if (shipAI != nullptr)
         shipAI->message("AEGIS_NONE");
@@ -1474,8 +1609,10 @@ void ShipEntity::findNewDefenseTarget()
 
 void ShipEntity::scanForOffenders()
 {
-    /*-- Locates all the ships in range and compares their legal status or bounty against ranrot_rand() & 255 - chooses the worst offender --*/
-    float gov_factor = 0.4 * (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList()).get<int>(std::string(KEY_GOVERNMENT)); // 0 .. 7 (0 anarchic .. 7 most stable) --> [0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8]
+    /*-- Locates all the ships in range and compares their legal status or bounty
+     * against ranrot_rand() & 255 - chooses the worst offender --*/
+    float gov_factor = 0.4 * (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList()).get<int>(std::string(KEY_GOVERNMENT)); // 0 .. 7 (0 anarchic .. 7 most stable) -->
+                                                                                                                                        // [0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8]
     //
     if ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) == nil)
         gov_factor = 1.0;
@@ -1496,7 +1633,8 @@ void ShipEntity::scanForOffenders()
             float legal_factor = (ship != nullptr ? ship->legalStatus() : int { }) * gov_factor;
             int random_factor = ranrot_rand() & 255; // 25% chance of spotting a fugitive in 15s
             if ((d2 < found_d2) && (random_factor < legal_factor) && (legal_factor > worst_legal_factor)) {
-                if (group == nil || group != (ship != nullptr ? ship->group() : (OOShipGroup*)nullptr)) // fellows with bounty can't be offenders
+                if (group == nil || group != (ship != nullptr ? ship->group() : (OOShipGroup*)nullptr)) // fellows with bounty
+                                                                                                        // can't be offenders
                 {
                     setFoundTarget(ship);
                     worst_legal_factor = legal_factor;
@@ -1511,27 +1649,28 @@ void ShipEntity::scanForOffenders()
 void ShipEntity::setCourseToWitchpoint()
 {
     if (UNIVERSE) {
-        _destination = (UNIVERSE != nullptr ? UNIVERSE->getWitchspaceExitPosition() : HPVector { });
+        _destination = (UNIVERSE != nullptr ? UNIVERSE->getWitchspaceExitPosition()
+                                            : HPVector { });
         desired_range = 10000.0; // 10km away
     }
 }
 
 void ShipEntity::setDestinationToWitchpoint()
 {
-    _destination = (UNIVERSE != nullptr ? UNIVERSE->getWitchspaceExitPosition() : HPVector { });
+    _destination = (UNIVERSE != nullptr ? UNIVERSE->getWitchspaceExitPosition()
+                                        : HPVector { });
 }
 
 void ShipEntity::setDestinationToStationBeacon()
 {
     if ((UNIVERSE != nullptr && UNIVERSE->station() != nullptr)) {
-        _destination = ((UNIVERSE != nullptr ? UNIVERSE->station() : nullptr) != nullptr ? UNIVERSE->station()->beaconPosition() : HPVector { });
+        _destination = ((UNIVERSE != nullptr ? UNIVERSE->station() : nullptr) != nullptr
+                ? UNIVERSE->station()->beaconPosition()
+                : HPVector { });
     }
 }
 
-void ShipEntity::performHyperSpaceExit()
-{
-    performHyperSpaceExitReplace(YES);
-}
+void ShipEntity::performHyperSpaceExit() { performHyperSpaceExitReplace(YES); }
 
 void ShipEntity::performHyperSpaceExitWithoutReplacing()
 {
@@ -1540,19 +1679,28 @@ void ShipEntity::performHyperSpaceExitWithoutReplacing()
 
 void ShipEntity::disengageAutopilot()
 {
-    OO_LOG_ERR("ai.invalid.notPlayer", "Error in {}:{}, AI method endAutoPilot is only applicable to the player.", (shipAI != nullptr ? shipAI->name() : std::optional<std::string>()).value_or("(null)"), (shipAI != nullptr ? shipAI->state() : std::optional<std::string>()).value_or("(null)"));
+    OO_LOG_ERR(
+        "ai.invalid.notPlayer",
+        "Error in {}:{}, AI method endAutoPilot is only applicable to the "
+        "player.",
+        (shipAI != nullptr ? shipAI->name() : std::optional<std::string>())
+            .value_or("(null)"),
+        (shipAI != nullptr ? shipAI->state() : std::optional<std::string>())
+            .value_or("(null)"));
 }
 
 void ShipEntity::wormholeGroup()
 {
     ::ShipEntity* ship = nil;
-    Entity* whole = nullptr; // the wormhole (bead oo-9ht.39.16)
+    Entity* whole = nullptr; // the wormhole
 
     whole = primaryTarget();
     if (!(whole != nullptr && whole->getIsWormhole()))
         return;
 
-    for (const oo::EntityHold& member : (group() != nullptr ? group()->memberArray() : std::vector<oo::EntityHold>())) {
+    for (const oo::EntityHold& member :
+        (group() != nullptr ? group()->memberArray()
+                            : std::vector<oo::EntityHold>())) {
         ship = oo::ToShip(member.get());
         if (ship != nullptr)
             ship->addTarget(whole);
@@ -1563,12 +1711,13 @@ void ShipEntity::wormholeGroup()
     }
 }
 
-void ShipEntity::commsMessage(const std::string& valueString) // called by name (ADR-0055 item 5)
+void ShipEntity::commsMessage(const std::string& valueString) // called by name
 {
     commsMessage(valueString, NO);
 }
 
-void ShipEntity::commsMessageByUnpiloted(const std::string& valueString) // called by name (ADR-0055 item 5)
+void ShipEntity::commsMessageByUnpiloted(
+    const std::string& valueString) // called by name
 {
     commsMessage(valueString, YES);
 }
@@ -1581,8 +1730,14 @@ void ShipEntity::ejectCargo()
     }
     dumpCargo();
     for (i = 1; i < cargo_to_go; i++) {
-        // drop 3 canisters per 2 seconds (a deferred call on the C++ ship since bead oo-9ht.39.7.3; by name on its object before)
-        oo::ScheduleEntityCall(this, [](Entity* entity) { if (ShipEntity *ship = dynamic_cast<ShipEntity *>(entity))  ship->dumpCargo(); }, 0.75 * i);
+        // drop 3 canisters per 2 seconds (a deferred call on the ship)
+        oo::ScheduleEntityCall(
+            this,
+            [](Entity* entity) {
+                if (ShipEntity* ship = dynamic_cast<ShipEntity*>(entity))
+                    ship->dumpCargo();
+            },
+            0.75 * i);
     }
 }
 
@@ -1623,14 +1778,17 @@ void ShipEntity::thargonCheckMother()
 
     if (mother && mother != this && HPdistance2(mother->position, position) < maxRange2) {
         if (shipAI != nullptr)
-            shipAI->message("TARGET_FOUND"); // no need for scanning, we still have our mother.
+            shipAI->message(
+                "TARGET_FOUND"); // no need for scanning, we still have our mother.
     } else {
         // we lost the old mother, search for a new one
-        scanForNearestShipHavingRole("thargoid-mothership"); // the scan will send further AI messages.
+        scanForNearestShipHavingRole(
+            "thargoid-mothership"); // the scan will send further AI messages.
         if (foundTarget() != nil) {
             mother = oo::ToShip(foundTarget());
             setOwner(mother);
-            if ((mother != nullptr ? mother->group() : (OOShipGroup*)nullptr) != (mother != nullptr ? mother->escortGroup() : (OOShipGroup*)nullptr)) // avoid adding thargon to an escort group.
+            if ((mother != nullptr ? mother->group() : (OOShipGroup*)nullptr) != (mother != nullptr ? mother->escortGroup() : (OOShipGroup*)nullptr)) // avoid adding thargon
+                                                                                                                                                      // to an escort group.
             {
                 setGroup((mother != nullptr ? mother->group() : (OOShipGroup*)nullptr));
             }
@@ -1733,7 +1891,8 @@ void ShipEntity::escortCheckMother()
 
     if ((mother != nullptr ? mother->acceptAsEscort(this) : false)) {
         setOwner(mother);
-        setGroup((mother != nullptr ? mother->escortGroup() : (OOShipGroup*)nullptr));
+        setGroup(
+            (mother != nullptr ? mother->escortGroup() : (OOShipGroup*)nullptr));
         if (shipAI != nullptr)
             shipAI->message("ESCORTING");
     } else {
@@ -1791,13 +1950,15 @@ void ShipEntity::scanForFormationLeader()
             shipAI->message("NOTHING_FOUND");
         if (hasPrimaryRole("wingman")) {
             // become free-lance police :)
-            setAITo("route1patrolAI.plist"); // use this to avoid referencing a released AI
-            setPrimaryRole("police"); // other wingman can now select this ship as leader.
+            setAITo("route1patrolAI.plist"); // use this to avoid referencing a
+                                             // released AI
+            setPrimaryRole(
+                "police"); // other wingman can now select this ship as leader.
         }
     }
 }
 
-void ShipEntity::messageMother(const std::string& msgString) // called by name (ADR-0055 item 5)
+void ShipEntity::messageMother(const std::string& msgString) // called by name
 {
     ::ShipEntity* mother = oo::ToShip(owner());
     if (mother != nil && mother != this) {
@@ -1806,7 +1967,7 @@ void ShipEntity::messageMother(const std::string& msgString) // called by name (
     }
 }
 
-void ShipEntity::messageSelf(const std::string& msgString) // called by name (ADR-0055 item 5)
+void ShipEntity::messageSelf(const std::string& msgString) // called by name
 {
     sendAIMessage(msgString);
 }
@@ -1833,27 +1994,33 @@ void ShipEntity::setPlanetPatrolCoordinates()
         Vector v2 = cross_product(v0, v1);
         switch (patrol_counter) {
         case 0: // first go to 5km ahead of the station
-            coordinates = make_HPvector(stn_pos.x + 5000 * v0.x, stn_pos.y + 5000 * v0.y, stn_pos.z + 5000 * v0.z);
+            coordinates = make_HPvector(stn_pos.x + 5000 * v0.x, stn_pos.y + 5000 * v0.y,
+                stn_pos.z + 5000 * v0.z);
             desired_range = 250.0;
             break;
         case 1: // go to 25km N of the station
-            coordinates = make_HPvector(stn_pos.x + 25000 * v1.x, stn_pos.y + 25000 * v1.y, stn_pos.z + 25000 * v1.z);
+            coordinates = make_HPvector(stn_pos.x + 25000 * v1.x, stn_pos.y + 25000 * v1.y,
+                stn_pos.z + 25000 * v1.z);
             desired_range = 250.0;
             break;
         case 2: // go to 25km E of the station
-            coordinates = make_HPvector(stn_pos.x + 25000 * v2.x, stn_pos.y + 25000 * v2.y, stn_pos.z + 25000 * v2.z);
+            coordinates = make_HPvector(stn_pos.x + 25000 * v2.x, stn_pos.y + 25000 * v2.y,
+                stn_pos.z + 25000 * v2.z);
             desired_range = 250.0;
             break;
         case 3: // go to 25km S of the station
-            coordinates = make_HPvector(stn_pos.x - 25000 * v1.x, stn_pos.y - 25000 * v1.y, stn_pos.z - 25000 * v1.z);
+            coordinates = make_HPvector(stn_pos.x - 25000 * v1.x, stn_pos.y - 25000 * v1.y,
+                stn_pos.z - 25000 * v1.z);
             desired_range = 250.0;
             break;
         case 4: // go to 25km W of the station
-            coordinates = make_HPvector(stn_pos.x - 25000 * v2.x, stn_pos.y - 25000 * v2.y, stn_pos.z - 25000 * v2.z);
+            coordinates = make_HPvector(stn_pos.x - 25000 * v2.x, stn_pos.y - 25000 * v2.y,
+                stn_pos.z - 25000 * v2.z);
             desired_range = 250.0;
             break;
         default: // We should never come here
-            coordinates = make_HPvector(stn_pos.x + 5000 * v0.x, stn_pos.y + 5000 * v0.y, stn_pos.z + 5000 * v0.z);
+            coordinates = make_HPvector(stn_pos.x + 5000 * v0.x, stn_pos.y + 5000 * v0.y,
+                stn_pos.z + 5000 * v0.z);
             desired_range = 250.0;
             break;
         }
@@ -1882,7 +2049,8 @@ void ShipEntity::setSunSkimStartCoordinates()
         return;
     }
 
-    HPVector v0 = (UNIVERSE != nullptr ? UNIVERSE->getSunSkimStartPositionForShip(this) : HPVector { });
+    HPVector v0 = (UNIVERSE != nullptr ? UNIVERSE->getSunSkimStartPositionForShip(this)
+                                       : HPVector { });
 
     if (!HPvector_equal(v0, kZeroHPVector)) {
         coordinates = v0;
@@ -1902,7 +2070,8 @@ void ShipEntity::setSunSkimEndCoordinates()
         return;
     }
 
-    coordinates = (UNIVERSE != nullptr ? UNIVERSE->getSunSkimEndPositionForShip(this) : HPVector { });
+    coordinates = (UNIVERSE != nullptr ? UNIVERSE->getSunSkimEndPositionForShip(this)
+                                       : HPVector { });
     if (shipAI != nullptr)
         shipAI->message("APPROACH_COORDINATES");
 }
@@ -1912,7 +2081,8 @@ void ShipEntity::setSunSkimExitCoordinates()
     Entity* the_sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
     if (the_sun == nil)
         return;
-    HPVector v1 = (UNIVERSE != nullptr ? UNIVERSE->getSunSkimEndPositionForShip(this) : HPVector { });
+    HPVector v1 = (UNIVERSE != nullptr ? UNIVERSE->getSunSkimEndPositionForShip(this)
+                                       : HPVector { });
     HPVector vs = the_sun->position;
     HPVector vout = HPvector_subtract(v1, vs);
     if (vout.x || vout.y || vout.z)
@@ -1956,7 +2126,8 @@ void ShipEntity::checkForMotherStation()
         shipAI->message("STATION_FOUND");
 }
 
-void ShipEntity::sendTargetCommsMessage(const std::string& message) // called by name (ADR-0055 item 5)
+void ShipEntity::sendTargetCommsMessage(
+    const std::string& message) // called by name
 {
     ::ShipEntity* ship = oo::ToShip(primaryTarget());
     if ((ship == nil) || ((ship != nullptr ? ship->status() : OOEntityStatus { }) == STATUS_DEAD) || ((ship != nullptr ? ship->status() : OOEntityStatus { }) == STATUS_DOCKED)) {
@@ -1979,7 +2150,8 @@ void ShipEntity::markTargetForFines()
     }
 }
 
-void ShipEntity::markTargetForOffence(const std::string& valueString) // called by name (ADR-0055 item 5)
+void ShipEntity::markTargetForOffence(
+    const std::string& valueString) // called by name
 {
     if ((isStation) || (scanClass == CLASS_POLICE)) {
         ::ShipEntity* ship = oo::ToShip(primaryTarget());
@@ -1989,7 +2161,8 @@ void ShipEntity::markTargetForOffence(const std::string& valueString) // called 
         }
         const std::string finalValue = cxx_OOExpand(valueString).value_or(std::string()); // expand values
         if (ship != nullptr)
-            ship->markAsOffender(oo::str::intValue(finalValue), kOOLegalStatusReasonSeenByPolice);
+            ship->markAsOffender(oo::str::intValue(finalValue),
+                kOOLegalStatusReasonSeenByPolice);
     }
 }
 
@@ -2004,10 +2177,8 @@ void ShipEntity::storeTarget()
     }
 }
 
-// Slice 4 of docs/phases/3-slices/ShipEntityAI.md (bead oo-lqyhf): PureAI part 3: stored targets,
-// nearest-ship scans, stations, script actions, beacons. Members of ShipEntity defined in the
-// category's file (ADR-0056 amendment oo-o89 item 4); called directly since bead oo-9ht.144 deleted
-// the facade (amendment oo-9ht.144).
+// PureAI part 3: stored targets, nearest-ship scans, stations, script actions,
+// beacons. Members of ShipEntity defined in the category's file.
 
 void ShipEntity::recallStoredTarget()
 {
@@ -2015,7 +2186,9 @@ void ShipEntity::recallStoredTarget()
     BOOL found = NO;
 
     if (oldTarget && !(oldTarget != nullptr ? oldTarget->isCloaked() : false)) {
-        GLfloat range2 = HPdistance2((oldTarget != nullptr ? oldTarget->getPosition() : HPVector { }), position);
+        GLfloat range2 = HPdistance2(
+            (oldTarget != nullptr ? oldTarget->getPosition() : HPVector { }),
+            position);
         if (range2 <= scannerRange * scannerRange && range2 <= SCANNER_MAX_RANGE2) {
             found = YES;
         }
@@ -2107,7 +2280,8 @@ void ShipEntity::requestNewTarget()
         return;
     }
 
-    /*-- Locates all the ships in range targeting the mother ship and chooses the nearest/biggest --*/
+    /*-- Locates all the ships in range targeting the mother ship and chooses the
+     * nearest/biggest --*/
     _foundTarget = nullptr;
     checkScanner();
     unsigned i;
@@ -2128,7 +2302,7 @@ void ShipEntity::requestNewTarget()
     checkFoundTarget();
 }
 
-void ShipEntity::rollD(const std::string& die_number) // called by name (ADR-0055 item 5)
+void ShipEntity::rollD(const std::string& die_number) // called by name
 {
     int die_sides = oo::str::intValue(die_number);
     if (die_sides > 0) {
@@ -2136,67 +2310,89 @@ void ShipEntity::rollD(const std::string& die_number) // called by name (ADR-005
         if (shipAI != nullptr)
             shipAI->reactToMessage(oo::str::format("ROLL_%d", die_roll), "rollD:");
     } else {
-        OO_LOG("ai.rollD.invalidValue", "***** ERROR: invalid value supplied to rollD: '{}'.", die_number);
+        OO_LOG("ai.rollD.invalidValue",
+            "***** ERROR: invalid value supplied to rollD: '{}'.", die_number);
     }
 }
 
-void ShipEntity::scanForNearestShipWithPrimaryRole(const std::string& scanRole) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipWithPrimaryRole(
+    const std::string& scanRole) // called by name
 {
-    scanForNearestShipWithPredicate(HasPrimaryRolePredicate, const_cast<std::string*>(&scanRole)); // the predicate reads a std::string
+    scanForNearestShipWithPredicate(
+        HasPrimaryRolePredicate,
+        const_cast<std::string*>(
+            &scanRole)); // the predicate reads a std::string
 }
 
-void ShipEntity::scanForNearestShipHavingRole(const std::string& scanRole) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipHavingRole(
+    const std::string& scanRole) // called by name
 {
-    scanForNearestShipWithPredicate(HasRolePredicate, const_cast<std::string*>(&scanRole)); // the predicate reads a std::string
+    scanForNearestShipWithPredicate(
+        HasRolePredicate, const_cast<std::string*>(&scanRole)); // the predicate reads a std::string
 }
 
-void ShipEntity::scanForNearestShipWithAnyPrimaryRole(const std::string& scanRoles) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipWithAnyPrimaryRole(
+    const std::string& scanRoles) // called by name
 {
     std::vector<std::string> roles = oo::str::tokens(scanRoles); // the predicate reads the role strings
     scanForNearestShipWithPredicate(HasPrimaryRoleInSetPredicate, &roles);
 }
 
-void ShipEntity::scanForNearestShipHavingAnyRole(const std::string& scanRoles) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipHavingAnyRole(
+    const std::string& scanRoles) // called by name
 {
     std::vector<std::string> roles = oo::str::tokens(scanRoles); // the predicate reads the role strings
     scanForNearestShipWithPredicate(HasRoleInSetPredicate, &roles);
 }
 
-void ShipEntity::scanForNearestShipWithScanClass(const std::string& scanScanClass) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipWithScanClass(
+    const std::string& scanScanClass) // called by name
 {
-    OOScanClass wantedClass = cxx_OOScanClassFromString(scanScanClass); // the predicate reads an OOScanClass
+    OOScanClass wantedClass = cxx_OOScanClassFromString(
+        scanScanClass); // the predicate reads an OOScanClass
     scanForNearestShipWithPredicate(HasScanClassPredicate, &wantedClass);
 }
 
-void ShipEntity::scanForNearestShipWithoutPrimaryRole(const std::string& scanRole) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipWithoutPrimaryRole(
+    const std::string& scanRole) // called by name
 {
-    scanForNearestShipWithNegatedPredicate(HasPrimaryRolePredicate, const_cast<std::string*>(&scanRole)); // the predicate reads a std::string
+    scanForNearestShipWithNegatedPredicate(
+        HasPrimaryRolePredicate,
+        const_cast<std::string*>(
+            &scanRole)); // the predicate reads a std::string
 }
 
-void ShipEntity::scanForNearestShipNotHavingRole(const std::string& scanRole) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipNotHavingRole(
+    const std::string& scanRole) // called by name
 {
-    scanForNearestShipWithNegatedPredicate(HasRolePredicate, const_cast<std::string*>(&scanRole)); // the predicate reads a std::string
+    scanForNearestShipWithNegatedPredicate(
+        HasRolePredicate, const_cast<std::string*>(&scanRole)); // the predicate reads a std::string
 }
 
-void ShipEntity::scanForNearestShipWithoutAnyPrimaryRole(const std::string& scanRoles) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipWithoutAnyPrimaryRole(
+    const std::string& scanRoles) // called by name
 {
     std::vector<std::string> roles = oo::str::tokens(scanRoles); // the predicate reads the role strings
     scanForNearestShipWithNegatedPredicate(HasPrimaryRoleInSetPredicate, &roles);
 }
 
-void ShipEntity::scanForNearestShipNotHavingAnyRole(const std::string& scanRoles) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipNotHavingAnyRole(
+    const std::string& scanRoles) // called by name
 {
     std::vector<std::string> roles = oo::str::tokens(scanRoles); // the predicate reads the role strings
     scanForNearestShipWithNegatedPredicate(HasRoleInSetPredicate, &roles);
 }
 
-void ShipEntity::scanForNearestShipWithoutScanClass(const std::string& scanScanClass) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipWithoutScanClass(
+    const std::string& scanScanClass) // called by name
 {
-    OOScanClass wantedClass = cxx_OOScanClassFromString(scanScanClass); // the predicate reads an OOScanClass
+    OOScanClass wantedClass = cxx_OOScanClassFromString(
+        scanScanClass); // the predicate reads an OOScanClass
     scanForNearestShipWithNegatedPredicate(HasScanClassPredicate, &wantedClass);
 }
 
-void ShipEntity::scanForNearestShipMatchingPredicate(const std::string& predicateExpression) // called by name (ADR-0055 item 5)
+void ShipEntity::scanForNearestShipMatchingPredicate(
+    const std::string& predicateExpression) // called by name
 {
     /*	Takes a boolean-valued JS expression where "ship" is the ship being
      evaluated and "this" is our ship's ship script. the expression is
@@ -2213,8 +2409,10 @@ void ShipEntity::scanForNearestShipMatchingPredicate(const std::string& predicat
      function (ship) { ...do something complicated... } ()
      */
 
-    // Created on first use and never destroyed, as the dictionary it replaces (it holds JS functions).
-    static std::map<std::string, oo::Ref<OOJSFunction>, std::less<>>* scriptCache = nullptr;
+    // Created on first use and never destroyed, as the dictionary it replaces (it
+    // holds JS functions).
+    static std::map<std::string, oo::Ref<OOJSFunction>, std::less<>>*
+        scriptCache = nullptr;
     std::string key;
     oo::Ref<OOJSFunction> function;
     ooscript::Context context = NULL;
@@ -2247,13 +2445,8 @@ void ShipEntity::scanForNearestShipMatchingPredicate(const std::string& predicat
         // Stuff expression in a function.
         const std::string predicateCode = "return " + expression + ";";
         function = OOJSFunction::initWithName(std::string("_oo_AIScanPredicate"),
-            NULL,
-            predicateCode,
-            1,
-            argNames,
-            aiName,
-            0,
-            context);
+            NULL, predicateCode, 1, argNames,
+            aiName, 0, context);
 
         // Cache function.
         if (function != nullptr) {
@@ -2264,22 +2457,27 @@ void ShipEntity::scanForNearestShipMatchingPredicate(const std::string& predicat
     }
 
     if (function != nullptr) {
-        ooscript::Object jsThis = nullptr; // the ship's JS object, as OOJSObjectFromNativeObject() made of its object (bead oo-9ht.39.16)
-        if (!ooscript::valueToObject(context, OOJSEntityJSValue(this, context), &jsThis))
+        ooscript::Object jsThis = nullptr; // the ship's JS object, as OOJSObjectFromNativeObject() made
+                                           // of its object
+        if (!ooscript::valueToObject(context, OOJSEntityJSValue(this, context),
+                &jsThis))
             jsThis = nullptr;
-        JSFunctionPredicateParameter param = {
-            .context = context,
+        JSFunctionPredicateParameter param = { .context = context,
             .function = function->functionValue(),
             .jsThis = jsThis,
-            .errorFlag = NO
-        };
+            .errorFlag = NO };
         scanForNearestShipWithPredicate(JSFunctionPredicate, &param);
     } else {
         // Report error (once per occurrence)
         static std::set<std::string> errorCache;
 
         if (!errorCache.contains(key)) {
-            OO_LOG("ai.scanForNearestShipMatchingPredicate.compile.failed", "Could not compile JavaScript predicate \"{}\" for AI {}.", predicateExpression, (getAI() != nullptr ? getAI()->name() : std::optional<std::string>()).value_or("(null)"));
+            OO_LOG(
+                "ai.scanForNearestShipMatchingPredicate.compile.failed",
+                "Could not compile JavaScript predicate \"{}\" for AI {}.",
+                predicateExpression,
+                (getAI() != nullptr ? getAI()->name() : std::optional<std::string>())
+                    .value_or("(null)"));
             errorCache.insert(key);
         }
 
@@ -2293,12 +2491,14 @@ void ShipEntity::scanForNearestShipMatchingPredicate(const std::string& predicat
     OOJSRelinquishContext(context);
 }
 
-void ShipEntity::setCoordinates(const std::string& system_x_y_z) // called by name (ADR-0055 item 5)
+void ShipEntity::setCoordinates(
+    const std::string& system_x_y_z) // called by name
 {
     const std::vector<std::string> tokens = oo::str::tokens(system_x_y_z);
 
     if (tokens.size() != 4) {
-        OO_LOG("ai.syntax.setCoordinates", "***** ERROR: cannot setCoordinates: '{}'.", system_x_y_z);
+        OO_LOG("ai.syntax.setCoordinates",
+            "***** ERROR: cannot setCoordinates: '{}'.", system_x_y_z);
         return;
     }
 
@@ -2314,10 +2514,14 @@ void ShipEntity::setCoordinates(const std::string& system_x_y_z) // called by na
         zString = oo::str::format("%.3f", bellf(RandArgument(zString)));
 
     // -floatValue
-    HPVector posn = make_HPvector((float)oo::str::doubleValue(xString), (float)oo::str::doubleValue(yString), (float)oo::str::doubleValue(zString));
+    HPVector posn = make_HPvector((float)oo::str::doubleValue(xString),
+        (float)oo::str::doubleValue(yString),
+        (float)oo::str::doubleValue(zString));
     GLfloat scalar = 1.0;
 
-    coordinates = (UNIVERSE != nullptr ? UNIVERSE->coordinatesForPosition(posn, systemString, &scalar) : HPVector { });
+    coordinates = (UNIVERSE != nullptr ? UNIVERSE->coordinatesForPosition(
+                                             posn, systemString, &scalar)
+                                       : HPVector { });
 
     if (shipAI != nullptr)
         shipAI->message("APPROACH_COORDINATES");
@@ -2339,7 +2543,8 @@ void ShipEntity::setTargetToRandomStation()
     /*- selects the nearest station it can find -*/
     int ent_count = UNIVERSE->n_entities;
     Entity** uni_entities = UNIVERSE->sortedEntities; // grab the public sorted list
-    std::vector<oo::Ref<Entity>> my_entities(ent_count); // kept for the search, as the objects were retained (bead oo-9ht.39.16)
+    std::vector<oo::Ref<Entity>> my_entities(
+        ent_count); // kept for the search, as the objects were retained
     ::StationEntity *station = nil, *my_station = nil;
     double maxRange2 = desired_range * desired_range;
     int i;
@@ -2393,12 +2598,13 @@ void ShipEntity::setTargetToLastStation()
     }
 }
 
-void ShipEntity::addFuel(const std::string& fuel_number) // called by name (ADR-0055 item 5)
+void ShipEntity::addFuel(const std::string& fuel_number) // called by name
 {
     setFuel(getFuel() + oo::str::intValue(fuel_number) * 10);
 }
 
-void ShipEntity::scriptActionOnTarget(const std::string& action) // called by name (ADR-0055 item 5)
+void ShipEntity::scriptActionOnTarget(
+    const std::string& action) // called by name
 {
     ::PlayerEntity* player = PLAYER;
     ::ShipEntity* targEnt = oo::ToShip(primaryTarget());
@@ -2409,9 +2615,20 @@ void ShipEntity::scriptActionOnTarget(const std::string& action) // called by na
 
     if (!deprecationWarning) {
         deprecationWarning = YES;
-        OO_LOG("script.deprecated.scriptActionOnTarget", "----- WARNING in AI {}: the AI method scriptActionOnTarget: is deprecated and should not be used. It is slow and has unpredictable side effects. The recommended alternative is to use sendScriptMessage: to call a function in a ship's JavaScript ship script instead. scriptActionOnTarget: should not be used at all from scripts. An alternative is safeScriptActionOnTarget:, which is similar to scriptActionOnTarget: but has less side effects.", ::AI::currentlyRunningAIDescription().value_or("(null)"));
+        OO_LOG("script.deprecated.scriptActionOnTarget",
+            "----- WARNING in AI {}: the AI method scriptActionOnTarget: is "
+            "deprecated and should not be used. It is slow and has "
+            "unpredictable side effects. The recommended alternative is to use "
+            "sendScriptMessage: to call a function in a ship's JavaScript ship "
+            "script instead. scriptActionOnTarget: should not be used at all "
+            "from scripts. An alternative is safeScriptActionOnTarget:, which "
+            "is similar to scriptActionOnTarget: but has less side effects.",
+            ::AI::currentlyRunningAIDescription().value_or("(null)"));
     } else {
-        OO_LOG("script.deprecated.scriptActionOnTarget.repeat", "----- WARNING in AI {}: the AI method scriptActionOnTarget: is deprecated and should not be used.", ::AI::currentlyRunningAIDescription().value_or("(null)"));
+        OO_LOG("script.deprecated.scriptActionOnTarget.repeat",
+            "----- WARNING in AI {}: the AI method scriptActionOnTarget: is "
+            "deprecated and should not be used.",
+            ::AI::currentlyRunningAIDescription().value_or("(null)"));
     }
 #endif
 
@@ -2420,7 +2637,18 @@ void ShipEntity::scriptActionOnTarget(const std::string& action) // called by na
         if (player != nullptr)
             player->setScriptTarget(oo::ToShip(targEnt));
         if (player != nullptr)
-            player->runUnsanitizedScriptActions(oo::PList(oo::PList::Array { oo::PList(action) }), YES, oo::str::format("<AI \"%s\" state %s - scriptActionOnTarget:>", (getAI() != nullptr ? getAI()->name() : std::optional<std::string>()).value_or("(null)").c_str(), (getAI() != nullptr ? getAI()->state() : std::optional<std::string>()).value_or("(null)").c_str()), targEnt);
+            player->runUnsanitizedScriptActions(
+                oo::PList(oo::PList::Array { oo::PList(action) }), YES,
+                oo::str::format("<AI \"%s\" state %s - scriptActionOnTarget:>",
+                    (getAI() != nullptr ? getAI()->name()
+                                        : std::optional<std::string>())
+                        .value_or("(null)")
+                        .c_str(),
+                    (getAI() != nullptr ? getAI()->state()
+                                        : std::optional<std::string>())
+                        .value_or("(null)")
+                        .c_str()),
+                targEnt);
         if (player != nullptr)
             player->checkScript(); // react immediately to any changes this makes
         if (player != nullptr)
@@ -2428,7 +2656,8 @@ void ShipEntity::scriptActionOnTarget(const std::string& action) // called by na
     }
 }
 
-void ShipEntity::safeScriptActionOnTarget(const std::string& action) // called by name (ADR-0055 item 5)
+void ShipEntity::safeScriptActionOnTarget(
+    const std::string& action) // called by name
 {
     ::PlayerEntity* player = PLAYER;
     ::ShipEntity* targEnt = oo::ToShip(primaryTarget());
@@ -2439,51 +2668,66 @@ void ShipEntity::safeScriptActionOnTarget(const std::string& action) // called b
         if (player != nullptr)
             player->setScriptTarget(oo::ToShip(targEnt));
         if (player != nullptr)
-            player->runUnsanitizedScriptActions(oo::PList(oo::PList::Array { oo::PList(action) }), YES, oo::str::format("<AI \"%s\" state %s - safeScriptActionOnTarget:>", (getAI() != nullptr ? getAI()->name() : std::optional<std::string>()).value_or("(null)").c_str(), (getAI() != nullptr ? getAI()->state() : std::optional<std::string>()).value_or("(null)").c_str()), targEnt);
+            player->runUnsanitizedScriptActions(
+                oo::PList(oo::PList::Array { oo::PList(action) }), YES,
+                oo::str::format("<AI \"%s\" state %s - safeScriptActionOnTarget:>",
+                    (getAI() != nullptr ? getAI()->name()
+                                        : std::optional<std::string>())
+                        .value_or("(null)")
+                        .c_str(),
+                    (getAI() != nullptr ? getAI()->state()
+                                        : std::optional<std::string>())
+                        .value_or("(null)")
+                        .c_str()),
+                targEnt);
         if (player != nullptr)
             player->setScriptTarget(oldTarget);
     }
 }
 
 // Send own ship script a message.
-void ShipEntity::sendScriptMessage(const std::string& message) // called by name (ADR-0055 item 5)
+void ShipEntity::sendScriptMessage(
+    const std::string& message) // called by name
 {
     const std::vector<std::string> components = oo::str::tokens(message);
 
     if (components.size() == 1) {
         doScriptEvent(cxx_OOJSIDFromString(message));
-    } else if (!components.empty()) // (an empty message raised at -objectAtIndex:0)
+    } else if (!components
+                   .empty()) // (an empty message raised at -objectAtIndex:0)
     {
         const std::string& function = components[0];
-        oo::PList::Array arguments; // one argument: an array of the other components
-        for (auto component = components.begin() + 1; component != components.end(); ++component)
+        oo::PList::Array
+            arguments; // one argument: an array of the other components
+        for (auto component = components.begin() + 1; component != components.end();
+            ++component)
             arguments.emplace_back(*component);
-        doScriptEvent(cxx_OOJSIDFromString(function), { oo::PList(std::move(arguments)) });
+        doScriptEvent(cxx_OOJSIDFromString(function),
+            { oo::PList(std::move(arguments)) });
     }
 }
 
-void ShipEntity::ai_throwSparks()
-{
-    setThrowSparks(YES);
-}
+void ShipEntity::ai_throwSparks() { setThrowSparks(YES); }
 
-void ShipEntity::explodeSelf()
-{
-    getDestroyedBy(nullptr, kOODamageTypeEnergy);
-}
+void ShipEntity::explodeSelf() { getDestroyedBy(nullptr, kOODamageTypeEnergy); }
 
-void ShipEntity::ai_debugMessage(const std::string& message) // called by name (ADR-0055 item 5)
+void ShipEntity::ai_debugMessage(const std::string& message) // called by name
 {
-    std::string desc = oo::str::format("%s %d", getName().value_or("(null)").c_str(), getUniversalID());
+    std::string desc = oo::str::format(
+        "%s %d", getName().value_or("(null)").c_str(), getUniversalID());
     if (getIsPlayer())
         desc = "player autopilot";
-    OO_LOG("ai.takeAction.debugMessage", "DEBUG: AI MESSAGE from {}: {}", desc, message);
+    OO_LOG("ai.takeAction.debugMessage", "DEBUG: AI MESSAGE from {}: {}", desc,
+        message);
 }
 
 // racing code TODO
-void ShipEntity::targetFirstBeaconWithCode(const std::string& code) // called by name (ADR-0055 item 5)
+void ShipEntity::targetFirstBeaconWithCode(
+    const std::string& code) // called by name
 {
-    const std::vector<oo::EntityHold> all_beacons = (UNIVERSE != nullptr ? UNIVERSE->listBeaconsWithCode(code) : std::vector<oo::EntityHold>()); // held C++ entities (bead oo-9ht.39.26)
+    const std::vector<oo::EntityHold> all_beacons = (UNIVERSE != nullptr
+            ? UNIVERSE->listBeaconsWithCode(code)
+            : std::vector<oo::EntityHold>()); // held C++ entities
     if (!all_beacons.empty()) {
         addTarget(all_beacons[0].get());
         if (shipAI != nullptr)
@@ -2494,9 +2738,12 @@ void ShipEntity::targetFirstBeaconWithCode(const std::string& code) // called by
     }
 }
 
-void ShipEntity::targetNextBeaconWithCode(const std::string& code) // called by name (ADR-0055 item 5)
+void ShipEntity::targetNextBeaconWithCode(
+    const std::string& code) // called by name
 {
-    const std::vector<oo::EntityHold> all_beacons = (UNIVERSE != nullptr ? UNIVERSE->listBeaconsWithCode(code) : std::vector<oo::EntityHold>()); // held C++ entities (bead oo-9ht.39.26)
+    const std::vector<oo::EntityHold> all_beacons = (UNIVERSE != nullptr
+            ? UNIVERSE->listBeaconsWithCode(code)
+            : std::vector<oo::EntityHold>()); // held C++ entities
     ::ShipEntity* current_beacon = oo::ToShip(primaryTarget());
 
     if ((!current_beacon) || (!(current_beacon != nullptr ? current_beacon->isBeacon() : false))) {
@@ -2509,8 +2756,13 @@ void ShipEntity::targetNextBeaconWithCode(const std::string& code) // called by 
 
     // find the current beacon in the list..
     // -indexOfObject: (identity for entities)
-    const auto found = std::find_if(all_beacons.begin(), all_beacons.end(), [current_beacon](const oo::EntityHold& beacon) { return beacon.get() == current_beacon; });
-    NSUInteger i = found != all_beacons.end() ? (NSUInteger)(found - all_beacons.begin()) : NSNotFound;
+    const auto found = std::find_if(all_beacons.begin(), all_beacons.end(),
+        [current_beacon](const oo::EntityHold& beacon) {
+            return beacon.get() == current_beacon;
+        });
+    NSUInteger i = found != all_beacons.end()
+        ? (NSUInteger)(found - all_beacons.begin())
+        : NSNotFound;
 
     if (i == NSNotFound) {
         if (shipAI != nullptr)
@@ -2547,7 +2799,8 @@ void ShipEntity::setRacepointsFromTarget()
     HPVector o = ship->position;
     navpoints[0] = make_HPvector(o.x - c * k.x, o.y - c * k.y, o.z - c * k.z);
     navpoints[1] = make_HPvector(o.x + c * k.x, o.y + c * k.y, o.z + c * k.z);
-    navpoints[2] = make_HPvector(o.x + 2.0 * c * k.x, o.y + 2.0 * c * k.y, o.z + 2.0 * c * k.z);
+    navpoints[2] = make_HPvector(o.x + 2.0 * c * k.x, o.y + 2.0 * c * k.y,
+        o.z + 2.0 * c * k.z);
     number_of_navpoints = 2;
     next_navpoint_index = 0;
     _destination = navpoints[0];

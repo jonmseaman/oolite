@@ -27,8 +27,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef INCLUDED_OOMATHS_h
-#define INCLUDED_OOMATHS_h
+#pragma once
 
 // The maths headers it includes #error unless this is defined, so they are only
 // reachable through OOMaths.h.
@@ -46,8 +45,7 @@ extern "C" {
 #define OOMATHS_OPENGL_INTEGRATION !OOMATHS_STANDALONE
 #endif
 
-#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit
-                                                        // until bead oo-dbz), not a plain C++ one
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // a game unit, not a plain C++ one
 #include "OOFoundation.h"
 #endif
 
@@ -61,11 +59,10 @@ extern "C" {
 #include "OOFunctionAttributes.h"
 
 #if OOMATHS_OPENGL_INTEGRATION
-#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit
-                                                        // until bead oo-dbz), not a plain C++ one
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // a game unit, not a plain C++ one
 #include "OOOpenGL.h"
 #else
-/*	A plain C or C++ translation unit (ADR-0012: OOVoxel.c) needs only the
+/*	A plain C or C++ translation unit (OOVoxel.c) needs only the
    GL types. OOOpenGL.h imports OOFoundation.h, i.e. Foundation, which does not
    compile outside Objective-C.
 */
@@ -162,5 +159,3 @@ typedef double OOHPScalar;
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* INCLUDED_OOMATHS_h */

@@ -23,14 +23,13 @@ MA 02110-1301, USA.
 */
 
 #include "SkyEntity.h"
-#include "OOSkyDrawable.h"
-#include "PlayerEntity.h"
-
 #include "MyOpenGLView.h"
 #include "OOColor.h"
 #include "OOMaterial.h"
 #include "OOMaths.h"
 #include "OOObjCPList.h"
+#include "OOSkyDrawable.h"
+#include "PlayerEntity.h"
 #include "Universe.h"
 
 #include "oofnd/Log.hpp"
@@ -150,7 +149,7 @@ void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In, const oo::PList
         clusterChance,
         alpha,
         scale);
-    setDrawable(skyDrawable.get()); // (the root facade until bead oo-hahfg)
+    setDrawable(skyDrawable.get());
 
     setStatus(STATUS_EFFECT);
 }

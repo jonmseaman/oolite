@@ -24,77 +24,71 @@ MA 02110-1301, USA.
 */
 
 #include "ShipEntity.h"
-#include "EntityOOJavaScriptExtensions.h"
-#include "ShipEntityAI.h"
-#include "ShipEntityScriptMethods.h"
 
-#include "OOMaths.h"
-#include "OOOpenGLExtensionManager.h"
-#include "OOShaderMaterial.h"
-#include "Universe.h"
+#include <string_view>
 
 #include "AI.h"
+#include "DockEntity.h"
+#include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
+#include "GuiDisplayGen.h"
+#include "HeadUpDisplay.h"
 #include "MyOpenGLView.h"
 #include "OOCharacter.h"
+#include "OOColor.h"
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
-#include "OORoleSet.h"
-#include "OOShipGroup.h"
-#include "OOStringExpander.h"
-#include "OOStringParsing.h"
-#include "OOSystemDescriptionManager.h"
-#include "ResourceManager.h"
-#include "oofnd/Scanner.hpp"
-
-#include "OOMesh.h"
-#include "OOPlanetDrawable.h"
-
-#include "OOColor.h"
-#include "OOPolygonSprite.h"
-#include "Octree.h"
-
-#include "DockEntity.h"
+#include "OODebugFlags.h"
+#include "OODebugGLDrawing.h"
+#include "OODebugStandards.h"
 #include "OOECMBlastEntity.h"
+#include "OOEntityFilterPredicate.h"
+#include "OOEquipmentType.h"
 #include "OOExhaustPlumeEntity.h"
 #include "OOExplosionCloudEntity.h"
 #include "OOFlashEffectEntity.h"
 #include "OOFlasherEntity.h"
-#include "OOLaserShotEntity.h"
-#include "OOParticleSystem.h"
-#include "OOPlanetEntity.h"
-#include "OOPlasmaShotEntity.h"
-#include "OOQuiriumCascadeEntity.h"
-#include "OORingEffectEntity.h"
-#include "OOSparkEntity.h"
-#include "OOStellarBody.h"
-#include "OOSunEntity.h"
-#include "PlayerEntity.h"
-#include "ProxyPlayerEntity.h"
-#include "StationEntity.h"
-#include "WormholeEntity.h"
-
-#include "GuiDisplayGen.h"
-#include "HeadUpDisplay.h"
-#include "OOEntityFilterPredicate.h"
-#include "OOEquipmentType.h"
-#include "OOShipRegistry.h"
-#include "PlayerEntityLegacyScriptEngine.h"
-#include "PlayerEntitySound.h"
-
-#include "OODebugFlags.h"
-#include "OODebugGLDrawing.h"
-#include "OODebugStandards.h"
-
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
 #include "OOJSVector.h"
+#include "OOLaserShotEntity.h"
+#include "OOMaths.h"
+#include "OOMesh.h"
 #include "OOObjCPList.h"
+#include "OOOpenGLExtensionManager.h"
 #include "OOPListGameTypes.h"
+#include "OOParticleSystem.h"
+#include "OOPlanetDrawable.h"
+#include "OOPlanetEntity.h"
+#include "OOPlasmaShotEntity.h"
+#include "OOPolygonSprite.h"
+#include "OOQuiriumCascadeEntity.h"
+#include "OORingEffectEntity.h"
+#include "OORoleSet.h"
+#include "OOShaderMaterial.h"
+#include "OOShipGroup.h"
+#include "OOShipRegistry.h"
+#include "OOSparkEntity.h"
+#include "OOStellarBody.h"
+#include "OOStringExpander.h"
+#include "OOStringParsing.h"
+#include "OOSunEntity.h"
+#include "OOSystemDescriptionManager.h"
+#include "Octree.h"
+#include "PlayerEntity.h"
+#include "PlayerEntityLegacyScriptEngine.h"
+#include "PlayerEntitySound.h"
+#include "ProxyPlayerEntity.h"
+#include "ResourceManager.h"
+#include "ShipEntityAI.h"
+#include "ShipEntityScriptMethods.h"
+#include "StationEntity.h"
+#include "Universe.h"
+#include "WormholeEntity.h"
+#include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOException.h" // oo::Finally, oo::CurrentOOException (beads oo-rskgl, oo-rskgl.1)
-#include <string_view>
+#include "oofnd/objc/OOException.h" // oo::Finally, oo::CurrentOOException
 
 #define USEMASC 1
 
@@ -104,10 +98,13 @@ MA 02110-1301, USA.
 #if MASS_DEPENDENT_FUEL_PRICES
 static GLfloat calcFuelChargeRate(GLfloat myMass)
 {
-#define kMassCharge 0.65 // the closer to 1 this number is, the more the fuel price changes from ship to ship.
-#define kBaseCharge (1.0 - kMassCharge) // proportion of price that doesn't change with ship's mass.
+#define kMassCharge \
+    0.65 // the closer to 1 this number is, the more the fuel price changes from
+         // ship to ship.
+#define kBaseCharge \
+    (1.0 - kMassCharge) // proportion of price that doesn't change with ship's mass.
 
-    GLfloat baseMass = (PLAYER != nullptr ? PLAYER->baseMass() : 0.0f); // [PLAYER baseMass] (ShipEntityPlayerBaseMass() until bead oo-9ht.144)
+    GLfloat baseMass = (PLAYER != nullptr ? PLAYER->baseMass() : 0.0f); // [PLAYER baseMass]
     // if anything is wrong, use 1 (the default  charge rate).
     if (myMass <= 0.0 || baseMass <= 0.0)
         return 1.0;
@@ -117,7 +114,8 @@ static GLfloat calcFuelChargeRate(GLfloat myMass)
     // round the result to the second decimal digit.
     result = roundf(result * 100.0f) / 100.0f;
 
-    // Make sure that the rate is clamped to between three times and a third of the standard charge rate.
+    // Make sure that the rate is clamped to between three times and a third of
+    // the standard charge rate.
     if (result > 3.0f)
         result = 3.0f;
     else if (result < 0.33f)
@@ -132,7 +130,8 @@ static GLfloat calcFuelChargeRate(GLfloat myMass)
 
 namespace {
 
-// Equipment keys as the array -hasEquipmentItem: / -hasAllEquipment: take (was an NSSet of them).
+// Equipment keys as the array -hasEquipmentItem: / -hasAllEquipment: take (was
+// an NSSet of them).
 oo::PList KeysPList(const std::vector<std::string>& keys)
 {
     oo::PList::Array result;
@@ -142,17 +141,18 @@ oo::PList KeysPList(const std::vector<std::string>& keys)
     return oo::PList(std::move(result));
 }
 
-// An equipment key as -hasEquipmentItem: takes it: a null PList for nullopt (was nil).
+// An equipment key as -hasEquipmentItem: takes it: a null PList for nullopt
+// (was nil).
 oo::PList OptionalKeyPList(const std::optional<std::string>& key)
 {
     return key.has_value() ? oo::PList(*key) : oo::PList();
 }
 
-/*	Readers for a subentity / ship configuration held as an oo::PList (the Foundation sweep,
-        proposed ADR-0043): what oo::PListView(dict)'s array / string / get<HPVector> /
-        get<Quaternion> answered. A string is nil (nullopt) when the key is absent or holds neither a
-        string nor a number; vectors and quaternions go through OOPListGameTypes' readers, with their
-        defaults for a missing key.
+/*	Readers for a subentity / ship configuration held as an oo::PList: what
+   oo::PListView(dict)'s array / string / get<HPVector> / get<Quaternion>
+   answered. A string is nil (nullopt) when the key is absent or holds neither a
+   string nor a number; vectors and quaternions go through OOPListGameTypes'
+   readers, with their defaults for a missing key.
 */
 const oo::PList* ArrayForKey(const oo::PList& dict, std::string_view key)
 {
@@ -160,7 +160,8 @@ const oo::PList* ArrayForKey(const oo::PList& dict, std::string_view key)
     return (value != nullptr && value->isArray()) ? value : nullptr;
 }
 
-std::optional<std::string> StringForKey(const oo::PList& dict, std::string_view key)
+std::optional<std::string> StringForKey(const oo::PList& dict,
+    std::string_view key)
 {
     const oo::PList* value = dict.find(key);
     if (value == nullptr || !(value->isString() || value->isNumber()))
@@ -180,7 +181,8 @@ Quaternion QuaternionForKey(const oo::PList& dict, std::string_view key)
     return OOQuaternionFromPList(value, kIdentityQuaternion);
 }
 
-// get<Vector>(key, kZeroVector) / at<Vector>(i, kZeroVector): nullptr is a missing value.
+// get<Vector>(key, kZeroVector) / at<Vector>(i, kZeroVector): nullptr is a
+// missing value.
 Vector VectorFromPList(const oo::PList* value)
 {
     return OOVectorFromPList(value, kZeroVector);
@@ -199,17 +201,21 @@ std::string RepeatString(std::string_view str, NSUInteger times)
     return result;
 }
 
-/*	cxx_OOExpandKey(key, <argument>): the expansion of a description key with the one-entry argument
-        dictionary the macro builds from the variable's name (OOShipLibraryDescriptions.mm's pattern).
-        A nil argument (which the macro could not have put in a dictionary) is left out.
+/*	cxx_OOExpandKey(key, <argument>): the expansion of a description key
+   with the one-entry argument dictionary the macro builds from the variable's
+   name (OOShipLibraryDescriptions.mm's pattern). A nil argument (which the
+   macro could not have put in a dictionary) is left out.
 */
-std::optional<std::string> ExpandKeyWithArgument(const char* key, const char* argumentName, const std::optional<std::string>& argument)
+std::optional<std::string> ExpandKeyWithArgument(
+    const char* key, const char* argumentName,
+    const std::optional<std::string>& argument)
 {
     oo::PList::Dict arguments;
     if (argument.has_value())
         arguments[argumentName] = *argument;
     return cxx_OOExpandDescriptionString(OOStringExpanderDefaultRandomSeed(), key,
-        oo::PList(std::move(arguments)), oo::PList(), std::nullopt, kOOExpandKey);
+        oo::PList(std::move(arguments)),
+        oo::PList(), std::nullopt, kOOExpandKey);
 }
 
 // [key intValue] for a close-contact key (the "%d" text of a universal ID).
@@ -221,22 +227,25 @@ int IntValueOfKey(std::string_view key)
     return value;
 }
 
-// cxx_OOExpand(text): the text expanded with no arguments; nothing expanded is "".
+// cxx_OOExpand(text): the text expanded with no arguments; nothing expanded is
+// "".
 std::string ExpandedText(const std::string& text)
 {
     return cxx_OOExpand(text).value_or(std::string());
 }
 
-// get<oo::FuzzyBoolean>(key, fallback): YES with the probability the value gives, through
-// OOFuzzyBooleanFromPList, which also draws the random number.
-BOOL FuzzyBooleanForKey(const oo::PList& dict, std::string_view key, float fallback = 0.0f)
+// get<oo::FuzzyBoolean>(key, fallback): YES with the probability the value
+// gives, through OOFuzzyBooleanFromPList, which also draws the random number.
+BOOL FuzzyBooleanForKey(const oo::PList& dict, std::string_view key,
+    float fallback = 0.0f)
 {
     const oo::PList* value = dict.find(key);
     return OOFuzzyBooleanFromPList(value, fallback);
 }
 
 // get<Vector>(key, fallback).
-Vector VectorForKey(const oo::PList& dict, std::string_view key, Vector fallback)
+Vector VectorForKey(const oo::PList& dict, std::string_view key,
+    Vector fallback)
 {
     const oo::PList* value = dict.find(key);
     return OOVectorFromPList(value, fallback);
@@ -249,16 +258,19 @@ oo::PList DictionaryForKey(const oo::PList& dict, std::string_view key)
     return value != nullptr ? *value : oo::PList();
 }
 
-// -objectForKey: as plist data (a null PList when absent), for +cxx_colorWithDescription: & co.
+// -objectForKey: as plist data (a null PList when absent), for
+// +cxx_colorWithDescription: & co.
 oo::PList ValueForKey(const oo::PList& dict, std::string_view key)
 {
     const oo::PList* value = dict.find(key);
     return value != nullptr ? *value : oo::PList();
 }
 
-// The strings in an array value, as a set of names (a string set's -containsObject: of a string
-// never matched anything else); empty when the value is absent or not an array.
-std::set<std::string> NamesInArrayForKey(const oo::PList& dict, std::string_view key)
+// The strings in an array value, as a set of names (a string set's
+// -containsObject: of a string never matched anything else); empty when the
+// value is absent or not an array.
+std::set<std::string> NamesInArrayForKey(const oo::PList& dict,
+    std::string_view key)
 {
     std::set<std::string> names;
     const oo::PList* value = ArrayForKey(dict, key);
@@ -277,10 +289,12 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
 
 namespace {
 
-/*	One batch of a for-in over a group's -objectEnumerator, now a plain OOShipGroupCursor: GNUstep's
-        -[NSEnumerator countByEnumeratingWithState:objects:count:] asked -nextObject up to 16 times
-        (clang's buffer) before the loop body ran, so dead members were compacted, and the group cleaned
-        up, a batch ahead of the body, also when the body returned early. 0 at the end.
+/*	One batch of a for-in over a group's -objectEnumerator, now a plain
+   OOShipGroupCursor: GNUstep's
+        -[NSEnumerator countByEnumeratingWithState:objects:count:] asked
+   -nextObject up to 16 times (clang's buffer) before the loop body ran, so dead
+   members were compacted, and the group cleaned up, a batch ahead of the body,
+   also when the body returned early. 0 at the end.
 */
 NSUInteger ShipGroupCursorBatch(OOShipGroupCursor& cursor, ShipEntity** batch)
 {
@@ -296,16 +310,17 @@ NSUInteger ShipGroupCursorBatch(OOShipGroupCursor& cursor, ShipEntity** batch)
 
 } // namespace
 
-/*	A ship made in C++ (oo::NewShipObject, beads oo-9ht.183, oo-9ht.144): the object holding ship,
-        the root's facade (OOEntityWithDrawable's until bead oo-9ht.40) (the root's -initWithCxxEntity: stores the part once, so the root's
-        -init body runs once, as [super init] did), then the set-up from the definition. The failing
-        set-up released the object, as the initialiser did.
+/*	A ship made in C++ (oo::NewShipObject): the object holding ship, the
+   root's facade (the root's -initWithCxxEntity: stores the part once, so the
+   root's -init body runs once, as [super init] did), then the set-up from the
+   definition. The failing set-up released the object, as the initialiser did.
 */
-ShipEntity* oo::NewShipObject(const Ref<ShipEntity>& ship, const std::string& key, const oo::PList& dict)
+ShipEntity* oo::NewShipObject(const Ref<ShipEntity>& ship,
+    const std::string& key, const oo::PList& dict)
 {
     if (ship == nullptr)
         return nullptr;
-    MadeEntityRetained(ship); // +1, as +alloc gave (its object's, until bead oo-dpyk8)
+    MadeEntityRetained(ship); // +1, as +alloc gave
     if (!ship->initShipSetUp(key, dict)) {
         ReleaseEntity(ship.get());
         return nullptr;
@@ -313,7 +328,8 @@ ShipEntity* oo::NewShipObject(const Ref<ShipEntity>& ship, const std::string& ke
     return ship.get();
 }
 
-// The deleted facade's -initShipSetUpWithKey:definition: (bead oo-9ht.183), unchanged but for self.
+// The ship's initialiser body: initWithKey(), then the set-up from the
+// dictionary.
 bool ShipEntity::initShipSetUp(const std::string& key, const oo::PList& dict)
 {
     OOJS_PROFILE_ENTER
@@ -325,7 +341,9 @@ bool ShipEntity::initShipSetUp(const std::string& key, const oo::PList& dict)
 
     // Problem observed in testing -- Ahruman
     if (!isfinite(maxFlightSpeed)) {
-        OO_LOG("ship.sanityCheck.failed", "Ship {} {} infinite top speed, clamped to 300.", oo::EntityDescription(this), "generated with");
+        OO_LOG("ship.sanityCheck.failed",
+            "Ship {} {} infinite top speed, clamped to 300.",
+            oo::EntityDescription(this), "generated with");
         maxFlightSpeed = 300;
     }
     return true;
@@ -333,8 +351,8 @@ bool ShipEntity::initShipSetUp(const std::string& key, const oo::PList& dict)
     OOJS_PROFILE_EXIT
 }
 
-// The deleted facade's -dealloc body after the subclasses' parts and the weak reference's drop,
-// which the root's -dealloc (Entity::willDispose() since bead oo-dpyk8) runs first (bead oo-9ht.144).
+// The -dealloc body after the subclasses' parts and the weak reference's drop,
+// which the root's -dealloc (Entity::willDispose()) runs first.
 void ShipEntity::shipWillDealloc()
 {
     /*	NOTE: we guarantee that entityDestroyed is sent immediately after the
@@ -351,7 +369,8 @@ void ShipEntity::shipWillDealloc()
 
     setTrackCloseContacts(NO); // deallocs tracking dictionary
     if (ShipEntity* parent = oo::ToShip(parentEntity()))
-        parent->subEntityReallyDied(this); // Will do nothing if we're not really a subentity
+        parent->subEntityReallyDied(
+            this); // Will do nothing if we're not really a subentity
     clearSubEntities();
 
     shipAI = nullptr; // DESTROY
@@ -384,8 +403,8 @@ void ShipEntity::shipWillDealloc()
     _beaconDrawable = nullptr;
 }
 
-/*	-cxx_initWithKey:definition:'s body between [super init] and the set-up from the dictionary
-        (initShipSetUp() runs both: amendment oo-60fwo).
+/*	-cxx_initWithKey:definition:'s body between [super init] and the set-up
+   from the dictionary (initShipSetUp() runs both).
 */
 void ShipEntity::initWithKey(const std::string& key)
 {
@@ -422,7 +441,8 @@ static GLfloat police_color2[4] = { 1.0, 0.0, 0.5, 1.0 }; // purpley-red
 static GLfloat jammed_color[4] = { 0.0, 0.0, 0.0, 0.0 }; // clear black
 static GLfloat mascem_color1[4] = { 0.3, 0.3, 0.3, 1.0 }; // dark gray
 static GLfloat mascem_color2[4] = { 0.4, 0.1, 0.4, 1.0 }; // purple
-static GLfloat scripted_color[4] = { 0.0, 0.0, 0.0, 0.0 }; // to be defined by script
+static GLfloat scripted_color[4] = { 0.0, 0.0, 0.0,
+    0.0 }; // to be defined by script
 
 static BOOL IsBehaviourHostile(OOBehaviour behaviour)
 {
@@ -455,12 +475,12 @@ static BOOL IsBehaviourHostile(OOBehaviour behaviour)
     return 100 < behaviour && behaviour < 120;
 }
 
-// The stellar bodies are C++ entities (bead oo-al52f): -position and -radius were the members.
+// The stellar bodies are C++ entities: -position and -radius were the members.
 namespace {
 float SurfaceDistanceSqaredV(HPVector reference, Entity* stellar)
 {
     float centerDistance = HPmagnitude2(HPvector_subtract(stellar->getPosition(), reference));
-    float r = OOStellarBodyRadius(stellar); // [stellar radius] (ShipEntityStellarBodyRadius() until bead oo-9ht.144)
+    float r = OOStellarBodyRadius(stellar); // [stellar radius]
     /*	1.35: empirical value used to help determine proximity when non-nested
                     planets are close to each other
             */
@@ -472,9 +492,10 @@ float SurfaceDistanceSqared(Entity* reference, Entity* stellar)
     return SurfaceDistanceSqaredV(reference->getPosition(), stellar);
 }
 
-OOComparisonResult ComparePlanetsBySurfaceDistance(Entity* e1, Entity* e2, void* context) // the C++ planets (bead oo-al52f)
+OOComparisonResult ComparePlanetsBySurfaceDistance(
+    Entity* e1, Entity* e2, void* context) // the C++ planets
 {
-    HPVector p = static_cast<ShipEntity*>(context)->getPosition(); // the ship (its object until bead oo-9ht.144)
+    HPVector p = static_cast<ShipEntity*>(context)->getPosition(); // the ship
 
     float p1 = SurfaceDistanceSqaredV(p, e1);
     float p2 = SurfaceDistanceSqaredV(p, e2);
@@ -488,7 +509,8 @@ OOComparisonResult ComparePlanetsBySurfaceDistance(Entity* e1, Entity* e2, void*
 }
 } // namespace
 
-Vector cxx_positionOffsetForShipInRotationToAlignment(ShipEntity* ship, Quaternion q, const std::string& align)
+Vector cxx_positionOffsetForShipInRotationToAlignment(
+    ShipEntity* ship, Quaternion q, const std::string& align)
 {
     // indexed in UTF-16 units, as -characterAtIndex: was
     const std::u16string padAlign = oo::utf8ToUtf16(oo::str::format("%s---", align.c_str()));
@@ -536,16 +558,17 @@ Vector cxx_positionOffsetForShipInRotationToAlignment(ShipEntity* ship, Quaterni
     return result;
 }
 
-/*	Slice 33 (bead oo-tz2ra): -broadcastHitByLaserFrom:'s search for the authorities, without
-        messages. Its parameter is the victim's C++ part with the two answers the predicate messaged for,
-        read once before the search (both are plain reads); the entities' C++ parts answer the rest
-        (getScanClass() is virtual, so an Objective-C subclass's -scanClass still runs).
+/*	-broadcastHitByLaserFrom:'s search for the
+   authorities, without messages. Its parameter is the victim's C++ part with
+   the two answers the predicate messaged for, read once before the search (both
+   are plain reads); the entities' C++ parts answer the rest (getScanClass() is
+   virtual, so an Objective-C subclass's -scanClass still runs).
 */
 namespace {
 
 struct AuthorityPredicateParameter {
     ShipEntity* victim;
-    Entity* mainStation; // [UNIVERSE station], the C++ station (bead oo-al52f)
+    Entity* mainStation; // [UNIVERSE station], the C++ station
     bool victimWithinAegis; // [victim withinStationAegis]
 };
 
@@ -568,9 +591,10 @@ BOOL AuthorityPredicate(Entity* entity, void* parameter)
     return NO;
 }
 
-} // namespace	(AuthorityPredicate joined it when its signature changed, bead oo-9ht.39.23: misc-use-anonymous-namespace)
+} // namespace
 
-// The category ShipEntity (SubEntityRelationship); Entity's, which answers NO, is the facade's.
+// The category ShipEntity (SubEntityRelationship); Entity's, which answers NO,
+// is the facade's.
 bool ShipEntity::isShipWithSubEntityShip(Entity* other)
 {
     assert(getIsShip());
@@ -585,7 +609,12 @@ bool ShipEntity::isShipWithSubEntityShip(Entity* other)
 #ifndef NDEBUG
     // Sanity check; this should always be true.
     if (!hasSubEntity(other)) {
-        OO_LOG_ERR("ship.subentity.sanityCheck.failed", "{} thinks it's a subentity of {}, but the supposed parent does not agree. {}", oo::EntityShortDescription(other), oo::EntityShortDescription(this), "This is an internal error, please report it.");
+        OO_LOG_ERR("ship.subentity.sanityCheck.failed",
+            "{} thinks it's a subentity of {}, but the supposed parent does "
+            "not agree. {}",
+            oo::EntityShortDescription(other),
+            oo::EntityShortDescription(this),
+            "This is an internal error, please report it.");
         if (other != nullptr)
             other->setOwner(nullptr);
         return NO;
@@ -595,9 +624,8 @@ bool ShipEntity::isShipWithSubEntityShip(Entity* other)
     return YES;
 }
 
-// Slice 2 of docs/phases/3-slices/ShipEntity.md (bead oo-cvbe3): set-up from the ship dictionary
-// (cxx_setUpFromDictionary:). Members of the C++ ship, called directly, since bead oo-9ht.144
-// deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Set-up from the ship dictionary (cxx_setUpFromDictionary:). Members of the
+// C++ ship.
 
 bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
 {
@@ -624,14 +652,16 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
     suppressExplosion = NO;
     _lightsActive = YES;
 
-    // set things from dictionary from here out - default values might require adjustment -- Kaks 20091130
+    // set things from dictionary from here out - default values might require
+    // adjustment -- Kaks 20091130
     _scaleFactor = shipDict.get<float>("model_scale_factor", 1.0f);
 
     float defaultSpeed = isStation ? 0.0f : 160.0f;
     maxFlightSpeed = shipDict.get<float>("max_flight_speed", defaultSpeed);
     max_flight_roll = shipDict.get<float>("max_flight_roll", 2.0f);
     max_flight_pitch = shipDict.get<float>("max_flight_pitch", 1.0f);
-    max_flight_yaw = shipDict.get<float>("max_flight_yaw", max_flight_pitch); // Note by default yaw == pitch
+    max_flight_yaw = shipDict.get<float>(
+        "max_flight_yaw", max_flight_pitch); // Note by default yaw == pitch
     cruiseSpeed = maxFlightSpeed * 0.8f;
 
     max_thrust = shipDict.get<float>("thrust", 15.0f);
@@ -640,17 +670,25 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
     afterburner_rate = shipDict.get<float>("injector_burn_rate", AFTERBURNER_BURNRATE);
     afterburner_speed_factor = shipDict.get<float>("injector_speed_factor", 7.0f);
     if (afterburner_speed_factor < 1.0) {
-        OO_LOG("ship.setup.injectorSpeed", "injector_speed_factor cannot be lower than 1.0 for {}", oo::EntityDescription(this));
+        OO_LOG("ship.setup.injectorSpeed",
+            "injector_speed_factor cannot be lower than 1.0 for {}",
+            oo::EntityDescription(this));
         afterburner_speed_factor = 1.0;
     }
 #if OO_VARIABLE_TORUS_SPEED
     else if (afterburner_speed_factor > MIN_HYPERSPEED_FACTOR) {
-        OO_LOG("ship.setup.injectorSpeed", "injector_speed_factor cannot be higher than minimum torus speed factor ({:f}) for {}.", MIN_HYPERSPEED_FACTOR, oo::EntityDescription(this));
+        OO_LOG("ship.setup.injectorSpeed",
+            "injector_speed_factor cannot be higher than minimum torus speed "
+            "factor ({:f}) for {}.",
+            MIN_HYPERSPEED_FACTOR, oo::EntityDescription(this));
         afterburner_speed_factor = MIN_HYPERSPEED_FACTOR;
     }
 #else
     else if (afterburner_speed_factor > HYPERSPEED_FACTOR) {
-        OO_LOG("ship.setup.injectorSpeed", "injector_speed_factor cannot be higher than torus speed factor ({:f}) for {}.", HYPERSPEED_FACTOR, oo::EntityDescription(this));
+        OO_LOG("ship.setup.injectorSpeed",
+            "injector_speed_factor cannot be higher than torus speed factor "
+            "({:f}) for {}.",
+            HYPERSPEED_FACTOR, oo::EntityDescription(this));
         afterburner_speed_factor = HYPERSPEED_FACTOR;
     }
 #endif
@@ -659,32 +697,44 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
     energy_recharge_rate = shipDict.get<float>("energy_recharge_rate", 1.0f);
 
     _showDamage = shipDict.get<bool>("show_damage", (energy_recharge_rate > 0));
-    // Each new ship should start in seemingly good operating condition, unless specifically told not to - this does not affect the ship's energy levels
+    // Each new ship should start in seemingly good operating condition, unless
+    // specifically told not to - this does not affect the ship's energy levels
     setThrowSparks(shipDict.get<bool>("throw_sparks", NO));
 
     weapon_facings = shipDict.get<int>("weapon_facings", VALID_WEAPON_FACINGS) & VALID_WEAPON_FACINGS;
     if (weapon_facings & WEAPON_FACING_FORWARD)
-        forward_weapon_type = cxx_OOWeaponTypeFromString(shipDict.get<std::string>("forward_weapon_type", "EQ_WEAPON_NONE"));
+        forward_weapon_type = cxx_OOWeaponTypeFromString(
+            shipDict.get<std::string>("forward_weapon_type", "EQ_WEAPON_NONE"));
     if (weapon_facings & WEAPON_FACING_AFT)
-        aft_weapon_type = cxx_OOWeaponTypeFromString(shipDict.get<std::string>("aft_weapon_type", "EQ_WEAPON_NONE"));
+        aft_weapon_type = cxx_OOWeaponTypeFromString(
+            shipDict.get<std::string>("aft_weapon_type", "EQ_WEAPON_NONE"));
     if (weapon_facings & WEAPON_FACING_PORT)
-        port_weapon_type = cxx_OOWeaponTypeFromString(shipDict.get<std::string>("port_weapon_type", "EQ_WEAPON_NONE"));
+        port_weapon_type = cxx_OOWeaponTypeFromString(
+            shipDict.get<std::string>("port_weapon_type", "EQ_WEAPON_NONE"));
     if (weapon_facings & WEAPON_FACING_STARBOARD)
-        starboard_weapon_type = cxx_OOWeaponTypeFromString(shipDict.get<std::string>("starboard_weapon_type", "EQ_WEAPON_NONE"));
+        starboard_weapon_type = cxx_OOWeaponTypeFromString(
+            shipDict.get<std::string>("starboard_weapon_type", "EQ_WEAPON_NONE"));
 
     cloaking_device_active = NO;
     military_jammer_active = NO;
-    cloakPassive = shipDict.get<bool>("cloak_passive", YES); // Nikos - switched passive cloak default to YES 20120523
+    cloakPassive = shipDict.get<bool>(
+        "cloak_passive",
+        YES); // Nikos - switched passive cloak default to YES 20120523
     cloakAutomatic = shipDict.get<bool>("cloak_automatic", YES);
 
     missiles = shipDict.get<int>("missiles", 0);
-    /* TODO: The following initializes the missile list to be blank, which prevents a crash caused by hasOneEquipmentItem trying to access a missile list
-             previously initialized but then released.  See issue #204.  We need to investigate further the cause of the missile list being released.
+    /* TODO: The following initializes the missile list to be blank, which
+       prevents a crash caused by hasOneEquipmentItem trying to access a missile
+       list previously initialized but then released.  See issue #204.  We need to
+       investigate further the cause of the missile list being released.
                     - kanthoney 10/03/2017
-            Update 20170818: The issue seems to have been resolved properly using the fix below and the problem was apparently an access of the
-            missile_list array elements before their initialization and while we were checking whether equipment can be added or not. There is
-            probably not much more that can be done here, unless someone would like to have a go at refactoring the entire ship initialization
-            code. In any case, the crash is no more and the applied solution is both simple and logical - Nikos
+            Update 20170818: The issue seems to have been resolved properly using
+       the fix below and the problem was apparently an access of the missile_list
+       array elements before their initialization and while we were checking
+       whether equipment can be added or not. There is probably not much more that
+       can be done here, unless someone would like to have a go at refactoring the
+       entire ship initialization code. In any case, the crash is no more and the
+       applied solution is both simple and logical - Nikos
     */
     unsigned i;
     for (i = 0; i < missiles; i++) {
@@ -695,7 +745,8 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
         max_missiles = SHIPENTITY_MAX_MISSILES;
     if (missiles > max_missiles)
         missiles = max_missiles;
-    missile_load_time = fmax(0.0, shipDict.get<double>("missile_load_time", 0.0)); // no negative load times
+    missile_load_time = fmax(0.0, shipDict.get<double>("missile_load_time",
+                                      0.0)); // no negative load times
     missile_launch_time = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) + missile_load_time;
 
     // upgrades:
@@ -745,7 +796,8 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
     max_cargo = shipDict.get<unsigned int>("max_cargo");
     extra_cargo = shipDict.get<unsigned int>("extra_cargo", 15);
 
-    hyperspaceMotorSpinTime = shipDict.get<float>("hyperspace_motor_spin_time", DEFAULT_HYPERSPACE_SPIN_TIME);
+    hyperspaceMotorSpinTime = shipDict.get<float>("hyperspace_motor_spin_time",
+        DEFAULT_HYPERSPACE_SPIN_TIME);
     if (!shipDict.get<bool>("hyperspace_motor", YES))
         hyperspaceMotorSpinTime = -1;
 
@@ -760,15 +812,15 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
     // Load the model (must be before subentities)
     const std::optional<std::string> modelName = StringForKey(shipDict, "model");
     if (modelName.has_value()) {
-        const oo::Ref<::OOMesh> mesh = ::OOMesh::meshWithName(*modelName,
-            oo::str::format("%s-%.3f", _shipKey.value_or("(null)").c_str(), _scaleFactor), // %@ printed nil as (null)
+        const oo::Ref<::OOMesh> mesh = ::OOMesh::meshWithName(
+            *modelName,
+            oo::str::format("%s-%.3f", _shipKey.value_or("(null)").c_str(),
+                _scaleFactor), // %@ printed nil as (null)
             DictionaryForKey(shipDict, "materials"),
             DictionaryForKey(shipDict, "shaders"),
-            shipDict.get<bool>("smooth", false),
-            OODefaultShipShaderMacros(),
-            this, // the C++ ship (bead oo-9ht.39.6)
-            _scaleFactor,
-            true);
+            shipDict.get<bool>("smooth", false), OODefaultShipShaderMacros(),
+            this, // the C++ ship
+            _scaleFactor, true);
 
         if (mesh == nullptr)
             return NO;
@@ -787,12 +839,15 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
         setLaserColor(default_laser_color.get());
     }
     // exhaust emissive color
-    OORGBAComponents defaultExhaustEmissiveColorComponents; // pale blue is exhaust default color
+    OORGBAComponents
+        defaultExhaustEmissiveColorComponents; // pale blue is exhaust default
+                                               // color
     defaultExhaustEmissiveColorComponents.r = 0.7f;
     defaultExhaustEmissiveColorComponents.g = 0.9f;
     defaultExhaustEmissiveColorComponents.b = 1.0f;
     defaultExhaustEmissiveColorComponents.a = 0.9f;
-    oo::Ref<OOColor> color = OOColor::brightColorWithDescription(ValueForKey(shipDict, "exhaust_emissive_color"));
+    oo::Ref<OOColor> color = OOColor::brightColorWithDescription(
+        ValueForKey(shipDict, "exhaust_emissive_color"));
     if (color == nil)
         color = OOColor::colorWithRGBAComponents(defaultExhaustEmissiveColorComponents);
     setExhaustEmissiveColor(color.get());
@@ -814,9 +869,10 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
             }
         }
         if (isWeaponNone(weapon_type) && hasTurrets) { /* safety for ships only equipped with turrets
-                                                          note: this was hard-coded to 10000.0, although turrets have a notably
-                                                          shorter range. We are using a multiplier of 1.667 in order to not change
-                                                          something that already works, but probably it would be best to use
+                                                          note: this was hard-coded to 10000.0, although turrets
+                                                          have a notably shorter range. We are using a multiplier
+                                                          of 1.667 in order to not change something that already
+                                                          works, but probably it would be best to use
                                                           TURRET_SHOT_RANGE * COMBAT_WEAPON_RANGE_FACTOR here
                                                        */
             weaponRange = TURRET_SHOT_RANGE * 1.667;
@@ -837,17 +893,21 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
     const oo::PList& weaponMounts = shipDict;
     const std::string weaponMountMode = weaponMounts.get<std::string>("weapon_mount_mode", "single");
     _multiplyWeapons = weaponMountMode == "multiply";
-    forwardWeaponOffset = weaponOffsetsFrom(weaponMounts, "weapon_position_forward", weaponMountMode);
+    forwardWeaponOffset = weaponOffsetsFrom(
+        weaponMounts, "weapon_position_forward", weaponMountMode);
     aftWeaponOffset = weaponOffsetsFrom(weaponMounts, "weapon_position_aft", weaponMountMode);
     portWeaponOffset = weaponOffsetsFrom(weaponMounts, "weapon_position_port", weaponMountMode);
-    starboardWeaponOffset = weaponOffsetsFrom(weaponMounts, "weapon_position_starboard", weaponMountMode);
+    starboardWeaponOffset = weaponOffsetsFrom(
+        weaponMounts, "weapon_position_starboard", weaponMountMode);
 
-    tractor_position = vector_multiply_scalar(VectorFromPList(shipDict.find("scoop_position")), _scaleFactor);
+    tractor_position = vector_multiply_scalar(
+        VectorFromPList(shipDict.find("scoop_position")), _scaleFactor);
 
     // sun glare filter - default is high filter, both for HDR and SDR
     setSunGlareFilter(shipDict.get<float>("sun_glare_filter", 0.97f));
 
-    // Get scriptInfo dictionary, containing arbitrary stuff scripts might be interested in.
+    // Get scriptInfo dictionary, containing arbitrary stuff scripts might be
+    // interested in.
     scriptInfo = DictionaryForKey(shipDict, "script_info"); // null when absent
 
     const oo::PList* explosion = ArrayForKey(shipDict, "explosion_type");
@@ -860,9 +920,8 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict)
     OOJS_PROFILE_EXIT
 }
 
-// Slice 3 of docs/phases/3-slices/ShipEntity.md (bead oo-mvzmb): setUpShipFromDictionary:,
-// subentity serialisation and set-up. Members of the C++ ship, called directly, since bead
-// oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// setUpShipFromDictionary:, subentity serialisation and set-up. Members of the
+// C++ ship.
 
 bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
 {
@@ -882,13 +941,17 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
 
     isShip = YES;
 
-    // scan class settings. 'scanClass' is in common usage, but we could also have a more standard 'scan_class' key with higher precedence. Kaks 20090810
+    // scan class settings. 'scanClass' is in common usage, but we could also have
+    // a more standard 'scan_class' key with higher precedence. Kaks 20090810
     // let's see if scan_class is set...
-    scanClass = cxx_OOScanClassFromString(shipDict.get<std::string>("scan_class", "CLASS_NOT_SET"));
+    scanClass = cxx_OOScanClassFromString(
+        shipDict.get<std::string>("scan_class", "CLASS_NOT_SET"));
 
-    // if not, try 'scanClass'. NOTE: non-standard capitalization is documented and entrenched.
+    // if not, try 'scanClass'. NOTE: non-standard capitalization is documented
+    // and entrenched.
     if (scanClass == CLASS_NOT_SET) {
-        scanClass = cxx_OOScanClassFromString(shipDict.get<std::string>("scanClass", "CLASS_NOT_SET"));
+        scanClass = cxx_OOScanClassFromString(
+            shipDict.get<std::string>("scanClass", "CLASS_NOT_SET"));
     }
 
     scan_description = StringForKey(shipDict, "scan_description");
@@ -908,17 +971,21 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
     port_weapon_temp = 0.0f;
     starboard_weapon_temp = 0.0f;
 
-    // setWeaponDataFromType inside setUpFromDictionary should set weapon_damage from the front laser.
-    // no weapon_damage? It's a missile: set weapon_damage from shipdata!
+    // setWeaponDataFromType inside setUpFromDictionary should set weapon_damage
+    // from the front laser. no weapon_damage? It's a missile: set weapon_damage
+    // from shipdata!
     if (weapon_damage == 0.0) {
-        weapon_damage_override = weapon_damage = shipDict.get<float>("weapon_energy", 0); // any damage value for missiles/bombs
+        weapon_damage_override = weapon_damage = shipDict.get<float>(
+            "weapon_energy", 0); // any damage value for missiles/bombs
     } else {
         weapon_damage_override = 0;
     }
 
     scannerRange = shipDict.get<float>("scanner_range", (float)SCANNER_MAX_RANGE);
 
-    fuel = shipDict.get<unsigned short>("fuel"); // Does it make sense that this defaults to 0? Should it not be 70? -- Ahruman
+    fuel = shipDict.get<unsigned short>(
+        "fuel"); // Does it make sense that this defaults to 0? Should it not be
+                 // 70? -- Ahruman
 
     fuel_accumulator = 1.0;
 
@@ -946,14 +1013,19 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
             std::optional<std::string> c_commodity;
             int c_amount = 1;
             oo::str::Scanner scanner(*cargoString);
-            OOCommodities* commodities = (UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr); // null: no good is defined, as a message to nil
+            OOCommodities* commodities = (UNIVERSE != nullptr
+                    ? UNIVERSE->getCommodities()
+                    : nullptr); // null: no good is defined, as a message to nil
             if (scanner.scanInt(&c_amount)) {
-                scanner.scanCharactersFromSetNoSkip(oo::str::CharacterSet::whitespace()); // skip whitespace
+                scanner.scanCharactersFromSetNoSkip(
+                    oo::str::CharacterSet::whitespace()); // skip whitespace
                 c_commodity = scanner.remainder();
                 if (commodities != nullptr && commodities->goodDefined(c_commodity.value_or(""))) {
                     setCommodityForPod(c_commodity, c_amount);
                 } else {
-                    c_commodity = (commodities != nullptr) ? commodities->goodNamed(c_commodity.value_or("")) : std::nullopt;
+                    c_commodity = (commodities != nullptr)
+                        ? commodities->goodNamed(c_commodity.value_or(""))
+                        : std::nullopt;
                     if (commodities != nullptr && commodities->goodDefined(c_commodity.value_or(""))) {
                         setCommodityForPod(c_commodity, c_amount);
                     }
@@ -964,7 +1036,9 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
                 if (commodities != nullptr && commodities->goodDefined(c_commodity.value_or(""))) {
                     setCommodityForPod(c_commodity, c_amount);
                 } else {
-                    c_commodity = (commodities != nullptr) ? commodities->goodNamed(c_commodity.value_or("")) : std::nullopt;
+                    c_commodity = (commodities != nullptr)
+                        ? commodities->goodNamed(c_commodity.value_or(""))
+                        : std::nullopt;
                     if (commodities != nullptr && commodities->goodDefined(c_commodity.value_or(""))) {
                         setCommodityForPod(c_commodity, c_amount);
                     }
@@ -994,7 +1068,9 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
     setOwner(this);
     setHulk(shipDict.get<bool>("is_hulk"));
 
-    // these are the colors used for the "lollipop" of the ship. Any of the two (or both, for flash effect) can be defined. nil means use default from shipData.
+    // these are the colors used for the "lollipop" of the ship. Any of the two
+    // (or both, for flash effect) can be defined. nil means use default from
+    // shipData.
     setScannerDisplayColor1(nullptr);
     setScannerDisplayColor2(nullptr);
     // and the same for the "hostile" colours
@@ -1006,7 +1082,8 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
     unsigned i, j;
     for (i = 0, j = 0; i < missiles; i++) {
         missile_list[i] = selectMissile();
-        // could loop forever (if missile_role is badly defined, selectMissile might return nil in some cases) . Try 3 times, and if no luck, skip
+        // could loop forever (if missile_role is badly defined, selectMissile might
+        // return nil in some cases) . Try 3 times, and if no luck, skip
         if (missile_list[i] == nil && j < 3) {
             j++;
             i--;
@@ -1018,7 +1095,8 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
         }
     }
 
-    // accuracy. Must come after scanClass, because we are using scanClass to determine if this is a missile.
+    // accuracy. Must come after scanClass, because we are using scanClass to
+    // determine if this is a missile.
 
     // missiles: range 0 to +10
     // ships: range -5 to +10, but randomly only -5 <= accuracy < +5
@@ -1029,7 +1107,8 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
     if (accuracy < -5.0f || accuracy > 10.0f) {
         accuracy = (randf() * 10.0) - 5.0;
 
-        if (accuracy < 0.0f && (scanClass == CLASS_MILITARY || scanClass == CLASS_POLICE)) { // police and military pilots have a better average skill.
+        if (accuracy < 0.0f && (scanClass == CLASS_MILITARY || scanClass == CLASS_POLICE)) { // police and military pilots have a
+                                                                                             // better average skill.
             accuracy = -accuracy;
         }
     }
@@ -1060,7 +1139,8 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
     setTrackCloseContacts(shipDict.get<bool>("track_contacts", NO));
 
     // ship skin insulation factor (1.0 is normal)
-    setHeatInsulation(shipDict.get<float>("heat_insulation", hasHeatShield() ? 2.0 : 1.0));
+    setHeatInsulation(
+        shipDict.get<float>("heat_insulation", hasHeatShield() ? 2.0 : 1.0));
 
     // unpiloted (like missiles asteroids etc.)
     _explicitlyUnpiloted = (unsigned char)FuzzyBooleanForKey(shipDict, "unpiloted");
@@ -1094,20 +1174,11 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict)
     OOJS_PROFILE_EXIT
 }
 
-void ShipEntity::setSubIdx(NSUInteger value)
-{
-    _subIdx = value;
-}
+void ShipEntity::setSubIdx(NSUInteger value) { _subIdx = value; }
 
-NSUInteger ShipEntity::subIdx()
-{
-    return _subIdx;
-}
+NSUInteger ShipEntity::subIdx() { return _subIdx; }
 
-NSUInteger ShipEntity::maxShipSubEntities()
-{
-    return _maxShipSubIdx;
-}
+NSUInteger ShipEntity::maxShipSubEntities() { return _maxShipSubIdx; }
 
 std::optional<std::string> ShipEntity::serializeShipSubEntities()
 {
@@ -1129,7 +1200,8 @@ std::optional<std::string> ShipEntity::serializeShipSubEntities()
 void ShipEntity::deserializeShipSubEntitiesFrom(const std::string& string)
 {
     const std::vector<oo::EntityHold> subEnts = shipSubEntities();
-    const std::u16string units = oo::utf8ToUtf16(string); // indexed in UTF-16 units, as -substringWithRange: was
+    const std::u16string units = oo::utf8ToUtf16(
+        string); // indexed in UTF-16 units, as -substringWithRange: was
     NSInteger i, idx, start = (NSInteger)subEnts.size() - 1;
     NSInteger strMaxIdx = (NSInteger)units.size() - 1;
 
@@ -1137,7 +1209,9 @@ void ShipEntity::deserializeShipSubEntitiesFrom(const std::string& string)
 
     for (i = start; i >= 0; i--) {
         se = oo::ToShip(subEnts[(std::size_t)i].get());
-        idx = (se != nullptr ? se->subIdx() : 0); // should be identical to i, but better safe than sorry...
+        idx = (se != nullptr
+                ? se->subIdx()
+                : 0); // should be identical to i, but better safe than sorry...
         if (idx <= strMaxIdx && units[(std::size_t)idx] == u'0') {
             if (se != nullptr)
                 se->setSuppressExplosion(NO);
@@ -1161,10 +1235,13 @@ bool ShipEntity::setUpSubEntities()
     _maxShipSubIdx = 0;
 
     for (i = 0; plumes != nullptr && i < plumes->count(); i++) {
-        // at<std::string>: a string, or a number's text, else "" (no tokens), as the string reader gave.
+        // at<std::string>: a string, or a number's text, else "" (no tokens), as
+        // the string reader gave.
         const std::vector<std::string> definition = oo::str::tokens(plumes->at<std::string>(i));
-        // C++ since bead oo-9ht.110: the plume's object is the root façade; nil for no tokens.
-        addSubEntity(oo::MadeEntity(OOExhaustPlumeEntity::exhaustForShip(this, definition, _scaleFactor))); // its object made as before (null for none)
+        // The plume's object is the root façade; nil for no tokens.
+        addSubEntity(oo::MadeEntity(OOExhaustPlumeEntity::exhaustForShip(
+            this, definition,
+            _scaleFactor))); // its object made as before (null for none)
     }
 
     const oo::PList* subs = ArrayForKey(shipDict, "subentities");
@@ -1173,7 +1250,9 @@ bool ShipEntity::setUpSubEntities()
 
     for (i = 0; subs != nullptr && i < subs->count(); i++) {
         const oo::PList* subentDict = subs->at(i);
-        setUpOneSubentity((subentDict != nullptr && subentDict->isDict()) ? *subentDict : oo::PList());
+        setUpOneSubentity((subentDict != nullptr && subentDict->isDict())
+                ? *subentDict
+                : oo::PList());
     }
 
     no_draw_distance = _profileRadius * _profileRadius * NO_DRAW_DISTANCE_FACTOR * NO_DRAW_DISTANCE_FACTOR * 2.0;
@@ -1188,7 +1267,9 @@ GLfloat ShipEntity::frustumRadius()
     OOScalar exhaust_length = 0;
     for (const auto& exhaust : exhausts()) {
         Entity* exEnt = exhaust.get();
-        const double exRadius = exEnt != nullptr ? exEnt->findCollisionRadius() : 0; // a message to nil answered 0
+        const double exRadius = exEnt != nullptr
+            ? exEnt->findCollisionRadius()
+            : 0; // a message to nil answered 0
         if (exRadius > exhaust_length) {
             exhaust_length = exRadius;
         }
@@ -1212,21 +1293,22 @@ bool ShipEntity::setUpOneSubentity(const oo::PList& subentDict)
 
 bool ShipEntity::setUpOneFlasher(const oo::PList& subentDict)
 {
-    // C++ since bead oo-9ht.107: the flasher's object is the nearest façade left.
+    // The flasher's object is the nearest façade left.
     const oo::Ref<OOFlasherEntity> flasher = OOFlasherEntity::flasherWithDictionary(subentDict);
     Entity* flasherPart = oo::MadeEntity(flasher); // its object made as before
     if (flasherPart != nullptr)
-        flasherPart->setPosition(HPvector_multiply_scalar(HPVectorForKey(subentDict, "position"), _scaleFactor));
+        flasherPart->setPosition(HPvector_multiply_scalar(
+            HPVectorForKey(subentDict, "position"), _scaleFactor));
     flasher->rescaleBy(_scaleFactor);
     addSubEntity(flasherPart);
     return YES;
 }
 
-// Slice 4 of docs/phases/3-slices/ShipEntity.md (bead oo-ln2m1): standard subentities and cargo
-// pods; descriptions, mesh, vectors, misjump, subentity lists, AI scripts. Members of the C++ ship,
-// called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Standard subentities and cargo pods; descriptions, mesh, vectors, misjump,
+// subentity lists, AI scripts. Members of the C++ ship.
 
-bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict, bool asTurret)
+bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict,
+    bool asTurret)
 {
     ::ShipEntity* subentity = nil;
     HPVector subPosition;
@@ -1234,21 +1316,29 @@ bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict, bool asT
 
     const std::optional<std::string> subentKey = StringForKey(subentDict, "subentity_key");
     if (!subentKey.has_value()) {
-        OO_LOG("setup.ship.badEntry.subentities", "Failed to set up entity - no subentKey in {}", oo::DescriptionOf(subentDict));
+        OO_LOG("setup.ship.badEntry.subentities",
+            "Failed to set up entity - no subentKey in {}",
+            oo::DescriptionOf(subentDict));
         return NO;
     }
 
     if (!asTurret && getIsStation() && subentDict.get<bool>("is_dock")) {
-        subentity = (UNIVERSE != nullptr ? UNIVERSE->newDockWithName(*subentKey, _scaleFactor) : (::ShipEntity*)nil);
+        subentity = (UNIVERSE != nullptr
+                ? UNIVERSE->newDockWithName(*subentKey, _scaleFactor)
+                : (::ShipEntity*)nil);
     } else {
-        subentity = (UNIVERSE != nullptr ? UNIVERSE->newSubentityWithName(*subentKey, _scaleFactor) : (::ShipEntity*)nil);
+        subentity = (UNIVERSE != nullptr
+                ? UNIVERSE->newSubentityWithName(*subentKey, _scaleFactor)
+                : (::ShipEntity*)nil);
     }
     if (subentity == nil) {
-        OO_LOG("setup.ship.badEntry.subentities", "Failed to set up entity {}", *subentKey);
+        OO_LOG("setup.ship.badEntry.subentities", "Failed to set up entity {}",
+            *subentKey);
         return NO;
     }
 
-    subPosition = HPvector_multiply_scalar(HPVectorForKey(subentDict, "position"), _scaleFactor);
+    subPosition = HPvector_multiply_scalar(HPVectorForKey(subentDict, "position"),
+        _scaleFactor);
     subOrientation = QuaternionForKey(subentDict, "orientation");
 
     if (subentity != nullptr)
@@ -1265,11 +1355,14 @@ bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict, bool asT
         if (subentity != nullptr)
             subentity->setBehaviour(BEHAVIOUR_TRACK_AS_TURRET);
         if (subentity != nullptr)
-            subentity->setWeaponRechargeRate(subentDict.get<float>("fire_rate", TURRET_SHOT_FREQUENCY));
+            subentity->setWeaponRechargeRate(
+                subentDict.get<float>("fire_rate", TURRET_SHOT_FREQUENCY));
         if (subentity != nullptr)
-            subentity->setWeaponEnergy(subentDict.get<float>("weapon_energy", TURRET_TYPICAL_ENERGY));
+            subentity->setWeaponEnergy(
+                subentDict.get<float>("weapon_energy", TURRET_TYPICAL_ENERGY));
         if (subentity != nullptr)
-            subentity->setWeaponRange(subentDict.get<float>("weapon_range", TURRET_SHOT_RANGE));
+            subentity->setWeaponRange(
+                subentDict.get<float>("weapon_range", TURRET_SHOT_RANGE));
         if (subentity != nullptr)
             subentity->setStatus(STATUS_ACTIVE);
     } else {
@@ -1279,7 +1372,10 @@ bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict, bool asT
 
     const oo::PList* scriptInfoOverride = subentDict.find("script_info");
     if (subentity != nullptr)
-        subentity->overrideScriptInfo((scriptInfoOverride != nullptr && scriptInfoOverride->isDict()) ? *scriptInfoOverride : oo::PList());
+        subentity->overrideScriptInfo(
+            (scriptInfoOverride != nullptr && scriptInfoOverride->isDict())
+                ? *scriptInfoOverride
+                : oo::PList());
 
     addSubEntity(subentity);
     if (subentity != nullptr)
@@ -1287,7 +1383,8 @@ bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict, bool asT
     _maxShipSubIdx++;
 
     // update subentities
-    BoundingBox sebb = (subentity != nullptr ? subentity->findSubentityBoundingBox() : BoundingBox { });
+    BoundingBox sebb = (subentity != nullptr ? subentity->findSubentityBoundingBox()
+                                             : BoundingBox { });
     bounding_box_add_vector(&totalBoundingBox, sebb.max);
     bounding_box_add_vector(&totalBoundingBox, sebb.min);
 
@@ -1295,7 +1392,8 @@ bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict, bool asT
         BOOL allow_docking = subentDict.get<bool>("allow_docking", true);
         BOOL ddc = subentDict.get<bool>("disallowed_docking_collides", false);
         BOOL allow_launching = subentDict.get<bool>("allow_launching", true);
-        // do not include this key in OOShipRegistry; should never be set by shipdata
+        // do not include this key in OOShipRegistry; should never be set by
+        // shipdata
         BOOL virtual_dock = subentDict.get<bool>("_is_virtual_dock", false);
         if (virtual_dock) {
             if (oo::ToDock(subentity) != nullptr)
@@ -1303,9 +1401,11 @@ bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict, bool asT
         }
 
         if (oo::ToDock(subentity) != nullptr)
-            oo::ToDock(subentity)->setDimensionsAndCorridor(allow_docking, ddc, allow_launching);
+            oo::ToDock(subentity)->setDimensionsAndCorridor(allow_docking, ddc,
+                allow_launching);
         if (subentity != nullptr)
-            subentity->setDisplayName(subentDict.get<std::string>("dock_label", "the docking bay"));
+            subentity->setDisplayName(
+                subentDict.get<std::string>("dock_label", "the docking bay"));
     }
 
     if (subentity != nullptr)
@@ -1327,7 +1427,8 @@ void ShipEntity::setUpCargoType(const std::string& cargoString)
     case CARGO_SLAVES:
         commodity_amount = 1;
         commodity_type = "slaves";
-        cargo_type = CARGO_RANDOM; // not realy random, but it tells that cargo is selected.
+        cargo_type = CARGO_RANDOM; // not realy random, but it tells that cargo
+                                   // is selected.
         break;
 
     case CARGO_ALLOY:
@@ -1354,7 +1455,8 @@ void ShipEntity::setUpCargoType(const std::string& cargoString)
         break;
 
     case CARGO_RANDOM:
-        // Could already be set by the cargo_carried key. If not, ensure at least one.
+        // Could already be set by the cargo_carried key. If not, ensure at least
+        // one.
         if (commodity_amount == 0)
             commodity_amount = 1;
         break;
@@ -1372,7 +1474,8 @@ void ShipEntity::removeScript()
 
 void ShipEntity::clearSubEntities()
 {
-    // Ensure backlinks are broken (last to first, as -makeObjectsPerformSelector:withObject: went)
+    // Ensure backlinks are broken (last to first, as
+    // -makeObjectsPerformSelector:withObject: went)
     for (auto sub = subEntities.rbegin(); sub != subEntities.rend(); ++sub)
         if (sub->get() != nullptr)
             sub->get()->setOwner(nullptr);
@@ -1401,20 +1504,14 @@ std::optional<std::string> ShipEntity::shortDescriptionComponents()
     return oo::str::format("\"%s\"", getName().value_or("(null)").c_str());
 }
 
-GLfloat ShipEntity::getSunGlareFilter()
-{
-    return sunGlareFilter;
-}
+GLfloat ShipEntity::getSunGlareFilter() { return sunGlareFilter; }
 
 void ShipEntity::setSunGlareFilter(GLfloat newValue)
 {
     sunGlareFilter = OOClamp_0_1_f(newValue);
 }
 
-GLfloat ShipEntity::getAccuracy()
-{
-    return accuracy;
-}
+GLfloat ShipEntity::getAccuracy() { return accuracy; }
 
 void ShipEntity::setAccuracy(GLfloat new_accuracy)
 {
@@ -1437,7 +1534,8 @@ void ShipEntity::setAccuracy(GLfloat new_accuracy)
 
 ::OOMesh* ShipEntity::mesh()
 {
-    return static_cast<::OOMesh*>(getDrawable()); // a ship's drawable is its mesh
+    return static_cast<::OOMesh*>(
+        getDrawable()); // a ship's drawable is its mesh
 }
 
 void ShipEntity::setMesh(::OOMesh* mesh)
@@ -1448,55 +1546,31 @@ void ShipEntity::setMesh(::OOMesh* mesh)
     }
 }
 
-BoundingBox ShipEntity::getTotalBoundingBox()
-{
-    return totalBoundingBox;
-}
+BoundingBox ShipEntity::getTotalBoundingBox() { return totalBoundingBox; }
 
-Vector ShipEntity::forwardVector()
-{
-    return v_forward;
-}
+Vector ShipEntity::forwardVector() { return v_forward; }
 
-Vector ShipEntity::upVector()
-{
-    return v_up;
-}
+Vector ShipEntity::upVector() { return v_up; }
 
-Vector ShipEntity::rightVector()
-{
-    return v_right;
-}
+Vector ShipEntity::rightVector() { return v_right; }
 
-bool ShipEntity::scriptedMisjump()
-{
-    return scripted_misjump;
-}
+bool ShipEntity::scriptedMisjump() { return scripted_misjump; }
 
 void ShipEntity::setScriptedMisjump(bool newValue)
 {
     scripted_misjump = !!newValue;
 }
 
-GLfloat ShipEntity::scriptedMisjumpRange()
-{
-    return _scriptedMisjumpRange;
-}
+GLfloat ShipEntity::scriptedMisjumpRange() { return _scriptedMisjumpRange; }
 
 void ShipEntity::setScriptedMisjumpRange(GLfloat newValue)
 {
     _scriptedMisjumpRange = newValue;
 }
 
-std::vector<oo::EntityHold> ShipEntity::getSubEntities()
-{
-    return subEntities;
-}
+std::vector<oo::EntityHold> ShipEntity::getSubEntities() { return subEntities; }
 
-NSUInteger ShipEntity::subEntityCount()
-{
-    return subEntities.size();
-}
+NSUInteger ShipEntity::subEntityCount() { return subEntities.size(); }
 
 bool ShipEntity::hasSubEntity(Entity* sub)
 {
@@ -1563,10 +1637,16 @@ void ShipEntity::setSubEntityTakingDamage(::ShipEntity* sub)
     // Sanity checks: sub must be a ship subentity of self, or nil.
     if (sub != nil) {
         if (!hasSubEntity(sub)) {
-            OO_LOG("ship.subentity.sanityCheck.failed.details", "Attempt to set subentity taking damage of {} to {}, which is not a subentity.", oo::EntityShortDescription(this), oo::EntityDescription(sub));
+            OO_LOG("ship.subentity.sanityCheck.failed.details",
+                "Attempt to set subentity taking damage of {} to {}, which is not "
+                "a subentity.",
+                oo::EntityShortDescription(this), oo::EntityDescription(sub));
             sub = nil;
         } else if (!(sub != nullptr ? sub->getIsShip() : false)) {
-            OO_LOG("ship.subentity.sanityCheck.failed", "Attempt to set subentity taking damage of {} to {}, which is not a ship.", oo::EntityShortDescription(this), oo::EntityDescription(sub));
+            OO_LOG("ship.subentity.sanityCheck.failed",
+                "Attempt to set subentity taking damage of {} to {}, which is not "
+                "a ship.",
+                oo::EntityShortDescription(this), oo::EntityDescription(sub));
             sub = nil;
         }
     }
@@ -1575,32 +1655,24 @@ void ShipEntity::setSubEntityTakingDamage(::ShipEntity* sub)
     _subEntityTakingDamage = oo::WeakRef<Entity>(sub);
 }
 
-::OOScript* ShipEntity::shipScript()
-{
-    return script.get();
-}
+::OOScript* ShipEntity::shipScript() { return script.get(); }
 
-::OOScript* ShipEntity::shipAIScript()
-{
-    return aiScript.get();
-}
+::OOScript* ShipEntity::shipAIScript() { return aiScript.get(); }
 
-OOTimeAbsolute ShipEntity::shipAIScriptWakeTime()
-{
-    return aiScriptWakeTime;
-}
+OOTimeAbsolute ShipEntity::shipAIScriptWakeTime() { return aiScriptWakeTime; }
 
-void ShipEntity::setAIScriptWakeTime(OOTimeAbsolute t)
-{
-    aiScriptWakeTime = t;
-}
+void ShipEntity::setAIScriptWakeTime(OOTimeAbsolute t) { aiScriptWakeTime = t; }
 
 std::optional<std::string> ShipEntity::descriptionComponents() const
 {
     ShipEntity* self = const_cast<ShipEntity*>(this); // the getters it called are not const
     if (!self->getIsSubEntity()) {
         // [super cxx_descriptionComponents]: the entity's own components.
-        return oo::str::format("\"%s\" %s", self->getName().value_or("(null)").c_str(), OOEntityWithDrawable::descriptionComponents().value_or("(null)").c_str());
+        return oo::str::format("\"%s\" %s",
+            self->getName().value_or("(null)").c_str(),
+            OOEntityWithDrawable::descriptionComponents()
+                .value_or("(null)")
+                .c_str());
     } else {
         // ID, scanClass and status are of no interest for subentities.
         const char* subtype = nullptr;
@@ -1609,50 +1681,56 @@ std::optional<std::string> ShipEntity::descriptionComponents() const
         else
             subtype = "(subentity)";
 
-        return oo::str::format("\"%s\" position: %s %s", self->getName().value_or("(null)").c_str(), cxx_HPVectorDescription(self->getPosition()).c_str(), subtype);
+        return oo::str::format(
+            "\"%s\" position: %s %s", self->getName().value_or("(null)").c_str(),
+            cxx_HPVectorDescription(self->getPosition()).c_str(), subtype);
     }
 }
 
-// Slice 5 of docs/phases/3-slices/ShipEntity.md (bead oo-ddnn8): bounding boxes, octree hit tests,
-// universe add / remove, beacons, boulders, escort set-up. Members of the C++ ship, called
-// directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Bounding boxes, octree hit tests, universe add / remove, beacons, boulders,
+// escort set-up. Members of the C++ ship.
 
-BoundingBox ShipEntity::findBoundingBoxRelativeToPosition(HPVector opv, Vector _i, Vector _j, Vector _k)
+BoundingBox ShipEntity::findBoundingBoxRelativeToPosition(HPVector opv,
+    Vector _i, Vector _j,
+    Vector _k)
 {
     // HPVect: check that this conversion doesn't lose needed precision
     ::OOMesh* mesh = this->mesh();
     if (mesh == nullptr)
         return BoundingBox { }; // a message to nil answered zero
-    return mesh->findBoundingBoxRelativeToPosition(HPVectorToVector(opv), _i, _j, _k, HPVectorToVector(position), v_right, v_up, v_forward);
+    return mesh->findBoundingBoxRelativeToPosition(HPVectorToVector(opv), _i, _j,
+        _k, HPVectorToVector(position),
+        v_right, v_up, v_forward);
 }
 
-Octree* ShipEntity::getOctree()
-{
-    return octree.get();
-}
+Octree* ShipEntity::getOctree() { return octree.get(); }
 
-float ShipEntity::volume()
-{
-    return octree ? octree->volume() : 0.0f;
-}
+float ShipEntity::volume() { return octree ? octree->volume() : 0.0f; }
 
 GLfloat ShipEntity::doesHitLine(HPVector v0, HPVector v1)
 {
-    Vector u0 = HPVectorToVector(HPvector_between(position, v0)); // relative to origin of model / octree
+    Vector u0 = HPVectorToVector(
+        HPvector_between(position, v0)); // relative to origin of model / octree
     Vector u1 = HPVectorToVector(HPvector_between(position, v1));
-    Vector w0 = make_vector(dot_product(u0, v_right), dot_product(u0, v_up), dot_product(u0, v_forward)); // in ijk vectors
-    Vector w1 = make_vector(dot_product(u1, v_right), dot_product(u1, v_up), dot_product(u1, v_forward));
+    Vector w0 = make_vector(dot_product(u0, v_right), dot_product(u0, v_up),
+        dot_product(u0, v_forward)); // in ijk vectors
+    Vector w1 = make_vector(dot_product(u1, v_right), dot_product(u1, v_up),
+        dot_product(u1, v_forward));
     return octree ? octree->isHitByLine(w0, w1) : 0.0f;
 }
 
-GLfloat ShipEntity::doesHitLine(HPVector v0, HPVector v1, ::ShipEntity** hitEntity)
+GLfloat ShipEntity::doesHitLine(HPVector v0, HPVector v1,
+    ::ShipEntity** hitEntity)
 {
     if (hitEntity)
         hitEntity[0] = (::ShipEntity*)nil;
-    Vector u0 = HPVectorToVector(HPvector_between(position, v0)); // relative to origin of model / octree
+    Vector u0 = HPVectorToVector(
+        HPvector_between(position, v0)); // relative to origin of model / octree
     Vector u1 = HPVectorToVector(HPvector_between(position, v1));
-    Vector w0 = make_vector(dot_product(u0, v_right), dot_product(u0, v_up), dot_product(u0, v_forward)); // in ijk vectors
-    Vector w1 = make_vector(dot_product(u1, v_right), dot_product(u1, v_up), dot_product(u1, v_forward));
+    Vector w0 = make_vector(dot_product(u0, v_right), dot_product(u0, v_up),
+        dot_product(u0, v_forward)); // in ijk vectors
+    Vector w1 = make_vector(dot_product(u1, v_right), dot_product(u1, v_up),
+        dot_product(u1, v_forward));
     GLfloat hit_distance = octree ? octree->isHitByLine(w0, w1) : 0.0f;
     if (hit_distance) {
         if (hitEntity)
@@ -1682,11 +1760,14 @@ GLfloat ShipEntity::doesHitLine(HPVector v0, HPVector v1, ::ShipEntity** hitEnti
     return hit_distance;
 }
 
-GLfloat ShipEntity::doesHitLine(HPVector v0, HPVector v1, HPVector o, Vector i, Vector j, Vector k)
+GLfloat ShipEntity::doesHitLine(HPVector v0, HPVector v1, HPVector o, Vector i,
+    Vector j, Vector k)
 {
-    Vector u0 = HPVectorToVector(HPvector_between(o, v0)); // relative to origin of model / octree
+    Vector u0 = HPVectorToVector(
+        HPvector_between(o, v0)); // relative to origin of model / octree
     Vector u1 = HPVectorToVector(HPvector_between(o, v1));
-    Vector w0 = make_vector(dot_product(u0, i), dot_product(u0, j), dot_product(u0, k)); // in ijk vectors
+    Vector w0 = make_vector(dot_product(u0, i), dot_product(u0, j),
+        dot_product(u0, k)); // in ijk vectors
     Vector w1 = make_vector(dot_product(u1, j), dot_product(u1, j), dot_product(u1, k));
     return octree ? octree->isHitByLine(w0, w1) : 0.0f;
 }
@@ -1712,7 +1793,8 @@ void ShipEntity::wasAddedToUniverse()
         }
     }
 
-    //	Tell subentities, too (last to first, as -makeObjectsPerformSelector: went)
+    //	Tell subentities, too (last to first, as -makeObjectsPerformSelector:
+    // went)
     const std::vector<oo::EntityHold> subs = subEntities;
     for (auto sub = subs.rbegin(); sub != subs.rend(); ++sub) {
         if (sub->get() != nullptr)
@@ -1737,13 +1819,11 @@ HPVector ShipEntity::absoluteTractorPosition()
     return HPvector_add(position, vectorToHPVector(quaternion_rotate_vector(normalOrientation(), tractor_position)));
 }
 
-std::optional<std::string> ShipEntity::beaconCode()
-{
-    return _beaconCode;
-}
+std::optional<std::string> ShipEntity::beaconCode() { return _beaconCode; }
 
-// bcode: optional string; empty is treated as none. The Foundation version compared the new string with the
-// old by pointer, so any new string (every string this class hands out is new) replaced it.
+// bcode: optional string; empty is treated as none. The Foundation version
+// compared the new string with the old by pointer, so any new string (every
+// string this class hands out is new) replaced it.
 void ShipEntity::setBeaconCode(const std::optional<std::string>& bcode)
 {
     std::optional<std::string> code = bcode;
@@ -1761,10 +1841,7 @@ void ShipEntity::setBeaconCode(const std::optional<std::string>& bcode)
     }
 }
 
-std::optional<std::string> ShipEntity::beaconLabel()
-{
-    return _beaconLabel;
-}
+std::optional<std::string> ShipEntity::beaconLabel() { return _beaconLabel; }
 
 void ShipEntity::setBeaconLabel(const std::optional<std::string>& blabel)
 {
@@ -1777,15 +1854,9 @@ void ShipEntity::setBeaconLabel(const std::optional<std::string>& blabel)
     }
 }
 
-bool ShipEntity::isVisible()
-{
-    return cam_zero_distance <= no_draw_distance;
-}
+bool ShipEntity::isVisible() { return cam_zero_distance <= no_draw_distance; }
 
-bool ShipEntity::isBeacon()
-{
-    return beaconCode().has_value();
-}
+bool ShipEntity::isBeacon() { return beaconCode().has_value(); }
 
 OOHUDBeaconIcon* ShipEntity::beaconDrawable()
 {
@@ -1797,12 +1868,14 @@ OOHUDBeaconIcon* ShipEntity::beaconDrawable()
             const oo::PList* iconEntry = UNIVERSE->descriptions()->find(*_beaconCode);
             const oo::PList iconData = (iconEntry != nullptr) ? *iconEntry : oo::PList();
             if (iconData.isArray())
-                _beaconDrawable = OOPolygonSprite::initWithDataArray(iconData, 0.5, *_beaconCode); // null where it answered nil
+                _beaconDrawable = OOPolygonSprite::initWithDataArray(
+                    iconData, 0.5, *_beaconCode); // null where it answered nil
         }
 
         if (_beaconDrawable == nullptr) {
             if (length > 0)
-                _beaconDrawable = oo::makeRef<OOHUDBeaconCodeIcon>(oo::utf16ToUtf8(beaconCode.substr(0, 1))); // -substringToIndex:1
+                _beaconDrawable = oo::makeRef<OOHUDBeaconCodeIcon>(
+                    oo::utf16ToUtf8(beaconCode.substr(0, 1))); // -substringToIndex:1
             else
                 _beaconDrawable = oo::makeRef<OOHUDBeaconCodeIcon>(std::string());
         }
@@ -1811,23 +1884,15 @@ OOHUDBeaconIcon* ShipEntity::beaconDrawable()
     return _beaconDrawable.get();
 }
 
-// The beacons' C++ entities since bead oo-9ht.39.23: null when the object is gone, as the object was nil.
-Entity* ShipEntity::prevBeacon()
-{
-    return oo::LiveEntity(_prevBeacon);
-}
+// The beacons' C++ entities: null when the object is gone, as the object was
+// nil.
+Entity* ShipEntity::prevBeacon() { return oo::LiveEntity(_prevBeacon); }
 
-Entity* ShipEntity::nextBeacon()
-{
-    return oo::LiveEntity(_nextBeacon);
-}
+Entity* ShipEntity::nextBeacon() { return oo::LiveEntity(_nextBeacon); }
 
-// Through the virtual nextBeacon() (a test's player answers it) (bead oo-9ht.39.8.10): the JS bindings compare
-// the C++ entity, which nextBeacon() answers since bead oo-9ht.39.23.
-Entity* ShipEntity::nextBeaconEntity()
-{
-    return nextBeacon();
-}
+// Through the virtual nextBeacon() (a test's player answers it): the JS
+// bindings compare the C++ entity, which nextBeacon() answers.
+Entity* ShipEntity::nextBeaconEntity() { return nextBeacon(); }
 
 void ShipEntity::setPrevBeacon(Entity* beaconShip)
 {
@@ -1873,12 +1938,16 @@ bool ShipEntity::countsAsKill()
 
 void ShipEntity::setUpEscorts()
 {
-    // Ensure that we do not try to create escorts if we are an escort ship ourselves.
-    // This could lead to circular reference memory overflows (e.g. "boa-mk2" trying to create 4 "boa-mk2"
-    // escorts or the case of two ships specifying eachother as escorts) - Nikos 20090510
+    // Ensure that we do not try to create escorts if we are an escort ship
+    // ourselves. This could lead to circular reference memory overflows (e.g.
+    // "boa-mk2" trying to create 4 "boa-mk2" escorts or the case of two ships
+    // specifying eachother as escorts) - Nikos 20090510
     if (isEscort()) {
-        OO_LOG_WARN("ship.setUp.escortShipCircularReference",
-            "Ship {} requested escorts, when it is an escort ship itself. Avoiding possible circular reference overflow by ignoring escort setup.", oo::EntityDescription(this));
+        OO_LOG_WARN(
+            "ship.setUp.escortShipCircularReference",
+            "Ship {} requested escorts, when it is an escort ship itself. Avoiding "
+            "possible circular reference overflow by ignoring escort setup.",
+            oo::EntityDescription(this));
         return;
     }
 
@@ -1897,10 +1966,12 @@ void ShipEntity::setUpEscorts()
 
     if (_maxEscortCount < _pendingEscortCount) {
         if (hasPrimaryRole("police") || hasPrimaryRole("hunter")) {
-            _maxEscortCount = MAX_ESCORTS; // police and hunters get up to MAX_ESCORTS, overriding the 'escorts' key.
+            _maxEscortCount = MAX_ESCORTS; // police and hunters get up to MAX_ESCORTS, overriding
+                                           // the 'escorts' key.
             updateEscortFormation();
         } else {
-            _pendingEscortCount = _maxEscortCount; // other ships can only get what's defined inside their 'escorts' key.
+            _pendingEscortCount = _maxEscortCount; // other ships can only get what's defined inside
+                                                   // their 'escorts' key.
         }
     }
 
@@ -1908,9 +1979,13 @@ void ShipEntity::setUpEscorts()
         defaultRole = "wingman";
 
     const std::optional<std::string> escortRoleSetting = StringForKey(info, "escort_role");
-    escortRole = escortRoleSetting.has_value() ? *escortRoleSetting : info.get<std::string>("escort-role", defaultRole);
+    escortRole = escortRoleSetting.has_value()
+        ? *escortRoleSetting
+        : info.get<std::string>("escort-role", defaultRole);
     if (escortRole != defaultRole) {
-        if (!oo::ToShip(oo::AutoreleaseEntity((UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(escortRole) : (::ShipEntity*)nil)))) {
+        if (!oo::ToShip(oo::AutoreleaseEntity(
+                (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(escortRole)
+                                     : (::ShipEntity*)nil)))) {
             escortRole = defaultRole;
         }
     }
@@ -1920,7 +1995,9 @@ void ShipEntity::setUpEscorts()
         escortShipKey = StringForKey(info, "escort-ship");
 
     if (escortShipKey.has_value()) {
-        if (!oo::ToShip(oo::AutoreleaseEntity((UNIVERSE != nullptr ? UNIVERSE->newShipWithName(*escortShipKey) : (::ShipEntity*)nil)))) {
+        if (!oo::ToShip(oo::AutoreleaseEntity(
+                (UNIVERSE != nullptr ? UNIVERSE->newShipWithName(*escortShipKey)
+                                     : (::ShipEntity*)nil)))) {
             escortShipKey = std::nullopt;
         } else {
             escortRole = oo::str::format("[%s]", escortShipKey->c_str());
@@ -1929,7 +2006,8 @@ void ShipEntity::setUpEscorts()
 
     ::OOShipGroup* escortGroup = this->escortGroup();
     if (group() == nil) {
-        setGroup(escortGroup); // should probably become a copy of the escortGroup post NMSR.
+        setGroup(escortGroup); // should probably become a copy of the escortGroup
+                               // post NMSR.
     }
     if (escortGroup != nullptr)
         escortGroup->setLeader(this);
@@ -1944,11 +2022,13 @@ void ShipEntity::setUpEscorts()
 
         ::ShipEntity* escorter = nil;
 
-        escorter = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(escortRole) : (::ShipEntity*)nil); // retained
+        escorter = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(escortRole)
+                                        : (::ShipEntity*)nil); // retained
 
         if (escorter == nil)
             break;
-        setUpOneEscort(escorter, escortGroup, escortRole, ex_pos, currentEscortCount);
+        setUpOneEscort(escorter, escortGroup, escortRole, ex_pos,
+            currentEscortCount);
 
         if (escorter != nullptr)
             oo::ReleaseEntity(escorter);
@@ -1966,7 +2046,8 @@ void ShipEntity::setUpMixedEscorts()
     const oo::PList* escortRoles = ArrayForKey(info, "escort_roles");
     if (escortRoles == nullptr) {
         OO_LOG_WARN("eship.setUp.escortShipRoles",
-            "Ship {} has bad escort_roles definition.", oo::EntityDescription(this));
+            "Ship {} has bad escort_roles definition.",
+            oo::EntityDescription(this));
         return;
     }
     OOGovernmentID government;
@@ -1976,7 +2057,8 @@ void ShipEntity::setUpMixedEscorts()
 
     ::OOShipGroup* escortGroup = this->escortGroup();
     if (group() == nil) {
-        setGroup(escortGroup); // should probably become a copy of the escortGroup post NMSR.
+        setGroup(escortGroup); // should probably become a copy of the escortGroup
+                               // post NMSR.
     }
     if (escortGroup != nullptr)
         escortGroup->setLeader(this);
@@ -1987,7 +2069,8 @@ void ShipEntity::setUpMixedEscorts()
 
     _maxEscortCount = 0;
     int8_t i = 0;
-    for (const oo::PList& escortDefinition : *escortRoles->getIf<oo::PList::Array>()) {
+    for (const oo::PList& escortDefinition :
+        *escortRoles->getIf<oo::PList::Array>()) {
         if (currentEscortCount >= MAX_ESCORTS) {
             break;
         }
@@ -1999,7 +2082,8 @@ void ShipEntity::setUpMixedEscorts()
         int8_t desired = max;
         if (min < desired) {
             for (i = min; i < max; i++) {
-                if (Ranrot() % 11 < static_cast<unsigned>(government) + 2) // unsigned, as the comparison converted it (GCC -Wsign-compare; bead oo-1q4)
+                if (Ranrot() % 11 < static_cast<unsigned>(government) + 2) // unsigned, as the comparison converted it
+                                                                           // (GCC -Wsign-compare)
                 {
                     desired--;
                 }
@@ -2011,11 +2095,13 @@ void ShipEntity::setUpMixedEscorts()
             }
             if (!escortRole.empty()) {
                 HPVector ex_pos = coordinatesForEscortPosition(currentEscortCount);
-                ::ShipEntity* escorter = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(escortRole) : (::ShipEntity*)nil); // retained
+                ::ShipEntity* escorter = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(escortRole)
+                                                              : (::ShipEntity*)nil); // retained
                 if (escorter == nil) {
                     break;
                 }
-                setUpOneEscort(escorter, escortGroup, escortRole, ex_pos, currentEscortCount);
+                setUpOneEscort(escorter, escortGroup, escortRole, ex_pos,
+                    currentEscortCount);
                 if (escorter != nullptr)
                     oo::ReleaseEntity(escorter);
             }
@@ -2027,13 +2113,12 @@ void ShipEntity::setUpMixedEscorts()
     _pendingEscortCount = 0;
 }
 
-// Slice 6 of docs/phases/3-slices/ShipEntity.md (bead oo-5z5wd): escort creation, ship data key,
-// weapon offsets, octree collision checks, subentity geometry, escape-pod launch. Members of the
-// C++ ship, called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
-/*	Slice 6 (bead oo-5z5wd): the octree collision check, without messages: the ships' C++ parts
-        answer their positions, frames and -canCollide (a virtual member, so PlayerEntity's override
-        still runs), and the octrees' C++ objects test the hit.
+// Escort creation, ship data key, weapon offsets, octree collision checks,
+// subentity geometry, escape-pod launch. Members of the C++ ship.
+/*	The octree collision check, without messages:
+   the ships' C++ parts answer their positions, frames and -canCollide (a
+   virtual member, so PlayerEntity's override still runs), and the octrees' C++
+   objects test the hit.
 */
 ::ShipEntity* doOctreesCollide(::ShipEntity* prime, ::ShipEntity* other)
 {
@@ -2046,7 +2131,9 @@ void ShipEntity::setUpMixedEscorts()
     HPVector other_position = other->absolutePositionForSubentity();
     Triangle other_ijk = other->absoluteIJKForSubentity();
 
-    Vector relative_position_of_other = resolveVectorInIJK(HPVectorToVector(HPvector_between(prime_position, other_position)), prime_ijk);
+    Vector relative_position_of_other = resolveVectorInIJK(
+        HPVectorToVector(HPvector_between(prime_position, other_position)),
+        prime_ijk);
     Triangle relative_ijk_of_other;
     relative_ijk_of_other.v[0] = resolveVectorInIJK(other_ijk.v[0], prime_ijk);
     relative_ijk_of_other.v[1] = resolveVectorInIJK(other_ijk.v[1], prime_ijk);
@@ -2100,7 +2187,10 @@ void ShipEntity::setUpMixedEscorts()
     return nil;
 }
 
-void ShipEntity::setUpOneEscort(::ShipEntity* escorter, ::OOShipGroup* escortGroup, const std::string& /*escortRole*/, HPVector ex_pos, uint8_t currentEscortCount)
+void ShipEntity::setUpOneEscort(::ShipEntity* escorter,
+    ::OOShipGroup* escortGroup,
+    const std::string& /*escortRole*/,
+    HPVector ex_pos, uint8_t currentEscortCount)
 {
     std::string autoAI;
     std::string pilotRole;
@@ -2131,7 +2221,10 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter, ::OOShipGroup* escortGro
     if (escorter != nullptr)
         escorter->setPosition(ex_pos); // minimise lollipop flash
 
-    if (!(escorter != nullptr ? escorter->getCrew() : std::optional<std::vector<oo::Ref<OOCharacter>>>()).has_value()) {
+    if (!(escorter != nullptr
+                ? escorter->getCrew()
+                : std::optional<std::vector<oo::Ref<OOCharacter>>>())
+            .has_value()) {
         if (escorter != nullptr)
             escorter->setSingleCrewWithRole(pilotRole);
     }
@@ -2152,7 +2245,8 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter, ::OOShipGroup* escortGro
     } // Avoid dirty escorts for clean mothers
 
     // find the right autoAI.
-    const oo::PList autoAIMap = ResourceManager::dictionaryFromFilesNamed("autoAImap.plist", "Config", YES);
+    const oo::PList autoAIMap = ResourceManager::dictionaryFromFilesNamed(
+        "autoAImap.plist", "Config", YES);
     const std::optional<std::string> mappedAI = StringForKey(autoAIMap, defaultRole);
     if (mappedAI.has_value())
         autoAI = *mappedAI;
@@ -2163,10 +2257,16 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter, ::OOShipGroup* escortGro
 
     escortAI = (escorter != nullptr ? escorter->getAI() : (::AI*)nullptr);
 
-    // Let the populator decide which AI to use, unless we have a working alternative AI & we specify auto_ai = NO !
-    // (Both callers always passed a role, so the old nil test of escortRole was always true.)
-    if (FuzzyBooleanForKey((escorter != nullptr ? escorter->shipInfoDictionary() : oo::PList()), "auto_ai", YES)
-        || ((escortAI != nullptr ? escortAI->name() : std::optional<std::string>()).value_or(std::string()) == "nullAI.plist" && autoAI != "nullAI.plist")) {
+    // Let the populator decide which AI to use, unless we have a working
+    // alternative AI & we specify auto_ai = NO ! (Both callers always passed a
+    // role, so the old nil test of escortRole was always true.)
+    if (FuzzyBooleanForKey(
+            (escorter != nullptr ? escorter->shipInfoDictionary() : oo::PList()),
+            "auto_ai", YES)
+        || ((escortAI != nullptr ? escortAI->name() : std::optional<std::string>())
+                    .value_or(std::string())
+                == "nullAI.plist"
+            && autoAI != "nullAI.plist")) {
         if (escorter != nullptr)
             escorter->switchAITo(autoAI);
     }
@@ -2177,8 +2277,8 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter, ::OOShipGroup* escortGro
         escorter->setOwner(this); // mark self as group leader
 
     if (status() == STATUS_DOCKED) {
-        // A station's object is a ship's since bead oo-9ht.175, and a dock's since bead
-        // oo-9ht.180: their C++ parts answer (no other owner answered the selector).
+        // A station's and a dock's C++ parts answer (no other owner answered the
+        // selector).
         if (::StationEntity* station = oo::ToStation(owner()))
             station->addShipToLaunchQueue(escorter, NO);
         else if (::DockEntity* dock = oo::ToDock(owner()))
@@ -2187,7 +2287,9 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter, ::OOShipGroup* escortGro
         if (UNIVERSE != nullptr)
             UNIVERSE->addEntity(escorter); // STATUS_IN_FLIGHT, AI state GLOBAL
         if (escortAI != nullptr)
-            escortAI->setState("FLYING_ESCORT"); // Begin escort flight. (If the AI doesn't define FLYING_ESCORT, this has no effect.)
+            escortAI->setState(
+                "FLYING_ESCORT"); // Begin escort flight. (If the AI doesn't define
+                                  // FLYING_ESCORT, this has no effect.)
         if (escorter != nullptr)
             escorter->doScriptEvent(OOJSID("spawnedAsEscort"), this);
     }
@@ -2197,7 +2299,8 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter, ::OOShipGroup* escortGro
             escorter->setHeatInsulation(heatInsulation());
     } // give escorts same protection as mother.
     if (((escorter != nullptr ? escorter->getMaxFlightSpeed() : 0.0f) < cruiseSpeed) && ((escorter != nullptr ? escorter->getMaxFlightSpeed() : 0.0f) > cruiseSpeed * 0.3))
-        cruiseSpeed = (escorter != nullptr ? escorter->getMaxFlightSpeed() : 0.0f) * 0.99; // adapt patrolSpeed to the slowest escort but ignore the very slow ones.
+        cruiseSpeed = (escorter != nullptr ? escorter->getMaxFlightSpeed() : 0.0f) * 0.99; // adapt patrolSpeed to the slowest escort but ignore
+                                                                                           // the very slow ones.
 
     if (bounty) {
         int extra = 1 | (ranrot_rand() & 15);
@@ -2211,14 +2314,13 @@ void ShipEntity::setUpOneEscort(::ShipEntity* escorter, ::OOShipGroup* escortGro
     }
 }
 
-std::optional<std::string> ShipEntity::shipDataKey()
-{
-    return _shipKey;
-}
+std::optional<std::string> ShipEntity::shipDataKey() { return _shipKey; }
 
 std::optional<std::string> ShipEntity::shipDataKeyAutoRole()
 {
-    return oo::str::format("[%s]", shipDataKey().value_or("(null)").c_str()); // %@ printed nil as (null)
+    return oo::str::format(
+        "[%s]",
+        shipDataKey().value_or("(null)").c_str()); // %@ printed nil as (null)
 }
 
 void ShipEntity::setShipDataKey(const std::optional<std::string>& key)
@@ -2226,12 +2328,11 @@ void ShipEntity::setShipDataKey(const std::optional<std::string>& key)
     _shipKey = key;
 }
 
-oo::PList ShipEntity::shipInfoDictionary()
-{
-    return shipinfoDictionary;
-}
+oo::PList ShipEntity::shipInfoDictionary() { return shipinfoDictionary; }
 
-std::vector<Vector> ShipEntity::weaponOffsetsFrom(const oo::PList& dict, const std::string& key, const std::string& mode)
+std::vector<Vector> ShipEntity::weaponOffsetsFrom(const oo::PList& dict,
+    const std::string& key,
+    const std::string& mode)
 {
     Vector offset;
     if (mode == "single") {
@@ -2254,10 +2355,7 @@ std::vector<Vector> ShipEntity::weaponOffsetsFrom(const oo::PList& dict, const s
     }
 }
 
-std::vector<Vector> ShipEntity::getAftWeaponOffset()
-{
-    return aftWeaponOffset;
-}
+std::vector<Vector> ShipEntity::getAftWeaponOffset() { return aftWeaponOffset; }
 
 std::vector<Vector> ShipEntity::getForwardWeaponOffset()
 {
@@ -2274,15 +2372,9 @@ std::vector<Vector> ShipEntity::getStarboardWeaponOffset()
     return starboardWeaponOffset;
 }
 
-bool ShipEntity::getIsFrangible()
-{
-    return isFrangible;
-}
+bool ShipEntity::getIsFrangible() { return isFrangible; }
 
-bool ShipEntity::suppressFlightNotifications()
-{
-    return suppressAegisMessages;
-}
+bool ShipEntity::suppressFlightNotifications() { return suppressAegisMessages; }
 
 OOScanClass ShipEntity::getScanClass()
 {
@@ -2318,17 +2410,19 @@ BoundingBox ShipEntity::findSubentityBoundingBox()
     ::OOMesh* mesh = this->mesh();
     if (mesh == nullptr)
         return BoundingBox { }; // a message to nil answered zero
-    return mesh->findSubentityBoundingBoxWithPosition(HPVectorToVector(position), rotMatrix);
+    return mesh->findSubentityBoundingBoxWithPosition(HPVectorToVector(position),
+        rotMatrix);
 }
 
 Triangle ShipEntity::absoluteIJKForSubentity()
 {
     Triangle result = { { kBasisXVector, kBasisYVector, kBasisZVector } };
     Entity* last = nullptr;
-    Entity* father = this; // the C++ entities, which the objects forwarded to (bead oo-9ht.39.16)
+    Entity* father = this; // the C++ entities, which the objects forwarded to
     OOMatrix r_mat;
 
-    // NO_TARGET is 0, so the old `father != (Entity *)NO_TARGET` test only repeated the null check.
+    // NO_TARGET is 0, so the old `father != (Entity *)NO_TARGET` test only
+    // repeated the null check.
     while ((father) && (father != last)) {
         r_mat = father->drawRotationMatrix();
         result.v[0] = OOVectorMultiplyMatrix(result.v[0], r_mat);
@@ -2362,18 +2456,28 @@ void ShipEntity::addSubentityToCollisionRadius(Entity* subent)
     }
 }
 
-::ShipEntity* ShipEntity::launchPodWithCrew(const std::vector<oo::Ref<OOCharacter>>& podCrew)
+::ShipEntity* ShipEntity::launchPodWithCrew(
+    const std::vector<oo::Ref<OOCharacter>>& podCrew)
 {
     ::ShipEntity* pod = nil;
 
     const oo::PList& info = shipinfoDictionary;
-    pod = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(StringForKey(info, "escape_pod_role").value_or("")) : (::ShipEntity*)nil); // or nil
+    pod = (UNIVERSE != nullptr
+            ? UNIVERSE->newShipWithRole(
+                  StringForKey(info, "escape_pod_role").value_or(""))
+            : (::ShipEntity*)nil); // or nil
     if (!pod) {
         //	_role not defined? it might have _model defined;
-        pod = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(info.get<std::string>("escape_pod_model", "escape-capsule")) : (::ShipEntity*)nil);
+        pod = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(info.get<std::string>(
+                                         "escape_pod_model", "escape-capsule"))
+                                   : (::ShipEntity*)nil);
         if (!pod) {
-            pod = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("escape-capsule") : (::ShipEntity*)nil);
-            OO_LOG("shipEntity.noEscapePod", "Ship {} has no correct escape_pod_role defined. Now using default capsule.", oo::EntityDescription(this));
+            pod = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("escape-capsule")
+                                       : (::ShipEntity*)nil);
+            OO_LOG("shipEntity.noEscapePod",
+                "Ship {} has no correct escape_pod_role defined. Now using "
+                "default capsule.",
+                oo::EntityDescription(this));
         }
     }
 
@@ -2399,29 +2503,38 @@ void ShipEntity::addSubentityToCollisionRadius(Entity* subent)
 bool ShipEntity::validForAddToUniverse()
 {
     if (shipinfoDictionary.isNull()) {
-        OO_LOG("shipEntity.notDict", "Ship {} was not set up from dictionary.", oo::EntityDescription(this));
+        OO_LOG("shipEntity.notDict", "Ship {} was not set up from dictionary.",
+            oo::EntityDescription(this));
         return NO;
     }
-    return OOEntityWithDrawable::validForAddToUniverse(); // [super validForAddToUniverse]
+    return OOEntityWithDrawable::
+        validForAddToUniverse(); // [super validForAddToUniverse]
 }
 
 bool ShipEntity::checkCloseCollisionWith(Entity* otherPart)
 {
     if (oo::WithObject(otherPart) == nullptr)
         return NO; // (no object: nil)
-    if (std::find_if(collidingEntities.begin(), collidingEntities.end(), [otherPart](const oo::EntityHold& e) { return e.get() == otherPart; }) != collidingEntities.end())
-        return NO; // we know about this already! (-containsObject:, identity for entities)
+    if (std::find_if(collidingEntities.begin(), collidingEntities.end(),
+            [otherPart](const oo::EntityHold& e) {
+                return e.get() == otherPart;
+            })
+        != collidingEntities.end())
+        return NO; // we know about this already! (-containsObject:, identity for
+                   // entities)
 
     ::ShipEntity* otherShip = nil;
     if (oo::EntityIsShip(otherPart))
         otherShip = oo::ToShip(otherPart);
 
     if (canScoop(otherShip))
-        return YES; // quick test - could this improve scooping for small ships? I think so!
+        return YES; // quick test - could this improve scooping for small ships? I
+                    // think so!
 
     if (otherShip != nil && trackCloseContacts) {
-        // in update we check if close contacts have gone out of touch range (origin within our collision_radius)
-        // here we check if something has come within that range
+        // in update we check if close contacts have gone out of touch range (origin
+        // within our collision_radius) here we check if something has come within
+        // that range
         HPVector otherPos = (otherShip != nullptr ? otherShip->getPosition() : HPVector { });
         OOUniversalID otherID = (otherShip != nullptr ? otherShip->getUniversalID() : OOUniversalID { });
         const std::string other_key = oo::str::format("%d", otherID);
@@ -2429,7 +2542,8 @@ bool ShipEntity::checkCloseCollisionWith(Entity* otherPart)
         if (!closeContactsInfo.contains(other_key) && HPdistance2(position, otherPos) < collision_radius * collision_radius) {
             // calculate position with respect to our own position and orientation
             Vector dpos = HPVectorToVector(HPvector_between(position, otherPos));
-            Vector rpos = make_vector(dot_product(dpos, v_right), dot_product(dpos, v_up), dot_product(dpos, v_forward));
+            Vector rpos = make_vector(dot_product(dpos, v_right), dot_product(dpos, v_up),
+                dot_product(dpos, v_forward));
             closeContactsInfo[other_key] = oo::str::format("%f %f %f", rpos.x, rpos.y, rpos.z);
 
             // send AI a message about the touch
@@ -2448,13 +2562,13 @@ bool ShipEntity::checkCloseCollisionWith(Entity* otherPart)
      * the situations where the effect of adding hundreds of extra
      * false-positive collisions leaves the player returning to a
      * mess... So, commented out: CIM 21 Jan 2014
-    if (zero_distance > CLOSE_COLLISION_CHECK_MAX_RANGE2)	// don't work too hard on entities that are far from the player
-    return YES;
+    if (zero_distance > CLOSE_COLLISION_CHECK_MAX_RANGE2)	// don't work too hard
+    on entities that are far from the player return YES;
     */
 
     if (otherShip != nil) {
         // check hull octree versus other hull octree
-        collider = doOctreesCollide(this, otherShip); // the C++ part (bead oo-9ht.39.4)
+        collider = doOctreesCollide(this, otherShip); // the C++ part
         return (collider != nil);
     }
 
@@ -2463,20 +2577,22 @@ bool ShipEntity::checkCloseCollisionWith(Entity* otherPart)
     return YES;
 }
 
-// Slice 7 of docs/phases/3-slices/ShipEntity.md (bead oo-k2q1f): update:. Members of the C++ ship,
-// called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// update:. Members of the C++ ship.
 
 void ShipEntity::update(OOTimeDelta delta_t)
 {
     if (shipinfoDictionary.isNull()) {
-        OO_LOG("shipEntity.notDict", "Ship {} was not set up from dictionary.", oo::EntityDescription(this));
+        OO_LOG("shipEntity.notDict", "Ship {} was not set up from dictionary.",
+            oo::EntityDescription(this));
         if (UNIVERSE != nullptr)
             UNIVERSE->removeEntity(this);
         return;
     }
 
     if (!isfinite(maxFlightSpeed)) {
-        OO_LOG("ship.sanityCheck.failed", "Ship {} {} infinite top speed, clamped to 300.", oo::EntityDescription(this), "had");
+        OO_LOG("ship.sanityCheck.failed",
+            "Ship {} {} infinite top speed, clamped to 300.",
+            oo::EntityDescription(this), "had");
         maxFlightSpeed = 300;
     }
 
@@ -2484,13 +2600,19 @@ void ShipEntity::update(OOTimeDelta delta_t)
 
     if (isDemoShip) {
         if (demoRate > 0) {
-            OOScalar cos1 = cos(M_PI * ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) * demoRate / 11);
-            OOScalar sin1 = sin(M_PI * ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) * demoRate / 11);
-            OOScalar cos2 = cos(-M_PI * ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) * demoRate / 15);
-            OOScalar sin2 = sin(-M_PI * ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) * demoRate / 15);
+            OOScalar cos1 = cos(
+                M_PI * ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) * demoRate / 11);
+            OOScalar sin1 = sin(
+                M_PI * ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) * demoRate / 11);
+            OOScalar cos2 = cos(
+                -M_PI * ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) * demoRate / 15);
+            OOScalar sin2 = sin(
+                -M_PI * ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) * demoRate / 15);
             Quaternion q1 = make_quaternion(cos1, sin1 * sqrt(3) / 2, sin1 / 2, 0);
-            Quaternion q2 = make_quaternion(cos2, -sin2 * sqrt(4) / sqrt(5), 0, sin2 * sqrt(1) / sqrt(5));
-            setOrientation(quaternion_multiply(q2, quaternion_multiply(q1, demoStartOrientation)));
+            Quaternion q2 = make_quaternion(cos2, -sin2 * sqrt(4) / sqrt(5), 0,
+                sin2 * sqrt(1) / sqrt(5));
+            setOrientation(quaternion_multiply(
+                q2, quaternion_multiply(q1, demoStartOrientation)));
         }
 
         OOEntityWithDrawable::update(delta_t); // [super update:delta_t]
@@ -2514,7 +2636,10 @@ void ShipEntity::update(OOTimeDelta delta_t)
     if (!isSubEnt) {
         if (scanClass == CLASS_NOT_SET) {
             scanClass = CLASS_NEUTRAL;
-            OO_LOG("ship.sanityCheck.failed", "Ship {} {} with scanClass CLASS_NOT_SET; forced to CLASS_NEUTRAL.", oo::EntityDescription(this), getPrimaryRole().value_or("(null)"));
+            OO_LOG(
+                "ship.sanityCheck.failed",
+                "Ship {} {} with scanClass CLASS_NOT_SET; forced to CLASS_NEUTRAL.",
+                oo::EntityDescription(this), getPrimaryRole().value_or("(null)"));
         }
 
         updateTrackingCurve();
@@ -2540,42 +2665,58 @@ void ShipEntity::update(OOTimeDelta delta_t)
         }
 
         if (trackCloseContacts) {
-            // in checkCloseCollisionWith: we check if some thing has come within touch range (origin within our collision_radius)
-            // here we check if it has gone outside that range
-            // create a temp copy to iterate over, since we may want to
-            // change the original. ORDER: byte order of the ID text (was the dictionary's hash order).
+            // in checkCloseCollisionWith: we check if some thing has come within
+            // touch range (origin within our collision_radius) here we check if it
+            // has gone outside that range create a temp copy to iterate over, since
+            // we may want to change the original. ORDER: byte order of the ID text
+            // (was the dictionary's hash order).
             const std::map<std::string, std::string, std::less<>> closeContactsTemp = closeContactsInfo;
             for (const auto& [other_key, other_position] : closeContactsTemp) {
-                ::ShipEntity* other = oo::ToShip((UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(IntValueOfKey(other_key)) : nullptr));
+                ::ShipEntity* other = oo::ToShip(
+                    (UNIVERSE != nullptr
+                            ? UNIVERSE->entityForUniversalID(IntValueOfKey(other_key))
+                            : nullptr));
                 if ((other != nil) && (other->isShip)) {
                     if (HPdistance2(position, other->position) > collision_radius * collision_radius) // moved beyond our sphere!
                     {
-                        // calculate position with respect to our own position and orientation
+                        // calculate position with respect to our own position and
+                        // orientation
                         Vector dpos = HPVectorToVector(HPvector_between(position, other->position));
-                        Vector pos1 = make_vector(dot_product(dpos, v_right), dot_product(dpos, v_up), dot_product(dpos, v_forward));
+                        Vector pos1 = make_vector(dot_product(dpos, v_right), dot_product(dpos, v_up),
+                            dot_product(dpos, v_forward));
                         Vector pos0 = { 0, 0, 0 };
                         const auto contact = closeContactsInfo.find(other_key);
-                        cxx_ScanVectorFromString(contact != closeContactsInfo.end() ? std::optional<std::string>(contact->second) : std::nullopt, &pos0);
+                        cxx_ScanVectorFromString(
+                            contact != closeContactsInfo.end()
+                                ? std::optional<std::string>(contact->second)
+                                : std::nullopt,
+                            &pos0);
                         // send AI messages about the contact
                         const oo::WeakRef<Entity> temp = _primaryTarget;
                         _primaryTarget = oo::WeakRef<Entity>(other);
                         if ((pos0.x < 0.0) && (pos1.x > 0.0)) {
-                            doScriptEvent(OOJSID("shipTraversePositiveX"), other, "POSITIVE X TRAVERSE");
+                            doScriptEvent(OOJSID("shipTraversePositiveX"), other,
+                                "POSITIVE X TRAVERSE");
                         }
                         if ((pos0.x > 0.0) && (pos1.x < 0.0)) {
-                            doScriptEvent(OOJSID("shipTraverseNegativeX"), other, "NEGATIVE X TRAVERSE");
+                            doScriptEvent(OOJSID("shipTraverseNegativeX"), other,
+                                "NEGATIVE X TRAVERSE");
                         }
                         if ((pos0.y < 0.0) && (pos1.y > 0.0)) {
-                            doScriptEvent(OOJSID("shipTraversePositiveY"), other, "POSITIVE Y TRAVERSE");
+                            doScriptEvent(OOJSID("shipTraversePositiveY"), other,
+                                "POSITIVE Y TRAVERSE");
                         }
                         if ((pos0.y > 0.0) && (pos1.y < 0.0)) {
-                            doScriptEvent(OOJSID("shipTraverseNegativeY"), other, "NEGATIVE Y TRAVERSE");
+                            doScriptEvent(OOJSID("shipTraverseNegativeY"), other,
+                                "NEGATIVE Y TRAVERSE");
                         }
                         if ((pos0.z < 0.0) && (pos1.z > 0.0)) {
-                            doScriptEvent(OOJSID("shipTraversePositiveZ"), other, "POSITIVE Z TRAVERSE");
+                            doScriptEvent(OOJSID("shipTraversePositiveZ"), other,
+                                "POSITIVE Z TRAVERSE");
                         }
                         if ((pos0.z > 0.0) && (pos1.z < 0.0)) {
-                            doScriptEvent(OOJSID("shipTraverseNegativeZ"), other, "NEGATIVE Z TRAVERSE");
+                            doScriptEvent(OOJSID("shipTraverseNegativeZ"), other,
+                                "NEGATIVE Z TRAVERSE");
                         }
                         _primaryTarget = temp;
                         closeContactsInfo.erase(other_key);
@@ -2591,17 +2732,20 @@ void ShipEntity::update(OOTimeDelta delta_t)
 #ifdef OO_DEBUG_MONITOR_ENABLED
     // DEBUGGING
     if (reportAIMessages && (debugLastBehaviour != behaviour)) {
-        OO_LOG("entity.behaviour.changed", "{} behaviour is now {}", oo::EntityDescription(this), cxx_OOStringFromBehaviour(behaviour));
+        OO_LOG("entity.behaviour.changed", "{} behaviour is now {}",
+            oo::EntityDescription(this), cxx_OOStringFromBehaviour(behaviour));
         debugLastBehaviour = behaviour;
     }
 #endif
 
     // cool all weapons.
     weapon_temp = fmaxf(weapon_temp - (float)(WEAPON_COOLING_FACTOR * delta_t), 0.0f);
-    forward_weapon_temp = fmaxf(forward_weapon_temp - (float)(WEAPON_COOLING_FACTOR * delta_t), 0.0f);
+    forward_weapon_temp = fmaxf(
+        forward_weapon_temp - (float)(WEAPON_COOLING_FACTOR * delta_t), 0.0f);
     aft_weapon_temp = fmaxf(aft_weapon_temp - (float)(WEAPON_COOLING_FACTOR * delta_t), 0.0f);
     port_weapon_temp = fmaxf(port_weapon_temp - (float)(WEAPON_COOLING_FACTOR * delta_t), 0.0f);
-    starboard_weapon_temp = fmaxf(starboard_weapon_temp - (float)(WEAPON_COOLING_FACTOR * delta_t), 0.0f);
+    starboard_weapon_temp = fmaxf(
+        starboard_weapon_temp - (float)(WEAPON_COOLING_FACTOR * delta_t), 0.0f);
 
     // update time between shots
     shot_time += delta_t;
@@ -2619,7 +2763,8 @@ void ShipEntity::update(OOTimeDelta delta_t)
         ::OOSunEntity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
         if (sun != nil) {
             // set the ambient temperature here
-            double sun_zd = HPdistance2(position, (sun != nullptr ? sun->getPosition() : HPVector { })); // square of distance
+            double sun_zd = HPdistance2(
+                position, (sun != nullptr ? sun->getPosition() : HPVector { })); // square of distance
             double sun_cr = sun->collision_radius;
             double alt1 = sun_cr * sun_cr / sun_zd;
             external_temp = SUN_TEMPERATURE * alt1;
@@ -2651,7 +2796,8 @@ void ShipEntity::update(OOTimeDelta delta_t)
         }
     } else // subents
     {
-        ship_temperature = (oo::ToShip(owner()) != nullptr ? oo::ToShip(owner())->temperature() : 0.0f);
+        ship_temperature = (oo::ToShip(owner()) != nullptr ? oo::ToShip(owner())->temperature()
+                                                           : 0.0f);
     }
 
     if (ship_temperature > SHIP_MAX_CABIN_TEMP)
@@ -2671,7 +2817,6 @@ void ShipEntity::update(OOTimeDelta delta_t)
     }
 
     if (!isSubEnt) {
-
         // cloaking device
         if (hasCloakingDevice()) {
             if (cloaking_device_active) {
@@ -2720,7 +2865,8 @@ void ShipEntity::update(OOTimeDelta delta_t)
 
     // scripting
     if (!haveExecutedSpawnAction) {
-        // When crashing into a boulder, STATUS_LAUNCHING is sometimes skipped on scooping the resulting splinters.
+        // When crashing into a boulder, STATUS_LAUNCHING is sometimes skipped on
+        // scooping the resulting splinters.
         OOEntityStatus status = this->status();
         if (script != nullptr && (status == STATUS_IN_FLIGHT || status == STATUS_LAUNCHING || status == STATUS_BEING_SCOOPED || (status == STATUS_ACTIVE && this == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr)))) {
             if (PLAYER != nullptr)
@@ -2744,7 +2890,10 @@ void ShipEntity::update(OOTimeDelta delta_t)
     if (status() == STATUS_LAUNCHING) {
         if ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) > launch_time + launch_delay) // move for while before thinking
         {
-            ::StationEntity* stationLaunchedFrom = oo::ToStation((UNIVERSE != nullptr ? UNIVERSE->nearestEntityMatchingPredicate(IsStationPredicate, NULL, this) : nullptr));
+            ::StationEntity* stationLaunchedFrom = oo::ToStation(
+                (UNIVERSE != nullptr ? UNIVERSE->nearestEntityMatchingPredicate(
+                                           IsStationPredicate, NULL, this)
+                                     : nullptr));
             setStatus(STATUS_IN_FLIGHT);
             // awaken JS-based AIs
             haveStartedJSAI = YES;
@@ -2787,7 +2936,8 @@ void ShipEntity::update(OOTimeDelta delta_t)
     //
     if (status() == STATUS_BEING_SCOOPED) {
         // if we are being tractored, but we have no owner, then we have a problem
-        if (behaviour != BEHAVIOUR_TRACTORED || owner() == nil || oo::LiveOwner(this) == this) // NO_TARGET is 0: `[self owner] == (id)NO_TARGET` only repeated the nil test
+        if (behaviour != BEHAVIOUR_TRACTORED || owner() == nil || oo::LiveOwner(this) == this) // NO_TARGET is 0: `[self owner] == (id)NO_TARGET` only
+                                                                                               // repeated the nil test
         {
             // escaped tractor beam
             setStatus(STATUS_IN_FLIGHT); // should correct 'uncollidable objects' bug
@@ -2795,7 +2945,9 @@ void ShipEntity::update(OOTimeDelta delta_t)
             frustration = 0.0;
             setOwner(this);
             if (shipAI != nullptr)
-                shipAI->exitStateMachineWithMessage(std::nullopt); // Escapepods and others should continue their old AI here.
+                shipAI->exitStateMachineWithMessage(
+                    std::nullopt); // Escapepods and others should continue their old
+                                   // AI here.
         }
     }
 
@@ -2825,15 +2977,20 @@ void ShipEntity::update(OOTimeDelta delta_t)
             refreshEscortPositions();
             if (hasEscorts()) {
                 unsigned i = 0;
-                // Note: works on escortArray rather than escortEnumerator because escorts may be mutated.
+                // Note: works on escortArray rather than escortEnumerator because
+                // escorts may be mutated.
                 for (const auto& escort : escortArray()) {
                     if (oo::ToShip(escort.get()) != nullptr)
-                        oo::ToShip(escort.get())->setEscortDestination(coordinatesForEscortPosition(i++));
+                        oo::ToShip(escort.get())
+                            ->setEscortDestination(coordinatesForEscortPosition(i++));
                 }
 
-                ::ShipEntity* leader = (escortGroup() != nullptr ? escortGroup()->leader() : (::ShipEntity*)nil);
+                ::ShipEntity* leader = (escortGroup() != nullptr ? escortGroup()->leader()
+                                                                 : (::ShipEntity*)nil);
                 if (leader != nil && ((leader != nullptr ? leader->getScanClass() : OOScanClass { }) != getScanClass())) {
-                    OO_LOG("ship.sanityCheck.failed", "Ship {} escorting {} with wrong scanclass!", oo::EntityDescription(this), oo::EntityDescription(leader));
+                    OO_LOG("ship.sanityCheck.failed",
+                        "Ship {} escorting {} with wrong scanclass!",
+                        oo::EntityDescription(this), oo::EntityDescription(leader));
                     if (escortGroup() != nullptr)
                         escortGroup()->removeShip(this);
                     setEscortGroup(nullptr);
@@ -2881,9 +3038,8 @@ void ShipEntity::update(OOTimeDelta delta_t)
     }
 }
 
-// Slice 8 of docs/phases/3-slices/ShipEntity.md (bead oo-vxdsc): behaviour dispatch, attack
-// response, equipment queries. Members of the C++ ship, called directly, since bead oo-9ht.144
-// deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Behaviour dispatch, attack response, equipment queries. Members of the C++
+// ship.
 
 void ShipEntity::processBehaviour(OOTimeDelta delta_t)
 {
@@ -3057,9 +3213,9 @@ void ShipEntity::respondToAttackFrom(Entity* from, Entity* other)
 
         // JSAIs handle friendly fire themselves
         if (!hasNewAI()) {
-
             ::ShipEntity* hunter = oo::ToShip(other);
-            // if we are in the same group, then we have to be careful about how we handle things
+            // if we are in the same group, then we have to be careful about how we
+            // handle things
             if (isPolice() && (hunter != nullptr ? hunter->isPolice() : false)) {
                 // police never get into a fight with each other
                 return;
@@ -3108,7 +3264,8 @@ void ShipEntity::respondToAttackFrom(Entity* from, Entity* other)
 
 // Equipment
 
-bool ShipEntity::hasOneEquipmentItem(const std::string& itemKey, bool includeWeapons, bool loading)
+bool ShipEntity::hasOneEquipmentItem(const std::string& itemKey,
+    bool includeWeapons, bool loading)
 {
     if (hasOneEquipmentItemIncludingMissiles(itemKey, includeWeapons, loading))
         return YES;
@@ -3131,7 +3288,8 @@ bool ShipEntity::hasOneEquipmentItem(const std::string& itemKey, bool includeWea
     return NO;
 }
 
-bool ShipEntity::hasOneEquipmentItemIncludingMissiles(const std::string& itemKey, bool includeMissiles, bool loading)
+bool ShipEntity::hasOneEquipmentItemIncludingMissiles(
+    const std::string& itemKey, bool includeMissiles, bool loading)
 {
     if (std::ranges::find(_equipment, itemKey) != _equipment.end())
         return YES;
@@ -3156,14 +3314,18 @@ bool ShipEntity::hasOneEquipmentItemIncludingMissiles(const std::string& itemKey
 
 bool ShipEntity::hasPrimaryWeapon(OOWeaponType weaponType)
 {
-    // -isEqualToString: of the identifiers: a nil weapon (nullopt) matches nothing.
-    const std::optional<std::string> weaponIdentifier = (weaponType != nullptr ? weaponType->identifier() : std::optional<std::string>());
+    // -isEqualToString: of the identifiers: a nil weapon (nullopt) matches
+    // nothing.
+    const std::optional<std::string> weaponIdentifier = (weaponType != nullptr ? weaponType->identifier()
+                                                                               : std::optional<std::string>());
     if (weaponIdentifier.has_value() && ((forward_weapon_type != nullptr ? forward_weapon_type->identifier() : std::optional<std::string>()) == weaponIdentifier || (aft_weapon_type != nullptr ? aft_weapon_type->identifier() : std::optional<std::string>()) == weaponIdentifier || (port_weapon_type != nullptr ? port_weapon_type->identifier() : std::optional<std::string>()) == weaponIdentifier || (starboard_weapon_type != nullptr ? starboard_weapon_type->identifier() : std::optional<std::string>()) == weaponIdentifier)) {
         return YES;
     }
 
     for (const auto& subEntity : shipSubEntities()) {
-        if ((oo::ToShip(subEntity.get()) != nullptr ? oo::ToShip(subEntity.get())->hasPrimaryWeapon(weaponType) : false))
+        if ((oo::ToShip(subEntity.get()) != nullptr
+                    ? oo::ToShip(subEntity.get())->hasPrimaryWeapon(weaponType)
+                    : false))
             return YES;
     }
 
@@ -3175,15 +3337,18 @@ NSUInteger ShipEntity::countEquipmentItem(const std::string& eqkey)
     return (NSUInteger)std::ranges::count(_equipment, eqkey);
 }
 
-bool ShipEntity::hasEquipmentItem(const oo::PList& equipmentKeys, bool includeWeapons, bool loading)
+bool ShipEntity::hasEquipmentItem(const oo::PList& equipmentKeys,
+    bool includeWeapons, bool loading)
 {
-    // this method is also used internally to find out if an equipped item is undamaged.
+    // this method is also used internally to find out if an equipped item is
+    // undamaged.
     if (const std::string* key = equipmentKeys.getIf<std::string>()) {
         return hasOneEquipmentItem(*key, includeWeapons, loading);
     } else {
         OOCParameterAssert(equipmentKeys.isArray());
 
-        // Any match: order-insensitive. Only string keys can match an equipment key.
+        // Any match: order-insensitive. Only string keys can match an equipment
+        // key.
         if (const oo::PList::Array* keys = equipmentKeys.getIf<oo::PList::Array>()) {
             for (const oo::PList& element : *keys) {
                 const std::string* elementKey = element.getIf<std::string>();
@@ -3219,7 +3384,8 @@ bool ShipEntity::hasEquipmentItemProviding(const std::string& equipmentType)
     return NO;
 }
 
-std::optional<std::string> ShipEntity::equipmentItemProviding(const std::string& equipmentType)
+std::optional<std::string> ShipEntity::equipmentItemProviding(
+    const std::string& equipmentType)
 {
     for (const std::string& key : _equipment) {
         if (key == equipmentType) {
@@ -3235,7 +3401,8 @@ std::optional<std::string> ShipEntity::equipmentItemProviding(const std::string&
     return std::nullopt;
 }
 
-bool ShipEntity::hasAllEquipment(const oo::PList& equipmentKeys, bool includeWeapons, bool loading)
+bool ShipEntity::hasAllEquipment(const oo::PList& equipmentKeys,
+    bool includeWeapons, bool loading)
 {
     if (_equipment.empty())
         return NO;
@@ -3247,7 +3414,8 @@ bool ShipEntity::hasAllEquipment(const oo::PList& equipmentKeys, bool includeWea
     else if (const oo::PList::Array* elements = equipmentKeys.getIf<oo::PList::Array>()) {
         for (const oo::PList& element : *elements) {
             const std::string* elementKey = element.getIf<std::string>();
-            // A key that is not a string is never held: the whole test fails, as it did.
+            // A key that is not a string is never held: the whole test fails, as it
+            // did.
             if (elementKey == nullptr)
                 return NO;
             keys.push_back(*elementKey);
@@ -3269,26 +3437,20 @@ bool ShipEntity::hasAllEquipment(const oo::PList& equipmentKeys)
     return hasAllEquipment(equipmentKeys, NO, NO);
 }
 
-bool ShipEntity::hasHyperspaceMotor()
-{
-    return hyperspaceMotorSpinTime >= 0;
-}
+bool ShipEntity::hasHyperspaceMotor() { return hyperspaceMotorSpinTime >= 0; }
 
-float ShipEntity::hyperspaceSpinTime()
-{
-    return hyperspaceMotorSpinTime;
-}
+float ShipEntity::hyperspaceSpinTime() { return hyperspaceMotorSpinTime; }
 
 void ShipEntity::setHyperspaceSpinTime(float newValue)
 {
     hyperspaceMotorSpinTime = newValue;
 }
 
-// Slice 9 of docs/phases/3-slices/ShipEntity.md (bead oo-ke13m): equipment validity and adding,
-// weapon mounts, scripting lists. Members of the C++ ship, called directly, since bead oo-9ht.144
-// deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Equipment validity and adding, weapon mounts, scripting lists. Members of the
+// C++ ship.
 
-bool ShipEntity::canAddEquipment(const std::string& equipmentKeyIn, const std::string& context)
+bool ShipEntity::canAddEquipment(const std::string& equipmentKeyIn,
+    const std::string& context)
 {
     std::string equipmentKey = equipmentKeyIn;
     if (oo::str::hasSuffix(equipmentKey, "_DAMAGED")) {
@@ -3312,12 +3474,10 @@ bool ShipEntity::canAddEquipment(const std::string& equipmentKeyIn, const std::s
     return YES;
 }
 
-OOWeaponFacingSet ShipEntity::weaponFacings()
-{
-    return weapon_facings;
-}
+OOWeaponFacingSet ShipEntity::weaponFacings() { return weapon_facings; }
 
-OOWeaponType ShipEntity::weaponTypeIDForFacing(OOWeaponFacing facing, bool strict)
+OOWeaponType ShipEntity::weaponTypeIDForFacing(OOWeaponFacing facing,
+    bool strict)
 {
     OOWeaponType weaponType = nil;
 
@@ -3325,7 +3485,8 @@ OOWeaponType ShipEntity::weaponTypeIDForFacing(OOWeaponFacing facing, bool stric
         switch (facing) {
         case WEAPON_FACING_FORWARD:
             weaponType = forward_weapon_type;
-            // if no forward weapon, and not carrying out a strict check, see if subentities have forward weapons, return the first one found.
+            // if no forward weapon, and not carrying out a strict check, see if
+            // subentities have forward weapons, return the first one found.
             if (isWeaponNone(weaponType) && !strict) {
                 for (const auto& subEntity : shipSubEntities()) {
                     if (!isWeaponNone(weaponType))
@@ -3355,10 +3516,12 @@ OOWeaponType ShipEntity::weaponTypeIDForFacing(OOWeaponFacing facing, bool stric
     return weaponType;
 }
 
-::OOEquipmentType* ShipEntity::weaponTypeForFacing(OOWeaponFacing facing, bool strict)
+::OOEquipmentType* ShipEntity::weaponTypeForFacing(OOWeaponFacing facing,
+    bool strict)
 {
-    //	OOWeaponType weaponType = [self weaponTypeIDForFacing:facing strict:strict];
-    //	return [OOEquipmentType equipmentTypeWithIdentifier:OOEquipmentIdentifierFromWeaponType(weaponType)];
+    //	OOWeaponType weaponType = [self weaponTypeIDForFacing:facing
+    // strict:strict]; 	return [OOEquipmentType
+    // equipmentTypeWithIdentifier:OOEquipmentIdentifierFromWeaponType(weaponType)];
     return weaponTypeIDForFacing(facing, strict);
 }
 
@@ -3389,12 +3552,14 @@ oo::PList ShipEntity::contractListForScripting()
     return oo::PList(oo::PList::Array { }); // an empty array
 }
 
-::OOEquipmentType* ShipEntity::generateMissileEquipmentTypeFrom(const std::string& role)
+::OOEquipmentType* ShipEntity::generateMissileEquipmentTypeFrom(
+    const std::string& role)
 {
-    /* 	The generated missile equipment type provides for backward compatibility with pre-1.74 OXPs  missile_roles
-            and follows this template:
+    /* 	The generated missile equipment type provides for backward compatibility
+       with pre-1.74 OXPs  missile_roles and follows this template:
 
-            //NPC equipment, incompatible with player ship. Not buyable because of its TL.
+            //NPC equipment, incompatible with player ship. Not buyable because of
+       its TL.
             (
                     100, 100000, "Missile",
                     "EQ_X_MISSILE",
@@ -3404,14 +3569,16 @@ oo::PList ShipEntity::contractListForScripting()
                     }
             )
     */
-    const oo::PList itemInfo(oo::PList::Array { "100", "100000", "Missile", role, "Unidentified missile type.",
+    const oo::PList itemInfo(oo::PList::Array {
+        "100", "100000", "Missile", role, "Unidentified missile type.",
         oo::PList(oo::PList::Dict { { "is_external_store", oo::PList("true") } }) });
 
     OOEquipmentType::addEquipmentWithInfo(itemInfo);
     return OOEquipmentType::equipmentTypeWithIdentifier(role).get();
 }
 
-std::vector<oo::Ref<::OOEquipmentType>> ShipEntity::equipmentListForScripting()
+std::vector<oo::Ref<::OOEquipmentType>>
+ShipEntity::equipmentListForScripting()
 {
     std::vector<oo::Ref<::OOEquipmentType>> quip;
     ::OOEquipmentType* eqType = nil;
@@ -3419,7 +3586,9 @@ std::vector<oo::Ref<::OOEquipmentType>> ShipEntity::equipmentListForScripting()
 
     for (const auto& eqTypeRef : OOEquipmentType::allEquipmentTypes()) {
         eqType = eqTypeRef.get();
-        const std::string identifier = (eqType != nullptr ? eqType->identifier() : std::optional<std::string>()).value_or("");
+        const std::string identifier = (eqType != nullptr ? eqType->identifier()
+                                                          : std::optional<std::string>())
+                                           .value_or("");
         // Equipment list,  consistent with the rest of the API - Kaks
         if ((eqType != nullptr ? eqType->canCarryMultiple() : false)) {
             const std::string damagedIdentifier = identifier + "_DAMAGED";
@@ -3440,7 +3609,8 @@ std::vector<oo::Ref<::OOEquipmentType>> ShipEntity::equipmentListForScripting()
 
     // Passengers - not supported yet for NPCs, but it's here for genericity.
     if (passengerCapacity() > 0) {
-        eqType = OOEquipmentType::equipmentTypeWithIdentifier("EQ_PASSENGER_BERTH").get();
+        eqType = OOEquipmentType::equipmentTypeWithIdentifier("EQ_PASSENGER_BERTH")
+                     .get();
         //[quip addObject:[self eqDictionaryWithType:eqType isDamaged:NO]];
         quip.emplace_back(eqType);
     }
@@ -3448,12 +3618,14 @@ std::vector<oo::Ref<::OOEquipmentType>> ShipEntity::equipmentListForScripting()
     return quip;
 }
 
-bool ShipEntity::equipmentValidToAdd(const std::string& equipmentKey, const std::string& context)
+bool ShipEntity::equipmentValidToAdd(const std::string& equipmentKey,
+    const std::string& context)
 {
     return equipmentValidToAdd(equipmentKey, NO, context);
 }
 
-bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey, bool loading, const std::string& context)
+bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey,
+    bool loading, const std::string& context)
 {
     ::OOEquipmentType* eqType = nil;
     BOOL validationForDamagedEquipment = NO;
@@ -3467,26 +3639,33 @@ bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey, bool l
     if (eqType == nil)
         return NO;
 
-    // need to know if we are trying to add a Repair version of the equipment. In some cases
-    // (e.g. available cargo space required), it makes sense to deny installation of equipment
-    // if the condition is not satisfied, but it doesn't make sense to deny repair when the
-    // equipment is already installed. For now, we are checking only the cargo space condition,
-    // but other conditions might need to be revised too. - Nikos, 20151115
-    if (hasEquipmentItem(OptionalKeyPList((eqType != nullptr ? eqType->damagedIdentifier() : std::optional<std::string>())))) {
+    // need to know if we are trying to add a Repair version of the equipment. In
+    // some cases (e.g. available cargo space required), it makes sense to deny
+    // installation of equipment if the condition is not satisfied, but it doesn't
+    // make sense to deny repair when the equipment is already installed. For now,
+    // we are checking only the cargo space condition, but other conditions might
+    // need to be revised too. - Nikos, 20151115
+    if (hasEquipmentItem(OptionalKeyPList(
+            (eqType != nullptr ? eqType->damagedIdentifier()
+                               : std::optional<std::string>())))) {
         validationForDamagedEquipment = YES;
     }
 
-    // not all conditions make sence checking while loading a game with already purchaged equipment.
-    // while loading, we mainly need to catch changes when the installed oxps set has changed since saving.
+    // not all conditions make sence checking while loading a game with already
+    // purchaged equipment. while loading, we mainly need to catch changes when
+    // the installed oxps set has changed since saving.
     if ((eqType != nullptr ? eqType->requiresEmptyPylon() : false) && missileCount() >= missileCapacity() && !loading)
         return NO;
     if ((eqType != nullptr ? eqType->requiresMountedPylon() : false) && missileCount() == 0 && !loading)
         return NO;
     if (availableCargoSpace() < (eqType != nullptr ? eqType->requiredCargoSpace() : 0) && !validationForDamagedEquipment && !loading)
         return NO;
-    const std::optional<std::vector<std::string>> requiresEquipment = (eqType != nullptr ? eqType->requiresEquipment() : std::optional<std::vector<std::string>>());
-    const std::optional<std::vector<std::string>> requiresAnyEquipment = (eqType != nullptr ? eqType->requiresAnyEquipment() : std::optional<std::vector<std::string>>());
-    const std::optional<std::vector<std::string>> incompatibleEquipment = (eqType != nullptr ? eqType->incompatibleEquipment() : std::optional<std::vector<std::string>>());
+    const std::optional<std::vector<std::string>> requiresEquipment = (eqType != nullptr ? eqType->requiresEquipment()
+                                                                                         : std::optional<std::vector<std::string>>());
+    const std::optional<std::vector<std::string>> requiresAnyEquipment = (eqType != nullptr ? eqType->requiresAnyEquipment()
+                                                                                            : std::optional<std::vector<std::string>>());
+    const std::optional<std::vector<std::string>> incompatibleEquipment = (eqType != nullptr ? eqType->incompatibleEquipment()
+                                                                                             : std::optional<std::vector<std::string>>());
     if (requiresEquipment.has_value() && !hasAllEquipment(KeysPList(*requiresEquipment), YES, loading))
         return NO;
     if (requiresAnyEquipment.has_value() && !hasEquipmentItem(KeysPList(*requiresAnyEquipment), YES, loading))
@@ -3505,18 +3684,28 @@ bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey, bool l
         return NO;
 
     if (!loading) {
-        const std::optional<std::string> condition_script = (eqType != nullptr ? eqType->conditionScript() : std::optional<std::string>());
+        const std::optional<std::string> condition_script = (eqType != nullptr ? eqType->conditionScript()
+                                                                               : std::optional<std::string>());
         if (condition_script.has_value()) {
-            ::OOScript* condScript = (UNIVERSE != nullptr ? UNIVERSE->getConditionScript(*condition_script) : nullptr);
+            ::OOScript* condScript = (UNIVERSE != nullptr ? UNIVERSE->getConditionScript(*condition_script)
+                                                          : nullptr);
             if (condScript != nil) // should always be non-nil, but just in case
             {
                 ooscript::Context JScontext = OOJSAcquireContext();
                 BOOL OK;
                 bool allow_addition = false;
                 ooscript::Value result;
-                ooscript::Value args[] = { OOJSValueFromPList(JScontext, oo::PList(equipmentKey)), OOJSValueFromCxxObject(JScontext, this), OOJSValueFromPList(JScontext, oo::PList(context)) };
+                ooscript::Value args[] = {
+                    OOJSValueFromPList(JScontext, oo::PList(equipmentKey)),
+                    OOJSValueFromCxxObject(JScontext, this),
+                    OOJSValueFromPList(JScontext, oo::PList(context))
+                };
 
-                OK = (condScript != nullptr ? condScript->callMethod(OOJSID("allowAwardEquipment"), JScontext, args, sizeof args / sizeof *args, &result) : false);
+                OK = (condScript != nullptr
+                        ? condScript->callMethod(OOJSID("allowAwardEquipment"),
+                              JScontext, args,
+                              sizeof args / sizeof *args, &result)
+                        : false);
 
                 if (OK)
                     OK = ooscript::valueToBoolean(JScontext, result, &allow_addition);
@@ -3537,14 +3726,18 @@ bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey, bool l
         if (!(eqType != nullptr ? eqType->isAvailableToPlayer() : false))
             return NO;
         if (!(eqType != nullptr ? eqType->isAvailableToAll() : false)) {
-            // find options that agree with this ship. Only player ships have these options.
-            // (Membership only: the string elements of the two arrays.)
+            // find options that agree with this ship. Only player ships have these
+            // options. (Membership only: the string elements of the two arrays.)
             ::OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
             const oo::PList shipyardInfo = registry->shipyardInfoForKey(shipDataKey().value_or(""));
             std::set<std::string> options;
             const oo::PList* standardEquipment = shipyardInfo.find(std::string(KEY_STANDARD_EQUIPMENT));
-            for (const oo::PList* list : { ArrayForKey(shipyardInfo, std::string(KEY_OPTIONAL_EQUIPMENT)),
-                     standardEquipment != nullptr ? ArrayForKey(*standardEquipment, std::string(KEY_EQUIPMENT_EXTRAS)) : nullptr }) {
+            for (const oo::PList* list :
+                { ArrayForKey(shipyardInfo, std::string(KEY_OPTIONAL_EQUIPMENT)),
+                    standardEquipment != nullptr
+                        ? ArrayForKey(*standardEquipment,
+                              std::string(KEY_EQUIPMENT_EXTRAS))
+                        : nullptr }) {
                 for (std::size_t i = 0; list != nullptr && i < list->count(); i++) {
                     if (const std::string* option = list->at(i)->getIf<std::string>())
                         options.insert(*option);
@@ -3561,7 +3754,8 @@ bool ShipEntity::equipmentValidToAdd(const std::string& fullEquipmentKey, bool l
     return YES;
 }
 
-bool ShipEntity::setWeaponMount(OOWeaponFacing facing, const std::string& eqKey)
+bool ShipEntity::setWeaponMount(OOWeaponFacing facing,
+    const std::string& eqKey)
 {
     // sets WEAPON_NONE if not recognised
     if (weapon_facings & facing) {
@@ -3593,12 +3787,15 @@ bool ShipEntity::setWeaponMount(OOWeaponFacing facing, const std::string& eqKey)
     }
 }
 
-bool ShipEntity::addEquipmentItem(const std::string& equipmentKey, const std::string& context)
+bool ShipEntity::addEquipmentItem(const std::string& equipmentKey,
+    const std::string& context)
 {
     return addEquipmentItem(equipmentKey, YES, context);
 }
 
-bool ShipEntity::addEquipmentItem(const std::string& equipmentKeyIn, bool validateAddition, const std::string& context)
+bool ShipEntity::addEquipmentItem(const std::string& equipmentKeyIn,
+    bool validateAddition,
+    const std::string& context)
 {
     ::OOEquipmentType* eqType = nil;
     std::string equipmentKey = equipmentKeyIn;
@@ -3615,14 +3812,18 @@ bool ShipEntity::addEquipmentItem(const std::string& equipmentKeyIn, bool valida
         return NO;
 
     if (oo::str::hasSuffix(equipmentKey, "_DAMAGED")) {
-        eqType = OOEquipmentType::equipmentTypeWithIdentifier(equipmentKey.substr(0, equipmentKey.size() - std::string_view("_DAMAGED").size())).get();
+        eqType = OOEquipmentType::equipmentTypeWithIdentifier(
+            equipmentKey.substr(
+                0, equipmentKey.size() - std::string_view("_DAMAGED").size()))
+                     .get();
     } else {
         eqType = OOEquipmentType::equipmentTypeWithIdentifier(equipmentKey).get();
         // in case we have the damaged version!
         if (!(eqType != nullptr ? eqType->canCarryMultiple() : false)) {
             const std::string damagedKey = equipmentKey + "_DAMAGED";
             if (std::ranges::find(_equipment, damagedKey) != _equipment.end()) {
-                std::erase(_equipment, damagedKey); // -removeObject: removed every occurrence
+                std::erase(_equipment,
+                    damagedKey); // -removeObject: removed every occurrence
                 isRepairedEquipment = YES;
             }
         }
@@ -3679,26 +3880,20 @@ bool ShipEntity::addEquipmentItem(const std::string& equipmentKeyIn, bool valida
     return YES;
 }
 
-std::vector<std::string> ShipEntity::equipmentKeys()
-{
-    return _equipment;
-}
+std::vector<std::string> ShipEntity::equipmentKeys() { return _equipment; }
 
-NSUInteger ShipEntity::equipmentCount()
-{
-    return _equipment.size();
-}
+NSUInteger ShipEntity::equipmentCount() { return _equipment.size(); }
 
-// Slice 10 of docs/phases/3-slices/ShipEntity.md (bead oo-wvcs2): equipment removal, missile
-// selection, capacities and has-equipment predicates, shields. Members of the C++ ship, called
-// directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Equipment removal, missile selection, capacities and has-equipment
+// predicates, shields. Members of the C++ ship.
 
 void ShipEntity::removeEquipmentItem(const std::string& equipmentKey)
 {
     // "" (a former nil) matches no equipment key.
     std::string equipmentTypeCheckKey = equipmentKey;
     const std::string lcEquipmentKey = oo::str::lowercase(equipmentKey);
-    // determine the equipment type and make sure it works also in the case of damaged equipment
+    // determine the equipment type and make sure it works also in the case of
+    // damaged equipment
     if (oo::str::hasSuffix(equipmentKey, "_DAMAGED")) {
         equipmentTypeCheckKey.resize(equipmentKey.size() - std::string_view("_DAMAGED").size());
     }
@@ -3711,7 +3906,8 @@ void ShipEntity::removeEquipmentItem(const std::string& equipmentKey)
     } else {
         if (std::ranges::find(_equipment, equipmentKey) != _equipment.end()) {
             if (equipmentKey != "EQ_PASSENGER_BERTH") {
-                equipment_weight -= (eqType != nullptr ? eqType->requiredCargoSpace() : 0); // all other cases;
+                equipment_weight -= (eqType != nullptr ? eqType->requiredCargoSpace()
+                                                       : 0); // all other cases;
             }
 
             if (equipmentKey == "EQ_CLOAKING_DEVICE") {
@@ -3739,7 +3935,8 @@ void ShipEntity::removeEquipmentItem(const std::string& equipmentKey)
             const std::string damagedKey = equipmentKey + "_DAMAGED";
             const auto damaged = std::ranges::find(_equipment, damagedKey);
             if (damaged != _equipment.end()) {
-                // remove damaged counterpart (the first occurrence, as -indexOfObject: found it)
+                // remove damaged counterpart (the first occurrence, as -indexOfObject:
+                // found it)
                 _equipment.erase(damaged);
                 equipment_weight -= (eqType != nullptr ? eqType->requiredCargoSpace() : 0);
             }
@@ -3780,7 +3977,8 @@ bool ShipEntity::removeExternalStore(::OOEquipmentType* eqType)
     return NO;
 }
 
-::OOEquipmentType* ShipEntity::verifiedMissileTypeFromRole(const std::string& requestedRole)
+::OOEquipmentType* ShipEntity::verifiedMissileTypeFromRole(
+    const std::string& requestedRole)
 {
     std::string role = requestedRole;
     std::optional<std::string> eqRole;
@@ -3791,30 +3989,54 @@ bool ShipEntity::removeExternalStore(::OOEquipmentType* eqType)
 
     if (isRandomMissile) {
         while (!shipKey.has_value()) {
-            shipKey = (UNIVERSE != nullptr ? UNIVERSE->randomShipKeyForRoleRespectingConditions(role) : std::optional<std::string>());
+            shipKey = (UNIVERSE != nullptr
+                    ? UNIVERSE->randomShipKeyForRoleRespectingConditions(role)
+                    : std::optional<std::string>());
             if (!shipKey.has_value()) {
-                OO_LOG_WARN("ship.setUp.missiles", "{} \"{}\" used in ship \"{}\" needs a valid {}.plist entry.{}", "random missile", shipKey.value_or("(null)"), getName().value_or("(null)"), "shipdata", "Trying another missile.");
+                OO_LOG_WARN(
+                    "ship.setUp.missiles",
+                    "{} \"{}\" used in ship \"{}\" needs a valid {}.plist entry.{}",
+                    "random missile", shipKey.value_or("(null)"),
+                    getName().value_or("(null)"), "shipdata",
+                    "Trying another missile.");
             }
         }
     } else {
-        shipKey = (UNIVERSE != nullptr ? UNIVERSE->randomShipKeyForRoleRespectingConditions(role) : std::optional<std::string>());
+        shipKey = (UNIVERSE != nullptr
+                ? UNIVERSE->randomShipKeyForRoleRespectingConditions(role)
+                : std::optional<std::string>());
         if (!shipKey.has_value()) {
-            OO_LOG_WARN("ship.setUp.missiles", "{} \"{}\" used in ship \"{}\" needs a valid {}.plist entry.{}", "missile_role", role, getName().value_or("(null)"), "shipdata", " Using defaults instead.");
+            OO_LOG_WARN(
+                "ship.setUp.missiles",
+                "{} \"{}\" used in ship \"{}\" needs a valid {}.plist entry.{}",
+                "missile_role", role, getName().value_or("(null)"), "shipdata",
+                " Using defaults instead.");
             return nil;
         }
     }
 
-    eqRole = OOEquipmentType::getMissileRegistryRoleForShip(*shipKey); // eqRole != role for generic missiles.
+    eqRole = OOEquipmentType::getMissileRegistryRoleForShip(
+        *shipKey); // eqRole != role for generic missiles.
 
     if (!eqRole.has_value()) {
-        missile = (UNIVERSE != nullptr ? UNIVERSE->newShipWithName(*shipKey) : (::ShipEntity*)nil);
+        missile = (UNIVERSE != nullptr ? UNIVERSE->newShipWithName(*shipKey)
+                                       : (::ShipEntity*)nil);
         if (!missile) {
             if (isRandomMissile)
-                OO_LOG_WARN("ship.setUp.missiles", "{} \"{}\" used in ship \"{}\" needs a valid {}.plist entry.{}", "random missile", *shipKey, getName().value_or("(null)"), "shipdata", "Trying another missile.");
+                OO_LOG_WARN(
+                    "ship.setUp.missiles",
+                    "{} \"{}\" used in ship \"{}\" needs a valid {}.plist entry.{}",
+                    "random missile", *shipKey, getName().value_or("(null)"),
+                    "shipdata", "Trying another missile.");
             else
-                OO_LOG_WARN("ship.setUp.missiles", "{} \"{}\" used in ship \"{}\" needs a valid {}.plist entry.{}", "missile_role", role, getName().value_or("(null)"), "shipdata", " Using defaults instead.");
+                OO_LOG_WARN(
+                    "ship.setUp.missiles",
+                    "{} \"{}\" used in ship \"{}\" needs a valid {}.plist entry.{}",
+                    "missile_role", role, getName().value_or("(null)"), "shipdata",
+                    " Using defaults instead.");
 
-            OOEquipmentType::setMissileRegistryRole("", *shipKey); // no valid role for this shipKey
+            OOEquipmentType::setMissileRegistryRole(
+                "", *shipKey); // no valid role for this shipKey
             if (isRandomMissile)
                 return verifiedMissileTypeFromRole(role);
             else
@@ -3823,7 +4045,9 @@ bool ShipEntity::removeExternalStore(::OOEquipmentType* eqType)
 
         if (isRandomMissile) {
             const oo::Ref<::OORoleSet> missileRoles = missile->getRoleSet();
-            for (const std::string& value : (missileRoles != nullptr) ? missileRoles->roles() : std::vector<std::string>()) {
+            for (const std::string& value : (missileRoles != nullptr)
+                    ? missileRoles->roles()
+                    : std::vector<std::string>()) {
                 role = value;
                 missileType = OOEquipmentType::equipmentTypeWithIdentifier(role).get();
                 // ensure that we have a missile or mine
@@ -3832,14 +4056,21 @@ bool ShipEntity::removeExternalStore(::OOEquipmentType* eqType)
             }
 
             if (!(missileType != nullptr ? missileType->isMissileOrMine() : false)) {
-                role = *shipKey; // unique identifier to use in lieu of a valid equipment type if none are defined inside the generic missile roleset.
+                role = *shipKey; // unique identifier to use in lieu of a valid
+                                 // equipment type if none are defined inside the
+                                 // generic missile roleset.
             }
         }
 
         missileType = OOEquipmentType::equipmentTypeWithIdentifier(role).get();
 
         if (!missileType) {
-            OO_LOG_WARN("ship.setUp.missiles", "{} \"{}\" used in ship \"{}\" needs a valid {}.plist entry.{}", (isRandomMissile ? "random missile" : "missile_role"), role, getName().value_or("(null)"), "equipment", " Enabling compatibility mode.");
+            OO_LOG_WARN(
+                "ship.setUp.missiles",
+                "{} \"{}\" used in ship \"{}\" needs a valid {}.plist entry.{}",
+                (isRandomMissile ? "random missile" : "missile_role"), role,
+                getName().value_or("(null)"), "equipment",
+                " Enabling compatibility mode.");
             missileType = generateMissileEquipmentTypeFrom(role);
         }
 
@@ -3850,7 +4081,8 @@ bool ShipEntity::removeExternalStore(::OOEquipmentType* eqType)
         if (eqRole->empty()) {
             // wrong ship definition, already written to the log in a previous call.
             if (isRandomMissile)
-                return verifiedMissileTypeFromRole(role); // try and find a valid missile with role 'missile'.
+                return verifiedMissileTypeFromRole(
+                    role); // try and find a valid missile with role 'missile'.
             return nil;
         }
         missileType = OOEquipmentType::equipmentTypeWithIdentifier(*eqRole).get();
@@ -3870,12 +4102,13 @@ bool ShipEntity::removeExternalStore(::OOEquipmentType* eqType)
         if (_missileRole.has_value())
             missileType = verifiedMissileTypeFromRole(*_missileRole);
         if (missileType == nil) {
-            _missileRole = "EQ_THARGON"; // no valid missile_role defined, use thargoid fallback from now on.
+            _missileRole = "EQ_THARGON"; // no valid missile_role defined, use
+                                         // thargoid fallback from now on.
             missileType = verifiedMissileTypeFromRole(*_missileRole);
         }
     } else {
-        // All other ships: random role 10% of the cases when auto weapons is set, if a missile_role is defined.
-        // Without auto weapons, never random.
+        // All other ships: random role 10% of the cases when auto weapons is set,
+        // if a missile_role is defined. Without auto weapons, never random.
         float randomSelectionChance = chance;
         if (!hasAutoWeapons())
             randomSelectionChance = 0.0f;
@@ -3890,7 +4123,8 @@ bool ShipEntity::removeExternalStore(::OOEquipmentType* eqType)
                 _missileRole = std::nullopt; // use generic ship fallback from now on.
             }
 
-            // assign random missiles 20% of the time without missile_role (or 10% with valid missile_role)
+            // assign random missiles 20% of the time without missile_role (or 10%
+            // with valid missile_role)
             if (chance > 0.8f)
                 role = "missile";
             // otherwise use the standard role
@@ -3902,23 +4136,31 @@ bool ShipEntity::removeExternalStore(::OOEquipmentType* eqType)
     }
 
     if (missileType == nil)
-        OO_LOG_ERR("ship.setUp.missiles", "could not resolve missile / mine type for ship \"{}\". Original missile role:\"{}\".", getName().value_or("(null)"), _missileRole.value_or("(null)"));
+        OO_LOG_ERR("ship.setUp.missiles",
+            "could not resolve missile / mine type for ship \"{}\". "
+            "Original missile role:\"{}\".",
+            getName().value_or("(null)"), _missileRole.value_or("(null)"));
 
-    role = oo::str::lowercase((missileType != nullptr ? missileType->identifier() : std::optional<std::string>()).value_or(""));
+    role = oo::str::lowercase((missileType != nullptr ? missileType->identifier()
+                                                      : std::optional<std::string>())
+            .value_or(""));
     thargoidMissile = isThargoid() && (oo::str::hasSuffix(role, "thargon") || oo::str::hasPrefix(role, "thargon"));
 
     if (thargoidMissile || (!thargoidMissile && (missileType != nullptr ? missileType->isMissileOrMine() : false))) {
         return missileType;
     } else {
-        OO_LOG_WARN("ship.setUp.missiles", "missile_role \"{}\" is not a valid missile / mine type for ship \"{}\".{}", (missileType != nullptr ? missileType->identifier() : std::optional<std::string>()).value_or("(null)"), getName().value_or("(null)"), " No missile selected.");
+        OO_LOG_WARN("ship.setUp.missiles",
+            "missile_role \"{}\" is not a valid missile / mine type for "
+            "ship \"{}\".{}",
+            (missileType != nullptr ? missileType->identifier()
+                                    : std::optional<std::string>())
+                .value_or("(null)"),
+            getName().value_or("(null)"), " No missile selected.");
         return nil;
     }
 }
 
-void ShipEntity::removeAllEquipment()
-{
-    _equipment.clear();
-}
+void ShipEntity::removeAllEquipment() { _equipment.clear(); }
 
 OOCreditsQuantity ShipEntity::removeMissiles()
 {
@@ -3926,35 +4168,17 @@ OOCreditsQuantity ShipEntity::removeMissiles()
     return 0;
 }
 
-NSUInteger ShipEntity::parcelCount()
-{
-    return 0;
-}
+NSUInteger ShipEntity::parcelCount() { return 0; }
 
-NSUInteger ShipEntity::passengerCount()
-{
-    return 0;
-}
+NSUInteger ShipEntity::passengerCount() { return 0; }
 
-NSUInteger ShipEntity::passengerCapacity()
-{
-    return 0;
-}
+NSUInteger ShipEntity::passengerCapacity() { return 0; }
 
-NSUInteger ShipEntity::missileCount()
-{
-    return missiles;
-}
+NSUInteger ShipEntity::missileCount() { return missiles; }
 
-NSUInteger ShipEntity::missileCapacity()
-{
-    return max_missiles;
-}
+NSUInteger ShipEntity::missileCapacity() { return max_missiles; }
 
-NSUInteger ShipEntity::extraCargo()
-{
-    return extra_cargo;
-}
+NSUInteger ShipEntity::extraCargo() { return extra_cargo; }
 
 /* This is used for e.g. displaying the HUD icon */
 bool ShipEntity::hasScoop()
@@ -3973,10 +4197,7 @@ bool ShipEntity::hasCargoScoop()
     return hasEquipmentItemProviding("EQ_CARGO_SCOOPS");
 }
 
-bool ShipEntity::hasECM()
-{
-    return hasEquipmentItemProviding("EQ_ECM");
-}
+bool ShipEntity::hasECM() { return hasEquipmentItemProviding("EQ_ECM"); }
 
 bool ShipEntity::hasCloakingDevice()
 {
@@ -4081,25 +4302,14 @@ float ShipEntity::shieldRechargeRate()
     return hasMilitaryShieldEnhancer() ? 3.0f : 2.0f;
 }
 
-double ShipEntity::maxHyperspaceDistance()
-{
-    return MAX_JUMP_RANGE;
-}
+double ShipEntity::maxHyperspaceDistance() { return MAX_JUMP_RANGE; }
 
-// Slice 11 of docs/phases/3-slices/ShipEntity.md (bead oo-eh955): thrust and afterburner;
-// behaviours: idle, tumble, tractored, track, intercept, break off, dogfight, evasive. Members of
-// the C++ ship, called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
+// Thrust and afterburner; behaviours: idle, tumble, tractored, track,
+// intercept, break off, dogfight, evasive. Members of the C++ ship.
 
-float ShipEntity::afterburnerFactor()
-{
-    return afterburner_speed_factor;
-}
+float ShipEntity::afterburnerFactor() { return afterburner_speed_factor; }
 
-float ShipEntity::afterburnerRate()
-{
-    return afterburner_rate;
-}
+float ShipEntity::afterburnerRate() { return afterburner_rate; }
 
 void ShipEntity::setAfterburnerFactor(GLfloat newValue)
 {
@@ -4111,20 +4321,11 @@ void ShipEntity::setAfterburnerRate(GLfloat newValue)
     afterburner_rate = newValue;
 }
 
-float ShipEntity::maxThrust()
-{
-    return max_thrust;
-}
+float ShipEntity::maxThrust() { return max_thrust; }
 
-void ShipEntity::setMaxThrust(GLfloat newValue)
-{
-    max_thrust = newValue;
-}
+void ShipEntity::setMaxThrust(GLfloat newValue) { max_thrust = newValue; }
 
-float ShipEntity::getThrust()
-{
-    return thrust;
-}
+float ShipEntity::getThrust() { return thrust; }
 
 ////////////////
 //            //
@@ -4154,10 +4355,7 @@ void ShipEntity::behaviour_idle(double delta_t)
     applySticks(delta_t);
 }
 
-void ShipEntity::behaviour_tumble(double delta_t)
-{
-    applySticks(delta_t);
-}
+void ShipEntity::behaviour_tumble(double delta_t) { applySticks(delta_t); }
 
 void ShipEntity::behaviour_tractored(double delta_t)
 {
@@ -4175,7 +4373,8 @@ void ShipEntity::behaviour_tractored(double delta_t)
         }
         GLfloat tf = TRACTOR_FORCE / mass;
         // adjust for difference in velocity (spring rule)
-        Vector dv = vector_between(getVelocity(), (hauler != nullptr ? hauler->getVelocity() : Vector { }));
+        Vector dv = vector_between(
+            getVelocity(), (hauler != nullptr ? hauler->getVelocity() : Vector { }));
         GLfloat moment = delta_t * 0.25 * tf;
         velocity.x += moment * dv.x;
         velocity.y += moment * dv.y;
@@ -4220,7 +4419,8 @@ void ShipEntity::behaviour_tractored(double delta_t)
                 frustration = 0.0;
                 setOwner(this);
                 if (shipAI != nullptr)
-                    shipAI->exitStateMachineWithMessage(std::nullopt); // exit nullAI.plist
+                    shipAI->exitStateMachineWithMessage(
+                        std::nullopt); // exit nullAI.plist
                 return;
             } else if ((hauler != nullptr ? hauler->getIsPlayer() : false)) {
                 static_cast<PlayerEntity*>(hauler)->setScoopsActive();
@@ -4256,7 +4456,8 @@ void ShipEntity::behaviour_intercept_target(double delta_t)
         desired_speed = maxFlightSpeed;
         if (range < desired_range) {
             if (shipAI != nullptr)
-                shipAI->reactToMessage("DESIRED_RANGE_ACHIEVED", "BEHAVIOUR_INTERCEPT_TARGET");
+                shipAI->reactToMessage("DESIRED_RANGE_ACHIEVED",
+                    "BEHAVIOUR_INTERCEPT_TARGET");
             doScriptEvent(OOJSID("shipAchievedDesiredRange"));
         }
         desired_speed = maxFlightSpeed * trackPrimaryTarget(delta_t, NO);
@@ -4399,7 +4600,8 @@ void ShipEntity::behaviour_attack_slow_dogfight(double delta_t)
         behaviour = BEHAVIOUR_ATTACK_TARGET;
     } else if (aspect < -0.5) {
         // mostly behind target - try to stay there and keep up
-        desired_speed = fmin(maxFlightSpeed * 0.5, (target != nullptr ? target->speed() : 0.0) * 0.5);
+        desired_speed = fmin(maxFlightSpeed * 0.5,
+            (target != nullptr ? target->speed() : 0.0) * 0.5);
     } else if (aspect < 0.3) {
         // to side of target - slow right down
         desired_speed = maxFlightSpeed * 0.1;
@@ -4471,9 +4673,8 @@ void ShipEntity::behaviour_evasive_action(double delta_t)
     fireMainWeapon(rangeToPrimaryTarget());
 }
 
-// Slice 12 of docs/phases/3-slices/ShipEntity.md (bead oo-0akes): behaviours: attack target,
-// broadside, close with target. Members of the C++ ship, called directly, since bead oo-9ht.144
-// deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Behaviours: attack target, broadside, close with target. Members of the C++
+// ship.
 
 void ShipEntity::behaviour_attack_target(double /*delta_t*/)
 {
@@ -4485,7 +4686,8 @@ void ShipEntity::behaviour_attack_target(double /*delta_t*/)
     /* Start of behaviour selection:
      * Anything beyond the basics should require accuracy >= COMBAT_AI_ISNT_AWFUL
      * Anything fancy should require accuracy >= COMBAT_AI_IS_SMART
-     * If precise aim is required, behaviour should have accuracy >= COMBAT_AI_TRACKS_CLOSER
+     * If precise aim is required, behaviour should have accuracy >=
+     * COMBAT_AI_TRACKS_CLOSER
      * - CIM
      */
 
@@ -4506,12 +4708,15 @@ void ShipEntity::behaviour_attack_target(double /*delta_t*/)
             }
         }
         if (isWeaponNone(forward_weapon_real_type) && hasTurrets) { // safety for ships only equipped with turrets
-            forward_weapon_real_type = cxx_OOWeaponTypeFromEquipmentIdentifierSloppy("EQ_WEAPON_PULSE_LASER");
+            forward_weapon_real_type = cxx_OOWeaponTypeFromEquipmentIdentifierSloppy(
+                "EQ_WEAPON_PULSE_LASER");
             forward_weapon_real_temp = COMBAT_AI_WEAPON_TEMP_USABLE * 0.9;
         }
     }
 
-    if ((forward_weapon_real_type != nullptr ? forward_weapon_real_type->isTurretLaser() : false)) {
+    if ((forward_weapon_real_type != nullptr
+                ? forward_weapon_real_type->isTurretLaser()
+                : false)) {
         behaviour = BEHAVIOUR_ATTACK_FLY_TO_TARGET_TWELVE;
     } else {
         BOOL in_good_range = aim_tolerance * range < COMBAT_AI_CONFIDENCE_FACTOR;
@@ -4533,7 +4738,8 @@ void ShipEntity::behaviour_attack_target(double /*delta_t*/)
         Entity* target = primaryTarget();
         double aspect = approachAspectToPrimaryTarget();
 
-        if (!forward_weapon_ready && !aft_weapon_ready && !port_weapon_ready && !starboard_weapon_ready) { // no usable weapons! Either not fitted or overheated
+        if (!forward_weapon_ready && !aft_weapon_ready && !port_weapon_ready && !starboard_weapon_ready) { // no usable weapons! Either not fitted or
+                                                                                                           // overheated
 
             // if unarmed
             if (isWeaponNone(forward_weapon_real_type) && isWeaponNone(aft_weapon_type) && isWeaponNone(port_weapon_type) && isWeaponNone(starboard_weapon_type)) {
@@ -4559,11 +4765,16 @@ void ShipEntity::behaviour_attack_target(double /*delta_t*/)
                 }
             }
         }
-        // if our current target isn't targeting us, and we have some idea of how to fight, and our weapons are running hot, and we're fairly nearby
+        // if our current target isn't targeting us, and we have some idea of how to
+        // fight, and our weapons are running hot, and we're fairly nearby
         else if (weapons_heating && accuracy >= COMBAT_AI_ISNT_AWFUL && oo::EntityIsShip(target) && (oo::ToShip(target) != nullptr ? oo::ToShip(target)->primaryTarget() : (Entity*)nullptr) != this && range < COMBAT_OUT_RANGE_FACTOR * weaponRange) {
-            // then back off a bit for weapons to cool so we get a good attack run later, rather than weaving closer
-            float relativeSpeed = magnitude(vector_subtract(getVelocity(), (target != nullptr ? target->getVelocity() : kZeroVector)));
-            setEvasiveJink((range + COMBAT_JINK_OFFSET - relativeSpeed / max_flight_pitch));
+            // then back off a bit for weapons to cool so we get a good attack run
+            // later, rather than weaving closer
+            float relativeSpeed = magnitude(vector_subtract(
+                getVelocity(),
+                (target != nullptr ? target->getVelocity() : kZeroVector)));
+            setEvasiveJink(
+                (range + COMBAT_JINK_OFFSET - relativeSpeed / max_flight_pitch));
             behaviour = BEHAVIOUR_ATTACK_FLY_FROM_TARGET;
         } else {
             BOOL nearby = range < COMBAT_IN_RANGE_FACTOR * getWeaponRangeFromType(forward_weapon_type);
@@ -4579,14 +4790,19 @@ void ShipEntity::behaviour_attack_target(double /*delta_t*/)
                 if (!pitching_over) // don't change jink in the middle of a sharp turn.
                 {
                     /*
-                            For most AIs, is behaviour_attack_target called as starting behaviour on every hit.
-                            Target can both fly towards or away from ourselves here. Both situations
-                            need a different jink.z for optimal collision avoidance at high speed approach and low speed dogfighting.
-                            The COMBAT_JINK_OFFSET intentionally over-compensates the range for collision radii to send ships towards
-                            the target at low speeds.
+                            For most AIs, is behaviour_attack_target called as starting
+                       behaviour on every hit. Target can both fly towards or away from
+                       ourselves here. Both situations need a different jink.z for optimal
+                       collision avoidance at high speed approach and low speed
+                       dogfighting. The COMBAT_JINK_OFFSET intentionally over-compensates
+                       the range for collision radii to send ships towards the target at
+                       low speeds.
                     */
-                    float relativeSpeed = magnitude(vector_subtract(getVelocity(), (target != nullptr ? target->getVelocity() : kZeroVector)));
-                    setEvasiveJink((range + COMBAT_JINK_OFFSET - relativeSpeed / max_flight_pitch));
+                    float relativeSpeed = magnitude(vector_subtract(
+                        getVelocity(),
+                        (target != nullptr ? target->getVelocity() : kZeroVector)));
+                    setEvasiveJink(
+                        (range + COMBAT_JINK_OFFSET - relativeSpeed / max_flight_pitch));
                 }
                 // good pilots use behaviour_attack_break_off_target instead
                 if (accuracy >= COMBAT_AI_FLEES_BETTER) {
@@ -4683,7 +4899,8 @@ void ShipEntity::behaviour_attack_broadside_right(double delta_t)
     behaviour_attack_broadside_target(delta_t, NO);
 }
 
-void ShipEntity::behaviour_attack_broadside_target(double delta_t, bool leftside)
+void ShipEntity::behaviour_attack_broadside_target(double delta_t,
+    bool leftside)
 {
     BOOL canBurn = hasFuelInjection() && (fuel > MIN_FUEL);
     float max_available_speed = maxFlightSpeed;
@@ -4694,7 +4911,8 @@ void ShipEntity::behaviour_attack_broadside_target(double delta_t, bool leftside
         noteLostTargetAndGoIdle();
         return;
     }
-    GLfloat currentWeaponRange = getWeaponRangeFromType(leftside ? port_weapon_type : starboard_weapon_type);
+    GLfloat currentWeaponRange = getWeaponRangeFromType(
+        leftside ? port_weapon_type : starboard_weapon_type);
     if (range > COMBAT_BROADSIDE_RANGE_FACTOR * currentWeaponRange) {
         behaviour = BEHAVIOUR_CLOSE_TO_BROADSIDE_RANGE;
         return;
@@ -4720,13 +4938,19 @@ void ShipEntity::behaviour_attack_broadside_target(double delta_t, bool leftside
     double slow_down_range = currentWeaponRange * COMBAT_WEAPON_RANGE_FACTOR * ((isUsingAfterburner) ? 3.0 * afterburnerFactor() : 1.0);
     //	double target_speed = [target speed];
     if (range <= slow_down_range)
-        desired_speed = fmin(0.8 * maxFlightSpeed, fmax((2.0 - frustration) * maxFlightSpeed, 0.1 * maxFlightSpeed)); // within the weapon's range slow down to aim
+        desired_speed = fmin(
+            0.8 * maxFlightSpeed,
+            fmax(
+                (2.0 - frustration) * maxFlightSpeed,
+                0.1 * maxFlightSpeed)); // within the weapon's range slow down to aim
     else
         desired_speed = max_available_speed; // use afterburner to approach
 
     double last_success_factor = success_factor;
     success_factor = trackSideTarget(delta_t, leftside); // do the actual piloting
-    if (weapon_temp > COMBAT_AI_WEAPON_TEMP_USABLE) { // will probably have more luck with the other laser or picking a different attack method
+    if (weapon_temp > COMBAT_AI_WEAPON_TEMP_USABLE) { // will probably have more luck with the
+                                                      // other laser or picking a different
+                                                      // attack method
         if (leftside) {
             if (!isWeaponNone(starboard_weapon_type)) {
                 behaviour = BEHAVIOUR_ATTACK_BROADSIDE_RIGHT;
@@ -4742,7 +4966,7 @@ void ShipEntity::behaviour_attack_broadside_target(double delta_t, bool leftside
         }
     }
 
-    /* FIXME: again, basically all of this next bit common with standard attack  */
+    /* FIXME: again, basically all of this next bit common with standard attack */
     if ((success_factor > 0.999) || (success_factor > last_success_factor)) {
         frustration -= delta_t;
         if (frustration < 0.0)
@@ -4751,7 +4975,6 @@ void ShipEntity::behaviour_attack_broadside_target(double delta_t, bool leftside
         frustration += delta_t;
         if (frustration > 3.0) // 3s of frustration
         {
-
             noteFrustration("BEHAVIOUR_ATTACK_BROADSIDE");
             setEvasiveJink(1000.0);
             behaviour = BEHAVIOUR_ATTACK_FLY_FROM_TARGET;
@@ -4781,7 +5004,8 @@ void ShipEntity::behaviour_close_to_broadside_range(double delta_t)
     double range = rangeToPrimaryTarget();
     if (proximityAlert() != nullptr) {
         if (proximityAlert() == primaryTarget()) {
-            behaviour = BEHAVIOUR_ATTACK_FLY_TO_TARGET; // this behaviour will handle proximity_alert.
+            behaviour = BEHAVIOUR_ATTACK_FLY_TO_TARGET; // this behaviour will handle
+                                                        // proximity_alert.
             behaviour_attack_fly_from_target(delta_t); // do it now.
         } else {
             avoidCollision();
@@ -4812,7 +5036,8 @@ void ShipEntity::behaviour_close_with_target(double delta_t)
     double range = rangeToPrimaryTarget();
     if (proximityAlert() != nullptr) {
         if (proximityAlert() == primaryTarget()) {
-            behaviour = BEHAVIOUR_ATTACK_FLY_TO_TARGET; // this behaviour will handle proximity_alert.
+            behaviour = BEHAVIOUR_ATTACK_FLY_TO_TARGET; // this behaviour will handle
+                                                        // proximity_alert.
             behaviour_attack_fly_from_target(delta_t); // do it now.
         } else {
             avoidCollision();
@@ -4835,13 +5060,11 @@ void ShipEntity::behaviour_close_with_target(double delta_t)
     }
 }
 
-// Slice 13 of docs/phases/3-slices/ShipEntity.md (bead oo-xmajv): behaviours: sniper, fly to target
-// six, mining target, attack fly to target. Members of the C++ ship, called directly, since bead
-// oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Behaviours: sniper, fly to target six, mining target, attack fly to target.
+// Members of the C++ ship.
 
 void ShipEntity::behaviour_attack_sniper(double delta_t)
 {
-
     if (!canStillTrackPrimaryTarget()) {
         noteLostTargetAndGoIdle();
         return;
@@ -4906,7 +5129,6 @@ void ShipEntity::behaviour_attack_sniper(double delta_t)
 
 void ShipEntity::behaviour_fly_to_target_six(double delta_t)
 {
-
     BOOL canBurn = hasFuelInjection() && (fuel > MIN_FUEL);
     float max_available_speed = maxFlightSpeed;
     double range = rangeToPrimaryTarget();
@@ -4916,7 +5138,8 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t)
     // deal with collisions and lost targets
     if (proximityAlert() != nullptr) {
         if (proximityAlert() == primaryTarget()) {
-            behaviour = BEHAVIOUR_ATTACK_FLY_TO_TARGET; // this behaviour will handle proximity_alert.
+            behaviour = BEHAVIOUR_ATTACK_FLY_TO_TARGET; // this behaviour will handle
+                                                        // proximity_alert.
             behaviour_attack_fly_from_target(delta_t); // do it now.
         } else {
             avoidCollision();
@@ -4965,24 +5188,29 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t)
         }
     }
 
-    // if within 0.75km of the target's six or twelve, or if target almost at standstill for 62.5% of non-thargoid ships (!),
-    // then vector in attack.
+    // if within 0.75km of the target's six or twelve, or if target almost at
+    // standstill for 62.5% of non-thargoid ships (!), then vector in attack.
     if (distance < 750.0 || (target_speed < 0.2 && !isThargoid() && (getUniversalID() & 14) > 4)) {
         behaviour = BEHAVIOUR_ATTACK_FLY_TO_TARGET;
         frustration = 0.0;
-        desired_speed = fmax(target_speed, 0.4 * maxFlightSpeed); // within the weapon's range don't use afterburner
+        desired_speed = fmax(
+            target_speed,
+            0.4 * maxFlightSpeed); // within the weapon's range don't use afterburner
     }
 
     // target-six
     if (behaviour == BEHAVIOUR_ATTACK_FLY_TO_TARGET_SIX) {
         // head for a point weapon-range * 0.5 to the six of the target
         //
-        _destination = (target != nullptr ? target->distance_six(0.5 * weaponRange) : HPVector { });
+        _destination = (target != nullptr ? target->distance_six(0.5 * weaponRange)
+                                          : HPVector { });
     }
     // target-twelve
     if (behaviour == BEHAVIOUR_ATTACK_FLY_TO_TARGET_TWELVE) {
-        if ((forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser() : false)) {
-            // head for a point near the target, avoiding common Galcop weapon mount locations
+        if ((forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser()
+                                            : false)) {
+            // head for a point near the target, avoiding common Galcop weapon mount
+            // locations
             // TODO: this should account for weapon ranges
             GLfloat offset = 1000.0;
             GLfloat spacing = 2000.0;
@@ -4993,7 +5221,8 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t)
             if (entity_personality & 1) { // half at random
                 offset = -offset;
             }
-            _destination = (target != nullptr ? target->distance_twelve(spacing, offset) : HPVector { });
+            _destination = (target != nullptr ? target->distance_twelve(spacing, offset)
+                                              : HPVector { });
         } else {
             // head for a point 1.25km above the target
             _destination = (target != nullptr ? target->distance_twelve(1250, 0) : HPVector { });
@@ -5009,7 +5238,9 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t)
         frustration -= delta_t * 0.75;
 
     double aspect = approachAspectToPrimaryTarget();
-    if (!(forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser() : false) && (frustration > 10 || aspect > 0.75)) {
+    if (!(forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser()
+                                         : false)
+        && (frustration > 10 || aspect > 0.75)) {
         behaviour = BEHAVIOUR_ATTACK_FLY_TO_TARGET;
     }
 
@@ -5028,7 +5259,6 @@ void ShipEntity::behaviour_fly_to_target_six(double delta_t)
 
 void ShipEntity::behaviour_attack_mining_target(double delta_t)
 {
-
     double range = rangeToPrimaryTarget();
     if (!canStillTrackPrimaryTarget()) {
         noteLostTargetAndGoIdle();
@@ -5059,7 +5289,6 @@ void ShipEntity::behaviour_attack_mining_target(double delta_t)
 
 void ShipEntity::behaviour_attack_fly_to_target(double delta_t)
 {
-
     BOOL canBurn = hasFuelInjection() && (fuel > MIN_FUEL);
     float max_available_speed = maxFlightSpeed;
     double range = rangeToPrimaryTarget();
@@ -5110,7 +5339,9 @@ void ShipEntity::behaviour_attack_fly_to_target(double delta_t)
                     desired_speed = fmax(target_speed * 1.25, 0.8 * maxFlightSpeed);
                     // stay at high speed if might be taking return fire
                 } else {
-                    desired_speed = fmax(target_speed * 1.05, 0.25 * maxFlightSpeed); // within the weapon's range match speed
+                    desired_speed = fmax(
+                        target_speed * 1.05,
+                        0.25 * maxFlightSpeed); // within the weapon's range match speed
                 }
             } else { // smart, and not being shot at right now - slow down to attack
                 desired_speed = fmax(0.1 * target_speed, 0.1 * maxFlightSpeed);
@@ -5130,7 +5361,10 @@ void ShipEntity::behaviour_attack_fly_to_target(double delta_t)
         if (closeQuickly) {
             desired_speed = max_available_speed; // use afterburner to approach
         } else {
-            desired_speed = fmax(maxFlightSpeed, fmin(3.0 * target_speed, max_available_speed)); // possibly use afterburner to approach
+            desired_speed = fmax(
+                maxFlightSpeed,
+                fmin(3.0 * target_speed,
+                    max_available_speed)); // possibly use afterburner to approach
         }
     }
 
@@ -5180,14 +5414,11 @@ void ShipEntity::behaviour_attack_fly_to_target(double delta_t)
     }
 }
 
-// Slice 14 of docs/phases/3-slices/ShipEntity.md (bead oo-v9sa5): behaviours: fly from target,
-// running defence, flee, range from destination, face destination, land on planet, formation.
-// Members of the C++ ship, called directly, since bead oo-9ht.144 deleted the facade (ADR-0056
-// amendment oo-9ht.144).
+// Behaviours: fly from target, running defence, flee, range from destination,
+// face destination, land on planet, formation. Members of the C++ ship.
 
 void ShipEntity::behaviour_attack_fly_from_target(double delta_t)
 {
-
     double range = rangeToPrimaryTarget();
     double last_success_factor = success_factor;
     success_factor = range;
@@ -5211,7 +5442,8 @@ void ShipEntity::behaviour_attack_fly_from_target(double delta_t)
         }
         GLfloat z = jink.z;
         if (randf() < 0.3) {
-            z /= 2; // move the z-offset closer to the target to let him fly away from the target.
+            z /= 2; // move the z-offset closer to the target to let him fly away
+                    // from the target.
             desired_speed = flightSpeed * 2; // increase speed a bit.
         }
         setEvasiveJink(z);
@@ -5256,7 +5488,6 @@ void ShipEntity::behaviour_attack_fly_from_target(double delta_t)
 
 void ShipEntity::behaviour_running_defense(double delta_t)
 {
-
     if (!canStillTrackPrimaryTarget()) {
         noteLostTargetAndGoIdle();
         return;
@@ -5267,13 +5498,15 @@ void ShipEntity::behaviour_running_defense(double delta_t)
     jink = kZeroVector;
     if (range > weaponRange || range > 0.8 * scannerRange || range == 0) {
         behaviour = BEHAVIOUR_CLOSE_WITH_TARGET;
-        if ((forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser() : false)) {
+        if ((forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser()
+                                            : false)) {
             behaviour = BEHAVIOUR_ATTACK_FLY_TO_TARGET_TWELVE;
         }
         frustration = 0.0;
     }
     trackPrimaryTarget(delta_t, YES);
-    if ((forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser() : false)) {
+    if ((forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser()
+                                        : false)) {
         // most Thargoids will only have the forward weapon
         fireMainWeapon(range);
     } else {
@@ -5296,7 +5529,6 @@ void ShipEntity::behaviour_running_defense(double delta_t)
 
 void ShipEntity::behaviour_flee_target(double delta_t)
 {
-
     BOOL canBurn = hasFuelInjection() && (fuel > MIN_FUEL);
     float max_available_speed = maxFlightSpeed;
     double range = rangeToPrimaryTarget();
@@ -5346,7 +5578,8 @@ void ShipEntity::behaviour_flee_target(double delta_t)
     }
 
     // thargoids won't normally be fleeing, but if they do, they can still shoot
-    if ((forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser() : false)) {
+    if ((forward_weapon_type != nullptr ? forward_weapon_type->isTurretLaser()
+                                        : false)) {
         fireMainWeapon(range);
     }
 
@@ -5361,12 +5594,14 @@ void ShipEntity::behaviour_flee_target(double delta_t)
 
 void ShipEntity::behaviour_fly_range_from_destination(double /*delta_t*/)
 {
-
     double distance = rangeToDestination();
     if (distance < desired_range) {
         behaviour = BEHAVIOUR_FLY_FROM_DESTINATION;
         if (desired_speed < maxFlightSpeed) {
-            desired_speed = maxFlightSpeed; // Not all AI define speed when flying away. Start with max speed to stay compatible with such AI's, but allow faster flight if it's (e.g.) used to flee from coordinates rather than entity
+            desired_speed = maxFlightSpeed; // Not all AI define speed when flying away. Start
+                                            // with max speed to stay compatible with such AI's,
+                                            // but allow faster flight if it's (e.g.) used to
+                                            // flee from coordinates rather than entity
         }
     } else {
         behaviour = BEHAVIOUR_FLY_TO_DESTINATION;
@@ -5379,13 +5614,14 @@ void ShipEntity::behaviour_fly_range_from_destination(double /*delta_t*/)
 
 void ShipEntity::behaviour_face_destination(double delta_t)
 {
-
     double max_cos = MAX_COS;
     double distance = rangeToDestination();
     double old_pitch = flightPitch;
     desired_speed = 0.0;
     if (desired_range > 1.0 && distance > desired_range) {
-        max_cos = sqrt(1 - 0.90 * desired_range * desired_range / (distance * distance)); // Head for a point within 95% of desired_range (must match the value in trackDestination)
+        max_cos = sqrt(
+            1 - 0.90 * desired_range * desired_range / (distance * distance)); // Head for a point within 95% of desired_range
+                                                                               // (must match the value in trackDestination)
     }
     double confidenceFactor = trackDestination(delta_t, NO);
     if (confidenceFactor >= max_cos && flightPitch == 0.0) {
@@ -5412,10 +5648,13 @@ void ShipEntity::behaviour_face_destination(double delta_t)
             flightPitch = 0.5 * max_flight_pitch; // hack to get out of frustration.
     }
 
-    /* 2009-7-18 Eric: the condition check below is intended to eliminate the flippering between two positions for fast turning ships
-       during low FPS conditions. This flippering is particular frustrating on slow computers during docking. But with my current computer I can't
-       induce those low FPS conditions so I can't properly test if it helps.
-       I did try with the TAF time acceleration that also generated larger frame jumps and than it seemed to help.
+    /* 2009-7-18 Eric: the condition check below is intended to eliminate the
+       flippering between two positions for fast turning ships during low FPS
+       conditions. This flippering is particular frustrating on slow computers
+       during docking. But with my current computer I can't induce those low FPS
+       conditions so I can't properly test if it helps. I did try with the TAF
+       time acceleration that also generated larger frame jumps and than it seemed
+       to help.
     */
     if (flightSpeed == 0 && frustration > 5 && confidenceFactor > 0.5 && ((flightPitch > 0 && old_pitch < 0) || (flightPitch < 0 && old_pitch > 0))) {
         flightPitch += 0.5 * old_pitch; // damping with last pitch value.
@@ -5428,11 +5667,14 @@ void ShipEntity::behaviour_face_destination(double delta_t)
 
 void ShipEntity::behaviour_land_on_planet(double delta_t)
 {
-
-    double max_cos = MAX_COS2; // trackDestination returns the squared confidence in reverse mode.
+    double max_cos = MAX_COS2; // trackDestination returns the squared confidence
+                               // in reverse mode.
     desired_speed = 0.0;
 
-    ::OOPlanetEntity* planet = dynamic_cast<::OOPlanetEntity*>((UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(planetForLanding) : nullptr)); // null for any other entity, whose -isPlanet was NO (C++ since bead oo-9ht.129)
+    ::OOPlanetEntity* planet = dynamic_cast<::OOPlanetEntity*>(
+        (UNIVERSE != nullptr
+                ? UNIVERSE->entityForUniversalID(planetForLanding)
+                : nullptr)); // null for any other entity, whose -isPlanet was NO
 
     if (!(planet != nullptr ? planet->isPlanet() : false)) {
         behaviour = BEHAVIOUR_IDLE;
@@ -5442,7 +5684,10 @@ void ShipEntity::behaviour_land_on_planet(double delta_t)
         return;
     }
 
-    if (HPdistance(position, (planet != nullptr ? planet->getPosition() : HPVector { })) + collisionRadius() < (planet != nullptr ? planet->radius() : 0.0)) {
+    if (HPdistance(position,
+            (planet != nullptr ? planet->getPosition() : HPVector { }))
+            + collisionRadius()
+        < (planet != nullptr ? planet->radius() : 0.0)) {
         // we have landed. (completely disappeared inside planet)
         landOnPlanet(planet);
         return;
@@ -5454,7 +5699,8 @@ void ShipEntity::behaviour_land_on_planet(double delta_t)
         // We are now turned away from planet. Start landing by flying backward.
         thrust = 0.0; // stop forward acceleration.
         if (magnitude2(velocity) < MAX_LANDING_SPEED2) {
-            adjustVelocity(vector_multiply_scalar(forwardVector(), -max_thrust * delta_t));
+            adjustVelocity(
+                vector_multiply_scalar(forwardVector(), -max_thrust * delta_t));
         }
     }
 
@@ -5465,7 +5711,6 @@ void ShipEntity::behaviour_land_on_planet(double delta_t)
 
 void ShipEntity::behaviour_formation_form_up(double delta_t)
 {
-
     // destination for each escort is set in update() from owner.
     ::ShipEntity* leadShip = oo::ToShip(owner());
     double distance = rangeToDestination();
@@ -5499,9 +5744,13 @@ void ShipEntity::behaviour_formation_form_up(double delta_t)
         frustration += delta_t;
         if (frustration > 15.0) {
             if (!leadShip)
-                noteFrustration("BEHAVIOUR_FORMATION_FORM_UP"); // escorts never reach their destination when following leader.
+                noteFrustration(
+                    "BEHAVIOUR_FORMATION_FORM_UP"); // escorts never reach their
+                                                    // destination when following
+                                                    // leader.
             else if (distance > 0.5 * scannerRange && !pitching_over) {
-                pitching_over = YES; // Force the ship in a 180 degree turn. Do it here to allow escorts to break out formation for some seconds.
+                pitching_over = YES; // Force the ship in a 180 degree turn. Do it here to allow
+                                     // escorts to break out formation for some seconds.
             }
             frustration = 0;
         }
@@ -5511,15 +5760,14 @@ void ShipEntity::behaviour_formation_form_up(double delta_t)
     }
 }
 
-// Slice 15 of docs/phases/3-slices/ShipEntity.md (bead oo-x4qqv): behaviours: fly to / from
-// destination, avoid collision, turret, navpoints, scripted AI; reaction time. Members of the C++
-// ship, called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Behaviours: fly to / from destination, avoid collision, turret, navpoints,
+// scripted AI; reaction time. Members of the C++ ship.
 
 void ShipEntity::behaviour_fly_to_destination(double delta_t)
 {
-
     double distance = rangeToDestination();
-    // double desiredRange = (dockingInstructions != nil) ? 1.2 * desired_range : desired_range; // stop a bit earlyer when docking.
+    // double desiredRange = (dockingInstructions != nil) ? 1.2 * desired_range :
+    // desired_range; // stop a bit earlyer when docking.
     if (distance < desired_range) // + collision_radius)
     {
         // desired range achieved
@@ -5542,18 +5790,25 @@ void ShipEntity::behaviour_fly_to_destination(double delta_t)
         if (confidenceFactor < 0.2)
             confidenceFactor = 0.2; // don't allow small or negative values.
 
-        /*	2009-07-19 Eric: Estimated Time of Arrival (eta) should also take the "angle to target" into account (confidenceFactor = cos(angle to target))
-                and should not fuss about that last meter and use "distance + 1" instead of just "distance".
-                trackDestination already did pitch regulation, use confidence here only for cutting down to high speeds.
-                This should prevent ships crawling to their destination when they try to pull up close to their destination.
+        /*	2009-07-19 Eric: Estimated Time of Arrival (eta) should also take the
+           "angle to target" into account (confidenceFactor = cos(angle to target))
+                and should not fuss about that last meter and use "distance + 1"
+           instead of just "distance". trackDestination already did pitch
+           regulation, use confidence here only for cutting down to high speeds.
+                This should prevent ships crawling to their destination when they
+           try to pull up close to their destination.
 
-                To prevent ships circling around their target without reaching destination I added a limitation based on turnrate,
-                speed and distance to target. Formula based on satelite orbit:
-                                orbitspeed = turnrate (rad/sec) * radius (m)   or   flightSpeed = max_flight_pitch * 2 Pi * distance
-                Speed must be significant lower when not flying in direction of target (low confidenceFactor) or it can never approach its destination
-                and the ships runs the risk flying in circles around the target. (exclude active escorts)
+                To prevent ships circling around their target without reaching
+           destination I added a limitation based on turnrate, speed and distance to
+           target. Formula based on satelite orbit: orbitspeed = turnrate (rad/sec)
+           * radius (m)   or   flightSpeed = max_flight_pitch * 2 Pi * distance
+                Speed must be significant lower when not flying in direction of
+           target (low confidenceFactor) or it can never approach its destination
+                and the ships runs the risk flying in circles around the target.
+           (exclude active escorts)
         */
-        GLfloat eta = ((distance + 1) - desired_range) / (0.51 * flightSpeed * confidenceFactor); // 2% safety margin assuming an average of half current speed
+        GLfloat eta = ((distance + 1) - desired_range) / (0.51 * flightSpeed * confidenceFactor); // 2% safety margin assuming an average
+                                                                                                  // of half current speed
         GLfloat slowdownTime = (thrust > 0.0) ? flightSpeed / (thrust) : 4.0;
         GLfloat minTurnSpeedFactor = 0.05 * max_flight_pitch * max_flight_roll; // faster turning implies higher speeds
         if (!dockingInstructions.isNull()) {
@@ -5574,7 +5829,10 @@ void ShipEntity::behaviour_fly_to_destination(double delta_t)
             ::StationEntity* station_for_docking = oo::ToStation(targetStation());
 
             if ((station_for_docking) && (station_for_docking->isStation)) {
-                float rollMatch = dot_product((station_for_docking != nullptr ? station_for_docking->portUpVectorForShip(this) : Vector { }), upVector());
+                float rollMatch = dot_product((station_for_docking != nullptr
+                                                      ? station_for_docking->portUpVectorForShip(this)
+                                                      : Vector { }),
+                    upVector());
                 if (rollMatch < MAX_COS && rollMatch > -MAX_COS) {
                     // not matching rotating - stop until corrected
                     desired_speed = 0.1;
@@ -5606,7 +5864,6 @@ void ShipEntity::behaviour_fly_to_destination(double delta_t)
 
 void ShipEntity::behaviour_fly_from_destination(double delta_t)
 {
-
     double distance = rangeToDestination();
     if (distance > desired_range) {
         // desired range achieved
@@ -5627,7 +5884,6 @@ void ShipEntity::behaviour_fly_from_destination(double delta_t)
 
 void ShipEntity::behaviour_avoid_collision(double delta_t)
 {
-
     double distance = rangeToDestination();
     if (distance > desired_range) {
         resumePostProximityAlert();
@@ -5637,24 +5893,29 @@ void ShipEntity::behaviour_avoid_collision(double delta_t)
             desired_range = prox_ship->collision_radius * PROXIMITY_AVOID_DISTANCE_FACTOR;
             _destination = prox_ship->position;
         }
-        double dq = trackDestination(delta_t, YES); // returns 0 when heading towards prox_ship
-        // Heading towards target with desired_speed > 0, avoids collisions better than setting desired_speed to zero.
-        // (tested with boa class cruiser on collisioncourse with buoy)
+        double dq = trackDestination(
+            delta_t, YES); // returns 0 when heading towards prox_ship
+        // Heading towards target with desired_speed > 0, avoids collisions better
+        // than setting desired_speed to zero. (tested with boa class cruiser on
+        // collisioncourse with buoy)
         desired_speed = maxFlightSpeed * (0.5 * dq + 0.5);
     }
 }
 
 void ShipEntity::behaviour_track_as_turret(double delta_t)
 {
-
     double aim = -2.0;
     ::ShipEntity* turret_owner = oo::ToShip(owner());
-    ::ShipEntity* turret_target = oo::ToShip((turret_owner != nullptr ? turret_owner->primaryTarget() : (Entity*)nullptr));
+    ::ShipEntity* turret_target = oo::ToShip((turret_owner != nullptr ? turret_owner->primaryTarget()
+                                                                      : (Entity*)nullptr));
     if (turret_owner && turret_target && (turret_owner != nullptr ? turret_owner->hasHostileTarget() : false)) {
         aim = ballTrackLeadingTarget(delta_t, turret_target);
         if (aim > -1.0) // potential target
         {
-            HPVector p = HPvector_subtract((turret_target != nullptr ? turret_target->getPosition() : HPVector { }), (turret_owner != nullptr ? turret_owner->getPosition() : HPVector { }));
+            HPVector p = HPvector_subtract(
+                (turret_target != nullptr ? turret_target->getPosition()
+                                          : HPVector { }),
+                (turret_owner != nullptr ? turret_owner->getPosition() : HPVector { }));
             double cr = (turret_owner != nullptr ? turret_owner->collisionRadius() : 0.0f);
 
             if (aim > .95) {
@@ -5665,26 +5926,35 @@ void ShipEntity::behaviour_track_as_turret(double delta_t)
     }
 
     // can't fire on primary target; track secondary targets instead
-    for (const auto& targetRef : (turret_owner != nullptr ? turret_owner->defenseTargets() : std::vector<oo::EntityHold>())) {
-        Entity* target = targetRef.get(); // the snapshot keeps its object (bead oo-9ht.39.16)
+    for (const auto& targetRef :
+        (turret_owner != nullptr ? turret_owner->defenseTargets()
+                                 : std::vector<oo::EntityHold>())) {
+        Entity* target = targetRef.get(); // the snapshot keeps its object
         // defense targets cannot be tracked while cloaked
         if (target->getScanClass() == CLASS_NO_DRAW || (oo::ToShip(target) != nullptr ? oo::ToShip(target)->isCloaked() : false) || target->getEnergy() <= 0.0) {
             if (turret_owner != nullptr)
                 turret_owner->removeDefenseTarget(target);
         } else {
-            double range = (turret_owner != nullptr ? turret_owner->rangeToSecondaryTarget(target) : 0.0);
+            double range = (turret_owner != nullptr
+                    ? turret_owner->rangeToSecondaryTarget(target)
+                    : 0.0);
             if (range < weaponRange) {
                 aim = ballTrackLeadingTarget(delta_t, target);
                 if (aim > -1.0) { // tracking...
-                    HPVector p = HPvector_subtract(target->getPosition(), (turret_owner != nullptr ? turret_owner->getPosition() : HPVector { }));
-                    double cr = (turret_owner != nullptr ? turret_owner->collisionRadius() : 0.0f);
+                    HPVector p = HPvector_subtract(
+                        target->getPosition(),
+                        (turret_owner != nullptr ? turret_owner->getPosition()
+                                                 : HPVector { }));
+                    double cr = (turret_owner != nullptr ? turret_owner->collisionRadius()
+                                                         : 0.0f);
 
                     if (aim > .95) { // fire!
                         fireTurretCannon(HPmagnitude(p) - cr);
                     }
                     return;
                 }
-                // else that target is out of range, try the next priority defense target
+                // else that target is out of range, try the next priority defense
+                // target
             } else if (range > scannerRange) {
                 if (turret_owner != nullptr)
                     turret_owner->removeDefenseTarget(target);
@@ -5698,7 +5968,6 @@ void ShipEntity::behaviour_track_as_turret(double delta_t)
 
 void ShipEntity::behaviour_fly_thru_navpoints(double delta_t)
 {
-
     int navpoint_plus_index = (next_navpoint_index + 1) % number_of_navpoints;
     HPVector d1 = navpoints[next_navpoint_index]; // head for this one
     HPVector d2 = navpoints[navpoint_plus_index]; // but be facing this one
@@ -5707,7 +5976,9 @@ void ShipEntity::behaviour_fly_thru_navpoints(double delta_t)
     HPVector ref = HPvector_between(d2, d1); // vector from d2 to d1
     ref = HPvector_normal(ref);
 
-    HPVector xp = make_HPvector(ref.y * rel.z - ref.z * rel.y, ref.z * rel.x - ref.x * rel.z, ref.x * rel.y - ref.y * rel.x);
+    HPVector xp = make_HPvector(ref.y * rel.z - ref.z * rel.y,
+        ref.z * rel.x - ref.x * rel.z,
+        ref.x * rel.y - ref.y * rel.x);
 
     GLfloat v0 = 0.0;
 
@@ -5776,7 +6047,6 @@ void ShipEntity::behaviour_fly_thru_navpoints(double delta_t)
 
 void ShipEntity::behaviour_scripted_ai(double delta_t)
 {
-
     ooscript::Context context = OOJSAcquireContext();
     ooscript::Value rval = ooscript::undefinedValue();
     ooscript::Value deltaJS = ooscript::undefinedValue();
@@ -5784,18 +6054,26 @@ void ShipEntity::behaviour_scripted_ai(double delta_t)
 
     BOOL OK = ooscript::newNumberValue(context, delta_t, &deltaJS);
     if (OK) {
-        OK = (getScript() != nullptr ? getScript()->callMethod(OOJSID("scriptedAI"), context, &deltaJS, 1, &rval) : false);
+        OK = (getScript() != nullptr
+                ? getScript()->callMethod(OOJSID("scriptedAI"), context, &deltaJS,
+                      1, &rval)
+                : false);
     }
 
     if (!OK) {
-        OO_LOG("ai.error", "Could not call scriptedAI in ship script of {}, reverting to idle", oo::EntityDescription(this));
+        OO_LOG("ai.error",
+            "Could not call scriptedAI in ship script of {}, reverting to idle",
+            oo::EntityDescription(this));
         behaviour = BEHAVIOUR_IDLE;
         OOJSRelinquishContext(context);
         return;
     }
 
     if (!ooscript::isObjectOrNull(rval)) {
-        OO_LOG("ai.error", "Invalid return value of scriptedAI in ship script of {}, reverting to idle", oo::EntityDescription(this));
+        OO_LOG("ai.error",
+            "Invalid return value of scriptedAI in ship script of {}, reverting "
+            "to idle",
+            oo::EntityDescription(this));
         behaviour = BEHAVIOUR_IDLE;
         OOJSRelinquishContext(context);
         return;
@@ -5871,10 +6149,7 @@ void ShipEntity::behaviour_scripted_ai(double delta_t)
     }
 }
 
-float ShipEntity::getReactionTime()
-{
-    return reactionTime;
-}
+float ShipEntity::getReactionTime() { return reactionTime; }
 
 void ShipEntity::setReactionTime(float newReactionTime)
 {
@@ -5883,7 +6158,6 @@ void ShipEntity::setReactionTime(float newReactionTime)
 
 HPVector ShipEntity::calculateTargetPosition()
 {
-
     Entity* target = primaryTarget();
     if (target == nil) {
         return kZeroHPVector;
@@ -5892,16 +6166,17 @@ HPVector ShipEntity::calculateTargetPosition()
         return (target != nullptr ? target->getPosition() : kZeroHPVector);
     }
     double t = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - trackingCurveTimes[1];
-    return HPvector_add(HPvector_add(trackingCurveCoeffs[0], HPvector_multiply_scalar(trackingCurveCoeffs[1], t)), HPvector_multiply_scalar(trackingCurveCoeffs[2], t * t));
+    return HPvector_add(
+        HPvector_add(trackingCurveCoeffs[0],
+            HPvector_multiply_scalar(trackingCurveCoeffs[1], t)),
+        HPvector_multiply_scalar(trackingCurveCoeffs[2], t * t));
 }
 
-// Slice 16 of docs/phases/3-slices/ShipEntity.md (bead oo-d96oe): tracking curve, drawing, scanner
-// colours, cloaking, subentities and owner, thrust. Members of the C++ ship, called directly, since
-// bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Tracking curve, drawing, scanner colours, cloaking, subentities and owner,
+// thrust. Members of the C++ ship.
 
 void ShipEntity::startTrackingCurve()
 {
-
     Entity* target = primaryTarget();
     if (target == nil) {
         return;
@@ -5921,7 +6196,6 @@ void ShipEntity::startTrackingCurve()
 
 void ShipEntity::updateTrackingCurve()
 {
-
     Entity* target = primaryTarget();
     OOTimeAbsolute now = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
     if (target == nil || reactionTime <= 0.0 || trackingCurveTimes[0] + reactionTime / 3.0 > now)
@@ -5933,7 +6207,12 @@ void ShipEntity::updateTrackingCurve()
         // if target is cloaked, introduce some more inaccuracy
         // 0.02 seems to be enough to give them slight difficulty on
         // a straight-line target and real trouble on anything better
-        trackingCurvePositions[0] = HPvector_add((target != nullptr ? target->getPosition() : kZeroHPVector), OOHPVectorRandomSpatial((oo::ToShip(target) != nullptr ? oo::ToShip(target)->getFlightSpeed() : 0.0f) * reactionTime * 0.02));
+        trackingCurvePositions[0] = HPvector_add(
+            (target != nullptr ? target->getPosition() : kZeroHPVector),
+            OOHPVectorRandomSpatial((oo::ToShip(target) != nullptr
+                                            ? oo::ToShip(target)->getFlightSpeed()
+                                            : 0.0f)
+                * reactionTime * 0.02));
     } else {
         trackingCurvePositions[0] = (target != nullptr ? target->getPosition() : kZeroHPVector);
     }
@@ -5956,20 +6235,25 @@ void ShipEntity::calculateTrackingCurve()
     double t1 = trackingCurveTimes[2] - trackingCurveTimes[1],
            t2 = trackingCurveTimes[3] - trackingCurveTimes[1];
     trackingCurveCoeffs[0] = trackingCurvePositions[1];
-    trackingCurveCoeffs[1] = HPvector_add(HPvector_add(
-                                              HPvector_multiply_scalar(trackingCurvePositions[1], -(t1 + t2) / (t1 * t2)),
-                                              HPvector_multiply_scalar(trackingCurvePositions[2], -t2 / (t1 * (t1 - t2)))),
-        HPvector_multiply_scalar(trackingCurvePositions[3], t1 / (t2 * (t1 - t2))));
-    trackingCurveCoeffs[2] = HPvector_add(HPvector_add(
-                                              HPvector_multiply_scalar(trackingCurvePositions[1], 1 / (t1 * t2)),
-                                              HPvector_multiply_scalar(trackingCurvePositions[2], 1 / (t1 * (t1 - t2)))),
-        HPvector_multiply_scalar(trackingCurvePositions[3], -1 / (t2 * (t1 - t2))));
+    trackingCurveCoeffs[1] = HPvector_add(
+        HPvector_add(HPvector_multiply_scalar(trackingCurvePositions[1],
+                         -(t1 + t2) / (t1 * t2)),
+            HPvector_multiply_scalar(trackingCurvePositions[2],
+                -t2 / (t1 * (t1 - t2)))),
+        HPvector_multiply_scalar(trackingCurvePositions[3],
+            t1 / (t2 * (t1 - t2))));
+    trackingCurveCoeffs[2] = HPvector_add(
+        HPvector_add(
+            HPvector_multiply_scalar(trackingCurvePositions[1], 1 / (t1 * t2)),
+            HPvector_multiply_scalar(trackingCurvePositions[2],
+                1 / (t1 * (t1 - t2)))),
+        HPvector_multiply_scalar(trackingCurvePositions[3],
+            -1 / (t2 * (t1 - t2))));
     return;
 }
 
 void ShipEntity::drawImmediate(bool immediate, bool translucent)
 {
-
     if ((no_draw_distance < cam_zero_distance) || // Done redundantly to skip subentities
         (cloaking_device_active && randf() > 0.10)) {
         // Don't draw.
@@ -5981,12 +6265,14 @@ void ShipEntity::drawImmediate(bool immediate, bool translucent)
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
     // Draw bounding boxes if we have to before going for the subentities.
-    // TODO: the translucent flag here makes very little sense. Something's wrong with the matrices.
+    // TODO: the translucent flag here makes very little sense. Something's wrong
+    // with the matrices.
     if (translucent)
         drawDebugStuff();
     else if (gDebugFlags & DEBUG_BOUNDING_BOXES && !getIsSubEntity()) {
         OODebugDrawBoundingBox(getBoundingBox());
-        OODebugDrawColoredBoundingBox(totalBoundingBox, OOColor::purpleColor().get());
+        OODebugDrawColoredBoundingBox(totalBoundingBox,
+            OOColor::purpleColor().get());
     }
 #endif
 
@@ -5998,10 +6284,18 @@ void ShipEntity::drawImmediate(bool immediate, bool translucent)
             const std::vector<oo::EntityHold> subs = subEntities; // a snapshot, as -subEntities copied
             for (const auto& sub : subs) {
                 Entity* subEntity = sub.get();
-                OOCAssert((subEntity != nullptr ? subEntity->owner() : nullptr) == oo::WithObject(this), "Subentity ownership broke - %s should be owned by %s but is owned by %s.", oo::EntityDescription(subEntity).c_str(), oo::EntityDescription(this).c_str(), oo::EntityDescription(subEntity != nullptr ? subEntity->owner() : nullptr).c_str());
+                OOCAssert((subEntity != nullptr ? subEntity->owner() : nullptr) == oo::WithObject(this),
+                    "Subentity ownership broke - %s should be owned by %s but is "
+                    "owned by %s.",
+                    oo::EntityDescription(subEntity).c_str(),
+                    oo::EntityDescription(this).c_str(),
+                    oo::EntityDescription(
+                        subEntity != nullptr ? subEntity->owner() : nullptr)
+                        .c_str());
                 if (cxx::OOSubEntityInterface* cxxSub = dynamic_cast<cxx::OOSubEntityInterface*>(subEntity))
                     cxxSub->drawSubEntityImmediate(immediate, translucent);
-                // (else: nothing - the root's category drew only a ship's or an effect's part, which adopt the interface; bead oo-dpyk8)
+                // (else: nothing - the root's category drew only a ship's or an
+                // effect's part, which adopt the interface)
             }
         }
     }
@@ -6010,26 +6304,41 @@ void ShipEntity::drawImmediate(bool immediate, bool translucent)
 #ifdef OO_DEBUG_MONITOR_ENABLED
 void ShipEntity::drawDebugStuff()
 {
-
     // HPVect: imprecise here - needs camera relative
     if (0 && reportAIMessages) {
-        OODebugDrawPoint(HPVectorToVector(_destination), OOColor::blueColor().get());
-        OODebugDrawColoredLine(HPVectorToVector(getPosition()), HPVectorToVector(_destination), OOColor::colorWithWhite(0.15, 1.0).get());
+        OODebugDrawPoint(HPVectorToVector(_destination),
+            OOColor::blueColor().get());
+        OODebugDrawColoredLine(HPVectorToVector(getPosition()),
+            HPVectorToVector(_destination),
+            OOColor::colorWithWhite(0.15, 1.0).get());
 
         Entity* pTarget = primaryTarget();
         if (pTarget != nil) {
-            OODebugDrawPoint(HPVectorToVector((pTarget != nullptr ? pTarget->getPosition() : kZeroHPVector)), OOColor::redColor().get());
-            OODebugDrawColoredLine(HPVectorToVector(getPosition()), HPVectorToVector((pTarget != nullptr ? pTarget->getPosition() : kZeroHPVector)), OOColor::colorWithRed(0.2, 0.0, 0.0, 1.0).get());
+            OODebugDrawPoint(
+                HPVectorToVector(
+                    (pTarget != nullptr ? pTarget->getPosition() : kZeroHPVector)),
+                OOColor::redColor().get());
+            OODebugDrawColoredLine(
+                HPVectorToVector(getPosition()),
+                HPVectorToVector(
+                    (pTarget != nullptr ? pTarget->getPosition() : kZeroHPVector)),
+                OOColor::colorWithRed(0.2, 0.0, 0.0, 1.0).get());
         }
 
         Entity* sTarget = targetStation();
         if (sTarget != pTarget && (sTarget != nullptr && sTarget->getIsStation())) {
-            OODebugDrawPoint(HPVectorToVector((sTarget != nullptr ? sTarget->getPosition() : kZeroHPVector)), OOColor::cyanColor().get());
+            OODebugDrawPoint(
+                HPVectorToVector(
+                    (sTarget != nullptr ? sTarget->getPosition() : kZeroHPVector)),
+                OOColor::cyanColor().get());
         }
 
         Entity* fTarget = foundTarget();
         if (fTarget != nil && fTarget != pTarget && fTarget != sTarget) {
-            OODebugDrawPoint(HPVectorToVector((fTarget != nullptr ? fTarget->getPosition() : kZeroHPVector)), OOColor::magentaColor().get());
+            OODebugDrawPoint(
+                HPVectorToVector(
+                    (fTarget != nullptr ? fTarget->getPosition() : kZeroHPVector)),
+                OOColor::magentaColor().get());
         }
     }
 }
@@ -6037,10 +6346,10 @@ void ShipEntity::drawDebugStuff()
 
 void ShipEntity::drawSubEntityImmediate(bool immediate, bool translucent)
 {
-
     OOVerifyOpenGLState();
 
-    if (cam_zero_distance > no_draw_distance) // this test provides an opportunity to do simple LoD culling
+    if (cam_zero_distance > no_draw_distance) // this test provides an opportunity to do simple LoD
+                                              // culling
     {
         return; // TOO FAR AWAY
     }
@@ -6062,27 +6371,33 @@ void ShipEntity::drawSubEntityImmediate(bool immediate, bool translucent)
     OOVerifyOpenGLState();
 }
 
-GLfloat* ShipEntity::scannerDisplayColorForShip(::ShipEntity* otherShip, bool isHostile, bool flash, ::OOColor* scannerDisplayColor1, ::OOColor* scannerDisplayColor2, ::OOColor* scannerDisplayColorH1, ::OOColor* scannerDisplayColorH2)
+GLfloat* ShipEntity::scannerDisplayColorForShip(
+    ::ShipEntity* otherShip, bool isHostile, bool flash,
+    ::OOColor* scannerDisplayColor1, ::OOColor* scannerDisplayColor2,
+    ::OOColor* scannerDisplayColorH1, ::OOColor* scannerDisplayColorH2)
 {
-
     if (isHostile) {
         /* if there are any scripted scanner hostile display colours
          * for the ship, use them - otherwise fall through to the
          * normal scripted colours, then the scan class colours */
         if (scannerDisplayColorH1 || scannerDisplayColorH2) {
             if (scannerDisplayColorH1 && !scannerDisplayColorH2) {
-                scannerDisplayColorH1->getRed(&scripted_color[0], &scripted_color[1], &scripted_color[2], &scripted_color[3]);
+                scannerDisplayColorH1->getRed(&scripted_color[0], &scripted_color[1],
+                    &scripted_color[2], &scripted_color[3]);
             }
 
             if (!scannerDisplayColorH1 && scannerDisplayColorH2) {
-                scannerDisplayColorH2->getRed(&scripted_color[0], &scripted_color[1], &scripted_color[2], &scripted_color[3]);
+                scannerDisplayColorH2->getRed(&scripted_color[0], &scripted_color[1],
+                    &scripted_color[2], &scripted_color[3]);
             }
 
             if (scannerDisplayColorH1 && scannerDisplayColorH2) {
                 if (flash)
-                    scannerDisplayColorH1->getRed(&scripted_color[0], &scripted_color[1], &scripted_color[2], &scripted_color[3]);
+                    scannerDisplayColorH1->getRed(&scripted_color[0], &scripted_color[1],
+                        &scripted_color[2], &scripted_color[3]);
                 else
-                    scannerDisplayColorH2->getRed(&scripted_color[0], &scripted_color[1], &scripted_color[2], &scripted_color[3]);
+                    scannerDisplayColorH2->getRed(&scripted_color[0], &scripted_color[1],
+                        &scripted_color[2], &scripted_color[3]);
             }
 
             return scripted_color;
@@ -6092,18 +6407,22 @@ GLfloat* ShipEntity::scannerDisplayColorForShip(::ShipEntity* otherShip, bool is
     // if there are any scripted scanner display colors for the ship, use them
     if (scannerDisplayColor1 || scannerDisplayColor2) {
         if (scannerDisplayColor1 && !scannerDisplayColor2) {
-            scannerDisplayColor1->getRed(&scripted_color[0], &scripted_color[1], &scripted_color[2], &scripted_color[3]);
+            scannerDisplayColor1->getRed(&scripted_color[0], &scripted_color[1],
+                &scripted_color[2], &scripted_color[3]);
         }
 
         if (!scannerDisplayColor1 && scannerDisplayColor2) {
-            scannerDisplayColor2->getRed(&scripted_color[0], &scripted_color[1], &scripted_color[2], &scripted_color[3]);
+            scannerDisplayColor2->getRed(&scripted_color[0], &scripted_color[1],
+                &scripted_color[2], &scripted_color[3]);
         }
 
         if (scannerDisplayColor1 && scannerDisplayColor2) {
             if (flash)
-                scannerDisplayColor1->getRed(&scripted_color[0], &scripted_color[1], &scripted_color[2], &scripted_color[3]);
+                scannerDisplayColor1->getRed(&scripted_color[0], &scripted_color[1],
+                    &scripted_color[2], &scripted_color[3]);
             else
-                scannerDisplayColor2->getRed(&scripted_color[0], &scripted_color[1], &scripted_color[2], &scripted_color[3]);
+                scannerDisplayColor2->getRed(&scripted_color[0], &scripted_color[1],
+                    &scripted_color[2], &scripted_color[3]);
         }
 
         return scripted_color;
@@ -6164,7 +6483,8 @@ GLfloat* ShipEntity::scannerDisplayColorForShip(::ShipEntity* otherShip, bool is
 void ShipEntity::setScannerDisplayColor1(::OOColor* color)
 {
     if (color == nullptr)
-        scanner_display_color1 = OOColor::colorWithDescription(ValueForKey(shipinfoDictionary, "scanner_display_color1"));
+        scanner_display_color1 = OOColor::colorWithDescription(
+            ValueForKey(shipinfoDictionary, "scanner_display_color1"));
     else
         scanner_display_color1 = oo::Ref<OOColor>(color);
 }
@@ -6172,7 +6492,8 @@ void ShipEntity::setScannerDisplayColor1(::OOColor* color)
 void ShipEntity::setScannerDisplayColor2(::OOColor* color)
 {
     if (color == nullptr)
-        scanner_display_color2 = OOColor::colorWithDescription(ValueForKey(shipinfoDictionary, "scanner_display_color2"));
+        scanner_display_color2 = OOColor::colorWithDescription(
+            ValueForKey(shipinfoDictionary, "scanner_display_color2"));
     else
         scanner_display_color2 = oo::Ref<OOColor>(color);
 }
@@ -6190,7 +6511,8 @@ void ShipEntity::setScannerDisplayColor2(::OOColor* color)
 void ShipEntity::setScannerDisplayColorHostile1(::OOColor* color)
 {
     if (color == nullptr)
-        scanner_display_color_hostile1 = OOColor::colorWithDescription(ValueForKey(shipinfoDictionary, "scanner_hostile_display_color1"));
+        scanner_display_color_hostile1 = OOColor::colorWithDescription(
+            ValueForKey(shipinfoDictionary, "scanner_hostile_display_color1"));
     else
         scanner_display_color_hostile1 = oo::Ref<OOColor>(color);
 }
@@ -6198,7 +6520,8 @@ void ShipEntity::setScannerDisplayColorHostile1(::OOColor* color)
 void ShipEntity::setScannerDisplayColorHostile2(::OOColor* color)
 {
     if (color == nullptr)
-        scanner_display_color_hostile2 = OOColor::colorWithDescription(ValueForKey(shipinfoDictionary, "scanner_hostile_display_color2"));
+        scanner_display_color_hostile2 = OOColor::colorWithDescription(
+            ValueForKey(shipinfoDictionary, "scanner_hostile_display_color2"));
     else
         scanner_display_color_hostile2 = oo::Ref<OOColor>(color);
 }
@@ -6213,44 +6536,29 @@ void ShipEntity::setScannerDisplayColorHostile2(::OOColor* color)
     return scanner_display_color_hostile2.get();
 }
 
-bool ShipEntity::isCloaked()
-{
-    return cloaking_device_active;
-}
+bool ShipEntity::isCloaked() { return cloaking_device_active; }
 
-bool ShipEntity::getCloakPassive()
-{
-    return cloakPassive;
-}
+bool ShipEntity::getCloakPassive() { return cloakPassive; }
 
 void ShipEntity::setCloaked(bool cloak)
 {
-
     if (cloak)
         activateCloakingDevice();
     else
         deactivateCloakingDevice();
 }
 
-bool ShipEntity::hasAutoCloak()
-{
-    return cloakAutomatic;
-}
+bool ShipEntity::hasAutoCloak() { return cloakAutomatic; }
 
-void ShipEntity::setAutoCloak(bool automatic)
-{
-    cloakAutomatic = !!automatic;
-}
+void ShipEntity::setAutoCloak(bool automatic) { cloakAutomatic = !!automatic; }
 
 bool ShipEntity::isJammingScanning()
 {
-
     return (hasMilitaryJammer() && military_jammer_active);
 }
 
 void ShipEntity::addSubEntity(Entity* sub)
 {
-
     if (sub == nil)
         return;
 
@@ -6264,7 +6572,6 @@ void ShipEntity::addSubEntity(Entity* sub)
 
 void ShipEntity::setOwner(Entity* who_owns_entity)
 {
-
     OOEntityWithDrawable::setOwner(who_owns_entity);
 
     /*	Reset shader binding target so that bind-to-super works.
@@ -6274,13 +6581,12 @@ void ShipEntity::setOwner(Entity* who_owns_entity)
     */
     if (isSubEntity) {
         if (OODrawable* drawable = getDrawable())
-            drawable->setBindingTarget(this); // the C++ entity (bead oo-9ht.39.6)
+            drawable->setBindingTarget(this); // the C++ entity
     }
 }
 
 void ShipEntity::applyThrust(double delta_t)
 {
-
     GLfloat dt_thrust = SHIP_THRUST_FACTOR * thrust * delta_t;
     BOOL canBurn = hasFuelInjection() && (fuel > MIN_FUEL);
     BOOL isUsingAfterburner = (canBurn && (flightSpeed > maxFlightSpeed) && (desired_speed >= flightSpeed));
@@ -6336,14 +6642,11 @@ void ShipEntity::orientationChanged()
     v_right = vector_right_from_quaternion(orientation);
 }
 
-// Slice 17 of docs/phases/3-slices/ShipEntity.md (bead oo-6hofy): attitude, collision avoidance,
-// messages, groups and escort accessors, proximity alert, names and descriptions. Members of the
-// C++ ship, called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
+// Attitude, collision avoidance, messages, groups and escort accessors,
+// proximity alert, names and descriptions. Members of the C++ ship.
 
 void ShipEntity::applyRoll(GLfloat roll1, GLfloat climb1)
 {
-
     Quaternion q1 = kIdentityQuaternion;
 
     if (!roll1 && !climb1 && !hasRotated)
@@ -6360,7 +6663,6 @@ void ShipEntity::applyRoll(GLfloat roll1, GLfloat climb1)
 
 void ShipEntity::applyRoll(GLfloat roll1, GLfloat climb1, GLfloat yaw1)
 {
-
     if ((roll1 == 0.0) && (climb1 == 0.0) && (yaw1 == 0.0) && (!hasRotated))
         return;
 
@@ -6379,13 +6681,11 @@ void ShipEntity::applyRoll(GLfloat roll1, GLfloat climb1, GLfloat yaw1)
 
 void ShipEntity::applyAttitudeChanges(double delta_t)
 {
-
     applyRoll(flightRoll * delta_t, flightPitch * delta_t, flightYaw * delta_t);
 }
 
 void ShipEntity::avoidCollision()
 {
-
     if (scanClass == CLASS_MISSILE)
         return; // missiles are SUPPOSED to collide!
 
@@ -6396,15 +6696,20 @@ void ShipEntity::avoidCollision()
         condition["behaviour"] = oo::PList((long)behaviour); // as oo_setInteger: stored it
         if (primaryTarget() != nil) {
             // must use the weak ref here to prevent potential over-retention
-            condition["primaryTarget"] = oo::EntityWeakNode(primaryTarget()); // weakly, as its object's weak reference was (bead oo-w9pi2)
+            condition["primaryTarget"] = oo::EntityWeakNode(primaryTarget()); // weakly, as its object's weak
+                                                                              // reference was
         }
-        condition["desired_range"] = oo::PList::singleReal(desired_range); // floats, as oo_setFloat: stored them
+        condition["desired_range"] = oo::PList::singleReal(
+            desired_range); // floats, as oo_setFloat: stored them
         condition["desired_speed"] = oo::PList::singleReal(desired_speed);
         condition["destination"] = OOPListFromHPVector(_destination); // as oo_setHPVector: stored it
         previousCondition = oo::PList(std::move(condition));
 
         _destination = (prox_ship != nullptr ? prox_ship->getPosition() : HPVector { });
-        _destination = OOHPVectorInterpolate(position, (prox_ship != nullptr ? prox_ship->getPosition() : HPVector { }), 0.5); // point between us and them
+        _destination = OOHPVectorInterpolate(
+            position,
+            (prox_ship != nullptr ? prox_ship->getPosition() : HPVector { }),
+            0.5); // point between us and them
 
         desired_range = prox_ship->collision_radius * PROXIMITY_AVOID_DISTANCE_FACTOR;
 
@@ -6415,13 +6720,14 @@ void ShipEntity::avoidCollision()
 
 void ShipEntity::resumePostProximityAlert()
 {
-
     if (previousCondition.isNull())
         return;
 
     behaviour = (OOBehaviour)previousCondition.get<int>("behaviour");
     const oo::PList* previousTarget = previousCondition.find("primaryTarget");
-    _primaryTarget = oo::WeakRef<Entity>(previousTarget != nullptr ? oo::EntityInWeakNode(*previousTarget) : nullptr); // the node holds the target weakly (bead oo-w9pi2)
+    _primaryTarget = oo::WeakRef<Entity>(
+        previousTarget != nullptr ? oo::EntityInWeakNode(*previousTarget)
+                                  : nullptr); // the node holds the target weakly
     startTrackingCurve();
     desired_range = previousCondition.get<float>("desired_range");
     desired_speed = previousCondition.get<float>("desired_speed");
@@ -6432,27 +6738,18 @@ void ShipEntity::resumePostProximityAlert()
 
     _proximityAlert = nullptr;
 
-    //[shipAI message:@"RESTART_DOCKING"];	// if docking, start over, other AIs will ignore this message
+    //[shipAI message:@"RESTART_DOCKING"];	// if docking, start over, other
+    // AIs will ignore this message
 }
 
-double ShipEntity::getMessageTime()
-{
-    return messageTime;
-}
+double ShipEntity::getMessageTime() { return messageTime; }
 
-void ShipEntity::setMessageTime(double value)
-{
-    messageTime = value;
-}
+void ShipEntity::setMessageTime(double value) { messageTime = value; }
 
-::OOShipGroup* ShipEntity::group()
-{
-    return _group.get();
-}
+::OOShipGroup* ShipEntity::group() { return _group.get(); }
 
 void ShipEntity::setGroup(::OOShipGroup* group)
 {
-
     if (group != _group) {
         if (_escortGroup != _group && _group != nullptr) {
             if (this == _group->leader())
@@ -6472,7 +6769,6 @@ void ShipEntity::setGroup(::OOShipGroup* group)
 
 ::OOShipGroup* ShipEntity::escortGroup()
 {
-
     if (_escortGroup == nullptr) {
         _escortGroup = ::OOShipGroup::groupWithName(std::string("escort group"));
         if (_escortGroup != nullptr)
@@ -6484,25 +6780,21 @@ void ShipEntity::setGroup(::OOShipGroup* group)
 
 void ShipEntity::setEscortGroup(::OOShipGroup* group)
 {
-
     if (group != _escortGroup) {
         _escortGroup = oo::Ref<::OOShipGroup>(group);
         if (group != nullptr)
-            group->setLeader(this); // A ship is always leader of its own escort group.
+            group->setLeader(
+                this); // A ship is always leader of its own escort group.
         updateEscortFormation();
     }
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-::OOShipGroup* ShipEntity::rawEscortGroup()
-{
-    return _escortGroup.get();
-}
+::OOShipGroup* ShipEntity::rawEscortGroup() { return _escortGroup.get(); }
 #endif
 
 ::OOShipGroup* ShipEntity::stationGroup()
 {
-
     if (_group == nullptr) {
         _group = ::OOShipGroup::groupWithName(std::string("station group"));
         if (_group != nullptr)
@@ -6521,11 +6813,11 @@ bool ShipEntity::hasEscorts()
 
 std::vector<oo::EntityHold> ShipEntity::escorts()
 {
-
     std::vector<oo::EntityHold> escorts;
     if (_escortGroup == nullptr)
         return escorts;
-    // The group's members at this moment, in its order, without self (as -ooExcludingObject: skipped it).
+    // The group's members at this moment, in its order, without self (as
+    // -ooExcludingObject: skipped it).
     for (const oo::EntityHold& memberRef : _escortGroup->memberArray()) {
         ::ShipEntity* member = oo::ToShip(memberRef.get());
         if (member == this)
@@ -6535,11 +6827,7 @@ std::vector<oo::EntityHold> ShipEntity::escorts()
     return escorts;
 }
 
-std::vector<oo::EntityHold> ShipEntity::escortArray()
-{
-
-    return escorts();
-}
+std::vector<oo::EntityHold> ShipEntity::escortArray() { return escorts(); }
 
 uint8_t ShipEntity::escortCount()
 {
@@ -6548,20 +6836,14 @@ uint8_t ShipEntity::escortCount()
     return _escortGroup->count() - 1;
 }
 
-uint8_t ShipEntity::pendingEscortCount()
-{
-    return _pendingEscortCount;
-}
+uint8_t ShipEntity::pendingEscortCount() { return _pendingEscortCount; }
 
 void ShipEntity::setPendingEscortCount(uint8_t count)
 {
     _pendingEscortCount = MIN(count, _maxEscortCount);
 }
 
-uint8_t ShipEntity::maxEscortCount()
-{
-    return _maxEscortCount;
-}
+uint8_t ShipEntity::maxEscortCount() { return _maxEscortCount; }
 
 void ShipEntity::setMaxEscortCount(uint8_t newCount)
 {
@@ -6570,17 +6852,17 @@ void ShipEntity::setMaxEscortCount(uint8_t newCount)
 
 NSUInteger ShipEntity::turretCount()
 {
-
     NSUInteger count = 0;
     for (const auto& se : shipSubEntities()) {
-        if ((oo::ToShip(se.get()) != nullptr ? oo::ToShip(se.get())->isTurret() : false)) {
+        if ((oo::ToShip(se.get()) != nullptr ? oo::ToShip(se.get())->isTurret()
+                                             : false)) {
             count++;
         }
     }
     return count;
 }
 
-// The C++ entity (bead oo-9ht.39.23.2): null, and forgotten, when its object is gone, as before.
+// The C++ entity: null, and forgotten, when its object is gone, as before.
 Entity* ShipEntity::proximityAlert()
 {
     Entity* prox = oo::LiveEntity(_proximityAlert);
@@ -6593,13 +6875,13 @@ Entity* ShipEntity::proximityAlert()
 
 void ShipEntity::setProximityAlert(::ShipEntity* other)
 {
-
     if (!other) {
         _proximityAlert = nullptr;
         return;
     }
 
-    if ((other != nullptr ? other->getMass() : 0.0f) < 2000) // we are not alerted by small objects. (a cargopod has a mass of about 1000)
+    if ((other != nullptr ? other->getMass() : 0.0f) < 2000) // we are not alerted by small objects. (a cargopod has a mass of
+                                                             // about 1000)
         return;
 
     if (isStation) // stations don't worry about colliding with things
@@ -6610,7 +6892,8 @@ void ShipEntity::setProximityAlert(::ShipEntity* other)
         return;
     }
 
-    if (!crew) // Ships without pilot (cargo, rocks, missiles, buoys etc) will not get alarmed. (escape-pods have pilots)
+    if (!crew) // Ships without pilot (cargo, rocks, missiles, buoys etc) will
+               // not get alarmed. (escape-pods have pilots)
         return;
 
     // check vectors
@@ -6641,10 +6924,7 @@ void ShipEntity::setProximityAlert(::ShipEntity* other)
     _proximityAlert = oo::WeakRef<Entity>(other);
 }
 
-std::optional<std::string> ShipEntity::getName()
-{
-    return name;
-}
+std::optional<std::string> ShipEntity::getName() { return name; }
 
 std::optional<std::string> ShipEntity::getShipUniqueName()
 {
@@ -6668,9 +6948,11 @@ std::optional<std::string> ShipEntity::getDisplayName()
         } else {
             // %@ printed nil as (null)
             if (!shipClassName.has_value()) {
-                return oo::str::format("%s: %s", name.value_or("(null)").c_str(), shipUniqueName->c_str());
+                return oo::str::format("%s: %s", name.value_or("(null)").c_str(),
+                    shipUniqueName->c_str());
             } else {
-                return oo::str::format("%s: %s", shipClassName->c_str(), shipUniqueName->c_str());
+                return oo::str::format("%s: %s", shipClassName->c_str(),
+                    shipUniqueName->c_str());
             }
         }
     }
@@ -6685,7 +6967,6 @@ std::optional<std::string> ShipEntity::scanDescriptionForScripting()
 
 std::optional<std::string> ShipEntity::scanDescription()
 {
-
     if (scan_description.has_value()) {
         return scan_description;
     } else {
@@ -6749,13 +7030,11 @@ void ShipEntity::setScanDescription(const std::optional<std::string>& inName)
     scan_description = inName;
 }
 
-// Slice 18 of docs/phases/3-slices/ShipEntity.md (bead oo-vho1o): roles, ship-type predicates,
-// hostility, weapon data, scanner range, aegis transition, nearest planet. Members of the C++ ship,
-// called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Roles, ship-type predicates, hostility, weapon data, scanner range, aegis
+// transition, nearest planet. Members of the C++ ship.
 
 std::optional<std::string> ShipEntity::identFromShip(::ShipEntity* otherShip)
 {
-
     if (isJammingScanning() && !(otherShip != nullptr ? otherShip->hasMilitaryScannerFilter() : false)) {
         return OO_DESC("unknown-target");
     }
@@ -6764,7 +7043,6 @@ std::optional<std::string> ShipEntity::identFromShip(::ShipEntity* otherShip)
 
 bool ShipEntity::hasRole(const std::string& role)
 {
-
     if (roleSet != nullptr && roleSet->hasRole(role))
         return YES;
     return role == primaryRole || role == shipDataKeyAutoRole();
@@ -6772,27 +7050,22 @@ bool ShipEntity::hasRole(const std::string& role)
 
 oo::Ref<::OORoleSet> ShipEntity::getRoleSet()
 {
-
     // A null set answers null, as the messages to a nil set did.
     if (roleSet == nullptr)
         roleSet = ::OORoleSet::roleSetWithString(primaryRole.value_or(std::string()));
     if (roleSet == nullptr)
         return nullptr;
-    const oo::Ref<::OORoleSet> withPrimary = roleSet->roleSetWithAddedRoleIfNotSet(primaryRole.value_or(std::string()), 1.0);
+    const oo::Ref<::OORoleSet> withPrimary = roleSet->roleSetWithAddedRoleIfNotSet(primaryRole.value_or(std::string()),
+        1.0);
     if (withPrimary == nullptr)
         return nullptr;
     return withPrimary->roleSetWithAddedRoleIfNotSet(*shipDataKeyAutoRole(), 1.0);
 }
 
-void ShipEntity::addRole(const std::string& role)
-{
-
-    addRole(role, 0.0f);
-}
+void ShipEntity::addRole(const std::string& role) { addRole(role, 0.0f); }
 
 void ShipEntity::addRole(const std::string& role, float probability)
 {
-
     if (!hasRole(role)) {
         oo::Ref<::OORoleSet> newRoles;
         if (roleSet != nullptr)
@@ -6807,7 +7080,6 @@ void ShipEntity::addRole(const std::string& role, float probability)
 
 void ShipEntity::removeRole(const std::string& role)
 {
-
     if (hasRole(role)) {
         const oo::Ref<::OORoleSet> newRoles = (roleSet != nullptr) ? roleSet->roleSetWithRemovedRole(role) : nullptr;
         if (newRoles != nullptr) {
@@ -6818,101 +7090,88 @@ void ShipEntity::removeRole(const std::string& role)
 
 std::optional<std::string> ShipEntity::getPrimaryRole()
 {
-
     if (!primaryRole.has_value()) {
         primaryRole = (roleSet != nullptr) ? roleSet->anyRole() : std::nullopt;
         if (!primaryRole.has_value())
             primaryRole = "trader";
-        OO_LOG("ship.noPrimaryRole", "{} had no primary role, randomly selected \"{}\".", getName().value_or("(null)"), primaryRole.value_or("(null)"));
+        OO_LOG("ship.noPrimaryRole",
+            "{} had no primary role, randomly selected \"{}\".",
+            getName().value_or("(null)"), primaryRole.value_or("(null)"));
     }
 
     return primaryRole;
 }
 
 // Exposed to AI.
-void ShipEntity::setPrimaryRole(const std::string& role)
-{
-    primaryRole = role;
-}
+void ShipEntity::setPrimaryRole(const std::string& role) { primaryRole = role; }
 
 bool ShipEntity::hasPrimaryRole(const std::string& role)
 {
-
     return getPrimaryRole() == role;
 }
 
 bool ShipEntity::isPolice()
 {
-
-    // bounty hunters have a police role, but are not police, so we must test by scan class, not by role
+    // bounty hunters have a police role, but are not police, so we must test by
+    // scan class, not by role
     return getScanClass() == CLASS_POLICE;
 }
 
-bool ShipEntity::isThargoid()
-{
-
-    return getScanClass() == CLASS_THARGOID;
-}
+bool ShipEntity::isThargoid() { return getScanClass() == CLASS_THARGOID; }
 
 bool ShipEntity::isTrader()
 {
-
-    return (UNIVERSE != nullptr ? UNIVERSE->role(getPrimaryRole().value_or(""), "oolite-trader") : false);
+    return (UNIVERSE != nullptr
+            ? UNIVERSE->role(getPrimaryRole().value_or(""), "oolite-trader")
+            : false);
 }
 
 bool ShipEntity::isPirate()
 {
-
-    return (UNIVERSE != nullptr ? UNIVERSE->role(getPrimaryRole().value_or(""), "oolite-pirate") : false);
+    return (UNIVERSE != nullptr
+            ? UNIVERSE->role(getPrimaryRole().value_or(""), "oolite-pirate")
+            : false);
 }
 
 bool ShipEntity::getIsMissile()
 {
-
     return (getPrimaryRole().value_or("").ends_with("MISSILE") || hasPrimaryRole("missile"));
 }
 
 bool ShipEntity::isMine()
 {
-
     return getPrimaryRole().value_or("").ends_with("MINE");
 }
 
-bool ShipEntity::isWeapon()
-{
-
-    return getIsMissile() || isMine();
-}
+bool ShipEntity::isWeapon() { return getIsMissile() || isMine(); }
 
 bool ShipEntity::isEscort()
 {
-
-    return (UNIVERSE != nullptr ? UNIVERSE->role(getPrimaryRole().value_or(""), "oolite-escort") : false);
+    return (UNIVERSE != nullptr
+            ? UNIVERSE->role(getPrimaryRole().value_or(""), "oolite-escort")
+            : false);
 }
 
 bool ShipEntity::isShuttle()
 {
-
-    return (UNIVERSE != nullptr ? UNIVERSE->role(getPrimaryRole().value_or(""), "oolite-shuttle") : false);
+    return (UNIVERSE != nullptr
+            ? UNIVERSE->role(getPrimaryRole().value_or(""), "oolite-shuttle")
+            : false);
 }
 
-bool ShipEntity::isTurret()
-{
-    return behaviour == BEHAVIOUR_TRACK_AS_TURRET;
-}
+bool ShipEntity::isTurret() { return behaviour == BEHAVIOUR_TRACK_AS_TURRET; }
 
 bool ShipEntity::isPirateVictim()
 {
-
-    return (UNIVERSE != nullptr ? UNIVERSE->roleIsPirateVictim(getPrimaryRole().value_or("")) : false);
+    return (UNIVERSE != nullptr
+            ? UNIVERSE->roleIsPirateVictim(getPrimaryRole().value_or(""))
+            : false);
 }
 
-bool ShipEntity::isExplicitlyUnpiloted()
-{
-    return _explicitlyUnpiloted;
-}
+bool ShipEntity::isExplicitlyUnpiloted() { return _explicitlyUnpiloted; }
 
-void ShipEntity::getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
+void ShipEntity::getJSClass(ooscript::ClassDef** outClass,
+    ooscript::Object* outPrototype)
 {
     ::ShipEntityJSGetJSClass(outClass, outPrototype);
 }
@@ -6922,8 +7181,9 @@ std::optional<std::string> ShipEntity::jsClassName()
     return ::ShipEntityJSClassName();
 }
 
-// A ship made in C++ (the player, the proxy) is visible to scripts, as its deleted facade was: the
-// Objective-C PlayerEntity and ProxyPlayerEntity inherited ShipEntity's answer (bead oo-ak1km).
+// A ship made in C++ (the player, the proxy) is visible to scripts, as its
+// deleted facade was: the Objective-C PlayerEntity and ProxyPlayerEntity
+// inherited ShipEntity's answer.
 bool ShipEntity::isVisibleToScripts()
 {
     return ::ShipEntityJSIsVisibleToScripts();
@@ -6931,14 +7191,12 @@ bool ShipEntity::isVisibleToScripts()
 
 bool ShipEntity::isUnpiloted()
 {
-
     return isExplicitlyUnpiloted() || getIsHulk() || getScanClass() == CLASS_ROCK || getScanClass() == CLASS_CARGO;
 }
 
 // Exposed to shaders.
 bool ShipEntity::hasHostileTarget()
 {
-
     Entity* t = primaryTarget();
     if (t == nil || !oo::EntityIsShip(t)) {
         return NO;
@@ -6955,23 +7213,15 @@ bool ShipEntity::hasHostileTarget()
 
 bool ShipEntity::isHostileTo(Entity* entity)
 {
-
     return (hasHostileTarget() && primaryTarget() == entity);
 }
 
-GLfloat ShipEntity::getWeaponRange()
-{
-    return weaponRange;
-}
+GLfloat ShipEntity::getWeaponRange() { return weaponRange; }
 
-void ShipEntity::setWeaponRange(GLfloat value)
-{
-    weaponRange = value;
-}
+void ShipEntity::setWeaponRange(GLfloat value) { weaponRange = value; }
 
 void ShipEntity::setWeaponDataFromType(OOWeaponType weapon_type)
 {
-
     weaponRange = getWeaponRangeFromType(weapon_type);
     weapon_energy_use = (weapon_type != nullptr ? weapon_type->weaponEnergyUse() : 0.0f);
     weapon_recharge_rate = (weapon_type != nullptr ? weapon_type->weaponRechargeRate() : 0.0f);
@@ -6979,78 +7229,51 @@ void ShipEntity::setWeaponDataFromType(OOWeaponType weapon_type)
     weapon_damage = (weapon_type != nullptr ? weapon_type->weaponDamage() : 0.0f);
 
     if (default_laser_color == nil) {
-        oo::Ref<OOColor> wcol = (weapon_type != nullptr ? weapon_type->weaponColor() : oo::Ref<OOColor>());
+        oo::Ref<OOColor> wcol = (weapon_type != nullptr ? weapon_type->weaponColor()
+                                                        : oo::Ref<OOColor>());
         if (wcol != nil) {
             setLaserColor(wcol.get());
         }
     }
 }
 
-float ShipEntity::energyRechargeRate()
-{
-    return energy_recharge_rate;
-}
+float ShipEntity::energyRechargeRate() { return energy_recharge_rate; }
 
 void ShipEntity::setEnergyRechargeRate(GLfloat newValue)
 {
     energy_recharge_rate = newValue;
 }
 
-float ShipEntity::weaponRechargeRate()
-{
-    return weapon_recharge_rate;
-}
+float ShipEntity::weaponRechargeRate() { return weapon_recharge_rate; }
 
 void ShipEntity::setWeaponRechargeRate(float value)
 {
     weapon_recharge_rate = value;
 }
 
-void ShipEntity::setWeaponEnergy(float value)
-{
-    weapon_damage = value;
-}
+void ShipEntity::setWeaponEnergy(float value) { weapon_damage = value; }
 
 OOWeaponFacing ShipEntity::getCurrentWeaponFacing()
 {
     return currentWeaponFacing;
 }
 
-GLfloat ShipEntity::getScannerRange()
-{
-    return scannerRange;
-}
+GLfloat ShipEntity::getScannerRange() { return scannerRange; }
 
-void ShipEntity::setScannerRange(GLfloat value)
-{
-    scannerRange = value;
-}
+void ShipEntity::setScannerRange(GLfloat value) { scannerRange = value; }
 
-Vector ShipEntity::getReference()
-{
-    return reference;
-}
+Vector ShipEntity::getReference() { return reference; }
 
-void ShipEntity::setReference(Vector v)
-{
-    reference = v;
-}
+void ShipEntity::setReference(Vector v) { reference = v; }
 
-bool ShipEntity::getReportAIMessages()
-{
-    return reportAIMessages;
-}
+bool ShipEntity::getReportAIMessages() { return reportAIMessages; }
 
-void ShipEntity::setReportAIMessages(bool yn)
-{
-    reportAIMessages = yn;
-}
+void ShipEntity::setReportAIMessages(bool yn) { reportAIMessages = yn; }
 
 void ShipEntity::transitionToAegisNone()
 {
-
     if (!suppressAegisMessages && aegis_status != AEGIS_NONE) {
-        Entity* lastAegisLock = this->lastAegisLock(); // the C++ entity (bead oo-al52f)
+        Entity* lastAegisLock = this->lastAegisLock(); // the C++ entity
         if (lastAegisLock != nullptr) {
             doScriptEvent(OOJSID("shipExitedPlanetaryVicinity"), lastAegisLock);
 
@@ -7073,7 +7296,6 @@ void ShipEntity::transitionToAegisNone()
 
 ::OOPlanetEntity* ShipEntity::findNearestPlanet()
 {
-
     /*
             Performance note: this method is called every frame by every ship, and
             has a significant profiler presence.
@@ -7086,8 +7308,11 @@ void ShipEntity::transitionToAegisNone()
     // valgrind complains about this line here. Might be compiler/GNUstep bug?
     // should we go back to a traditional enumerator? - CIM
     // similar complaints about the other foreach() in this file
-    for (const auto& planetRef : (UNIVERSE != nullptr ? UNIVERSE->planets() : std::vector<oo::EntityHold>())) {
-        planet = static_cast<::OOPlanetEntity*>(planetRef.get()); // the list holds only planets (C++ since bead oo-9ht.129)
+    for (const auto& planetRef :
+        (UNIVERSE != nullptr ? UNIVERSE->planets()
+                             : std::vector<oo::EntityHold>())) {
+        planet = static_cast<::OOPlanetEntity*>(
+            planetRef.get()); // the list holds only planets
         // Ignore miniature planets.
         if ((planet != nullptr ? planet->planetType() : OOStellarBodyType { }) == STELLAR_TYPE_MINIATURE)
             continue;
@@ -7104,8 +7329,7 @@ void ShipEntity::transitionToAegisNone()
 
 Entity* ShipEntity::findNearestStellarBody()
 {
-
-    Entity* match = findNearestPlanet(); // the C++ planet and sun (bead oo-al52f)
+    Entity* match = findNearestPlanet(); // the C++ planet and sun
     Entity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
 
     if (sun != nullptr) {
@@ -7119,11 +7343,12 @@ Entity* ShipEntity::findNearestStellarBody()
 
 ::OOPlanetEntity* ShipEntity::findNearestPlanetExcludingMoons()
 {
-
     ::OOPlanetEntity* result = nil;
-    std::vector<oo::EntityHold> planets; // the planets, held (beads oo-9ht.39.26, oo-al52f)
+    std::vector<oo::EntityHold> planets; // the planets, held
 
-    for (const auto& planet : (UNIVERSE != nullptr ? UNIVERSE->planets() : std::vector<oo::EntityHold>())) {
+    for (const auto& planet :
+        (UNIVERSE != nullptr ? UNIVERSE->planets()
+                             : std::vector<oo::EntityHold>())) {
         if (OOStellarBodyPlanetType(planet.get()) == STELLAR_TYPE_NORMAL_PLANET)
             planets.push_back(planet);
     }
@@ -7132,22 +7357,26 @@ Entity* ShipEntity::findNearestStellarBody()
         return nil;
 
     // ComparePlanetsBySurfaceDistance's order; the nearest comes first.
-    std::stable_sort(planets.begin(), planets.end(), [this](const oo::EntityHold& a, const oo::EntityHold& b) {
-        return ComparePlanetsBySurfaceDistance(a.get(), b.get(), this) == OOOrderedAscending;
-    });
+    std::stable_sort(planets.begin(), planets.end(),
+        [this](const oo::EntityHold& a, const oo::EntityHold& b) {
+            return ComparePlanetsBySurfaceDistance(
+                       a.get(), b.get(), this)
+                == OOOrderedAscending;
+        });
     result = static_cast<::OOPlanetEntity*>(planets[0].get());
 
     return result;
 }
 
-// Slice 19 of docs/phases/3-slices/ShipEntity.md (bead oo-umyg2): aegis, home and destination
-// systems, status, crew, AI and ship script, fuel. Members of the C++ ship, called directly, since
-// bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Aegis, home and destination systems, status, crew, AI and ship script, fuel.
+// Members of the C++ ship.
 
 OOAegisStatus ShipEntity::checkForAegis()
 {
-    Entity* nearest = findNearestStellarBody(); // the C++ entity (bead oo-al52f)
-    BOOL sunGoneNova = ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr ? UNIVERSE->sun()->goneNova() : false);
+    Entity* nearest = findNearestStellarBody(); // the C++ entity
+    BOOL sunGoneNova = ((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr
+            ? UNIVERSE->sun()->goneNova()
+            : false);
 
     if (nearest == nullptr) {
         if (aegis_status != AEGIS_NONE) {
@@ -7165,8 +7394,10 @@ OOAegisStatus ShipEntity::checkForAegis()
     float sd2 = SCANNER_MAX_RANGE2 * 10.0f;
 
     // check if nearing a surface
-    unsigned wasNearPlanetSurface = isNearPlanetSurface; // isNearPlanetSurface is a bit flag, not an actual BOOL
-    isNearPlanetSurface = (d2 - cr2) < (250000.0f + 1000.0f * cr); // less than 500m from the surface: (a+b)*(a+b) = a*a+b*b +2*a*b
+    unsigned wasNearPlanetSurface = isNearPlanetSurface; // isNearPlanetSurface is a bit flag, not an actual
+                                                         // BOOL
+    isNearPlanetSurface = (d2 - cr2) < (250000.0f + 1000.0f * cr); // less than 500m from the surface:
+                                                                   // (a+b)*(a+b) = a*a+b*b +2*a*b
 
     if (EXPECT_NOT((wasNearPlanetSurface != isNearPlanetSurface) && !suppressAegisMessages)) {
         if (isNearPlanetSurface) {
@@ -7183,13 +7414,16 @@ OOAegisStatus ShipEntity::checkForAegis()
     // being close to the station takes precedence over planets
     ::StationEntity* the_station = (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr);
     if (the_station) {
-        sd2 = HPmagnitude2(HPvector_subtract((the_station != nullptr ? the_station->getPosition() : HPVector { }), getPosition()));
+        sd2 = HPmagnitude2(HPvector_subtract(
+            (the_station != nullptr ? the_station->getPosition() : HPVector { }),
+            getPosition()));
     }
     // again, notional scanner range is intentional
     if (sd2 < SCANNER_MAX_RANGE2 * 4.0f) // double scanner range
     {
         result = AEGIS_IN_DOCKING_RANGE;
-    } else if (EXPECT_NOT(isNearPlanetSurface || d2 < cr2 * 9.0f)) // to 3x radius of any planet/moon - or 500m of tiny ones,
+    } else if (EXPECT_NOT(isNearPlanetSurface || d2 < cr2 * 9.0f)) // to 3x radius of any planet/moon -
+                                                                   // or 500m of tiny ones,
     {
         result = AEGIS_CLOSE_TO_ANY_PLANET;
         if (EXPECT(nearest == (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr))) {
@@ -7201,23 +7435,27 @@ OOAegisStatus ShipEntity::checkForAegis()
     if (result != AEGIS_CLOSE_TO_MAIN_PLANET && result != AEGIS_IN_DOCKING_RANGE && !sunGoneNova) {
         // are we also close to the main planet?
         ::OOPlanetEntity* mainPlanet = (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr);
-        d2 = HPmagnitude2(HPvector_subtract((mainPlanet != nullptr ? mainPlanet->getPosition() : HPVector { }), getPosition()));
+        d2 = HPmagnitude2(HPvector_subtract(
+            (mainPlanet != nullptr ? mainPlanet->getPosition() : HPVector { }),
+            getPosition()));
         cr2 = (mainPlanet != nullptr ? mainPlanet->radius() : 0.0);
         cr2 *= cr2;
         if (d2 < cr2 * 9.0f) {
-            nearest = mainPlanet; // the C++ planet (bead oo-al52f)
+            nearest = mainPlanet; // the C++ planet
             result = AEGIS_CLOSE_TO_MAIN_PLANET;
         }
     }
 
-    /*	Rewrote aegis stuff and tested it against redux.oxp that adds multiple planets and moons.
-            Made sure AI scripts can differentiate between MAIN and NON-MAIN planets so they can decide
-            if they can dock at the systemStation or just any station.
-            Added sun detection so route2Patrol can turn before they heat up in the sun.
+    /*	Rewrote aegis stuff and tested it against redux.oxp that adds multiple
+       planets and moons. Made sure AI scripts can differentiate between MAIN and
+       NON-MAIN planets so they can decide if they can dock at the systemStation
+       or just any station. Added sun detection so route2Patrol can turn before
+       they heat up in the sun.
             -- Eric 2009-07-11
 
-            More rewriting of the aegis stuff, it's now a bit faster and works properly when moving
-            from one secondary planet/moon vicinity to another one.  -- Kaks 20120917
+            More rewriting of the aegis stuff, it's now a bit faster and works
+       properly when moving from one secondary planet/moon vicinity to another
+       one.  -- Kaks 20120917
     */
     if (EXPECT(!suppressAegisMessages)) {
         // script/AI messages on change in status
@@ -7232,14 +7470,19 @@ OOAegisStatus ShipEntity::checkForAegis()
             if (shipAI != nullptr)
                 shipAI->message("AEGIS_IN_DOCKING_RANGE");
 
-            if (lastAegisLock() == nullptr && !sunGoneNova) // With small main planets the station aegis can come before planet aegis
+            if (lastAegisLock() == nullptr && !sunGoneNova) // With small main planets the station aegis can come
+                                                            // before planet aegis
             {
-                doScriptEvent(OOJSID("shipEnteredPlanetaryVicinity"), (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr)); // the planet is C++ since bead oo-9ht.129
+                doScriptEvent(OOJSID("shipEnteredPlanetaryVicinity"),
+                    (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr));
                 setLastAegisLock((UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr));
             }
         } else if (EXPECT_NOT(result == AEGIS_NONE && aegis_status != result)) {
             if (lastAegisLock() == nullptr && !sunGoneNova) {
-                setLastAegisLock((UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr)); // in case of a first launch from a near-planet station.
+                setLastAegisLock((UNIVERSE != nullptr
+                        ? UNIVERSE->planet()
+                        : nullptr)); // in case of a first launch from a
+                                     // near-planet station.
             }
             transitionToAegisNone();
         }
@@ -7249,7 +7492,8 @@ OOAegisStatus ShipEntity::checkForAegis()
             {
                 doScriptEvent(OOJSID("shipExitedPlanetaryVicinity"), lastAegisLock());
                 if (shipAI != nullptr)
-                    shipAI->message("AWAY_FROM_PLANET"); // fires for suns, planets and moons.
+                    shipAI->message(
+                        "AWAY_FROM_PLANET"); // fires for suns, planets and moons.
             }
             doScriptEvent(OOJSID("shipEnteredPlanetaryVicinity"), nearest);
             setLastAegisLock(nearest);
@@ -7263,10 +7507,13 @@ OOAegisStatus ShipEntity::checkForAegis()
                     shipAI->message("CLOSE_TO_PLANET");
 
                 if (EXPECT(result == AEGIS_CLOSE_TO_MAIN_PLANET)) {
-                    // It's been years since 1.71 - it should be safe enough to comment out the line below for 1.77/1.78 -- Kaks 20120917
-                    //[shipAI message:@"AEGIS_CLOSE_TO_PLANET"];	    // fires only for main planets, kept for compatibility with pre-1.72 AI plists.
+                    // It's been years since 1.71 - it should be safe enough to comment
+                    // out the line below for 1.77/1.78 -- Kaks 20120917
+                    //[shipAI message:@"AEGIS_CLOSE_TO_PLANET"];	    // fires only for
+                    // main planets, kept for compatibility with pre-1.72 AI plists.
                     if (shipAI != nullptr)
-                        shipAI->message("AEGIS_CLOSE_TO_MAIN_PLANET"); // fires only for main planet.
+                        shipAI->message(
+                            "AEGIS_CLOSE_TO_MAIN_PLANET"); // fires only for main planet.
                 } else if (EXPECT_NOT(OOStellarBodyPlanetType(nearest) == STELLAR_TYPE_MOON)) {
                     if (shipAI != nullptr)
                         shipAI->message("CLOSE_TO_MOON");
@@ -7285,17 +7532,15 @@ OOAegisStatus ShipEntity::checkForAegis()
     return result;
 }
 
-void ShipEntity::forceAegisCheck()
-{
-    _nextAegisCheck = -1.0f;
-}
+void ShipEntity::forceAegisCheck() { _nextAegisCheck = -1.0f; }
 
 bool ShipEntity::withinStationAegis()
 {
     return aegis_status == AEGIS_IN_DOCKING_RANGE;
 }
 
-// A planet or sun, the C++ entity (bead oo-9ht.39.23.3): null, and forgotten, when its object is gone, as before.
+// A planet or sun, the C++ entity: null, and forgotten, when its object is
+// gone, as before.
 Entity* ShipEntity::lastAegisLock()
 {
     Entity* stellar = oo::LiveEntity(_lastAegisLock);
@@ -7312,25 +7557,13 @@ void ShipEntity::setLastAegisLock(Entity* lastAegisLock)
     _lastAegisLock = oo::WeakRef<Entity>(lastAegisLock);
 }
 
-OOSystemID ShipEntity::homeSystem()
-{
-    return home_system;
-}
+OOSystemID ShipEntity::homeSystem() { return home_system; }
 
-OOSystemID ShipEntity::destinationSystem()
-{
-    return destination_system;
-}
+OOSystemID ShipEntity::destinationSystem() { return destination_system; }
 
-void ShipEntity::setHomeSystem(OOSystemID s)
-{
-    home_system = s;
-}
+void ShipEntity::setHomeSystem(OOSystemID s) { home_system = s; }
 
-void ShipEntity::setDestinationSystem(OOSystemID s)
-{
-    destination_system = s;
-}
+void ShipEntity::setDestinationSystem(OOSystemID s) { destination_system = s; }
 
 void ShipEntity::setStatus(OOEntityStatus stat)
 {
@@ -7342,25 +7575,25 @@ void ShipEntity::setStatus(OOEntityStatus stat)
     }
 }
 
-void ShipEntity::setLaunchDelay(double delay)
-{
-    launch_delay = delay;
-}
+void ShipEntity::setLaunchDelay(double delay) { launch_delay = delay; }
 
 std::optional<std::vector<oo::Ref<OOCharacter>>> ShipEntity::getCrew()
 {
     return crew;
 }
 
-void ShipEntity::setCrew(const std::optional<std::vector<oo::Ref<OOCharacter>>>& crewArray)
+void ShipEntity::setCrew(
+    const std::optional<std::vector<oo::Ref<OOCharacter>>>& crewArray)
 {
     if (isExplicitlyUnpiloted()) {
         // unpiloted ships cannot have crew
-        //  but may have crew before isExplicitlyUnpiloted set, so force *that* to clear too
+        //  but may have crew before isExplicitlyUnpiloted set, so force *that* to
+        //  clear too
         crew = std::nullopt;
         return;
     }
-    // do not set to hulk here when crew is nil (or 0).  Some things like missiles have no crew.
+    // do not set to hulk here when crew is nil (or 0).  Some things like missiles
+    // have no crew.
     crew = crewArray;
 }
 
@@ -7385,10 +7618,7 @@ std::vector<oo::PList> ShipEntity::crewForScripting()
     return result;
 }
 
-void ShipEntity::setStateMachine(const std::string& smName)
-{
-    setAITo(smName);
-}
+void ShipEntity::setStateMachine(const std::string& smName) { setAITo(smName); }
 
 void ShipEntity::setAI(::AI* ai)
 {
@@ -7400,10 +7630,7 @@ void ShipEntity::setAI(::AI* ai)
     shipAI = std::move(newAI);
 }
 
-::AI* ShipEntity::getAI()
-{
-    return shipAI.get();
-}
+::AI* ShipEntity::getAI() { return shipAI.get(); }
 
 bool ShipEntity::hasAutoAI()
 {
@@ -7412,7 +7639,9 @@ bool ShipEntity::hasAutoAI()
 
 bool ShipEntity::hasNewAI()
 {
-    return (getAI() != nullptr ? getAI()->name() : std::optional<std::string>()) == "nullAI.plist"; // (no AI never matched)
+    return (getAI() != nullptr ? getAI()->name()
+                               : std::optional<std::string>())
+        == "nullAI.plist"; // (no AI never matched)
 }
 
 bool ShipEntity::hasAutoWeapons()
@@ -7428,12 +7657,16 @@ void ShipEntity::setShipScript(const std::optional<std::string>& script_name)
     properties["ship"] = oo::EntityObjectNode(this);
 
     OOScriptAutorelease(std::move(script)); // [script autorelease]
-    script = OOScript::jsScriptFromFileNamed(script_name.value_or(std::string()), oo::PList(properties)); // nil as "", as the Foundation form sent it
+    script = OOScript::jsScriptFromFileNamed(
+        script_name.value_or(std::string()),
+        oo::PList(properties)); // nil as "", as the Foundation form sent it
 
     if (script == nullptr) {
         actions = ArrayForKey(shipinfoDictionary, "launch_actions");
         if (actions) {
-            cxx_OOStandardsDeprecated(oo::str::format("The launch_actions ship key is deprecated on %s.", getDisplayName().value_or("(null)").c_str()));
+            cxx_OOStandardsDeprecated(
+                oo::str::format("The launch_actions ship key is deprecated on %s.",
+                    getDisplayName().value_or("(null)").c_str()));
             if (!OOEnforceStandards()) {
                 properties["legacy_launchActions"] = *actions;
             }
@@ -7441,7 +7674,9 @@ void ShipEntity::setShipScript(const std::optional<std::string>& script_name)
 
         actions = ArrayForKey(shipinfoDictionary, "script_actions");
         if (actions) {
-            cxx_OOStandardsDeprecated(oo::str::format("The script_actions ship key is deprecated on %s.", getDisplayName().value_or("(null)").c_str()));
+            cxx_OOStandardsDeprecated(
+                oo::str::format("The script_actions ship key is deprecated on %s.",
+                    getDisplayName().value_or("(null)").c_str()));
             if (!OOEnforceStandards()) {
                 properties["legacy_scriptActions"] = *actions;
             }
@@ -7449,7 +7684,9 @@ void ShipEntity::setShipScript(const std::optional<std::string>& script_name)
 
         actions = ArrayForKey(shipinfoDictionary, "death_actions");
         if (actions) {
-            cxx_OOStandardsDeprecated(oo::str::format("The death_actions ship key is deprecated on %s.", getDisplayName().value_or("(null)").c_str()));
+            cxx_OOStandardsDeprecated(
+                oo::str::format("The death_actions ship key is deprecated on %s.",
+                    getDisplayName().value_or("(null)").c_str()));
             if (!OOEnforceStandards()) {
                 properties["legacy_deathActions"] = *actions;
             }
@@ -7457,25 +7694,22 @@ void ShipEntity::setShipScript(const std::optional<std::string>& script_name)
 
         actions = ArrayForKey(shipinfoDictionary, "setup_actions");
         if (actions) {
-            cxx_OOStandardsDeprecated(oo::str::format("The setup_actions ship key is deprecated on %s.", getDisplayName().value_or("(null)").c_str()));
+            cxx_OOStandardsDeprecated(
+                oo::str::format("The setup_actions ship key is deprecated on %s.",
+                    getDisplayName().value_or("(null)").c_str()));
             if (!OOEnforceStandards()) {
                 properties["legacy_setupActions"] = *actions;
             }
         }
 
-        script = OOScript::jsScriptFromFileNamed("oolite-default-ship-script.js", oo::PList(std::move(properties)));
+        script = OOScript::jsScriptFromFileNamed("oolite-default-ship-script.js",
+            oo::PList(std::move(properties)));
     }
 }
 
-double ShipEntity::getFrustration()
-{
-    return frustration;
-}
+double ShipEntity::getFrustration() { return frustration; }
 
-OOFuelQuantity ShipEntity::getFuel()
-{
-    return fuel;
-}
+OOFuelQuantity ShipEntity::getFuel() { return fuel; }
 
 void ShipEntity::setFuel(OOFuelQuantity amount)
 {
@@ -7487,7 +7721,8 @@ void ShipEntity::setFuel(OOFuelQuantity amount)
 
 OOFuelQuantity ShipEntity::fuelCapacity()
 {
-    // FIXME: shipdata.plist can allow greater fuel quantities (without extending hyperspace range). Need some consistency here.
+    // FIXME: shipdata.plist can allow greater fuel quantities (without extending
+    // hyperspace range). Need some consistency here.
     return PLAYER_MAX_FUEL;
 }
 
@@ -7501,19 +7736,20 @@ GLfloat ShipEntity::fuelChargeRate()
         rate = calcFuelChargeRate(mass);
     }
 
-    OO_LOG("fuelPrices", "\"{}\" fuel charge rate: {:.2f} (mass ratio: {:.2f}/{:.2f})", shipDataKey().value_or("(null)"), rate, mass, (PLAYER != nullptr ? PLAYER->baseMass() : 0.0f));
+    OO_LOG("fuelPrices",
+        "\"{}\" fuel charge rate: {:.2f} (mass ratio: {:.2f}/{:.2f})",
+        shipDataKey().value_or("(null)"), rate, mass,
+        (PLAYER != nullptr ? PLAYER->baseMass() : 0.0f));
 #endif
 
     return rate;
 }
 
-// Slice 20 of docs/phases/3-slices/ShipEntity.md (bead oo-66inv): sticks, bounty and legal status,
-// commodities and cargo, speed. Members of the C++ ship, called directly, since bead oo-9ht.144
-// deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Sticks, bounty and legal status, commodities and cargo, speed. Members of the
+// C++ ship.
 
 void ShipEntity::applySticks(double delta_t)
 {
-
     double rate1 = 2.0 * delta_t; // roll
     double rate2 = 4.0 * delta_t; // pitch
     double rate3 = 4.0 * delta_t; // yaw
@@ -7560,30 +7796,15 @@ void ShipEntity::applySticks(double delta_t)
     }
 }
 
-void ShipEntity::setRoll(double amount)
-{
-    flightRoll = amount * M_PI / 2.0;
-}
+void ShipEntity::setRoll(double amount) { flightRoll = amount * M_PI / 2.0; }
 
-void ShipEntity::setRawRoll(double amount)
-{
-    flightRoll = amount;
-}
+void ShipEntity::setRawRoll(double amount) { flightRoll = amount; }
 
-void ShipEntity::setPitch(double amount)
-{
-    flightPitch = amount * M_PI / 2.0;
-}
+void ShipEntity::setPitch(double amount) { flightPitch = amount * M_PI / 2.0; }
 
-void ShipEntity::setYaw(double amount)
-{
-    flightYaw = amount * M_PI / 2.0;
-}
+void ShipEntity::setYaw(double amount) { flightYaw = amount * M_PI / 2.0; }
 
-void ShipEntity::setThrust(double amount)
-{
-    thrust = amount;
-}
+void ShipEntity::setThrust(double amount) { thrust = amount; }
 
 void ShipEntity::setThrustForDemo(float factor)
 {
@@ -7595,7 +7816,8 @@ void ShipEntity::setBounty(OOCreditsQuantity amount)
     setBounty(amount, kOOLegalStatusReasonUnknown);
 }
 
-void ShipEntity::setBounty(OOCreditsQuantity amount, OOLegalStatusReason reason)
+void ShipEntity::setBounty(OOCreditsQuantity amount,
+    OOLegalStatusReason reason)
 {
     if (getIsSubEntity()) {
         if (oo::ToShip(parentEntity()) != nullptr)
@@ -7611,7 +7833,8 @@ void ShipEntity::setBounty(OOCreditsQuantity amount, OOLegalStatusReason reason)
     }
 }
 
-void ShipEntity::setBounty(OOCreditsQuantity amount, const std::string& reason)
+void ShipEntity::setBounty(OOCreditsQuantity amount,
+    const std::string& reason)
 {
     if (getIsSubEntity()) {
         if (oo::ToShip(parentEntity()) != nullptr)
@@ -7622,7 +7845,8 @@ void ShipEntity::setBounty(OOCreditsQuantity amount, const std::string& reason)
         ooscript::Value amountVal = ooscript::undefinedValue();
         ooscript::newNumberValue(context, (int)amount - (int)bounty, &amountVal);
 
-        bounty = amount; // can't set the new bounty until the size of the change is known
+        bounty = amount; // can't set the new bounty until the size of the change
+                         // is known
 
         ooscript::Value reasonVal = OOJSValueFromPList(context, oo::PList(reason));
 
@@ -7635,7 +7859,9 @@ void ShipEntity::setBounty(OOCreditsQuantity amount, const std::string& reason)
 OOCreditsQuantity ShipEntity::getBounty()
 {
     if (getIsSubEntity()) {
-        return (oo::ToShip(parentEntity()) != nullptr ? oo::ToShip(parentEntity())->getBounty() : 0);
+        return (oo::ToShip(parentEntity()) != nullptr
+                ? oo::ToShip(parentEntity())->getBounty()
+                : 0);
     } else {
         return bounty;
     }
@@ -7650,15 +7876,17 @@ int ShipEntity::legalStatus()
     return (int)getBounty();
 }
 
-void ShipEntity::setCommodity(const std::string& co_type, OOCargoQuantity co_amount)
+void ShipEntity::setCommodity(const std::string& co_type,
+    OOCargoQuantity co_amount)
 {
-    /* scoopUp can pass a reference to self.commodity_type (the old code copied it first);
-     * assigning a std::string from itself is safe. */
+    /* scoopUp can pass a reference to self.commodity_type (the old code copied it
+     * first); assigning a std::string from itself is safe. */
     commodity_type = co_type;
     commodity_amount = co_amount;
 }
 
-void ShipEntity::setCommodityForPod(const std::optional<std::string>& co_type, OOCargoQuantity co_amount)
+void ShipEntity::setCommodityForPod(const std::optional<std::string>& co_type,
+    OOCargoQuantity co_amount)
 {
     // can be nil for pods
     if (!co_type.has_value()) {
@@ -7666,9 +7894,11 @@ void ShipEntity::setCommodityForPod(const std::optional<std::string>& co_type, O
         commodity_amount = 0;
         return;
     }
-    // pod content should never be greater than 1 ton or this will give cargo counting problems elsewhere in the code.
-    // so do first a mass check for cargo added by script/plist.
-    OOCommodityMarket* market = (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket() : nullptr); // null: tons, as a message to nil
+    // pod content should never be greater than 1 ton or this will give cargo
+    // counting problems elsewhere in the code. so do first a mass check for cargo
+    // added by script/plist.
+    OOCommodityMarket* market = (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket()
+                                                     : nullptr); // null: tons, as a message to nil
     OOMassUnit unit = (market != nullptr) ? market->massUnitForGood(*co_type) : UNITS_TONS;
     if (unit == UNITS_TONS && co_amount > 1)
         co_amount = 1;
@@ -7684,10 +7914,7 @@ std::optional<std::string> ShipEntity::commodityType()
     return commodity_type;
 }
 
-OOCargoQuantity ShipEntity::commodityAmount()
-{
-    return commodity_amount;
-}
+OOCargoQuantity ShipEntity::commodityAmount() { return commodity_amount; }
 
 OOCargoQuantity ShipEntity::maxAvailableCargoSpace()
 {
@@ -7714,38 +7941,33 @@ OOCargoQuantity ShipEntity::cargoQuantityOnBoard()
     return (OOCargoQuantity)result;
 }
 
-OOCargoType ShipEntity::cargoType()
-{
-    return cargo_type;
-}
+OOCargoType ShipEntity::cargoType() { return cargo_type; }
 
 /* Note: this array probably contains some template cargo pods. Do not
- * pass it to Javascript without reifying them first. The live container: callers edit it in place
- * (ADR-0043 Amendment 3 item 22); nullptr for a nil receiver. */
-std::vector<oo::EntityHold>* ShipEntity::getCargo()
-{
-    return &cargo;
-}
+ * pass it to Javascript without reifying them first. The live container:
+ * callers edit it in place; nullptr for a nil
+ * receiver. */
+std::vector<oo::EntityHold>* ShipEntity::getCargo() { return &cargo; }
 
-NSUInteger ShipEntity::cargoCount()
-{
-    return cargo.size();
-}
+NSUInteger ShipEntity::cargoCount() { return cargo.size(); }
 
 oo::PList ShipEntity::cargoListForScripting()
 {
     oo::PList::Array list;
 
-    OOCommodityMarket* market = (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket() : nullptr); // null: no goods, as a message to nil
+    OOCommodityMarket* market = (UNIVERSE != nullptr ? UNIVERSE->getCommodityMarket()
+                                                     : nullptr); // null: no goods, as a message to nil
     const std::vector<std::string> goods = (market != nullptr) ? market->goods() : std::vector<std::string>();
     NSUInteger i, commodityCount = goods.size();
     std::vector<OOCargoQuantity> quantityInHold(commodityCount, 0);
 
     for (i = 0; i < cargo.size(); i++) {
         ::ShipEntity* container = oo::ToShip(cargo[i].get());
-        const std::optional<std::string> good = (container != nullptr ? container->commodityType() : std::optional<std::string>());
+        const std::optional<std::string> good = (container != nullptr ? container->commodityType()
+                                                                      : std::optional<std::string>());
         const auto j = good.has_value() ? std::ranges::find(goods, *good) : goods.end();
-        // A pod whose commodity is not a good (or has none) indexed past the array before; it is skipped.
+        // A pod whose commodity is not a good (or has none) indexed past the array
+        // before; it is skipped.
         if (j != goods.end())
             quantityInHold[(std::size_t)(j - goods.begin())] += (container != nullptr ? container->commodityAmount() : 0);
     }
@@ -7783,11 +8005,15 @@ bool ShipEntity::addCargo(const std::vector<oo::EntityHold>& some_cargo)
     }
 }
 
-bool ShipEntity::removeCargo(const std::string& commodity, OOCargoQuantity amount)
+bool ShipEntity::removeCargo(const std::string& commodity,
+    OOCargoQuantity amount)
 {
     OOCargoQuantity found = 0;
     for (const auto& pod : cargo) {
-        if ((oo::ToShip(pod.get()) != nullptr ? oo::ToShip(pod.get())->commodityType() : std::optional<std::string>()) == commodity) {
+        if ((oo::ToShip(pod.get()) != nullptr
+                    ? oo::ToShip(pod.get())->commodityType()
+                    : std::optional<std::string>())
+            == commodity) {
             found++;
         }
     }
@@ -7799,7 +8025,10 @@ bool ShipEntity::removeCargo(const std::string& commodity, OOCargoQuantity amoun
     NSUInteger i = cargo.size() - 1;
     // iterate downwards to be safe removing during iteration
     while (amount > 0) {
-        if ((oo::ToShip(cargo[i].get()) != nullptr ? oo::ToShip(cargo[i].get())->commodityType() : std::optional<std::string>()) == commodity) {
+        if ((oo::ToShip(cargo[i].get()) != nullptr
+                    ? oo::ToShip(cargo[i].get())->commodityType()
+                    : std::optional<std::string>())
+            == commodity) {
             amount--;
             cargo.erase(cargo.begin() + i);
         }
@@ -7810,21 +8039,15 @@ bool ShipEntity::removeCargo(const std::string& commodity, OOCargoQuantity amoun
     return YES;
 }
 
-bool ShipEntity::showScoopMessage()
-{
-    return hasScoopMessage;
-}
+bool ShipEntity::showScoopMessage() { return hasScoopMessage; }
 
-OOCargoFlag ShipEntity::cargoFlag()
-{
-    return cargo_flag;
-}
+OOCargoFlag ShipEntity::cargoFlag() { return cargo_flag; }
 
 void ShipEntity::setCargoFlag(OOCargoFlag flag)
 {
     if (cargo_flag != flag) {
         cargo_flag = flag;
-        std::vector<oo::EntityHold> newCargo; // the universe's pods (bead oo-9ht.39.26)
+        std::vector<oo::EntityHold> newCargo; // the universe's pods
         unsigned num = 0;
         if (likely_cargo > 0) {
             num = likely_cargo * (0.5 + randf());
@@ -7845,22 +8068,35 @@ void ShipEntity::setCargoFlag(OOCargoFlag flag)
             switch (cargo_flag) {
             case CARGO_FLAG_FULL_UNIFORM: {
                 const oo::PList& info = shipinfoDictionary;
-                newCargo = (UNIVERSE != nullptr ? UNIVERSE->getContainersOfCommodity(StringForKey(info, "cargo_carried").value_or(""), num) : std::vector<oo::EntityHold>());
+                newCargo = (UNIVERSE != nullptr
+                        ? UNIVERSE->getContainersOfCommodity(
+                              StringForKey(info, "cargo_carried").value_or(""), num)
+                        : std::vector<oo::EntityHold>());
             } break;
             case CARGO_FLAG_FULL_PLENTIFUL:
-                newCargo = (UNIVERSE != nullptr ? UNIVERSE->getContainersOfGoods(num, NO, YES) : std::vector<oo::EntityHold>());
+                newCargo = (UNIVERSE != nullptr
+                        ? UNIVERSE->getContainersOfGoods(num, NO, YES)
+                        : std::vector<oo::EntityHold>());
                 break;
             case CARGO_FLAG_FULL_SCARCE:
-                newCargo = (UNIVERSE != nullptr ? UNIVERSE->getContainersOfGoods(num, YES, YES) : std::vector<oo::EntityHold>());
+                newCargo = (UNIVERSE != nullptr
+                        ? UNIVERSE->getContainersOfGoods(num, YES, YES)
+                        : std::vector<oo::EntityHold>());
                 break;
             case CARGO_FLAG_FULL_MEDICAL:
-                newCargo = (UNIVERSE != nullptr ? UNIVERSE->getContainersOfCommodity("Narcotics", num) : std::vector<oo::EntityHold>());
+                newCargo = (UNIVERSE != nullptr
+                        ? UNIVERSE->getContainersOfCommodity("Narcotics", num)
+                        : std::vector<oo::EntityHold>());
                 break;
             case CARGO_FLAG_FULL_CONTRABAND:
-                newCargo = (UNIVERSE != nullptr ? UNIVERSE->getContainersOfGoods(num, YES, NO) : std::vector<oo::EntityHold>());
+                newCargo = (UNIVERSE != nullptr
+                        ? UNIVERSE->getContainersOfGoods(num, YES, NO)
+                        : std::vector<oo::EntityHold>());
                 break;
             case CARGO_FLAG_PIRATE:
-                newCargo = (UNIVERSE != nullptr ? UNIVERSE->getContainersOfGoods((Ranrot() % (1 + num / 2)), YES, NO) : std::vector<oo::EntityHold>());
+                newCargo = (UNIVERSE != nullptr ? UNIVERSE->getContainersOfGoods(
+                                                      (Ranrot() % (1 + num / 2)), YES, NO)
+                                                : std::vector<oo::EntityHold>());
                 break;
             case CARGO_FLAG_FULL_PASSENGERS:
                 // TODO: allow passengers to survive
@@ -7873,39 +8109,20 @@ void ShipEntity::setCargoFlag(OOCargoFlag flag)
     }
 }
 
-void ShipEntity::setSpeed(double amount)
-{
-    flightSpeed = amount;
-}
+void ShipEntity::setSpeed(double amount) { flightSpeed = amount; }
 
-void ShipEntity::setDesiredSpeed(double amount)
-{
-    desired_speed = amount;
-}
+void ShipEntity::setDesiredSpeed(double amount) { desired_speed = amount; }
 
-double ShipEntity::desiredSpeed()
-{
-    return desired_speed;
-}
+double ShipEntity::desiredSpeed() { return desired_speed; }
 
-// Slice 21 of docs/phases/3-slices/ShipEntity.md (bead oo-cicod): flight controls and limits,
-// temperature, dealing damage, hulks, damage notes. Members of the C++ ship, called directly, since
-// bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Flight controls and limits, temperature, dealing damage, hulks, damage notes.
+// Members of the C++ ship.
 
-double ShipEntity::desiredRange()
-{
-    return desired_range;
-}
+double ShipEntity::desiredRange() { return desired_range; }
 
-void ShipEntity::setDesiredRange(double amount)
-{
-    desired_range = amount;
-}
+void ShipEntity::setDesiredRange(double amount) { desired_range = amount; }
 
-double ShipEntity::getCruiseSpeed()
-{
-    return cruiseSpeed;
-}
+double ShipEntity::getCruiseSpeed() { return cruiseSpeed; }
 
 void ShipEntity::increase_flight_speed(double delta)
 {
@@ -7987,45 +8204,21 @@ void ShipEntity::decrease_flight_yaw(double delta)
         flightYaw = -max_flight_yaw;
 }
 
-GLfloat ShipEntity::getFlightRoll()
-{
-    return flightRoll;
-}
+GLfloat ShipEntity::getFlightRoll() { return flightRoll; }
 
-GLfloat ShipEntity::getFlightPitch()
-{
-    return flightPitch;
-}
+GLfloat ShipEntity::getFlightPitch() { return flightPitch; }
 
-GLfloat ShipEntity::getFlightYaw()
-{
-    return flightYaw;
-}
+GLfloat ShipEntity::getFlightYaw() { return flightYaw; }
 
-GLfloat ShipEntity::getFlightSpeed()
-{
-    return flightSpeed;
-}
+GLfloat ShipEntity::getFlightSpeed() { return flightSpeed; }
 
-GLfloat ShipEntity::maxFlightPitch()
-{
-    return max_flight_pitch;
-}
+GLfloat ShipEntity::maxFlightPitch() { return max_flight_pitch; }
 
-GLfloat ShipEntity::getMaxFlightSpeed()
-{
-    return maxFlightSpeed;
-}
+GLfloat ShipEntity::getMaxFlightSpeed() { return maxFlightSpeed; }
 
-GLfloat ShipEntity::maxFlightRoll()
-{
-    return max_flight_roll;
-}
+GLfloat ShipEntity::maxFlightRoll() { return max_flight_roll; }
 
-GLfloat ShipEntity::maxFlightYaw()
-{
-    return max_flight_yaw;
-}
+GLfloat ShipEntity::maxFlightYaw() { return max_flight_yaw; }
 
 void ShipEntity::setMaxFlightPitch(GLfloat newValue)
 {
@@ -8054,15 +8247,9 @@ GLfloat ShipEntity::speedFactor()
     return flightSpeed / maxFlightSpeed;
 }
 
-GLfloat ShipEntity::temperature()
-{
-    return ship_temperature;
-}
+GLfloat ShipEntity::temperature() { return ship_temperature; }
 
-void ShipEntity::setTemperature(GLfloat value)
-{
-    ship_temperature = value;
-}
+void ShipEntity::setTemperature(GLfloat value) { ship_temperature = value; }
 
 float ShipEntity::randomEjectaTemperature()
 {
@@ -8080,39 +8267,34 @@ float ShipEntity::randomEjectaTemperatureWithMaxFactor(float factor)
         adjusted = SHIP_MAX_CABIN_TEMP;
     }
 
-    // Interpolate so that result == parentTemp when parentTemp is SHIP_MIN_CABIN_TEMP
+    // Interpolate so that result == parentTemp when parentTemp is
+    // SHIP_MIN_CABIN_TEMP
     float interp = OOClamp_0_1_f((parentTemp - SHIP_MIN_CABIN_TEMP) / (SHIP_MAX_CABIN_TEMP - SHIP_MIN_CABIN_TEMP));
 
     return OOLerp(SHIP_MIN_CABIN_TEMP, adjusted, interp);
 }
 
-GLfloat ShipEntity::heatInsulation()
-{
-    return _heatInsulation;
-}
+GLfloat ShipEntity::heatInsulation() { return _heatInsulation; }
 
-void ShipEntity::setHeatInsulation(GLfloat value)
-{
-    _heatInsulation = value;
-}
+void ShipEntity::setHeatInsulation(GLfloat value) { _heatInsulation = value; }
 
-int ShipEntity::damage()
-{
-    return (int)(100 - (100 * energy / maxEnergy));
-}
+int ShipEntity::damage() { return (int)(100 - (100 * energy / maxEnergy)); }
 
-void ShipEntity::dealEnergyDamage(GLfloat baseDamage, GLfloat range, GLfloat velocityBias)
+void ShipEntity::dealEnergyDamage(GLfloat baseDamage, GLfloat range,
+    GLfloat velocityBias)
 {
     // this is limited to the player's scanner range
     GLfloat maxRange = fmin(range * sqrt(baseDamage), SCANNER_MAX_RANGE);
 
-    OO_LOG("missile.damage.calc", "Range: {:f} | Damage: {:f} | MaxRange: {:f}", range, baseDamage, maxRange);
+    OO_LOG("missile.damage.calc", "Range: {:f} | Damage: {:f} | MaxRange: {:f}",
+        range, baseDamage, maxRange);
 
-    const std::vector<oo::EntityHold> targets = (UNIVERSE != nullptr ? UNIVERSE->entitiesWithinRange(maxRange, this) : std::vector<oo::EntityHold>());
+    const std::vector<oo::EntityHold> targets = (UNIVERSE != nullptr ? UNIVERSE->entitiesWithinRange(maxRange, this)
+                                                                     : std::vector<oo::EntityHold>());
     if (targets.size() > 0) {
         unsigned i;
         for (i = 0; i < targets.size(); i++) {
-            Entity* e2 = targets[i].get(); // the snapshot keeps its object (beads oo-9ht.39.16, oo-9ht.39.26)
+            Entity* e2 = targets[i].get(); // the snapshot keeps its object
             Vector p2 = vectorTo(e2);
             double ecr = e2->collisionRadius();
             double d = (magnitude(p2) - ecr) / range;
@@ -8125,26 +8307,32 @@ void ShipEntity::dealEnergyDamage(GLfloat baseDamage, GLfloat range, GLfloat vel
                 // vSign should always be positive for the missile's actual target
                 // but might be negative for other nearby ships which are
                 // actually moving further away from the missile
-                //				double vMag = vSign > 0.0 ? magnitude(v2) : -magnitude(v2);
+                //				double vMag = vSign > 0.0 ?
+                // magnitude(v2) : -magnitude(v2);
                 double vMag = vSign * magnitude(v2);
                 if (vMag > 1000.0) {
                     vMag = 1000.0;
-                    // cap effective closing speed to 1.0LM or injector-collisions can still do
-                    // ridiculous damage
+                    // cap effective closing speed to 1.0LM or injector-collisions can
+                    // still do ridiculous damage
                 }
 
                 localDamage += vMag * velocityBias;
-                OO_LOG("missile.damage.calc", "Velocity magnitude + sign: {:f} , {:f}", magnitude(v2), vSign);
+                OO_LOG("missile.damage.calc", "Velocity magnitude + sign: {:f} , {:f}",
+                    magnitude(v2), vSign);
                 OO_LOG("missile.damage.calc", "Velocity magnitude factor: {:f}", vMag);
-                OO_LOG("missile.damage.calc", "Velocity corrected damage: {:f}", localDamage);
+                OO_LOG("missile.damage.calc", "Velocity corrected damage: {:f}",
+                    localDamage);
             }
             double damage = (d > 1) ? localDamage / (d * d) : localDamage;
-            OO_LOG("missile.damage.calc", "{:f} at range {:f} (d={:f})", damage, magnitude(p2) - ecr, d);
+            OO_LOG("missile.damage.calc", "{:f} at range {:f} (d={:f})", damage,
+                magnitude(p2) - ecr, d);
             if (damage > 0.0) {
                 if (owner()) {
-                    e2->takeEnergyDamage(damage, this, oo::LiveOwner(this), getPrimaryRole().value_or(std::string()));
+                    e2->takeEnergyDamage(damage, this, oo::LiveOwner(this),
+                        getPrimaryRole().value_or(std::string()));
                 } else {
-                    e2->takeEnergyDamage(damage, this, this, getPrimaryRole().value_or(std::string()));
+                    e2->takeEnergyDamage(damage, this, this,
+                        getPrimaryRole().value_or(std::string()));
                 }
             }
         }
@@ -8159,32 +8347,47 @@ void ShipEntity::dealEnergyDamage(GLfloat baseDamage, GLfloat range, GLfloat vel
     // and a visual sign of the explosion
     // "fireball" explosion effect
     if (UNIVERSE != nullptr)
-        UNIVERSE->addEntity(oo::MadeEntity(OOExplosionCloudEntity::explosionCloudFromEntity(this, range * 3.0, (UNIVERSE != nullptr ? UNIVERSE->explosionSetting("oolite-default-ship-explosion") : oo::PList()))));
+        UNIVERSE->addEntity(
+            oo::MadeEntity(OOExplosionCloudEntity::explosionCloudFromEntity(
+                this, range * 3.0,
+                (UNIVERSE != nullptr
+                        ? UNIVERSE->explosionSetting("oolite-default-ship-explosion")
+                        : oo::PList()))));
 }
 
 // dealEnergyDamage preferred
 // Exposed to AI
 void ShipEntity::dealEnergyDamageWithinDesiredRange()
 {
-    cxx_OOStandardsDeprecated(oo::str::format("dealEnergyDamageWithinDesiredRange is deprecated for %s", oo::EntityDescription(this).c_str()));
+    cxx_OOStandardsDeprecated(
+        oo::str::format("dealEnergyDamageWithinDesiredRange is deprecated for %s",
+            oo::EntityDescription(this).c_str()));
     // not over scannerRange
-    const std::vector<oo::EntityHold> targets = (UNIVERSE != nullptr ? UNIVERSE->entitiesWithinRange((desired_range < SCANNER_MAX_RANGE ? desired_range : SCANNER_MAX_RANGE), this) : std::vector<oo::EntityHold>());
+    const std::vector<oo::EntityHold> targets = (UNIVERSE != nullptr
+            ? UNIVERSE->entitiesWithinRange(
+                  (desired_range < SCANNER_MAX_RANGE ? desired_range
+                                                     : SCANNER_MAX_RANGE),
+                  this)
+            : std::vector<oo::EntityHold>());
     if (targets.size() > 0) {
         unsigned i;
         for (i = 0; i < targets.size(); i++) {
-            Entity* e2 = targets[i].get(); // the snapshot keeps its object (beads oo-9ht.39.16, oo-9ht.39.26)
+            Entity* e2 = targets[i].get(); // the snapshot keeps its object
             Vector p2 = vectorTo(e2);
             double ecr = e2->collisionRadius();
-            double d = (magnitude(p2) - ecr) * 2.6; // 2.6 is a correction constant to stay in limits of the old code.
+            double d = (magnitude(p2) - ecr) * 2.6; // 2.6 is a correction constant to stay
+                                                    // in limits of the old code.
             double damage = (d > 0) ? weapon_damage * desired_range / (d * d) : weapon_damage;
-            e2->takeEnergyDamage(damage, this, oo::LiveOwner(this), getPrimaryRole().value_or(std::string()));
+            e2->takeEnergyDamage(damage, this, oo::LiveOwner(this),
+                getPrimaryRole().value_or(std::string()));
         }
     }
 }
 
 void ShipEntity::dealMomentumWithinDesiredRange(double amount)
 {
-    const std::vector<oo::EntityHold> targets = (UNIVERSE != nullptr ? UNIVERSE->entitiesWithinRange(desired_range, this) : std::vector<oo::EntityHold>());
+    const std::vector<oo::EntityHold> targets = (UNIVERSE != nullptr ? UNIVERSE->entitiesWithinRange(desired_range, this)
+                                                                     : std::vector<oo::EntityHold>());
     if (targets.size() > 0) {
         unsigned i;
         for (i = 0; i < targets.size(); i++) {
@@ -8205,10 +8408,7 @@ void ShipEntity::dealMomentumWithinDesiredRange(double amount)
     }
 }
 
-bool ShipEntity::getIsHulk()
-{
-    return isHulk;
-}
+bool ShipEntity::getIsHulk() { return isHulk; }
 
 void ShipEntity::setHulk(bool isNowHulk)
 {
@@ -8217,7 +8417,8 @@ void ShipEntity::setHulk(bool isNowHulk)
     }
 }
 
-void ShipEntity::noteTakingDamage(double amount, Entity* entity, OOShipDamageType type)
+void ShipEntity::noteTakingDamage(double amount, Entity* entity,
+    OOShipDamageType type)
 {
     if (amount < 0 || (amount == 0 && (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr ? UNIVERSE->gameController()->isGamePaused() : false)))
         return;
@@ -8229,7 +8430,8 @@ void ShipEntity::noteTakingDamage(double amount, Entity* entity, OOShipDamageTyp
     ooscript::Value entityVal = OOJSEntityJSValue(entity, context);
     ooscript::Value typeVal = OOJSValueFromShipDamageType(context, type);
 
-    ShipScriptEvent(context, this, "shipTakingDamage", amountVal, entityVal, typeVal);
+    ShipScriptEvent(context, this, "shipTakingDamage", amountVal, entityVal,
+        typeVal);
     OOJSRelinquishContext(context);
 
     if (oo::EntityIsShip(entity)) {
@@ -8237,7 +8439,8 @@ void ShipEntity::noteTakingDamage(double amount, Entity* entity, OOShipDamageTyp
         if (hasHostileTarget() && accuracy >= COMBAT_AI_IS_SMART && (randf() * 10.0 < accuracy || desired_speed < 0.5 * maxFlightSpeed) && behaviour != BEHAVIOUR_EVASIVE_ACTION && behaviour != BEHAVIOUR_FLEE_EVASIVE_ACTION && behaviour != BEHAVIOUR_SCRIPTED_ATTACK_AI) {
             if (behaviour == BEHAVIOUR_FLEE_TARGET) {
                 // jink should be sufficient to avoid being hit most of the time
-                // if not, this will make a sharp turn and then select a new jink position
+                // if not, this will make a sharp turn and then select a new jink
+                // position
                 behaviour = BEHAVIOUR_FLEE_EVASIVE_ACTION;
             } else {
                 behaviour = BEHAVIOUR_EVASIVE_ACTION;
@@ -8265,16 +8468,16 @@ void ShipEntity::noteKilledBy(Entity* whom, OOShipDamageType type)
     ShipScriptEvent(context, this, "shipDied", whomVal, typeVal);
     if (oo::EntityIsShip(whom)) {
         ooscript::Value selfVal = OOJSValueFromCxxObject(context, this);
-        ShipScriptEvent(context, oo::ToShip(whom), "shipKilledOther", selfVal, typeVal);
+        ShipScriptEvent(context, oo::ToShip(whom), "shipKilledOther", selfVal,
+            typeVal);
     }
 
     setStatus(originalStatus);
     OOJSRelinquishContext(context);
 }
 
-// Slice 22 of docs/phases/3-slices/ShipEntity.md (bead oo-z1utw): destruction, rescaling, cargo
-// debris, explosions, energy blast. Members of the C++ ship, called directly, since bead oo-9ht.144
-// deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Destruction, rescaling, cargo debris, explosions, energy blast. Members of
+// the C++ ship.
 
 void ShipEntity::getDestroyedBy(Entity* whom, OOShipDamageType type)
 {
@@ -8283,10 +8486,7 @@ void ShipEntity::getDestroyedBy(Entity* whom, OOShipDamageType type)
     becomeExplosion();
 }
 
-void ShipEntity::rescaleBy(GLfloat factor)
-{
-    rescaleBy(factor, YES);
-}
+void ShipEntity::rescaleBy(GLfloat factor) { rescaleBy(factor, YES); }
 
 void ShipEntity::rescaleBy(GLfloat factor, bool writeToCache)
 {
@@ -8296,15 +8496,15 @@ void ShipEntity::rescaleBy(GLfloat factor, bool writeToCache)
     const oo::PList& shipDict = shipinfoDictionary;
     const std::optional<std::string> modelName = StringForKey(shipDict, "model");
     if (modelName.has_value()) {
-        mesh = ::OOMesh::meshWithName(*modelName,
-            oo::str::format("%s-%.3f", _shipKey.value_or("(null)").c_str(), _scaleFactor), // %@ printed nil as (null)
+        mesh = ::OOMesh::meshWithName(
+            *modelName,
+            oo::str::format("%s-%.3f", _shipKey.value_or("(null)").c_str(),
+                _scaleFactor), // %@ printed nil as (null)
             DictionaryForKey(shipDict, "materials"),
             DictionaryForKey(shipDict, "shaders"),
-            shipDict.get<bool>("smooth", false),
-            OODefaultShipShaderMacros(),
-            this, // the C++ ship (bead oo-9ht.39.6)
-            factor,
-            writeToCache);
+            shipDict.get<bool>("smooth", false), OODefaultShipShaderMacros(),
+            this, // the C++ ship
+            factor, writeToCache);
 
         if (mesh == nullptr)
             return;
@@ -8320,7 +8520,7 @@ void ShipEntity::rescaleBy(GLfloat factor, bool writeToCache)
         se->setPosition(HPvector_multiply_scalar(se->getPosition(), factor));
         if (cxx::OOSubEntityInterface* cxxSub = dynamic_cast<cxx::OOSubEntityInterface*>(se))
             cxxSub->rescaleBy(factor, writeToCache);
-        // (else: none - every ship sub-entity adopts the interface; bead oo-dpyk8)
+        // (else: none - every ship sub-entity adopts the interface)
     }
 
     // rescale mass
@@ -8335,7 +8535,8 @@ void ShipEntity::releaseCargoPodsDebris()
     Quaternion q;
     int speed_low = 200;
 
-    std::vector<oo::EntityHold> jetsam; // this will contain the stuff to get thrown out
+    std::vector<oo::EntityHold>
+        jetsam; // this will contain the stuff to get thrown out
     unsigned cargo_chance = 70;
     jetsam = cargo; // what the ship is carrying
     cargo.clear(); // dispense with it!
@@ -8344,7 +8545,8 @@ void ShipEntity::releaseCargoPodsDebris()
     NSUInteger n_jetsam = jetsam.size();
 
     for (i = 0; i < n_jetsam; i++) {
-        if (Ranrot() % 100 < cargo_chance) //  chance of any given piece of cargo surviving decompression
+        if (Ranrot() % 100 < cargo_chance) //  chance of any given piece of cargo
+                                           //  surviving decompression
         {
             // a higher chance of getting at least a couple of bits of cargo out
             if (cargo_chance > 10) {
@@ -8356,7 +8558,8 @@ void ShipEntity::releaseCargoPodsDebris()
             }
             limit--;
             ::ShipEntity* cargoObj = oo::ToShip(jetsam[i].get());
-            ::ShipEntity* container = (UNIVERSE != nullptr ? UNIVERSE->reifyCargoPod(cargoObj) : (::ShipEntity*)nil);
+            ::ShipEntity* container = (UNIVERSE != nullptr ? UNIVERSE->reifyCargoPod(cargoObj)
+                                                           : (::ShipEntity*)nil);
             /* TODO: this debris position/velocity setting code is
              * duplicated - sometimes not very cleanly - all over the
              * place. Unify to a single function - CIM */
@@ -8387,35 +8590,33 @@ void ShipEntity::releaseCargoPodsDebris()
                 UNIVERSE->addEntity(container); // STATUS_IN_FLIGHT, AI state GLOBAL
 
             ::AI* containerAI = (container != nullptr ? container->getAI() : (::AI*)nullptr);
-            if ((containerAI != nullptr ? containerAI->hasSuspendedStateMachines() : false)) // check if new or recycled cargo.
+            if ((containerAI != nullptr ? containerAI->hasSuspendedStateMachines()
+                                        : false)) // check if new or recycled cargo.
             {
                 if (containerAI != nullptr)
                     containerAI->exitStateMachineWithMessage(std::nullopt);
                 if (container != nullptr)
-                    container->setThrust((container != nullptr ? container->maxThrust() : 0.0f)); // restore old value. Was set to zero on previous scooping.
+                    container->setThrust((container != nullptr
+                            ? container->maxThrust()
+                            : 0.0f)); // restore old value. Was set to
+                                      // zero on previous scooping.
                 if (container != nullptr)
                     container->setOwner(container);
             }
         }
         if (limit <= 0) {
-            break; // even really big ships won't have too much cargo survive an explosion
+            break; // even really big ships won't have too much cargo survive an
+                   // explosion
         }
     }
 }
 
-void ShipEntity::setIsWreckage(bool isw)
-{
-    isWreckage = isw;
-}
+void ShipEntity::setIsWreckage(bool isw) { isWreckage = isw; }
 
-bool ShipEntity::showDamage()
-{
-    return _showDamage;
-}
+bool ShipEntity::showDamage() { return _showDamage; }
 
 void ShipEntity::becomeExplosion()
 {
-
     // check if we're destroying a subentity
     ::ShipEntity* parent = oo::ToShip(parentEntity());
     if (parent != nil) {
@@ -8433,7 +8634,8 @@ void ShipEntity::becomeExplosion()
             oo::ReleaseEntity(this_ship);
         if ((parent != nullptr ? parent->getIsPlayer() : false)) {
             // make the parent ship less reliable.
-            static_cast<PlayerEntity*>(parent)->adjustTradeInFactorBy(-PLAYER_SHIP_SUBENTITY_TRADE_IN_VALUE);
+            static_cast<PlayerEntity*>(parent)->adjustTradeInFactorBy(
+                -PLAYER_SHIP_SUBENTITY_TRADE_IN_VALUE);
         }
     }
 
@@ -8486,42 +8688,55 @@ void ShipEntity::becomeExplosion()
 
                     // 1. fast sparks
                     if (UNIVERSE != nullptr)
-                        UNIVERSE->addEntity(oo::MadeEntity(OOSmallFragmentBurstEntity::fragmentBurstFromEntity(this)));
+                        UNIVERSE->addEntity(oo::MadeEntity(
+                            OOSmallFragmentBurstEntity::fragmentBurstFromEntity(this)));
                     // 2. slow clouds
                     if (UNIVERSE != nullptr)
-                        UNIVERSE->addEntity(oo::MadeEntity(OOBigFragmentBurstEntity::fragmentBurstFromEntity(this)));
+                        UNIVERSE->addEntity(oo::MadeEntity(
+                            OOBigFragmentBurstEntity::fragmentBurstFromEntity(this)));
                     // 3. flash
                     if (UNIVERSE != nullptr)
-                        UNIVERSE->addEntity(oo::MadeEntity(::OOFlashEffectEntity::explosionFlashFromEntity(this)));
+                        UNIVERSE->addEntity(oo::MadeEntity(
+                            ::OOFlashEffectEntity::explosionFlashFromEntity(this)));
                     /* This mode used to be the default for
                      * cargo/munitions but this now must be explicitly
                      * specified. */
                 } else {
                     if (explosionType.isNull()) {
                         if (UNIVERSE != nullptr)
-                            UNIVERSE->addEntity(oo::MadeEntity(OOExplosionCloudEntity::explosionCloudFromEntity(this, (UNIVERSE != nullptr ? UNIVERSE->explosionSetting("oolite-default-ship-explosion") : oo::PList()))));
+                            UNIVERSE->addEntity(oo::MadeEntity(
+                                OOExplosionCloudEntity::explosionCloudFromEntity(
+                                    this, (UNIVERSE != nullptr ? UNIVERSE->explosionSetting("oolite-default-ship-explosion") : oo::PList()))));
                         // 3. flash
                         if (UNIVERSE != nullptr)
-                            UNIVERSE->addEntity(oo::MadeEntity(::OOFlashEffectEntity::explosionFlashFromEntity(this)));
+                            UNIVERSE->addEntity(oo::MadeEntity(
+                                ::OOFlashEffectEntity::explosionFlashFromEntity(this)));
                     }
                     for (NSUInteger i = 0; i < explosionType.count(); i++) {
-                        // The string reader at index i: a string, or a number's text, else none.
+                        // The string reader at index i: a string, or a number's text, else
+                        // none.
                         const oo::PList* entry = explosionType.at(i);
                         if (entry != nullptr && (entry->isString() || entry->isNumber())) {
                             const std::string explosionKey = oo::PListGet<std::string>::from(entry, std::string());
                             // three special-case builtins
                             if (explosionKey == "oolite-builtin-flash") {
                                 if (UNIVERSE != nullptr)
-                                    UNIVERSE->addEntity(oo::MadeEntity(::OOFlashEffectEntity::explosionFlashFromEntity(this)));
+                                    UNIVERSE->addEntity(oo::MadeEntity(
+                                        ::OOFlashEffectEntity::explosionFlashFromEntity(this)));
                             } else if (explosionKey == "oolite-builtin-slowcloud") {
                                 if (UNIVERSE != nullptr)
-                                    UNIVERSE->addEntity(oo::MadeEntity(OOBigFragmentBurstEntity::fragmentBurstFromEntity(this)));
+                                    UNIVERSE->addEntity(oo::MadeEntity(
+                                        OOBigFragmentBurstEntity::fragmentBurstFromEntity(this)));
                             } else if (explosionKey == "oolite-builtin-fastspark") {
                                 if (UNIVERSE != nullptr)
-                                    UNIVERSE->addEntity(oo::MadeEntity(OOSmallFragmentBurstEntity::fragmentBurstFromEntity(this)));
+                                    UNIVERSE->addEntity(oo::MadeEntity(
+                                        OOSmallFragmentBurstEntity::fragmentBurstFromEntity(
+                                            this)));
                             } else {
                                 if (UNIVERSE != nullptr)
-                                    UNIVERSE->addEntity(oo::MadeEntity(OOExplosionCloudEntity::explosionCloudFromEntity(this, (UNIVERSE != nullptr ? UNIVERSE->explosionSetting(explosionKey) : oo::PList()))));
+                                    UNIVERSE->addEntity(oo::MadeEntity(
+                                        OOExplosionCloudEntity::explosionCloudFromEntity(
+                                            this, (UNIVERSE != nullptr ? UNIVERSE->explosionSetting(explosionKey) : oo::PList()))));
                             }
                         }
                     }
@@ -8551,18 +8766,26 @@ void ShipEntity::becomeExplosion()
                         }
                         NSUInteger n_rocks = 2 + (Ranrot() % (likely_cargo + 1));
 
-                        const std::string debrisRole = shipInfoDictionary().get<std::string>("debris_role", defaultRole);
+                        const std::string debrisRole = shipInfoDictionary().get<std::string>("debris_role",
+                            defaultRole);
                         for (i = 0; i < n_rocks; i++) {
-                            ::ShipEntity* rock = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(debrisRole) : (::ShipEntity*)nil); // retain count = 1
+                            ::ShipEntity* rock = (UNIVERSE != nullptr
+                                    ? UNIVERSE->newShipWithRole(debrisRole)
+                                    : (::ShipEntity*)nil); // retain count = 1
                             if (rock) {
-                                float r_speed = (rock != nullptr ? rock->getMaxFlightSpeed() : 0.0f) > 0 ? 2.0 * (rock != nullptr ? rock->getMaxFlightSpeed() : 0.0f) : defaultSpeed;
-                                float cr = (collision_radius < rock->collision_radius) ? collision_radius : 2 * rock->collision_radius;
+                                float r_speed = (rock != nullptr ? rock->getMaxFlightSpeed() : 0.0f) > 0
+                                    ? 2.0 * (rock != nullptr ? rock->getMaxFlightSpeed() : 0.0f)
+                                    : defaultSpeed;
+                                float cr = (collision_radius < rock->collision_radius)
+                                    ? collision_radius
+                                    : 2 * rock->collision_radius;
                                 v.x = ((randf() * r_speed) - r_speed / 2);
                                 v.y = ((randf() * r_speed) - r_speed / 2);
                                 v.z = ((randf() * r_speed) - r_speed / 2);
                                 if (rock != nullptr)
                                     rock->setVelocity(vector_add(v, getVelocity()));
-                                HPVector rpos = HPvector_add(xposition, vectorToHPVector(vector_multiply_scalar(vector_normal(v), cr)));
+                                HPVector rpos = HPvector_add(
+                                    xposition, vectorToHPVector(vector_multiply_scalar(vector_normal(v), cr)));
                                 if (rock != nullptr)
                                     rock->setPosition(rpos);
 
@@ -8577,8 +8800,13 @@ void ShipEntity::becomeExplosion()
                                         rock->setScanClass(CLASS_CARGO);
                                     if (rock != nullptr)
                                         rock->setBounty(0, kOOLegalStatusReasonSetup);
-                                    // only make the rock have minerals if something isn't already defined for the rock
-                                    if (!StringForKey((rock != nullptr ? rock->shipInfoDictionary() : oo::PList()), "cargo_carried").has_value())
+                                    // only make the rock have minerals if something isn't already
+                                    // defined for the rock
+                                    if (!StringForKey(
+                                            (rock != nullptr ? rock->shipInfoDictionary()
+                                                             : oo::PList()),
+                                            "cargo_carried")
+                                            .has_value())
                                         if (rock != nullptr)
                                             rock->setCommodity("minerals", 1);
                                 } else {
@@ -8588,7 +8816,8 @@ void ShipEntity::becomeExplosion()
                                         rock->setIsBoulder(YES);
                                 }
                                 if (UNIVERSE != nullptr)
-                                    UNIVERSE->addEntity(rock); // STATUS_IN_FLIGHT, AI state GLOBAL
+                                    UNIVERSE->addEntity(
+                                        rock); // STATUS_IN_FLIGHT, AI state GLOBAL
                                 if (rock != nullptr)
                                     oo::ReleaseEntity(rock);
                             }
@@ -8610,7 +8839,9 @@ void ShipEntity::becomeExplosion()
                             // must be sub-wreckage here
                             n_wreckage = (mass > 600.0 && randf() < 0.2) ? 2 : 0;
                         } else {
-                            n_wreckage = (n_alloys < maxWrecks) ? floorf(randf() * (n_alloys + 2)) : maxWrecks;
+                            n_wreckage = (n_alloys < maxWrecks)
+                                ? floorf(randf() * (n_alloys + 2))
+                                : maxWrecks;
                         }
                     }
 
@@ -8619,10 +8850,17 @@ void ShipEntity::becomeExplosion()
                         Vector dir = quaternion_rotate_vector(normalOrientation(), r1);
                         HPVector rpos = HPvector_add(vectorToHPVector(dir), xposition);
                         GLfloat lifetime = 750.0 * randf() + 250.0 * i + 100.0;
-                        ::ShipEntity* wreck = (UNIVERSE != nullptr ? UNIVERSE->addWreckageFrom(this, "wreckage", rpos, 1.0, lifetime / 2) : nullptr);
+                        ::ShipEntity* wreck = (UNIVERSE != nullptr
+                                ? UNIVERSE->addWreckageFrom(this, "wreckage", rpos, 1.0,
+                                      lifetime / 2)
+                                : nullptr);
 
                         if (wreck != nullptr)
-                            wreck->setVelocity(vector_add((wreck != nullptr ? wreck->getVelocity() : Vector { }), vector_multiply_scalar(vector_normal(dir), randf() * (wreck != nullptr ? wreck->collisionRadius() : 0.0f))));
+                            wreck->setVelocity(vector_add(
+                                (wreck != nullptr ? wreck->getVelocity() : Vector { }),
+                                vector_multiply_scalar(
+                                    vector_normal(dir),
+                                    randf() * (wreck != nullptr ? wreck->collisionRadius() : 0.0f))));
                     }
                     n_alloys = randf() * n_alloys;
                 }
@@ -8631,7 +8869,8 @@ void ShipEntity::becomeExplosion()
             if (!canFragment) {
                 n_alloys = 0.0;
             }
-            // If UNIVERSE is almost full, don't create more than 1 piece of scrap metal.
+            // If UNIVERSE is almost full, don't create more than 1 piece of scrap
+            // metal.
             else if (!add_debris) {
                 n_alloys = (n_alloys > 1.0) ? 1.0 : 0.0;
             }
@@ -8642,7 +8881,8 @@ void ShipEntity::becomeExplosion()
             // Throw out scrap metal
             //
             for (i = 0; i < numAlloys; i++) {
-                ::ShipEntity* plate = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("alloy") : (::ShipEntity*)nil); // retain count = 1
+                ::ShipEntity* plate = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("alloy")
+                                                           : (::ShipEntity*)nil); // retain count = 1
                 if (plate) {
                     HPVector rpos = xposition;
                     Vector rrand = OORandomPositionInBoundingBox(boundingBox);
@@ -8694,11 +8934,13 @@ void ShipEntity::becomeExplosion()
             dealMomentumWithinDesiredRange(0.125f * mass);
         }
 
-        if (this != PLAYER) // was if !isPlayer - but I think this may cause ghosts (Who's "I"? -- Ahruman)
+        if (this != PLAYER) // was if !isPlayer - but I think this may cause ghosts
+                            // (Who's "I"? -- Ahruman)
         {
             if (isPlayer) {
 #ifndef NDEBUG
-                OO_LOG("becomeExplosion.suspectedGhost.confirm", "{}", "Ship spotted with isPlayer set when not actually the player.");
+                OO_LOG("becomeExplosion.suspectedGhost.confirm", "{}",
+                    "Ship spotted with isPlayer set when not actually the player.");
 #endif
                 isPlayer = NO;
             }
@@ -8710,7 +8952,8 @@ void ShipEntity::becomeExplosion()
 void ShipEntity::becomeEnergyBlast()
 {
     if (UNIVERSE != nullptr)
-        UNIVERSE->addEntity(oo::MadeEntity(OOQuiriumCascadeEntity::quiriumCascadeFromShip(this)));
+        UNIVERSE->addEntity(
+            oo::MadeEntity(OOQuiriumCascadeEntity::quiriumCascadeFromShip(this)));
     broadcastEnergyBlastImminent();
     noteKilledBy(nullptr, kOODamageTypeCascadeWeapon);
     if (UNIVERSE != nullptr)
@@ -8720,12 +8963,15 @@ void ShipEntity::becomeEnergyBlast()
 // Exposed to AI
 void ShipEntity::broadcastEnergyBlastImminent()
 {
-    // anyone further away than typical scanner range probably doesn't need to hear
-    const std::vector<oo::EntityHold> targets = (UNIVERSE != nullptr ? UNIVERSE->entitiesWithinRange(SCANNER_MAX_RANGE, this) : std::vector<oo::EntityHold>());
+    // anyone further away than typical scanner range probably doesn't need to
+    // hear
+    const std::vector<oo::EntityHold> targets = (UNIVERSE != nullptr
+            ? UNIVERSE->entitiesWithinRange(SCANNER_MAX_RANGE, this)
+            : std::vector<oo::EntityHold>());
     if (targets.size() > 0) {
         unsigned i;
         for (i = 0; i < targets.size(); i++) {
-            Entity* e2 = targets[i].get(); // the snapshot keeps its object (beads oo-9ht.39.16, oo-9ht.39.26)
+            Entity* e2 = targets[i].get(); // the snapshot keeps its object
             if (oo::EntityIsShip(e2)) {
                 ::ShipEntity* se = oo::ToShip(e2);
                 if (se != nullptr)
@@ -8746,9 +8992,8 @@ void ShipEntity::removeExhaust(OOExhaustPlumeEntity* exhaust)
         exhaust->setOwner(nullptr); // [exhaustObject setOwner:nil]
 }
 
-// Slice 23 of docs/phases/3-slices/ShipEntity.md (bead oo-xmrgd): subentity death, alignment
-// offsets, large explosion, laser heat, personality, scanner, remembered ships. Members of the C++
-// ship, called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Subentity death, alignment offsets, large explosion, laser heat, personality,
+// scanner, remembered ships. Members of the C++ ship.
 
 void ShipEntity::removeFlasher(OOFlasherEntity* flasher)
 {
@@ -8764,9 +9009,12 @@ void ShipEntity::subEntityDied(::ShipEntity* sub)
 
     if (sub != nullptr)
         sub->setOwner(nullptr);
-    // TODO? Recalculating collision radius should increase collision testing efficiency,
-    // but for most ship models the difference would be marginal. -- Kaks 20110429
-    mass -= (sub != nullptr ? sub->getMass() : 0.0f); // missing subents affect fuel charge rate, etc..
+    // TODO? Recalculating collision radius should increase collision testing
+    // efficiency, but for most ship models the difference would be marginal. --
+    // Kaks 20110429
+    mass -= (sub != nullptr
+            ? sub->getMass()
+            : 0.0f); // missing subents affect fuel charge rate, etc..
     std::erase(subEntities, static_cast<Entity*>(sub));
 }
 
@@ -8776,10 +9024,14 @@ void ShipEntity::subEntityReallyDied(::ShipEntity* sub)
         setSubEntityTakingDamage(nullptr);
 
     if (hasSubEntity(sub)) {
-        OO_LOG_ERR("shipEntity.bug.subEntityRetainUnderflow", "Subentity of {} died while still in subentity list! This is bad. Leaking subentity list to avoid crash. {}", oo::EntityDescription(this), "This is an internal error, please report it.");
+        OO_LOG_ERR("shipEntity.bug.subEntityRetainUnderflow",
+            "Subentity of {} died while still in subentity list! This is "
+            "bad. Leaking subentity list to avoid crash. {}",
+            oo::EntityDescription(this),
+            "This is an internal error, please report it.");
 
-        // Leak subentity list: one more retain each, so that emptying the list keeps them all alive,
-        // as dropping the array pointer did.
+        // Leak subentity list: one more retain each, so that emptying the list
+        // keeps them all alive, as dropping the array pointer did.
         for (const auto& leaked : subEntities)
             oo::RetainEntity(leaked.get());
         subEntities.clear();
@@ -8832,7 +9084,6 @@ Vector ShipEntity::positionOffsetForAlignment(const std::string& align)
 
 void ShipEntity::becomeLargeExplosion(double factor)
 {
-
     if (status() == STATUS_DEAD)
         return;
     setStatus(STATUS_DEAD);
@@ -8850,14 +9101,16 @@ void ShipEntity::becomeLargeExplosion(double factor)
         float how_many = factor;
         while (how_many > 0.5f) {
             if (UNIVERSE != nullptr)
-                UNIVERSE->addEntity(oo::MadeEntity(OOSmallFragmentBurstEntity::fragmentBurstFromEntity(this)));
+                UNIVERSE->addEntity(oo::MadeEntity(
+                    OOSmallFragmentBurstEntity::fragmentBurstFromEntity(this)));
             how_many -= 1.0f;
         }
         // 2. slow clouds
         how_many = factor;
         while (how_many > 0.5f) {
             if (UNIVERSE != nullptr)
-                UNIVERSE->addEntity(oo::MadeEntity(OOBigFragmentBurstEntity::fragmentBurstFromEntity(this)));
+                UNIVERSE->addEntity(oo::MadeEntity(
+                    OOBigFragmentBurstEntity::fragmentBurstFromEntity(this)));
             how_many -= 1.0f;
         }
 
@@ -8876,7 +9129,8 @@ void ShipEntity::becomeLargeExplosion(double factor)
 
 void ShipEntity::collectBountyFor(::ShipEntity* other)
 {
-    if ((other != nullptr ? other->isPolice() : false)) // oops, we shot a copper!
+    if ((other != nullptr ? other->isPolice()
+                          : false)) // oops, we shot a copper!
     {
         markAsOffender(64, kOOLegalStatusReasonAttackedPolice);
     }
@@ -8884,7 +9138,9 @@ void ShipEntity::collectBountyFor(::ShipEntity* other)
 
 OOComparisonResult ShipEntity::compareBeaconCodeWith(Entity* other)
 {
-    return (OOComparisonResult)oo::str::caseInsensitiveCompare(beaconCode().value_or(""), oo::BeaconCode(other).value_or("")); // the other's -beaconCode (bead oo-al52f)
+    return (OOComparisonResult)oo::str::caseInsensitiveCompare(
+        beaconCode().value_or(""),
+        oo::BeaconCode(other).value_or("")); // the other's -beaconCode
 }
 
 // for shaders, equivalent to 1.76's NPC laserHeatLevel
@@ -8947,10 +9203,7 @@ GLfloat ShipEntity::entityPersonality()
     return entity_personality / (float)ENTITY_PERSONALITY_MAX;
 }
 
-GLint ShipEntity::entityPersonalityInt()
-{
-    return entity_personality;
-}
+GLint ShipEntity::entityPersonalityInt() { return entity_personality; }
 
 uint32_t ShipEntity::randomSeedForShaders()
 {
@@ -8987,7 +9240,7 @@ void ShipEntity::resetExhaustPlumes()
 
 void ShipEntity::checkScanner()
 {
-    Entity* scan; // the C++ part (bead oo-9ht.39.4)
+    Entity* scan; // the C++ part
     n_scanned_ships = 0;
     //
     scan = z_previous;
@@ -9025,7 +9278,7 @@ void ShipEntity::checkScanner()
 
 void ShipEntity::checkScannerIgnoringUnpowered()
 {
-    Entity* scan; // the C++ part (bead oo-9ht.39.4)
+    Entity* scan; // the C++ part
     n_scanned_ships = 0;
     //
     GLfloat scannerRange2 = scannerRange * scannerRange;
@@ -9071,12 +9324,10 @@ void ShipEntity::checkScannerIgnoringUnpowered()
     return scanned_ships;
 }
 
-int ShipEntity::numberOfScannedShips()
-{
-    return n_scanned_ships;
-}
+int ShipEntity::numberOfScannedShips() { return n_scanned_ships; }
 
-// The C++ entity (bead oo-9ht.39.23): null, and forgotten, when its object is gone or it is no valid target, as before.
+// The C++ entity: null, and forgotten, when its object is gone or it is no
+// valid target, as before.
 Entity* ShipEntity::foundTarget()
 {
     Entity* result = oo::LiveEntity(_foundTarget);
@@ -9092,7 +9343,8 @@ void ShipEntity::setFoundTarget(Entity* targetEntity)
     _foundTarget = oo::WeakRef<Entity>(targetEntity);
 }
 
-// The C++ entity (bead oo-9ht.39.23): null, and forgotten, when its object is gone or it is no valid target, as before.
+// The C++ entity: null, and forgotten, when its object is gone or it is no
+// valid target, as before.
 Entity* ShipEntity::primaryAggressor()
 {
     Entity* result = oo::LiveEntity(_primaryAggressor);
@@ -9108,7 +9360,8 @@ void ShipEntity::setPrimaryAggressor(Entity* targetEntity)
     _primaryAggressor = oo::WeakRef<Entity>(targetEntity);
 }
 
-// The C++ entity (bead oo-9ht.39.23.1): null when its object is gone or it is no valid target, as before.
+// The C++ entity: null when its object is gone or it is no valid target, as
+// before.
 Entity* ShipEntity::lastEscortTarget()
 {
     Entity* result = oo::LiveEntity(_lastEscortTarget);
@@ -9124,11 +9377,11 @@ void ShipEntity::setLastEscortTarget(Entity* targetEntity)
     _lastEscortTarget = oo::WeakRef<Entity>(targetEntity);
 }
 
-// Slice 24 of docs/phases/3-slices/ShipEntity.md (bead oo-zd80m): target memory and validity,
-// behaviour and destination accessors, distances, leading the target. Members of the C++ ship,
-// called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Target memory and validity, behaviour and destination accessors, distances,
+// leading the target. Members of the C++ ship.
 
-// The C++ entity (bead oo-9ht.39.23.1): null when its object is gone or it is no valid target, as before.
+// The C++ entity: null when its object is gone or it is no valid target, as
+// before.
 Entity* ShipEntity::thankedShip()
 {
     Entity* result = oo::LiveEntity(_thankedShip);
@@ -9144,7 +9397,8 @@ void ShipEntity::setThankedShip(Entity* targetEntity)
     _thankedShip = oo::WeakRef<Entity>(targetEntity);
 }
 
-// The C++ entity (bead oo-9ht.39.23.1): null when its object is gone or it is no valid target, as before.
+// The C++ entity: null when its object is gone or it is no valid target, as
+// before.
 Entity* ShipEntity::rememberedShip()
 {
     Entity* result = oo::LiveEntity(_rememberedShip);
@@ -9160,7 +9414,8 @@ void ShipEntity::setRememberedShip(Entity* targetEntity)
     _rememberedShip = oo::WeakRef<Entity>(targetEntity);
 }
 
-// The C++ entity (bead oo-9ht.39.23.4): null, and forgotten, when its object is gone or it is no valid target, as before.
+// The C++ entity: null, and forgotten, when its object is gone or it is no
+// valid target, as before.
 Entity* ShipEntity::targetStation()
 {
     Entity* result = oo::LiveEntity(_targetStation);
@@ -9179,7 +9434,8 @@ void ShipEntity::setTargetStation(Entity* targetEntity)
 /* Now we use weakrefs rather than universal ID this function checks
  * for targets which may have a valid reference but are not currently
  * targetable. */
-// The C++ entity since bead oo-9ht.39.23 (the object's -isShip, -status, -isWormhole and -scanClass read these).
+// The C++ entity (the object's -isShip, -status, -isWormhole and -scanClass
+// read these).
 bool ShipEntity::isValidTarget(Entity* target)
 {
     if (target == nullptr) {
@@ -9188,7 +9444,8 @@ bool ShipEntity::isValidTarget(Entity* target)
     if (target->getIsShip()) {
         OOEntityStatus tstatus = target->status();
         if (tstatus == STATUS_ENTERING_WITCHSPACE || tstatus == STATUS_IN_HOLD || tstatus == STATUS_DOCKED || tstatus == STATUS_DEAD)
-        // 2013-01-13, Eric: added STATUS_DEAD because I keep seeing ships locked on dead ships in attack mode.
+        // 2013-01-13, Eric: added STATUS_DEAD because I keep seeing ships locked on
+        // dead ships in attack mode.
         {
             return NO;
         }
@@ -9238,7 +9495,8 @@ void ShipEntity::removeTarget(Entity* targetEntity)
  * 1.80 behaviour: still exists, is in scanner range, is not cloaked
  *
  * 1.81 (planned) behaviour:
- * - track cloaked ships once primary targeted (but no missiles, and can't keep as a mere defense target, and probably some other penalties)
+ * - track cloaked ships once primary targeted (but no missiles, and can't keep
+ * as a mere defense target, and probably some other penalties)
  * - track ships at 120% scanner range *if* they are also primary aggressor
  *
  * But first, just switch over to this method on 1.80 behaviour and check
@@ -9266,13 +9524,12 @@ bool ShipEntity::canStillTrackPrimaryTarget()
     return YES;
 }
 
-// The C++ entity (bead oo-9ht.39.23; its object before): null, and forgotten, when its object is gone or it is
-// no valid target, as before.
+// The C++ entity: null, and forgotten, when its object is gone or it is no
+// valid target, as before.
 Entity* ShipEntity::primaryTarget()
 {
     Entity* result = oo::LiveEntity(_primaryTarget);
-    if ((result == nil && _primaryTarget != oo::WeakRef<Entity>())
-        || !isValidTarget(result)) {
+    if ((result == nil && _primaryTarget != oo::WeakRef<Entity>()) || !isValidTarget(result)) {
         _primaryTarget = nullptr;
         return nullptr;
     } else if (EXPECT_NOT(result == this)) {
@@ -9376,10 +9633,7 @@ void ShipEntity::noteTargetDestroyed(::ShipEntity* target)
     }
 }
 
-OOBehaviour ShipEntity::getBehaviour()
-{
-    return behaviour;
-}
+OOBehaviour ShipEntity::getBehaviour() { return behaviour; }
 
 void ShipEntity::setBehaviour(OOBehaviour cond)
 {
@@ -9389,20 +9643,11 @@ void ShipEntity::setBehaviour(OOBehaviour cond)
     }
 }
 
-HPVector ShipEntity::destination()
-{
-    return _destination;
-}
+HPVector ShipEntity::destination() { return _destination; }
 
-HPVector ShipEntity::getCoordinates()
-{
-    return coordinates;
-}
+HPVector ShipEntity::getCoordinates() { return coordinates; }
 
-void ShipEntity::setCoordinate(HPVector coord)
-{
-    coordinates = coord;
-}
+void ShipEntity::setCoordinate(HPVector coord) { coordinates = coord; }
 
 HPVector ShipEntity::distance_six(GLfloat dist)
 {
@@ -9481,7 +9726,9 @@ double ShipEntity::ballTrackLeadingTarget(double delta_t, Entity* target)
     // this is in absolute coordinates, so now rotate it
 
     Entity* last = nullptr;
-    Entity* father = oo::LiveEntity(oo::WeakRef<Entity>(parentEntity())); // null once its object has gone, as the object read +0 was nil (bead oo-xn1j1)
+    Entity* father = oo::LiveEntity(
+        oo::WeakRef<Entity>(parentEntity())); // null once its object has gone,
+                                              // as the object read +0 was nil
 
     Quaternion q = kIdentityQuaternion;
     while ((father) && (father != last) && (father != nullptr)) // (Entity *)NO_TARGET
@@ -9528,7 +9775,8 @@ double ShipEntity::ballTrackLeadingTarget(double delta_t, Entity* target)
         return -2.0; // target is out of fire arc
     }
 
-    quaternion_rotate_about_axis(&orientation, axis_to_track_by, thrust * delta_t);
+    quaternion_rotate_about_axis(&orientation, axis_to_track_by,
+        thrust * delta_t);
     orientationChanged();
 
     setStatus(STATUS_ACTIVE);
@@ -9536,9 +9784,7 @@ double ShipEntity::ballTrackLeadingTarget(double delta_t, Entity* target)
     return aim_cos;
 }
 
-// Slice 25 of docs/phases/3-slices/ShipEntity.md (bead oo-k6wuw): evasive jink, primary and side
-// target tracking. Members of the C++ ship, called directly, since bead oo-9ht.144 deleted the
-// facade (ADR-0056 amendment oo-9ht.144).
+// Evasive jink, primary and side target tracking. Members of the C++ ship.
 
 void ShipEntity::setEvasiveJink(GLfloat z)
 {
@@ -9571,7 +9817,8 @@ void ShipEntity::evasiveAction(double delta_t)
     ::ShipEntity* target = oo::ToShip(primaryTarget());
     if (!target) // leave now!
     {
-        noteLostTargetAndGoIdle(); // NOTE: was AI message: rather than reactToMessage:
+        noteLostTargetAndGoIdle(); // NOTE: was AI message: rather than
+                                   // reactToMessage:
         return;
     }
 
@@ -9600,12 +9847,14 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat)
 
     if (!target) // leave now!
     {
-        noteLostTargetAndGoIdle(); // NOTE: was AI message: rather than reactToMessage:
+        noteLostTargetAndGoIdle(); // NOTE: was AI message: rather than
+                                   // reactToMessage:
         return 0.0;
     }
 
     if (!canStillTrackPrimaryTarget()) {
-        noteLostTargetAndGoIdle(); // NOTE: was AI message: rather than reactToMessage:
+        noteLostTargetAndGoIdle(); // NOTE: was AI message: rather than
+                                   // reactToMessage:
         return 0.0;
     }
 
@@ -9620,7 +9869,8 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat)
 
     Vector relPos = HPVectorToVector(HPvector_subtract(calculateTargetPosition(), position));
 
-    double range2 = HPmagnitude2(HPvector_subtract((target != nullptr ? target->getPosition() : kZeroHPVector), position));
+    double range2 = HPmagnitude2(HPvector_subtract(
+        (target != nullptr ? target->getPosition() : kZeroHPVector), position));
 
     // jink if retreating
     if (retreat) // calculate jink position when flying away from target.
@@ -9707,7 +9957,9 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat)
 
     d_right = dot_product(relPos, v_right);
     d_up = dot_product(relPos, v_up);
-    d_forward = dot_product(relPos, v_forward); // == cos of angle between v_forward and vector to target
+    d_forward = dot_product(
+        relPos,
+        v_forward); // == cos of angle between v_forward and vector to target
 
     if (d_forward * reverse > max_cos) // on_target!
     {
@@ -9777,15 +10029,19 @@ double ShipEntity::trackPrimaryTarget(double delta_t, bool retreat)
         }
     }
     /*	#  note
-            Eric 9-9-2010: Removed the "reverse" variable from the stick_roll calculation. This was mathematical wrong and
-            made the ship roll in the wrong direction, preventing the ship to fly away in a straight line from the target.
-            This means all the places were a jink was set, this jink never worked correctly. The main reason a ship still
-            managed to turn at close range was probably by the fail-safe mechanisme with the "pitching_over" variable.
-            The jink was programmed to do nothing within 500 meters of the ship and just fly away in direct line from the target
-            in that range. Because of the bug the ships always rolled to the wrong side needed to fly away in direct line
-            resulting in making it a difficult target.
-            After fixing the bug, the ship realy flew away in direct line during the first 500 meters, making it a easy target
-            for the player. All jink settings are retested and changed to give a turning behaviour that felt like the old
+            Eric 9-9-2010: Removed the "reverse" variable from the stick_roll
+       calculation. This was mathematical wrong and made the ship roll in the
+       wrong direction, preventing the ship to fly away in a straight line from
+       the target. This means all the places were a jink was set, this jink never
+       worked correctly. The main reason a ship still managed to turn at close
+       range was probably by the fail-safe mechanisme with the "pitching_over"
+       variable. The jink was programmed to do nothing within 500 meters of the
+       ship and just fly away in direct line from the target in that range.
+       Because of the bug the ships always rolled to the wrong side needed to fly
+       away in direct line resulting in making it a difficult target. After fixing
+       the bug, the ship realy flew away in direct line during the first 500
+       meters, making it a easy target for the player. All jink settings are
+       retested and changed to give a turning behaviour that felt like the old
             situation, but now more deliberately set.
      */
 
@@ -9812,12 +10068,14 @@ double ShipEntity::trackSideTarget(double delta_t, bool leftside)
 
     if (!target) // leave now!
     {
-        noteLostTargetAndGoIdle(); // NOTE: was AI message: rather than reactToMessage:
+        noteLostTargetAndGoIdle(); // NOTE: was AI message: rather than
+                                   // reactToMessage:
         return 0.0;
     }
 
     if (!canStillTrackPrimaryTarget()) {
-        noteLostTargetAndGoIdle(); // NOTE: was AI message: rather than reactToMessage:
+        noteLostTargetAndGoIdle(); // NOTE: was AI message: rather than
+                                   // reactToMessage:
         return 0.0;
     }
 
@@ -9852,7 +10110,9 @@ double ShipEntity::trackSideTarget(double delta_t, bool leftside)
 
     d_right = dot_product(relPos, v_right);
     d_up = dot_product(relPos, v_up);
-    d_forward = dot_product(relPos, v_forward); // == cos of angle between v_forward and vector to target
+    d_forward = dot_product(
+        relPos,
+        v_forward); // == cos of angle between v_forward and vector to target
 
     if (d_right * reverse > max_cos) // on_target!
     {
@@ -9916,9 +10176,8 @@ double ShipEntity::trackSideTarget(double delta_t, bool leftside)
     return d_right * reverse;
 }
 
-// Slice 26 of docs/phases/3-slices/ShipEntity.md (bead oo-v92af): missile and destination tracking,
-// collision exceptions, defence targets, ranges. Members of the C++ ship, called directly, since
-// bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Missile and destination tracking, collision exceptions, defence targets,
+// ranges. Members of the C++ ship.
 
 double ShipEntity::missileTrackPrimaryTarget(double delta_t)
 {
@@ -9943,12 +10202,15 @@ double ShipEntity::missileTrackPrimaryTarget(double delta_t)
 
     float missileSpeed = (float)speed();
 
-    // Avoid getting ourselves in a divide by zero situation by setting a missileSpeed
-    // low threshold. Arbitrarily chosen 0.01, since it seems to work quite well.
-    // Missile accuracy is already clamped within the 0.0 to 10.0 range at initialization,
-    // but doing these calculations every frame when accuracy equals 0.0 just wastes cycles.
+    // Avoid getting ourselves in a divide by zero situation by setting a
+    // missileSpeed low threshold. Arbitrarily chosen 0.01, since it seems to work
+    // quite well. Missile accuracy is already clamped within the 0.0 to 10.0
+    // range at initialization, but doing these calculations every frame when
+    // accuracy equals 0.0 just wastes cycles.
     if (missileSpeed > 0.01f && accuracy > 0.0f) {
-        inPursuit = (dot_product((target != nullptr ? target->forwardVector() : Vector { }), v_forward) > 0.0f);
+        inPursuit = (dot_product((target != nullptr ? target->forwardVector() : Vector { }),
+                         v_forward)
+            > 0.0f);
         if (inPursuit) {
             Vector leading = (target != nullptr ? target->getVelocity() : Vector { });
             float lead = magnitude(relPos) / missileSpeed;
@@ -9966,9 +10228,14 @@ double ShipEntity::missileTrackPrimaryTarget(double delta_t)
     else
         relPos.z = 1.0;
 
-    d_right = dot_product(relPos, v_right); // = cosine of angle between angle to target and v_right
-    d_up = dot_product(relPos, v_up); // = cosine of angle between angle to target and v_up
-    d_forward = dot_product(relPos, v_forward); // = cosine of angle between angle to target and v_forward
+    d_right = dot_product(
+        relPos,
+        v_right); // = cosine of angle between angle to target and v_right
+    d_up = dot_product(
+        relPos, v_up); // = cosine of angle between angle to target and v_up
+    d_forward = dot_product(
+        relPos,
+        v_forward); // = cosine of angle between angle to target and v_forward
 
     // begin rule-of-thumb manoeuvres
 
@@ -10029,8 +10296,11 @@ double ShipEntity::trackDestination(double delta_t, bool retreat)
     double reversePlayer = 1.0;
 
     double min_d = 0.004;
-    double max_cos = MAX_COS; // should match default value of max_cos in behaviour_fly_to_destination!
-    double precision = we_are_docking ? 0.25 : 0.9025; // lower values force a direction closer to the target. (resp. 50% and 95% within range)
+    double max_cos = MAX_COS; // should match default value of max_cos in
+                              // behaviour_fly_to_destination!
+    double precision = we_are_docking ? 0.25
+                                      : 0.9025; // lower values force a direction closer to the
+                                                // target. (resp. 50% and 95% within range)
 
     if (retreat)
         reverse = -reverse;
@@ -10044,11 +10314,15 @@ double ShipEntity::trackDestination(double delta_t, bool retreat)
     double range2 = magnitude2(relPos);
     double desired_range2 = desired_range * desired_range;
 
-    /*	2009-7-18 Eric: We need to aim well inide the desired_range sphere round the target and not at the surface of the sphere.
-            Because of the framerate most ships normally overshoot the target and they end up flying clearly on a path
-            through the sphere. Those ships give no problems, but ships with a very low turnrate will aim close to the surface and will than
-            have large trouble with reaching their destination. When those ships enter the slowdown range, they have almost no speed vector
-            in the direction of the target. I now used 95% of desired_range to aim at, but a smaller value might even be better.
+    /*	2009-7-18 Eric: We need to aim well inide the desired_range sphere round
+       the target and not at the surface of the sphere. Because of the framerate
+       most ships normally overshoot the target and they end up flying clearly on
+       a path through the sphere. Those ships give no problems, but ships with a
+       very low turnrate will aim close to the surface and will than have large
+       trouble with reaching their destination. When those ships enter the
+       slowdown range, they have almost no speed vector in the direction of the
+       target. I now used 95% of desired_range to aim at, but a smaller value
+       might even be better.
     */
     if (range2 > desired_range2) {
         max_cos = sqrt(1 - precision * desired_range2 / range2); // Head for a point within 95% of desired_range.
@@ -10064,14 +10338,17 @@ double ShipEntity::trackDestination(double delta_t, bool retreat)
 
     d_right = dot_product(relPos, v_right);
     d_up = dot_product(relPos, v_up);
-    d_forward = dot_product(relPos, v_forward); // == cos of angle between v_forward and vector to target
+    d_forward = dot_product(
+        relPos,
+        v_forward); // == cos of angle between v_forward and vector to target
 
     // begin rule-of-thumb manoeuvres
     stick_pitch = 0.0;
     stick_roll = 0.0;
 
-    // pitching_over is currently only set in behaviour_formation_form_up, for escorts and in avoidCollision.
-    // This allows for immediate pitch corrections instead of first waiting untill roll has completed.
+    // pitching_over is currently only set in behaviour_formation_form_up, for
+    // escorts and in avoidCollision. This allows for immediate pitch corrections
+    // instead of first waiting untill roll has completed.
     if (pitching_over) {
         if (reverse * d_up > 0) // pitch up
             stick_pitch = -max_flight_pitch;
@@ -10083,7 +10360,6 @@ double ShipEntity::trackDestination(double delta_t, bool retreat)
     // check if we are flying toward (or away from) the destination..
     if ((d_forward < max_cos) || (retreat)) // not on course so we must adjust controls..
     {
-
         if (d_forward <= -max_cos || (retreat && d_forward >= max_cos)) // hack to avoid just flying away from the destination
         {
             d_up = min_d * 2.0;
@@ -10133,11 +10409,17 @@ double ShipEntity::trackDestination(double delta_t, bool retreat)
     }
 
     if (we_are_docking && docking_match_rotation && (d_forward > max_cos)) {
-        /* we are docking and need to consider the rotation/orientation of the docking port */
+        /* we are docking and need to consider the rotation/orientation of the
+         * docking port */
         ::StationEntity* station_for_docking = oo::ToStation(targetStation());
 
         if ((station_for_docking) && (station_for_docking->isStation)) {
-            stick_roll = rollToMatchUp((station_for_docking != nullptr ? station_for_docking->portUpVectorForShip(this) : Vector { }), (station_for_docking != nullptr ? station_for_docking->getFlightRoll() : 0.0f));
+            stick_roll = rollToMatchUp(
+                (station_for_docking != nullptr
+                        ? station_for_docking->portUpVectorForShip(this)
+                        : Vector { }),
+                (station_for_docking != nullptr ? station_for_docking->getFlightRoll()
+                                                : 0.0f));
         }
     }
 
@@ -10197,7 +10479,8 @@ std::vector<oo::EntityHold> ShipEntity::collisionExceptions()
 
 void ShipEntity::addCollisionException(::ShipEntity* ship)
 {
-    _collisionExceptions.add(ship); // (was allocated lazily, as an OOWeakSet of the ships' objects)
+    _collisionExceptions.add(
+        ship); // (was allocated lazily, as an OOWeakSet of the ships' objects)
 }
 
 void ShipEntity::removeCollisionException(::ShipEntity* ship)
@@ -10210,10 +10493,7 @@ bool ShipEntity::collisionExceptedFor(::ShipEntity* ship)
     return _collisionExceptions.contains(ship);
 }
 
-NSUInteger ShipEntity::defenseTargetCount()
-{
-    return _defenseTargets.count();
-}
+NSUInteger ShipEntity::defenseTargetCount() { return _defenseTargets.count(); }
 
 std::vector<oo::EntityHold> ShipEntity::allDefenseTargets()
 {
@@ -10232,7 +10512,7 @@ std::vector<oo::EntityHold> ShipEntity::defenseTargets()
     return targets;
 }
 
-// The C++ entity since bead oo-9ht.39.23; the weak set holds it since bead oo-9ht.22.3.
+// The C++ entity; the weak set holds it.
 bool ShipEntity::addDefenseTarget(Entity* target)
 {
     if (defenseTargetCount() >= MAX_TARGETS) {
@@ -10242,7 +10522,8 @@ bool ShipEntity::addDefenseTarget(Entity* target)
     if (target == nullptr || isDefenseTarget(target) || !target->getIsShip()) {
         return NO;
     }
-    _defenseTargets.add(target); // (was allocated lazily, as an OOWeakSet of the targets' objects)
+    _defenseTargets.add(target); // (was allocated lazily, as an OOWeakSet of the
+                                 // targets' objects)
     return YES;
 }
 
@@ -10263,10 +10544,7 @@ bool ShipEntity::isDefenseTarget(Entity* target)
 }
 
 // exposed to AI (as alias of clearDefenseTargets)
-void ShipEntity::removeAllDefenseTargets()
-{
-    _defenseTargets.removeAll();
-}
+void ShipEntity::removeAllDefenseTargets() { _defenseTargets.removeAll(); }
 
 void ShipEntity::removeDefenseTarget(Entity* target)
 {
@@ -10314,9 +10592,8 @@ bool ShipEntity::hasProximityAlertIgnoringTarget(bool ignore_target)
     return NO;
 }
 
-// Slice 27 of docs/phases/3-slices/ShipEntity.md (bead oo-pnfyp): aim tolerance, sun glare, main
-// weapons and turret fire, laser colours. Members of the C++ ship, called directly, since bead
-// oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Aim tolerance, sun glare, main weapons and turret fire, laser colours.
+// Members of the C++ ship.
 
 // lower is better. Defines angular size of circle in which ship
 // thinks is on target
@@ -10338,7 +10615,8 @@ GLfloat ShipEntity::currentAimTolerance()
     }
     if (currentWeaponFacing == WEAPON_FACING_AFT && accuracy < COMBAT_AI_ISNT_AWFUL) { // bad shots with aft lasers
         basic_aim *= 1.3;
-    } else if (currentWeaponFacing == WEAPON_FACING_PORT || currentWeaponFacing == WEAPON_FACING_STARBOARD) { // everyone a bit worse with side lasers
+    } else if (currentWeaponFacing == WEAPON_FACING_PORT || currentWeaponFacing == WEAPON_FACING_STARBOARD) { // everyone a bit worse with side
+                                                                                                              // lasers
         if (accuracy < COMBAT_AI_ISNT_AWFUL) { // especially these
             basic_aim *= 1.3 + randf();
         } else {
@@ -10354,7 +10632,8 @@ GLfloat ShipEntity::currentAimTolerance()
             if (glareLevel > 0.1f) {
                 // looking towards sun can seriously mess up aim (glareLevel 0..1)
                 basic_aim *= (1.0 + glareLevel * 3.0);
-                //				OO_LOG("aim.debug", "Sun glare affecting aim: {:f} for {}", glareLevel, oo::DescriptionOf(self));
+                //				OO_LOG("aim.debug", "Sun glare affecting
+                // aim: {:f} for {}", glareLevel, oo::DescriptionOf(self));
                 if (glareLevel > 0.5f) {
                     // strong glare makes precise targeting impossible
                     best_cos = 0.99999;
@@ -10372,7 +10651,8 @@ GLfloat ShipEntity::currentAimTolerance()
 }
 
 // much simpler than player version
-GLfloat ShipEntity::lookingAtSunWithThresholdAngleCos(GLfloat thresholdAngleCos)
+GLfloat ShipEntity::lookingAtSunWithThresholdAngleCos(
+    GLfloat thresholdAngleCos)
 {
     ::OOSunEntity* sun = (UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr);
     GLfloat measuredCos = 999.0f, measuredCosAbs;
@@ -10382,7 +10662,8 @@ GLfloat ShipEntity::lookingAtSunWithThresholdAngleCos(GLfloat thresholdAngleCos)
     if (EXPECT_NOT(!sun))
         return 0.0f;
 
-    relativePosition = HPVectorToVector(HPvector_subtract(getPosition(), (sun != nullptr ? sun->getPosition() : HPVector { })));
+    relativePosition = HPVectorToVector(HPvector_subtract(
+        getPosition(), (sun != nullptr ? sun->getPosition() : HPVector { })));
     unitRelativePosition = vector_normal_or_zbasis(relativePosition);
     switch (currentWeaponFacing) {
     case WEAPON_FACING_FORWARD:
@@ -10412,8 +10693,10 @@ GLfloat ShipEntity::lookingAtSunWithThresholdAngleCos(GLfloat thresholdAngleCos)
 
 bool ShipEntity::onTarget(OOWeaponFacing direction, OOWeaponType weapon_type)
 {
-    // initialize dq to a value that would normally return NO; dq is handled inside the defaultless switch(direction) statement
-    // and should alaways be recalculated anyway. Initialization here needed to silence compiler warning - Nikos 20120526
+    // initialize dq to a value that would normally return NO; dq is handled
+    // inside the defaultless switch(direction) statement and should alaways be
+    // recalculated anyway. Initialization here needed to silence compiler warning
+    // - Nikos 20120526
     GLfloat dq = -1.0f;
     GLfloat d2, radius, astq;
     Vector rel_pos, urp;
@@ -10428,7 +10711,8 @@ bool ShipEntity::onTarget(OOWeaponFacing direction, OOWeaponType weapon_type)
         return NO;
 
     if (isSunlit && (target->isSunlit == NO) && (randf() < 0.75)) {
-        return NO; // 3/4 of the time you can't see from a lit place into a darker place
+        return NO; // 3/4 of the time you can't see from a lit place into a darker
+                   // place
     }
     radius = target->collision_radius;
     rel_pos = HPVectorToVector(HPvector_subtract(calculateTargetPosition(), position));
@@ -10437,19 +10721,23 @@ bool ShipEntity::onTarget(OOWeaponFacing direction, OOWeaponType weapon_type)
 
     switch (direction) {
     case WEAPON_FACING_FORWARD:
-        dq = +dot_product(urp, v_forward); // cosine of angle between v_forward and unit relative position
+        dq = +dot_product(urp, v_forward); // cosine of angle between v_forward
+                                           // and unit relative position
         break;
 
     case WEAPON_FACING_AFT:
-        dq = -dot_product(urp, v_forward); // cosine of angle between v_forward and unit relative position
+        dq = -dot_product(urp, v_forward); // cosine of angle between v_forward
+                                           // and unit relative position
         break;
 
     case WEAPON_FACING_PORT:
-        dq = -dot_product(urp, v_right); // cosine of angle between v_right and unit relative position
+        dq = -dot_product(urp, v_right); // cosine of angle between v_right and
+                                         // unit relative position
         break;
 
     case WEAPON_FACING_STARBOARD:
-        dq = +dot_product(urp, v_right); // cosine of angle between v_right and unit relative position
+        dq = +dot_product(urp, v_right); // cosine of angle between v_right and
+                                         // unit relative position
         break;
 
     case WEAPON_FACING_NONE:
@@ -10471,7 +10759,8 @@ bool ShipEntity::onTarget(OOWeaponFacing direction, OOWeaponType weapon_type)
     return (fabs(dq) >= astq);
 }
 
-bool ShipEntity::fireWeapon(OOWeaponType weapon_type, OOWeaponFacing direction, double range)
+bool ShipEntity::fireWeapon(OOWeaponType weapon_type, OOWeaponFacing direction,
+    double range)
 {
     weapon_temp = 0.0;
     switch (direction) {
@@ -10507,7 +10796,9 @@ bool ShipEntity::fireWeapon(OOWeaponType weapon_type, OOWeaponFacing direction, 
         return NO;
     if (shotTime() < weapon_recharge_rate)
         return NO;
-    if (!(weapon_type != nullptr ? weapon_type->isTurretLaser() : false)) { // thargoid laser may just pick secondary target in this case
+    if (!(weapon_type != nullptr ? weapon_type->isTurretLaser()
+                                 : false)) { // thargoid laser may just pick
+                                             // secondary target in this case
         if (range > randf() * weaponRange * (accuracy + 7.5))
             return NO;
         if (range > weaponRange)
@@ -10522,7 +10813,8 @@ bool ShipEntity::fireWeapon(OOWeaponType weapon_type, OOWeaponFacing direction, 
             fireDirectLaserShot(range);
             fired = YES;
         } else {
-            fireLaserShotInDirection(direction, (weapon_type != nullptr ? weapon_type->identifier() : std::optional<std::string>()).value_or(""));
+            fireLaserShotInDirection(
+                direction, (weapon_type != nullptr ? weapon_type->identifier() : std::optional<std::string>()).value_or(""));
             fired = YES;
         }
     }
@@ -10554,7 +10846,9 @@ bool ShipEntity::fireWeapon(OOWeaponType weapon_type, OOWeaponFacing direction, 
     if (direction == WEAPON_FACING_FORWARD) {
         // can we fire lasers from our subentities?
         for (const auto& se : shipSubEntities()) {
-            if ((oo::ToShip(se.get()) != nullptr ? oo::ToShip(se.get())->fireSubentityLaserShot(range) : false)) {
+            if ((oo::ToShip(se.get()) != nullptr
+                        ? oo::ToShip(se.get())->fireSubentityLaserShot(range)
+                        : false)) {
                 fired = YES;
             }
         }
@@ -10593,11 +10887,13 @@ bool ShipEntity::fireMainWeapon(double range)
                 hasTurrets = YES;
             }
         }
-        if (isWeaponNone(weapon_type) && hasTurrets) { /* no forward weapon but has turrets, so set up range calculations accordingly
-                                                          note: this was hard-coded to 10000.0, although turrets have a notably
-                                                          shorter range. We are using a multiplier of 1.667 in order to not change
-                                                          something that already works, but probably it would be best to use
-                                                          TURRET_SHOT_RANGE * COMBAT_WEAPON_RANGE_FACTOR here
+        if (isWeaponNone(weapon_type) && hasTurrets) { /* no forward weapon but has turrets, so set up range
+                                                          calculations accordingly note: this was hard-coded to
+                                                          10000.0, although turrets have a notably shorter range.
+                                                          We are using a multiplier of 1.667 in order to not
+                                                          change something that already works, but probably it
+                                                          would be best to use TURRET_SHOT_RANGE *
+                                                          COMBAT_WEAPON_RANGE_FACTOR here
                                                        */
             weaponRange = TURRET_SHOT_RANGE * 1.667;
         } else {
@@ -10634,15 +10930,9 @@ bool ShipEntity::fireStarboardWeapon(double range)
     return fireWeapon(starboard_weapon_type, WEAPON_FACING_STARBOARD, range);
 }
 
-OOTimeDelta ShipEntity::shotTime()
-{
-    return shot_time;
-}
+OOTimeDelta ShipEntity::shotTime() { return shot_time; }
 
-void ShipEntity::resetShotTime()
-{
-    shot_time = 0.0;
-}
+void ShipEntity::resetShotTime() { shot_time = 0.0; }
 
 bool ShipEntity::fireTurretCannon(double range)
 {
@@ -10663,7 +10953,9 @@ bool ShipEntity::fireTurretCannon(double range)
     HPVector origin = getPosition();
 
     Entity* last = nullptr;
-    Entity* father = oo::LiveEntity(oo::WeakRef<Entity>(parentEntity())); // null once its object has gone, as the object read +0 was nil (bead oo-xn1j1)
+    Entity* father = oo::LiveEntity(
+        oo::WeakRef<Entity>(parentEntity())); // null once its object has gone,
+                                              // as the object read +0 was nil
     OOMatrix r_mat;
 
     vel = vector_forward_from_quaternion(orientation); // Facing
@@ -10671,7 +10963,8 @@ bool ShipEntity::fireTurretCannon(double range)
     while ((father) && (father != last) && (father != nullptr)) // (Entity *)NO_TARGET
     {
         r_mat = father->drawRotationMatrix();
-        origin = HPvector_add(OOHPVectorMultiplyMatrix(origin, r_mat), father->getPosition());
+        origin = HPvector_add(OOHPVectorMultiplyMatrix(origin, r_mat),
+            father->getPosition());
         vel = OOVectorMultiplyMatrix(vel, r_mat);
         last = father;
         if (!oo::EntityIsSubEntity(last))
@@ -10679,18 +10972,18 @@ bool ShipEntity::fireTurretCannon(double range)
         father = oo::LiveOwner(father); // [father owner]
     }
 
-    origin = HPvector_add(origin, vectorToHPVector(vector_multiply_scalar(vel, collision_radius + 0.5))); // Start just outside collision sphere
+    origin = HPvector_add(
+        origin, vectorToHPVector(vector_multiply_scalar(vel, collision_radius + 0.5))); // Start just outside collision sphere
     vel = vector_multiply_scalar(vel, TURRET_SHOT_SPEED); // Shot velocity
 
-    Entity* shot = oo::MadeEntity(OOPlasmaShotEntity::shotWithPosition(origin,
-        vel,
-        weapon_damage,
-        weaponRange / TURRET_SHOT_SPEED,
+    Entity* shot = oo::MadeEntity(OOPlasmaShotEntity::shotWithPosition(
+        origin, vel, weapon_damage, weaponRange / TURRET_SHOT_SPEED,
         laser_color.get()));
 
     if (UNIVERSE != nullptr)
         UNIVERSE->addEntity(shot);
-    shot->setOwner(rootShipEntity()); // has to be done AFTER adding shot to the UNIVERSE
+    shot->setOwner(
+        rootShipEntity()); // has to be done AFTER adding shot to the UNIVERSE
 
     resetShotTime();
     return YES;
@@ -10710,19 +11003,15 @@ void ShipEntity::setExhaustEmissiveColor(::OOColor* color)
     }
 }
 
-::OOColor* ShipEntity::laserColor()
-{
-    return laser_color.get();
-}
+::OOColor* ShipEntity::laserColor() { return laser_color.get(); }
 
 ::OOColor* ShipEntity::exhaustEmissiveColor()
 {
     return exhaust_emissive_color.get();
 }
 
-// Slice 28 of docs/phases/3-slices/ShipEntity.md (bead oo-40ocf): laser shots, missed shots,
-// sparks, missile launch decision. Members of the C++ ship, called directly, since bead oo-9ht.144
-// deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Laser shots, missed shots, sparks, missile launch decision. Members of the
+// C++ ship.
 
 bool ShipEntity::fireSubentityLaserShot(double range)
 {
@@ -10733,7 +11022,9 @@ bool ShipEntity::fireSubentityLaserShot(double range)
     setWeaponDataFromType(forward_weapon_type);
 
     ::ShipEntity* parent = oo::ToShip(owner());
-    OOCAssert((parent != nullptr ? parent->isShipWithSubEntityShip(this) : false), "-fireSubentityLaserShot: called on ship which is not a subentity.");
+    OOCAssert(
+        (parent != nullptr ? parent->isShipWithSubEntityShip(this) : false),
+        "-fireSubentityLaserShot: called on ship which is not a subentity.");
 
     // subentity lasers still draw power from the main entity
     if ((parent != nullptr ? parent->getEnergy() : 0.0f) <= weapon_energy_use)
@@ -10747,15 +11038,18 @@ bool ShipEntity::fireSubentityLaserShot(double range)
 
     forward_weapon_temp += weapon_shot_temperature;
     if (parent != nullptr)
-        parent->setEnergy(((parent != nullptr ? parent->getEnergy() : 0.0f) - weapon_energy_use));
+        parent->setEnergy(
+            ((parent != nullptr ? parent->getEnergy() : 0.0f) - weapon_energy_use));
 
     GLfloat hitAtRange = weaponRange;
     OOWeaponFacing direction = WEAPON_FACING_FORWARD;
-    ::ShipEntity* victim = (UNIVERSE != nullptr ? UNIVERSE->firstShipHitByLaserFromShip(this, direction, kZeroVector, &hitAtRange) : (::ShipEntity*)nil);
+    ::ShipEntity* victim = (UNIVERSE != nullptr ? UNIVERSE->firstShipHitByLaserFromShip(
+                                                      this, direction, kZeroVector, &hitAtRange)
+                                                : (::ShipEntity*)nil);
     setShipHitByLaser(victim);
 
     const oo::Ref<OOLaserShotEntity> shot = OOLaserShotEntity::laserFromShip(this, direction, kZeroVector);
-    Entity* shotObjC = oo::MadeEntity(shot); // the shot, given its object (bead oo-9ht.39.26)
+    Entity* shotObjC = oo::MadeEntity(shot); // the shot, given its object
     shot->setColor(laser_color.get());
     shot->setScanClass(CLASS_NO_DRAW);
 
@@ -10767,33 +11061,50 @@ bool ShipEntity::fireSubentityLaserShot(double range)
                 PLAYER->addRoleForAggression(victim);
         }
 
-        ::ShipEntity* subent = (victim != nullptr ? victim->subEntityTakingDamage() : (::ShipEntity*)nil);
+        ::ShipEntity* subent = (victim != nullptr ? victim->subEntityTakingDamage()
+                                                  : (::ShipEntity*)nil);
         if (subent != nil && (victim != nullptr ? victim->getIsFrangible() : false)) {
             // do 1% bleed-through damage...
             if (victim != nullptr)
-                victim->takeEnergyDamage(0.01 * weapon_damage, this, parent, (weaponTypeForFacing(WEAPON_FACING_FORWARD, YES) != nullptr ? weaponTypeForFacing(WEAPON_FACING_FORWARD, YES)->identifier() : std::optional<std::string>()).value_or(std::string()));
+                victim->takeEnergyDamage(
+                    0.01 * weapon_damage, this, parent,
+                    (weaponTypeForFacing(WEAPON_FACING_FORWARD, YES) != nullptr
+                            ? weaponTypeForFacing(WEAPON_FACING_FORWARD, YES)->identifier()
+                            : std::optional<std::string>())
+                        .value_or(std::string()));
             victim = subent;
         }
 
         if (hitAtRange < weaponRange) {
             if (victim != nullptr)
-                victim->takeEnergyDamage(weapon_damage, this, parent, (weaponTypeForFacing(WEAPON_FACING_FORWARD, YES) != nullptr ? weaponTypeForFacing(WEAPON_FACING_FORWARD, YES)->identifier() : std::optional<std::string>()).value_or(std::string())); // a very palpable hit
+                victim->takeEnergyDamage(
+                    weapon_damage, this, parent,
+                    (weaponTypeForFacing(WEAPON_FACING_FORWARD, YES) != nullptr
+                            ? weaponTypeForFacing(WEAPON_FACING_FORWARD, YES)->identifier()
+                            : std::optional<std::string>())
+                        .value_or(std::string())); // a very palpable hit
 
             shot->setRange(hitAtRange);
             Vector vd = vector_forward_from_quaternion(shot->getOrientation());
-            HPVector flash_pos = HPvector_add(shot->getPosition(), vectorToHPVector(vector_multiply_scalar(vd, hitAtRange)));
+            HPVector flash_pos = HPvector_add(
+                shot->getPosition(),
+                vectorToHPVector(vector_multiply_scalar(vd, hitAtRange)));
             if (UNIVERSE != nullptr)
-                UNIVERSE->addLaserHitEffectsAt(flash_pos, victim, weapon_damage, laser_color.get());
+                UNIVERSE->addLaserHitEffectsAt(flash_pos, victim, weapon_damage,
+                    laser_color.get());
         }
     } else {
         adjustMissedShots(+1);
 
         // see ATTACKER_MISSED section of main entity laser routine
         if (!(parent != nullptr ? parent->isCloaked() : false)) {
-            victim = oo::ToShip((parent != nullptr ? parent->primaryTarget() : (Entity*)nullptr));
+            victim = oo::ToShip(
+                (parent != nullptr ? parent->primaryTarget() : (Entity*)nullptr));
 
             Vector shotDirection = vector_forward_from_quaternion(shot->getOrientation());
-            Vector victimDirection = vector_normal(HPVectorToVector(HPvector_subtract((victim != nullptr ? victim->getPosition() : HPVector { }), (parent != nullptr ? parent->getPosition() : HPVector { }))));
+            Vector victimDirection = vector_normal(HPVectorToVector(HPvector_subtract(
+                (victim != nullptr ? victim->getPosition() : HPVector { }),
+                (parent != nullptr ? parent->getPosition() : HPVector { }))));
             if (dot_product(shotDirection, victimDirection) > 0.995) // Within 84.26 degrees
             {
                 if (getIsPlayer()) {
@@ -10805,9 +11116,11 @@ bool ShipEntity::fireSubentityLaserShot(double range)
                 if (victim != nullptr)
                     victim->setFoundTarget(parent);
                 if (victim != nullptr)
-                    victim->reactToAIMessage("ATTACKER_MISSED", "attacker narrowly misses");
+                    victim->reactToAIMessage("ATTACKER_MISSED",
+                        "attacker narrowly misses");
                 if (victim != nullptr)
-                    victim->doScriptEvent(OOJSID("shipBeingAttackedUnsuccessfully"), parent);
+                    victim->doScriptEvent(OOJSID("shipBeingAttackedUnsuccessfully"),
+                        parent);
             }
         }
     }
@@ -10834,7 +11147,7 @@ bool ShipEntity::fireDirectLaserShot(double range)
 bool ShipEntity::fireDirectLaserDefensiveShot()
 {
     for (const auto& targetRef : defenseTargets()) {
-        Entity* target = targetRef.get(); // the snapshot keeps its object (bead oo-9ht.39.16)
+        Entity* target = targetRef.get(); // the snapshot keeps its object
         // can't fire defensively at cloaked ships
         if (target->getScanClass() == CLASS_NO_DRAW || (oo::ToShip(target) != nullptr ? oo::ToShip(target)->isCloaked() : false) || target->getEnergy() <= 0.0) {
             removeDefenseTarget(target);
@@ -10862,7 +11175,8 @@ bool ShipEntity::fireDirectLaserShotAt(Entity* my_target)
 
     GLfloat acc_factor = (10.0 - accuracy) * 0.001;
 
-    q_laser.x += acc_factor * (randf() - 0.5); // randomise aim a little (+/- 0.005 at accuracy 0, never miss at accuracy 10)
+    q_laser.x += acc_factor * (randf() - 0.5); // randomise aim a little (+/- 0.005 at
+                                               // accuracy 0, never miss at accuracy 10)
     q_laser.y += acc_factor * (randf() - 0.5);
     q_laser.z += acc_factor * (randf() - 0.5);
     quaternion_normalize(&q_laser);
@@ -10870,15 +11184,19 @@ bool ShipEntity::fireDirectLaserShotAt(Entity* my_target)
     Quaternion q_save = orientation; // save rotation
     orientation = q_laser; // face in direction of laser
     // weapon offset for thargoid lasers is always zero
-    ::ShipEntity* victim = (UNIVERSE != nullptr ? UNIVERSE->firstShipHitByLaserFromShip(this, WEAPON_FACING_FORWARD, kZeroVector, &hit_at_range) : (::ShipEntity*)nil);
+    ::ShipEntity* victim = (UNIVERSE != nullptr
+            ? UNIVERSE->firstShipHitByLaserFromShip(this, WEAPON_FACING_FORWARD,
+                  kZeroVector, &hit_at_range)
+            : (::ShipEntity*)nil);
     setShipHitByLaser(victim);
     orientation = q_save; // restore rotation
 
     Vector vel = vector_multiply_scalar(v_forward, flightSpeed);
 
     // do special effects laser line
-    const oo::Ref<OOLaserShotEntity> shot = OOLaserShotEntity::laserFromShip(this, WEAPON_FACING_FORWARD, kZeroVector);
-    Entity* shotObjC = oo::MadeEntity(shot); // the shot, given its object (bead oo-9ht.39.26)
+    const oo::Ref<OOLaserShotEntity> shot = OOLaserShotEntity::laserFromShip(
+        this, WEAPON_FACING_FORWARD, kZeroVector);
+    Entity* shotObjC = oo::MadeEntity(shot); // the shot, given its object
     shot->setColor(laser_color.get());
     shot->setScanClass(CLASS_NO_DRAW);
     shot->setPosition(position);
@@ -10886,23 +11204,37 @@ bool ShipEntity::fireDirectLaserShotAt(Entity* my_target)
     shot->setVelocity(vel);
 
     if (victim != nil) {
-        ::ShipEntity* subent = (victim != nullptr ? victim->subEntityTakingDamage() : (::ShipEntity*)nil);
+        ::ShipEntity* subent = (victim != nullptr ? victim->subEntityTakingDamage()
+                                                  : (::ShipEntity*)nil);
         if (subent != nil && (victim != nullptr ? victim->getIsFrangible() : false)) {
             // do 1% bleed-through damage...
             if (victim != nullptr)
-                victim->takeEnergyDamage(0.01 * weapon_damage, this, this, (weaponTypeForFacing(WEAPON_FACING_FORWARD, YES) != nullptr ? weaponTypeForFacing(WEAPON_FACING_FORWARD, YES)->identifier() : std::optional<std::string>()).value_or(std::string()));
+                victim->takeEnergyDamage(
+                    0.01 * weapon_damage, this, this,
+                    (weaponTypeForFacing(WEAPON_FACING_FORWARD, YES) != nullptr
+                            ? weaponTypeForFacing(WEAPON_FACING_FORWARD, YES)->identifier()
+                            : std::optional<std::string>())
+                        .value_or(std::string()));
             victim = subent;
         }
 
         if (hit_at_range * hit_at_range < range_limit2) {
             if (victim != nullptr)
-                victim->takeEnergyDamage(weapon_damage, this, this, (weaponTypeForFacing(WEAPON_FACING_FORWARD, YES) != nullptr ? weaponTypeForFacing(WEAPON_FACING_FORWARD, YES)->identifier() : std::optional<std::string>()).value_or(std::string())); // a very palpable hit
+                victim->takeEnergyDamage(
+                    weapon_damage, this, this,
+                    (weaponTypeForFacing(WEAPON_FACING_FORWARD, YES) != nullptr
+                            ? weaponTypeForFacing(WEAPON_FACING_FORWARD, YES)->identifier()
+                            : std::optional<std::string>())
+                        .value_or(std::string())); // a very palpable hit
 
             shot->setRange(hit_at_range);
             Vector vd = vector_forward_from_quaternion(shot->getOrientation());
-            HPVector flash_pos = HPvector_add(shot->getPosition(), vectorToHPVector(vector_multiply_scalar(vd, hit_at_range)));
+            HPVector flash_pos = HPvector_add(
+                shot->getPosition(),
+                vectorToHPVector(vector_multiply_scalar(vd, hit_at_range)));
             if (UNIVERSE != nullptr)
-                UNIVERSE->addLaserHitEffectsAt(flash_pos, victim, weapon_damage, laser_color.get());
+                UNIVERSE->addLaserHitEffectsAt(flash_pos, victim, weapon_damage,
+                    laser_color.get());
         }
     }
 
@@ -10938,7 +11270,8 @@ std::vector<Vector> ShipEntity::laserPortOffset(OOWeaponFacing direction)
     return laserPortOffset;
 }
 
-bool ShipEntity::fireLaserShotInDirection(OOWeaponFacing direction, const std::string& weaponIdentifier)
+bool ShipEntity::fireLaserShotInDirection(OOWeaponFacing direction,
+    const std::string& weaponIdentifier)
 {
     double range_limit2 = weaponRange * weaponRange;
     GLfloat hit_at_range;
@@ -10962,11 +11295,14 @@ bool ShipEntity::fireLaserShotInDirection(OOWeaponFacing direction, const std::s
 
         last_shot_time = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
 
-        ::ShipEntity* victim = (UNIVERSE != nullptr ? UNIVERSE->firstShipHitByLaserFromShip(this, direction, laserPortOffset, &hit_at_range) : (::ShipEntity*)nil);
+        ::ShipEntity* victim = (UNIVERSE != nullptr
+                ? UNIVERSE->firstShipHitByLaserFromShip(
+                      this, direction, laserPortOffset, &hit_at_range)
+                : (::ShipEntity*)nil);
         setShipHitByLaser(victim);
 
         shot = OOLaserShotEntity::laserFromShip(this, direction, laserPortOffset);
-        Entity* shotObjC = oo::MadeEntity(shot); // the shot, given its object (bead oo-9ht.39.26)
+        Entity* shotObjC = oo::MadeEntity(shot); // the shot, given its object
         if (getIsPlayer()) {
             shotEntities.emplace_back(shot);
         }
@@ -10982,31 +11318,39 @@ bool ShipEntity::fireLaserShotInDirection(OOWeaponFacing direction, const std::s
                     PLAYER->addRoleForAggression(victim);
             }
 
-            /*	CRASH in [victim->sub_entities containsObject:subent] here (1.69, OS X/x86).
-                    Analysis: Crash is in _freedHandler called from CFEqual, indicating either a dead
-                    object in victim->sub_entities or dead victim->subentity_taking_damage. I suspect
-                    the latter. Probable solution: dying subentities must cause parent to clean up
-                    properly. This was probably obscured by the entity recycling scheme in the past.
-                    Fix: made subentity_taking_damage a weak reference accessed via a method.
+            /*	CRASH in [victim->sub_entities containsObject:subent] here
+               (1.69, OS X/x86). Analysis: Crash is in _freedHandler called from
+               CFEqual, indicating either a dead object in victim->sub_entities or
+               dead victim->subentity_taking_damage. I suspect the latter. Probable
+               solution: dying subentities must cause parent to clean up properly.
+               This was probably obscured by the entity recycling scheme in the past.
+                    Fix: made subentity_taking_damage a weak reference accessed via a
+               method.
                     -- Ahruman 20070706, 20080304
             */
-            ::ShipEntity* subent = (victim != nullptr ? victim->subEntityTakingDamage() : (::ShipEntity*)nil);
+            ::ShipEntity* subent = (victim != nullptr ? victim->subEntityTakingDamage()
+                                                      : (::ShipEntity*)nil);
             if (subent != nil && (victim != nullptr ? victim->getIsFrangible() : false)) {
                 // do 1% bleed-through damage...
                 if (victim != nullptr)
-                    victim->takeEnergyDamage(0.01 * effective_damage, this, this, weaponIdentifier);
+                    victim->takeEnergyDamage(0.01 * effective_damage, this, this,
+                        weaponIdentifier);
                 victim = subent;
             }
 
             if (hit_at_range * hit_at_range < range_limit2) {
                 if (victim != nullptr)
-                    victim->takeEnergyDamage(effective_damage, this, this, weaponIdentifier); // a very palpable hit
+                    victim->takeEnergyDamage(effective_damage, this, this,
+                        weaponIdentifier); // a very palpable hit
 
                 shot->setRange(hit_at_range);
                 Vector vd = vector_forward_from_quaternion(shot->getOrientation());
-                HPVector flash_pos = HPvector_add(shot->getPosition(), vectorToHPVector(vector_multiply_scalar(vd, hit_at_range)));
+                HPVector flash_pos = HPvector_add(
+                    shot->getPosition(),
+                    vectorToHPVector(vector_multiply_scalar(vd, hit_at_range)));
                 if (UNIVERSE != nullptr)
-                    UNIVERSE->addLaserHitEffectsAt(flash_pos, victim, effective_damage, laser_color.get());
+                    UNIVERSE->addLaserHitEffectsAt(flash_pos, victim, effective_damage,
+                        laser_color.get());
             }
         } else {
             adjustMissedShots(+1);
@@ -11014,14 +11358,17 @@ bool ShipEntity::fireLaserShotInDirection(OOWeaponFacing direction, const std::s
             // shot missed
             if (!isCloaked()) {
                 victim = oo::ToShip(primaryTarget());
-                if ((victim != nullptr ? victim->getIsShip() : false)) // it might not be - fixes crash bug
+                if ((victim != nullptr ? victim->getIsShip()
+                                       : false)) // it might not be - fixes crash bug
                 {
-
                     /* player currently gets a bit of an advantage here if
                      * they ambush without having their target actually
                      * targeted. Though in those circumstances they
                      * shouldn't be missing their first shot anyway. */
-                    if (dot_product(vector_forward_from_quaternion(shot->getOrientation()), vector_normal(vectorTo(victim))) > 0.995) {
+                    if (dot_product(
+                            vector_forward_from_quaternion(shot->getOrientation()),
+                            vector_normal(vectorTo(victim)))
+                        > 0.995) {
                         /* plausibly aimed at target. Allows reaction
                          * before attacker actually hits. But we need to
                          * be able to distinguish in AI from ATTACKED so
@@ -11037,9 +11384,11 @@ bool ShipEntity::fireLaserShotInDirection(OOWeaponFacing direction, const std::s
                         if (victim != nullptr)
                             victim->setFoundTarget(this);
                         if (victim != nullptr)
-                            victim->reactToAIMessage("ATTACKER_MISSED", "attacker narrowly misses");
+                            victim->reactToAIMessage("ATTACKER_MISSED",
+                                "attacker narrowly misses");
                         if (victim != nullptr)
-                            victim->doScriptEvent(OOJSID("shipBeingAttackedUnsuccessfully"), this);
+                            victim->doScriptEvent(OOJSID("shipBeingAttackedUnsuccessfully"),
+                                this);
                     }
                 }
             }
@@ -11074,7 +11423,8 @@ void ShipEntity::adjustMissedShots(int delta)
 int ShipEntity::missedShots()
 {
     if (getIsSubEntity()) {
-        return (oo::ToShip(owner()) != nullptr ? oo::ToShip(owner())->missedShots() : int { });
+        return (oo::ToShip(owner()) != nullptr ? oo::ToShip(owner())->missedShots()
+                                               : int { });
     } else {
         return _missed_shots;
     }
@@ -11087,7 +11437,9 @@ void ShipEntity::throwSparks()
         randf() * (boundingBox.max.y - boundingBox.min.y) + boundingBox.min.y,
         randf() * boundingBox.max.z + boundingBox.min.z // rear section only
     };
-    HPVector origin = HPvector_add(position, vectorToHPVector(quaternion_rotate_vector(normalOrientation(), offset)));
+    HPVector origin = HPvector_add(
+        position,
+        vectorToHPVector(quaternion_rotate_vector(normalOrientation(), offset)));
 
     float w = boundingBox.max.x - boundingBox.min.x;
     float h = boundingBox.max.y - boundingBox.min.y;
@@ -11095,15 +11447,13 @@ void ShipEntity::throwSparks()
 
     float sz = m * (1 + randf() + randf()); // half minimum dimension on average
 
-    Vector vel = vector_multiply_scalar(HPVectorToVector(HPvector_subtract(origin, position)), 2.0);
+    Vector vel = vector_multiply_scalar(
+        HPVectorToVector(HPvector_subtract(origin, position)), 2.0);
 
     oo::Ref<OOColor> color = OOColor::colorWithHue(0.08 + 0.17 * randf(), 1.0, 1.0, 1.0);
 
-    Entity* spark = oo::MadeEntity(OOSparkEntity::sparkWithPosition(origin,
-        vel,
-        2.0 + 3.0 * randf(),
-        sz,
-        color.get()));
+    Entity* spark = oo::MadeEntity(OOSparkEntity::sparkWithPosition(
+        origin, vel, 2.0 + 3.0 * randf(), sz, color.get()));
 
     spark->setOwner(this);
     if (UNIVERSE != nullptr)
@@ -11141,7 +11491,11 @@ Vector ShipEntity::missileLaunchPosition()
 
     if (start.x == 0.0f && start.y == 0.0f && start.z <= 0.0f) // The kZeroVector as start is illegal also.
     {
-        OO_LOG("ship.missileLaunch.invalidPosition", "***** ERROR: The missile_launch_position defines a position {} behind the {}. In future versions such missiles may explode on launch because they have to travel through the ship.", VectorDescription(start), oo::EntityDescription(this));
+        OO_LOG("ship.missileLaunch.invalidPosition",
+            "***** ERROR: The missile_launch_position defines a position {} "
+            "behind the {}. In future versions such missiles may explode on "
+            "launch because they have to travel through the ship.",
+            VectorDescription(start), oo::EntityDescription(this));
         start.x = 0.0f;
         start.y = boundingBox.min.y - 4.0f;
         start.z = boundingBox.max.z + 1.0f;
@@ -11154,11 +11508,11 @@ Vector ShipEntity::missileLaunchPosition()
     return fireMissileWithIdentifier(std::nullopt, primaryTarget());
 }
 
-// Slice 29 of docs/phases/3-slices/ShipEntity.md (bead oo-g900k): missile firing, ECM, cloak,
-// cascade mine, escape capsule, cargo dumping. Members of the C++ ship, called directly, since bead
-// oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Missile firing, ECM, cloak, cascade mine, escape capsule, cargo dumping.
+// Members of the C++ ship.
 
-::ShipEntity* ShipEntity::fireMissileWithIdentifier(const std::optional<std::string>& requestedIdentifier, Entity* target)
+::ShipEntity* ShipEntity::fireMissileWithIdentifier(
+    const std::optional<std::string>& requestedIdentifier, Entity* target)
 {
     std::optional<std::string> identifier = requestedIdentifier;
     // both players and NPCs!
@@ -11185,7 +11539,10 @@ Vector ShipEntity::missileLaunchPosition()
             return nil;
         }
         // missile fire requires being in scanner range
-        if (HPmagnitude2(HPvector_subtract((target_ship != nullptr ? target_ship->getPosition() : HPVector { }), position)) > scannerRange * scannerRange) {
+        if (HPmagnitude2(HPvector_subtract(
+                (target_ship != nullptr ? target_ship->getPosition() : HPVector { }),
+                position))
+            > scannerRange * scannerRange) {
             return nil;
         }
         if (!hasMilitaryScannerFilter() && (target_ship != nullptr ? target_ship->isJammingScanning() : false)) {
@@ -11197,8 +11554,11 @@ Vector ShipEntity::missileLaunchPosition()
     if (!identifier.has_value()) {
         // use a random missile from the list
         i = floor(randf() * (double)missiles);
-        identifier = (missile_list[i] != nullptr ? missile_list[i]->identifier() : std::optional<std::string>());
-        missile = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(identifier.value_or("")) : (::ShipEntity*)nil);
+        identifier = (missile_list[i] != nullptr ? missile_list[i]->identifier()
+                                                 : std::optional<std::string>());
+        missile = (UNIVERSE != nullptr
+                ? UNIVERSE->newShipWithRole(identifier.value_or(""))
+                : (::ShipEntity*)nil);
         if (EXPECT_NOT(missile == nil)) // invalid missile role.
         {
             // remove that invalid missile role from the missiles list.
@@ -11207,7 +11567,8 @@ Vector ShipEntity::missileLaunchPosition()
             missiles--;
         }
     } else
-        missile = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(*identifier) : (::ShipEntity*)nil);
+        missile = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole(*identifier)
+                                       : (::ShipEntity*)nil);
 
     if (EXPECT_NOT(missile == nil))
         return nil;
@@ -11229,10 +11590,12 @@ Vector ShipEntity::missileLaunchPosition()
         start = vector_add(start, vector_multiply_scalar(v_eject, mcr));
     }
 
-    vel = vector_add(vel, vector_multiply_scalar(v_forward, flightSpeed + throw_speed));
+    vel = vector_add(
+        vel, vector_multiply_scalar(v_forward, flightSpeed + throw_speed));
 
     Quaternion q1 = normalOrientation();
-    HPVector origin = HPvector_add(position, vectorToHPVector(quaternion_rotate_vector(q1, start)));
+    HPVector origin = HPvector_add(
+        position, vectorToHPVector(quaternion_rotate_vector(q1, start)));
 
     if (isPlayer) {
         if (missile != nullptr)
@@ -11241,14 +11604,19 @@ Vector ShipEntity::missileLaunchPosition()
 
     // special cases
 
-    // We don't want real missiles in a group. Missiles could become escorts when the group is also used as escortGroup.
+    // We don't want real missiles in a group. Missiles could become escorts when
+    // the group is also used as escortGroup.
     if ((missile != nullptr ? missile->getScanClass() : OOScanClass { }) == CLASS_THARGOID) {
         if (group() == nullptr)
-            setGroup(OOShipGroup::groupWithName("thargoid group").get()); // the ship keeps it (the autoreleased facade lived to the end of the pass)
+            setGroup(OOShipGroup::groupWithName("thargoid group")
+                    .get()); // the ship keeps it (the autoreleased facade lived
+                             // to the end of the pass)
 
         ::ShipEntity* thisGroupLeader = (_group != nullptr ? _group->leader() : (::ShipEntity*)nil);
 
-        if ((thisGroupLeader != nullptr ? thisGroupLeader->escortGroup() : (OOShipGroup*)nullptr) != _group) // avoid adding tharons to escort groups
+        if ((thisGroupLeader != nullptr ? thisGroupLeader->escortGroup()
+                                        : (OOShipGroup*)nullptr)
+            != _group) // avoid adding tharons to escort groups
         {
             if (missile != nullptr)
                 missile->setGroup(group());
@@ -11295,9 +11663,11 @@ Vector ShipEntity::missileLaunchPosition()
         if (target_ship != nullptr)
             target_ship->setPrimaryAggressor(this);
         if (target_ship != nullptr)
-            target_ship->doScriptEvent(OOJSID("shipAttackedWithMissile"), missile, this);
+            target_ship->doScriptEvent(OOJSID("shipAttackedWithMissile"), missile,
+                this);
         if (target_ship != nullptr)
-            target_ship->reactToAIMessage("INCOMING_MISSILE", "someone's shooting at me!");
+            target_ship->reactToAIMessage("INCOMING_MISSILE",
+                "someone's shooting at me!");
         if (cloaking_device_active && cloakPassive) {
             // parity between player &NPCs, only deactivate cloak for missiles
             deactivateCloakingDevice();
@@ -11311,18 +11681,17 @@ Vector ShipEntity::missileLaunchPosition()
 
 bool ShipEntity::isMissileFlagSet()
 {
-    return isMissile; // were we created using fireMissile? (for tracking submunitions and preventing collisions at launch)
+    return isMissile; // were we created using fireMissile? (for tracking
+                      // submunitions and preventing collisions at launch)
 }
 
 void ShipEntity::setIsMissileFlag(bool newValue)
 {
-    isMissile = !!newValue; // set the isMissile flag, used for tracking submunitions and preventing collisions at launch.
+    isMissile = !!newValue; // set the isMissile flag, used for tracking
+                            // submunitions and preventing collisions at launch.
 }
 
-OOTimeDelta ShipEntity::missileLoadTime()
-{
-    return missile_load_time;
-}
+OOTimeDelta ShipEntity::missileLoadTime() { return missile_load_time; }
 
 void ShipEntity::setMissileLoadTime(OOTimeDelta newMissileLoadTime)
 {
@@ -11335,7 +11704,8 @@ void ShipEntity::noticeECM()
     if (accuracy >= COMBAT_AI_ISNT_AWFUL && missiles > 0 && ((missile_list[0] != nullptr ? missile_list[0]->identifier() : std::optional<std::string>()) == "EQ_MISSILE")) {
         // if we're being ECMd, and our missiles appear to be standard, and we
         // have some combat sense, wait a bit before firing the next one!
-        missile_launch_time = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) + fmax(2.0, missile_load_time); // set minimum launchtime for the next missile.
+        missile_launch_time = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) + fmax(2.0,
+                                  missile_load_time); // set minimum launchtime for the next missile.
     }
 }
 
@@ -11375,7 +11745,8 @@ bool ShipEntity::launchCascadeMine()
     if (!hasCascadeMine())
         return NO;
     setSpeed(maxFlightSpeed + 300);
-    ::ShipEntity* bomb = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("energy-bomb") : (::ShipEntity*)nil);
+    ::ShipEntity* bomb = (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("energy-bomb")
+                                              : (::ShipEntity*)nil);
     if (bomb == nil)
         return NO;
 
@@ -11389,7 +11760,9 @@ bool ShipEntity::launchCascadeMine()
     double random_pitch = randf() - 0.5; //  -0.5 to +0.5
     quaternion_set_random(&random_direction);
 
-    rpos = HPvector_subtract(getPosition(), vectorToHPVector(vector_multiply_scalar(v_forward, start)));
+    rpos = HPvector_subtract(
+        getPosition(),
+        vectorToHPVector(vector_multiply_scalar(v_forward, start)));
 
     double eject_speed = -800.0;
     vel = vector_multiply_scalar(v_forward, getFlightSpeed() + eject_speed);
@@ -11439,7 +11812,8 @@ bool ShipEntity::launchCascadeMine()
     ::ShipEntity* result = nil;
     ::ShipEntity* mainPod = nil;
     unsigned n_pods, i;
-    std::optional<std::vector<oo::EntityHold>> passengers; // only with more than one pod, as before
+    std::optional<std::vector<oo::EntityHold>>
+        passengers; // only with more than one pod, as before
 
     /*
             CHANGE: both player & NPCs can now launch escape pods in interstellar
@@ -11471,26 +11845,30 @@ bool ShipEntity::launchCascadeMine()
     // launch other pods (passengers)
     for (i = 1; i < n_pods; i++) {
         ::ShipEntity* passenger = nil;
-        passenger = launchPodWithCrew(std::vector<oo::Ref<OOCharacter>> { oo::Ref<OOCharacter>(OOCharacter::randomCharacterWithRole("passenger", gen_rnd_number())) });
+        passenger = launchPodWithCrew(std::vector<oo::Ref<OOCharacter>> {
+            oo::Ref<OOCharacter>(OOCharacter::randomCharacterWithRole(
+                "passenger", gen_rnd_number())) });
         if (passengers.has_value())
             passengers->emplace_back(passenger);
     }
 
     // the passengers' pods as an array, or null (nil) with a single pod
     if (mainPod)
-        doScriptEvent(OOJSID("shipLaunchedEscapePod"), { oo::EntityObjectNode(mainPod), passengers.has_value() ? oo::EntityNodesFrom(*passengers) : oo::PList() });
+        doScriptEvent(OOJSID("shipLaunchedEscapePod"),
+            { oo::EntityObjectNode(mainPod),
+                passengers.has_value() ? oo::EntityNodesFrom(*passengers)
+                                       : oo::PList() });
 
     return result;
 }
 
-// This is a documented AI method; do not change semantics. (Note: AIs don't have access to the return value,
-// and no caller read it: PlayerEntity reads the commodity from -cxx_dumpCargoItem: itself.)
-void ShipEntity::dumpCargo()
-{
-    dumpCargoItem(std::nullopt);
-}
+// This is a documented AI method; do not change semantics. (Note: AIs don't
+// have access to the return value, and no caller read it: PlayerEntity reads
+// the commodity from -cxx_dumpCargoItem: itself.)
+void ShipEntity::dumpCargo() { dumpCargoItem(std::nullopt); }
 
-::ShipEntity* ShipEntity::dumpCargoItem(const std::optional<std::string>& preferred)
+::ShipEntity* ShipEntity::dumpCargoItem(
+    const std::optional<std::string>& preferred)
 {
     ::ShipEntity* jetto = nil;
     NSUInteger i = 0;
@@ -11502,8 +11880,12 @@ void ShipEntity::dumpCargo()
         } else {
             BOOL found = NO;
             for (i = 0; i < cargo.size(); i++) {
-                if ((oo::ToShip(cargo[i].get()) != nullptr ? oo::ToShip(cargo[i].get())->commodityType() : std::optional<std::string>()) == preferred) {
-                    jetto = oo::ToShip(oo::AutoreleaseEntity(oo::RetainEntity(cargo[i].get())));
+                if ((oo::ToShip(cargo[i].get()) != nullptr
+                            ? oo::ToShip(cargo[i].get())->commodityType()
+                            : std::optional<std::string>())
+                    == preferred) {
+                    jetto = oo::ToShip(
+                        oo::AutoreleaseEntity(oo::RetainEntity(cargo[i].get())));
                     found = YES;
                     break;
                 }
@@ -11517,7 +11899,8 @@ void ShipEntity::dumpCargo()
         if (jetto != nil) {
             dumpItem(jetto); // CLASS_CARGO, STATUS_IN_FLIGHT, AI state GLOBAL
             cargo.erase(cargo.begin() + i);
-            broadcastAIMessage("CARGO_DUMPED"); // goes only to 16 nearby ships in range, but that should be enough.
+            broadcastAIMessage("CARGO_DUMPED"); // goes only to 16 nearby ships in
+                                                // range, but that should be enough.
             unsigned i;
             // only send script event to powered entities
             checkScannerIgnoringUnpowered();
@@ -11537,15 +11920,22 @@ OOCargoType ShipEntity::dumpItem(::ShipEntity* cargoObj)
     if (!cargoObj)
         return (OOCargoType)0;
 
-    ::ShipEntity* jetto = (UNIVERSE != nullptr ? UNIVERSE->reifyCargoPod(cargoObj) : (::ShipEntity*)nil);
+    ::ShipEntity* jetto = (UNIVERSE != nullptr ? UNIVERSE->reifyCargoPod(cargoObj)
+                                               : (::ShipEntity*)nil);
 
     int result = (jetto != nullptr ? static_cast<int>(jetto->cargoType()) : 0);
     ::AI* jettoAI = nil;
     Vector start;
 
-    // players get to see their old ship sailing forth, while NPCs run away more efficiently!
-    // cargo is ejected at higher speed from any ship
-    double eject_speed = EXPECT_NOT((jetto != nullptr ? jetto->getCrew() : std::optional<std::vector<oo::Ref<OOCharacter>>>()).has_value() && (jetto != nullptr ? jetto->getIsPlayer() : false)) ? 20.0 : 100.0;
+    // players get to see their old ship sailing forth, while NPCs run away more
+    // efficiently! cargo is ejected at higher speed from any ship
+    double eject_speed = EXPECT_NOT((jetto != nullptr
+                                            ? jetto->getCrew()
+                                            : std::optional<std::vector<oo::Ref<OOCharacter>>>())
+                                        .has_value()
+                             && (jetto != nullptr ? jetto->getIsPlayer() : false))
+        ? 20.0
+        : 100.0;
     double eject_reaction = -eject_speed * (jetto != nullptr ? jetto->getMass() : 0.0f) / getMass();
     double jcr = jetto->collision_radius;
 
@@ -11579,12 +11969,15 @@ OOCargoType ShipEntity::dumpItem(::ShipEntity* cargoObj)
     v_eject.y += (randf() - randf()) / eject_speed;
     v_eject.z += (randf() - randf()) / eject_speed;
 
-    vel = vector_add(vector_multiply_scalar(v_forward, flightSpeed), vector_multiply_scalar(v_eject, eject_speed));
+    vel = vector_add(vector_multiply_scalar(v_forward, flightSpeed),
+        vector_multiply_scalar(v_eject, eject_speed));
     velocity = vector_add(velocity, vector_multiply_scalar(v_eject, eject_reaction));
 
     if (jetto != nullptr)
         jetto->setPosition(rpos);
-    if ((jetto != nullptr ? jetto->getCrew() : std::optional<std::vector<oo::Ref<OOCharacter>>>()).has_value()) // jetto has a crew, so assume it is an escape pod.
+    if ((jetto != nullptr ? jetto->getCrew()
+                          : std::optional<std::vector<oo::Ref<OOCharacter>>>())
+            .has_value()) // jetto has a crew, so assume it is an escape pod.
     {
         // orient the pod away from the ship to avoid colliding with it.
         jetto_orientation = quaternion_rotation_between(v_eject_normal, kBasisZVector);
@@ -11611,10 +12004,13 @@ OOCargoType ShipEntity::dumpItem(::ShipEntity* cargoObj)
         UNIVERSE->addEntity(jetto); // STATUS_IN_FLIGHT, AI state GLOBAL
 
     jettoAI = (jetto != nullptr ? jetto->getAI() : (::AI*)nullptr);
-    if ((jettoAI != nullptr ? jettoAI->hasSuspendedStateMachines() : false)) // check if this was previous scooped cargo.
+    if ((jettoAI != nullptr
+                ? jettoAI->hasSuspendedStateMachines()
+                : false)) // check if this was previous scooped cargo.
     {
         if (jetto != nullptr)
-            jetto->setThrust((jetto != nullptr ? jetto->maxThrust() : 0.0f)); // restore old thrust.
+            jetto->setThrust((jetto != nullptr ? jetto->maxThrust()
+                                               : 0.0f)); // restore old thrust.
         if (jetto != nullptr)
             jetto->setOwner(jetto);
         if (jettoAI != nullptr)
@@ -11628,9 +12024,7 @@ OOCargoType ShipEntity::dumpItem(::ShipEntity* cargoObj)
     return (OOCargoType)result;
 }
 
-// Slice 30 of docs/phases/3-slices/ShipEntity.md (bead oo-ogoct): collisions, velocity, tractoring
-// and scooping. Members of the C++ ship, called directly, since bead oo-9ht.144 deleted the facade
-// (ADR-0056 amendment oo-9ht.144).
+// Collisions, velocity, tractoring and scooping. Members of the C++ ship.
 
 void ShipEntity::manageCollisions()
 {
@@ -11640,19 +12034,22 @@ void ShipEntity::manageCollisions()
     ::ShipEntity* other_ship;
 
     while (!collidingEntities.empty()) {
-        // EMMSTRAN: investigate if doing this backwards would be more efficient. (Not entirely obvious, the vector is kinda funky.) -- Ahruman 2011-02-12
-        ent = oo::AutoreleaseEntity(oo::RetainEntity(collidingEntities.front().get())); // [[... retain] autorelease]
+        // EMMSTRAN: investigate if doing this backwards would be more efficient.
+        // (Not entirely obvious, the vector is kinda funky.) -- Ahruman 2011-02-12
+        ent = oo::AutoreleaseEntity(oo::RetainEntity(
+            collidingEntities.front().get())); // [[... retain] autorelease]
         collidingEntities.erase(collidingEntities.begin());
         if (ent) {
             if (oo::EntityIsShip(ent)) {
                 other_ship = oo::ToShip(ent);
                 collideWithShip(other_ship);
             } else if (ent->isStellarObject()) {
-                getDestroyedBy(ent, ent->isSun() ? kOODamageTypeHitASun : kOODamageTypeHitAPlanet);
+                getDestroyedBy(
+                    ent, ent->isSun() ? kOODamageTypeHitASun : kOODamageTypeHitAPlanet);
                 if (this == PLAYER)
                     oo::RetainEntity(this);
             } else if (ent->getIsWormhole()) {
-                // the C++ wormhole (C++ since bead oo-9ht.112; a C-style cast of its object until bead oo-9ht.144)
+                // the C++ wormhole
                 if (getIsPlayer())
                     enterWormhole(static_cast<::WormholeEntity*>(ent));
                 else
@@ -11674,7 +12071,9 @@ bool ShipEntity::collideWithShip(::ShipEntity* other)
     ::ShipEntity* otherParent = oo::ToShip((other != nullptr ? other->parentEntity() : (Entity*)nullptr));
     BOOL otherIsStation = other == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr);
     // calculate line of centers using centres
-    hploc = HPvector_normal_or_zbasis(HPvector_subtract((other != nullptr ? other->absolutePositionForSubentity() : HPVector { }), position));
+    hploc = HPvector_normal_or_zbasis(HPvector_subtract(
+        (other != nullptr ? other->absolutePositionForSubentity() : HPVector { }),
+        position));
     loc = HPVectorToVector(hploc);
 
     if (canScoop(other)) {
@@ -11739,7 +12138,8 @@ bool ShipEntity::collideWithShip(::ShipEntity* other)
     Vector vel1a = vector_multiply_scalar(loc, -v1a);
     Vector vel2a = vector_multiply_scalar(loc, v2b);
 
-    if (magnitude2(v) <= 0.1) // virtually no relative velocity - we must provide at least 1m/s to avoid conjoined objects
+    if (magnitude2(v) <= 0.1) // virtually no relative velocity - we must provide
+                              // at least 1m/s to avoid conjoined objects
     {
         vel1a = vector_multiply_scalar(loc, -1);
         vel2a = loc;
@@ -11748,7 +12148,8 @@ bool ShipEntity::collideWithShip(::ShipEntity* other)
     // apply change in velocity
     if (otherParent != nil) {
         if (otherParent != nullptr)
-            otherParent->adjustVelocity(vel2a); // move the otherParent not the subentity
+            otherParent->adjustVelocity(
+                vel2a); // move the otherParent not the subentity
     } else {
         if (other != nullptr)
             other->adjustVelocity(vel2a);
@@ -11788,19 +12189,24 @@ bool ShipEntity::collideWithShip(::ShipEntity* other)
     if (!selfDestroyed && !otherDestroyed) {
         float t = 10.0 * (UNIVERSE != nullptr ? UNIVERSE->getTimeDelta() : 0.0); // 10 ticks
 
-        HPVector pos1a = HPvector_add(getPosition(), vectorToHPVector(vector_multiply_scalar(loc, t * v1a)));
+        HPVector pos1a = HPvector_add(
+            getPosition(), vectorToHPVector(vector_multiply_scalar(loc, t * v1a)));
         setPosition(pos1a);
 
         if (!otherIsStation) {
-            HPVector pos2a = HPvector_add((other != nullptr ? other->getPosition() : HPVector { }), vectorToHPVector(vector_multiply_scalar(loc, t * v2b)));
+            HPVector pos2a = HPvector_add((other != nullptr ? other->getPosition() : HPVector { }),
+                vectorToHPVector(vector_multiply_scalar(loc, t * v2b)));
             if (other != nullptr)
                 other->setPosition(pos2a);
         }
     }
 
     // remove self from other's collision list
-    if (std::vector<oo::EntityHold>* colliding = (other != nullptr ? other->getCollidingEntities() : (std::vector<oo::EntityHold>*)nullptr))
-        std::erase_if(*colliding, [this](const oo::EntityHold& e) { return e.get() == this; }); // -removeObject:
+    if (std::vector<oo::EntityHold>* colliding = (other != nullptr ? other->getCollidingEntities()
+                                                                   : (std::vector<oo::EntityHold>*)nullptr))
+        std::erase_if(*colliding, [this](const oo::EntityHold& e) {
+            return e.get() == this;
+        }); // -removeObject:
 
     doScriptEvent(OOJSID("shipCollided"), other, "COLLISION");
     if (other != nullptr)
@@ -11816,7 +12222,8 @@ Vector ShipEntity::thrustVector()
 
 Vector ShipEntity::getVelocity()
 {
-    return vector_add(OOEntityWithDrawable::getVelocity(), thrustVector()); // [super velocity]
+    return vector_add(OOEntityWithDrawable::getVelocity(),
+        thrustVector()); // [super velocity]
 }
 
 void ShipEntity::setTotalVelocity(Vector vel)
@@ -11852,12 +12259,14 @@ bool ShipEntity::canScoop(::ShipEntity* other)
     if ((other != nullptr ? other->getIsStation() : false))
         return NO;
 
-    HPVector loc = HPvector_between(position, (other != nullptr ? other->getPosition() : HPVector { }));
+    HPVector loc = HPvector_between(
+        position, (other != nullptr ? other->getPosition() : HPVector { }));
 
     if (dot_product(v_forward, HPVectorToVector(loc)) < 0.0f)
         return NO; // Must be in front of us
     if (getIsPlayer() && dot_product(v_up, HPVectorToVector(loc)) > 0.0f)
-        return NO; // player has to scoop on underside, give more flexibility to NPCs
+        return NO; // player has to scoop on underside, give more flexibility to
+                   // NPCs
 
     return YES;
 }
@@ -11893,16 +12302,15 @@ void ShipEntity::scoopIn(::ShipEntity* other)
         other->getTractoredBy(this);
 }
 
-void ShipEntity::suppressTargetLost()
-{
-}
+void ShipEntity::suppressTargetLost() { }
 
 void ShipEntity::scoopUp(::ShipEntity* other)
 {
     scoopUpProcess(other, YES, YES);
 }
 
-void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents, bool procMessages)
+void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents,
+    bool procMessages)
 {
     if (other == nil)
         return;
@@ -11917,10 +12325,12 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents, bool procM
         return;
     }
 
-    switch (other != nullptr ? static_cast<int>(other->cargoType()) : 0) // (a message to nil answered 0)
+    switch (other != nullptr ? static_cast<int>(other->cargoType())
+                             : 0) // (a message to nil answered 0)
     {
     case CARGO_RANDOM:
-        co_type = (other != nullptr ? other->commodityType() : std::optional<std::string>());
+        co_type = (other != nullptr ? other->commodityType()
+                                    : std::optional<std::string>());
         co_amount = (other != nullptr ? other->commodityAmount() : 0);
         break;
 
@@ -11934,17 +12344,23 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents, bool procM
                 other->doScriptEvent(OOJSID("shipWasScooped"), this);
         }
 
-        if ((other != nullptr ? other->commodityType() : std::optional<std::string>()).has_value()) {
-            co_type = (other != nullptr ? other->commodityType() : std::optional<std::string>());
+        if ((other != nullptr ? other->commodityType()
+                              : std::optional<std::string>())
+                .has_value()) {
+            co_type = (other != nullptr ? other->commodityType()
+                                        : std::optional<std::string>());
             co_amount = (other != nullptr ? other->commodityAmount() : 0);
             // don't show scoop message now, will happen later.
         } else {
             if (isPlayer && (other != nullptr ? other->showScoopMessage() : false) && procMessages) {
                 if (UNIVERSE != nullptr)
                     UNIVERSE->clearPreviousMessage();
-                const std::optional<std::string> shipName = (other != nullptr ? other->getDisplayName() : std::optional<std::string>());
+                const std::optional<std::string> shipName = (other != nullptr ? other->getDisplayName()
+                                                                              : std::optional<std::string>());
                 if (UNIVERSE != nullptr)
-                    UNIVERSE->addMessage(ExpandKeyWithArgument("scripted-item-scooped", "shipName", shipName), 4);
+                    UNIVERSE->addMessage(ExpandKeyWithArgument("scripted-item-scooped",
+                                             "shipName", shipName),
+                        4);
             }
             if (other != nullptr)
                 other->setCommodityForPod(std::nullopt, 0);
@@ -11968,8 +12384,13 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents, bool procM
             -- Ahruman 20070714
     */
     if (!co_type.has_value() && co_amount > 0) {
-        co_type = std::optional<std::string>((UNIVERSE != nullptr ? UNIVERSE->getRandomCommodity() : std::string()));
-        co_amount = co_type.has_value() ? (UNIVERSE != nullptr ? UNIVERSE->getRandomAmountOfCommodity(*co_type) : 0) : 0;
+        co_type = std::optional<std::string>(
+            (UNIVERSE != nullptr ? UNIVERSE->getRandomCommodity() : std::string()));
+        co_amount = co_type.has_value()
+            ? (UNIVERSE != nullptr
+                      ? UNIVERSE->getRandomAmountOfCommodity(*co_type)
+                      : 0)
+            : 0;
     }
 
     if (co_amount > 0) {
@@ -11980,7 +12401,9 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents, bool procM
         cargo_flag = CARGO_FLAG_CANISTERS;
 
         if (isPlayer) {
-            const std::optional<std::vector<oo::Ref<OOCharacter>>> otherCrew = (other != nullptr ? other->getCrew() : std::optional<std::vector<oo::Ref<OOCharacter>>>());
+            const std::optional<std::vector<oo::Ref<OOCharacter>>> otherCrew = (other != nullptr
+                    ? other->getCrew()
+                    : std::optional<std::vector<oo::Ref<OOCharacter>>>());
             if (otherCrew.has_value()) {
                 if ((other != nullptr ? other->showScoopMessage() : false) && procMessages) {
                     if (UNIVERSE != nullptr)
@@ -11991,10 +12414,16 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents, bool procM
                         const std::optional<std::string> characterName = rescuee->name();
                         if (rescuee->legalStatus()) {
                             if (UNIVERSE != nullptr)
-                                UNIVERSE->addMessage(ExpandKeyWithArgument("scoop-captured-character", "characterName", characterName), 4.5);
+                                UNIVERSE->addMessage(
+                                    ExpandKeyWithArgument("scoop-captured-character",
+                                        "characterName", characterName),
+                                    4.5);
                         } else if (rescuee->insuranceCredits()) {
                             if (UNIVERSE != nullptr)
-                                UNIVERSE->addMessage(ExpandKeyWithArgument("scoop-rescued-character", "characterName", characterName), 4.5);
+                                UNIVERSE->addMessage(
+                                    ExpandKeyWithArgument("scoop-rescued-character",
+                                        "characterName", characterName),
+                                    4.5);
                         } else {
                             if (UNIVERSE != nullptr)
                                 UNIVERSE->addMessage(OO_DESC("scoop-got-slave"), 4.5);
@@ -12009,11 +12438,18 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents, bool procM
                     if (UNIVERSE != nullptr)
                         UNIVERSE->clearPreviousMessage();
                     if (UNIVERSE != nullptr)
-                        UNIVERSE->addMessage((UNIVERSE != nullptr ? UNIVERSE->describeCommodity(co_type.value_or(""), co_amount) : std::optional<std::string>()), 4.5);
+                        UNIVERSE->addMessage(
+                            (UNIVERSE != nullptr ? UNIVERSE->describeCommodity(
+                                                       co_type.value_or(""), co_amount)
+                                                 : std::optional<std::string>()),
+                            4.5);
                 }
             }
         }
-        cargo.insert(cargo.begin(), oo::EntityHold(other)); // places most recently scooped object at eject position
+        cargo.insert(
+            cargo.begin(),
+            oo::EntityHold(
+                other)); // places most recently scooped object at eject position
         if (other != nullptr)
             other->setStatus(STATUS_IN_HOLD);
         if (other != nullptr)
@@ -12026,7 +12462,8 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents, bool procM
         }
     }
     if (procEvents) {
-        doScriptEvent(OOJSID("shipScoopedOther"), other); // always fire, even without commodity.
+        doScriptEvent(OOJSID("shipScoopedOther"),
+            other); // always fire, even without commodity.
     }
 
     // if shipScoopedOther does something strange to the object, we must
@@ -12038,8 +12475,11 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents, bool procM
         }
     }
 
-    if (std::vector<oo::EntityHold>* colliding = (other != nullptr ? other->getCollidingEntities() : (std::vector<oo::EntityHold>*)nullptr))
-        std::erase_if(*colliding, [this](const oo::EntityHold& e) { return e.get() == this; }); // -removeObject:, so it can't be scooped twice!
+    if (std::vector<oo::EntityHold>* colliding = (other != nullptr ? other->getCollidingEntities()
+                                                                   : (std::vector<oo::EntityHold>*)nullptr))
+        std::erase_if(*colliding, [this](const oo::EntityHold& e) {
+            return e.get() == this;
+        }); // -removeObject:, so it can't be scooped twice!
     // make sure other ships trying to scoop it lose it
     // probably already happened, but some may have acquired it
     // after the scooping started, and they might get stuck in a scooping
@@ -12060,11 +12500,11 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents, bool procM
         UNIVERSE->removeEntity(other);
 }
 
-// Slice 31 of docs/phases/3-slices/ShipEntity.md (bead oo-gx86h): cascades, energy / scrape / heat
-// damage, abandoning ship, docks, wormholes, witchspace. Members of the C++ ship, called directly,
-// since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Cascades, energy / scrape / heat damage, abandoning ship, docks, wormholes,
+// witchspace. Members of the C++ ship.
 
-bool ShipEntity::cascadeIfAppropriateWithDamageAmount(double amount, Entity* /* owner */)
+bool ShipEntity::cascadeIfAppropriateWithDamageAmount(double amount,
+    Entity* /* owner */)
 {
     BOOL cascade = NO;
     switch (getScanClass()) {
@@ -12075,7 +12515,8 @@ bool ShipEntity::cascadeIfAppropriateWithDamageAmount(double amount, Entity* /* 
     case CLASS_BUOY:
         // does not normally cascade
         if ((fuel > MIN_FUEL) || isStation) {
-            // we have fuel onboard so we can still go pop, or we are a station which can
+            // we have fuel onboard so we can still go pop, or we are a station
+            // which can
         } else
             break;
 
@@ -12090,11 +12531,14 @@ bool ShipEntity::cascadeIfAppropriateWithDamageAmount(double amount, Entity* /* 
     case CLASS_NO_DRAW:
     case CLASS_NEUTRAL:
     case CLASS_TARGET:
-        // ...start a chain reaction, if we're dying and have a non-trivial amount of energy.
+        // ...start a chain reaction, if we're dying and have a non-trivial amount
+        // of energy.
         if (energy < amount && energy > 10 && countsAsKill()) {
-            cascade = YES; // confirm we're cascading, then try to add our cascade to UNIVERSE.
+            cascade = YES; // confirm we're cascading, then try to add our cascade
+                           // to UNIVERSE.
             if (UNIVERSE != nullptr)
-                UNIVERSE->addEntity(oo::MadeEntity(OOQuiriumCascadeEntity::quiriumCascadeFromShip(this)));
+                UNIVERSE->addEntity(oo::MadeEntity(
+                    OOQuiriumCascadeEntity::quiriumCascadeFromShip(this)));
         }
         break;
         // no default thanks, we want the compiler to tell us if we missed a case.
@@ -12102,7 +12546,9 @@ bool ShipEntity::cascadeIfAppropriateWithDamageAmount(double amount, Entity* /* 
     return cascade;
 }
 
-void ShipEntity::takeEnergyDamage(double amount, Entity* entPart, Entity* otherPart, const std::string& /* weaponIdentifier */)
+void ShipEntity::takeEnergyDamage(double amount, Entity* entPart,
+    Entity* otherPart,
+    const std::string& /* weaponIdentifier */)
 {
     if (status() == STATUS_DEAD)
         return;
@@ -12112,7 +12558,8 @@ void ShipEntity::takeEnergyDamage(double amount, Entity* entPart, Entity* otherP
     BOOL energyMine = OOEntityIsCascadeWeapon(entPart);
     BOOL cascade = NO;
     if (energyMine) {
-        cascade = cascadeIfAppropriateWithDamageAmount(amount, oo::LiveOwner(entPart)); // [ent owner]'s C++ entity
+        cascade = cascadeIfAppropriateWithDamageAmount(
+            amount, oo::LiveOwner(entPart)); // [ent owner]'s C++ entity
     }
 
     energy -= amount;
@@ -12120,7 +12567,8 @@ void ShipEntity::takeEnergyDamage(double amount, Entity* entPart, Entity* otherP
      * overheating - too easy for missile hits to cause an uncredited
      * death by overheating - CIM */
     if (ship_temperature < SHIP_MAX_CABIN_TEMP) {
-        ship_temperature += amount * (mass > 400000 ? 200000 / mass : 0.5) / heatInsulation(); // SHIP_ENERGY_DAMAGE_TO_HEAT_FACTOR, which named the facade's C++ entity
+        ship_temperature += amount * (mass > 400000 ? 200000 / mass : 0.5) / heatInsulation(); // SHIP_ENERGY_DAMAGE_TO_HEAT_FACTOR, which named the
+                                                                                               // facade's C++ entity
         if (ship_temperature > SHIP_MAX_CABIN_TEMP) {
             ship_temperature = SHIP_MAX_CABIN_TEMP;
         }
@@ -12135,13 +12583,17 @@ void ShipEntity::takeEnergyDamage(double amount, Entity* entPart, Entity* otherP
 
     // must check for this before potentially deleting 'other' for cloaking
     if ((otherPart) && (oo::EntityIsShip(otherPart))) {
-        being_mined = ((oo::ToShip(otherPart) != nullptr ? oo::ToShip(otherPart)->isMining() : false) != NO);
+        being_mined = ((oo::ToShip(otherPart) != nullptr ? oo::ToShip(otherPart)->isMining()
+                                                         : false)
+            != NO);
     }
 
-    if (hunter != nil && oo::LiveOwner(this) != hunter) // our owner could be the same entity as the one responsible for our taking damage in the case of submunitions
+    if (hunter != nil && oo::LiveOwner(this) != hunter) // our owner could be the same entity as the one responsible
+                                                        // for our taking damage in the case of submunitions
     {
         if ((hunter != nullptr ? hunter->isCloaked() : false)) {
-            doScriptEvent(OOJSID("shipBeingAttackedByCloaked"), "ATTACKED_BY_CLOAKED");
+            doScriptEvent(OOJSID("shipBeingAttackedByCloaked"),
+                "ATTACKED_BY_CLOAKED");
 
             // lose it!
             otherPart = nullptr;
@@ -12187,7 +12639,9 @@ void ShipEntity::takeEnergyDamage(double amount, Entity* entPart, Entity* otherP
                     }
                 }
                 if (isPirate()) {
-                    for (const oo::EntityHold& otherPirateRef : (group != nullptr ? group->memberArray() : std::vector<oo::EntityHold>())) {
+                    for (const oo::EntityHold& otherPirateRef :
+                        (group != nullptr ? group->memberArray()
+                                          : std::vector<oo::EntityHold>())) {
                         ::ShipEntity* otherPirate = oo::ToShip(otherPirateRef.get());
                         if (otherPirate != this && randf() < 0.5) // 50% chance they'll help
                         {
@@ -12200,7 +12654,9 @@ void ShipEntity::takeEnergyDamage(double amount, Entity* entPart, Entity* otherP
                         }
                     }
                 } else if (iAmTheLaw) {
-                    for (const oo::EntityHold& otherPoliceRef : (group != nullptr ? group->memberArray() : std::vector<oo::EntityHold>())) {
+                    for (const oo::EntityHold& otherPoliceRef :
+                        (group != nullptr ? group->memberArray()
+                                          : std::vector<oo::EntityHold>())) {
                         ::ShipEntity* otherPolice = oo::ToShip(otherPoliceRef.get());
                         if (otherPolice != this) {
                             if (otherPolice != nullptr)
@@ -12231,7 +12687,8 @@ void ShipEntity::takeEnergyDamage(double amount, Entity* entPart, Entity* otherP
                 if (hunter != nullptr)
                     hunter->setBehaviour(BEHAVIOUR_ATTACK_FLY_FROM_TARGET);
                 if (hunter != nullptr)
-                    hunter->setDesiredSpeed((hunter != nullptr ? hunter->getMaxFlightSpeed() : 0.0f));
+                    hunter->setDesiredSpeed(
+                        (hunter != nullptr ? hunter->getMaxFlightSpeed() : 0.0f));
             }
         }
     }
@@ -12245,7 +12702,8 @@ void ShipEntity::takeEnergyDamage(double amount, Entity* entPart, Entity* otherP
     if (!suppressExplosion) {
         noteTakingDamage(amount, otherPart, damageType);
         if (cascade)
-            energy = 0.0; // explicit set energy to zero in case an oxp raised the energy in previous line.
+            energy = 0.0; // explicit set energy to zero in case an oxp raised the
+                          // energy in previous line.
     }
 
     // die if I'm out of energy
@@ -12274,22 +12732,29 @@ bool ShipEntity::abandonShip()
 {
     BOOL OK = NO;
     if (getIsPlayer() && static_cast<PlayerEntity*>(this)->isDocked()) {
-        OO_LOG("ShipEntity.abandonShip.failed", "{}", "Player cannot abandon ship while docked.");
+        OO_LOG("ShipEntity.abandonShip.failed", "{}",
+            "Player cannot abandon ship while docked.");
         return OK;
     }
 
     if (!hasEscapePod()) {
-        OO_LOG("ShipEntity.abandonShip.failed", "Ship abandonment was requested for {}, but this ship does not carry escape pod(s).", oo::EntityDescription(this));
+        OO_LOG("ShipEntity.abandonShip.failed",
+            "Ship abandonment was requested for {}, but this ship does not "
+            "carry escape pod(s).",
+            oo::EntityDescription(this));
         return OK;
     }
 
-    if (EXPECT(launchEscapeCapsule() != nil)) // oo::ToShip(NO_TARGET)	// -launchEscapeCapsule takes care of everything for the player
+    if (EXPECT(launchEscapeCapsule() != nil)) // oo::ToShip(NO_TARGET)	// -launchEscapeCapsule takes
+                                              // care of everything for the player
     {
         if (!getIsPlayer()) {
             OK = YES;
-            // if multiple items providing escape pod, remove all of them (NPC process)
+            // if multiple items providing escape pod, remove all of them (NPC
+            // process)
             while (hasEquipmentItemProviding("EQ_ESCAPE_POD")) {
-                removeEquipmentItem(equipmentItemProviding("EQ_ESCAPE_POD").value_or(std::string()));
+                removeEquipmentItem(
+                    equipmentItemProviding("EQ_ESCAPE_POD").value_or(std::string()));
             }
             setAITo("nullAI.plist");
             behaviour = BEHAVIOUR_IDLE;
@@ -12305,7 +12770,8 @@ bool ShipEntity::abandonShip()
                 setOwner(nullptr); // unset owner, but not if we are a subent
             if (hasEscorts()) {
                 ::OOShipGroup* escortGroup = this->escortGroup();
-                // Note: works on escortArray rather than escortEnumerator because escorts may be mutated.
+                // Note: works on escortArray rather than escortEnumerator because
+                // escorts may be mutated.
                 for (const auto& escortRef : escortArray()) {
                     ::ShipEntity* escort = oo::ToShip(escortRef.get());
                     // act individually now!
@@ -12327,12 +12793,15 @@ bool ShipEntity::abandonShip()
         // may still have launched passenger pods even if no crew
         // if multiple items providing escape pod, remove all of them (NPC process)
         while (hasEquipmentItemProviding("EQ_ESCAPE_POD")) {
-            removeEquipmentItem(equipmentItemProviding("EQ_ESCAPE_POD").value_or(std::string()));
+            removeEquipmentItem(
+                equipmentItemProviding("EQ_ESCAPE_POD").value_or(std::string()));
         }
 
     } else {
         // this shouldn't happen any more!
-        OO_LOG("ShipEntity.abandonShip.notPossible", "Ship {} cannot be abandoned at this time.", oo::EntityDescription(this));
+        OO_LOG("ShipEntity.abandonShip.notPossible",
+            "Ship {} cannot be abandoned at this time.",
+            oo::EntityDescription(this));
     }
     return OK;
 }
@@ -12420,7 +12889,8 @@ void ShipEntity::enterDock(::StationEntity* station)
 
 void ShipEntity::leaveDock(::StationEntity* station)
 {
-    // This code is never used. Currently npc ships are only launched from the stations launch queue.
+    // This code is never used. Currently npc ships are only launched from the
+    // stations launch queue.
     if (station == nil)
         return;
 
@@ -12445,10 +12915,13 @@ void ShipEntity::enterWormhole(::WormholeEntity* w_hole, bool /* replacing */)
     // MKW 2011.02.27 - Moved here from ShipEntityAI so escorts reliably follow
     //                  mother in all wormhole cases, not just when the ship
     //                  creates the wormhole.
-    addTarget(w_hole); // its Objective-C object (C++ since bead oo-9ht.112)
+    addTarget(w_hole); // its Objective-C object
     setFoundTarget(w_hole);
     if (shipAI != nullptr)
-        shipAI->reactToMessage("WITCHSPACE OKAY", "performHyperSpaceExit"); // must be a reaction, the ship is about to disappear
+        shipAI->reactToMessage(
+            "WITCHSPACE OKAY",
+            "performHyperSpaceExit"); // must be a reaction, the ship is about to
+                                      // disappear
 
     // CIM 2012.07.22 above only covers those cases where ship expected to leave
     if (escortArray().size() > 1) {
@@ -12473,7 +12946,9 @@ void ShipEntity::enterWitchspace()
     if (shipAI != nullptr)
         shipAI->message("ENTERED_WITCHSPACE");
 
-    if (!((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr ? UNIVERSE->sun()->willGoNova() : false)) {
+    if (!((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr
+                ? UNIVERSE->sun()->willGoNova()
+                : false)) {
         // if the sun's not going nova, add a new ship like this one leaving.
         if (UNIVERSE != nullptr)
             UNIVERSE->witchspaceShipWithPrimaryRole(getPrimaryRole().value_or(""));
@@ -12497,7 +12972,8 @@ void ShipEntity::leaveWitchspace()
         d1 = SCANNER_MAX_RANGE * (randf() - randf());
     }
 
-    HPVector exitposition = (UNIVERSE != nullptr ? UNIVERSE->getWitchspaceExitPosition() : HPVector { });
+    HPVector exitposition = (UNIVERSE != nullptr ? UNIVERSE->getWitchspaceExitPosition()
+                                                 : HPVector { });
     exitposition.x += v1.x * d1; // randomise exit position
     exitposition.y += v1.y * d1;
     exitposition.z += v1.z * d1;
@@ -12505,14 +12981,14 @@ void ShipEntity::leaveWitchspace()
     witchspaceLeavingEffects();
 }
 
-// Slice 32 of docs/phases/3-slices/ShipEntity.md (bead oo-5e0ny): witchspace effects, offences,
-// lights, escort formation and deployment, nearest stations. Members of the C++ ship, called
-// directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Witchspace effects, offences, lights, escort formation and deployment,
+// nearest stations. Members of the C++ ship.
 
 bool ShipEntity::witchspaceLeavingEffects()
 {
     // all ships exiting witchspace will share the same orientation.
-    orientation = (UNIVERSE != nullptr ? UNIVERSE->getWitchspaceExitRotation() : Quaternion { });
+    orientation = (UNIVERSE != nullptr ? UNIVERSE->getWitchspaceExitRotation()
+                                       : Quaternion { });
     flightRoll = 0.0;
     stick_roll = 0.0;
     flightPitch = 0.0;
@@ -12524,7 +13000,8 @@ bool ShipEntity::witchspaceLeavingEffects()
     // others slow down - CIM
     // will be overridden if left witchspace via a genuine wormhole
     velocity = kZeroVector;
-    if (!(UNIVERSE != nullptr ? UNIVERSE->addEntity(this) : false)) // AI and status get initialised here
+    if (!(UNIVERSE != nullptr ? UNIVERSE->addEntity(this)
+                              : false)) // AI and status get initialised here
     {
         return NO;
     }
@@ -12557,9 +13034,11 @@ void ShipEntity::markAsOffender(int offence_value, OOLegalStatusReason reason)
             ooscript::Context context = OOJSAcquireContext();
 
             ooscript::Value amountVal = ooscript::undefinedValue();
-            ooscript::newNumberValue(context, (bounty | offence_value) - bounty, &amountVal);
+            ooscript::newNumberValue(context, (bounty | offence_value) - bounty,
+                &amountVal);
 
-            bounty |= offence_value; // can't set the new bounty until the size of the change is known
+            bounty |= offence_value; // can't set the new bounty until the size of
+                                     // the change is known
 
             ooscript::Value reasonVal = OOJSValueFromLegalStatusReason(context, reason);
 
@@ -12602,10 +13081,7 @@ void ShipEntity::switchLightsOff()
     }
 }
 
-bool ShipEntity::lightsActive()
-{
-    return _lightsActive;
-}
+bool ShipEntity::lightsActive() { return _lightsActive; }
 
 void ShipEntity::setDestination(HPVector dest)
 {
@@ -12624,7 +13100,8 @@ bool ShipEntity::canAcceptEscort(::ShipEntity* potentialEscort)
     {
         return NO;
     }
-    if (scanClass != (potentialEscort != nullptr ? potentialEscort->getScanClass() : OOScanClass { })) // this makes sure that wingman can only select police, thargons only thargoids.
+    if (scanClass != (potentialEscort != nullptr ? potentialEscort->getScanClass() : OOScanClass { })) // this makes sure that wingman can only select
+                                                                                                       // police, thargons only thargoids.
     {
         return NO;
     }
@@ -12634,7 +13111,9 @@ bool ShipEntity::canAcceptEscort(::ShipEntity* potentialEscort)
     }
     if (!isEscort()) // self is NOT wingman or escort or thargon
     {
-        return (potentialEscort != nullptr ? potentialEscort->isEscort() : false); // is wingman or escort or thargon
+        return (potentialEscort != nullptr
+                ? potentialEscort->isEscort()
+                : false); // is wingman or escort or thargon
     }
     return NO;
 }
@@ -12649,21 +13128,26 @@ bool ShipEntity::acceptAsEscort(::ShipEntity* other_ship)
     if (status() != STATUS_IN_FLIGHT)
         return NO;
 
-    // increased stack depth at which it can accept escorts to avoid rejections at this stage.
-    // doesn't seem to have any adverse effect for now. - Kaks.
+    // increased stack depth at which it can accept escorts to avoid rejections at
+    // this stage. doesn't seem to have any adverse effect for now. - Kaks.
     if ((shipAI != nullptr ? shipAI->stackDepth() : NSUInteger { }) > 3) {
-        OO_LOG("ship.escort.reject", "{} rejecting escort {} because AI stack depth is {}.", oo::EntityDescription(this), oo::EntityDescription(other_ship), (shipAI != nullptr ? shipAI->stackDepth() : NSUInteger { }));
+        OO_LOG("ship.escort.reject",
+            "{} rejecting escort {} because AI stack depth is {}.",
+            oo::EntityDescription(this), oo::EntityDescription(other_ship),
+            (shipAI != nullptr ? shipAI->stackDepth() : NSUInteger { }));
         return NO;
     }
 
     if (canAcceptEscort(other_ship)) {
         ::OOShipGroup* escortGroup = this->escortGroup();
 
-        if ((escortGroup != nullptr ? escortGroup->containsShip(other_ship) : false))
+        if ((escortGroup != nullptr ? escortGroup->containsShip(other_ship)
+                                    : false))
             return YES;
 
         // check total number acceptable
-        // the system's patrols don't have escorts set inside their dictionary, but accept max escorts.
+        // the system's patrols don't have escorts set inside their dictionary, but
+        // accept max escorts.
         if (_maxEscortCount == 0 && (hasPrimaryRole("police") || hasPrimaryRole("hunter") || hasRole("thargoid-mothership"))) {
             _maxEscortCount = MAX_ESCORTS;
         }
@@ -12685,7 +13169,8 @@ bool ShipEntity::acceptAsEscort(::ShipEntity* other_ship)
                 cruiseSpeed = (other_ship != nullptr ? other_ship->getMaxFlightSpeed() : 0.0f) * 0.99;
             }
 
-            OO_LOG("ship.escort.accept", "{} accepting escort {}.", oo::EntityDescription(this), oo::EntityDescription(other_ship));
+            OO_LOG("ship.escort.accept", "{} accepting escort {}.",
+                oo::EntityDescription(this), oo::EntityDescription(other_ship));
 
             doScriptEvent(OOJSID("shipAcceptedEscort"), other_ship);
             if (other_ship != nullptr)
@@ -12694,41 +13179,48 @@ bool ShipEntity::acceptAsEscort(::ShipEntity* other_ship)
                 shipAI->message("ACCEPTED_ESCORT");
             return YES;
         } else {
-            OO_LOG("ship.escort.reject", "{} already got max escorts({}). Escort rejected: {}.", oo::EntityDescription(this), escortCount, oo::EntityDescription(other_ship));
+            OO_LOG("ship.escort.reject",
+                "{} already got max escorts({}). Escort rejected: {}.",
+                oo::EntityDescription(this), escortCount,
+                oo::EntityDescription(other_ship));
         }
     } else {
-        OO_LOG("ship.escort.reject", "{} failed canAcceptEscort for escort {}.", oo::EntityDescription(this), oo::EntityDescription(other_ship));
+        OO_LOG("ship.escort.reject", "{} failed canAcceptEscort for escort {}.",
+            oo::EntityDescription(this), oo::EntityDescription(other_ship));
     }
 
     return NO;
 }
 
 // Exposed to AI
-void ShipEntity::updateEscortFormation()
-{
-    _escortPositionsValid = NO;
-}
+void ShipEntity::updateEscortFormation() { _escortPositionsValid = NO; }
 
 /*
-        NOTE: it's tempting to call refreshEscortPositions from coordinatesForEscortPosition:
-        as needed, but that would cause unnecessary extra work if the formation
-        callback itself calls updateEscortFormation.
+        NOTE: it's tempting to call refreshEscortPositions from
+   coordinatesForEscortPosition: as needed, but that would cause unnecessary
+   extra work if the formation callback itself calls updateEscortFormation.
 */
 void ShipEntity::refreshEscortPositions()
 {
     if (!_escortPositionsValid) {
         ooscript::Context context = OOJSAcquireContext();
         ooscript::Value result;
-        ooscript::Value args[] = { ooscript::int32Value(0), ooscript::int32Value(_maxEscortCount) };
+        ooscript::Value args[] = { ooscript::int32Value(0),
+            ooscript::int32Value(_maxEscortCount) };
         BOOL OK;
 
-        // Reset validity first so updateEscortFormation can be called from the update callback.
+        // Reset validity first so updateEscortFormation can be called from the
+        // update callback.
         _escortPositionsValid = YES;
 
         uint8_t i;
         for (i = 0; i < _maxEscortCount; i++) {
             args[0] = ooscript::int32Value(i);
-            OK = (script != nullptr ? script->callMethod(OOJSID("coordinatesForEscortPosition"), context, args, sizeof args / sizeof *args, &result) : false);
+            OK = (script != nullptr
+                    ? script->callMethod(OOJSID("coordinatesForEscortPosition"),
+                          context, args, sizeof args / sizeof *args,
+                          &result)
+                    : false);
 
             if (OK)
                 OK = JSValueToVector(context, result, &_escortPositions[i]);
@@ -12744,25 +13236,31 @@ void ShipEntity::refreshEscortPositions()
 HPVector ShipEntity::coordinatesForEscortPosition(unsigned idx)
 {
     /*
-            This function causes problems with Thargoids: their missiles (aka Thargons) are automatically
-            added to the escorts group, and when a mother ship dies all thargons will attach themselves
-            as escorts to the surviving battleships. This can lead to huge escort groups.
+            This function causes problems with Thargoids: their missiles (aka
+       Thargons) are automatically added to the escorts group, and when a mother
+       ship dies all thargons will attach themselves as escorts to the surviving
+       battleships. This can lead to huge escort groups.
             TODO: better handling of Thargoid groups:
-                    - put thargons (& all other thargon missiles) in their own non-escort group perhaps?
+                    - put thargons (& all other thargon missiles) in their own
+       non-escort group perhaps?
     */
 
     // The _escortPositions array is always MAX_ESCORTS long.
-    // Kludge: return the same last escort position if we have escorts above MAX_ESCORTS...
+    // Kludge: return the same last escort position if we have escorts above
+    // MAX_ESCORTS...
     idx = MIN(idx, (unsigned)(MAX_ESCORTS - 1));
 
-    return HPvector_add(position, vectorToHPVector(quaternion_rotate_vector(normalOrientation(), _escortPositions[idx])));
+    return HPvector_add(position,
+        vectorToHPVector(quaternion_rotate_vector(
+            normalOrientation(), _escortPositions[idx])));
 }
 
 // Exposed to AI
 void ShipEntity::deployEscorts()
 {
     ::ShipEntity* target = nil;
-    std::vector<oo::EntityHold> idleEscorts; // in escort order (was a mutable set: hash order)
+    std::vector<oo::EntityHold>
+        idleEscorts; // in escort order (was a mutable set: hash order)
     unsigned deployCount;
 
     if (primaryTarget() == nil || _escortGroup == nil)
@@ -12786,12 +13284,18 @@ void ShipEntity::deployEscorts()
     // Find idle escorts
     for (const auto& escortRef : escorts()) {
         ::ShipEntity* escort = oo::ToShip(escortRef.get());
-        if ((escort != nullptr && escort->getAI() != nullptr ? escort->getAI()->name() : std::optional<std::string>()).value_or(std::string()) != "interceptAI.plist" && !(escort != nullptr ? escort->hasNewAI() : false)) {
+        if ((escort != nullptr && escort->getAI() != nullptr
+                    ? escort->getAI()->name()
+                    : std::optional<std::string>())
+                    .value_or(std::string())
+                != "interceptAI.plist"
+            && !(escort != nullptr ? escort->hasNewAI() : false)) {
             idleEscorts.push_back(escortRef);
         } else if ((escort != nullptr ? escort->hasNewAI() : false)) {
             // JS-based escorts get a help request
             if (escort != nullptr)
-                escort->doScriptEvent(OOJSID("helpRequestReceived"), this, primaryTarget());
+                escort->doScriptEvent(OOJSID("helpRequestReceived"), this,
+                    primaryTarget());
         }
     }
 
@@ -12828,7 +13332,8 @@ void ShipEntity::dockEscorts()
     ::OOShipGroup* escortGroup = this->escortGroup();
     ::ShipEntity* target = oo::ToShip(primaryTarget());
     unsigned i = 0;
-    // Note: works on escortArray rather than escortEnumerator because escorts may be mutated.
+    // Note: works on escortArray rather than escortEnumerator because escorts may
+    // be mutated.
     for (const auto& escortRef : escortArray()) {
         ::ShipEntity* escort = oo::ToShip(escortRef.get());
         float delay = i++ * 3.0 + 1.5; // send them off at three second intervals
@@ -12855,14 +13360,16 @@ void ShipEntity::dockEscorts()
                 ai->setState("ABORT", delay + 0.25);
         }
         if (escort != nullptr)
-            escort->doScriptEvent(OOJSID("escortDock"), { oo::PList::singleReal(delay) });
+            escort->doScriptEvent(OOJSID("escortDock"),
+                { oo::PList::singleReal(delay) });
     }
 
     // We now have no escorts.
     _escortGroup = nullptr;
 }
 
-void ShipEntity::setTargetToNearestStationIncludingHostiles(bool includeHostiles)
+void ShipEntity::setTargetToNearestStationIncludingHostiles(
+    bool includeHostiles)
 {
     // check if the groupID (parent ship) points to a station...
     Entity* mother = (group() != nullptr ? group()->leader() : (::ShipEntity*)nil);
@@ -12885,7 +13392,8 @@ void ShipEntity::setTargetToNearestStationIncludingHostiles(bool includeHostiles
             my_entities[station_count++] = oo::RetainEntity(uni_entities[i]); //	retained
     //
     ::StationEntity *thing = nil, *station = nil;
-    double range2, nearest2 = SCANNER_MAX_RANGE2 * 1000000.0; // 1000x typical scanner range (25600 km), squared.
+    double range2,
+        nearest2 = SCANNER_MAX_RANGE2 * 1000000.0; // 1000x typical scanner range (25600 km), squared.
     for (i = 0; i < station_count; i++) {
         thing = oo::ToStation(my_entities[i]);
         range2 = HPdistance2(position, thing->position);
@@ -12948,9 +13456,8 @@ void ShipEntity::setTargetToSystemStation()
     return;
 }
 
-// Slice 33 of docs/phases/3-slices/ShipEntity.md (bead oo-tz2ra): landing, docking abort,
-// broadcasts and comms, fines, AI messages, spawning, close contacts, salvage. Members of the C++
-// ship, called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment oo-9ht.144).
+// Landing, docking abort, broadcasts and comms, fines, AI messages, spawning,
+// close contacts, salvage. Members of the C++ ship.
 
 void ShipEntity::landOnPlanet(::OOPlanetEntity* planet)
 {
@@ -12962,7 +13469,8 @@ void ShipEntity::landOnPlanet(::OOPlanetEntity* planet)
 
 #ifndef NDEBUG
     if (getReportAIMessages()) {
-        OO_LOG("planet.collide.shuttleLanded", "DEBUG: {} landed on planet {}", oo::EntityDescription(this), oo::EntityDescription(planet));
+        OO_LOG("planet.collide.shuttleLanded", "DEBUG: {} landed on planet {}",
+            oo::EntityDescription(this), oo::EntityDescription(planet));
     }
 #endif
 
@@ -12974,22 +13482,26 @@ void ShipEntity::landOnPlanet(::OOPlanetEntity* planet)
 void ShipEntity::abortDocking()
 {
     // -makeObjectsPerformSelector:withObject: of the stations, in order
-    for (const oo::EntityHold& station : (UNIVERSE != nullptr ? UNIVERSE->findEntitiesMatchingPredicate(IsStationPredicate, nullptr, -1, nullptr) : std::vector<oo::EntityHold>())) {
+    for (const oo::EntityHold& station :
+        (UNIVERSE != nullptr ? UNIVERSE->findEntitiesMatchingPredicate(
+                                   IsStationPredicate, nullptr, -1, nullptr)
+                             : std::vector<oo::EntityHold>())) {
         if (oo::ToStation(station.get()) != nullptr)
             oo::ToStation(station.get())->abortDockingForShip(this);
     }
 }
 
-oo::PList ShipEntity::getDockingInstructions()
-{
-    return dockingInstructions;
-}
+oo::PList ShipEntity::getDockingInstructions() { return dockingInstructions; }
 
 void ShipEntity::broadcastThargoidDestroyed()
 {
     std::string role = "tharglet";
     // -makeObjectsPerformSelector:withObject: of the ships, in order
-    for (const oo::EntityHold& ship : (UNIVERSE != nullptr ? UNIVERSE->findShipsMatchingPredicate(HasRolePredicate, &role, SCANNER_MAX_RANGE, this) : std::vector<oo::EntityHold>())) {
+    for (const oo::EntityHold& ship :
+        (UNIVERSE != nullptr
+                ? UNIVERSE->findShipsMatchingPredicate(HasRolePredicate, &role,
+                      SCANNER_MAX_RANGE, this)
+                : std::vector<oo::EntityHold>())) {
         if (oo::ToShip(ship.get()) != nullptr)
             oo::ToShip(ship.get())->sendAIMessage("THARGOID_DESTROYED");
     }
@@ -12997,7 +13509,8 @@ void ShipEntity::broadcastThargoidDestroyed()
 
 void ShipEntity::broadcastHitByLaserFrom(::ShipEntity* aggressor_ship)
 {
-    /*-- If you're clean, locates all police and stations in range and tells them OFFENCE_COMMITTED --*/
+    /*-- If you're clean, locates all police and stations in range and tells them
+     * OFFENCE_COMMITTED --*/
     if (!UNIVERSE)
         return;
     if (getBounty())
@@ -13007,28 +13520,37 @@ void ShipEntity::broadcastHitByLaserFrom(::ShipEntity* aggressor_ship)
 
     if ((scanClass == CLASS_NEUTRAL) || (scanClass == CLASS_STATION) || (scanClass == CLASS_BUOY) || (scanClass == CLASS_POLICE) || (scanClass == CLASS_MILITARY) || (scanClass == CLASS_PLAYER)) // only for active ships...
     {
-        AuthorityPredicateParameter param = { this, (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr), (bool)withinStationAegis() };
-        const std::vector<oo::EntityHold> authorities = (UNIVERSE != nullptr ? UNIVERSE->findShipsMatchingPredicate(AuthorityPredicate, &param, -1, nullptr) : std::vector<oo::EntityHold>());
+        AuthorityPredicateParameter param = {
+            this, (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr),
+            (bool)withinStationAegis()
+        };
+        const std::vector<oo::EntityHold> authorities = (UNIVERSE != nullptr ? UNIVERSE->findShipsMatchingPredicate(
+                                                                                   AuthorityPredicate, &param, -1, nullptr)
+                                                                             : std::vector<oo::EntityHold>());
         for (const auto& authority : authorities) {
             ::ShipEntity* auth = oo::ToShip(authority.get());
             if (auth != nullptr)
                 auth->setFoundTarget(aggressor_ship);
             if (auth != nullptr)
-                auth->doScriptEvent(OOJSID("offenceCommittedNearby"), aggressor_ship, this);
+                auth->doScriptEvent(OOJSID("offenceCommittedNearby"), aggressor_ship,
+                    this);
             if (auth != nullptr)
                 auth->reactToAIMessage("OFFENCE_COMMITTED", "combat update");
         }
     }
 }
 
-void ShipEntity::sendMessage(const std::string& message_text, ::ShipEntity* other_ship, bool unpilotedOverride)
+void ShipEntity::sendMessage(const std::string& message_text,
+    ::ShipEntity* other_ship, bool unpilotedOverride)
 {
     if (!other_ship)
         return;
     if (!crew && !unpilotedOverride)
         return;
 
-    double d2 = HPdistance2(position, (other_ship != nullptr ? other_ship->getPosition() : HPVector { }));
+    double d2 = HPdistance2(
+        position,
+        (other_ship != nullptr ? other_ship->getPosition() : HPVector { }));
     if (d2 > scannerRange * scannerRange)
         return; // out of comms range
 
@@ -13036,7 +13558,8 @@ void ShipEntity::sendMessage(const std::string& message_text, ::ShipEntity* othe
 
     if (other_ship->isPlayer) {
         setCommsMessageColor();
-        static_cast<PlayerEntity*>(other_ship)->receiveCommsMessage(expandedMessage, this);
+        static_cast<PlayerEntity*>(other_ship)
+            ->receiveCommsMessage(expandedMessage, this);
         messageTime = 6.0;
         if (UNIVERSE != nullptr)
             UNIVERSE->resetCommsLogColor();
@@ -13044,7 +13567,8 @@ void ShipEntity::sendMessage(const std::string& message_text, ::ShipEntity* othe
         other_ship->receiveCommsMessage(expandedMessage, this);
 }
 
-void ShipEntity::sendExpandedMessage(const std::string& message_text, ::ShipEntity* other_ship)
+void ShipEntity::sendExpandedMessage(const std::string& message_text,
+    ::ShipEntity* other_ship)
 {
     if (!other_ship || !crew)
         return; // nobody to receive or send the signal
@@ -13052,7 +13576,9 @@ void ShipEntity::sendExpandedMessage(const std::string& message_text, ::ShipEnti
         return; // don't send the same message too often
     lastRadioMessage = message_text;
 
-    double d2 = HPdistance2(position, (other_ship != nullptr ? other_ship->getPosition() : HPVector { }));
+    double d2 = HPdistance2(
+        position,
+        (other_ship != nullptr ? other_ship->getPosition() : HPVector { }));
     if (d2 > scannerRange * scannerRange) {
         // out of comms range
         return;
@@ -13067,16 +13593,21 @@ void ShipEntity::sendExpandedMessage(const std::string& message_text, ::ShipEnti
     very_random_seed.f = rand() & 255;
     seed_RNG_only_for_planet_description(very_random_seed);
 
-    // The specials dictionary as +dictionaryWithObjectsAndKeys: built it: it ended at the first nil.
+    // The specials dictionary as +dictionaryWithObjectsAndKeys: built it: it
+    // ended at the first nil.
     oo::PList::Dict specials;
     const std::optional<std::string> selfName = getDisplayName();
     if (selfName.has_value()) {
         specials["[self:name]"] = *selfName;
-        const std::optional<std::string> targetName = (other_ship != nullptr ? other_ship->identFromShip(this) : std::optional<std::string>());
+        const std::optional<std::string> targetName = (other_ship != nullptr ? other_ship->identFromShip(this)
+                                                                             : std::optional<std::string>());
         if (targetName.has_value())
             specials["[target:name]"] = *targetName;
     }
-    const std::optional<std::string> expandedMessage = cxx_OOExpandDescriptionString(OOStringExpanderDefaultRandomSeed(), message_text, oo::PList(std::move(specials)), oo::PList(), std::nullopt, kOOExpandNoOptions);
+    const std::optional<std::string> expandedMessage = cxx_OOExpandDescriptionString(OOStringExpanderDefaultRandomSeed(),
+        message_text,
+        oo::PList(std::move(specials)), oo::PList(),
+        std::nullopt, kOOExpandNoOptions);
 
     if (expandedMessage.has_value())
         sendMessage(*expandedMessage, other_ship, NO); // nil was not sent
@@ -13095,12 +13626,14 @@ void ShipEntity::broadcastAIMessage(const std::string& ai_message)
     }
 }
 
-void ShipEntity::broadcastMessage(const std::string& message_text, bool unpilotedOverride)
+void ShipEntity::broadcastMessage(const std::string& message_text,
+    bool unpilotedOverride)
 {
     const std::string expandedMessage = ExpandedText(message_text); // consistent with broadcast message.
 
     if (!crew && !unpilotedOverride)
-        return; // nobody to send the signal and no override for unpiloted craft is set
+        return; // nobody to send the signal and no override for unpiloted craft is
+                // set
 
     checkScanner();
     unsigned i;
@@ -13112,10 +13645,13 @@ void ShipEntity::broadcastMessage(const std::string& message_text, bool unpilote
         }
     }
 
-    ::PlayerEntity* player = PLAYER; // make sure that the player always receives a message when in range
+    ::PlayerEntity* player = PLAYER; // make sure that the player always receives
+                                     // a message when in range
     // SCANNER_MAX_RANGE2 because it's the player's scanner range
     // which is important
-    if (HPdistance2(position, (player != nullptr ? player->getPosition() : HPVector { })) < SCANNER_MAX_RANGE2) {
+    if (HPdistance2(position,
+            (player != nullptr ? player->getPosition() : HPVector { }))
+        < SCANNER_MAX_RANGE2) {
         setCommsMessageColor();
         if (player != nullptr)
             player->receiveCommsMessage(expandedMessage, this);
@@ -13128,20 +13664,24 @@ void ShipEntity::broadcastMessage(const std::string& message_text, bool unpilote
 void ShipEntity::setCommsMessageColor()
 {
     float hue = 0.0625f * (universalID & 15);
-    UNIVERSE->commLogGUI()->setTextColor(OOColor::colorWithHue(hue, 0.375f, 1.0f, 1.0f).get());
+    UNIVERSE->commLogGUI()->setTextColor(
+        OOColor::colorWithHue(hue, 0.375f, 1.0f, 1.0f).get());
     if (scanClass == CLASS_THARGOID)
         UNIVERSE->commLogGUI()->setTextColor(OOColor::greenColor().get());
     if (scanClass == CLASS_POLICE)
         UNIVERSE->commLogGUI()->setTextColor(OOColor::cyanColor().get());
 }
 
-void ShipEntity::receiveCommsMessage(const std::string& message_text, ::ShipEntity* other)
+void ShipEntity::receiveCommsMessage(const std::string& message_text,
+    ::ShipEntity* other)
 {
     // Too complex for AI scripts to handle, JS event only.
-    doScriptEvent(OOJSID("commsMessageReceived"), { oo::PList(message_text), oo::EntityObjectNode(other) });
+    doScriptEvent(OOJSID("commsMessageReceived"),
+        { oo::PList(message_text), oo::EntityObjectNode(other) });
 }
 
-void ShipEntity::commsMessage(const std::string& valueString, bool unpilotedOverride)
+void ShipEntity::commsMessage(const std::string& valueString,
+    bool unpilotedOverride)
 {
     Random_Seed very_random_seed;
     very_random_seed.a = rand() & 255;
@@ -13155,10 +13695,7 @@ void ShipEntity::commsMessage(const std::string& valueString, bool unpilotedOver
     broadcastMessage(valueString, unpilotedOverride);
 }
 
-bool ShipEntity::markedForFines()
-{
-    return being_fined;
-}
+bool ShipEntity::markedForFines() { return being_fined; }
 
 bool ShipEntity::markForFines()
 {
@@ -13170,7 +13707,8 @@ bool ShipEntity::markForFines()
 
 bool ShipEntity::isMining()
 {
-    return ((behaviour == BEHAVIOUR_ATTACK_MINING_TARGET) && ((forward_weapon_type != nullptr ? forward_weapon_type->isMiningLaser() : false)));
+    return (
+        (behaviour == BEHAVIOUR_ATTACK_MINING_TARGET) && ((forward_weapon_type != nullptr ? forward_weapon_type->isMiningLaser() : false)));
 }
 
 void ShipEntity::interpretAIMessage(const std::string& ms)
@@ -13182,16 +13720,21 @@ void ShipEntity::interpretAIMessage(const std::string& ms)
         if (tokens.size() < 3)
             return; // (-objectAtIndex: raised on a short message; never sent)
         int switcher_id = oo::str::intValue(tokens[1]); // Attacker that switched targets.
-        Entity* switcher = (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(switcher_id) : nullptr); // the C++ entity (bead oo-9ht.39.26)
+        Entity* switcher = (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(switcher_id)
+                                                : nullptr); // the C++ entity
         int rescuer_id = oo::str::intValue(tokens[2]); // New primary target of attacker.
-        Entity* rescuer = (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(rescuer_id) : nullptr);
+        Entity* rescuer = (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(rescuer_id)
+                                               : nullptr);
         if ((switcher == primaryAggressor()) && (switcher == primaryTarget()) && (switcher) && (rescuer) && (rescuer->isShip) && (thankedShip() != rescuer) && (scanClass != CLASS_THARGOID)) {
             ::ShipEntity* rescueShip = oo::ToShip(rescuer);
-            //			ShipEntity* switchingShip = (ShipEntity*)switcher;
+            //			ShipEntity* switchingShip =
+            //(ShipEntity*)switcher;
             if (scanClass == CLASS_POLICE) {
                 sendExpandedMessage("[police-thanks-for-assist]", rescueShip);
                 if (rescueShip != nullptr)
-                    rescueShip->setBounty((rescueShip != nullptr ? rescueShip->getBounty() : 0) * 0.80, kOOLegalStatusReasonAssistingPolice); // lower bounty by 20%
+                    rescueShip->setBounty(
+                        (rescueShip != nullptr ? rescueShip->getBounty() : 0) * 0.80,
+                        kOOLegalStatusReasonAssistingPolice); // lower bounty by 20%
             } else {
                 sendExpandedMessage("[thanks-for-assist]", rescueShip);
             }
@@ -13200,7 +13743,8 @@ void ShipEntity::interpretAIMessage(const std::string& ms)
     }
 }
 
-BoundingBox ShipEntity::findBoundingBoxRelativeTo(Entity* other, Vector _i, Vector _j, Vector _k)
+BoundingBox ShipEntity::findBoundingBoxRelativeTo(Entity* other, Vector _i,
+    Vector _j, Vector _k)
 {
     HPVector opv = other ? other->position : position;
     return findBoundingBoxRelativeToPosition(opv, _i, _j, _k);
@@ -13213,7 +13757,10 @@ void ShipEntity::spawn(const std::string& roles_number)
     NSUInteger number;
 
     if (tokens.size() != 2) {
-        OO_LOG("script.debug.syntax.addShips", "***** Could not spawn: \"{}\" (must be two tokens, role and number)", roles_number);
+        OO_LOG(
+            "script.debug.syntax.addShips",
+            "***** Could not spawn: \"{}\" (must be two tokens, role and number)",
+            roles_number);
         return;
     }
 
@@ -13255,7 +13802,8 @@ int ShipEntity::checkShipsInVicinityForWitchJumpExit()
         HPVector delta = HPvector_between(position, ship->position);
         GLfloat d2 = HPmagnitude2(delta);
         if (!(ship != nullptr ? ship->getIsPlayer() : false) || !(PLAYER != nullptr ? PLAYER->isDocked() : false)) { // player doesn't block if docked
-            if ((k * (ship != nullptr ? ship->getMass() : 0.0f) > d2) && (d2 < SCANNER_MAX_RANGE2)) // if you go off (typical) scanner from a blocker - it ceases to block
+            if ((k * (ship != nullptr ? ship->getMass() : 0.0f) > d2) && (d2 < SCANNER_MAX_RANGE2)) // if you go off (typical) scanner from a
+                                                                                                    // blocker - it ceases to block
                 result = (ship != nullptr ? ship->getUniversalID() : OOUniversalID { });
         }
     }
@@ -13266,10 +13814,7 @@ int ShipEntity::checkShipsInVicinityForWitchJumpExit()
     return result;
 }
 
-bool ShipEntity::getTrackCloseContacts()
-{
-    return trackCloseContacts;
-}
+bool ShipEntity::getTrackCloseContacts() { return trackCloseContacts; }
 
 void ShipEntity::setTrackCloseContacts(bool value)
 {
@@ -13282,14 +13827,15 @@ void ShipEntity::setTrackCloseContacts(bool value)
 }
 
 #if OO_SALVAGE_SUPPORT || defined(OO_DEBUG_MONITOR_ENABLED)
-// What oo::DescriptionOf printed for the deleted facade: "(null)" for none, else
-// <OORoleSet 0x...>{roles} (OODescription.h).
+// What oo::DescriptionOf printed for the deleted facade: "(null)" for none,
+// else <OORoleSet 0x...>{roles} (OODescription.h).
 namespace {
 std::string RoleSetDescription(::OORoleSet* roleSet)
 {
     if (roleSet == nullptr)
         return "(null)";
-    std::string result = oo::str::format("<OORoleSet %s>", oo::str::pointerDescription(roleSet).c_str());
+    std::string result = oo::str::format(
+        "<OORoleSet %s>", oo::str::pointerDescription(roleSet).c_str());
     if (const std::optional<std::string> components = roleSet->descriptionComponents())
         result += "{" + *components + "}";
     return result;
@@ -13303,28 +13849,36 @@ std::string RoleSetDescription(::OORoleSet* roleSet)
 void ShipEntity::claimAsSalvage()
 {
     // Create a bouy and beacon where the hulk is.
-    // Get the main GalCop station to launch a pilot boat to deliver a pilot to the hulk.
-    OO_LOG("claimAsSalvage.called", "claimAsSalvage called on {} {}", [this cxx_name].value_or("(null)"), RoleSetDescription(getRoleSet().get()));
+    // Get the main GalCop station to launch a pilot boat to deliver a pilot to
+    // the hulk.
+    OO_LOG("claimAsSalvage.called", "claimAsSalvage called on {} {}",
+        [this cxx_name].value_or("(null)"),
+        RoleSetDescription(getRoleSet().get()));
 
     // Not an abandoned hulk, so don't allow the salvage
     if (![this isHulk]) {
-        OO_LOG("claimAsSalvage.failed.notHulk", "{}", "claimAsSalvage failed because not a hulk");
+        OO_LOG("claimAsSalvage.failed.notHulk", "{}",
+            "claimAsSalvage failed because not a hulk");
         return;
     }
 
     // Set target to main station, and return now if it can't be found
     [this setTargetToSystemStation];
     if ([this primaryTarget] == nil) {
-        OO_LOG("claimAsSalvage.failed.noStation", "{}", "claimAsSalvage failed because did not find a station");
+        OO_LOG("claimAsSalvage.failed.noStation", "{}",
+            "claimAsSalvage failed because did not find a station");
         return;
     }
 
-    // Get the station to launch a pilot boat to bring a pilot out to the hulk (use a viper for now)
+    // Get the station to launch a pilot boat to bring a pilot out to the hulk
+    // (use a viper for now)
     ::StationEntity* station = oo::ToStation([this primaryTarget]);
-    OO_LOG("claimAsSalvage.requestingPilot", "{}", "claimAsSalvage asking station to launch a pilot boat");
+    OO_LOG("claimAsSalvage.requestingPilot", "{}",
+        "claimAsSalvage asking station to launch a pilot boat");
     [station launchShipWithRole:"pilot"];
     [this setReportAIMessages:YES];
-    OO_LOG("claimAsSalvage.success", "{}", "claimAsSalvage setting own state machine to capturedShipAI.plist");
+    OO_LOG("claimAsSalvage.success", "{}",
+        "claimAsSalvage setting own state machine to capturedShipAI.plist");
     [this setAITo:"capturedShipAI.plist"];
 }
 
@@ -13347,7 +13901,8 @@ void ShipEntity::sendCoordinatesToPilot()
 
             if ([this hasRole:"pilot"] == YES) {
                 if ([scanShip primaryTarget] == nil) {
-                    OO_LOG("ship.pilotage", "{}", "found pilot boat with no target, will use this one");
+                    OO_LOG("ship.pilotage", "{}",
+                        "found pilot boat with no target, will use this one");
                     pilot = scanShip;
                     [pilot setPrimaryRole:"pilot"];
                     break;
@@ -13370,10 +13925,8 @@ void ShipEntity::sendCoordinatesToPilot()
 }
 #endif
 
-// Slice 34 of docs/phases/3-slices/ShipEntity.md (bead oo-nkyn3): salvage pilot, debug dump, script
-// info, demo ship, script events and AI reactions, alert condition, shader helpers. Members of the
-// C++ ship, called directly, since bead oo-9ht.144 deleted the facade (ADR-0056 amendment
-// oo-9ht.144).
+// Salvage pilot, debug dump, script info, demo ship, script events and AI
+// reactions, alert condition, shader helpers. Members of the C++ ship.
 
 #if OO_SALVAGE_SUPPORT
 void ShipEntity::pilotArrived()
@@ -13393,21 +13946,31 @@ void ShipEntity::dumpSelfState()
 
     OO_LOG("dumpState.shipEntity", "Type: {}", shipDataKey().value_or("(null)"));
     OO_LOG("dumpState.shipEntity", "Name: {}", name.value_or("(null)"));
-    OO_LOG("dumpState.shipEntity", "Display Name: {}", getDisplayName().value_or("(null)"));
-    OO_LOG("dumpState.shipEntity", "Roles: {}", RoleSetDescription(getRoleSet().get()));
-    OO_LOG("dumpState.shipEntity", "Primary role: {}", primaryRole.value_or("(null)"));
-    OO_LOG("dumpState.shipEntity", "Script: {}", (script != nullptr) ? script->description() : std::string("(null)"));
+    OO_LOG("dumpState.shipEntity", "Display Name: {}",
+        getDisplayName().value_or("(null)"));
+    OO_LOG("dumpState.shipEntity", "Roles: {}",
+        RoleSetDescription(getRoleSet().get()));
+    OO_LOG("dumpState.shipEntity", "Primary role: {}",
+        primaryRole.value_or("(null)"));
+    OO_LOG("dumpState.shipEntity", "Script: {}",
+        (script != nullptr) ? script->description() : std::string("(null)"));
     OO_LOG("dumpState.shipEntity", "Subentity count: {}", subEntityCount());
-    OO_LOG("dumpState.shipEntity", "Behaviour: {}", cxx_OOStringFromBehaviour(behaviour));
+    OO_LOG("dumpState.shipEntity", "Behaviour: {}",
+        cxx_OOStringFromBehaviour(behaviour));
     Entity* target = primaryTarget();
-    OO_LOG("dumpState.shipEntity", "Target: {}", target != nullptr ? oo::EntityDescription(target) : std::string("<none>"));
-    OO_LOG("dumpState.shipEntity", "Destination: {}", cxx_HPVectorDescription(_destination));
-    OO_LOG("dumpState.shipEntity", "Other destination: {}", cxx_HPVectorDescription(coordinates));
+    OO_LOG("dumpState.shipEntity", "Target: {}",
+        target != nullptr ? oo::EntityDescription(target)
+                          : std::string("<none>"));
+    OO_LOG("dumpState.shipEntity", "Destination: {}",
+        cxx_HPVectorDescription(_destination));
+    OO_LOG("dumpState.shipEntity", "Other destination: {}",
+        cxx_HPVectorDescription(coordinates));
     OO_LOG("dumpState.shipEntity", "Waypoint count: {}", number_of_navpoints);
     OO_LOG("dumpState.shipEntity", "Desired speed: {:g}", desired_speed);
     OO_LOG("dumpState.shipEntity", "Thrust: {:g}", thrust);
     if (escortCount() != 0)
-        OO_LOG("dumpState.shipEntity", "Escort count: {}", static_cast<unsigned>(escortCount()));
+        OO_LOG("dumpState.shipEntity", "Escort count: {}",
+            static_cast<unsigned>(escortCount()));
     OO_LOG("dumpState.shipEntity", "Fuel: {}", fuel);
     OO_LOG("dumpState.shipEntity", "Fuel accumulator: {:g}", fuel_accumulator);
     OO_LOG("dumpState.shipEntity", "Missile count: {}", missiles);
@@ -13422,18 +13985,22 @@ void ShipEntity::dumpSelfState()
         } catch (...) {
             if (!oo::CurrentOOException())
                 throw;
-        } // was @catch (id exception) {}: the game's exceptions only (oo::Exception since oo-rskgl.1)
+        } // was @catch (id exception) {}: the game's exceptions only
+          // (oo::Exception)
         OOLogPopIndent();
     }
     OO_LOG("dumpState.shipEntity", "Accuracy: {:g}", accuracy);
     OO_LOG("dumpState.shipEntity", "Jink position: {}", VectorDescription(jink));
     OO_LOG("dumpState.shipEntity", "Frustration: {:g}", frustration);
     OO_LOG("dumpState.shipEntity", "Success factor: {:g}", success_factor);
-    OO_LOG("dumpState.shipEntity", "Shots fired: {}", static_cast<unsigned>(shot_counter));
+    OO_LOG("dumpState.shipEntity", "Shots fired: {}",
+        static_cast<unsigned>(shot_counter));
     OO_LOG("dumpState.shipEntity", "Time since shot: {:g}", shotTime());
-    OO_LOG("dumpState.shipEntity", "Spawn time: {:g} ({:g} seconds ago)", getSpawnTime(), timeElapsedSinceSpawn());
+    OO_LOG("dumpState.shipEntity", "Spawn time: {:g} ({:g} seconds ago)",
+        getSpawnTime(), timeElapsedSinceSpawn());
     if (isBeacon()) {
-        OO_LOG("dumpState.shipEntity", "Beacon code: {}", beaconCode().value_or("(null)"));
+        OO_LOG("dumpState.shipEntity", "Beacon code: {}",
+            beaconCode().value_or("(null)"));
     }
     OO_LOG("dumpState.shipEntity", "Hull temperature: {:g}", ship_temperature);
     OO_LOG("dumpState.shipEntity", "Heat insulation: {:g}", heatInsulation());
@@ -13466,14 +14033,12 @@ void ShipEntity::dumpSelfState()
 }
 #endif
 
-::OOScript* ShipEntity::getScript()
-{
-    return script.get();
-}
+::OOScript* ShipEntity::getScript() { return script.get(); }
 
 oo::PList ShipEntity::getScriptInfo()
 {
-    return scriptInfo.isNull() ? oo::PList(oo::PList::Dict { }) : scriptInfo; // empty rather than null
+    return scriptInfo.isNull() ? oo::PList(oo::PList::Dict { })
+                               : scriptInfo; // empty rather than null
 }
 
 void ShipEntity::overrideScriptInfo(const oo::PList& override)
@@ -13481,7 +14046,8 @@ void ShipEntity::overrideScriptInfo(const oo::PList& override)
     if (scriptInfo.isNull())
         scriptInfo = override;
     else if (!override.isNull()) {
-        // both are dictionaries: a copy with the override's entries added, replacing duplicates
+        // both are dictionaries: a copy with the override's entries added,
+        // replacing duplicates
         oo::PList::Dict newInfo = *scriptInfo.getIf<oo::PList::Dict>();
         for (const auto& [key, value] : *override.getIf<oo::PList::Dict>())
             newInfo[key] = value;
@@ -13489,10 +14055,7 @@ void ShipEntity::overrideScriptInfo(const oo::PList& override)
     }
 }
 
-Entity* ShipEntity::entityForShaderProperties()
-{
-    return rootShipEntity();
-}
+Entity* ShipEntity::entityForShaderProperties() { return rootShipEntity(); }
 
 void ShipEntity::setDemoShip(OOScalar rate)
 {
@@ -13503,20 +14066,11 @@ void ShipEntity::setDemoShip(OOScalar rate)
     setRoll(0.0f);
 }
 
-bool ShipEntity::getIsDemoShip()
-{
-    return isDemoShip;
-}
+bool ShipEntity::getIsDemoShip() { return isDemoShip; }
 
-void ShipEntity::setDemoStartTime(OOTimeAbsolute time)
-{
-    demoStartTime = time;
-}
+void ShipEntity::setDemoStartTime(OOTimeAbsolute time) { demoStartTime = time; }
 
-OOTimeAbsolute ShipEntity::getDemoStartTime()
-{
-    return demoStartTime;
-}
+OOTimeAbsolute ShipEntity::getDemoStartTime() { return demoStartTime; }
 
 // *** Script event dispatch.
 void ShipEntity::doScriptEvent(ooscript::PropertyId message)
@@ -13526,8 +14080,8 @@ void ShipEntity::doScriptEvent(ooscript::PropertyId message)
     OOJSRelinquishContext(context);
 }
 
-// With entities (bead oo-9ht.39.16): each entity's JS value, what OOJSValueFromNativeObject()
-// gave for its object (null for none). The id forms had no caller and are deleted (bead oo-4aq6a.6).
+// With entities: each entity's JS value, what OOJSValueFromNativeObject() gave
+// for its object (null for none).
 void ShipEntity::doScriptEvent(ooscript::PropertyId message, Entity* argument)
 {
     ooscript::Context context = OOJSAcquireContext();
@@ -13538,23 +14092,27 @@ void ShipEntity::doScriptEvent(ooscript::PropertyId message, Entity* argument)
     OOJSRelinquishContext(context);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId message, Entity* argument1, Entity* argument2)
+void ShipEntity::doScriptEvent(ooscript::PropertyId message, Entity* argument1,
+    Entity* argument2)
 {
     ooscript::Context context = OOJSAcquireContext();
 
-    ooscript::Value argv[2] = { OOJSEntityJSValue(argument1, context), OOJSEntityJSValue(argument2, context) };
+    ooscript::Value argv[2] = { OOJSEntityJSValue(argument1, context),
+        OOJSEntityJSValue(argument2, context) };
     doScriptEvent(message, context, argv, 2);
 
     OOJSRelinquishContext(context);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId message, const std::vector<oo::PList>& arguments)
+void ShipEntity::doScriptEvent(ooscript::PropertyId message,
+    const std::vector<oo::PList>& arguments)
 {
     ooscript::Context context = OOJSAcquireContext();
     unsigned i, argc;
     ooscript::Value* argv = NULL;
 
-    // Convert arguments to JS values and make them temporarily un-garbage-collectable.
+    // Convert arguments to JS values and make them temporarily
+    // un-garbage-collectable.
     argc = (unsigned)arguments.size();
     if (argc != 0) {
         argv = (decltype(argv))malloc(sizeof *argv * argc);
@@ -13580,14 +14138,17 @@ void ShipEntity::doScriptEvent(ooscript::PropertyId message, const std::vector<o
     OOJSRelinquishContext(context);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId message, ooscript::Value* argv, unsigned argc)
+void ShipEntity::doScriptEvent(ooscript::PropertyId message,
+    ooscript::Value* argv, unsigned argc)
 {
     ooscript::Context context = OOJSAcquireContext();
     doScriptEvent(message, context, argv, argc);
     OOJSRelinquishContext(context);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId message, ooscript::Context context, ooscript::Value* argv, unsigned argc)
+void ShipEntity::doScriptEvent(ooscript::PropertyId message,
+    ooscript::Context context, ooscript::Value* argv,
+    unsigned argc)
 {
     // This method is a bottleneck so that PlayerEntity can override at one point.
     if (script != nullptr)
@@ -13596,7 +14157,9 @@ void ShipEntity::doScriptEvent(ooscript::PropertyId message, ooscript::Context c
         aiScript->callMethod(message, context, argv, argc, NULL);
 }
 
-void ShipEntity::reactToAIMessage(const std::string& message, const std::optional<std::string>& debugContext)
+void ShipEntity::reactToAIMessage(
+    const std::string& message,
+    const std::optional<std::string>& debugContext)
 {
     if (shipAI != nullptr)
         shipAI->reactToMessage(message, debugContext);
@@ -13608,13 +14171,15 @@ void ShipEntity::sendAIMessage(const std::string& message)
         shipAI->message(message);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId scriptEvent, const std::string& aiMessage)
+void ShipEntity::doScriptEvent(ooscript::PropertyId scriptEvent,
+    const std::string& aiMessage)
 {
     doScriptEvent(scriptEvent);
     reactToAIMessage(aiMessage, std::nullopt);
 }
 
-void ShipEntity::doScriptEvent(ooscript::PropertyId scriptEvent, Entity* argument, const std::string& aiMessage)
+void ShipEntity::doScriptEvent(ooscript::PropertyId scriptEvent,
+    Entity* argument, const std::string& aiMessage)
 {
     doScriptEvent(scriptEvent, argument);
     reactToAIMessage(aiMessage, std::nullopt);
@@ -13646,7 +14211,9 @@ OOAlertCondition ShipEntity::realAlertCondition()
         for (const auto& defenseTarget : defenseTargets()) {
             ship = oo::ToShip(defenseTarget.get());
             if ((ship != nullptr ? ship->hasHostileTarget() : false) || ((ship != nullptr ? ship->getIsPlayer() : false) && (PLAYER != nullptr ? PLAYER->weaponsOnline() : false))) {
-                if (HPdistance2((ship != nullptr ? ship->getPosition() : HPVector { }), position) < scanrange2) {
+                if (HPdistance2((ship != nullptr ? ship->getPosition() : HPVector { }),
+                        position)
+                    < scanrange2) {
                     return ALERT_CONDITION_RED;
                 }
             }
@@ -13657,7 +14224,9 @@ OOAlertCondition ShipEntity::realAlertCondition()
             if (ptarget != nil && oo::EntityIsShip(ptarget)) {
                 ship = oo::ToShip(ptarget);
                 if ((ship != nullptr ? ship->hasHostileTarget() : false) || ((ship != nullptr ? ship->getIsPlayer() : false) && (PLAYER != nullptr ? PLAYER->weaponsOnline() : false))) {
-                    if (HPdistance2((ship != nullptr ? ship->getPosition() : HPVector { }), position) < scanrange2 * 1.5625) {
+                    if (HPdistance2((ship != nullptr ? ship->getPosition() : HPVector { }),
+                            position)
+                        < scanrange2 * 1.5625) {
                         return ALERT_CONDITION_RED;
                     }
                 }
@@ -13666,11 +14235,15 @@ OOAlertCondition ShipEntity::realAlertCondition()
         if (_group) {
             OOShipGroupCursor cursor(_group.get());
             ::ShipEntity* batch[16];
-            for (NSUInteger count = ShipGroupCursorBatch(cursor, batch); count != 0; count = ShipGroupCursorBatch(cursor, batch)) {
+            for (NSUInteger count = ShipGroupCursorBatch(cursor, batch); count != 0;
+                count = ShipGroupCursorBatch(cursor, batch)) {
                 for (NSUInteger i = 0; i < count; i++) {
                     ship = batch[i];
                     if ((ship != nullptr ? ship->hasHostileTarget() : false) || ((ship != nullptr ? ship->getIsPlayer() : false) && (PLAYER != nullptr ? PLAYER->weaponsOnline() : false))) {
-                        if (HPdistance2((ship != nullptr ? ship->getPosition() : HPVector { }), position) < scanrange2) {
+                        if (HPdistance2(
+                                (ship != nullptr ? ship->getPosition() : HPVector { }),
+                                position)
+                            < scanrange2) {
                             return ALERT_CONDITION_RED;
                         }
                     }
@@ -13680,11 +14253,15 @@ OOAlertCondition ShipEntity::realAlertCondition()
         if (_escortGroup && _group != _escortGroup) {
             OOShipGroupCursor cursor(_escortGroup.get());
             ::ShipEntity* batch[16];
-            for (NSUInteger count = ShipGroupCursorBatch(cursor, batch); count != 0; count = ShipGroupCursorBatch(cursor, batch)) {
+            for (NSUInteger count = ShipGroupCursorBatch(cursor, batch); count != 0;
+                count = ShipGroupCursorBatch(cursor, batch)) {
                 for (NSUInteger i = 0; i < count; i++) {
                     ship = batch[i];
                     if ((ship != nullptr ? ship->hasHostileTarget() : false) || ((ship != nullptr ? ship->getIsPlayer() : false) && (PLAYER != nullptr ? PLAYER->weaponsOnline() : false))) {
-                        if (HPdistance2((ship != nullptr ? ship->getPosition() : HPVector { }), position) < scanrange2) {
+                        if (HPdistance2(
+                                (ship != nullptr ? ship->getPosition() : HPVector { }),
+                                position)
+                            < scanrange2) {
                             return ALERT_CONDITION_RED;
                         }
                     }
@@ -13696,42 +14273,53 @@ OOAlertCondition ShipEntity::realAlertCondition()
 }
 
 // Exposed to AI and scripts.
-void ShipEntity::doNothing()
-{
-}
+void ShipEntity::doNothing() { }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 std::optional<std::string> ShipEntity::descriptionForObjDump()
 {
-    // DescriptionOf(nil) was "(null)"; preserve that for a disengaged super result.
-    std::string desc = oo::str::format("%s mass %g", OOEntityWithDrawable::descriptionForObjDump().value_or("(null)").c_str(), getMass());
+    // DescriptionOf(nil) was "(null)"; preserve that for a disengaged super
+    // result.
+    std::string desc = oo::str::format(
+        "%s mass %g",
+        OOEntityWithDrawable::descriptionForObjDump().value_or("(null)").c_str(),
+        getMass());
     if (!getIsPlayer()) {
-        desc = oo::str::format("%s AI: %s", desc.c_str(), (getAI() != nullptr ? getAI()->shortDescriptionComponents() : std::optional<std::string>()).value_or("(null)").c_str());
+        desc = oo::str::format(
+            "%s AI: %s", desc.c_str(),
+            (getAI() != nullptr ? getAI()->shortDescriptionComponents()
+                                : std::optional<std::string>())
+                .value_or("(null)")
+                .c_str());
     }
     return desc;
 }
 #endif
 
-/*	Slice 34 (bead oo-nkyn3): the shader and weapon-range helpers, without messages. The resource
-        manager and the equipment types answer through their C++ classes; the binding target's class is
-        asked of the runtime, and its kind of entity of the entity's C++ part (getIsShip(),
-        getIsVisualEffect(): the facade's -isShip and -isVisualEffect answer the same).
+/*	The shader and weapon-range helpers, without messages. The resource
+   manager and the equipment types answer through their C++ classes; the binding
+   target's class is asked of the runtime, and its kind of entity of the
+   entity's C++ part (getIsShip(), getIsVisualEffect(): the facade's -isShip and
+   -isVisualEffect answer the same).
 */
 oo::PList OODefaultShipShaderMacros(void)
 {
-    // "ship-prefix-macros" of the material defaults, read once; an empty dictionary if it is not one.
+    // "ship-prefix-macros" of the material defaults, read once; an empty
+    // dictionary if it is not one.
     static const oo::PList macros = [] {
         const oo::PList materialDefaults = ResourceManager::materialDefaults();
         const oo::PList* prefixMacros = materialDefaults.get<oo::PList::Dict>("ship-prefix-macros");
-        return prefixMacros != nullptr ? *prefixMacros : oo::PList(oo::PList::Dict { });
+        return prefixMacros != nullptr ? *prefixMacros
+                                       : oo::PList(oo::PList::Dict { });
     }();
 
     return macros;
 }
 
 // is this the right place for this function now? - CIM
-// The target is the C++ entity since bead oo-9ht.39.6; every entity's object was a kind of Entity.
-BOOL OOUniformBindingPermitted(const std::string& propertyName, Entity* bindingTarget)
+// The target is the C++ entity; every entity's object was a kind of Entity.
+BOOL OOUniformBindingPermitted(const std::string& propertyName,
+    Entity* bindingTarget)
 {
     // the whitelists, read once (membership only)
     static const oo::PList wlDict = ResourceManager::whitelistDictionary();
@@ -13748,8 +14336,8 @@ BOOL OOUniformBindingPermitted(const std::string& propertyName, Entity* bindingT
             if (shipWhitelist.contains(propertyName))
                 return YES;
         }
-        // -isPlayerLikeShip answered YES for these two only (ProxyPlayerEntity.mm); their objects are a
-        // ship's since beads oo-9ht.177 and oo-9ht.183, so it is asked of the C++ part.
+        // -isPlayerLikeShip answered YES for these two only (ProxyPlayerEntity.mm);
+        // it is asked of the C++ part.
         if (dynamic_cast<PlayerEntity*>(entity) != nullptr || dynamic_cast<ProxyPlayerEntity*>(entity) != nullptr) {
             if (playerShipWhitelist.contains(propertyName))
                 return YES;

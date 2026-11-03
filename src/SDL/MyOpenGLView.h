@@ -23,19 +23,19 @@ MA 02110-1301, USA.
 */
 #pragma once
 
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_video.h>
+
+#include <string_view>
+
 #include "OOFoundation.h"
 #include "OOMouseInteractionMode.h"
 #include "OOOpenGL.h"
 #include "OOOpenGLMatrixManager.h"
-#include "oofnd/Ref.hpp"
-#include "oofnd/objc/OOObject.h"
-
 #include "oofnd/PList.hpp"
+#include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_video.h>
-#include <string_view>
+#include "oofnd/objc/OOObject.h"
 
 #define WINDOW_SIZE_DEFAULT_WIDTH 1280
 #define WINDOW_SIZE_DEFAULT_HEIGHT 720
@@ -143,11 +143,9 @@ enum StringInput {
     gvStringInputAll = 3
 };
 
-enum KeyboardType {
-    gvKeyboardAuto,
+enum KeyboardType { gvKeyboardAuto,
     gvKeyboardUS,
-    gvKeyboardUK
-};
+    gvKeyboardUK };
 
 typedef enum {
     OOHDR_TONEMAPPER_NONE = -1,
@@ -169,21 +167,23 @@ typedef enum {
 
 extern int debug;
 
-// The game view: a global class since the Objective-C facade was deleted (bead oo-9ht.153).
+// The game view.
 class MyOpenGLView : public oo::RefCounted {
 public:
     MyOpenGLView() = default; // the object -init fills; see init()
-    // The members marked virtual are the ones the whole-game tests' recording views answer
-    // (test_GameController, test_OOOXZManager, test_OOPlanetDrawable; ADR-0056 amendment oo-9ht.153
-    // item 4); nothing in the game overrides them.
+    // The members marked virtual are the ones the whole-game tests' recording
+    // views answer (test_GameController, test_OOOXZManager,
+    // test_OOPlanetDrawable); nothing in the game overrides them.
     ~MyOpenGLView() override;
 
     /**
      * \ingroup cli
-     * Scans the command line for -nosplash, --nosplash, -splash, --splash- -novsync and --novsync arguments.
+     * Scans the command line for -nosplash, --nosplash, -splash, --splash-
+     * -novsync and --novsync arguments.
      */
-    // -init's body, run on the new view by its maker (GameController::beginSplashScreen(); amendment
-    // oo-3bgz item 3). false where -init answered nil (SDL could not start).
+    // -init's body, run on the new view by its maker
+    // (GameController::beginSplashScreen()). false where -init answered nil (SDL
+    // could not start).
     bool init();
     std::optional<std::string> getWindowCaption();
     void createWindowWithSize(NSSize size);
@@ -195,8 +195,8 @@ public:
     SDL_DisplayID getDisplayId();
     oo::PList getNativeSize();
 
-    // Slice 2 (bead oo-72cz): accessors, display modes, settings, display / HDR, FOV and MSAA. A getter
-    // named like its member is get<Name> (ADR-0056 amendment oo-862e).
+    // Accessors, display modes, settings, display / HDR, FOV and MSAA. A getter
+    // named like its member is get<Name>.
     NSRect getBounds();
     virtual NSSize getViewSize();
     NSSize backingViewSize();
@@ -235,7 +235,8 @@ public:
     void saveWindowSize(NSSize windowSize);
     NSSize loadWindowSize();
     int loadFullscreenSettings();
-    int indexOfDisplayModeForWidth(unsigned int d_width, unsigned int d_height, unsigned int d_refresh);
+    int indexOfDisplayModeForWidth(unsigned int d_width, unsigned int d_height,
+        unsigned int d_refresh);
     virtual NSSize currentScreenSize();
     virtual oo::PList currentScreenMode(); // null: no mode
     void setFov(float value, bool fromFraction);
@@ -245,20 +246,32 @@ public:
     static bool pollShiftKey();
     OOOpenGLMatrixManager* getOpenGLMatrixManager(); // borrowed
 
-    // Slice 3 (bead oo-299r): snapshots and debug image dumps.
-    bool snapShot(const std::optional<std::string>& filename); // nullopt: auto-numbered "oolite-NNN"
+    // Snapshots and debug image dumps.
+    bool snapShot(const std::optional<std::string>&
+            filename); // nullopt: auto-numbered "oolite-NNN"
 #ifndef NDEBUG
     // General image-dumping method.
-    void dumpRGBAToFileNamed(const std::string& name, uint8_t* bytes, NSUInteger width, NSUInteger height, NSUInteger rowBytes);
-    void dumpRGBToFileNamed(const std::string& name, uint8_t* bytes, NSUInteger width, NSUInteger height, NSUInteger rowBytes);
-    void dumpGrayToFileNamed(const std::string& name, uint8_t* bytes, NSUInteger width, NSUInteger height, NSUInteger rowBytes);
-    void dumpGrayAlphaToFileNamed(const std::string& name, uint8_t* bytes, NSUInteger width, NSUInteger height, NSUInteger rowBytes);
+    void dumpRGBAToFileNamed(const std::string& name, uint8_t* bytes,
+        NSUInteger width, NSUInteger height,
+        NSUInteger rowBytes);
+    void dumpRGBToFileNamed(const std::string& name, uint8_t* bytes,
+        NSUInteger width, NSUInteger height,
+        NSUInteger rowBytes);
+    void dumpGrayToFileNamed(const std::string& name, uint8_t* bytes,
+        NSUInteger width, NSUInteger height,
+        NSUInteger rowBytes);
+    void dumpGrayAlphaToFileNamed(const std::string& name, uint8_t* bytes,
+        NSUInteger width, NSUInteger height,
+        NSUInteger rowBytes);
     // A nullopt name skips that file.
-    void dumpRGBAToRGBFileNamed(const std::optional<std::string>& rgbName, const std::optional<std::string>& grayName, uint8_t* bytes, NSUInteger width, NSUInteger height, NSUInteger rowBytes);
+    void dumpRGBAToRGBFileNamed(const std::optional<std::string>& rgbName,
+        const std::optional<std::string>& grayName,
+        uint8_t* bytes, NSUInteger width,
+        NSUInteger height, NSUInteger rowBytes);
 #endif
 
-    // Input (bead oo-0806, MyOpenGLView+Input.mm): the former (Input) category. A getter named like its
-    // member is get<Name> (ADR-0056 amendment oo-862e).
+    // Input (MyOpenGLView+Input.mm): the former (Input) category. A getter named
+    // like its member is get<Name>.
     void initKeyMappingData();
     void autoShowMouse();
     void setStringInput(enum StringInput value);
@@ -267,7 +280,8 @@ public:
     std::optional<std::string> getTypedString();
     virtual void resetTypedString();
     void setTypedString(const std::string& value);
-    virtual void noteMouseInteractionModeChangedFrom(OOMouseInteractionMode oldMode, OOMouseInteractionMode newMode);
+    virtual void noteMouseInteractionModeChangedFrom(
+        OOMouseInteractionMode oldMode, OOMouseInteractionMode newMode);
     void pollControls();
     void setVirtualJoystick(double vmx, double vmy);
     NSPoint getVirtualJoystickPosition();
@@ -288,27 +302,28 @@ public:
     int mouseWheelState();
     float mouseWheelDelta();
     void setMouseWheelDelta(float newWheelDelta);
-    // Command-key combinations need special handling. SDL stubs for these mac functions.
+    // Command-key combinations need special handling. SDL stubs for these mac
+    // functions.
     bool isCommandQDown();
     bool isCommandFDown();
     void clearCommandF();
     void setMouseInDeltaMode(bool inDelta);
-    // DJS: String input handler. Since for SDL versions we're also handling freeform typing this has
-    // necessarily got more complex than the non-SDL versions.
+    // DJS: String input handler. Since for SDL versions we're also handling
+    // freeform typing this has necessarily got more complex than the non-SDL
+    // versions.
     void handleStringInput(SDL_KeyboardEvent* kbd_event, Uint16 key_id);
 
-    // tests/unit/core/test_MyOpenGLView.mm and test_OOOpenGLMatrixManager.mm read and set the state
-    // below (bead oo-mlpcc).
+    // tests/unit/core/test_MyOpenGLView.mm and test_OOOpenGLMatrixManager.mm read
+    // and set the state below.
     friend struct MyOpenGLViewTestAccess;
 
 private:
-    /*	Internal: the view's state, read by the members above and by the other slices. Private again
-            since bead oo-mlpcc (public from oo-9ht.153 to it).
-    */
+    // Internal: the view's state, read by the members above.
     ::GameController* gameController = { }; // not retained
     bool keys[NUM_KEYS] = { };
     int scancode2Unicode[NUM_KEYS] = { };
-    oo::PList keyMappings_normal; // the keyboard's mapping_normal / mapping_shifted (null if none)
+    oo::PList keyMappings_normal; // the keyboard's mapping_normal /
+                                  // mapping_shifted (null if none)
     oo::PList keyMappings_shifted;
     bool suppressKeys = { }; // DJS
     bool opt = { }, ctrl = { }, command = { }, shift = { }, lastKeyShifted = { };
@@ -340,7 +355,9 @@ private:
     bool _msaa = { };
 
     // Full screen sizes
-    std::vector<oo::PList> screenSizes; // mode Dicts: Width, Height (integers), RefreshRate (a single real; the native mode's an integer 0)
+    std::vector<oo::PList>
+        screenSizes; // mode Dicts: Width, Height (integers), RefreshRate (a
+                     // single real; the native mode's an integer 0)
     int currentSize = { }; // we need an int!
     bool fullScreen = { };
 
@@ -377,7 +394,7 @@ private:
 
     NSSize firstScreen = { };
 
-    oo::Ref<OOOpenGLMatrixManager> matrixManager; // C++ since bead oo-vt0o
+    oo::Ref<OOOpenGLMatrixManager> matrixManager;
 
     // Mouse mode indicator (for mouse movement model)
     bool mouseInDeltaMode = { };

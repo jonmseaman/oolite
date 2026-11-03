@@ -23,16 +23,18 @@ MA 02110-1301, USA.
 */
 
 #include "OOSunEntity.h"
-#include "OOJSSun.h"
-#include "OOMacroOpenGL.h"
-#include "OOOpenGLExtensionManager.h"
-#include "OOPlanetEntity.h"
+
+#include <cstring>
 
 #include "AI.h"
 #include "MyOpenGLView.h"
 #include "OOCharacter.h"
 #include "OOColor.h"
 #include "OODebugFlags.h"
+#include "OOJSSun.h"
+#include "OOMacroOpenGL.h"
+#include "OOOpenGLExtensionManager.h"
+#include "OOPlanetEntity.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "PlayerEntity.h"
@@ -40,11 +42,9 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Log.hpp"
-
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
-#include <cstring>
 
 bool OOSunEntity::setSunColor(OOColor* sun_colorIn)
 {
@@ -76,7 +76,9 @@ bool OOSunEntity::setSunColor(OOColor* sun_colorIn)
     GLfloat r, g, b, a;
     sun_color->getRed(&r, &g, &b, &a);
 
-    GLfloat sun_ambient[] = { 0.0, 0.0, 0.0, 1.0 }; // real ambient light inside gl_LightModel.ambient
+    GLfloat sun_ambient[] = {
+        0.0, 0.0, 0.0, 1.0
+    }; // real ambient light inside gl_LightModel.ambient
     sun_diffuse[0] = 0.5f * (1.0f + r); // paler
     sun_diffuse[1] = 0.5f * (1.0f + g); // paler
     sun_diffuse[2] = 0.5f * (1.0f + b); // paler
@@ -90,11 +92,16 @@ bool OOSunEntity::setSunColor(OOColor* sun_colorIn)
     OOGL(glLightfv(GL_LIGHT1, GL_DIFFUSE, sun_diffuse));
     OOGL(glLightfv(GL_LIGHT1, GL_SPECULAR, sun_specular));
 
-    // main disc less saturation (partially taken care of by the ACES tonemapper) more brightness
+    // main disc less saturation (partially taken care of by the ACES tonemapper)
+    // more brightness
     color = OOColor::colorWithHue(hue, sat * 0.75f, 1.0f, 1.0f);
-    // our OpenGL color values are unclamped, so we can multiply the color components by
-    // any value we want, in order to make the sun a truly bright object in the sky
-    color = OOColor::colorWithRed(color->redComponent() * _sunBrightnessFactor, color->greenComponent() * _sunBrightnessFactor, color->blueComponent() * _sunBrightnessFactor, color->alphaComponent());
+    // our OpenGL color values are unclamped, so we can multiply the color
+    // components by any value we want, in order to make the sun a truly bright
+    // object in the sky
+    color = OOColor::colorWithRed(color->redComponent() * _sunBrightnessFactor,
+        color->greenComponent() * _sunBrightnessFactor,
+        color->blueComponent() * _sunBrightnessFactor,
+        color->alphaComponent());
     color->getRed(&discColor[0], &discColor[1], &discColor[2], &discColor[3]);
 
     /*	Two inner corona layers with low alpha and saturation are additively
@@ -104,8 +111,12 @@ bool OOSunEntity::setSunColor(OOColor* sun_colorIn)
     hue += hue_drift * 3;
     // saturation = 1 would shift white to red
     color = OOColor::colorWithHue(hue, OOClamp_0_1_f(sat * 1.0f), bri * 0.75f, 0.45f);
-    color = OOColor::colorWithRed(color->redComponent() * _sunBrightnessFactor, color->greenComponent() * _sunBrightnessFactor, color->blueComponent() * _sunBrightnessFactor, color->alphaComponent());
-    color->getRed(&outerCoronaColor[0], &outerCoronaColor[1], &outerCoronaColor[2], &outerCoronaColor[3]);
+    color = OOColor::colorWithRed(color->redComponent() * _sunBrightnessFactor,
+        color->greenComponent() * _sunBrightnessFactor,
+        color->blueComponent() * _sunBrightnessFactor,
+        color->alphaComponent());
+    color->getRed(&outerCoronaColor[0], &outerCoronaColor[1],
+        &outerCoronaColor[2], &outerCoronaColor[3]);
 
     return YES;
 }
@@ -131,7 +142,9 @@ void OOSunEntity::initSunWithColor(OOColor* sun_color, const oo::PList& dict)
     setSunColor(sun_color);
 
     // A nil dictionary read nil for the name (messaging nil), not the default.
-    setName(dict ? cxx_OOExpand(dict.get<std::string>(std::string(KEY_SUNNAME), "[oolite-default-star-name]")) : std::nullopt);
+    setName(dict ? cxx_OOExpand(dict.get<std::string>(
+                       std::string(KEY_SUNNAME), "[oolite-default-star-name]"))
+                 : std::nullopt);
 
     corona_blending = OOClamp_0_1_f(dict.get<float>("corona_hues", 1.0f));
     corona_speed_factor = dict.get<float>("corona_shimmer", -1.0);
@@ -139,7 +152,8 @@ void OOSunEntity::initSunWithColor(OOColor* sun_color, const oo::PList& dict)
         // from .22222 to 2
         corona_speed_factor = 1.0 / (0.5 + 2.0 * (randf() + randf()));
     } else {
-        // on average:  0 = .25 , 1 = 2.25  -  the same sun should give the same random component
+        // on average:  0 = .25 , 1 = 2.25  -  the same sun should give the same
+        // random component
         corona_speed_factor = OOClamp_0_1_f(corona_speed_factor) * 2.0 + randf() * randf();
     }
 #ifdef OO_DUMP_PLANETINFO
@@ -198,7 +212,9 @@ std::optional<std::string> OOSunEntity::descriptionComponents() const
 {
     // The getters read these members (or answer from them).
     OOSunEntity* sun = const_cast<OOSunEntity*>(this);
-    std::string result = oo::str::format("ID: %u position: %s radius: %.3fkm", universalID, cxx_HPVectorDescription(position).c_str(), 0.001 * sun->radius());
+    std::string result = oo::str::format(
+        "ID: %u position: %s radius: %.3fkm", universalID,
+        cxx_HPVectorDescription(position).c_str(), 0.001 * sun->radius());
     if (sun->goneNova()) {
         result += " (gone nova)";
     } else if (sun->willGoNova()) {
@@ -208,10 +224,7 @@ std::optional<std::string> OOSunEntity::descriptionComponents() const
     return result;
 }
 
-bool OOSunEntity::canCollide()
-{
-    return YES;
-}
+bool OOSunEntity::canCollide() { return YES; }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 bool OOSunEntity::checkCloseCollisionWith(Entity* other)
@@ -230,7 +243,8 @@ void OOSunEntity::update(OOTimeDelta delta_t)
 
     ::PlayerEntity* player = PLAYER;
     assert(player != nil);
-    rotMatrix = OOMatrixForBillboard(position, (player != nullptr ? player->viewpointPosition() : HPVector { }));
+    rotMatrix = OOMatrixForBillboard(
+        position, (player != nullptr ? player->viewpointPosition() : HPVector { }));
 
     if (throw_sparks && _novaExpansionRate > 0.0f) // going NOVA!
     {
@@ -247,37 +261,44 @@ void OOSunEntity::update(OOTimeDelta delta_t)
                 if (sky_bri < 0) {
                     if (UNIVERSE != nullptr)
                         UNIVERSE->setSkyColorRed(0.0f, // back to black
-                            0.0f,
-                            0.0f,
-                            0.0f);
+                            0.0f, 0.0f, 0.0f);
                 } else {
                     if (UNIVERSE != nullptr)
                         UNIVERSE->setSkyColorRed(sky_bri, // whiteout
-                            sky_bri,
-                            sky_bri,
-                            1.0f);
+                            sky_bri, sky_bri, 1.0f);
                 }
                 if (sky_bri == 1.0) {
                     // This sun has now gone nova!
                     if (UNIVERSE != nullptr)
-                        UNIVERSE->setSystemDataKey("sun_gone_nova", oo::PList(static_cast<bool>(YES)), "org.oolite.oolite"); // +numberWithBool:
+                        UNIVERSE->setSystemDataKey(
+                            "sun_gone_nova", oo::PList(static_cast<bool>(YES)),
+                            "org.oolite.oolite"); // +numberWithBool:
                     if (UNIVERSE != nullptr)
-                        UNIVERSE->setSystemDataKey("corona_flare", oo::PList::singleReal(0.3), "org.oolite.oolite"); // +numberWithFloat:
+                        UNIVERSE->setSystemDataKey(
+                            "corona_flare", oo::PList::singleReal(0.3),
+                            "org.oolite.oolite"); // +numberWithFloat:
                     if (UNIVERSE != nullptr)
-                        UNIVERSE->setSystemDataKey("corona_hues", oo::PList::singleReal(0.05), "org.oolite.oolite");
+                        UNIVERSE->setSystemDataKey("corona_hues",
+                            oo::PList::singleReal(0.05),
+                            "org.oolite.oolite");
                     // Novas are stored under the core manifest if the
                     // player was there at the time. Default layer 2
                     // is fine.
-                    OO_LOG("sun.nova.start", "DEBUG: NOVA original radius {:.1f}", collision_radius);
+                    OO_LOG("sun.nova.start", "DEBUG: NOVA original radius {:.1f}",
+                        collision_radius);
                 }
                 discColor[0] = 1.0 * _sunBrightnessFactor;
                 discColor[1] = 1.0 * _sunBrightnessFactor;
                 discColor[2] = 1.0 * _sunBrightnessFactor;
                 _novaExpansionTimer += delta_t;
                 if (UNIVERSE != nullptr)
-                    UNIVERSE->setSystemDataKey("sun_radius", oo::PList::singleReal(collision_radius + delta_t * _novaExpansionRate), "org.oolite.oolite"); // +numberWithFloat:
+                    UNIVERSE->setSystemDataKey(
+                        "sun_radius",
+                        oo::PList::singleReal(collision_radius + delta_t * _novaExpansionRate),
+                        "org.oolite.oolite"); // +numberWithFloat:
             } else {
-                OO_LOG("sun.nova.end", "DEBUG: NOVA final radius {:.1f}", collision_radius);
+                OO_LOG("sun.nova.end", "DEBUG: NOVA final radius {:.1f}",
+                    collision_radius);
 
                 // reset at the new size
                 resetNova();
@@ -322,7 +343,9 @@ void OOSunEntity::drawImmediate(bool /*immediate*/, bool translucent)
 
 void OOSunEntity::updateCameraRelativePosition()
 {
-    HPVector cr_temp = HPvector_subtract(absolutePositionForSubentity(), (PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector { }));
+    HPVector cr_temp = HPvector_subtract(
+        absolutePositionForSubentity(),
+        (PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector { }));
     /* Special calculation as suns viewed over ~1E9 - and the bigger
      * ones are still just about visible at this range - get floating
      * point errors messing up the display */
@@ -355,7 +378,11 @@ void OOSunEntity::drawOpaqueParts()
 
     if ((UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false)) {
         int subdivideLevel = 2; // 4 is probably the maximum!
-        float drawFactor = (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr ? UNIVERSE->getGameView()->getViewSize() : NSSize { }).width / 100.0;
+        float drawFactor = (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
+                                   ? UNIVERSE->getGameView()->getViewSize()
+                                   : NSSize { })
+                               .width
+            / 100.0;
         float drawRatio2 = drawFactor * effective_radius / sqrt_zero_distance; // equivalent to size on screen in pixels
 
         if (cam_zero_distance > 0.0f) {
@@ -393,9 +420,7 @@ void OOSunEntity::drawOpaqueParts()
             OOGL(glEnable(GL_DEPTH_TEST));
 
     } else {
-        calculateGLArrays(effective_radius,
-            effective_cor16k,
-            sqrt_zero_distance);
+        calculateGLArrays(effective_radius, effective_cor16k, sqrt_zero_distance);
         OOGL(glDisable(GL_BLEND));
         OOGL(glVertexPointer(3, GL_FLOAT, 0, sunVertices));
 
@@ -409,7 +434,9 @@ void OOSunEntity::drawOpaqueParts()
     }
 
     OOVerifyOpenGLState();
-    cxx_OOCheckOpenGLErrors([&]() -> std::string { return "SunEntity after drawing " + oo::EntityDescription(this); });
+    cxx_OOCheckOpenGLErrors([&]() -> std::string {
+        return "SunEntity after drawing " + oo::EntityDescription(this);
+    });
 }
 
 void OOSunEntity::drawTranslucentParts()
@@ -426,17 +453,19 @@ void OOSunEntity::drawTranslucentParts()
 
     OOGL(glEnableClientState(GL_COLOR_ARRAY));
     OOGL(glColorPointer(4, GL_FLOAT, 0, sunColors));
-    OOGL(glDrawElements(GL_TRIANGLES, 24 * 360, GL_UNSIGNED_INT, sunTriangles + (3 * 360)));
+    OOGL(glDrawElements(GL_TRIANGLES, 24 * 360, GL_UNSIGNED_INT,
+        sunTriangles + (3 * 360)));
 
     OOGL(glDisableClientState(GL_COLOR_ARRAY));
 }
 
-void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width, GLfloat z_distance)
+void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
+    GLfloat z_distance)
 {
-    //	if (EXPECT_NOT(inner_radius >= z_distance))  return;	// inside the sphere
+    //	if (EXPECT_NOT(inner_radius >= z_distance))  return;	// inside the
+    // sphere
 
-    GLfloat activity[8] = { 0.84, 0.74, 0.64, 0.54,
-        0.3, 0.4, 0.7, 0.8 };
+    GLfloat activity[8] = { 0.84, 0.74, 0.64, 0.54, 0.3, 0.4, 0.7, 0.8 };
 
     GLfloat si, ci;
     GLfloat rv0, rv1, rv2, c0, c1, c2;
@@ -552,7 +581,9 @@ void OOSunEntity::drawDirectVisionSunGlare()
 
     GLfloat sunGlareAngularSize = atan(radius() / HPdistance((PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector { }), getPosition())) * SUN_GLARE_MULT_FACTOR + (SUN_GLARE_ADD_FACTOR);
 
-    GLfloat directVisionSunGlare = (PLAYER != nullptr ? PLAYER->lookingAtSunWithThresholdAngleCos(cosf(sunGlareAngularSize)) : 0.0f);
+    GLfloat directVisionSunGlare = (PLAYER != nullptr ? PLAYER->lookingAtSunWithThresholdAngleCos(
+                                                            cosf(sunGlareAngularSize))
+                                                      : 0.0f);
     if (directVisionSunGlare) {
         NSSize siz = UNIVERSE->getGui()->size();
         ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
@@ -561,9 +592,13 @@ void OOSunEntity::drawDirectVisionSunGlare()
         GLfloat atmosphericReductionFactor = 1.0f - (PLAYER != nullptr ? PLAYER->insideAtmosphereFraction() : 0.0f);
         // 182: square of ratio of radius to sun-witchpoint distance
         // in default Lave
-        GLfloat distanceReductionFactor = OOClamp_0_1_f((radius() * radius() * 182.0) / HPdistance2((PLAYER != nullptr ? PLAYER->getPosition() : HPVector { }), getPosition()));
+        GLfloat distanceReductionFactor = OOClamp_0_1_f(
+            (radius() * radius() * 182.0) / HPdistance2((PLAYER != nullptr ? PLAYER->getPosition() : HPVector { }), getPosition()));
         GLfloat sunGlareFilterMultiplierLocal = (PLAYER != nullptr ? PLAYER->getSunGlareFilter() : 0.0f);
-        GLfloat directVisionSunGlareColor[4] = { discColor[0], discColor[1], discColor[2], directVisionSunGlare * atmosphericReductionFactor * distanceReductionFactor * (1.0f - sunGlareFilterMultiplierLocal) * 0.0085f };
+        GLfloat directVisionSunGlareColor[4] = {
+            discColor[0], discColor[1], discColor[2],
+            directVisionSunGlare * atmosphericReductionFactor * distanceReductionFactor * (1.0f - sunGlareFilterMultiplierLocal) * 0.0085f
+        };
 
         OOGL(glColor4fv(directVisionSunGlareColor));
 
@@ -609,18 +644,23 @@ void OOSunEntity::drawStarGlare()
     }
 }
 
-bool OOSunEntity::changeSunProperty(const std::string& key, const oo::PList& dict)
+bool OOSunEntity::changeSunProperty(const std::string& key,
+    const oo::PList& dict)
 {
-    // the value's -doubleValue / -floatValue (0 when absent, as nil answered): get<> with fallback 0 is
-    // the same for a string or a number
+    // the value's -doubleValue / -floatValue (0 when absent, as nil answered):
+    // get<> with fallback 0 is the same for a string or a number
     static GLfloat oldRadius = 0.0;
     if (key == "sun_radius") {
-        oldRadius = dict.get<double>(key, 0.0); // clamp corona_flare in case planetinfo.plist / savegame contains the wrong value
+        oldRadius = dict.get<double>(
+            key, 0.0); // clamp corona_flare in case planetinfo.plist / savegame
+                       // contains the wrong value
         setRadius(oldRadius, dict.get<float>("corona_flare", 0.0f));
     } else if (key == std::string(KEY_SUNNAME)) {
         // the Foundation get<> read nil unless a string or a number's text
         const oo::PList* name = dict.find(key);
-        setName((name != nullptr && (name->isString() || name->isNumber())) ? std::optional<std::string>(dict.get<std::string>(key)) : std::nullopt);
+        setName((name != nullptr && (name->isString() || name->isNumber()))
+                ? std::optional<std::string>(dict.get<std::string>(key))
+                : std::nullopt);
     } else if (key == "corona_flare") {
         setRadius(collision_radius, dict.get<float>(key, 0.0f));
     } else if (key == "corona_shimmer") {
@@ -628,7 +668,6 @@ bool OOSunEntity::changeSunProperty(const std::string& key, const oo::PList& dic
     } else if (key == "corona_hues") {
         corona_blending = OOClamp_0_1_f(dict.get<float>(key, 0.0f));
     } else if (key == "sun_gone_nova") {
-
         if (dict.get<bool>(key)) {
             setGoingNova(YES, 0);
         } else {
@@ -637,16 +676,16 @@ bool OOSunEntity::changeSunProperty(const std::string& key, const oo::PList& dic
             setRadius(oldRadius, dict.get<float>("corona_flare", 0.0f));
         }
     } else {
-        OO_LOG_WARN("script.warning", "Change to property '{}' not applied, will apply only after leaving this system.", key);
+        OO_LOG_WARN("script.warning",
+            "Change to property '{}' not applied, will apply only after "
+            "leaving this system.",
+            key);
         return NO;
     }
     return YES;
 }
 
-OOStellarBodyType OOSunEntity::planetType()
-{
-    return STELLAR_TYPE_SUN;
-}
+OOStellarBodyType OOSunEntity::planetType() { return STELLAR_TYPE_SUN; }
 
 void OOSunEntity::getDiffuseComponents(GLfloat components[4])
 {
@@ -660,10 +699,7 @@ void OOSunEntity::getSpecularComponents(GLfloat components[4])
     memcpy(components, sun_specular, sizeof sun_specular);
 }
 
-double OOSunEntity::radius()
-{
-    return collision_radius;
-}
+double OOSunEntity::radius() { return collision_radius; }
 
 void OOSunEntity::setRadius(GLfloat rad, GLfloat corona)
 {
@@ -685,22 +721,17 @@ void OOSunEntity::setPosition(HPVector posn)
         UNIVERSE->setMainLightPosition(HPVectorToVector(posn));
 }
 
-bool OOSunEntity::willGoNova()
-{
-    return throw_sparks;
-}
+bool OOSunEntity::willGoNova() { return throw_sparks; }
 
-bool OOSunEntity::goneNova()
-{
-    return throw_sparks && _novaCountdown <= 0;
-}
+bool OOSunEntity::goneNova() { return throw_sparks && _novaCountdown <= 0; }
 
 void OOSunEntity::setGoingNova(bool yesno, double interval)
 {
     throw_sparks = yesno;
     if (throw_sparks) {
         _novaCountdown = fmax(interval, 0.0);
-        OO_LOG("script.debug.setSunNovaIn", "NOVA activated! time until Nova : {:.1f} s", _novaCountdown);
+        OO_LOG("script.debug.setSunNovaIn",
+            "NOVA activated! time until Nova : {:.1f} s", _novaCountdown);
     }
 
     _novaExpansionTimer = 0;
@@ -714,28 +745,20 @@ void OOSunEntity::resetNova()
     _novaCountdown = 0.0;
 }
 
-bool OOSunEntity::isSun()
-{
-    return YES;
-}
+bool OOSunEntity::isSun() { return YES; }
 
-bool OOSunEntity::isVisible()
-{
-    return YES;
-}
+bool OOSunEntity::isVisible() { return YES; }
 
-std::optional<std::string> OOSunEntity::name()
-{
-    return _name;
-}
+std::optional<std::string> OOSunEntity::name() { return _name; }
 
 void OOSunEntity::setName(const std::optional<std::string>& name)
 {
     _name = name;
 }
 
-// The binding's bodies (OOJSSun.mm), which the facade forwarded to until bead oo-9ht.111.
-void OOSunEntity::getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
+// The binding's bodies (OOJSSun.mm), which the facade forwarded to.
+void OOSunEntity::getJSClass(ooscript::ClassDef** outClass,
+    ooscript::Object* outPrototype)
 {
     ::OOJSSunGetJSClass(outClass, outPrototype);
 }
@@ -745,13 +768,10 @@ std::optional<std::string> OOSunEntity::jsClassName()
     return ::OOJSSunJSClassName();
 }
 
-bool OOSunEntity::isVisibleToScripts()
-{
-    return ::OOJSSunIsVisibleToScripts();
-}
+bool OOSunEntity::isVisibleToScripts() { return ::OOJSSunIsVisibleToScripts(); }
 
-// OOStellarBody.h: the sun (bead oo-9ht.111) and the planet (bead oo-9ht.129) asked directly, any
-// other body by selector.
+// OOStellarBody.h: the sun and the planet asked
+// directly, any other body by selector.
 double OOStellarBodyRadius(Entity* body)
 {
     if (body == nullptr)
@@ -760,7 +780,8 @@ double OOStellarBodyRadius(Entity* body)
         return sun->radius();
     if (OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(body))
         return planet->radius();
-    return 0.0; // any other body: none in the game; its object did not answer -radius (bead oo-dpyk8)
+    return 0.0; // any other body: none in the game; its object did not answer
+                // -radius
 }
 
 OOStellarBodyType OOStellarBodyPlanetType(Entity* body)
@@ -771,5 +792,6 @@ OOStellarBodyType OOStellarBodyPlanetType(Entity* body)
         return sun->planetType();
     if (OOPlanetEntity* planet = dynamic_cast<OOPlanetEntity*>(body))
         return planet->planetType();
-    return (OOStellarBodyType)0; // any other body: none in the game; its object did not answer -planetType (bead oo-dpyk8)
+    return (OOStellarBodyType)0; // any other body: none in the game; its object
+                                 // did not answer -planetType
 }

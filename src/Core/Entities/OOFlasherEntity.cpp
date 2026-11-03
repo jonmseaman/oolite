@@ -200,8 +200,9 @@ void OOFlasherEntity::rescaleBy(GLfloat /*factor*/, bool /*writeToCache*/)
        implementation requirements */
 }
 
-// The binding's bodies (OOJSFlasher.mm), which the façade forwarded to until bead oo-9ht.107.
-void OOFlasherEntity::getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
+// The binding's bodies (OOJSFlasher.mm), which the façade forwarded to.
+void OOFlasherEntity::getJSClass(ooscript::ClassDef** outClass,
+    ooscript::Object* outPrototype)
 {
     ::OOJSFlasherGetJSClass(outClass, outPrototype);
 }

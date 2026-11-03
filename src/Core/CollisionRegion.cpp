@@ -44,9 +44,9 @@ static int crid_counter = 1;
 
 namespace {
 
-/*	What the root facade's selectors answered for an entity (bead oo-9ht.39.27): the C++ member each
-        forwarded to (an Objective-C stand-in was messaged until bead oo-j12i2). -isPlayer, -isShip,
-        -isPlanet and -status are oo::EntityIsPlayer() etc. (Entity+ObjCBridge.h, bead oo-9ht.39.16).
+/*	What the root facade's selectors answered for an entity: the C++ member
+   each forwarded to. -isPlayer, -isShip, -isPlanet and -status are
+   oo::EntityIsPlayer() etc. (Entity+ObjCBridge.h).
 */
 bool EntityIsVisible(Entity* entity)
 {
@@ -71,9 +71,11 @@ CollisionRegion::CollisionRegion() // Designated initializer.
         max_entities = COLLISION_MAX_ENTITIES;
         entity_array = (Entity**)malloc(max_entities * sizeof(Entity*));
         if (entity_array == NULL) {
-            // -init released itself and returned nil; a constructor cannot, so it raises what
-            // -addEntity: raises when the list cannot grow (ADR-0056 amendment oo-44gg).
-            OORaiseException(OOMallocException, "Not enough memory to create collision region member list.");
+            // -init released itself and returned nil; a constructor cannot, so it
+            // raises what -addEntity: raises when the list cannot grow.
+            OORaiseException(
+                OOMallocException,
+                "Not enough memory to create collision region member list.");
         }
 
         crid = crid_counter++;
@@ -257,7 +259,7 @@ void CollisionRegion::findCollisions()
     //
     // According to Shark, when this was in Universe this was where Oolite spent most time!
     //
-    Entity *e1, *e2; // C++ parts (bead oo-9ht.39.4)
+    Entity *e1, *e2; // C++ parts
     HPVector p1;
     double dist2, r1, r2, r0, min_dist2;
     unsigned i;

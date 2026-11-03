@@ -23,66 +23,55 @@ MA 02110-1301, USA.
 */
 
 #include "OOJSSystemInfo.h"
+
+#include <cstring>
+
 #include "OOCommodities.h"
 #include "OOConstToString.h"
 #include "OOIsNumberLiteral.h"
 #include "OOJSScript.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
+#include "OOObjCPList.h"
 #include "OOSystemDescriptionManager.h"
-#include "OOTypes.h" // OOCreditsQuantity (ADR-0063 item 5 samplePrice)
+#include "OOTypes.h" // OOCreditsQuantity (samplePrice)
 #include "PlayerEntityScriptMethods.h"
 #include "Universe.h"
-
-#include "OOObjCPList.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "ooscript/JSEngine.hpp"
-#include <cstring>
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) the way OOJSVector.mm does it (bead
-        oo-sdz, the sweep exemplar): the class dispatch table becomes a static ooscript::ClassDef
-        (the stub hooks are nullptr), the engine's own InitClass entry point becomes
-        ooscript::initClass, native methods and class hooks take the façade's hook signature
-        (Context/Object/PropertyId/Value pointer/CallArgs reference), and the directly spelled
-        object-creation, numeric-conversion, property-id and function-call engine entry points
-        become their ooscript:: façade equivalents. Natives take the
-        façade signature directly (ooscript::Context and a CallArgs reference) and the OOJS_*
-        argument-marshalling macros expand to the CallArgs accessors, so the rest of each function
-        body is UNCHANGED. `this` is
-        renamed to `thisObj` because it is a reserved word once this file compiles as Objective-C++
-        (ADR-0001).
+ * Retargeted onto the ooscript facade (JSEngine.hpp): the class dispatch table
+ * is a static ooscript::ClassDef (the stub hooks are nullptr), the engine's
+ * InitClass entry point is ooscript::initClass, and native methods and class
+ * hooks take the facade's hook signature (Context/Object/PropertyId/Value
+ * pointer/CallArgs reference). Natives take that signature directly and the
+ * OOJS_* argument-marshalling macros expand to the CallArgs accessors. `this`
+ * is spelled `thisObj`.
+ *
+ * SystemInfo is registered as an object converter with &sSystemInfoClass, the
+ * same ooscript::ClassDef that ooscript::getClass() reports for its instances.
+ *
+ * OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and
+ * scope guards (OOJSEngineNativeWrappers.h). OOSystemInfo, the class a
+ * SystemInfo wraps, is declared in OOJSSystemInfo.h and is what the JS private
+ * slot holds; its initWithGalaxy:system: is a factory that answers null. The
+ * natives null-guard where a message to nil would answer. The private slot
+ * holds the C++ system info itself, which implements OOJSPrivateObject: the
+ * natives read it with OOJSGetCxxPrivate, the finalizer and toString() are the
+ * engine's OOJSCxxObjectWrapperFinalize and OOJSCxxObjectWrapperToString, and
+ * the converter answers the object itself, as a oo::PListForeign.
+ */
 
-        SystemInfo is registered as an object converter with &sSystemInfoClass, the same
-        ooscript::ClassDef that ooscript::getClass() reports for its instances.
-*/
-/*
-        C++20 since bead oo-6ia4, converted the way bead oo-ppc converted OOJSVector.mm (proposed
-        ADR-0056 amendment oo-ppc). The JS class was already C++ on the ooscript façade;
-        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. OOSystemInfo, the class a
-        SystemInfo wraps, is OOSystemInfo (OOJSSystemInfo.h), which the JS private slot holds; its
-        -initWithGalaxy:system: is a factory that answers null (amendment oo-novu). The natives
-        null-guard where a message to nil answered, and OOSystemDescriptionManager and
-        OOCommodities, which are C++ since beads oo-0sr1 and oo-fqyw, are reached the same way
-        (amendment oo-ppc, item 4). Messages to classes that are still Objective-C (Universe,
-        PlayerEntity, OOJSScript) stay as they are, which is why the file is still .mm until Phase 4.
-        Since bead oo-6symp.2 (proposed ADR-0056 amendment oo-6symp) the private slot holds the C++
-        system info itself, which implements OOJSPrivateObject: the natives read it with
-        OOJSGetCxxPrivate, the finalizer and toString() are the engine's OOJSCxxObjectWrapperFinalize
-        and OOJSCxxObjectWrapperToString, and the converter answers the object itself, as a oo::PListForeign (bead oo-9ht.95 deleted the
-        Objective-C facade).
-*/
-
-// The running script's manifest property (-cxx_propertyNamed: of the running OOJSScript, whose
-// facades beads oo-9ht.137 and oo-9ht.133 deleted); null for no script, or once a script a timer or
-// definition pushed weakly has gone, as the message to nil answered.
+// The running script's manifest property; null for no script, or once a script
+// a timer or definition pushed weakly has gone, as the message to nil answered.
 namespace {
 oo::PList RunningScriptManifest()
 {
     OOJSScript* running = OOJSScript::currentlyRunningScript();
-    return running != nullptr ? running->propertyNamed(kLocalManifestProperty) : oo::PList();
+    return running != nullptr ? running->propertyNamed(kLocalManifestProperty)
+                              : oo::PList();
 }
 } // namespace
 
@@ -100,9 +89,13 @@ using ooscript::PropertyId;
 using ooscript::PropertySpec;
 using ooscript::Value;
 
-// Byte-identical façade <-> jsapi views, local to this call site (see OOJSVector.mm).
+// Byte-identical façade <-> jsapi views, local to this call site (see
+// OOJSVector.mm).
 namespace {
-static inline Object* OOJSFOBJP(ooscript::Object* o) { return reinterpret_cast<Object*>(o); }
+static inline Object* OOJSFOBJP(ooscript::Object* o)
+{
+    return reinterpret_cast<Object*>(o);
+}
 } // namespace
 
 namespace {
@@ -119,23 +112,27 @@ static OOSystemID sCachedSystem;
 } // namespace
 
 namespace {
-static bool SystemInfoDeleteProperty(Context cx, Object obj, PropertyId propID, Value* value);
+static bool SystemInfoDeleteProperty(Context cx, Object obj, PropertyId propID,
+    Value* value);
 } // namespace
 namespace {
-static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID, Value* value);
+static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value);
 } // namespace
 namespace {
-static bool SystemInfoSetProperty(Context cx, Object obj, PropertyId propID, bool strict, Value* value);
+static bool SystemInfoSetProperty(Context cx, Object obj, PropertyId propID,
+    bool strict, Value* value);
 } // namespace
 namespace {
 static void SystemInfoFinalize(Context cx, Object obj);
 } // namespace
 namespace {
-static bool SystemInfoToString(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemInfoToString(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-// The state of a SystemInfo enumeration, kept in the enumeration's private slot (was a retained
-// Foundation enumerator over the keys).
+// The state of a SystemInfo enumeration, kept in the enumeration's private slot
+// (was a retained Foundation enumerator over the keys).
 struct SystemInfoEnumerationState {
     std::vector<std::string> keys;
     std::size_t next = 0;
@@ -143,27 +140,34 @@ struct SystemInfoEnumerationState {
 } // namespace
 
 namespace {
-static bool SystemInfoEnumerate(Context cx, Object obj, EnumerateOp enumOp, Value* state, PropertyId* idp);
+static bool SystemInfoEnumerate(Context cx, Object obj, EnumerateOp enumOp,
+    Value* state, PropertyId* idp);
 } // namespace
 
 namespace {
-static bool SystemInfoDistanceToSystem(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemInfoDistanceToSystem(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemInfoRouteToSystem(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemInfoRouteToSystem(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemInfoSamplePrice(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemInfoSamplePrice(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemInfoSetPropertyMethod(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemInfoSetPropertyMethod(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 
 namespace {
-static bool SystemInfoStaticSetInterstellarProperty(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemInfoStaticSetInterstellarProperty(
+    ooscript::Context cx, ooscript::CallArgs& oojsArgs);
 } // namespace
 namespace {
-static bool SystemInfoStaticFilteredSystems(ooscript::Context cx, ooscript::CallArgs& oojsArgs);
+static bool SystemInfoStaticFilteredSystems(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs);
 } // namespace
 
 namespace {
@@ -188,32 +192,45 @@ static ClassDef sSystemInfoClass = {
 
 enum : std::uint8_t {
     // Property IDs
-    kSystemInfo_coordinates, // system coordinates (in LY), Vector3D (with z = 0), read-only
-    kSystemInfo_internalCoordinates, // system coordinates (unscaled), Vector3D (with z = 0), read-only
+    kSystemInfo_coordinates, // system coordinates (in LY), Vector3D (with z =
+                             // 0), read-only
+    kSystemInfo_internalCoordinates, // system coordinates (unscaled), Vector3D
+                                     // (with z = 0), read-only
     kSystemInfo_galaxyID, // galaxy number, integer, read-only
     kSystemInfo_systemID // system number, integer, read-only
 };
 
 namespace {
 static PropertySpec sSystemInfoProperties[] = {
-    // JS name					ID									flags								getter	setter
-    { "coordinates", kSystemInfo_coordinates, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared, nullptr, nullptr },
-    { "internalCoordinates", kSystemInfo_internalCoordinates, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared, nullptr, nullptr },
-    { "galaxyID", kSystemInfo_galaxyID, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared, nullptr, nullptr },
-    { "systemID", kSystemInfo_systemID, PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared, nullptr, nullptr },
+    // JS name					ID
+    // flags getter	setter
+    { "coordinates", kSystemInfo_coordinates,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared,
+        nullptr, nullptr },
+    { "internalCoordinates", kSystemInfo_internalCoordinates,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared,
+        nullptr, nullptr },
+    { "galaxyID", kSystemInfo_galaxyID,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared,
+        nullptr, nullptr },
+    { "systemID", kSystemInfo_systemID,
+        PropertyFlag::Permanent | PropertyFlag::Enumerate | PropertyFlag::ReadOnly | PropertyFlag::Shared,
+        nullptr, nullptr },
     { 0 }
 };
 } // namespace
 
-// A raw jsapi mirror of sSystemInfoProperties, used only for the bad-property error reporter
-// in OOJavaScriptEngine.m (OOJSReportBadPropertySelector): that helper is outside this bead's
-// scope (shared across every binding file) and still takes a ooscript::PropertySpec*, not
-// ooscript::PropertySpec* (see OOJSVector.mm for the same pattern).
+// A raw jsapi mirror of sSystemInfoProperties, used only for the bad-property
+// error reporter in OOJavaScriptEngine.m (OOJSReportBadPropertySelector), which
+// is shared across every binding file and still takes a
+// ooscript::PropertySpec*.
 namespace {
 static ooscript::PropertySpec sSystemInfoPropertiesRaw[] = {
-    // JS name					ID									flags
+    // JS name					ID
+    // flags
     { "coordinates", kSystemInfo_coordinates, OOJS_PROP_READONLY_CB },
-    { "internalCoordinates", kSystemInfo_internalCoordinates, OOJS_PROP_READONLY_CB },
+    { "internalCoordinates", kSystemInfo_internalCoordinates,
+        OOJS_PROP_READONLY_CB },
     { "galaxyID", kSystemInfo_galaxyID, OOJS_PROP_READONLY_CB },
     { "systemID", kSystemInfo_systemID, OOJS_PROP_READONLY_CB },
     { 0 }
@@ -222,7 +239,8 @@ static ooscript::PropertySpec sSystemInfoPropertiesRaw[] = {
 
 namespace {
 static FunctionSpec sSystemInfoMethods[] = {
-    // JS name					Function					min args	flags
+    // JS name					Function
+    // min args	flags
     { "toString", SystemInfoToString, 0, 0 },
     { "distanceToSystem", SystemInfoDistanceToSystem, 1, 0 },
     { "routeToSystem", SystemInfoRouteToSystem, 1, 0 },
@@ -234,7 +252,8 @@ static FunctionSpec sSystemInfoMethods[] = {
 
 namespace {
 static FunctionSpec sSystemInfoStaticMethods[] = {
-    // JS name						Function									min args	flags
+    // JS name						Function
+    // min args	flags
     { "filteredSystems", SystemInfoStaticFilteredSystems, 2, 0 },
     { "setInterstellarProperty", SystemInfoStaticSetInterstellarProperty, 4, 0 },
     { 0 }
@@ -249,7 +268,8 @@ oo::PList StringOrNull(const std::optional<std::string>& string)
     return string.has_value() ? oo::PList(*string) : oo::PList();
 }
 
-// A manifest identifier as the -fromManifest: arguments read it: a string, else none.
+// A manifest identifier as the -fromManifest: arguments read it: a string, else
+// none.
 std::optional<std::string> ManifestString(const oo::PList& manifest)
 {
     if (const std::string* text = manifest.getIf<std::string>())
@@ -257,12 +277,25 @@ std::optional<std::string> ManifestString(const oo::PList& manifest)
     return std::nullopt;
 }
 
-// What a message to a nil OOSystemInfo answered, for the natives that take one from a JS object
-// (the prototype has none): 0, the zero point, null.
-OOGalaxyID GalaxyOf(OOSystemInfo* info) { return (info != nullptr) ? info->galaxy() : 0; }
-OOSystemID SystemOf(OOSystemInfo* info) { return (info != nullptr) ? info->system() : 0; }
-NSPoint CoordinatesOf(OOSystemInfo* info) { return (info != nullptr) ? info->coordinates() : NSMakePoint(0, 0); }
-oo::PList ValueForKey(OOSystemInfo* info, const std::optional<std::string>& key) { return (info != nullptr) ? info->valueForKey(key) : oo::PList(); }
+// What a message to a nil OOSystemInfo answered, for the natives that take one
+// from a JS object (the prototype has none): 0, the zero point, null.
+OOGalaxyID GalaxyOf(OOSystemInfo* info)
+{
+    return (info != nullptr) ? info->galaxy() : 0;
+}
+OOSystemID SystemOf(OOSystemInfo* info)
+{
+    return (info != nullptr) ? info->system() : 0;
+}
+NSPoint CoordinatesOf(OOSystemInfo* info)
+{
+    return (info != nullptr) ? info->coordinates() : NSMakePoint(0, 0);
+}
+oo::PList ValueForKey(OOSystemInfo* info,
+    const std::optional<std::string>& key)
+{
+    return (info != nullptr) ? info->valueForKey(key) : oo::PList();
+}
 
 // -intValue of a system property (an NSNumber or an NSString; 0 for nil).
 int PropertyIntValue(const oo::PList& value)
@@ -274,25 +307,30 @@ int PropertyIntValue(const oo::PList& value)
 
 } // namespace
 
-// DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, &sSystemInfoClass, sSystemInfoPrototype,
-// OOSystemInfo) for the C++ system info the slot holds (bead oo-6symp.2).
+// DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, &sSystemInfoClass,
+// sSystemInfoPrototype, OOSystemInfo) for the C++ system info the slot holds.
 namespace {
-static bool JSSystemInfoGetSystemInfo(ooscript::Context context, ooscript::Object inObject, OOSystemInfo** outObject)
+static bool JSSystemInfoGetSystemInfo(ooscript::Context context,
+    ooscript::Object inObject,
+    OOSystemInfo** outObject)
 {
     return OOJSGetCxxPrivate(context, inObject, &sSystemInfoClass, outObject);
 }
 
-// The system info of a JS object of the SystemInfo class, else null (as the Objective-C class
-// check of OOJSNativeObjectOfClassFromJSObject answered nil).
-static OOSystemInfo* SystemInfoOfJSObject(ooscript::Context context, ooscript::Object object)
+// The system info of a JS object of the SystemInfo class, else null (as the
+// Objective-C class check of OOJSNativeObjectOfClassFromJSObject answered nil).
+static OOSystemInfo* SystemInfoOfJSObject(ooscript::Context context,
+    ooscript::Object object)
 {
     if (object == nullptr || ooscript::getObjectClass(context, object) != &sSystemInfoClass)
         return nullptr;
-    return static_cast<OOSystemInfo*>(static_cast<oo::RefCounted*>(ooscript::getPrivate(context, object)));
+    return static_cast<OOSystemInfo*>(
+        static_cast<oo::RefCounted*>(ooscript::getPrivate(context, object)));
 }
 } // namespace
 
-// OOSystemInfo (OOJSSystemInfo.h), the helper class wrapped by JS SystemInfo objects.
+// OOSystemInfo (OOJSSystemInfo.h), the helper class wrapped by JS SystemInfo
+// objects.
 
 OOSystemInfo::OOSystemInfo(OOGalaxyID galaxy, OOSystemID system)
     : _galaxy(galaxy)
@@ -301,7 +339,8 @@ OOSystemInfo::OOSystemInfo(OOGalaxyID galaxy, OOSystemID system)
 {
 }
 
-oo::Ref<OOSystemInfo> OOSystemInfo::initWithGalaxy(OOGalaxyID galaxy, OOSystemID system)
+oo::Ref<OOSystemInfo> OOSystemInfo::initWithGalaxy(OOGalaxyID galaxy,
+    OOSystemID system)
 {
     if (galaxy > kOOMaximumGalaxyID || system > kOOMaximumSystemID || system < kOOMinimumSystemID) {
         return nullptr;
@@ -346,7 +385,9 @@ oo::PList OOSystemInfo::valueForKey(const std::optional<std::string>& key)
         const oo::PList* value = key.has_value() ? systemData.find(*key) : nullptr;
         return (value != nullptr) ? *value : oo::PList();
     }
-    return (UNIVERSE != nullptr ? UNIVERSE->systemDataForGalaxy(_galaxy, _system, key.value_or("")) : oo::PList()); // (a nil key as "")
+    return (UNIVERSE != nullptr ? UNIVERSE->systemDataForGalaxy(_galaxy, _system,
+                                      key.value_or(""))
+                                : oo::PList()); // (a nil key as "")
 }
 
 void OOSystemInfo::setValue(const oo::PList& value, const std::string& key)
@@ -355,7 +396,9 @@ void OOSystemInfo::setValue(const oo::PList& value, const std::string& key)
     const oo::PList manifest = RunningScriptManifest();
 
     if (UNIVERSE != nullptr)
-        UNIVERSE->setSystemDataForGalaxy(_galaxy, _system, key, value, ManifestString(manifest), OO_LAYER_OXP_DYNAMIC);
+        UNIVERSE->setSystemDataForGalaxy(_galaxy, _system, key, value,
+            ManifestString(manifest),
+            OO_LAYER_OXP_DYNAMIC);
 }
 
 std::vector<std::string> OOSystemInfo::allKeys()
@@ -363,7 +406,8 @@ std::vector<std::string> OOSystemInfo::allKeys()
     if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false) && _system == -1) {
         // the dictionary's keys, in key order (-allKeys gave hash order)
         std::vector<std::string> keys;
-        // -cxx_currentSystemData answers a copy: keep it alive while the loop reads it (bead oo-f4241).
+        // -cxx_currentSystemData answers a copy: keep it alive while the loop reads
+        // it.
         const oo::PList systemData = (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList());
         if (const oo::PList::Dict* systemDict = systemData.getIf<oo::PList::Dict>()) {
             for (const auto& entry : *systemDict)
@@ -371,31 +415,32 @@ std::vector<std::string> OOSystemInfo::allKeys()
         }
         return keys;
     }
-    return (UNIVERSE != nullptr ? UNIVERSE->systemDataKeysForGalaxy(_galaxy, _system) : std::vector<std::string>());
+    return (UNIVERSE != nullptr
+            ? UNIVERSE->systemDataKeysForGalaxy(_galaxy, _system)
+            : std::vector<std::string>());
 }
 
-OOGalaxyID OOSystemInfo::galaxy() const
-{
-    return _galaxy;
-}
+OOGalaxyID OOSystemInfo::galaxy() const { return _galaxy; }
 
-OOSystemID OOSystemInfo::system() const
-{
-    return _system;
-}
+OOSystemID OOSystemInfo::system() const { return _system; }
 
 /*- (Random_Seed) systemSeed
 {
-        OOAssert([PLAYER currentGalaxyID] == _galaxy, "Attempt to use -[OOSystemInfo systemSeed] from a different galaxy.");
-        return [UNIVERSE systemSeedForSystemNumber:_system];
+        OOAssert([PLAYER currentGalaxyID] == _galaxy, "Attempt to use
+-[OOSystemInfo systemSeed] from a different galaxy."); return [UNIVERSE
+systemSeedForSystemNumber:_system];
         }*/
 
 NSPoint OOSystemInfo::coordinates()
 {
     if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false) && _system == -1) {
-        return (PLAYER != nullptr ? PLAYER->PlayerEntity::getGalaxy_coordinates() : NSPoint { }); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
+        return (PLAYER != nullptr
+                ? PLAYER->PlayerEntity::getGalaxy_coordinates()
+                : NSPoint { }); // qualified: the final overrider, so the binding
+                                // test stands in for it
     }
-    return (UNIVERSE != nullptr ? UNIVERSE->coordinatesForSystem(_system) : NSPoint { });
+    return (UNIVERSE != nullptr ? UNIVERSE->coordinatesForSystem(_system)
+                                : NSPoint { });
 }
 
 ooscript::Value OOSystemInfo::jsValueInContext(ooscript::Context context)
@@ -403,7 +448,8 @@ ooscript::Value OOSystemInfo::jsValueInContext(ooscript::Context context)
     ooscript::Object jsSelf = NULL;
     ooscript::Value result = ooscript::nullValue();
 
-    jsSelf = (ooscript::newObject((context), &sSystemInfoClass, (sSystemInfoPrototype), nullptr));
+    jsSelf = (ooscript::newObject((context), &sSystemInfoClass,
+        (sSystemInfoPrototype), nullptr));
     if (jsSelf != NULL) {
         // The slot holds this, retained (OOJSCxxObjectWrapperFinalize releases it).
         if (!OOJSSetCxxPrivate(context, jsSelf, this))
@@ -423,12 +469,9 @@ void OOSystemInfo::clearJSSelf(ooscript::Object selfVal)
         _jsSelf = NULL;
 }
 
-// What the facade's -cxx_oo_jsDescription answered (OOObject (OOJavaScriptConversion)): the JS
-// class name and the components.
-std::string OOSystemInfo::className() const
-{
-    return "OOSystemInfo";
-}
+// What the facade's -cxx_oo_jsDescription answered (OOObject
+// (OOJavaScriptConversion)): the JS class name and the components.
+std::string OOSystemInfo::className() const { return "OOSystemInfo"; }
 
 std::string OOSystemInfo::description() const
 {
@@ -445,12 +488,14 @@ std::optional<std::string> OOSystemInfo::jsDescription()
     return oo::str::format("[object %s]", name.c_str());
 }
 
-// OOJSBasicPrivateObjectConverter for the C++ system info the slot holds: the object itself as a
-// PList::Object node (null for the prototype).
+// OOJSBasicPrivateObjectConverter for the C++ system info the slot holds: the
+// object itself as a PList::Object node (null for the prototype).
 namespace {
-static oo::PList SystemInfoConverter(ooscript::Context context, ooscript::Object object)
+static oo::PList SystemInfoConverter(ooscript::Context context,
+    ooscript::Object object)
 {
-    OOSystemInfo* info = static_cast<OOSystemInfo*>(static_cast<oo::RefCounted*>(ooscript::getPrivate(context, object)));
+    OOSystemInfo* info = static_cast<OOSystemInfo*>(
+        static_cast<oo::RefCounted*>(ooscript::getPrivate(context, object)));
     if (info == nullptr)
         return oo::PList();
     return oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(info)));
@@ -459,12 +504,16 @@ static oo::PList SystemInfoConverter(ooscript::Context context, ooscript::Object
 
 void InitOOJSSystemInfo(ooscript::Context context, ooscript::Object global)
 {
-    Object proto = ooscript::initClass((context), (global), nullptr, &sSystemInfoClass, OOJSUnconstructableConstruct, 0, sSystemInfoProperties, sSystemInfoMethods, NULL, sSystemInfoStaticMethods);
+    Object proto = ooscript::initClass(
+        (context), (global), nullptr, &sSystemInfoClass,
+        OOJSUnconstructableConstruct, 0, sSystemInfoProperties,
+        sSystemInfoMethods, NULL, sSystemInfoStaticMethods);
     sSystemInfoPrototype = (proto);
     OOJSRegisterObjectConverter(&sSystemInfoClass, SystemInfoConverter);
 }
 
-ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context, OOGalaxyID galaxy, OOSystemID system)
+ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context,
+    OOGalaxyID galaxy, OOSystemID system)
 {
     OOJS_PROFILE_ENTER
 
@@ -477,11 +526,15 @@ ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context, OOGalaxyID g
     oo::Ref<OOSystemInfo> info;
     ooscript::Value result;
     OOJS_BEGIN_FULL_NATIVE(context)
-    info = OOSystemInfo::initWithGalaxy(galaxy, system); // null for a galaxy or system out of range
+    info = OOSystemInfo::initWithGalaxy(
+        galaxy, system); // null for a galaxy or system out of range
     OOJS_END_FULL_NATIVE
 
     if (EXPECT_NOT(info == nullptr)) {
-        cxx_OOJSReportWarning(context, "Could not create system info object for galaxy %u, system %i.", galaxy, system);
+        cxx_OOJSReportWarning(
+            context,
+            "Could not create system info object for galaxy %u, system %i.", galaxy,
+            system);
     }
 
     result = OOJSValueFromCxxObject(context, info.get());
@@ -497,7 +550,8 @@ ooscript::Value GetJSSystemInfoForSystem(ooscript::Context context, OOGalaxyID g
 }
 
 namespace {
-static bool SystemInfoToString(ooscript::Context cx, ooscript::CallArgs& oojsArgs)
+static bool SystemInfoToString(ooscript::Context cx,
+    ooscript::CallArgs& oojsArgs)
 {
     return OOJSCxxObjectWrapperToString(cx, oojsArgs, &sSystemInfoClass);
 }
@@ -510,7 +564,8 @@ static void SystemInfoFinalize(Context cx, Object obj)
 
     OOJS_PROFILE_ENTER
 
-    OOJSCxxObjectWrapperFinalize(cx, obj); // clearJSSelf(), the slot's release, the empty slot
+    OOJSCxxObjectWrapperFinalize(
+        cx, obj); // clearJSSelf(), the slot's release, the empty slot
 
     // Clear now-stale cache entry if appropriate.
     if (sCachedSystemInfo == thisObj)
@@ -521,7 +576,8 @@ static void SystemInfoFinalize(Context cx, Object obj)
 } // namespace
 
 namespace {
-static bool SystemInfoEnumerate(Context cx, Object obj, EnumerateOp enumOp, Value* state, PropertyId* idp)
+static bool SystemInfoEnumerate(Context cx, Object obj, EnumerateOp enumOp,
+    Value* state, PropertyId* idp)
 {
     ooscript::Context context = (cx);
 
@@ -531,10 +587,17 @@ static bool SystemInfoEnumerate(Context cx, Object obj, EnumerateOp enumOp, Valu
 
     switch (enumOp) {
     case EnumerateOp::Init:
-    case EnumerateOp::InitAll: // For ES5 Object.getOwnPropertyNames(). Since we have no non-enumerable properties, this is the same as Init.
+    case EnumerateOp::InitAll: // For ES5 Object.getOwnPropertyNames(). Since
+                               // we have no non-enumerable properties, this is
+                               // the same as Init.
     {
-        OOSystemInfo* info = static_cast<OOSystemInfo*>(static_cast<oo::RefCounted*>(ooscript::getPrivate(cx, obj)));
-        enumerator = new SystemInfoEnumerationState { (info != nullptr) ? info->allKeys() : std::vector<std::string>() }; // (none from a message to nil)
+        OOSystemInfo* info = static_cast<OOSystemInfo*>(
+            static_cast<oo::RefCounted*>(ooscript::getPrivate(cx, obj)));
+        enumerator = new SystemInfoEnumerationState {
+            (info != nullptr)
+                ? info->allKeys()
+                : std::vector<std::string>()
+        }; // (none from a message to nil)
         *state = ooscript::privateValue(enumerator);
 
         NSUInteger count = enumerator->keys.size();
@@ -547,7 +610,8 @@ static bool SystemInfoEnumerate(Context cx, Object obj, EnumerateOp enumOp, Valu
     case EnumerateOp::Next: {
         enumerator = static_cast<SystemInfoEnumerationState*>(ooscript::toPrivate(*state));
         if (enumerator->next < enumerator->keys.size()) {
-            ooscript::Value val = OOJSValueFromPList(context, oo::PList(enumerator->keys[enumerator->next++]));
+            ooscript::Value val = OOJSValueFromPList(
+                context, oo::PList(enumerator->keys[enumerator->next++]));
             return ooscript::valueToId(cx, (val), idp);
         }
         // else:
@@ -557,7 +621,8 @@ static bool SystemInfoEnumerate(Context cx, Object obj, EnumerateOp enumOp, Valu
 
     case EnumerateOp::Destroy: {
         if (enumerator == nullptr && ooscript::isDouble(*(state))) {
-            enumerator = static_cast<SystemInfoEnumerationState*>(ooscript::toPrivate(*state));
+            enumerator = static_cast<SystemInfoEnumerationState*>(
+                ooscript::toPrivate(*state));
         }
         delete enumerator;
 
@@ -572,9 +637,11 @@ static bool SystemInfoEnumerate(Context cx, Object obj, EnumerateOp enumOp, Valu
 } // namespace
 
 namespace {
-static bool SystemInfoDeleteProperty(Context cx, Object obj, PropertyId propID, Value* /*value*/)
+static bool SystemInfoDeleteProperty(Context cx, Object obj, PropertyId propID,
+    Value* /*value*/)
 {
-    OOJS_PROFILE_ENTER // Any exception will be converted in SystemInfoSetProperty()
+    OOJS_PROFILE_ENTER // Any exception will be converted in
+                       // SystemInfoSetProperty()
 
         Value v = ooscript::undefinedValue();
     return SystemInfoSetProperty(cx, obj, propID, false, &v);
@@ -584,7 +651,8 @@ static bool SystemInfoDeleteProperty(Context cx, Object obj, PropertyId propID, 
 } // namespace
 
 namespace {
-static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID, Value* value)
+static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value)
 {
     ooscript::Context context = (cx);
     ooscript::Object thisObj = (obj);
@@ -592,22 +660,31 @@ static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID, Val
     OOJS_NATIVE_ENTER(context)
 
     if (thisObj == sSystemInfoPrototype) {
-        // Let SpiderMonkey handle access to the prototype object (where info will be nil).
+        // Let SpiderMonkey handle access to the prototype object (where info will
+        // be nil).
         return true;
     }
 
     OOSystemInfo* info = SystemInfoOfJSObject(context, thisObj);
     // What if we're trying to access a saved witchspace systemInfo object?
     bool savedInterstellarInfo = !(UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false) && SystemOf(info) == -1;
-    bool sameGalaxy = (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID() : OOGalaxyID { }) == GalaxyOf(info); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
+    bool sameGalaxy = (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID()
+                                         : OOGalaxyID { })
+        == GalaxyOf(info); // qualified: the final overrider, so the
+                           // binding test stands in for it
 
     if (ooscript::isInt32Id(propID)) {
         switch (ooscript::idToInt32(propID)) {
         case kSystemInfo_coordinates:
             if (sameGalaxy && !savedInterstellarInfo) {
-                return VectorToJSValue(context, OOGalacticCoordinatesFromInternal(CoordinatesOf(info)), (value));
+                return VectorToJSValue(
+                    context, OOGalacticCoordinatesFromInternal(CoordinatesOf(info)),
+                    (value));
             } else {
-                cxx_OOJSReportError(context, "Cannot read systemInfo values for %s.", (savedInterstellarInfo ? "invalid interstellar space reference" : "other galaxies"));
+                cxx_OOJSReportError(
+                    context, "Cannot read systemInfo values for %s.",
+                    (savedInterstellarInfo ? "invalid interstellar space reference"
+                                           : "other galaxies"));
                 return false;
             }
             break;
@@ -616,7 +693,10 @@ static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID, Val
             if (sameGalaxy && !savedInterstellarInfo) {
                 return NSPointToVectorJSValue(context, CoordinatesOf(info), (value));
             } else {
-                cxx_OOJSReportError(context, "Cannot read systemInfo values for %s.", (savedInterstellarInfo ? "invalid interstellar space reference" : "other galaxies"));
+                cxx_OOJSReportError(
+                    context, "Cannot read systemInfo values for %s.",
+                    (savedInterstellarInfo ? "invalid interstellar space reference"
+                                           : "other galaxies"));
                 return false;
             }
             break;
@@ -630,7 +710,8 @@ static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID, Val
             return true;
 
         default:
-            OOJSReportBadPropertySelector(context, thisObj, (propID), sSystemInfoPropertiesRaw);
+            OOJSReportBadPropertySelector(context, thisObj, (propID),
+                sSystemInfoPropertiesRaw);
             return false;
         }
     } else if (ooscript::isStringId(propID)) {
@@ -640,7 +721,10 @@ static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID, Val
         oo::PList propValue;
         // interstellar space needs more work at this stage
         if (SystemOf(info) != -1) {
-            propValue = (systemManager != nullptr) ? systemManager->getProperty(key.value_or(""), SystemOf(info), GalaxyOf(info)) : oo::PList(); // (null from a message to nil)
+            propValue = (systemManager != nullptr)
+                ? systemManager->getProperty(
+                      key.value_or(""), SystemOf(info), GalaxyOf(info))
+                : oo::PList(); // (null from a message to nil)
         } else {
             propValue = ValueForKey(info, key);
         }
@@ -649,14 +733,17 @@ static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID, Val
             if (propValue.isNumber() || OOIsNumberLiteral(oo::DescriptionOf(propValue), true)) {
                 // -doubleValue: an NSNumber's, or an NSString's (a number literal)
                 const std::string* text = propValue.getIf<std::string>();
-                const double number = (text != nullptr) ? oo::plist_get::doubleValue(oo::utf8ToUtf16(*text)) : propValue.doubleValue();
+                const double number = (text != nullptr)
+                    ? oo::plist_get::doubleValue(oo::utf8ToUtf16(*text))
+                    : propValue.doubleValue();
                 bool OK = ooscript::newNumberValue(cx, number, value);
                 if (!OK) {
                     *value = ooscript::undefinedValue();
                     return false;
                 }
             } else {
-                *value = OOJSValueFromPList(context, propValue); // non-null: as its own glue gave
+                *value = OOJSValueFromPList(
+                    context, propValue); // non-null: as its own glue gave
             }
         }
     }
@@ -667,13 +754,15 @@ static bool SystemInfoGetProperty(Context cx, Object obj, PropertyId propID, Val
 } // namespace
 
 namespace {
-static bool SystemInfoSetProperty(Context cx, Object obj, PropertyId propID, bool /*strict*/, Value* value)
+static bool SystemInfoSetProperty(Context cx, Object obj, PropertyId propID,
+    bool /*strict*/, Value* value)
 {
     ooscript::Context context = (cx);
     ooscript::Object thisObj = (obj);
 
     if (EXPECT_NOT(thisObj == sSystemInfoPrototype)) {
-        // Let SpiderMonkey handle access to the prototype object (where info will be nil).
+        // Let SpiderMonkey handle access to the prototype object (where info will
+        // be nil).
         return true;
     }
 
@@ -695,9 +784,9 @@ static bool SystemInfoSetProperty(Context cx, Object obj, PropertyId propID, boo
 
 // distanceToSystem(sys : SystemInfo) : Number
 namespace {
-static bool SystemInfoDistanceToSystem(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemInfoDistanceToSystem(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     OOSystemInfo* thisInfo = nullptr;
@@ -707,20 +796,25 @@ static bool SystemInfoDistanceToSystem(ooscript::Context context, ooscript::Call
     if (!JSSystemInfoGetSystemInfo(context, OOJS_THIS, &thisInfo))
         return false;
     if (oojsArgs.count() < 1 || !ooscript::valueToObject(context, (OOJS_ARGV[0]), OOJSFOBJP(&otherObj)) || !JSSystemInfoGetSystemInfo(context, otherObj, &otherInfo)) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "distanceToSystem", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "system info");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "distanceToSystem",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "system info");
         return false;
     }
 
     bool sameGalaxy = (GalaxyOf(thisInfo) == GalaxyOf(otherInfo));
     if (!sameGalaxy) {
-        cxx_OOJSReportErrorForCaller(context, "SystemInfo", "distanceToSystem", "Cannot calculate distance for systems in other galaxies.");
+        cxx_OOJSReportErrorForCaller(
+            context, "SystemInfo", "distanceToSystem",
+            "Cannot calculate distance for systems in other galaxies.");
         return false;
     }
 
     NSPoint thisCoord = CoordinatesOf(thisInfo);
     NSPoint otherCoord = CoordinatesOf(otherInfo);
 
-    OOJS_RETURN_DOUBLE(distanceBetweenPlanetPositions(thisCoord.x, thisCoord.y, otherCoord.x, otherCoord.y));
+    OOJS_RETURN_DOUBLE(distanceBetweenPlanetPositions(
+        thisCoord.x, thisCoord.y, otherCoord.x, otherCoord.y));
 
     OOJS_NATIVE_EXIT
 }
@@ -728,9 +822,9 @@ static bool SystemInfoDistanceToSystem(ooscript::Context context, ooscript::Call
 
 // routeToSystem(sys : SystemInfo [, optimizedBy : String]) : Object
 namespace {
-static bool SystemInfoRouteToSystem(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemInfoRouteToSystem(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     OOSystemInfo* thisInfo = nullptr;
@@ -742,22 +836,30 @@ static bool SystemInfoRouteToSystem(ooscript::Context context, ooscript::CallArg
     if (!JSSystemInfoGetSystemInfo(context, OOJS_THIS, &thisInfo))
         return false;
     if (oojsArgs.count() < 1 || !ooscript::valueToObject(context, (OOJS_ARGV[0]), OOJSFOBJP(&otherObj)) || !JSSystemInfoGetSystemInfo(context, otherObj, &otherInfo)) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "routeToSystem", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "system info");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "routeToSystem",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "system info");
         return false;
     }
 
     bool sameGalaxy = (GalaxyOf(thisInfo) == GalaxyOf(otherInfo));
     if (!sameGalaxy) {
-        cxx_OOJSReportErrorForCaller(context, "SystemInfo", "routeToSystem", "Cannot calculate route for destinations in other galaxies.");
+        cxx_OOJSReportErrorForCaller(
+            context, "SystemInfo", "routeToSystem",
+            "Cannot calculate route for destinations in other galaxies.");
         return false;
     }
 
     if (oojsArgs.count() >= 2) {
-        routeType = cxx_StringToRouteType(cxx_OOStringFromJSValue(context, OOJS_ARGV[1]).value_or(""));
+        routeType = cxx_StringToRouteType(
+            cxx_OOStringFromJSValue(context, OOJS_ARGV[1]).value_or(""));
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = (UNIVERSE != nullptr ? UNIVERSE->routeFromSystem(SystemOf(thisInfo), SystemOf(otherInfo), routeType) : oo::PList());
+    result = (UNIVERSE != nullptr
+            ? UNIVERSE->routeFromSystem(SystemOf(thisInfo),
+                  SystemOf(otherInfo), routeType)
+            : oo::PList());
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_PLIST(result);
@@ -768,31 +870,44 @@ static bool SystemInfoRouteToSystem(ooscript::Context context, ooscript::CallArg
 
 // samplePrice(commodity)
 namespace {
-static bool SystemInfoSamplePrice(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemInfoSamplePrice(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     OOSystemInfo* thisInfo = nullptr;
 
     if (!JSSystemInfoGetSystemInfo(context, OOJS_THIS, &thisInfo))
         return false;
-    OOCommodities* commodities = (UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr); // null: no good is defined, as a message to nil
+    OOCommodities* commodities = (UNIVERSE != nullptr
+            ? UNIVERSE->getCommodities()
+            : nullptr); // null: no good is defined, as a message to nil
     std::optional<std::string> commodity = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(commodities == nullptr || !commodities->goodDefined(commodity.value_or("")))) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "samplePrice", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "Unrecognised commodity type");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "samplePrice",
+            MIN(oojsArgs.count(), 1U), OOJS_ARGV,
+            std::nullopt, "Unrecognised commodity type");
         return false;
     }
 
-    bool sameGalaxy = (GalaxyOf(thisInfo) == (PLAYER != nullptr ? PLAYER->PlayerEntity::galaxyNumber() : OOGalaxyID { })); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
+    bool sameGalaxy = (GalaxyOf(thisInfo) == (PLAYER != nullptr ? PLAYER->PlayerEntity::galaxyNumber() : OOGalaxyID { })); // qualified: the final overrider,
+                                                                                                                           // so the binding test stands in
+                                                                                                                           // for it
     if (!sameGalaxy) {
-        cxx_OOJSReportErrorForCaller(context, "SystemInfo", "samplePrice", "Cannot calculate sample price for destinations in other galaxies.");
+        cxx_OOJSReportErrorForCaller(
+            context, "SystemInfo", "samplePrice",
+            "Cannot calculate sample price for destinations in other galaxies.");
         return false;
     }
 
-    int economy = PropertyIntValue(ValueForKey(thisInfo, std::string("economy"))); // one system-data read per local, in the order Clang evaluates the arguments: a description that is an array draws (ADR-0063 item 5)
+    int economy = PropertyIntValue(ValueForKey(
+        thisInfo,
+        std::string("economy"))); // one system-data read per local, in the order
+                                  // Clang evaluates the arguments: a description
+                                  // that is an array draws
     std::optional<std::string> commodityScript = ManifestString(ValueForKey(thisInfo, std::string("commodity_script")));
-    OOCreditsQuantity price = commodities->samplePriceForCommodity(commodity.value_or(""), economy, commodityScript, SystemOf(thisInfo));
+    OOCreditsQuantity price = commodities->samplePriceForCommodity(
+        commodity.value_or(""), economy, commodityScript, SystemOf(thisInfo));
 
     return ooscript::newNumberValue(context, price, oojsArgs.rawVp());
 
@@ -801,9 +916,9 @@ static bool SystemInfoSamplePrice(ooscript::Context context, ooscript::CallArgs&
 } // namespace
 
 namespace {
-static bool SystemInfoSetPropertyMethod(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemInfoSetPropertyMethod(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     OOSystemInfo* thisInfo = nullptr;
@@ -813,20 +928,29 @@ static bool SystemInfoSetPropertyMethod(ooscript::Context context, ooscript::Cal
 
     std::optional<std::string> property;
     oo::PList value; // null for a JavaScript null
-    oo::PList manifest; // a string from JavaScript, or the running script's manifest identifier as read
+    oo::PList manifest; // a string from JavaScript, or the running script's
+                        // manifest identifier as read
 
     int32_t iValue;
 
     if (oojsArgs.count() < 3) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "setProperty(layer, property, value [,manifest])");
+        cxx_OOJSReportBadArguments(
+            context, "SystemInfo", "setProperty", MIN(oojsArgs.count(), 3U),
+            OOJS_ARGV, std::nullopt,
+            "setProperty(layer, property, value [,manifest])");
         return false;
     }
     if (!ooscript::valueToInt32(context, (OOJS_ARGV[0]), &iValue)) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "setProperty(layer, property, value [,manifest])");
+        cxx_OOJSReportBadArguments(
+            context, "SystemInfo", "setProperty", MIN(oojsArgs.count(), 3U),
+            OOJS_ARGV, std::nullopt,
+            "setProperty(layer, property, value [,manifest])");
         return false;
     }
     if (iValue < 0 || iValue >= OO_SYSTEM_LAYERS) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "layer must be 0, 1, 2 or 3");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "setProperty",
+            MIN(oojsArgs.count(), 3U), OOJS_ARGV,
+            std::nullopt, "layer must be 0, 1, 2 or 3");
         return false;
     }
     OOSystemLayer layer = (OOSystemLayer)iValue;
@@ -842,7 +966,9 @@ static bool SystemInfoSetPropertyMethod(ooscript::Context context, ooscript::Cal
     }
 
     if (UNIVERSE != nullptr)
-        UNIVERSE->setSystemDataForGalaxy(GalaxyOf(thisInfo), SystemOf(thisInfo), property.value_or(""), value, ManifestString(manifest), layer);
+        UNIVERSE->setSystemDataForGalaxy(GalaxyOf(thisInfo), SystemOf(thisInfo),
+            property.value_or(""), value,
+            ManifestString(manifest), layer);
 
     OOJS_RETURN_VOID;
 
@@ -852,16 +978,18 @@ static bool SystemInfoSetPropertyMethod(ooscript::Context context, ooscript::Cal
 
 // filteredSystems(this : Object, predicate : Function) : Array
 namespace {
-static bool SystemInfoStaticFilteredSystems(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemInfoStaticFilteredSystems(ooscript::Context context,
+    ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     ooscript::Object jsThis = NULL;
 
     // Get this and predicate arguments
     if (oojsArgs.count() < 2 || !OOJSValueIsFunction(context, OOJS_ARGV[1]) || !ooscript::valueToObject(context, (OOJS_ARGV[0]), OOJSFOBJP(&jsThis))) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "filteredSystems", oojsArgs.count(), OOJS_ARGV, std::nullopt, "this and predicate function");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "filteredSystems",
+            oojsArgs.count(), OOJS_ARGV, std::nullopt,
+            "this and predicate function");
         return false;
     }
     ooscript::Value predicate = OOJS_ARGV[1];
@@ -869,7 +997,7 @@ static bool SystemInfoStaticFilteredSystems(ooscript::Context context, ooscript:
     std::vector<oo::Ref<OOSystemInfo>> result;
     bool OK;
     {
-        oo::AutoreleaseScope pool; // was @autoreleasepool (oo-31u.8)
+        oo::AutoreleaseScope pool;
         result.reserve(256);
 
         // Not OOJS_BEGIN_FULL_NATIVE() - we use the engine while paused.
@@ -877,16 +1005,21 @@ static bool SystemInfoStaticFilteredSystems(ooscript::Context context, ooscript:
 
         // Iterate over systems.
         OK = true; // (the array was always made)
-        OOGalaxyID galaxy = (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID() : OOGalaxyID { }); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
+        OOGalaxyID galaxy = (PLAYER != nullptr ? PLAYER->PlayerEntity::currentGalaxyID()
+                                               : OOGalaxyID { }); // qualified: the final overrider,
+                                                                  // so the binding test stands in
+                                                                  // for it
         OOSystemID system;
         for (system = 0; system <= kOOMaximumSystemID; system++) {
-            // NOTE: this deliberately bypasses the cache, since iteration is inherently unfriendly to a single-item cache.
+            // NOTE: this deliberately bypasses the cache, since iteration is
+            // inherently unfriendly to a single-item cache.
             oo::Ref<OOSystemInfo> info = OOSystemInfo::initWithGalaxy(galaxy, system);
             ooscript::Value args[1] = { OOJSValueFromCxxObject(context, info.get()) };
 
             ooscript::Value rval = ooscript::undefinedValue();
             OOJSResumeTimeLimiter();
-            OK = ooscript::callFunctionValue(context, (jsThis), (predicate), 1, (args), (&rval));
+            OK = ooscript::callFunctionValue(context, (jsThis), (predicate), 1,
+                (args), (&rval));
             OOJSPauseTimeLimiter();
 
             if (OK) {
@@ -911,7 +1044,8 @@ static bool SystemInfoStaticFilteredSystems(ooscript::Context context, ooscript:
             oo::PList::Array infos;
             infos.reserve(result.size());
             for (const auto& info : result)
-                infos.push_back(oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(info.get()))));
+                infos.push_back(oo::PList(
+                    oo::PList::Object(oo::Ref<oo::PListForeign>(info.get()))));
             OOJS_SET_RVAL(OOJSValueFromPList(context, oo::PList(std::move(infos))));
         } else {
             OOJS_SET_RVAL(ooscript::undefinedValue());
@@ -926,62 +1060,91 @@ static bool SystemInfoStaticFilteredSystems(ooscript::Context context, ooscript:
 } // namespace
 
 namespace {
-static bool SystemInfoStaticSetInterstellarProperty(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+static bool SystemInfoStaticSetInterstellarProperty(
+    ooscript::Context context, ooscript::CallArgs& oojsArgs)
 {
-
     OOJS_NATIVE_ENTER(context)
 
     std::optional<std::string> property;
     oo::PList value; // null for a JavaScript null
-    oo::PList manifest; // a string from JavaScript, or the running script's manifest identifier as read
+    oo::PList manifest; // a string from JavaScript, or the running script's
+                        // manifest identifier as read
 
     int32_t iValue;
     OOGalaxyID g;
     OOSystemID s1, s2;
 
     if (oojsArgs.count() < 6) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "setProperty(galaxy, fromsystem, tosystem, layer, property, value [,manifest])");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
+            MIN(oojsArgs.count(), 3U), OOJS_ARGV,
+            std::nullopt,
+            "setProperty(galaxy, fromsystem, tosystem, "
+            "layer, property, value [,manifest])");
         return false;
     }
     if (!ooscript::valueToInt32(context, (OOJS_ARGV[0]), &iValue)) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "setProperty(galaxy, fromsystem, tosystem, layer, property, value [,manifest])");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
+            MIN(oojsArgs.count(), 3U), OOJS_ARGV,
+            std::nullopt,
+            "setProperty(galaxy, fromsystem, tosystem, "
+            "layer, property, value [,manifest])");
         return false;
     }
     if (iValue < 0 || iValue > kOOMaximumGalaxyID) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "galaxy out of range");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
+            MIN(oojsArgs.count(), 3U), OOJS_ARGV,
+            std::nullopt, "galaxy out of range");
         return false;
     } else {
         g = (OOGalaxyID)iValue;
     }
 
     if (!ooscript::valueToInt32(context, (OOJS_ARGV[1]), &iValue)) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "setProperty(galaxy, fromsystem, tosystem, layer, property, value [,manifest])");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
+            MIN(oojsArgs.count(), 3U), OOJS_ARGV,
+            std::nullopt,
+            "setProperty(galaxy, fromsystem, tosystem, "
+            "layer, property, value [,manifest])");
         return false;
     }
     if (iValue < 0 || iValue > kOOMaximumSystemID) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "fromsystem out of range");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
+            MIN(oojsArgs.count(), 3U), OOJS_ARGV,
+            std::nullopt, "fromsystem out of range");
         return false;
     } else {
         s1 = (OOSystemID)iValue;
     }
 
     if (!ooscript::valueToInt32(context, (OOJS_ARGV[2]), &iValue)) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "setProperty(galaxy, fromsystem, tosystem, layer, property, value [,manifest])");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
+            MIN(oojsArgs.count(), 3U), OOJS_ARGV,
+            std::nullopt,
+            "setProperty(galaxy, fromsystem, tosystem, "
+            "layer, property, value [,manifest])");
         return false;
     }
     if (iValue < 0 || iValue > kOOMaximumSystemID) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "tosystem out of range");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
+            MIN(oojsArgs.count(), 3U), OOJS_ARGV,
+            std::nullopt, "tosystem out of range");
         return false;
     } else {
         s2 = (OOSystemID)iValue;
     }
 
     if (!ooscript::valueToInt32(context, (OOJS_ARGV[3]), &iValue)) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "setProperty(galaxy, fromsystem, tosystem, layer, property, value [,manifest])");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
+            MIN(oojsArgs.count(), 3U), OOJS_ARGV,
+            std::nullopt,
+            "setProperty(galaxy, fromsystem, tosystem, "
+            "layer, property, value [,manifest])");
         return false;
     }
     if (iValue < 0 || iValue >= OO_SYSTEM_LAYERS) {
-        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty", MIN(oojsArgs.count(), 3U), OOJS_ARGV, std::nullopt, "layer must be 0, 1, 2 or 3");
+        cxx_OOJSReportBadArguments(context, "SystemInfo", "setInterstellarProperty",
+            MIN(oojsArgs.count(), 3U), OOJS_ARGV,
+            std::nullopt, "layer must be 0, 1, 2 or 3");
         return false;
     }
     OOSystemLayer layer = (OOSystemLayer)iValue;
@@ -998,9 +1161,12 @@ static bool SystemInfoStaticSetInterstellarProperty(ooscript::Context context, o
 
     std::string key = oo::str::format("interstellar: %u %u %u", g, s1, s2);
 
-    OOSystemDescriptionManager* systemManager = (UNIVERSE != nullptr ? UNIVERSE->getSystemManager() : nullptr); // null: nothing set, as a message to nil
+    OOSystemDescriptionManager* systemManager = (UNIVERSE != nullptr
+            ? UNIVERSE->getSystemManager()
+            : nullptr); // null: nothing set, as a message to nil
     if (systemManager != nullptr)
-        systemManager->setProperty(property.value_or(""), key, layer, value, ManifestString(manifest));
+        systemManager->setProperty(property.value_or(""), key, layer, value,
+            ManifestString(manifest));
 
     OOJS_RETURN_VOID;
 

@@ -1,7 +1,7 @@
 /*	oofnd/objc/OOAssert.h
-        Foundation-free assertions (bead oo-diow, the NSAssert seam of the oo-qps gap sweep; proposed
-        ADR-0029 floor). Same semantics as gnustep-base 1.31.1's macros, pinned with a throwaway
-        harness (a method, a class method and a C function, each plain and parameter form):
+        Foundation-free assertions. Same semantics as gnustep-base 1.31.1's
+   macros, pinned with a throwaway harness (a method, a class method and a C
+   function, each plain and parameter form):
 
             Foundation                                  here
             ------------------------------------------  ---------------------------------------------
@@ -11,17 +11,20 @@
             NSParameterAssert(cond)                     OOParameterAssert(cond)
             NSCParameterAssert(cond)                    OOCParameterAssert(cond)
 
-        LIVE IN EVERY FLAVOUR, deployment (NDEBUG) included, because Foundation's were (bead oo-pdsng).
-        Upstream's OOFoundation.h defines NS_BLOCK_ASSERTIONS iff NDEBUG, but only AFTER it imports
-        the Foundation umbrella header, and gnustep-base's include-guarded exception header picks the
-        blocked or live assertion macros when it is first parsed (its line 432), so the define came
-        too late and never blocked anything. Blocking these under NDEBUG skipped the side effect
-        in PlayerEntity::deferredInit's assertion (the player's ship set-up), and a deployment build
-        could not launch: '1' started the undock again and again. The arguments are always
-        evaluated, and a false condition logs one line in message class "gnustep" (where the NSLog
-        hook, OOLogOutputHandler, sent gnustep-base's assertion log; NSLog's own date/process prefix is
-        not reproduced) and raises an OOException named OOInternalInconsistencyException (the parameter
-        forms too, as in gnustep-base) with Foundation's reason text:
+        LIVE IN EVERY FLAVOUR, deployment (NDEBUG) included, because
+   Foundation's were. Upstream's OOFoundation.h defines
+   NS_BLOCK_ASSERTIONS iff NDEBUG, but only AFTER it imports the Foundation
+   umbrella header, and gnustep-base's include-guarded exception header picks
+   the blocked or live assertion macros when it is first parsed (its line 432),
+   so the define came too late and never blocked anything. Blocking these under
+   NDEBUG skipped the side effect in PlayerEntity::deferredInit's assertion (the
+   player's ship set-up), and a deployment build could not launch: '1' started
+   the undock again and again. The arguments are always evaluated, and a false
+   condition logs one line in message class "gnustep" (where the NSLog hook,
+   OOLogOutputHandler, sent gnustep-base's assertion log; NSLog's own
+   date/process prefix is not reproduced) and raises an OOException named
+   OOInternalInconsistencyException (the parameter forms too, as in
+   gnustep-base) with Foundation's reason text:
 
             <__FILE__>:<__LINE__>  Assertion failed in <Class>(instance), method <selector>.  <message>
             <__FILE__>:<__LINE__>  Assertion failed in <__PRETTY_FUNCTION__>.  <message>
@@ -31,14 +34,14 @@
         %@ has no meaning in the format: pass UTF-8 strings (%s), as with +[OOException raise:format:].
 */
 
-#ifndef OOFND_OBJC_OOASSERT_H
-#define OOFND_OBJC_OOASSERT_H
+#pragma once
 
-/*	The method forms (OOAssert, OOParameterAssert: self/_cmd) went with libobjc2 (bead oo-dbz): no game
-        code called them. A game unit (an Objective-C++ unit until oo-dbz) still gets OOException.h from
-        here, as it did; a plain C or C++ translation unit (bead oo-9ht.64: OOConstToJSString) does not.
+/*	There are no method forms (OOAssert, OOParameterAssert: self/_cmd): no
+   game code calls them. A game C++ unit gets OOException.h from here; a plain
+   C or C++ translation unit (OO_PLAIN_CPP_UNIT, e.g. OOConstToJSString) does
+   not.
 */
-#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__ (bead oo-dbz)
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT)
 #include "oofnd/objc/OOException.h"
 #endif
 #include "oofnd/PrintfFormat.h"
@@ -55,7 +58,7 @@ void OOAssertFailedInFunction(const char* function, const char* file, long line,
 }
 #endif
 
-// Not conditional on NDEBUG: see the head of this file (bead oo-pdsng).
+// Not conditional on NDEBUG: see the head of this file.
 #define OOCAssert(condition, ...)                                                           \
     do {                                                                                    \
         if (!(condition))                                                                   \
@@ -63,5 +66,3 @@ void OOAssertFailedInFunction(const char* function, const char* file, long line,
     } while (0)
 
 #define OOCParameterAssert(condition) OOCAssert((condition), "Invalid parameter not satisfying: %s", #condition)
-
-#endif // OOFND_OBJC_OOASSERT_H

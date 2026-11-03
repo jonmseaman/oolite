@@ -2,35 +2,40 @@
 
 ooscript/JSEngine.hpp
 
-The JavaScript engine façade (Phase 1 seam 1.1, bead oo-e7c; ADR-0002, architecture §4 R1).
+The JavaScript engine façade.
 
-Oolite talks to its script engine through this header and nothing else. It is sized to what the
-tree actually calls (the 2026-09-18 histogram over src/: 139 distinct JS_* functions, 3,828
-sites; the top twenty are mapped in README.md beside this file), not to what any engine
-offers. Behind it sits one backend: JSEngine_quickjs.cpp, the vendored QuickJS-ng (the patched
-SpiderMonkey 1.8.5 backend it replaced was deleted by bead oo-7wx at Phase 1 item 5).
-Retargeting a call site onto this façade must not change behaviour; that is what the goldens
-verify, and it is why every function here keeps the calling convention of the JS_* function it
-replaces (out-parameters, bool success, same argument order) rather than restyling it.
+Oolite talks to its script engine through this header and nothing else. It is
+sized to what the tree actually calls (the 2026-09-18 histogram over src/: 139
+distinct JS_* functions, 3,828 sites; the top twenty are mapped in README.md
+beside this file), not to what any engine offers. Behind it sits one backend:
+JSEngine_quickjs.cpp, the vendored QuickJS-ng (the patched SpiderMonkey 1.8.5
+backend it replaced is gone). Retargeting a call site onto this façade must not
+change behaviour; that is what the goldens verify, and it is why every function
+here keeps the calling convention of the
+JS_* function it replaces (out-parameters, bool success, same argument order)
+rather than restyling it.
 
 Rules of the header:
-  * No engine type appears here. Handles are pointers to incomplete types the backend defines;
-    Value and PropertyId are 8-byte PODs whose layout is the backend's (asserted there). That
-    is what lets a file include this header without any engine header.
-  * Hooks (property getters, class hooks, natives) are declared with façade types. The backend
-    adapts them; a call site never writes an engine signature.
-  * Nothing is inline that would need the engine's value layout. The build is thin-LTO, so the
-    cost of an out-of-line predicate is an LTO decision, not a design one.
-  * Consumers that are still Objective-C are compiled as Objective-C++ when they are retargeted
-    (ADR-0001: the whole tree compiles as Objective-C++ during the bridge).
+  * No engine type appears here. Handles are pointers to incomplete types the
+backend defines; Value and PropertyId are 8-byte PODs whose layout is the
+backend's (asserted there). That is what lets a file include this header without
+any engine header.
+  * Hooks (property getters, class hooks, natives) are declared with façade
+types. The backend adapts them; a call site never writes an engine signature.
+  * Nothing is inline that would need the engine's value layout. The build is
+thin-LTO, so the cost of an out-of-line predicate is an LTO decision, not a
+design one.
+  * Consumers that are still Objective-C are compiled as Objective-C++ when they
+are retargeted.
 
-Engine function names in this file's comments are written without their JS_* prefix: the
-deny-list (tools/deny-list.txt) forbids the prefixed spelling in any code file, comments
-included, and this header is code. The full map from engine function to façade call, the
-top-20 histogram and the list of what is deliberately not in the façade are in README.md
-beside this file.
+Engine function names in this file's comments are written without their JS_*
+prefix: the deny-list (tools/deny-list.txt) forbids the prefixed spelling in any
+code file, comments included, and this header is code. The full map from engine
+function to façade call, the top-20 histogram and the list of what is
+deliberately not in the façade are in README.md beside this file.
 
-Copyright (C) 2026 the Oolite migration project. GPL-2.0-or-later, as the rest of Oolite.
+Copyright (C) 2026 the Oolite migration project. GPL-2.0-or-later, as the rest
+of Oolite.
 
 */
 
@@ -275,13 +280,19 @@ Object getConstructor(Context cx, Object proto); // engine: GetConstructor
 Object getPrototype(Context cx, Object obj); // engine: GetPrototype
 Object getParent(Context cx, Object obj); // engine: GetParent
 Object getGlobalObject(Context cx); // engine: GetGlobalObject
-Object getGlobalForObject(Context cx, Object obj); // engine: GetGlobalForObject
+Object getGlobalForObject(Context cx,
+    Object obj); // engine: GetGlobalForObject
 
-const ClassDef* getClass(Context cx, Object obj); // engine: GetClass; nullptr if the class is not ours
-const ClassDef* getObjectClass(Context cx, Object obj); // engine: GetClass for any object: our classes as getClass,
-                                                        // the engine's own (Object, Array, ...) a stable hook-less
-                                                        // descriptor carrying their name (bead oo-1gc.3)
-bool instanceOf(Context cx, Object obj, ClassDef* def, Value* argv); // engine: InstanceOf
+const ClassDef* getClass(
+    Context cx,
+    Object obj); // engine: GetClass; nullptr if the class is not ours
+const ClassDef* getObjectClass(
+    Context cx,
+    Object obj); // engine: GetClass for any object: our classes as getClass,
+                 // the engine's own (Object, Array, ...) a stable hook-less
+                 // descriptor carrying their name
+bool instanceOf(Context cx, Object obj, ClassDef* def,
+    Value* argv); // engine: InstanceOf
 bool setPrivate(Context cx, Object obj, void* data); // engine: SetPrivate
 void* getPrivate(Context cx, Object obj); // engine: GetPrivate
 void* getInstancePrivate(Context cx, Object obj, ClassDef* def, Value* argv); // engine: GetInstancePrivate
@@ -559,7 +570,8 @@ OperationCallback setOperationCallback(Context cx, OperationCallback cb); // eng
 void triggerOperationCallback(Context cx); // engine: TriggerOperationCallback
 void triggerAllOperationCallbacks(Runtime rt); // engine: TriggerAllOperationCallbacks
 
-// MARK: Completing the retarget (bead oo-1gc.3) -------------------------------------------------
+// MARK: Completing the retarget
+// -------------------------------------------------
 //
 // What the last game files needed that the histogram-sized first cut left out. Same rule as the
 // rest of the header: each replaces one engine call and keeps its calling convention.

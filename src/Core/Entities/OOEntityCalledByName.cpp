@@ -2,18 +2,19 @@
 
 OOEntityCalledByName.mm
 
-An entity's method called by name, on its C++ part (bead oo-9ht.39.7.1, ADR-0056 amendment
-oo-9ht.39.7.1; declared in OOCallByName.h). The facade's by-name categories are the generated
-table OOEntityCalledByNameTable.h (tools/gen-entity-by-name-table.py): a tabled name is answered
-for the C++ part it applies to, exactly as the root facade's -respondsToSelector: and the category method
-answered it, and called as OOCallByName called the method (the same signature rules, read from
-the declared types' encodings instead of the method's type encoding: @encode()'s, measured literals since bead oo-dbz.3). Since bead oo-9ht.39.9 any
-other name, and a tabled name that does not apply, are answered without the entity's Objective-C
-object, as OOCallByName answered them on it (OOEntityObjectNamesTable.h); an Objective-C stand-in's
-went to its object until bead oo-j12i2. callObjC() reads
-a typed result through oo::CallEntityByNameTyped (bead oo-9ht.39.7.2). Since bead oo-9ht.39.7.3
-the categories are deleted (the table is the source): a tabled name that applies but whose
-signature the call cannot use is logged here, and oo::ScheduleEntityCall holds the deferred calls.
+An entity's method called by name, on its C++ part (declared in OOCallByName.h).
+The facade's by-name categories are the generated table
+OOEntityCalledByNameTable.h (tools/gen-entity-by-name-table.py): a tabled name
+is answered for the C++ part it applies to, exactly as the root facade's
+-respondsToSelector: and the category method answered it, and called as
+OOCallByName called the method (the same signature rules, read from the declared
+types' encodings instead of the method's type encoding: @encode()'s, measured
+literals). Any other name, and a tabled name that does not apply, are answered
+without the entity's Objective-C object, as OOCallByName answered them on it
+(OOEntityObjectNamesTable.h). callObjC() reads a typed result through
+oo::CallEntityByNameTyped. The table is the source: a tabled name that applies
+but whose signature the call cannot use is logged here, and
+oo::ScheduleEntityCall holds the deferred calls.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -36,6 +37,12 @@ MA 02110-1301, USA.
 */
 
 #include "OOEntityCalledByName.h"
+
+#include <cstring>
+#include <string_view>
+#include <type_traits>
+#include <unordered_map>
+
 #include "AI.h"
 #include "DockEntity.h"
 #include "Entity.h"
@@ -43,9 +50,9 @@ MA 02110-1301, USA.
 #include "OOCallByName.h"
 #include "OODescription.h"
 #include "OOEntityWithDrawable.h"
-#include "OOPlanetEntity.h" // the facade rows (bead oo-9ht.39.8.25)
+#include "OOPlanetEntity.h" // the facade rows
 #include "OOQuiriumCascadeEntity.h"
-#include "OOTypeEncodings.h" // the rows' measured encodings (bead oo-dbz.3)
+#include "OOTypeEncodings.h" // the rows' measured encodings
 #include "OOVisualEffectEntity.h"
 #include "OOWaypointEntity.h"
 #include "PlayerEntity.h"
@@ -56,28 +63,45 @@ MA 02110-1301, USA.
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
-#include <cstring>
-#include <string_view>
-#include <type_traits>
-#include <unordered_map>
 
 namespace {
 
-// The parts the category methods' bodies read, as the facade's (Entity+ObjCBridge.mm) are.
-ShipEntity* ShipPart(Entity* entity) { return dynamic_cast<ShipEntity*>(entity); }
-StationEntity* StationPart(Entity* entity) { return dynamic_cast<StationEntity*>(entity); }
-DockEntity* DockPart(Entity* entity) { return dynamic_cast<DockEntity*>(entity); }
-PlayerEntity* PlayerEntityPart(Entity* entity) { return dynamic_cast<PlayerEntity*>(entity); }
-ProxyPlayerEntity* ProxyPart(Entity* entity) { return dynamic_cast<ProxyPlayerEntity*>(entity); }
-OOVisualEffectEntity* EffectPart(Entity* entity) { return dynamic_cast<OOVisualEffectEntity*>(entity); }
+// The parts the category methods' bodies read, as the facade's
+// (Entity+ObjCBridge.mm) are.
+ShipEntity* ShipPart(Entity* entity)
+{
+    return dynamic_cast<ShipEntity*>(entity);
+}
+StationEntity* StationPart(Entity* entity)
+{
+    return dynamic_cast<StationEntity*>(entity);
+}
+DockEntity* DockPart(Entity* entity)
+{
+    return dynamic_cast<DockEntity*>(entity);
+}
+PlayerEntity* PlayerEntityPart(Entity* entity)
+{
+    return dynamic_cast<PlayerEntity*>(entity);
+}
+ProxyPlayerEntity* ProxyPart(Entity* entity)
+{
+    return dynamic_cast<ProxyPlayerEntity*>(entity);
+}
+OOVisualEffectEntity* EffectPart(Entity* entity)
+{
+    return dynamic_cast<OOVisualEffectEntity*>(entity);
+}
 
 } // namespace
 
-// The generated table's row (OOEntityCalledByName.h declares the flags and the argument kinds).
+// The generated table's row (OOEntityCalledByName.h declares the flags and the
+// argument kinds).
 namespace {
 
 template <auto Function>
-oo::PList OOEntityByNameAdaptNone(Entity* entity, const std::string*, const oo::PList*)
+oo::PList OOEntityByNameAdaptNone(Entity* entity, const std::string*,
+    const oo::PList*)
 {
     if constexpr (std::is_same_v<decltype(Function(entity)), oo::PList>)
         return Function(entity);
@@ -88,7 +112,8 @@ oo::PList OOEntityByNameAdaptNone(Entity* entity, const std::string*, const oo::
 }
 
 template <auto Function>
-oo::PList OOEntityByNameAdaptString(Entity* entity, const std::string* string, const oo::PList*)
+oo::PList OOEntityByNameAdaptString(Entity* entity, const std::string* string,
+    const oo::PList*)
 {
     if constexpr (std::is_same_v<decltype(Function(entity, *string)), oo::PList>)
         return Function(entity, *string);
@@ -99,7 +124,8 @@ oo::PList OOEntityByNameAdaptString(Entity* entity, const std::string* string, c
 }
 
 template <auto Function>
-oo::PList OOEntityByNameAdaptPList(Entity* entity, const std::string*, const oo::PList* plist)
+oo::PList OOEntityByNameAdaptPList(Entity* entity, const std::string*,
+    const oo::PList* plist)
 {
     if constexpr (std::is_same_v<decltype(Function(entity, *plist)), oo::PList>)
         return Function(entity, *plist);
@@ -118,7 +144,8 @@ void OOEntityByNameTyped(Entity* entity, OOEntityByNameValue& value)
     else if constexpr (std::is_same_v<Result, oo::PList>)
         value.plist = Function(entity);
     else if constexpr (std::is_integral_v<Result> && std::is_signed_v<Result> && sizeof(Result) == 1) {
-        // a signed char (BOOL): its value, sign kept, as OOCallIntegerMethod() converted it
+        // a signed char (BOOL): its value, sign kept, as OOCallIntegerMethod()
+        // converted it
         const long long bits = static_cast<unsigned char>(Function(entity));
         value.integer = (bits > 127) ? bits - 256 : bits;
     } else if constexpr (std::is_integral_v<Result> || std::is_enum_v<Result>)
@@ -130,33 +157,42 @@ void OOEntityByNameTyped(Entity* entity, OOEntityByNameValue& value)
     else if constexpr (std::is_same_v<Result, Quaternion>)
         value.quaternion = Function(entity);
     else if constexpr (std::is_same_v<Result, OOColor*>)
-        value.color = Function(entity); // borrowed (bead oo-9ht.39.8.25)
+        value.color = Function(entity); // borrowed
     else if constexpr (std::is_convertible_v<Result, Entity*>)
-        value.entity = Function(entity); // the C++ entity (bead oo-9ht.39.24)
+        value.entity = Function(entity); // the C++ entity
     else
-        (void)Function(entity); // a result callObjC() cannot read (it does not call such a method)
+        (void)Function(entity); // a result callObjC() cannot read (it does not
+                                // call such a method)
 }
 
 } // namespace
 
 #include "OOEntityCalledByNameTable.h"
 
-/*	The root facade's own selectors that callObjC() lists and the by-name table does not (bead
-        oo-9ht.39.8.25, ADR-0056 amendment oo-9ht.39.8.25), so callObjC() asks and calls an entity's C++
-        part for every name of its table. Each function is the facade method's body (Entity+ObjCBridge.mm,
-        and the cascade's category, deleted by bead oo-9ht.186), verbatim, with the entity for the facade's own C++ entity, after a guard
-        for no entity (zero, as a message to nil answered; the calls never pass one); a name whose
-        result callObjC() cannot read (a string, a vector of objects, a matrix, a high-precision vector,
-        a bounding box: "cannot be called", or no result) has no function. The answers are
-        the root facade's -respondsToSelector:'s: every entity but for the planet's shader selectors (a planet's
-        part) and the beacon protocol's (a ship's, an effect's or a waypoint's part). The entity results
-        (nextBeacon, prevBeacon, parentEntity, rootShipEntity) are the C++ entity since bead oo-9ht.39.24:
-        callObjC() makes its Object node, the same as the object's.
+/*	The root facade's own selectors that callObjC() lists and the by-name
+   table does not, so callObjC() asks and calls an entity's C++ part for every
+   name of its table. Each function is the facade method's body
+   (Entity+ObjCBridge.mm, and the cascade's category), verbatim, with the entity
+   for the facade's own C++ entity, after a guard for no entity (zero, as a
+   message to nil answered; the calls never pass one); a name whose result
+   callObjC() cannot read (a string, a vector of objects, a matrix, a
+   high-precision vector, a bounding box: "cannot be called", or no result) has
+   no function. The answers are the root facade's -respondsToSelector:'s: every
+   entity but for the planet's shader selectors (a planet's part) and the beacon
+   protocol's (a ship's, an effect's or a waypoint's part). The entity results
+        (nextBeacon, prevBeacon, parentEntity, rootShipEntity) are the C++
+   entity: callObjC() makes its Object node, the same as the object's.
 */
 namespace {
 
-bool AnswersPlanet(Entity* entity) { return dynamic_cast<OOPlanetEntity*>(entity) != nullptr; }
-bool AnswersBeacon(Entity* entity) { return dynamic_cast<OOWaypointEntity*>(entity) != nullptr || ShipPart(entity) != nullptr || EffectPart(entity) != nullptr; }
+bool AnswersPlanet(Entity* entity)
+{
+    return dynamic_cast<OOPlanetEntity*>(entity) != nullptr;
+}
+bool AnswersBeacon(Entity* entity)
+{
+    return dynamic_cast<OOWaypointEntity*>(entity) != nullptr || ShipPart(entity) != nullptr || EffectPart(entity) != nullptr;
+}
 
 void Facade_addToLinkedLists(Entity* entity)
 {
@@ -471,7 +507,7 @@ void Facade_orientationChanged(Entity* entity)
         return;
     entity->orientationChanged();
 }
-Entity* Facade_owner(Entity* entity) // the owner's C++ entity (its object's until bead oo-dpyk8)
+Entity* Facade_owner(Entity* entity) // the owner's C++ entity
 {
     if (entity == nullptr)
         return { };
@@ -542,7 +578,8 @@ OOEntityStatus Facade_status(Entity* entity)
         return { };
     return entity->status();
 }
-Entity* Facade_superShaderBindingTarget(Entity* entity) // the parent's C++ entity (its object's until bead oo-dpyk8)
+Entity* Facade_superShaderBindingTarget(
+    Entity* entity) // the parent's C++ entity
 {
     if (entity == nullptr)
         return { };
@@ -636,18 +673,24 @@ double Facade_zeroDistance(Entity* entity)
 
 const OOEntityFacadeRow kOOEntityFacadeRows[] = {
     { "absolutePositionForSubentity", nullptr, nullptr },
-    { "addToLinkedLists", nullptr, &OOEntityByNameTyped<&Facade_addToLinkedLists> },
-    { "airColorAsVector", &AnswersPlanet, &OOEntityByNameTyped<&Facade_airColorAsVector> },
-    { "airColorMixRatio", &AnswersPlanet, &OOEntityByNameTyped<&Facade_airColorMixRatio> },
+    { "addToLinkedLists", nullptr,
+        &OOEntityByNameTyped<&Facade_addToLinkedLists> },
+    { "airColorAsVector", &AnswersPlanet,
+        &OOEntityByNameTyped<&Facade_airColorAsVector> },
+    { "airColorMixRatio", &AnswersPlanet,
+        &OOEntityByNameTyped<&Facade_airColorMixRatio> },
     { "airDensity", &AnswersPlanet, &OOEntityByNameTyped<&Facade_airDensity> },
     { "beaconCode", &AnswersBeacon, nullptr },
-    { "beaconDrawable", &AnswersBeacon, &OOEntityByNameTyped<&Facade_beaconDrawable> },
+    { "beaconDrawable", &AnswersBeacon,
+        &OOEntityByNameTyped<&Facade_beaconDrawable> },
     { "beaconLabel", &AnswersBeacon, nullptr },
     { "boundingBox", nullptr, nullptr },
     { "camZeroDistance", nullptr, &OOEntityByNameTyped<&Facade_camZeroDistance> },
     { "cameraRangeBack", nullptr, &OOEntityByNameTyped<&Facade_cameraRangeBack> },
-    { "cameraRangeFront", nullptr, &OOEntityByNameTyped<&Facade_cameraRangeFront> },
-    { "cameraRelativePosition", nullptr, &OOEntityByNameTyped<&Facade_cameraRelativePosition> },
+    { "cameraRangeFront", nullptr,
+        &OOEntityByNameTyped<&Facade_cameraRangeFront> },
+    { "cameraRelativePosition", nullptr,
+        &OOEntityByNameTyped<&Facade_cameraRelativePosition> },
     { "canCollide", nullptr, &OOEntityByNameTyped<&Facade_canCollide> },
     { "collisionRadius", nullptr, &OOEntityByNameTyped<&Facade_collisionRadius> },
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -664,23 +707,28 @@ const OOEntityFacadeRow kOOEntityFacadeRows[] = {
 #ifdef OO_DEBUG_MONITOR_ENABLED
     { "descriptionForObjDumpBasic", nullptr, nullptr },
 #endif
-    { "distanceTravelled", nullptr, &OOEntityByNameTyped<&Facade_distanceTravelled> },
+    { "distanceTravelled", nullptr,
+        &OOEntityByNameTyped<&Facade_distanceTravelled> },
     { "drawRotationMatrix", nullptr, nullptr },
     { "drawTransformationMatrix", nullptr, nullptr },
     { "dumpSelfState", nullptr, &OOEntityByNameTyped<&Facade_dumpSelfState> },
     { "dumpState", nullptr, &OOEntityByNameTyped<&Facade_dumpState> },
     { "energy", nullptr, &OOEntityByNameTyped<&Facade_energy> },
-    { "findCollisionRadius", nullptr, &OOEntityByNameTyped<&Facade_findCollisionRadius> },
+    { "findCollisionRadius", nullptr,
+        &OOEntityByNameTyped<&Facade_findCollisionRadius> },
     { "fogUniform", nullptr, &OOEntityByNameTyped<&Facade_fogUniform> },
     { "frustumRadius", nullptr, &OOEntityByNameTyped<&Facade_frustumRadius> },
-    { "illuminationColorAsVector", &AnswersPlanet, &OOEntityByNameTyped<&Facade_illuminationColorAsVector> },
+    { "illuminationColorAsVector", &AnswersPlanet,
+        &OOEntityByNameTyped<&Facade_illuminationColorAsVector> },
     { "isBeacon", &AnswersBeacon, &OOEntityByNameTyped<&Facade_isBeacon> },
     { "isCascadeWeapon", nullptr, &OOEntityByNameTyped<&Facade_isCascadeWeapon> },
     { "isDock", nullptr, &OOEntityByNameTyped<&Facade_isDock> },
     { "isEffect", nullptr, &OOEntityByNameTyped<&Facade_isEffect> },
-    { "isImmuneToBreakPatternHide", nullptr, &OOEntityByNameTyped<&Facade_isImmuneToBreakPatternHide> },
+    { "isImmuneToBreakPatternHide", nullptr,
+        &OOEntityByNameTyped<&Facade_isImmuneToBreakPatternHide> },
     { "isInSpace", nullptr, &OOEntityByNameTyped<&Facade_isInSpace> },
-    { "isJammingScanning", &AnswersBeacon, &OOEntityByNameTyped<&Facade_isJammingScanning> },
+    { "isJammingScanning", &AnswersBeacon,
+        &OOEntityByNameTyped<&Facade_isJammingScanning> },
     { "isPlanet", nullptr, &OOEntityByNameTyped<&Facade_isPlanet> },
     { "isPlayer", nullptr, &OOEntityByNameTyped<&Facade_isPlayer> },
     { "isShip", nullptr, &OOEntityByNameTyped<&Facade_isShip> },
@@ -691,7 +739,8 @@ const OOEntityFacadeRow kOOEntityFacadeRows[] = {
     { "isSun", nullptr, &OOEntityByNameTyped<&Facade_isSun> },
     { "isSunlit", nullptr, &OOEntityByNameTyped<&Facade_isSunlit> },
     { "isVisible", nullptr, &OOEntityByNameTyped<&Facade_isVisible> },
-    { "isVisibleToScripts", nullptr, &OOEntityByNameTyped<&Facade_isVisibleToScripts> },
+    { "isVisibleToScripts", nullptr,
+        &OOEntityByNameTyped<&Facade_isVisibleToScripts> },
     { "isVisualEffect", nullptr, &OOEntityByNameTyped<&Facade_isVisualEffect> },
     { "isWaypoint", nullptr, &OOEntityByNameTyped<&Facade_isWaypoint> },
     { "isWormhole", nullptr, &OOEntityByNameTyped<&Facade_isWormhole> },
@@ -699,15 +748,19 @@ const OOEntityFacadeRow kOOEntityFacadeRows[] = {
     { "mass", nullptr, &OOEntityByNameTyped<&Facade_mass> },
     { "maxEnergy", nullptr, &OOEntityByNameTyped<&Facade_maxEnergy> },
     { "nextBeacon", &AnswersBeacon, &OOEntityByNameTyped<&Facade_nextBeacon> },
-    { "normalOrientation", nullptr, &OOEntityByNameTyped<&Facade_normalOrientation> },
+    { "normalOrientation", nullptr,
+        &OOEntityByNameTyped<&Facade_normalOrientation> },
     { "orientation", nullptr, &OOEntityByNameTyped<&Facade_orientation> },
-    { "orientationChanged", nullptr, &OOEntityByNameTyped<&Facade_orientationChanged> },
+    { "orientationChanged", nullptr,
+        &OOEntityByNameTyped<&Facade_orientationChanged> },
     { "owner", nullptr, &OOEntityByNameTyped<&Facade_owner> },
     { "parentEntity", nullptr, &OOEntityByNameTyped<&Facade_parentEntity> },
     { "position", nullptr, nullptr },
     { "prevBeacon", &AnswersBeacon, &OOEntityByNameTyped<&Facade_prevBeacon> },
-    { "relativePosition", nullptr, &OOEntityByNameTyped<&Facade_relativePosition> },
-    { "removeFromLinkedLists", nullptr, &OOEntityByNameTyped<&Facade_removeFromLinkedLists> },
+    { "relativePosition", nullptr,
+        &OOEntityByNameTyped<&Facade_relativePosition> },
+    { "removeFromLinkedLists", nullptr,
+        &OOEntityByNameTyped<&Facade_removeFromLinkedLists> },
     { "rootShipEntity", nullptr, &OOEntityByNameTyped<&Facade_rootShipEntity> },
     { "rotationMatrix", nullptr, nullptr },
     { "scanClass", nullptr, &OOEntityByNameTyped<&Facade_scanClass> },
@@ -715,21 +768,30 @@ const OOEntityFacadeRow kOOEntityFacadeRows[] = {
     { "spawnTime", nullptr, &OOEntityByNameTyped<&Facade_spawnTime> },
     { "speed", nullptr, &OOEntityByNameTyped<&Facade_speed> },
     { "status", nullptr, &OOEntityByNameTyped<&Facade_status> },
-    { "superShaderBindingTarget", nullptr, &OOEntityByNameTyped<&Facade_superShaderBindingTarget> },
-    { "terminatorThresholdVector", &AnswersPlanet, &OOEntityByNameTyped<&Facade_terminatorThresholdVector> },
+    { "superShaderBindingTarget", nullptr,
+        &OOEntityByNameTyped<&Facade_superShaderBindingTarget> },
+    { "terminatorThresholdVector", &AnswersPlanet,
+        &OOEntityByNameTyped<&Facade_terminatorThresholdVector> },
     { "throwSparks", nullptr, &OOEntityByNameTyped<&Facade_throwSparks> },
     { "throwingSparks", nullptr, &OOEntityByNameTyped<&Facade_throwingSparks> },
-    { "timeElapsedSinceSpawn", nullptr, &OOEntityByNameTyped<&Facade_timeElapsedSinceSpawn> },
+    { "timeElapsedSinceSpawn", nullptr,
+        &OOEntityByNameTyped<&Facade_timeElapsedSinceSpawn> },
     { "transformationMatrix", nullptr, nullptr },
     { "universalID", nullptr, &OOEntityByNameTyped<&Facade_universalID> },
     { "universalTime", nullptr, &OOEntityByNameTyped<&Facade_universalTime> },
-    { "updateCameraRelativePosition", nullptr, &OOEntityByNameTyped<&Facade_updateCameraRelativePosition> },
-    { "updateLinkedLists", nullptr, &OOEntityByNameTyped<&Facade_updateLinkedLists> },
-    { "validForAddToUniverse", nullptr, &OOEntityByNameTyped<&Facade_validForAddToUniverse> },
+    { "updateCameraRelativePosition", nullptr,
+        &OOEntityByNameTyped<&Facade_updateCameraRelativePosition> },
+    { "updateLinkedLists", nullptr,
+        &OOEntityByNameTyped<&Facade_updateLinkedLists> },
+    { "validForAddToUniverse", nullptr,
+        &OOEntityByNameTyped<&Facade_validForAddToUniverse> },
     { "velocity", nullptr, &OOEntityByNameTyped<&Facade_velocity> },
-    { "warnAboutHostiles", nullptr, &OOEntityByNameTyped<&Facade_warnAboutHostiles> },
-    { "wasAddedToUniverse", nullptr, &OOEntityByNameTyped<&Facade_wasAddedToUniverse> },
-    { "wasRemovedFromUniverse", nullptr, &OOEntityByNameTyped<&Facade_wasRemovedFromUniverse> },
+    { "warnAboutHostiles", nullptr,
+        &OOEntityByNameTyped<&Facade_warnAboutHostiles> },
+    { "wasAddedToUniverse", nullptr,
+        &OOEntityByNameTyped<&Facade_wasAddedToUniverse> },
+    { "wasRemovedFromUniverse", nullptr,
+        &OOEntityByNameTyped<&Facade_wasRemovedFromUniverse> },
     { "zeroDistance", nullptr, &OOEntityByNameTyped<&Facade_zeroDistance> },
 };
 
@@ -744,12 +806,13 @@ std::span<const OOEntityObjectName> oo::EntityObjectNames()
 
 const OOEntityObjectName* oo::EntityObjectNameNamed(const std::string& name)
 {
-    static const std::unordered_map<std::string_view, const OOEntityObjectName*> names = [] {
-        std::unordered_map<std::string_view, const OOEntityObjectName*> result;
-        for (const OOEntityObjectName& row : kOOEntityObjectNames)
-            result.emplace(row.name, &row);
-        return result;
-    }();
+    static const std::unordered_map<std::string_view, const OOEntityObjectName*>
+        names = [] {
+            std::unordered_map<std::string_view, const OOEntityObjectName*> result;
+            for (const OOEntityObjectName& row : kOOEntityObjectNames)
+                result.emplace(row.name, &row);
+            return result;
+        }();
     auto found = names.find(name);
     return found != names.end() ? found->second : nullptr;
 }
@@ -761,12 +824,13 @@ std::span<const OOEntityFacadeRow> oo::EntityFacadeRows()
 
 const OOEntityFacadeRow* oo::EntityFacadeRowNamed(const std::string& name)
 {
-    static const std::unordered_map<std::string_view, const OOEntityFacadeRow*> rows = [] {
-        std::unordered_map<std::string_view, const OOEntityFacadeRow*> result;
-        for (const OOEntityFacadeRow& row : kOOEntityFacadeRows)
-            result.emplace(row.name, &row);
-        return result;
-    }();
+    static const std::unordered_map<std::string_view, const OOEntityFacadeRow*>
+        rows = [] {
+            std::unordered_map<std::string_view, const OOEntityFacadeRow*> result;
+            for (const OOEntityFacadeRow& row : kOOEntityFacadeRows)
+                result.emplace(row.name, &row);
+            return result;
+        }();
     auto found = rows.find(name);
     return found != rows.end() ? found->second : nullptr;
 }
@@ -778,19 +842,21 @@ std::span<const OOEntityByNameRow> oo::EntityByNameRows()
 
 const OOEntityByNameRow* oo::EntityByNameRowNamed(const std::string& name)
 {
-    static const std::unordered_map<std::string_view, const OOEntityByNameRow*> rows = [] {
-        std::unordered_map<std::string_view, const OOEntityByNameRow*> result;
-        for (const OOEntityByNameRow& row : kOOEntityByNameRows)
-            result.emplace(row.name, &row);
-        return result;
-    }();
+    static const std::unordered_map<std::string_view, const OOEntityByNameRow*>
+        rows = [] {
+            std::unordered_map<std::string_view, const OOEntityByNameRow*> result;
+            for (const OOEntityByNameRow& row : kOOEntityByNameRows)
+                result.emplace(row.name, &row);
+            return result;
+        }();
     auto found = rows.find(name);
     return found != rows.end() ? found->second : nullptr;
 }
 
-// As the root facade's -respondsToSelector: answered the name sets (the visual effect's first). A name only
-// the effect's set holds is answered by the root (super) for any entity, as the facade did; its
-// body answers zero for any part but an effect's.
+// As the root facade's -respondsToSelector: answered the name sets (the visual
+// effect's first). A name only the effect's set holds is answered by the root
+// (super) for any entity, as the facade did; its body answers zero for any part
+// but an effect's.
 bool oo::EntityByNameRowApplies(const OOEntityByNameRow& row, Entity* entity)
 {
     if (entity == nullptr)
@@ -809,7 +875,8 @@ bool oo::EntityByNameRowApplies(const OOEntityByNameRow& row, Entity* entity)
     return ((flags & kOOByNameStation) != 0 && StationPart(entity) != nullptr) || ((flags & kOOByNameDock) != 0 && DockPart(entity) != nullptr);
 }
 
-bool oo::CallEntityByNameTyped(Entity* entity, const std::string& name, OOEntityByNameValue& value)
+bool oo::CallEntityByNameTyped(Entity* entity, const std::string& name,
+    OOEntityByNameValue& value)
 {
     if (entity == nullptr)
         return false;
@@ -819,7 +886,7 @@ bool oo::CallEntityByNameTyped(Entity* entity, const std::string& name, OOEntity
         row->typed(entity, value);
         return true;
     }
-    // A facade row (bead oo-9ht.39.8.25): the facade method's body, for an entity that answers it.
+    // A facade row: the facade method's body, for an entity that answers it.
     const OOEntityFacadeRow* facade = EntityFacadeRowNamed(name);
     if (facade == nullptr || facade->typed == nullptr || (facade->answers != nullptr && !facade->answers(entity)))
         return false;
@@ -832,11 +899,12 @@ namespace {
 enum class Kind : std::uint8_t {
     Void, // a void result, or a scalar result the call ignores
     PList, // an oo::PList result
-    Object, // an object result, ignored (ADR-0055 Amendment 2)
+    Object, // an object result, ignored
     Unsupported
 };
 
-// As OOCallByName classifies a method's return type encoding (OOCallByName.mm, ResultKind()).
+// As OOCallByName classifies a method's return type encoding (OOCallByName.mm,
+// ResultKind()).
 Kind ResultKind(const char* encoding)
 {
     std::string_view type = encoding;
@@ -853,24 +921,28 @@ Kind ResultKind(const char* encoding)
     return Kind::Unsupported;
 }
 
-// The tabled row the name names, if it applies to the entity; null for any other name.
+// The tabled row the name names, if it applies to the entity; null for any
+// other name.
 const OOEntityByNameRow* ApplyingRow(Entity* entity, const std::string& name)
 {
     const OOEntityByNameRow* row = oo::EntityByNameRowNamed(name);
-    return (row != nullptr && oo::EntityByNameRowApplies(*row, entity)) ? row : nullptr;
+    return (row != nullptr && oo::EntityByNameRowApplies(*row, entity)) ? row
+                                                                        : nullptr;
 }
 
-// The row's call with the argument, if OOCallByName would make it (its usable signatures); none
-// if the signature is unusable.
-std::optional<oo::PList> CallRow(const OOEntityByNameRow& row, Entity* entity, const std::string* string, const oo::PList* plist)
+// The row's call with the argument, if OOCallByName would make it (its usable
+// signatures); none if the signature is unusable.
+std::optional<oo::PList> CallRow(const OOEntityByNameRow& row, Entity* entity,
+    const std::string* string,
+    const oo::PList* plist)
 {
     const Kind result = ResultKind(row.result);
     const bool hasArgument = (string != nullptr || plist != nullptr);
     if (hasArgument != (row.argument != OOEntityByNameArgument::None) || result == Kind::Unsupported)
         return std::nullopt;
 
-    // A string reaches a PList parameter as a string PList; a PList reaches a string parameter
-    // only when it is a string.
+    // A string reaches a PList parameter as a string PList; a PList reaches a
+    // string parameter only when it is a string.
     oo::PList stringAsPList;
     if (row.argument == OOEntityByNameArgument::String && plist != nullptr) {
         string = plist->getIf<std::string>();
@@ -887,24 +959,21 @@ std::optional<oo::PList> CallRow(const OOEntityByNameRow& row, Entity* entity, c
     }
 
     oo::PList answer = row.call(entity, string, plist);
-    // only a PList result is the call's result; a void, scalar or object result is ignored
+    // only a PList result is the call's result; a void, scalar or object result
+    // is ignored
     return (result == Kind::PList) ? std::move(answer) : oo::PList();
 }
 
-/*	The class OOCallByName's lines named: the entity's object's, the root's facade, of class Entity (not
-        asked since bead oo-9ht.39.9, ADR-0056 amendment oo-9ht.39.9; an Objective-C stand-in's own class
-        until bead oo-j12i2).
+/*	The class OOCallByName's lines named: the entity's object's, the root's
+   facade, of class Entity (not asked).
 */
-const char* ObjectClassName(Entity*)
-{
-    return "Entity";
-}
+const char* ObjectClassName(Entity*) { return "Entity"; }
 
-/*	The line OOCallByName logged for a method whose signature the call cannot use (OOCallByName.mm
-        LogBadSignature), for a tabled name that applies: the class of the entity's object, as the
-        category method was its; the type encoding is the row's, @encode() of the result, of self and
-        _cmd and of the argument, without the frame offsets the method's encoding had (bead
-        oo-9ht.39.7.3, ADR-0056 amendment oo-9ht.39.7.3: a log-text-only change).
+/*	The line OOCallByName logged for a method whose signature the call
+   cannot use (OOCallByName.mm LogBadSignature), for a tabled name that applies:
+   the class of the entity's object, as the category method was its; the type
+   encoding is the row's, @encode() of the result, of self and _cmd and of the
+   argument, without the frame offsets the method's encoding had.
 */
 void LogBadSignature(Entity* entity, const OOEntityByNameRow& row)
 {
@@ -913,11 +982,17 @@ void LogBadSignature(Entity* entity, const OOEntityByNameRow& row)
         encoding += kOOTypeEncoding<const std::string&>;
     if (row.argument == OOEntityByNameArgument::PList)
         encoding += kOOTypeEncoding<const oo::PList&>;
-    OO_LOG_ERR("callByName.badSignature", "-[{} {}] has no signature a by-name call can use (type encoding {}).", ObjectClassName(entity), row.name, encoding);
+    OO_LOG_ERR(
+        "callByName.badSignature",
+        "-[{} {}] has no signature a by-name call can use (type encoding {}).",
+        ObjectClassName(entity), row.name, encoding);
 }
 
-// A tabled name that applies, called or logged; none for any other name (the object's path).
-std::optional<oo::PList> CallTabled(Entity* entity, const std::string& name, const std::string* string, const oo::PList* plist)
+// A tabled name that applies, called or logged; none for any other name (the
+// object's path).
+std::optional<oo::PList> CallTabled(Entity* entity, const std::string& name,
+    const std::string* string,
+    const oo::PList* plist)
 {
     const OOEntityByNameRow* row = ApplyingRow(entity, name);
     if (row == nullptr)
@@ -929,24 +1004,30 @@ std::optional<oo::PList> CallTabled(Entity* entity, const std::string& name, con
 }
 
 // The name, if the entity's object answered it for this entity; else null.
-const OOEntityObjectName* AnsweredObjectName(Entity* entity, const std::string& name)
+const OOEntityObjectName* AnsweredObjectName(Entity* entity,
+    const std::string& name)
 {
     const OOEntityObjectName* row = oo::EntityObjectNameNamed(name);
-    return (row != nullptr && (row->answers == nullptr || row->answers(entity))) ? row : nullptr;
+    return (row != nullptr && (row->answers == nullptr || row->answers(entity)))
+        ? row
+        : nullptr;
 }
 
-/*	A C++ entity's name outside the by-name table, as OOCallByName answered it on the entity's
-        object (bead oo-9ht.39.9, ADR-0056 amendment oo-9ht.39.9), without the object: a facade row's
-        method with no argument that the call called is the row's body (its result ignored, as the call
-        ignored it); any other name the object answered is logged as the call logged it (the method's
-        type encoding), a root-class or lifetime method included, which is no longer called; any other
-        name does not respond. The texts are OOCallByName's (OOCallByName.mm LogUnknown, LogBadSignature).
+/*	A C++ entity's name outside the by-name table, as OOCallByName answered
+   it on the entity's object, without the object: a facade row's method with no
+   argument that the call called is the row's body (its result ignored, as the
+   call ignored it); any other name the object answered is logged as the call
+   logged it (the method's type encoding), a root-class or lifetime method
+   included, which is no longer called; any other name does not respond. The
+   texts are OOCallByName's (OOCallByName.mm LogUnknown, LogBadSignature).
 */
-oo::PList CallObjectName(Entity* entity, const std::string& name, bool hasArgument)
+oo::PList CallObjectName(Entity* entity, const std::string& name,
+    bool hasArgument)
 {
     const OOEntityObjectName* row = AnsweredObjectName(entity, name);
     if (row == nullptr) {
-        OO_LOG_ERR("callByName.unknownSelector", "{} does not respond to {}.", ObjectClassName(entity), name);
+        OO_LOG_ERR("callByName.unknownSelector", "{} does not respond to {}.",
+            ObjectClassName(entity), name);
         return oo::PList();
     }
     if (row->kind == kOOEntityObjectCalled && !hasArgument) {
@@ -957,7 +1038,10 @@ oo::PList CallObjectName(Entity* entity, const std::string& name, bool hasArgume
             return oo::PList();
         }
     }
-    OO_LOG_ERR("callByName.badSignature", "-[{} {}] has no signature a by-name call can use (type encoding {}).", ObjectClassName(entity), name, row->encoding);
+    OO_LOG_ERR(
+        "callByName.badSignature",
+        "-[{} {}] has no signature a by-name call can use (type encoding {}).",
+        ObjectClassName(entity), name, row->encoding);
     return oo::PList();
 }
 
@@ -969,10 +1053,11 @@ bool oo::EntityRespondsToName(Entity* entity, const std::string& name)
         return false;
     if (const OOEntityByNameRow* row = EntityByNameRowNamed(name))
         return EntityByNameRowApplies(*row, entity);
-    // A facade row (bead oo-9ht.39.8.25): the root facade's -respondsToSelector:'s answer for the facade's method.
+    // A facade row: the root facade's
+    // -respondsToSelector:'s answer for the facade's method.
     if (const OOEntityFacadeRow* facade = EntityFacadeRowNamed(name))
         return facade->answers == nullptr || facade->answers(entity);
-    // Any other name the entity's object answered (bead oo-9ht.39.9): the object is not asked.
+    // Any other name the entity's object answered: the object is not asked.
     return AnsweredObjectName(entity, name) != nullptr;
 }
 
@@ -985,7 +1070,8 @@ oo::PList oo::CallEntityByName(Entity* entity, const std::string& name)
     return CallObjectName(entity, name, false);
 }
 
-oo::PList oo::CallEntityByName(Entity* entity, const std::string& name, const std::string& argument)
+oo::PList oo::CallEntityByName(Entity* entity, const std::string& name,
+    const std::string& argument)
 {
     if (entity == nullptr)
         return PList();
@@ -994,7 +1080,8 @@ oo::PList oo::CallEntityByName(Entity* entity, const std::string& name, const st
     return CallObjectName(entity, name, true);
 }
 
-oo::PList oo::CallEntityByName(Entity* entity, const std::string& name, const PList& argument)
+oo::PList oo::CallEntityByName(Entity* entity, const std::string& name,
+    const PList& argument)
 {
     if (entity == nullptr)
         return PList();
@@ -1003,12 +1090,13 @@ oo::PList oo::CallEntityByName(Entity* entity, const std::string& name, const PL
     return CallObjectName(entity, name, true);
 }
 
-void oo::ScheduleEntityCall(Entity* entity, void (*call)(Entity* entity), double delay)
+void oo::ScheduleEntityCall(Entity* entity, void (*call)(Entity* entity),
+    double delay)
 {
     if (entity == nullptr || call == nullptr)
         return;
-    // The call holds the entity, so it keeps the entity alive until it has run, as the Objective-C
-    // holder OOEntityDeferredCall did (bead oo-9ht.39.7.3; a C++ call since bead oo-pvhrh).
+    // The call holds the entity, so it keeps the entity alive until it has run,
+    // as the Objective-C holder OOEntityDeferredCall did.
     oo::Ref<Entity> held(entity);
     OOScheduleDeferredCall([held, call]() { call(held.get()); }, delay);
 }

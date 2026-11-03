@@ -24,23 +24,24 @@ MA 02110-1301, USA.
 */
 
 #include "OOJSWorldScripts.h"
+
+#include <cstring>
+
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
 #include "OOScript.h"
 #include "PlayerEntity.h"
-
 #include "ooscript/JSEngine.hpp"
-#include <cstring>
 
 /*
-        Retargeted onto the ooscript façade (JSEngine.hpp) per the OOJSVector.mm exemplar (bead
-        oo-sdz): the class dispatch table (PropertyStub / StrictPropertyStub / ResolveStub /
-        ConvertStub / FinalizeStub) is replaced by nullptr hooks in ooscript::ClassDef, and the two
-        directly-spelled engine calls (DefineObject, DefineProperty) go through the façade. The hook
-        functions (WorldScriptsGetProperty, WorldScriptsEnumerate) take the façade's hook signature
-        (ooscript::Context / Object / PropertyId) directly rather than the engine's, so the OOJS_*
-        macros and the rest of each function body need no conversion. `this` is renamed to `thisObj`
-        because it is a reserved word once this file compiles as Objective-C++ (ADR-0001).
+        Retargeted onto the ooscript facade (JSEngine.hpp): the class dispatch
+   table (PropertyStub / StrictPropertyStub / ResolveStub / ConvertStub /
+   FinalizeStub) is replaced by nullptr hooks in ooscript::ClassDef, and the two
+   directly-spelled engine calls (DefineObject, DefineProperty) go through the
+   facade. The hook functions (WorldScriptsGetProperty, WorldScriptsEnumerate)
+   take the facade's hook signature (ooscript::Context / Object / PropertyId)
+   directly rather than the engine's, so the OOJS_* macros and the rest of each
+   function body need no conversion. `this` is spelled `thisObj`.
 */
 
 namespace ooscript {
@@ -54,7 +55,8 @@ using ooscript::PropertyId;
 using ooscript::Value;
 
 namespace {
-static bool WorldScriptsGetProperty(Context context, Object thisObj, PropertyId propID, Value* value);
+static bool WorldScriptsGetProperty(Context context, Object thisObj,
+    PropertyId propID, Value* value);
 } // namespace
 namespace {
 static bool WorldScriptsEnumerate(Context cx, Object obj);
@@ -85,11 +87,14 @@ static ClassDef sWorldScriptsClass = {
 
 void InitOOJSWorldScripts(ooscript::Context context, ooscript::Object global)
 {
-    ooscript::defineObject((context), (global), "worldScripts", &sWorldScriptsClass, nullptr, kWorldScriptsObjectFlags);
+    ooscript::defineObject((context), (global), "worldScripts",
+        &sWorldScriptsClass, nullptr,
+        kWorldScriptsObjectFlags);
 }
 
 namespace {
-static bool WorldScriptsGetProperty(Context cx, Object obj, PropertyId propID, Value* value)
+static bool WorldScriptsGetProperty(Context cx, Object obj, PropertyId propID,
+    Value* value)
 {
     ooscript::Context context = (cx);
     ooscript::PropertyId jsPropID = (propID);
@@ -108,8 +113,13 @@ static bool WorldScriptsGetProperty(Context cx, Object obj, PropertyId propID, V
 
     if (scriptName.has_value()) {
         script = nullptr;
-        const auto worldScripts = (player != nullptr ? player->worldScriptsByName() : std::vector<std::pair<std::string, oo::Ref<OOScript>>>()); // kept while script is used
-        for (const auto& [name, scriptRef] : worldScripts) // the last of a name, as the dictionary kept
+        const auto worldScripts = (player != nullptr
+                ? player->worldScriptsByName()
+                : std::vector<std::pair<std::string,
+                      oo::Ref<OOScript>>>()); // kept while
+                                              // script is used
+        for (const auto& [name, scriptRef] :
+            worldScripts) // the last of a name, as the dictionary kept
         {
             if (name == *scriptName && scriptRef.get() != nullptr)
                 script = scriptRef.get();
@@ -149,11 +159,14 @@ static bool WorldScriptsEnumerate(Context cx, Object obj)
     */
 
     PlayerEntity* player = OOPlayerForScripting();
-    const std::vector<std::string> names = (player != nullptr ? player->worldScriptNames() : std::vector<std::string>());
+    const std::vector<std::string> names = (player != nullptr ? player->worldScriptNames()
+                                                              : std::vector<std::string>());
 
     for (const std::string& name : names) {
         Value nullVal = ooscript::nullValue();
-        if (!ooscript::defineProperty(cx, obj, name.c_str(), nullVal, WorldScriptsGetProperty, nullptr, kWorldScriptsPropertyFlags))
+        if (!ooscript::defineProperty(cx, obj, name.c_str(), nullVal,
+                WorldScriptsGetProperty, nullptr,
+                kWorldScriptsPropertyFlags))
             return NO;
     }
 

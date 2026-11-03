@@ -4,9 +4,6 @@ OOTrumble.h
 
 Implements cute, fuzzy trumbles.
 
-C++20 since bead oo-862e (Phase 3, proposed ADR-0056); the Objective-C facade was deleted, and the
-class moved out of namespace cxx, by bead oo-9ht.17.
-
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
 
@@ -27,19 +24,17 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOTRUMBLE_H
-#define OOTRUMBLE_H
+#pragma once
 
 #include "OOFoundation.h"
 #include "OOOpenGL.h"
-
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 
-class AI; // C++ since bead oo-9ht.73 (AI.h)
+class AI; // AI.h
 class OOTexture;
 class PlayerEntity;
-class OOSound; // C++ since bead oo-9ht.68 deleted its facade
+class OOSound;
 
 #define TRUMBLE_MAX_ROTATION 15.0
 #define TRUMBLE_MAX_ROTATIONAL_VELOCITY 5.0
@@ -88,8 +83,8 @@ public:
 
     void calcGrowthRate();
 
-    // The getters of the ivars of the same name (a data member and a member function cannot share
-    // a name; ADR-0056 amendment oo-862e).
+    // The getters of the ivars of the same name (a data member and a member
+    // function cannot share a name).
     uint16_t* getDigram();
     NSPoint getPosition();
     NSPoint getMovement();
@@ -142,7 +137,8 @@ private:
     GLfloat* pointColor[6] = { }; // pointscheme
     //
     GLfloat hunger = { }; // behaviour modifier 0.0 (satiated) to 1.0 (starving)
-    GLfloat discomfort = { }; // behaviour modifier 0.0 (very happy) to 1.0 (extremely uncomfortable)
+    GLfloat discomfort = { }; // behaviour modifier 0.0 (very happy) to 1.0
+                              // (extremely uncomfortable)
     //
     GLfloat size = { }; // 0.0 -> max_size
     GLfloat max_size = { }; // 0.90 -> 1.25
@@ -165,8 +161,10 @@ private:
     //
     int animationStage = { }; // sub-sequence within animation
     //
-    enum trumble_mouth mouthFrame = { }; // which mouth position - determines what part of the texture to display
-    enum trumble_eyes eyeFrame = { }; // which eye position - determines what part of the texture to display
+    enum trumble_mouth mouthFrame = { }; // which mouth position - determines what
+                                         // part of the texture to display
+    enum trumble_eyes eyeFrame = { }; // which eye position - determines what part
+                                      // of the texture to display
     //
     oo::Ref<OOTexture> texture;
     //
@@ -174,5 +172,3 @@ private:
     //
     bool readyToSpawn = { };
 };
-
-#endif // OOTRUMBLE_H

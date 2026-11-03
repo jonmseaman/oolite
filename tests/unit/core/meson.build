@@ -1,4 +1,4 @@
-# Unit tests of converted game classes (Phase 3; proposed ADR-0056, exemplar bead oo-11m):
+# Unit tests of converted game classes:
 # meson test -C build/meson_<type> --suite core, or bash tools/check-core-tests.sh.
 #
 # One executable per tests/unit/core/test_<Class>.mm. It links the GAME'S OWN objects for the
@@ -15,7 +15,7 @@ core_tests = {
     'test_OOJSEngineTimeManagement': ['Core/Scripting/OOJSEngineTimeManagement.cpp', 'Core/OOProfilingStopwatch.cpp', 'Core/Scripting/ooscript/JSEngine_quickjs.cpp'],
     'test_OOJSGuiScreenKeyDefinition': ['Core/Scripting/OOJSGuiScreenKeyDefinition.cpp', 'Core/Scripting/ooscript/JSEngine_quickjs.cpp'],
     'test_OOJSInterfaceDefinition': ['Core/Scripting/OOJSInterfaceDefinition.cpp', 'Core/Scripting/ooscript/JSEngine_quickjs.cpp'],
-    'test_OoliteEquipmentControlScript': ['Core/Scripting/ooscript/JSEngine_quickjs.cpp'],	# Resources/Scripts/oolite-equipment-control.js (upstream #369, bead oo-we7mm)
+    'test_OoliteEquipmentControlScript': ['Core/Scripting/ooscript/JSEngine_quickjs.cpp'],	# Resources/Scripts/oolite-equipment-control.js (upstream #369)
     'test_OOJSPopulatorDefinition': ['Core/Scripting/OOJSPopulatorDefinition.cpp', 'Core/Scripting/ooscript/JSEngine_quickjs.cpp'],
     'test_OOPListScript': ['*'],
     'test_OOScript': ['*'],
@@ -129,12 +129,9 @@ core_tests = {
     'test_OOPolygonSprite': ['*'],
     'test_OOVector': ['Core/OOVector.cpp', 'Core/legacy_random.c'],
     'test_OOFastArithmetic': [],
-    # test_OOAsyncQueue retired with its only subject, the Objective-C OOAsyncQueue (bead oo-4aq6a.8, std-2026-10-19)
     'test_OOProfilingStopwatch': ['Core/OOProfilingStopwatch.cpp'],
     'test_OOAsyncWorkManager': ['Core/OOAsyncWorkManager.cpp', 'Core/OOCPUInfo.cpp'],
     'test_AI': ['Core/AI.cpp', 'Core/Scripting/ooscript/JSEngine_quickjs.cpp'],
-    # test_OOWeakReference retired with its only subject, the weak-reference class (bead oo-9ht.22, ADR-0049; Jon approved 2026-10-19)
-    # test_OOWeakSet retired with its only subject, the Objective-C weak set (bead oo-9ht.22, ADR-0049; Jon approved 2026-10-19)
     'test_OOJSFunction': ['Core/Scripting/OOJSFunction.cpp', 'Core/Scripting/ooscript/JSEngine_quickjs.cpp'],
     'test_OOJSPrivateObject': ['Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/ooscript/JSEngine_quickjs.cpp'],
     'test_OOJSTimer': ['Core/Scripting/OOJSTimer.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOScriptTimer.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/ooscript/JSEngine_quickjs.cpp'],
@@ -201,7 +198,7 @@ foreach name, game_sources : core_tests
         wanted += ['src/' + s]
     endforeach
     # ['*'] is every game object but main's, for a class whose object needs the game graph
-    # (Universe, Entity ivars): proposed ADR-0056 amendment oo-44gg.
+    # (Universe, Entity ivars).
     whole_game = game_sources == ['*']
     sources = []
     foreach f : oolite_sources
@@ -223,6 +220,6 @@ foreach name, game_sources : core_tests
     # 'openal': the tests that open the OpenAL device (alcOpenDevice). A sanitized run leaves them
     # out with --no-suite openal: the prebuilt libopenal-1.dll's onexit registration trips ASan's
     # allocator-ownership check inside ucrtbase.dll, a third-party report no suppression reaches
-    # (oo-dg6vf; tools/asan-suppressions.txt). The game's sanitized launch uses --nosound instead.
+    # (tools/asan-suppressions.txt). The game's sanitized launch uses --nosound instead.
     test(name, exe, suite: name in openal_tests ? ['core', 'openal'] : 'core', timeout: 60)
 endforeach

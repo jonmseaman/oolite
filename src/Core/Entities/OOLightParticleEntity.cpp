@@ -40,9 +40,8 @@ static OOTexture* sBlobTexture = nil;
 
 namespace {
 
-// The texture's graphics reset client, which the facade class was until bead oo-9ht.23 (ADR-0056
-// amendment oo-jpd8 item 3, as OOLaserShotEntity's): registered once, with the texture, and never
-// destroyed.
+// The texture's graphics reset client (as OOLaserShotEntity's): registered
+// once, with the texture, and never destroyed.
 class BlobTextureResetClient : public OOGraphicsResetClient {
 public:
     void resetGraphicsState() override { OOLightParticleEntity::resetGraphicsState(); }
@@ -100,7 +99,7 @@ void OOLightParticleEntity::drawSubEntityImmediate(bool immediate, bool transluc
             zero_distances are necessary for flashers, if they haven't already.
             -- Ahruman 2009-09-20
     */
-    Entity* ownerPart = oo::LiveOwner(this); // -owner's C++ entity (bead oo-zwnvp)
+    Entity* ownerPart = oo::LiveOwner(this); // -owner's C++ entity
     cam_zero_distance = ownerPart != nullptr ? ownerPart->camZeroDistance() : 0; // a message to nil answered 0
     if (no_draw_distance <= cam_zero_distance)
         return;
@@ -137,7 +136,7 @@ void OOLightParticleEntity::drawImmediate(bool /*immediate*/, bool translucent)
     if (!translucent)
         return;
     if ((UNIVERSE != nullptr ? UNIVERSE->breakPatternHide() : false) && !getIsImmuneToBreakPatternHide()) {
-        Entity* father = oo::LiveOwner(this); // -owner's C++ entity (bead oo-zwnvp)
+        Entity* father = oo::LiveOwner(this); // -owner's C++ entity
         while (father != nullptr) // && father != (Entity *)NO_TARGET, which is nil: NO_TARGET is 0
         {
             if (!oo::EntityIsSubEntity(father))

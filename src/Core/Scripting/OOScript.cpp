@@ -23,6 +23,12 @@ MA 02110-1301, USA.
 */
 
 #include "OOScript.h"
+
+#include <cxxabi.h>
+
+#include <cstdlib>
+#include <typeinfo>
+
 #include "OODebugStandards.h"
 #include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
@@ -31,21 +37,17 @@ MA 02110-1301, USA.
 #include "OOPListScript.h"
 #include "ResourceManager.h"
 #include "Universe.h"
-
 #include "oofnd/FileSystem.hpp"
+#include "oofnd/Ref.hpp" // oo::autorelease
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOObject.h"
 
-#include "oofnd/Ref.hpp" // oo::autorelease (beads oo-pvhrh, oo-31u.7)
-#include <cstdlib>
-#include <cxxabi.h>
-#include <typeinfo>
-
 namespace {
-// The strings in the array a property-list file holds (other elements skipped); nullopt when the
-// file holds no array (what OOArrayFromFile answered nil for; its plist.wrongType line, which named
-// the Foundation class, is not kept).
-static std::optional<std::vector<std::string>> StringsFromArrayFile(const std::string& path)
+// The strings in the array a property-list file holds (other elements skipped);
+// nullopt when the file holds no array (what OOArrayFromFile answered nil for;
+// its plist.wrongType line, which named the Foundation class, is not kept).
+static std::optional<std::vector<std::string>> StringsFromArrayFile(
+    const std::string& path)
 {
     const oo::PList list = cxx_OOPropertyListFromFile(path);
     const oo::PList::Array* array = list.getIf<oo::PList::Array>();
@@ -59,8 +61,7 @@ static std::optional<std::vector<std::string>> StringsFromArrayFile(const std::s
     return result;
 }
 
-// The C++ class's name, as [self class] named an Objective-C script's class (the deleted facade's
-// -description named it so; bead oo-9ht.133 moved it here).
+// The C++ class's name, as [self class] named an Objective-C script's class.
 static std::string ClassName(const OOScript& script)
 {
     int status = 0;
@@ -73,7 +74,8 @@ static std::string ClassName(const OOScript& script)
 }
 } // namespace
 
-std::optional<std::vector<oo::Ref<OOScript>>> OOScript::worldScriptsAtPath(const std::string& path)
+std::optional<std::vector<oo::Ref<OOScript>>> OOScript::worldScriptsAtPath(
+    const std::string& path)
 {
     std::string filePath;
     std::optional<std::vector<oo::Ref<OOScript>>> result;
@@ -101,15 +103,18 @@ std::optional<std::vector<oo::Ref<OOScript>>> OOScript::worldScriptsAtPath(const
                 foundScript = true;
         }
         if (foundScript) {
-            OO_LOG("script.load.javaScript", "Trying to load JavaScript script {}", filePath);
+            OO_LOG("script.load.javaScript", "Trying to load JavaScript script {}",
+                filePath);
             oo::log::indentIf("script.load.javaScript");
 
             script = OOJSScript::scriptWithPath(filePath, oo::PList());
             if (script != nullptr) {
                 result = std::vector<oo::Ref<OOScript>> { script };
-                OO_LOG("script.load.parseOK", "Successfully loaded JavaScript script {}", filePath);
+                OO_LOG("script.load.parseOK",
+                    "Successfully loaded JavaScript script {}", filePath);
             } else
-                OO_LOG_ERR("script.load.parseError", "Failed to load JavaScript script {}", filePath);
+                OO_LOG_ERR("script.load.parseError",
+                    "Failed to load JavaScript script {}", filePath);
 
             oo::log::outdentIf("script.load.javaScript");
         }
@@ -119,17 +124,21 @@ std::optional<std::vector<oo::Ref<OOScript>>> OOScript::worldScriptsAtPath(const
     if (!result.has_value()) {
         filePath = oo::str::appendingPathComponent(path, "script.plist");
         if (OOOxzFileExistsAtPath(filePath)) {
-            cxx_OOStandardsDeprecated(oo::str::format("Legacy script %s is deprecated", filePath.c_str()));
+            cxx_OOStandardsDeprecated(
+                oo::str::format("Legacy script %s is deprecated", filePath.c_str()));
             if (!OOEnforceStandards()) {
                 foundScript = true;
-                OO_LOG("script.load.pList", "Trying to load property list script {}", filePath);
+                OO_LOG("script.load.pList", "Trying to load property list script {}",
+                    filePath);
                 oo::log::indentIf("script.load.pList");
 
                 result = ::OOPListScript::scriptsInPListFile(filePath);
                 if (result.has_value())
-                    OO_LOG("script.load.parseOK", "Successfully loaded property list script {}", filePath);
+                    OO_LOG("script.load.parseOK",
+                        "Successfully loaded property list script {}", filePath);
                 else
-                    OO_LOG_ERR("script.load.parseError", "Failed to load property list script {}", filePath);
+                    OO_LOG_ERR("script.load.parseError",
+                        "Failed to load property list script {}", filePath);
 
                 oo::log::outdentIf("script.load.pList");
             }
@@ -143,7 +152,8 @@ std::optional<std::vector<oo::Ref<OOScript>>> OOScript::worldScriptsAtPath(const
     return result;
 }
 
-std::optional<std::vector<oo::Ref<OOScript>>> OOScript::scriptsFromFileNamed(const std::string& fileName)
+std::optional<std::vector<oo::Ref<OOScript>>> OOScript::scriptsFromFileNamed(
+    const std::string& fileName)
 {
     std::optional<std::vector<oo::Ref<OOScript>>> result;
     std::optional<std::string> path = ResourceManager::pathForFileNamed(fileName, "Scripts");
@@ -152,13 +162,15 @@ std::optional<std::vector<oo::Ref<OOScript>>> OOScript::scriptsFromFileNamed(con
     }
 
     if (!result.has_value()) {
-        OO_LOG_ERR("script.load.notFound", "Could not find script file {}.", fileName);
+        OO_LOG_ERR("script.load.notFound", "Could not find script file {}.",
+            fileName);
     }
 
     return result;
 }
 
-std::vector<oo::Ref<OOScript>> OOScript::scriptsFromList(const std::vector<std::string>& fileNames)
+std::vector<oo::Ref<OOScript>> OOScript::scriptsFromList(
+    const std::vector<std::string>& fileNames)
 {
     std::vector<oo::Ref<OOScript>> result;
 
@@ -173,7 +185,8 @@ std::vector<oo::Ref<OOScript>> OOScript::scriptsFromList(const std::vector<std::
     return result;
 }
 
-std::optional<std::vector<oo::Ref<OOScript>>> OOScript::scriptsFromFileAtPath(const std::string& filePath)
+std::optional<std::vector<oo::Ref<OOScript>>> OOScript::scriptsFromFileAtPath(
+    const std::string& filePath)
 {
     // OXZ-aware exists is false for directories
     if (!OOOxzFileExistsAtPath(filePath))
@@ -188,18 +201,21 @@ std::optional<std::vector<oo::Ref<OOScript>>> OOScript::scriptsFromFileAtPath(co
             result = std::vector<oo::Ref<OOScript>> { script };
         return result;
     } else if (extension == "plist") {
-        cxx_OOStandardsDeprecated(oo::str::format("Legacy script %s is deprecated", filePath.c_str()));
+        cxx_OOStandardsDeprecated(
+            oo::str::format("Legacy script %s is deprecated", filePath.c_str()));
         if (OOEnforceStandards()) {
             return std::nullopt;
         }
         return ::OOPListScript::scriptsInPListFile(filePath);
     }
 
-    OO_LOG_ERR("script.load.badName", "Don't know how to load a script from {}.", filePath);
+    OO_LOG_ERR("script.load.badName", "Don't know how to load a script from {}.",
+        filePath);
     return std::nullopt;
 }
 
-oo::Ref<OOScript> OOScript::jsScriptFromFileNamed(const std::string& fileName, const oo::PList& properties)
+oo::Ref<OOScript> OOScript::jsScriptFromFileNamed(const std::string& fileName,
+    const oo::PList& properties)
 {
     std::string extension;
     std::optional<std::string> path;
@@ -211,20 +227,26 @@ oo::Ref<OOScript> OOScript::jsScriptFromFileNamed(const std::string& fileName, c
     if (extension == "js" || extension == "es") {
         path = ResourceManager::pathForFileNamed(fileName, "Scripts");
         if (!path.has_value()) {
-            OO_LOG_ERR("script.load.notFound", "Could not find script file {}.", fileName);
+            OO_LOG_ERR("script.load.notFound", "Could not find script file {}.",
+                fileName);
             return nullptr;
         }
         return OOJSScript::scriptWithPath(path, properties);
     } else if (extension == "plist") {
-        OO_LOG_ERR("script.load.badName", "Can't load script named {} - legacy scripts are not supported in this context.", fileName);
+        OO_LOG_ERR("script.load.badName",
+            "Can't load script named {} - legacy scripts are not supported "
+            "in this context.",
+            fileName);
         return nullptr;
     }
 
-    OO_LOG_ERR("script.load.badName", "Don't know how to load a script from {}.", fileName);
+    OO_LOG_ERR("script.load.badName", "Don't know how to load a script from {}.",
+        fileName);
     return nullptr;
 }
 
-oo::Ref<OOScript> OOScript::jsAIScriptFromFileNamed(const std::string& fileName, const oo::PList& properties)
+oo::Ref<OOScript> OOScript::jsAIScriptFromFileNamed(
+    const std::string& fileName, const oo::PList& properties)
 {
     std::string extension;
     std::optional<std::string> path;
@@ -236,39 +258,48 @@ oo::Ref<OOScript> OOScript::jsAIScriptFromFileNamed(const std::string& fileName,
     if (extension == "js" || extension == "es") {
         path = ResourceManager::pathForFileNamed(fileName, "AIs");
         if (!path.has_value()) {
-            OO_LOG_ERR("script.load.notFound", "Could not find script file {}.", fileName);
+            OO_LOG_ERR("script.load.notFound", "Could not find script file {}.",
+                fileName);
             return nullptr;
         }
         return OOJSScript::scriptWithPath(path, properties);
     } else if (extension == "plist") {
-        OO_LOG_ERR("script.load.badName", "Can't load script named {} - legacy scripts are not supported in this context.", fileName);
+        OO_LOG_ERR("script.load.badName",
+            "Can't load script named {} - legacy scripts are not supported "
+            "in this context.",
+            fileName);
         return nullptr;
     }
 
-    OO_LOG_ERR("script.load.badName", "Don't know how to load a script from {}.", fileName);
+    OO_LOG_ERR("script.load.badName", "Don't know how to load a script from {}.",
+        fileName);
     return nullptr;
 }
 
 std::optional<std::string> OOScript::descriptionComponents()
 {
-    return oo::str::format("\"%s\" version %s", name().value_or("(null)").c_str(), version().value_or("(null)").c_str());
+    return oo::str::format("\"%s\" version %s", name().value_or("(null)").c_str(),
+        version().value_or("(null)").c_str());
 }
 
 std::optional<std::string> OOScript::name()
 {
-    OO_LOG_ERR(cxx_kOOLogSubclassResponsibility, "{}", "OOScript should not be used directly!");
+    OO_LOG_ERR(cxx_kOOLogSubclassResponsibility, "{}",
+        "OOScript should not be used directly!");
     return std::nullopt;
 }
 
 std::optional<std::string> OOScript::scriptDescription()
 {
-    OO_LOG_ERR(cxx_kOOLogSubclassResponsibility, "{}", "OOScript should not be used directly!");
+    OO_LOG_ERR(cxx_kOOLogSubclassResponsibility, "{}",
+        "OOScript should not be used directly!");
     return std::nullopt;
 }
 
 std::optional<std::string> OOScript::version()
 {
-    OO_LOG_ERR(cxx_kOOLogSubclassResponsibility, "{}", "OOScript should not be used directly!");
+    OO_LOG_ERR(cxx_kOOLogSubclassResponsibility, "{}",
+        "OOScript should not be used directly!");
     return std::nullopt;
 }
 
@@ -278,58 +309,56 @@ std::optional<std::string> OOScript::displayName()
     std::optional<std::string> version = this->version();
 
     if (version.has_value())
-        return oo::str::format("%s %s", name.value_or("(null)").c_str(), version->c_str());
+        return oo::str::format("%s %s", name.value_or("(null)").c_str(),
+            version->c_str());
     else
         return name;
 }
 
-bool OOScript::requiresTickle()
-{
-    return false;
-}
+bool OOScript::requiresTickle() { return false; }
 
 void OOScript::runWithTarget(Entity*)
 {
-    OO_LOG_ERR(cxx_kOOLogSubclassResponsibility, "{}", "OOScript should not be used directly!");
+    OO_LOG_ERR(cxx_kOOLogSubclassResponsibility, "{}",
+        "OOScript should not be used directly!");
 }
 
-// OOScript (JavaScriptEvents): NO for every script but a JS one (OOJSScript overrides).
-bool OOScript::callMethod(ooscript::PropertyId, ooscript::Context, ooscript::Value*, int, ooscript::Value*)
+// OOScript (JavaScriptEvents): NO for every script but a JS one (OOJSScript
+// overrides).
+bool OOScript::callMethod(ooscript::PropertyId, ooscript::Context,
+    ooscript::Value*, int, ooscript::Value*)
 {
     return false;
 }
 
 // The deleted facade's class, which a writer error named.
-std::string OOScript::className() const
-{
-    return "OOScript";
-}
+std::string OOScript::className() const { return "OOScript"; }
 
-// The deleted facade's -description: the C++ class's name and the address (the script's, which is
-// its identity now), then the components.
+// The deleted facade's -description: the C++ class's name and the address (the
+// script's, which is its identity now), then the components.
 std::string OOScript::description() const
 {
     OOScript& script = const_cast<OOScript&>(*this);
-    std::string result = oo::str::format("<%s %s>", ClassName(script).c_str(), oo::str::pointerDescription(this).c_str());
+    std::string result = oo::str::format("<%s %s>", ClassName(script).c_str(),
+        oo::str::pointerDescription(this).c_str());
     if (const std::optional<std::string> components = script.descriptionComponents())
         result += "{" + *components + "}";
     return result;
 }
 
-// OOObject's -oo_jsValueInContext: (OOObjectJSValueInContext), which the facade answered for every
-// script but a JS one.
+// OOObject's -oo_jsValueInContext: (OOObjectJSValueInContext), which the facade
+// answered for every script but a JS one.
 ooscript::Value OOScript::jsValueInContext(ooscript::Context)
 {
     return ooscript::undefinedValue();
 }
 
 // OOObject's -oo_clearJSSelf:, which did nothing.
-void OOScript::clearJSSelf(ooscript::Object)
-{
-}
+void OOScript::clearJSSelf(ooscript::Object) { }
 
-/*	OOScriptAutorelease(): the script goes to the innermost oo::AutoreleaseScope, whose drain releases it
-        where the keeper object that held it was released (beads oo-pvhrh, oo-31u.7).
+/*	OOScriptAutorelease(): the script goes to the innermost
+   oo::AutoreleaseScope, whose drain releases it where the keeper object that
+   held it was released.
 */
 void OOScriptAutorelease(oo::Ref<OOScript> script)
 {

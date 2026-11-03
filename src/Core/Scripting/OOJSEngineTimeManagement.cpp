@@ -253,7 +253,7 @@ void OOJSTimeManagementInit(OOJavaScriptEngine* engine, ooscript::Runtime runtim
         engine->retain();
     oo::thread::detach([engine, runtime]() {
         {
-            oo::AutoreleaseScope pool; // was @autoreleasepool (oo-31u.8)
+            oo::AutoreleaseScope pool;
             WatchdogTimerThread(runtime);
         }
         if (engine != nullptr)
@@ -265,18 +265,17 @@ void OOJSTimeManagementInit(OOJavaScriptEngine* engine, ooscript::Runtime runtim
 
 #if OOJS_PROFILE
 
-// Profiling is enabled, but MOZ_TRACE_JSCALLS is disabled, so only native functions are profiled.
-// MOZ_TRACE_JSCALLS was a SpiderMonkey build option; the QuickJS-ng engine has no such hook, so it
-// is never defined and this is how every profiling build profiles. It was a #warning, printed by
-// every such build with nothing to act on (bead oo-99txa).
+// Profiling is enabled, but MOZ_TRACE_JSCALLS is disabled, so only native
+// functions are profiled. MOZ_TRACE_JSCALLS was a SpiderMonkey build option;
+// the QuickJS-ng engine has no such hook, so it is never defined and this is
+// how every profiling build profiles.
 
 namespace {
 static bool sProfiling = false;
 static bool sTracing = false;
 } // namespace
 static OOJSProfileStackFrame* sProfileStack = NULL;
-// Profile key (native name or JS function, by pointer) -> entry, retained. Was a map table with
-// non-owned pointer keys and retained object values (bead oo-3rb.20).
+// Profile key (native name or JS function, by pointer) -> entry, retained.
 namespace {
 static std::unordered_map<const void*, oo::Ref<OOTimeProfileEntry>>* sProfileInfo;
 

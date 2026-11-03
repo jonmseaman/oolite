@@ -4,9 +4,9 @@ OOCharacter.h
 
 Represents an NPC person (as opposed to an NPC ship).
 
-C++20 since bead oo-8kx7 (Phase 3, proposed ADR-0056). Its Objective-C facade was deleted by bead
-oo-9ht.10 (batch E): ships' crews and the character pool hold oo::Ref<OOCharacter>, and a
-character is its own PList::Object payload (oo::PListForeign) for its script's "character".
+Ships' crews and the character pool hold oo::Ref<OOCharacter>, and a
+character is its own PList::Object payload (oo::PListForeign) for its script's
+"character".
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -28,28 +28,29 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOCHARACTER_H
-#define OOCHARACTER_H
+#pragma once
 
 #include "OOJSPropID.h"
+#include "OOScript.h" // oo::Ref<OOScript> members and results
 #include "OOTypes.h"
 #include "legacy_random.h"
-#include "ooscript/JSEngine.hpp"
-
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-
-#include "OOScript.h" // oo::Ref<OOScript> members and results (bead oo-9ht.133)
+#include "ooscript/JSEngine.hpp"
 
 class OOCharacter : public oo::PListForeign {
 public:
     OOCharacter() = default; // [[OOCharacter alloc] init]: every field zero
     OOCharacter(const std::string& role, OOSystemID s);
 
-    static oo::Ref<OOCharacter> characterWithRole(const std::string& c_role, OOSystemID s);
-    static oo::Ref<OOCharacter> randomCharacterWithRole(const std::string& c_role, OOSystemID s);
-    static oo::Ref<OOCharacter> characterWithDictionary(const oo::PList& c_dict); // a dictionary (JS crew definitions may hold any object, as an Object node)
+    static oo::Ref<OOCharacter> characterWithRole(const std::string& c_role,
+        OOSystemID s);
+    static oo::Ref<OOCharacter> randomCharacterWithRole(const std::string& c_role,
+        OOSystemID s);
+    static oo::Ref<OOCharacter> characterWithDictionary(
+        const oo::PList& c_dict); // a dictionary (JS crew definitions may hold
+                                  // any object, as an Object node)
 
     std::optional<std::string> planetOfOrigin();
     OOSystemID planetIDOfOrigin();
@@ -58,11 +59,12 @@ public:
     void basicSetUp();
     bool castInRole(const std::string& role);
 
-    std::optional<std::string> name(); // nullopt: none (bead oo-3rb.289.9)
+    std::optional<std::string> name(); // nullopt: none
     void setName(const std::optional<std::string>& value);
 
     std::optional<std::string> shortDescription();
-    void setShortDescription(const std::optional<std::string>& value); // nullopt: none (bead oo-qps.51)
+    void setShortDescription(
+        const std::optional<std::string>& value); // nullopt: none
 
     int legalStatus();
     void setLegalStatus(int value);
@@ -78,17 +80,21 @@ public:
 
     oo::PList infoForScripting(); // a dictionary
 
-    // What "%@" prints between the braces of <OOCharacter 0x...>{...} (OODescription.h).
+    // What "%@" prints between the braces of <OOCharacter 0x...>{...}
+    // (OODescription.h).
     std::optional<std::string> descriptionComponents() const;
-    // The JavaScript class the character's Objective-C object answered (-oo_jsClassName).
+    // The JavaScript class the character's Objective-C object answered
+    // (-oo_jsClassName).
     std::optional<std::string> oo_jsClassName();
 
-    // oo::PListForeign: what the facade answered (its class, and "%@" as <OOCharacter 0x...>{...}).
+    // oo::PListForeign: what the facade answered (its class, and "%@" as
+    // <OOCharacter 0x...>{...}).
     std::string className() const override;
     std::string description() const override;
 
 private:
-    OOCharacter(Random_Seed characterSeed, OOSystemID systemSeed); // -initWithGenSeed:andOriginalSystem:
+    OOCharacter(Random_Seed characterSeed,
+        OOSystemID systemSeed); // -initWithGenSeed:andOriginalSystem:
     void setCharacterFromDictionary(const oo::PList& dict);
 
     void setOriginSystem(OOSystemID value);
@@ -104,5 +110,3 @@ private:
     oo::PList _scriptActions; // an array; null: none
     oo::Ref<OOScript> _script;
 };
-
-#endif // OOCHARACTER_H

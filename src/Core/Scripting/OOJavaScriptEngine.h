@@ -33,29 +33,27 @@ MA 02110-1301, USA.
 
 #include "OOJSPropID.h"
 #include "oofnd/PList.hpp"
+#include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
+#include "oofnd/objc/OOAssert.h"
 #include "ooscript/JSEngine.hpp"
 
-#include "oofnd/Ref.hpp"
-#include "oofnd/objc/OOAssert.h"
-
-/*	The plain C++ part of the engine API (bead oo-9ht.72): reporters, converters, argument and
-        return macros, the native wrappers. A binding with no Objective-C includes only that header.
+/*	The plain C++ part of the engine API: reporters,
+   converters, argument and return macros, the native wrappers. A binding with
+   no Objective-C includes only that header.
 */
 #include "OOJSEngineCore.h"
 
 #if OOJSENGINE_MONITOR_SUPPORT
-#include "OOJavaScriptEngineMonitor.h" // a C++ interface since bead oo-9ht.74.1
+#include "OOJavaScriptEngineMonitor.h"
 #endif
 
-/*	The engine (proposed ADR-0056; docs/phases/3-slices/OOJavaScriptEngine.md): the singleton
-        that owns the JS runtime and the main thread context. A global class since bead oo-wdqw1
-        deleted its Objective-C facade; it is the sender of its reset notifications.
+/*	The engine: the singleton that owns the JS runtime and the main thread
+   context. A global class; it is the sender of its reset notifications.
 */
 class OOJavaScriptEngine : public oo::RefCounted {
 public:
-    // The shared engine, made on first use; borrowed, never released (proposed ADR-0056
-    // amendment oo-r7m0).
+    // The shared engine, made on first use; borrowed, never released.
     static OOJavaScriptEngine* sharedEngine();
 
     ~OOJavaScriptEngine();
@@ -69,8 +67,11 @@ public:
 
     ooscript::Object globalObject();
 
-    // Call a JS function, setting up new contexts as necessary. Caller is responsible for ensuring the ooscript::Value passed really is a function.
-    bool callJSFunction(ooscript::Value function, ooscript::Object jsThis, unsigned argc, ooscript::Value* argv, ooscript::Value* outResult);
+    // Call a JS function, setting up new contexts as necessary. Caller is
+    // responsible for ensuring the ooscript::Value passed really is a function.
+    bool callJSFunction(ooscript::Value function, ooscript::Object jsThis,
+        unsigned argc, ooscript::Value* argv,
+        ooscript::Value* outResult);
 
     void removeGCObjectRoot(ooscript::Object* rootPtr);
     void removeGCValueRoot(ooscript::Value* rootPtr);
@@ -99,16 +100,21 @@ public:
 
 #if OOJSENGINE_MONITOR_SUPPORT
     // (OOMonitorSupport)
-    void setMonitor(OOJavaScriptEngineMonitor* monitor); // borrowed (bead oo-9ht.74.1)
+    void setMonitor(OOJavaScriptEngineMonitor* monitor); // borrowed
 
     // (OOMonitorSupportInternal)
-    void sendMonitorError(ooscript::ErrorReport* errorReport, const std::string& message, ooscript::Context context);
-    // nullopt is meaningful to the monitor (Log() with a null message; no class for Log()).
-    void sendMonitorLogMessage(const std::optional<std::string>& message, const std::optional<std::string>& messageClass, ooscript::Context context);
+    void sendMonitorError(ooscript::ErrorReport* errorReport,
+        const std::string& message, ooscript::Context context);
+    // nullopt is meaningful to the monitor (Log() with a null message; no class
+    // for Log()).
+    void sendMonitorLogMessage(const std::optional<std::string>& message,
+        const std::optional<std::string>& messageClass,
+        ooscript::Context context);
 #endif
 
 private:
-    void init(); // -init's body after [super init]: run by sharedEngine() on the new object
+    void init(); // -init's body after [super init]: run by sharedEngine() on the
+                 // new object
 
     bool lookUpStandardClassPointers();
     void registerStandardObjectConverters();
@@ -135,42 +141,40 @@ private:
 #endif
 };
 
-/*	(The root-class JS glue for classes rooted on OOObject, the defaults OOObject+OOJavaScript.h's
-        bridges called, went with those bridges in bead oo-4aq6a.6.2: no game object is an Objective-C
-        object.)
-*/
-
-// A vector box's JS value (OOJSValueFromPList, for an Object node that holds one).
+// A vector box's JS value (OOJSValueFromPList, for an Object node that holds
+// one).
 class OONativeVector;
-ooscript::Value OONativeVectorJSValueInContext(OONativeVector* vector, ooscript::Context context);
+ooscript::Value OONativeVectorJSValueInContext(OONativeVector* vector,
+    ooscript::Context context);
 
 /*	OONull: the placeholder for null inside native collections, which cannot
-        hold nil (was Foundation's null singleton, ADR-0029 Decision 5). A JS array
-        element that is null or undefined becomes [OONull null] in the native array, and
-        [OONull null] becomes JS null, so JS null round-trips as before. Game code
-        uses it where a collection slot is empty (MFD settings, target memory,
-        script event arguments). It describes itself as "<null>", as its
-        predecessor did, and -copy returns itself. A property list holds it as an
-        Object node whose foreign object it is (OONullObjectNode(); bead oo-wdqw1 deleted its
-        Objective-C facade, which was what the collections held).
+   hold nil. A JS array element that is null or undefined becomes [OONull null]
+   in the native array, and [OONull null] becomes JS null, so JS null
+   round-trips. Game code uses it where a collection slot is empty (MFD
+   settings, target memory, script event arguments). It describes itself as
+   "<null>", and -copy returns itself. A property list holds it as an Object
+   node whose foreign object it is (OONullObjectNode()).
 */
 class OONull : public oo::PListForeign {
 public:
-    // The one null, made on first use; borrowed, never released (amendment oo-r7m0).
+    // The one null, made on first use; borrowed, never released.
     static OONull* null();
 
     ooscript::Value jsValueInContext(ooscript::Context context); // JS null
 
-    // oo::PListForeign: what the facade answered (its class, and "%@" as "<null>").
+    // oo::PListForeign: what the facade answered (its class, and "%@" as
+    // "<null>").
     std::string className() const override;
     std::string description() const override; // "<null>"
 };
 
-// The one null as a PList::Object node ([OONull null] through oo::PListObject()), and whether a
-// node is that null (oo::ObjectIn(node) == [OONull null]).
+// The one null as a PList::Object node ([OONull null] through
+// oo::PListObject()), and whether a node is that null (oo::ObjectIn(node) ==
+// [OONull null]).
 inline oo::PList OONullObjectNode()
 {
-    return oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(OONull::null())));
+    return oo::PList(
+        oo::PList::Object(oo::Ref<oo::PListForeign>(OONull::null())));
 }
 
 inline bool OOIsNullObjectNode(const oo::PList& plist)
@@ -179,13 +183,14 @@ inline bool OOIsNullObjectNode(const oo::PList& plist)
     return node != nullptr && node->get() == OONull::null();
 }
 
-// OOJSValue is declared in OOJSEngineCore.h (a plain C++ header, so C++-only bindings can use it).
+// OOJSValue is declared in OOJSEngineCore.h (a plain C++ header, so C++-only
+// bindings can use it).
 
 // OOEntityFilterPredicate wrapping a JavaScript function.
-typedef struct
-{
+typedef struct {
     ooscript::Context context;
-    ooscript::Value function; // Caller is responsible for ensuring this is a function object (using OOJSValueIsFunction()).
+    ooscript::Value function; // Caller is responsible for ensuring this is a
+                              // function object (using OOJSValueIsFunction()).
     ooscript::Object jsThis;
     BOOL errorFlag; // Set if a JS exception occurs. The
                     // exception will have been reported.
@@ -194,19 +199,18 @@ typedef struct
 OOJS_EXTERN_C BOOL JSFunctionPredicate(Entity* entity, void* parameter);
 
 // YES for ships and (normal) planets. Parameter: ignored.
-OOJS_EXTERN_C BOOL JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* parameter);
+OOJS_EXTERN_C BOOL JSEntityIsJavaScriptVisiblePredicate(Entity* entity,
+    void* parameter);
 
-// YES for ships other than sub-entities and menu-display ships, and planets other than atmospheres and menu miniatures. Parameter: ignored.
-OOJS_EXTERN_C BOOL JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void* parameter);
+// YES for ships other than sub-entities and menu-display ships, and planets
+// other than atmospheres and menu miniatures. Parameter: ignored.
+OOJS_EXTERN_C BOOL JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
+    void* parameter);
 
 // YES for menu-display ships. Parameter: ignored
 OOJS_EXTERN_C BOOL JSEntityIsDemoShipPredicate(Entity* entity, void* parameter);
 
-/*	DEFINE_JS_OBJECT_GETTER() and OOJSObjectGetterImplPRIVATE(), which read an Objective-C object
-        from a JS object's private slot with an Objective-C class check, are deleted (bead
-        oo-4aq6a.6): every slot holds a C++ object, read by OOJSGetCxxPrivate() (OOJSPrivateObject.h).
+/*	OOJSGetCxxPrivate() (OOJSPrivateObject.h) reads the C++ object every JS
+   object's private slot holds.
 */
-
-// (The root class's JS glue and the engine's one-line sends to Objective-C objects,
-// OOObject+OOJavaScript.h, went with bead oo-4aq6a.6.2.)
 #include "OOFoundation.h"
