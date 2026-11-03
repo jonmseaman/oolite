@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOObjCRef.h"
 #include "ooscript/JSEngine.hpp"
 #include <vector>
-@class Entity;
+class Entity;
 class OOVisualEffectEntity; // C++ since bead oo-9ht.165
 
 #ifdef __cplusplus
@@ -52,4 +52,4 @@ void InitOOJSVisualEffect(ooscript::Context context, ooscript::Object global);
 void OOJSVisualEffectGetJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype);
 std::optional<std::string> OOJSVisualEffectJSClassName(void);
 bool OOJSVisualEffectIsVisibleToScripts(void);
-std::vector<oo::ObjCRef<Entity*>> OOJSVisualEffectSubEntitiesForScript(OOVisualEffectEntity* effect);
+std::vector<oo::EntityHold> OOJSVisualEffectSubEntitiesForScript(OOVisualEffectEntity* effect);

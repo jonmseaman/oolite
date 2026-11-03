@@ -249,12 +249,14 @@ static bool ContextCallback(ooscript::Context context, ooscript::ContextOp conte
 void OOJSTimeManagementInit(OOJavaScriptEngine* engine, ooscript::Runtime runtime)
 {
     // The watchdog holds the engine for its (endless) life, as a detached selector thread did.
-    [engine retain];
+    if (engine != nullptr)
+        engine->retain();
     oo::thread::detach([engine, runtime]() {
         @autoreleasepool {
             WatchdogTimerThread(runtime);
         }
-        [engine release];
+        if (engine != nullptr)
+            engine->release();
     });
 
     ooscript::setContextCallback(runtime, ContextCallback);
@@ -264,7 +266,8 @@ void OOJSTimeManagementInit(OOJavaScriptEngine* engine, ooscript::Runtime runtim
 
 // Profiling is enabled, but MOZ_TRACE_JSCALLS is disabled, so only native functions are profiled.
 // MOZ_TRACE_JSCALLS was a SpiderMonkey build option; the QuickJS-ng engine has no such hook, so it
-// is never defined and this is how every profiling build profiles.
+// is never defined and this is how every profiling build profiles. It was a #warning, printed by
+// every such build with nothing to act on (bead oo-99txa).
 
 namespace {
 static bool sProfiling = false;
@@ -513,7 +516,9 @@ void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function)
         .key = function,
         .function = function,
         .startTime = OOGetHighResTime(),
-        .total = &sProfilerTotalNativeTime
+        .subTime = 0,
+        .total = &sProfilerTotalNativeTime,
+        .cleanup = NULL
     };
     sProfileStack = frame;
 }

@@ -34,6 +34,7 @@ MA 02110-1301, USA.
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -48,20 +49,19 @@ MA 02110-1301, USA.
 #define MINIMUM_ANIMATION_TICK 0.0041667
 // 1.0 / (desired framerate cap)
 
-@class MyOpenGLView;
+class MyOpenGLView;
 class OOFullScreenController; // C++ since bead oo-bgmb
 
 // TEMP: whether to use separate OOFullScreenController object, will hopefully be used for all builds soon.
 #define OO_USE_FULLSCREEN_CONTROLLER OOLITE_MAC_COCOA_UI
 
-namespace cxx {
-
 /*	The application controller (bead oo-zkpmt, slice 1 of docs/phases/3-slices/GameController.md):
         the class shell, its state and accessors; the frame loop and deferred calls (slice 2, bead
         oo-hn0fw); start-up, splash and progress messages, exit and the player file (slice 3, bead
         oo-5ah4k); the SDL full-screen members (SDL/GameController+SDLFullScreen.mm, bead oo-qinv), the
-        former FullScreen category. The Mac FullScreen category (Core/GameController+FullScreen.mm) is
-        not compiled and stays an Objective-C category of the façade (GameController+ObjCBridge.h).
+        former FullScreen category. The Mac FullScreen category (Core/GameController+FullScreen.mm) and
+        the Mac category at the end of GameController.mm are not compiled and are left as they were
+        (Phase 5). A global class since the Objective-C façade was deleted (bead oo-9ht.164).
 */
 class GameController : public oo::RefCounted {
 public:
@@ -159,8 +159,12 @@ public:
     void pauseFullScreenModeToPerform(SEL selector, id target);
 #endif
 
+    // tests/unit/core/test_GameController.mm reads and sets the state below (bead oo-auu6o).
+    friend struct GameControllerTestAccess;
+
+private:
     // Internal: the state, read and written by the members above (and by the fenced Mac
-    // FullScreen category of the façade through _cxxController).
+    // categories, not compiled). Private again since bead oo-auu6o (public from oo-9ht.164 to it).
 #if OOLITE_MAC_OS_X
     NSTextField* splashProgressTextField = { };
     NSView* splashView = { };
@@ -224,8 +228,6 @@ private:
 #endif
 };
 
-} // namespace cxx
-
 /*	OOScheduleDeferredCall(target, selector, argument, delay): what Foundation's
         performer-after-delay did (bead oo-3rb.57, proposed ADR-0040). [target
         performSelector:selector withObject:argument] runs on the first frame-loop
@@ -237,10 +239,17 @@ private:
 */
 void OOScheduleDeferredCall(id target, SEL selector, id argument, NSTimeInterval delay);
 
+/*	The same queue for a C++ call (bead oo-pvhrh, ADR-0056 amendment oo-pvhrh): call() runs where the
+        perform ran, in the same order and pass, and is destroyed after it (what it captures is kept alive
+        until then, as the target was retained). An OOException from it is caught and logged as the
+        perform's was, and the call is then never destroyed, as the performer leaked its target.
+*/
+void OOScheduleDeferredCall(std::function<void()> call, NSTimeInterval delay);
+
 #if OO_DEBUG
-#define OO_DEBUG_PROGRESS(message) [[::GameController sharedController] cxx_debugLogProgress:message]
-#define OO_DEBUG_PUSH_PROGRESS(message) [[::GameController sharedController] cxx_debugPushProgressMessage:message]
-#define OO_DEBUG_POP_PROGRESS() [[::GameController sharedController] debugPopProgressMessage]
+#define OO_DEBUG_PROGRESS(message) ::GameController::sharedController()->debugLogProgress(message)
+#define OO_DEBUG_PUSH_PROGRESS(message) ::GameController::sharedController()->debugPushProgressMessage(message)
+#define OO_DEBUG_POP_PROGRESS() ::GameController::sharedController()->debugPopProgressMessage()
 #else
 #define OO_DEBUG_PROGRESS(message) \
     do {                           \
@@ -253,6 +262,11 @@ void OOScheduleDeferredCall(id target, SEL selector, id argument, NSTimeInterval
     } while (0)
 #endif
 
-// Transitional: the Objective-C GameController, for code not yet converted. Deleted, with namespace
-// cxx above, by the bridge's deletion bead.
-#import "GameController+ObjCBridge.h"
+/*	[target performSelector:selector withObject:argument] for a deferred call (OOScheduleDeferredCall):
+        false when it raised an OOException, which is caught and its name and reason (the exception's own
+        strings, alive until the pool drains) written out (the caller logs them as the Foundation timer
+        did); anything else propagates. The free function FireOneDueDeferredCall() calls it (ADR-0056
+        amendment oo-9ht.139 item 3: its @try/@catch and send stay Objective-C, in GameController.mm since
+        bead oo-9ht.164).
+*/
+bool GameControllerPerformSelectorWithObject(id target, SEL selector, id argument, const char** outName, const char** outReason);

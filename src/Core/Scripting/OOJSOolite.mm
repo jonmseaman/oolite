@@ -220,7 +220,7 @@ static bool OoliteGetProperty(Context cx, Object obj, PropertyId propID, Value* 
     OOJS_NATIVE_ENTER(context)
 
     oo::PList result; // null: nil
-    MyOpenGLView* gameView = [UNIVERSE gameView];
+    MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
 
     switch (ooscript::idToInt32(propID)) {
     case kOolite_version: {
@@ -248,31 +248,31 @@ static bool OoliteGetProperty(Context cx, Object obj, PropertyId propID, Value* 
         return true;
 
     case kOolite_gameSettings:
-        result = [UNIVERSE cxx_gameSettings];
+        result = (UNIVERSE != nullptr ? UNIVERSE->gameSettings() : oo::PList());
         break;
 
     case kOolite_resourcePaths:
         // user name in displayed paths masked for privacy - remember that the console can be run remotely too
         {
             oo::PList::Array paths;
-            for (const std::string& path : [ResourceManager cxx_maskUserNameInPathArray:[ResourceManager cxx_paths]])
+            for (const std::string& path : ResourceManager::maskUserNameInPathArray(ResourceManager::paths()))
                 paths.push_back(oo::PList(path));
             result = oo::PList(std::move(paths));
             break;
         }
 
     case kOolite_colorSaturation:
-        return ooscript::newNumberValue(cx, [gameView colorSaturation], value);
+        return ooscript::newNumberValue(cx, (gameView != nullptr ? gameView->colorSaturation() : 0.0f), value);
 
     case kOolite_postFX:
-        *value_raw = ooscript::int32Value([UNIVERSE currentPostFX]);
+        *value_raw = ooscript::int32Value((UNIVERSE != nullptr ? UNIVERSE->currentPostFX() : 0));
         return true;
 
     case kOolite_hdrToneMapper: {
         std::optional<std::string> toneMapperStr = "OOHDR_TONEMAPPER_UNDEFINED";
 #if OOLITE_WINDOWS
-        if ([gameView hdrOutput]) {
-            toneMapperStr = cxx_OOStringFromHDRToneMapper([gameView hdrToneMapper]);
+        if ((gameView != nullptr ? gameView->hdrOutput() : false)) {
+            toneMapperStr = cxx_OOStringFromHDRToneMapper((gameView != nullptr ? gameView->hdrToneMapper() : OOHDRToneMapper { }));
         }
 #endif
         if (toneMapperStr.has_value())
@@ -282,8 +282,8 @@ static bool OoliteGetProperty(Context cx, Object obj, PropertyId propID, Value* 
 
     case kOolite_sdrToneMapper: {
         std::optional<std::string> toneMapperStr = "OOSDR_TONEMAPPER_UNDEFINED";
-        if (![gameView hdrOutput]) {
-            toneMapperStr = cxx_OOStringFromSDRToneMapper([gameView sdrToneMapper]);
+        if (!(gameView != nullptr ? gameView->hdrOutput() : false)) {
+            toneMapperStr = cxx_OOStringFromSDRToneMapper((gameView != nullptr ? gameView->sdrToneMapper() : OOSDRToneMapper { }));
         }
         if (toneMapperStr.has_value())
             result = oo::PList(*toneMapperStr);
@@ -292,7 +292,7 @@ static bool OoliteGetProperty(Context cx, Object obj, PropertyId propID, Value* 
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
     case kOolite_timeAccelerationFactor:
-        return ooscript::newNumberValue(cx, [UNIVERSE timeAccelerationFactor], value);
+        return ooscript::newNumberValue(cx, (UNIVERSE != nullptr ? UNIVERSE->getTimeAccelerationFactor() : 0.0), value);
 #endif
 
     default:
@@ -322,13 +322,14 @@ static bool OoliteSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     double fValue;
     int32_t iValue;
     std::optional<std::string> sValue;
-    MyOpenGLView* gameView = [UNIVERSE gameView];
+    MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
 
     switch (ooscript::idToInt32(propID)) {
     case kOolite_colorSaturation:
         if (ooscript::valueToNumber(cx, *value, &fValue)) {
-            float currentColorSaturation = [gameView colorSaturation];
-            [gameView adjustColorSaturation:fValue - currentColorSaturation];
+            float currentColorSaturation = (gameView != nullptr ? gameView->colorSaturation() : 0.0f);
+            if (gameView != nullptr)
+                gameView->adjustColorSaturation(fValue - currentColorSaturation);
             return true;
         }
         break;
@@ -336,7 +337,8 @@ static bool OoliteSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     case kOolite_postFX:
         if (ooscript::valueToInt32(cx, *value, &iValue)) {
             iValue = MAX(iValue, 0);
-            [UNIVERSE setCurrentPostFX:iValue];
+            if (UNIVERSE != nullptr)
+                UNIVERSE->setCurrentPostFX(iValue);
             return true;
         }
         break;
@@ -347,9 +349,10 @@ static bool OoliteSetProperty(Context cx, Object obj, PropertyId propID, bool /*
         sValue = cxx_OOStringFromJSValue(context, *value_raw);
         if (sValue.has_value()) {
 #if OOLITE_WINDOWS
-            if ([gameView hdrOutput])
-                [gameView setHDRToneMapper:cxx_OOHDRToneMapperFromString(*sValue)];
-            else
+            if ((gameView != nullptr ? gameView->hdrOutput() : false)) {
+                if (gameView != nullptr)
+                    gameView->setHDRToneMapper(cxx_OOHDRToneMapperFromString(*sValue));
+            } else
                 cxx_OOJSReportWarning(context, "hdrToneMapper cannot be set if not running in HDR mode");
 #endif
             return true;
@@ -361,9 +364,10 @@ static bool OoliteSetProperty(Context cx, Object obj, PropertyId propID, bool /*
             break; // non-string is not allowed
         sValue = cxx_OOStringFromJSValue(context, *value_raw);
         if (sValue.has_value()) {
-            if (![gameView hdrOutput])
-                [gameView setSDRToneMapper:cxx_OOSDRToneMapperFromString(*sValue)];
-            else
+            if (!(gameView != nullptr ? gameView->hdrOutput() : false)) {
+                if (gameView != nullptr)
+                    gameView->setSDRToneMapper(cxx_OOSDRToneMapperFromString(*sValue));
+            } else
                 cxx_OOJSReportWarning(context, "sdrToneMapper cannot be set if not running in SDR mode");
             return true;
         }
@@ -372,7 +376,8 @@ static bool OoliteSetProperty(Context cx, Object obj, PropertyId propID, bool /*
 #ifdef OO_DEBUG_MONITOR_ENABLED
     case kOolite_timeAccelerationFactor:
         if (ooscript::valueToNumber(cx, *value, &fValue)) {
-            [UNIVERSE setTimeAccelerationFactor:fValue];
+            if (UNIVERSE != nullptr)
+                UNIVERSE->setTimeAccelerationFactor(fValue);
             return true;
         }
         break;

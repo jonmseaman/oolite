@@ -32,10 +32,8 @@
 
 // MARK: The classes, as far as the binding sees them ----------------------------------------------
 
-@class Universe;
+class Universe;
 class PlayerEntity;
-
-namespace cxx {
 
 // The C++ root, as far as the binding and the root's JS category reach it.
 class Entity : public oo::RefCounted
@@ -45,14 +43,14 @@ public:
 	virtual void getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype);
 	virtual std::optional<std::string> jsClassName();
 	virtual bool isVisibleToScripts();
+	Quaternion getOrientation();	// the binding calls these since bead oo-9ht.39.8.18 (its object's selectors did)
+	void setNormalOrientation(Quaternion quat);
 };
-
-}	// namespace cxx
 
 /*	The waypoint (C++ since bead oo-9ht.108). One whose size is 99 raises from size(), one whose
 	size is 98 throws a C++ exception, so the test sees what an exception under a native becomes.
 */
-class OOWaypointEntity : public cxx::Entity
+class OOWaypointEntity : public Entity
 {
 public:
 	void getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype) override;
@@ -62,6 +60,11 @@ public:
 	bool getOriented();
 	OOScalar size();
 	void setSize(OOScalar newSize);
+	std::optional<std::string> beaconCode();	// the binding calls these since bead oo-9ht.39.8.18 (its object's selectors did)
+	void setBeaconCode(const std::optional<std::string> &bcode);
+	std::optional<std::string> beaconLabel();
+	void setBeaconLabel(const std::optional<std::string> &blabel);
+	bool isBeacon();
 
 	BOOL _oriented = NO;
 	OOScalar _size = 0;
@@ -69,46 +72,60 @@ public:
 
 // The root's object, which holds the waypoint's C++ part (oo::ToCxx reads it) and answers the
 // beacon selectors for it (the game's Entity (OOWaypointBeacon)).
-@interface Entity: OOObject
+// What an entity's JS object holds since bead oo-9ht.39.3: a weak reference to the C++ entity.
+#include "OOJSEntityHolder.h"
+
+
+__attribute__((objc_runtime_name("Entity")))
+@interface TestEntityObject: OOObject
 {
 @public
-	oo::Ref<cxx::Entity> _cxxEntity;
+	oo::Ref<Entity> _cxxEntity;
 	std::optional<std::string> _beaconCode;
 	std::optional<std::string> _beaconLabel;
 	Quaternion _orientation;
 }
 - (id) weakRefUnderlyingObject;
-- (std::optional<std::string>) beaconCode;
-- (void) setBeaconCode:(const std::optional<std::string> &)bcode;
-- (std::optional<std::string>) beaconLabel;
-- (void) setBeaconLabel:(const std::optional<std::string> &)blabel;
-- (BOOL) isBeacon;
-- (Quaternion) orientation;
-- (void) setNormalOrientation:(Quaternion)quat;
 @end
 
 // The universe's beacon list and the player's compass: what the binding tells them.
-@interface FakeGame: OOObject
+#import "UniverseStandIn.h"
+
+// The universe as the code under test sees it: a stand-in for the C++ class (bead oo-ql9rn deleted
+// the Objective-C facade FakeGame stood in for). It answers virtual members, so it has the game's
+// vtable (UniverseStandIn.h) and FakeGame overrides them; FakeGame also answers the player's
+// compass (the player stand-in calls it).
+class Universe : public oo::RefCounted
 {
-@public
-	id _nextBeacon;
-	int _cleared;
-	int _added;
-	int _compassMode;
-}
-- (void) setNextBeacon:(Entity *)beacon;
-- (void) clearBeacon:(Entity *)beacon;
-- (Entity *) nextBeacon;
-- (void) setCompassMode:(OOCompassMode)mode;
-@end
+public:
+	OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
+};
+
+namespace oo { ::TestEntityObject *ToObjC(Entity *entity); }	// defined below
+
+class FakeGame : public Universe
+{
+public:
+	id _nextBeacon = nil;
+	int _cleared = 0;
+	int _added = 0;
+	int _compassMode = 0;
+
+	// The C++ waypoint since bead oo-9ht.39.8.10 (it was the waypoint's object, which holds the code here).
+	void setNextBeacon(Entity *beacon) override  { _added++; (void)beacon; }
+	void clearBeacon(Entity *beacon) override  { _cleared++; oo::ToObjC(beacon)->_beaconCode = std::nullopt; }
+	TestEntityObject *nextBeacon()  { return _nextBeacon; }
+	void setCompassMode(OOCompassMode mode)  { _compassMode = static_cast<int>(mode); }
+};
 
 // PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player the fake game stood in for: the
 // compass members the binding calls (declared as the game headers declare them; the test imports
 // none that defines the classes), which ask the fake game as the binding asked it.
-class ShipEntity : public cxx::Entity	// C++ since bead oo-9ht.144
+class ShipEntity : public Entity	// C++ since bead oo-9ht.144
 {
 public:
-	::Entity *nextBeacon();
+	::TestEntityObject *nextBeacon();
+	Entity *nextBeaconEntity();
 };
 
 class PlayerEntity : public ShipEntity
@@ -119,7 +136,7 @@ public:
 	FakeGame *_game = nil;
 };
 
-@interface Entity (OOJavaScriptExtensions)
+@interface TestEntityObject (OOJavaScriptExtensions)
 - (void) getJSClass:(ooscript::ClassDef **)outClass andPrototype:(ooscript::Object *)outPrototype;
 - (std::optional<std::string>) cxx_oo_jsClassName;
 - (BOOL) isVisibleToScripts;
@@ -138,23 +155,16 @@ public:
 #include <vector>
 
 
-@implementation Entity
+@implementation TestEntityObject
 
 - (id) weakRefUnderlyingObject  { return self; }
-- (std::optional<std::string>) beaconCode  { return _beaconCode; }
-- (void) setBeaconCode:(const std::optional<std::string> &)bcode  { _beaconCode = bcode; }
-- (std::optional<std::string>) beaconLabel  { return _beaconLabel; }
-- (void) setBeaconLabel:(const std::optional<std::string> &)blabel  { _beaconLabel = blabel; }
-- (BOOL) isBeacon  { return _beaconCode.has_value() && !_beaconCode->empty(); }
-- (Quaternion) orientation  { return _orientation; }
-- (void) setNormalOrientation:(Quaternion)quat  { _orientation = quat; }
 
 @end
 
 
 // The root's JS category, as the game's asks the C++ part (EntityOOJavaScriptExtensions+ObjCBridge.mm,
 // bead oo-9ht.107): the engine sends these selectors to the wrapped object.
-@implementation Entity (OOJavaScriptExtensions)
+@implementation TestEntityObject (OOJavaScriptExtensions)
 
 - (void) getJSClass:(ooscript::ClassDef **)outClass andPrototype:(ooscript::Object *)outPrototype  { _cxxEntity->getJSClass(outClass, outPrototype); }
 - (std::optional<std::string>) cxx_oo_jsClassName  { return _cxxEntity->jsClassName(); }
@@ -163,10 +173,10 @@ public:
 @end
 
 
-cxx::Entity::~Entity()  {}
-void cxx::Entity::getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype)  { *outClass = nullptr; *outPrototype = nullptr; }
-std::optional<std::string> cxx::Entity::jsClassName()  { return std::string("Entity"); }
-bool cxx::Entity::isVisibleToScripts()  { return false; }
+Entity::~Entity()  {}
+void Entity::getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype)  { *outClass = nullptr; *outPrototype = nullptr; }
+std::optional<std::string> Entity::jsClassName()  { return std::string("Entity"); }
+bool Entity::isVisibleToScripts()  { return false; }
 
 // The binding's category, as the C++ class's overrides call it (OOWaypointEntity.mm, bead oo-9ht.108).
 void OOWaypointEntity::getJSClass(ooscript::ClassDef **outClass, ooscript::Object *outPrototype)  { ::OOJSWaypointGetJSClass(outClass, outPrototype); }
@@ -183,17 +193,10 @@ OOScalar OOWaypointEntity::size()
 }
 
 
-@implementation FakeGame
 
-- (void) setNextBeacon:(Entity *)beacon  { _added++; (void)beacon; }
-- (void) clearBeacon:(Entity *)beacon  { _cleared++; beacon->_beaconCode = std::nullopt; }
-- (Entity *) nextBeacon  { return _nextBeacon; }
-- (void) setCompassMode:(OOCompassMode)mode  { _compassMode = static_cast<int>(mode); }
-
-@end
-
-::Entity *ShipEntity::nextBeacon()  { return [static_cast<PlayerEntity *>(this)->_game nextBeacon]; }
-void PlayerEntity::setCompassMode(OOCompassMode value)  { [static_cast<PlayerEntity *>(this)->_game setCompassMode:value]; }
+::TestEntityObject *ShipEntity::nextBeacon()  { return static_cast<PlayerEntity *>(this)->_game->nextBeacon(); }
+Entity *ShipEntity::nextBeaconEntity()  { ::TestEntityObject *object = nextBeacon(); return object != nil ? object->_cxxEntity.get() : nullptr; }	// as the game's (oo::ToCxx of it)
+void PlayerEntity::setCompassMode(OOCompassMode value)  { static_cast<PlayerEntity *>(this)->_game->setCompassMode(value); }
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
@@ -301,24 +304,15 @@ void OOJSRegisterObjectConverter(ooscript::ClassDef *theClass, oo::PList (*)(oos
 }
 
 
-// The engine's object getter: the JS class must be a subclass of the required one, and the
-// underlying object must be of the required Objective-C class.
-BOOL OOJSObjectGetterImplPRIVATE(ooscript::Context context, ooscript::Object object, ooscript::ClassDef *requiredJSClass, Class requiredObjCClass, const char *, id *outObject)
+// The engine's object getter is OOJSPrivateObject.cpp's (linked) since bead oo-9ht.39.3: the JS
+// class must be a subclass of the required one, and the slot holds the entity's holder.
+
+// The shared toString(), which OOJSCxxObjectWrapperToString() hands a `this` of another class.
+bool OOJSObjectWrapperToString(ooscript::Context context, ooscript::CallArgs &args)
 {
-	ooscript::ClassDef *actualClass = const_cast<ooscript::ClassDef *>(ooscript::getObjectClass(context, object));
-	if (!OOJSIsSubclass(actualClass, requiredJSClass))
-	{
-		cxx_OOJSReportError(context, "Native method expected %s, got %s.", requiredJSClass->name, cxx_OOStringFromJSValue(context, ooscript::objectValue(object)).value_or("(null)").c_str());
-		return NO;
-	}
-	*outObject = [(id)ooscript::getPrivate(context, object) weakRefUnderlyingObject];
-	if (*outObject != nil && ![*outObject isKindOfClass:requiredObjCClass])
-	{
-		cxx_OOJSReportError(context, "Native method expected %s from %s.", class_getName(requiredObjCClass), requiredJSClass->name);
-		*outObject = nil;
-		return NO;
-	}
-	return YES;
+	const std::string text = "[object]";
+	args.setRval(ooscript::stringValue(ooscript::newStringCopyN(context, text.data(), text.size())));
+	return true;
 }
 
 
@@ -334,10 +328,6 @@ bool OOJSUnconstructableConstruct(ooscript::Context context, ooscript::CallArgs 
 	return false;
 }
 
-
-void OOJSObjectWrapperFinalize(ooscript::Context, ooscript::Object)
-{
-}
 
 
 // A quaternion is the array [w, x, y, z] here: enough to see what the binding hands over and takes.
@@ -386,10 +376,40 @@ void OOJSUnreachable(const char *function, const char *, unsigned)
 }	// extern "C"
 
 
-oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context, ooscript::Object)
+oo::PList OOJSEntityObjectConverter(ooscript::Context, ooscript::Object)
 {
 	return oo::PList();
 }
+
+
+// The holder's glue is OOJSEntity.mm's, which the test does not link; the binding never asks it.
+ooscript::Value OOJSEntityHolder::jsValueInContext(ooscript::Context)  { return ooscript::undefinedValue(); }
+void OOJSEntityHolder::clearJSSelf(ooscript::Object)  {}
+std::optional<std::string> OOJSEntityHolder::jsDescription()  { return std::nullopt; }
+
+
+// oo::ToObjC (Entity+ObjCBridge.mm): the object of each C++ part the test wrapped, nil for any
+// other (the binding asks it where its natives still message the object, bead oo-9ht.39.3).
+namespace {
+std::map<Entity *, TestEntityObject *> sObjects;
+}
+namespace oo { ::TestEntityObject *ToObjC(Entity *entity); }
+::TestEntityObject *oo::ToObjC(Entity *entity)
+{
+	auto found = sObjects.find(entity);
+	return found != sObjects.end() ? found->second : nil;
+}
+
+
+// The waypoint's beacon and orientation, on its object's fields, as the object's selectors answered
+// them until bead oo-9ht.39.8.18.
+std::optional<std::string> OOWaypointEntity::beaconCode()  { return oo::ToObjC(this)->_beaconCode; }
+void OOWaypointEntity::setBeaconCode(const std::optional<std::string> &bcode)  { oo::ToObjC(this)->_beaconCode = bcode; }
+std::optional<std::string> OOWaypointEntity::beaconLabel()  { return oo::ToObjC(this)->_beaconLabel; }
+void OOWaypointEntity::setBeaconLabel(const std::optional<std::string> &blabel)  { oo::ToObjC(this)->_beaconLabel = blabel; }
+bool OOWaypointEntity::isBeacon()  { const std::optional<std::string> &code = oo::ToObjC(this)->_beaconCode; return code.has_value() && !code->empty(); }
+Quaternion Entity::getOrientation()  { return oo::ToObjC(this)->_orientation; }
+void Entity::setNormalOrientation(Quaternion quat)  { oo::ToObjC(this)->_orientation = quat; }
 
 
 // MARK: The context -------------------------------------------------------------------------------
@@ -399,22 +419,24 @@ namespace {
 ooscript::Runtime sRuntime;
 ooscript::Context sContext;
 ooscript::Object sGlobal;
-Entity *sWaypoint = nil;			// the waypoint's object
+TestEntityObject *sWaypoint = nil;			// the waypoint's object
 OOWaypointEntity *sWaypointPart = nullptr;	// its C++ part
 FakeGame *sGame = nil;
 
 
-ooscript::Value JSValueForObject(ooscript::ClassDef *jsClass, ooscript::Object prototype, Entity *entity)
+ooscript::Value JSValueForObject(ooscript::ClassDef *jsClass, ooscript::Object prototype, TestEntityObject *entity)
 {
 	ooscript::Object object = ooscript::newObject(sContext, jsClass, prototype, nullptr);
-	if (object == nullptr || !ooscript::setPrivate(sContext, object, entity))  return ooscript::nullValue();
+	if (entity->_cxxEntity == nullptr)  entity->_cxxEntity = oo::makeRef<Entity>();	// a plain entity's C++ part
+	if (object == nullptr || !OOJSSetCxxPrivate(sContext, object, oo::makeRef<OOJSEntityHolder>(entity->_cxxEntity.get()).get()))  return ooscript::nullValue();	// the slot holds the C++ entity (bead oo-9ht.39.3)
+	sObjects[entity->_cxxEntity.get()] = entity;
 	return ooscript::objectValue(object);
 }
 
 
-// A JS object for an entity, as -[Entity oo_jsValueInContext:] makes it: the class and prototype
+// A JS object for an entity, as -[TestEntityObject oo_jsValueInContext:] makes it: the class and prototype
 // the entity's category names, and the entity in the private slot.
-ooscript::Value JSValueForEntity(Entity *entity)
+ooscript::Value JSValueForEntity(TestEntityObject *entity)
 {
 	ooscript::ClassDef *jsClass = nullptr;
 	ooscript::Object prototype = nullptr;
@@ -440,11 +462,11 @@ void SetUpContext()
 	gOOEntityJSPrototype = ooscript::initClass(sContext, sGlobal, nullptr, &sFakeEntityClass, OOJSUnconstructableConstruct, 0, nullptr, nullptr, nullptr, nullptr);
 	InitOOJSWaypoint(sContext, sGlobal);
 
-	sGame = [[FakeGame alloc] init];	// kept for the life of the test
-	gSharedUniverse = (Universe *)sGame;
+	sGame = new FakeGame();	// kept for the life of the test
+	gSharedUniverse = sGame;
 	gOOPlayer = new PlayerEntity;	// never deleted
 	gOOPlayer->_game = sGame;
-	sWaypoint = [[Entity alloc] init];	// kept for the life of the test
+	sWaypoint = [[TestEntityObject alloc] init];	// kept for the life of the test
 	sWaypoint->_cxxEntity = oo::makeRef<OOWaypointEntity>();
 	sWaypointPart = static_cast<OOWaypointEntity *>(sWaypoint->_cxxEntity.get());
 	sWaypoint->_beaconLabel = "Label";
@@ -452,7 +474,7 @@ void SetUpContext()
 	sWaypointPart->_oriented = YES;
 	sWaypointPart->_size = 20;
 	Define("waypoint", JSValueForEntity(sWaypoint));
-	Define("plainEntity", JSValueForObject(&sFakeEntityClass, gOOEntityJSPrototype, [[Entity alloc] init]));
+	Define("plainEntity", JSValueForObject(&sFakeEntityClass, gOOEntityJSPrototype, [[TestEntityObject alloc] init]));
 }
 
 

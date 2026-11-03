@@ -3,7 +3,7 @@
 OOECMBlastEntity.m
 
 C++20 since bead oo-ryhi (see OOECMBlastEntity.h). The bodies are the Objective-C ones: a message
-to self is a member call, and the universe and the scripts are handed the entity's Objective-C
+to self is a member call, the universe is handed the C++ entity (bead oo-9ht.39.26) and the scripts the entity's Objective-C
 object, oo::ToObjC(this). The ship stays its Objective-C object (amendment oo-bj8 item 4).
 
 Oolite
@@ -49,7 +49,7 @@ OOECMBlastEntity::OOECMBlastEntity(ShipEntity* ship)
 {
     _blastsRemaining = ECM_PULSE_COUNT;
     _nextBlast = ECM_PULSE_INTERVAL;
-    _ship = (ship != nullptr ? [oo::ToObjC(ship) weakRetain] : id { });
+    _ship = oo::WeakRef<Entity>(ship);
 
     Entity::setPosition((ship != nullptr ? ship->getPosition() : HPVector { }));
 
@@ -67,9 +67,8 @@ oo::Ref<OOECMBlastEntity> OOECMBlastEntity::initFromShip(ShipEntity* ship)
 
 void OOECMBlastEntity::update(OOTimeDelta delta_t)
 {
-    ::Entity* self = oo::ToObjC(this);
     _nextBlast -= delta_t;
-    ShipEntity* ship = oo::ToShip([_ship weakRefUnderlyingObject]);
+    ShipEntity* ship = oo::ToShip(_ship.get());
     BOOL validShip = (ship != nil) && ((ship != nullptr ? ship->status() : OOEntityStatus { }) != STATUS_DEAD);
 
     if (_nextBlast <= 0.0 && validShip) {
@@ -78,15 +77,12 @@ void OOECMBlastEntity::update(OOTimeDelta delta_t)
         radius *= SCANNER_MAX_RANGE;
         _blastsRemaining--;
 
-        const std::vector<oo::ObjCRef<::Entity*>> targets = [UNIVERSE cxx_findEntitiesMatchingPredicate:IsShipPredicate
-                                                                                              parameter:NULL
-                                                                                                inRange:radius
-                                                                                               ofEntity:self];
+        const std::vector<oo::EntityHold> targets = (UNIVERSE != nullptr ? UNIVERSE->findEntitiesMatchingPredicate(IsShipPredicate, NULL, radius, this) : std::vector<oo::EntityHold>());
         NSUInteger i, count = targets.size();
         if (count > 0) {
             ooscript::Context context = OOJSAcquireContext();
             ooscript::Value ecmPulsesRemaining = ooscript::int32Value(_blastsRemaining);
-            ooscript::Value whomVal = OOJSValueFromNativeObject(context, oo::ToObjC(ship));
+            ooscript::Value whomVal = OOJSValueFromCxxObject(context, ship);
 
             for (i = 0; i < count; i++) {
                 ShipEntity* target = oo::ToShip(targets[i].get());
@@ -102,8 +98,10 @@ void OOECMBlastEntity::update(OOTimeDelta delta_t)
         _nextBlast += ECM_PULSE_INTERVAL;
     }
 
-    if (_blastsRemaining == 0 || !validShip)
-        [UNIVERSE removeEntity:self];
+    if (_blastsRemaining == 0 || !validShip) {
+        if (UNIVERSE != nullptr)
+            UNIVERSE->removeEntity(this);
+    }
 }
 
 void OOECMBlastEntity::drawImmediate(bool /*immediate*/, bool /*translucent*/)

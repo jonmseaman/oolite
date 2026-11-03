@@ -91,7 +91,7 @@ static ClassDef sWormholeClass = {
     nullptr, // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
     nullptr, // resolve
     nullptr, // convert
-    OOJSObjectWrapperFinalize, // finalize
+    OOJSCxxObjectWrapperFinalize, // finalize
     nullptr, // call
     nullptr, // construct
     nullptr, // backend: owned by the facade backend, must start null
@@ -143,7 +143,7 @@ void InitOOJSWormhole(ooscript::Context context, ooscript::Object global)
 {
     Object proto = ooscript::initClass((context), (global), (JSEntityPrototype()), &sWormholeClass, OOJSUnconstructableConstruct, 0, sWormholeProperties, sWormholeMethods, NULL, NULL);
     sWormholePrototype = (proto);
-    OOJSRegisterObjectConverter(&sWormholeClass, OOJSBasicPrivateObjectConverter);
+    OOJSRegisterObjectConverter(&sWormholeClass, OOJSEntityObjectConverter);
     OOJSRegisterSubclass(&sWormholeClass, JSEntityClass());
 }
 
@@ -153,7 +153,7 @@ static bool JSWormholeGetWormholeEntity(ooscript::Context context, ooscript::Obj
     OOJS_PROFILE_ENTER
 
     bool result;
-    Entity* entity = nil;
+    Entity* entity = nullptr; // the slot holds the C++ entity (bead oo-9ht.39.3)
 
     if (outEntity == NULL)
         return false;
@@ -164,7 +164,7 @@ static bool JSWormholeGetWormholeEntity(ooscript::Context context, ooscript::Obj
         return false;
 
     // The wormhole is C++ behind the root's facade since bead oo-9ht.112 (-isKindOfClass: before).
-    *outEntity = dynamic_cast<WormholeEntity*>(oo::ToCxx(entity));
+    *outEntity = dynamic_cast<WormholeEntity*>(entity);
     return *outEntity != nullptr;
 
     OOJS_PROFILE_EXIT

@@ -39,11 +39,11 @@ SOFTWARE.
 #define OOREGEXPMATCHER_H
 
 #import "OOFoundation.h"
+#include "OOJSEngineCore.h" // OOJSValue, which the matcher holds
 #import "OOJSFunction.h"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 #include "ooscript/JSEngine.hpp"
-@class OOJSValue;
 
 enum {
     kOORegExpCaseInsensitive = ooscript::RegExpFoldCase,
@@ -73,7 +73,7 @@ private:
 
     oo::Ref<OOJSFunction> _tester = { };
     std::optional<std::string> _cachedRegExpString = { }; // UTF-8; nullopt: nothing cached (proposed ADR-0043)
-    ::OOJSValue* _cachedRegExpObject = { };
+    oo::Ref<OOJSValue> _cachedRegExpObject = { };
     NSUInteger _cachedFlags = { };
 };
 

@@ -24,13 +24,15 @@ MA 02110-1301, USA.
 
 */
 
+#import "Entity.h"
 #import "EntityOOJavaScriptExtensions.h"
 #import "OOFoundation.h"
+#include "OOJSEntityHolder.h"
 #import "OOJavaScriptEngine.h"
 #import "Universe.h"
 #include "oofnd/StdLib.hpp"
 
-@class Entity;
+class Entity;
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +40,7 @@ extern "C" {
 
 void InitOOJSEntity(ooscript::Context context, ooscript::Object global);
 
+// The C++ entity (bead oo-9ht.39.3: the slot holds it; the facade before), or null for a stale one.
 bool JSValueToEntity(ooscript::Context context, ooscript::Value value, Entity** outEntity);
 
 // The Entity class is an ooscript::ClassDef owned by OOJSEntity.mm (bead oo-oap); JSEntityClass()
@@ -50,7 +53,50 @@ ooscript::ClassDef* JSEntityClass(void);
 #endif
 
 extern ooscript::Object gOOEntityJSPrototype;
-DEFINE_JS_OBJECT_GETTER(OOJSEntityGetEntity, JSEntityClass(), gOOEntityJSPrototype, Entity)
+
+/*	OOJSEntityGetEntity was DEFINE_JS_OBJECT_GETTER's getter of the Entity class until
+        bead oo-9ht.39.3 (ADR-0056 amendment oo-9ht.39.3): the slot holds an OOJSEntityHolder, so the
+        getter is OOJSGetCxxPrivate's (the same JS class check and error) and answers the C++ entity,
+        null for a stale one (or a prototype). The JS class fixes what the slot holds, so the
+        Objective-C class check of the debug build has nothing left to check. A binding's own class
+        (Ship, Planet, Sun) passes its JS class as DEFINE_JS_OBJECT_GETTER did.
+*/
+OOINLINE bool OOJSEntityGetEntityOfClass(ooscript::Context context, ooscript::Object inObject, ooscript::ClassDef* jsClass, Entity** outEntity)
+{
+    OOJSEntityHolder* holder = nullptr;
+    if (!OOJSGetCxxPrivate(context, inObject, jsClass, &holder))
+        return false;
+    *outEntity = (holder != nullptr) ? holder->entity() : nullptr;
+    return true;
+}
+
+OOINLINE bool OOJSEntityGetEntity(ooscript::Context context, ooscript::Object inObject, Entity** outEntity)
+{
+    return OOJSEntityGetEntityOfClass(context, inObject, JSEntityClass(), outEntity);
+}
+
+/*	OOJSNativeObjectOfClassFromJSValue(context, value, <the root entity class>) for a C++ caller (bead
+        oo-9ht.39.3): the entity an entity's JS object holds, else null, with no error (another value,
+        another object, a stale entity), as that answered nil.
+*/
+Entity* OOJSEntityFromJSValue(ooscript::Context context, ooscript::Value value);
+
+// The position and orientation of the C++ entity an entity's JS object (of any entity class) holds,
+// zero for a stale one, for the conversions that take them (OOJSVector, OOJSQuaternion): its
+// getPosition()/getOrientation(), which the object's -position/-orientation answered until bead oo-9ht.39.8.12
+// (the object of OOJSEntityObjectFromJSObject, nil for a stale one). The object must be of the
+// Entity class or a subclass.
+HPVector OOJSEntityPositionOfJSObject(ooscript::Context context, ooscript::Object object);
+Quaternion OOJSEntityOrientationOfJSObject(ooscript::Context context, ooscript::Object object);
+
+// OOJSBasicPrivateObjectConverter for the entity classes (each registers it): the entity's object
+// (its facade, which code converting a JS value still expects) as an Object node, a null PList
+// once the entity has gone, as the slot's weak reference answered.
+oo::PList OOJSEntityObjectConverter(ooscript::Context context, ooscript::Object object);
+
+// toString() of the entity classes: OOJSCxxObjectWrapperToString for the Entity class and its
+// subclasses (the entity's jsDescription(), else "[object <JS class name>]").
+bool OOJSEntityToString(ooscript::Context context, ooscript::CallArgs& oojsArgs);
 
 OOINLINE ooscript::Object JSEntityPrototype(void) { return gOOEntityJSPrototype; }
 
@@ -80,14 +126,17 @@ bool EntityFromArgumentList(ooscript::Context context, const std::optional<std::
         blockJSPlayerShipProps flag is in effect (i.e., the escape pod sequence is
         active).
 */
+// The global holds the player's C++ entity while the flag is in effect (bead oo-9ht.39.25; it held
+// the player's object), else null.
 OOINLINE bool OOIsPlayerStale(void)
 {
     extern Entity* gOOJSPlayerIfStale;
-    return gOOJSPlayerIfStale != nil;
+    return gOOJSPlayerIfStale != nullptr;
 }
 
+// Of the C++ entity a getter answers (bead oo-9ht.39.3).
 OOINLINE bool OOIsStaleEntity(Entity* entity)
 {
     extern Entity* gOOJSPlayerIfStale;
-    return entity == nil || (entity == gOOJSPlayerIfStale);
+    return entity == nullptr || (gOOJSPlayerIfStale != nullptr && entity == gOOJSPlayerIfStale);
 }

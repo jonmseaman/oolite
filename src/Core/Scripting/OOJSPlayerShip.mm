@@ -244,7 +244,7 @@ static ClassDef sPlayerShipClass = {
     nullptr, // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
     nullptr, // resolve (engine default: ResolveStub)
     nullptr, // convert (engine default: ConvertStub)
-    OOJSObjectWrapperFinalize, // finalize
+    OOJSCxxObjectWrapperFinalize, // finalize
     nullptr, // call
     nullptr, // construct
     nullptr, // backend: owned by the façade backend, must start null
@@ -505,7 +505,7 @@ void InitOOJSPlayerShip(ooscript::Context context, ooscript::Object global)
 {
     Object proto = ooscript::initClass((context), (global), (JSShipPrototype()), &sPlayerShipClass, OOJSUnconstructableConstruct, 0, sPlayerShipProperties, sPlayerShipMethods, nullptr, nullptr);
     sPlayerShipPrototype = (proto);
-    OOJSRegisterObjectConverter(&sPlayerShipClass, OOJSBasicPrivateObjectConverter);
+    OOJSRegisterObjectConverter(&sPlayerShipClass, OOJSEntityObjectConverter);
     OOJSRegisterSubclass(&sPlayerShipClass, JSShipClass());
 
     PlayerEntity* player = PlayerEntity::sharedPlayer(); // NOTE: at time of writing, this creates the player entity. Don't use PLAYER here.
@@ -513,9 +513,10 @@ void InitOOJSPlayerShip(ooscript::Context context, ooscript::Object global)
     // Create ship object as a property of the player object.
     Object shipObj = ooscript::defineObject((context), (JSPlayerObject()), "ship", &sPlayerShipClass, proto, OOJS_PROP_READONLY);
     sPlayerShipObject = (shipObj);
-    ooscript::setPrivate((context), shipObj, OOConsumeReference([oo::ToObjC(player) weakRetain]));
+    // The slot holds a weak reference to the C++ player (bead oo-9ht.39.3; the player's object's
+    // weak reference before), as every entity's JS object's does.
+    OOJSSetCxxPrivate((context), shipObj, oo::makeRef<OOJSEntityHolder>(player).get());
     OOJSPlayerShipSetJSSelf(player, sPlayerShipObject, context); // -setJSSelf:context:, the category in this file
-    // Analyzer: object leaked. [Expected, object is retained by JS object.]
 }
 
 ooscript::ClassDef* JSPlayerShipClass(void)
@@ -547,14 +548,14 @@ void OOJSPlayerShipSetJSSelf(PlayerEntity* player, ooscript::Object val, ooscrip
     OOJSAddGCObjectRoot(context, &player->_jsSelf, "Player jsSelf");
 
     oo::NotificationCenter::defaultCenter().addObserver(player, kOOJavaScriptEngineWillResetNotificationName,
-        [OOJavaScriptEngine sharedEngine],
+        OOJavaScriptEngine::sharedEngine(),
         [player](const oo::Notification& notification) { OOJSPlayerShipJavaScriptEngineWillReset(player, notification); });
 }
 
 void OOJSPlayerShipJavaScriptEngineWillReset(PlayerEntity* player, const oo::Notification& /*notification*/)
 {
     oo::NotificationCenter::defaultCenter().removeObserver(player, kOOJavaScriptEngineWillResetNotificationName,
-        [OOJavaScriptEngine sharedEngine]);
+        OOJavaScriptEngine::sharedEngine());
 
     if (player->_jsSelf != NULL) {
 
@@ -597,7 +598,7 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID, Val
         return true;
 
     case kPlayerShip_dockedStation:
-        result = oo::PListObject(oo::ToObjC(player != nullptr ? player->dockedStation() : (StationEntity*)nullptr));
+        result = oo::EntityObjectNode(player != nullptr ? player->dockedStation() : (StationEntity*)nullptr);
         break;
 
     case kPlayerShip_specialCargo:
@@ -668,7 +669,7 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID, Val
     case kPlayerShip_multiFunctionDisplayList: {
         oo::PList::Array list; // [OONull null] for an inactive MFD
         for (const std::optional<std::string>& key : (player != nullptr ? player->multiFunctionDisplayList() : std::vector<std::optional<std::string>>())) {
-            list.push_back(key.has_value() ? oo::PList(*key) : oo::PListObject([OONull null]));
+            list.push_back(key.has_value() ? oo::PList(*key) : OONullObjectNode());
         }
         result = oo::PList(std::move(list));
     } break;
@@ -754,7 +755,7 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID, Val
         return true;
 
     case kPlayerShip_compassTarget:
-        result = oo::PListObject(player != nullptr ? player->getCompassTarget() : (::Entity*)nullptr);
+        result = oo::EntityObjectNode(player != nullptr ? player->getCompassTargetEntity() : (Entity*)nullptr); // the C++ entity's node, the same object's (bead oo-9ht.39.25)
         break;
 
     case kPlayerShip_compassType:
@@ -786,7 +787,7 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID, Val
         return true;
 
     case kPlayerShip_viewDirection:
-        *value_raw = OOJSValueFromViewID(context, [UNIVERSE viewDirection]);
+        *value_raw = OOJSValueFromViewID(context, (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }));
         return true;
 
     case kPlayerShip_viewPositionAft:
@@ -806,7 +807,7 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID, Val
         break;
 
     case kPlayerShip_price:
-        return ooscript::newNumberValue(cx, [UNIVERSE cxx_tradeInValueForCommanderDictionary:(player != nullptr ? player->commanderDataDictionary() : oo::PList())], value);
+        return ooscript::newNumberValue(cx, (UNIVERSE != nullptr ? UNIVERSE->tradeInValueForCommanderDictionary((player != nullptr ? player->commanderDataDictionary() : oo::PList())) : 0), value);
 
     case kPlayerShip_serviceLevel:
         return ooscript::newNumberValue(cx, (player != nullptr ? player->tradeInFactor() : int { }), value);
@@ -829,11 +830,11 @@ static bool PlayerShipGetProperty(Context cx, Object obj, PropertyId propID, Val
         return ooscript::newNumberValue(cx, -(player != nullptr ? player->getFlightYaw() : 0.0f), value);
 
     case kPlayerShip_messageGuiTextColor:
-        result = NormalizedColorComponents([UNIVERSE messageGUI]->getTextColor());
+        result = NormalizedColorComponents(UNIVERSE->messageGUI()->getTextColor());
         break;
 
     case kPlayerShip_messageGuiTextCommsColor:
-        result = NormalizedColorComponents([UNIVERSE messageGUI]->getTextCommsColor());
+        result = NormalizedColorComponents(UNIVERSE->messageGUI()->getTextCommsColor());
         break;
 
     default:
@@ -870,7 +871,7 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID, boo
     OOGalacticHyperspaceBehaviour ghBehaviour;
     Vector vValue;
     oo::Ref<OOColor> colorForScript; // the colours are converted (OOColor)
-    Entity* eValue = nil;
+    Entity* eValue = nullptr; // as JSValueToEntity() answers (the C++ entity since bead oo-9ht.39.3)
 
     switch (ooscript::idToInt32(propID)) {
     case kPlayerShip_fuelLeakRate:
@@ -954,19 +955,20 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID, boo
         }
         // make sure we have a valid entity
         if (!ooscript::isNull(*value_raw) && JSValueToEntity(context, *value_raw, &eValue)) {
-            Entity* current = (player != nullptr ? player->getCompassTarget() : (::Entity*)nullptr);
+            Entity* current = (player != nullptr ? player->getCompassTargetEntity() : nullptr); // the C++ entities (bead oo-9ht.39.25)
             if (player != nullptr)
                 player->setNextCompassMode();
             if (player != nullptr)
                 player->validateCompassTarget();
             // cycle the targets until we either get back to the start (entity not found) or we find the one we're looking for
-            while ((player != nullptr ? player->getCompassTarget() : (::Entity*)nullptr) != current && (player != nullptr ? player->getCompassTarget() : (::Entity*)nullptr) != eValue) {
+            while ((player != nullptr ? player->getCompassTargetEntity() : nullptr) != current && (player != nullptr ? player->getCompassTargetEntity() : nullptr) != eValue) // the C++ entities (bead oo-9ht.39.8.11)
+            {
                 if (player != nullptr)
                     player->setNextCompassMode();
                 if (player != nullptr)
                     player->validateCompassTarget();
             }
-            return (player != nullptr ? player->getCompassTarget() : (::Entity*)nullptr) != current;
+            return (player != nullptr ? player->getCompassTargetEntity() : nullptr) != current;
         } else {
             cxx_OOJSReportError(context, "Invalid compass target entity provided.");
             return false;
@@ -1239,7 +1241,7 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID, boo
     case kPlayerShip_messageGuiTextColor:
         colorForScript = OOColor::colorWithDescription(cxx_OOJSPListFromJSValue(context, *value_raw));
         if (colorForScript != nullptr || ooscript::isNull(*value_raw)) {
-            [UNIVERSE messageGUI]->setTextColor(colorForScript.get());
+            UNIVERSE->messageGUI()->setTextColor(colorForScript.get());
             return true;
         }
         break;
@@ -1247,7 +1249,7 @@ static bool PlayerShipSetProperty(Context cx, Object obj, PropertyId propID, boo
     case kPlayerShip_messageGuiTextCommsColor:
         colorForScript = OOColor::colorWithDescription(cxx_OOJSPListFromJSValue(context, *value_raw));
         if (colorForScript != nullptr || ooscript::isNull(*value_raw)) {
-            [UNIVERSE messageGUI]->setTextCommsColor(colorForScript.get());
+            UNIVERSE->messageGUI()->setTextCommsColor(colorForScript.get());
             return true;
         }
         break;
@@ -1372,7 +1374,7 @@ static bool PlayerShipEngageAutopilotToStation(ooscript::Context context, ooscri
     StationEntity* stationForDocking = nil;
 
     if (oojsArgs.count() > 0)
-        stationForDocking = oo::ToStation(OOJSNativeObjectOfClassFromJSValue(context, OOJS_ARGV[0], [::Entity class])); // a station's object is a ship's (bead oo-9ht.175)
+        stationForDocking = oo::ToStation(OOJSEntityFromJSValue(context, OOJS_ARGV[0])); // a station's object is a ship's (bead oo-9ht.175)
     if (stationForDocking == nil) {
         cxx_OOJSReportBadArguments(context, "PlayerShip", "engageAutopilot", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "station");
         return false;
@@ -1415,7 +1417,7 @@ static bool PlayerShipRequestDockingClearance(ooscript::Context context, ooscrip
     StationEntity* stationForDocking = nil;
 
     if (oojsArgs.count() > 0)
-        stationForDocking = oo::ToStation(OOJSNativeObjectOfClassFromJSValue(context, OOJS_ARGV[0], [::Entity class])); // a station's object is a ship's (bead oo-9ht.175)
+        stationForDocking = oo::ToStation(OOJSEntityFromJSValue(context, OOJS_ARGV[0])); // a station's object is a ship's (bead oo-9ht.175)
     if (stationForDocking == nil) {
         cxx_OOJSReportBadArguments(context, "PlayerShip", "requestDockingClearance", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "station");
         return false;
@@ -1442,7 +1444,7 @@ static bool PlayerShipCancelDockingRequest(ooscript::Context context, ooscript::
     StationEntity* stationForDocking = nil;
 
     if (oojsArgs.count() > 0)
-        stationForDocking = oo::ToStation(OOJSNativeObjectOfClassFromJSValue(context, OOJS_ARGV[0], [::Entity class])); // a station's object is a ship's (bead oo-9ht.175)
+        stationForDocking = oo::ToStation(OOJSEntityFromJSValue(context, OOJS_ARGV[0])); // a station's object is a ship's (bead oo-9ht.175)
     if (stationForDocking == nil) {
         cxx_OOJSReportBadArguments(context, "PlayerShip", "cancelDockingRequest", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "station");
         return false;
@@ -1704,7 +1706,7 @@ static bool PlayerShipSetCustomView(ooscript::Context context, ooscript::CallArg
     }
 
     // must be in custom view
-    if ([UNIVERSE viewDirection] != VIEW_CUSTOM) {
+    if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }) != VIEW_CUSTOM) {
         cxx_OOJSReportError(context, "PlayerShip.setCustomView only works when custom view is active.");
         return false;
     }
@@ -1758,7 +1760,7 @@ static bool PlayerShipResetCustomView(ooscript::Context context, ooscript::CallA
     PlayerEntity* player = OOPlayerForScripting();
 
     // must be in custom view
-    if ([UNIVERSE viewDirection] != VIEW_CUSTOM) {
+    if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }) != VIEW_CUSTOM) {
         cxx_OOJSReportError(context, "PlayerShip.setCustomView only works when custom view is active.");
         return false;
     }
@@ -1899,7 +1901,8 @@ static bool PlayerShipBeginGalacticHyperspaceCountdown(ooscript::Context context
         if (player != nullptr)
             player->playGalacticHyperspace();
         // say it!
-        [UNIVERSE cxx_addMessage:oo::str::format(OO_DESC("witch-galactic-in-f-seconds").c_str(), witchspaceSpinUpTime) forCount:1.0];
+        if (UNIVERSE != nullptr)
+            UNIVERSE->addMessage(oo::str::format(OO_DESC("witch-galactic-in-f-seconds").c_str(), witchspaceSpinUpTime), 1.0);
         begun = true;
     }
     OOJS_RETURN_BOOL(begun);
@@ -1969,7 +1972,7 @@ static bool PlayerShipSetMultiFunctionText(ooscript::Context context, ooscript::
         if (player != nullptr)
             player->setMultiFunctionText(value, key);
     } else {
-        GuiDisplayGen* gui = [UNIVERSE gui];
+        GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
         if (player != nullptr)
             player->setMultiFunctionText(gui->reflowTextForMFD(value), key);
     }

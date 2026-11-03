@@ -30,6 +30,7 @@
 #include "oofnd/String.hpp"
 #import "OODescription.h"
 #import "OOObjCPList.h"
+#include "EntityPListForeign.h"	// an entity's node (bead oo-dpyk8)
 
 
 // MARK: The classes, as far as the binding sees them ----------------------------------------------
@@ -41,24 +42,22 @@
 	holds the C++ part (oo::ToCxx reads it) and which oo::ToObjC answers for it; declared as
 	Entity.h and ShipEntity.h declare them (the test imports neither).
 */
-@class Entity;
+@class TestEntityObject;
 
-namespace cxx {
 class Entity : public oo::RefCounted
 {
 public:
 	virtual ~Entity();
 
-	::Entity *_object = nil;	// its object (not retained)
+	::TestEntityObject *_object = nil;	// its object (not retained)
 };
-}	// namespace cxx
 
-class ShipEntity : public cxx::Entity
+class ShipEntity : public Entity
 {
 public:
 	::OOShipGroup *group();
 	void setGroup(::OOShipGroup *group);
-	void setOwner(cxx::Entity *who_owns_entity);
+	void setOwner(Entity *who_owns_entity);
 	::OOShipGroup *escortGroup();
 	bool acceptAsEscort(::ShipEntity *other_ship);
 
@@ -69,18 +68,25 @@ public:
 	int _accepted = 0;
 };
 
-@interface Entity: OOWeakRefObject
+__attribute__((objc_runtime_name("Entity")))
+@interface TestEntityObject: OOWeakRefObject
 {
 @public
-	oo::Ref<cxx::Entity> _cxxEntity;
+	oo::Ref<Entity> _cxxEntity;
 	std::string _name;
 	ooscript::Object _jsSelf;
 }
 @end
 
-@interface OONull: OOObject
-+ (OONull *) null;
-@end
+// The one null (OOJavaScriptEngine.h; a C++ class since bead oo-wdqw1 deleted its facade), declared
+// with the header's names and signatures but not its class: its own property-list node's object.
+class OONull : public oo::PListForeign
+{
+public:
+	static OONull *null();
+	std::string className() const override;
+	std::string description() const override;
+};
 
 @interface OOObject (OOJSTestGlue)
 - (ooscript::Value) oo_jsValueInContext:(ooscript::Context)context;
@@ -108,10 +114,10 @@ ooscript::Object sFakeShipPrototype = nullptr;
 }
 
 
-cxx::Entity::~Entity() = default;
+Entity::~Entity() = default;
 OOShipGroup *ShipEntity::group()  { return _group.get(); }
 void ShipEntity::setGroup(OOShipGroup *group)  { _group = oo::Ref<OOShipGroup>(group); }
-void ShipEntity::setOwner(cxx::Entity *who_owns_entity)  { (void)who_owns_entity; }
+void ShipEntity::setOwner(Entity *who_owns_entity)  { (void)who_owns_entity; }
 OOShipGroup *ShipEntity::escortGroup()  { return _escortGroup.get(); }
 
 bool ShipEntity::acceptAsEscort(::ShipEntity *other_ship)
@@ -122,11 +128,12 @@ bool ShipEntity::acceptAsEscort(::ShipEntity *other_ship)
 	return YES;
 }
 
-namespace oo { ::Entity *ToObjC(cxx::Entity *entity); }	// Entity+ObjCBridge.mm's, which the test does not link
-::Entity *oo::ToObjC(cxx::Entity *entity)  { return entity != nullptr ? entity->_object : nil; }
+namespace oo { ::TestEntityObject *ToObjC(Entity *entity); }	// Entity+ObjCBridge.mm's, which the test does not link
+::TestEntityObject *oo::ToObjC(Entity *entity)  { return entity != nullptr ? entity->_object : nil; }
+#import "EntityHelpersStandIn.h"	// EntityHelpers.mm's, on the test's objects (bead oo-dpyk8)
 
 
-@implementation Entity
+@implementation TestEntityObject
 
 - (std::optional<std::string>) cxx_descriptionComponents  { return _name; }
 
@@ -143,15 +150,14 @@ namespace oo { ::Entity *ToObjC(cxx::Entity *entity); }	// Entity+ObjCBridge.mm'
 @end
 
 
-@implementation OONull
-
-+ (OONull *) null
+OONull *OONull::null()
 {
-	static OONull *null = [[OONull alloc] init];
+	static OONull *null = oo::makeRef<OONull>().leakRef();
 	return null;
 }
 
-@end
+std::string OONull::className() const	{ return "OONull"; }
+std::string OONull::description() const	{ return "<null>"; }
 
 
 // MARK: What the rest of the engine provides ------------------------------------------------------
@@ -228,7 +234,9 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context, const oo::PList &p
 	if (const oo::PList::Object *node = plist.getIf<oo::PList::Object>())	// a C++ object that is its own JS glue, as the engine asks it
 	{
 		if (OOJSPrivateObject *glue = dynamic_cast<OOJSPrivateObject *>(node->get()))  return OOJSValueFromCxxObject(context, glue);
+		if (dynamic_cast<OONull *>(node->get()) != nullptr)  return ooscript::nullValue();	// OONull is null
 	}
+	if (Entity *entity = oo::EntityIn(plist))  return OOJSValueFromNativeObject(context, oo::ToObjC(entity));	// an entity's node: its object's value (bead oo-dpyk8)
 	if (id object = oo::ObjectIn(plist))  return OOJSValueFromNativeObject(context, object);
 	if (const oo::PList::Array *array = plist.getIf<oo::PList::Array>())
 	{
@@ -287,20 +295,11 @@ BOOL OOJSObjectGetterImplPRIVATE(ooscript::Context context, ooscript::Object obj
 }
 
 
-// The engine's conversion asks the object for its JS value; nil and OONull are null.
+// The engine's conversion asks the object for its JS value; nil is null (OONull is a C++ node's, above).
 ooscript::Value OOJSValueFromNativeObject(ooscript::Context context, id object)
 {
-	if (object == nil || [object isKindOfClass:[OONull class]])  return ooscript::nullValue();
+	if (object == nil)  return ooscript::nullValue();
 	return [object oo_jsValueInContext:context];
-}
-
-
-// The private object of a JS object, if it is of the class.
-id OOJSNativeObjectOfClassFromJSValue(ooscript::Context context, ooscript::Value value, Class requiredClass)
-{
-	if (!ooscript::isObject(value) || ooscript::isNull(value))  return nil;
-	id object = (id)ooscript::getPrivate(context, ooscript::toObject(value));
-	return [object isKindOfClass:requiredClass] ? object : nil;
 }
 
 
@@ -356,6 +355,19 @@ void OOJSUnreachable(const char *function, const char *, unsigned)
 }	// extern "C"
 
 
+// OOJSEntity.mm's (not linked): the C++ entity of an entity's JS object, null for any other value,
+// with no error (OOJSNativeObjectOfClassFromJSValue(context, value, [TestEntityObject class]) until bead
+// oo-9ht.39.3, whose stand-in this was). The test's ships keep their object in the slot, as the
+// game's slot held the object's weak reference before.
+Entity *OOJSEntityFromJSValue(ooscript::Context context, ooscript::Value value)
+{
+	if (!ooscript::isObject(value) || ooscript::isNull(value))  return nullptr;
+	id object = (id)ooscript::getPrivate(context, ooscript::toObject(value));
+	TestEntityObject *entity = [object isKindOfClass:[TestEntityObject class]] ? object : nil;
+	return entity != nil ? entity->_cxxEntity.get() : nullptr;
+}
+
+
 oo::PList OOJSBasicPrivateObjectConverter(ooscript::Context, ooscript::Object)
 {
 	return oo::PList();
@@ -379,7 +391,7 @@ void Define(const char *name, ooscript::Value value)
 // A ship and its object (kept for the life of the test), defined by name.
 ShipEntity *NewShip(const char *name)
 {
-	::Entity *object = [[::Entity alloc] init];
+	::TestEntityObject *object = [[::TestEntityObject alloc] init];
 	oo::Ref<ShipEntity> ship = oo::makeRef<ShipEntity>();
 	ship->_object = object;
 	ship->_name = name;

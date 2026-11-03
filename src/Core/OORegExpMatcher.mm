@@ -76,7 +76,7 @@ bool OORegExpMatcher::init()
     unsigned codeLine = __LINE__ + 1; // NB: should remain line before code.
     const char* code = "return regexp.test(string);";
 
-    [::OOJavaScriptEngine sharedEngine]; // Summon the beast from the Pit.
+    OOJavaScriptEngine::sharedEngine(); // Summon the beast from the Pit.
 
     ooscript::Context context = OOJSAcquireContext();
     _tester = OOJSFunction::initWithName(std::string("matchesRegExp"),
@@ -102,7 +102,7 @@ OORegExpMatcher::~OORegExpMatcher()
         sActiveInstance = nullptr;
 
     _tester = nullptr;
-    DESTROY(_cachedRegExpObject);
+    _cachedRegExpObject = nullptr;
 }
 
 bool OORegExpMatcher::string(const std::string& string, const std::string& regExp)
@@ -124,7 +124,7 @@ bool OORegExpMatcher::string(const std::string& string, const std::string& regEx
     // Create new RegExp object if necessary.
     if (flags != _cachedFlags || _cachedRegExpString != regExp) {
         _cachedRegExpString.reset();
-        DESTROY(_cachedRegExpObject);
+        _cachedRegExpObject = nullptr;
 
         uint16_t* buffer;
         buffer = static_cast<uint16_t*>(malloc(expLength * sizeof *buffer));
@@ -135,7 +135,7 @@ bool OORegExpMatcher::string(const std::string& string, const std::string& regEx
         _cachedRegExpString = regExp;
         Object regExpFacadeObj = ooscript::newUCRegExpObjectNoStatics((context), reinterpret_cast<const ooscript::Char16*>(buffer), expLength, static_cast<std::uint32_t>(flags));
         ooscript::Object regExpObj = (regExpFacadeObj);
-        _cachedRegExpObject = [[::OOJSValue alloc] initWithJSObject:regExpObj inContext:context];
+        _cachedRegExpObject = OOJSValue::valueWithJSObject(regExpObj, context);
         _cachedFlags = flags;
 
         free(buffer);
@@ -147,7 +147,7 @@ bool OORegExpMatcher::string(const std::string& string, const std::string& regEx
     ooscript::Value argv[2];
     argv[0] = OOJSValueFromPList(context, oo::PList(string));
     OOJSAddGCValueRoot(context, &argv[0], "OORegExpMatcher argv");
-    argv[1] = (_cachedRegExpObject != nil) ? OOJSValueFromNativeObject(context, _cachedRegExpObject) : ooscript::Value { 0 };
+    argv[1] = (_cachedRegExpObject != nullptr) ? _cachedRegExpObject->jsValueInContext(context) : ooscript::Value { 0 };
     OOJSAddGCValueRoot(context, &argv[1], "OORegExpMatcher argv");
     ooscript::Value resultValue;
     bool OK = _tester->evaluateWithContext(context, NULL, 2, argv, &resultValue);

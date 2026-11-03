@@ -103,7 +103,7 @@ namespace {
 struct RunningStack {
     RunningStack* back = nullptr;
     // The running script, held weakly (bead oo-9ht.133: the stack held its Objective-C object, or
-    // the OOWeakReference a timer or definition pushed); null for a script-less push.
+    // the weak reference proxy a timer or definition pushed); null for a script-less push.
     oo::WeakRef<OOJSScript> current;
     bool scriptless = false; // pushed with no script, which scriptStack() refuses
 };
@@ -136,7 +136,7 @@ static bool ScriptToString(Context context, CallArgs& oojsArgs);
 static oo::PList ScriptConverter(ooscript::Context context, ooscript::Object object);
 
 /*	A Script object's private slot (bead oo-9ht.133): a weak reference to its script, as the slot held
-        the OOWeakReference the script's -weakRetain gave, so the JS object does not keep the script
+        the weak reference proxy the script's facade gave, so the JS object does not keep the script
         alive. The slot retains it once; OOJSCxxObjectWrapperFinalize releases it (it has no JS glue of
         its own: the converter and toString() below ask the script, and answer what a dead reference
         did once it has gone).
@@ -237,7 +237,7 @@ bool OOJSScript::initWithPath(const std::optional<std::string>& path, const oo::
         }
 
         if (!problem.has_value()) {
-            // (the slot held the script's -weakRetain: a weak reference, retained)
+            // (the slot held the script's weak reference proxy, retained)
             if (!OOJSSetCxxPrivate(context, _jsSelf, oo::makeRef<ScriptPrivate>(this).get())) {
                 problem = "could not set private backreference";
             }
@@ -337,7 +337,7 @@ bool OOJSScript::initWithPath(const std::optional<std::string>& path, const oo::
 
     if (!problem.has_value()) {
         oo::NotificationCenter::defaultCenter().addObserver(this, kOOJavaScriptEngineWillResetNotificationName,
-            [::OOJavaScriptEngine sharedEngine],
+            OOJavaScriptEngine::sharedEngine(),
             [this](const oo::Notification& notification) { javaScriptEngineWillReset(notification); });
     }
 
@@ -347,7 +347,7 @@ bool OOJSScript::initWithPath(const std::optional<std::string>& path, const oo::
 OOJSScript::~OOJSScript()
 {
     oo::NotificationCenter::defaultCenter().removeObserver(this, kOOJavaScriptEngineWillResetNotificationName,
-        [::OOJavaScriptEngine sharedEngine]);
+        OOJavaScriptEngine::sharedEngine());
 
     if (_jsSelf != NULL) {
         ooscript::Context context = OOJSAcquireContext();
@@ -418,7 +418,7 @@ std::optional<std::string> OOJSScript::version()
     return _version;
 }
 
-void OOJSScript::runWithTarget(::Entity*)
+void OOJSScript::runWithTarget(Entity*)
 {
 }
 
@@ -747,7 +747,7 @@ static void AddStackToArrayReversed(std::vector<oo::Ref<OOJSScript>>& array, Run
     if (stack != NULL) {
         AddStackToArrayReversed(array, stack->back);
         // -addObject: raised on the nil a script-less push leaves (GNUstep 1.31.1's text). A weak
-        // push whose script has gone was a dead OOWeakReference, not nil: it is a null entry.
+        // push whose script has gone was a dead weak reference proxy, not nil: it is a null entry.
         if (stack->scriptless)
             [OOException raise:OOInvalidArgumentException format:"Tried to add nil to array"];
         array.emplace_back(stack->current.get());
@@ -759,7 +759,7 @@ namespace {
 static Script LoadScriptWithName(ooscript::Context context, const std::optional<std::string>& path, ooscript::Object object, ooscript::Object* outScriptObject, std::optional<std::string>* outErrorMessage)
 {
 #if OO_CACHE_JS_SCRIPTS
-    OOCacheManager* cache = nil;
+    OOCacheManager* cache = nullptr;
 #endif
     std::optional<std::string> fileContents;
     std::optional<std::u16string> data; // the script's UTF-16 units
@@ -770,8 +770,8 @@ static Script LoadScriptWithName(ooscript::Context context, const std::optional<
 
 #if OO_CACHE_JS_SCRIPTS
     // Look for cached compiled script (a nil path is the key "", as the cache read it)
-    cache = [OOCacheManager sharedCache];
-    const oo::PList cached = [cache cxx_pListForKey:path.value_or("") inCache:"compiled JavaScript scripts"];
+    cache = OOCacheManager::sharedCache();
+    const oo::PList cached = cache->pListForKey(path.value_or(""), "compiled JavaScript scripts");
     if (const oo::Data* cachedData = cached.getIf<oo::PList::Data>()) {
         script = ScriptWithCompiledData(context, *cachedData);
     }
@@ -815,7 +815,7 @@ static Script LoadScriptWithName(ooscript::Context context, const std::optional<
         if (script != NULL) {
             // Write compiled script to cache
             const std::optional<oo::Data> compiled = CompiledScriptData(context, script);
-            [cache cxx_setPList:(compiled.has_value() ? oo::PList(*compiled) : oo::PList()) forKey:path.value_or("") inCache:"compiled JavaScript scripts"]; // (null asserts, as nil did)
+            cache->setPList((compiled.has_value() ? oo::PList(*compiled) : oo::PList()), path.value_or(""), "compiled JavaScript scripts"); // (null asserts, as nil did)
         }
 #endif
     }

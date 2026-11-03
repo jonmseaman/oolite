@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #import "OOJSQuaternion.h"
 #import "OOJSVector.h"
 #import "OOJavaScriptEngine.h"
+#import "OOObjCPList.h"
 
 #import "OOJSPlayer.h"
 #import "PlayerEntity.h"
@@ -102,7 +103,7 @@ static ClassDef sEntityClass = {
     nullptr, // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
     nullptr, // resolve (engine default: ResolveStub)
     nullptr, // convert (engine default: ConvertStub)
-    OOJSObjectWrapperFinalize, // finalize
+    OOJSCxxObjectWrapperFinalize, // finalize (the slot holds an OOJSEntityHolder, bead oo-9ht.39.3)
     nullptr, // call
     nullptr, // construct
     nullptr, // backend: owned by the façade backend, must start null
@@ -178,7 +179,7 @@ static PropertySpec sEntityProperties[] = {
 namespace {
 static FunctionSpec sEntityMethods[] = {
     // JS name					Function					min args
-    { "toString", OOJSObjectWrapperToString, 0, 0 },
+    { "toString", OOJSEntityToString, 0, 0 },
 #ifdef OO_DEBUG_MONITOR_ENABLED
     { "dumpState", EntityDumpState, 0, 0 },
 #endif
@@ -192,7 +193,63 @@ void InitOOJSEntity(ooscript::Context context, ooscript::Object global)
         OOJSUnconstructableConstruct, 0, sEntityProperties, sEntityMethods,
         nullptr, nullptr);
     gOOEntityJSPrototype = (proto);
-    OOJSRegisterObjectConverter(&sEntityClass, OOJSBasicPrivateObjectConverter);
+    OOJSRegisterObjectConverter(&sEntityClass, OOJSEntityObjectConverter);
+}
+
+// The holder's glue (OOJSEntityHolder.h): the entity's own, while it lives.
+ooscript::Value OOJSEntityHolder::jsValueInContext(ooscript::Context context)
+{
+    Entity* held = entity();
+    return (held != nullptr) ? OOJSValueFromCxxObject(context, held) : ooscript::nullValue();
+}
+
+// OOObject's -oo_clearJSSelf:, which the facade did not override, did nothing (Entity's
+// clearJSSelf() too): the entity's JS object is a GC root while the entity keeps it.
+void OOJSEntityHolder::clearJSSelf(ooscript::Object /*selfVal*/)
+{
+}
+
+std::optional<std::string> OOJSEntityHolder::jsDescription()
+{
+    Entity* held = entity();
+    return (held != nullptr) ? held->jsDescription() : std::nullopt;
+}
+
+bool OOJSEntityToString(ooscript::Context context, ooscript::CallArgs& oojsArgs)
+{
+    return OOJSCxxObjectWrapperToString(context, oojsArgs, &sEntityClass);
+}
+
+oo::PList OOJSEntityObjectConverter(ooscript::Context context, ooscript::Object object)
+{
+    OOJSEntityHolder* holder = static_cast<OOJSEntityHolder*>(static_cast<oo::RefCounted*>(ooscript::getPrivate(context, object)));
+    Entity* entity = (holder != nullptr) ? holder->entity() : nullptr;
+    return oo::EntityObjectNode(entity); // nil: a null PList
+}
+
+HPVector OOJSEntityPositionOfJSObject(ooscript::Context context, ooscript::Object object)
+{
+    OOJSEntityHolder* holder = static_cast<OOJSEntityHolder*>(static_cast<oo::RefCounted*>(ooscript::getPrivate(context, object)));
+    Entity* entity = (holder != nullptr) ? holder->entity() : nullptr;
+    return entity != nullptr ? entity->getPosition() : HPVector { }; // zero for none, as the message to nil
+}
+
+Quaternion OOJSEntityOrientationOfJSObject(ooscript::Context context, ooscript::Object object)
+{
+    OOJSEntityHolder* holder = static_cast<OOJSEntityHolder*>(static_cast<oo::RefCounted*>(ooscript::getPrivate(context, object)));
+    Entity* entity = (holder != nullptr) ? holder->entity() : nullptr;
+    return entity != nullptr ? entity->getOrientation() : Quaternion { }; // zero for none, as the message to nil
+}
+
+Entity* OOJSEntityFromJSValue(ooscript::Context context, ooscript::Value value)
+{
+    if (!ooscript::isObject(value))
+        return nullptr;
+    ooscript::Object object = ooscript::toObject(value);
+    if (object == nullptr || !OOJSIsMemberOfSubclass(context, object, &sEntityClass))
+        return nullptr;
+    OOJSEntityHolder* holder = static_cast<OOJSEntityHolder*>(static_cast<oo::RefCounted*>(ooscript::getPrivate(context, object)));
+    return (holder != nullptr) ? holder->entity() : nullptr;
 }
 
 bool JSValueToEntity(ooscript::Context context, ooscript::Value value, Entity** outEntity)
@@ -246,12 +303,12 @@ static bool EntityGetProperty(Context cx, Object obj, PropertyId propID, Value* 
 
     OOJS_NATIVE_ENTER(context)
 
-    Entity* entity = nil;
-    id result = nil;
+    Entity* cxxEntity = nullptr;
+    Entity* result = nullptr;
 
-    if (EXPECT_NOT(!OOJSEntityGetEntity(context, thisObj, &entity)))
+    if (EXPECT_NOT(!OOJSEntityGetEntity(context, thisObj, &cxxEntity)))
         return false;
-    if (OOIsStaleEntity(entity)) {
+    if (OOIsStaleEntity(cxxEntity)) {
         if (ooscript::idToInt32(propID) == kEntity_isValid)
             *value = ooscript::falseValue();
         else {
@@ -260,105 +317,107 @@ static bool EntityGetProperty(Context cx, Object obj, PropertyId propID, Value* 
         return true;
     }
 
+    // The C++ members the root facade's selectors called (bead oo-9ht.39.8.21; ADR-0056 amendment
+    // oo-9ht.39.8.21): a virtual one reaches an Objective-C entity's override as the selector did.
     switch (ooscript::idToInt32(propID)) {
     case kEntity_collisionRadius:
-        return ooscript::newNumberValue(cx, [entity collisionRadius], value);
+        return ooscript::newNumberValue(cx, cxxEntity->collisionRadius(), value);
 
     case kEntity_position:
-        return HPVectorToJSValue(context, [entity position], value);
+        return HPVectorToJSValue(context, cxxEntity->getPosition(), value);
 
     case kEntity_orientation:
-        return QuaternionToJSValue(context, [entity normalOrientation], value);
+        return QuaternionToJSValue(context, cxxEntity->normalOrientation(), value);
 
     case kEntity_heading:
-        return VectorToJSValue(context, vector_forward_from_quaternion([entity normalOrientation]), value);
+        return VectorToJSValue(context, vector_forward_from_quaternion(cxxEntity->normalOrientation()), value);
 
     case kEntity_status:
-        *value = OOJSValueFromEntityStatus(context, [entity status]);
+        *value = OOJSValueFromEntityStatus(context, cxxEntity->status());
         return true;
 
     case kEntity_scanClass:
-        *value = OOJSValueFromScanClass(context, [entity scanClass]);
+        *value = OOJSValueFromScanClass(context, cxxEntity->getScanClass());
         return true;
 
     case kEntity_mass:
-        return ooscript::newNumberValue(cx, [entity mass], value);
+        return ooscript::newNumberValue(cx, cxxEntity->getMass(), value);
 
     case kEntity_owner:
-        result = [entity owner];
-        if (result == entity)
-            result = nil;
+        result = cxxEntity->ownerEntity(); // the owner's C++ entity (-owner answered its object)
+        if (result == cxxEntity)
+            result = nullptr;
         break;
 
     case kEntity_energy:
-        return ooscript::newNumberValue(cx, [entity energy], value);
+        return ooscript::newNumberValue(cx, cxxEntity->getEnergy(), value);
 
     case kEntity_maxEnergy:
-        return ooscript::newNumberValue(cx, [entity maxEnergy], value);
+        return ooscript::newNumberValue(cx, cxxEntity->getMaxEnergy(), value);
 
     case kEntity_isValid:
-        *value = [entity status] == STATUS_DEAD ? ooscript::falseValue() : ooscript::trueValue();
+        *value = cxxEntity->status() == STATUS_DEAD ? ooscript::falseValue() : ooscript::trueValue();
         return true;
 
     case kEntity_isInSpace:
-        *value = OOJSValueFromBOOL([entity isInSpace]);
+        *value = OOJSValueFromBOOL(cxxEntity->isInSpace());
         return true;
 
     case kEntity_isShip:
-        *value = OOJSValueFromBOOL([entity isShip]);
+        *value = OOJSValueFromBOOL(cxxEntity->getIsShip());
         return true;
 
     case kEntity_isStation:
-        *value = OOJSValueFromBOOL([entity isStation]);
+        *value = OOJSValueFromBOOL(cxxEntity->getIsStation());
         return true;
 
     case kEntity_isDock:
-        *value = OOJSValueFromBOOL([entity isDock]);
+        *value = OOJSValueFromBOOL(cxxEntity->isDock());
         return true;
 
     case kEntity_isSubEntity:
-        *value = OOJSValueFromBOOL([entity isSubEntity]);
+        *value = OOJSValueFromBOOL(cxxEntity->getIsSubEntity());
         return true;
 
     case kEntity_isPlayer:
-        *value = OOJSValueFromBOOL([entity isPlayer]);
+        *value = OOJSValueFromBOOL(cxxEntity->getIsPlayer());
         return true;
 
     case kEntity_isPlanet:
-        *value = OOJSValueFromBOOL([entity isPlanet]);
+        *value = OOJSValueFromBOOL(cxxEntity->isPlanet());
         return true;
 
     case kEntity_isSun:
-        *value = OOJSValueFromBOOL([entity isSun]);
+        *value = OOJSValueFromBOOL(cxxEntity->isSun());
         return true;
 
     case kEntity_isSunlit:
-        *value = OOJSValueFromBOOL([entity isSunlit]);
+        *value = OOJSValueFromBOOL(cxxEntity->getIsSunlit());
         return true;
 
     case kEntity_isVisible:
-        *value = OOJSValueFromBOOL([entity isVisible]);
+        *value = OOJSValueFromBOOL(cxxEntity->isVisible());
         return true;
 
     case kEntity_isVisualEffect:
-        *value = OOJSValueFromBOOL([entity isVisualEffect]);
+        *value = OOJSValueFromBOOL(cxxEntity->getIsVisualEffect());
         return true;
 
     case kEntity_isWormhole:
-        *value = OOJSValueFromBOOL([entity isWormhole]);
+        *value = OOJSValueFromBOOL(cxxEntity->getIsWormhole());
         return true;
 
     case kEntity_distanceTravelled:
-        return ooscript::newNumberValue(cx, [entity distanceTravelled], value);
+        return ooscript::newNumberValue(cx, cxxEntity->getDistanceTravelled(), value);
 
     case kEntity_spawnTime:
-        return ooscript::newNumberValue(cx, [entity spawnTime], value);
+        return ooscript::newNumberValue(cx, cxxEntity->getSpawnTime(), value);
 
     default:
         OOJSReportBadPropertySelector(context, thisObj, (propID), sEntityProperties);
     }
 
-    *value = OOJSValueFromNativeObject(context, result);
+    *value = OOJSValueFromCxxObject(context, result); // the owner's JS value, its object's (null for none)
     return true;
 
     OOJS_NATIVE_EXIT
@@ -376,25 +435,26 @@ static bool EntitySetProperty(Context cx, Object obj, PropertyId propID, bool /*
 
     OOJS_NATIVE_ENTER(context)
 
-    Entity* entity = nil;
+    Entity* cxxEntity = nullptr;
     double fValue;
     HPVector hpvValue;
     Quaternion qValue;
 
-    if (EXPECT_NOT(!OOJSEntityGetEntity(context, thisObj, &entity)))
+    if (EXPECT_NOT(!OOJSEntityGetEntity(context, thisObj, &cxxEntity)))
         return false;
-    if (OOIsStaleEntity(entity))
+    if (OOIsStaleEntity(cxxEntity))
         return true;
+    // The C++ members the root facade's selectors called (bead oo-9ht.39.8.21).
 
     switch (ooscript::idToInt32(propID)) {
     case kEntity_position:
         if (JSValueToHPVector(context, *value, &hpvValue)) {
-            [entity setPosition:hpvValue];
-            if ([entity isShip]) {
-                if (oo::ToShip(entity) != nullptr)
-                    oo::ToShip(entity)->resetExhaustPlumes();
-                if (oo::ToShip(entity) != nullptr)
-                    oo::ToShip(entity)->forceAegisCheck();
+            cxxEntity->setPosition(hpvValue);
+            if (cxxEntity->getIsShip()) {
+                if (oo::ToShip(cxxEntity) != nullptr)
+                    oo::ToShip(cxxEntity)->resetExhaustPlumes();
+                if (oo::ToShip(cxxEntity) != nullptr)
+                    oo::ToShip(cxxEntity)->forceAegisCheck();
             }
             return true;
         }
@@ -402,15 +462,15 @@ static bool EntitySetProperty(Context cx, Object obj, PropertyId propID, bool /*
 
     case kEntity_orientation:
         if (JSValueToQuaternion(context, *value, &qValue)) {
-            [entity setNormalOrientation:qValue];
+            cxxEntity->setNormalOrientation(qValue);
             return true;
         }
         break;
 
     case kEntity_energy:
         if (ooscript::valueToNumber(cx, *value, &fValue)) {
-            fValue = OOClamp_0_max_d(fValue, [entity maxEnergy]);
-            [entity setEnergy:fValue];
+            fValue = OOClamp_0_max_d(fValue, cxxEntity->getMaxEnergy());
+            cxxEntity->setEnergy(fValue);
             return true;
         }
         break;
@@ -421,19 +481,19 @@ static bool EntitySetProperty(Context cx, Object obj, PropertyId propID, bool /*
                 cxx_OOJSReportError(context, "entity.maxEnergy must be positive.");
                 return false;
             }
-            [entity setMaxEnergy:fValue];
+            cxxEntity->setMaxEnergy(fValue);
             return true;
         }
         break;
 
     case kEntity_scanClass:
-        if ([entity isShip] && ![entity isPlayer]) {
+        if (cxxEntity->getIsShip() && !cxxEntity->getIsPlayer()) {
             OOScanClass newClass = OOScanClassFromJSValue(context, *value);
             if (newClass == CLASS_NOT_SET || newClass == CLASS_NO_DRAW || newClass == CLASS_TARGET || newClass == CLASS_WORMHOLE || newClass == CLASS_PLAYER || newClass == CLASS_VISUAL_EFFECT) {
                 cxx_OOJSReportError(context, "entity.scanClass cannot be set to that value.");
                 return false;
             }
-            [entity setScanClass:newClass];
+            cxxEntity->setScanClass(newClass);
             return true;
         } else {
             cxx_OOJSReportError(context, "entity.scanClass is read-only except on NPC ships.");
@@ -457,9 +517,10 @@ static bool EntityDumpState(ooscript::Context context, ooscript::CallArgs& oojsA
 {
     OOJS_PROFILE_ENTER
 
-    Entity* thisEnt = nil;
+    Entity* thisEnt = nullptr;
     OOJSEntityGetEntity(context, OOJS_THIS, &thisEnt);
-    [thisEnt dumpState];
+    if (thisEnt != nullptr)
+        thisEnt->dumpState(); // the C++ member, which the object's -dumpState called (bead oo-9ht.39.8.2)
 
     OOJS_RETURN_VOID;
 

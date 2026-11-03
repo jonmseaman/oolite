@@ -122,6 +122,14 @@ ooscript::ClassDef *JSEntityClass(void)
 }
 
 
+// OOJSEntity.mm's (not linked): the position and orientation of the entity an Entity JS object
+// holds (bead oo-9ht.39.8.12; it was the object, whose -position/-orientation the conversions sent). The test's
+// fake entities are put in the slot themselves; the orientation is the fake's (below). No case converts
+// an entity to a vector here.
+HPVector OOJSEntityPositionOfJSObject(ooscript::Context, ooscript::Object)  { std::abort(); }
+Quaternion OOJSEntityOrientationOfJSObject(ooscript::Context context, ooscript::Object object);
+
+
 #if OOJS_PROFILE
 namespace {
 int sProfileDepth = 0;
@@ -178,7 +186,20 @@ void OOJSUnreachable(const char *function, const char *, unsigned)
 
 @end
 
+
+// The fake entity's orientation, as the conversion asked its object (nil: zero) until bead oo-9ht.39.8.12.
+Quaternion OOJSEntityOrientationOfJSObject(ooscript::Context context, ooscript::Object object)
+{
+	FakeEntity *entity = [(id)ooscript::getPrivate(context, object) weakRefUnderlyingObject];
+	return [entity orientation];
+}
+
 Universe *gSharedUniverse = nil;	// OOJSVector.mm's coordinate-system methods read it; not called here
+
+// Link stubs, never reached: OOJSVector.mm's coordinate-system methods call them on the universe,
+// which stays nil here (bead oo-ql9rn: they were messages to nil).
+HPVector Universe::legacyPositionFrom(HPVector, const std::string &)  { std::abort(); }
+HPVector Universe::coordinatesFromCoordinateSystemString(const std::string &)  { std::abort(); }
 
 
 // MARK: The context -------------------------------------------------------------------------------
@@ -365,7 +386,10 @@ OO_TEST(statistics)
 {
 	clearJSQuaternionStatistics();
 	Eval("new Quaternion(1, 2, 3, 4).multiply(new Quaternion()).multiply([1, 2, 3, 4]).multiply(Quaternion.prototype)");
-	const std::string *report = reportJSQuaternionStatistics().getIf<std::string>();
+	// The report is kept in a local: a pointer into the temporary would dangle once the statement
+	// ends (oo-zdxtn, an ASan stack-use-after-scope).
+	const oo::PList reportNode = reportJSQuaternionStatistics();
+	const std::string *report = reportNode.getIf<std::string>();
 	OO_CHECK(report != nullptr);
 	if (report != nullptr)
 	{
@@ -374,7 +398,8 @@ OO_TEST(statistics)
 		OO_CHECK(report->find("       prototype-to-zero conversions: 1 (") != std::string::npos);
 	}
 	clearJSQuaternionStatistics();
-	report = reportJSQuaternionStatistics().getIf<std::string>();
+	const oo::PList clearedNode = reportJSQuaternionStatistics();
+	report = clearedNode.getIf<std::string>();
 	OO_CHECK(report != nullptr && report->find("total: 0") != std::string::npos);
 }
 #endif

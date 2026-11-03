@@ -38,15 +38,15 @@ SOFTWARE.
 #import "OOFoundation.h"
 #import "OOMaths.h"
 #import "OOOpenGL.h"
-#import "OOWeakReference.h"
 #import "oofnd/objc/OOObject.h"
+class Entity; // Entity.h: the shader binding target (bead oo-9ht.39.6)
 
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OOObjCRef.h"
 #include <vector>
 
-@class OOTexture;
+#include "OOTexture.h" // allTextures() answers oo::Ref<OOTexture>, which needs the class (bead oo-9ht.99)
 
 class OODrawable : public oo::RefCounted {
 public:
@@ -61,7 +61,7 @@ public:
     virtual BoundingBox boundingBox();
 
     // Passed to all materials.
-    virtual void setBindingTarget(id<OOWeakReferenceSupport> target);
+    virtual void setBindingTarget(Entity* target);
 
     virtual void dumpSelfState();
 
@@ -74,7 +74,7 @@ public:
     std::string description() const;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    virtual std::vector<oo::ObjCRef<::OOTexture*>> allTextures();
+    virtual std::vector<oo::Ref<OOTexture>> allTextures();
     virtual size_t totalSize(); // Size including dynamic data, not counting textures.
 
     // The object's own size, which totalSize() starts from (the facade's instance size until bead

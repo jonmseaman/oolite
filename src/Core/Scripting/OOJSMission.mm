@@ -206,7 +206,7 @@ void MissionRunCallback()
     ooscript::Value argval2 = ooscript::undefinedValue();
     ooscript::Value rval = ooscript::undefinedValue();
     PlayerEntity* player = OOPlayerForScripting();
-    OOJavaScriptEngine* engine = [OOJavaScriptEngine sharedEngine];
+    OOJavaScriptEngine* engine = OOJavaScriptEngine::sharedEngine();
     ooscript::Context context = OOJSAcquireContext();
 
     /*	Create temporarily-rooted local copies of sCallbackFunction and
@@ -240,11 +240,7 @@ void MissionRunCallback()
     // Call the callback.
     @try {
         OOJSScript::pushScript(cbScript);
-        [engine callJSFunction:cbFunction
-                     forObject:cbThis
-                          argc:2
-                          argv:args
-                        result:&rval];
+        engine->callJSFunction(cbFunction, cbThis, 2, args, &rval);
     }
     @catch (OOException* exception) {
         // Squash any exception, allow cleanup to happen and so forth.
@@ -577,7 +573,7 @@ static oo::PList GetParameterImageDescriptor(ooscript::Context context, ooscript
 {
     ooscript::Value value = ooscript::nullValue();
     if (ooscript::getProperty((context), (object), key, (&value))) {
-        return [UNIVERSE gui]->textureDescriptorFromJSValue(value, context, "mission.runScreen()");
+        return UNIVERSE->getGui()->textureDescriptorFromJSValue(value, context, "mission.runScreen()");
     } else {
         return oo::PList(); // was nil
     }
@@ -645,7 +641,7 @@ static bool MissionRunScreen(ooscript::Context context, ooscript::CallArgs& oojs
     } else {
         std::optional<std::string> titleKey = GetParameterString(context, params, "titleKey");
         if (titleKey.has_value()) {
-            const oo::PList missionText = [UNIVERSE cxx_missiontext];
+            const oo::PList missionText = (UNIVERSE != nullptr ? UNIVERSE->getMissiontext() : oo::PList());
             std::optional<std::string> message = StringFromPList(missionText.find(*titleKey)); // -objectForKey:
             if (message.has_value()) {
                 if (player != nullptr)
@@ -702,7 +698,8 @@ static bool MissionRunScreen(ooscript::Context context, ooscript::CallArgs& oojs
         }
     }
 
-    [UNIVERSE removeDemoShips]; // remove any demoship or miniature planet that may be remaining from previous screens
+    if (UNIVERSE != nullptr)
+        UNIVERSE->removeDemoShips(); // remove any demoship or miniature planet that may be remaining from previous screens
 
     ShipEntity* demoShip = nil;
     if (ooscript::getProperty(context, (params), "model", (&value)) && !ooscript::isUndefined(value)) {
@@ -717,7 +714,7 @@ static bool MissionRunScreen(ooscript::Context context, ooscript::CallArgs& oojs
             }
 
             //	[player showShipModel:oo::NSStringOrNil(cxx_OOStringFromJSValue(context, value))];
-            demoShip = [UNIVERSE cxx_makeDemoShipWithRole:role.value_or("") spinning:(bool)spinning];
+            demoShip = (UNIVERSE != nullptr ? UNIVERSE->makeDemoShipWithRole(role.value_or(""), (bool)spinning) : (::ShipEntity*)nil);
         }
     }
     if (demoShip != nil) {
@@ -727,7 +724,7 @@ static bool MissionRunScreen(ooscript::Context context, ooscript::CallArgs& oojs
             if (demoShip != nullptr)
                 demoShip->setEntityPersonalityInt(personality);
         }
-        ooscript::Value demoShipVal = [oo::ToObjC(demoShip) oo_jsValueInContext:context]; // the ship's object (C++ ship since bead oo-9ht.144)
+        ooscript::Value demoShipVal = OOJSValueFromCxxObject(context, demoShip); // the C++ ship's JS value (its object's -oo_jsValueInContext: until bead oo-9ht.39.8.2)
         ooscript::setProperty(context, (sMissionObject), "displayModel", (&demoShipVal));
     } else {
         ooscript::deleteProperty(context, (sMissionObject), "displayModel");
@@ -813,9 +810,9 @@ static bool MissionRunScreen(ooscript::Context context, ooscript::CallArgs& oojs
 
     std::optional<std::string> firstKey = GetParameterString(context, params, "initialChoicesKey");
     if (firstKey.has_value()) {
-        OOGUIRow row = [UNIVERSE gui]->rowForKey(firstKey);
+        OOGUIRow row = UNIVERSE->getGui()->rowForKey(firstKey);
         if (row != -1) {
-            [UNIVERSE gui]->setSelectedRow(row);
+            UNIVERSE->getGui()->setSelectedRow(row);
         }
     }
 

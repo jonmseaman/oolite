@@ -55,7 +55,7 @@ private:
 
     ooscript::Value _callback = { };
     ooscript::Object _callbackThis = { };
-    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was -weakRetain)
+    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's weak reference proxy)
 };
 
 // A PList::Object node holding the definition (strongly), as the settings' callbackObj.

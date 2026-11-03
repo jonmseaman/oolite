@@ -47,7 +47,7 @@ enum {
         cxx::OOSubEntityInterface, and the graphics reset manager through a C++ client in
         OOExhaustPlumeEntity.mm.
 */
-class OOExhaustPlumeEntity : public cxx::Entity, public cxx::OOSubEntityInterface {
+class OOExhaustPlumeEntity : public Entity, public cxx::OOSubEntityInterface {
 public:
     // definition: the exhaust's tokens (x y z scale_x scale_y scale_z), read as -oo_floatAtIndex: read them.
     // A new plume, initialised; null for no tokens. oo::NewEntityFacade hands it to Objective-C.
@@ -61,10 +61,10 @@ public:
     Vector scale();
     void setScale(Vector scale);
 
-    ::OOTexture* texture();
+    OOTexture* texture();
 
     static void setUpTexture();
-    static ::OOTexture* plumeTexture();
+    static OOTexture* plumeTexture();
     // What the graphics reset client (OOExhaustPlumeEntity.mm) runs.
     static void resetGraphicsState();
 

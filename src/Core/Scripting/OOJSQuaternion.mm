@@ -341,8 +341,7 @@ bool JSObjectGetQuaternion(ooscript::Context context, ooscript::Object quaternio
     // If it's an entity, use its orientation.
     if (OOJSIsMemberOfSubclass(context, quaternionObj, JSEntityClass())) {
         COUNT(entityCount);
-        Entity* entity = [(id)ooscript::getPrivate(cx, obj) weakRefUnderlyingObject];
-        *outQuaternion = [entity orientation];
+        *outQuaternion = OOJSEntityOrientationOfJSObject(context, quaternionObj); // the C++ entity's (bead oo-9ht.39.8.12)
         return true;
     }
 

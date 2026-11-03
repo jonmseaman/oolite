@@ -43,7 +43,8 @@ typedef NSInteger OOGUIRow;	// as GuiDisplayGen.h declares it
 
 // The demo ship's object (the root's; the Objective-C ship's until bead oo-9ht.144 deleted it), which
 // oo::ToObjC answers for the demo ship.
-@interface Entity: OOObject
+__attribute__((objc_runtime_name("Entity")))
+@interface TestEntityObject: OOObject
 {
 @public
 	ooscript::Object _jsSelf;
@@ -59,17 +60,19 @@ typedef NSInteger OOGUIRow;	// as GuiDisplayGen.h declares it
 // PLAYER: C++ since bead oo-9ht.177 deleted the Objective-C player this stood in for: the members
 // the code under test calls, declared as the game headers declare them (the test imports none
 // that defines the classes), with the stand-in's answers.
-namespace cxx {
-class Entity
+#include "oofnd/Ref.hpp"
+#include "OOJSPrivateObject.h"
+
+class Entity : public oo::RefCounted, public OOJSPrivateObject	// the game's root's bases (its JS glue)
 {
 public:
 	OOEntityStatus status();
+	ooscript::Value jsValueInContext(ooscript::Context context) override;
+	void clearJSSelf(ooscript::Object selfVal) override;
 };
 
-}	// namespace cxx
-
 // The ship: C++ since bead oo-9ht.144 (the demo ship is a plain one).
-class ShipEntity : public cxx::Entity
+class ShipEntity : public Entity
 {
 public:
 	void setEntityPersonalityInt(uint16_t value);
@@ -136,18 +139,30 @@ public:
 #import "OOColor.h"	// and its row colours
 
 
-@interface Universe: OOObject
+#import "UniverseStandIn.h"
+
+// The universe as the code under test sees it: a stand-in for the C++ class (bead oo-ql9rn deleted
+// the Objective-C facade the test's Objective-C stand-in stood in for), with the header's names and signatures.
+// It answers virtual members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse overrides them.
+class Universe : public oo::RefCounted
 {
-@public
+public:
+	OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
+
 	GuiDisplayGen *_gui;
 	ShipEntity *_demoShip;
 	std::vector<std::string> _calls;
-}
-- (GuiDisplayGen *) gui;
-- (oo::PList) cxx_missiontext;
-- (void) removeDemoShips;
-- (ShipEntity *) cxx_makeDemoShipWithRole:(const std::string &)role spinning:(BOOL)spinning;
-@end
+
+	oo::PList getMissiontext();
+	void removeDemoShips();
+	::ShipEntity *makeDemoShipWithRole(const std::string &, bool);
+};
+
+class StandInUniverse : public Universe
+{
+public:
+	::GuiDisplayGen *getGui() override	{ return _gui; }
+};
 
 
 
@@ -155,15 +170,15 @@ public:
 /*	The engine calls the mission screen's callback. While _raise is set it raises instead, as a
 	script error could, which MissionRunCallback() logs and ignores.
 */
-@interface OOJavaScriptEngine: OOObject
+class OOJavaScriptEngine	// a C++ class since bead oo-wdqw1 deleted its facade: the header's names and signatures
 {
-@public
-	int _calls;
-	BOOL _raise;
-}
-+ (OOJavaScriptEngine *) sharedEngine;
-- (BOOL) callJSFunction:(ooscript::Value)function forObject:(ooscript::Object)jsThis argc:(unsigned)argc argv:(ooscript::Value *)argv result:(ooscript::Value *)outResult;
-@end
+public:
+	static OOJavaScriptEngine *sharedEngine();
+	bool callJSFunction(ooscript::Value function, ooscript::Object jsThis, unsigned argc, ooscript::Value *argv, ooscript::Value *outResult);
+
+	int _calls = 0;
+	BOOL _raise = NO;
+};
 
 
 // The music controller, a converted class the binding only calls (amendment oo-jy98 item 3): the
@@ -247,7 +262,7 @@ void CaptureLog(std::string_view line)
 }	// namespace
 
 
-@implementation Entity
+@implementation TestEntityObject
 
 - (ooscript::Value) oo_jsValueInContext:(ooscript::Context)context
 {
@@ -266,7 +281,7 @@ void CaptureLog(std::string_view line)
 
 void PlayerEntity::setScriptTarget(::ShipEntity *ship)  { (void)ship; }
 void ShipEntity::setEntityPersonalityInt(uint16_t value)  { _personality = value; }
-OOEntityStatus cxx::Entity::status()  { return static_cast<PlayerEntity *>(this)->_status; }
+OOEntityStatus Entity::status()  { return static_cast<PlayerEntity *>(this)->_status; }
 oo::PList PlayerEntity::getMissionDestinations()  { return oo::PList(_destinations); }
 std::optional<std::string> PlayerEntity::missionScreenID()
 {
@@ -407,24 +422,22 @@ void GuiDisplayGen::setArray(const std::vector<std::string> &, OOGUIRow)  { std:
 
 
 // The demo ship's object, which oo::ToObjC answers (only the demo ship crosses).
-::Entity *sDemoShipObject = nil;
-namespace oo { ::Entity *ToObjC(cxx::Entity *entity); }
-::Entity *oo::ToObjC(cxx::Entity *entity)  { return entity != nullptr ? sDemoShipObject : nil; }
+::TestEntityObject *sDemoShipObject = nil;
+namespace oo { ::TestEntityObject *ToObjC(Entity *entity); }
+::TestEntityObject *oo::ToObjC(Entity *entity)  { return entity != nullptr ? sDemoShipObject : nil; }
+// The C++ ship's JS value (bead oo-9ht.39.8.2: displayModel is OOJSValueFromCxxObject of the demo
+// ship): its object's, which the binding asked until then.
+ooscript::Value Entity::jsValueInContext(ooscript::Context context)  { return [oo::ToObjC(this) oo_jsValueInContext:context]; }
+void Entity::clearJSSelf(ooscript::Object)  {}
 
 
-@implementation Universe
-
-- (GuiDisplayGen *) gui  { return _gui; }
-- (oo::PList) cxx_missiontext  { return Dict({ { "mission_title", oo::PList("The [name] Job") }, { "mission_number", oo::PList(12) } }); }
-- (void) removeDemoShips  { _calls.push_back("removeDemoShips"); }
-
-- (ShipEntity *) cxx_makeDemoShipWithRole:(const std::string &)role spinning:(BOOL)spinning
+oo::PList Universe::getMissiontext()	{ return Dict({ { "mission_title", oo::PList("The [name] Job") }, { "mission_number", oo::PList(12) } }); }
+void Universe::removeDemoShips()	{ _calls.push_back("removeDemoShips"); }
+::ShipEntity *Universe::makeDemoShipWithRole(const std::string &role, bool spinning)
 {
 	_calls.push_back("demoShip('" + role + "', " + (spinning ? "YES)" : "NO)"));
 	return role == "none" ? nil : _demoShip;
 }
-
-@end
 
 
 #import "OOScript.h"
@@ -451,7 +464,7 @@ std::optional<std::string> OOScript::name()					{ return std::nullopt; }
 std::optional<std::string> OOScript::scriptDescription()		{ return std::nullopt; }
 std::optional<std::string> OOScript::version()				{ return std::nullopt; }
 bool OOScript::requiresTickle()								{ return false; }
-void OOScript::runWithTarget(::Entity *)						{}
+void OOScript::runWithTarget(Entity *)						{}
 bool OOScript::callMethod(ooscript::PropertyId, ooscript::Context, ooscript::Value *, int, ooscript::Value *)	{ return false; }
 std::string OOScript::className() const						{ return "OOScript"; }
 std::string OOScript::description() const						{ return "<OOScript>"; }
@@ -464,21 +477,17 @@ void OOJSScript::popScript(OOJSScript *script)  { sScriptStack.push_back("-" + (
 
 
 namespace {
-OOJavaScriptEngine *sEngine = nil;
+OOJavaScriptEngine *sEngine = nullptr;
 }
 
-@implementation OOJavaScriptEngine
+OOJavaScriptEngine *OOJavaScriptEngine::sharedEngine()  { return sEngine; }
 
-+ (OOJavaScriptEngine *) sharedEngine  { return sEngine; }
-
-- (BOOL) callJSFunction:(ooscript::Value)function forObject:(ooscript::Object)jsThis argc:(unsigned)argc argv:(ooscript::Value *)argv result:(ooscript::Value *)outResult
+bool OOJavaScriptEngine::callJSFunction(ooscript::Value function, ooscript::Object jsThis, unsigned argc, ooscript::Value *argv, ooscript::Value *outResult)
 {
 	_calls++;
 	if (_raise)  [OOException raise:OOInvalidArgumentException format:"callback %s", "boom"];
 	return ooscript::callFunctionValue(sContext, jsThis, function, argc, argv, outResult);
 }
-
-@end
 
 
 OOMusicController::OOMusicController()
@@ -767,9 +776,10 @@ void OOJSUnreachable(const char *function, const char *, unsigned)
 
 
 // (a C++ function, outside the C block above)
-ooscript::Value OOJSValueFromCxxObject(ooscript::Context, OOJSPrivateObject *object)
+ooscript::Value OOJSValueFromCxxObject(ooscript::Context context, OOJSPrivateObject *object)
 {
 	if (object != nullptr && object == static_cast<OOJSPrivateObject *>(sRunningScript))  return ooscript::objectValue(sScriptObject);
+	if (dynamic_cast<Entity *>(object) != nullptr)  return object->jsValueInContext(context);	// the demo ship (bead oo-9ht.39.8.2)
 	return ooscript::nullValue();
 }
 
@@ -803,12 +813,12 @@ void SetUpContext()
 	sPlayer->_status = STATUS_DOCKED;
 	sPlayer->_exitScreen = GUI_SCREEN_STATUS;
 	gOOPlayer = sPlayer;
-	sUniverse = [[Universe alloc] init];
+	sUniverse = new StandInUniverse();
 	sUniverse->_gui = oo::makeRef<GuiDisplayGen>().leakRef();	// kept for the life of the test
 	sUniverse->_demoShip = new ShipEntity;
-	sDemoShipObject = [[Entity alloc] init];
+	sDemoShipObject = [[TestEntityObject alloc] init];
 	gSharedUniverse = sUniverse;
-	sEngine = [[OOJavaScriptEngine alloc] init];
+	sEngine = new OOJavaScriptEngine;
 	sRunningScript = oo::makeRef<OOJSScript>().leakRef();
 	sRunningScript->_name = "oolite-test-mission";
 	sScriptObject = ooscript::newObject(sContext, nullptr, nullptr, nullptr);

@@ -40,7 +40,7 @@
 
 // MARK: The classes, as far as the binding sees them ----------------------------------------------
 
-@class MyOpenGLView;
+class MyOpenGLView;
 
 /*	The player: its galaxy and screen, key binding descriptions, extra GUI screen keys and the
 	equipment screen's background.
@@ -68,9 +68,16 @@ public:
 /*	The universe: time acceleration, mission text (whose lookup raises while _raise is set),
 	inhabitants, the view, the GUI, screen textures by key, the game view, pause and quit.
 */
-@interface Universe: OOObject
+#import "UniverseStandIn.h"
+
+// The universe as the code under test sees it: a stand-in for the C++ class (bead oo-ql9rn deleted
+// the Objective-C facade the test's Objective-C stand-in stood in for), with the header's names and signatures.
+// It answers virtual members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse overrides them.
+class Universe : public oo::RefCounted
 {
-@public
+public:
+	OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
+
 	double _timeAcceleration;
 	OOViewID _view;
 	GuiDisplayGen *_gui;
@@ -79,36 +86,40 @@ public:
 	int _quit;
 	BOOL _raise;
 	BOOL _throwCxx;
-}
-- (double) timeAccelerationFactor;
-- (void) setTimeAccelerationFactor:(double)newTimeAccelerationFactor;
-- (oo::PList) cxx_missiontext;
-- (std::optional<std::string>) cxx_getSystemInhabitants:(OOSystemID)sys plural:(BOOL)plural;
-- (OOViewID) viewDirection;
-- (GuiDisplayGen *) gui;
-- (oo::PList) cxx_screenTextureDescriptorForKey:(const std::string &)key;
-- (void) cxx_setScreenTextureDescriptorForKey:(const std::string &)key descriptor:(const oo::PList &)desc;
-- (MyOpenGLView *) gameView;
-- (void) pauseGame;
-- (void) quitGame;
-@end
+
+	double getTimeAccelerationFactor();
+	void setTimeAccelerationFactor(double);
+	void pauseGame();
+	void quitGame();
+	oo::PList getMissiontext();
+	std::optional<std::string> getSystemInhabitants(OOSystemID, bool);
+	oo::PList screenTextureDescriptorForKey(const std::string &);
+	void setScreenTextureDescriptorForKey(const std::string &, const oo::PList &);
+};
+
+class StandInUniverse : public Universe
+{
+public:
+	OOViewID getViewDirection() override	{ return _view; }
+	::GuiDisplayGen *getGui() override	{ return _gui; }
+	::MyOpenGLView *getGameView() override	{ return nil; }
+};
 
 // The GUI is C++ since bead oo-9ht.143 deleted its facade: the members OOJSGlobal.mm calls are
 // defined below (a C++ stand-in with the facade stand-in's answers).
 
-@interface MyOpenGLView: OOObject
-- (BOOL) cxx_snapShot:(const std::optional<std::string> &)filename;
-@end
+// The game view is C++ since bead oo-9ht.153 deleted its facade: the member OOJSGlobal.mm calls is
+// defined below (never run: there is no view).
+class MyOpenGLView : public oo::RefCounted
+{
+public:
+	bool snapShot(const std::optional<std::string> &filename);
+};
 
-@interface ResourceManager: OOObject
-+ (oo::PList) cxx_dictionaryFromFilesNamed:(const std::string &)fileName inFolder:(const std::optional<std::string> &)folderName andMerge:(BOOL)mergeFiles;
-@end
+#import "ResourceManager.h"
 
-// The Objective-C engine, which OOJSGuiScreenKeyDefinition.mm (linked here) still messages for its
-// reset-notification observer and its JS calls; nothing more of it is needed.
-@interface OOJavaScriptEngine: OOObject
-+ (OOJavaScriptEngine *) sharedEngine;
-@end
+// The engine, which OOJSGuiScreenKeyDefinition.mm (linked here) calls for its reset-notification
+// observer and its JS calls, is declared below (a C++ class since bead oo-wdqw1).
 
 #import "OOJSGlobal.h"
 
@@ -154,17 +165,11 @@ bool PlayerEntity::setExtraGuiScreenKeys(OOGUIScreenID gui, ::OOJSGuiScreenKeyDe
 }
 
 
-@implementation Universe
-
-- (double) timeAccelerationFactor  { return _timeAcceleration; }
-- (void) setTimeAccelerationFactor:(double)newTimeAccelerationFactor  { _timeAcceleration = newTimeAccelerationFactor; }
-- (OOViewID) viewDirection  { return _view; }
-- (GuiDisplayGen *) gui  { return _gui; }
-- (MyOpenGLView *) gameView  { return nil; }
-- (void) pauseGame  { _paused++; }
-- (void) quitGame  { _quit++; }
-
-- (oo::PList) cxx_missiontext
+double Universe::getTimeAccelerationFactor()	{ return _timeAcceleration; }
+void Universe::setTimeAccelerationFactor(double newTimeAccelerationFactor)	{ _timeAcceleration = newTimeAccelerationFactor; }
+void Universe::pauseGame()	{ _paused++; }
+void Universe::quitGame()	{ _quit++; }
+oo::PList Universe::getMissiontext()
 {
 	if (_raise)  [OOException raise:OOInvalidArgumentException format:"missiontext %s", "boom"];
 	if (_throwCxx)  throw std::runtime_error("cxx boom");
@@ -173,26 +178,21 @@ bool PlayerEntity::setExtraGuiScreenKeys(OOGUIScreenID gui, ::OOJSGuiScreenKeyDe
 	text["number"] = oo::PList(5.0);
 	return oo::PList(std::move(text));
 }
-
-- (std::optional<std::string>) cxx_getSystemInhabitants:(OOSystemID)sys plural:(BOOL)plural
+std::optional<std::string> Universe::getSystemInhabitants(OOSystemID sys, bool plural)
 {
 	(void)sys;
 	return plural ? std::string("Furry Felines") : std::string("Furry Feline");
 }
-
-- (oo::PList) cxx_screenTextureDescriptorForKey:(const std::string &)key
+oo::PList Universe::screenTextureDescriptorForKey(const std::string &key)
 {
 	auto found = _screenTextures.find(key);
 	return found != _screenTextures.end() ? found->second : oo::PList();
 }
-
-- (void) cxx_setScreenTextureDescriptorForKey:(const std::string &)key descriptor:(const oo::PList &)desc
+void Universe::setScreenTextureDescriptorForKey(const std::string &key, const oo::PList &desc)
 {
 	if (desc.isNull())  _screenTextures.erase(key);
 	else  _screenTextures[key] = desc;
 }
-
-@end
 
 
 GuiDisplayGen::GuiDisplayGen() {}
@@ -246,54 +246,43 @@ OOGUIRow GuiDisplayGen::addLongText(const std::optional<std::string> &, OOGUIRow
 void GuiDisplayGen::setArray(const std::vector<std::string> &, OOGUIRow)  { std::abort(); }
 
 
-@implementation MyOpenGLView
-- (BOOL) cxx_snapShot:(const std::optional<std::string> &)filename  { (void)filename; std::abort(); }	// never run
-@end
+bool MyOpenGLView::snapShot(const std::optional<std::string> &filename)  { (void)filename; std::abort(); }	// never run
 
 
-@implementation ResourceManager
-
-+ (oo::PList) cxx_dictionaryFromFilesNamed:(const std::string &)fileName inFolder:(const std::optional<std::string> &)folderName andMerge:(BOOL)mergeFiles
+// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade: C++ definitions of the
+// statics the code under test calls, with the Objective-C stand-in's answers.
+oo::PList ResourceManager::dictionaryFromFilesNamed(const std::string &fileName, const std::optional<std::string> &folderName, bool mergeFiles)
 {
 	if (fileName != "autoAImap.plist" || folderName != std::optional<std::string>("Config") || !mergeFiles)  return oo::PList();
 	return oo::PList(oo::PList::Dict{ { "trader", oo::PList(std::string("oolite-traderAI.js")) }, { "number", oo::PList(3.0) } });
 }
 
-@end
 
 
 /*	The engine, as far as log() sees it: the C++ engine's monitor member, declared with the
 	engine header's signature but not its class (OOJavaScriptEngine.h pulls in the game's
 	classes), the way the other stand-ins here are declared. What the monitor was sent is kept.
 */
-namespace cxx {
 class OOJavaScriptEngine
 {
 public:
 	static OOJavaScriptEngine *sharedEngine();
+	bool callJSFunction(ooscript::Value function, ooscript::Object jsThis, unsigned argc, ooscript::Value *argv, ooscript::Value *outResult);
 	void sendMonitorLogMessage(const std::optional<std::string> &message, const std::optional<std::string> &messageClass, ooscript::Context context);
 };
-}
 
 static std::vector<std::string> sMonitorMessages;
 
-@implementation OOJavaScriptEngine
-
-+ (OOJavaScriptEngine *) sharedEngine
+OOJavaScriptEngine *OOJavaScriptEngine::sharedEngine()
 {
-	static OOJavaScriptEngine *engine = [[OOJavaScriptEngine alloc] init];
+	static OOJavaScriptEngine *engine = new OOJavaScriptEngine;
 	return engine;
 }
 
-@end
+// The key definitions' callback call: never reached here (the Objective-C stand-in did not answer it).
+bool OOJavaScriptEngine::callJSFunction(ooscript::Value, ooscript::Object, unsigned, ooscript::Value *, ooscript::Value *)  { std::abort(); }
 
-cxx::OOJavaScriptEngine *cxx::OOJavaScriptEngine::sharedEngine()
-{
-	static cxx::OOJavaScriptEngine *engine = new cxx::OOJavaScriptEngine;
-	return engine;
-}
-
-void cxx::OOJavaScriptEngine::sendMonitorLogMessage(const std::optional<std::string> &message, const std::optional<std::string> &messageClass, ooscript::Context context)
+void OOJavaScriptEngine::sendMonitorLogMessage(const std::optional<std::string> &message, const std::optional<std::string> &messageClass, ooscript::Context context)
 {
 	(void)context;
 	sMonitorMessages.push_back(messageClass.value_or("(no class)") + ": " + message.value_or("(null)"));
@@ -556,7 +545,7 @@ void SetUpContext()
 	sPlayer->_galaxy = 3;
 	sPlayer->_screen = GUI_SCREEN_STATUS;
 	gOOPlayer = sPlayer;
-	sUniverse = [[Universe alloc] init];
+	sUniverse = new StandInUniverse();
 	sUniverse->_timeAcceleration = 1;
 	sUniverse->_view = VIEW_GUI_DISPLAY;
 	sGui = oo::makeRef<GuiDisplayGen>();	// kept for the life of the test

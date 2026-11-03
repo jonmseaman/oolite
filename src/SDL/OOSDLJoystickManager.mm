@@ -27,8 +27,6 @@ MA 02110-1301, USA.
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
 
-namespace cxx {
-
 OOSDLJoystickManager::OOSDLJoystickManager()
 {
     int i;
@@ -111,7 +109,7 @@ bool OOSDLJoystickManager::handleSDLEvent(SDL_Event* evt)
         // The index, not joyEvt.which: an unknown stick's -1 is 0xFFFFFFFF in the unsigned
         // SDL_JoystickID, which passed a `which >= 0` test (bead oo-9ht.3).
         if (getJoystickIndexFromId(((SDL_JoyAxisEvent*)evt)->which) >= 0) {
-            [oo::ToObjC(this) decodeAxisEvent:&joyEvt]; // OOJoystickManager's, on the facade
+            decodeAxisEvent(&joyEvt); // OOJoystickManager's
             rc = true;
         }
         break;
@@ -123,7 +121,7 @@ bool OOSDLJoystickManager::handleSDLEvent(SDL_Event* evt)
     case SDL_EVENT_JOYSTICK_BUTTON_UP: {
         JoyButtonEvent joyEvt = makeJoyButtonEvent((SDL_JoyButtonEvent*)evt);
         if (getJoystickIndexFromId(((SDL_JoyButtonEvent*)evt)->which) >= 0) {
-            [oo::ToObjC(this) decodeButtonEvent:&joyEvt]; // OOJoystickManager's, on the facade
+            decodeButtonEvent(&joyEvt); // OOJoystickManager's
             rc = true;
         }
         break;
@@ -132,7 +130,7 @@ bool OOSDLJoystickManager::handleSDLEvent(SDL_Event* evt)
     case SDL_EVENT_JOYSTICK_HAT_MOTION: {
         JoyHatEvent joyEvt = makeJoyHatEvent((SDL_JoyHatEvent*)evt);
         if (getJoystickIndexFromId(((SDL_JoyHatEvent*)evt)->which) >= 0) {
-            [oo::ToObjC(this) decodeHatEvent:&joyEvt]; // OOJoystickManager's, on the facade
+            decodeHatEvent(&joyEvt); // OOJoystickManager's
             rc = true;
         }
         break;
@@ -153,7 +151,7 @@ NSUInteger OOSDLJoystickManager::joystickCount()
 
 std::optional<std::string> OOSDLJoystickManager::nameOfJoystick(NSUInteger stickNumber)
 {
-    if (stickNumber >= stickCount)
+    if (stickNumber >= static_cast<NSUInteger>(stickCount))
         return std::string("(unknown joystick)");
     const char* name = SDL_GetJoystickName(stick[stickNumber]);
     if (name == NULL)
@@ -165,5 +163,3 @@ int16_t OOSDLJoystickManager::getAxisWithStick(NSUInteger stickNum, NSUInteger a
 {
     return SDL_GetJoystickAxis(stick[stickNum], axisNum);
 }
-
-} // namespace cxx

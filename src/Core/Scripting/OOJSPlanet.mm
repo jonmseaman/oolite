@@ -109,7 +109,7 @@ static ClassDef sPlanetClass = {
     nullptr, // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
     nullptr, // resolve
     nullptr, // convert
-    OOJSObjectWrapperFinalize, // finalize
+    OOJSCxxObjectWrapperFinalize, // finalize
     nullptr, // call
     nullptr, // construct
     nullptr, // backend: owned by the facade backend, must start null
@@ -173,17 +173,17 @@ static ooscript::PropertySpec sPlanetPropertiesRaw[] = {
 } // namespace
 
 namespace {
-DEFINE_JS_OBJECT_GETTER(JSPlanetGetPlanetObject, &sPlanetClass, sPlanetPrototype, Entity)
-
 // The planet is C++ behind the root's facade since bead oo-9ht.129: the getter checks the JS class
 // (a Planet object's private slot holds the planet's Objective-C object, so -isKindOfClass: of the
 // facade class always held) and answers the C++ planet; null for a stale entity, as nil before.
+// Since bead oo-9ht.39.3 the slot holds the C++ entity (OOJSEntityGetEntityOfClass for the Planet
+// class, DEFINE_JS_OBJECT_GETTER(JSPlanetGetPlanetObject, &sPlanetClass, ...) before).
 bool JSPlanetGetPlanetEntity(ooscript::Context context, ooscript::Object inObject, OOPlanetEntity** outObject)
 {
-    Entity* object = nil;
-    if (!JSPlanetGetPlanetObject(context, inObject, &object))
+    Entity* entity = nullptr;
+    if (!OOJSEntityGetEntityOfClass(context, inObject, &sPlanetClass, &entity))
         return false;
-    *outObject = (object != nil) ? dynamic_cast<OOPlanetEntity*>(oo::ToCxx(object)) : nullptr;
+    *outObject = dynamic_cast<OOPlanetEntity*>(entity);
     return true;
 }
 } // namespace
@@ -192,7 +192,7 @@ void InitOOJSPlanet(ooscript::Context context, ooscript::Object global)
 {
     Object proto = ooscript::initClass((context), (global), (JSEntityPrototype()), &sPlanetClass, OOJSUnconstructableConstruct, 0, sPlanetProperties, nullptr, nullptr, nullptr);
     sPlanetPrototype = (proto);
-    OOJSRegisterObjectConverter(&sPlanetClass, OOJSBasicPrivateObjectConverter);
+    OOJSRegisterObjectConverter(&sPlanetClass, OOJSEntityObjectConverter);
     OOJSRegisterSubclass(&sPlanetClass, JSEntityClass());
 }
 
@@ -255,7 +255,7 @@ static bool PlanetGetProperty(Context cx, Object obj, PropertyId propID, Value* 
         return true;
 
     case kPlanet_isMainPlanet:
-        *value_raw = OOJSValueFromBOOL(planet == [UNIVERSE planet]);
+        *value_raw = OOJSValueFromBOOL(planet == (UNIVERSE != nullptr ? UNIVERSE->planet() : nullptr));
         return true;
 
     case kPlanet_radius:
@@ -278,8 +278,10 @@ static bool PlanetGetProperty(Context cx, Object obj, PropertyId propID, Value* 
         return true;
 
     case kPlanet_orientation:
-        // The root's selector, which reaches the C++ virtual member (as the message did; nil for none).
-        return QuaternionToJSValue(context, [oo::ToObjC(planet) normalOrientation], value_raw);
+        // The C++ member the root's selector reached (bead oo-9ht.39.8.2), qualified: the final overrider for a
+        // planet (OOPlanetEntity has no subclass and does not override it), so the binding test stands in for
+        // it; zero for none, as the message to nil.
+        return QuaternionToJSValue(context, planet != nullptr ? planet->Entity::normalOrientation() : Quaternion { }, value_raw);
 
     case kPlanet_rotationalVelocity:
         return ooscript::newNumberValue(cx, (planet != nullptr ? planet->rotationalVelocity() : 0.0), value);
@@ -388,7 +390,10 @@ static bool PlanetSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     case kPlanet_orientation:
         if (JSValueToQuaternion(context, *value_raw, &qValue)) {
             quaternion_normalize(&qValue);
-            [oo::ToObjC(planet) setOrientation:qValue]; // the root's selector, which reaches the C++ virtual member
+            // The C++ member the root's selector reached (bead oo-9ht.39.8.2), qualified: the final overrider
+            // (OOPlanetEntity has no subclass), so the binding test stands in for it; nothing for none.
+            if (planet != nullptr)
+                planet->OOPlanetEntity::setOrientation(qValue);
             return true;
         }
         break;

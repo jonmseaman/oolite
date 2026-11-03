@@ -24,6 +24,9 @@ MA 02110-1301, USA.
 */
 
 #include "OOJSSpecialFunctions.h"
+#include "OOJSEngineCore.h" // OOJSValue
+#include "oofnd/Ref.hpp"
+#include "ooscript/JSEngine.hpp" // ooscript::Context, ooscript::Object (InitOOJSSpecialFunctions)
 
 static bool SpecialJSWarning(ooscript::Context context, ooscript::CallArgs& oojsArgs);
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -39,11 +42,11 @@ static ooscript::FunctionSpec sSpecialFunctionsMethods[] = {
     { 0 }
 };
 
-void InitOOJSSpecialFunctions(ooscript::Context context, ooscript::Object global)
+void InitOOJSSpecialFunctions(ooscript::Context /*context*/, ooscript::Object /*global*/)
 {
 }
 
-oo::Ref<cxx::OOJSValue> cxx_JSSpecialFunctionsObjectWrapper(ooscript::Context context)
+oo::Ref<OOJSValue> JSSpecialFunctionsObjectWrapper(ooscript::Context context)
 {
     /*
             Special object is created on the fly so it can be GCed (the debug
@@ -59,7 +62,7 @@ oo::Ref<cxx::OOJSValue> cxx_JSSpecialFunctionsObjectWrapper(ooscript::Context co
     ooscript::defineFunctions(context, special, sSpecialFunctionsMethods);
     ooscript::freezeObject(context, special);
 
-    oo::Ref<cxx::OOJSValue> result = cxx::OOJSValue::valueWithJSObject(special, context);
+    oo::Ref<OOJSValue> result = OOJSValue::valueWithJSObject(special, context);
 
     ooscript::removeObjectRoot(context, &special);
 

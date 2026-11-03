@@ -122,6 +122,11 @@ ooscript::ClassDef *JSEntityClass(void)
 }
 
 
+// OOJSEntity.mm's (not linked): the position of the entity an Entity JS object holds (bead oo-9ht.39.8.12; it
+// was the object, whose -position the conversion sent). No case here makes an entity.
+HPVector OOJSEntityPositionOfJSObject(ooscript::Context, ooscript::Object)  { std::abort(); }
+
+
 // A quaternion is the array [w, x, y, z] here: enough to see what OOJSVector hands over. (bool since
 // OOJSQuaternion.h is, bead oo-hwae: a stand-in has the signature of what it stands in for.)
 bool QuaternionToJSValue(ooscript::Context context, Quaternion quaternion, ooscript::Value *outValue)
@@ -185,12 +190,12 @@ void OOJSUnreachable(const char *function, const char *, unsigned)
 	-coordinatesFromCoordinateSystemString:. A system name of "throw-objc" or "throw-cxx" makes the
 	call throw, so the test sees what a native's exception becomes.
 */
-@interface FakeUniverse: OOObject
-@end
-
-@implementation FakeUniverse
-
-- (HPVector) cxx_legacyPositionFrom:(HPVector)pos asCoordinateSystem:(const std::string &)system
+/*	The universe is the C++ class since bead oo-ql9rn deleted its Objective-C facade, which the
+	test's FakeUniverse stood in for. Universe.h is included (through the headers above) and
+	Universe.mm is not linked, so the test defines the members the code under test calls, with the
+	stand-in's bodies, and UNIVERSE is storage nothing constructs: those members read no state.
+*/
+HPVector Universe::legacyPositionFrom(HPVector pos, const std::string &system)
 {
 	if (system == "throw-objc")  [OOException raise:OOInvalidArgumentException format:"legacy %s", "boom"];
 	if (system == "throw-cxx")  throw std::runtime_error("cxx boom");
@@ -198,13 +203,13 @@ void OOJSUnreachable(const char *function, const char *, unsigned)
 }
 
 
-- (HPVector) cxx_coordinatesFromCoordinateSystemString:(const std::string &)text
+HPVector Universe::coordinatesFromCoordinateSystemString(const std::string &text)
 {
 	if (text.rfind("throw-objc", 0) == 0)  [OOException raise:OOInvalidArgumentException format:"coords %s", "boom"];
 	return make_HPvector(static_cast<OOHPScalar>(text.size()), 0, 0);
 }
 
-@end
+alignas(Universe) unsigned char sUniverseStorage[sizeof(Universe)];
 
 Universe *gSharedUniverse = nil;
 
@@ -228,7 +233,7 @@ void SetUpContext()
 	ooscript::initStandardClasses(sContext, sGlobal);
 	InitOOJSVector(sContext, sGlobal);
 	ranrot_srand(12345);	// the game seeds its generator at startup; unseeded, Vector3D.random() never ends
-	gSharedUniverse = (Universe *)[[FakeUniverse alloc] init];
+	gSharedUniverse = reinterpret_cast<Universe *>(sUniverseStorage);
 }
 
 
@@ -376,7 +381,10 @@ OO_TEST(statistics)
 {
 	clearJSVectorStatistics();
 	Eval("new Vector3D(1, 2, 3).add(new Vector3D(1, 1, 1)).add([1, 2, 3]).add(Vector3D.prototype)");
-	const std::string *report = reportJSVectorStatistics().getIf<std::string>();
+	// The report is kept in a local: a pointer into the temporary would dangle once the statement
+	// ends (oo-zdxtn, an ASan stack-use-after-scope).
+	const oo::PList reportNode = reportJSVectorStatistics();
+	const std::string *report = reportNode.getIf<std::string>();
 	OO_CHECK(report != nullptr);
 	if (report != nullptr)
 	{
@@ -385,7 +393,8 @@ OO_TEST(statistics)
 		OO_CHECK(report->find("prototype-to-zero conversions: 1 (") != std::string::npos);
 	}
 	clearJSVectorStatistics();
-	report = reportJSVectorStatistics().getIf<std::string>();
+	const oo::PList clearedNode = reportJSVectorStatistics();
+	report = clearedNode.getIf<std::string>();
 	OO_CHECK(report != nullptr && report->find("total: 0") != std::string::npos);
 }
 #endif

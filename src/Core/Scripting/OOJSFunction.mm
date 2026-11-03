@@ -57,7 +57,7 @@ OOJSFunction::OOJSFunction(ooscript::Function function, ooscript::Context contex
         _name = cxx_OOStringFromJSString(context, ooscript::getFunctionId(function));
 
         oo::NotificationCenter::defaultCenter().addObserver(this, kOOJavaScriptEngineWillResetNotificationName,
-            [::OOJavaScriptEngine sharedEngine],
+            OOJavaScriptEngine::sharedEngine(),
             [this](const oo::Notification&) { deleteJSValue(); });
     }
 }
@@ -83,7 +83,7 @@ oo::Ref<OOJSFunction> OOJSFunction::initWithName(const std::optional<std::string
         releaseContext = true;
     }
     if (scope == NULL)
-        scope = [[::OOJavaScriptEngine sharedEngine] globalObject];
+        scope = OOJavaScriptEngine::sharedEngine()->globalObject();
 
     if (!code.has_value() || (argCount > 0 && argNames == NULL))
         OK = false;
@@ -130,7 +130,7 @@ void OOJSFunction::deleteJSValue()
 
         _function = NULL;
         oo::NotificationCenter::defaultCenter().removeObserver(this, kOOJavaScriptEngineWillResetNotificationName,
-            [::OOJavaScriptEngine sharedEngine]);
+            OOJavaScriptEngine::sharedEngine());
     }
 }
 
@@ -186,8 +186,7 @@ bool OOJSFunction::evaluateWithContext(ooscript::Context context,
 {
     NSUInteger i, argc = arguments.size();
     assert(argc < UINT32_MAX);
-    std::vector<ooscript::Value> argvBuffer(argc);
-    ooscript::Value* argv = argvBuffer.data();
+    std::vector<ooscript::Value> argv(argc);
 
     for (i = 0; i < argc; i++) {
         argv[i] = arguments[i].get() != nil ? OOJSValueFromNativeObject(context, arguments[i].get()) : ooscript::Value { 0 }; // (a message to nil gave the zero value)
@@ -202,7 +201,7 @@ bool OOJSFunction::evaluateWithContext(ooscript::Context context,
         OK = evaluateWithContext(context,
             scopeObj,
             (uint32_t)argc,
-            argv,
+            argv.data(),
             result);
 
     for (i = 0; i < argc; i++) {

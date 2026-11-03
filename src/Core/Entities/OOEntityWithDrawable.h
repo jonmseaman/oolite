@@ -33,7 +33,7 @@ MA 02110-1301, USA.
 
 #import "OODrawable.h" // the drawable is held by oo::Ref (a complete type wherever the entity is destroyed)
 
-class OOEntityWithDrawable : public cxx::Entity {
+class OOEntityWithDrawable : public Entity {
 public:
     OODrawable* getDrawable(); // borrowed
     void setDrawable(OODrawable* drawable);
@@ -42,7 +42,7 @@ public:
     void drawImmediate(bool immediate, bool translucent) override;
 
 #ifndef NDEBUG
-    std::vector<oo::ObjCRef<::OOTexture*>> allTextures() override;
+    std::vector<oo::Ref<OOTexture>> allTextures() override;
 #endif
 
 private:

@@ -39,9 +39,6 @@ MA 02110-1301, USA.
         nil). The initializer is -cxx_initWithDictionary: (bead oo-3rb.292.1; its id twin retired with
         oo-qps.44).
 */
-// Another beacon, which stays its Objective-C object (amendment oo-bj8 item 4). Named at file
-// scope: inside namespace cxx a protocol list cannot follow the qualified name ::Entity.
-typedef Entity<OOBeaconEntity> OOBeaconEntityObject;
 
 /*	C++ only since bead oo-9ht.108 deleted its Objective-C facade (ADR-0056 amendments oo-9ht.23 and
         oo-9ht.106): the universe makes it with waypointWithDictionary() and hands it to Objective-C with
@@ -49,7 +46,7 @@ typedef Entity<OOBeaconEntity> OOBeaconEntityObject;
         OOBeaconEntity selectors the beacon list sends for a waypoint's part (the root's category
         Entity (OOWaypointBeacon), Entity+ObjCBridge.mm).
 */
-class OOWaypointEntity : public cxx::Entity {
+class OOWaypointEntity : public Entity {
 public:
     // +waypointWithDictionary:: a new waypoint, initialised. Callers hand it to Objective-C with
     // oo::NewEntityFacade.
@@ -75,17 +72,17 @@ public:
 
     // OOBeaconEntity, answered for the waypoint by the root facade's category (the facade's until
     // bead oo-9ht.108). Other beacons stay their Objective-C objects (amendment oo-bj8 item 4).
-    OOComparisonResult compareBeaconCodeWith(OOBeaconEntityObject* other);
+    OOComparisonResult compareBeaconCodeWith(Entity* other);
     std::optional<std::string> beaconCode();
     void setBeaconCode(const std::optional<std::string>& bcode);
     std::optional<std::string> beaconLabel();
     void setBeaconLabel(const std::optional<std::string>& blabel);
     bool isBeacon();
     OOHUDBeaconIcon* beaconDrawable(); // borrowed (the protocol type until bead oo-7ae4p)
-    OOBeaconEntityObject* prevBeacon();
-    OOBeaconEntityObject* nextBeacon();
-    void setPrevBeacon(OOBeaconEntityObject* beaconShip);
-    void setNextBeacon(OOBeaconEntityObject* beaconShip);
+    Entity* prevBeacon(); // the C++ entity since bead oo-9ht.39.24 (null once its object has gone, as before)
+    Entity* nextBeacon();
+    void setPrevBeacon(Entity* beaconShip);
+    void setNextBeacon(Entity* beaconShip);
     bool isJammingScanning();
 
 private:
@@ -93,8 +90,8 @@ private:
 
     std::optional<std::string> _beaconCode; // nullopt: nil
     std::optional<std::string> _beaconLabel;
-    oo::ObjCRef<::OOWeakReference*> _prevBeacon;
-    oo::ObjCRef<::OOWeakReference*> _nextBeacon;
+    oo::WeakRef<Entity> _prevBeacon; // the beacons' C++ parts (bead oo-9ht.39.5.2; were their objects' weak references)
+    oo::WeakRef<Entity> _nextBeacon;
     oo::Ref<OOHUDBeaconIcon> _beaconDrawable;
     bool oriented = { };
 };

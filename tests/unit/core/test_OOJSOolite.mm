@@ -20,6 +20,7 @@
 #include "ooscript/JSEngine.hpp"
 #include "oofnd/objc/OOException.h"
 #include "oofnd/PList.hpp"
+#include "oofnd/Ref.hpp"
 #include "oofnd/String.hpp"
 
 
@@ -47,51 +48,63 @@ typedef enum
 } OOSDRToneMapper;
 
 
-@interface MyOpenGLView: OOObject
+// The game view: a stand-in for the C++ class (bead oo-9ht.153 deleted the Objective-C facade the
+// test's Objective-C stand-in stood in for), with the header's names and signatures, defined out of
+// line below with the stand-in's answers.
+class MyOpenGLView : public oo::RefCounted
 {
-@public
-	float _colorSaturation;
-	BOOL _hdrOutput;
-	OOHDRToneMapper _hdrToneMapper;
-	OOSDRToneMapper _sdrToneMapper;
-	int _hdrSets;
-	int _sdrSets;
-}
-- (float) colorSaturation;
-- (void) adjustColorSaturation:(float)colorSaturationAdjustment;
-- (BOOL) hdrOutput;
-- (OOHDRToneMapper) hdrToneMapper;
-- (void) setHDRToneMapper:(OOHDRToneMapper)newToneMapper;
-- (OOSDRToneMapper) sdrToneMapper;
-- (void) setSDRToneMapper:(OOSDRToneMapper)newToneMapper;
-@end
+public:
+	float _colorSaturation = {};
+	BOOL _hdrOutput = {};
+	OOHDRToneMapper _hdrToneMapper = {};
+	OOSDRToneMapper _sdrToneMapper = {};
+	int _hdrSets = {};
+	int _sdrSets = {};
+
+	float colorSaturation();
+	void adjustColorSaturation(float colorSaturationAdjustment);
+	bool hdrOutput();
+	OOHDRToneMapper hdrToneMapper();
+	void setHDRToneMapper(OOHDRToneMapper newToneMapper);
+	OOSDRToneMapper sdrToneMapper();
+	void setSDRToneMapper(OOSDRToneMapper newToneMapper);
+};
 
 
 /*	The universe. While _raise is set, -cxx_gameSettings raises, and while _throwCxx is set it
 	throws a C++ exception, so the test sees what an exception under a native becomes.
 */
-@interface Universe: OOObject
+#import "UniverseStandIn.h"
+
+// The universe as the code under test sees it: a stand-in for the C++ class (bead oo-ql9rn deleted
+// the Objective-C facade the test's Objective-C stand-in stood in for), with the header's names and signatures.
+// It answers virtual members, so it has the game's vtable (UniverseStandIn.h) and StandInUniverse overrides them.
+class Universe : public oo::RefCounted
 {
-@public
+public:
+	OO_UNIVERSE_STAND_IN_VIRTUAL_MEMBERS
+
 	MyOpenGLView *_gameView;
 	int _currentPostFX;
 	double _timeAccelerationFactor;
 	BOOL _raise;
 	BOOL _throwCxx;
-}
-- (MyOpenGLView *) gameView;
-- (oo::PList) cxx_gameSettings;
-- (int) currentPostFX;
-- (void) setCurrentPostFX:(int)newCurrentPostFX;
-- (double) timeAccelerationFactor;
-- (void) setTimeAccelerationFactor:(double)newTimeAccelerationFactor;
-@end
+
+	oo::PList gameSettings();
+	int currentPostFX();
+	void setCurrentPostFX(int);
+	double getTimeAccelerationFactor();
+	void setTimeAccelerationFactor(double);
+};
+
+class StandInUniverse : public Universe
+{
+public:
+	::MyOpenGLView *getGameView() override	{ return _gameView; }
+};
 
 
-@interface ResourceManager: OOObject
-+ (std::vector<std::string>) cxx_paths;
-+ (std::vector<std::string>) cxx_maskUserNameInPathArray:(const std::vector<std::string> &)inputPathArray;
-@end
+#import "ResourceManager.h"
 
 
 #import "OOJSOolite.h"
@@ -120,46 +133,35 @@ oo::PList Dict(std::initializer_list<std::pair<const char *, oo::PList>> entries
 }	// namespace
 
 
-@implementation MyOpenGLView
-
-- (float) colorSaturation  { return _colorSaturation; }
-- (void) adjustColorSaturation:(float)colorSaturationAdjustment  { _colorSaturation += colorSaturationAdjustment; }
-- (BOOL) hdrOutput  { return _hdrOutput; }
-- (OOHDRToneMapper) hdrToneMapper  { return _hdrToneMapper; }
-- (void) setHDRToneMapper:(OOHDRToneMapper)newToneMapper  { _hdrToneMapper = newToneMapper; _hdrSets++; }
-- (OOSDRToneMapper) sdrToneMapper  { return _sdrToneMapper; }
-- (void) setSDRToneMapper:(OOSDRToneMapper)newToneMapper  { _sdrToneMapper = newToneMapper; _sdrSets++; }
-
-@end
+float MyOpenGLView::colorSaturation()  { return _colorSaturation; }
+void MyOpenGLView::adjustColorSaturation(float colorSaturationAdjustment)  { _colorSaturation += colorSaturationAdjustment; }
+bool MyOpenGLView::hdrOutput()  { return _hdrOutput; }
+OOHDRToneMapper MyOpenGLView::hdrToneMapper()  { return _hdrToneMapper; }
+void MyOpenGLView::setHDRToneMapper(OOHDRToneMapper newToneMapper)  { _hdrToneMapper = newToneMapper; _hdrSets++; }
+OOSDRToneMapper MyOpenGLView::sdrToneMapper()  { return _sdrToneMapper; }
+void MyOpenGLView::setSDRToneMapper(OOSDRToneMapper newToneMapper)  { _sdrToneMapper = newToneMapper; _sdrSets++; }
 
 
-@implementation Universe
-
-- (MyOpenGLView *) gameView  { return _gameView; }
-
-- (oo::PList) cxx_gameSettings
+oo::PList Universe::gameSettings()
 {
 	if (_raise)  [OOException raise:OOInvalidArgumentException format:"settings %s", "boom"];
 	if (_throwCxx)  throw std::runtime_error("cxx boom");
 	return Dict({ { "detailLevel", oo::PList("DETAIL_LEVEL_SHADERS") }, { "musicMode", oo::PList("MUSIC_ON") } });
 }
-
-- (int) currentPostFX  { return _currentPostFX; }
-- (void) setCurrentPostFX:(int)newCurrentPostFX  { _currentPostFX = newCurrentPostFX; }
-- (double) timeAccelerationFactor  { return _timeAccelerationFactor; }
-- (void) setTimeAccelerationFactor:(double)newTimeAccelerationFactor  { _timeAccelerationFactor = newTimeAccelerationFactor; }
-
-@end
+int Universe::currentPostFX()	{ return _currentPostFX; }
+void Universe::setCurrentPostFX(int newCurrentPostFX)	{ _currentPostFX = newCurrentPostFX; }
+double Universe::getTimeAccelerationFactor()	{ return _timeAccelerationFactor; }
+void Universe::setTimeAccelerationFactor(double newTimeAccelerationFactor)	{ _timeAccelerationFactor = newTimeAccelerationFactor; }
 
 
-@implementation ResourceManager
-
-+ (std::vector<std::string>) cxx_paths
+// ResourceManager is C++ since bead oo-9ht.150 deleted its Objective-C facade: C++ definitions of the
+// statics the code under test calls, with the Objective-C stand-in's answers.
+std::vector<std::string> ResourceManager::paths()
 {
 	return { "C:/Users/jameson/Oolite/Resources", "C:/Users/jameson/AddOns/one.oxp" };
 }
 
-+ (std::vector<std::string>) cxx_maskUserNameInPathArray:(const std::vector<std::string> &)inputPathArray
+std::vector<std::string> ResourceManager::maskUserNameInPathArray(const std::vector<std::string> &inputPathArray)
 {
 	std::vector<std::string> result;
 	for (std::string path : inputPathArray)
@@ -171,7 +173,6 @@ oo::PList Dict(std::initializer_list<std::pair<const char *, oo::PList>> entries
 	return result;
 }
 
-@end
 
 
 // The tone mappers' names, as OOConstToString.mm gives them, for the ones the test uses.
@@ -404,11 +405,11 @@ void SetUpContext()
 	sGlobal = ooscript::getGlobalObject(sContext);
 	ooscript::initStandardClasses(sContext, sGlobal);
 
-	sView = [[MyOpenGLView alloc] init];	// kept for the life of the test
+	sView = new MyOpenGLView();	// kept for the life of the test
 	sView->_colorSaturation = 1.0f;
 	sView->_hdrToneMapper = OOHDR_TONEMAPPER_DICE;
 	sView->_sdrToneMapper = OOSDR_TONEMAPPER_AgX;
-	sUniverse = [[Universe alloc] init];
+	sUniverse = new StandInUniverse();
 	sUniverse->_gameView = sView;
 	sUniverse->_currentPostFX = 2;
 	sUniverse->_timeAccelerationFactor = 1.0;

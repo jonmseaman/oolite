@@ -189,7 +189,7 @@ oo::Ref<OOJSTimer> OOJSTimer::timerWithDelay(OOTimeAbsolute delay, OOTimeDelta i
 
 bool OOJSTimer::initWithDelay(OOTimeAbsolute delay, OOTimeDelta interval, ooscript::Context context, ooscript::Value function, ooscript::Object jsThis)
 {
-    if (!initWithNextTime([UNIVERSE getTime] + delay, interval))
+    if (!initWithNextTime((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) + delay, interval))
         return false;
     {
         OOCAssert(OOJSValueIsFunction(context, function), "Attempt to init OOJSTimer with a function that isn't.");
@@ -213,7 +213,7 @@ bool OOJSTimer::initWithDelay(OOTimeAbsolute delay, OOTimeDelta interval, ooscri
         _owningScript = OOJSScript::currentlyRunningScript();
 
         oo::NotificationCenter::defaultCenter().addObserver(this, kOOJavaScriptEngineWillResetNotificationName,
-            [::OOJavaScriptEngine sharedEngine],
+            OOJavaScriptEngine::sharedEngine(),
             [this](const oo::Notification&) { deleteJSPointers(); });
     }
 
@@ -234,7 +234,7 @@ void OOJSTimer::deleteJSPointers()
         OOJSRelinquishContext(context);
 
         oo::NotificationCenter::defaultCenter().removeObserver(this, kOOJavaScriptEngineWillResetNotificationName,
-            [::OOJavaScriptEngine sharedEngine]);
+            OOJavaScriptEngine::sharedEngine());
     }
 }
 
@@ -275,13 +275,15 @@ void OOJSTimer::timerFired()
     ooscript::Value rval = ooscript::undefinedValue();
     bool described = false; // was the description itself, used only to test for nil
 
-    ::OOJavaScriptEngine* engine = [::OOJavaScriptEngine sharedEngine];
+    ::OOJavaScriptEngine* engine = OOJavaScriptEngine::sharedEngine();
     ooscript::Context context = OOJSAcquireContext();
 
     // stop and remove the timer if _jsThis (the first parameter in the constructor) dies.
     const oo::PList thisValue = cxx_OOJSPListFromJSObject(context, _jsThis);
     id object = oo::ObjectIn(thisValue);
-    if (object != nil) {
+    if (oo::EntityIn(thisValue) != nullptr)
+        described = true; // an entity's object described itself (bead oo-dpyk8)
+    else if (object != nil) {
         described = [object cxx_oo_jsDescription].has_value();
         if (!described)
             described = oo::DescriptionOf(object) != "(null)"; // -description was nil
@@ -298,11 +300,7 @@ void OOJSTimer::timerFired()
     }
 
     OOJSScript::pushScript(_owningScript);
-    [engine callJSFunction:_function
-                 forObject:_jsThis
-                      argc:0
-                      argv:NULL
-                    result:&rval];
+    engine->callJSFunction(_function, _jsThis, 0, NULL, &rval);
     OOJSScript::popScript(_owningScript.get());
 
     OOJSRelinquishContext(context);

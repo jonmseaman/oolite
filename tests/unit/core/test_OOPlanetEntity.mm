@@ -71,7 +71,7 @@ T *NewTestPlayer()
 	oo::Ref<T> player = oo::makeRef<T>();
 	@autoreleasepool
 	{
-		[oo::NewEntityFacade(player) retain];
+		oo::RetainEntity(oo::MadeEntity(player));
 	}
 	return player.get();
 }
@@ -80,25 +80,16 @@ T *NewTestPlayer()
 
 
 // UNIVERSE: never initialised; answers the system data, the time and the detail level.
-@interface TestUniverse: Universe
+class TestUniverse : public Universe
 {
-@public
-	oo::PList	_systemData;
-	double		_time;
-	float		_airResistance;
-}
-@end
+public:
+	oo::PList _systemData = {};
+	OOTimeAbsolute &_time = universal_time;	// the universe's own state, which its getter answers (bead oo-ql9rn)
+	GLfloat &_airResistance = airResistanceFactor;	// the universe's own state, which setAirResistanceFactor() sets (bead oo-ql9rn)
 
-
-@implementation TestUniverse
-
-- (oo::PList) cxx_generateSystemData:(OOSystemID)s		{ return _systemData; }
-- (OOTimeAbsolute) getTime								{ return _time; }
-- (OOGraphicsDetail) detailLevel						{ return DETAIL_LEVEL_MINIMUM; }
-- (BOOL) reducedDetail									{ return YES; }
-- (void) setAirResistanceFactor:(GLfloat)factor			{ _airResistance = factor; }
-
-@end
+	oo::PList generateSystemData(OOSystemID /*s*/, bool /*useCache*/) override	{ return _systemData; }
+	bool reducedDetail() override	{ return YES; }
+};
 
 
 namespace {
@@ -108,11 +99,12 @@ TestPlayer *sPlayer = nullptr;
 std::vector<std::string> sTexturesAsked;
 
 
-// +[OOTexture cxx_textureWithConfiguration:]: records the name, finds nothing.
-id NoTexture(id, SEL, const oo::PList &configuration)
+// OOTexture::configurationFactory, the test-only loader hook (bead oo-9ht.99), where +[OOTexture
+// cxx_textureWithConfiguration:] was replaced: records the name, finds nothing.
+oo::Ref<OOTexture> NoTexture(const oo::PList &configuration)
 {
 	sTexturesAsked.push_back(configuration.get<std::string>("name", "?"));
-	return nil;
+	return nullptr;
 }
 
 
@@ -120,12 +112,10 @@ void SetUp()
 {
 	if (sUniverse == nil)
 	{
-		sUniverse = (TestUniverse *)class_createInstance([TestUniverse class], 0);	// never released
-		sUniverse->_cxxUniverse = oo::makeRef<cxx::Universe>(sUniverse);	// what -initWithGameView: makes first (ADR-0056 amendment oo-riqmz)
+		sUniverse = new TestUniverse();	// never released
 		new (&sUniverse->_systemData) oo::PList();
 		sPlayer = NewTestPlayer<TestPlayer>();
-		Method load = class_getClassMethod([OOTexture class], sel_registerName("cxx_textureWithConfiguration:"));
-		method_setImplementation(load, (IMP)NoTexture);
+		OOTexture::configurationFactory = &NoTexture;
 	}
 	sUniverse->_systemData = oo::PList(oo::PList::Dict{ { "air_density", oo::PList(0.4) }, { "planet_name", oo::PList("Lave") } });
 	sUniverse->_time = 0;
@@ -178,7 +168,7 @@ OOPlanetEntity *Planet(BOOL atmosphere, int radiusKm = 5000)
 {
 	Random_Seed seed = { 1, 2, 3, 4, 5, 6 };
 	oo::Ref<OOPlanetEntity> planet = oo::makeRef<OOPlanetEntity>();
-	(void)oo::NewEntityFacade(planet);
+	(void)oo::MadeEntity(planet);
 	planet->initFromDictionary(PlanetDict(radiusKm), atmosphere, seed, 7);
 	return planet.get();
 }
@@ -188,7 +178,7 @@ OOPlanetEntity *Planet(BOOL atmosphere, int radiusKm = 5000)
 OOPlanetEntity *Miniature(OOPlanetEntity *planet)
 {
 	oo::Ref<OOPlanetEntity> mini = planet->miniatureVersion();
-	(void)oo::NewEntityFacade(mini);
+	(void)oo::MadeEntity(mini);
 	return mini.get();
 }
 
@@ -201,7 +191,7 @@ OO_TEST(moon)
 	{
 		SetUp();
 		OOPlanetEntity *moon = Planet(NO);
-		OO_CHECK(moon != nullptr && dynamic_cast<OOPlanetEntity *>(static_cast<cxx::Entity *>(moon)) != nullptr);
+		OO_CHECK(moon != nullptr && dynamic_cast<OOPlanetEntity *>(static_cast<Entity *>(moon)) != nullptr);
 		OO_CHECK(moon->radius() == 50000.0);
 		OO_CHECK(moon->collisionRadius() == 50000.0f);
 		OO_CHECK(moon->getEnergy() == 50000.0f * 1000.0f);
@@ -318,7 +308,7 @@ OO_TEST(miniature)
 		SetUp();
 		OOPlanetEntity *planet = Planet(YES);
 		OOPlanetEntity *mini = Miniature(planet);
-		OO_CHECK(mini != nullptr && mini != planet && dynamic_cast<OOPlanetEntity *>(static_cast<cxx::Entity *>(mini)) != nullptr);
+		OO_CHECK(mini != nullptr && mini != planet && dynamic_cast<OOPlanetEntity *>(static_cast<Entity *>(mini)) != nullptr);
 		OO_CHECK(mini->planetType() == STELLAR_TYPE_MINIATURE);
 		OO_CHECK(mini->status() == STATUS_COCKPIT_DISPLAY);
 		OO_CHECK(mini->getScanClass() == CLASS_NO_DRAW);
@@ -387,8 +377,8 @@ OO_TEST(closeCollision)
 		SetUp();
 		OOPlanetEntity *moon = Planet(NO);
 		OO_CHECK(!moon->checkCloseCollisionWith(nullptr));
-		Entity *rock = [[[Entity alloc] init] autorelease];
-		OO_CHECK(moon->checkCloseCollisionWith(oo::ToCxx(rock)));
+		Entity *rock = oo::MadeEntity(oo::makeRef<Entity>());
+		OO_CHECK(moon->checkCloseCollisionWith(rock));
 	}
 }
 
@@ -399,7 +389,7 @@ OO_TEST(description)
 	{
 		SetUp();
 		OOPlanetEntity *moon = Planet(NO, 3000);
-		std::string description = oo::DescriptionOf(oo::ToObjC(moon));
+		std::string description = oo::EntityDescription(moon);
 		OO_CHECK(description.find("OOPlanetEntity") != std::string::npos);
 		OO_CHECK(description.find("radius: 30000 m") != std::string::npos);
 	}
@@ -415,30 +405,21 @@ OO_TEST(facade)
 	{
 		SetUp();
 		OOPlanetEntity *moon = Planet(NO);
-		Entity *object = oo::ToObjC(moon);
-		OO_CHECK(object != nil && [object class] == [Entity class]);
+		Entity *object = moon;
+		OO_CHECK(object != nil);	// (and its object's class, the root facade: retired with the facade, bead oo-dpyk8, under oo-9n5p9)
 		// A C++ entity (amendment oo-0mxi), not an Objective-C entity's adapter.
-		OO_CHECK(oo::ToCxx(object) == moon);
-		OO_CHECK(oo::AsObjCEntity(moon) == nullptr);
+		OO_CHECK(object == moon);
 		OOPlanetEntity *mini = Miniature(moon);
-		OO_CHECK([oo::ToObjC(mini) class] == [Entity class] && oo::ToCxx(oo::ToObjC(mini)) == mini);
+		OO_CHECK(mini == mini);	// (and its object's class, the root facade: retired with the facade, bead oo-dpyk8, under oo-9n5p9)
 
-		// The shader bindings, by selector: the planet's values, and no other entity binds them.
-		OO_CHECK([object respondsToSelector:@selector(airColorAsVector)] && [object respondsToSelector:@selector(terminatorThresholdVector)]);
-		OO_CHECK([object respondsToSelector:@selector(airColorMixRatio)] && [object respondsToSelector:@selector(airDensity)] && [object respondsToSelector:@selector(illuminationColorAsVector)]);
+		// The shader bindings: the planet's values, which its object's selectors forwarded to. (That the
+		// object answered them by selector, and a plain entity's did not, is retired with the facade,
+		// bead oo-dpyk8, under oo-9n5p9.)
 		moon->setAirDensity(0.5f);
 		moon->setTerminatorThresholdVector(make_vector(1, 2, 3));
-		// Called as the uniforms call them: the implementation found by selector.
-		float (*floatValue)(id, SEL) = (float (*)(id, SEL))[object methodForSelector:@selector(airDensity)];
-		OO_CHECK(floatValue(object, @selector(airDensity)) == 0.5f);
-		floatValue = (float (*)(id, SEL))[object methodForSelector:@selector(airColorMixRatio)];
-		OO_CHECK(floatValue(object, @selector(airColorMixRatio)) == moon->airColorMixRatio());
-		Vector (*vectorValue)(id, SEL) = (Vector (*)(id, SEL))[object methodForSelector:@selector(terminatorThresholdVector)];
-		Vector t = vectorValue(object, @selector(terminatorThresholdVector));
+		OO_CHECK(moon->airDensity() == 0.5f);
+		Vector t = moon->terminatorThresholdVector();
 		OO_CHECK(t.x == 1 && t.y == 2 && t.z == 3);
-		Entity *rock = [[[Entity alloc] init] autorelease];
-		OO_CHECK(![rock respondsToSelector:@selector(airColorAsVector)] && ![rock respondsToSelector:@selector(airDensity)]);
-		OO_CHECK([rock respondsToSelector:@selector(relativePosition)]);
 	}
 }
 
@@ -454,12 +435,12 @@ OO_TEST(jsExtensions)
 		OOPlanetEntity *moon = Planet(NO);
 		ooscript::ClassDef *jsClass = nullptr, *expectedClass = nullptr;
 		ooscript::Object prototype = nullptr, expectedPrototype = nullptr;
-		Entity *object = oo::ToObjC(moon);
-		[object getJSClass:&jsClass andPrototype:&prototype];
+		Entity *object = moon;
+		OOJSEntityGetJSClass(object, &jsClass, &prototype);
 		OOJSPlanetGetJSClass(&expectedClass, &expectedPrototype);
 		OO_CHECK(jsClass != nullptr && jsClass == expectedClass && prototype == expectedPrototype);
-		OO_CHECK([object cxx_oo_jsClassName] == std::optional<std::string>("Moon"));
-		OO_CHECK([object isVisibleToScripts] == YES);
+		OO_CHECK(OOJSEntityJSClassName(object) == std::optional<std::string>("Moon"));
+		OO_CHECK(OOJSEntityIsVisibleToScripts(object) == YES);
 	}
 }
 

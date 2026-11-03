@@ -35,8 +35,21 @@
 #include "oo_test.hpp"
 
 #include <cstdarg>
+#include <cstdlib>
 #include <string>
 #include <vector>
+
+
+// EntityHelpers.mm's (bead oo-dpyk8), which the test does not link: an entity's node (its hold and
+// its description) is reached only for an entity, which the test has none of. A null hold releases
+// nothing.
+class Entity;
+namespace oo {
+namespace detail { void EntityRelease(Entity *entity) noexcept; }
+std::string EntityDescription(Entity *entity);
+}
+void oo::detail::EntityRelease(Entity *entity) noexcept  { if (entity != nullptr)  std::abort(); }
+std::string oo::EntityDescription(Entity *)  { std::abort(); }
 
 
 extern "C" void InitOOJSTimer(ooscript::Context context, ooscript::Object global);
@@ -250,22 +263,24 @@ void OOJSUnreachable(const char *function, const char *, unsigned)
 /*	The engine object: the one method the timer sends it (-callJSFunction:...), which calls the
 	function as the engine does, and the script stack the timer pushes its owner on.
 */
-@interface OOJavaScriptEngine: OOObject
-+ (OOJavaScriptEngine *) sharedEngine;
-- (BOOL) callJSFunction:(ooscript::Value)function forObject:(ooscript::Object)jsThis argc:(unsigned)argc argv:(ooscript::Value *)argv result:(ooscript::Value *)outResult;
-@end
-
-@implementation OOJavaScriptEngine
-
-+ (OOJavaScriptEngine *) sharedEngine
+// The engine (OOJavaScriptEngine.h; a C++ class since bead oo-wdqw1 deleted its facade), declared
+// with the header's names and signatures but not its class; the stand-in's answers are kept.
+class OOJavaScriptEngine
 {
-	static OOJavaScriptEngine *engine = nil;
-	if (engine == nil)  engine = [[OOJavaScriptEngine alloc] init];
+public:
+	static OOJavaScriptEngine *sharedEngine();
+	bool callJSFunction(ooscript::Value function, ooscript::Object jsThis, unsigned argc, ooscript::Value *argv, ooscript::Value *outResult);
+};
+
+
+OOJavaScriptEngine *OOJavaScriptEngine::sharedEngine()
+{
+	static OOJavaScriptEngine *engine = new OOJavaScriptEngine;
 	return engine;
 }
 
 
-- (BOOL) callJSFunction:(ooscript::Value)function forObject:(ooscript::Object)jsThis argc:(unsigned)argc argv:(ooscript::Value *)argv result:(ooscript::Value *)outResult
+bool OOJavaScriptEngine::callJSFunction(ooscript::Value function, ooscript::Object jsThis, unsigned argc, ooscript::Value *argv, ooscript::Value *outResult)
 {
 	sCalls++;
 	ooscript::Context context = gOOJSMainThreadContext;
@@ -273,8 +288,6 @@ void OOJSUnreachable(const char *function, const char *, unsigned)
 	if (!OK)  ooscript::clearPendingException(context);
 	return OK;
 }
-
-@end
 
 
 #import "OOScript.h"
@@ -301,15 +314,18 @@ namespace {
 double sNow = 100.0;
 } // namespace
 
-@interface FakeUniverse: OOObject
-- (double) getTime;
-@end
+// The universe as the code under test sees it: a stand-in for the C++ class (bead oo-ql9rn deleted
+// the Objective-C facade the test's FakeUniverse stood in for), with the header's names and signatures.
+class Universe
+{
+public:
+	OOTimeAbsolute getTime();
+};
+typedef Universe FakeUniverse;
 
-@implementation FakeUniverse
-- (double) getTime  { return sNow; }
-@end
+OOTimeAbsolute Universe::getTime()	{ return sNow; }
 
-@class Universe;
+class Universe;
 Universe *gSharedUniverse = nil;
 
 
@@ -339,7 +355,7 @@ void SetUpContext()
 	sGlobal = ooscript::getGlobalObject(gOOJSMainThreadContext);
 	ooscript::initStandardClasses(gOOJSMainThreadContext, sGlobal);
 	InitOOJSTimer(gOOJSMainThreadContext, sGlobal);
-	gSharedUniverse = (Universe *)[[FakeUniverse alloc] init];
+	gSharedUniverse = new FakeUniverse();
 }
 
 
@@ -517,7 +533,7 @@ OO_TEST(engineReset)
 {
 	sNow = 100.0;
 	OO_CHECK_EQ(Eval("globalThis.log3 = []; globalThis.r = new Timer({}, function () { log3.push('r'); }, 1, 1); r.isRunning"), "true");
-	oo::NotificationCenter::defaultCenter().post(kOOJavaScriptEngineWillResetNotificationName, [OOJavaScriptEngine sharedEngine]);
+	oo::NotificationCenter::defaultCenter().post(kOOJavaScriptEngineWillResetNotificationName, OOJavaScriptEngine::sharedEngine());
 	OO_CHECK_EQ(Eval("r.isRunning"), "false");
 	OO_CHECK_EQ(Eval("String(r)"), "[Timer invalid]");
 	Update(105.0);

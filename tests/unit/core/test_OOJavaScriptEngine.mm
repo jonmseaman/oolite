@@ -23,6 +23,7 @@
 #import "EntityOOJavaScriptExtensions.h"
 #import "OOVector.h"
 #import "OOObjCPList.h"
+#include "oofnd/objc/OOException.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Notification.hpp"
@@ -78,71 +79,68 @@ static int sNativeDeallocs = 0;
 @end
 
 
-// An entity whose script-visible answers the test chooses (the predicates ask only these).
-@interface TestScriptEntity: Entity
+// An entity whose script-visible answers the test chooses (the predicates ask only these). An
+// Objective-C subclass until bead oo-j12i2: a C++ one overriding the virtual members its selectors
+// became; its -isShip, -isSubEntity and -status answers are the C++ entity's own flags and status,
+// which the predicates read for a C++ entity, set where the test set its ivars.
+class TestScriptEntity : public Entity
 {
-@public
-	BOOL			_scriptVisible;
-	BOOL			_ship;
-	BOOL			_subEntity;
-	OOEntityStatus	_testStatus;
-}
-@end
+public:
+	bool isVisibleToScripts() override  { return _scriptVisible; }
+	bool isPlanet() override  { return false; }
+	ooscript::Value jsValueInContext(ooscript::Context) override  { return ooscript::int32Value(42); }
 
-@implementation TestScriptEntity
-
-- (BOOL) isVisibleToScripts							{ return _scriptVisible; }
-- (BOOL) isShip										{ return _ship; }
-- (BOOL) isSubEntity								{ return _subEntity; }
-- (BOOL) isPlanet									{ return NO; }
-- (OOEntityStatus) status							{ return _testStatus; }
-- (ooscript::Value) oo_jsValueInContext:(ooscript::Context)context	{ return ooscript::int32Value(42); }
-
-@end
+	bool _scriptVisible = false;
+};
 
 
 #if OOJSENGINE_MONITOR_SUPPORT
-// A debug monitor that records what the engine sends it.
-@interface TestMonitor: OOObject <OOJavaScriptEngineMonitor>
+// A debug monitor that records what the engine sends it. A C++ OOJavaScriptEngineMonitor since bead
+// oo-9ht.74.1 (it was an Objective-C object adopting the protocol); the same records.
+namespace {
+
+// The records (the Objective-C class's @public ivars).
+struct TestMonitorRecord
 {
-@public
-	int							_errors;
-	int							_logs;
-	id							_engine;
-	BOOL						_showLocation;
+	int							_errors = 0;
+	int							_logs = 0;
+	OOJavaScriptEngine			*_engine = nullptr;
+	BOOL						_showLocation = NO;
 	std::string					_message;
 	std::optional<std::string>	_messageClass;
-}
-@end
+};
 
-@implementation TestMonitor
 
-- (void)jsEngine:(OOJavaScriptEngine *)engine
-		 context:(ooscript::Context)context
-		   error:(ooscript::ErrorReport *)errorReport
-	   stackSkip:(unsigned)stackSkip
- showingLocation:(BOOL)showLocation
-	 withMessage:(const std::string &)message
+class TestMonitor : public OOJavaScriptEngineMonitor, public TestMonitorRecord
 {
-	_errors++;
-	_engine = engine;
-	_showLocation = showLocation;
-	_message = message;
-}
+public:
+	void jsEngine(OOJavaScriptEngine *engine,
+				  ooscript::Context /*context*/,
+				  ooscript::ErrorReport * /*errorReport*/,
+				  unsigned /*stackSkip*/,
+				  bool showLocation,
+				  const std::string &message) override
+	{
+		_errors++;
+		_engine = engine;
+		_showLocation = showLocation;
+		_message = message;
+	}
 
 
-- (void)jsEngine:(OOJavaScriptEngine *)engine
-		 context:(ooscript::Context)context
-	  logMessage:(const std::string &)message
-		 ofClass:(const std::optional<std::string> &)messageClass
-{
-	_logs++;
-	_engine = engine;
-	_message = message;
-	_messageClass = messageClass;
-}
+	void jsEngine(OOJavaScriptEngine *engine,
+				  ooscript::Context /*context*/,
+				  const std::string &message,
+				  const std::optional<std::string> &messageClass) override
+	{
+		_logs++;
+		_engine = engine;
+		_message = message;
+		_messageClass = messageClass;
+	}
+};
 
-@end
+}	// namespace
 #endif
 
 
@@ -178,7 +176,7 @@ void SetUp()
 	OO_CHECK(::_putenv_s("HOMEPATH", sRoot.string().c_str()) == 0);
 	stdfs::current_path(sRoot);
 	WriteText(sRoot / "Resources" / "Info-gnustep.plist", "{ CFBundleVersion = \"9.9.9-test\"; }");
-	(void)[OOJavaScriptEngine sharedEngine];
+	(void)OOJavaScriptEngine::sharedEngine();
 }
 
 
@@ -219,7 +217,7 @@ std::string LogText()
 ooscript::Value Eval(ooscript::Context context, const std::string &source)
 {
 	ooscript::Value result = ooscript::undefinedValue();
-	OO_CHECK(ooscript::evaluateScript(context, [[OOJavaScriptEngine sharedEngine] globalObject], source.c_str(), static_cast<unsigned>(source.size()), "test.js", 1, &result));
+	OO_CHECK(ooscript::evaluateScript(context, OOJavaScriptEngine::sharedEngine()->globalObject(), source.c_str(), static_cast<unsigned>(source.size()), "test.js", 1, &result));
 	return result;
 }
 
@@ -250,20 +248,20 @@ OO_TEST(sharedEngine)
 	SetUp();
 	@autoreleasepool
 	{
-		OOJavaScriptEngine *engine = [OOJavaScriptEngine sharedEngine];
-		OO_CHECK(engine != nil);
-		OO_CHECK([OOJavaScriptEngine sharedEngine] == engine);
+		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
+		OO_CHECK(engine != nullptr);
+		OO_CHECK(OOJavaScriptEngine::sharedEngine() == engine);
 		OO_CHECK(gOOJSMainThreadContext != NULL);
-		OO_CHECK([engine globalObject] != NULL);
+		OO_CHECK(engine->globalObject() != NULL);
 
 		ooscript::Context context = OOJSAcquireContext();
-		OO_CHECK(ooscript::getGlobalObject(context) == [engine globalObject]);
+		OO_CHECK(ooscript::getGlobalObject(context) == engine->globalObject());
 		// The Oolite classes and the prefix script are set up on the global object.
 		OO_CHECK(ooscript::isObject(Eval(context, "Vector3D")));
 		OO_CHECK(ooscript::isObject(Eval(context, "missionVariables")));
 		OOJSRelinquishContext(context);
 
-		[engine runMissionCallback];	// no callback set: does nothing
+		engine->runMissionCallback();	// no callback set: does nothing
 	}
 }
 
@@ -273,22 +271,22 @@ OO_TEST(standardClasses)
 	SetUp();
 	@autoreleasepool
 	{
-		OOJavaScriptEngine *engine = [OOJavaScriptEngine sharedEngine];
-		OO_CHECK([engine objectClass] != NULL);
-		OO_CHECK([engine stringClass] != NULL);
-		OO_CHECK([engine arrayClass] != NULL);
-		OO_CHECK([engine numberClass] != NULL);
-		OO_CHECK([engine booleanClass] != NULL);
-		OO_CHECK([engine objectClass] != [engine arrayClass]);
-		OO_CHECK([engine stringClass] != [engine numberClass]);
-		OO_CHECK([engine numberClass] != [engine booleanClass]);
+		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
+		OO_CHECK(engine->objectClass() != NULL);
+		OO_CHECK(engine->stringClass() != NULL);
+		OO_CHECK(engine->arrayClass() != NULL);
+		OO_CHECK(engine->numberClass() != NULL);
+		OO_CHECK(engine->booleanClass() != NULL);
+		OO_CHECK(engine->objectClass() != engine->arrayClass());
+		OO_CHECK(engine->stringClass() != engine->numberClass());
+		OO_CHECK(engine->numberClass() != engine->booleanClass());
 
 		ooscript::Context context = OOJSAcquireContext();
-		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "[1, 2]"))) == [engine arrayClass]);
-		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "({ a: 1 })"))) == [engine objectClass]);
-		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "new String('s')"))) == [engine stringClass]);
-		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "new Number(1)"))) == [engine numberClass]);
-		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "new Boolean(false)"))) == [engine booleanClass]);
+		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "[1, 2]"))) == engine->arrayClass());
+		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "({ a: 1 })"))) == engine->objectClass());
+		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "new String('s')"))) == engine->stringClass());
+		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "new Number(1)"))) == engine->numberClass());
+		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "new Boolean(false)"))) == engine->booleanClass());
 		OOJSRelinquishContext(context);
 	}
 }
@@ -299,27 +297,27 @@ OO_TEST(flags)
 	SetUp();
 	@autoreleasepool
 	{
-		OOJavaScriptEngine *engine = [OOJavaScriptEngine sharedEngine];
-		const BOOL show = [engine showErrorLocations];
-		[engine setShowErrorLocations:YES];
-		OO_CHECK([engine showErrorLocations]);
-		[engine setShowErrorLocations:NO];
-		OO_CHECK(![engine showErrorLocations]);
-		[engine setShowErrorLocations:show];
+		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
+		const BOOL show = engine->showErrorLocations();
+		engine->setShowErrorLocations(YES);
+		OO_CHECK(engine->showErrorLocations());
+		engine->setShowErrorLocations(NO);
+		OO_CHECK(!engine->showErrorLocations());
+		engine->setShowErrorLocations(show);
 
 #ifndef NDEBUG
 		// Off unless the preferences say otherwise (the scratch home has none).
-		OO_CHECK(![engine dumpStackForErrors]);
-		OO_CHECK(![engine dumpStackForWarnings]);
-		[engine setDumpStackForErrors:YES];
-		OO_CHECK([engine dumpStackForErrors]);
-		OO_CHECK(![engine dumpStackForWarnings]);
-		[engine setDumpStackForWarnings:YES];
-		OO_CHECK([engine dumpStackForWarnings]);
-		[engine setDumpStackForErrors:NO];
-		[engine setDumpStackForWarnings:NO];
-		OO_CHECK(![engine dumpStackForErrors]);
-		OO_CHECK(![engine dumpStackForWarnings]);
+		OO_CHECK(!engine->dumpStackForErrors());
+		OO_CHECK(!engine->dumpStackForWarnings());
+		engine->setDumpStackForErrors(YES);
+		OO_CHECK(engine->dumpStackForErrors());
+		OO_CHECK(!engine->dumpStackForWarnings());
+		engine->setDumpStackForWarnings(YES);
+		OO_CHECK(engine->dumpStackForWarnings());
+		engine->setDumpStackForErrors(NO);
+		engine->setDumpStackForWarnings(NO);
+		OO_CHECK(!engine->dumpStackForErrors());
+		OO_CHECK(!engine->dumpStackForWarnings());
 #endif
 	}
 }
@@ -330,7 +328,7 @@ OO_TEST(callJSFunction)
 	SetUp();
 	@autoreleasepool
 	{
-		OOJavaScriptEngine *engine = [OOJavaScriptEngine sharedEngine];
+		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
 		ooscript::Context context = OOJSAcquireContext();
 		ooscript::Value function = Eval(context, "(function (a, b) { return this.base + a * b; })");
 		ooscript::Value thisValue = Eval(context, "({ base: 100 })");
@@ -338,7 +336,7 @@ OO_TEST(callJSFunction)
 
 		ooscript::Value argv[2] = { ooscript::int32Value(6), ooscript::int32Value(7) };
 		ooscript::Value result = ooscript::undefinedValue();
-		OO_CHECK([engine callJSFunction:function forObject:ooscript::toObject(thisValue) argc:2 argv:argv result:&result]);
+		OO_CHECK(engine->callJSFunction(function, ooscript::toObject(thisValue), 2, argv, &result));
 		OO_CHECK(ooscript::isInt32(result) && ooscript::toInt32(result) == 142);
 
 		// A function that throws: NO, and the exception is reported (not left pending).
@@ -346,7 +344,7 @@ OO_TEST(callJSFunction)
 		context = OOJSAcquireContext();
 		ooscript::Value thrower = Eval(context, "(function () { throw new Error('call boom'); })");
 		OOJSRelinquishContext(context);
-		OO_CHECK(![engine callJSFunction:thrower forObject:ooscript::toObject(thisValue) argc:0 argv:NULL result:&result]);
+		OO_CHECK(!engine->callJSFunction(thrower, ooscript::toObject(thisValue), 0, NULL, &result));
 		OO_CHECK(LogLinesContaining("call boom") >= 1);
 		context = OOJSAcquireContext();
 		OO_CHECK(!ooscript::isExceptionPending(context));
@@ -360,7 +358,7 @@ OO_TEST(gcRoots)
 	SetUp();
 	@autoreleasepool
 	{
-		OOJavaScriptEngine *engine = [OOJavaScriptEngine sharedEngine];
+		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
 		ooscript::Context context = OOJSAcquireContext();
 		static ooscript::Value value;
 		static ooscript::Object object;
@@ -370,15 +368,15 @@ OO_TEST(gcRoots)
 		OO_CHECK(ooscript::addNamedObjectRoot(context, &object, "test object root"));
 		OOJSRelinquishContext(context);
 
-		[engine garbageCollectionOpportunity:YES];
-		[engine garbageCollectionOpportunity:NO];
+		engine->garbageCollectionOpportunity(YES);
+		engine->garbageCollectionOpportunity(NO);
 		context = OOJSAcquireContext();
 		OO_CHECK(cxx_OOStringFromJSValue(context, Eval(context, "1, 'ok'")).value_or("") == "ok");
 		OOJSRelinquishContext(context);
 
-		[engine removeGCValueRoot:&value];
-		[engine removeGCObjectRoot:&object];
-		[engine garbageCollectionOpportunity:YES];
+		engine->removeGCValueRoot(&value);
+		engine->removeGCObjectRoot(&object);
+		engine->garbageCollectionOpportunity(YES);
 	}
 }
 
@@ -390,16 +388,17 @@ OO_TEST(errorReporting)
 	SetUp();
 	@autoreleasepool
 	{
-		OOJavaScriptEngine *engine = [OOJavaScriptEngine sharedEngine];
-		const BOOL show = [engine showErrorLocations];
+		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
+		const BOOL show = engine->showErrorLocations();
 #if OOJSENGINE_MONITOR_SUPPORT
-		TestMonitor *monitor = [[[TestMonitor alloc] init] autorelease];
-		[engine setMonitor:monitor];
+		TestMonitor monitorObject;	// set while the test runs, then cleared (the engine borrows it)
+		TestMonitor *monitor = &monitorObject;
+		engine->setMonitor(monitor);
 #endif
 
 		// An error reported by a native, with the caller's prefix.
 		StartLog();
-		[engine setShowErrorLocations:NO];
+		engine->setShowErrorLocations(NO);
 		ooscript::Context context = OOJSAcquireContext();
 		cxx_OOJSReportErrorForCaller(context, std::string("TestClass"), std::string("doThing"), "bad %s %d", "input", 7);
 		ooscript::reportPendingException(context);
@@ -425,11 +424,11 @@ OO_TEST(errorReporting)
 
 		// An uncaught exception with locations shown: two lines.
 		StartLog();
-		[engine setShowErrorLocations:YES];
+		engine->setShowErrorLocations(YES);
 		context = OOJSAcquireContext();
 		ooscript::Value result = ooscript::undefinedValue();
 		const char *source = "\n\nthrow new Error('located boom');";
-		OO_CHECK(!ooscript::evaluateScript(context, [engine globalObject], source, static_cast<unsigned>(strlen(source)), "located.js", 1, &result));
+		OO_CHECK(!ooscript::evaluateScript(context, engine->globalObject(), source, static_cast<unsigned>(strlen(source)), "located.js", 1, &result));
 		ooscript::reportPendingException(context);
 		OOJSRelinquishContext(context);
 		OO_CHECK(LogLinesContaining("located boom") >= 1);
@@ -442,7 +441,7 @@ OO_TEST(errorReporting)
 		StartLog();
 		OOJSSetWarningOrErrorStackSkip(1);
 		context = OOJSAcquireContext();
-		OO_CHECK(!ooscript::evaluateScript(context, [engine globalObject], source, static_cast<unsigned>(strlen(source)), "located.js", 1, &result));
+		OO_CHECK(!ooscript::evaluateScript(context, engine->globalObject(), source, static_cast<unsigned>(strlen(source)), "located.js", 1, &result));
 		ooscript::reportPendingException(context);
 		OOJSRelinquishContext(context);
 		OOJSSetWarningOrErrorStackSkip(0);
@@ -451,7 +450,7 @@ OO_TEST(errorReporting)
 
 		// A warning: dashes, and nothing pending.
 		StartLog();
-		[engine setShowErrorLocations:NO];
+		engine->setShowErrorLocations(NO);
 		context = OOJSAcquireContext();
 		cxx_OOJSReportWarningForCaller(context, std::nullopt, std::string("warnFunc"), "careful %s", "now");
 		OO_CHECK(!ooscript::isExceptionPending(context));
@@ -468,9 +467,9 @@ OO_TEST(errorReporting)
 		OO_CHECK(monitor->_logs == logs + 1);
 		OO_CHECK(monitor->_message == "monitored message");
 		OO_CHECK(!monitor->_messageClass.has_value());
-		[engine setMonitor:nil];
+		engine->setMonitor(nil);
 #endif
-		[engine setShowErrorLocations:show];
+		engine->setShowErrorLocations(show);
 	}
 }
 
@@ -490,15 +489,15 @@ OO_TEST(stackDump)
 	SetUp();
 	@autoreleasepool
 	{
-		OOJavaScriptEngine *engine = [OOJavaScriptEngine sharedEngine];
+		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
 		ooscript::Context context = OOJSAcquireContext();
-		OO_CHECK(ooscript::defineFunction(context, [engine globalObject], "testDumpStack", DumpStackNative, 0, ooscript::PropertyFlag::None) != NULL);
+		OO_CHECK(ooscript::defineFunction(context, engine->globalObject(), "testDumpStack", DumpStackNative, 0, ooscript::PropertyFlag::None) != NULL);
 
 		// The QuickJS backend's frames have a file and a line, but no function and no variables.
 		StartLog();
 		ooscript::Value result = ooscript::undefinedValue();
 		const char *source = "function dumpTarget(a) {\n\tvar b = a + 1;\n\ttestDumpStack();\n\treturn b;\n}\ndumpTarget(41);\n";
-		OO_CHECK(ooscript::evaluateScript(context, [engine globalObject], source, static_cast<unsigned>(strlen(source)), "dumpstack.js", 1, &result));
+		OO_CHECK(ooscript::evaluateScript(context, engine->globalObject(), source, static_cast<unsigned>(strlen(source)), "dumpstack.js", 1, &result));
 		OO_CHECK(LogLinesContaining("(dumpstack.js:3) <not a function frame>") == 1);
 		OO_CHECK(LogLinesContaining("(dumpstack.js:6) <not a function frame>") == 1);
 		OO_CHECK(LogLinesContaining(" 0 (dumpstack.js:3)") == 1);
@@ -509,14 +508,14 @@ OO_TEST(stackDump)
 		StartLog();
 		OOJSSetWarningOrErrorStackSkip(1);
 		context = OOJSAcquireContext();
-		OO_CHECK(ooscript::evaluateScript(context, [engine globalObject], source, static_cast<unsigned>(strlen(source)), "dumpstack.js", 1, &result));
+		OO_CHECK(ooscript::evaluateScript(context, engine->globalObject(), source, static_cast<unsigned>(strlen(source)), "dumpstack.js", 1, &result));
 		OOJSRelinquishContext(context);
 		OOJSSetWarningOrErrorStackSkip(0);
 		OO_CHECK(LogLinesContaining("(dumpstack.js:3)") == 0);
 		OO_CHECK(LogLinesContaining("(dumpstack.js:6) <not a function frame>") == 1);
 
 		// This backend has no `debugger` hook: the statement does nothing.
-		[engine enableDebuggerStatement];
+		engine->enableDebuggerStatement();
 		StartLog();
 		context = OOJSAcquireContext();
 		Eval(context, "(function () { debugger; return 1; })();");
@@ -590,12 +589,12 @@ OO_TEST(nativeObjectValues)
 
 		// nil and OONull are JS null; OONull is one object that copies as itself.
 		OO_CHECK(ooscript::isNull(OOJSValueFromNativeObject(context, nil)));
-		OONull *null = [OONull null];
-		OO_CHECK(null != nil && [OONull null] == null);
-		OO_CHECK([[null copy] autorelease] == null);
-		OO_CHECK_EQ(oo::DescriptionOf(null), "<null>");
-		OO_CHECK(ooscript::isNull(OOJSValueFromNativeObject(context, null)));
-		OO_CHECK(ooscript::isNull([null oo_jsValueInContext:context]));
+		OONull *null = OONull::null();
+		OO_CHECK(null != nullptr && OONull::null() == null);
+		OO_CHECK(OOIsNullObjectNode(OONullObjectNode()) && OONullObjectNode() == OONullObjectNode());	// the one null, shared (the facade's -copy answered itself)
+		OO_CHECK_EQ(null->description(), "<null>");
+		OO_CHECK(ooscript::isNull(OOJSValueFromPList(context, OONullObjectNode())));
+		OO_CHECK(ooscript::isNull(null->jsValueInContext(context)));
 
 		// A plain OOObject has no JS value, and describes itself by its class name and components.
 		TestNative *native = [[[TestNative alloc] init] autorelease];
@@ -625,26 +624,26 @@ OO_TEST(jsValueHolder)
 	{
 		ooscript::Context context = OOJSAcquireContext();
 		ooscript::Value object = Eval(context, "({ held: 'yes' })");
-		OOJSValue *holder = [OOJSValue valueWithJSValue:object inContext:context];
-		OO_CHECK(holder != nil);
-		OO_CHECK([holder oo_jsValueInContext:context] == object);
-		OO_CHECK(OOJSValueFromNativeObject(context, holder) == object);
+		oo::Ref<OOJSValue> holder = OOJSValue::valueWithJSValue(object, context);
+		OO_CHECK(holder != nullptr);
+		OO_CHECK(holder->jsValueInContext(context) == object);
+		OO_CHECK(OOJSValueFromPList(context, OOJSValueObjectNode(holder.get())) == object);
 
-		OOJSValue *byObject = [OOJSValue valueWithJSObject:ooscript::toObject(object) inContext:context];
-		OO_CHECK(ooscript::toObject([byObject oo_jsValueInContext:context]) == ooscript::toObject(object));
+		oo::Ref<OOJSValue> byObject = OOJSValue::valueWithJSObject(ooscript::toObject(object), context);
+		OO_CHECK(ooscript::toObject(byObject->jsValueInContext(context)) == ooscript::toObject(object));
 		OOJSRelinquishContext(context);
 
 		// A nil context is acquired for the call.
-		OOJSValue *noContext = [[[OOJSValue alloc] initWithJSValue:ooscript::int32Value(9) inContext:NULL] autorelease];
-		OO_CHECK(ooscript::toInt32([noContext oo_jsValueInContext:NULL]) == 9);
+		oo::Ref<OOJSValue> noContext = OOJSValue::valueWithJSValue(ooscript::int32Value(9), NULL);
+		OO_CHECK(ooscript::toInt32(noContext->jsValueInContext(NULL)) == 9);
 
 		// Undefined holds undefined.
-		OOJSValue *undefinedHolder = [OOJSValue valueWithJSValue:ooscript::undefinedValue() inContext:NULL];
-		OO_CHECK(ooscript::isUndefined([undefinedHolder oo_jsValueInContext:NULL]));
+		oo::Ref<OOJSValue> undefinedHolder = OOJSValue::valueWithJSValue(ooscript::undefinedValue(), NULL);
+		OO_CHECK(ooscript::isUndefined(undefinedHolder->jsValueInContext(NULL)));
 
-		[[OOJavaScriptEngine sharedEngine] garbageCollectionOpportunity:YES];	// the held object survives
+		OOJavaScriptEngine::sharedEngine()->garbageCollectionOpportunity(YES);	// the held object survives
 		context = OOJSAcquireContext();
-		OO_CHECK_EQ(cxx_OOStringFromJSValue(context, ooscript::objectValue(ooscript::toObject([holder oo_jsValueInContext:context]))).value_or("<none>"), "[object Object]");
+		OO_CHECK_EQ(cxx_OOStringFromJSValue(context, ooscript::objectValue(ooscript::toObject(holder->jsValueInContext(context)))).value_or("<none>"), "[object Object]");
 		OOJSRelinquishContext(context);
 	}
 }
@@ -679,9 +678,9 @@ OO_TEST(objectWrapper)
 		OO_CHECK(OOJSNativeObjectFromJSObject(context, wrapper) == native);
 		OO_CHECK(OOJSNativeObjectOfClassFromJSObject(context, wrapper, [TestNative class]) == native);
 		OO_CHECK(OOJSNativeObjectOfClassFromJSObject(context, wrapper, [OOObject class]) == native);
-		OO_CHECK(OOJSNativeObjectOfClassFromJSObject(context, wrapper, [OONull class]) == nil);
+		OO_CHECK(OOJSNativeObjectOfClassFromJSObject(context, wrapper, [OOException class]) == nil);
 		OO_CHECK(OOJSNativeObjectOfClassFromJSValue(context, ooscript::objectValue(wrapper), [TestNative class]) == native);
-		OO_CHECK(OOJSNativeObjectOfClassFromJSValue(context, ooscript::objectValue(wrapper), [OONull class]) == nil);
+		OO_CHECK(OOJSNativeObjectOfClassFromJSValue(context, ooscript::objectValue(wrapper), [OOException class]) == nil);
 		OO_CHECK(OOJSNativeObjectOfClassFromJSValue(context, ooscript::int32Value(1), [TestNative class]) == nil);
 
 		// Finalising clears the native object's JS self, releases it and empties the slot.
@@ -710,30 +709,30 @@ OO_TEST(entityPredicates)
 	SetUp();
 	@autoreleasepool
 	{
-		OO_CHECK(!JSEntityIsJavaScriptVisiblePredicate(nil, NULL));
-		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(nil, NULL));
-		OO_CHECK(!JSEntityIsDemoShipPredicate(nil, NULL));
+		OO_CHECK(!JSEntityIsJavaScriptVisiblePredicate(nullptr, NULL));
+		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(nullptr, NULL));
+		OO_CHECK(!JSEntityIsDemoShipPredicate(nullptr, NULL));
 
-		TestScriptEntity *entity = [[[TestScriptEntity alloc] init] autorelease];
-		entity->_testStatus = STATUS_IN_FLIGHT;
+		TestScriptEntity *entity = static_cast<TestScriptEntity *>(oo::MadeEntity(oo::makeRef<TestScriptEntity>()));
+		entity->setStatus(STATUS_IN_FLIGHT);
 		OO_CHECK(!JSEntityIsJavaScriptVisiblePredicate(entity, NULL));
 		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
 
-		entity->_scriptVisible = YES;
+		entity->_scriptVisible = true;
 		OO_CHECK(JSEntityIsJavaScriptVisiblePredicate(entity, NULL));
 		OO_CHECK(JSEntityIsJavaScriptSearchablePredicate(entity, NULL));	// neither ship nor planet
 		OO_CHECK(!JSEntityIsDemoShipPredicate(entity, NULL));
 
-		entity->_ship = YES;
+		entity->isShip = YES;
 		OO_CHECK(JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
 		OO_CHECK(!JSEntityIsDemoShipPredicate(entity, NULL));
-		entity->_subEntity = YES;
+		entity->isSubEntity = YES;
 		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
-		entity->_subEntity = NO;
-		entity->_testStatus = STATUS_COCKPIT_DISPLAY;
+		entity->isSubEntity = NO;
+		entity->setStatus(STATUS_COCKPIT_DISPLAY);
 		OO_CHECK(!JSEntityIsJavaScriptSearchablePredicate(entity, NULL));
 		OO_CHECK(JSEntityIsDemoShipPredicate(entity, NULL));
-		entity->_subEntity = YES;
+		entity->isSubEntity = YES;
 		OO_CHECK(!JSEntityIsDemoShipPredicate(entity, NULL));
 
 		// A JS function as a predicate: called with the entity's JS value.
@@ -770,7 +769,7 @@ OO_TEST(propertyListsFromJS)
 		if (elements != nullptr && elements->size() == 4)
 		{
 			OO_CHECK((*elements)[0] == oo::PList::signedInteger(1));
-			OO_CHECK(oo::ObjectIn((*elements)[1]) == [OONull null]);	// a null element is OONull
+			OO_CHECK(OOIsNullObjectNode((*elements)[1]));	// a null element is OONull
 			OO_CHECK((*elements)[2] == oo::PList(std::string("a")));
 			OO_CHECK((*elements)[3].isArray());
 		}
@@ -798,7 +797,7 @@ OO_TEST(reset)
 	SetUp();
 	@autoreleasepool
 	{
-		OOJavaScriptEngine *engine = [OOJavaScriptEngine sharedEngine];
+		OOJavaScriptEngine *engine = OOJavaScriptEngine::sharedEngine();
 		ooscript::Context context = OOJSAcquireContext();
 		Eval(context, "this.survivesReset = 1;");
 		OOJSRelinquishContext(context);
@@ -813,18 +812,18 @@ OO_TEST(reset)
 		oo::NotificationCenter::defaultCenter().addObserver(&marker, kOOJavaScriptEngineDidResetNotificationName, &otherSender,
 			[](const oo::Notification &) { otherSender++; });
 
-		OO_CHECK([engine reset]);
+		OO_CHECK(engine->reset());
 		OO_CHECK(willResets == 1 && didResets == 1 && otherSender == 0);
 		OO_CHECK(contextDuringWill);
-		OO_CHECK([OOJavaScriptEngine sharedEngine] == engine);
+		OO_CHECK(OOJavaScriptEngine::sharedEngine() == engine);
 		OO_CHECK(gOOJSMainThreadContext != NULL);
-		OO_CHECK([engine globalObject] != NULL);
-		OO_CHECK([engine arrayClass] != NULL);
+		OO_CHECK(engine->globalObject() != NULL);
+		OO_CHECK(engine->arrayClass() != NULL);
 
 		context = OOJSAcquireContext();
 		OO_CHECK_EQ(cxx_OOStringFromJSValue(context, Eval(context, "typeof survivesReset")).value_or("<none>"), "undefined");
 		OO_CHECK(ooscript::isObject(Eval(context, "Vector3D")));
-		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "[1]"))) == [engine arrayClass]);
+		OO_CHECK(OOJSGetClass(context, ooscript::toObject(Eval(context, "[1]"))) == engine->arrayClass());
 		// The standard converters are registered again.
 		OO_CHECK(cxx_OOJSPListFromJSValue(context, Eval(context, "[1]")).isArray());
 		OOJSRelinquishContext(context);
@@ -832,6 +831,25 @@ OO_TEST(reset)
 		oo::NotificationCenter::defaultCenter().removeObserver(&marker);
 	}
 }
+
+
+// An Objective-C object that keeps a held value until it is released (bead oo-wdqw1: the value is
+// C++; an autorelease keeper holds it, as OOScriptAutorelease() holds a script).
+@interface TestValueKeeper: OOObject
+{
+	oo::Ref<OOJSValue>	_value;
+}
+- (id) initWithValue:(oo::Ref<OOJSValue>)value;
+@end
+
+@implementation TestValueKeeper
+- (id) initWithValue:(oo::Ref<OOJSValue>)value
+{
+	self = [super init];
+	if (self != nil)  _value = std::move(value);
+	return self;
+}
+@end
 
 
 // Bead oo-9ht.173: a rooted value left autoreleased in the thread's own pool (no @autoreleasepool
@@ -844,8 +862,9 @@ OO_TEST(aValueLeftInTheThreadPoolAtExit)
 	SetUp();
 	ooscript::Context context = OOJSAcquireContext();
 	ooscript::Value object = Eval(context, "({ leftAtExit: true })");
-	OOJSValue *holder = [OOJSValue valueWithJSValue:object inContext:context];
-	OO_CHECK(holder != nil && [holder oo_jsValueInContext:context] == object);
+	oo::Ref<OOJSValue> holder = OOJSValue::valueWithJSValue(object, context);
+	OO_CHECK(holder != nullptr && holder->jsValueInContext(context) == object);
+	[[[TestValueKeeper alloc] initWithValue:holder] autorelease];	// what the game's autorelease keepers do (OOScriptAutorelease())
 	OOJSRelinquishContext(context);
 }
 

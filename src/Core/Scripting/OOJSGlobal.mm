@@ -331,7 +331,7 @@ static bool GlobalGetProperty(Context cx, Object obj, PropertyId propID, Value* 
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
     case kGlobal_timeAccelerationFactor:
-        return ooscript::newNumberValue(cx, [UNIVERSE timeAccelerationFactor], value);
+        return ooscript::newNumberValue(cx, (UNIVERSE != nullptr ? UNIVERSE->getTimeAccelerationFactor() : 0.0), value);
 #endif
 
     default:
@@ -360,7 +360,8 @@ static bool GlobalSetProperty(Context cx, Object obj, PropertyId propID, bool /*
     switch (ooscript::idToInt32(propID)) {
     case kGlobal_timeAccelerationFactor:
         if (ooscript::valueToNumber(cx, *value, &fValue)) {
-            [UNIVERSE setTimeAccelerationFactor:fValue];
+            if (UNIVERSE != nullptr)
+                UNIVERSE->setTimeAccelerationFactor(fValue);
             return true;
         }
         break;
@@ -416,7 +417,7 @@ static bool GlobalLog(ooscript::Context context, ooscript::CallArgs& oojsArgs)
     OO_LOG(messageClass, "{}", message.value_or("(null)"));
 
 #if OOJSENGINE_MONITOR_SUPPORT
-    cxx::OOJavaScriptEngine::sharedEngine()->sendMonitorLogMessage(message, std::nullopt, context);
+    OOJavaScriptEngine::sharedEngine()->sendMonitorLogMessage(message, std::nullopt, context);
 #endif
     OOJS_END_FULL_NATIVE
 
@@ -502,7 +503,7 @@ static bool GlobalExpandMissionText(ooscript::Context context, ooscript::CallArg
         overrides = OOJSDictionaryFromStringTable(context, OOJS_ARGV[1]);
     }
 
-    const oo::PList missionText = [UNIVERSE cxx_missiontext];
+    const oo::PList missionText = (UNIVERSE != nullptr ? UNIVERSE->getMissiontext() : oo::PList());
     string = StringFromPList(missionText.find(*string)); // -objectForKey:
     if (string.has_value())
         string = cxx_OOExpandDescriptionString(kNilRandomSeed, *string, overrides, oo::PList(), std::nullopt, kOOExpandForJavaScript | kOOExpandBackslashN | kOOExpandGoodRNG); // nil expanded to nil
@@ -575,7 +576,7 @@ static bool GlobalRandomInhabitantsDescription(ooscript::Context context, ooscri
     }
 
     make_pseudo_random_seed(&aSeed);
-    string = [UNIVERSE cxx_getSystemInhabitants:Ranrot() % OO_SYSTEMS_PER_GALAXY plural:(isPlural ? true : false)];
+    string = (UNIVERSE != nullptr ? UNIVERSE->getSystemInhabitants(Ranrot() % OO_SYSTEMS_PER_GALAXY, (isPlural ? true : false)) : std::optional<std::string>());
     OOJS_RETURN_STRING_OR_NULL(string);
 
     OOJS_NATIVE_EXIT
@@ -725,8 +726,8 @@ static bool GlobalSetScreenBackground(ooscript::Context context, ooscript::CallA
         return false;
     }
 
-    if ([UNIVERSE viewDirection] == VIEW_GUI_DISPLAY) {
-        GuiDisplayGen* gui = [UNIVERSE gui];
+    if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }) == VIEW_GUI_DISPLAY) {
+        GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
         oo::PList descriptor = gui->textureDescriptorFromJSValue(value, context, "setScreenBackground()");
 
         result = gui->setBackgroundTextureDescriptor(descriptor);
@@ -759,7 +760,7 @@ static bool GlobalGetScreenBackgroundForKey(ooscript::Context context, ooscript:
         cxx_OOJSReportBadArguments(context, std::nullopt, "getScreenBackgroundDefault", 0, OOJS_ARGV, std::nullopt, "key");
         return false;
     }
-    OOJS_RETURN_PLIST([UNIVERSE cxx_screenTextureDescriptorForKey:*key]);
+    OOJS_RETURN_PLIST((UNIVERSE != nullptr ? UNIVERSE->screenTextureDescriptorForKey(*key) : oo::PList()));
 
     OOJS_NATIVE_EXIT
 }
@@ -786,10 +787,11 @@ static bool GlobalSetScreenBackgroundForKey(ooscript::Context context, ooscript:
         return false;
     }
 
-    GuiDisplayGen* gui = [UNIVERSE gui];
+    GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     oo::PList descriptor = gui->textureDescriptorFromJSValue(value, context, "setScreenBackgroundDefault()");
 
-    [UNIVERSE cxx_setScreenTextureDescriptorForKey:*key descriptor:descriptor]; // (its Foundation round trip was the identity for this JavaScript-derived dictionary)
+    if (UNIVERSE != nullptr)
+        UNIVERSE->setScreenTextureDescriptorForKey(*key, descriptor); // (its Foundation round trip was the identity for this JavaScript-derived dictionary)
     result = true;
 
     OOJS_RETURN_BOOL(result);
@@ -815,8 +817,8 @@ static bool GlobalSetScreenOverlay(ooscript::Context context, ooscript::CallArgs
         return false;
     }
 
-    if ([UNIVERSE viewDirection] == VIEW_GUI_DISPLAY) {
-        GuiDisplayGen* gui = [UNIVERSE gui];
+    if ((UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID { }) == VIEW_GUI_DISPLAY) {
+        GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
         oo::PList descriptor = gui->textureDescriptorFromJSValue(value, context, "setScreenOverlay()");
 
         result = gui->setForegroundTextureDescriptor(descriptor);
@@ -848,7 +850,7 @@ static bool GlobalGetGuiColorSettingForKey(ooscript::Context context, ooscript::
         return false;
     }
 
-    GuiDisplayGen* gui = [UNIVERSE gui];
+    GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     oo::Ref<OOColor> col = gui->colorFromSetting(key, nil);
 
     // The components as the colour's -normalizedArray gave them: floats, nil for no colour.
@@ -896,7 +898,7 @@ static bool GlobalSetGuiColorSettingForKey(ooscript::Context context, ooscript::
         }
     }
 
-    GuiDisplayGen* gui = [UNIVERSE gui];
+    GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     gui->setGuiColorSettingFromKey(*key, col.get());
     result = true;
 
@@ -961,7 +963,7 @@ static bool GlobalTakeSnapShot(ooscript::Context context, ooscript::CallArgs& oo
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = [[UNIVERSE gameView] cxx_snapShot:value];
+    result = (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr ? UNIVERSE->getGameView()->snapShot(value) : false);
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_BOOL(result);
@@ -987,7 +989,7 @@ static bool GlobalAutoAIForRole(ooscript::Context context, ooscript::CallArgs& o
         return false;
     }
 
-    const oo::PList autoAIMap = [ResourceManager cxx_dictionaryFromFilesNamed:"autoAImap.plist" inFolder:"Config" andMerge:true];
+    const oo::PList autoAIMap = ResourceManager::dictionaryFromFilesNamed("autoAImap.plist", "Config", true);
     std::optional<std::string> autoAI = StringFromPList(autoAIMap.find(*string));
 
     OOJS_RETURN_STRING_OR_NULL(autoAI);
@@ -1010,7 +1012,8 @@ static bool GlobalPauseGame(ooscript::Context context, ooscript::CallArgs& oojsA
         OOGUIScreenID guiScreen = (player != nullptr ? player->guiScreen() : OOGUIScreenID { });
 
         if (guiScreen != GUI_SCREEN_LONG_RANGE_CHART && guiScreen != GUI_SCREEN_MISSION && guiScreen != GUI_SCREEN_REPORT && guiScreen != GUI_SCREEN_KEYBOARD_ENTRY && guiScreen != GUI_SCREEN_SAVE) {
-            [UNIVERSE pauseGame];
+            if (UNIVERSE != nullptr)
+                UNIVERSE->pauseGame();
             result = true;
         }
     }
@@ -1030,7 +1033,8 @@ static bool GlobalQuitGame(ooscript::Context context, ooscript::CallArgs& oojsAr
 
     OO_LOG("script.debug.quit", "{}", "Quit requested via JavaScript global.quitGame()");
 
-    [UNIVERSE quitGame];
+    if (UNIVERSE != nullptr)
+        UNIVERSE->quitGame();
 
     OOJS_RETURN_BOOL(true);
 

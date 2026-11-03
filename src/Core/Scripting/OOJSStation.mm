@@ -72,7 +72,8 @@ MA 02110-1301, USA.
         definition is C++ since bead oo-9ht.61 deleted its façade, and the station keeps it as oo::Ref.
         The station is C++ since bead oo-9ht.175 deleted its facade: its members are called (its object,
         a ship's, is the JS object's; the ship is C++ since bead oo-9ht.144). Messages to classes that
-        are still Objective-C (Universe, GameController, OOShipRegistry) stay as they are, which is why the file is
+        are still Objective-C (Universe, GameController) stay as they are (the ship registry is C++ since bead
+        oo-9ht.122), which is why the file is
         still .mm until Phase 4.
 */
 
@@ -218,7 +219,7 @@ static ClassDef sStationClass = {
     nullptr, // newEnumerate (ooscript::ClassFlag::NewEnumerate not used)
     nullptr, // resolve (engine default: ResolveStub)
     nullptr, // convert (engine default: ConvertStub)
-    OOJSObjectWrapperFinalize, // finalize
+    OOJSCxxObjectWrapperFinalize, // finalize
     nullptr, // call
     nullptr, // construct
     nullptr, // backend: owned by the façade backend, must start null
@@ -332,7 +333,7 @@ void InitOOJSStation(ooscript::Context context, ooscript::Object global)
 {
     Object proto = ooscript::initClass((context), (global), (JSShipPrototype()), &sStationClass, OOJSUnconstructableConstruct, 0, sStationProperties, sStationMethods, NULL, NULL);
     sStationPrototype = (proto);
-    OOJSRegisterObjectConverter(&sStationClass, OOJSBasicPrivateObjectConverter);
+    OOJSRegisterObjectConverter(&sStationClass, OOJSEntityObjectConverter);
     OOJSRegisterSubclass(&sStationClass, JSShipClass());
 }
 
@@ -342,7 +343,7 @@ static bool JSStationGetStationEntity(ooscript::Context context, ooscript::Objec
     OOJS_PROFILE_ENTER
 
     bool result;
-    Entity* entity = nil;
+    Entity* entity = nullptr; // the slot holds the C++ entity (bead oo-9ht.39.3)
 
     if (outEntity == NULL)
         return false;
@@ -371,7 +372,7 @@ static bool JSStationGetShipEntity(ooscript::Context context, ooscript::Object s
     OOJS_PROFILE_ENTER
 
     bool result;
-    Entity* entity = nil;
+    Entity* entity = nullptr; // the slot holds the C++ entity (bead oo-9ht.39.3)
 
     if (outEntity == NULL)
         return false;
@@ -427,7 +428,7 @@ static bool StationGetProperty(Context cx, Object obj, PropertyId propID, Value*
 
     switch (ooscript::idToInt32(propID)) {
     case kStation_isMainStation:
-        *value_raw = OOJSValueFromBOOL(entity == [UNIVERSE station]);
+        *value_raw = OOJSValueFromBOOL(entity == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr));
         return true;
 
     case kStation_hasNPCTraffic:
@@ -724,14 +725,15 @@ static bool StationDockPlayer(ooscript::Context context, ooscript::CallArgs& ooj
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    GameController* gameController = [UNIVERSE gameController];
+    GameController* gameController = (UNIVERSE != nullptr ? UNIVERSE->gameController() : nullptr);
 
-    if (EXPECT_NOT([gameController isGamePaused])) {
+    if (EXPECT_NOT((gameController != nullptr ? gameController->isGamePaused() : false))) {
         /*	Station.dockPlayer() was executed while the game was in pause.
                 Do we want to return an error or just unpause and continue?
                 I think unpausing is the sensible thing to do here - Nikos 20110208
         */
-        [gameController setGamePaused:false];
+        if (gameController != nullptr)
+            gameController->setGamePaused(false);
     }
 
     if (EXPECT(!(player != nullptr ? player->PlayerEntity::isDocked() : false))) // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
@@ -742,7 +744,8 @@ static bool StationDockPlayer(ooscript::Context context, ooscript::CallArgs& ooj
             player->setDockingClearanceStatus(DOCKING_CLEARANCE_STATUS_GRANTED);
         if (player != nullptr)
             player->PlayerEntity::safeAllMissiles(); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
-        [UNIVERSE setViewDirection:VIEW_FORWARD];
+        if (UNIVERSE != nullptr)
+            UNIVERSE->setViewDirection(VIEW_FORWARD);
         if (player != nullptr)
             player->PlayerEntity::enterDock(stationForDockingPlayer); // qualified: the final overrider (bead oo-9ht.177), so the binding test stands in for it
     }
@@ -819,14 +822,14 @@ static bool StationLaunchShipWithRole(ooscript::Context context, ooscript::CallA
         ooscript::valueToBoolean((context), (OOJS_ARGV[1]), &abortAllDockings);
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = oo::ToShip(oo::ObjectIn((station != nullptr ? station->launchIndependentShip(*shipRole) : oo::PList())));
+    result = oo::ToShip(oo::EntityIn((station != nullptr ? station->launchIndependentShip(*shipRole) : oo::PList()))); // the ship's entity node (bead oo-9ht.39.5.3)
     if (abortAllDockings) {
         if (station != nullptr)
             station->abortAllDockings();
     }
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_OBJECT(oo::ToObjC(result));
+    OOJS_RETURN(OOJSValueFromCxxObject(context, result)); // the C++ ship's JS value (its object's until bead oo-9ht.39.8.2)
     OOJS_NATIVE_EXIT
 }
 } // namespace
@@ -844,7 +847,7 @@ static bool StationLaunchDefenseShip(ooscript::Context context, ooscript::CallAr
     OOJS_BEGIN_FULL_NATIVE(context)
     launched = (station != nullptr ? station->launchDefenseShip() : (::ShipEntity*)nil);
     OOJS_END_FULL_NATIVE
-    OOJS_RETURN_OBJECT(oo::ToObjC(launched));
+    OOJS_RETURN(OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value (its object's until bead oo-9ht.39.8.2)
 
     OOJS_NATIVE_EXIT
 }
@@ -863,7 +866,7 @@ static bool StationLaunchEscort(ooscript::Context context, ooscript::CallArgs& o
     OOJS_BEGIN_FULL_NATIVE(context)
     launched = (station != nullptr ? station->launchEscort() : (::ShipEntity*)nil);
     OOJS_END_FULL_NATIVE
-    OOJS_RETURN_OBJECT(oo::ToObjC(launched));
+    OOJS_RETURN(OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value (its object's until bead oo-9ht.39.8.2)
 
     OOJS_NATIVE_EXIT
 }
@@ -882,7 +885,7 @@ static bool StationLaunchScavenger(ooscript::Context context, ooscript::CallArgs
     OOJS_BEGIN_FULL_NATIVE(context)
     launched = (station != nullptr ? station->launchScavenger() : (::ShipEntity*)nil);
     OOJS_END_FULL_NATIVE
-    OOJS_RETURN_OBJECT(oo::ToObjC(launched));
+    OOJS_RETURN(OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value (its object's until bead oo-9ht.39.8.2)
 
     OOJS_NATIVE_EXIT
 }
@@ -901,7 +904,7 @@ static bool StationLaunchMiner(ooscript::Context context, ooscript::CallArgs& oo
     OOJS_BEGIN_FULL_NATIVE(context)
     launched = (station != nullptr ? station->launchMiner() : (::ShipEntity*)nil);
     OOJS_END_FULL_NATIVE
-    OOJS_RETURN_OBJECT(oo::ToObjC(launched));
+    OOJS_RETURN(OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value (its object's until bead oo-9ht.39.8.2)
     OOJS_NATIVE_EXIT
 }
 } // namespace
@@ -919,7 +922,7 @@ static bool StationLaunchPirateShip(ooscript::Context context, ooscript::CallArg
     OOJS_BEGIN_FULL_NATIVE(context)
     launched = (station != nullptr ? station->launchPirateShip() : (::ShipEntity*)nil);
     OOJS_END_FULL_NATIVE
-    OOJS_RETURN_OBJECT(oo::ToObjC(launched));
+    OOJS_RETURN(OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value (its object's until bead oo-9ht.39.8.2)
 
     OOJS_NATIVE_EXIT
 }
@@ -938,7 +941,7 @@ static bool StationLaunchShuttle(ooscript::Context context, ooscript::CallArgs& 
     OOJS_BEGIN_FULL_NATIVE(context)
     launched = (station != nullptr ? station->launchShuttle() : (::ShipEntity*)nil);
     OOJS_END_FULL_NATIVE
-    OOJS_RETURN_OBJECT(oo::ToObjC(launched));
+    OOJS_RETURN(OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value (its object's until bead oo-9ht.39.8.2)
     OOJS_NATIVE_EXIT
 }
 } // namespace
@@ -956,7 +959,7 @@ static bool StationLaunchPatrol(ooscript::Context context, ooscript::CallArgs& o
     OOJS_BEGIN_FULL_NATIVE(context)
     launched = (station != nullptr ? station->launchPatrol() : (::ShipEntity*)nil);
     OOJS_END_FULL_NATIVE
-    OOJS_RETURN_OBJECT(oo::ToObjC(launched));
+    OOJS_RETURN(OOJSValueFromCxxObject(context, launched)); // the C++ ship's JS value (its object's until bead oo-9ht.39.8.2)
     OOJS_NATIVE_EXIT
 }
 } // namespace
@@ -970,11 +973,13 @@ static bool StationLaunchPolice(ooscript::Context context, ooscript::CallArgs& o
     if (!JSStationGetStationEntity(context, OOJS_THIS, &station))
         OOJS_RETURN_VOID; // stale reference, no-op
 
-    std::vector<oo::ObjCRef<::Entity*>> launched;
+    oo::PList::Array launched; // the launched ships' entity nodes, in order (bead oo-9ht.39.5.3)
     OOJS_BEGIN_FULL_NATIVE(context)
-    launched = oo::ObjCRefsIn<::Entity*>((station != nullptr ? station->launchPolice() : oo::PList()));
+    const oo::PList police = (station != nullptr ? station->launchPolice() : oo::PList());
+    for (Entity* ship : oo::EntitiesIn(police))
+        launched.push_back(oo::EntityObjectNode(ship));
     OOJS_END_FULL_NATIVE
-    OOJS_RETURN_PLIST(oo::PListFromObjects(launched));
+    OOJS_RETURN_PLIST(oo::PList(std::move(launched)));
     OOJS_NATIVE_EXIT
 }
 } // namespace
@@ -1095,7 +1100,7 @@ static bool StationSetMarketPrice(ooscript::Context context, ooscript::CallArgs&
     }
 
     std::optional<std::string> commodity = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
-    OOCommodities* commodities = [UNIVERSE commodities]; // null: no good is defined, as a message to nil
+    OOCommodities* commodities = (UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr); // null: no good is defined, as a message to nil
     if (EXPECT_NOT(commodities == nullptr || !commodities->goodDefined(commodity.value_or("")))) {
         cxx_OOJSReportBadArguments(context, "Station", "setMarketPrice", MIN(oojsArgs.count(), 2U), OOJS_ARGV, std::nullopt, "Unrecognised commodity type");
         return false;
@@ -1138,7 +1143,7 @@ static bool StationSetMarketQuantity(ooscript::Context context, ooscript::CallAr
     }
 
     const std::string commodity = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]).value_or("");
-    OOCommodities* commodities = [UNIVERSE commodities]; // null: no good is defined, as a message to nil
+    OOCommodities* commodities = (UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr); // null: no good is defined, as a message to nil
     if (EXPECT_NOT(commodities == nullptr || !commodities->goodDefined(commodity))) {
         cxx_OOJSReportBadArguments(context, "Station", "setMarketQuantity", MIN(oojsArgs.count(), 2U), OOJS_ARGV, std::nullopt, "Unrecognised commodity type");
         return false;
@@ -1233,14 +1238,14 @@ static bool StationAddShipToShipyard(ooscript::Context context, ooscript::CallAr
     }
     // get the shipInfo and shipyardInfo for this key
     const std::optional<std::string> shipKey = StringForKey(shipyardDefinition, std::string(SHIPYARD_KEY_SHIPDATA_KEY));
-    OOShipRegistry* registry = [OOShipRegistry sharedRegistry];
+    OOShipRegistry* registry = OOShipRegistry::sharedRegistry();
     // A copy of the registry's entry: -dictionaryWithDictionary: made an empty one for an unknown
     // key, never nil, so an unknown key goes on to the tests below (its "Invalid shipdata_key" test
     // could not fire and is gone).
-    oo::PList shipInfo = (shipKey.has_value() ? [registry cxx_shipInfoForKey:*shipKey] : oo::PList());
+    oo::PList shipInfo = (shipKey.has_value() ? registry->shipInfoForKey(*shipKey) : oo::PList());
     if (!shipInfo.isDict())
         shipInfo = oo::PList(oo::PList::Dict());
-    const oo::PList shipyardInfo = (shipKey.has_value() ? [registry cxx_shipyardInfoForKey:*shipKey] : oo::PList());
+    const oo::PList shipyardInfo = (shipKey.has_value() ? registry->shipyardInfoForKey(*shipKey) : oo::PList());
     // make sure the ship is a player ship (no roles string searched as a nil receiver: found at 0)
     const std::optional<std::string> roles = StringForKey(shipInfo, "roles");
     if (roles.has_value() && roles->find("player") == std::string::npos) {
@@ -1255,7 +1260,7 @@ static bool StationAddShipToShipyard(ooscript::Context context, ooscript::CallAr
     result[std::string(SHIPYARD_KEY_SHIPDATA_KEY)] = *shipKey; // non-nil: a nil key found no shipyard information above
 
     // add an ID
-    Random_Seed ship_seed = [UNIVERSE marketSeed];
+    Random_Seed ship_seed = (UNIVERSE != nullptr ? UNIVERSE->marketSeed() : Random_Seed { });
     int superRand1 = ship_seed.a * 0x10000 + ship_seed.c * 0x100 + ship_seed.e;
     uint32_t superRand2 = ship_seed.b * 0x10000 + ship_seed.d * 0x100 + ship_seed.f;
     superRand2 &= Ranrot();
@@ -1370,7 +1375,7 @@ static bool StationRemoveShipFromShipyard(ooscript::Context context, ooscript::C
     bool gotIndex = true;
     gotIndex = ooscript::valueToInt32((context), (OOJS_ARGV[0]), &shipIndex);
 
-    if (oojsArgs.count() != 1 || (!ooscript::isNull(OOJS_ARGV[0]) && !gotIndex) || shipIndex < 0 || (shipIndex + 1) > (shipyard != nullptr ? shipyard->size() : 0)) {
+    if (oojsArgs.count() != 1 || (!ooscript::isNull(OOJS_ARGV[0]) && !gotIndex) || shipIndex < 0 || static_cast<std::size_t>(shipIndex) + 1 > (shipyard != nullptr ? shipyard->size() : 0)) {
         cxx_OOJSReportBadArguments(context, "Station", "removeShipFromShipyard", MIN(oojsArgs.count(), 1U), OOJS_ARGV, std::nullopt, "valid ship index");
         return false;
     }
