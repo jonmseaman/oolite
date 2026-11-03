@@ -47,7 +47,7 @@ MA 02110-1301, USA.
 #ifndef OOSCRIPT_H
 #define OOSCRIPT_H
 
-#import "OOFoundation.h"
+#include "OOFoundation.h"
 #include "OOJSPrivateObject.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"

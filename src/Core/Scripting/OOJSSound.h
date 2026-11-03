@@ -25,7 +25,7 @@ MA 02110-1301, USA.
 */
 
 #pragma once
-#import "OOFoundation.h"
+#include "OOFoundation.h"
 #include "OOJSPrivateObject.h"
 #include "oofnd/Ref.hpp"
 #include "ooscript/JSEngine.hpp"

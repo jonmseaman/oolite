@@ -31,7 +31,7 @@ MA 02110-1301, USA.
 #ifndef OOSHIPGROUP_H
 #define OOSHIPGROUP_H
 
-#import "OOFoundation.h"
+#include "OOFoundation.h"
 #include "ooscript/JSEngine.hpp"
 
 #include "OOEntityHold.h" // memberArray() (bead oo-xn1j1)
@@ -39,7 +39,6 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "oofnd/objc/OOObjCRef.h"
 
 #include <vector>
 

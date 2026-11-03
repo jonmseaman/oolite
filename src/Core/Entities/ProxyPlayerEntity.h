@@ -31,7 +31,9 @@ MA 02110-1301, USA.
 
 */
 
-#import "PlayerEntity.h"
+#pragma once
+
+#include "PlayerEntity.h"
 
 /*	The proxy's state and methods. Its ship part is ShipEntity's. C++ only since bead oo-9ht.183
         deleted its Objective-C facade (ADR-0056 amendment oo-9ht.183): newProxyObject() makes it and its

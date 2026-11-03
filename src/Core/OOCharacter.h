@@ -31,15 +31,14 @@ MA 02110-1301, USA.
 #ifndef OOCHARACTER_H
 #define OOCHARACTER_H
 
-#import "OOJSPropID.h"
-#import "OOTypes.h"
-#import "legacy_random.h"
+#include "OOJSPropID.h"
+#include "OOTypes.h"
+#include "legacy_random.h"
 #include "ooscript/JSEngine.hpp"
 
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
-#include "oofnd/objc/OOObjCRef.h"
 
 #include "OOScript.h" // oo::Ref<OOScript> members and results (bead oo-9ht.133)
 

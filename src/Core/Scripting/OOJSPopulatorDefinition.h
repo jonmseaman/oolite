@@ -30,8 +30,8 @@ MA 02110-1301, USA.
 #ifndef OOJSPOPULATORDEFINITION_H
 #define OOJSPOPULATORDEFINITION_H
 
-#import "OOFoundation.h"
-#import "OOMaths.h"
+#include "OOFoundation.h"
+#include "OOMaths.h"
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include "ooscript/JSEngine.hpp"

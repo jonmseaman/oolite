@@ -35,15 +35,15 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#import "GuiDisplayGen.h"
-#import "OOCommodityMarket.h"
-#import "OOFoundation.h"
-#import "OOJSPropID.h"
-#import "OOLaserShotEntity.h"
-#import "OOTrumble.h"
-#import "OOTypes.h"
-#import "ShipEntity.h"
-#import "WormholeEntity.h"
+#include "GuiDisplayGen.h"
+#include "OOCommodityMarket.h"
+#include "OOFoundation.h"
+#include "OOJSPropID.h"
+#include "OOLaserShotEntity.h"
+#include "OOTrumble.h"
+#include "OOTypes.h"
+#include "ShipEntity.h"
+#include "WormholeEntity.h"
 #include "ooscript/JSEngine.hpp"
 
 #include "oofnd/PList.hpp"
@@ -54,11 +54,11 @@ MA 02110-1301, USA.
 class MyOpenGLView;
 class ShipEntity; // C++ since bead oo-9ht.144
 class GuiDisplayGen;
-#import "HeadUpDisplay.h" // C++ since bead oo-mwd58: the player keeps its HUD (oo::Ref)
+#include "HeadUpDisplay.h" // C++ since bead oo-mwd58: the player keeps its HUD (oo::Ref)
 class OOSound; // C++ since bead oo-9ht.68 deleted its facade
 class OOSoundSource; // C++ since bead oo-9ht.88 deleted its facade
 class OOTexture;
-#import "OOJSGuiScreenKeyDefinition.h" // C++ since bead oo-9ht.62: extraGuiScreenKeys keeps it (oo::Ref)
+#include "OOJSGuiScreenKeyDefinition.h" // C++ since bead oo-9ht.62: extraGuiScreenKeys keeps it (oo::Ref)
 #include "OOScript.h" // oo::Ref<OOScript> members and results (bead oo-9ht.133)
 class StickProfileScreen; // C++ (PlayerEntityStickProfile.h, bead oo-movn)
 

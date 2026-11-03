@@ -33,14 +33,13 @@ MA 02110-1301, USA.
 #ifndef UNIVERSE_VIRTUAL_MEMBERS_H
 #define UNIVERSE_VIRTUAL_MEMBERS_H
 
-#import "OOEntityEnums.h" // OOScanClass
-#import "OOEntityHold.h" // owning entity references (bead oo-9ht.39.26)
-#import "OOFoundation.h"
-#import "OOMaths.h"
-#import "OOSystemDescriptionManager.h" // OOSystemLayer
-#import "OOTypes.h"
+#include "OOEntityEnums.h" // OOScanClass
+#include "OOEntityHold.h" // owning entity references (bead oo-9ht.39.26)
+#include "OOFoundation.h"
+#include "OOMaths.h"
+#include "OOSystemDescriptionManager.h" // OOSystemLayer
+#include "OOTypes.h"
 #include "oofnd/PList.hpp"
-#include "oofnd/objc/OOObjCRef.h"
 
 #include <map>
 #include <optional>
@@ -49,7 +48,6 @@ MA 02110-1301, USA.
 
 class Entity;
 class MyOpenGLView;
-@protocol OOBeaconEntity;
 class StationEntity;
 class OOPlanetEntity;
 class OOSunEntity;

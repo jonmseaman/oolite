@@ -30,12 +30,11 @@ MA 02110-1301, USA.
 #ifndef OOTRUMBLE_H
 #define OOTRUMBLE_H
 
-#import "OOFoundation.h"
-#import "OOOpenGL.h"
+#include "OOFoundation.h"
+#include "OOOpenGL.h"
 
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
-#include "oofnd/objc/OOObjCRef.h"
 
 class AI; // C++ since bead oo-9ht.73 (AI.h)
 class OOTexture;

@@ -43,8 +43,10 @@ MA 02110-1301, USA.
 
 */
 
-#import "OOFoundation.h"
-#import "oofnd/objc/OOObject.h"
+#pragma once
+
+#include "OOFoundation.h"
+#include "oofnd/objc/OOObject.h"
 
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
@@ -163,7 +165,7 @@ inline constexpr std::string_view BUTTON_SETTINGS = "JoystickButs"; // oo::Defau
 inline constexpr std::string_view STICK_ISAXIS = "isAxis"; // YES=axis NO=button
 inline constexpr std::string_view STICK_NUMBER = "stickNum"; // Stick number 0 to 4
 inline constexpr std::string_view STICK_AXBUT = "stickAxBt"; // Axis or button number
-#define STICK_FUNCTION @"stickFunc" // Function of axis/button
+#define STICK_FUNCTION "stickFunc" // Function of axis/button
 inline constexpr std::string_view STICK_ROLL_AXIS_PROFILE_SETTING = "RollAxisProfile"; // Joystick Profiles
 inline constexpr std::string_view STICK_PITCH_AXIS_PROFILE_SETTING = "PitchAxisProfile"; // Joystick Profiles
 inline constexpr std::string_view STICK_YAW_AXIS_PROFILE_SETTING = "YawAxisProfile"; // Joystick Profiles
@@ -175,7 +177,7 @@ inline constexpr std::string_view STICK_YAW_AXIS_PROFILE_SETTING = "YawAxisProfi
 
 #if OOLITE_SDL
 
-#import <SDL3/SDL_events.h>
+#include <SDL3/SDL_events.h>
 
 enum {
     JOYAXISMOTION = SDL_EVENT_JOYSTICK_AXIS_MOTION,
@@ -249,7 +251,7 @@ typedef struct
 
 #endif // OOLITE_SDL
 
-#import "OOJoystickProfile.h"
+#include "OOJoystickProfile.h"
 #include "oofnd/String.hpp"
 
 class OOJoystickManager : public oo::RefCounted {

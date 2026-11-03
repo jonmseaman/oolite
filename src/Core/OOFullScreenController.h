@@ -26,14 +26,16 @@ MA 02110-1301, USA.
 
 */
 
-#import "OOFoundation.h"
-#import "OOMouseInteractionMode.h"
+#pragma once
+
+#include "OOFoundation.h"
+#include "OOMouseInteractionMode.h"
 
 #include "oofnd/PList.hpp"
 #include "oofnd/Ref.hpp"
 #include <string_view>
 
-#import "MyOpenGLView.h" // oo::Ref<MyOpenGLView> (C++ since bead oo-9ht.153)
+#include "MyOpenGLView.h" // oo::Ref<MyOpenGLView> (C++ since bead oo-9ht.153)
 
 /*	Display-mode dictionary keys. On Mac OS X they were CoreGraphics' kCGDisplay* constants, whose
         values are these same strings (CFSTR("Width") and so on), so a mode dictionary answers to either.

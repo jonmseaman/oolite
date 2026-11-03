@@ -32,8 +32,8 @@ SOFTWARE.
 #define INCLUDED_OOPROFILINGSTOPWATCH_h
 
 #ifndef OOSTOPWATCH_STANDALONE
-#ifdef __OBJC__
-#import "OOFoundation.h"
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit until bead oo-dbz), not a plain C++ one
+#include "OOFoundation.h"
 #else
 /*	A plain C++ translation unit (bead oo-9ht.72: the JS bindings, through
         OOJSEngineNativeWrappers.h) cannot parse OOCocoa.h's Objective-C class declarations. The one platform switch
