@@ -148,7 +148,7 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
 
 - (void)resetStickFunctions
 {
-    stickFunctions.clear();
+    _cxxPlayer->stickFunctions.clear();
 }
 
 - (void)setGuiToStickMapperScreen:(unsigned)skip
@@ -170,7 +170,7 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
     tabStop[2] = 400;
     [gui setTabStops:tabStop];
 
-    gui_screen = GUI_SCREEN_STICKMAPPER;
+    _cxxPlayer->gui_screen = GUI_SCREEN_STICKMAPPER;
     [gui clear];
     [gui cxx_setTitle:"Configure Joysticks"];
 
@@ -224,12 +224,12 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
 
     // Don't do anything if the user is supposed to be selecting
     // a function - other than look for Escape.
-    if (waitingForStickCallback) {
+    if (_cxxPlayer->waitingForStickCallback) {
         if ([gameView isDown:27]) {
             [stickHandler clearCallback];
             [gui cxx_setArray:std::vector<std::string> { "Function setting aborted." }
                        forRow:GUI_ROW_INSTRUCT];
-            waitingForStickCallback = NO;
+            _cxxPlayer->waitingForStickCallback = NO;
         }
 
         // Break out now.
@@ -245,9 +245,9 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
 
     const std::optional<std::string> key = [gui cxx_keyForRow:[gui selectedRow]];
     if (key.has_value() && oo::str::hasPrefix(*key, "Index:"))
-        selFunctionIdx = NumberAfterColon(*key);
+        _cxxPlayer->selFunctionIdx = NumberAfterColon(*key);
     else
-        selFunctionIdx = -1;
+        _cxxPlayer->selFunctionIdx = -1;
 
     if ([gameView isDown:13]) {
         if (key.has_value() && oo::str::hasPrefix(*key, "More:")) {
@@ -263,7 +263,7 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
             return;
         }
 
-        const oo::PList& entry = StickFunctionAt(stickFunctions, selFunctionIdx);
+        const oo::PList& entry = StickFunctionAt(_cxxPlayer->stickFunctions, _cxxPlayer->selFunctionIdx);
         int hw = IntValueForKey(entry, KEY_ALLOWABLE);
         [stickHandler setCallback:@selector(updateFunction:)
                            object:self
@@ -282,12 +282,12 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
             instructions = "Press the button or deflect the axis you want to use for this function.";
         }
         [gui cxx_setArray:std::vector<std::string> { instructions } forRow:GUI_ROW_INSTRUCT];
-        waitingForStickCallback = YES;
+        _cxxPlayer->waitingForStickCallback = YES;
     }
 
     if ([gameView isDown:'u']) {
-        if (selFunctionIdx >= 0)
-            [self removeFunction:selFunctionIdx];
+        if (_cxxPlayer->selFunctionIdx >= 0)
+            [self removeFunction:_cxxPlayer->selFunctionIdx];
     }
 }
 
@@ -296,16 +296,16 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
 - (void)updateFunction:(const oo::PList&)hwDict // called by name (joystick callback, ADR-0055 item 5)
 {
     OOJoystickManager* stickHandler = [OOJoystickManager sharedStickHandler];
-    waitingForStickCallback = NO;
+    _cxxPlayer->waitingForStickCallback = NO;
 
     // Right time and the right place?
-    if (gui_screen != GUI_SCREEN_STICKMAPPER) {
+    if (_cxxPlayer->gui_screen != GUI_SCREEN_STICKMAPPER) {
         OO_LOG("joystick.configure.error", "{} called when not on stick mapper screen.", __PRETTY_FUNCTION__);
         return;
     }
     // What moved?
     int function;
-    const oo::PList& entry = StickFunctionAt(stickFunctions, selFunctionIdx);
+    const oo::PList& entry = StickFunctionAt(_cxxPlayer->stickFunctions, _cxxPlayer->selFunctionIdx);
     if (hwDict.get<bool>(std::string(STICK_ISAXIS))) {
         function = entry.get<int>(KEY_AXISFN);
         if (function == AXIS_THRUST) {
@@ -352,10 +352,10 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
             key = std::string(CUSTOMEQUIP_BUTTONMODE);
         }
         // the customEquipActivation entry is edited in place
-        if (oo::PList::Dict* custEquipDict = CustomEquipFields(customEquipActivation, function))
+        if (oo::PList::Dict* custEquipDict = CustomEquipFields(_cxxPlayer->customEquipActivation, function))
             (*custEquipDict)[key] = hwDict;
         [self checkCustomEquipButtons:hwDict ignore:function];
-        oo::Defaults::standard().setObject(std::string(KEYCONFIG_CUSTOMEQUIP), oo::PList(customEquipActivation));
+        oo::Defaults::standard().setObject(std::string(KEYCONFIG_CUSTOMEQUIP), oo::PList(_cxxPlayer->customEquipActivation));
     } else {
         [stickHandler setFunction:function withDict:hwDict];
         [self checkCustomEquipButtons:hwDict ignore:-1];
@@ -364,10 +364,10 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
 
     // Update the GUI (this will refresh the function list).
     unsigned skip;
-    if (selFunctionIdx < MAX_ROWS_FUNCTIONS - 1) {
+    if (_cxxPlayer->selFunctionIdx < MAX_ROWS_FUNCTIONS - 1) {
         skip = 0;
     } else {
-        skip = ((selFunctionIdx - 1) / (MAX_ROWS_FUNCTIONS - 2)) * (MAX_ROWS_FUNCTIONS - 2) + 1;
+        skip = ((_cxxPlayer->selFunctionIdx - 1) / (MAX_ROWS_FUNCTIONS - 2)) * (MAX_ROWS_FUNCTIONS - 2) + 1;
     }
 
     [self setGuiToStickMapperScreen:skip];
@@ -380,10 +380,10 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
     const std::string activateKey = std::string(CUSTOMEQUIP_BUTTONACTIVATE);
     const std::string modeKey = std::string(CUSTOMEQUIP_BUTTONMODE);
     int i;
-    for (i = 0; i < customEquipActivation.size(); i++) {
+    for (i = 0; i < _cxxPlayer->customEquipActivation.size(); i++) {
         if (i != idx) {
-            const oo::PList original = customEquipActivation[i];
-            oo::PList& custEquip = customEquipActivation[i]; // edited in place
+            const oo::PList original = _cxxPlayer->customEquipActivation[i];
+            oo::PList& custEquip = _cxxPlayer->customEquipActivation[i]; // edited in place
             oo::PList::Dict* custEquipDict = custEquip.getIf<oo::PList::Dict>();
             const oo::PList* bf = original.find(activateKey);
             if (IntegerIn(bf, stickNumberKey) == stickFn.get<NSInteger>(stickNumberKey) && IntegerIn(bf, stickAxBtKey) == stickFn.get<NSInteger>(stickAxBtKey) && custEquip.find(activateKey) != nullptr) {
@@ -400,11 +400,11 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
 - (void)removeFunction:(int)idx
 {
     OOJoystickManager* stickHandler = [OOJoystickManager sharedStickHandler];
-    const oo::PList& entry = StickFunctionAt(stickFunctions, idx);
+    const oo::PList& entry = StickFunctionAt(_cxxPlayer->stickFunctions, idx);
     const oo::PList* butfunc = entry.find(KEY_BUTTONFN); // -intValue as before
     const oo::PList* axfunc = entry.find(KEY_AXISFN);
     BOOL custom = NO;
-    selFunctionIdx = idx;
+    _cxxPlayer->selFunctionIdx = idx;
 
     // Some things can have either axis or buttons - make sure we clear
     // both!
@@ -420,7 +420,7 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
                 key = std::string(CUSTOMEQUIP_BUTTONMODE);
             }
             // edited in place; both tests reduce to "remove key if present"
-            if (oo::PList::Dict* custEquipDict = CustomEquipFields(customEquipActivation, bf))
+            if (oo::PList::Dict* custEquipDict = CustomEquipFields(_cxxPlayer->customEquipActivation, bf))
                 custEquipDict->erase(key);
         } else {
             [stickHandler unsetButtonFunction:IntValueOf(*butfunc)];
@@ -432,14 +432,14 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
     if (!custom) {
         [stickHandler saveStickSettings];
     } else {
-        oo::Defaults::standard().setObject(std::string(KEYCONFIG_CUSTOMEQUIP), oo::PList(customEquipActivation));
+        oo::Defaults::standard().setObject(std::string(KEYCONFIG_CUSTOMEQUIP), oo::PList(_cxxPlayer->customEquipActivation));
     }
 
     unsigned skip;
-    if (selFunctionIdx < MAX_ROWS_FUNCTIONS - 1)
+    if (_cxxPlayer->selFunctionIdx < MAX_ROWS_FUNCTIONS - 1)
         skip = 0;
     else
-        skip = ((selFunctionIdx - 1) / (MAX_ROWS_FUNCTIONS - 2)) * (MAX_ROWS_FUNCTIONS - 2) + 1;
+        skip = ((_cxxPlayer->selFunctionIdx - 1) / (MAX_ROWS_FUNCTIONS - 2)) * (MAX_ROWS_FUNCTIONS - 2) + 1;
     [self setGuiToStickMapperScreen:skip];
 }
 
@@ -452,14 +452,14 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
     [gui cxx_setArray:std::vector<std::string> { "Function", "Assigned to", "Type" }
                forRow:GUI_ROW_HEADING];
 
-    if (stickFunctions.empty()) // (the list is never empty once built)
+    if (_cxxPlayer->stickFunctions.empty()) // (the list is never empty once built)
     {
-        stickFunctions = [self stickFunctionList];
+        _cxxPlayer->stickFunctions = [self stickFunctionList];
     }
     const oo::PList assignedAxes = [stickHandler axisFunctions];
     const oo::PList assignedButs = [stickHandler buttonFunctions];
 
-    NSUInteger i, n_functions = stickFunctions.size();
+    NSUInteger i, n_functions = _cxxPlayer->stickFunctions.size();
     NSInteger n_rows, start_row, previous = 0;
 
     if (skip >= n_functions)
@@ -491,7 +491,7 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
         }
 
         for (i = 0; i < (n_functions - skip) && (int)i < n_rows; i++) {
-            const oo::PList& entry = StickFunctionAt(stickFunctions, i + skip);
+            const oo::PList& entry = StickFunctionAt(_cxxPlayer->stickFunctions, i + skip);
             if (entry.find(KEY_HEADER) != nullptr) {
                 const std::optional<std::string> header = OptionalStringForKey(entry, KEY_HEADER);
                 [gui cxx_setArray:ColumnsUpToNil({ header, std::string(), std::string() }) forRow:i + start_row];
@@ -523,7 +523,7 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
                             bf -= 10000;
                             key = std::string(CUSTOMEQUIP_BUTTONMODE);
                         }
-                        const oo::PList& custom = CustomEquipEntry(customEquipActivation, bf);
+                        const oo::PList& custom = CustomEquipEntry(_cxxPlayer->customEquipActivation, bf);
                         assignment = [self describeStickDict:custom.find(key)];
                     }
                     break;
@@ -889,17 +889,17 @@ oo::PList::Dict* CustomEquipFields(std::vector<oo::PList>& entries, NSUInteger i
                         axisfn:AXIS_FIELD_OF_VIEW
                          butfn:BUTTON_DEC_FIELD_OF_VIEW]);
 #endif
-    if (customEquipActivation.size() > 0) {
+    if (_cxxPlayer->customEquipActivation.size() > 0) {
         funcList.push_back([self makeStickGuiDictHeader:OO_DESC("stickmapper-header-oxp-equip")]);
         int i;
-        for (i = 0; i < customEquipActivation.size(); i++) {
+        for (i = 0; i < _cxxPlayer->customEquipActivation.size(); i++) {
             funcList.push_back(
-                [self makeStickGuiDict:oo::str::format("Activate '%s'", OptionalStringForKey(customEquipActivation[i], std::string(CUSTOMEQUIP_EQUIPNAME)).value_or("(null)").c_str())
+                [self makeStickGuiDict:oo::str::format("Activate '%s'", OptionalStringForKey(_cxxPlayer->customEquipActivation[i], std::string(CUSTOMEQUIP_EQUIPNAME)).value_or("(null)").c_str())
                              allowable:HW_BUTTON
                                 axisfn:STICK_NOFUNCTION
                                  butfn:(i + 10000)]);
             funcList.push_back(
-                [self makeStickGuiDict:oo::str::format("Mode '%s'", OptionalStringForKey(customEquipActivation[i], std::string(CUSTOMEQUIP_EQUIPNAME)).value_or("(null)").c_str())
+                [self makeStickGuiDict:oo::str::format("Mode '%s'", OptionalStringForKey(_cxxPlayer->customEquipActivation[i], std::string(CUSTOMEQUIP_EQUIPNAME)).value_or("(null)").c_str())
                              allowable:HW_BUTTON
                                 axisfn:STICK_NOFUNCTION
                                  butfn:(i + 20000)]);
