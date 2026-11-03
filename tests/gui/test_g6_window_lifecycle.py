@@ -876,7 +876,7 @@ def test_the_fullscreen_toggle_has_exactly_two_routes_and_g6_takes_only_the_key(
     callers = []
     for path, source in _tree_sources():
         for number, line in enumerate(source.splitlines(), 1):
-            if re.search(r"\btoggleScreenMode\s*\]", line):
+            if re.search(r"\btoggleScreenMode\s*\(\)\s*;", line) and not re.search(r"\bvoid\b", line):
                 callers.append((f"{os.path.relpath(path, SRC_DIR)}:{number}", line.strip()))
     assert callers, "nothing calls -toggleScreenMode any more; F12 would toggle nothing"
     assert len(callers) == 2, (
@@ -898,7 +898,7 @@ def test_the_fullscreen_toggle_has_exactly_two_routes_and_g6_takes_only_the_key(
     menu_site = by_file.get("Core/Entities/PlayerEntityControls")
     assert menu_site, f"no -toggleScreenMode call in PlayerEntityControls.m; callers: {callers}"
     guard = _source_window(menu_site, before=3)
-    assert "GUI_ROW(GAME,DISPLAYSTYLE)" in guard, (
+    assert "GUI_ROW(GAME,DISPLAYSTYLE)" in guard.replace(" ", ""), (
         f"the menu route to -toggleScreenMode ({menu_site}) is no longer gated on the Game "
         "Options Display Style row, so it may now be reachable from the start screen and G6's "
         "F12 would no longer be the only possible cause of a fullscreen transition. The lines "
@@ -967,7 +967,11 @@ def test_the_fullscreen_flag_is_only_assigned_by_the_toggle_at_runtime():
     assignments = []
     for path, source in _tree_sources():
         for number, line in enumerate(source.splitlines(), 1):
-            if re.search(r"\bfullScreen\s*=(?!=)", line) and "==" not in line:
+            if (
+                re.search(r"\bfullScreen\s*=(?!=)", line)
+                and "==" not in line
+                and not re.match(r"\s*bool\s+fullScreen\b", line)  # the member declaration
+            ):
                 assignments.append((f"{os.path.relpath(path, SRC_DIR)}:{number}", line.strip()))
     assert assignments, "nothing assigns fullScreen; the observable does not exist"
     runtime = [
