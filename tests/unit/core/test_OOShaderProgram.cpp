@@ -14,7 +14,12 @@
    and a held Ref for retain/release. Run: tests/run.sh unit
 */
 
+#include <cstdio>
+#include <filesystem>
+#include <fstream>
 #include <map>
+#include <regex>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -314,6 +319,170 @@ OO_TEST(cxxAPI) {
     OOShaderProgram::applyNone();
     OO_CHECK(CurrentProgram() == 0);
   }
+}
+
+// --- OOTranslateGLSL330To120 (upstream #766, used on macOS)
+// ----------------------------------------------------
+
+namespace {
+
+// A shader from Resources/Shaders, found from this file's directory or the
+// working directory upwards; empty when it is not there.
+std::string ShaderFile(const std::string& name) {
+  namespace fs = std::filesystem;
+  const fs::path rel = fs::path("Resources") / "Shaders" / name;
+  for (const fs::path& start :
+       {fs::path(__FILE__).parent_path(), fs::current_path()}) {
+    std::error_code ec;
+    fs::path dir = fs::absolute(start, ec);
+    for (int i = 0; i < 8 && !dir.empty(); i++) {
+      if (fs::exists(dir / rel, ec)) {
+        std::ifstream in(dir / rel, std::ios::binary);
+        std::stringstream text;
+        text << in.rdbuf();
+        return text.str();
+      }
+      if (dir == dir.parent_path()) break;
+      dir = dir.parent_path();
+    }
+  }
+  return std::string();
+}
+
+bool Contains(const std::string& text, const std::string& part) {
+  return text.find(part) != std::string::npos;
+}
+
+// What upstream's NSRegularExpression rewrite gives, run through the C++ one.
+std::string Translated(const std::string& source, bool isVertexShader,
+                       oo::PList::Dict& bindings) {
+  return OOTranslateGLSL330To120(source, isVertexShader, bindings)
+      .value_or("(null)");
+}
+
+const std::string kGLSL120Prefix =
+    "#version 120\n#extension GL_EXT_gpu_shader4 : enable\n";
+
+}  // namespace
+
+OO_TEST(translateGLSL330To120) {
+  oo::PList::Dict bindings;
+  OO_CHECK(OOTranslateGLSL330To120(std::nullopt, true, bindings) ==
+           std::nullopt);
+  OO_CHECK(bindings.empty());
+
+  // Vertex: located inputs become attributes and bindings, outputs varyings.
+  OO_CHECK_EQ(Translated("layout (location = 0) in vec3 aPos;\n"
+                         "layout(location=3) in vec2 aTexCoords;\n"
+                         "out vec2 TexCoords;\n"
+                         "void main() { TexCoords = aTexCoords; }\n",
+                         true, bindings),
+              std::string("attribute vec3 aPos;\n"
+                          "attribute vec2 aTexCoords;\n"
+                          "varying vec2 TexCoords;\n"
+                          "void main() { TexCoords = aTexCoords; }\n"));
+  OO_CHECK(bindings.size() == 2);
+  OO_CHECK(bindings["aPos"] == oo::PList::signedInteger(0));
+  OO_CHECK(bindings["aTexCoords"] == oo::PList::signedInteger(3));
+
+  // Fragment: vec4 outputs become gl_FragData defines (location 0 when none
+  // is given), inputs varyings; texture() and textureSize() take their 1.20
+  // names, and a qualifier inside a function is left alone.
+  bindings.clear();
+  OO_CHECK_EQ(Translated("layout (location = 1) out vec4 bright;\n"
+                         "out vec4 FragColor;\n"
+                         "in vec2 TexCoords;\n"
+                         "uniform sampler2D image;\n"
+                         "void f(in float x, out float y) { y = x; }\n"
+                         "void main() {\n"
+                         "\tvec2 s = 1.0 / textureSize(image, 0);\n"
+                         "\tFragColor = texture (image, TexCoords);\n"
+                         "\tbright = texture2D(image, s);\n"
+                         "}\n",
+                         false, bindings),
+              std::string("#define bright gl_FragData[1]\n"
+                          "#define FragColor gl_FragData[0]\n"
+                          "varying vec2 TexCoords;\n"
+                          "uniform sampler2D image;\n"
+                          "void f(in float x, out float y) { y = x; }\n"
+                          "void main() {\n"
+                          "\tvec2 s = 1.0 / textureSize2D(image, 0);\n"
+                          "\tFragColor = texture2D(image, TexCoords);\n"
+                          "\tbright = texture2D(image, s);\n"
+                          "}\n"));
+  OO_CHECK(bindings.empty());
+
+  // isnan() is not in GLSL 1.20: a shim is prepended and called instead.
+  OO_CHECK_EQ(
+      Translated("void main() { bool b = isnan(1.0) || isnan (2.0); }\n", false,
+                 bindings),
+      std::string("bool oo_isnan(float x) { return !(x < 0.0 || x > 0.0 || x "
+                  "== 0.0); }\n"
+                  "void main() { bool b = oo_isnan(1.0) || oo_isnan(2.0); }\n"));
+}
+
+OO_TEST(translateGameShadersGLSL330To120) {
+  struct Program {
+    const char* vertex;
+    const char* fragment;
+  };
+  const Program programs[] = {
+      {"oolite-texture.vertex", "oolite-texture.fragment"},
+      {"oolite-blur.vertex", "oolite-blur.fragment"},
+      {"oolite-final.vertex", "oolite-final.fragment"},
+  };
+  const std::regex texture330(R"(\btexture\s*\()");
+  const std::regex inOut330(R"(^\s*(in|out)\s)", std::regex::ECMAScript |
+                                                     std::regex::multiline);
+  const bool canCompile =
+      SetUp() &&
+      OOOpenGLExtensionManager::sharedManager()->haveExtension(
+          "GL_EXT_gpu_shader4");
+  if (!canCompile)
+    std::printf("note: no GL_EXT_gpu_shader4, so the translated game shaders "
+                "are not compiled\n");
+
+  for (const Program& program : programs) {
+    const std::string vertex330 = ShaderFile(program.vertex);
+    const std::string fragment330 = ShaderFile(program.fragment);
+    OO_CHECK(!vertex330.empty() && !fragment330.empty());
+    oo::PList::Dict bindings;
+    const std::string vertex = Translated(vertex330, true, bindings);
+    const std::string fragment = Translated(fragment330, false, bindings);
+
+    // Every game vertex shader takes its two inputs at locations 0 and 1.
+    OO_CHECK(bindings.size() == 2);
+    for (const auto& [name, location] : bindings)
+      OO_CHECK(location == oo::PList::signedInteger(0) ||
+               location == oo::PList::signedInteger(1));
+    for (const std::string* translated : {&vertex, &fragment}) {
+      OO_CHECK(!Contains(*translated, "layout"));
+      OO_CHECK(!std::regex_search(*translated, texture330));
+      OO_CHECK(!std::regex_search(*translated, inOut330));
+    }
+    OO_CHECK(Contains(vertex, "attribute "));
+    OO_CHECK(Contains(vertex, "varying "));
+    OO_CHECK(Contains(fragment, "gl_FragData[0]"));
+    OO_CHECK(Contains(fragment, "varying "));
+    OO_CHECK(Contains(fragment, "isnan(") ==
+             Contains(fragment, "bool oo_isnan(float x)"));
+
+    if (canCompile) {
+      // GLSL 1.20 with GL_EXT_gpu_shader4, as the macOS legacy context runs it.
+      const oo::Ref<OOShaderProgram> compiled =
+          Make(vertex, fragment, kGLSL120Prefix);
+      if (compiled == nullptr)
+        std::printf("FAIL: %s + %s do not compile as GLSL 1.20\n",
+                    program.vertex, program.fragment);
+      OO_CHECK(compiled != nullptr);
+    }
+  }
+  // The texture program's two outputs go to the two colour attachments.
+  oo::PList::Dict bindings;
+  const std::string texture =
+      Translated(ShaderFile("oolite-texture.fragment"), false, bindings);
+  OO_CHECK(Contains(texture, "#define out_color gl_FragData[0]"));
+  OO_CHECK(Contains(texture, "#define bright_color gl_FragData[1]"));
 }
 
 OO_TEST_MAIN()

@@ -23,6 +23,7 @@ MA 02110-1301, USA.
 */
 
 #include "OOCharacter.h"
+
 #include "OOJSScript.h"
 #include "OOObjCPList.h"
 #include "OOStringExpander.h"
@@ -33,9 +34,10 @@ MA 02110-1301, USA.
 
 namespace {
 
-// get<std::string> where the Foundation code read nil: std::nullopt when the key is absent or its
-// value is neither a string nor a number.
-std::optional<std::string> OptionalStringForKey(const oo::PList& dict, std::string_view key)
+// get<std::string> where the Foundation code read nil: std::nullopt when the
+// key is absent or its value is neither a string nor a number.
+std::optional<std::string> OptionalStringForKey(const oo::PList& dict,
+    std::string_view key)
 {
     const oo::PList* value = dict.find(key);
     if (value == nullptr || !(value->isString() || value->isNumber()))
@@ -47,9 +49,13 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dict, std::stri
 
 std::optional<std::string> OOCharacter::descriptionComponents() const
 {
-    // ("(null)" is what "%@" printed for a missing name or description; the two getters read
-    // _legalStatus and _insuranceCredits, which a const member reads directly)
-    return oo::str::format("%s, %s. bounty: %i insurance: %zu", _name.value_or("(null)").c_str(), _shortDescription.value_or("(null)").c_str(), _legalStatus, _insuranceCredits);
+    // ("(null)" is what "%@" printed for a missing name or description; the two
+    // getters read _legalStatus and _insuranceCredits, which a const member reads
+    // directly)
+    return oo::str::format("%s, %s. bounty: %i insurance: %" PRIu64,
+        _name.value_or("(null)").c_str(),
+        _shortDescription.value_or("(null)").c_str(),
+        _legalStatus, _insuranceCredits);
 }
 
 std::optional<std::string> OOCharacter::oo_jsClassName()
@@ -57,14 +63,12 @@ std::optional<std::string> OOCharacter::oo_jsClassName()
     return std::string("Character");
 }
 
-std::string OOCharacter::className() const
-{
-    return "OOCharacter";
-}
+std::string OOCharacter::className() const { return "OOCharacter"; }
 
 std::string OOCharacter::description() const
 {
-    std::string result = oo::str::format("<OOCharacter %s>", oo::str::pointerDescription(this).c_str());
+    std::string result = oo::str::format(
+        "<OOCharacter %s>", oo::str::pointerDescription(this).c_str());
     const std::optional<std::string> components = descriptionComponents();
     if (components.has_value())
         result += "{" + *components + "}";
@@ -82,7 +86,8 @@ OOCharacter::OOCharacter(Random_Seed characterSeed, OOSystemID system)
 
 namespace {
 
-// -initWithRole:andOriginalSystem:'s seed, made before it called -initWithGenSeed:andOriginalSystem:.
+// -initWithRole:andOriginalSystem:'s seed, made before it called
+// -initWithGenSeed:andOriginalSystem:.
 Random_Seed PseudoRandomSeed()
 {
     Random_Seed seed;
@@ -98,12 +103,14 @@ OOCharacter::OOCharacter(const std::string& role, OOSystemID system)
     castInRole(role);
 }
 
-oo::Ref<OOCharacter> OOCharacter::characterWithRole(const std::string& role, OOSystemID system)
+oo::Ref<OOCharacter> OOCharacter::characterWithRole(const std::string& role,
+    OOSystemID system)
 {
     return oo::makeRef<OOCharacter>(role, system);
 }
 
-oo::Ref<OOCharacter> OOCharacter::randomCharacterWithRole(const std::string& role, OOSystemID system)
+oo::Ref<OOCharacter> OOCharacter::randomCharacterWithRole(
+    const std::string& role, OOSystemID system)
 {
     Random_Seed seed;
 
@@ -120,7 +127,8 @@ oo::Ref<OOCharacter> OOCharacter::randomCharacterWithRole(const std::string& rol
     return character;
 }
 
-oo::Ref<OOCharacter> OOCharacter::characterWithDictionary(const oo::PList& dict)
+oo::Ref<OOCharacter> OOCharacter::characterWithDictionary(
+    const oo::PList& dict)
 {
     oo::Ref<OOCharacter> character = oo::makeRef<OOCharacter>();
     // (an oo::PList, which carries any non-plist values exactly)
@@ -132,10 +140,12 @@ oo::Ref<OOCharacter> OOCharacter::characterWithDictionary(const oo::PList& dict)
 std::optional<std::string> OOCharacter::planetOfOrigin()
 {
     // determine the planet of origin
-    const oo::PList originInfo = (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(planetIDOfOrigin()) : oo::PList());
+    const oo::PList originInfo = (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(planetIDOfOrigin())
+                                                      : oo::PList());
     const oo::PList* name = originInfo.find(std::string(KEY_NAME));
     if (name == nullptr || !name->isString())
-        return std::nullopt; // (the value was returned as it stood; it is a string)
+        return std::nullopt; // (the value was returned as it stood; it is a
+                             // string)
     return *name->getIf<std::string>();
 }
 
@@ -151,8 +161,9 @@ std::optional<std::string> OOCharacter::species()
     int species = genSeed().f & 0x03; // 0-1 native to home system, 2 human colonial, 3 other
     std::optional<std::string> speciesString;
     if (species == 3)
-        speciesString = (UNIVERSE != nullptr ? UNIVERSE->getSystemInhabitants(genSeed().e, false)
-                                             : std::optional<std::string>());
+        speciesString = (UNIVERSE != nullptr
+                ? UNIVERSE->getSystemInhabitants(genSeed().e, false)
+                : std::optional<std::string>());
     else
         speciesString = (UNIVERSE != nullptr ? UNIVERSE->getSystemInhabitants(
                                                    planetIDOfOrigin(), false)
@@ -178,15 +189,18 @@ void OOCharacter::basicSetUp()
     seed_for_planet_description(genSeed);
 
     // determine the planet of origin
-    const oo::PList originInfo = (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(planetIDOfOrigin()) : oo::PList());
+    const oo::PList originInfo = (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(planetIDOfOrigin())
+                                                      : oo::PList());
     const std::optional<std::string> planet = OptionalStringForKey(originInfo, std::string(KEY_NAME));
-    OOGovernmentID government = originInfo.get<int>(std::string(KEY_GOVERNMENT)); // 0 .. 7 (0 anarchic .. 7 most stable)
+    OOGovernmentID government = originInfo.get<int>(
+        std::string(KEY_GOVERNMENT)); // 0 .. 7 (0 anarchic .. 7 most stable)
     int criminalTendency = government ^ 0x07;
 
     // determine the character's species
     const std::optional<std::string> species = this->species();
 
-    // determine the character's name (each half expanded in turn, as the format's arguments were)
+    // determine the character's name (each half expanded in turn, as the format's
+    // arguments were)
     seed_RNG_only_for_planet_description(genSeed);
     std::string genName;
     if (species.has_value() && oo::str::hasPrefix(*species, "human")) {
@@ -205,11 +219,13 @@ void OOCharacter::basicSetUp()
     }
     _name = genName;
 
-    _shortDescription = cxx_OOExpandKeyWithSeed(genSeed, "character-generic-description", species, planet);
+    _shortDescription = cxx_OOExpandKeyWithSeed(
+        genSeed, "character-generic-description", species, planet);
 
     // determine _legalStatus for a completely random character
     setLegalStatus(0); // clean
-    // Two draws, named so the order is explicit (left operand first, as clang evaluated it).
+    // Two draws, named so the order is explicit (left operand first, as clang
+    // evaluated it).
     const int legalDraw1 = gen_rnd_number();
     const int legalDraw2 = gen_rnd_number();
     int legalIndex = legalDraw1 & legalDraw2 & 0x03;
@@ -328,40 +344,25 @@ bool OOCharacter::castInRole(const std::string& roleName)
     return specialSetUpDone;
 }
 
-std::optional<std::string> OOCharacter::name()
-{
-    return _name;
-}
+std::optional<std::string> OOCharacter::name() { return _name; }
 
 std::optional<std::string> OOCharacter::shortDescription()
 {
     return _shortDescription;
 }
 
-Random_Seed OOCharacter::genSeed()
-{
-    return _genSeed;
-}
+Random_Seed OOCharacter::genSeed() { return _genSeed; }
 
-int OOCharacter::legalStatus()
-{
-    return _legalStatus;
-}
+int OOCharacter::legalStatus() { return _legalStatus; }
 
-OOCreditsQuantity OOCharacter::insuranceCredits()
-{
-    return _insuranceCredits;
-}
+OOCreditsQuantity OOCharacter::insuranceCredits() { return _insuranceCredits; }
 
-oo::PList OOCharacter::legacyScript()
-{
-    return _scriptActions;
-}
+oo::PList OOCharacter::legacyScript() { return _scriptActions; }
 
 oo::PList OOCharacter::infoForScripting()
 {
-    // Every value is worked out first, as the list's arguments were; the list ended at the first
-    // nil (a missing name, description or species).
+    // Every value is worked out first, as the list's arguments were; the list
+    // ended at the first nil (a missing name, description or species).
     const std::optional<std::string> species = this->species();
     oo::PList::Dict result;
     if (_name.has_value()) {
@@ -371,8 +372,10 @@ oo::PList OOCharacter::infoForScripting()
             if (species.has_value()) {
                 result.emplace("species", oo::PList(*species));
                 result.emplace("legalStatus", oo::PList::signedInteger(legalStatus()));
-                result.emplace("insuranceCredits", oo::PList::unsignedInteger(insuranceCredits()));
-                result.emplace("homeSystem", oo::PList::signedInteger(planetIDOfOrigin()));
+                result.emplace("insuranceCredits",
+                    oo::PList::unsignedInteger(insuranceCredits()));
+                result.emplace("homeSystem",
+                    oo::PList::signedInteger(planetIDOfOrigin()));
             }
         }
     }
@@ -389,20 +392,11 @@ void OOCharacter::setShortDescription(const std::optional<std::string>& value)
     _shortDescription = value;
 }
 
-void OOCharacter::setOriginSystem(OOSystemID value)
-{
-    _originSystem = value;
-}
+void OOCharacter::setOriginSystem(OOSystemID value) { _originSystem = value; }
 
-void OOCharacter::setGenSeed(Random_Seed value)
-{
-    _genSeed = value;
-}
+void OOCharacter::setGenSeed(Random_Seed value) { _genSeed = value; }
 
-void OOCharacter::setLegalStatus(int value)
-{
-    _legalStatus = value;
-}
+void OOCharacter::setLegalStatus(int value) { _legalStatus = value; }
 
 void OOCharacter::setInsuranceCredits(OOCreditsQuantity value)
 {
@@ -414,17 +408,17 @@ void OOCharacter::setLegacyScript(const oo::PList& some_actions)
     _scriptActions = some_actions;
 }
 
-::OOScript* OOCharacter::script()
-{
-    return _script.get();
-}
+::OOScript* OOCharacter::script() { return _script.get(); }
 
 void OOCharacter::setCharacterScript(const std::string& scriptName)
 {
-    // (the script's "character" is this character, an Object node, as it was self; it reaches
-    // JavaScript as undefined, as the facade did)
-    _script = OOScript::jsScriptFromFileNamed(scriptName,
-        oo::PList(oo::PList::Dict { { "character", oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(this))) } }));
+    // (the script's "character" is this character, an Object node, as it was
+    // self; it reaches JavaScript as undefined, as the facade did)
+    _script = OOScript::jsScriptFromFileNamed(
+        scriptName,
+        oo::PList(oo::PList::Dict {
+            { "character",
+                oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(this))) } }));
 }
 
 void OOCharacter::doScriptEvent(ooscript::PropertyId message)
@@ -450,7 +444,9 @@ void OOCharacter::setCharacterFromDictionary(const oo::PList& dict)
     } else if (originName != nullptr) {
         OOSystemID sys = (UNIVERSE != nullptr ? UNIVERSE->findSystemFromName(*originName) : 0);
         if (sys < 0) {
-            OO_LOG_ERR("character.load.unknownSystem", "could not find a system named '{}' in this galaxy.", *originName);
+            OO_LOG_ERR("character.load.unknownSystem",
+                "could not find a system named '{}' in this galaxy.",
+                *originName);
             setOriginSystem((ranrot_rand() & 0xff));
         } else {
             setOriginSystem(sys);
@@ -461,7 +457,8 @@ void OOCharacter::setCharacterFromDictionary(const oo::PList& dict)
     }
 
     if (dict.find("random_seed") != nullptr) {
-        seed = cxx_RandomSeedFromString(OptionalStringForKey(dict, "random_seed")); // returns kNilRandomSeed on failure
+        seed = cxx_RandomSeedFromString(OptionalStringForKey(
+            dict, "random_seed")); // returns kNilRandomSeed on failure
     } else {
         seed.a = (ranrot_rand() & 0xff);
         seed.b = (ranrot_rand() & 0xff);

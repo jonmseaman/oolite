@@ -30,8 +30,6 @@ SOFTWARE.
 
 #pragma once
 
-#import "OOOpenGLExtensionManager.h"
-
 #include "OOOpenGLExtensionManager.h" // OO_TEXTURE_CUBE_MAP, which the members below test (upstream #748)
 #include "OOTexture.h"
 #include "OOTextureLoader.h"

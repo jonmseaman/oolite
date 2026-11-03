@@ -45,7 +45,7 @@ MA 02110-1301, USA.
 #include "oofnd/Process.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
-#import "png.h"
+#include "png.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -251,7 +251,7 @@ void MyOpenGLView::createWindowWithSize(NSSize size)
         OO_LOG("sdl.create_context", "{}", "Could not create OpenGL context");
         exit(1);
     }
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_MACOS
     // On macOS a window surface replaces the OpenGL drawable, so it must not be
     // created there.
     SDL_Surface* surface = SDL_GetWindowSurface(window);
@@ -288,7 +288,7 @@ void MyOpenGLView::createWindowWithSize(NSSize size)
 
 #endif // OOLITE_WINDOWS
 
-#if !OOLITE_MAC_OS_X
+#if !OOLITE_MACOS
     // On macOS SDL would set this 32x32 image as the Dock icon, replacing the
     // bundle's high-resolution oolite-icon.icns.
     const std::string imagesDir = oo::fs::utf8String(
@@ -323,7 +323,7 @@ void MyOpenGLView::createWindowWithSize(NSSize size)
     _sdrToneMapper = cxx_OOSDRToneMapperFromString(
         DefaultsString("sdr-tone-mapper", "OOSDR_TONEMAPPER_ACES"));
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
     SDL_GL_SetSwapInterval(vSyncPreference ? 1 : 0);
 #else
     SDL_SetWindowSurfaceVSync(window, vSyncPreference);
@@ -355,7 +355,7 @@ void MyOpenGLView::createWindowWithSize(NSSize size)
     // Verify V-sync successfully set - report it if not
 
     int hasVsync;
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
     if (vSyncPreference && (!SDL_GL_GetSwapInterval(&hasVsync) || !hasVsync)) {
 #else
     if (vSyncPreference && (!SDL_GetWindowSurfaceVSync(window, &hasVsync) || !hasVsync)) {
@@ -525,7 +525,7 @@ void MyOpenGLView::endSplashScreen()
     }
 
 #endif
-    BOOL replaceSplashWindow = showSplashScreen && !fullScreen && window && glContext;
+    bool replaceSplashWindow = showSplashScreen && !fullScreen && window && glContext;
     if (!replaceSplashWindow) {
         SDL_SetWindowResizable(window, true);
         SDL_SetWindowBordered(window, true);
@@ -546,10 +546,11 @@ void MyOpenGLView::endSplashScreen()
         window = NULL;
         createWindowWithSize(firstScreen);
         SDL_DestroyWindow(previousWindow);
-        // createWindowWithSize: left glContext current, and SDL_DestroyWindow does
-        // not destroy it. But destroying the old window frees the GL context of its
-        // SDL framebuffer renderer, which SDL makes current and then releases, so
-        // no context is current afterwards. Rebind glContext before anything draws.
+        // createWindowWithSize() left glContext current, and SDL_DestroyWindow
+        // does not destroy it. But destroying the old window frees the GL context
+        // of its SDL framebuffer renderer, which SDL makes current and then
+        // releases, so no context is current afterwards. Rebind glContext before
+        // anything draws.
         if (!SDL_GL_MakeCurrent(window, glContext)) {
             OO_LOG("sdl.create_context", "Could not make OpenGL context current: {}",
                 SDL_GetError());
@@ -1238,6 +1239,12 @@ bool MyOpenGLView::snapShot(const std::optional<std::string>& filename)
     bool snapShotOK = true;
     SDL_Surface* tmpSurface;
 
+#if OOLITE_MACOS
+    // The back buffer is undefined after a swap on macOS, so read the frame
+    // currently on screen.
+    OOGL(glReadBuffer(GL_FRONT));
+#endif
+
     // backup the previous directory
     const auto originalDirectory = oo::fs::currentDirectory();
     // use the snapshots directory (mkdir + chdir of
@@ -1295,7 +1302,18 @@ bool MyOpenGLView::snapShot(const std::optional<std::string>& filename)
         imageNo = tmpImageNo;
     }
 
+#if OOLITE_MACOS
+    // No window surface on macOS (see createWindowWithSize()); describe the GL
+    // drawable instead.
+    SDL_Surface* surface = NULL;
+    {
+        int pixelWidth, pixelHeight;
+        SDL_GetWindowSizeInPixels(window, &pixelWidth, &pixelHeight);
+        surface = SDL_CreateSurface(pixelWidth, pixelHeight, SDL_PIXELFORMAT_ARGB8888);
+    }
+#else
     SDL_Surface* surface = SDL_GetWindowSurface(window);
+#endif
     OO_LOG("screenshot", "Saving screen shot \"{}\" ({} x {} pixels).",
         *pathToPic, static_cast<unsigned>(surface->w),
         static_cast<unsigned>(surface->h));
@@ -1366,6 +1384,11 @@ bool MyOpenGLView::snapShot(const std::optional<std::string>& filename)
 
         free(pixlsf);
     }
+
+#if OOLITE_MACOS
+    SDL_DestroySurface(surface);
+    OOGL(glReadBuffer(GL_BACK));
+#endif
 
     // return to the previous directory
     if (originalDirectory)

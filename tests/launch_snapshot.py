@@ -368,6 +368,14 @@ def _link_dir(source, target):
         os.symlink(source, target)
 
 
+def _link_file(source, target):
+    """Hard link, falling back to a copy (a different volume)."""
+    try:
+        os.link(source, target)
+    except OSError:
+        shutil.copy2(source, target)
+
+
 def stage_app(app_dir, staged):
     """Build a private copy of oolite.app whose GNUSTEP_USERS_ROOT is this run's alone.
 
@@ -385,6 +393,11 @@ def stage_app(app_dir, staged):
         if os.path.isdir(source):
             if name in PRIVATE_SUBDIRS:
                 shutil.copytree(source, target, dirs_exist_ok=True)
+            elif name == "MacOS":
+                # A bundle's executable must sit in a real Contents/MacOS: the game finds its
+                # Resources from the real path of the binary, so a linked directory would resolve
+                # back into the shared build.
+                shutil.copytree(source, target, dirs_exist_ok=True, copy_function=_link_file)
             else:
                 _link_dir(source, target)
         else:
@@ -475,7 +488,9 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
     # an env var - the game overwrites it (SDL_setenv_unsafe ..., YES) - and not a lock, which
     # would serialise the N-concurrent fan-out this function exists to support.
     staged_root = tempfile.mkdtemp(prefix=f"oolite-run-{port}-{os.getpid()}-")
-    staged_app = os.path.join(staged_root, "app")
+    # In a macOS bundle the game only looks for Resources when its binary is in .../Contents/MacOS.
+    in_bundle = os.path.basename(app_dir) == "Contents"
+    staged_app = os.path.join(staged_root, "Contents" if in_bundle else "app")
     stage_app(app_dir, staged_app)
     print(f"[*] Private prefs root: {staged_app}")
 
@@ -1289,6 +1304,11 @@ if __name__ == "__main__":
     if os.path.isfile(target_dir):
         bin_name = os.path.basename(target_dir)
         target_dir = os.path.dirname(target_dir)
+        if os.path.basename(target_dir) == "MacOS" and (
+                os.path.basename(os.path.dirname(target_dir)) == "Contents"):
+            # An app bundle: stage the whole Contents, and run MacOS/oolite from it.
+            bin_name = os.path.join("MacOS", bin_name)
+            target_dir = os.path.dirname(target_dir)
 
     # Resolved before the chdir below, so relative paths mean what the caller meant.
     test_output = os.path.abspath(native_path(args.output))

@@ -30,13 +30,15 @@
 #define DEBUG_DUMP (0 && OOLITE_DEBUG)
 #define DEBUG_DUMP_RAW (1 && DEBUG_DUMP)
 
-#define ALBEDO_FACTOR 0.7f // Overall darkening of everything, allowing better contrast for snow and specular highlights.
+#define ALBEDO_FACTOR \
+    0.7f // Overall darkening of everything, allowing better contrast for snow
+         // and specular highlights.
 
-#include "OOColor.h"
-#include "OOStandaloneAtmosphereGenerator.h"
 #include <cstring>
 
+#include "OOColor.h"
 #include "OOObjCPList.h"
+#include "OOStandaloneAtmosphereGenerator.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 
@@ -60,22 +62,26 @@
         *x_ = NULL;                                   \
     } while (0)
 
-#define PLANET_TEXTURE_OPTIONS (kOOTextureMinFilterLinear | kOOTextureMagFilterLinear | kOOTextureRepeatS | kOOTextureNoShrink)
+#define PLANET_TEXTURE_OPTIONS \
+    (kOOTextureMinFilterLinear | kOOTextureMagFilterLinear | kOOTextureRepeatS | kOOTextureNoShrink)
 
-enum {
-    kRandomBufferSize = 128
-};
+enum { kRandomBufferSize = 128 };
 
 namespace {
 
-FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary, const std::string& key); // dictionary: the planet info (colours are Object nodes)
+FloatRGB FloatRGBFromDictColor(
+    const oo::PList& dictionary,
+    const std::string&
+        key); // dictionary: the planet info (colours are Object nodes)
 
 } // namespace
 
 static bool FillFBMBuffer(OOStandaloneAtmosphereGeneratorInfo* info);
-static float QFactor(float* accbuffer, int x, int y, unsigned width, float polar_y_value, float bias, float polar_y);
+static float QFactor(float* accbuffer, int x, int y, unsigned width,
+    float polar_y_value, float bias, float polar_y);
 static float BlendAlpha(float fraction, float a, float b);
-static FloatRGBA CloudMix(OOStandaloneAtmosphereGeneratorInfo* info, float q, float nearPole);
+static FloatRGBA CloudMix(OOStandaloneAtmosphereGeneratorInfo* info, float q,
+    float nearPole);
 
 enum {
     kPlanetScale256x256 = 1,
@@ -88,7 +94,9 @@ enum {
     kPlanetScaleFullDetail = kPlanetScale1024x1024
 };
 
-oo::Ref<OOStandaloneAtmosphereGenerator> OOStandaloneAtmosphereGenerator::generatorWithPlanetInfo(const oo::PList& planetInfo, RANROTSeed seed)
+oo::Ref<OOStandaloneAtmosphereGenerator>
+OOStandaloneAtmosphereGenerator::generatorWithPlanetInfo(
+    const oo::PList& planetInfo, RANROTSeed seed)
 {
     oo::Ref<OOStandaloneAtmosphereGenerator> result = oo::makeRef<OOStandaloneAtmosphereGenerator>();
     if (!result->initWithPlanetInfo(planetInfo, seed))
@@ -96,9 +104,11 @@ oo::Ref<OOStandaloneAtmosphereGenerator> OOStandaloneAtmosphereGenerator::genera
     return result;
 }
 
-bool OOStandaloneAtmosphereGenerator::initWithPlanetInfo(const oo::PList& planetInfo, RANROTSeed seed)
+bool OOStandaloneAtmosphereGenerator::initWithPlanetInfo(
+    const oo::PList& planetInfo, RANROTSeed seed)
 {
-    OO_LOG("texture.planet.generate", "{}", "Initialising standalone atmosphere generator");
+    OO_LOG("texture.planet.generate", "{}",
+        "Initialising standalone atmosphere generator");
 
     // AllowCubeMap not used yet but might be in future
     if (initWithPath(oo::str::format("OOStandaloneAtmosphereTexture@%s",
@@ -134,7 +144,8 @@ bool OOStandaloneAtmosphereGenerator::initWithPlanetInfo(const oo::PList& planet
     return false;
 }
 
-oo::Ref<OOTexture> OOStandaloneAtmosphereGenerator::planetTextureWithInfo(const oo::PList& planetInfo, RANROTSeed seed)
+oo::Ref<OOTexture> OOStandaloneAtmosphereGenerator::planetTextureWithInfo(
+    const oo::PList& planetInfo, RANROTSeed seed)
 {
     oo::Ref<OOTexture> result;
     const oo::Ref<OOStandaloneAtmosphereGenerator> generator = generatorWithPlanetInfo(planetInfo, seed);
@@ -145,7 +156,8 @@ oo::Ref<OOTexture> OOStandaloneAtmosphereGenerator::planetTextureWithInfo(const 
     return result;
 }
 
-bool OOStandaloneAtmosphereGenerator::generateAtmosphereTexture(oo::Ref<OOTexture>* texture, const oo::PList& planetInfo, RANROTSeed seed)
+bool OOStandaloneAtmosphereGenerator::generateAtmosphereTexture(
+    oo::Ref<OOTexture>* texture, const oo::PList& planetInfo, RANROTSeed seed)
 {
     OOCParameterAssert(texture != NULL);
 
@@ -158,7 +170,8 @@ bool OOStandaloneAtmosphereGenerator::generateAtmosphereTexture(oo::Ref<OOTextur
     return texture->get() != nullptr;
 }
 
-std::optional<std::string> OOStandaloneAtmosphereGenerator::descriptionComponents() const
+std::optional<std::string>
+OOStandaloneAtmosphereGenerator::descriptionComponents() const
 {
     return oo::str::format("seed: %u,%u", _info.seed.high, _info.seed.low);
 }
@@ -170,29 +183,36 @@ uint32_t OOStandaloneAtmosphereGenerator::textureOptions()
 
 std::optional<std::string> OOStandaloneAtmosphereGenerator::cacheKey()
 {
-    return oo::str::format("OOStandaloneAtmosphereGenerator-@%u\n%u,%u/%u,%u/%f/%f/%f,%f,%f/%f,%f,%f/%f,%f,%f",
-        _planetScale,
-        _info.width, _info.height, _info.seed.high, _info.seed.low,
-        _info.cloudAlpha, _info.cloudFraction,
-        _info.airColor.r, _info.airColor.g, _info.airColor.b,
-        _info.cloudColor.r, _info.cloudColor.g, _info.cloudColor.b,
-        _info.paleCloudColor.r, _info.paleCloudColor.g, _info.paleCloudColor.b);
+    return oo::str::format(
+        "OOStandaloneAtmosphereGenerator-@%u\n%u,%u/%u,%u/%f/%f/%f,%f,%f/"
+        "%f,%f,%f/%f,%f,%f",
+        _planetScale, _info.width, _info.height, _info.seed.high, _info.seed.low,
+        _info.cloudAlpha, _info.cloudFraction, _info.airColor.r, _info.airColor.g,
+        _info.airColor.b, _info.cloudColor.r, _info.cloudColor.g,
+        _info.cloudColor.b, _info.paleCloudColor.r, _info.paleCloudColor.g,
+        _info.paleCloudColor.b);
 }
 
-bool OOStandaloneAtmosphereGenerator::getResultFormatWidthHeight(OOPixMap* outData, OOTextureDataFormat* outFormat, uint32_t* outWidth, uint32_t* outHeight)
+bool OOStandaloneAtmosphereGenerator::getResultFormatWidthHeight(
+    OOPixMap* outData, OOTextureDataFormat* outFormat, uint32_t* outWidth,
+    uint32_t* outHeight)
 {
     bool waiting = false;
     if (!isReady()) {
         waiting = true;
-        OO_LOG("texture.planet.generate.wait", "{} generator {}", "Waiting for", description());
+        OO_LOG("texture.planet.generate.wait", "{} generator {}", "Waiting for",
+            description());
     }
 
     bool result = OOTextureGenerator::getResult(outData, outFormat, outWidth, outHeight);
 
     if (waiting) {
-        OO_LOG("texture.planet.generate.dequeue", "{} generator {}", result ? "Dequeued" : "Failed to dequeue", description());
+        OO_LOG("texture.planet.generate.dequeue", "{} generator {}",
+            result ? "Dequeued" : "Failed to dequeue", description());
     } else {
-        OO_LOG("texture.planet.generate.dequeue", "{} generator {} without waiting.", result ? "Dequeued" : "Failed to dequeue", description());
+        OO_LOG("texture.planet.generate.dequeue",
+            "{} generator {} without waiting.",
+            result ? "Dequeued" : "Failed to dequeue", description());
     }
 
     return result;
@@ -202,7 +222,8 @@ bool OOStandaloneAtmosphereGenerator::getResultFormatWidthHeight(OOPixMap* outDa
  * various noise, interpolation, etc. functions */
 void OOStandaloneAtmosphereGenerator::loadTexture()
 {
-    OO_LOG("texture.planet.generate.begin", "Started generator {}", description());
+    OO_LOG("texture.planet.generate.begin", "Started generator {}",
+        description());
 
     bool success = false;
 
@@ -228,8 +249,9 @@ void OOStandaloneAtmosphereGenerator::loadTexture()
     dumpNoiseBuffer(_info.fbmBuffer);
 #endif
     {
-
-        float paleClouds = (_info.cloudFraction * _info.fbmBuffer[0] < 1.0f - _info.cloudFraction) ? 0.0f : 1.0f;
+        float paleClouds = (_info.cloudFraction * _info.fbmBuffer[0] < 1.0f - _info.cloudFraction)
+            ? 0.0f
+            : 1.0f;
 
         int x, y;
         FloatRGBA color;
@@ -244,7 +266,8 @@ void OOStandaloneAtmosphereGenerator::loadTexture()
             nearPole *= nearPole;
 
             for (x = (int)_width - 1; x >= 0; x--) {
-                q = QFactor(_info.fbmBuffer, x, y, _width, paleClouds, cloudFraction, nearPole);
+                q = QFactor(_info.fbmBuffer, x, y, _width, paleClouds, cloudFraction,
+                    nearPole);
                 color = CloudMix(&_info, q, nearPole);
                 *apx++ = 255.0f * color.r;
                 *apx++ = 255.0f * color.g;
@@ -266,19 +289,24 @@ END:
         FREE(aBuffer);
     }
 
-    OO_LOG("texture.planet.generate.complete", "Completed generator {} {}successfully", description(), success ? "" : "un");
+    OO_LOG("texture.planet.generate.complete",
+        "Completed generator {} {}successfully", description(),
+        success ? "" : "un");
 
 #if DEBUG_DUMP
     if (success) {
-        const std::string diffuseName = oo::str::format("atmosphere-%u-%u-diffuse-new", _info.seed.high, _info.seed.low);
-        const std::string lightsName = oo::str::format("atmosphere-%u-%u-alpha-new", _info.seed.high, _info.seed.low);
+        const std::string diffuseName = oo::str::format(
+            "atmosphere-%u-%u-diffuse-new", _info.seed.high, _info.seed.low);
+        const std::string lightsName = oo::str::format(
+            "atmosphere-%u-%u-alpha-new", _info.seed.high, _info.seed.low);
 
-        [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr) cxx_dumpRGBAToRGBFileNamed:diffuseName
-                                                                             andGrayFileNamed:lightsName
-                                                                                        bytes:aBuffer
-                                                                                        width:_width
-                                                                                       height:_height
-                                                                                     rowBytes:_width * 4];
+        [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr)
+            cxx_dumpRGBAToRGBFileNamed:diffuseName
+                      andGrayFileNamed:lightsName
+                                 bytes:aBuffer
+                                 width:_width
+                                height:_height
+                              rowBytes:_width * 4];
     }
 #endif
 }
@@ -287,7 +315,8 @@ END:
 
 void OOStandaloneAtmosphereGenerator::dumpNoiseBuffer(float* noise)
 {
-    const std::string noiseName = oo::str::format("atmosphere-%u-%u-noise-new", _info.seed.high, _info.seed.low);
+    const std::string noiseName = oo::str::format(
+        "atmosphere-%u-%u-noise-new", _info.seed.high, _info.seed.low);
 
     uint8_t* noisePx = malloc(_width * _height);
     unsigned x, y;
@@ -297,11 +326,12 @@ void OOStandaloneAtmosphereGenerator::dumpNoiseBuffer(float* noise)
         }
     }
 
-    [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr) cxx_dumpGrayToFileNamed:noiseName
-                                                                                 bytes:noisePx
-                                                                                 width:_width
-                                                                                height:_height
-                                                                              rowBytes:_width];
+    [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr)
+        cxx_dumpGrayToFileNamed:noiseName
+                          bytes:noisePx
+                          width:_width
+                         height:_height
+                       rowBytes:_width];
     FREE(noisePx);
 }
 
@@ -309,17 +339,15 @@ void OOStandaloneAtmosphereGenerator::dumpNoiseBuffer(float* noise)
 
 OOINLINE float Lerp(float v0, float v1, float fraction)
 {
-    // Linear interpolation - equivalent to v0 * (1.0f - fraction) + v1 * fraction.
+    // Linear interpolation - equivalent to v0 * (1.0f - fraction) + v1 *
+    // fraction.
     return v0 + fraction * (v1 - v0);
 }
 
 static FloatRGB Blend(float fraction, FloatRGB a, FloatRGB b)
 {
-    return (FloatRGB) {
-        Lerp(b.r, a.r, fraction),
-        Lerp(b.g, a.g, fraction),
-        Lerp(b.b, a.b, fraction)
-    };
+    return (FloatRGB) { Lerp(b.r, a.r, fraction), Lerp(b.g, a.g, fraction),
+        Lerp(b.b, a.b, fraction) };
 }
 
 static float BlendAlpha(float fraction, float a, float b)
@@ -327,7 +355,8 @@ static float BlendAlpha(float fraction, float a, float b)
     return Lerp(b, a, fraction);
 }
 
-static FloatRGBA CloudMix(OOStandaloneAtmosphereGeneratorInfo* info, float q, float nearPole)
+static FloatRGBA CloudMix(OOStandaloneAtmosphereGeneratorInfo* info, float q,
+    float nearPole)
 {
 // #define AIR_ALPHA				(0.15f)
 // #define CLOUD_ALPHA				(1.0f)
@@ -345,21 +374,27 @@ static FloatRGBA CloudMix(OOStandaloneAtmosphereGeneratorInfo* info, float q, fl
     q -= CLOUD_BOUNDARY * 0.5f;
 
     if (nearPole > POLAR_BOUNDARY) {
-        portion = nearPole > POLAR_BOUNDARY + 0.2f ? 1.0f : (nearPole - POLAR_BOUNDARY) * 5.0f;
+        portion = nearPole > POLAR_BOUNDARY + 0.2f
+            ? 1.0f
+            : (nearPole - POLAR_BOUNDARY) * 5.0f;
         cloudColor = Blend(portion, info->paleCloudColor, cloudColor);
 
-        portion = nearPole > POLAR_BOUNDARY + 0.625f ? 1.0f : (nearPole - POLAR_BOUNDARY) * 1.6f;
+        portion = nearPole > POLAR_BOUNDARY + 0.625f
+            ? 1.0f
+            : (nearPole - POLAR_BOUNDARY) * 1.6f;
     }
 
     if (q <= 0.0f) {
         if (q >= -CLOUD_BOUNDARY) {
-            alpha *= BlendAlpha(-q * 0.5f * RECIP_CLOUD_BOUNDARY + 0.5f, CLOUD_ALPHA, AIR_ALPHA);
+            alpha *= BlendAlpha(-q * 0.5f * RECIP_CLOUD_BOUNDARY + 0.5f, CLOUD_ALPHA,
+                AIR_ALPHA);
         } else {
             alpha *= CLOUD_ALPHA;
         }
     } else {
         if (q < CLOUD_BOUNDARY) {
-            alpha *= BlendAlpha(q * 0.5f * RECIP_CLOUD_BOUNDARY + 0.5f, AIR_ALPHA, CLOUD_ALPHA);
+            alpha *= BlendAlpha(q * 0.5f * RECIP_CLOUD_BOUNDARY + 0.5f, AIR_ALPHA,
+                CLOUD_ALPHA);
         } else {
             alpha *= AIR_ALPHA;
         }
@@ -375,7 +410,8 @@ static FloatRGBA CloudMix(OOStandaloneAtmosphereGeneratorInfo* info, float q, fl
 
 namespace {
 
-FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary, const std::string& key)
+FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary,
+    const std::string& key)
 {
     const oo::PList* value = dictionary.find(key);
     OOColor* color = (value != nullptr) ? OOColorInObjectNode(*value)
@@ -384,16 +420,16 @@ FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary, const std::string& k
         (value != nullptr) ? oo::DescriptionOf(*value).c_str() : "(null)");
 
     if (color == nullptr)
-        return (FloatRGB) { 0.0f, 0.0f, 0.0f }; // a nil colour answered zeros (release builds)
-    return (FloatRGB) { color->redComponent() * ALBEDO_FACTOR, color->greenComponent() * ALBEDO_FACTOR, color->blueComponent() * ALBEDO_FACTOR };
+        return (FloatRGB) { 0.0f, 0.0f,
+            0.0f }; // a nil colour answered zeros (release builds)
+    return (FloatRGB) { color->redComponent() * ALBEDO_FACTOR,
+        color->greenComponent() * ALBEDO_FACTOR,
+        color->blueComponent() * ALBEDO_FACTOR };
 }
 
 } // namespace
 
-OOINLINE float Hermite(float q)
-{
-    return 3.0f * q * q - 2.0f * q * q * q;
-}
+OOINLINE float Hermite(float q) { return 3.0f * q * q - 2.0f * q * q * q; }
 
 #if __BIG_ENDIAN__
 #define iman_ 1
@@ -434,11 +470,13 @@ static bool FillFBMBuffer(OOStandaloneAtmosphereGeneratorInfo* info)
 }
 
 enum {
-    //	Size of permutation buffer used to map integer coordinates to gradients. Must be power of two.
+    //	Size of permutation buffer used to map integer coordinates to gradients.
+    // Must be power of two.
     kPermutationCount = 1 << 10,
     kPermutationMask = kPermutationCount - 1,
 
-    // Number of different gradient vectors used. The most important thing is that the gradients are evenly distributed and sum to 0.
+    // Number of different gradient vectors used. The most important thing is that
+    // the gradients are evenly distributed and sum to 0.
     kGradientCount = 12
 };
 
@@ -446,39 +484,20 @@ enum {
 
 #if !LUT_DOT
 static const Vector kGradients[kGradientCount] = {
-    { 1, 1, 0 },
-    { -1, 1, 0 },
-    { 1, -1, 0 },
-    { -1, -1, 0 },
-    { 1, 0, 1 },
-    { -1, 0, 1 },
-    { 1, 0, -1 },
-    { -1, 0, -1 },
-    { 0, 1, 1 },
-    { 0, -1, 1 },
-    { 0, 1, -1 },
-    { 0, -1, -1 }
+    { 1, 1, 0 }, { -1, 1, 0 }, { 1, -1, 0 }, { -1, -1, 0 }, { 1, 0, 1 }, { -1, 0, 1 },
+    { 1, 0, -1 }, { -1, 0, -1 }, { 0, 1, 1 }, { 0, -1, 1 }, { 0, 1, -1 }, { 0, -1, -1 }
 };
 #else
 static const uint8_t kGradients[kGradientCount][3] = {
-    { 2, 2, 1 },
-    { 0, 2, 1 },
-    { 2, 0, 1 },
-    { 0, 0, 1 },
-    { 2, 1, 2 },
-    { 0, 1, 2 },
-    { 2, 1, 0 },
-    { 0, 1, 0 },
-    { 1, 2, 2 },
-    { 1, 0, 2 },
-    { 1, 2, 0 },
-    { 1, 0, 0 }
+    { 2, 2, 1 }, { 0, 2, 1 }, { 2, 0, 1 }, { 0, 0, 1 }, { 2, 1, 2 }, { 0, 1, 2 },
+    { 2, 1, 0 }, { 0, 1, 0 }, { 1, 2, 2 }, { 1, 0, 2 }, { 1, 2, 0 }, { 1, 0, 0 }
 };
 
-/*	Attempted speedup that didn't pan out, but might inspire something better.
-        Since our gradient vectors' components are all -1, 0 or 1, we should be
-        able to calculate the dot product without any multiplication at all, by
-        simply summing the right combination of (x, y, z), (0, 0, 0) and (-x, -y, -z).
+/*	Attempted speedup that didn't pan out, but might inspire something
+   better. Since our gradient vectors' components are all -1, 0 or 1, we should
+   be able to calculate the dot product without any multiplication at all, by
+        simply summing the right combination of (x, y, z), (0, 0, 0) and (-x,
+   -y, -z).
 
         This turns out to be slightly slower than using multiplication, even if
         the negations are precalculated.
@@ -493,8 +512,10 @@ OOINLINE float TDot3(const uint8_t grad[3], float x, float y, float z)
 }
 #endif
 
-// Sample 3D noise function defined by kGradients and permutation table at point p.
-static float SampleNoise3D(OOStandaloneAtmosphereGeneratorInfo* info, Vector p)
+// Sample 3D noise function defined by kGradients and permutation table at point
+// p.
+static float SampleNoise3D(OOStandaloneAtmosphereGeneratorInfo* info,
+    Vector p)
 {
     uint16_t* permutations = info->permutations;
 
@@ -533,9 +554,11 @@ static float SampleNoise3D(OOStandaloneAtmosphereGeneratorInfo* info, Vector p)
 
     //	Calculate noise contributions from each of the eight corners.
 #if !LUT_DOT
-#define DOT3(idx, x_, y_, z_) dot_product(kGradients[(idx) % kGradientCount], (Vector) { (x_), (y_), (z_) })
+#define DOT3(idx, x_, y_, z_) \
+    dot_product(kGradients[(idx) % kGradientCount], (Vector) { (x_), (y_), (z_) })
 #else
-#define DOT3(idx, x_, y_, z_) TDot3(kGradients[(idx) % kGradientCount], (x_), (y_), (z_))
+#define DOT3(idx, x_, y_, z_) \
+    TDot3(kGradients[(idx) % kGradientCount], (x_), (y_), (z_))
 #endif
 
     float x1 = x - 1.0f;
@@ -572,8 +595,8 @@ static float SampleNoise3D(OOStandaloneAtmosphereGeneratorInfo* info, Vector p)
 }
 
 /*	Generate shuffled permutation order - each value from 0 to
-        kPermutationCount - 1 occurs exactly once. This shuffling provides all the
-        randomness in the resulting noise. Don't worry, though - for
+        kPermutationCount - 1 occurs exactly once. This shuffling provides all
+   the randomness in the resulting noise. Don't worry, though - for
         kPermutationCount = 1024 this allows for 4e2567 different noise maps,
         which is a lot more than RanRot will actually give us.
 */
@@ -584,7 +607,8 @@ static bool MakePermutationTable(OOStandaloneAtmosphereGeneratorInfo* info)
         return false;
 
     /*	Fisher-Yates/Durstenfeld/Knuth shuffle, "inside-out" variant.
-            Based on pseudocode from http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
+            Based on pseudocode from
+       http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
 
             When comparing to the pseudocode, note that it generates a one-based
             series, but this version generates a zero-based series.
@@ -625,11 +649,7 @@ static bool GenerateFBMNoise3D(OOStandaloneAtmosphereGeneratorInfo* info)
                 float los = sin(lon);
                 float loc = cos(lon);
 
-                Vector p = {
-                    los * lac,
-                    las,
-                    loc * lac
-                };
+                Vector p = { los * lac, las, loc * lac };
 
 #if 1
                 // fBM
@@ -673,7 +693,9 @@ static void FillRandomBuffer(float* randomBuffer, RANROTSeed seed)
     }
 }
 
-static void AddNoise(OOStandaloneAtmosphereGeneratorInfo* info, float* randomBuffer, float octave, unsigned octaveMask, float scale, float* qxBuffer, int* ixBuffer)
+static void AddNoise(OOStandaloneAtmosphereGeneratorInfo* info,
+    float* randomBuffer, float octave, unsigned octaveMask,
+    float scale, float* qxBuffer, int* ixBuffer)
 {
     unsigned x, y;
     unsigned width = info->width, height = info->height;
@@ -708,8 +730,10 @@ static void AddNoise(OOStandaloneAtmosphereGeneratorInfo* info, float* randomBuf
             jx = (ix + 1) & octaveMask;
             jx &= (kRandomBufferSize - 1);
 
-            rix = Lerp(randomBuffer[iy * kRandomBufferSize + ix], randomBuffer[iy * kRandomBufferSize + jx], qx);
-            rjx = Lerp(randomBuffer[jy * kRandomBufferSize + ix], randomBuffer[jy * kRandomBufferSize + jx], qx);
+            rix = Lerp(randomBuffer[iy * kRandomBufferSize + ix],
+                randomBuffer[iy * kRandomBufferSize + jx], qx);
+            rjx = Lerp(randomBuffer[jy * kRandomBufferSize + ix],
+                randomBuffer[jy * kRandomBufferSize + jx], qx);
             rfinal = Lerp(rix, rjx, qy);
 
             *dst++ += scale * rfinal;
@@ -719,7 +743,8 @@ static void AddNoise(OOStandaloneAtmosphereGeneratorInfo* info, float* randomBuf
 
 static bool GenerateFBMNoise(OOStandaloneAtmosphereGeneratorInfo* info)
 {
-    // Allocate the temporary buffers we need in one fell swoop, to avoid administrative overhead.
+    // Allocate the temporary buffers we need in one fell swoop, to avoid
+    // administrative overhead.
     size_t randomBufferSize = kRandomBufferSize * kRandomBufferSize * sizeof(float);
     size_t qxBufferSize = info->width * sizeof(float);
     size_t ixBufferSize = info->width * sizeof(int);
@@ -752,7 +777,8 @@ static bool GenerateFBMNoise(OOStandaloneAtmosphereGeneratorInfo* info)
     return true;
 }
 
-static float QFactor(float* accbuffer, int x, int y, unsigned width, float polar_y_value, float bias, float polar_y)
+static float QFactor(float* accbuffer, int x, int y, unsigned width,
+    float polar_y_value, float bias, float polar_y)
 {
     float q = accbuffer[y * width + x]; // 0.0 -> 1.0
     q += bias;

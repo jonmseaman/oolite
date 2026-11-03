@@ -23,6 +23,7 @@ MA 02110-1301, USA.
 */
 
 #include "CollisionRegion.h"
+
 #include "Entity.h"
 #include "OODebugFlags.h"
 #include "OOMaths.h"
@@ -32,11 +33,9 @@ MA 02110-1301, USA.
 #include "ShipEntity.h"
 #include "StationEntity.h"
 #include "Universe.h"
-#include "oofnd/objc/OOException.h"
-
 #include "oofnd/Log.hpp"
-
 #include "oofnd/String.hpp"
+#include "oofnd/objc/OOException.h"
 
 // basic alloc/ dealloc routines
 //
@@ -90,7 +89,8 @@ CollisionRegion::CollisionRegion(AsUniverse)
     }
 }
 
-CollisionRegion::CollisionRegion(HPVector locn, GLfloat rad, CollisionRegion* otherRegion)
+CollisionRegion::CollisionRegion(HPVector locn, GLfloat rad,
+    CollisionRegion* otherRegion)
     : CollisionRegion()
 {
     {
@@ -107,11 +107,12 @@ CollisionRegion::~CollisionRegion()
     subregions.clear();
 }
 
-// OOObject's -description wraps this as "<CollisionRegion 0x...>{ID: ...}", which is what this
-// class's own -description printed.
+// OOObject's -description wraps this as "<CollisionRegion 0x...>{ID: ...}",
+// which is what this class's own -description printed.
 std::optional<std::string> CollisionRegion::descriptionComponents() const
 {
-    return oo::str::format("ID: %d, %zu subregions, %u ents", crid, subregions.size(), n_entities);
+    return oo::str::format("ID: %d, %zu subregions, %u ents", crid,
+        subregions.size(), n_entities);
 }
 
 void CollisionRegion::clearSubregions()
@@ -144,9 +145,11 @@ void CollisionRegion::addSubregionAtPosition(HPVector pos, GLfloat rad)
     subregions.push_back(oo::makeRef<CollisionRegion>(pos, rad, this));
 }
 
-// update routines to check if a position is within the radius or within its borders
+// update routines to check if a position is within the radius or within its
+// borders
 //
-bool CollisionRegion::positionIsWithinRegion(HPVector position, CollisionRegion* region)
+bool CollisionRegion::positionIsWithinRegion(HPVector position,
+    CollisionRegion* region)
 {
     if (region == nullptr)
         return false;
@@ -163,7 +166,8 @@ bool CollisionRegion::positionIsWithinRegion(HPVector position, CollisionRegion*
     return true;
 }
 
-bool CollisionRegion::sphereIsWithinRegion(HPVector position, GLfloat rad, CollisionRegion* region)
+bool CollisionRegion::sphereIsWithinRegion(HPVector position, GLfloat rad,
+    CollisionRegion* region)
 {
     if (region == nullptr)
         return false;
@@ -180,7 +184,8 @@ bool CollisionRegion::sphereIsWithinRegion(HPVector position, GLfloat rad, Colli
     return true;
 }
 
-bool CollisionRegion::positionIsWithinBorders(HPVector position, CollisionRegion* region)
+bool CollisionRegion::positionIsWithinBorders(HPVector position,
+    CollisionRegion* region)
 {
     if (region == nullptr)
         return false;
@@ -213,9 +218,12 @@ void CollisionRegion::addEntity(Entity* ent)
     //
     if (n_entities == max_entities) {
         max_entities = 1 + max_entities * 2;
-        Entity** new_store = (Entity**)realloc(static_cast<void*>(entity_array), max_entities * sizeof(Entity*));
+        Entity** new_store = (Entity**)realloc(static_cast<void*>(entity_array),
+            max_entities * sizeof(Entity*));
         if (new_store == NULL) {
-            OORaiseException(OOMallocException, "Not enough memory to grow collision region member list.");
+            OORaiseException(
+                OOMallocException,
+                "Not enough memory to grow collision region member list.");
         }
 
         entity_array = new_store;
@@ -257,7 +265,8 @@ void CollisionRegion::findCollisions()
         return;
 
     //
-    // According to Shark, when this was in Universe this was where Oolite spent most time!
+    // According to Shark, when this was in Universe this was where Oolite spent
+    // most time!
     //
     Entity *e1, *e2; // C++ parts
     HPVector p1;
@@ -276,7 +285,12 @@ void CollisionRegion::findCollisions()
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if (gDebugFlags & DEBUG_COLLISIONS) {
-        OO_LOG("collisionRegion.debug", "DEBUG in collision region {} testing {} out of {} entities", oo::str::format("<CollisionRegion %s>{%s}", oo::str::pointerDescription(this).c_str(), descriptionComponents().value_or("").c_str()), n_entities_to_test, n_entities);
+        OO_LOG("collisionRegion.debug",
+            "DEBUG in collision region {} testing {} out of {} entities",
+            oo::str::format("<CollisionRegion %s>{%s}",
+                oo::str::pointerDescription(this).c_str(),
+                descriptionComponents().value_or("").c_str()),
+            n_entities_to_test, n_entities);
     }
 #endif
 
@@ -316,7 +330,6 @@ void CollisionRegion::findCollisions()
             if (e1->isShip && e2->isShip && (oo::ToShip(e1) != nullptr ? oo::ToShip(e1)->collisionExceptedFor(oo::ToShip(e2)) : false)) {
                 // nothing happens
             } else {
-
                 r2 = e2->collision_radius;
                 r0 = r1 + r2;
                 dist2 = HPdistance2(e2->position, p1);
@@ -324,8 +337,12 @@ void CollisionRegion::findCollisions()
                 if (dist2 < PROXIMITY_WARN_DISTANCE2 * min_dist2) {
 #ifdef OO_DEBUG_MONITOR_ENABLED
                     if (gDebugFlags & DEBUG_COLLISIONS) {
-                        OO_LOG("collisionRegion.debug", "DEBUG Testing collision between {} ({}) and {} ({})",
-                            oo::EntityDescription(e1), (e1->collisionTestFilter == 3) ? "YES" : "NO", oo::EntityDescription(e2), (e2->collisionTestFilter == 3) ? "YES" : "NO");
+                        OO_LOG("collisionRegion.debug",
+                            "DEBUG Testing collision between {} ({}) and {} ({})",
+                            oo::EntityDescription(e1),
+                            (e1->collisionTestFilter == 3) ? "YES" : "NO",
+                            oo::EntityDescription(e2),
+                            (e2->collisionTestFilter == 3) ? "YES" : "NO");
                     }
 #endif
                     checks_within_range++;
@@ -355,14 +372,16 @@ void CollisionRegion::findCollisions()
 
                         if (e1->isStation) {
                             ::StationEntity* se1 = oo::ToStation(e1);
-                            if ((se1 != nullptr ? se1->shipIsInDockingCorridor(oo::ToShip(e2)) : false)) {
+                            if ((se1 != nullptr ? se1->shipIsInDockingCorridor(oo::ToShip(e2))
+                                                : false)) {
                                 collision = false;
                             } else {
                                 collision = EntityChecksCloseCollisionWith(e1, e2);
                             }
                         } else if (e2->isStation) {
                             ::StationEntity* se2 = oo::ToStation(e2);
-                            if ((se2 != nullptr ? se2->shipIsInDockingCorridor(oo::ToShip(e1)) : false)) {
+                            if ((se2 != nullptr ? se2->shipIsInDockingCorridor(oo::ToShip(e1))
+                                                : false)) {
                                 collision = false;
                             } else {
                                 collision = EntityChecksCloseCollisionWith(e2, e1);
@@ -401,7 +420,9 @@ void CollisionRegion::findCollisions()
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if (gDebugFlags & DEBUG_COLLISIONS) {
-        OO_LOG("collisionRegion.debug", "Collision test checks {}, within range {}, for {} entities", checks_this_tick, checks_within_range, n_entities_to_test);
+        OO_LOG("collisionRegion.debug",
+            "Collision test checks {}, within range {}, for {} entities",
+            checks_this_tick, checks_within_range, n_entities_to_test);
     }
 #endif
 }
@@ -416,7 +437,8 @@ bool entityByEntityOcclusionToValue(Entity* e1, Entity* e2,
         // you can't shade self
         return false;
     }
-    return shadowAtPointOcclusionToValue(e1->position, e1->collision_radius, e2, the_sun, outValue);
+    return shadowAtPointOcclusionToValue(e1->position, e1->collision_radius, e2,
+        the_sun, outValue);
 }
 
 } // namespace
@@ -441,7 +463,8 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
 
     // tested in construction of e2 list
     //	if (e2->isSunlit == NO)
-    //		return NO;	// things already /in/ shade can't shade things more.
+    //		return NO;	// things already /in/ shade can't shade things
+    // more.
     //
     // check projected sizes of discs
     GLfloat d2_sun = HPdistance2(e1pos, the_sun->position);
@@ -455,7 +478,8 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
             // exception: if within the collision radius of the other
             // object, might still be shadowed by it.
             GLfloat bbx = 0.0f, bby = 0.0f, bbz = 0.0f;
-            BoundingBox bb = (oo::ToShip(e2) != nullptr ? oo::ToShip(e2)->getTotalBoundingBox() : BoundingBox { });
+            BoundingBox bb = (oo::ToShip(e2) != nullptr ? oo::ToShip(e2)->getTotalBoundingBox()
+                                                        : BoundingBox { });
             bounding_box_get_dimensions(bb, &bbx, &bby, &bbz);
             float minbb = bbx;
             if (bby < minbb) {
@@ -493,14 +517,16 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
 
     GLfloat cr2_sun_scaled = cr_sun * cr_sun * d2_e2 / d2_sun;
     if (cr_e2 * cr_e2 < cr2_sun_scaled) {
-        // if solar disc projected to the distance of e2 > collision radius it can't be shaded by e2
+        // if solar disc projected to the distance of e2 > collision radius it can't
+        // be shaded by e2
         return false;
     }
 
     // check angles subtended by sun and occluder
-    // double theta_sun = asin( cr_sun / sqrt(d2_sun));	// 1/2 angle subtended by sun
-    // double theta_e2 = asin( cr_e2 / sqrt(d2_e2));		// 1/2 angle subtended by e2
-    // find the difference between the angles subtended by occluder and sun
+    // double theta_sun = asin( cr_sun / sqrt(d2_sun));	// 1/2 angle subtended
+    // by sun double theta_e2 = asin( cr_e2 / sqrt(d2_e2));		// 1/2
+    // angle subtended by e2 find the difference between the angles subtended by
+    // occluder and sun
     float d2_e = sqrt(d2_e2);
     float theta_diff;
     if (d2_e < cr_e2) {
@@ -520,7 +546,8 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
     Vector v_e2 = HPVectorToVector(HPvector_subtract(p_e2, p_e1));
     v_e2 = vector_normal_or_xbasis(v_e2);
 
-    float phi = acos(dot_product(v_sun, v_e2)); // angle between sun and e2 from e1's viewpoint
+    float phi = acos(dot_product(
+        v_sun, v_e2)); // angle between sun and e2 from e1's viewpoint
     *outValue = (phi / theta_diff); // 1 means just occluded, < 1 means in shadow
 
     if (phi > theta_diff) {
@@ -578,10 +605,12 @@ void CollisionRegion::findShadowedEntities()
                 planets[n_planets++] = uni_entities[i];
             }
 
-            // and a list of shipentities large enough that they might cast a noticeable shadow
-            // if we can't see it, it can't be shadowing anything important
+            // and a list of shipentities large enough that they might cast a
+            // noticeable shadow if we can't see it, it can't be shadowing anything
+            // important
             else if (EntityIsShip(uni_entities[i]) && EntityIsVisible(uni_entities[i]) && uni_entities[i]->collision_radius >= MINIMUM_SHADOWING_ENTITY_RADIUS) {
-                ships[n_ships++] = uni_entities[i]; //	don't bother retaining - nothing will happen to them!
+                ships[n_ships++] = uni_entities[i]; //	don't bother retaining - nothing
+                                                    // will happen to them!
             }
         }
     }
@@ -604,7 +633,9 @@ void CollisionRegion::findShadowedEntities()
         }
         Entity* occluder = nullptr;
         if (e1->isSunlit == false) {
-            occluder = (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(e1->shadingEntityID) : nullptr);
+            occluder = (UNIVERSE != nullptr
+                    ? UNIVERSE->entityForUniversalID(e1->shadingEntityID)
+                    : nullptr);
             if (occluder != nullptr) {
                 occluder_moved = occluder->hasMoved;
             }
@@ -633,7 +664,8 @@ void CollisionRegion::findShadowedEntities()
             // test planets
             for (j = 0; j < n_planets; j++) {
                 float occlusionNumber;
-                if (entityByEntityOcclusionToValue(e1, planets[j], the_sun, &occlusionNumber)) {
+                if (entityByEntityOcclusionToValue(e1, planets[j], the_sun,
+                        &occlusionNumber)) {
                     e1->isSunlit = false;
                     e1->shadingEntityID = EntityUniversalID(planets[j]);
                     break;

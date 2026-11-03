@@ -26,6 +26,7 @@ SOFTWARE.
 */
 
 #include "OOLogHeader.h"
+
 #include "OOCPUInfo.h"
 #include "OOJavaScriptEngine.h"
 #include "OOLogging.h"
@@ -79,7 +80,7 @@ void OOPrintLogHeader(void)
 #endif
 #endif
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
 #define OS_TYPE_STRING "Mac OS X"
 #elif OOLITE_WINDOWS
 #define OS_TYPE_STRING "Windows"
@@ -151,10 +152,13 @@ void OOPrintLogHeader(void)
     };
 
 // systemString: UTF-8 string with system type and possibly version.
-#if (OOLITE_MAC_OS_X || !OOLITE_WINDOWS)
-    std::string systemString = oo::str::format(OS_TYPE_STRING " %s", oo::process::operatingSystemVersionString().c_str());
+#if (OOLITE_MACOS || !OOLITE_WINDOWS)
+    std::string systemString = oo::str::format(OS_TYPE_STRING " %s",
+        oo::process::operatingSystemVersionString().c_str());
 #elif OOLITE_WINDOWS
-    std::string systemString = oo::str::format(OS_TYPE_STRING " %s %s-bit", operatingSystemFullVersion().c_str(), is64BitSystem() ? "64" : "32");
+    std::string systemString = oo::str::format(
+        OS_TYPE_STRING " %s %s-bit", operatingSystemFullVersion().c_str(),
+        is64BitSystem() ? "64" : "32");
 #else
 #define systemString std::string(OS_TYPE_STRING)
 #endif
@@ -168,7 +172,11 @@ void OOPrintLogHeader(void)
     if (versionString.empty())
         versionString = "<unknown version>";
 
-    std::string miscString = oo::str::format("Opening log for Oolite %s by %s (" CPU_TYPE_STRING RELEASE_VARIANT_STRING ") under %s at %s.\n", versionString.c_str(), OO_BUILDER, systemString.c_str(), oo::date::description().c_str());
+    std::string miscString = oo::str::format(
+        "Opening log for Oolite %s by %s (" CPU_TYPE_STRING RELEASE_VARIANT_STRING
+        ") under %s at %s.\n",
+        versionString.c_str(), OO_BUILDER, systemString.c_str(),
+        oo::date::description().c_str());
 
     miscString += AdditionalLogHeaderInfo();
 
@@ -182,7 +190,8 @@ void OOPrintLogHeader(void)
         featureDesc = "none";
     miscString += oo::str::format("\nBuild options: %s.\n", featureDesc.c_str());
 
-    miscString += "\nNote that the contents of the log file can be adjusted by editing logcontrol.plist.";
+    miscString += "\nNote that the contents of the log file can be adjusted by editing "
+                  "logcontrol.plist.";
 
     OO_LOG("log.header", "{}\n", miscString);
 }
@@ -191,7 +200,7 @@ void OOPrintLogHeader(void)
 // "<system> (<cpu><variant>)" text.
 std::string OOPlatformDescription(void)
 {
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
     const std::string platformSystem = OS_TYPE_STRING " " + oo::process::operatingSystemVersionString();
 #else
     const std::string platformSystem = OS_TYPE_STRING;
@@ -201,7 +210,8 @@ std::string OOPlatformDescription(void)
 }
 
 // System-specific stuff to append to log header.
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
+#include <mach/machine.h>
 #include <sys/sysctl.h>
 
 static std::optional<std::string> GetSysCtlString(const char* name);
@@ -218,9 +228,11 @@ std::string AdditionalLogHeaderInfo(void)
     sysPhysMem = GetSysCtlInt("hw.memsize");
 
     // "%@" printed a nil model as "(null)".
-    return oo::str::format("Machine type: %s, %zu MiB memory, %s.", sysModel ? sysModel->c_str() : "(null)", sysPhysMem >> 20, GetCPUDescription().c_str());
+    return oo::str::format("Machine type: %s, %llu MiB memory, %s.",
+        sysModel ? sysModel->c_str() : "(null)",
+        sysPhysMem >> 20, GetCPUDescription().c_str());
 }
-}
+} // namespace
 
 #ifndef CPUFAMILY_INTEL_MEROM
 #define CPUFAMILY_INTEL_MEROM 0x426f69ef
@@ -307,16 +319,19 @@ static std::string GetCPUDescription(void)
     }
 
     if (!typeStr.has_value())
-        typeStr = oo::str::format("CPU type %zu", sysCPUType);
+        typeStr = oo::str::format("CPU type %llu", sysCPUType);
 
     std::string countStr;
     if (sysCPUCount == sysLogicalCPUCount)
-        countStr = oo::str::format("%zu", sysCPUCount);
+        countStr = oo::str::format("%llu", sysCPUCount);
     else
-        countStr = oo::str::format("%zu (%zu logical)", sysCPUCount, sysLogicalCPUCount);
+        countStr = oo::str::format("%llu (%llu logical)", sysCPUCount, sysLogicalCPUCount);
 
     // "%@" printed a nil sub-type as "(null)".
-    return oo::str::format("%s x %s%s @ %zu MHz", countStr.c_str(), typeStr->c_str(), subTypeStr ? subTypeStr->c_str() : "(null)", (sysCPUFrequency + 500000) / 1000000);
+    return oo::str::format("%s x %s%s @ %llu MHz", countStr.c_str(),
+        typeStr->c_str(),
+        subTypeStr ? subTypeStr->c_str() : "(null)",
+        (sysCPUFrequency + 500000) / 1000000);
 }
 
 static std::optional<std::string> GetSysCtlString(const char* name)
@@ -329,7 +344,7 @@ static std::optional<std::string> GetSysCtlString(const char* name)
     if (size == 0)
         return std::nullopt;
 
-    buffer = alloca(size);
+    buffer = static_cast<char*>(alloca(size));
     if (sysctlbyname(name, buffer, &size, NULL, 0) != 0)
         return std::nullopt;
     return std::string(buffer);
@@ -364,7 +379,11 @@ std::string AdditionalLogHeaderInfo(void)
     const std::string cpuDescription = OOCPUDescription();
     OOMemoryStatus systemMemoryStatus = OOSystemMemoryStatus();
 
-    return oo::str::format("%s %u processor%s detected. System RAM: %llu MB (free: %llu MB).", cpuDescription.c_str(), cpuCount, cpuCount != 1 ? "s" : "", systemMemoryStatus.ooPhysicalMemory, systemMemoryStatus.ooAvailableMemory);
+    return oo::str::format(
+        "%s %u processor%s detected. System RAM: %llu MB (free: %llu MB).",
+        cpuDescription.c_str(), cpuCount, cpuCount != 1 ? "s" : "",
+        systemMemoryStatus.ooPhysicalMemory,
+        systemMemoryStatus.ooAvailableMemory);
 }
-}
+} // namespace
 #endif

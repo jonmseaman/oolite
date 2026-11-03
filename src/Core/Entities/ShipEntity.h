@@ -608,9 +608,10 @@ public:
     void getJSClass(ooscript::ClassDef** outClass, ooscript::Object* outPrototype)
         override; // StationEntity overrides
     std::optional<std::string> jsClassName() override; // StationEntity overrides
-    bool isVisibleToScripts()
-        override; // YES, as the Objective-C ShipEntity answered; StationEntity
-                  // and DockEntity override with the same answer
+    // YES, as the Objective-C ShipEntity answered; StationEntity
+    // and DockEntity override with the same answer
+    bool isVisibleToScripts() override;
+
     virtual bool hasHostileTarget(); // PlayerEntity and StationEntity override
     bool isHostileTo(Entity* entity);
     GLfloat getWeaponRange();
@@ -794,14 +795,13 @@ public:
     void setThankedShip(Entity* targetEntity);
     Entity* rememberedShip();
     void setRememberedShip(Entity* targetEntity);
-    Entity* targetStation(); // the target station (or the mother an escort docks
-                             // with), its C++ entity
+    // the target station (or the mother an escort docks
+    // with), its C++ entity
+    Entity* targetStation();
     void setTargetStation(Entity* targetEntity);
     virtual bool isValidTarget(Entity* target);
     virtual void addTarget(Entity* targetEntity);
-    virtual void removeTarget(Entity* targetEntity); // virtual: a test seam
-                                                     // (test_EntityOOJavaScriptExtensions'
-                                                     // ship overrides it)
+    virtual void removeTarget(Entity* targetEntity);
     bool canStillTrackPrimaryTarget();
     virtual Entity* primaryTarget();
     Entity* primaryTargetWithoutValidityCheck();

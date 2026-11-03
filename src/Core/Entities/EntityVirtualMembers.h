@@ -56,114 +56,91 @@ class Entity;
    glue) keep their place: the class and a stand-in derive from oo::RefCounted
         and ::OOJSPrivateObject, in that order.
 */
-#define OO_ENTITY_VIRTUAL_MEMBERS(VOID_BODY, VALUE_BODY)                                            \
-    /* The session in which the entity was created. */                                              \
-    virtual NSUInteger                                                                              \
-    sessionID() VALUE_BODY virtual bool isDock() VALUE_BODY virtual bool isPlanet()                 \
-        VALUE_BODY virtual bool isSun() VALUE_BODY virtual bool isSky() VALUE_BODY virtual bool     \
-            isEffect() VALUE_BODY virtual bool getIsVisualEffect() VALUE_BODY virtual bool          \
-                isWaypoint() VALUE_BODY virtual bool validForAddToUniverse()                        \
-                    VALUE_BODY virtual void wasAddedToUniverse() VOID_BODY virtual void             \
-                        wasRemovedFromUniverse() VOID_BODY virtual void                             \
-                            warnAboutHostiles() VOID_BODY virtual void                              \
-                                throwSparks() VOID_BODY virtual void setOwner(                      \
-                                    Entity* /*ent*/)                                                \
-                                    VOID_BODY virtual void setPosition(                             \
-                                        HPVector /*posn*/) VOID_BODY virtual GLfloat                \
-                                        cameraRangeFront() VALUE_BODY virtual GLfloat               \
-                                            cameraRangeBack() VALUE_BODY virtual void               \
-                                                updateCameraRelativePosition()                      \
-                                                    VOID_BODY virtual OOComparisonResult            \
-                                                        compareZeroDistance(                        \
-                                                            Entity* /*otherEntity*/)                \
-                                                            VALUE_BODY virtual void setOrientation( \
-                                                                Quaternion /*quat*/)                \
-                                                                VOID_BODY /* Historical             \
-                                                                             wart:                  \
-                                                                             orientation.w          \
-                                                                             is                     \
-                                                                             reversed               \
-                                                                             for                    \
-                                                                             player;                \
-                                                                             normalOrientation()    \
-                                                                             corrects               \
-                                                                             this.                  \
-                                                                           */                       \
-        virtual Quaternion normalOrientation() VALUE_BODY virtual void setNormalOrientation(        \
-            Quaternion /*quat*/) VOID_BODY virtual void orientationChanged()                        \
-            VOID_BODY virtual Vector getVelocity() VALUE_BODY virtual void setStatus(               \
-                OOEntityStatus /*stat*/) VOID_BODY virtual OOScanClass                              \
-                getScanClass() VALUE_BODY virtual void applyRoll(                                   \
-                    GLfloat /*roll*/, GLfloat /*climb*/)                                            \
-                    VOID_BODY virtual void applyRoll(                                               \
-                        GLfloat /*roll*/, GLfloat /*climb*/, GLfloat /*yaw*/)                       \
-                        VOID_BODY virtual void moveForward(                                         \
-                            double /*amount*/) VOID_BODY virtual OOMatrix                           \
-                            drawRotationMatrix() VALUE_BODY virtual OOMatrix                        \
-                                drawTransformationMatrix() VALUE_BODY virtual bool                  \
-                                    canCollide() VALUE_BODY virtual GLfloat                         \
-                                        collisionRadius() VALUE_BODY virtual GLfloat                \
-                                            frustumRadius() VALUE_BODY virtual void update(         \
-                                                OOTimeDelta /*delta_t*/)                            \
-                                                VOID_BODY virtual bool                              \
-                                                    checkCloseCollisionWith(                        \
-                                                        Entity* /*other*/)                          \
-                                                        VALUE_BODY virtual void                     \
-                                                            takeEnergyDamage(                       \
-                                                                double /*amount*/                   \
-                                                                ,                                   \
-                                                                Entity* /*ent*/,                    \
-                                                                Entity* /*other*/                   \
-                                                                ,                                   \
-                                                                const std::                         \
-                                                                    string& /*weaponIdentifier*/)   \
-                                                                VOID_BODY /* Subclasses             \
-                                                                             should                 \
-                                                                             override               \
-                                                                             this,                  \
-                                                                             not                    \
-                                                                             dumpState(),           \
-                                                                             and                    \
-                                                                             call                   \
-                                                                             through                \
-                                                                             to                     \
-                                                                             the                    \
-                                                                             base                   \
-                                                                             first.                 \
-                                                                           */                       \
-        virtual void dumpSelfState()                                                                \
-            VOID_BODY virtual void subEntityReallyDied(::ShipEntity* /*sub*/)                       \
-                VOID_BODY /* Subclass responsibilities */                                           \
-        virtual double findCollisionRadius()                                                        \
-            VALUE_BODY virtual void drawImmediate(bool /*immediate*/,                               \
-                bool /*translucent*/)                                                               \
-                VOID_BODY virtual bool isVisible()                                                  \
-                    VALUE_BODY /* What "%@" prints between the braces of <Class                     \
-                                  0x...>{...} (OODescription.h). */                                 \
-        virtual std::optional<std::string>                                                          \
-            descriptionComponents()                                                                 \
-                const VALUE_BODY /* Entity (OOJavaScriptExtensions)'s class                         \
-                                    questions (Entity.h). */                                        \
-        virtual void getJSClass(ooscript::ClassDef** /*outClass*/,                                  \
-            ooscript::Object* /*outPrototype*/)                                                     \
-            VOID_BODY virtual std::optional<std::string>                                            \
-                jsClassName() VALUE_BODY virtual bool isVisibleToScripts()                          \
-                    VALUE_BODY /* The Mac debug OXP's inspector's -inspect (the                     \
-                                  console's inspectEntity()): nothing unless                        \
-                                  overridden. */                                                    \
-        virtual void inspect()                                                                      \
-            VOID_BODY /* The entity's JS glue (OOJSPrivateObject; Entity.h). */                     \
-                ooscript::Value jsValueInContext(ooscript::Context /*context*/)                     \
-                    override VALUE_BODY void clearJSSelf(                                           \
-                        ooscript::Object /*selfVal*/)                                               \
-                        override VOID_BODY std::optional<std::string>                               \
-                            jsDescription() override VALUE_BODY
+// clang-format off
+#define OO_ENTITY_VIRTUAL_MEMBERS(VOID_BODY, VALUE_BODY)                       \
+  /* The session in which the entity was created. */                           \
+  virtual NSUInteger sessionID() VALUE_BODY                                    \
+  virtual bool isDock() VALUE_BODY                                             \
+  virtual bool isPlanet() VALUE_BODY                                           \
+  virtual bool isSun() VALUE_BODY                                              \
+  virtual bool isSky() VALUE_BODY                                              \
+  virtual bool isEffect() VALUE_BODY                                           \
+  virtual bool getIsVisualEffect() VALUE_BODY                                  \
+  virtual bool isWaypoint() VALUE_BODY                                         \
+  virtual bool validForAddToUniverse() VALUE_BODY                              \
+  virtual void wasAddedToUniverse() VOID_BODY                                  \
+  virtual void wasRemovedFromUniverse() VOID_BODY                              \
+  virtual void warnAboutHostiles() VOID_BODY                                   \
+  virtual void throwSparks() VOID_BODY                                         \
+  virtual void setOwner(Entity* /*ent*/) VOID_BODY                             \
+  virtual void setPosition(HPVector /*posn*/) VOID_BODY                        \
+  virtual GLfloat cameraRangeFront() VALUE_BODY                                \
+  virtual GLfloat cameraRangeBack() VALUE_BODY                                 \
+  virtual void updateCameraRelativePosition() VOID_BODY                        \
+  virtual OOComparisonResult compareZeroDistance(                              \
+      Entity* /*otherEntity*/) VALUE_BODY                                      \
+  virtual void setOrientation(Quaternion /*quat*/) VOID_BODY                   \
+  /* Historical wart: orientation.w is reversed for player;                    \
+    normalOrientation() corrects this. */                                      \
+  virtual Quaternion normalOrientation() VALUE_BODY                            \
+  virtual void setNormalOrientation(Quaternion /*quat*/) VOID_BODY             \
+  virtual void orientationChanged() VOID_BODY                                  \
+  virtual Vector getVelocity() VALUE_BODY                                      \
+  virtual void setStatus(OOEntityStatus /*stat*/) VOID_BODY                    \
+  virtual OOScanClass getScanClass() VALUE_BODY                                \
+  virtual void applyRoll(GLfloat /*roll*/, GLfloat /*climb*/) VOID_BODY        \
+  virtual void applyRoll(                                                      \
+      GLfloat /*roll*/,                                                        \
+      GLfloat /*climb*/,                                                       \
+      GLfloat /*yaw*/) VOID_BODY                                               \
+  virtual void moveForward(double /*amount*/) VOID_BODY                        \
+  virtual OOMatrix drawRotationMatrix() VALUE_BODY                             \
+  virtual OOMatrix drawTransformationMatrix() VALUE_BODY                       \
+  virtual bool canCollide() VALUE_BODY                                         \
+  virtual GLfloat collisionRadius() VALUE_BODY                                 \
+  virtual GLfloat frustumRadius() VALUE_BODY                                   \
+  virtual void update(OOTimeDelta /*delta_t*/) VOID_BODY                       \
+  virtual bool checkCloseCollisionWith(Entity* /*other*/) VALUE_BODY           \
+  virtual void takeEnergyDamage(                                               \
+      double /*amount*/,                                                       \
+      Entity* /*ent*/,                                                         \
+      Entity* /*other*/,                                                       \
+      const std::string& /*weaponIdentifier*/) VOID_BODY                       \
+  /* Subclasses should override this, not dumpState(), and call through to the \
+    base first. */                                                             \
+  virtual void dumpSelfState() VOID_BODY                                       \
+  virtual void subEntityReallyDied(::ShipEntity* /*sub*/) VOID_BODY            \
+  /* Subclass responsibilities */                                              \
+  virtual double findCollisionRadius() VALUE_BODY                              \
+  virtual void drawImmediate(                                                  \
+      bool /*immediate*/,                                                      \
+      bool /*translucent*/) VOID_BODY                                          \
+  virtual bool isVisible() VALUE_BODY                                          \
+  /* What "%@" prints between the braces of <Class 0x...>{...}                 \
+    (OODescription.h). */                                                      \
+  virtual std::optional<std::string> descriptionComponents() const VALUE_BODY  \
+  /* Entity (OOJavaScriptExtensions)'s class questions (Entity.h). */          \
+  virtual void getJSClass(                                                     \
+      ooscript::ClassDef** /*outClass*/,                                       \
+      ooscript::Object* /*outPrototype*/) VOID_BODY                            \
+  virtual std::optional<std::string> jsClassName() VALUE_BODY                  \
+  virtual bool isVisibleToScripts() VALUE_BODY                                 \
+  /* The Mac debug OXP's inspector's -inspect (the console's inspectEntity()): \
+    nothing unless overridden. */                                              \
+  virtual void inspect() VOID_BODY                                             \
+  /* The entity's JS glue (OOJSPrivateObject; Entity.h). */                    \
+  ooscript::Value jsValueInContext(                                            \
+      ooscript::Context /*context*/) override VALUE_BODY                       \
+  void clearJSSelf(ooscript::Object /*selfVal*/) override VOID_BODY            \
+  std::optional<std::string> jsDescription() override VALUE_BODY
+// clang-format on
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-#define OO_ENTITY_DEBUG_VIRTUAL_MEMBERS(VOID_BODY, VALUE_BODY) \
-    virtual std::optional<std::string> descriptionForObjDump() \
-        VALUE_BODY virtual std::vector<oo::Ref<OOTexture>>     \
-            allTextures() VALUE_BODY
+// clang-format off
+#define OO_ENTITY_DEBUG_VIRTUAL_MEMBERS(VOID_BODY, VALUE_BODY)                 \
+  virtual std::optional<std::string> descriptionForObjDump() VALUE_BODY        \
+  virtual std::vector<oo::Ref<OOTexture>> allTextures() VALUE_BODY
+// clang-format on
 #else
 #define OO_ENTITY_DEBUG_VIRTUAL_MEMBERS(VOID_BODY, VALUE_BODY)
 #endif

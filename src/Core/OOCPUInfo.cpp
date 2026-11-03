@@ -23,14 +23,17 @@ MA 02110-1301, USA.
 */
 
 #include "OOCPUInfo.h"
+
+#include <stdlib.h>
+
+#include <cstring>
+
 #include "oofnd/Process.hpp"
 #include "oofnd/String.hpp"
-#include <cstring>
-#include <stdlib.h>
 
 #if OOLITE_MAC_OS_X
 #include <sys/sysctl.h>
-#elif (OOLITE_LINUX || OOLITE_WINDOWS)
+#elif (OOLITE_LINUX || OOLITE_WINDOWS || OOLITE_MACOS)
 // Workaround for clang/glibc incompatibility.
 #if !OOLITE_HAVE_CLANG
 #define __block __glibc_block
@@ -70,14 +73,18 @@ void OOCPUInfoInit(void)
 
 #if OOLITE_BIG_ENDIAN
     if (*(uint32_t*)endianTag != 0x12345678) {
-        OO_LOG("cpuInfo.endianTest.failed", "{}", "OOLITE_BIG_ENDIAN is set, but the system is not big-endian -- aborting.");
+        OO_LOG("cpuInfo.endianTest.failed", "{}",
+            "OOLITE_BIG_ENDIAN is set, but the system is not big-endian -- "
+            "aborting.");
         exit(EXIT_FAILURE);
     }
 #endif
 
 #if OOLITE_LITTLE_ENDIAN
     if (*(uint32_t*)endianTag != 0x78563412) {
-        OO_LOG("cpuInfo.endianTest.failed", "{}", "OOLITE_LITTLE_ENDIAN is set, but the system is not little-endian -- aborting.");
+        OO_LOG("cpuInfo.endianTest.failed", "{}",
+            "OOLITE_LITTLE_ENDIAN is set, but the system is not little-endian "
+            "-- aborting.");
         exit(EXIT_FAILURE);
     }
 #endif
@@ -108,9 +115,11 @@ NSUInteger OOCPUCount(void)
 
 #if (OOLITE_WINDOWS || OOLITE_LINUX)
 /*
-Taken straight out of the x64 gcc's __cpuid because our 32-bit compiler does not define it
+Taken straight out of the x64 gcc's __cpuid because our 32-bit compiler does not
+define it
 */
-// gnu_inline was the C (GNU89) spelling of "emit one definition"; C++ inline already means that.
+// gnu_inline was the C (GNU89) spelling of "emit one definition"; C++ inline
+// already means that.
 inline void OOCPUID(int CPUInfo[4], int InfoType)
 {
     __asm__ __volatile__(
@@ -187,7 +196,10 @@ std::string operatingSystemFullVersion(void)
 
     // get the Update Build Revision from the Registry
     HKEY hKey;
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0,
+            KEY_READ, &hKey)
+        == ERROR_SUCCESS) {
         DWORD dwUBRSize = sizeof(DWORD);
         DWORD dwUBR = 0;
         if (RegQueryValueEx(hKey, "UBR", NULL, NULL, (BYTE*)&dwUBR, &dwUBRSize) == ERROR_SUCCESS) {
@@ -206,13 +218,15 @@ std::string operatingSystemFullVersion(void)
 }
 
 /*
-is64bitSystem: Detect operating system bitness. This function is based mainly on code by Mark S. Kolich, as
-seen in http://mark.koli.ch/2009/10/reliably-checking-os-bitness-32-or-64-bit-on-windows-with-a-tiny-c-app.html
+is64bitSystem: Detect operating system bitness. This function is based mainly on
+code by Mark S. Kolich, as seen in
+http://mark.koli.ch/2009/10/reliably-checking-os-bitness-32-or-64-bit-on-windows-with-a-tiny-c-app.html
 */
 bool is64BitSystem(void)
 {
 #if defined(_WIN64)
-    // if we have been compiled as a 64-bit app and we are running, we are obviously on a 64-bit system
+    // if we have been compiled as a 64-bit app and we are running, we are
+    // obviously on a 64-bit system
     return true;
 #else
     BOOL is64Bit = FALSE;

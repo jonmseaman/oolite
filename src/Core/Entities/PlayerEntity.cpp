@@ -11444,9 +11444,9 @@ void PlayerEntity::showMarketScreenDataLine(OOGUIRow row,
         2.5);
 
     NSUInteger priceDecimal = pricePerUnit % 10;
-    const std::string price = oo::str::format(
-        " %s.%zu ",
-        cxx_OOPadStringToEms(oo::str::format("%zu", (pricePerUnit / 10)), 2.5)
+    const std::string price = oo::str::format(" %s.%zu ",
+        cxx_OOPadStringToEms(
+            oo::str::format("%" PRIu64, (pricePerUnit / 10)), 2.5)
             .c_str(),
         priceDecimal);
 

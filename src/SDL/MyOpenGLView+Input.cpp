@@ -10,9 +10,8 @@ Oolite
 // MinGW's or the UCRT's printf/strtod family is used.
 #include <SDL3/SDL_init.h>
 
-#include "MyOpenGLView.h"
-
 #include "GameController.h"
+#include "MyOpenGLView.h"
 #include "OOSDLJoystickManager.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
@@ -29,7 +28,8 @@ namespace {
 // probe), as UTF-8.
 std::string FormattedCharacter(unsigned code)
 {
-    return oo::utf16ToUtf8(std::u16string(1, static_cast<char16_t>(code & 0xFFu)));
+    return oo::utf16ToUtf8(
+        std::u16string(1, static_cast<char16_t>(code & 0xFFu)));
 }
 
 } // namespace
@@ -47,9 +47,11 @@ void MyOpenGLView::initKeyMappingData()
     const oo::PList kmap = ResourceManager::dictionaryFromFilesNamed(
         "keymappings_linux.plist", "Config", MERGE_BASIC, false);
 #endif
-    // get the stored keyboard code from preferences (oo_stringForKey:defaultValue: over the value)
+    // get the stored keyboard code from preferences
+    // (oo_stringForKey:defaultValue: over the value)
     const oo::PList kbdValue = oo::Defaults::standard().object("keyboard-code");
-    const std::string kbd = oo::PListGet<std::string>::from(kbdValue.isNull() ? nullptr : &kbdValue, "default");
+    const std::string kbd = oo::PListGet<std::string>::from(
+        kbdValue.isNull() ? nullptr : &kbdValue, "default");
     const oo::PList* subset = kmap.find(kbd);
     const oo::PList* normal = (subset != nullptr) ? subset->find("mapping_normal") : nullptr;
     const oo::PList* shifted = (subset != nullptr) ? subset->find("mapping_shifted") : nullptr;
@@ -87,15 +89,13 @@ std::optional<std::string> MyOpenGLView::getTypedString()
 {
     return typedString;
 }
-void MyOpenGLView::resetTypedString()
-{
-    typedString.clear();
-}
+void MyOpenGLView::resetTypedString() { typedString.clear(); }
 void MyOpenGLView::setTypedString(const std::string& value)
 {
     typedString = value;
 }
-void MyOpenGLView::noteMouseInteractionModeChangedFrom(OOMouseInteractionMode /*oldMode*/, OOMouseInteractionMode newMode)
+void MyOpenGLView::noteMouseInteractionModeChangedFrom(
+    OOMouseInteractionMode /*oldMode*/, OOMouseInteractionMode newMode)
 {
     autoShowMouse();
     setMouseInDeltaMode(OOMouseInteractionModeIsFlightMode(newMode));
@@ -134,11 +134,13 @@ void MyOpenGLView::resetMouse()
 {
     setVirtualJoystick(0.0, 0.0);
     if (::PlayerEntity::sharedPlayer()->isMouseControlOn()) {
-        // viewSize is in pixels; SDL mouse coordinates are in points (they differ on high-DPI displays)
+        // viewSize is in pixels; SDL mouse coordinates are in points (they differ
+        // on high-DPI displays)
         float pixelDensity = SDL_GetWindowPixelDensity(window);
         if (pixelDensity <= 0.0f)
             pixelDensity = 1.0f;
-        SDL_WarpMouseInWindow(window, viewSize.width / 2 / pixelDensity, viewSize.height / 2 / pixelDensity);
+        SDL_WarpMouseInWindow(window, viewSize.width / 2 / pixelDensity,
+            viewSize.height / 2 / pixelDensity);
         mouseWarped = true;
     }
 }
@@ -171,22 +173,10 @@ bool MyOpenGLView::isDown(int key)
         return false;
     return keys[key];
 }
-bool MyOpenGLView::isOptDown()
-{
-    return opt;
-}
-bool MyOpenGLView::isCtrlDown()
-{
-    return ctrl;
-}
-bool MyOpenGLView::isCommandDown()
-{
-    return command;
-}
-bool MyOpenGLView::isShiftDown()
-{
-    return shift;
-}
+bool MyOpenGLView::isOptDown() { return opt; }
+bool MyOpenGLView::isCtrlDown() { return ctrl; }
+bool MyOpenGLView::isCommandDown() { return command; }
+bool MyOpenGLView::isShiftDown() { return shift; }
 bool MyOpenGLView::isCapsLockOn()
 {
     /* Caps Lock state check - This effectively gives us
@@ -197,14 +187,8 @@ bool MyOpenGLView::isCapsLockOn()
     */
     return (SDL_GetModState() & SDL_KMOD_CAPS) == SDL_KMOD_CAPS;
 }
-bool MyOpenGLView::lastKeyWasShifted()
-{
-    return lastKeyShifted;
-}
-int MyOpenGLView::numKeys()
-{
-    return NUM_KEYS;
-}
+bool MyOpenGLView::lastKeyWasShifted() { return lastKeyShifted; }
+int MyOpenGLView::numKeys() { return NUM_KEYS; }
 int MyOpenGLView::mouseWheelState()
 {
     if (_mouseWheelDelta > 0.0f)
@@ -253,7 +237,10 @@ void MyOpenGLView::pollControls()
         case SDL_EVENT_GAMEPAD_BUTTON_UP:
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
         case SDL_EVENT_JOYSTICK_HAT_MOTION:
-            static_cast<OOSDLJoystickManager*>(OOJoystickManager::sharedStickHandler())->handleSDLEvent(&event); // the registered SDL handler (was a C cast)
+            static_cast<OOSDLJoystickManager*>(
+                OOJoystickManager::sharedStickHandler())
+                ->handleSDLEvent(
+                    &event); // the registered SDL handler (was a C cast)
             break;
 
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -266,10 +253,12 @@ void MyOpenGLView::pollControls()
             case SDL_BUTTON_RIGHT:
                 // Cocoa version does this in the GameController
                 /*
-                 The mouseWarped variable is quite important as far as mouse control is concerned. When we
-                 reset the virtual joystick (mouse) coordinates, we need to send a WarpMouse call because we
-                 must recenter the pointer physically on screen. This goes together with a mouse motion event,
-                 so we use mouseWarped to simply ignore handling of motion events in this case. - Nikos 20110721
+                 The mouseWarped variable is quite important as far as mouse control
+                 is concerned. When we reset the virtual joystick (mouse)
+                 coordinates, we need to send a WarpMouse call because we must
+                 recenter the pointer physically on screen. This goes together with
+                 a mouse motion event, so we use mouseWarped to simply ignore
+                 handling of motion events in this case. - Nikos 20110721
                 */
                 resetMouse(); // Will set mouseWarped to YES
                 break;
@@ -316,10 +305,11 @@ void MyOpenGLView::pollControls()
                     _mouseWheelDelta = 0.0f;
             }
             /*
-               Mousewheel handling - just note time since last use here and mark as inactive,
-               if needed, at the end of this method. Note that the mousewheel button up event is
-               kind of special, as in, it is sent at the same time as its corresponding mousewheel
-               button down one - Nikos 20140809
+               Mousewheel handling - just note time since last use here and mark as
+               inactive, if needed, at the end of this method. Note that the
+               mousewheel button up event is kind of special, as in, it is sent at
+               the same time as its corresponding mousewheel button down one - Nikos
+               20140809
             */
             NSTimeInterval timeBetweenMouseWheels;
             timeBetweenMouseWheels = timeNow - timeSinceLastMouseWheel;
@@ -369,7 +359,8 @@ void MyOpenGLView::pollControls()
 
                 if (!mouseWarped) // standard event, handle it
                 {
-                    // Event coordinates are in points, viewSize in pixels (they differ on high-DPI displays)
+                    // Event coordinates are in points, viewSize in pixels (they
+                    // differ on high-DPI displays)
                     float pixelDensity = SDL_GetWindowPixelDensity(window);
                     if (pixelDensity <= 0.0f)
                         pixelDensity = 1.0f;
@@ -607,26 +598,32 @@ void MyOpenGLView::pollControls()
                 }
                 break;
             default:
-                // OO_LOG("keys.test", "Unhandled Keydown scancode with unicode = 0: {}", static_cast<int>(scan_code));
+                // OO_LOG("keys.test", "Unhandled Keydown scancode with unicode =
+                // 0: {}", static_cast<int>(scan_code));
                 ;
             }
 
-            // the keyup event doesn't give us the unicode value, so store it here so it can be retrieved on keyup
-            // the ctrl key tends to mix up the unicode values, so deal with some special cases
-            // we also need (in most cases) to get the character without the impact of caps lock.
+            // the keyup event doesn't give us the unicode value, so store it here
+            // so it can be retrieved on keyup the ctrl key tends to mix up the
+            // unicode values, so deal with some special cases we also need (in most
+            // cases) to get the character without the impact of caps lock.
 
             if (((!special_key && (ctrl || key_id == 0)) || (isCapsLockOn() && (!special_key && !allowingStringInput))) && !modifier_pressed) //
             {
                 // ctrl changes alpha characters to control codes (1-26)
                 if (ctrl && key_id >= 1 && key_id <= 26) {
                     if (shift)
-                        key_id += 64; // A-Z is from 65, offset by -1 for the scancode start point
+                        key_id += 64; // A-Z is from 65, offset by -1 for the scancode
+                                      // start point
                     else
-                        key_id += 96; // a-z is from 97, offset by -1 for the scancode start point
+                        key_id += 96; // a-z is from 97, offset by -1 for the scancode
+                                      // start point
                 } else {
-                    // SDL3 - the key_id should contain the correct unicode value, so we shouldn't need to run the key mapping
+                    // SDL3 - the key_id should contain the correct unicode value, so we
+                    // shouldn't need to run the key mapping
                     // - kanthoney
-                    // key_id = 0; // reset the value here to force a lookup from the keymappings data
+                    // key_id = 0; // reset the value here to force a lookup from the
+                    // keymappings data
                 }
             }
 
@@ -638,12 +635,15 @@ void MyOpenGLView::pollControls()
                 handleStringInput(kbd_event, key_id);
             }
 
-            OO_LOG("input.keyMapping.keyPress.keyDown", "Keydown scancode = {}, unicode = {}", static_cast<int>(scan_code), static_cast<int>(key_id));
+            OO_LOG("input.keyMapping.keyPress.keyDown",
+                "Keydown scancode = {}, unicode = {}",
+                static_cast<int>(scan_code), static_cast<int>(key_id));
 
             if (key_id > 0 && key_id < numKeys()) {
                 keys[key_id] = true;
             } else {
-                OO_LOG("keys.test", "Unhandled Keydown scancode/unicode: {} {}", static_cast<int>(scan_code), static_cast<int>(key_id));
+                OO_LOG("keys.test", "Unhandled Keydown scancode/unicode: {} {}",
+                    static_cast<int>(scan_code), static_cast<int>(key_id));
             }
             break;
 
@@ -656,7 +656,8 @@ void MyOpenGLView::pollControls()
             ctrl = kbd_event->mod & SDL_KMOD_CTRL;
             opt = kbd_event->mod & SDL_KMOD_ALT;
 
-            // all the work should have been down on the keydown event, so all we need to do is get the unicode value from the array
+            // all the work should have been down on the keydown event, so all we
+            // need to do is get the unicode value from the array
             key_id = scancode2Unicode[scan_code];
 
             // deal with modifiers first
@@ -677,8 +678,16 @@ void MyOpenGLView::pollControls()
                 break;
             default:;
             }
-            OO_LOG("input.keyMapping.keyPress.keyUp", "Keyup scancode = {}, unicode = {}, character = {}, shift = {}, ctrl = {}, alt = {}", static_cast<int>(scan_code), static_cast<int>(key_id), static_cast<char>(key_id), static_cast<int>(shift), static_cast<int>(ctrl), static_cast<int>(opt));
-            // OO_LOG("input.keyMapping.keyPress.keyUp", "Keyup scancode = {}, shift = {}, ctrl = {}, alt = {}", static_cast<int>(scan_code), static_cast<int>(shift), static_cast<int>(ctrl), static_cast<int>(opt));
+            OO_LOG("input.keyMapping.keyPress.keyUp",
+                "Keyup scancode = {}, unicode = {}, character = {}, shift = {}, "
+                "ctrl = {}, alt = {}",
+                static_cast<int>(scan_code), static_cast<int>(key_id),
+                static_cast<char>(key_id), static_cast<int>(shift),
+                static_cast<int>(ctrl), static_cast<int>(opt));
+            // OO_LOG("input.keyMapping.keyPress.keyUp", "Keyup scancode = {}, shift
+            // = {}, ctrl = {}, alt = {}", static_cast<int>(scan_code),
+            // static_cast<int>(shift), static_cast<int>(ctrl),
+            // static_cast<int>(opt));
 
             // translate scancode to unicode equiv
             switch (kbd_event->key) {
@@ -819,14 +828,16 @@ void MyOpenGLView::pollControls()
                 break;
 
             default:
-                // OO_LOG("keys.test", "Unhandled Keyup scancode with unicode = 0: {}", static_cast<int>(kbd_event->keysym.scancode));
+                // OO_LOG("keys.test", "Unhandled Keyup scancode with unicode = 0:
+                // {}", static_cast<int>(kbd_event->keysym.scancode));
                 ;
             }
 
             if (key_id > 0 && key_id < numKeys()) {
                 keys[key_id] = false;
             } else {
-                // OO_LOG("keys.test", "Unhandled Keyup scancode: {}", static_cast<int>(kbd_event->keysym.scancode));
+                // OO_LOG("keys.test", "Unhandled Keyup scancode: {}",
+                // static_cast<int>(kbd_event->keysym.scancode));
             }
             break;
 
@@ -838,7 +849,9 @@ void MyOpenGLView::pollControls()
 #if OOLITE_WINDOWS
         case SDL_EVENT_WINDOW_FOCUS_GAINED: {
             if (gameController != nullptr)
-                gameController->setEcoQoS((gameController != nullptr ? gameController->isGamePaused() : false));
+                gameController->setEcoQoS((gameController != nullptr
+                        ? gameController->isGamePaused()
+                        : false));
             break;
         }
 
@@ -870,8 +883,8 @@ void MyOpenGLView::pollControls()
         updateGLSize(NSMakeSize(pixelWidth, pixelHeight));
 
         if (!fullScreen) {
-            // Save the window size in points, not pixels: they differ on high-DPI displays,
-            // and the saved size is passed back to SDL_SetWindowSize().
+            // Save the window size in points, not pixels: they differ on high-DPI
+            // displays, and the saved size is passed back to SDL_SetWindowSize().
             int windowWidth, windowHeight;
             SDL_GetWindowSize(window, &windowWidth, &windowHeight);
             saveWindowSize(NSMakeSize(windowWidth, windowHeight));
@@ -882,7 +895,8 @@ void MyOpenGLView::pollControls()
 // DJS: String input handler. Since for SDL versions we're also handling
 // freeform typing this has necessarily got more complex than the non-SDL
 // versions.
-void MyOpenGLView::handleStringInput(SDL_KeyboardEvent* kbd_event, Uint16 key_id)
+void MyOpenGLView::handleStringInput(SDL_KeyboardEvent* kbd_event,
+    Uint16 key_id)
 {
     SDL_Keycode key = kbd_event->key;
 

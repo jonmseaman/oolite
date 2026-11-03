@@ -50,7 +50,7 @@ __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #elif OOLITE_LINUX
 #include <unistd.h>
-#elif OOLITE_MAC_OS_X
+#elif OOLITE_MACOS
 #include <mach-o/dyld.h>
 #include <unistd.h>
 #endif
@@ -66,11 +66,6 @@ GameController* controller = nullptr;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 uint32_t gDebugFlags = 0;
-#endif
-
-#ifndef STRINGIFY // provided by GNUstep
-#define STRINGIFY_(s) #s
-#define STRINGIFY(s) STRINGIFY_(s)
 #endif
 
 // This macro is normally defined in the build command
@@ -172,7 +167,7 @@ int main(int argc, char* argv[])
         // As before: if the executable's directory cannot be entered, the game
         // starts where it is.
     }
-#elif OOLITE_MAC_OS_X
+#elif OOLITE_MACOS
     // Run from the folder holding Resources and AddOns: Contents in an app bundle
     // (executable in Contents/MacOS), otherwise the folder holding the
     // executable.
@@ -184,10 +179,14 @@ int main(int argc, char* argv[])
         if (last_slash != NULL) {
             *last_slash = '\0';
         }
-        chdir(resolved);
+        if (chdir(resolved) != 0) {
+            // As on Linux: the game starts where it is.
+        }
         size_t length = strlen(resolved);
         if (length >= 15 && strcmp(resolved + length - 15, "/Contents/MacOS") == 0) {
-            chdir("..");
+            if (chdir("..") != 0) {
+                // The game starts in Contents/MacOS.
+            }
         }
     }
 #endif

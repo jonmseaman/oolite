@@ -365,7 +365,7 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView)
 
     // Set up speech synthesizer.
 #if OOLITE_SPEECH_SYNTH
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         /*
                 NSSpeechSynthesizer can take over a second on an SSD and several
@@ -516,7 +516,7 @@ void Universe::dealloc()
 
 #if OOLITE_SPEECH_SYNTH
     speechArray = oo::PList();
-#if OOLITE_MAC_OS_X
+#if OOLITE_MAC_COCOA_UI
     [speechSynthesizer release];
 #elif OOLITE_ESPEAK
     espeak_Cancel();
@@ -11551,6 +11551,18 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize)
     OOGL(glBindFramebuffer(GL_FRAMEBUFFER, msaaFramebufferID));
 
     // creating MSAA texture that should be rendered into
+#if OO_MSAA_COLOR_RENDERBUFFER
+    // No multisample textures in the macOS legacy context; a multisample
+    // renderbuffer resolves the same way.
+    OOGL(glGenRenderbuffers(1, &msaaTextureID));
+    OOGL(glBindRenderbuffer(GL_RENDERBUFFER, msaaTextureID));
+    OOGL(glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA16F,
+        (GLsizei)viewSize.width,
+        (GLsizei)viewSize.height));
+    OOGL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+    OOGL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+        GL_RENDERBUFFER, msaaTextureID));
+#else
     OOGL(glGenTextures(1, &msaaTextureID));
     OOGL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaTextureID));
     OOGL(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA16F,
@@ -11559,6 +11571,7 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize)
     OOGL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
     OOGL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D_MULTISAMPLE, msaaTextureID, 0));
+#endif
 
     // create necessary MSAA depth render buffer
     OOGL(glGenRenderbuffers(1, &msaaDepthBufferID));
@@ -11744,7 +11757,11 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize)
 
 void Universe::deleteOpenGLObjects()
 {
+#if OO_MSAA_COLOR_RENDERBUFFER
+    OOGL(glDeleteRenderbuffers(1, &msaaTextureID));
+#else
     OOGL(glDeleteTextures(1, &msaaTextureID));
+#endif
     OOGL(glDeleteTextures(1, &targetTextureID));
     OOGL(glDeleteTextures(2, passthroughTextureID));
     OOGL(glDeleteTextures(2, pingpongColorbuffers));
@@ -11766,11 +11783,19 @@ void Universe::resizeTargetFramebufferWithViewSize(NSSize viewSize)
 {
     int i;
     // resize MSAA color attachment
+#if OO_MSAA_COLOR_RENDERBUFFER
+    OOGL(glBindRenderbuffer(GL_RENDERBUFFER, msaaTextureID));
+    OOGL(glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA16F,
+        (GLsizei)viewSize.width,
+        (GLsizei)viewSize.height));
+    OOGL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+#else
     OOGL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaTextureID));
     OOGL(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA16F,
         (GLsizei)viewSize.width,
         (GLsizei)viewSize.height, GL_TRUE));
     OOGL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
+#endif
 
     // resize MSAA depth attachment
     OOGL(glBindRenderbuffer(GL_RENDERBUFFER, msaaDepthBufferID));

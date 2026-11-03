@@ -1,6 +1,6 @@
 project(
     'oolite',
-    ['c', 'cpp'],	# every game unit is C++
+    ['c', 'cpp'],
     meson_version: '>= 1.4.0',
     version: run_command(
         'bash',

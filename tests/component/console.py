@@ -104,7 +104,8 @@ class DebugConsole:
         # Headless and silent, exactly as tests/launch_snapshot.py runs the game. The offscreen
         # video driver is deliberately not set on Windows: MSYS2's mesa ships no EGL, so SDL's
         # offscreen driver cannot create a context there and the game exits during init.
-        if not IS_WINDOWS:
+        # SDL's offscreen driver has no OpenGL on macOS either, so a real window is used there.
+        if not IS_WINDOWS and sys.platform != "darwin":
             env["SDL_VIDEODRIVER"] = "offscreen"
         env["LIBGL_ALWAYS_SOFTWARE"] = "1"
         env["GALLIUM_DRIVER"] = "llvmpipe"
@@ -122,6 +123,9 @@ class DebugConsole:
     def _spawn(self):
         binary = "oolite.exe" if IS_WINDOWS else "oolite"
         path = os.path.join(self.app_dir, binary)
+        bundled = os.path.join(self.app_dir, "Contents", "MacOS", binary)
+        if not os.path.isfile(path) and os.path.isfile(bundled):
+            path = bundled  # a macOS app bundle
         if not os.path.isfile(path):
             raise ConsoleError(f"no Oolite binary at {path}; build it first")
         argv = [path, "--no-splash"]

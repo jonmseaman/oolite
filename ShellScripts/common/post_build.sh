@@ -52,7 +52,6 @@ run_script() {
         return 1
     fi
     generate_manifest "$resourcesdir/manifest.plist" "$debug_monitor" "$ver_full" "$ver_quad" "$ver_githash" "$buildtime"
-    local addonsdir="$progdir/AddOns"
     mkdir -p "$addonsdir"
     rm -rf "$addonsdir/Basic-debug.oxp"
     cp -rf DebugOXP/Debug.oxp "$addonsdir/Basic-debug.oxp"
@@ -155,7 +154,6 @@ run_script() {
             echo "❌ Failed to create Info.plist!" >&2
             return 1
         fi
-        rm -f "$resourcesdir/Info-gnustep.plist"
         if ! bundle_dylibs "$progpath" "$progdir/Contents/Frameworks"; then
             echo "❌ Failed to bundle libraries!" >&2
             return 1

@@ -24,7 +24,6 @@ MA 02110-1301, USA.
 
 */
 
-#import "EntityOOJavaScriptExtensions.h"
 #pragma once
 
 #include "Entity.h"
@@ -55,7 +54,10 @@ extern ooscript::Object gOOEntityJSPrototype;
    the slot holds. A binding's own class (Ship, Planet, Sun) passes its JS
    class.
 */
-OOINLINE bool OOJSEntityGetEntityOfClass(ooscript::Context context, ooscript::Object inObject, ooscript::ClassDef* jsClass, Entity** outEntity)
+OOINLINE bool OOJSEntityGetEntityOfClass(ooscript::Context context,
+    ooscript::Object inObject,
+    ooscript::ClassDef* jsClass,
+    Entity** outEntity)
 {
     OOJSEntityHolder* holder = nullptr;
     if (!OOJSGetCxxPrivate(context, inObject, jsClass, &holder))
@@ -64,9 +66,12 @@ OOINLINE bool OOJSEntityGetEntityOfClass(ooscript::Context context, ooscript::Ob
     return true;
 }
 
-OOINLINE bool OOJSEntityGetEntity(ooscript::Context context, ooscript::Object inObject, Entity** outEntity)
+OOINLINE bool OOJSEntityGetEntity(ooscript::Context context,
+    ooscript::Object inObject,
+    Entity** outEntity)
 {
-    return OOJSEntityGetEntityOfClass(context, inObject, JSEntityClass(), outEntity);
+    return OOJSEntityGetEntityOfClass(context, inObject, JSEntityClass(),
+        outEntity);
 }
 
 /*	OOJSNativeObjectOfClassFromJSValue(context, value, <the root entity
@@ -106,7 +111,8 @@ OOINLINE ooscript::Object JSEntityPrototype(void)
 
         Construct a entity from an argument list containing a JS Entity object.
         The optional outConsumed argument can be used to find out how many
-        parameters were used (currently, this will be 0 on failure, otherwise 1).
+        parameters were used (currently, this will be 0 on failure, otherwise
+   1).
 
         On failure, it will return false, annd the entity will be unaltered. If
         scriptClass and function are non-nil, a warning will be reported to the
@@ -121,8 +127,8 @@ bool EntityFromArgumentList(ooscript::Context context,
 /*
         For scripting purposes, a JS entity object is a stale reference if its
         underlying ObjC object is nil, or if it refers to the player and the
-        blockJSPlayerShipProps flag is in effect (i.e., the escape pod sequence is
-        active).
+        blockJSPlayerShipProps flag is in effect (i.e., the escape pod sequence
+   is active).
 */
 // The global holds the player's C++ entity while the flag is in effect, else
 // null.

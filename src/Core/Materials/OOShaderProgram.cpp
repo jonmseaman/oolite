@@ -29,6 +29,9 @@ SOFTWARE.
 
 #if OO_SHADERS
 
+#include <regex>
+#include <vector>
+
 #include "MyOpenGLView.h"
 #include "OODebugFlags.h"
 #include "OOFunctionAttributes.h"
@@ -38,7 +41,6 @@ SOFTWARE.
 #include "OOStringParsing.h"
 #include "ResourceManager.h"
 #include "Universe.h"
-
 #include "oofnd/PListGet.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
@@ -56,7 +58,8 @@ bool GetShaderSource(const std::optional<std::string>& fileName,
     std::optional<std::string>* outResult);
 std::string GetGLSLInfoLog(GLhandleARB shaderObject);
 
-// The game view's matrix manager, taken from the C++ view. Null when there is no universe or view.
+// The game view's matrix manager, taken from the C++ view. Null when there is
+// no universe or view.
 OOOpenGLMatrixManager* GameViewMatrixManager()
 {
     MyOpenGLView* view = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
@@ -74,7 +77,8 @@ namespace {
 
 std::unordered_map<std::string, OOShaderProgram*>* sShaderCache = NULL;
 
-OOShaderProgram* CachedShaderProgram(const std::optional<std::string>& cacheKey)
+OOShaderProgram* CachedShaderProgram(
+    const std::optional<std::string>& cacheKey)
 {
     if (!cacheKey.has_value() || sShaderCache == NULL)
         return nullptr;
@@ -100,12 +104,15 @@ oo::Ref<OOShaderProgram>& ActiveProgram()
 
 } // namespace
 
-oo::Ref<OOShaderProgram> OOShaderProgram::shaderProgramWithVertexShader(const std::optional<std::string>& vertexShaderSource,
+oo::Ref<OOShaderProgram> OOShaderProgram::shaderProgramWithVertexShader(
+    const std::optional<std::string>& vertexShaderSource,
     const std::optional<std::string>& fragmentShaderSource,
     const std::optional<std::string>& vertexShaderName,
     const std::optional<std::string>& fragmentShaderName,
-    const std::optional<std::string>& inPrefixString, // String prepended to program source (both vs and fs)
-    const oo::PList& attributeBindings, // Maps vertex attribute names to "locations".
+    const std::optional<std::string>&
+        inPrefixString, // String prepended to program source (both vs and fs)
+    const oo::PList&
+        attributeBindings, // Maps vertex attribute names to "locations".
     const std::optional<std::string>& cacheKey)
 {
     oo::Ref<OOShaderProgram> result;
@@ -114,33 +121,31 @@ oo::Ref<OOShaderProgram> OOShaderProgram::shaderProgramWithVertexShader(const st
     if (prefixString.has_value() && prefixString->empty())
         prefixString = std::nullopt;
 
-    // Use cache to avoid creating duplicate shader programs -- saves on GPU resources and potentially state changes.
+    // Use cache to avoid creating duplicate shader programs -- saves on GPU
+    // resources and potentially state changes.
     // FIXME: probably needs to respond to graphics resets.
     result = oo::Ref<OOShaderProgram>(CachedShaderProgram(cacheKey));
 
     if (result == nullptr) {
         // No cached program; create one...
         result = oo::adopt(new OOShaderProgram());
-        if (!result->initWithVertexShaderSource(vertexShaderSource,
-                fragmentShaderSource,
-                prefixString,
-                vertexShaderName,
-                fragmentShaderName,
-                attributeBindings,
-                cacheKey))
+        if (!result->initWithVertexShaderSource(
+                vertexShaderSource, fragmentShaderSource, prefixString,
+                vertexShaderName, fragmentShaderName, attributeBindings, cacheKey))
             result = nullptr;
 
         if (result != nullptr && cacheKey.has_value()) {
             // ...and add it to the cache.
-            CacheShaderProgram(*cacheKey, result.get()); // the cache doesn't retain the program
+            CacheShaderProgram(*cacheKey,
+                result.get()); // the cache doesn't retain the program
         }
     }
 
     return result;
 }
 
-oo::Ref<OOShaderProgram> OOShaderProgram::shaderProgramWithVertexShaderName(const std::string& vertexShaderName,
-    const std::string& fragmentShaderName,
+oo::Ref<OOShaderProgram> OOShaderProgram::shaderProgramWithVertexShaderName(
+    const std::string& vertexShaderName, const std::string& fragmentShaderName,
     const std::optional<std::string>& inPrefixString,
     const oo::PList& attributeBindings)
 {
@@ -153,7 +158,8 @@ oo::Ref<OOShaderProgram> OOShaderProgram::shaderProgramWithVertexShaderName(cons
     if (prefixString.has_value() && prefixString->empty())
         prefixString = std::nullopt;
 
-    // Use cache to avoid creating duplicate shader programs -- saves on GPU resources and potentially state changes.
+    // Use cache to avoid creating duplicate shader programs -- saves on GPU
+    // resources and potentially state changes.
     // FIXME: probably needs to respond to graphics resets.
     cacheKey = "vertex:" + vertexShaderName + "\nfragment:" + fragmentShaderName + "\n----\n" + prefixString.value_or("");
     result = oo::Ref<OOShaderProgram>(CachedShaderProgram(cacheKey));
@@ -164,19 +170,32 @@ oo::Ref<OOShaderProgram> OOShaderProgram::shaderProgramWithVertexShaderName(cons
             return nullptr;
         if (!GetShaderSource(fragmentShaderName, "fragment", &fragmentSource))
             return nullptr;
+        oo::PList bindings = attributeBindings;
+#if OOLITE_MACOS
+        /*	The macOS legacy OpenGL context only supports GLSL 1.20, so shaders
+                written for #version 330 are translated when loaded.
+        */
+        const std::string version330 = "#version 330";
+        if (prefixString.has_value() && oo::str::hasPrefix(*prefixString, version330)) {
+            oo::PList::Dict translatedBindings;
+            if (const oo::PList::Dict* given = attributeBindings.getIf<oo::PList::Dict>())
+                translatedBindings = *given;
+            vertexSource = OOTranslateGLSL330To120(vertexSource, true, translatedBindings);
+            fragmentSource = OOTranslateGLSL330To120(fragmentSource, false, translatedBindings);
+            bindings = oo::PList(std::move(translatedBindings));
+            prefixString = "#version 120\n#extension GL_EXT_gpu_shader4 : enable\n" + prefixString->substr(version330.length());
+        }
+#endif
         result = oo::adopt(new OOShaderProgram());
-        if (!result->initWithVertexShaderSource(vertexSource,
-                fragmentSource,
-                prefixString,
-                vertexShaderName,
-                fragmentShaderName,
-                attributeBindings,
-                cacheKey))
+        if (!result->initWithVertexShaderSource(
+                vertexSource, fragmentSource, prefixString, vertexShaderName,
+                fragmentShaderName, bindings, cacheKey))
             result = nullptr;
 
         if (result != nullptr) {
             // ...and add it to the cache.
-            CacheShaderProgram(cacheKey, result.get()); // the cache doesn't retain the program
+            CacheShaderProgram(cacheKey,
+                result.get()); // the cache doesn't retain the program
         }
     }
 
@@ -188,9 +207,12 @@ OOShaderProgram::~OOShaderProgram()
     OO_ENTER_OPENGL();
 
 #ifndef NDEBUG
-    // Cannot happen while being in use retains the program; kept as the old imbalance check.
+    // Cannot happen while being in use retains the program; kept as the old
+    // imbalance check.
     if (EXPECT_NOT(ActiveProgram() != nullptr && ActiveProgram().get() == this)) {
-        OO_LOG("shader.dealloc.imbalance", "{}", "***** OOShaderProgram deallocated while active, indicating a retain/release imbalance. Expect imminent crash.");
+        OO_LOG("shader.dealloc.imbalance", "{}",
+            "***** OOShaderProgram deallocated while active, indicating a "
+            "retain/release imbalance. Expect imminent crash.");
         // applyNone(), but not released: it is being destroyed.
         (void)ActiveProgram().leakRef();
         OOGL(glUseProgramObjectARB(NULL_SHADER));
@@ -227,10 +249,7 @@ void OOShaderProgram::applyNone()
     }
 }
 
-GLhandleARB OOShaderProgram::program()
-{
-    return _program;
-}
+GLhandleARB OOShaderProgram::program() { return _program; }
 
 namespace {
 
@@ -279,17 +298,23 @@ bool ValidateShaderObject(GLhandleARB object,
     OOGL(glGetObjectParameterivARB(object, statusType, &status));
     if (status == GL_FALSE) {
         const std::string msgClass = oo::str::format("shader.%s.failure", linking ? "link" : "compile");
-        OO_LOG_ERR(msgClass, "GLSL {} {} failed for {}:\n>>>>> GLSL log:\n{}\n", subtypeString, actionString, name.value_or("(null)"), GetGLSLInfoLog(object));
+        OO_LOG_ERR(msgClass, "GLSL {} {} failed for {}:\n>>>>> GLSL log:\n{}\n",
+            subtypeString, actionString, name.value_or("(null)"),
+            GetGLSLInfoLog(object));
         return false;
     }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if (0 && (gDebugFlags & DEBUG_SHADER_VALIDATION)) {
         OOGL(glValidateProgramARB(object));
-        OOGL(glGetObjectParameterivARB(object, GL_OBJECT_VALIDATE_STATUS_ARB, &status));
+        OOGL(glGetObjectParameterivARB(object, GL_OBJECT_VALIDATE_STATUS_ARB,
+            &status));
         if (status == GL_FALSE) {
-            const std::string msgClass = oo::str::format("shader.%s.validationFailure", linking ? "link" : "compile");
-            OO_LOG_WARN(msgClass, "GLSL {} {} failed for {}:\n>>>>> GLSL log:\n{}\n", subtypeString, "validation", name.value_or("(null)"), GetGLSLInfoLog(object));
+            const std::string msgClass = oo::str::format(
+                "shader.%s.validationFailure", linking ? "link" : "compile");
+            OO_LOG_WARN(msgClass, "GLSL {} {} failed for {}:\n>>>>> GLSL log:\n{}\n",
+                subtypeString, "validation", name.value_or("(null)"),
+                GetGLSLInfoLog(object));
             return false;
         }
     }
@@ -300,7 +325,8 @@ bool ValidateShaderObject(GLhandleARB object,
 
 } // namespace
 
-bool OOShaderProgram::initWithVertexShaderSource(const std::optional<std::string>& vertexSource,
+bool OOShaderProgram::initWithVertexShaderSource(
+    const std::optional<std::string>& vertexSource,
     const std::optional<std::string>& fragmentSource,
     const std::optional<std::string>& prefixString,
     const std::optional<std::string>& vertexName,
@@ -376,10 +402,12 @@ bool OOShaderProgram::initWithVertexShaderSource(const std::optional<std::string
         OOGL(glDeleteObjectARB(fragmentShader));
 
     if (OK) {
-        // The matrix manager is C++: taken from the C++ game view (null-guarded, as a message to
-        // nil answered a null list).
+        // The matrix manager is C++: taken from the C++ game view (null-guarded, as
+        // a message to nil answered a null list).
         OOOpenGLMatrixManager* matrixManager = GameViewMatrixManager();
-        standardMatrixUniformLocations = (matrixManager != nullptr) ? matrixManager->standardMatrixUniformLocations(_program) : oo::PList();
+        standardMatrixUniformLocations = (matrixManager != nullptr)
+            ? matrixManager->standardMatrixUniformLocations(_program)
+            : oo::PList();
     } else {
         if (_program != NULL_SHADER) {
             OOGL(glDeleteObjectARB(_program));
@@ -397,8 +425,11 @@ void OOShaderProgram::bindAttributes(const oo::PList& attributeBindings)
 
     if (!attributeBindings.isDict())
         return;
-    for (const auto& [attrKey, location] : *attributeBindings.getIf<oo::PList::Dict>()) {
-        OOGL(glBindAttribLocationARB(_program, attributeBindings.get<unsigned int>(attrKey), attrKey.c_str()));
+    for (const auto& [attrKey, location] :
+        *attributeBindings.getIf<oo::PList::Dict>()) {
+        OOGL(glBindAttribLocationARB(_program,
+            attributeBindings.get<unsigned int>(attrKey),
+            attrKey.c_str()));
     }
 }
 
@@ -412,15 +443,22 @@ void OOShaderProgram::bindStandardMatrixUniforms()
         // Null-guarded as messages to nil: nothing synced, and a zero matrix.
         if (matrixManager != nullptr)
             matrixManager->syncModelView();
-        for (const oo::PList& pair : *standardMatrixUniformLocations.getIf<oo::PList::Array>()) {
+        for (const oo::PList& pair :
+            *standardMatrixUniformLocations.getIf<oo::PList::Array>()) {
             if (pair.isArray()) {
-                // -[nil compare:] answered 0, so an entry without a type string counts as "mat3".
+                // -[nil compare:] answered 0, so an entry without a type string counts
+                // as "mat3".
                 const oo::PList* typeName = pair.at<oo::PList>(2);
                 const bool noTypeName = typeName == nullptr || !(typeName->isString() || typeName->isNumber());
                 if (noTypeName || pair.at<std::string>(2) == "mat3") {
-                    OOGL(GLUniformMatrix3(pair.at<int>(0), matrixManager != nullptr ? matrixManager->getMatrix(pair.at<int>(1)) : kZeroMatrix));
+                    OOGL(GLUniformMatrix3(pair.at<int>(0),
+                        matrixManager != nullptr
+                            ? matrixManager->getMatrix(pair.at<int>(1))
+                            : kZeroMatrix));
                 } else {
-                    OOMatrix matrix = matrixManager != nullptr ? matrixManager->getMatrix(pair.at<int>(1)) : kZeroMatrix;
+                    OOMatrix matrix = matrixManager != nullptr
+                        ? matrixManager->getMatrix(pair.at<int>(1))
+                        : kZeroMatrix;
                     GLUniformMatrix(pair.at<int>(0), matrix);
                 }
             }
@@ -432,8 +470,9 @@ void OOShaderProgram::bindStandardMatrixUniforms()
 namespace {
 
 /*	Attempt to load fragment or vertex shader source from a file.
-        Returns YES if source was loaded or no shader was specified, and NO if an
-        external shader was specified but could not be found. (The prefix it took went unused.)
+        Returns YES if source was loaded or no shader was specified, and NO if
+   an external shader was specified but could not be found. (The prefix it took
+   went unused.)
 */
 bool GetShaderSource(const std::optional<std::string>& fileName,
     const std::string& shaderType,
@@ -442,22 +481,29 @@ bool GetShaderSource(const std::optional<std::string>& fileName,
     std::optional<std::string> result;
 
     if (!fileName.has_value())
-        return true; // It's OK for one or the other of the shaders to be undefined.
+        return true; // It's OK for one or the other of the shaders to be
+                     // undefined.
 
     result = ResourceManager::stringFromFilesNamed(*fileName, "Shaders");
     if (!result.has_value()) {
-        const std::vector<std::string> extensions { shaderType, shaderType.substr(0, 4) }; // vertex and vert, or fragment and frag
+        const std::vector<std::string> extensions {
+            shaderType,
+            shaderType.substr(0, 4)
+        }; // vertex and vert, or fragment and frag
 
-        // Futureproofing -- in future, we may wish to support automatic selection between supported shader languages.
+        // Futureproofing -- in future, we may wish to support automatic selection
+        // between supported shader languages.
         if (!oo::str::pathHasExtensionIn(*fileName, extensions)) {
             for (const std::string& extension : extensions) {
-                result = ResourceManager::stringFromFilesNamed(oo::str::appendingPathExtension(*fileName, extension), "Shaders");
+                result = ResourceManager::stringFromFilesNamed(
+                    oo::str::appendingPathExtension(*fileName, extension), "Shaders");
                 if (result.has_value())
                     break;
             }
         }
         if (!result.has_value()) {
-            OO_LOG(cxx_kOOLogFileNotFound, "GLSL ERROR: failed to find fragment program {}.", *fileName);
+            OO_LOG(cxx_kOOLogFileNotFound,
+                "GLSL ERROR: failed to find fragment program {}.", *fileName);
             return false;
         }
     }
@@ -472,7 +518,8 @@ bool GetShaderSource(const std::optional<std::string>& fileName,
     return true;
 }
 
-// Whether <bytes> is well-formed UTF-8 (shortest forms, no surrogates, at most U+10FFFF).
+// Whether <bytes> is well-formed UTF-8 (shortest forms, no surrogates, at most
+// U+10FFFF).
 bool IsWellFormedUTF8(std::string_view bytes)
 {
     std::size_t i = 0;
@@ -512,8 +559,8 @@ bool IsWellFormedUTF8(std::string_view bytes)
     return true;
 }
 
-// The info log as UTF-8: +stringWithUTF8String: of it, or (when that failed) its bytes read as
-// ISO Latin-1.
+// The info log as UTF-8: +stringWithUTF8String: of it, or (when that failed)
+// its bytes read as ISO Latin-1.
 std::string GetGLSLInfoLog(GLhandleARB shaderObject)
 {
     GLint length;
@@ -525,7 +572,8 @@ std::string GetGLSLInfoLog(GLhandleARB shaderObject)
     if (EXPECT_NOT(shaderObject == NULL_SHADER))
         return "(null)"; // what "%@" printed for the nil result
 
-    OOGL(glGetObjectParameterivARB(shaderObject, GL_OBJECT_INFO_LOG_LENGTH_ARB, &length));
+    OOGL(glGetObjectParameterivARB(shaderObject, GL_OBJECT_INFO_LOG_LENGTH_ARB,
+        &length));
     log = (GLcharARB*)malloc(length);
     if (log == NULL) {
         length = 1024;
@@ -555,65 +603,73 @@ std::string GetGLSLInfoLog(GLhandleARB shaderObject)
 
 } // namespace
 
-#endif // OO_SHADERS
+namespace {
 
-#if OOLITE_MAC_OS_X
-static NSString* ReplaceRegex(NSString* source, NSString* pattern, NSString* replacement)
+constexpr std::regex::flag_type kGLSLRegexFlags = std::regex::ECMAScript | std::regex::multiline;
+
+std::string ReplaceRegex(const std::string& source, const char* pattern,
+    const char* replacement)
 {
-    NSRegularExpression* regex = [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionAnchorsMatchLines error:NULL];
-    return [regex stringByReplacingMatchesInString:source options:0 range:NSMakeRange(0, [source length]) withTemplate:replacement];
+    return std::regex_replace(source, std::regex(pattern, kGLSLRegexFlags),
+        replacement);
 }
 
-/*	Translate the subset of GLSL 3.30 used by Oolite's post-processing shaders
-        to GLSL 1.20 (plus GL_EXT_gpu_shader4). Only top-level declarations are
-        rewritten, so in/out parameter qualifiers inside functions are untouched.
-*/
-static NSString* TranslateGLSL330To120(NSString* source, BOOL isVertexShader, NSMutableDictionary* attributeBindings)
-{
-    if (source == nil)
-        return nil;
+} // namespace
 
-    NSRegularExpression* regex = nil;
-    NSArray* matches = nil;
-    NSTextCheckingResult* match = nil;
+std::optional<std::string> OOTranslateGLSL330To120(
+    const std::optional<std::string>& inSource, bool isVertexShader,
+    oo::PList::Dict& attributeBindings)
+{
+    if (!inSource.has_value())
+        return std::nullopt;
+    std::string source = *inSource;
 
     if (isVertexShader) {
         // layout(location = N) in TYPE NAME;  ->  attribute binding NAME = N
-        regex = [NSRegularExpression regularExpressionWithPattern:@"^\\s*layout\\s*\\(\\s*location\\s*=\\s*(\\d+)\\s*\\)\\s*in\\s+\\w+\\s+(\\w+)\\s*;" options:NSRegularExpressionAnchorsMatchLines error:NULL];
-        matches = [regex matchesInString:source options:0 range:NSMakeRange(0, [source length])];
-        foreach (match, matches) {
-            NSString* location = [source substringWithRange:[match rangeAtIndex:1]];
-            NSString* name = [source substringWithRange:[match rangeAtIndex:2]];
-            [attributeBindings setObject:[NSNumber numberWithInt:[location intValue]] forKey:name];
+        const std::regex location(
+            R"(^\s*layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s*in\s+\w+\s+(\w+)\s*;)",
+            kGLSLRegexFlags);
+        for (std::sregex_iterator match(source.begin(), source.end(), location),
+            end;
+            match != end; ++match) {
+            attributeBindings[(*match)[2].str()] = oo::PList::signedInteger(std::stoi((*match)[1].str()));
         }
     } else {
         // [layout(location = N)] out vec4 NAME;  ->  #define NAME gl_FragData[N]
-        NSMutableString* result = [NSMutableString stringWithString:source];
-        regex = [NSRegularExpression regularExpressionWithPattern:@"^\\s*(?:layout\\s*\\(\\s*location\\s*=\\s*(\\d+)\\s*\\)\\s*)?out\\s+vec4\\s+(\\w+)\\s*;" options:NSRegularExpressionAnchorsMatchLines error:NULL];
-        matches = [regex matchesInString:source options:0 range:NSMakeRange(0, [source length])];
-        foreach (match, [matches reverseObjectEnumerator]) {
-            NSRange locationRange = [match rangeAtIndex:1];
-            NSString* location = locationRange.location != NSNotFound ? [source substringWithRange:locationRange] : @"0";
-            NSString* name = [source substringWithRange:[match rangeAtIndex:2]];
-            [result replaceCharactersInRange:[match range] withString:[NSString stringWithFormat:@"#define %@ gl_FragData[%@]", name, location]];
+        const std::regex output(
+            R"(^\s*(?:layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s*)?out\s+vec4\s+(\w+)\s*;)",
+            kGLSLRegexFlags);
+        std::vector<std::smatch> matches;
+        for (std::sregex_iterator match(source.begin(), source.end(), output), end;
+            match != end; ++match)
+            matches.push_back(*match);
+        std::string result = source;
+        for (auto match = matches.rbegin(); match != matches.rend(); ++match) {
+            const std::string location = (*match)[1].matched ? (*match)[1].str() : std::string("0");
+            result.replace(
+                match->position(0), match->length(0),
+                "#define " + (*match)[2].str() + " gl_FragData[" + location + "]");
         }
         source = result;
     }
 
-    source = ReplaceRegex(source, @"layout\\s*\\([^)]*\\)\\s*", @"");
+    source = ReplaceRegex(source, R"(layout\s*\([^)]*\)\s*)", "");
     if (isVertexShader) {
-        source = ReplaceRegex(source, @"^(\\s*)in\\s+", @"$1attribute ");
-        source = ReplaceRegex(source, @"^(\\s*)out\\s+", @"$1varying ");
+        source = ReplaceRegex(source, R"(^(\s*)in\s+)", "$1attribute ");
+        source = ReplaceRegex(source, R"(^(\s*)out\s+)", "$1varying ");
     } else {
-        source = ReplaceRegex(source, @"^(\\s*)in\\s+", @"$1varying ");
+        source = ReplaceRegex(source, R"(^(\s*)in\s+)", "$1varying ");
     }
-    source = ReplaceRegex(source, @"\\btexture\\s*\\(", @"texture2D(");
-    source = ReplaceRegex(source, @"\\btextureSize\\s*\\(", @"textureSize2D(");
-    if ([source rangeOfString:@"isnan("].location != NSNotFound) {
+    source = ReplaceRegex(source, R"(\btexture\s*\()", "texture2D(");
+    source = ReplaceRegex(source, R"(\btextureSize\s*\()", "textureSize2D(");
+    if (source.find("isnan(") != std::string::npos) {
         // isnan() is not available before GLSL 1.30.
-        source = [@"bool oo_isnan(float x) { return !(x < 0.0 || x > 0.0 || x == 0.0); }\n" stringByAppendingString:ReplaceRegex(source, @"\\bisnan\\s*\\(", @"oo_isnan(")];
+        source = "bool oo_isnan(float x) { return !(x < 0.0 || x > 0.0 || x == 0.0); "
+                 "}\n"
+            + ReplaceRegex(source, R"(\bisnan\s*\()", "oo_isnan(");
     }
 
     return source;
 }
-#endif
+
+#endif // OO_SHADERS

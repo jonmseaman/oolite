@@ -236,16 +236,11 @@ void OOOpenGLExtensionManager::reset()
             extensions.size(), extensionList);
     }
 
-#if OOLITE_MAC_OS_X
+#if OOLITE_MACOS
     /*	macOS only offers a 2.1 legacy context alongside fixed-function GL, but
             it provides what Oolite needs from 3.3 as extensions.
     */
-    if ([self versionIsAtLeastMajor:2 minor:1] &&
-        [self haveExtension:@"GL_ARB_framebuffer_object"] &&
-        [self haveExtension:@"GL_APPLE_vertex_array_object"] &&
-        [self haveExtension:@"GL_ARB_texture_float"] &&
-        [self haveExtension:@"GL_ARB_color_buffer_float"] &&
-        [self haveExtension:@"GL_ARB_draw_buffers"]) {
+    if (versionIsAtLeastMajor(2, 1) && haveExtension("GL_ARB_framebuffer_object") && haveExtension("GL_APPLE_vertex_array_object") && haveExtension("GL_ARB_texture_float") && haveExtension("GL_ARB_color_buffer_float") && haveExtension("GL_ARB_draw_buffers")) {
         // OK
     } else
 #endif

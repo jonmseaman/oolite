@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
 
 */
+
 #pragma once
 
 #include <SDL3/SDL_events.h>
@@ -365,7 +366,6 @@ private:
     NSSize currentWindowSize = { };
 
     bool showSplashScreen = { };
-    SDL_Window* splashWindow = { };
     SDL_Window* window = { };
     SDL_GLContext glContext = { };
     int bitsPerColorComponent = { };

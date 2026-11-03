@@ -24,14 +24,15 @@ MA 02110-1301, USA.
 */
 
 #include "OOFlasherEntity.h"
+
 #include "OOColor.h"
 #include "OOJSFlasher.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
-
 #include "oofnd/PListGet.hpp"
 
-oo::Ref<OOFlasherEntity> OOFlasherEntity::flasherWithDictionary(const oo::PList& dictionary)
+oo::Ref<OOFlasherEntity> OOFlasherEntity::flasherWithDictionary(
+    const oo::PList& dictionary)
 {
     const oo::Ref<OOFlasherEntity> flasher = oo::makeRef<OOFlasherEntity>();
     flasher->initWithDictionary(dictionary);
@@ -60,7 +61,8 @@ void OOFlasherEntity::setUpColors(const oo::PList* colorSpecifiers)
 {
     std::vector<oo::Ref<OOColor>> colors;
     if (colorSpecifiers != nullptr) {
-        for (const oo::PList& specifier : *colorSpecifiers->getIf<oo::PList::Array>()) {
+        for (const oo::PList& specifier :
+            *colorSpecifiers->getIf<oo::PList::Array>()) {
             colors.emplace_back(OOColor::colorWithDescription(specifier, 0.75f));
         }
     }
@@ -79,48 +81,25 @@ void OOFlasherEntity::getCurrentColorComponents()
     setColor(flasherColorAtIndex(_activeColor), _colorComponents[3]);
 }
 
-bool OOFlasherEntity::isActive()
-{
-    return _active;
-}
+bool OOFlasherEntity::isActive() { return _active; }
 
-void OOFlasherEntity::setActive(bool active)
-{
-    _active = !!active;
-}
+void OOFlasherEntity::setActive(bool active) { _active = !!active; }
 
 oo::Ref<OOColor> OOFlasherEntity::color()
 {
-    return OOColor::colorWithRed(_colorComponents[0],
-        _colorComponents[1],
-        _colorComponents[2],
-        _colorComponents[3]);
+    return OOColor::colorWithRed(_colorComponents[0], _colorComponents[1],
+        _colorComponents[2], _colorComponents[3]);
 }
 
-float OOFlasherEntity::frequency()
-{
-    return _frequency;
-}
+float OOFlasherEntity::frequency() { return _frequency; }
 
-void OOFlasherEntity::setFrequency(float frequency)
-{
-    _frequency = frequency;
-}
+void OOFlasherEntity::setFrequency(float frequency) { _frequency = frequency; }
 
-float OOFlasherEntity::phase()
-{
-    return _phase;
-}
+float OOFlasherEntity::phase() { return _phase; }
 
-void OOFlasherEntity::setPhase(float phase)
-{
-    _phase = phase;
-}
+void OOFlasherEntity::setPhase(float phase) { _phase = phase; }
 
-float OOFlasherEntity::fraction()
-{
-    return _brightfraction;
-}
+float OOFlasherEntity::fraction() { return _brightfraction; }
 
 void OOFlasherEntity::setFraction(float fraction)
 {
@@ -137,11 +116,13 @@ void OOFlasherEntity::update(OOTimeDelta delta_t)
         float wave = sinf(_frequency * M_PI * (_time + _phase));
         NSUInteger count = _colors.size();
         if (count > 1 && wave < 0) {
-            if (!_justSwitched && wave > _wave) // don't test for wave >= _wave - could give wrong results with very low frequencies
+            if (!_justSwitched && wave > _wave) // don't test for wave >= _wave - could give wrong
+                                                // results with very low frequencies
             {
                 _justSwitched = true;
                 ++_activeColor;
-                _activeColor %= count; //_activeColor = ++_activeColor % count; is potentially undefined operation
+                _activeColor %= count; //_activeColor = ++_activeColor % count; is
+                                       // potentially undefined operation
                 setColor(flasherColorAtIndex(_activeColor));
             }
         } else if (_justSwitched) {
@@ -181,10 +162,7 @@ void OOFlasherEntity::drawSubEntityImmediate(bool immediate, bool translucent)
 
 bool OOFlasherEntity::isFlasher() { return true; }
 
-double OOFlasherEntity::findCollisionRadius()
-{
-    return diameter() / 2.0;
-}
+double OOFlasherEntity::findCollisionRadius() { return diameter() / 2.0; }
 
 void OOFlasherEntity::rescaleBy(GLfloat factor)
 {

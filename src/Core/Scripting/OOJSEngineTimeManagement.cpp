@@ -26,6 +26,7 @@ SOFTWARE.
 */
 
 #include "OOJSEngineTimeManagement.h"
+
 #include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
 #include "OOLoggingExtended.h"
@@ -42,9 +43,10 @@ SOFTWARE.
 #endif
 #define __block __glibc_block
 #endif
+#include <unistd.h>
+
 #include "OOObjCPList.h"
 #include "oofnd/String.hpp"
-#include <unistd.h>
 
 #if OOLITE_LINUX
 #undef __block
@@ -80,17 +82,21 @@ static unsigned sLastStoppedLine;
 #endif
 
 #if OOJS_PROFILE && defined(MOZ_TRACE_JSCALLS)
-static void FunctionCallback(ooscript::Function function, ooscript::Script script, ooscript::Context context, int entering);
+static void FunctionCallback(ooscript::Function function,
+    ooscript::Script script, ooscript::Context context,
+    int entering);
 #endif
 
 #ifndef NDEBUG
-void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta limit, const char* file, unsigned line)
+void OOJSStartTimeLimiterWithTimeLimit_(OOTimeDelta limit, const char* file,
+    unsigned line)
 #else
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit)
 #endif
 {
 #if OOJS_DEBUG_LIMITER
-    OO_LOG("script.javaScript.timeLimit.debug", "Limiter starting: {} => {}", sLimiterStartDepth, sLimiterStartDepth + 1);
+    OO_LOG("script.javaScript.timeLimit.debug", "Limiter starting: {} => {}",
+        sLimiterStartDepth, sLimiterStartDepth + 1);
 #endif
     if (sLimiterStartDepth++ == 0) {
         if (limit <= 0.0)
@@ -116,7 +122,13 @@ void OOJSStopTimeLimiter(void)
 {
 #ifndef NDEBUG
     if (sLimiterStartDepth == 0) {
-        OO_LOG("bug.javaScript.limiterDepth", "Attempt to stop JavaScript time limiter while it is already fully stopped. This is an internal bug, please report it. (Last start: {}:{}, last valid stop: {}:{}, this stop attempt: {}:{}.)", oo::log::abbreviatedFileName(sLastStartedFile), sLastStartedLine, oo::log::abbreviatedFileName(sLastStoppedFile), sLastStoppedLine, oo::log::abbreviatedFileName(file), line);
+        OO_LOG("bug.javaScript.limiterDepth",
+            "Attempt to stop JavaScript time limiter while it is already fully "
+            "stopped. This is an internal bug, please report it. (Last start: "
+            "{}:{}, last valid stop: {}:{}, this stop attempt: {}:{}.)",
+            oo::log::abbreviatedFileName(sLastStartedFile), sLastStartedLine,
+            oo::log::abbreviatedFileName(sLastStoppedFile), sLastStoppedLine,
+            oo::log::abbreviatedFileName(file), line);
         return;
     }
 
@@ -124,7 +136,8 @@ void OOJSStopTimeLimiter(void)
     sLastStoppedLine = line;
 
 #if OOJS_DEBUG_LIMITER
-    OO_LOG("script.javaScript.timeLimit.debug", "Limiter ending: {} <= {}", sLimiterStartDepth - 1, sLimiterStartDepth);
+    OO_LOG("script.javaScript.timeLimit.debug", "Limiter ending: {} <= {}",
+        sLimiterStartDepth - 1, sLimiterStartDepth);
 #endif
 
 #endif
@@ -168,19 +181,14 @@ void OOJSResetTimeLimiter(void)
     sStop = false;
 }
 
-OOTimeDelta OOJSGetTimeLimiterLimit(void)
-{
-    return sLimiterTimeLimit;
-}
+OOTimeDelta OOJSGetTimeLimiterLimit(void) { return sLimiterTimeLimit; }
 
-void OOJSSetTimeLimiterLimit(OOTimeDelta limit)
-{
-    sLimiterTimeLimit = limit;
-}
+void OOJSSetTimeLimiterLimit(OOTimeDelta limit) { sLimiterTimeLimit = limit; }
 #endif
 
-/*	The watchdog, which was a category of the engine that only OOJSTimeManagementInit() sent. It
-        reads the runtime the engine made (its _runtime, set once in -init) from its argument.
+/*	The watchdog, which was a category of the engine that only
+   OOJSTimeManagementInit() sent. It reads the runtime the engine made (its
+   _runtime, set once in -init) from its argument.
 */
 namespace {
 void WatchdogTimerThread(ooscript::Runtime runtime)
@@ -224,17 +232,23 @@ static bool OperationCallback(ooscript::Context context)
         return true;
 
     OOJSScript* runningScript = OOJSScript::currentlyRunningScript();
-    OO_LOG_ERR("script.javaScript.timeLimit", "Script \"{}\" ran for {:g} seconds and has been terminated.", ((runningScript != nullptr) ? runningScript->name() : std::nullopt).value_or("(null)"), elapsed);
+    OO_LOG_ERR("script.javaScript.timeLimit",
+        "Script \"{}\" ran for {:g} seconds and has been terminated.",
+        ((runningScript != nullptr) ? runningScript->name() : std::nullopt)
+            .value_or("(null)"),
+        elapsed);
 #ifdef OO_DEBUG_MONITOR_ENABLED
     OOJSDumpStack(context);
 #endif
 
-    // FIXME: we really should put something in the JS log here, but since that's implemented in JS there are complications.
+    // FIXME: we really should put something in the JS log here, but since that's
+    // implemented in JS there are complications.
 
     return false;
 }
 
-static bool ContextCallback(ooscript::Context context, ooscript::ContextOp contextOp)
+static bool ContextCallback(ooscript::Context context,
+    ooscript::ContextOp contextOp)
 {
     if (contextOp == ooscript::ContextOp::New) {
         ooscript::setOperationCallback(context, OperationCallback);
@@ -246,9 +260,11 @@ static bool ContextCallback(ooscript::Context context, ooscript::ContextOp conte
     return true;
 }
 
-void OOJSTimeManagementInit(OOJavaScriptEngine* engine, ooscript::Runtime runtime)
+void OOJSTimeManagementInit(OOJavaScriptEngine* engine,
+    ooscript::Runtime runtime)
 {
-    // The watchdog holds the engine for its (endless) life, as a detached selector thread did.
+    // The watchdog holds the engine for its (endless) life, as a detached
+    // selector thread did.
     if (engine != nullptr)
         engine->retain();
     oo::thread::detach([engine, runtime]() {
@@ -277,7 +293,8 @@ static bool sTracing = false;
 static OOJSProfileStackFrame* sProfileStack = NULL;
 // Profile key (native name or JS function, by pointer) -> entry, retained.
 namespace {
-static std::unordered_map<const void*, oo::Ref<OOTimeProfileEntry>>* sProfileInfo;
+static std::unordered_map<const void*, oo::Ref<OOTimeProfileEntry>>*
+    sProfileInfo;
 
 static OOTimeProfileEntry* ProfileEntryForKey(const void* key)
 {
@@ -343,7 +360,10 @@ oo::Ref<OOTimeProfile> OOJSEndProfiling(void)
     entries.reserve(sProfileInfo->size());
     for (const auto& keyAndEntry : *sProfileInfo)
         entries.emplace_back(keyAndEntry.second);
-    std::stable_sort(entries.begin(), entries.end(), [](const auto& a, const auto& b) { return a->compareBySelfTimeReverse(b.get()) == OOOrderedAscending; });
+    std::stable_sort(
+        entries.begin(), entries.end(), [](const auto& a, const auto& b) {
+            return a->compareBySelfTimeReverse(b.get()) == OOOrderedAscending;
+        });
     result->setProfileEntries(entries);
 
     if (sTracing) {
@@ -363,28 +383,26 @@ oo::Ref<OOTimeProfile> OOJSEndProfiling(void)
     return result;
 }
 
-bool OOJSIsProfiling(void)
-{
-    return sProfiling;
-}
+bool OOJSIsProfiling(void) { return sProfiling; }
 
 void OOJSBeginTracing(void);
 void OOJSEndTracing(void);
 bool OOJSIsTracing(void);
 
 namespace {
-static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame* frame);
+static void UpdateProfileForFrame(OOHighResTimeValue now,
+    OOJSProfileStackFrame* frame);
 } // namespace
 
 #ifdef MOZ_TRACE_JSCALLS
-static void CleanUpJSFrame(OOJSProfileStackFrame* frame)
-{
-    free(frame);
-}
+static void CleanUpJSFrame(OOJSProfileStackFrame* frame) { free(frame); }
 
-static void TraceEnterJSFunction(ooscript::Context context, ooscript::Function function, OOTimeProfileEntry* profileEntry)
+static void TraceEnterJSFunction(ooscript::Context context,
+    ooscript::Function function,
+    OOTimeProfileEntry* profileEntry)
 {
-    std::string name = oo::str::format("%s(", profileEntry->function().value_or("(null)").c_str());
+    std::string name = oo::str::format(
+        "%s(", profileEntry->function().value_or("(null)").c_str());
     bool isNative = ooscript::getFunctionNative(context, function) != NULL;
     std::string frameTag;
     std::string logMsgClass;
@@ -398,7 +416,8 @@ static void TraceEnterJSFunction(ooscript::Context context, ooscript::Function f
         ooscript::VariableList properties = { 0, NULL, NULL };
         unsigned i;
 
-        // Temporarily disable profiling as we'll call out to profiled functions to get value descriptions.
+        // Temporarily disable profiling as we'll call out to profiled functions to
+        // get value descriptions.
         sProfiling = false;
 
         if (ooscript::frameIterator(context, &frame) != NULL) {
@@ -407,7 +426,9 @@ static void TraceEnterJSFunction(ooscript::Context context, ooscript::Function f
             }
 
             if (ooscript::frameThis(context, frame, &thisVal)) {
-                name += oo::str::format("this: %s", (cxx_OOJSDescribeValue(context, thisVal, true)).c_str());
+                name += oo::str::format(
+                    "this: %s",
+                    (cxx_OOJSDescribeValue(context, thisVal, true)).c_str());
                 first = false;
             }
 
@@ -423,7 +444,12 @@ static void TraceEnterJSFunction(ooscript::Context context, ooscript::Function f
 
                         ooscript::Value propName = ooscript::undefinedValue();
                         ooscript::idToValue(context, prop->id, &propName);
-                        name += oo::str::format("%s: %s", (cxx_OOStringFromJSValueEvenIfNull(context, propName)).value_or("(null)").c_str(), (cxx_OOJSDescribeValue(context, prop->value, true)).c_str());
+                        name += oo::str::format(
+                            "%s: %s",
+                            (cxx_OOStringFromJSValueEvenIfNull(context, propName))
+                                .value_or("(null)")
+                                .c_str(),
+                            (cxx_OOJSDescribeValue(context, prop->value, true)).c_str());
                     }
                 }
             }
@@ -443,14 +469,17 @@ static void TraceEnterJSFunction(ooscript::Context context, ooscript::Function f
     oo::log::indent();
 }
 
-static void FunctionCallback(ooscript::Function function, ooscript::Script script, ooscript::Context context, int entering)
+static void FunctionCallback(ooscript::Function function,
+    ooscript::Script script, ooscript::Context context,
+    int entering)
 {
     if (EXPECT(!sProfiling))
         return;
     if (EXPECT_NOT(function == NULL))
         return;
 
-    // Ignore native functions. Ours get their own entries anyway, SpiderMonkey's are elided.
+    // Ignore native functions. Ours get their own entries anyway, SpiderMonkey's
+    // are elided.
     if (!sTracing && ooscript::getFunctionNative(context, function) != NULL)
         return;
 
@@ -467,7 +496,8 @@ static void FunctionCallback(ooscript::Function function, ooscript::Script scrip
             }
 
             if (EXPECT_NOT(sTracing)) {
-                // We use EXPECT_NOT here because profiles are time-critical and traces are not.
+                // We use EXPECT_NOT here because profiles are time-critical and traces
+                // are not.
                 TraceEnterJSFunction(context, function, entry);
             }
 
@@ -475,14 +505,12 @@ static void FunctionCallback(ooscript::Function function, ooscript::Script scrip
             OOJSProfileStackFrame* frame = (OOJSProfileStackFrame*)malloc(sizeof(OOJSProfileStackFrame));
             assert(frame != NULL);
 
-            *frame = (OOJSProfileStackFrame) {
-                .back = sProfileStack,
+            *frame = (OOJSProfileStackFrame) { .back = sProfileStack,
                 .key = function,
                 .startTime = start,
                 .subTime = 0.0,
                 .total = &sProfilerTotalJavaScriptTime,
-                .cleanup = CleanUpJSFrame
-            };
+                .cleanup = CleanUpJSFrame };
 
             sProfileStack = frame;
         } else {
@@ -506,20 +534,19 @@ void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function)
     if (EXPECT(!sProfiling))
         return;
     if (EXPECT_NOT(sTracing)) {
-        // We use EXPECT_NOT here because profiles are time-critical and traces are not.
+        // We use EXPECT_NOT here because profiles are time-critical and traces are
+        // not.
         OO_LOG("script.javaScript.trace.ON", ">> {} [ON]", function);
         oo::log::indent();
     }
 
-    *frame = (OOJSProfileStackFrame) {
-        .back = sProfileStack,
+    *frame = (OOJSProfileStackFrame) { .back = sProfileStack,
         .key = function,
         .function = function,
         .startTime = OOGetHighResTime(),
         .subTime = 0,
         .total = &sProfilerTotalNativeTime,
-        .cleanup = NULL
-    };
+        .cleanup = NULL };
     sProfileStack = frame;
 }
 
@@ -533,9 +560,9 @@ void OOJSProfileExit(OOJSProfileStackFrame* frame)
         bool done = false;
 
         /*
-                It's possible there could be JavaScript frames on top of this frame if
-                a JS native returned false. Or possibly not. The semantics of
-                the engine's function callback aren't specified in detail.
+                It's possible there could be JavaScript frames on top of this frame
+           if a JS native returned false. Or possibly not. The semantics of the
+           engine's function callback aren't specified in detail.
                 -- Ahruman 2011-01-16
         */
         for (;;) {
@@ -566,7 +593,8 @@ void OOJSProfileExit(OOJSProfileStackFrame* frame)
 }
 
 namespace {
-static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame* frame)
+static void UpdateProfileForFrame(OOHighResTimeValue now,
+    OOJSProfileStackFrame* frame)
 {
     sProfileStack = frame->back;
 
@@ -602,42 +630,40 @@ std::optional<std::string> OOTimeProfile::description()
         "JavaScript: %g ms, native: %g ms\n"
         "Counted towards limit: %g ms, excluded: %g ms\n"
         "Profiler overhead: %g ms",
-        totalTime * 1000.0,
-        javaScriptTime() * 1000.0, nativeTime() * 1000.0,
+        totalTime * 1000.0, javaScriptTime() * 1000.0, nativeTime() * 1000.0,
         nonExtensionTime() * 1000.0, extensionTime() * 1000.0,
         profilerOverhead() * 1000.0);
 
     const std::vector<oo::Ref<OOTimeProfileEntry>>& profileEntries = _profileEntries;
     NSUInteger i, count = profileEntries.size();
     if (count != 0) {
-        result += "\n                                                        NAME  T  COUNT    TOTAL     SELF  TOTAL%   SELF%  SELFMAX";
+        result += "\n                                                        NAME  T  "
+                  "COUNT    TOTAL     SELF  TOTAL%   SELF%  SELFMAX";
         for (i = 0; i < count; i++) {
-            //	[result appendFormat:@"\n    %@", [_profileEntries objectAtIndex:i]];
+            //	[result appendFormat:@"\n    %@", [_profileEntries
+            // objectAtIndex:i]];
 
             OOTimeProfileEntry* entry = profileEntries[i].get();
 
             double totalPc = entry->totalTimeSum() * 100.0 / totalTime;
             double selfPc = entry->selfTimeSum() * 100.0 / totalTime;
 
-            result += oo::str::format("\n%60s  %c%7lu %8.2f %8.2f   %5.1f   %5.1f %8.2f",
+            result += oo::str::format(
+                "\n%60s  %c%7lu %8.2f %8.2f   %5.1f   %5.1f %8.2f",
                 entry->function().value_or("(null)").c_str(),
                 entry->isJavaScriptFrame() ? 'J' : 'N',
-                (unsigned long)entry->hitCount(), entry->totalTimeSum() * 1000.0, entry->selfTimeSum() * 1000.0, totalPc, selfPc, entry->selfTimeMax() * 1000.0);
+                (unsigned long)entry->hitCount(), entry->totalTimeSum() * 1000.0,
+                entry->selfTimeSum() * 1000.0, totalPc, selfPc,
+                entry->selfTimeMax() * 1000.0);
         }
     }
 
     return result;
 }
 
-double OOTimeProfile::totalTime()
-{
-    return _totalTime;
-}
+double OOTimeProfile::totalTime() { return _totalTime; }
 
-void OOTimeProfile::setTotalTime(double value)
-{
-    _totalTime = value;
-}
+void OOTimeProfile::setTotalTime(double value) { _totalTime = value; }
 
 double OOTimeProfile::javaScriptTime()
 {
@@ -649,41 +675,20 @@ double OOTimeProfile::javaScriptTime()
 }
 
 #ifdef MOZ_TRACE_JSCALLS
-void OOTimeProfile::setJavaScriptTime(double value)
-{
-    _javaScriptTime = value;
-}
+void OOTimeProfile::setJavaScriptTime(double value) { _javaScriptTime = value; }
 #endif
 
-double OOTimeProfile::nativeTime()
-{
-    return _nativeTime;
-}
+double OOTimeProfile::nativeTime() { return _nativeTime; }
 
-void OOTimeProfile::setNativeTime(double value)
-{
-    _nativeTime = value;
-}
+void OOTimeProfile::setNativeTime(double value) { _nativeTime = value; }
 
-double OOTimeProfile::extensionTime()
-{
-    return _extensionTime;
-}
+double OOTimeProfile::extensionTime() { return _extensionTime; }
 
-void OOTimeProfile::setExtensionTime(double value)
-{
-    _extensionTime = value;
-}
+void OOTimeProfile::setExtensionTime(double value) { _extensionTime = value; }
 
-double OOTimeProfile::nonExtensionTime()
-{
-    return _totalTime - _extensionTime;
-}
+double OOTimeProfile::nonExtensionTime() { return _totalTime - _extensionTime; }
 
-double OOTimeProfile::profilerOverhead()
-{
-    return _profilerOverhead;
-}
+double OOTimeProfile::profilerOverhead() { return _profilerOverhead; }
 
 void OOTimeProfile::setProfilerOverhead(double value)
 {
@@ -695,7 +700,8 @@ std::vector<oo::Ref<OOTimeProfileEntry>> OOTimeProfile::profileEntries()
     return _profileEntries;
 }
 
-void OOTimeProfile::setProfileEntries(const std::vector<oo::Ref<OOTimeProfileEntry>>& value)
+void OOTimeProfile::setProfileEntries(
+    const std::vector<oo::Ref<OOTimeProfileEntry>>& value)
 {
     _profileEntries = value;
 }
@@ -707,7 +713,8 @@ ooscript::Value OOTimeProfile::oo_jsValueInContext(ooscript::Context context)
 
 oo::PList OOTimeProfile::propertyListRepresentation()
 {
-    // "profiles" holds each entry's own property list, which is what converting the entry to JavaScript gave.
+    // "profiles" holds each entry's own property list, which is what converting
+    // the entry to JavaScript gave.
     oo::PList::Array profiles;
     profiles.reserve(_profileEntries.size());
     for (const auto& entry : _profileEntries)
@@ -736,11 +743,13 @@ OOTimeProfileEntry::OOTimeProfileEntry(const char* name)
 }
 
 #if MOZ_TRACE_JSCALLS
-OOTimeProfileEntry::OOTimeProfileEntry(ooscript::Function function, ooscript::Context context)
+OOTimeProfileEntry::OOTimeProfileEntry(ooscript::Function function,
+    ooscript::Context context)
     : OOTimeProfileEntry(nullptr)
 {
     {
-        // Temporarily disable profiling so we don't profile the profiler while it's profiling the profilee.
+        // Temporarily disable profiling so we don't profile the profiler while it's
+        // profiling the profilee.
         sProfiling = false;
         _jsFunction = function;
 
@@ -770,7 +779,8 @@ OOTimeProfileEntry::OOTimeProfileEntry(ooscript::Function function, ooscript::Co
 }
 #endif
 
-void OOTimeProfileEntry::addSampleWithTotalTime(OOTimeDelta totalTime, OOTimeDelta selfTime)
+void OOTimeProfileEntry::addSampleWithTotalTime(OOTimeDelta totalTime,
+    OOTimeDelta selfTime)
 {
     _hitCount++;
     _totalTimeSum += totalTime;
@@ -781,7 +791,8 @@ void OOTimeProfileEntry::addSampleWithTotalTime(OOTimeDelta totalTime, OOTimeDel
 
 std::optional<std::string> OOTimeProfileEntry::description()
 {
-    const char* function = _function.has_value() ? _function->c_str() : "(null)"; // as %@ printed nil
+    const char* function = _function.has_value() ? _function->c_str()
+                                                 : "(null)"; // as %@ printed nil
     if (_hitCount == 0)
         return oo::str::format("%s: --", function);
 
@@ -795,36 +806,32 @@ std::optional<std::string> OOTimeProfileEntry::description()
         if (_hitCount == 1) {
             return oo::str::format("%s: 1 time, %g ms", function, totalTimeSum);
         } else {
-            return oo::str::format("%s: %lu times, total %g ms, avg %g ms, max %g ms", function, _hitCount, totalTimeSum, totalTimeSum / _hitCount, totalTimeMax);
+            return oo::str::format("%s: %lu times, total %g ms, avg %g ms, max %g ms",
+                function, _hitCount, totalTimeSum,
+                totalTimeSum / _hitCount, totalTimeMax);
         }
     } else {
         if (_hitCount == 1) {
-            return oo::str::format("%s: 1 time, %g ms (self %g ms)", function, totalTimeSum, selfTimeSum);
+            return oo::str::format("%s: 1 time, %g ms (self %g ms)", function,
+                totalTimeSum, selfTimeSum);
         } else {
-            return oo::str::format("%s: %lu times, total %g ms (self %g ms), avg %g ms (self %g ms), max %g ms, max self %g ms", function, _hitCount, totalTimeSum, selfTimeSum, totalTimeSum / _hitCount, selfTimeSum / _hitCount, totalTimeMax, selfTimeMax);
+            return oo::str::format(
+                "%s: %lu times, total %g ms (self %g ms), avg %g ms (self %g ms), "
+                "max %g ms, max self %g ms",
+                function, _hitCount, totalTimeSum, selfTimeSum,
+                totalTimeSum / _hitCount, selfTimeSum / _hitCount, totalTimeMax,
+                selfTimeMax);
         }
     }
 }
 
-std::optional<std::string> OOTimeProfileEntry::function()
-{
-    return _function;
-}
+std::optional<std::string> OOTimeProfileEntry::function() { return _function; }
 
-NSUInteger OOTimeProfileEntry::hitCount()
-{
-    return _hitCount;
-}
+NSUInteger OOTimeProfileEntry::hitCount() { return _hitCount; }
 
-double OOTimeProfileEntry::totalTimeSum()
-{
-    return _totalTimeSum;
-}
+double OOTimeProfileEntry::totalTimeSum() { return _totalTimeSum; }
 
-double OOTimeProfileEntry::selfTimeSum()
-{
-    return _selfTimeSum;
-}
+double OOTimeProfileEntry::selfTimeSum() { return _selfTimeSum; }
 
 double OOTimeProfileEntry::totalTimeAverage()
 {
@@ -836,15 +843,9 @@ double OOTimeProfileEntry::selfTimeAverage()
     return _hitCount ? (_selfTimeSum / _hitCount) : 0.0;
 }
 
-double OOTimeProfileEntry::totalTimeMax()
-{
-    return _totalTimeMax;
-}
+double OOTimeProfileEntry::totalTimeMax() { return _totalTimeMax; }
 
-double OOTimeProfileEntry::selfTimeMax()
-{
-    return _selfTimeMax;
-}
+double OOTimeProfileEntry::selfTimeMax() { return _selfTimeMax; }
 
 bool OOTimeProfileEntry::isJavaScriptFrame()
 {
@@ -855,15 +856,18 @@ bool OOTimeProfileEntry::isJavaScriptFrame()
 #endif
 }
 
-OOComparisonResult OOTimeProfileEntry::compareByTotalTime(OOTimeProfileEntry* other)
+OOComparisonResult OOTimeProfileEntry::compareByTotalTime(
+    OOTimeProfileEntry* other)
 {
     return (OOComparisonResult)-compareByTotalTimeReverse(other);
 }
 
-OOComparisonResult OOTimeProfileEntry::compareByTotalTimeReverse(OOTimeProfileEntry* other)
+OOComparisonResult OOTimeProfileEntry::compareByTotalTimeReverse(
+    OOTimeProfileEntry* other)
 {
     double selfTotal = totalTimeSum();
-    double otherTotal = (other != nullptr) ? other->totalTimeSum() : 0.0; // (a message to nil gave 0)
+    double otherTotal = (other != nullptr) ? other->totalTimeSum()
+                                           : 0.0; // (a message to nil gave 0)
 
     if (selfTotal < otherTotal)
         return OOOrderedDescending;
@@ -872,15 +876,18 @@ OOComparisonResult OOTimeProfileEntry::compareByTotalTimeReverse(OOTimeProfileEn
     return OOOrderedSame;
 }
 
-OOComparisonResult OOTimeProfileEntry::compareBySelfTime(OOTimeProfileEntry* other)
+OOComparisonResult OOTimeProfileEntry::compareBySelfTime(
+    OOTimeProfileEntry* other)
 {
     return (OOComparisonResult)-compareBySelfTimeReverse(other);
 }
 
-OOComparisonResult OOTimeProfileEntry::compareBySelfTimeReverse(OOTimeProfileEntry* other)
+OOComparisonResult OOTimeProfileEntry::compareBySelfTimeReverse(
+    OOTimeProfileEntry* other)
 {
     double selfTotal = selfTimeSum();
-    double otherTotal = (other != nullptr) ? other->selfTimeSum() : 0.0; // (a message to nil gave 0)
+    double otherTotal = (other != nullptr) ? other->selfTimeSum()
+                                           : 0.0; // (a message to nil gave 0)
 
     if (selfTotal < otherTotal)
         return OOOrderedDescending;
@@ -889,7 +896,8 @@ OOComparisonResult OOTimeProfileEntry::compareBySelfTimeReverse(OOTimeProfileEnt
     return OOOrderedSame;
 }
 
-ooscript::Value OOTimeProfileEntry::oo_jsValueInContext(ooscript::Context context)
+ooscript::Value OOTimeProfileEntry::oo_jsValueInContext(
+    ooscript::Context context)
 {
     return OOJSValueFromPList(context, propertyListRepresentation());
 }
@@ -897,7 +905,8 @@ ooscript::Value OOTimeProfileEntry::oo_jsValueInContext(ooscript::Context contex
 oo::PList OOTimeProfileEntry::propertyListRepresentation()
 {
     oo::PList::Dict result;
-    // A nameless entry gave an empty dictionary: its nil name ended the object/key list.
+    // A nameless entry gave an empty dictionary: its nil name ended the
+    // object/key list.
     if (_function.has_value()) {
         result.emplace("name", oo::PList(*_function));
         result.emplace("hitCount", oo::PList::unsignedInteger(hitCount()));
@@ -907,7 +916,8 @@ oo::PList OOTimeProfileEntry::propertyListRepresentation()
         result.emplace("selfTimeAverage", oo::PList(selfTimeAverage()));
         result.emplace("totalTimeMax", oo::PList(totalTimeMax()));
         result.emplace("selfTimeMax", oo::PList(selfTimeMax()));
-        result.emplace("isJavaScriptFrame", oo::PList(static_cast<bool>(isJavaScriptFrame())));
+        result.emplace("isJavaScriptFrame",
+            oo::PList(static_cast<bool>(isJavaScriptFrame())));
     }
     return oo::PList(std::move(result));
 }

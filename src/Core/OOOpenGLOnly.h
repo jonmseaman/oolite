@@ -25,11 +25,34 @@ MA 02110-1301, USA.
 
 */
 
-#pragma once
+#ifndef OOLITE_SDL
+#if !OOLITE_MAC_OS_X
+#define OOLITE_SDL 1
+#endif
+#endif
+
+#if OOLITE_MAC_OS_X && !OOLITE_SDL // the Cocoa (AppKit) front end
+
+// Apple OpenGL includes...
+#include <OpenGL/OpenGL.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#include <OpenGL/glu.h>
+
+#elif OOLITE_SDL
+
 // SDL OpenGL includes...
 
-// GL_GLEXT_PROTOTYPES must be defined for the Linux and macOS builds to use shaders.
-#if OOLITE_LINUX || defined(__APPLE__)
+// prevent the including of SDL_opengl.h loading a previous version of glext.h.
+// Not on Apple: its glext.h is old, and SDL's supplies the GL 3.x names.
+#ifndef __APPLE__
+#define NO_SDL_GLEXT
+#endif
+
+// GL_GLEXT_PROTOTYPES must be defined for the Linux and macOS builds to use
+// shaders. A plain C++ unit (OO_PLAIN_CPP_UNIT) does not include
+// OOFoundation.h, so test the build's LINUX define as well.
+#if OOLITE_LINUX || defined(LINUX) || defined(__APPLE__)
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
 #define __DEFINED_GL_GLEXT_PROTOTYPES
@@ -64,4 +87,10 @@ MA 02110-1301, USA.
 #ifdef __DEFINED_GL_GLEXT_PROTOTYPES
 #undef GL_GLEXT_PROTOTYPES
 #undef __DEFINED_GL_GLEXT_PROTOTYPES
+#endif
+
+#else // Not OS X or SDL
+
+#error OOOpenGL.h: unknown target!
+
 #endif

@@ -23,6 +23,7 @@
  */
 
 #include "OOPlanetDrawable.h"
+
 #include "MyOpenGLView.h"
 #include "OOMacroOpenGL.h"
 #include "OOOpenGL.h"
@@ -42,7 +43,8 @@
 #define LOD_GRANULARITY ((float)(kOOPlanetDataLevels - 1))
 #define LOD_FACTOR (1.0 / 4.0)
 
-oo::Ref<OOPlanetDrawable> OOPlanetDrawable::planetWithTextureName(const std::string& textureName, float radius)
+oo::Ref<OOPlanetDrawable> OOPlanetDrawable::planetWithTextureName(
+    const std::string& textureName, float radius)
 {
     oo::Ref<OOPlanetDrawable> result = oo::makeRef<OOPlanetDrawable>();
     result->setTextureName(textureName);
@@ -82,7 +84,8 @@ oo::Ref<OOPlanetDrawable> OOPlanetDrawable::initAsAtmosphere()
 
 oo::Ref<OOPlanetDrawable> OOPlanetDrawable::copy()
 {
-    oo::Ref<OOPlanetDrawable> copy = oo::makeRef<OOPlanetDrawable>(); // [[[self class] allocWithZone:zone] init]: the class has no subclass
+    oo::Ref<OOPlanetDrawable> copy = oo::makeRef<OOPlanetDrawable>(); // [[[self class] allocWithZone:zone]
+                                                                      // init]: the class has no subclass
     copy->setMaterial(material());
     copy->_isAtmosphere = _isAtmosphere;
     copy->_radius = _radius;
@@ -92,10 +95,7 @@ oo::Ref<OOPlanetDrawable> OOPlanetDrawable::copy()
     return copy;
 }
 
-OOMaterial* OOPlanetDrawable::material()
-{
-    return _material.get();
-}
+OOMaterial* OOPlanetDrawable::material() { return _material.get(); }
 
 void OOPlanetDrawable::setMaterial(OOMaterial* material)
 {
@@ -112,19 +112,19 @@ std::optional<std::string> OOPlanetDrawable::textureName()
 void OOPlanetDrawable::setTextureName(const std::string& textureName)
 {
     if (this->textureName() != textureName) {
-        // {diffuse_map={repeat_s=yes;cube_map=yes};}, as the old-style property list parsed.
+        // {diffuse_map={repeat_s=yes;cube_map=yes};}, as the old-style property
+        // list parsed.
         const oo::PList spec(oo::PList::Dict {
-            { "diffuse_map", oo::PList(oo::PList::Dict { { "repeat_s", oo::PList("yes") }, { "cube_map", oo::PList("yes") } }) } });
-        // [_material release], then [[OOSingleTextureMaterial alloc] initWithName:configuration:]:
-        // the factory's material (null for none).
+            { "diffuse_map",
+                oo::PList(oo::PList::Dict { { "repeat_s", oo::PList("yes") },
+                    { "cube_map", oo::PList("yes") } }) } });
+        // [_material release], then [[OOSingleTextureMaterial alloc]
+        // initWithName:configuration:]: the factory's material (null for none).
         _material = OOSingleTextureMaterial::materialWithName(textureName, spec);
     }
 }
 
-float OOPlanetDrawable::radius()
-{
-    return _radius;
-}
+float OOPlanetDrawable::radius() { return _radius; }
 
 void OOPlanetDrawable::setRadius(float radius)
 {
@@ -145,7 +145,11 @@ void OOPlanetDrawable::setLevelOfDetail(float lod)
 void OOPlanetDrawable::calculateLevelOfDetailForViewDistance(float distance)
 {
     bool simple = (UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false);
-    float drawFactor = (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr ? UNIVERSE->getGameView()->getViewSize() : NSSize { }).width / (simple ? 100.0 : 40.0);
+    float drawFactor = (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
+                               ? UNIVERSE->getGameView()->getViewSize()
+                               : NSSize { })
+                           .width
+        / (simple ? 100.0 : 40.0);
     float drawRatio2 = drawFactor * _radius / sqrtf(distance); // proportional to size on screen in pixels
 
     float lod = sqrtf(drawRatio2 * LOD_FACTOR);
@@ -240,11 +244,13 @@ void OOPlanetDrawable::renderCommonParts()
         OOGL(glTexCoordPointer(2, GL_FLOAT, 0, kOOPlanetTexCoords));
     }
 
-    // FIXME: instead of GL_RESCALE_NORMAL, consider copying and transforming the vertex array for each planet.
+    // FIXME: instead of GL_RESCALE_NORMAL, consider copying and transforming the
+    // vertex array for each planet.
     OOGL(glEnable(GL_RESCALE_NORMAL));
     OOGL(glNormalPointer(GL_FLOAT, 0, kOOPlanetVertices));
 
-    OOGL(glDrawElements(GL_TRIANGLES, data->faceCount * 3, data->type, data->indices));
+    OOGL(glDrawElements(GL_TRIANGLES, data->faceCount * 3, data->type,
+        data->indices));
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if ((UNIVERSE != nullptr ? UNIVERSE->getWireframeGraphics() : false)) {
@@ -271,20 +277,11 @@ void OOPlanetDrawable::renderCommonParts()
     OOGL(glDisableClientState(GL_TEXTURE_COORD_ARRAY));
 }
 
-bool OOPlanetDrawable::hasOpaqueParts()
-{
-    return !_isAtmosphere;
-}
+bool OOPlanetDrawable::hasOpaqueParts() { return !_isAtmosphere; }
 
-bool OOPlanetDrawable::hasTranslucentParts()
-{
-    return _isAtmosphere;
-}
+bool OOPlanetDrawable::hasTranslucentParts() { return _isAtmosphere; }
 
-GLfloat OOPlanetDrawable::collisionRadius()
-{
-    return _radius;
-}
+GLfloat OOPlanetDrawable::collisionRadius() { return _radius; }
 
 GLfloat OOPlanetDrawable::maxDrawDistance()
 {
@@ -294,7 +291,8 @@ GLfloat OOPlanetDrawable::maxDrawDistance()
 
 BoundingBox OOPlanetDrawable::boundingBox()
 {
-    return (BoundingBox) { { -_radius, -_radius, -_radius }, { _radius, _radius, _radius } };
+    return (BoundingBox) { { -_radius, -_radius, -_radius },
+        { _radius, _radius, _radius } };
 }
 
 void OOPlanetDrawable::setBindingTarget(Entity* target)
@@ -330,17 +328,19 @@ void OOPlanetDrawable::debugDrawNormals()
 
     OOGLBEGIN(GL_LINES);
     for (i = 0; i < data->vertexCount; i++) {
-        /*	Fun sphere facts: the normalized coordinates of a point on a sphere at the origin
-                is equal to the object-space normal of the surface at that point.
-                Furthermore, we can construct the binormal (a vector pointing westward along the
-                surface) as the cross product of the normal with the Y axis. (This produces
-                singularities at the pole, but there have to be singularities according to the
-                Hairy Ball Theorem.) The tangent (a vector north along the surface) is then the
-                inverse of the cross product of the normal and binormal.
+        /*	Fun sphere facts: the normalized coordinates of a point on a sphere at
+           the origin is equal to the object-space normal of the surface at that
+           point. Furthermore, we can construct the binormal (a vector pointing
+           westward along the surface) as the cross product of the normal with the Y
+           axis. (This produces singularities at the pole, but there have to be
+           singularities according to the Hairy Ball Theorem.) The tangent (a vector
+           north along the surface) is then the inverse of the cross product of the
+           normal and binormal.
 
                 (This comment courtesy of the in-development planet shader.)
         */
-        Vector v = make_vector(kOOPlanetVertices[i * 3], kOOPlanetVertices[i * 3 + 1], kOOPlanetVertices[i * 3 + 2]);
+        Vector v = make_vector(kOOPlanetVertices[i * 3], kOOPlanetVertices[i * 3 + 1],
+            kOOPlanetVertices[i * 3 + 2]);
         Vector n = v;
         v = OOVectorMultiplyMatrix(v, _transform);
 
@@ -363,13 +363,12 @@ void OOPlanetDrawable::debugDrawNormals()
 
     OODebugEndWireframe(state);
 }
-#endif
 
-#ifdef OO_DEBUG_MONITOR_ENABLED
 std::vector<oo::Ref<OOTexture>> OOPlanetDrawable::allTextures()
 {
     OOMaterial* material = this->material();
-    return material != nullptr ? material->allTextures() : std::vector<oo::Ref<OOTexture>>();
+    return material != nullptr ? material->allTextures()
+                               : std::vector<oo::Ref<OOTexture>>();
 }
 
 #endif

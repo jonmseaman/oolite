@@ -55,19 +55,25 @@ public:
     ~OOShaderProgram() override;
 
     // Null where no program could be made (it answered nil).
-    static oo::Ref<OOShaderProgram> shaderProgramWithVertexShader(const std::optional<std::string>& vertexShaderSource,
+    static oo::Ref<OOShaderProgram> shaderProgramWithVertexShader(
+        const std::optional<std::string>& vertexShaderSource,
         const std::optional<std::string>& fragmentShaderSource,
         const std::optional<std::string>& vertexShaderName,
         const std::optional<std::string>& fragmentShaderName,
-        const std::optional<std::string>& prefixString, // String prepended to program source (both vs and fs)
-        const oo::PList& attributeBindings, // Maps vertex attribute names to "locations".
+        const std::optional<std::string>&
+            prefixString, // String prepended to program source (both vs and fs)
+        const oo::PList&
+            attributeBindings, // Maps vertex attribute names to "locations".
         const std::optional<std::string>& cacheKey);
 
     // Loads a shader from a file, caching and sharing shader program instances.
-    static oo::Ref<OOShaderProgram> shaderProgramWithVertexShaderName(const std::string& vertexShaderName,
+    static oo::Ref<OOShaderProgram> shaderProgramWithVertexShaderName(
+        const std::string& vertexShaderName,
         const std::string& fragmentShaderName,
-        const std::optional<std::string>& prefixString, // String prepended to program source (both vs and fs)
-        const oo::PList& attributeBindings); // Maps vertex attribute names to "locations".
+        const std::optional<std::string>&
+            prefixString, // String prepended to program source (both vs and fs)
+        const oo::PList&
+            attributeBindings); // Maps vertex attribute names to "locations".
 
     void apply();
     static void applyNone();
@@ -77,7 +83,8 @@ public:
 private:
     OOShaderProgram() = default;
 
-    bool initWithVertexShaderSource(const std::optional<std::string>& vertexSource,
+    bool initWithVertexShaderSource(
+        const std::optional<std::string>& vertexSource,
         const std::optional<std::string>& fragmentSource,
         const std::optional<std::string>& prefixString,
         const std::optional<std::string>& vertexName,
@@ -93,5 +100,17 @@ private:
     std::optional<std::string> key = { };
     oo::PList standardMatrixUniformLocations = { };
 };
+
+/*	Translate the subset of GLSL 3.30 used by Oolite's post-processing shaders
+        to GLSL 1.20 (plus GL_EXT_gpu_shader4). Only top-level declarations are
+        rewritten, so in/out parameter qualifiers inside functions are untouched.
+   A vertex shader's layout(location = N) inputs are added to attributeBindings.
+   The macOS legacy context only supports GLSL 1.20, so
+   shaderProgramWithVertexShaderName() calls this there (OOLITE_MACOS); it is
+   built everywhere so the unit tests run it.
+*/
+std::optional<std::string> OOTranslateGLSL330To120(
+    const std::optional<std::string>& source, bool isVertexShader,
+    oo::PList::Dict& attributeBindings);
 
 #endif // OO_SHADERS

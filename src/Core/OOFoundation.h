@@ -30,11 +30,7 @@ MA 02110-1301, USA.
  causing a warning in Clang. This lets us write #define FOO (1 && OOLITE_DEBUG)
  instead.
  */
-
 #pragma once
-
-#include <math.h>
-#include <stdbool.h>
 
 #ifdef NDEBUG
 #define OOLITE_DEBUG 0
@@ -60,8 +56,11 @@ MA 02110-1301, USA.
 #define OO_DEBUG 0
 #endif
 
-#include "oofnd/objc/OOFoundationTypes.h"
 #include <assert.h>
+#include <math.h>
+#include <stdbool.h>
+
+#include "oofnd/objc/OOFoundationTypes.h"
 
 #ifdef __clang__
 #define OOLITE_HAVE_CLANG 1
@@ -76,6 +75,7 @@ MA 02110-1301, USA.
     (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
 
+#include <inttypes.h>
 #include <limits.h> // to get UINT_MAX
 #include <stdint.h>
 
@@ -125,6 +125,15 @@ MA 02110-1301, USA.
 
 #ifndef OOLITE_MAC_OS_X
 #define OOLITE_MAC_OS_X 0
+#endif
+
+// macOS as a platform (SDL front end, Apple's GL and libc), without Apple
+// Foundation. OOLITE_MAC_OS_X above is the legacy Foundation/Cocoa switch and
+// stays 0.
+#ifdef __APPLE__
+#define OOLITE_MACOS 1
+#else
+#define OOLITE_MACOS 0
 #endif
 
 #ifndef OOLITE_WINDOWS

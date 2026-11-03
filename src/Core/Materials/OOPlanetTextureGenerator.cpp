@@ -30,15 +30,17 @@
 #define DEBUG_DUMP_RAW (1 && DEBUG_DUMP)
 
 #define POLAR_CAPS 1
-#define ALBEDO_FACTOR 0.7f // Overall darkening of everything, allowing better contrast for snow and specular highlights.
+#define ALBEDO_FACTOR \
+    0.7f // Overall darkening of everything, allowing better contrast for snow
+         // and specular highlights.
+
+#include <cstring>
 
 #include "OOColor.h"
+#include "OOObjCPList.h"
 #include "OOPlanetTextureGenerator.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/PListGet.hpp"
-#include <cstring>
-
-#include "OOObjCPList.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 
@@ -62,11 +64,10 @@
         *x_ = NULL;                                   \
     } while (0)
 
-#define PLANET_TEXTURE_OPTIONS (kOOTextureMinFilterLinear | kOOTextureMagFilterLinear | kOOTextureRepeatS | kOOTextureNoShrink)
+#define PLANET_TEXTURE_OPTIONS \
+    (kOOTextureMinFilterLinear | kOOTextureMagFilterLinear | kOOTextureRepeatS | kOOTextureNoShrink)
 
-enum {
-    kRandomBufferSize = 128
-};
+enum { kRandomBufferSize = 128 };
 
 /*	The planet generator actually generates two textures when shaders are
         active, but the texture loader interface assumes we only load/generate
@@ -75,7 +76,8 @@ enum {
 */
 class OOPlanetNormalMapGenerator : public OOTextureGenerator {
 public:
-    bool initWithCacheKey(const std::string& cacheKey, RANROTSeed seed); // was -initWithCacheKey:seed:
+    bool initWithCacheKey(const std::string& cacheKey,
+        RANROTSeed seed); // was -initWithCacheKey:seed:
 
     void completeWithData(void* data, unsigned width, unsigned height);
 
@@ -95,7 +97,9 @@ private:
 //	Doing the same as above for the atmosphere.
 class OOPlanetAtmosphereGenerator : public OOTextureGenerator {
 public:
-    bool initWithCacheKey(const std::string& cacheKey, RANROTSeed seed, OOPlanetTextureGenerator* parent); // was -initWithCacheKey:seed:andParent:
+    bool initWithCacheKey(const std::string& cacheKey, RANROTSeed seed,
+        OOPlanetTextureGenerator*
+            parent); // was -initWithCacheKey:seed:andParent:
 
     void completeWithData(void* data, unsigned width, unsigned height);
 
@@ -105,31 +109,41 @@ public:
     uint32_t textureOptions() override;
     bool enqueue() override;
     void loadTexture() override;
-    bool getResult(OOPixMap* result, OOTextureDataFormat* outFormat, uint32_t* outWidth, uint32_t* outHeight) override;
+    bool getResult(OOPixMap* result, OOTextureDataFormat* outFormat,
+        uint32_t* outWidth, uint32_t* outHeight) override;
 
 private:
     bool _enqueued = { };
     std::string _cacheKey;
     RANROTSeed _seed = { };
-    oo::Ref<OOPlanetTextureGenerator> _parent; // (it holds this too: the old retain cycle, kept)
+    oo::Ref<OOPlanetTextureGenerator>
+        _parent; // (it holds this too: the old retain cycle, kept)
 };
 
 namespace {
 
-FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary, const std::string& key); // dictionary: the planet info (colours are Object nodes)
+FloatRGB FloatRGBFromDictColor(
+    const oo::PList& dictionary,
+    const std::string&
+        key); // dictionary: the planet info (colours are Object nodes)
 
 } // namespace
 
 static bool FillFBMBuffer(OOPlanetTextureGeneratorInfo* info);
 
-static float QFactor(float* accbuffer, int x, int y, unsigned width, float polar_y_value, float bias, float polar_y);
-static float GetQ(float* qbuffer, int x, int y, unsigned width, unsigned height, unsigned widthMask, unsigned heightMask);
+static float QFactor(float* accbuffer, int x, int y, unsigned width,
+    float polar_y_value, float bias, float polar_y);
+static float GetQ(float* qbuffer, int x, int y, unsigned width, unsigned height,
+    unsigned widthMask, unsigned heightMask);
 
 static FloatRGB Blend(float fraction, FloatRGB a, FloatRGB b);
 static float BlendAlpha(float fraction, float a, float b);
-static void SetMixConstants(OOPlanetTextureGeneratorInfo* info, float temperatureFraction);
-static FloatRGBA CloudMix(OOPlanetTextureGeneratorInfo* info, float q, float nearPole);
-static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q, float nearPole);
+static void SetMixConstants(OOPlanetTextureGeneratorInfo* info,
+    float temperatureFraction);
+static FloatRGBA CloudMix(OOPlanetTextureGeneratorInfo* info, float q,
+    float nearPole);
+static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q,
+    float nearPole);
 
 enum {
     kPlanetScale256x256 = 1,
@@ -143,7 +157,9 @@ enum {
     kPlanetScaleExtraDetail = kPlanetScale2048x2048
 };
 
-oo::Ref<OOPlanetTextureGenerator> OOPlanetTextureGenerator::generatorWithPlanetInfo(const oo::PList& planetInfo, RANROTSeed seed)
+oo::Ref<OOPlanetTextureGenerator>
+OOPlanetTextureGenerator::generatorWithPlanetInfo(const oo::PList& planetInfo,
+    RANROTSeed seed)
 {
     oo::Ref<OOPlanetTextureGenerator> result = oo::makeRef<OOPlanetTextureGenerator>();
     if (!result->initWithPlanetInfo(planetInfo, seed))
@@ -151,13 +167,17 @@ oo::Ref<OOPlanetTextureGenerator> OOPlanetTextureGenerator::generatorWithPlanetI
     return result;
 }
 
-bool OOPlanetTextureGenerator::initWithPlanetInfo(const oo::PList& planetInfo, RANROTSeed seed)
+bool OOPlanetTextureGenerator::initWithPlanetInfo(const oo::PList& planetInfo,
+    RANROTSeed seed)
 {
     OO_LOG("texture.planet.generate", "{}", "Initialising planetary generator");
 
     // AllowCubeMap not used yet but might be in future
-    if (initWithPath(oo::str::format("OOPlanetTexture@%s", oo::str::pointerDescription(this).c_str()), kOOTextureAllowCubeMap)) {
-        OO_LOG("texture.planet.generate", "Extracting parameters for generator {}", description());
+    if (initWithPath(oo::str::format("OOPlanetTexture@%s",
+                         oo::str::pointerDescription(this).c_str()),
+            kOOTextureAllowCubeMap)) {
+        OO_LOG("texture.planet.generate", "Extracting parameters for generator {}",
+            description());
 
         _info.landFraction = OOClamp_0_1_f(planetInfo.get<float>("land_fraction", 0.3));
         _info.polarFraction = OOClamp_0_1_f(planetInfo.get<float>("polar_fraction", 0.05));
@@ -167,7 +187,8 @@ bool OOPlanetTextureGenerator::initWithPlanetInfo(const oo::PList& planetInfo, R
         _info.polarSeaColor = FloatRGBFromDictColor(planetInfo, "polar_sea_color");
         _info.seed = seed; // was a value box under "noise_map_seed" in planetInfo
         if (planetInfo.find("cloud_alpha") != nullptr) {
-            OO_LOG("texture.planet.generate", "{}", "Extracting atmosphere parameters");
+            OO_LOG("texture.planet.generate", "{}",
+                "Extracting atmosphere parameters");
             // we have an atmosphere:
             _info.cloudAlpha = planetInfo.get<float>("cloud_alpha", 1.0f);
             _info.cloudFraction = OOClamp_0_1_f(planetInfo.get<float>("cloud_fraction", 0.3));
@@ -197,7 +218,8 @@ bool OOPlanetTextureGenerator::initWithPlanetInfo(const oo::PList& planetInfo, R
     return false;
 }
 
-oo::Ref<OOTexture> OOPlanetTextureGenerator::planetTextureWithInfo(const oo::PList& planetInfo, RANROTSeed seed)
+oo::Ref<OOTexture> OOPlanetTextureGenerator::planetTextureWithInfo(
+    const oo::PList& planetInfo, RANROTSeed seed)
 {
     oo::Ref<OOTexture> result;
     const oo::Ref<OOPlanetTextureGenerator> generator = generatorWithPlanetInfo(planetInfo, seed);
@@ -208,7 +230,9 @@ oo::Ref<OOTexture> OOPlanetTextureGenerator::planetTextureWithInfo(const oo::PLi
     return result;
 }
 
-bool OOPlanetTextureGenerator::generatePlanetTextureAndAtmosphere(oo::Ref<OOTexture>* texture, oo::Ref<OOTexture>* atmosphere, const oo::PList& planetInfo, RANROTSeed seed)
+bool OOPlanetTextureGenerator::generatePlanetTextureAndAtmosphere(
+    oo::Ref<OOTexture>* texture, oo::Ref<OOTexture>* atmosphere,
+    const oo::PList& planetInfo, RANROTSeed seed)
 {
     OOCParameterAssert(texture != NULL);
 
@@ -229,7 +253,9 @@ bool OOPlanetTextureGenerator::generatePlanetTextureAndAtmosphere(oo::Ref<OOText
     return texture->get() != nullptr;
 }
 
-bool OOPlanetTextureGenerator::generatePlanetTexture(oo::Ref<OOTexture>* texture, oo::Ref<OOTexture>* secondaryTexture, const oo::PList& planetInfo, RANROTSeed seed)
+bool OOPlanetTextureGenerator::generatePlanetTexture(
+    oo::Ref<OOTexture>* texture, oo::Ref<OOTexture>* secondaryTexture,
+    const oo::PList& planetInfo, RANROTSeed seed)
 {
     OOCParameterAssert(texture != NULL);
 
@@ -255,7 +281,10 @@ bool OOPlanetTextureGenerator::generatePlanetTexture(oo::Ref<OOTexture>* texture
     return texture->get() != nullptr;
 }
 
-bool OOPlanetTextureGenerator::generatePlanetTexture(oo::Ref<OOTexture>* texture, oo::Ref<OOTexture>* secondaryTexture, oo::Ref<OOTexture>* atmosphere, const oo::PList& planetInfo, RANROTSeed seed)
+bool OOPlanetTextureGenerator::generatePlanetTexture(
+    oo::Ref<OOTexture>* texture, oo::Ref<OOTexture>* secondaryTexture,
+    oo::Ref<OOTexture>* atmosphere, const oo::PList& planetInfo,
+    RANROTSeed seed)
 {
     OOCParameterAssert(texture != NULL);
 
@@ -289,20 +318,23 @@ bool OOPlanetTextureGenerator::generatePlanetTexture(oo::Ref<OOTexture>* texture
     }
     enqueue = enqueue || atmoGen->enqueued();
 
-    OO_LOG("texture.planet.generate", "Generator {} has atmosphere {}", diffuseGen.get()->description(), (*atmosphere != nullptr) ? (*atmosphere)->description() : std::string("(null)"));
+    OO_LOG("texture.planet.generate", "Generator {} has atmosphere {}",
+        diffuseGen.get()->description(),
+        (*atmosphere != nullptr) ? (*atmosphere)->description()
+                                 : std::string("(null)"));
 
     *texture = OOTexture::textureWithGenerator(diffuseGen.get(), enqueue);
     return texture->get() != nullptr;
 }
 
 // Was -dealloc: the helper generators are released with their members.
-OOPlanetTextureGenerator::~OOPlanetTextureGenerator()
-{
-}
+OOPlanetTextureGenerator::~OOPlanetTextureGenerator() { }
 
-std::optional<std::string> OOPlanetTextureGenerator::descriptionComponents() const
+std::optional<std::string> OOPlanetTextureGenerator::descriptionComponents()
+    const
 {
-    return oo::str::format("seed: %u,%u land: %g", _info.seed.high, _info.seed.low, _info.landFraction);
+    return oo::str::format("seed: %u,%u land: %g", _info.seed.high,
+        _info.seed.low, _info.landFraction);
 }
 
 uint32_t OOPlanetTextureGenerator::textureOptions()
@@ -318,13 +350,15 @@ std::optional<std::string> OOPlanetTextureGenerator::cacheKey()
     return cacheKeyForType(type);
 }
 
-std::optional<std::string> OOPlanetTextureGenerator::cacheKeyForType(const std::string& type)
+std::optional<std::string> OOPlanetTextureGenerator::cacheKeyForType(
+    const std::string& type)
 {
-    return oo::str::format("OOPlanetTextureGenerator-%s@%u\n%u,%u/%g/%u,%u/%f,%f,%f/%f,%f,%f/%f,%f,%f/%f,%f,%f",
-        type.c_str(), _planetScale,
-        _info.width, _info.height, _info.landFraction, _info.seed.high, _info.seed.low,
-        _info.landColor.r, _info.landColor.g, _info.landColor.b,
-        _info.seaColor.r, _info.seaColor.g, _info.seaColor.b,
+    return oo::str::format(
+        "OOPlanetTextureGenerator-%s@%u\n%u,%u/%g/%u,%u/%f,%f,%f/%f,%f,%f/"
+        "%f,%f,%f/%f,%f,%f",
+        type.c_str(), _planetScale, _info.width, _info.height, _info.landFraction,
+        _info.seed.high, _info.seed.low, _info.landColor.r, _info.landColor.g,
+        _info.landColor.b, _info.seaColor.r, _info.seaColor.g, _info.seaColor.b,
         _info.paleLandColor.r, _info.paleLandColor.g, _info.paleLandColor.b,
         _info.polarSeaColor.r, _info.polarSeaColor.g, _info.polarSeaColor.b);
 }
@@ -349,20 +383,26 @@ OOPlanetAtmosphereGenerator* OOPlanetTextureGenerator::atmosphereGenerator()
     return _atmoGenerator.get();
 }
 
-bool OOPlanetTextureGenerator::getResultFormatWidthHeight(OOPixMap* outData, OOTextureDataFormat* outFormat, uint32_t* outWidth, uint32_t* outHeight)
+bool OOPlanetTextureGenerator::getResultFormatWidthHeight(
+    OOPixMap* outData, OOTextureDataFormat* outFormat, uint32_t* outWidth,
+    uint32_t* outHeight)
 {
     bool waiting = false;
     if (!isReady()) {
         waiting = true;
-        OO_LOG("texture.planet.generate.wait", "{} generator {}", "Waiting for", description());
+        OO_LOG("texture.planet.generate.wait", "{} generator {}", "Waiting for",
+            description());
     }
 
     bool result = OOTextureGenerator::getResult(outData, outFormat, outWidth, outHeight);
 
     if (waiting) {
-        OO_LOG("texture.planet.generate.dequeue", "{} generator {}", result ? "Dequeued" : "Failed to dequeue", description());
+        OO_LOG("texture.planet.generate.dequeue", "{} generator {}",
+            result ? "Dequeued" : "Failed to dequeue", description());
     } else {
-        OO_LOG("texture.planet.generate.dequeue", "{} generator {} without waiting.", result ? "Dequeued" : "Failed to dequeue", description());
+        OO_LOG("texture.planet.generate.dequeue",
+            "{} generator {} without waiting.",
+            result ? "Dequeued" : "Failed to dequeue", description());
     }
 
     return result;
@@ -370,7 +410,8 @@ bool OOPlanetTextureGenerator::getResultFormatWidthHeight(OOPixMap* outData, OOT
 
 void OOPlanetTextureGenerator::loadTexture()
 {
-    OO_LOG("texture.planet.generate.begin", "Started generator {}", description());
+    OO_LOG("texture.planet.generate.begin", "Started generator {}",
+        description());
 
     bool success = false;
     bool generateNormalMap = (bool)_nMapGenerator;
@@ -413,11 +454,14 @@ void OOPlanetTextureGenerator::loadTexture()
 #endif
 
     {
-        float paleClouds = (_info.cloudFraction * _info.fbmBuffer[0] < 1.0f - _info.cloudFraction) ? 0.0f : 1.0f;
+        float paleClouds = (_info.cloudFraction * _info.fbmBuffer[0] < 1.0f - _info.cloudFraction)
+            ? 0.0f
+            : 1.0f;
         float poleValue = (_info.landFraction > 0.5f) ? 0.5f * _info.landFraction : 0.0f;
         float seaBias = _info.landFraction - 1.0f;
 
-        _info.paleSeaColor = Blend(0.35f, _info.polarSeaColor, Blend(0.7f, _info.seaColor, _info.landColor));
+        _info.paleSeaColor = Blend(0.35f, _info.polarSeaColor,
+            Blend(0.7f, _info.seaColor, _info.landColor));
         float normalScale = (1 << _planetScale);
 #ifndef NDEBUG
         // test-release only, make normalScale adjustable from within user defaults
@@ -439,8 +483,12 @@ void OOPlanetTextureGenerator::loadTexture()
         GLfloat shade;
         float rHeight = 1.0f / _height;
         float fy, fHeight = _height;
-        // The second parameter is the temperature fraction. Most favourable: 1.0f,  little ice. Most unfavourable: 0.0f, frozen planet. TODO: make it dependent on ranrot / planetinfo key...
-        SetMixConstants(&_info, 1.0f - _info.polarFraction); // no need to recalculate them inside each loop!
+        // The second parameter is the temperature fraction. Most favourable: 1.0f,
+        // little ice. Most unfavourable: 0.0f, frozen planet. TODO: make it
+        // dependent on ranrot / planetinfo key...
+        SetMixConstants(&_info,
+            1.0f - _info.polarFraction); // no need to recalculate them
+                                         // inside each loop!
 
         // first pass, calculate q.
         _info.qBuffer = (float*)malloc(static_cast<size_t>(_width * _height) * sizeof(float));
@@ -451,7 +499,8 @@ void OOPlanetTextureGenerator::loadTexture()
             nearPole *= nearPole;
 
             for (x = (int)_width - 1; x >= 0; x--) {
-                _info.qBuffer[y * _width + x] = QFactor(_info.fbmBuffer, x, y, _width, poleValue, seaBias, nearPole);
+                _info.qBuffer[y * _width + x] = QFactor(_info.fbmBuffer, x, y, _width,
+                    poleValue, seaBias, nearPole);
             }
         }
 
@@ -465,15 +514,21 @@ void OOPlanetTextureGenerator::loadTexture()
             nearPole *= nearPole;
 
             for (x = (int)_width - 1; x >= 0; x--) {
-                q = _info.qBuffer[y * _width + x]; // no need to use GetQ, x and y are always within bounds.
-                yN = GetQ(_info.qBuffer, x, y - 1, _width, _height, widthMask, heightMask); // recalculates x & y if they go out of bounds.
-                yS = GetQ(_info.qBuffer, x, y + 1, _width, _height, widthMask, heightMask);
-                yW = GetQ(_info.qBuffer, x - 1, y, _width, _height, widthMask, heightMask);
-                yE = GetQ(_info.qBuffer, x + 1, y, _width, _height, widthMask, heightMask);
+                q = _info.qBuffer[y * _width + x]; // no need to use GetQ, x and y are
+                                                   // always within bounds.
+                yN = GetQ(_info.qBuffer, x, y - 1, _width, _height, widthMask,
+                    heightMask); // recalculates x & y if they go out of bounds.
+                yS = GetQ(_info.qBuffer, x, y + 1, _width, _height, widthMask,
+                    heightMask);
+                yW = GetQ(_info.qBuffer, x - 1, y, _width, _height, widthMask,
+                    heightMask);
+                yE = GetQ(_info.qBuffer, x + 1, y, _width, _height, widthMask,
+                    heightMask);
 
                 color = PlanetMix(&_info, q, nearPole);
 
-                norm = vector_normal(make_vector(normalScale * (yE - yW), normalScale * (yN - yS), 1.0f));
+                norm = vector_normal(make_vector(normalScale * (yE - yW),
+                    normalScale * (yN - yS), 1.0f));
                 if (generateNormalMap) {
                     shade = 1.0f;
 
@@ -495,7 +550,8 @@ void OOPlanetTextureGenerator::loadTexture()
                             so we can recycle that to avoid branching.
                             -- Ahruman
                     */
-                    shade += color.a - color.a * shade; // equivalent to - but slightly faster than - previous implementation.
+                    shade += color.a - color.a * shade; // equivalent to - but slightly faster
+                                                        // than - previous implementation.
                 }
 
                 *px++ = 255.0f * color.r * shade;
@@ -505,7 +561,8 @@ void OOPlanetTextureGenerator::loadTexture()
                 *px++ = 0; // FIXME: light map goes here.
 
                 if (generateAtmosphere) {
-                    q = QFactor(_info.fbmBuffer, x, y, _width, paleClouds, cloudFraction, nearPole);
+                    q = QFactor(_info.fbmBuffer, x, y, _width, paleClouds, cloudFraction,
+                        nearPole);
                     color = CloudMix(&_info, q, nearPole);
                     *apx++ = 255.0f * color.r;
                     *apx++ = 255.0f * color.g;
@@ -537,19 +594,24 @@ END:
     _nMapGenerator = nullptr;
     _atmoGenerator = nullptr;
 
-    OO_LOG("texture.planet.generate.complete", "Completed generator {} {}successfully", description(), success ? "" : "un");
+    OO_LOG("texture.planet.generate.complete",
+        "Completed generator {} {}successfully", description(),
+        success ? "" : "un");
 
 #if DEBUG_DUMP
     if (success) {
-        const std::string diffuseName = oo::str::format("planet-%u-%u-diffuse-new", _info.seed.high, _info.seed.low);
-        const std::string lightsName = oo::str::format("planet-%u-%u-lights-new", _info.seed.high, _info.seed.low);
+        const std::string diffuseName = oo::str::format(
+            "planet-%u-%u-diffuse-new", _info.seed.high, _info.seed.low);
+        const std::string lightsName = oo::str::format(
+            "planet-%u-%u-lights-new", _info.seed.high, _info.seed.low);
 
-        [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr) cxx_dumpRGBAToRGBFileNamed:diffuseName
-                                                                             andGrayFileNamed:lightsName
-                                                                                        bytes:buffer
-                                                                                        width:_width
-                                                                                       height:_height
-                                                                                     rowBytes:_width * 4];
+        [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr)
+            cxx_dumpRGBAToRGBFileNamed:diffuseName
+                      andGrayFileNamed:lightsName
+                                 bytes:buffer
+                                 width:_width
+                                height:_height
+                              rowBytes:_width * 4];
     }
 #endif
 }
@@ -558,7 +620,8 @@ END:
 
 void OOPlanetTextureGenerator::dumpNoiseBuffer(float* noise)
 {
-    const std::string noiseName = oo::str::format("planet-%u-%u-noise-new", _info.seed.high, _info.seed.low);
+    const std::string noiseName = oo::str::format(
+        "planet-%u-%u-noise-new", _info.seed.high, _info.seed.low);
 
     uint8_t* noisePx = malloc(_width * _height);
     unsigned x, y;
@@ -568,11 +631,12 @@ void OOPlanetTextureGenerator::dumpNoiseBuffer(float* noise)
         }
     }
 
-    [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr) cxx_dumpGrayToFileNamed:noiseName
-                                                                                 bytes:noisePx
-                                                                                 width:_width
-                                                                                height:_height
-                                                                              rowBytes:_width];
+    [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr)
+        cxx_dumpGrayToFileNamed:noiseName
+                          bytes:noisePx
+                          width:_width
+                         height:_height
+                       rowBytes:_width];
     FREE(noisePx);
 }
 
@@ -580,17 +644,15 @@ void OOPlanetTextureGenerator::dumpNoiseBuffer(float* noise)
 
 OOINLINE float Lerp(float v0, float v1, float fraction)
 {
-    // Linear interpolation - equivalent to v0 * (1.0f - fraction) + v1 * fraction.
+    // Linear interpolation - equivalent to v0 * (1.0f - fraction) + v1 *
+    // fraction.
     return v0 + fraction * (v1 - v0);
 }
 
 static FloatRGB Blend(float fraction, FloatRGB a, FloatRGB b)
 {
-    return (FloatRGB) {
-        Lerp(b.r, a.r, fraction),
-        Lerp(b.g, a.g, fraction),
-        Lerp(b.b, a.b, fraction)
-    };
+    return (FloatRGB) { Lerp(b.r, a.r, fraction), Lerp(b.g, a.g, fraction),
+        Lerp(b.b, a.b, fraction) };
 }
 
 static float BlendAlpha(float fraction, float a, float b)
@@ -598,7 +660,8 @@ static float BlendAlpha(float fraction, float a, float b)
     return Lerp(b, a, fraction);
 }
 
-static FloatRGBA CloudMix(OOPlanetTextureGeneratorInfo* info, float q, float nearPole)
+static FloatRGBA CloudMix(OOPlanetTextureGeneratorInfo* info, float q,
+    float nearPole)
 {
 // #define AIR_ALPHA				(0.15f)
 // #define CLOUD_ALPHA				(1.0f)
@@ -616,21 +679,27 @@ static FloatRGBA CloudMix(OOPlanetTextureGeneratorInfo* info, float q, float nea
     q -= CLOUD_BOUNDARY * 0.5f;
 
     if (nearPole > POLAR_BOUNDARY) {
-        portion = nearPole > POLAR_BOUNDARY + 0.2f ? 1.0f : (nearPole - POLAR_BOUNDARY) * 5.0f;
+        portion = nearPole > POLAR_BOUNDARY + 0.2f
+            ? 1.0f
+            : (nearPole - POLAR_BOUNDARY) * 5.0f;
         cloudColor = Blend(portion, info->paleCloudColor, cloudColor);
 
-        portion = nearPole > POLAR_BOUNDARY + 0.625f ? 1.0f : (nearPole - POLAR_BOUNDARY) * 1.6f;
+        portion = nearPole > POLAR_BOUNDARY + 0.625f
+            ? 1.0f
+            : (nearPole - POLAR_BOUNDARY) * 1.6f;
     }
 
     if (q <= 0.0f) {
         if (q >= -CLOUD_BOUNDARY) {
-            alpha *= BlendAlpha(-q * 0.5f * RECIP_CLOUD_BOUNDARY + 0.5f, CLOUD_ALPHA, AIR_ALPHA);
+            alpha *= BlendAlpha(-q * 0.5f * RECIP_CLOUD_BOUNDARY + 0.5f, CLOUD_ALPHA,
+                AIR_ALPHA);
         } else {
             alpha *= CLOUD_ALPHA;
         }
     } else {
         if (q < CLOUD_BOUNDARY) {
-            alpha *= BlendAlpha(q * 0.5f * RECIP_CLOUD_BOUNDARY + 0.5f, AIR_ALPHA, CLOUD_ALPHA);
+            alpha *= BlendAlpha(q * 0.5f * RECIP_CLOUD_BOUNDARY + 0.5f, AIR_ALPHA,
+                CLOUD_ALPHA);
         } else {
             alpha *= AIR_ALPHA;
         }
@@ -644,7 +713,8 @@ static FloatRGBA CloudMix(OOPlanetTextureGeneratorInfo* info, float q, float nea
     return (FloatRGBA) { cloudColor.r, cloudColor.g, cloudColor.b, alpha };
 }
 
-static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q, float nearPole)
+static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q,
+    float nearPole)
 {
 #define RECIP_COASTLINE_PORTION (160.0f)
 #define COASTLINE_PORTION (1.0f / RECIP_COASTLINE_PORTION)
@@ -656,7 +726,8 @@ static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q, float ne
 
     const FloatRGB white = { 1.0f, 1.0f, 1.0f };
     FloatRGB diffuse;
-    // windows specular 'fix': 0 was showing pitch black continents when on the dark side, 0.01 shows the same shading as on Macs.
+    // windows specular 'fix': 0 was showing pitch black continents when on the
+    // dark side, 0.01 shows the same shading as on Macs.
     // TODO: a less hack-like fix.
     float specular = 0.01f;
 
@@ -683,19 +754,24 @@ static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q, float ne
         // High up - snow-capped peaks. With overrides q can range between -2 to +2.
         diffuse = white;
     } else if (q > info->mix_hi) {
-        diffuse = Blend((q - info->mix_hi) * info->mix_ih, white, info->paleLandColor); // Snowline.
+        diffuse = Blend((q - info->mix_hi) * info->mix_ih, white,
+            info->paleLandColor); // Snowline.
     } else {
         // Normal land.
-        diffuse = Blend((info->mix_hi - q) * info->mix_oh, info->landColor, info->paleLandColor);
+        diffuse = Blend((info->mix_hi - q) * info->mix_oh, info->landColor,
+            info->paleLandColor);
     }
 
 #if POLAR_CAPS
-    // (q > mix_polarCap + mix_polarCap - nearPole) ==  ((nearPole + q) / 2 > mix_polarCap)
+    // (q > mix_polarCap + mix_polarCap - nearPole) ==  ((nearPole + q) / 2 >
+    // mix_polarCap)
     float phi = info->mix_polarCap + info->mix_polarCap - nearPole;
     if (q > phi) // (nearPole + q) / 2 > pole
     {
         // thinner to thicker ice.
-        specular = q > phi + 0.02f ? 1.0f : 0.2f + (q - phi) * 40.0f; // (q - phi) * 40 == ((q-phi) / 0.02) * 0.8
+        specular = q > phi + 0.02f
+            ? 1.0f
+            : 0.2f + (q - phi) * 40.0f; // (q - phi) * 40 == ((q-phi) / 0.02) * 0.8
         // diffuse = info->polarSeaColor;
         diffuse = Blend(specular, info->polarSeaColor, diffuse);
         specular = specular * 0.5f; // softer contours under ice, but still contours.
@@ -707,7 +783,8 @@ static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q, float ne
 
 namespace {
 
-FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary, const std::string& key)
+FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary,
+    const std::string& key)
 {
     const oo::PList* value = dictionary.find(key);
     OOColor* color = (value != nullptr) ? OOColorInObjectNode(*value)
@@ -716,16 +793,16 @@ FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary, const std::string& k
         (value != nullptr) ? oo::DescriptionOf(*value).c_str() : "(null)");
 
     if (color == nullptr)
-        return (FloatRGB) { 0.0f, 0.0f, 0.0f }; // a nil colour answered zeros (release builds)
-    return (FloatRGB) { color->redComponent() * ALBEDO_FACTOR, color->greenComponent() * ALBEDO_FACTOR, color->blueComponent() * ALBEDO_FACTOR };
+        return (FloatRGB) { 0.0f, 0.0f,
+            0.0f }; // a nil colour answered zeros (release builds)
+    return (FloatRGB) { color->redComponent() * ALBEDO_FACTOR,
+        color->greenComponent() * ALBEDO_FACTOR,
+        color->blueComponent() * ALBEDO_FACTOR };
 }
 
 } // namespace
 
-OOINLINE float Hermite(float q)
-{
-    return 3.0f * q * q - 2.0f * q * q * q;
-}
+OOINLINE float Hermite(float q) { return 3.0f * q * q - 2.0f * q * q * q; }
 
 #if __BIG_ENDIAN__
 #define iman_ 1
@@ -766,11 +843,13 @@ static bool FillFBMBuffer(OOPlanetTextureGeneratorInfo* info)
 }
 
 enum {
-    //	Size of permutation buffer used to map integer coordinates to gradients. Must be power of two.
+    //	Size of permutation buffer used to map integer coordinates to gradients.
+    // Must be power of two.
     kPermutationCount = 1 << 10,
     kPermutationMask = kPermutationCount - 1,
 
-    // Number of different gradient vectors used. The most important thing is that the gradients are evenly distributed and sum to 0.
+    // Number of different gradient vectors used. The most important thing is that
+    // the gradients are evenly distributed and sum to 0.
     kGradientCount = 12
 };
 
@@ -778,39 +857,20 @@ enum {
 
 #if !LUT_DOT
 static const Vector kGradients[kGradientCount] = {
-    { 1, 1, 0 },
-    { -1, 1, 0 },
-    { 1, -1, 0 },
-    { -1, -1, 0 },
-    { 1, 0, 1 },
-    { -1, 0, 1 },
-    { 1, 0, -1 },
-    { -1, 0, -1 },
-    { 0, 1, 1 },
-    { 0, -1, 1 },
-    { 0, 1, -1 },
-    { 0, -1, -1 }
+    { 1, 1, 0 }, { -1, 1, 0 }, { 1, -1, 0 }, { -1, -1, 0 }, { 1, 0, 1 }, { -1, 0, 1 },
+    { 1, 0, -1 }, { -1, 0, -1 }, { 0, 1, 1 }, { 0, -1, 1 }, { 0, 1, -1 }, { 0, -1, -1 }
 };
 #else
 static const uint8_t kGradients[kGradientCount][3] = {
-    { 2, 2, 1 },
-    { 0, 2, 1 },
-    { 2, 0, 1 },
-    { 0, 0, 1 },
-    { 2, 1, 2 },
-    { 0, 1, 2 },
-    { 2, 1, 0 },
-    { 0, 1, 0 },
-    { 1, 2, 2 },
-    { 1, 0, 2 },
-    { 1, 2, 0 },
-    { 1, 0, 0 }
+    { 2, 2, 1 }, { 0, 2, 1 }, { 2, 0, 1 }, { 0, 0, 1 }, { 2, 1, 2 }, { 0, 1, 2 },
+    { 2, 1, 0 }, { 0, 1, 0 }, { 1, 2, 2 }, { 1, 0, 2 }, { 1, 2, 0 }, { 1, 0, 0 }
 };
 
-/*	Attempted speedup that didn't pan out, but might inspire something better.
-        Since our gradient vectors' components are all -1, 0 or 1, we should be
-        able to calculate the dot product without any multiplication at all, by
-        simply summing the right combination of (x, y, z), (0, 0, 0) and (-x, -y, -z).
+/*	Attempted speedup that didn't pan out, but might inspire something
+   better. Since our gradient vectors' components are all -1, 0 or 1, we should
+   be able to calculate the dot product without any multiplication at all, by
+        simply summing the right combination of (x, y, z), (0, 0, 0) and (-x,
+   -y, -z).
 
         This turns out to be slightly slower than using multiplication, even if
         the negations are precalculated.
@@ -825,7 +885,8 @@ OOINLINE float TDot3(const uint8_t grad[3], float x, float y, float z)
 }
 #endif
 
-// Sample 3D noise function defined by kGradients and permutation table at point p.
+// Sample 3D noise function defined by kGradients and permutation table at point
+// p.
 static float SampleNoise3D(OOPlanetTextureGeneratorInfo* info, Vector p)
 {
     uint16_t* permutations = info->permutations;
@@ -865,9 +926,11 @@ static float SampleNoise3D(OOPlanetTextureGeneratorInfo* info, Vector p)
 
     //	Calculate noise contributions from each of the eight corners.
 #if !LUT_DOT
-#define DOT3(idx, x_, y_, z_) dot_product(kGradients[(idx) % kGradientCount], (Vector) { (x_), (y_), (z_) })
+#define DOT3(idx, x_, y_, z_) \
+    dot_product(kGradients[(idx) % kGradientCount], (Vector) { (x_), (y_), (z_) })
 #else
-#define DOT3(idx, x_, y_, z_) TDot3(kGradients[(idx) % kGradientCount], (x_), (y_), (z_))
+#define DOT3(idx, x_, y_, z_) \
+    TDot3(kGradients[(idx) % kGradientCount], (x_), (y_), (z_))
 #endif
 
     float x1 = x - 1.0f;
@@ -943,11 +1006,7 @@ static bool GenerateFBMNoise3D(OOPlanetTextureGeneratorInfo* info)
                 float los = sin(lon);
                 float loc = cos(lon);
 
-                Vector p = {
-                    los * lac,
-                    las,
-                    loc * lac
-                };
+                Vector p = { los * lac, las, loc * lac };
 
 #if 1
                 // fBM
@@ -991,7 +1050,9 @@ static void FillRandomBuffer(float* randomBuffer, RANROTSeed seed)
     }
 }
 
-static void AddNoise(OOPlanetTextureGeneratorInfo* info, float* randomBuffer, float octave, unsigned octaveMask, float scale, float* qxBuffer, int* ixBuffer)
+static void AddNoise(OOPlanetTextureGeneratorInfo* info, float* randomBuffer,
+    float octave, unsigned octaveMask, float scale,
+    float* qxBuffer, int* ixBuffer)
 {
     unsigned x, y;
     unsigned width = info->width, height = info->height;
@@ -1026,8 +1087,10 @@ static void AddNoise(OOPlanetTextureGeneratorInfo* info, float* randomBuffer, fl
             jx = (ix + 1) & octaveMask;
             jx &= (kRandomBufferSize - 1);
 
-            rix = Lerp(randomBuffer[iy * kRandomBufferSize + ix], randomBuffer[iy * kRandomBufferSize + jx], qx);
-            rjx = Lerp(randomBuffer[jy * kRandomBufferSize + ix], randomBuffer[jy * kRandomBufferSize + jx], qx);
+            rix = Lerp(randomBuffer[iy * kRandomBufferSize + ix],
+                randomBuffer[iy * kRandomBufferSize + jx], qx);
+            rjx = Lerp(randomBuffer[jy * kRandomBufferSize + ix],
+                randomBuffer[jy * kRandomBufferSize + jx], qx);
             rfinal = Lerp(rix, rjx, qy);
 
             *dst++ += scale * rfinal;
@@ -1037,7 +1100,8 @@ static void AddNoise(OOPlanetTextureGeneratorInfo* info, float* randomBuffer, fl
 
 static bool GenerateFBMNoise(OOPlanetTextureGeneratorInfo* info)
 {
-    // Allocate the temporary buffers we need in one fell swoop, to avoid administrative overhead.
+    // Allocate the temporary buffers we need in one fell swoop, to avoid
+    // administrative overhead.
     size_t randomBufferSize = kRandomBufferSize * kRandomBufferSize * sizeof(float);
     size_t qxBufferSize = info->width * sizeof(float);
     size_t ixBufferSize = info->width * sizeof(int);
@@ -1070,7 +1134,8 @@ static bool GenerateFBMNoise(OOPlanetTextureGeneratorInfo* info)
     return true;
 }
 
-static float QFactor(float* accbuffer, int x, int y, unsigned width, float polar_y_value, float bias, float polar_y)
+static float QFactor(float* accbuffer, int x, int y, unsigned width,
+    float polar_y_value, float bias, float polar_y)
 {
     float q = accbuffer[y * width + x]; // 0.0 -> 1.0
     q += bias;
@@ -1081,7 +1146,8 @@ static float QFactor(float* accbuffer, int x, int y, unsigned width, float polar
     return q;
 }
 
-static float GetQ(float* qbuffer, int x, int y, unsigned width, unsigned height, unsigned widthMask, unsigned heightMask)
+static float GetQ(float* qbuffer, int x, int y, unsigned width, unsigned height,
+    unsigned widthMask, unsigned heightMask)
 {
     // Correct Y wrapping mode, unoptimised.
     // if (y < 0) { y = -y - 1; x += width / 2; }
@@ -1089,8 +1155,9 @@ static float GetQ(float* qbuffer, int x, int y, unsigned width, unsigned height,
     // now let's wrap x.
     // x = x % width;
 
-    // Correct Y wrapping mode, faster method. In the following lines of code, both
-    // width and height are assumed to be powers of 2: 512, 1024, 2048, etc...
+    // Correct Y wrapping mode, faster method. In the following lines of code,
+    // both width and height are assumed to be powers of 2: 512, 1024, 2048,
+    // etc...
     if (y & height) {
         y = (y ^ heightMask) & heightMask;
         x += width >> 1;
@@ -1100,18 +1167,23 @@ static float GetQ(float* qbuffer, int x, int y, unsigned width, unsigned height,
     return qbuffer[y * width + x];
 }
 
-static void SetMixConstants(OOPlanetTextureGeneratorInfo* info, float temperatureFraction)
+static void SetMixConstants(OOPlanetTextureGeneratorInfo* info,
+    float temperatureFraction)
 {
     info->mix_hi = 0.66667f * info->landFraction;
     info->mix_oh = 1.0f / info->mix_hi;
     info->mix_ih = 1.0f / (1.0f - info->mix_hi);
-    info->mix_polarCap = temperatureFraction * (0.28f + 0.24f * info->landFraction); // landmasses make the polar cap proportionally bigger, but not too much bigger.
+    info->mix_polarCap = temperatureFraction * (0.28f + 0.24f * info->landFraction); // landmasses make the polar cap proportionally
+                                                                                     // bigger, but not too much bigger.
 }
 
-bool OOPlanetNormalMapGenerator::initWithCacheKey(const std::string& cacheKey, RANROTSeed seed)
+bool OOPlanetNormalMapGenerator::initWithCacheKey(const std::string& cacheKey,
+    RANROTSeed seed)
 {
     // AllowCubeMap not used yet but might be in future
-    if (initWithPath(oo::str::format("OOPlanetNormalTexture@%s", oo::str::pointerDescription(this).c_str()), kOOTextureAllowCubeMap)) {
+    if (initWithPath(oo::str::format("OOPlanetNormalTexture@%s",
+                         oo::str::pointerDescription(this).c_str()),
+            kOOTextureAllowCubeMap)) {
         _enqueued = false;
         _cacheKey = cacheKey;
         _seed = seed;
@@ -1141,17 +1213,15 @@ bool OOPlanetNormalMapGenerator::enqueue()
     return true;
 }
 
-bool OOPlanetNormalMapGenerator::enqueued()
-{
-    return _enqueued;
-}
+bool OOPlanetNormalMapGenerator::enqueued() { return _enqueued; }
 
 void OOPlanetNormalMapGenerator::loadTexture()
 {
     // Do nothing.
 }
 
-void OOPlanetNormalMapGenerator::completeWithData(void* data_, unsigned width_, unsigned height_)
+void OOPlanetNormalMapGenerator::completeWithData(void* data_, unsigned width_,
+    unsigned height_)
 {
     _data = data_;
     _width = width_;
@@ -1165,20 +1235,26 @@ void OOPlanetNormalMapGenerator::completeWithData(void* data_, unsigned width_, 
     const std::string normalName = oo::str::format("planet-%u-%u-normal-new", _seed.high, _seed.low);
     const std::string specularName = oo::str::format("planet-%u-%u-specular-new", _seed.high, _seed.low);
 
-    [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr) cxx_dumpRGBAToRGBFileNamed:normalName
-                                                                         andGrayFileNamed:specularName
-                                                                                    bytes:_data
-                                                                                    width:_width
-                                                                                   height:_height
-                                                                                 rowBytes:_width * 4];
+    [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr)
+        cxx_dumpRGBAToRGBFileNamed:normalName
+                  andGrayFileNamed:specularName
+                             bytes:_data
+                             width:_width
+                            height:_height
+                          rowBytes:_width * 4];
 #endif
 }
 
-bool OOPlanetAtmosphereGenerator::initWithCacheKey(const std::string& cacheKey, RANROTSeed seed, OOPlanetTextureGenerator* parent)
+bool OOPlanetAtmosphereGenerator::initWithCacheKey(
+    const std::string& cacheKey, RANROTSeed seed,
+    OOPlanetTextureGenerator* parent)
 {
-    OO_LOG("texture.planet.generate", "Initialising atmosphere generator {}", cacheKey);
+    OO_LOG("texture.planet.generate", "Initialising atmosphere generator {}",
+        cacheKey);
     // AllowCubeMap not used yet but might be in future
-    if (initWithPath(oo::str::format("OOPlanetAtmoTexture@%s", oo::str::pointerDescription(this).c_str()), kOOTextureAllowCubeMap)) {
+    if (initWithPath(oo::str::format("OOPlanetAtmoTexture@%s",
+                         oo::str::pointerDescription(this).c_str()),
+            kOOTextureAllowCubeMap)) {
         _cacheKey = cacheKey;
         _seed = seed;
         _parent = oo::Ref<OOPlanetTextureGenerator>(parent);
@@ -1204,10 +1280,7 @@ bool OOPlanetAtmosphereGenerator::enqueue()
     return true;
 }
 
-bool OOPlanetAtmosphereGenerator::enqueued()
-{
-    return _enqueued;
-}
+bool OOPlanetAtmosphereGenerator::enqueued() { return _enqueued; }
 
 void OOPlanetAtmosphereGenerator::loadTexture()
 {
@@ -1223,19 +1296,21 @@ void OOPlanetAtmosphereGenerator::loadTexture()
  * by the time the parent task is complete, this texture loader will
  * have been enqueued, and [super getResult] will then work
  * properly. - CIM 2014-04-05 */
-bool OOPlanetAtmosphereGenerator::getResult(OOPixMap* result, OOTextureDataFormat* outFormat, uint32_t* outWidth, uint32_t* outHeight)
+bool OOPlanetAtmosphereGenerator::getResult(OOPixMap* result,
+    OOTextureDataFormat* outFormat,
+    uint32_t* outWidth,
+    uint32_t* outHeight)
 {
     if (!_ready) {
-        OOAsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(_parent.get());
+        OOAsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(
+            _parent.get());
     }
 
-    return OOTextureGenerator::getResult(result,
-        outFormat,
-        outWidth,
-        outHeight);
+    return OOTextureGenerator::getResult(result, outFormat, outWidth, outHeight);
 }
 
-void OOPlanetAtmosphereGenerator::completeWithData(void* data_, unsigned width_, unsigned height_)
+void OOPlanetAtmosphereGenerator::completeWithData(void* data_, unsigned width_,
+    unsigned height_)
 {
     OO_LOG("texture.planet.generate", "{}", "Completing atmosphere generator");
 
@@ -1249,13 +1324,15 @@ void OOPlanetAtmosphereGenerator::completeWithData(void* data_, unsigned width_,
 
 #if DEBUG_DUMP
     const std::string rgbName = oo::str::format("planet-%u-%u-atmosphere-rgb-new", _seed.high, _seed.low);
-    const std::string alphaName = oo::str::format("planet-%u-%u-atmosphere-alpha-new", _seed.high, _seed.low);
+    const std::string alphaName = oo::str::format(
+        "planet-%u-%u-atmosphere-alpha-new", _seed.high, _seed.low);
 
-    [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr) cxx_dumpRGBAToRGBFileNamed:rgbName
-                                                                         andGrayFileNamed:alphaName
-                                                                                    bytes:_data
-                                                                                    width:_width
-                                                                                   height:_height
-                                                                                 rowBytes:_width * 4];
+    [(UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr)
+        cxx_dumpRGBAToRGBFileNamed:rgbName
+                  andGrayFileNamed:alphaName
+                             bytes:_data
+                             width:_width
+                            height:_height
+                          rowBytes:_width * 4];
 #endif
 }
