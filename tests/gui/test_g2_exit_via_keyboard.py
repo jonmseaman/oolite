@@ -89,7 +89,7 @@ that branch passes. The two derivations must agree on which row is ` Exit Game `
 Down presses is their difference, and the expected context is the one the source actually
 contains.
 
-    python3 -m pytest upstream/oolite/tests/gui/test_g2_exit_via_keyboard.py -x -q
+    python3 -m pytest oolite-dev/tests/gui/test_g2_exit_via_keyboard.py -x -q
 
 Needs the desktop: a real window, unlocked and logged in (ADR-0017). It takes tools/gui-lock for
 the duration, via the ``game`` fixture.
