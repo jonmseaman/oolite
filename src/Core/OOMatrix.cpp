@@ -22,16 +22,20 @@ MA 02110-1301, USA.
 
 */
 
-#define OO_PLAIN_CPP_UNIT 1 // a plain C++ unit: the shared headers' game-unit parts stay out of it (bead oo-dbz)
+#define OO_PLAIN_CPP_UNIT \
+    1 // a plain C++ unit: the shared headers' game-unit parts stay out of it
+      // (bead oo-dbz)
 #include "OOMaths.h"
+#include "oofnd/String.hpp"
+#if OOMATHS_OPENGL_INTEGRATION
+#include <SDL3/SDL_opengl.h> // GL_FALSE
+
 #include "OOOpenGLCheck.h" // OOGL() (bead oo-9ht.163)
 #include "OOOpenGLExtensionPointers.h" // glUniformMatrix3fvARB, Windows' extension pointer (bead oo-9ht.120)
 #include "OOOpenGLOnly.h" // GL_FALSE
-#include "oofnd/String.hpp"
-#include <SDL3/SDL_opengl.h> // GL_FALSE
+#endif
 
-const OOMatrix kIdentityMatrix = { .m = {
-                                       { 1.0f, 0.0f, 0.0f, 0.0f },
+const OOMatrix kIdentityMatrix = { .m = { { 1.0f, 0.0f, 0.0f, 0.0f },
                                        { 0.0f, 1.0f, 0.0f, 0.0f },
                                        { 0.0f, 0.0f, 1.0f, 0.0f },
                                        { 0.0f, 0.0f, 0.0f, 1.0f } } };
@@ -50,12 +54,13 @@ OOMatrix OOMatrixForRotation(Vector axis, OOScalar angle)
     OOScalar s = sin(angle), c = cos(angle);
     OOScalar t = 1.0f - c;
 
-    // Lots of opportunity for common subexpression elimintation here, but I'll leave it to the compiler for now.
-    return OOMatrixConstruct(
-        t * x * x + c, t * x * y + s * z, t * x * z - s * y, 0.0f,
-        t * x * y - s * z, t * y * y + c, t * y * z + s * x, 0.0f,
-        t * x * y + s * y, t * y * z - s * x, t * z * z + c, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f);
+    // Lots of opportunity for common subexpression elimintation here, but I'll
+    // leave it to the compiler for now.
+    return OOMatrixConstruct(t * x * x + c, t * x * y + s * z, t * x * z - s * y,
+        0.0f, t * x * y - s * z, t * y * y + c,
+        t * y * z + s * x, 0.0f, t * x * y + s * y,
+        t * y * z - s * x, t * z * z + c, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f);
 }
 
 OOMatrix OOMatrixForQuaternionRotation(Quaternion orientation)
@@ -86,11 +91,9 @@ OOMatrix OOMatrixForQuaternionRotation(Quaternion orientation)
     yz = y * zz;
     zz = z * zz;
 
-    return OOMatrixConstruct(
-        1.0f - yy - zz, xy - wz, xz + wy, 0.0f,
-        xy + wz, 1.0f - xx - zz, yz - wx, 0.0f,
-        xz - wy, yz + wx, 1.0f - xx - yy, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f);
+    return OOMatrixConstruct(1.0f - yy - zz, xy - wz, xz + wy, 0.0f, xy + wz,
+        1.0f - xx - zz, yz - wx, 0.0f, xz - wy, yz + wx,
+        1.0f - xx - yy, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 bool OOMatrixEqual(OOMatrix a, OOMatrix b)
@@ -112,7 +115,8 @@ OOMatrix OOMatrixMultiply(OOMatrix a, OOMatrix b)
     unsigned i = 0;
     OOMatrix r;
 
-    // This is amenable to significant optimization with Altivec, and presumably also SSE.
+    // This is amenable to significant optimization with Altivec, and presumably
+    // also SSE.
     for (i = 0; i != 4; ++i) {
         r.m[i][0] = a.m[i][0] * b.m[0][0] + a.m[i][1] * b.m[1][0] + a.m[i][2] * b.m[2][0] + a.m[i][3] * b.m[3][0];
         r.m[i][1] = a.m[i][0] * b.m[0][1] + a.m[i][1] * b.m[1][1] + a.m[i][2] * b.m[2][1] + a.m[i][3] * b.m[3][1];
@@ -156,7 +160,8 @@ OOMatrix OOMatrixOrthogonalize(OOMatrix m)
 {
     //	Simple orthogonalization: make everything orthogonal to everything else.
 
-    Vector i; // = { m.m[0][0], m.m[1][0], m.m[2][0] };	// Overwritten without being used
+    Vector i; // = { m.m[0][0], m.m[1][0], m.m[2][0] };	// Overwritten without
+              // being used
     Vector j = { m.m[0][1], m.m[1][1], m.m[2][1] };
     Vector k = { m.m[0][2], m.m[1][2], m.m[2][2] };
 
@@ -180,7 +185,9 @@ OOMatrix OOMatrixOrthogonalize(OOMatrix m)
 #ifdef __cplusplus
 std::string OOMatrixDescription(OOMatrix matrix)
 {
-    return oo::str::format("{{%g, %g, %g, %g}, {%g, %g, %g, %g}, {%g, %g, %g, %g}, {%g, %g, %g, %g}}",
+    return oo::str::format(
+        "{{%g, %g, %g, %g}, {%g, %g, %g, %g}, {%g, %g, %g, %g}, {%g, %g, %g, "
+        "%g}}",
         matrix.m[0][0], matrix.m[0][1], matrix.m[0][2], matrix.m[0][3],
         matrix.m[1][0], matrix.m[1][1], matrix.m[1][2], matrix.m[1][3],
         matrix.m[2][0], matrix.m[2][1], matrix.m[2][2], matrix.m[2][3],
@@ -236,7 +243,8 @@ void OOMatrixRowScale(OOMatrix* M, int row, OOScalar factor)
     return;
 }
 
-void OOMatrixRowOperation(OOMatrix* M, int row1, OOScalar factor1, int row2, OOScalar factor2)
+void OOMatrixRowOperation(OOMatrix* M, int row1, OOScalar factor1, int row2,
+    OOScalar factor2)
 {
     if (row1 < 0 || row1 >= 4 || row2 < 0 || row2 >= 4) {
         return;
@@ -275,7 +283,8 @@ void OOMatrixColumnScale(OOMatrix* M, int column, OOScalar factor)
     return;
 }
 
-void OOMatrixColumnOperation(OOMatrix* M, int column1, OOScalar factor1, int column2, OOScalar factor2)
+void OOMatrixColumnOperation(OOMatrix* M, int column1, OOScalar factor1,
+    int column2, OOScalar factor2)
 {
     if (column1 < 0 || column1 >= 4 || column2 < 0 || column2 >= 4) {
         return;
@@ -413,6 +422,8 @@ OOMatrix OOMatrixInverseWithDeterminant(OOMatrix M, OOScalar* d)
     return B;
 }
 
+#if OOMATHS_OPENGL_INTEGRATION
+
 void GLUniformMatrix3(int location, OOMatrix M)
 {
     OOScalar m[9];
@@ -425,5 +436,9 @@ void GLUniformMatrix3(int location, OOMatrix M)
     m[6] = M.m[2][0];
     m[7] = M.m[2][1];
     m[8] = M.m[2][2];
-    OOGL(glUniformMatrix3fvARB(location, 1, GL_FALSE, m)); // GL_FALSE: objc.h's NO is not in C++ (oo-s37k)
+    OOGL(glUniformMatrix3fvARB(
+        location, 1, GL_FALSE,
+        m)); // GL_FALSE: objc.h's NO is not in C++ (oo-s37k)
 }
+
+#endif

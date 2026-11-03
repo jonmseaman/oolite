@@ -27,7 +27,12 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOFastArithmetic.h"
+#ifndef INCLUDED_OOMATHS_h
+#error Do not include OOHPVector.h directly; include OOMaths.h.
+#else
+
+// Each maths header includes what it uses, so OOMaths.h may list them in any
+// order.
 #include "OOVector.h"
 
 #ifndef OOMATHS_EXTERNAL_VECTOR_TYPES
@@ -55,27 +60,43 @@ extern const HPVector2D kZeroHPVector2D, /* 0, 0 */
     kBasisYHPVector2D; /* 0, 1 */
 
 /* Construct vector */
-OOINLINE HPVector make_HPvector(OOHPScalar vx, OOHPScalar vy, OOHPScalar vz) INLINE_CONST_FUNC;
-OOINLINE HPVector2D MakeHPVector2D(OOHPScalar vx, OOHPScalar vy) INLINE_CONST_FUNC;
+OOINLINE HPVector make_HPvector(OOHPScalar vx, OOHPScalar vy,
+    OOHPScalar vz) INLINE_CONST_FUNC;
+OOINLINE HPVector2D MakeHPVector2D(OOHPScalar vx,
+    OOHPScalar vy) INLINE_CONST_FUNC;
 
 OOINLINE HPVector vectorToHPVector(Vector v) INLINE_CONST_FUNC;
 OOINLINE Vector HPVectorToVector(HPVector v) INLINE_CONST_FUNC;
 
+#if !OOMATHS_STANDALONE
 /* Generate random vectors. */
 HPVector OORandomUnitHPVector(void);
-HPVector OOHPVectorRandomSpatial(OOHPScalar maxLength); // Random vector uniformly distributed in radius-maxLength sphere. (Longer vectors are more common.)
-HPVector OOHPVectorRandomRadial(OOHPScalar maxLength); // Random vector with uniform distribution of direction and radius in radius-maxLength sphere. (Causes clustering at centre.)
-HPVector OORandomPositionInCylinder(HPVector centre1, OOHPScalar exclusion1, HPVector centre2, OOHPScalar exclusion2, OOHPScalar radius);
-HPVector OORandomPositionInShell(HPVector centre, OOHPScalar inner, OOHPScalar outer);
+HPVector OOHPVectorRandomSpatial(
+    OOHPScalar
+        maxLength); // Random vector uniformly distributed in radius-maxLength
+                    // sphere. (Longer vectors are more common.)
+HPVector OOHPVectorRandomRadial(
+    OOHPScalar maxLength); // Random vector with uniform distribution of
+                           // direction and radius in radius-maxLength sphere.
+                           // (Causes clustering at centre.)
+HPVector OORandomPositionInCylinder(HPVector centre1, OOHPScalar exclusion1,
+    HPVector centre2, OOHPScalar exclusion2,
+    OOHPScalar radius);
+HPVector OORandomPositionInShell(HPVector centre, OOHPScalar inner,
+    OOHPScalar outer);
 /* returns the projection of 'point' to the plane defined by the point
          'plane' and the normal vector 'normal' */
-HPVector OOProjectHPVectorToPlane(HPVector point, HPVector plane, HPVector normal);
+HPVector OOProjectHPVectorToPlane(HPVector point, HPVector plane,
+    HPVector normal);
+#endif
 
 /* Multiply vector by scalar (in place) */
-OOINLINE void HPscale_vector(HPVector* outHPVector, OOHPScalar factor) ALWAYS_INLINE_FUNC NONNULL_FUNC;
+OOINLINE void HPscale_vector(HPVector* outHPVector,
+    OOHPScalar factor) ALWAYS_INLINE_FUNC NONNULL_FUNC;
 
 /* Multiply vector by scalar */
-OOINLINE HPVector HPvector_multiply_scalar(HPVector v, OOHPScalar s) INLINE_CONST_FUNC;
+OOINLINE HPVector HPvector_multiply_scalar(HPVector v,
+    OOHPScalar s) INLINE_CONST_FUNC;
 
 /* Addition and subtraction of vectors */
 OOINLINE HPVector HPvector_add(HPVector a, HPVector b) INLINE_CONST_FUNC;
@@ -84,8 +105,10 @@ OOINLINE HPVector HPvector_subtract(HPVector a, HPVector b) INLINE_CONST_FUNC;
 OOINLINE HPVector HPvector_flip(HPVector v) INLINE_CONST_FUNC;
 
 /* HPVector linear interpolation */
-OOINLINE HPVector OOHPVectorInterpolate(HPVector a, HPVector b, OOHPScalar where) INLINE_CONST_FUNC;
-OOINLINE HPVector OOHPVectorTowards(HPVector a, HPVector b, OOHPScalar where) INLINE_CONST_FUNC;
+OOINLINE HPVector OOHPVectorInterpolate(HPVector a, HPVector b,
+    OOHPScalar where) INLINE_CONST_FUNC;
+OOINLINE HPVector OOHPVectorTowards(HPVector a, HPVector b,
+    OOHPScalar where) INLINE_CONST_FUNC;
 
 /* Comparison of vectors */
 OOINLINE bool HPvector_equal(HPVector a, HPVector b) INLINE_CONST_FUNC;
@@ -100,7 +123,8 @@ OOINLINE OOHPScalar HPmagnitude(HPVector vec) INLINE_CONST_FUNC;
 OOINLINE HPVector HPvector_normal(HPVector vec) INLINE_CONST_FUNC;
 
 /* Normalize vector, returning fallback if zero vector. */
-OOINLINE HPVector HPvector_normal_or_fallback(HPVector vec, HPVector fallback) INLINE_CONST_FUNC;
+OOINLINE HPVector HPvector_normal_or_fallback(HPVector vec, HPVector fallback)
+    INLINE_CONST_FUNC;
 OOINLINE HPVector HPvector_normal_or_xbasis(HPVector vec) INLINE_CONST_FUNC;
 OOINLINE HPVector HPvector_normal_or_ybasis(HPVector vec) INLINE_CONST_FUNC;
 OOINLINE HPVector HPvector_normal_or_zbasis(HPVector vec) INLINE_CONST_FUNC;
@@ -112,22 +136,29 @@ OOINLINE OOHPScalar HPdistance2(HPVector v1, HPVector v2) INLINE_CONST_FUNC;
 OOINLINE OOHPScalar HPdistance(HPVector v1, HPVector v2) INLINE_CONST_FUNC;
 
 /* Dot product */
-OOINLINE OOHPScalar HPdot_product(HPVector first, HPVector second) INLINE_CONST_FUNC;
+OOINLINE OOHPScalar HPdot_product(HPVector first,
+    HPVector second) INLINE_CONST_FUNC;
 
 /* NORMALIZED cross product */
-OOINLINE HPVector HPcross_product(HPVector first, HPVector second) INLINE_CONST_FUNC;
+OOINLINE HPVector HPcross_product(HPVector first,
+    HPVector second) INLINE_CONST_FUNC;
 
 /* General cross product */
-OOINLINE HPVector HPtrue_cross_product(HPVector first, HPVector second) CONST_FUNC;
+OOINLINE HPVector HPtrue_cross_product(HPVector first,
+    HPVector second) CONST_FUNC;
 
 /* Triple product */
-OOINLINE OOHPScalar HPtriple_product(HPVector first, HPVector second, HPVector third) INLINE_CONST_FUNC;
+OOINLINE OOHPScalar HPtriple_product(HPVector first, HPVector second,
+    HPVector third) INLINE_CONST_FUNC;
 
 /* Given three points on a surface, returns the normal to the surface. */
-OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2, HPVector v3) CONST_FUNC;
+OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2,
+    HPVector v3) CONST_FUNC;
 
-#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit until bead oo-dbz), not a plain C++ one
-/*	Objective-C++ only: OOMaths.h is included inside extern "C" (proposed ADR-0043, bead oo-dlox). */
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit
+                                                        // until bead oo-dbz), not a plain C++ one
+/*	Objective-C++ only: OOMaths.h is included inside extern "C" (proposed
+ * ADR-0043, bead oo-dlox). */
 extern "C++" {
 #include "oofnd/StdLib.hpp"
 std::string cxx_HPVectorDescription(HPVector vector); // "(x, y, z)"
@@ -136,6 +167,7 @@ std::vector<double> cxx_ArrayFromHPVector(HPVector vector); // { x, y, z }
 
 #endif
 
+#if OOMATHS_OPENGL_INTEGRATION
 /*	OpenGL conveniences. Need to be macros to work with OOMacroOpenGL. */
 #define GLVertexOOHPVector(v)         \
     do {                              \
@@ -147,6 +179,7 @@ std::vector<double> cxx_ArrayFromHPVector(HPVector vector); // { x, y, z }
         HPVector v_ = v;                      \
         OOGL(glTranslatef(v_.x, v_.y, v_.z)); \
     } while (0)
+#endif
 
 /*** Only inline definitions beyond this point ***/
 
@@ -190,8 +223,8 @@ OOINLINE void HPscale_vector(HPVector* vec, OOHPScalar factor)
     /*
             Clang static analyzer: reports an unintialized value here when called
             from -[HeadUpDisplay rescaleByFactor:]. This is blatantly wrong, as
-            the array the vector comes from is fully initialized in the range being
-            looped over.
+            the array the vector comes from is fully initialized in the range
+       being looped over.
             -- Ahruman 2012-09-14
     */
     vec->x *= factor;
@@ -223,18 +256,16 @@ OOINLINE HPVector HPvector_add(HPVector a, HPVector b)
     return r;
 }
 
-OOINLINE HPVector OOHPVectorInterpolate(HPVector a, HPVector b, OOHPScalar where)
+OOINLINE HPVector OOHPVectorInterpolate(HPVector a, HPVector b,
+    OOHPScalar where)
 {
-    return make_HPvector(OOLerpd(a.x, b.x, where),
-        OOLerpd(a.y, b.y, where),
+    return make_HPvector(OOLerpd(a.x, b.x, where), OOLerpd(a.y, b.y, where),
         OOLerpd(a.z, b.z, where));
 }
 
 OOINLINE HPVector OOHPVectorTowards(HPVector a, HPVector b, OOHPScalar where)
 {
-    return make_HPvector(a.x + b.x * where,
-        a.y + b.y * where,
-        a.z + b.z * where);
+    return make_HPvector(a.x + b.x * where, a.y + b.y * where, a.z + b.z * where);
 }
 
 OOINLINE HPVector HPvector_subtract(HPVector a, HPVector b)
@@ -323,7 +354,8 @@ OOINLINE OOHPScalar HPdot_product(HPVector a, HPVector b)
     return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
-OOINLINE OOHPScalar HPtriple_product(HPVector first, HPVector second, HPVector third)
+OOINLINE OOHPScalar HPtriple_product(HPVector first, HPVector second,
+    HPVector third)
 {
     return HPdot_product(first, HPtrue_cross_product(second, third));
 }
@@ -336,10 +368,4 @@ OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2, HPVector v3)
     return HPcross_product(d0, d1);
 }
 
-#if __OBJC__
-/*	TRANSITIONAL (proposed ADR-0043, "Transitional bridges"): the Foundation-typed functions this header
-        declared before bead oo-dlox, forwarding to the cxx_ functions above, so unmigrated callers compile
-        unchanged (with their old C linkage). Callers move to the cxx_ API in their own sweep beads; the
-        bridge goes in its own bead.
-*/
-#endif
+#endif /* INCLUDED_OOMATHS_h */

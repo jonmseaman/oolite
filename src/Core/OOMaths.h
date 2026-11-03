@@ -27,25 +27,30 @@ MA 02110-1301, USA.
 
 */
 
-#pragma once
+#ifndef INCLUDED_OOMATHS_h
+#define INCLUDED_OOMATHS_h
+
+// The maths headers it includes #error unless this is defined, so they are only
+// reachable through OOMaths.h.
+#define INCLUDED_OOMATHS_h
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit until bead oo-dbz), not a plain C++ one
+#ifndef OOMATHS_STANDALONE
+#define OOMATHS_STANDALONE 0
+#endif
+
+#ifndef OOMATHS_OPENGL_INTEGRATION
+#define OOMATHS_OPENGL_INTEGRATION !OOMATHS_STANDALONE
+#endif
+
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit
+                                                        // until bead oo-dbz), not a plain C++ one
 #include "OOFoundation.h"
 #endif
 
-#include "OOFunctionAttributes.h"
-#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit, not a plain C++ one
-#include "OOOpenGL.h"
-#else
-/*	A plain C or C++ translation unit (OOVoxel.c, for one) needs only the GL types. OOOpenGL.h
-        imports OOFoundation.h, i.e. Foundation, which does not compile outside Objective-C.
-*/
-#include "OOOpenGLOnly.h"
-#endif
 #include <assert.h>
 #include <limits.h>
 #include <stdbool.h>
@@ -53,7 +58,26 @@ extern "C" {
 #include <stdlib.h>
 #include <tgmath.h>
 
+#include "OOFunctionAttributes.h"
+
+#if OOMATHS_OPENGL_INTEGRATION
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit
+                                                        // until bead oo-dbz), not a plain C++ one
+#include "OOOpenGL.h"
+#else
+/*	A plain C or C++ translation unit (ADR-0012: OOVoxel.c) needs only the
+   GL types. OOOpenGL.h imports OOFoundation.h, i.e. Foundation, which does not
+   compile outside Objective-C.
+*/
+#include "OOOpenGLOnly.h"
+#endif
+#endif
+
+#if OOMATHS_OPENGL_INTEGRATION
 typedef GLfloat OOScalar;
+#else
+typedef float OOScalar;
+#endif
 
 typedef double OOHPScalar;
 
@@ -84,16 +108,31 @@ typedef double OOHPScalar;
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #ifndef MIN
-#define MIN(A, B) ({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __a : __b; })
+#define MIN(A, B)                \
+    ({                           \
+        __typeof__(A) __a = (A); \
+        __typeof__(B) __b = (B); \
+        __a < __b ? __a : __b;   \
+    })
 #endif
 #if !defined(MAX)
-#define MAX(A, B) ({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __b : __a; })
+#define MAX(A, B)                \
+    ({                           \
+        __typeof__(A) __a = (A); \
+        __typeof__(B) __b = (B); \
+        __a < __b ? __b : __a;   \
+    })
 #endif
 #if !defined(ABS)
-#define ABS(A) ({ __typeof__(A) __a = (A); __a < 0 ? -__a : __a; })
+#define ABS(A)                   \
+    ({                           \
+        __typeof__(A) __a = (A); \
+        __a < 0 ? -__a : __a;    \
+    })
 #endif
 #else
-/* These definitions are unsafe in that the "winning" expression is evaluated twice. */
+/* These definitions are unsafe in that the "winning" expression is evaluated
+ * twice. */
 #if !defined(MIN)
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 #endif
@@ -105,28 +144,23 @@ typedef double OOHPScalar;
 #endif
 #endif
 
-// Each of these builds on the ones before it, so each is its own include block: clang-format sorts
-// only within a block (upstream #748 made its headers self-contained for the same reason).
+// Each maths header includes the others it uses, so this list may be in any
+// order (clang-format sorts it).
 #include "OOFastArithmetic.h"
-
+#include "OOHPVector.h"
+#include "OOMatrix.h"
+#include "OOQuaternion.h"
 #include "OOVector.h"
 
-#include "OOHPVector.h"
-
-#include "OOQuaternion.h"
-
-#include "OOMatrix.h"
-
 #if !OOMATHS_STANDALONE
-#include "OOVoxel.h"
-
-#include "OOTriangle.h"
-
 #include "OOBoundingBox.h"
-
+#include "OOTriangle.h"
+#include "OOVoxel.h"
 #include "legacy_random.h"
 #endif
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* INCLUDED_OOMATHS_h */

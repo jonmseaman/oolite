@@ -26,6 +26,15 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#ifndef INCLUDED_OOMATHS_h
+#error Do not include OOQuaternion.h directly; include OOMaths.h.
+#else
+
+// Each maths header includes what it uses, so OOMaths.h may list them in any
+// order.
+#include "OOHPVector.h"
+#include "OOVector.h"
+
 typedef struct Quaternion {
     OOScalar w;
     OOScalar x;
@@ -37,7 +46,8 @@ extern const Quaternion kIdentityQuaternion; // 1, 0, 0, 0
 extern const Quaternion kZeroQuaternion; // 0, 0, 0, 0
 
 /* Construct quaternion */
-OOINLINE Quaternion make_quaternion(OOScalar qw, OOScalar qx, OOScalar qy, OOScalar qz) INLINE_CONST_FUNC;
+OOINLINE Quaternion make_quaternion(OOScalar qw, OOScalar qx, OOScalar qy,
+    OOScalar qz) INLINE_CONST_FUNC;
 
 /* Comparison of quaternions */
 OOINLINE bool quaternion_equal(Quaternion a, Quaternion b) INLINE_CONST_FUNC;
@@ -51,15 +61,19 @@ OOINLINE Quaternion quaternion_negate(Quaternion q) INLINE_CONST_FUNC;
 /* Conjugate, or spacial inverse -- negate x, y, z components */
 OOINLINE Quaternion quaternion_conjugate(Quaternion q) INLINE_CONST_FUNC;
 
+#if !OOMATHS_STANDALONE
 /* Set quaternion to random unit quaternion */
 void quaternion_set_random(Quaternion* quat) NONNULL_FUNC;
 OOINLINE Quaternion OORandomQuaternion(void) ALWAYS_INLINE_FUNC;
+#endif
 
 /* Build quaternion representing a rotation around a given axis */
-OOINLINE void quaternion_set_rotate_about_axis(Quaternion* quat, Vector axis, OOScalar angle) NONNULL_FUNC;
+OOINLINE void quaternion_set_rotate_about_axis(Quaternion* quat, Vector axis,
+    OOScalar angle) NONNULL_FUNC;
 
 /* Inner product of two quaternions */
-OOINLINE OOScalar quaternion_dot_product(Quaternion q1, Quaternion q2) CONST_FUNC;
+OOINLINE OOScalar quaternion_dot_product(Quaternion q1,
+    Quaternion q2) CONST_FUNC;
 
 /* Create basis vectors from a quaternion. */
 Vector vector_forward_from_quaternion(Quaternion quat) CONST_FUNC;
@@ -68,29 +82,37 @@ Vector vector_right_from_quaternion(Quaternion quat) CONST_FUNC;
 
 HPVector HPvector_forward_from_quaternion(Quaternion quat) CONST_FUNC;
 
-void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight, Vector* outUp, Vector* outForward);
+void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight,
+    Vector* outUp, Vector* outForward);
 
-/* produce a quaternion representing an angle between two vectors. Assumes the vectors are normalized. */
+/* produce a quaternion representing an angle between two vectors. Assumes the
+ * vectors are normalized. */
 Quaternion quaternion_rotation_between(Vector v0, Vector v1) CONST_FUNC;
 Quaternion quaternion_rotation_betweenHP(HPVector v0, HPVector v1) CONST_FUNC;
 
-/* produce a quaternion representing an angle between two vectors with a maximum arc */
-Quaternion quaternion_limited_rotation_between(Vector v0, Vector v1, float maxArc) CONST_FUNC;
+/* produce a quaternion representing an angle between two vectors with a maximum
+ * arc */
+Quaternion quaternion_limited_rotation_between(Vector v0, Vector v1,
+    float maxArc) CONST_FUNC;
 
 /* Rotate a quaternion about a fixed axis. */
 void quaternion_rotate_about_x(Quaternion* quat, OOScalar angle) NONNULL_FUNC;
 void quaternion_rotate_about_y(Quaternion* quat, OOScalar angle) NONNULL_FUNC;
 void quaternion_rotate_about_z(Quaternion* quat, OOScalar angle) NONNULL_FUNC;
-void quaternion_rotate_about_axis(Quaternion* quat, Vector axis, OOScalar angle) NONNULL_FUNC;
+void quaternion_rotate_about_axis(Quaternion* quat, Vector axis,
+    OOScalar angle) NONNULL_FUNC;
 
 /* Normalize quaternion */
-OOINLINE void quaternion_normalize(Quaternion* quat) NONNULL_FUNC ALWAYS_INLINE_FUNC;
+OOINLINE void quaternion_normalize(Quaternion* quat)
+    NONNULL_FUNC ALWAYS_INLINE_FUNC;
 
 #ifdef __cplusplus
-/*	C++ only: OOMaths.h is included inside extern "C" (proposed ADR-0043, bead oo-dupk). */
+/*	C++ only: OOMaths.h is included inside extern "C" (proposed ADR-0043,
+ * bead oo-dupk). */
 extern "C++" {
 #include "oofnd/StdLib.hpp"
-std::string QuaternionDescription(Quaternion quaternion); // "(w + xi + yj + zk)"
+std::string QuaternionDescription(
+    Quaternion quaternion); // "(w + xi + yj + zk)"
 }
 #endif
 
@@ -99,7 +121,8 @@ HPVector quaternion_rotate_HPvector(Quaternion q, HPVector vector) CONST_FUNC;
 
 /*** Only inline definitions beyond this point ***/
 
-OOINLINE Quaternion make_quaternion(OOScalar qw, OOScalar qx, OOScalar qy, OOScalar qz)
+OOINLINE Quaternion make_quaternion(OOScalar qw, OOScalar qx, OOScalar qy,
+    OOScalar qz)
 {
     Quaternion result;
     result.w = qw;
@@ -124,7 +147,8 @@ OOINLINE Quaternion quaternion_conjugate(Quaternion q)
     return make_quaternion(q.w, -q.x, -q.y, -q.z);
 }
 
-OOINLINE void quaternion_set_rotate_about_axis(Quaternion* quat, Vector axis, OOScalar angle)
+OOINLINE void quaternion_set_rotate_about_axis(Quaternion* quat, Vector axis,
+    OOScalar angle)
 {
     OOScalar a = angle * 0.5f;
     OOScalar scale = sin(a);
@@ -155,9 +179,13 @@ OOINLINE void quaternion_normalize(Quaternion* quat)
     quat->z = lv * z;
 }
 
+#if !OOMATHS_STANDALONE
 OOINLINE Quaternion OORandomQuaternion(void)
 {
     Quaternion q;
     quaternion_set_random(&q);
     return q;
 }
+#endif
+
+#endif /* INCLUDED_OOMATHS_h */

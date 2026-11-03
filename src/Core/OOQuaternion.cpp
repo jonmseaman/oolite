@@ -22,7 +22,9 @@ MA 02110-1301, USA.
 
 */
 
-#define OO_PLAIN_CPP_UNIT 1 // a plain C++ unit: the shared headers' game-unit parts stay out of it (bead oo-dbz)
+#define OO_PLAIN_CPP_UNIT \
+    1 // a plain C++ unit: the shared headers' game-unit parts stay out of it
+      // (bead oo-dbz)
 #include "OOMaths.h"
 #include "oofnd/String.hpp"
 
@@ -39,7 +41,9 @@ Quaternion quaternion_multiply(Quaternion q1, Quaternion q2)
     return result;
 }
 
-// NOTE: this is broken - its distribution is weighted towards corners of the hypercube. Probably doesn't matter, though.
+#if !OOMATHS_STANDALONE
+// NOTE: this is broken - its distribution is weighted towards corners of the
+// hypercube. Probably doesn't matter, though.
 void quaternion_set_random(Quaternion* quat)
 {
     quat->w = (OOScalar)(Ranrot() % 1024) - 511.5f; // -511.5 to +511.5
@@ -48,6 +52,7 @@ void quaternion_set_random(Quaternion* quat)
     quat->z = (OOScalar)(Ranrot() % 1024) - 511.5f; // -511.5 to +511.5
     quaternion_normalize(quat);
 }
+#endif
 
 Vector vector_forward_from_quaternion(Quaternion quat)
 {
@@ -153,7 +158,8 @@ Vector vector_right_from_quaternion(Quaternion quat)
         return make_vector(1.0f, 0.0f, 0.0f);
 }
 
-void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight, Vector* outUp, Vector* outForward)
+void basis_vectors_from_quaternion(Quaternion quat, Vector* outRight,
+    Vector* outUp, Vector* outForward)
 {
     OOScalar w, wz, wy, wx;
     OOScalar x, xz, xy, xx;
@@ -229,9 +235,10 @@ Quaternion quaternion_rotation_between(Vector v0, Vector v1)
         } else {
             q = kIdentityQuaternion;
         }
-        // We arrive here for antiparallel vectors. Rotation axis is then undefined, but not rotating is
-        // wrong. Probably the calling function should exclude this situation. For current
-        // in-game use of this function we return (0,1,0,0), but generally that is also wrong.
+        // We arrive here for antiparallel vectors. Rotation axis is then undefined,
+        // but not rotating is wrong. Probably the calling function should exclude
+        // this situation. For current in-game use of this function we return
+        // (0,1,0,0), but generally that is also wrong.
     }
     return q;
 }
@@ -253,19 +260,22 @@ Quaternion quaternion_rotation_betweenHP(HPVector v0, HPVector v1)
         } else {
             q = kIdentityQuaternion;
         }
-        // We arrive here for antiparallel vectors. Rotation axis is then undefined, but not rotating is
-        // wrong. Probably the calling function should exclude this situation. For current
-        // in-game use of this function we return (0,1,0,0), but generally that is also wrong.
+        // We arrive here for antiparallel vectors. Rotation axis is then undefined,
+        // but not rotating is wrong. Probably the calling function should exclude
+        // this situation. For current in-game use of this function we return
+        // (0,1,0,0), but generally that is also wrong.
     }
     return q;
 }
 
-Quaternion quaternion_limited_rotation_between(Vector v0, Vector v1, float maxArc) // vectors both normalised
+Quaternion quaternion_limited_rotation_between(
+    Vector v0, Vector v1, float maxArc) // vectors both normalised
 {
     Quaternion q;
     OOScalar min_s = 2.0f * cosf(0.5f * maxArc);
     OOScalar s = sqrtf((1.0f + v0.x * v1.x + v0.y * v1.y + v0.z * v1.z) * 2.0f);
-    // for some antiparallel vectors, s returns a NaN instead of 0. Testing s > 0 catches both.
+    // for some antiparallel vectors, s returns a NaN instead of 0. Testing s > 0
+    // catches both.
     if (EXPECT(s > 0.0f)) {
         if (s < min_s) // larger angle => smaller cos
         {
@@ -344,7 +354,8 @@ void quaternion_rotate_about_z(Quaternion* quat, OOScalar angle)
     quat->z = result.z;
 }
 
-void quaternion_rotate_about_axis(Quaternion* quat, Vector axis, OOScalar angle)
+void quaternion_rotate_about_axis(Quaternion* quat, Vector axis,
+    OOScalar angle)
 {
     Quaternion q2 /*, result */;
     OOScalar a = angle * 0.5f;
@@ -373,7 +384,8 @@ std::string QuaternionDescription(Quaternion quaternion)
     ys = (quaternion.y >= 0.0f) ? '+' : '-';
     zs = (quaternion.z >= 0.0f) ? '+' : '-';
 
-    return oo::str::format("(%g %c %gi %c %gj %c %gk)", quaternion.w, xs, x, ys, y, zs, z);
+    return oo::str::format("(%g %c %gi %c %gj %c %gk)", quaternion.w, xs, x, ys,
+        y, zs, z);
 }
 #endif
 

@@ -26,10 +26,16 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "OOHPVector.h"
+#ifndef INCLUDED_OOMATHS_h
+#error Do not include OOBoundingBox.h directly; include OOMaths.h.
+#else
 
-typedef struct
-{
+// Each maths header includes what it uses, so OOMaths.h may list them in any
+// order.
+#include "OOHPVector.h"
+#include "OOVector.h"
+
+typedef struct {
     Vector min;
     Vector max;
 } BoundingBox;
@@ -37,16 +43,21 @@ typedef struct
 extern const BoundingBox kZeroBoundingBox; /* (0, 0, 0), (0, 0, 0) */
 
 /* Extend bounding box to contain specified point. */
-OOINLINE void bounding_box_add_vector(BoundingBox* box, Vector vec) ALWAYS_INLINE_FUNC NONNULL_FUNC;
-OOINLINE void bounding_box_add_xyz(BoundingBox* box, GLfloat x, GLfloat y, GLfloat z) ALWAYS_INLINE_FUNC NONNULL_FUNC;
+OOINLINE void bounding_box_add_vector(BoundingBox* box, Vector vec)
+    ALWAYS_INLINE_FUNC NONNULL_FUNC;
+OOINLINE void bounding_box_add_xyz(BoundingBox* box, GLfloat x, GLfloat y,
+    GLfloat z) ALWAYS_INLINE_FUNC NONNULL_FUNC;
 
 /* Reset bounding box to kZeroBoundingBox. */
 OOINLINE void bounding_box_reset(BoundingBox* box) NONNULL_FUNC;
 
 /* Reset bounding box to a zero-sized box surrounding specified vector. */
-OOINLINE void bounding_box_reset_to_vector(BoundingBox* box, Vector vec) ALWAYS_INLINE_FUNC NONNULL_FUNC;
+OOINLINE void bounding_box_reset_to_vector(BoundingBox* box, Vector vec)
+    ALWAYS_INLINE_FUNC NONNULL_FUNC;
 
-OOINLINE void bounding_box_get_dimensions(BoundingBox bb, GLfloat* xSize, GLfloat* ySize, GLfloat* zSize) ALWAYS_INLINE_FUNC;
+OOINLINE void bounding_box_get_dimensions(BoundingBox bb, GLfloat* xSize,
+    GLfloat* ySize,
+    GLfloat* zSize) ALWAYS_INLINE_FUNC;
 
 OOINLINE Vector OOBoundingBoxCenter(BoundingBox bb) INLINE_CONST_FUNC;
 
@@ -66,7 +77,8 @@ OOINLINE void bounding_box_add_vector(BoundingBox* box, Vector vec)
     box->max.z = fmax(box->max.z, vec.z);
 }
 
-OOINLINE void bounding_box_add_xyz(BoundingBox* box, GLfloat x, GLfloat y, GLfloat z)
+OOINLINE void bounding_box_add_xyz(BoundingBox* box, GLfloat x, GLfloat y,
+    GLfloat z)
 {
     assert(box != NULL);
     box->min.x = fmin(box->min.x, x);
@@ -90,7 +102,8 @@ OOINLINE void bounding_box_reset_to_vector(BoundingBox* box, Vector vec)
     box->max = vec;
 }
 
-OOINLINE void bounding_box_get_dimensions(BoundingBox bb, GLfloat* xSize, GLfloat* ySize, GLfloat* zSize)
+OOINLINE void bounding_box_get_dimensions(BoundingBox bb, GLfloat* xSize,
+    GLfloat* ySize, GLfloat* zSize)
 {
     if (xSize != NULL)
         *xSize = bb.max.x - bb.min.x;
@@ -104,3 +117,5 @@ OOINLINE Vector OOBoundingBoxCenter(BoundingBox bb)
 {
     return vector_multiply_scalar(vector_add(bb.min, bb.max), 0.5f);
 }
+
+#endif
