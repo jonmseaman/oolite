@@ -33,7 +33,7 @@ SOFTWARE.
 #include "oofnd/objc/OOException.h"
 #include "oofnd/objc/OOObjCRef.h"
 
-// OOCocoa.h defines true/false as macros; the standard headers want the keywords (oofnd/Data.hpp).
+// OOFoundation.h defines true/false as macros; the standard headers want the keywords (oofnd/Data.hpp).
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
