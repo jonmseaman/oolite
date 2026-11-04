@@ -32,7 +32,7 @@ MA 02110-1301, USA.
    bool is needed, and OOFoundation.h imports Foundation, which does not compile
    outside Objective-C.
 */
-#include "oofnd/objc/OOFoundationTypes.h" // bool
+#include "oofnd/objc/OOFoundationTypes.h"  // bool
 #endif
 
 #include "oofnd/StdLib.hpp"
@@ -55,10 +55,10 @@ MA 02110-1301, USA.
         mouse control disabled.
 */
 typedef enum {
-    MOUSE_MODE_UI_SCREEN_NO_INTERACTION,
-    MOUSE_MODE_UI_SCREEN_WITH_INTERACTION,
-    MOUSE_MODE_FLIGHT_NO_MOUSE_CONTROL,
-    MOUSE_MODE_FLIGHT_WITH_MOUSE_CONTROL
+  MOUSE_MODE_UI_SCREEN_NO_INTERACTION,
+  MOUSE_MODE_UI_SCREEN_WITH_INTERACTION,
+  MOUSE_MODE_FLIGHT_NO_MOUSE_CONTROL,
+  MOUSE_MODE_FLIGHT_WITH_MOUSE_CONTROL
 } OOMouseInteractionMode;
 
 std::string OOStringFromMouseInteractionMode(OOMouseInteractionMode mode);

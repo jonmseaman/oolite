@@ -25,23 +25,23 @@ MA 02110-1301, USA.
 */
 
 #pragma once
-#include "OOFoundation.h"
 #include <quickjs.h>
 
 #include <optional>
 #include <string>
 
+#include "OOFoundation.h"
 #include "OOJSPrivateObject.h"
 #include "oofnd/Ref.hpp"
 
-class OOSound; // C++: it has no Objective-C facade
+class OOSound;  // C++: it has no Objective-C facade
 
 void InitOOJSSound(JSContext* context, JSValueConst global);
 
 /*	SoundFromJSValue()
 
-        Convert a JS value to a sound. The value may be either a Sound object or a
-        string specifying a sound name.
+        Convert a JS value to a sound. The value may be either a Sound object or
+   a string specifying a sound name.
  */
 OOSound* SoundFromJSValue(JSContext* context, JSValueConst value);
 
@@ -60,16 +60,16 @@ std::optional<std::string> OOJSSoundJSClassName(void);
    OOJSSound.mm; only the binding makes one.
 */
 class OOJSSoundHolder final : public oo::RefCounted, public OOJSPrivateObject {
-public:
-    explicit OOJSSoundHolder(OOSound* inSound);
-    ~OOJSSoundHolder() override;
+ public:
+  explicit OOJSSoundHolder(OOSound* inSound);
+  ~OOJSSoundHolder() override;
 
-    OOSound* sound() const;
+  OOSound* sound() const;
 
-    JSValue jsValueInContext(JSContext* context) override; // owned
-    void clearJSSelf(JSValueConst selfVal) override;
-    std::optional<std::string> jsDescription() override;
+  JSValue jsValueInContext(JSContext* context) override;  // owned
+  void clearJSSelf(JSValueConst selfVal) override;
+  std::optional<std::string> jsDescription() override;
 
-private:
-    oo::Ref<OOSound> _sound;
+ private:
+  oo::Ref<OOSound> _sound;
 };

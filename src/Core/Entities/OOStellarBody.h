@@ -33,21 +33,21 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOObject.h"
 
 typedef enum {
-    STELLAR_TYPE_SUN,
-    STELLAR_TYPE_NORMAL_PLANET, // Terrestrial planet with atmosphere and oceans
-    STELLAR_TYPE_MOON, // Rocky/airless planet
-    STELLAR_TYPE_MINIATURE // Display proxy for a "normal" planet
+  STELLAR_TYPE_SUN,
+  STELLAR_TYPE_NORMAL_PLANET,  // Terrestrial planet with atmosphere and oceans
+  STELLAR_TYPE_MOON,           // Rocky/airless planet
+  STELLAR_TYPE_MINIATURE       // Display proxy for a "normal" planet
 } OOStellarBodyType;
 
 #define ATMOSPHERE_DEPTH 500.0
 #define PLANET_MINIATURE_FACTOR 0.00185
 #define MAX_SUBDIVIDE 6
 
-/*	-radius and -planetType of a stellar body's Objective-C object: the sun and the
-        planet are asked directly
-        (their object is the root Entity's facade, which does not answer them); any other body by
-        selector. Nil answers 0, as the message to nil did. Defined in OOSunEntity.mm.
+/*	-radius and -planetType of a stellar body's Objective-C object: the sun
+   and the planet are asked directly (their object is the root Entity's facade,
+   which does not answer them); any other body by selector. Nil answers 0, as
+   the message to nil did. Defined in OOSunEntity.mm.
 */
 class Entity;
-double OOStellarBodyRadius(Entity* body); // of the C++ entity
-OOStellarBodyType OOStellarBodyPlanetType(Entity* body); // the same
+double OOStellarBodyRadius(Entity* body);                 // of the C++ entity
+OOStellarBodyType OOStellarBodyPlanetType(Entity* body);  // the same

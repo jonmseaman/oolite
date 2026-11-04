@@ -11,13 +11,16 @@ A method called by name has one of its dispatcher's signatures; OOCallByName
 reads the method's type encoding and calls it through an IMP of exactly that
 type:
 
-        call                                     the method may be                        result
-        ---------------------------------------  ---------------------------------------  -----------------
-        OOCallByName(target, sel)                - (void) sel                              null PList
-                                                 - (oo::PList) sel                         what it returns
-        OOCallByName(target, sel, "text")        - (void) sel:(const std::string &)s       null PList
-                                                 - (oo::PList) sel:(const std::string &)s  what it returns
-        OOCallByName(target, sel, plist)         - (void) sel:(const oo::PList &)p         null PList
+        call                                     the method may be result
+        ---------------------------------------
+---------------------------------------  ----------------- OOCallByName(target,
+sel)                - (void) sel                              null PList
+                                                 - (oo::PList) sel what it
+returns OOCallByName(target, sel, "text")        - (void) sel:(const std::string
+&)s       null PList
+                                                 - (oo::PList) sel:(const
+std::string &)s  what it returns OOCallByName(target, sel, plist)         -
+(void) sel:(const oo::PList &)p         null PList
 
 A scalar result (bool, float...) or an object result (the ship a launch action
 returns) is ignored: no dispatcher reads one (OOJSCall calls an
@@ -26,13 +29,14 @@ called (see below). A string argument reaches a (const oo::PList &) parameter
 as a string PList; a PList argument reaches a (const std::string &) parameter
 only when it is a string.
 
-        dispatcher                                                  argument        result
-        ----------------------------------------------------------  --------------  -----------
-        AI actions, deferred AI calls (AI.mm), legacy-script        none or string  void / PList
-        actions, ship.call() (OOJSCall.mm)
-        legacy-script queries (*_string, *_number, *_bool),         none            PList (a string
-        expander [selector] keys                                                    or a number)
-        HUD dials (HeadUpDisplay.mm), joystick callbacks            PList           void
+        dispatcher                                                  argument
+result
+        ----------------------------------------------------------
+--------------  ----------- AI actions, deferred AI calls (AI.mm), legacy-script
+none or string  void / PList actions, ship.call() (OOJSCall.mm) legacy-script
+queries (*_string, *_number, *_bool),         none            PList (a string
+        expander [selector] keys or a number) HUD dials (HeadUpDisplay.mm),
+joystick callbacks            PList           void
 
 An entity's method is called by its name through oo::CallEntityByName (below):
 the AI's actions and messages and the legacy script engine.
@@ -68,10 +72,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include "oofnd/objc/OOObject.h"
-
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
+#include "oofnd/objc/OOObject.h"
 
 // The signatures above are the entity call's (below).
 
@@ -93,9 +96,9 @@ namespace oo {
 bool EntityRespondsToName(Entity* entity, const std::string& name);
 PList CallEntityByName(Entity* entity, const std::string& name);
 PList CallEntityByName(Entity* entity, const std::string& name,
-    const std::string& argument);
+                       const std::string& argument);
 PList CallEntityByName(Entity* entity, const std::string& name,
-    const PList& argument);
+                       const PList& argument);
 
 /*	An entity's method called after <delay> seconds: what
    OOScheduleDeferredCall() of the method's selector on the entity's object did
@@ -106,6 +109,6 @@ PList CallEntityByName(Entity* entity, const std::string& name,
    Defined in OOEntityCalledByName.mm.
 */
 void ScheduleEntityCall(Entity* entity, void (*call)(Entity* entity),
-    double delay);
+                        double delay);
 
-} // namespace oo
+}  // namespace oo

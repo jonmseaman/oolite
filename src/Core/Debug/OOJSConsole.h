@@ -32,9 +32,10 @@ SOFTWARE.
 #pragma once
 
 #include "OOFoundation.h"
-class OODebugMonitor; // C++: its Objective-C facade is deleted
+class OODebugMonitor;  // C++: its Objective-C facade is deleted
 
 #include <quickjs.h>
 
-// Create the JS console object for the debug monitor. The caller owns the result.
+// Create the JS console object for the debug monitor. The caller owns the
+// result.
 JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor);
