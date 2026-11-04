@@ -85,7 +85,6 @@ int RandArgument(const std::string& token) {
 }
 
 }  // namespace
-// OOJSVector.mm).
 
 // AI category, OOAIPrivate (ship and station) and the station stubs. Members of
 // ShipEntity defined in the category's file.
