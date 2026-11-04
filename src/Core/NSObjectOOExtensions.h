@@ -32,7 +32,7 @@ SOFTWARE.
 // On OOObject, the root of every Oolite class (ADR-0029).
 @interface OOObject (OOExtensions)
 
-#ifndef NDEBUG
+#ifdef OO_DEBUG_MONITOR_ENABLED
 
 + (size_t)oo_instanceSize;
 - (size_t)oo_objectSize;
