@@ -29,6 +29,7 @@ core_tests = {
     'test_OOColor': ['Core/OOColor.mm', 'Core/OODescription.mm'],
     'test_OOJoystickProfile': ['Core/OOJoystickProfile.mm'],
     'test_OOSDLJoystickManager': ['SDL/OOSDLJoystickManager.mm', 'Core/OOJoystickManager.mm', 'Core/OOJoystickProfile.mm', 'Core/OOCallByName.mm', 'Core/OODescription.mm'],
+    'test_OOJoystickDecoding': ['Core/OOJoystickProfile.mm'],	# upstream #742's layout and dead zone
     'test_OOJoystickManager': ['Core/OOJoystickManager.mm', 'SDL/OOSDLJoystickManager.mm', 'Core/OOJoystickProfile.mm', 'Core/OOCallByName.mm', 'Core/OODescription.mm'],
     'test_OORegExpMatcher': ['Core/OORegExpMatcher.mm'],
     'test_OOFileScannerVerifierStage': ['Core/OXPVerifier/OOFileScannerVerifierStage.mm', 'Core/OXPVerifier/OOOXPVerifierStage.mm', 'Core/OODescription.mm'],
@@ -68,6 +69,7 @@ core_tests = {
     'test_OOMusicController': ['Core/OOMusicController.mm'],
     'test_OOShipGroup': ['Core/OOShipGroup.mm', 'Core/OODescription.mm'],
     'test_OOGraphicsResetManager': ['Core/OOGraphicsResetManager.mm', 'Core/OOOpenGLExtensionManager.mm', 'Core/OOOpenGL.mm', 'Core/OOOpenGLStateManager.mm'],
+    'test_OOOpenGLOnly': [],	# src/Core/OOOpenGLOnly.h (upstream #748)
     'test_OOOpenGLExtensionManager': ['Core/OOOpenGLExtensionManager.mm', 'Core/OOOpenGL.mm', 'Core/OOOpenGLStateManager.mm'],
     'test_OOOpenGLStateManager': ['Core/OOOpenGLStateManager.mm', 'Core/OOOpenGL.mm', 'Core/OOOpenGLExtensionManager.mm'],
     'test_OOTextureSprite': ['Core/OOTextureSprite.mm', 'Core/OOOpenGLStateManager.mm', 'Core/OOOpenGL.mm', 'Core/OOOpenGLExtensionManager.mm'],
