@@ -34,8 +34,8 @@ MA 02110-1301, USA.
 #pragma once
 
 #include "OOFoundation.h"
-#include <quickjs.h>
 #include <optional>
+#include <quickjs.h>
 #include <string>
 
 class PlayerEntity;
@@ -51,8 +51,9 @@ JSClassID JSPlayerShipClassID(void);
 */
 JSValue JSPlayerShipObject(void);
 
-/*	PlayerEntity (OOJavaScriptExtensions), whose methods the engine and the player send by selector:
-        the bodies, as free functions. The C++ player calls them (PlayerEntity::jsClassName()).
+/*	PlayerEntity (OOJavaScriptExtensions), whose methods the engine and the
+   player send by selector: the bodies, as free functions. The C++ player calls
+   them (PlayerEntity::jsClassName()).
         Its JS class is JSPlayerShipClassID() (PlayerEntity::jsClassID()).
 */
 std::optional<std::string> OOJSPlayerShipJSClassName(void);

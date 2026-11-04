@@ -35,23 +35,8 @@ MA 02110-1301, USA.
 #include "OOMusicController.h"
 #include "OOStringExpander.h"
 #include "PlayerEntityScriptMethods.h"
-#include "oofnd/objc/OOException.h"
 #include "oofnd/Notification.hpp"
-
-/*
-        C++20 since bead oo-nge8, converted the way bead oo-ppc converted OOJSVector.mm (proposed
-        ADR-0056 amendment oo-ppc). The natives were already C++ on QuickJS-ng;
-        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. OOMusicController, which is C++
-        since bead oo-lfkq, is reached as OOMusicController (amendment oo-ppc, item 4).
-        MissionRunCallback()'s @try/@catch (OOException *) around the callback stayed verbatim (amendment
-        oo-puw9 item 4) until bead oo-rskgl made it a C++ try/catch with the other exception sites.
-        mission.markedSystems kept the destinations it reads in a local: it read them through a pointer
-        into a temporary that had died (bead oo-nge8; the same defect in OOJSSystemInfo.mm is bead
-        oo-f4241). Messages to classes that are still Objective-C (PlayerEntity, Universe,
-        GuiDisplayGen, OOJSScript, OOJavaScriptEngine) stay as they are, which is why the file is still
-        .mm until Phase 4.
-*/
+#include "oofnd/objc/OOException.h"
 
 static JSValue MissionGetProperty(OOJS_GETTER_ARGS);
 static JSValue MissionSetProperty(OOJS_SETTER_ARGS);
@@ -235,8 +220,8 @@ static JSValue MissionGetProperty(OOJS_GETTER_ARGS)
     case kMission_markedSystems: {
         // The destinations' values, in key order (-allValues gave hash order).
         oo::PList::Array values;
-        // Kept in a local: getIf() points into it, and the temporary the message answered died
-        // at the end of the if's initialiser (a dangling pointer until bead oo-nge8).
+        // Kept in a local: getIf() points into it, and a temporary would die at
+        // the end of the if's initialiser (a dangling pointer).
         const oo::PList missionDestinations = (player != nullptr ? player->getMissionDestinations() : oo::PList());
         if (const oo::PList::Dict* destinations = missionDestinations.getIf<oo::PList::Dict>()) {
             for (const auto& entry : *destinations) {
@@ -721,7 +706,7 @@ static JSValue MissionRunScreen(OOJS_NATIVE_ARGS)
         }
         JS_FreeValue(context, value);
 
-        JSValue demoShipVal = OOJSValueFromCxxObject(context, demoShip); // the C++ ship's JS value (its object's -oo_jsValueInContext: until the root Entity facade went)
+        JSValue demoShipVal = OOJSValueFromCxxObject(context, demoShip); // the C++ ship's JS value
         if (JS_SetPropertyStr(context, sMissionObject, "displayModel", demoShipVal) < 0) {
             OOJSReportPendingException(context);
         }

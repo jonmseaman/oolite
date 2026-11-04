@@ -27,9 +27,9 @@ SOFTWARE.
 
 #include "OOJSEngineTimeManagement.h"
 #include "OOObjCPList.h"
-#include "oofnd/String.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/StdLib.hpp"
+#include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 
 /*	The SpiderMonkey version of this file implemented the time limiter
@@ -57,8 +57,7 @@ static bool sProfiling = false;
 static bool sTracing = false;
 } // namespace
 static OOJSProfileStackFrame* sProfileStack = NULL;
-// Profile key (native name or JS function, by pointer) -> entry, retained. Was a map table with
-// non-owned pointer keys and retained object values (bead oo-3rb.20).
+// Profile key (native name or JS function, by pointer) -> entry, retained.
 namespace {
 static std::unordered_map<const void*, oo::Ref<OOTimeProfileEntry>>* sProfileInfo;
 
@@ -360,7 +359,6 @@ OOTimeProfileEntry::OOTimeProfileEntry(const char* name)
         }
     }
 }
-
 
 void OOTimeProfileEntry::addSampleWithTotalTime(OOTimeDelta totalTime, OOTimeDelta selfTime)
 {

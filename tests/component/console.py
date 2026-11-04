@@ -7,7 +7,7 @@ vocabulary in steps/world_steps.py.
 The protocol is the one tests/launch_snapshot.py speaks: a 4-byte big-endian length followed by an
 XML property list. See src/Core/Debug/OODebugTCPConsoleProtocol.h for the packet types.
 
-NO DESKTOP LOCK here, deliberately (bug oo-ccy9). Every tool that launches the game on the
+NO DESKTOP LOCK here, deliberately. Every tool that launches the game on the
 interactive desktop must take tools/gui-lock - but this file is the shared TRANSPORT, not a tier,
 and it has two callers with opposite needs: the component tier spawns it once per scenario (and
 holds the lock for its whole session, in its conftest), while the golden harness spawns it N times
