@@ -429,6 +429,9 @@ static AIStackElement* sStack = NULL;
         .context = &*debugContext
     };
     sStack = &stackElement;
+#else
+    // The argument as given: the deployment build's message log (OO_DEBUG_MONITOR_ENABLED, upstream #756) reads it.
+    const std::optional<std::string>& debugContext = debugContextArgument;
 #endif
 
     /*	CRASH when calling reactToMessage: FOO in state FOO causes infinite
@@ -438,9 +441,6 @@ static AIStackElement* sStack = NULL;
             scripts.
     */
     if (recursionLimiter > kRecursionLimiter) {
-#ifdef NDEBUG
-        const std::optional<std::string>& debugContext = debugContextArgument;
-#endif
         OO_LOG_ERR("ai.error.recursion", "AI dispatch: hit stack depth limit in AI {}, state {} handling message {} in context \"{}\", aborting.", stateMachineName, currentState.value_or("(null)"), message, debugContext.value_or("(null)"));
 
 #ifndef NDEBUG

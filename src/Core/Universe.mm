@@ -102,13 +102,14 @@ MA 02110-1301, USA.
 #import "StationEntity.h"
 #import "WormholeEntity.h"
 
-#if OO_LOCALIZATION_TOOLS
-#import "OOConvertSystemDescriptions.h"
-#import "OOFoundationBridge.h"
+#import "OOFoundationBridge.h" // oo::PListFrom, used by every build, not only OO_LOCALIZATION_TOOLS ones
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/Scanner.hpp"
 #include "oofnd/String.hpp"
+
+#if OO_LOCALIZATION_TOOLS
+#import "OOConvertSystemDescriptions.h"
 #endif
 
 enum {
