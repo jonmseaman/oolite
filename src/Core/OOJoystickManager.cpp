@@ -312,6 +312,26 @@ oo::PList OOJoystickManager::buttonFunctions()
     return oo::PList(std::move(fnList));
 }
 
+oo::PList OOJoystickManager::guiButtonFunctions()
+{
+    int i, j;
+    oo::PList::Dict fnList;
+
+    // Add buttons
+    for (i = 0; i < MAX_BUTTONS; i++) {
+        for (j = 0; j < MAX_STICKS; j++) {
+            if (guibuttonmap[j][i] >= 0) {
+                oo::PList::Dict fnDict;
+                fnDict[std::string(STICK_ISAXIS)] = oo::PList(static_cast<bool>(false));
+                fnDict[std::string(STICK_NUMBER)] = oo::PList(j);
+                fnDict[std::string(STICK_AXBUT)] = oo::PList(i);
+                fnList[ENUMKEY(guibuttonmap[j][i])] = oo::PList(std::move(fnDict));
+            }
+        }
+    }
+    return oo::PList(std::move(fnList));
+}
+
 void OOJoystickManager::setFunction(int function, const oo::PList& stickFn)
 {
     bool isAxis = stickFn.get<bool>(std::string(STICK_ISAXIS)) ? true : false;
@@ -323,9 +343,13 @@ void OOJoystickManager::setFunction(int function, const oo::PList& stickFn)
             function,
             stickNum);
     } else {
-        setFunctionForButton(stickAxBt,
-            function,
-            stickNum);
+        if (function >= BUTTON_GUILEFT && function <= BUTTON_GUISELECT) {
+            setGuiFunctionForButton(stickAxBt, function, stickNum);
+        } else {
+            setFunctionForButton(stickAxBt,
+                function,
+                stickNum);
+        }
     }
 }
 
@@ -367,6 +391,23 @@ void OOJoystickManager::setFunctionForButton(int button,
     buttonmap[stickNum][button] = function;
 }
 
+void OOJoystickManager::setGuiFunctionForButton(int button, int function,
+    int stickNum)
+{
+    OOCParameterAssert(button < MAX_BUTTONS && stickNum < MAX_STICKS);
+
+    int i, j;
+    for (i = 0; i < MAX_BUTTONS; i++) {
+        for (j = 0; j < MAX_STICKS; j++) {
+            if (guibuttonmap[j][i] == function) {
+                guibuttonmap[j][i] = STICK_NOFUNCTION;
+                break;
+            }
+        }
+    }
+    guibuttonmap[stickNum][button] = function;
+}
+
 void OOJoystickManager::unsetAxisFunction(int function)
 {
     int i, j;
@@ -388,6 +429,19 @@ void OOJoystickManager::unsetButtonFunction(int function)
         for (j = 0; j < MAX_STICKS; j++) {
             if (buttonmap[j][i] == function) {
                 buttonmap[j][i] = STICK_NOFUNCTION;
+                break;
+            }
+        }
+    }
+}
+
+void OOJoystickManager::unsetGuiButtonFunction(int function)
+{
+    int i, j;
+    for (i = 0; i < MAX_BUTTONS; i++) {
+        for (j = 0; j < MAX_STICKS; j++) {
+            if (guibuttonmap[j][i] == function) {
+                guibuttonmap[j][i] = STICK_NOFUNCTION;
                 break;
             }
         }
@@ -453,6 +507,7 @@ void OOJoystickManager::saveStickSettings()
 
     defaults.setObject(std::string(AXIS_SETTINGS), axisFunctions());
     defaults.setObject(std::string(BUTTON_SETTINGS), buttonFunctions());
+    defaults.setObject(std::string(GUI_BUTTON_SETTINGS), guiButtonFunctions());
     saveProfileForAxis(AXIS_ROLL);
     saveProfileForAxis(AXIS_PITCH);
     saveProfileForAxis(AXIS_YAW);
@@ -465,6 +520,7 @@ void OOJoystickManager::loadStickSettings()
     oo::Defaults& defaults = oo::Defaults::standard();
     const oo::PList axisSettings = defaults.object(std::string(AXIS_SETTINGS));
     const oo::PList buttonSettings = defaults.object(std::string(BUTTON_SETTINGS));
+    const oo::PList guiButtonSettings = defaults.object(std::string(GUI_BUTTON_SETTINGS));
     // Keys are visited in byte order (they came in hash order): where two
     // settings claim the same stick axis or button, the last one still wins.
     if (axisSettings) {
@@ -485,6 +541,13 @@ void OOJoystickManager::loadStickSettings()
     } else {
         // Nothing to load - set useful defaults
         setDefaultMapping();
+    }
+    if (guiButtonSettings) {
+        if (const oo::PList::Dict* settings = guiButtonSettings.getIf<oo::PList::Dict>()) {
+            for (const auto& [key, stickFn] : *settings) {
+                setFunction(oo::str::intValue(key), stickFn);
+            }
+        }
     }
     loadProfileForAxis(AXIS_ROLL);
     loadProfileForAxis(AXIS_PITCH);

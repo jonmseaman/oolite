@@ -218,10 +218,12 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui, ::MyOpenGLView*
         // Break out now.
         return;
     }
+    const bool* joyButtonState = stickHandler->getAllButtonStates();
 
     handleGUIUpDownArrowKeys();
+    bool selectKeyPress = (checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT] || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
 
-    if (gui->getSelectedRow() == GUI_ROW_STICKPROFILE && (gameView != nullptr ? gameView->isDown(13) : false)) {
+    if (gui->getSelectedRow() == GUI_ROW_STICKPROFILE && selectKeyPress) {
         setGuiToStickProfileScreen(gui);
         return;
     }
@@ -232,7 +234,7 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui, ::MyOpenGLView*
     else
         selFunctionIdx = -1;
 
-    if ((gameView != nullptr ? gameView->isDown(13) : false)) {
+    if (selectKeyPress) {
         if (key.has_value() && oo::str::hasPrefix(*key, "More:")) {
             int from_function = NumberAfterColon(*key);
             if (from_function < 0)
@@ -339,8 +341,12 @@ void PlayerEntity::updateFunction(
         checkCustomEquipButtons(hwDict, function);
         oo::Defaults::standard().setObject(std::string(KEYCONFIG_CUSTOMEQUIP), oo::PList(customEquipActivation));
     } else {
-        stickHandler->setFunction(function, hwDict);
-        checkCustomEquipButtons(hwDict, -1);
+        if (function >= BUTTON_GUILEFT && function <= BUTTON_GUISELECT) {
+            stickHandler->setFunction(function, hwDict);
+        } else {
+            stickHandler->setFunction(function, hwDict);
+            checkCustomEquipButtons(hwDict, -1);
+        }
         stickHandler->saveStickSettings();
     }
 
@@ -438,6 +444,7 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, NSUInteger skip)
     }
     const oo::PList assignedAxes = stickHandler->axisFunctions();
     const oo::PList assignedButs = stickHandler->buttonFunctions();
+    const oo::PList assignedGuiButs = stickHandler->guiButtonFunctions();
 
     NSUInteger i, n_functions = stickFunctions.size();
     NSInteger n_rows, start_row, previous = 0;
@@ -484,6 +491,8 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, NSUInteger skip)
                 // -objectForKey: of a nil key found nothing
                 const oo::PList* assignedAxis = axFuncKey.has_value() ? assignedAxes.find(*axFuncKey) : nullptr;
                 const oo::PList* assignedButton = butFuncKey.has_value() ? assignedButs.find(*butFuncKey) : nullptr;
+                const oo::PList* assignedGuiButton = butFuncKey.has_value() ? assignedGuiButs.find(*butFuncKey)
+                                                                            : nullptr;
                 int allowable = entry.get<int>(KEY_ALLOWABLE);
                 switch (allowable) {
                 case HW_AXIS:
@@ -495,7 +504,11 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, NSUInteger skip)
                     int bf;
                     bf = butFuncKey.has_value() ? static_cast<int>(oo::str::longLongValue(*butFuncKey)) : 0; // -integerValue (nil: 0)
                     if (bf < 10000) {
-                        assignment = describeStickDict(assignedButton);
+                        if (bf >= BUTTON_GUILEFT && bf <= BUTTON_GUISELECT) {
+                            assignment = describeStickDict(assignedGuiButton);
+                        } else {
+                            assignment = describeStickDict(assignedButton);
+                        }
                     } else {
                         std::string key = std::string(CUSTOMEQUIP_BUTTONACTIVATE);
                         bf -= 10000;
@@ -512,8 +525,16 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, NSUInteger skip)
 
                     // axis has priority
                     assignment = describeStickDict(assignedAxis);
-                    if (!assignment.has_value())
-                        assignment = describeStickDict(assignedButton);
+                    if (!assignment.has_value()) {
+                        bf = butFuncKey.has_value()
+                            ? static_cast<int>(oo::str::longLongValue(*butFuncKey))
+                            : 0; // -integerValue (nil: 0)
+                        if (bf >= BUTTON_GUILEFT && bf <= BUTTON_GUISELECT) {
+                            assignment = describeStickDict(assignedGuiButton);
+                        } else {
+                            assignment = describeStickDict(assignedButton);
+                        }
+                    }
                 }
 
                 // Find out what's assigned for this function currently.
@@ -692,6 +713,28 @@ std::vector<oo::PList> PlayerEntity::stickFunctionList()
         makeStickGuiDict(OO_DESC("stickmapper-fastactivate-a"), HW_BUTTON, STICK_NOFUNCTION, BUTTON_CLOAK));
     funcList.push_back(
         makeStickGuiDict(OO_DESC("stickmapper-fastactivate-b"), HW_BUTTON, STICK_NOFUNCTION, BUTTON_ENERGYBOMB));
+
+    funcList.push_back(makeStickGuiDictHeader(OO_DESC("stickmapper-header-gui")));
+    funcList.push_back(makeStickGuiDict(OO_DESC("stickmapper-gui-left"),
+        HW_BUTTON, STICK_NOFUNCTION,
+        BUTTON_GUILEFT));
+    funcList.push_back(makeStickGuiDict(OO_DESC("stickmapper-gui-right"),
+        HW_BUTTON, STICK_NOFUNCTION,
+        BUTTON_GUIRIGHT));
+    funcList.push_back(makeStickGuiDict(OO_DESC("stickmapper-gui-up"), HW_BUTTON,
+        STICK_NOFUNCTION, BUTTON_GUIUP));
+    funcList.push_back(makeStickGuiDict(OO_DESC("stickmapper-gui-down"),
+        HW_BUTTON, STICK_NOFUNCTION,
+        BUTTON_GUIDOWN));
+    funcList.push_back(makeStickGuiDict(OO_DESC("stickmapper-gui-page-up"),
+        HW_BUTTON, STICK_NOFUNCTION,
+        BUTTON_GUIPAGEUP));
+    funcList.push_back(makeStickGuiDict(OO_DESC("stickmapper-gui-page-down"),
+        HW_BUTTON, STICK_NOFUNCTION,
+        BUTTON_GUIPAGEDOWN));
+    funcList.push_back(makeStickGuiDict(OO_DESC("stickmapper-gui-select"),
+        HW_BUTTON, STICK_NOFUNCTION,
+        BUTTON_GUISELECT));
 
     // misc
     funcList.push_back(makeStickGuiDictHeader(OO_DESC("stickmapper-header-misc")));
