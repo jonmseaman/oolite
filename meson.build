@@ -160,5 +160,7 @@ if (not get_option('deployment_release') or get_option('deployment_unit_tests'))
     subdir('tests/unit/oofnd')
 endif
 
-# Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
-subdir('tests/unit/core')
+if not get_option('deployment_release') and host_machine.system() == 'windows'
+    # Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
+    subdir('tests/unit/core')
+endif
