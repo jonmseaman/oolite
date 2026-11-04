@@ -42,9 +42,9 @@ MA 02110-1301, USA.
 #include "OOMaths.h"
 #include "OOTypes.h"
 
-#include <quickjs.h>
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
+#include <quickjs.h>
 
 class Entity;
 class Universe;
