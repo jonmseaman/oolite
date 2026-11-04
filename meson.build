@@ -144,8 +144,23 @@ if get_option('quickjs_poc')
     subdir('src/Core/Scripting/poc')
 endif
 
-# Unit tests that need no game build (meson test --suite oofnd).
-subdir('tests/unit/oofnd')
+# The unit tests are built by every flavour but deployment: they test the live assertion and
+# debug paths, which a deployment build (NDEBUG) compiles out, and upstream's CI builds
+# `./mk.sh build deployment` (since #756), which builds every default target.
+# They are Windows-only for now: they were written and verified on the native Windows toolchain
+# and use its headers and LLP64 types (<process.h>, _putenv_s, <winsock2.h>, long == 32 bits),
+# so the Linux CI flavours build the game without them.
+#
+# deployment_unit_tests builds the oofnd suite under the deployment macros as well, in a separate
+# non-LTO build directory (meson setup with -Ddeployment_unit_tests=true): OOCAssert compiled out
+# under NDEBUG, and with it PlayerEntity's -deferredInit ship set-up, passes every test-flavour
+# suite and breaks the shipped game.
+if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows'
+    # Unit tests that need no game build (meson test --suite oofnd).
+    subdir('tests/unit/oofnd')
+endif
 
-# Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
-subdir('tests/unit/core')
+if not get_option('deployment_release') and host_machine.system() == 'windows'
+    # Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
+    subdir('tests/unit/core')
+endif

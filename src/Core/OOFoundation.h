@@ -70,7 +70,8 @@ MA 02110-1301, USA.
 #define BOOL WinBOOL
 #define __OBJC_BOOL 1
 #include <winsock2.h>
-
+// <winsock2.h> first: <windows.h> before it would bring in the old <winsock.h> (kept apart so
+// clang-format's include sorting cannot swap them; upstream #748 did the same for its headers).
 #include <windows.h>
 #undef __OBJC_BOOL
 #undef BOOL
@@ -144,7 +145,7 @@ MA 02110-1301, USA.
         stay exactly as they were (game code keeps its int-typed true/false), but a C++20 standard
         header parsed after them breaks: <optional> has `bool(__x) <=> false`, i.e. bool <=> int.
         So those headers are parsed here first, with the real keywords; their include guards make
-        every later #include of them a no-op. extern "C++" because OOCocoa.h is sometimes reached
+        every later #include of them a no-op. extern "C++" because OOFoundation.h is sometimes reached
         from inside an extern "C" block (OOMaths.h).
 */
 extern "C++" {
