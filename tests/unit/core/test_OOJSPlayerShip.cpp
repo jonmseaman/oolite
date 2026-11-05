@@ -433,9 +433,9 @@ class FakePlayer : public PlayerEntity {
   }
 };
 
-// [[TestPlayer alloc] init]: a C++ player under the ship's facade, as
-// PlayerEntity::sharedPlayer() makes the game's, retained (+1) as +alloc's
-// object was.
+// [[TestPlayer alloc] init]: a C++ player under the ship's
+// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
+// +alloc's object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -575,7 +575,6 @@ OO_TEST(registration) {
   JSValue prototype = JS_GetClassProto(context, JSPlayerShipClassID());
   OO_CHECK(JS_IsObject(prototype));
   JS_FreeValue(context, prototype);
-  OOJSRelinquishContext(context);
   OO_CHECK_EVAL("player.ship instanceof Ship", "true");
   OO_CHECK_EVAL(
       "Object.getPrototypeOf(player.ship) === "

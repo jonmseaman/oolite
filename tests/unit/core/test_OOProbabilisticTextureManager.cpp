@@ -51,8 +51,9 @@ oo::PList ResourceManager::arrayFromFilesNamed(
   return gConfig;
 }
 
-// Every texture loads, but for "missing.png". The stand-in is C++: the factory the manager
-// calls, the root's own members (a texture needs them), and TestTexture, which the factory answers.
+// Every texture loads, but for "missing.png". The stand-in is C++: the factory
+// the manager calls, the root's own members (a texture needs them), and
+// TestTexture, which the factory answers.
 class TestTexture final : public OOTexture {
  public:
   void ensureFinishedLoading() override { _loaded++; }

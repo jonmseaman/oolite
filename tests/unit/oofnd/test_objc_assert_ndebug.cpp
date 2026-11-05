@@ -1,16 +1,15 @@
 /*	test_objc_assert_ndebug.cpp
-        OOAssert.h compiled the way a deployment build compiles it: with NDEBUG.
+        OOAssert.h compiled the way a DEPLOYMENT build compiles it: with NDEBUG.
 
         Upstream's Foundation assertions were live in every flavour:
    OOFoundation.h defines NS_BLOCK_ASSERTIONS only after importing the
    Foundation umbrella header, too late for gnustep-base's include-guarded
-   exception header. Blocking OOCAssert under NDEBUG skips the side effect in
-   PlayerEntity::deferredInit's assertion (the player's ship set-up), so a
-   deployment build cannot launch. This test is built with NDEBUG in every
-   flavour, so the test flavour catches a regression that only a deployment
-   build would show: the condition (and its side effects) must be evaluated and
-   a false one must still raise. The reasons' text is test_objc_assert.cpp's
-   subject; here only that the macros are live.
+   exception header. The conversion once blocked OOCAssert under NDEBUG, which
+   skipped the side effect in PlayerEntity::deferredInit's assertion (the
+   player's ship set-up), so a deployment build could not launch. This test is
+   built with NDEBUG in every flavour, so the test flavour catches a regression
+        that only a deployment build would show: the condition (and its side
+   effects) must be evaluated and a false one must still raise.
 */
 
 #ifndef NDEBUG
@@ -31,8 +30,9 @@ bool CountedTrue() {
   return true;
 }
 
-template <class F>
-bool Raises(F body) {
+// The exception's name and reason text are test_objc_assert's subject; here
+// only that it raises.
+bool Raises(void (*body)()) {
   try {
     body();
   } catch (const oo::Exception&) {

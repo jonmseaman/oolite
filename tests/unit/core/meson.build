@@ -8,6 +8,9 @@
 # class as one entry: its test name and the game sources whose objects it needs (['*']: all but main).
 # Every test_*.cpp in this directory needs an entry in this list to be built.
 
+openal_tests = ['test_OOOpenALController', 'test_OOSound', 'test_OOALBufferedSound', 'test_OOALStreamedSound',
+    'test_OOMusic', 'test_OOSoundChannel', 'test_OOSoundMixer', 'test_MyOpenGLView']
+
 core_tests = {
     'test_OOJSEngineTimeManagement': ['Core/Scripting/OOJSEngineTimeManagement.cpp', 'Core/OOProfilingStopwatch.cpp'],
     'test_OOJSTimeLimiter': ['*'],
@@ -108,21 +111,21 @@ core_tests = {
     'test_OOJSSun': ['Core/Scripting/OOJSSun.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp'],
     'test_OOJSOolite': ['Core/Scripting/OOJSOolite.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp'],
     'test_OOJSEquipmentInfo': ['Core/Scripting/OOJSEquipmentInfo.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOEquipmentType.cpp', 'Core/OOColor.cpp'],
-    'test_OOJSPlayer': ['Core/Scripting/OOJSPlayer.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/legacy_random.cpp'],
-    'test_OOJSEntity': ['Core/Scripting/OOJSEntity.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOConstToJSString.cpp', 'Core/OOQuaternion.cpp', 'Core/OOVector.cpp', 'Core/OOHPVector.cpp', 'Core/legacy_random.cpp'],
+    'test_OOJSPlayer': ['Core/Scripting/OOJSPlayer.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/legacy_random.cpp', 'Core/Scripting/OOJSClasses.cpp'],
+    'test_OOJSEntity': ['Core/Scripting/OOJSEntity.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOConstToJSString.cpp', 'Core/OOQuaternion.cpp', 'Core/OOVector.cpp', 'Core/OOHPVector.cpp', 'Core/legacy_random.cpp'],
     'test_OOJSMissionVariables': ['Core/Scripting/OOJSMissionVariables.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOIsNumberLiteral.cpp'],
-    'test_OOJSMission': ['Core/Scripting/OOJSMission.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOConstToJSString.cpp', 'Core/OOVector.cpp', 'Core/legacy_random.cpp'],
-    'test_OOJSStation': ['Core/Scripting/OOJSStation.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/OOCommodities.cpp', 'Core/OOCommodityMarket.cpp', 'Core/Scripting/OOJSInterfaceDefinition.cpp', 'Core/OOEquipmentType.cpp', 'Core/OOColor.cpp', 'Core/legacy_random.cpp'],
+    'test_OOJSMission': ['Core/Scripting/OOJSMission.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOConstToJSString.cpp', 'Core/OOVector.cpp', 'Core/legacy_random.cpp'],
+    'test_OOJSStation': ['Core/Scripting/OOJSStation.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOCommodities.cpp', 'Core/OOCommodityMarket.cpp', 'Core/Scripting/OOJSInterfaceDefinition.cpp', 'Core/OOEquipmentType.cpp', 'Core/OOColor.cpp', 'Core/legacy_random.cpp'],
     'test_OOJSGlobal': ['Core/Scripting/OOJSGlobal.cpp', 'Core/Scripting/OOConstToJSString.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOColor.cpp', 'Core/Scripting/OOJSGuiScreenKeyDefinition.cpp', 'Core/legacy_random.cpp'],
     'test_OOJSPlanet': ['Core/Scripting/OOJSPlanet.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOColor.cpp'],
-    'test_OOJSSystemInfo': ['Core/Scripting/OOJSSystemInfo.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/OOSystemDescriptionManager.cpp', 'Core/OOCommodities.cpp', 'Core/OOCommodityMarket.cpp', 'Core/OOIsNumberLiteral.cpp', 'Core/legacy_random.cpp'],
+    'test_OOJSSystemInfo': ['Core/Scripting/OOJSSystemInfo.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOSystemDescriptionManager.cpp', 'Core/OOCommodities.cpp', 'Core/OOCommodityMarket.cpp', 'Core/OOIsNumberLiteral.cpp', 'Core/legacy_random.cpp'],
     'test_OOJSManifest': ['Core/Scripting/OOJSManifest.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/OOCommodities.cpp', 'Core/OOCommodityMarket.cpp', 'Core/legacy_random.cpp'],
     'test_OOJSShipGroup': ['Core/Scripting/OOJSShipGroup.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOShipGroup.cpp', 'Core/Scripting/OOJSClasses.cpp'],
-    'test_OOJSVisualEffect': ['Core/Scripting/OOJSVisualEffect.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/OOColor.cpp', 'Core/OOVector.cpp', 'Core/legacy_random.cpp'],
-    'test_OOJSWaypoint': ['Core/Scripting/OOJSWaypoint.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/OOQuaternion.cpp', 'Core/OOVector.cpp', 'Core/OOHPVector.cpp', 'Core/legacy_random.cpp'],
+    'test_OOJSVisualEffect': ['Core/Scripting/OOJSVisualEffect.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOColor.cpp', 'Core/OOVector.cpp', 'Core/legacy_random.cpp'],
+    'test_OOJSWaypoint': ['Core/Scripting/OOJSWaypoint.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOQuaternion.cpp', 'Core/OOVector.cpp', 'Core/OOHPVector.cpp', 'Core/legacy_random.cpp'],
     'test_OOJSFlasher': ['Core/Scripting/OOJSFlasher.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOColor.cpp'],
     'test_OOJSExhaustPlume': ['Core/Scripting/OOJSExhaustPlume.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp'],
-    'test_OOJSQuaternion': ['Core/Scripting/OOJSQuaternion.cpp', 'Core/Scripting/OOJSVector.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/OOHPVector.cpp', 'Core/OOVector.cpp', 'Core/OOQuaternion.cpp', 'Core/legacy_random.cpp'],
+    'test_OOJSQuaternion': ['Core/Scripting/OOJSQuaternion.cpp', 'Core/Scripting/OOJSVector.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/OOHPVector.cpp', 'Core/OOVector.cpp', 'Core/OOQuaternion.cpp', 'Core/legacy_random.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSClasses.cpp'],
     'test_OOJSClock': ['Core/Scripting/OOJSClock.cpp', 'Core/Scripting/OOJSClasses.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp'],
     'test_OOJSWormhole': ['Core/Scripting/OOJSWormhole.cpp', 'Core/Scripting/OOJSPrivateObject.cpp', 'Core/Scripting/OOJSEngineNativeWrappers.cpp', 'Core/Scripting/OOJSClasses.cpp'],
     'test_OOMeshToOctreeConverter': ['*'],
@@ -219,5 +222,9 @@ foreach name, game_sources : core_tests
         override_options: oolite_override_options,
         install: false,
     )
-    test(name, exe, suite: 'core', timeout: 60)
+    # 'openal': the tests that open the OpenAL device (alcOpenDevice). A sanitized run leaves them
+    # out with --no-suite openal: the prebuilt libopenal-1.dll's onexit registration trips ASan's
+    # allocator-ownership check inside ucrtbase.dll, a third-party report no suppression reaches
+    # (tests/unit/asan-suppressions.txt). The game's sanitized launch uses --nosound instead.
+    test(name, exe, suite: name in openal_tests ? ['core', 'openal'] : 'core', timeout: 60)
 endforeach

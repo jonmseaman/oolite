@@ -4,18 +4,18 @@
 
         A GUI screen key definition is a script's extra keys for a GUI screen: a
    name and the keys it registers, and a JS callback and its `this` that it
-   keeps alive (owned references) and runs with the entry's key, pushing the
-   script that made it. The test runs it in a real QuickJS-ng context and links
-   the game's own objects for the class. What the rest of the engine would
-        provide is defined below as the smallest stand-in that does the same
-   thing: the engine object (which calls the function), the script stack
-   (OOJSScript) and the property-list converter. The engine's and OOJSScript's
-   headers are not imported, because the test defines those classes; the class's
-   header names OOScript with @class for that. The expectations were written
-   against the Objective-C class and run on it first. They pin the initial
-   state, the name and the keys, the callback and its `this` (kept alive across
-   a garbage collection), the run, the sort order (interfaceCompare(), with its
-   null cases) and an engine reset. Run: tests/run.sh unit
+   keeps alive (owned references) and runs with the entry's key, pushing the script that
+   made it. The test runs it in a real QuickJS-ng context and links the game's own objects for the
+   class. What the rest of the engine would provide is defined below as the
+   smallest stand-in that does the same thing: the engine object (which
+   calls the function), the script stack (OOJSScript) and the property-list
+   converter. The engine's and OOJSScript's headers are not imported, because
+   the test defines those classes; the class's header names OOScript with
+   @class for that. The expectations were written against the Objective-C class
+   and run on it first. They pin the initial state, the name and the keys, the
+   callback and its `this` (kept alive across a garbage collection), the run,
+   the sort order (interfaceCompare(), with its null cases) and an engine reset.
+        Run: tests/run.sh unit
 */
 
 #include <quickjs.h>
@@ -73,17 +73,18 @@ bool OOJavaScriptEngine::callJSFunction(JSValueConst function,
                                         JSValueConst* argv,
                                         JSValue* outResult) {
   sCalls++;
-  JSContext* context = gOOJSMainThreadContext;
-  JSValue result = JS_Call(context, function, jsThis, argc, argv);
+  JSValue result =
+      JS_Call(gOOJSMainThreadContext, function, jsThis, argc, argv);
   if (JS_IsException(result)) {
-    JS_FreeValue(context, JS_GetException(context));
+    JS_FreeValue(gOOJSMainThreadContext,
+                 JS_GetException(gOOJSMainThreadContext));
     if (outResult != NULL) *outResult = JS_UNDEFINED;
     return false;
   }
   if (outResult != NULL)
     *outResult = result;
   else
-    JS_FreeValue(context, result);
+    JS_FreeValue(gOOJSMainThreadContext, result);
   return true;
 }
 
@@ -163,8 +164,8 @@ class Owned {
 };
 
 Owned Evaluate(const char* src) {
-  JSValue result =
-      JS_Eval(Context(), src, std::strlen(src), "test.js", JS_EVAL_TYPE_GLOBAL);
+  JSValue result = JS_Eval(Context(), src, std::strlen(src), "test.js",
+                           JS_EVAL_TYPE_GLOBAL);
   if (JS_IsException(result)) {
     JS_FreeValue(Context(), JS_GetException(Context()));
     result = JS_UNDEFINED;
@@ -183,14 +184,13 @@ std::string String(JSValueConst value) {
   return result;
 }
 
-// Whether an owned value (what -callback and -callbackThis answer) is
+// Whether an owned value (what callback() and callbackThis() answer) is
 // undefined, or an object; the value is freed.
 bool IsUndefined(JSValue value) {
   bool result = JS_IsUndefined(value);
   JS_FreeValue(Context(), value);
   return result;
 }
-
 bool IsObject(JSValue value) {
   bool result = JS_IsObject(value);
   JS_FreeValue(Context(), value);
@@ -237,7 +237,8 @@ OO_TEST(runCallback) {
     definition->setCallback(
         Evaluate("(function (key) { globalThis.ran = this.tag + ':' + key + "
                  "':' + arguments.length; })"));
-    definition->setCallbackThis(Evaluate("({ tag: 'me' })"));
+    definition->setCallbackThis(
+        Evaluate("({ tag: 'me' })"));
     OO_CHECK(IsObject(definition->callback()));
     OO_CHECK(IsObject(definition->callbackThis()));
     CollectGarbage();

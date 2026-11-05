@@ -13,10 +13,11 @@
    itself).
 
         What it reaches would bring the game into the link, so this file stands
-   in for it: the resource manager (the configuration and the beacon's path),
-   the debug monitor, the TCP console client (which records where it was asked
-   to connect, and can be made to fail) and the JavaScript engine. Run:
-   tests/run.sh unit
+   in for it: the resource manager
+   (the configuration and the beacon's path), the debug monitor, the TCP console
+   client (which records where it was asked to connect, and can be made to fail)
+   and the JavaScript engine. Run: tests/run.sh unit
+   test_OODebugSupport
 */
 
 #include <optional>

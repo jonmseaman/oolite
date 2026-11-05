@@ -6,14 +6,14 @@
    another) system's inhabitants, its legal status and insurance from the
    planet-description RNG and its government, and a role or a dictionary (a
    ship's pilot, a JS crew definition) adjusts them. The test pins what the
-   class computes from what it is given. The game around it is replaced:
-   UNIVERSE is a fake Universe below that answers from a table, the string
-   expander and the description lookup return text that records what they were
-   asked, and the JavaScript entry points are link stubs that abort. The RNG is
-   the game's own (legacy_random.c), reseeded by each test. The tests ask the
-   C++ class (its factories' oo::Ref held), with the C++ class's own cases at
-        the end.
-        Run: tests/run.sh unit
+   class computes from what it is given. The game around it is replaced
+   UNIVERSE is a fake Universe below that answers
+   from a table, the string expander and the description lookup return text that
+   records what they were asked, and the JavaScript entry points are link stubs
+        that abort. The RNG is the game's own (legacy_random.c), reseeded by
+   each test. The tests ask the C++ class (its factories' oo::Ref held), with
+   the C++ class's own cases at the end. Run:
+   tests/run.sh unit
 */
 
 #include <cstdlib>
@@ -23,6 +23,7 @@
 #include "OOObjCPList.h"
 #include "OOStringExpander.h"
 #include "oo_test.hpp"
+#include "OOJSEngineCore.h"
 
 // --- The game around the class
 // --------------------------------------------------------------

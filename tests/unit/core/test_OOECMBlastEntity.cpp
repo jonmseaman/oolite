@@ -6,13 +6,14 @@
    (['*']) and uses a Universe that was never initialised, subclassed to record
    -removeEntity: and the range searches the pulses make (it finds no ship, so
    no script event is sent). The blast calls the C++ ship's members, so the
-   firing ship is a C++ ship under its object, never set up. The tests cover: no
-        blast from nil; a blast is a no-draw effect at the ship's position; four
-   pulses half a second apart, a quarter of the scanner range wider each, then
-   it removes itself; a dead or deallocated ship ends it at once; it is an ECM
-   blast and the ship is not (the check asks the C++ member). The blasts are
-   made through the one helper below: the blast is a C++ entity whose object is
-   the Entity facade oo::NewEntityFacade made. Run: tests/run.sh unit
+   firing ship is a C++ ship under its object, never set up. The tests cover:
+   no blast from nil; a blast is a
+   no-draw effect at the ship's position; four pulses half a second apart, a
+   quarter of the scanner range wider each, then it removes itself; a dead or
+   deallocated ship ends it at once; it is an ECM blast and the ship is not
+   (the check asks the C++ member). The blasts are made through the one helper
+   below: the blast is a C++ entity whose object is the Entity facade
+   oo::NewEntityFacade made. Run: tests/run.sh unit
 */
 
 #include <vector>
@@ -60,10 +61,10 @@ namespace {
 TestUniverse* sUniverse = nullptr;
 std::vector<double> sRanges;
 
-// PLAYER: the debug build asserts it is set (OOGetPlayer()), so the entities'
-// positions, which read it, have a player whose viewpoint is the origin: the
-// camera-relative positions are the release build's with no player (the
-// origin's). Never released, as the player is not.
+// PLAYER: the debug build asserts it is set (OOGetPlayer()), so
+// the entities' positions, which read it, have a player whose viewpoint is the
+// origin: the camera-relative positions are the release build's with no player
+// (the origin's). Never released, as the player is not.
 class TestPlayer : public PlayerEntity {
  public:
   HPVector viewpointPosition() override { return kZeroHPVector; }
@@ -96,7 +97,8 @@ void SetUp() {
   // The ship's -dealloc sends its (absent) scripts entityDestroyed in a request
   // on the main thread's context, so there is one, with nothing in it.
   if (gOOJSMainThreadContext == nullptr)
-    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+    gOOJSMainThreadContext =
+        JS_NewContext(JS_NewRuntime());
 }
 
 // A ship (the blast calls its members), under its object

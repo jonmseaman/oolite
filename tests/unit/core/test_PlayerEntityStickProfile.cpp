@@ -14,13 +14,13 @@
 
         The GUI object references Universe and the player, so the test links the
    whole game but main (tests/unit/core/meson.build entry ['*']) and defines
-   gDebugFlags. UNIVERSE is nil: a description lookup answers its key, so the
-   rows show the keys. PLAYER is a stand-in that answers -status and takes the
-   GUI's row-changed script event; the GUI names that event by its JS id, so the
-   test makes the engine's main-thread JS context. The defaults' home (HOMEPATH)
-   is a scratch folder, set before they are first read, as in
-   test_OOJoystickManager. The tests call the C++ members. Run: tests/run.sh
-   unit
+   gDebugFlags. UNIVERSE is nil: a description lookup
+   answers its key, so the rows show the keys. PLAYER is a stand-in that answers
+   -status and takes the GUI's row-changed script event; the GUI names that
+   event by its JS id, so the test makes the engine's
+   main-thread JS context. The defaults' home (HOMEPATH) is a scratch folder,
+   set before they are first read, as in test_OOJoystickManager. The
+   tests call the C++ members. Run: bash
 */
 
 #include <process.h>
@@ -33,7 +33,7 @@
 
 #include "GuiDisplayGen.h"
 #include "OOJoystickManager.h"
-#include "PlayerEntity.h"  // PLAYER is C++
+#include "PlayerEntity.h"
 #include "PlayerEntityStickProfile.h"
 #include "oo_test.hpp"
 #include "oofnd/Defaults.hpp"
@@ -45,7 +45,8 @@ uint32_t gDebugFlags = 0;
 #endif
 
 extern PlayerEntity* gOOPlayer;  // PlayerEntity.mm's, what PLAYER answers
-extern JSContext* gOOJSMainThreadContext;  // the engine's; OOJSID needs it
+extern JSContext*
+    gOOJSMainThreadContext;  // the engine's; OOJSID needs it
 
 // PLAYER: the screen asks it for its status (docked: the root's member, which
 // is not virtual, so the player is made docked); the GUI sends it a script
@@ -90,7 +91,8 @@ void SetUp() {
   gOOPlayer->Entity::setStatus(
       STATUS_DOCKED);  // the root's: what the Objective-C stand-in's -status
                        // answered
-  gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+  gOOJSMainThreadContext =
+      JS_NewContext(JS_NewRuntime());
 }
 
 OOJoystickManager* Handler() { return OOJoystickManager::sharedStickHandler(); }

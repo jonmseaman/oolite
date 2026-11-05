@@ -1,18 +1,18 @@
-/*	test_OOJSTimeLimiter.mm
+/*	test_OOJSTimeLimiter.cpp
         Unit tests for the script time limiter: start/stop, pause/resume, and
    the interrupt handler that stops a script which runs too long
-   (OOJSEngineCore.h, implemented in src/Core/Scripting/OOJavaScriptEngine.mm,
+   (OOJSEngineCore.h, implemented in src/Core/Scripting/OOJavaScriptEngine.cpp,
    as #768 does).
 
         These cases were test_OOJSEngineTimeManagement's, when the limiter and
-   its watchdog thread lived in OOJSEngineTimeManagement. The limiter is now the
-   engine's, so the test links every game object but main's
-   (tests/unit/core/meson.build entry ['*']), points the user's directories at a
-        scratch folder and runs the real engine. The expectations are the ones
-   written against the Objective-C file: the limiter's limit through nesting, an
-   extra stop, pause and resume; and the engine stopping an endless script,
-   logging the running script's name, after which scripts run again. Run:
-   tests/run.sh unit
+   its watchdog thread lived in OOJSEngineTimeManagement. The limiter is now
+   the engine's, so the test links every game object but main's
+   (tests/unit/core/meson.build entry ['*']), points the user's directories at
+   a scratch folder and runs the real engine. The expectations are the ones
+   written against the Objective-C file: the limiter's limit through nesting,
+   an extra stop, pause and resume; and the engine stopping an endless script,
+   logging the running script's name, after which scripts run again.
+   Run: tests/run.sh unit
 */
 
 #include <process.h>
@@ -70,13 +70,7 @@ void SetUp() {
   stdfs::current_path(sRoot);
   WriteText(sRoot / "Resources" / "Info-gnustep.plist",
             "{ CFBundleVersion = \"9.9.9-test\"; }");
-  // In a scope of its own, as the game's main() has one: what starting the
-  // engine autoreleases (an OOJSValue, which observes the engine's reset) is
-  // released here, not at process exit, after the notification centre has gone.
-  {
-    oo::AutoreleaseScope pool;  // was @autoreleasepool
-    (void)OOJavaScriptEngine::sharedEngine();
-  }
+  (void)OOJavaScriptEngine::sharedEngine();
 }
 
 // Evaluates source in the engine's context; true if it ran to completion. A
@@ -137,59 +131,56 @@ OO_TEST(pauseAndResume) {
 }
 
 OO_TEST(watchdog) {
-  // The engine stops a script that runs past its limit (QuickJS-ng's interrupt
+  // The engine stops a script that runs past its limit (QuickJS's interrupt
   // handler, which replaced the watchdog thread).
   SetUp();
-  {
-    oo::AutoreleaseScope pool;  // was @autoreleasepool
-    const stdfs::path scriptPath = sRoot / "running" / "running.js";
-    WriteText(scriptPath, "this.name = \"test script\";\n");
-    const oo::Ref<OOJSScript> script =
-        OOJSScript::scriptWithPath(scriptPath.generic_string(), oo::PList());
-    OO_CHECK(script != nullptr);
-    OOJSScript::pushScript(script.get());  // the script named in the log line
+  const stdfs::path scriptPath = sRoot / "running" / "running.js";
+  WriteText(scriptPath, "this.name = \"test script\";\n");
+  const oo::Ref<OOJSScript> script =
+      OOJSScript::scriptWithPath(scriptPath.generic_string(), oo::PList());
+  OO_CHECK(script != nullptr);
+  OOJSScript::pushScript(script.get());  // the script named in the log line
 
-    oo::log::logger().setSink(
-        [](std::string_view line) { sLogLines.emplace_back(line); });
-    oo::log::logger().setInitialized(true);
+  oo::log::logger().setSink(
+      [](std::string_view line) { sLogLines.emplace_back(line); });
+  oo::log::logger().setInitialized(true);
 
-    StartLimiter(0.05);
-    OOJSResetTimeLimiter();
-    const auto start = std::chrono::steady_clock::now();
-    const bool completed = Evaluate("for (;;) {}", "endless.js");
-    const double seconds =
-        std::chrono::duration<double>(std::chrono::steady_clock::now() - start)
-            .count();
-    StopLimiter();
-    OOJSResetTimeLimiter();
-    oo::log::logger().setSink(nullptr);
-    OOJSScript::popScript(script.get());
+  StartLimiter(0.05);
+  OOJSResetTimeLimiter();
+  const auto start = std::chrono::steady_clock::now();
+  const bool completed = Evaluate("for (;;) {}", "endless.js");
+  const double seconds =
+      std::chrono::duration<double>(std::chrono::steady_clock::now() - start)
+          .count();
+  StopLimiter();
+  OOJSResetTimeLimiter();
+  oo::log::logger().setSink(nullptr);
+  OOJSScript::popScript(script.get());
 
-    OO_CHECK(!completed);
-    OO_CHECK(seconds < 10.0);
-    bool logged = false;
-    int stackDumps = 0;
-    for (const std::string& line : sLogLines) {
-      if (line.find("Script \"test script\" ran for ") != std::string::npos &&
-          line.find(" seconds and has been terminated.") != std::string::npos)
-        logged = true;
-      // OOJSDumpStack()'s entry: the stack's frames, or none.
-      if (line.rfind("    at ", 0) == 0 ||
-          line.find("<no JavaScript stack>") != std::string::npos)
-        stackDumps++;
-    }
-    OO_CHECK(logged);
+  OO_CHECK(!completed);
+  OO_CHECK(seconds < 10.0);
+  bool logged = false;
+  int stackDumps = 0;
+  for (const std::string& line : sLogLines) {
+    if (line.find("Script \"test script\" ran for ") != std::string::npos &&
+        line.find(" seconds and has been terminated.") != std::string::npos)
+      logged = true;
+    // OOJSDumpStack()'s entry: the stack's frames, or none.
+    if (line.rfind("    at ", 0) == 0 ||
+        line.find("<no JavaScript stack>") != std::string::npos)
+      stackDumps++;
+  }
+  OO_CHECK(logged);
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    OO_CHECK_EQ(stackDumps, 1);  // the engine dumps the stack (OOJSDumpStack)
+  OO_CHECK_EQ(stackDumps, 1);  // the engine dumps the stack (OOJSDumpStack)
 #else
-    (void)stackDumps;
+  (void)stackDumps;
 #endif
 
-    // After a reset, scripts run again.
-    StartLimiter(0.0);
-    OO_CHECK(Evaluate("1 + 1", "quick.js"));
-    StopLimiter();
-  }
+  // After a reset, scripts run again.
+  StartLimiter(0.0);
+  OO_CHECK(Evaluate("1 + 1", "quick.js"));
+  StopLimiter();
 }
 
 OO_TEST(cleanUp) {

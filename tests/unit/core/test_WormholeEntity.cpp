@@ -1,6 +1,6 @@
 /*	test_WormholeEntity.mm
         Unit tests for WormholeEntity (src/Core/Entities/WormholeEntity.h), the
-   witchspace wormholes ships leave behind.
+   witchspace wormholes ships leave behind, a leaf of the Entities seam.
 
         The entity reads Universe and PLAYER, so the test links the whole game
    but main (['*']) and uses a Universe that was never initialised, subclassed
@@ -9,20 +9,21 @@
    format, with no sun, and to record what is removed; PLAYER is an entity that
    answers the galaxy, the clock, its galactic coordinates and its forward
    vector; the ship that opens a wormhole is a plain entity of the mass the test
-   sets (a C++ ship under its object, never set up). The expectations were
-   written against the Objective-C API and run on the unconverted class first: a
-   wormhole made by a ship is a no-mass-yet effect of the wormhole scan class
-   whose size, expiry and arrival follow from the ship's mass and the distance;
-   one made from a saved dictionary reads its systems, times (crossed times
-   fixed), position and misjump back, and -getDict writes them; the misjump
-   setters move the exit and the arrival; the scan state; who can collide with
-   it; -update: shrinks nothing at no mass, hides it and removes it once it has
-        expired; -suckInShip: refuses a missing ship, one already leaving,
-   another system and an expired wormhole; -disgorgeShips moves a wormhole that
-   held the player behind the player; and the description. Masses and distances
-   are set through the one helper below. The cases make the C++ wormhole and its
-   Objective-C object (oo::NewEntityFacade) and ask the C++ class, and the
-   facade case pins the crossing: its object is the root Entity's. Run: bash
+   sets (a C++ ship under its object, never set up). The
+   expectations were written against the Objective-C API and run on the
+   unconverted class first: a wormhole made by a ship is a no-mass-yet effect of
+        the wormhole scan class whose size, expiry and arrival follow from the
+   ship's mass and the distance; one made from a saved dictionary reads its
+   systems, times (crossed times fixed), position and misjump back, and -getDict
+   writes them; the misjump setters move the exit and the arrival; the scan
+   state; who can collide with it; -update: shrinks nothing at no mass, hides it
+        and removes it once it has expired; -suckInShip: refuses a missing ship,
+   one already leaving, another system and an expired wormhole; -disgorgeShips
+   moves a wormhole that held the player behind the player; and the description.
+   Masses and distances are set through the one helper below. The cases make
+   the C++ wormhole and its Objective-C object (oo::NewEntityFacade) and ask
+   the C++ class, and the facade case pins that its object is the root
+   Entity's. Run: bash
    tests/run.sh unit
 */
 
@@ -30,11 +31,11 @@
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
-#include "OODescription.h"
 #include "OOJSEntity.h"
+#include "OODescription.h"
 #include "OOJSWormhole.h"
 #include "OOSystemDescriptionManager.h"
-#include "PlayerEntity.h"  // PLAYER is C++
+#include "PlayerEntity.h"
 #include "Universe.h"
 #include "WormholeEntity.h"
 #include "oo_test.hpp"
@@ -83,8 +84,8 @@ class TestEffect : public Entity {
 // records removals.
 class TestUniverse : public Universe {
  public:
-  OOSystemID& _system =
-      systemID;  // the universe's own state, which its getter answers
+  OOSystemID& _system = systemID;  // the universe's own state, which its getter
+                                   // answers
   Entity* _removed = {};
 
   std::optional<std::string> getSystemName(OOSystemID sys,
@@ -140,7 +141,8 @@ void SetUp() {
   // The ship's -dealloc sends its (absent) scripts entityDestroyed in a request
   // on the main thread's context, so there is one, with nothing in it.
   if (gOOJSMainThreadContext == nullptr)
-    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+    gOOJSMainThreadContext =
+        JS_NewContext(JS_NewRuntime());
 }
 
 // --- Ivars the test sets and reads, and nothing else
@@ -388,8 +390,8 @@ OO_TEST(facade) {
     WormholeEntity* wh = ToNine(Ship(1000.0f));
     // Its Objective-C object is the root's facade.
     Entity* object = wh;
-    OO_CHECK(object !=
-             nullptr);  // A C++ entity, not an Objective-C entity's adapter.
+    OO_CHECK(object != nullptr);
+    // A C++ entity, not an Objective-C entity's adapter.
     OO_CHECK(dynamic_cast<WormholeEntity*>(object) == wh);
   }
 }
@@ -415,8 +417,8 @@ OO_TEST(jsExtensions) {
   {
     SetUp();
     WormholeEntity* wh = ToNine(Ship(1000.0f));
-    RegisterJSClasses(InitOOJSWormhole);
     Entity* object = wh;  // what the engine asks (the root's facade)
+    RegisterJSClasses(InitOOJSWormhole);
     const JSClassID jsClass = OOJSEntityJSClassID(object);
     const JSClassID expectedClass = JSWormholeClassID();
     OO_CHECK(jsClass != 0 && jsClass == expectedClass);

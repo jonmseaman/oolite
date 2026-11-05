@@ -74,8 +74,7 @@ class TestUniverse : public Universe {
   }
 };
 
-// An effect, for the collision test (a C++ one
-// overriding the member).
+// An effect, for the collision test (a C++ one overriding the member).
 class TestEffect : public Entity {
  public:
   bool isEffect() override { return true; }

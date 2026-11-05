@@ -9,12 +9,11 @@
    lowest, so 512 x 512, or 512 x 256 with 3D noise), keys it by its parameters
    and by which helpers it feeds, and fills it from the seed's noise; the class
    methods make the textures, the surface's last so that it is queued once the
-        helpers are. It links the whole game but main
-   (tests/unit/core/meson.build entry ['*']), on the hidden GL context of
-   oo_gl_test_context.hpp. Making a generator and the class methods go through
-   the helpers below: the class is a global C++ class. The last test pins the
-   C++ API. Run: bash meson test -C build/meson_test
-   test_OOPlanetTextureGenerator
+   helpers are. It links the whole game but main (tests/unit/core/meson.build
+   entry ['*']), on the hidden GL context of oo_gl_test_context.hpp. Making a
+   generator and the class methods go through the helpers below: the class is a
+   global C++ class. The last test pins the C++ API. Run: bash
+   meson test -C build/meson_test test_OOPlanetTextureGenerator
 */
 
 #include <cstdlib>

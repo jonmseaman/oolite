@@ -4,24 +4,23 @@
 
         The entity reads Universe and PLAYER, so the test links the whole game
    but main (['*']) and uses a Universe that was never initialised and a plain
-   entity as PLAYER. The expectations were written against the Objective-C API
-   and run on the unconverted class first: a waypoint reads its position,
+   entity as PLAYER. The tests pin that a waypoint reads its position,
    orientation, size and beacon code and label from its dictionary (defaults:
    the origin, the identity, 1000, "W" and "Waypoint"; an empty dictionary reads
    zeros and no beacon); a zero orientation is the identity and marks it
    unoriented; its size sets its draw distance and ignores a size that is not
    positive; it is a no-draw effect and a waypoint; the beacon code and label
-        setters (an empty string is none; a code gives a blank label its text)
-   and the case-insensitive comparison; its beacon icon is kept until the code
+   setters (an empty string is none; a code gives a blank label its text) and
+   the case- insensitive comparison; its beacon icon is kept until the code
    changes; and its neighbours in the beacon list are weak references. The draw
    distance is read through the one helper below. The waypoints are made as the
    universe makes them: by the C++ factory, handed to Objective-C with
-        oo::NewEntityFacade, whose object is the root Entity's facade. The
+   oo::NewEntityFacade, whose object is the root Entity's facade. The
    object still answers the beacon selectors (the root's category Entity
-   (OOWaypointBeacon)), so the beacon checks send them; the class's own
-   selectors are member calls; the last tests pin that the object is a C++
-        entity's, that only a waypoint's object (or a facade that implements
-   them) answers the beacon selectors, and the JS answers. Run: bash
+   (OOWaypointBeacon)), so the beacon checks send them; the class's
+   own selectors are member calls; the last tests pin that the object is a C++
+   entity's, that only a waypoint's object (or a facade that implements them)
+   answers the beacon selectors, and the JS answers. Run: bash
    tests/run.sh unit
 */
 
@@ -286,6 +285,19 @@ OO_TEST(facade) {
   }
 }
 
+// The beacon selectors on the root's facade: answered for a waypoint's part,
+// and not for another entity's, whose object did not answer them. The beacon
+// questions a plain entity is asked answer none.
+OO_TEST(beaconSelectorsForAWaypointOnly) {
+  {
+    oo::AutoreleaseScope scope;
+    SetUp();
+    Entity* plain = oo::MadeEntity(oo::makeRef<Entity>());
+    OO_CHECK(!oo::EntityIsBeacon(plain) && !oo::BeaconCode(plain).has_value());
+    OO_CHECK(oo::NextBeacon(plain) == nullptr);
+  }
+}
+
 // Registers Entity's JS class and the given class (a child of Entity) in the
 // test's context, as the engine's start does; the context is made here if the
 // test has none yet.
@@ -298,19 +310,6 @@ static void RegisterJSClasses(void (*initClass)(JSContext*, JSValueConst)) {
   InitOOJSEntity(context, global);
   initClass(context, global);
   JS_FreeValue(context, global);
-}
-
-// The beacon selectors on the root's facade: answered for a waypoint's part,
-// and not for another entity's, whose object did not answer them. The beacon
-// questions a plain entity is asked answer none.
-OO_TEST(beaconSelectorsForAWaypointOnly) {
-  {
-    oo::AutoreleaseScope scope;
-    SetUp();
-    Entity* plain = oo::MadeEntity(oo::makeRef<Entity>());
-    OO_CHECK(!oo::EntityIsBeacon(plain) && !oo::BeaconCode(plain).has_value());
-    OO_CHECK(oo::NextBeacon(plain) == nullptr);
-  }
 }
 
 // The binding's category: what the engine asks a waypoint's object for by

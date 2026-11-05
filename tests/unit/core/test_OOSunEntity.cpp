@@ -6,13 +6,12 @@
    but main (['*']) and uses a Universe that was never initialised (minimum
    detail, so the corona never moves), subclassed to record the main light
    position, the sky colour and the system data the sun sets, and an entity that
-   answers the viewpoint the test sets as PLAYER. The expectations were written
-   against the Objective-C API and run on the unconverted class first: a sun's
-   radius, name and corona come from its dictionary, it is a no-draw, visible,
-   collidable sun; its light colours are its colour blended with white;
+   answers the viewpoint the test sets as PLAYER. The tests pin: a
+   sun's radius, name and corona come from its dictionary, it is a no-draw,
+   visible, collidable sun; its light colours are its colour blended with white;
    -changeSunProperty:withDictionary: takes the radius, the name, the corona,
-        and going nova or not, and refuses anything else; a new position moves
-   the main light; going nova counts down, then whitens the sky and records the
+   and going nova or not, and refuses anything else; a new position moves the
+   main light; going nova counts down, then whitens the sky and records the
    nova and the growing radius in the system data; and the camera-relative
    position is pulled in to 1e9 for a far sun. The camera-relative position is
    read through the one helper below. The cases make the C++ sun and its
@@ -26,12 +25,12 @@
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "OOJSEntity.h"
 #include "OOColor.h"
 #include "OODescription.h"
-#include "OOJSEntity.h"
 #include "OOJSSun.h"
 #include "OOSunEntity.h"
-#include "PlayerEntity.h"  // PLAYER is C++
+#include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 #include "oofnd/PListGet.hpp"
@@ -109,9 +108,9 @@ void SetUp() {
 // --- Ivars the test reads, and nothing else
 // ---------------------------------------------------------
 
-Vector CameraRelativePosition(Entity* e) {
-  return e->cameraRelativePosition;
-}  // --------------------------------------------------------------------------------------------------
+Vector CameraRelativePosition(Entity* e) { return e->cameraRelativePosition; }
+
+// --------------------------------------------------------------------------------------------------
 
 oo::PList Dict(oo::PList::Dict entries) {
   return oo::PList(std::move(entries));
@@ -304,8 +303,8 @@ OO_TEST(facade) {
     OOSunEntity* sun = RedSun();
     // Its Objective-C object is the root's facade.
     Entity* object = sun;
-    OO_CHECK(object !=
-             nullptr);  // A C++ entity, not an Objective-C entity's adapter.
+    OO_CHECK(object != nullptr);
+    // A C++ entity, not an Objective-C entity's adapter.
     OO_CHECK(dynamic_cast<OOSunEntity*>(object) == sun);
   }
 }
@@ -330,8 +329,8 @@ OO_TEST(jsExtensions) {
   {
     SetUp();
     OOSunEntity* sun = RedSun();
-    RegisterJSClasses(InitOOJSSun);
     Entity* object = sun;  // what the engine asks (the root's facade)
+    RegisterJSClasses(InitOOJSSun);
     const JSClassID jsClass = OOJSEntityJSClassID(object);
     const JSClassID expectedClass = JSSunClassID();
     OO_CHECK(jsClass != 0 && jsClass == expectedClass);

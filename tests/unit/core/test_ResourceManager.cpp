@@ -1,18 +1,23 @@
 /*	test_ResourceManager.mm
-	Unit tests for ResourceManager (src/Core/ResourceManager.h).
+        Unit tests for ResourceManager (src/Core/ResourceManager.h).
 
-	ResourceManager is class methods over file-scope state. These tests pin what its units answer:
-	the state before any scan (no add-on selection, no errors, no OXP messages, no manifests),
-	external paths, which make the search paths without a scan, the root paths (the built-in data,
-	the managed add-ons, the user's add-on folders, as oo::ResourcePaths computes them), masking the
-	user's name in paths, and resetting. They never scan for add-ons: that would read the machine's
-	installed expansions, so the search paths are always given as external paths first.
-	ResourceManager is a C++ class (static members), and the last test checks the C++ API.
+        ResourceManager is class methods over file-scope state. These tests pin
+   what its units answer: the state before any scan (no add-on selection, no
+   errors, no OXP messages, no manifests), external paths, which make the search
+   paths without a scan, the root paths (the built-in data, the managed add-ons,
+   the user's add-on folders, as oo::ResourcePaths computes them), masking the
+   user's name in paths, and resetting. They never scan for add-ons: that would
+   read the machine's installed expansions, so the search
+   paths are always given as external paths first. ResourceManager is a C++
+   class (static members), and the last test checks the C++ API.
 
-	ResourceManager.mm reaches the universe, the HUD, the OXZ manager and the scripts, so the test
-	links every game object but main's (tests/unit/core/meson.build entry ['*']) and defines
-	gDebugFlags. UNIVERSE is nil. The tests run in a scratch game folder (see ScratchGameFolder) and
-	add a scan of fixture add-ons whose manifests the scan accepts or rejects. Run: tests/run.sh unit
+        ResourceManager.mm reaches the universe, the HUD, the OXZ manager and
+   the scripts, so the test links every game object but main's
+   (tests/unit/core/meson.build entry ['*']) and
+   defines gDebugFlags. UNIVERSE is nil. The tests run in a scratch game folder
+   (see ScratchGameFolder) and add a scan of fixture add-ons whose manifests
+   the scan accepts or rejects. Run: tests/run.sh unit
+   test_ResourceManager
 */
 
 #include <process.h>

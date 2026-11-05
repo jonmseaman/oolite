@@ -2,9 +2,9 @@
 
         The equipment-control world script
    (Resources/Scripts/oolite-equipment-control.js) on the game's JavaScript
-   engine (QuickJS-ng, through its own API), with the two game objects it reads
-   stood in by plain JS objects (EquipmentInfo.infoForKey and
-   player.ship.removeEquipment).
+   engine (QuickJS-ng, through its own API), with
+   the two game objects it reads stood in by plain JS objects
+   (EquipmentInfo.infoForKey and player.ship.removeEquipment).
 
         Pins upstream OoliteProject #369: adding an item removes an installed
    item that lists it as incompatible, but no longer "removes" an incompatible
@@ -12,13 +12,13 @@
    $equipmentEnabled entry is 0, not absent).
 */
 
-#include <quickjs.h>
-
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
+
+#include <quickjs.h>
 
 namespace {
 
@@ -58,8 +58,8 @@ std::string ScriptSource() {
 // Evaluates JS in the global scope; true when it ran without an exception and,
 // when asked, gives the result's truth value in *result.
 bool Eval(JSContext* cx, const std::string& code, bool* result = nullptr) {
-  JSValue rval =
-      JS_Eval(cx, code.c_str(), code.size(), "test.js", JS_EVAL_TYPE_GLOBAL);
+  JSValue rval = JS_Eval(cx, code.c_str(), code.size(), "test.js",
+                         JS_EVAL_TYPE_GLOBAL);
   if (JS_IsException(rval)) {
     std::printf("JS exception evaluating: %.120s\n", code.c_str());
     JS_FreeValue(cx, JS_GetException(cx));

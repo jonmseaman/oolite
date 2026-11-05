@@ -304,7 +304,7 @@ oo::Ref<OOOXPVerifierStage> MakeTestStage(const std::string& name) {
           {"OOTestStageDup2", Make<OOTestStageDup2>},
           {"OOTestStageSub", Make<OOTestStageSub>},
           {"OOTestStageLate", Make<OOTestStageLate>},
-      };
+  };
   const auto found = makers.find(name);
   return found != makers.end() ? found->second() : nullptr;
 }

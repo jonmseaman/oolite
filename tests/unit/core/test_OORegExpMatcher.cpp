@@ -4,21 +4,17 @@
         The matcher compiles a JavaScript function, "return
    regexp.test(string);", and runs it on a RegExp object it caches by pattern
    and flags. The test links the game's own OORegExpMatcher and the QuickJS-ng
-   engine, so every match below is the real engine's answer. The Objective-C
-   glue the matcher uses but whose files reach the whole game (the engine
-   singleton, OOJSFunction, OOJSValue, the two value converters and the
-   exception reporter; OOJavaScriptEngine.mm links everything) is replaced by
-   the minimal definitions below (OOJSFunction's C++ members), which count what
-   the matcher asks of them. The expectations were written against the
-   Objective-C API and run on the unconverted class first: what matches, the
-   flags, the empty pattern, the cache (one compiled RegExp per pattern and
-   flags), and the pseudo-singleton (one matcher per autorelease pool, a new one
-   after the pool drains; nil, and asked again, when the tester does not
-   compile). The cases ask the C++ matcher: see the note above the tests. Run:
-   tests/run.sh unit
+   engine, so every match below is the real engine's answer. The
+   Objective-C glue the matcher uses but whose files reach the whole game (the
+   engine singleton, OOJSFunction, OOJSValue and the exception reporter;
+   OOJavaScriptEngine.mm links everything) is replaced by the minimal
+   definitions below (OOJSFunction's C++ members), which count what the matcher
+   asks of them. The expectations cover: what matches, the flags, the empty
+   pattern, the cache (one compiled RegExp per pattern and flags), and the
+   pseudo-singleton (one matcher per autorelease pool, a new one after the pool
+   drains; nil, and asked again, when the tester does not compile). See the note
+   above the tests. Run: tests/run.sh unit
 */
-
-#include <quickjs.h>
 
 #include <string>
 
@@ -37,8 +33,8 @@ JSContext* gOOJSMainThreadContext = nullptr;
 namespace {
 
 JSValue sGlobal = JS_UNDEFINED;  // owned, for the life of the process
-unsigned sEngineCalls = 0;       // +OOJavaScriptEngine::sharedEngine()
-unsigned sFunctionsMade = 0;     // OOJSFunction inits: one per matcher
+unsigned sEngineCalls = 0;    // +OOJavaScriptEngine::sharedEngine()
+unsigned sFunctionsMade = 0;  // OOJSFunction inits: one per matcher
 unsigned sRegExpsMade =
     0;  // OOJSValue inits: one per RegExp the matcher compiled
 unsigned sEvaluations = 0;  // OOJSFunction evaluations: one per match
@@ -57,24 +53,20 @@ class OOJavaScriptEngine {
 OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
   sEngineCalls++;
   if (gOOJSMainThreadContext == nullptr) {
-    JSRuntime* runtime = JS_NewRuntime();
-    JS_SetMemoryLimit(runtime, 64L * 1024L * 1024L);
-    gOOJSMainThreadContext = JS_NewContext(runtime);
+    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
     sGlobal = JS_GetGlobalObject(gOOJSMainThreadContext);
   }
   return nullptr;
 }
 
 // OOJSFunction (src/Core/Scripting/OOJSFunction.h): the members the matcher
-// calls, defined here in place of OOJSFunction.mm. The function is compiled
-// as a function expression in the global scope, as OOJSFunction.mm does.
+// calls, defined here in place of OOJSFunction.cpp. The function is compiled
+// as a function expression in the global scope, as OOJSFunction.cpp does.
 oo::Ref<OOJSFunction> OOJSFunction::initWithName(
-    const std::optional<std::string>& name, JSValueConst scope,
+    const std::optional<std::string>& name, JSValueConst /*scope*/,
     const std::optional<std::string>& code, NSUInteger argCount,
     const char** argNames, const std::optional<std::string>& fileName,
-    NSUInteger lineNumber, JSContext* context) {
-  (void)scope;
-  (void)lineNumber;
+    NSUInteger /*lineNumber*/, JSContext* context) {
   sFunctionsMade++;
   if (sFailCompile) return nullptr;
   std::string source = "(function " + name.value_or(std::string()) + "(";
@@ -106,12 +98,12 @@ bool OOJSFunction::evaluateWithContext(JSContext* context, JSValueConst jsThis,
                                        JSValue* result) {
   sEvaluations++;
   JSValue rval = JS_Call(context, _function,
-                         JS_IsObject(jsThis) ? jsThis : sGlobal, argc, argv);
-  if (JS_IsException(rval)) {
-    *result = JS_UNDEFINED;
-    return false;  // the exception is left pending
-  }
-  *result = rval;
+                         JS_IsUndefined(jsThis) ? sGlobal : jsThis, argc, argv);
+  if (JS_IsException(rval)) return false;  // the exception is left pending
+  if (result != nullptr)
+    *result = rval;
+  else
+    JS_FreeValue(context, rval);
   return true;
 }
 
@@ -121,25 +113,17 @@ oo::Ref<OOJSValue> OOJSValue::valueWithJSValue(JSValueConst value,
                                                JSContext* context) {
   oo::Ref<OOJSValue> result = oo::makeRef<OOJSValue>();
   sRegExpsMade++;
-  result->_val = JS_DupValue(context, value);  // owned
+  result->_val = JS_DupValue(context, value);
   return result;
 }
 
 OOJSValue::~OOJSValue() { JS_FreeValue(gOOJSMainThreadContext, _val); }
 
-// Owned, as the engine's.
 JSValue OOJSValue::jsValueInContext(JSContext* context) {
   return JS_DupValue(context, _val);
 }
 std::string OOJSValue::className() const { return "OOJSValue"; }
 std::string OOJSValue::description() const { return "<OOJSValue>"; }
-
-// Owned, as the engine's.
-JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
-  const std::string* string = plist.getIf<std::string>();
-  if (string == nullptr) return JS_NULL;
-  return JS_NewStringLen(context, string->data(), string->size());
-}
 
 // The engine's reporter: the stand-in clears the exception.
 void OOJSReportPendingException(JSContext* context) {
@@ -163,20 +147,17 @@ bool Matches(const std::string& string, const std::string& regExp,
 }  // namespace
 
 OO_TEST(matches) {
-  {
-    oo::AutoreleaseScope pool;
-    OO_CHECK(Matches("GeForce GTX 1080", "GeForce"));
-    OO_CHECK(Matches("GeForce GTX 1080", "^GeForce GTX [0-9]+$"));
-    OO_CHECK(!Matches("GeForce GTX 1080", "^GTX"));
-    OO_CHECK(!Matches("geforce", "GeForce"));
-    OO_CHECK(Matches("geforce", "GeForce", kOORegExpCaseInsensitive));
-    OO_CHECK(!Matches("one\ntwo", "^two"));
-    OO_CHECK(Matches("one\ntwo", "^two", kOORegExpMultiLine));
-    OO_CHECK(Matches("", "^$"));
-    OO_CHECK(Matches("caf\xC3\xA9",
-                     "\xC3\xA9$"));  // UTF-8 in, and UTF-8 to the engine
-    OO_CHECK(OORegExpMatcher::regExpMatcher()->string("abc", "b"));  // flags 0
-  }
+  OO_CHECK(Matches("GeForce GTX 1080", "GeForce"));
+  OO_CHECK(Matches("GeForce GTX 1080", "^GeForce GTX [0-9]+$"));
+  OO_CHECK(!Matches("GeForce GTX 1080", "^GTX"));
+  OO_CHECK(!Matches("geforce", "GeForce"));
+  OO_CHECK(Matches("geforce", "GeForce", kOORegExpCaseInsensitive));
+  OO_CHECK(!Matches("one\ntwo", "^two"));
+  OO_CHECK(Matches("one\ntwo", "^two", kOORegExpMultiLine));
+  OO_CHECK(Matches("", "^$"));
+  OO_CHECK(Matches("caf\xC3\xA9",
+                   "\xC3\xA9$"));  // UTF-8 in, and UTF-8 to the engine
+  OO_CHECK(OORegExpMatcher::regExpMatcher()->string("abc", "b"));  // flags 0
 }
 
 OO_TEST(emptyPatternMatchesNothing) {

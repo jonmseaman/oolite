@@ -10,10 +10,11 @@
    there is no market or no such good).
 
         The game around them is replaced, as in test_OOEquipmentType: UNIVERSE
-   hands out the equipment data, the descriptions and a market; the cache
-   manager, script loader, player and standards functions are the test's.
-   OOEquipmentType, OOCommodityMarket and OOColor are the game's own. Run:
-   tests/run.sh unit
+   hands out the equipment data, the
+   descriptions and a market; the cache manager, script loader, player and
+   standards functions are the test's. OOEquipmentType, OOCommodityMarket and
+   OOColor are the game's own. Run: tests/run.sh unit
+   test_OOConstToString
 */
 
 #include <cstdlib>

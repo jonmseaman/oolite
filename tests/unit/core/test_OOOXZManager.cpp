@@ -1,25 +1,22 @@
 /*	test_OOOXZManager.mm
-        Unit tests for OOOXZManager (src/Core/OOOXZManager.h): the class shell
-   (state, paths, filters, manifests and the download plumbing).
+        Unit tests for OOOXZManager (src/Core/OOOXZManager.h).
 
         The manager is a process-wide singleton that keeps the list of OXZ
    manifests, the managed OXZs on disk, a filter over the list, and one
    download. The test points the user's home (HOMEPATH: the caches and the
    defaults), the managed, extract and additional add-on folders, and the
-        built-in Resources (the current directory) at a scratch folder before
-   the singleton exists, so nothing of the user's is read or written. Every
-   manifest is synthetic, written by the test; no expansion is read. The one
-   download is a file: URL (oofnd/Http.hpp), so no network is used.
+   built-in Resources (the current directory) at a scratch folder before the
+   singleton exists, so nothing of the user's is read or written. Every manifest
+   is synthetic, written by the test; no expansion is read. The one download is
+   a file: URL (oofnd/Http.hpp), so no network is used.
 
-        It pins what the manager computed before the conversion: the shared
-   instance and the list it loads from the manifest cache, sorted; the paths;
-   the filters and their validation; the human size; the managed OXZs read from
-   disk and matched against the list; a manifest download from start to finish
-   (the list replaced, the cache rewritten, the temporary file removed, the
-   managed list rebuilt), and the requests it then refuses. The expectations
-   were written against the Objective-C API and run on the unconverted class
-   first. Every case asks the C++ singleton. Run: bash meson test -C
-   build/meson_test test_OOOXZManager
+        It pins: the shared instance and the list it loads from the manifest
+   cache, sorted; the paths; the filters and their validation; the human size;
+   the managed OXZs read from disk and matched against the list; a manifest
+   download from start to finish (the list replaced, the cache rewritten, the
+   temporary file removed, the managed list rebuilt), and the requests it then
+   refuses. Every case asks the C++ singleton. Run: bash
+   meson test -C build/meson_test test_OOOXZManager
 */
 
 #include "OOCacheManager.h"
@@ -1299,8 +1296,8 @@ OO_TEST(guiInput) {
   SetUp();
   // The manager leaves these pages through the intro screen, which it shows
   // only with no PLAYER (PLAYER's setGuiToIntroFirstGo()): they run with none,
-  // as before, which only a release-style build can (the debug build asserts
-  // PLAYER is set).
+  // which only a release-style build can (the debug build asserts PLAYER is
+  // set).
   gOOPlayer = nullptr;
 #if !OO_DEBUG
   {
@@ -1674,8 +1671,8 @@ OO_TEST(optionPages) {
   SetUp();
   // The manager leaves these pages through the intro screen, which it shows
   // only with no PLAYER (PLAYER's setGuiToIntroFirstGo()): they run with none,
-  // as before, which only a release-style build can (the debug build asserts
-  // PLAYER is set).
+  // which only a release-style build can (the debug build asserts PLAYER is
+  // set).
   gOOPlayer = nullptr;
   {
     StandInUniverse standIn;
@@ -1950,7 +1947,6 @@ OO_TEST(optionPages) {
 OO_TEST(copyUrlKey) {
   SetUp();
   {
-    oo::AutoreleaseScope pool;
     StandInUniverse standIn;
     OOOXZManager* m = Manager();
     TestGui* gui = standIn.universe->testGui.get();

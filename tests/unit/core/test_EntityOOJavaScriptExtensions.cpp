@@ -1,11 +1,11 @@
 /*	test_EntityOOJavaScriptExtensions.mm
         Unit tests for the categories Entity (OOJavaScriptExtensions) and
    ShipEntity (OOJavaScriptExtensions)
-   (src/Core/Scripting/EntityOOJavaScriptExtensions.h/.mm): what the script
-   engine asks an entity by selector (is it visible to scripts, its JS class
-        name, its JS class, its JS object) and what scripts ask a ship (its
-   subentities, and setting its target, which climbs from a subentity to its
-   root ship on both sides).
+   (src/Core/Scripting/EntityOOJavaScriptExtensions.h/.mm): what
+   the script engine asks an entity by selector (is it visible to scripts, its
+   JS class name, its JS class and prototype, its JS object) and what scripts
+   ask a ship (its subentities, and setting its target, which climbs from a
+   subentity to its root ship on both sides).
 
         The categories reach the entity's C++ part (_jsSelf), so the test links
    the whole game but main
@@ -13,16 +13,9 @@
    ShipEntity made with class_createInstance (never initialised, never
    released): it answers the ShipEntity selectors the category sends (its
    subentities, its owner, being a subentity, its targets) and records what it
-   was told. The JS object the entity already has is a plain object of a
-   QuickJS-ng context the test makes, the engine's main thread context, with
-   Entity's and Ship's JS classes registered by their Init functions; the test
-   owns that object and frees it. On QuickJS-ng (upstream #768's binding) a JS
-   class is its JSClassID, so the class checks compare IDs and the prototype
-   checks are gone (the prototype is per context, JS_GetClassProto). Run:
-   tests/run.sh unit
+   was told. The JS object the entity already has is a plain object of a runtime
+   the test makes. Run: tests/run.sh unit
 */
-
-#include <quickjs.h>
 
 #include <string>
 #include <vector>
@@ -295,7 +288,8 @@ OO_TEST(setTargetOnANonShipRootDoesNothing) {
 // Objective-C class's own selectors still answer first.
 namespace {
 
-JSClassDef sTestScriptedClass = {.class_name = "TestScripted"};
+JSClassDef sTestScriptedClass = {"TestScripted", nullptr, nullptr, nullptr,
+                                 nullptr};
 JSClassID sTestScriptedClassID = 0;
 
 class TestScriptedEntity : public Entity {
