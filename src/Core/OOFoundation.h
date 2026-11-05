@@ -36,9 +36,10 @@ MA 02110-1301, USA.
 #include <math.h>
 #include <stdbool.h>
 
-/*	-sortedArrayUsingFunction: and friends take NSInteger (*)(id, id, void*). Oolite's sort
-        functions return NSComparisonResult, which has the same size and calling convention but is
-        a distinct enum type that C++ will not convert implicitly.
+/*	-sortedArrayUsingFunction: and friends take NSInteger (*)(id, id,
+   void*). Oolite's sort functions return NSComparisonResult, which has the same
+   size and calling convention but is a distinct enum type that C++ will not
+   convert implicitly.
 */
 #define OOSortFunction(function) ((NSInteger (*)(id, id, void*))(function))
 
