@@ -366,6 +366,41 @@ def _link_dir(source, target):
         os.symlink(source, target)
 
 
+# On macOS the binary lives in oolite.app/Contents/MacOS and finds its dylibs and resources through
+# paths relative to itself (@loader_path/../Frameworks, ../Resources). A staged copy of MacOS alone
+# would lose them, so the other entries of Contents are linked in beside it. Logs is left out: the
+# game's logs are redirected to the test output directory.
+BUNDLE_BINARY_DIR = "MacOS"
+BUNDLE_SKIPPED_SIBLINGS = ("Logs",)
+
+
+def _bundle_contents(app_dir):
+    """The Contents directory when app_dir is an app bundle's MacOS directory, else None."""
+    if os.path.basename(app_dir) != BUNDLE_BINARY_DIR:
+        return None
+    contents = os.path.dirname(app_dir)
+    if os.path.basename(contents) != "Contents":
+        return None
+    return contents
+
+
+def _bundle_siblings(contents):
+    return [name for name in sorted(os.listdir(contents))
+            if name != BUNDLE_BINARY_DIR and name not in BUNDLE_SKIPPED_SIBLINGS]
+
+
+def _link_bundle_siblings(app_dir, staged):
+    """Make a staged MacOS directory look like part of a bundle; a no-op for any other layout."""
+    contents = _bundle_contents(app_dir)
+    if contents is None or os.path.basename(staged) != BUNDLE_BINARY_DIR:
+        return
+    staged_contents = os.path.dirname(staged)
+    for name in _bundle_siblings(contents):
+        target = os.path.join(staged_contents, name)
+        if not os.path.lexists(target):
+            os.symlink(os.path.join(contents, name), target)
+
+
 def stage_app(app_dir, staged):
     """Build a private copy of oolite.app whose GNUSTEP_USERS_ROOT is this run's alone.
 
@@ -392,6 +427,7 @@ def stage_app(app_dir, staged):
                 shutil.copy2(source, target)
     for name in PRIVATE_SUBDIRS:
         os.makedirs(os.path.join(staged, name), exist_ok=True)
+    _link_bundle_siblings(app_dir, staged)
     return staged
 
 
@@ -422,6 +458,24 @@ def unstage_app(staged):
                 pass
     try:
         os.rmdir(staged)
+    except OSError:
+        pass
+    _unlink_bundle_siblings(staged)
+
+
+def _unlink_bundle_siblings(staged):
+    """Remove the links _link_bundle_siblings made beside a staged MacOS directory."""
+    if os.path.basename(staged) != BUNDLE_BINARY_DIR:
+        return
+    staged_contents = os.path.dirname(staged)
+    if not os.path.isdir(staged_contents):
+        return
+    for name in os.listdir(staged_contents):
+        path = os.path.join(staged_contents, name)
+        if os.path.islink(path):
+            os.unlink(path)
+    try:
+        os.rmdir(staged_contents)
     except OSError:
         pass
 
@@ -473,7 +527,10 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
     # an env var - the game overwrites it (SDL_setenv_unsafe ..., YES) - and not a lock, which
     # would serialise the N-concurrent fan-out this function exists to support.
     staged_root = tempfile.mkdtemp(prefix=f"oolite-run-{port}-{os.getpid()}-")
-    staged_app = os.path.join(staged_root, "app")
+    if _bundle_contents(app_dir):
+        staged_app = os.path.join(staged_root, "oolite.app", "Contents", BUNDLE_BINARY_DIR)
+    else:
+        staged_app = os.path.join(staged_root, "app")
     stage_app(app_dir, staged_app)
     print(f"[*] Private prefs root: {staged_app}")
 
@@ -625,10 +682,11 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
         else:
             # unstage_app, never rmtree: the staged app is full of junctions INTO THE REAL BUILD.
             unstage_app(staged_app)
-            try:
-                os.rmdir(staged_root)
-            except OSError:
-                pass
+            for leftover in (os.path.join(staged_root, "oolite.app"), staged_root):
+                try:
+                    os.rmdir(leftover)
+                except OSError:
+                    pass
 
 
 def parse_args(argv=None):
