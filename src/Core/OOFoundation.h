@@ -30,11 +30,7 @@ MA 02110-1301, USA.
  causing a warning in Clang. This lets us write #define FOO (1 && OOLITE_DEBUG)
  instead.
  */
-
 #pragma once
-
-#include <math.h>
-#include <stdbool.h>
 
 #ifdef NDEBUG
 #define OOLITE_DEBUG 0
@@ -61,6 +57,8 @@ MA 02110-1301, USA.
 #endif
 
 #include <assert.h>
+#include <math.h>
+#include <stdbool.h>
 
 #include "oofnd/objc/OOFoundationTypes.h"
 
@@ -77,6 +75,7 @@ MA 02110-1301, USA.
   (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
 
+#include <inttypes.h>
 #include <limits.h>  // to get UINT_MAX
 #include <stdint.h>
 

@@ -212,9 +212,9 @@ class OOEquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
   oo::PList _weaponInfo;          // a dictionary (empty by default)
   std::optional<std::string> _script;
   std::optional<std::string> _condition_script;
-  // The EquipmentInfo object (OOJSEquipmentInfo.mm), a weak reference: the JS
-  // object retains the type, and clearJSSelf() forgets it when it is finalized.
-  // Not an object until created (test with JS_IsObject()).
+  // The EquipmentInfo object (OOJSEquipmentInfo.cpp), a weak reference: the
+  // JS object retains the type, and clearJSSelf() forgets it when it is
+  // finalized. Not an object until created (test with JS_IsObject()).
   JSValue _jsSelf = JS_UNDEFINED;
 };
 

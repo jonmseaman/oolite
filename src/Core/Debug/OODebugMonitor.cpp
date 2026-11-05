@@ -83,8 +83,8 @@ void OODebugMonitor::init() {
 
     ::OOJavaScriptEngine* jsEng = OOJavaScriptEngine::sharedEngine();
 #if OOJSENGINE_MONITOR_SUPPORT
-    jsEng->setMonitor(
-        this);  // the C++ monitor interface; the engine borrows it
+    jsEng->setMonitor(this);  // the C++ monitor interface; the engine
+                              // borrows it
 #endif
 
     setUpDebugConsoleScript();
@@ -641,12 +641,10 @@ void OODebugMonitor::disconnectDebugger(
   }
 }
 
-#if OOLITE_SDL
 void OODebugMonitor::applicationWillTerminate() {
   oo::NotificationCenter::defaultCenter().post(
       kOODebugMonitorApplicationWillTerminateNotificationName, nullptr);
 }
-#endif
 
 void OODebugMonitor::applicationWillTerminate(
     const oo::Notification& /*notification*/) {
@@ -701,9 +699,7 @@ void OODebugMonitor::setUpDebugConsoleScript() {
 void OODebugMonitor::javaScriptEngineWillReset(
     const oo::Notification& /*notification*/) {
   _script = nullptr;
-  if (JS_IsObject(_jsSelf)) {
-    JS_FreeValue(OOJSAcquireContext(), _jsSelf);
-  }
+  if (JS_IsObject(_jsSelf)) JS_FreeValue(OOJSAcquireContext(), _jsSelf);
   _jsSelf = JS_UNDEFINED;
 }
 
@@ -793,16 +789,18 @@ oo::PList OODebugMonitor::normalizeConfigValue(const oo::PList& value,
 void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
                               JSContext* /*context*/,
                               const std::string& severity,
-                              const std::optional<std::string>& filePath,
+                              const std::optional<std::string>& file,
                               unsigned line, unsigned stackSkip,
                               bool showLocation, const std::string& message) {
   std::string colorKey;
   std::string prefix;
+  const std::string filePath = file.value_or("");
   std::optional<std::string> scriptLine;
   std::string formattedMessage;
   NSRange emphasisRange;
   const char* showKey = nullptr;
-  bool isWarning = (severity == "warning");
+
+  const bool isWarning = (severity == "warning");
 
   if (_debugger == nullptr) return;
 
@@ -834,15 +832,14 @@ void OODebugMonitor::jsEngine(::OOJavaScriptEngine* /*engine*/,
     formattedMessage += "\n    Active script: " + *scriptLine;
   }
 
-  if (showLocation && stackSkip == 0 && filePath.has_value() &&
-      !filePath->empty()) {
+  if (showLocation && stackSkip == 0 && !filePath.empty()) {
     // Append file name and line
     formattedMessage +=
         oo::str::format("\n    %s, line %u",
-                        oo::str::lastPathComponent(*filePath).c_str(), line);
+                        oo::str::lastPathComponent(filePath).c_str(), line);
 
     // Append source code
-    formattedMessage += ":\n    " + sourceCodeForFile(*filePath, line);
+    formattedMessage += ":\n    " + sourceCodeForFile(filePath, line);
   }
 
   appendJSConsoleLine(formattedMessage, colorKey, emphasisRange);
@@ -879,7 +876,7 @@ JSValue OODebugMonitor::jsValueInContext(JSContext* context) {
 }
 
 void OODebugMonitor::clearJSSelf(JSValueConst /*selfVal*/) {
-  // OOObject's -oo_clearJSSelf:, which the facade did not override: the console
+  // OOObject's -oo_clearJSSelf:, which #768 does not override: the console
   // object is kept (owned) until the engine resets.
 }
 

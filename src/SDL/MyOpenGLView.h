@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
 
 */
+
 #pragma once
 
 #include <SDL3/SDL_events.h>
@@ -391,8 +392,9 @@ class MyOpenGLView : public oo::RefCounted {
 
   NSSize firstScreen = {};
 
-  oo::Ref<OOOpenGLMatrixManager>
-      matrixManager;  // Mouse mode indicator (for mouse movement model)
+  oo::Ref<OOOpenGLMatrixManager> matrixManager;
+
+  // Mouse mode indicator (for mouse movement model)
   bool mouseInDeltaMode = {};
   float _mouseWheelDelta = {};
 

@@ -282,7 +282,7 @@ bool OOVisualEffectEntity::setUpOneSubentity(const oo::PList& subentDict) {
 }
 
 bool OOVisualEffectEntity::setUpOneFlasher(const oo::PList& subentDict) {
-  // The flasher's object is the nearest facade left.
+  // The flasher's object is the nearest façade left.
   Entity* flasher =
       oo::MadeEntity(OOFlasherEntity::flasherWithDictionary(subentDict));
   if (flasher != nullptr)
@@ -613,9 +613,9 @@ oo::PList OOVisualEffectEntity::effectInfoDictionary() {
 }
 
 // (SubEntityRelationship) a slightly misnamed test now things other than ships
-// can have subents The C++ entity: the members its object's messages forwarded
-// to (the virtual getIsVisualEffect() and setOwner(), which an Objective-C
-// entity's adapter sends on; nil's NO for none).
+// can have subents The C++ entity: the members its object's
+// messages forwarded to (the virtual getIsVisualEffect() and setOwner(), which
+// an Objective-C entity's adapter sends on; nil's NO for none).
 bool OOVisualEffectEntity::isShipWithSubEntityShip(Entity* other) {
   assert(getIsVisualEffect());
 

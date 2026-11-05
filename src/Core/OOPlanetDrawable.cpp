@@ -345,9 +345,7 @@ void OOPlanetDrawable::debugDrawNormals() {
 
   OODebugEndWireframe(state);
 }
-#endif
 
-#ifdef OO_DEBUG_MONITOR_ENABLED
 std::vector<oo::Ref<OOTexture>> OOPlanetDrawable::allTextures() {
   OOMaterial* material = this->material();
   return material != nullptr ? material->allTextures()

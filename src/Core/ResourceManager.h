@@ -62,8 +62,8 @@ inline constexpr std::string_view SCENARIO_OXP_DEFINITION_BYTAG = "tag:";
 inline constexpr std::string_view SCENARIO_OXP_DEFINITION_NOPLIST = "exc:";
 
 /*	Class methods over file-scope state: the class is never made, and every
- * member is static.
- */
+   member is static.
+*/
 class ResourceManager {
  public:
   ResourceManager() = delete;
@@ -206,8 +206,8 @@ class ResourceManager {
       const std::string& fileName, const std::optional<std::string>& folderName,
       std::map<std::string, oo::Ref<OOSound>, std::less<>>* ioCache,
       std::optional<std::string> key,
-      bool useCache);  // the class was always OOSound; borrowed: the cache
-                       // keeps it
+      bool useCache);  // the class was always OOSound; borrowed:
+                       // the cache keeps it
   static bool directoryExists(const std::string& inPath, bool inCreate);
   static bool checkCacheUpToDateForPaths(
       const std::vector<std::string>& searchPaths);

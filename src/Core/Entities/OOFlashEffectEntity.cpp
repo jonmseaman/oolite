@@ -77,9 +77,8 @@ void OOFlashEffectEntity::initLaserFlashWithPosition(HPVector pos, Vector vel,
   }
 }
 
-// The C++ entity: the
-// members -position, -velocity and -collisionRadius forwarded to; none answers
-// zero, as nil did.
+// The C++ entity: the members -position, -velocity and -collisionRadius
+// forwarded to; none answers zero, as nil did.
 oo::Ref<OOFlashEffectEntity> OOFlashEffectEntity::explosionFlashFromEntity(
     Entity* entity) {
   const oo::Ref<OOFlashEffectEntity> flash = oo::makeRef<OOFlashEffectEntity>();

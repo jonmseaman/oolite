@@ -167,7 +167,7 @@ void OOFlasherEntity::rescaleBy(GLfloat /*factor*/, bool /*writeToCache*/) {
      implementation requirements */
 }
 
-// The binding's bodies (OOJSFlasher.mm), which the facade forwarded to.
+// The binding's bodies (OOJSFlasher.mm), which the façade forwarded to.
 JSClassID OOFlasherEntity::jsClassID() { return ::JSFlasherClassID(); }
 
 std::optional<std::string> OOFlasherEntity::jsClassName() {

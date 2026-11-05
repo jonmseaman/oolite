@@ -39,7 +39,7 @@ typedef struct {
 enum { kExhaustFrameCount = 16 };
 
 /*	The ships make it with exhaustForShip() and hand it to Objective-C with
-   oo::NewEntityFacade, which wraps it in the root's facade. The engine's JS
+   oo::NewEntityFacade, which wraps it in the root's façade. The engine's JS
    questions reach it through the root's virtual members, an owner's
    OOSubEntity messages through cxx::OOSubEntityInterface, and the graphics
    reset manager through a C++ client in OOExhaustPlumeEntity.mm.

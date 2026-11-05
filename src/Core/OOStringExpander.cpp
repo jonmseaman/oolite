@@ -830,8 +830,7 @@ OOMaybeUnits ExpandStringKeySpecial(OOStringExpansionContext* context,
         "Special string expansion selector %s for [%s] is not implemented.",
         selector->c_str(), key.c_str());
 
-    // Called by name on the player's C++ part: a string
-    // result, as a PList.
+    // Called by name on the player's C++ part: a string result, as a PList.
     const oo::PList result = oo::CallEntityByName(PLAYER, *selector);
     if (!result.isNull()) {
       const std::string* string = result.getIf<std::string>();
@@ -1004,8 +1003,8 @@ OOMaybeUnits ExpandLegacyScriptSelectorKey(OOStringExpansionContext* context,
   const std::string* selector = LookUpLegacySelector(key);
 
   if (selector != nullptr) {
-    // Called by name on the player's C++ part: "%@" of the
-    // result, as [[result description]] gave it (nil stays nil).
+    // Called by name on the player's C++ part: "%@" of the result, as [[result
+    // description]] gave it (nil stays nil).
     const oo::PList result = oo::CallEntityByName(PLAYER, *selector);
     return UnitsFromOptional(
         !result.isNull() ? std::optional<std::string>(oo::DescriptionOf(result))

@@ -65,8 +65,8 @@ void OODebugTCPConsoleServiceInput(double timeout);
 
 class OODebugMonitor;
 
-/*	The connection is one non-blocking TCP socket, where it was a
-        Foundation host lookup and an input/output stream pair on the run loop.
+/*	The connection is one non-blocking TCP socket, where it was a Foundation
+   host lookup and an input/output stream pair on the run loop.
    _inStatus/_outStatus keep the two streams' status numbers (Foundation's
    stream-status values), which the connection-failure messages print;
    _pendingErrorCode is an error event the run loop would still have delivered

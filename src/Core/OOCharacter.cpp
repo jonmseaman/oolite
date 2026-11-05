@@ -24,8 +24,6 @@ MA 02110-1301, USA.
 
 #include "OOCharacter.h"
 
-#include <cinttypes>  // PRIu64
-
 #include "OOJSScript.h"
 #include "OOObjCPList.h"
 #include "OOStringExpander.h"

@@ -52,9 +52,8 @@ enum { kShaderModeOff, kShaderModeOn, kShaderModeUnknown };
 #endif
 
 #if OO_SHADERS
-/*	The dust shader's two uniforms read the dust's members.
-        The uniform holds the dust weakly: once the dust has gone it sets
-   nothing.
+/*	The dust shader's two uniforms read the dust's members. The uniform
+   holds the dust weakly: once the dust has gone it sets nothing.
 */
 namespace {
 

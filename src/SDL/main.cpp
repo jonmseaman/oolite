@@ -57,20 +57,15 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 
 namespace {
 // The controller lives to the end of the process and is never destroyed, as
-// upstream's GameController *controller was never released: the game exits with
-// exit(0) from inside it, and a namespace-scope oo::Ref would tear the universe
-// down during static destruction, after function-local statics such as
-// oo::log's logger have died.
+// upstream's GameController *controller was never released: the
+// game exits with exit(0) from inside it, and a namespace-scope oo::Ref would
+// tear the universe down during static destruction, after function-local
+// statics such as oo::log's logger have died.
 GameController* controller = nullptr;
 }  // namespace
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 uint32_t gDebugFlags = 0;
-#endif
-
-#ifndef STRINGIFY  // provided by GNUstep
-#define STRINGIFY_(s) #s
-#define STRINGIFY(s) STRINGIFY_(s)
 #endif
 
 // This macro is normally defined in the build command

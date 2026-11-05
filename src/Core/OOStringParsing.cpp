@@ -254,11 +254,12 @@ std::string cxx_OOStringFromDeciCredits(OOCreditsQuantity tenthsOfCredits,
     JSValue rval = JS_Call(context, method, global, 3, args);
     OOJSStopTimeLimiter();
 
-    if (JS_IsException(rval))
+    if (JS_IsException(rval)) {
       OOJSReportPendingException(context);
-    else
+    } else {
       // nullopt (was nil) for null or undefined
       result = cxx_OOStringFromJSValue(context, rval);
+    }
     JS_FreeValue(context, rval);
   } else {
     OOJSReportPendingException(context);

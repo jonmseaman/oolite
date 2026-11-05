@@ -163,15 +163,15 @@ void OOEntityByNameTyped(Entity* entity, OOEntityByNameValue& value) {
 /*	The root facade's own selectors that callObjC() lists and the by-name
    table does not, so callObjC() asks and calls an entity's C++ part for every
    name of its table. Each function is the facade method's body
-   (Entity+ObjCBridge.mm, and the cascade's deleted category), verbatim, with
-   the entity for the facade's own C++ entity, after a guard for no entity
-        (zero, as a message to nil answered; the calls never pass one); a name
-   whose result callObjC() cannot read (a string, a vector of objects, a matrix,
-   a high-precision vector, a bounding box: "cannot be called", or no result)
-   has no function. The answers are the root facade's -respondsToSelector:'s:
-   every entity but for the planet's shader selectors (a planet's part) and the
-   beacon protocol's (a ship's, an effect's or a waypoint's part). The entity
-   results (nextBeacon, prevBeacon, parentEntity, rootShipEntity) are the C++
+   (Entity+ObjCBridge.mm, and the cascade's category), verbatim, with the entity
+   for the facade's own C++ entity, after a guard for no entity (zero, as a
+   message to nil answered; the calls never pass one); a name whose result
+   callObjC() cannot read (a string, a vector of objects, a matrix, a
+   high-precision vector, a bounding box: "cannot be called", or no result) has
+   no function. The answers are the root facade's -respondsToSelector:'s: every
+   entity but for the planet's shader selectors (a planet's part) and the beacon
+   protocol's (a ship's, an effect's or a waypoint's part). The entity results
+        (nextBeacon, prevBeacon, parentEntity, rootShipEntity) are the C++
    entity: callObjC() makes its Object node, the same as the object's.
 */
 namespace {

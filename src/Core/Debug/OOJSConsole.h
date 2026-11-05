@@ -31,11 +31,11 @@ SOFTWARE.
 
 #pragma once
 
-#include "OOFoundation.h"
-class OODebugMonitor;  // C++: its Objective-C facade is deleted
-
 #include <quickjs.h>
 
+#include "OOFoundation.h"
+class OODebugMonitor;
+
 // Create the JS console object for the debug monitor. The caller owns the
-// result.
+// result (JS null on failure).
 JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor);

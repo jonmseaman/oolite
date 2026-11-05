@@ -2407,9 +2407,9 @@ void ShipEntity::scanForNearestShipMatchingPredicate(
   }
 
   if (function != nullptr) {
-    JSValue jsThis = OOJSEntityJSValue(
-        this, context);  // the ship's JS object, as
-                         // OOJSObjectFromNativeObject() made of its object
+    // The ship's JS object, as OOJSObjectFromNativeObject() made of its
+    // object. Owned.
+    JSValue jsThis = OOJSEntityJSValue(this, context);
     JSFunctionPredicateParameter param = {
         .context = context,
         .function = function->function(),  // Borrowed.

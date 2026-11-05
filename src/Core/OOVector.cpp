@@ -67,9 +67,8 @@ Vector OORandomUnitVector(void) {
   float m;
 
   do {
-    float x =
-        randf() -
-        0.5f;  // one draw per local, in the order Clang evaluates the arguments
+    float x = randf() - 0.5f;  // one draw per local, in the order Clang
+                               // evaluates the arguments
     float y = randf() - 0.5f;
     float z = randf() - 0.5f;
     v = make_vector(x, y, z);
@@ -86,9 +85,8 @@ Vector OOVectorRandomSpatial(OOScalar maxLength) {
   float m;
 
   do {
-    float x =
-        randf() -
-        0.5f;  // one draw per local, in the order Clang evaluates the arguments
+    float x = randf() - 0.5f;  // one draw per local, in the order Clang
+                               // evaluates the arguments
     float y = randf() - 0.5f;
     float z = randf() - 0.5f;
     v = make_vector(x, y, z);

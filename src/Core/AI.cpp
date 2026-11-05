@@ -102,7 +102,7 @@ void OOAIAutorelease(oo::Ref<AI> ai) {
 }
 
 /*	A deferred call's body calls the method the selector named, found in
-        kDeferredAIMethods by the name the by-name call used.
+   kDeferredAIMethods by the name the by-name call used.
 */
 namespace {
 

@@ -1059,8 +1059,7 @@ bool GuiDisplayGen::preloadGUITexture(const oo::PList& descriptor) {
 }
 
 oo::PList GuiDisplayGen::textureDescriptorFromJSValue(
-    JSValue value, JSContext* context,
-    const std::optional<std::string>& callerDescription) {
+    OOJSVal value, JSContext* context, const std::string& callerDescription) {
   OOJS_PROFILE_ENTER
 
   oo::PList result;
@@ -1090,10 +1089,9 @@ oo::PList GuiDisplayGen::textureDescriptorFromJSValue(
 
   // Start loading the texture, and return nil if it doesn't exist.
   if (!result.isNull() && !preloadGUITexture(result)) {
-    cxx_OOJSReportWarning(
-        context, "%s: texture \"%s\" could not be found.",
-        (callerDescription ? callerDescription->c_str() : "(null)"),
-        DescriptorName(result).value_or("(null)").c_str());
+    cxx_OOJSReportWarning(context, "%s: texture \"%s\" could not be found.",
+                          callerDescription.c_str(),
+                          DescriptorName(result).value_or("(null)").c_str());
     result = oo::PList();
   }
 

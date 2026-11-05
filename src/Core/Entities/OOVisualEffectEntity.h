@@ -38,7 +38,9 @@
 class OOMesh;
 #include "OOScript.h"  // oo::Ref<OOScript> members and results
 class OOColor;
-class OOFlasherEntity; /*	The effect definition and script_info are
+class OOFlasherEntity;
+
+/*	The effect definition and script_info are
         oo::PLists (script_info null where it was nil); the effect key and
    beacon strings are std::optional (nullopt where they were nil). The subentity
    list is nullopt until the first subentity is added and again after
@@ -99,7 +101,7 @@ class OOVisualEffectEntity
   std::vector<oo::EntityHold>
   effectSubEntityEnumerator();  // the visual-effect subentities' objects
   std::vector<oo::EntityHold>
-  flasherEnumerator();  // flasher subentities' objects (the nearest facade
+  flasherEnumerator();  // flasher subentities' objects (the nearest façade
                         // left), a snapshot
 
   void orientationChanged() override;
