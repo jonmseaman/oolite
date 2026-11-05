@@ -1,5 +1,5 @@
 /*
-OOJSDock.m (QuickJS-ng)
+OOJSDock.m
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -23,32 +23,47 @@ MA 02110-1301, USA.
 
 #include "OOJSDock.h"
 
+#include <cstring>
+
 #include "DockEntity.h"
-#include "EntityOOJavaScriptExtensions.h"
 #include "GameController.h"
 #include "OOJSEntity.h"
 #include "OOJSPlayer.h"
 #include "OOJSShip.h"
 #include "OOJavaScriptEngine.h"
 
+namespace {
 static JSClassID sDockClassID;
+}  // namespace
 
+namespace {
 static bool JSDockGetDockEntity(JSContext* context, JSValueConst stationObj,
                                 DockEntity** outEntity);
+}  // namespace
+namespace {
 static bool JSDockGetShipEntity(JSContext* context, JSValueConst shipObj,
                                 ShipEntity** outEntity);
+}  // namespace
 
+namespace {
 static JSValue DockIsQueued(OOJS_NATIVE_ARGS);
+}  // namespace
 
+namespace {
 static JSValue DockGetProperty(OOJS_GETTER_ARGS);
+}  // namespace
+namespace {
 static JSValue DockSetProperty(OOJS_SETTER_ARGS);
+}  // namespace
 
+namespace {
 static JSClassDef sDockClass = {
     .class_name = "Dock",
-    .finalizer = OOJSCxxObjectWrapperFinalize,
+    .finalizer = OOJSObjectWrapperFinalize,
 };
+}  // namespace
 
-enum {
+enum : std::uint8_t {
   // Property IDs
   kDock_allowsDocking,
   kDock_disallowedDockingCollides,
@@ -57,6 +72,7 @@ enum {
   kDock_launchingQueueLength
 };
 
+namespace {
 static const JSCFunctionListEntry sDockProperties[] = {
     // JS name, getter, setter, ID
     OOJS_PROPERTY_RW("allowsDocking", DockGetProperty, DockSetProperty,
@@ -70,11 +86,14 @@ static const JSCFunctionListEntry sDockProperties[] = {
     OOJS_PROPERTY_RO("launchingQueueLength", DockGetProperty,
                      kDock_launchingQueueLength),
 };
+}  // namespace
 
+namespace {
 static const JSCFunctionListEntry sDockMethods[] = {
     // JS name, min args, function
     JS_CFUNC_DEF("isQueued", 1, DockIsQueued),
 };
+}  // namespace
 
 void InitOOJSDock(JSContext* context, JSValueConst global) {
   OOJSRegisterClass(&sDockClassID, &sDockClass);
@@ -85,7 +104,7 @@ void InitOOJSDock(JSContext* context, JSValueConst global) {
   OOJSInitClass(context, global, sDockClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sDockProperties,
                 OOJS_COUNT(sDockProperties), sDockMethods,
-                OOJS_COUNT(sDockMethods), NULL, 0);
+                OOJS_COUNT(sDockMethods), nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sDockClassID, OOJSEntityObjectConverter);
@@ -94,10 +113,7 @@ void InitOOJSDock(JSContext* context, JSValueConst global) {
 
 JSClassID JSDockClassID(void) { return sDockClassID; }
 
-/*	As in the SpiderMonkey version, these return false without an exception
-   for stale references (nil entity) and for entities of the wrong native class;
-        OOJSEntityGetEntity() throws if the object is not an Entity at all.
-*/
+namespace {
 static bool JSDockGetDockEntity(JSContext* context, JSValueConst dockObj,
                                 DockEntity** outEntity) {
   OOJS_PROFILE_ENTER
@@ -120,7 +136,9 @@ static bool JSDockGetDockEntity(JSContext* context, JSValueConst dockObj,
 
   OOJS_PROFILE_EXIT
 }
+}  // namespace
 
+namespace {
 static bool JSDockGetShipEntity(JSContext* context, JSValueConst shipObj,
                                 ShipEntity** outEntity) {
   OOJS_PROFILE_ENTER
@@ -141,6 +159,7 @@ static bool JSDockGetShipEntity(JSContext* context, JSValueConst shipObj,
 
   OOJS_PROFILE_EXIT
 }
+}  // namespace
 
 // The bodies of DockEntity's class questions, which DockEntity's overrides
 // call.
@@ -148,97 +167,92 @@ std::optional<std::string> OOJSDockJSClassName(void) {
   return std::string("Dock");
 }
 
+namespace {
 static JSValue DockGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   DockEntity* entity = nullptr;
 
-  if (!JSDockGetDockEntity(context, thisObj, &entity))
+  if (!JSDockGetDockEntity(context, OOJS_THIS, &entity))
     return OOJSNativeFailure(context);
-  if (entity == nullptr) {
-    return JS_UNDEFINED;
-  }
+  if (entity == nullptr) return JS_UNDEFINED;
 
   switch (magic) {
     case kDock_allowsDocking:
-      return OOJSValueFromBOOL(
-          (entity != nullptr ? entity->allowsDocking() : false));
+      return OOJSValueFromBOOL(entity->allowsDocking());
 
     case kDock_disallowedDockingCollides:
-      return OOJSValueFromBOOL(
-          (entity != nullptr ? entity->disallowedDockingCollides() : false));
+      return OOJSValueFromBOOL(entity->disallowedDockingCollides());
 
     case kDock_allowsLaunching:
-      return OOJSValueFromBOOL(
-          (entity != nullptr ? entity->allowsLaunching() : false));
+      return OOJSValueFromBOOL(entity->allowsLaunching());
 
     case kDock_dockingQueueLength:
-      return JS_NewNumber(
-          context,
-          (entity != nullptr ? entity->countOfShipsInDockingQueue() : 0));
+      return JS_NewNumber(context, entity->countOfShipsInDockingQueue());
 
     case kDock_launchingQueueLength:
-      return JS_NewNumber(
-          context,
-          (entity != nullptr ? entity->countOfShipsInLaunchQueue() : 0));
+      return JS_NewNumber(context, entity->countOfShipsInLaunchQueue());
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sDockProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic, sDockProperties,
                                     OOJS_COUNT(sDockProperties));
       return OOJSNativeFailure(context);
   }
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue DockSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   DockEntity* entity = nullptr;
   int bValue;
-  //	int32_t						iValue;
 
-  if (!JSDockGetDockEntity(context, thisObj, &entity))
+  if (!JSDockGetDockEntity(context, OOJS_THIS, &entity))
     return OOJSNativeFailure(context);
   if (entity == nullptr) return JS_UNDEFINED;
 
   switch (magic) {
     case kDock_allowsDocking:
       if ((bValue = JS_ToBool(context, value)) >= 0) {
-        if (entity != nullptr) entity->setAllowsDocking(bValue);
+        entity->setAllowsDocking(bValue != 0);
         return JS_UNDEFINED;
       }
       break;
 
     case kDock_allowsLaunching:
       if ((bValue = JS_ToBool(context, value)) >= 0) {
-        if (entity != nullptr) entity->setAllowsLaunching(bValue);
+        entity->setAllowsLaunching(bValue != 0);
         return JS_UNDEFINED;
       }
       break;
 
     case kDock_disallowedDockingCollides:
       if ((bValue = JS_ToBool(context, value)) >= 0) {
-        if (entity != nullptr) entity->setDisallowedDockingCollides(bValue);
+        entity->setDisallowedDockingCollides(bValue != 0);
         return JS_UNDEFINED;
       }
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sDockProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic, sDockProperties,
                                     OOJS_COUNT(sDockProperties));
       return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sDockProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sDockProperties,
                              OOJS_COUNT(sDockProperties), value);
   return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // *** Methods ***
 
+namespace {
 static JSValue DockIsQueued(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -269,3 +283,4 @@ static JSValue DockIsQueued(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace

@@ -1,6 +1,6 @@
 /*
 
-OOJSScript.h (QuickJS-ng)
+OOJSScript.h
 
 JavaScript support for Oolite
 Copyright (C) 2007-2013 David Taylor and Jens Ayton.

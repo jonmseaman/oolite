@@ -1,6 +1,6 @@
 /*
 
-OOJSSystem.m (QuickJS-ng)
+ OOJSSystem.mm
 
 
  Oolite
@@ -25,8 +25,7 @@ OOJSSystem.m (QuickJS-ng)
 
 #include "OOJSSystem.h"
 
-#include <algorithm>
-#include <set>
+#include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToJSString.h"
@@ -43,7 +42,7 @@ OOJSSystem.m (QuickJS-ng)
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
 #include "OOPlanetEntity.h"
-#include "OOSunEntity.h"  // the sun is C++
+#include "OOSunEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "PlayerEntityScriptMethods.h"
 #include "ShipEntity.h"
@@ -112,7 +111,7 @@ static JSClassDef sSystemClass = {
     .class_name = "System",
 };
 
-enum {
+enum : std::uint8_t {
   // Property IDs
   kSystem_allDemoShips,           // demo ships, array of Ship, read-only
   kSystem_allShips,               // ships in system, array of Ship, read-only
@@ -253,7 +252,7 @@ void InitOOJSSystem(JSContext* context, JSValueConst global) {
                 OOJS_COUNT(sSystemStaticMethods));
 
   // Create system object as a property of the global object.
-  JSValue systemObject = JS_NewObjectClass(context, (int)sSystemClassID);
+  JSValue systemObject = JS_NewObjectClass(context, sSystemClassID);
   JS_DefinePropertyValueStr(context, global, "system", systemObject,
                             OOJS_PROP_READONLY);
 }
@@ -466,7 +465,7 @@ static JSValue SystemGetProperty(OOJS_GETTER_ARGS) {
               context, systemData.get<int>(std::string(KEY_PRODUCTIVITY)));
 
         default:
-          OOJSReportBadPropertySelector(context, thisObj, magic,
+          OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                         sSystemProperties,
                                         OOJS_COUNT(sSystemProperties));
           return OOJSNativeFailure(context);
@@ -504,13 +503,11 @@ static JSValue SystemGetProperty(OOJS_GETTER_ARGS) {
           return JS_NewInt32(context, -1);
 
         case kSystem_population:
-          return JS_NewInt32(context, 0);
-
         case kSystem_productivity:
           return JS_NewInt32(context, 0);
 
         default:
-          OOJSReportBadPropertySelector(context, thisObj, magic,
+          OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                         sSystemProperties,
                                         OOJS_COUNT(sSystemProperties));
           return OOJSNativeFailure(context);
@@ -671,12 +668,13 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sSystemProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sSystemProperties,
                                     OOJS_COUNT(sSystemProperties));
       return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sSystemProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sSystemProperties,
                              OOJS_COUNT(sSystemProperties), value);
   return OOJSNativeFailure(context);
 
@@ -989,7 +987,7 @@ static JSValue SystemEntitiesWithScanClass(OOJS_NATIVE_ARGS) {
 static JSValue SystemFilteredEntities(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  JSValue jsThis = JS_UNDEFINED;
+  JSValue jsThis = JS_UNDEFINED;  // owned
   JSValueConst predicate;
   Entity* relativeTo = nullptr;  // the C++ entity
   double range = -1;
@@ -1083,13 +1081,13 @@ static JSValue SystemLocationFromCode(OOJS_NATIVE_ARGS) {
 }
 
 // addShips(role : String, count : Number [, position: Vector [, radius:
-// Number]]) : Array of Ship
+// Number]]) : Array
 static JSValue SystemAddShips(OOJS_NATIVE_ARGS) {
   return SystemAddShipsOrGroup(context, argc, OOJS_ARGV, false);
 }
 
 // addGroup(role : String, count : Number [, position: Vector [, radius:
-// Number]]) : ShipGroup
+// Number]]) : Array
 static JSValue SystemAddGroup(OOJS_NATIVE_ARGS) {
   return SystemAddShipsOrGroup(context, argc, OOJS_ARGV, true);
 }
@@ -1114,6 +1112,7 @@ static JSValue SystemAddGroupToRoute(OOJS_NATIVE_ARGS) {
 // legacy_addShips(role : String, count : Number)
 static JSValue SystemLegacyAddShips(OOJS_NATIVE_ARGS) {
   cxx_OOStandardsDeprecated("system.legacy_addShips() is deprecated");
+
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> role;
@@ -1143,6 +1142,7 @@ static JSValue SystemLegacyAddShips(OOJS_NATIVE_ARGS) {
 // legacy_addSystemShips(role : String, count : Number, location : Number)
 static JSValue SystemLegacyAddSystemShips(OOJS_NATIVE_ARGS) {
   cxx_OOStandardsDeprecated("system.legacy_addSystemShips() is deprecated");
+
   OOJS_NATIVE_ENTER(context)
 
   double position;
@@ -1176,6 +1176,7 @@ static JSValue SystemLegacyAddSystemShips(OOJS_NATIVE_ARGS) {
 // : vectorExpression)
 static JSValue SystemLegacyAddShipsAt(OOJS_NATIVE_ARGS) {
   cxx_OOStandardsDeprecated("system.legacy_addShipsAt() is deprecated");
+
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1216,6 +1217,7 @@ static JSValue SystemLegacyAddShipsAt(OOJS_NATIVE_ARGS) {
 static JSValue SystemLegacyAddShipsAtPrecisely(OOJS_NATIVE_ARGS) {
   cxx_OOStandardsDeprecated(
       "system.legacy_addShipsAtPrecisely() is deprecated");
+
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1256,6 +1258,7 @@ static JSValue SystemLegacyAddShipsAtPrecisely(OOJS_NATIVE_ARGS) {
 static JSValue SystemLegacyAddShipsWithinRadius(OOJS_NATIVE_ARGS) {
   cxx_OOStandardsDeprecated(
       "system.legacy_addShipsWithinRadius() is deprecated");
+
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -1298,6 +1301,7 @@ static JSValue SystemLegacyAddShipsWithinRadius(OOJS_NATIVE_ARGS) {
 // legacy_spawnShip(key : string)
 static JSValue SystemLegacySpawnShip(OOJS_NATIVE_ARGS) {
   cxx_OOStandardsDeprecated("system.legacy_spawnShip() is deprecated");
+
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
@@ -1369,7 +1373,7 @@ static JSValue SystemStaticSystemIDForName(OOJS_NATIVE_ARGS) {
 
   // As with INT_TO_JSVAL(), the unsigned result is reinterpreted as signed (so
   // not found is -1).
-  OOJS_RETURN_INT((int32_t)result);
+  OOJS_RETURN_INT(static_cast<int32_t>(result));
 
   OOJS_NATIVE_EXIT
 }
@@ -1448,8 +1452,8 @@ static JSValue SystemAddVisualEffect(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-// Get a property of a settings object. As before, a failed get is treated like
-// a missing property.
+// Get a property of a settings object, owned by the caller. As before, a
+// failed get is treated like a missing property.
 static JSValue GetParam(JSContext* context, JSValueConst object,
                         const char* key) {
   JSValue value = JS_GetPropertyStr(context, object, key);
@@ -1465,7 +1469,7 @@ static JSValue SystemSetPopulator(OOJS_NATIVE_ARGS) {
 
   std::optional<std::string> key;
   oo::PList settings;
-  JSValue params = JS_UNDEFINED;
+  JSValue params = JS_UNDEFINED;  // owned
 
   if (argc < 1) {
     cxx_OOJSReportBadArguments(context, "System", "setPopulator", MIN(argc, 0),
@@ -1515,8 +1519,8 @@ static JSValue SystemSetPopulator(OOJS_NATIVE_ARGS) {
     populator->setCallback(callback);  // Takes its own reference.
     JS_FreeValue(context, callback);
 
-    // (The SpiderMonkey version converted argv[1] directly; params is the same
-    // object for any object argument.)
+    // (The SpiderMonkey version converted argv[1] directly; params is the
+    // same object for any object argument.)
     settings = cxx_OOJSPListFromJSObject(context, params);
     oo::PList::Dict* settingsDict =
         settings.getIf<oo::PList::Dict>();  // messages to a nil dictionary did
@@ -1631,7 +1635,7 @@ static JSValue SystemAddShipsOrGroup(JSContext* context, int argc,
   int32_t count = 0;
   int consumed = 0;
   HPVector where;
-  double radius = (double)NSNotFound;  // a negative value means
+  double radius = static_cast<double>(NSNotFound);  // a negative value means
   oo::PList result;
 
   std::string func = isGroup ? "addGroup" : "addShips";
@@ -1711,8 +1715,8 @@ static JSValue SystemAddShipsOrGroupToRoute(JSContext* context, int argc,
   static const std::set<std::string> validRoutes = {"wp", "pw", "ws",
                                                     "sw", "sp", "ps"};
   int32_t count = 0;
-  double where =
-      (double)NSNotFound;  // a negative value means random positioning!
+  double where = static_cast<double>(
+      NSNotFound);  // a negative value means random positioning!
   oo::PList result;
 
   std::string func = isGroup ? "addGroup" : "addShips";
@@ -1845,7 +1849,7 @@ static std::vector<oo::EntityHold> FindJSVisibleEntities(
   }
   return result;  // empty for no matches, as the empty array was
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_VAL(std::vector<oo::EntityHold>())
 }
 
 static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate,
@@ -1857,7 +1861,7 @@ static std::vector<oo::EntityHold> FindShips(EntityFilterPredicate predicate,
                                              parameter};
   return FindJSVisibleEntities(ANDPredicate, &param, relativeTo, range);
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_VAL(std::vector<oo::EntityHold>())
 }
 
 static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
@@ -1879,5 +1883,5 @@ static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
   else
     return OOOrderedSame;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_VAL(OOOrderedSame)
 }

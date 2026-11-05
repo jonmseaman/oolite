@@ -1,6 +1,6 @@
 /*
 
-OOJSWaypoint.h (QuickJS-ng)
+OOJSWaypoint.h
 
 JavaScript proxy for OOWaypointEntities.
 
@@ -39,7 +39,8 @@ JSClassID JSWaypointClassID(void);
 
 /*	The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the
    engine reaches through the root's JS members: the C++ class's overrides call
-   these. Its JS class is JSWaypointClassID().
+   these.
+   Its JS class is JSWaypointClassID() (#768's -oo_jsClassID).
 */
 std::optional<std::string> OOJSWaypointJSClassName(void);
 bool OOJSWaypointIsVisibleToScripts(void);

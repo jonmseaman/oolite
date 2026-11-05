@@ -1,6 +1,6 @@
 /*
 
-OOJSFont.h (QuickJS-ng)
+OOJSFont.h
 
 JavaScript interface for introspecting fonts. Well, the font. Designed so that
 expanding to multiple font support would be reasonably elegant from the JS

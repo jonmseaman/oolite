@@ -27,14 +27,15 @@ MA 02110-1301, USA.
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
 #include "OOJSSpecialFunctions.h"
 
+#include "OOJSEngineCore.h"
+
 static JSValue SpecialJSWarning(OOJS_NATIVE_ARGS);
 #ifdef OO_DEBUG_MONITOR_ENABLED
 static JSValue SpecialMarkConsoleEntryPoint(OOJS_NATIVE_ARGS);
 #endif
 
 static const JSCFunctionListEntry sSpecialFunctionsMethods[] = {
-    // JS name					Function
-    // min args
+    // JS name					min args	Function
     JS_CFUNC_DEF("jsWarning", 1, SpecialJSWarning),
 #ifdef OO_DEBUG_MONITOR_ENABLED
     JS_CFUNC_DEF("markConsoleEntryPoint", 0, SpecialMarkConsoleEntryPoint),
@@ -84,7 +85,7 @@ static JSValue SpecialJSWarning(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED

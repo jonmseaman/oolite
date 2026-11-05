@@ -1,6 +1,6 @@
 /*
 
-OOJSShip.h (QuickJS-ng)
+OOJSShip.h
 
 JavaScript proxy for ShipEntities.
 
@@ -21,6 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
+
 */
 
 #pragma once
@@ -29,8 +30,10 @@ MA 02110-1301, USA.
 
 #include "OOFoundation.h"
 
-class ShipEntity;  // C++
+class ShipEntity;
 
 void InitOOJSShip(JSContext* context, JSValueConst global);
 
+// (SpiderMonkey's JSShipPrototype() is no longer needed; use
+// JS_GetClassProto(context, JSShipClassID()).)
 JSClassID JSShipClassID(void);

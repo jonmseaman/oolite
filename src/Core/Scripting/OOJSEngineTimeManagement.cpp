@@ -27,38 +27,33 @@ SOFTWARE.
 
 #include "OOJSEngineTimeManagement.h"
 
-#include "OOObjCPList.h"
+#include <algorithm>
+#include <unordered_map>
+
+#include "OOJavaScriptEngine.h"
+#include "OOLoggingExtended.h"
+#include "OOProfilingStopwatch.h"
 #include "oofnd/Log.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 
-/*	The SpiderMonkey version of this file implemented the time limiter
-        (with a watchdog thread that triggered SpiderMonkey's operation
-        callback) and the JavaScript profiler.
-
-        With QuickJS, the time limiter is implemented in OOJavaScriptEngine.m on
-        top of QuickJS's interrupt handler, which QuickJS polls while running
-        JavaScript, so neither the watchdog thread nor the operation callback is
-        needed.
-
-        The profiler is the SpiderMonkey one without MOZ_TRACE_JSCALLS support:
-        only natives are profiled.
-*/
+// The time limiter is in OOJavaScriptEngine.cpp, as #768 has it.
 
 void OOJSTimeManagementInit(OOJavaScriptEngine* /*engine*/,
-                            JSRuntime* /*runtime*/) {
-  // The interrupt handler is installed by -[OOJavaScriptEngine init].
-}
+                            JSRuntime* /*runtime*/) {}
 
 #if OOJS_PROFILE
+
+// Only native functions are profiled: QuickJS has no function call hook (as in
+// SpiderMonkey builds without MOZ_TRACE_JSCALLS).
 
 namespace {
 static bool sProfiling = false;
 static bool sTracing = false;
 }  // namespace
 static OOJSProfileStackFrame* sProfileStack = NULL;
-// Profile key (native name or JS function, by pointer) -> entry, retained.
+// Profile key (the native's name, by pointer) -> entry, retained.
 namespace {
 static std::unordered_map<const void*, oo::Ref<OOTimeProfileEntry>>*
     sProfileInfo;
@@ -167,18 +162,11 @@ void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function) {
 void OOJSProfileExit(OOJSProfileStackFrame* frame) {
   if (EXPECT(!sProfiling)) return;
 
-  /*	A frame entered before profiling started (such as the console's
-          profile() itself) is not on the profile stack.
-  */
-  OOJSProfileStackFrame* search = sProfileStack;
-  while (search != NULL && search != frame) search = search->back;
-  if (search == NULL) return;
-
   OOHighResTimeValue now = OOGetHighResTime();
   {
     bool done = false;
 
-    // Pop any frames above this one, as for a native that threw.
+    // Frames of natives that exited by exception are unwound here too.
     for (;;) {
       assert(sProfileStack != NULL);
 
@@ -193,6 +181,7 @@ void OOJSProfileExit(OOJSProfileStackFrame* frame) {
   OOHighResTimeValue end = OOGetHighResTime();
   double currentOverhead = OOHighResTimeDeltaInSeconds(now, end);
   sProfilerOverhead += currentOverhead;
+
   OOJSExcludeTimeFromLimiter(currentOverhead);
 
   OODisposeHighResTime(now);
@@ -243,6 +232,9 @@ std::optional<std::string> OOTimeProfile::description() {
         "\n                                                        NAME  T  "
         "COUNT    TOTAL     SELF  TOTAL%   SELF%  SELFMAX";
     for (i = 0; i < count; i++) {
+      //	[result appendFormat:@"\n    %@", [_profileEntries
+      // objectAtIndex:i]];
+
       OOTimeProfileEntry* entry = profileEntries[i].get();
 
       double totalPc = entry->totalTimeSum() * 100.0 / totalTime;
@@ -297,7 +289,8 @@ JSValue OOTimeProfile::oo_jsValueInContext(JSContext* context) {
 }
 
 oo::PList OOTimeProfile::propertyListRepresentation() {
-  // "profiles" holds each entry's own property list.
+  // "profiles" holds each entry's own property list, which is what converting
+  // the entry to JavaScript gave.
   oo::PList::Array profiles;
   profiles.reserve(_profileEntries.size());
   for (const auto& entry : _profileEntries)

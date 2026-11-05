@@ -9,8 +9,8 @@ this file describes how existing OXP scripts are kept working.
 QuickJS-ng is built from source as a Meson subproject
 (`subprojects/quickjs-ng.wrap`), with Oolite's patch from
 `subprojects/packagefiles/quickjs-ng/` applied. The bundled copy is always
-used, even if a system `quickjs-ng` is installed (`force_fallback_for` in the
-top-level `meson.build`), because an unpatched build changes behaviour OXPs rely
+used, even if a system `quickjs-ng` is installed (`src/meson.build` calls
+`subproject()` directly), because an unpatched build changes behaviour OXPs rely
 on. The flatpak manifest provides the same source and patch, since
 flatpak-builder has no network access; update both when changing the version.
 

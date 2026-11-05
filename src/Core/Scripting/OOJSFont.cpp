@@ -1,6 +1,6 @@
 /*
 
-OOJSFont.m (QuickJS-ng)
+OOJSFont.mm
 
 
 Copyright (C) 2011-2013 Jens Ayton
@@ -35,12 +35,15 @@ SOFTWARE.
 #include "OOJSEngineCore.h"
 #include "OOStringWidth.h"
 
-static JSValue FontMeasureString(OOJS_NATIVE_ARGS);
+namespace {
+JSValue FontMeasureString(OOJS_NATIVE_ARGS);
+}  // namespace
 
 // MARK: Public
 
 void InitOOJSFont(JSContext* context, JSValueConst global) {
   JSValue fontObject = JS_NewObject(context);
+  // JS_DefinePropertyValueStr() takes ownership of the value it defines.
   JS_DefinePropertyValueStr(
       context, fontObject, "measureString",
       JS_NewCFunction(context, FontMeasureString, "measureString", 1),
@@ -51,7 +54,8 @@ void InitOOJSFont(JSContext* context, JSValueConst global) {
 
 // MARK: Methods
 
-static JSValue FontMeasureString(OOJS_NATIVE_ARGS) {
+namespace {
+JSValue FontMeasureString(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   if (EXPECT_NOT(argc < 1) || JS_IsUndefined(OOJS_ARGV[0])) {
@@ -68,3 +72,4 @@ static JSValue FontMeasureString(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace

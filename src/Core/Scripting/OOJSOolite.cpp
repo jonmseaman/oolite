@@ -27,6 +27,8 @@ MA 02110-1301, USA.
 
 #include "OOJSOolite.h"
 
+#include <cstring>
+
 #include "MyOpenGLView.h"
 #include "OOConstToString.h"
 #include "OOJSPlayer.h"
@@ -37,9 +39,6 @@ MA 02110-1301, USA.
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
-
-static JSValue OoliteGetProperty(OOJS_GETTER_ARGS);
-static JSValue OoliteSetProperty(OOJS_SETTER_ARGS);
 
 namespace {
 
@@ -64,9 +63,16 @@ std::optional<std::string> OoliteInfoString(std::string_view key) {
 
 }  // namespace
 
+static JSValue OoliteGetProperty(OOJS_GETTER_ARGS);
+static JSValue OoliteSetProperty(OOJS_SETTER_ARGS);
+
+namespace {
 static std::optional<std::string> VersionString(void);
+}  // namespace
+namespace {
 static std::vector<unsigned> VersionComponents(void);
 static unsigned UnsignedIntValue(const oo::PList& number);
+}  // namespace
 
 static JSValue OoliteCompareVersion(OOJS_NATIVE_ARGS);
 
@@ -82,7 +88,7 @@ static JSClassDef sOoliteClass = {
     .class_name = "Oolite",
 };
 
-enum {
+enum : std::uint8_t {
   // Property IDs
   kOolite_version,          // version number components, array, read-only
   kOolite_versionString,    // version number as string, string, read-only
@@ -127,8 +133,7 @@ static const JSCFunctionListEntry sOoliteProperties[] = {
 };
 
 static const JSCFunctionListEntry sOoliteMethods[] = {
-    // JS name					Function
-    // min args
+    // JS name					min args	Function
     JS_CFUNC_DEF("compareVersion", 1, OoliteCompareVersion),
 };
 
@@ -232,7 +237,8 @@ static JSValue OoliteGetProperty(OOJS_GETTER_ARGS) {
 #endif
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sOoliteProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sOoliteProperties,
                                     OOJS_COUNT(sOoliteProperties));
       return JS_EXCEPTION;
   }
@@ -312,7 +318,8 @@ static JSValue OoliteSetProperty(OOJS_SETTER_ARGS) {
 #endif
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sOoliteProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sOoliteProperties,
                                     OOJS_COUNT(sOoliteProperties));
       return JS_EXCEPTION;
   }
@@ -320,17 +327,20 @@ static JSValue OoliteSetProperty(OOJS_SETTER_ARGS) {
   // A failed conversion may have left an exception pending; report the bad
   // value instead, as before.
   if (JS_HasException(context)) JS_FreeValue(context, JS_GetException(context));
-  OOJSReportBadPropertyValue(context, thisObj, magic, sOoliteProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sOoliteProperties,
                              OOJS_COUNT(sOoliteProperties), value);
   return JS_EXCEPTION;
 
   OOJS_NATIVE_EXIT
 }
 
+namespace {
 static std::optional<std::string> VersionString(void) {
   return OoliteInfoString("CFBundleVersion");
 }
+}  // namespace
 
+namespace {
 static std::vector<unsigned> VersionComponents(void) {
   const std::optional<std::string> version = VersionString();
   if (!version.has_value())
@@ -346,6 +356,7 @@ static unsigned UnsignedIntValue(const oo::PList& number) {
     return static_cast<unsigned>(integer->value);
   return static_cast<unsigned>(*number.getIf<double>());
 }
+}  // namespace
 
 /*	oolite.compareVersion(versionSpec) : Number
         returns -1 if the current version of Oolite is less than versionSpec, 0

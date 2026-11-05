@@ -1,6 +1,6 @@
 /*
 
-OOJSPlayer.m (QuickJS-ng)
+OOJSPlayer.h
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 #include "OOJSPlayer.h"
 
+#include <cstring>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToString.h"
 #include "OOFunctionAttributes.h"
@@ -40,23 +42,25 @@ MA 02110-1301, USA.
 
 /*
         The Player class is a static JSClassDef registered with
-        OOJSRegisterClass(); JSPlayerClassID() is its class ID. The global
-        player object has no private data, as before. The global object owns the
-        only reference to it (a read-only, permanent property), so
-        JSPlayerObject() looks it up there instead of keeping a reference that
-        would have to be dropped on engine reset (#768).
+   OOJSRegisterClass(); JSPlayerClassID() is its class ID. The global player
+   object has no private data, as before. The global object owns the only
+   reference to it (a read-only, permanent property), so JSPlayerObject() looks
+   it up there instead of keeping a reference that would have to be dropped on
+   engine reset (#768).
 */
 
+namespace {
 static JSClassID sPlayerClassID;
+}  // namespace
 
-static JSClassDef sPlayerClass = {
-    .class_name = "Player",
-    .finalizer = OOJSObjectWrapperFinalize,
-};
-
+namespace {
 static JSValue PlayerGetProperty(OOJS_GETTER_ARGS);
+}  // namespace
+namespace {
 static JSValue PlayerSetProperty(OOJS_SETTER_ARGS);
+}  // namespace
 
+namespace {
 static JSValue PlayerAddMessageToArrivalReport(OOJS_NATIVE_ARGS);
 static JSValue PlayerAudioMessage(OOJS_NATIVE_ARGS);
 static JSValue PlayerCommsMessage(OOJS_NATIVE_ARGS);
@@ -72,8 +76,16 @@ static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS);
 static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS);
 static JSValue PlayerSetPlayerRole(OOJS_NATIVE_ARGS);
 static JSValue PlayerStopAudioMessage(OOJS_NATIVE_ARGS);
+}  // namespace
 
-enum {
+namespace {
+static JSClassDef sPlayerClass = {
+    .class_name = "Player",
+    .finalizer = OOJSObjectWrapperFinalize,
+};
+}  // namespace
+
+enum : std::uint8_t {
   // Property IDs
   kPlayer_alertAltitude,     // low altitude alert flag, boolean, read-only
   kPlayer_alertCondition,    // alert level, integer, read-only
@@ -107,6 +119,7 @@ enum {
   kPlayer_trumbleCount,                // number of trumbles, integer, read-only
 };
 
+namespace {
 static const JSCFunctionListEntry sPlayerProperties[] = {
     // JS name, getter, setter, ID
     OOJS_PROPERTY_RO("alertAltitude", PlayerGetProperty, kPlayer_alertAltitude),
@@ -147,7 +160,9 @@ static const JSCFunctionListEntry sPlayerProperties[] = {
                      kPlayer_score),
     OOJS_PROPERTY_RO("trumbleCount", PlayerGetProperty, kPlayer_trumbleCount),
 };
+}  // namespace
 
+namespace {
 static const JSCFunctionListEntry sPlayerMethods[] = {
     // JS name, min args, function
     JS_CFUNC_DEF("addMessageToArrivalReport", 1,
@@ -173,13 +188,16 @@ static const JSCFunctionListEntry sPlayerMethods[] = {
     JS_CFUNC_DEF("setPlayerRole", 1, PlayerSetPlayerRole),
     JS_CFUNC_DEF("stopAudioMessage", 0, PlayerStopAudioMessage),
 };
+}  // namespace
+
+// *** Public ***
 
 void InitOOJSPlayer(JSContext* context, JSValueConst global) {
   OOJSRegisterClass(&sPlayerClassID, &sPlayerClass);
   OOJSInitClass(context, global, sPlayerClassID, JS_UNDEFINED,
                 OOJSUnconstructableConstruct, 0, sPlayerProperties,
                 OOJS_COUNT(sPlayerProperties), sPlayerMethods,
-                OOJS_COUNT(sPlayerMethods), NULL, 0);
+                OOJS_COUNT(sPlayerMethods), nullptr, 0);
   OOJSRegisterObjectConverter(sPlayerClassID, OOJSBasicPrivateObjectConverter);
 
   /*	Create player object as a property of the global object. As before, it
@@ -190,14 +208,14 @@ void InitOOJSPlayer(JSContext* context, JSValueConst global) {
   */
   JSValue playerObject = JS_NewObjectClass(context, (int)sPlayerClassID);
   JS_DefinePropertyValueStr(context, global, "player", playerObject,
-                            OOJS_PROP_READONLY);
+                            OOJS_PROP_READONLY);  // consumes playerObject
 }
 
 JSClassID JSPlayerClassID(void) { return sPlayerClassID; }
 
 JSValue JSPlayerObject(void) {
   JSContext* context = OOJSAcquireContext();
-  // Not -[OOJavaScriptEngine globalObject]: this is used while the engine is
+  // Not OOJavaScriptEngine::globalObject(): this is used while the engine is
   // being set up.
   JSValue global = JS_GetGlobalObject(context);
   JSValue result = JS_GetPropertyStr(context, global, "player");
@@ -213,6 +231,7 @@ PlayerEntity* OOPlayerForScripting(void) {
   return player;
 }
 
+namespace {
 static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -229,10 +248,11 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
 
     case kPlayer_score:
       return JS_NewInt32(
-          context, (player != nullptr
-                        ? player->PlayerEntity::score()
-                        : unsigned{}));  // qualified: the final overrider, so
-                                         // the binding test stands in for it
+          context,
+          (player != nullptr ? player->PlayerEntity::score()
+                             : unsigned{}));  // qualified: the final overrider,
+                                              // so the binding test stands in
+                                              // for it
 
     case kPlayer_credits:
       return JS_NewNumber(context,
@@ -362,7 +382,8 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
     } break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sPlayerProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sPlayerProperties,
                                     OOJS_COUNT(sPlayerProperties));
       return OOJSNativeFailure(context);
   }
@@ -371,7 +392,9 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue PlayerSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -425,21 +448,24 @@ static JSValue PlayerSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sPlayerProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sPlayerProperties,
                                     OOJS_COUNT(sPlayerProperties));
       return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sPlayerProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sPlayerProperties,
                              OOJS_COUNT(sPlayerProperties), value);
   return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // *** Methods ***
 
 // commsMessage(message : String [, duration : Number])
+namespace {
 static JSValue PlayerCommsMessage(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -467,8 +493,10 @@ static JSValue PlayerCommsMessage(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // consoleMessage(message : String [, duration : Number])
+namespace {
 static JSValue PlayerConsoleMessage(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -490,8 +518,10 @@ static JSValue PlayerConsoleMessage(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // endScenario(scenario : String)
+namespace {
 static JSValue PlayerEndScenario(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -509,8 +539,10 @@ static JSValue PlayerEndScenario(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // increaseContractReputation()
+namespace {
 static JSValue PlayerIncreaseContractReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -520,8 +552,10 @@ static JSValue PlayerIncreaseContractReputation(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // decreaseContractReputation()
+namespace {
 static JSValue PlayerDecreaseContractReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -531,8 +565,10 @@ static JSValue PlayerDecreaseContractReputation(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // increaseParcelReputation()
+namespace {
 static JSValue PlayerIncreaseParcelReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -542,8 +578,10 @@ static JSValue PlayerIncreaseParcelReputation(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // decreaseParcelReputation()
+namespace {
 static JSValue PlayerDecreaseParcelReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -553,8 +591,10 @@ static JSValue PlayerDecreaseParcelReputation(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // increasePassengerReputation()
+namespace {
 static JSValue PlayerIncreasePassengerReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -564,8 +604,10 @@ static JSValue PlayerIncreasePassengerReputation(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // decreasePassengerReputation()
+namespace {
 static JSValue PlayerDecreasePassengerReputation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -575,8 +617,10 @@ static JSValue PlayerDecreasePassengerReputation(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // addMessageToArrivalReport(message : String)
+namespace {
 static JSValue PlayerAddMessageToArrivalReport(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -596,7 +640,9 @@ static JSValue PlayerAddMessageToArrivalReport(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue PlayerAudioMessage(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -619,8 +665,10 @@ static JSValue PlayerAudioMessage(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // replaceShip (shipyard-key : String)
+namespace {
 static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -641,14 +689,14 @@ static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS) {
                    STATUS_DOCKED))) {
     cxx_OOJSReportError(
         context, "Player.replaceShip() only works while the player is docked.");
-    return OOJSNativeFailure(context);
+    return JS_EXCEPTION;
   }
 
   success =
       (player != nullptr ? player->replaceShipWithNamedShip(*shipKey) : false);
   if (argc > 1) {
-    // As before, an invalid personality is ignored (personality stays 0); don't
-    // leave the conversion error pending.
+    // As before, an invalid personality is ignored (personality stays 0);
+    // don't leave the conversion error pending.
     if (!OOJSValueToInt32(context, OOJS_ARGV[1], &personality))
       JS_FreeValue(context, JS_GetException(context));
     if (personality >= 0 && (uint16_t)personality < ENTITY_PERSONALITY_MAX) {
@@ -677,8 +725,10 @@ static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // setEscapePodDestination(Entity | 'NEARBY_SYSTEM')
+namespace {
 static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -686,7 +736,7 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
     cxx_OOJSReportError(context,
                         "Player.setEscapePodDestination() only works while the "
                         "escape pod is in flight.");
-    return OOJSNativeFailure(context);
+    return JS_EXCEPTION;
   }
 
   bool OK = false;
@@ -775,8 +825,10 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // setPlayerRole (role-key : String [, index : Number])
+namespace {
 static JSValue PlayerSetPlayerRole(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -800,7 +852,8 @@ static JSValue PlayerSetPlayerRole(OOJS_NATIVE_ARGS) {
                             // test stands in for it
       OOJS_RETURN_VOID;
     }
-    // As before, fall back to the default slot if the index can't be converted.
+    // As before, fall back to the default slot if the index can't be
+    // converted.
     JS_FreeValue(context, JS_GetException(context));
   }
   if (player != nullptr)
@@ -811,7 +864,9 @@ static JSValue PlayerSetPlayerRole(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue PlayerStopAudioMessage(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
   if ((UNIVERSE != nullptr ? UNIVERSE->isSpeaking() : false)) {
@@ -821,3 +876,4 @@ static JSValue PlayerStopAudioMessage(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace

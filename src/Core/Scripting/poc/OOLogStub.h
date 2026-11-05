@@ -2,9 +2,23 @@
 
 OOLogStub.h (QuickJS-ng proof of concept)
 
-Logging for the QuickJS-ng proof-of-concept harness: the game's oo::log
-logger (OO_LOG), with every message class shown and each line printed in
-Oolite's log format and recorded so tests can check what was logged.
+Oolite
+Copyright (C) 2004-2013 Giles C Williams and contributors
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+MA 02110-1301, USA.
 
 */
 
@@ -14,7 +28,7 @@ Oolite's log format and recorded so tests can check what was logged.
 #include <vector>
 
 // Show every message class and record each line; call before logging.
-void OOPocInstallLogging(void);
+void OOPocInstallLogging();
 
-const std::vector<std::string>& OOPocRecordedLogMessages(void);
-void OOPocClearRecordedLogMessages(void);
+const std::vector<std::string>& OOPocRecordedLogMessages();
+void OOPocClearRecordedLogMessages();

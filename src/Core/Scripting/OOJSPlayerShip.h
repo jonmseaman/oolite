@@ -1,6 +1,6 @@
 /*
 
-OOJSPlayerShip.h (QuickJS-ng)
+OOJSPlayerShip.h
 
 JavaScript proxy for the player's ship.
 While the player and player's ship are not differentiated in Oolite, such a
@@ -39,6 +39,7 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "OOFoundation.h"
+#include "oofnd/Notification.hpp"
 
 class PlayerEntity;
 
@@ -47,17 +48,24 @@ void InitOOJSPlayerShip(JSContext* context, JSValueConst global);
 JSClassID JSPlayerShipClassID(void);
 
 /*	The player's ship object (player.ship), which is also the PlayerEntity's
-        jsValueInContext(). The returned value is owned by the caller, who must
-        JS_FreeValue() it. (SpiderMonkey's JSPlayerShipPrototype() is no longer
-        needed; use JS_GetClassProto(context, JSPlayerShipClassID()).)
+   jsValueInContext(). The returned value is owned by the caller, who must
+   JS_FreeValue() it. (JSPlayerShipPrototype() is no longer needed; use
+   JS_GetClassProto(context, JSPlayerShipClassID()).)
 */
 JSValue JSPlayerShipObject(void);
 
 /*	PlayerEntity (OOJavaScriptExtensions), whose methods the engine and the
    player send by selector: the bodies, as free functions. The C++ player calls
-   them (PlayerEntity::jsClassName()).
-        Its JS class is JSPlayerShipClassID() (PlayerEntity::jsClassID()).
+   them (PlayerEntity::jsClassName()). Its JS class is JSPlayerShipClassID()
+   (#768's -oo_jsClassID).
+
+   OOJSPlayerShipSetJSSelf() drops any previous wrapper, then keeps its own
+   reference to val (val is borrowed) until the engine resets, when
+   OOJSPlayerShipJavaScriptEngineWillReset() lets go of it (the entity's
+   deleteJSSelf()).
 */
 std::optional<std::string> OOJSPlayerShipJSClassName(void);
 void OOJSPlayerShipSetJSSelf(PlayerEntity* player, JSValueConst val,
                              JSContext* context);
+void OOJSPlayerShipJavaScriptEngineWillReset(
+    PlayerEntity* player, const oo::Notification& notification);

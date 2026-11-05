@@ -25,22 +25,28 @@ MA 02110-1301, USA.
 
 #include "OOJSShipGroup.h"
 
+#include <cstring>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJavaScriptEngine.h"
 #include "OOObjCPList.h"
 #include "OOShipGroup.h"
 #include "ShipEntity.h"
+#include "Universe.h"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 
 /*
-        The group is C++ and is called directly, null-guarded where a message to
-        nil answered.
+        ShipGroup's private-object getter (DEFINE_JS_OBJECT_GETTER() for a slot
+   that holds the C++ group) is OOJSGetCxxPrivate<OOShipGroup>(context, value,
+   sShipGroupClassID, &group). The finalizer (OOJSObjectWrapperFinalize)
+   releases the group the slot retains.
 */
 
 static JSClassID sShipGroupClassID;
 
+namespace {
 static JSValue ShipGroupGetProperty(OOJS_GETTER_ARGS);
 static JSValue ShipGroupSetProperty(OOJS_SETTER_ARGS);
 static JSValue ShipGroupConstruct(OOJS_NATIVE_ARGS);
@@ -50,13 +56,16 @@ static JSValue ShipGroupToString(OOJS_NATIVE_ARGS);
 static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS);
 static JSValue ShipGroupRemoveShip(OOJS_NATIVE_ARGS);
 static JSValue ShipGroupContainsShip(OOJS_NATIVE_ARGS);
+}  // namespace
 
+namespace {
 static JSClassDef sShipGroupClass = {
     .class_name = "ShipGroup",
-    .finalizer = OOJSCxxObjectWrapperFinalize,  // the slot retains the group
+    .finalizer = OOJSObjectWrapperFinalize,  // the slot retains the group
 };
+}  // namespace
 
-enum {
+enum : std::uint8_t {
   // Property IDs
   kShipGroup_ships,   // array of ships, double, read-only
   kShipGroup_leader,  // leader, Ship, read/write
@@ -64,6 +73,7 @@ enum {
   kShipGroup_count,   // number of ships, integer, read-only
 };
 
+namespace {
 static const JSCFunctionListEntry sShipGroupProperties[] = {
     // JS name, getter, setter, ID
     OOJS_PROPERTY_RO("count", ShipGroupGetProperty, kShipGroup_count),
@@ -73,7 +83,9 @@ static const JSCFunctionListEntry sShipGroupProperties[] = {
                      kShipGroup_name),
     OOJS_PROPERTY_RO("ships", ShipGroupGetProperty, kShipGroup_ships),
 };
+}  // namespace
 
+namespace {
 static const JSCFunctionListEntry sShipGroupMethods[] = {
     // JS name, min args, function
     JS_CFUNC_DEF("toString", 0, ShipGroupToString),
@@ -81,13 +93,11 @@ static const JSCFunctionListEntry sShipGroupMethods[] = {
     JS_CFUNC_DEF("containsShip", 1, ShipGroupContainsShip),
     JS_CFUNC_DEF("removeShip", 1, ShipGroupRemoveShip),
 };
-
-// The private object getter, DEFINE_JS_OBJECT_GETTER's equivalent for a slot
-// that holds the C++ group (OOJSPrivateObject.h):
-// OOJSGetCxxPrivate<OOShipGroup>(context, value, sShipGroupClassID, &group).
+}  // namespace
 
 // OOJSBasicPrivateObjectConverter for the C++ group the slot holds: its node
 // (null for the prototype).
+namespace {
 static oo::PList ShipGroupConverter(JSContext* /*context*/,
                                     JSValueConst object) {
   OOShipGroup* group = static_cast<OOShipGroup*>(
@@ -95,6 +105,7 @@ static oo::PList ShipGroupConverter(JSContext* /*context*/,
   if (group == nullptr) return oo::PList();
   return OOShipGroupObjectNode(group);
 }
+}  // namespace
 
 // *** Public ***
 
@@ -107,6 +118,7 @@ void InitOOJSShipGroup(JSContext* context, JSValueConst global) {
   OOJSRegisterObjectConverter(sShipGroupClassID, ShipGroupConverter);
 }
 
+namespace {
 static JSValue ShipGroupGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -114,7 +126,7 @@ static JSValue ShipGroupGetProperty(OOJS_GETTER_ARGS) {
   OOShipGroup* cxxGroup = nullptr;
 
   if (EXPECT_NOT(
-          !OOJSGetCxxPrivate(context, thisObj, sShipGroupClassID, &cxxGroup)))
+          !OOJSGetCxxPrivate(context, OOJS_THIS, sShipGroupClassID, &cxxGroup)))
     return OOJSNativeFailure(context);
   // (null for the prototype: each use answers what a message to nil did
 
@@ -144,7 +156,7 @@ static JSValue ShipGroupGetProperty(OOJS_GETTER_ARGS) {
                           (cxxGroup != nullptr) ? cxxGroup->count() : 0);
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                     sShipGroupProperties,
                                     OOJS_COUNT(sShipGroupProperties));
       return OOJSNativeFailure(context);
@@ -154,7 +166,9 @@ static JSValue ShipGroupGetProperty(OOJS_GETTER_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue ShipGroupSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -162,7 +176,7 @@ static JSValue ShipGroupSetProperty(OOJS_SETTER_ARGS) {
   OOShipGroup* cxxGroup = nullptr;
 
   if (EXPECT_NOT(
-          !OOJSGetCxxPrivate(context, thisObj, sShipGroupClassID, &cxxGroup)))
+          !OOJSGetCxxPrivate(context, OOJS_THIS, sShipGroupClassID, &cxxGroup)))
     return OOJSNativeFailure(context);
   // (null for the prototype: the setters do nothing, as messages to nil
 
@@ -184,20 +198,22 @@ static JSValue ShipGroupSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                     sShipGroupProperties,
                                     OOJS_COUNT(sShipGroupProperties));
       return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sShipGroupProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sShipGroupProperties,
                              OOJS_COUNT(sShipGroupProperties), value);
   return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // new ShipGroup([name : String [, leader : Ship]]) : ShipGroup
+namespace {
 static JSValue ShipGroupConstruct(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -241,27 +257,29 @@ static JSValue ShipGroupConstruct(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 /*	The JS glue of the C++ group (OOJSPrivateObject). As with SpiderMonkey,
    the JS object retains the group (its private slot holds the group), and
    _jsSelf is a weak (uncounted) reference to the JS object, cleared by
    clearJSSelf() when the JS object is finalized.
 */
+
 JSValue OOShipGroup::jsValueInContext(JSContext* context) {
   if (!JS_IsObject(_jsSelf)) {
-    JSValue newSelf = JS_NewObjectClass(context, (int)sShipGroupClassID);
-    if (JS_IsException(newSelf)) {
+    JSValue jsSelf = JS_NewObjectClass(context, (int)sShipGroupClassID);
+    if (JS_IsException(jsSelf)) {
       JS_FreeValue(context, JS_GetException(context));
       return JS_NULL;
     }
-    if (!OOJSSetCxxPrivate(newSelf, this)) {
-      JS_FreeValue(context, newSelf);
+    if (!OOJSSetCxxPrivate(jsSelf, this)) {
+      JS_FreeValue(context, jsSelf);
       return JS_NULL;
     }
 
     // Weak: the caller gets the only reference.
-    _jsSelf = newSelf;
-    return newSelf;
+    _jsSelf = jsSelf;
+    return jsSelf;
   }
 
   return JS_DupValue(context, _jsSelf);
@@ -286,11 +304,14 @@ std::optional<std::string> OOShipGroup::jsDescription() {
 // *** Methods ***
 
 // toString() : String
+namespace {
 static JSValue ShipGroupToString(OOJS_NATIVE_ARGS) {
   return OOJSCxxObjectWrapperToString(context, OOJS_THIS, sShipGroupClassID);
 }
+}  // namespace
 
 // addShip(ship : Ship)
+namespace {
 static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -386,8 +407,10 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // removeShip(ship : Ship)
+namespace {
 static JSValue ShipGroupRemoveShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -413,8 +436,10 @@ static JSValue ShipGroupRemoveShip(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // containsShip(ship : Ship) : Boolean
+namespace {
 static JSValue ShipGroupContainsShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -440,3 +465,4 @@ static JSValue ShipGroupContainsShip(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace

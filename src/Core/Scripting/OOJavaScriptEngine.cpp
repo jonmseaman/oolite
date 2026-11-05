@@ -1,7 +1,8 @@
 /*
 
-OOJavaScriptEngine.m (QuickJS-ng)
+OOJavaScriptEngine.cpp (QuickJS-ng)
 
+JavaScript support for Oolite: upstream #768's OOJavaScriptEngine.m, in C++.
 Copyright (C) 2007-2013 David Taylor and Jens Ayton.
 
 This program is free software; you can redistribute it and/or
@@ -23,7 +24,11 @@ MA 02110-1301, USA.
 
 #include "OOJavaScriptEngine.h"
 
-#include <time.h>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <unordered_map>
+#include <vector>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToJSString.h"
@@ -63,8 +68,10 @@ MA 02110-1301, USA.
 #include "OOJSWaypoint.h"
 #include "OOJSWorldScripts.h"
 #include "OOJSWormhole.h"
+#include "OOLoggingExtended.h"
 #include "OOObjCPList.h"  // Object nodes (OOJSValueFromPList)
 #include "OOPlanetEntity.h"
+#include "OOProfilingStopwatch.h"
 #include "OOVisualEffectEntity.h"
 #include "OOWaypointEntity.h"
 #include "ResourceManager.h"
@@ -76,14 +83,10 @@ MA 02110-1301, USA.
 #include "oofnd/Notification.hpp"
 #include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"
-#include "oofnd/Scanner.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
-#if OOLITE_WINDOWS
-#include <windows.h>
-#endif
 
 #define OOJS_RUNTIME_SIZE_MiB 256
 #define OOJS_STACK_SIZE (1024 * 1024)
@@ -94,10 +97,14 @@ MA 02110-1301, USA.
 #define OOJS_TIME_LIMIT (1)  // seconds
 #endif
 
-static OOJavaScriptEngine* sSharedEngine =
-    nullptr;  // the one +1 is never released
+namespace {
+OOJavaScriptEngine* sSharedEngine = nullptr;  // the one +1 is never released
+unsigned sErrorHandlerStackSkip = 0;
 
-static unsigned sErrorHandlerStackSkip = 0;
+int InterruptHandler(JSRuntime* runtime, void* opaque);
+void RegisterStandardObjectConverters(JSContext* context);
+void LoadCompatibilityScript(JSContext* context);
+}  // namespace
 
 JSContext* gOOJSMainThreadContext = NULL;
 
@@ -105,10 +112,6 @@ const char* const kOOJavaScriptEngineWillResetNotificationName =
     "org.aegidian.oolite OOJavaScriptEngine will reset";
 const char* const kOOJavaScriptEngineDidResetNotificationName =
     "org.aegidian.oolite OOJavaScriptEngine did reset";
-
-static int InterruptHandler(JSRuntime* runtime, void* opaque);
-static void RegisterStandardObjectConverters(JSContext* context);
-static void LoadCompatibilityScript(JSContext* context);
 
 //===========================================================================
 // JavaScript engine initialisation and shutdown
@@ -134,7 +137,6 @@ void OOJavaScriptEngine::init() {
   // one.
   OOCAssert(sSharedEngine == this,
             "Attempt to create multiple OOJavaScriptEngines.");
-
   _showErrorLocations = true;
 
   oo::Defaults& defaults = oo::Defaults::standard();
@@ -253,21 +255,21 @@ void OOJavaScriptEngine::destroyMainThreadContext() {
 
 #ifndef NDEBUG
     /*	Every native object holding a JSValue should have let go of it on
-            kOOJavaScriptEngineWillResetNotification, so nothing should be
+            kOOJavaScriptEngineWillResetNotificationName, so nothing should be
             left. Anything that is indicates a reference counting error.
     */
     JSMemoryUsage usage;
     JS_ComputeMemoryUsage(_runtime, &usage);
     if (usage.obj_count != 0) {
       OO_LOG_WARN("script.javaScript.reset.liveObjects",
-                  "{} JavaScript objects are still alive after the context was "
-                  "destroyed; something is holding a JSValue it does not own, "
-                  "or has not freed one it does.",
+                  "{} JavaScript objects are still alive after the context "
+                  "was destroyed; something is holding a JSValue it does not "
+                  "own, or has not freed one it does.",
                   static_cast<long long>(usage.obj_count));
     } else {
-      OO_LOG(
-          "script.javaScript.reset.liveObjects", "{}",
-          "No JavaScript objects left alive after the context was destroyed.");
+      OO_LOG("script.javaScript.reset.liveObjects", "{}",
+             "No JavaScript objects left alive after the context was "
+             "destroyed.");
     }
 #endif
   }
@@ -294,9 +296,10 @@ bool OOJavaScriptEngine::reset() {
   return true;
 }
 
-// YES if JavaScript code is on the stack (e.g. quitGame() called from a
+namespace {
+// true if JavaScript code is on the stack (e.g. quitGame() called from a
 // script).
-static bool IsRunningJavaScript(JSContext* context) {
+bool IsRunningJavaScript(JSContext* context) {
   if (context == NULL) return false;
   for (int level = 0; level < 16; level++) {
     JSAtom name = JS_GetScriptOrModuleName(context, level);
@@ -307,6 +310,7 @@ static bool IsRunningJavaScript(JSContext* context) {
   }
   return false;
 }
+}  // namespace
 
 NSUInteger OOJavaScriptEngine::shutDown() {
   if (_runtime == NULL) return 0;
@@ -325,8 +329,7 @@ NSUInteger OOJavaScriptEngine::shutDown() {
 
   OOJSFrameCallbacksRemoveAll();
   oo::NotificationCenter::defaultCenter().post(
-      kOOJavaScriptEngineWillResetNotificationName,
-      this);  // the engine: what observers filter on
+      kOOJavaScriptEngineWillResetNotificationName, this);
   destroyMainThreadContext();
 
   JSMemoryUsage usage;
@@ -341,7 +344,7 @@ NSUInteger OOJavaScriptEngine::shutDown() {
            "one it does.",
            static_cast<long long>(usage.obj_count));
     _runtime = NULL;
-    return (NSUInteger)usage.obj_count;
+    return static_cast<NSUInteger>(usage.obj_count);
   }
 
   JS_FreeRuntime(_runtime);
@@ -398,6 +401,7 @@ void OOJavaScriptEngine::setShowErrorLocations(bool value) {
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
+
 bool OOJavaScriptEngine::dumpStackForErrors() { return _dumpStackForErrors; }
 
 void OOJavaScriptEngine::setDumpStackForErrors(bool value) {
@@ -442,19 +446,25 @@ void OOJavaScriptEngine::sendMonitorLogMessage(
 
 #endif
 
+namespace {
+
+// A file's text as -stringWithContentsOfUnicodeFile: read it (it read through
+// .oxz archives); nullopt if it cannot be read.
+std::optional<std::string> ContentsOfUnicodeFile(const std::string& path) {
+  if (const std::optional<oo::Data> bytes = OODataFromOXZFile(path))
+    return oo::str::decodeUnicodeText(bytes->stringView());
+  return std::nullopt;
+}
+
 /*	Define the SpiderMonkey extensions OXPs rely on (toSource(),
    uneval()...) before any other script runs. The script is run as plain global
    code, not wrapped like normal scripts.
 */
-static void LoadCompatibilityScript(JSContext* context) {
-  const std::optional<std::string> path = ResourceManager::pathForFileNamed(
-      "oolite-quickjs-compat.js", std::string("Scripts"));
-  std::optional<std::string> source;
-  // +stringWithContentsOfUnicodeFile: (it read through .oxz archives)
-  if (path.has_value()) {
-    if (const std::optional<oo::Data> bytes = OODataFromOXZFile(*path))
-      source = oo::str::decodeUnicodeText(bytes->stringView());
-  }
+void LoadCompatibilityScript(JSContext* context) {
+  const std::optional<std::string> path =
+      ResourceManager::pathForFileNamed("oolite-quickjs-compat.js", "Scripts");
+  const std::optional<std::string> source =
+      path.has_value() ? ContentsOfUnicodeFile(*path) : std::nullopt;
   if (!source.has_value()) {
     OO_LOG_ERR("script.javaScript.init.error", "{}",
                "Could not load oolite-quickjs-compat.js; SpiderMonkey "
@@ -492,6 +502,8 @@ static void LoadCompatibilityScript(JSContext* context) {
   }
 }
 
+}  // namespace
+
 std::string OOJSWrapScriptSource(const std::string& source) {
   // A newline before the closing part is needed if the last line is a //
   // comment.
@@ -514,8 +526,7 @@ bool OOJSValueToInt32(JSContext* context, JSValueConst value,
   if (JS_ToFloat64(context, &number, value) < 0) return false;
 
   number = floor(number + 0.5);
-  if (isnan(number) || number < INT32_MIN || number > INT32_MAX) {
-    // ("%@" of a nil string printed "(null)")
+  if (std::isnan(number) || number < INT32_MIN || number > INT32_MAX) {
     cxx_OOJSReportError(context, "can't convert %s to an integer",
                         cxx_OOStringFromJSValueEvenIfNull(context, value)
                             .value_or("(null)")
@@ -523,7 +534,7 @@ bool OOJSValueToInt32(JSContext* context, JSValueConst value,
     return false;
   }
 
-  *outValue = (int32_t)number;
+  *outValue = static_cast<int32_t>(number);
   return true;
 }
 
@@ -531,32 +542,22 @@ bool OOJSValueToInt32(JSContext* context, JSValueConst value,
 // Time limiter
 //===========================================================================
 
-static unsigned sLimiterStartDepth;
-static int sLimiterPauseDepth;
-static double sLimiterStart;
-static double sLimiterPauseStart;
-static double sLimiterTimeLimit;
-
-static double MonotonicTime(void) {
-#if OOLITE_WINDOWS
-  static LARGE_INTEGER frequency;
-  LARGE_INTEGER counter;
-  if (frequency.QuadPart == 0) QueryPerformanceFrequency(&frequency);
-  QueryPerformanceCounter(&counter);
-  return (double)counter.QuadPart / (double)frequency.QuadPart;
-#else
-  struct timespec now;
-  clock_gettime(CLOCK_MONOTONIC, &now);
-  return now.tv_sec + now.tv_nsec * 1e-9;
-#endif
-}
+namespace {
+unsigned sLimiterStartDepth;
+int sLimiterPauseDepth;
+OOHighResTimeValue sLimiterStart;
+OOHighResTimeValue sLimiterPauseStart;
+double sLimiterTimeLimit;
+}  // namespace
 
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit) {
   if (sLimiterStartDepth++ == 0) {
     if (limit <= 0.0) limit = OOJS_TIME_LIMIT;
     sLimiterTimeLimit = limit;
     sLimiterPauseDepth = 0;
-    sLimiterStart = MonotonicTime();
+
+    OODisposeHighResTime(sLimiterStart);
+    sLimiterStart = OOGetHighResTime();
   }
 }
 
@@ -572,16 +573,25 @@ void OOJSStopTimeLimiter(void) {
 }
 
 void OOJSPauseTimeLimiter(void) {
-  if (sLimiterPauseDepth++ == 0) sLimiterPauseStart = MonotonicTime();
+  if (sLimiterPauseDepth++ == 0) {
+    OODisposeHighResTime(sLimiterPauseStart);
+    sLimiterPauseStart = OOGetHighResTime();
+  }
 }
 
 void OOJSResumeTimeLimiter(void) {
-  if (--sLimiterPauseDepth == 0)
-    sLimiterTimeLimit += MonotonicTime() - sLimiterPauseStart;
+  if (--sLimiterPauseDepth == 0) {
+    OOHighResTimeValue now = OOGetHighResTime();
+    sLimiterTimeLimit += OOHighResTimeDeltaInSeconds(sLimiterPauseStart, now);
+    OODisposeHighResTime(now);
+  }
 }
 
 #ifndef NDEBUG
-void OOJSResetTimeLimiter(void) { sLimiterStart = MonotonicTime(); }
+void OOJSResetTimeLimiter(void) {
+  OODisposeHighResTime(sLimiterStart);
+  sLimiterStart = OOGetHighResTime();
+}
 
 OOTimeDelta OOJSGetTimeLimiterLimit(void) { return sLimiterTimeLimit; }
 
@@ -598,33 +608,39 @@ void OOJSExcludeTimeFromLimiter(OOTimeDelta time) {
 }
 #endif
 
+namespace {
 /*	QuickJS polls this regularly while running JS code, so unlike the
         SpiderMonkey operation callback no watchdog thread is needed. Returning
         non-zero throws an uncatchable error, which unwinds all JS frames.
 */
-static int InterruptHandler(JSRuntime* runtime, void* opaque) {
+int InterruptHandler(JSRuntime* /*runtime*/, void* /*opaque*/) {
   if (EXPECT(sLimiterStartDepth == 0 || sLimiterPauseDepth > 0)) return 0;
 
-  double elapsed = MonotonicTime() - sLimiterStart;
+  OOHighResTimeValue now = OOGetHighResTime();
+  OOTimeDelta elapsed = OOHighResTimeDeltaInSeconds(sLimiterStart, now);
+  OODisposeHighResTime(now);
   if (elapsed <= sLimiterTimeLimit) return 0;
 
   OOJSScript* runningScript = OOJSScript::currentlyRunningScript();
   OO_LOG_ERR("script.javaScript.timeLimit",
-             "Script \"{}\" ran for {} seconds and has been terminated.",
+             "Script \"{}\" ran for {:g} seconds and has been terminated.",
              ((runningScript != nullptr) ? runningScript->name() : std::nullopt)
                  .value_or("(null)"),
-             oo::str::format("%g", elapsed));
+             elapsed);
 #ifdef OO_DEBUG_MONITOR_ENABLED
   OOJSDumpStack(gOOJSMainThreadContext);
 #endif
   return 1;
 }
+}  // namespace
 
 //===========================================================================
 // Error reporting
 //===========================================================================
 
-static std::string_view TrimWhitespace(std::string_view text) {
+namespace {
+
+std::string_view TrimWhitespace(std::string_view text) {
   static constexpr std::string_view kWhitespace = " \t";
   const std::size_t first = text.find_first_not_of(kWhitespace);
   if (first == std::string_view::npos) return std::string_view();
@@ -636,9 +652,9 @@ static std::string_view TrimWhitespace(std::string_view text) {
    form "    at name (file:line:column)" or "    at file:line:column". Extract
    the file and line of the innermost frame with a location.
 */
-static bool GetLocationFromStack(const std::optional<std::string>& stack,
-                                 std::optional<std::string>* outFile,
-                                 unsigned* outLine) {
+bool GetLocationFromStack(const std::optional<std::string>& stack,
+                          std::optional<std::string>* outFile,
+                          unsigned* outLine) {
   if (!stack.has_value()) return false;
 
   std::string_view rest(*stack);
@@ -673,16 +689,20 @@ static bool GetLocationFromStack(const std::optional<std::string>& stack,
   return false;
 }
 
-static std::optional<std::string> StackOfValue(JSContext* context,
-                                               JSValueConst value) {
+std::optional<std::string> StackOfValue(JSContext* context,
+                                        JSValueConst value) {
   if (!JS_IsObject(value)) return std::nullopt;
   JSValue stack = JS_GetPropertyStr(context, value, "stack");
+  if (JS_IsException(stack)) {
+    JS_FreeValue(context, JS_GetException(context));
+    return std::nullopt;
+  }
   std::optional<std::string> result = cxx_OOStringFromJSValue(context, stack);
   JS_FreeValue(context, stack);
   return result;
 }
 
-static std::optional<std::string> CurrentStack(JSContext* context) {
+std::optional<std::string> CurrentStack(JSContext* context) {
   // A fresh Error object captures the current JS stack.
   JSValue error = JS_NewError(context);
   std::optional<std::string> result = StackOfValue(context, error);
@@ -690,12 +710,12 @@ static std::optional<std::string> CurrentStack(JSContext* context) {
   return result;
 }
 
-static void LogProblem(JSContext* context, const std::string& severity,
-                       const std::string& errorName, const std::string& message,
-                       const std::optional<std::string>& stack) {
+void LogProblem(JSContext* context, const std::string& severity,
+                const std::string& errorName, const std::string& message,
+                const std::optional<std::string>& stack) {
   const std::string messageClass =
       "script.javaScript." + severity + "." + errorName;
-  const std::string highlight = (severity == "warning") ? "-----" : "*****";
+  const char* highlight = (severity == "warning") ? "-----" : "*****";
   OOJavaScriptEngine* jsEng = OOJavaScriptEngine::sharedEngine();
 
   // Skip the rest if this is a warning being ignored.
@@ -704,9 +724,9 @@ static void LogProblem(JSContext* context, const std::string& severity,
   // avoid windows DEP exceptions!
   // The running script (null when none runs, or once a script a timer or
   // definition pushed weakly has gone: a message to nil).
-  OOJSScript* runningScript = OOJSScript::currentlyRunningScript();
+  OOJSScript* thisScript = OOJSScript::currentlyRunningScript();
   const std::string activeScript =
-      ((runningScript != nullptr) ? runningScript->displayName() : std::nullopt)
+      ((thisScript != nullptr) ? thisScript->displayName() : std::nullopt)
           .value_or("<unidentified script>");
   OO_LOG(messageClass, "{} JavaScript {} ({}): {}", highlight, severity,
          activeScript, message);
@@ -731,6 +751,8 @@ static void LogProblem(JSContext* context, const std::string& severity,
 #endif
 }
 
+}  // namespace
+
 void OOJSReportPendingException(JSContext* context) {
   JSValue exception = JS_GetException(context);
 
@@ -745,30 +767,35 @@ void OOJSReportPendingException(JSContext* context) {
   std::string errorName = "exception";
   if (JS_IsError(exception)) {
     JSValue name = JS_GetPropertyStr(context, exception, "name");
-    errorName = cxx_OOStringFromJSValue(context, name).value_or(errorName);
+    if (JS_IsException(name)) {
+      JS_FreeValue(context, JS_GetException(context));
+    } else {
+      errorName = cxx_OOStringFromJSValue(context, name).value_or(errorName);
+    }
     JS_FreeValue(context, name);
   }
 
-  // ("%@" of a nil message printed "(null)")
-  std::optional<std::string> message =
-      cxx_OOStringFromJSValueEvenIfNull(context, exception);
+  std::string message =
+      cxx_OOStringFromJSValueEvenIfNull(context, exception).value_or("?");
   if (!JS_IsError(exception)) {
-    message = "uncaught exception: " + message.value_or("?");
+    message = "uncaught exception: " + message;
   }
 
-  LogProblem(context, "exception", errorName, message.value_or("(null)"),
+  LogProblem(context, "exception", errorName, message,
              StackOfValue(context, exception));
 
   JS_FreeValue(context, exception);
   OOJSResumeTimeLimiter();
 }
 
-static std::string CallerPrefix(const std::optional<std::string>& scriptClass,
-                                const std::optional<std::string>& function) {
+namespace {
+std::string CallerPrefix(const std::optional<std::string>& scriptClass,
+                         const std::optional<std::string>& function) {
   if (!function) return std::string();
   if (!scriptClass) return *function + ": ";
   return *scriptClass + "." + *function + ": ";
 }
+}  // namespace
 
 void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
@@ -809,9 +836,7 @@ void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
   }
 }
 
-// OOJSReportCurrentException() is in OOJSEngineNativeWrappers.mm
-// (OOJSReportWrappedException() went with the Objective-C exceptions, when the
-// exception became the C++ oo::Exception).
+// OOJSReportCurrentException() is in OOJSEngineNativeWrappers.cpp.
 
 JSValue OOJSNativeFailure(JSContext* context) {
   if (JS_HasException(context)) return JS_EXCEPTION;
@@ -821,6 +846,19 @@ JSValue OOJSNativeFailure(JSContext* context) {
   JS_SetUncatchableError(context, error);
   return JS_Throw(context, error);
 }
+
+#ifndef NDEBUG
+
+void OOJSUnreachable(const char* function, const char* file, unsigned line) {
+  OO_LOG(
+      "fatal.unreachable",
+      "Supposedly unreachable statement reached in {} ({}:{}) -- terminating.",
+      function, oo::log::abbreviatedFileName(file),
+      static_cast<unsigned>(line));
+  abort();
+}
+
+#endif
 
 void cxx_OOJSReportWarning(JSContext* context, const char* format, ...) {
   va_list args;
@@ -864,21 +902,21 @@ void cxx_OOJSReportWarningWithArguments(JSContext* context, const char* format,
   }
 }
 
-std::string cxx_OOStringFromJSPropertyMagic(int magic,
-                                            const JSCFunctionListEntry* list,
-                                            size_t count) {
+std::string OOStringFromJSPropertyMagic(int magic,
+                                        const JSCFunctionListEntry* list,
+                                        size_t count) {
   for (size_t i = 0; i < count; i++) {
     if (list[i].def_type == JS_DEF_CGETSET_MAGIC && list[i].magic == magic)
       return std::string(list[i].name);
   }
-  return oo::str::format("%i", magic);
+  return std::to_string(magic);
 }
 
 void OOJSReportBadPropertySelector(JSContext* context, JSValueConst thisObj,
                                    int magic, const JSCFunctionListEntry* list,
                                    size_t count) {
-  std::string propName = cxx_OOStringFromJSPropertyMagic(magic, list, count);
-  std::string className = OOJSClassNameOfValue(context, thisObj);
+  const std::string propName = OOStringFromJSPropertyMagic(magic, list, count);
+  const std::string className = OOJSClassNameOfValue(context, thisObj);
 
   cxx_OOJSReportError(context,
                       "Invalid property identifier %s for instance of %s.",
@@ -888,9 +926,9 @@ void OOJSReportBadPropertySelector(JSContext* context, JSValueConst thisObj,
 void OOJSReportBadPropertyValue(JSContext* context, JSValueConst thisObj,
                                 int magic, const JSCFunctionListEntry* list,
                                 size_t count, JSValueConst value) {
-  std::string propName = cxx_OOStringFromJSPropertyMagic(magic, list, count);
-  std::string className = OOJSClassNameOfValue(context, thisObj);
-  std::string valueDesc = cxx_OOJSDescribeValue(context, value, true);
+  const std::string propName = OOStringFromJSPropertyMagic(magic, list, count);
+  const std::string className = OOJSClassNameOfValue(context, thisObj);
+  const std::string valueDesc = cxx_OOJSDescribeValue(context, value, true);
 
   cxx_OOJSReportError(
       context, "Cannot set property %s of instance of %s to invalid value %s.",
@@ -924,8 +962,9 @@ void OOJSSetWarningOrErrorStackSkip(unsigned skip) {
 
 #if OOLITE_DEBUG || defined(OO_DEBUG_MONITOR_ENABLED)
 void OOJSDumpStack(JSContext* context) {
+  const std::optional<std::string> stack = CurrentStack(context);
   OO_LOG("script.javaScript.stackTrace", "{}",
-         CurrentStack(context).value_or("<no JavaScript stack>"));
+         stack.value_or("<no JavaScript stack>"));
 }
 #endif
 
@@ -947,6 +986,8 @@ bool cxx_OOJSArgumentListGetNumber(
 bool OOJSArgumentListGetNumberNoError(JSContext* context, int argc,
                                       JSValueConst* argv, double* outNumber,
                                       int* outConsumed) {
+  OOJS_PROFILE_ENTER
+
   double value;
 
   OOCParameterAssert(context != NULL && (argv != NULL || argc == 0) &&
@@ -954,7 +995,7 @@ bool OOJSArgumentListGetNumberNoError(JSContext* context, int argc,
 
   // Get value, if possible.
   if (EXPECT_NOT(argc < 1 || JS_ToFloat64(context, &value, argv[0]) < 0 ||
-                 isnan(value))) {
+                 std::isnan(value))) {
     // ToNumber can throw (e.g. for a Symbol); this variant must not leave an
     // exception pending.
     if (JS_HasException(context))
@@ -967,6 +1008,8 @@ bool OOJSArgumentListGetNumberNoError(JSContext* context, int argc,
   *outNumber = value;
   if (outConsumed != NULL) *outConsumed = 1;
   return true;
+
+  OOJS_PROFILE_EXIT
 }
 
 //===========================================================================
@@ -1019,8 +1062,10 @@ std::optional<std::string> cxx_OOStringFromJSID(JSAtom propID) {
 namespace {
 // The Foundation array's glue (JSArrayFromNSArray) over ObjectFromPList's
 // array: null elements dropped. Owned; undefined on failure.
-static JSValue JSArrayValueFromPList(JSContext* context,
-                                     const oo::PList::Array& array) {
+JSValue JSArrayValueFromPList(JSContext* context,
+                              const oo::PList::Array& array) {
+  OOJS_PROFILE_ENTER
+
   JSValue result = JS_NewArray(context);
   if (JS_IsException(result)) {
     JS_FreeValue(context, JS_GetException(context));
@@ -1042,13 +1087,17 @@ static JSValue JSArrayValueFromPList(JSContext* context,
   }
 
   return result;
+
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 // The Foundation dictionary's glue (JSObjectFromNSDictionary) over
 // ObjectFromPList's dictionary: null and undefined values dropped, empty keys
 // skipped, key order. Owned; undefined on failure.
-static JSValue JSObjectValueFromPList(JSContext* context,
-                                      const oo::PList::Dict& dict) {
+JSValue JSObjectValueFromPList(JSContext* context,
+                               const oo::PList::Dict& dict) {
+  OOJS_PROFILE_ENTER
+
   JSValue result = JS_NewObject(context);
   if (JS_IsException(result)) {
     JS_FreeValue(context, JS_GetException(context));
@@ -1069,10 +1118,14 @@ static JSValue JSObjectValueFromPList(JSContext* context,
   }
 
   return result;
+
+  OOJS_PROFILE_EXIT_JSVAL
 }
 }  // namespace
 
 JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
+  OOJS_PROFILE_ENTER
+
   switch (plist.type()) {
     case oo::PList::Type::Null:
       return JS_NULL;
@@ -1082,8 +1135,6 @@ JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
       return JS_NewInt32(context, *plist.getIf<bool>() ? 1 : 0);
 
     case oo::PList::Type::Integer: {
-      // The Foundation number's glue: JS_NewNumber() of the integer, an int32
-      // when it is in range.
       const oo::PList::Integer& integer = *plist.getIf<oo::PList::Integer>();
       if (integer.isUnsigned) {
         const unsigned long long u = integer.unsignedValue();
@@ -1099,12 +1150,11 @@ JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
     }
 
     case oo::PList::Type::Real: {
-      // The Foundation number's glue: a float type is always a double.
       double d = *plist.getIf<double>();
       if (plist.isSinglePrecision())
         d = static_cast<double>(
             static_cast<float>(d));  // +numberWithFloat: -doubleValue
-      return JS_NewFloat64(context, d);
+      return JS_NewNumber(context, d);
     }
 
     case oo::PList::Type::String: {
@@ -1131,13 +1181,12 @@ JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
           return OOJSValueFromCxxObject(context, glue);
         if (OONativeVector* box = dynamic_cast<OONativeVector*>(node->get()))
           return OONativeVectorJSValueInContext(box, context);
-        // An entity's node: the entity's JS value, which its object's forwarded
-        // to.
+        // An entity's node: the entity's JS value.
         if (const auto* held =
                 dynamic_cast<const oo::EntityPListForeign*>(node->get()))
           return OOJSEntityJSValue(held->entity(), context);
         // An entity held weakly: the entity's value, undefined once it has
-        // gone, as the weak reference forwarded to its object's.
+        // gone.
         if (const auto* weak =
                 dynamic_cast<const oo::EntityWeakPListForeign*>(node->get())) {
           Entity* entity = weak->entity();
@@ -1155,28 +1204,38 @@ JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
     }
   }
   return JS_UNDEFINED;
+
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 oo::Ref<OOJSValue> OOJSValue::valueWithJSValue(JSValueConst value,
                                                JSContext* context) {
+  OOJS_PROFILE_ENTER
+
   oo::Ref<OOJSValue> result = oo::makeRef<OOJSValue>();
   result->initWithJSValue(value, context);
   return result;
+
+  OOJS_PROFILE_EXIT_VAL(nullptr)
 }
 
 void OOJSValue::initWithJSValue(JSValueConst value, JSContext* context) {
+  OOJS_PROFILE_ENTER
+
   if (context == NULL) context = OOJSAcquireContext();
 
   _val = JS_DupValue(context, value);
   if (!JS_IsUndefined(_val)) {
-    // The engine: the sender of its reset notifications. Kept for removing the
-    // observer, so the destructor does not ask for the engine (which could make
-    // it).
+    // The engine: the sender of its reset notifications. Kept for removing
+    // the observer, so the destructor does not ask for the engine (which
+    // could make it).
     _resetSender = OOJavaScriptEngine::sharedEngine();
     oo::NotificationCenter::defaultCenter().addObserver(
         this, kOOJavaScriptEngineWillResetNotificationName, _resetSender,
         [this](const oo::Notification&) { deleteJSValue(); });
   }
+
+  OOJS_PROFILE_EXIT_VOID
 }
 
 void OOJSValue::deleteJSValue() {
@@ -1208,9 +1267,11 @@ std::string OOJSValue::description() const {
 
 std::optional<std::string> cxx_OOStringFromJSValueEvenIfNull(
     JSContext* context, JSValueConst value) {
+  OOJS_PROFILE_ENTER
+
   size_t length;
-  const char* chars = JS_ToCStringLen(
-      context, &length, value);  // Calls the value's toString method if needed.
+  // Calls the value's toString method if needed.
+  const char* chars = JS_ToCStringLen(context, &length, value);
   if (chars == NULL) {
     JS_FreeValue(context, JS_GetException(context));
     return std::nullopt;
@@ -1219,14 +1280,20 @@ std::optional<std::string> cxx_OOStringFromJSValueEvenIfNull(
   std::string result(chars, length);
   JS_FreeCString(context, chars);
   return result;
+
+  OOJS_PROFILE_EXIT_VAL(std::nullopt)
 }
 
 std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
                                                    JSValueConst value) {
+  OOJS_PROFILE_ENTER
+
   if (EXPECT(!JS_IsNull(value) && !JS_IsUndefined(value))) {
     return cxx_OOStringFromJSValueEvenIfNull(context, value);
   }
   return std::nullopt;
+
+  OOJS_PROFILE_EXIT_VAL(std::nullopt)
 }
 
 std::string OOJSClassNameOfValue(JSContext* context, JSValueConst value) {
@@ -1236,18 +1303,33 @@ std::string OOJSClassNameOfValue(JSContext* context, JSValueConst value) {
   if (registered != NULL) return registered;
 
   JSValue ctor = JS_GetPropertyStr(context, value, "constructor");
+  if (JS_IsException(ctor)) {
+    JS_FreeValue(context, JS_GetException(context));
+    ctor = JS_UNDEFINED;
+  }
   JSValue name = JS_IsObject(ctor) ? JS_GetPropertyStr(context, ctor, "name")
                                    : JS_UNDEFINED;
+  if (JS_IsException(name)) {
+    JS_FreeValue(context, JS_GetException(context));
+    name = JS_UNDEFINED;
+  }
   std::optional<std::string> result = cxx_OOStringFromJSValue(context, name);
   JS_FreeValue(context, name);
   JS_FreeValue(context, ctor);
   return result.value_or("Object");
 }
 
-static std::string DescribeValue(JSContext* context, JSValueConst value,
-                                 bool abbreviateObjects, bool recursing) {
+namespace {
+std::string DescribeValue(JSContext* context, JSValueConst value,
+                          bool abbreviateObjects, bool recursing) {
+  OOJS_PROFILE_ENTER
+
   if (JS_IsFunction(context, value)) {
     JSValue nameVal = JS_GetPropertyStr(context, value, "name");
+    if (JS_IsException(nameVal)) {
+      JS_FreeValue(context, JS_GetException(context));
+      nameVal = JS_UNDEFINED;
+    }
     std::optional<std::string> name = cxx_OOStringFromJSValue(context, nameVal);
     JS_FreeValue(context, nameVal);
     if (name.has_value() && !name->empty())
@@ -1261,7 +1343,7 @@ static std::string DescribeValue(JSContext* context, JSValueConst value,
 
   if (JS_IsString(value) ||
       (classID != JS_INVALID_CLASS_ID && classID == gOOJSStringClassID)) {
-    enum { kMaxLength = 200 };
+    enum : std::uint8_t { kMaxLength = 200 };
 
     // Truncated to kMaxLength UTF-16 units, as the NSString was cut.
     const std::u16string units = oo::utf8ToUtf16(
@@ -1278,27 +1360,31 @@ static std::string DescribeValue(JSContext* context, JSValueConst value,
         std::string arrayDesc = "[";
         int64_t i, effectiveCount = MIN(count, (int64_t)4);
         for (i = 0; i < effectiveCount; i++) {
-          JSValue item = JS_GetPropertyUint32(context, value, (uint32_t)i);
+          JSValue item =
+              JS_GetPropertyUint32(context, value, static_cast<uint32_t>(i));
           std::string itemDesc = "?";
           if (!JS_IsException(item)) {
             itemDesc = DescribeValue(
                 context, item, true /* always abbreviate objects in arrays */,
                 true);
+          } else {
+            JS_FreeValue(context, JS_GetException(context));
           }
           JS_FreeValue(context, item);
           if (i != 0) arrayDesc += ", ";
           arrayDesc += itemDesc;
         }
         if (effectiveCount != count) {
-          arrayDesc +=
-              oo::str::format(", ... <%lli items total>]", (long long)count);
+          arrayDesc += oo::str::format(", ... <%lli items total>]",
+                                       static_cast<long long>(count));
         } else {
           arrayDesc += "]";
         }
 
         result = arrayDesc;
       } else {
-        result = oo::str::format("[<%lli items>]", (long long)count);
+        result =
+            oo::str::format("[<%lli items>]", static_cast<long long>(count));
       }
     } else {
       JS_FreeValue(context, JS_GetException(context));
@@ -1318,7 +1404,10 @@ static std::string DescribeValue(JSContext* context, JSValueConst value,
   }
 
   return *result;
+
+  OOJS_PROFILE_EXIT_VAL(std::string())
 }
+}  // namespace
 
 std::string cxx_OOJSDescribeValue(JSContext* context, JSValueConst value,
                                   bool abbreviateObjects) {
@@ -1327,23 +1416,28 @@ std::string cxx_OOJSDescribeValue(JSContext* context, JSValueConst value,
 
 std::optional<std::string> cxx_OOJSStringWithJavaScriptParameters(
     JSValueConst* params, int count, JSContext* context) {
+  OOJS_PROFILE_ENTER
+
   if (params == NULL && count != 0) return std::nullopt;
 
-  int i;
   std::string result = "(";
 
-  for (i = 0; i < count; ++i) {
+  for (int i = 0; i < count; ++i) {
     if (i != 0) result += ", ";
     result += cxx_OOJSDescribeValue(context, params[i], false);
   }
 
   result += ")";
   return result;
+
+  OOJS_PROFILE_EXIT_VAL(std::nullopt)
 }
 
 std::optional<std::string> cxx_OOJSConcatenationOfStringsFromJavaScriptValues(
     JSValueConst* values, size_t count, const std::string& separator,
     JSContext* context) {
+  OOJS_PROFILE_ENTER
+
   size_t i;
   std::optional<std::string> result;
 
@@ -1363,6 +1457,8 @@ std::optional<std::string> cxx_OOJSConcatenationOfStringsFromJavaScriptValues(
   }
 
   return result;
+
+  OOJS_PROFILE_EXIT_VAL(std::nullopt)
 }
 
 std::string cxx_OOJSEscapedForJavaScriptLiteral(std::string_view string) {
@@ -1443,10 +1539,14 @@ JSValue OONull::jsValueInContext(JSContext* /*context*/) { return JS_NULL; }
 // Reusable callbacks
 //===========================================================================
 
-JSValue OOJSUnconstructableConstruct(JSContext* context, JSValueConst thisObj,
-                                     int argc, JSValueConst* argv) {
-  // For constructors, this is new.target, i.e. the constructor function itself.
-  JSValue nameVal = JS_GetPropertyStr(context, thisObj, "name");
+JSValue OOJSUnconstructableConstruct(OOJS_NATIVE_ARGS) {
+  // For constructors, this is new.target, i.e. the constructor function
+  // itself.
+  JSValue nameVal = JS_GetPropertyStr(context, OOJS_THIS, "name");
+  if (JS_IsException(nameVal)) {
+    JS_FreeValue(context, JS_GetException(context));
+    nameVal = JS_UNDEFINED;
+  }
   std::optional<std::string> name = cxx_OOStringFromJSValue(context, nameVal);
   JS_FreeValue(context, nameVal);
 
@@ -1462,14 +1562,13 @@ void OOJSObjectWrapperFinalize(JSRuntime* runtime, JSValueConst thisObj) {
   OOJSCxxObjectWrapperFinalize(runtime, thisObj);
 }
 
-// No slot holds an Objective-C object, so the JS class names the object.
-JSValue OOJSObjectWrapperToString(JSContext* context, JSValueConst thisObj,
-                                  int argc, JSValueConst* argv) {
+// No slot is read here (not every class's slot holds a C++ object that
+// describes itself), so the JS class names the object.
+JSValue OOJSObjectWrapperToString(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> description;
-
-  const char* className = OOJSClassName(JS_GetClassID(thisObj));
+  const char* className = OOJSClassName(JS_GetClassID(OOJS_THIS));
   if (className != NULL) {
     description = oo::str::format("[object %s]", className);
   }
@@ -1485,8 +1584,10 @@ JSValue OOJSObjectWrapperToString(JSContext* context, JSValueConst thisObj,
 //===========================================================================
 
 bool JSFunctionPredicate(Entity* entity, void* parameter) {
+  OOJS_PROFILE_ENTER
+
   JSFunctionPredicateParameter* param =
-      (JSFunctionPredicateParameter*)parameter;
+      static_cast<JSFunctionPredicateParameter*>(parameter);
   bool result = false;
 
   OOCParameterAssert(entity != nullptr && param != NULL);
@@ -1495,14 +1596,13 @@ bool JSFunctionPredicate(Entity* entity, void* parameter) {
 
   if (EXPECT_NOT(param->errorFlag)) return false;
 
-  JSValue arg = OOJSEntityJSValue(
-      entity, param->context);  // the C++ entity's glue; entity is required to
-                                // be non-nil (asserted above).
+  // the C++ entity's glue; entity is required to be non-nil (asserted above).
+  JSValue arg = OOJSEntityJSValue(entity, param->context);
 
   OOJSStartTimeLimiter();
   OOJSResumeTimeLimiter();
-  JSValue rval = JS_Call(param->context, param->function, param->jsThis, 1,
-                         (JSValueConst*)&arg);
+  JSValue rval =
+      JS_Call(param->context, param->function, param->jsThis, 1, &arg);
   OOJSPauseTimeLimiter();
   OOJSStopTimeLimiter();
 
@@ -1517,6 +1617,8 @@ bool JSFunctionPredicate(Entity* entity, void* parameter) {
   }
 
   return result;
+
+  OOJS_PROFILE_EXIT
 }
 
 namespace {
@@ -1545,11 +1647,18 @@ OOEntityStatus OOJavaScriptEngineStatus(Entity* entity) {
 
 }  // namespace
 
-bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* parameter) {
+bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* /*parameter*/) {
+  OOJS_PROFILE_ENTER
+
   return OOJavaScriptEngineIsVisibleToScripts(entity);
+
+  OOJS_PROFILE_EXIT
 }
 
-bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void* parameter) {
+bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
+                                             void* /*parameter*/) {
+  OOJS_PROFILE_ENTER
+
   if (!OOJavaScriptEngineIsVisibleToScripts(entity)) return false;
   if (OOJavaScriptEngineIsShip(entity)) {
     if (OOJavaScriptEngineIsSubEntity(entity)) return false;
@@ -1571,9 +1680,11 @@ bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void* parameter) {
   }
 
   return true;  // would happen if we added a new script-visible class
+
+  OOJS_PROFILE_EXIT
 }
 
-bool JSEntityIsDemoShipPredicate(Entity* entity, void* parameter) {
+bool JSEntityIsDemoShipPredicate(Entity* entity, void* /*parameter*/) {
   return (OOJavaScriptEngineIsVisibleToScripts(entity) &&
           OOJavaScriptEngineIsShip(entity) &&
           OOJavaScriptEngineStatus(entity) == STATUS_COCKPIT_DISPLAY &&
@@ -1584,24 +1695,30 @@ bool JSEntityIsDemoShipPredicate(Entity* entity, void* parameter) {
 // Classes
 //===========================================================================
 
-// Class registration lives in OOJSClasses.m.
+// Class registration lives in OOJSClasses.cpp; the C++ private-object getter in
+// OOJSPrivateObject.cpp.
 
 //===========================================================================
 // JS to native conversion
 //===========================================================================
 
 oo::PList OOJSDictionaryFromJSValue(JSContext* context, JSValueConst value) {
+  OOJS_PROFILE_ENTER
+
   if (EXPECT_NOT(!JS_IsObject(value))) {
     return oo::PList();
   }
   return cxx_OOJSDictionaryFromJSObject(context, value);
+
+  OOJS_PROFILE_EXIT_VAL(oo::PList())
 }
 
 oo::PList cxx_OOJSDictionaryFromJSObject(JSContext* context,
                                          JSValueConst object) {
+  OOJS_PROFILE_ENTER
+
   JSPropertyEnum* properties = NULL;
   uint32_t i, count;
-  oo::PList::Dict result;
 
   if (JS_GetOwnPropertyNames(context, &properties, &count, object,
                              JS_GPN_STRING_MASK | JS_GPN_ENUM_ONLY) < 0) {
@@ -1609,12 +1726,12 @@ oo::PList cxx_OOJSDictionaryFromJSObject(JSContext* context,
     return oo::PList();
   }
 
+  oo::PList::Dict result;
   for (i = 0; i != count; ++i) {
     /*	An integer-like property is keyed by its decimal text, the name
-           JS itself gives it, so native code can look it up by that key.
-        */
-    const std::optional<std::string> key =
-        cxx_OOStringFromJSID(properties[i].atom);
+       JS itself gives it, so native code can look it up by that key.
+    */
+    std::optional<std::string> key = cxx_OOStringFromJSID(properties[i].atom);
     JSValue value = JS_GetProperty(context, object, properties[i].atom);
     if (JS_IsException(value)) {
       JS_FreeValue(context, JS_GetException(context));
@@ -1630,13 +1747,16 @@ oo::PList cxx_OOJSDictionaryFromJSObject(JSContext* context,
 
   JS_FreePropertyEnum(context, properties, count);
   return oo::PList(std::move(result));
+
+  OOJS_PROFILE_EXIT_VAL(oo::PList())
 }
 
 oo::PList OOJSDictionaryFromStringTable(JSContext* context,
                                         JSValueConst tableValue) {
+  OOJS_PROFILE_ENTER
+
   JSPropertyEnum* properties = NULL;
   uint32_t i, count;
-  oo::PList::Dict result;
 
   if (EXPECT_NOT(JS_IsNull(tableValue) || JS_IsUndefined(tableValue))) {
     return oo::PList();
@@ -1655,19 +1775,19 @@ oo::PList OOJSDictionaryFromStringTable(JSContext* context,
     return oo::PList();
   }
 
+  oo::PList::Dict result;
   for (i = 0; i != count; ++i) {
-    const std::optional<std::string> key =
-        cxx_OOStringFromJSID(properties[i].atom);
+    std::optional<std::string> key = cxx_OOStringFromJSID(properties[i].atom);
     JSValue value = JS_GetProperty(context, tableObject, properties[i].atom);
     if (JS_IsException(value)) {
       JS_FreeValue(context, JS_GetException(context));
       continue;
     }
 
-    if (key.has_value() && !JS_IsUndefined(value)) {
+    if (key && !JS_IsUndefined(value)) {
       std::optional<std::string> string =
           cxx_OOStringFromJSValueEvenIfNull(context, value);
-      if (string.has_value()) {
+      if (string) {
         result.insert_or_assign(*key, oo::PList(std::move(*string)));
       }
     }
@@ -1677,26 +1797,32 @@ oo::PList OOJSDictionaryFromStringTable(JSContext* context,
   JS_FreePropertyEnum(context, properties, count);
   JS_FreeValue(context, tableObject);
   return oo::PList(std::move(result));
+
+  OOJS_PROFILE_EXIT_VAL(oo::PList())
 }
 
+namespace {
 // Indexed by class ID; process lifetime.
-static OOJSClassConverterCallback sObjectConverters[kOOJSMaxClassID];
+OOJSClassConverterCallback sObjectConverters[kOOJSMaxClassID];
+}  // namespace
 
 JSClassID gOOJSObjectClassID, gOOJSStringClassID, gOOJSArrayClassID,
     gOOJSNumberClassID, gOOJSBooleanClassID;
 
 oo::PList cxx_OOJSPListFromJSValue(JSContext* context, JSValueConst value) {
+  OOJS_PROFILE_ENTER
+
   if (JS_IsNull(value) || JS_IsUndefined(value)) return oo::PList();
 
-  int32_t intValue;
-  double doubleValue;
-
   if (JS_VALUE_GET_TAG(value) == JS_TAG_INT) {
-    JS_ToInt32(context, &intValue, value);
-    return oo::PList::signedInteger(intValue);
+    return oo::PList::signedInteger(JS_VALUE_GET_INT(value));
   }
   if (JS_IsNumber(value)) {
-    JS_ToFloat64(context, &doubleValue, value);
+    double doubleValue = 0.0;
+    if (JS_ToFloat64(context, &doubleValue, value) < 0) {
+      JS_FreeValue(context, JS_GetException(context));
+      return oo::PList();
+    }
     return oo::PList(doubleValue);
   }
   if (JS_IsBool(value)) {
@@ -1710,24 +1836,13 @@ oo::PList cxx_OOJSPListFromJSValue(JSContext* context, JSValueConst value) {
     return cxx_OOJSPListFromJSObject(context, value);
   }
   return oo::PList();
+
+  OOJS_PROFILE_EXIT_VAL(oo::PList())
 }
 
-static oo::PList PListFromJSArray(JSContext* context, JSValueConst array);
-static oo::PList PListFromJSStringObject(JSContext* context,
-                                         JSValueConst object);
-static oo::PList PListFromJSNumberObject(JSContext* context,
-                                         JSValueConst object);
-static oo::PList PListFromJSBooleanObject(JSContext* context,
-                                          JSValueConst object);
-static oo::PList PListFromJSPlainObject(JSContext* context,
-                                        JSValueConst object);
-static oo::PList JSArrayConverter(JSContext* context, JSValueConst array);
-static oo::PList JSStringConverter(JSContext* context, JSValueConst object);
-static oo::PList JSNumberConverter(JSContext* context, JSValueConst object);
-static oo::PList JSBooleanConverter(JSContext* context, JSValueConst object);
-static oo::PList JSObjectConverter(JSContext* context, JSValueConst object);
-
 oo::PList cxx_OOJSPListFromJSObject(JSContext* context, JSValueConst object) {
+  OOJS_PROFILE_ENTER
+
   if (!JS_IsObject(object)) return oo::PList();
 
   JSClassID classID = JS_GetClassID(object);
@@ -1738,6 +1853,8 @@ oo::PList cxx_OOJSPListFromJSObject(JSContext* context, JSValueConst object) {
   // The engine's own converters build the PList; a private-object converter
   // gives an Object node.
   return converter(context, object);
+
+  OOJS_PROFILE_EXIT_VAL(oo::PList())
 }
 
 // The slot holds a C++ object: a node of it when it is a node's foreign
@@ -1758,9 +1875,9 @@ void OOJSRegisterObjectConverter(JSClassID classID,
   sObjectConverters[classID] = converter;
 }
 
-static oo::PList PListFromJSArray(JSContext* context, JSValueConst array) {
+namespace {
+oo::PList JSArrayConverter(JSContext* context, JSValueConst array) {
   int64_t i, count;
-  oo::PList::Array values;
 
   // Convert a JS array to a native array by calling cxx_OOJSPListFromJSValue()
   // on all its elements.
@@ -1770,9 +1887,11 @@ static oo::PList PListFromJSArray(JSContext* context, JSValueConst array) {
     return oo::PList();
   }
 
+  oo::PList::Array values;
   values.reserve(static_cast<std::size_t>(count));
   for (i = 0; i != count; ++i) {
-    JSValue value = JS_GetPropertyUint32(context, array, (uint32_t)i);
+    JSValue value =
+        JS_GetPropertyUint32(context, array, static_cast<uint32_t>(i));
     if (JS_IsException(value)) {
       JS_FreeValue(context, JS_GetException(context));
       value = JS_UNDEFINED;
@@ -1789,22 +1908,12 @@ static oo::PList PListFromJSArray(JSContext* context, JSValueConst array) {
   return oo::PList(std::move(values));
 }
 
-static oo::PList JSArrayConverter(JSContext* context, JSValueConst array) {
-  return PListFromJSArray(context, array);
-}
-
-static oo::PList PListFromJSStringObject(JSContext* context,
-                                         JSValueConst object) {
+oo::PList JSStringConverter(JSContext* context, JSValueConst object) {
   std::optional<std::string> string = cxx_OOStringFromJSValue(context, object);
   return string.has_value() ? oo::PList(std::move(*string)) : oo::PList();
 }
 
-static oo::PList JSStringConverter(JSContext* context, JSValueConst object) {
-  return PListFromJSStringObject(context, object);
-}
-
-static oo::PList PListFromJSNumberObject(JSContext* context,
-                                         JSValueConst object) {
+oo::PList JSNumberConverter(JSContext* context, JSValueConst object) {
   double value;
   if (JS_ToFloat64(context, &value, object) == 0) {
     return oo::PList(value);
@@ -1813,12 +1922,7 @@ static oo::PList PListFromJSNumberObject(JSContext* context,
   return oo::PList();
 }
 
-static oo::PList JSNumberConverter(JSContext* context, JSValueConst object) {
-  return PListFromJSNumberObject(context, object);
-}
-
-static oo::PList PListFromJSBooleanObject(JSContext* context,
-                                          JSValueConst object) {
+oo::PList JSBooleanConverter(JSContext* context, JSValueConst object) {
   /*	Fun With JavaScript: Boolean(false) is a truthy value, since it's a
           non-null object. However, Boolean objects are transformed to numbers
           sanely, so this works.
@@ -1831,14 +1935,9 @@ static oo::PList PListFromJSBooleanObject(JSContext* context,
   return oo::PList();
 }
 
-static oo::PList JSBooleanConverter(JSContext* context, JSValueConst object) {
-  return PListFromJSBooleanObject(context, object);
-}
-
 // A plain JS Object: cxx_OOJSDictionaryFromJSObject(); an integer-like key is a
 // string.
-static oo::PList PListFromJSPlainObject(JSContext* context,
-                                        JSValueConst object) {
+oo::PList JSObjectConverter(JSContext* context, JSValueConst object) {
   /*	SpiderMonkey's global object had a class of its own, with no converter,
           so it converted to nil. QuickJS's is a plain object, and converting it
           as one recurses until the stack overflows, since globalThis refers to
@@ -1852,11 +1951,7 @@ static oo::PList PListFromJSPlainObject(JSContext* context,
   return cxx_OOJSDictionaryFromJSObject(context, object);
 }
 
-static oo::PList JSObjectConverter(JSContext* context, JSValueConst object) {
-  return PListFromJSPlainObject(context, object);
-}
-
-static void RegisterStandardObjectConverters(JSContext* context) {
+void RegisterStandardObjectConverters(JSContext* context) {
   if (gOOJSObjectClassID == 0) {
     // The standard class IDs are not part of the QuickJS API, so look them up
     // from instances.
@@ -1881,3 +1976,4 @@ static void RegisterStandardObjectConverters(JSContext* context) {
   OOJSRegisterObjectConverter(gOOJSNumberClassID, JSNumberConverter);
   OOJSRegisterObjectConverter(gOOJSBooleanClassID, JSBooleanConverter);
 }
+}  // namespace

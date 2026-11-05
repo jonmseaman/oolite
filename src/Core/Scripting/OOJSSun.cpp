@@ -1,6 +1,6 @@
 /*
 
-OOJSSun.m (QuickJS-ng)
+OOJSSun.mm
 
 
 Oolite
@@ -25,6 +25,9 @@ MA 02110-1301, USA.
 
 #include "OOJSSun.h"
 
+#include <cstdint>
+#include <cstring>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJavaScriptEngine.h"
@@ -32,17 +35,21 @@ MA 02110-1301, USA.
 
 static JSClassID sSunClassID;
 
+namespace {
 static JSValue SunGetProperty(OOJS_GETTER_ARGS);
 static JSValue SunGoNova(OOJS_NATIVE_ARGS);
 static JSValue SunCancelNova(OOJS_NATIVE_ARGS);
+}  // namespace
 
+namespace {
 static JSClassDef sSunClass = {
     .class_name = "Sun",
     .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+        OOJSObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
 };
+}
 
-enum {
+enum : std::uint8_t {
   // Property IDs
   kSun_radius,       // Radius of sun in metres, number, read-only
   kSun_hasGoneNova,  // Has sun gone nova, boolean, read-only
@@ -50,6 +57,7 @@ enum {
   kSun_name          // Name of sun, string, read-only (writable via systeminfo)
 };
 
+namespace {
 static const JSCFunctionListEntry sSunProperties[] = {
     // JS name, getter, setter, ID
     OOJS_PROPERTY_RO("hasGoneNova", SunGetProperty, kSun_hasGoneNova),
@@ -57,12 +65,15 @@ static const JSCFunctionListEntry sSunProperties[] = {
     OOJS_PROPERTY_RO("name", SunGetProperty, kSun_name),
     OOJS_PROPERTY_RO("radius", SunGetProperty, kSun_radius),
 };
+}
 
+namespace {
 static const JSCFunctionListEntry sSunMethods[] = {
     // JS name, min args, function
     JS_CFUNC_DEF("cancelNova", 0, SunCancelNova),
     JS_CFUNC_DEF("goNova", 1, SunGoNova),
 };
+}
 
 namespace {
 // The getter checks the JS class and answers the C++ sun (the slot holds the
@@ -103,12 +114,13 @@ std::optional<std::string> OOJSSunJSClassName(void) {
   return std::string("Sun");
 }
 
+namespace {
 static JSValue SunGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   OOSunEntity* sun = nullptr;
 
-  if (EXPECT_NOT(!JSSunGetSunEntity(context, thisObj, &sun)))
+  if (EXPECT_NOT(!JSSunGetSunEntity(context, OOJS_THIS, &sun)))
     return OOJSNativeFailure(context);
 
   switch (magic) {
@@ -130,19 +142,19 @@ static JSValue SunGetProperty(OOJS_GETTER_ARGS) {
                                !(sun != nullptr ? sun->goneNova() : false));
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sSunProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic, sSunProperties,
                                     OOJS_COUNT(sSunProperties));
       return OOJSNativeFailure(context);
   }
 
   OOJS_NATIVE_EXIT
 }
-
-// namespace
+}  // namespace
 
 // *** Methods ***
 
 // goNova([delay : Number])
+namespace {
 static JSValue SunGoNova(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -159,10 +171,10 @@ static JSValue SunGoNova(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
-
-// namespace
+}  // namespace
 
 // cancelNova()
+namespace {
 static JSValue SunCancelNova(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -179,3 +191,4 @@ static JSValue SunCancelNova(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace

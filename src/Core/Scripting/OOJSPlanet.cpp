@@ -1,6 +1,6 @@
 /*
 
-OOJSPlanet.m (QuickJS-ng)
+OOJSPlanet.mm
 
 
 Oolite
@@ -25,18 +25,20 @@ MA 02110-1301, USA.
 
 #include "OOJSPlanet.h"
 
-#include "EntityOOJavaScriptExtensions.h"
+#include <cstdint>
+#include <cstring>
+
 #include "OOJSEntity.h"
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOPlanetEntity.h"
-#include "oofnd/objc/OOAssert.h"
 
+namespace {
 static JSClassID sPlanetClassID;
+}  // namespace
 
-static JSValue PlanetGetProperty(OOJS_GETTER_ARGS);
-static JSValue PlanetSetProperty(OOJS_SETTER_ARGS);
+namespace {
 
 namespace {
 
@@ -52,13 +54,20 @@ oo::PList NormalizedColorComponents(OOColor* color) {
 
 }  // namespace
 
+static JSValue PlanetGetProperty(OOJS_GETTER_ARGS);
+}  // namespace
+namespace {
+static JSValue PlanetSetProperty(OOJS_SETTER_ARGS);
+}  // namespace
+
+namespace {
 static JSClassDef sPlanetClass = {
     .class_name = "Planet",
-    .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+    .finalizer = OOJSObjectWrapperFinalize,
 };
+}  // namespace
 
-enum {
+enum : std::uint8_t {
   // Property IDs
   kPlanet_airColor,          // air color, read/write
   kPlanet_airColorMixRatio,  // air color mix ratio, float, read/write
@@ -74,6 +83,7 @@ enum {
   kPlanet_terminatorThresholdVector,
 };
 
+namespace {
 static const JSCFunctionListEntry sPlanetProperties[] = {
     // JS name, getter, setter, ID
     OOJS_PROPERTY_RW("airColor", PlanetGetProperty, PlanetSetProperty,
@@ -99,18 +109,21 @@ static const JSCFunctionListEntry sPlanetProperties[] = {
     OOJS_PROPERTY_RW("terminatorThresholdVector", PlanetGetProperty,
                      PlanetSetProperty, kPlanet_terminatorThresholdVector),
 };
+}  // namespace
 
-// The getter checks the JS class and answers the C++ planet (the slot holds the
-// C++ entity, read by OOJSEntityGetEntityOfClass for the Planet class); null
-// for a stale entity.
-static bool JSPlanetGetPlanetEntity(JSContext* context, JSValueConst inObject,
-                                    OOPlanetEntity** outObject) {
+namespace {
+// #768's DEFINE_JS_OBJECT_GETTER: the getter checks the JS class and answers
+// the C++ planet (the slot holds the C++ entity, read by
+// OOJSEntityGetEntityOfClass for the Planet class); null for a stale entity.
+bool JSPlanetGetPlanetEntity(JSContext* context, JSValueConst inObject,
+                             OOPlanetEntity** outObject) {
   Entity* entity = nullptr;
   if (!OOJSEntityGetEntityOfClass(context, inObject, sPlanetClassID, &entity))
     return false;
   *outObject = dynamic_cast<OOPlanetEntity*>(entity);
   return true;
 }
+}  // namespace
 
 void InitOOJSPlanet(JSContext* context, JSValueConst global) {
   OOJSRegisterClass(&sPlanetClassID, &sPlanetClass);
@@ -120,7 +133,7 @@ void InitOOJSPlanet(JSContext* context, JSValueConst global) {
             "Entity must be initialized before Planet.");
   OOJSInitClass(context, global, sPlanetClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sPlanetProperties,
-                OOJS_COUNT(sPlanetProperties), NULL, 0, NULL, 0);
+                OOJS_COUNT(sPlanetProperties), nullptr, 0, nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sPlanetClassID, OOJSEntityObjectConverter);
@@ -148,11 +161,12 @@ std::optional<std::string> OOJSPlanetJSClassName(OOPlanetEntity* planet) {
   }
 }
 
+namespace {
 static JSValue PlanetGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   OOPlanetEntity* planet = nullptr;
-  if (!JSPlanetGetPlanetEntity(context, thisObj, &planet))
+  if (!JSPlanetGetPlanetEntity(context, OOJS_THIS, &planet))
     return OOJSNativeFailure(context);
 
   switch (magic) {
@@ -221,14 +235,17 @@ static JSValue PlanetGetProperty(OOJS_GETTER_ARGS) {
           (planet != nullptr ? planet->terminatorThresholdVector() : Vector{}));
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sPlanetProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sPlanetProperties,
                                     OOJS_COUNT(sPlanetProperties));
       return OOJSNativeFailure(context);
   }
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -239,7 +256,7 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
   double dValue;
   oo::Ref<OOColor> colorForScript;
 
-  if (!JSPlanetGetPlanetEntity(context, thisObj, &planet))
+  if (!JSPlanetGetPlanetEntity(context, OOJS_THIS, &planet))
     return OOJSNativeFailure(context);
 
   switch (magic) {
@@ -337,14 +354,16 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sPlanetProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sPlanetProperties,
                                     OOJS_COUNT(sPlanetProperties));
       return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sPlanetProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sPlanetProperties,
                              OOJS_COUNT(sPlanetProperties), value);
   return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace

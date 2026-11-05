@@ -1,6 +1,6 @@
 /*
 
-OOJSWorldScripts.m
+OOJSWorldScripts.mm
 
 
 Oolite
@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 
 #include "OOJSWorldScripts.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include "OOJSPlayer.h"
@@ -85,7 +86,7 @@ static std::optional<std::string> ScriptNameForPropertyID(JSContext* context,
 
 static int WorldScriptsGetOwnProperty(JSContext* context,
                                       JSPropertyDescriptor* desc,
-                                      JSValueConst object, JSAtom propID) {
+                                      JSValueConst /*object*/, JSAtom propID) {
   try {
     PlayerEntity* player = OOPlayerForScripting();
     std::optional<std::string> scriptName;
@@ -94,13 +95,13 @@ static int WorldScriptsGetOwnProperty(JSContext* context,
     scriptName = ScriptNameForPropertyID(context, propID);
 
     if (scriptName.has_value()) {
-      script = nullptr;
       const auto worldScripts =
           (player != nullptr
                ? player->worldScriptsByName()
-               : std::vector<std::pair<
-                     std::string, oo::Ref<OOScript>>>());  // kept while script
-                                                           // is used
+               : std::vector<std::pair<std::string,
+                                       oo::Ref<OOScript>>>());  // kept while
+                                                                // script is
+                                                                // used
       for (const auto& [name, scriptRef] :
            worldScripts)  // the last of a name, as the dictionary kept
       {
@@ -115,7 +116,7 @@ static int WorldScriptsGetOwnProperty(JSContext* context,
                   undefined.
           */
           desc->flags = OOJS_PROP_READONLY;
-          desc->value = script->jsValueInContext(context);
+          desc->value = script->jsValueInContext(context);  // owned
           desc->getter = JS_UNDEFINED;
           desc->setter = JS_UNDEFINED;
         }
@@ -133,7 +134,7 @@ static int WorldScriptsGetOwnProperty(JSContext* context,
 static int WorldScriptsGetOwnPropertyNames(JSContext* context,
                                            JSPropertyEnum** outTable,
                                            uint32_t* outCount,
-                                           JSValueConst object) {
+                                           JSValueConst /*object*/) {
   /*	In order to support enumeration of world scripts (e.g.,
           for (name in worldScripts) { ... }), report each name.
           QuickJS frees the table and its atoms.
@@ -143,13 +144,13 @@ static int WorldScriptsGetOwnPropertyNames(JSContext* context,
     const std::vector<std::string> names =
         (player != nullptr ? player->worldScriptNames()
                            : std::vector<std::string>());
-    uint32_t i, count = (uint32_t)names.size();
+    uint32_t count = static_cast<uint32_t>(names.size());
 
-    JSPropertyEnum* table =
-        (JSPropertyEnum*)js_malloc(context, sizeof *table * MAX(count, 1U));
+    JSPropertyEnum* table = static_cast<JSPropertyEnum*>(
+        js_malloc(context, sizeof *table * std::max(count, 1U)));
     if (table == NULL) return -1;
 
-    for (i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
       table[i].is_enumerable = true;
       table[i].atom = JS_NewAtom(context, names[i].c_str());
       if (table[i].atom == JS_ATOM_NULL) {

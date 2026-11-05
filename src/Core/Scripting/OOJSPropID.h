@@ -1,9 +1,10 @@
 /*
 
-OOJSPropID.h (QuickJS-ng)
+OOJSPropID.h
 
-Oolite
-Copyright (C) 2004-2013 Giles C Williams and contributors
+
+JavaScript support for Oolite
+Copyright (C) 2007-2013 David Taylor and Jens Ayton.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -30,7 +31,7 @@ MA 02110-1301, USA.
 
 /*	Engine-neutral names for a property ID and a value (jsid and jsval with
         SpiderMonkey). Declared here, rather than in OOJavaScriptEngine.h, so
-   game headers imported by OOJavaScriptEngine.h can use them.
+   game headers included by OOJavaScriptEngine.h can use them.
 */
 typedef JSAtom OOJSPropID;
 typedef JSValue OOJSVal;

@@ -39,9 +39,10 @@ MA 02110-1301, USA.
 
 class OOJSFunction : public oo::RefCounted {
  public:
-  // The initialisers' factories: null where the initialiser answered nil (not a
-  // function; no code, missing argument names, or a compile error). function
-  // must be a function value; the OOJSFunction takes its own reference.
+  // The initialisers' factories: null where the initialiser answered nil (not
+  // a function; no code, missing argument names, or a compile error).
+  // function must be a function value; the OOJSFunction takes its own
+  // reference.
   static oo::Ref<OOJSFunction> initWithFunction(JSValueConst function,
                                                 JSContext* context);
   static oo::Ref<OOJSFunction> initWithName(

@@ -1,6 +1,6 @@
 /*
 
-OOJSConsole.m (QuickJS-ng)
+OOJSConsole.m
 
 
 Oolite
@@ -48,6 +48,7 @@ SOFTWARE.
 #include "OOLoggingExtended.h"
 #include "OOObjCPList.h"
 #include "OOOpenGLExtensionManager.h"
+#include "OOProfilingStopwatch.h"
 #include "ResourceManager.h"
 #if OO_DEBUG
 #include "OOShaderUniformMethodType.h"  // callObjC()'s scalar results on the console
@@ -57,11 +58,11 @@ SOFTWARE.
 #include "oofnd/String.hpp"
 
 // The Mac debug OXP's inspector added -inspect to entities (a category on
-// Entity); inspectEntity() sent it to an entity that answered it. Since the
-// root facade's deletion it calls the entity's virtual inspect()
-// (oo::InspectEntity()), which does nothing unless a subclass overrides it.
+// Entity); inspectEntity() sent it to an entity that answered it. Now it calls
+// the entity's virtual inspect() (oo::InspectEntity()), which does nothing
+// unless a subclass overrides it.
 
-/*	Differences from the SpiderMonkey version:
+/*	Differences from the SpiderMonkey version (as #768's):
         - pedanticMode is remembered but has no effect: SpiderMonkey's
           JSOPTION_STRICT extra warnings have no QuickJS equivalent.
         - dumpNamedRoots() does not exist (QuickJS has no named roots), and
@@ -75,10 +76,6 @@ SOFTWARE.
 static JSClassID sConsoleClassID;
 static JSClassID sConsoleSettingsClassID;
 static bool sPedanticMode = true;
-
-namespace {
-oo::PList ConsoleConverter(JSContext* context, JSValueConst object);
-}  // namespace
 
 static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS);
 static JSValue ConsoleSetProperty(OOJS_SETTER_ARGS);
@@ -138,7 +135,7 @@ static int ConsoleSettingsSetProperty(JSContext* context, JSValueConst object,
 */
 static JSClassDef sConsoleClass = {
     .class_name = "Console",
-    .finalizer = OOJSCxxObjectWrapperFinalize,
+    .finalizer = OOJSObjectWrapperFinalize,
 };
 
 enum {
@@ -151,8 +148,9 @@ enum {
   kConsole_platformDescription,  // Information about system we're running on in
                                  // unspecified format, string, read-only
   kConsole_ignoreDroppedPackets,  // boolean (default false), read/write
-  kConsole_pedanticMode,  // JS pedantic mode (JS_STRICT flag, not the same as
-                          // "use strict"), boolean (default true), read/write
+  kConsole_pedanticMode,  // JS pedantic mode (the engine's strict option, not
+                          // the same as "use strict"), boolean (default true),
+                          // read/write
   kConsole_showErrorLocations,  // Show error/warning source locations, boolean
                                 // (default true), read/write
   kConsole_dumpStackForErrors,  // Write stack dump when reporting
@@ -188,8 +186,7 @@ enum {
                         OOJS_PROP_HIDDEN_READWRITE_CB)
 
 static const JSCFunctionListEntry sConsoleProperties[] = {
-    // JS name								Getter
-    // Setter				ID
+    // JS name, getter, setter, ID
     OOJS_PROPERTY_RW("debugFlags", ConsoleGetProperty, ConsoleSetProperty,
                      kConsole_debugFlags),
     OOJS_PROPERTY_RW("detailLevel", ConsoleGetProperty, ConsoleSetProperty,
@@ -237,8 +234,7 @@ static const JSCFunctionListEntry sConsoleProperties[] = {
 };
 
 static const JSCFunctionListEntry sConsoleMethods[] = {
-    // JS name							Function
-    // min args
+    // JS name, min args, function
     JS_CFUNC_DEF("consoleMessage", 2, ConsoleConsoleMessage),
     JS_CFUNC_DEF("clearConsole", 0, ConsoleClearConsole),
     JS_CFUNC_DEF("scriptStack", 0, ConsoleScriptStack),
@@ -274,7 +270,7 @@ static JSClassExoticMethods sConsoleSettingsExoticMethods = {
 
 static JSClassDef sConsoleSettingsClass = {
     .class_name = "ConsoleSettings",
-    .finalizer = OOJSCxxObjectWrapperFinalize,  // (same as Console)
+    .finalizer = OOJSObjectWrapperFinalize,  // (same as Console)
     .exotic = &sConsoleSettingsExoticMethods,
 };
 
@@ -284,12 +280,13 @@ static void InitOOJSConsole(JSContext* context, JSValueConst global) {
                 OOJSUnconstructableConstruct, 0, sConsoleProperties,
                 OOJS_COUNT(sConsoleProperties), sConsoleMethods,
                 OOJS_COUNT(sConsoleMethods), NULL, 0);
-  OOJSRegisterObjectConverter(sConsoleClassID, ConsoleConverter);
+  OOJSRegisterObjectConverter(sConsoleClassID, OOJSBasicPrivateObjectConverter);
 
   OOJSRegisterClass(&sConsoleSettingsClassID, &sConsoleSettingsClass);
   OOJSInitClass(context, global, sConsoleSettingsClassID, JS_UNDEFINED,
                 OOJSUnconstructableConstruct, 0, NULL, 0, NULL, 0, NULL, 0);
-  OOJSRegisterObjectConverter(sConsoleSettingsClassID, ConsoleConverter);
+  OOJSRegisterObjectConverter(sConsoleSettingsClassID,
+                              OOJSBasicPrivateObjectConverter);
 }
 
 namespace {
@@ -323,22 +320,11 @@ void ReportNotTheMonitor(JSContext* context, JSValueConst object,
                       "This is an internal error, please report it.");
 }
 
-// The monitor the private slot holds; null, with the internal error reported,
-// for any other object.
 OODebugMonitor* MonitorForConsoleObject(JSContext* context, JSValueConst object,
                                         const char* function) {
   OODebugMonitor* monitor = MonitorFromJSObject(object);
   if (monitor == nullptr) ReportNotTheMonitor(context, object, function);
   return monitor;
-}
-
-// The console objects' converter: the monitor as an Object node
-// (oo::PListForeign), whose JS value is the console object, as the facade's
-// node's was (OOJSBasicPrivateObjectConverter); null for none.
-oo::PList ConsoleConverter(JSContext* /*context*/, JSValueConst object) {
-  OODebugMonitor* monitor = MonitorFromJSObject(object);
-  if (monitor == nullptr) return oo::PList();
-  return oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(monitor)));
 }
 
 }  // namespace
@@ -387,6 +373,7 @@ JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor) {
     return JS_NULL;
   }
 
+  // Takes ownership of settingsObject.
   if (JS_SetPropertyStr(context, object, "settings", settingsObject) < 0) {
     OOJSReportPendingException(context);
     JS_FreeValue(context, object);
@@ -395,7 +382,7 @@ JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor) {
 
   return object;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_VAL(JS_NULL)
 }
 
 static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
@@ -417,29 +404,29 @@ static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
           OOOpenGLExtensionManager::sharedManager()->maximumDetailLevel())));
 
     case kConsole_displayFPS:
-      return OOJSValueFromBOOL(
+      OOJS_RETURN_BOOL(
           (UNIVERSE != nullptr ? UNIVERSE->getDisplayFPS() : false));
 
     case kConsole_platformDescription:
       OOJS_RETURN_PLIST(oo::PList(OOPlatformDescription()));
 
     case kConsole_pedanticMode:
-      return OOJSValueFromBOOL(sPedanticMode);
+      OOJS_RETURN_BOOL(sPedanticMode);
 
     case kConsole_ignoreDroppedPackets:
-      return OOJSValueFromBOOL(
+      OOJS_RETURN_BOOL(
           OODebugMonitor::sharedDebugMonitor()->TCPIgnoresDroppedPackets());
 
     case kConsole_showErrorLocations:
-      return OOJSValueFromBOOL(
+      OOJS_RETURN_BOOL(
           OOJavaScriptEngine::sharedEngine()->showErrorLocations());
 
     case kConsole_dumpStackForErrors:
-      return OOJSValueFromBOOL(
+      OOJS_RETURN_BOOL(
           OOJavaScriptEngine::sharedEngine()->dumpStackForErrors());
 
     case kConsole_dumpStackForWarnings:
-      return OOJSValueFromBOOL(
+      OOJS_RETURN_BOOL(
           OOJavaScriptEngine::sharedEngine()->dumpStackForWarnings());
 
     case kConsole_glVendorString:
@@ -451,18 +438,16 @@ static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
           OOOpenGLExtensionManager::sharedManager()->rendererString());
 
     case kConsole_glFixedFunctionTextureUnitCount:
-      return JS_NewInt32(
-          context,
+      OOJS_RETURN_INT(
           OOOpenGLExtensionManager::sharedManager()->textureUnitCount());
 
     case kConsole_glFragmentShaderTextureUnitCount:
-      return JS_NewInt32(
-          context,
+      OOJS_RETURN_INT(
           OOOpenGLExtensionManager::sharedManager()->textureImageUnitCount());
 
 #define DEBUG_FLAG_CASE(x) \
   case kConsole_##x:       \
-    return JS_NewInt32(context, x);
+    OOJS_RETURN_INT(x);
       DEBUG_FLAG_CASE(DEBUG_LINKED_LISTS);
       DEBUG_FLAG_CASE(DEBUG_COLLISIONS);
       DEBUG_FLAG_CASE(DEBUG_DOCKING);
@@ -478,7 +463,8 @@ static JSValue ConsoleGetProperty(OOJS_GETTER_ARGS) {
 #undef DEBUG_FLAG_CASE
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sConsoleProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sConsoleProperties,
                                     OOJS_COUNT(sConsoleProperties));
       return OOJSNativeFailure(context);
   }
@@ -539,7 +525,8 @@ static JSValue ConsoleSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sConsoleProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sConsoleProperties,
                                     OOJS_COUNT(sConsoleProperties));
       return OOJSNativeFailure(context);
   }
@@ -609,18 +596,20 @@ static std::optional<std::string> SettingKeyForPropertyID(JSContext* context,
         (the enumerate hook was a stub), so for-in and Object.keys() see
    nothing.
 */
-static int ConsoleSettingsGetOwnProperty(JSContext* context,
-                                         JSPropertyDescriptor* desc,
-                                         JSValueConst object, JSAtom propID) {
+static int ConsoleSettingsGetOwnProperty(JSContext* /*context*/,
+                                         JSPropertyDescriptor* /*desc*/,
+                                         JSValueConst /*object*/,
+                                         JSAtom /*propID*/) {
   return false;
 }
 
 static JSValue ConsoleSettingsGetProperty(JSContext* context,
                                           JSValueConst object, JSAtom propID,
-                                          JSValueConst receiver) {
+                                          JSValueConst /*receiver*/) {
   OOJS_NATIVE_ENTER(context)
 
-  std::optional<std::string> key = SettingKeyForPropertyID(context, propID);
+  const std::optional<std::string> key =
+      SettingKeyForPropertyID(context, propID);
   if (!key.has_value() || IsSettingsPrototype(object)) {
     // Symbols, such as Symbol.toPrimitive: look them up on the prototype.
     JSValue prototype = JS_GetPrototype(context, object);
@@ -631,10 +620,10 @@ static JSValue ConsoleSettingsGetProperty(JSContext* context,
 
   OODebugMonitor* monitor =
       MonitorForConsoleObject(context, object, __PRETTY_FUNCTION__);
-  if (monitor == nullptr) return OOJSNativeFailure(context);
+  if (monitor == nullptr) return JS_EXCEPTION;
 
   const oo::PList setting = monitor->configurationValueForKey(*key);
-  if (setting) return OOJSValueFromPList(context, setting);
+  if (!setting.isNull()) OOJS_RETURN_PLIST(setting);
   return JS_UNDEFINED;
 
   OOJS_NATIVE_EXIT
@@ -642,7 +631,8 @@ static JSValue ConsoleSettingsGetProperty(JSContext* context,
 
 static int SetSetting(JSContext* context, JSValueConst object, JSAtom propID,
                       JSValueConst value) {
-  std::optional<std::string> key = SettingKeyForPropertyID(context, propID);
+  const std::optional<std::string> key =
+      SettingKeyForPropertyID(context, propID);
   if (!key.has_value() || IsSettingsPrototype(object)) return true;
 
   OODebugMonitor* monitor =
@@ -671,7 +661,8 @@ static int SetSetting(JSContext* context, JSValueConst object, JSAtom propID,
 
 static int ConsoleSettingsSetProperty(JSContext* context, JSValueConst object,
                                       JSAtom propID, JSValueConst value,
-                                      JSValueConst receiver, int flags) {
+                                      JSValueConst /*receiver*/,
+                                      int /*flags*/) {
   try {
     return SetSetting(context, object, propID, value);
   } catch (...) {
@@ -681,11 +672,9 @@ static int ConsoleSettingsSetProperty(JSContext* context, JSValueConst object,
 }
 
 // Object.defineProperty() and similar: treated as assignment of the value.
-static int ConsoleSettingsDefineOwnProperty(JSContext* context,
-                                            JSValueConst object, JSAtom propID,
-                                            JSValueConst value,
-                                            JSValueConst getter,
-                                            JSValueConst setter, int flags) {
+static int ConsoleSettingsDefineOwnProperty(
+    JSContext* context, JSValueConst object, JSAtom propID, JSValueConst value,
+    JSValueConst /*getter*/, JSValueConst /*setter*/, int flags) {
   try {
     if (!(flags & JS_PROP_HAS_VALUE)) return true;
     return SetSetting(context, object, propID, value);
@@ -698,7 +687,8 @@ static int ConsoleSettingsDefineOwnProperty(JSContext* context,
 static int ConsoleSettingsDeleteProperty(JSContext* context,
                                          JSValueConst object, JSAtom propID) {
   try {
-    std::optional<std::string> key = SettingKeyForPropertyID(context, propID);
+    const std::optional<std::string> key =
+        SettingKeyForPropertyID(context, propID);
     if (!key.has_value() || IsSettingsPrototype(object)) return false;
 
     OODebugMonitor* monitor =
@@ -736,7 +726,7 @@ static JSValue ConsoleConsoleMessage(OOJS_NATIVE_ARGS) {
                         "(null)", __PRETTY_FUNCTION__,
                         "This is an internal error, please report it.");
     OOJSResumeTimeLimiter();
-    return OOJSNativeFailure(context);
+    return JS_EXCEPTION;
   }
 
   if (argc > 0) colorKey = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
@@ -776,7 +766,7 @@ static JSValue ConsoleClearConsole(OOJS_NATIVE_ARGS) {
 
   OODebugMonitor* monitor =
       MonitorForConsoleObject(context, OOJS_THIS, __PRETTY_FUNCTION__);
-  if (monitor == nullptr) return OOJSNativeFailure(context);
+  if (monitor == nullptr) return JS_EXCEPTION;
 
   monitor->clearJSConsole();
   OOJS_RETURN_VOID;
@@ -872,11 +862,9 @@ const MonitorMethod kMonitorMethods[] = {
     {"dumpMemoryStatistics", MonitorMethodForm::VoidVoid,
      [](OODebugMonitor* m) { m->dumpMemoryStatistics(); }, nullptr, nullptr,
      nullptr, nullptr},
-#if OOLITE_SDL
     {"applicationWillTerminate", MonitorMethodForm::VoidVoid,
      [](OODebugMonitor* m) { m->applicationWillTerminate(); }, nullptr, nullptr,
      nullptr, nullptr},
-#endif
     {"debuggerConnected", MonitorMethodForm::Scalar, nullptr, nullptr, nullptr,
      [](OODebugMonitor* m) -> long long { return m->debuggerConnected(); },
      kOOTypeEncoding<bool>},
@@ -1013,35 +1001,31 @@ static JSValue ConsoleCallObjCMethod(OOJS_NATIVE_ARGS) {
     OOJSPauseTimeLimiter();
     OK = CallMonitorMethod(context, monitor, argc, OOJS_ARGV, &result);
     OOJSResumeTimeLimiter();
-    if (!OK) {
-      JS_FreeValue(context, result);
-      return OOJSNativeFailure(context);
+  } else {
+    // An entity's `this` converts to its entity node, whose C++ entity this
+    // takes and calls by its name table. Any other `this` held no Objective-C
+    // object since none is made: the error below, as for a plain JS object.
+    const oo::PList thisNode = cxx_OOJSPListFromJSValue(context, OOJS_THIS);
+    Entity* entity = oo::EntityIn(thisNode);
+    if (entity == nullptr) {
+      cxx_OOJSReportError(
+          context,
+          "Attempt to call __callObjCMethod() for non-Objective-C object %s.",
+          cxx_OOStringFromJSValueEvenIfNull(context, OOJS_THIS)
+              .value_or("(null)")
+              .c_str());
+      return JS_EXCEPTION;
     }
-    return result;
-  }
 
-  // An entity's `this` converts to its entity node, whose C++ entity this takes
-  // and calls by its name table. Any other `this` held no Objective-C object
-  // since none is made: the error below, as for a plain JS object.
-  const oo::PList thisNode = cxx_OOJSPListFromJSValue(context, OOJS_THIS);
-  Entity* entity = oo::EntityIn(thisNode);
-  if (entity == nullptr) {
-    cxx_OOJSReportError(
-        context,
-        "Attempt to call __callObjCMethod() for non-Objective-C object %s.",
-        cxx_OOStringFromJSValueEvenIfNull(context, OOJS_THIS)
-            .value_or("(null)")
-            .c_str());
-    return OOJSNativeFailure(context);
+    OOJSPauseTimeLimiter();
+    // The class name of the error texts: an entity's is its C++ part's, the
+    // answer its object's -cxx_oo_jsClassName forwarded to.
+    std::optional<std::string> className = OOJSEntityJSClassName(entity);
+    OK =
+        OOJSCallEntityMethod(context, entity, className.value_or(std::string()),
+                             argc, OOJS_ARGV, &result);
+    OOJSResumeTimeLimiter();
   }
-
-  OOJSPauseTimeLimiter();
-  // The class name of the error texts: an entity's is its C++ part's, the
-  // answer its object's -cxx_oo_jsClassName forwarded to.
-  std::optional<std::string> className = OOJSEntityJSClassName(entity);
-  OK = OOJSCallEntityMethod(context, entity, className.value_or(std::string()),
-                            argc, OOJS_ARGV, &result);
-  OOJSResumeTimeLimiter();
 
   if (!OK) {
     JS_FreeValue(context, result);
@@ -1059,13 +1043,14 @@ static JSValue ConsoleSetUpCallObjC(OOJS_NATIVE_ARGS) {
   if (EXPECT_NOT(argc < 1 || !JS_IsObject(OOJS_ARGV[0]))) {
     cxx_OOJSReportBadArguments(context, "Console", "__setUpCallObjC", argc,
                                OOJS_ARGV, std::nullopt, "Object.prototype");
-    return OOJSNativeFailure(context);
+    return JS_EXCEPTION;
   }
 
   // Read-only, permanent and not enumerable, as OOJS_METHOD_READONLY was.
   JSValue function =
       JS_NewCFunction(context, ConsoleCallObjCMethod, "callObjC", 1);
-  JS_DefinePropertyValueStr(context, OOJS_ARGV[0], "callObjC", function, 0);
+  JS_DefinePropertyValueStr(context, OOJS_ARGV[0], "callObjC", function,
+                            OOJS_METHOD_READONLY);
   OOJS_RETURN_VOID;
 
   OOJS_NATIVE_EXIT
@@ -1105,8 +1090,7 @@ static bool IsIncompleteSyntaxError(JSContext* context, JSValueConst exception,
       cxx_OOStringFromJSValue(context, stackVal).value_or(std::string());
   JS_FreeValue(context, stackVal);
 
-  // Lines and columns as the NSString form counted them (lengths in UTF-16
-  // units).
+  // Lines and columns as #768 counts them (NSString lengths: UTF-16 units).
   const size_t lastNewline = code.rfind('\n');
   const size_t lineCount =
       static_cast<size_t>(std::count(code.begin(), code.end(), '\n')) + 1;
@@ -1279,7 +1263,7 @@ static JSValue ConsoleProfile(OOJS_NATIVE_ARGS) {
     cxx_OOJSReportError(
         context,
         "Profiling functions may not be called while already profiling.");
-    return OOJSNativeFailure(context);
+    return JS_EXCEPTION;
   }
 
   JSValue result = JS_UNDEFINED;
@@ -1312,7 +1296,7 @@ static JSValue ConsoleGetProfile(OOJS_NATIVE_ARGS) {
     cxx_OOJSReportError(
         context,
         "Profiling functions may not be called while already profiling.");
-    return OOJSNativeFailure(context);
+    return JS_EXCEPTION;
   }
 
   JSValue result = JS_UNDEFINED;
@@ -1342,7 +1326,7 @@ static JSValue ConsoleTrace(OOJS_NATIVE_ARGS) {
     cxx_OOJSReportError(
         context,
         "Profiling functions may not be called while already profiling.");
-    return OOJSNativeFailure(context);
+    return JS_EXCEPTION;
   }
 
   JSValue rval = JS_UNDEFINED;
@@ -1362,32 +1346,32 @@ static JSValue ConsoleTrace(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
+namespace {
+
 /*	Calls argv[0] with argv[1] (or debugConsole.script) as this, profiling
    it. *outRval, if not NULL, is owned by the caller. On failure, any exception
         has been reported.
 */
-namespace {
-
 bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
                       JSValueConst* argv, JSValue* outRval, bool trace,
                       oo::Ref<OOTimeProfile>* outProfile) {
   // Get function.
   if (argc < 1 || !OOJSValueIsFunction(context, argv[0])) {
     cxx_OOJSReportBadArguments(context, "Console", nominalFunction,
-                               MIN(argc, 1), argv, std::nullopt, "function");
+                               std::min(argc, 1), argv, std::nullopt,
+                               "function");
     return false;
   }
   JSValueConst function = argv[0];
 
   // Get "this" object.
-  JSValue thisObj;
-  if (argc > 1)
-    thisObj = JS_DupValue(context, argv[1]);
-  else {
+  JSValue thisVal;
+  if (argc > 1) {
+    thisVal = JS_DupValue(context, argv[1]);
+  } else {
     JSValue debugConsole =
-        OODebugMonitor::sharedDebugMonitor()->jsValueInContext(
-            context);  // the facade's -oo_jsValueInContext:
-    thisObj = JS_GetPropertyStr(context, debugConsole, "script");
+        OODebugMonitor::sharedDebugMonitor()->jsValueInContext(context);
+    thisVal = JS_GetPropertyStr(context, debugConsole, "script");
     JS_FreeValue(context, debugConsole);
   }
 
@@ -1403,7 +1387,7 @@ bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
   OOJSBeginProfiling(trace);
 
   // Call the function.
-  JSValue rval = JS_Call(context, function, thisObj, 0, NULL);
+  JSValue rval = JS_Call(context, function, thisVal, 0, NULL);
 
   // Get results.
   oo::Ref<OOTimeProfile> profile = OOJSEndProfiling();
@@ -1413,7 +1397,7 @@ bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
   OOJSSetTimeLimiterLimit(originalLimit);
   OOJSResetTimeLimiter();
 
-  JS_FreeValue(context, thisObj);
+  JS_FreeValue(context, thisVal);
 
   if (JS_IsException(rval)) {
     OOJSReportPendingException(context);

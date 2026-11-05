@@ -27,6 +27,9 @@ MA 02110-1301, USA.
 
 #include "OOJSMissionVariables.h"
 
+#include <algorithm>
+#include <cstring>
+
 #include "OOIsNumberLiteral.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
@@ -143,8 +146,9 @@ static JSValue ValueForMissionVariable(JSContext* context,
   if (mvar.isNull()) return JS_UNDEFINED;
 
   if (const std::string* string =
-          mvar.getIf<std::string>())  // Currently there should only be strings,
-                                      // but we may want to change this.
+          mvar.getIf<std::string>())  // Currently there should only be
+                                      // strings, but we may want to change
+                                      // this.
   {
     if (OOIsNumberLiteral(*string, true)) {
       return JS_NewNumber(
@@ -157,7 +161,8 @@ static JSValue ValueForMissionVariable(JSContext* context,
 
 static int MissionVariablesGetOwnProperty(JSContext* context,
                                           JSPropertyDescriptor* desc,
-                                          JSValueConst object, JSAtom propID) {
+                                          JSValueConst /*object*/,
+                                          JSAtom propID) {
   try {
     std::optional<std::string> key =
         KeyForPropertyName(NameForPropertyID(context, propID));
@@ -184,11 +189,10 @@ static int MissionVariablesGetOwnProperty(JSContext* context,
 static int MissionVariablesGetOwnPropertyNames(JSContext* context,
                                                JSPropertyEnum** outTable,
                                                uint32_t* outCount,
-                                               JSValueConst object) {
+                                               JSValueConst /*object*/) {
   try {
     // A copy of the keys, which is good since the enumerating code might
-    // mutate. In key order
-    // (-allKeys gave them in hash order).
+    // mutate. In key order (-allKeys gave them in hash order).
     std::vector<std::string> mvars;
     const oo::PList missionVariables =
         (PLAYER != nullptr ? PLAYER->missionVariables() : oo::PList());
@@ -199,17 +203,17 @@ static int MissionVariablesGetOwnPropertyNames(JSContext* context,
     NSUInteger count = mvars.size();
     assert(count <= INT32_MAX);
 
-    JSPropertyEnum* table = (JSPropertyEnum*)js_malloc(
-        context, sizeof *table * MAX(count, (NSUInteger)1));
+    JSPropertyEnum* table = static_cast<JSPropertyEnum*>(js_malloc(
+        context, sizeof *table * std::max(count, static_cast<NSUInteger>(1))));
     if (table == NULL) return -1;
 
     uint32_t used = 0;
-    for (std::string next : mvars) {
-      if (!oo::str::hasPrefix(next, "mission_"))
+    for (const std::string& key : mvars) {
+      if (!oo::str::hasPrefix(key, "mission_"))
         continue;  // Skip mission instructions, which aren't visible through
                    // missionVariables.
 
-      next = next.substr(8);  // Cut off "mission_".
+      const std::string next = key.substr(8);  // Cut off "mission_".
 
       JSAtom atom = JS_NewAtom(context, next.c_str());
       if (atom == JS_ATOM_NULL) {
@@ -232,16 +236,15 @@ static int MissionVariablesGetOwnPropertyNames(JSContext* context,
 }
 
 static int MissionVariablesDeleteProperty(JSContext* context,
-                                          JSValueConst object, JSAtom propID) {
+                                          JSValueConst /*object*/,
+                                          JSAtom propID) {
   try {
     PlayerEntity* player = OOPlayerForScripting();
 
-    std::optional<std::string> name = NameForPropertyID(context, propID);
-    if (name.has_value()) {
-      std::optional<std::string> key = KeyForPropertyName(name);
-      if (key.has_value()) {
-        if (player != nullptr) player->setMissionVariable(oo::PList(), *key);
-      }
+    std::optional<std::string> key =
+        KeyForPropertyName(NameForPropertyID(context, propID));
+    if (key.has_value()) {
+      if (player != nullptr) player->setMissionVariable(oo::PList(), *key);
     }
     return true;
   } catch (...) {
@@ -252,7 +255,7 @@ static int MissionVariablesDeleteProperty(JSContext* context,
 
 static JSValue MissionVariablesGetProperty(JSContext* context,
                                            JSValueConst object, JSAtom propID,
-                                           JSValueConst receiver) {
+                                           JSValueConst /*receiver*/) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key =
@@ -275,8 +278,8 @@ static JSValue MissionVariablesGetProperty(JSContext* context,
     } else if (found) {
       result = JS_GetProperty(context, prototype, propID);
     } else {
-      // Missing mission variables read as null
-      // (OOJSValueFromNativeObject(nil)).
+      // Missing mission variables read as null (OOJSValueFromPList of a null
+      // PList).
       result = JS_NULL;
     }
   } else if (key.has_value()) {
@@ -301,8 +304,8 @@ static bool SetMissionVariable(JSContext* context, JSAtom propID,
       return false;
     }
 
-    // nil (a value with no string form) clears the variable. (The old OONull
-    // test could not match a string and is gone.)
+    // nullopt (a value with no string form) clears the variable. (The old
+    // NSNull test could not match a string and is gone.)
     std::optional<std::string> objValue =
         cxx_OOStringFromJSValue(context, value);
 
@@ -313,9 +316,11 @@ static bool SetMissionVariable(JSContext* context, JSAtom propID,
   return true;
 }
 
-static int MissionVariablesSetProperty(JSContext* context, JSValueConst object,
-                                       JSAtom propID, JSValueConst value,
-                                       JSValueConst receiver, int flags) {
+static int MissionVariablesSetProperty(JSContext* context,
+                                       JSValueConst /*object*/, JSAtom propID,
+                                       JSValueConst value,
+                                       JSValueConst /*receiver*/,
+                                       int /*flags*/) {
   try {
     return SetMissionVariable(context, propID, value) ? true : -1;
   } catch (...) {
@@ -325,10 +330,11 @@ static int MissionVariablesSetProperty(JSContext* context, JSValueConst object,
 }
 
 static int MissionVariablesDefineOwnProperty(JSContext* context,
-                                             JSValueConst object, JSAtom propID,
-                                             JSValueConst value,
-                                             JSValueConst getter,
-                                             JSValueConst setter, int flags) {
+                                             JSValueConst /*object*/,
+                                             JSAtom propID, JSValueConst value,
+                                             JSValueConst /*getter*/,
+                                             JSValueConst /*setter*/,
+                                             int flags) {
   /*	Object.defineProperty() and friends. Mission variables can't be
           accessors; a defined value is stored like an assignment.
   */

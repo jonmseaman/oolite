@@ -1,6 +1,6 @@
 /*
 
-OOJSVector.h (QuickJS-ng proof of concept)
+OOJSVector.h
 
 JavaScript proxy for vectors.
 
@@ -22,12 +22,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
 
-
 */
 
 #pragma once
 
 #include <quickjs.h>
+
+#include <string>
 
 #include "OOFoundation.h"
 #include "OOMaths.h"
@@ -35,7 +36,7 @@ MA 02110-1301, USA.
 
 void InitOOJSVector(JSContext* context, JSValueConst global);
 
-// Return an owned Vector3D object, or JS_EXCEPTION.
+// New Vector3D objects, owned by the caller (JS_EXCEPTION on failure).
 JSValue JSVectorWithVector(JSContext* context, Vector vector) NONNULL_FUNC;
 JSValue JSVectorWithHPVector(JSContext* context, HPVector vector) NONNULL_FUNC;
 
@@ -54,7 +55,8 @@ bool JSValueToHPVector(JSContext* context, JSValueConst value,
 /*	Given a JS Vector object, get the corresponding Vector struct. Given a
    JS Entity, get its position. Given a JS Array with exactly three elements,
         all of them numbers, treat them as [x, y, z]  components. For anything
-        else, return NO. (Other implicit conversions may be added in future.)
+        else (including null and primitives), return NO. (Other implicit
+        conversions may be added in future.)
 */
 bool JSObjectGetVector(JSContext* context, JSValueConst vectorObj,
                        HPVector* outVector) GCC_ATTR((nonnull(1, 3)));

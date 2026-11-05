@@ -1,5 +1,5 @@
 /*
-OOJSWaypoint.m (QuickJS-ng)
+OOJSWaypoint.m
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -23,6 +23,9 @@ MA 02110-1301, USA.
 
 #include "OOJSWaypoint.h"
 
+#include <cstdint>
+#include <cstring>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOJSEntity.h"
 #include "OOJSQuaternion.h"
@@ -32,31 +35,40 @@ MA 02110-1301, USA.
 
 /*
         The class is a static JSClassDef registered with OOJSRegisterClass(),
-        its properties a JSCFunctionListEntry table whose magic is the property
-        ID, as in #768.
+   its properties a JSCFunctionListEntry table whose magic is the property ID,
+   as in #768.
 
-        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and
-        scope guards (OOJSEngineNativeWrappers.h). The category on
-        OOWaypointEntity is free functions; the natives call the C++
-        OOWaypointEntity's members.
+        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch
+   and scope guards (OOJSEngineNativeWrappers.h). The category on
+   OOWaypointEntity is free functions; the natives call the C++
+   OOWaypointEntity's members.
 */
 
+namespace {
 static JSClassID sWaypointClassID;
+}  // namespace
 
+namespace {
 static bool JSWaypointGetWaypointEntity(JSContext* context,
                                         JSValueConst waypointObj,
                                         OOWaypointEntity** outEntity);
+}  // namespace
 
+namespace {
 static JSValue WaypointGetProperty(OOJS_GETTER_ARGS);
+}  // namespace
+namespace {
 static JSValue WaypointSetProperty(OOJS_SETTER_ARGS);
+}  // namespace
 
+namespace {
 static JSClassDef sWaypointClass = {
     .class_name = "Waypoint",
-    .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+    .finalizer = OOJSObjectWrapperFinalize,
 };
+}  // namespace
 
-enum {
+enum : std::uint8_t {
   // Property IDs
   kWaypoint_beaconCode,
   kWaypoint_beaconLabel,
@@ -64,6 +76,7 @@ enum {
   kWaypoint_size
 };
 
+namespace {
 static const JSCFunctionListEntry sWaypointProperties[] = {
     // JS name, getter, setter, ID
     OOJS_PROPERTY_RW("beaconCode", WaypointGetProperty, WaypointSetProperty,
@@ -75,6 +88,7 @@ static const JSCFunctionListEntry sWaypointProperties[] = {
     OOJS_PROPERTY_RW("size", WaypointGetProperty, WaypointSetProperty,
                      kWaypoint_size),
 };
+}  // namespace
 
 // No Waypoint methods.
 
@@ -86,7 +100,7 @@ void InitOOJSWaypoint(JSContext* context, JSValueConst global) {
             "Entity must be initialized before Waypoint.");
   OOJSInitClass(context, global, sWaypointClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sWaypointProperties,
-                OOJS_COUNT(sWaypointProperties), NULL, 0, NULL, 0);
+                OOJS_COUNT(sWaypointProperties), nullptr, 0, nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sWaypointClassID, OOJSEntityObjectConverter);
@@ -95,6 +109,7 @@ void InitOOJSWaypoint(JSContext* context, JSValueConst global) {
 
 JSClassID JSWaypointClassID(void) { return sWaypointClassID; }
 
+namespace {
 static bool JSWaypointGetWaypointEntity(JSContext* context,
                                         JSValueConst waypointObj,
                                         OOWaypointEntity** outEntity) {
@@ -119,6 +134,7 @@ static bool JSWaypointGetWaypointEntity(JSContext* context,
 
   OOJS_PROFILE_EXIT
 }
+}  // namespace
 
 // The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the C++
 // class's overrides of the root's JS members call.
@@ -128,6 +144,7 @@ std::optional<std::string> OOJSWaypointJSClassName(void) {
 
 bool OOJSWaypointIsVisibleToScripts(void) { return true; }
 
+namespace {
 static JSValue WaypointGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -136,7 +153,7 @@ static JSValue WaypointGetProperty(OOJS_GETTER_ARGS) {
   std::optional<std::string> text;
   Quaternion q = kIdentityQuaternion;
 
-  if (!JSWaypointGetWaypointEntity(context, thisObj, &waypoint))
+  if (!JSWaypointGetWaypointEntity(context, OOJS_THIS, &waypoint))
     return OOJSNativeFailure(context);  // not null after this
 
   switch (magic) {
@@ -162,7 +179,7 @@ static JSValue WaypointGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewNumber(context, waypoint->size());
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                     sWaypointProperties,
                                     OOJS_COUNT(sWaypointProperties));
       return OOJSNativeFailure(context);
@@ -172,7 +189,9 @@ static JSValue WaypointGetProperty(OOJS_GETTER_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -181,7 +200,7 @@ static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
   std::optional<std::string> sValue;
   Quaternion qValue;
 
-  if (!JSWaypointGetWaypointEntity(context, thisObj, &waypoint))
+  if (!JSWaypointGetWaypointEntity(context, OOJS_THIS, &waypoint))
     return OOJSNativeFailure(context);  // not null after this
 
   switch (magic) {
@@ -209,7 +228,6 @@ static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
         }
       }
       return JS_UNDEFINED;
-      break;
 
     case kWaypoint_beaconLabel:
       sValue = cxx_OOStringFromJSValue(context, value);
@@ -239,15 +257,16 @@ static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                     sWaypointProperties,
                                     OOJS_COUNT(sWaypointProperties));
       return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sWaypointProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sWaypointProperties,
                              OOJS_COUNT(sWaypointProperties), value);
   return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace

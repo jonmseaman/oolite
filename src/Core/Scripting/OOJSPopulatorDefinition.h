@@ -1,6 +1,6 @@
 /*
 
-OOJSPopulatorDefinition.h (QuickJS-ng)
+OOJSPopulatorDefinition.h
 
 An oo::RefCounted: OOJSSystem makes it with oo::makeRef and Universe keeps it
 as a PList::Object node (OOJSPopulatorDefinitionToPList /

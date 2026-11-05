@@ -1,6 +1,6 @@
 /*
 
-OOJSEquipmentInfo.h (QuickJS-ng)
+OOJSEquipmentInfo.h
 
 JavaScript equipment introspection class, wrapper for OOEquipmentType.
 
@@ -41,10 +41,9 @@ void InitOOJSEquipmentInfo(JSContext* context, JSValueConst global);
         JSValueToEquipmentKeyRelaxed() will return any string that does not end
         with _DAMAGED.
  */
-class OOEquipmentType;  // C++ (OOEquipmentType.h)
+class OOEquipmentType;  // OOEquipmentType.h
 
 OOEquipmentType* JSValueToEquipmentType(JSContext* context, JSValueConst value);
-// C++ results; nullopt where there is none
 std::optional<std::string> JSValueToEquipmentKey(JSContext* context,
                                                  JSValueConst value);
 

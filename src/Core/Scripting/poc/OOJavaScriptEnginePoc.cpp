@@ -2,6 +2,11 @@
 
 OOJavaScriptEnginePoc.cpp (QuickJS-ng proof of concept)
 
+The harness's engine core: the part of OOJavaScriptEngine.h and
+OOJSEngineCore.h that the harness and the bindings it builds (Vector3D,
+Quaternion, the class registry) use. The game's engine core needs the rest of
+the game.
+
 Copyright (C) 2007-2013 David Taylor and Jens Ayton.
 
 This program is free software; you can redistribute it and/or
@@ -33,36 +38,31 @@ MA 02110-1301, USA.
 #include "OOJSScript.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "oofnd/Defaults.hpp"
 #include "oofnd/Encoding.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/String.hpp"
+#include "oofnd/objc/OOAssert.h"
 
 #define OOJS_RUNTIME_SIZE_MiB 256
 #define OOJS_TIME_LIMIT (1)  // seconds
 
 namespace {
 OOJavaScriptEngine* sSharedEngine = nullptr;  // the one +1 is never released
-}
 
-JSContext* gOOJSMainThreadContext = NULL;
+int InterruptHandler(JSRuntime* runtime, void* opaque);
+JSValue GlobalLog(OOJS_NATIVE_ARGS);
 
-static int InterruptHandler(JSRuntime* runtime, void* opaque);
-static JSValue GlobalLog(OOJS_NATIVE_ARGS);
-
-static const JSCFunctionListEntry sGlobalMethods[] = {
+const JSCFunctionListEntry sGlobalMethods[] = {
     JS_CFUNC_DEF("log", 1, GlobalLog),
 };
+}  // namespace
+
+JSContext* gOOJSMainThreadContext = NULL;
 
 //===========================================================================
 // JavaScript engine initialisation and shutdown
 //===========================================================================
 
-/*	This minimal engine implements only what the harness uses of the full
-        engine header. The engine methods the harness has no use for (mission
-        callbacks, resets, garbage collection hints, the debug console's stack
-        dump switches) do nothing.
-*/
 OOJavaScriptEngine* OOJavaScriptEngine::sharedEngine() {
   if (sSharedEngine == nullptr) {
     OOJavaScriptEngine* engine = oo::makeRef<OOJavaScriptEngine>().leakRef();
@@ -85,11 +85,7 @@ void OOJavaScriptEngine::init() {
     exit(1);
   }
 
-  int64_t jsRuntimeInMiB =
-      oo::Defaults::standard().integerForKey("jsruntime-size-mib");
-  if (jsRuntimeInMiB <= 0) jsRuntimeInMiB = OOJS_RUNTIME_SIZE_MiB;
-  JS_SetMemoryLimit(_runtime,
-                    static_cast<size_t>(jsRuntimeInMiB) * 1024 * 1024);
+  JS_SetMemoryLimit(_runtime, OOJS_RUNTIME_SIZE_MiB * 1024L * 1024L);
   JS_SetInterruptHandler(_runtime, InterruptHandler, NULL);
 #ifndef NDEBUG
   JS_SetDumpFlags(_runtime, JS_DUMP_LEAKS);
@@ -154,15 +150,6 @@ JSContext* OOJavaScriptEngine::context() { return _context; }
 
 JSValueConst OOJavaScriptEngine::globalObject() { return _globalObject; }
 
-void OOJavaScriptEngine::runMissionCallback() {
-  // The harness has no mission screens.
-}
-
-bool OOJavaScriptEngine::reset() {
-  // The harness's context lives until shutDown(); it is never rebuilt.
-  return false;
-}
-
 bool OOJavaScriptEngine::callJSFunction(JSValueConst function,
                                         JSValueConst jsThis, int argc,
                                         JSValueConst* argv,
@@ -186,37 +173,11 @@ bool OOJavaScriptEngine::callJSFunction(JSValueConst function,
   return true;
 }
 
-void OOJavaScriptEngine::garbageCollectionOpportunity(bool force) {
-  // The harness collects only in shutDown().
-  (void)force;
-}
-
 bool OOJavaScriptEngine::showErrorLocations() { return _showErrorLocations; }
 
 void OOJavaScriptEngine::setShowErrorLocations(bool value) {
-  _showErrorLocations = value;
+  _showErrorLocations = !!value;
 }
-
-#ifdef OO_DEBUG_MONITOR_ENABLED
-// The harness dumps no stacks; the switches are only kept.
-bool OOJavaScriptEngine::dumpStackForErrors() { return _dumpStackForErrors; }
-
-void OOJavaScriptEngine::setDumpStackForErrors(bool value) {
-  _dumpStackForErrors = value;
-}
-
-bool OOJavaScriptEngine::dumpStackForWarnings() {
-  return _dumpStackForWarnings;
-}
-
-void OOJavaScriptEngine::setDumpStackForWarnings(bool value) {
-  _dumpStackForWarnings = value;
-}
-
-void OOJavaScriptEngine::enableDebuggerStatement() {
-  // Not supported by QuickJS; does nothing, as in the full engine.
-}
-#endif
 
 JSAtom cxx_OOJSIDFromString(const std::string& string) {
   // Interned for the life of the process, as in the full engine.
@@ -237,6 +198,16 @@ JSValue OOJSNativeFailure(JSContext* context) {
   return JS_Throw(context, error);
 }
 
+#ifndef NDEBUG
+void OOJSUnreachable(const char* function, const char* file, unsigned line) {
+  OO_LOG(
+      "fatal.unreachable",
+      "Supposedly unreachable statement reached in {} ({}:{}) -- terminating.",
+      function, oo::log::abbreviatedFileName(file), line);
+  abort();
+}
+#endif
+
 std::string OOJSWrapScriptSource(const std::string& source) {
   // A newline before the closing part is needed if the last line is a //
   // comment.
@@ -248,8 +219,9 @@ std::string OOJSWrapScriptSource(const std::string& source) {
 // Global functions
 //===========================================================================
 
+namespace {
 // log([messageClass : String,] message : String, ...)
-static JSValue GlobalLog(OOJS_NATIVE_ARGS) {
+JSValue GlobalLog(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::string message;
@@ -284,22 +256,25 @@ static JSValue GlobalLog(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 //===========================================================================
 // Time limiter
 //===========================================================================
 
-static unsigned sLimiterStartDepth;
-static int sLimiterPauseDepth;
-static double sLimiterStart;
-static double sLimiterPauseStart;
-static double sLimiterTimeLimit;
+namespace {
+unsigned sLimiterStartDepth;
+int sLimiterPauseDepth;
+double sLimiterStart;
+double sLimiterPauseStart;
+double sLimiterTimeLimit;
 
-static double MonotonicTime(void) {
+double MonotonicTime() {
   return std::chrono::duration<double>(
              std::chrono::steady_clock::now().time_since_epoch())
       .count();
 }
+}  // namespace
 
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit) {
   if (sLimiterStartDepth++ == 0) {
@@ -330,11 +305,12 @@ void OOJSResumeTimeLimiter(void) {
     sLimiterTimeLimit += MonotonicTime() - sLimiterPauseStart;
 }
 
+namespace {
 /*	QuickJS polls this regularly while running JS code, so unlike the
         SpiderMonkey operation callback no watchdog thread is needed. Returning
         non-zero throws an uncatchable error, which unwinds all JS frames.
 */
-static int InterruptHandler(JSRuntime* /*runtime*/, void* /*opaque*/) {
+int InterruptHandler(JSRuntime* /*runtime*/, void* /*opaque*/) {
   if (EXPECT(sLimiterStartDepth == 0 || sLimiterPauseDepth > 0)) return 0;
 
   double elapsed = MonotonicTime() - sLimiterStart;
@@ -348,17 +324,19 @@ static int InterruptHandler(JSRuntime* /*runtime*/, void* /*opaque*/) {
              elapsed);
   return 1;
 }
+}  // namespace
 
 //===========================================================================
 // Error reporting
 //===========================================================================
 
+namespace {
 /*	QuickJS records locations only in the stack property, as lines of the
    form "    at name (file:line:column)" or "    at file:line:column". Extract
    the file and line of the innermost frame.
 */
-static bool GetLocationFromStack(const std::optional<std::string>& stack,
-                                 std::string* outFile, unsigned* outLine) {
+bool GetLocationFromStack(const std::optional<std::string>& stack,
+                          std::string* outFile, unsigned* outLine) {
   if (!stack.has_value()) return false;
 
   std::string_view rest(*stack);
@@ -368,16 +346,14 @@ static bool GetLocationFromStack(const std::optional<std::string>& stack,
     rest = (newline == std::string_view::npos) ? std::string_view()
                                                : rest.substr(newline + 1);
 
-    // -stringByTrimmingCharactersInSet: whitespace
     const std::size_t first = frame.find_first_not_of(" \t");
     if (first == std::string_view::npos) continue;
-    frame = frame.substr(first, frame.find_last_not_of(" \t") - first + 1);
+    frame.remove_prefix(first);
     if (frame.substr(0, 3) != "at ") continue;
     frame.remove_prefix(3);
 
     const std::size_t open = frame.rfind('(');
-    if (open != std::string_view::npos && !frame.empty() &&
-        frame.back() == ')') {
+    if (open != std::string_view::npos && frame.back() == ')') {
       frame = frame.substr(open + 1, frame.size() - open - 2);
     }
 
@@ -397,8 +373,8 @@ static bool GetLocationFromStack(const std::optional<std::string>& stack,
   return false;
 }
 
-static std::optional<std::string> StackOfValue(JSContext* context,
-                                               JSValueConst value) {
+std::optional<std::string> StackOfValue(JSContext* context,
+                                        JSValueConst value) {
   if (!JS_IsObject(value)) return std::nullopt;
   JSValue stack = JS_GetPropertyStr(context, value, "stack");
   std::optional<std::string> result = cxx_OOStringFromJSValue(context, stack);
@@ -406,9 +382,9 @@ static std::optional<std::string> StackOfValue(JSContext* context,
   return result;
 }
 
-static void LogProblem(const std::string& severity,
-                       const std::string& errorName, const std::string& message,
-                       const std::optional<std::string>& stack) {
+void LogProblem(const std::string& severity, const std::string& errorName,
+                const std::string& message,
+                const std::optional<std::string>& stack) {
   const std::string messageClass =
       "script.javaScript." + severity + "." + errorName;
   const char* highlight = (severity == "warning") ? "-----" : "*****";
@@ -429,6 +405,14 @@ static void LogProblem(const std::string& severity,
     OO_LOG(messageClass, "      {}, line {}.", file, line);
   }
 }
+
+std::string CallerPrefix(const std::optional<std::string>& scriptClass,
+                         const std::optional<std::string>& function) {
+  if (!function) return std::string();
+  if (!scriptClass) return *function + ": ";
+  return *scriptClass + "." + *function + ": ";
+}
+}  // namespace
 
 void OOJSReportPendingException(JSContext* context) {
   JSValue exception = JS_GetException(context);
@@ -457,13 +441,6 @@ void OOJSReportPendingException(JSContext* context) {
   OOJSResumeTimeLimiter();
 }
 
-static std::string CallerPrefix(const std::optional<std::string>& scriptClass,
-                                const std::optional<std::string>& function) {
-  if (!function.has_value()) return std::string();
-  if (!scriptClass.has_value()) return *function + ": ";
-  return *scriptClass + "." + *function + ": ";
-}
-
 void cxx_OOJSReportError(JSContext* context, const char* format, ...) {
   va_list args;
 
@@ -488,6 +465,7 @@ void cxx_OOJSReportErrorForCaller(JSContext* context,
                         msg.c_str());
   } catch (...) {
     // Squash any secondary errors during error handling.
+    return;
   }
 }
 
@@ -498,6 +476,7 @@ void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
     JS_ThrowPlainError(context, "%s", msg.c_str());
   } catch (...) {
     // Squash any secondary errors during error handling.
+    return;
   }
 }
 
@@ -524,6 +503,7 @@ void cxx_OOJSReportWarningForCaller(
                           msg.c_str());
   } catch (...) {
     // Squash any secondary errors during error handling.
+    return;
   }
 }
 
@@ -538,12 +518,13 @@ void cxx_OOJSReportWarningWithArguments(JSContext* context, const char* format,
     JS_FreeValue(context, error);
   } catch (...) {
     // Squash any secondary errors during error handling.
+    return;
   }
 }
 
-std::string cxx_OOStringFromJSPropertyMagic(int magic,
-                                            const JSCFunctionListEntry* list,
-                                            size_t count) {
+std::string OOStringFromJSPropertyMagic(int magic,
+                                        const JSCFunctionListEntry* list,
+                                        size_t count) {
   for (size_t i = 0; i < count; i++) {
     if (list[i].def_type == JS_DEF_CGETSET_MAGIC && list[i].magic == magic)
       return std::string(list[i].name);
@@ -554,8 +535,7 @@ std::string cxx_OOStringFromJSPropertyMagic(int magic,
 void OOJSReportBadPropertySelector(JSContext* context, JSValueConst thisObj,
                                    int magic, const JSCFunctionListEntry* list,
                                    size_t count) {
-  const std::string propName =
-      cxx_OOStringFromJSPropertyMagic(magic, list, count);
+  const std::string propName = OOStringFromJSPropertyMagic(magic, list, count);
   const std::string className = OOJSClassNameOfValue(context, thisObj);
 
   cxx_OOJSReportError(context,
@@ -566,8 +546,7 @@ void OOJSReportBadPropertySelector(JSContext* context, JSValueConst thisObj,
 void OOJSReportBadPropertyValue(JSContext* context, JSValueConst thisObj,
                                 int magic, const JSCFunctionListEntry* list,
                                 size_t count, JSValueConst value) {
-  const std::string propName =
-      cxx_OOStringFromJSPropertyMagic(magic, list, count);
+  const std::string propName = OOStringFromJSPropertyMagic(magic, list, count);
   const std::string className = OOJSClassNameOfValue(context, thisObj);
   const std::string valueDesc = cxx_OOJSDescribeValue(context, value, true);
 
@@ -582,16 +561,17 @@ void cxx_OOJSReportBadArguments(
     const std::optional<std::string>& message,
     const std::optional<std::string>& expectedArgsDescription) {
   try {
-    std::string text = message.value_or("Invalid arguments");
+    std::string text = message ? *message : std::string("Invalid arguments");
     text += " " + cxx_OOJSStringWithJavaScriptParameters(argv, argc, context)
                       .value_or("(null)");
-    if (expectedArgsDescription.has_value())
+    if (expectedArgsDescription)
       text += " -- expected " + *expectedArgsDescription;
 
     cxx_OOJSReportErrorForCaller(context, scriptClass, function, "%s.",
                                  text.c_str());
   } catch (...) {
     // Squash any secondary errors during error handling.
+    return;
   }
 }
 
@@ -642,8 +622,8 @@ bool OOJSArgumentListGetNumberNoError(JSContext* context, int argc,
 std::optional<std::string> cxx_OOStringFromJSValueEvenIfNull(
     JSContext* context, JSValueConst value) {
   size_t length;
-  const char* chars = JS_ToCStringLen(
-      context, &length, value);  // Calls the value's toString method if needed.
+  // Calls the value's toString method if needed.
+  const char* chars = JS_ToCStringLen(context, &length, value);
   if (chars == NULL) {
     JS_FreeValue(context, JS_GetException(context));
     return std::nullopt;
@@ -674,114 +654,9 @@ std::string OOJSClassNameOfValue(JSContext* context, JSValueConst value) {
   return result.value_or("Object");
 }
 
-// Owned; undefined on failure. Null elements are dropped, as in the full
-// engine.
-static JSValue JSArrayValueFromPList(JSContext* context,
-                                     const oo::PList::Array& array) {
-  JSValue result = JS_NewArray(context);
-  if (JS_IsException(result)) {
-    JS_FreeValue(context, JS_GetException(context));
-    return JS_UNDEFINED;
-  }
-
-  uint32_t i = 0;
-  for (const oo::PList& element : array) {
-    if (element.isNull()) continue;
-    // JS_SetPropertyUint32() takes ownership of the value.
-    if (EXPECT_NOT(JS_SetPropertyUint32(context, result, i,
-                                        OOJSValueFromPList(context, element)) <
-                   0)) {
-      JS_FreeValue(context, JS_GetException(context));
-      JS_FreeValue(context, result);
-      return JS_UNDEFINED;
-    }
-    ++i;
-  }
-
-  return result;
-}
-
-// Owned; undefined on failure. Null and undefined values are dropped and empty
-// keys skipped, as in the full engine.
-static JSValue JSObjectValueFromPList(JSContext* context,
-                                      const oo::PList::Dict& dict) {
-  JSValue result = JS_NewObject(context);
-  if (JS_IsException(result)) {
-    JS_FreeValue(context, JS_GetException(context));
-    return JS_UNDEFINED;
-  }
-
-  for (const auto& [key, element] : dict) {
-    if (element.isNull() || key.empty()) continue;
-    JSValue elementValue = OOJSValueFromPList(context, element);
-    if (JS_IsUndefined(elementValue)) continue;
-    // JS_SetProperty() takes ownership of the value.
-    if (EXPECT_NOT(JS_SetProperty(context, result, cxx_OOJSIDFromString(key),
-                                  elementValue) < 0)) {
-      JS_FreeValue(context, JS_GetException(context));
-      JS_FreeValue(context, result);
-      return JS_UNDEFINED;
-    }
-  }
-
-  return result;
-}
-
-JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
-  switch (plist.type()) {
-    case oo::PList::Type::Null:
-      return JS_NULL;
-
-    case oo::PList::Type::Bool:
-      return JS_NewInt32(context, *plist.getIf<bool>() ? 1 : 0);
-
-    case oo::PList::Type::Integer: {
-      const oo::PList::Integer& integer = *plist.getIf<oo::PList::Integer>();
-      if (integer.isUnsigned) {
-        const unsigned long long u = integer.unsignedValue();
-        if (u <= static_cast<unsigned long long>(INT32_MAX))
-          return JS_NewInt32(context, static_cast<int32_t>(u));
-        return JS_NewNumber(context, static_cast<double>(u));
-      }
-      const long long v = integer.value;
-      if (static_cast<long long>(INT32_MIN) <= v &&
-          v <= static_cast<long long>(INT32_MAX))
-        return JS_NewInt32(context, static_cast<int32_t>(v));
-      return JS_NewNumber(context, static_cast<double>(v));
-    }
-
-    case oo::PList::Type::Real: {
-      double d = *plist.getIf<double>();
-      if (plist.isSinglePrecision())
-        d = static_cast<double>(static_cast<float>(d));
-      return JS_NewFloat64(context, d);
-    }
-
-    case oo::PList::Type::String: {
-      const std::string& string = *plist.getIf<std::string>();
-      return JS_NewStringLen(context, string.data(), string.size());
-    }
-
-    case oo::PList::Type::Data:
-    case oo::PList::Type::Date:
-      return JS_UNDEFINED;
-
-    case oo::PList::Type::Array:
-      return JSArrayValueFromPList(context, *plist.getIf<oo::PList::Array>());
-
-    case oo::PList::Type::Dict:
-      return JSObjectValueFromPList(context, *plist.getIf<oo::PList::Dict>());
-
-    case oo::PList::Type::Object:
-      // The harness has no native-object glue: an object is undefined, as its
-      // NSObject glue gave.
-      return JS_UNDEFINED;
-  }
-  return JS_UNDEFINED;
-}
-
-static std::string DescribeValue(JSContext* context, JSValueConst value,
-                                 bool abbreviateObjects, bool recursing) {
+namespace {
+std::string DescribeValue(JSContext* context, JSValueConst value,
+                          bool abbreviateObjects, bool recursing) {
   if (JS_IsFunction(context, value)) {
     JSValue nameVal = JS_GetPropertyStr(context, value, "name");
     std::optional<std::string> name = cxx_OOStringFromJSValue(context, nameVal);
@@ -795,23 +670,23 @@ static std::string DescribeValue(JSContext* context, JSValueConst value,
   std::optional<std::string> result;
 
   if (JS_IsString(value)) {
-    constexpr size_t kMaxLength = 200;
+    enum : std::uint8_t { kMaxLength = 200 };
 
     // Truncated to kMaxLength UTF-16 units, as the NSString was cut.
     const std::u16string units = oo::utf8ToUtf16(
         cxx_OOStringFromJSValueEvenIfNull(context, value).value_or(""));
-    const std::string truncated = oo::utf16ToUtf8(
-        std::u16string_view(units.data(), std::min(units.size(), kMaxLength)));
+    const std::string truncated = oo::utf16ToUtf8(std::u16string_view(
+        units.data(), std::min(units.size(), static_cast<size_t>(kMaxLength))));
     result = "\"" + cxx_OOJSEscapedForJavaScriptLiteral(truncated) +
              ((units.size() > kMaxLength) ? "..." : "") + "\"";
   } else if (JS_IsArray(value)) {
-    // Descibe up to four elements of an array.
+    // Describe up to four elements of an array.
     int64_t count;
     if (JS_GetLength(context, value, &count) == 0) {
       if (!recursing) {
         std::string arrayDesc = "[";
-        int64_t i, effectiveCount = std::min(count, static_cast<int64_t>(4));
-        for (i = 0; i < effectiveCount; i++) {
+        int64_t effectiveCount = std::min(count, static_cast<int64_t>(4));
+        for (int64_t i = 0; i < effectiveCount; i++) {
           JSValue item =
               JS_GetPropertyUint32(context, value, static_cast<uint32_t>(i));
           std::string itemDesc = "?";
@@ -841,19 +716,20 @@ static std::string DescribeValue(JSContext* context, JSValueConst value,
     }
   }
 
-  if (!result.has_value()) {
+  if (!result) {
     result = cxx_OOStringFromJSValueEvenIfNull(context, value);
 
-    if (abbreviateObjects && JS_IsObject(value) &&
-        result == "[object Object]") {
+    if (abbreviateObjects && JS_IsObject(value) && result &&
+        *result == "[object Object]") {
       result = "{...}";
     }
 
-    if (!result.has_value()) result = "?";
+    if (!result) result = "?";
   }
 
   return *result;
 }
+}  // namespace
 
 std::string cxx_OOJSDescribeValue(JSContext* context, JSValueConst value,
                                   bool abbreviateObjects) {
@@ -876,9 +752,8 @@ std::optional<std::string> cxx_OOJSStringWithJavaScriptParameters(
 }
 
 std::string cxx_OOJSEscapedForJavaScriptLiteral(std::string_view string) {
-  /*	Byte-wise over UTF-8: every escaped character is ASCII, so multi-byte
-          sequences pass through unchanged, as the UTF-16 units they encode did.
-  */
+  // Byte-wise over UTF-8: every escaped character is ASCII, so multi-byte
+  // sequences pass through unchanged, as the UTF-16 units they encode did.
   std::string result;
   result.reserve(string.size());
 
