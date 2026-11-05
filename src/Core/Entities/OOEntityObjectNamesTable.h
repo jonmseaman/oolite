@@ -13,9 +13,9 @@ One row per name: when the object answered it (null: every entity; the planet's
 and the beacon's names for the parts the facade's -respondsToSelector: answered
 them for), the kind (OOEntityCalledByName.h) and the method's type encoding, as
 OOCallByName logged it. The JS glue the facade no longer answers
-(isVisibleToScripts, deleteJSSelf) has no row: a call to it does not respond.
-Included by OOEntityCalledByName.mm only, after AnswersPlanet() and
-AnswersBeacon().
+(isVisibleToScripts, deleteJSSelf) has no row: a call to it
+does not respond. Included by OOEntityCalledByName.mm only, after
+AnswersPlanet() and AnswersBeacon().
 
 */
 

@@ -319,8 +319,8 @@ void PerformActionStatment(const oo::PList& statement, Entity* target) {
   selectorString = statement.at<std::string>(1);
   if (statement.count() > 2) argumentString = statement.at<std::string>(2);
 
-  // The target's C++ part answers its methods called by name, the player's
-  // for the player only; the planet's shader bindings are never actions
+  // The target's C++ part answers its methods called by name, the player's for
+  // the player only; the planet's shader bindings are never actions
   Entity* cxxTarget = target;
   if (cxxTarget == nullptr ||
       !oo::EntityRespondsToName(cxxTarget, selectorString)) {
@@ -474,8 +474,8 @@ void PlayerEntity::runScriptActions(
   std::optional<std::string> oldMissionKey;
 
   {
-    oo::AutoreleaseScope pool;  // FIXME: does this actually make sense in the
-                                // context of non-missions?
+    oo::AutoreleaseScope pool;
+    // FIXME: does this actually make sense in the context of non-missions?
     oldMissionKey = sCurrentMissionKey;
     sCurrentMissionKey = contextName;
 
@@ -885,8 +885,8 @@ std::optional<std::string> PlayerEntity::replaceVariablesInString(
     } else if (oo::str::hasSuffix(valueString, "_number") ||
                oo::str::hasSuffix(valueString, "_bool") ||
                oo::str::hasSuffix(valueString, "_string")) {
-      // called by name on the player's C++ part; "%@" of the result, as
-      // +stringWithFormat: printed it
+      // called by name on the player's C++ part; "%@" of
+      // the result, as +stringWithFormat: printed it
       if (oo::EntityRespondsToName(this, valueString)) {
         replace(valueString,
                 oo::DescriptionOf(oo::CallEntityByName(this, valueString)));
@@ -1068,38 +1068,38 @@ oo::PList PlayerEntity::pseudoFixedD256_number()  // called by name
   return oo::PList::signedInteger(systemPseudoRandom256());
 }
 
-oo::PList PlayerEntity::clock_number()  // called by name; returns the game time
-                                        // in seconds
+oo::PList PlayerEntity::clock_number()  // called by name;
+                                        // returns the game time in seconds
 {
   return oo::PList((double)(ship_clock));
 }
 
-oo::PList PlayerEntity::clock_secs_number()  // called by name; returns the game
-                                             // time in seconds
+oo::PList PlayerEntity::clock_secs_number()  // called by name; returns
+                                             // the game time in seconds
 {
   return oo::PList::unsignedInteger((unsigned long long)(ship_clock));
 }
 
-oo::PList PlayerEntity::clock_mins_number()  // called by name; returns the game
-                                             // time in minutes
+oo::PList PlayerEntity::clock_mins_number()  // called by name; returns
+                                             // the game time in minutes
 {
   return oo::PList::unsignedInteger((unsigned long long)(ship_clock / 60.0));
 }
 
-oo::PList PlayerEntity::clock_hours_number()  // called by name; returns the
-                                              // game time in hours
+oo::PList PlayerEntity::clock_hours_number()  // called by name;
+                                              // returns the game time in hours
 {
   return oo::PList::unsignedInteger((unsigned long long)(ship_clock / 3600.0));
 }
 
-oo::PList PlayerEntity::clock_days_number()  // called by name; returns the game
-                                             // time in days
+oo::PList PlayerEntity::clock_days_number()  // called by name; returns
+                                             // the game time in days
 {
   return oo::PList::unsignedInteger((unsigned long long)(ship_clock / 86400.0));
 }
 
-oo::PList PlayerEntity::fuelLevel_number()  // called by name; returns the fuel
-                                            // level in LY
+oo::PList PlayerEntity::fuelLevel_number()  // called by name; returns the
+                                            // fuel level in LY
 {
   return oo::PList::singleReal((float)(floor(0.1 * fuel)));
 }
@@ -1117,8 +1117,9 @@ oo::PList PlayerEntity::foundEquipment_bool()  // called by name
   return oo::PList((found_equipment) ? "YES" : "NO");
 }
 
-oo::PList PlayerEntity::sunWillGoNova_bool()  // called by name; returns whether
-                                              // the sun is going to go nova
+oo::PList PlayerEntity::sunWillGoNova_bool()  // called by name; returns
+                                              // whether the sun is going to go
+                                              // nova
 {
   return oo::PList(
       (((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr
@@ -1128,8 +1129,8 @@ oo::PList PlayerEntity::sunWillGoNova_bool()  // called by name; returns whether
           : "NO");
 }
 
-oo::PList PlayerEntity::sunGoneNova_bool()  // called by name; returns whether
-                                            // the sun has gone nova
+oo::PList PlayerEntity::sunGoneNova_bool()  // called by name; returns
+                                            // whether the sun has gone nova
 {
   return oo::PList(
       (((UNIVERSE != nullptr ? UNIVERSE->sun() : nullptr) != nullptr
@@ -1139,9 +1140,9 @@ oo::PList PlayerEntity::sunGoneNova_bool()  // called by name; returns whether
           : "NO");
 }
 
-oo::PList
-PlayerEntity::missionChoice_string()  // called by name; returns nil or the key
-                                      // for the chosen option
+oo::PList PlayerEntity::missionChoice_string()  // called by name; returns nil
+                                                // or the key for the chosen
+                                                // option
 {
   return StringOrNull(missionChoice);
 }
@@ -1162,10 +1163,10 @@ oo::PList PlayerEntity::dockedTechLevel_number()  // called by name
 }
 
 oo::PList
-PlayerEntity::dockedStationName_string()  // called by name; returns 'NONE' if
-                                          // the player isn't docked, [station
-                                          // name] if it is, 'UNKNOWN' otherwise
-                                          // (?)
+PlayerEntity::dockedStationName_string()  // called by name;
+                                          // returns 'NONE' if the player isn't
+                                          // docked, [station name] if it is,
+                                          // 'UNKNOWN' otherwise (?)
 {
   if (status() != STATUS_DOCKED) return oo::PList("NONE");
 
@@ -1306,7 +1307,8 @@ void PlayerEntity::awardShipKills(
 }
 
 void PlayerEntity::awardEquipment(
-    const std::string& equipString)  // called by name; eg. EQ_NAVAL_ENERGY_UNIT
+    const std::string& equipString)  // called by name; eg.
+                                     // EQ_NAVAL_ENERGY_UNIT
 {
   if (::scriptTarget != this) return;
 
@@ -1342,7 +1344,8 @@ void PlayerEntity::awardEquipment(
 }
 
 void PlayerEntity::removeEquipment(
-    const std::string& equipString)  // called by name; eg. EQ_NAVAL_ENERGY_UNIT
+    const std::string& equipString)  // called by name; eg.
+                                     // EQ_NAVAL_ENERGY_UNIT
 {
   if (::scriptTarget != this) return;
 
@@ -1367,8 +1370,8 @@ void PlayerEntity::removeEquipment(
 }
 
 void PlayerEntity::setPlanetinfo(
-    const std::string&
-        key_valueString)  // called by name; uses key=value format
+    const std::string& key_valueString)  // called by name;
+                                         // uses key=value format
 {
   const std::string argument = key_valueString;
   const std::vector<std::string> tokens = oo::str::split(argument, "=");
@@ -1393,8 +1396,8 @@ void PlayerEntity::setPlanetinfo(
 }
 
 void PlayerEntity::setSpecificPlanetInfo(
-    const std::string&
-        key_valueString)  // called by name; uses galaxy#=planet#=key=value
+    const std::string& key_valueString)  // called by name;
+                                         // uses galaxy#=planet#=key=value
 {
   const std::string argument = key_valueString;
   const std::vector<std::string> tokens = oo::str::split(argument, "=");
@@ -1526,13 +1529,15 @@ void PlayerEntity::useSpecialCargo(
 }
 
 void PlayerEntity::testForEquipment(
-    const std::string& equipString)  // called by name; eg. EQ_NAVAL_ENERGY_UNIT
+    const std::string& equipString)  // called by name; eg.
+                                     // EQ_NAVAL_ENERGY_UNIT
 {
   found_equipment = hasEquipmentItem(oo::PList(equipString));
 }
 
 void PlayerEntity::awardFuel(
-    const std::string& valueString)  // called by name; add to fuel up to 7.0 LY
+    const std::string& valueString)  // called by name; add
+                                     // to fuel up to 7.0 LY
 {
   int delta = 10 * (float)oo::str::doubleValue(valueString);
   OOFuelQuantity scriptTargetFuelBeforeAward =
@@ -2067,9 +2072,9 @@ void PlayerEntity::setMissionChoiceByTextEntry(bool enable) {
 }
 
 void PlayerEntity::setMissionChoices(
-    const std::string& choicesKey)  // called by name; choicesKey is a key for a
-                                    // dictionary of // choices/choice phrases
-                                    // in missiontext.plist and also..
+    const std::string& choicesKey)  // called by name; choicesKey is a key
+                                    // for a dictionary of // choices/choice
+                                    // phrases in missiontext.plist and also..
 {
   const oo::PList missionText =
       (UNIVERSE != nullptr ? UNIVERSE->getMissiontext() : oo::PList());
@@ -2434,9 +2439,7 @@ void PlayerEntity::addPlanet(const std::string& planetKey)  // called by name
          oo::DescriptionOf(dict));
   ::OOPlanetEntity* planet = nullptr;
   {
-    // [[[OOPlanetEntity alloc] initFromDictionary:...] autorelease]: a new C++
-    // planet, kept by its autoreleased Objective-C object (its facade is
-    // deleted).
+    // A new C++ planet, kept by its autoreleased Objective-C object.
     oo::Ref<::OOPlanetEntity> planetRef = oo::makeRef<::OOPlanetEntity>();
     oo::MadeEntity(planetRef);
     planetRef->initFromDictionary(
@@ -2528,9 +2531,7 @@ void PlayerEntity::addMoon(const std::string& moonKey)  // called by name
          oo::DescriptionOf(dict));
   ::OOPlanetEntity* planet = nullptr;
   {
-    // [[[OOPlanetEntity alloc] initFromDictionary:...] autorelease]: a new C++
-    // planet, kept by its autoreleased Objective-C object (its facade is
-    // deleted).
+    // A new C++ planet, kept by its autoreleased Objective-C object.
     oo::Ref<::OOPlanetEntity> planetRef = oo::makeRef<::OOPlanetEntity>();
     oo::MadeEntity(planetRef);
     planetRef->initFromDictionary(

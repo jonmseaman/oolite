@@ -4,8 +4,8 @@ OODrawable.h
 
 Abstract base class for objects which can draw themselves.
 
-Every drawable (OOMesh,
-OOPlanetDrawable, OOSkyDrawable) and every holder is C++.
+Every drawable (OOMesh, OOPlanetDrawable, OOSkyDrawable) and every holder is
+C++.
 
 
 Copyright (C) 2007-2013 Jens Ayton
@@ -81,9 +81,8 @@ class OODrawable : public oo::RefCounted {
 #endif
 };
 
-/*	Keeps the drawable
-        until the current autorelease pool drains, so a drawable an entity
-   replaces lives exactly as long as an autoreleased object would. Nothing for
-   null.
+/*	Keeps the drawable until the current autorelease pool drains, so a
+   drawable an entity replaces lives exactly as long as an autoreleased object
+   would. Nothing for null.
 */
 void OODrawableAutorelease(oo::Ref<OODrawable> drawable);

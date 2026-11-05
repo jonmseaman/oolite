@@ -56,8 +56,8 @@ static OOTexture* sShotTexture2 = nullptr;
 
 namespace {
 
-// The shot textures' graphics reset client: registered once, with the textures,
-// and never destroyed.
+// The shot textures' graphics reset client: registered once, with the
+// textures, and never destroyed.
 class ShotTextureResetClient : public OOGraphicsResetClient {
  public:
   void resetGraphicsState() override {

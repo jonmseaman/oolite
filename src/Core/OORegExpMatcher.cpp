@@ -90,9 +90,7 @@ bool OORegExpMatcher::string(const std::string& string,
   OOCAssert(oo::thread::isMainThread(),
             "OORegExpMatcher may only be used on the main thread.");
 
-  const std::u16string regExpUnits = oo::utf8ToUtf16(regExp);
-  size_t expLength = regExpUnits.size();
-  if (EXPECT_NOT(expLength == 0)) return false;
+  if (EXPECT_NOT(regExp.empty())) return false;
 
   JSContext* context = OOJSAcquireContext();
 
@@ -127,29 +125,27 @@ bool OORegExpMatcher::string(const std::string& string,
     JS_FreeValue(context, global);
   }
 
-  // The arguments converted as -evaluatePredicateWithContext:scope:arguments:
-  // converted them (a JS string, as the string's Objective-C string gave; the
-  // cached RegExp object), owned while the function runs, and the result
-  // converted to a boolean as it did; an uncaught exception, which QuickJS
-  // leaves pending, is reported as it did.
+  // -evaluatePredicateWithContext:scope:arguments: with the string and the
+  // cached RegExp object: the result converted to a boolean.
   JSValue argv[2];
-  argv[0] = OOJSValueFromPList(context, oo::PList(string));
+  argv[0] = JS_NewStringLen(context, string.data(), string.size());
   argv[1] = (_cachedRegExpObject != nullptr)
                 ? _cachedRegExpObject->jsValueInContext(context)
-                : JSValue{};  // (a message to nil gave the zero value)
+                : JS_NULL;
   JSValue resultValue = JS_UNDEFINED;
   bool OK = _tester->evaluateWithContext(context, JS_UNDEFINED, 2, argv,
                                          &resultValue);
-  int matched = 0;
+  int truth = 0;
   if (OK) {
-    matched = JS_ToBool(context, resultValue);
+    truth = JS_ToBool(context, resultValue);
     JS_FreeValue(context, resultValue);
-    if (matched < 0) OK = false;
+    if (truth < 0) OK = false;
   }
+  // QuickJS leaves an uncaught exception pending.
   if (!OK && JS_HasException(context)) OOJSReportPendingException(context);
+  bool result = OK && truth > 0;
   JS_FreeValue(context, argv[0]);
   JS_FreeValue(context, argv[1]);
-  bool result = OK && matched > 0;
 
   OOJSRelinquishContext(context);
 

@@ -12,15 +12,16 @@
             NSCParameterAssert(cond)                    OOCParameterAssert(cond)
 
         LIVE IN EVERY FLAVOUR, deployment (NDEBUG) included, because
-   Foundation's were. Upstream's OOFoundation.h defines NS_BLOCK_ASSERTIONS iff
-   NDEBUG, but only AFTER it imports the Foundation umbrella header, and
-   gnustep-base's include-guarded exception header picks the blocked or live
-   assertion macros when it is first parsed, so the define came too late and
-        never blocked anything. Blocking these under NDEBUG skips the side
-   effect in PlayerEntity's -deferredInit assertion (the player's ship set-up),
-   and a deployment build cannot launch. The arguments are always evaluated, and
-   a false condition logs one line in message class "gnustep" (where the NSLog
-   hook, OOLogOutputHandler, sent gnustep-base's assertion log; NSLog's own
+   Foundation's were. Upstream's OOFoundation.h defines
+   NS_BLOCK_ASSERTIONS iff NDEBUG, but only AFTER it imports the Foundation
+   umbrella header, and gnustep-base's include-guarded exception header picks
+   the blocked or live assertion macros when it is first parsed (its line 432),
+   so the define came too late and never blocked anything. Blocking these under
+   NDEBUG skipped the side effect in PlayerEntity::deferredInit's assertion (the
+   player's ship set-up), and a deployment build could not launch: '1' started
+   the undock again and again. The arguments are always evaluated, and a false
+   condition logs one line in message class "gnustep" (where the NSLog hook,
+   OOLogOutputHandler, sent gnustep-base's assertion log; NSLog's own
    date/process prefix is not reproduced) and raises an OOException named
    OOInternalInconsistencyException (the parameter forms too, as in
    gnustep-base) with Foundation's reason text:

@@ -211,7 +211,6 @@ void PlayerEntity::setGuiToStickMapperScreen(unsigned skip,
 void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
                                            ::MyOpenGLView* gameView) {
   OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
-
   // Don't do anything if the user is supposed to be selecting
   // a function - other than look for Escape.
   if (waitingForStickCallback) {
@@ -226,7 +225,6 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
     return;
   }
   const bool* joyButtonState = stickHandler->getAllButtonStates();
-
   handleGUIUpDownArrowKeys();
   bool selectKeyPress =
       (checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT] ||

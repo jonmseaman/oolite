@@ -11,16 +11,18 @@ A method called by name has one of its dispatcher's signatures; OOCallByName
 reads the method's type encoding and calls it through an IMP of exactly that
 type:
 
-        call                                     the method may be result
-        ---------------------------------------
----------------------------------------  ----------------- OOCallByName(target,
-sel)                - (void) sel                              null PList
-                                                 - (oo::PList) sel what it
-returns OOCallByName(target, sel, "text")        - (void) sel:(const std::string
-&)s       null PList
-                                                 - (oo::PList) sel:(const
-std::string &)s  what it returns OOCallByName(target, sel, plist)         -
-(void) sel:(const oo::PList &)p         null PList
+  call                               the method may be              result
+  ---------------------------------  -----------------------------  ---------
+  OOCallByName(target, sel)          - (void) sel                   null PList
+                                     - (oo::PList) sel              what it
+                                                                    returns
+  OOCallByName(target, sel, "text")  - (void) sel:(const
+                                       std::string &)s              null PList
+                                     - (oo::PList) sel:(const
+                                       std::string &)s              what it
+                                                                    returns
+  OOCallByName(target, sel, plist)   - (void) sel:(const
+                                       oo::PList &)p                null PList
 
 A scalar result (bool, float...) or an object result (the ship a launch action
 returns) is ignored: no dispatcher reads one (OOJSCall calls an
@@ -29,14 +31,13 @@ called (see below). A string argument reaches a (const oo::PList &) parameter
 as a string PList; a PList argument reaches a (const std::string &) parameter
 only when it is a string.
 
-        dispatcher                                                  argument
-result
-        ----------------------------------------------------------
---------------  ----------- AI actions, deferred AI calls (AI.mm), legacy-script
-none or string  void / PList actions, ship.call() (OOJSCall.mm) legacy-script
-queries (*_string, *_number, *_bool),         none            PList (a string
-        expander [selector] keys or a number) HUD dials (HeadUpDisplay.mm),
-joystick callbacks            PList           void
+  dispatcher                                           argument       result
+  ---------------------------------------------------  ------------- -----------
+  AI actions, deferred AI calls (AI.mm),               none or        void /
+PList legacy-script actions, ship.call() (OOJSCall.mm)     string legacy-script
+queries (*_string, *_number, *_bool),  none           PList expander [selector]
+keys (a string or a number) HUD dials (HeadUpDisplay.mm), joystick callbacks
+PList          void
 
 An entity's method is called by its name through oo::CallEntityByName (below):
 the AI's actions and messages and the legacy script engine.

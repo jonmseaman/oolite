@@ -41,7 +41,7 @@ struct OOSkyQuadDesc;
 
 /*	A drawable. Its one caller, SkyEntity, makes it with oo::makeRef and
    hands it to the entity. It is a graphics reset client through the C++ client
-        interface.
+   interface.
 */
 class OOSkyDrawable : public OODrawable, public OOGraphicsResetClient {
  public:

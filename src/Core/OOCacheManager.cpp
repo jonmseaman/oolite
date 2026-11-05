@@ -59,10 +59,10 @@ constexpr const char* kCacheKeyCaches = "caches";
 
 enum { kEndianTagValue = 0x0123456789ABCDEFULL, kFormatVersionValue = 219 };
 
-static OOCacheManager* sSingleton =
+namespace {
+OOCacheManager* sSingleton =
     nullptr;  // +1, never released (the retained singleton)
 
-namespace {
 using CacheEntries = std::map<std::string, oo::PList, std::less<>>;
 
 // The cache named <name>, or nullptr (no such cache, or no caches at all), as

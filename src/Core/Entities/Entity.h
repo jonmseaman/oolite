@@ -30,8 +30,6 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include <quickjs.h>
-
 #include "CollisionRegion.h"
 #include "EntityVirtualMembers.h"  // the virtual members
 #include "OOCacheManager.h"
@@ -284,7 +282,7 @@ class Entity : public oo::RefCounted, public ::OOJSPrivateObject {
 
   // The category ShaderBindings (EntityShaderBindings.mm): more values the
   // shader uniforms bind to by name, through the entities' shader binding
-  // member table (EntityShaderBindings.mm).
+  // member table (Entity+ObjCBridge.mm).
   GLfloat clock();
   unsigned pseudoFixedD100();
   unsigned pseudoFixedD256();
@@ -303,10 +301,10 @@ class Entity : public oo::RefCounted, public ::OOJSPrivateObject {
      its class by overriding them (EntityOOJavaScriptExtensions.h). The defaults
      are the category's bodies. The engine asks the C++ entity
           (OOJSEntityIsVisibleToScripts(), OOJSEntityJSClassName(),
-          OOJSEntityJSClassID()); an Objective-C entity's class that implements
-     the selectors still answers first. oo::ObjCEntity must not forward these:
-     those functions reach them only for an Objective-C entity with no override
-     of its own, and a forwarding adapter would send the selector back.
+     OOJSEntityJSClassID()); an Objective-C entity's class that implements the
+     selectors still answers first. oo::ObjCEntity must not forward these: those
+     functions reach them only for an Objective-C entity with no override of its
+     own, and a forwarding adapter would send the selector back.
   */
   // jsClassID(): virtual, in OO_ENTITY_VIRTUAL_MEMBERS
   // (EntityVirtualMembers.h) jsClassName(): virtual, in
@@ -403,8 +401,9 @@ class Entity : public oo::RefCounted, public ::OOJSPrivateObject {
 
   OOTimeAbsolute spawnTime = {};
 
-  JSValue _jsSelf = {};  // Zero-filled (not an object) until created; test with
-                         // JS_IsObject().
+  // The entity's JS object, owned while the entity lives; not an object until
+  // created (test with JS_IsObject()).
+  JSValue _jsSelf = JS_UNDEFINED;
   NSUInteger lastDrawCounter = {};
 
  private:
@@ -422,7 +421,7 @@ class Entity : public oo::RefCounted, public ::OOJSPrivateObject {
 
 namespace cxx {
 
-/*	The protocol OOSubEntity's methods, for a C++ subentity whose own facade
+/*	The protocol OOSubEntity's methods, for a C++ subentity whose own façade
    is gone: the owner that sent a subentity -rescaleBy: or
         -drawSubEntityImmediate:translucent: calls these when the subentity's
    C++ part adopts this interface, and sends the selector otherwise. (Not named

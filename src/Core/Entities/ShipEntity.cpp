@@ -50,6 +50,7 @@ MA 02110-1301, USA.
 #include "OOFlasherEntity.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
+#include "OOJSShip.h"
 #include "OOJSVector.h"
 #include "OOLaserShotEntity.h"
 #include "OOMaths.h"
@@ -306,8 +307,8 @@ ShipEntity* oo::NewShipObject(const Ref<ShipEntity>& ship,
   return ship.get();
 }
 
-// The deleted facade's -initShipSetUpWithKey:definition:, unchanged but for
-// self.
+// The ship's initialiser body: initWithKey(), then the set-up from the
+// dictionary.
 bool ShipEntity::initShipSetUp(const std::string& key, const oo::PList& dict) {
   OOJS_PROFILE_ENTER
 
@@ -6699,8 +6700,9 @@ void ShipEntity::avoidCollision() {
         oo::PList((long)behaviour);  // as oo_setInteger: stored it
     if (primaryTarget() != nullptr) {
       // must use the weak ref here to prevent potential over-retention
-      condition["primaryTarget"] = oo::EntityWeakNode(
-          primaryTarget());  // weakly, as its object's weak reference was
+      condition["primaryTarget"] =
+          oo::EntityWeakNode(primaryTarget());  // weakly, as its object's weak
+                                                // reference was
     }
     condition["desired_range"] = oo::PList::singleReal(
         desired_range);  // floats, as oo_setFloat: stored them
@@ -7137,7 +7139,7 @@ bool ShipEntity::isPirateVictim() {
 
 bool ShipEntity::isExplicitlyUnpiloted() { return _explicitlyUnpiloted; }
 
-JSClassID ShipEntity::jsClassID() { return ::ShipEntityJSClassID(); }
+JSClassID ShipEntity::jsClassID() { return ::JSShipClassID(); }
 
 std::optional<std::string> ShipEntity::jsClassName() {
   return ::ShipEntityJSClassName();
@@ -8392,8 +8394,8 @@ void ShipEntity::noteKilledBy(Entity* whom, OOShipDamageType type) {
   OOEntityStatus originalStatus = status();
   setStatus(STATUS_DEAD);
 
-  ShipScriptEvent(context, this, "shipDied", whomVal,
-                  typeVal);  // Frees whomVal and typeVal.
+  // Frees whomVal and typeVal.
+  ShipScriptEvent(context, this, "shipDied", whomVal, typeVal);
   if (oo::EntityIsShip(whom)) {
     OOJSVal selfVal = OOJSValueFromCxxObject(context, this);
     typeVal = OOJSValueFromShipDamageType(context, type);
@@ -13864,9 +13866,8 @@ void ShipEntity::doScriptEvent(OOJSPropID message) {
   OOJSRelinquishContext(context);
 }
 
-// With entities: each entity's JS value, what OOJSValueFromNativeObject()
-// gave for its object (null for none). The id forms had no caller and are
-// deleted.
+// With entities: each entity's JS value, what OOJSValueFromNativeObject() gave
+// for its object (null for none).
 void ShipEntity::doScriptEvent(OOJSPropID message, Entity* argument) {
   JSContext* context = OOJSAcquireContext();
 
@@ -13896,8 +13897,7 @@ void ShipEntity::doScriptEvent(OOJSPropID message,
   int i, argc;
   OOJSVal* argv = NULL;
 
-  // Convert arguments to JS values and make them temporarily
-  // un-garbage-collectable.
+  // Convert arguments to JS values.
   argc = (int)arguments.size();
   if (argc != 0) {
     argv = (decltype(argv))malloc(sizeof *argv * argc);
@@ -13922,14 +13922,14 @@ void ShipEntity::doScriptEvent(OOJSPropID message,
   OOJSRelinquishContext(context);
 }
 
-void ShipEntity::doScriptEvent(OOJSPropID message, OOJSVal* argv, int argc) {
+void ShipEntity::doScriptEvent(OOJSPropID message, JSValue* argv, int argc) {
   JSContext* context = OOJSAcquireContext();
   doScriptEvent(message, context, argv, argc);
   OOJSRelinquishContext(context);
 }
 
 void ShipEntity::doScriptEvent(OOJSPropID message, JSContext* context,
-                               OOJSVal* argv, int argc) {
+                               JSValue* argv, int argc) {
   // This method is a bottleneck so that PlayerEntity can override at one point.
   if (script != nullptr) script->callMethod(message, context, argv, argc, NULL);
   if (aiScript != nullptr)

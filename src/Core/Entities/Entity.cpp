@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #include "GameController.h"
 #include "OOConstToString.h"
 #include "OODebugFlags.h"
+#include "OOJSEntity.h"
 #include "OOMaths.h"
 #include "OOPlanetEntity.h"
 #include "PlayerEntity.h"
@@ -94,10 +95,11 @@ void Entity::init() {
 
 /*	What the root facade's -dealloc ran before the C++ part went: the last
    release runs it, with the entity whole (oo::RefCounted::willDispose()), in
-   the same order. An entity that never had its object (no creator made its
-   facade) ran none of it, so it runs none. From its first line the entity no
-   longer has its object (hasObject()), as oo::ToObjC() answered nil for an
-        object being deallocated: holds and retains of it are null and nothing.
+   the same order. An entity that
+   never had its object (no creator made its facade) ran none of it, so it runs
+   none. From its first line the entity no longer has its object (hasObject()),
+   as oo::ToObjC() answered nil for an object being deallocated: holds and
+   retains of it are null and nothing.
 */
 void Entity::willDispose() noexcept {
   if (!_hasObject) return;
@@ -533,13 +535,13 @@ void Entity::throwSparks() {
 }
 
 void Entity::setOwner(Entity* ent) {
-  _owner = oo::WithObject(
-      ent);  // an entity without its object was nil's empty reference
+  _owner = oo::WithObject(ent);  // an entity without its object was nil's empty
+                                 // reference
 }
 
 Entity* Entity::owner() {
-  return oo::WithObject(
-      _owner.get());  // +0, null once it has gone, as the object read
+  return oo::WithObject(_owner.get());  // +0, null once it has gone, as the
+                                        // object read
 }
 
 Entity* Entity::ownerEntity() { return _owner.get(); }
@@ -947,7 +949,7 @@ bool Entity::getIsImmuneToBreakPatternHide() {
 // Entity (OOJavaScriptExtensions)'s answers for the class, which the root
 // category forwards here: the category's bodies, which a C++ subclass
 // overrides.
-JSClassID Entity::jsClassID() { return ::EntityJSClassID(); }
+JSClassID Entity::jsClassID() { return ::JSEntityClassID(); }
 
 std::optional<std::string> Entity::jsClassName() {
   return ::EntityJSClassName();
@@ -955,15 +957,16 @@ std::optional<std::string> Entity::jsClassName() {
 
 bool Entity::isVisibleToScripts() { return ::EntityJSIsVisibleToScripts(); }
 
-// The JS glue: the bodies are EntityOOJavaScriptExtensions.mm's, as they were
-// when the root facade answered the selectors.
+// The JS glue: the bodies are
+// EntityOOJavaScriptExtensions.mm's, as they were when the root facade answered
+// the selectors.
 JSValue Entity::jsValueInContext(JSContext* context) {
   return ::EntityJSValueInContext(this, context);
 }
 
-// NSObject's -oo_clearJSSelf:, which #768's Entity does not override: nothing
-// (the entity owns a reference to its JS object, so it is finalized only after
-// deleteJSSelf() has let go of it).
+// NSObject's -oo_clearJSSelf:, which #768's Entity does not override:
+// nothing (the entity owns a reference to its JS object, so it is finalized
+// only after deleteJSSelf() has let go of it).
 void Entity::clearJSSelf(JSValueConst /*selfVal*/) {}
 
 std::optional<std::string> Entity::jsDescription() {

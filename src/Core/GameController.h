@@ -51,8 +51,9 @@ MA 02110-1301, USA.
 // 1.0 / (desired framerate cap)
 
 class MyOpenGLView;
-class OOFullScreenController;  // TEMP: whether to use separate
-                               // OOFullScreenController object, will hopefully
+class OOFullScreenController;
+
+// TEMP: whether to use separate OOFullScreenController object, will hopefully
 // be used for all builds soon.
 #define OO_USE_FULLSCREEN_CONTROLLER OOLITE_MAC_COCOA_UI
 

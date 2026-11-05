@@ -33,10 +33,10 @@ MA 02110-1301, USA.
   return ship;
 }
 
-/*	-cxx_initWithKey:definition:'s body after [super
-   cxx_initWithKey:definition:], which newProxyObject() runs (the ship set-up
-   may release the object and answer nil).
-*/
+/* -cxx_initWithKey:definition:'s body after [super
+ * cxx_initWithKey:definition:], which newProxyObject() runs (the ship set-up
+ * may release the object and answer nil).
+ */
 void ProxyPlayerEntity::initProxyDefaults() {
   setDialForwardShield(1.0f);
   setDialAftShield(1.0f);

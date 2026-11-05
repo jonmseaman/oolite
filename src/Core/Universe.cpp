@@ -101,7 +101,6 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
-
 #if OO_LOCALIZATION_TOOLS
 #include <cstring>
 
@@ -246,8 +245,6 @@ bool BeaconCodeMatches(const std::optional<std::string>& beaconCode,
 }
 
 }  // namespace
-
-// namespace
 
 //------------------------------------------------------------------------------------//
 //	The class: Universe's members. The Objective-C facade's initialiser and
@@ -1347,12 +1344,12 @@ void Universe::carryPlayerOn(::StationEntity* /*carrier */,
   if (player != nullptr) player->setJumpCause("carried");
   if (player != nullptr)
     player->setPreviousSystemID((player != nullptr ? player->systemID() : 0));
-  const std::optional<std::string> jumpCause =
-      (player != nullptr ? player->jumpCause() : std::optional<std::string>());
   ShipScriptEvent(
       context, player, "shipWillEnterWitchspace",
-      OOJSValueFromPList(
-          context, jumpCause.has_value() ? oo::PList(*jumpCause) : oo::PList()),
+      OOJSValueFromPList(context,
+                         player != nullptr && player->jumpCause().has_value()
+                             ? oo::PList(*player->jumpCause())
+                             : oo::PList()),
       OOJSValueFromDouble(context, dest));
   OOJSRelinquishContext(context);
 
@@ -3450,7 +3447,7 @@ std::vector<oo::EntityHold> Universe::addShipsAt(HPVector pos,
 
   return ships;  // empty where nil was returned
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_VAL(std::vector<oo::EntityHold>())
 }
 
 std::vector<oo::EntityHold> Universe::addShipsToRoute(const std::string& route,
@@ -4262,8 +4259,9 @@ void Universe::clearBeacon(Entity* beacon) {
       oo::SetPrevBeacon(oo::NextBeacon(beacon), oo::PrevBeacon(beacon));
       oo::SetNextBeacon(oo::PrevBeacon(beacon), oo::NextBeacon(beacon));
     }
-    oo::SetBeaconCode(beacon, std::nullopt);  // not nil: nil built a
-                                              // std::string from a null char*
+    oo::SetBeaconCode(beacon,
+                      std::nullopt);  // not nil: nil built a std::string from a
+                                      // null char*
   }
 }
 
@@ -4426,7 +4424,7 @@ std::optional<std::string> Universe::randomShipKeyForRoleRespectingConditions(
   // If we got here, some ships existed but all failed conditions test.
   return std::nullopt;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_VAL(std::nullopt)
 }
 
 ::ShipEntity* Universe::newShipWithRole(const std::string& role) {
@@ -6843,7 +6841,7 @@ std::vector<oo::EntityHold> Universe::findEntitiesMatchingPredicate(
 
   return result;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_VAL(std::vector<oo::EntityHold>())
 }
 
 Entity* Universe::findOneEntityMatchingPredicate(
@@ -8373,7 +8371,7 @@ oo::PList Universe::generateSystemData(OOSystemID s, bool /*useCache*/) {
               ? systemManager->getPropertiesForSystemKey(systemKey)
               : oo::PList());
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_VAL(oo::PList())
 }
 
 oo::PList Universe::currentSystemData() {
@@ -8406,7 +8404,7 @@ oo::PList Universe::currentSystemData() {
     return interstellarDict;
   }
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_VAL(oo::PList())
 }
 
 bool Universe::inInterstellarSpace() { return sun() == nullptr; }
@@ -9535,9 +9533,9 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
       std::string shortExtrasKey = "shipyard-first-extra";
 
       // for testing condition scripts
-      ::ShipEntity* testship = ::ProxyPlayerEntity::newProxyObject(
-          ship_key, shipDict);  // customise the ship (if chance = 1, then ship
-                                // will get all possible add
+      ::ShipEntity* testship =
+          ::ProxyPlayerEntity::newProxyObject(ship_key, shipDict);
+      // customise the ship (if chance = 1, then ship will get all possible add
       // ons)
       while ((randf() < chance) && (options.size())) {
         chance *= chance;  // decrease the chance of a further customisation

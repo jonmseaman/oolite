@@ -7,7 +7,7 @@ implementing much of the interaction, menu system etc. Breaking it up into
 ten or so different classes is a perennial to-do item.
 
 The player is made in C++ by PlayerEntity::sharedPlayer() and its Objective-C
-object is the root's facade (which answers the selectors the game still finds
+object is a ship's (the root's facade answers the selectors the game still finds
 by name on the player: legacy-script actions and queries, callObjC(), shader
 bindings, deferred calls, for the player's C++ part only).
 
@@ -942,7 +942,6 @@ class PlayerEntity : public ShipEntity {
   void doScriptEvent(OOJSPropID message, JSContext* context, JSValue* argv,
                      int argc) override;
   bool doWorldEventUntilMissionScreen(OOJSPropID message);
-  // argv is borrowed: the caller remains responsible for freeing the values.
   void doWorldScriptEvent(OOJSPropID message, JSContext* context, JSValue* argv,
                           int argc, OOTimeDelta limit);
   virtual void setGalacticHyperspaceBehaviour(
@@ -1257,8 +1256,8 @@ class PlayerEntity : public ShipEntity {
   // that file.
   virtual void setScriptTarget(::ShipEntity* ship);
   // The player its own script target, through the virtual member
-  // (OOPlayerForScripting()): not virtual, so the binding's narrow test stands
-  // in for it.
+  // (OOPlayerForScripting()): not virtual, so the binding's narrow test
+  // stands in for it.
   void setScriptTargetToSelf();
   ::ShipEntity* scriptTarget();
   std::vector<std::pair<std::string, oo::Ref<OOScript>>>

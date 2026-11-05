@@ -38,7 +38,7 @@ MA 02110-1301, USA.
 
         The ships and the visual effects make it with flasherWithDictionary()
         and hand it to Objective-C with oo::NewEntityFacade, which wraps it in
-   the nearest facade left (OOLightParticleEntity's). The engine's JS questions
+   the nearest façade left (OOLightParticleEntity's). The engine's JS questions
    reach it through the root's virtual members, and an owner's -rescaleBy:
    through cxx::OOSubEntityInterface.
 */

@@ -37,10 +37,10 @@ MA 02110-1301, USA.
 #include "oofnd/Ref.hpp"
 #include "oofnd/StdLib.hpp"
 
-/*	Cache names and keys are UTF-8
-        std::strings. The cache directory is std::nullopt where it was nil.
-   Every cached value is property-list data, held as an oo::PList and written to
-   the cache file as it is; a null PList is "no value".
+/*	Cache names and keys are UTF-8 std::strings. The cache directory is
+   std::nullopt where it was nil. Every cached value is property-list data,
+   held as an oo::PList and written to the cache file as it is; a null PList is
+   "no value".
 */
 /*	The cache manager is a singleton. The write task (OOAsyncCacheWriter) is
    a C++ task (OOAsyncWorkTask).

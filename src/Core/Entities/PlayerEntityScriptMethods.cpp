@@ -70,8 +70,8 @@ NSInteger IntegerValueOf(const oo::PList* value) {
 
 }  // namespace
 
-/*	The category PlayerEntity (ScriptMethods): members of PlayerEntity,
-   declared in PlayerEntity.h.
+/* The category PlayerEntity (ScriptMethods): members of PlayerEntity, declared
+ * in PlayerEntity.h.
  */
 
 unsigned PlayerEntity::score() { return ship_kills; }

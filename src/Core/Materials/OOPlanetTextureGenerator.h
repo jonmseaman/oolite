@@ -74,10 +74,9 @@ typedef struct OOPlanetTextureGeneratorInfo {
   bool perlin3d;
 } OOPlanetTextureGeneratorInfo;
 
-/*	A leaf of the texture generators, over
-        OOTextureGenerator; so are the two helper generators private to
-        its file. Its one caller (OOPlanetEntity) calls the static members; a
-   texture takes the C++ generator.
+/*	A leaf of the texture generators, over OOTextureGenerator; so are the
+   two helper generators private to its file. Its one caller (OOPlanetEntity)
+   calls the static members; a texture takes the C++ generator.
 */
 class OOPlanetTextureGenerator : public OOTextureGenerator {
  public:

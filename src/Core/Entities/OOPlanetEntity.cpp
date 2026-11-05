@@ -1079,8 +1079,8 @@ void OOPlanetEntity::setTextureFileName(
   bool isMoon = _atmosphereDrawable == nullptr;
 
   std::optional<std::string> textureName = textureFileName;
-  oo::Ref<OOTexture>
-      diffuseMap;  // held: the factories answer the texture retained
+  oo::Ref<OOTexture> diffuseMap;  // held: the factories answer the texture
+                                  // retained
   oo::Ref<OOTexture> normalMap;
   oo::Ref<OOTexture> generatedDiffuseMap,
       generatedNormalMap;  // the C++ generator answers them retained

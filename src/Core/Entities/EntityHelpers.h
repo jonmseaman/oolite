@@ -2,10 +2,10 @@
 
 EntityHelpers.h
 
-What is kept of the root entity facade in Entity+ObjCBridge.h: the questions the
-facade's methods and categories answered for an entity's object, asked of the
-C++ entity, and the entity's property-list node. Imported as the last line of
-Entity.h; do not import it directly.
+What is kept of the root entity facade in Entity+ObjCBridge.h: the questions
+the facade's methods and categories answered for an entity's object, asked of
+the C++ entity, and the entity's property-list node. Imported as the last line
+of Entity.h; do not import it directly.
 
 An entity "has its object" (Entity::hasObject()) from the creator that made its
 facade until its last release begins: what oo::ToObjC() answering non-nil was.

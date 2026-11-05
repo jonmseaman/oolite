@@ -53,8 +53,9 @@ class WormholeEntity;
 #include "OOPolygonSprite.h"  // OOHUDBeaconIcon: the beacon drawable is oo::Ref
 #include "OOShipGroup.h"      // the groups are oo::Ref
 class OOFlasherEntity;
-class OOExhaustPlumeEntity;  // Universe.h's, for the members of
-                             // ShipEntityAI.mm's scans.
+class OOExhaustPlumeEntity;
+
+// Universe.h's, for the members of ShipEntityAI.mm's scans.
 typedef bool (*EntityFilterPredicate)(Entity* entity, void* parameter);
 
 #define MAX_TARGETS 24
@@ -1585,10 +1586,11 @@ class ShipEntity : public OOEntityWithDrawable,
 
 /*	Script events with raw JS values, for example:
         ShipScriptEvent(context, ship, "doSomething",
-   OOJSValueFromDouble(context, 42)); The argument values are owned by the
-   macro, which frees them (with OOJSFreeValue()) after the event has been sent,
-   so they must be fresh values that are not used again afterwards. The ship is
-   the C++ ship; a null ship sends nothing, as the message to nil did.
+                        OOJSValueFromDouble(context, 42));
+        The argument values are owned by the macro, which frees them (with
+   OOJSFreeValue()) after the event has been sent, so they must be fresh values
+   that are not used again afterwards. The ship is the C++ ship; a null ship
+   sends nothing, as the message to nil did.
 */
 #define ShipScriptEvent(context, ship, event, ...)                           \
   do {                                                                       \

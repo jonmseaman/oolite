@@ -24,7 +24,7 @@ MA 02110-1301, USA.
 
 #include "PlayerEntityControls.h"
 
-#include <initializer_list>
+#include <cstring>
 
 #include "AI.h"
 #include "DockEntity.h"
@@ -781,6 +781,7 @@ bool PlayerEntity::handleGUIUpDownArrowKeys() {
   ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
   const bool* joyButtonState =
       OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+
   bool result = false;
   bool arrow_up =
       checkKeyPress(n_key_gui_arrow_up) || joyButtonState[BUTTON_GUIUP];
@@ -2148,6 +2149,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
   const bool* joyButtonState =
       OOJoystickManager::sharedStickHandler()->getAllButtonStates();
+
   bool moving = false;
   bool dragging = false;
   double cursor_speed =
@@ -2761,7 +2763,8 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
           disc_operation_in_progress = true;
           if (UNIVERSE != nullptr)
             UNIVERSE->setUseAddOns(std::string(SCENARIO_OXP_DEFINITION_ALL),
-                                   false, true);  // calls reinitAndShowDemo
+                                   false,
+                                   true);  // calls reinitAndShowDemo
         }
 
         if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick)
@@ -4390,8 +4393,9 @@ void PlayerEntity::pollCustomViewControls() {
           (customView.isDict() ? customView : oo::PList()),
           true);  // null unless a Dict
 
-      switchToThisView(VIEW_CUSTOM, false);  // weapon facing must not change,
-                                             // we just want an external view
+      switchToThisView(VIEW_CUSTOM,
+                       false);  // weapon facing must not change, we just want
+                                // an external view
     }
     customView_pressed = true;
   } else
@@ -5849,8 +5853,8 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking) {
   }
 
   Entity* target;
-  target =
-      primaryTarget();  // If target isn't dockable, check for nearby stations
+  target = primaryTarget();
+  // If target isn't dockable, check for nearby stations
   if (!(target != nullptr && target->getIsStation())) {
     ::Universe* uni = UNIVERSE;
     Entity** entities = uni->sortedEntities;  // grab the public sorted list

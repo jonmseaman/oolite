@@ -30,8 +30,6 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include <quickjs.h>
-
 #include <vector>
 
 #include "OOEntityHold.h"  // memberArray()
@@ -113,9 +111,10 @@ class OOShipGroup : public oo::PListForeign, public ::OOJSPrivateObject {
   std::vector<oo::WeakRef<Entity>> _members = {};
   oo::WeakRef<Entity> _leader = {};
   std::optional<std::string> _name = {};
-  JSValue _jsSelf =
-      JS_UNDEFINED;  // The JS ShipGroup object proxy for this group; not an
-                     // object until created (test with JS_IsObject()).
+  // The JS ShipGroup object proxy for this group: a weak (uncounted)
+  // reference, as the JS object retains the group, cleared by clearJSSelf()
+  // when the JS object is finalized. Not an object until created.
+  JSValue _jsSelf = JS_UNDEFINED;
 };
 
 /*	OOShipGroupCursor: steps through a group's live members in its internal

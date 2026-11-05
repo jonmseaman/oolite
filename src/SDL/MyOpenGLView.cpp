@@ -852,7 +852,6 @@ void MyOpenGLView::setGameController(::GameController* controller) {
 
 bool MyOpenGLView::inFullScreenMode() { return fullScreen; }
 
-#if OOLITE_SDL
 void MyOpenGLView::setFullScreenMode(bool fsm) {
   fullScreen = fsm;
 
@@ -897,8 +896,6 @@ NSSize MyOpenGLView::modeAsSize(int sizeIndex) {
                     mode.get<int>(std::string(kOODisplayHeight)));
 }
 
-#endif
-
 void MyOpenGLView::getDisplayDimensions(unsigned* width, unsigned* height) {
   SDL_DisplayID displayID = SDL_GetDisplayForWindow(window);
 
@@ -937,6 +934,7 @@ void MyOpenGLView::stringToClipboard(const std::string& stringToCopy) {
 }
 
 #if OOLITE_WINDOWS
+
 bool MyOpenGLView::getAtDesktopResolution() { return atDesktopResolution; }
 
 bool MyOpenGLView::hdrOutput() { return _hdrOutput; }

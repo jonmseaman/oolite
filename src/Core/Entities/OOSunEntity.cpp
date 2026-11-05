@@ -776,8 +776,8 @@ std::optional<std::string> OOSunEntity::jsClassName() {
 
 bool OOSunEntity::isVisibleToScripts() { return ::OOJSSunIsVisibleToScripts(); }
 
-// OOStellarBody.h: the sun and the planet asked directly, any
-// other body by selector.
+// OOStellarBody.h: the sun and the planet asked
+// directly, any other body by selector.
 double OOStellarBodyRadius(Entity* body) {
   if (body == nullptr) return 0.0;
   if (OOSunEntity* sun = dynamic_cast<OOSunEntity*>(body)) return sun->radius();

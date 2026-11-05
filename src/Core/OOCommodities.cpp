@@ -260,13 +260,13 @@ oo::PList OOCommodities::modifyGood(const oo::PList& good, ::OOScript* script,
   // The JS boundary takes and gives property-list objects: the info crosses as
   // one, and an accepted result comes back through oo::PListFrom (an exact
   // round trip).
-  OOJSVal args[] = {
-      OOJSValueFromPList(context, good),
-      station != nullptr
-          ? station->jsValueInContext(context)
-          : JS_NULL,  // the C++ station's JS value, which
-                      // OOJSValueFromNativeObject() of its object reached
-      OOJSValueFromDouble(context, system)};
+  OOJSVal args[] = {OOJSValueFromPList(context, good),
+                    station != nullptr
+                        ? station->jsValueInContext(context)
+                        : JS_NULL,  // the C++ station's JS value, which
+                                    // OOJSValueFromNativeObject() of its object
+                                    // reached
+                    OOJSValueFromDouble(context, system)};
   bool OK = true;
   const char* errorType = nullptr;
 
@@ -297,8 +297,9 @@ oo::PList OOCommodities::modifyGood(const oo::PList& good, ::OOScript* script,
     return good;
   }
 
-  if (!JS_IsObject(rval)) {  // Unlike JSVAL_IS_OBJECT(), false for null, which
-                             // gets the same message below.
+  // Unlike the old object-or-null test, false for null, which gets the same
+  // message below.
+  if (!JS_IsObject(rval)) {
     OO_LOG("script.commodityScript.error",
            "Could not update {} commodity definition for {} - return value "
            "invalid",

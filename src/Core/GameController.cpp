@@ -74,7 +74,7 @@ MA 02110-1301, USA.
 #import "OoliteApp.h"
 
 static void SetUpSparkle(void);
-#elif (OOLITE_SDL && defined(OO_DEBUG_MONITOR_ENABLED))
+#elif defined(OO_DEBUG_MONITOR_ENABLED)
 #include "OODebugMonitor.h"
 #endif
 
@@ -132,8 +132,6 @@ TickClock::time_point NextGameTick() {
 }
 }  // namespace
 
-// namespace
-
 /*	Deferred calls: Foundation's timed performers, which were one-shot
    timers on the main run loop. As measured against gnustep-base 1.31: a
    performer's fire date is now + delay (a delay <= 0 is 0.0001 s, the timer
@@ -161,7 +159,6 @@ std::vector<OODeferredCall> sDeferredCalls;  // in scheduling order
 
 }  // namespace
 
-// namespace
 void OOScheduleDeferredCall(std::function<void()> call, NSTimeInterval delay) {
   if (!oo::thread::isMainThread() || !call) return;
 
@@ -403,7 +400,8 @@ bool GameController::suppressClangStuff() {
 #endif
 
 #if !OOLITE_MAC_COCOA_UI  // the Mac -performGameTick: is in GameController
-                          // (MacOSX) at the end of the file
+                          // (MacOSX)
+                          // at the end of the file
 
 void GameController::performGameTick() {
   oo::AutoreleaseScope pool;  // was an Objective-C autorelease pool
@@ -697,7 +695,8 @@ void GameController::logProgress(const std::string& message) {
 
 #if OO_DEBUG
 #if !OOLITE_MAC_COCOA_UI  // the Mac arms are in GameController (MacOSX) at the
-                          // end of the file
+                          // end
+                          // of the file
 bool GameController::debugMessageTrackingIsOn() {
   return oo::log::willDisplay("startup.progress");
 }
@@ -753,7 +752,7 @@ void GameController::endSplashScreen() {
 #if OOLITE_SDL
 void GameController::exitAppWithContext(const std::string& context) {
   OO_LOG("exit.context", "Exiting: {}.", context);
-#if (OOLITE_SDL && defined(OO_DEBUG_MONITOR_ENABLED))
+#if defined(OO_DEBUG_MONITOR_ENABLED)
   ::OODebugMonitor::sharedDebugMonitor()->applicationWillTerminate();
 #endif
 #if OOLITE_WINDOWS

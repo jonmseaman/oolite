@@ -441,8 +441,8 @@ PlayerEntity* PlayerEntity::sharedPlayer() {
 
 ::ShipEntity* PlayerEntity::newPlayerObject() {
   // -init: the ship's part only ([super initBypassForPlayer]), under the facade
-  // oo::NewEntityFacade picks (the drawable's); the player, its object retained
-  // (+1).
+  // oo::NewEntityFacade picks (the drawable's); the player, its object
+  // retained (+1).
   OOCAssert(gOOPlayer == nullptr,
             "Expected only one PlayerEntity to exist at a time.");
   oo::Ref<PlayerEntity> player = oo::makeRef<PlayerEntity>();
@@ -456,8 +456,8 @@ void PlayerEntity::deferredInit() {
   OOCAssert(gOOPlayer == this,
             "Expected only one PlayerEntity to exist at a time.");
   // -[ShipEntity cxx_initWithKey:definition:] sent again: the root's
-  // -initWithCxxEntity: (what the ship's -initShipPart sent an initialised
-  // ship), then the ship's set-up.
+  // -initWithCxxEntity: (what the ship's -initShipPart sent an
+  // initialised ship), then the ship's set-up.
   OOCAssert(oo::EntityInitAgain(this) == this &&
                 initShipSetUp(std::string(PLAYER_SHIP_DESC),
                               oo::PList(oo::PList::Dict{})),
@@ -534,9 +534,10 @@ OOAlertCondition PlayerEntity::alertCondition() { return getAlertCondition(); }
 int PlayerEntity::legalStatus() { return getLegalStatus(); }
 void PlayerEntity::suppressTargetLost() { getSuppressTargetLost(); }
 
-// The player's JS class name, which its facade's category PlayerEntity
-// (OOJavaScriptExtensions) answered.
+// The player's JS class and class name, which its category PlayerEntity
+// (OOJavaScriptExtensions) answers.
 JSClassID PlayerEntity::jsClassID() { return JSPlayerShipClassID(); }
+
 std::optional<std::string> PlayerEntity::jsClassName() {
   return OOJSPlayerShipJSClassName();
 }
@@ -1163,10 +1164,10 @@ bool PlayerEntity::infoSystemOnRoute() {
 ::WormholeEntity* PlayerEntity::getWormhole() { return wormhole; }
 
 void PlayerEntity::setWormhole(::WormholeEntity* newWormhole) {
-  // The wormhole is C++: its Objective-C object (the root's facade, which
-  // owns it) is what is retained. oo::ToObjC answers it autoreleased: the pool
-  // drains that here, so the object's retain count is its holders' alone
-  // afterwards, as before.
+  // The wormhole is C++: its Objective-C object (the root's facade, which owns
+  // it) is what is retained. oo::ToObjC answers it
+  // autoreleased: the pool drains that here, so the object's retain count is
+  // its holders' alone afterwards, as before.
   {
     oo::AutoreleaseScope pool;                     // was @autoreleasepool
     wormholeObject = oo::EntityHold(newWormhole);  // null for null
@@ -5286,8 +5287,8 @@ void PlayerEntity::updateSystemMemory() {
 }
 
 // Virtual: a test's player answers it. What the object-answering
-// getCompassTarget() answered the C++ entity of: null once the target's object
-// has gone, which also forgets it.
+// getCompassTarget() answered the C++ entity of: null once the
+// target's object has gone, which also forgets it.
 Entity* PlayerEntity::getCompassTargetEntity() {
   Entity* result = oo::LiveEntity(compassTarget);
   if (result == nullptr) {
@@ -6806,8 +6807,8 @@ void PlayerEntity::setBounty(OOCreditsQuantity amount,
                              const std::string& reason) {
   JSContext* context = OOJSAcquireContext();
 
-  int amountVal2 = (int)amount - (int)legalStatusValue;
-  OOJSVal amountVal = OOJSValueFromDouble(context, amountVal2);
+  OOJSVal amountVal =
+      OOJSValueFromDouble(context, (int)amount - (int)legalStatusValue);
 
   legalStatusValue = (int)
       amount;  // can't set the new bounty until the size of the change is known
@@ -6836,8 +6837,8 @@ void PlayerEntity::markAsOffender(int offence_value,
   if (!isCloaked()) {
     JSContext* context = OOJSAcquireContext();
 
-    int amountVal2 = (legalStatusValue | offence_value) - legalStatusValue;
-    OOJSVal amountVal = OOJSValueFromDouble(context, amountVal2);
+    OOJSVal amountVal = OOJSValueFromDouble(
+        context, (legalStatusValue | offence_value) - legalStatusValue);
 
     legalStatusValue |= offence_value;  // can't set the new bounty until the
                                         // size of the change is known
@@ -7682,8 +7683,8 @@ void PlayerEntity::enterWormhole(::WormholeEntity* w_hole) {
   bool misjump = scriptedMisjump() ||
                  (w_hole != nullptr ? w_hole->withMisjump() : false) ||
                  flightPitch == max_flight_pitch || randf() > 0.995;
-  wormholeObject
-      .leak();  // a wormhole held here was dropped without a release, as before
+  wormholeObject.leak();  // a wormhole held here was dropped without a release,
+                          // as before
   wormholeObject = oo::EntityHold(w_hole);  // held (its Objective-C object)
   wormhole = w_hole;
   addScannedWormhole(wormhole);

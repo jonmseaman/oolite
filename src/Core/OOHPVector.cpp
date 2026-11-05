@@ -59,9 +59,8 @@ HPVector OORandomUnitHPVector(void) {
   OOHPScalar m;
 
   do {
-    float x =
-        randf() -
-        0.5f;  // one draw per local, in the order Clang evaluates the arguments
+    float x = randf() - 0.5f;  // one draw per local, in the order Clang
+                               // evaluates the arguments
     float y = randf() - 0.5f;
     float z = randf() - 0.5f;
     v = make_HPvector(x, y, z);
@@ -78,9 +77,8 @@ HPVector OOHPVectorRandomSpatial(OOHPScalar maxLength) {
   OOHPScalar m;
 
   do {
-    float x =
-        randf() -
-        0.5f;  // one draw per local, in the order Clang evaluates the arguments
+    float x = randf() - 0.5f;  // one draw per local, in the order Clang
+                               // evaluates the arguments
     float y = randf() - 0.5f;
     float z = randf() - 0.5f;
     v = make_HPvector(x, y, z);
@@ -121,9 +119,10 @@ HPVector OORandomPositionInCylinder(HPVector centre1, OOHPScalar exclusion1,
   }
   HPVector result;
   do {
-    HPVector along = OOHPVectorInterpolate(
-        centre1, centre2, randf());  // one draw per local, in the order
-                                     // Clang evaluates the arguments
+    HPVector along =
+        OOHPVectorInterpolate(centre1, centre2,
+                              randf());  // one draw per local, in the order
+                                         // Clang evaluates the arguments
     HPVector offset = OOHPVectorRandomSpatial(radius);
     result = HPvector_add(along, offset);
   } while (HPdistance2(result, centre1) < exc12 ||

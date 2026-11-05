@@ -2210,8 +2210,7 @@ void StationEntity::setAlertLevel(OOStationAlertLevel level,
     alertLevel = level;
     if (signallingScript) {
       self->doScriptEvent(OOJSID("alertConditionChanged"),
-                          std::vector<oo::PList>{oo::PList((int)level),
-                                                 oo::PList((int)oldLevel)});
+                          {oo::PList((int)level), oo::PList((int)oldLevel)});
     }
     switch (level) {
       case STATION_ALERT_LEVEL_GREEN:
@@ -2497,7 +2496,6 @@ std::optional<std::string> StationEntity::acceptDockingClearanceRequestFrom(
           if (tempreject) {
             openLater = true;
           }
-
           OOJSFreeValue(context, rval);
           OOJSFreeValue(context, args[0]);
           OOJSFreeValue(context, args[1]);

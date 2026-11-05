@@ -217,7 +217,7 @@ void DockEntity::setDimensionsAndCorridor(bool docking, bool ddc,
 
 bool DockEntity::isDock() { return true; }
 
-// The binding's bodies (OOJSDock.mm), which a category on the facade forwarded
+// The binding's bodies (OOJSDock.mm), which a category on the façade forwarded
 // to.
 JSClassID DockEntity::jsClassID() { return ::JSDockClassID(); }
 

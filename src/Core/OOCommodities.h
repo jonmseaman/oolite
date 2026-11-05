@@ -4,8 +4,7 @@ OOCommodities.h
 
 Commodity price and quantity manager
 
-The universe
-holds it as oo::Ref, and the markets it makes are
+The universe holds it as oo::Ref, and the markets it makes are
 oo::Ref<OOCommodityMarket>.
 
 Oolite
