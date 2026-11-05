@@ -1,19 +1,22 @@
 /*	test_OOCombinedEmissionMapGenerator.mm
-	Unit tests for OOCombinedEmissionMapGenerator (src/Core/Materials/OOCombinedEmissionMapGenerator.h),
-	the texture generator that bakes a material's emission map, illumination map, diffuse map and
-	their modulating colours into one emission texture.
+        Unit tests for OOCombinedEmissionMapGenerator
+   (src/Core/Materials/OOCombinedEmissionMapGenerator.h), the texture generator
+   that bakes a material's emission map, illumination map, diffuse map and their
+   modulating colours into one emission texture.
 
-	It answers nil when there is nothing to bake, takes its texture options, anisotropy and LOD
-	bias from the options specifier, keys its texture by what it combines, reads its source maps
-	when it is made (unless a texture of its key exists), and bakes them on the work thread:
-	emission tinted by its colour, plus illumination tinted by its colour and modulated by the
-	diffuse map. Its source maps are PNGs the test writes under a scratch Resources/Textures, the
-	current directory and HOMEPATH both pointed at the scratch folder first and the resource
-	manager in strict mode (the built-in Resources alone), so no game resource and no add-on is
-	read. It links the whole game but main (tests/unit/core/meson.build entry ['*']), on the
-	hidden GL context of oo_gl_test_context.hpp. The generators are made by the C++ factories
-	and asked directly. The last test pins the C++ API.
-	Run: bash meson test -C build/meson_test test_OOCombinedEmissionMapGenerator
+        It answers nil when there is nothing to bake, takes its texture options,
+   anisotropy and LOD bias from the options specifier, keys its texture by what
+   it combines, reads its source maps when it is made (unless a texture of its
+   key exists), and bakes them on the work thread: emission tinted by its
+   colour, plus illumination tinted by its colour and modulated by the diffuse
+   map. Its source maps are PNGs the test writes under a scratch
+   Resources/Textures, the current directory and HOMEPATH both pointed at the
+   scratch folder first and the resource manager in strict mode (the built-in
+   Resources alone), so no game resource and no add-on is read. It links the
+   whole game but main (tests/unit/core/meson.build entry ['*']), on the hidden
+   GL context of oo_gl_test_context.hpp. The generators are made by the C++
+   factories and asked directly. The last test pins the C++ API. Run: bash
+   meson test -C build/meson_test test_OOCombinedEmissionMapGenerator
 */
 
 #include <png.h>

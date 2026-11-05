@@ -4,15 +4,15 @@
 
         Like test_OOJSVector.mm, it runs the JS class in a real QuickJS-ng
    context and links the game's own objects for the binding, the class
-   registration (OOJSClasses.mm) and the engine's exception translator
+   registration (OOJSClasses.cpp) and the engine's exception translator
    (OOJSEngineNativeWrappers.mm). What the rest of the game would provide (the
    player's clock, the universe's time, the clock-string formatter, the
-   deprecation warning, error reporting and the string helpers) is defined below
-   as the smallest stand-in that does the same thing. The expectations were
-   written against the Objective-C file and run on it first; they pin the
-        JS-visible behaviour: the global `clock` object and every property, the
-   three methods, their errors, and how an exception under a native reaches JS.
-        Run: tests/run.sh unit
+        deprecation warning, error reporting and the string helpers) is defined
+   below as the smallest stand-in that does the same thing. The expectations
+   were written against the Objective-C file and run on it first; they pin the
+   JS-visible behaviour: the global `clock` object and every property, the three
+   methods, their errors, and how an exception under a native reaches JS. Run:
+   tests/run.sh unit
 */
 
 #include <cstdarg>
@@ -33,7 +33,7 @@
 // MARK: What the rest of the engine provides
 // ------------------------------------------------------
 
-JSContext* gOOJSMainThreadContext = NULL;  // the engine's
+JSContext* gOOJSMainThreadContext = nullptr;  // the engine's
 
 void cxx_OOJSReportErrorWithArguments(JSContext* context, const char* format,
                                       va_list args) {
@@ -70,7 +70,7 @@ std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
   if (JS_IsNull(value) || JS_IsUndefined(value)) return std::nullopt;
   std::size_t length = 0;
   const char* chars = JS_ToCStringLen(context, &length, value);
-  if (chars == NULL) {
+  if (chars == nullptr) {
     JS_FreeValue(context, JS_GetException(context));
     return std::nullopt;
   }
@@ -79,19 +79,15 @@ std::optional<std::string> cxx_OOStringFromJSValue(JSContext* context,
   return result;
 }
 
-JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
-  const std::string* str = plist.getIf<std::string>();
-  return str != nullptr ? JS_NewStringLen(context, str->data(), str->size())
-                        : JS_NULL;
-}
-
-JSValue OOJSUnconstructableConstruct(JSContext* context, JSValueConst, int,
-                                     JSValueConst*) {
+JSValue OOJSUnconstructableConstruct(OOJS_NATIVE_ARGS) {
+  (void)oojsThis;
+  (void)argc;
+  (void)oojsArgv;
   cxx_OOJSReportError(context, "unconstructable");
   return JS_EXCEPTION;
 }
 
-// What the class registration (OOJSClasses.mm) asks of the engine.
+// What the class registration (OOJSClasses.cpp) asks of the engine.
 void OOJSReportPendingException(JSContext* context) {
   JS_FreeValue(context, JS_GetException(context));
 }
@@ -190,10 +186,10 @@ PlayerEntity* OOPlayerForScripting(void) {
 
 namespace {
 
-JSContext* sContext = NULL;
+JSContext* sContext;
 
 void SetUpContext() {
-  if (sContext != NULL) return;
+  if (sContext != nullptr) return;
   sContext = JS_NewContext(JS_NewRuntime());
   gOOJSMainThreadContext = sContext;  // the class registration's runtime
   JSValue global = JS_GetGlobalObject(sContext);
@@ -211,8 +207,8 @@ std::string Eval(const char* src) {
                         src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(), "test.js",
-                           JS_EVAL_TYPE_GLOBAL);
+  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(),
+                           "test.js", JS_EVAL_TYPE_GLOBAL);
   if (JS_IsException(result)) {
     JS_FreeValue(sContext, JS_GetException(sContext));
     return "<evaluation failed>";

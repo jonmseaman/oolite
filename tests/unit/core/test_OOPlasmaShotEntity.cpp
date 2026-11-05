@@ -6,18 +6,17 @@
    but main (['*']) and uses a Universe that was never initialised, subclassed
    to answer the time the test sets and to record -addEntity: and
    -removeEntity:, and a plain entity as PLAYER. The ship that fired is a plain
-        entity marked as a ship (so it is its own root ship entity; a C++ ship
-   under its object, never set up), and the entity hit is an entity subclass
-   that records the damage. The expectations were written against the
-   Objective-C API and run on the unconverted class first: a shot is a no-draw
-        effect of diameter 12 and collision radius 2 with the given position,
-   velocity, energy and colour (always opaque); it cannot collide for its first
-   0.05 seconds; it collides with anything but an effect or its owner's ship; it
-   damages what it collides with (unless that is its owner's ship), removes
-   itself and leaves a plasma burst where it was; and it removes itself when its
-        time is up. The shots are made, and their colour read, through the one
-   block of helpers below: the shot is a C++ entity whose Objective-C object is
-   the OOLightParticleEntity facade oo::NewEntityFacade made. Run: bash
+   entity marked as a ship (so it is its own root ship entity; a C++ ship under
+   its object, never set up), and the entity hit is an entity subclass that
+   records the damage. The expectations cover: a shot is a no-draw effect of
+   diameter 12 and collision radius 2 with the given position, velocity, energy
+   and colour (always opaque); it cannot collide for its first 0.05 seconds; it
+   collides with anything but an effect or its owner's ship; it damages what it
+   collides with (unless that is its owner's ship), removes itself and leaves a
+   plasma burst where it was; and it removes itself when its time is up. The
+   shots are made, and their colour read, through the one block of helpers
+   below: the shot is a C++ entity whose Objective-C object is the
+   OOLightParticleEntity facade oo::NewEntityFacade made. Run: bash
    tests/run.sh unit
 */
 
@@ -61,8 +60,8 @@ T* NewTestPlayer() {
 // added and removed.
 class TestUniverse : public Universe {
  public:
-  OOTimeAbsolute& _time =
-      universal_time;  // the universe's own state, which its getter answers
+  OOTimeAbsolute& _time = universal_time;  // the universe's own state, which
+                                           // its getter answers
   Entity* _removed = {};
   Entity* _added = {};
 
@@ -130,7 +129,8 @@ void SetUp(OOTimeAbsolute time) {
   // on the main thread's context, so there is one, with nothing in it (the ship
   // stand-in is C++, as test_StationEntity's ships are).
   if (gOOJSMainThreadContext == nullptr)
-    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+    gOOJSMainThreadContext =
+        JS_NewContext(JS_NewRuntime());
 }
 
 // --- How the test makes a shot and reads its colour (ported by the

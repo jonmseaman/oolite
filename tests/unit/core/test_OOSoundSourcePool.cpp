@@ -26,7 +26,8 @@
 #include "oo_test.hpp"
 
 // The game clock.
-// The universe as the code under test sees it: a stand-in for the C++ class, with the header's names and signatures.
+// The universe as the code under test sees it: a stand-in for the C++ class,
+// with the header's names and signatures.
 class Universe {
  public:
   OOTimeAbsolute _time;
@@ -274,8 +275,8 @@ OO_TEST(noOverlap) {
   }
 }
 
-// The C++ API: each overload is the selector it was. An overlap is passed as a bool, since game
-// code sees OOFoundation.h's integer true and false.
+// The C++ API: each overload is the selector it was. An overlap is passed as a
+// bool, since game code sees OOCocoa.h's integer true and false.
 OO_TEST(cxxApi) {
   const bool overlap = static_cast<bool>(1), noOverlap = static_cast<bool>(0);
   {

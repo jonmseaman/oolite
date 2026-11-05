@@ -44,9 +44,9 @@ static int gTextureApplyNones = 0;
 static int gTexturesDeallocated = 0;
 static std::vector<oo::PList> gTextureConfigurations;
 
-/*	The stand-in is C++: the root's static
-	members the material calls, the root's own members (a texture needs them), and TestTexture, the
-	texture the factory answers.
+/*	The stand-in is C++: the root's static members the material calls, the
+   root's own members (a texture needs them), and TestTexture, the texture the
+   factory answers.
 */
 class TestTexture final : public OOTexture {
  public:

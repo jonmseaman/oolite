@@ -2,19 +2,19 @@
         Unit tests for the Vector3D JS binding
    (src/Core/Scripting/OOJSVector.h/.mm).
 
-        A binding's test runs its JS class in a real QuickJS-ng context and
-   links the game's own objects for the binding, the engine's class registration
-   (OOJSClasses.mm), its exception translator (OOJSEngineNativeWrappers.mm) and
-   the maths they call. What the rest of the engine would provide (error
-   reporting, the argument and string helpers, Quaternion, the Entity class, the
-   universe, the profiler and the time limiter) is defined below as the smallest
-   stand-in that does the same thing: reportError for an error, a plain array
-   for a quaternion. The expectations were written against the Objective-C file
-   and run on it first; they pin the JS-visible behaviour: construction, x/y/z,
-   every method and static method, the errors, Vector3D.prototype reading as
-        zero, and how a native's exception reaches JS (an Objective-C
-   OOException and a C++ exception both become a JS error). Run: tests/run.sh
-   unit
+        A binding's test runs its JS class in a real QuickJS-ng context and links
+   the game's own objects for the binding, the engine's class registration
+   (OOJSClasses.cpp), its exception translator (OOJSEngineNativeWrappers.mm)
+   and the maths they call. What the rest of the
+   engine would provide (error reporting, the argument and string helpers,
+   Quaternion, the Entity class, the universe, the profiler and the time
+   limiter) is defined below as the smallest stand-in that does the same thing:
+   reportError for an error, a plain array for a quaternion. The expectations
+   were written against the Objective-C file and run on it first; they pin the
+   JS-visible behaviour: construction, x/y/z, every method and static method,
+   the errors, Vector3D.prototype reading as zero, and how a native's exception
+   reaches JS (an Objective-C OOException and a C++ exception both become a JS
+   error). Run: tests/run.sh unit
 */
 
 #include <quickjs.h>
@@ -77,8 +77,8 @@ void OOJSReportBadPropertyValue(JSContext* context, JSValueConst, int,
   cxx_OOJSReportError(context, "bad property value");
 }
 
-// As the engine's: the pending exception, else an uncatchable error that stops
-// the script.
+// As the engine's: the pending exception, else an uncatchable error that
+// stops the script.
 JSValue OOJSNativeFailure(JSContext* context) {
   if (JS_HasException(context)) return JS_EXCEPTION;
   JSValue error = JS_NewError(context);
@@ -136,13 +136,7 @@ bool cxx_OOJSArgumentListGetNumber(
   return false;
 }
 
-JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
-  const std::string* str = plist.getIf<std::string>();
-  return str != nullptr ? JS_NewStringLen(context, str->data(), str->size())
-                        : JS_NULL;
-}
-
-// The Entity class, registered by the test (OOJSEntity.mm is not linked). No
+// The Entity class, registered by the test (OOJSEntity.cpp is not linked). No
 // case makes an entity, so its private slot is never read.
 namespace {
 JSClassID sFakeEntityClassID;
@@ -151,9 +145,12 @@ JSClassDef sFakeEntityClass = {.class_name = "Entity"};
 
 JSClassID JSEntityClassID(void) { return sFakeEntityClassID; }
 
-// OOJSEntity.mm's (not linked): the position of the entity an Entity JS object
-// holds. No case here makes an entity.
-HPVector OOJSEntityPositionOfJSObject(JSContext*, JSValueConst) {
+// Entity.cpp's (not linked): reached only for an entity.
+HPVector Entity::getPosition() { std::abort(); }
+
+// OOJSPrivateObject.cpp's (not linked): reached only for an entity.
+bool OOJSGetCxxPrivateImpl(JSContext*, JSValueConst, JSClassID,
+                           oo::RefCounted**) {
   std::abort();
 }
 
@@ -213,6 +210,13 @@ int sLimiterPauses = 0;
 
 void OOJSPauseTimeLimiter(void) { sLimiterPauses++; }
 void OOJSResumeTimeLimiter(void) { sLimiterPauses--; }
+
+#ifndef NDEBUG
+void OOJSUnreachable(const char* function, const char*, unsigned) {
+  std::printf("unreachable reached in %s\n", function);
+  abort();
+}
+#endif
 
 /*	The universe, as far as Vector3D's coordinate-system methods see it:
    -legacyPositionFrom:... and -coordinatesFromCoordinateSystemString:. A system
@@ -274,8 +278,8 @@ std::string Eval(const char* src) {
                         src +
                         "); } catch (e) { return 'threw: ' + (e && e.message "
                         "!== undefined ? e.message : e); } })()";
-  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(), "test.js",
-                           JS_EVAL_TYPE_GLOBAL);
+  JSValue result = JS_Eval(sContext, wrapped.c_str(), wrapped.size(),
+                           "test.js", JS_EVAL_TYPE_GLOBAL);
   if (JS_IsException(result)) {
     JS_FreeValue(sContext, JS_GetException(sContext));
     return "<evaluation failed>";

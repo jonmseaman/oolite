@@ -4,7 +4,8 @@
 #include <cstdarg>
 
 #include "OOFoundation.h"
-typedef struct JSContext JSContext;
+// QuickJS-ng's context, opaque here: the stub never touches it.
+struct JSContext;
 JSContext* OOJSAcquireContext(void);
 void OOJSRelinquishContext(JSContext* context);
 // The C++ form the expander calls (printf format).

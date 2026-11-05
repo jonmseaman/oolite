@@ -88,10 +88,9 @@ static int gTexturesDeallocated = 0;
 static std::vector<std::pair<oo::PList, uint32_t>>
     gTextureConfigurations;  // (specifier, extra options)
 
-// The stand-in is C++: the root's static
-// members the material calls, TestTexture (what they answer), and the root's
-// own members; the short description is every texture's here (they are all
-// TestTextures).
+// The stand-in is C++: the root's static members the material calls,
+// TestTexture (what they answer), and the root's own members; the short
+// description is every texture's here (they are all TestTextures).
 class TestTexture final : public OOTexture {
  public:
   ~TestTexture() override { gTexturesDeallocated++; }
@@ -167,8 +166,8 @@ std::string OOTexture::shortDescription() const {
 /*	OOCombinedEmissionMapGenerator: records which factory was called and
    with what. It answers null when it would have nothing to bake (no emission
    map and no illumination map), as the material's callers never see a generated
-   map for none. It is C++: the stand-in defines the factories, and its own and
-   its bases' other members as no-ops (no texture loader is linked). The
+   map for none. It is C++: the stand-in defines the factories, and its own
+   and its bases' other members as no-ops (no texture loader is linked). The
    material hands the C++ generator to the OOTexture stand-in, which only asks
    whether it is nil.
 */

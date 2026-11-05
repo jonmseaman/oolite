@@ -9,7 +9,8 @@
    initialised and a plain entity as PLAYER (answering the one player query a
    dock makes when it aborts its dockings). A dock's station is a StationEntity
    whose virtual dock only records its definition, with the dock added as its
-   subentity. Run: bash meson test -C build/meson_test test_DockEntity
+   subentity. Run: bash
+   meson test -C build/meson_test test_DockEntity
 */
 
 #include <cmath>
@@ -74,7 +75,8 @@ void SetUp() {
   // The ship's -dealloc sends its (absent) scripts entityDestroyed in a request
   // on the main thread's context, so there is one, with nothing in it.
   if (gOOJSMainThreadContext == nullptr)
-    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+    gOOJSMainThreadContext =
+        JS_NewContext(JS_NewRuntime());
 }
 
 // Unpiloted (a crewed ship would ask the universe for a pilot).

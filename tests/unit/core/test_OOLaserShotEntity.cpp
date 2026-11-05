@@ -9,15 +9,13 @@
    that fires is an entity of the test's own that answers the selectors the
    class sends a ship (its root ship, speed and weapon range); the class asserts
    that it is a ship, so the test sets that flag. It is a C++ ship whose fields
-   give those answers. The expectations were written against the Objective-C API
-   and run on the unconverted class first; the cases ask the C++ class, and the
-   shots are made as the ship makes them, laserFromShip() then
-        oo::NewEntityFacade. They cover: where the shot starts and how it is
-   turned for each facing, its velocity, owner, range and status; its colour
-   (default red, a set colour brightened, the alpha constant); the lifetime in
-   its description; following the player's ship; removal when its lifetime has
-   run out. The colour is private; the test reads it through the access struct
-   below. Run: tests/run.sh unit
+   give those answers. The shots are made as the ship makes them,
+   laserFromShip() then oo::NewEntityFacade. The cases cover: where the shot
+   starts and how it is turned for each facing, its velocity, owner, range and
+   status; its colour (default red, a set colour brightened, the alpha
+   constant); the lifetime in its description; following the player's ship;
+   removal when its lifetime has run out. The colour is private; the test reads
+   it through the access struct below. Run: tests/run.sh unit
 */
 
 #include <cmath>
@@ -93,7 +91,8 @@ void SetUp() {
   // on the main thread's context, so there is one, with nothing in it (the ship
   // stand-in is C++, as test_StationEntity's ships are).
   if (gOOJSMainThreadContext == nullptr)
-    gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
+    gOOJSMainThreadContext =
+        JS_NewContext(JS_NewRuntime());
   sRemoved = nullptr;
 }
 

@@ -196,7 +196,9 @@ void SetUp() {
   gOOPlayer = sPlayer;
 }
 
-bool SameId(OOJSPropID a, OOJSPropID b) { return a == b; }
+bool SameId(OOJSPropID a, OOJSPropID b) {
+  return a == b;
+}
 
 oo::PList Mode(int width, int height, int refresh) {
   oo::PList::Dict mode;

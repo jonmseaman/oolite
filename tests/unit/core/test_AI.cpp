@@ -46,8 +46,8 @@ std::vector<std::string> gLog;
 
 #include "ResourceManager.h"
 
-// ResourceManager stand-in: C++ definitions of the
-// statics the code under test calls.
+// ResourceManager stand-in: C++ definitions of the statics the code under test
+// calls.
 std::optional<std::string> ResourceManager::pathForFileNamed(
     const std::string& fileName, const std::optional<std::string>& folderName) {
   if (gAIFiles.find(fileName) == gAIFiles.end()) return std::nullopt;
@@ -211,8 +211,8 @@ void ShipEntity::setAIScript(const std::string& aiString) {
   static_cast<TestShip*>(_object)->_script = aiString;
 }
 
-// The test's object of an entity (Entity+ObjCBridge.mm's stand-in, which
-// the test does not link).
+// The test's object of an entity (Entity+ObjCBridge.mm's stand-in, which the
+// test does not link).
 ::TestEntityObject* TestObjectOf(Entity* entity) {
   return entity != nullptr ? entity->_object : nullptr;
 }

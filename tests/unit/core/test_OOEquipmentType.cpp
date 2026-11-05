@@ -12,11 +12,12 @@
    identifier) and the missile registry.
 
         The game around it is replaced: UNIVERSE hands out the equipment data
-   below, the cache manager, script loader and player answer from fields and
-   record what they are asked, and the standards and legacy-condition functions
-   are test replacements. OOColor is the game's own. The tests ask the C++
-   class, and the last tests pin the C++ API and that a registered type outlives
-   the autorelease pool, as ships rely on. Run: tests/run.sh unit
+   below, the cache manager, script loader
+   and player answer from fields and record what they are asked, and the
+   standards and legacy-condition functions are test replacements. OOColor is
+   the game's own. The tests ask the C++ class, and the last tests pin the C++
+   API and that a registered type outlives the autorelease pool, as ships rely
+   on. Run: tests/run.sh unit
 */
 
 #include <cstdio>

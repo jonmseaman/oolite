@@ -3,20 +3,17 @@
    root of a hierarchy whose one subclass is the SDL manager.
 
         The manager keeps the stick-to-function tables, decodes stick events
-   into axis and button states (the SDL manager decodes, upstream #742: the
-   cases that decode use an SDL manager that answers for the hardware as the
-   base does), reports the next moved axis or pressed button to a callback, and
-   loads and saves the tables and the axis profiles in the user defaults. The
-   test points the defaults' home (HOMEPATH) at a scratch folder before they are
-   first read, so nothing of the user's is read or written. The expectations
-   were written against the Objective-C API and run on the unconverted class
-   first; they call the C++ members. They cover: the default mapping; axis
-        decoding (normalised, thrust, view, raw, out of range, the profiles and
+   into axis and button states, reports the next moved axis or pressed button to
+   a callback, and loads and saves the tables and the axis profiles in the user
+   defaults. The test points the defaults' home (HOMEPATH) at a scratch folder
+   before they are first read, so nothing of the user's is read or written. The
+   expectations call the C++ members. They cover: the default mapping; axis
+   decoding (normalised, thrust, view, raw, out of range, the profiles and
    precision mode); buttons and hats; reassigning and unsetting functions; the
    callback for both kinds of hardware; saving and reloading the tables and both
    kinds of profile; a subclass's overrides reached by the base (also from
    -init) and [super ...]; the shared handler of a registered factory. Run: bash
-        tests/run.sh unit
+   tests/run.sh unit
 */
 
 #include <process.h>
@@ -65,8 +62,6 @@ class TestStickManager : public OOSDLJoystickManager {
   }
 
   std::optional<std::string> superNameOfJoystick(NSUInteger stickNumber) {
-    // OOJoystickManager's own member (the SDL manager, its superclass,
-    // overrides it).
     return OOJoystickManager::nameOfJoystick(stickNumber);
   }
 };
@@ -79,11 +74,9 @@ class DecodingStickManager : public OOSDLJoystickManager {
   NSUInteger joystickCount() override {
     return OOJoystickManager::joystickCount();
   }
-
   std::optional<std::string> nameOfJoystick(NSUInteger stickNumber) override {
     return OOJoystickManager::nameOfJoystick(stickNumber);
   }
-
   int16_t getAxisWithStick(NSUInteger stickNum, NSUInteger axisNum) override {
     return OOJoystickManager::getAxisWithStick(stickNum, axisNum);
   }
@@ -169,7 +162,7 @@ oo::Ref<OOJoystickManager> NewManager() {
   return manager;
 }
 
-// The decoding manager, made the same way.
+// The decoding manager, made and init()ed the same way.
 oo::Ref<DecodingStickManager> NewDecodingManager() {
   Defaults();
   oo::Ref<DecodingStickManager> manager = oo::makeRef<DecodingStickManager>();

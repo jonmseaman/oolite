@@ -13,6 +13,7 @@
    this file's stand-in: it answers sharedController() and records the contexts
    it is asked to exit with. The defaults are set in memory (setObject; nothing
    is written without synchronize()). Run: tests/run.sh unit
+   test_OODebugStandards
 */
 
 #include <string>
@@ -29,10 +30,9 @@ std::vector<std::string> sExitContexts;
 
 }  // namespace
 
-// C++ definitions of the
-// two controller members the code under test calls, with the stand-in's
-// answers. The shared controller is storage nothing constructs:
-// exitAppWithContext() reads no state.
+// C++ definitions of the two controller members the code under test calls,
+// with the stand-in's answers. The shared controller is storage nothing
+// constructs: exitAppWithContext() reads no state.
 alignas(
     GameController) unsigned char sControllerStorage[sizeof(GameController)];
 

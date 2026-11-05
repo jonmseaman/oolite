@@ -37,9 +37,8 @@ class TestPlayer : public PlayerEntity {
   HPVector viewpointPosition() override { return kZeroHPVector; }
 };
 
-// A C++ player under the ship's facade, as
-// PlayerEntity::sharedPlayer() makes the game's, retained (+1) as +alloc's
-// object was.
+// A C++ player under the ship's facade, as PlayerEntity::sharedPlayer() makes
+// the game's, retained (+1) as +alloc's object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();

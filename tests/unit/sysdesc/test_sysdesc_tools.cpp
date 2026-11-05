@@ -76,11 +76,10 @@ oo::PList KeyTable() {
 
 }  // namespace
 
-
-// --- stubs -------------------------------------------------------------------------------------
+// --- stubs
+// -------------------------------------------------------------------------------------
 
 // The tools log through oo::log (OO_LOG).
-
 
 // ResourceManager is C++.
 oo::PList ResourceManager::dictionaryFromFilesNamed(

@@ -9,10 +9,11 @@
    test_ShipEntity.mm's), in a Universe that was never initialised and with a
    plain entity as PLAYER; the player branches of the getter read the engine's
    own player, whose class the test swaps for a subclass that answers
-        -availableFacings and -fleeingStatus itself. The expectations were
-   written against the Objective-C file and run on it first; they pin the
-   property getter (every property) and the weapon offsets and colours its
-   helpers give JavaScript. Run: tests/run.sh unit test_OOJSShip
+   -availableFacings and -fleeingStatus itself. The
+   expectations were written against the Objective-C file and run on it first;
+   they pin the property getter (every property) and the weapon offsets and
+   colours its helpers give JavaScript. Run: tests/run.sh unit
+   test_OOJSShip
 */
 
 #include <process.h>
@@ -107,8 +108,7 @@ class TestUniverse : public Universe {
   }
   void unMagicMainStation() override { sLog.push_back("unMagicMainStation"); }
   Entity* hazardOnRouteFromEntity(Entity* /*e1*/, double dist,
-                                  HPVector p2) override  // the C++ entities
-  {
+                                  HPVector p2) override {
     sLog.push_back(oo::str::format("hazardOnRoute %g (%g, %g, %g)", dist, p2.x,
                                    p2.y, p2.z));
     return nullptr;
@@ -125,8 +125,7 @@ class TestUniverse : public Universe {
     return {};
   }
   HPVector getSafeVectorFromEntity(Entity* /*e1*/, double dist,
-                                   HPVector p2) override  // the C++ entity
-  {
+                                   HPVector p2) override {
     sLog.push_back(oo::str::format("getSafeVector %g (%g, %g, %g)", dist, p2.x,
                                    p2.y, p2.z));
     return make_HPvector(10, 20, 30);
@@ -159,9 +158,9 @@ class TestPlayerShip : public PlayerEntity {
   }
 };
 
-// [[TestPlayer alloc] init]: a C++ player under the ship's facade, as
-// PlayerEntity::sharedPlayer() makes the game's, retained (+1) as +alloc's
-// object was.
+// [[TestPlayer alloc] init]: a C++ player under the ship's
+// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1) as
+// +alloc's object was.
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -360,7 +359,6 @@ OO_TEST(registration) {
   JSValue prototype = JS_GetClassProto(context, JSShipClassID());
   OO_CHECK(JS_IsObject(prototype));
   JS_FreeValue(context, prototype);
-  OOJSRelinquishContext(context);
   OO_CHECK_EVAL("typeof ship", "object");
   OO_CHECK_EVAL("ship instanceof Ship", "true");
   OO_CHECK_EVAL("Ship.prototype.name",
@@ -667,8 +665,8 @@ OO_TEST(setterNumbers) {
   OO_CHECK(Threw("ship.energyRechargeRate = -1"));
   OO_CHECK_EVAL(SET("maxEscorts", "2"), "2");
   OO_CHECK(Threw("ship.maxEscorts = 20"));
-  OO_CHECK(
-      !Threw("ship.fuel = 'lots'"));  // the Objective-C setter did not throw
+  OO_CHECK(!Threw("ship.fuel = 'lots'"));  // the Objective-C setter did not
+                                           // throw
 }
 
 OO_TEST(setterFlags) {
@@ -799,7 +797,8 @@ OO_TEST(methodsAI) {
   OO_CHECK(ThrewWith("player.ship.sendAIMessage('X')",
                      "Ship.sendAIMessage: Not valid for player ship."));
   OO_CHECK_EVAL("ship.sendAIMessage('NOTHING_HERE')", "undefined");
-  OO_CHECK_EVAL("ship.AI", "<no AI>");  // as the Objective-C natives answered
+  OO_CHECK_EVAL("ship.AI",
+                "<no AI>");  // as the Objective-C natives answered
 }
 
 OO_TEST(methodsEscortsRolesEquipment) {
@@ -929,10 +928,10 @@ OO_TEST(methodsBountyCargoCrew) {
   OO_CHECK_EVAL("ship.setCargo('food')",
                 "false");  // the universe has no commodities
   OO_CHECK(Threw("ship.setCrew()"));
-  // ship.setCrew(7) is not run here: the Objective-C native does not throw but
-  // takes the number as an empty character definition, and making that
-  // character expands descriptions (its random name), which ends this test's
-  // process, whose universe has none. The goldens cover it.
+  // ship.setCrew(7) is not run here: the Objective-C native does not
+  // throw but takes the number as an empty character definition, and making
+  // that character expands descriptions (its random name), which ends this
+  // test's process, whose universe has none. The goldens cover it.
   OO_CHECK_EVAL("(ship.setCrew(null) + ' ' + ship.crew)", "true null");
   OO_CHECK(Threw("ship.setCargoType()"));
   OO_CHECK_EVAL("ship.setCargoType('SCARCE_GOODS')", "true");

@@ -6,8 +6,8 @@
    but main (['*']) and uses a Universe that was never initialised and a plain
    entity as PLAYER. The tests cover: a flasher reads its size, frequency
    (doubled), phase, bright fraction, colours and initial state from its
-   dictionary (defaults 1, 1, 0, 0.5, none, on); its accessors; its colour is
-   its current components; -update: cycles its colours on the wave's falling
+        dictionary (defaults 1, 1, 0, 0.5, none, on); its accessors; its colour
+   is its current components; -update: cycles its colours on the wave's falling
    half and sets its brightness, or keeps it opaque at frequency 0; it draws
    only while active; it is a flasher (and an entity is not); its collision
    radius is half its diameter; -rescaleBy: scales the diameter and
@@ -17,17 +17,16 @@
    (flasherWithDictionary(), then oo::NewEntityFacade). The cases ask the C++
    class; the facade case pins the crossing (the object is
    OOLightParticleEntity's facade, whose C++ part is the flasher), and
-   jsExtensions pins that the engine's selectors reach the C++ class's overrides
-        through the root.
-        Run: tests/run.sh unit
+   jsExtensions pins that the engine's selectors reach the C++ class's
+   overrides through the root. Run: tests/run.sh unit
 */
 
 #include <cmath>
 
 #include "EntityOOJavaScriptExtensions.h"
+#include "OOJSEntity.h"
 #include "OOColor.h"
 #include "OOFlasherEntity.h"
-#include "OOJSEntity.h"
 #include "OOJSFlasher.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
