@@ -336,7 +336,7 @@ static OOOXZManager* sSingleton = nil;
 {
     DESTROY(_oxzList);
     if (list != nil) {
-        _oxzList = [[list sortedArrayUsingFunction:oxzSort context:NULL] retain];
+        _oxzList = [[list sortedArrayUsingFunction:OOSortFunction(oxzSort) context:NULL] retain];
         // needed for update to available versions
         DESTROY(_managedList);
     }
@@ -642,7 +642,7 @@ static OOOXZManager* sSingleton = nil;
                 [manifests addObject:adjManifest];
             }
         }
-        [manifests sortUsingFunction:oxzSort context:NULL];
+        [manifests sortUsingFunction:OOSortFunction(oxzSort) context:NULL];
 
         _managedList = [manifests copy];
     }
