@@ -1,8 +1,7 @@
 """Debug-console client: framing, handshake, and running JS inside a live Oolite.
 
-Transport only. Several callers may share this file, so nothing here
-knows anything about the component tier, Gherkin, or pytest - keep assertions and scenario
-vocabulary in steps/world_steps.py.
+Transport only. Nothing here knows anything about the component tier, Gherkin, or pytest -
+keep assertions and scenario vocabulary in steps/world_steps.py.
 
 The protocol is the one tests/launch_snapshot.py speaks: a 4-byte big-endian length followed by an
 XML property list. See src/Core/Debug/OODebugTCPConsoleProtocol.h for the packet types.
@@ -103,8 +102,9 @@ class DebugConsole:
         env = os.environ.copy()
         # Headless and silent, exactly as tests/launch_snapshot.py runs the game. The offscreen
         # video driver is deliberately not set on Windows: MSYS2's mesa ships no EGL, so SDL's
-        # offscreen driver cannot create a context there and the game exits during init.
-        if not IS_WINDOWS:
+        # offscreen driver cannot create a context there and the game exits during init. It is
+        # not set on macOS either, where it has no OpenGL, so a real window is used there.
+        if not IS_WINDOWS and sys.platform != "darwin":
             env["SDL_VIDEODRIVER"] = "offscreen"
         env["LIBGL_ALWAYS_SOFTWARE"] = "1"
         env["GALLIUM_DRIVER"] = "llvmpipe"
