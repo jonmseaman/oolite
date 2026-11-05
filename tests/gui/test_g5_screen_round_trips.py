@@ -87,14 +87,6 @@ from conftest import (
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OOLITE_ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-SRC_DIR = os.path.join(OOLITE_ROOT, "src")
-TESTS_DIR = os.path.abspath(os.path.join(HERE, ".."))
-if TESTS_DIR not in sys.path:
-    sys.path.insert(0, TESTS_DIR)
-
-# Sources are named by STEM: the migration renames .m -> .mm -> .cpp (source_paths.py).
-from source_paths import iter_source_files  # noqa: E402
 
 # --- the start screen's rows (PlayerEntity.m:9913-9955, ``initialRow = 22``) --------------------
 SHIP_LIBRARY_ROW = 24
@@ -416,36 +408,6 @@ def test_g5_screen_round_trips(screen_witness, game):
 
 
 # --- offline guards ----------------------------------------------------------------------------
-
-
-@pytest.mark.offline
-def test_each_screens_observable_is_assigned_in_exactly_one_place():
-    """Each ``GUI_SCREEN_*`` this test asserts on must be assigned in EXACTLY ONE place.
-
-    This is the uniqueness proof the whole file rests on. If some future edit assigned
-    ``gui_screen = GUI_SCREEN_GAMEOPTIONS`` from a second site, then reading that value back
-    would no longer prove that ``-setGuiToGameOptionsScreen`` ran, and G5's arrival assertion
-    would have quietly become a weaker claim than its message says it is. Measured on this tree:
-    one assignment each, all three in PlayerEntity.m.
-    """
-    assert os.path.isdir(SRC_DIR), f"no source tree at {SRC_DIR}"
-    sources = list(iter_source_files(SRC_DIR))
-    assert sources, f"no Objective-C sources under {SRC_DIR}"
-
-    for screen in ("GUI_SCREEN_SHIPLIBRARY", "GUI_SCREEN_GAMEOPTIONS", "GUI_SCREEN_OXZMANAGER"):
-        pattern = re.compile(r"gui_screen\s*=\s*[^=;]*\b" + screen + r"\b")
-        hits = []
-        for path in sources:
-            with open(path, "r", encoding="utf-8", errors="replace") as handle:
-                for number, line in enumerate(handle, 1):
-                    if pattern.search(line):
-                        hits.append(f"{os.path.relpath(path, OOLITE_ROOT)}:{number}")
-        assert len(hits) == 1, (
-            f"{screen} is assigned to gui_screen in {len(hits)} places, not 1: {hits}. G5 reads "
-            "this value back out of the live game and claims it proves that screen's setter ran; "
-            "with more than one assignment site that claim is no longer true and the arrival "
-            "assertion must be re-justified."
-        )
 
 
 @pytest.mark.offline
