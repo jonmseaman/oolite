@@ -11,7 +11,7 @@
 #
 # The harness has its own minimal engine core and script loader (in this
 # directory), since the full ones depend on the rest of the game. It uses the
-# game's QuickJS-ng (src/meson/meson.build) and oofnd, compiled as the game is.
+# game's QuickJS-ng (src/meson.build) and oofnd.
 
 poc_sources = files(
     '../OOJSClasses.cpp',
@@ -28,19 +28,14 @@ poc_sources = files(
     '../../legacy_random.cpp',
 )
 
-# The game's QuickJS-ng, as src/meson/meson.build declared it (the cached dependency).
-poc_quickjs_dep = dependency('quickjs-ng', version: '>=0.17.0')
-
-poc_args = ['-DOOJS_POC_HARNESS=1']
-
 # The harness's own OOJSScript.h must be found before the game's in
 # src/Core/Scripting.
 poc_bin = executable(
     'oojs-quickjs-poc',
     poc_sources,
     include_directories: [include_directories('.'), oolite_includes],
-    cpp_args: poc_args,
-    dependencies: [poc_quickjs_dep, oofnd_dep, oofnd_objc_dep],
+    cpp_args: ['-DOOJS_POC_HARNESS=1'],
+    dependencies: [quickjs_ng_proj.get_variable('qjs_dep'), oofnd_dep, oofnd_objc_dep],
     override_options: oolite_override_options,
     install: false,
 )

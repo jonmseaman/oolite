@@ -111,6 +111,10 @@ Next run the following to build the GNUstep libraries needed by Oolite:
 ShellScripts/Linux/build_gnustep.sh
 ```
 
+Oolite's JavaScript engine, QuickJS-ng, is fetched automatically by Meson as a subproject when you
+build (or, for an offline build, from `subprojects/packagecache` if you have placed the wrap's
+tarball there); no separate install step is needed.
+
 By default, the above command will install to $HOME/.local, but you can supply an argument system or build
 to specify /usr/local or the project build folder respectively. When installing to /usr/local, sudo is used by 
 default, but you can supply a further argument to specify an alternative like doas.
@@ -123,9 +127,6 @@ meson setup, compile, configure and install flags. Type the following for help:
 ```bash
 ./mk.sh help
 ```
-
-Oolite's JavaScript engine, [QuickJS-ng](https://github.com/quickjs-ng/quickjs), is downloaded, patched and built as a
-Meson subproject (`subprojects/quickjs-ng.wrap`) the first time the build is set up, so that needs network access.
 
 Oolite has various build types:
 
