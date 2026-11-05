@@ -40,6 +40,10 @@ option('dev_release', type: 'boolean', value: false,
 
 option('strip_bin', type: 'boolean', value: false, description: 'Enable stripping')
 
+# JavaScript engine (QuickJS-ng)
+option('quickjs_poc', type: 'boolean', value: false,
+       description: 'Build the QuickJS-ng proof-of-concept test harness (oojs-quickjs-poc)')
+
 # Windows Specific Customizations
 option('pdb', type: 'boolean', value: false,
        description: 'Windows Clang builds only: Generate native .pdb debug symbol files')
@@ -47,7 +51,3 @@ option('pdb', type: 'boolean', value: false,
 # Flavour coverage
 option('deployment_unit_tests', type: 'boolean', value: false,
        description: 'Also build the oofnd unit tests when deployment_release is set (off for the shipped deployment build)')
-
-# JavaScript engine (QuickJS-ng)
-option('quickjs_poc', type: 'boolean', value: false,
-       description: 'Build the QuickJS-ng proof-of-concept test harness (oojs-quickjs-poc)')

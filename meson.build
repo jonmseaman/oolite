@@ -14,9 +14,6 @@ project(
         # -O changes vectorisation width, reassociation opportunities and inlining, all of
         # which move the low-order bits of float results.
         'optimization=2',
-        # Always use the bundled, patched QuickJS-ng (see subprojects/quickjs-ng.wrap):
-        # an unpatched system build breaks OXPs that rely on SpiderMonkey behaviour.
-        'force_fallback_for=quickjs-ng',
     ],
 )
 
@@ -73,7 +70,11 @@ endif
 #
 # It is applied UNCONDITIONALLY, not only for golden builds: a flag that is only on in one
 # configuration is a flag whose absence nobody notices.
-add_project_arguments('-ffp-contract=off', language: c_family)
+#
+# GLOBAL, not project, arguments: QuickJS-ng is a meson subproject linked into the
+# game binary, its number code produces floats that land in the dumps, and project arguments do
+# not reach a subproject (nor does a subproject() c_args default option).
+add_global_arguments('-ffp-contract=off', language: c_family)
 
 if get_option('no_shaders')
     add_project_arguments('-DNO_SHADERS=1', language: c_family)
@@ -132,17 +133,19 @@ if get_option('quickjs_poc')
     subdir('src/Core/Scripting/poc')
 endif
 
-# The unit tests are built by every flavour but deployment: they test the live assertion and
-# debug paths, which a deployment build (NDEBUG) compiles out, and upstream's CI builds
-# `./mk.sh build deployment` (since #756), which builds every default target.
-# They are Windows-only for now: they were written and verified on the native Windows toolchain
-# and use its headers and LLP64 types (<process.h>, _putenv_s, <winsock2.h>, long == 32 bits),
-# so the Linux CI flavours build the game without them.
+# The unit tests are built by every flavour but deployment: they test the live
+# assertion and debug paths, which a deployment build (NDEBUG) compiles out, and upstream's CI
+# builds `./mk.sh build deployment` (since #756), which builds every default target.
+# They are Windows-only for now: they were written and verified on the native
+# Windows toolchain and use its headers and LLP64 types (<process.h>, _putenv_s,
+# <winsock2.h>, long == 32 bits), so the Linux CI flavours build the game without them.
 #
-# deployment_unit_tests builds the oofnd suite under the deployment macros as well, in a separate
-# non-LTO build directory (meson setup with -Ddeployment_unit_tests=true): OOCAssert compiled out
-# under NDEBUG, and with it PlayerEntity's -deferredInit ship set-up, passes every test-flavour
-# suite and breaks the shipped game.
+# deployment_unit_tests builds the oofnd suite under the
+# deployment macros as well, in a separate non-LTO build directory (meson setup with -Ddeployment_unit_tests=true):
+# OOCAssert compiled out under NDEBUG, and with it PlayerEntity::deferredInit's ship set-up, passed
+# every test-flavour suite and broke the shipped game. The core suite joins it once its test files
+# build under NDEBUG (78 executables still guard their gDebugFlags
+# definition on !NDEBUG, which upstream #756 moved to OO_DEBUG_MONITOR_ENABLED, and the like).
 if host_machine.system() == 'windows'
     # Tests load the toolchain's libstdc++/libwinpthread, which must win over older copies earlier
     # on PATH (Git for Windows ships mingw64 ones; a missing symbol surfaces as exit 0xc0000139).
@@ -156,7 +159,6 @@ if (not get_option('deployment_release') or get_option('deployment_unit_tests'))
     # Unit tests that need no game build (meson test --suite oofnd).
     subdir('tests/unit/oofnd')
 endif
-
 if not get_option('deployment_release') and host_machine.system() == 'windows'
     # Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
     subdir('tests/unit/core')
