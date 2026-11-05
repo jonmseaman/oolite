@@ -1,6 +1,6 @@
 /*
 
-OOJSStation.h (QuickJS-ng)
+OOJSStation.h
 
 JavaScript proxy for StationEntities.
 
@@ -32,7 +32,6 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "OOFoundation.h"
-
 class StationEntity;
 
 void InitOOJSStation(JSContext* context, JSValueConst global);
@@ -40,7 +39,7 @@ void InitOOJSStation(JSContext* context, JSValueConst global);
 JSClassID JSStationClassID(void);
 
 /*	The bodies of StationEntity (OOJavaScriptExtensions), which the engine
-   reaches by selector. StationEntity::jsClassName calls these. Its JS class is
-   JSStationClassID() (StationEntity::jsClassID()).
+   reaches by selector. StationEntity::jsClassName calls these.
+   Its JS class is JSStationClassID() (#768's -oo_jsClassID).
 */
 std::optional<std::string> OOJSStationJSClassName(void);

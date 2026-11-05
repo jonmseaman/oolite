@@ -1,6 +1,6 @@
 /*
 
-OOJSSound.h (QuickJS-ng)
+OOJSSound.h
 
 JavaScript sound object.
 
@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 */
 
 #pragma once
+
 #include <quickjs.h>
 
 #include <optional>
@@ -34,7 +35,7 @@ MA 02110-1301, USA.
 #include "OOJSPrivateObject.h"
 #include "oofnd/Ref.hpp"
 
-class OOSound;  // C++: it has no Objective-C facade
+class OOSound;
 
 void InitOOJSSound(JSContext* context, JSValueConst global);
 
@@ -57,7 +58,7 @@ std::optional<std::string> OOJSSoundJSClassName(void);
    holder, which retains the sound; the slot retains the holder
    (OOJSSetCxxPrivate) and the finalizer releases it
    (OOJSCxxObjectWrapperFinalize). Its toString() is the sound's. Defined in
-   OOJSSound.mm; only the binding makes one.
+   OOJSSound.cpp; only the binding makes one.
 */
 class OOJSSoundHolder final : public oo::RefCounted, public OOJSPrivateObject {
  public:

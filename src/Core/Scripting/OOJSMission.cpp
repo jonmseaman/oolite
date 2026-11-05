@@ -1,6 +1,6 @@
 /*
 
-OOJSMission.m
+OOJSMission.mm
 
 
 Oolite
@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 */
 
 #include "OOJSMission.h"
+
+#include <cstring>
 
 #include "GuiDisplayGen.h"
 #include "OOConstToJSString.h"
@@ -72,7 +74,11 @@ static JSClassDef sMissionClass = {
     .class_name = "Mission",
 };
 
-enum { kMission_markedSystems, kMission_screenID, kMission_exitScreen };
+enum : std::uint8_t {
+  kMission_markedSystems,
+  kMission_screenID,
+  kMission_exitScreen
+};
 
 static const JSCFunctionListEntry sMissionProperties[] = {
     // JS name					Getter
@@ -85,8 +91,7 @@ static const JSCFunctionListEntry sMissionProperties[] = {
 };
 
 static const JSCFunctionListEntry sMissionMethods[] = {
-    // JS name					Function
-    // min args
+    // JS name					min args	Function
     JS_CFUNC_DEF("addMessageText", 1, MissionAddMessageText),
     JS_CFUNC_DEF("markSystem", 1, MissionMarkSystem),
     JS_CFUNC_DEF("runScreen", 1,
@@ -106,6 +111,7 @@ static void SetOwnedValue(JSContext* context, JSValue* slot,
                                // and JS_FreeValue() ignores them.
 }
 
+// Releases the pending callback before the context is destroyed.
 static void ClearPendingCallback(void) {
   JSContext* context = OOJSAcquireContext();
   SetOwnedValue(context, &sCallbackFunction, JS_NULL);
@@ -116,9 +122,9 @@ static void ClearPendingCallback(void) {
 }
 
 void InitOOJSMission(JSContext* context, JSValueConst global) {
+  // Registered once, for the life of the process, for any sender.
   static bool observing = false;
   if (!observing) {
-    // Releases the pending callback before the context is destroyed.
     static const char sResetObserver = 0;
     oo::NotificationCenter::defaultCenter().addObserver(
         &sResetObserver, kOOJavaScriptEngineWillResetNotificationName, nullptr,
@@ -255,7 +261,8 @@ static JSValue MissionGetProperty(OOJS_GETTER_ARGS) {
           (player != nullptr ? player->missionExitScreen() : OOGUIScreenID{}));
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sMissionProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sMissionProperties,
                                     OOJS_COUNT(sMissionProperties));
       return JS_EXCEPTION;
   }
@@ -278,12 +285,13 @@ static JSValue MissionSetProperty(OOJS_SETTER_ARGS) {
       return JS_UNDEFINED;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sMissionProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sMissionProperties,
                                     OOJS_COUNT(sMissionProperties));
       return JS_EXCEPTION;
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sMissionProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sMissionProperties,
                              OOJS_COUNT(sMissionProperties), value);
   return JS_EXCEPTION;
 
@@ -549,7 +557,7 @@ static oo::PList GetParameterImageDescriptor(JSContext* context,
     return oo::PList();  // was nil
   }
   oo::PList result = UNIVERSE->getGui()->textureDescriptorFromJSValue(
-      value, context, std::string("mission.runScreen()"));
+      value, context, "mission.runScreen()");
   JS_FreeValue(context, value);
   return result;
 }
@@ -562,7 +570,7 @@ static void GetParameterBool(JSContext* context, JSValueConst object,
   if (!JS_IsUndefined(value)) {
     int b = JS_ToBool(context, value);
     if (b >= 0)
-      *outValue = b;
+      *outValue = (b != 0);
     else
       JS_FreeValue(context, JS_GetException(context));
   }
@@ -588,8 +596,8 @@ static JSValue MissionRunScreen(OOJS_NATIVE_ARGS) {
   }
 
   // Validate arguments.
-  // (SpiderMonkey's JS_ValueToObject() accepted null and undefined, yielding no
-  // object, and then crashed; treat them as invalid.)
+  // (SpiderMonkey's JS_ValueToObject() accepted null and undefined, yielding
+  // no object, and then crashed; treat them as invalid.)
   if (argc >= 1 && !JS_IsNull(OOJS_ARGV[0]) && !JS_IsUndefined(OOJS_ARGV[0])) {
     params = JS_ToObject(context, OOJS_ARGV[0]);
     if (JS_IsException(params)) {
@@ -622,9 +630,8 @@ static JSValue MissionRunScreen(OOJS_NATIVE_ARGS) {
      * multi-world-script mission screens. (Though, since no-one has
      * complained yet, perhaps I'm the only one who uses them?) */
 
-    if (sCallbackScript != nullptr)
-      sCallbackScript->release();  // (Leaked by the SpiderMonkey version if
-                                   // runScreen() was called twice.)
+    // (Leaked by the SpiderMonkey version if runScreen() was called twice.)
+    if (sCallbackScript != nullptr) sCallbackScript->release();
     sCallbackScript = OOJSScript::currentlyRunningScript();
     if (sCallbackScript != nullptr) sCallbackScript->retain();
     if (argc > 2) {
@@ -700,10 +707,10 @@ static JSValue MissionRunScreen(OOJS_NATIVE_ARGS) {
     } else {
       if (player != nullptr)
         player->setCustomChartCentre(
-            (player != nullptr
-                 ? player->PlayerEntity::getGalaxy_coordinates()
-                 : NSPoint{}));  // qualified: the final overrider, so the
-                                 // binding test stands in for it
+            (player != nullptr ? player->PlayerEntity::getGalaxy_coordinates()
+                               : NSPoint{}));  // qualified: the final
+                                               // overrider, so the binding test
+                                               // stands in for it
       cxx_OOJSReportWarning(
           context,
           "Mission.runScreen: invalid value for customChartCentre. Must be "
@@ -721,10 +728,10 @@ static JSValue MissionRunScreen(OOJS_NATIVE_ARGS) {
     } else {
       if (player != nullptr)
         player->setCustomChartCentre(
-            (player != nullptr
-                 ? player->PlayerEntity::getGalaxy_coordinates()
-                 : NSPoint{}));  // qualified: the final overrider, so the
-                                 // binding test stands in for it
+            (player != nullptr ? player->PlayerEntity::getGalaxy_coordinates()
+                               : NSPoint{}));  // qualified: the final
+                                               // overrider, so the binding test
+                                               // stands in for it
       cxx_OOJSReportWarning(
           context,
           "Mission.runScreen: invalid value for customChartCentreInLY. Must be "
@@ -774,8 +781,8 @@ static JSValue MissionRunScreen(OOJS_NATIVE_ARGS) {
     }
     JS_FreeValue(context, value);
 
-    JSValue demoShipVal =
-        OOJSValueFromCxxObject(context, demoShip);  // the C++ ship's JS value
+    // The C++ ship's JS value, owned; JS_SetPropertyStr() takes it.
+    JSValue demoShipVal = OOJSValueFromCxxObject(context, demoShip);
     if (JS_SetPropertyStr(context, sMissionObject, "displayModel",
                           demoShipVal) < 0) {
       OOJSReportPendingException(context);

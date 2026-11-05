@@ -1,6 +1,6 @@
 /*
 
-OOJSFrameCallbacks.m
+OOJSFrameCallbacks.cpp
 
 
 Copyright (C) 2011-2013 Jens Ayton
@@ -26,6 +26,9 @@ SOFTWARE.
 */
 
 #include "OOJSFrameCallbacks.h"
+
+#include <cstdlib>
+#include <cstring>
 
 #include "OOJSEngineTimeManagement.h"
 #include "oofnd/Date.hpp"
@@ -103,12 +106,12 @@ typedef struct {
 } DeferredOperation;
 
 namespace {
-static std::vector<DeferredOperation>*
+std::vector<DeferredOperation>*
     sDeferredOps;  // Deferred adds/removes while running.
 }  // namespace
 static uint32_t sNextID;
 namespace {
-static bool sRunning;
+bool sRunning;
 }  // namespace
 
 // Methods
@@ -118,32 +121,26 @@ static JSValue GlobalIsValidFrameCallback(OOJS_NATIVE_ARGS);
 
 // Internals
 namespace {
-static bool AddCallback(JSContext* context, JSValueConst callback,
-                        uint32_t trackingID,
-                        std::optional<std::string>* errorString);
-static bool GrowCallbackList(JSContext* context,
-                             std::optional<std::string>* errorString);
-}  // namespace
+bool AddCallback(JSContext* context, JSValueConst callback, uint32_t trackingID,
+                 std::optional<std::string>* errorString);
+bool GrowCallbackList(JSContext* context,
+                      std::optional<std::string>* errorString);
 
-namespace {
-static bool GetIndexForTrackingID(uint32_t trackingID, NSUInteger* outIndex);
-}  // namespace
+bool GetIndexForTrackingID(uint32_t trackingID, NSUInteger* outIndex);
 
-namespace {
-static bool RemoveCallbackWithTrackingID(JSContext* context,
-                                         uint32_t trackingID);
+bool RemoveCallbackWithTrackingID(JSContext* context, uint32_t trackingID);
 }  // namespace
 static void RemoveCallbackAtIndex(JSContext* context, NSUInteger index);
 
 namespace {
-static void QueueDeferredOperation(const std::string& opType,
-                                   uint32_t trackingID, OOJSValue* value);
+void QueueDeferredOperation(const std::string& opType, uint32_t trackingID,
+                            OOJSValue* value);
 }  // namespace
 static void RunDeferredOperations(JSContext* context);
 
-static const JSCFunctionListEntry sFrameCallbackMethods[] = {
-    // JS name						Function
-    // min args
+namespace {
+const JSCFunctionListEntry sFrameCallbackMethods[] = {
+    // JS name, min args, function, flags
     JS_CFUNC_DEF2("addFrameCallback", 1, GlobalAddFrameCallback,
                   OOJS_METHOD_READONLY),
     JS_CFUNC_DEF2("removeFrameCallback", 1, GlobalRemoveFrameCallback,
@@ -151,6 +148,7 @@ static const JSCFunctionListEntry sFrameCallbackMethods[] = {
     JS_CFUNC_DEF2("isValidFrameCallback", 1, GlobalIsValidFrameCallback,
                   OOJS_METHOD_READONLY),
 };
+}  // namespace
 
 // MARK: Public
 
@@ -185,16 +183,16 @@ void OOJSFrameCallbacksInvoke(OOTimeDelta inDeltaT) {
     sRunning = true;
 
     /*
-            The watchdog timer only fires once per second in deployment builds,
-            but in testrelease builds at least we can keep them on a short
+            The watchdog timer only fires once per second in deployment
+       builds, but in testrelease builds at least we can keep them on a short
        leash. (With QuickJS the limit is checked by the interrupt handler.)
     */
     OOJSStartTimeLimiterWithTimeLimit(0.1);
 
     for (i = 0; i < sCount; i++) {
       // TODO: remove out of scope callbacks - post MNSR!
-      JSValue result = JS_Call(context, sCallbacks[i].callback, global, 1,
-                               (JSValueConst*)&deltaVal);
+      JSValue result =
+          JS_Call(context, sCallbacks[i].callback, global, 1, &deltaVal);
       if (JS_IsException(result)) {
         OOJSReportPendingException(context);
       }
@@ -233,7 +231,8 @@ void OOJSFrameCallbacksRemoveAll(void) {
 static JSValue GlobalAddFrameCallback(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  // Get callback argument and verify that it's a function.
+  // Get callback argument and verify that it's a function. (QuickJS pads the
+  // arguments to the declared length with undefined, so OOJS_ARGV[0] exists.)
   JSValueConst callback = OOJS_ARGV[0];
   if (EXPECT_NOT(argc < 1 || !OOJSValueIsFunction(context, callback))) {
     cxx_OOJSReportBadArguments(context, std::nullopt, "addFrameCallback",
@@ -331,9 +330,8 @@ static JSValue GlobalIsValidFrameCallback(OOJS_NATIVE_ARGS) {
 // MARK: Internals
 
 namespace {
-static bool AddCallback(JSContext* context, JSValueConst callback,
-                        uint32_t trackingID,
-                        std::optional<std::string>* errorString) {
+bool AddCallback(JSContext* context, JSValueConst callback, uint32_t trackingID,
+                 std::optional<std::string>* errorString) {
   OOCParameterAssert(context != NULL);
   OOCParameterAssert(errorString != NULL);
   OOCAssert(!sRunning, "%s cannot be called while frame callbacks are running.",
@@ -352,11 +350,9 @@ static bool AddCallback(JSContext* context, JSValueConst callback,
 
   return true;
 }
-}  // namespace
 
-namespace {
-static bool GrowCallbackList(JSContext* context,
-                             std::optional<std::string>* errorString) {
+bool GrowCallbackList(JSContext* context,
+                      std::optional<std::string>* errorString) {
   OOCParameterAssert(context != NULL);
   OOCParameterAssert(errorString != NULL);
 
@@ -380,10 +376,8 @@ static bool GrowCallbackList(JSContext* context,
 
   return true;
 }
-}  // namespace
 
-namespace {
-static bool GetIndexForTrackingID(uint32_t trackingID, NSUInteger* outIndex) {
+bool GetIndexForTrackingID(uint32_t trackingID, NSUInteger* outIndex) {
   OOCParameterAssert(outIndex != NULL);
 
   /*	It is assumed that few frame callbacks will be active at once, so a
@@ -401,11 +395,8 @@ static bool GetIndexForTrackingID(uint32_t trackingID, NSUInteger* outIndex) {
 
   return false;
 }
-}  // namespace
 
-namespace {
-static bool RemoveCallbackWithTrackingID(JSContext* context,
-                                         uint32_t trackingID) {
+bool RemoveCallbackWithTrackingID(JSContext* context, uint32_t trackingID) {
   OOCParameterAssert(context != NULL);
   OOCAssert(!sRunning, "%s cannot be called while frame callbacks are running.",
             __PRETTY_FUNCTION__);
@@ -447,8 +438,8 @@ static void RemoveCallbackAtIndex(JSContext* context, NSUInteger index) {
 }
 
 namespace {
-static void QueueDeferredOperation(const std::string& opType,
-                                   uint32_t trackingID, OOJSValue* value) {
+void QueueDeferredOperation(const std::string& opType, uint32_t trackingID,
+                            OOJSValue* value) {
   OOCAssert(sRunning,
             "%s can only be called while frame callbacks are running.",
             __PRETTY_FUNCTION__);

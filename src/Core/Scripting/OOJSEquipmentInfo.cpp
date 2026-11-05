@@ -1,6 +1,6 @@
 /*
 
-OOJSEquipmentInfo.m (QuickJS-ng)
+OOJSEquipmentInfo.mm
 
 
 Oolite
@@ -25,6 +25,8 @@ MA 02110-1301, USA.
 
 #include "OOJSEquipmentInfo.h"
 
+#include <cstring>
+
 #include "OODebugStandards.h"
 #include "OOEquipmentType.h"
 #include "OOJSPlayer.h"
@@ -33,11 +35,6 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 
 static JSClassID sEquipmentInfoClassID;
-
-static JSValue EquipmentInfoGetProperty(OOJS_GETTER_ARGS);
-static JSValue EquipmentInfoSetProperty(OOJS_SETTER_ARGS);
-
-static JSValue EquipmentInfoGetAllEqipment(OOJS_GETTER_ARGS);
 
 namespace {
 
@@ -73,16 +70,21 @@ oo::PList KeyArrayOrNull(const std::optional<std::vector<std::string>>& keys) {
 
 }  // namespace
 
+static JSValue EquipmentInfoGetProperty(OOJS_GETTER_ARGS);
+static JSValue EquipmentInfoSetProperty(OOJS_SETTER_ARGS);
+
+static JSValue EquipmentInfoGetAllEqipment(OOJS_GETTER_ARGS);
+
 // Methods
 static JSValue EquipmentInfoStaticInfoForKey(OOJS_NATIVE_ARGS);
 static JSValue EquipmentInfoToString(OOJS_NATIVE_ARGS);
 
 static JSClassDef sEquipmentInfoClass = {
     .class_name = "EquipmentInfo",
-    .finalizer = OOJSCxxObjectWrapperFinalize,
+    .finalizer = OOJSObjectWrapperFinalize,
 };
 
-enum {
+enum : std::uint8_t {
   // Property IDs
   kEquipmentInfo_calculatedPrice,
   kEquipmentInfo_canBeDamaged,
@@ -223,16 +225,6 @@ bool JSEquipmentInfoGetEquipmentType(JSContext* context, JSValueConst inObject,
                                      OOEquipmentType** outObject) {
   return OOJSGetCxxPrivate(context, inObject, sEquipmentInfoClassID, outObject);
 }
-
-// OOJSBasicPrivateObjectConverter for the C++ type the slot holds: the type
-// itself as an Object node, for the callers of cxx_OOJSPListFromJSValue (null
-// for the prototype).
-oo::PList EquipmentInfoConverter(JSContext* /*context*/, JSValueConst object) {
-  OOEquipmentType* type =
-      static_cast<OOEquipmentType*>(static_cast<oo::RefCounted*>(
-          JS_GetOpaque(object, sEquipmentInfoClassID)));
-  return OOEquipmentTypeObjectNode(type);
-}
 }  // namespace
 
 // *** Public ***
@@ -245,7 +237,8 @@ void InitOOJSEquipmentInfo(JSContext* context, JSValueConst global) {
                 OOJS_COUNT(sEquipmentInfoMethods), sEquipmentInfoStaticMethods,
                 OOJS_COUNT(sEquipmentInfoStaticMethods));
 
-  OOJSRegisterObjectConverter(sEquipmentInfoClassID, EquipmentInfoConverter);
+  OOJSRegisterObjectConverter(sEquipmentInfoClassID,
+                              OOJSBasicPrivateObjectConverter);
 }
 
 OOEquipmentType* JSValueToEquipmentType(JSContext* context,
@@ -254,9 +247,9 @@ OOEquipmentType* JSValueToEquipmentType(JSContext* context,
 
   if (JS_IsObject(value)) {
     if (JS_GetClassID(value) == sEquipmentInfoClassID) {
-      return static_cast<OOEquipmentType*>(
-          static_cast<oo::RefCounted*>(JS_GetOpaque(
-              value, sEquipmentInfoClassID)));  // borrowed: the slot holds it
+      return static_cast<OOEquipmentType*>(static_cast<oo::RefCounted*>(
+          JS_GetOpaque(value, sEquipmentInfoClassID)));  // borrowed: the slot
+                                                         // holds it
     }
   }
 
@@ -303,7 +296,7 @@ std::optional<std::string> JSValueToEquipmentKeyRelaxed(JSContext* context,
   if (outExists != NULL) *outExists = exists;
   return result;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_VAL(std::nullopt)
 }
 
 // *** Implementation stuff ***
@@ -315,7 +308,7 @@ static JSValue EquipmentInfoGetProperty(OOJS_GETTER_ARGS) {
   NSUInteger inst_time;
 
   OOEquipmentType* type = nullptr;  // null for the prototype: see Ask()
-  if (EXPECT_NOT(!JSEquipmentInfoGetEquipmentType(context, thisObj, &type)))
+  if (EXPECT_NOT(!JSEquipmentInfoGetEquipmentType(context, OOJS_THIS, &type)))
     return OOJSNativeFailure(context);
 
   switch (magic) {
@@ -502,7 +495,7 @@ static JSValue EquipmentInfoGetProperty(OOJS_GETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                     sEquipmentInfoProperties,
                                     OOJS_COUNT(sEquipmentInfoProperties));
       return OOJSNativeFailure(context);
@@ -520,7 +513,7 @@ static JSValue EquipmentInfoSetProperty(OOJS_SETTER_ARGS) {
   oo::Ref<OOColor> colorForScript;
 
   OOEquipmentType* type = nullptr;  // null for the prototype: see Ask()
-  if (EXPECT_NOT(!JSEquipmentInfoGetEquipmentType(context, thisObj, &type)))
+  if (EXPECT_NOT(!JSEquipmentInfoGetEquipmentType(context, OOJS_THIS, &type)))
     return OOJSNativeFailure(context);
 
   switch (magic) {
@@ -570,13 +563,14 @@ static JSValue EquipmentInfoSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                     sEquipmentInfoProperties,
                                     OOJS_COUNT(sEquipmentInfoProperties));
       return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sEquipmentInfoProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic,
+                             sEquipmentInfoProperties,
                              OOJS_COUNT(sEquipmentInfoProperties), value);
   return OOJSNativeFailure(context);
 
@@ -594,29 +588,27 @@ static JSValue EquipmentInfoGetAllEqipment(OOJS_GETTER_ARGS) {
 
 // The JS glue of OOEquipmentType (OOJSPrivateObject), which the engine reaches
 // through the slot's C++ object or an Object node that holds the type.
-
 /*	As with SpiderMonkey, the JS object retains the equipment type, and
-        _jsSelf is a weak (uncounted) reference to the JS object, cleared by
-        clearJSSelf() when the JS object is finalized.
+   _jsSelf is a weak (uncounted) reference to the JS object, cleared by
+   clearJSSelf() when the JS object is finalized.
 */
 JSValue OOEquipmentType::jsValueInContext(JSContext* context) {
-  if (!JS_IsObject(_jsSelf)) {
-    JSValue newSelf = JS_NewObjectClass(context, (int)sEquipmentInfoClassID);
-    if (JS_IsException(newSelf)) {
-      JS_FreeValue(context, JS_GetException(context));
-      return JS_NULL;
-    }
-    if (!OOJSSetCxxPrivate(newSelf, this)) {
-      JS_FreeValue(context, newSelf);
-      return JS_NULL;
-    }
+  if (JS_IsObject(_jsSelf)) return JS_DupValue(context, _jsSelf);
 
-    // Weak: the caller gets the only reference.
-    _jsSelf = newSelf;
-    return newSelf;
+  JSValue jsSelf =
+      JS_NewObjectClass(context, static_cast<int>(sEquipmentInfoClassID));
+  if (JS_IsException(jsSelf)) {
+    JS_FreeValue(context, JS_GetException(context));
+    return JS_NULL;
+  }
+  if (!OOJSSetCxxPrivate(jsSelf, this)) {
+    JS_FreeValue(context, jsSelf);
+    return JS_NULL;
   }
 
-  return JS_DupValue(context, _jsSelf);
+  // Weak: the caller gets the only reference.
+  _jsSelf = jsSelf;
+  return jsSelf;
 }
 
 void OOEquipmentType::clearJSSelf(JSValueConst selfVal) {

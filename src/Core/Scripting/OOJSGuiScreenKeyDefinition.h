@@ -1,6 +1,6 @@
 /*
 
-OOJSGuiScreenKeyDefinition.h (QuickJS-ng)
+OOJSGuiScreenKeyDefinition.h
 
 The JS global object makes it and the player keeps it as oo::Ref.
 

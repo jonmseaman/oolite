@@ -38,7 +38,7 @@ MA 02110-1301, USA.
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOShaderUniformMethodType.h"
-#include "PlayerEntity.h"  // the script target (a C++ member)
+#include "PlayerEntity.h"  // PLAYER, the script target
 #include "ShipEntity.h"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"

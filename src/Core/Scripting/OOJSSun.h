@@ -1,6 +1,6 @@
 /*
 
-OOJSSun.h (QuickJS-ng)
+OOJSSun.h
 
 JavaScript proxy for suns.
 

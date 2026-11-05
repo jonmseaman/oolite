@@ -1,6 +1,6 @@
 /*
 
-OOJSShip.m (QuickJS-ng)
+OOJSShip.m
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -185,12 +185,12 @@ static JSValue ShipStaticSetShipDataForKey(OOJS_NATIVE_ARGS);
 static JSClassDef sShipClass = {
     .class_name = "Ship",
     .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+        OOJSObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
 };
 
 /* It turns out that the value in SpiderMonkey used to identify these
  * enums is an 8-bit signed int:
- * developer.mozilla.org/en/docs/SpiderMonkey/JSAPI_Reference/JSPropertySpec
+ * (see the engine reference for its property-spec table)
  * which puts a limit of 256 properties on the ship object.  Moved the
  * enum to start at -128, so we can use the full 256 rather than just
  * 128 of them. I don't think any of our other classes are getting
@@ -789,7 +789,7 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
   ShipEntity* entity = nullptr;
   oo::PList result;  // null maps to null
 
-  if (EXPECT_NOT(!JSShipGetShipEntity(context, thisObj, &entity)))
+  if (EXPECT_NOT(!JSShipGetShipEntity(context, OOJS_THIS, &entity)))
     return OOJSNativeFailure(context);
   if (OOIsStaleEntity(entity)) {
     return JS_UNDEFINED;
@@ -1358,7 +1358,7 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
     }
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sShipProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic, sShipProperties,
                                     OOJS_COUNT(sShipProperties));
       return OOJSNativeFailure(context);
   }
@@ -1376,7 +1376,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
   std::optional<std::string> sValue;
   double fValue;
   int32_t iValue;
-  int bValue;
+  int bValue;  // JS_ToBool(): -1 on exception
   Vector vValue;
   Quaternion qValue;
   HPVector hpvValue;
@@ -1384,7 +1384,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
   oo::Ref<OOColor> colorForScript;
   bool exists;  // JSValueToEquipmentKeyRelaxed()'s out parameter
 
-  if (EXPECT_NOT(!JSShipGetShipEntity(context, thisObj, &entity)))
+  if (EXPECT_NOT(!JSShipGetShipEntity(context, OOJS_THIS, &entity)))
     return OOJSNativeFailure(context);
   if (OOIsStaleEntity(entity)) return JS_UNDEFINED;
   ShipEntity* ship = entity;  // not null: entity is not
@@ -1516,8 +1516,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         if (iValue < 0 || iValue > (int32_t)ENTITY_PERSONALITY_MAX) {
           cxx_OOJSReportError(
               context, "ship.%s must be >= 0 and <= %u.",
-              cxx_OOStringFromJSPropertyMagic(magic, sShipProperties,
-                                              OOJS_COUNT(sShipProperties))
+              OOStringFromJSPropertyMagic(magic, sShipProperties,
+                                          OOJS_COUNT(sShipProperties))
                   .c_str(),
               ENTITY_PERSONALITY_MAX);
           return OOJSNativeFailure(context);
@@ -1593,7 +1593,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         ship->setFoundTarget(nullptr);
         return JS_UNDEFINED;
       } else if (JSValueToEntity(context, value, &target) && IsShip(target)) {
-        ship->setFoundTarget(target);  // the C++ entity (the member takes it)
+        ship->setFoundTarget(target);  // the C++ entity
         return JS_UNDEFINED;
       }
       break;
@@ -1605,8 +1605,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         ship->setPrimaryAggressor(nullptr);
         return JS_UNDEFINED;
       } else if (JSValueToEntity(context, value, &target) && IsShip(target)) {
-        ship->setPrimaryAggressor(
-            target);  // the C++ entity (the member takes it)
+        ship->setPrimaryAggressor(target);  // the C++ entity
         return JS_UNDEFINED;
       }
       break;
@@ -1644,14 +1643,14 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kShip_isCloaked:
-      if (((bValue = JS_ToBool(context, value)) >= 0)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         ship->setCloaked(bValue);
         return JS_UNDEFINED;
       }
       break;
 
     case kShip_cloakAutomatic:
-      if (((bValue = JS_ToBool(context, value)) >= 0)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         ship->setAutoCloak(bValue);
         return JS_UNDEFINED;
       }
@@ -1674,14 +1673,14 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kShip_reportAIMessages:
-      if (((bValue = JS_ToBool(context, value)) >= 0)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         ship->setReportAIMessages(bValue);
         return JS_UNDEFINED;
       }
       break;
 
     case kShip_trackCloseContacts:
-      if (((bValue = JS_ToBool(context, value)) >= 0)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         ship->setTrackCloseContacts(bValue);
         return JS_UNDEFINED;
       }
@@ -1690,7 +1689,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kShip_isBoulder:
       if (EXPECT_NOT(ship->getIsPlayer())) goto playerReadOnly;
 
-      if (((bValue = JS_ToBool(context, value)) >= 0)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         ship->setIsBoulder(bValue);
         return JS_UNDEFINED;
       }
@@ -1825,7 +1824,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kShip_scriptedMisjump:
-      if (((bValue = JS_ToBool(context, value)) >= 0)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         ship->setScriptedMisjump(bValue);
         return JS_UNDEFINED;
       }
@@ -1839,8 +1838,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         } else {
           cxx_OOJSReportError(
               context, "ship.%s must be > 0.0 and < 1.0.",
-              cxx_OOStringFromJSPropertyMagic(magic, sShipProperties,
-                                              OOJS_COUNT(sShipProperties))
+              OOStringFromJSPropertyMagic(magic, sShipProperties,
+                                          OOJS_COUNT(sShipProperties))
                   .c_str());
           return OOJSNativeFailure(context);
         }
@@ -1862,8 +1861,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         } else {
           cxx_OOJSReportError(
               context, "ship.%s must be > 0.0 and < 1.0.",
-              cxx_OOStringFromJSPropertyMagic(magic, sShipProperties,
-                                              OOJS_COUNT(sShipProperties))
+              OOStringFromJSPropertyMagic(magic, sShipProperties,
+                                          OOJS_COUNT(sShipProperties))
                   .c_str());
           return OOJSNativeFailure(context);
         }
@@ -1989,7 +1988,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kShip_lightsActive:
-      if (((bValue = JS_ToBool(context, value)) >= 0)) {
+      if ((bValue = JS_ToBool(context, value)) >= 0) {
         if (bValue)
           ship->switchLightsOn();
         else
@@ -2051,16 +2050,16 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
                 1) {
           cxx_OOJSReportError(
               context, "ship.%s must be >= current escort numbers.",
-              cxx_OOStringFromJSPropertyMagic(magic, sShipProperties,
-                                              OOJS_COUNT(sShipProperties))
+              OOStringFromJSPropertyMagic(magic, sShipProperties,
+                                          OOJS_COUNT(sShipProperties))
                   .c_str());
           return OOJSNativeFailure(context);
         }
         if (iValue > MAX_ESCORTS) {
           cxx_OOJSReportError(
               context, "ship.%s must be <= %d.",
-              cxx_OOStringFromJSPropertyMagic(magic, sShipProperties,
-                                              OOJS_COUNT(sShipProperties))
+              OOStringFromJSPropertyMagic(magic, sShipProperties,
+                                          OOJS_COUNT(sShipProperties))
                   .c_str(),
               MAX_ESCORTS);
           return OOJSNativeFailure(context);
@@ -2072,19 +2071,19 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sShipProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic, sShipProperties,
                                     OOJS_COUNT(sShipProperties));
       return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sShipProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sShipProperties,
                              OOJS_COUNT(sShipProperties), value);
   return OOJSNativeFailure(context);
 
 playerReadOnly:
   cxx_OOJSReportError(context, "player.ship.%s is read-only.",
-                      cxx_OOStringFromJSPropertyMagic(
-                          magic, sShipProperties, OOJS_COUNT(sShipProperties))
+                      OOStringFromJSPropertyMagic(magic, sShipProperties,
+                                                  OOJS_COUNT(sShipProperties))
                           .c_str());
   return OOJSNativeFailure(context);
 
@@ -2092,8 +2091,9 @@ playerReadOnly:
   /*
   npcReadOnly:
           cxx_OOJSReportError(context, "npc.ship.%s is read-only.",
-  cxx_OOStringFromJSPropertyMagic(magic, sShipProperties,
-  OOJS_COUNT(sShipProperties)).c_str()); return OOJSNativeFailure(context);
+  OOStringFromJSPropertyMagic(magic, sShipProperties,
+                                          OOJS_COUNT(sShipProperties))
+                  .c_str()); return OOJSNativeFailure(context);
   */
 
   OOJS_NATIVE_EXIT
@@ -2373,7 +2373,8 @@ static JSValue ShipEjectItem(OOJS_NATIVE_ARGS) {
   }
 
   OOJS_RETURN(OOJSValueFromCxxObject(
-      context, ship->ejectShipOfRole(role)));  // the C++ ship's JS value
+      context,
+      ship->ejectShipOfRole(role)));  // the C++ ship's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -2383,8 +2384,8 @@ static JSValue ShipAddCargoEntity(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
   ShipEntity* thisEnt = nullptr;
   ShipEntity* target = nullptr;
-  int procEvents = false;
-  int procMessages = false;
+  int procEvents = false;    // JS_ToBool(): -1 on exception
+  int procMessages = false;  // JS_ToBool(): -1 on exception
 
   GET_THIS_SHIP(thisEnt);
   ShipEntity* ship = thisEnt;  // not null: thisEnt is not
@@ -2463,7 +2464,8 @@ static JSValue ShipEjectSpecificItem(OOJS_NATIVE_ARGS) {
   }
 
   OOJS_RETURN(OOJSValueFromCxxObject(
-      context, ship->ejectShipOfType(itemKey)));  // the C++ ship's JS value
+      context,
+      ship->ejectShipOfType(itemKey)));  // the C++ ship's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -2516,7 +2518,8 @@ static JSValue ShipDumpCargo(OOJS_NATIVE_ARGS) {
   }
 
   OOJS_RETURN(OOJSValueFromCxxObject(
-      context, ship->dumpCargoItem(pref)));  // the C++ pod's JS value
+      context,
+      ship->dumpCargoItem(pref)));  // the C++ pod's JS value
 
   OOJS_NATIVE_EXIT
 }
@@ -2619,7 +2622,7 @@ static JSValue ShipRemove(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   ShipEntity* thisEnt = nullptr;
-  int suppressDeathEvent = false;
+  int suppressDeathEvent = false;  // JS_ToBool(): -1 on exception
 
   GET_THIS_SHIP(thisEnt);
   ShipEntity* ship = thisEnt;  // not null: thisEnt is not
@@ -3468,11 +3471,9 @@ JSValue ShipSetMaterialsInternal(OOJS_NATIVE_ARGS, ShipEntity* thisEnt,
 
   OOJS_RETURN_BOOL(success);
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 }  // namespace
-
-// namespace
 
 // exitSystem([int systemID])
 static JSValue ShipExitSystem(OOJS_NATIVE_ARGS) {
@@ -3517,7 +3518,7 @@ static JSValue ShipUpdateEscortFormation(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 namespace {
@@ -3567,7 +3568,7 @@ JSValue RemoveOrExplodeShip(OOJS_NATIVE_ARGS, bool explode) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 }  // namespace
 
@@ -3581,7 +3582,7 @@ static JSValue ShipClearDefenseTargets(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipAddDefenseTarget(OOJS_NATIVE_ARGS) {
@@ -3601,11 +3602,11 @@ static JSValue ShipAddDefenseTarget(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  ship->addDefenseTarget(target);  // the C++ ship (the member takes it)
+  ship->addDefenseTarget(target);  // the C++ ship
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipRemoveDefenseTarget(OOJS_NATIVE_ARGS) {
@@ -3625,11 +3626,11 @@ static JSValue ShipRemoveDefenseTarget(OOJS_NATIVE_ARGS) {
     return OOJSNativeFailure(context);
   }
 
-  ship->removeDefenseTarget(target);  // the C++ ship (the member takes it)
+  ship->removeDefenseTarget(target);  // the C++ ship
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipAddCollisionException(OOJS_NATIVE_ARGS) {
@@ -3659,7 +3660,7 @@ static JSValue ShipAddCollisionException(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipRemoveCollisionException(OOJS_NATIVE_ARGS) {
@@ -3687,7 +3688,7 @@ static JSValue ShipRemoveCollisionException(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 // getMaterials()
@@ -3704,7 +3705,7 @@ static JSValue ShipGetMaterials(OOJS_NATIVE_ARGS) {
     result = oo::PList(oo::PList::Dict{});  // empty rather than null
   OOJS_RETURN_PLIST(result);
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 // getShaders()
@@ -3721,7 +3722,7 @@ static JSValue ShipGetShaders(OOJS_NATIVE_ARGS) {
     result = oo::PList(oo::PList::Dict{});  // empty rather than null
   OOJS_RETURN_PLIST(result);
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipBroadcastCascadeImminent(OOJS_NATIVE_ARGS) {
@@ -3734,7 +3735,7 @@ static JSValue ShipBroadcastCascadeImminent(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipBecomeCascadeExplosion(OOJS_NATIVE_ARGS) {
@@ -3747,7 +3748,7 @@ static JSValue ShipBecomeCascadeExplosion(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipOfferToEscort(OOJS_NATIVE_ARGS) {
@@ -3771,7 +3772,7 @@ static JSValue ShipOfferToEscort(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_BOOL(result);
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipRequestHelpFromGroup(OOJS_NATIVE_ARGS) {
@@ -3786,7 +3787,7 @@ static JSValue ShipRequestHelpFromGroup(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPatrolReportIn(OOJS_NATIVE_ARGS) {
@@ -3813,7 +3814,7 @@ static JSValue ShipPatrolReportIn(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipMarkTargetForFines(OOJS_NATIVE_ARGS) {
@@ -3832,7 +3833,7 @@ static JSValue ShipMarkTargetForFines(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_BOOL(ok);
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipEnterWormhole(OOJS_NATIVE_ARGS) {
@@ -3871,7 +3872,7 @@ static JSValue ShipEnterWormhole(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipNotifyGroupOfWormhole(OOJS_NATIVE_ARGS) {
@@ -3885,7 +3886,7 @@ static JSValue ShipNotifyGroupOfWormhole(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipThrowSpark(OOJS_NATIVE_ARGS) {
@@ -3898,7 +3899,7 @@ static JSValue ShipThrowSpark(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformAttack(OOJS_NATIVE_ARGS) {
@@ -3911,7 +3912,7 @@ static JSValue ShipPerformAttack(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformCollect(OOJS_NATIVE_ARGS) {
@@ -3924,7 +3925,7 @@ static JSValue ShipPerformCollect(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformEscort(OOJS_NATIVE_ARGS) {
@@ -3937,7 +3938,7 @@ static JSValue ShipPerformEscort(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformFaceDestination(OOJS_NATIVE_ARGS) {
@@ -3950,7 +3951,7 @@ static JSValue ShipPerformFaceDestination(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformFlee(OOJS_NATIVE_ARGS) {
@@ -3963,7 +3964,7 @@ static JSValue ShipPerformFlee(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformFlyToRangeFromDestination(OOJS_NATIVE_ARGS) {
@@ -3976,7 +3977,7 @@ static JSValue ShipPerformFlyToRangeFromDestination(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformHold(OOJS_NATIVE_ARGS) {
@@ -3989,7 +3990,7 @@ static JSValue ShipPerformHold(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformIdle(OOJS_NATIVE_ARGS) {
@@ -4002,7 +4003,7 @@ static JSValue ShipPerformIdle(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformIntercept(OOJS_NATIVE_ARGS) {
@@ -4015,7 +4016,7 @@ static JSValue ShipPerformIntercept(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformLandOnPlanet(OOJS_NATIVE_ARGS) {
@@ -4028,7 +4029,7 @@ static JSValue ShipPerformLandOnPlanet(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformMining(OOJS_NATIVE_ARGS) {
@@ -4041,7 +4042,7 @@ static JSValue ShipPerformMining(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformScriptedAI(OOJS_NATIVE_ARGS) {
@@ -4054,7 +4055,7 @@ static JSValue ShipPerformScriptedAI(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformScriptedAttackAI(OOJS_NATIVE_ARGS) {
@@ -4067,7 +4068,7 @@ static JSValue ShipPerformScriptedAttackAI(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformStop(OOJS_NATIVE_ARGS) {
@@ -4080,7 +4081,7 @@ static JSValue ShipPerformStop(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipPerformTumble(OOJS_NATIVE_ARGS) {
@@ -4093,7 +4094,7 @@ static JSValue ShipPerformTumble(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipRequestDockingInstructions(OOJS_NATIVE_ARGS) {
@@ -4106,7 +4107,7 @@ static JSValue ShipRequestDockingInstructions(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_PLIST(ship->getDockingInstructions());  // nil maps to null
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipRecallDockingInstructions(OOJS_NATIVE_ARGS) {
@@ -4119,7 +4120,7 @@ static JSValue ShipRecallDockingInstructions(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_PLIST(ship->getDockingInstructions());  // nil maps to null
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipBroadcastDistressMessage(OOJS_NATIVE_ARGS) {
@@ -4132,7 +4133,7 @@ static JSValue ShipBroadcastDistressMessage(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipCheckCourseToDestination(OOJS_NATIVE_ARGS) {
@@ -4150,7 +4151,7 @@ static JSValue ShipCheckCourseToDestination(OOJS_NATIVE_ARGS) {
   OOJS_RETURN(
       OOJSValueFromCxxObject(context, hazard));  // the C++ hazard's JS value
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipGetSafeCourseToDestination(OOJS_NATIVE_ARGS) {
@@ -4167,14 +4168,14 @@ static JSValue ShipGetSafeCourseToDestination(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_HPVECTOR(waypoint);
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipCheckScanner(OOJS_NATIVE_ARGS) {
   OOJS_PROFILE_ENTER
 
   ShipEntity* thisEnt = nullptr;
-  int onlyCheckPowered = false;
+  int onlyCheckPowered = false;  // JS_ToBool(): -1 on exception
 
   GET_THIS_SHIP(thisEnt);
   ShipEntity* ship = thisEnt;  // not null: thisEnt is not
@@ -4201,7 +4202,7 @@ static JSValue ShipCheckScanner(OOJS_NATIVE_ARGS) {
   }
   OOJS_RETURN_PLIST(oo::PList(std::move(scanResult)));
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipAdjustCargo(OOJS_NATIVE_ARGS) {
@@ -4248,7 +4249,7 @@ static JSValue ShipAdjustCargo(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_BOOL(ok);
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 /* 0 = no significant damage or consumable loss, higher numbers mean some */
@@ -4276,14 +4277,14 @@ static JSValue ShipDamageAssessment(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_INT(assessment);
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
   OOJS_PROFILE_ENTER
 
   ShipEntity* thisEnt = nullptr;
-  int fullCheck = false;
+  int fullCheck = false;  // JS_ToBool(): -1 on exception
 
   GET_THIS_SHIP(thisEnt);
   ShipEntity* ship = thisEnt;  // not null: thisEnt is not
@@ -4403,7 +4404,7 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_DOUBLE(assessment);
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
 
 static double ShipThreatAssessmentWeapon(OOWeaponType wt) {

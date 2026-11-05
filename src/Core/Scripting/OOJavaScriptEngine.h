@@ -2,8 +2,8 @@
 
 OOJavaScriptEngine.h (QuickJS-ng)
 
-JavaScript support for Oolite, ported from SpiderMonkey 1.8.5 to QuickJS-ng.
-See https://github.com/OoliteProject/oolite/issues/580.
+JavaScript support for Oolite, ported from SpiderMonkey 1.8.5 to QuickJS-ng
+(upstream #767/#768), in C++.
 
 Copyright (C) 2007-2013 David Taylor and Jens Ayton.
 
@@ -29,26 +29,25 @@ MA 02110-1301, USA.
 #include <quickjs.h>
 
 #include "OOFoundation.h"
-#include "OOTypes.h"
-#include "oofnd/PList.hpp"
-#include "oofnd/Ref.hpp"
-#include "oofnd/StdLib.hpp"
-#include "oofnd/objc/OOAssert.h"
-#include "oofnd/objc/OOObject.h"
-
 #if !OOJS_POC_HARNESS
 #include "PlayerEntity.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "Universe.h"
 #endif
+#include "oofnd/objc/OOObject.h"
+#define OOJSENGINE_MONITOR_SUPPORT OO_DEBUG_MONITOR_ENABLED
 
-/*	The plain C++ part of the engine API: reporters, converters, argument
-   and return macros, the native wrappers. A binding with no Objective-C
-   includes only that header.
+#include "OOJSPropID.h"
+#include "oofnd/PList.hpp"
+#include "oofnd/Ref.hpp"
+#include "oofnd/StdLib.hpp"
+#include "oofnd/objc/OOAssert.h"
+
+/*	The plain C++ part of the engine API: ownership conventions, reporters,
+   converters, class registration, argument and return macros, the native
+   wrappers. A binding with no game includes only that header.
 */
 #include "OOJSEngineCore.h"
-
-#define OOJSENGINE_MONITOR_SUPPORT OO_DEBUG_MONITOR_ENABLED
 
 #if OOJSENGINE_MONITOR_SUPPORT
 #include "OOJavaScriptEngineMonitor.h"
@@ -92,15 +91,15 @@ class OOJavaScriptEngine : public oo::RefCounted {
   bool dumpStackForWarnings();
   void setDumpStackForWarnings(bool value);
 
-  // Install handler for JS "debugger" statment. (Not supported by QuickJS; does
-  // nothing.)
+  // Install handler for JS "debugger" statment. (Not supported by QuickJS;
+  // does nothing.)
   void enableDebuggerStatement();
 #endif
 
   /*	Destroy the context and runtime. All native objects holding JSValues
-     must have released them first. Returns the number of JS objects still alive
-          after a final garbage collection; if it is non-zero, they are logged
-          and the runtime is abandoned rather than freed.
+     must have released them first. Returns the number of JS objects still
+     alive after a final garbage collection; if it is non-zero, they are logged
+     and the runtime is abandoned rather than freed.
   */
   NSUInteger shutDown();
 
@@ -109,7 +108,9 @@ class OOJavaScriptEngine : public oo::RefCounted {
   void setMonitor(OOJavaScriptEngineMonitor* monitor);  // borrowed
 
   // (OOMonitorSupportInternal)
-  // file is nullopt when the stack gives no location (a nil file before).
+  // QuickJS has no JSErrorReport, so problems are described by severity
+  // ("exception" or "warning") and the innermost location on the stack, if
+  // any (file is nullopt otherwise).
   void sendMonitorProblem(const std::string& severity,
                           const std::optional<std::string>& file, unsigned line,
                           const std::string& message, JSContext* context);
@@ -130,7 +131,7 @@ class OOJavaScriptEngine : public oo::RefCounted {
   JSRuntime* _runtime = nullptr;
   JSContext* _context = nullptr;
   JSValue _globalObject = JS_UNDEFINED;  // owned
-  bool _showErrorLocations = {};
+  bool _showErrorLocations = true;
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
   bool _dumpStackForErrors = {};
@@ -143,8 +144,7 @@ class OOJavaScriptEngine : public oo::RefCounted {
 };
 
 // A vector box's JS value (OOJSValueFromPList, for an Object node that holds
-// one), owned by the
-// caller.
+// one), owned by the caller.
 class OONativeVector;
 JSValue OONativeVectorJSValueInContext(OONativeVector* vector,
                                        JSContext* context);
@@ -188,8 +188,6 @@ inline bool OOIsNullObjectNode(const oo::PList& plist) {
 
 #if !OOJS_POC_HARNESS
 
-class Entity;
-
 // OOEntityFilterPredicate wrapping a JavaScript function.
 typedef struct {
   JSContext* context;
@@ -212,9 +210,9 @@ bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void* parameter);
 // YES for menu-display ships. Parameter: ignored
 bool JSEntityIsDemoShipPredicate(Entity* entity, void* parameter);
 
-#endif
+#endif  // !OOJS_POC_HARNESS
 
 /*	OOJSGetCxxPrivate() (OOJSPrivateObject.h) reads the C++ object every JS
    object's private slot holds.
 */
-#include "OOFoundation.h"
+#include "OOJSPrivateObject.h"

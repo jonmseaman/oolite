@@ -1,6 +1,6 @@
 /*
 
-OOJSSystemInfo.h (QuickJS-ng)
+OOJSSystemInfo.h
 
 JavaScript object representing system info overrides.
 
@@ -35,7 +35,6 @@ MA 02110-1301, USA.
 
 #include <quickjs.h>
 
-#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -77,8 +76,8 @@ class OOSystemInfo : public oo::PListForeign, public ::OOJSPrivateObject {
   OOSystemID system() const;
   NSPoint coordinates();
 
-  // The JS glue (OOJSPrivateObject): a new SystemInfo object holding this (no
-  // wrapper is remembered, so clearJSSelf() has nothing to forget);
+  // The JS glue (OOJSPrivateObject): a new SystemInfo object holding this
+  // (no wrapper is remembered, so clearJSSelf() has nothing to forget);
   // "[SystemInfo galaxy g, system s]".
   JSValue jsValueInContext(JSContext* context) override;  // owned
   void clearJSSelf(JSValueConst selfVal) override;

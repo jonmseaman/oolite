@@ -1,6 +1,6 @@
 /*
 
-OOJSQuaternion.h (QuickJS-ng proof of concept)
+OOJSQuaternion.h
 
 JavaScript proxy for quaternions.
 
@@ -28,13 +28,15 @@ MA 02110-1301, USA.
 
 #include <quickjs.h>
 
+#include <string>
+
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include "oofnd/StdLib.hpp"
 
 void InitOOJSQuaternion(JSContext* context, JSValueConst global);
 
-// Return an owned Quaternion object, or JS_EXCEPTION.
+// A new Quaternion object, owned by the caller (JS_EXCEPTION on failure).
 JSValue JSQuaternionWithQuaternion(JSContext* context,
                                    Quaternion quaternion) NONNULL_FUNC;
 
@@ -47,8 +49,8 @@ bool JSValueToQuaternion(JSContext* context, JSValueConst value,
 /*	Given a JS Quaternion object, get the corresponding Vector struct. Given
    a JS Entity, get its orientation. Given a JS Array with exactly four
         elements, all of them numbers, treat them as [w, x, y, z]  components.
-   For anything else, return NO. (Other implicit conversions may be added in
-        future.)
+   For anything else (including null and primitives), return NO. (Other
+        implicit conversions may be added in future.)
 */
 bool JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj,
                            Quaternion* outQuaternion) GCC_ATTR((nonnull(1, 3)));

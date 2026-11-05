@@ -1,6 +1,6 @@
 /*
 
-OOJSInterfaceDefinition.m (QuickJS-ng)
+OOJSInterfaceDefinition.mm
 
 
 Oolite

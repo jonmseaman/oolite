@@ -1,6 +1,6 @@
 /*
 
-OOJSPopulatorDefinition.m (QuickJS-ng)
+OOJSPopulatorDefinition.mm
 
 
 Oolite
@@ -30,8 +30,6 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "OOMaths.h"
 #include "oofnd/Notification.hpp"
-
-// namespace
 
 OOJSPopulatorDefinition::OOJSPopulatorDefinition() {
   _callback = JS_UNDEFINED;

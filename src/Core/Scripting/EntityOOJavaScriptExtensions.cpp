@@ -1,6 +1,6 @@
 /*
 
-EntityOOJavaScriptExtensions.m (QuickJS-ng)
+EntityOOJavaScriptExtensions.m
 
 The Entity and ShipEntity JavaScript extensions as free functions
 (EntityOOJavaScriptExtensions.h). A method that used self takes the object as
@@ -52,11 +52,9 @@ std::optional<std::string> EntityJSClassName(void) {
 }
 
 /*	The entity's JS object: made on first use for an entity that scripts can
-   see, of the class the entity names, its private slot an
-   OOJSEntityHolder (a weak reference to the entity: the JS object does not keep
-   the entity alive), held by
-        the entity while it lives and dropped when the engine
-   resets.
+   see, of the class the entity names, its private slot an OOJSEntityHolder (a
+   weak reference to the entity: the JS object does not keep the entity alive),
+   held by the entity while it lives and dropped when the engine resets.
 */
 /*	The class questions about an entity's JS object, answered by the C++
    entity's members. Used by the engine's generic paths that ask an entity's
@@ -110,8 +108,6 @@ JSValue EntityJSValueInContext(Entity* entity, JSContext* context) {
   return JS_NULL;
 }
 
-JSClassID EntityJSClassID(void) { return JSEntityClassID(); }
-
 void EntityJSDeleteJSSelf(Entity* entity) {
   if (JS_IsObject(entity->_jsSelf)) {
     /*	Scripts may still hold the JS object. Its private data is a weak
@@ -149,8 +145,6 @@ std::optional<std::string> EntityJSDescription(Entity* entity) {
 // MARK: ShipEntity (OOJavaScriptExtensions)
 
 bool ShipEntityJSIsVisibleToScripts(void) { return true; }
-
-JSClassID ShipEntityJSClassID(void) { return JSShipClassID(); }
 
 std::optional<std::string> ShipEntityJSClassName(void) {
   return std::string("Ship");

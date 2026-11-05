@@ -1,6 +1,6 @@
 /*
 
-OOJSPlayerShip.m (QuickJS-ng)
+OOJSPlayerShip.h
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -23,6 +23,8 @@ MA 02110-1301, USA.
 */
 
 #include "OOJSPlayerShip.h"
+
+#include <cstring>
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "GuiDisplayGen.h"
@@ -53,12 +55,11 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
 
+namespace {
 static JSClassID sPlayerShipClassID;
+}  // namespace
 
-static JSClassDef sPlayerShipClass = {
-    .class_name = "PlayerShip",
-    .finalizer = OOJSCxxObjectWrapperFinalize,
-};
+namespace {
 
 namespace {
 
@@ -100,8 +101,12 @@ oo::PList StringOrNull(const std::optional<std::string>& string) {
 }  // namespace
 
 static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS);
+}  // namespace
+namespace {
 static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS);
+}  // namespace
 
+namespace {
 static JSValue PlayerShipLaunch(OOJS_NATIVE_ARGS);
 static JSValue PlayerShipRemoveAllCargo(OOJS_NATIVE_ARGS);
 static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS);
@@ -129,14 +134,24 @@ static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS);
 static JSValue PlayerShipHideHUDSelector(OOJS_NATIVE_ARGS);
 static JSValue PlayerShipShowHUDSelector(OOJS_NATIVE_ARGS);
 static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS);
+}  // namespace
 
+namespace {
 static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
                               bool isCargo, OOSystemID* start,
                               OOSystemID* destination, double* eta, double* fee,
                               double* premium, const std::string& functionName,
                               unsigned* risk);
+}  // namespace
 
-enum {
+namespace {
+static JSClassDef sPlayerShipClass = {
+    .class_name = "PlayerShip",
+    .finalizer = OOJSObjectWrapperFinalize,
+};
+}  // namespace
+
+enum : std::uint8_t {
   // Property IDs
   kPlayerShip_activeMissile,  // index in 'missiles' array of current active
                               // missile
@@ -238,6 +253,7 @@ enum {
   kPlayerShip_yaw,            // yaw (overrules Ship)
 };
 
+namespace {
 static const JSCFunctionListEntry sPlayerShipProperties[] = {
     // JS name, getter, setter, ID
     OOJS_PROPERTY_RO("activeMissile", PlayerShipGetProperty,
@@ -299,7 +315,7 @@ static const JSCFunctionListEntry sPlayerShipProperties[] = {
                      kPlayerShip_injectorsEngaged),
     OOJS_PROPERTY_RW("massLockable", PlayerShipGetProperty,
                      PlayerShipSetProperty, kPlayerShip_massLockable),
-    // manifest defined in OOJSManifest.m
+    // manifest defined in OOJSManifest.cpp
     OOJS_PROPERTY_RW("maxAftShield", PlayerShipGetProperty,
                      PlayerShipSetProperty, kPlayerShip_maxAftShield),
     OOJS_PROPERTY_RW("maxForwardShield", PlayerShipGetProperty,
@@ -373,7 +389,9 @@ static const JSCFunctionListEntry sPlayerShipProperties[] = {
     OOJS_PROPERTY_RW("yaw", PlayerShipGetProperty, PlayerShipSetProperty,
                      kPlayerShip_yaw),
 };
+}  // namespace
 
+namespace {
 static const JSCFunctionListEntry sPlayerShipMethods[] = {
     // JS name, min args, function
     JS_CFUNC_DEF("addParcel", 0, PlayerShipAddParcel),
@@ -411,6 +429,7 @@ static const JSCFunctionListEntry sPlayerShipMethods[] = {
     JS_CFUNC_DEF("takeInternalDamage", 0, PlayerShipTakeInternalDamage),
     JS_CFUNC_DEF("useSpecialCargo", 1, PlayerShipUseSpecialCargo),
 };
+}  // namespace
 
 void InitOOJSPlayerShip(JSContext* context, JSValueConst global) {
   OOJSRegisterClass(&sPlayerShipClassID, &sPlayerShipClass);
@@ -421,7 +440,7 @@ void InitOOJSPlayerShip(JSContext* context, JSValueConst global) {
   OOJSInitClass(context, global, sPlayerShipClassID, shipPrototype,
                 OOJSUnconstructableConstruct, 0, sPlayerShipProperties,
                 OOJS_COUNT(sPlayerShipProperties), sPlayerShipMethods,
-                OOJS_COUNT(sPlayerShipMethods), NULL, 0);
+                OOJS_COUNT(sPlayerShipMethods), nullptr, 0);
   JS_FreeValue(context, shipPrototype);
 
   OOJSRegisterObjectConverter(sPlayerShipClassID, OOJSEntityObjectConverter);
@@ -445,9 +464,9 @@ void InitOOJSPlayerShip(JSContext* context, JSValueConst global) {
   JS_DefinePropertyValueStr(context, playerObject, "ship",
                             JS_DupValue(context, shipObject),
                             OOJS_PROP_READONLY);
-  OOJSPlayerShipSetJSSelf(
-      player, shipObject,
-      context);  // -setJSSelf:context:, the category in this file
+  OOJSPlayerShipSetJSSelf(player, shipObject,
+                          context);  // -setJSSelf:context:, the category in
+                                     // this file
 
   JS_FreeValue(context, shipObject);
   JS_FreeValue(context, playerObject);
@@ -466,7 +485,6 @@ JSValue JSPlayerShipObject(void) {
 
 // PlayerEntity (OOJavaScriptExtensions): the bodies of the category's methods,
 // which the engine and the player sent by selector; the C++ player calls them.
-// Its JS class is JSPlayerShipClassID() (PlayerEntity::jsClassID()).
 std::optional<std::string> OOJSPlayerShipJSClassName(void) {
   return std::string("PlayerShip");
 }
@@ -482,18 +500,28 @@ void OOJSPlayerShipSetJSSelf(PlayerEntity* player, JSValueConst val,
   oo::NotificationCenter::defaultCenter().addObserver(
       player, kOOJavaScriptEngineWillResetNotificationName,
       OOJavaScriptEngine::sharedEngine(),
-      [player](const oo::Notification&) { player->deleteJSSelf(); });
+      [player](const oo::Notification& notification) {
+        OOJSPlayerShipJavaScriptEngineWillReset(player, notification);
+      });
 }
 
+// #768's observer selector is -deleteJSSelf: free the held reference and stop
+// observing.
+void OOJSPlayerShipJavaScriptEngineWillReset(
+    PlayerEntity* player, const oo::Notification& /*notification*/) {
+  player->deleteJSSelf();
+}
+
+namespace {
 static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
-  /*	SpiderMonkey compared this with the prototype. The prototype (like any
-          object that isn't player.ship, such as the this of a detached getter
-          call) has no private weak reference to the player.
+  /*	The façade compared this with the prototype. The prototype (like any
+     object that isn't player.ship, such as the this of a detached getter call)
+     has nothing in its private slot.
   */
   if (EXPECT_NOT(OOIsPlayerStale() ||
-                 JS_GetOpaque(thisObj, sPlayerShipClassID) == NULL)) {
+                 JS_GetOpaque(OOJS_THIS, sPlayerShipClassID) == nullptr)) {
     return JS_UNDEFINED;
   }
 
@@ -821,7 +849,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                     sPlayerShipProperties,
                                     OOJS_COUNT(sPlayerShipProperties));
       return OOJSNativeFailure(context);
@@ -831,7 +859,9 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -957,7 +987,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
           if (player != nullptr) player->setNextCompassMode();
           if (player != nullptr) player->validateCompassTarget();
         }
-        // SpiderMonkey returned NO (stopping the script without an error) if
+        // SpiderMonkey returned false (stopping the script without an error) if
         // the target wasn't found.
         if ((player != nullptr ? player->getCompassTargetEntity() : nullptr) ==
             current)
@@ -1182,7 +1212,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
       }
       /*	The SpiderMonkey version fell through to currentWeapon here
          (which removed the current weapon) if the conversion threw. Report the
-         bad value instead.
+         bad value instead (#768).
       */
       break;
 
@@ -1230,8 +1260,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
           }
         }
         /*	The SpiderMonkey version fell through to infoSystem, which
-                converted the value again, failed again and reported the bad
-                value.
+           converted the value again, failed again and reported the bad value
+           (#768).
         */
         break;
       } else {
@@ -1307,22 +1337,24 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                     sPlayerShipProperties,
                                     OOJS_COUNT(sPlayerShipProperties));
       return OOJSNativeFailure(context);
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sPlayerShipProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sPlayerShipProperties,
                              OOJS_COUNT(sPlayerShipProperties), value);
   return OOJSNativeFailure(context);
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // *** Methods ***
 
 // launch()
+namespace {
 static JSValue PlayerShipLaunch(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1334,8 +1366,10 @@ static JSValue PlayerShipLaunch(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // removeAllCargo()
+namespace {
 static JSValue PlayerShipRemoveAllCargo(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1354,8 +1388,10 @@ static JSValue PlayerShipRemoveAllCargo(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // useSpecialCargo(name : String)
+namespace {
 static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1379,8 +1415,10 @@ static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // engageAutopilotToStation(stationForDocking : Station) : Boolean
+namespace {
 static JSValue PlayerShipEngageAutopilotToStation(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1390,8 +1428,9 @@ static JSValue PlayerShipEngageAutopilotToStation(OOJS_NATIVE_ARGS) {
   StationEntity* stationForDocking = nullptr;
 
   if (argc > 0)
-    stationForDocking = oo::ToStation(OOJSEntityFromJSValue(
-        context, OOJS_ARGV[0]));  // a station's object is a ship's
+    stationForDocking = oo::ToStation(
+        OOJSEntityFromJSValue(context,
+                              OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nullptr) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "engageAutopilot",
                                MIN(argc, 1), OOJS_ARGV, std::nullopt,
@@ -1405,8 +1444,10 @@ static JSValue PlayerShipEngageAutopilotToStation(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // disengageAutopilot()
+namespace {
 static JSValue PlayerShipDisengageAutopilot(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1418,7 +1459,9 @@ static JSValue PlayerShipDisengageAutopilot(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue PlayerShipRequestDockingClearance(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1428,8 +1471,9 @@ static JSValue PlayerShipRequestDockingClearance(OOJS_NATIVE_ARGS) {
   StationEntity* stationForDocking = nullptr;
 
   if (argc > 0)
-    stationForDocking = oo::ToStation(OOJSEntityFromJSValue(
-        context, OOJS_ARGV[0]));  // a station's object is a ship's
+    stationForDocking = oo::ToStation(
+        OOJSEntityFromJSValue(context,
+                              OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nullptr) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "requestDockingClearance",
                                MIN(argc, 1), OOJS_ARGV, std::nullopt,
@@ -1442,7 +1486,9 @@ static JSValue PlayerShipRequestDockingClearance(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue PlayerShipCancelDockingRequest(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1452,8 +1498,9 @@ static JSValue PlayerShipCancelDockingRequest(OOJS_NATIVE_ARGS) {
   StationEntity* stationForDocking = nullptr;
 
   if (argc > 0)
-    stationForDocking = oo::ToStation(OOJSEntityFromJSValue(
-        context, OOJS_ARGV[0]));  // a station's object is a ship's
+    stationForDocking = oo::ToStation(
+        OOJSEntityFromJSValue(context,
+                              OOJS_ARGV[0]));  // a station's object is a ship's
   if (stationForDocking == nullptr) {
     cxx_OOJSReportBadArguments(context, "PlayerShip", "cancelDockingRequest",
                                MIN(argc, 1), OOJS_ARGV, std::nullopt,
@@ -1466,8 +1513,10 @@ static JSValue PlayerShipCancelDockingRequest(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // awardEquipmentToCurrentPylon(externalTank: equipmentInfoExpression) : Boolean
+namespace {
 static JSValue PlayerShipAwardEquipmentToCurrentPylon(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1494,9 +1543,11 @@ static JSValue PlayerShipAwardEquipmentToCurrentPylon(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // addPassenger(name: string, start: int, destination: int, ETA: double, fee:
 // double) : Boolean
+namespace {
 static JSValue PlayerShipAddPassenger(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1538,8 +1589,10 @@ static JSValue PlayerShipAddPassenger(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // removePassenger(name :string)
+namespace {
 static JSValue PlayerShipRemovePassenger(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1563,9 +1616,11 @@ static JSValue PlayerShipRemovePassenger(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // addParcel(description: string, start: int, destination: int, ETA: double,
 // fee: double) : Boolean
+namespace {
 static JSValue PlayerShipAddParcel(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1604,8 +1659,10 @@ static JSValue PlayerShipAddParcel(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // removeParcel(description :string)
+namespace {
 static JSValue PlayerShipRemoveParcel(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1628,9 +1685,11 @@ static JSValue PlayerShipRemoveParcel(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // awardContract(quantity: int, commodity: string, start: int, destination: int,
 // eta: double, fee: double) : Boolean
+namespace {
 static JSValue PlayerShipAwardContract(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1675,8 +1734,10 @@ static JSValue PlayerShipAwardContract(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // removeContract(commodity: string, destination: int)
+namespace {
 static JSValue PlayerShipRemoveContract(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1714,8 +1775,10 @@ static JSValue PlayerShipRemoveContract(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // setCustomView(position:vector, orientation:quaternion [, weapon:string])
+namespace {
 static JSValue PlayerShipSetCustomView(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1784,8 +1847,10 @@ static JSValue PlayerShipSetCustomView(OOJS_NATIVE_ARGS) {
   OOJS_RETURN_BOOL(true);
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // resetCustomView()
+namespace {
 static JSValue PlayerShipResetCustomView(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1806,8 +1871,10 @@ static JSValue PlayerShipResetCustomView(OOJS_NATIVE_ARGS) {
   OOJS_RETURN_BOOL(true);
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // resetScannerZoom()
+namespace {
 static JSValue PlayerShipResetScannerZoom(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1818,8 +1885,10 @@ static JSValue PlayerShipResetScannerZoom(OOJS_NATIVE_ARGS) {
   OOJS_RETURN_VOID;
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // takeInternalDamage()
+namespace {
 static JSValue PlayerShipTakeInternalDamage(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1830,8 +1899,10 @@ static JSValue PlayerShipTakeInternalDamage(OOJS_NATIVE_ARGS) {
   OOJS_RETURN_BOOL(took);
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // beginHyperspaceCountdown([int: spin_time])
+namespace {
 static JSValue PlayerShipBeginHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1870,8 +1941,10 @@ static JSValue PlayerShipBeginHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   OOJS_RETURN_BOOL(begun);
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // cancelHyperspaceCountdown()
+namespace {
 static JSValue PlayerShipCancelHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1889,7 +1962,9 @@ static JSValue PlayerShipCancelHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   OOJS_RETURN_BOOL(cancelled);
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue PlayerShipBeginGalacticHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1931,8 +2006,10 @@ static JSValue PlayerShipBeginGalacticHyperspaceCountdown(OOJS_NATIVE_ARGS) {
   OOJS_RETURN_BOOL(begun);
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // setMultiFunctionDisplay(index,key)
+namespace {
 static JSValue PlayerShipSetMultiFunctionDisplay(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -1961,15 +2038,17 @@ static JSValue PlayerShipSetMultiFunctionDisplay(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // setMultiFunctionText(key,value)
+namespace {
 static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
   std::optional<std::string> value;
   PlayerEntity* player = OOPlayerForScripting();
-  int reflow = false;
+  int reflow = 0;  // JS_ToBool(): -1 if it throws
 
   if (argc > 0) {
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
@@ -2001,14 +2080,16 @@ static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // setPrimedEquipment(key, [noMessage])
+namespace {
 static JSValue PlayerShipSetPrimedEquipment(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key;
   PlayerEntity* player = OOPlayerForScripting();
-  int showMsg = true;
+  int showMsg = 1;  // JS_ToBool(): -1 if it throws
 
   if (argc > 0) {
     key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
@@ -2029,14 +2110,16 @@ static JSValue PlayerShipSetPrimedEquipment(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_BOOL(key.has_value()
                        ? (player != nullptr
-                              ? player->setPrimedEquipment(*key, showMsg)
+                              ? player->setPrimedEquipment(*key, showMsg != 0)
                               : false)
                        : false);
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 // setCustomHUDDial(key,value)
+namespace {
 static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -2065,7 +2148,9 @@ static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue PlayerShipHideHUDSelector(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -2088,7 +2173,9 @@ static JSValue PlayerShipHideHUDSelector(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue PlayerShipShowHUDSelector(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -2111,7 +2198,9 @@ static JSValue PlayerShipShowHUDSelector(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
                               bool isCargo, OOSystemID* start,
                               OOSystemID* destination, double* eta, double* fee,
@@ -2122,8 +2211,8 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
   OOCParameterAssert(context != NULL && argv != NULL && start != NULL &&
                      destination != NULL && eta != NULL && fee != NULL);
 
+  unsigned offset = isCargo ? 2 : 1;
   uint32_t uValue;
-  int offset = isCargo ? 2 : 1;
   double fValue;
   int32_t iValue;
 
@@ -2164,7 +2253,7 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
 
   // Optional arguments: as before, invalid values are ignored. Don't leave a
   // conversion error pending.
-  if (argc > offset + 4) {
+  if (argc > (int)offset + 4) {
     if (JS_ToFloat64(context, &fValue, argv[offset + 4]) != 0)
       JS_FreeValue(context, JS_GetException(context));
     else if (isfinite(fValue) && fValue >= 0.0)
@@ -2172,7 +2261,7 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
   }
 
   if (!isCargo) {
-    if (argc > offset + 5) {
+    if (argc > (int)offset + 5) {
       if (JS_ToUint32(context, &uValue, argv[offset + 5]) != 0)
         JS_FreeValue(context, JS_GetException(context));
       else
@@ -2184,3 +2273,4 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
 
   OOJS_PROFILE_EXIT
 }
+}  // namespace

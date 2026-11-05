@@ -1,6 +1,6 @@
 /*
 
-OOJSPlayer.h (QuickJS-ng)
+OOJSPlayer.h
 
 JavaScript proxy for the player.
 
@@ -35,11 +35,8 @@ class PlayerEntity;
 void InitOOJSPlayer(JSContext* context, JSValueConst global);
 
 JSClassID JSPlayerClassID(void);
-
-/*	The global player object. The returned value is owned by the caller, who
-        must JS_FreeValue() it. (SpiderMonkey's JSPlayerPrototype() is no
-        longer needed; use JS_GetClassProto(context, JSPlayerClassID()).)
-*/
+// The global player object, owned by the caller (looked up on the global
+// object, which holds the only lasting reference).
 JSValue JSPlayerObject(void);
 
 /*	All JS functions which talk to the player entity should call

@@ -3,8 +3,8 @@
 OOJSPrivateObject.cpp
 
 The engine glue for a JS object whose private slot holds a C++ object. Each
-function is the C++ counterpart of the Objective-C one named beside it in
-OOJavaScriptEngine.mm, dispatching to OOJSPrivateObject's virtual members where
+function is the C++ counterpart of the #768 one named beside it in
+OOJavaScriptEngine.m, dispatching to OOJSPrivateObject's virtual members where
 that one sent a selector to an id.
 
 Oolite
@@ -63,9 +63,9 @@ bool OOJSGetCxxPrivateImpl(JSContext* context, JSValueConst object,
 
   /*
           Ensure it's a valid type of JS object. This is absolutely necessary,
-     because if we don't check it we'll crash trying to get the private field of
-     something that isn't a native object wrapper - for example,
-     Ship.setAI.call(new Vector3D, "") is valid JavaScript.
+          because if we don't check it we'll crash trying to get the private
+          field of something that isn't a native object wrapper - for example,
+          Ship.setAI.call(new Vector3D, "") is valid JavaScript.
   */
   JSClassID actualClassID = JS_GetClassID(object);
   if (EXPECT_NOT(!OOJSIsSubclass(actualClassID, requiredClassID))) {
@@ -103,7 +103,7 @@ void OOJSCxxObjectWrapperFinalize(JSRuntime* /*runtime*/,
   OOJS_PROFILE_EXIT_VOID
 }
 
-// OOJSObjectWrapperToString(): the object's -cxx_oo_jsDescription, else
+// OOJSObjectWrapperToString(): the object's -oo_jsDescription, else
 // "[object <JS class name>]".
 JSValue OOJSCxxObjectWrapperToString(JSContext* context, JSValueConst thisVal,
                                      JSClassID jsClassID) {

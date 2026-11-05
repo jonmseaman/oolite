@@ -1,6 +1,6 @@
 /*
 
-OOJSVisualEffect.h (QuickJS-ng)
+OOJSVisualEffect.h
 
 JavaScript proxy for OOVisualEffectEntities.
 
@@ -28,11 +28,12 @@ MA 02110-1301, USA.
 
 #include <quickjs.h>
 
+#include <optional>
+#include <string>
 #include <vector>
 
 #include "OOEntityHold.h"
 #include "OOFoundation.h"
-
 class Entity;
 class OOVisualEffectEntity;
 
@@ -42,8 +43,8 @@ JSClassID JSVisualEffectClassID(void);
 
 /*	The bodies of OOVisualEffectEntity (OOJavaScriptExtensions), which the
    engine reaches by selector: the C++ effect's
-   jsClassID()/jsClassName()/isVisibleToScripts() overrides call them. Its JS
-   class is JSVisualEffectClassID().
+   jsClassName()/isVisibleToScripts() overrides call them.
+   Its JS class is JSVisualEffectClassID() (#768's -oo_jsClassID).
 */
 std::optional<std::string> OOJSVisualEffectJSClassName(void);
 bool OOJSVisualEffectIsVisibleToScripts(void);

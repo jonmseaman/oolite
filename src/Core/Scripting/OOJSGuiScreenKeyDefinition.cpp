@@ -1,6 +1,6 @@
 /*
 
-OOJSGuiScreenKeyDefinition.m (QuickJS-ng)
+OOJSGuiScreenKeyDefinition.m
 
 
 Oolite
@@ -29,8 +29,6 @@ MA 02110-1301, USA.
 #include "OOJavaScriptEngine.h"
 #include "oofnd/Notification.hpp"
 #include "oofnd/String.hpp"
-
-// namespace
 
 OOJSGuiScreenKeyDefinition::OOJSGuiScreenKeyDefinition() {
   _callback = JS_UNDEFINED;

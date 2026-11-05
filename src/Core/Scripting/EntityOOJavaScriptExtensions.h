@@ -1,6 +1,6 @@
 /*
 
-EntityOOJavaScriptExtensions.h (QuickJS-ng)
+EntityOOJavaScriptExtensions.h
 
 JavaScript support methods for entities.
 
@@ -35,16 +35,14 @@ MA 02110-1301, USA.
 #include "Entity.h"
 #include "OOJavaScriptEngine.h"
 
-class ShipEntity;  // Entity extensions. The JS object's functions take the C++
-                   // entity (Entity's
+class ShipEntity;
+
+// Entity extensions. The JS object's functions take the C++ entity (Entity's
 // JS glue members call them; the engine asks those members).
 bool EntityJSIsVisibleToScripts(void);
 std::optional<std::string> EntityJSClassName(void);
 // The entity's JS object, owned by the caller (JS null for none).
 JSValue EntityJSValueInContext(Entity* entity, JSContext* context);
-// The JS class of the entity's wrapper object; subclasses override
-// -oo_jsClassID.
-JSClassID EntityJSClassID(void);
 void EntityJSDeleteJSSelf(Entity* entity);
 std::optional<std::string> EntityJSDescription(Entity* entity);
 
@@ -56,14 +54,13 @@ std::optional<std::string> OOJSEntityJSClassName(Entity* entity);
 // The same for the JS class, and for the JS value (the entity's own JS object;
 // null for no entity): what the engine asked an entity's object by
 // -oo_jsClassID and -oo_jsValueInContext:. Entity's own class is
-// EntityJSClassID(), ShipEntity's ShipEntityJSClassID().
+// JSEntityClassID() (OOJSEntity.h), ShipEntity's JSShipClassID() (OOJSShip.h).
 JSClassID OOJSEntityJSClassID(Entity* entity);
 // Owned by the caller.
 JSValue OOJSEntityJSValue(Entity* entity, JSContext* context);
 
 // ShipEntity (OOJavaScriptExtensions)
 bool ShipEntityJSIsVisibleToScripts(void);
-JSClassID ShipEntityJSClassID(void);
 std::optional<std::string> ShipEntityJSClassName(void);
 std::vector<oo::EntityHold> ShipEntityJSSubEntitiesForScript(ShipEntity* ship);
 void ShipEntityJSSetTargetForScript(ShipEntity* ship, ShipEntity* target);

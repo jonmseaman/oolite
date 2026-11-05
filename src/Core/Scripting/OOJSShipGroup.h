@@ -1,6 +1,6 @@
 /*
 
-OOJSShipGroup.h (QuickJS-ng)
+OOJSShipGroup.h
 
 JavaScript wrapper for ship group objects.
 

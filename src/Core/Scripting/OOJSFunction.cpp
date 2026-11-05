@@ -33,9 +33,9 @@ MA 02110-1301, USA.
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 
-/*	OOJSFunction. The initialisers are static factories answering null for
-   their input; the part of -initWithFunction:context: that cannot fail is the
-   private constructor.
+/*	OOJSFunction (#768's design). The initialisers are static factories
+   answering null for their input; the part of -initWithFunction:context: that
+   cannot fail is the private constructor.
 */
 
 oo::Ref<OOJSFunction> OOJSFunction::initWithFunction(JSValueConst function,
@@ -50,29 +50,27 @@ oo::Ref<OOJSFunction> OOJSFunction::initWithFunction(JSValueConst function,
 }
 
 OOJSFunction::OOJSFunction(JSValueConst function, JSContext* context) {
-  {
-    _function = JS_DupValue(context, function);
+  _function = JS_DupValue(context, function);
 
-    // QuickJS has no JS_GetFunctionId(); use the function's name property.
-    JSValue nameValue = JS_GetPropertyStr(context, function, "name");
-    if (JS_IsException(nameValue)) {
-      JS_FreeValue(context, JS_GetException(context));
-    } else {
-      std::optional<std::string> name =
-          cxx_OOStringFromJSValue(context, nameValue);
-      if (name.has_value() && !name->empty()) _name = name;
-    }
-    JS_FreeValue(context, nameValue);
-
-    oo::NotificationCenter::defaultCenter().addObserver(
-        this, kOOJavaScriptEngineWillResetNotificationName,
-        OOJavaScriptEngine::sharedEngine(),
-        [this](const oo::Notification&) { deleteJSValue(); });
+  // QuickJS has no JS_GetFunctionId(); use the function's name property.
+  JSValue nameValue = JS_GetPropertyStr(context, function, "name");
+  if (JS_IsException(nameValue)) {
+    JS_FreeValue(context, JS_GetException(context));
+  } else {
+    std::optional<std::string> name =
+        cxx_OOStringFromJSValue(context, nameValue);
+    if (name.has_value() && !name->empty()) _name = std::move(name);
   }
+  JS_FreeValue(context, nameValue);
+
+  oo::NotificationCenter::defaultCenter().addObserver(
+      this, kOOJavaScriptEngineWillResetNotificationName,
+      OOJavaScriptEngine::sharedEngine(),
+      [this](const oo::Notification&) { deleteJSValue(); });
 }
 
 oo::Ref<OOJSFunction> OOJSFunction::initWithName(
-    const std::optional<std::string>& name, JSValueConst scope,
+    const std::optional<std::string>& name, JSValueConst /*scope*/,
     const std::optional<std::string>& code, NSUInteger argCount,
     const char** argNames, const std::optional<std::string>& fileName,
     NSUInteger lineNumber, JSContext* context) {
@@ -91,7 +89,6 @@ oo::Ref<OOJSFunction> OOJSFunction::initWithName(
           always compiled in the global scope. (The only caller passed NULL,
           meaning the global object, anyway.)
   */
-  (void)scope;
 
   if (!code.has_value() || (argCount > 0 && argNames == NULL)) OK = false;
 
@@ -103,8 +100,7 @@ oo::Ref<OOJSFunction> OOJSFunction::initWithName(
             the first line so that line numbers in the body are unchanged.
     */
     std::string source = "(function(";
-    NSUInteger i;
-    for (i = 0; i < argCount; i++) {
+    for (NSUInteger i = 0; i < argCount; i++) {
       if (i != 0) source += ",";
       source += argNames[i];
     }
@@ -114,7 +110,7 @@ oo::Ref<OOJSFunction> OOJSFunction::initWithName(
         .version = JS_EVAL_OPTIONS_VERSION,
         .eval_flags = JS_EVAL_TYPE_GLOBAL,
         .filename = fileName.has_value() ? fileName->c_str() : "<anonymous>",
-        .line_num = (int)lineNumber};
+        .line_num = static_cast<int>(lineNumber)};
     // JS_Eval2() requires a NUL-terminated buffer, which c_str() is.
     function = JS_Eval2(context, source.c_str(), source.size(), &options);
     if (JS_IsException(function)) {
@@ -145,7 +141,6 @@ oo::Ref<OOJSFunction> OOJSFunction::initWithName(
 }
 
 void OOJSFunction::deleteJSValue() {
-  // _function is JS_NULL (not an object) if never set.
   if (JS_IsObject(_function)) {
     JSContext* context = OOJSAcquireContext();
     JS_FreeValue(context, _function);
@@ -166,10 +161,7 @@ std::optional<std::string> OOJSFunction::descriptionComponents() const {
 
 std::optional<std::string> OOJSFunction::name() { return _name; }
 
-bool OOJSFunction::isValid() const {
-  // _function is JS_NULL until set, and after reset.
-  return JS_IsObject(_function);
-}
+bool OOJSFunction::isValid() const { return JS_IsObject(_function); }
 
 JSValueConst OOJSFunction::function() {
   return isValid() ? _function : JS_NULL;

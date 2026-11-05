@@ -44,6 +44,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <quickjs.h>
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -109,7 +111,7 @@ class OOScript : public oo::PListForeign, public ::OOJSPrivateObject {
 
   // OOJSPrivateObject: undefined (OOObject's -oo_jsValueInContext:); a JS
   // script answers its Script object.
-  JSValue jsValueInContext(JSContext* context) override;  // owned
+  JSValue jsValueInContext(JSContext* context) override;
   void clearJSSelf(JSValueConst selfVal) override;
 };
 

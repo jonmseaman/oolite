@@ -1,6 +1,6 @@
 /*
 
-OOJSDock.h (QuickJS-ng)
+OOJSDock.h
 
 JavaScript proxy for DockEntities.
 
@@ -32,7 +32,6 @@ MA 02110-1301, USA.
 #include <string>
 
 #include "OOFoundation.h"
-
 class DockEntity;
 
 void InitOOJSDock(JSContext* context, JSValueConst global);
@@ -40,7 +39,7 @@ void InitOOJSDock(JSContext* context, JSValueConst global);
 JSClassID JSDockClassID(void);
 
 /*	The bodies of Entity (OOJavaScriptExtensions)'s class questions for a
-   dock, which the C++ DockEntity's overrides call. Its JS class is
-   JSDockClassID() (DockEntity::jsClassID()).
+   dock, which the C++ DockEntity's overrides call.
+   Its JS class is JSDockClassID() (#768's -oo_jsClassID).
 */
 std::optional<std::string> OOJSDockJSClassName(void);

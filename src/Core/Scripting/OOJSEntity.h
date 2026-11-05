@@ -1,6 +1,6 @@
 /*
 
-OOJSEntity.h (QuickJS-ng)
+OOJSEntity.h
 
 JavaScript proxy for entities.
 
@@ -21,6 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
+
 */
 
 #pragma once
@@ -40,6 +41,11 @@ void InitOOJSEntity(JSContext* context, JSValueConst global);
 bool JSValueToEntity(JSContext* context, JSValueConst value,
                      Entity** outEntity);
 
+// The Entity class's ID, registered by OOJSEntity.cpp (#768's
+// JSEntityClassID()). Declared as a real function rather than OOINLINE so the
+// class definition stays private to OOJSEntity.cpp. (SpiderMonkey's
+// JSEntityPrototype() is no longer needed; use
+// JS_GetClassProto(context, JSEntityClassID()).)
 JSClassID JSEntityClassID(void);
 
 /*	OOJSEntityGetEntity: the slot holds an OOJSEntityHolder, so the getter
@@ -79,9 +85,8 @@ Quaternion OOJSEntityOrientationOfJSObject(JSContext* context,
                                            JSValueConst object);
 
 // OOJSBasicPrivateObjectConverter for the entity classes (each registers it):
-// the entity's object (its facade, which code converting a JS value still
-// expects) as an Object node, a null PList once the entity has gone, as the
-// slot's weak reference answered.
+// the entity's object as an Object node, a null PList once the entity has
+// gone, as the slot's weak reference answered.
 oo::PList OOJSEntityObjectConverter(JSContext* context, JSValueConst object);
 
 // toString() of the entity classes: OOJSCxxObjectWrapperToString for the Entity
@@ -100,7 +105,6 @@ JSValue OOJSEntityToString(OOJS_NATIVE_ARGS);
         scriptClass and function are non-nil, a warning will be reported to the
         log.
 */
-// C++ parameters; nullopt class or function: no warning.
 bool EntityFromArgumentList(JSContext* context,
                             const std::optional<std::string>& scriptClass,
                             const std::optional<std::string>& function,

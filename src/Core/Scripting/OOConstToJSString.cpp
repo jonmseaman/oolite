@@ -27,6 +27,8 @@ MA 02110-1301, USA.
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
 #include "OOConstToJSString.h"
 
+#include <cstdlib>
+
 #include "oofnd/objc/OOAssert.h"
 
 /*
@@ -35,10 +37,10 @@ MA 02110-1301, USA.
 
         The list is statically initialized with the constant values and C
    strings. OOConstToJSStringInit() (through InitTable()) adds an interned
-   JSAtom for each C string. Atoms are interned once per process (they belong to
-   the runtime, which survives engine resets) and are never freed. Two atoms are
-        equal if and only if their strings are equal, so lookups from JS strings
-        compare atoms.
+   JSAtom for each C string. Atoms are interned once per process (they belong
+   to the runtime, which survives engine resets) and are never freed. Two atoms
+   are equal if and only if their strings are equal, so lookups from JS strings
+   compare atoms.
 
         ConstTables are globals, which are accessed as local externs in the
    inlines in the header. All the advantages of globals with most of the
@@ -68,7 +70,7 @@ static bool sAtomsInterned = false;
         The interned string "UNDEFINED", returned by
    OOJSValueFromConstantPRIVATE() if passed a bogus constant value.
 */
-static JSAtom sUndefinedAtom;
+static JSAtom sUndefinedAtom = JS_ATOM_NULL;
 
 /*
         Initialize table contents (with C strings, see above) from table files.

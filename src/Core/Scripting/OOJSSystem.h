@@ -1,6 +1,6 @@
 /*
 
-OOJSSystem.h (QuickJS-ng)
+OOJSSystem.h
 
 JavaScript proxy for the current system.
 

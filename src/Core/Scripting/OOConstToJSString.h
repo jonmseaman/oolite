@@ -27,8 +27,8 @@ MA 02110-1301, USA.
 */
 
 /*	Plain includes: this header and OOConstToJSString's translation unit are
-   C++. QuickJS-ng, OOINLINE, NSInteger/NSUInteger and the
-   constant enumerations are all the inlines below need.
+   C++. QuickJS, OOINLINE, NSInteger/NSUInteger and the constant enumerations
+   are all the inlines below need.
 */
 #pragma once
 
@@ -44,9 +44,9 @@ void OOConstToJSStringDestroy(void);
 struct ConstTable;
 
 /*	QuickJS has no JSString type, so the SpiderMonkey OOJSStringFromFoo()
-   and OOFooFromJSString() variants are gone; OOJSValueFromFoo() returns an
-   owned string value and OOFooFromJSValue() accepts any value (non-strings give
-        the default).
+   and OOFooFromJSString() variants are gone (as in #768); OOJSValueFromFoo()
+        returns an owned string value and OOFooFromJSValue() accepts any value
+        (non-strings give the default).
 */
 
 // Private functions, don't use directly.

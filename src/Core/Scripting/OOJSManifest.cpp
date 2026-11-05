@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 #include "OOJSManifest.h"
 
+#include <cstring>
+
 #include "OOCommodities.h"
 #include "OOCommodityMarket.h"
 #include "OOIsNumberLiteral.h"
@@ -35,12 +37,13 @@ MA 02110-1301, USA.
 #include "PlayerEntityScriptMethods.h"
 #include "Universe.h"
 
-static JSValue ManifestComment(OOJS_NATIVE_ARGS);
-static JSValue ManifestSetComment(OOJS_NATIVE_ARGS);
-static JSValue ManifestShortComment(OOJS_NATIVE_ARGS);
-static JSValue ManifestSetShortComment(OOJS_NATIVE_ARGS);
+namespace {
+JSValue ManifestComment(OOJS_NATIVE_ARGS);
+JSValue ManifestSetComment(OOJS_NATIVE_ARGS);
+JSValue ManifestShortComment(OOJS_NATIVE_ARGS);
+JSValue ManifestSetShortComment(OOJS_NATIVE_ARGS);
 
-static JSValue ManifestGetProperty(OOJS_GETTER_ARGS);
+JSValue ManifestGetProperty(OOJS_GETTER_ARGS);
 
 /*	SpiderMonkey called the Manifest class's get, set and delete hooks for
         every property; string-named properties map to cargo quantities. QuickJS
@@ -53,51 +56,48 @@ static JSValue ManifestGetProperty(OOJS_GETTER_ARGS);
         prototype, and is reported as an own property as SpiderMonkey did for
         shared permanent properties (commodities are not enumerated, as before).
 */
-static int ManifestGetOwnProperty(JSContext* context,
-                                  JSPropertyDescriptor* desc,
-                                  JSValueConst object, JSAtom propID);
-static int ManifestDeleteProperty(JSContext* context, JSValueConst object,
-                                  JSAtom propID);
-static int ManifestSetPropertyExotic(JSContext* context, JSValueConst object,
-                                     JSAtom propID, JSValueConst value,
-                                     JSValueConst receiver, int flags);
+int ManifestGetOwnProperty(JSContext* context, JSPropertyDescriptor* desc,
+                           JSValueConst object, JSAtom propID);
+int ManifestDeleteProperty(JSContext* context, JSValueConst object,
+                           JSAtom propID);
+int ManifestSetPropertyExotic(JSContext* context, JSValueConst object,
+                              JSAtom propID, JSValueConst value,
+                              JSValueConst receiver, int flags);
 
-static JSClassExoticMethods sManifestExoticMethods = {
+JSClassExoticMethods sManifestExoticMethods = {
     .get_own_property = ManifestGetOwnProperty,
     .get_own_property_names = OOJSGetSharedPermanentOwnPropertyNames,
     .delete_property = ManifestDeleteProperty,
     .set_property = ManifestSetPropertyExotic,
 };
 
-static JSClassID sManifestClassID;
-static JSClassDef sManifestClass = {
+JSClassID sManifestClassID;
+JSClassDef sManifestClass = {
     .class_name = "Manifest",
     .finalizer = OOJSObjectWrapperFinalize,
     .exotic = &sManifestExoticMethods,
 };
 
-enum {
+enum : std::uint8_t {
   kManifest_list  // manifest list, array of commodities: name, unit, quantity,
                   // displayName - read-only
 };
 
-static const JSCFunctionListEntry sManifestProperties[] = {
+const JSCFunctionListEntry sManifestProperties[] = {
     // JS name					Getter ID
     OOJS_PROPERTY_RO("list", ManifestGetProperty, kManifest_list),
 };
 
-static const JSCFunctionListEntry sManifestMethods[] = {
-    // JS name					Function
-    // min args
+const JSCFunctionListEntry sManifestMethods[] = {
+    // JS name					min args	Function
     JS_CFUNC_DEF("shortComment", 1, ManifestShortComment),
     JS_CFUNC_DEF("setShortComment", 2, ManifestSetShortComment),
     JS_CFUNC_DEF("comment", 1, ManifestComment),
     JS_CFUNC_DEF("setComment", 2, ManifestSetComment),
 };
+}  // namespace
 
-// namespace
-
-// Both Manifest objects are defined with no private object (InitOOJSManifest).
+// Both Manifest objects are defined with no private object.
 
 void InitOOJSManifest(JSContext* context, JSValueConst global) {
   OOJSRegisterClass(&sManifestClassID, &sManifestClass);
@@ -109,8 +109,7 @@ void InitOOJSManifest(JSContext* context, JSValueConst global) {
   OOJSRegisterObjectConverter(sManifestClassID,
                               OOJSBasicPrivateObjectConverter);
 
-  // Create manifest object as a property of the player.ship object. (Its
-  // private value is NULL.)
+  // Create manifest object as a property of the player.ship object.
   JSValue playerShip = JSPlayerShipObject();  // Owned.
   if (JS_IsObject(playerShip)) {
     JSValue shipManifest =
@@ -134,20 +133,27 @@ void InitOOJSManifest(JSContext* context, JSValueConst global) {
       OOJS_PROP_READONLY);
 }
 
+namespace {
 // Name for a string property ID, or nullopt for other IDs (symbols and
 // integers, which SpiderMonkey's hooks ignored).
-static std::optional<std::string> NameForPropertyID(JSContext* context,
-                                                    JSAtom propID) {
+std::optional<std::string> NameForPropertyID(JSContext* context,
+                                             JSAtom propID) {
   std::optional<std::string> result;
   JSValue idValue = JS_AtomToValue(context, propID);
-  if (JS_IsString(idValue)) {
-    result = cxx_OOStringFromJSValue(context, idValue);
-  }
+  if (JS_IsString(idValue)) result = cxx_OOStringFromJSValue(context, idValue);
   JS_FreeValue(context, idValue);
   return result;
 }
 
-static JSValue ManifestGetProperty(OOJS_GETTER_ARGS) {
+// Whether a good of that name is defined (false with no universe, as a
+// message to nil answered).
+bool GoodDefined(const std::string& key) {
+  OOCommodities* commodities =
+      (UNIVERSE != nullptr ? UNIVERSE->getCommodities() : nullptr);
+  return commodities != nullptr && commodities->goodDefined(key);
+}
+
+JSValue ManifestGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   oo::PList result;  // null: nil
@@ -157,25 +163,24 @@ static JSValue ManifestGetProperty(OOJS_GETTER_ARGS) {
     case kManifest_list:
       result = (entity != nullptr
                     ? entity->PlayerEntity::cargoListForScripting()
-                    : oo::PList());  // qualified: the final overrider, so the
-                                     // binding test stands in for it
+                    : oo::PList());  // qualified: the final overrider, so
+                                     // the binding test stands in for it
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
                                     sManifestProperties,
                                     OOJS_COUNT(sManifestProperties));
       return JS_EXCEPTION;
   }
 
-  return OOJSValueFromPList(context, result);
+  OOJS_RETURN_PLIST(result);
 
   OOJS_NATIVE_EXIT
 }
 
-static int ManifestGetOwnProperty(JSContext* context,
-                                  JSPropertyDescriptor* desc,
-                                  JSValueConst object, JSAtom propID) {
+int ManifestGetOwnProperty(JSContext* context, JSPropertyDescriptor* desc,
+                           JSValueConst object, JSAtom propID) {
   try {
     PlayerEntity* entity = OOPlayerForScripting();
 
@@ -184,17 +189,13 @@ static int ManifestGetOwnProperty(JSContext* context,
      * compatible-ish with 1.80 and earlier except that
      * alienItems and similar aliases don't work */
     std::optional<std::string> key = NameForPropertyID(context, propID);
-    OOCommodities* commodities =
-        (UNIVERSE != nullptr
-             ? UNIVERSE->getCommodities()
-             : nullptr);  // null: no good is defined, as a message to nil
-    if (key.has_value() && commodities != nullptr &&
-        commodities->goodDefined(*key)) {
+    if (key.has_value() && GoodDefined(*key)) {
       if (desc != NULL) {
         desc->flags = JS_PROP_C_W_E;
         desc->value = JS_NewInt32(
             context,
-            (entity != nullptr ? entity->cargoQuantityForType(*key) : 0));
+            static_cast<int32_t>(
+                entity != nullptr ? entity->cargoQuantityForType(*key) : 0));
         desc->getter = JS_UNDEFINED;
         desc->setter = JS_UNDEFINED;
       }
@@ -210,8 +211,8 @@ static int ManifestGetOwnProperty(JSContext* context,
 }
 
 // Returns false with an exception pending on failure.
-static bool ManifestSetProperty(JSContext* context, JSValueConst thisObj,
-                                const std::string& key, JSValueConst value) {
+bool ManifestSetProperty(JSContext* context, JSValueConst thisObj,
+                         const std::string& key, JSValueConst value) {
   PlayerEntity* entity = OOPlayerForScripting();
   int32_t iValue;
 
@@ -226,8 +227,8 @@ static bool ManifestSetProperty(JSContext* context, JSValueConst thisObj,
   if (unit == UNITS_TONS &&
       (entity != nullptr ? entity->PlayerEntity::getSpecialCargo()
                          : std::optional<std::string>())
-          .has_value())  // qualified: the final overrider, so the binding test
-                         // stands in for it
+          .has_value())  // qualified: the final overrider, so the binding
+                         // test stands in for it
   {
     cxx_OOJSReportWarning(context,
                           "PlayerShip.manifest['foo'] - cannot modify cargo "
@@ -239,8 +240,8 @@ static bool ManifestSetProperty(JSContext* context, JSValueConst thisObj,
     if (iValue < 0) iValue = 0;
     if (entity != nullptr) entity->setCargoQuantityForType(key, iValue);
   } else {
-    // OOJSReportBadPropertyValue() takes a tinyid; this is the same message for
-    // a named property.
+    // OOJSReportBadPropertyValue() takes a magic; this is the same message
+    // for a named property.
     if (JS_HasException(context))
       JS_FreeValue(context, JS_GetException(context));
     cxx_OOJSReportError(
@@ -253,9 +254,9 @@ static bool ManifestSetProperty(JSContext* context, JSValueConst thisObj,
   return true;
 }
 
-static int ManifestSetPropertyExotic(JSContext* context, JSValueConst object,
-                                     JSAtom propID, JSValueConst value,
-                                     JSValueConst receiver, int flags) {
+int ManifestSetPropertyExotic(JSContext* context, JSValueConst object,
+                              JSAtom propID, JSValueConst value,
+                              JSValueConst receiver, int flags) {
   try {
     std::optional<std::string> key = NameForPropertyID(context, propID);
     if (!key.has_value()) {
@@ -264,7 +265,7 @@ static int ManifestSetPropertyExotic(JSContext* context, JSValueConst object,
                                     JS_DupValue(context, value), JS_PROP_C_W_E);
     }
 
-    // A read-only property inherited from the prototype (list) can't be
+    // A read-only property inherited from the prototype (list) cannot be
     // assigned.
     JSValue prototype = JS_GetPrototype(context, object);
     if (JS_IsException(prototype)) return -1;
@@ -298,11 +299,7 @@ static int ManifestSetPropertyExotic(JSContext* context, JSValueConst object,
             get hook overrode it; for other names, it was what later reads
             returned.
     */
-    OOCommodities* commodities =
-        (UNIVERSE != nullptr
-             ? UNIVERSE->getCommodities()
-             : nullptr);  // null: no good is defined, as a message to nil
-    if (commodities == nullptr || !commodities->goodDefined(*key)) {
+    if (!GoodDefined(*key)) {
       return JS_DefinePropertyValue(context, receiver, propID,
                                     JS_DupValue(context, value), JS_PROP_C_W_E);
     }
@@ -313,8 +310,8 @@ static int ManifestSetPropertyExotic(JSContext* context, JSValueConst object,
   }
 }
 
-static int ManifestDeleteProperty(JSContext* context, JSValueConst object,
-                                  JSAtom propID) {
+int ManifestDeleteProperty(JSContext* context, JSValueConst object,
+                           JSAtom propID) {
   try {
     // As before, deleting is setting to undefined.
     std::optional<std::string> key = NameForPropertyID(context, propID);
@@ -325,8 +322,11 @@ static int ManifestDeleteProperty(JSContext* context, JSValueConst object,
     return -1;
   }
 }
+}  // namespace
 
-static JSValue ManifestComment(OOJS_NATIVE_ARGS) {
+// comment(good : String) : String
+namespace {
+JSValue ManifestComment(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> good;
@@ -351,8 +351,11 @@ static JSValue ManifestComment(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
-static JSValue ManifestSetComment(OOJS_NATIVE_ARGS) {
+// setComment(good : String, information : String) : Boolean
+namespace {
+JSValue ManifestSetComment(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   bool OK;
@@ -380,8 +383,11 @@ static JSValue ManifestSetComment(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
-static JSValue ManifestShortComment(OOJS_NATIVE_ARGS) {
+// shortComment(good : String) : String
+namespace {
+JSValue ManifestShortComment(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> good;
@@ -406,8 +412,11 @@ static JSValue ManifestShortComment(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
-static JSValue ManifestSetShortComment(OOJS_NATIVE_ARGS) {
+// setShortComment(good : String, information : String) : Boolean
+namespace {
+JSValue ManifestSetShortComment(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   bool OK;
@@ -435,3 +444,4 @@ static JSValue ManifestSetShortComment(OOJS_NATIVE_ARGS) {
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace

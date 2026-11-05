@@ -1,10 +1,12 @@
 /*
 
-OOJSClasses.m (QuickJS-ng)
+OOJSClasses.cpp (QuickJS-ng)
 
-JS class registration, subclass relationships, and SpiderMonkey-compatible
-own properties for native classes.
+Class registration for the JavaScript bindings: class IDs, names, the subclass
+table and the shared permanent properties of prototypes. Upstream #768's
+OOJSClasses.m, in C++.
 
+JavaScript support for Oolite
 Copyright (C) 2007-2013 David Taylor and Jens Ayton.
 
 This program is free software; you can redistribute it and/or
@@ -24,11 +26,19 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOJavaScriptEngine.h"
+#define OO_PLAIN_CPP_UNIT \
+  1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
+#include <algorithm>
+#include <memory>
+#include <vector>
+
+#include "OOJSEngineCore.h"
+
+namespace {
 
 // Indexed by class ID; process lifetime, as are class IDs.
-static const char* sClassNames[kOOJSMaxClassID];
-static JSClassID sSuperclasses[kOOJSMaxClassID];
+const char* sClassNames[kOOJSMaxClassID];
+JSClassID sSuperclasses[kOOJSMaxClassID];
 
 /*	Per class: the atoms of the getter/setter properties defined on its
         prototype by OOJSInitClass(), which SpiderMonkey reported as own
@@ -40,13 +50,13 @@ static JSClassID sSuperclasses[kOOJSMaxClassID];
         Ship properties are own properties, but its Entity properties are not
         (checked against SpiderMonkey with tools/js-parity).
 */
-typedef struct {
-  JSAtom* atoms;
-  JSAtom* sortedAtoms;
-  uint32_t count;
-} SharedPropertyTable;
+struct SharedPropertyTable {
+  bool recorded = false;
+  std::vector<JSAtom> atoms;
+  std::vector<JSAtom> sortedAtoms;
+};
 
-static SharedPropertyTable sSharedProperties[kOOJSMaxClassID];
+SharedPropertyTable* sSharedProperties[kOOJSMaxClassID];
 
 /*	Each class without exotic methods of its own gets its own, initially
         empty, JSClassExoticMethods; the hooks are only filled in when
@@ -55,7 +65,47 @@ static SharedPropertyTable sSharedProperties[kOOJSMaxClassID];
         lookups, which matters for Script objects: they are the with() scope of
         every script, so all bare identifier lookups pass through them.
 */
-static JSClassExoticMethods* sOwnExoticMethods[kOOJSMaxClassID];
+JSClassExoticMethods* sOwnExoticMethods[kOOJSMaxClassID];
+
+void RecordSharedProperties(JSClassID classID,
+                            const JSCFunctionListEntry* properties,
+                            size_t count) {
+  if (properties == NULL) return;
+  if (sSharedProperties[classID] == nullptr)
+    sSharedProperties[classID] = new SharedPropertyTable;
+  SharedPropertyTable* table = sSharedProperties[classID];
+  if (table->recorded) return;
+  table->recorded = true;
+
+  for (size_t i = 0; i < count; i++) {
+    if (properties[i].def_type == JS_DEF_CGETSET ||
+        properties[i].def_type == JS_DEF_CGETSET_MAGIC) {
+      JSAtom atom = cxx_OOJSIDFromString(properties[i].name);
+
+      // Some tables define a property twice (e.g. Ship's homeSystem); like
+      // SpiderMonkey, keep the first.
+      if (std::find(table->atoms.begin(), table->atoms.end(), atom) ==
+          table->atoms.end())
+        table->atoms.push_back(atom);
+    }
+  }
+  table->sortedAtoms = table->atoms;
+  std::sort(table->sortedAtoms.begin(), table->sortedAtoms.end());
+
+  JSClassExoticMethods* exotic = sOwnExoticMethods[classID];
+  if (exotic != nullptr && !table->atoms.empty()) {
+    exotic->get_own_property = OOJSGetSharedPermanentOwnProperty;
+    exotic->get_own_property_names = OOJSGetSharedPermanentOwnPropertyNames;
+  }
+}
+
+bool TableContainsAtom(const SharedPropertyTable* table, JSAtom atom) {
+  return table != nullptr && !table->sortedAtoms.empty() &&
+         std::binary_search(table->sortedAtoms.begin(),
+                            table->sortedAtoms.end(), atom);
+}
+
+}  // namespace
 
 JSClassID OOJSRegisterClass(JSClassID* ioClassID, const JSClassDef* classDef) {
   OOCParameterAssert(ioClassID != NULL && classDef != NULL);
@@ -67,8 +117,8 @@ JSClassID OOJSRegisterClass(JSClassID* ioClassID, const JSClassDef* classDef) {
   if (!JS_IsRegisteredClass(runtime, classID)) {
     JSClassDef def = *classDef;
     if (def.exotic == NULL) {
-      sOwnExoticMethods[classID] =
-          (JSClassExoticMethods*)calloc(1, sizeof(JSClassExoticMethods));
+      // Process lifetime, as the class registration that points at it.
+      sOwnExoticMethods[classID] = new JSClassExoticMethods{};
       def.exotic = sOwnExoticMethods[classID];
     }
     JS_NewClass(runtime, classID, &def);
@@ -108,47 +158,6 @@ bool OOJSIsSubclass(JSClassID putativeSubclass, JSClassID superclass) {
   return false;
 }
 
-static int CompareAtoms(const void* a, const void* b) {
-  JSAtom x = *(const JSAtom*)a, y = *(const JSAtom*)b;
-  return (x > y) - (x < y);
-}
-
-static void RecordSharedProperties(JSContext* context, JSClassID classID,
-                                   const JSCFunctionListEntry* properties,
-                                   size_t count) {
-  SharedPropertyTable* table = &sSharedProperties[classID];
-  if (table->atoms != NULL || properties == NULL) return;
-
-  table->atoms = (JSAtom*)malloc(sizeof(JSAtom) * (count ? count : 1));
-  table->sortedAtoms = (JSAtom*)malloc(sizeof(JSAtom) * (count ? count : 1));
-  for (size_t i = 0; i < count; i++) {
-    if (properties[i].def_type == JS_DEF_CGETSET ||
-        properties[i].def_type == JS_DEF_CGETSET_MAGIC) {
-      JSAtom atom = cxx_OOJSIDFromString(properties[i].name);
-
-      // Some tables define a property twice (e.g. Ship's homeSystem); like
-      // SpiderMonkey, keep the first.
-      bool duplicate = false;
-      for (uint32_t j = 0; j < table->count && !duplicate; j++)
-        duplicate = (table->atoms[j] == atom);
-      if (!duplicate) table->atoms[table->count++] = atom;
-    }
-  }
-  memcpy(table->sortedAtoms, table->atoms, sizeof(JSAtom) * table->count);
-  qsort(table->sortedAtoms, table->count, sizeof(JSAtom), CompareAtoms);
-
-  JSClassExoticMethods* exotic = sOwnExoticMethods[classID];
-  if (exotic != NULL && table->count != 0) {
-    exotic->get_own_property = OOJSGetSharedPermanentOwnProperty;
-    exotic->get_own_property_names = OOJSGetSharedPermanentOwnPropertyNames;
-  }
-}
-
-static bool TableContainsAtom(const SharedPropertyTable* table, JSAtom atom) {
-  return table->count != 0 && bsearch(&atom, table->sortedAtoms, table->count,
-                                      sizeof(JSAtom), CompareAtoms) != NULL;
-}
-
 /*	A property is a shared permanent property of an object if its class
         defines it on its prototype. The descriptor is the prototype's
         getter/setter pair, so reads and writes go through the native callbacks
@@ -160,7 +169,7 @@ int OOJSGetSharedPermanentOwnProperty(JSContext* context,
                                       JSValueConst object, JSAtom prop) {
   JSClassID classID = JS_GetClassID(object);
   if (classID == 0 || classID >= kOOJSMaxClassID ||
-      !TableContainsAtom(&sSharedProperties[classID], prop))
+      !TableContainsAtom(sSharedProperties[classID], prop))
     return 0;
 
   JSValue prototype = JS_GetClassProto(context, classID);
@@ -179,9 +188,10 @@ int OOJSGetSharedPermanentOwnPropertyNames(JSContext* context,
                                            JSValueConst object) {
   JSClassID classID = JS_GetClassID(object);
   const SharedPropertyTable* table = (classID != 0 && classID < kOOJSMaxClassID)
-                                         ? &sSharedProperties[classID]
-                                         : NULL;
-  uint32_t count = (table != NULL) ? table->count : 0;
+                                         ? sSharedProperties[classID]
+                                         : nullptr;
+  uint32_t count =
+      (table != nullptr) ? static_cast<uint32_t>(table->atoms.size()) : 0;
 
   // A class's own prototype gets its properties from its shape, not from here.
   JSValue prototype =
@@ -189,8 +199,8 @@ int OOJSGetSharedPermanentOwnPropertyNames(JSContext* context,
   if (JS_IsStrictEqual(context, prototype, object)) count = 0;
   JS_FreeValue(context, prototype);
 
-  JSPropertyEnum* tab = (JSPropertyEnum*)js_malloc(
-      context, sizeof(JSPropertyEnum) * (count ? count : 1));
+  JSPropertyEnum* tab = static_cast<JSPropertyEnum*>(
+      js_malloc(context, sizeof(JSPropertyEnum) * (count ? count : 1)));
   if (tab == NULL) return -1;
 
   for (uint32_t i = 0; i < count; i++) {
@@ -224,11 +234,12 @@ JSValueConst OOJSInitClass(JSContext* context, JSValueConst global,
 
   if (properties != NULL) {
     JS_SetPropertyFunctionList(context, prototype, properties,
-                               (int)propertyCount);
-    RecordSharedProperties(context, classID, properties, propertyCount);
+                               static_cast<int>(propertyCount));
+    RecordSharedProperties(classID, properties, propertyCount);
   }
   if (methods != NULL)
-    JS_SetPropertyFunctionList(context, prototype, methods, (int)methodCount);
+    JS_SetPropertyFunctionList(context, prototype, methods,
+                               static_cast<int>(methodCount));
 
   if (constructor != NULL) {
     const char* name = OOJSClassName(classID);
@@ -238,7 +249,7 @@ JSValueConst OOJSInitClass(JSContext* context, JSValueConst global,
     JS_SetConstructor(context, ctor, prototype);
     if (staticMethods != NULL)
       JS_SetPropertyFunctionList(context, ctor, staticMethods,
-                                 (int)staticMethodCount);
+                                 static_cast<int>(staticMethodCount));
     JS_DefinePropertyValueStr(context, global, name, ctor,
                               JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
   }

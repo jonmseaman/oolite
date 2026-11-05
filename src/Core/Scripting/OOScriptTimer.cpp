@@ -96,8 +96,7 @@ std::string OOScriptTimer::description() const {
   return descriptionWithComponents(descriptionComponents());
 }
 
-// oo::DescriptionWithComponents() of an object
-// of the C++ class's name.
+// oo::DescriptionWithComponents() of an object of the C++ class's name.
 std::string OOScriptTimer::descriptionWithComponents(
     const std::optional<std::string>& components) const {
   std::string result =

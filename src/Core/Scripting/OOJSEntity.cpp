@@ -1,6 +1,6 @@
 /*
 
-OOJSEntity.m (QuickJS-ng)
+OOJSEntity.mm
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 #include "OOJSEntity.h"
 
+#include <cstring>
+
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToJSString.h"
 #include "OOJSCall.h"
@@ -37,25 +39,29 @@ MA 02110-1301, USA.
 
 /*
         The Entity class is the shared base for every other entity binding
-        file's OOJSRegisterSubclass() call and entity getter; JSEntityClassID()
-        returns its ID.
+   file's OOJSRegisterSubclass() call and entity getter; JSEntityClassID()
+   returns its ID.
 */
 
 static JSClassID sEntityClassID;
 
+namespace {
 static JSValue EntityGetProperty(OOJS_GETTER_ARGS);
 static JSValue EntitySetProperty(OOJS_SETTER_ARGS);
 #ifdef OO_DEBUG_MONITOR_ENABLED
 static JSValue EntityDumpState(OOJS_NATIVE_ARGS);
 #endif
+}  // namespace
 
+namespace {
 static JSClassDef sEntityClass = {
     .class_name = "Entity",
     .finalizer =
-        OOJSCxxObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
+        OOJSObjectWrapperFinalize,  // the slot holds an OOJSEntityHolder
 };
+}  // namespace
 
-enum {
+enum : std::uint8_t {
   // Property IDs
   kEntity_collisionRadius,    // collision radius, double, read-only.
   kEntity_distanceTravelled,  // distance travelled, double, read-only.
@@ -86,6 +92,7 @@ enum {
   kEntity_isWormhole,      // is visual effect, boolean, read-only.
 };
 
+namespace {
 static const JSCFunctionListEntry sEntityProperties[] = {
     // JS name, getter, setter, ID
     OOJS_PROPERTY_RO("collisionRadius", EntityGetProperty,
@@ -122,7 +129,9 @@ static const JSCFunctionListEntry sEntityProperties[] = {
                      kEntity_isVisualEffect),
     OOJS_PROPERTY_RO("isWormhole", EntityGetProperty, kEntity_isWormhole),
 };
+}  // namespace
 
+namespace {
 static const JSCFunctionListEntry sEntityMethods[] = {
     // JS name, min args, function
     JS_CFUNC_DEF("toString", 0, OOJSEntityToString),
@@ -130,6 +139,7 @@ static const JSCFunctionListEntry sEntityMethods[] = {
     JS_CFUNC_DEF("dumpState", 0, EntityDumpState),
 #endif
 };
+}  // namespace
 
 JSClassID JSEntityClassID(void) { return sEntityClassID; }
 
@@ -245,13 +255,14 @@ bool EntityFromArgumentList(JSContext* context,
   OOJS_PROFILE_EXIT
 }
 
+namespace {
 static JSValue EntityGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
   Entity* cxxEntity = nullptr;
   Entity* result = nullptr;
 
-  if (EXPECT_NOT(!OOJSEntityGetEntity(context, thisObj, &cxxEntity)))
+  if (EXPECT_NOT(!OOJSEntityGetEntity(context, OOJS_THIS, &cxxEntity)))
     return JS_EXCEPTION;
   if (OOIsStaleEntity(cxxEntity)) {
     if (magic == kEntity_isValid)
@@ -343,18 +354,20 @@ static JSValue EntityGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewFloat64(context, cxxEntity->getSpawnTime());
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sEntityProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sEntityProperties,
                                     OOJS_COUNT(sEntityProperties));
       return JS_EXCEPTION;
   }
 
-  return OOJSValueFromCxxObject(
-      context,
-      result);  // the owner's JS value, its object's (null for none); owned
+  // The owner's JS value, its object's (null for none); owned.
+  return OOJSValueFromCxxObject(context, result);
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
+namespace {
 static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
 
@@ -363,7 +376,7 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
   HPVector hpvValue;
   Quaternion qValue;
 
-  if (EXPECT_NOT(!OOJSEntityGetEntity(context, thisObj, &cxxEntity)))
+  if (EXPECT_NOT(!OOJSEntityGetEntity(context, OOJS_THIS, &cxxEntity)))
     return JS_EXCEPTION;
   if (OOIsStaleEntity(cxxEntity)) return JS_UNDEFINED;
   // The C++ members the properties call.
@@ -428,19 +441,22 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
         return JS_EXCEPTION;
       }
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sEntityProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sEntityProperties,
                                     OOJS_COUNT(sEntityProperties));
       return JS_EXCEPTION;
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sEntityProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sEntityProperties,
                              OOJS_COUNT(sEntityProperties), value);
   return JS_EXCEPTION;
 
   OOJS_NATIVE_EXIT
 }
+}  // namespace
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
+namespace {
 static JSValue EntityDumpState(OOJS_NATIVE_ARGS) {
   OOJS_PROFILE_ENTER
 
@@ -450,6 +466,7 @@ static JSValue EntityDumpState(OOJS_NATIVE_ARGS) {
 
   OOJS_RETURN_VOID;
 
-  OOJS_PROFILE_EXIT
+  OOJS_PROFILE_EXIT_JSVAL
 }
+}  // namespace
 #endif

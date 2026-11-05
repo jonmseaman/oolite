@@ -25,6 +25,8 @@ MA 02110-1301, USA.
 
 #include "OOJSGlobal.h"
 
+#include <cstring>
+
 #include "GameController.h"
 #include "GuiDisplayGen.h"
 #include "MyOpenGLView.h"
@@ -45,8 +47,6 @@ MA 02110-1301, USA.
 
 static const char* const kOOLogDebugMessage = "script.debug.message";
 
-static JSValue GlobalGetProperty(OOJS_GETTER_ARGS);
-
 // What -oo_stringForKey: made of the value it found: a string, or a number's
 // text; nullopt (was nil) for no value or any other kind of value.
 static std::optional<std::string> StringFromPList(const oo::PList* value) {
@@ -55,6 +55,7 @@ static std::optional<std::string> StringFromPList(const oo::PList* value) {
   return oo::PListGet<std::string>::from(value, std::string());
 }
 
+static JSValue GlobalGetProperty(OOJS_GETTER_ARGS);
 #ifdef OO_DEBUG_MONITOR_ENABLED
 static JSValue GlobalSetProperty(OOJS_SETTER_ARGS);
 #endif
@@ -87,7 +88,7 @@ static JSValue GlobalQuitGame(OOJS_NATIVE_ARGS);
         the global object.
 */
 
-enum {
+enum : std::int8_t {
   // Property IDs
   kGlobal_galaxyNumber,  // galaxy number, integer, read-only
   kGlobal_global,        // global.global.global.global, integer, read-only
@@ -109,8 +110,8 @@ static const JSCFunctionListEntry sGlobalProperties[] = {
 };
 
 static const JSCFunctionListEntry sGlobalMethods[] = {
-    // JS name							Function
-    // min args
+    // JS name							min args
+    // Function
     JS_CFUNC_DEF("log", 1, GlobalLog),
     JS_CFUNC_DEF("autoAIForRole", 1, GlobalAutoAIForRole),
     JS_CFUNC_DEF("expandDescription", 1, GlobalExpandDescription),
@@ -171,7 +172,8 @@ static JSValue GlobalGetProperty(OOJS_GETTER_ARGS) {
 #endif
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sGlobalProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sGlobalProperties,
                                     OOJS_COUNT(sGlobalProperties));
       return JS_EXCEPTION;
   }
@@ -195,12 +197,13 @@ static JSValue GlobalSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     default:
-      OOJSReportBadPropertySelector(context, thisObj, magic, sGlobalProperties,
+      OOJSReportBadPropertySelector(context, OOJS_THIS, magic,
+                                    sGlobalProperties,
                                     OOJS_COUNT(sGlobalProperties));
       return JS_EXCEPTION;
   }
 
-  OOJSReportBadPropertyValue(context, thisObj, magic, sGlobalProperties,
+  OOJSReportBadPropertyValue(context, OOJS_THIS, magic, sGlobalProperties,
                              OOJS_COUNT(sGlobalProperties), value);
   return JS_EXCEPTION;
 
@@ -385,7 +388,7 @@ static JSValue GlobalRandomInhabitantsDescription(OOJS_NATIVE_ARGS) {
 
   std::optional<std::string> string;
   Random_Seed aSeed;
-  int isPlural = true;
+  int isPlural = 1;
 
   if (argc > 0 && (isPlural = JS_ToBool(context, OOJS_ARGV[0])) < 0) {
     JS_FreeValue(context, JS_GetException(context));
@@ -445,7 +448,7 @@ static JSValue GlobalClearExtraGuiScreenKeys(OOJS_NATIVE_ARGS) {
    getter throws, the exception is reported and cleared and the property is
    treated as undefined. (SpiderMonkey's JS_GetProperty() returned false, which
    the callers below treat as a missing property; a native must not return
-        normally with an exception pending in QuickJS.)
+   normally with an exception pending in QuickJS.)
 */
 static JSValue GetParam(JSContext* context, JSValueConst object,
                         const char* key) {
@@ -480,8 +483,8 @@ static JSValue GlobalSetExtraGuiScreenKeys(OOJS_NATIVE_ARGS) {
   key = cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
 
   // Validate arguments.
-  // (SpiderMonkey's JS_ValueToObject() accepted null and undefined, yielding no
-  // object; treat them as invalid.)
+  // (SpiderMonkey's JS_ValueToObject() accepted null and undefined, yielding
+  // no object; treat them as invalid.)
   if (argc >= 2 && !JS_IsNull(OOJS_ARGV[1]) && !JS_IsUndefined(OOJS_ARGV[1])) {
     params = JS_ToObject(context, OOJS_ARGV[1]);
     if (JS_IsException(params)) {
@@ -564,7 +567,7 @@ static JSValue GlobalSetExtraGuiScreenKeys(OOJS_NATIVE_ARGS) {
     return JS_EXCEPTION;
   }
 
-  // C++, with no facade; the player keeps it (oo::Ref).
+  // The player keeps it (oo::Ref).
   const oo::Ref<OOJSGuiScreenKeyDefinition> definition =
       oo::makeRef<OOJSGuiScreenKeyDefinition>();
   OOJSGuiScreenKeyDefinition* cxxDefinition = definition.get();
