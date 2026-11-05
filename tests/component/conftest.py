@@ -73,9 +73,9 @@ def console_port():
     It is the GAME that dials the console, not the other way round, and it takes the port from
     console-port in debugConfig.plist - defaulting to 8563 (OODebugSupport.m:80,
     OODebugTCPConsoleProtocol.h:46). So a port the test picks freely is a port nothing connects
-    to. console.py still takes the port as an argument, because the golden harness needs to run
-    several games at once and will have to write that plist per process; until something does,
-    scenarios share the default and must run sequentially, which pytest does anyway.
+    to. console.py still takes the port as an argument, so a caller that runs several games at
+    once can write that plist per process; until something does, scenarios share the default
+    and must run sequentially, which pytest does anyway.
     """
     return int(os.environ.get("OO_CONSOLE_PORT", "8563"))
 
