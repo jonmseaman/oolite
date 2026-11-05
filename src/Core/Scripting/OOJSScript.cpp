@@ -223,8 +223,10 @@ bool OOJSScript::initWithPath(const std::optional<std::string>& path,
     if (!problem.has_value()) {
       OO_LOG("script.javaScript.willLoad", "About to load JavaScript {}",
              path.value_or("(null)"));
-      oo::log::indentIf("script.javaScript.willLoad");
+    }
+    oo::log::indentIf("script.javaScript.willLoad");
 
+    if (!problem.has_value()) {
       if (!RunScriptWithName(context, path, _jsSelf, &problem)) {
         if (!problem.has_value()) problem = "could not run script";
       }
@@ -1013,6 +1015,10 @@ static std::string RewriteLegacyConst(JSContext* context,
   JSValue global = JS_GetGlobalObject(context);
   JSValue rewriter =
       JS_GetPropertyStr(context, global, "__ooliteRewriteLegacyConst");
+  if (JS_IsException(rewriter)) {
+    JS_FreeValue(context, JS_GetException(context));
+    rewriter = JS_UNDEFINED;
+  }
   std::string result = source;
 
   if (JS_IsFunction(context, rewriter)) {
