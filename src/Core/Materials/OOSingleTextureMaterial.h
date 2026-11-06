@@ -4,8 +4,6 @@ OOSingleTextureMaterial.h
 
 A material with a single texture (and no shaders).
 
-Objective-C sees one as an OOMaterial.
-
 
 Copyright (C) 2007-2013 Jens Ayton
 
@@ -56,7 +54,7 @@ class OOSingleTextureMaterial : public OOBasicMaterial {
      will be used in preference to the name parameter.
 
           The initialisers run once, right after construction, and answer false
-     where the Objective-C initialiser answered nil.
+     on failure.
   */
   bool initWithName(
       const std::optional<std::string>& name,

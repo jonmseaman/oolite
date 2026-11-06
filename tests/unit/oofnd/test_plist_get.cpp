@@ -1033,8 +1033,7 @@ OO_TEST(noFallbackFormsUseTheExtractorDefaults) {
       -1);  // -oo_objectAtIndex: is nil past the end, never a range exception
 }
 
-// A receiver of the wrong kind (the Objective-C method would not exist) finds
-// nothing.
+// A receiver of the wrong kind finds nothing.
 OO_TEST(wrongReceiverKindGivesFallback) {
   const PList s("text");
   OO_CHECK_EQ(s.get<int>("k", 4), 4);

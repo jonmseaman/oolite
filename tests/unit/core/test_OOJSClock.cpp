@@ -8,8 +8,7 @@
    (OOJSEngineNativeWrappers.mm). What the rest of the game would provide (the
    player's clock, the universe's time, the clock-string formatter, the
    deprecation warning, error reporting and the string helpers) is defined below
-   as the smallest stand-in that does the same thing. The expectations were
-   written against the Objective-C file and run on it first; they pin the
+   as the smallest stand-in that does the same thing. The tests pin the
         JS-visible behaviour: the global `clock` object and every property, the
    three methods, their errors, and how an exception under a native reaches JS.
         Run: tests/run.sh unit

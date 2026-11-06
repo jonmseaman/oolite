@@ -103,15 +103,14 @@ static bool JSWormholeGetWormholeEntity(JSContext* context,
   result = OOJSEntityGetEntity(context, wormholeObj, &entity);
   if (!result) return false;
 
-  // The wormhole is C++ behind the root's facade.
+  // The wormhole is a WormholeEntity.
   *outEntity = dynamic_cast<WormholeEntity*>(entity);
   return *outEntity != nullptr;
 
   OOJS_PROFILE_EXIT
 }
 
-// The bodies of WormholeEntity (OOJavaScriptExtensions), whose methods are on
-// the WormholeEntity facade, in WormholeEntity+ObjCBridge.mm.
+// The bodies of WormholeEntity's JS members.
 std::optional<std::string> OOJSWormholeJSClassName(void) {
   return std::string("Wormhole");
 }

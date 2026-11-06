@@ -175,9 +175,8 @@ oo::PList PListForKeyIn(const oo::PList& dict, std::string_view key);
 std::string ExpandKeyWith(const std::string& key, const char* name,
                           const oo::PList& value);
 
-// -addObject: on a set of held entities (identity, as Entity keeps NSObject's
-// -isEqual:): once each, in the order added, the entity's
-// object retained once.
+// Adds to a set of held entities (compared by identity): once each, in the
+// order added, the entity retained once.
 void AddIfAbsent(std::vector<oo::EntityHold>& entities, Entity* entity) {
   if (std::find(entities.begin(), entities.end(), entity) == entities.end())
     entities.emplace_back(entity);
@@ -193,15 +192,13 @@ void AutoreleaseAll(std::vector<oo::EntityHold>& entities) {
   entities.clear();
 }
 
-// A script-event argument: the string, or null for nullopt (what
-// oo::NSStringOrNil's nil gave).
+// A script-event argument: the string, or null for nullopt .
 oo::PList StringOrNull(const std::optional<std::string>& string) {
   return string.has_value() ? oo::PList(*string) : oo::PList();
 }
 
-// A script value's -doubleValue / -floatValue / -intValue, as the NSString or
-// NSNumber it was answered them (anything else, which does not answer them,
-// reads 0 as nil did).
+// A script value as a double / float / int, from a string or number (anything
+// else reads 0).
 double ScriptValueDouble(const oo::PList& value) {
   if (const std::string* text = value.getIf<std::string>())
     return oo::plist_get::doubleValue(oo::utf8ToUtf16(*text));
@@ -231,11 +228,11 @@ void RemoveFirstWormhole(std::vector<oo::EntityHold>& wormholes) {
   wormholes.erase(wormholes.begin());
 }
 
-/*	[beaconCode rangeOfString:code options:NSCaseInsensitiveSearch].location
-   != NSNotFound: the units compared lowercased (oo::str::lowercase maps unit
-   for unit, so a byte search of the two lowercased strings finds the same
-   places); an empty code is never found; a nil beacon code answered a zeroed
-   range from messaging nil, location 0, which counted as found.
+/*	Whether the beacon code contains the code, case-insensitively: the
+        units compared lowercased (oo::str::lowercase maps unit for unit, so a
+   byte search of the two lowercased strings finds the same places); an empty
+   code is never found; a nil beacon code answered a zeroed range from messaging
+   nil, location 0, which counted as found.
 */
 bool BeaconCodeMatches(const std::optional<std::string>& beaconCode,
                        const std::string& code) {
@@ -250,18 +247,17 @@ bool BeaconCodeMatches(const std::optional<std::string>& beaconCode,
 // namespace
 
 //------------------------------------------------------------------------------------//
-//	The class: Universe's members. The Objective-C facade's initialiser and
-//-dealloc are newUniverse() and the destructor.
+//	The class: Universe's members. Construction is newUniverse() and
+//teardown the 	destructor.
 
 Universe::Universe() {}
 
-// The facade's -dealloc: the body, then the members go (as the runtime released
-// the ivars).
+// The body, then the members go.
 Universe::~Universe() { dealloc(); }
 
 Universe* Universe::newUniverse(::MyOpenGLView* inGameView) {
   /*	The universe first: one refused below is released at once, and its
-     teardown runs the whole body as the facade's -dealloc did.
+     teardown runs the whole body.
   */
   Universe* universe = new Universe();
 
@@ -820,8 +816,7 @@ std::optional<std::string> OptionalStringIn(const oo::PList& dict,
 std::string ExpandKey(
     const std::string& key);  // defined with the shipyard helpers below
 
-// -[currentMessage isEqual:text]: both present and equal (a nil receiver or
-// argument answered NO).
+// Both present and equal.
 bool SameMessage(const std::optional<std::string>& current,
                  const std::optional<std::string>& text) {
   return current.has_value() && text.has_value() && *current == *text;
@@ -870,9 +865,8 @@ std::optional<std::string> OptionalStringIn(const oo::PList& dict,
   return dict.get<std::string>(key);
 }
 
-/*	A configuration value as -objectForKey: gave it, a null PList where that
-   gave nil (the key is absent), for +[OOColor cxx_colorWithDescription:] (null
-   gives nil, as nil did) and Object nodes.
+/*	A configuration value, a null PList where the key is absent, for
+        OOColor::colorWithDescription() (null gives null) and Object nodes.
 */
 oo::PList PListForKeyIn(const oo::PList& dict, std::string_view key) {
   const oo::PList* value = dict.find(key);
@@ -903,7 +897,7 @@ const oo::PList* EquipmentExtraInfo(const oo::PList& item) {
   return item.at<oo::PList::Dict>(EQUIPMENT_EXTRA_INFO_INDEX);
 }
 
-// -[nil oo_unsignedLongLongForKey:defaultValue:] was 0, not the fallback.
+// A missing dictionary gives 0, not the fallback.
 unsigned long long ExtraInfoValue(const oo::PList* extra, std::string_view key,
                                   unsigned long long fallback) {
   return (extra != nullptr) ? extra->get<unsigned long long>(key, fallback) : 0;
@@ -1164,13 +1158,12 @@ std::vector<std::string> CachedConditionScripts(const std::string& key) {
 
 }  // namespace
 
-/*	The custom-sound categories of OOSound and OOSoundSource on converted
-   classes' facades: their bodies are free functions, which the callers call.
+/*	The custom-sound helpers of OOSound and OOSoundSource, as free functions
+   the callers call.
 */
 
-// +[OOSound cxx_soundWithCustomSoundKey:]: the sound for a customsounds.plist
-// key, borrowed (the resource manager's cache keeps it; was autoreleased); null
-// for none.
+// The sound for a customsounds.plist key, borrowed (the resource manager's
+// cache keeps it); null for none.
 ::OOSound* OOSoundWithCustomSoundKey(const std::string& key) {
   const std::optional<std::string> fileName =
       OOUniverseSoundNameForCustomSoundKey(key);
@@ -1178,7 +1171,7 @@ std::vector<std::string> CachedConditionScripts(const std::string& key) {
   return ResourceManager::ooSoundNamed(*fileName, std::string("Sounds"));
 }
 
-// -[OOSoundSource cxx_playCustomSoundWithKey:]
+// Plays the sound for a customsounds.plist key on the source.
 void OOSoundSourcePlayCustomSoundWithKey(::OOSoundSource* source,
                                          const std::string& key) {
   if (source == nullptr) return;  // a message to nil
@@ -1525,7 +1518,7 @@ void Universe::setUpUniverseFromStation() {
 
 void Universe::setUpUniverseFromWitchspace() {
   ::PlayerEntity* player;
-  ::ShipEntity* playerObject;  // the player's Objective-C object
+  ::ShipEntity* playerObject;  // the player's entity
 
   //
   // check the player is still around!
@@ -1573,7 +1566,7 @@ void Universe::setUpUniverseFromWitchspace() {
 
 void Universe::setUpUniverseFromMisjump() {
   ::PlayerEntity* player;
-  ::ShipEntity* playerObject;  // the player's Objective-C object
+  ::ShipEntity* playerObject;  // the player's entity
 
   //
   // check the player is still around!
@@ -1710,8 +1703,7 @@ void Universe::setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2) {
       oo::PList(true);
   ::OOPlanetEntity* a_planet = nullptr;
   {
-    // +alloc/-initFromDictionary:withAtmosphere:andSeed:forSystem:: a new C++
-    // planet and its Objective-C object, +1.
+    // A new planet, +1.
     oo::Ref<::OOPlanetEntity> planetRef = oo::makeRef<::OOPlanetEntity>();
     oo::RetainEntity(oo::MadeEntity(planetRef));
     planetRef->initFromDictionary(planetDict,
@@ -1982,8 +1974,7 @@ void Universe::setUpSpace() {
              .value_or("(null)"));
 #endif
   {
-    // +alloc/-initSunWithColor:andDictionary:: a new C++ sun and its
-    // Objective-C object, +1.
+    // A new sun, +1.
     oo::Ref<OOSunEntity> sunRef = oo::makeRef<OOSunEntity>();
     oo::RetainEntity(oo::MadeEntity(sunRef));  // alloc retains!
     sunRef->initSunWithColor(bgcolor.get(), sun_dict);
@@ -2164,7 +2155,7 @@ void Universe::populateNormalSpace() {
 
   OO_DEBUG_PUSH_PROGRESS("setUpSpace - populate from hyperpoint");
   //	[self populateSpaceFromHyperPoint:witchPos toPlanetPosition:
-  // a_planet->position andSunPosition: a_sun->position];
+  //a_planet->position andSunPosition: a_sun->position];
   clearSystemPopulator();
 
   if ((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) !=
@@ -2232,8 +2223,7 @@ void Universe::populateSystemFromDictionariesWithSun(::OOSunEntity* sun,
       (systemManager != nullptr ? systemManager->getRandomSeedForCurrentSystem()
                                 : Random_Seed());
   // A copy of the blocks (the callbacks may change the settings), in key byte
-  // order (was the dictionary's hash order), then stably sorted by priority:
-  // order-sensitive, the goldens decide.
+  // order , then stably sorted by priority: the order matters.
   std::vector<oo::PList> sortedBlocks;
   if (const oo::PList::Dict* blocks =
           populatorSettings.getIf<oo::PList::Dict>()) {
@@ -3429,8 +3419,7 @@ std::vector<oo::EntityHold> Universe::addShipsAt(HPVector pos,
   std::vector<oo::EntityHold> ships;
   ships.reserve(count);
   ::ShipEntity* ship = nullptr;
-  oo::Ref<::OOShipGroup>
-      group;  // kept for the pass, as the autoreleased facade was
+  oo::Ref<::OOShipGroup> group;  // kept for the pass
 
   if (isGroup) {
     group =
@@ -3616,10 +3605,9 @@ void Universe::setUpBreakPattern(HPVector pos, Quaternion q, bool forDocking) {
   oo::Ref<OOColor> col2 =
       OOColor::colorWithRed(0.0, 0.0, 1.0, 0.25);  // standard tunnel colour
 
-  colorDesc =
-      PListForKeyIn(globalSettings,
-                    "hyperspace_tunnel_color_1");  // +cxx_colorWithDescription:
-                                                   // takes any description
+  colorDesc = PListForKeyIn(
+      globalSettings, "hyperspace_tunnel_color_1");  // +cxx_colorWithDescription:
+                                                     // takes any description
   if (!colorDesc.isNull()) {
     color = OOColor::colorWithDescription(colorDesc);
     if (color != nullptr)
@@ -3837,7 +3825,7 @@ void Universe::setupIntroFirstGo(bool justCobra) {
 
   if (!justCobra) {
     //		[gui setText:[demo_ship displayName] forRow:19
-    // align:GUI_ALIGN_CENTER];
+    //align:GUI_ALIGN_CENTER];
     setLibraryTextForDemoShip();
   }
 
@@ -4191,8 +4179,7 @@ void Universe::unMagicMainStation() {
 }
 
 // The beacon list holds the C++ entities: the links are still each beacon's
-// own, set and read through its object's messages (oo::PrevBeacon() and the
-// rest, Entity+ObjCBridge).
+// own, set and read through its members (setPrevBeacon() and the rest).
 void Universe::resetBeacons() {
   Entity *beaconShip = firstBeacon(), *next = nullptr;
   while (beaconShip) {
@@ -5975,10 +5962,9 @@ bool Universe::addEntity(Entity* entity) {
     }
 
     if (entity->getIsWormhole()) {
-      activeWormholes.emplace_back(
-          entity);  // the wormhole's Objective-C object
+      activeWormholes.emplace_back(entity);
     } else if (oo::EntityIsPlanet(entity)) {
-      allPlanets.emplace_back(entity);  // the planet's Objective-C object
+      allPlanets.emplace_back(entity);
     } else if (oo::EntityIsShip(entity)) {
       if (se != nullptr && se->getAI() != nullptr) se->getAI()->setOwner(se);
       if (se != nullptr && se->getAI() != nullptr)
@@ -7518,8 +7504,8 @@ void Universe::update(OOTimeDelta inDeltaT) {
                     if (demo_ship != nullptr)
                       demo_ship->setScanClass(CLASS_NO_DRAW);
                     //										[gui
-                    // setText:shipName != nil ? shipName : [demo_ship
-                    // displayName] forRow:19 align:GUI_ALIGN_CENTER];
+                    //setText:shipName != nil ? shipName : [demo_ship
+                    //displayName] forRow:19 align:GUI_ALIGN_CENTER];
 
                     setLibraryTextForDemoShip();
 
@@ -8423,8 +8409,7 @@ void Universe::setSystemDataForGalaxy(
     OOGalaxyID gnum, OOSystemID pnum, const std::string& key,
     const oo::PList& value, const std::optional<std::string>& manifest,
     OOSystemLayer layer) {
-  oo::PList object =
-      value;  // the script value, as the Objective-C object it was (null: nil)
+  oo::PList object = value;  // the script value (null: none)
   static bool sysdataLocked = false;
   if (sysdataLocked) {
     OO_LOG_ERR("script.error", "{}",
@@ -10021,8 +10006,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
 
   // shipyard.plist settings might have duplicate keys.
   // cull possible duplicates from inside base equipment
-  // (the search range 0..i-2, as NSMakeRange(0, i-1) gave it, never looks at
-  // the entry just before)
+  // (the search range 0..i-2 never looks at the entry just before)
   for (i = (NSInteger)base_extra_equipment.size() - 1; i > 0; i--) {
     eq_key = base_extra_equipment[i];
     const auto searchEnd = base_extra_equipment.begin() + (i - 1);

@@ -35,11 +35,10 @@ SOFTWARE.
 #include "OOFoundation.h"
 #else
 /*	A plain C++ translation unit (the JS bindings, through
-        OOJSEngineNativeWrappers.h) cannot parse OOFoundation.h's Objective-C
-   class declarations. The one platform switch below that differs from its
-   default on this build is set as OOFoundation.h sets it (WIN32 is only defined
-   on the GNUstep build), so OOHighResTimeValue is the same type in both kinds
-   of translation unit.
+        OOJSEngineNativeWrappers.h) cannot parse OOFoundation.h's class
+   declarations. The one platform switch below that differs from its default on
+   this build is set as OOFoundation.h sets it, so OOHighResTimeValue is the
+   same type in both kinds of translation unit.
 */
 #if defined(WIN32) && !defined(OOLITE_WINDOWS)
 #define OOLITE_WINDOWS 1
@@ -83,10 +82,8 @@ typedef uint64_t OOHighResTimeValue;
 // Windows: use timeGetTime.
 // DWORD and timeGetTime(), from their own headers: <windows.h> here would bring
 // in the old <winsock.h> ahead of a later <winsock2.h>.
-#include <windef.h>
-// <timeapi.h> needs <windef.h>'s types; this line keeps clang-format from
-// sorting it first.
 #include <timeapi.h>
+#include <windef.h>
 #define OO_PROFILING_STOPWATCH_WINDOWS 1
 typedef DWORD OOHighResTimeValue;  // Rolls over once every 50 days, but we can
                                    // live with that.

@@ -106,10 +106,9 @@ bool SameObject(JSValueConst a, JSValueConst b) {
          JS_VALUE_GET_PTR(a) == JS_VALUE_GET_PTR(b);
 }
 
-// A ship made the way the test can: the C++ ship under its object
-// (oo::NewEntityFacade, retained and never released), never set up from a
-// definition, a ship (it answers -isShip, as the Objective-C class did, so
-// shipSubEntities() keeps it).
+// A ship made the way the test can: the C++ ship under its object (retained and
+// never released), never set up from a definition, a ship (it answers -isShip,
+// as the Objective-C class did, so shipSubEntities() keeps it).
 TestShip* Ship(const char* name) {
   oo::Ref<TestShip> ship = oo::makeRef<TestShip>();
   {

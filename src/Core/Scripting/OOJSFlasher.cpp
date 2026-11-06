@@ -124,8 +124,7 @@ static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
   result = OOJSEntityGetEntity(context, jsobj, &entity);
   if (!result) return false;
 
-  // The object is the nearest facade left (OOLightParticleEntity's): a flasher
-  // is its C++ part.
+  // A flasher is an OOFlasherEntity.
   OOFlasherEntity* flasher = dynamic_cast<OOFlasherEntity*>(entity);
   if (flasher == nullptr) return false;
 

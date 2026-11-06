@@ -253,8 +253,7 @@ void OOJSTimer::clearJSSelf(JSValueConst selfVal) {
     _jsSelf = JS_UNDEFINED;
 }
 
-// What the facade's -cxx_oo_jsDescription answered (OOObject
-// (OOJavaScriptConversion)): the JS class name and the components.
+// The JS class name and the components.
 std::optional<std::string> OOJSTimer::jsDescription() {
   const std::optional<std::string> components = descriptionComponents();
   const std::string name = oo_jsClassName().value_or("OOJSTimer");

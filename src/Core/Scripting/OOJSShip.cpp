@@ -751,9 +751,7 @@ bool AIHasSuspendedStateMachines(ShipEntity* ship) {
   return ai != nullptr && ai->hasSuspendedStateMachines();
 }
 
-// Whether an entity is a ship, as -isKindOfClass:[ShipEntity class] answered: a
-// ship's C++ part is a ShipEntity (Entity+ObjCBridge.mm picks the facade class
-// from it). False for none.
+// Whether an entity is a ShipEntity. False for none.
 bool IsShip(Entity* entity) {
   return dynamic_cast<ShipEntity*>(entity) != nullptr;
 }
@@ -1016,7 +1014,7 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       result = NativeVectorArray(ship->getForwardWeaponOffset());
       break;
       //			OOJS_RETURN_VECTOR([entity
-      // forwardWeaponOffset]);
+      //forwardWeaponOffset]);
 
     case kShip_weaponPositionPort:
       result = NativeVectorArray(ship->getPortWeaponOffset());
@@ -1861,7 +1859,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
 
     case kShip_thrust:
       //			if (EXPECT_NOT(ship->getIsPlayer()))  goto
-      // playerReadOnly;
+      //playerReadOnly;
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         ship->setThrust(OOClamp_0_max_f(fValue, ship->maxThrust()));
@@ -2938,8 +2936,7 @@ static JSValue ShipRestoreSubEntities(OOJS_NATIVE_ARGS) {
   GET_THIS_SHIP(thisEnt);
   ShipEntity* ship = thisEnt;  // not null: thisEnt is not
 
-  NSUInteger subCount = ShipEntityJSSubEntitiesForScript(thisEnt)
-                            .size();  // -subEntitiesForScript
+  NSUInteger subCount = ShipEntityJSSubEntitiesForScript(thisEnt).size();
 
   ship->clearSubEntities();
   ship->setUpSubEntities();

@@ -59,16 +59,11 @@ constexpr const char* kOOLogEntityUpdateError =
 constexpr const char* kOOLogEntityVerificationError =
     "entity.linkedList.verify.error";
 
-// -init's body is init(), which the facade runs again when an initialised
-// entity is sent -init.
+// The constructor runs init().
 Entity::Entity() { init(); }
 
-/*	-init. What needed the Objective-C object as self (counting the entity
-   with its instance size) is in the facade's initialiser. Run by the
-   constructor, and again when an initialised entity is sent -init
-   (PlayerEntity's -deferredInit sends it through -[ShipEntity
-        cxx_initWithKey:...]).
-*/
+// Run by the constructor, and again when an initialised entity is initialised
+// anew (PlayerEntity's deferred initialisation does).
 void Entity::init() {
   _sessionID = (UNIVERSE != nullptr ? UNIVERSE->sessionID() : 0);
 
@@ -92,20 +87,18 @@ void Entity::init() {
   lastDrawCounter = 0;
 }
 
-/*	What the root facade's -dealloc ran before the C++ part went: the last
-   release runs it, with the entity whole (oo::RefCounted::willDispose()), in
-   the same order. An entity that never had its object (no creator made its
-   facade) ran none of it, so it runs none. From its first line the entity no
-   longer has its object (hasObject()), as oo::ToObjC() answered nil for an
-        object being deallocated: holds and retains of it are null and nothing.
+/*	Teardown that runs before the entity is destroyed: the last release runs
+   it, with the entity whole (oo::RefCounted::willDispose()). An entity that
+   never had its object runs none of it. From its first line the entity no
+   longer has its object (hasObject()): holds and retains of it are null and
+   nothing.
 */
 void Entity::willDispose() noexcept {
   if (!_hasObject) return;
   _disposing = true;
 
-  /*	A ship's -dealloc ran first. The player's, a station's or a dock's part
-     first, as their facades' -dealloc ran before the ship's; then the weak
-     references, dropped before entityDestroyed (see
+  /*	A ship's teardown runs first. The player's, a station's or a dock's part
+     first; then the weak references, dropped before entityDestroyed (see
      ShipEntity::shipWillDealloc()); then the ship's body.
   */
   if (::ShipEntity* ship = dynamic_cast<::ShipEntity*>(this)) {
@@ -120,8 +113,7 @@ void Entity::willDispose() noexcept {
   }
 
   if (UNIVERSE != nullptr) {
-    // The log line describes the entity before it goes (the facade's described
-    // its object; the address is the entity's).
+    // The log line describes the entity before it goes.
     if (getUniversalID() != NO_TARGET) {
       OO_LOG("universe.unremovedEntity",
              "Entity {} dealloced without being removed from universe! (This "
@@ -140,8 +132,7 @@ void Entity::willDispose() noexcept {
   gTotalEntityMemory -= oo::EntityObjectSize(this);
 #endif
 
-  // The weak references read null from here, where the facade's superclass's
-  // -dealloc dropped the object's.
+  // The weak references read null from here.
   dropWeakReferences();
 }
 
@@ -955,15 +946,13 @@ std::optional<std::string> Entity::jsClassName() {
 
 bool Entity::isVisibleToScripts() { return ::EntityJSIsVisibleToScripts(); }
 
-// The JS glue: the bodies are EntityOOJavaScriptExtensions.mm's, as they were
-// when the root facade answered the selectors.
+// The JS glue: the bodies are EntityOOJavaScriptExtensions.mm's.
 JSValue Entity::jsValueInContext(JSContext* context) {
   return ::EntityJSValueInContext(this, context);
 }
 
-// NSObject's -oo_clearJSSelf:, which #768's Entity does not override: nothing
-// (the entity owns a reference to its JS object, so it is finalized only after
-// deleteJSSelf() has let go of it).
+// Nothing: the entity owns a reference to its JS object, so it is finalized
+// only after deleteJSSelf() has let go of it.
 void Entity::clearJSSelf(JSValueConst /*selfVal*/) {}
 
 std::optional<std::string> Entity::jsDescription() {

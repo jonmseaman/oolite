@@ -67,8 +67,7 @@ class OOJSGuiScreenKeyDefinition : public oo::RefCounted {
 
   JSValue _callback = JS_UNDEFINED;       // Owned.
   JSValue _callbackThis = JS_UNDEFINED;   // Owned.
-  oo::WeakRef<OOJSScript> _owningScript;  // a weak reference (was the facade's
-                                          // weak reference proxy)
+  oo::WeakRef<OOJSScript> _owningScript;  // a weak reference
 
   std::optional<std::string> _name;  // nullopt until set (was nil)
   oo::PList

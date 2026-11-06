@@ -211,9 +211,7 @@ static bool JSVisualEffectGetVisualEffectEntity(
   OOJS_PROFILE_EXIT
 }
 
-// The bodies of OOVisualEffectEntity (OOJavaScriptExtensions), which the C++
-// effect's overrides call (the OOVisualEffectEntity facade forwarded to them
-// before).
+// The bodies the C++ effect's overrides call.
 std::optional<std::string> OOJSVisualEffectJSClassName(void) {
   return std::string("VisualEffect");
 }
