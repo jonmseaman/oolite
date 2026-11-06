@@ -273,7 +273,7 @@ static OOEncodingConverter* sEncodingCoverter = nullptr;
 
 enum {
   kFontTextureOptions = kOOTextureMinFilterMipMap | kOOTextureMagFilterLinear |
-  kOOTextureNoShrink | kOOTextureAlphaMask
+                        kOOTextureNoShrink | kOOTextureAlphaMask
 };
 
 static const GLfloat red_color[4] = {1.0, 0.0, 0.0, 1.0};
