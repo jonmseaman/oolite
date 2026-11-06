@@ -74,8 +74,8 @@ typedef struct OOALAutoreleasePool* OOALAutoreleasePoolRef;
 
 OOALStringRef OOALGetConstantString(const char* string); // Should only be used with string literals!
 
-/*	In Objective-C the protocol constants (OODebugTCPConsoleProtocol.h) stay Objective-C string
-        literals for OODebugTCPConsoleClient; only the C decoder spells its strings as handles.
+/*	Only the C decoder spells its protocol constants (OODebugTCPConsoleProtocol.h) as handles;
+        OODebugTCPConsoleClient uses plain literals.
 */
 #ifdef OO_PLAIN_CPP_UNIT
 #define OOALSTR(string) OOALGetConstantString("" string "")

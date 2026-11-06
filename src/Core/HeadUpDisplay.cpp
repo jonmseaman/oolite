@@ -121,9 +121,8 @@ void AddHUDWidget(std::vector<OOHUDWidget>& widgets, const oo::PList& info,
         OOHUDWidget { info, *cache, !info.isNull(), dial, selectorString, { } });
 }
 
-/*	The dials by selector name: exactly the selectors the HUD's Objective-C
-   facade answered (its OODials category, one forwarder per dial member), so a
-   whitelisted name the facade did not answer is still "not implemented".
+/*	The dials by selector name, one per dial member, so a whitelisted name that
+   is not here is still "not implemented".
 */
 const struct {
     std::string_view name;
@@ -194,9 +193,8 @@ std::optional<std::string> OptionalStringIn(const oo::PList& info,
     return info.get<std::string>(key);
 }
 
-/*	A value from the configuration as -objectForKey: gave it, a null PList
-   where that gave nil (the key is absent), for +[OOColor
-   cxx_colorWithDescription:] (null gives nil, as nil did).
+/*	A value from the configuration, a null PList where the key is absent, for
+        OOColor::colorWithDescription() (null gives null).
 */
 oo::PList PListForKeyIn(const oo::PList& info, std::string_view key)
 {
@@ -924,15 +922,19 @@ GLfloat HeadUpDisplay::getLineWidth() { return lineWidth; }
 
         Bottom-up, one profile shows:
         21.2%	OODrawString()
-                        (Caching the glyph conversion here was a win, but
-   caching geometry in vertex arrays/VBOs would be better.) 8.9%
-   -[HeadUpDisplay drawHudItem:] 5.1%	OOFloatFromObject (Reifying HUD info
-   instead of parsing plists each frame would be a win.) 4.4%	hudDrawBarAt()
-                        (Using fixed geometery and a vertex shader could help
-   here, especially if bars are grouped together and drawn at once if possible.)
-        4.3%	-[OOCrosshairs render]
-                        (Uses vertex arrays, but does more GL state manipulation
-   than strictly necessary.)
+                        (Caching the glyph conversion here was a win, but caching geometry
+                        in vertex arrays/VBOs would be better.)
+        8.9%	HeadUpDisplay::drawHUDItem()
+        5.1%	OOFloatFromObject
+                        (Reifying HUD info instead of parsing plists each frame would be
+                        a win.)
+        4.4%	hudDrawBarAt()
+                        (Using fixed geometery and a vertex shader could help here,
+                        especially if bars are grouped together and drawn at once if
+                        possible.)
+        4.3%	OOCrosshairs::render()
+                        (Uses vertex arrays, but does more GL state manipulation than
+                        strictly necessary.)
 
 */
 void HeadUpDisplay::renderHUD()
@@ -4519,7 +4521,7 @@ void GetRGBAArrayFromInfo(const oo::PList& info, GLfloat ioColor[4])
 
 } // namespace
 
-// --- One-line sends to classes still behind facades.
+// --- One-line calls into other classes.
 
 void HeadUpDisplayUniverseGUISetGLColorFromSetting(
     const std::optional<std::string>& setting, OOColor* defaultValue,
@@ -4569,7 +4571,7 @@ OOMatrix HeadUpDisplayPlayerRotationMatrix(PlayerEntity* player)
 {
     return (player != nullptr ? player->rotationMatrix() : OOMatrix { });
 }
-// The members the facade's selectors forwarded to: nil's answer for none.
+// The members of the entities, null-safe (a null entity answers the default).
 bool HeadUpDisplayEntityIsShip(Entity* entity)
 {
     return oo::EntityIsShip(entity);
