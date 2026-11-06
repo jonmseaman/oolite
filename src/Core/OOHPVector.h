@@ -190,7 +190,7 @@ OOINLINE void HPscale_vector(HPVector* vec, OOHPScalar factor)
 {
     /*
             Clang static analyzer: reports an unintialized value here when called
-            from -[HeadUpDisplay rescaleByFactor:]. This is blatantly wrong, as
+            from the HUD's rescaling. This is blatantly wrong, as
             the array the vector comes from is fully initialized in the range being
             looped over.
             -- Ahruman 2012-09-14
@@ -204,7 +204,7 @@ OOINLINE HPVector HPvector_multiply_scalar(HPVector v, OOHPScalar s)
 {
     /*
             Clang static analyzer: reports a garbage value here when called from
-            -[OOMesh rescaleByFactor:], apparently on baseless assumption that
+            OOMesh::rescaleByFactor(), apparently on baseless assumption that
             OOMesh._vertices points to only one vertex.
             -- Ahruman 2012-09-14
     */
