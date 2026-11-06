@@ -115,7 +115,7 @@ void OOFlasherEntity::update(OOTimeDelta delta_t) {
         _justSwitched = true;
         ++_activeColor;
         _activeColor %= count;  //_activeColor = ++_activeColor % count; is
-                                // potentially undefined operation
+                                //potentially undefined operation
         setColor(flasherColorAtIndex(_activeColor));
       }
     } else if (_justSwitched) {
@@ -167,7 +167,7 @@ void OOFlasherEntity::rescaleBy(GLfloat /*factor*/, bool /*writeToCache*/) {
      implementation requirements */
 }
 
-// The binding's bodies (OOJSFlasher.mm), which the facade forwarded to.
+// The binding's bodies (OOJSFlasher.mm).
 JSClassID OOFlasherEntity::jsClassID() { return ::JSFlasherClassID(); }
 
 std::optional<std::string> OOFlasherEntity::jsClassName() {

@@ -78,7 +78,7 @@ class OOPolygonSprite : public OOHUDBeaconIcon, public OOGraphicsResetClient {
   void drawHUDBeaconIconAt(NSPoint where, NSSize size, GLfloat alpha,
                            GLfloat z) override;
 
-  // What "%@" printed for the facade: <OOPolygonSprite 0x...>, with
+  // What "%@" prints: <OOPolygonSprite 0x...>, with
   // {components} in debug builds.
   std::string description() const;
 

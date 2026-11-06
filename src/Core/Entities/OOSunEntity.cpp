@@ -458,7 +458,7 @@ void OOSunEntity::drawTranslucentParts() {
 void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
                                     GLfloat z_distance) {
   //	if (EXPECT_NOT(inner_radius >= z_distance))  return;	// inside the
-  // sphere
+  //sphere
 
   GLfloat activity[8] = {0.84, 0.74, 0.64, 0.54, 0.3, 0.4, 0.7, 0.8};
 
@@ -767,7 +767,7 @@ void OOSunEntity::setName(const std::optional<std::string>& name) {
   _name = name;
 }
 
-// The binding's bodies (OOJSSun.mm), which the facade forwarded to.
+// The binding's bodies (OOJSSun.mm).
 JSClassID OOSunEntity::jsClassID() { return ::JSSunClassID(); }
 
 std::optional<std::string> OOSunEntity::jsClassName() {

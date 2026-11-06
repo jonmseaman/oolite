@@ -3,14 +3,13 @@
 EntityVirtualMembers.h
 
 The root entity's virtual members, as UniverseVirtualMembers.h declares the
-universe's: the members the converted subclasses (and the Objective-C entities'
-adapter, oo::ObjCEntity) override. They are declared once, here, in the order
-Entity.h declared them: Entity.h expands OO_ENTITY_VIRTUAL_MEMBERS(;, ;) and
-OO_ENTITY_DEBUG_VIRTUAL_MEMBERS(;, ;) where its first virtual member was, and a
-narrow test's stand-in for the class expands them with default bodies
-(tests/unit/core/EntityStandIn.h), so the stand-in's vtable has the same slots
-as the game's and a virtual call from the code under test reaches the test's
-override. Never reorder without rebuilding every test.
+universe's: the members the subclasses override. They are declared once, here,
+in the order Entity.h declared them: Entity.h expands
+OO_ENTITY_VIRTUAL_MEMBERS(;, ;) and OO_ENTITY_DEBUG_VIRTUAL_MEMBERS(;, ;) where
+its first virtual member was, and a narrow test's stand-in for the class expands
+them with default bodies (tests/unit/core/EntityStandIn.h), so the stand-in's
+vtable has the same slots as the game's and a virtual call from the code under
+test reaches the test's override. Never reorder without rebuilding every test.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors

@@ -16,10 +16,8 @@
    the filters and their validation; the human size; the managed OXZs read from
    disk and matched against the list; a manifest download from start to finish
    (the list replaced, the cache rewritten, the temporary file removed, the
-   managed list rebuilt), and the requests it then refuses. The expectations
-   were written against the Objective-C API and run on the unconverted class
-   first. Every case asks the C++ singleton. Run: bash meson test -C
-   build/meson_test test_OOOXZManager
+   managed list rebuilt), and the requests it then refuses. Every case asks the
+   C++ singleton. Run: bash tools/check-core-tests.sh test_OOOXZManager
 */
 
 #include "OOCacheManager.h"
@@ -199,8 +197,7 @@ std::string Titles(const oo::PList& list) {
   return result;
 }
 
-// The manager's private API (the units the facade did not declare):
-// its C++ members.
+// The manager's private API its C++ members.
 OOOXZManager* Manager() { return OOOXZManager::sharedManager(); }
 std::optional<std::string> ManifestPath() { return Manager()->manifestPath(); }
 std::optional<std::string> DownloadPath() { return Manager()->downloadPath(); }
@@ -840,8 +837,8 @@ struct StandInUniverse {
   }
   ~StandInUniverse() {
     gSharedUniverse = nullptr;
-  }  // never released: a universe's teardown (the facade's -dealloc) flushes
-     // the caches and the GL objects
+  }  // never released: a universe's teardown flushes the caches and the GL
+     // objects
   std::string Page() {
     std::string page;
     for (const std::string& line : universe->testGui->log) page += line + "\n";

@@ -9,12 +9,11 @@
    reporting, the argument and string helpers, Quaternion, the Entity class, the
    universe, the profiler and the time limiter) is defined below as the smallest
    stand-in that does the same thing: reportError for an error, a plain array
-   for a quaternion. The expectations were written against the Objective-C file
-   and run on it first; they pin the JS-visible behaviour: construction, x/y/z,
-   every method and static method, the errors, Vector3D.prototype reading as
-        zero, and how a native's exception reaches JS (an Objective-C
-   OOException and a C++ exception both become a JS error). Run: tests/run.sh
-   unit
+   for a quaternion. The expectations were written against the file's behaviour:
+   they pin the JS-visible behaviour: construction, x/y/z, every method and
+   static method, the errors, Vector3D.prototype reading as zero, and how a
+   native's exception reaches JS (an OOException and a C++ exception both become
+   a JS error). Run: bash tools/check-core-tests.sh
 */
 
 #include <quickjs.h>
@@ -418,8 +417,8 @@ OO_TEST(nativeExceptions) {
   OO_CHECK_EQ(Eval("new Vector3D(1, 2, 3).toCoordinateSystem()"),
               "threw: bad arguments: Vector3D.toCoordinateSystem (0): ; "
               "expected coordinate system");
-  // An Objective-C exception from a native is a JS error, and the time limiter
-  // is resumed on the way out.
+  // An OOException from a native is a JS error, and the time limiter is resumed
+  // on the way out.
   OO_CHECK_EQ(Eval("new Vector3D(1, 2, 3).toCoordinateSystem('throw-objc')"),
               "threw: Native exception: legacy boom");
   OO_CHECK_EQ(Eval("new Vector3D(1, 2, 3).fromCoordinateSystem('throw-objc')"),

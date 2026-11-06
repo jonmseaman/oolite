@@ -43,9 +43,8 @@ static int crid_counter = 1;
 
 namespace {
 
-/*	What the root facade's selectors answered for an entity: the C++ member
-   each forwarded to. -isPlayer, -isShip, -isPlanet and -status are
-   oo::EntityIsPlayer() etc. (Entity+ObjCBridge.h).
+/*	Entity queries, each forwarding to the C++ member. isPlayer, isShip,
+        isPlanet and status are oo::EntityIsPlayer() etc. (EntityHelpers.h).
 */
 bool EntityIsVisible(Entity* entity) {
   return entity != nullptr && entity->isVisible();  // nil's answer for none
@@ -445,7 +444,7 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
   // tested in construction of e2 list
   //	if (e2->isSunlit == NO)
   //		return NO;	// things already /in/ shade can't shade things
-  // more.
+  //more.
   //
   // check projected sizes of discs
   GLfloat d2_sun = HPdistance2(e1pos, the_sun->position);
@@ -593,7 +592,7 @@ void CollisionRegion::findShadowedEntities() {
                uni_entities[i]->collision_radius >=
                    MINIMUM_SHADOWING_ENTITY_RADIUS) {
         ships[n_ships++] = uni_entities[i];  //	don't bother retaining - nothing
-                                             // will happen to them!
+                                             //will happen to them!
       }
     }
   }

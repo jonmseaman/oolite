@@ -207,13 +207,12 @@ inline constexpr std::string_view PLANETINFO_INTERSTELLAR_KEY =
 #define MASS_DEPENDENT_FUEL_PRICES 1
 #endif
 
-/*	The universe: the old @interface's ivars, by the same names and types,
-   every one zero-initialised as the runtime zeroed them, and its methods as
-   member functions. The game's one universe is gSharedUniverse, UNIVERSE
-   (below), made by newUniverse() and released by the game controller. A message
-   to nil answered zero, so callers that may run without a universe (start-up,
-   tests) guard their calls (UNIVERSE != nullptr ? UNIVERSE->m() : zero).
-        Objective-C classes are named ::X here where a C++ class of the same
+/*	The universe: its members, every one zero-initialised, and its methods
+   as member functions. The game's one universe is gSharedUniverse, UNIVERSE
+   (below), made by newUniverse() and released by the game controller. Callers
+   that may run without a universe (start-up, tests) guard their calls
+   (UNIVERSE != nullptr ? UNIVERSE->m() : zero).
+        Game classes are named ::X here where a C++ class of the same
    name is in namespace cxx.
 */
 class Universe : public oo::RefCounted {
@@ -221,17 +220,15 @@ class Universe : public oo::RefCounted {
   Universe();
   ~Universe();
 
-  /*	[[Universe alloc] initWithGameView:]: the new universe, +1 as +alloc
-     gave (the game controller keeps it in gSharedUniverse and releases it). A
-     second universe while one exists is released (its teardown runs, as the
-     facade's -dealloc ran) and raises.
+  /*	The new universe, +1 (the game controller keeps it in gSharedUniverse
+     and releases it). A second universe while one exists is released (its
+     teardown runs) and raises.
   */
   static Universe* newUniverse(::MyOpenGLView* inGameView);
 
-  // -initWithGameView:'s set-up, after [super init].
+  // The set-up of a new universe.
   void initWithGameView(::MyOpenGLView* inGameView);
-  // -dealloc's body, run by the destructor (it was the facade's -dealloc before
-  // it released this part).
+  // The teardown body, run by the destructor.
   void dealloc();
 
   // The test seams: the members a whole-game test's universe
@@ -327,7 +324,7 @@ class Universe : public oo::RefCounted {
   std::vector<oo::Ref<GuiDisplayGen>> replacedGuis;
   // The commodities, the system manager and the character pool setUpSettings()
   // and setUpInitialUniverse() replaced, kept until they replace them again:
-  // they were autoreleased (their facades are gone).
+  // they are not released until then.
   oo::Ref<OOCommodities> replacedCommodities;
   oo::Ref<OOSystemDescriptionManager> replacedSystemManager;
   std::vector<oo::Ref<OOCharacter>> replacedCharacterPool;
@@ -380,7 +377,7 @@ class Universe : public oo::RefCounted {
                             // initialisation (an array)
   oo::PList equipmentDataOutfitting;
   //	std::set<std::string>	pirateVictimRoles;		// Roles listed
-  // in pirateVictimRoles.plist.
+  //in pirateVictimRoles.plist.
   oo::PList roleCategories;  // Categories for roles from role-categories.plist,
                              // extending the old pirate-victim-roles.plist
                              // (category -> array of roles)
@@ -597,7 +594,7 @@ class Universe : public oo::RefCounted {
   // (UniverseVirtualMembers.h) sun(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h) planets(): virtual, in
   // OO_UNIVERSE_VIRTUAL_MEMBERS (UniverseVirtualMembers.h)	// the planets'
-  // Objective-C objects stations(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
+  // entities stations(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
 
   // Wormholes, the main station, beacons, waypoints, sky colour, the

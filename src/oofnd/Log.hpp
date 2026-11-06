@@ -18,7 +18,7 @@
    oo::log::abbreviatedFileName(__FILE__) OOLogInsertMarker()
    oo::log::logger().insertMarker()
 
-        The game's OOLogging.mm is a thin Objective-C shell over this: it loads
+        The game's OOLogging.cpp is a thin shell over this: it loads
    logcontrol.plist and the logging-show-* defaults, formats %@ messages for the
    calls not yet converted, and installs the sink that feeds OOLogOutputHandler
    (Latest.log). Both kinds of call site share one Logger, so settings,

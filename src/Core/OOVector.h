@@ -147,8 +147,7 @@ class OONativeVector : public oo::PListForeign {
   explicit OONativeVector(Vector vect);
   Vector getVector();
 
-  // oo::PListForeign: what the facade answered (its class, and "%@" as
-  // <OONativeVector 0x...>).
+  // oo::PListForeign: the class name, and "%@" as <OONativeVector 0x...>.
   std::string className() const override;
   std::string description() const override;
 
@@ -190,7 +189,7 @@ OOINLINE Vector2D MakeVector2D(OOScalar vx, OOScalar vy) {
 OOINLINE void scale_vector(Vector* vec, OOScalar factor) {
   /*
           Clang static analyzer: reports an unintialized value here when called
-          from -[HeadUpDisplay rescaleByFactor:]. This is blatantly wrong, as
+          from the HUD's rescaling. This is blatantly wrong, as
           the array the vector comes from is fully initialized in the range
      being looped over.
           -- Ahruman 2012-09-14
@@ -203,7 +202,7 @@ OOINLINE void scale_vector(Vector* vec, OOScalar factor) {
 OOINLINE Vector vector_multiply_scalar(Vector v, OOScalar s) {
   /*
           Clang static analyzer: reports a garbage value here when called from
-          -[OOMesh rescaleByFactor:], apparently on baseless assumption that
+          OOMesh::rescaleByFactor(), apparently on baseless assumption that
           OOMesh._vertices points to only one vertex.
           -- Ahruman 2012-09-14
   */

@@ -14,12 +14,10 @@
         -rescaleBy:writeToCache: does nothing. The colour components, an ivar of
    OOLightParticleEntity, are read and set through the one block of helpers
    below. The flashers are made as the callers make them
-   (flasherWithDictionary(), then oo::NewEntityFacade). The cases ask the C++
-   class; the facade case pins the crossing (the object is
-   OOLightParticleEntity's facade, whose C++ part is the flasher), and
-   jsExtensions pins that the engine's selectors reach the C++ class's overrides
-        through the root.
-        Run: tests/run.sh unit
+   (flasherWithDictionary()). The cases ask the C++ class; the facade case pins
+   the crossing (the object is OOLightParticleEntity's, whose C++ part is the
+   flasher), and jsExtensions pins that the engine's selectors reach the C++
+   class's overrides through the root. Run: tests/run.sh unit
 */
 
 #include <cmath>

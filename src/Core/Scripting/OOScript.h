@@ -66,7 +66,7 @@ class OOScript : public oo::PListForeign, public ::OOJSPrivateObject {
       const std::string& path);
 
   //	Load named scripts from Scripts folders. nullopt where these returned
-  // nil.
+  //nil.
   static std::optional<std::vector<oo::Ref<OOScript>>> scriptsFromFileNamed(
       const std::string& fileName);
   static std::vector<oo::Ref<OOScript>> scriptsFromList(
@@ -76,7 +76,7 @@ class OOScript : public oo::PListForeign, public ::OOJSPrivateObject {
       const std::string& filePath);
 
   //	Load a single JavaScript script (an OOJSScript; null where it answered
-  // nil). The properties may hold live objects (oo::PList Object nodes).
+  //nil). The properties may hold live objects (oo::PList Object nodes).
   static oo::Ref<OOScript> jsScriptFromFileNamed(const std::string& fileName,
                                                  const oo::PList& properties);
   //  As above, but load from the "AIs" directory
@@ -102,8 +102,8 @@ class OOScript : public oo::PListForeign, public ::OOJSPrivateObject {
   virtual bool callMethod(JSAtom methodID, JSContext* context,
                           JSValueConst* argv, int argc, JSValue* outResult);
 
-  // oo::PListForeign: the facade's class name, and its -description ("<C++
-  // class address>{components}").
+  // oo::PListForeign: the class name, and the description ("<C++ class
+  // address>{components}").
   std::string className() const override;
   std::string description() const override;
 

@@ -73,8 +73,7 @@ std::optional<std::string> StringAt(const oo::PList& array, std::size_t index) {
   return array.at<std::string>(index);
 }
 
-// The items of -[UNIVERSE cxx_equipmentData] & co. (enumerating a non-array
-// found none, as nil did).
+// The items of the universe's equipment data & co. (a non-array has none).
 std::vector<oo::PList> EquipmentItems(const oo::PList& equipmentData) {
   std::vector<oo::PList> items;
   if (const oo::PList::Array* elements =
@@ -130,8 +129,7 @@ void OOEquipmentType::loadEquipment() {
     }
   }
 
-  oo::PList::Array
-      conditionScriptList;  // an array of strings, as the Objective-C array was
+  oo::PList::Array conditionScriptList;  // an array of strings
   for (const std::string& conditionScript : conditionScripts)
     conditionScriptList.emplace_back(conditionScript);
   OOCacheManager::sharedCache()->setPList(

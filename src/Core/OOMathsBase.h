@@ -46,7 +46,7 @@ MA 02110-1301, USA.
 #else
 /*	A plain C or C++ translation unit (OOVoxel.c, for one) needs only the GL
    types. OOOpenGL.h imports OOFoundation.h, i.e. Foundation, which does not
-   compile outside Objective-C.
+   compile in a plain C++ unit.
 */
 #include "OOOpenGLOnly.h"
 #endif

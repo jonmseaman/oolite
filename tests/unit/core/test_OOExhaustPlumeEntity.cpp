@@ -17,11 +17,11 @@
    pinned); -rescaleBy: scales it and -rescaleBy:writeToCache: does nothing; and
    its texture is loaded once, by name (the loader replaced as in
    test_OOParticleSystem). The collision radius is set through the one helper
-   below. The plumes are made as the ship makes them (exhaustForShip(), then
-        oo::NewEntityFacade). The cases ask the C++ class; the facade case pins
-   the crossing (the object is the root's facade, whose C++ part is the plume),
-   and jsExtensions pins that the engine's selectors reach the C++ class's
-   overrides through the root. Run: tests/run.sh unit
+   below. The plumes are made as the ship makes them (exhaustForShip()). The
+   cases ask the C++ class; the facade case pins the crossing (the object is the
+   root's, whose C++ part is the plume), and jsExtensions pins that the engine's
+   selectors reach the C++ class's overrides through the root. Run: tests/run.sh
+   unit
 */
 
 #include <cmath>
