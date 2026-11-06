@@ -85,19 +85,20 @@ enum {
   kOOTextureMagFilterMask = 0x000004UL,
   kOOTextureFlagsMask = ~(kOOTextureMinFilterMask | kOOTextureMagFilterMask),
 
-  kOOTextureDefaultOptions = kOOTextureMinFilterDefault |
-      kOOTextureMagFilterLinear,
+  kOOTextureDefaultOptions =
+      kOOTextureMinFilterDefault | kOOTextureMagFilterLinear,
 
-  kOOTextureDefinedFlags = kOOTextureMinFilterMask | kOOTextureMagFilterMask |
-      kOOTextureNoShrink | kOOTextureExtraShrink | kOOTextureAllowRectTexture |
+  kOOTextureDefinedFlags =
+      kOOTextureMinFilterMask | kOOTextureMagFilterMask | kOOTextureNoShrink |
+      kOOTextureExtraShrink | kOOTextureAllowRectTexture |
       kOOTextureAllowCubeMap | kOOTextureRepeatS | kOOTextureRepeatT |
       kOOTextureNoFNFMessage | kOOTextureNeverScale | kOOTextureAlphaMask |
       kOOTextureSRGBA | kOOTextureExtractChannelMask,
 
-  kOOTextureFlagsAllowedForRectangleTexture = kOOTextureDefinedFlags &
-      ~(kOOTextureRepeatS | kOOTextureRepeatT),
-  kOOTextureFlagsAllowedForCubeMap = kOOTextureDefinedFlags &
-      ~(kOOTextureRepeatS | kOOTextureRepeatT)
+  kOOTextureFlagsAllowedForRectangleTexture =
+      kOOTextureDefinedFlags & ~(kOOTextureRepeatS | kOOTextureRepeatT),
+  kOOTextureFlagsAllowedForCubeMap =
+      kOOTextureDefinedFlags & ~(kOOTextureRepeatS | kOOTextureRepeatT)
 };
 
 typedef uint32_t OOTextureFlags;
