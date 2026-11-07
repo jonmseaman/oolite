@@ -76,7 +76,7 @@ bool Contains(const std::vector<std::string>& list, const std::string& item) {
 
 // The "keyboard-code" default as -oo_stringForKey:defaultValue:@"default" read
 // it (MyOpenGLView+Input.mm).
-std::string KeyboardCode(void) {
+std::string KeyboardCode() {
   const oo::PList kbdValue = oo::Defaults::standard().object("keyboard-code");
   return oo::PListGet<std::string>::from(
       kbdValue.isNull() ? nullptr : &kbdValue, "default");
@@ -136,7 +136,7 @@ const oo::PList& ElementAt(const oo::PList& array, std::size_t index) {
 
 // A copy of the KeyConfigOverrides default (+dictionaryWithDictionary: of nil
 // was empty).
-oo::PList::Dict KeyConfigOverrides(void) {
+oo::PList::Dict KeyConfigOverrides() {
   const oo::PList overrides =
       oo::Defaults::standard().object(std::string(KEYCONFIG_OVERRIDES));
   const oo::PList::Dict* dict = overrides.getIf<oo::PList::Dict>();
@@ -144,16 +144,13 @@ oo::PList::Dict KeyConfigOverrides(void) {
 }
 
 // The keymappings plist for this platform.
-std::string KeyMappingsFileName(void) {
+std::string KeyMappingsFileName() {
   std::string map;
 #if OOLITE_WINDOWS
   map = "keymappings_windows.plist";
 #endif
 #if OOLITE_LINUX
   map = "keymappings_linux.plist";
-#endif
-#if OOLITE_MAC_COCOA_UI
-  map = "keymappings_mac.plist";
 #endif
   return map;
 }
@@ -665,14 +662,8 @@ void PlayerEntity::outputKeyDefinition(const std::string& key,
                       GUI_ROW_KC_MOD1 + skiprows);
       }
 
-#if OOLITE_MAC_COCOA_UI
-      [gui cxx_setArray:Columns(
-                            {OO_DESC("oolite-keyconfig-update-mod2-mac"), mod2})
-                 forRow:GUI_ROW_KC_MOD2 + skiprows];
-#else
       gui->setArray(Columns({OO_DESC("oolite-keyconfig-update-mod2-pc"), mod2}),
                     GUI_ROW_KC_MOD2 + skiprows);
-#endif
       gui->setKey(std::string(GUI_KEY_OK), GUI_ROW_KC_MOD2 + skiprows);
     }
   }

@@ -41,6 +41,7 @@ MA 02110-1301, USA.
 #include "OODebugFlags.h"
 #include "OODebugGLDrawing.h"
 #include "OODebugStandards.h"
+#include "OODescription.h"
 #include "OOECMBlastEntity.h"
 #include "OOEntityFilterPredicate.h"
 #include "OOEquipmentType.h"
@@ -54,7 +55,6 @@ MA 02110-1301, USA.
 #include "OOLaserShotEntity.h"
 #include "OOMaths.h"
 #include "OOMesh.h"
-#include "OOObjCPList.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOPListGameTypes.h"
 #include "OOParticleSystem.h"
@@ -85,7 +85,9 @@ MA 02110-1301, USA.
 #include "StationEntity.h"
 #include "Universe.h"
 #include "WormholeEntity.h"
+#include "oofnd/PList.hpp"
 #include "oofnd/Scanner.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"  // oo::Finally, oo::CurrentOOException
@@ -833,14 +835,14 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
         hasTurrets = true;
       }
     }
-    if (isWeaponNone(weapon_type) &&
-        hasTurrets) { /* safety for ships only equipped with turrets
-                         note: this was hard-coded to 10000.0, although turrets
-                         have a notably shorter range. We are using a multiplier
-                         of 1.667 in order to not change something that already
-                         works, but probably it would be best to use
-                         TURRET_SHOT_RANGE * COMBAT_WEAPON_RANGE_FACTOR here
-                      */
+    /* safety for ships only equipped with turrets
+      note: this was hard-coded to 10000.0, although turrets
+      have a notably shorter range. We are using a multiplier
+      of 1.667 in order to not change something that already
+      works, but probably it would be best to use
+      TURRET_SHOT_RANGE * COMBAT_WEAPON_RANGE_FACTOR here
+      */
+    if (isWeaponNone(weapon_type) && hasTurrets) {
       weaponRange = TURRET_SHOT_RANGE * 1.667;
     } else {
       setWeaponDataFromType(weapon_type);
@@ -891,9 +893,7 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
   OOJS_PROFILE_EXIT
 }
 
-// setUpShipFromDictionary:, subentity serialisation and set-up. Members of the
-// C++ ship.
-
+// setUpShipFromDictionary:, subentity serialisation and set-up.
 bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict) {
   OOJS_PROFILE_ENTER
 
@@ -2840,7 +2840,7 @@ void ShipEntity::update(OOTimeDelta delta_t) {
     {
       ::StationEntity* stationLaunchedFrom = oo::ToStation(
           (UNIVERSE != nullptr ? UNIVERSE->nearestEntityMatchingPredicate(
-                                     IsStationPredicate, NULL, this)
+                                     IsStationPredicate, nullptr, this)
                                : nullptr));
       setStatus(STATUS_IN_FLIGHT);
       // awaken JS-based AIs
@@ -13851,7 +13851,7 @@ OOTimeAbsolute ShipEntity::getDemoStartTime() { return demoStartTime; }
 // *** Script event dispatch.
 void ShipEntity::doScriptEvent(OOJSPropID message) {
   JSContext* context = OOJSAcquireContext();
-  doScriptEvent(message, context, NULL, 0);
+  doScriptEvent(message, context, nullptr, 0);
   OOJSRelinquishContext(context);
 }
 
@@ -13885,14 +13885,14 @@ void ShipEntity::doScriptEvent(OOJSPropID message,
                                const std::vector<oo::PList>& arguments) {
   JSContext* context = OOJSAcquireContext();
   int i, argc;
-  OOJSVal* argv = NULL;
+  OOJSVal* argv = nullptr;
 
   // Convert arguments to JS values and make them temporarily
   // un-garbage-collectable.
   argc = (int)arguments.size();
   if (argc != 0) {
     argv = (decltype(argv))malloc(sizeof *argv * argc);
-    if (argv != NULL) {
+    if (argv != nullptr) {
       for (i = 0; i != argc; ++i) {
         argv[i] = OOJSValueFromPList(context, arguments[i]);
       }
@@ -13903,7 +13903,7 @@ void ShipEntity::doScriptEvent(OOJSPropID message,
   doScriptEvent(message, context, argv, argc);
 
   // Release the arguments and free the array.
-  if (argv != NULL) {
+  if (argv != nullptr) {
     for (i = 0; i != argc; ++i) {
       OOJSFreeValue(context, argv[i]);
     }
@@ -13922,9 +13922,10 @@ void ShipEntity::doScriptEvent(OOJSPropID message, OOJSVal* argv, int argc) {
 void ShipEntity::doScriptEvent(OOJSPropID message, JSContext* context,
                                OOJSVal* argv, int argc) {
   // This method is a bottleneck so that PlayerEntity can override at one point.
-  if (script != nullptr) script->callMethod(message, context, argv, argc, NULL);
+  if (script != nullptr)
+    script->callMethod(message, context, argv, argc, nullptr);
   if (aiScript != nullptr)
-    aiScript->callMethod(message, context, argv, argc, NULL);
+    aiScript->callMethod(message, context, argv, argc, nullptr);
 }
 
 void ShipEntity::reactToAIMessage(
@@ -14066,7 +14067,7 @@ std::optional<std::string> ShipEntity::descriptionForObjDump() {
    target's class is asked of the runtime, and its kind of entity of the
    entity's C++ part (getIsShip(), getIsVisualEffect()).
 */
-oo::PList OODefaultShipShaderMacros(void) {
+oo::PList OODefaultShipShaderMacros() {
   // "ship-prefix-macros" of the material defaults, read once; an empty
   // dictionary if it is not one.
   static const oo::PList macros = [] {

@@ -29,11 +29,11 @@ MA 02110-1301, USA.
 #include "OOColor.h"
 #include "OOConstToString.h"
 #include "OOCrosshairs.h"
+#include "OODescription.h"
 #include "OOEncodingConverter.h"
 #include "OOFoundation.h"
 #include "OOJavaScriptEngine.h"
 #include "OOJoystickManager.h"
-#include "OOObjCPList.h"
 #include "OOPlanetEntity.h"
 #include "OOPolygonSprite.h"
 #include "OOQuiriumCascadeEntity.h"
@@ -50,6 +50,7 @@ MA 02110-1301, USA.
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
+#include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
@@ -80,7 +81,7 @@ struct CachedInfo {
 };
 
 // A dial: a member called by name with its hud.plist entry.
-typedef void (HeadUpDisplay::*OOHUDDial)(const oo::PList& info);
+using OOHUDDial = void (HeadUpDisplay::*)(const oo::PList& info);
 
 /*	One legend, dial or MFD. Was an array tuple [info, boxed CachedInfo,
    boxed SEL, selector name]; the widget lists are std::vectors
@@ -293,7 +294,7 @@ static bool _compassUpdated;
 static GLfloat drawCharacterQuad(uint8_t chr, GLfloat x, GLfloat y, GLfloat z,
                                  NSSize siz);
 
-static void InitTextEngine(void);
+static void InitTextEngine();
 
 namespace {
 void prefetchData(const oo::PList& info, struct CachedInfo* data);
@@ -4171,7 +4172,7 @@ static void hudRotateViewpointForVirtualDepth(PlayerEntity* player1,
   // draw the waypoint
 }
 
-static void InitTextEngine(void) {
+static void InitTextEngine() {
   oo::PList fontSpec;
   const oo::PList* widths = nullptr;
   std::string texName;
@@ -4210,7 +4211,7 @@ oo::Data ConvertedString(const std::string& text) {
 
 }  // namespace
 
-void OOHUDResetTextEngine(void) {
+void OOHUDResetTextEngine() {
   OOTexture* fontTexture =
       sFontTexture;  // DESTROY(): cleared before the release
   sFontTexture = nullptr;
@@ -4249,7 +4250,7 @@ NSRect cxx_OORectFromString(const std::string& text, GLfloat x, GLfloat y,
                             NSSize siz) {
   GLfloat w = 0;
   oo::Data data;
-  const uint8_t* bytes = NULL;
+  const uint8_t* bytes = nullptr;
   NSUInteger i, length;
 
   data = ConvertedString(text);
@@ -4323,7 +4324,7 @@ void cxx_OODrawStringQuadsAligned(const std::string& text, GLfloat x, GLfloat y,
   GLfloat cx = x;
   NSInteger i, length;
   oo::Data data;
-  const uint8_t* bytes = NULL;
+  const uint8_t* bytes = nullptr;
 
   data = ConvertedString(text);
   length = data.length();

@@ -26,14 +26,16 @@ MA 02110-1301, USA.
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToJSString.h"
+#include "OODescription.h"
 #include "OOJSCall.h"
 #include "OOJSPlayer.h"
 #include "OOJSQuaternion.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOObjCPList.h"
 #include "PlayerEntity.h"
 #include "ShipEntity.h"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 
 /*
         The Entity class is the shared base for every other entity binding
@@ -131,14 +133,14 @@ static const JSCFunctionListEntry sEntityMethods[] = {
 #endif
 };
 
-JSClassID JSEntityClassID(void) { return sEntityClassID; }
+JSClassID JSEntityClassID() { return sEntityClassID; }
 
 void InitOOJSEntity(JSContext* context, JSValueConst global) {
   OOJSRegisterClass(&sEntityClassID, &sEntityClass);
   OOJSInitClass(context, global, sEntityClassID, JS_UNDEFINED,
                 OOJSUnconstructableConstruct, 0, sEntityProperties,
                 OOJS_COUNT(sEntityProperties), sEntityMethods,
-                OOJS_COUNT(sEntityMethods), NULL, 0);
+                OOJS_COUNT(sEntityMethods), nullptr, 0);
   OOJSRegisterObjectConverter(sEntityClassID, OOJSEntityObjectConverter);
 }
 
@@ -216,8 +218,8 @@ bool EntityFromArgumentList(JSContext* context,
   OOJS_PROFILE_ENTER
 
   // Sanity checks.
-  if (outConsumed != NULL) *outConsumed = 0;
-  if (EXPECT_NOT(argc == 0 || argv == NULL || outEntity == NULL)) {
+  if (outConsumed != nullptr) *outConsumed = 0;
+  if (EXPECT_NOT(argc == 0 || argv == nullptr || outEntity == nullptr)) {
     OOLogGenericParameterError();
     return false;
   }
@@ -238,7 +240,7 @@ bool EntityFromArgumentList(JSContext* context,
   }
 
   // Success.
-  if (outConsumed != NULL) *outConsumed = 1;
+  if (outConsumed != nullptr) *outConsumed = 1;
   return true;
 
   OOJS_PROFILE_EXIT

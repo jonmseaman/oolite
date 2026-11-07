@@ -55,9 +55,9 @@ MA 02110-1301, USA.
         static const object).
 */
 
-typedef enum { kStateFalse = false, kStateTrue = true, kStateMaybe } StateFlag;
+using StateFlag = enum { kStateFalse = false, kStateTrue = true, kStateMaybe };
 
-typedef struct {
+using OOOpenGLState = struct {
   const char* name;
 
 #define ITEM_STATEFLAG(NAME) StateFlag NAME
@@ -76,7 +76,7 @@ typedef struct {
 #undef ITEM_CLIENTSTATEFLAG
 #undef ITEM_SPECIAL
 #undef ITEM_INT
-} OOOpenGLState;
+};
 
 // The state definitions.
 static const OOOpenGLState kStandardStates[OPENGL_STATE_INTERNAL_USE_ONLY + 1] =
@@ -287,7 +287,7 @@ static void SwitchOpenGLStateInternal(
         SetState_ acccessors are used in either mode.
 */
 #ifndef NDEBUG
-static inline bool GetState_DEPTH_WRITEMASK(void) {
+static inline bool GetState_DEPTH_WRITEMASK() {
   OO_ENTER_OPENGL();
 
   GLboolean value;
@@ -301,7 +301,7 @@ static inline bool GetState_DEPTH_WRITEMASK(void) {
 #define SetState_SHADE_MODEL(VALUE) OOGL(glShadeModel(VALUE))
 
 #ifndef NDEBUG
-static inline GLenum GetState_TEXTURE_ENV_MODE(void) {
+static inline GLenum GetState_TEXTURE_ENV_MODE() {
   OO_ENTER_OPENGL();
 
   GLint value;
@@ -315,7 +315,7 @@ static inline GLenum GetState_TEXTURE_ENV_MODE(void) {
 
 #if OO_MULTITEXTURE
 #ifndef NDEBUG
-static inline GLenum GetState_ACTIVE_TEXTURE(void) {
+static inline GLenum GetState_ACTIVE_TEXTURE() {
   OO_ENTER_OPENGL();
 
   GLint value;
@@ -327,7 +327,7 @@ static inline GLenum GetState_ACTIVE_TEXTURE(void) {
 #define SetState_ACTIVE_TEXTURE(VALUE) OOGL(glActiveTextureARB(VALUE))
 
 #ifndef NDEBUG
-static inline GLenum GetState_CLIENT_ACTIVE_TEXTURE(void) {
+static inline GLenum GetState_CLIENT_ACTIVE_TEXTURE() {
   OO_ENTER_OPENGL();
 
   GLint value;
@@ -468,7 +468,7 @@ void OOVerifyOpenGLState_(const char* function, unsigned line) {
 static void GetCurrentOpenGLState(OOOpenGLState* state) {
   static const char* name = "<current state>";
 
-  OOCParameterAssert(state != NULL);
+  OOCParameterAssert(state != nullptr);
   OO_ENTER_OPENGL();
   memset(state, 0, sizeof *state);
   state->name = name;
@@ -492,7 +492,7 @@ static void GetCurrentOpenGLState(OOOpenGLState* state) {
 
 namespace {
 static bool StatesEqual(const OOOpenGLState* a, const OOOpenGLState* b) {
-  OOCParameterAssert(a != NULL && b != NULL);
+  OOCParameterAssert(a != nullptr && b != nullptr);
 
 #define ITEM_STATEFLAG(NAME)                            \
   do {                                                  \
@@ -612,7 +612,7 @@ void OOSetOpenGLState(OOOpenGLStateID state) {
 namespace {
 static void SwitchOpenGLStateInternal(const OOOpenGLState* sourceState,
                                       const OOOpenGLState* targetState) {
-  OOCParameterAssert(sourceState != NULL && targetState != NULL);
+  OOCParameterAssert(sourceState != nullptr && targetState != nullptr);
   OO_ENTER_OPENGL();
 
 #define ITEM_STATEFLAG(NAME)                                                  \
@@ -659,7 +659,7 @@ static void SwitchOpenGLStateInternal(const OOOpenGLState* sourceState,
 }
 }  // namespace
 
-void OOResetGLStateVerifier(void) {
+void OOResetGLStateVerifier() {
   // State has been reset behind our backs, so to speak; don't verify.
   sCurrentStateID = OPENGL_STATE_INTERNAL_USE_ONLY;
 }

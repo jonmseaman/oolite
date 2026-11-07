@@ -32,6 +32,7 @@ MA 02110-1301, USA.
 #include "OOColor.h"
 #include "OOCommodities.h"
 #include "OOConstToString.h"
+#include "OODescription.h"
 #include "OOEntityFilterPredicate.h"
 #include "OOEquipmentType.h"
 #include "OOJSEntity.h"
@@ -42,7 +43,6 @@ MA 02110-1301, USA.
 #include "OOJSWormhole.h"
 #include "OOJavaScriptEngine.h"
 #include "OOMesh.h"
-#include "OOObjCPList.h"
 #include "OORoleSet.h"
 #include "OOScript.h"
 #include "OOShipGroup.h"
@@ -58,6 +58,8 @@ MA 02110-1301, USA.
 #include "StationEntity.h"
 #include "Universe.h"
 #include "WormholeEntity.h"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 
@@ -694,7 +696,7 @@ namespace {
 */
 bool JSShipGetShipEntity(JSContext* context, JSValueConst inObject,
                          ShipEntity** outShip) {
-  OOCParameterAssert(outShip != NULL);
+  OOCParameterAssert(outShip != nullptr);
   Entity* entity = nullptr;
   if (EXPECT_NOT(!OOJSEntityGetEntityOfClass(context, inObject, sShipClassID,
                                              &entity)))
@@ -719,7 +721,7 @@ void InitOOJSShip(JSContext* context, JSValueConst global) {
   OOJSRegisterSubclass(sShipClassID, JSEntityClassID());
 }
 
-JSClassID JSShipClassID(void) { return sShipClassID; }
+JSClassID JSShipClassID() { return sShipClassID; }
 
 namespace {
 
@@ -2088,11 +2090,11 @@ playerReadOnly:
 
 // *** Methods ***
 
-#define GET_THIS_SHIP(THISENT)                                          \
-  do {                                                                  \
-    if (EXPECT_NOT(!JSShipGetShipEntity(context, OOJS_THIS, &THISENT))) \
-      return OOJSNativeFailure(context); /* Exception */                \
-    if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID;                     \
+#define GET_THIS_SHIP(THISENT)                                            \
+  do {                                                                    \
+    if (EXPECT_NOT(!JSShipGetShipEntity(context, OOJS_THIS, &(THISENT)))) \
+      return OOJSNativeFailure(context); /* Exception */                  \
+    if (OOIsStaleEntity(THISENT)) OOJS_RETURN_VOID;                       \
   } while (0)
 
 // setScript(scriptName : String)

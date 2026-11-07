@@ -503,6 +503,7 @@ void OOOXPVerifier::buildDependencyGraph() {
     // Iterate over all stages, resolving dependencies.
     std::vector<std::string> stageKeys;  // Get the keys up front because we may
                                          // need to remove entries from the map.
+    stageKeys.reserve(_stagesByName.size());
     for (const auto& entry : _stagesByName) stageKeys.push_back(entry.first);
 
     for (const std::string& stageKey : stageKeys) {
@@ -793,10 +794,7 @@ void OpenLogFile() {
     const oo::PList openLog =
         oo::Defaults::standard().object("oxp-verifier-open-log");
     if (oo::PListGet<bool>::from(openLog.isNull() ? nullptr : &openLog, true)) {
-#if OOLITE_MAC_COCOA_UI
-      [[NSWorkspace sharedWorkspace]
-          openFile:oo::NSStringOrNil(cxx_OOLogHandlerGetLogPath())];
-#elif OOLITE_WINDOWS
+#if OOLITE_WINDOWS
       // ShellExecute will automatically use the app associated with .log files
       // A nil path's -UTF8String was NULL.
       const std::optional<std::string> logPath = cxx_OOLogHandlerGetLogPath();

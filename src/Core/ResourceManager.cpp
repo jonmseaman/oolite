@@ -29,11 +29,11 @@ MA 02110-1301, USA.
 #include "OOALMusic.h"
 #include "OOCacheManager.h"
 #include "OODebugStandards.h"
+#include "OODescription.h"
 #include "OOJSScript.h"
 #include "OOLogOutputHandler.h"
 #include "OOManifestProperties.h"
 #include "OOOXZManager.h"
-#include "OOObjCPList.h"
 #include "OOPListParsing.h"
 #include "OOPListScript.h"
 #include "OOSound.h"
@@ -43,6 +43,7 @@ MA 02110-1301, USA.
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Encoding.hpp"
 #include "oofnd/FileSystem.hpp"
+#include "oofnd/PList.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/PListWriting.hpp"
 #include "oofnd/ResourcePaths.hpp"
@@ -585,21 +586,22 @@ void ResourceManager::preloadFileLists() {
 
 void ResourceManager::preloadFileListFromOXZ(
     const std::string& path, const std::vector<std::string>& folders) {
-  unzFile uf = NULL;
+  unzFile uf = nullptr;
   const char* zipname = path.c_str();
   char componentName[512];
 
-  if (zipname != NULL) {
+  if (zipname != nullptr) {
     uf = unzOpen64(zipname);
   }
-  if (uf == NULL) {
+  if (uf == nullptr) {
     OO_LOG("resourceManager.error", "Could not open .oxz at {} as zip file",
            path);
     return;
   }
   if (unzGoToFirstFile(uf) == UNZ_OK) {
     do {
-      unzGetCurrentFileInfo64(uf, NULL, componentName, 512, NULL, 0, NULL, 0);
+      unzGetCurrentFileInfo64(uf, nullptr, componentName, 512, nullptr, 0,
+                              nullptr, 0);
       const std::string zipEntry = componentName;
       // A name that is not UTF-8 was nil, and had no components.
       const std::vector<std::string> pathBits =
@@ -2147,7 +2149,7 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
       pathForFileNamed(fileName, folderName, useCache);
   if (path.has_value()) result = ::OOSound::initWithContentsOfFile(path);
 
-  if (result != nullptr && ioCache != NULL) {
+  if (result != nullptr && ioCache != nullptr) {
     (*ioCache)[*key] = result;
     return result.get();
   }

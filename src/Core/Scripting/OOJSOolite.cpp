@@ -64,8 +64,8 @@ std::optional<std::string> OoliteInfoString(std::string_view key) {
 
 }  // namespace
 
-static std::optional<std::string> VersionString(void);
-static std::vector<unsigned> VersionComponents(void);
+static std::optional<std::string> VersionString();
+static std::vector<unsigned> VersionComponents();
 static unsigned UnsignedIntValue(const oo::PList& number);
 
 static JSValue OoliteCompareVersion(OOJS_NATIVE_ARGS);
@@ -138,7 +138,7 @@ void InitOOJSOolite(JSContext* context, JSValueConst global) {
       OOJSInitClass(context, global, sOoliteClassID, JS_UNDEFINED,
                     OOJSUnconstructableConstruct, 0, sOoliteProperties,
                     OOJS_COUNT(sOoliteProperties), sOoliteMethods,
-                    OOJS_COUNT(sOoliteMethods), NULL, 0);
+                    OOJS_COUNT(sOoliteMethods), nullptr, 0);
   JS_DefinePropertyValueStr(
       context, global, "oolite",
       JS_NewObjectProtoClass(context, oolitePrototype, sOoliteClassID),
@@ -327,11 +327,11 @@ static JSValue OoliteSetProperty(OOJS_SETTER_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static std::optional<std::string> VersionString(void) {
+static std::optional<std::string> VersionString() {
   return OoliteInfoString("CFBundleVersion");
 }
 
-static std::vector<unsigned> VersionComponents(void) {
+static std::vector<unsigned> VersionComponents() {
   const std::optional<std::string> version = VersionString();
   if (!version.has_value())
     return {};  // ComponentsFromVersionString(nil) was empty

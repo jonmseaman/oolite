@@ -71,14 +71,14 @@ void InitOOJSExhaustPlume(JSContext* context, JSValueConst global) {
   OOJSInitClass(context, global, sExhaustPlumeClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sExhaustPlumeProperties,
                 OOJS_COUNT(sExhaustPlumeProperties), sExhaustPlumeMethods,
-                OOJS_COUNT(sExhaustPlumeMethods), NULL, 0);
+                OOJS_COUNT(sExhaustPlumeMethods), nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sExhaustPlumeClassID, OOJSEntityObjectConverter);
   OOJSRegisterSubclass(sExhaustPlumeClassID, JSEntityClassID());
 }
 
-JSClassID JSExhaustPlumeClassID(void) { return sExhaustPlumeClassID; }
+JSClassID JSExhaustPlumeClassID() { return sExhaustPlumeClassID; }
 
 static bool JSExhaustPlumeGetExhaustPlumeEntity(
     JSContext* context, JSValueConst jsobj, OOExhaustPlumeEntity** outEntity) {
@@ -87,7 +87,7 @@ static bool JSExhaustPlumeGetExhaustPlumeEntity(
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
 
-  if (outEntity == NULL) return false;
+  if (outEntity == nullptr) return false;
   *outEntity = nullptr;
 
   result = OOJSEntityGetEntity(context, jsobj, &entity);
@@ -105,11 +105,11 @@ static bool JSExhaustPlumeGetExhaustPlumeEntity(
 
 // The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the C++
 // class's overrides of the root's JS members call.
-std::optional<std::string> OOJSExhaustPlumeJSClassName(void) {
+std::optional<std::string> OOJSExhaustPlumeJSClassName() {
   return std::string("ExhaustPlume");
 }
 
-bool OOJSExhaustPlumeIsVisibleToScripts(void) { return true; }
+bool OOJSExhaustPlumeIsVisibleToScripts() { return true; }
 
 static JSValue ExhaustPlumeGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)

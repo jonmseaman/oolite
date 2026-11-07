@@ -26,10 +26,12 @@ MA 02110-1301, USA.
 #include "OOJSEquipmentInfo.h"
 
 #include "OODebugStandards.h"
+#include "OODescription.h"
 #include "OOEquipmentType.h"
 #include "OOJSPlayer.h"
 #include "OOJavaScriptEngine.h"
-#include "OOObjCPList.h"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 
 static JSClassID sEquipmentInfoClassID;
@@ -300,7 +302,7 @@ std::optional<std::string> JSValueToEquipmentKeyRelaxed(JSContext* context,
     }
   }
 
-  if (outExists != NULL) *outExists = exists;
+  if (outExists != nullptr) *outExists = exists;
   return result;
 
   OOJS_PROFILE_EXIT
@@ -635,7 +637,7 @@ std::optional<std::string> OOEquipmentType::jsDescription() {
   return oo::str::format("[object %s]", name.c_str());
 }
 
-std::optional<std::string> OOJSEquipmentInfoJSClassName(void) {
+std::optional<std::string> OOJSEquipmentInfoJSClassName() {
   return std::string("EquipmentInfo");
 }
 

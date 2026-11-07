@@ -43,6 +43,7 @@ MA 02110-1301, USA.
 #include "OODebugFlags.h"
 #include "OODebugStandards.h"
 #include "OODebugSupport.h"
+#include "OODescription.h"
 #include "OOEntityFilterPredicate.h"
 #include "OOEquipmentType.h"
 #include "OOExplosionCloudEntity.h"
@@ -57,7 +58,6 @@ MA 02110-1301, USA.
 #include "OOLoggingExtended.h"
 #include "OOMaterial.h"
 #include "OOMusicController.h"
-#include "OOObjCPList.h"
 #include "OOOpenGL.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOOpenGLMatrixManager.h"
@@ -95,9 +95,11 @@ MA 02110-1301, USA.
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
+#include "oofnd/PList.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/Process.hpp"
 #include "oofnd/Scanner.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
@@ -354,26 +356,11 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView) {
 
   // Set up speech synthesizer.
 #if OOLITE_SPEECH_SYNTH
-#if OOLITE_MAC_COCOA_UI
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-    /*
-            NSSpeechSynthesizer can take over a second on an SSD and several
-            seconds on an HDD for a cold start, and a third of a second upward
-            for a warm start. There are no particular thread safety consider-
-            ations documented for NSSpeechSynthesizer, so I'm assuming the
-            default one-thread-at-a-time access rule applies.
-            -- Ahruman 2012-09-13
-    */
-    OO_LOG("speech.setup.begin", "Starting to set up speech synthesizer.");
-    NSSpeechSynthesizer* synth = [[NSSpeechSynthesizer alloc] init];
-    OO_LOG("speech.setup.end", "Finished setting up speech synthesizer.");
-    speechSynthesizer = synth;
-  });
-#elif OOLITE_ESPEAK
+#if OOLITE_ESPEAK
   int volume = ::OOSound::masterVolume() * 100;
   espeak_SetParameter(espeakPUNCTUATION, espeakPUNCT_NONE, 0);
   espeak_SetParameter(espeakVOLUME, volume, 0);
-  espeak_voices = espeak_ListVoices(NULL);
+  espeak_voices = espeak_ListVoices(nullptr);
   for (espeak_voice_count = 0; espeak_voices[espeak_voice_count];
        ++espeak_voice_count)
     /**/;
@@ -499,9 +486,7 @@ void Universe::dealloc() {
 
 #if OOLITE_SPEECH_SYNTH
   speechArray = oo::PList();
-#if OOLITE_MAC_COCOA_UI
-  [speechSynthesizer release];
-#elif OOLITE_ESPEAK
+#if OOLITE_ESPEAK
   espeak_Cancel();
 #endif
 #endif
@@ -641,7 +626,7 @@ static const OOMatrix starboard_matrix = {{{0.0f, 0.0f, 1.0f, 0.0f},
                                            {0.0f, 0.0f, 0.0f, 1.0f}}};
 
 static bool MaintainLinkedLists(Universe* uni) {
-  OOCParameterAssert(uni != NULL);
+  OOCParameterAssert(uni != nullptr);
   bool result = true;
 
   // DEBUG check for loops and short lists
@@ -1661,8 +1646,8 @@ void Universe::setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2) {
       "repopulator", "interstellarSpaceWillRepopulate");
   JSContext* context = OOJSAcquireContext();
   if (PLAYER != nullptr)
-    PLAYER->doWorldScriptEvent(cxx_OOJSIDFromString(populator), context, NULL,
-                               0, kOOJSLongTimeLimit);
+    PLAYER->doWorldScriptEvent(cxx_OOJSIDFromString(populator), context,
+                               nullptr, 0, kOOJSLongTimeLimit);
   OOJSRelinquishContext(context);
   populateSystemFromDictionariesWithSun(nullptr, nullptr);
 
@@ -2169,8 +2154,8 @@ void Universe::populateNormalSpace() {
 
     JSContext* context = OOJSAcquireContext();
     if (PLAYER != nullptr)
-      PLAYER->doWorldScriptEvent(cxx_OOJSIDFromString(populator), context, NULL,
-                                 0, kOOJSLongTimeLimit);
+      PLAYER->doWorldScriptEvent(cxx_OOJSIDFromString(populator), context,
+                                 nullptr, 0, kOOJSLongTimeLimit);
     OOJSRelinquishContext(context);
     populateSystemFromDictionariesWithSun(cachedSun, cachedPlanet);
   }
@@ -5053,7 +5038,7 @@ void Universe::lightForEntity(bool isLit) {
 
 void Universe::getActiveViewMatrix(OOMatrix* outMatrix, Vector* outForward,
                                    Vector* outUp) {
-  assert(outMatrix != NULL && outForward != NULL && outUp != NULL);
+  assert(outMatrix != nullptr && outForward != nullptr && outUp != nullptr);
 
   ::PlayerEntity* player = nullptr;
 
@@ -6517,7 +6502,7 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
       break;
   }
 
-  basis_vectors_from_quaternion(q1, &r1, NULL, &f1);
+  basis_vectors_from_quaternion(q1, &r1, nullptr, &f1);
   HPVector p1 = HPvector_add(
       p0, vectorToHPVector(vector_multiply_scalar(f1, nearest)));  // endpoint
 
@@ -6562,7 +6547,7 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
         hit_entity->setSubEntityTakingDamage(hit_subentity);
     }
 
-    if (range_ptr != NULL) {
+    if (range_ptr != nullptr) {
       *range_ptr = nearest;
     }
   }
@@ -6622,7 +6607,7 @@ Entity* Universe::firstEntityTargetedByPlayer() {
     default:
       break;
   }
-  basis_vectors_from_quaternion(q1, &r1, NULL, &f1);
+  basis_vectors_from_quaternion(q1, &r1, nullptr, &f1);
 
   for (i = 0; i < ship_count; i++) {
     Entity* e2 = my_entities[i];
@@ -6707,14 +6692,14 @@ Entity* Universe::firstEntityTargetedByPlayerPrecisely() {
   }
 
   return firstShipHitByLaserFromShip(PLAYER, targetFacing, laserPortOffset,
-                                     NULL);
+                                     nullptr);
 }
 
 std::vector<oo::EntityHold> Universe::entitiesWithinRange(double range,
                                                           Entity* entity) {
   if (entity == nullptr) return {};
 
-  return findShipsMatchingPredicate(YESPredicate, NULL, range, entity);
+  return findShipsMatchingPredicate(YESPredicate, nullptr, range, entity);
 }
 
 // The role predicates read a std::string, held here for the call.
@@ -6755,7 +6740,7 @@ unsigned Universe::countEntitiesMatchingPredicate(
   HPVector p1;
   double distance, cr;
 
-  if (predicate == NULL) predicate = YESPredicate;
+  if (predicate == nullptr) predicate = YESPredicate;
 
   if (e1 != nullptr)
     p1 = e1->position;
@@ -6783,13 +6768,14 @@ unsigned Universe::countEntitiesMatchingPredicate(
 unsigned Universe::countShipsMatchingPredicate(EntityFilterPredicate predicate,
                                                void* parameter, double range,
                                                Entity* entity) {
-  if (predicate != NULL) {
-    BinaryOperationPredicateParameter param = {IsShipPredicate, NULL, predicate,
-                                               parameter};
+  if (predicate != nullptr) {
+    BinaryOperationPredicateParameter param = {IsShipPredicate, nullptr,
+                                               predicate, parameter};
 
     return countEntitiesMatchingPredicate(ANDPredicate, &param, range, entity);
   } else {
-    return countEntitiesMatchingPredicate(IsShipPredicate, NULL, range, entity);
+    return countEntitiesMatchingPredicate(IsShipPredicate, nullptr, range,
+                                          entity);
   }
 }
 
@@ -6809,7 +6795,7 @@ std::vector<oo::EntityHold> Universe::findEntitiesMatchingPredicate(
 
   OOJSPauseTimeLimiter();
 
-  if (predicate == NULL) predicate = YESPredicate;
+  if (predicate == nullptr) predicate = YESPredicate;
 
   result.reserve(n_entities);
 
@@ -6840,7 +6826,7 @@ Entity* Universe::findOneEntityMatchingPredicate(
 
   OOJSPauseTimeLimiter();
 
-  if (predicate == NULL) predicate = YESPredicate;
+  if (predicate == nullptr) predicate = YESPredicate;
 
   for (i = 0; i < n_entities; i++) {
     candidate = sortedEntities[i];
@@ -6855,27 +6841,28 @@ Entity* Universe::findOneEntityMatchingPredicate(
 std::vector<oo::EntityHold> Universe::findShipsMatchingPredicate(
     EntityFilterPredicate predicate, void* parameter, double range,
     Entity* entity) {
-  if (predicate != NULL) {
-    BinaryOperationPredicateParameter param = {IsShipPredicate, NULL, predicate,
-                                               parameter};
+  if (predicate != nullptr) {
+    BinaryOperationPredicateParameter param = {IsShipPredicate, nullptr,
+                                               predicate, parameter};
 
     return findEntitiesMatchingPredicate(ANDPredicate, &param, range, entity);
   } else {
-    return findEntitiesMatchingPredicate(IsShipPredicate, NULL, range, entity);
+    return findEntitiesMatchingPredicate(IsShipPredicate, nullptr, range,
+                                         entity);
   }
 }
 
 std::vector<oo::EntityHold> Universe::findVisualEffectsMatchingPredicate(
     EntityFilterPredicate predicate, void* parameter, double range,
     Entity* entity) {
-  if (predicate != NULL) {
-    BinaryOperationPredicateParameter param = {IsVisualEffectPredicate, NULL,
+  if (predicate != nullptr) {
+    BinaryOperationPredicateParameter param = {IsVisualEffectPredicate, nullptr,
                                                predicate, parameter};
 
     return findEntitiesMatchingPredicate(ANDPredicate, &param, range, entity);
   } else {
-    return findEntitiesMatchingPredicate(IsVisualEffectPredicate, NULL, range,
-                                         entity);
+    return findEntitiesMatchingPredicate(IsVisualEffectPredicate, nullptr,
+                                         range, entity);
   }
 }
 
@@ -6886,7 +6873,7 @@ Entity* Universe::nearestEntityMatchingPredicate(
   float rangeSq = INFINITY;
   Entity* result = nullptr;
 
-  if (predicate == NULL) predicate = YESPredicate;
+  if (predicate == nullptr) predicate = YESPredicate;
 
   if (entity != nullptr)
     p1 = entity->getPosition();
@@ -6912,13 +6899,13 @@ Entity* Universe::nearestEntityMatchingPredicate(
 Entity* Universe::nearestShipMatchingPredicate(EntityFilterPredicate predicate,
                                                void* parameter,
                                                Entity* entity) {
-  if (predicate != NULL) {
-    BinaryOperationPredicateParameter param = {IsShipPredicate, NULL, predicate,
-                                               parameter};
+  if (predicate != nullptr) {
+    BinaryOperationPredicateParameter param = {IsShipPredicate, nullptr,
+                                               predicate, parameter};
 
     return nearestEntityMatchingPredicate(ANDPredicate, &param, entity);
   } else {
-    return nearestEntityMatchingPredicate(IsShipPredicate, NULL, entity);
+    return nearestEntityMatchingPredicate(IsShipPredicate, nullptr, entity);
   }
 }
 
@@ -7242,9 +7229,7 @@ void Universe::speakWithSubstitutions(const std::optional<std::string>& text) {
               OptionalStringAt(thePair, 0);
 
           NSUInteger replacementIndex;
-#if OOLITE_MAC_COCOA_UI
-          replacementIndex = 1;
-#elif OOLITE_ESPEAK
+#if OOLITE_ESPEAK
           replacementIndex = thePair.count() > 2 ? 2 : 1;
 #endif
 
@@ -7382,7 +7367,7 @@ void Universe::repopulateSystem() {
     PLAYER->doWorldScriptEvent((system_repopulator.has_value()
                                     ? cxx_OOJSIDFromString(*system_repopulator)
                                     : JS_ATOM_NULL),
-                               context, NULL, 0, kOOJSLongTimeLimit);
+                               context, nullptr, 0, kOOJSLongTimeLimit);
   OOJSRelinquishContext(context);
   next_repopulation = SYSTEM_REPOPULATION_INTERVAL;
 }
@@ -10448,35 +10433,14 @@ void Universe::setAirResistanceFactor(GLfloat newFactor) {
 }
 
 // The speech arms. The Mac's is not built.
-#if OOLITE_MAC_COCOA_UI
-
-void Universe::startSpeakingString(const std::string& text) {
-  [speechSynthesizer
-      startSpeakingString:oo::NSStringFrom(oo::str::format(
-                              "[[volm %.3f]]%s",
-                              0.3333333f * OOSound::masterVolume(),
-                              text.c_str()))];
-}
-
-void Universe::stopSpeaking() {
-  if ([speechSynthesizer
-          respondsToSelector:@selector(stopSpeakingAtBoundary:)]) {
-    [speechSynthesizer stopSpeakingAtBoundary:NSSpeechWordBoundary];
-  } else {
-    [speechSynthesizer stopSpeaking];
-  }
-}
-
-bool Universe::isSpeaking() { return [speechSynthesizer isSpeaking]; }
-
-#elif OOLITE_ESPEAK
+#if OOLITE_ESPEAK
 
 void Universe::startSpeakingString(const std::string& text) {
   // the UTF-8 bytes of the text
   const char* stringToSay = text.c_str();
-  espeak_Synth(stringToSay, strlen(stringToSay) + 1 /* inc. NULL */, 0,
-               POS_CHARACTER, 0,
-               espeakCHARS_UTF8 | espeakPHONEMES | espeakENDPAUSE, NULL, NULL);
+  espeak_Synth(
+      stringToSay, strlen(stringToSay) + 1 /* inc. NULL */, 0, POS_CHARACTER, 0,
+      espeakCHARS_UTF8 | espeakPHONEMES | espeakENDPAUSE, nullptr, nullptr);
 }
 
 void Universe::stopSpeaking() { espeak_Cancel(); }
@@ -10516,14 +10480,14 @@ unsigned int Universe::setVoice(unsigned int index, bool isMale) {
 
   if (index < espeak_voice_count) {
     espeak_VOICE voice = {espeak_voices[index]->name,
-                          NULL,
-                          NULL,
+                          nullptr,
+                          nullptr,
                           (unsigned char)(isMale ? 1 : 2),
                           0,
                           0,
                           0,
                           0,
-                          NULL};
+                          nullptr};
     espeak_SetVoiceByProperties(&voice);
   }
 
@@ -11422,7 +11386,7 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
   OOGL(glGenTextures(1, &targetTextureID));
   OOGL(glBindTexture(GL_TEXTURE_2D, targetTextureID));
   OOGL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, (GLsizei)viewSize.width,
-                    (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, NULL));
+                    (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, nullptr));
   OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
   OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
   OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
@@ -11468,7 +11432,7 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
   for (unsigned int i = 0; i < 2; i++) {
     OOGL(glBindTexture(GL_TEXTURE_2D, passthroughTextureID[i]));
     OOGL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, (GLsizei)viewSize.width,
-                      (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, NULL));
+                      (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, nullptr));
     OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
@@ -11493,7 +11457,7 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
     OOGL(glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]));
     OOGL(glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]));
     OOGL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, (GLsizei)viewSize.width,
-                      (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, NULL));
+                      (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, nullptr));
     OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     OOGL(glTexParameteri(
@@ -11567,7 +11531,7 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
   OOGL(glEnableVertexAttribArray(0));
   // position attribute
   OOGL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                             (void*)0));
+                             (void*)nullptr));
   OOGL(glEnableVertexAttribArray(1));
   // texture coord attribute
   OOGL(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
@@ -11631,20 +11595,20 @@ void Universe::resizeTargetFramebufferWithViewSize(NSSize viewSize) {
   // resize color attachments
   OOGL(glBindTexture(GL_TEXTURE_2D, targetTextureID));
   OOGL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, (GLsizei)viewSize.width,
-                    (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, NULL));
+                    (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, nullptr));
   OOGL(glBindTexture(GL_TEXTURE_2D, 0));
 
   for (i = 0; i < 2; i++) {
     OOGL(glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]));
     OOGL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, (GLsizei)viewSize.width,
-                      (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, NULL));
+                      (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, nullptr));
     OOGL(glBindTexture(GL_TEXTURE_2D, 0));
   }
 
   for (i = 0; i < 2; i++) {
     OOGL(glBindTexture(GL_TEXTURE_2D, passthroughTextureID[i]));
     OOGL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, (GLsizei)viewSize.width,
-                      (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, NULL));
+                      (GLsizei)viewSize.height, 0, GL_RGBA, GL_FLOAT, nullptr));
     OOGL(glBindTexture(GL_TEXTURE_2D, 0));
   }
 
@@ -11691,7 +11655,7 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
   OOGL(glUniform1i(glGetUniformLocation(program, "image"), 0));
 
   OOGL(glBindVertexArray(quadTextureVAO));
-  OOGL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+  OOGL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
   OOGL(glBindVertexArray(0));
 
   OOGL(glBindFramebuffer(GL_FRAMEBUFFER, defaultDrawFBO));
@@ -11711,7 +11675,7 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
                                           : pingpongColorbuffers[!horizontal]));
     OOGL(glUniform1i(glGetUniformLocation(blur, "imageIn"), 0));
     OOGL(glBindVertexArray(quadTextureVAO));
-    OOGL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    OOGL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
     OOGL(glBindVertexArray(0));
     horizontal = !horizontal;
     firstIteration = false;
@@ -11752,7 +11716,7 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
                    (gameView != nullptr ? gameView->colorSaturation() : 0.0f)));
 
   OOGL(glBindVertexArray(quadTextureVAO));
-  OOGL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+  OOGL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
   // restore GL_TEXTURE1 to 0, just in case we are returning from a
   // DETAIL_LEVEL_NORMAL to DETAIL_LEVEL_SHADERS

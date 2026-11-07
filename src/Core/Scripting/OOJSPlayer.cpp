@@ -26,17 +26,19 @@ MA 02110-1301, USA.
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToString.h"
+#include "OODescription.h"
 #include "OOFunctionAttributes.h"
 #include "OOJSEntity.h"
 #include "OOJSShip.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOObjCPList.h"
 #include "OOStringParsing.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityContracts.h"
 #include "PlayerEntityLegacyScriptEngine.h"
 #include "PlayerEntityScriptMethods.h"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 
 /*
         The Player class is a static JSClassDef registered with
@@ -179,7 +181,7 @@ void InitOOJSPlayer(JSContext* context, JSValueConst global) {
   OOJSInitClass(context, global, sPlayerClassID, JS_UNDEFINED,
                 OOJSUnconstructableConstruct, 0, sPlayerProperties,
                 OOJS_COUNT(sPlayerProperties), sPlayerMethods,
-                OOJS_COUNT(sPlayerMethods), NULL, 0);
+                OOJS_COUNT(sPlayerMethods), nullptr, 0);
   OOJSRegisterObjectConverter(sPlayerClassID, OOJSBasicPrivateObjectConverter);
 
   /*	Create player object as a property of the global object. As before, it
@@ -193,9 +195,9 @@ void InitOOJSPlayer(JSContext* context, JSValueConst global) {
                             OOJS_PROP_READONLY);
 }
 
-JSClassID JSPlayerClassID(void) { return sPlayerClassID; }
+JSClassID JSPlayerClassID() { return sPlayerClassID; }
 
-JSValue JSPlayerObject(void) {
+JSValue JSPlayerObject() {
   JSContext* context = OOJSAcquireContext();
   // Not OOJavaScriptEngine's globalObject(): this is used while the engine is
   // being set up.
@@ -206,7 +208,7 @@ JSValue JSPlayerObject(void) {
   return result;
 }
 
-PlayerEntity* OOPlayerForScripting(void) {
+PlayerEntity* OOPlayerForScripting() {
   PlayerEntity* player = PLAYER;
   if (player != nullptr) player->setScriptTargetToSelf();
 
@@ -698,7 +700,7 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
     Entity* destEntity = oo::EntityIn(destValue);  // the entity node's
 
     if (destValue.isNull()) {
-      if (player != nullptr) player->setDockTarget(NULL);
+      if (player != nullptr) player->setDockTarget(nullptr);
       OK = true;
     } else if ((oo::ToShip(destEntity) != nullptr) &&
                destEntity->getIsStation())  // what -isStation forwarded to
@@ -708,7 +710,7 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
     } else if (const std::string* destString = destValue.getIf<std::string>()) {
       if (*destString == "NEARBY_SYSTEM") {
         // find the nearest system with a main station, or die in the attempt!
-        if (player != nullptr) player->setDockTarget(NULL);
+        if (player != nullptr) player->setDockTarget(nullptr);
 
         double rescueRange = MAX_JUMP_RANGE;  // reach at least 1 other system!
         if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false)) {
@@ -759,7 +761,7 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS) {
     } else {
       int bValue = JS_ToBool(context, OOJS_ARGV[0]);
       if (bValue == 0) {
-        if (player != nullptr) player->setDockTarget(NULL);
+        if (player != nullptr) player->setDockTarget(nullptr);
         OK = true;
       }
     }

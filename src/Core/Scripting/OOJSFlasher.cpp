@@ -102,14 +102,14 @@ void InitOOJSFlasher(JSContext* context, JSValueConst global) {
   OOJSInitClass(context, global, sFlasherClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sFlasherProperties,
                 OOJS_COUNT(sFlasherProperties), sFlasherMethods,
-                OOJS_COUNT(sFlasherMethods), NULL, 0);
+                OOJS_COUNT(sFlasherMethods), nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sFlasherClassID, OOJSEntityObjectConverter);
   OOJSRegisterSubclass(sFlasherClassID, JSEntityClassID());
 }
 
-JSClassID JSFlasherClassID(void) { return sFlasherClassID; }
+JSClassID JSFlasherClassID() { return sFlasherClassID; }
 
 static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
                                       OOFlasherEntity** outEntity) {
@@ -118,7 +118,7 @@ static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
 
-  if (outEntity == NULL) return false;
+  if (outEntity == nullptr) return false;
   *outEntity = nullptr;
 
   result = OOJSEntityGetEntity(context, jsobj, &entity);
@@ -136,11 +136,11 @@ static bool JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj,
 
 // The bodies of OOFlasherEntity (OOJavaScriptExtensions), which the C++ class's
 // overrides of the root's JS members call.
-std::optional<std::string> OOJSFlasherJSClassName(void) {
+std::optional<std::string> OOJSFlasherJSClassName() {
   return std::string("Flasher");
 }
 
-bool OOJSFlasherIsVisibleToScripts(void) { return true; }
+bool OOJSFlasherIsVisibleToScripts() { return true; }
 
 static JSValue FlasherGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)

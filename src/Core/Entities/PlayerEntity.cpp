@@ -38,6 +38,7 @@ MA 02110-1301, USA.
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
 #include "OODebugSupport.h"
+#include "OODescription.h"
 #include "OOEntityFilterPredicate.h"
 #include "OOEquipmentType.h"
 #include "OOFullScreenController.h"
@@ -54,7 +55,6 @@ MA 02110-1301, USA.
 #include "OOMesh.h"
 #include "OOMusicController.h"
 #include "OOOXZManager.h"
-#include "OOObjCPList.h"
 #include "OOOpenGLExtensionManager.h"
 #include "OOPListGameTypes.h"
 #include "OOPListParsing.h"
@@ -89,10 +89,12 @@ MA 02110-1301, USA.
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
+#include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/Process.hpp"
 #include "oofnd/ResourcePaths.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
@@ -2724,7 +2726,7 @@ void PlayerEntity::completeSetUpAndSetTarget(bool /*setTarget*/) {
   {
     const oo::PList startLimit =
         oo::Defaults::standard().object("start-script-limit-value");
-    doWorldScriptEvent(OOJSID("startUp"), context, NULL, 0,
+    doWorldScriptEvent(OOJSID("startUp"), context, nullptr, 0,
                        MAX(0.0, oo::PListGet<float>::from(
                                     startLimit.isNull() ? nullptr : &startLimit,
                                     kOOJSLongTimeLimit)));
@@ -2734,7 +2736,7 @@ void PlayerEntity::completeSetUpAndSetTarget(bool /*setTarget*/) {
 
 void PlayerEntity::startUpComplete() {
   JSContext* context = OOJSAcquireContext();
-  doWorldScriptEvent(OOJSID("startUpComplete"), context, NULL, 0,
+  doWorldScriptEvent(OOJSID("startUpComplete"), context, nullptr, 0,
                      kOOJSLongTimeLimit);
   OOJSRelinquishContext(context);
 }
@@ -4247,7 +4249,7 @@ void PlayerEntity::performLaunchingUpdates(OOTimeDelta delta_t) {
     setDockingClearanceStatus(DOCKING_CLEARANCE_STATUS_NONE);
     ::StationEntity* stationLaunchedFrom = oo::ToStation(
         (UNIVERSE != nullptr ? UNIVERSE->nearestEntityMatchingPredicate(
-                                   IsStationPredicate, NULL, this)
+                                   IsStationPredicate, nullptr, this)
                              : nullptr));
     doScriptEvent(OOJSID("shipLaunchedFromStation"), stationLaunchedFrom);
   }
@@ -8462,11 +8464,12 @@ void PlayerEntity::activatePrimableEquipment(NSUInteger index,
     switch (mode) {
       case OOPRIMEDEQUIP_MODE:
         if (eqScript != nullptr)
-          eqScript->callMethod(OOJSID("mode"), context, NULL, 0, NULL);
+          eqScript->callMethod(OOJSID("mode"), context, nullptr, 0, nullptr);
         break;
       case OOPRIMEDEQUIP_ACTIVATED:
         if (eqScript != nullptr)
-          eqScript->callMethod(OOJSID("activated"), context, NULL, 0, NULL);
+          eqScript->callMethod(OOJSID("activated"), context, nullptr, 0,
+                               nullptr);
         break;
     }
     OOJSRelinquishContext(context);
@@ -9323,7 +9326,6 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
     }
 #endif
 #endif
-#if !OOLITE_MAC_COCOA_UI
     // window/fullscreen
     if ((gameView != nullptr ? gameView->inFullScreenMode() : false)) {
       gui->setText(OO_DESC("gameoptions-play-in-window"),
@@ -9333,7 +9335,6 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
                    GUI_ROW(GAME, DISPLAYSTYLE), GUI_ALIGN_CENTER);
     }
     gui->setKey(std::string(GUI_KEY_OK), GUI_ROW(GAME, DISPLAYSTYLE));
-#endif
 
     gui->setText(OO_DESC("gameoptions-joystick-configuration"),
                  GUI_ROW(GAME, STICKMAPPER), GUI_ALIGN_CENTER);
@@ -13366,7 +13367,8 @@ bool PlayerEntity::doWorldEventUntilMissionScreen(OOJSPropID message) {
   while (scriptEntry != scripts.end() && gui_screen != GUI_SCREEN_MISSION &&
          isDocked()) {
     if (scriptEntry->second.get() != nullptr)
-      scriptEntry->second.get()->callMethod(message, context, NULL, 0, NULL);
+      scriptEntry->second.get()->callMethod(message, context, nullptr, 0,
+                                            nullptr);
     ++scriptEntry;
   }
   OOJSRelinquishContext(context);
@@ -13383,7 +13385,7 @@ bool PlayerEntity::doWorldEventUntilMissionScreen(OOJSPropID message) {
 void PlayerEntity::doWorldScriptEvent(OOJSPropID message, JSContext* context,
                                       JSValue* argv, int argc,
                                       OOTimeDelta limit) {
-  OOCParameterAssert(context != NULL);
+  OOCParameterAssert(context != nullptr);
 
   // ORDER-SENSITIVE (decision D): load order (was -allValues order); a
   // snapshot, as -allValues was.
@@ -13392,7 +13394,7 @@ void PlayerEntity::doWorldScriptEvent(OOJSPropID message, JSContext* context,
   for (const auto& entry : scripts) {
     OOJSStartTimeLimiterWithTimeLimit(limit);
     if (entry.second.get() != nullptr)
-      entry.second.get()->callMethod(message, context, argv, argc, NULL);
+      entry.second.get()->callMethod(message, context, argv, argc, nullptr);
     OOJSStopTimeLimiter();
   }
 }

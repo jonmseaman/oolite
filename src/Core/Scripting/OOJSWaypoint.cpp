@@ -86,14 +86,14 @@ void InitOOJSWaypoint(JSContext* context, JSValueConst global) {
             "Entity must be initialized before Waypoint.");
   OOJSInitClass(context, global, sWaypointClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sWaypointProperties,
-                OOJS_COUNT(sWaypointProperties), NULL, 0, NULL, 0);
+                OOJS_COUNT(sWaypointProperties), nullptr, 0, nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sWaypointClassID, OOJSEntityObjectConverter);
   OOJSRegisterSubclass(sWaypointClassID, JSEntityClassID());
 }
 
-JSClassID JSWaypointClassID(void) { return sWaypointClassID; }
+JSClassID JSWaypointClassID() { return sWaypointClassID; }
 
 static bool JSWaypointGetWaypointEntity(JSContext* context,
                                         JSValueConst waypointObj,
@@ -103,7 +103,7 @@ static bool JSWaypointGetWaypointEntity(JSContext* context,
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
 
-  if (outEntity == NULL) return false;
+  if (outEntity == nullptr) return false;
   *outEntity = nullptr;
 
   result = OOJSEntityGetEntity(context, waypointObj, &entity);
@@ -122,11 +122,11 @@ static bool JSWaypointGetWaypointEntity(JSContext* context,
 
 // The bodies of OOWaypointEntity (OOJavaScriptExtensions), which the C++
 // class's overrides of the root's JS members call.
-std::optional<std::string> OOJSWaypointJSClassName(void) {
+std::optional<std::string> OOJSWaypointJSClassName() {
   return std::string("Waypoint");
 }
 
-bool OOJSWaypointIsVisibleToScripts(void) { return true; }
+bool OOJSWaypointIsVisibleToScripts() { return true; }
 
 static JSValue WaypointGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)

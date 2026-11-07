@@ -120,14 +120,14 @@ void InitOOJSPlanet(JSContext* context, JSValueConst global) {
             "Entity must be initialized before Planet.");
   OOJSInitClass(context, global, sPlanetClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sPlanetProperties,
-                OOJS_COUNT(sPlanetProperties), NULL, 0, NULL, 0);
+                OOJS_COUNT(sPlanetProperties), nullptr, 0, nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sPlanetClassID, OOJSEntityObjectConverter);
   OOJSRegisterSubclass(sPlanetClassID, JSEntityClassID());
 }
 
-JSClassID JSPlanetClassID(void) { return sPlanetClassID; }
+JSClassID JSPlanetClassID() { return sPlanetClassID; }
 
 // The bodies of OOPlanetEntity (OOJavaScriptExtensions), called by the C++
 // planet's overrides.

@@ -40,7 +40,7 @@ SOFTWARE.
 #include "oofnd/String.hpp"
 
 namespace {
-std::string AdditionalLogHeaderInfo(void);
+std::string AdditionalLogHeaderInfo();
 }
 
 #ifdef ALLOW_PROCEDURAL_PLANETS
@@ -59,7 +59,7 @@ std::string AdditionalLogHeaderInfo(void);
 #warning TARGET_INCOMING_MISSILES is no longer optional and the macro should no longer be defined.
 #endif
 
-void OOPrintLogHeader(void) {
+void OOPrintLogHeader() {
 // Bunch of string literal macros which are assembled into a CPU info string.
 #if defined(__ppc__)
 #define CPU_TYPE_STRING "PPC-32"
@@ -118,10 +118,6 @@ void OOPrintLogHeader(void) {
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
       "JavaScript console support",
-#if OOLITE_MAC_COCOA_UI
-      // Under Mac OS X, Debug.oxp adds more than console support.
-      "Debug plug-in support",
-#endif
 #endif
 
 #if OO_OXP_VERIFIER_ENABLED
@@ -192,7 +188,7 @@ void OOPrintLogHeader(void) {
 
 // A std::string, for OOJSConsole's console.platformDescription; the same
 // "<system> (<cpu><variant>)" text.
-std::string OOPlatformDescription(void) {
+std::string OOPlatformDescription() {
 #if OOLITE_MACOS
   const std::string platformSystem =
       OS_TYPE_STRING " " + oo::process::operatingSystemVersionString();
@@ -210,10 +206,10 @@ std::string OOPlatformDescription(void) {
 
 static std::optional<std::string> GetSysCtlString(const char* name);
 static unsigned long long GetSysCtlInt(const char* name);
-static std::string GetCPUDescription(void);
+static std::string GetCPUDescription();
 
 namespace {
-std::string AdditionalLogHeaderInfo(void) {
+std::string AdditionalLogHeaderInfo() {
   std::optional<std::string> sysModel;
   unsigned long long sysPhysMem;
 
@@ -243,7 +239,7 @@ std::string AdditionalLogHeaderInfo(void) {
 #define CPUFAMILY_INTEL_SKYLAKE 0x37fc219f
 #endif
 
-static std::string GetCPUDescription(void) {
+static std::string GetCPUDescription() {
   std::optional<std::string> typeStr, subTypeStr;
 
   unsigned long long sysCPUType = GetSysCtlInt("hw.cputype");
@@ -328,15 +324,15 @@ static std::string GetCPUDescription(void) {
 }
 
 static std::optional<std::string> GetSysCtlString(const char* name) {
-  char* buffer = NULL;
+  char* buffer = nullptr;
   size_t size = 0;
 
   // Get size
-  sysctlbyname(name, NULL, &size, NULL, 0);
+  sysctlbyname(name, nullptr, &size, nullptr, 0);
   if (size == 0) return std::nullopt;
 
   buffer = static_cast<char*>(alloca(size));
-  if (sysctlbyname(name, buffer, &size, NULL, 0) != 0) return std::nullopt;
+  if (sysctlbyname(name, buffer, &size, nullptr, 0) != 0) return std::nullopt;
   return std::string(buffer);
 }
 
@@ -346,11 +342,11 @@ static unsigned long long GetSysCtlInt(const char* name) {
   size_t size;
 
   size = sizeof llresult;
-  if (sysctlbyname(name, &llresult, &size, NULL, 0) != 0) return 0;
+  if (sysctlbyname(name, &llresult, &size, nullptr, 0) != 0) return 0;
   if (size == sizeof llresult) return llresult;
 
   size = sizeof intresult;
-  if (sysctlbyname(name, &intresult, &size, NULL, 0) != 0) return 0;
+  if (sysctlbyname(name, &intresult, &size, nullptr, 0) != 0) return 0;
   if (size == sizeof intresult) return intresult;
 
   return 0;

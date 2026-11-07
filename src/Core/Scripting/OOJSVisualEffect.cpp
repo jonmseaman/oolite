@@ -25,14 +25,16 @@ MA 02110-1301, USA.
 
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOColor.h"
+#include "OODescription.h"
 #include "OOJSEntity.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOMesh.h"
-#include "OOObjCPList.h"
 #include "OOScript.h"
 #include "OOVisualEffectEntity.h"
 #include "ResourceManager.h"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OOAssert.h"
 
 /*
@@ -179,14 +181,14 @@ void InitOOJSVisualEffect(JSContext* context, JSValueConst global) {
   OOJSInitClass(context, global, sVisualEffectClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sVisualEffectProperties,
                 OOJS_COUNT(sVisualEffectProperties), sVisualEffectMethods,
-                OOJS_COUNT(sVisualEffectMethods), NULL, 0);
+                OOJS_COUNT(sVisualEffectMethods), nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sVisualEffectClassID, OOJSEntityObjectConverter);
   OOJSRegisterSubclass(sVisualEffectClassID, JSEntityClassID());
 }
 
-JSClassID JSVisualEffectClassID(void) { return sVisualEffectClassID; }
+JSClassID JSVisualEffectClassID() { return sVisualEffectClassID; }
 
 static bool JSVisualEffectGetVisualEffectEntity(
     JSContext* context, JSValueConst visualEffectObj,
@@ -196,7 +198,7 @@ static bool JSVisualEffectGetVisualEffectEntity(
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
 
-  if (outEntity == NULL) return false;
+  if (outEntity == nullptr) return false;
   *outEntity = nullptr;
 
   result = OOJSEntityGetEntity(context, visualEffectObj, &entity);
@@ -212,11 +214,11 @@ static bool JSVisualEffectGetVisualEffectEntity(
 }
 
 // The bodies the C++ effect's overrides call.
-std::optional<std::string> OOJSVisualEffectJSClassName(void) {
+std::optional<std::string> OOJSVisualEffectJSClassName() {
   return std::string("VisualEffect");
 }
 
-bool OOJSVisualEffectIsVisibleToScripts(void) { return true; }
+bool OOJSVisualEffectIsVisibleToScripts() { return true; }
 
 std::vector<oo::EntityHold> OOJSVisualEffectSubEntitiesForScript(
     OOVisualEffectEntity* effect) {
