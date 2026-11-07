@@ -1,0 +1,43 @@
+// Linux development container (Ubuntu 26.04, LLVM 22): build and test the Linux game, and run
+// clang-format at the version CI checks with. See .devcontainer/README.md.
+{
+  "name": "Oolite (Ubuntu 26.04, LLVM 22)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  // When this checkout is the oolite-dev submodule, its .git is a file pointing at
+  // ../.git/modules/oolite-dev, so the parent folder is mounted to keep git working.
+  "workspaceMount": "source=${localWorkspaceFolder}/..,target=/workspaces/parent,type=bind",
+  "workspaceFolder": "/workspaces/parent/${localWorkspaceFolderBasename}",
+
+  // Linux build directories live in a volume, apart from the Windows build/ in the checkout,
+  // and build much faster there than over the bind mount.
+  "mounts": [
+    "source=oolite-linux-build,target=/workspaces/parent/${localWorkspaceFolderBasename}/build,type=volume"
+  ],
+
+  "containerEnv": {
+    // mk.sh writes compile_commands.json here instead of the checkout's root, which keeps the
+    // Windows clangd database.
+    "OOLITE_COMPILE_COMMANDS_DIR": "build"
+  },
+
+  "remoteUser": "ubuntu",
+  "postCreateCommand": "sudo chown ubuntu:ubuntu build && git config --global --add safe.directory '*'",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "llvm-vs-code-extensions.vscode-clangd",
+        "mesonbuild.mesonbuild"
+      ],
+      "settings": {
+        "clangd.path": "/usr/lib/llvm-22/bin/clangd",
+        "clangd.arguments": ["--compile-commands-dir=build"],
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
