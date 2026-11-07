@@ -14,7 +14,12 @@
 
 oofnd_inc = include_directories('..')
 oofnd_override_options = ['cpp_std=c++20', 'warning_level=2', 'werror=true']
-oofnd_dep = declare_dependency(include_directories: oofnd_inc)
+# ICU: oo::str::localizedCompare (String.hpp) collates with it, as GNUstep's -localizedCompare:
+# does (bead oo-r4d6). GNUstep-base already links the same ICU, so the game gains no new DLL.
+# icu-uc is named too: String.hpp calls it directly (uloc_getDefault, unorm2_*), and icu-i18n.pc
+# lists it only under Requires.private, so a shared link on Linux does not get -licuuc from i18n.
+oofnd_icu_dep = [dependency('icu-uc', required: true), dependency('icu-i18n', required: true)]
+oofnd_dep = declare_dependency(include_directories: oofnd_inc, dependencies: oofnd_icu_dep)
 
 # The Foundation-free Objective-C floor (bead oo-3rb.1, proposed ADR-0029): the OOObject root
 # class and the OOConstantString class behind @"..." literals, on libobjc2 alone. Linked into the game
@@ -24,6 +29,6 @@ oofnd_dep = declare_dependency(include_directories: oofnd_inc)
 oofnd_objc_args = ['-fno-constant-cfstrings', '-fconstant-string-class=OOConstantString']
 oofnd_objc_dep = declare_dependency(
     include_directories: oofnd_inc,
-    sources: files('objc/OOObject.mm', 'objc/OOConstantString.mm', 'objc/OOException.mm'),
+    sources: files('objc/OOObject.mm', 'objc/OOConstantString.mm', 'objc/OOException.mm', 'objc/OOAssert.mm'),
     dependencies: cc.find_library('objc', required: true),
 )
