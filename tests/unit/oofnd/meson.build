@@ -33,13 +33,26 @@ oofnd_tests = [
     'test_tcp_stream_format',
 ]
 
+# Left out off Windows: each test assumes the Windows toolchain, so it doesn't build or pass elsewhere.
+oofnd_windows_only = {
+    'test_foundation_types': 'static_asserts LLP64 (long is long long)',
+    'test_string': 'its version table was captured from gnustep-base on Windows (LLP64 clamps)',
+    'test_plist_get': 'its table was captured from gnustep-base on Windows (32-bit unsigned long)',
+    'test_resourcepaths': 'simulates Windows paths, whose backslashes only a Windows std::filesystem splits',
+    'test_defaults': 'simulates Windows paths, whose backslashes only a Windows std::filesystem splits',
+}
+
 foreach t : oofnd_tests
+    if host_machine.system() != 'windows' and t in oofnd_windows_only
+        continue
+    endif
     exe = executable(
         'oofnd_' + t,
         t + '.cpp',
         dependencies: oofnd_dep,
         override_options: oofnd_override_options,
         install: false,
+        build_by_default: unit_tests_by_default,
     )
     test(t, exe, suite: 'oofnd', timeout: 60)
 endforeach
@@ -55,6 +68,7 @@ test('test_http',
         link_args: oofnd_http_link_args,
         override_options: oofnd_override_options,
         install: false,
+        build_by_default: unit_tests_by_default,
     ),
     suite: 'oofnd',
     timeout: 60,
@@ -74,14 +88,21 @@ oofnd_plist_tests = [
     'test_plist_description',
     'test_plist_hdr_brightness_index',
 ]
+foreach name, reason : oofnd_windows_only
+    assert(name in oofnd_tests or name in oofnd_plist_tests, name + ' in oofnd_windows_only is not a test here')
+endforeach
 
 foreach t : oofnd_plist_tests
+    if host_machine.system() != 'windows' and t in oofnd_windows_only
+        continue
+    endif
     exe = executable(
         'oofnd_' + t,
         t + '.cpp',
         dependencies: oofnd_dep,
         override_options: oofnd_override_options,
         install: false,
+        build_by_default: unit_tests_by_default,
     )
     test(t, exe, suite: ['oofnd', 'oofnd-plist'], timeout: 60)
 endforeach
@@ -105,6 +126,7 @@ foreach t : oofnd_objc_tests
         dependencies: oofnd_objc_dep,
         override_options: oofnd_override_options,
         install: false,
+        build_by_default: unit_tests_by_default,
     )
     test(t, exe, suite: 'oofnd', timeout: 60)
 endforeach

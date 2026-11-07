@@ -110,9 +110,11 @@ endif
 # The unit tests are built by every flavour but deployment: they test the live assertion and
 # debug paths, which a deployment build (NDEBUG) compiles out, and upstream's CI builds
 # `./mk.sh build deployment` (since #756), which builds every default target.
-# They are Windows-only for now: they were written and verified on the native Windows toolchain
-# and use its headers and LLP64 types (<process.h>, _putenv_s, <winsock2.h>, long == 32 bits),
-# so the Linux CI flavours build the game without them.
+# Elsewhere they are built only when meson test asks for them (unit_tests_by_default), so the
+# Linux CI flavours build just the game. Tests written against the Windows toolchain's headers and
+# LLP64 types (<process.h>, _putenv_s, <winsock2.h>, long == 32 bits) are left out there: each
+# suite's meson.build lists them with the reason.
+unit_tests_by_default = host_machine.system() == 'windows'
 #
 # deployment_unit_tests builds the oofnd suite under the deployment macros as well, in a separate
 # non-LTO build directory (meson setup with -Ddeployment_unit_tests=true): OOCAssert compiled out
@@ -125,22 +127,28 @@ if host_machine.system() == 'windows'
     test_env = environment()
     test_env.prepend('PATH', toolchain_bin)
     add_test_setup('default', env: test_env, is_default: true)
+else
+    # The GL tests make their context in an SDL window; SDL's offscreen driver gives them one with
+    # no display, as the component tests' launches have (tests/component/console.py).
+    test_env = environment()
+    test_env.set('SDL_VIDEODRIVER', 'offscreen')
+    add_test_setup('default', env: test_env, is_default: true)
 endif
 
-if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows'
+if not get_option('deployment_release') or get_option('deployment_unit_tests')
     # Unit tests that need no game build (meson test --suite oofnd).
     subdir('tests/unit/oofnd')
 endif
 
-if not get_option('deployment_release') and host_machine.system() == 'windows'
+if not get_option('deployment_release')
     # Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
     subdir('tests/unit/core')
 endif
 
 # Every game and test header compiles on its own, so include order never matters and clang-format
-# may sort includes freely (meson test --suite headers). Windows-only like the unit tests above,
-# whose headers it also checks; it needs the finished build's dependency log, which meson test has.
-if not get_option('deployment_release') and host_machine.system() == 'windows'
+# may sort includes freely (meson test --suite headers). It checks the unit tests' headers too, and
+# needs the finished build's dependency log, which meson test has.
+if not get_option('deployment_release')
     test('headers_standalone', find_program('python3'),
         args: [files('tests/check_headers_standalone.py'), meson.project_build_root()],
         suite: 'headers', timeout: 900, is_parallel: false)
