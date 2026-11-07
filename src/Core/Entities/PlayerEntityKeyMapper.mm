@@ -191,7 +191,7 @@ oo::PList KeyConfigEntry(const oo::PList::Dict& settings, const std::optional<st
 // sets up a copy of the raw keyconfig.plist file so we can run checks against it to tell if a key is set to default
 void PlayerEntity::initCheckingDictionary()
 {
-    const oo::PList kdicmaster = [::ResourceManager cxx_dictionaryFromFilesNamed:"keyconfig2.plist" inFolder:std::optional<std::string>("Config") mergeMode:MERGE_BASIC cache:NO];
+    const oo::PList kdicmaster = ResourceManager::dictionaryFromFilesNamed("keyconfig2.plist", std::optional<std::string>("Config"), MERGE_BASIC, NO);
     const std::string kbd = KeyboardCode();
     const oo::PList* kdicValue = kdicmaster.get<oo::PList::Dict>(kbd);
     oo::PList::Dict kdic = (kdicValue != nullptr) ? *kdicValue->getIf<oo::PList::Dict>() : oo::PList::Dict();
@@ -226,8 +226,8 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip, bool resetCurrentRow)
 {
     const std::string kbd = KeyboardCode();
 
-    ::GuiDisplayGen* gui = [UNIVERSE gui];
-    ::MyOpenGLView* gameView = [UNIVERSE gameView];
+    ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
+    ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
     OOGUIScreenID oldScreen = gui_screen;
     OOGUITabStop tabStop[GUI_MAX_COLUMNS];
     tabStop[0] = 10;
@@ -240,7 +240,8 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip, bool resetCurrentRow)
 
     gui_screen = GUI_SCREEN_KEYBOARD;
     BOOL guiChanged = (oldScreen != gui_screen);
-    [[UNIVERSE gameController] setMouseInteractionModeForUIWithMouseInteraction:YES];
+    if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
+        UNIVERSE->gameController()->setMouseInteractionModeForUIWithMouseInteraction(YES);
 
     gui->clear();
     gui->setTitle(std::string("Configure Keyboard"));
@@ -278,9 +279,12 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip, bool resetCurrentRow)
     gui->setForegroundTextureKey(std::string(status() == STATUS_DOCKED ? "docked_overlay" : "paused_overlay"));
     gui->setBackgroundTextureKey(std::string("keyboardsettings"));
 
-    [gameView clearMouse];
-    [gameView clearKeys];
-    [UNIVERSE enterGUIViewModeWithMouseInteraction:YES];
+    if (gameView != nullptr)
+        gameView->clearMouse();
+    if (gameView != nullptr)
+        gameView->clearKeys();
+    if (UNIVERSE != nullptr)
+        UNIVERSE->enterGUIViewModeWithMouseInteraction(YES);
 
     if (guiChanged)
         noteGUIDidChangeFrom(oldScreen, gui_screen);
@@ -289,9 +293,11 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip, bool resetCurrentRow)
 void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui, ::MyOpenGLView* gameView)
 {
     handleGUIUpDownArrowKeys();
-    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || [gameView isDown:gvMouseDoubleClick]);
-    if ([gameView isDown:gvMouseDoubleClick])
-        [gameView clearMouse];
+    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
+    if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
+        if (gameView != nullptr)
+            gameView->clearMouse();
+    }
 
     const std::string key = gui->keyForRow(gui->getSelectedRow()).value_or(""); // a nil key has no prefix
     if (oo::str::hasPrefix(key, "Index:"))
@@ -309,14 +315,18 @@ void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui, ::MyOpenGLView* g
             if (from_function == 0)
                 current_row = GUI_ROW_KC_FUNCSTART + MAX_ROWS_KC_FUNCTIONS - 1;
             setGuiToKeyMapperScreen(from_function);
-            if ([gameView isDown:gvMouseDoubleClick])
-                [gameView clearMouse];
+            if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
+                if (gameView != nullptr)
+                    gameView->clearMouse();
+            }
             return;
         }
         if (oo::str::hasPrefix(key, "kbd:")) {
             setGuiToKeyboardLayoutScreen(0);
-            if ([gameView isDown:gvMouseDoubleClick])
-                [gameView clearMouse];
+            if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
+                if (gameView != nullptr)
+                    gameView->clearMouse();
+            }
             return;
         }
         current_row = gui->getSelectedRow();
@@ -328,11 +338,12 @@ void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui, ::MyOpenGLView* g
             definitions = getCustomEquipArray(selected_entry.get<std::string>(std::string(KEY_KC_DEFINITION)));
         }
         key_list = definitions.isArray() ? definitions : oo::PList(oo::PList::Array()); // -initWithArray:nil was empty
-        [gameView clearKeys]; // try to stop key bounces
+        if (gameView != nullptr)
+            gameView->clearKeys(); // try to stop key bounces
         setGuiToKeyConfigScreen(YES);
     }
 
-    if ([gameView isDown:'u']) {
+    if ((gameView != nullptr ? gameView->isDown('u') : false)) {
         // pressed 'u' on an "more" line
         if (oo::str::hasPrefix(key, "More:"))
             return;
@@ -342,9 +353,9 @@ void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui, ::MyOpenGLView* g
         reloadPage();
     }
 
-    if ([gameView isDown:'r']) {
+    if ((gameView != nullptr ? gameView->isDown('r') : false)) {
         // reset single entry or all
-        if (![gameView isCtrlDown]) {
+        if (!(gameView != nullptr ? gameView->isCtrlDown() : false)) {
             // pressed 'r' on an "more" line
             if (oo::str::hasPrefix(key, "More:"))
                 return;
@@ -393,7 +404,7 @@ void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui, ::MyOpenGLView* g
             setGuiToConfirmClearScreen();
         }
     }
-    if ([gameView isDown:' '] && !has_error)
+    if ((gameView != nullptr ? gameView->isDown(' ') : false) && !has_error)
         setGuiToGameOptionsScreen();
 }
 
@@ -479,7 +490,7 @@ void PlayerEntity::setGuiToKeyConfigScreen()
 void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow)
 {
     NSUInteger i = 0;
-    ::GuiDisplayGen* gui = [UNIVERSE gui];
+    ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     OOGUIScreenID oldScreen = gui_screen;
     OOGUITabStop tabStop[GUI_MAX_COLUMNS];
     tabStop[0] = 10;
@@ -560,15 +571,17 @@ void PlayerEntity::setGuiToKeyConfigScreen(bool resetSelectedRow)
 
     gui->setForegroundTextureKey(std::string(status() == STATUS_DOCKED ? "docked_overlay" : "paused_overlay"));
     gui->setBackgroundTextureKey(std::string("keyboardsettings"));
-    [[UNIVERSE gameView] clearMouse];
-    [[UNIVERSE gameView] clearKeys];
+    if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
+        UNIVERSE->getGameView()->clearMouse();
+    if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
+        UNIVERSE->getGameView()->clearKeys();
     if (guiChanged)
         noteGUIDidChangeFrom(oldScreen, gui_screen);
 }
 
 void PlayerEntity::outputKeyDefinition(const std::string& key, const std::string& shift, const std::string& mod1, const std::string& mod2, NSUInteger skiprows)
 {
-    ::GuiDisplayGen* gui = [UNIVERSE gui];
+    ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     const std::string definition = selected_entry.get<std::string>(std::string(KEY_KC_DEFINITION));
 
     gui->setArray(Columns({ std::optional<std::string>(skiprows == 0 ? OO_DESC("oolite-keyconfig-update-key") : OO_DESC("oolite-keyconfig-update-alternate")), key }), GUI_ROW_KC_KEY + skiprows);
@@ -601,9 +614,11 @@ void PlayerEntity::outputKeyDefinition(const std::string& key, const std::string
 void PlayerEntity::handleKeyConfigKeys(::GuiDisplayGen* gui, ::MyOpenGLView* gameView)
 {
     handleGUIUpDownArrowKeys();
-    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || [gameView isDown:gvMouseDoubleClick]);
-    if ([gameView isDown:gvMouseDoubleClick])
-        [gameView clearMouse];
+    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
+    if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
+        if (gameView != nullptr)
+            gameView->clearMouse();
+    }
 
     if (selectKeyPress && (gui->getSelectedRow() == GUI_ROW_KC_KEY || gui->getSelectedRow() == (GUI_ROW_KC_KEY + 5))) {
         key_index = (gui->getSelectedRow() == GUI_ROW_KC_KEY ? 0 : 1);
@@ -628,7 +643,7 @@ void PlayerEntity::handleKeyConfigKeys(::GuiDisplayGen* gui, ::MyOpenGLView* gam
         reloadPage();
     }
 
-    if ((selectKeyPress && gui->getSelectedRow() == GUI_ROW_KC_CANCEL) || [gameView isDown:27]) {
+    if ((selectKeyPress && gui->getSelectedRow() == GUI_ROW_KC_CANCEL) || (gameView != nullptr ? gameView->isDown(27) : false)) {
         // esc or Cancel was pressed - get out of here
         reloadPage();
     }
@@ -636,8 +651,8 @@ void PlayerEntity::handleKeyConfigKeys(::GuiDisplayGen* gui, ::MyOpenGLView* gam
 
 void PlayerEntity::setGuiToKeyConfigEntryScreen()
 {
-    ::GuiDisplayGen* gui = [UNIVERSE gui];
-    ::MyOpenGLView* gameView = [UNIVERSE gameView];
+    ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
+    ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
     OOGUIScreenID oldScreen = gui_screen;
     gui_screen = GUI_SCREEN_KEYBOARD_ENTRY;
     BOOL guiChanged = (oldScreen != gui_screen);
@@ -651,9 +666,12 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen()
     const oo::PList* def = key_list.at(key_index);
     // if ([key isEqualToString:@"(not set)"]) key = @"";
     OOKeyCode k_int = (OOKeyCode)(def != nullptr ? def->get<long long>("key") : 0); // -integerValue
-    [gameView resetTypedString];
-    [gameView cxx_setTypedString:(k_int != 0 ? keyCodeDescriptionShort(k_int).value_or(std::string()) : std::string())];
-    [gameView setStringInput:gvStringInputAll];
+    if (gameView != nullptr)
+        gameView->resetTypedString();
+    if (gameView != nullptr)
+        gameView->setTypedString((k_int != 0 ? keyCodeDescriptionShort(k_int).value_or(std::string()) : std::string()));
+    if (gameView != nullptr)
+        gameView->setStringInput(gvStringInputAll);
 
     gui->clear();
     gui->setTitle(OO_DESC("oolite-keyconfig-update-entry-title")); // @"%@"
@@ -665,7 +683,7 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen()
 
     gui->addLongText(OO_DESC("oolite-keyconfig-update-entry-info"), GUI_ROW_KC_ENTRY_INFO, GUI_ALIGN_LEFT);
 
-    gui->setText(oo::str::formatRuntime(OO_DESC("Key: %@"), { TextArg([gameView cxx_typedString]) }), end_row, GUI_ALIGN_LEFT);
+    gui->setText(oo::str::formatRuntime(OO_DESC("Key: %@"), { TextArg((gameView != nullptr ? gameView->getTypedString() : std::optional<std::string>())) }), end_row, GUI_ALIGN_LEFT);
     gui->setColor(OOColor::cyanColor().get(), end_row);
     gui->setSelectableRange(NSMakeRange(0, 0));
 
@@ -674,10 +692,13 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen()
 
     gui->setForegroundTextureKey(std::string(status() == STATUS_DOCKED ? "docked_overlay" : "paused_overlay"));
     gui->setBackgroundTextureKey(std::string("keyboardsettings"));
-    [UNIVERSE enterGUIViewModeWithMouseInteraction:NO];
+    if (UNIVERSE != nullptr)
+        UNIVERSE->enterGUIViewModeWithMouseInteraction(NO);
 
-    [gameView clearMouse];
-    [gameView clearKeys];
+    if (gameView != nullptr)
+        gameView->clearMouse();
+    if (gameView != nullptr)
+        gameView->clearKeys();
     if (guiChanged)
         noteGUIDidChangeFrom(oldScreen, gui_screen);
 }
@@ -690,22 +711,25 @@ void PlayerEntity::handleKeyConfigEntryKeys(::GuiDisplayGen* gui, ::MyOpenGLView
     }
 
     handleGUIUpDownArrowKeys();
-    if ([gameView lastKeyWasShifted])
+    if ((gameView != nullptr ? gameView->lastKeyWasShifted() : false))
         last_shift = YES;
 
-    gui->setText(oo::str::formatRuntime(OO_DESC("Key: %@"), { TextArg([gameView cxx_typedString]) }), end_row);
+    gui->setText(oo::str::formatRuntime(OO_DESC("Key: %@"), { TextArg((gameView != nullptr ? gameView->getTypedString() : std::optional<std::string>())) }), end_row);
     gui->setColor(OOColor::cyanColor().get(), end_row);
 
     if (checkKeyPress(n_key_gui_select)) {
-        [gameView suppressKeysUntilKeyUp];
+        if (gameView != nullptr)
+            gameView->suppressKeysUntilKeyUp();
         // update function key
-        updateKeyDefinition([gameView cxx_typedString].value_or(""), key_index);
-        [gameView clearKeys]; // try to stop key bounces
+        updateKeyDefinition((gameView != nullptr ? gameView->getTypedString() : std::optional<std::string>()).value_or(""), key_index);
+        if (gameView != nullptr)
+            gameView->clearKeys(); // try to stop key bounces
         setGuiToKeyConfigScreen(YES);
     }
-    if ([gameView isDown:27]) // escape
+    if ((gameView != nullptr ? gameView->isDown(27) : false)) // escape
     {
-        [gameView suppressKeysUntilKeyUp];
+        if (gameView != nullptr)
+            gameView->suppressKeysUntilKeyUp();
         // don't update function key
         setGuiToKeyConfigScreen(YES);
     }
@@ -768,7 +792,7 @@ void PlayerEntity::updateShiftKeyDefinition(const std::string& key, NSUInteger i
 
 void PlayerEntity::setGuiToConfirmClearScreen()
 {
-    ::GuiDisplayGen* gui = [UNIVERSE gui];
+    ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     OOGUIScreenID oldScreen = gui_screen;
 
     gui_screen = GUI_SCREEN_KEYBOARD_CONFIRMCLEAR;
@@ -792,8 +816,10 @@ void PlayerEntity::setGuiToConfirmClearScreen()
     gui->setForegroundTextureKey(std::string(status() == STATUS_DOCKED ? "docked_overlay" : "paused_overlay"));
     gui->setBackgroundTextureKey(std::string("keyboardsettings"));
 
-    [[UNIVERSE gameView] clearMouse];
-    [[UNIVERSE gameView] clearKeys];
+    if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
+        UNIVERSE->getGameView()->clearMouse();
+    if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
+        UNIVERSE->getGameView()->clearKeys();
     if (guiChanged)
         noteGUIDidChangeFrom(oldScreen, gui_screen);
 }
@@ -802,13 +828,15 @@ void PlayerEntity::handleKeyMapperConfirmClearKeys(::GuiDisplayGen* gui, ::MyOpe
 {
     handleGUIUpDownArrowKeys();
 
-    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || [gameView isDown:gvMouseDoubleClick]);
-    if ([gameView isDown:gvMouseDoubleClick])
-        [gameView clearMouse];
+    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
+    if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
+        if (gameView != nullptr)
+            gameView->clearMouse();
+    }
 
     // Translation issue: we can't confidently use raw Y and N ascii as shortcuts. It's better to use the load-previous-commander keys.
-    const oo::PList* yesValue = [UNIVERSE cxx_descriptions]->find("load-previous-commander-yes");
-    const oo::PList* noValue = [UNIVERSE cxx_descriptions]->find("load-previous-commander-no");
+    const oo::PList* yesValue = UNIVERSE->descriptions()->find("load-previous-commander-yes");
+    const oo::PList* noValue = UNIVERSE->descriptions()->find("load-previous-commander-no");
     const std::u16string valueYes = oo::utf8ToUtf16(oo::str::lowercase(oo::PListGet<std::string>::from(yesValue, "y")));
     const std::u16string valueNo = oo::utf8ToUtf16(oo::str::lowercase(oo::PListGet<std::string>::from(noValue, "n")));
     unsigned char cYes, cNo;
@@ -816,15 +844,17 @@ void PlayerEntity::handleKeyMapperConfirmClearKeys(::GuiDisplayGen* gui, ::MyOpe
     cYes = (valueYes.empty() ? 0 : valueYes[0]) & 0x00ff; // Use lower byte of unichar.
     cNo = (valueNo.empty() ? 0 : valueNo[0]) & 0x00ff; // Use lower byte of unichar.
 
-    if ((selectKeyPress && (gui->getSelectedRow() == GUI_ROW_KC_CONFIRMCLEAR_YES)) || [gameView isDown:cYes] || [gameView isDown:cYes - 32]) {
+    if ((selectKeyPress && (gui->getSelectedRow() == GUI_ROW_KC_CONFIRMCLEAR_YES)) || (gameView != nullptr ? gameView->isDown(cYes) : false) || (gameView != nullptr ? gameView->isDown(cYes - 32) : false)) {
         deleteAllKeySettings();
-        [gameView suppressKeysUntilKeyUp];
+        if (gameView != nullptr)
+            gameView->suppressKeysUntilKeyUp();
         setGuiToKeyMapperScreen(0, YES);
     }
 
-    if ((selectKeyPress && (gui->getSelectedRow() == GUI_ROW_KC_CONFIRMCLEAR_NO)) || [gameView isDown:27] || [gameView isDown:cNo] || [gameView isDown:cNo - 32]) {
+    if ((selectKeyPress && (gui->getSelectedRow() == GUI_ROW_KC_CONFIRMCLEAR_NO)) || (gameView != nullptr ? gameView->isDown(27) : false) || (gameView != nullptr ? gameView->isDown(cNo) : false) || (gameView != nullptr ? gameView->isDown(cNo - 32) : false)) {
         // esc or NO was pressed - get out of here
-        [gameView suppressKeysUntilKeyUp];
+        if (gameView != nullptr)
+            gameView->suppressKeysUntilKeyUp();
         setGuiToKeyMapperScreen(0, YES);
     }
 }
@@ -909,8 +939,8 @@ void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui, NSUInteger skip)
                         defArray = (item != nullptr ? item->defaultModeKey() : oo::PList());
                         compArray = keyArray != nullptr ? *keyArray : oo::PList();
                     }
-                    for (j = 0; j < defArray.count(); j++) {
-                        for (k = 0; k < compArray.count(); k++) {
+                    for (j = 0; static_cast<std::size_t>(j) < defArray.count(); j++) {
+                        for (k = 0; static_cast<std::size_t>(k) < compArray.count(); k++) {
                             if (!compareKeyEntries(ElementAt(defArray, j), ElementAt(compArray, k))) {
                                 result = false;
                                 break;
@@ -1055,8 +1085,8 @@ std::vector<oo::PList> PlayerEntity::keyFunctionList()
     funcList.push_back(makeKeyGuiDict(OO_DESC("oolite-keydesc-key_mouse_control_yaw"), "key_mouse_control_yaw"));
     funcList.push_back(makeKeyGuiDict(OO_DESC("oolite-keydesc-key_hud_toggle"), "key_hud_toggle"));
 #if OO_FOV_INFLIGHT_CONTROL_ENABLED
-    funcList.push_back([oo::ToObjC(this) makeKeyGuiDict:OO_DESC("oolite-keydesc-key_inc_field_of_view") keyDef:"key_inc_field_of_view"]);
-    funcList.push_back([oo::ToObjC(this) makeKeyGuiDict:OO_DESC("oolite-keydesc-key_dec_field_of_view") keyDef:"key_dec_field_of_view"]);
+    funcList.push_back(makeKeyGuiDict(OO_DESC("oolite-keydesc-key_inc_field_of_view"), "key_inc_field_of_view")); // the member
+    funcList.push_back(makeKeyGuiDict(OO_DESC("oolite-keydesc-key_dec_field_of_view"), "key_dec_field_of_view"));
 #endif
     funcList.push_back(makeKeyGuiDict(OO_DESC("oolite-keydesc-key_comms_log"), "key_comms_log"));
 
@@ -1102,7 +1132,7 @@ std::vector<oo::PList> PlayerEntity::keyFunctionList()
     if (customEquipActivation.size() > 0) {
         funcList.push_back(makeKeyGuiDictHeader(OO_DESC("oolite-keydesc-header-oxp-equip")));
         int i;
-        for (i = 0; i < customEquipActivation.size(); i++) {
+        for (i = 0; static_cast<std::size_t>(i) < customEquipActivation.size(); i++) {
             const oo::PList equip = customEquipActivation[i];
             const std::string equipName = DescriptionOfString(OptionalStringForKey(equip, std::string(CUSTOMEQUIP_EQUIPNAME))); // %@: "(null)" for nil
             const std::string equipKey = DescriptionOfString(OptionalStringForKey(equip, std::string(CUSTOMEQUIP_EQUIPKEY)));
@@ -1140,8 +1170,8 @@ void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip)
 
 void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip, bool /*resetCurrentRow*/)
 {
-    ::GuiDisplayGen* gui = [UNIVERSE gui];
-    ::MyOpenGLView* gameView = [UNIVERSE gameView];
+    ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
+    ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
     OOGUIScreenID oldScreen = gui_screen;
     OOGUITabStop tabStop[GUI_MAX_COLUMNS];
     tabStop[0] = 10;
@@ -1151,7 +1181,8 @@ void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip, bool /*resetCurre
     gui_screen = GUI_SCREEN_KEYBOARD_LAYOUT;
     BOOL guiChanged = (oldScreen != gui_screen);
 
-    [[UNIVERSE gameController] setMouseInteractionModeForUIWithMouseInteraction:YES];
+    if (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr)
+        UNIVERSE->gameController()->setMouseInteractionModeForUIWithMouseInteraction(YES);
 
     gui->clear();
     gui->setTitle(std::string("Select Keyboard Layout"));
@@ -1165,9 +1196,12 @@ void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip, bool /*resetCurre
     gui->setForegroundTextureKey(std::string(status() == STATUS_DOCKED ? "docked_overlay" : "paused_overlay"));
     gui->setBackgroundTextureKey(std::string("keyboardsettings"));
 
-    [gameView clearMouse];
-    [gameView clearKeys];
-    [UNIVERSE enterGUIViewModeWithMouseInteraction:YES];
+    if (gameView != nullptr)
+        gameView->clearMouse();
+    if (gameView != nullptr)
+        gameView->clearKeys();
+    if (UNIVERSE != nullptr)
+        UNIVERSE->enterGUIViewModeWithMouseInteraction(YES);
 
     if (guiChanged)
         noteGUIDidChangeFrom(oldScreen, gui_screen);
@@ -1176,9 +1210,11 @@ void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip, bool /*resetCurre
 void PlayerEntity::handleKeyboardLayoutEntryKeys(::GuiDisplayGen* gui, ::MyOpenGLView* gameView)
 {
     handleGUIUpDownArrowKeys();
-    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || [gameView isDown:gvMouseDoubleClick]);
-    if ([gameView isDown:gvMouseDoubleClick])
-        [gameView clearMouse];
+    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
+    if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
+        if (gameView != nullptr)
+            gameView->clearMouse();
+    }
 
     const std::string key = gui->keyForRow(gui->getSelectedRow()).value_or(""); // a nil key has no prefix
     if (selectKeyPress) {
@@ -1191,8 +1227,10 @@ void PlayerEntity::handleKeyboardLayoutEntryKeys(::GuiDisplayGen* gui, ::MyOpenG
             if (from_function == 0)
                 current_row = GUI_ROW_KC_FUNCSTART + MAX_ROWS_KC_FUNCTIONS - 1;
             setGuiToKeyboardLayoutScreen(from_function);
-            if ([gameView isDown:gvMouseDoubleClick])
-                [gameView clearMouse];
+            if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
+                if (gameView != nullptr)
+                    gameView->clearMouse();
+            }
             return;
         }
 
@@ -1204,26 +1242,28 @@ void PlayerEntity::handleKeyboardLayoutEntryKeys(::GuiDisplayGen* gui, ::MyOpenG
         initKeyConfigSettings();
         initCheckingDictionary();
 
-        [gameView clearKeys]; // try to stop key bounces
+        if (gameView != nullptr)
+            gameView->clearKeys(); // try to stop key bounces
         setGuiToKeyMapperScreen(0, YES);
     }
-    if ([gameView isDown:27]) // escape - return without change
+    if ((gameView != nullptr ? gameView->isDown(27) : false)) // escape - return without change
     {
-        [gameView clearKeys]; // try to stop key bounces
+        if (gameView != nullptr)
+            gameView->clearKeys(); // try to stop key bounces
         setGuiToKeyMapperScreen(0, YES);
     }
 }
 
 std::optional<std::string> PlayerEntity::keyboardDescription(const std::string& kbd)
 {
-    const oo::PList kmap = [::ResourceManager cxx_dictionaryFromFilesNamed:KeyMappingsFileName() inFolder:std::optional<std::string>("Config") mergeMode:MERGE_BASIC cache:NO];
+    const oo::PList kmap = ResourceManager::dictionaryFromFilesNamed(KeyMappingsFileName(), std::optional<std::string>("Config"), MERGE_BASIC, NO);
     const oo::PList* sect = kmap.find(kbd);
     return sect != nullptr ? OptionalStringForKey(*sect, "description") : std::nullopt;
 }
 
 std::vector<oo::PList> PlayerEntity::keyboardLayoutList()
 {
-    const oo::PList kmap = [::ResourceManager cxx_dictionaryFromFilesNamed:KeyMappingsFileName() inFolder:std::optional<std::string>("Config") mergeMode:MERGE_BASIC cache:NO];
+    const oo::PList kmap = ResourceManager::dictionaryFromFilesNamed(KeyMappingsFileName(), std::optional<std::string>("Config"), MERGE_BASIC, NO);
     std::vector<oo::PList> kbdList;
     oo::PList def;
 
