@@ -117,6 +117,10 @@ enum {
   OO_POSTFX_ENDOFLIST  // keep this for last
 };
 
+// The ship library's demo_stage: a ship flies in, is shown, and flies out; the
+// end of the fly-out moves on to the next ship of the class.
+enum { DEMO_FLY_IN = 101, DEMO_SHOW_THING, DEMO_FLY_OUT };
+
 #define SHADERS_MIN SHADERS_OFF
 
 #define MAX_MESSAGES 5
@@ -584,6 +588,7 @@ class Universe : public oo::RefCounted {
   void selectIntro2PreviousCategory();
   void selectIntro2NextCategory();
   void selectIntro2Next();
+  void stepDemoShip(int delta);
   // station(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
   ::StationEntity* stationWithRole(const std::string& role, HPVector position);
