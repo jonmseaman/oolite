@@ -656,8 +656,7 @@ bool AIHasSuspendedStateMachines(ShipEntity* ship)
     return ai != nullptr && ai->hasSuspendedStateMachines();
 }
 
-// Whether an entity is a ship, as -isKindOfClass:[ShipEntity class] answered: a ship's C++ part is a
-// ShipEntity (Entity+ObjCBridge.mm picks the facade class from it). False for none.
+// Whether an entity is a ShipEntity. False for none.
 bool IsShip(Entity* entity)
 {
     return dynamic_cast<ShipEntity*>(entity) != nullptr;
@@ -1608,20 +1607,11 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS)
 
     case kShip_speed:
         // Writable so a script can put a ship at a KNOWN flight speed, and in particular can
-        // hold it at rest. Writing ship.velocity is not enough on its own: that calls
-        // -setTotalVelocity:, documented at ShipEntity.h:944 as setting velocity to
-        // `vel - thrustVector`, i.e. the INSTANTANEOUS velocity. The engine is untouched, so
-        // -applyThrust: (ShipEntity.m:6734) rebuilds thrustVector from flightSpeed on the very
-        // next frame and the ship carries on. performStop() already zeroes desired_speed and
-        // selects BEHAVIOUR_STOP_STILL, but flightSpeed still DECAYS to zero over several
-        // frames at the ship's thrust rate rather than arriving there; this is the direct
-        // write, the JS counterpart of -setSpeed: (ShipEntity.m:8575), which the engine itself
-        // uses for exactly this purpose (DockEntity.m:919 launch speed, WormholeEntity.m:448
-        // exit speed, ShipEntityAI.m:1765 when a ship becomes wreckage).
+        // hold it at rest.
         //
         // PLAYER: read-only, as for desiredSpeed just above. The player's flightSpeed is
         // driven by the throttle every frame through PlayerEntity's control path, so a write
-        // here would be silently reverted - a setter that does not stick is worse than none.
+        // here would be silently reverted.
         if (EXPECT_NOT(ship->getIsPlayer()))
             goto playerReadOnly;
 
@@ -2737,7 +2727,7 @@ static JSValue ShipRestoreSubEntities(OOJS_NATIVE_ARGS)
     GET_THIS_SHIP(thisEnt);
     ShipEntity* ship = thisEnt; // not null: thisEnt is not
 
-    NSUInteger subCount = ShipEntityJSSubEntitiesForScript(thisEnt).size(); // -subEntitiesForScript
+    NSUInteger subCount = ShipEntityJSSubEntitiesForScript(thisEnt).size();
 
     ship->clearSubEntities();
     ship->setUpSubEntities();

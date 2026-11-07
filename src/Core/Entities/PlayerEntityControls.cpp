@@ -3237,7 +3237,7 @@ void PlayerEntity::handleGameOptionsScreenKeys()
     }
 
     if ((guiSelectedRow == GUI_ROW(GAME, VOLUME))
-        && ((checkKeyPress(n_key_gui_arrow_right)) || (checkKeyPress(n_key_gui_arrow_left)))) // (+[OOSound respondsToSelector:@selector(masterVolume)] was always YES)
+        && ((checkKeyPress(n_key_gui_arrow_right)) || (checkKeyPress(n_key_gui_arrow_left))))
     {
         if ((!volumeControlPressed) || (script_time > timeLastKeyPress + KEY_REPEAT_INTERVAL)) {
             BOOL rightKeyDown = checkKeyPress(n_key_gui_arrow_right);
@@ -4300,7 +4300,7 @@ void PlayerEntity::pollDockedControls(double delta_t)
 
 void PlayerEntity::handleUndockControl()
 {
-    // FIXME: should this not be in leaveDock:? (Note: leaveDock: is also called from script method launchFromStation and -[StationEntity becomeExplosion]) -- Ahruman 20080308
+    // FIXME: should this not be in leaveDock:? (Note: leaveDock: is also called from script method launchFromStation and StationEntity::becomeExplosion()) -- Ahruman 20080308
     if (UNIVERSE != nullptr)
         UNIVERSE->setUpUniverseFromStation(); // player pre-launch
     if (dockedStation() == nil)

@@ -36,6 +36,12 @@ MA 02110-1301, USA.
 #include <math.h>
 #include <stdbool.h>
 
+/*	-sortedArrayUsingFunction: and friends take NSInteger (*)(id, id, void*). Oolite's sort
+        functions return NSComparisonResult, which has the same size and calling convention but is
+        a distinct enum type that C++ will not convert implicitly.
+*/
+#define OOSortFunction(function) ((NSInteger (*)(id, id, void*))(function))
+
 #ifdef NDEBUG
 #define OOLITE_DEBUG 0
 #else
@@ -126,7 +132,7 @@ MA 02110-1301, USA.
 #endif
 
 #if defined(__cplusplus)
-/*	Objective-C++ is built as C++20. The true/false macros below
+/*	The game is built as C++20. The true/false macros below
         stay exactly as they were (game code keeps its int-typed true/false),
    but a C++20 standard header parsed after them breaks: <optional> has
    `bool(__x) <=> false`, i.e. bool <=> int. So those headers are parsed here

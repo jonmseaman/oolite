@@ -272,7 +272,7 @@ void cxx_OOLogOutputHandlerChangeLogFile(const std::string& name)
     }
 }
 
-/*	-[OOAsyncLogger init] and -startLogging: move an existing log to
+/*	Opening the async logger moves an existing log to
    Previous.log, create the new one and start the writer. nullptr when that
    fails; the handler then logs to stderr.
 */
@@ -359,9 +359,9 @@ static void LoadLogCStringFunctions(void)
 
     foundationBundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Foundation"));
     if (foundationBundle != NULL) {
-        getter = CFBundleGetFunctionPointerForName(foundationBundle,
+        getter = (LogCStringFunctionGetterProc)CFBundleGetFunctionPointerForName(foundationBundle,
             CFSTR("_NSLogCStringFunction"));
-        setter = CFBundleGetFunctionPointerForName(
+        setter = (LogCStringFunctionSetterProc)CFBundleGetFunctionPointerForName(
             foundationBundle, CFSTR("_NSSetLogCStringFunction"));
 
         if (getter != NULL && setter != NULL) {
@@ -413,7 +413,7 @@ static void ExcludeFromTimeMachine(const std::string& path)
     CFBundleRef carbonCoreBundle = CFBundleGetBundleWithIdentifier(
         CFSTR("com.apple.CoreServices.CarbonCore"));
     if (carbonCoreBundle) {
-        CSBackupSetItemExcluded = CFBundleGetFunctionPointerForName(
+        CSBackupSetItemExcluded = (OSStatus (*)(NSURL*, Boolean, Boolean))CFBundleGetFunctionPointerForName(
             carbonCoreBundle, CFSTR("CSBackupSetItemExcluded"));
         if (CSBackupSetItemExcluded != NULL) {
             (void)CSBackupSetItemExcluded(
@@ -561,7 +561,7 @@ static std::mutex sCrashReporterInfoLock;
 // http://www.allocinit.net/blog/2008/01/04/application-specific-information-in-leopard-crash-reports/
 static void InitCrashReporterInfo(void)
 {
-    sCrashReporterInfo = dlsym(RTLD_DEFAULT, "__crashreporter_info__");
+    sCrashReporterInfo = (char**)dlsym(RTLD_DEFAULT, "__crashreporter_info__");
     if (sCrashReporterInfo != NULL) {
         sCrashReporterInfoAvailable = YES;
     }
