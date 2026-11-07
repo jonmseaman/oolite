@@ -40,21 +40,7 @@ so stop and file a bead rather than adding one inside a conversion story
 ## Writing a scenario that will not flake
 
 Assert **"within N ticks"**, never "at tick N". Assert **"no pirate remains"**, never an exact
-position. A scenario that needs an exact float is a golden, not a component test — it belongs in
-item 0.4.
-
-**The spawn steps pin the cast.** `I spawn <n> ship(s) with role "<role>"` does not ask `addShips`
-for the role: for `police`, `pirate`, `trader` and `escort` it asks for a literal core ship key
-(`[viper]`, `[sidewinder]`, `[boa]`, `[sidewinder-escort]`, `ROLE_SHIP_KEY` in
-`steps/world_steps.py`), then sets `primaryRole` back to the role. A role spawn is a RANROT draw
-between hulls, and the role path also draws a pirate's starting bounty (20-70) across policeAI's
-`fineThreshold()` gate, so the same seed gave a different, sometimes non-engageable cast each run
-(oo-sjvz; LEARNINGS oo-qwk5, oo-rkm). A spawned pirate's bounty is set to `PIRATE_BOUNTY` (100)
-for the same reason. A role with no pinned key falls back to the plain role draw. The step text is
-unchanged; add a key here, not a new step, when a new role needs to be deterministic.
-Pinning removes the draw, not the fight: a scenario that asserts who survives a long dogfight (S6)
-can still lose it, because a real-time fight on a software renderer is not seed-deterministic
-(oo-9aq4).
+position. A scenario that needs an exact float does not belong in this tier.
 
 ## What this tier deliberately cannot see
 
@@ -72,7 +58,7 @@ native-API project.
 
 | File | Role |
 |---|---|
-| `console.py` | Debug-console client: framing, handshake, `perform`/`evaluate`, parameterised port. **Transport only** — the golden harness (item 0.4) is expected to share it, so keep component-tier vocabulary out. |
+| `console.py` | Debug-console client: framing, handshake, `perform`/`evaluate`, parameterised port. **Transport only** — keep component-tier vocabulary out. |
 | `conftest.py` | `world` fixture: one game per scenario, free port, hard timeout with forced kill. |
 | `steps/world_steps.py` | The step library above. |
 | `features/*.feature` | The scenarios. Data, not interface. |

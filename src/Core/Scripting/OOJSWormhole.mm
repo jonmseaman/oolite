@@ -113,7 +113,7 @@ static BOOL JSWormholeGetWormholeEntity(JSContext* context, JSValueConst wormhol
     return sWormholeClassID;
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsClassName
 {
     return @"Wormhole";
 }

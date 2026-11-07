@@ -24,13 +24,6 @@ MA 02110-1301, USA.
 
 #import "PlayerEntity.h"
 
-#include "oofnd/StdLib.hpp"
-
-/*	Foundation sweep (proposed ADR-0043, bead oo-14c5): weapon identifiers and sound keys are
-        std::strings. The weapon-identifier selectors are called from PlayerEntity.mm and
-        PlayerEntityControls.mm, so they are cxx_ twins here and the Foundation-typed originals live in
-        PlayerEntitySound+FoundationBridge.h until those callers are swept.
-*/
 @interface PlayerEntity (Sound)
 
 - (void)setUpSound;
@@ -124,15 +117,15 @@ MA 02110-1301, USA.
 - (void)playFuelLeak;
 
 // Damage sounds
-- (void)cxx_playShieldHit:(Vector)attackVector weaponIdentifier:(const std::string&)weaponIdentifier;
-- (void)cxx_playDirectHit:(Vector)attackVector weaponIdentifier:(const std::string&)weaponIdentifier;
+- (void)playShieldHit:(Vector)attackVector weaponIdentifier:(NSString*)weaponIdentifier;
+- (void)playDirectHit:(Vector)attackVector weaponIdentifier:(NSString*)weaponIdentifier;
 - (void)playScrapeDamage:(Vector)attackVector;
 
 // Weapon sounds
-- (void)cxx_playLaserHit:(BOOL)hit offset:(Vector)weaponOffset weaponIdentifier:(const std::string&)weaponIdentifier;
+- (void)playLaserHit:(BOOL)hit offset:(Vector)weaponOffset weaponIdentifier:(NSString*)weaponIdentifier;
 - (void)playWeaponOverheated:(Vector)weaponOffset;
-- (void)cxx_playMissileLaunched:(Vector)weaponOffset weaponIdentifier:(const std::string&)weaponIdentifier;
-- (void)cxx_playMineLaunched:(Vector)weaponOffset weaponIdentifier:(const std::string&)weaponIdentifier;
+- (void)playMissileLaunched:(Vector)weaponOffset weaponIdentifier:(NSString*)weaponIdentifier;
+- (void)playMineLaunched:(Vector)weaponOffset weaponIdentifier:(NSString*)weaponIdentifier;
 
 // Miscellaneous sounds
 - (void)playEscapePodScooped;
@@ -140,12 +133,6 @@ MA 02110-1301, USA.
 - (void)playAegisCloseToStation;
 - (void)playGameOver;
 
-- (void)playLegacyScriptSound:(const std::string&)key;
+- (void)playLegacyScriptSound:(NSString*)key;
 
 @end
-
-/*	TRANSITIONAL (proposed ADR-0043, "Transitional bridges"): the Foundation-typed API this header
-        declared before bead oo-14c5, forwarding to the cxx_ methods above, so unmigrated callers compile
-        unchanged. Callers move to the cxx_ API in their own sweep beads; the bridge goes in its own bead.
-*/
-#import "PlayerEntitySound+FoundationBridge.h"

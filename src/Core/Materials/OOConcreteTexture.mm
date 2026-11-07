@@ -36,10 +36,7 @@
 #import "Universe.h"
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-#import "OOFoundationBridge.h"
 #import "OOTextureGenerator.h"
-
-#include "oofnd/String.hpp"
 #endif
 
 #if OOLITE_BIG_ENDIAN
@@ -72,7 +69,7 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options, GLenum* o
 @implementation OOConcreteTexture
 
 - (id)initWithLoader:(OOTextureLoader*)loader
-                 key:(const std::optional<std::string>&)key
+                 key:(NSString*)key
              options:(uint32_t)options
           anisotropy:(GLfloat)anisotropy
              lodBias:(GLfloat)lodBias
@@ -98,24 +95,24 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options, GLenum* o
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
     if ([loader isKindOfClass:[OOTextureGenerator class]]) {
-        _name = "<" + oo::DescriptionOf([loader class]) + ">";
+        _name = [[NSString alloc] initWithFormat:@"<%@>", [loader class]];
     }
 #endif
 
-    _key = key;
+    _key = [key copy];
 
     [self addToCaches];
 
     return self;
 }
 
-- (id)initWithPath:(const std::string&)path
-               key:(const std::optional<std::string>&)key
+- (id)initWithPath:(NSString*)path
+               key:(NSString*)key
            options:(uint32_t)options
         anisotropy:(float)anisotropy
            lodBias:(GLfloat)lodBias
 {
-    OOTextureLoader* loader = [OOTextureLoader loaderWithPath:oo::NSStringFrom(path) options:options];
+    OOTextureLoader* loader = [OOTextureLoader loaderWithPath:path options:options];
     if (loader == nil) {
         [self release];
         return nil;
@@ -123,7 +120,7 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options, GLenum* o
 
     if ((self = [self initWithLoader:loader key:key options:options anisotropy:anisotropy lodBias:lodBias])) {
 #if OOTEXTURE_RELOADABLE
-        _path = path;
+        _path = [path retain];
 #endif
     }
 
@@ -137,7 +134,7 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options, GLenum* o
 #endif
 
 #if OOTEXTURE_RELOADABLE
-    _path = std::nullopt;
+    DESTROY(_path);
 #endif
 
     if (_loaded) {
@@ -152,80 +149,76 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options, GLenum* o
 
 #ifndef OOTEXTURE_NO_CACHE
     [self removeFromCaches];
-    _key = std::nullopt;
+    [_key autorelease];
+    _key = nil;
 #endif
 
     DESTROY(_loader);
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-    _name = std::nullopt;
+    DESTROY(_name);
 #endif
 
     [super dealloc];
 }
 
-- (id)descriptionComponents // shared selector (proposed ADR-0043)
+- (NSString*)descriptionComponents
 {
-    std::string stateDesc;
+    NSString* stateDesc = nil;
 
     if (_loaded) {
         if (_valid) {
-            stateDesc = oo::str::format("%u x %u", _width, _height);
+            stateDesc = [NSString stringWithFormat:@"%u x %u", _width, _height];
         } else {
-            stateDesc = "LOAD ERROR";
+            stateDesc = @"LOAD ERROR";
         }
     } else {
-        stateDesc = "loading";
+        stateDesc = @"loading";
     }
 
-    return oo::NSStringFrom(_key.value_or("(null)") + ", " + stateDesc); // "%@, %@": nil printed (null)
+    return [NSString stringWithFormat:@"%@, %@", _key, stateDesc];
 }
 
-- (id)shortDescriptionComponents // shared selector (proposed ADR-0043)
+- (NSString*)shortDescriptionComponents
 {
-    return oo::NSStringOrNil(_key);
+    return _key;
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-- (id)name // shared selector (proposed ADR-0043)
+- (NSString*)name
 {
-    if (_name.has_value())
-        return oo::NSStringFrom(*_name);
+    if (_name != nil)
+        return _name;
 
-    // -lastPathComponent of a nil path is nil, and so is the name.
 #if OOTEXTURE_RELOADABLE
-    if (!_path.has_value())
-        return nil;
-    std::string name = oo::StdString([oo::NSStringFrom(*_path) lastPathComponent]);
+    NSString* name = [_path lastPathComponent];
 #else
-    if ([self cacheKey] == nil)
-        return nil;
-    std::string name = oo::StdString([[[[self cacheKey] componentsSeparatedByString:@":"] objectAtIndex:0] lastPathComponent]);
+    NSString* name = [[[[self cacheKey] componentsSeparatedByString:@":"] objectAtIndex:0] lastPathComponent];
 #endif
 
-    const char* channelSuffix = nullptr;
+    NSString* channelSuffix = nil;
     switch (_options & kOOTextureExtractChannelMask) {
     case kOOTextureExtractChannelR:
-        channelSuffix = ":r";
+        channelSuffix = @":r";
         break;
 
     case kOOTextureExtractChannelG:
-        channelSuffix = ":g";
+        channelSuffix = @":g";
         break;
 
     case kOOTextureExtractChannelB:
-        channelSuffix = ":b";
+        channelSuffix = @":b";
         break;
 
     case kOOTextureExtractChannelA:
-        channelSuffix = ":a";
+        channelSuffix = @":a";
         break;
     }
 
-    if (channelSuffix != nullptr)
-        name += channelSuffix;
+    if (channelSuffix != nil)
+        name = [name stringByAppendingString:channelSuffix];
 
-    return oo::NSStringFrom(name);
+    return name;
 }
 #endif
 
@@ -257,9 +250,9 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options, GLenum* o
     return _loaded || [_loader isReady];
 }
 
-- (id)cacheKey // shared selector (proposed ADR-0043)
+- (NSString*)cacheKey
 {
-    return oo::NSStringOrNil(_key);
+    return _key;
 }
 
 - (NSSize)dimensions
@@ -404,8 +397,8 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options, GLenum* o
 #if defined(OO_DEBUG_MONITOR_ENABLED) && OOTEXTURE_RELOADABLE
         if (_trace) {
             static unsigned dumpID = 0;
-            const std::string name = oo::str::format("tex dump %u \"", ++dumpID) + oo::DescriptionOf([self name]) + "\"";
-            OOLog(@"texture.trace.dump", @"Dumped traced texture %@ to \'%@.png\'", self, oo::NSStringFrom(name));
+            NSString* name = [NSString stringWithFormat:@"tex dump %u \"%@\"", ++dumpID, [self name]];
+            OOLog(@"texture.trace.dump", @"Dumped traced texture %@ to \'%@.png\'", self, name);
             OODumpPixMap(pm, name);
         }
 #endif
@@ -479,12 +472,12 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options, GLenum* o
 
         if (texTarget == GL_TEXTURE_2D) {
             [self uploadTextureDataWithMipMap:mipMap format:_format];
-            OOLog(@"texture.upload", @"Uploaded texture %u (%ux%u pixels, %@)", _textureName, _width, _height, oo::NSStringOrNil(_key));
+            OOLog(@"texture.upload", @"Uploaded texture %u (%ux%u pixels, %@)", _textureName, _width, _height, _key);
         }
 #if OO_TEXTURE_CUBE_MAP
         else if (texTarget == GL_TEXTURE_CUBE_MAP) {
             [self uploadTextureCubeMapDataWithMipMap:mipMap format:_format];
-            OOLog(@"texture.upload", @"Uploaded cube map texture %u (%ux%ux6 pixels, %@)", _textureName, _width, _width, oo::NSStringOrNil(_key));
+            OOLog(@"texture.upload", @"Uploaded cube map texture %u (%ux%ux6 pixels, %@)", _textureName, _width, _width, _key);
         }
 #endif
         else {
@@ -596,7 +589,7 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options, GLenum* o
             _uploaded = NO;
             _valid = NO;
 
-            _loader = [[OOTextureLoader loaderWithPath:oo::NSStringOrNil(_path) options:_options] retain];
+            _loader = [[OOTextureLoader loaderWithPath:_path options:_options] retain];
         }
 #endif
     }
@@ -606,7 +599,7 @@ static BOOL DecodeFormat(OOTextureDataFormat format, uint32_t options, GLenum* o
 
 - (BOOL)isReloadable
 {
-    return _path.has_value();
+    return _path != nil;
 }
 
 #endif

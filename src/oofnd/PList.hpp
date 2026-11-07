@@ -19,16 +19,6 @@
             NSDate / NSCalendarDate                              PList(PList::Date{..})  Type::Date
             NSArray                                              PList(PList::Array{..}) Type::Array
             NSDictionary                                         PList(PList::Dict{..})  Type::Dict
-            +numberWithFloat: (single precision)                 PList::singleReal(f)    Type::Real,
-                                                                                         isSinglePrecision
-            any other object (a colour, a texture, a             PList(PList::Object)    Type::Object
-                placeholder) inside a configuration dictionary
-
-        The last two rows are the Foundation sweep's typed carrier for configuration dictionaries that mix
-        property-list data with live objects (proposed ADR-0043 Amendment 2). No parser produces either;
-        the game side (src/Core/OOFoundationBridge.h) makes them from Foundation objects and back, so a
-        round trip returns the same objects and the same NSNumber types. An Object is an oo::Ref to a
-        PListForeign, which oofnd never looks into: it compares by identity and describes itself.
 
         Representation choices (ADR-0013 decision 4 and proposed ADR-0027):
 
@@ -70,7 +60,6 @@
 #undef false
 
 #include "oofnd/Data.hpp"
-#include "oofnd/Ref.hpp"
 
 #include <cmath>
 #include <compare>
@@ -94,14 +83,6 @@ namespace oo {
 template <class T>
 struct PListGet;
 
-// A value inside a PList that is not property-list data (proposed ADR-0043 Amendment 2): the game
-// side wraps an Objective-C object in a subclass. Compared by identity.
-class PListForeign : public RefCounted {
-public:
-    virtual std::string className() const = 0; // for writer errors ("Class X does not support ...")
-    virtual std::string description() const = 0; // what "%@" printed
-};
-
 class PList {
 public:
     enum class Type {
@@ -114,7 +95,6 @@ public:
         Date,
         Array,
         Dict,
-        Object,
     };
 
     struct Integer {
@@ -134,7 +114,6 @@ public:
     using Data = ::oo::Data; // NSData (oofnd/Data.hpp)
     using Array = std::vector<PList>;
     using Dict = std::map<std::string, PList, std::less<>>;
-    using Object = Ref<PListForeign>;
 
     // --- construction ---------------------------------------------------------------------
 
@@ -194,21 +173,9 @@ public:
         : v_(std::in_place_type<Dict>, std::move(d))
     {
     }
-    PList(Object o) noexcept
-        : v_(std::in_place_type<Object>, std::move(o))
-    {
-    }
 
     static PList signedInteger(std::int64_t i) noexcept { return PList(Integer { i, false }); }
     static PList unsignedInteger(std::uint64_t u) noexcept { return PList(Integer { static_cast<std::int64_t>(u), true }); }
-    // A real that was a single-precision NSNumber (+numberWithFloat:): it prints as %0.7g where a
-    // double prints as %0.16g, and compares unequal to the same value as a double (type-strict ==).
-    static PList singleReal(float f) noexcept
-    {
-        PList p(static_cast<double>(f));
-        p.single_ = true;
-        return p;
-    }
 
     // --- type queries ---------------------------------------------------------------------
 
@@ -223,8 +190,6 @@ public:
     bool isDate() const noexcept { return type() == Type::Date; }
     bool isArray() const noexcept { return type() == Type::Array; }
     bool isDict() const noexcept { return type() == Type::Dict; }
-    bool isObject() const noexcept { return type() == Type::Object; }
-    bool isSinglePrecision() const noexcept { return isReal() && single_; }
     explicit operator bool() const noexcept { return !isNull(); } // "!= nil"
 
     // --- payload access -------------------------------------------------------------------
@@ -354,8 +319,7 @@ private:
     }
 
     // Order matches Type.
-    std::variant<std::monostate, bool, Integer, double, std::string, Data, Date, Array, Dict, Object> v_;
-    bool single_ = false; // meaningful for Type::Real only (see singleReal)
+    std::variant<std::monostate, bool, Integer, double, std::string, Data, Date, Array, Dict> v_;
 };
 
 // NSPropertyListFormat, with GNUstep's numeric values: what a parser found (GNUstep reports
@@ -403,8 +367,6 @@ inline const char* typeName(PList::Type t) noexcept
         return "array";
     case PList::Type::Dict:
         return "dict";
-    case PList::Type::Object:
-        return "object";
     }
     return "?";
 }

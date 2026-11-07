@@ -68,67 +68,6 @@ enum {
 @end
 
 static id ShipGroupIterate(OOShipGroupEnumerator* enumerator);
-static NSUInteger ShipGroupFillBatch(OOShipGroup* group, NSUInteger* ioIndex, id* buffer, NSUInteger length);
-
-/*	OOShipGroupMembers: range-for over a group's live members, in _members order, replacing the
-        for-in fast-enumeration conformance (bead oo-3rb.20). It fetches batches of kBatchSize exactly
-        as -countByEnumeratingWithState:objects:count: did under clang's for-in (whose buffer is 16
-        objects): dead references are compacted, and -cleanUp runs, at the same points, so a loop that
-        breaks early leaves the group as it did before.
-
-                for (ShipEntity *ship : OOShipGroupMembers(group)) { ... }
-
-        The group must not be mutated during the loop (for-in raised; this asserts).
-*/
-class OOShipGroupMembers {
-public:
-    enum { kBatchSize = 16 };
-
-    explicit OOShipGroupMembers(OOShipGroup* group)
-        : _group(group)
-    {
-    }
-
-    struct End { };
-
-    class Iterator {
-    public:
-        explicit Iterator(OOShipGroup* group)
-            : _group(group)
-            , _updateCount([group updateCount])
-        {
-            Fill();
-        }
-
-        id operator*() const { return _buffer[_position]; }
-        Iterator& operator++()
-        {
-            NSCAssert([_group updateCount] == _updateCount, @"OOShipGroup was mutated while being enumerated.");
-            if (++_position == _batchCount)
-                Fill();
-            return *this;
-        }
-        bool operator!=(End) const { return _batchCount != 0; }
-
-    private:
-        void Fill()
-        {
-            _batchCount = ShipGroupFillBatch(_group, &_index, _buffer, kBatchSize);
-            _position = 0;
-        }
-
-        OOShipGroup* _group;
-        NSUInteger _updateCount;
-        NSUInteger _index = 0, _batchCount = 0, _position = 0;
-        id _buffer[kBatchSize];
-    };
-
-    Iterator begin() const { return Iterator(_group); }
-    End end() const { return End(); }
-
-private:
-    OOShipGroup* _group;
-};
 
 @implementation OOShipGroup
 
@@ -259,7 +198,7 @@ private:
         return [NSArray array];
 
     objects = (id*)malloc(sizeof *objects * _count);
-    for (id ship : OOShipGroupMembers(self)) {
+    for (id ship in self) {
         objects[count++] = ship;
     }
 
@@ -281,7 +220,7 @@ private:
     leader = self.leader;
 
     objects = (id*)malloc(sizeof *objects * _count);
-    for (id ship : OOShipGroupMembers(self)) {
+    for (id ship in self) {
         if (ship != leader) {
             objects[count++] = ship;
         }
@@ -295,7 +234,9 @@ private:
 
 - (BOOL)containsShip:(ShipEntity*)ship
 {
-    for (ShipEntity* containedShip : OOShipGroupMembers(self)) {
+    ShipEntity* containedShip = nil;
+
+    for (containedShip in self) {
         if ([ship isEqual:containedShip]) {
             return YES;
         }
@@ -461,30 +402,30 @@ static id ShipGroupIterate(OOShipGroupEnumerator* enumerator)
     return result;
 }
 
-// One batch of live members for OOShipGroupMembers: the body of the former
-// -countByEnumeratingWithState:objects:count:, unchanged.
-static NSUInteger ShipGroupFillBatch(OOShipGroup* group, NSUInteger* ioIndex, id* buffer, NSUInteger length)
+- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState*)state objects:(id*)stackbuf count:(NSUInteger)len
 {
     NSUInteger srcIndex, dstIndex = 0;
     ShipEntity* item = nil;
     BOOL cleanupNeeded = NO;
 
-    srcIndex = *ioIndex;
-    while (srcIndex < group->_count && dstIndex < length) {
-        item = [group->_members[srcIndex] weakRefUnderlyingObject];
+    srcIndex = state->state;
+    while (srcIndex < _count && dstIndex < len) {
+        item = [_members[srcIndex] weakRefUnderlyingObject];
         if (item != nil) {
-            buffer[dstIndex++] = item;
+            stackbuf[dstIndex++] = item;
             srcIndex++;
         } else {
-            group->_members[srcIndex] = group->_members[--group->_count];
+            _members[srcIndex] = _members[--_count];
             cleanupNeeded = YES;
         }
     }
 
     if (cleanupNeeded)
-        [group cleanUp];
+        [self cleanUp];
 
-    *ioIndex = srcIndex;
+    state->state = srcIndex;
+    state->itemsPtr = stackbuf;
+    state->mutationsPtr = &_updateCount;
 
     return dstIndex;
 }

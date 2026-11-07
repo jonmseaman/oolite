@@ -24,7 +24,6 @@ MA 02110-1301, USA.
 */
 
 #import "OOJSGuiScreenKeyDefinition.h"
-#import "OOFoundationBridge.h"
 #import "OOJavaScriptEngine.h"
 
 @implementation OOJSGuiScreenKeyDefinition
@@ -63,30 +62,34 @@ MA 02110-1301, USA.
                                                   object:[OOJavaScriptEngine sharedEngine]];
 
     [_owningScript release];
+    [_name release];
+    [_registerKeys release];
 
     [self deleteJSPointers];
 
     [super dealloc];
 }
 
-- (id)name // shared selector (proposed ADR-0043)
+- (NSString*)name
 {
-    return oo::NSStringOrNil(_name);
+    return _name;
 }
 
-- (void)setName:(id)name // shared selector (proposed ADR-0043)
+- (void)setName:(NSString*)name
 {
-    _name = oo::OptionalString(name);
+    [_name autorelease];
+    _name = [name retain];
 }
 
-- (oo::PList)registerKeys
+- (NSDictionary*)registerKeys
 {
     return _registerKeys;
 }
 
-- (void)setRegisterKeys:(const oo::PList&)registerKeys
+- (void)setRegisterKeys:(NSDictionary*)registerKeys
 {
-    _registerKeys = registerKeys;
+    [_registerKeys release];
+    _registerKeys = [registerKeys copy];
 }
 
 - (JSValue)callback
@@ -117,7 +120,7 @@ MA 02110-1301, USA.
     OOJSRelinquishContext(context);
 }
 
-- (void)runCallback:(id)key // shared selector (proposed ADR-0043)
+- (void)runCallback:(NSString*)key
 {
     OOJavaScriptEngine* engine = [OOJavaScriptEngine sharedEngine];
     JSContext* context = OOJSAcquireContext();
@@ -155,12 +158,7 @@ MA 02110-1301, USA.
 
 - (NSComparisonResult)interfaceCompare:(OOJSGuiScreenKeyDefinition*)other
 {
-    // -caseInsensitiveCompare: as it was sent: a nil name answers NSOrderedSame (a message to nil); a
-    // nil other name compares as the empty string.
-    if (!_name.has_value())
-        return NSOrderedSame;
-    int order = oo::str::caseInsensitiveCompare(*_name, oo::OptionalString([other name]).value_or(std::string()));
-    return (order < 0) ? NSOrderedAscending : ((order > 0) ? NSOrderedDescending : NSOrderedSame);
+    return [_name caseInsensitiveCompare:[other name]];
 }
 
 @end

@@ -45,7 +45,7 @@ SOFTWARE.
     return kOOTextureDefaultLODBias;
 }
 
-- (id)cacheKey // shared selector (proposed ADR-0043)
+- (NSString*)cacheKey
 {
     return nil;
 }

@@ -38,9 +38,6 @@ MA 02110-1301, USA.
 #import "OOPListView.h"
 #import "OOStringParsing.h"
 
-#import "OOFoundationBridge.h"
-
-
 static JSClassID sPlayerClassID;
 
 static JSClassDef sPlayerClass = {
@@ -276,13 +273,13 @@ static JSValue PlayerSetProperty(OOJS_SETTER_ARGS)
     PlayerEntity* player = OOPlayerForScripting();
     double fValue;
     int32_t iValue;
-    std::optional<std::string> sValue;
+    NSString* sValue;
 
     switch (magic) {
     case kPlayer_name:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-        if (sValue.has_value()) {
-            [player setCommanderName:oo::NSStringFrom(*sValue)];
+        sValue = OOStringFromJSValue(context, value);
+        if (sValue != nil) {
+            [player setCommanderName:sValue];
             return JS_UNDEFINED;
         }
         break;
@@ -336,21 +333,21 @@ static JSValue PlayerCommsMessage(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> message;
+    NSString* message = nil;
     double time = 4.5;
     BOOL gotTime = YES;
 
     if (argc > 0)
-        message = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        message = OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (argc > 1)
         gotTime = (JS_ToFloat64(context, &time, OOJS_ARGV[1]) == 0);
-    if (!message.has_value() || !gotTime) {
+    if (message == nil || !gotTime) {
         OOJSReportBadArguments(context, @"Player", @"commsMessage", argc, OOJS_ARGV, nil, @"message and optional duration");
         return OOJSNativeFailure(context);
     }
 
-    [UNIVERSE addCommsMessage:oo::NSStringFrom(*message) forCount:time];
-    [PLAYER doScriptEvent:OOJSID("commsMessageReceived") withArgument:oo::NSStringFrom(*message) andArgument:nil];
+    [UNIVERSE addCommsMessage:message forCount:time];
+    [PLAYER doScriptEvent:OOJSID("commsMessageReceived") withArgument:message andArgument:nil];
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -361,20 +358,20 @@ static JSValue PlayerConsoleMessage(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> message;
+    NSString* message = nil;
     double time = 3.0;
     BOOL gotTime = YES;
 
     if (argc > 0)
-        message = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        message = OOStringFromJSValue(context, OOJS_ARGV[0]);
     if (argc > 1)
         gotTime = (JS_ToFloat64(context, &time, OOJS_ARGV[1]) == 0);
-    if (!message.has_value() || !gotTime) {
+    if (message == nil || !gotTime) {
         OOJSReportBadArguments(context, @"Player", @"consoleMessage", argc, OOJS_ARGV, nil, @"message and optional duration");
         return OOJSNativeFailure(context);
     }
 
-    [UNIVERSE addMessage:oo::NSStringFrom(*message) forCount:time];
+    [UNIVERSE addMessage:message forCount:time];
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -385,16 +382,16 @@ static JSValue PlayerEndScenario(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> scenario;
+    NSString* scenario = nil;
 
     if (argc > 0)
-        scenario = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (!scenario.has_value()) {
+        scenario = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (scenario == nil) {
         OOJSReportBadArguments(context, @"Player", @"endScenario", argc, OOJS_ARGV, nil, @"scenario key");
         return OOJSNativeFailure(context);
     }
 
-    OOJS_RETURN_BOOL([PLAYER endScenario:oo::NSStringFrom(*scenario)]);
+    OOJS_RETURN_BOOL([PLAYER endScenario:scenario]);
 
     OOJS_NATIVE_EXIT
 }
@@ -470,17 +467,17 @@ static JSValue PlayerAddMessageToArrivalReport(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> report;
+    NSString* report = nil;
     PlayerEntity* player = OOPlayerForScripting();
 
     if (argc > 0)
-        report = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (!report.has_value()) {
+        report = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (report == nil) {
         OOJSReportBadArguments(context, @"Player", @"addMessageToArrivalReport", MIN(argc, 1), OOJS_ARGV, nil, @"string (arrival message)");
         return OOJSNativeFailure(context);
     }
 
-    [player addMessageToReport:oo::NSStringFrom(*report)];
+    [player addMessageToReport:report];
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -490,18 +487,18 @@ static JSValue PlayerAudioMessage(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> audioMessage;
+    NSString* audioMessage = nil;
     PlayerEntity* player = OOPlayerForScripting();
 
     if (argc > 0)
-        audioMessage = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (!audioMessage.has_value()) {
+        audioMessage = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (audioMessage == nil) {
         OOJSReportBadArguments(context, @"Player", @"audioMessage", argc, OOJS_ARGV, nil, @"audiomessage (string)");
         return OOJSNativeFailure(context);
     }
 
     if ([player isSpeechOn] >= OOSPEECHSETTINGS_COMMS)
-        [UNIVERSE startSpeakingString:oo::NSStringFrom(*audioMessage)];
+        [UNIVERSE startSpeakingString:audioMessage];
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
@@ -512,14 +509,14 @@ static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> shipKey;
+    NSString* shipKey = nil;
     PlayerEntity* player = OOPlayerForScripting();
     BOOL success = NO;
     int32_t personality = 0;
 
     if (argc > 0)
-        shipKey = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (!shipKey.has_value()) {
+        shipKey = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (shipKey == nil) {
         OOJSReportBadArguments(context, @"Player", @"replaceShip", MIN(argc, 1), OOJS_ARGV, nil, @"string (shipyard key)");
         return OOJSNativeFailure(context);
     }
@@ -529,7 +526,7 @@ static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    success = [player replaceShipWithNamedShip:oo::NSStringFrom(*shipKey)];
+    success = [player replaceShipWithNamedShip:shipKey];
     if (argc > 1) {
         // As before, an invalid personality is ignored (personality stays 0); don't leave the conversion error pending.
         if (!OOJSValueToInt32(context, OOJS_ARGV[1], &personality))
@@ -542,7 +539,7 @@ static JSValue PlayerReplaceShip(OOJS_NATIVE_ARGS)
     if (success) {
         [player doScriptEvent:OOJSID("playerReplacedShip") withArgument:player];
         // slightly misnamed world event now - to be deprecated
-        [player doScriptEvent:OOJSID("playerBoughtNewShip") withArgument:player andArgument:oo::ObjectFromPList(oo::PList::signedInteger(0))];
+        [player doScriptEvent:OOJSID("playerBoughtNewShip") withArgument:player andArgument:[NSNumber numberWithInt:0]];
     }
 
     OOJS_RETURN_BOOL(success);
@@ -573,8 +570,8 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS)
         } else if ([destValue isKindOfClass:[ShipEntity class]] && [destValue isStation]) {
             [player setDockTarget:destValue];
             OK = YES;
-        } else if (oo::IsNSString(destValue)) {
-            if (oo::StdString(destValue) == "NEARBY_SYSTEM") {
+        } else if ([destValue isKindOfClass:[NSString class]]) {
+            if ([destValue isEqualToString:@"NEARBY_SYSTEM"]) {
                 // find the nearest system with a main station, or die in the attempt!
                 [player setDockTarget:NULL];
 
@@ -583,29 +580,26 @@ static JSValue PlayerSetEscapePodDestination(OOJS_NATIVE_ARGS)
                     // Set 3.5 ly as the limit, enough to reach at least 2 systems!
                     rescueRange = MAX_JUMP_RANGE / 2.0;
                 }
-                oo::PList destinations = oo::PListFrom([UNIVERSE nearbyDestinationsWithinRange:rescueRange]);
-                oo::PList::Array sDests;
-                if (const oo::PList::Array* array = destinations.getIf<oo::PList::Array>())
-                    sDests = *array;
-                NSUInteger i = 0, nDests = sDests.size();
+                NSMutableArray* sDests = [UNIVERSE nearbyDestinationsWithinRange:rescueRange];
+                NSUInteger i = 0, nDests = [sDests count];
 
                 if (nDests > 0)
                     for (i = --nDests; i > 0; i--) {
-                        if (sDests[i].get<bool>("nova")) {
-                            sDests.erase(sDests.begin() + i);
+                        if (oo::PListView(oo::PListView(sDests).at<NSDictionary*>(i)).get<BOOL>(@"nova")) {
+                            [sDests removeObjectAtIndex:i];
                         }
                     }
 
                 // i is back to 0, nDests could have changed...
-                nDests = sDests.size();
+                nDests = [sDests count];
                 if (nDests > 0) // we have a system with a main station!
                 {
                     if (nDests > 1)
                         i = ranrot_rand() % nDests; // any nearby system will do.
-                    const oo::PList& dest = sDests[i];
+                    NSDictionary* dest = [sDests objectAtIndex:i];
 
                     // add more time until rescue, with overheads for entering witchspace in case of overlapping systems.
-                    double dist = dest.get<double>("distance");
+                    double dist = oo::PListView(dest).get<double>(@"distance");
                     [player addToAdjustTime:(.2 + dist * dist) * 3600.0 + 5400.0 * (ranrot_rand() & 127)];
 
                     // at the end of the docking sequence we'll check if the target system is the same as the system we're in...
@@ -636,26 +630,26 @@ static JSValue PlayerSetPlayerRole(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> role;
+    NSString* role = nil;
     PlayerEntity* player = OOPlayerForScripting();
     uint32_t index = 0;
 
     if (argc > 0)
-        role = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (!role.has_value()) {
+        role = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (role == nil) {
         OOJSReportBadArguments(context, @"Player", @"setPlayerRole", MIN(argc, 1), OOJS_ARGV, nil, @"string (role) [, number (index)]");
         return OOJSNativeFailure(context);
     }
 
     if (argc > 1) {
         if (JS_ToUint32(context, &index, OOJS_ARGV[1]) == 0) {
-            [player addRoleToPlayer:oo::NSStringFrom(*role) inSlot:index];
+            [player addRoleToPlayer:role inSlot:index];
             OOJS_RETURN_VOID;
         }
         // As before, fall back to the default slot if the index can't be converted.
         JS_FreeValue(context, JS_GetException(context));
     }
-    [player addRoleToPlayer:oo::NSStringFrom(*role)];
+    [player addRoleToPlayer:role];
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT

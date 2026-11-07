@@ -25,8 +25,6 @@ MA 02110-1301, USA.
 
 #import "OOFoundation.h"
 
-#include "oofnd/StdLib.hpp"
-
 /*
         OOMouseInteractionMode
         Mouse interaction states, defined in game-centric terms. The precise
@@ -51,6 +49,6 @@ typedef enum {
     MOUSE_MODE_FLIGHT_WITH_MOUSE_CONTROL
 } OOMouseInteractionMode;
 
-std::string OOStringFromMouseInteractionMode(OOMouseInteractionMode mode);
+NSString* OOStringFromMouseInteractionMode(OOMouseInteractionMode mode);
 BOOL OOMouseInteractionModeIsUIScreen(OOMouseInteractionMode mode);
 BOOL OOMouseInteractionModeIsFlightMode(OOMouseInteractionMode mode);

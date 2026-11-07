@@ -26,17 +26,13 @@ SOFTWARE.
 */
 
 #import "OOPixMapTextureLoader.h"
-#import "OOFoundationBridge.h"
 #import "OOTextureScaling.h"
-
-#include "oofnd/String.hpp"
 
 @implementation OOPixMapTextureLoader
 
 - (id)initWithPixMap:(OOPixMap)pixMap textureOptions:(uint32_t)options freeWhenDone:(BOOL)freeWhenDone
 {
-    self = [super initWithPath:oo::NSStringFrom(oo::str::format("OOPixMap@%s", oo::str::pointerDescription(self).c_str())) options:options];
-    if (self != nil) {
+    if ((self = [super initWithPath:[NSString stringWithFormat:@"OOPixMap@%p", self] options:options])) {
         if (freeWhenDone)
             _pixMap = pixMap;
         else

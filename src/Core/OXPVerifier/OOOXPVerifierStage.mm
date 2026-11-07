@@ -31,28 +31,12 @@ SOFTWARE.
 
 #if OO_OXP_VERIFIER_ENABLED
 
-#import "OOFoundationBridge.h"
-
 @interface OOOXPVerifierStage (OOPrivate)
 
 - (void)registerDepedent:(OOOXPVerifierStage*)dependent;
 - (void)dependencyCompleted:(OOOXPVerifierStage*)dependency;
-- (void)notifyDependents;
 
 @end
-
-// Adding a stage to a set of stages: identity, no duplicates, nil ignored.
-namespace {
-
-void AddStage(std::vector<oo::ObjCRef<OOOXPVerifierStage*>>& stages, OOOXPVerifierStage* stage)
-{
-    if (stage == nil)
-        return;
-    if (std::find(stages.begin(), stages.end(), stage) == stages.end())
-        stages.emplace_back(stage);
-}
-
-} // namespace
 
 @implementation OOOXPVerifierStage
 
@@ -61,17 +45,27 @@ void AddStage(std::vector<oo::ObjCRef<OOOXPVerifierStage*>>& stages, OOOXPVerifi
     self = [super init];
 
     if (self != nil) {
+        _dependencies = [[NSMutableSet alloc] init];
+        _incompleteDependencies = [[NSMutableSet alloc] init];
+        _dependents = [[NSMutableSet alloc] init];
         _canRun = NO;
     }
 
     return self;
 }
 
-// OOObject's -description wraps this as "<Class 0x...>{"name"}", which is what this class's own
-// -description printed.
-- (id)descriptionComponents
+- (void)dealloc
 {
-    return oo::NSStringFrom("\"" + oo::DescriptionOf([self name]) + "\"");
+    [_dependencies release];
+    [_incompleteDependencies release];
+    [_dependents release];
+
+    [super dealloc];
+}
+
+- (id)description
+{
+    return [NSString stringWithFormat:@"<%@ %p>{\"%@\"}", [self class], self, [self name]];
 }
 
 - (OOOXPVerifier*)verifier
@@ -84,18 +78,18 @@ void AddStage(std::vector<oo::ObjCRef<OOOXPVerifierStage*>>& stages, OOOXPVerifi
     return _hasRun;
 }
 
-- (id)name
+- (NSString*)name
 {
     OOLogGenericSubclassResponsibility();
     return nil;
 }
 
-- (id)dependencies
+- (NSSet*)dependencies
 {
     return nil;
 }
 
-- (id)dependents
+- (NSSet*)dependents
 {
     return nil;
 }
@@ -121,16 +115,18 @@ void AddStage(std::vector<oo::ObjCRef<OOOXPVerifierStage*>>& stages, OOOXPVerifi
 
 - (BOOL)isDependentOf:(OOOXPVerifierStage*)stage
 {
+    OOOXPVerifierStage* directDep = nil;
+
     if (stage == nil)
         return NO;
 
     // Direct dependency check.
-    if (std::find(_dependencies.begin(), _dependencies.end(), stage) != _dependencies.end())
+    if ([_dependencies containsObject:stage])
         return YES;
 
     // Recursive dependency check.
-    for (const auto& directDep : _dependencies) {
-        if ([directDep.get() isDependentOf:stage])
+    foreach (directDep, _dependencies) {
+        if ([directDep isDependentOf:stage])
             return YES;
     }
 
@@ -139,8 +135,8 @@ void AddStage(std::vector<oo::ObjCRef<OOOXPVerifierStage*>>& stages, OOOXPVerifi
 
 - (void)registerDependency:(OOOXPVerifierStage*)dependency
 {
-    AddStage(_dependencies, dependency);
-    AddStage(_incompleteDependencies, dependency);
+    [_dependencies addObject:dependency];
+    [_incompleteDependencies addObject:dependency];
 
     [dependency registerDepedent:self];
 }
@@ -165,7 +161,7 @@ void AddStage(std::vector<oo::ObjCRef<OOOXPVerifierStage*>>& stages, OOOXPVerifi
 
     _hasRun = YES;
     _canRun = NO;
-    [self notifyDependents];
+    [_dependents makeObjectsPerformSelector:@selector(dependencyCompleted:) withObject:self];
 }
 
 - (void)noteSkipped
@@ -174,20 +170,20 @@ void AddStage(std::vector<oo::ObjCRef<OOOXPVerifierStage*>>& stages, OOOXPVerifi
 
     _hasRun = YES;
     _canRun = NO;
-    [self notifyDependents];
+    [_dependents makeObjectsPerformSelector:@selector(dependencyCompleted:) withObject:self];
 }
 
 - (void)dependencyRegistrationComplete
 {
-    _canRun = _incompleteDependencies.empty();
+    _canRun = [_incompleteDependencies count] == 0;
 }
 
-- (std::vector<oo::ObjCRef<OOOXPVerifierStage*>>)resolvedDependencies
+- (NSSet*)resolvedDependencies
 {
     return _dependencies;
 }
 
-- (std::vector<oo::ObjCRef<OOOXPVerifierStage*>>)resolvedDependents
+- (NSSet*)resolvedDependents
 {
     return _dependents;
 }
@@ -200,26 +196,14 @@ void AddStage(std::vector<oo::ObjCRef<OOOXPVerifierStage*>>& stages, OOOXPVerifi
 {
     assert(![self isDependentOf:dependent]);
 
-    AddStage(_dependents, dependent);
+    [_dependents addObject:dependent];
 }
 
 - (void)dependencyCompleted:(OOOXPVerifierStage*)dependency
 {
-    const auto where = std::find(_incompleteDependencies.begin(), _incompleteDependencies.end(), dependency);
-    if (where != _incompleteDependencies.end())
-        _incompleteDependencies.erase(where);
-    if (_incompleteDependencies.empty())
+    [_incompleteDependencies removeObject:dependency];
+    if ([_incompleteDependencies count] == 0)
         _canRun = YES;
-}
-
-// -makeObjectsPerformSelector:withObject: over the dependents: each is told once, in the order
-// they registered.
-- (void)notifyDependents
-{
-    const std::vector<oo::ObjCRef<OOOXPVerifierStage*>> dependents = _dependents;
-    for (const auto& dependent : dependents) {
-        [dependent.get() dependencyCompleted:self];
-    }
 }
 
 @end

@@ -28,22 +28,21 @@ MA 02110-1301, USA.
 
 #import <Foundation/Foundation.h>
 
-#include "oofnd/Data.hpp"
-#include "oofnd/PList.hpp"
-#include "oofnd/StdLib.hpp"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// whereFrom is an optional description of the data source, for error reporting (nullopt reads as
-// "<data in memory>"). No data (nullopt) parses nothing. The result is null where there was no
-// property list.
-oo::PList cxx_OOPropertyListFromData(const std::optional<oo::Data>& data, const std::optional<std::string>& whereFrom);
-oo::PList cxx_OOPropertyListFromFile(const std::string& path);
+// whereFrom is an optional description of the data source, for error reporting.
+id OOPropertyListFromData(NSData* data, NSString* whereFrom);
+id OOPropertyListFromFile(NSString* path);
 
-// The typed wrappers have no twins: test the result's kind (getIf<oo::PList::Dict> /
-// getIf<oo::PList::Array>).
+// Wrappers which ensure that the plist contains the right type of object.
+NSDictionary* OODictionaryFromData(NSData* data, NSString* whereFrom);
+NSDictionary* OODictionaryFromFile(NSString* path);
 
-/*	TRANSITIONAL (proposed ADR-0043, "Transitional bridges"): the Foundation-typed functions as they
-        were declared before their sweep (bead oo-crpp, chunk oo-3rb.132), forwarding to the cxx_
-        functions above, so unmigrated callers compile unchanged. Callers move to the cxx_ API in their
-        own sweep beads; the bridge goes in its own bead.
-*/
-#import "OOPListParsing+FoundationBridge.h"
+NSArray* OOArrayFromData(NSData* data, NSString* whereFrom);
+NSArray* OOArrayFromFile(NSString* path);
+
+#ifdef __cplusplus
+}
+#endif

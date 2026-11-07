@@ -31,8 +31,6 @@ MA 02110-1301, USA.
 #import "OOJavaScriptEngine.h"
 #import "OOPlanetEntity.h"
 
-#import "OOFoundationBridge.h"
-
 static JSClassID sPlanetClassID;
 
 static JSValue PlanetGetProperty(OOJS_GETTER_ARGS);
@@ -109,7 +107,7 @@ JSClassID JSPlanetClassID(void)
     return sPlanetClassID;
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsClassName
 {
     switch ([self planetType]) {
     case STELLAR_TYPE_NORMAL_PLANET:
@@ -181,7 +179,7 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS)
     OOJS_NATIVE_ENTER(context)
 
     OOPlanetEntity* planet = nil;
-    std::optional<std::string> sValue;
+    NSString* sValue = nil;
     Quaternion qValue;
     Vector vValue;
     double dValue;
@@ -222,19 +220,18 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS)
         break;
 
     case kPlanet_name:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-        [planet setName:oo::NSStringOrNil(sValue)];
+        sValue = OOStringFromJSValue(context, value);
+        [planet setName:sValue];
         return JS_UNDEFINED;
 
     case kPlanet_texture: {
         BOOL OK = NO;
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-
+        sValue = OOStringFromJSValue(context, value);
 
         OOJSPauseTimeLimiter();
 
         if ([planet isKindOfClass:[OOPlanetEntity class]]) {
-            if (!sValue.has_value()) {
+            if (sValue == nil) {
                 OOJSReportWarning(context, @"Expected texture string. Value not set.");
             } else {
                 OK = YES;
@@ -242,9 +239,9 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS)
         }
 
         if (OK) {
-            OK = [planet setUpPlanetFromTexture:oo::NSStringFrom(*sValue)];
+            OK = [planet setUpPlanetFromTexture:sValue];
             if (!OK)
-                OOJSReportWarning(context, @"Cannot find texture \"%@\". Value not set.", oo::NSStringFrom(*sValue));
+                OOJSReportWarning(context, @"Cannot find texture \"%@\". Value not set.", sValue);
         }
 
         OOJSResumeTimeLimiter();

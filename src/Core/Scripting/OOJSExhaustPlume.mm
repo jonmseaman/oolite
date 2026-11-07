@@ -108,7 +108,7 @@ static BOOL JSExhaustPlumeGetExhaustPlumeEntity(JSContext* context, JSValueConst
     return sExhaustPlumeClassID;
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsClassName
 {
     return @"ExhaustPlume";
 }

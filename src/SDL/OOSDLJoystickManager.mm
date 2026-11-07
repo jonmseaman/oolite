@@ -24,11 +24,8 @@ MA 02110-1301, USA.
 */
 
 #import "OOSDLJoystickManager.h"
-#import "OOFoundationBridge.h"
 #import "OOLogging.h"
-#import "OOStringBridge.h"
 #include "oofnd/Log.hpp"
-#include "oofnd/String.hpp"
 
 #define kOOLogUnconvertedNSLog @"unclassified.OOSDLJoystickManager"
 
@@ -38,7 +35,7 @@ MA 02110-1301, USA.
 {
     int i;
 
-    std::map<std::string, int, std::less<>> idMap;
+    NSMutableDictionary* idMap = [[[NSMutableDictionary alloc] init] autorelease];
 
     // Find and open the sticks. Make sure that we don't fail if more joysticks than MAX_STICKS are detected.
     SDL_JoystickID* joystickIds = SDL_GetJoysticks(&stickCount);
@@ -56,7 +53,7 @@ MA 02110-1301, USA.
 
             stick[i] = SDL_OpenJoystick(joystickIds[i]);
             if (stick[i]) {
-                idMap[oo::str::format("%d", joystickIds[i])] = i;
+                [idMap setObject:[NSNumber numberWithInt:i] forKey:[NSString stringWithFormat:@"%d", joystickIds[i]]];
             } else {
                 OO_LOG("joystick.init", "Failed to open joystick #{}", i);
             }
@@ -64,20 +61,21 @@ MA 02110-1301, USA.
         SDL_SetJoystickEventsEnabled(true);
     }
     SDL_free(joystickIds);
-    joystickIdMap = std::move(idMap);
+    joystickIdMap = [idMap copy];
     return [super init];
 }
 
 - (void)dealloc
 {
+    [joystickIdMap release];
     [super dealloc];
 }
 
 - (NSInteger)getJoystickIndexFromId:(SDL_JoystickID)joystickId
 {
-    const auto index = joystickIdMap.find(oo::str::format("%d", joystickId));
-    if (index != joystickIdMap.end()) {
-        return index->second;
+    NSNumber* index = [joystickIdMap valueForKey:[NSString stringWithFormat:@"%d", joystickId]];
+    if (index) {
+        return [index integerValue];
     }
     return -1;
 }
@@ -87,12 +85,11 @@ MA 02110-1301, USA.
     return stickCount;
 }
 
-- (id)nameOfJoystick:(NSUInteger)stickNumber // shared selector (proposed ADR-0043)
+- (NSString*)nameOfJoystick:(NSUInteger)stickNumber
 {
     if (stickNumber >= stickCount)
         return @"(unknown joystick)";
-    const char* name = SDL_GetJoystickName(stick[stickNumber]);
-    return (name != NULL) ? oo::NSStringFrom(name) : nil; // no string for a NULL name, as before
+    return [NSString stringWithUTF8String:SDL_GetJoystickName(stick[stickNumber])];
 }
 
 - (int16_t)getAxisWithStick:(NSUInteger)stickNum axis:(NSUInteger)axisNum
@@ -140,12 +137,13 @@ MA 02110-1301, USA.
     if (cbObject && (cbHardware & HW_AXIS)) {
         // ...then check if axis moved more than AXCBTHRESH - (fix for BUG #17482)
         if (axisvalue > AXCBTHRESH) {
-            oo::PList::Dict fnDict;
-            fnDict[oo::StdString(STICK_ISAXIS)] = oo::PList(static_cast<bool>(YES));
-            fnDict[oo::StdString(STICK_NUMBER)] = oo::PList(static_cast<int>(evt->which));
-            fnDict[oo::StdString(STICK_AXBUT)] = oo::PList(static_cast<int>(evt->axis));
+            NSDictionary* fnDict = [NSDictionary dictionaryWithObjectsAndKeys:
+                    [NSNumber numberWithBool:YES], STICK_ISAXIS,
+                [NSNumber numberWithInt:evt->which], STICK_NUMBER,
+                [NSNumber numberWithInt:evt->axis], STICK_AXBUT,
+                nil];
             cbHardware = 0;
-            [cbObject performSelector:cbSelector withObject:oo::ObjectFromPList(oo::PList(std::move(fnDict)))];
+            [cbObject performSelector:cbSelector withObject:fnDict];
             cbObject = nil;
         }
 
@@ -197,12 +195,13 @@ MA 02110-1301, USA.
 
     // Is there a callback we need to make?
     if (cbObject && (cbHardware & HW_BUTTON)) {
-        oo::PList::Dict fnDict;
-        fnDict[oo::StdString(STICK_ISAXIS)] = oo::PList(static_cast<bool>(NO));
-        fnDict[oo::StdString(STICK_NUMBER)] = oo::PList(static_cast<int>(evt->which));
-        fnDict[oo::StdString(STICK_AXBUT)] = oo::PList(static_cast<int>(evt->button));
+        NSDictionary* fnDict = [NSDictionary dictionaryWithObjectsAndKeys:
+                [NSNumber numberWithBool:NO], STICK_ISAXIS,
+            [NSNumber numberWithInt:evt->which], STICK_NUMBER,
+            [NSNumber numberWithInt:evt->button], STICK_AXBUT,
+            nil];
         cbHardware = 0;
-        [cbObject performSelector:cbSelector withObject:oo::ObjectFromPList(oo::PList(std::move(fnDict)))];
+        [cbObject performSelector:cbSelector withObject:fnDict];
         cbObject = nil;
 
         // we are done.

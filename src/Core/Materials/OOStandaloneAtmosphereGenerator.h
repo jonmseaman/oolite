@@ -58,13 +58,9 @@ typedef struct OOStandaloneAtmosphereGeneratorInfo {
     unsigned _planetScale;
 }
 
-/*	Foundation sweep (proposed ADR-0043, bead oo-2pmp): planetInfo is the planet's material
-        parameters, an Objective-C dictionary that holds OOColor objects (not a property list), so it
-        stays id at this boundary and is never round-tripped through oo::PList.
-*/
-- (id)initWithPlanetInfo:(id)planetInfo seed:(RANROTSeed)seed; // Shared selector (proposed ADR-0043).
+- (id)initWithPlanetInfo:(NSDictionary*)planetInfo seed:(RANROTSeed)seed;
 
-+ (OOTexture*)planetTextureWithInfo:(id)planetInfo seed:(RANROTSeed)seed; // Shared selector (proposed ADR-0043).
-+ (BOOL)generateAtmosphereTexture:(OOTexture**)texture withInfo:(id)planetInfo seed:(RANROTSeed)seed;
++ (OOTexture*)planetTextureWithInfo:(NSDictionary*)planetInfo seed:(RANROTSeed)seed;
++ (BOOL)generateAtmosphereTexture:(OOTexture**)texture withInfo:(NSDictionary*)planetInfo seed:(RANROTSeed)seed;
 
 @end

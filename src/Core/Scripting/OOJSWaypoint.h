@@ -40,7 +40,7 @@ JSClassID JSWaypointClassID(void);
 
 // Replaces SpiderMonkey's -getJSClass:andPrototype:.
 - (JSClassID)oo_jsClassID;
-- (id)oo_jsClassName; // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsClassName;
 - (BOOL)isVisibleToScripts;
 
 @end

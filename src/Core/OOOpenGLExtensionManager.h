@@ -113,12 +113,10 @@ SOFTWARE.
 #if OOOPENGLEXTMGR_LOCK_SET_ACCESS
     std::mutex lock;
 #endif
-    // Foundation sweep (proposed ADR-0043, bead oo-fzwt): the extension names, and the vendor /
-    // renderer strings (nullopt where OpenGL answered NULL, as the strings were nil).
-    std::set<std::string> extensions;
+    NSSet* extensions;
 
-    std::optional<std::string> vendor;
-    std::optional<std::string> renderer;
+    NSString* vendor;
+    NSString* renderer;
 
     unsigned major, minor, release;
 
@@ -149,7 +147,7 @@ SOFTWARE.
 
 - (void)reset;
 
-- (BOOL)haveExtension:(const std::string&)extension;
+- (BOOL)haveExtension:(NSString*)extension;
 
 - (BOOL)shadersSupported;
 - (BOOL)shadersForceDisabled;
@@ -168,8 +166,8 @@ SOFTWARE.
 - (void)getVersionMajor:(unsigned*)outMajor minor:(unsigned*)outMinor release:(unsigned*)outRelease;
 - (BOOL)versionIsAtLeastMajor:(unsigned)maj minor:(unsigned)min;
 
-- (std::optional<std::string>)vendorString;
-- (std::optional<std::string>)rendererString;
+- (NSString*)vendorString;
+- (NSString*)rendererString;
 
 //	GL_POINT_SMOOTH is slow or non-functional on some GPUs.
 - (BOOL)usePointSmoothing;

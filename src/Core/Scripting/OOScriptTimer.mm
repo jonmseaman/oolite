@@ -24,7 +24,6 @@ MA 02110-1301, USA.
 */
 
 #import "OOScriptTimer.h"
-#import "OOFoundationBridge.h"
 #import "OOLogging.h"
 #import "OOPriorityQueue.h"
 #import "Universe.h"
@@ -33,9 +32,7 @@ static OOPriorityQueue* sTimers;
 
 // During an update, new timers must be deferred to avoid an infinite loop.
 static BOOL sUpdating;
-namespace {
-static std::vector<oo::ObjCRef<OOScriptTimer*>>* sDeferredTimers;
-} // namespace
+static NSMutableArray* sDeferredTimers;
 
 @implementation OOScriptTimer
 
@@ -79,16 +76,16 @@ static std::vector<oo::ObjCRef<OOScriptTimer*>>* sDeferredTimers;
     [super dealloc];
 }
 
-- (id)descriptionComponents // shared selector (proposed ADR-0043)
+- (NSString*)descriptionComponents
 {
-    std::string intervalDesc;
+    NSString* intervalDesc = nil;
 
     if (_interval <= 0.0)
-        intervalDesc = "one-shot";
+        intervalDesc = @"one-shot";
     else
-        intervalDesc = oo::str::format("interval: %g", _interval);
+        intervalDesc = [NSString stringWithFormat:@"interval: %g", _interval];
 
-    return oo::NSStringFrom(oo::str::format("nextTime: %g, %s, %srunning", _nextTime, intervalDesc.c_str(), _isScheduled ? "" : "not "));
+    return [NSString stringWithFormat:@"nextTime: %g, %@, %srunning", _nextTime, intervalDesc, _isScheduled ? "" : "not "];
 }
 
 - (OOTimeAbsolute)nextTime
@@ -134,9 +131,9 @@ static std::vector<oo::ObjCRef<OOScriptTimer*>>* sDeferredTimers;
             sTimers = [[OOPriorityQueue alloc] initWithComparator:@selector(compareByNextFireTime:)];
         [sTimers addObject:self];
     } else {
-        if (sDeferredTimers == NULL)
-            sDeferredTimers = new std::vector<oo::ObjCRef<OOScriptTimer*>>;
-        sDeferredTimers->emplace_back(self);
+        if (sDeferredTimers == nil)
+            sDeferredTimers = [[NSMutableArray alloc] init];
+        [sDeferredTimers addObject:self];
     }
 
     _isScheduled = YES;
@@ -181,11 +178,9 @@ static std::vector<oo::ObjCRef<OOScriptTimer*>>* sDeferredTimers;
         }
     }
 
-    if (sDeferredTimers != NULL) {
-        for (const auto& deferred : *sDeferredTimers)
-            [sTimers addObject:deferred.get()]; // as -addObjects: did, in order
-        delete sDeferredTimers;
-        sDeferredTimers = NULL;
+    if (sDeferredTimers != nil) {
+        [sTimers addObjects:sDeferredTimers];
+        DESTROY(sDeferredTimers);
     }
 
     sUpdating = NO;
@@ -193,10 +188,13 @@ static std::vector<oo::ObjCRef<OOScriptTimer*>>* sDeferredTimers;
 
 + (void)noteGameReset
 {
+    NSArray* timers = nil;
+    OOScriptTimer* timer = nil;
+
     // Intermediate array is required so we don't get stuck in an endless loop over reinserted timers. Note that -sortedObjects also clears the queue!
-    const std::vector<oo::ObjCRef<OOScriptTimer*>> timers = oo::ObjCRefsFrom<OOScriptTimer*>([sTimers sortedObjects]);
-    for (const auto& timer : timers) {
-        timer.get()->_isScheduled = NO;
+    timers = [sTimers sortedObjects];
+    foreach (timer, timers) {
+        timer->_isScheduled = NO;
     }
 }
 

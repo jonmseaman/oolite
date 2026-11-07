@@ -31,7 +31,6 @@ MA 02110-1301, USA.
 #import "OOMaths.h"
 #import "OOOpenGL.h"
 #import "OOOpenGLExtensionManager.h"
-#import "OOStringBridge.h"
 
 /*	DESIGN NOTES
 
@@ -355,9 +354,7 @@ static inline void SetState_CULL_FACE_MODE(GLint value)
 /*	Debug mode implementation.
  */
 
-namespace {
-constexpr const char* kOOLogOpenGLVerifyDump = "rendering.opengl.state"; // an OOLog class: oo::NSStringFrom() it
-}
+static NSString* const kOOLogOpenGLVerifyDump = @"rendering.opengl.state";
 
 /*
         VerifyOpenGLStateInternal(caller, nominalCaller, line)
@@ -521,18 +518,18 @@ static void VerifyOpenGLStateInternal(const char* caller, const char* nominalCal
     const OOOpenGLState* expectedState = &kStandardStates[sCurrentStateID];
 
     if (!StatesEqual(&currentState, expectedState)) {
-        if (OOLogWillDisplayMessagesInClass(oo::NSStringFrom(kOOLogOpenGLVerifyDump))) {
-            OOLog(oo::NSStringFrom(kOOLogOpenGLVerifyDump), @"Incorrect OpenGL state in %s (line %u)->%s", nominalCaller, line, caller);
+        if (OOLogWillDisplayMessagesInClass(kOOLogOpenGLVerifyDump)) {
+            OOLog(kOOLogOpenGLVerifyDump, @"Incorrect OpenGL state in %s (line %u)->%s", nominalCaller, line, caller);
 #if OO_CHECK_GL_HEAVY
-            OOLog(oo::NSStringFrom(kOOLogOpenGLVerifyDump), @"Previous OpenGL-using function: %s (line %u)", sPreviousFunction, sPreviousLine);
+            OOLog(kOOLogOpenGLVerifyDump, @"Previous OpenGL-using function: %s (line %u)", sPreviousFunction, sPreviousLine);
 #endif
-            OOLog(oo::NSStringFrom(kOOLogOpenGLVerifyDump), @"Expected previous state: %s", expectedState->name);
+            OOLog(kOOLogOpenGLVerifyDump, @"Expected previous state: %s", expectedState->name);
 
             OOLogIndent();
 
-#define TEST_ITEM(NAME_, DISP_)                                                                                                                              \
-    if (currentState.NAME_ != expectedState->NAME_) {                                                                                                        \
-        OOLog(oo::NSStringFrom(kOOLogOpenGLVerifyDump), @"GL_%@ should be %@ but is %@.", @ #NAME_, DISP_(expectedState->NAME_), DISP_(currentState.NAME_)); \
+#define TEST_ITEM(NAME_, DISP_)                                                                                                            \
+    if (currentState.NAME_ != expectedState->NAME_) {                                                                                      \
+        OOLog(kOOLogOpenGLVerifyDump, @"GL_%@ should be %@ but is %@.", @ #NAME_, DISP_(expectedState->NAME_), DISP_(currentState.NAME_)); \
     }
 
 #define ITEM_STATEFLAG(NAME)                  \
@@ -546,7 +543,7 @@ static void VerifyOpenGLStateInternal(const char* caller, const char* nominalCal
 #include "OOOpenGLStates.tbl"
 
             if (currentState.BLEND_SRC != expectedState->BLEND_SRC || currentState.BLEND_DST != expectedState->BLEND_DST) {
-                OOLog(oo::NSStringFrom(kOOLogOpenGLVerifyDump), @"GL blend mode should be %@, %@ but is %@, %@.", OOGLEnumToString(expectedState->BLEND_SRC), OOGLEnumToString(expectedState->BLEND_DST), OOGLEnumToString(currentState.BLEND_SRC), OOGLEnumToString(currentState.BLEND_DST));
+                OOLog(kOOLogOpenGLVerifyDump, @"GL blend mode should be %@, %@ but is %@, %@.", OOGLEnumToString(expectedState->BLEND_SRC), OOGLEnumToString(expectedState->BLEND_DST), OOGLEnumToString(currentState.BLEND_SRC), OOGLEnumToString(currentState.BLEND_DST));
             }
 
 #undef ITEM_STATEFLAG

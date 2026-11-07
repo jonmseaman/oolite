@@ -28,30 +28,18 @@ MA 02110-1301, USA.
 #if OO_OXP_VERIFIER_ENABLED
 
 #import "OOFileScannerVerifierStage.h"
-#import "OOFoundationBridge.h"
 #import "OOJSScript.h"
 #import "OOJavaScriptEngine.h"
 #import "OOScript.h"
 #import "OOStringParsing.h"
 
-#include "oofnd/String.hpp"
-
-static const char* const kStageName = "Checking JS Script file syntax";
-
-namespace {
-
-bool Contains(const std::vector<std::string>& strings, std::string_view string)
-{
-    return std::find(strings.begin(), strings.end(), string) != strings.end();
-}
-
-} // namespace
+static NSString* const kStageName = @"Checking JS Script file syntax";
 
 @implementation OOCheckJSSyntaxVerifierStage
 
-- (id)name // shared selector (proposed ADR-0043)
+- (NSString*)name
 {
-    return oo::NSStringFrom(kStageName);
+    return kStageName;
 }
 
 - (BOOL)shouldRun
@@ -59,35 +47,40 @@ bool Contains(const std::vector<std::string>& strings, std::string_view string)
     OOFileScannerVerifierStage* fileScanner = nil;
 
     fileScanner = [[self verifier] fileScannerStage];
-    return (!oo::StringsFrom([fileScanner filesInFolder:@"Scripts"]).empty() || Contains(oo::StringsFrom([fileScanner filesInFolder:@"Config"]), "script.js"));
+    return ([[fileScanner filesInFolder:@"Scripts"] count] > 0 || [[fileScanner filesInFolder:@"Config"] containsObject:@"script.js"]);
 }
 
 - (void)run
 {
     OOFileScannerVerifierStage* fileScanner = nil;
-    std::vector<std::string> scriptFiles;
-    BOOL scriptsFolder = NO;
+    NSArray* scriptFiles = nil;
+    NSString* scriptFile = nil;
+    NSString* fileExt = nil;
+    NSString* filePath = nil;
     BOOL configScript = NO;
 
     fileScanner = [[self verifier] fileScannerStage];
-    scriptsFolder = [fileScanner filesInFolder:@"Scripts"] != nil;
-    scriptFiles = oo::StringsFrom([fileScanner filesInFolder:@"Scripts"]);
-    configScript = Contains(oo::StringsFrom([fileScanner filesInFolder:@"Config"]), "script.js");
+    scriptFiles = [fileScanner filesInFolder:@"Scripts"];
+    configScript = ([[fileScanner filesInFolder:@"Config"] containsObject:@"script.js"]);
 
-    if (scriptsFolder == NO && configScript == NO)
+    if (scriptFiles == nil && configScript == NO)
         return;
 
     [[OOJavaScriptEngine sharedEngine] setShowErrorLocations:YES];
 
-    for (const std::string& scriptFile : scriptFiles) {
-        const std::string fileExt = oo::str::lowercase(oo::str::pathExtension(scriptFile));
-        if (fileExt == "js" || fileExt == "es") {
-            OOScript* script = [OOJSScript scriptWithPath:oo::OptionalString([fileScanner pathForFile:oo::NSStringFrom(scriptFile) inFolder:@"Scripts" referencedFrom:nil checkBuiltIn:NO]) properties:oo::PList()];
+    foreach (scriptFile, scriptFiles) {
+        fileExt = [[scriptFile pathExtension] lowercaseString];
+        if ([fileExt isEqualToString:@"js"] || [fileExt isEqualToString:@"es"]) {
+            filePath = [fileScanner pathForFile:scriptFile inFolder:@"Scripts" referencedFrom:nil checkBuiltIn:NO];
+
+            OOScript* script = [OOJSScript scriptWithPath:filePath properties:nil];
             (void)script;
         }
     }
     if (configScript == YES) {
-        OOScript* script = [OOJSScript scriptWithPath:oo::OptionalString([fileScanner pathForFile:@"script.js" inFolder:@"Config" referencedFrom:nil checkBuiltIn:NO]) properties:oo::PList()];
+        scriptFile = @"script.js";
+        filePath = [fileScanner pathForFile:scriptFile inFolder:@"Config" referencedFrom:nil checkBuiltIn:NO];
+        OOScript* script = [OOJSScript scriptWithPath:filePath properties:nil];
         (void)script;
     }
 }

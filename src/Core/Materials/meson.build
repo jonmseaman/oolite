@@ -8,7 +8,6 @@ oolite_sources += files(
     'OOMaterial.mm',
     'OOMaterialConvenienceCreators.mm',
     'OOMaterialSpecifier.mm',
-    'OOMaterialSpecifier+FoundationBridge.mm',
     'OOMultiTextureMaterial.mm',
     'OONullTexture.mm',
     'OOPNGTextureLoader.mm',
@@ -23,10 +22,8 @@ oolite_sources += files(
     'OOSingleTextureMaterial.mm',
     'OOStandaloneAtmosphereGenerator.mm',
     'OOTexture.mm',
-    'OOTexture+FoundationBridge.mm',
     'OOTextureGenerator.mm',
     'OOTextureLoader.mm',
-    'OOTextureLoader+FoundationBridge.mm',
 )
 
 oolite_includes += include_directories('.')

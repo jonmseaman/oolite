@@ -25,13 +25,11 @@ MA 02110-1301, USA.
 
 #import "OOExplosionCloudEntity.h"
 #import "OOColor.h"
-#import "OOFoundationBridge.h"
 #import "OOGraphicsResetManager.h"
+#import "OOPListView.h"
 #import "OOTexture.h"
 #import "PlayerEntity.h"
 #import "Universe.h"
-
-#include "oofnd/PListGet.hpp"
 
 #define kExplosionCloudDuration 0.9
 #define kGrowthRateFactor 1.5f
@@ -40,62 +38,60 @@ MA 02110-1301, USA.
 #define kExplosionDefaultSize 2.5f
 
 // keys for plist file
-namespace {
-constexpr std::string_view kExplosionAlpha = "alpha";
-constexpr std::string_view kExplosionBrightness = "brightness";
-constexpr std::string_view kExplosionColors = "color_order";
-constexpr std::string_view kExplosionCount = "count";
-constexpr std::string_view kExplosionDuration = "duration";
-constexpr std::string_view kExplosionGrowth = "growth_rate";
-constexpr std::string_view kExplosionSize = "size";
-constexpr std::string_view kExplosionSpread = "spread";
-constexpr std::string_view kExplosionTexture = "texture";
-} // namespace
+static NSString* const kExplosionAlpha = @"alpha";
+static NSString* const kExplosionBrightness = @"brightness";
+static NSString* const kExplosionColors = @"color_order";
+static NSString* const kExplosionCount = @"count";
+static NSString* const kExplosionDuration = @"duration";
+static NSString* const kExplosionGrowth = @"growth_rate";
+static NSString* const kExplosionSize = @"size";
+static NSString* const kExplosionSpread = @"spread";
+static NSString* const kExplosionTexture = @"texture";
 
 @interface OOExplosionCloudEntity (OOPrivate)
-- (id)initExplosionCloudWithEntity:(Entity*)entity size:(float)size andSettings:(const oo::PList&)settings;
+- (id)initExplosionCloudWithEntity:(Entity*)entity size:(float)size andSettings:(NSDictionary*)settings;
 @end
 
 @implementation OOExplosionCloudEntity
 
-- (id)initExplosionCloudWithEntity:(Entity*)entity size:(float)size andSettings:(const oo::PList&)settings
+- (id)initExplosionCloudWithEntity:(Entity*)entity size:(float)size andSettings:(NSDictionary*)settings
 {
     unsigned i;
     unsigned maxCount = [UNIVERSE detailLevel] <= DETAIL_LEVEL_SHADERS ? 10 : 25;
     HPVector pos = [entity position];
     Vector vel = [entity velocity];
 
-    if (settings.isNull()) {
-        _settings = oo::PList(oo::PList::Dict { });
+    if (settings == nil) {
+        _settings = [[NSDictionary dictionary] retain];
     } else {
-        _settings = settings;
+        _settings = [settings retain];
     }
 
-    unsigned count = _settings.get<unsigned int>(kExplosionCount, 25);
+    unsigned count = oo::PListView(_settings).get<unsigned int>(kExplosionCount, 25);
     if (count > maxCount) {
         count = maxCount;
     }
 
     if (size == 0.0) {
-        size = [entity collisionRadius] * _settings.get<float>(kExplosionSize, kExplosionDefaultSize);
+        size = [entity collisionRadius] * oo::PListView(_settings).get<float>(kExplosionSize, kExplosionDefaultSize);
     }
 
-    _growthRate = _settings.get<float>(kExplosionGrowth, kGrowthRateFactor) * size;
-    _alpha = _settings.get<float>(kExplosionAlpha, kExplosionCloudAlpha);
-    _brightnessMult = _settings.get<float>(kExplosionBrightness, kExplosionBrightnessMult);
+    _growthRate = oo::PListView(_settings).get<float>(kExplosionGrowth, kGrowthRateFactor) * size;
+    _alpha = oo::PListView(_settings).get<float>(kExplosionAlpha, kExplosionCloudAlpha);
+    _brightnessMult = oo::PListView(_settings).get<float>(kExplosionBrightness, kExplosionBrightnessMult);
     if (_brightnessMult < 1.0f)
         _brightnessMult = 1.0f;
-    _cloudDuration = _settings.get<double>(kExplosionDuration, kExplosionCloudDuration);
+    _cloudDuration = oo::PListView(_settings).get<double>(kExplosionDuration, kExplosionCloudDuration);
 
-    GLfloat spread = _settings.get<float>(kExplosionSpread, 1.0);
+    GLfloat spread = oo::PListView(_settings).get<float>(kExplosionSpread, 1.0);
 
-    std::string textureFile = _settings.get<std::string>(kExplosionTexture, "oolite-particle-cloud2.png");
+    NSString* textureFile = oo::PListView(_settings).get<NSString*>(kExplosionTexture, @"oolite-particle-cloud2.png");
 
-    _texture = [[OOTexture cxx_textureWithName:textureFile
-                                      inFolder:std::string("Textures")
-                                       options:kOOTextureMinFilterMipMap | kOOTextureMagFilterLinear | kOOTextureAlphaMask
-                                    anisotropy:kOOTextureDefaultAnisotropy
-                                       lodBias:0.0] retain];
+    _texture = [[OOTexture textureWithName:textureFile
+                                  inFolder:@"Textures"
+                                   options:kOOTextureMinFilterMipMap | kOOTextureMagFilterLinear | kOOTextureAlphaMask
+                                anisotropy:kOOTextureDefaultAnisotropy
+                                   lodBias:0.0] retain];
     if (_texture == nil) {
         [self release];
         return nil;
@@ -109,10 +105,10 @@ constexpr std::string_view kExplosionTexture = "texture";
     }
 
     if ((self = [super initWithPosition:pos velocity:vel count:count minSpeed:size * 0.8f * spread maxSpeed:size * 1.2f * spread duration:_cloudDuration baseColor:baseColor])) {
-        const std::string color_order = _settings.get<std::string>(kExplosionColors, "rgb");
+        NSString* color_order = oo::PListView(_settings).get<NSString*>(kExplosionColors, @"rgb");
 
         for (i = 0; i < count; i++) {
-            if (color_order == "white") {
+            if ([color_order isEqualToString:@"white"]) {
                 // grey
                 _particleColor[i][0] = _particleColor[i][1] = _particleColor[i][2] = randf();
             } else {
@@ -125,27 +121,27 @@ constexpr std::string_view kExplosionTexture = "texture";
                 if (c3 > c2) {
                     c3 = c2;
                 }
-                if (color_order == "rgb") {
+                if ([color_order isEqualToString:@"rgb"]) {
                     _particleColor[i][0] = c1;
                     _particleColor[i][1] = c2;
                     _particleColor[i][2] = c3;
-                } else if (color_order == "rbg") {
+                } else if ([color_order isEqualToString:@"rbg"]) {
                     _particleColor[i][0] = c1;
                     _particleColor[i][1] = c3;
                     _particleColor[i][2] = c2;
-                } else if (color_order == "grb") {
+                } else if ([color_order isEqualToString:@"grb"]) {
                     _particleColor[i][0] = c2;
                     _particleColor[i][1] = c1;
                     _particleColor[i][2] = c3;
-                } else if (color_order == "gbr") {
+                } else if ([color_order isEqualToString:@"gbr"]) {
                     _particleColor[i][0] = c3;
                     _particleColor[i][1] = c1;
                     _particleColor[i][2] = c2;
-                } else if (color_order == "brg") {
+                } else if ([color_order isEqualToString:@"brg"]) {
                     _particleColor[i][0] = c2;
                     _particleColor[i][1] = c3;
                     _particleColor[i][2] = c1;
-                } else if (color_order == "bgr") {
+                } else if ([color_order isEqualToString:@"bgr"]) {
                     _particleColor[i][0] = c3;
                     _particleColor[i][1] = c2;
                     _particleColor[i][2] = c1;
@@ -164,15 +160,16 @@ constexpr std::string_view kExplosionTexture = "texture";
 - (void)dealloc
 {
     DESTROY(_texture);
+    DESTROY(_settings);
     [super dealloc];
 }
 
-+ (instancetype)explosionCloudFromEntity:(Entity*)entity withSettings:(const oo::PList&)settings
++ (instancetype)explosionCloudFromEntity:(Entity*)entity withSettings:(NSDictionary*)settings
 {
     return [[[self alloc] initExplosionCloudWithEntity:entity size:0 andSettings:settings] autorelease];
 }
 
-+ (instancetype)explosionCloudFromEntity:(Entity*)entity withSize:(float)size andSettings:(const oo::PList&)settings
++ (instancetype)explosionCloudFromEntity:(Entity*)entity withSize:(float)size andSettings:(NSDictionary*)settings
 {
     return [[[self alloc] initExplosionCloudWithEntity:entity size:size andSettings:settings] autorelease];
 }
@@ -187,30 +184,30 @@ constexpr std::string_view kExplosionTexture = "texture";
     GLfloat(*particleColor)[4] = _particleColor;
 
     float newAlpha = _alpha * (1 - (_timePassed / _cloudDuration));
-    const std::string color_order = _settings.get<std::string>(kExplosionColors, "rgb");
+    NSString* color_order = oo::PListView(_settings).get<NSString*>(kExplosionColors, @"rgb");
     NSUInteger primary = 0, secondary = 1, tertiary = 2;
 
-    if (color_order == "rgb") {
+    if ([color_order isEqualToString:@"rgb"]) {
         primary = 0;
         secondary = 1;
         tertiary = 2;
-    } else if (color_order == "rbg") {
+    } else if ([color_order isEqualToString:@"rbg"]) {
         primary = 0;
         secondary = 2;
         tertiary = 1;
-    } else if (color_order == "grb") {
+    } else if ([color_order isEqualToString:@"grb"]) {
         primary = 1;
         secondary = 0;
         tertiary = 2;
-    } else if (color_order == "gbr") {
+    } else if ([color_order isEqualToString:@"gbr"]) {
         primary = 1;
         secondary = 2;
         tertiary = 0;
-    } else if (color_order == "brg") {
+    } else if ([color_order isEqualToString:@"brg"]) {
         primary = 2;
         secondary = 0;
         tertiary = 1;
-    } else if (color_order == "bgr") {
+    } else if ([color_order isEqualToString:@"bgr"]) {
         primary = 2;
         secondary = 1;
         tertiary = 0;
@@ -222,7 +219,7 @@ constexpr std::string_view kExplosionTexture = "texture";
         _particleSize[i] += delta_t * _growthRate;
 
         particleColor[i][3] = newAlpha;
-        if (color_order != "white") {
+        if (![color_order isEqualToString:@"white"]) {
 
             if (particleColor[i][tertiary] > 0.0f) // fade blue (white to yellow)
             {

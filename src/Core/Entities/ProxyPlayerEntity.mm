@@ -27,7 +27,7 @@ MA 02110-1301, USA.
 
 @implementation ProxyPlayerEntity
 
-- (id)initWithKey:(id)key definition:(id)dict // shared selector (proposed ADR-0043): an Objective-C string and dictionary
+- (id)initWithKey:(NSString*)key definition:(NSDictionary*)dict
 {
     self = [super initWithKey:key definition:dict];
     if (self != nil) {

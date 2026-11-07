@@ -30,7 +30,6 @@ SOFTWARE.
 #import "NSObjectOOExtensions.h"
 #import "OOCollectionExtractors.h"
 #import "OOColor.h"
-#import "OOFoundationBridge.h"
 #import "OOGraphicsResetManager.h"
 #import "OOMacroOpenGL.h"
 #import "OOProbabilisticTextureManager.h"
@@ -39,8 +38,6 @@ SOFTWARE.
 #import "Universe.h"
 
 #include "oofnd/Defaults.hpp"
-#include "oofnd/String.hpp"
-#include "oofnd/objc/OOException.h"
 
 #define SKY_ELEMENT_SCALE_FACTOR (BILLBOARD_DEPTH / 500.0f)
 #define NEBULA_SHUFFLE_FACTOR 0.005f
@@ -80,7 +77,7 @@ enum {
     GLfloat* _colors; // 4 entries per vertex, 16 per quad
 }
 
-+ (void)addQuads:(OOSkyQuadDesc*)quads count:(unsigned)count toArray:(std::vector<oo::ObjCRef<OOSkyQuadSet*>>&)ioArray;
++ (void)addQuads:(OOSkyQuadDesc*)quads count:(unsigned)count toArray:(NSMutableArray*)ioArray;
 
 - (id)initWithQuadsWithTexture:(OOTexture*)texture inArray:(OOSkyQuadDesc*)array count:(unsigned)totalCount;
 
@@ -170,6 +167,7 @@ static OOColor* SaturatedColorInRange(OOColor* color1, OOColor* color2, BOOL hue
 {
     OO_ENTER_OPENGL();
 
+    [_quadSets release];
     [[OOGraphicsResetManager sharedManager] unregisterClient:self];
     if (_displayListName != 0)
         glDeleteLists(_displayListName, 1);
@@ -204,8 +202,7 @@ static OOColor* SaturatedColorInRange(OOColor* color1, OOColor* color2, BOOL hue
         OOGL(glEnableClientState(GL_TEXTURE_COORD_ARRAY));
         OOGL(glEnableClientState(GL_COLOR_ARRAY));
 
-        for (const oo::ObjCRef<OOSkyQuadSet*>& quadSet : _quadSets)
-            [quadSet.get() render];
+        [_quadSets makeObjectsPerformSelector:@selector(render)];
 
         OOGL(glDisableClientState(GL_TEXTURE_COORD_ARRAY));
         OOGL(glDisableClientState(GL_COLOR_ARRAY));
@@ -234,24 +231,25 @@ static OOColor* SaturatedColorInRange(OOColor* color1, OOColor* color2, BOOL hue
 }
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-- (id)allTextures // shared selector (proposed ADR-0043)
+- (NSSet*)allTextures
 {
-    std::vector<id> result;
-    result.reserve(_quadSets.size());
+    NSMutableSet* result = [NSMutableSet setWithCapacity:[_quadSets count]];
 
-    for (const oo::ObjCRef<OOSkyQuadSet*>& quadSet : _quadSets) {
-        result.push_back([quadSet.get() texture]);
+    OOSkyQuadSet* quadSet = nil;
+    foreach (quadSet, _quadSets) {
+        [result addObject:[quadSet texture]];
     }
 
-    return oo::NSSetFromObjects(result);
+    return result;
 }
 
 - (size_t)totalSize
 {
     size_t result = [super totalSize];
 
-    for (const oo::ObjCRef<OOSkyQuadSet*>& quadSet : _quadSets) {
-        result += [quadSet.get() totalSize];
+    OOSkyQuadSet* quadSet = nil;
+    foreach (quadSet, _quadSets) {
+        result += [quadSet totalSize];
     }
 
     return result;
@@ -413,6 +411,9 @@ static OOColor* DebugColor(Vector orientation)
 
 - (void)addQuads:(OOSkyQuadDesc*)quads count:(unsigned)count
 {
+    if (_quadSets == nil)
+        _quadSets = [[NSMutableArray alloc] init];
+
     [OOSkyQuadSet addQuads:quads count:count toArray:_quadSets];
 }
 
@@ -420,12 +421,12 @@ static OOColor* DebugColor(Vector orientation)
 {
     if (sStarTextures == nil) {
         sStarTextures = [[OOProbabilisticTextureManager alloc]
-            initWithPListName:"startextures.plist"
+            initWithPListName:@"startextures.plist"
                       options:kOOTextureMinFilterMipMap | kOOTextureMagFilterLinear | kOOTextureAlphaMask
                    anisotropy:0.0f
                       lodBias:-0.0f];
         if (sStarTextures == nil) {
-            [OOException raise:OOLITE_EXCEPTION_DATA_NOT_FOUND format:"No star textures could be loaded."];
+            [NSException raise:OOLITE_EXCEPTION_DATA_NOT_FOUND format:@"No star textures could be loaded."];
         }
     }
 
@@ -436,12 +437,12 @@ static OOColor* DebugColor(Vector orientation)
 {
     if (sNebulaTextures == nil) {
         sNebulaTextures = [[OOProbabilisticTextureManager alloc]
-            initWithPListName:"nebulatextures.plist"
+            initWithPListName:@"nebulatextures.plist"
                       options:kOOTextureDefaultOptions | kOOTextureAlphaMask
                    anisotropy:0.0f
                       lodBias:0.0f];
         if (sNebulaTextures == nil) {
-            [OOException raise:OOLITE_EXCEPTION_DATA_NOT_FOUND format:"No nebula textures could be loaded."];
+            [NSException raise:OOLITE_EXCEPTION_DATA_NOT_FOUND format:@"No nebula textures could be loaded."];
         }
     }
 
@@ -468,27 +469,29 @@ static OOColor* DebugColor(Vector orientation)
 
 @implementation OOSkyQuadSet
 
-+ (void)addQuads:(OOSkyQuadDesc*)quads count:(unsigned)count toArray:(std::vector<oo::ObjCRef<OOSkyQuadSet*>>&)ioArray
++ (void)addQuads:(OOSkyQuadDesc*)quads count:(unsigned)count toArray:(NSMutableArray*)ioArray
 {
-    std::vector<oo::ObjCRef<OOTexture*>> seenTextures; // by identity (textures do not override -isEqual:)
+    NSMutableSet* seenTextures = nil;
     OOTexture* texture = nil;
     OOSkyQuadSet* quadSet = nil;
     unsigned i;
 
     // Iterate over all quads.
+    seenTextures = [NSMutableSet set];
     for (i = 0; i != count; ++i) {
         texture = quads[i].texture;
 
         // If we haven't seen this quad's texture before...
-        if (std::find(seenTextures.begin(), seenTextures.end(), texture) == seenTextures.end()) {
-            seenTextures.emplace_back(texture);
+        if (![seenTextures containsObject:texture]) {
+            [seenTextures addObject:texture];
 
             // ...create a quad set for this texture.
             quadSet = [[self alloc] initWithQuadsWithTexture:texture
                                                      inArray:quads
                                                        count:count];
             if (quadSet != nil) {
-                ioArray.push_back(oo::adoptObjC(quadSet));
+                [ioArray addObject:quadSet];
+                [quadSet release];
             }
         }
     }
@@ -625,11 +628,9 @@ static OOColor* DebugColor(Vector orientation)
     [super dealloc];
 }
 
-// OOObject's -description wraps this as "<OOSkyQuadSet 0x...>{...}", the text this class's own
-// -description printed. Shared selector (proposed ADR-0043).
-- (id)descriptionComponents
+- (NSString*)description
 {
-    return oo::NSStringFrom(oo::str::format("%u quads, texture: %s", _count, oo::DescriptionOf(_texture).c_str()));
+    return [NSString stringWithFormat:@"<%@ %p>{%u quads, texture: %@}", [self class], self, _count, _texture];
 }
 
 - (void)render

@@ -26,29 +26,14 @@ SOFTWARE.
 */
 
 #import "OOProbabilisticTextureManager.h"
-#import "OOFoundationBridge.h"
+#import "OOPListView.h"
 #import "OOTexture.h"
 #import "PlayerEntityScriptMethods.h"
 #import "ResourceManager.h"
 
-#include "oofnd/String.hpp"
-
-namespace {
-
-// oo_stringForKey: a string, a number's string value, or nil (Foundation sweep, proposed ADR-0043).
-std::optional<std::string> OptionalStringForKey(const oo::PList& dict, std::string_view key)
-{
-    const oo::PList* value = dict.find(key);
-    if (value == nullptr || !(value->isString() || value->isNumber()))
-        return std::nullopt;
-    return dict.get<std::string>(key);
-}
-
-} // namespace
-
 @implementation OOProbabilisticTextureManager
 
-- (id)initWithPListName:(const std::string&)plistName
+- (id)initWithPListName:(NSString*)plistName
                 options:(uint32_t)options
              anisotropy:(GLfloat)anisotropy
                 lodBias:(GLfloat)lodBias
@@ -60,34 +45,34 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dict, std::stri
                               seed:RANROTGetFullSeed()];
 }
 
-- (id)initWithPListName:(const std::string&)plistName
+- (id)initWithPListName:(NSString*)plistName
                 options:(uint32_t)options
              anisotropy:(GLfloat)anisotropy
                 lodBias:(GLfloat)lodBias
                    seed:(RANROTSeed)seed
 {
     BOOL OK = YES;
-    oo::PList config;
+    NSArray* config = nil;
     NSUInteger i, count, j;
-    const oo::PList* entry = nullptr;
-    std::optional<std::string> name;
+    id entry = nil;
+    NSString* name = nil;
     float probability;
     OOTexture* texture = nil;
     int galID = -1;
-    const oo::PList* object = nullptr;
+    id object = nil;
 
     self = [super init];
     if (self == nil)
         OK = NO;
 
     if (OK) {
-        config = oo::PListFrom([ResourceManager arrayFromFilesNamed:oo::NSStringFrom(plistName) inFolder:@"Config" andMerge:YES]);
-        if (!config)
+        config = [ResourceManager arrayFromFilesNamed:plistName inFolder:@"Config" andMerge:YES];
+        if (config == nil)
             OK = NO;
     }
 
     if (OK) {
-        count = config.count();
+        count = [config count];
 
         _textures = (OOTexture**)malloc(sizeof *_textures * count);
         _prob = (float*)malloc(sizeof *_prob * count);
@@ -104,26 +89,26 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dict, std::stri
 
         //  Go through list and load textures.
         for (i = 0; i != count; ++i) {
-            entry = config.at(i);
+            entry = [config objectAtIndex:i];
             galID = -1;
-            if (entry->isDict()) {
-                name = OptionalStringForKey(*entry, "texture");
-                probability = entry->get<float>("probability", 1.0f);
-                object = entry->find("galaxy");
-                if (object != nullptr && object->isString()) {
-                    galID = oo::str::intValue(*object->getIf<std::string>());
-                } else if (object != nullptr) {
-                    OOLog(@"textures.load", @"***** ERROR: %@ for texture %@ is not a string.", @"galaxy", oo::NSStringOrNil(name));
+            if ([entry isKindOfClass:[NSDictionary class]]) {
+                name = oo::PListView((NSDictionary*)entry).get<NSString*>(@"texture");
+                probability = oo::PListView(entry).get<float>(@"probability", 1.0f);
+                object = [entry objectForKey:@"galaxy"];
+                if ([object isKindOfClass:[NSString class]]) {
+                    galID = [object intValue];
+                } else if (object != nil) {
+                    OOLog(@"textures.load", @"***** ERROR: %@ for texture %@ is not a string.", @"galaxy", name);
                 }
-            } else if (entry->isString()) {
-                name = *entry->getIf<std::string>();
+            } else if ([entry isKindOfClass:[NSString class]]) {
+                name = entry;
                 probability = 1.0f;
             } else {
-                name = std::nullopt;
+                name = nil;
             }
 
-            if (name.has_value() && 0.0f < probability) {
-                texture = [OOTexture textureWithName:oo::NSStringFrom(*name)
+            if (name != nil && 0.0f < probability) {
+                texture = [OOTexture textureWithName:name
                                             inFolder:@"Textures"
                                              options:options
                                           anisotropy:anisotropy
@@ -180,11 +165,9 @@ std::optional<std::string> OptionalStringForKey(const oo::PList& dict, std::stri
     [super dealloc];
 }
 
-// OOObject's -description wraps this as "<OOProbabilisticTextureManager 0x...>{...}", the text
-// this class's own -description printed. Shared selector (proposed ADR-0043).
-- (id)descriptionComponents
+- (NSString*)description
 {
-    return oo::NSStringFrom(oo::str::format("%u textures, cumulative probability=%g", _count, _probMax));
+    return [NSString stringWithFormat:@"<%@ %p>{%u textures, cumulative probability=%g}", [self class], self, _count, _probMax];
 }
 
 - (OOTexture*)selectTexture

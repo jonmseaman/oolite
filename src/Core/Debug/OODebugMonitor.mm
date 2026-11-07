@@ -35,7 +35,6 @@ SOFTWARE.
 #import "OOPListView.h"
 #import "ResourceManager.h"
 
-#import "OOFoundationBridge.h"
 #import "OOJSConsole.h"
 #import "OOJSEngineTimeManagement.h"
 #import "OOJSScript.h"
@@ -44,9 +43,7 @@ SOFTWARE.
 #import "NSObjectOOExtensions.h"
 #import "OOConcreteTexture.h"
 #import "OODrawable.h"
-#import "OOFoundationBridge.h"
 #import "OOTexture.h"
-#include "oofnd/String.hpp"
 
 static OODebugMonitor* sSingleton = nil;
 
@@ -329,61 +326,64 @@ NSString* NSApplicationWillTerminateNotification = @"ApplicationWillTerminate";
     return _debugger != nil;
 }
 
-- (void)writeMemStat:(const std::string&)line
+- (void)writeMemStat:(NSString*)format, ...
 {
-    OOLog(@"debug.memStats", @"%@", oo::NSStringFrom(line));
-    [self appendJSConsoleLine:oo::NSStringFrom(line) colorKey:@"command-result"];
+    va_list args;
+    va_start(args, format);
+    NSString* message = [[NSString alloc] initWithFormat:format arguments:args];
+    va_end(args);
+
+    OOLog(@"debug.memStats", @"%@", message);
+    [self appendJSConsoleLine:message colorKey:@"command-result"];
+
+    [message release];
 }
 
-namespace {
-
-std::string SizeString(size_t size)
+static NSString* SizeString(size_t size)
 {
     enum {
         kThreshold = 2 // 2 KiB, 2 MiB etc.
     };
 
     unsigned magnitude = 0;
+    NSString* suffix = @"";
 
     if (size < kThreshold << 10) {
-        return oo::str::format("%zu bytes", size);
+        return [NSString stringWithFormat:@"%zu bytes", size];
     }
-    const char* suffix;
     if (size < kThreshold << 20) {
         magnitude = 1;
-        suffix = "KiB";
+        suffix = @"KiB";
     } else if (size < ((size_t)kThreshold << 30)) {
         magnitude = 2;
-        suffix = "MiB";
+        suffix = @"MiB";
     } else {
         magnitude = 3;
-        suffix = "GiB";
+        suffix = @"GiB";
     }
 
     float unit = 1 << (magnitude * 10);
     float sizef = (float)size / unit;
     sizef = round(sizef * 100.0f) / 100.f;
 
-    return oo::str::format("%.2f %s", sizef, suffix);
+    return [NSString stringWithFormat:@"%.2f %@", sizef, suffix];
 }
 
-// Sets of objects by identity (the mutable sets of textures and entities compared by identity).
-struct EntityDumpState {
-    std::set<oo::ObjCRef<id>> entityTextures;
-    std::set<oo::ObjCRef<id>> visibleEntityTextures;
-    std::set<oo::ObjCRef<id>> seenEntities;
-    unsigned seenCount = 0;
-    size_t totalEntityObjSize = 0;
-    size_t totalDrawableSize = 0;
-};
-
-} // namespace
+typedef struct
+{
+    NSMutableSet* entityTextures;
+    NSMutableSet* visibleEntityTextures;
+    NSMutableSet* seenEntities;
+    unsigned seenCount;
+    size_t totalEntityObjSize;
+    size_t totalDrawableSize;
+} EntityDumpState;
 
 - (void)dumpEntity:(id)entity withState:(EntityDumpState*)state parentVisible:(BOOL)parentVisible
 {
-    if (entity == nil || state->seenEntities.count(oo::ObjCRef<id>(entity)) != 0)
+    if ([state->seenEntities containsObject:entity] || entity == nil)
         return;
-    state->seenEntities.insert(oo::ObjCRef<id>(entity));
+    [state->seenEntities addObject:entity];
 
     state->seenCount++;
 
@@ -396,37 +396,38 @@ struct EntityDumpState {
 
     BOOL visible = parentVisible && [entity isVisible];
 
-    // -allTextures is a shared selector (id): read the set it returns with for-in.
-    for (id texture in [entity allTextures]) {
-        state->entityTextures.insert(oo::ObjCRef<id>(texture));
+    NSSet* textures = [entity allTextures];
+    if (textures != nil) {
+        [state->entityTextures unionSet:textures];
         if (visible)
-            state->visibleEntityTextures.insert(oo::ObjCRef<id>(texture));
+            [state->visibleEntityTextures unionSet:textures];
     }
 
-    std::string extra;
+    NSString* extra = @"";
     if (visible) {
-        extra += ", visible";
+        extra = [extra stringByAppendingString:@", visible"];
     }
 
     if (drawableSize != 0) {
-        extra += ", drawable: " + SizeString(drawableSize);
+        extra = [extra stringByAppendingFormat:@", drawable: %@", SizeString(drawableSize)];
     }
 
-    [self writeMemStat:oo::str::format("%s: %s%s", oo::DescriptionOf([entity shortDescription]).c_str(), SizeString(entitySize).c_str(), extra.c_str())];
+    [self writeMemStat:@"%@: %@%@", [entity shortDescription], SizeString(entitySize), extra];
 
     state->totalEntityObjSize += entitySize;
     state->totalDrawableSize += drawableSize;
 
     OOLogIndent();
     if ([entity isShip]) {
-        for (id subentity in [entity subEntityEnumerator]) {
+        id subentity = nil;
+        foreach (subentity, [entity subEntityEnumerator]) {
             [self dumpEntity:subentity withState:state parentVisible:visible];
         }
 
         if ([entity isPlayer]) {
             NSUInteger i, count = [entity dialMaxMissiles];
             for (i = 0; i < count; i++) {
-                id subentity = [entity missileForPylon:i];
+                subentity = [entity missileForPylon:i];
                 if (subentity != nil)
                     [self dumpEntity:subentity withState:state parentVisible:NO];
             }
@@ -443,7 +444,8 @@ struct EntityDumpState {
 #endif
     }
     if ([entity isWormhole]) {
-        for (id shipInfo in [entity shipsInTransit]) {
+        NSDictionary* shipInfo = nil;
+        foreach (shipInfo, [entity shipsInTransit]) {
             ShipEntity* ship = [shipInfo objectForKey:@"ship"];
             [self dumpEntity:ship withState:state parentVisible:NO];
         }
@@ -457,44 +459,51 @@ struct EntityDumpState {
     OOLogIndent();
 
     //	Get texture retain counts before the entity dumper starts messing with them.
-    const std::vector<oo::ObjCRef<OOTexture*>> allTextures = [OOTexture cxx_allTextures];
-    std::map<OOTexture*, NSUInteger> textureRefCounts;
+    NSSet* allTextures = [OOTexture allTextures];
+    NSMutableDictionary* textureRefCounts = [NSMutableDictionary dictionaryWithCapacity:[allTextures count]];
 
-    for (const oo::ObjCRef<OOTexture*>& tex : allTextures) {
+    OOTexture* tex = nil;
+    foreach (tex, allTextures) {
         // We subtract one because allTextures retains the textures.
-        textureRefCounts[tex.get()] = [tex.get() retainCount] - 1;
+        [textureRefCounts setObject:[NSNumber numberWithUnsignedInteger:[tex retainCount] - 1] forKey:[NSValue valueWithNonretainedObject:tex]];
     }
 
     size_t totalSize = 0;
 
-    [self writeMemStat:"Entitites:"];
+    [self writeMemStat:@"Entitites:"];
     OOLogIndent();
 
-    EntityDumpState entityDumpState;
+    NSArray* entities = [UNIVERSE entityList];
+    EntityDumpState entityDumpState = {
+        .entityTextures = [NSMutableSet set],
+        .visibleEntityTextures = [NSMutableSet set],
+        .seenEntities = [NSMutableSet set]
+    };
 
-    for (id entity in [UNIVERSE entityList]) {
+    id entity = nil;
+    foreach (entity, entities) {
         [self dumpEntity:entity withState:&entityDumpState parentVisible:YES];
     }
-    for (id entity in [PLAYER scannedWormholes]) {
+    foreach (entity, [PLAYER scannedWormholes]) {
         [self dumpEntity:entity withState:&entityDumpState parentVisible:YES];
     }
 
     OOLogOutdent();
-    [self writeMemStat:oo::str::format("Total entity size (excluding %u entities not accounted for): %s (%s entity objects, %s drawables)",
-                           gLiveEntityCount - entityDumpState.seenCount,
-                           SizeString(entityDumpState.totalEntityObjSize + entityDumpState.totalDrawableSize).c_str(),
-                           SizeString(entityDumpState.totalEntityObjSize).c_str(),
-                           SizeString(entityDumpState.totalDrawableSize).c_str())];
+    [self writeMemStat:@"Total entity size (excluding %u entities not accounted for): %@ (%@ entity objects, %@ drawables)",
+        gLiveEntityCount - entityDumpState.seenCount,
+        SizeString(entityDumpState.totalEntityObjSize + entityDumpState.totalDrawableSize),
+        SizeString(entityDumpState.totalEntityObjSize),
+        SizeString(entityDumpState.totalDrawableSize)];
     totalSize += entityDumpState.totalEntityObjSize + entityDumpState.totalDrawableSize;
 
     /*	Sort textures so that textures in the "recent cache" come first by age,
             followed by others.
     */
-    std::vector<oo::ObjCRef<OOTexture*>> textures = [OOTexture cxx_cachedTexturesByAge];
+    NSMutableArray* textures = [[[OOTexture cachedTexturesByAge] mutableCopy] autorelease];
 
-    for (const oo::ObjCRef<OOTexture*>& tex : allTextures) {
-        if (std::find(textures.begin(), textures.end(), tex) == textures.end()) {
-            textures.push_back(tex);
+    foreach (tex, allTextures) {
+        if ([textures indexOfObject:tex] == NSNotFound) {
+            [textures addObject:tex];
         }
     }
 
@@ -502,37 +511,35 @@ struct EntityDumpState {
     size_t totalTextureDataSize = 0;
     size_t visibleTextureDataSize = 0;
 
-    [self writeMemStat:"Textures:"];
+    [self writeMemStat:@"Textures:"];
     OOLogIndent();
 
-    for (const oo::ObjCRef<OOTexture*>& texRef : textures) {
-        OOTexture* tex = texRef.get();
+    foreach (tex, textures) {
         size_t objSize = [tex oo_objectSize];
         size_t dataSize = [tex dataSize];
 
 #if OOTEXTURE_RELOADABLE
-        const char* byteCountSuffix = "";
+        NSString* byteCountSuffix = @"";
 #else
-        const char* byteCountSuffix = " (* 2)";
+        NSString* byteCountSuffix = @" (* 2)";
 #endif
 
-        const char* usage = "";
-        if (entityDumpState.visibleEntityTextures.count(oo::ObjCRef<id>(tex)) != 0) {
+        NSString* usage = @"";
+        if ([entityDumpState.visibleEntityTextures containsObject:tex]) {
             visibleTextureDataSize += dataSize; // NOT doubled if !OOTEXTURE_RELOADABLE, because we're interested in what the GPU sees.
-            usage = ", visible";
-        } else if (entityDumpState.entityTextures.count(oo::ObjCRef<id>(tex)) != 0) {
-            usage = ", active";
+            usage = @", visible";
+        } else if ([entityDumpState.entityTextures containsObject:tex]) {
+            usage = @", active";
         }
 
-        const auto counted = textureRefCounts.find(tex);
-        unsigned refCount = (counted != textureRefCounts.end()) ? (unsigned)counted->second : 0;
+        unsigned refCount = oo::PListView(textureRefCounts).get<unsigned int>([NSValue valueWithNonretainedObject:tex]);
 
-        [self writeMemStat:oo::str::format("%s: [%u refs%s] %s%s",
-                               oo::DescriptionOf([tex name]).c_str(),
-                               refCount,
-                               usage,
-                               SizeString(objSize + dataSize).c_str(),
-                               byteCountSuffix)];
+        [self writeMemStat:@"%@: [%u refs%@] %@%@",
+            [tex name],
+            refCount,
+            usage,
+            SizeString(objSize + dataSize),
+            byteCountSuffix];
 
         totalTextureDataSize += dataSize;
         totalTextureObjSize += objSize;
@@ -544,15 +551,15 @@ struct EntityDumpState {
 #if !OOTEXTURE_RELOADABLE
     totalTextureDataSize *= 2;
 #endif
-    [self writeMemStat:oo::str::format("Total texture size: %s (%s object overhead, %s data, %s visible texture data)",
-                           SizeString(totalTextureObjSize + totalTextureDataSize).c_str(),
-                           SizeString(totalTextureObjSize).c_str(),
-                           SizeString(totalTextureDataSize).c_str(),
-                           SizeString(visibleTextureDataSize).c_str())];
+    [self writeMemStat:@"Total texture size: %@ (%@ object overhead, %@ data, %@ visible texture data)",
+        SizeString(totalTextureObjSize + totalTextureDataSize),
+        SizeString(totalTextureObjSize),
+        SizeString(totalTextureDataSize),
+        SizeString(visibleTextureDataSize)];
 
     totalSize += [self dumpJSMemoryStatistics];
 
-    [self writeMemStat:oo::str::format("Total: %s", SizeString(totalSize).c_str())];
+    [self writeMemStat:@"Total: %@", SizeString(totalSize)];
 
     OOLogOutdent();
 }
@@ -572,7 +579,7 @@ struct EntityDumpState {
 
     OOJSRelinquishContext(context);
 
-    [self writeMemStat:oo::str::format("JavaScript heap: %s (%lli objects, next collection at %s)", SizeString(jsSize).c_str(), (long long)usage.obj_count, SizeString(jsGCThreshold).c_str())];
+    [self writeMemStat:@"JavaScript heap: %@ (%lli objects, next collection at %@)", SizeString(jsSize), (long long)usage.obj_count, SizeString(jsGCThreshold)];
     return jsSize;
 }
 
@@ -675,7 +682,7 @@ struct EntityDumpState {
                 self, @"console",
             specialWrapper, @"special",
             nil];
-        _script = [[OOJSScript scriptWithPath:oo::OptionalString(path) properties:oo::PListFrom(jsProps)] retain];
+        _script = [[OOJSScript scriptWithPath:path properties:jsProps] retain];
     }
 
     // If no script, just make console visible globally as debugConsole.

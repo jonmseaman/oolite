@@ -47,8 +47,6 @@
 #import "OOStringParsing.h"
 #import "ResourceManager.h"
 
-#import "OOFoundationBridge.h"
-
 @interface ShipEntity (OOAIPrivate)
 
 - (void)checkFoundTarget;
@@ -2082,12 +2080,12 @@
 
         // Stuff expression in a function.
         predicateCode = [NSString stringWithFormat:@"return %@;", predicateExpression];
-        function = [[OOJSFunction alloc] initWithName:std::string("_oo_AIScanPredicate")
+        function = [[OOJSFunction alloc] initWithName:@"_oo_AIScanPredicate"
                                                 scope:JS_UNDEFINED
-                                                 code:oo::OptionalString(predicateCode)
+                                                 code:predicateCode
                                         argumentCount:1
                                         argumentNames:argNames
-                                             fileName:oo::OptionalString(aiName)
+                                             fileName:aiName
                                            lineNumber:0
                                               context:context];
         [function autorelease];

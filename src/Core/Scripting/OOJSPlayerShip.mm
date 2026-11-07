@@ -45,8 +45,6 @@ MA 02110-1301, USA.
 #import "OOFunctionAttributes.h"
 #import "OOJSEquipmentInfo.h"
 
-#import "OOFoundationBridge.h"
-
 static JSClassID sPlayerShipClassID;
 
 static JSClassDef sPlayerShipClass = {
@@ -85,7 +83,7 @@ static JSValue PlayerShipHideHUDSelector(OOJS_NATIVE_ARGS);
 static JSValue PlayerShipShowHUDSelector(OOJS_NATIVE_ARGS);
 static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS);
 
-static BOOL ValidateContracts(JSContext* context, int argc, JSValueConst* argv, BOOL isCargo, OOSystemID* start, OOSystemID* destination, double* eta, double* fee, double* premium, const std::string& functionName, unsigned* risk);
+static BOOL ValidateContracts(JSContext* context, int argc, JSValueConst* argv, BOOL isCargo, OOSystemID* start, OOSystemID* destination, double* eta, double* fee, double* premium, NSString* functionName, unsigned* risk);
 
 enum {
     // Property IDs
@@ -302,7 +300,7 @@ JSValue JSPlayerShipObject(void)
 
 @implementation PlayerEntity (OOJavaScriptExtensions)
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsClassName
 {
     return @"PlayerShip";
 }
@@ -591,7 +589,7 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS)
     double fValue;
     int bValue;
     int32_t iValue;
-    std::optional<std::string> sValue;
+    NSString* sValue = nil;
     OOGalacticHyperspaceBehaviour ghBehaviour;
     Vector vValue;
     OOColor* colorForScript = nil;
@@ -620,9 +618,9 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS)
         break;
 
     case kPlayerShip_chartHightlightMode:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-        if (sValue.has_value()) {
-            OOLongRangeChartMode chartMode = OOLongRangeChartModeFromString(oo::NSStringOrNil(sValue));
+        sValue = OOStringFromJSValue(context, value);
+        if (sValue != nil) {
+            OOLongRangeChartMode chartMode = OOLongRangeChartModeFromString(sValue);
             if (chartMode > OOLRC_MODE_UNKNOWN) {
                 [player setLongRangeChartMode:chartMode];
                 [player doScriptEvent:OOJSID("chartHighlightModeChanged") withArgument:OOStringFromLongRangeChartMode([player longRangeChartMode])];
@@ -635,8 +633,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS)
         break;
 
     case kPlayerShip_compassMode:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-        if (sValue.has_value()) {
+        sValue = OOStringFromJSValue(context, value);
+        if (sValue != nil) {
             OOCompassMode mode = OOCompassModeFromJSValue(context, value);
             [player setCompassMode:mode];
             [player validateCompassTarget];
@@ -645,11 +643,11 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS)
         break;
 
     case kPlayerShip_compassType:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-        if (sValue.has_value()) {
-            if (*sValue == "OO_COMPASSTYPE_BASIC") {
+        sValue = OOStringFromJSValue(context, value);
+        if (sValue != nil) {
+            if ([sValue isEqualToString:@"OO_COMPASSTYPE_BASIC"]) {
                 [player setCompassMode:COMPASS_MODE_BASIC];
-            } else if (*sValue == "OO_COMPASSTYPE_ADVANCED") {
+            } else if ([sValue isEqualToString:@"OO_COMPASSTYPE_ADVANCED"]) {
                 if (![player hasEquipmentItemProviding:@"EQ_ADVANCED_COMPASS"]) {
                     OOJSReportWarning(context, @"Advanced Compass type requested and set but player ship does not carry the EQ_ADVANCED_COMPASS equipment or has it damaged.");
                 }
@@ -713,26 +711,26 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS)
         break;
 
     case kPlayerShip_fastEquipmentA:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-        if (sValue.has_value()) {
-            [player setFastEquipmentA:oo::NSStringOrNil(sValue)];
+        sValue = OOStringFromJSValue(context, value);
+        if (sValue != nil) {
+            [player setFastEquipmentA:sValue];
             return JS_UNDEFINED;
         }
         break;
 
     case kPlayerShip_fastEquipmentB:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-        if (sValue.has_value()) {
-            [player setFastEquipmentB:oo::NSStringOrNil(sValue)];
+        sValue = OOStringFromJSValue(context, value);
+        if (sValue != nil) {
+            [player setFastEquipmentB:sValue];
             return JS_UNDEFINED;
         }
         break;
 
     case kPlayerShip_primedEquipment:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-        if (sValue.has_value()) {
+        sValue = OOStringFromJSValue(context, value);
+        if (sValue != nil) {
             // As before, failure stops the script without an error.
-            if (![player setPrimedEquipment:oo::NSStringOrNil(sValue) showMessage:NO])
+            if (![player setPrimedEquipment:sValue showMessage:NO])
                 return OOJSNativeFailure(context);
             return JS_UNDEFINED;
         }
@@ -839,9 +837,9 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS)
         break;
 
     case kPlayerShip_hud:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-        if (sValue.has_value()) {
-            [player switchHudTo:oo::NSStringOrNil(sValue)]; // EMMSTRAN: logged error should be a JS warning.
+        sValue = OOStringFromJSValue(context, value);
+        if (sValue != nil) {
+            [player switchHudTo:sValue]; // EMMSTRAN: logged error should be a JS warning.
             return JS_UNDEFINED;
         } else {
             [player resetHud];
@@ -850,15 +848,16 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS)
         break;
 
     case kPlayerShip_crosshairs:
-        sValue = oo::OptionalString(OOStringFromJSValue(context, value));
-        if (!sValue.has_value()) {
+        sValue = OOStringFromJSValue(context, value);
+        if (sValue == nil) {
             // reset HUD back to its plist settings
-            std::optional<std::string> hud = oo::OptionalString([[player hud] hudName]); // a copy, as the retain kept it
-            [player switchHudTo:oo::NSStringOrNil(hud)];
+            NSString* hud = [[[player hud] hudName] retain];
+            [player switchHudTo:hud];
+            [hud release];
             return JS_UNDEFINED;
         } else {
-            if (![[player hud] setCrosshairDefinition:oo::NSStringOrNil(sValue)]) {
-                OOJSReportWarning(context, @"Crosshair definition file %@ not found or invalid", oo::NSStringOrNil(sValue));
+            if (![[player hud] setCrosshairDefinition:sValue]) {
+                OOJSReportWarning(context, @"Crosshair definition file %@ not found or invalid", sValue);
             }
             return JS_UNDEFINED;
         }
@@ -886,10 +885,10 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS)
     case kPlayerShip_currentWeapon: {
         BOOL exists = NO;
         sValue = JSValueToEquipmentKeyRelaxed(context, value, &exists);
-        if (!exists || !sValue.has_value()) {
-            sValue = "EQ_WEAPON_NONE";
+        if (!exists || sValue == nil) {
+            sValue = @"EQ_WEAPON_NONE";
         }
-        [player setWeaponMount:[player currentWeaponFacing] toWeapon:oo::NSStringOrNil(sValue) inContext:@"scripted"];
+        [player setWeaponMount:[player currentWeaponFacing] toWeapon:sValue inContext:@"scripted"];
         return JS_UNDEFINED;
     }
 
@@ -1038,11 +1037,11 @@ static JSValue PlayerShipUseSpecialCargo(OOJS_NATIVE_ARGS)
         OOJS_RETURN_VOID;
 
     PlayerEntity* player = OOPlayerForScripting();
-    std::optional<std::string> name;
+    NSString* name = nil;
 
     if (argc > 0)
-        name = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (EXPECT_NOT(!name.has_value())) {
+        name = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (EXPECT_NOT(name == nil)) {
         OOJSReportBadArguments(context, @"PlayerShip", @"useSpecialCargo", MIN(argc, 1), OOJS_ARGV, nil, @"string (special cargo description)");
         return OOJSNativeFailure(context);
     }
@@ -1145,19 +1144,19 @@ static JSValue PlayerShipAwardEquipmentToCurrentPylon(OOJS_NATIVE_ARGS)
         OOJS_RETURN_VOID;
 
     PlayerEntity* player = OOPlayerForScripting();
-    std::optional<std::string> key;
+    NSString* key = nil;
     OOEquipmentType* eqType = nil;
 
     if (argc > 0)
         key = JSValueToEquipmentKey(context, OOJS_ARGV[0]);
-    if (key.has_value())
-        eqType = [OOEquipmentType equipmentTypeWithIdentifier:oo::NSStringOrNil(key)];
+    if (key != nil)
+        eqType = [OOEquipmentType equipmentTypeWithIdentifier:key];
     if (EXPECT_NOT(![eqType isMissileOrMine])) {
         OOJSReportBadArguments(context, @"PlayerShip", @"awardEquipmentToCurrentPylon", MIN(argc, 1), OOJS_ARGV, nil, @"equipment type (external store)");
         return OOJSNativeFailure(context);
     }
 
-    OOJS_RETURN_BOOL([player assignToActivePylon:oo::NSStringOrNil(key)]);
+    OOJS_RETURN_BOOL([player assignToActivePylon:key]);
 
     OOJS_NATIVE_EXIT
 }
@@ -1168,7 +1167,7 @@ static JSValue PlayerShipAddPassenger(OOJS_NATIVE_ARGS)
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    std::optional<std::string> name;
+    NSString* name = nil;
     OOSystemID start = 0, destination = 0;
     double eta = 0.0, fee = 0.0, advance = 0.0;
     unsigned risk = 0;
@@ -1178,20 +1177,20 @@ static JSValue PlayerShipAddPassenger(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    name = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (EXPECT_NOT(!name.has_value())) {
+    name = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (EXPECT_NOT(name == nil)) {
         OOJSReportBadArguments(context, @"PlayerShip", @"addPassenger", 1, &OOJS_ARGV[0], nil, @"string");
         return OOJSNativeFailure(context);
     }
 
-    if (!ValidateContracts(context, argc, OOJS_ARGV, NO, &start, &destination, &eta, &fee, &advance, "addPassenger", &risk))
+    if (!ValidateContracts(context, argc, OOJS_ARGV, NO, &start, &destination, &eta, &fee, &advance, @"addPassenger", &risk))
         return OOJSNativeFailure(context); // always go through validate contracts (passenger)
 
     // Ensure there's space.
     if ([player passengerCount] >= [player passengerCapacity])
         OOJS_RETURN_BOOL(NO);
 
-    BOOL OK = [player addPassenger:oo::NSStringOrNil(name) start:start destination:destination eta:eta fee:fee advance:advance risk:risk];
+    BOOL OK = [player addPassenger:name start:start destination:destination eta:eta fee:fee advance:advance risk:risk];
     OOJS_RETURN_BOOL(OK);
 
     OOJS_NATIVE_EXIT
@@ -1203,19 +1202,19 @@ static JSValue PlayerShipRemovePassenger(OOJS_NATIVE_ARGS)
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    std::optional<std::string> name;
+    NSString* name = nil;
     BOOL OK = YES;
 
     if (argc > 0)
-        name = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (EXPECT_NOT(!name.has_value())) {
+        name = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (EXPECT_NOT(name == nil)) {
         OOJSReportBadArguments(context, @"PlayerShip", @"removePassenger", MIN(argc, 1), OOJS_ARGV, nil, @"string");
         return OOJSNativeFailure(context);
     }
 
-    OK = [player passengerCount] > 0 && !name->empty();
+    OK = [player passengerCount] > 0 && [name length] > 0;
     if (OK)
-        OK = [player removePassenger:oo::NSStringOrNil(name)];
+        OK = [player removePassenger:name];
 
     OOJS_RETURN_BOOL(OK);
 
@@ -1228,7 +1227,7 @@ static JSValue PlayerShipAddParcel(OOJS_NATIVE_ARGS)
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    std::optional<std::string> name;
+    NSString* name = nil;
     OOSystemID start = 0, destination = 0;
     double eta = 0.0, fee = 0.0, premium = 0.0;
     unsigned risk = 0;
@@ -1238,18 +1237,18 @@ static JSValue PlayerShipAddParcel(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    name = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (EXPECT_NOT(!name.has_value())) {
+    name = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (EXPECT_NOT(name == nil)) {
         OOJSReportBadArguments(context, @"PlayerShip", @"addParcel", 1, &OOJS_ARGV[0], nil, @"string");
         return OOJSNativeFailure(context);
     }
 
-    if (!ValidateContracts(context, argc, OOJS_ARGV, NO, &start, &destination, &eta, &fee, &premium, "addParcel", &risk))
+    if (!ValidateContracts(context, argc, OOJS_ARGV, NO, &start, &destination, &eta, &fee, &premium, @"addParcel", &risk))
         return OOJSNativeFailure(context); // always go through validate contracts (passenger/parcel mode)
 
     // Ensure there's space.
 
-    BOOL OK = [player addParcel:oo::NSStringOrNil(name) start:start destination:destination eta:eta fee:fee premium:premium risk:risk];
+    BOOL OK = [player addParcel:name start:start destination:destination eta:eta fee:fee premium:premium risk:risk];
     OOJS_RETURN_BOOL(OK);
 
     OOJS_NATIVE_EXIT
@@ -1261,19 +1260,19 @@ static JSValue PlayerShipRemoveParcel(OOJS_NATIVE_ARGS)
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    std::optional<std::string> name;
+    NSString* name = nil;
     BOOL OK = YES;
 
     if (argc > 0)
-        name = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (EXPECT_NOT(!name.has_value())) {
+        name = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (EXPECT_NOT(name == nil)) {
         OOJSReportBadArguments(context, @"PlayerShip", @"removeParcel", MIN(argc, 1), OOJS_ARGV, nil, @"string");
         return OOJSNativeFailure(context);
     }
 
-    OK = [player parcelCount] > 0 && !name->empty();
+    OK = [player parcelCount] > 0 && [name length] > 0;
     if (OK)
-        OK = [player removeParcel:oo::NSStringOrNil(name)];
+        OK = [player removeParcel:name];
 
     OOJS_RETURN_BOOL(OK);
 
@@ -1286,7 +1285,7 @@ static JSValue PlayerShipAwardContract(OOJS_NATIVE_ARGS)
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    std::optional<std::string> key;
+    NSString* key = nil;
     int32_t qty = 0;
     OOSystemID start = 0, destination = 0;
     double eta = 0.0, fee = 0.0, premium = 0.0;
@@ -1301,16 +1300,16 @@ static JSValue PlayerShipAwardContract(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[1]));
-    if (EXPECT_NOT(!key.has_value())) {
+    key = OOStringFromJSValue(context, OOJS_ARGV[1]);
+    if (EXPECT_NOT(key == nil)) {
         OOJSReportBadArguments(context, @"PlayerShip", @"awardContract", 1, &OOJS_ARGV[1], nil, @"string (commodity identifier)");
         return OOJSNativeFailure(context);
     }
 
-    if (!ValidateContracts(context, argc, OOJS_ARGV, YES, &start, &destination, &eta, &fee, &premium, "awardContract", NULL))
+    if (!ValidateContracts(context, argc, OOJS_ARGV, YES, &start, &destination, &eta, &fee, &premium, @"awardContract", NULL))
         return OOJSNativeFailure(context); // always go through validate contracts (cargo)
 
-    BOOL OK = [player awardContract:qty commodity:oo::NSStringOrNil(key) start:start destination:destination eta:eta fee:fee premium:premium];
+    BOOL OK = [player awardContract:qty commodity:key start:start destination:destination eta:eta fee:fee premium:premium];
     OOJS_RETURN_BOOL(OK);
 
     OOJS_NATIVE_EXIT
@@ -1322,7 +1321,7 @@ static JSValue PlayerShipRemoveContract(OOJS_NATIVE_ARGS)
     OOJS_NATIVE_ENTER(context)
 
     PlayerEntity* player = OOPlayerForScripting();
-    std::optional<std::string> key;
+    NSString* key = nil;
     int32_t dest = 0;
 
     if (argc < 2) {
@@ -1330,9 +1329,9 @@ static JSValue PlayerShipRemoveContract(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+    key = OOStringFromJSValue(context, OOJS_ARGV[0]);
 
-    if (EXPECT_NOT(!key.has_value())) {
+    if (EXPECT_NOT(key == nil)) {
         OOJSReportBadArguments(context, @"PlayerShip", @"removeContract", 1, &OOJS_ARGV[0], nil, @"string (commodity identifier)");
         return OOJSNativeFailure(context);
     }
@@ -1342,7 +1341,7 @@ static JSValue PlayerShipRemoveContract(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    BOOL OK = [player removeContract:oo::NSStringOrNil(key) destination:(unsigned)dest];
+    BOOL OK = [player removeContract:key destination:(unsigned)dest];
     OOJS_RETURN_BOOL(OK);
 
     OOJS_NATIVE_EXIT
@@ -1366,7 +1365,7 @@ static JSValue PlayerShipSetCustomView(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    oo::PList::Dict viewData;
+    NSMutableDictionary* viewData = [NSMutableDictionary dictionaryWithCapacity:3];
 
     Vector position = kZeroVector;
     BOOL gotpos = JSValueToVector(context, OOJS_ARGV[0], &position);
@@ -1374,29 +1373,30 @@ static JSValue PlayerShipSetCustomView(OOJS_NATIVE_ARGS)
         OOJSReportBadArguments(context, @"PlayerShip", @"setCustomView", argc, OOJS_ARGV, nil, @"position, orientiation, [weapon]");
         return OOJSNativeFailure(context);
     }
-    std::string positionstr = oo::str::format("%f %f %f", position.x, position.y, position.z);
+    NSString* positionstr = [[NSString alloc] initWithFormat:@"%f %f %f", position.x, position.y, position.z];
 
     Quaternion orientation = kIdentityQuaternion;
     BOOL gotquat = JSValueToQuaternion(context, OOJS_ARGV[1], &orientation);
     if (!gotquat) {
+        [positionstr release]; // (Leaked in the SpiderMonkey version.)
         OOJSReportBadArguments(context, @"PlayerShip", @"setCustomView", argc, OOJS_ARGV, nil, @"position, orientiation, [weapon]");
         return OOJSNativeFailure(context);
     }
-    std::string orientationstr = oo::str::format("%f %f %f %f", orientation.w, orientation.x, orientation.y, orientation.z);
+    NSString* orientationstr = [[NSString alloc] initWithFormat:@"%f %f %f %f", orientation.w, orientation.x, orientation.y, orientation.z];
 
-    viewData["view_position"] = positionstr;
-    viewData["view_orientation"] = orientationstr;
+    [viewData setObject:positionstr forKey:@"view_position"];
+    [viewData setObject:orientationstr forKey:@"view_orientation"];
 
     if (argc > 2) {
-        std::optional<std::string> facing = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[2]));
-        // -setObject:forKey: raised on a nil facing (GNUstep 1.31.1's text).
-        if (!facing.has_value())
-            [NSException raise:NSInvalidArgumentException format:@"Tried to add nil value for key '%@' to dictionary", @"weapon_facing"];
-        viewData["weapon_facing"] = *facing;
+        NSString* facing = OOStringFromJSValue(context, OOJS_ARGV[2]);
+        [viewData setObject:facing forKey:@"weapon_facing"];
     }
 
-    [player setCustomViewDataFromDictionary:oo::ObjectFromPList(oo::PList(std::move(viewData))) withScaling:NO];
+    [player setCustomViewDataFromDictionary:viewData withScaling:NO];
     [player noteSwitchToView:VIEW_CUSTOM fromView:VIEW_CUSTOM];
+
+    [positionstr release];
+    [orientationstr release];
 
     OOJS_RETURN_BOOL(YES);
     OOJS_NATIVE_EXIT
@@ -1526,7 +1526,7 @@ static JSValue PlayerShipBeginGalacticHyperspaceCountdown(OOJS_NATIVE_ARGS)
         [player setStatus:STATUS_WITCHSPACE_COUNTDOWN];
         [player playGalacticHyperspace];
         // say it!
-        [UNIVERSE addMessage:oo::NSStringFrom(oo::str::format(oo::StdString(DESC(@"witch-galactic-in-f-seconds")).c_str(), witchspaceSpinUpTime)) forCount:1.0];
+        [UNIVERSE addMessage:[NSString stringWithFormat:DESC(@"witch-galactic-in-f-seconds"), witchspaceSpinUpTime] forCount:1.0];
         begun = YES;
     }
     OOJS_RETURN_BOOL(begun);
@@ -1538,7 +1538,7 @@ static JSValue PlayerShipSetMultiFunctionDisplay(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> key;
+    NSString* key = nil;
     uint32_t index = 0;
     PlayerEntity* player = OOPlayerForScripting();
     BOOL OK = YES;
@@ -1551,10 +1551,10 @@ static JSValue PlayerShipSetMultiFunctionDisplay(OOJS_NATIVE_ARGS)
     }
 
     if (argc > 1) {
-        key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[1]));
+        key = OOStringFromJSValue(context, OOJS_ARGV[1]);
     }
 
-    OK = [player setMultiFunctionDisplay:index toKey:oo::NSStringOrNil(key)];
+    OK = [player setMultiFunctionDisplay:index toKey:key];
 
     OOJS_RETURN_BOOL(OK);
 
@@ -1566,20 +1566,20 @@ static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> key;
-    std::optional<std::string> value;
+    NSString* key = nil;
+    NSString* value = nil;
     PlayerEntity* player = OOPlayerForScripting();
     int reflow = NO;
 
     if (argc > 0) {
-        key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        key = OOStringFromJSValue(context, OOJS_ARGV[0]);
     }
-    if (!key.has_value()) {
+    if (key == nil) {
         OOJSReportBadArguments(context, @"PlayerShip", @"setMultiFunctionText", MIN(argc, 1), OOJS_ARGV, nil, @"string (key) [, string (text)]");
         return OOJSNativeFailure(context);
     }
     if (argc > 1) {
-        value = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[1]));
+        value = OOStringFromJSValue(context, OOJS_ARGV[1]);
     }
     if (argc > 2 && EXPECT_NOT((reflow = JS_ToBool(context, OOJS_ARGV[2])) < 0)) {
         OOJSReportBadArguments(context, @"setMultiFunctionText", @"reflow", argc, OOJS_ARGV, nil, @"boolean");
@@ -1587,10 +1587,11 @@ static JSValue PlayerShipSetMultiFunctionText(OOJS_NATIVE_ARGS)
     }
 
     if (!reflow) {
-        [player setMultiFunctionText:oo::NSStringOrNil(value) forKey:oo::NSStringOrNil(key)];
+        [player setMultiFunctionText:value forKey:key];
     } else {
         GuiDisplayGen* gui = [UNIVERSE gui];
-        [player setMultiFunctionText:[gui reflowTextForMFD:oo::NSStringOrNil(value)] forKey:oo::NSStringOrNil(key)];
+        NSString* formatted = [gui reflowTextForMFD:value];
+        [player setMultiFunctionText:formatted forKey:key];
     }
 
     OOJS_RETURN_VOID;
@@ -1603,14 +1604,14 @@ static JSValue PlayerShipSetPrimedEquipment(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> key;
+    NSString* key = nil;
     PlayerEntity* player = OOPlayerForScripting();
     int showMsg = YES;
 
     if (argc > 0) {
-        key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        key = OOStringFromJSValue(context, OOJS_ARGV[0]);
     }
-    if (!key.has_value()) {
+    if (key == nil) {
         OOJSReportBadArguments(context, @"PlayerShip", @"setPrimedEquipment", MIN(argc, 1), OOJS_ARGV, nil, @"string (key)");
         return OOJSNativeFailure(context);
     }
@@ -1619,7 +1620,7 @@ static JSValue PlayerShipSetPrimedEquipment(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    OOJS_RETURN_BOOL([player setPrimedEquipment:oo::NSStringOrNil(key) showMessage:showMsg]);
+    OOJS_RETURN_BOOL([player setPrimedEquipment:key showMessage:showMsg]);
 
     OOJS_NATIVE_EXIT
 }
@@ -1629,14 +1630,14 @@ static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> key;
+    NSString* key = nil;
     id value = nil;
     PlayerEntity* player = OOPlayerForScripting();
 
     if (argc > 0) {
-        key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        key = OOStringFromJSValue(context, OOJS_ARGV[0]);
     }
-    if (!key.has_value()) {
+    if (key == nil) {
         OOJSReportBadArguments(context, @"PlayerShip", @"setCustomHUDDial", MIN(argc, 1), OOJS_ARGV, nil, @"string (key), value]");
         return OOJSNativeFailure(context);
     }
@@ -1646,7 +1647,7 @@ static JSValue PlayerShipSetCustomHUDDial(OOJS_NATIVE_ARGS)
         value = @"";
     }
 
-    [player setDialCustom:value forKey:oo::NSStringOrNil(key)];
+    [player setDialCustom:value forKey:key];
 
     OOJS_RETURN_VOID;
 
@@ -1657,17 +1658,17 @@ static JSValue PlayerShipHideHUDSelector(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> key;
+    NSString* key = nil;
     PlayerEntity* player = OOPlayerForScripting();
 
     if (argc > 0) {
-        key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        key = OOStringFromJSValue(context, OOJS_ARGV[0]);
     }
-    if (!key.has_value()) {
+    if (key == nil) {
         OOJSReportBadArguments(context, @"PlayerShip", @"hideHUDSelector", MIN(argc, 1), OOJS_ARGV, nil, @"string (selector)");
         return OOJSNativeFailure(context);
     }
-    [[player hud] setHiddenSelector:oo::NSStringOrNil(key) hidden:YES];
+    [[player hud] setHiddenSelector:key hidden:YES];
 
     OOJS_RETURN_VOID;
 
@@ -1678,24 +1679,24 @@ static JSValue PlayerShipShowHUDSelector(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> key;
+    NSString* key = nil;
     PlayerEntity* player = OOPlayerForScripting();
 
     if (argc > 0) {
-        key = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        key = OOStringFromJSValue(context, OOJS_ARGV[0]);
     }
-    if (!key.has_value()) {
+    if (key == nil) {
         OOJSReportBadArguments(context, @"PlayerShip", @"hideHUDSelector", MIN(argc, 1), OOJS_ARGV, nil, @"string (selector)");
         return OOJSNativeFailure(context);
     }
-    [[player hud] setHiddenSelector:oo::NSStringOrNil(key) hidden:NO];
+    [[player hud] setHiddenSelector:key hidden:NO];
 
     OOJS_RETURN_VOID;
 
     OOJS_NATIVE_EXIT
 }
 
-static BOOL ValidateContracts(JSContext* context, int argc, JSValueConst* argv, BOOL isCargo, OOSystemID* start, OOSystemID* destination, double* eta, double* fee, double* premium, const std::string& functionName, unsigned* risk)
+static BOOL ValidateContracts(JSContext* context, int argc, JSValueConst* argv, BOOL isCargo, OOSystemID* start, OOSystemID* destination, double* eta, double* fee, double* premium, NSString* functionName, unsigned* risk)
 {
     OOJS_PROFILE_ENTER
 
@@ -1707,25 +1708,25 @@ static BOOL ValidateContracts(JSContext* context, int argc, JSValueConst* argv, 
     int32_t iValue;
 
     if (!OOJSValueToInt32(context, argv[offset + 0], &iValue) || iValue < 0 || iValue > kOOMaximumSystemID) {
-        OOJSReportBadArguments(context, @"PlayerShip", oo::NSStringFrom(functionName), 1, &argv[offset + 0], nil, @"system ID");
+        OOJSReportBadArguments(context, @"PlayerShip", functionName, 1, &argv[offset + 0], nil, @"system ID");
         return NO;
     }
     *start = iValue;
 
     if (!OOJSValueToInt32(context, argv[offset + 1], &iValue) || iValue < 0 || iValue > kOOMaximumSystemID) {
-        OOJSReportBadArguments(context, @"PlayerShip", oo::NSStringFrom(functionName), 1, &argv[offset + 1], nil, @"system ID");
+        OOJSReportBadArguments(context, @"PlayerShip", functionName, 1, &argv[offset + 1], nil, @"system ID");
         return NO;
     }
     *destination = iValue;
 
     if (JS_ToFloat64(context, &fValue, argv[offset + 2]) != 0 || !isfinite(fValue) || fValue <= [PLAYER clockTime]) {
-        OOJSReportBadArguments(context, @"PlayerShip", oo::NSStringFrom(functionName), 1, &argv[offset + 2], nil, @"number (future time)");
+        OOJSReportBadArguments(context, @"PlayerShip", functionName, 1, &argv[offset + 2], nil, @"number (future time)");
         return NO;
     }
     *eta = fValue;
 
     if (JS_ToFloat64(context, &fValue, argv[offset + 3]) != 0 || !isfinite(fValue) || fValue < 0.0) {
-        OOJSReportBadArguments(context, @"PlayerShip", oo::NSStringFrom(functionName), 1, &argv[offset + 3], nil, @"number (credits quantity)");
+        OOJSReportBadArguments(context, @"PlayerShip", functionName, 1, &argv[offset + 3], nil, @"number (credits quantity)");
         return NO;
     }
     *fee = fValue;

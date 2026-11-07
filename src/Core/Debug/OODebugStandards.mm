@@ -31,23 +31,18 @@ SOFTWARE.
 #import "GameController.h"
 #import "OOLogging.h"
 #import "OOPListView.h"
-#import "OOStringBridge.h"
 
 #ifndef OO_DEBUG_MONITOR_ENABLED
 // in release mode, stubs
-void cxx_OOStandardsDeprecated(const std::string& message) { }
-void cxx_OOStandardsError(const std::string& message) { }
+void OOStandardsDeprecated(NSString* message) { }
+void OOStandardsError(NSString* message) { }
 BOOL OOEnforceStandards() { return NO; }
 void OOSetStandardsForOXPVerifierMode() { }
 
 #else
 
 void OOStandardsSetup(void);
-namespace {
-
-void OOStandardsInternal(const std::string& type, const std::string& message);
-
-} // namespace
+void OOStandardsInternal(NSString* type, NSString* message);
 
 static BOOL sSetup = NO;
 
@@ -86,33 +81,29 @@ void OOStandardsSetup()
     sEnforcement = (OOStandardsEnforcement)s;
 }
 
-namespace {
-
-void OOStandardsInternal(const std::string& type, const std::string& message)
+void OOStandardsInternal(NSString* type, NSString* message)
 {
     OOStandardsSetup();
     if (sEnforcement == STANDARDS_ENFORCEMENT_OFF) {
         return;
     }
 
-    OOLog(oo::NSStringFrom(type), @"%@", oo::NSStringFrom(message));
+    OOLog(type, @"%@", message);
 
     if (sEnforcement == STANDARDS_ENFORCEMENT_QUIT) {
-        [[GameController sharedController] exitAppWithContext:oo::NSStringFrom(type)];
+        [[GameController sharedController] exitAppWithContext:type];
         // exit
     }
 }
 
-} // namespace
-
-void cxx_OOStandardsDeprecated(const std::string& message)
+void OOStandardsDeprecated(NSString* message)
 {
-    OOStandardsInternal("oxp-standards.deprecated", message);
+    OOStandardsInternal(@"oxp-standards.deprecated", message);
 }
 
-void cxx_OOStandardsError(const std::string& message)
+void OOStandardsError(NSString* message)
 {
-    OOStandardsInternal("oxp-standards.error", message);
+    OOStandardsInternal(@"oxp-standards.error", message);
 }
 
 BOOL OOEnforceStandards()

@@ -34,8 +34,6 @@ SOFTWARE.
 #import "oofnd/objc/OOObject.h"
 #import <Foundation/Foundation.h>
 
-#include "oofnd/StdLib.hpp"
-
 @interface OOProbabilisticTextureManager : OOObject {
 @private
     unsigned _count;
@@ -56,12 +54,12 @@ SOFTWARE.
 
         If no seed is specified, the current seed will be copied.
 */
-- (id)initWithPListName:(const std::string&)plistName
+- (id)initWithPListName:(NSString*)plistName
                 options:(uint32_t)options
              anisotropy:(GLfloat)anisotropy
                 lodBias:(GLfloat)lodBias;
 
-- (id)initWithPListName:(const std::string&)plistName
+- (id)initWithPListName:(NSString*)plistName
                 options:(uint32_t)options
              anisotropy:(GLfloat)anisotropy
                 lodBias:(GLfloat)lodBias

@@ -36,23 +36,20 @@ MA 02110-1301, USA.
 #endif
 
 #import "OOCollectionExtractors.h"
-#import "OOStringBridge.h"
-
-#include "oofnd/String.hpp"
 
 #define DEBUG_DUMP (0 && OOLITE_DEBUG)
 
-static const char* const kOOLogPlanetTextureGen = "texture.planet.generate"; // an OOLog class: oo::NSStringFrom() it
+static NSString* const kOOLogPlanetTextureGen = @"texture.planet.generate";
 
 #import "OOTextureGenerator.h" // For FloatRGB
 
-static FloatRGB FloatRGBFromDictColor(id dictionary, const char* key) // dictionary: see getPlanetTextureNameFor:
+static FloatRGB FloatRGBFromDictColor(NSDictionary* dictionary, NSString* key)
 {
-    OOColor* color = [dictionary objectForKey:oo::NSStringFrom(key)];
+    OOColor* color = [dictionary objectForKey:key];
     if (color == nil) {
         // could not get a color from the dicitionary, return white color instead of hitting the assert below
         color = [OOColor colorWithDescription:@"whiteColor"];
-        OOLog(@"textureStore.FloatRGBFromDictColor.nilColor", @"Expected color for key \"%@\" in dictionary %@, got nil. Setting color to %@", oo::NSStringFrom(key), dictionary, [color rgbaDescription]);
+        OOLog(@"textureStore.FloatRGBFromDictColor.nilColor", @"Expected color for key \"%@\" in dictionary %@, got nil. Setting color to %@", key, dictionary, [color rgbaDescription]);
     }
     NSCAssert1([color isKindOfClass:[OOColor class]], @"Expected OOColor, got %@", [color class]);
 
@@ -100,7 +97,7 @@ static void fillSquareImageWithPlanetTex(unsigned char* imageBuffer, int width, 
 
 #define PROC_TEXTURE_SIZE 512
 
-+ (BOOL)getPlanetTextureNameFor:(id)planetInfo intoData:(unsigned char**)textureData width:(GLuint*)textureWidth height:(GLuint*)textureHeight
++ (BOOL)getPlanetTextureNameFor:(NSDictionary*)planetInfo intoData:(unsigned char**)textureData width:(GLuint*)textureWidth height:(GLuint*)textureHeight
 {
     int texture_h = PROC_TEXTURE_SIZE;
     int texture_w = PROC_TEXTURE_SIZE;
@@ -120,12 +117,12 @@ static void fillSquareImageWithPlanetTex(unsigned char* imageBuffer, int width, 
     float land_fraction = [[planetInfo objectForKey:@"land_fraction"] floatValue];
     float sea_bias = land_fraction - 1.0;
 
-    OOLog(oo::NSStringFrom(kOOLogPlanetTextureGen), @"genning texture for land_fraction %.5f", land_fraction);
+    OOLog(kOOLogPlanetTextureGen, @"genning texture for land_fraction %.5f", land_fraction);
 
-    FloatRGB land_color = FloatRGBFromDictColor(planetInfo, "land_color");
-    FloatRGB sea_color = FloatRGBFromDictColor(planetInfo, "sea_color");
-    FloatRGB polar_land_color = FloatRGBFromDictColor(planetInfo, "polar_land_color");
-    FloatRGB polar_sea_color = FloatRGBFromDictColor(planetInfo, "polar_sea_color");
+    FloatRGB land_color = FloatRGBFromDictColor(planetInfo, @"land_color");
+    FloatRGB sea_color = FloatRGBFromDictColor(planetInfo, @"sea_color");
+    FloatRGB polar_land_color = FloatRGBFromDictColor(planetInfo, @"polar_land_color");
+    FloatRGB polar_sea_color = FloatRGBFromDictColor(planetInfo, @"polar_sea_color");
 
     // Pale sea colour gives a better transition between land and sea., Backported from the new planets code.
     FloatRGB pale_sea_color = Blend(0.45, polar_sea_color, Blend(0.7, sea_color, land_color));
@@ -270,10 +267,10 @@ static void fillSquareImageDataWithCloudTexture(unsigned char* imageBuffer, int 
             imageBuffer[3 + 4 * (y * width + x)] = 255 * rgba[3] * q;
         }
 #if DEBUG_DUMP
-    const std::string name = oo::str::format("atmosphere-%u-%u-old", sNoiseSeed.high, sNoiseSeed.low);
-    OOLog(@"planetTex.dump", @"Saving generated texture to file %@.", oo::NSStringFrom(name));
+    NSString* name = [NSString stringWithFormat:@"atmosphere-%u-%u-old", sNoiseSeed.high, sNoiseSeed.low];
+    OOLog(@"planetTex.dump", [NSString stringWithFormat:@"Saving generated texture to file %@.", name]);
 
-    [[UNIVERSE gameView] dumpRGBAToFileNamed:oo::NSStringFrom(name)
+    [[UNIVERSE gameView] dumpRGBAToFileNamed:name
                                        bytes:imageBuffer
                                        width:width
                                       height:width
@@ -328,9 +325,9 @@ static void fillSquareImageWithPlanetTex(unsigned char* imageBuffer, int width, 
             imageBuffer[3 + 4 * (y * width + x)] = 255;
         }
 #if DEBUG_DUMP
-    OOLog(@"planetTex.dump", @"Saving generated texture to file planet-%u-%u-old.", sNoiseSeed.high, sNoiseSeed.low);
+    OOLog(@"planetTex.dump", [NSString stringWithFormat:@"Saving generated texture to file planet-%u-%u-old.", sNoiseSeed.high, sNoiseSeed.low]);
 
-    [[UNIVERSE gameView] dumpRGBAToFileNamed:oo::NSStringFrom(oo::str::format("planet-%u-%u-old", sNoiseSeed.high, sNoiseSeed.low))
+    [[UNIVERSE gameView] dumpRGBAToFileNamed:[NSString stringWithFormat:@"planet-%u-%u-old", sNoiseSeed.high, sNoiseSeed.low]
                                        bytes:imageBuffer
                                        width:width
                                       height:width

@@ -31,10 +31,6 @@ MA 02110-1301, USA.
 #import "OOTypes.h"
 #import "oofnd/objc/OOObject.h"
 
-#include <optional>
-#include <string>
-#include <vector>
-
 typedef enum {
     OXZ_DOWNLOAD_NONE = 0,
     OXZ_DOWNLOAD_STARTED = 1,
@@ -91,9 +87,9 @@ typedef enum {
 
 + (OOOXZManager*)sharedManager;
 
-- (std::optional<std::string>)installPath; // oo::ResourcePaths::managedAddOnsDirectory()
-- (std::optional<std::string>)extractAddOnsPath; // oo::ResourcePaths::extractAddOnsDirectory()
-- (std::vector<std::string>)additionalAddOnsPaths; // oo::ResourcePaths::additionalAddOnsDirectories()
+- (NSString*)installPath;
+- (NSString*)extractAddOnsPath;
+- (NSArray*)additionalAddOnsPaths;
 
 - (BOOL)updateManifests;
 - (BOOL)cancelUpdate;

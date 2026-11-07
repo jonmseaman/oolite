@@ -32,7 +32,6 @@ MA 02110-1301, USA.
 #import "NSFileManagerOOExtensions.h"
 #import "OOCacheManager.h"
 #import "OOColor.h"
-#import "OOFoundationBridge.h"
 #import "OOPListParsing.h"
 #import "OOPListView.h"
 #import "OOStringBridge.h"
@@ -45,28 +44,22 @@ MA 02110-1301, USA.
 #import <objc/objc-arc.h>
 #import <objc/runtime.h>
 
-#include "oofnd/FileSystem.hpp"
-#include "oofnd/ResourcePaths.hpp"
-#include "oofnd/String.hpp"
 #import "unzip.h"
 
 #import "OOManifestProperties.h"
-#include "oofnd/Date.hpp"
 
 /* The URL for the manifest.plist array. */
 /* switching (temporarily maybe) to oolite.space - Nikos 20230507 */
-namespace {
-/*const char *const kOOOXZDataURL = "http://addons.oolite.org/api/1.0/overview";*/
-const char* const kOOOXZDataURL = "https://addons.oolite.space/api/1.0/overview";
+/*static NSString * const kOOOXZDataURL = @"http://addons.oolite.org/api/1.0/overview";*/
+static NSString* const kOOOXZDataURL = @"https://addons.oolite.space/api/1.0/overview";
 /* The config parameter to use a non-default URL at runtime */
-const char* const kOOOXZDataConfig = "oxz-index-url";
+static NSString* const kOOOXZDataConfig = @"oxz-index-url";
 /* The filename to store the downloaded manifest.plist array */
-const char* const kOOOXZManifestCache = "Oolite-manifests.plist";
+static NSString* const kOOOXZManifestCache = @"Oolite-manifests.plist";
 /* The filename to temporarily store the downloaded OXZ. Has an OXZ extension since we might want to read its manifest.plist out of it;  */
-const char* const kOOOXZTmpPath = "Oolite-download.oxz";
+static NSString* const kOOOXZTmpPath = @"Oolite-download.oxz";
 /* The filename to temporarily store the downloaded plists. */
-const char* const kOOOXZTmpPlistPath = "Oolite-download.plist";
-} // namespace
+static NSString* const kOOOXZTmpPlistPath = @"Oolite-download.plist";
 
 /* Log file record types */
 static NSString* const kOOOXZErrorLog = @"oxz.manager.error";
@@ -128,11 +121,11 @@ static OOOXZManager* sSingleton = nil;
 // protocol was only formalised in 10.7
 @interface OOOXZManager (NSURLConnectionDataDelegate)
 
-- (std::optional<std::string>)manifestPath; // nullopt: no cache directory
-- (std::optional<std::string>)downloadPath; // nullopt: no cache directory
-- (std::optional<std::string>)extractionBasePathForIdentifier:(const std::string&)identifier andVersion:(const std::string&)version; // nullopt: no user root
-- (std::optional<std::string>)dataURL;
-- (std::optional<std::string>)humanSize:(NSUInteger)bytes; // nullopt: the missing-field description is missing
+- (NSString*)manifestPath;
+- (NSString*)downloadPath;
+- (NSString*)extractionBasePathForIdentifier:(NSString*)identifier andVersion:(NSString*)version;
+- (NSString*)dataURL;
+- (NSString*)humanSize:(NSUInteger)bytes;
 
 - (BOOL)ensureInstallPath;
 
@@ -197,7 +190,7 @@ static OOOXZManager* sSingleton = nil;
     if (self != nil) {
         _downloadStatus = OXZ_DOWNLOAD_NONE;
         // if the file has not been downloaded, this will be nil
-        [self setOXZList:OOArrayFromFile(oo::NSStringOrNil([self manifestPath]))];
+        [self setOXZList:OOArrayFromFile([self manifestPath])];
         OOLog(kOOOXZDebugLog, @"Initialised with %@", _oxzList);
         _interfaceState = OXZ_STATE_NODATA;
         _currentFilter = @"*";
@@ -227,58 +220,87 @@ static OOOXZManager* sSingleton = nil;
 /* The install path for OXZs downloaded by
  * Oolite. Library/ApplicationSupport seems to be the most appropriate
  * location. */
-- (std::optional<std::string>)installPath
+- (NSString*)installPath
 {
-    // OO_MANAGEDADDONSDIR, else <ApplicationSupport>/Oolite/ManagedAddOns (GNUstep uses
-    // "ApplicationSupport" rather than "Application Support", so no space in "ManagedAddOns"
-    // either): oo::ResourcePaths reproduces the NSSearchPathForDirectoriesInDomains result.
-    return oo::fs::utf8String(oo::ResourcePaths::current().managedAddOnsDirectory());
+    const char* managedAddOnsEnv = SDL_getenv("OO_MANAGEDADDONSDIR");
+
+    if (managedAddOnsEnv) {
+        return [NSString stringWithUTF8String:managedAddOnsEnv];
+    } else {
+        NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+        NSString* appPath = [paths objectAtIndex:0];
+        if (appPath != nil) {
+            appPath = [appPath stringByAppendingPathComponent:@"Oolite"];
+#if OOLITE_MAC_OS_X
+            appPath = [appPath stringByAppendingPathComponent:@"Managed AddOns"];
+#else
+            /* GNUStep uses "ApplicationSupport" rather than "Application
+             * Support" so match convention by not putting a space in the
+             * path either */
+            appPath = [appPath stringByAppendingPathComponent:@"ManagedAddOns"];
+#endif
+            return appPath;
+        }
+    }
+    return nil;
 }
 
 /* The extract path for OXZs . */
-- (std::optional<std::string>)extractAddOnsPath
+- (NSString*)extractAddOnsPath
 {
-    // OO_ADDONSEXTRACTDIR, else "../AddOns" on Windows (%LOCALAPPDATA%\Oolite\AddOns with
-    // OO_GAME_DATA_TO_USER_FOLDER), else ~/.Oolite/AddOns.
-    return oo::fs::utf8String(oo::ResourcePaths::current().extractAddOnsDirectory());
+    const char* addOnsExtractEnv = SDL_getenv("OO_ADDONSEXTRACTDIR");
+
+    if (addOnsExtractEnv) {
+        return [NSString stringWithUTF8String:addOnsExtractEnv];
+    } else {
+#if OOLITE_WINDOWS
+#if OO_GAME_DATA_TO_USER_FOLDER
+        return [NSString stringWithFormat:@"%s\\Oolite\\AddOns", SDL_getenv("LOCALAPPDATA")];
+#else
+        return @"../AddOns";
+#endif
+#else
+        return [[NSHomeDirectory() stringByAppendingPathComponent:@".Oolite"] stringByAppendingPathComponent:@"AddOns"];
+#endif
+    }
 }
 
 /* Add additional AddOns paths */
-- (std::vector<std::string>)additionalAddOnsPaths
+- (NSArray*)additionalAddOnsPaths
 {
-    // OO_ADDITIONALADDONSDIRS split on ',' (empty components kept, as before).
-    std::vector<std::string> result;
-    for (const oo::fs::Path& path : oo::ResourcePaths::current().additionalAddOnsDirectories())
-        result.push_back(oo::fs::utf8String(path));
-    return result;
+    const char* additionalAddOnsEnv = SDL_getenv("OO_ADDITIONALADDONSDIRS");
+
+    if (additionalAddOnsEnv) {
+        NSString* envStr = [NSString stringWithUTF8String:additionalAddOnsEnv];
+        return [envStr componentsSeparatedByString:@","];
+    }
+    return [NSArray array];
 }
 
-- (std::optional<std::string>)extractionBasePathForIdentifier:(const std::string&)identifier andVersion:(const std::string&)version
+- (NSString*)extractionBasePathForIdentifier:(NSString*)identifier andVersion:(NSString*)version
 {
-    const std::vector<std::string> userRootPaths = [ResourceManager cxx_userRootPaths];
-    if (userRootPaths.empty())
-        return std::nullopt;
-    const std::string& basePath = userRootPaths.back();
-    std::string mainDir = identifier + "-" + version + ".off";
+    NSString* basePath = [[ResourceManager userRootPaths] lastObject];
+    NSString* rawMainDir = [NSString stringWithFormat:@"%@-%@.off", identifier, version];
 
-    // The blacklisted characters (all ASCII) are removed.
-    std::erase_if(mainDir, [](char c) { return std::string_view("'#%^&{}[]/~|\\?<,:\" ").find(c) != std::string_view::npos; });
-    return oo::str::appendingPathComponent(basePath, mainDir);
+    NSCharacterSet* blacklist = [NSCharacterSet characterSetWithCharactersInString:@"'#%^&{}[]/~|\\?<,:\" "];
+    return [[[basePath stringByAppendingPathComponent:[[rawMainDir componentsSeparatedByCharactersInSet:blacklist] componentsJoinedByString:@""]] retain] autorelease];
 }
 
 - (BOOL)ensureInstallPath
 {
-    const std::optional<std::string> path = [self installPath];
-    const oo::fs::Path fsPath = oo::fs::pathFromUTF8(path.value_or(std::string()));
-    const bool exists = path.has_value() && oo::fs::fileExists(fsPath);
+    BOOL exists, directory;
+    NSFileManager* fmgr = [NSFileManager defaultManager];
+    NSString* path = [self installPath];
 
-    if (exists && !oo::fs::isDirectory(fsPath)) {
-        OOLog(kOOOXZErrorLog, @"Expected %@ to be a folder, but it is a file.", oo::NSStringOrNil(path));
+    exists = [fmgr fileExistsAtPath:path isDirectory:&directory];
+
+    if (exists && !directory) {
+        OOLog(kOOOXZErrorLog, @"Expected %@ to be a folder, but it is a file.", path);
         return NO;
     }
     if (!exists) {
-        if (!path.has_value() || !oo::fs::createDirectories(fsPath)) {
-            OOLog(kOOOXZErrorLog, @"Could not create folder %@.", oo::NSStringOrNil(path));
+        if (![fmgr oo_createDirectoryAtPath:path attributes:nil]) {
+            OOLog(kOOOXZErrorLog, @"Could not create folder %@.", path);
             return NO;
         }
     }
@@ -286,49 +308,43 @@ static OOOXZManager* sSingleton = nil;
     return YES;
 }
 
-- (std::optional<std::string>)manifestPath
+- (NSString*)manifestPath
 {
-    const std::optional<std::string> cacheDirectory = [[OOCacheManager sharedCache] cxx_cacheDirectoryPathCreatingIfNecessary:YES];
-    if (!cacheDirectory.has_value())
-        return std::nullopt;
-    return oo::str::appendingPathComponent(*cacheDirectory, kOOOXZManifestCache);
+    return [[[OOCacheManager sharedCache] cacheDirectoryPathCreatingIfNecessary:YES] stringByAppendingPathComponent:kOOOXZManifestCache];
 }
 
 /* Download mechanism could destroy a correct file if it failed
  * half-way and was downloaded on top of the old one. So this loads it
  * off to the side a bit */
-- (std::optional<std::string>)downloadPath
+- (NSString*)downloadPath
 {
-    const std::optional<std::string> cacheDirectory = [[OOCacheManager sharedCache] cxx_cacheDirectoryPathCreatingIfNecessary:YES];
-    if (!cacheDirectory.has_value())
-        return std::nullopt;
     if (_interfaceState == OXZ_STATE_UPDATING) {
-        return oo::str::appendingPathComponent(*cacheDirectory, kOOOXZTmpPlistPath);
+        return [[[OOCacheManager sharedCache] cacheDirectoryPathCreatingIfNecessary:YES] stringByAppendingPathComponent:kOOOXZTmpPlistPath];
     } else {
-        return oo::str::appendingPathComponent(*cacheDirectory, kOOOXZTmpPath);
+        return [[[OOCacheManager sharedCache] cacheDirectoryPathCreatingIfNecessary:YES] stringByAppendingPathComponent:kOOOXZTmpPath];
     }
 }
 
-- (std::optional<std::string>)dataURL
+- (NSString*)dataURL
 {
     /* Not expected to be set in general, but might be useful for some users */
-    const std::optional<std::string> url = oo::OptionalString([[NSUserDefaults standardUserDefaults] stringForKey:oo::NSStringFrom(kOOOXZDataConfig)]);
-    if (url.has_value()) {
+    NSString* url = [[NSUserDefaults standardUserDefaults] stringForKey:kOOOXZDataConfig];
+    if (url != nil) {
         return url;
     }
     return kOOOXZDataURL;
 }
 
-- (std::optional<std::string>)humanSize:(NSUInteger)bytes
+- (NSString*)humanSize:(NSUInteger)bytes
 {
     if (bytes == 0) {
-        return oo::OptionalString(DESC(@"oolite-oxzmanager-missing-field"));
+        return DESC(@"oolite-oxzmanager-missing-field");
     } else if (bytes < 1024) {
-        return "<1 kB";
+        return @"<1 kB";
     } else if (bytes < 1024 * 1024) {
-        return oo::str::format("%zu kB", (size_t)(bytes >> 10));
+        return [NSString stringWithFormat:@"%zu kB", bytes >> 10];
     } else {
-        return oo::str::format("%.2f MB", ((float)(bytes >> 10)) / 1024);
+        return [NSString stringWithFormat:@"%.2f MB", ((float)(bytes >> 10)) / 1024];
     }
 }
 
@@ -336,7 +352,7 @@ static OOOXZManager* sSingleton = nil;
 {
     DESTROY(_oxzList);
     if (list != nil) {
-        _oxzList = [[list sortedArrayUsingFunction:oxzSort context:NULL] retain];
+        _oxzList = [[list sortedArrayUsingFunction:OOSortFunction(oxzSort) context:NULL] retain];
         // needed for update to available versions
         DESTROY(_managedList);
     }
@@ -469,7 +485,7 @@ static OOOXZManager* sSingleton = nil;
         return NO;
     } else {
         NSUInteger updated = oo::PListView(manifest).get<NSUInteger>(kOOManifestUploadDate);
-        NSUInteger now = (NSUInteger)oo::date::timeIntervalSince1970();
+        NSUInteger now = (NSUInteger)[[NSDate date] timeIntervalSince1970];
         return (updated + (86400 * i) > now);
     }
 }
@@ -538,7 +554,7 @@ static OOOXZManager* sSingleton = nil;
 
 - (BOOL)updateManifests
 {
-    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:oo::NSStringOrNil([self dataURL])]];
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[self dataURL]]];
     if (_downloadStatus != OXZ_DOWNLOAD_NONE) {
         return NO;
     }
@@ -568,7 +584,7 @@ static OOOXZManager* sSingleton = nil;
 
         [self setCurrentDownload:download withLabel:label]; // retains it
         [download release];
-        OOLog(kOOOXZDebugLog, @"Download request received, using %@ and downloading to %@", [request URL], oo::NSStringOrNil([self downloadPath]));
+        OOLog(kOOOXZDebugLog, @"Download request received, using %@ and downloading to %@", [request URL], [self downloadPath]);
         return YES;
     } else {
         OOLog(kOOOXZErrorLog, @"Unable to start downloading file at %@", [request URL]);
@@ -586,7 +602,7 @@ static OOOXZManager* sSingleton = nil;
     if (_currentDownload != nil) {
         [_currentDownload cancel];
     } else if (_downloadStatus == OXZ_DOWNLOAD_COMPLETE) {
-        NSString* path = oo::NSStringOrNil([self downloadPath]);
+        NSString* path = [self downloadPath];
         [[NSFileManager defaultManager] oo_removeItemAtPath:path];
     }
     _downloadStatus = OXZ_DOWNLOAD_NONE;
@@ -609,13 +625,13 @@ static OOOXZManager* sSingleton = nil;
     if (_managedList == nil) {
         // if this list is being reset, also reset the current install list
         [ResourceManager resetManifestKnowledgeForOXZManager];
-        NSArray* managedOXZs = [[NSFileManager defaultManager] oo_directoryContentsAtPath:oo::NSStringOrNil([self installPath])];
+        NSArray* managedOXZs = [[NSFileManager defaultManager] oo_directoryContentsAtPath:[self installPath]];
         NSMutableArray* manifests = [NSMutableArray arrayWithCapacity:[managedOXZs count]];
         NSString* filename = nil;
         NSString* fullpath = nil;
         NSDictionary* manifest = nil;
         foreach (filename, managedOXZs) {
-            fullpath = [oo::NSStringOrNil([self installPath]) stringByAppendingPathComponent:filename];
+            fullpath = [[self installPath] stringByAppendingPathComponent:filename];
             manifest = OODictionaryFromFile([fullpath stringByAppendingPathComponent:@"manifest.plist"]);
             if (manifest != nil) {
                 NSMutableDictionary* adjManifest = [NSMutableDictionary dictionaryWithDictionary:manifest];
@@ -642,7 +658,7 @@ static OOOXZManager* sSingleton = nil;
                 [manifests addObject:adjManifest];
             }
         }
-        [manifests sortUsingFunction:oxzSort context:NULL];
+        [manifests sortUsingFunction:OOSortFunction(oxzSort) context:NULL];
 
         _managedList = [manifests copy];
     }
@@ -654,11 +670,11 @@ static OOOXZManager* sSingleton = nil;
     if (_downloadStatus != OXZ_DOWNLOAD_COMPLETE) {
         return NO;
     }
-    [self setOXZList:OOArrayFromFile(oo::NSStringOrNil([self downloadPath]))];
+    [self setOXZList:OOArrayFromFile([self downloadPath])];
     if (_oxzList != nil) {
-        [_oxzList writeToFile:oo::NSStringOrNil([self manifestPath]) atomically:YES];
+        [_oxzList writeToFile:[self manifestPath] atomically:YES];
         // and clean up the temp file
-        [[NSFileManager defaultManager] oo_removeItemAtPath:oo::NSStringOrNil([self downloadPath])];
+        [[NSFileManager defaultManager] oo_removeItemAtPath:[self downloadPath]];
         // invalidate the managed list
         DESTROY(_managedList);
         _interfaceState = OXZ_STATE_TASKDONE;
@@ -666,9 +682,9 @@ static OOOXZManager* sSingleton = nil;
         return YES;
     } else {
         _downloadStatus = OXZ_DOWNLOAD_ERROR;
-        OOLog(kOOOXZErrorLog, @"Downloaded manifest was not a valid plist, has been left in %@", oo::NSStringOrNil([self downloadPath]));
+        OOLog(kOOOXZErrorLog, @"Downloaded manifest was not a valid plist, has been left in %@", [self downloadPath]);
         // revert to the old one
-        [self setOXZList:OOArrayFromFile(oo::NSStringOrNil([self manifestPath]))];
+        [self setOXZList:OOArrayFromFile([self manifestPath])];
         _interfaceState = OXZ_STATE_TASKDONE;
         [self gui];
         return NO;
@@ -681,10 +697,10 @@ static OOOXZManager* sSingleton = nil;
         return NO;
     }
 
-    NSDictionary* downloadedManifest = OODictionaryFromFile([oo::NSStringOrNil([self downloadPath]) stringByAppendingPathComponent:@"manifest.plist"]);
+    NSDictionary* downloadedManifest = OODictionaryFromFile([[self downloadPath] stringByAppendingPathComponent:@"manifest.plist"]);
     if (downloadedManifest == nil) {
         _downloadStatus = OXZ_DOWNLOAD_ERROR;
-        OOLog(kOOOXZErrorLog, @"Downloaded OXZ does not contain a manifest.plist, has been left in %@", oo::NSStringOrNil([self downloadPath]));
+        OOLog(kOOOXZErrorLog, @"Downloaded OXZ does not contain a manifest.plist, has been left in %@", [self downloadPath]);
         _interfaceState = OXZ_STATE_TASKDONE;
         [self gui];
         return NO;
@@ -712,11 +728,11 @@ static OOOXZManager* sSingleton = nil;
     }
 
     // delete filename if it exists from OXZ folder
-    NSString* destination = [oo::NSStringOrNil([self installPath]) stringByAppendingPathComponent:filename];
+    NSString* destination = [[self installPath] stringByAppendingPathComponent:filename];
     [[NSFileManager defaultManager] oo_removeItemAtPath:destination];
 
     // move the temp file on to it
-    if (![[NSFileManager defaultManager] oo_moveItemAtPath:oo::NSStringOrNil([self downloadPath]) toPath:destination]) {
+    if (![[NSFileManager defaultManager] oo_moveItemAtPath:[self downloadPath] toPath:destination]) {
         _downloadStatus = OXZ_DOWNLOAD_ERROR;
         OOLog(kOOOXZErrorLog, @"%@", @"Downloaded OXZ could not be installed.");
         _interfaceState = OXZ_STATE_TASKDONE;
@@ -900,7 +916,7 @@ static OOOXZManager* sSingleton = nil;
     }
 
     if (installed != nil) {
-        if (![oo::PListView(installed).get<NSString*>(kOOManifestFilePath) hasPrefix:oo::NSStringOrNil([self installPath])]) {
+        if (![oo::PListView(installed).get<NSString*>(kOOManifestFilePath) hasPrefix:[self installPath]]) {
             // installed manually
             return OXZ_UNINSTALLABLE_MANUAL;
         }
@@ -1061,7 +1077,7 @@ static OOOXZManager* sSingleton = nil;
         if (_downloadStatus == OXZ_DOWNLOAD_ERROR) {
             [gui addLongText:OOExpandKey(@"oolite-oxzmanager-progress-error") startingAtRow:OXZ_GUI_ROW_PROGRESS align:GUI_ALIGN_LEFT];
         } else {
-            [gui addLongText:[NSString stringWithFormat:DESC(@"oolite-oxzmanager-progress-@-is-@-of-@"), _currentDownloadName, oo::NSStringOrNil([self humanSize:_downloadProgress]), oo::NSStringOrNil([self humanSize:_downloadExpected])] startingAtRow:OXZ_GUI_ROW_PROGRESS align:GUI_ALIGN_LEFT];
+            [gui addLongText:[NSString stringWithFormat:DESC(@"oolite-oxzmanager-progress-@-is-@-of-@"), _currentDownloadName, [self humanSize:_downloadProgress], [self humanSize:_downloadExpected]] startingAtRow:OXZ_GUI_ROW_PROGRESS align:GUI_ALIGN_LEFT];
         }
         [gui addLongText:_progressStatus startingAtRow:OXZ_GUI_ROW_PROGRESS + 2 align:GUI_ALIGN_LEFT];
 
@@ -1124,7 +1140,7 @@ static OOOXZManager* sSingleton = nil;
         [gui setColor:[OOColor orangeColor] forRow:7];
         [gui setColor:[OOColor orangeColor] forRow:8];
 #endif
-        NSString* path = oo::NSStringOrNil([self extractionBasePathForIdentifier:oo::DescriptionOf(identifier) andVersion:oo::DescriptionOf(version)]);
+        NSString* path = [self extractionBasePathForIdentifier:identifier andVersion:version];
         if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
             [gui addLongText:[NSString stringWithFormat:DESC(@"oolite-oxzmanager-extract-@-already-exists"), path]
                 startingAtRow:10
@@ -1581,7 +1597,7 @@ static OOOXZManager* sSingleton = nil;
 
     foreach (manifest, options) {
         NSDictionary* installed = [ResourceManager manifestForIdentifier:oo::PListView(manifest).get<NSString*>(kOOManifestIdentifier)];
-        NSString* localPath = [[oo::NSStringOrNil([self installPath]) stringByAppendingPathComponent:oo::PListView(manifest).get<NSString*>(kOOManifestIdentifier)] stringByAppendingPathExtension:@"oxz"];
+        NSString* localPath = [[[self installPath] stringByAppendingPathComponent:oo::PListView(manifest).get<NSString*>(kOOManifestIdentifier)] stringByAppendingPathExtension:@"oxz"];
         if (installed == nil) {
             // check that there's not one just been downloaded
             installed = OODictionaryFromFile([localPath stringByAppendingPathComponent:@"manifest.plist"]);
@@ -1592,7 +1608,7 @@ static OOOXZManager* sSingleton = nil;
                 installed = OODictionaryFromFile([localPath stringByAppendingPathComponent:@"manifest.plist"]);
             } else {
                 // check if this was a managed OXZ which has been deleted
-                if ([oo::PListView(installed).get<NSString*>(kOOManifestFilePath) hasPrefix:oo::NSStringOrNil([self installPath])]) {
+                if ([oo::PListView(installed).get<NSString*>(kOOManifestFilePath) hasPrefix:[self installPath]]) {
                     installed = nil;
                 }
             }
@@ -1635,15 +1651,15 @@ static OOOXZManager* sSingleton = nil;
             NSUInteger timestamp = oo::PListView(manifest).get<NSUInteger>(kOOManifestUploadDate, 0);
             if (timestamp > 0) {
                 // list of installable OXZs
-                NSString* updated = [NSString stringWithUTF8String:oo::date::description(oo::date::dateWithTimeIntervalSince1970(timestamp)).c_str()];
+                NSDate* updated = [NSDate dateWithTimeIntervalSince1970:timestamp];
 
                 // keep only the first part of the date string description, which should be in YYYY-MM-DD format
-                updatedDesc = oo::PListView([updated componentsSeparatedByString:@" "]).at<NSString*>(0);
+                updatedDesc = oo::PListView([[updated description] componentsSeparatedByString:@" "]).at<NSString*>(0);
 
-                [gui setArray:[NSArray arrayWithObjects:DESC(@"oolite-oxzmanager-infoline-size"), oo::NSStringOrNil([self humanSize:size]), DESC(@"oolite-oxzmanager-infoline-date"), updatedDesc, nil] forRow:OXZ_GUI_ROW_LISTINFO2];
+                [gui setArray:[NSArray arrayWithObjects:DESC(@"oolite-oxzmanager-infoline-size"), [self humanSize:size], DESC(@"oolite-oxzmanager-infoline-date"), updatedDesc, nil] forRow:OXZ_GUI_ROW_LISTINFO2];
             } else if (size > 0) {
                 // list of installed/removable OXZs
-                [gui setArray:[NSArray arrayWithObjects:DESC(@"oolite-oxzmanager-infoline-size"), oo::NSStringOrNil([self humanSize:size]), nil] forRow:OXZ_GUI_ROW_LISTINFO2];
+                [gui setArray:[NSArray arrayWithObjects:DESC(@"oolite-oxzmanager-infoline-size"), [self humanSize:size], nil] forRow:OXZ_GUI_ROW_LISTINFO2];
             }
         }
 
@@ -1858,7 +1874,7 @@ static OOOXZManager* sSingleton = nil;
     NSDictionary* manifest = oo::PListView(_filteredList).at<NSDictionary*>(item);
     NSString* version = oo::PListView(manifest).get<NSString*>(kOOManifestVersion);
     NSString* identifier = oo::PListView(manifest).get<NSString*>(kOOManifestIdentifier);
-    NSString* path = oo::NSStringOrNil([self extractionBasePathForIdentifier:oo::DescriptionOf(identifier) andVersion:oo::DescriptionOf(version)]);
+    NSString* path = [self extractionBasePathForIdentifier:identifier andVersion:version];
 
     // OXZ errors should really never happen unless someone is messing
     // directly with the managed folder while Oolite is running, but
@@ -1967,8 +1983,8 @@ static OOOXZManager* sSingleton = nil;
     _downloadExpected = [response expectedContentLength];
     _downloadProgress = 0;
     DESTROY(_fileWriter);
-    [[NSFileManager defaultManager] createFileAtPath:oo::NSStringOrNil([self downloadPath]) contents:nil attributes:nil];
-    _fileWriter = [[NSFileHandle fileHandleForWritingAtPath:oo::NSStringOrNil([self downloadPath])] retain];
+    [[NSFileManager defaultManager] createFileAtPath:[self downloadPath] contents:nil attributes:nil];
+    _fileWriter = [[NSFileHandle fileHandleForWritingAtPath:[self downloadPath]] retain];
     if (_fileWriter == nil) {
         // file system is full or read-only or something
         OOLog(kOOOXZErrorLog, @"%@", @"Unable to create download file");

@@ -32,7 +32,6 @@ SOFTWARE.
 */
 
 #import "OOFoundation.h"
-#include "oofnd/StdLib.hpp"
 #import "oofnd/objc/OOObject.h"
 
 @class OOJSFunction, OOJSValue;
@@ -46,17 +45,20 @@ enum {
 @interface OORegExpMatcher : OOObject {
 @private
     OOJSFunction* _tester;
-    std::optional<std::string> _cachedRegExpString; // UTF-8; nullopt: nothing cached (proposed ADR-0043)
+    NSString* _cachedRegExpString;
     OOJSValue* _cachedRegExpObject;
     NSUInteger _cachedFlags;
 }
 
 + (instancetype)regExpMatcher;
 
-// Strings are UTF-8 (Foundation sweep, proposed ADR-0043). The Objective-C string category
-// -oo_matchesRegularExpression: was [[OORegExpMatcher regExpMatcher] string:self matchesExpression:regExp];
-// its callers now send that message themselves.
-- (BOOL)string:(const std::string&)string matchesExpression:(const std::string&)regExp;
-- (BOOL)string:(const std::string&)string matchesExpression:(const std::string&)regExp flags:(NSUInteger)flags;
+- (BOOL)string:(NSString*)string matchesExpression:(NSString*)regExp;
+- (BOOL)string:(NSString*)string matchesExpression:(NSString*)regExp flags:(NSUInteger)flags;
+
+@end
+
+@interface NSString (OORegExpMatcher)
+
+- (BOOL)oo_matchesRegularExpression:(NSString*)regExp;
 
 @end

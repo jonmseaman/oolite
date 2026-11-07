@@ -28,89 +28,138 @@ MA 02110-1301, USA.
 #if OO_OXP_VERIFIER_ENABLED
 
 #import "OOFileScannerVerifierStage.h"
-#import "OOFoundationBridge.h"
+#import "oofnd/objc/OOObject.h"
 
-#include "oofnd/String.hpp"
+static NSString* const kStageName = @"Testing models";
 
-static const char* const kStageName = "Testing models";
+// Placeholder for a nil context/materials/shaders in the info dictionaries (was Foundation's null).
+static id NSNULL = nil;
 
 @interface OOModelVerifierStage (OOPrivate)
 
-- (void)checkModel:(const std::string&)name
-           context:(const std::string&)context
-         materials:(const oo::PList&)materials
-           shaders:(const oo::PList&)shaders;
+- (void)checkModel:(NSString*)name
+           context:(NSString*)context
+         materials:(NSDictionary*)materials
+           shaders:(NSDictionary*)shaders;
 
 @end
 
 @implementation OOModelVerifierStage
 
-+ (id)nameForReverseDependencyForVerifier:(OOOXPVerifier*)verifier
+- (id)init
 {
-    OOModelVerifierStage* stage = [verifier stageWithName:oo::NSStringFrom(kStageName)];
+    self = [super init];
+    if (self != nil) {
+        if (NSNULL == nil)
+            NSNULL = [[OOObject alloc] init];
+        _modelsToCheck = [[NSMutableSet alloc] init];
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    [_modelsToCheck release];
+
+    [super dealloc];
+}
+
++ (NSString*)nameForReverseDependencyForVerifier:(OOOXPVerifier*)verifier
+{
+    OOModelVerifierStage* stage = [verifier stageWithName:kStageName];
     if (stage == nil) {
         stage = [[OOModelVerifierStage alloc] init];
         [verifier registerStage:stage];
         [stage release];
     }
 
-    return oo::NSStringFrom(kStageName);
+    return kStageName;
 }
 
-- (id)name // shared selector (proposed ADR-0043)
+- (NSString*)name
 {
-    return oo::NSStringFrom(kStageName);
+    return kStageName;
 }
 
 - (BOOL)shouldRun
 {
-    return !_modelsToCheck.empty();
+    return [_modelsToCheck count] != 0;
 }
 
 - (void)run
 {
+    NSDictionary* info = nil;
+    NSString *name = nil,
+             *context = nil;
+    NSDictionary *materials = nil,
+                 *shaders = nil;
+
     OOLog(@"verifyOXP.models.unimplemented", @"%@", @"TODO: implement model verifier.");
 
-    for (const OOModelVerifierEntry& info : _modelsToCheck) {
+    foreach (info, _modelsToCheck) {
         @autoreleasepool {
-            [self checkModel:info.name
-                     context:info.context
-                   materials:info.materials
-                     shaders:info.shaders];
+            name = [info objectForKey:@"name"];
+            context = [info objectForKey:@"context"];
+            if (context == NSNULL)
+                context = nil;
+            materials = [info objectForKey:@"materials"];
+            if (materials == NSNULL)
+                materials = nil;
+            shaders = [info objectForKey:@"shaders"];
+            if (shaders == NSNULL)
+                shaders = nil;
+
+            [self checkModel:name
+                     context:context
+                   materials:materials
+                     shaders:shaders];
         }
     }
-    _modelsToCheck.clear();
+    [_modelsToCheck release];
+    _modelsToCheck = nil;
 }
 
-- (BOOL)modelNamed:(const std::string&)name
-      usedForEntry:(const std::optional<std::string>&)entryName
-            inFile:(const std::string&)fileName
-     withMaterials:(const oo::PList&)materials
-        andShaders:(const oo::PList&)shaders
+- (BOOL)modelNamed:(NSString*)name
+      usedForEntry:(NSString*)entryName
+            inFile:(NSString*)fileName
+     withMaterials:(NSDictionary*)materials
+        andShaders:(NSDictionary*)shaders
 {
     OOFileScannerVerifierStage* fileScanner = nil;
-    std::string context;
+    NSDictionary* info = nil;
+    NSString* context = nil;
 
-    if (name.empty())
+    if (name == nil)
         return NO;
 
-    if (entryName.has_value())
-        context = oo::str::format("entry \"%s\" of %s", entryName->c_str(), fileName.c_str());
+    if (entryName != nil)
+        context = [NSString stringWithFormat:@"entry \"%@\" of %@", entryName, fileName];
     else
         context = fileName;
 
     fileScanner = [[self verifier] fileScannerStage];
-    if (![fileScanner fileExists:oo::NSStringFrom(name)
+    if (![fileScanner fileExists:name
                         inFolder:@"Models"
-                  referencedFrom:oo::NSStringFrom(context)
+                  referencedFrom:context
                     checkBuiltIn:YES]) {
         return NO;
     }
 
-    OOModelVerifierEntry info { name, context, materials, shaders };
-    if (std::find(_modelsToCheck.begin(), _modelsToCheck.end(), info) == _modelsToCheck.end()) {
-        _modelsToCheck.push_back(std::move(info));
-    }
+    if (context == nil)
+        context = NSNULL;
+    if (materials == nil)
+        materials = NSNULL;
+    if (shaders == nil)
+        shaders = NSNULL;
+
+    info = [NSDictionary dictionaryWithObjectsAndKeys:
+            name, @"name",
+        context, @"context",
+        materials, @"materials",
+        shaders, @"shaders",
+        nil];
+
+    [_modelsToCheck addObject:info];
 
     return YES;
 }
@@ -119,12 +168,12 @@ static const char* const kStageName = "Testing models";
 
 @implementation OOModelVerifierStage (OOPrivate)
 
-- (void)checkModel:(const std::string&)name
-           context:(const std::string&)context
-         materials:(const oo::PList&)materials
-           shaders:(const oo::PList&)shaders
+- (void)checkModel:(NSString*)name
+           context:(NSString*)context
+         materials:(NSDictionary*)materials
+           shaders:(NSDictionary*)shaders
 {
-    OOLog(@"verifyOXP.verbose.model.unimp", @"- Pretending to verify model %@ referenced in %@.", oo::NSStringFrom(name), oo::NSStringFrom(context));
+    OOLog(@"verifyOXP.verbose.model.unimp", @"- Pretending to verify model %@ referenced in %@.", name, context);
     // FIXME: this should check DAT files.
 }
 
@@ -134,7 +183,7 @@ static const char* const kStageName = "Testing models";
 
 - (OOModelVerifierStage*)modelVerifierStage
 {
-    return [self stageWithName:oo::NSStringFrom(kStageName)];
+    return [self stageWithName:kStageName];
 }
 
 @end

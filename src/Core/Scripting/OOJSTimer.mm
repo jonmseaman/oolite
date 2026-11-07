@@ -27,7 +27,6 @@ MA 02110-1301, USA.
 #import "OOJavaScriptEngine.h"
 #import "Universe.h"
 
-#import "OOFoundationBridge.h"
 #include "oofnd/Notification.hpp"
 
 // Minimum allowable interval for repeating timers.
@@ -166,23 +165,23 @@ static JSClassID sTimerClassID;
     [super dealloc];
 }
 
-- (id)descriptionComponents // shared selector (proposed ADR-0043)
+- (NSString*)descriptionComponents
 {
-    std::optional<std::string> funcName;
+    NSString* funcName = nil;
 
     if (!JS_IsObject(_function)) {
         return @"invalid";
     }
 
-    funcName = oo::OptionalString(_functionName);
-    if (!funcName.has_value()) {
-        funcName = "anonymous";
+    funcName = _functionName;
+    if (funcName == nil) {
+        funcName = @"anonymous";
     }
 
-    return oo::NSStringFrom(oo::str::format("%s, function: %s", oo::DescriptionOf([super descriptionComponents]).c_str(), funcName->c_str()));
+    return [NSString stringWithFormat:@"%@, function: %@", [super descriptionComponents], funcName];
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsClassName
 {
     return @"Timer";
 }
@@ -190,7 +189,7 @@ static JSClassID sTimerClassID;
 - (void)timerFired
 {
     JSValue rval = JS_UNDEFINED;
-    bool described = false; // was the description itself, used only to test for nil
+    NSString* description = nil;
 
     OOJavaScriptEngine* engine = [OOJavaScriptEngine sharedEngine];
     JSContext* context = OOJSAcquireContext();
@@ -198,12 +197,12 @@ static JSClassID sTimerClassID;
     // stop and remove the timer if _jsThis (the first parameter in the constructor) dies.
     id object = OOJSNativeObjectFromJSObject(context, _jsThis);
     if (object != nil) {
-        described = [object oo_jsDescription] != nil;
-        if (!described)
-            described = [object description] != nil;
+        description = [object oo_jsDescription];
+        if (description == nil)
+            description = [object description];
     }
 
-    if (!described || !JS_IsObject(_function)) {
+    if (description == nil || !JS_IsObject(_function)) {
         [self unscheduleTimer];
         OOJSRelinquishContext(context);
         return;

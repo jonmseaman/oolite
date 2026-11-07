@@ -30,9 +30,4 @@ SOFTWARE.
 
 #import "OOFoundation.h"
 
-#include "oofnd/StdLib.hpp"
-
 void OOPrintLogHeader(void);
-
-// "<system> (<cpu><variant>)", as the log header prints it; console.platformDescription.
-std::string OOPlatformDescription(void);

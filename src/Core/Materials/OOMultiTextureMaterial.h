@@ -43,7 +43,7 @@ SOFTWARE.
     NSUInteger _unitsUsed;
 }
 
-- (id)initWithName:(id)name configuration:(id)configuration; // an Objective-C string and dictionary. Shared selector (proposed ADR-0043).
+- (id)initWithName:(NSString*)name configuration:(NSDictionary*)configuration;
 
 - (NSUInteger)textureUnitCount;
 

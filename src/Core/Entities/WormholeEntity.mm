@@ -31,7 +31,6 @@ MA 02110-1301, USA.
 #import "ShipEntityLoadRestore.h"
 
 #import "AI.h"
-#import "OOFoundationBridge.h"
 #import "OOLoggingExtended.h"
 #import "OOPListView.h"
 #import "OORoleSet.h"
@@ -118,14 +117,14 @@ static void DrawWormholeCorona(GLfloat inner_radius, GLfloat outer_radius, int s
             NSArray* shipDictsArray = oo::PListView(dict).get<NSArray*>(@"ships");
             NSDictionary* currShipDict = nil;
             [shipsInTransit removeAllObjects];
-            OOShipSaveContext restoreContext;
+            NSMutableDictionary* restoreContext = [NSMutableDictionary dictionary];
 
             foreach (currShipDict, shipDictsArray) {
                 NSDictionary* shipInfo = oo::PListView(currShipDict).get<NSDictionary*>(@"ship_info");
                 if (shipInfo != nil) {
-                    ShipEntity* ship = [ShipEntity shipRestoredFromDictionary:oo::PListFrom(shipInfo)
+                    ShipEntity* ship = [ShipEntity shipRestoredFromDictionary:shipInfo
                                                                   useFallback:YES
-                                                                      context:&restoreContext];
+                                                                      context:restoreContext];
                     if (ship != nil) {
                         [shipsInTransit addObject:[NSDictionary dictionaryWithObjectsAndKeys:
                                                           ship, @"ship",
@@ -745,12 +744,12 @@ static void DrawWormholeCorona(GLfloat inner_radius, GLfloat outer_radius, int s
     NSMutableArray* shipArray = [NSMutableArray arrayWithCapacity:[shipsInTransit count]];
     NSEnumerator* ships = [shipsInTransit objectEnumerator];
     NSDictionary* currShipDict = nil;
-    OOShipSaveContext context;
+    NSMutableDictionary* context = [NSMutableDictionary dictionary];
     while ((currShipDict = [ships nextObject]) != nil) {
         id ship = [currShipDict objectForKey:@"ship"];
         [shipArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:
                                      [NSNumber numberWithDouble:oo::PListView(currShipDict).get<double>(@"time")], @"time_delta",
-                                 oo::ObjectFromPList([ship savedShipDictionaryWithContext:&context]), @"ship_info",
+                                 [ship savedShipDictionaryWithContext:context], @"ship_info",
                                  nil]];
     }
     [myDict setObject:shipArray forKey:@"ships"];

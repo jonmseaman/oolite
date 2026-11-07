@@ -25,18 +25,11 @@ SOFTWARE.
 
 */
 
-#import "OOFoundationBridge.h"
 #import "OOLogging.h"
 #import "OOMaths.h"
 #import "OOSoundInternal.h"
 
-#include "oofnd/String.hpp"
-
-namespace {
-// The sources that are playing, each once, retained (a Foundation mutable set before; sources
-// compare by identity). Created lazily and dropped by +stopAll, as the set was (proposed ADR-0043).
-std::vector<oo::ObjCRef<OOSoundSource*>>* sPlayingSoundSources = nullptr;
-}
+static NSMutableSet* sPlayingSoundSources;
 
 @implementation OOSoundSource
 
@@ -76,12 +69,12 @@ std::vector<oo::ObjCRef<OOSoundSource*>>* sPlayingSoundSources = nullptr;
     [super dealloc];
 }
 
-- (id)descriptionComponents // shared selector (proposed ADR-0043)
+- (NSString*)descriptionComponents
 {
     if ([self isPlaying]) {
-        return oo::NSStringFrom(oo::str::format("sound=%s, loop=%s, repeatCount=%u, playing on channel %s", oo::DescriptionOf(_sound).c_str(), [self loop] ? "YES" : "NO", [self repeatCount], oo::DescriptionOf(_channel).c_str()));
+        return [NSString stringWithFormat:@"sound=%@, loop=%s, repeatCount=%u, playing on channel %@", _sound, [self loop] ? "YES" : "NO", [self repeatCount], _channel];
     } else {
-        return oo::NSStringFrom(oo::str::format("sound=%s, loop=%s, repeatCount=%u, not playing", oo::DescriptionOf(_sound).c_str(), [self loop] ? "YES" : "NO", [self repeatCount]));
+        return [NSString stringWithFormat:@"sound=%@, loop=%s, repeatCount=%u, not playing", _sound, [self loop] ? "YES" : "NO", [self repeatCount]];
     }
 }
 
@@ -144,12 +137,10 @@ std::vector<oo::ObjCRef<OOSoundSource*>>* sPlayingSoundSources = nullptr;
         [self retain];
     }
 
-    if (EXPECT_NOT(sPlayingSoundSources == nullptr)) {
-        sPlayingSoundSources = new std::vector<oo::ObjCRef<OOSoundSource*>>();
+    if (EXPECT_NOT(sPlayingSoundSources == nil)) {
+        sPlayingSoundSources = [[NSMutableSet alloc] init];
     }
-    if (std::find(sPlayingSoundSources->begin(), sPlayingSoundSources->end(), self) == sPlayingSoundSources->end()) {
-        sPlayingSoundSources->emplace_back(self);
-    }
+    [sPlayingSoundSources addObject:self];
 
     OOSoundReleaseLock();
 }
@@ -171,11 +162,7 @@ std::vector<oo::ObjCRef<OOSoundSource*>>* sPlayingSoundSources = nullptr;
         [_channel stop];
         _channel = nil;
 
-        if (sPlayingSoundSources != nullptr) {
-            auto it = std::find(sPlayingSoundSources->begin(), sPlayingSoundSources->end(), self);
-            if (it != sPlayingSoundSources->end())
-                sPlayingSoundSources->erase(it);
-        }
+        [sPlayingSoundSources removeObject:self];
         [self release];
     }
 
@@ -189,15 +176,11 @@ std::vector<oo::ObjCRef<OOSoundSource*>>* sPlayingSoundSources = nullptr;
             end up empty we may as well use the original set and let a new one be
             set up lazily.
     */
-    std::vector<oo::ObjCRef<OOSoundSource*>>* playing = sPlayingSoundSources;
-    sPlayingSoundSources = nullptr;
+    NSMutableSet* playing = sPlayingSoundSources;
+    sPlayingSoundSources = nil;
 
-    if (playing != nullptr) {
-        // In the order they started playing (the set's hash order before).
-        for (const oo::ObjCRef<OOSoundSource*>& source : *playing)
-            [source.get() stop];
-        delete playing;
-    }
+    [playing makeObjectsPerformSelector:@selector(stop)];
+    [playing release];
 }
 
 - (void)playSound:(OOSound*)sound

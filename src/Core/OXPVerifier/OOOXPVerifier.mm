@@ -55,27 +55,20 @@ SOFTWARE.
 #import "GameController.h"
 #import "OOCacheManager.h"
 #import "OODebugStandards.h"
-#import "OOFoundationBridge.h"
 #import "OOLoggingExtended.h"
 #import "OOOXPVerifierStageInternal.h"
 #import "OOPListView.h"
 #import "ResourceManager.h"
-#include "oofnd/Date.hpp"
 #include "oofnd/FileSystem.hpp"
-#include "oofnd/PListParsing.hpp"
 #include "oofnd/Process.hpp"
-#include "oofnd/String.hpp"
-#include "oofnd/objc/OORuntime.h"
 
-namespace {
-void SwitchLogFile(const std::string& name);
-void NoteVerificationStage(const std::string& displayName, const std::string& stage);
-void OpenLogFile();
-}
+static void SwitchLogFile(NSString* name);
+static void NoteVerificationStage(NSString* displayName, NSString* stage);
+static void OpenLogFile(NSString* name);
 
 @interface OOOXPVerifier (OOPrivate)
 
-- (id)initWithPath:(id)path; // path: an Objective-C string. Shared selector (proposed ADR-0043).
+- (id)initWithPath:(NSString*)path;
 - (void)run;
 
 - (void)setUpLogOverrides;
@@ -84,10 +77,10 @@ void OpenLogFile();
 - (void)buildDependencyGraph;
 - (void)runStages;
 
-- (BOOL)setUpDependencies:(const std::vector<std::string>&)dependencies
+- (BOOL)setUpDependencies:(NSSet*)dependencies
                  forStage:(OOOXPVerifierStage*)stage;
 
-- (void)setUpDependents:(const std::vector<std::string>&)dependents
+- (void)setUpDependents:(NSSet*)dependents
                forStage:(OOOXPVerifierStage*)stage;
 
 - (void)dumpDebugGraphviz;
@@ -105,7 +98,7 @@ void OpenLogFile();
  */
 + (BOOL)runVerificationIfRequested
 {
-    std::optional<std::string> foundPath;
+    NSString* foundPath = nil;
     BOOL exists, isDirectory;
     OOOXPVerifier* verifier = nil;
     void* pool = NULL;
@@ -119,32 +112,32 @@ void OpenLogFile();
         const std::string& arg = arguments[argIndex];
         if (arg == "-verify-oxp" || arg == "--verify-oxp") {
             if (argIndex + 1 < arguments.size())
-                foundPath = arguments[argIndex + 1];
-            if (!foundPath.has_value()) {
+                foundPath = [NSString stringWithUTF8String:arguments[argIndex + 1].c_str()];
+            if (foundPath == nil) {
                 OOLog(@"verifyOXP.noPath", @"***** ERROR: %s passed without path argument; nothing to verify.", arg.c_str());
                 objc_autoreleasePoolPop(pool);
                 return YES;
             }
-            foundPath = oo::StdString([oo::NSStringFrom(*foundPath) stringByExpandingTildeInPath]); // no oo::str form yet: runs on the bridged string
+            foundPath = [foundPath stringByExpandingTildeInPath];
             break;
         }
     }
 
-    if (!foundPath.has_value()) {
+    if (foundPath == nil) {
         objc_autoreleasePoolPop(pool);
         return NO;
     }
 
     // We got a path; does it point to a directory?
-    oo::fs::FileType foundType = oo::fs::fileType(oo::fs::pathFromUTF8(*foundPath));
+    oo::fs::FileType foundType = oo::fs::fileType(oo::fs::pathFromUTF8([foundPath UTF8String]));
     exists = (foundType != oo::fs::FileType::none);
     isDirectory = (foundType == oo::fs::FileType::directory);
     if (!exists) {
-        OOLog(@"verifyOXP.badPath", @"***** ERROR: no OXP exists at path \"%@\"; nothing to verify.", oo::NSStringFrom(*foundPath));
+        OOLog(@"verifyOXP.badPath", @"***** ERROR: no OXP exists at path \"%@\"; nothing to verify.", foundPath);
     } else if (!isDirectory) {
-        OOLog(@"verifyOXP.badPath", @"***** ERROR: \"%@\" is a file, not an OXP directory; nothing to verify.", oo::NSStringFrom(*foundPath));
+        OOLog(@"verifyOXP.badPath", @"***** ERROR: \"%@\" is a file, not an OXP directory; nothing to verify.", foundPath);
     } else {
-        verifier = [[OOOXPVerifier alloc] initWithPath:oo::NSStringFrom(*foundPath)];
+        verifier = [[OOOXPVerifier alloc] initWithPath:foundPath];
         objc_autoreleasePoolPop(pool);
         pool = objc_autoreleasePoolPush();
         [verifier run];
@@ -158,13 +151,18 @@ void OpenLogFile();
 
 - (void)dealloc
 {
-    // The C++ ivars (the configuration, the strings, the retained stages) are destroyed with the object.
+    [_verifierPList release];
+    [_basePath release];
+    [_displayName release];
+    [_stagesByName release];
+    [_waitingStages release];
+
     [super dealloc];
 }
 
 - (void)registerStage:(OOOXPVerifierStage*)stage
 {
-    id name = nil;
+    NSString* name = nil;
     OOOXPVerifierStage* existing = nil;
 
     // Sanity checking
@@ -188,8 +186,7 @@ void OpenLogFile();
     }
 
     // We can only have one stage with a given name. Registering the same stage twice is OK, though.
-    const auto found = _stagesByName.find(oo::StdString(name));
-    existing = found != _stagesByName.end() ? found->second.get() : nil;
+    existing = [_stagesByName objectForKey:name];
     if (existing == stage)
         return;
     if (existing != nil) {
@@ -199,92 +196,77 @@ void OpenLogFile();
 
     // Checks passed, store state.
     [stage setVerifier:self];
-    _stagesByName[oo::StdString(name)] = oo::ObjCRef<OOOXPVerifierStage*>(stage);
-    _waitingStages.push_back(oo::ObjCRef<OOOXPVerifierStage*>(stage));
+    [_stagesByName setObject:stage forKey:name];
+    [_waitingStages addObject:stage];
 }
 
-- (std::optional<std::string>)cxx_oxpPath
+- (NSString*)oxpPath
 {
-    return _basePath;
+    return [[_basePath retain] autorelease];
 }
 
-- (std::optional<std::string>)cxx_oxpDisplayName
+- (NSString*)oxpDisplayName
 {
-    return _displayName;
+    return [[_displayName retain] autorelease];
 }
 
-- (id)cxx_stageWithName:(const std::string&)name
+- (id)stageWithName:(NSString*)name
 {
-    const auto found = _stagesByName.find(name);
-    return found != _stagesByName.end() ? found->second.get() : nil;
+    if (name == nil)
+        return nil;
+
+    return [_stagesByName objectForKey:name];
 }
 
-- (id)configurationValueForKey:(id)key // shared selector (proposed ADR-0043)
+- (id)configurationValueForKey:(NSString*)key
 {
-    const oo::PList* value = _verifierPList.find(oo::StdString(key));
-    return value != nullptr ? oo::ObjectFromPList(*value) : nil;
+    return [_verifierPList objectForKey:key];
 }
 
-- (oo::PList)cxx_configurationArrayForKey:(const std::string&)key
+- (NSArray*)configurationArrayForKey:(NSString*)key
 {
-    const oo::PList* array = _verifierPList.get<oo::PList::Array>(key);
-    return array != nullptr ? *array : oo::PList();
+    return oo::PListView(_verifierPList).get<NSArray*>(key);
 }
 
-- (oo::PList)cxx_configurationDictionaryForKey:(const std::string&)key
+- (NSDictionary*)configurationDictionaryForKey:(NSString*)key
 {
-    const oo::PList* dictionary = _verifierPList.get<oo::PList::Dict>(key);
-    return dictionary != nullptr ? *dictionary : oo::PList();
+    return oo::PListView(_verifierPList).get<NSDictionary*>(key);
 }
 
-- (std::optional<std::string>)cxx_configurationStringForKey:(const std::string&)key
+- (NSString*)configurationStringForKey:(NSString*)key
 {
-    const oo::PList* value = _verifierPList.find(key);
-    if (value == nullptr || !(value->isString() || value->isNumber()))
-        return std::nullopt;
-    return _verifierPList.get<std::string>(key);
+    return oo::PListView(_verifierPList).get<NSString*>(key);
 }
 
-- (std::optional<std::vector<std::string>>)cxx_configurationSetForKey:(const std::string&)key
+- (NSSet*)configurationSetForKey:(NSString*)key
 {
-    const oo::PList* array = _verifierPList.get<oo::PList::Array>(key);
-    if (array == nullptr)
-        return std::nullopt;
-
-    std::set<std::string> strings;
-    for (const oo::PList& element : *array->getIf<oo::PList::Array>()) {
-        if (const std::string* string = element.getIf<std::string>())
-            strings.insert(*string);
-    }
-    return std::vector<std::string>(strings.begin(), strings.end());
+    NSArray* array = oo::PListView(_verifierPList).get<NSArray*>(key);
+    return array != nil ? [NSSet setWithArray:array] : nil;
 }
 
 @end
 
 @implementation OOOXPVerifier (OOPrivate)
 
-- (id)initWithPath:(id)path // shared selector (proposed ADR-0043)
+- (id)initWithPath:(NSString*)path
 {
     self = [super init];
 
     OOSetStandardsForOXPVerifierMode();
 
-    // Any plist format; missing, unreadable or not a dictionary is no configuration, as
-    // -dictionaryWithContentsOfFile: returned nil for them.
-    const std::optional<std::string> builtInPath = [ResourceManager cxx_builtInPath];
-    if (builtInPath.has_value()) {
-        const std::string verifierPListPath = oo::str::appendingPathComponent(oo::str::appendingPathComponent(*builtInPath, "Config"), "verifyOXP.plist");
-        if (const oo::fs::Result<oo::Data> bytes = oo::fs::readFile(oo::fs::pathFromUTF8(verifierPListPath)); bytes && !bytes->empty()) {
-            oo::Expected<oo::PList, oo::PListError> parsed = oo::parsePropertyList(bytes->stringView());
-            if (parsed && parsed->isDict())
-                _verifierPList = std::move(*parsed);
-        }
-    }
+    NSString* verifierPListPath = [[[ResourceManager builtInPath] stringByAppendingPathComponent:@"Config"] stringByAppendingPathComponent:@"verifyOXP.plist"];
+    _verifierPList = [[NSDictionary dictionaryWithContentsOfFile:verifierPListPath] retain];
 
-    _basePath = oo::StdString(path); // never nil: the path always came from the command line
-    _displayName = oo::str::lastPathComponent(_basePath); // what GNUstep's -displayNameAtPath: returns
+    _basePath = [path copy];
+    _displayName = [_basePath lastPathComponent]; // what GNUstep's -displayNameAtPath: returns
+    if (_displayName == nil)
+        _displayName = [_basePath lastPathComponent];
+    [_displayName retain];
 
-    if (_verifierPList.isNull()) {
+    _stagesByName = [[NSMutableDictionary alloc] init];
+    _waitingStages = [[NSMutableSet alloc] init];
+
+    if (_verifierPList == nil || _basePath == nil) {
         OOLog(@"verifyOXP.setup.failed", @"%@", @"***** ERROR: failed to set up OXP verifier.");
         [self release];
         return nil;
@@ -297,7 +279,7 @@ void OpenLogFile();
 
 - (void)run
 {
-    NoteVerificationStage(_displayName, "");
+    NoteVerificationStage(_displayName, @"");
 
     [self setUpLogOverrides];
 
@@ -313,29 +295,30 @@ void OpenLogFile();
     [ResourceManager setUseAddOns:SCENARIO_OXP_DEFINITION_NONE];
 
     SwitchLogFile(_displayName);
-    OOLog(@"verifyOXP.start", @"Running OXP verifier for %@", oo::NSStringFrom(_basePath)); //_displayName);
+    OOLog(@"verifyOXP.start", @"Running OXP verifier for %@", _basePath); //_displayName);
 
     [self registerBaseStages];
     [self buildDependencyGraph];
     [self runStages];
 
-    NoteVerificationStage(_displayName, "");
+    NoteVerificationStage(_displayName, @"");
     OOLog(@"verifyOXP.done", @"%@", @"OXP verification complete.");
 
-    OpenLogFile();
+    OpenLogFile(_displayName);
 }
 
 - (void)setUpLogOverrides
 {
+    NSDictionary* overrides = nil;
+    NSString* messageClass = nil;
     id verbose = nil;
 
-    OOLogSetShowMessageClassTemporary(_verifierPList.get<bool>("logShowMessageClassOverride", NO));
+    OOLogSetShowMessageClassTemporary(oo::PListView(_verifierPList).get<BOOL>(@"logShowMessageClassOverride", NO));
 
-    const oo::PList* overrides = _verifierPList.get<oo::PList::Dict>("logControlOverride");
-    if (overrides != nullptr) {
-        for (const auto& override : *overrides->getIf<oo::PList::Dict>()) {
-            OOLogSetDisplayMessagesInClass(oo::NSStringFrom(override.first), overrides->get<bool>(override.first, NO));
-        }
+    overrides = oo::PListView(_verifierPList).get<NSDictionary*>(@"logControlOverride");
+    foreachkey(messageClass, overrides)
+    {
+        OOLogSetDisplayMessagesInClass(messageClass, oo::PListView(overrides).get<BOOL>(messageClass, NO));
     }
 
     /*	Since actually editing logControlOverride is a pain, we also allow
@@ -349,91 +332,105 @@ void OpenLogFile();
 
 - (void)registerBaseStages
 {
+    NSSet* stages = nil;
+    NSSet* excludeStages = nil;
+    NSString* stageName = nil;
     Class stageClass = Nil;
     OOOXPVerifierStage* stage = nil;
 
     @autoreleasepool {
         // Load stages specified as array of class names in verifyOXP.plist
-        std::vector<std::string> stages = [self cxx_configurationSetForKey:"stages"].value_or(std::vector<std::string>());
-        const std::vector<std::string> excludeStages = [self cxx_configurationSetForKey:"excludeStages"].value_or(std::vector<std::string>());
-        if (!excludeStages.empty()) {
-            std::erase_if(stages, [&excludeStages](const std::string& stageName) { return std::binary_search(excludeStages.begin(), excludeStages.end(), stageName); });
+        stages = [self configurationSetForKey:@"stages"];
+        excludeStages = [self configurationSetForKey:@"excludeStages"];
+        if ([excludeStages count] != 0) {
+            stages = [[stages mutableCopy] autorelease];
+            [(NSMutableSet*)stages minusSet:excludeStages];
         }
-        for (const std::string& stageName : stages) {
-            stageClass = OOClassFromName(stageName);
-            if (stageClass == Nil) {
-                OOLog(@"verifyOXP.registration.failed", @"Attempt to register unknown class %@ as a verifier stage, ignoring.", oo::NSStringFrom(stageName));
-                continue;
+        foreach (stageName, stages) {
+            if ([stageName isKindOfClass:[NSString class]]) {
+                stageClass = NSClassFromString(stageName);
+                if (stageClass == Nil) {
+                    OOLog(@"verifyOXP.registration.failed", @"Attempt to register unknown class %@ as a verifier stage, ignoring.", stageName);
+                    continue;
+                }
+                stage = [[stageClass alloc] init];
+                [self registerStage:stage];
+                [stage release];
             }
-            stage = [[stageClass alloc] init];
-            [self registerStage:stage];
-            [stage release];
         }
     }
 }
 
 - (void)buildDependencyGraph
 {
+    NSArray* stageKeys = nil;
+    NSString* stageKey = nil;
     OOOXPVerifierStage* stage = nil;
-    id name = nil;
-    std::map<OOOXPVerifierStage*, std::vector<std::string>> dependenciesByStage,
-        dependentsByStage;
-    id dependencies = nil,
-       dependents = nil;
+    NSString* name = nil;
+    NSMutableDictionary *dependenciesByStage = nil,
+                        *dependentsByStage = nil;
+    NSSet *dependencies = nil,
+          *dependents = nil;
+    NSValue* key = nil;
 
     @autoreleasepool {
         /*	Iterate over all stages, getting dependency and dependent sets.
                 This is done in advance so that -dependencies and -dependents may
                 register stages.
         */
+        dependenciesByStage = [NSMutableDictionary dictionary];
+        dependentsByStage = [NSMutableDictionary dictionary];
+
         for (;;) {
             /*	Loop while there are stages whose dependency lists haven't been
                     checked. This is an indeterminate loop since new ones can be
                     added.
             */
-            if (_waitingStages.empty())
+            stage = [_waitingStages anyObject];
+            if (stage == nil)
                 break;
-            const oo::ObjCRef<OOOXPVerifierStage*> waiting = _waitingStages.front();
-            _waitingStages.erase(_waitingStages.begin());
-            stage = waiting.get();
+            [_waitingStages removeObject:stage];
+
+            key = [NSValue valueWithNonretainedObject:stage];
 
             dependencies = [stage dependencies];
             if (dependencies != nil) {
-                dependenciesByStage[stage] = oo::StringsFrom(dependencies);
+                [dependenciesByStage setObject:dependencies
+                                        forKey:key];
             }
 
             dependents = [stage dependents];
             if (dependents != nil) {
-                dependentsByStage[stage] = oo::StringsFrom(dependents);
+                [dependentsByStage setObject:dependents
+                                      forKey:key];
             }
         }
-        _waitingStages.clear();
+        [_waitingStages release];
+        _waitingStages = nil;
         _openForRegistration = NO;
 
         // Iterate over all stages, resolving dependencies.
-        std::vector<std::string> stageKeys; // Get the keys up front because we may need to remove entries from the map.
-        for (const auto& entry : _stagesByName)
-            stageKeys.push_back(entry.first);
+        stageKeys = [_stagesByName allKeys]; // Get the keys up front because we may need to remove entries from dictionary.
 
-        for (const std::string& stageKey : stageKeys) {
-            const auto found = _stagesByName.find(stageKey);
-            if (found == _stagesByName.end())
+        foreach (stageKey, stageKeys) {
+            stage = [_stagesByName objectForKey:stageKey];
+            if (stage == nil)
                 continue;
-            stage = found->second.get();
 
             // Sanity check
             name = [stage name];
-            if (!oo::IsNSString(name) || oo::StdString(name) != stageKey) {
-                OOLog(@"verifyOXP.buildDependencyGraph.badName", @"***** Stage name appears to have changed from \"%@\" to \"%@\" for verifier stage %@, removing.", oo::NSStringFrom(stageKey), name, stage);
-                _stagesByName.erase(stageKey);
+            if (![stageKey isEqualToString:name]) {
+                OOLog(@"verifyOXP.buildDependencyGraph.badName", @"***** Stage name appears to have changed from \"%@\" to \"%@\" for verifier stage %@, removing.", stageKey, name, stage);
+                [_stagesByName removeObjectForKey:stageKey];
                 continue;
             }
 
             // Get dependency set
-            const auto stageDependencies = dependenciesByStage.find(stage);
+            key = [NSValue valueWithNonretainedObject:stage];
+            dependencies = [dependenciesByStage objectForKey:key];
 
-            if (stageDependencies != dependenciesByStage.end() && ![self setUpDependencies:stageDependencies->second forStage:stage]) {
-                _stagesByName.erase(stageKey);
+            if (dependencies != nil && ![self setUpDependencies:dependencies forStage:stage]) {
+                [_stagesByName removeObjectForKey:stageKey];
             }
         }
 
@@ -441,28 +438,24 @@ void OpenLogFile();
                 This is done in a separate pass because reverse dependencies are "weak"
                 while forward dependencies are "strong".
         */
-        stageKeys.clear();
-        for (const auto& entry : _stagesByName)
-            stageKeys.push_back(entry.first);
+        stageKeys = [_stagesByName allKeys];
 
-        for (const std::string& stageKey : stageKeys) {
-            const auto found = _stagesByName.find(stageKey);
-            if (found == _stagesByName.end())
+        foreach (stageKey, stageKeys) {
+            stage = [_stagesByName objectForKey:stageKey];
+            if (stage == nil)
                 continue;
-            stage = found->second.get();
 
             // Get dependent set
-            const auto stageDependents = dependentsByStage.find(stage);
+            key = [NSValue valueWithNonretainedObject:stage];
+            dependents = [dependentsByStage objectForKey:key];
 
-            if (stageDependents != dependentsByStage.end()) {
-                [self setUpDependents:stageDependents->second forStage:stage];
+            if (dependents != nil) {
+                [self setUpDependents:dependents forStage:stage];
             }
         }
 
-        for (const auto& entry : _stagesByName)
-            _waitingStages.push_back(entry.second);
-        for (const auto& waiting : _waitingStages)
-            [waiting.get() dependencyRegistrationComplete];
+        _waitingStages = [[NSMutableSet alloc] initWithArray:[_stagesByName allValues]];
+        [_waitingStages makeObjectsPerformSelector:@selector(dependencyRegistrationComplete)];
 
         if ([[NSUserDefaults standardUserDefaults] boolForKey:@"oxp-verifier-dump-debug-graphviz"]) {
             [self dumpDebugGraphviz];
@@ -473,8 +466,9 @@ void OpenLogFile();
 - (void)runStages
 {
     void* pool = NULL;
-    OOOXPVerifierStage* stageToRun = nil;
-    id stageName = nil;
+    OOOXPVerifierStage *candidateStage = nil,
+                       *stageToRun = nil;
+    NSString* stageName = nil;
 
     // Loop while there are still stages to run.
     for (;;) {
@@ -482,9 +476,9 @@ void OpenLogFile();
 
         // Look through queue for a stage that's ready
         stageToRun = nil;
-        for (const auto& candidateStage : _waitingStages) {
-            if ([candidateStage.get() canRun]) {
-                stageToRun = candidateStage.get();
+        foreach (candidateStage, _waitingStages) {
+            if ([candidateStage canRun]) {
+                stageToRun = candidateStage;
                 break;
             }
         }
@@ -499,7 +493,7 @@ void OpenLogFile();
         @try {
             stageName = [stageToRun name];
             if ([stageToRun shouldRun]) {
-                NoteVerificationStage(_displayName, oo::DescriptionOf(stageName)); // "%@" text, as the old format printed it
+                NoteVerificationStage(_displayName, stageName);
                 OOLog(@"verifyOXP.runStage", @"%@", stageName);
                 OOLogIndent();
                 [stageToRun performRun];
@@ -515,41 +509,43 @@ void OpenLogFile();
         }
         OOLogPopIndent();
 
-        std::erase(_waitingStages, stageToRun);
+        [_waitingStages removeObject:stageToRun];
         objc_autoreleasePoolPop(pool);
     }
 
     pool = objc_autoreleasePoolPush();
 
-    if (!_waitingStages.empty()) {
+    if ([_waitingStages count] != 0) {
         OOLog(@"verifyOXP.incomplete", @"%@", @"Some verifier stages could not be run:");
         OOLogIndent();
-        for (const auto& candidateStage : _waitingStages) {
-            OOLog(@"verifyOXP.incomplete.item", @"%@", candidateStage.get());
+        foreach (candidateStage, _waitingStages) {
+            OOLog(@"verifyOXP.incomplete.item", @"%@", candidateStage);
         }
         OOLogOutdent();
     }
-    _waitingStages.clear();
+    [_waitingStages release];
+    _waitingStages = nil;
 
     objc_autoreleasePoolPop(pool);
 }
 
-- (BOOL)setUpDependencies:(const std::vector<std::string>&)dependencies
+- (BOOL)setUpDependencies:(NSSet*)dependencies
                  forStage:(OOOXPVerifierStage*)stage
 {
+    NSString* depName = nil;
     OOOXPVerifierStage* depStage = nil;
 
     // Iterate over dependencies, connecting them up.
-    for (const std::string& depName : dependencies) {
-        depStage = [self cxx_stageWithName:depName];
+    foreach (depName, dependencies) {
+        depStage = [_stagesByName objectForKey:depName];
         if (depStage == nil) {
-            OOLog(@"verifyOXP.buildDependencyGraph.unresolved", @"Verifier stage %@ has unresolved dependency \"%@\", skipping.", stage, oo::NSStringFrom(depName));
+            OOLog(@"verifyOXP.buildDependencyGraph.unresolved", @"Verifier stage %@ has unresolved dependency \"%@\", skipping.", stage, depName);
             return NO;
         }
 
         if ([depStage isDependentOf:stage]) {
             OOLog(@"verifyOXP.buildDependencyGraph.circularReference", @"Verifier stages %@ and %@ have a dependency loop, skipping.", stage, depStage);
-            _stagesByName.erase(depName);
+            [_stagesByName removeObjectForKey:depName];
             return NO;
         }
 
@@ -559,16 +555,17 @@ void OpenLogFile();
     return YES;
 }
 
-- (void)setUpDependents:(const std::vector<std::string>&)dependents
+- (void)setUpDependents:(NSSet*)dependents
                forStage:(OOOXPVerifierStage*)stage
 {
+    NSString* depName = nil;
     OOOXPVerifierStage* depStage = nil;
 
     // Iterate over dependents, connecting them up.
-    for (const std::string& depName : dependents) {
-        depStage = [self cxx_stageWithName:depName];
+    foreach (depName, dependents) {
+        depStage = [_stagesByName objectForKey:depName];
         if (depStage == nil) {
-            OOLog(@"verifyOXP.buildDependencyGraph.unresolved", @"Verifier stage %@ has unresolved dependent \"%@\".", stage, oo::NSStringFrom(depName));
+            OOLog(@"verifyOXP.buildDependencyGraph.unresolved", @"Verifier stage %@ has unresolved dependent \"%@\".", stage, depName);
             continue; // Unresolved/conflicting dependents are non-fatal
         }
 
@@ -583,93 +580,88 @@ void OpenLogFile();
 
 - (void)dumpDebugGraphviz
 {
-    using oo::str::FormatArg;
+    NSMutableString* graphViz = nil;
+    NSDictionary* graphVizTemplate = nil;
+    NSString *arcTemplate = nil,
+             *startTemplate = nil,
+             *endTemplate = nil;
+    OOOXPVerifierStage* stage = nil;
+    NSSet* deps = nil;
+    OOOXPVerifierStage* dep = nil;
 
-    // The templates are data (verifyOXP.plist), so they are formatted at run time (ADR-0043 item 19).
-    const oo::PList graphVizTemplate = [self cxx_configurationDictionaryForKey:"debugGraphvizTempate"];
-    std::string graphViz = oo::str::formatRuntime(graphVizTemplate.get<std::string>("preamble"), { oo::date::description() });
+    graphVizTemplate = [self configurationDictionaryForKey:@"debugGraphvizTempate"];
+    graphViz = [NSMutableString stringWithFormat:oo::PListView(graphVizTemplate).get<NSString*>(@"preamble"), [NSDate date]];
 
     /*	Pass 1: enumerate over graph setting node attributes for each stage.
             We use pointers as node names for simplicity of generation.
     */
-    std::string arcTemplate = graphVizTemplate.get<std::string>("node");
-    for (const auto& entry : _stagesByName) {
-        OOOXPVerifierStage* stage = entry.second.get();
-        graphViz += oo::str::formatRuntime(arcTemplate, { FormatArg::pointer(stage), oo::DescriptionOf([stage class]), oo::DescriptionOf([stage name]) });
+    arcTemplate = oo::PListView(graphVizTemplate).get<NSString*>(@"node");
+    foreach (stage, [_stagesByName allValues]) {
+        [graphViz appendFormat:arcTemplate, stage, [stage class], [stage name]];
     }
 
-    graphViz += graphVizTemplate.get<std::string>("forwardPreamble");
+    [graphViz appendString:oo::PListView(graphVizTemplate).get<NSString*>(@"forwardPreamble")];
 
     /*	Pass 2: enumerate over graph setting forward arcs for each dependency.
      */
-    arcTemplate = graphVizTemplate.get<std::string>("forwardArc");
-    const std::string startTemplate = graphVizTemplate.get<std::string>("startArc");
-    for (const auto& entry : _stagesByName) {
-        OOOXPVerifierStage* stage = entry.second.get();
-        const std::vector<oo::ObjCRef<OOOXPVerifierStage*>> deps = [stage resolvedDependencies];
-        if (!deps.empty()) {
-            for (const auto& dep : deps) {
-                graphViz += oo::str::formatRuntime(arcTemplate, { FormatArg::pointer(dep.get()), FormatArg::pointer(stage) });
+    arcTemplate = oo::PListView(graphVizTemplate).get<NSString*>(@"forwardArc");
+    startTemplate = oo::PListView(graphVizTemplate).get<NSString*>(@"startArc");
+    foreach (stage, [_stagesByName allValues]) {
+        deps = [stage resolvedDependencies];
+        if ([deps count] != 0) {
+            foreach (dep, deps) {
+                [graphViz appendFormat:arcTemplate, dep, stage];
             }
         } else {
-            graphViz += oo::str::formatRuntime(startTemplate, { FormatArg::pointer(stage) });
+            [graphViz appendFormat:startTemplate, stage];
         }
     }
 
-    graphViz += graphVizTemplate.get<std::string>("backwardPreamble");
+    [graphViz appendString:oo::PListView(graphVizTemplate).get<NSString*>(@"backwardPreamble")];
 
     /*	Pass 3: enumerate over graph setting backward arcs for each dependent.
      */
-    arcTemplate = graphVizTemplate.get<std::string>("backwardArc");
-    const std::string endTemplate = graphVizTemplate.get<std::string>("endArc");
-    for (const auto& entry : _stagesByName) {
-        OOOXPVerifierStage* stage = entry.second.get();
-        const std::vector<oo::ObjCRef<OOOXPVerifierStage*>> deps = [stage resolvedDependents];
-        if (!deps.empty()) {
-            for (const auto& dep : deps) {
-                graphViz += oo::str::formatRuntime(arcTemplate, { FormatArg::pointer(dep.get()), FormatArg::pointer(stage) });
+    arcTemplate = oo::PListView(graphVizTemplate).get<NSString*>(@"backwardArc");
+    endTemplate = oo::PListView(graphVizTemplate).get<NSString*>(@"endArc");
+    foreach (stage, [_stagesByName allValues]) {
+        deps = [stage resolvedDependents];
+        if ([deps count] != 0) {
+            foreach (dep, deps) {
+                [graphViz appendFormat:arcTemplate, dep, stage];
             }
         } else {
-            graphViz += oo::str::formatRuntime(endTemplate, { FormatArg::pointer(stage) });
+            [graphViz appendFormat:endTemplate, stage];
         }
     }
 
-    graphViz += graphVizTemplate.get<std::string>("postamble");
+    [graphViz appendString:oo::PListView(graphVizTemplate).get<NSString*>(@"postamble")];
 
-    // Write file: what +[ResourceManager writeDiagnosticString:toFileNamed:] did for a name with no
-    // directory part (UTF-8, atomically, in the diagnostic directory).
-    const std::optional<std::string> directory = [ResourceManager cxx_diagnosticFileLocation];
-    if (directory.has_value()) {
-        const std::string path = oo::str::appendingPathComponent(*directory, "OXPVerifierStageDependencies.dot");
-        (void)oo::fs::writeFile(oo::fs::pathFromUTF8(path), oo::Data::fromString(graphViz));
-    }
+    // Write file
+    [ResourceManager writeDiagnosticString:graphViz toFileNamed:@"OXPVerifierStageDependencies.dot"];
 }
 
 @end
 
 #import "OOLogOutputHandler.h"
 
-namespace {
-
-void SwitchLogFile(const std::string& name)
+static void SwitchLogFile(NSString* name)
 {
     // #ifndef OOLITE_LINUX
-    //  -stringByAppendingPathExtension: has no oo::str form yet: it runs on the bridged string.
-    const std::string logName = oo::StdString([oo::NSStringFrom(name) stringByAppendingPathExtension:@"log"]);
-    OOLog(@"verifyOXP.switchingLog", @"Switching log files -- logging to \"%@\".", oo::NSStringFrom(logName));
-    OOLogOutputHandlerChangeLogFile(oo::NSStringFrom(logName));
+    name = [name stringByAppendingPathExtension:@"log"];
+    OOLog(@"verifyOXP.switchingLog", @"Switching log files -- logging to \"%@\".", name);
+    OOLogOutputHandlerChangeLogFile(name);
     // #else
     //	OOLog(@"verifyOXP.switchingLog", @"Switching logging to <stdout>.");
     //	OOLogOutputHandlerStartLoggingToStdout();
     // #endif
 }
 
-void NoteVerificationStage(const std::string& displayName, const std::string& stage)
+static void NoteVerificationStage(NSString* displayName, NSString* stage)
 {
-    [[GameController sharedController] logProgress:oo::NSStringFrom(oo::str::format("Verifying %s\n%s", displayName.c_str(), stage.c_str()))];
+    [[GameController sharedController] logProgress:[NSString stringWithFormat:@"Verifying %@\n%@", displayName, stage]];
 }
 
-void OpenLogFile()
+static void OpenLogFile(NSString* name)
 {
     //	Open log file in appropriate application / provide feedback.
 
@@ -686,14 +678,12 @@ void OpenLogFile()
         // value to void seems to keep it quiet for now
         // Nothing to do here, since we dump to stdout instead of to a file.
         // OOLogOutputHandlerStopLoggingToStdout();
-        (void)system(oo::str::format("cat \"%s\"", oo::DescriptionOf(OOLogHandlerGetLogPath()).c_str()).c_str());
+        (void)system([[NSString stringWithFormat:@"cat \"%@\"", OOLogHandlerGetLogPath()] UTF8String]);
 #else
         do {
         } while (0);
 #endif
     }
 }
-
-} // namespace
 
 #endif // OO_OXP_VERIFIER_ENABLED

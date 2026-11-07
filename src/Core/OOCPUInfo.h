@@ -27,8 +27,6 @@ MA 02110-1301, USA.
 #import "OOFoundation.h"
 #include <stdint.h>
 
-#include "oofnd/StdLib.hpp"
-
 #if OOLITE_LINUX
 #include <sys/sysinfo.h>
 #endif
@@ -44,7 +42,7 @@ NSUInteger OOCPUCount(void);
         Returns the CPU identifier string. Currently Windows and Linux only.
 */
 #if (OOLITE_WINDOWS || OOLITE_LINUX)
-std::string OOCPUDescription(void); // UTF-8 (Foundation sweep, proposed ADR-0043)
+NSString* OOCPUDescription(void);
 void OOCPUID(int CPUInfo[4], int InfoType);
 
 typedef struct
@@ -58,7 +56,7 @@ OOMemoryStatus OOSystemMemoryStatus(void);
 #if OOLITE_WINDOWS
 typedef BOOL(WINAPI* IW64PFP)(HANDLE, BOOL*); // for checking for 64/32 bit system
 BOOL is64BitSystem(void);
-std::string operatingSystemFullVersion(void); // UTF-8
+NSString* operatingSystemFullVersion(void);
 #endif
 
 /*	Set up OOLITE_BIG_ENDIAN and OOLITE_LITTLE_ENDIAN macros. Exactly one must

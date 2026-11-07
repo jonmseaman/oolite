@@ -30,11 +30,9 @@ MA 02110-1301, USA.
 #import <Foundation/NSDate.h>
 #endif
 #import "GameController.h"
-#import "OOFoundationException.h"
 #import "OOLoggingExtended.h"
-#import "OOStringBridge.h"
 #include "oofnd/Process.hpp"
-#include "oofnd/String.hpp"
+#import <Foundation/NSString.h>
 
 #if OOLITE_WINDOWS
 #include <SDL3/SDL_main.h>
@@ -196,10 +194,9 @@ int main(int argc, char* argv[])
             if (strcmp("-load", argv[i]) == 0) {
                 i++;
             }
-            // argv is UTF-8 (SDL_main); an argument past the end reads as nothing, as nil did.
-            const std::string argument = (i < argc) ? argv[i] : "";
-            if (i < argc && oo::str::hasSuffix(oo::str::lowercase(argument), ".oolite-save")) {
-                [controller setPlayerFileToLoad:oo::NSStringFrom(argument)];
+            NSString* argument = [NSString stringWithCString:argv[i]];
+            if (i < argc && [[argument lowercaseString] hasSuffix:@".oolite-save"]) {
+                [controller setPlayerFileToLoad:argument];
             }
 
             if (!strcmp("-help", argv[i]) || !strcmp("--help", argv[i])) {
@@ -256,11 +253,7 @@ int main(int argc, char* argv[])
         // GNUstep port.
         [controller applicationDidFinishLaunching];
     }
-    @catch (OOException* exception) {
-        OOLogERR(kOOLogException, @"Root exception handler hit - terminating. This is an internal error, please report it. Exception name: %@, reason: %@", oo::NSStringFrom([exception name]), oo::NSStringFrom([exception reason]));
-        return EXIT_FAILURE;
-    }
-    @catch (OOFoundationException* exception) {
+    @catch (NSException* exception) {
         OOLogERR(kOOLogException, @"Root exception handler hit - terminating. This is an internal error, please report it. Exception name: %@, reason: %@", [exception name], [exception reason]);
         return EXIT_FAILURE;
     }

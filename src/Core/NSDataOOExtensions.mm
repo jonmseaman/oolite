@@ -27,13 +27,8 @@ SOFTWARE.
 
 */
 
-#import "NSDataOOExtensions.h"
 #import "OOFoundation.h"
-#import "OOStringBridge.h"
 #import "unzip.h"
-
-#include "oofnd/FileSystem.hpp"
-#include "oofnd/String.hpp"
 
 #define ZIP_BUFFER_SIZE 8192
 
@@ -41,58 +36,51 @@ SOFTWARE.
 
 + (instancetype)oo_dataWithOXZFile:(NSString*)path
 {
-    std::optional<oo::Data> d = OODataFromOXZFile(oo::StdString(path));
-    return d ? [self dataWithBytes:d->bytes() length:d->length()] : nil;
-}
-
-@end
-
-std::optional<oo::Data> OODataFromOXZFile(const std::string& path)
-{
-    const std::vector<std::string> components = oo::str::pathComponents(path);
-    std::size_t i, cl = components.size();
+    NSUInteger i, cl;
+    NSArray* components = [path pathComponents];
+    cl = [components count];
     for (i = 0; i < cl; i++) {
-        if (oo::str::lowercase(oo::str::pathExtension(components[i])) == "oxz") {
+        NSString* component = [components objectAtIndex:i];
+        if ([[[component pathExtension] lowercaseString] isEqualToString:@"oxz"]) {
             break;
         }
     }
     // if i == cl then the path is entirely uncompressed
     if (i == cl) {
-        const oo::fs::Path filePath = oo::fs::pathFromUTF8(path);
 /* -initWithContentsOfMappedFile fails quietly under OS X if there's no file,
    but GNUstep complains. */
 #if OOLITE_MAC_OS_X
-        auto data = oo::fs::readFile(filePath);
-        if (data)
-            return std::move(*data);
-        return std::nullopt;
+        return [[[NSData alloc] initWithContentsOfMappedFile:path] autorelease];
 #else
-        const oo::fs::FileType type = oo::fs::fileType(filePath);
+        NSFileManager* fmgr = [NSFileManager defaultManager];
+        BOOL dir;
 
-        if (type != oo::fs::FileType::none) {
-            if (type != oo::fs::FileType::directory) {
-                if (oo::fs::fileSize(filePath).value_or(0) == 0) {
-                    OOLog(kOOLogFileNotFound, @"Expected file but found empty file at %@", oo::NSStringFrom(path));
+        if ([fmgr fileExistsAtPath:path isDirectory:&dir]) {
+            if (!dir) {
+                if ([[fmgr fileAttributesAtPath:path traverseLink:NO] fileSize] == 0) {
+                    OOLog(kOOLogFileNotFound, @"Expected file but found empty file at %@", path);
                 } else {
-                    auto data = oo::fs::readFile(filePath);
-                    if (data)
-                        return std::move(*data);
-                    return std::nullopt;
+                    return [[[NSData alloc] initWithContentsOfMappedFile:path] autorelease];
                 }
             } else {
-                OOLog(kOOLogFileNotFound, @"Expected file but found directory at %@", oo::NSStringFrom(path));
+                OOLog(kOOLogFileNotFound, @"Expected file but found directory at %@", path);
             }
         }
-        return std::nullopt;
+        return nil;
 #endif
     }
     // otherwise components 0..i are the OXZ path, and i+1..n are the
     // path inside the OXZ
-    const std::string zipFile = oo::str::pathWithComponents(std::vector<std::string>(components.begin(), components.begin() + static_cast<std::ptrdiff_t>(i) + 1));
-    const std::string containedFile = oo::str::pathWithComponents(std::vector<std::string>(components.begin() + static_cast<std::ptrdiff_t>(i) + 1, components.end()));
+    NSRange range;
+    range.location = 0;
+    range.length = i + 1;
+    NSString* zipFile = [NSString pathWithComponents:[components subarrayWithRange:range]];
+    range.location = i + 1;
+    range.length = cl - (i + 1);
+    NSString* containedFile = [NSString pathWithComponents:[components subarrayWithRange:range]];
 
     unzFile uf = NULL;
-    const char* zipname = zipFile.c_str();
+    const char* zipname = [zipFile UTF8String];
     if (zipname != NULL) {
         uf = unzOpen64(zipname);
     }
@@ -100,9 +88,9 @@ std::optional<oo::Data> OODataFromOXZFile(const std::string& path)
         // This is not necessarily an error - the OXZ manager tries to
         // do this as a test for the presence of managed OXZs
         //		OOLog(kOOLogFileNotFound, @"Could not unzip OXZ at %@", zipFile);
-        return std::nullopt;
+        return nil;
     }
-    const char* filename = containedFile.c_str();
+    const char* filename = [containedFile UTF8String];
     // unzLocateFile(*, *, 1) = case-sensitive extract
     if (unzLocateFile(uf, filename, 1) != UNZ_OK) {
         unzClose(uf);
@@ -111,7 +99,7 @@ std::optional<oo::Data> OODataFromOXZFile(const std::string& path)
          * e.g. on plist merges, config scans, etc. So don't add log
          * entries for this failure mode */
         //		OOLog(kOOLogFileNotFound, @"Could not find %@ within OXZ at %@", containedFile, zipFile);
-        return std::nullopt;
+        return nil;
     }
 
     int err = UNZ_OK;
@@ -119,39 +107,41 @@ std::optional<oo::Data> OODataFromOXZFile(const std::string& path)
     err = unzGetCurrentFileInfo64(uf, &file_info, NULL, 0, NULL, 0, NULL, 0);
     if (err != UNZ_OK) {
         unzClose(uf);
-        OOLog(kOOLogFileNotFound, @"Could not get properties of %@ within OXZ at %@", oo::NSStringFrom(containedFile), oo::NSStringFrom(zipFile));
-        return std::nullopt;
+        OOLog(kOOLogFileNotFound, @"Could not get properties of %@ within OXZ at %@", containedFile, zipFile);
+        return nil;
     }
 
     err = unzOpenCurrentFile(uf);
     if (err != UNZ_OK) {
         unzClose(uf);
-        OOLog(kOOLogFileNotFound, @"Could not read %@ within OXZ at %@", oo::NSStringFrom(containedFile), oo::NSStringFrom(zipFile));
-        return std::nullopt;
+        OOLog(kOOLogFileNotFound, @"Could not read %@ within OXZ at %@", containedFile, zipFile);
+        return nil;
     }
 
-    oo::Data tmp;
+    NSMutableData* tmp = [NSMutableData dataWithCapacity:file_info.uncompressed_size];
     void* buf = (void*)malloc(ZIP_BUFFER_SIZE);
     do {
         err = unzReadCurrentFile(uf, buf, ZIP_BUFFER_SIZE);
         if (err < 0) {
-            OOLog(kOOLogFileNotFound, @"Could not read %@ within OXZ at %@ (err %d)", oo::NSStringFrom(containedFile), oo::NSStringFrom(zipFile), err);
+            OOLog(kOOLogFileNotFound, @"Could not read %@ within OXZ at %@ (err %d)", containedFile, zipFile, err);
             break;
         }
         if (err == 0) {
             break;
         }
-        tmp.append(buf, static_cast<std::size_t>(err));
+        [tmp appendBytes:buf length:err];
     } while (err > 0);
     free(buf);
 
     err = unzCloseCurrentFile(uf);
     if (err != UNZ_OK) {
         unzClose(uf);
-        OOLog(kOOLogFileNotFound, @"Could not close %@ within OXZ at %@", oo::NSStringFrom(containedFile), oo::NSStringFrom(zipFile));
-        return std::nullopt;
+        OOLog(kOOLogFileNotFound, @"Could not close %@ within OXZ at %@", containedFile, zipFile);
+        return nil;
     }
 
     unzClose(uf);
-    return tmp;
+    return [[tmp retain] autorelease];
 }
+
+@end

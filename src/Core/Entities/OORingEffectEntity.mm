@@ -25,10 +25,7 @@ MA 02110-1301, USA.
 
 #import "OORingEffectEntity.h"
 #import "OOMacroOpenGL.h"
-#import "OOStringBridge.h"
 #import "Universe.h"
-
-#include "oofnd/String.hpp"
 
 #define kRingDuration (2.0f) // seconds
 #define kRingAttack (0.4f) // fade-up time
@@ -103,9 +100,9 @@ static struct {
     return result;
 }
 
-- (id)descriptionComponents // shared selector (proposed ADR-0043)
+- (NSString*)descriptionComponents
 {
-    return oo::NSStringFrom(oo::str::format("%f seconds passed of %f", _timePassed, kRingDuration));
+    return [NSString stringWithFormat:@"%f seconds passed of %f", _timePassed, kRingDuration];
 }
 
 - (void)update:(OOTimeDelta)delta_t

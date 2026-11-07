@@ -34,9 +34,9 @@ MA 02110-1301, USA.
 - (void)setStringInput:(enum StringInput)value;
 - (void)allowStringInput:(BOOL)value;
 - (enum StringInput)allowingStringInput;
-- (std::optional<std::string>)cxx_typedString;
+- (NSString*)typedString;
 - (void)resetTypedString;
-- (void)cxx_setTypedString:(const std::string&)value;
+- (void)setTypedString:(NSString*)value;
 
 - (void)noteMouseInteractionModeChangedFrom:(OOMouseInteractionMode)oldMode to:(OOMouseInteractionMode)newMode;
 

@@ -30,17 +30,14 @@ SOFTWARE.
 #import "OODrawable.h"
 #import "OOOpenGL.h"
 
-#include "oofnd/StdLib.hpp"
-#include "oofnd/objc/OOObjCRef.h"
-
-@class OOColor, OOTexture, OOSkyQuadSet;
+@class OOColor, OOTexture;
 
 @interface OOSkyDrawable : OODrawable {
 @private
     unsigned _starCount;
     unsigned _nebulaCount;
 
-    std::vector<oo::ObjCRef<OOSkyQuadSet*>> _quadSets; // one per texture (Foundation sweep, proposed ADR-0043)
+    NSMutableArray* _quadSets;
 
     GLint _displayListName;
 }

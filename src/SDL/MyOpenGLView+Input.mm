@@ -9,7 +9,6 @@ Oolite
 #import "GameController.h"
 #import "MyOpenGLView.h"
 #import "NSFileManagerOOExtensions.h" // to find savedir
-#import "OOFoundationBridge.h"
 #import "OOPListView.h"
 #import "OOSDLJoystickManager.h"
 #import "PlayerEntity.h"
@@ -17,20 +16,11 @@ Oolite
 #import "Universe.h"
 #include <SDL3/SDL_init.h>
 #include "oofnd/Date.hpp"
-#include "oofnd/String.hpp"
-
-namespace {
-
-// What -appendFormat:@"%c" appended for a character code 0..255: the Latin-1 character U+0000..U+00FF
-// (GNUstep 1.31.1, captured for 32..255 by a throwaway probe, bead oo-3rb.113), as UTF-8.
-std::string FormattedCharacter(unsigned code)
-{
-    return oo::utf16ToUtf8(std::u16string(1, static_cast<char16_t>(code & 0xFFu)));
-}
-
-} // namespace
 
 #define kOOLogUnconvertedNSLog @"unclassified.MyOpenGLView"
+
+static NSString* kOOLogKeyUp = @"input.keyMapping.keyPress.keyUp";
+static NSString* kOOLogKeyDown = @"input.keyMapping.keyPress.keyDown";
 
 @interface MyOpenGLView (InputPrivate)
 
@@ -43,19 +33,18 @@ std::string FormattedCharacter(unsigned code)
     NSUserDefaults* prefs = [NSUserDefaults standardUserDefaults];
     // load in our keyboard scancode mappings
 #if OOLITE_WINDOWS
-    const oo::PList kmap = oo::PListFrom([ResourceManager dictionaryFromFilesNamed:@"keymappings_windows.plist" inFolder:@"Config" mergeMode:MERGE_BASIC cache:NO]);
+    NSDictionary* kmap = [NSDictionary dictionaryWithDictionary:[ResourceManager dictionaryFromFilesNamed:@"keymappings_windows.plist" inFolder:@"Config" mergeMode:MERGE_BASIC cache:NO]];
 #else
-    const oo::PList kmap = oo::PListFrom([ResourceManager dictionaryFromFilesNamed:@"keymappings_linux.plist" inFolder:@"Config" mergeMode:MERGE_BASIC cache:NO]);
+    NSDictionary* kmap = [NSDictionary dictionaryWithDictionary:[ResourceManager dictionaryFromFilesNamed:@"keymappings_linux.plist" inFolder:@"Config" mergeMode:MERGE_BASIC cache:NO]];
 #endif
-    // get the stored keyboard code from preferences (oo_stringForKey:defaultValue: over the value)
-    const oo::PList kbdValue = oo::PListFrom([prefs objectForKey:@"keyboard-code"]);
-    const std::string kbd = oo::PListGet<std::string>::from(kbdValue.isNull() ? nullptr : &kbdValue, "default");
-    const oo::PList* subset = kmap.find(kbd);
-    const oo::PList* normal = (subset != nullptr) ? subset->find("mapping_normal") : nullptr;
-    const oo::PList* shifted = (subset != nullptr) ? subset->find("mapping_shifted") : nullptr;
+    // get the stored keyboard code from preferences
+    NSString* kbd = oo::PListView(prefs).get<NSString*>(@"keyboard-code", @"default");
+    NSDictionary* subset = [kmap objectForKey:kbd];
 
-    keyMappings_normal = (normal != nullptr) ? *normal : oo::PList();
-    keyMappings_shifted = (shifted != nullptr) ? *shifted : oo::PList();
+    [keyMappings_normal release];
+    keyMappings_normal = [[subset objectForKey:@"mapping_normal"] copy];
+    [keyMappings_shifted release];
+    keyMappings_shifted = [[subset objectForKey:@"mapping_shifted"] copy];
 }
 - (void)autoShowMouse
 {
@@ -83,17 +72,17 @@ std::string FormattedCharacter(unsigned code)
 {
     return allowingStringInput;
 }
-- (std::optional<std::string>)cxx_typedString
+- (NSString*)typedString
 {
     return typedString;
 }
 - (void)resetTypedString
 {
-    typedString.clear();
+    [typedString setString:@""];
 }
-- (void)cxx_setTypedString:(const std::string&)value
+- (void)setTypedString:(NSString*)value
 {
-    typedString = value;
+    [typedString setString:value];
 }
 - (void)noteMouseInteractionModeChangedFrom:(OOMouseInteractionMode)oldMode to:(OOMouseInteractionMode)newMode
 {
@@ -634,7 +623,7 @@ std::string FormattedCharacter(unsigned code)
                 [self handleStringInput:kbd_event keyID:key_id];
             }
 
-            OOLog(@"input.keyMapping.keyPress.keyDown", @"Keydown scancode = %d, unicode = %i", scan_code, key_id);
+            OOLog(kOOLogKeyDown, @"Keydown scancode = %d, unicode = %i", scan_code, key_id);
 
             if (key_id > 0 && key_id <= [self numKeys]) {
                 keys[key_id] = YES;
@@ -673,8 +662,8 @@ std::string FormattedCharacter(unsigned code)
                 break;
             default:;
             }
-            OOLog(@"input.keyMapping.keyPress.keyUp", @"Keyup scancode = %d, unicode = %i, character = %c, shift = %d, ctrl = %d, alt = %d", scan_code, key_id, key_id, shift, ctrl, opt);
-            // OOLog(@"input.keyMapping.keyPress.keyUp", @"Keyup scancode = %d, shift = %d, ctrl = %d, alt = %d", scan_code, shift, ctrl, opt);
+            OOLog(kOOLogKeyUp, @"Keyup scancode = %d, unicode = %i, character = %c, shift = %d, ctrl = %d, alt = %d", scan_code, key_id, key_id, shift, ctrl, opt);
+            // OOLog(kOOLogKeyUp, @"Keyup scancode = %d, shift = %d, ctrl = %d, alt = %d", scan_code, shift, ctrl, opt);
 
             // translate scancode to unicode equiv
             switch (kbd_event->key) {
@@ -880,23 +869,21 @@ std::string FormattedCharacter(unsigned code)
     SDL_Keycode key = kbd_event->key;
 
     // Del, Backspace
-    // lengths in UTF-16 units, as the old mutable-string buffer counted them
-    const std::size_t typedLength = oo::utf8ToUtf16(typedString).size();
-    if ((key == SDLK_BACKSPACE || key == SDLK_DELETE) && typedLength > 0) {
+    if ((key == SDLK_BACKSPACE || key == SDLK_DELETE) && [typedString length] > 0) {
         // delete
-        oo::str::deleteUnitAt(typedString, typedLength - 1);
+        [typedString deleteCharactersInRange:NSMakeRange([typedString length] - 1, 1)];
     }
 
     isAlphabetKeyDown = NO;
 
     // TODO: a more flexible mechanism  for max. string length ?
-    if (oo::utf8ToUtf16(typedString).size() < 40) {
+    if ([typedString length] < 40) {
         lastKeyShifted = shift;
         if (allowingStringInput == gvStringInputAlpha) {
             // inputAlpha - limited input for planet find screen
             if (key >= SDLK_A && key <= SDLK_Z) {
                 isAlphabetKeyDown = YES;
-                typedString += FormattedCharacter(key);
+                [typedString appendFormat:@"%c", key];
                 // if in inputAlpha, keep in lower case.
             }
         } else {
@@ -906,7 +893,7 @@ std::string FormattedCharacter(unsigned code)
             {
                 if ((char)key_id != '/' || allowingStringInput == gvStringInputAll) {
                     isAlphabetKeyDown = YES;
-                    typedString += FormattedCharacter(key_id);
+                    [typedString appendFormat:@"%c", key_id];
                 }
             }
         }

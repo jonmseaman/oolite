@@ -26,8 +26,6 @@ SOFTWARE.
 */
 
 #import "OOJSEngineTimeManagement.h"
-#import "OOFoundationBridge.h"
-#include "oofnd/StdLib.hpp"
 
 /*	The SpiderMonkey version of this file implemented the time limiter
         (with a watchdog thread that triggered SpiderMonkey's operation
@@ -52,15 +50,7 @@ void OOJSTimeManagementInit(OOJavaScriptEngine* engine, JSRuntime* runtime)
 static BOOL sProfiling = NO;
 static BOOL sTracing = NO;
 static OOJSProfileStackFrame* sProfileStack = NULL;
-// Profile key (native name or JS function, by pointer) -> entry, retained. Was a map table with
-// non-owned pointer keys and retained object values (bead oo-3rb.20).
-static std::unordered_map<const void*, OOTimeProfileEntry*>* sProfileInfo;
-
-static OOTimeProfileEntry* ProfileEntryForKey(const void* key)
-{
-    auto found = sProfileInfo->find(key);
-    return (found != sProfileInfo->end()) ? found->second : nil;
-}
+static NSMapTable* sProfileInfo;
 static double sProfilerOverhead;
 static double sProfilerTotalNativeTime;
 static double sProfilerEntryTimeLimit;
@@ -72,9 +62,9 @@ static OOHighResTimeValue sProfilerStartTime;
 - (void)setNativeTime:(double)value;
 - (void)setProfilerOverhead:(double)value;
 - (void)setExtensionTime:(double)value;
-- (void)setProfileEntries:(const std::vector<oo::ObjCRef<OOTimeProfileEntry*>>&)value;
+- (void)setProfileEntries:(NSArray*)value;
 
-- (id)propertyListRepresentation; // shared selector (proposed ADR-0043): an Objective-C dictionary
+- (NSDictionary*)propertyListRepresentation;
 
 @end
 
@@ -84,7 +74,7 @@ static OOHighResTimeValue sProfilerStartTime;
 
 - (void)addSampleWithTotalTime:(OOTimeDelta)totalTime selfTime:(OOTimeDelta)selfTime;
 
-- (id)propertyListRepresentation; // shared selector (proposed ADR-0043): an Objective-C dictionary
+- (NSDictionary*)propertyListRepresentation;
 
 @end
 
@@ -93,8 +83,7 @@ void OOJSBeginProfiling(BOOL trace)
     assert(sProfiling == NO);
     sProfiling = YES;
     sTracing = trace;
-    sProfileInfo = new std::unordered_map<const void*, OOTimeProfileEntry*>;
-    sProfileInfo->reserve(100);
+    sProfileInfo = NSCreateMapTable(NSNonOwnedPointerMapKeyCallBacks, NSObjectMapValueCallBacks, 100);
     sProfilerOverhead = 0.0;
     sProfilerTotalNativeTime = 0.0;
     sProfilerEntryTimeLimit = OOJSGetTimeLimiterLimit();
@@ -128,12 +117,7 @@ OOTimeProfile* OOJSEndProfiling(void)
     double currentTimeLimit = OOJSGetTimeLimiterLimit();
     [result setExtensionTime:currentTimeLimit - sProfilerEntryTimeLimit];
 
-    std::vector<oo::ObjCRef<OOTimeProfileEntry*>> entries;
-    entries.reserve(sProfileInfo->size());
-    for (const auto& keyAndEntry : *sProfileInfo)
-        entries.emplace_back(keyAndEntry.second);
-    std::stable_sort(entries.begin(), entries.end(), [](const auto& a, const auto& b) { return [a.get() compareBySelfTimeReverse:b.get()] == NSOrderedAscending; });
-    [result setProfileEntries:entries];
+    [result setProfileEntries:[NSAllMapTableValues(sProfileInfo) sortedArrayUsingSelector:@selector(compareBySelfTimeReverse:)]];
 
     if (sTracing) {
         OOLogOutdent();
@@ -142,10 +126,7 @@ OOTimeProfile* OOJSEndProfiling(void)
     }
 
     // Clean up.
-    for (const auto& keyAndEntry : *sProfileInfo)
-        [keyAndEntry.second release];
-    delete sProfileInfo;
-    sProfileInfo = NULL;
+    NSFreeMapTable(sProfileInfo);
     OODisposeHighResTime(sProfilerStartTime);
 
     OODisposeHighResTime(now);
@@ -225,10 +206,11 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 {
     sProfileStack = frame->back;
 
-    OOTimeProfileEntry* entry = ProfileEntryForKey(frame->key);
+    OOTimeProfileEntry* entry = (OOTimeProfileEntry*)NSMapGet(sProfileInfo, frame->key);
     if (entry == nil) {
         entry = [[OOTimeProfileEntry alloc] initWithCName:frame->function];
-        (*sProfileInfo)[frame->key] = entry; // the table's reference
+        NSMapInsertKnownAbsent(sProfileInfo, frame->key, entry);
+        [entry release];
     }
 
     OOTimeDelta time = OOHighResTimeDeltaInSeconds(frame->startTime, now);
@@ -245,38 +227,45 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 
 @implementation OOTimeProfile
 
-- (id)description // shared selector (proposed ADR-0043)
+- (void)dealloc
+{
+    DESTROY(_profileEntries);
+
+    [super dealloc];
+}
+
+- (NSString*)description
 {
     double totalTime = [self totalTime];
 
-    std::string result = oo::str::format(
-        "Total time: %g ms\n"
-        "JavaScript: %g ms, native: %g ms\n"
-        "Counted towards limit: %g ms, excluded: %g ms\n"
-        "Profiler overhead: %g ms",
+    NSMutableString* result = [NSMutableString stringWithFormat:
+            @"Total time: %g ms\n"
+             "JavaScript: %g ms, native: %g ms\n"
+             "Counted towards limit: %g ms, excluded: %g ms\n"
+             "Profiler overhead: %g ms",
         totalTime * 1000.0,
         [self javaScriptTime] * 1000.0, [self nativeTime] * 1000.0,
         [self nonExtensionTime] * 1000.0, [self extensionTime] * 1000.0,
-        [self profilerOverhead] * 1000.0);
+        [self profilerOverhead] * 1000.0];
 
-    const std::vector<oo::ObjCRef<OOTimeProfileEntry*>>& profileEntries = _profileEntries;
-    NSUInteger i, count = profileEntries.size();
+    NSArray* profileEntries = [self profileEntries];
+    NSUInteger i, count = [profileEntries count];
     if (count != 0) {
-        result += "\n                                                        NAME  T  COUNT    TOTAL     SELF  TOTAL%   SELF%  SELFMAX";
+        [result appendString:@"\n                                                        NAME  T  COUNT    TOTAL     SELF  TOTAL%   SELF%  SELFMAX"];
         for (i = 0; i < count; i++) {
-            OOTimeProfileEntry* entry = profileEntries[i].get();
+            OOTimeProfileEntry* entry = [profileEntries objectAtIndex:i];
 
             double totalPc = [entry totalTimeSum] * 100.0 / totalTime;
             double selfPc = [entry selfTimeSum] * 100.0 / totalTime;
 
-            result += oo::str::format("\n%60s  %c%7lu %8.2f %8.2f   %5.1f   %5.1f %8.2f",
-                oo::DescriptionOf([entry function]).c_str(),
+            [result appendFormat:@"\n%60s  %c%7lu %8.2f %8.2f   %5.1f   %5.1f %8.2f",
+                [[entry function] UTF8String],
                 [entry isJavaScriptFrame] ? 'J' : 'N',
-                (unsigned long)[entry hitCount], [entry totalTimeSum] * 1000.0, [entry selfTimeSum] * 1000.0, totalPc, selfPc, [entry selfTimeMax] * 1000.0);
+                (unsigned long)[entry hitCount], [entry totalTimeSum] * 1000.0, [entry selfTimeSum] * 1000.0, totalPc, selfPc, [entry selfTimeMax] * 1000.0];
         }
     }
 
-    return oo::NSStringFrom(result);
+    return result;
 }
 
 - (double)totalTime
@@ -329,14 +318,17 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
     _profilerOverhead = value;
 }
 
-- (std::vector<oo::ObjCRef<OOTimeProfileEntry*>>)profileEntries
+- (NSArray*)profileEntries
 {
     return _profileEntries;
 }
 
-- (void)setProfileEntries:(const std::vector<oo::ObjCRef<OOTimeProfileEntry*>>&)value
+- (void)setProfileEntries:(NSArray*)value
 {
-    _profileEntries = value;
+    if (_profileEntries != value) {
+        [_profileEntries release];
+        _profileEntries = [value retain];
+    }
 }
 
 - (JSValue)oo_jsValueInContext:(JSContext*)context
@@ -344,23 +336,24 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
     return OOJSValueFromNativeObject(context, [self propertyListRepresentation]);
 }
 
-- (id)propertyListRepresentation // shared selector (proposed ADR-0043)
+- (NSDictionary*)propertyListRepresentation
 {
-    // "profiles" holds each entry's own property list.
-    oo::PList::Array profiles;
-    profiles.reserve(_profileEntries.size());
-    for (const auto& entry : _profileEntries)
-        profiles.push_back(oo::PListFrom([entry.get() propertyListRepresentation]));
+    NSArray* profileEntries = [self profileEntries];
+    NSMutableArray* convertedEntries = [NSMutableArray arrayWithCapacity:[profileEntries count]];
+    OOTimeProfileEntry* entry = nil;
+    foreach (entry, profileEntries) {
+        [convertedEntries addObject:[entry propertyListRepresentation]];
+    }
 
-    oo::PList::Dict result;
-    result.emplace("profiles", oo::PList(std::move(profiles)));
-    result.emplace("totalTime", oo::PList([self totalTime]));
-    result.emplace("javaScriptTime", oo::PList([self javaScriptTime]));
-    result.emplace("nativeTime", oo::PList([self nativeTime]));
-    result.emplace("extensionTime", oo::PList([self extensionTime]));
-    result.emplace("nonExtensionTime", oo::PList([self nonExtensionTime]));
-    result.emplace("profilerOverhead", oo::PList([self profilerOverhead]));
-    return oo::ObjectFromPList(oo::PList(std::move(result)));
+    return [NSDictionary dictionaryWithObjectsAndKeys:
+            convertedEntries, @"profiles",
+        [NSNumber numberWithDouble:[self totalTime]], @"totalTime",
+        [NSNumber numberWithDouble:[self javaScriptTime]], @"javaScriptTime",
+        [NSNumber numberWithDouble:[self nativeTime]], @"nativeTime",
+        [NSNumber numberWithDouble:[self extensionTime]], @"extensionTime",
+        [NSNumber numberWithDouble:[self nonExtensionTime]], @"nonExtensionTime",
+        [NSNumber numberWithDouble:[self profilerOverhead]], @"profilerOverhead",
+        nil];
 }
 
 @end
@@ -373,11 +366,18 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 
     if ((self = [super init])) {
         if (name != NULL) {
-            _function = std::string(name);
+            _function = [[NSString stringWithUTF8String:name] retain];
         }
     }
 
     return self;
+}
+
+- (void)dealloc
+{
+    DESTROY(_function);
+
+    [super dealloc];
 }
 
 - (void)addSampleWithTotalTime:(OOTimeDelta)totalTime selfTime:(OOTimeDelta)selfTime
@@ -389,11 +389,10 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
     _selfTimeMax = fmax(_selfTimeMax, selfTime);
 }
 
-- (id)description // shared selector (proposed ADR-0043)
+- (NSString*)description
 {
-    const char* function = _function.has_value() ? _function->c_str() : "(null)"; // as %@ printed nil
     if (_hitCount == 0)
-        return oo::NSStringFrom(oo::str::format("%s: --", function));
+        return [NSString stringWithFormat:@"%@: --", _function];
 
     // Convert everything to milliseconds.
     float totalTimeSum = _totalTimeSum * 1000.0;
@@ -403,22 +402,22 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
 
     if (totalTimeSum == selfTimeSum && totalTimeMax == selfTimeMax) {
         if (_hitCount == 1) {
-            return oo::NSStringFrom(oo::str::format("%s: 1 time, %g ms", function, totalTimeSum));
+            return [NSString stringWithFormat:@"%@: 1 time, %g ms", _function, totalTimeSum];
         } else {
-            return oo::NSStringFrom(oo::str::format("%s: %lu times, total %g ms, avg %g ms, max %g ms", function, _hitCount, totalTimeSum, totalTimeSum / _hitCount, totalTimeMax));
+            return [NSString stringWithFormat:@"%@: %lu times, total %g ms, avg %g ms, max %g ms", _function, _hitCount, totalTimeSum, totalTimeSum / _hitCount, totalTimeMax];
         }
     } else {
         if (_hitCount == 1) {
-            return oo::NSStringFrom(oo::str::format("%s: 1 time, %g ms (self %g ms)", function, totalTimeSum, selfTimeSum));
+            return [NSString stringWithFormat:@"%@: 1 time, %g ms (self %g ms)", _function, totalTimeSum, selfTimeSum];
         } else {
-            return oo::NSStringFrom(oo::str::format("%s: %lu times, total %g ms (self %g ms), avg %g ms (self %g ms), max %g ms, max self %g ms", function, _hitCount, totalTimeSum, selfTimeSum, totalTimeSum / _hitCount, selfTimeSum / _hitCount, totalTimeMax, selfTimeMax));
+            return [NSString stringWithFormat:@"%@: %lu times, total %g ms (self %g ms), avg %g ms (self %g ms), max %g ms, max self %g ms", _function, _hitCount, totalTimeSum, selfTimeSum, totalTimeSum / _hitCount, selfTimeSum / _hitCount, totalTimeMax, selfTimeMax];
         }
     }
 }
 
-- (id)function // shared selector (proposed ADR-0043)
+- (NSString*)function
 {
-    return oo::NSStringOrNil(_function);
+    return _function;
 }
 
 - (NSUInteger)hitCount
@@ -500,22 +499,19 @@ static void UpdateProfileForFrame(OOHighResTimeValue now, OOJSProfileStackFrame*
     return OOJSValueFromNativeObject(context, [self propertyListRepresentation]);
 }
 
-- (id)propertyListRepresentation // shared selector (proposed ADR-0043)
+- (NSDictionary*)propertyListRepresentation
 {
-    oo::PList::Dict result;
-    // A nameless entry gave an empty dictionary: its nil name ended the object/key list.
-    if (_function.has_value()) {
-        result.emplace("name", oo::PList(*_function));
-        result.emplace("hitCount", oo::PList::unsignedInteger([self hitCount]));
-        result.emplace("totalTimeSum", oo::PList([self totalTimeSum]));
-        result.emplace("selfTimeSum", oo::PList([self selfTimeSum]));
-        result.emplace("totalTimeAverage", oo::PList([self totalTimeAverage]));
-        result.emplace("selfTimeAverage", oo::PList([self selfTimeAverage]));
-        result.emplace("totalTimeMax", oo::PList([self totalTimeMax]));
-        result.emplace("selfTimeMax", oo::PList([self selfTimeMax]));
-        result.emplace("isJavaScriptFrame", oo::PList(static_cast<bool>([self isJavaScriptFrame])));
-    }
-    return oo::ObjectFromPList(oo::PList(std::move(result)));
+    return [NSDictionary dictionaryWithObjectsAndKeys:
+            _function, @"name",
+        [NSNumber numberWithUnsignedInteger:[self hitCount]], @"hitCount",
+        [NSNumber numberWithDouble:[self totalTimeSum]], @"totalTimeSum",
+        [NSNumber numberWithDouble:[self selfTimeSum]], @"selfTimeSum",
+        [NSNumber numberWithDouble:[self totalTimeAverage]], @"totalTimeAverage",
+        [NSNumber numberWithDouble:[self selfTimeAverage]], @"selfTimeAverage",
+        [NSNumber numberWithDouble:[self totalTimeMax]], @"totalTimeMax",
+        [NSNumber numberWithDouble:[self selfTimeMax]], @"selfTimeMax",
+        [NSNumber numberWithBool:[self isJavaScriptFrame]], @"isJavaScriptFrame",
+        nil];
 }
 
 @end

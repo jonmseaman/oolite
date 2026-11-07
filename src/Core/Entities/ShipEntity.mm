@@ -39,11 +39,11 @@ MA 02110-1301, USA.
 #import "MyOpenGLView.h"
 #import "NSScannerOOExtensions.h"
 #import "OOCharacter.h"
+#import "OOCollectionExtractors.h"
 #import "OOConstToJSString.h"
 #import "OOConstToString.h"
 #import "OOExcludeObjectEnumerator.h"
 #import "OOFilteringEnumerator.h"
-#import "OOPListView.h"
 #import "OORoleSet.h"
 #import "OOShipGroup.h"
 #import "OOStringExpander.h"
@@ -262,20 +262,20 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     _lightsActive = YES;
 
     // set things from dictionary from here out - default values might require adjustment -- Kaks 20091130
-    _scaleFactor = oo::PListView(shipDict).get<float>(@"model_scale_factor", 1.0f);
+    _scaleFactor = [shipDict oo_floatForKey:@"model_scale_factor" defaultValue:1.0f];
 
     float defaultSpeed = isStation ? 0.0f : 160.0f;
-    maxFlightSpeed = oo::PListView(shipDict).get<float>(@"max_flight_speed", defaultSpeed);
-    max_flight_roll = oo::PListView(shipDict).get<float>(@"max_flight_roll", 2.0f);
-    max_flight_pitch = oo::PListView(shipDict).get<float>(@"max_flight_pitch", 1.0f);
-    max_flight_yaw = oo::PListView(shipDict).get<float>(@"max_flight_yaw", max_flight_pitch); // Note by default yaw == pitch
+    maxFlightSpeed = [shipDict oo_floatForKey:@"max_flight_speed" defaultValue:defaultSpeed];
+    max_flight_roll = [shipDict oo_floatForKey:@"max_flight_roll" defaultValue:2.0f];
+    max_flight_pitch = [shipDict oo_floatForKey:@"max_flight_pitch" defaultValue:1.0f];
+    max_flight_yaw = [shipDict oo_floatForKey:@"max_flight_yaw" defaultValue:max_flight_pitch]; // Note by default yaw == pitch
     cruiseSpeed = maxFlightSpeed * 0.8f;
 
-    max_thrust = oo::PListView(shipDict).get<float>(@"thrust", 15.0f);
+    max_thrust = [shipDict oo_floatForKey:@"thrust" defaultValue:15.0f];
     thrust = max_thrust;
 
-    afterburner_rate = oo::PListView(shipDict).get<float>(@"injector_burn_rate", AFTERBURNER_BURNRATE);
-    afterburner_speed_factor = oo::PListView(shipDict).get<float>(@"injector_speed_factor", 7.0f);
+    afterburner_rate = [shipDict oo_floatForKey:@"injector_burn_rate" defaultValue:AFTERBURNER_BURNRATE];
+    afterburner_speed_factor = [shipDict oo_floatForKey:@"injector_speed_factor" defaultValue:7.0f];
     if (afterburner_speed_factor < 1.0) {
         OOLog(@"ship.setup.injectorSpeed", @"injector_speed_factor cannot be lower than 1.0 for %@", self);
         afterburner_speed_factor = 1.0;
@@ -292,29 +292,29 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     }
 #endif
 
-    maxEnergy = oo::PListView(shipDict).get<float>(@"max_energy", 200.0f);
-    energy_recharge_rate = oo::PListView(shipDict).get<float>(@"energy_recharge_rate", 1.0f);
+    maxEnergy = [shipDict oo_floatForKey:@"max_energy" defaultValue:200.0f];
+    energy_recharge_rate = [shipDict oo_floatForKey:@"energy_recharge_rate" defaultValue:1.0f];
 
-    _showDamage = oo::PListView(shipDict).get<bool>(@"show_damage", (energy_recharge_rate > 0));
+    _showDamage = [shipDict oo_boolForKey:@"show_damage" defaultValue:(energy_recharge_rate > 0)];
     // Each new ship should start in seemingly good operating condition, unless specifically told not to - this does not affect the ship's energy levels
-    [self setThrowSparks:oo::PListView(shipDict).get<BOOL>(@"throw_sparks", NO)];
+    [self setThrowSparks:[shipDict oo_boolForKey:@"throw_sparks" defaultValue:NO]];
 
-    weapon_facings = oo::PListView(shipDict).get<int>(@"weapon_facings", VALID_WEAPON_FACINGS) & VALID_WEAPON_FACINGS;
+    weapon_facings = [shipDict oo_intForKey:@"weapon_facings" defaultValue:VALID_WEAPON_FACINGS] & VALID_WEAPON_FACINGS;
     if (weapon_facings & WEAPON_FACING_FORWARD)
-        forward_weapon_type = OOWeaponTypeFromString(oo::PListView(shipDict).get<NSString*>(@"forward_weapon_type", @"EQ_WEAPON_NONE"));
+        forward_weapon_type = OOWeaponTypeFromString([shipDict oo_stringForKey:@"forward_weapon_type" defaultValue:@"EQ_WEAPON_NONE"]);
     if (weapon_facings & WEAPON_FACING_AFT)
-        aft_weapon_type = OOWeaponTypeFromString(oo::PListView(shipDict).get<NSString*>(@"aft_weapon_type", @"EQ_WEAPON_NONE"));
+        aft_weapon_type = OOWeaponTypeFromString([shipDict oo_stringForKey:@"aft_weapon_type" defaultValue:@"EQ_WEAPON_NONE"]);
     if (weapon_facings & WEAPON_FACING_PORT)
-        port_weapon_type = OOWeaponTypeFromString(oo::PListView(shipDict).get<NSString*>(@"port_weapon_type", @"EQ_WEAPON_NONE"));
+        port_weapon_type = OOWeaponTypeFromString([shipDict oo_stringForKey:@"port_weapon_type" defaultValue:@"EQ_WEAPON_NONE"]);
     if (weapon_facings & WEAPON_FACING_STARBOARD)
-        starboard_weapon_type = OOWeaponTypeFromString(oo::PListView(shipDict).get<NSString*>(@"starboard_weapon_type", @"EQ_WEAPON_NONE"));
+        starboard_weapon_type = OOWeaponTypeFromString([shipDict oo_stringForKey:@"starboard_weapon_type" defaultValue:@"EQ_WEAPON_NONE"]);
 
     cloaking_device_active = NO;
     military_jammer_active = NO;
-    cloakPassive = oo::PListView(shipDict).get<bool>(@"cloak_passive", YES); // Nikos - switched passive cloak default to YES 20120523
-    cloakAutomatic = oo::PListView(shipDict).get<bool>(@"cloak_automatic", YES);
+    cloakPassive = [shipDict oo_boolForKey:@"cloak_passive" defaultValue:YES]; // Nikos - switched passive cloak default to YES 20120523
+    cloakAutomatic = [shipDict oo_boolForKey:@"cloak_automatic" defaultValue:YES];
 
-    missiles = oo::PListView(shipDict).get<int>(@"missiles", 0);
+    missiles = [shipDict oo_intForKey:@"missiles" defaultValue:0];
     /* TODO: The following initializes the missile list to be blank, which prevents a crash caused by hasOneEquipmentItem trying to access a missile list
              previously initialized but then released.  See issue #204.  We need to investigate further the cause of the missile list being released.
                     - kanthoney 10/03/2017
@@ -327,25 +327,25 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     for (i = 0; i < missiles; i++) {
         missile_list[i] = nil;
     }
-    max_missiles = oo::PListView(shipDict).get<int>(@"max_missiles", missiles);
+    max_missiles = [shipDict oo_intForKey:@"max_missiles" defaultValue:missiles];
     if (max_missiles > SHIPENTITY_MAX_MISSILES)
         max_missiles = SHIPENTITY_MAX_MISSILES;
     if (missiles > max_missiles)
         missiles = max_missiles;
-    missile_load_time = fmax(0.0, oo::PListView(shipDict).get<double>(@"missile_load_time", 0.0)); // no negative load times
+    missile_load_time = fmax(0.0, [shipDict oo_doubleForKey:@"missile_load_time" defaultValue:0.0]); // no negative load times
     missile_launch_time = [UNIVERSE getTime] + missile_load_time;
 
     // upgrades:
     equipment_weight = 0;
-    if (oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"has_ecm"))
+    if ([shipDict oo_fuzzyBooleanForKey:@"has_ecm"])
         [self addEquipmentItem:@"EQ_ECM" inContext:@"npc"];
-    if (oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"has_scoop"))
+    if ([shipDict oo_fuzzyBooleanForKey:@"has_scoop"])
         [self addEquipmentItem:@"EQ_FUEL_SCOOPS" inContext:@"npc"];
-    if (oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"has_escape_pod"))
+    if ([shipDict oo_fuzzyBooleanForKey:@"has_escape_pod"])
         [self addEquipmentItem:@"EQ_ESCAPE_POD" inContext:@"npc"];
-    if (oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"has_cloaking_device"))
+    if ([shipDict oo_fuzzyBooleanForKey:@"has_cloaking_device"])
         [self addEquipmentItem:@"EQ_CLOAKING_DEVICE" inContext:@"npc"];
-    if (oo::PListView(shipDict).get<float>(@"has_energy_bomb") > 0) {
+    if ([shipDict oo_floatForKey:@"has_energy_bomb"] > 0) {
         /*	NOTE: has_energy_bomb actually refers to QC mines.
 
                 max_missiles for NPCs is a newish addition, and ships have
@@ -354,7 +354,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
                 explicit, we add an extra missile slot to compensate.
                 -- Ahruman 2011-03-25
         */
-        if (oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"has_energy_bomb")) {
+        if ([shipDict oo_fuzzyBooleanForKey:@"has_energy_bomb"]) {
             if (max_missiles == missiles && max_missiles < SHIPENTITY_MAX_MISSILES && [shipDict objectForKey:@"max_missiles"] == nil) {
                 max_missiles++;
             }
@@ -362,53 +362,53 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
         }
     }
 
-    if (oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"has_fuel_injection"))
+    if ([shipDict oo_fuzzyBooleanForKey:@"has_fuel_injection"])
         [self addEquipmentItem:@"EQ_FUEL_INJECTION" inContext:@"npc"];
 
 #if USEMASC
-    if (oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"has_military_jammer"))
+    if ([shipDict oo_fuzzyBooleanForKey:@"has_military_jammer"])
         [self addEquipmentItem:@"EQ_MILITARY_JAMMER" inContext:@"npc"];
-    if (oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"has_military_scanner_filter"))
+    if ([shipDict oo_fuzzyBooleanForKey:@"has_military_scanner_filter"])
         [self addEquipmentItem:@"EQ_MILITARY_SCANNER_FILTER" inContext:@"npc"];
 #endif
 
     // can it be 'mined' for alloys?
-    canFragment = (unsigned char)oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"fragment_chance", 0.9);
+    canFragment = [shipDict oo_fuzzyBooleanForKey:@"fragment_chance" defaultValue:0.9];
     isWreckage = NO;
 
     // can subentities be destroyed separately?
-    isFrangible = oo::PListView(shipDict).get<bool>(@"frangible", YES);
+    isFrangible = [shipDict oo_boolForKey:@"frangible" defaultValue:YES];
 
-    max_cargo = oo::PListView(shipDict).get<unsigned int>(@"max_cargo");
-    extra_cargo = oo::PListView(shipDict).get<unsigned int>(@"extra_cargo", 15);
+    max_cargo = [shipDict oo_unsignedIntForKey:@"max_cargo"];
+    extra_cargo = [shipDict oo_unsignedIntForKey:@"extra_cargo" defaultValue:15];
 
-    hyperspaceMotorSpinTime = oo::PListView(shipDict).get<float>(@"hyperspace_motor_spin_time", DEFAULT_HYPERSPACE_SPIN_TIME);
-    if (!oo::PListView(shipDict).get<BOOL>(@"hyperspace_motor", YES))
+    hyperspaceMotorSpinTime = [shipDict oo_floatForKey:@"hyperspace_motor_spin_time" defaultValue:DEFAULT_HYPERSPACE_SPIN_TIME];
+    if (![shipDict oo_boolForKey:@"hyperspace_motor" defaultValue:YES])
         hyperspaceMotorSpinTime = -1;
 
     [name autorelease];
-    name = [oo::PListView(shipDict).get<NSString*>(@"name", @"?") copy];
+    name = [[shipDict oo_stringForKey:@"name" defaultValue:@"?"] copy];
 
     [shipUniqueName autorelease];
-    shipUniqueName = [oo::PListView(shipDict).get<NSString*>(@"ship_name", @"") copy];
+    shipUniqueName = [[shipDict oo_stringForKey:@"ship_name" defaultValue:@""] copy];
 
     [shipClassName autorelease];
-    shipClassName = [oo::PListView(shipDict).get<NSString*>(@"ship_class_name", name) copy];
+    shipClassName = [[shipDict oo_stringForKey:@"ship_class_name" defaultValue:name] copy];
 
     [displayName autorelease];
-    displayName = [oo::PListView(shipDict).get<NSString*>(@"display_name", nil) copy];
+    displayName = [[shipDict oo_stringForKey:@"display_name" defaultValue:nil] copy];
 
     // Load the model (must be before subentities)
-    NSString* modelName = oo::PListView(shipDict).get<NSString*>(@"model");
+    NSString* modelName = [shipDict oo_stringForKey:@"model"];
     if (modelName != nil) {
         OOMesh* mesh = nil;
 
-        mesh = [OOMesh meshWithName:oo::StdString(modelName)
-                           cacheKey:oo::OptionalString([NSString stringWithFormat:@"%@-%.3f", _shipKey, _scaleFactor])
-                 materialDictionary:oo::PListFrom(oo::PListView(shipDict).get<NSDictionary*>(@"materials"))
-                  shadersDictionary:oo::PListFrom(oo::PListView(shipDict).get<NSDictionary*>(@"shaders"))
-                             smooth:oo::PListView(shipDict).get<BOOL>(@"smooth", NO)
-                       shaderMacros:oo::PListFrom(OODefaultShipShaderMacros())
+        mesh = [OOMesh meshWithName:modelName
+                           cacheKey:[NSString stringWithFormat:@"%@-%.3f", _shipKey, _scaleFactor]
+                 materialDictionary:[shipDict oo_dictionaryForKey:@"materials"]
+                  shadersDictionary:[shipDict oo_dictionaryForKey:@"shaders"]
+                             smooth:[shipDict oo_boolForKey:@"smooth" defaultValue:NO]
+                       shaderMacros:OODefaultShipShaderMacros()
                 shaderBindingTarget:self
                         scaleFactor:_scaleFactor
                      cacheWriteable:YES];
@@ -418,7 +418,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
         [self setMesh:mesh];
     }
 
-    float density = oo::PListView(shipDict).get<float>(@"density", 1.0f);
+    float density = [shipDict oo_floatForKey:@"density" defaultValue:1.0f];
     if (octree)
         mass = (GLfloat)(density * 20.0f * [octree volume]);
 
@@ -473,26 +473,26 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     // rotating subentities
     subentityRotationalVelocity = kIdentityQuaternion;
     if ([shipDict objectForKey:@"rotational_velocity"]) {
-        subentityRotationalVelocity = oo::PListView(shipDict).get<Quaternion>(@"rotational_velocity");
+        subentityRotationalVelocity = [shipDict oo_quaternionForKey:@"rotational_velocity"];
     }
 
     // set weapon offsets
-    NSString* weaponMountMode = oo::PListView(shipDict).get<NSString*>(@"weapon_mount_mode", @"single");
+    NSString* weaponMountMode = [shipDict oo_stringForKey:@"weapon_mount_mode" defaultValue:@"single"];
     _multiplyWeapons = [weaponMountMode isEqualToString:@"multiply"];
     forwardWeaponOffset = [[self getWeaponOffsetFrom:shipDict withKey:@"weapon_position_forward" inMode:weaponMountMode] retain];
     aftWeaponOffset = [[self getWeaponOffsetFrom:shipDict withKey:@"weapon_position_aft" inMode:weaponMountMode] retain];
     portWeaponOffset = [[self getWeaponOffsetFrom:shipDict withKey:@"weapon_position_port" inMode:weaponMountMode] retain];
     starboardWeaponOffset = [[self getWeaponOffsetFrom:shipDict withKey:@"weapon_position_starboard" inMode:weaponMountMode] retain];
 
-    tractor_position = vector_multiply_scalar(oo::PListView(shipDict).get<Vector>(@"scoop_position"), _scaleFactor);
+    tractor_position = vector_multiply_scalar([shipDict oo_vectorForKey:@"scoop_position"], _scaleFactor);
 
     // sun glare filter - default is high filter, both for HDR and SDR
-    [self setSunGlareFilter:oo::PListView(shipDict).get<float>(@"sun_glare_filter", 0.97f)];
+    [self setSunGlareFilter:[shipDict oo_floatForKey:@"sun_glare_filter" defaultValue:0.97f]];
 
     // Get scriptInfo dictionary, containing arbitrary stuff scripts might be interested in.
-    scriptInfo = [oo::PListView(shipDict).get<NSDictionary*>(@"script_info", nil) retain];
+    scriptInfo = [[shipDict oo_dictionaryForKey:@"script_info" defaultValue:nil] retain];
 
-    explosionType = [oo::PListView(shipDict).get<NSArray*>(@"explosion_type", nil) retain];
+    explosionType = [[shipDict oo_arrayForKey:@"explosion_type" defaultValue:nil] retain];
 
     isDemoShip = NO;
 
@@ -521,21 +521,21 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
 
     // scan class settings. 'scanClass' is in common usage, but we could also have a more standard 'scan_class' key with higher precedence. Kaks 20090810
     // let's see if scan_class is set...
-    scanClass = OOScanClassFromString(oo::PListView(shipDict).get<NSString*>(@"scan_class", @"CLASS_NOT_SET"));
+    scanClass = OOScanClassFromString([shipDict oo_stringForKey:@"scan_class" defaultValue:@"CLASS_NOT_SET"]);
 
     // if not, try 'scanClass'. NOTE: non-standard capitalization is documented and entrenched.
     if (scanClass == CLASS_NOT_SET) {
-        scanClass = OOScanClassFromString(oo::PListView(shipDict).get<NSString*>(@"scanClass", @"CLASS_NOT_SET"));
+        scanClass = OOScanClassFromString([shipDict oo_stringForKey:@"scanClass" defaultValue:@"CLASS_NOT_SET"]);
     }
 
     [scan_description autorelease];
-    scan_description = [oo::PListView(shipDict).get<NSString*>(@"scan_description", nil) copy];
+    scan_description = [[shipDict oo_stringForKey:@"scan_description" defaultValue:nil] copy];
 
     // FIXME: give NPCs shields instead.
 
-    if (oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"has_shield_booster"))
+    if ([shipDict oo_fuzzyBooleanForKey:@"has_shield_booster"])
         [self addEquipmentItem:@"EQ_SHIELD_BOOSTER" inContext:@"npc"];
-    if (oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"has_shield_enhancer"))
+    if ([shipDict oo_fuzzyBooleanForKey:@"has_shield_enhancer"])
         [self addEquipmentItem:@"EQ_SHIELD_ENHANCER" inContext:@"npc"];
 
     // Start with full energy banks.
@@ -549,30 +549,30 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     // setWeaponDataFromType inside setUpFromDictionary should set weapon_damage from the front laser.
     // no weapon_damage? It's a missile: set weapon_damage from shipdata!
     if (weapon_damage == 0.0) {
-        weapon_damage_override = weapon_damage = oo::PListView(shipDict).get<float>(@"weapon_energy", 0); // any damage value for missiles/bombs
+        weapon_damage_override = weapon_damage = [shipDict oo_floatForKey:@"weapon_energy" defaultValue:0]; // any damage value for missiles/bombs
     } else {
         weapon_damage_override = 0;
     }
 
-    scannerRange = oo::PListView(shipDict).get<float>(@"scanner_range", (float)SCANNER_MAX_RANGE);
+    scannerRange = [shipDict oo_floatForKey:@"scanner_range" defaultValue:(float)SCANNER_MAX_RANGE];
 
-    fuel = oo::PListView(shipDict).get<unsigned short>(@"fuel"); // Does it make sense that this defaults to 0? Should it not be 70? -- Ahruman
+    fuel = [shipDict oo_unsignedShortForKey:@"fuel"]; // Does it make sense that this defaults to 0? Should it not be 70? -- Ahruman
 
     fuel_accumulator = 1.0;
 
-    [self setBounty:oo::PListView(shipDict).get<unsigned int>(@"bounty", 0) withReason:kOOLegalStatusReasonSetup];
+    [self setBounty:[shipDict oo_unsignedIntForKey:@"bounty" defaultValue:0] withReason:kOOLegalStatusReasonSetup];
 
     [shipAI autorelease];
     shipAI = [[AI alloc] init];
     [shipAI setOwner:self];
-    [self setAITo:oo::PListView(shipDict).get<NSString*>(@"ai_type", @"nullAI.plist")];
+    [self setAITo:[shipDict oo_stringForKey:@"ai_type" defaultValue:@"nullAI.plist"]];
 
-    likely_cargo = oo::PListView(shipDict).get<unsigned int>(@"likely_cargo");
-    noRocks = (unsigned char)oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"no_boulders");
+    likely_cargo = [shipDict oo_unsignedIntForKey:@"likely_cargo"];
+    noRocks = [shipDict oo_fuzzyBooleanForKey:@"no_boulders"];
 
     commodity_amount = 0;
     commodity_type = nil;
-    NSString* cargoString = oo::PListView(shipDict).get<NSString*>(@"cargo_carried");
+    NSString* cargoString = [shipDict oo_stringForKey:@"cargo_carried"];
     if (cargoString != nil) {
         if ([cargoString isEqualToString:@"SCARCE_GOODS"]) {
             cargo_flag = CARGO_FLAG_FULL_SCARCE;
@@ -597,7 +597,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
                 }
             } else {
                 c_amount = 1;
-                c_commodity = oo::PListView(shipDict).get<NSString*>(@"cargo_carried");
+                c_commodity = [shipDict oo_stringForKey:@"cargo_carried"];
                 if ([[UNIVERSE commodities] goodDefined:c_commodity]) {
                     [self setCommodityForPod:c_commodity andAmount:c_amount];
                 } else {
@@ -610,7 +610,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
         }
     }
 
-    cargoString = oo::PListView(shipDict).get<NSString*>(@"cargo_type");
+    cargoString = [shipDict oo_stringForKey:@"cargo_type"];
     if (cargoString) {
         if (cargo != nil)
             [cargo autorelease];
@@ -625,15 +625,15 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
         cargo_type = CARGO_NOT_CARGO;
     }
 
-    hasScoopMessage = oo::PListView(shipDict).get<bool>(@"has_scoop_message", YES);
+    hasScoopMessage = [shipDict oo_boolForKey:@"has_scoop_message" defaultValue:YES];
 
     [roleSet release];
-    roleSet = [[[OORoleSet roleSetWithString:oo::StdString(oo::PListView(shipDict).get<NSString*>(@"roles"))] roleSetWithRemovedRole:"player"] retain];
+    roleSet = [[[OORoleSet roleSetWithString:oo::StdString([shipDict oo_stringForKey:@"roles"])] roleSetWithRemovedRole:"player"] retain];
     [primaryRole release];
     primaryRole = nil;
 
     [self setOwner:self];
-    [self setHulk:oo::PListView(shipDict).get<BOOL>(@"is_hulk")];
+    [self setHulk:[shipDict oo_boolForKey:@"is_hulk"]];
 
     // these are the colors used for the "lollipop" of the ship. Any of the two (or both, for flash effect) can be defined. nil means use default from shipData.
     [self setScannerDisplayColor1:nil];
@@ -643,7 +643,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     [self setScannerDisplayColorHostile2:nil];
 
     // Populate the missiles here. Must come after scanClass.
-    _missileRole = oo::PListView(shipDict).get<NSString*>(@"missile_role");
+    _missileRole = [shipDict oo_stringForKey:@"missile_role"];
     unsigned i, j;
     for (i = 0, j = 0; i < missiles; i++) {
         missile_list[i] = [self selectMissile];
@@ -666,7 +666,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     // enables "better" AIs at +5 and above
     // police and military always have positive accuracy
 
-    accuracy = oo::PListView(shipDict).get<float>(@"accuracy", -100.0f); // Out-of-range default
+    accuracy = [shipDict oo_floatForKey:@"accuracy" defaultValue:-100.0f]; // Out-of-range default
     if (accuracy < -5.0f || accuracy > 10.0f) {
         accuracy = (randf() * 10.0) - 5.0;
 
@@ -681,9 +681,9 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     _missed_shots = 0;
 
     //  escorts
-    _maxEscortCount = MIN(oo::PListView(shipDict).get<unsigned char>(@"escorts", 0), (uint8_t)MAX_ESCORTS);
+    _maxEscortCount = MIN([shipDict oo_unsignedCharForKey:@"escorts" defaultValue:0], (uint8_t)MAX_ESCORTS);
     _pendingEscortCount = _maxEscortCount;
-    if (_pendingEscortCount == 0 && oo::PListView(shipDict).get<NSArray*>(@"escort_roles", nil) != nil) {
+    if (_pendingEscortCount == 0 && [shipDict oo_arrayForKey:@"escort_roles" defaultValue:nil] != nil) {
         // mostly ignored by setUpMixedEscorts, but needs to be high
         // enough that it doesn't end up at zero (e.g. by governmental
         // reductions in [Universe addShipAt]
@@ -691,34 +691,34 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     }
 
     // beacons
-    [self setBeaconCode:oo::PListView(shipDict).get<NSString*>(@"beacon")];
-    [self setBeaconLabel:oo::PListView(shipDict).get<NSString*>(@"beacon_label", oo::PListView(shipDict).get<NSString*>(@"beacon"))];
+    [self setBeaconCode:[shipDict oo_stringForKey:@"beacon"]];
+    [self setBeaconLabel:[shipDict oo_stringForKey:@"beacon_label" defaultValue:[shipDict oo_stringForKey:@"beacon"]]];
 
     // contact tracking entities
-    [self setTrackCloseContacts:oo::PListView(shipDict).get<BOOL>(@"track_contacts", NO)];
+    [self setTrackCloseContacts:[shipDict oo_boolForKey:@"track_contacts" defaultValue:NO]];
 
     // ship skin insulation factor (1.0 is normal)
-    [self setHeatInsulation:oo::PListView(shipDict).get<float>(@"heat_insulation", [self hasHeatShield] ? 2.0 : 1.0)];
+    [self setHeatInsulation:[shipDict oo_floatForKey:@"heat_insulation" defaultValue:[self hasHeatShield] ? 2.0 : 1.0]];
 
     // unpiloted (like missiles asteroids etc.)
-    _explicitlyUnpiloted = (unsigned char)oo::PListView(shipDict).get<oo::FuzzyBoolean>(@"unpiloted");
+    _explicitlyUnpiloted = [shipDict oo_fuzzyBooleanForKey:@"unpiloted"];
     if (_explicitlyUnpiloted) {
         [self setCrew:nil];
     } else {
         // crew and passengers
-        NSDictionary* cdict = [[UNIVERSE characters] objectForKey:oo::PListView(shipDict).get<NSString*>(@"pilot")];
+        NSDictionary* cdict = [[UNIVERSE characters] objectForKey:[shipDict oo_stringForKey:@"pilot"]];
         if (cdict != nil) {
             OOCharacter* pilot = [OOCharacter characterWithDictionary:cdict];
             [self setCrew:[NSArray arrayWithObject:pilot]];
         }
     }
 
-    [self setShipScript:oo::PListView(shipDict).get<NSString*>(@"script")];
+    [self setShipScript:[shipDict oo_stringForKey:@"script"]];
 
     home_system = [UNIVERSE currentSystemID];
     destination_system = [UNIVERSE currentSystemID];
 
-    reactionTime = oo::PListView(shipDict).get<float>(@"reaction_time", COMBAT_AI_STANDARD_REACTION_TIME);
+    reactionTime = [shipDict oo_floatForKey:@"reaction_time" defaultValue:COMBAT_AI_STANDARD_REACTION_TIME];
 
     return YES;
 
@@ -797,23 +797,23 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
 
     unsigned int i;
     NSDictionary* shipDict = [self shipInfoDictionary];
-    NSArray* plumes = oo::PListView(shipDict).get<NSArray*>(@"exhaust");
+    NSArray* plumes = [shipDict oo_arrayForKey:@"exhaust"];
 
     _profileRadius = collision_radius;
     _maxShipSubIdx = 0;
 
     for (i = 0; i < [plumes count]; i++) {
-        NSArray* definition = ScanTokensFromString(oo::PListView(plumes).at<NSString*>(i));
-        OOExhaustPlumeEntity* exhaust = [OOExhaustPlumeEntity exhaustForShip:self withDefinition:oo::StringsFrom(definition) andScale:_scaleFactor];
+        NSArray* definition = ScanTokensFromString([plumes oo_stringAtIndex:i]);
+        OOExhaustPlumeEntity* exhaust = [OOExhaustPlumeEntity exhaustForShip:self withDefinition:definition andScale:_scaleFactor];
         [self addSubEntity:exhaust];
     }
 
-    NSArray* subs = oo::PListView(shipDict).get<NSArray*>(@"subentities");
+    NSArray* subs = [shipDict oo_arrayForKey:@"subentities"];
 
     totalBoundingBox = boundingBox;
 
     for (i = 0; i < [subs count]; i++) {
-        [self setUpOneSubentity:oo::PListView(subs).at<NSDictionary*>(i)];
+        [self setUpOneSubentity:[subs oo_dictionaryAtIndex:i]];
     }
 
     no_draw_distance = _profileRadius * _profileRadius * NO_DRAW_DISTANCE_FACTOR * NO_DRAW_DISTANCE_FACTOR * 2.0;
@@ -842,7 +842,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
 
     NSString* type = nil;
 
-    type = oo::PListView(subentDict).get<NSString*>(@"type");
+    type = [subentDict oo_stringForKey:@"type"];
     if ([type isEqualToString:@"flasher"]) {
         return [self setUpOneFlasher:subentDict];
     } else {
@@ -854,8 +854,8 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
 
 - (BOOL)setUpOneFlasher:(NSDictionary*)subentDict
 {
-    OOFlasherEntity* flasher = [OOFlasherEntity flasherWithDictionary:oo::PListFrom(subentDict)];
-    [flasher setPosition:HPvector_multiply_scalar(oo::PListView(subentDict).get<HPVector>(@"position"), _scaleFactor)];
+    OOFlasherEntity* flasher = [OOFlasherEntity flasherWithDictionary:subentDict];
+    [flasher setPosition:HPvector_multiply_scalar([subentDict oo_hpvectorForKey:@"position"], _scaleFactor)];
     [flasher rescaleBy:_scaleFactor];
     [self addSubEntity:flasher];
     return YES;
@@ -868,13 +868,13 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     HPVector subPosition;
     Quaternion subOrientation;
 
-    subentKey = oo::PListView(subentDict).get<NSString*>(@"subentity_key");
+    subentKey = [subentDict oo_stringForKey:@"subentity_key"];
     if (subentKey == nil) {
         OOLog(@"setup.ship.badEntry.subentities", @"Failed to set up entity - no subentKey in %@", subentDict);
         return NO;
     }
 
-    if (!asTurret && [self isStation] && oo::PListView(subentDict).get<BOOL>(@"is_dock")) {
+    if (!asTurret && [self isStation] && [subentDict oo_boolForKey:@"is_dock"]) {
         subentity = [UNIVERSE newDockWithName:subentKey andScaleFactor:_scaleFactor];
     } else {
         subentity = [UNIVERSE newSubentityWithName:subentKey andScaleFactor:_scaleFactor];
@@ -884,8 +884,8 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
         return NO;
     }
 
-    subPosition = HPvector_multiply_scalar(oo::PListView(subentDict).get<HPVector>(@"position"), _scaleFactor);
-    subOrientation = oo::PListView(subentDict).get<Quaternion>(@"orientation");
+    subPosition = HPvector_multiply_scalar([subentDict oo_hpvectorForKey:@"position"], _scaleFactor);
+    subOrientation = [subentDict oo_quaternionForKey:@"orientation"];
 
     [subentity setPosition:subPosition];
     [subentity setOrientation:subOrientation];
@@ -895,15 +895,15 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
 
     if (asTurret) {
         [subentity setBehaviour:BEHAVIOUR_TRACK_AS_TURRET];
-        [subentity setWeaponRechargeRate:oo::PListView(subentDict).get<float>(@"fire_rate", TURRET_SHOT_FREQUENCY)];
-        [subentity setWeaponEnergy:oo::PListView(subentDict).get<float>(@"weapon_energy", TURRET_TYPICAL_ENERGY)];
-        [subentity setWeaponRange:oo::PListView(subentDict).get<float>(@"weapon_range", TURRET_SHOT_RANGE)];
+        [subentity setWeaponRechargeRate:[subentDict oo_floatForKey:@"fire_rate" defaultValue:TURRET_SHOT_FREQUENCY]];
+        [subentity setWeaponEnergy:[subentDict oo_floatForKey:@"weapon_energy" defaultValue:TURRET_TYPICAL_ENERGY]];
+        [subentity setWeaponRange:[subentDict oo_floatForKey:@"weapon_range" defaultValue:TURRET_SHOT_RANGE]];
         [subentity setStatus:STATUS_ACTIVE];
     } else {
         [subentity setStatus:STATUS_INACTIVE];
     }
 
-    [subentity overrideScriptInfo:oo::PListView(subentDict).get<NSDictionary*>(@"script_info")];
+    [subentity overrideScriptInfo:[subentDict oo_dictionaryForKey:@"script_info"]];
 
     [self addSubEntity:subentity];
     [subentity setSubIdx:_maxShipSubIdx];
@@ -914,18 +914,18 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     bounding_box_add_vector(&totalBoundingBox, sebb.max);
     bounding_box_add_vector(&totalBoundingBox, sebb.min);
 
-    if (!asTurret && [self isStation] && oo::PListView(subentDict).get<BOOL>(@"is_dock")) {
-        BOOL allow_docking = oo::PListView(subentDict).get<BOOL>(@"allow_docking", YES);
-        BOOL ddc = oo::PListView(subentDict).get<BOOL>(@"disallowed_docking_collides", NO);
-        BOOL allow_launching = oo::PListView(subentDict).get<BOOL>(@"allow_launching", YES);
+    if (!asTurret && [self isStation] && [subentDict oo_boolForKey:@"is_dock"]) {
+        BOOL allow_docking = [subentDict oo_boolForKey:@"allow_docking" defaultValue:YES];
+        BOOL ddc = [subentDict oo_boolForKey:@"disallowed_docking_collides" defaultValue:NO];
+        BOOL allow_launching = [subentDict oo_boolForKey:@"allow_launching" defaultValue:YES];
         // do not include this key in OOShipRegistry; should never be set by shipdata
-        BOOL virtual_dock = oo::PListView(subentDict).get<BOOL>(@"_is_virtual_dock", NO);
+        BOOL virtual_dock = [subentDict oo_boolForKey:@"_is_virtual_dock" defaultValue:NO];
         if (virtual_dock) {
             [(DockEntity*)subentity setVirtual];
         }
 
         [(DockEntity*)subentity setDimensionsAndCorridor:allow_docking ddc:ddc launching:allow_launching];
-        [subentity setDisplayName:oo::PListView(subentDict).get<NSString*>(@"dock_label", @"the docking bay")];
+        [subentity setDisplayName:[subentDict oo_stringForKey:@"dock_label" defaultValue:@"the docking bay"]];
     }
 
     [subentity release];
@@ -1076,7 +1076,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     // reset size & mass!
     collision_radius = [self findCollisionRadius];
     _profileRadius = collision_radius;
-    float density = oo::PListView([self shipInfoDictionary]).get<float>(@"density", 1.0f);
+    float density = [[self shipInfoDictionary] oo_floatForKey:@"density" defaultValue:1.0f];
     if (octree)
         mass = (GLfloat)(density * 20.0f * [octree volume]);
 }
@@ -1461,9 +1461,9 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
         NSUInteger length = [beaconCode length];
 
         if (length > 1) {
-            NSArray* iconData = oo::PListView([UNIVERSE descriptions]).get<NSArray*>(beaconCode);
+            NSArray* iconData = [[UNIVERSE descriptions] oo_arrayForKey:beaconCode];
             if (iconData != nil)
-                _beaconDrawable = [[OOPolygonSprite alloc] initWithDataArray:oo::PListFrom(iconData) outlineWidth:0.5 name:oo::StdString(beaconCode)];
+                _beaconDrawable = [[OOPolygonSprite alloc] initWithDataArray:iconData outlineWidth:0.5 name:beaconCode];
         }
 
         if (_beaconDrawable == nil) {
@@ -1530,7 +1530,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
 
 - (BOOL)countsAsKill
 {
-    return oo::PListView([self shipInfoDictionary]).get<BOOL>(@"counts_as_kill", YES);
+    return [[self shipInfoDictionary] oo_boolForKey:@"counts_as_kill" defaultValue:YES];
 }
 
 - (void)setUpEscorts
@@ -1568,18 +1568,18 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     if ([self isPolice])
         defaultRole = @"wingman";
 
-    escortRole = oo::PListView(shipinfoDictionary).get<NSString*>(@"escort_role", nil);
+    escortRole = [shipinfoDictionary oo_stringForKey:@"escort_role" defaultValue:nil];
     if (escortRole == nil)
-        escortRole = oo::PListView(shipinfoDictionary).get<NSString*>(@"escort-role", defaultRole);
+        escortRole = [shipinfoDictionary oo_stringForKey:@"escort-role" defaultValue:defaultRole];
     if (![escortRole isEqualToString:defaultRole]) {
         if (![[UNIVERSE newShipWithRole:escortRole] autorelease]) {
             escortRole = defaultRole;
         }
     }
 
-    escortShipKey = oo::PListView(shipinfoDictionary).get<NSString*>(@"escort_ship", nil);
+    escortShipKey = [shipinfoDictionary oo_stringForKey:@"escort_ship" defaultValue:nil];
     if (escortShipKey == nil)
-        escortShipKey = oo::PListView(shipinfoDictionary).get<NSString*>(@"escort-ship");
+        escortShipKey = [shipinfoDictionary oo_stringForKey:@"escort-ship"];
 
     if (escortShipKey != nil) {
         if (![[UNIVERSE newShipWithName:escortShipKey] autorelease]) {
@@ -1622,7 +1622,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
 
 - (void)setUpMixedEscorts
 {
-    NSArray* escortRoles = oo::PListView(shipinfoDictionary).get<NSArray*>(@"escort_roles", nil);
+    NSArray* escortRoles = [shipinfoDictionary oo_arrayForKey:@"escort_roles" defaultValue:nil];
     if (escortRoles == nil) {
         OOLogWARN(@"eship.setUp.escortShipRoles",
             @"Ship %@ has bad escort_roles definition.", self);
@@ -1633,7 +1633,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     OOGovernmentID government;
 
     systeminfo = [UNIVERSE currentSystemData];
-    government = oo::PListView(systeminfo).get<unsigned char>(KEY_GOVERNMENT);
+    government = [systeminfo oo_unsignedCharForKey:KEY_GOVERNMENT];
 
     OOShipGroup* escortGroup = [self escortGroup];
     if ([self group] == nil) {
@@ -1653,9 +1653,9 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
         }
         // int rather than uint because, at least for min, there is a
         // use to giving a negative value
-        int8_t min = oo::PListView(escortDefinition).get<int>(@"min", 0);
-        int8_t max = oo::PListView(escortDefinition).get<int>(@"max", 2);
-        NSString* escortRole = oo::PListView(escortDefinition).get<NSString*>(@"role", @"escort");
+        int8_t min = [escortDefinition oo_intForKey:@"min" defaultValue:0];
+        int8_t max = [escortDefinition oo_intForKey:@"max" defaultValue:2];
+        NSString* escortRole = [escortDefinition oo_stringForKey:@"role" defaultValue:@"escort"];
         int8_t desired = max;
         if (min < desired) {
             for (i = min; i < max; i++) {
@@ -1735,16 +1735,16 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
     // find the right autoAI.
     escortShipDict = [escorter shipInfoDictionary];
     autoAIMap = [ResourceManager dictionaryFromFilesNamed:@"autoAImap.plist" inFolder:@"Config" andMerge:YES];
-    autoAI = oo::PListView(autoAIMap).get<NSString*>(defaultRole);
+    autoAI = [autoAIMap oo_stringForKey:defaultRole];
     if (autoAI == nil) // no 'wingman' defined in autoAImap?
     {
-        autoAI = oo::PListView(autoAIMap).get<NSString*>(@"escort", @"nullAI.plist");
+        autoAI = [autoAIMap oo_stringForKey:@"escort" defaultValue:@"nullAI.plist"];
     }
 
     escortAI = [escorter getAI];
 
     // Let the populator decide which AI to use, unless we have a working alternative AI & we specify auto_ai = NO !
-    if ((escortRole && oo::PListView(escortShipDict).get<oo::FuzzyBoolean>(@"auto_ai", YES))
+    if ((escortRole && [escortShipDict oo_fuzzyBooleanForKey:@"auto_ai" defaultValue:YES])
         || ([[escortAI name] isEqualToString:@"nullAI.plist"] && ![autoAI isEqualToString:@"nullAI.plist"])) {
         [escorter switchAITo:autoAI];
     }
@@ -1802,10 +1802,10 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
 {
     Vector offset;
     if ([mode isEqualToString:@"single"]) {
-        offset = vector_multiply_scalar(oo::PListView(dict).get<Vector>(key, kZeroVector), _scaleFactor);
+        offset = vector_multiply_scalar([dict oo_vectorForKey:key defaultValue:kZeroVector], _scaleFactor);
         return [NSArray arrayWithObject:MAKE_VECTOR_ARRAY(offset)];
     } else {
-        NSArray* offsets = oo::PListView(dict).get<NSArray*>(key, nil);
+        NSArray* offsets = [dict oo_arrayForKey:key defaultValue:nil];
         if (offsets == nil) {
             offset = kZeroVector;
             return [NSArray arrayWithObject:MAKE_VECTOR_ARRAY(offset)];
@@ -1813,7 +1813,7 @@ static ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other);
         NSMutableArray* output = [NSMutableArray arrayWithCapacity:[offsets count]];
         NSUInteger i;
         for (i = 0; i < [offsets count]; i++) {
-            offset = vector_multiply_scalar(oo::PListView(offsets).at<Vector>(i, kZeroVector), _scaleFactor);
+            offset = vector_multiply_scalar([offsets oo_vectorAtIndex:i defaultValue:kZeroVector], _scaleFactor);
             [output addObject:MAKE_VECTOR_ARRAY(offset)];
         }
         return [NSArray arrayWithArray:output];
@@ -2052,10 +2052,10 @@ ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other)
 {
     ShipEntity* pod = nil;
 
-    pod = [UNIVERSE newShipWithRole:oo::PListView(shipinfoDictionary).get<NSString*>(@"escape_pod_role")]; // or nil
+    pod = [UNIVERSE newShipWithRole:[shipinfoDictionary oo_stringForKey:@"escape_pod_role"]]; // or nil
     if (!pod) {
         //	_role not defined? it might have _model defined;
-        pod = [UNIVERSE newShipWithRole:oo::PListView(shipinfoDictionary).get<NSString*>(@"escape_pod_model", @"escape-capsule")];
+        pod = [UNIVERSE newShipWithRole:[shipinfoDictionary oo_stringForKey:@"escape_pod_model" defaultValue:@"escape-capsule"]];
         if (!pod) {
             pod = [UNIVERSE newShipWithRole:@"escape-capsule"];
             OOLog(@"shipEntity.noEscapePod", @"Ship %@ has no correct escape_pod_role defined. Now using default capsule.", self);
@@ -3125,8 +3125,8 @@ ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other)
             // find options that agree with this ship. Only player ships have these options.
             OOShipRegistry* registry = [OOShipRegistry sharedRegistry];
             NSDictionary* shipyardInfo = [registry shipyardInfoForKey:[self shipDataKey]];
-            NSMutableSet* options = [NSMutableSet setWithArray:oo::PListView(shipyardInfo).get<NSArray*>(KEY_OPTIONAL_EQUIPMENT)];
-            [options addObjectsFromArray:oo::PListView(oo::PListView(shipyardInfo).get<NSDictionary*>(KEY_STANDARD_EQUIPMENT)).get<NSArray*>(KEY_EQUIPMENT_EXTRAS)];
+            NSMutableSet* options = [NSMutableSet setWithArray:[shipyardInfo oo_arrayForKey:KEY_OPTIONAL_EQUIPMENT]];
+            [options addObjectsFromArray:[[shipyardInfo oo_dictionaryForKey:KEY_STANDARD_EQUIPMENT] oo_arrayForKey:KEY_EQUIPMENT_EXTRAS]];
             if (![options containsObject:equipmentKey])
                 return NO;
         }
@@ -5100,7 +5100,7 @@ ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other)
 
         /* Flight correction block to prevent one possible form of
          * crashes in late docking process */
-        if (docking_match_rotation && confidenceFactor >= MAX_COS && dockingInstructions != nil && oo::PListView(dockingInstructions).get<int>(@"docking_stage") >= 7) {
+        if (docking_match_rotation && confidenceFactor >= MAX_COS && dockingInstructions != nil && [dockingInstructions oo_intForKey:@"docking_stage"] >= 7) {
             // then at this point should be rotating to match the station
             StationEntity* station_for_docking = (StationEntity*)[self targetStation];
 
@@ -5111,7 +5111,7 @@ ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other)
                     desired_speed = 0.1;
                 } else if (desired_speed <= 0.2) {
                     // had previously paused, so return to normal speed
-                    desired_speed = oo::PListView(dockingInstructions).get<float>(@"speed");
+                    desired_speed = [dockingInstructions oo_floatForKey:@"speed"];
                 }
             }
         }
@@ -5337,9 +5337,9 @@ ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other)
 
     // roll or roll factor
     if ([result objectForKey:@"stickRollFactor"] != nil) {
-        stick_roll = oo::PListView(result).get<float>(@"stickRollFactor") * max_flight_roll;
+        stick_roll = [result oo_floatForKey:@"stickRollFactor"] * max_flight_roll;
     } else {
-        stick_roll = oo::PListView(result).get<float>(@"stickRoll");
+        stick_roll = [result oo_floatForKey:@"stickRoll"];
     }
     if (stick_roll > max_flight_roll) {
         stick_roll = max_flight_roll;
@@ -5349,9 +5349,9 @@ ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other)
 
     // pitch or pitch factor
     if ([result objectForKey:@"stickPitchFactor"] != nil) {
-        stick_pitch = oo::PListView(result).get<float>(@"stickPitchFactor") * max_flight_pitch;
+        stick_pitch = [result oo_floatForKey:@"stickPitchFactor"] * max_flight_pitch;
     } else {
-        stick_pitch = oo::PListView(result).get<float>(@"stickPitch");
+        stick_pitch = [result oo_floatForKey:@"stickPitch"];
     }
     if (stick_pitch > max_flight_pitch) {
         stick_pitch = max_flight_pitch;
@@ -5361,9 +5361,9 @@ ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other)
 
     // yaw or yaw factor
     if ([result objectForKey:@"stickYawFactor"] != nil) {
-        stick_yaw = oo::PListView(result).get<float>(@"stickYawFactor") * max_flight_yaw;
+        stick_yaw = [result oo_floatForKey:@"stickYawFactor"] * max_flight_yaw;
     } else {
-        stick_yaw = oo::PListView(result).get<float>(@"stickYaw");
+        stick_yaw = [result oo_floatForKey:@"stickYaw"];
     }
     if (stick_yaw > max_flight_yaw) {
         stick_yaw = max_flight_yaw;
@@ -5376,9 +5376,9 @@ ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other)
 
     // desired speed
     if ([result objectForKey:@"desiredSpeedFactor"] != nil) {
-        desired_speed = oo::PListView(result).get<float>(@"desiredSpeedFactor") * maxFlightSpeed;
+        desired_speed = [result oo_floatForKey:@"desiredSpeedFactor"] * maxFlightSpeed;
     } else {
-        desired_speed = oo::PListView(result).get<float>(@"desiredSpeed");
+        desired_speed = [result oo_floatForKey:@"desiredSpeed"];
     }
 
     if (desired_speed < 0.0) {
@@ -5387,7 +5387,7 @@ ShipEntity* doOctreesCollide(ShipEntity* prime, ShipEntity* other)
     // overspeed and injector use is handled by applyThrust
 
     if (behaviour == BEHAVIOUR_SCRIPTED_ATTACK_AI) {
-        NSString* chosen_weapon = oo::PListView(result).get<NSString*>(@"chosenWeapon", @"FORWARD");
+        NSString* chosen_weapon = [result oo_stringForKey:@"chosenWeapon" defaultValue:@"FORWARD"];
         double range = [self rangeToPrimaryTarget];
 
         if ([chosen_weapon isEqualToString:@"FORWARD"]) {
@@ -5943,13 +5943,13 @@ static GLfloat scripted_color[4] = { 0.0, 0.0, 0.0, 0.0 }; // to be defined by s
     if (!previousCondition)
         return;
 
-    behaviour = (OOBehaviour)oo::PListView(previousCondition).get<int>(@"behaviour");
+    behaviour = (OOBehaviour)[previousCondition oo_intForKey:@"behaviour"];
     [_primaryTarget release];
     _primaryTarget = [[previousCondition objectForKey:@"primaryTarget"] weakRetain];
     [self startTrackingCurve];
-    desired_range = oo::PListView(previousCondition).get<float>(@"desired_range");
-    desired_speed = oo::PListView(previousCondition).get<float>(@"desired_speed");
-    _destination = oo::PListView(previousCondition).get<HPVector>(@"destination");
+    desired_range = [previousCondition oo_floatForKey:@"desired_range"];
+    desired_speed = [previousCondition oo_floatForKey:@"desired_speed"];
+    _destination = [previousCondition oo_hpvectorForKey:@"destination"];
 
     [previousCondition release];
     previousCondition = nil;
@@ -6202,7 +6202,7 @@ static GLfloat scripted_color[4] = { 0.0, 0.0, 0.0, 0.0 }; // to be defined by s
             if (legal > 0) {
                 legal_i = (legal <= 50) ? 1 : 2;
             }
-            desc = oo::PListView(oo::PListView([UNIVERSE descriptions]).get<NSArray*>(@"legal_status")).at<NSString*>(legal_i);
+            desc = [[[UNIVERSE descriptions] oo_arrayForKey:@"legal_status"] oo_stringAtIndex:legal_i];
         } break;
 
         case CLASS_THARGOID:
@@ -6440,7 +6440,7 @@ static BOOL IsBehaviourHostile(OOBehaviour behaviour)
         return YES; // missiles are always fired against a hostile target
     }
     if ((behaviour == BEHAVIOUR_AVOID_COLLISION) && (previousCondition)) {
-        int old_behaviour = oo::PListView(previousCondition).get<int>(@"behaviour");
+        int old_behaviour = [previousCondition oo_intForKey:@"behaviour"];
         return IsBehaviourHostile((OOBehaviour)old_behaviour);
     }
     return IsBehaviourHostile(behaviour);
@@ -6653,7 +6653,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
     if ([planets count] == 0)
         return nil;
 
-    planets = [planets sortedArrayUsingFunction:ComparePlanetsBySurfaceDistance context:self];
+    planets = [planets sortedArrayUsingFunction:OOSortFunction(ComparePlanetsBySurfaceDistance) context:self];
     result = [planets objectAtIndex:0];
 
     return result;
@@ -6915,7 +6915,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
 
 - (BOOL)hasAutoAI
 {
-    return oo::PListView([self shipInfoDictionary]).get<oo::FuzzyBoolean>(@"auto_ai", YES);
+    return [[self shipInfoDictionary] oo_fuzzyBooleanForKey:@"auto_ai" defaultValue:YES];
 }
 
 - (BOOL)hasNewAI
@@ -6925,7 +6925,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
 
 - (BOOL)hasAutoWeapons
 {
-    return oo::PListView([self shipInfoDictionary]).get<oo::FuzzyBoolean>(@"auto_weapons", NO);
+    return [[self shipInfoDictionary] oo_fuzzyBooleanForKey:@"auto_weapons" defaultValue:NO];
 }
 
 - (void)setShipScript:(NSString*)script_name
@@ -6940,7 +6940,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
     script = [OOScript jsScriptFromFileNamed:script_name properties:properties];
 
     if (script == nil) {
-        actions = oo::PListView(shipinfoDictionary).get<NSArray*>(@"launch_actions");
+        actions = [shipinfoDictionary oo_arrayForKey:@"launch_actions"];
         if (actions) {
             OOStandardsDeprecated([NSString stringWithFormat:@"The launch_actions ship key is deprecated on %@.", [self displayName]]);
             if (!OOEnforceStandards()) {
@@ -6948,7 +6948,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
             }
         }
 
-        actions = oo::PListView(shipinfoDictionary).get<NSArray*>(@"script_actions");
+        actions = [shipinfoDictionary oo_arrayForKey:@"script_actions"];
         if (actions) {
             OOStandardsDeprecated([NSString stringWithFormat:@"The script_actions ship key is deprecated on %@.", [self displayName]]);
             if (!OOEnforceStandards()) {
@@ -6956,7 +6956,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
             }
         }
 
-        actions = oo::PListView(shipinfoDictionary).get<NSArray*>(@"death_actions");
+        actions = [shipinfoDictionary oo_arrayForKey:@"death_actions"];
         if (actions) {
             OOStandardsDeprecated([NSString stringWithFormat:@"The death_actions ship key is deprecated on %@.", [self displayName]]);
             if (!OOEnforceStandards()) {
@@ -6964,7 +6964,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
             }
         }
 
-        actions = oo::PListView(shipinfoDictionary).get<NSArray*>(@"setup_actions");
+        actions = [shipinfoDictionary oo_arrayForKey:@"setup_actions"];
         if (actions) {
             OOStandardsDeprecated([NSString stringWithFormat:@"The setup_actions ship key is deprecated on %@.", [self displayName]]);
             if (!OOEnforceStandards()) {
@@ -7347,7 +7347,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
         if (num > 0) {
             switch (cargo_flag) {
             case CARGO_FLAG_FULL_UNIFORM:
-                newCargo = [UNIVERSE getContainersOfCommodity:oo::PListView(shipinfoDictionary).get<NSString*>(@"cargo_carried") how_much:num];
+                newCargo = [UNIVERSE getContainersOfCommodity:[shipinfoDictionary oo_stringForKey:@"cargo_carried"] how_much:num];
                 break;
             case CARGO_FLAG_FULL_PLENTIFUL:
                 newCargo = [UNIVERSE getContainersOfGoods:num scarce:NO legal:YES];
@@ -7657,7 +7657,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
     // and a visual sign of the explosion
     // "fireball" explosion effect
     NSDictionary* explosion = [UNIVERSE explosionSetting:@"oolite-default-ship-explosion"];
-    [UNIVERSE addEntity:[OOExplosionCloudEntity explosionCloudFromEntity:self withSize:range * 3.0 andSettings:oo::PListFrom(explosion)]];
+    [UNIVERSE addEntity:[OOExplosionCloudEntity explosionCloudFromEntity:self withSize:range * 3.0 andSettings:explosion]];
 }
 
 // dealEnergyDamage preferred
@@ -7786,14 +7786,14 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
     OOMesh* mesh = nil;
 
     NSDictionary* shipDict = [self shipInfoDictionary];
-    NSString* modelName = oo::PListView(shipDict).get<NSString*>(@"model");
+    NSString* modelName = [shipDict oo_stringForKey:@"model"];
     if (modelName != nil) {
-        mesh = [OOMesh meshWithName:oo::StdString(modelName)
-                           cacheKey:oo::OptionalString([NSString stringWithFormat:@"%@-%.3f", _shipKey, _scaleFactor])
-                 materialDictionary:oo::PListFrom(oo::PListView(shipDict).get<NSDictionary*>(@"materials"))
-                  shadersDictionary:oo::PListFrom(oo::PListView(shipDict).get<NSDictionary*>(@"shaders"))
-                             smooth:oo::PListView(shipDict).get<BOOL>(@"smooth", NO)
-                       shaderMacros:oo::PListFrom(OODefaultShipShaderMacros())
+        mesh = [OOMesh meshWithName:modelName
+                           cacheKey:[NSString stringWithFormat:@"%@-%.3f", _shipKey, _scaleFactor]
+                 materialDictionary:[shipDict oo_dictionaryForKey:@"materials"]
+                  shadersDictionary:[shipDict oo_dictionaryForKey:@"shaders"]
+                             smooth:[shipDict oo_boolForKey:@"smooth" defaultValue:NO]
+                       shaderMacros:OODefaultShipShaderMacros()
                 shaderBindingTarget:self
                         scaleFactor:factor
                      cacheWriteable:writeToCache];
@@ -7962,12 +7962,12 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
                     NSDictionary* explosion = nil;
                     if (explosionType == nil) {
                         explosion = [UNIVERSE explosionSetting:explosionKey];
-                        [UNIVERSE addEntity:[OOExplosionCloudEntity explosionCloudFromEntity:self withSettings:oo::PListFrom(explosion)]];
+                        [UNIVERSE addEntity:[OOExplosionCloudEntity explosionCloudFromEntity:self withSettings:explosion]];
                         // 3. flash
                         [UNIVERSE addEntity:[OOFlashEffectEntity explosionFlashFromEntity:self]];
                     }
                     for (NSUInteger i = 0; i < [explosionType count]; i++) {
-                        explosionKey = oo::PListView(explosionType).at<NSString*>(i, nil);
+                        explosionKey = [explosionType oo_stringAtIndex:i defaultValue:nil];
                         if (explosionKey != nil) {
                             // three special-case builtins
                             if ([explosionKey isEqualToString:@"oolite-builtin-flash"]) {
@@ -7978,7 +7978,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
                                 [UNIVERSE addEntity:[OOSmallFragmentBurstEntity fragmentBurstFromEntity:self]];
                             } else {
                                 explosion = [UNIVERSE explosionSetting:explosionKey];
-                                [UNIVERSE addEntity:[OOExplosionCloudEntity explosionCloudFromEntity:self withSettings:oo::PListFrom(explosion)]];
+                                [UNIVERSE addEntity:[OOExplosionCloudEntity explosionCloudFromEntity:self withSettings:explosion]];
                             }
                         }
                     }
@@ -8007,7 +8007,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
                         }
                         NSUInteger n_rocks = 2 + (Ranrot() % (likely_cargo + 1));
 
-                        NSString* debrisRole = oo::PListView([self shipInfoDictionary]).get<NSString*>(@"debris_role", defaultRole);
+                        NSString* debrisRole = [[self shipInfoDictionary] oo_stringForKey:@"debris_role" defaultValue:defaultRole];
                         for (i = 0; i < n_rocks; i++) {
                             ShipEntity* rock = [UNIVERSE newShipWithRole:debrisRole]; // retain count = 1
                             if (rock) {
@@ -8028,7 +8028,7 @@ NSComparisonResult ComparePlanetsBySurfaceDistance(id i1, id i2, void* context)
                                     [rock setScanClass:CLASS_CARGO];
                                     [rock setBounty:0 withReason:kOOLegalStatusReasonSetup];
                                     // only make the rock have minerals if something isn't already defined for the rock
-                                    if (oo::PListView([rock shipInfoDictionary]).get<NSString*>(@"cargo_carried") == nil)
+                                    if ([[rock shipInfoDictionary] oo_stringForKey:@"cargo_carried"] == nil)
                                         [rock setCommodity:@"minerals" andAmount:1];
                                 } else {
                                     [rock setScanClass:CLASS_ROCK];
@@ -10379,7 +10379,7 @@ Vector positionOffsetForShipInRotationToAlignment(ShipEntity* ship, Quaternion q
     }
 
     for (i = 0; i < barrels; i++) {
-        Vector laserPortOffset = oo::PListView(laserPortOffsets).at<Vector>(i);
+        Vector laserPortOffset = [laserPortOffsets oo_vectorAtIndex:i];
 
         last_shot_time = [UNIVERSE getTime];
 
@@ -10543,7 +10543,7 @@ Vector positionOffsetForShipInRotationToAlignment(ShipEntity* ship, Quaternion q
     start.z = boundingBox.max.z + 1.0f; // 1m ahead of bounding box
 
     // custom launching position
-    start = oo::PListView(shipinfoDictionary).get<Vector>(@"missile_launch_position", start);
+    start = [shipinfoDictionary oo_vectorForKey:@"missile_launch_position" defaultValue:start];
     if (EXPECT_NOT(_scaleFactor != 1.0)) {
         start = vector_multiply_scalar(start, _scaleFactor);
     }
@@ -10821,7 +10821,7 @@ Vector positionOffsetForShipInRotationToAlignment(ShipEntity* ship, Quaternion q
     */
 
     // check number of pods aboard -- require at least one.
-    n_pods = oo::PListView(shipinfoDictionary).get<unsigned int>(@"has_escape_pod");
+    n_pods = [shipinfoDictionary oo_unsignedIntForKey:@"has_escape_pod"];
     if (n_pods > 65)
         n_pods = 65; // maximum of 64 passengers.
     if (n_pods > 1)
@@ -10936,7 +10936,7 @@ Vector positionOffsetForShipInRotationToAlignment(ShipEntity* ship, Quaternion q
     start.z = boundingBox.min.z - jcr; // 1m behind of bounding box
 
     // custom launching position
-    start = oo::PListView(shipinfoDictionary).get<Vector>(@"aft_eject_position", start);
+    start = [shipinfoDictionary oo_vectorForKey:@"aft_eject_position" defaultValue:start];
 
     v_eject = vector_normal(start);
 
@@ -12490,12 +12490,12 @@ static BOOL AuthorityPredicate(Entity* entity, void* parameter)
         return;
     }
 
-    roleString = oo::PListView(tokens).at<NSString*>(0);
-    numberString = oo::PListView(tokens).at<NSString*>(1);
+    roleString = [tokens oo_stringAtIndex:0];
+    numberString = [tokens oo_stringAtIndex:1];
 
     number = [numberString intValue];
 
-    [self spawnShipsWithRole:oo::StdString(roleString) count:number];
+    [self spawnShipsWithRole:roleString count:number];
 }
 
 - (int)checkShipsInVicinityForWitchJumpExit
@@ -12889,7 +12889,7 @@ static BOOL AuthorityPredicate(Entity* entity, void* parameter)
         NSEnumerator* sEnum = [_defenseTargets objectEnumerator];
         ShipEntity* ship = nil;
         double scanrange2 = scannerRange * scannerRange;
-        // FIXME: OOWeakSet doesn't support for-in enumeration.
+        // FIXME: OOWeakSet doesn't implement NSFastEnumeration protocol.
         foreach (ship, sEnum) {
             if ([ship hasHostileTarget] || ([ship isPlayer] && [PLAYER weaponsOnline])) {
                 if (HPdistance2([ship position], position) < scanrange2) {
@@ -12998,14 +12998,14 @@ NSDictionary* OODefaultShipShaderMacros(void)
     static NSDictionary* macros = nil;
 
     if (macros == nil) {
-        macros = [oo::PListView([ResourceManager materialDefaults]).get<NSDictionary*>(@"ship-prefix-macros", [NSDictionary dictionary]) retain];
+        macros = [[[ResourceManager materialDefaults] oo_dictionaryForKey:@"ship-prefix-macros" defaultValue:[NSDictionary dictionary]] retain];
     }
 
     return macros;
 }
 
 // is this the right place for this function now? - CIM
-BOOL OOUniformBindingPermitted(const std::string& propertyName, id bindingTarget)
+BOOL OOUniformBindingPermitted(NSString* propertyName, id bindingTarget)
 {
     static NSSet* entityWhitelist = nil;
     static NSSet* shipWhitelist = nil;
@@ -13014,27 +13014,25 @@ BOOL OOUniformBindingPermitted(const std::string& propertyName, id bindingTarget
 
     if (entityWhitelist == nil) {
         NSDictionary* wlDict = [ResourceManager whitelistDictionary];
-        entityWhitelist = [[NSSet alloc] initWithArray:oo::PListView(wlDict).get<NSArray*>(@"shader_entity_binding_methods")];
-        shipWhitelist = [[NSSet alloc] initWithArray:oo::PListView(wlDict).get<NSArray*>(@"shader_ship_binding_methods")];
-        playerShipWhitelist = [[NSSet alloc] initWithArray:oo::PListView(wlDict).get<NSArray*>(@"shader_player_ship_binding_methods")];
-        visualEffectWhitelist = [[NSSet alloc] initWithArray:oo::PListView(wlDict).get<NSArray*>(@"shader_visual_effect_binding_methods")];
+        entityWhitelist = [[NSSet alloc] initWithArray:[wlDict oo_arrayForKey:@"shader_entity_binding_methods"]];
+        shipWhitelist = [[NSSet alloc] initWithArray:[wlDict oo_arrayForKey:@"shader_ship_binding_methods"]];
+        playerShipWhitelist = [[NSSet alloc] initWithArray:[wlDict oo_arrayForKey:@"shader_player_ship_binding_methods"]];
+        visualEffectWhitelist = [[NSSet alloc] initWithArray:[wlDict oo_arrayForKey:@"shader_visual_effect_binding_methods"]];
     }
 
-    id property = oo::NSStringFrom(propertyName); // the whitelists hold the names as strings
-
     if ([bindingTarget isKindOfClass:[Entity class]]) {
-        if ([entityWhitelist containsObject:property])
+        if ([entityWhitelist containsObject:propertyName])
             return YES;
         if ([bindingTarget isShip]) {
-            if ([shipWhitelist containsObject:property])
+            if ([shipWhitelist containsObject:propertyName])
                 return YES;
         }
         if ([bindingTarget isPlayerLikeShip]) {
-            if ([playerShipWhitelist containsObject:property])
+            if ([playerShipWhitelist containsObject:propertyName])
                 return YES;
         }
         if ([bindingTarget isVisualEffect]) {
-            if ([visualEffectWhitelist containsObject:property])
+            if ([visualEffectWhitelist containsObject:propertyName])
                 return YES;
         }
     }

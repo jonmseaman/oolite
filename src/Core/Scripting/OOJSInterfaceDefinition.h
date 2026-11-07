@@ -26,8 +26,6 @@ MA 02110-1301, USA.
 #import "OOJSScript.h"
 #include <quickjs.h>
 
-#include "oofnd/StdLib.hpp"
-
 /*	The definition owns references to its callback and callbackThis, which are
         released on dealloc and when the JavaScript engine is reset.
 */
@@ -37,24 +35,24 @@ MA 02110-1301, USA.
     JSValue _callbackThis; // Owned.
     OOJSScript* _owningScript;
 
-    std::optional<std::string> _title; // nullopt until set (was nil)
-    std::optional<std::string> _summary;
-    std::optional<std::string> _category;
+    NSString* _title;
+    NSString* _summary;
+    NSString* _category;
 }
 
-- (id)title; // shared selector (proposed ADR-0043): an Objective-C string, or nil
-- (void)setTitle:(id)title; // shared selector (proposed ADR-0043): an Objective-C string, or nil
-- (std::optional<std::string>)category;
-- (void)setCategory:(const std::string&)category;
-- (std::optional<std::string>)summary;
-- (void)setSummary:(const std::string&)summary;
+- (NSString*)title;
+- (void)setTitle:(NSString*)title;
+- (NSString*)category;
+- (void)setCategory:(NSString*)category;
+- (NSString*)summary;
+- (void)setSummary:(NSString*)summary;
 // Returned values are owned by the caller.
 - (JSValue)callback;
 - (void)setCallback:(JSValueConst)callback;
 - (JSValue)callbackThis;
 - (void)setCallbackThis:(JSValueConst)callbackthis;
 
-- (void)runCallback:(id)key; // shared selector (proposed ADR-0043): key is an Objective-C string
+- (void)runCallback:(NSString*)key;
 
 - (NSComparisonResult)interfaceCompare:(OOJSInterfaceDefinition*)other;
 

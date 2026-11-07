@@ -29,100 +29,82 @@ MA 02110-1301, USA.
 
 #if OO_OXP_VERIFIER_ENABLED
 
-#import "OOFoundationBridge.h"
 #import "ResourceManager.h"
 
-#include "oofnd/String.hpp"
-
-static const char* const kStageName = "Validating AIs";
-
-namespace {
-
-// Adding to a set kept as a sorted vector; false if it was already there.
-bool AddString(std::vector<std::string>& set, const std::string& string)
-{
-    const auto where = std::lower_bound(set.begin(), set.end(), string);
-    if (where != set.end() && *where == string)
-        return false;
-    set.insert(where, string);
-    return true;
-}
-
-bool ContainsString(const std::vector<std::string>& set, const std::string& string)
-{
-    return std::binary_search(set.begin(), set.end(), string);
-}
-
-std::vector<std::string> SortedCaseInsensitively(std::vector<std::string> strings)
-{
-    std::stable_sort(strings.begin(), strings.end(), [](const std::string& a, const std::string& b) {
-        return oo::str::caseInsensitiveCompare(a, b) < 0;
-    });
-    return strings;
-}
-
-} // namespace
+static NSString* const kStageName = @"Validating AIs";
 
 @interface OOAIStateMachineVerifierStage (Private)
 
-- (void)validateAI:(const std::string&)aiName;
+- (void)validateAI:(NSString*)aiName;
 
 @end
 
 @implementation OOAIStateMachineVerifierStage
 
-- (id)name // shared selector (proposed ADR-0043)
+- (void)dealloc
 {
-    return oo::NSStringFrom(kStageName);
+    [_whitelist release];
+    [_usedAIs release];
+
+    [super dealloc];
+}
+
+- (NSString*)name
+{
+    return kStageName;
 }
 
 - (BOOL)shouldRun
 {
-    return !_usedAIs.empty();
+    return [_usedAIs count] != 0;
 }
 
 - (void)run
 {
-    // Build whitelist. Note that we merge in aliases since the distinction doesn't matter when just validating.
-    const oo::PList whitelist = oo::PListFrom([ResourceManager whitelistDictionary]);
-    for (const char* key : { "ai_methods", "ai_and_action_methods" }) {
-        if (const oo::PList* methods = whitelist.get<oo::PList::Array>(key)) {
-            for (const oo::PList& method : *methods->getIf<oo::PList::Array>()) {
-                if (const std::string* string = method.getIf<std::string>())
-                    AddString(_whitelist, *string);
-            }
-        }
-    }
-    if (const oo::PList* aliases = whitelist.get<oo::PList::Dict>("ai_method_aliases")) {
-        for (const auto& [alias, value] : *aliases->getIf<oo::PList::Dict>())
-            AddString(_whitelist, alias);
-    }
+    NSArray* aiNames = nil;
+    NSString* aiName = nil;
+    NSMutableSet* whitelist = nil;
 
-    for (const std::string& aiName : SortedCaseInsensitively(_usedAIs)) {
+    // Build whitelist. Note that we merge in aliases since the distinction doesn't matter when just validating.
+    whitelist = [[NSMutableSet alloc] init];
+    [whitelist addObjectsFromArray:oo::PListView([ResourceManager whitelistDictionary]).get<NSArray*>(@"ai_methods")];
+    [whitelist addObjectsFromArray:oo::PListView([ResourceManager whitelistDictionary]).get<NSArray*>(@"ai_and_action_methods")];
+    [whitelist addObjectsFromArray:[oo::PListView([ResourceManager whitelistDictionary]).get<NSDictionary*>(@"ai_method_aliases") allKeys]];
+    _whitelist = [whitelist copy];
+    [whitelist release];
+
+    aiNames = [[_usedAIs allObjects] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
+    foreach (aiName, aiNames) {
         [self validateAI:aiName];
     }
 
-    _whitelist.clear();
+    [_whitelist release];
+    _whitelist = nil;
 }
 
-+ (id)nameForReverseDependencyForVerifier:(OOOXPVerifier*)verifier
++ (NSString*)nameForReverseDependencyForVerifier:(OOOXPVerifier*)verifier
 {
-    return oo::NSStringFrom(kStageName);
+    return kStageName;
 }
 
-- (void)stateMachineNamed:(const std::string&)name usedByShip:(const std::string&)shipName
+- (void)stateMachineNamed:(NSString*)name usedByShip:(NSString*)shipName
 {
     OOFileScannerVerifierStage* fileScanner = nil;
 
-    if (!AddString(_usedAIs, name))
+    if (name == nil)
         return;
+    if ([_usedAIs containsObject:name])
+        return;
+    if (_usedAIs == nil)
+        _usedAIs = [[NSMutableSet alloc] init];
+    [_usedAIs addObject:name];
 
     fileScanner = [[self verifier] fileScannerStage];
-    if (![fileScanner fileExists:oo::NSStringFrom(name)
+    if (![fileScanner fileExists:name
                         inFolder:@"AIs"
-                  referencedFrom:oo::NSStringFrom(oo::str::format("shipdata.plist entry \"%s\"", shipName.c_str()))
+                  referencedFrom:[NSString stringWithFormat:@"shipdata.plist entry \"%@\"", shipName]
                     checkBuiltIn:YES]) {
-        OOLog(@"verifyOXP.validateAI.notFound", @"----- WARNING: AI state machine \"%@\" referenced in shipdata.plist entry \"%@\" could not be found in %@ or in Oolite.", oo::NSStringFrom(name), oo::NSStringFrom(shipName), [[self verifier] oxpDisplayName]);
+        OOLog(@"verifyOXP.validateAI.notFound", @"----- WARNING: AI state machine \"%@\" referenced in shipdata.plist entry \"%@\" could not be found in %@ or in Oolite.", name, shipName, [[self verifier] oxpDisplayName]);
     }
 }
 
@@ -130,73 +112,85 @@ std::vector<std::string> SortedCaseInsensitively(std::vector<std::string> string
 
 @implementation OOAIStateMachineVerifierStage (Private)
 
-- (void)validateAI:(const std::string&)aiName
+- (void)validateAI:(NSString*)aiName
 {
-    std::optional<std::string> path;
-    oo::PList aiStateMachine;
-    std::vector<std::string> badSelectors; // sorted, no duplicates
-    std::string badSelectorDesc;
+    NSString* path = nil;
+    NSDictionary* aiStateMachine = nil;
+    NSString* stateKey = nil;
+    NSDictionary* stateHandlers = nil;
+    NSString* handlerKey = nil;
+    NSArray* handlerActions = nil;
+    NSString* action = nil;
+    NSRange spaceRange;
+    NSString* selector = nil;
+    NSMutableSet* badSelectors = nil;
+    NSString* badSelectorDesc = nil;
     NSUInteger index = 0;
 
-    OOLog(@"verifyOXP.verbose.validateAI", @"- Validating AI \"%@\".", oo::NSStringFrom(aiName));
+    OOLog(@"verifyOXP.verbose.validateAI", @"- Validating AI \"%@\".", aiName);
     OOLogIndentIf(@"verifyOXP.verbose.validateAI");
 
     // Attempt to load AI.
-    path = oo::OptionalString([[[self verifier] fileScannerStage] pathForFile:oo::NSStringFrom(aiName) inFolder:@"AIs" referencedFrom:@"AI list" checkBuiltIn:NO]);
-    if (!path.has_value())
+    path = [[[self verifier] fileScannerStage] pathForFile:aiName inFolder:@"AIs" referencedFrom:@"AI list" checkBuiltIn:NO];
+    if (path == nil)
         return;
 
-    aiStateMachine = oo::PListFrom(OODictionaryFromFile(oo::NSStringFrom(*path)));
-    if (aiStateMachine.isNull()) {
-        OOLog(@"verifyOXP.validateAI.failed.notDictPlist", @"***** ERROR: could not interpret \"%@\" as a dictionary.", oo::NSStringFrom(*path));
+    badSelectors = [NSMutableSet set];
+
+    aiStateMachine = OODictionaryFromFile(path);
+    if (aiStateMachine == nil) {
+        OOLog(@"verifyOXP.validateAI.failed.notDictPlist", @"***** ERROR: could not interpret \"%@\" as a dictionary.", path);
         return;
     }
 
     // Validate each state.
-    for (const auto& [stateKey, stateHandlers] : *aiStateMachine.getIf<oo::PList::Dict>()) {
-        if (!stateHandlers.isDict()) {
-            OOLog(@"verifyOXP.validateAI.failed.invalidFormat.state", @"***** ERROR: state \"%@\" in AI \"%@\" is not a dictionary.", oo::NSStringFrom(stateKey), oo::NSStringFrom(aiName));
+    foreachkey(stateKey, aiStateMachine)
+    {
+        stateHandlers = [aiStateMachine objectForKey:stateKey];
+        if (![stateHandlers isKindOfClass:[NSDictionary class]]) {
+            OOLog(@"verifyOXP.validateAI.failed.invalidFormat.state", @"***** ERROR: state \"%@\" in AI \"%@\" is not a dictionary.", stateKey, aiName);
             continue;
         }
 
         // Verify handlers for this state.
-        for (const auto& [handlerKey, handlerActions] : *stateHandlers.getIf<oo::PList::Dict>()) {
-            if (!handlerActions.isArray()) {
-                OOLog(@"verifyOXP.validateAI.failed.invalidFormat.handler", @"***** ERROR: handler \"%@\" for state \"%@\" in AI \"%@\" is not an array, ignoring.", oo::NSStringFrom(handlerKey), oo::NSStringFrom(stateKey), oo::NSStringFrom(aiName));
+        foreachkey(handlerKey, stateHandlers)
+        {
+            handlerActions = [stateHandlers objectForKey:handlerKey];
+            if (![handlerActions isKindOfClass:[NSArray class]]) {
+                OOLog(@"verifyOXP.validateAI.failed.invalidFormat.handler", @"***** ERROR: handler \"%@\" for state \"%@\" in AI \"%@\" is not an array, ignoring.", handlerKey, stateKey, aiName);
                 continue;
             }
 
             // Verify commands for this handler.
             index = 0;
-            for (const oo::PList& actionValue : *handlerActions.getIf<oo::PList::Array>()) {
+            foreach (action, handlerActions) {
                 index++;
-                const std::string* untrimmed = actionValue.getIf<std::string>();
-                if (untrimmed == nullptr) {
-                    OOLog(@"verifyOXP.validateAI.failed.invalidFormat.action", @"***** ERROR: action %zu in handler \"%@\" for state \"%@\" in AI \"%@\" is not a string, ignoring.", index - 1, oo::NSStringFrom(handlerKey), oo::NSStringFrom(stateKey), oo::NSStringFrom(aiName));
+                if (![action isKindOfClass:[NSString class]]) {
+                    OOLog(@"verifyOXP.validateAI.failed.invalidFormat.action", @"***** ERROR: action %zu in handler \"%@\" for state \"%@\" in AI \"%@\" is not a string, ignoring.", index - 1, handlerKey, stateKey, aiName);
                     continue;
                 }
 
-                // Trim spaces from beginning and end (the whitespace character set, not newlines).
-                const std::string action = oo::StdString([oo::NSStringFrom(*untrimmed) stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]);
+                // Trim spaces from beginning and end.
+                action = [action stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 
                 // Cut off parameters.
-                const std::string selector = action.substr(0, action.find(' '));
+                spaceRange = [action rangeOfString:@" "];
+                if (spaceRange.location == NSNotFound)
+                    selector = action;
+                else
+                    selector = [action substringToIndex:spaceRange.location];
 
                 // Check against whitelist.
-                if (!ContainsString(_whitelist, selector)) {
-                    AddString(badSelectors, selector);
+                if (![_whitelist containsObject:selector]) {
+                    [badSelectors addObject:selector];
                 }
             }
         }
     }
 
-    if (badSelectors.size() != 0) {
-        for (const std::string& selector : SortedCaseInsensitively(badSelectors)) {
-            if (!badSelectorDesc.empty())
-                badSelectorDesc += ", ";
-            badSelectorDesc += selector;
-        }
-        OOLog(@"verifyOXP.validateAI.failed.badSelector", @"***** ERROR: the AI \"%@\" uses %zu unpermitted method%s: %@", oo::NSStringFrom(aiName), badSelectors.size(), (badSelectors.size() == 1) ? "" : "s", oo::NSStringFrom(badSelectorDesc));
+    if ([badSelectors count] != 0) {
+        badSelectorDesc = [[[badSelectors allObjects] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)] componentsJoinedByString:@", "];
+        OOLog(@"verifyOXP.validateAI.failed.badSelector", @"***** ERROR: the AI \"%@\" uses %zu unpermitted method%s: %@", aiName, [badSelectors count], ([badSelectors count] == 1) ? "" : "s", badSelectorDesc);
     }
 
     OOLogOutdentIf(@"verifyOXP.verbose.validateAI");

@@ -47,7 +47,7 @@ typedef struct
 - (GLfloat)lodBias; // Default: kOOTextureDefaultLODBias
 
 // Key for in-memory cache; nil for no cache.
-- (id)cacheKey; // an Objective-C string. Shared selector (proposed ADR-0043).
+- (NSString*)cacheKey;
 
 // For use by OOTexture.
 - (BOOL)enqueue;

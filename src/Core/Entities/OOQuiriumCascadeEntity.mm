@@ -25,11 +25,8 @@ MA 02110-1301, USA.
 
 #import "OOQuiriumCascadeEntity.h"
 #import "OOMacroOpenGL.h"
-#import "OOStringBridge.h"
 #import "PlayerEntity.h"
 #import "Universe.h"
-
-#include "oofnd/String.hpp"
 
 #define kQuiriumCascadeDuration (20.0) // seconds
 #define kQuiriumCollisionDelay (0.05) // seconds before we start colliding with and damaging things.
@@ -64,9 +61,9 @@ MA 02110-1301, USA.
     return [[[self alloc] initQuiriumCascadeFromShip:ship] autorelease];
 }
 
-- (id)descriptionComponents // shared selector (proposed ADR-0043)
+- (NSString*)descriptionComponents
 {
-    return oo::NSStringFrom(oo::str::format("%f seconds passed of %f", _timePassed, kQuiriumCascadeDuration));
+    return [NSString stringWithFormat:@"%f seconds passed of %f", _timePassed, kQuiriumCascadeDuration];
 }
 
 - (void)update:(OOTimeDelta)delta_t

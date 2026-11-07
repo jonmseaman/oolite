@@ -28,67 +28,86 @@ MA 02110-1301, USA.
 #if OO_OXP_VERIFIER_ENABLED
 
 #import "OOFileScannerVerifierStage.h"
-#import "OOFoundationBridge.h"
 #import "OOMaths.h"
 #import "OOTextureLoader.h"
 
-static const char* const kStageName = "Testing textures and images";
+static NSString* const kStageName = @"Testing textures and images";
 
 @interface OOTextureVerifierStage (OOPrivate)
 
-- (void)checkTextureNamed:(const std::string&)name inFolder:(const std::string&)folder;
+- (void)checkTextureNamed:(NSString*)name inFolder:(NSString*)folder;
 
 @end
 
 @implementation OOTextureVerifierStage
 
-+ (id)nameForReverseDependencyForVerifier:(OOOXPVerifier*)verifier
+- (id)init
 {
-    return oo::NSStringFrom(kStageName);
+    self = [super init];
+    if (self != nil) {
+        _usedTextures = [[NSMutableSet alloc] init];
+    }
+    return self;
 }
 
-- (id)name
+- (void)dealloc
 {
-    return oo::NSStringFrom(kStageName);
+    [_usedTextures release];
+
+    [super dealloc];
+}
+
++ (NSString*)nameForReverseDependencyForVerifier:(OOOXPVerifier*)verifier
+{
+    return kStageName;
+}
+
+- (NSString*)name
+{
+    return kStageName;
 }
 
 - (BOOL)shouldRun
 {
-    return !_usedTextures.empty() || [[[self verifier] fileScannerStage] filesInFolder:@"Images"] != nil;
+    return [_usedTextures count] != 0 || [[[self verifier] fileScannerStage] filesInFolder:@"Images"] != nil;
 }
 
 - (void)run
 {
-    for (const std::string& name : _usedTextures) {
+    NSArray* nameEnum = nil;
+    NSString* name = nil;
+
+    foreach (name, _usedTextures) {
         @autoreleasepool {
-            [self checkTextureNamed:name inFolder:"Textures"];
+            [self checkTextureNamed:name inFolder:@"Textures"];
         }
     }
-    _usedTextures.clear();
+    [_usedTextures release];
+    _usedTextures = nil;
 
     // All "images" are considered used, since we don't have a reasonable way to look for images referenced in JavaScript scripts.
-    for (const std::string& name : oo::StringsFrom([[[self verifier] fileScannerStage] filesInFolder:@"Images"])) {
-        [self checkTextureNamed:name inFolder:"Images"];
+    nameEnum = [[[self verifier] fileScannerStage] filesInFolder:@"Images"];
+    foreach (name, nameEnum) {
+        [self checkTextureNamed:name inFolder:@"Images"];
     }
 }
 
-- (void)textureNamed:(const std::string&)name usedInContext:(const std::string&)context
+- (void)textureNamed:(NSString*)name usedInContext:(NSString*)context
 {
     OOFileScannerVerifierStage* fileScanner = nil;
 
-    if (name.empty())
+    if (name == nil)
         return;
-    const auto where = std::lower_bound(_usedTextures.begin(), _usedTextures.end(), name);
-    if (where != _usedTextures.end() && *where == name)
+    if ([_usedTextures containsObject:name])
         return;
-    _usedTextures.insert(where, name);
+    [_usedTextures addObject:name];
 
     fileScanner = [[self verifier] fileScannerStage];
-    if (![fileScanner fileExists:oo::NSStringFrom(name)
+    if (![fileScanner fileExists:name
                         inFolder:@"Textures"
-                  referencedFrom:oo::NSStringFrom(context)
+                  referencedFrom:context
                     checkBuiltIn:YES]) {
-        OOLog(@"verifyOXP.texture.notFound", @"----- WARNING: texture \"%@\" referenced in %@ could not be found in %@ or in Oolite.", oo::NSStringFrom(name), oo::NSStringFrom(context), [[self verifier] oxpDisplayName]);
+        OOLog(@"verifyOXP.texture.notFound", @"----- WARNING: texture \"%@\" referenced in %@ could not be found in %@ or in Oolite.", name, context, [[self verifier] oxpDisplayName]);
     }
 }
 
@@ -96,33 +115,33 @@ static const char* const kStageName = "Testing textures and images";
 
 @implementation OOTextureVerifierStage (OOPrivate)
 
-- (void)checkTextureNamed:(const std::string&)name inFolder:(const std::string&)folder
+- (void)checkTextureNamed:(NSString*)name inFolder:(NSString*)folder
 {
     OOTextureLoader* loader = nil;
-    std::optional<std::string> path;
+    NSString* path = nil;
     OOFileScannerVerifierStage* fileScanner = nil;
-    std::optional<std::string> displayName;
+    NSString* displayName = nil;
     OOPixMapDimension rWidth, rHeight;
     BOOL success;
     OOPixMap pixmap;
     OOTextureDataFormat format;
 
     fileScanner = [[self verifier] fileScannerStage];
-    path = oo::OptionalString([fileScanner pathForFile:oo::NSStringFrom(name)
-                                              inFolder:oo::NSStringFrom(folder)
-                                        referencedFrom:nil
-                                          checkBuiltIn:NO]);
+    path = [fileScanner pathForFile:name
+                           inFolder:folder
+                     referencedFrom:nil
+                       checkBuiltIn:NO];
 
-    if (!path.has_value())
+    if (path == nil)
         return;
 
-    loader = [OOTextureLoader loaderWithPath:oo::NSStringFrom(*path)
+    loader = [OOTextureLoader loaderWithPath:path
                                      options:kOOTextureMinFilterNearest | kOOTextureMinFilterNearest | kOOTextureNoShrink | kOOTextureNoFNFMessage |
         kOOTextureNeverScale];
 
-    displayName = oo::OptionalString([fileScanner displayNameForFile:oo::NSStringFrom(name) andFolder:oo::NSStringFrom(folder)]);
+    displayName = [fileScanner displayNameForFile:name andFolder:folder];
     if (loader == nil) {
-        OOLog(@"verifyOXP.texture.failed", @"***** ERROR: image %@ could not be read.", oo::NSStringOrNil(displayName));
+        OOLog(@"verifyOXP.texture.failed", @"***** ERROR: image %@ could not be read.", displayName);
     } else {
         success = [loader getResult:&pixmap format:&format originalWidth:NULL originalHeight:NULL];
 
@@ -130,14 +149,14 @@ static const char* const kStageName = "Testing textures and images";
             rWidth = OORoundUpToPowerOf2_PixMap((2 * pixmap.width) / 3);
             rHeight = OORoundUpToPowerOf2_PixMap((2 * pixmap.height) / 3);
             if (pixmap.width != rWidth || pixmap.height != rHeight) {
-                OOLog(@"verifyOXP.texture.notPOT", @"----- WARNING: image %@ has non-power-of-two dimensions; it will have to be rescaled (from %ux%u pixels to %ux%u pixels) at runtime.", oo::NSStringOrNil(displayName), pixmap.width, pixmap.height, rWidth, rHeight);
+                OOLog(@"verifyOXP.texture.notPOT", @"----- WARNING: image %@ has non-power-of-two dimensions; it will have to be rescaled (from %ux%u pixels to %ux%u pixels) at runtime.", displayName, pixmap.width, pixmap.height, rWidth, rHeight);
             } else {
-                OOLog(@"verifyOXP.verbose.texture.OK", @"- %@ (%ux%u px) OK.", oo::NSStringOrNil(displayName), pixmap.width, pixmap.height);
+                OOLog(@"verifyOXP.verbose.texture.OK", @"- %@ (%ux%u px) OK.", displayName, pixmap.width, pixmap.height);
             }
 
             OOFreePixMap(&pixmap);
         } else {
-            OOLog(@"verifyOXP.texture.failed", @"***** ERROR: texture loader failed to load %@.", oo::NSStringOrNil(displayName));
+            OOLog(@"verifyOXP.texture.failed", @"***** ERROR: texture loader failed to load %@.", displayName);
         }
     }
 }
@@ -146,13 +165,11 @@ static const char* const kStageName = "Testing textures and images";
 
 @implementation OOTextureHandlingStage
 
-- (id)dependents // shared selector (proposed ADR-0043)
+- (NSSet*)dependents
 {
-    std::vector<std::string> result = oo::StringsFrom([super dependents]);
-    const std::string reverse = oo::StdString([OOTextureVerifierStage nameForReverseDependencyForVerifier:[self verifier]]);
-    if (std::find(result.begin(), result.end(), reverse) == result.end())
-        result.push_back(reverse);
-    return oo::NSSetFromStrings(result);
+    NSMutableSet* result = [[super dependents] mutableCopy];
+    [result addObject:[OOTextureVerifierStage nameForReverseDependencyForVerifier:[self verifier]]];
+    return [result autorelease];
 }
 
 @end
@@ -161,7 +178,7 @@ static const char* const kStageName = "Testing textures and images";
 
 - (OOTextureVerifierStage*)textureVerifierStage
 {
-    return [self stageWithName:oo::NSStringFrom(kStageName)];
+    return [self stageWithName:kStageName];
 }
 
 @end

@@ -77,9 +77,6 @@ MA 02110-1301, USA.
 
 #import "OOJavaScriptEngine.h"
 
-#include "oofnd/StdLib.hpp"
-#include "oofnd/String.hpp"
-
 // Exported for use from a debugger; not declared in a header.
 const char* JSValueToStrDbg(JSValue val);
 const char* JSObjectToStrDbg(JSValue obj);
@@ -89,17 +86,6 @@ const char* JSValueToStrSafeDbg(JSValue val);
 const char* JSObjectToStrSafeDbg(JSValue obj);
 const char* JSStringToStrSafeDbg(JSValue str);
 const char* JSIDToStrSafeDbg(JSAtom anID);
-
-namespace {
-// The text a *SafeDbg function returns stays valid until the next such call (it was an autoreleased
-// string's UTF-8 buffer, valid until the pool drained); the debugger prints it straight away.
-static const char* DebuggerCString(std::string text)
-{
-    static std::string sText;
-    sText = std::move(text);
-    return sText.c_str();
-}
-} // namespace
 
 const char* JSValueToStrDbg(JSValue val)
 {
@@ -162,19 +148,19 @@ const char* JSValueTypeDbg(JSValue val)
 // Doesn't run JavaScript code.
 const char* JSValueToStrSafeDbg(JSValue val)
 {
-    std::string formatted;
+    NSString* formatted = nil;
 
     switch (JS_VALUE_GET_TAG(val)) {
     case JS_TAG_INT:
-        formatted = oo::str::format("%i", JS_VALUE_GET_INT(val));
+        formatted = [NSString stringWithFormat:@"%i", JS_VALUE_GET_INT(val)];
         break;
 
     case JS_TAG_FLOAT64:
-        formatted = oo::str::format("%g", JS_VALUE_GET_FLOAT64(val));
+        formatted = [NSString stringWithFormat:@"%g", JS_VALUE_GET_FLOAT64(val)];
         break;
 
     case JS_TAG_BOOL:
-        formatted = JS_VALUE_GET_BOOL(val) ? "true" : "false";
+        formatted = JS_VALUE_GET_BOOL(val) ? @"true" : @"false";
         break;
 
     case JS_TAG_STRING:
@@ -184,11 +170,11 @@ const char* JSValueToStrSafeDbg(JSValue val)
         size_t length;
         const char* chars = JS_ToCStringLen(context, &length, val);
         if (chars != NULL) {
-            formatted = std::string(chars, length);
+            formatted = [[[NSString alloc] initWithBytes:chars length:length encoding:NSUTF8StringEncoding] autorelease];
             JS_FreeCString(context, chars);
         } else {
             JS_FreeValue(context, JS_GetException(context));
-            formatted = "string [unreadable]";
+            formatted = @"string [unreadable]";
         }
         break;
     }
@@ -200,7 +186,7 @@ const char* JSValueToStrSafeDbg(JSValue val)
         return JSValueTypeDbg(val);
     }
 
-    return DebuggerCString(std::move(formatted));
+    return [formatted UTF8String];
 }
 
 const char* JSObjectToStrSafeDbg(JSValue obj)
@@ -219,16 +205,16 @@ const char* JSIDToStrSafeDbg(JSAtom anID)
         return "void";
 
     JSContext* context = OOJSAcquireContext();
-    std::string formatted;
+    NSString* formatted = nil;
     const char* chars = JS_AtomToCString(context, anID);
     if (chars != NULL) {
-        formatted = chars;
+        formatted = [NSString stringWithUTF8String:chars];
         JS_FreeCString(context, chars);
     } else {
         JS_FreeValue(context, JS_GetException(context));
-        formatted = oo::str::format("unknown <0x%X>", (unsigned)anID);
+        formatted = [NSString stringWithFormat:@"unknown <0x%X>", (unsigned)anID];
     }
 
-    return DebuggerCString(std::move(formatted));
+    return [formatted UTF8String];
 }
 #endif

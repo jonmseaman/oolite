@@ -24,71 +24,64 @@ MA 02110-1301, USA.
 */
 
 #import "OOFlasherEntity.h"
+#import "NSDictionaryOOExtensions.h"
 #import "OOColor.h"
-#import "OOFoundationBridge.h"
+#import "OOPListView.h"
 #import "PlayerEntity.h"
 #import "Universe.h"
 
-#include "oofnd/PListGet.hpp"
-
 @interface OOFlasherEntity (Internal)
 
-- (id)initWithFlasherConfiguration:(const oo::PList&)dictionary;
-- (void)setUpColors:(const oo::PList*)colorSpecifiers; // an array node, or nullptr
+- (void)setUpColors:(NSArray*)colorSpecifiers;
 - (void)getCurrentColorComponents;
 
 @end
 
 @implementation OOFlasherEntity
 
-+ (instancetype)flasherWithDictionary:(const oo::PList&)dictionary
++ (instancetype)flasherWithDictionary:(NSDictionary*)dictionary
 {
-    return [[[OOFlasherEntity alloc] initWithFlasherConfiguration:dictionary] autorelease];
+    return [[[OOFlasherEntity alloc] initWithDictionary:dictionary] autorelease];
 }
 
-- (id)initWithDictionary:(id)dictionary
+- (id)initWithDictionary:(NSDictionary*)dictionary
 {
-    return [self initWithFlasherConfiguration:oo::PListFrom(dictionary)];
-}
-
-- (id)initWithFlasherConfiguration:(const oo::PList&)dictionary
-{
-    float size = dictionary.get<float>("size", 1.0f);
+    float size = oo::PListView(dictionary).get<float>(@"size", 1.0f);
 
     if ((self = [super initWithDiameter:size])) {
-        _frequency = dictionary.get<float>("frequency", 1.0f) * 2.0f;
-        _phase = dictionary.get<float>("phase", 0.0f);
-        _brightfraction = dictionary.get<float>("bright_fraction", 0.5f);
+        _frequency = oo::PListView(dictionary).get<float>(@"frequency", 1.0f) * 2.0f;
+        _phase = oo::PListView(dictionary).get<float>(@"phase", 0.0f);
+        _brightfraction = oo::PListView(dictionary).get<float>(@"bright_fraction", 0.5f);
 
-        [self setUpColors:dictionary.get<oo::PList::Array>("colors")];
+        [self setUpColors:oo::PListView(dictionary).get<NSArray*>(@"colors")];
         [self getCurrentColorComponents];
 
-        [self setActive:dictionary.get<bool>("initially_on", YES)];
+        [self setActive:oo::PListView(dictionary).get<BOOL>(@"initially_on", YES)];
     }
     return self;
 }
 
-- (void)setUpColors:(const oo::PList*)colorSpecifiers
+- (void)dealloc
 {
-    std::vector<oo::ObjCRef<OOColor*>> colors;
-    if (colorSpecifiers != nullptr) {
-        for (const oo::PList& specifier : *colorSpecifiers->getIf<oo::PList::Array>()) {
-            colors.emplace_back([OOColor colorWithDescription:oo::ObjectFromPList(specifier) saturationFactor:0.75f]);
-        }
-    }
+    [_colors release];
 
-    _colors = std::move(colors);
+    [super dealloc];
 }
 
-// The colour at index; nil past the end (-objectAtIndex: raised there).
-- (OOColor*)flasherColorAtIndex:(NSUInteger)index
+- (void)setUpColors:(NSArray*)colorSpecifiers
 {
-    return index < _colors.size() ? _colors[index].get() : nil;
+    NSMutableArray* colors = [NSMutableArray arrayWithCapacity:[colorSpecifiers count]];
+    id specifier = nil;
+    foreach (specifier, colorSpecifiers) {
+        [colors addObject:[OOColor colorWithDescription:specifier saturationFactor:0.75f]];
+    }
+
+    _colors = [colors copy];
 }
 
 - (void)getCurrentColorComponents
 {
-    [self setColor:[self flasherColorAtIndex:_activeColor] alpha:_colorComponents[3]];
+    [self setColor:[_colors objectAtIndex:_activeColor] alpha:_colorComponents[3]];
 }
 
 - (BOOL)isActive
@@ -147,14 +140,14 @@ MA 02110-1301, USA.
 
     if (_frequency != 0) {
         float wave = sinf(_frequency * M_PI * (_time + _phase));
-        NSUInteger count = _colors.size();
+        NSUInteger count = [_colors count];
         if (count > 1 && wave < 0) {
             if (!_justSwitched && wave > _wave) // don't test for wave >= _wave - could give wrong results with very low frequencies
             {
                 _justSwitched = YES;
                 ++_activeColor;
                 _activeColor %= count; //_activeColor = ++_activeColor % count; is potentially undefined operation
-                [self setColor:[self flasherColorAtIndex:_activeColor]];
+                [self setColor:[_colors objectAtIndex:_activeColor]];
             }
         } else if (_justSwitched) {
             _justSwitched = NO;

@@ -28,13 +28,9 @@ MA 02110-1301, USA.
 #import "OOJSScript.h"
 #import "OOJSVector.h"
 #import "OOJavaScriptEngine.h"
-#import "OOStringBridge.h"
 #import "OOSystemDescriptionManager.h"
 #import "PlayerEntityScriptMethods.h"
 #import "Universe.h"
-
-#import "OOFoundationBridge.h"
-#include <cstring>
 
 /*	SpiderMonkey implemented SystemInfo's dynamic per-system properties with
         class getProperty/setProperty/delProperty hooks and a JSCLASS_NEW_ENUMERATE
@@ -144,16 +140,16 @@ static const JSCFunctionListEntry sSystemInfoStaticMethods[] = {
 @private
     OOGalaxyID _galaxy;
     OOSystemID _system;
-    std::string _planetKey;
+    NSString* _planetKey;
     NSMutableSet* _nullAssignedKeys; // See SystemInfoExoticSetProperty().
 }
 
 - (id)initWithGalaxy:(OOGalaxyID)galaxy system:(OOSystemID)system;
 
-- (id)valueForKey:(id)key; // shared selector (proposed ADR-0043): key is an Objective-C string
-- (void)setValue:(id)value forKey:(id)key; // shared selector (proposed ADR-0043): key is an Objective-C string
+- (id)valueForKey:(NSString*)key;
+- (void)setValue:(id)value forKey:(NSString*)key;
 
-- (id)allKeys; // shared selector (proposed ADR-0043): an Objective-C array of strings
+- (NSArray*)allKeys;
 
 - (void)setNullAssigned:(BOOL)flag forKey:(NSString*)key;
 - (BOOL)isNullAssignedForKey:(NSString*)key;
@@ -184,13 +180,14 @@ DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, sSystemInfoClassID, OOSystemI
     if ((self = [super init])) {
         _galaxy = galaxy;
         _system = system;
-        _planetKey = oo::str::format("%u %i", galaxy, system);
+        _planetKey = [[NSString stringWithFormat:@"%u %i", galaxy, system] retain];
     }
     return self;
 }
 
 - (void)dealloc
 {
+    [_planetKey release];
     [_nullAssignedKeys release];
 
     [super dealloc];
@@ -212,17 +209,17 @@ DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, sSystemInfoClassID, OOSystemI
     return [_nullAssignedKeys containsObject:key];
 }
 
-- (id)descriptionComponents // shared selector (proposed ADR-0043)
+- (NSString*)descriptionComponents
 {
-    return oo::NSStringFrom(oo::str::format("galaxy %u, system %i", _galaxy, _system));
+    return [NSString stringWithFormat:@"galaxy %u, system %i", _galaxy, _system];
 }
 
-- (id)shortDescriptionComponents // shared selector (proposed ADR-0043)
+- (NSString*)shortDescriptionComponents
 {
-    return oo::NSStringFrom(_planetKey);
+    return _planetKey;
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsClassName
 {
     return @"SystemInfo";
 }
@@ -240,7 +237,7 @@ DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, sSystemInfoClassID, OOSystemI
     return hash;
 }
 
-- (id)valueForKey:(id)key // shared selector (proposed ADR-0043)
+- (id)valueForKey:(NSString*)key
 {
     if ([UNIVERSE inInterstellarSpace] && _system == -1) {
         return [[UNIVERSE currentSystemData] objectForKey:key];
@@ -248,15 +245,14 @@ DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, sSystemInfoClassID, OOSystemI
     return [UNIVERSE systemDataForGalaxy:_galaxy planet:_system key:key];
 }
 
-- (void)setValue:(id)value forKey:(id)key // shared selector (proposed ADR-0043)
+- (void)setValue:(id)value forKey:(NSString*)key
 {
-    // The running script's manifest identifier, handed on as it was read.
-    const oo::PList manifest = oo::PListFrom([[OOJSScript currentlyRunningScript] propertyNamed:kLocalManifestProperty]);
+    NSString* manifest = [[OOJSScript currentlyRunningScript] propertyNamed:kLocalManifestProperty];
 
-    [UNIVERSE setSystemDataForGalaxy:_galaxy planet:_system key:key value:value fromManifest:oo::ObjectFromPList(manifest) forLayer:OO_LAYER_OXP_DYNAMIC];
+    [UNIVERSE setSystemDataForGalaxy:_galaxy planet:_system key:key value:value fromManifest:manifest forLayer:OO_LAYER_OXP_DYNAMIC];
 }
 
-- (id)allKeys // shared selector (proposed ADR-0043)
+- (NSArray*)allKeys
 {
     if ([UNIVERSE inInterstellarSpace] && _system == -1) {
         return [[UNIVERSE currentSystemData] allKeys];
@@ -402,13 +398,13 @@ static OOSystemInfo* SystemInfoForObject(JSValueConst obj)
     return (OOSystemInfo*)JS_GetOpaque(obj, sSystemInfoClassID);
 }
 
-// The key for a string property, or nullopt for symbols.
-static std::optional<std::string> SystemInfoKeyForAtom(JSContext* context, JSAtom prop)
+// The key for a string property, or nil for symbols.
+static NSString* SystemInfoKeyForAtom(JSContext* context, JSAtom prop)
 {
-    std::optional<std::string> key;
+    NSString* key = nil;
     JSValue propValue = JS_AtomToValue(context, prop);
     if (JS_IsString(propValue)) {
-        key = oo::OptionalString(OOStringFromJSValue(context, propValue));
+        key = OOStringFromJSValue(context, propValue);
     }
     JS_FreeValue(context, propValue);
     return key;
@@ -419,7 +415,7 @@ static std::optional<std::string> SystemInfoKeyForAtom(JSContext* context, JSAto
         exists, NO otherwise (or on exception, which is then pending and
         *outValue is JS_EXCEPTION).
 */
-static BOOL SystemInfoGetSystemDataValue(JSContext* context, OOSystemInfo* info, const std::string& key, JSValue* outValue)
+static BOOL SystemInfoGetSystemDataValue(JSContext* context, OOSystemInfo* info, NSString* key, JSValue* outValue)
 {
     *outValue = JS_UNDEFINED;
 
@@ -427,15 +423,15 @@ static BOOL SystemInfoGetSystemDataValue(JSContext* context, OOSystemInfo* info,
     id propValue = nil;
     // interstellar space needs more work at this stage
     if ([info system] != -1) {
-        propValue = [systemManager getProperty:oo::NSStringFrom(key) forSystem:[info system] inGalaxy:[info galaxy]];
+        propValue = [systemManager getProperty:key forSystem:[info system] inGalaxy:[info galaxy]];
     } else {
-        propValue = [info valueForKey:oo::NSStringFrom(key)];
+        propValue = [info valueForKey:key];
     }
 
     if (propValue == nil)
         return NO;
 
-    if (oo::IsNSNumber(propValue) || OOIsNumberLiteral(oo::StdString([propValue description]), YES)) {
+    if ([propValue isKindOfClass:[NSNumber class]] || OOIsNumberLiteral([propValue description], YES)) {
         *outValue = JS_NewNumber(context, [propValue doubleValue]);
     } else {
         *outValue = [propValue oo_jsValueInContext:context];
@@ -513,7 +509,7 @@ static int SystemInfoExoticGetOwnProperty(JSContext* context, JSPropertyDescript
     OOJS_EXOTIC_ENTER
 
     OOSystemInfo* info = SystemInfoForObject(obj);
-    std::optional<std::string> key = (info != nil) ? SystemInfoKeyForAtom(context, prop) : std::nullopt;
+    NSString* key = (info != nil) ? SystemInfoKeyForAtom(context, prop) : nil;
     JSValue value;
 
     /*	SpiderMonkey reported the fixed (shared permanent) properties as own
@@ -524,8 +520,8 @@ static int SystemInfoExoticGetOwnProperty(JSContext* context, JSPropertyDescript
     */
     int shared = OOJSGetSharedPermanentOwnProperty(context, desc, obj, prop);
     if (shared != 0) {
-        if (shared > 0 && desc != NULL && key.has_value()) {
-            if (SystemInfoGetSystemDataValue(context, info, *key, &value)) {
+        if (shared > 0 && desc != NULL && key != nil) {
+            if (SystemInfoGetSystemDataValue(context, info, key, &value)) {
                 if (JS_IsException(value)) {
                     JS_FreeValue(context, desc->getter);
                     JS_FreeValue(context, desc->setter);
@@ -539,7 +535,7 @@ static int SystemInfoExoticGetOwnProperty(JSContext* context, JSPropertyDescript
         return shared;
     }
 
-    if (!key.has_value())
+    if (key == nil)
         return false; // Prototype (no dynamic properties) or symbol.
 
     /*	SpiderMonkey's resolve hook made system data keys enumerable (for..in and
@@ -552,7 +548,7 @@ static int SystemInfoExoticGetOwnProperty(JSContext* context, JSPropertyDescript
     if (desc == NULL)
         return false;
 
-    if (!SystemInfoGetSystemDataValue(context, info, *key, &value)) {
+    if (!SystemInfoGetSystemDataValue(context, info, key, &value)) {
         return false;
     }
     if (JS_IsException(value))
@@ -579,8 +575,8 @@ static int SystemInfoExoticGetOwnPropertyNames(JSContext* context, JSPropertyEnu
     *plen = 0;
 
     OOSystemInfo* info = SystemInfoForObject(obj);
-    const std::vector<std::string> keys = oo::StringsFrom([info allKeys]);
-    NSUInteger count = keys.size();
+    NSArray* keys = [info allKeys];
+    NSUInteger count = [keys count];
     assert(count <= INT32_MAX);
 
     JSPropertyEnum* tab = (JSPropertyEnum*)js_mallocz(context, sizeof *tab * (count + 1));
@@ -589,8 +585,8 @@ static int SystemInfoExoticGetOwnPropertyNames(JSContext* context, JSPropertyEnu
 
     // System data keys (all enumerable; the SpiderMonkey enumerate hook listed exactly these).
     uint32_t i = 0;
-    for (const std::string& key : keys) {
-        JSAtom atom = JS_NewAtom(context, key.c_str());
+    for (NSString* key in keys) {
+        JSAtom atom = JS_NewAtom(context, [[key description] UTF8String]);
         if (atom == JS_ATOM_NULL) {
             JS_FreePropertyEnum(context, tab, i);
             return -1;
@@ -617,9 +613,9 @@ static int SystemInfoExoticDeleteProperty(JSContext* context, JSValueConst obj, 
 
     // SpiderMonkey version: set the property to undefined (which removes it).
     OOSystemInfo* info = SystemInfoForObject(obj);
-    std::optional<std::string> key = SystemInfoKeyForAtom(context, prop);
-    if (info != nil && key.has_value()) {
-        [info setValue:nil forKey:oo::NSStringFrom(*key)];
+    NSString* key = SystemInfoKeyForAtom(context, prop);
+    if (info != nil && key != nil) {
+        [info setValue:nil forKey:key];
     }
     return true;
 
@@ -667,12 +663,12 @@ static JSValue SystemInfoExoticGetProperty(JSContext* context, JSValueConst obj,
         return JS_UNDEFINED;
     }
 
-    std::optional<std::string> key = SystemInfoKeyForAtom(context, prop);
-    if (!key.has_value())
+    NSString* key = SystemInfoKeyForAtom(context, prop);
+    if (key == nil)
         return JS_UNDEFINED;
 
     JSValue value;
-    if (!SystemInfoGetSystemDataValue(context, info, *key, &value) && [info isNullAssignedForKey:oo::NSStringFrom(*key)])
+    if (!SystemInfoGetSystemDataValue(context, info, key, &value) && [info isNullAssignedForKey:key])
         return JS_NULL;
     return value;
 
@@ -689,8 +685,8 @@ static int SystemInfoExoticSetProperty(JSContext* context, JSValueConst obj, JSA
         return result;
 
     OOSystemInfo* info = SystemInfoForObject(obj);
-    std::optional<std::string> key = SystemInfoKeyForAtom(context, prop);
-    if (info == nil || !key.has_value() || !JS_IsObject(receiver) || JS_VALUE_GET_PTR(receiver) != JS_VALUE_GET_PTR(obj)) {
+    NSString* key = SystemInfoKeyForAtom(context, prop);
+    if (info == nil || key == nil || !JS_IsObject(receiver) || JS_VALUE_GET_PTR(receiver) != JS_VALUE_GET_PTR(obj)) {
         // Ordinary property (prototype object, symbol, or inherited by another object).
         return JS_DefinePropertyValue(context, receiver, prop, JS_DupValue(context, value), JS_PROP_C_W_E);
     }
@@ -699,8 +695,8 @@ static int SystemInfoExoticSetProperty(JSContext* context, JSValueConst obj, JSA
             value in the object's own slot, so reading the key back gave null;
             remember such keys to do the same.
     */
-    [info setValue:OOStringFromJSValue(context, value) forKey:oo::NSStringFrom(*key)];
-    [info setNullAssigned:JS_IsNull(value) forKey:oo::NSStringFrom(*key)];
+    [info setValue:OOStringFromJSValue(context, value) forKey:key];
+    [info setNullAssigned:JS_IsNull(value) forKey:key];
     return true;
 
     OOJS_EXOTIC_EXIT(context, -1)
@@ -794,7 +790,7 @@ static JSValue SystemInfoRouteToSystem(OOJS_NATIVE_ARGS)
 
     OOSystemInfo* thisInfo = nil;
     OOSystemInfo* otherInfo = nil;
-    oo::PList result;
+    NSDictionary* result = nil;
     OORouteType routeType = OPTIMIZED_BY_JUMPS;
 
     if (!JSSystemInfoGetSystemInfo(context, OOJS_THIS, &thisInfo))
@@ -815,10 +811,10 @@ static JSValue SystemInfoRouteToSystem(OOJS_NATIVE_ARGS)
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = oo::PListFrom([UNIVERSE routeFromSystem:[thisInfo system] toSystem:[otherInfo system] optimizedBy:routeType]);
+    result = [UNIVERSE routeFromSystem:[thisInfo system] toSystem:[otherInfo system] optimizedBy:routeType];
     OOJS_END_FULL_NATIVE
 
-    OOJS_RETURN_OBJECT(oo::ObjectFromPList(result));
+    OOJS_RETURN_OBJECT(result);
 
     OOJS_NATIVE_EXIT
 }
@@ -832,8 +828,8 @@ static JSValue SystemInfoSamplePrice(OOJS_NATIVE_ARGS)
 
     if (!JSSystemInfoGetSystemInfo(context, OOJS_THIS, &thisInfo))
         return OOJSNativeFailure(context);
-    std::optional<std::string> commodity = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (EXPECT_NOT(![[UNIVERSE commodities] goodDefined:oo::NSStringOrNil(commodity)])) {
+    OOCommodityType commodity = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (EXPECT_NOT(![[UNIVERSE commodities] goodDefined:commodity])) {
         OOJSReportBadArguments(context, @"SystemInfo", @"samplePrice", MIN(argc, 1), OOJS_ARGV, NULL, @"Unrecognised commodity type");
         return OOJSNativeFailure(context);
     }
@@ -844,7 +840,7 @@ static JSValue SystemInfoSamplePrice(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    OOCreditsQuantity price = [[UNIVERSE commodities] samplePriceForCommodity:oo::NSStringOrNil(commodity) inEconomy:[[thisInfo valueForKey:@"economy"] intValue] withScript:[thisInfo valueForKey:@"commodity_script"] inSystem:[thisInfo system]];
+    OOCreditsQuantity price = [[UNIVERSE commodities] samplePriceForCommodity:commodity inEconomy:[[thisInfo valueForKey:@"economy"] intValue] withScript:[thisInfo valueForKey:@"commodity_script"] inSystem:[thisInfo system]];
 
     return JS_NewNumber(context, price);
 
@@ -860,9 +856,9 @@ static JSValue SystemInfoSetPropertyMethod(OOJS_NATIVE_ARGS)
     if (!JSSystemInfoGetSystemInfo(context, OOJS_THIS, &thisInfo))
         return OOJSNativeFailure(context);
 
-    std::optional<std::string> property;
+    NSString* property = nil;
     id value = nil;
-    oo::PList manifest; // a string from JavaScript, or the running script's manifest identifier as read
+    NSString* manifest = nil;
 
     int32_t iValue;
 
@@ -880,17 +876,17 @@ static JSValue SystemInfoSetPropertyMethod(OOJS_NATIVE_ARGS)
     }
     OOSystemLayer layer = (OOSystemLayer)iValue;
 
-    property = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[1]));
+    property = OOStringFromJSValue(context, OOJS_ARGV[1]);
     if (!JS_IsNull(OOJS_ARGV[2])) {
         value = OOJSNativeObjectFromJSValue(context, OOJS_ARGV[2]);
     }
     if (argc >= 4) {
-        manifest = oo::PListFrom(OOStringFromJSValue(context, OOJS_ARGV[3]));
+        manifest = OOStringFromJSValue(context, OOJS_ARGV[3]);
     } else {
-        manifest = oo::PListFrom([[OOJSScript currentlyRunningScript] propertyNamed:kLocalManifestProperty]);
+        manifest = [[OOJSScript currentlyRunningScript] propertyNamed:kLocalManifestProperty];
     }
 
-    [UNIVERSE setSystemDataForGalaxy:[thisInfo galaxy] planet:[thisInfo system] key:oo::NSStringOrNil(property) value:value fromManifest:oo::ObjectFromPList(manifest) forLayer:layer];
+    [UNIVERSE setSystemDataForGalaxy:[thisInfo galaxy] planet:[thisInfo system] key:property value:value fromManifest:manifest forLayer:layer];
 
     OOJS_RETURN_VOID;
 
@@ -917,14 +913,13 @@ static JSValue SystemInfoStaticFilteredSystems(OOJS_NATIVE_ARGS)
 
     JSValue rval = JS_UNDEFINED;
     @autoreleasepool {
-        std::vector<oo::ObjCRef<OOSystemInfo*>> result;
-        result.reserve(256);
+        NSMutableArray* result = [NSMutableArray arrayWithCapacity:256];
 
         // Not OOJS_BEGIN_FULL_NATIVE() - we use JSAPI while paused.
         OOJSPauseTimeLimiter();
 
         // Iterate over systems.
-        BOOL OK = YES; // (the array was always made)
+        BOOL OK = result != nil;
         OOGalaxyID galaxy = [PLAYER currentGalaxyID];
         OOSystemID system;
         for (system = 0; system <= kOOMaximumSystemID; system++) {
@@ -943,7 +938,7 @@ static JSValue SystemInfoStaticFilteredSystems(OOJS_NATIVE_ARGS)
             if (OK) {
                 int boolVal = JS_ToBool(context, callResult);
                 if (boolVal > 0) {
-                    result.emplace_back(info);
+                    [result addObject:info];
                 } else if (boolVal < 0) {
                     JS_FreeValue(context, JS_GetException(context));
                 }
@@ -955,7 +950,7 @@ static JSValue SystemInfoStaticFilteredSystems(OOJS_NATIVE_ARGS)
         }
 
         if (OK) {
-            rval = [oo::NSArrayFromObjects(result) oo_jsValueInContext:context];
+            rval = [result oo_jsValueInContext:context];
         } else {
             rval = OOJSNativeFailure(context);
         }
@@ -971,9 +966,9 @@ static JSValue SystemInfoStaticSetInterstellarProperty(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> property;
+    NSString* property = nil;
     id value = nil;
-    oo::PList manifest; // a string from JavaScript, or the running script's manifest identifier as read
+    NSString* manifest = nil;
 
     int32_t iValue;
     OOGalaxyID g;
@@ -1026,19 +1021,19 @@ static JSValue SystemInfoStaticSetInterstellarProperty(OOJS_NATIVE_ARGS)
     }
     OOSystemLayer layer = (OOSystemLayer)iValue;
 
-    property = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[4]));
+    property = OOStringFromJSValue(context, OOJS_ARGV[4]);
     if (!JS_IsNull(OOJS_ARGV[5])) {
         value = OOJSNativeObjectFromJSValue(context, OOJS_ARGV[5]);
     }
     if (argc >= 7) {
-        manifest = oo::PListFrom(OOStringFromJSValue(context, OOJS_ARGV[6]));
+        manifest = OOStringFromJSValue(context, OOJS_ARGV[6]);
     } else {
-        manifest = oo::PListFrom([[OOJSScript currentlyRunningScript] propertyNamed:kLocalManifestProperty]);
+        manifest = [[OOJSScript currentlyRunningScript] propertyNamed:kLocalManifestProperty];
     }
 
-    std::string key = oo::str::format("interstellar: %u %u %u", g, s1, s2);
+    NSString* key = [NSString stringWithFormat:@"interstellar: %u %u %u", g, s1, s2];
 
-    [[UNIVERSE systemManager] setProperty:oo::NSStringOrNil(property) forSystemKey:oo::NSStringFrom(key) andLayer:layer toValue:value fromManifest:oo::ObjectFromPList(manifest)];
+    [[UNIVERSE systemManager] setProperty:property forSystemKey:key andLayer:layer toValue:value fromManifest:manifest];
 
     OOJS_RETURN_VOID;
 

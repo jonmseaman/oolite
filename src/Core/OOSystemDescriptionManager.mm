@@ -25,7 +25,6 @@ MA 02110-1301, USA.
 */
 
 #import "OOSystemDescriptionManager.h"
-#import "OOFoundationBridge.h"
 #import "OOPListView.h"
 #import "OOStringParsing.h"
 #import "OOTypes.h"
@@ -33,38 +32,32 @@ MA 02110-1301, USA.
 #import "ResourceManager.h"
 #import "Universe.h"
 
-namespace {
-
 // character sequence which can't be in property name, system key or layer
 // and is highly unlikely to be in a manifest identifier
-constexpr std::string_view kOOScriptedChangeJoiner = "~|~";
-
-}
+static NSString* const kOOScriptedChangeJoiner = @"~|~";
 
 // likely maximum number of planetinfo properties to be applied to a system
 // just for efficiency - no harm in exceeding it
 #define OO_LIKELY_PROPERTIES_PER_SYSTEM 50
 
 @interface OOSystemDescriptionManager (OOPrivate)
-// Property dictionaries are oo::PList Dicts; a single property value is an oo::PList (null = nil).
-- (void)setProperties:(const oo::PList&)properties inDescription:(OOSystemDescriptionEntry*)desc;
-- (oo::PList)calculatePropertiesForSystemKey:(const std::string&)key;
+- (void)setProperties:(NSDictionary*)properties inDescription:(OOSystemDescriptionEntry*)desc;
+- (NSDictionary*)calculatePropertiesForSystemKey:(NSString*)key;
 - (void)updateCacheEntry:(NSUInteger)i;
-- (void)updateCacheEntry:(NSUInteger)i forProperty:(const std::string&)property;
-- (oo::PList)getProperty:(const std::string&)property forSystemKey:(const std::string&)key withUniversal:(BOOL)universal;
+- (void)updateCacheEntry:(NSUInteger)i forProperty:(NSString*)property;
+- (id)getProperty:(NSString*)property forSystemKey:(NSString*)key withUniversal:(BOOL)universal;
 /* some planetinfo properties have two ways to specify
  * need to get the one with higher layer (if they're both at the same layer,
  * go with property1) */
-- (oo::PList)getProperty:(const std::string&)property1 orProperty:(const std::string&)property2 forSystemKey:(const std::string&)key withUniversal:(BOOL)universal;
+- (id)getProperty:(NSString*)property1 orProperty:(NSString*)property2 forSystemKey:(NSString*)key withUniversal:(BOOL)universal;
 
-// value null = nil (removes the saved change); manifest nullopt = nil (cancels saving it)
-- (void)saveScriptedChangeToProperty:(const std::string&)property forSystemKey:(const std::string&)key andLayer:(OOSystemLayer)layer toValue:(const oo::PList&)value fromManifest:(const std::optional<std::string>&)manifest;
+- (void)saveScriptedChangeToProperty:(NSString*)property forSystemKey:(NSString*)key andLayer:(OOSystemLayer)layer toValue:(id)value fromManifest:(NSString*)manifest;
 
 @end
 
-namespace {
+static NSString* kOOSystemLayerProperty = @"layer";
 
-constexpr const char* kOOSystemLayerProperty = "layer";
+namespace {
 
 // A layer number read from data, as an OOSystemLayer. 0-3 are the layers themselves; anything
 // else (only a hand-edited saved game gives one) takes the rule -setProperties:inDescription:
@@ -77,31 +70,6 @@ OOSystemLayer OOSystemLayerFromNumber(unsigned int number)
     return (number > OO_LAYER_OXP_PRIORITY) ? OO_LAYER_OXP_PRIORITY : static_cast<OOSystemLayer>(number);
 }
 
-// ScanTokensFromString(key) as a property-list array, so at<NSUInteger>(i) reads a token as the
-// collection extractors read it from the token array.
-oo::PList KeyTokens(const std::string& key)
-{
-    const std::vector<std::string> tokens = oo::str::tokens(key);
-    return oo::PList(oo::PList::Array(tokens.begin(), tokens.end()));
-}
-
-// [dict objectForKey:key] of a property dictionary, as a value (null = nil).
-oo::PList ValueForKey(const oo::PList& dict, const std::string& key)
-{
-    const oo::PList* value = dict.find(key);
-    return value != nullptr ? *value : oo::PList();
-}
-
-// get<std::string> as the string extractor answered it: nullopt where that was nil (no such key,
-// or neither a string nor a number).
-std::optional<std::string> StringForKey(const oo::PList& dict, const char* key)
-{
-    const oo::PList* value = dict.find(key);
-    if (value == nullptr || !(value->isString() || value->isNumber()))
-        return std::nullopt;
-    return dict.get<std::string>(key);
-}
-
 }
 
 @implementation OOSystemDescriptionManager
@@ -110,22 +78,33 @@ std::optional<std::string> StringForKey(const oo::PList& dict, const char* key)
 {
     self = [super init];
     if (self != nil) {
-        universalProperties = oo::PList(oo::PList::Dict());
+        universalProperties = [[NSMutableDictionary alloc] initWithCapacity:OO_LIKELY_PROPERTIES_PER_SYSTEM];
         interstellarSpace = [[OOSystemDescriptionEntry alloc] init];
+        // assume specific interstellar settings are rare
+        systemDescriptions = [[NSMutableDictionary alloc] initWithCapacity:OO_SYSTEM_CACHE_LENGTH + 20];
         for (NSUInteger i = 0; i < OO_SYSTEM_CACHE_LENGTH; i++) {
-            propertyCache[i] = oo::PList(oo::PList::Dict());
+            propertyCache[i] = [[NSMutableDictionary alloc] initWithCapacity:OO_LIKELY_PROPERTIES_PER_SYSTEM];
             // hub count of 24 is considerably higher than occurs in
             // standard planetinfo
-            neighbourCache[i].reserve(24);
+            neighbourCache[i] = [[NSMutableArray alloc] initWithCapacity:24];
         }
-        scriptedChanges = oo::PList(oo::PList::Dict());
+        propertiesInUse = [[NSMutableSet alloc] initWithCapacity:OO_LIKELY_PROPERTIES_PER_SYSTEM];
+        scriptedChanges = [[NSMutableDictionary alloc] initWithCapacity:64];
     }
     return self;
 }
 
 - (void)dealloc
 {
+    DESTROY(universalProperties);
     DESTROY(interstellarSpace);
+    DESTROY(systemDescriptions);
+    for (NSUInteger i = 0; i < OO_SYSTEM_CACHE_LENGTH; i++) {
+        DESTROY(propertyCache[i]);
+        DESTROY(neighbourCache[i]);
+    }
+    DESTROY(propertiesInUse);
+    DESTROY(scriptedChanges);
     [super dealloc];
 }
 
@@ -134,8 +113,7 @@ std::optional<std::string> StringForKey(const oo::PList& dict, const char* key)
     NSUInteger i, j, k, jIndex, kIndex;
     // firstly, cache all coordinates
     for (i = 0; i < OO_SYSTEM_CACHE_LENGTH; i++) {
-        // PointFromString (OOStringParsing) is an unmigrated callee: convert at the call.
-        coordinatesCache[i] = PointFromString(oo::NSStringOrNil(StringForKey(propertyCache[i], "coordinates")));
+        coordinatesCache[i] = PointFromString(oo::PListView(propertyCache[i]).get<NSString*>(@"coordinates"));
     }
     // now for each system find its neighbours
     for (i = 0; i < OO_GALAXIES_AVAILABLE; i++) {
@@ -146,209 +124,197 @@ std::optional<std::string> StringForKey(const oo::PList& dict, const char* key)
                 kIndex = k + (i * OO_SYSTEMS_PER_GALAXY);
                 if (distanceBetweenPlanetPositions(coordinatesCache[jIndex].x, coordinatesCache[jIndex].y, coordinatesCache[kIndex].x, coordinatesCache[kIndex].y) <= MAX_JUMP_RANGE) {
                     // arrays are of system number only
-                    neighbourCache[jIndex].push_back(static_cast<OOSystemID>(k));
-                    neighbourCache[kIndex].push_back(static_cast<OOSystemID>(j));
+                    [neighbourCache[jIndex] addObject:[NSNumber numberWithUnsignedInteger:k]];
+                    [neighbourCache[kIndex] addObject:[NSNumber numberWithUnsignedInteger:j]];
                 }
             }
         }
     }
 }
 
-- (void)cxx_setUniversalProperties:(const oo::PList&)properties
+- (void)setUniversalProperties:(NSDictionary*)properties
 {
-    if (const oo::PList::Dict* entries = properties.getIf<oo::PList::Dict>()) {
-        oo::PList::Dict& universal = *universalProperties.getIf<oo::PList::Dict>();
-        for (const auto& [property, value] : *entries) {
-            universal.insert_or_assign(property, value);
-            propertiesInUse.insert(property);
-        }
-    }
+    [universalProperties addEntriesFromDictionary:properties];
+    [propertiesInUse addObjectsFromArray:[properties allKeys]];
     for (NSUInteger i = 0; i < OO_SYSTEM_CACHE_LENGTH; i++) {
         [self updateCacheEntry:i];
     }
 }
 
-- (void)cxx_setInterstellarProperties:(const oo::PList&)properties
+- (void)setInterstellarProperties:(NSDictionary*)properties
 {
     [self setProperties:properties inDescription:interstellarSpace];
 }
 
-- (void)cxx_setProperties:(const oo::PList&)properties forSystemKey:(const std::string&)key
+- (void)setProperties:(NSDictionary*)properties forSystemKey:(NSString*)key
 {
-    oo::ObjCRef<OOSystemDescriptionEntry*>& desc = systemDescriptions[key];
-    if (desc.get() == nil) {
+    OOSystemDescriptionEntry* desc = [systemDescriptions objectForKey:key];
+    if (desc == nil) {
         // create it
-        desc = oo::ObjCRef<OOSystemDescriptionEntry*>::adopt([[OOSystemDescriptionEntry alloc] init]);
+        desc = [[[OOSystemDescriptionEntry alloc] init] autorelease];
+        [systemDescriptions setObject:desc forKey:key];
     }
-    [self setProperties:properties inDescription:desc.get()];
-    if (const oo::PList::Dict* entries = properties.getIf<oo::PList::Dict>()) {
-        for (const auto& [property, value] : *entries)
-            propertiesInUse.insert(property);
-    }
+    [self setProperties:properties inDescription:desc];
+    [propertiesInUse addObjectsFromArray:[properties allKeys]];
 
-    const oo::PList tokens = KeyTokens(key);
-    if (tokens.count() == 2 && tokens.at<NSUInteger>(0) < OO_GALAXIES_AVAILABLE && tokens.at<NSUInteger>(1) < OO_SYSTEMS_PER_GALAXY) {
-        OOGalaxyID g = tokens.at<NSUInteger>(0);
-        OOSystemID s = tokens.at<NSUInteger>(1);
+    NSArray* tokens = ScanTokensFromString(key);
+    if ([tokens count] == 2 && oo::PListView(tokens).at<NSUInteger>(0) < OO_GALAXIES_AVAILABLE && oo::PListView(tokens).at<NSUInteger>(1) < OO_SYSTEMS_PER_GALAXY) {
+        OOGalaxyID g = oo::PListView(tokens).at<NSUInteger>(0);
+        OOSystemID s = oo::PListView(tokens).at<NSUInteger>(1);
         NSUInteger index = (g * OO_SYSTEMS_PER_GALAXY) + s;
         if (index >= OO_SYSTEM_CACHE_LENGTH) {
-            OOLog(@"system.description.error", @"'%@' is an invalid system key. This is an internal error. Please report it.", oo::NSStringFrom(key));
+            OOLog(@"system.description.error", @"'%@' is an invalid system key. This is an internal error. Please report it.", key);
         } else {
             [self updateCacheEntry:index];
         }
     }
 }
 
-- (void)cxx_setProperty:(const std::string&)property forSystemKey:(const std::string&)key andLayer:(OOSystemLayer)layer toValue:(const oo::PList&)value fromManifest:(const std::optional<std::string>&)manifest
+- (void)setProperty:(NSString*)property forSystemKey:(NSString*)key andLayer:(OOSystemLayer)layer toValue:(id)value fromManifest:(NSString*)manifest
 {
-    oo::ObjCRef<OOSystemDescriptionEntry*>& desc = systemDescriptions[key];
-    if (desc.get() == nil) {
+    OOSystemDescriptionEntry* desc = [systemDescriptions objectForKey:key];
+    if (desc == nil) {
         // create it
-        desc = oo::ObjCRef<OOSystemDescriptionEntry*>::adopt([[OOSystemDescriptionEntry alloc] init]);
+        desc = [[[OOSystemDescriptionEntry alloc] init] autorelease];
+        [systemDescriptions setObject:desc forKey:key];
     }
-    [desc.get() setProperty:property forLayer:layer toValue:value];
-    propertiesInUse.insert(property);
+    [desc setProperty:property forLayer:layer toValue:value];
+    [propertiesInUse addObject:property];
 
-    const oo::PList tokens = KeyTokens(key);
-    if (tokens.count() == 2 && tokens.at<NSUInteger>(0) < OO_GALAXIES_AVAILABLE && tokens.at<NSUInteger>(1) < OO_SYSTEMS_PER_GALAXY) {
+    NSArray* tokens = ScanTokensFromString(key);
+    if ([tokens count] == 2 && oo::PListView(tokens).at<NSUInteger>(0) < OO_GALAXIES_AVAILABLE && oo::PListView(tokens).at<NSUInteger>(1) < OO_SYSTEMS_PER_GALAXY) {
         [self saveScriptedChangeToProperty:property forSystemKey:key andLayer:layer toValue:value fromManifest:manifest];
 
-        OOGalaxyID g = tokens.at<NSUInteger>(0);
-        OOSystemID s = tokens.at<NSUInteger>(1);
+        OOGalaxyID g = oo::PListView(tokens).at<NSUInteger>(0);
+        OOSystemID s = oo::PListView(tokens).at<NSUInteger>(1);
         NSUInteger index = (g * OO_SYSTEMS_PER_GALAXY) + s;
         if (index >= OO_SYSTEM_CACHE_LENGTH) {
-            OOLog(@"system.description.error", @"'%@' is an invalid system key. This is an internal error. Please report it.", oo::NSStringFrom(key));
+            OOLog(@"system.description.error", @"'%@' is an invalid system key. This is an internal error. Please report it.", key);
         } else {
             [self updateCacheEntry:index forProperty:property];
         }
     }
     // for interstellar updates, save but don't update cache
-    else if (tokens.count() == 4 && tokens.at<NSUInteger>(1) < OO_GALAXIES_AVAILABLE && tokens.at<NSUInteger>(2) < OO_SYSTEMS_PER_GALAXY && tokens.at<NSUInteger>(3) < OO_SYSTEMS_PER_GALAXY) {
+    else if ([tokens count] == 4 && oo::PListView(tokens).at<NSUInteger>(1) < OO_GALAXIES_AVAILABLE && oo::PListView(tokens).at<NSUInteger>(2) < OO_SYSTEMS_PER_GALAXY && oo::PListView(tokens).at<NSUInteger>(3) < OO_SYSTEMS_PER_GALAXY) {
         [self saveScriptedChangeToProperty:property forSystemKey:key andLayer:layer toValue:value fromManifest:manifest];
     }
 }
 
-- (void)saveScriptedChangeToProperty:(const std::string&)property forSystemKey:(const std::string&)key andLayer:(OOSystemLayer)layer toValue:(const oo::PList&)value fromManifest:(const std::optional<std::string>&)manifest
+- (void)saveScriptedChangeToProperty:(NSString*)property forSystemKey:(NSString*)key andLayer:(OOSystemLayer)layer toValue:(id)value fromManifest:(NSString*)manifest
 {
     // if OXP doesn't have a manifest, cancel saving the change
-    if (!manifest.has_value()) {
+    if (manifest == nil) {
         return;
     }
     //	OOLog(@"saving change",@"%@ %@ %@ %d",manifest,key,property,layer);
-    // The four parts (the layer as its number's text) joined into one key: the plist
-    // format can't have array keys, so they couldn't be saved.
-    std::string overrideKeyStr = *manifest;
-    overrideKeyStr += kOOScriptedChangeJoiner;
-    overrideKeyStr += key;
-    overrideKeyStr += kOOScriptedChangeJoiner;
-    overrideKeyStr += property;
-    overrideKeyStr += kOOScriptedChangeJoiner;
-    overrideKeyStr += std::to_string(static_cast<int>(layer));
-    oo::PList::Dict& changes = *scriptedChanges.getIf<oo::PList::Dict>();
-    if (!value.isNull()) {
-        changes[overrideKeyStr] = value;
+    NSArray* overrideKey = [NSArray arrayWithObjects:manifest, key, property, [[NSNumber numberWithInt:layer] stringValue], nil];
+    // Obj-C copes with NSArray keys to dictionaries fine, but the
+    // plist format doesn't, so they can't be saved.
+    NSString* overrideKeyStr = [overrideKey componentsJoinedByString:kOOScriptedChangeJoiner];
+    if (value != nil) {
+        [scriptedChanges setObject:value forKey:overrideKeyStr];
     } else {
-        changes.erase(overrideKeyStr);
+        [scriptedChanges removeObjectForKey:overrideKeyStr];
     }
 }
 
-- (void)cxx_importScriptedChanges:(const oo::PList&)scripted
+- (void)importScriptedChanges:(NSDictionary*)scripted
 {
-    const oo::PList::Dict* changes = scripted.getIf<oo::PList::Dict>();
-    if (changes == nullptr)
-        return;
-    // (in key order; was hash order: a later key overwrites the same property and layer)
-    for (const auto& [keyStr, value] : *changes) {
-        const std::vector<std::string> key = oo::str::split(keyStr, kOOScriptedChangeJoiner);
-        if (key.size() == 4) {
-            const std::string& manifest = key[0];
-            if (![ResourceManager cxx_manifestForIdentifier:manifest].isNull()) {
+    NSArray* key = nil;
+    NSString* keyStr = nil;
+    NSString* manifest = nil;
+    foreachkey(keyStr, scripted)
+    {
+        key = [keyStr componentsSeparatedByString:kOOScriptedChangeJoiner];
+        if ([key count] == 4) {
+            manifest = oo::PListView(key).at<NSString*>(0);
+            if ([ResourceManager manifestForIdentifier:manifest] != nil) {
                 //				OOLog(@"importing",@"%@ -> %@",keyStr,[scripted objectForKey:keyStr]);
-                [self cxx_setProperty:key[2]
-                         forSystemKey:key[1]
-                             andLayer:OOSystemLayerFromNumber(static_cast<unsigned int>(oo::str::intValue(key[3])))
-                              toValue:value
-                         fromManifest:manifest];
+                [self setProperty:oo::PListView(key).at<NSString*>(2)
+                     forSystemKey:oo::PListView(key).at<NSString*>(1)
+                         andLayer:OOSystemLayerFromNumber(static_cast<unsigned int>(oo::PListView(key).at<int>(3)))
+                          toValue:[scripted objectForKey:keyStr]
+                     fromManifest:manifest];
                 // and doing this set stores it into the manager's copy
                 // of scripted changes
                 // this means in theory we could import more than one
             }
             // else OXP not installed, do not load
         } else {
-            OOLog(@"systemManager.import", @"Key '%@' has unexpected format - skipping", oo::NSStringFrom(keyStr));
+            OOLog(@"systemManager.import", @"Key '%@' has unexpected format - skipping", keyStr);
         }
     }
 }
 
 // import of the old local_planetinfo_overrides dictionary
-- (void)cxx_importLegacyScriptedChanges:(const oo::PList&)scripted
+- (void)importLegacyScriptedChanges:(NSDictionary*)scripted
 {
-    const oo::PList::Dict* systems = scripted.getIf<oo::PList::Dict>();
-    if (systems == nullptr)
-        return;
-    const std::string defaultManifest = "org.oolite.oolite";
+    NSString* systemKey = nil;
+    NSString* propertyKey = nil;
+    NSString* defaultManifest = @"org.oolite.oolite";
 
-    // (systems and properties in key order; was hash order: each is set once)
-    for (const auto& [systemKey, systemChanges] : *systems) {
-        if (systemChanges.isDict() && systemChanges.find("sun_gone_nova") != nullptr) {
+    foreachkey(systemKey, scripted)
+    {
+        NSDictionary* legacyChanges = oo::PListView(scripted).get<NSDictionary*>(systemKey);
+        if ([legacyChanges objectForKey:@"sun_gone_nova"] != nil) {
             // then this is a change to import even if we don't know
             // if the OXP is still installed
-            for (const auto& [propertyKey, value] : *systemChanges.getIf<oo::PList::Dict>()) {
-                [self cxx_setProperty:propertyKey
-                         forSystemKey:systemKey
-                             andLayer:OO_LAYER_OXP_DYNAMIC
-                              toValue:value
-                         fromManifest:defaultManifest];
+            foreachkey(propertyKey, legacyChanges)
+            {
+                [self setProperty:propertyKey
+                     forSystemKey:systemKey
+                         andLayer:OO_LAYER_OXP_DYNAMIC
+                          toValue:[legacyChanges objectForKey:propertyKey]
+                     fromManifest:defaultManifest];
             }
             /* Fix for older savegames not having a larger sun radius
              * property set from the Nova mission. */
-            // -floatValue of the value (0 for nil)
-            const oo::PList sr = [self cxx_getProperty:"sun_radius" forSystemKey:systemKey];
-            float sr_num = oo::plist_get::realFrom<float>(&sr, 0.0f);
+            id sr = [self getProperty:@"sun_radius" forSystemKey:systemKey];
+            float sr_num = [sr floatValue];
             if (sr_num < 600000) {
-                // fix sun radius values (a float: written to disk as a single real)
-                [self cxx_setProperty:"sun_radius"
-                         forSystemKey:systemKey
-                             andLayer:OO_LAYER_OXP_DYNAMIC
-                              toValue:oo::PList::singleReal(sr_num + 600000.0f)
-                         fromManifest:defaultManifest];
+                // fix sun radius values
+                [self setProperty:@"sun_radius"
+                     forSystemKey:systemKey
+                         andLayer:OO_LAYER_OXP_DYNAMIC
+                          toValue:[NSNumber numberWithFloat:sr_num + 600000.0f]
+                     fromManifest:defaultManifest];
             }
         }
     }
 }
 
-- (oo::PList)cxx_exportScriptedChanges
+- (NSDictionary*)exportScriptedChanges
 {
-    return scriptedChanges;
+    return [[scriptedChanges copy] autorelease];
 }
 
-- (oo::PList)cxx_getPropertiesForCurrentSystem
+- (NSDictionary*)getPropertiesForCurrentSystem
 {
     OOSystemID s = [UNIVERSE currentSystemID];
     if (s >= 0) {
         NSUInteger index = ([PLAYER galaxyNumber] * OO_SYSTEMS_PER_GALAXY) + s;
         if (index >= OO_SYSTEM_CACHE_LENGTH) {
             OOLog(@"system.description.error", @"'%zu' is an invalid system index for the current system. This is an internal error. Please report it.", index);
-            return oo::PList(oo::PList::Dict());
+            return [NSDictionary dictionary];
         }
         return propertyCache[index];
     } else {
         OOLog(@"system.description.error", @"%@", @"getPropertiesForCurrentSystem called while player in interstellar space. This is an internal error. Please report it.");
         // this shouldn't be called for interstellar space
-        return oo::PList(oo::PList::Dict());
+        return [NSDictionary dictionary];
     }
 }
 
-- (oo::PList)cxx_getPropertiesForSystemKey:(const std::string&)key
+- (NSDictionary*)getPropertiesForSystemKey:(NSString*)key
 {
-    const oo::PList tokens = KeyTokens(key);
-    if (tokens.count() == 2 && tokens.at<NSUInteger>(0) < OO_GALAXIES_AVAILABLE && tokens.at<NSUInteger>(1) < OO_SYSTEMS_PER_GALAXY) {
-        OOGalaxyID g = tokens.at<NSUInteger>(0);
-        OOSystemID s = tokens.at<NSUInteger>(1);
+    NSArray* tokens = ScanTokensFromString(key);
+    if ([tokens count] == 2 && oo::PListView(tokens).at<NSUInteger>(0) < OO_GALAXIES_AVAILABLE && oo::PListView(tokens).at<NSUInteger>(1) < OO_SYSTEMS_PER_GALAXY) {
+        OOGalaxyID g = oo::PListView(tokens).at<NSUInteger>(0);
+        OOSystemID s = oo::PListView(tokens).at<NSUInteger>(1);
         NSUInteger index = (g * OO_SYSTEMS_PER_GALAXY) + s;
         if (index >= OO_SYSTEM_CACHE_LENGTH) {
-            OOLog(@"system.description.error", @"'%@' is an invalid system key. This is an internal error. Please report it.", oo::NSStringFrom(key));
-            return oo::PList(oo::PList::Dict());
+            OOLog(@"system.description.error", @"'%@' is an invalid system key. This is an internal error. Please report it.", key);
+            return [NSDictionary dictionary];
         }
         return propertyCache[index];
     }
@@ -356,163 +322,164 @@ std::optional<std::string> StringForKey(const oo::PList& dict, const char* key)
     return [self calculatePropertiesForSystemKey:key];
 }
 
-- (oo::PList)cxx_getPropertiesForSystem:(OOSystemID)s inGalaxy:(OOGalaxyID)g
+- (NSDictionary*)getPropertiesForSystem:(OOSystemID)s inGalaxy:(OOGalaxyID)g
 {
     NSUInteger index = (g * OO_SYSTEMS_PER_GALAXY) + s;
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
         OOLog(@"system.description.error", @"'%u, %u' is an invalid system. This is an internal error. Please report it.", g, s);
-        return oo::PList(oo::PList::Dict());
+        return [NSDictionary dictionary];
     }
     return propertyCache[index];
 }
 
-- (oo::PList)cxx_getProperty:(const std::string&)property forSystemKey:(const std::string&)key
+- (id)getProperty:(NSString*)property forSystemKey:(NSString*)key
 {
     return [self getProperty:property forSystemKey:key withUniversal:YES];
 }
 
-- (oo::PList)cxx_getProperty:(const std::string&)property forSystem:(OOSystemID)s inGalaxy:(OOGalaxyID)g
+- (id)getProperty:(NSString*)property forSystem:(OOSystemID)s inGalaxy:(OOGalaxyID)g
 {
     if (s < 0) {
         OOLog(@"system.description.error", @"'%d %d' is an invalid system key. This is an internal error. Please report it.", g, s);
-        return oo::PList();
+        return nil;
     }
     NSUInteger index = (g * OO_SYSTEMS_PER_GALAXY) + s;
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
         OOLog(@"system.description.error", @"'%d %d' is an invalid system key. This is an internal error. Please report it.", g, s);
-        return oo::PList();
+        return nil;
     }
-    return ValueForKey(propertyCache[index], property);
+    return [propertyCache[index] objectForKey:property];
 }
 
-- (oo::PList)getProperty:(const std::string&)property forSystemKey:(const std::string&)key withUniversal:(BOOL)universal
+- (id)getProperty:(NSString*)property forSystemKey:(NSString*)key withUniversal:(BOOL)universal
 {
     OOSystemDescriptionEntry* desc = nil;
-    if (EXPECT_NOT(key == "interstellar")) {
+    if (EXPECT_NOT([key isEqualToString:@"interstellar"])) {
         desc = interstellarSpace;
     } else {
-        auto entry = systemDescriptions.find(key);
-        if (entry != systemDescriptions.end())
-            desc = entry->second.get();
+        desc = [systemDescriptions objectForKey:key];
     }
     if (desc == nil) {
-        return oo::PList();
+        return nil;
     }
-    oo::PList result = [desc getProperty:property forLayer:OO_LAYER_OXP_PRIORITY];
-    if (result.isNull()) {
+    id result = nil;
+    result = [desc getProperty:property forLayer:OO_LAYER_OXP_PRIORITY];
+    if (result == nil) {
         result = [desc getProperty:property forLayer:OO_LAYER_OXP_DYNAMIC];
     }
-    if (result.isNull()) {
+    if (result == nil) {
         result = [desc getProperty:property forLayer:OO_LAYER_OXP_STATIC];
     }
-    if (result.isNull() && universal) {
-        result = ValueForKey(universalProperties, property);
+    if (result == nil && universal) {
+        result = [universalProperties objectForKey:property];
     }
-    if (result.isNull()) {
+    if (result == nil) {
         result = [desc getProperty:property forLayer:OO_LAYER_CORE];
     }
     return result;
 }
 
-- (oo::PList)getProperty:(const std::string&)property1 orProperty:(const std::string&)property2 forSystemKey:(const std::string&)key withUniversal:(BOOL)universal
+- (id)getProperty:(NSString*)property1 orProperty:(NSString*)property2 forSystemKey:(NSString*)key withUniversal:(BOOL)universal
 {
-    auto entry = systemDescriptions.find(key);
-    if (entry == systemDescriptions.end() || entry->second.get() == nil) {
-        return oo::PList();
+    OOSystemDescriptionEntry* desc = [systemDescriptions objectForKey:key];
+    if (desc == nil) {
+        return nil;
     }
-    OOSystemDescriptionEntry* desc = entry->second.get();
-    oo::PList result = [desc getProperty:property1 forLayer:OO_LAYER_OXP_PRIORITY];
-    if (result.isNull()) {
+    id result = nil;
+    result = [desc getProperty:property1 forLayer:OO_LAYER_OXP_PRIORITY];
+    if (result == nil) {
         result = [desc getProperty:property2 forLayer:OO_LAYER_OXP_PRIORITY];
     }
-    if (result.isNull()) {
+    if (result == nil) {
         result = [desc getProperty:property1 forLayer:OO_LAYER_OXP_DYNAMIC];
     }
-    if (result.isNull()) {
+    if (result == nil) {
         result = [desc getProperty:property2 forLayer:OO_LAYER_OXP_DYNAMIC];
     }
-    if (result.isNull()) {
+    if (result == nil) {
         result = [desc getProperty:property1 forLayer:OO_LAYER_OXP_STATIC];
     }
-    if (result.isNull()) {
+    if (result == nil) {
         result = [desc getProperty:property2 forLayer:OO_LAYER_OXP_STATIC];
     }
     if (universal) {
-        if (result.isNull()) {
-            result = ValueForKey(universalProperties, property1);
+        if (result == nil) {
+            result = [universalProperties objectForKey:property1];
         }
-        if (result.isNull()) {
-            result = ValueForKey(universalProperties, property2);
+        if (result == nil) {
+            result = [universalProperties objectForKey:property2];
         }
     }
-    if (result.isNull()) {
+    if (result == nil) {
         result = [desc getProperty:property1 forLayer:OO_LAYER_CORE];
     }
-    if (result.isNull()) {
+    if (result == nil) {
         result = [desc getProperty:property2 forLayer:OO_LAYER_CORE];
     }
     return result;
 }
 
-- (void)setProperties:(const oo::PList&)properties inDescription:(OOSystemDescriptionEntry*)desc
+- (void)setProperties:(NSDictionary*)properties inDescription:(OOSystemDescriptionEntry*)desc
 {
     // Range-checked as the number it is read as, then converted: the enum only ever holds a layer.
-    unsigned int layerNumber = properties.get<unsigned int>(kOOSystemLayerProperty, OO_LAYER_OXP_STATIC);
+    unsigned int layerNumber = oo::PListView(properties).get<unsigned int>(kOOSystemLayerProperty, OO_LAYER_OXP_STATIC);
     if (layerNumber > OO_LAYER_OXP_PRIORITY) {
         OOLog(@"system.description.error", @"Layer %u is not a valid layer number in system information.", layerNumber);
     }
     OOSystemLayer layer = OOSystemLayerFromNumber(layerNumber);
-    const oo::PList::Dict* entries = properties.getIf<oo::PList::Dict>();
-    if (entries == nullptr)
-        return;
-    // (in key order; was hash order: each key is set once)
-    for (const auto& [key, value] : *entries) {
-        if (key != kOOSystemLayerProperty) {
-            propertiesInUse.insert(key);
-            [desc setProperty:key forLayer:layer toValue:value];
+    NSString* key = nil;
+    foreachkey(key, properties)
+    {
+        if (![key isEqualToString:kOOSystemLayerProperty]) {
+            [propertiesInUse addObject:key];
+            [desc setProperty:key forLayer:layer toValue:[properties objectForKey:key]];
         }
     }
 }
 
-- (oo::PList)calculatePropertiesForSystemKey:(const std::string&)key
+- (NSDictionary*)calculatePropertiesForSystemKey:(NSString*)key
 {
-    oo::PList::Dict dict;
-    BOOL interstellar = oo::str::hasPrefix(key, "interstellar:");
-    for (const std::string& property : propertiesInUse) {
+    NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithCapacity:OO_LIKELY_PROPERTIES_PER_SYSTEM];
+    NSString* property = nil;
+    id val = nil;
+    BOOL interstellar = [key hasPrefix:@"interstellar:"];
+    foreach (property, propertiesInUse) {
         // don't use universal properties on interstellar specific regions
-        oo::PList val = [self getProperty:property forSystemKey:key withUniversal:!interstellar];
+        val = [self getProperty:property forSystemKey:key withUniversal:!interstellar];
 
-        if (!val.isNull()) {
-            dict[property] = std::move(val);
+        if (val != nil) {
+            [dict setObject:val forKey:property];
         } else if (interstellar) {
             // interstellar is always overridden by specific regions
             // universal properties for interstellar get picked up here
-            val = [self getProperty:property forSystemKey:"interstellar" withUniversal:YES];
-            if (!val.isNull()) {
-                dict[property] = std::move(val);
+            val = [self getProperty:property forSystemKey:@"interstellar"];
+            if (val != nil) {
+                [dict setObject:val forKey:property];
             }
         }
     }
-    return oo::PList(std::move(dict));
+    return dict;
 }
 
 - (void)updateCacheEntry:(NSUInteger)i
 {
     NSAssert(i < OO_SYSTEM_CACHE_LENGTH, @"Invalid cache entry number");
-    const std::string key = oo::str::format("%zu %zu", i / OO_SYSTEMS_PER_GALAXY, i % OO_SYSTEMS_PER_GALAXY);
-    propertyCache[i] = [self calculatePropertiesForSystemKey:key];
+    NSString* key = [NSString stringWithFormat:@"%zu %zu", i / OO_SYSTEMS_PER_GALAXY, i % OO_SYSTEMS_PER_GALAXY];
+    NSDictionary* current = [self calculatePropertiesForSystemKey:key];
+
+    [propertyCache[i] removeAllObjects];
+    [propertyCache[i] addEntriesFromDictionary:current];
 }
 
-- (void)updateCacheEntry:(NSUInteger)i forProperty:(const std::string&)property
+- (void)updateCacheEntry:(NSUInteger)i forProperty:(NSString*)property
 {
     NSAssert(i < OO_SYSTEM_CACHE_LENGTH, @"Invalid cache entry number");
-    const std::string key = oo::str::format("%zu %zu", i / OO_SYSTEMS_PER_GALAXY, i % OO_SYSTEMS_PER_GALAXY);
-    oo::PList current = [self cxx_getProperty:property forSystemKey:key];
-    oo::PList::Dict& cache = *propertyCache[i].getIf<oo::PList::Dict>();
-    if (current.isNull()) {
-        cache.erase(property);
+    NSString* key = [NSString stringWithFormat:@"%zu %zu", i / OO_SYSTEMS_PER_GALAXY, i % OO_SYSTEMS_PER_GALAXY];
+    id current = [self getProperty:property forSystemKey:key];
+    if (current == nil) {
+        [propertyCache[i] removeObjectForKey:property];
     } else {
-        cache[property] = std::move(current);
+        [propertyCache[i] setObject:current forKey:property];
     }
 }
 
@@ -530,16 +497,16 @@ std::optional<std::string> StringForKey(const oo::PList& dict, const char* key)
     return coordinatesCache[index];
 }
 
-- (std::vector<OOSystemID>)cxx_getNeighbourIDsForSystem:(OOSystemID)s inGalaxy:(OOGalaxyID)g
+- (NSArray*)getNeighbourIDsForSystem:(OOSystemID)s inGalaxy:(OOGalaxyID)g
 {
     if (s < 0) {
         OOLog(@"system.description.error", @"'%d %d' is an invalid system key. This is an internal error. Please report it.", g, s);
-        return { };
+        return nil;
     }
     NSUInteger index = (g * OO_SYSTEMS_PER_GALAXY) + s;
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
         OOLog(@"system.description.error", @"'%d %d' is an invalid system key. This is an internal error. Please report it.", g, s);
-        return { };
+        return nil;
     }
 
     return neighbourCache[index];
@@ -556,8 +523,7 @@ std::optional<std::string> StringForKey(const oo::PList& dict, const char* key)
             OOLog(@"system.description.error", @"'%zu' is an invalid system index for the current system. This is an internal error. Please report it.", index);
             return kNilRandomSeed;
         }
-        // RandomSeedFromString (OOStringParsing) is an unmigrated callee: convert at the call.
-        return RandomSeedFromString(oo::NSStringOrNil(StringForKey(propertyCache[index], "random_seed")));
+        return RandomSeedFromString(oo::PListView(propertyCache[index]).get<NSString*>(@"random_seed"));
     }
 }
 
@@ -572,14 +538,13 @@ std::optional<std::string> StringForKey(const oo::PList& dict, const char* key)
         OOLog(@"system.description.error", @"'%d %d' is an invalid system key. This is an internal error. Please report it.", g, s);
         return kNilRandomSeed;
     }
-    return RandomSeedFromString(oo::NSStringOrNil(StringForKey(propertyCache[index], "random_seed")));
+    return RandomSeedFromString(oo::PListView(propertyCache[index]).get<NSString*>(@"random_seed"));
 }
 
 @end
 
 @interface OOSystemDescriptionEntry (OOPrivate)
-// null = nil (validation failed and could not be recovered)
-- (oo::PList)validateProperty:(const std::string&)property withValue:(const oo::PList&)value;
+- (id)validateProperty:(NSString*)property withValue:(id)value;
 @end
 
 @implementation OOSystemDescriptionEntry
@@ -589,68 +554,74 @@ std::optional<std::string> StringForKey(const oo::PList& dict, const char* key)
     self = [super init];
     if (self != nil) {
         for (NSUInteger i = 0; i < OO_SYSTEM_LAYERS; i++) {
-            layers[i] = oo::PList(oo::PList::Dict());
+            layers[i] = [[NSMutableDictionary alloc] initWithCapacity:OO_LIKELY_PROPERTIES_PER_SYSTEM];
         }
     }
     return self;
 }
 
-- (void)setProperty:(const std::string&)property forLayer:(OOSystemLayer)layer toValue:(const oo::PList&)value
+- (void)dealloc
 {
-    oo::PList::Dict& properties = *layers[layer].getIf<oo::PList::Dict>();
-    if (value.isNull()) {
-        properties.erase(property);
+    for (NSUInteger i = 0; i < OO_SYSTEM_LAYERS; i++) {
+        DESTROY(layers[i]);
+    }
+    [super dealloc];
+}
+
+- (void)setProperty:(NSString*)property forLayer:(OOSystemLayer)layer toValue:(id)value
+{
+    if (value == nil) {
+        [layers[layer] removeObjectForKey:property];
     } else {
         // validate type of object for certain properties
-        oo::PList validated = [self validateProperty:property withValue:value];
+        value = [self validateProperty:property withValue:value];
         // if it's nil now, validation failed and could not be recovered
         // so don't actually set anything
-        if (!validated.isNull()) {
-            properties[property] = std::move(validated);
+        if (value != nil) {
+            [layers[layer] setObject:value forKey:property];
         }
     }
 }
 
-- (oo::PList)getProperty:(const std::string&)property forLayer:(OOSystemLayer)layer
+- (id)getProperty:(NSString*)property forLayer:(OOSystemLayer)layer
 {
-    return ValueForKey(layers[layer], property);
+    return [layers[layer] objectForKey:property];
 }
 
 /* Mostly the rest of the game gets a system dictionary from
  * [UNIVERSE currentSystemData] or similar, which means that it uses
- * safe methods like get<std::string> - a few things use a direct call
+ * safe methods like get<NSString *> - a few things use a direct call
  * to getProperty for various reasons, so need some type validation
  * here instead. */
-- (oo::PList)validateProperty:(const std::string&)property withValue:(const oo::PList&)value
+- (id)validateProperty:(NSString*)property withValue:(id)value
 {
-    // OOLog's %@ of the value: its object, as it was before it became a property list
-    if (property == "coordinates") {
+    if ([property isEqualToString:@"coordinates"]) {
         // must be a string with two numbers in it
         // TODO: convert two element arrays
-        if (!value.isString()) {
-            OOLog(@"system.description.error", @"'%@' is not a valid format for coordinates", oo::ObjectFromPList(value));
-            return oo::PList();
+        if (![value isKindOfClass:[NSString class]]) {
+            OOLog(@"system.description.error", @"'%@' is not a valid format for coordinates", value);
+            return nil;
         }
-        if (oo::str::tokens(*value.getIf<std::string>()).size() != 2) {
-            OOLog(@"system.description.error", @"'%@' is not a valid format for coordinates (must have exactly two numbers)", oo::ObjectFromPList(value));
-            return oo::PList();
+        NSArray* tokens = ScanTokensFromString((NSString*)value);
+        if ([tokens count] != 2) {
+            OOLog(@"system.description.error", @"'%@' is not a valid format for coordinates (must have exactly two numbers)", value);
+            return nil;
         }
-    } else if (property == "radius" || property == "government") {
+    } else if ([property isEqualToString:@"radius"] || [property isEqualToString:@"government"]) {
         // read in a context which expects a string, but it's a string representation of a number
-        if (!value.isString()) {
-            if (value.isNumber()) {
-                // -stringValue
-                return oo::PList(oo::plist_get::numberStringValue(value));
+        if (![value isKindOfClass:[NSString class]]) {
+            if ([value isKindOfClass:[NSNumber class]]) {
+                return [value stringValue];
             } else {
-                OOLog(@"system.description.error", @"'%@' is not a valid value for '%@' (string required)", oo::ObjectFromPList(value), oo::NSStringFrom(property));
-                return oo::PList();
+                OOLog(@"system.description.error", @"'%@' is not a valid value for '%@' (string required)", value, property);
+                return nil;
             }
         }
-    } else if (property == "inhabitant" || property == "inhabitants" || property == "name") {
+    } else if ([property isEqualToString:@"inhabitant"] || [property isEqualToString:@"inhabitants"] || [property isEqualToString:@"name"]) {
         // read in a context which expects a string
-        if (!value.isString()) {
-            OOLog(@"system.description.error", @"'%@' is not a valid value for '%@' (string required)", oo::ObjectFromPList(value), oo::NSStringFrom(property));
-            return oo::PList();
+        if (![value isKindOfClass:[NSString class]]) {
+            OOLog(@"system.description.error", @"'%@' is not a valid value for '%@' (string required)", value, property);
+            return nil;
         }
     }
 

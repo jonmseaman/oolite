@@ -25,10 +25,10 @@ MA 02110-1301, USA.
 #import "GameController.h"
 #import "MyOpenGLView.h"
 #import "NSFileManagerOOExtensions.h"
+#import "OOCollectionExtractors.h"
 #import "OODebugFlags.h"
 #import "OODebugSupport.h"
 #import "OOEnumerationShuffle.h"
-#import "OOFoundationException.h"
 #import "OOJSFrameCallbacks.h"
 #import "OOLogOutputHandler.h"
 #import "OOLoggingExtended.h"
@@ -38,9 +38,7 @@ MA 02110-1301, USA.
 #import "OOOpenGL.h"
 #import "OOOpenGLExtensionManager.h"
 #import "OOOpenGLMatrixManager.h"
-#import "OOPListView.h"
 #import "OOSound.h"
-#import "OOStringBridge.h"
 #import "PlayerEntityLoadSave.h"
 #import "ResourceManager.h"
 #import "Universe.h"
@@ -68,7 +66,7 @@ static GameController* sSharedController = nil;
 
 @interface GameController (OOPrivate)
 
-- (void)reportUnhandledStartupExceptionName:(NSString*)name reason:(NSString*)reason;
+- (void)reportUnhandledStartupException:(NSException*)exception;
 
 - (void)doPerformGameTick;
 
@@ -88,20 +86,20 @@ static GameController* sSharedController = nil;
 {
     if (sSharedController != nil) {
         [self release];
-        [OOException raise:OOInternalInconsistencyException format:"%s: expected only one GameController to exist at a time.", __PRETTY_FUNCTION__];
+        [NSException raise:NSInternalInconsistencyException format:@"%s: expected only one GameController to exist at a time.", __PRETTY_FUNCTION__];
     }
 
     if ((self = [super init])) {
         _finishedLaunching = NO;
         last_timeInterval = [NSDate timeIntervalSinceReferenceDate];
         delta_t = 0.01; // one hundredth of a second
-        _animationTimerInterval = oo::PListView([NSUserDefaults standardUserDefaults]).get<double>(@"animation_timer_interval", MINIMUM_ANIMATION_TICK);
+        _animationTimerInterval = [[NSUserDefaults standardUserDefaults] oo_doubleForKey:@"animation_timer_interval" defaultValue:MINIMUM_ANIMATION_TICK];
 
         // rather than seeding this with the date repeatedly, seed it
         // once here at startup
-        // OO_RANDOM_SEED pins the seed so a run can be reproduced. Nothing downstream of
-        // RANROT is repeatable without it, which both the goldens (0.4) and the component
-        // tier (0.13b) depend on. Unset - the normal case - keeps wall-clock seeding.
+        // OO_RANDOM_SEED pins the seed so a run can be reproduced.
+        // Downstream component tests depend on it.
+        // Unset to keep wall-clock seeding.
         const char* seedEnv = getenv("OO_RANDOM_SEED");
         if (seedEnv != NULL && *seedEnv != '\0') {
             ranrot_srand((uint32_t)strtoul(seedEnv, NULL, 10));
@@ -165,7 +163,7 @@ static GameController* sSharedController = nil;
 - (void)setEcoQoS:(BOOL)efficiencyModeRequested
 {
 #if OOLITE_WINDOWS
-    if (oo::PListView([NSUserDefaults standardUserDefaults]).get<BOOL>(@"ecoqos", YES)) {
+    if ([[NSUserDefaults standardUserDefaults] oo_boolForKey:@"ecoqos" defaultValue:YES]) {
         BOOL setEfficiencyMode = !!efficiencyModeRequested; // yes or no, not 42
         HANDLE currentProcess = GetCurrentProcess();
 
@@ -197,7 +195,7 @@ static GameController* sSharedController = nil;
         return;
 
     _mouseMode = mode;
-    OOLog(@"input.mouseMode.changed", @"Mouse interaction mode changed from %@ to %@", oo::NSStringFrom(OOStringFromMouseInteractionMode(oldMode)), oo::NSStringFrom(OOStringFromMouseInteractionMode(mode)));
+    OOLog(@"input.mouseMode.changed", @"Mouse interaction mode changed from %@ to %@", OOStringFromMouseInteractionMode(oldMode), OOStringFromMouseInteractionMode(mode));
 
 #if OO_USE_FULLSCREEN_CONTROLLER
     if ([self inFullScreenMode]) {
@@ -285,12 +283,8 @@ static GameController* sSharedController = nil;
 
         [self endSplashScreen];
     }
-    @catch (OOException* exception) {
-        [self reportUnhandledStartupExceptionName:oo::NSStringFrom([exception name]) reason:oo::NSStringFrom([exception reason])];
-        exit(EXIT_FAILURE);
-    }
-    @catch (OOFoundationException* exception) {
-        [self reportUnhandledStartupExceptionName:[exception name] reason:[exception reason]];
+    @catch (NSException* exception) {
+        [self reportUnhandledStartupException:exception];
         exit(EXIT_FAILURE);
     }
 
@@ -385,14 +379,7 @@ static GameController* sSharedController = nil;
         }
     }
     @catch (id exception) {
-        if ([exception isKindOfClass:[OOException class]]) {
-            // -callStackSymbols is Foundation's; an OOException does not answer it (sending it raised
-            // out of this handler), so name the exception instead (proposed ADR-0037).
-            OOException* ooException = (OOException*)exception;
-            OOLog(@"exception.backtrace", @"%@ : %@", oo::NSStringFrom([ooException name]), oo::NSStringFrom([ooException reason]));
-        } else {
-            OOLog(@"exception.backtrace", @"%@", [exception callStackSymbols]);
-        }
+        OOLog(@"exception.backtrace", @"%@", [exception callStackSymbols]);
     }
 
     @
@@ -422,19 +409,9 @@ static GameController* sSharedController = nil;
         lives on it (performSelector:afterDelay:, the debug console's streams, OXZ
         downloads) until their own beads take it off.
 */
-namespace {
-// Held as steady_clock tick counts, as OOLogOutputHandler's flush deadline is: a static
-// time_point or duration has a constructor that may throw (bugprone-throwing-static-initialization).
-using TickClock = std::chrono::steady_clock;
-bool sGameTickScheduled = false;
-TickClock::rep sNextGameTick = 0; // ticks since the clock's epoch
-TickClock::rep sGameTickInterval = 0; // ticks
-
-TickClock::time_point NextGameTick()
-{
-    return TickClock::time_point(TickClock::duration(sNextGameTick));
-}
-}
+static bool sGameTickScheduled = false;
+static std::chrono::steady_clock::time_point sNextGameTick;
+static std::chrono::steady_clock::duration sGameTickInterval;
 
 - (void)startAnimationTimer
 {
@@ -443,8 +420,8 @@ TickClock::time_point NextGameTick()
         if (ti <= 0.0)
             ti = 0.0001; // as the Foundation timer did
 
-        sGameTickInterval = std::chrono::duration_cast<TickClock::duration>(std::chrono::duration<double>(ti)).count();
-        sNextGameTick = TickClock::now().time_since_epoch().count() + sGameTickInterval;
+        sGameTickInterval = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(ti));
+        sNextGameTick = std::chrono::steady_clock::now() + sGameTickInterval;
         sGameTickScheduled = true;
     }
 }
@@ -459,11 +436,11 @@ TickClock::time_point NextGameTick()
     if (!sGameTickScheduled)
         return;
 
-    const TickClock::rep now = TickClock::now().time_since_epoch().count();
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     if (now < sNextGameTick)
         return;
 
-    TickClock::rep next = sNextGameTick + sGameTickInterval;
+    std::chrono::steady_clock::time_point next = sNextGameTick + sGameTickInterval;
     while (next <= now)
         next += sGameTickInterval;
     sNextGameTick = next;
@@ -493,12 +470,12 @@ TickClock::time_point NextGameTick()
 
             NSDate* limit = [NSDate distantFuture];
             if (sGameTickScheduled) {
-                std::chrono::duration<double> wait = NextGameTick() - TickClock::now();
+                std::chrono::duration<double> wait = sNextGameTick - std::chrono::steady_clock::now();
                 limit = [NSDate dateWithTimeIntervalSinceNow:wait.count()];
             }
             if (![runLoop runMode:NSDefaultRunLoopMode beforeDate:limit] && sGameTickScheduled) {
                 // Nothing on the run loop to wait for: wait for the tick here.
-                std::this_thread::sleep_until(NextGameTick());
+                std::this_thread::sleep_until(sNextGameTick);
             }
         }
     }
@@ -969,14 +946,14 @@ static NSMutableArray* sMessageStack;
     [[NSUserDefaults standardUserDefaults] setObject:filename forKey:@"save-directory"];
 }
 
-- (void)reportUnhandledStartupExceptionName:(NSString*)name reason:(NSString*)reason
+- (void)reportUnhandledStartupException:(NSException*)exception
 {
-    OOLog(@"startup.exception", @"***** Unhandled exception during startup: %@ (%@).", name, reason);
+    OOLog(@"startup.exception", @"***** Unhandled exception during startup: %@ (%@).", [exception name], [exception reason]);
 
 #if OOLITE_MAC_COCOA_UI
     // Display an error alert.
     // TODO: provide better information on reporting bugs in the manual, and refer to it here.
-    NSRunCriticalAlertPanel(@"Oolite failed to start up, because an unhandled exception occurred.", @"An exception of type %@ occurred. If this problem persists, please file a bug report.", @"OK", NULL, NULL, name);
+    NSRunCriticalAlertPanel(@"Oolite failed to start up, because an unhandled exception occurred.", @"An exception of type %@ occurred. If this problem persists, please file a bug report.", @"OK", NULL, NULL, [exception name]);
 #endif
 }
 
@@ -1010,7 +987,8 @@ static void SetUpSparkle(void)
 #define DEFAULT_TEST_RELEASE 1
 #endif
 
-    BOOL useTestReleases = oo::PListView([NSUserDefaults standardUserDefaults]).get<BOOL>(@"use-test-release-updates", DEFAULT_TEST_RELEASE);
+    BOOL useTestReleases = [[NSUserDefaults standardUserDefaults] oo_boolForKey:@"use-test-release-updates"
+                                                                   defaultValue:DEFAULT_TEST_RELEASE];
 
     SUUpdater* updater = [SUUpdater sharedUpdater];
     [updater setFeedURL:[NSURL URLWithString:useTestReleases ? TEST_RELEASE_FEED_URL : DEPLOYMENT_FEED_URL]];

@@ -28,12 +28,9 @@ SOFTWARE.
 
 #import "OOALSoundDecoder.h"
 #import "NSDataOOExtensions.h"
-#import "OOFoundationBridge.h"
 #import "OOLogging.h"
 #import "unzip.h"
 #import <vorbis/vorbisfile.h>
-
-#include "oofnd/String.hpp"
 
 enum {
     kMaxDecodeSize = 1 << 20 // 2^20 frames = 4 MB
@@ -47,35 +44,35 @@ static int OOCloseOXZVorbis(void* datasource);
 
 @interface OOALSoundVorbisCodec : OOALSoundDecoder {
     OggVorbis_File _vf;
-    std::optional<std::string> _name; // nil when the path was nil
+    NSString* _name;
     BOOL _readStarted;
     BOOL _seekableStream;
 @public
     unzFile uf;
 }
 
-- (std::optional<std::map<std::string, std::string>>)comments;
+- (NSDictionary*)comments;
 
 @end
 
 @implementation OOALSoundDecoder
 
-- (id)initWithPath:(id)inPath
+- (id)initWithPath:(NSString*)inPath
 {
     [self release];
     self = nil;
 
-    if (oo::str::pathExtension(oo::StdString(inPath)) == "ogg") {
+    if ([[inPath pathExtension] isEqual:@"ogg"]) {
         self = [[OOALSoundVorbisCodec alloc] initWithPath:inPath];
     }
 
     return self;
 }
 
-+ (OOALSoundDecoder*)codecWithPath:(const std::string&)inPath
++ (OOALSoundDecoder*)codecWithPath:(NSString*)inPath
 {
-    if (oo::str::pathExtension(inPath) == "ogg") {
-        return [[[OOALSoundVorbisCodec alloc] initWithPath:oo::NSStringFrom(inPath)] autorelease];
+    if ([[inPath pathExtension] isEqual:@"ogg"]) {
+        return [[[OOALSoundVorbisCodec alloc] initWithPath:inPath] autorelease];
     }
     return nil;
 }
@@ -115,7 +112,7 @@ static int OOCloseOXZVorbis(void* datasource);
     // nothing
 }
 
-- (id)name
+- (NSString*)name
 {
     return @"";
 }
@@ -124,21 +121,19 @@ static int OOCloseOXZVorbis(void* datasource);
 
 @implementation OOALSoundVorbisCodec
 
-- (id)initWithPath:(id)path
+- (id)initWithPath:(NSString*)path
 {
     if ((self = [super init])) {
         BOOL OK = NO;
 
-        const std::string pathString = oo::StdString(path);
-        if (path != nil)
-            _name = oo::str::lastPathComponent(pathString);
+        _name = [[path lastPathComponent] retain];
 
-        std::size_t i, cl;
-        const std::vector<std::string> components = oo::str::pathComponents(pathString);
-        cl = components.size();
+        NSUInteger i, cl;
+        NSArray* components = [path pathComponents];
+        cl = [components count];
         for (i = 0; i < cl; i++) {
-            const std::string& component = components[i];
-            if (oo::str::lowercase(oo::str::pathExtension(component)) == "oxz") {
+            NSString* component = [components objectAtIndex:i];
+            if ([[[component pathExtension] lowercaseString] isEqualToString:@"oxz"]) {
                 break;
             }
         }
@@ -168,16 +163,24 @@ static int OOCloseOXZVorbis(void* datasource);
         } else {
             _seekableStream = NO;
 
-            const std::string zipFile = oo::str::pathWithComponents(std::vector<std::string>(components.begin(), components.begin() + i + 1));
-            const std::string containedFile = oo::str::pathWithComponents(std::vector<std::string>(components.begin() + i + 1, components.end()));
+            NSRange range;
+            range.location = 0;
+            range.length = i + 1;
+            NSString* zipFile = [NSString pathWithComponents:[components subarrayWithRange:range]];
+            range.location = i + 1;
+            range.length = cl - (i + 1);
+            NSString* containedFile = [NSString pathWithComponents:[components subarrayWithRange:range]];
 
-            uf = unzOpen64(zipFile.c_str());
+            const char* zipname = [zipFile UTF8String];
+            if (zipname != NULL) {
+                uf = unzOpen64(zipname);
+            }
             if (uf == NULL) {
-                OOLog(kOOLogFileNotFound, @"Could not unzip OXZ at %@", oo::NSStringFrom(zipFile));
+                OOLog(kOOLogFileNotFound, @"Could not unzip OXZ at %@", zipFile);
                 [self release];
                 self = nil;
             } else {
-                const char* filename = containedFile.c_str();
+                const char* filename = [containedFile UTF8String];
                 // unzLocateFile(*, *, 1) = case-sensitive extract
                 if (unzLocateFile(uf, filename, 1) != UNZ_OK) {
                     unzClose(uf);
@@ -189,14 +192,14 @@ static int OOCloseOXZVorbis(void* datasource);
                     err = unzGetCurrentFileInfo64(uf, &file_info, NULL, 0, NULL, 0, NULL, 0);
                     if (err != UNZ_OK) {
                         unzClose(uf);
-                        OOLog(kOOLogFileNotFound, @"Could not get properties of %@ within OXZ at %@", oo::NSStringFrom(containedFile), oo::NSStringFrom(zipFile));
+                        OOLog(kOOLogFileNotFound, @"Could not get properties of %@ within OXZ at %@", containedFile, zipFile);
                         [self release];
                         self = nil;
                     } else {
                         err = unzOpenCurrentFile(uf);
                         if (err != UNZ_OK) {
                             unzClose(uf);
-                            OOLog(kOOLogFileNotFound, @"Could not read %@ within OXZ at %@", oo::NSStringFrom(containedFile), oo::NSStringFrom(zipFile));
+                            OOLog(kOOLogFileNotFound, @"Could not read %@ within OXZ at %@", containedFile, zipFile);
                             [self release];
                             self = nil;
                         } else {
@@ -224,7 +227,7 @@ static int OOCloseOXZVorbis(void* datasource);
     }
 #ifdef OOLITE_DEBUG_SOUND_FILE_OPENING
     if (self != nil) {
-        OOLog(@"sound.retain", @"%@", oo::NSStringOrNil(_name));
+        OOLog(@"sound.retain", @"%@", _name);
     }
 #endif
     return self;
@@ -234,35 +237,43 @@ static int OOCloseOXZVorbis(void* datasource);
 {
 #ifdef OOLITE_DEBUG_SOUND_FILE_OPENING
     if (self != nil) {
-        OOLog(@"sound.release", @"%@", oo::NSStringOrNil(_name));
+        OOLog(@"sound.release", @"%@", _name);
     }
 #endif
 
+    [_name release];
     ov_clear(&_vf);
     unzClose(uf);
 
     [super dealloc];
 }
 
-- (std::optional<std::map<std::string, std::string>>)comments
+- (NSDictionary*)comments
 {
     vorbis_comment* comments;
     unsigned i, count;
-    std::optional<std::map<std::string, std::string>> result;
+    NSMutableDictionary* result = nil;
+    NSString *comment, *key, *value;
+    NSRange range;
 
     comments = ov_comment(&_vf, -1);
     if (NULL != comments) {
         count = comments->comments;
         if (0 != count) {
-            result.emplace();
+            result = [NSMutableDictionary dictionaryWithCapacity:count];
             for (i = 0; i != count; ++i) {
-                const std::string comment(comments->user_comments[i], static_cast<std::size_t>(comments->comment_lengths[i]));
-                const std::size_t equals = comment.find('=');
-                if (equals != std::string::npos) {
-                    (*result)[comment.substr(0, equals)] = comment.substr(equals + 1);
+                comment = [[NSString alloc] initWithBytesNoCopy:comments->user_comments[i] length:comments->comment_lengths[i] encoding:NSUTF8StringEncoding freeWhenDone:NO];
+                range = [comment rangeOfString:@"="];
+                if (0 != range.length) {
+                    key = [comment substringToIndex:range.location];
+                    value = [comment substringFromIndex:range.location + 1];
                 } else {
-                    (*result)[comment] = "";
+                    key = comment;
+                    value = @"";
                 }
+                [result setObject:value forKey:key];
+
+                [comment release];
             }
         }
     }
@@ -384,18 +395,9 @@ static int OOCloseOXZVorbis(void* datasource);
     return 1 < ov_info(&_vf, -1)->channels;
 }
 
-// OOObject's -description wraps this as "<OOALSoundVorbisCodec 0x...>{...}", which is what this
-// class's own -description printed.
-- (id)descriptionComponents // shared selector (proposed ADR-0043)
+- (NSString*)description
 {
-    oo::PList commentList;
-    if (const auto comments = [self comments]) {
-        oo::PList::Dict dict;
-        for (const auto& [key, value] : *comments)
-            dict.emplace(key, oo::PList(value));
-        commentList = oo::PList(std::move(dict));
-    }
-    return oo::NSStringFrom(oo::str::format("\"%s\", comments=%s", oo::DescriptionOf(oo::NSStringOrNil(_name)).c_str(), oo::DescriptionOf(oo::ObjectFromPList(commentList)).c_str()));
+    return [NSString stringWithFormat:@"<%@ %p>{\"%@\", comments=%@}", [self className], self, _name, [self comments]];
 }
 
 - (long)sampleRate
@@ -426,9 +428,9 @@ static int OOCloseOXZVorbis(void* datasource);
     _readStarted = NO;
 }
 
-- (id)name
+- (NSString*)name
 {
-    return oo::NSStringOrNil(_name);
+    return [[_name retain] autorelease];
 }
 
 @end

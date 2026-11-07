@@ -31,8 +31,6 @@ MA 02110-1301, USA.
 #import "OOFoundation.h"
 #include <quickjs.h>
 
-#include "oofnd/StdLib.hpp"
-
 @class OOEquipmentType;
 
 void InitOOJSEquipmentInfo(JSContext* context, JSValueConst global);
@@ -45,7 +43,6 @@ void InitOOJSEquipmentInfo(JSContext* context, JSValueConst global);
         with _DAMAGED.
  */
 OOEquipmentType* JSValueToEquipmentType(JSContext* context, JSValueConst value);
-// C++ results (proposed ADR-0043); nullopt where these returned nil.
-std::optional<std::string> JSValueToEquipmentKey(JSContext* context, JSValueConst value);
+NSString* JSValueToEquipmentKey(JSContext* context, JSValueConst value);
 
-std::optional<std::string> JSValueToEquipmentKeyRelaxed(JSContext* context, JSValueConst value, BOOL* outExists);
+NSString* JSValueToEquipmentKeyRelaxed(JSContext* context, JSValueConst value, BOOL* outExists);

@@ -37,7 +37,7 @@
     } while (0)
 #endif
 
-BOOL OOIsNumberLiteral(const std::string& string, BOOL allowSpaces)
+BOOL OOIsNumberLiteral(NSString* string, BOOL allowSpaces)
 {
     BOOL leadingSpace = allowSpaces,
          trailingSpace = NO,
@@ -47,11 +47,14 @@ BOOL OOIsNumberLiteral(const std::string& string, BOOL allowSpaces)
          hadExp = NO,
          allowDec = YES,
          hadNumber = NO;
-    std::size_t i, count;
+    NSUInteger i, count;
 
-    count = string.size();
+    if (string == nil)
+        return NO;
+
+    count = [string length];
     for (i = 0; i != count; ++i) {
-        switch (string[i]) {
+        switch ([string characterAtIndex:i]) {
         // <digit>
         case '0':
         case '1':

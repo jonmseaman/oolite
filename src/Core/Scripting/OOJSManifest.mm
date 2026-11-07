@@ -23,7 +23,6 @@ MA 02110-1301, USA.
 */
 
 #import "OOJSManifest.h"
-#import "OOFoundationBridge.h"
 #import "OOIsNumberLiteral.h"
 #import "OOJSPlayer.h"
 #import "OOJSPlayerShip.h"
@@ -97,7 +96,7 @@ static const JSCFunctionListEntry sManifestMethods[] = {
     [super dealloc];
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsClassName
 {
     return @"Manifest";
 }
@@ -141,13 +140,13 @@ void InitOOJSManifest(JSContext* context, JSValueConst global)
     JS_DefinePropertyValueStr(context, global, "manifest", JS_NewObjectProtoClass(context, manifestPrototype, sManifestClassID), OOJS_PROP_READONLY);
 }
 
-// Name for a string property ID, or nullopt for other IDs (symbols and integers, which SpiderMonkey's hooks ignored).
-static std::optional<std::string> NameForPropertyID(JSContext* context, JSAtom propID)
+// Name for a string property ID, or nil for other IDs (symbols and integers, which SpiderMonkey's hooks ignored).
+static NSString* NameForPropertyID(JSContext* context, JSAtom propID)
 {
-    std::optional<std::string> result;
+    NSString* result = nil;
     JSValue idValue = JS_AtomToValue(context, propID);
     if (JS_IsString(idValue)) {
-        result = oo::OptionalString(OOStringFromJSValue(context, idValue));
+        result = OOStringFromJSValue(context, idValue);
     }
     JS_FreeValue(context, idValue);
     return result;
@@ -184,11 +183,11 @@ static int ManifestGetOwnProperty(JSContext* context, JSPropertyDescriptor* desc
          * others map to the commodity keys in trade-goods.plist
          * compatible-ish with 1.80 and earlier except that
          * alienItems and similar aliases don't work */
-        std::optional<std::string> key = NameForPropertyID(context, propID);
-        if (key.has_value() && [[UNIVERSE commodities] goodDefined:oo::NSStringFrom(*key)]) {
+        NSString* key = NameForPropertyID(context, propID);
+        if (key != nil && [[UNIVERSE commodities] goodDefined:key]) {
             if (desc != NULL) {
                 desc->flags = JS_PROP_C_W_E;
-                desc->value = JS_NewInt32(context, [entity cargoQuantityForType:oo::NSStringFrom(*key)]);
+                desc->value = JS_NewInt32(context, [entity cargoQuantityForType:key]);
                 desc->getter = JS_UNDEFINED;
                 desc->setter = JS_UNDEFINED;
             }
@@ -204,12 +203,12 @@ static int ManifestGetOwnProperty(JSContext* context, JSPropertyDescriptor* desc
 }
 
 // Returns NO with an exception pending on failure.
-static BOOL ManifestSetProperty(JSContext* context, JSValueConst thisObj, const std::string& key, JSValueConst value)
+static BOOL ManifestSetProperty(JSContext* context, JSValueConst thisObj, NSString* key, JSValueConst value)
 {
     PlayerEntity* entity = OOPlayerForScripting();
     int32_t iValue;
 
-    OOMassUnit unit = [[UNIVERSE commodityMarket] massUnitForGood:oo::NSStringFrom(key)];
+    OOMassUnit unit = [[UNIVERSE commodityMarket] massUnitForGood:key];
     // we can always change gold, platinum & gem-stones quantities, even with special cargo
     if (unit == UNITS_TONS && [entity specialCargo]) {
         OOJSReportWarning(context, @"PlayerShip.manifest['foo'] - cannot modify cargo tonnage when Special Cargo is in use.");
@@ -219,12 +218,12 @@ static BOOL ManifestSetProperty(JSContext* context, JSValueConst thisObj, const 
     if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue < 0)
             iValue = 0;
-        [entity setCargoQuantityForType:oo::NSStringFrom(key) amount:iValue];
+        [entity setCargoQuantityForType:key amount:iValue];
     } else {
         // OOJSReportBadPropertyValue() takes a tinyid; this is the same message for a named property.
         if (JS_HasException(context))
             JS_FreeValue(context, JS_GetException(context));
-        OOJSReportError(context, @"Cannot set property %@ of instance of %@ to invalid value %@.", oo::NSStringFrom(key), OOJSClassNameOfValue(context, thisObj), OOJSDescribeValue(context, value, YES));
+        OOJSReportError(context, @"Cannot set property %@ of instance of %@ to invalid value %@.", key, OOJSClassNameOfValue(context, thisObj), OOJSDescribeValue(context, value, YES));
         return NO;
     }
     return YES;
@@ -233,8 +232,8 @@ static BOOL ManifestSetProperty(JSContext* context, JSValueConst thisObj, const 
 static int ManifestSetPropertyExotic(JSContext* context, JSValueConst object, JSAtom propID, JSValueConst value, JSValueConst receiver, int flags)
 {
     @try {
-        std::optional<std::string> key = NameForPropertyID(context, propID);
-        if (!key.has_value()) {
+        NSString* key = NameForPropertyID(context, propID);
+        if (key == nil) {
             // Not handled by the SpiderMonkey hook; store as an ordinary property.
             return JS_DefinePropertyValue(context, receiver, propID, JS_DupValue(context, value), JS_PROP_C_W_E);
         }
@@ -255,21 +254,21 @@ static int ManifestSetPropertyExotic(JSContext* context, JSValueConst object, JS
             JS_FreeValue(context, protoDesc.setter);
             if (readOnly) {
                 if (flags & JS_PROP_THROW) {
-                    OOJSReportError(context, @"Cannot set read-only property %@ of instance of %@.", oo::NSStringFrom(*key), OOJSClassNameOfValue(context, receiver));
+                    OOJSReportError(context, @"Cannot set read-only property %@ of instance of %@.", key, OOJSClassNameOfValue(context, receiver));
                     return -1;
                 }
                 return NO;
             }
         }
 
-        if (!ManifestSetProperty(context, receiver, *key, value))
+        if (!ManifestSetProperty(context, receiver, key, value))
             return -1;
 
         /*	SpiderMonkey also stored the value in a slot. For commodities, the
                 get hook overrode it; for other names, it was what later reads
                 returned.
         */
-        if (![[UNIVERSE commodities] goodDefined:oo::NSStringFrom(*key)]) {
+        if (![[UNIVERSE commodities] goodDefined:key]) {
             return JS_DefinePropertyValue(context, receiver, propID, JS_DupValue(context, value), JS_PROP_C_W_E);
         }
         return YES;
@@ -284,10 +283,10 @@ static int ManifestDeleteProperty(JSContext* context, JSValueConst object, JSAto
 {
     @try {
         // As before, deleting is setting to undefined.
-        std::optional<std::string> key = NameForPropertyID(context, propID);
-        if (!key.has_value())
+        NSString* key = NameForPropertyID(context, propID);
+        if (key == nil)
             return YES;
-        return ManifestSetProperty(context, object, *key, JS_UNDEFINED) ? YES : -1;
+        return ManifestSetProperty(context, object, key, JS_UNDEFINED) ? YES : -1;
     }
     @catch (id exception) {
         OOJSReportWrappedException(context, exception);
@@ -299,20 +298,20 @@ static JSValue ManifestComment(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> good;
-    std::optional<std::string> information;
+    OOCommodityType good = nil;
+    NSString* information = nil;
 
     if (argc > 0) {
-        good = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        good = OOStringFromJSValue(context, OOJS_ARGV[0]);
     }
-    if (!good.has_value()) {
+    if (good == nil) {
         OOJSReportBadArguments(context, @"Manifest", @"comment", MIN(argc, 1), OOJS_ARGV, nil, @"good");
         return JS_EXCEPTION;
     }
 
-    information = [[PLAYER shipCommodityData] cxx_commentForGood:*good];
+    information = [[PLAYER shipCommodityData] commentForGood:good];
 
-    OOJS_RETURN_OBJECT(oo::NSStringOrNil(information));
+    OOJS_RETURN_OBJECT(information);
 
     OOJS_NATIVE_EXIT
 }
@@ -322,19 +321,19 @@ static JSValue ManifestSetComment(OOJS_NATIVE_ARGS)
     OOJS_NATIVE_ENTER(context)
 
     BOOL OK;
-    std::optional<std::string> good;
-    std::optional<std::string> information;
+    OOCommodityType good = nil;
+    NSString* information = nil;
 
     if (argc > 1) {
-        good = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-        information = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[1]));
+        good = OOStringFromJSValue(context, OOJS_ARGV[0]);
+        information = OOStringFromJSValue(context, OOJS_ARGV[1]);
     }
-    if (!good.has_value() || !information.has_value()) {
+    if (good == nil || information == nil) {
         OOJSReportBadArguments(context, @"Manifest", @"setComment", MIN(argc, 2), OOJS_ARGV, nil, @"good and information text");
         return JS_EXCEPTION;
     }
 
-    OK = [[PLAYER shipCommodityData] cxx_setComment:*information forGood:*good];
+    OK = [[PLAYER shipCommodityData] setComment:information forGood:good];
 
     OOJS_RETURN_BOOL(OK);
 
@@ -345,20 +344,20 @@ static JSValue ManifestShortComment(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> good;
-    std::optional<std::string> information;
+    OOCommodityType good = nil;
+    NSString* information = nil;
 
     if (argc > 0) {
-        good = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
+        good = OOStringFromJSValue(context, OOJS_ARGV[0]);
     }
-    if (!good.has_value()) {
+    if (good == nil) {
         OOJSReportBadArguments(context, @"Manifest", @"shortComment", MIN(argc, 1), OOJS_ARGV, nil, @"good");
         return JS_EXCEPTION;
     }
 
-    information = [[PLAYER shipCommodityData] cxx_shortCommentForGood:*good];
+    information = [[PLAYER shipCommodityData] shortCommentForGood:good];
 
-    OOJS_RETURN_OBJECT(oo::NSStringOrNil(information));
+    OOJS_RETURN_OBJECT(information);
 
     OOJS_NATIVE_EXIT
 }
@@ -368,19 +367,19 @@ static JSValue ManifestSetShortComment(OOJS_NATIVE_ARGS)
     OOJS_NATIVE_ENTER(context)
 
     BOOL OK;
-    std::optional<std::string> good;
-    std::optional<std::string> information;
+    OOCommodityType good = nil;
+    NSString* information = nil;
 
     if (argc > 1) {
-        good = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-        information = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[1]));
+        good = OOStringFromJSValue(context, OOJS_ARGV[0]);
+        information = OOStringFromJSValue(context, OOJS_ARGV[1]);
     }
-    if (!good.has_value() || !information.has_value()) {
+    if (good == nil || information == nil) {
         OOJSReportBadArguments(context, @"Manifest", @"setShortComment", MIN(argc, 2), OOJS_ARGV, nil, @"good and information text");
         return JS_EXCEPTION;
     }
 
-    OK = [[PLAYER shipCommodityData] cxx_setShortComment:*information forGood:*good];
+    OK = [[PLAYER shipCommodityData] setShortComment:information forGood:good];
 
     OOJS_RETURN_BOOL(OK);
 

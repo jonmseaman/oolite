@@ -23,17 +23,17 @@ MA 02110-1301, USA.
 */
 
 #import "NSScannerOOExtensions.h"
-#import "OOStringBridge.h"
 
 @implementation NSScanner (OOExtensions)
 
-- (BOOL)ooliteScanCharactersFromSet:(NSCharacterSet*)set intoString:(std::string*)value
+- (BOOL)ooliteScanCharactersFromSet:(NSCharacterSet*)set intoString:(NSString**)value
 {
     NSUInteger currentLocation = [self scanLocation];
     NSRange matchedRange = NSMakeRange(currentLocation, 0);
-    NSUInteger scanLength = [[self string] length];
+    NSString* scanString = [self string];
+    NSUInteger scanLength = [scanString length];
 
-    while ((currentLocation < scanLength) && ([set characterIsMember:[[self string] characterAtIndex:currentLocation]])) {
+    while ((currentLocation < scanLength) && ([set characterIsMember:[scanString characterAtIndex:currentLocation]])) {
         currentLocation++;
     }
 
@@ -45,19 +45,20 @@ MA 02110-1301, USA.
         return NO;
 
     if (value != NULL) {
-        *value = oo::StdString([[self string] substringWithRange:matchedRange]);
+        *value = [scanString substringWithRange:matchedRange];
     }
 
     return YES;
 }
 
-- (BOOL)ooliteScanUpToCharactersFromSet:(NSCharacterSet*)set intoString:(std::string*)value
+- (BOOL)ooliteScanUpToCharactersFromSet:(NSCharacterSet*)set intoString:(NSString**)value
 {
     NSUInteger currentLocation = [self scanLocation];
     NSRange matchedRange = NSMakeRange(currentLocation, 0);
-    NSUInteger scanLength = [[self string] length];
+    NSString* scanString = [self string];
+    NSUInteger scanLength = [scanString length];
 
-    while ((currentLocation < scanLength) && (![set characterIsMember:[[self string] characterAtIndex:currentLocation]])) {
+    while ((currentLocation < scanLength) && (![set characterIsMember:[scanString characterAtIndex:currentLocation]])) {
         currentLocation++;
     }
 
@@ -69,7 +70,7 @@ MA 02110-1301, USA.
         return NO;
 
     if (value != NULL) {
-        *value = oo::StdString([[self string] substringWithRange:matchedRange]);
+        *value = [scanString substringWithRange:matchedRange];
     }
 
     return YES;

@@ -34,16 +34,7 @@ MA 02110-1301, USA.
 #import "OOColor.h"
 #import "legacy_random.h"
 
-#include "oofnd/PList.hpp"
-#include "oofnd/StdLib.hpp"
-
 @class OOTexture;
-
-/*	Foundation sweep (proposed ADR-0043, bead oo-buk6). Compiled only with NEW_PLANETS off (it is
-        on: OOStellarBody.h). -initFromDictionary:withAtmosphere:andSeed: is unique and takes the planet
-        configuration as an oo::PList; -setUpPlanetFromTexture: and -textureFileName are shared with
-        OOPlanetEntity and keep id.
-*/
 
 #define MAX_TRI_INDICES 3 * (20 + 80 + 320 + 1280 + 5120 + 20480)
 #define MAX_PLANET_VERTICES 10400
@@ -66,7 +57,7 @@ typedef struct
     uint8_t lastSubdivideLevel;
     BOOL useTexturedModel;
     BOOL isTextureImage; // is the texture explicitly specified (as opposed to synthesized)?
-    std::optional<std::string> _textureFileName; // nullopt: no texture file (nil)
+    NSString* _textureFileName;
     OOTexture* _texture;
 
     int planet_seed;
@@ -95,16 +86,16 @@ typedef struct
     Vector rotationAxis;
 }
 
-- (id)initFromDictionary:(const oo::PList&)dict withAtmosphere:(BOOL)atmo andSeed:(Random_Seed)p_seed;
+- (id)initFromDictionary:(NSDictionary*)dict withAtmosphere:(BOOL)atmo andSeed:(Random_Seed)p_seed;
 - (void)miniaturize;
 
-- (BOOL)setUpPlanetFromTexture:(id)fileName; // shared selector (proposed ADR-0043): an Objective-C string
+- (BOOL)setUpPlanetFromTexture:(NSString*)fileName;
 
 - (int)planet_seed;
 - (BOOL)isTextured;
 - (BOOL)isExplicitlyTextured; // Specified texture, not synthesized.
 - (OOTexture*)texture;
-- (id)textureFileName; // shared selector (proposed ADR-0043): an Objective-C string or nil
+- (NSString*)textureFileName;
 
 - (double)polar_color_factor;
 - (GLfloat*)amb_land;

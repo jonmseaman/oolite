@@ -26,7 +26,7 @@ MA 02110-1301, USA.
 #import "AI.h"
 #import "EntityOOJavaScriptExtensions.h"
 #import "OOCharacter.h"
-
+#import "OOCollectionExtractors.h"
 #import "OOConstToString.h"
 #import "OOEntityFilterPredicate.h"
 #import "OOEquipmentType.h"
@@ -39,7 +39,6 @@ MA 02110-1301, USA.
 #import "OOJSWormhole.h"
 #import "OOJavaScriptEngine.h"
 #import "OOMesh.h"
-#import "OOPListView.h"
 #import "OORoleSet.h"
 #import "OOShipGroup.h"
 #import "OOShipRegistry.h"
@@ -1479,20 +1478,11 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS)
 
     case kShip_speed:
         // Writable so a script can put a ship at a KNOWN flight speed, and in particular can
-        // hold it at rest. Writing ship.velocity is not enough on its own: that calls
-        // -setTotalVelocity:, documented at ShipEntity.h:944 as setting velocity to
-        // `vel - thrustVector`, i.e. the INSTANTANEOUS velocity. The engine is untouched, so
-        // -applyThrust: (ShipEntity.m:6734) rebuilds thrustVector from flightSpeed on the very
-        // next frame and the ship carries on. performStop() already zeroes desired_speed and
-        // selects BEHAVIOUR_STOP_STILL, but flightSpeed still DECAYS to zero over several
-        // frames at the ship's thrust rate rather than arriving there; this is the direct
-        // write, the JS counterpart of -setSpeed: (ShipEntity.m:8575), which the engine itself
-        // uses for exactly this purpose (DockEntity.m:919 launch speed, WormholeEntity.m:448
-        // exit speed, ShipEntityAI.m:1765 when a ship becomes wreckage).
+        // hold it at rest.
         //
         // PLAYER: read-only, as for desiredSpeed just above. The player's flightSpeed is
         // driven by the throttle every frame through PlayerEntity's control path, so a write
-        // here would be silently reverted - a setter that does not stick is worse than none.
+        // here would be silently reverted.
         if (EXPECT_NOT([entity isPlayer]))
             goto playerReadOnly;
 
@@ -1743,7 +1733,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS)
     case kShip_aftWeapon:
     case kShip_forwardWeapon:
     case kShip_currentWeapon: {
-        sValue = oo::NSStringOrNil(JSValueToEquipmentKeyRelaxed(context, value, &exists));
+        sValue = JSValueToEquipmentKeyRelaxed(context, value, &exists);
         if (sValue == nil) {
             sValue = @"EQ_WEAPON_NONE";
         }
@@ -2077,7 +2067,7 @@ static JSValue ShipEjectItem(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    OOJS_RETURN_OBJECT([thisEnt ejectShipOfRole:oo::OptionalString(role)]);
+    OOJS_RETURN_OBJECT([thisEnt ejectShipOfRole:role]);
 
     OOJS_NATIVE_EXIT
 }
@@ -2145,7 +2135,7 @@ static JSValue ShipEjectSpecificItem(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    OOJS_RETURN_OBJECT([thisEnt ejectShipOfType:oo::OptionalString(itemKey)]);
+    OOJS_RETURN_OBJECT([thisEnt ejectShipOfType:itemKey]);
 
     OOJS_NATIVE_EXIT
 }
@@ -2213,7 +2203,7 @@ static JSValue ShipSpawn(OOJS_NATIVE_ARGS)
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    result = oo::NSArrayFromObjects([thisEnt spawnShipsWithRole:oo::StdString(role) count:count]);
+    result = [thisEnt spawnShipsWithRole:role count:count];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_OBJECT(result);
@@ -2415,7 +2405,7 @@ static JSValue ShipCanAwardEquipment(OOJS_NATIVE_ARGS)
     GET_THIS_SHIP(thisEnt);
 
     if (argc > 0)
-        key = oo::NSStringOrNil(JSValueToEquipmentKeyRelaxed(context, OOJS_ARGV[0], &exists));
+        key = JSValueToEquipmentKeyRelaxed(context, OOJS_ARGV[0], &exists);
     if (EXPECT_NOT(key == nil)) {
         OOJSReportBadArguments(context, @"Ship", @"canAwardEquipment", MIN(argc, 1), OOJS_ARGV, nil, @"equipment type");
         return OOJSNativeFailure(context);
@@ -2528,7 +2518,7 @@ static JSValue ShipRemoveEquipment(OOJS_NATIVE_ARGS)
     GET_THIS_SHIP(thisEnt);
 
     if (argc > 0)
-        key = oo::NSStringOrNil(JSValueToEquipmentKey(context, OOJS_ARGV[0]));
+        key = JSValueToEquipmentKey(context, OOJS_ARGV[0]);
     if (EXPECT_NOT(key == nil)) {
         OOJSReportBadArguments(context, @"Ship", @"removeEquipment", MIN(argc, 1), OOJS_ARGV, nil, @"equipment type");
         return OOJSNativeFailure(context);
@@ -2689,7 +2679,7 @@ static JSValue ShipEquipmentStatus(OOJS_NATIVE_ARGS)
     GET_THIS_SHIP(thisEnt);
 
     if (argc > 0)
-        key = oo::NSStringOrNil(JSValueToEquipmentKey(context, OOJS_ARGV[0]));
+        key = JSValueToEquipmentKey(context, OOJS_ARGV[0]);
     if (argc > 1)
         asDict = OOJSValueToBOOL(context, OOJS_ARGV[1]);
     if (EXPECT_NOT(key == nil)) {
@@ -2991,7 +2981,7 @@ static JSValue ShipSetMaterialsInternal(OOJS_NATIVE_ARGS, ShipEntity* thisEnt, B
     }
 
     if (fromShaders) {
-        materials = oo::ObjectFromPList([[thisEnt mesh] materials]);
+        materials = [[thisEnt mesh] materials];
         params = OOJS_ARGV[0];
         shaders = OOJSNativeObjectFromJSObject(context, params);
     } else {
@@ -3001,7 +2991,7 @@ static JSValue ShipSetMaterialsInternal(OOJS_NATIVE_ARGS, ShipEntity* thisEnt, B
             params = OOJS_ARGV[1];
             shaders = OOJSNativeObjectFromJSObject(context, params);
         } else {
-            shaders = oo::ObjectFromPList([[thisEnt mesh] shaders]);
+            shaders = [[thisEnt mesh] shaders];
         }
     }
 
@@ -3009,12 +2999,12 @@ static JSValue ShipSetMaterialsInternal(OOJS_NATIVE_ARGS, ShipEntity* thisEnt, B
     NSDictionary* shipDict = [thisEnt shipInfoDictionary];
 
     // First we test to see if we can create the mesh.
-    OOMesh* mesh = [OOMesh meshWithName:oo::StdString(oo::PListView(shipDict).get<NSString*>(@"model"))
-                               cacheKey:std::nullopt
-                     materialDictionary:oo::PListFrom(materials)
-                      shadersDictionary:oo::PListFrom(shaders)
-                                 smooth:oo::PListView(shipDict).get<BOOL>(@"smooth", NO)
-                           shaderMacros:oo::PListFrom(oo::PListView([ResourceManager materialDefaults]).get<NSDictionary*>(@"ship-prefix-macros"))
+    OOMesh* mesh = [OOMesh meshWithName:[shipDict oo_stringForKey:@"model"]
+                               cacheKey:nil
+                     materialDictionary:materials
+                      shadersDictionary:shaders
+                                 smooth:[shipDict oo_boolForKey:@"smooth" defaultValue:NO]
+                           shaderMacros:[[ResourceManager materialDefaults] oo_dictionaryForKey:@"ship-prefix-macros"]
                     shaderBindingTarget:thisEnt];
 
     if (mesh != nil) {
@@ -3222,7 +3212,7 @@ static JSValue ShipGetMaterials(OOJS_NATIVE_ARGS)
 
     GET_THIS_SHIP(thisEnt);
 
-    result = oo::ObjectFromPList([[thisEnt mesh] materials]);
+    result = [[thisEnt mesh] materials];
     if (result == nil)
         result = [NSDictionary dictionary];
     OOJS_RETURN_OBJECT(result);
@@ -3240,7 +3230,7 @@ static JSValue ShipGetShaders(OOJS_NATIVE_ARGS)
 
     GET_THIS_SHIP(thisEnt);
 
-    result = oo::ObjectFromPList([[thisEnt mesh] shaders]);
+    result = [[thisEnt mesh] shaders];
     if (result == nil)
         result = [NSDictionary dictionary];
     OOJS_RETURN_OBJECT(result);

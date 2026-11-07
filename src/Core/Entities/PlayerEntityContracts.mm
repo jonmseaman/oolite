@@ -37,7 +37,6 @@ MA 02110-1301, USA.
 #import "OOColor.h"
 #import "OOConstToString.h"
 #import "OOEquipmentType.h"
-#import "OOFoundationBridge.h"
 #import "OOJavaScriptEngine.h"
 #import "OOPListView.h"
 #import "OOShipRegistry.h"
@@ -1279,12 +1278,11 @@ static NSMutableDictionary* currentShipyard = nil;
         station = [UNIVERSE station];
         stationTechLevel = NSNotFound;
     }
-    if ([station cxx_localShipyard] == nullptr) {
+    if ([station localShipyard] == nil) {
         [station generateShipyard:stationTechLevel];
     }
 
-    std::vector<oo::PList>* stationShipyard = [station cxx_localShipyard];
-    NSArray* shipyard = stationShipyard != nullptr ? oo::ObjectFromPList(oo::PList(*stationShipyard)) : nil; // read only here
+    NSMutableArray* shipyard = [station localShipyard];
 
     [currentShipyard release];
     currentShipyard = [[NSMutableDictionary alloc] initWithCapacity:[shipyard count]];
@@ -1558,11 +1556,9 @@ static NSMutableDictionary* currentShipyard = nil;
         return NO; // you can't afford it!
 
     // from this point, the player is committed to buying - raise a pre-buy script event
-    std::vector<oo::PList>* dockedShipyard = [[self dockedStation] cxx_localShipyard];
-    const NSUInteger boughtIndex = selectedRow - GUI_ROW_SHIPYARD_START;
     [self doScriptEvent:OOJSID("playerWillBuyNewShip")
           withArguments:[NSArray arrayWithObjects:oo::PListView(shipInfo).get<NSString*>(SHIPYARD_KEY_SHIPDATA_KEY),
-                            (dockedShipyard != nullptr && boughtIndex < dockedShipyard->size()) ? oo::ObjectFromPList((*dockedShipyard)[boughtIndex]) : nil,
+                            [[[self dockedStation] localShipyard] objectAtIndex:selectedRow - GUI_ROW_SHIPYARD_START],
                             [NSNumber numberWithUnsignedLongLong:price],
                             [NSNumber numberWithUnsignedLongLong:(tradeIn / 10)], nil]];
 
@@ -1599,9 +1595,7 @@ static NSMutableDictionary* currentShipyard = nil;
     [shipyard_record setObject:[self shipDataKey] forKey:[shipInfo objectForKey:SHIPYARD_KEY_ID]];
 
     // remove the ship from the localShipyard
-    dockedShipyard = [[self dockedStation] cxx_localShipyard];
-    if (dockedShipyard != nullptr)
-        dockedShipyard->erase(dockedShipyard->begin() + (selectedRow - GUI_ROW_SHIPYARD_START));
+    [[[self dockedStation] localShipyard] removeObjectAtIndex:selectedRow - GUI_ROW_SHIPYARD_START];
 
     // perform the transformation
     NSDictionary* cmdr_dict = [self commanderDataDictionary]; // gather up all the info

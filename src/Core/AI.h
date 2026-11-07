@@ -28,48 +28,42 @@ MA 02110-1301, USA.
 #import "OOWeakReference.h"
 #import <Foundation/Foundation.h>
 
-#include "oofnd/PList.hpp"
-#include "oofnd/StdLib.hpp"
-#include "oofnd/objc/OOObjCRef.h"
-
 #define AI_THINK_INTERVAL 0.125
 
-@class ShipEntity, OOPreservedAIStateMachine;
+@class ShipEntity;
 
 @interface AI : OOWeakRefObject {
 @private
     id _owner; // OOWeakReference to the ShipEntity this is the AI for
-    std::optional<std::string> ownerDesc; // describes the object this is the AI for; nullopt until it has an owner
+    NSString* ownerDesc; // describes the object this is the AI for
 
-    oo::PList stateMachine; // the loaded, whitelisted state machine; null: none (nil)
-    std::string stateMachineName;
-    std::optional<std::string> currentState; // nullopt: no state (nil)
-    std::set<std::string> pendingMessages; // in byte order (a Foundation set before)
+    NSDictionary* stateMachine;
+    NSString* stateMachineName;
+    NSString* currentState;
+    NSMutableSet* pendingMessages;
 
-    std::vector<oo::ObjCRef<OOPreservedAIStateMachine*>> aiStack;
+    NSMutableArray* aiStack;
 
     OOTimeAbsolute nextThinkTime;
     OOTimeDelta thinkTimeInterval;
 
-    std::optional<std::string> jsScript;
+    NSString* jsScript;
 }
 
 + (AI*)currentlyRunningAI;
-+ (std::optional<std::string>)cxx_currentlyRunningAIDescription;
++ (NSString*)currentlyRunningAIDescription;
 
-- (id)name; // shared selector (proposed ADR-0043): the state machine's name, an Objective-C string
-- (std::optional<std::string>)cxx_associatedJS;
-- (id)state; // shared selector (proposed ADR-0043): the current state, an Objective-C string or nil
+- (NSString*)name;
+- (NSString*)associatedJS;
+- (NSString*)state;
 
-- (void)cxx_setStateMachine:(const std::string&)smName withJSScript:(const std::string&)script;
-- (void)cxx_setState:(const std::string&)stateName;
+- (void)setStateMachine:(NSString*)smName withJSScript:(NSString*)script;
+- (void)setState:(NSString*)stateName;
 
-- (void)cxx_setStateMachine:(const std::string&)smName afterDelay:(NSTimeInterval)delay;
-- (void)cxx_setState:(const std::string&)stateName afterDelay:(NSTimeInterval)delay;
+- (void)setStateMachine:(NSString*)smName afterDelay:(NSTimeInterval)delay;
+- (void)setState:(NSString*)stateName afterDelay:(NSTimeInterval)delay;
 
-// std::nullopt where the Foundation version took nil (no state machine / no initial state). An
-// initializer outside the init family by name, so the ownership it returns (+1) is declared.
-- (id)cxx_initWithStateMachine:(const std::optional<std::string>&)smName andState:(const std::optional<std::string>&)stateName OO_RETURNS_RETAINED;
+- (id)initWithStateMachine:(NSString*)smName andState:(NSString*)stateName;
 
 - (ShipEntity*)owner;
 - (void)setOwner:(ShipEntity*)ship;
@@ -79,21 +73,20 @@ MA 02110-1301, USA.
 - (void)restorePreviousStateMachine;
 
 - (BOOL)hasSuspendedStateMachines;
-- (void)cxx_exitStateMachineWithMessage:(const std::optional<std::string>&)message; // nullopt: "RESTARTED"
+- (void)exitStateMachineWithMessage:(NSString*)message;
 
 - (NSUInteger)stackDepth;
 
-// Immediately handle a message. This is the core dispatcher. DebugContext is a textual hint for
-// diagnostics (std::nullopt where the Foundation version took nil).
-- (void)cxx_reactToMessage:(const std::string&)message context:(const std::optional<std::string>&)debugContext;
+// Immediately handle a message. This is the core dispatcher. DebugContext is a textual hint for diagnostics.
+- (void)reactToMessage:(NSString*)message context:(NSString*)debugContext;
 
-- (void)cxx_takeAction:(const std::string&)action;
+- (void)takeAction:(NSString*)action;
 
 - (void)think;
 
-- (void)message:(id)ms; // shared selector (proposed ADR-0043): ms is an Objective-C string
-- (void)cxx_dropMessage:(const std::string&)ms;
-- (id)pendingMessages; // shared selector (proposed ADR-0043): an immutable Objective-C set of strings
+- (void)message:(NSString*)ms;
+- (void)dropMessage:(NSString*)ms;
+- (NSSet*)pendingMessages;
 - (void)debugDumpPendingMessages;
 
 - (void)setNextThinkTime:(OOTimeAbsolute)ntt;
@@ -109,10 +102,3 @@ MA 02110-1301, USA.
 - (void)dumpState;
 
 @end
-
-/*	TRANSITIONAL (proposed ADR-0043, "Transitional bridges"): the Foundation-typed API this header
-        declared before the AI.mm sweep (beads oo-3rb.84-87, oo-gtl8), forwarding to the cxx_ methods
-        above, so unmigrated callers compile unchanged. Callers move to the cxx_ API in their own sweep
-        beads; the bridge goes in its own bead.
-*/
-#import "AI+FoundationBridge.h"

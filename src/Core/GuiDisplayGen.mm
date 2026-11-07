@@ -27,7 +27,6 @@ MA 02110-1301, USA.
 #include <vector>
 #import "GameController.h"
 #import "HeadUpDisplay.h"
-#import "OOFoundationBridge.h"
 #import "OOJavaScriptEngine.h"
 #import "OOPListView.h"
 #import "OOSound.h"
@@ -41,30 +40,11 @@ MA 02110-1301, USA.
 #import "PlayerEntityStickProfile.h"
 #import "ResourceManager.h"
 #import "Universe.h"
-#include "oofnd/objc/OOException.h"
-
-#include "oofnd/String.hpp"
 
 OOINLINE BOOL RowInRange(OOGUIRow row, NSRange range)
 {
     return ((int)range.location <= row && row < (int)(range.location + range.length));
 }
-
-namespace {
-
-// -[NSArray componentsJoinedByString:@" "] of words[from...].
-std::string WordsJoinedBySpace(const std::vector<std::string>& words, std::size_t from)
-{
-    std::string result;
-    for (std::size_t i = from; i < words.size(); i++) {
-        if (i != from)
-            result += " ";
-        result += words[i];
-    }
-    return result;
-}
-
-} // namespace
 
 @interface GuiDisplayGen (Internal)
 
@@ -72,11 +52,11 @@ std::string WordsJoinedBySpace(const std::vector<std::string>& words, std::size_
 
 - (void)drawCrossHairsWithSize:(GLfloat)size x:(GLfloat)x y:(GLfloat)y z:(GLfloat)z;
 - (void)drawStarChart:(GLfloat)x y:(GLfloat)y z:(GLfloat)z alpha:(GLfloat)alpha compact:(BOOL)compact;
-- (void)drawSystemMarkers:(const oo::PList&)marker atX:(GLfloat)x andY:(GLfloat)y andZ:(GLfloat)z withAlpha:(GLfloat)alpha andScale:(GLfloat)scale;
-- (void)drawSystemMarker:(const oo::PList&)marker atX:(GLfloat)x andY:(GLfloat)y andZ:(GLfloat)z withAlpha:(GLfloat)alpha andScale:(GLfloat)scale;
+- (void)drawSystemMarkers:(NSArray*)marker atX:(GLfloat)x andY:(GLfloat)y andZ:(GLfloat)z withAlpha:(GLfloat)alpha andScale:(GLfloat)scale;
+- (void)drawSystemMarker:(NSDictionary*)marker atX:(GLfloat)x andY:(GLfloat)y andZ:(GLfloat)z withAlpha:(GLfloat)alpha andScale:(GLfloat)scale;
 
 - (void)drawEquipmentList:(NSArray*)eqptList z:(GLfloat)z;
-- (void)drawAdvancedNavArrayAtX:(float)x y:(float)y z:(float)z alpha:(float)alpha usingRoute:(const oo::PList&)route optimizedBy:(OORouteType)optimizeBy zoom:(OOScalar)zoom;
+- (void)drawAdvancedNavArrayAtX:(float)x y:(float)y z:(float)z alpha:(float)alpha usingRoute:(NSDictionary*)route optimizedBy:(OORouteType)optimizeBy zoom:(OOScalar)zoom;
 
 @end
 
@@ -129,17 +109,17 @@ static BOOL _refreshStarChart = NO;
 
         backgroundSpecial = GUI_BACKGROUND_SPECIAL_NONE;
 
-        guiUserSettings = oo::PListFrom([ResourceManager dictionaryFromFilesNamed:@"gui-settings.plist" inFolder:@"Config" andMerge:YES]);
+        guiUserSettings = [[ResourceManager dictionaryFromFilesNamed:@"gui-settings.plist" inFolder:@"Config" andMerge:YES] retain];
     }
     return self;
 }
 
-- (id)cxx_initWithPixelSize:(NSSize)gui_size
-                    columns:(int)gui_cols
-                       rows:(int)gui_rows
-                  rowHeight:(int)gui_row_height
-                   rowStart:(int)gui_row_start
-                      title:(const std::optional<std::string>&)gui_title
+- (id)initWithPixelSize:(NSSize)gui_size
+                columns:(int)gui_cols
+                   rows:(int)gui_rows
+              rowHeight:(int)gui_row_height
+               rowStart:(int)gui_row_start
+                  title:(NSString*)gui_title
 {
     self = [super init];
 
@@ -172,7 +152,7 @@ static BOOL _refreshStarChart = NO;
         rowAlignment[i] = GUI_ALIGN_LEFT;
     }
 
-    title = [oo::NSStringOrNil(gui_title) retain]; // the title ivar is chunk 5's (oo-3rb.96)
+    title = [gui_title retain];
 
     textColor = [[OOColor yellowColor] retain];
 
@@ -189,16 +169,17 @@ static BOOL _refreshStarChart = NO;
     [rowText release];
     [rowKey release];
     [rowColor release];
+    [guiUserSettings release];
 
     [super dealloc];
 }
 
-- (void)cxx_resizeWithPixelSize:(NSSize)gui_size
-                        columns:(int)gui_cols
-                           rows:(int)gui_rows
-                      rowHeight:(int)gui_row_height
-                       rowStart:(int)gui_row_start
-                          title:(const std::optional<std::string>&)gui_title
+- (void)resizeWithPixelSize:(NSSize)gui_size
+                    columns:(int)gui_cols
+                       rows:(int)gui_rows
+                  rowHeight:(int)gui_row_height
+                   rowStart:(int)gui_row_start
+                      title:(NSString*)gui_title
 {
     [self clear];
     //
@@ -215,12 +196,12 @@ static BOOL _refreshStarChart = NO;
     rowRange = NSMakeRange(0, n_rows);
     [self clear];
     //
-    [self setTitle:oo::NSStringOrNil(gui_title)];
+    [self setTitle:gui_title];
 }
 
-- (void)cxx_resizeTo:(NSSize)gui_size
-     characterHeight:(int)csize
-               title:(const std::optional<std::string>&)gui_title
+- (void)resizeTo:(NSSize)gui_size
+    characterHeight:(int)csize
+              title:(NSString*)gui_title
 {
     [self clear];
     //
@@ -228,7 +209,7 @@ static BOOL _refreshStarChart = NO;
     n_columns = gui_size.width / csize;
     n_rows = (int)gui_size.height / csize;
 
-    [self setTitle:oo::NSStringOrNil(gui_title)];
+    [self setTitle:gui_title];
 
     pixel_row_center = gui_size.width / 2;
     pixel_row_height = csize;
@@ -312,7 +293,7 @@ static BOOL _refreshStarChart = NO;
     return drawPosition;
 }
 
-- (oo::PList)cxx_userSettings
+- (NSDictionary*)userSettings
 {
     return guiUserSettings;
 }
@@ -381,13 +362,12 @@ static BOOL _refreshStarChart = NO;
     textCommsColor = [color retain];
 }
 
-- (OOColor*)cxx_colorFromSetting:(const std::optional<std::string>&)setting defaultValue:(OOColor*)def
+- (OOColor*)colorFromSetting:(NSString*)setting defaultValue:(OOColor*)def
 {
 
     OOColor* col = nil;
-    if (setting.has_value()) {
-        const oo::PList* description = guiUserSettings.find(*setting);
-        col = [OOColor colorWithDescription:(description != nullptr) ? oo::ObjectFromPList(*description) : nil];
+    if (setting != nil) {
+        col = [OOColor colorWithDescription:[guiUserSettings objectForKey:setting]];
     }
     if (col == nil) {
         if (def != nil) {
@@ -400,26 +380,26 @@ static BOOL _refreshStarChart = NO;
     return [[col copy] autorelease];
 }
 
-- (void)cxx_setGLColorFromSetting:(const std::optional<std::string>&)setting defaultValue:(OOColor*)def alpha:(GLfloat)alpha
+- (void)setGLColorFromSetting:(NSString*)setting defaultValue:(OOColor*)def alpha:(GLfloat)alpha
 {
     GLfloat r, g, b, a;
-    OOColor* col = [self cxx_colorFromSetting:setting defaultValue:def];
+    OOColor* col = [self colorFromSetting:setting defaultValue:def];
     [col getRed:&r green:&g blue:&b alpha:&a];
 
     OOGL(glColor4f(r, g, b, a * alpha));
 }
 
-- (void)cxx_setGuiColorSettingFromKey:(const std::string&)key color:(OOColor*)col
+- (void)setGuiColorSettingFromKey:(NSString*)key color:(OOColor*)col
 {
-    // With no settings (nil), the mutable copy was nil too and nothing changed.
-    oo::PList::Dict* settings = guiUserSettings.getIf<oo::PList::Dict>();
-    if (settings == nullptr)
-        return;
+    NSMutableDictionary* guiCopy = [guiUserSettings mutableCopy];
     if (col == nil) {
-        settings->erase(key);
+        [guiCopy removeObjectForKey:key];
     } else {
-        (*settings)[key] = oo::PListObject(col);
+        [guiCopy setObject:col forKey:key];
     }
+    [guiUserSettings release];
+    guiUserSettings = [guiCopy copy];
+    [guiCopy release];
 }
 
 - (void)setCharacterSize:(NSSize)character_size
@@ -446,24 +426,22 @@ static BOOL _refreshStarChart = NO;
         return NULL;
 }
 
-- (OOGUIRow)cxx_rowForKey:(const std::optional<std::string>&)key
+- (OOGUIRow)rowForKey:(NSString*)key
 {
-    if (!key.has_value())
-        return -1; // a nil key matched nothing
     for (unsigned i = 0; i < [rowKey count]; i++) {
-        if (*key == oo::StdString([rowKey objectAtIndex:i])) {
+        if ([key isEqualToString:[rowKey objectAtIndex:i]]) {
             return (OOGUIRow)i;
         }
     }
     return -1;
 }
 
-- (std::optional<std::string>)cxx_keyForRow:(OOGUIRow)row
+- (NSString*)keyForRow:(OOGUIRow)row
 {
     if (RowInRange(row, rowRange))
-        return oo::OptionalString([rowKey objectAtIndex:row]);
+        return [rowKey objectAtIndex:row];
     else
-        return std::nullopt;
+        return NULL;
 }
 
 - (OOGUIRow)selectedRow
@@ -543,21 +521,21 @@ static BOOL _refreshStarChart = NO;
     selectedRow = -1;
 }
 
-- (std::optional<std::string>)cxx_selectedRowText
+- (NSString*)selectedRowText
 {
-    if (oo::IsNSString([rowText objectAtIndex:selectedRow]))
-        return oo::OptionalString([rowText objectAtIndex:selectedRow]);
-    if (oo::IsNSArray([rowText objectAtIndex:selectedRow]))
-        return oo::OptionalString([[rowText objectAtIndex:selectedRow] objectAtIndex:0]);
-    return std::nullopt;
+    if ([[rowText objectAtIndex:selectedRow] isKindOfClass:[NSString class]])
+        return (NSString*)[rowText objectAtIndex:selectedRow];
+    if ([[rowText objectAtIndex:selectedRow] isKindOfClass:[NSArray class]])
+        return (NSString*)[[rowText objectAtIndex:selectedRow] objectAtIndex:0];
+    return NULL;
 }
 
-- (std::optional<std::string>)cxx_selectedRowKey
+- (NSString*)selectedRowKey
 {
     if ((selectedRow < 0) || ((unsigned)selectedRow > [rowKey count]))
-        return std::nullopt;
+        return nil;
     else
-        return oo::OptionalString([rowKey objectAtIndex:selectedRow]);
+        return (NSString*)[rowKey objectAtIndex:selectedRow];
 }
 
 - (void)setShowTextCursor:(BOOL)yesno
@@ -591,16 +569,16 @@ static BOOL _refreshStarChart = NO;
         memmove(tabStops, stops, sizeof tabStops);
 }
 
-- (void)cxx_overrideTabs:(OOGUITabSettings)stops from:(const std::string&)setting length:(NSUInteger)len
+- (void)overrideTabs:(OOGUITabSettings)stops from:(NSString*)setting length:(NSUInteger)len
 {
-    const oo::PList* override = guiUserSettings.get<oo::PList::Array>(setting, nullptr);
+    NSArray* override = oo::PListView(guiUserSettings).get<NSArray*>(setting, nil);
     NSUInteger i;
     if (stops != NULL && override != nil) {
         if (len > GUI_MAX_COLUMNS) {
             len = GUI_MAX_COLUMNS;
         }
         for (i = 0; i < len; i++) {
-            stops[i] = override->at<NSUInteger>(i, stops[i]);
+            stops[i] = oo::PListView(override).at<NSUInteger>(i, stops[i]);
         }
     }
 }
@@ -628,98 +606,94 @@ static BOOL _refreshStarChart = NO;
         [self clearBackground];
 }
 
-- (void)cxx_setKey:(const std::string&)str forRow:(OOGUIRow)row
+- (void)setKey:(NSString*)str forRow:(OOGUIRow)row
 {
     if (RowInRange(row, rowRange))
-        [rowKey replaceObjectAtIndex:row withObject:oo::NSStringFrom(str)]; // the row ivars are chunk 5's (oo-3rb.96)
+        [rowKey replaceObjectAtIndex:row withObject:str];
 }
 
-- (void)cxx_setText:(const std::string&)str forRow:(OOGUIRow)row
+- (void)setText:(NSString*)str forRow:(OOGUIRow)row
 {
     if (RowInRange(row, rowRange)) {
-        [rowText replaceObjectAtIndex:row withObject:oo::NSStringFrom(str)];
+        [rowText replaceObjectAtIndex:row withObject:str];
     }
 }
 
-- (void)cxx_setText:(const std::optional<std::string>&)str forRow:(OOGUIRow)row align:(OOGUIAlignment)alignment
+- (void)setText:(NSString*)str forRow:(OOGUIRow)row align:(OOGUIAlignment)alignment
 {
-    if (str.has_value() && RowInRange(row, rowRange)) {
-        [rowText replaceObjectAtIndex:row withObject:oo::NSStringFrom(*str)];
+    if (str != nil && RowInRange(row, rowRange)) {
+        [rowText replaceObjectAtIndex:row withObject:str];
         rowAlignment[row] = alignment;
     }
 }
 
-- (OOGUIRow)cxx_addLongText:(const std::optional<std::string>&)str
-              startingAtRow:(OOGUIRow)row
-                      align:(OOGUIAlignment)alignment
+- (OOGUIRow)addLongText:(NSString*)str
+          startingAtRow:(OOGUIRow)row
+                  align:(OOGUIAlignment)alignment
 {
-    // nil: -rangeOfString: answered location 0 and -componentsSeparatedByString: no lines.
-    if (!str.has_value())
-        return row;
 
-    if (str->find('\n') != std::string::npos) {
-        for (const std::string& line : oo::str::split(*str, "\n")) {
-            row = [self cxx_addLongText:line startingAtRow:row align:alignment];
+    if ([str rangeOfString:@"\n"].location != NSNotFound) {
+        NSArray* lines = [str componentsSeparatedByString:@"\n"];
+        unsigned i;
+        for (i = 0; i < [lines count]; i++) {
+            row = [self addLongText:oo::PListView(lines).at<NSString*>(i) startingAtRow:row align:alignment];
         }
         return row;
     }
 
     NSSize chSize = pixel_text_size;
-    NSSize strsize = OORectFromString(oo::NSStringFrom(*str), 0.0f, 0.0f, chSize).size;
+    NSSize strsize = OORectFromString(str, 0.0f, 0.0f, chSize).size;
     if (strsize.width < size_in_pixels.width) {
-        [self cxx_setText:str forRow:row align:alignment];
+        [self setText:str forRow:row align:alignment];
         return row + 1;
     } else {
-        const std::vector<std::string> words = oo::str::tokens(*str);
-        std::size_t next = 0; // words moved to string1
-        std::string string1;
+        NSMutableArray* words = ScanTokensFromString(str);
+        NSMutableString* string1 = [NSMutableString stringWithCapacity:256];
+        NSMutableString* string2 = [NSMutableString stringWithCapacity:256];
         strsize.width = 0.0f;
-        while ((strsize.width < size_in_pixels.width) && (next < words.size())) {
-            string1 += words[next];
-            string1 += " ";
-            next++;
-            strsize = OORectFromString(oo::NSStringFrom(string1), 0.0f, 0.0f, chSize).size;
-            if (next < words.size())
-                strsize.width += OORectFromString(oo::NSStringFrom(words[next]), 0.0f, 0.0f, chSize).size.width;
+        while ((strsize.width < size_in_pixels.width) && ([words count] > 0)) {
+            [string1 appendString:(NSString*)[words objectAtIndex:0]];
+            [string1 appendString:@" "];
+            [words removeObjectAtIndex:0];
+            strsize = OORectFromString(string1, 0.0f, 0.0f, chSize).size;
+            if ([words count] > 0)
+                strsize.width += OORectFromString((NSString*)[words objectAtIndex:0], 0.0f, 0.0f, chSize).size.width;
         }
-        const std::string string2 = WordsJoinedBySpace(words, next);
-        [self cxx_setText:string1 forRow:row align:alignment];
-        return [self cxx_addLongText:string2 startingAtRow:row + 1 align:alignment];
+        [string2 appendString:[words componentsJoinedByString:@" "]];
+        [self setText:string1 forRow:row align:alignment];
+        return [self addLongText:string2 startingAtRow:row + 1 align:alignment];
     }
 }
 
-- (std::optional<std::string>)cxx_reflowTextForMFD:(const std::optional<std::string>&)input
+- (NSString*)reflowTextForMFD:(NSString*)input
 {
-    std::string output;
+    NSMutableString* output = [[NSMutableString alloc] initWithCapacity:512];
+    NSArray* lines = [input componentsSeparatedByString:@"\n"];
     NSSize chSize = pixel_text_size;
     NSUInteger limit = chSize.width * 15;
-    // nil split into no lines: the result was an empty string, not nil.
-    if (!input.has_value())
-        return output;
-    for (const std::string& line : oo::str::split(*input, "\n")) {
-        const std::vector<std::string> words = oo::str::tokens(line);
-        std::size_t first = 0; // words consumed
-        std::string accum;
-        if (!words.empty()) {
-            while (words.size() - first > 1) {
-                accum += words[first];
-                accum += " ";
-                if (OORectFromString(oo::NSStringFrom(accum), 0.0f, 0.0f, chSize).size.width + OORectFromString(oo::NSStringFrom(words[first + 1]), 0.0f, 0.0f, chSize).size.width > limit) {
+    NSString* line = nil;
+    foreach (line, lines) {
+        NSMutableArray* words = ScanTokensFromString(line);
+        NSMutableString* accum = [NSMutableString stringWithCapacity:64];
+        if ([words count] > 0) {
+            while ([words count] > 1) {
+                [accum appendString:oo::PListView(words).at<NSString*>(0)];
+                [accum appendString:@" "];
+                if (OORectFromString(accum, 0.0f, 0.0f, chSize).size.width + OORectFromString(oo::PListView(words).at<NSString*>(1), 0.0f, 0.0f, chSize).size.width > limit) {
                     // can't fit next word on this line
-                    // (-whitespaceCharacterSet trimming: accum holds tokens and spaces, no newlines)
-                    output += oo::str::trimWhitespaceAndNewlines(accum);
-                    output += "\n";
-                    accum.clear();
+                    [output appendString:[accum stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]];
+                    [output appendString:@"\n"];
+                    [accum setString:@""];
                 }
-                first++;
+                [words removeObjectAtIndex:0];
             }
-            output += accum;
-            output += words[first];
+            [output appendString:accum];
+            [output appendString:oo::PListView(words).at<NSString*>(0)];
         }
-        output += "\n";
+        [output appendString:@"\n"];
     }
 
-    return output;
+    return [output autorelease];
 }
 
 - (void)leaveLastLine
@@ -735,57 +709,46 @@ static BOOL _refreshStarChart = NO;
     rowFadeTime[i] = 0.4f; // fade the last line...
 }
 
-- (oo::PList)cxx_getLastLines // text, colour, fade time - text, colour, fade time
+- (NSArray*)getLastLines // text, colour, fade time - text, colour, fade time
 {
     if (n_rows < 1)
-        return oo::PList();
+        return nil;
 
     // we have at least 1 row!
 
     unsigned i = n_rows - 1;
     OORGBAComponents col = [(OOColor*)[rowColor objectAtIndex:i] rgbaComponents];
-    oo::PList::Array result;
-
-    /*	Row r's text, colour and fade time, as -arrayWithObjects: took them: the text is what
-            -oo_stringAtIndex: read (a string, or a number's -stringValue); anything else was nil, which
-            ended the list there. Returns whether it was appended.
-    */
-    auto appendRow = [&](unsigned r, const OORGBAComponents& c) -> bool {
-        const oo::PList text = oo::PListFrom([rowText objectAtIndex:r]); // the row ivars are chunk 5's (oo-3rb.96)
-        if (!text.isString() && !text.isNumber())
-            return false;
-        result.emplace_back(oo::PList(oo::PList::Array { text }).at<std::string>(0));
-        result.emplace_back(oo::str::format("%.3g %.3g %.3g %.3g", c.r, c.g, c.b, c.a));
-        result.push_back(oo::PList::singleReal(rowFadeTime[r])); // +numberWithFloat:
-        return true;
-    };
 
     if (i > 0) {
         // we have at least 2 rows!
         OORGBAComponents col0 = [(OOColor*)[rowColor objectAtIndex:i - 1] rgbaComponents];
-        if (appendRow(i - 1, col0))
-            appendRow(i, col);
+        return [NSArray arrayWithObjects:oo::PListView(rowText).at<NSString*>(i - 1),
+            [NSString stringWithFormat:@"%.3g %.3g %.3g %.3g", col0.r, col0.g, col0.b, col0.a],
+            [NSNumber numberWithFloat:rowFadeTime[i - 1]],
+            oo::PListView(rowText).at<NSString*>(i),
+            [NSString stringWithFormat:@"%.3g %.3g %.3g %.3g", col.r, col.g, col.b, col.a],
+            [NSNumber numberWithFloat:rowFadeTime[i]], nil];
     } else {
-        appendRow(i, col);
+        return [NSArray arrayWithObjects:oo::PListView(rowText).at<NSString*>(i),
+            [NSString stringWithFormat:@"%.3g %.3g %.3g %.3g", col.r, col.g, col.b, col.a],
+            [NSNumber numberWithFloat:rowFadeTime[i]], nil];
     }
-    return oo::PList(std::move(result));
 }
 
-- (void)cxx_printLongText:(const std::optional<std::string>&)str
-                    align:(OOGUIAlignment)alignment
-                    color:(OOColor*)text_color
-                 fadeTime:(float)text_fade
-                      key:(const std::optional<std::string>&)text_key
-               addToArray:(std::vector<std::string>*)text_array
+- (void)printLongText:(NSString*)str
+                align:(OOGUIAlignment)alignment
+                color:(OOColor*)text_color
+             fadeTime:(float)text_fade
+                  key:(NSString*)text_key
+           addToArray:(NSMutableArray*)text_array
 {
     // print a multi-line message
     //
-    // nil: -rangeOfString: answered location 0 and -componentsSeparatedByString: no lines.
-    if (!str.has_value())
-        return;
-    if (str->find('\n') != std::string::npos) {
-        for (const std::string& line : oo::str::split(*str, "\n"))
-            [self cxx_printLongText:line align:alignment color:text_color fadeTime:text_fade key:text_key addToArray:text_array];
+    if ([str rangeOfString:@"\n"].location != NSNotFound) {
+        NSArray* lines = [str componentsSeparatedByString:@"\n"];
+        unsigned i;
+        for (i = 0; i < [lines count]; i++)
+            [self printLongText:oo::PListView(lines).at<NSString*>(i) align:alignment color:text_color fadeTime:text_fade key:text_key addToArray:text_array];
         return;
     }
 
@@ -793,115 +756,109 @@ static BOOL _refreshStarChart = NO;
     if (row == (OOGUIRow)n_rows - 1)
         [self scrollUp:1];
     NSSize chSize = pixel_text_size;
-    NSSize strsize = OORectFromString(oo::NSStringFrom(*str), 0.0f, 0.0f, chSize).size;
+    NSSize strsize = OORectFromString(str, 0.0f, 0.0f, chSize).size;
     if (strsize.width < size_in_pixels.width) {
-        [self cxx_setText:str forRow:row align:alignment];
+        [self setText:str forRow:row align:alignment];
         if (text_color)
             [self setColor:text_color forRow:row];
-        if (text_key.has_value())
-            [self cxx_setKey:*text_key forRow:row];
+        if (text_key)
+            [self setKey:text_key forRow:row];
         rowFadeTime[row] = text_fade;
         if (currentRow < (OOGUIRow)n_rows - 1)
             currentRow++;
         if (text_array)
-            text_array->push_back(*str);
+            [text_array addObject:str];
     } else {
-        const std::vector<std::string> words = oo::str::tokens(*str);
-        std::size_t next = 0; // words moved to string1
-        std::string string1;
+        NSMutableArray* words = ScanTokensFromString(str);
+        NSMutableString* string1 = [NSMutableString stringWithCapacity:256];
+        NSMutableString* string2 = [NSMutableString stringWithCapacity:256];
         strsize.width = 0.0f;
-        while ((strsize.width < size_in_pixels.width) && (next < words.size())) {
-            string1 += words[next];
-            string1 += " ";
-            next++;
-            strsize = OORectFromString(oo::NSStringFrom(string1), 0.0f, 0.0f, chSize).size;
-            if (next < words.size())
-                strsize.width += OORectFromString(oo::NSStringFrom(words[next]), 0.0f, 0.0f, chSize).size.width;
+        while ((strsize.width < size_in_pixels.width) && ([words count] > 0)) {
+            [string1 appendString:(NSString*)[words objectAtIndex:0]];
+            [string1 appendString:@" "];
+            [words removeObjectAtIndex:0];
+            strsize = OORectFromString(string1, 0.0f, 0.0f, chSize).size;
+            if ([words count] > 0)
+                strsize.width += OORectFromString(oo::PListView(words).at<NSString*>(0), 0.0f, 0.0f, chSize).size.width;
         }
 
-        [self cxx_setText:string1 forRow:row align:alignment];
+        [self setText:string1 forRow:row align:alignment];
 
-        const std::string string2 = WordsJoinedBySpace(words, next);
+        [string2 appendString:[words componentsJoinedByString:@" "]];
         if (text_color)
             [self setColor:text_color forRow:row];
-        if (text_key.has_value())
-            [self cxx_setKey:*text_key forRow:row];
+        if (text_key)
+            [self setKey:text_key forRow:row];
         if (text_array)
-            text_array->push_back(string1);
+            [text_array addObject:string1];
         rowFadeTime[row] = text_fade;
-        [self cxx_printLongText:string2 align:alignment color:text_color fadeTime:text_fade key:text_key addToArray:text_array];
+        [self printLongText:string2 align:alignment color:text_color fadeTime:text_fade key:text_key addToArray:text_array];
     }
 }
 
-- (void)cxx_printLineNoScroll:(const std::optional<std::string>&)str
-                        align:(OOGUIAlignment)alignment
-                        color:(OOColor*)text_color
-                     fadeTime:(float)text_fade
-                          key:(const std::optional<std::string>&)text_key
-                   addToArray:(std::vector<std::string>*)text_array
+- (void)printLineNoScroll:(NSString*)str
+                    align:(OOGUIAlignment)alignment
+                    color:(OOColor*)text_color
+                 fadeTime:(float)text_fade
+                      key:(NSString*)text_key
+               addToArray:(NSMutableArray*)text_array
 {
-    [self cxx_setText:str forRow:currentRow align:alignment];
+    [self setText:str forRow:currentRow align:alignment];
     if (text_color)
         [self setColor:text_color forRow:currentRow];
-    if (text_key.has_value())
-        [self cxx_setKey:*text_key forRow:currentRow];
-    if (text_array && str.has_value()) // adding nil raised
-        text_array->push_back(*str);
+    if (text_key)
+        [self setKey:text_key forRow:currentRow];
+    if (text_array)
+        [text_array addObject:str];
     rowFadeTime[currentRow] = text_fade;
 }
 
-- (void)cxx_setArray:(const std::vector<std::string>&)arr forRow:(OOGUIRow)row
+- (void)setArray:(NSArray*)arr forRow:(OOGUIRow)row
 {
     if (RowInRange(row, rowRange))
-        [rowText replaceObjectAtIndex:row withObject:oo::NSArrayFromStrings(arr)];
+        [rowText replaceObjectAtIndex:row withObject:arr];
 }
 
-- (void)cxx_insertItemsFromArray:(const oo::PList&)items
-                        withKeys:(const oo::PList&)item_keys
-                         intoRow:(OOGUIRow)row
-                           color:(OOColor*)text_color
+- (void)insertItemsFromArray:(NSArray*)items
+                    withKeys:(NSArray*)item_keys
+                     intoRow:(OOGUIRow)row
+                       color:(OOColor*)text_color
 {
-    if (items.isNull())
+    if (!items)
         return;
-    if (items.count() == 0)
+    if ([items count] == 0)
         return;
 
-    NSUInteger n_items = items.count();
-    if ((!item_keys.isNull()) && (item_keys.count() != n_items)) {
+    NSUInteger n_items = [items count];
+    if ((item_keys) && ([item_keys count] != n_items)) {
         // throw exception
-        [OOException raise:"ArrayLengthMismatchException"
-                    format:"The NSArray sent as 'item_keys' to insertItemsFromArray::: must contain the same number of objects as the NSArray 'items'"];
+        [NSException raise:@"ArrayLengthMismatchException"
+                    format:@"The NSArray sent as 'item_keys' to insertItemsFromArray::: must contain the same number of objects as the NSArray 'items'"];
     }
 
     unsigned i;
     for (i = n_rows; i >= row + n_items; i--) {
-        [self cxx_setKey:[self cxx_keyForRow:i - n_items].value_or("") forRow:i];
+        [self setKey:[self keyForRow:i - n_items] forRow:i];
         id old_row_info = [self objectForRow:i - n_items];
-        if (oo::IsNSArray(old_row_info))
-            [self cxx_setArray:oo::StringsFrom(old_row_info) forRow:i];
-        if (oo::IsNSString(old_row_info))
-            [self cxx_setText:oo::StdString(old_row_info) forRow:i];
+        if ([old_row_info isKindOfClass:[NSArray class]])
+            [self setArray:old_row_info forRow:i];
+        if ([old_row_info isKindOfClass:[NSString class]])
+            [self setText:(NSString*)old_row_info forRow:i];
     }
     for (i = 0; i < n_items; i++) {
-        const oo::PList& new_row_info = *items.at(i);
+        id new_row_info = [items objectAtIndex:i];
         if (text_color)
             [self setColor:text_color forRow:row + i];
         else
             [self setColor:textColor forRow:row + i];
-        if (const oo::PList::Array* columns = new_row_info.getIf<oo::PList::Array>()) {
-            std::vector<std::string> columnTexts;
-            for (const oo::PList& column : *columns) {
-                if (const std::string* text = column.getIf<std::string>())
-                    columnTexts.push_back(*text);
-            }
-            [self cxx_setArray:columnTexts forRow:row + i];
-        }
-        if (const std::string* text = new_row_info.getIf<std::string>())
-            [self cxx_setText:*text forRow:row + i];
-        if (!item_keys.isNull())
-            [self cxx_setKey:item_keys.at<std::string>(i) forRow:row + i];
+        if ([new_row_info isKindOfClass:[NSArray class]])
+            [self setArray:new_row_info forRow:row + i];
+        if ([new_row_info isKindOfClass:[NSString class]])
+            [self setText:(NSString*)new_row_info forRow:row + i];
+        if (item_keys)
+            [self setKey:[item_keys objectAtIndex:i] forRow:row + i];
         else
-            [self cxx_setKey:"" forRow:row + i];
+            [self setKey:@"" forRow:row + i];
     }
 }
 
@@ -926,23 +883,11 @@ static BOOL _refreshStarChart = NO;
 
 - (void)clearBackground
 {
-    [self cxx_setBackgroundTextureDescriptor:oo::PList()];
-    [self cxx_setForegroundTextureDescriptor:oo::PList()];
+    [self setBackgroundTextureDescriptor:nil];
+    [self setForegroundTextureDescriptor:nil];
 }
 
-namespace {
-
-// The descriptor's "name" as -oo_stringForKey: read it (a string, or a number's -stringValue), or
-// nullopt (nil).
-std::optional<std::string> DescriptorName(const oo::PList& descriptor)
-{
-    const oo::PList* name = descriptor.find("name");
-    if (name == nullptr || !(name->isString() || name->isNumber()))
-        return std::nullopt;
-    return descriptor.get<std::string>("name");
-}
-
-OOTexture* TextureForGUITexture(const oo::PList& descriptor, uint32_t srgbaOption)
+static OOTexture* TextureForGUITexture(NSDictionary* descriptor, uint32_t srgbaOption)
 {
     /*
             GUI textures like backgrounds, foregrounds etc. are not processed in any way after loading. However, they are
@@ -955,18 +900,18 @@ OOTexture* TextureForGUITexture(const oo::PList& descriptor, uint32_t srgbaOptio
     */
     if (![UNIVERSE useShaders])
         srgbaOption = 0;
-    return [OOTexture cxx_textureWithName:DescriptorName(descriptor)
-                                 inFolder:"Images"
-                                  options:kOOTextureDefaultOptions | kOOTextureNoShrink | srgbaOption
-                               anisotropy:kOOTextureDefaultAnisotropy
-                                  lodBias:kOOTextureDefaultLODBias];
+    return [OOTexture textureWithName:oo::PListView(descriptor).get<NSString*>(@"name")
+                             inFolder:@"Images"
+                              options:kOOTextureDefaultOptions | kOOTextureNoShrink | srgbaOption
+                           anisotropy:kOOTextureDefaultAnisotropy
+                              lodBias:kOOTextureDefaultLODBias];
 }
 
 /*
         Load a texture sprite given a descriptor. The caller owns a reference to
         the result.
 */
-OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uint32_t srgbaOption)
+static OOTextureSprite* NewTextureSpriteWithDescriptor(NSDictionary* descriptor, uint32_t srgbaOption)
 {
     OOTexture* texture = nil;
     NSSize size;
@@ -975,8 +920,8 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     if (texture == nil)
         return nil;
 
-    double specifiedWidth = descriptor.get<double>("width", -INFINITY);
-    double specifiedHeight = descriptor.get<double>("height", -INFINITY);
+    double specifiedWidth = oo::PListView(descriptor).get<double>(@"width", -INFINITY);
+    double specifiedHeight = oo::PListView(descriptor).get<double>(@"height", -INFINITY);
     BOOL haveWidth = isfinite(specifiedWidth);
     BOOL haveHeight = isfinite(specifiedHeight);
 
@@ -1006,44 +951,42 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     return [[OOTextureSprite alloc] initWithTexture:texture size:size];
 }
 
-} // namespace
-
 - (void)setBackgroundTextureSpecial:(OOGUIBackgroundSpecial)spec withBackground:(BOOL)withBackground
 {
     if (withBackground) {
-        oo::PList bgDescriptor;
+        NSDictionary* bgDescriptor = nil;
         OOGalaxyID galaxy_number = [PLAYER galaxyNumber];
 
         switch (spec) {
         case GUI_BACKGROUND_SPECIAL_CUSTOM:
         case GUI_BACKGROUND_SPECIAL_CUSTOM_ANA_SHORTEST:
         case GUI_BACKGROUND_SPECIAL_CUSTOM_ANA_QUICKEST:
-            bgDescriptor = oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:@"custom_chart_mission"]);
-            if (bgDescriptor.isNull()) {
-                bgDescriptor = oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:@"short_range_chart_mission"]);
-                if (bgDescriptor.isNull()) {
-                    bgDescriptor = oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:@"short_range_chart"]);
+            bgDescriptor = [UNIVERSE screenTextureDescriptorForKey:@"custom_chart_mission"];
+            if (bgDescriptor == nil) {
+                bgDescriptor = [UNIVERSE screenTextureDescriptorForKey:@"short_range_chart_mission"];
+                if (bgDescriptor == nil) {
+                    bgDescriptor = [UNIVERSE screenTextureDescriptorForKey:@"short_range_chart"];
                 }
             }
             break;
         case GUI_BACKGROUND_SPECIAL_SHORT:
         case GUI_BACKGROUND_SPECIAL_SHORT_ANA_SHORTEST:
         case GUI_BACKGROUND_SPECIAL_SHORT_ANA_QUICKEST:
-            bgDescriptor = oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:@"short_range_chart_mission"]);
-            if (bgDescriptor.isNull()) {
-                bgDescriptor = oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:@"short_range_chart"]);
+            bgDescriptor = [UNIVERSE screenTextureDescriptorForKey:@"short_range_chart_mission"];
+            if (bgDescriptor == nil) {
+                bgDescriptor = [UNIVERSE screenTextureDescriptorForKey:@"short_range_chart"];
             }
             break;
         case GUI_BACKGROUND_SPECIAL_LONG:
         case GUI_BACKGROUND_SPECIAL_LONG_ANA_SHORTEST:
         case GUI_BACKGROUND_SPECIAL_LONG_ANA_QUICKEST:
-            bgDescriptor = oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:oo::NSStringFrom(oo::str::format("long_range_chart%d_mission", galaxy_number + 1))]);
-            if (bgDescriptor.isNull()) {
-                bgDescriptor = oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:@"long_range_chart_mission"]);
-                if (bgDescriptor.isNull()) {
-                    bgDescriptor = oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:oo::NSStringFrom(oo::str::format("long_range_chart%d", galaxy_number + 1))]);
-                    if (bgDescriptor.isNull()) {
-                        bgDescriptor = oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:@"long_range_chart"]);
+            bgDescriptor = [UNIVERSE screenTextureDescriptorForKey:[NSString stringWithFormat:@"long_range_chart%d_mission", galaxy_number + 1]];
+            if (bgDescriptor == nil) {
+                bgDescriptor = [UNIVERSE screenTextureDescriptorForKey:@"long_range_chart_mission"];
+                if (bgDescriptor == nil) {
+                    bgDescriptor = [UNIVERSE screenTextureDescriptorForKey:[NSString stringWithFormat:@"long_range_chart%d", galaxy_number + 1]];
+                    if (bgDescriptor == nil) {
+                        bgDescriptor = [UNIVERSE screenTextureDescriptorForKey:@"long_range_chart"];
                     }
                 }
             }
@@ -1051,15 +994,15 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
         case GUI_BACKGROUND_SPECIAL_NONE:
             break;
         }
-        if (!bgDescriptor.isNull()) {
-            [self cxx_setBackgroundTextureDescriptor:bgDescriptor];
+        if (bgDescriptor != nil) {
+            [self setBackgroundTextureDescriptor:bgDescriptor];
         }
     }
     backgroundSpecial = spec;
     [self refreshStarChart];
 }
 
-- (BOOL)cxx_setBackgroundTextureDescriptor:(const oo::PList&)descriptor
+- (BOOL)setBackgroundTextureDescriptor:(NSDictionary*)descriptor
 {
     [backgroundSprite autorelease];
     backgroundSpecial = GUI_BACKGROUND_SPECIAL_NONE; // reset
@@ -1067,7 +1010,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     return backgroundSprite != nil;
 }
 
-- (BOOL)cxx_setForegroundTextureDescriptor:(const oo::PList&)descriptor
+- (BOOL)setForegroundTextureDescriptor:(NSDictionary*)descriptor
 {
     [foregroundSprite autorelease];
     // FIXME: for some reason passing kOOTextureSRGBA when in SDR results in double gamma correction
@@ -1076,55 +1019,55 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     return foregroundSprite != nil;
 }
 
-- (BOOL)cxx_setBackgroundTextureKey:(const std::optional<std::string>&)key
+- (BOOL)setBackgroundTextureKey:(NSString*)key
 {
-    return [self cxx_setBackgroundTextureDescriptor:oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:oo::NSStringOrNil(key)])];
+    return [self setBackgroundTextureDescriptor:[UNIVERSE screenTextureDescriptorForKey:key]];
 }
 
-- (BOOL)cxx_setForegroundTextureKey:(const std::optional<std::string>&)key
+- (BOOL)setForegroundTextureKey:(NSString*)key
 {
-    return [self cxx_setForegroundTextureDescriptor:oo::PListFrom([UNIVERSE screenTextureDescriptorForKey:oo::NSStringOrNil(key)])];
+    return [self setForegroundTextureDescriptor:[UNIVERSE screenTextureDescriptorForKey:key]];
 }
 
-- (BOOL)cxx_preloadGUITexture:(const oo::PList&)descriptor
+- (BOOL)preloadGUITexture:(NSDictionary*)descriptor
 {
     return TextureForGUITexture(descriptor, kOOTextureSRGBA) != nil;
 }
 
-- (oo::PList)cxx_textureDescriptorFromJSValue:(JSValue)value
+- (NSDictionary*)textureDescriptorFromJSValue:(OOJSVal)value
                                     inContext:(JSContext*)context
-                            callerDescription:(const std::optional<std::string>&)callerDescription
+                            callerDescription:(NSString*)callerDescription
 {
     OOJS_PROFILE_ENTER
 
-    oo::PList result;
+    NSDictionary* result = nil;
 
     // Null may be used to indicate no texture.
     if (JS_IsNull(value))
-        return oo::PList(oo::PList::Dict { });
+        return [NSDictionary dictionary];
 
     if (JS_IsObject(value)) {
         // String objects are converted to NSStrings; anything else is treated as a dictionary.
         // TODO (port): use a String class test when the QuickJS engine header provides one.
         if (![OOJSNativeObjectFromJSValue(context, value) isKindOfClass:[NSString class]]) {
-            result = oo::PListFrom(OOJSDictionaryFromJSObject(context, value));
+            result = OOJSDictionaryFromJSObject(context, value);
         }
     }
 
-    if (result.isNull()) {
-        const std::optional<std::string> name = oo::OptionalString(OOStringFromJSValue(context, value));
+    if (result == nil) {
+        NSString* name = OOStringFromJSValue(context, value);
 
-        if (name.has_value()) {
-            result = oo::PList(oo::PList::Dict { { "name", oo::PList(*name) } });
-            if (name->empty())
+        if (name != nil) {
+            result = [NSDictionary dictionaryWithObject:name forKey:@"name"];
+            if ([name length] == 0)
                 return result; // Explicit empty string may be used to indicate no texture.
         }
     }
 
     // Start loading the texture, and return nil if it doesn't exist.
-    if (!result.isNull() && ![self cxx_preloadGUITexture:result]) {
-        OOJSReportWarning(context, @"%@: texture \"%@\" could not be found.", oo::NSStringOrNil(callerDescription), oo::NSStringOrNil(DescriptorName(result)));
-        result = oo::PList();
+    if (result != nil && ![self preloadGUITexture:result]) {
+        OOJSReportWarning(context, @"%@: texture \"%@\" could not be found.", callerDescription, oo::PListView(result).get<NSString*>(@"name"));
+        result = nil;
     }
 
     return result;
@@ -1212,7 +1155,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     }
 
     if (statusPage > 1) {
-        [self setColor:[self cxx_colorFromSetting:cxx_kGuiStatusEquipmentScrollColor defaultValue:[OOColor greenColor]] forRow:firstRow];
+        [self setColor:[self colorFromSetting:kGuiStatusEquipmentScrollColor defaultValue:[OOColor greenColor]] forRow:firstRow];
         [self setArray:[NSArray arrayWithObjects:DESC(@"gui-back"), @"", @" <-- ", nil] forRow:firstRow];
         [self setKey:GUI_KEY_OK forRow:firstRow];
         firstY -= 16; // start 1 row down!
@@ -1222,7 +1165,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
         }
     }
     if (statusPage < pageCount) {
-        [self setColor:[self cxx_colorFromSetting:cxx_kGuiStatusEquipmentScrollColor defaultValue:[OOColor greenColor]] forRow:firstRow + maxRows];
+        [self setColor:[self colorFromSetting:kGuiStatusEquipmentScrollColor defaultValue:[OOColor greenColor]] forRow:firstRow + maxRows];
         [self setArray:[NSArray arrayWithObjects:DESC(@"gui-more"), @"", @" --> ", nil] forRow:firstRow + maxRows];
         [self setKey:GUI_KEY_OK forRow:firstRow + maxRows];
         if (statusPage == 1) {
@@ -1249,12 +1192,12 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
         damaged = !oo::PListView(info).at<BOOL>(1);
         if (damaged) {
             // Damaged items show up orange.
-            [self cxx_setGLColorFromSetting:"status_equipment_damaged_color" defaultValue:[OOColor orangeColor] alpha:1.0];
+            [self setGLColorFromSetting:@"status_equipment_damaged_color" defaultValue:[OOColor orangeColor] alpha:1.0];
         } else /// add color selection here
         {
             OOColor* dispCol = oo::PListView(info).at<id>(2);
             // Normal items in default colour
-            [self cxx_setGLColorFromSetting:"status_equipment_ok_color" defaultValue:dispCol alpha:1.0];
+            [self setGLColorFromSetting:@"status_equipment_ok_color" defaultValue:dispCol alpha:1.0];
         }
 
         if (i - start < itemsPerColumn) {
@@ -1433,13 +1376,13 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
         // draw the title
         //
         strsize = OORectFromString(title, 0.0f, 0.0f, titleCharacterSize).size;
-        [self cxx_setGLColorFromSetting:cxx_kGuiScreenTitleColor defaultValue:[OOColor redColor] alpha:alpha];
+        [self setGLColorFromSetting:kGuiScreenTitleColor defaultValue:[OOColor redColor] alpha:alpha];
 
         OODrawString(title, x + pixel_row_center - strsize.width / 2.0, y + size_in_pixels.height - pixel_title_size.height, z, titleCharacterSize);
 
         // draw a horizontal divider
         //
-        [self cxx_setGLColorFromSetting:cxx_kGuiScreenDividerColor defaultValue:[OOColor colorWithWhite:0.75 alpha:1.0] alpha:alpha];
+        [self setGLColorFromSetting:kGuiScreenDividerColor defaultValue:[OOColor colorWithWhite:0.75 alpha:1.0] alpha:alpha];
 
         OOGLBEGIN(GL_QUADS);
         glVertex3f(x + 0, y + size_in_pixels.height - pixel_title_size.height + 4, z);
@@ -1474,14 +1417,14 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
                 if (i == (unsigned)selectedRow) {
                     NSRect block = OORectFromString(text, x + rowPosition[i].x + 2, y + rowPosition[i].y + 2, characterSize);
                     OOStopDrawingStrings();
-                    [self cxx_setGLColorFromSetting:cxx_kGuiSelectedRowBackgroundColor defaultValue:[OOColor redColor] alpha:alpha];
+                    [self setGLColorFromSetting:kGuiSelectedRowBackgroundColor defaultValue:[OOColor redColor] alpha:alpha];
                     OOGLBEGIN(GL_QUADS);
                     glVertex3f(block.origin.x, block.origin.y, z);
                     glVertex3f(block.origin.x + block.size.width, block.origin.y, z);
                     glVertex3f(block.origin.x + block.size.width, block.origin.y + block.size.height, z);
                     glVertex3f(block.origin.x, block.origin.y + block.size.height, z);
                     OOGLEND();
-                    [self cxx_setGLColorFromSetting:cxx_kGuiSelectedRowColor defaultValue:[OOColor blackColor] alpha:alpha];
+                    [self setGLColorFromSetting:kGuiSelectedRowColor defaultValue:[OOColor blackColor] alpha:alpha];
                     OOStartDrawingStrings();
                 }
                 OODrawStringQuadsAligned(text, x + rowPosition[i].x, y + rowPosition[i].y, z, characterSize, NO);
@@ -1495,7 +1438,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
                     tr.size.width = 0.5f * characterSize.width;
                     GLfloat g_alpha = 0.5f * (1.0f + (float)sin(6 * [UNIVERSE getTime]));
                     OOStopDrawingStrings();
-                    [self cxx_setGLColorFromSetting:cxx_kGuiTextInputCursorColor defaultValue:[OOColor redColor] alpha:row_alpha[i] * g_alpha];
+                    [self setGLColorFromSetting:kGuiTextInputCursorColor defaultValue:[OOColor redColor] alpha:row_alpha[i] * g_alpha];
                     OOGLBEGIN(GL_QUADS);
                     glVertex3f(tr.origin.x, tr.origin.y, z);
                     glVertex3f(tr.origin.x + tr.size.width, tr.origin.y, z);
@@ -1554,14 +1497,14 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
 
                     if (i == (unsigned)selectedRow) {
                         OOStopDrawingStrings();
-                        [self cxx_setGLColorFromSetting:cxx_kGuiSelectedRowBackgroundColor defaultValue:[OOColor redColor] alpha:alpha];
+                        [self setGLColorFromSetting:kGuiSelectedRowBackgroundColor defaultValue:[OOColor redColor] alpha:alpha];
                         OOGLBEGIN(GL_QUADS);
                         glVertex3f(block.origin.x, block.origin.y, z);
                         glVertex3f(block.origin.x + block.size.width, block.origin.y, z);
                         glVertex3f(block.origin.x + block.size.width, block.origin.y + block.size.height, z);
                         glVertex3f(block.origin.x, block.origin.y + block.size.height, z);
                         OOGLEND();
-                        [self cxx_setGLColorFromSetting:cxx_kGuiSelectedRowColor defaultValue:[OOColor blackColor] alpha:alpha];
+                        [self setGLColorFromSetting:kGuiSelectedRowColor defaultValue:[OOColor blackColor] alpha:alpha];
                         OOStartDrawingStrings();
                     }
                     OODrawStringQuadsAligned(text, x + rowPosition[i].x, y + rowPosition[i].y, z, characterSize, NO);
@@ -1771,7 +1714,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
         if (routeInfo)
             routeExists = YES;
 
-        [self drawAdvancedNavArrayAtX:x + hoffset y:y + voffset z:z alpha:alpha usingRoute:oo::PListFrom(planetNumber != destNumber ? (id)routeInfo : nil) optimizedBy:advancedNavArrayMode zoom:zoom];
+        [self drawAdvancedNavArrayAtX:x + hoffset y:y + voffset z:z alpha:alpha usingRoute:(planetNumber != destNumber ? (id)routeInfo : nil) optimizedBy:advancedNavArrayMode zoom:zoom];
 
         if (routeExists) {
             distance = oo::PListView(routeInfo).get<double>(@"distance");
@@ -1785,7 +1728,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
             }
         }
     } else {
-        [self drawAdvancedNavArrayAtX:x + hoffset y:y + voffset z:z alpha:alpha usingRoute:oo::PList() optimizedBy:OPTIMIZED_BY_NONE zoom:zoom];
+        [self drawAdvancedNavArrayAtX:x + hoffset y:y + voffset z:z alpha:alpha usingRoute:nil optimizedBy:OPTIMIZED_BY_NONE zoom:zoom];
     }
     if (!routeExists) {
         NSPoint targetCoordinates = [systemManager getCoordinatesForSystem:target inGalaxy:galaxy_id];
@@ -1808,20 +1751,20 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     if ([player hasHyperspaceMotor]) {
         // draw fuel range circle
         OOGL(GLScaledLineWidth(2.0f));
-        [self cxx_setGLColorFromSetting:cxx_kGuiChartRangeColor defaultValue:[OOColor greenColor] alpha:alpha];
+        [self setGLColorFromSetting:kGuiChartRangeColor defaultValue:[OOColor greenColor] alpha:alpha];
 
         GLDrawOval(x + cu.x, y + cu.y, z, NSMakeSize((float)(fuel * hscale), 2 * (float)(fuel * vscale)), 5);
     }
 
     // draw crosshairs over current location
     //
-    [self cxx_setGLColorFromSetting:cxx_kGuiChartCrosshairColor defaultValue:[OOColor greenColor] alpha:alpha];
+    [self setGLColorFromSetting:kGuiChartCrosshairColor defaultValue:[OOColor greenColor] alpha:alpha];
 
     [self drawCrossHairsWithSize:12 / zoom + 2 x:x + cu.x y:y + cu.y z:z];
 
     // draw crosshairs over cursor
     //
-    [self cxx_setGLColorFromSetting:cxx_kGuiChartCursorColor defaultValue:[OOColor redColor] alpha:alpha];
+    [self setGLColorFromSetting:kGuiChartCursorColor defaultValue:[OOColor redColor] alpha:alpha];
     cu = NSMakePoint((float)(hscale * cursor_coordinates.x + hoffset), (float)(vscale * cursor_coordinates.y + voffset));
     [self drawCrossHairsWithSize:7 / zoom + 2 x:x + cu.x y:y + cu.y z:z];
 
@@ -1845,7 +1788,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
         }
 
         NSDictionary* systemInfo = [systemManager getPropertiesForSystem:i inGalaxy:galaxy_id];
-        float blob_factor = guiUserSettings.get<float>(cxx_kGuiChartCircleScale, 0.0017);
+        float blob_factor = oo::PListView(guiUserSettings).get<float>(kGuiChartCircleScale, 0.0017);
         float blob_size = (1.0f + blob_factor * oo::PListView(systemInfo).get<float>(@"radius")) / zoom;
         if (blob_size < 0.5)
             blob_size = 0.5;
@@ -1860,7 +1803,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
         if (markers != nil) // is marked
         {
             GLfloat base_size = 0.5f * blob_size + 2.5f;
-            [self drawSystemMarkers:oo::PListFrom(markers) atX:x + star.x andY:y + star.y andZ:z withAlpha:alpha andScale:base_size];
+            [self drawSystemMarkers:markers atX:x + star.x andY:y + star.y andZ:z withAlpha:alpha andScale:base_size];
         }
 
         if (concealment[i] >= OO_SYSTEMCONCEALMENT_NODATA) {
@@ -1873,9 +1816,9 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
                 if (EXPECT(noNova)) {
                     systemParameter = nearby_systems[i].eco;
                     GLfloat ce1 = 1.0f - 0.125f * systemParameter;
-                    [self cxx_setGLColorFromSetting:oo::str::format(cxx_kGuiChartEconomyUColor, systemParameter)
-                                       defaultValue:[OOColor colorWithRed:ce1 green:1.0f blue:0.0f alpha:1.0f]
-                                              alpha:1.0];
+                    [self setGLColorFromSetting:[NSString stringWithFormat:kGuiChartEconomyUColor, systemParameter]
+                                   defaultValue:[OOColor colorWithRed:ce1 green:1.0f blue:0.0f alpha:1.0f]
+                                          alpha:1.0];
                 } else {
                     r = g = b = 0.3;
                     OOGL(glColor4f(r, g, b, alpha));
@@ -1884,9 +1827,9 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
             case OOLRC_MODE_GOVERNMENT:
                 if (EXPECT(noNova)) {
                     systemParameter = nearby_systems[i].gov;
-                    [self cxx_setGLColorFromSetting:oo::str::format(cxx_kGuiChartGovernmentUColor, systemParameter)
-                                       defaultValue:[OOColor colorWithRed:govcol[systemParameter * 3] green:govcol[1 + (systemParameter * 3)] blue:govcol[2 + (systemParameter * 3)] alpha:1.0f]
-                                              alpha:1.0];
+                    [self setGLColorFromSetting:[NSString stringWithFormat:kGuiChartGovernmentUColor, systemParameter]
+                                   defaultValue:[OOColor colorWithRed:govcol[systemParameter * 3] green:govcol[1 + (systemParameter * 3)] blue:govcol[2 + (systemParameter * 3)] alpha:1.0f]
+                                          alpha:1.0];
                 } else {
                     r = g = b = 0.3;
                     OOGL(glColor4f(r, g, b, alpha));
@@ -1926,10 +1869,10 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
 
     // draw found stars and captions
     //
-    GLfloat systemNameScale = guiUserSettings.get<float>(cxx_kGuiChartLabelScale, 1.0);
+    GLfloat systemNameScale = oo::PListView(guiUserSettings).get<float>(kGuiChartLabelScale, 1.0);
 
     OOGL(GLScaledLineWidth(1.5f));
-    [self cxx_setGLColorFromSetting:cxx_kGuiChartMatchBoxColor defaultValue:[OOColor greenColor] alpha:alpha];
+    [self setGLColorFromSetting:kGuiChartMatchBoxColor defaultValue:[OOColor greenColor] alpha:alpha];
 
     int n_matches = 0, foundIndex = -1;
 
@@ -1970,9 +1913,9 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
                     if (n_matches == 1)
                         foundSystem = 0;
                     if (zoom > CHART_ZOOM_SHOW_LABELS && advancedNavArrayMode == OPTIMIZED_BY_NONE) {
-                        [self cxx_setGLColorFromSetting:cxx_kGuiChartMatchLabelColor defaultValue:[OOColor cyanColor] alpha:alpha];
+                        [self setGLColorFromSetting:kGuiChartMatchLabelColor defaultValue:[OOColor cyanColor] alpha:alpha];
                         OODrawString([UNIVERSE systemNameIndex:i], x + star.x + 2.0, y + star.y - 10.0f, z, NSMakeSize(10 * systemNameScale, 10 * systemNameScale));
-                        [self cxx_setGLColorFromSetting:cxx_kGuiChartMatchBoxColor defaultValue:[OOColor greenColor] alpha:alpha];
+                        [self setGLColorFromSetting:kGuiChartMatchBoxColor defaultValue:[OOColor greenColor] alpha:alpha];
                     }
                 } else if (zoom > CHART_ZOOM_SHOW_LABELS) {
                     OODrawString([UNIVERSE systemNameIndex:i], x + star.x + 2.0, y + star.y - 10.0f, z, NSMakeSize(10 * systemNameScale, 10 * systemNameScale));
@@ -2016,16 +1959,16 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
 
                 d = distanceBetweenPlanetPositions(galaxy_coordinates.x, galaxy_coordinates.y, sys_coordinates.x, sys_coordinates.y);
                 if (d <= jumpRange) {
-                    [self cxx_setGLColorFromSetting:cxx_kGuiChartLabelReachableColor defaultValue:[OOColor yellowColor] alpha:alpha];
+                    [self setGLColorFromSetting:kGuiChartLabelReachableColor defaultValue:[OOColor yellowColor] alpha:alpha];
                 } else {
-                    [self cxx_setGLColorFromSetting:cxx_kGuiChartLabelColor defaultValue:[OOColor yellowColor] alpha:alpha];
+                    [self setGLColorFromSetting:kGuiChartLabelColor defaultValue:[OOColor yellowColor] alpha:alpha];
                 }
 
                 OODrawString(sys->p_name, x + star.x + 2.0, y + star.y, z, chSize);
             } else if (EXPECT(sys->gov >= 0)) // Not a nova? Show the info.
             {
                 if (concealment[i] >= OO_SYSTEMCONCEALMENT_NODATA) {
-                    [self cxx_setGLColorFromSetting:cxx_kGuiChartLabelColor defaultValue:[OOColor yellowColor] alpha:alpha];
+                    [self setGLColorFromSetting:kGuiChartLabelColor defaultValue:[OOColor yellowColor] alpha:alpha];
                     OODrawHilightedString(@"???", x + star.x + 2.0, y + star.y, z, chSize);
                 } else {
                     OODrawPlanetInfo(sys->gov, sys->eco, sys->tec, x + star.x + 2.0, y + star.y + 2.0, z, chSize);
@@ -2047,16 +1990,16 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
             if (![player showInfoFlag]) {
                 d = distanceBetweenPlanetPositions(galaxy_coordinates.x, galaxy_coordinates.y, sys_coordinates.x, sys_coordinates.y);
                 if (d <= jumpRange) {
-                    [self cxx_setGLColorFromSetting:cxx_kGuiChartLabelReachableColor defaultValue:[OOColor yellowColor] alpha:alpha];
+                    [self setGLColorFromSetting:kGuiChartLabelReachableColor defaultValue:[OOColor yellowColor] alpha:alpha];
                 } else {
-                    [self cxx_setGLColorFromSetting:cxx_kGuiChartLabelColor defaultValue:[OOColor yellowColor] alpha:alpha];
+                    [self setGLColorFromSetting:kGuiChartLabelColor defaultValue:[OOColor yellowColor] alpha:alpha];
                 }
 
                 OODrawHilightedString(sys->p_name, x + star.x + 2.0, y + star.y, z, chSize);
             } else if (sys->gov >= 0) // Not a nova? Show the info.
             {
                 if (concealment[targetIdx] >= OO_SYSTEMCONCEALMENT_NODATA) {
-                    [self cxx_setGLColorFromSetting:cxx_kGuiChartLabelColor defaultValue:[OOColor yellowColor] alpha:alpha];
+                    [self setGLColorFromSetting:kGuiChartLabelColor defaultValue:[OOColor yellowColor] alpha:alpha];
                     OODrawHilightedString(@"???", x + star.x + 2.0, y + star.y, z, chSize);
                 } else {
                     OODrawHilightedPlanetInfo(sys->gov, sys->eco, sys->tec, x + star.x + 2.0, y + star.y + 2.0, z, chSize);
@@ -2069,7 +2012,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     tab_stops[0] = 0;
     tab_stops[1] = 96;
     tab_stops[2] = 288;
-    [self cxx_overrideTabs:tab_stops from:cxx_kGuiChartTraveltimeTabs length:3];
+    [self overrideTabs:tab_stops from:kGuiChartTraveltimeTabs length:3];
     [self setTabStops:tab_stops];
     NSString* targetName = [[UNIVERSE getSystemName:target] retain];
 
@@ -2099,7 +2042,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
 
     // draw planet info circle
     OOGL(GLScaledLineWidth(2.0f));
-    [self cxx_setGLColorFromSetting:cxx_kGuiChartInfoMarkerColor defaultValue:[OOColor blueColor] alpha:alpha];
+    [self setGLColorFromSetting:kGuiChartInfoMarkerColor defaultValue:[OOColor blueColor] alpha:alpha];
     cu = NSMakePoint((float)(hscale * info_system_coordinates.x + hoffset), (float)(vscale * info_system_coordinates.y + voffset));
     GLDrawOval(x + cu.x, y + cu.y, z, NSMakeSize(6.0f / zoom + 2.0f, 6.0f / zoom + 2.0f), 5);
 
@@ -2107,7 +2050,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     OOGL(glDisable(GL_SCISSOR_TEST));
 
     // Draw bottom divider
-    [self cxx_setGLColorFromSetting:cxx_kGuiScreenDividerColor defaultValue:[OOColor colorWithWhite:0.75 alpha:1.0] alpha:alpha];
+    [self setGLColorFromSetting:kGuiScreenDividerColor defaultValue:[OOColor colorWithWhite:0.75 alpha:1.0] alpha:alpha];
     OOGLBEGIN(GL_QUADS);
     glVertex3f(x + 0, (float)(y + size_in_pixels.height - (textRow - 1) * MAIN_GUI_ROW_HEIGHT - pixel_title_size.height), z);
     glVertex3f(x + size_in_pixels.width, (GLfloat)(y + size_in_pixels.height - (textRow - 1) * MAIN_GUI_ROW_HEIGHT - pixel_title_size.height), z);
@@ -2116,23 +2059,21 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     OOGLEND();
 }
 
-- (void)drawSystemMarkers:(const oo::PList&)markers atX:(GLfloat)x andY:(GLfloat)y andZ:(GLfloat)z withAlpha:(GLfloat)alpha andScale:(GLfloat)scale
+- (void)drawSystemMarkers:(NSArray*)markers atX:(GLfloat)x andY:(GLfloat)y andZ:(GLfloat)z withAlpha:(GLfloat)alpha andScale:(GLfloat)scale
 {
-    const oo::PList::Array* markerList = markers.getIf<oo::PList::Array>();
-    if (markerList == nullptr)
-        return;
-    for (const oo::PList& marker : *markerList) {
+    NSDictionary* marker;
+    foreach (marker, markers) {
         [self drawSystemMarker:marker atX:x andY:y andZ:z withAlpha:alpha andScale:scale];
     }
 }
 
-- (void)drawSystemMarker:(const oo::PList&)marker atX:(GLfloat)x andY:(GLfloat)y andZ:(GLfloat)z withAlpha:(GLfloat)alpha andScale:(GLfloat)scale
+- (void)drawSystemMarker:(NSDictionary*)marker atX:(GLfloat)x andY:(GLfloat)y andZ:(GLfloat)z withAlpha:(GLfloat)alpha andScale:(GLfloat)scale
 {
-    const std::string colorDesc = marker.get<std::string>("markerColor", "redColor");
-    OORGBAComponents color = [[OOColor colorWithDescription:oo::NSStringFrom(colorDesc)] rgbaComponents];
+    NSString* colorDesc = oo::PListView(marker).get<NSString*>(@"markerColor", @"redColor");
+    OORGBAComponents color = [[OOColor colorWithDescription:colorDesc] rgbaComponents];
 
     OOGL(glColor4f(color.r, color.g, color.b, alpha)); // red
-    GLfloat mark_size = marker.get<float>("markerScale", 1.0);
+    GLfloat mark_size = oo::PListView(marker).get<float>(@"markerScale", 1.0);
     if (mark_size > 2.0) {
         mark_size = 2.0;
     } else if (mark_size < 0.5) {
@@ -2140,21 +2081,21 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     }
     mark_size *= scale;
 
-    const std::string shape = marker.get<std::string>("markerShape", "MARKER_X");
+    NSString* shape = oo::PListView(marker).get<NSString*>(@"markerShape", @"MARKER_X");
 
     OOGLBEGIN(GL_LINES);
-    if (shape == "MARKER_X") {
+    if ([shape isEqualToString:@"MARKER_X"]) {
         glVertex3f(x - mark_size, y - mark_size, z);
         glVertex3f(x + mark_size, y + mark_size, z);
         glVertex3f(x - mark_size, y + mark_size, z);
         glVertex3f(x + mark_size, y - mark_size, z);
-    } else if (shape == "MARKER_PLUS") {
+    } else if ([shape isEqualToString:@"MARKER_PLUS"]) {
         mark_size *= 1.4; // match volumes
         glVertex3f(x, y - mark_size, z);
         glVertex3f(x, y + mark_size, z);
         glVertex3f(x - mark_size, y, z);
         glVertex3f(x + mark_size, y, z);
-    } else if (shape == "MARKER_SQUARE") {
+    } else if ([shape isEqualToString:@"MARKER_SQUARE"]) {
         glVertex3f(x - mark_size, y - mark_size, z);
         glVertex3f(x - mark_size, y + mark_size, z);
         glVertex3f(x - mark_size, y + mark_size, z);
@@ -2163,7 +2104,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
         glVertex3f(x + mark_size, y - mark_size, z);
         glVertex3f(x + mark_size, y - mark_size, z);
         glVertex3f(x - mark_size, y - mark_size, z);
-    } else if (shape == "MARKER_DIAMOND") {
+    } else if ([shape isEqualToString:@"MARKER_DIAMOND"]) {
         mark_size *= 1.4; // match volumes
         glVertex3f(x, y - mark_size, z);
         glVertex3f(x - mark_size, y, z);
@@ -2222,7 +2163,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
 }
 
 // Advanced Navigation Array -- galactic chart route mapping - contributed by Nikos Barkas (another_commander).
-- (void)drawAdvancedNavArrayAtX:(float)x y:(float)y z:(float)z alpha:(float)alpha usingRoute:(const oo::PList&)routeInfo optimizedBy:(OORouteType)optimizeBy zoom:(OOScalar)zoom
+- (void)drawAdvancedNavArrayAtX:(float)x y:(float)y z:(float)z alpha:(float)alpha usingRoute:(NSDictionary*)routeInfo optimizedBy:(OORouteType)optimizeBy zoom:(OOScalar)zoom
 {
     GLfloat lr, lg, lb, la, lr2, lg2, lb2, la2;
     double hscale = size_in_pixels.width / (CHART_WIDTH_AT_MAX_ZOOM * zoom);
@@ -2235,9 +2176,9 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
     OOGalaxyID g = [PLAYER galaxyNumber];
     OOSystemID planetNumber = [PLAYER systemID];
 
-    OOColor* defaultConnectionColor = [self cxx_colorFromSetting:cxx_kGuiChartConnectionColor defaultValue:[OOColor colorWithWhite:0.25 alpha:1.0]];
-    OOColor* currentJumpColorStart = [self cxx_colorFromSetting:cxx_kGuiChartCurrentJumpStartColor defaultValue:[OOColor colorWithWhite:0.25 alpha:0.0]];
-    OOColor* currentJumpColorEnd = [self cxx_colorFromSetting:cxx_kGuiChartCurrentJumpEndColor defaultValue:[OOColor colorWithWhite:0.25 alpha:0.0]];
+    OOColor* defaultConnectionColor = [self colorFromSetting:kGuiChartConnectionColor defaultValue:[OOColor colorWithWhite:0.25 alpha:1.0]];
+    OOColor* currentJumpColorStart = [self colorFromSetting:kGuiChartCurrentJumpStartColor defaultValue:[OOColor colorWithWhite:0.25 alpha:0.0]];
+    OOColor* currentJumpColorEnd = [self colorFromSetting:kGuiChartCurrentJumpEndColor defaultValue:[OOColor colorWithWhite:0.25 alpha:0.0]];
 
     OOColor* thisConnectionColor = nil;
     OOColor* thatConnectionColor = nil;
@@ -2246,7 +2187,8 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
 
     NSInteger concealment[256];
     for (NSUInteger i = 0; i < 256; i++) {
-        concealment[i] = oo::PListView([systemManager getPropertiesForSystem:i inGalaxy:g]).get<int>(@"concealment", OO_SYSTEMCONCEALMENT_NONE);
+        NSDictionary* systemInfo = [systemManager getPropertiesForSystem:i inGalaxy:g];
+        concealment[i] = oo::PListView(systemInfo).get<int>(@"concealment", OO_SYSTEMCONCEALMENT_NONE);
     }
 
     OOGLBEGIN(GL_LINES);
@@ -2303,7 +2245,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
                     glVertex3f(x + star2.x, y + star2.y, z);
 
                 } else {
-                    thisConnectionColor = [OOColor colorWithDescription:[systemManager getProperty:@"link_color" forSystemKey:oo::NSStringFrom(oo::str::format("interstellar: %d %ld %ld", g, (long)i, (long)j))]];
+                    thisConnectionColor = [OOColor colorWithDescription:[systemManager getProperty:@"link_color" forSystemKey:[NSString stringWithFormat:@"interstellar: %d %ld %ld", g, (long)i, (long)j]]];
 
                     if (thisConnectionColor == nil) {
                         thisConnectionColor = defaultConnectionColor;
@@ -2314,7 +2256,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
                     glVertex3f(x + star.x, y + star.y, z);
 
                     // and the other colour for the other end
-                    thatConnectionColor = [OOColor colorWithDescription:[systemManager getProperty:@"link_color" forSystemKey:oo::NSStringFrom(oo::str::format("interstellar: %d %ld %ld", g, (long)j, (long)i))]];
+                    thatConnectionColor = [OOColor colorWithDescription:[systemManager getProperty:@"link_color" forSystemKey:[NSString stringWithFormat:@"interstellar: %d %ld %ld", g, (long)j, (long)i]]];
 
                     if (thatConnectionColor == nil) {
                         thatConnectionColor = thisConnectionColor;
@@ -2333,25 +2275,21 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
         return;
     }
 
-    if (!routeInfo.isNull()) {
-        // "route" as -oo_arrayForKey: read it (its count: 0 when it is not an array), and as
-        // -objectForKey: gave it to the index reads (null reads as 0, as messaging nil did).
-        const oo::PList* routeArray = routeInfo.get<oo::PList::Array>("route");
-        const oo::PList route = (routeInfo.find("route") != nullptr) ? *routeInfo.find("route") : oo::PList();
-        NSUInteger i, route_hops = ((routeArray != nullptr) ? routeArray->count() : 0) - 1;
+    if (routeInfo) {
+        NSUInteger i, route_hops = [oo::PListView(routeInfo).get<NSArray*>(@"route") count] - 1;
 
         if (optimizeBy == OPTIMIZED_BY_JUMPS) {
             // route optimised by distance
-            [self cxx_setGLColorFromSetting:cxx_kGuiChartRouteShortColor defaultValue:[OOColor yellowColor] alpha:alpha];
+            [self setGLColorFromSetting:kGuiChartRouteShortColor defaultValue:[OOColor yellowColor] alpha:alpha];
         } else {
             // route optimised by time
-            [self cxx_setGLColorFromSetting:cxx_kGuiChartRouteQuickColor defaultValue:[OOColor cyanColor] alpha:alpha];
+            [self setGLColorFromSetting:kGuiChartRouteQuickColor defaultValue:[OOColor cyanColor] alpha:alpha];
         }
         OOSystemID loc;
         for (i = 0; i < route_hops; i++) {
-            loc = route.at<int>(i);
+            loc = oo::PListView([routeInfo objectForKey:@"route"]).at<int>(i);
             starabs = [systemManager getCoordinatesForSystem:loc inGalaxy:g];
-            star2abs = [systemManager getCoordinatesForSystem:route.at<int>(i + 1) inGalaxy:g];
+            star2abs = [systemManager getCoordinatesForSystem:oo::PListView([routeInfo objectForKey:@"route"]).at<int>(i + 1) inGalaxy:g];
 
             star.x = (float)(starabs.x * hscale);
             star.y = (float)(starabs.y * vscale);
@@ -2371,7 +2309,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
         }
         // Label the destination, which was not included in the above loop.
         if (zoom > CHART_ZOOM_SHOW_LABELS) {
-            loc = route.at<int>(i);
+            loc = oo::PListView([routeInfo objectForKey:@"route"]).at<int>(i);
             if (concealment[loc] < OO_SYSTEMCONCEALMENT_NONAME) {
                 OODrawString([UNIVERSE systemNameIndex:loc], x + star2.x + 2.0, y + star2.y, z, NSMakeSize(10, 10));
             }

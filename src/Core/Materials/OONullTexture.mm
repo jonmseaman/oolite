@@ -63,7 +63,7 @@ static OONullTexture* sSingleton = nil;
 }
 
 #ifndef NDEBUG
-- (id)name // shared selector (proposed ADR-0043)
+- (NSString*)name
 {
     return @"<null texture>";
 }

@@ -28,9 +28,6 @@ MA 02110-1301, USA.
 #import "OOJavaScriptEngine.h"
 #import "PlayerEntity.h"
 
-#import "OOFoundationBridge.h"
-#include <cstring>
-
 /*	SpiderMonkey called the WorldScripts class's getProperty hook for every
         property access and its enumerate hook defined each script's name on
         demand. QuickJS has no such hooks; instead, the class's exotic
@@ -62,13 +59,13 @@ void InitOOJSWorldScripts(JSContext* context, JSValueConst global)
     JS_DefinePropertyValueStr(context, global, "worldScripts", worldScripts, OOJS_PROP_READONLY);
 }
 
-// Name of a world script for a string property ID, or nullopt for other IDs (symbols and integers).
-static std::optional<std::string> ScriptNameForPropertyID(JSContext* context, JSAtom propID)
+// Name of a world script for a string property ID, or nil for other IDs (symbols and integers).
+static NSString* ScriptNameForPropertyID(JSContext* context, JSAtom propID)
 {
-    std::optional<std::string> result;
+    NSString* result = nil;
     JSValue idValue = JS_AtomToValue(context, propID);
     if (JS_IsString(idValue)) {
-        result = oo::OptionalString(OOStringFromJSValue(context, idValue));
+        result = OOStringFromJSValue(context, idValue);
     }
     JS_FreeValue(context, idValue);
     return result;
@@ -78,13 +75,13 @@ static int WorldScriptsGetOwnProperty(JSContext* context, JSPropertyDescriptor* 
 {
     @try {
         PlayerEntity* player = OOPlayerForScripting();
-        std::optional<std::string> scriptName;
+        NSString* scriptName = nil;
         id script = nil;
 
         scriptName = ScriptNameForPropertyID(context, propID);
 
-        if (scriptName.has_value()) {
-            script = [[player worldScriptsByName] objectForKey:oo::NSStringFrom(*scriptName)];
+        if (scriptName != nil) {
+            script = [[player worldScriptsByName] objectForKey:scriptName];
             if (script != nil) {
                 if (desc != NULL) {
                     /*	If script is an OOJSScript, this should return a JS Script
@@ -116,8 +113,8 @@ static int WorldScriptsGetOwnPropertyNames(JSContext* context, JSPropertyEnum** 
             QuickJS frees the table and its atoms.
     */
     @try {
-        const std::vector<std::string> names = oo::StringsFrom([OOPlayerForScripting() worldScriptNames]);
-        uint32_t i, count = (uint32_t)names.size();
+        NSArray* names = [OOPlayerForScripting() worldScriptNames];
+        uint32_t i, count = (uint32_t)[names count];
 
         JSPropertyEnum* table = (JSPropertyEnum*)js_malloc(context, sizeof *table * MAX(count, 1U));
         if (table == NULL)
@@ -125,7 +122,7 @@ static int WorldScriptsGetOwnPropertyNames(JSContext* context, JSPropertyEnum** 
 
         for (i = 0; i < count; i++) {
             table[i].is_enumerable = true;
-            table[i].atom = JS_NewAtom(context, names[i].c_str());
+            table[i].atom = JS_NewAtom(context, [[names objectAtIndex:i] UTF8String]);
             if (table[i].atom == JS_ATOM_NULL) {
                 JS_FreePropertyEnum(context, table, i);
                 return -1;

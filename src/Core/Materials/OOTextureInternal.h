@@ -37,7 +37,7 @@ SOFTWARE.
 - (void)addToCaches;
 - (void)removeFromCaches; // Must be called on -dealloc (while -cacheKey is still valid) for cacheable textures.
 
-+ (OOTexture*)cxx_existingTextureForKey:(const std::optional<std::string>&)key; // nil for nullopt
++ (OOTexture*)existingTextureForKey:(NSString*)key;
 
 @end
 
@@ -54,7 +54,7 @@ SOFTWARE.
 
 - (void)ensureFinishedLoading; // Default: does nothing
 - (BOOL)isFinishedLoading; // Default: YES
-- (id)cacheKey; // Default: nil. Shared selector (proposed ADR-0043).
+- (NSString*)cacheKey; // Default: nil
 - (BOOL)isRectangleTexture; // Default: NO
 - (BOOL)isCubeMap; // Default: NO
 - (NSSize)texCoordsScale; // Default: 1,1
@@ -63,12 +63,12 @@ SOFTWARE.
 @end
 
 /*	OOGenerateTextureCacheKey()
-        cxx_OOTextureCacheKeyForSpecifier()
+        OOTextureCacheKeyForSpecifier()
 
         Generate texture cache keys of the form used by normal file-based textures.
  */
-std::string OOGenerateTextureCacheKey(const std::optional<std::string>& directory, const std::string& name, OOTextureFlags options, float anisotropy, float lodBias);
-std::string cxx_OOTextureCacheKeyForSpecifier(const oo::PList& specifier);
+NSString* OOGenerateTextureCacheKey(NSString* directory, NSString* name, OOTextureFlags options, float anisotropy, float lodBias);
+NSString* OOTextureCacheKeyForSpecifier(id specifier);
 
 typedef struct OOTextureInfo {
     GLfloat anisotropyScale;

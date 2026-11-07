@@ -28,7 +28,6 @@ SOFTWARE.
 
 #import "OOALBufferedSound.h"
 #import "OOALSoundDecoder.h"
-#import "OOFoundationBridge.h"
 
 @implementation OOALBufferedSound
 
@@ -36,13 +35,14 @@ SOFTWARE.
 {
     free(_buffer);
     _buffer = NULL;
+    DESTROY(_name);
 
     [super dealloc];
 }
 
-- (id)name // shared selector (proposed ADR-0043)
+- (NSString*)name
 {
-    return oo::NSStringOrNil(_name);
+    return _name;
 }
 
 - (id)initWithDecoder:(OOALSoundDecoder*)inDecoder
@@ -60,7 +60,7 @@ SOFTWARE.
     }
 
     if (OK) {
-        _name = oo::OptionalString([inDecoder name]);
+        _name = [[inDecoder name] copy];
         _sampleRate = [inDecoder sampleRate];
         OK = [inDecoder readCreatingBuffer:&_buffer withFrameCount:&_size];
         _stereo = [inDecoder isStereo];
@@ -79,7 +79,7 @@ SOFTWARE.
     ALint error;
     OOAL(alGenBuffers(1, &buffer));
     if ((error = alGetError()) != AL_NO_ERROR) {
-        OOLog(oo::NSStringFrom(kOOLogSoundLoadingError), @"%@", @"Could not create OpenAL buffer");
+        OOLog(kOOLogSoundLoadingError, @"%@", @"Could not create OpenAL buffer");
         return 0;
     } else {
         if (!_stereo) {

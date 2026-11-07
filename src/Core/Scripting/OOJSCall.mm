@@ -31,7 +31,6 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OORuntime.h"
 
 #import "OOCollectionExtractors.h"
-#import "OOFoundationBridge.h"
 #import "OOFunctionAttributes.h"
 #import "OOJSQuaternion.h"
 #import "OOJSVector.h"
@@ -65,20 +64,20 @@ typedef enum {
 static MethodType GetMethodType(id object, SEL selector);
 OOINLINE BOOL MethodExpectsParameter(MethodType type) { return type == kMethodTypeVoidObject || type == kMethodTypeObjectObject; }
 
-BOOL OOJSCallObjCObjectMethod(JSContext* context, id object, const std::string& oo_jsClassName, int argc, JSValueConst* argv, JSValue* outResult)
+BOOL OOJSCallObjCObjectMethod(JSContext* context, id object, NSString* oo_jsClassName, int argc, JSValueConst* argv, JSValue* outResult)
 {
     OOJS_PROFILE_ENTER
 
-    std::optional<std::string> selectorString;
+    NSString* selectorString = nil;
     SEL selector = NULL;
-    std::optional<std::string> paramString;
+    NSString* paramString = nil;
     MethodType type;
     BOOL haveParameter = NO,
          error = NO;
     id result = nil;
 
     if (argc == 0) {
-        OOJSReportError(context, @"%@.callObjC(): no selector specified.", oo::NSStringFrom(oo_jsClassName));
+        OOJSReportError(context, @"%@.callObjC(): no selector specified.", oo_jsClassName);
         return NO;
     }
 
@@ -86,45 +85,38 @@ BOOL OOJSCallObjCObjectMethod(JSContext* context, id object, const std::string& 
         [PLAYER setScriptTarget:object];
     }
 
-    selectorString = oo::OptionalString(OOStringFromJSValue(context, argv[0]));
+    selectorString = OOStringFromJSValue(context, argv[0]);
 
     // Join all parameters together with spaces.
-    if (1 < argc && selectorString.has_value() && oo::str::hasSuffix(*selectorString, ":")) {
+    if (1 < argc && [selectorString hasSuffix:@":"]) {
         haveParameter = YES;
-        // As +concatenationOfStringsFromJavaScriptValues:count:separator:@" " joined them.
-        std::string joined;
-        for (int i = 1; i < argc; i++) {
-            if (i > 1)
-                joined += " ";
-            joined += oo::StdString(OOStringFromJSValueEvenIfNull(context, argv[i]));
-        }
-        paramString = joined;
+        paramString = [NSString concatenationOfStringsFromJavaScriptValues:argv + 1 count:argc - 1 separator:@" " inContext:context];
     }
 
-    selector = OOSelectorFromName(selectorString.has_value() ? selectorString->c_str() : NULL);
+    selector = OOSelectorFromName([selectorString UTF8String]);
 
     if ([object respondsToSelector:selector]) {
         // Validate signature.
         type = GetMethodType(object, selector);
 
         if (MethodExpectsParameter(type) && !haveParameter) {
-            OOJSReportError(context, @"%@.callObjC(): method %@ requires a parameter.", oo::NSStringFrom(oo_jsClassName), oo::NSStringOrNil(selectorString));
+            OOJSReportError(context, @"%@.callObjC(): method %@ requires a parameter.", oo_jsClassName, selectorString);
             error = YES;
         } else {
             IMP method = [object methodForSelector:selector];
             switch (type) {
             case kMethodTypeVoidObject:
-                [object performSelector:selector withObject:oo::NSStringOrNil(paramString)];
+                [object performSelector:selector withObject:paramString];
                 break;
 
             case kMethodTypeObjectObject:
-                result = [object performSelector:selector withObject:oo::NSStringOrNil(paramString)];
+                result = [object performSelector:selector withObject:paramString];
                 break;
 
             case kMethodTypeObjectVoid:
                 result = [object performSelector:selector];
-                if (selectorString.has_value() && oo::str::hasSuffix(*selectorString, "_bool"))
-                    result = oo::ObjectFromPList(oo::PList(static_cast<bool>(OOBooleanFromObject(result, NO))));
+                if ([selectorString hasSuffix:@"_bool"])
+                    result = [NSNumber numberWithBool:OOBooleanFromObject(result, NO)];
                 break;
 
             case kMethodTypeVoidVoid:
@@ -138,16 +130,16 @@ BOOL OOJSCallObjCObjectMethod(JSContext* context, id object, const std::string& 
             case kMethodTypeIntVoid:
             case kMethodTypeUnsignedIntVoid:
             case kMethodTypeLongVoid:
-                result = oo::ObjectFromPList(oo::PList::signedInteger(OOCallIntegerMethod(object, selector, method, (OOShaderUniformType)type)));
+                result = [NSNumber numberWithLongLong:OOCallIntegerMethod(object, selector, method, (OOShaderUniformType)type)];
                 break;
 
             case kMethodTypeUnsignedLongVoid:
-                result = oo::ObjectFromPList(oo::PList::unsignedInteger(OOCallIntegerMethod(object, selector, method, (OOShaderUniformType)type)));
+                result = [NSNumber numberWithUnsignedLongLong:OOCallIntegerMethod(object, selector, method, (OOShaderUniformType)type)];
                 break;
 
             case kMethodTypeFloatVoid:
             case kMethodTypeDoubleVoid:
-                result = oo::ObjectFromPList(oo::PList(static_cast<double>(OOCallFloatMethod(object, selector, method, (OOShaderUniformType)type))));
+                result = [NSNumber numberWithDouble:OOCallFloatMethod(object, selector, method, (OOShaderUniformType)type)];
                 break;
 
             case kMethodTypeVectorVoid: {
@@ -175,7 +167,7 @@ BOOL OOJSCallObjCObjectMethod(JSContext* context, id object, const std::string& 
             case kMethodTypeMatrixVoid:
             case kMethodTypePointVoid:
             case kMethodTypeInvalid:
-                OOJSReportError(context, @"%@.callObjC(): method %@ cannot be called from JavaScript.", oo::NSStringFrom(oo_jsClassName), oo::NSStringOrNil(selectorString));
+                OOJSReportError(context, @"%@.callObjC(): method %@ cannot be called from JavaScript.", oo_jsClassName, selectorString);
                 error = YES;
                 break;
             }
@@ -184,7 +176,7 @@ BOOL OOJSCallObjCObjectMethod(JSContext* context, id object, const std::string& 
             }
         }
     } else {
-        OOJSReportError(context, @"%@.callObjC(): %@ does not respond to method %@.", oo::NSStringFrom(oo_jsClassName), [object shortDescription], oo::NSStringOrNil(selectorString));
+        OOJSReportError(context, @"%@.callObjC(): %@ does not respond to method %@.", oo_jsClassName, [object shortDescription], selectorString);
         error = YES;
     }
 

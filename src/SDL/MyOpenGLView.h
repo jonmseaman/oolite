@@ -29,9 +29,6 @@ MA 02110-1301, USA.
 #import "OOOpenGLMatrixManager.h"
 #import "oofnd/objc/OOObject.h"
 
-#include "oofnd/PList.hpp"
-#include "oofnd/StdLib.hpp"
-
 #include <SDL3/SDL_video.h>
 
 #define WINDOW_SIZE_DEFAULT_WIDTH 1280
@@ -169,8 +166,8 @@ extern int debug;
     GameController* gameController;
     BOOL keys[NUM_KEYS];
     int scancode2Unicode[NUM_KEYS];
-    oo::PList keyMappings_normal; // the keyboard's mapping_normal / mapping_shifted (null if none)
-    oo::PList keyMappings_shifted;
+    NSDictionary* keyMappings_normal;
+    NSDictionary* keyMappings_shifted;
 
     BOOL suppressKeys; // DJS
 
@@ -188,7 +185,7 @@ extern int debug;
     NSTimeInterval timeSinceLastMouseWheel;
     BOOL doubleClick;
 
-    std::string typedString; // UTF-8; empty, never nil
+    NSMutableString* typedString;
 
     NSPoint virtualJoystickPosition;
 
@@ -205,7 +202,7 @@ extern int debug;
     BOOL _msaa;
 
     // Full screen sizes
-    std::vector<oo::PList> screenSizes; // mode Dicts: Width, Height (integers), RefreshRate (a single real; the native mode's an integer 0)
+    NSMutableArray* screenSizes;
     int currentSize; // we need an int!
     BOOL fullScreen;
 
@@ -255,7 +252,7 @@ extern int debug;
  */
 - (id)init;
 
-- (std::optional<std::string>)getWindowCaption;
+- (NSString*)getWindowCaption;
 - (void)createWindowWithSize:(NSSize)size;
 - (void)initSplashScreen;
 - (void)endSplashScreen;
@@ -291,14 +288,14 @@ extern int debug;
 
 - (void)grabMouseInsideGameWindow:(BOOL)value;
 
-- (void)cxx_stringToClipboard:(const std::string&)stringToCopy;
+- (void)stringToClipboard:(NSString*)stringToCopy;
 
 - (void)updateScreen;
 
-- (BOOL)cxx_snapShot:(const std::optional<std::string>&)filename; // nullopt: auto-numbered "oolite-NNN"
+- (BOOL)snapShot:(NSString*)filename;
 
 - (SDL_DisplayID)getDisplayId;
-- (oo::PList)getNativeSize;
+- (NSMutableDictionary*)getNativeSize;
 
 - (void)setFullScreenMode:(BOOL)fsm;
 - (BOOL)inFullScreenMode;
@@ -306,7 +303,7 @@ extern int debug;
 - (void)setDisplayMode:(int)mode fullScreen:(BOOL)fsm;
 
 - (void)setScreenSize:(int)sizeIndex;
-- (std::vector<oo::PList>)getScreenSizeArray;
+- (NSMutableArray*)getScreenSizeArray;
 - (void)populateFullScreenModelist;
 - (NSSize)modeAsSize:(int)sizeIndex;
 - (void)saveWindowSize:(NSSize)windowSize;
@@ -315,7 +312,7 @@ extern int debug;
 - (int)findDisplayModeForWidth:(unsigned int)d_width Height:(unsigned int)d_height
                        Refresh:(unsigned int)d_refresh;
 - (NSSize)currentScreenSize;
-- (oo::PList)currentScreenMode; // null: no mode
+- (NSDictionary*)currentScreenMode;
 
 // Command-key combinations need special handling. SDL stubs for these mac functions.
 
@@ -332,42 +329,35 @@ extern int debug;
 
 #ifndef NDEBUG
 // General image-dumping method.
-- (void)cxx_dumpRGBAToFileNamed:(const std::string&)name
-                          bytes:(uint8_t*)bytes
-                          width:(NSUInteger)width
-                         height:(NSUInteger)height
-                       rowBytes:(NSUInteger)rowBytes;
-- (void)cxx_dumpRGBToFileNamed:(const std::string&)name
+- (void)dumpRGBAToFileNamed:(NSString*)name
+                      bytes:(uint8_t*)bytes
+                      width:(NSUInteger)width
+                     height:(NSUInteger)height
+                   rowBytes:(NSUInteger)rowBytes;
+- (void)dumpRGBToFileNamed:(NSString*)name
+                     bytes:(uint8_t*)bytes
+                     width:(NSUInteger)width
+                    height:(NSUInteger)height
+                  rowBytes:(NSUInteger)rowBytes;
+- (void)dumpGrayToFileNamed:(NSString*)name
+                      bytes:(uint8_t*)bytes
+                      width:(NSUInteger)width
+                     height:(NSUInteger)height
+                   rowBytes:(NSUInteger)rowBytes;
+- (void)dumpGrayAlphaToFileNamed:(NSString*)name
+                           bytes:(uint8_t*)bytes
+                           width:(NSUInteger)width
+                          height:(NSUInteger)height
+                        rowBytes:(NSUInteger)rowBytes;
+- (void)dumpRGBAToRGBFileNamed:(NSString*)rgbName
+              andGrayFileNamed:(NSString*)grayName
                          bytes:(uint8_t*)bytes
                          width:(NSUInteger)width
                         height:(NSUInteger)height
                       rowBytes:(NSUInteger)rowBytes;
-- (void)cxx_dumpGrayToFileNamed:(const std::string&)name
-                          bytes:(uint8_t*)bytes
-                          width:(NSUInteger)width
-                         height:(NSUInteger)height
-                       rowBytes:(NSUInteger)rowBytes;
-- (void)cxx_dumpGrayAlphaToFileNamed:(const std::string&)name
-                               bytes:(uint8_t*)bytes
-                               width:(NSUInteger)width
-                              height:(NSUInteger)height
-                            rowBytes:(NSUInteger)rowBytes;
-// A nullopt name skips that file.
-- (void)cxx_dumpRGBAToRGBFileNamed:(const std::optional<std::string>&)rgbName
-                  andGrayFileNamed:(const std::optional<std::string>&)grayName
-                             bytes:(uint8_t*)bytes
-                             width:(NSUInteger)width
-                            height:(NSUInteger)height
-                          rowBytes:(NSUInteger)rowBytes;
 #endif
 
 @end
 
 #import "MyOpenGLView+Input.h"
 #include <SDL3/SDL_events.h>
-
-/*	TRANSITIONAL (proposed ADR-0043 Amendment 1): MyOpenGLView's Foundation-typed API as it was
-        declared before bead oo-3rb.110, forwarding to the cxx_ methods above, so unmigrated callers compile
-        unchanged. Callers move to the cxx_ API in their own sweep beads; the bridge goes in its own bead.
-*/
-#import "MyOpenGLView+FoundationBridge.h"

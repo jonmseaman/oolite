@@ -28,23 +28,13 @@ MA 02110-1301, USA.
 #import "OOLightParticleEntity.h"
 #import "ShipEntity.h"
 
-#include "oofnd/PList.hpp"
-#include "oofnd/StdLib.hpp"
-#include "oofnd/objc/OOObjCRef.h"
-
-@class OOColor;
-
-/*	Foundation sweep (proposed ADR-0043, bead oo-5lu6): +flasherWithDictionary: is unique and takes
-        the subentity configuration as an oo::PList; -initWithDictionary: is shared and keeps id.
-*/
-
 @interface OOFlasherEntity : OOLightParticleEntity <OOSubEntity> {
 @private
     float _frequency;
     float _phase;
     float _wave;
     float _brightfraction;
-    std::vector<oo::ObjCRef<OOColor*>> _colors;
+    NSArray* _colors;
     NSUInteger _activeColor;
 
     OOTimeDelta _time;
@@ -53,8 +43,8 @@ MA 02110-1301, USA.
     BOOL _justSwitched;
 }
 
-+ (instancetype)flasherWithDictionary:(const oo::PList&)dictionary;
-- (id)initWithDictionary:(id)dictionary; // shared selector (proposed ADR-0043): an Objective-C dictionary
++ (instancetype)flasherWithDictionary:(NSDictionary*)dictionary;
+- (id)initWithDictionary:(NSDictionary*)dictionary;
 
 - (BOOL)isActive;
 - (void)setActive:(BOOL)active;

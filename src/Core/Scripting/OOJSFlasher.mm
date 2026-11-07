@@ -119,7 +119,7 @@ static BOOL JSFlasherGetFlasherEntity(JSContext* context, JSValueConst jsobj, OO
     return sFlasherClassID;
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsClassName
 {
     return @"Flasher";
 }

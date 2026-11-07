@@ -34,7 +34,6 @@ MA 02110-1301, USA.
 #import "PlayerEntityScriptMethods.h"
 #import "ResourceManager.h"
 #import "Universe.h"
-#include "oofnd/StdLib.hpp"
 #include "oofnd/objc/OORuntime.h"
 
 // Syntax warnings are for OXP developers, so include them wherever the debug console is.
@@ -113,21 +112,7 @@ static NSString* ExpandStringKey(OOStringExpansionContext* context, NSString* ke
 static NSString* ExpandStringKeyOverride(OOStringExpansionContext* context, NSString* key);
 static NSString* ExpandStringKeySpecial(OOStringExpansionContext* context, NSString* key);
 static NSString* ExpandStringKeyKeyboardBinding(OOStringExpansionContext* context, NSString* key);
-/*	Key -> selector tables, keyed by the key's UTF-8 (NSString equality). Were map tables with
-        object keys and non-owned selector values (bead oo-3rb.20); never iterated.
-*/
-typedef std::unordered_map<std::string, SEL> OOSelectorTable;
-
-static SEL LookUpSelector(const OOSelectorTable* table, NSString* key)
-{
-    const char* utf8 = [key UTF8String];
-    if (table == NULL || utf8 == NULL)
-        return NULL;
-    auto found = table->find(utf8);
-    return (found != table->end()) ? found->second : NULL;
-}
-
-static const OOSelectorTable* SpecialSubstitutionSelectors(void);
+static NSMapTable* SpecialSubstitutionSelectors(void);
 static NSString* ExpandStringKeyFromDescriptions(OOStringExpansionContext* context, NSString* key, NSUInteger sizeLimit, NSUInteger recursionLimit);
 static NSString* ExpandStringKeyMissionVariable(OOStringExpansionContext* context, NSString* key);
 static NSString* ExpandStringKeyLegacyLocalVariable(OOStringExpansionContext* context, NSString* key);
@@ -657,7 +642,8 @@ static NSString* ExpandStringKeySpecial(OOStringExpansionContext* context, NSStr
 {
     NSCParameterAssert(context != NULL && key != nil);
 
-    SEL selector = LookUpSelector(SpecialSubstitutionSelectors(), key);
+    NSMapTable* specials = SpecialSubstitutionSelectors();
+    SEL selector = (SEL)NSMapGet(specials, key);
     if (selector != NULL) {
         NSCAssert2([PLAYER respondsToSelector:selector], @"Special string expansion selector %s for [%@] is not implemented.", OOSelectorName(selector), key);
 
@@ -690,9 +676,9 @@ static NSString* ExpandStringKeyKeyboardBinding(OOStringExpansionContext* contex
         Retrieve the mapping of special keys for ExpandStringKeySpecial() to
         selectors.
 */
-static const OOSelectorTable* SpecialSubstitutionSelectors(void)
+static NSMapTable* SpecialSubstitutionSelectors(void)
 {
-    static OOSelectorTable* specials = NULL;
+    static NSMapTable* specials = NULL;
     if (specials != NULL)
         return specials;
 
@@ -712,10 +698,9 @@ static const OOSelectorTable* SpecialSubstitutionSelectors(void)
     };
     unsigned i, count = sizeof selectors / sizeof *selectors;
 
-    specials = new OOSelectorTable;
-    specials->reserve(count);
+    specials = NSCreateMapTable(NSObjectMapKeyCallBacks, NSNonOwnedPointerMapValueCallBacks, count);
     for (i = 0; i < count; i++) {
-        specials->emplace([selectors[i].key UTF8String], selectors[i].selector);
+        NSMapInsertKnownAbsent(specials, selectors[i].key, selectors[i].selector);
     }
 
     return specials;
@@ -802,10 +787,12 @@ static NSString* ExpandLegacyScriptSelectorKey(OOStringExpansionContext* context
 static SEL LookUpLegacySelector(NSString* key)
 {
     SEL selector = NULL;
-    static OOSelectorTable* selectorCache = NULL;
+    static NSMapTable* selectorCache = NULL;
 
     // Try cache lookup.
-    selector = LookUpSelector(selectorCache, key);
+    if (selectorCache != NULL) {
+        selector = (SEL)NSMapGet(selectorCache, key);
+    }
 
     if (selector == NULL) {
         static NSDictionary* aliases = nil;
@@ -833,12 +820,9 @@ static SEL LookUpLegacySelector(NSString* key)
         if (selector != NULL) {
             // Add it to cache.
             if (selectorCache == NULL) {
-                selectorCache = new OOSelectorTable;
-                selectorCache->reserve([whitelist count]);
+                selectorCache = NSCreateMapTable(NSObjectMapKeyCallBacks, NSNonOwnedPointerMapValueCallBacks, [whitelist count]);
             }
-            const char* utf8 = [key UTF8String];
-            if (utf8 != NULL)
-                selectorCache->emplace(utf8, selector);
+            NSMapInsertKnownAbsent(selectorCache, key, selector);
         }
     }
 

@@ -24,205 +24,184 @@ MA 02110-1301, USA.
 */
 
 #import "OOLegacyScriptWhitelist.h"
+#import "NSDictionaryOOExtensions.h"
+#import "OODeepCopy.h"
 #import "OOFoundation.h"
-#import "OOFoundationBridge.h"
+#import "OOPListView.h"
 #import "OOStringParsing.h"
 #import "PlayerEntityLegacyScriptEngine.h"
 #import "ResourceManager.h"
 
-#include "oofnd/PList.hpp"
-#include "oofnd/StdLib.hpp"
-#include "oofnd/String.hpp"
-
 #define INCLUDE_RAW_STRING OOLITE_DEBUG // If nonzero, raw condition strings are included; if zero, a placeholder is used.
-
-/*	The sanitizer works on oo::PList trees (bead oo-3rb.204, proposed ADR-0043): a sanitized
-        script or conditions array is plist data (bools, unsigned integers, strings, nested arrays).
-        A null oo::PList stands for nil.
-*/
 
 typedef struct SanStackElement SanStackElement;
 struct SanStackElement {
     SanStackElement* back;
-    std::optional<std::string> key; // Dictionary key; nullopt for arrays.
-    NSUInteger index; // Array index if key is nullopt.
+    NSString* key; // Dictionary key; nil for arrays.
+    NSUInteger index; // Array index if key is nil.
 };
 
-namespace {
-static oo::PList OOSanitizeLegacyScriptInternal(const oo::PList& script, SanStackElement* stack, BOOL allowAIMethods);
-static oo::PList OOSanitizeLegacyScriptConditionsInternal(const oo::PList& conditions, SanStackElement* stack);
-static BOOL ConditionsAreSanitized(const oo::PList& conditions);
+static NSArray* OOSanitizeLegacyScriptInternal(NSArray* script, SanStackElement* stack, BOOL allowAIMethods);
+static NSArray* OOSanitizeLegacyScriptConditionsInternal(NSArray* conditions, SanStackElement* stack);
 
-static oo::PList SanitizeCondition(const std::string& condition, SanStackElement* stack);
-static oo::PList SanitizeConditionalStatement(const oo::PList& statement, SanStackElement* stack, BOOL allowAIMethods);
-static oo::PList SanitizeActionStatement(const std::string& statement, SanStackElement* stack, BOOL allowAIMethods);
-static OOOperationType ClassifyLHSConditionSelector(const std::string& selectorString, std::optional<std::string>* outSanitizedMethod);
-static std::optional<std::string> SanitizeQueryMethod(const std::string& selectorString); // Checks aliases and whitelist, returns nullopt if whitelist fails.
-static std::optional<std::string> SanitizeActionMethod(const std::string& selectorString, BOOL allowAIMethods); // Checks aliases and whitelist, returns nullopt if whitelist fails.
-static oo::PList AlwaysFalseConditions(void);
-static BOOL IsAlwaysFalseConditions(const oo::PList& conditions);
+static NSArray* SanitizeCondition(NSString* condition, SanStackElement* stack);
+static NSArray* SanitizeConditionalStatement(NSDictionary* statement, SanStackElement* stack, BOOL allowAIMethods);
+static NSArray* SanitizeActionStatement(NSString* statement, SanStackElement* stack, BOOL allowAIMethods);
+static OOOperationType ClassifyLHSConditionSelector(NSString* selectorString, NSString** outSanitizedMethod, SanStackElement* stack);
+static NSString* SanitizeQueryMethod(NSString* selectorString); // Checks aliases and whitelist, returns nil if whitelist fails.
+static NSString* SanitizeActionMethod(NSString* selectorString, BOOL allowAIMethods); // Checks aliases and whitelist, returns nil if whitelist fails.
+static NSArray* AlwaysFalseConditions(void);
+static BOOL IsAlwaysFalseConditions(NSArray* conditions);
 
-static std::string StringFromStack(SanStackElement* topOfStack);
-} // namespace
+static NSString* StringFromStack(SanStackElement* topOfStack);
 
 NSArray* OOSanitizeLegacyScript(NSArray* script, NSString* context, BOOL allowAIMethods)
 {
-    SanStackElement stackRoot = { NULL, oo::OptionalString(context), 0 };
-    oo::PList result = OOSanitizeLegacyScriptInternal(oo::PListFrom(script), &stackRoot, allowAIMethods);
-    return oo::ObjectFromPList(result); // a fresh tree, as the deep copy was
+    SanStackElement stackRoot = { NULL, context, 0 };
+    NSArray* result = OOSanitizeLegacyScriptInternal(script, &stackRoot, allowAIMethods);
+    return [OODeepCopy(result) autorelease];
 }
 
-namespace {
-static oo::PList OOSanitizeLegacyScriptInternal(const oo::PList& script, SanStackElement* stack, BOOL allowAIMethods)
+static NSArray* OOSanitizeLegacyScriptInternal(NSArray* script, SanStackElement* stack, BOOL allowAIMethods)
 {
-    oo::PList::Array result;
+    NSMutableArray* result = nil;
+    id statement = nil;
     NSUInteger index = 0;
 
     @autoreleasepool {
-        result.reserve(script.count());
+        result = [NSMutableArray arrayWithCapacity:[script count]];
 
-        if (const oo::PList::Array* statements = script.getIf<oo::PList::Array>()) {
-            for (const oo::PList& statement : *statements) {
-                SanStackElement subStack = {
-                    stack, std::nullopt, index++
-                };
+        foreach (statement, script) {
+            SanStackElement subStack = {
+                stack, nil, index++
+            };
 
-                oo::PList sanitized;
-                if (statement.isDict()) {
-                    sanitized = SanitizeConditionalStatement(statement, &subStack, allowAIMethods);
-                } else if (const std::string* string = statement.getIf<std::string>()) {
-                    sanitized = SanitizeActionStatement(*string, &subStack, allowAIMethods);
-                } else {
-                    OOLog(@"script.syntax.statement.invalidType", @"***** SCRIPT ERROR: in %@, statement is of invalid type - expected string or dictionary, got %@.", oo::NSStringFrom(StringFromStack(stack)), [oo::ObjectFromPList(statement) class]);
-                }
+            if ([statement isKindOfClass:[NSDictionary class]]) {
+                statement = SanitizeConditionalStatement(statement, &subStack, allowAIMethods);
+            } else if ([statement isKindOfClass:[NSString class]]) {
+                statement = SanitizeActionStatement(statement, &subStack, allowAIMethods);
+            } else {
+                OOLog(@"script.syntax.statement.invalidType", @"***** SCRIPT ERROR: in %@, statement is of invalid type - expected string or dictionary, got %@.", StringFromStack(stack), [statement class]);
+                statement = nil;
+            }
 
-                if (!sanitized.isNull()) {
-                    result.push_back(std::move(sanitized));
-                }
+            if (statement != nil) {
+                [result addObject:statement];
             }
         }
+
+        [result retain];
     }
 
-    return oo::PList(std::move(result));
+    return [result autorelease];
 }
-} // namespace
 
 NSArray* OOSanitizeLegacyScriptConditions(NSArray* conditions, NSString* context)
 {
-    std::optional<std::string> contextString = (context != nil) ? oo::OptionalString(context) : std::optional<std::string>("<anonymous conditions>");
-    SanStackElement stackRoot = { NULL, contextString, 0 };
-    oo::PList result = OOSanitizeLegacyScriptConditionsInternal(oo::PListFrom(conditions), &stackRoot);
-    return oo::ObjectFromPList(result); // a fresh tree, as the deep copy was; null -> nil
+    if (context == nil)
+        context = @"<anonymous conditions>";
+    SanStackElement stackRoot = { NULL, context, 0 };
+    NSArray* result = OOSanitizeLegacyScriptConditionsInternal(conditions, &stackRoot);
+    return [OODeepCopy(result) autorelease];
 }
 
-namespace {
-static oo::PList OOSanitizeLegacyScriptConditionsInternal(const oo::PList& conditions, SanStackElement* stack)
+static NSArray* OOSanitizeLegacyScriptConditionsInternal(NSArray* conditions, SanStackElement* stack)
 {
-    oo::PList::Array result;
+    NSString* condition = nil;
+    NSMutableArray* result = nil;
+    NSArray* tokens = nil;
     BOOL OK = YES;
     NSUInteger index = 0;
 
-    if (ConditionsAreSanitized(conditions) || conditions.isNull())
+    if (OOLegacyConditionsAreSanitized(conditions) || conditions == nil)
         return conditions;
 
-    result.reserve(conditions.count());
+    result = [NSMutableArray arrayWithCapacity:[conditions count]];
 
-    if (const oo::PList::Array* conditionArray = conditions.getIf<oo::PList::Array>()) {
-        for (const oo::PList& condition : *conditionArray) {
-            SanStackElement subStack = {
-                stack, std::nullopt, index++
-            };
+    foreach (condition, conditions) {
+        SanStackElement subStack = {
+            stack, nil, index++
+        };
 
-            const std::string* conditionString = condition.getIf<std::string>();
-            if (conditionString == nullptr) {
-                OOLog(@"script.syntax.condition.notString", @"***** SCRIPT ERROR: in %@, bad condition - expected string, got %@; ignoring.", oo::NSStringFrom(StringFromStack(stack)), [oo::ObjectFromPList(condition) class]);
-                OK = NO;
-                break;
-            }
+        if (![condition isKindOfClass:[NSString class]]) {
+            OOLog(@"script.syntax.condition.notString", @"***** SCRIPT ERROR: in %@, bad condition - expected string, got %@; ignoring.", StringFromStack(stack), [condition class]);
+            OK = NO;
+            break;
+        }
 
-            oo::PList tokens = SanitizeCondition(*conditionString, &subStack);
-            if (!tokens.isNull()) {
-                result.push_back(std::move(tokens));
-            } else {
-                OK = NO;
-                break;
-            }
+        tokens = SanitizeCondition(condition, &subStack);
+        if (tokens != nil) {
+            [result addObject:tokens];
+        } else {
+            OK = NO;
+            break;
         }
     }
 
     if (OK)
-        return oo::PList(std::move(result));
+        return result;
     else
         return AlwaysFalseConditions();
 }
-} // namespace
 
 BOOL OOLegacyConditionsAreSanitized(NSArray* conditions)
 {
     if ([conditions count] == 0)
         return YES; // Empty array is safe.
-    return oo::IsNSArray([conditions objectAtIndex:0]);
+    return [[conditions objectAtIndex:0] isKindOfClass:[NSArray class]];
 }
 
-// OOLegacyConditionsAreSanitized() for the sanitizer's own trees.
-namespace {
-static BOOL ConditionsAreSanitized(const oo::PList& conditions)
+static NSArray* SanitizeCondition(NSString* condition, SanStackElement* stack)
 {
-    if (conditions.count() == 0)
-        return YES; // Empty array is safe.
-    const oo::PList* first = conditions.at(0);
-    return first != nullptr && first->isArray();
-}
-} // namespace
-
-namespace {
-static oo::PList SanitizeCondition(const std::string& condition, SanStackElement* stack)
-{
-    std::vector<std::string> tokens;
+    NSArray* tokens = nil;
     NSUInteger i, tokenCount;
     OOOperationType opType;
-    std::string selectorString;
-    std::optional<std::string> sanitizedSelectorString;
-    std::string comparatorString;
+    NSString* selectorString = nil;
+    NSString* sanitizedSelectorString = nil;
+    NSString* comparatorString = nil;
     OOComparisonType comparatorValue;
-    oo::PList::Array rhs;
-    std::optional<std::string> rhsSelector;
-    std::optional<std::string> stringSegment;
+    NSMutableArray* rhs = nil;
+    NSString* rhsItem = nil;
+    NSString* rhsSelector = nil;
+    NSArray* sanitizedRHSItem = nil;
+    NSString* stringSegment = nil;
 
-    tokens = oo::str::tokens(condition);
-    tokenCount = tokens.size();
+    tokens = ScanTokensFromString(condition);
+    tokenCount = [tokens count];
 
     if (tokenCount < 1) {
-        OOLog(@"script.debug.syntax.scriptCondition.noneSpecified", @"***** SCRIPT ERROR: in %@, empty script condition.", oo::NSStringFrom(StringFromStack(stack)));
-        return oo::PList();
+        OOLog(@"script.debug.syntax.scriptCondition.noneSpecified", @"***** SCRIPT ERROR: in %@, empty script condition.", StringFromStack(stack));
+        return nil;
     }
 
     // Parse left-hand side.
-    selectorString = tokens[0];
-    opType = ClassifyLHSConditionSelector(selectorString, &sanitizedSelectorString);
+    selectorString = oo::PListView(tokens).at<NSString*>(0);
+    opType = ClassifyLHSConditionSelector(selectorString, &sanitizedSelectorString, stack);
     if (opType >= OP_INVALID) {
-        OOLog(@"script.unpermittedMethod", @"***** SCRIPT ERROR: in %@ (\"%@\"), method \"%@\" not allowed.", oo::NSStringFrom(StringFromStack(stack)), oo::NSStringFrom(condition), oo::NSStringFrom(selectorString));
-        return oo::PList();
+        OOLog(@"script.unpermittedMethod", @"***** SCRIPT ERROR: in %@ (\"%@\"), method \"%@\" not allowed.", StringFromStack(stack), condition, selectorString);
+        return nil;
     }
 
     // Parse operator.
     if (tokenCount > 1) {
-        comparatorString = tokens[1];
-        if (comparatorString == "equal")
+        comparatorString = oo::PListView(tokens).at<NSString*>(1);
+        if ([comparatorString isEqualToString:@"equal"])
             comparatorValue = COMPARISON_EQUAL;
-        else if (comparatorString == "notequal")
+        else if ([comparatorString isEqualToString:@"notequal"])
             comparatorValue = COMPARISON_NOTEQUAL;
-        else if (comparatorString == "lessthan")
+        else if ([comparatorString isEqualToString:@"lessthan"])
             comparatorValue = COMPARISON_LESSTHAN;
-        else if (comparatorString == "greaterthan" || comparatorString == "morethan")
+        else if ([comparatorString isEqualToString:@"greaterthan"])
             comparatorValue = COMPARISON_GREATERTHAN;
-        else if (comparatorString == "oneof")
+        else if ([comparatorString isEqualToString:@"morethan"])
+            comparatorValue = COMPARISON_GREATERTHAN;
+        else if ([comparatorString isEqualToString:@"oneof"])
             comparatorValue = COMPARISON_ONEOF;
-        else if (comparatorString == "undefined")
+        else if ([comparatorString isEqualToString:@"undefined"])
             comparatorValue = COMPARISON_UNDEFINED;
         else {
-            OOLog(@"script.debug.syntax.badComparison", @"***** SCRIPT ERROR: in %@ (\"%@\"), unknown comparison operator \"%@\", will return NO.", oo::NSStringFrom(StringFromStack(stack)), oo::NSStringFrom(condition), oo::NSStringFrom(comparatorString));
-            return oo::PList();
+            OOLog(@"script.debug.syntax.badComparison", @"***** SCRIPT ERROR: in %@ (\"%@\"), unknown comparison operator \"%@\", will return NO.", StringFromStack(stack), condition, comparatorString);
+            return nil;
         }
     } else {
         /*	In the direct interpreter, having no operator resulted in an
@@ -230,14 +209,14 @@ static oo::PList SanitizeCondition(const std::string& condition, SanStackElement
                 Returning NO here causes AlwaysFalseConditions() to be used, which
                 has the same effect.
          */
-        OOLog(@"script.debug.syntax.noOperator", @"----- WARNING: SCRIPT in %@ -- No operator in expression \"%@\", will always evaluate as false.", oo::NSStringFrom(StringFromStack(stack)), oo::NSStringFrom(condition));
-        return oo::PList();
+        OOLog(@"script.debug.syntax.noOperator", @"----- WARNING: SCRIPT in %@ -- No operator in expression \"%@\", will always evaluate as false.", StringFromStack(stack), condition);
+        return nil;
     }
 
     // Check for invalid opType/comparator combinations.
     if (opType == OP_NUMBER && comparatorValue == COMPARISON_UNDEFINED) {
-        OOLog(@"script.debug.syntax.invalidOperator", @"***** SCRIPT ERROR: in %@ (\"%@\"), comparison operator \"%@\" is not valid for %@.", oo::NSStringFrom(StringFromStack(stack)), oo::NSStringFrom(condition), @"undefined", @"numbers");
-        return oo::PList();
+        OOLog(@"script.debug.syntax.invalidOperator", @"***** SCRIPT ERROR: in %@ (\"%@\"), comparison operator \"%@\" is not valid for %@.", StringFromStack(stack), condition, @"undefined", @"numbers");
+        return nil;
     } else if (opType == OP_BOOL) {
         switch (comparatorValue) {
         // Valid comparators
@@ -246,8 +225,8 @@ static oo::PList SanitizeCondition(const std::string& condition, SanStackElement
             break;
 
         default:
-            OOLog(@"script.debug.syntax.invalidOperator", @"***** SCRIPT ERROR: in %@ (\"%@\"), comparison operator \"%@\" is not valid for %@.", oo::NSStringFrom(StringFromStack(stack)), oo::NSStringFrom(condition), OOComparisonTypeToString(comparatorValue), @"booleans");
-            return oo::PList();
+            OOLog(@"script.debug.syntax.invalidOperator", @"***** SCRIPT ERROR: in %@ (\"%@\"), comparison operator \"%@\" is not valid for %@.", StringFromStack(stack), condition, OOComparisonTypeToString(comparatorValue), @"booleans");
+            return nil;
         }
     }
 
@@ -258,345 +237,277 @@ static oo::PList SanitizeCondition(const std::string& condition, SanStackElement
             string segments.
     */
     if (tokenCount > 2) {
-        rhs.reserve(tokenCount - 2);
+        rhs = [NSMutableArray arrayWithCapacity:tokenCount - 2];
         for (i = 2; i < tokenCount; i++) {
-            const std::string& rhsItem = tokens[i];
+            rhsItem = oo::PListView(tokens).at<NSString*>(i);
             rhsSelector = SanitizeQueryMethod(rhsItem);
-            if (rhsSelector) {
+            if (rhsSelector != nil) {
                 // Method
-                if (stringSegment) {
+                if (stringSegment != nil) {
                     // Add stringSegment as a literal token.
-                    rhs.push_back(oo::PList(oo::PList::Array { oo::PList(false), oo::PList(*stringSegment) }));
-                    stringSegment = std::nullopt;
+                    sanitizedRHSItem = [NSArray arrayWithObjects:[NSNumber numberWithBool:NO], stringSegment, nil];
+                    [rhs addObject:sanitizedRHSItem];
+                    stringSegment = nil;
                 }
 
-                rhs.push_back(oo::PList(oo::PList::Array { oo::PList(true), oo::PList(*rhsSelector) }));
+                sanitizedRHSItem = [NSArray arrayWithObjects:[NSNumber numberWithBool:YES], rhsSelector, nil];
+                [rhs addObject:sanitizedRHSItem];
             } else {
                 // String; append to stringSegment
-                if (!stringSegment)
+                if (stringSegment == nil)
                     stringSegment = rhsItem;
                 else
-                    stringSegment = *stringSegment + " " + rhsItem;
+                    stringSegment = [NSString stringWithFormat:@"%@ %@", stringSegment, rhsItem];
             }
         }
 
-        if (stringSegment) {
-            rhs.push_back(oo::PList(oo::PList::Array { oo::PList(false), oo::PList(*stringSegment) }));
+        if (stringSegment != nil) {
+            sanitizedRHSItem = [NSArray arrayWithObjects:[NSNumber numberWithBool:NO], stringSegment, nil];
+            [rhs addObject:sanitizedRHSItem];
         }
+    } else {
+        rhs = [NSMutableArray array];
     }
 
-    std::string rawString;
+    NSString* rawString = nil;
 #if INCLUDE_RAW_STRING
     rawString = condition;
 #else
-    rawString = "<condition>";
+    rawString = @"<condition>";
 #endif
 
-    // opType and comparisonType were +numberWithUnsignedInt:; oo::ObjectFromPList gives back
-    // +numberWithUnsignedLongLong: (same value; the consumers read -unsignedIntValue).
-    return oo::PList(oo::PList::Array {
-        oo::PList::unsignedInteger(opType),
-        oo::PList(rawString),
-        oo::PList(sanitizedSelectorString ? *sanitizedSelectorString : std::string()),
-        oo::PList::unsignedInteger(comparatorValue),
-        oo::PList(std::move(rhs)) });
+    return [NSArray arrayWithObjects:
+            [NSNumber numberWithUnsignedInt:opType],
+        rawString,
+        sanitizedSelectorString,
+        [NSNumber numberWithUnsignedInt:comparatorValue],
+        rhs,
+        nil];
 }
-} // namespace
 
-namespace {
-static oo::PList SanitizeConditionalStatement(const oo::PList& statement, SanStackElement* stack, BOOL allowAIMethods)
+static NSArray* SanitizeConditionalStatement(NSDictionary* statement, SanStackElement* stack, BOOL allowAIMethods)
 {
-    oo::PList conditions;
-    oo::PList doActions;
-    oo::PList elseActions;
+    NSArray* conditions = nil;
+    NSArray* doActions = nil;
+    NSArray* elseActions = nil;
 
-    // -oo_arrayForKey: an array value, else nil.
-    auto arrayForKey = [&statement](std::string_view key) {
-        const oo::PList* value = statement.find(key);
-        return (value != nullptr && value->isArray()) ? *value : oo::PList();
-    };
-
-    conditions = arrayForKey("conditions");
-    if (conditions.isNull()) {
-        OOLog(@"script.syntax.noConditions", @"***** SCRIPT ERROR: in %@, conditions array contains no \"conditions\" entry, ignoring.", oo::NSStringFrom(StringFromStack(stack)));
-        return oo::PList();
+    conditions = oo::PListView(statement).get<NSArray*>(@"conditions");
+    if (conditions == nil) {
+        OOLog(@"script.syntax.noConditions", @"***** SCRIPT ERROR: in %@, conditions array contains no \"conditions\" entry, ignoring.", StringFromStack(stack));
+        return nil;
     }
 
     // Sanitize conditions.
-    SanStackElement subStack = { stack, std::string("conditions"), 0 };
+    SanStackElement subStack = { stack, @"conditions", 0 };
     conditions = OOSanitizeLegacyScriptConditionsInternal(conditions, &subStack);
-    if (conditions.isNull()) {
-        return oo::PList();
+    if (conditions == nil) {
+        return nil;
     }
 
     // Sanitize do and else.
     if (!IsAlwaysFalseConditions(conditions))
-        doActions = arrayForKey("do");
-    if (!doActions.isNull()) {
-        subStack.key = "do";
+        doActions = oo::PListView(statement).get<NSArray*>(@"do");
+    if (doActions != nil) {
+        subStack.key = @"do";
         doActions = OOSanitizeLegacyScriptInternal(doActions, &subStack, allowAIMethods);
     }
 
-    elseActions = arrayForKey("else");
-    if (!elseActions.isNull()) {
-        subStack.key = "else";
+    elseActions = oo::PListView(statement).get<NSArray*>(@"else");
+    if (elseActions != nil) {
+        subStack.key = @"else";
         elseActions = OOSanitizeLegacyScriptInternal(elseActions, &subStack, allowAIMethods);
     }
 
     // If neither does anything, the statment has no effect.
-    if (doActions.count() == 0 && elseActions.count() == 0) {
-        return oo::PList();
+    if ([doActions count] == 0 && [elseActions count] == 0) {
+        return nil;
     }
 
-    if (doActions.isNull())
-        doActions = oo::PList(oo::PList::Array { });
-    if (elseActions.isNull())
-        elseActions = oo::PList(oo::PList::Array { });
+    if (doActions == nil)
+        doActions = [NSArray array];
+    if (elseActions == nil)
+        elseActions = [NSArray array];
 
-    return oo::PList(oo::PList::Array { oo::PList(true), std::move(conditions), std::move(doActions), std::move(elseActions) });
+    return [NSArray arrayWithObjects:[NSNumber numberWithBool:YES], conditions, doActions, elseActions, nil];
 }
-} // namespace
 
-namespace {
-static oo::PList SanitizeActionStatement(const std::string& statement, SanStackElement* stack, BOOL allowAIMethods)
+static NSArray* SanitizeActionStatement(NSString* statement, SanStackElement* stack, BOOL allowAIMethods)
 {
-    std::vector<std::string> tokens;
+    NSMutableArray* tokens = nil;
     NSUInteger tokenCount;
-    std::string rawSelectorString;
-    std::optional<std::string> selectorString;
-    std::optional<std::string> argument;
+    NSString* rawSelectorString = nil;
+    NSString* selectorString = nil;
+    NSString* argument = nil;
 
-    tokens = oo::str::tokens(statement);
-    tokenCount = tokens.size();
+    tokens = ScanTokensFromString(statement);
+    tokenCount = [tokens count];
     if (tokenCount == 0)
-        return oo::PList();
+        return nil;
 
-    rawSelectorString = tokens[0];
+    rawSelectorString = [tokens objectAtIndex:0];
     selectorString = SanitizeActionMethod(rawSelectorString, allowAIMethods);
-    if (!selectorString) {
-        OOLog(@"script.unpermittedMethod", @"***** SCRIPT ERROR: in %@ (\"%@\"), method \"%@\" not allowed.", oo::NSStringFrom(StringFromStack(stack)), oo::NSStringFrom(statement), oo::NSStringFrom(rawSelectorString));
-        return oo::PList();
+    if (selectorString == nil) {
+        OOLog(@"script.unpermittedMethod", @"***** SCRIPT ERROR: in %@ (\"%@\"), method \"%@\" not allowed.", StringFromStack(stack), statement, rawSelectorString);
+        return nil;
     }
 
-    if (*selectorString == "doNothing") {
-        return oo::PList();
+    if ([selectorString isEqualToString:@"doNothing"]) {
+        return nil;
     }
 
-    if (oo::str::hasSuffix(*selectorString, ":")) {
+    if ([selectorString hasSuffix:@":"]) {
         // Expects an argument
         if (tokenCount == 2) {
-            argument = tokens[1];
+            argument = [tokens objectAtIndex:1];
         } else {
-            // The remaining tokens joined by " " ("" when there are none).
-            std::string joined;
-            for (NSUInteger i = 1; i < tokenCount; i++) {
-                if (i != 1)
-                    joined += " ";
-                joined += tokens[i];
-            }
-            argument = joined;
+            [tokens removeObjectAtIndex:0];
+            argument = [tokens componentsJoinedByString:@" "];
         }
 
-        argument = oo::str::replaceOccurrences(*argument, "[credits_number]", "[_oo_legacy_credits_number]");
+        argument = [argument stringByReplacingOccurrencesOfString:@"[credits_number]" withString:@"[_oo_legacy_credits_number]"];
     }
 
-    // A statement with no argument is (false, selector): +arrayWithObjects: stopped at the nil.
-    oo::PList::Array result { oo::PList(false), oo::PList(*selectorString) };
-    if (argument)
-        result.push_back(oo::PList(*argument));
-    return oo::PList(std::move(result));
+    return [NSArray arrayWithObjects:[NSNumber numberWithBool:NO], selectorString, argument, nil];
 }
-} // namespace
 
-namespace {
-static OOOperationType ClassifyLHSConditionSelector(const std::string& selectorString, std::optional<std::string>* outSanitizedSelector)
+static OOOperationType ClassifyLHSConditionSelector(NSString* selectorString, NSString** outSanitizedSelector, SanStackElement* stack)
 {
     assert(outSanitizedSelector != NULL);
 
     *outSanitizedSelector = selectorString;
 
     // Allow arbitrary mission_foo or local_foo pseudo-selectors.
-    if (oo::str::hasPrefix(selectorString, "mission_"))
+    if ([selectorString hasPrefix:@"mission_"])
         return OP_MISSION_VAR;
-    if (oo::str::hasPrefix(selectorString, "local_"))
+    if ([selectorString hasPrefix:@"local_"])
         return OP_LOCAL_VAR;
 
     // If it's a real method, check against whitelist.
     *outSanitizedSelector = SanitizeQueryMethod(selectorString);
-    if (!*outSanitizedSelector) {
+    if (*outSanitizedSelector == nil) {
         return OP_INVALID;
     }
 
     // If it's a real method, and in the whitelist, classify by suffix.
-    if (oo::str::hasSuffix(selectorString, "_string"))
+    if ([selectorString hasSuffix:@"_string"])
         return OP_STRING;
-    if (oo::str::hasSuffix(selectorString, "_number"))
+    if ([selectorString hasSuffix:@"_number"])
         return OP_NUMBER;
-    if (oo::str::hasSuffix(selectorString, "_bool"))
+    if ([selectorString hasSuffix:@"_bool"])
         return OP_BOOL;
 
     // If we got here, something's wrong.
-    OOLog(@"script.sanitize.unclassifiedSelector", @"***** ERROR: Whitelisted query method \"%@\" has no type suffix, treating as invalid.", oo::NSStringFrom(selectorString));
+    OOLog(@"script.sanitize.unclassifiedSelector", @"***** ERROR: Whitelisted query method \"%@\" has no type suffix, treating as invalid.", selectorString);
     return OP_INVALID;
 }
-} // namespace
 
-namespace {
-
-// The whitelist.plist array under key as a set of its strings (-oo_arrayForKey:, then
-// -initWithArray:; a missing key gives an empty set, as +setWithArray:nil did).
-std::set<std::string> WhitelistSet(const oo::PList& whitelist, std::string_view key)
+static NSString* SanitizeQueryMethod(NSString* selectorString)
 {
-    std::set<std::string> result;
-    const oo::PList* value = whitelist.find(key);
-    if (value != nullptr) {
-        if (const oo::PList::Array* array = value->getIf<oo::PList::Array>()) {
-            for (const oo::PList& element : *array) {
-                if (const std::string* string = element.getIf<std::string>())
-                    result.insert(*string);
-            }
-        }
+    static NSSet* whitelist = nil;
+    static NSDictionary* aliases = nil;
+    NSString* aliasedSelector = nil;
+
+    if (whitelist == nil) {
+        whitelist = [[NSSet alloc] initWithArray:oo::PListView([ResourceManager whitelistDictionary]).get<NSArray*>(@"query_methods")];
+        aliases = [oo::PListView([ResourceManager whitelistDictionary]).get<NSDictionary*>(@"query_method_aliases") retain];
     }
-    return result;
+
+    aliasedSelector = oo::PListView(aliases).get<NSString*>(selectorString);
+    if (aliasedSelector != nil)
+        selectorString = aliasedSelector;
+
+    if (![whitelist containsObject:selectorString])
+        selectorString = nil;
+
+    return selectorString;
 }
 
-// The whitelist.plist dictionary under key (-oo_dictionaryForKey:; null if missing).
-oo::PList WhitelistDictionary(const oo::PList& whitelist, std::string_view key)
+static NSString* SanitizeActionMethod(NSString* selectorString, BOOL allowAIMethods)
 {
-    const oo::PList* value = whitelist.find(key);
-    return (value != nullptr && value->isDict()) ? *value : oo::PList();
-}
+    static NSSet* whitelist = nil;
+    static NSSet* whitelistWithAI = nil;
+    static NSDictionary* aliases = nil;
+    static NSDictionary* aliasesWithAI = nil;
+    NSString* aliasedSelector = nil;
 
-// An alias lookup as -oo_stringForKey: did it: a string, or a number's -stringValue; else none.
-std::optional<std::string> AliasFor(const oo::PList& aliases, const std::string& selectorString)
-{
-    const oo::PList* value = aliases.find(selectorString);
-    if (value == nullptr || !(value->isString() || value->isNumber()))
-        return std::nullopt;
-    return aliases.get<std::string>(selectorString);
-}
+    if (whitelist == nil) {
+        NSArray* actionMethods = nil;
+        NSArray* aiMethods = nil;
+        NSArray* aiAndActionMethods = nil;
 
-} // namespace
+        actionMethods = oo::PListView([ResourceManager whitelistDictionary]).get<NSArray*>(@"action_methods");
+        aiMethods = oo::PListView([ResourceManager whitelistDictionary]).get<NSArray*>(@"ai_methods");
+        aiAndActionMethods = oo::PListView([ResourceManager whitelistDictionary]).get<NSArray*>(@"ai_and_action_methods");
 
-namespace {
-static std::optional<std::string> SanitizeQueryMethod(const std::string& selectorString)
-{
-    static const oo::PList whitelistDictionary = [ResourceManager cxx_whitelistDictionary];
-    static const std::set<std::string> whitelist = WhitelistSet(whitelistDictionary, "query_methods");
-    static const oo::PList aliases = WhitelistDictionary(whitelistDictionary, "query_method_aliases");
+        if (actionMethods == nil)
+            actionMethods = [NSArray array];
+        if (aiMethods == nil)
+            aiMethods = [NSArray array];
 
-    std::optional<std::string> result = selectorString;
-    std::optional<std::string> aliasedSelector = AliasFor(aliases, selectorString);
-    if (aliasedSelector)
-        result = aliasedSelector;
+        if (aiAndActionMethods != nil)
+            actionMethods = [actionMethods arrayByAddingObjectsFromArray:aiAndActionMethods];
 
-    if (whitelist.find(*result) == whitelist.end())
-        result = std::nullopt;
+        whitelist = [[NSSet alloc] initWithArray:actionMethods];
+        whitelistWithAI = [[NSSet alloc] initWithArray:[aiMethods arrayByAddingObjectsFromArray:actionMethods]];
 
-    return result;
-}
-} // namespace
+        aliases = [oo::PListView([ResourceManager whitelistDictionary]).get<NSDictionary*>(@"action_method_aliases") retain];
 
-namespace {
-static std::optional<std::string> SanitizeActionMethod(const std::string& selectorString, BOOL allowAIMethods)
-{
-    static const oo::PList whitelistDictionary = [ResourceManager cxx_whitelistDictionary];
-    static std::set<std::string> whitelist;
-    static std::set<std::string> whitelistWithAI;
-    static oo::PList aliases;
-    static oo::PList aliasesWithAI;
-    static bool inited = false;
-
-    if (!inited) {
-        std::set<std::string> actionMethods = WhitelistSet(whitelistDictionary, "action_methods");
-        std::set<std::string> aiMethods = WhitelistSet(whitelistDictionary, "ai_methods");
-        std::set<std::string> aiAndActionMethods = WhitelistSet(whitelistDictionary, "ai_and_action_methods");
-
-        actionMethods.insert(aiAndActionMethods.begin(), aiAndActionMethods.end());
-
-        whitelist = actionMethods;
-        whitelistWithAI = aiMethods;
-        whitelistWithAI.insert(actionMethods.begin(), actionMethods.end());
-
-        aliases = WhitelistDictionary(whitelistDictionary, "action_method_aliases");
-
-        // ai_method_aliases overlaid with action_method_aliases: the action entries win, as
-        // -dictionaryByAddingEntriesFromDictionary:aliases did.
-        aliasesWithAI = WhitelistDictionary(whitelistDictionary, "ai_method_aliases");
-        if (!aliasesWithAI.isNull()) {
-            if (const oo::PList::Dict* actionAliases = aliases.getIf<oo::PList::Dict>()) {
-                oo::PList::Dict* merged = aliasesWithAI.getIf<oo::PList::Dict>();
-                for (const auto& [key, value] : *actionAliases)
-                    merged->insert_or_assign(key, value);
-            }
+        aliasesWithAI = oo::PListView([ResourceManager whitelistDictionary]).get<NSDictionary*>(@"ai_method_aliases");
+        if (aliasesWithAI != nil) {
+            aliasesWithAI = [[aliasesWithAI dictionaryByAddingEntriesFromDictionary:aliases] copy];
         } else {
-            aliasesWithAI = aliases;
+            aliasesWithAI = [aliases copy];
         }
-
-        inited = true;
     }
 
-    std::optional<std::string> result = selectorString;
-    std::optional<std::string> aliasedSelector = AliasFor(allowAIMethods ? aliasesWithAI : aliases, selectorString);
-    if (aliasedSelector)
-        result = aliasedSelector;
+    aliasedSelector = oo::PListView((allowAIMethods ? aliasesWithAI : aliases)).get<NSString*>(selectorString);
+    if (aliasedSelector != nil)
+        selectorString = aliasedSelector;
 
-    const std::set<std::string>& list = allowAIMethods ? whitelistWithAI : whitelist;
-    if (list.find(*result) == list.end())
-        result = std::nullopt;
+    if (![(allowAIMethods ? whitelistWithAI : whitelist) containsObject:selectorString])
+        selectorString = nil;
 
-    return result;
+    return selectorString;
 }
-} // namespace
 
 //	Return a conditions array that always evaluates as false.
-namespace {
-static oo::PList AlwaysFalseConditions(void)
+static NSArray* AlwaysFalseConditions(void)
 {
-    /*	Upstream bug kept (proposed ADR-0043; goldens decide): the cache is only filled when it is
-            already non-nil, so this always returns nil (a null PList). A failed conditions array
-            therefore drops its enclosing conditional statement.
-    */
-    static oo::PList alwaysFalse;
-    if (!alwaysFalse.isNull()) {
-        alwaysFalse = oo::PList(oo::PList::Array { oo::PList(oo::PList::Array { oo::PList::unsignedInteger(OP_FALSE) }) });
+    static NSArray* alwaysFalse = nil;
+    if (alwaysFalse != nil) {
+        alwaysFalse = [NSArray arrayWithObject:[NSArray arrayWithObject:[NSNumber numberWithUnsignedInt:OP_FALSE]]];
+        [alwaysFalse retain];
     }
 
     return alwaysFalse;
 }
-} // namespace
 
-namespace {
-static BOOL IsAlwaysFalseConditions(const oo::PList& conditions)
+static BOOL IsAlwaysFalseConditions(NSArray* conditions)
 {
-    // -oo_arrayAtIndex:0 (an array element, else nil), then its -oo_unsignedIntAtIndex:0.
-    const oo::PList* first = conditions.at(0);
-    oo::PList firstCondition = (first != nullptr && first->isArray()) ? *first : oo::PList();
-    return firstCondition.at<unsigned int>(0) == OP_FALSE;
+    return oo::PListView(oo::PListView(conditions).at<NSArray*>(0)).at<unsigned int>(0) == OP_FALSE;
 }
-} // namespace
 
-namespace {
-static std::string StringFromStackInternal(SanStackElement* topOfStack)
+static NSMutableString* StringFromStackInternal(SanStackElement* topOfStack)
 {
     if (topOfStack == NULL)
-        return std::string();
+        return nil;
 
-    std::string base = StringFromStackInternal(topOfStack->back);
+    NSMutableString* base = StringFromStackInternal(topOfStack->back);
+    if (base == nil)
+        base = [NSMutableString string];
 
-    std::string string = topOfStack->key ? *topOfStack->key : oo::str::format("%zu", (size_t)topOfStack->index);
-    if (base.size() > 0)
-        base += ".";
+    NSString* string = topOfStack->key;
+    if (string == nil)
+        string = [NSString stringWithFormat:@"%zu", topOfStack->index];
+    if ([base length] > 0)
+        [base appendString:@"."];
 
-    base += string;
+    [base appendString:string];
 
     return base;
 }
-} // namespace
 
-namespace {
-static std::string StringFromStack(SanStackElement* topOfStack)
+static NSString* StringFromStack(SanStackElement* topOfStack)
 {
     return StringFromStackInternal(topOfStack);
 }
-} // namespace

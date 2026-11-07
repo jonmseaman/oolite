@@ -27,7 +27,6 @@ SOFTWARE.
 
 #import "OOSoundSourcePool.h"
 #import "OOSound.h"
-#import "OOStringBridge.h"
 #import "Universe.h"
 
 enum {
@@ -87,10 +86,12 @@ typedef struct OOSoundSourcePoolElement {
     }
     free(_sources);
 
+    [_lastKey release];
+
     [super dealloc];
 }
 
-- (void)playSoundWithKey:(const std::string&)key
+- (void)playSoundWithKey:(NSString*)key
                 priority:(float)priority
               expiryTime:(OOTimeDelta)expiryTime
                  overlap:(BOOL)overlap
@@ -106,7 +107,7 @@ typedef struct OOSoundSourcePoolElement {
     absExpiryTime = expiryTime + now;
 
     // Avoid repeats if required
-    if (now < _nextRepeat && _lastKey == key)
+    if (now < _nextRepeat && [key isEqualToString:_lastKey])
         return;
     if (!overlap && _reserved != kNoSlot && [_sources[_reserved].source isPlaying])
         return;
@@ -118,7 +119,7 @@ typedef struct OOSoundSourcePoolElement {
     element = &_sources[slot];
 
     // Load sound
-    sound = [OOSound soundWithCustomSoundKey:oo::NSStringFrom(key)];
+    sound = [OOSound soundWithCustomSoundKey:key];
     if (sound == nil)
         return;
 
@@ -142,14 +143,15 @@ typedef struct OOSoundSourcePoolElement {
     element->priority = priority;
     if (_minRepeat > 0.0) {
         _nextRepeat = now + _minRepeat;
-        _lastKey = key;
+        [_lastKey release];
+        _lastKey = [key copy];
     }
 
     // Set staring search location for next slot lookup
     _latest = slot;
 }
 
-- (void)playSoundWithKey:(const std::string&)key
+- (void)playSoundWithKey:(NSString*)key
                 priority:(float)priority
               expiryTime:(OOTimeDelta)expiryTime
 {
@@ -160,7 +162,7 @@ typedef struct OOSoundSourcePoolElement {
                   position:kZeroVector];
 }
 
-- (void)playSoundWithKey:(const std::string&)key
+- (void)playSoundWithKey:(NSString*)key
                 priority:(float)priority
                 position:(Vector)position
 {
@@ -171,7 +173,7 @@ typedef struct OOSoundSourcePoolElement {
                   position:position];
 }
 
-- (void)playSoundWithKey:(const std::string&)key
+- (void)playSoundWithKey:(NSString*)key
                 priority:(float)priority
 {
     [self playSoundWithKey:key
@@ -179,17 +181,17 @@ typedef struct OOSoundSourcePoolElement {
                 expiryTime:0.5 + randf() * 0.1];
 }
 
-- (void)playSoundWithKey:(const std::string&)key
+- (void)playSoundWithKey:(NSString*)key
 {
     [self playSoundWithKey:key priority:1.0];
 }
 
-- (void)playSoundWithKey:(const std::string&)key position:(Vector)position
+- (void)playSoundWithKey:(NSString*)key position:(Vector)position
 {
     [self playSoundWithKey:key priority:1.0 position:position];
 }
 
-- (void)playSoundWithKey:(const std::string&)key overlap:(BOOL)overlap
+- (void)playSoundWithKey:(NSString*)key overlap:(BOOL)overlap
 {
     [self playSoundWithKey:key
                   priority:1.0
@@ -198,7 +200,7 @@ typedef struct OOSoundSourcePoolElement {
                   position:kZeroVector];
 }
 
-- (void)playSoundWithKey:(const std::string&)key overlap:(BOOL)overlap position:(Vector)position
+- (void)playSoundWithKey:(NSString*)key overlap:(BOOL)overlap position:(Vector)position
 {
     [self playSoundWithKey:key
                   priority:1.0

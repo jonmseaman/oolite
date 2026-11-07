@@ -36,9 +36,9 @@ SOFTWARE.
 + (void)setMasterVolume:(float)fraction;
 + (float)masterVolume;
 
-- (id)initWithContentsOfFile:(id)path; // path: an Objective-C string. Shared selector (proposed ADR-0043).
+- (id)initWithContentsOfFile:(NSString*)path;
 
-- (id)name; // an Objective-C string. Shared selector (proposed ADR-0043).
+- (NSString*)name;
 
 + (BOOL)isSoundOK;
 

@@ -24,20 +24,7 @@ MA 02110-1301, USA.
 */
 
 #import "OOJSInterfaceDefinition.h"
-#import "OOFoundationBridge.h"
 #import "OOJavaScriptEngine.h"
-
-namespace {
-// -caseInsensitiveCompare: as the definitions used it: a nil receiver answers
-// NSOrderedSame (a message to nil); a nil argument compares as the empty string.
-static NSComparisonResult CaseInsensitiveCompare(const std::optional<std::string>& a, const std::optional<std::string>& b)
-{
-    if (!a.has_value())
-        return NSOrderedSame;
-    int order = oo::str::caseInsensitiveCompare(*a, b.value_or(std::string()));
-    return (order < 0) ? NSOrderedAscending : ((order > 0) ? NSOrderedDescending : NSOrderedSame);
-}
-} // namespace
 
 @implementation OOJSInterfaceDefinition
 
@@ -75,40 +62,46 @@ static NSComparisonResult CaseInsensitiveCompare(const std::optional<std::string
                                                   object:[OOJavaScriptEngine sharedEngine]];
 
     [_owningScript release];
+    [_title release];
+    [_summary release];
+    [_category release];
 
     [self deleteJSPointers];
 
     [super dealloc];
 }
 
-- (id)title // shared selector (proposed ADR-0043)
+- (NSString*)title
 {
-    return oo::NSStringOrNil(_title);
+    return _title;
 }
 
-- (void)setTitle:(id)title // shared selector (proposed ADR-0043)
+- (void)setTitle:(NSString*)title
 {
-    _title = oo::OptionalString(title);
+    [_title autorelease];
+    _title = [title retain];
 }
 
-- (std::optional<std::string>)category
+- (NSString*)category
 {
     return _category;
 }
 
-- (void)setCategory:(const std::string&)category
+- (void)setCategory:(NSString*)category
 {
-    _category = category;
+    [_category autorelease];
+    _category = [category retain];
 }
 
-- (std::optional<std::string>)summary
+- (NSString*)summary
 {
     return _summary;
 }
 
-- (void)setSummary:(const std::string&)summary
+- (void)setSummary:(NSString*)summary
 {
-    _summary = summary;
+    [_summary autorelease];
+    _summary = [summary retain];
 }
 
 - (JSValue)callback
@@ -139,7 +132,7 @@ static NSComparisonResult CaseInsensitiveCompare(const std::optional<std::string
     OOJSRelinquishContext(context);
 }
 
-- (void)runCallback:(id)key // shared selector (proposed ADR-0043)
+- (void)runCallback:(NSString*)key
 {
     OOJavaScriptEngine* engine = [OOJavaScriptEngine sharedEngine];
     JSContext* context = OOJSAcquireContext();
@@ -177,9 +170,9 @@ static NSComparisonResult CaseInsensitiveCompare(const std::optional<std::string
 
 - (NSComparisonResult)interfaceCompare:(OOJSInterfaceDefinition*)other
 {
-    NSComparisonResult byCategory = CaseInsensitiveCompare(_category, [other category]);
+    NSComparisonResult byCategory = [_category caseInsensitiveCompare:[other category]];
     if (byCategory == NSOrderedSame) {
-        return CaseInsensitiveCompare(_title, oo::OptionalString([other title]));
+        return [_title caseInsensitiveCompare:[other title]];
     } else {
         return byCategory;
     }

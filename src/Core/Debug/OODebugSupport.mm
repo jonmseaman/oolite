@@ -31,12 +31,9 @@ SOFTWARE.
 #import "GameController.h"
 #import "OODebugMonitor.h"
 #import "OODebugTCPConsoleClient.h"
-#import "OOFoundationBridge.h"
 #import "OOJavaScriptEngine.h"
 #import "OOPListView.h"
 #import "ResourceManager.h"
-
-#include "oofnd/PListGet.hpp"
 
 #if OOLITE_MAC_COCOA_UI
 static id LoadDebugPlugIn(void);
@@ -54,41 +51,37 @@ static id sDebugPlugInController;
 
 void OOInitDebugSupport(void)
 {
-    std::optional<std::string> debugOXPPath;
-    oo::PList debugSettings;
-    std::optional<std::string> consoleHost;
+    NSString* debugOXPPath = nil;
+    NSDictionary* debugSettings = nil;
+    NSString* consoleHost = nil;
     unsigned short consolePort = 0;
     id<OODebuggerInterface> debugger = nil;
     BOOL activateDebugConsole = NO;
 
     // Load debug settings.
-    debugSettings = oo::PListFrom([ResourceManager dictionaryFromFilesNamed:@"debugConfig.plist"
-                                                                   inFolder:@"Config"
-                                                                  mergeMode:MERGE_BASIC
-                                                                      cache:NO]);
+    debugSettings = [ResourceManager dictionaryFromFilesNamed:@"debugConfig.plist"
+                                                     inFolder:@"Config"
+                                                    mergeMode:MERGE_BASIC
+                                                        cache:NO];
 
     // Check that the debug OXP is installed. If not, we don't enable debug support.
-    debugOXPPath = oo::OptionalString([ResourceManager pathForFileNamed:@"DebugOXPLocatorBeacon.magic" inFolder:@"nil"]);
-    if (debugOXPPath.has_value()) {
+    debugOXPPath = [ResourceManager pathForFileNamed:@"DebugOXPLocatorBeacon.magic" inFolder:@"nil"];
+    if (debugOXPPath != nil) {
         // Load plug-in debugging code on platforms where this is supported.
         sDebugPlugInController = [(id)LoadDebugPlugIn() retain];
 
-        // oo_stringForKey: a string, or a number's string value; nil for anything else.
-        const oo::PList* consoleHostValue = debugSettings.get<oo::PList>("console-host");
-        if (consoleHostValue != nullptr && (consoleHostValue->isString() || consoleHostValue->isNumber())) {
-            consoleHost = debugSettings.get<std::string>("console-host");
-        }
-        consolePort = debugSettings.get<unsigned short>("console-port");
+        consoleHost = oo::PListView(debugSettings).get<NSString*>(@"console-host");
+        consolePort = oo::PListView(debugSettings).get<unsigned short>(@"console-port");
 
         // If consoleHost is nil, and the debug plug-in can set up a debugger, use that.
-        if (!consoleHost.has_value() && [sDebugPlugInController respondsToSelector:@selector(setUpDebugger)]) {
+        if (consoleHost == nil && [sDebugPlugInController respondsToSelector:@selector(setUpDebugger)]) {
             debugger = [sDebugPlugInController setUpDebugger];
             [[OODebugMonitor sharedDebugMonitor] setUsingPlugInController:YES];
         }
 
         // Otherwise, use TCP debugger connection.
         if (debugger == nil) {
-            debugger = [[OODebugTCPConsoleClient alloc] initWithAddress:oo::NSStringOrNil(consoleHost)
+            debugger = [[OODebugTCPConsoleClient alloc] initWithAddress:consoleHost
                                                                    port:consolePort];
             [debugger autorelease];
             [[OODebugMonitor sharedDebugMonitor] setUsingPlugInController:NO];
@@ -98,7 +91,7 @@ void OOInitDebugSupport(void)
     }
 
     if (!activateDebugConsole) {
-        activateDebugConsole = debugSettings.get<bool>("always-load-debug-console");
+        activateDebugConsole = oo::PListView(debugSettings).get<BOOL>(@"always-load-debug-console");
     }
 
     if (activateDebugConsole) {

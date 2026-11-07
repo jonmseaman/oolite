@@ -25,10 +25,8 @@ MA 02110-1301, USA.
 */
 
 #import "OOJoystickManager.h"
-#import "OOFoundationBridge.h"
 #import "OOLogging.h"
-
-#include "oofnd/String.hpp"
+#import "OOPListView.h"
 
 static Class sStickHandlerClass = Nil;
 static id sSharedStickHandler = nil;
@@ -183,47 +181,46 @@ static id sSharedStickHandler = nil;
 - (void)saveProfileForAxis:(int)axis
 {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    oo::PList::Dict dict;
+    NSMutableDictionary* dict = [[NSMutableDictionary alloc] init];
     OOJoystickAxisProfile* profile;
     OOJoystickStandardAxisProfile* standard_profile;
     OOJoystickSplineAxisProfile* spline_profile;
     std::vector<NSPoint> controlPoints;
-    oo::PList::Array points;
+    NSMutableArray* points;
     NSPoint point;
     NSUInteger i;
 
     profile = [self getProfileForAxis:axis];
     if (!profile)
         return;
-    dict["Deadzone"] = oo::PList([profile deadzone]);
+    [dict setObject:[NSNumber numberWithDouble:[profile deadzone]] forKey:@"Deadzone"];
     if ([profile isKindOfClass:[OOJoystickStandardAxisProfile class]]) {
         standard_profile = (OOJoystickStandardAxisProfile*)profile;
-        dict["Type"] = oo::PList("Standard");
-        dict["Power"] = oo::PList([standard_profile power]);
-        dict["Parameter"] = oo::PList([standard_profile parameter]);
+        [dict setObject:@"Standard" forKey:@"Type"];
+        [dict setObject:[NSNumber numberWithDouble:[standard_profile power]] forKey:@"Power"];
+        [dict setObject:[NSNumber numberWithDouble:[standard_profile parameter]] forKey:@"Parameter"];
     } else if ([profile isKindOfClass:[OOJoystickSplineAxisProfile class]]) {
         spline_profile = (OOJoystickSplineAxisProfile*)profile;
-        dict["Type"] = oo::PList("Spline");
+        [dict setObject:@"Spline" forKey:@"Type"];
         controlPoints = [spline_profile controlPoints];
-        points.reserve(controlPoints.size());
+        points = [[NSMutableArray alloc] initWithCapacity:controlPoints.size()];
         for (i = 0; i < controlPoints.size(); i++) {
             point = controlPoints[i];
-            // +numberWithFloat: as before: single-precision reals, so the defaults file prints them
-            // with %.7g (proposed ADR-0043 Amendment 2).
-            points.push_back(oo::PList(oo::PList::Array {
-                oo::PList::singleReal(static_cast<float>(point.x)),
-                oo::PList::singleReal(static_cast<float>(point.y)) }));
+            [points addObject:[NSArray arrayWithObjects:
+                                      [NSNumber numberWithFloat:point.x],
+                                  [NSNumber numberWithFloat:point.y],
+                                  nil]];
         }
-        dict["ControlPoints"] = oo::PList(std::move(points));
+        [dict setObject:points forKey:@"ControlPoints"];
     } else {
-        dict["Type"] = oo::PList("Standard");
+        [dict setObject:@"Standard" forKey:@"Type"];
     }
     if (axis == AXIS_ROLL) {
-        [defaults setObject:oo::ObjectFromPList(oo::PList(std::move(dict))) forKey:STICK_ROLL_AXIS_PROFILE_SETTING];
+        [defaults setObject:dict forKey:STICK_ROLL_AXIS_PROFILE_SETTING];
     } else if (axis == AXIS_PITCH) {
-        [defaults setObject:oo::ObjectFromPList(oo::PList(std::move(dict))) forKey:STICK_PITCH_AXIS_PROFILE_SETTING];
+        [defaults setObject:dict forKey:STICK_PITCH_AXIS_PROFILE_SETTING];
     } else if (axis == AXIS_YAW) {
-        [defaults setObject:oo::ObjectFromPList(oo::PList(std::move(dict))) forKey:STICK_YAW_AXIS_PROFILE_SETTING];
+        [defaults setObject:dict forKey:STICK_YAW_AXIS_PROFILE_SETTING];
     }
     return;
 }
@@ -231,38 +228,38 @@ static id sSharedStickHandler = nil;
 - (void)loadProfileForAxis:(int)axis
 {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    oo::PList dict;
+    NSDictionary* dict;
     OOJoystickStandardAxisProfile* standard_profile;
     OOJoystickSplineAxisProfile* spline_profile;
 
     if (axis == AXIS_ROLL) {
-        dict = oo::PListFrom([defaults objectForKey:STICK_ROLL_AXIS_PROFILE_SETTING]);
+        dict = [defaults objectForKey:STICK_ROLL_AXIS_PROFILE_SETTING];
     } else if (axis == AXIS_PITCH) {
-        dict = oo::PListFrom([defaults objectForKey:STICK_PITCH_AXIS_PROFILE_SETTING]);
+        dict = [defaults objectForKey:STICK_PITCH_AXIS_PROFILE_SETTING];
     } else if (axis == AXIS_YAW) {
-        dict = oo::PListFrom([defaults objectForKey:STICK_YAW_AXIS_PROFILE_SETTING]);
+        dict = [defaults objectForKey:STICK_YAW_AXIS_PROFILE_SETTING];
     } else {
         return;
     }
 
-    const oo::PList* type = dict.find("Type");
-    if (type != nullptr && type->isString() && *type->getIf<std::string>() == "Standard") {
+    NSString* type = [dict objectForKey:@"Type"];
+    if ([type isEqualToString:@"Standard"]) {
         standard_profile = [[OOJoystickStandardAxisProfile alloc] init];
-        [standard_profile setDeadzone:dict.get<double>("Deadzone")];
-        [standard_profile setPower:dict.get<double>("Power")];
-        [standard_profile setParameter:dict.get<double>("Parameter")];
+        [standard_profile setDeadzone:[[dict objectForKey:@"Deadzone"] doubleValue]];
+        [standard_profile setPower:[[dict objectForKey:@"Power"] doubleValue]];
+        [standard_profile setParameter:[[dict objectForKey:@"Parameter"] doubleValue]];
         [self setProfile:[standard_profile autorelease] forAxis:axis];
-    } else if (type != nullptr && type->isString() && *type->getIf<std::string>() == "Spline") {
+    } else if ([type isEqualToString:@"Spline"]) {
         spline_profile = [[OOJoystickSplineAxisProfile alloc] init];
-        [spline_profile setDeadzone:dict.get<double>("Deadzone")];
-        const oo::PList *points = dict.get<oo::PList::Array>("ControlPoints"), *pointArray;
+        [spline_profile setDeadzone:[[dict objectForKey:@"Deadzone"] doubleValue]];
+        NSArray *points = [dict objectForKey:@"ControlPoints"], *pointArray;
         NSPoint point;
         NSUInteger i;
 
-        for (i = 0; points != nullptr && i < points->count(); i++) {
-            pointArray = points->at<oo::PList::Array>(i);
-            if (pointArray != nullptr && pointArray->count() >= 2) {
-                point = NSMakePoint(pointArray->at<float>(0), pointArray->at<float>(1));
+        for (i = 0; i < [points count]; i++) {
+            pointArray = [points objectAtIndex:i];
+            if ([pointArray count] >= 2) {
+                point = NSMakePoint([[pointArray objectAtIndex:0] floatValue], [[pointArray objectAtIndex:1] floatValue]);
                 [spline_profile addControl:point];
             }
         }
@@ -272,62 +269,66 @@ static id sSharedStickHandler = nil;
     }
 }
 
-- (std::vector<std::string>)listSticks
+- (NSArray*)listSticks
 {
     NSUInteger i, stickCount = [self joystickCount];
 
-    std::vector<std::string> stickList;
+    NSMutableArray* stickList = [NSMutableArray array];
     for (i = 0; i < stickCount; i++) {
-        stickList.push_back(oo::StdString([self nameOfJoystick:i]));
+        [stickList addObject:[self nameOfJoystick:i]];
     }
     return stickList;
 }
 
-- (oo::PList)axisFunctions
+- (NSDictionary*)axisFunctions
 {
     int i, j;
-    oo::PList::Dict fnList;
+    NSMutableDictionary* fnList = [NSMutableDictionary dictionary];
 
     // Add axes
     for (i = 0; i < MAX_AXES; i++) {
         for (j = 0; j < MAX_STICKS; j++) {
             if (axismap[j][i] >= 0) {
-                oo::PList::Dict fnDict;
-                fnDict[oo::StdString(STICK_ISAXIS)] = oo::PList(static_cast<bool>(YES));
-                fnDict[oo::StdString(STICK_NUMBER)] = oo::PList(j);
-                fnDict[oo::StdString(STICK_AXBUT)] = oo::PList(i);
-                fnList[ENUMKEY(axismap[j][i])] = oo::PList(std::move(fnDict));
+                NSDictionary* fnDict = [NSDictionary dictionaryWithObjectsAndKeys:
+                        [NSNumber numberWithBool:YES], STICK_ISAXIS,
+                    [NSNumber numberWithInt:j], STICK_NUMBER,
+                    [NSNumber numberWithInt:i], STICK_AXBUT,
+                    nil];
+                [fnList setValue:fnDict
+                          forKey:ENUMKEY(axismap[j][i])];
             }
         }
     }
-    return oo::PList(std::move(fnList));
+    return fnList;
 }
 
-- (oo::PList)buttonFunctions
+- (NSDictionary*)buttonFunctions
 {
     int i, j;
-    oo::PList::Dict fnList;
+    NSMutableDictionary* fnList = [NSMutableDictionary dictionary];
 
     // Add buttons
     for (i = 0; i < MAX_BUTTONS; i++) {
         for (j = 0; j < MAX_STICKS; j++) {
             if (buttonmap[j][i] >= 0) {
-                oo::PList::Dict fnDict;
-                fnDict[oo::StdString(STICK_ISAXIS)] = oo::PList(static_cast<bool>(NO));
-                fnDict[oo::StdString(STICK_NUMBER)] = oo::PList(j);
-                fnDict[oo::StdString(STICK_AXBUT)] = oo::PList(i);
-                fnList[ENUMKEY(buttonmap[j][i])] = oo::PList(std::move(fnDict));
+                NSDictionary* fnDict = [NSDictionary dictionaryWithObjectsAndKeys:
+                        [NSNumber numberWithBool:NO], STICK_ISAXIS,
+                    [NSNumber numberWithInt:j], STICK_NUMBER,
+                    [NSNumber numberWithInt:i], STICK_AXBUT,
+                    nil];
+                [fnList setValue:fnDict
+                          forKey:ENUMKEY(buttonmap[j][i])];
             }
         }
     }
-    return oo::PList(std::move(fnList));
+    return fnList;
 }
 
-- (void)setFunction:(int)function withDict:(const oo::PList&)stickFn
+- (void)setFunction:(int)function withDict:(NSDictionary*)stickFn
 {
-    BOOL isAxis = stickFn.get<bool>(oo::StdString(STICK_ISAXIS)) ? YES : NO;
-    int stickNum = stickFn.get<int>(oo::StdString(STICK_NUMBER));
-    int stickAxBt = stickFn.get<int>(oo::StdString(STICK_AXBUT));
+    BOOL isAxis = oo::PListView(stickFn).get<BOOL>(STICK_ISAXIS);
+    int stickNum = oo::PListView(stickFn).get<int>(STICK_NUMBER);
+    int stickAxBt = oo::PListView(stickFn).get<int>(STICK_AXBUT);
 
     if (isAxis) {
         [self setFunctionForAxis:stickAxBt
@@ -464,9 +465,9 @@ static id sSharedStickHandler = nil;
 {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
 
-    [defaults setObject:oo::ObjectFromPList([self axisFunctions])
+    [defaults setObject:[self axisFunctions]
                  forKey:AXIS_SETTINGS];
-    [defaults setObject:oo::ObjectFromPList([self buttonFunctions])
+    [defaults setObject:[self buttonFunctions]
                  forKey:BUTTON_SETTINGS];
     [self saveProfileForAxis:AXIS_ROLL];
     [self saveProfileForAxis:AXIS_PITCH];
@@ -476,26 +477,25 @@ static id sSharedStickHandler = nil;
 
 - (void)loadStickSettings
 {
+    unsigned i;
     [self clearMappings];
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    const oo::PList axisSettings = oo::PListFrom([defaults objectForKey:AXIS_SETTINGS]);
-    const oo::PList buttonSettings = oo::PListFrom([defaults objectForKey:BUTTON_SETTINGS]);
-    // Keys are visited in byte order (they came in hash order): where two settings claim the
-    // same stick axis or button, the last one still wins (proposed ADR-0043).
+    NSDictionary* axisSettings = [defaults objectForKey:AXIS_SETTINGS];
+    NSDictionary* buttonSettings = [defaults objectForKey:BUTTON_SETTINGS];
     if (axisSettings) {
-        if (const oo::PList::Dict* settings = axisSettings.getIf<oo::PList::Dict>()) {
-            for (const auto& [key, stickFn] : *settings) {
-                [self setFunction:oo::str::intValue(key)
-                         withDict:stickFn];
-            }
+        NSArray* keys = [axisSettings allKeys];
+        for (i = 0; i < [keys count]; i++) {
+            NSString* key = [keys objectAtIndex:i];
+            [self setFunction:[key intValue]
+                     withDict:[axisSettings objectForKey:key]];
         }
     }
     if (buttonSettings) {
-        if (const oo::PList::Dict* settings = buttonSettings.getIf<oo::PList::Dict>()) {
-            for (const auto& [key, stickFn] : *settings) {
-                [self setFunction:oo::str::intValue(key)
-                         withDict:stickFn];
-            }
+        NSArray* keys = [buttonSettings allKeys];
+        for (i = 0; i < [keys count]; i++) {
+            NSString* key = [keys objectAtIndex:i];
+            [self setFunction:[key intValue]
+                     withDict:[buttonSettings objectForKey:key]];
         }
     } else {
         // Nothing to load - set useful defaults
@@ -512,7 +512,7 @@ static id sSharedStickHandler = nil;
     return 0;
 }
 
-- (id)nameOfJoystick:(NSUInteger)stickNumber // shared selector (proposed ADR-0043)
+- (NSString*)nameOfJoystick:(NSUInteger)stickNumber
 {
     return @"Dummy joystick";
 }

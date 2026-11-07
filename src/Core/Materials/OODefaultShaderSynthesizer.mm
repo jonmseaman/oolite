@@ -36,7 +36,6 @@ SOFTWARE.
 #import "OOMaterialSpecifier.h"
 #import "OOPListView.h"
 #import "ResourceManager.h"
-#include "oofnd/StdLib.hpp"
 
 /*
  * GNUstep 1.20.1 does not support NSIntegerHashCallBacks but uses
@@ -80,7 +79,7 @@ static NSString* FormatFloat(double value);
     // _textureIDs: dictionary mapping texture file names to numerical IDs used to name variables.
     NSMutableDictionary* _textureIDs;
     // _sampledTextures: hash of integer texture IDs for which we’ve set up a sample.
-    std::unordered_set<NSUInteger> _sampledTextures; // was an integer hash table (bead oo-3rb.20)
+    NSHashTable* _sampledTextures;
 
     NSMutableDictionary* _uniformBindingNames;
 
@@ -106,7 +105,7 @@ static NSString* FormatFloat(double value);
         _completed_writeVertexTangentBasis : 1;
 
 #ifndef NDEBUG
-    std::unordered_set<SEL> _stagesInProgress; // by pointer identity, as the hash table was
+    NSHashTable* _stagesInProgress;
 #endif
 }
 
@@ -623,7 +622,8 @@ static NSString* KeyFromTextureSpec(NSDictionary* spec)
     REQUIRE_STAGE(writeTextureCoordRead);
 
     NSUInteger texID = [self assignIDForTexture:textureSpec];
-    if (_sampledTextures.insert(texID).second) {
+    if ((NSUInteger)NSHashGet(_sampledTextures, (const void*)(texID + 1)) == 0) {
+        NSHashInsertKnownAbsent(_sampledTextures, (const void*)(texID + 1));
         [_fragmentTextureLookups appendFormat:@"\tvec4 tex%zuSample = texture2D(uTexture%zu, texCoords);  // %@\n", texID, texID, oo::PListView(textureSpec).get<NSString*>(kOOTextureSpecifierNameKey)];
     }
 }
@@ -683,16 +683,16 @@ static NSString* KeyFromTextureSpec(NSDictionary* spec)
 - (void)performStage:(SEL)stage
 {
     // Ensure that we aren’t recursing.
-    if (_stagesInProgress.count(stage) != 0) {
+    if (NSHashGet(_stagesInProgress, stage) != NULL) {
         OOLogERR(@"material.synthesis.error.recursion", @"Shader synthesis recursion for stage %s.", OOSelectorName(stage));
         [NSException raise:NSInternalInconsistencyException format:@"stage recursion"];
     }
 
-    _stagesInProgress.insert(stage);
+    NSHashInsertKnownAbsent(_stagesInProgress, stage);
 
     [self performSelector:stage];
 
-    _stagesInProgress.erase(stage);
+    NSHashRemove(_stagesInProgress, stage);
 }
 #endif
 
@@ -712,12 +712,12 @@ static NSString* KeyFromTextureSpec(NSDictionary* spec)
     _textures = [[NSMutableArray alloc] init];
     _texturesByName = [[NSMutableDictionary alloc] init];
     _textureIDs = [[NSMutableDictionary alloc] init];
-    _sampledTextures.clear();
+    _sampledTextures = NSCreateHashTable(NSIntegerHashCallBacks, 0);
 
     _uniformBindingNames = [[NSMutableDictionary alloc] init];
 
 #ifndef NDEBUG
-    _stagesInProgress.clear();
+    _stagesInProgress = NSCreateHashTable(NSNonOwnedPointerHashCallBacks, 0);
 #endif
 }
 
@@ -736,12 +736,18 @@ static NSString* KeyFromTextureSpec(NSDictionary* spec)
 
     DESTROY(_texturesByName);
     DESTROY(_textureIDs);
-    _sampledTextures.clear();
+    if (_sampledTextures != NULL) {
+        NSFreeHashTable(_sampledTextures);
+        _sampledTextures = NULL;
+    }
 
     DESTROY(_uniformBindingNames);
 
 #ifndef NDEBUG
-    _stagesInProgress.clear();
+    if (_stagesInProgress != NULL) {
+        NSFreeHashTable(_stagesInProgress);
+        _stagesInProgress = NULL;
+    }
 #endif
 }
 

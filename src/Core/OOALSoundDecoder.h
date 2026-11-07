@@ -33,14 +33,12 @@ SOFTWARE.
 #import "oofnd/objc/OOObject.h"
 #import <Foundation/Foundation.h>
 
-#include "oofnd/StdLib.hpp"
-
 #define OOAL_STREAM_CHUNK_SIZE (sizeof(char) * 409600)
 
 @interface OOALSoundDecoder : OOObject
 
-- (id)initWithPath:(id)inPath; // inPath: an Objective-C string. Shared selector (proposed ADR-0043).
-+ (OOALSoundDecoder*)codecWithPath:(const std::string&)inPath;
+- (id)initWithPath:(NSString*)inPath;
++ (OOALSoundDecoder*)codecWithPath:(NSString*)inPath;
 
 // Full-buffer reading.
 - (BOOL)readCreatingBuffer:(char**)outBuffer withFrameCount:(size_t*)outSize;
@@ -58,6 +56,6 @@ SOFTWARE.
 // For streaming
 - (void)reset;
 
-- (id)name; // shared selector (proposed ADR-0043)
+- (NSString*)name;
 
 @end

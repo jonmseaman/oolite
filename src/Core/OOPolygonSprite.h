@@ -33,9 +33,6 @@ SOFTWARE.
 #import "OOOpenGLExtensionManager.h"
 #import "oofnd/objc/OOObject.h"
 
-#include "oofnd/PList.hpp"
-#include "oofnd/StdLib.hpp"
-
 @interface OOPolygonSprite : OOObject {
 @private
     GLfloat* _solidData;
@@ -49,17 +46,17 @@ SOFTWARE.
 #endif
 
 #ifndef NDEBUG
-    std::string _name; // for debugging (Foundation sweep, proposed ADR-0043)
+    NSString* _name;
 #endif
 }
 
 /*	DataArray is either an array of pairs of numbers, or an array of such
-        arrays (representing one or more contours), as property-list data.
+        arrays (representing one or more contours).
         OutlineWidth is the width of the tesselated outline, in the same scale as
         the vertices.
         Name is used for debugging only.
 */
-- (id)initWithDataArray:(const oo::PList&)dataArray outlineWidth:(GLfloat)outlineWidth name:(const std::string&)name;
+- (id)initWithDataArray:(NSArray*)dataArray outlineWidth:(GLfloat)outlineWidth name:(NSString*)name;
 
 - (void)drawFilled;
 - (void)drawOutline;

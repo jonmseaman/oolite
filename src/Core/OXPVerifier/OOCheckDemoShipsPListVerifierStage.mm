@@ -28,22 +28,20 @@ MA 02110-1301, USA.
 #if OO_OXP_VERIFIER_ENABLED
 
 #import "OOFileScannerVerifierStage.h"
-#import "OOFoundationBridge.h"
 
-static const char* const kStageName = "Checking demoships.plist";
+static NSString* const kStageName = @"Checking demoships.plist";
 
 @interface OOCheckDemoShipsPListVerifierStage (OOPrivate)
 
-// demoshipsPList is an Array, shipdataPList a Dict.
-- (void)runCheckWithDemoShips:(const oo::PList&)demoshipsPList shipData:(const oo::PList&)shipdataPList;
+- (void)runCheckWithDemoShips:(NSArray*)demoshipsPList shipData:(NSDictionary*)shipdataPList;
 
 @end
 
 @implementation OOCheckDemoShipsPListVerifierStage
 
-- (id)name // shared selector (proposed ADR-0043)
+- (NSString*)name
 {
-    return oo::NSStringFrom(kStageName);
+    return kStageName;
 }
 
 - (BOOL)shouldRun
@@ -60,35 +58,35 @@ static const char* const kStageName = "Checking demoships.plist";
 - (void)run
 {
     OOFileScannerVerifierStage* fileScanner = nil;
-    oo::PList demoshipsPList;
-    oo::PList shipdataPList;
+    NSArray* demoshipsPList = nil;
+    NSDictionary* shipdataPList = nil;
 
     fileScanner = [[self verifier] fileScannerStage];
 
-    demoshipsPList = oo::PListFrom([fileScanner plistNamed:@"demoships.plist"
-                                                  inFolder:@"Config"
-                                            referencedFrom:nil
-                                              checkBuiltIn:NO]);
+    demoshipsPList = [fileScanner plistNamed:@"demoships.plist"
+                                    inFolder:@"Config"
+                              referencedFrom:nil
+                                checkBuiltIn:NO];
 
-    if (demoshipsPList.isNull())
+    if (demoshipsPList == nil)
         return;
 
     // Check that it's an array
-    if (!demoshipsPList.isArray()) {
+    if (![demoshipsPList isKindOfClass:[NSArray class]]) {
         OOLog(@"verifyOXP.demoshipsPList.notArray", @"%@", @"***** ERROR: demoships.plist is not an array.");
         return;
     }
 
-    shipdataPList = oo::PListFrom([fileScanner plistNamed:@"shipdata.plist"
-                                                 inFolder:@"Config"
-                                           referencedFrom:nil
-                                             checkBuiltIn:NO]);
+    shipdataPList = [fileScanner plistNamed:@"shipdata.plist"
+                                   inFolder:@"Config"
+                             referencedFrom:nil
+                               checkBuiltIn:NO];
 
-    if (shipdataPList.isNull())
+    if (shipdataPList == nil)
         return;
 
     // Check that it's a dictionary
-    if (!shipdataPList.isDict()) {
+    if (![shipdataPList isKindOfClass:[NSDictionary class]]) {
         OOLog(@"verifyOXP.demoshipsPList.notDict", @"%@", @"***** ERROR: shipdata.plist is not a dictionary.");
         return;
     }
@@ -100,13 +98,13 @@ static const char* const kStageName = "Checking demoships.plist";
 
 @implementation OOCheckDemoShipsPListVerifierStage (OOPrivate)
 
-- (void)runCheckWithDemoShips:(const oo::PList&)demoshipsPList shipData:(const oo::PList&)shipdataPList
+- (void)runCheckWithDemoShips:(NSArray*)demoshipsPList shipData:(NSDictionary*)shipdataPList
 {
-    for (const oo::PList& entry : *demoshipsPList.getIf<oo::PList::Array>()) {
-        // An entry that is not a string is no key of shipdata.plist; "%@" prints the entry itself.
-        const std::string* name = entry.getIf<std::string>();
-        if (name == nullptr || shipdataPList.find(*name) == nullptr) {
-            OOLog(@"verifyOXP.demoshipsPList.unknownShip", @"----- WARNING: demoships.plist entry \"%@\" not found in shipdata.plist.", name != nullptr ? oo::NSStringFrom(*name) : oo::ObjectFromPList(entry));
+    NSString* name = nil;
+
+    foreach (name, demoshipsPList) {
+        if ([shipdataPList objectForKey:name] == nil) {
+            OOLog(@"verifyOXP.demoshipsPList.unknownShip", @"----- WARNING: demoships.plist entry \"%@\" not found in shipdata.plist.", name);
         }
     }
 }

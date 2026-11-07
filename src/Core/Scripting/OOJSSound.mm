@@ -23,7 +23,6 @@ MA 02110-1301, USA.
 */
 
 #import "OOJSSound.h"
-#import "OOFoundationBridge.h"
 #import "OOJavaScriptEngine.h"
 #import "OOMusicController.h"
 #import "ResourceManager.h"
@@ -31,7 +30,7 @@ MA 02110-1301, USA.
 
 static JSClassID sSoundClassID;
 
-static OOSound* GetNamedSound(const std::string& name);
+static OOSound* GetNamedSound(NSString* name);
 
 static JSValue SoundGetProperty(OOJS_GETTER_ARGS);
 
@@ -93,7 +92,7 @@ OOSound* SoundFromJSValue(JSContext* context, JSValueConst value)
     */
     OOJSPauseTimeLimiter();
     if ([PLAYER status] != STATUS_START_GAME && JS_IsString(value)) {
-        result = GetNamedSound(oo::StdString(OOStringFromJSValue(context, value)));
+        result = GetNamedSound(OOStringFromJSValue(context, value));
     } else {
         result = OOJSNativeObjectOfClassFromJSValue(context, value, [OOSound class]);
     }
@@ -127,14 +126,14 @@ static JSValue SoundGetProperty(OOJS_GETTER_ARGS)
     OOJS_NATIVE_EXIT
 }
 
-static OOSound* GetNamedSound(const std::string& name)
+static OOSound* GetNamedSound(NSString* name)
 {
     OOSound* sound = nil;
 
-    if (oo::str::hasPrefix(name, "[") && oo::str::hasSuffix(name, "]")) {
-        sound = [OOSound soundWithCustomSoundKey:oo::NSStringFrom(name)];
+    if ([name hasPrefix:@"["] && [name hasSuffix:@"]"]) {
+        sound = [OOSound soundWithCustomSoundKey:name];
     } else {
-        sound = [ResourceManager ooSoundNamed:oo::NSStringFrom(name) inFolder:@"Sounds"];
+        sound = [ResourceManager ooSoundNamed:name inFolder:@"Sounds"];
     }
 
     return sound;
@@ -147,18 +146,18 @@ static JSValue SoundStaticLoad(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> name;
+    NSString* name = nil;
     OOSound* sound = nil;
 
     if (argc > 0)
-        name = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (!name.has_value()) {
+        name = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (name == nil) {
         OOJSReportBadArguments(context, @"Sound", @"load", MIN(argc, 1), OOJS_ARGV, nil, @"string");
         return OOJSNativeFailure(context);
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    sound = GetNamedSound(*name);
+    sound = GetNamedSound(name);
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_OBJECT(sound);
@@ -182,13 +181,13 @@ static JSValue SoundStaticPlayMusic(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> name;
+    NSString* name = nil;
     BOOL loop = NO;
     double gain = OO_DEFAULT_SOUNDSOURCE_GAIN;
 
     if (argc > 0)
-        name = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-    if (!name.has_value()) {
+        name = OOStringFromJSValue(context, OOJS_ARGV[0]);
+    if (name == nil) {
         OOJSReportBadArguments(context, @"Sound", @"playMusic", MIN(argc, 1), OOJS_ARGV, nil, @"string");
         return OOJSNativeFailure(context);
     }
@@ -209,7 +208,7 @@ static JSValue SoundStaticPlayMusic(OOJS_NATIVE_ARGS)
     }
 
     OOJS_BEGIN_FULL_NATIVE(context)
-    [[OOMusicController sharedController] playMusicNamed:oo::NSStringFrom(*name) loop:loop gain:(float)gain];
+    [[OOMusicController sharedController] playMusicNamed:name loop:loop gain:(float)gain];
     OOJS_END_FULL_NATIVE
 
     OOJS_RETURN_VOID;
@@ -222,11 +221,11 @@ static JSValue SoundStaticStopMusic(OOJS_NATIVE_ARGS)
 {
     OOJS_NATIVE_ENTER(context)
 
-    std::optional<std::string> name;
+    NSString* name = nil;
 
     if (argc > 0) {
-        name = oo::OptionalString(OOStringFromJSValue(context, OOJS_ARGV[0]));
-        if (EXPECT_NOT(!name.has_value())) {
+        name = OOStringFromJSValue(context, OOJS_ARGV[0]);
+        if (EXPECT_NOT(name == nil)) {
             OOJSReportBadArguments(context, @"Sound", @"stopMusic", argc, OOJS_ARGV, nil, @"string or no argument");
             return OOJSNativeFailure(context);
         }
@@ -234,7 +233,7 @@ static JSValue SoundStaticStopMusic(OOJS_NATIVE_ARGS)
 
     OOJS_BEGIN_FULL_NATIVE(context)
     OOMusicController* controller = [OOMusicController sharedController];
-    if (!name.has_value() || name == oo::OptionalString([controller playingMusic])) {
+    if (name == nil || [name isEqualToString:[controller playingMusic]]) {
         [[OOMusicController sharedController] stop];
     }
     OOJS_END_FULL_NATIVE
@@ -258,12 +257,12 @@ static JSValue SoundStaticStopMusic(OOJS_NATIVE_ARGS)
     return result;
 }
 
-- (id)oo_jsDescription // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsDescription
 {
-    return oo::NSStringFrom(oo::str::format("[Sound \"%s\"]", oo::DescriptionOf([self name]).c_str()));
+    return [NSString stringWithFormat:@"[Sound \"%@\"]", [self name]];
 }
 
-- (id)oo_jsClassName // shared selector (proposed ADR-0043)
+- (NSString*)oo_jsClassName
 {
     return @"Sound";
 }

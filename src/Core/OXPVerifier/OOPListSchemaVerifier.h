@@ -36,25 +36,22 @@ SOFTWARE.
 #import "oofnd/objc/OOObject.h"
 #import <Foundation/Foundation.h>
 
-#include "oofnd/PList.hpp"
-#include "oofnd/StdLib.hpp"
-
 @interface OOPListSchemaVerifier : OOObject {
 @private
-    oo::PList _schema;
-    oo::PList _definitions; // the schema's $definitions (null if none)
+    NSDictionary* _schema;
+    NSDictionary* _definitions;
 
     id _delegate;
     uint32_t _badDelegateWarning : 1;
 }
 
-+ (instancetype)verifierWithSchema:(const oo::PList&)schema; // nil for a null schema
-- (id)initWithSchema:(const oo::PList&)schema;
++ (instancetype)verifierWithSchema:(NSDictionary*)schema;
+- (id)initWithSchema:(NSDictionary*)schema;
 
 - (void)setDelegate:(id)delegate;
 - (id)delegate;
 
-- (BOOL)verifyPropertyList:(const oo::PList&)plist named:(const std::string&)name;
+- (BOOL)verifyPropertyList:(id)plist named:(NSString*)name;
 
 /*	Convert a key path (such as provided to the delegate method
         -verifier:withPropertyList:failedForProperty:atPath:expectedType:) to a
@@ -63,52 +60,49 @@ SOFTWARE.
         "view_description" ) is transfomed to
         "adder-player.custom_views[0].view_description".
 */
-+ (std::optional<std::string>)descriptionForKeyPath:(const oo::PList&)keyPath; // a null or empty path is "root"; nullopt for a component that is neither string nor number
++ (NSString*)descriptionForKeyPath:(NSArray*)keyPath;
 
 @end
 
 @interface NSObject (OOPListSchemaVerifierDelegate)
 
 // Handle "delegated types". Return YES for valid, NO for invalid.
-// name: a string; keyPath: an array of strings and numbers; typeKey: a string.
 - (BOOL)verifier:(OOPListSchemaVerifier*)verifier
     withPropertyList:(id)rootPList
-               named:(id)name
+               named:(NSString*)name
         testProperty:(id)subPList
-              atPath:(id)keyPath
-         againstType:(id)typeKey
-               error:(NSError**)outError; // shared selector (proposed ADR-0043)
+              atPath:(NSArray*)keyPath
+         againstType:(NSString*)typeKey
+               error:(NSError**)outError;
 
 /*	Method notifying of verification failure.
         Return YES to continue verifying, NO to stop.
 */
-// name: a string; localSchema: the schema type specifier (a string or a dictionary).
 - (BOOL)verifier:(OOPListSchemaVerifier*)verifier
      withPropertyList:(id)rootPList
-                named:(id)name
+                named:(NSString*)name
     failedForProperty:(id)subPList
             withError:(NSError*)error
-         expectedType:(id)localSchema; // shared selector (proposed ADR-0043)
+         expectedType:(NSDictionary*)localSchema;
 
 @end
 
-// NSError domain and codes used to report schema verifier errors (UTF-8; the NSError's domain and
-// userInfo keys are these texts).
-extern const char* const kOOPListSchemaVerifierErrorDomain;
+// NSError domain and codes used to report schema verifier errors.
+extern NSString* const kOOPListSchemaVerifierErrorDomain;
 
-extern const char* const kPListKeyPathErrorKey; // Array specifying key path in plist.
-extern const char* const kSchemaKeyPathErrorKey; // Array specifying key path in schema.
+extern NSString* const kPListKeyPathErrorKey; // Array specifying key path in plist.
+extern NSString* const kSchemaKeyPathErrorKey; // Array specifying key path in schema.
 
-extern const char* const kExpectedClassErrorKey; // Expected class. Nil for vector and quaternion.
-extern const char* const kExpectedClassNameErrorKey; // String describing expected class. May be more specific (for instance, "boolean" or "positive integer" for a number).
-extern const char* const kUnknownKeyErrorKey; // Unallowed key found in dictionary.
-extern const char* const kMissingRequiredKeysErrorKey; // Set of required keys not present in dictionary
-extern const char* const kMissingSubStringErrorKey; // String or array of strings not found for kPListErrorStringPrefixMissing/kPListErrorStringSuffixMissing/kPListErrorStringSubstringMissing.
-extern const char* const kUnnownFilterErrorKey; // Unrecognized filter specifier for kPListErrorSchemaUnknownFilter. Not specified if filter is not a string.
-extern const char* const kErrorsByOptionErrorKey; // Dictionary of errors for oneOf types.
+extern NSString* const kExpectedClassErrorKey; // Expected class. Nil for vector and quaternion.
+extern NSString* const kExpectedClassNameErrorKey; // String describing expected class. May be more specific (for instance, "boolean" or "positive integer" for NSNumber).
+extern NSString* const kUnknownKeyErrorKey; // Unallowed key found in dictionary.
+extern NSString* const kMissingRequiredKeysErrorKey; // Set of required keys not present in dictionary
+extern NSString* const kMissingSubStringErrorKey; // String or array of strings not found for kPListErrorStringPrefixMissing/kPListErrorStringSuffixMissing/kPListErrorStringSubstringMissing.
+extern NSString* const kUnnownFilterErrorKey; // Unrecognized filter specifier for kPListErrorSchemaUnknownFilter. Not specified if filter is not a string.
+extern NSString* const kErrorsByOptionErrorKey; // Dictionary of errors for oneOf types.
 
-extern const char* const kUnknownTypeErrorKey; // Set for kPListErrorSchemaUnknownType.
-extern const char* const kUndefinedMacroErrorKey; // Set for kPListErrorSchemaUndefiniedMacroReference.
+extern NSString* const kUnknownTypeErrorKey; // Set for kPListErrorSchemaUnknownType.
+extern NSString* const kUndefinedMacroErrorKey; // Set for kPListErrorSchemaUndefiniedMacroReference.
 
 // All plist verifier errors have a short error description in their -localizedFailureReason.
 
@@ -154,5 +148,17 @@ OOINLINE BOOL OOPlistErrorIsSchemaError(OOPListSchemaVerifierErrorCode error)
 {
     return kPListErrorStartOfSchemaErrors < error && error < kPListErrorLastErrorCode;
 }
+
+@interface NSError (OOPListSchemaVerifierConveniences)
+
+- (NSArray*)plistKeyPath;
+- (NSString*)plistKeyPathDescription; // Result of calling +[OOPListSchemaVerifier descriptionForKeyPath:] on kPListKeyPathErrorKey.
+
+- (NSSet*)missingRequiredKeys;
+
+- (Class)expectedClass;
+- (NSString*)expectedClassName;
+
+@end
 
 #endif // OO_OXP_VERIFIER_ENABLED

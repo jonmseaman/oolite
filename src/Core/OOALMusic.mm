@@ -47,7 +47,7 @@ static OOSoundSource* sMusicSource = nil;
     [super dealloc];
 }
 
-- (id)initWithContentsOfFile:(id)inPath // inPath: an Objective-C string. Shared selector (proposed ADR-0043).
+- (id)initWithContentsOfFile:(NSString*)inPath
 {
     self = [super init];
     if (nil != self) {
@@ -61,7 +61,7 @@ static OOSoundSource* sMusicSource = nil;
     return self;
 }
 
-- (id)name // shared selector (proposed ADR-0043)
+- (NSString*)name
 {
     return [sound name];
 }

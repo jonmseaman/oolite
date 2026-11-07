@@ -26,7 +26,6 @@
 #if NEW_PLANETS
 
 #import "MyOpenGLView.h"
-#import "OOFoundationBridge.h"
 #import "OOMacroOpenGL.h"
 #import "OOOpenGL.h"
 #import "OOPlanetData.h"
@@ -55,7 +54,7 @@
 
 @implementation OOPlanetDrawable
 
-+ (instancetype)planetWithTextureName:(const std::string&)textureName radius:(float)radius
++ (instancetype)planetWithTextureName:(NSString*)textureName radius:(float)radius
 {
     OOPlanetDrawable* result = [[[self alloc] init] autorelease];
     [result setTextureName:textureName];
@@ -122,19 +121,17 @@
     _material = [material retain];
 }
 
-- (std::optional<std::string>)textureName
+- (NSString*)textureName
 {
-    return oo::OptionalString([_material name]);
+    return [_material name];
 }
 
-- (void)setTextureName:(const std::string&)textureName
+- (void)setTextureName:(NSString*)textureName
 {
-    if ([self textureName] != textureName) {
+    if (![textureName isEqual:[self textureName]]) {
         [_material release];
-        // {diffuse_map={repeat_s=yes;cube_map=yes};}, as the old-style property list parsed.
-        const oo::PList spec(oo::PList::Dict {
-            { "diffuse_map", oo::PList(oo::PList::Dict { { "repeat_s", oo::PList("yes") }, { "cube_map", oo::PList("yes") } }) } });
-        _material = [[OOSingleTextureMaterial alloc] initWithName:oo::NSStringFrom(textureName) configuration:oo::ObjectFromPList(spec)];
+        NSDictionary* spec = [@"{diffuse_map={repeat_s=yes;cube_map=yes};}" propertyList];
+        _material = [[OOSingleTextureMaterial alloc] initWithName:textureName configuration:spec];
     }
 }
 
@@ -380,7 +377,7 @@
 #endif
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-- (id)allTextures // shared selector (proposed ADR-0043)
+- (NSSet*)allTextures
 {
     return [[self material] allTextures];
 }

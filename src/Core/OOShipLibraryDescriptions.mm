@@ -23,150 +23,134 @@ MA 02110-1301, USA.
 */
 
 #import "OOShipLibraryDescriptions.h"
-#import "OOFoundationBridge.h"
 #import "OOStringExpander.h"
 #import "Universe.h"
 
-#include "oofnd/String.hpp"
-
-namespace {
-
-/*	OOExpandKey(OOExpand(@"<pattern>[category]", category)): the category is handed to the expander
-        as the one-entry argument dictionary OOExpand's macro builds from the variable's name.
-*/
-std::string ExpandCategoryKey(const char* pattern, const std::string& category)
+NSString* OOShipLibraryCategorySingular(NSString* category)
 {
-    return oo::StdString(OOExpandKey(OOExpandDescriptionString(OOStringExpanderDefaultRandomSeed(), oo::NSStringFrom(pattern),
-        oo::ObjectFromPList(oo::PList(oo::PList::Dict { { "category", oo::PList(category) } })), nil, nil, kOOExpandNoOptions)));
+    return OOExpandKey(OOExpand(@"oolite-ship-library-category-[category]", category));
 }
 
-} // namespace
-
-std::string OOShipLibraryCategorySingular(const std::string& category)
+NSString* OOShipLibraryCategoryPlural(NSString* category)
 {
-    return ExpandCategoryKey("oolite-ship-library-category-[category]", category);
+    return OOExpandKey(OOExpand(@"oolite-ship-library-category-plural-[category]", category));
 }
 
-std::string OOShipLibraryCategoryPlural(const std::string& category)
-{
-    return ExpandCategoryKey("oolite-ship-library-category-plural-[category]", category);
-}
-
-std::string OOShipLibrarySpeed(ShipEntity* demo_ship)
+NSString* OOShipLibrarySpeed(ShipEntity* demo_ship)
 {
     GLfloat param = [demo_ship maxFlightSpeed];
-    std::string result;
+    NSString* result = nil;
     if (param <= 1) {
-        result = oo::StdString(DESC(@"oolite-ship-library-speed-stationary"));
+        result = DESC(@"oolite-ship-library-speed-stationary");
     } else if (param <= 150) {
-        result = oo::StdString(DESC(@"oolite-ship-library-speed-veryslow"));
+        result = DESC(@"oolite-ship-library-speed-veryslow");
     } else if (param <= 250) {
-        result = oo::StdString(DESC(@"oolite-ship-library-speed-slow"));
+        result = DESC(@"oolite-ship-library-speed-slow");
     } else if (param <= 325) {
-        result = oo::StdString(DESC(@"oolite-ship-library-speed-average"));
+        result = DESC(@"oolite-ship-library-speed-average");
     } else if (param <= 425) {
-        result = oo::StdString(DESC(@"oolite-ship-library-speed-fast"));
+        result = DESC(@"oolite-ship-library-speed-fast");
     } else {
-        result = oo::StdString(DESC(@"oolite-ship-library-speed-veryfast"));
+        result = DESC(@"oolite-ship-library-speed-veryfast");
     }
     return result;
 }
 
-std::string OOShipLibraryTurnRate(ShipEntity* demo_ship)
+NSString* OOShipLibraryTurnRate(ShipEntity* demo_ship)
 {
     GLfloat param = [demo_ship maxFlightRoll] + (2 * [demo_ship maxFlightPitch]);
-    std::string result;
+    NSString* result = nil;
     if (param <= 2) {
-        result = oo::StdString(DESC(@"oolite-ship-library-turn-veryslow"));
+        result = DESC(@"oolite-ship-library-turn-veryslow");
     } else if (param <= 2.75) {
-        result = oo::StdString(DESC(@"oolite-ship-library-turn-slow"));
+        result = DESC(@"oolite-ship-library-turn-slow");
     } else if (param <= 4.5) {
-        result = oo::StdString(DESC(@"oolite-ship-library-turn-average"));
+        result = DESC(@"oolite-ship-library-turn-average");
     } else if (param <= 6) {
-        result = oo::StdString(DESC(@"oolite-ship-library-turn-fast"));
+        result = DESC(@"oolite-ship-library-turn-fast");
     } else {
-        result = oo::StdString(DESC(@"oolite-ship-library-turn-veryfast"));
+        result = DESC(@"oolite-ship-library-turn-veryfast");
     }
     return result;
 }
 
-std::string OOShipLibraryCargo(ShipEntity* demo_ship)
+NSString* OOShipLibraryCargo(ShipEntity* demo_ship)
 {
     OOCargoQuantity param = [demo_ship maxAvailableCargoSpace];
-    std::string result;
+    NSString* result = nil;
     if (param == 0) {
-        result = oo::StdString(DESC(@"oolite-ship-library-cargo-none"));
+        result = DESC(@"oolite-ship-library-cargo-none");
     } else {
-        result = oo::str::format(oo::StdString(DESC(@"oolite-ship-library-cargo-carried-u")).c_str(), param);
+        result = [NSString stringWithFormat:DESC(@"oolite-ship-library-cargo-carried-u"), param];
     }
     return result;
 }
 
-std::string OOShipLibraryGenerator(ShipEntity* demo_ship)
+NSString* OOShipLibraryGenerator(ShipEntity* demo_ship)
 {
     float rate = [demo_ship energyRechargeRate];
-    std::string result;
+    NSString* result = nil;
     if (rate < 2.5) {
-        result = oo::StdString(DESC(@"oolite-ship-library-generator-weak"));
+        result = DESC(@"oolite-ship-library-generator-weak");
     } else if (rate < 3.75) {
-        result = oo::StdString(DESC(@"oolite-ship-library-generator-average"));
+        result = DESC(@"oolite-ship-library-generator-average");
     } else {
-        result = oo::StdString(DESC(@"oolite-ship-library-generator-strong"));
+        result = DESC(@"oolite-ship-library-generator-strong");
     }
     return result;
 }
 
-std::string OOShipLibraryShields(ShipEntity* demo_ship)
+NSString* OOShipLibraryShields(ShipEntity* demo_ship)
 {
     // when NPCs have actual shields, add those on as well
     float shields = [demo_ship maxEnergy];
-    std::string result;
+    NSString* result = nil;
     if (shields < 128) {
-        result = oo::StdString(DESC(@"oolite-ship-library-shields-veryweak"));
+        result = DESC(@"oolite-ship-library-shields-veryweak");
     } else if (shields < 192) {
-        result = oo::StdString(DESC(@"oolite-ship-library-shields-weak"));
+        result = DESC(@"oolite-ship-library-shields-weak");
     } else if (shields < 256) {
-        result = oo::StdString(DESC(@"oolite-ship-library-shields-average"));
+        result = DESC(@"oolite-ship-library-shields-average");
     } else if (shields < 320) {
-        result = oo::StdString(DESC(@"oolite-ship-library-shields-strong"));
+        result = DESC(@"oolite-ship-library-shields-strong");
     } else {
-        result = oo::StdString(DESC(@"oolite-ship-library-shields-verystrong"));
+        result = DESC(@"oolite-ship-library-shields-verystrong");
     }
     return result;
 }
 
-std::string OOShipLibraryWitchspace(ShipEntity* demo_ship)
+NSString* OOShipLibraryWitchspace(ShipEntity* demo_ship)
 {
     if ([demo_ship hasHyperspaceMotor]) {
-        return oo::StdString(DESC(@"oolite-ship-library-witchspace-yes"));
+        return DESC(@"oolite-ship-library-witchspace-yes");
     } else {
-        return oo::StdString(DESC(@"oolite-ship-library-witchspace-no"));
+        return DESC(@"oolite-ship-library-witchspace-no");
     }
 }
 
-std::string OOShipLibraryWeapons(ShipEntity* demo_ship)
+NSString* OOShipLibraryWeapons(ShipEntity* demo_ship)
 {
     OOWeaponFacingSet facings = [demo_ship weaponFacings];
     NSUInteger fixed = (facings & 1) + (facings & 2) / 2 + (facings & 4) / 4 + (facings & 8) / 8;
     NSUInteger pylons = [demo_ship missileCapacity];
     if (fixed == 0 && pylons == 0) {
-        return oo::StdString(DESC(@"oolite-ship-library-weapons-none"));
+        return DESC(@"oolite-ship-library-weapons-none");
     }
-    return oo::str::format(oo::StdString(DESC(@"oolite-ship-library-weapons-u-u")).c_str(), fixed, pylons);
+    return [NSString stringWithFormat:DESC(@"oolite-ship-library-weapons-u-u"), fixed, pylons];
 }
 
-std::string OOShipLibraryTurrets(ShipEntity* demo_ship)
+NSString* OOShipLibraryTurrets(ShipEntity* demo_ship)
 {
     NSUInteger turretCount = [demo_ship turretCount];
     if (turretCount > 0) {
-        return oo::str::format(oo::StdString(DESC(@"oolite-ship-library-turrets-u")).c_str(), turretCount);
+        return [NSString stringWithFormat:DESC(@"oolite-ship-library-turrets-u"), turretCount];
     } else {
-        return "";
+        return @"";
     }
 }
 
-std::string OOShipLibrarySize(ShipEntity* demo_ship)
+NSString* OOShipLibrarySize(ShipEntity* demo_ship)
 {
     BoundingBox bb = [demo_ship totalBoundingBox];
-    return oo::str::format(oo::StdString(DESC(@"oolite-ship-library-size-u-u-u")).c_str(), (unsigned)(bb.max.x - bb.min.x), (unsigned)(bb.max.y - bb.min.y), (unsigned)(bb.max.z - bb.min.z));
+    return [NSString stringWithFormat:DESC(@"oolite-ship-library-size-u-u-u"), (unsigned)(bb.max.x - bb.min.x), (unsigned)(bb.max.y - bb.min.y), (unsigned)(bb.max.z - bb.min.z)];
 }

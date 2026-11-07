@@ -44,7 +44,7 @@ SOFTWARE.
 // Called once at startup (by -[Universe init]).
 + (void)setUp;
 
-- (id)name; // an Objective-C string. Shared selector (proposed ADR-0043).
+- (NSString*)name;
 
 // Make this the current material.
 - (void)apply;
@@ -76,7 +76,7 @@ SOFTWARE.
 #endif
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
-- (id)allTextures; // an Objective-C set of textures. Shared selector (proposed ADR-0043).
+- (NSSet*)allTextures;
 #endif
 
 @end

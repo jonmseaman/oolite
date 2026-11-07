@@ -26,9 +26,6 @@ SOFTWARE.
 */
 
 #import "OOPixMap.h"
-#import "OOStringBridge.h"
-
-#include "oofnd/String.hpp"
 
 const OOPixMap kOONullPixMap = {
     .pixels = NULL,
@@ -140,7 +137,7 @@ BOOL OOExpandPixMap(OOPixMap* ioPixMap, size_t desiredSize)
 #import "MyOpenGLView.h"
 #import "Universe.h"
 
-void OODumpPixMap(OOPixMap pixMap, const std::string& name)
+void OODumpPixMap(OOPixMap pixMap, NSString* name)
 {
     if (!OOIsValidPixMap(pixMap))
         return;
@@ -153,7 +150,7 @@ void OODumpPixMap(OOPixMap pixMap, const std::string& name)
         break;
 
     case kOOPixMapGrayscale:
-        [gameView dumpGrayToFileNamed:oo::NSStringFrom(name)
+        [gameView dumpGrayToFileNamed:name
                                 bytes:(uint8_t*)pixMap.pixels
                                 width:pixMap.width
                                height:pixMap.height
@@ -161,7 +158,7 @@ void OODumpPixMap(OOPixMap pixMap, const std::string& name)
         break;
 
     case kOOPixMapGrayscaleAlpha:
-        [gameView dumpGrayAlphaToFileNamed:oo::NSStringFrom(name)
+        [gameView dumpGrayAlphaToFileNamed:name
                                      bytes:(uint8_t*)pixMap.pixels
                                      width:pixMap.width
                                     height:pixMap.height
@@ -169,8 +166,8 @@ void OODumpPixMap(OOPixMap pixMap, const std::string& name)
         break;
 
     case kOOPixMapRGBA:
-        [gameView dumpRGBAToRGBFileNamed:oo::NSStringFrom(name + " rgb")
-                        andGrayFileNamed:oo::NSStringFrom(name + " alpha")
+        [gameView dumpRGBAToRGBFileNamed:[name stringByAppendingString:@" rgb"]
+                        andGrayFileNamed:[name stringByAppendingString:@" alpha"]
                                    bytes:(uint8_t*)pixMap.pixels
                                    width:pixMap.width
                                   height:pixMap.height
@@ -212,20 +209,20 @@ unsigned short OOPixMapBytesPerPixelForFormat(OOPixMapFormat format)
 }
 #endif
 
-std::string OOPixMapFormatName(OOPixMapFormat format)
+NSString* OOPixMapFormatName(OOPixMapFormat format)
 {
     switch (format) {
     case kOOPixMapInvalidFormat:
-        return "invalid";
+        return @"invalid";
     case kOOPixMapGrayscale:
-        return "grayscale";
+        return @"grayscale";
     case kOOPixMapGrayscaleAlpha:
-        return "grayscale+alpha";
+        return @"grayscale+alpha";
     case kOOPixMapRGBA:
-        return "RGBA";
+        return @"RGBA";
     }
 
-    return oo::str::format("invalid<%i>", (int)format);
+    return [NSString stringWithFormat:@"invalid<%i>", (int)format];
 }
 
 BOOL OOPixMapFormatHasAlpha(OOPixMapFormat format)

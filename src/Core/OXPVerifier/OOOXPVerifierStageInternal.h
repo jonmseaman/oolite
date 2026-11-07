@@ -44,8 +44,8 @@ SOFTWARE.
 - (void)noteSkipped;
 
 // These return sets of stages set up by -registerDependency, wheras -dependencies/dependents return sets of names.
-- (std::vector<oo::ObjCRef<OOOXPVerifierStage*>>)resolvedDependencies;
-- (std::vector<oo::ObjCRef<OOOXPVerifierStage*>>)resolvedDependents;
+- (NSSet*)resolvedDependencies;
+- (NSSet*)resolvedDependents;
 
 @end
 
