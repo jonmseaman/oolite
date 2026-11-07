@@ -110,8 +110,6 @@ MA 02110-1301, USA.
 #include "OOConvertSystemDescriptions.h"
 #endif
 
-enum { DEMO_FLY_IN = 101, DEMO_SHOW_THING, DEMO_FLY_OUT };
-
 #define DEMO2_VANISHING_DISTANCE 650.0
 #define DEMO2_FLY_IN_STAGE_TIME 0.4
 
@@ -4054,11 +4052,30 @@ void Universe::setLibraryTextForDemoShip() {
   }
 }
 
-void Universe::selectIntro2Previous() {
-  demo_stage = DEMO_SHOW_THING;
-  NSUInteger subcount = DemoClassCount(demo_ships, demo_ship_index);
-  demo_ship_subindex = (demo_ship_subindex + subcount - 2) % subcount;
-  demo_stage_time = universal_time - 1.0;  // force change
+void Universe::selectIntro2Previous() { stepDemoShip(-1); }
+
+// Moves the ship library <delta> ships along the current class. The end of the
+// fly-out moves on one ship, so a step that starts a change sets the index one
+// short of where it lands. A step taken while a change is already due (the ship
+// is flying out, or the next frame starts it) adds to that change instead of
+// restarting it, so each press moves one ship however quickly they come.
+void Universe::stepDemoShip(int delta) {
+  const bool changeDue =
+      demo_stage == DEMO_FLY_OUT ||
+      (demo_stage == DEMO_SHOW_THING && demo_stage_time <= universal_time);
+  const long long count =
+      static_cast<long long>(DemoClassCount(demo_ships, demo_ship_index));
+  if (count > 0) {
+    const long long shift = changeDue ? delta : delta - 1;
+    demo_ship_subindex = static_cast<NSUInteger>(
+        (static_cast<long long>(demo_ship_subindex % count) +
+         (shift % count + count)) %
+        count);
+  }
+  if (!changeDue) {
+    demo_stage = DEMO_SHOW_THING;
+    demo_stage_time = universal_time - 1.0;  // force change
+  }
 }
 
 void Universe::selectIntro2PreviousCategory() {
@@ -4076,10 +4093,7 @@ void Universe::selectIntro2NextCategory() {
   demo_stage_time = universal_time - 1.0;  // force change
 }
 
-void Universe::selectIntro2Next() {
-  demo_stage = DEMO_SHOW_THING;
-  demo_stage_time = universal_time - 1.0;  // force change
-}
+void Universe::selectIntro2Next() { stepDemoShip(1); }
 
 ::StationEntity* Universe::station() {
   if (cachedSun != nullptr && cachedStation == nullptr) {
