@@ -130,6 +130,12 @@ inline constexpr int OO_POSTFX_CRTBADSIGNAL = OO_POSTFX_CRT + 1;
 inline constexpr int OO_POSTFX_ENDOFLIST =
     OO_POSTFX_CRTBADSIGNAL + 1;  // keep this for last
 
+// The ship library's demo_stage: a ship flies in, is shown, and flies out; the
+// end of the fly-out moves on to the next ship of the class.
+inline constexpr int DEMO_FLY_IN = 101;
+inline constexpr int DEMO_SHOW_THING = DEMO_FLY_IN + 1;
+inline constexpr int DEMO_FLY_OUT = DEMO_SHOW_THING + 1;
+
 #define SHADERS_MIN OOShaderSetting::kOff
 
 #define MAX_MESSAGES 5
@@ -599,6 +605,7 @@ class Universe : public oo::Object {
   void selectIntro2PreviousCategory();
   void selectIntro2NextCategory();
   void selectIntro2Next();
+  void stepDemoShip(int delta);
   // station(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
   ::StationEntity* stationWithRole(const std::string& role, HPVector position);
