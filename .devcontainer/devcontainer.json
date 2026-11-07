@@ -21,7 +21,9 @@
   "containerEnv": {
     // mk.sh writes compile_commands.json here instead of the checkout's root, which keeps the
     // Windows clangd database.
-    "OOLITE_COMPILE_COMMANDS_DIR": "build"
+    "OOLITE_COMPILE_COMMANDS_DIR": "build",
+    // Parallel LTO links of the core unit tests otherwise exhaust Docker Desktop's memory.
+    "OOLITE_MAX_LINKS": "4"
   },
 
   "remoteUser": "ubuntu",
