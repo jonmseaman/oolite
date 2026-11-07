@@ -60,6 +60,11 @@ meson_setup() {
     local build_dir="build/meson_$1"
     echo "--> Running Meson setup for: $1"
     local meson_opts=("${@:2}")
+    # OOLITE_MAX_LINKS caps parallel links: every core unit test links the whole game with LTO,
+    # and a few dozen of those at once run a memory-limited container out of memory.
+    if [[ -n "${OOLITE_MAX_LINKS:-}" ]]; then
+        meson_opts+=("-Dbackend_max_links=${OOLITE_MAX_LINKS}")
+    fi
     if [[ -n "${VER_FULL:-}" ]]; then
         export VER_FULL
     fi

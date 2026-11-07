@@ -193,9 +193,54 @@ core_tests = {
     'test_OOOXZManager': ['*'],
 }
 
+# Left out off Windows: each test assumes the Windows toolchain or a Windows-only feature, so it
+# doesn't build or pass elsewhere.
+core_windows_only = {
+    'test_GameController': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_GuiDisplayGen': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_HeadUpDisplay': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_MyOpenGLView': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOALBufferedSound': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOALStreamedSound': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOCacheManager': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOCombinedEmissionMapGenerator': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OODebugMonitor': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOJSPlayerShip': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOJSScript': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOJSShip': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOJSSystem': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOJSTimeLimiter': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOJavaScriptEngine': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOJoystickManager': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOMesh': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOMusic': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOMusicController': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOOXPVerifier': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOOXZManager': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOOpenALController': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOPListScript': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOScript': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOSound': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOSoundChannel': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOSoundMixer': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OOVisualEffectEntity': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_PlayerEntityStickProfile': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_ResourceManager': 'Windows CRT (<process.h>, _putenv_s, _getpid)',
+    'test_OODebugTCPConsoleClient': 'its loopback server uses <winsock2.h>',
+    'test_OOJSOolite': 'checks oolite.hdrToneMapper, which the game builds only on Windows (#if OOLITE_WINDOWS)',
+    'test_OOBasicMaterial': 'defines glActiveTextureARB, which SDL_opengl.h declares as a function off Windows',
+    'test_OOSingleTextureMaterial': 'defines glActiveTextureARB, which SDL_opengl.h declares as a function off Windows',
+}
+foreach name, reason : core_windows_only
+    assert(core_tests.has_key(name), name + ' in core_windows_only is not in core_tests')
+endforeach
+
 fs = import('fs')
 
 foreach name, game_sources : core_tests
+    if host_machine.system() != 'windows' and name in core_windows_only
+        continue
+    endif
     # The oolite target's own File objects for these sources (extract_objects matches Files, and
     # a files() made here would name a different directory).
     wanted = []
@@ -221,6 +266,7 @@ foreach name, game_sources : core_tests
         dependencies: oolite_dependencies,
         override_options: oolite_override_options,
         install: false,
+        build_by_default: unit_tests_by_default,
     )
     # 'openal': the tests that open the OpenAL device (alcOpenDevice). A sanitized run leaves them
     # out with --no-suite openal: the prebuilt libopenal-1.dll's onexit registration trips ASan's
