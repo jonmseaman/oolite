@@ -38,8 +38,7 @@ so stop and report it rather than adding one inside a conversion story.
 ## Writing a scenario that will not flake
 
 Assert **"within N ticks"**, never "at tick N". Assert **"no pirate remains"**, never an exact
-position. A scenario that needs an exact float is a golden, not a component test — it belongs in
-item 0.4.
+position. A scenario that needs an exact float does not belong in this tier.
 
 **The spawn steps pin the cast.** `I spawn <n> ship(s) with role "<role>"` does not ask `addShips`
 for the role: for `police`, `pirate`, `trader` and `escort` it asks for a literal core ship key
@@ -111,7 +110,7 @@ The walkthrough takes about 2.5 minutes, inside the default `OO_COMPONENT_TIMEOU
 
 | File | Role |
 |---|---|
-| `console.py` | Debug-console client: framing, handshake, `perform`/`evaluate`, parameterised port. **Transport only** — the golden harness (item 0.4) is expected to share it, so keep component-tier vocabulary out. |
+| `console.py` | Debug-console client: framing, handshake, `perform`/`evaluate`, parameterised port. **Transport only** — keep component-tier vocabulary out. |
 | `conftest.py` | `world` fixture: one game per scenario, free port, hard timeout with forced kill. |
 | `steps/world_steps.py` | The step library above. |
 | `steps/tutorial_steps.py` | The keyboard steps (T1). |
