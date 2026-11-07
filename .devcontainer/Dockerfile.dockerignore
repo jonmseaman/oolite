@@ -1,0 +1,4 @@
+# The image only copies ShellScripts/; keep the rest of the checkout (build trees, Resources)
+# out of the build context.
+*
+!ShellScripts/

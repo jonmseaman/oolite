@@ -20,7 +20,9 @@ install_gitversion() {
         echo "❌ Could not unpack gitversion tgz!" >&2
         return 1
     fi
-    chmod +x "$tmpdir/gitversion"
+    # Readable as well as executable by everyone: it is a .NET single-file bundle, which maps
+    # itself to run, so the release's own mode (0711) fails for non-root users.
+    chmod 0755 "$tmpdir/gitversion"
     if ! mv "$tmpdir/gitversion" "$installdir/gitversion"; then
         echo "❌ Could not move gitversion to $installdir!" >&2
         return 1

@@ -89,8 +89,10 @@ meson_setup() {
         fi
     fi
     # clangd and clang-tidy (-p .) read the compile database from this directory's root.
+    # OOLITE_COMPILE_COMMANDS_DIR puts it elsewhere: the Linux dev container sets it, so a Linux
+    # configure doesn't overwrite the Windows database in a shared checkout.
     if [[ -f "$build_dir/compile_commands.json" ]]; then
-        cp -f "$build_dir/compile_commands.json" compile_commands.json
+        cp -f "$build_dir/compile_commands.json" "${OOLITE_COMPILE_COMMANDS_DIR:-.}/compile_commands.json"
     fi
 }
 
