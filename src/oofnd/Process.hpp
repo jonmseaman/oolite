@@ -40,9 +40,8 @@
 #include <vector>
 
 #if defined(_WIN32)
-// Declared exactly as the Windows headers declare them (DWORD = unsigned long,
-// UINT = unsigned int, bool = int), so this header does not pull <windows.h>
-// into Objective-C++ game code.
+// Declared exactly as the Windows headers declare them (DWORD = unsigned long, UINT = unsigned
+// int, BOOL = int), so this header does not pull <windows.h> into game code.
 extern "C" {
 __declspec(dllimport) unsigned long __stdcall GetVersion(void);
 __declspec(dllimport) int __stdcall WideCharToMultiByte(unsigned int CodePage, unsigned long dwFlags, const wchar_t* lpWideCharStr, int cchWideChar, char* lpMultiByteStr, int cbMultiByte, const char* lpDefaultChar, int* lpUsedDefaultChar);

@@ -562,7 +562,7 @@ static std::optional<std::string> SanitizeActionMethod(
 namespace {
 static oo::PList AlwaysFalseConditions(void)
 {
-    /*	Upstream bug kept (goldens decide): the cache is only
+    /*	Upstream bug kept: the cache is only
        filled when it is already non-nil, so this always returns nil (a null
        PList). A failed conditions array therefore drops its enclosing conditional
        statement.
