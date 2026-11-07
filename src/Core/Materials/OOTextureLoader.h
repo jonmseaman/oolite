@@ -43,7 +43,7 @@ SOFTWARE.
 class OOTexture;
 
 /*	As OOTexture.h declares them. The loaders do not import OOTexture.h, so
-   a test that stands in for the Objective-C OOTexture can still see a C++
+   a test that stands in for OOTexture can still see a C++
    generator; a file that uses the textures imports OOTexture.h itself.
 */
 typedef uint32_t OOTextureFlags;
@@ -98,9 +98,9 @@ class OOTextureLoader : public ::OOAsyncWorkTask {
   virtual std::optional<std::string> descriptionComponents() const;
   virtual std::optional<std::string> shortDescriptionComponents() const;
 
-  /*	The former facade's descriptions, with the
-     loader's address: "%@" was <CxxClass 0x...>{components} (the C++ class's
-     name), and the short form named the facade's class, OOTextureGenerator for
+  /*	The descriptions, with the
+     loader's address: <CxxClass 0x...>{components} (the C++ class's
+     name), and the short form names the class, OOTextureGenerator for
      a generator and OOTextureLoader for any other loader.
   */
   std::string description() const;
@@ -134,12 +134,12 @@ class OOTextureLoader : public ::OOAsyncWorkTask {
   virtual void loadTexture();
 
   // The work manager's task: on a work thread, then on the main thread. The
-  // facade implemented -completeAsyncTask, so every loader has a completion.
+  // every loader has a completion.
   void performAsyncTask() override;
   bool hasCompleteAsyncTask() const override { return true; }
   void completeAsyncTask() override;
 
-  // The state (were the @protected ivars).
+  // The state.
   std::string _path = {};
 
   OOTextureFlags _options = {};

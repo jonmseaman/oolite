@@ -197,7 +197,7 @@ JSClassID JSPlayerClassID(void) { return sPlayerClassID; }
 
 JSValue JSPlayerObject(void) {
   JSContext* context = OOJSAcquireContext();
-  // Not -[OOJavaScriptEngine globalObject]: this is used while the engine is
+  // Not OOJavaScriptEngine's globalObject(): this is used while the engine is
   // being set up.
   JSValue global = JS_GetGlobalObject(context);
   JSValue result = JS_GetPropertyStr(context, global, "player");

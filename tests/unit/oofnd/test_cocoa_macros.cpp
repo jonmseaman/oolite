@@ -1,6 +1,12 @@
 /*	test_cocoa_macros.cpp
-        Regression test: the oofnd headers game code includes (ResourcePaths.hpp
-   and so FileSystem.hpp, Data.hpp, Expected.hpp) compile together and work.
+        Regression test: the oofnd headers must compile
+   when `true` and `false` are macros, `#define true
+   1` / `#define false 0` (as a Cocoa-compatibility header such as OOCocoa.h defines them),
+   and must hand those macros back unchanged (code
+   keeps its int-typed true/false). Here the macros are
+   defined that way, BEFORE any standard header, so
+        every standard header the oofnd headers pull in is first parsed inside
+   their macro guard.
 */
 
 

@@ -56,10 +56,8 @@ using OOVisualEffectSubEntities = std::vector<oo::EntityHold>;
    subentity relationship), and its scripted surface (scanner colours, the
    script and its events, the beacons and the shader uniforms).
 
-        A global C++ class, with no Objective-C class of its own: an effect's
-   Objective-C object is the root's facade, made by oo::NewVisualEffectObject(),
-   and the selectors found on it by name are the root's facade's (Entity
-   (OOVisualEffectSelectorsCalledByName)).
+        A global C++ class, made by oo::NewVisualEffectObject(); the names found
+   on it by name are in OOEntityCalledByNameTable.h.
 */
 class OOVisualEffectEntity
     : public OOEntityWithDrawable,
@@ -99,8 +97,7 @@ class OOVisualEffectEntity
   std::vector<oo::EntityHold>
   effectSubEntityEnumerator();  // the visual-effect subentities' objects
   std::vector<oo::EntityHold>
-  flasherEnumerator();  // flasher subentities' objects (the nearest facade
-                        // left), a snapshot
+  flasherEnumerator();  // flasher subentities' objects a snapshot
 
   void orientationChanged() override;
   Vector forwardVector();
@@ -125,8 +122,7 @@ class OOVisualEffectEntity
   void rescaleBy(GLfloat factor, bool writeToCache) override;
   void drawSubEntityImmediate(bool immediate, bool translucent) override;
 
-  // Entity (SubEntityRelationship): the root's facade answers it for an
-  // effect's part.
+  // The sub-entity relationship, for an effect's part.
   bool isShipWithSubEntityShip(Entity* other);  // the C++ entity
 
   bool isEffect() override;
@@ -136,9 +132,8 @@ class OOVisualEffectEntity
   void drawImmediate(bool immediate, bool translucent) override;
   void update(OOTimeDelta delta_t) override;
 
-  // The JS questions the engine asks the object (Entity
-  // (OOJavaScriptExtensions)), which the effect's facade answered: the
-  // binding's functions (OOJSVisualEffect.h).
+  // The JS questions the engine asks the object: the binding's functions
+  // (OOJSVisualEffect.h).
   JSClassID jsClassID() override;
   std::optional<std::string> jsClassName() override;
   bool isVisibleToScripts() override;
@@ -156,8 +151,7 @@ class OOVisualEffectEntity
   void doScriptEvent(OOJSPropID message);
   void remove();
 
-  // OOBeaconEntity: the root's facade (Entity (OOWaypointBeacon)) answers it
-  // for an effect's part.
+  // OOBeaconEntity, for an effect's part.
   OOComparisonResult compareBeaconCodeWith(Entity* other);
   std::optional<std::string> beaconCode();
   void setBeaconCode(const std::optional<std::string>& bcode);

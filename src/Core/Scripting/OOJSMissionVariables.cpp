@@ -148,7 +148,7 @@ static JSValue ValueForMissionVariable(JSContext* context,
   {
     if (OOIsNumberLiteral(*string, true)) {
       return JS_NewNumber(
-          context, oo::str::doubleValue(*string));  // -[NSString doubleValue]
+          context, oo::str::doubleValue(*string));  // as NSString's doubleValue
     }
   }
 

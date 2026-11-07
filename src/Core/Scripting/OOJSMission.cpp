@@ -60,8 +60,7 @@ static JSValue MissionSetInstructionsInternal(JSContext* context, int argc,
 */
 static JSValue sCallbackFunction;
 static JSValue sCallbackThis;
-static OOJSScript* sCallbackScript =
-    nullptr;  // retained (was the script's Objective-C object)
+static OOJSScript* sCallbackScript = nullptr;  // retained
 
 // Borrowed: owned by the global object's read-only, permanent "mission"
 // property. Reset by InitOOJSMission().

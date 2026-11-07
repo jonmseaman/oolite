@@ -41,15 +41,13 @@ class Entity;
 
 namespace oo {
 
-// The entity, where it has its object (what oo::ToObjC() answering non-nil
-// was); else null.
+// The entity, where it has its object; else null.
 Entity* WithObject(Entity* entity);  // EntityHelpers.mm (out of line: a narrow
                                      // test's stand-in entity answers it)
 
 /*	An entity carried through plist data as a PList::Object node: the
-   node holds the entity (it held the entity's object, which
-   owned the entity, so the node keeps the entity alive as before) and answers
-   it. Its class name is the facade's ("Entity"), its description the entity's
+   node holds the entity, which keeps the entity alive, and answers
+   it. Its class name is "Entity", its description the entity's
    (oo::EntityDescription()), its JS value the entity's (OOJSValueFromPList).
 */
 std::string EntityDescription(Entity* entity);  // EntityHelpers.mm
@@ -67,8 +65,8 @@ class EntityPListForeign final : public PListForeign {
   EntityHold _entity;
 };
 
-// The entity's Object node (what PListObject(ToObjC(entity)) made); a null
-// PList for null and for an entity without its object.
+// The entity's Object node; a null PList for null and for an
+// entity without its object.
 inline PList EntityObjectNode(Entity* entity) {
   if (WithObject(entity) == nullptr) return PList();
   return PList(PList::Object(makeRef<EntityPListForeign>(entity)));

@@ -4,12 +4,12 @@ OOEntityHold.h
 
 How the universe and the entities' own lists (sub-entities, cargo, colliding
 entities, the player's missiles, ...) own an entity. The C++ entity owns itself
-(oo::RefCounted, its last release running what the facade's -dealloc ran) and
-the holder is a strong reference to it.
+(oo::RefCounted, its last release running willDispose()) and the holder is a
+strong reference to it.
 
 An entity that has no object (Entity::hasObject(): never made by a creator, or
-in its last release) is held as null, as a reference to oo::ToObjC()'s nil was;
-the retain/release helpers do nothing for it, as the messages to nil did.
+in its last release) is held as null; the retain/release helpers do nothing for
+it.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -53,8 +53,8 @@ void EntityRelease(Entity* entity) noexcept;
 
 }  // namespace detail
 
-/*	An owning reference to an entity (oo::Ref<Entity> with the facade's rule
-   for an entity without its object: held as null). Copying retains, destroying
+/*	An owning reference to an entity (oo::Ref<Entity>, with a rule for an
+   entity without its object: held as null). Copying retains, destroying
    releases, moving steals.
 */
 class EntityHold {
@@ -82,9 +82,8 @@ class EntityHold {
   }
   void swap(EntityHold& other) noexcept { std::swap(_entity, other._entity); }
 
-  // Takes over a +1 reference to the entity (oo::RetainEntity()'s; what
-  // oo::adoptObjC(oo::ToObjC(entity)) held). Null, and nothing
-  // taken, for an entity without its object, as nil was.
+  // Takes over a +1 reference to the entity (oo::RetainEntity()'s). Null, and
+  // nothing taken, for an entity without its object.
   static EntityHold adopt(Entity* entity) noexcept {
     EntityHold result;
     if (detail::EntityHasObject(entity)) result._entity = entity;
@@ -122,10 +121,10 @@ Entity* RetainEntity(Entity* entity);
 void ReleaseEntity(Entity* entity);
 Entity* AutoreleaseEntity(Entity* entity);
 
-/*	A C++ entity just made, given its object, as the creators made it
-   (oo::NewEntityFacade(), +1 and autoreleased): from here it has its object, it
-   is counted as a live entity, and the pool holds one reference until it
-   drains. Answers the entity (null for null). Call it once, where it is made.
+/*	A C++ entity just made, given its object, as the creators make it (+1
+   and autoreleased): from here it has its object, it is counted as a live
+   entity, and the pool holds one reference until it drains. Answers the entity
+   (null for null). Call it once, where it is made.
 */
 Entity* MadeEntity(const Ref<Entity>& entity);
 

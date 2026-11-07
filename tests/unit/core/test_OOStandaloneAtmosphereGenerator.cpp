@@ -10,8 +10,8 @@
    seed's noise, their alpha scaled by cloud_alpha. It links the whole game but
    main (tests/unit/core/meson.build entry ['*']), on the hidden GL context of
    oo_gl_test_context.hpp. Making a generator and the class methods go through
-   the helpers below. The class is a global C++ class with no facade of its own.
-   The last test pins the C++ API. Run: bash meson test -C build/meson_test
+   the helpers below. The class is a global C++ class. The last test pins the
+   C++ API. Run: bash tools/check-core-tests.sh
    test_OOStandaloneAtmosphereGenerator
 */
 
