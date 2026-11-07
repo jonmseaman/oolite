@@ -193,6 +193,7 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z, NSSize
 
 static OOTexture* sFontTexture = nil;
 static OOEncodingConverter* sEncodingCoverter = nil;
+static std::string distance_unit;
 
 enum {
     kFontTextureOptions = kOOTextureMinFilterMipMap | kOOTextureMagFilterLinear | kOOTextureNoShrink | kOOTextureAlphaMask
@@ -363,6 +364,8 @@ void cxx::HeadUpDisplay::initWithDictionary(const oo::PList& hudinfo, const std:
 
     nonlinear_scanner = info.get<bool>("scanner_non_linear", false);
     scanner_ultra_zoom = info.get<bool>("scanner_ultra_zoom", false);
+
+    distance_unit = OO_DESC("oolite-hud-distance-unit");
 }
 
 //------------------------------------------------------------------------------------//
@@ -3426,7 +3429,7 @@ static void hudDrawReticleOnTarget(Entity* target, PlayerEntity* player1, GLfloa
             range = 0.0f; // avoids the occasional -0.001 km distance.
         NSSize textsize = NSMakeSize(rdist * scale, rdist * scale);
         float line_height = rdist * scale;
-        std::string infoline = oo::str::format("%0.3f km", range);
+        std::string infoline = oo::str::format("%0.3f %s", range, distance_unit.c_str());
         if (legal_desc.has_value())
             infoline = oo::str::format("%s (%s)", infoline.c_str(), legal_desc->c_str());
         // no need to set colour here
@@ -3523,7 +3526,7 @@ static void hudDrawWaypoint(OOWaypointEntity* waypoint, PlayerEntity* player1, G
             range = 0.0f; // avoids the occasional -0.001 km distance.
         NSSize textsize = NSMakeSize(rdist * scale, rdist * scale);
         float line_height = rdist * scale;
-        std::string infoline = oo::str::format("%0.3f km", range);
+        std::string infoline = oo::str::format("%0.3f %s", range, distance_unit.c_str());
         cxx_OODrawString(infoline, rs0 * 0.5, -rs2 - line_height, 0, textsize);
     }
 
