@@ -31,7 +31,7 @@ SOFTWARE.
 #pragma once
 
 #ifndef OOSTOPWATCH_STANDALONE
-#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // a game unit, not a plain C++ one
+#ifndef OO_PLAIN_CPP_UNIT
 #include "OOFoundation.h"
 #else
 /*	A plain C++ translation unit (the JS bindings, through
@@ -41,16 +41,6 @@ SOFTWARE.
 */
 #if defined(WIN32) && !defined(OOLITE_WINDOWS)
 #define OOLITE_WINDOWS 1
-#endif
-#if OOLITE_WINDOWS
-// DWORD and timeGetTime(), below, as OOFoundation.h's <windows.h> gives them (with the Windows
-// BOOL renamed, as there, so the floor's BOOL stays BOOL; __OBJC_BOOL
-// keeps <minwindef.h> from declaring its own, as OOFoundation.h does).
-#define BOOL WinBOOL
-#define __OBJC_BOOL 1
-#include <windows.h>
-#undef __OBJC_BOOL
-#undef BOOL
 #endif
 #endif
 #include "OOFunctionAttributes.h"
@@ -88,6 +78,11 @@ typedef uint64_t OOHighResTimeValue;
 #elif OOLITE_WINDOWS
 
 // Windows: use timeGetTime.
+// DWORD and timeGetTime(), from their own headers: <windows.h> here would bring in the old
+// <winsock.h> ahead of a later <winsock2.h>.
+#include <windef.h>
+
+#include <timeapi.h>
 #define OO_PROFILING_STOPWATCH_WINDOWS 1
 typedef DWORD OOHighResTimeValue; // Rolls over once every 50 days, but we can live with that.
 

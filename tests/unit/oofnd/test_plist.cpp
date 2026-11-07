@@ -5,18 +5,7 @@
    and writers use for NSString's code units. meson test --suite oofnd-plist
 */
 
-// PList.hpp may be included where true/false are defined as 1/0 (as OOCocoa.h did): it must
-// compile under those macros and hand them back unchanged (as test_cocoa_macros.cpp checks for
-// Data/FileSystem/ResourcePaths).
-#define true 1
-#define false 0
 #include "oofnd/PList.hpp"
-static_assert(std::is_same_v<decltype(true), int>,
-              "PList.hpp must restore OOCocoa.h's true macro");
-static_assert(std::is_same_v<decltype(false), int>,
-              "PList.hpp must restore OOCocoa.h's false macro");
-#undef true
-#undef false
 
 #include <cmath>
 #include <cstdint>

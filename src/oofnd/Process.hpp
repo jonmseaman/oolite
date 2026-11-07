@@ -32,13 +32,6 @@
 
 #pragma once
 
-// Callers see OOFoundation.h's `#define true 1` / `#define false
-// 0`; suspend them for the standard headers (as oofnd/Data.hpp does).
-#pragma push_macro("true")
-#pragma push_macro("false")
-#undef true
-#undef false
-
 #include <cstdlib>
 #include <optional>
 #include <string>
@@ -167,6 +160,3 @@ inline std::optional<std::string> env(const char* name)
 }
 
 } // namespace oo
-
-#pragma pop_macro("false")
-#pragma pop_macro("true")

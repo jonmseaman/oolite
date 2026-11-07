@@ -184,7 +184,7 @@ public:
     static bool setStickHandlerFactory(StickHandlerFactory factory);
 
     // General.
-    // Note: handleSDLEvent returns a BOOL (YES we handled it or NO we
+    // Note: handleSDLEvent returns a bool (YES we handled it or NO we
     // didn't) so in the future when more handler classes are written,
     // the GameView event loop can just go through an array of handlers
     // until it finds a handler that handles the event.
@@ -217,7 +217,7 @@ public:
 
     // This one just returns a pointer to the entire state array to
     // allow for multiple lookups with only one call
-    const BOOL* getAllButtonStates();
+    const bool* getAllButtonStates();
 
     // Hardware introspection.
     std::vector<std::string> listSticks();
@@ -259,7 +259,8 @@ protected:
     int8_t buttonmap[MAX_STICKS][MAX_BUTTONS] = { };
     bool true_butstate[MAX_STICKS][MAX_BUTTONS] = { };
     double axstate[AXIS_end] = { };
-    BOOL butstate[BUTTON_end] = { }; // still BOOL: getAllButtonStates() hands unconverted callers a const BOOL *
+    bool butstate[BUTTON_end] = { }; // still bool: getAllButtonStates() hands
+                                     // unconverted callers a const bool *
     uint8_t hatstate[MAX_STICKS][MAX_HATS] = { };
     bool precisionMode = { };
 

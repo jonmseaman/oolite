@@ -689,7 +689,7 @@ public:
 	std::optional<std::string> descriptionForKey(const std::string &key) override	{ (void)key; return std::nullopt; }
 	const oo::PList *descriptions() override	{ return &testDescriptions; }
 	::OOSystemDescriptionManager *getSystemManager() override	{ return nullptr; }
-	bool reinitAndShowDemo(bool showDemo) override	{ (void)showDemo; return YES; }
+	bool reinitAndShowDemo(bool showDemo) override	{ (void)showDemo; return true; }
 };
 
 
@@ -700,7 +700,7 @@ struct StandInUniverse
 {
 	TestUniverse *universe;
 	StandInUniverse()  { universe = new TestUniverse(); gSharedUniverse = universe; }
-	~StandInUniverse()  { gSharedUniverse = nil; }	// never released: a universe's teardown flushes the caches and the GL objects
+	~StandInUniverse()  { gSharedUniverse = nullptr; }	// never released: a universe's teardown flushes the caches and the GL objects
 	std::string Page()
 	{
 		std::string page;
