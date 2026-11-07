@@ -51,10 +51,10 @@
 #include <utility>
 
 #if defined(_WIN32)
-// The three kernel32 entry points, declared exactly as <processthreadsapi.h> declares them (HANDLE
-// = void *, HRESULT = long, BOOL = int), so this header does not drag <windows.h> (and its BOOL,
-// min/max and interface macros) into game code. A TU that also includes <windows.h>
-// sees identical redeclarations.
+// The three kernel32 entry points, declared exactly as <processthreadsapi.h>
+// declares them (HANDLE = void *, HRESULT = long, BOOL = int), so this header
+// does not drag <windows.h> (and its BOOL, min/max and interface macros) into
+// game code. A TU that also includes <windows.h> sees identical redeclarations.
 extern "C" {
 __declspec(dllimport) void* __stdcall GetCurrentThread(void);
 __declspec(dllimport) long __stdcall SetThreadDescription(

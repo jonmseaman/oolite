@@ -26,14 +26,16 @@ MA 02110-1301, USA.
 
 #include "MyOpenGLView.h"
 #include "OOColor.h"
+#include "OODescription.h"
 #include "OOMaterial.h"
 #include "OOMaths.h"
-#include "OOObjCPList.h"
 #include "OOSkyDrawable.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
+#include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 
 #define SKY_BASIS_STARS 4800
@@ -219,7 +221,7 @@ bool SkyEntity::readColor1(oo::Ref<OOColor>* ioColor1,
   oo::Ref<OOColor> color;
   bool nebulaSet = false;
 
-  assert(ioColor1 != NULL && ioColor2 != NULL);
+  assert(ioColor1 != nullptr && ioColor2 != nullptr);
 
   const std::optional<std::string> string =
       OptionalStringForKey(dictionary, "sky_rgb_colors");

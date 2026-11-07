@@ -36,6 +36,7 @@ MA 02110-1301, USA.
 #include "OODebugFlags.h"
 #include "OODebugMonitor.h"
 #include "OODebugSupport.h"
+#include "OODescription.h"
 #include "OOEquipmentType.h"
 #include "OOJSGuiScreenKeyDefinition.h"
 #include "OOJSScript.h"
@@ -43,7 +44,6 @@ MA 02110-1301, USA.
 #include "OOLoggingExtended.h"
 #include "OOMusicController.h"
 #include "OOOXZManager.h"
-#include "OOObjCPList.h"
 #include "OOPlanetEntity.h"
 #include "OOSound.h"
 #include "OOStringExpander.h"
@@ -65,7 +65,9 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Defaults.hpp"
+#include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
@@ -271,11 +273,7 @@ void PlayerEntity::initControls() {
 
   keyShiftText = OO_DESC("oolite-keyconfig-shift");
   keyMod1Text = OO_DESC("oolite-keyconfig-mod1");
-#if OOLITE_MAC_COCOA_UI
-  keyMod2Text = OO_DESC("oolite-keyconfig-mod2-mac");
-#else
   keyMod2Text = OO_DESC("oolite-keyconfig-mod2-pc");
-#endif
 
   initKeyConfigSettings();
 

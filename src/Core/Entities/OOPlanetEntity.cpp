@@ -26,8 +26,10 @@ A leaf of Entity. The class is global.
 
 #include "OOPlanetEntity.h"
 
+#include "OODescription.h"
 #include "OOJSPlanet.h"
-#include "OOObjCPList.h"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 
 #define NEW_ATMOSPHERE 1
 
@@ -400,7 +402,7 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
   OOGraphicsResetManager::sharedManager()->registerCxxClient(this);
 }
 
-static Vector RandomHSBColor(void) {
+static Vector RandomHSBColor() {
   return (Vector){(OOScalar)(gen_rnd_number() / 256.0),
                   (OOScalar)(gen_rnd_number() / 256.0),
                   (OOScalar)(0.5 + gen_rnd_number() / 512.0)};
@@ -1138,7 +1140,7 @@ void OOPlanetEntity::setTextureFileName(
   } else {
     OOPlanetTextureGenerator::generatePlanetTexture(
         &generatedDiffuseMap,
-        (detailLevel >= DETAIL_LEVEL_SHADERS) ? &generatedNormalMap : NULL,
+        (detailLevel >= DETAIL_LEVEL_SHADERS) ? &generatedNormalMap : nullptr,
         _materialParameters, _noiseMapSeed);
     diffuseMap = generatedDiffuseMap;
     normalMap = generatedNormalMap;

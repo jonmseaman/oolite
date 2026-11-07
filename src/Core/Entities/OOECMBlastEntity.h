@@ -4,9 +4,9 @@ OOECMBlastEntity.h
 
 Invisible entity which radiates ECM blast energy.
 
-A global class over Entity. ShipEntity::fireECM() makes it with initFromShip() and hands it to
-the universe. To ask whether an entity is an ECM blast, ask the C++ part:
-dynamic_cast<OOECMBlastEntity *>(...)->isECMBlast().
+A global class over Entity. ShipEntity::fireECM() makes it with initFromShip()
+and hands it to the universe. To ask whether an entity is an ECM blast, ask the
+C++ part: dynamic_cast<OOECMBlastEntity *>(...)->isECMBlast().
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors

@@ -29,8 +29,8 @@ MA 02110-1301, USA.
 
 #include "GameController.h"
 #include "HeadUpDisplay.h"
+#include "OODescription.h"
 #include "OOJavaScriptEngine.h"
-#include "OOObjCPList.h"
 #include "OOSound.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
@@ -43,6 +43,8 @@ MA 02110-1301, USA.
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/Log.hpp"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
@@ -587,7 +589,7 @@ void GuiDisplayGen::setSelectableRange(NSRange range) {
 }
 
 void GuiDisplayGen::setTabStops(OOGUITabSettings stops) {
-  if (stops != NULL) memmove(tabStops, stops, sizeof tabStops);
+  if (stops != nullptr) memmove(tabStops, stops, sizeof tabStops);
 }
 
 void GuiDisplayGen::overrideTabs(OOGUITabSettings stops,
@@ -595,7 +597,7 @@ void GuiDisplayGen::overrideTabs(OOGUITabSettings stops,
   const oo::PList* override =
       guiUserSettings.get<oo::PList::Array>(setting, nullptr);
   NSUInteger i;
-  if (stops != NULL && override != nullptr) {
+  if (stops != nullptr && override != nullptr) {
     if (len > GUI_MAX_COLUMNS) {
       len = GUI_MAX_COLUMNS;
     }

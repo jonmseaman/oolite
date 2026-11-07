@@ -28,16 +28,18 @@ MA 02110-1301, USA.
 #include "OOCommodities.h"
 #include "OOCommodityMarket.h"
 #include "OOConstToString.h"
+#include "OODescription.h"
 #include "OOEquipmentType.h"
 #include "OOJSEntity.h"
 #include "OOJSInterfaceDefinition.h"
 #include "OOJSPlayer.h"
 #include "OOJSShip.h"
 #include "OOJavaScriptEngine.h"
-#include "OOObjCPList.h"
 #include "OOShipRegistry.h"
 #include "PlayerEntityContracts.h"
 #include "StationEntity.h"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
 
@@ -172,14 +174,14 @@ void InitOOJSStation(JSContext* context, JSValueConst global) {
   OOJSInitClass(context, global, sStationClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sStationProperties,
                 OOJS_COUNT(sStationProperties), sStationMethods,
-                OOJS_COUNT(sStationMethods), NULL, 0);
+                OOJS_COUNT(sStationMethods), nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sStationClassID, OOJSEntityObjectConverter);
   OOJSRegisterSubclass(sStationClassID, JSShipClassID());
 }
 
-JSClassID JSStationClassID(void) { return sStationClassID; }
+JSClassID JSStationClassID() { return sStationClassID; }
 
 /*	As in the SpiderMonkey version, these return false without an exception
    for stale references (nil entity) and for entities of the wrong native class;
@@ -193,7 +195,7 @@ static bool JSStationGetStationEntity(JSContext* context,
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
 
-  if (outEntity == NULL) return false;
+  if (outEntity == nullptr) return false;
   *outEntity = nullptr;
 
   result = OOJSEntityGetEntity(context, stationObj, &entity);
@@ -216,7 +218,7 @@ static bool JSStationGetShipEntity(JSContext* context, JSValueConst shipObj,
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
 
-  if (outEntity == NULL) return false;
+  if (outEntity == nullptr) return false;
   *outEntity = nullptr;
 
   result = OOJSEntityGetEntity(context, shipObj, &entity);
@@ -235,17 +237,17 @@ static bool JSStationGetShipEntity(JSContext* context, JSValueConst shipObj,
         error is pending, and QuickJS natives must not return normally with an
         exception pending.
 */
-#define GET_THIS_STATION(THISENT)                                   \
-  do {                                                              \
-    if (!JSStationGetStationEntity(context, OOJS_THIS, &THISENT)) { \
-      if (JS_HasException(context)) return JS_EXCEPTION;            \
-      OOJS_RETURN_VOID; /* stale reference, no-op */                \
-    }                                                               \
+#define GET_THIS_STATION(THISENT)                                     \
+  do {                                                                \
+    if (!JSStationGetStationEntity(context, OOJS_THIS, &(THISENT))) { \
+      if (JS_HasException(context)) return JS_EXCEPTION;              \
+      OOJS_RETURN_VOID; /* stale reference, no-op */                  \
+    }                                                                 \
   } while (0)
 
 // The bodies of StationEntity (OOJavaScriptExtensions), which StationEntity's
 // jsClassName calls.
-std::optional<std::string> OOJSStationJSClassName(void) {
+std::optional<std::string> OOJSStationJSClassName() {
   return std::string("Station");
 }
 

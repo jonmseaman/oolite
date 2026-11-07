@@ -30,12 +30,12 @@
 #include "OOCallByName.h"  // oo::ScheduleEntityCall
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
+#include "OODescription.h"
 #include "OOEntityFilterPredicate.h"
 #include "OOJSFunction.h"
 #include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
 #include "OOMaths.h"
-#include "OOObjCPList.h"
 #include "OOPListGameTypes.h"
 #include "OOPlanetEntity.h"
 #include "OOShipGroup.h"
@@ -49,6 +49,8 @@
 #include "Universe.h"
 #include "WormholeEntity.h"
 #include "oofnd/Log.hpp"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 
 namespace {
@@ -742,7 +744,7 @@ void ShipEntity::scanForNearestShipWithPredicate(
   _foundTarget = nullptr;
   checkScanner();
 
-  if (predicate == NULL) return;
+  if (predicate == nullptr) return;
 
   for (i = 0; i < n_scanned_ships; i++) {
     candidate = scanned_ships[i];
@@ -2364,7 +2366,7 @@ void ShipEntity::scanForNearestShipMatchingPredicate(
       scriptCache = nullptr;
   std::string key;
   oo::Ref<OOJSFunction> function;
-  JSContext* context = NULL;
+  JSContext* context = nullptr;
 
   context = OOJSAcquireContext();
 

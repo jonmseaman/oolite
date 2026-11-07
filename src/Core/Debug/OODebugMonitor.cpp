@@ -34,12 +34,12 @@ SOFTWARE.
 #include <map>
 
 #include "OOConcreteTexture.h"
+#include "OODescription.h"
 #include "OODrawable.h"
 #include "OOJSConsole.h"
 #include "OOJSEngineTimeManagement.h"
 #include "OOJSScript.h"
 #include "OOJSSpecialFunctions.h"
-#include "OOObjCPList.h"
 #include "OOTexture.h"
 #include "ResourceManager.h"
 #include "oofnd/Defaults.hpp"
@@ -47,7 +47,9 @@ SOFTWARE.
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Notification.hpp"
+#include "oofnd/PList.hpp"
 #include "oofnd/PListGet.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
 
@@ -167,7 +169,7 @@ void OODebugMonitor::performJSConsoleCommand(const std::string& command) {
   OOJSStartTimeLimiterWithTimeLimit(kOOJSLongTimeLimit);
   if (_script != nullptr)
     _script->callMethod(OOJSID("consolePerformJSCommand"), context, &commandVal,
-                        1, NULL);
+                        1, nullptr);
   OOJSStopTimeLimiter();
   OOJSFreeValue(context, commandVal);
   OOJSRelinquishContext(context);
@@ -265,7 +267,7 @@ void OODebugMonitor::setConfigurationValue(const oo::PList& value,
                                            const std::string& key) {
   if (key.empty()) return;
 
-  const std::string keyString = key;
+  const std::string& keyString = key;
   const oo::PList normalized = normalizeConfigValue(value, keyString);
 
   if (!_configOverrides.isDict())
@@ -608,7 +610,7 @@ bool OODebugMonitor::usingPlugInController() { return _usingPlugInController; }
 
 std::string OODebugMonitor::sourceCodeForFile(const std::string& filePath,
                                               unsigned line) {
-  const std::string path = filePath;
+  const std::string& path = filePath;
   auto cached = _sourceFiles.find(path);
 
   if (cached == _sourceFiles.end()) {

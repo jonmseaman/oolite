@@ -85,14 +85,14 @@ void InitOOJSDock(JSContext* context, JSValueConst global) {
   OOJSInitClass(context, global, sDockClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sDockProperties,
                 OOJS_COUNT(sDockProperties), sDockMethods,
-                OOJS_COUNT(sDockMethods), NULL, 0);
+                OOJS_COUNT(sDockMethods), nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sDockClassID, OOJSEntityObjectConverter);
   OOJSRegisterSubclass(sDockClassID, JSShipClassID());
 }
 
-JSClassID JSDockClassID(void) { return sDockClassID; }
+JSClassID JSDockClassID() { return sDockClassID; }
 
 /*	As in the SpiderMonkey version, these return false without an exception
    for stale references (nil entity) and for entities of the wrong native class;
@@ -105,7 +105,7 @@ static bool JSDockGetDockEntity(JSContext* context, JSValueConst dockObj,
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
 
-  if (outEntity == NULL) return false;
+  if (outEntity == nullptr) return false;
   *outEntity = nullptr;
 
   result = OOJSEntityGetEntity(context, dockObj, &entity);
@@ -128,7 +128,7 @@ static bool JSDockGetShipEntity(JSContext* context, JSValueConst shipObj,
   bool result;
   Entity* entity = nullptr;  // the slot holds the C++ entity
 
-  if (outEntity == NULL) return false;
+  if (outEntity == nullptr) return false;
   *outEntity = nullptr;
 
   result = OOJSEntityGetEntity(context, shipObj, &entity);
@@ -144,9 +144,7 @@ static bool JSDockGetShipEntity(JSContext* context, JSValueConst shipObj,
 
 // The bodies of DockEntity's class questions, which DockEntity's overrides
 // call.
-std::optional<std::string> OOJSDockJSClassName(void) {
-  return std::string("Dock");
-}
+std::optional<std::string> OOJSDockJSClassName() { return std::string("Dock"); }
 
 static JSValue DockGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)

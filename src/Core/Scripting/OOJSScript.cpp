@@ -60,7 +60,7 @@ struct RunningStack {
 }  // namespace
 
 static JSClassID sScriptClassID;
-static RunningStack* sRunningStack = NULL;
+static RunningStack* sRunningStack = nullptr;
 
 static void AddStackToArrayReversed(std::vector<oo::Ref<OOJSScript>>& array,
                                     RunningStack* stack);
@@ -143,7 +143,7 @@ oo::Ref<OOJSScript> OOJSScript::scriptWithPath(
 
 bool OOJSScript::initWithPath(const std::optional<std::string>& path,
                               const oo::PList& properties) {
-  JSContext* context = NULL;
+  JSContext* context = nullptr;
   std::optional<std::string> problem;  // Acts as error flag.
 
   {
@@ -221,8 +221,10 @@ bool OOJSScript::initWithPath(const std::optional<std::string>& path,
     if (!problem.has_value()) {
       OO_LOG("script.javaScript.willLoad", "About to load JavaScript {}",
              path.value_or("(null)"));
-      oo::log::indentIf("script.javaScript.willLoad");
+    }
+    oo::log::indentIf("script.javaScript.willLoad");
 
+    if (!problem.has_value()) {
       if (!RunScriptWithName(context, path, _jsSelf, &problem)) {
         if (!problem.has_value()) problem = "could not run script";
       }
@@ -259,7 +261,7 @@ bool OOJSScript::initWithPath(const std::optional<std::string>& path,
     OO_LOG("script.javaScript.load.failed",
            "***** Error loading JavaScript script {} -- {}",
            path.value_or("(null)"), *problem);
-    if (context != NULL && JS_HasException(context))
+    if (context != nullptr && JS_HasException(context))
       OOJSReportPendingException(context);
     // (was DESTROY(self) here: scriptWithPath() drops the script when this
     // answers false, after the context below is relinquished)
@@ -317,7 +319,7 @@ void OOJSScript::javaScriptEngineWillReset(const oo::Notification&) {
 }
 
 OOJSScript* OOJSScript::currentlyRunningScript() {
-  if (sRunningStack == NULL) return NULL;
+  if (sRunningStack == nullptr) return nullptr;
   return sRunningStack->current.get();
 }
 
@@ -347,9 +349,9 @@ void OOJSScript::runWithTarget(Entity*) {}
 
 bool OOJSScript::callMethod(JSAtom methodID, JSContext* context,
                             JSValueConst* argv, int argc, JSValue* outResult) {
-  OOCParameterAssert(_name.has_value() && (argv != NULL || argc == 0) &&
-                     context != NULL);
-  if (outResult != NULL) *outResult = JS_UNDEFINED;
+  OOCParameterAssert(_name.has_value() && (argv != nullptr || argc == 0) &&
+                     context != nullptr);
+  if (outResult != nullptr) *outResult = JS_UNDEFINED;
   if (!JS_IsObject(_jsSelf)) return false;
 
   bool OK = false;
@@ -391,7 +393,7 @@ bool OOJSScript::callMethod(JSAtom methodID, JSContext* context,
       OK = false;
     } else {
       OK = true;
-      if (outResult != NULL)
+      if (outResult != nullptr)
         *outResult = result;
       else
         JS_FreeValue(context, result);
@@ -410,7 +412,7 @@ bool OOJSScript::callMethod(JSAtom methodID, JSContext* context,
 }
 
 oo::PList OOJSScript::propertyWithID(JSAtom propID, JSContext* context) {
-  OOCParameterAssert(context != NULL);
+  OOCParameterAssert(context != nullptr);
   if (!JS_IsObject(_jsSelf)) return oo::PList();
 
   JSValue jsValue = JS_GetProperty(context, _jsSelf, propID);
@@ -426,7 +428,7 @@ oo::PList OOJSScript::propertyWithID(JSAtom propID, JSContext* context) {
 
 bool OOJSScript::setProperty(const oo::PList& value, JSAtom propID,
                              JSContext* context) {
-  OOCParameterAssert(context != NULL);
+  OOCParameterAssert(context != nullptr);
   if (!JS_IsObject(_jsSelf)) return false;
 
   // JS_SetProperty() takes ownership of the value.
@@ -436,7 +438,7 @@ bool OOJSScript::setProperty(const oo::PList& value, JSAtom propID,
 
 bool OOJSScript::defineProperty(const oo::PList& value, JSAtom propID,
                                 JSContext* context) {
-  OOCParameterAssert(context != NULL);
+  OOCParameterAssert(context != nullptr);
   if (!JS_IsObject(_jsSelf)) return false;
 
   // JS_DefinePropertyValue() takes ownership of the value.
@@ -496,7 +498,7 @@ std::optional<std::string> OOJSScript::jsDescription() {
 
 void OOJSScript::pushScript(OOJSScript* script) {
   RunningStack* element = new (std::nothrow) RunningStack;
-  if (element == NULL) exit(EXIT_FAILURE);
+  if (element == nullptr) exit(EXIT_FAILURE);
 
   element->back = sRunningStack;
   element->current = script;
@@ -506,7 +508,7 @@ void OOJSScript::pushScript(OOJSScript* script) {
 
 void OOJSScript::pushScript(const oo::WeakRef<OOJSScript>& script) {
   RunningStack* element = new (std::nothrow) RunningStack;
-  if (element == NULL) exit(EXIT_FAILURE);
+  if (element == nullptr) exit(EXIT_FAILURE);
 
   element->back = sRunningStack;
   element->current = script;
@@ -514,7 +516,7 @@ void OOJSScript::pushScript(const oo::WeakRef<OOJSScript>& script) {
 }
 
 void OOJSScript::popScript(OOJSScript* script) {
-  RunningStack* element = NULL;
+  RunningStack* element = nullptr;
 
   assert(sRunningStack->current.get() == script);
   (void)script;
@@ -640,8 +642,8 @@ void OOJSScript::checkForTickle(JSContext* context) {
 void InitOOJSScript(JSContext* context, JSValueConst global) {
   OOJSRegisterClass(&sScriptClassID, &sScriptClass);
   OOJSInitClass(context, global, sScriptClassID, JS_UNDEFINED,
-                OOJSUnconstructableConstruct, 0, NULL, 0, sScriptMethods,
-                OOJS_COUNT(sScriptMethods), NULL, 0);
+                OOJSUnconstructableConstruct, 0, nullptr, 0, sScriptMethods,
+                OOJS_COUNT(sScriptMethods), nullptr, 0);
   OOJSRegisterObjectConverter(sScriptClassID, ScriptConverter);
 }
 
@@ -669,7 +671,7 @@ static JSValue ScriptToString(OOJS_NATIVE_ARGS) {
   if (!description.has_value()) {
     const char* className = OOJSClassName(JS_GetClassID(OOJS_THIS));
     description =
-        oo::str::format("[object %s]", className != NULL ? className : "");
+        oo::str::format("[object %s]", className != nullptr ? className : "");
   }
 
   OOJS_RETURN_STRING_OR_NULL(description);
@@ -679,7 +681,7 @@ static JSValue ScriptToString(OOJS_NATIVE_ARGS) {
 
 static void AddStackToArrayReversed(std::vector<oo::Ref<OOJSScript>>& array,
                                     RunningStack* stack) {
-  if (stack != NULL) {
+  if (stack != nullptr) {
     AddStackToArrayReversed(array, stack->back);
     // -addObject: raised on the nil a script-less push leaves (GNUstep 1.31.1's
     // text). A weak push whose script has gone was a dead weak reference proxy,
@@ -700,7 +702,7 @@ static bool RunScriptWithName(JSContext* context,
                               std::optional<std::string>* outErrorMessage) {
   std::optional<std::string> utf8Contents;
 
-  OOCParameterAssert(outErrorMessage != NULL);
+  OOCParameterAssert(outErrorMessage != nullptr);
   outErrorMessage->reset();
 
   // decodeUnicodeText (it read through .oxz archives)
@@ -762,7 +764,7 @@ static bool RunScriptWithName(JSContext* context,
   if (JS_IsUndefined(compiled)) {
     // JS_Eval requires a terminating NUL, which std::string's c_str() has.
     compiled = JS_Eval(context, wrapped.c_str(), wrapped.size(),
-                       path.has_value() ? path->c_str() : NULL,
+                       path.has_value() ? path->c_str() : nullptr,
                        JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_COMPILE_ONLY);
     if (JS_IsException(compiled)) {
       OOJSReportPendingException(context);
@@ -781,7 +783,7 @@ static bool RunScriptWithName(JSContext* context,
   if (JS_IsException(function)) {
     result = function;
   } else {
-    result = JS_Call(context, function, object, 0, NULL);
+    result = JS_Call(context, function, object, 0, nullptr);
     JS_FreeValue(context, function);
   }
   OOJSStopTimeLimiter();
@@ -887,7 +889,7 @@ static void CacheCompiledScript(JSContext* context, const std::string& path,
   size_t length = 0;
   uint8_t* bytes =
       JS_WriteObject(context, &length, compiled, JS_WRITE_OBJ_BYTECODE);
-  if (bytes == NULL) {
+  if (bytes == nullptr) {
     if (JS_HasException(context))
       JS_FreeValue(context, JS_GetException(context));
     return;
@@ -1011,6 +1013,10 @@ static std::string RewriteLegacyConst(JSContext* context,
   JSValue global = JS_GetGlobalObject(context);
   JSValue rewriter =
       JS_GetPropertyStr(context, global, "__ooliteRewriteLegacyConst");
+  if (JS_IsException(rewriter)) {
+    JS_FreeValue(context, JS_GetException(context));
+    rewriter = JS_UNDEFINED;
+  }
   std::string result = source;
 
   if (JS_IsFunction(context, rewriter)) {

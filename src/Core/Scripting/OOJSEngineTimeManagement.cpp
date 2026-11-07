@@ -27,8 +27,9 @@ SOFTWARE.
 
 #include "OOJSEngineTimeManagement.h"
 
-#include "OOObjCPList.h"
+#include "OODescription.h"
 #include "oofnd/Log.hpp"
+#include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
@@ -57,7 +58,7 @@ namespace {
 static bool sProfiling = false;
 static bool sTracing = false;
 }  // namespace
-static OOJSProfileStackFrame* sProfileStack = NULL;
+static OOJSProfileStackFrame* sProfileStack = nullptr;
 // Profile key (native name or JS function, by pointer) -> entry, retained.
 namespace {
 static std::unordered_map<const void*, oo::Ref<OOTimeProfileEntry>>*
@@ -93,13 +94,13 @@ void OOJSBeginProfiling(bool trace) {
   }
 }
 
-oo::Ref<OOTimeProfile> OOJSEndProfiling(void) {
+oo::Ref<OOTimeProfile> OOJSEndProfiling() {
   // This should be at the top for precision.
   OOHighResTimeValue now = OOGetHighResTime();
   // Time limiter should be as close to outermost as practical.
   OOJSPauseTimeLimiter();
 
-  assert(sProfiling && sProfileStack == NULL);
+  assert(sProfiling && sProfileStack == nullptr);
 
   sProfiling = false;
 
@@ -130,7 +131,7 @@ oo::Ref<OOTimeProfile> OOJSEndProfiling(void) {
 
   // Clean up (the table held the entries' references).
   delete sProfileInfo;
-  sProfileInfo = NULL;
+  sProfileInfo = nullptr;
   OODisposeHighResTime(sProfilerStartTime);
 
   OODisposeHighResTime(now);
@@ -139,7 +140,7 @@ oo::Ref<OOTimeProfile> OOJSEndProfiling(void) {
   return result;
 }
 
-bool OOJSIsProfiling(void) { return sProfiling; }
+bool OOJSIsProfiling() { return sProfiling; }
 
 namespace {
 static void UpdateProfileForFrame(OOHighResTimeValue now,
@@ -171,8 +172,8 @@ void OOJSProfileExit(OOJSProfileStackFrame* frame) {
           profile() itself) is not on the profile stack.
   */
   OOJSProfileStackFrame* search = sProfileStack;
-  while (search != NULL && search != frame) search = search->back;
-  if (search == NULL) return;
+  while (search != nullptr && search != frame) search = search->back;
+  if (search == nullptr) return;
 
   OOHighResTimeValue now = OOGetHighResTime();
   {
@@ -180,7 +181,7 @@ void OOJSProfileExit(OOJSProfileStackFrame* frame) {
 
     // Pop any frames above this one, as for a native that threw.
     for (;;) {
-      assert(sProfileStack != NULL);
+      assert(sProfileStack != nullptr);
 
       done = (sProfileStack == frame);
       UpdateProfileForFrame(now, sProfileStack);
@@ -217,7 +218,7 @@ static void UpdateProfileForFrame(OOHighResTimeValue now,
   entry->addSampleWithTotalTime(time, selfTime);
 
   *(frame->total) += selfTime;
-  if (sProfileStack != NULL) sProfileStack->subTime += time;
+  if (sProfileStack != nullptr) sProfileStack->subTime += time;
 
   if (EXPECT_NOT(sTracing)) oo::log::outdent();
 }
@@ -318,7 +319,7 @@ OOTimeProfileEntry::OOTimeProfileEntry(const char* name) {
   OOCAssert(sProfiling, "Can't create profile entries while not profiling.");
 
   {
-    if (name != NULL) {
+    if (name != nullptr) {
       _function = std::string(name);
     }
   }

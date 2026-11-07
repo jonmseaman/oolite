@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 #include "HeadUpDisplay.h"
 #include "OOConstToJSString.h"
 #include "OOConstToString.h"
+#include "OODescription.h"
 #include "OOEquipmentType.h"
 #include "OOFunctionAttributes.h"
 #include "OOJSEntity.h"
@@ -38,7 +39,6 @@ MA 02110-1301, USA.
 #include "OOJSShip.h"
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
-#include "OOObjCPList.h"
 #include "OOSystemDescriptionManager.h"
 #include "PlayerEntity.h"
 #include "PlayerEntityContracts.h"
@@ -49,6 +49,8 @@ MA 02110-1301, USA.
 #include "StationEntity.h"
 #include "Universe.h"
 #include "oofnd/Notification.hpp"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
@@ -421,7 +423,7 @@ void InitOOJSPlayerShip(JSContext* context, JSValueConst global) {
   OOJSInitClass(context, global, sPlayerShipClassID, shipPrototype,
                 OOJSUnconstructableConstruct, 0, sPlayerShipProperties,
                 OOJS_COUNT(sPlayerShipProperties), sPlayerShipMethods,
-                OOJS_COUNT(sPlayerShipMethods), NULL, 0);
+                OOJS_COUNT(sPlayerShipMethods), nullptr, 0);
   JS_FreeValue(context, shipPrototype);
 
   OOJSRegisterObjectConverter(sPlayerShipClassID, OOJSEntityObjectConverter);
@@ -453,9 +455,9 @@ void InitOOJSPlayerShip(JSContext* context, JSValueConst global) {
   JS_FreeValue(context, playerObject);
 }
 
-JSClassID JSPlayerShipClassID(void) { return sPlayerShipClassID; }
+JSClassID JSPlayerShipClassID() { return sPlayerShipClassID; }
 
-JSValue JSPlayerShipObject(void) {
+JSValue JSPlayerShipObject() {
   JSContext* context = OOJSAcquireContext();
   JSValue playerObject = JSPlayerObject();
   JSValue result = JS_GetPropertyStr(context, playerObject, "ship");
@@ -467,7 +469,7 @@ JSValue JSPlayerShipObject(void) {
 // PlayerEntity (OOJavaScriptExtensions): the bodies of the category's methods,
 // which the engine and the player sent by selector; the C++ player calls them.
 // Its JS class is JSPlayerShipClassID() (PlayerEntity::jsClassID()).
-std::optional<std::string> OOJSPlayerShipJSClassName(void) {
+std::optional<std::string> OOJSPlayerShipJSClassName() {
   return std::string("PlayerShip");
 }
 
@@ -493,7 +495,7 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
           call) has no private weak reference to the player.
   */
   if (EXPECT_NOT(OOIsPlayerStale() ||
-                 JS_GetOpaque(thisObj, sPlayerShipClassID) == NULL)) {
+                 JS_GetOpaque(thisObj, sPlayerShipClassID) == nullptr)) {
     return JS_UNDEFINED;
   }
 
@@ -1663,7 +1665,7 @@ static JSValue PlayerShipAwardContract(OOJS_NATIVE_ARGS) {
   }
 
   if (!ValidateContracts(context, argc, OOJS_ARGV, true, &start, &destination,
-                         &eta, &fee, &premium, "awardContract", NULL))
+                         &eta, &fee, &premium, "awardContract", nullptr))
     return OOJSNativeFailure(
         context);  // always go through validate contracts (cargo)
 
@@ -2119,8 +2121,9 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
                               unsigned* risk) {
   OOJS_PROFILE_ENTER
 
-  OOCParameterAssert(context != NULL && argv != NULL && start != NULL &&
-                     destination != NULL && eta != NULL && fee != NULL);
+  OOCParameterAssert(context != nullptr && argv != nullptr &&
+                     start != nullptr && destination != nullptr &&
+                     eta != nullptr && fee != nullptr);
 
   uint32_t uValue;
   int offset = isCargo ? 2 : 1;

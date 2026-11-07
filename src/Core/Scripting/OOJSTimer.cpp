@@ -25,11 +25,13 @@ MA 02110-1301, USA.
 
 #include "OOJSTimer.h"
 
+#include "OODescription.h"
 #include "OOJSScript.h"
 #include "OOJavaScriptEngine.h"
-#include "OOObjCPList.h"
 #include "Universe.h"
 #include "oofnd/Notification.hpp"
+#include "oofnd/PList.hpp"
+#include "oofnd/StdLib.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOAssert.h"
 
@@ -217,7 +219,7 @@ void OOJSTimer::timerFired() {
   JSValue jsThis = JS_DupValue(context, _jsThis);
 
   OOJSScript::pushScript(_owningScript);
-  engine->callJSFunction(function, jsThis, 0, NULL, &rval);
+  engine->callJSFunction(function, jsThis, 0, nullptr, &rval);
   OOJSScript::popScript(_owningScript.get());
 
   JS_FreeValue(context, rval);
@@ -328,7 +330,7 @@ void InitOOJSTimer(JSContext* context, JSValueConst global) {
   OOJSRegisterClass(&sTimerClassID, &sTimerClass);
   OOJSInitClass(context, global, sTimerClassID, JS_UNDEFINED, TimerConstruct, 0,
                 sTimerProperties, OOJS_COUNT(sTimerProperties), sTimerMethods,
-                OOJS_COUNT(sTimerMethods), NULL, 0);
+                OOJS_COUNT(sTimerMethods), nullptr, 0);
   OOJSRegisterObjectConverter(sTimerClassID, TimerConverter);
 }
 

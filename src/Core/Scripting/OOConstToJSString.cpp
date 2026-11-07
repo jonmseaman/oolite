@@ -47,18 +47,18 @@ MA 02110-1301, USA.
         -- Ahruman 2011-01-15
 */
 
-typedef struct {
+using TableEntry = struct {
   NSInteger value;
   const char* cString;
   JSAtom atom;
-} TableEntry;
+};
 
-typedef struct ConstTable {
+using ConstTable = struct ConstTable {
   NSUInteger count;
   TableEntry* entries;
-} ConstTable;
+};
 
-#define TABLE(entries) {sizeof entries / sizeof *entries, entries}
+#define TABLE(entries) {sizeof(entries) / sizeof *(entries), entries}
 
 // Unconditional, as upstream's: OOCAssert reads it in every flavour.
 static bool sInited = false;
@@ -141,7 +141,7 @@ static void InitTable(JSContext* context, ConstTable* table);
 
 void OOConstToJSStringInit(JSContext* context) {
   OOCAssert(!sInited, "OOConstToJSStringInit() called while already inited.");
-  OOCParameterAssert(context != NULL);
+  OOCParameterAssert(context != nullptr);
 
   // Atoms survive engine resets, so they only need interning once.
   if (!sAtomsInterned) {
@@ -163,7 +163,7 @@ void OOConstToJSStringInit(JSContext* context) {
   sInited = true;
 }
 
-void OOConstToJSStringDestroy(void) {
+void OOConstToJSStringDestroy() {
   OOCAssert(sInited, "OOConstToJSStringDestroy() called while not inited.");
   sInited = false;
   // The atoms remain valid; they belong to the runtime.
@@ -179,7 +179,7 @@ static int CompareEntries(const void* a, const void* b) {
 }
 
 static void InitTable(JSContext* context, ConstTable* table) {
-  OOCParameterAssert(context != NULL && table != NULL);
+  OOCParameterAssert(context != nullptr && table != nullptr);
 
   NSUInteger i;
   for (i = 0; i < table->count; i++) {
@@ -195,8 +195,8 @@ JSValue OOJSValueFromConstantPRIVATE(JSContext* context, NSInteger value,
                                      struct ConstTable* table) {
   OOCAssert(sInited, "%s called before OOConstToJSStringInit().",
             __PRETTY_FUNCTION__);
-  OOCParameterAssert(context != NULL);
-  OOCParameterAssert(table != NULL && table->count > 0);
+  OOCParameterAssert(context != nullptr);
+  OOCParameterAssert(table != nullptr && table->count > 0);
 
   // Binary search. (Signed bounds: the SpiderMonkey version underflowed for
   // values below the first entry.)
@@ -222,7 +222,7 @@ NSUInteger OOConstantFromJSValuePRIVATE(JSContext* context, JSValueConst value,
                                         NSInteger defaultValue) {
   OOCAssert(sInited, "%s called before OOConstToJSStringInit().",
             __PRETTY_FUNCTION__);
-  OOCParameterAssert(context != NULL && table != NULL);
+  OOCParameterAssert(context != nullptr && table != nullptr);
 
   if (EXPECT_NOT(!JS_IsString(value))) return defaultValue;
 

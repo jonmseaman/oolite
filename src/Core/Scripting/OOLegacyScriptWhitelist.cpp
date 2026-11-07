@@ -42,7 +42,7 @@ MA 02110-1301, USA.
    null oo::PList stands for nil.
 */
 
-typedef struct SanStackElement SanStackElement;
+using SanStackElement = struct SanStackElement;
 struct SanStackElement {
   SanStackElement* back;
   std::optional<std::string> key;  // Dictionary key; nullopt for arrays.
@@ -74,7 +74,7 @@ static std::optional<std::string> SanitizeActionMethod(
     const std::string& selectorString,
     bool allowAIMethods);  // Checks aliases and whitelist, returns nullopt if
                            // whitelist fails.
-static oo::PList AlwaysFalseConditions(void);
+static oo::PList AlwaysFalseConditions();
 static bool IsAlwaysFalseConditions(const oo::PList& conditions);
 
 static std::string StringFromStack(SanStackElement* topOfStack);
@@ -83,7 +83,7 @@ static std::string StringFromStack(SanStackElement* topOfStack);
 oo::PList OOSanitizeLegacyScript(const oo::PList& script,
                                  const std::optional<std::string>& context,
                                  bool allowAIMethods) {
-  SanStackElement stackRoot = {NULL, context, 0};
+  SanStackElement stackRoot = {nullptr, context, 0};
   return OOSanitizeLegacyScriptInternal(
       script, &stackRoot,
       allowAIMethods);  // a fresh tree, as the deep copy was
@@ -131,7 +131,7 @@ static oo::PList OOSanitizeLegacyScriptInternal(const oo::PList& script,
 oo::PList OOSanitizeLegacyScriptConditions(
     const oo::PList& conditions, const std::optional<std::string>& context) {
   SanStackElement stackRoot = {
-      NULL,
+      nullptr,
       context ? context : std::optional<std::string>("<anonymous conditions>"),
       0};
   return OOSanitizeLegacyScriptConditionsInternal(
@@ -454,7 +454,7 @@ namespace {
 static OOOperationType ClassifyLHSConditionSelector(
     const std::string& selectorString,
     std::optional<std::string>* outSanitizedSelector) {
-  assert(outSanitizedSelector != NULL);
+  assert(outSanitizedSelector != nullptr);
 
   *outSanitizedSelector = selectorString;
 
@@ -603,7 +603,7 @@ static std::optional<std::string> SanitizeActionMethod(
 
 //	Return a conditions array that always evaluates as false.
 namespace {
-static oo::PList AlwaysFalseConditions(void) {
+static oo::PList AlwaysFalseConditions() {
   /*	Upstream bug kept: the cache is only
      filled when it is already non-nil, so this always returns nil (a null
      PList). A failed conditions array therefore drops its enclosing conditional
@@ -632,7 +632,7 @@ static bool IsAlwaysFalseConditions(const oo::PList& conditions) {
 
 namespace {
 static std::string StringFromStackInternal(SanStackElement* topOfStack) {
-  if (topOfStack == NULL) return std::string();
+  if (topOfStack == nullptr) return std::string();
 
   std::string base = StringFromStackInternal(topOfStack->back);
 

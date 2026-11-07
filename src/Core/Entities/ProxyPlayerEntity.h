@@ -6,7 +6,8 @@ Ship entity which, in some respects, emulates a PlayerShip. In particular, at
 this time it implements the extra shader bindable methods of PlayerShip.
 
 ProxyPlayerEntity holds the proxy's dials and their accessors. The universe and
-the player make it with newProxyObject(). The shader bindings read its dials by name.
+the player make it with newProxyObject(). The shader bindings read its dials by
+name.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors

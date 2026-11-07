@@ -87,21 +87,19 @@ void InitOOJSSun(JSContext* context, JSValueConst global) {
   OOJSInitClass(context, global, sSunClassID, parentPrototype,
                 OOJSUnconstructableConstruct, 0, sSunProperties,
                 OOJS_COUNT(sSunProperties), sSunMethods,
-                OOJS_COUNT(sSunMethods), NULL, 0);
+                OOJS_COUNT(sSunMethods), nullptr, 0);
   JS_FreeValue(context, parentPrototype);
 
   OOJSRegisterObjectConverter(sSunClassID, OOJSEntityObjectConverter);
   OOJSRegisterSubclass(sSunClassID, JSEntityClassID());
 }
 
-JSClassID JSSunClassID(void) { return sSunClassID; }
+JSClassID JSSunClassID() { return sSunClassID; }
 
 // The bodies of OOSunEntity (OOJavaScriptExtensions).
-bool OOJSSunIsVisibleToScripts(void) { return true; }
+bool OOJSSunIsVisibleToScripts() { return true; }
 
-std::optional<std::string> OOJSSunJSClassName(void) {
-  return std::string("Sun");
-}
+std::optional<std::string> OOJSSunJSClassName() { return std::string("Sun"); }
 
 static JSValue SunGetProperty(OOJS_GETTER_ARGS) {
   OOJS_NATIVE_ENTER(context)
