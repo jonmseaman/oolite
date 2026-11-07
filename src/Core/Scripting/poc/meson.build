@@ -28,16 +28,16 @@ poc_gnustep_dep = declare_dependency(
 )
 
 poc_sources = files(
-    '../OOJSClasses.m',
-    '../OOJSQuaternion.m',
-    '../OOJSVector.m',
-    'OOJSScript.m',
-    'OOJavaScriptEnginePoc.m',
-    'OOLogStub.m',
-    'main.m',
-    '../../OOHPVector.m',
-    '../../OOQuaternion.m',
-    '../../OOVector.m',
+    '../OOJSClasses.mm',
+    '../OOJSQuaternion.mm',
+    '../OOJSVector.mm',
+    'OOJSScript.mm',
+    'OOJavaScriptEnginePoc.mm',
+    'OOLogStub.mm',
+    'main.mm',
+    '../../OOHPVector.mm',
+    '../../OOQuaternion.mm',
+    '../../OOVector.mm',
     '../../legacy_random.c',
 )
 
