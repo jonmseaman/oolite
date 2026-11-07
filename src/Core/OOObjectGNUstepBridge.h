@@ -7,7 +7,8 @@ OOFoundation.h. See OOObjectGNUstepBridge.mm.
 
 */
 
-#import "OOFoundation.h" // imports this header after Foundation; the Foundation types used here come from there
+// Imported only by OOFoundation.h, after Foundation: the Foundation types used here come from there
+// (importing OOFoundation.h back from here was an include cycle, misc-header-include-cycle).
 #import "oofnd/objc/OOObject.h"
 
 @interface OOObject (OOGNUstepBridge)
