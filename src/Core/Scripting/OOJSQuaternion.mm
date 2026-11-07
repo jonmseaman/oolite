@@ -28,11 +28,21 @@ MA 02110-1301, USA.
 #import "OOJSEntity.h"
 #endif
 #import "OOJavaScriptEngine.h"
-#import "OOStringBridge.h"
+
+#include "oofnd/String.hpp"
+#include <cstring>
+
+/*
+        C++20 since bead oo-hwae, converted the way bead oo-ppc converted OOJSVector.mm (proposed
+        ADR-0056 amendment oo-ppc). The JS class was already C++ on QuickJS-ng;
+        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
+        (OOJavaScriptEngine.h); BOOL/YES/NO are bool/true/false. Messages to classes that are still
+        Objective-C (Entity) stay as they are, which is why the file is still .mm until Phase 4.
+*/
 
 static JSClassID sQuaternionClassID;
 
-static BOOL GetThisQuaternion(JSContext* context, JSValueConst quaternionObj, Quaternion* outQuaternion, const std::string& method) NONNULL_FUNC;
+static bool GetThisQuaternion(JSContext* context, JSValueConst quaternionObj, Quaternion* outQuaternion, const std::string& method) NONNULL_FUNC;
 
 static JSValue QuaternionGetProperty(JSContext* context, JSValueConst thisObj, int magic);
 static JSValue QuaternionSetProperty(JSContext* context, JSValueConst thisObj, JSValueConst value, int magic);
@@ -137,7 +147,7 @@ JSValue JSQuaternionWithQuaternion(JSContext* context, Quaternion quaternion)
     OOJS_PROFILE_EXIT
 }
 
-BOOL QuaternionToJSValue(JSContext* context, Quaternion quaternion, JSValue* outValue)
+bool QuaternionToJSValue(JSContext* context, Quaternion quaternion, JSValue* outValue)
 {
     OOJS_PROFILE_ENTER
 
@@ -146,24 +156,24 @@ BOOL QuaternionToJSValue(JSContext* context, Quaternion quaternion, JSValue* out
     JSValue object = JSQuaternionWithQuaternion(context, quaternion);
     if (EXPECT_NOT(JS_IsException(object))) {
         *outValue = JS_UNDEFINED;
-        return NO;
+        return false;
     }
 
     *outValue = object;
-    return YES;
+    return true;
 
     OOJS_PROFILE_EXIT
 }
 
-BOOL JSValueToQuaternion(JSContext* context, JSValueConst value, Quaternion* outQuaternion)
+bool JSValueToQuaternion(JSContext* context, JSValueConst value, Quaternion* outQuaternion)
 {
     if (EXPECT_NOT(!JS_IsObject(value)))
-        return NO;
+        return false;
 
     return JSObjectGetQuaternion(context, value, outQuaternion);
 }
 
-static BOOL GetArrayElementNumber(JSContext* context, JSValueConst array, uint32_t index, double* outNumber)
+static bool GetArrayElementNumber(JSContext* context, JSValueConst array, uint32_t index, double* outNumber)
 {
     JSValue element = JS_GetPropertyUint32(context, array, index);
     int status = JS_IsException(element) ? -1 : JS_ToFloat64(context, outNumber, element);
@@ -171,7 +181,7 @@ static BOOL GetArrayElementNumber(JSContext* context, JSValueConst array, uint32
     return status == 0;
 }
 
-BOOL JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj, Quaternion* outQuaternion)
+bool JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj, Quaternion* outQuaternion)
 {
     OOJS_PROFILE_ENTER
 
@@ -183,14 +193,14 @@ BOOL JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj, Quate
 
     // quaternionObj can legitimately be null or a primitive.
     if (EXPECT_NOT(!JS_IsObject(quaternionObj))) {
-        return NO;
+        return false;
     }
 
     // If this is a (JS) Quaternion...
     priv = (Quaternion*)JS_GetOpaque(quaternionObj, sQuaternionClassID);
     if (EXPECT(priv != NULL)) {
         *outQuaternion = *priv;
-        return YES;
+        return true;
     }
 
     // If it's an array...
@@ -199,19 +209,19 @@ BOOL JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj, Quate
         if (JS_GetLength(context, quaternionObj, &arrayLength) == 0 && arrayLength == 4) {
             // ...use the four numbers as [w, x, y, z]
             if (!GetArrayElementNumber(context, quaternionObj, 0, &dVal))
-                return NO;
+                return false;
             outQuaternion->w = dVal;
             if (!GetArrayElementNumber(context, quaternionObj, 1, &dVal))
-                return NO;
+                return false;
             outQuaternion->x = dVal;
             if (!GetArrayElementNumber(context, quaternionObj, 2, &dVal))
-                return NO;
+                return false;
             outQuaternion->y = dVal;
             if (!GetArrayElementNumber(context, quaternionObj, 3, &dVal))
-                return NO;
+                return false;
             outQuaternion->z = dVal;
 
-            return YES;
+            return true;
         }
     }
 
@@ -221,7 +231,7 @@ BOOL JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj, Quate
         JSClassID ignored;
         Entity* entity = [(id)JS_GetAnyOpaque(quaternionObj, &ignored) weakRefUnderlyingObject];
         *outQuaternion = [entity orientation];
-        return YES;
+        return true;
     }
 #endif
 
@@ -234,24 +244,24 @@ BOOL JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj, Quate
     */
     if (JS_GetClassID(quaternionObj) == sQuaternionClassID) {
         *outQuaternion = kZeroQuaternion;
-        return YES;
+        return true;
     }
 
-    return NO;
+    return false;
 
     OOJS_PROFILE_EXIT
 }
 
-static BOOL GetThisQuaternion(JSContext* context, JSValueConst quaternionObj, Quaternion* outQuaternion, const std::string& method)
+static bool GetThisQuaternion(JSContext* context, JSValueConst quaternionObj, Quaternion* outQuaternion, const std::string& method)
 {
     if (EXPECT(JSObjectGetQuaternion(context, quaternionObj, outQuaternion)))
-        return YES;
+        return true;
 
     cxx_OOJSReportBadArguments(context, "Quaternion", method, 1, &quaternionObj, "Invalid target object", "Quaternion");
-    return NO;
+    return false;
 }
 
-BOOL JSQuaternionSetQuaternion(JSContext* context, JSValueConst quaternionObj, Quaternion quaternion)
+bool JSQuaternionSetQuaternion(JSContext* context, JSValueConst quaternionObj, Quaternion quaternion)
 {
     OOJS_PROFILE_ENTER
 
@@ -261,27 +271,27 @@ BOOL JSQuaternionSetQuaternion(JSContext* context, JSValueConst quaternionObj, Q
     if (priv != NULL) // If this is a (JS) Quaternion...
     {
         *priv = quaternion;
-        return YES;
+        return true;
     }
 
     if (JS_GetClassID(quaternionObj) == sQuaternionClassID) {
         // Silently fail for the prototype.
-        return YES;
+        return true;
     }
 
-    return NO;
+    return false;
 
     OOJS_PROFILE_EXIT
 }
 
-static BOOL QuaternionFromArgumentListNoErrorInternal(JSContext* context, int argc, JSValueConst* argv, Quaternion* outQuaternion, int* outConsumed, BOOL permitNumberList)
+static bool QuaternionFromArgumentListNoErrorInternal(JSContext* context, int argc, JSValueConst* argv, Quaternion* outQuaternion, int* outConsumed, bool permitNumberList)
 {
     OOJS_PROFILE_ENTER
 
     double w, x, y, z;
 
     if (EXPECT_NOT(argc == 0))
-        return NO;
+        return false;
     assert(argv != NULL && outQuaternion != NULL);
 
     if (outConsumed != NULL)
@@ -292,53 +302,53 @@ static BOOL QuaternionFromArgumentListNoErrorInternal(JSContext* context, int ar
         if (JSObjectGetQuaternion(context, argv[0], outQuaternion)) {
             if (outConsumed != NULL)
                 *outConsumed = 1;
-            return YES;
+            return true;
         }
     }
 
     if (!permitNumberList)
-        return NO;
+        return false;
 
     // As a special case for QuaternionConstruct(), look for four numbers.
     if (EXPECT_NOT(argc < 4))
-        return NO;
+        return false;
 
     // Given a string, JS_ToFloat64() succeeds but provides a NaN number.
     if (EXPECT_NOT(JS_ToFloat64(context, &w, argv[0]) < 0 || isnan(w)))
-        return NO;
+        return false;
     if (EXPECT_NOT(JS_ToFloat64(context, &x, argv[1]) < 0 || isnan(x)))
-        return NO;
+        return false;
     if (EXPECT_NOT(JS_ToFloat64(context, &y, argv[2]) < 0 || isnan(y)))
-        return NO;
+        return false;
     if (EXPECT_NOT(JS_ToFloat64(context, &z, argv[3]) < 0 || isnan(z)))
-        return NO;
+        return false;
 
     // We got our four numbers.
     *outQuaternion = make_quaternion(w, x, y, z);
     if (outConsumed != NULL)
         *outConsumed = 4;
 
-    return YES;
+    return true;
 
     OOJS_PROFILE_EXIT
 }
 
 // EMMSTRAN: remove outConsumed, since it can only be 1 except in failure (constructor is an exception, but it uses QuaternionFromArgumentListNoErrorInternal() directly).
-BOOL QuaternionFromArgumentList(JSContext* context, const std::string& scriptClass, const std::string& function, int argc, JSValueConst* argv, Quaternion* outQuaternion, int* outConsumed)
+bool QuaternionFromArgumentList(JSContext* context, const std::string& scriptClass, const std::string& function, int argc, JSValueConst* argv, Quaternion* outQuaternion, int* outConsumed)
 {
-    if (QuaternionFromArgumentListNoErrorInternal(context, argc, argv, outQuaternion, outConsumed, NO))
-        return YES;
+    if (QuaternionFromArgumentListNoErrorInternal(context, argc, argv, outQuaternion, outConsumed, false))
+        return true;
     else {
         cxx_OOJSReportBadArguments(context, scriptClass, function, argc, argv,
             "Could not construct quaternion from parameters",
             "Quaternion, Entity or four numbers");
-        return NO;
+        return false;
     }
 }
 
-BOOL QuaternionFromArgumentListNoError(JSContext* context, int argc, JSValueConst* argv, Quaternion* outQuaternion, int* outConsumed)
+bool QuaternionFromArgumentListNoError(JSContext* context, int argc, JSValueConst* argv, Quaternion* outQuaternion, int* outConsumed)
 {
-    return QuaternionFromArgumentListNoErrorInternal(context, argc, argv, outQuaternion, outConsumed, NO);
+    return QuaternionFromArgumentListNoErrorInternal(context, argc, argv, outQuaternion, outConsumed, false);
 }
 
 // *** Implementation stuff ***
@@ -439,7 +449,7 @@ static JSValue QuaternionConstruct(JSContext* context, JSValueConst newTarget, i
     Quaternion quaternion = kIdentityQuaternion;
 
     if (argc != 0) {
-        if (EXPECT_NOT(!QuaternionFromArgumentListNoErrorInternal(context, argc, argv, &quaternion, NULL, YES))) {
+        if (EXPECT_NOT(!QuaternionFromArgumentListNoErrorInternal(context, argc, argv, &quaternion, NULL, true))) {
             cxx_OOJSReportBadArguments(context, std::nullopt, std::nullopt, argc, argv,
                 "Could not construct quaternion from parameters",
                 "Quaternion, Entity or array of four numbers");
@@ -464,7 +474,7 @@ static JSValue QuaternionToString(OOJS_NATIVE_ARGS)
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "toString")))
         return JS_EXCEPTION;
 
-    OOJS_RETURN_OBJECT(oo::NSStringFrom(QuaternionDescription(thisq)));
+    OOJS_RETURN_PLIST(oo::PList(QuaternionDescription(thisq)));
 
     OOJS_NATIVE_EXIT
 }
@@ -479,7 +489,7 @@ static JSValue QuaternionToSource(OOJS_NATIVE_ARGS)
     if (EXPECT_NOT(!GetThisQuaternion(context, OOJS_THIS, &thisq, "toSource")))
         return JS_EXCEPTION;
 
-    OOJS_RETURN_OBJECT(oo::NSStringFrom(oo::str::format("Quaternion(%g, %g, %g, %g)", thisq.w, thisq.x, thisq.y, thisq.z)));
+    OOJS_RETURN_PLIST(oo::PList(oo::str::format("Quaternion(%g, %g, %g, %g)", thisq.w, thisq.x, thisq.y, thisq.z)));
 
     OOJS_NATIVE_EXIT
 }

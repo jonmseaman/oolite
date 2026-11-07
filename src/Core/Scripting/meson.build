@@ -9,6 +9,7 @@ oolite_sources += files(
     'OOJSClock.mm',
     'OOJSDock.mm',
     'OOJSEngineDebuggerHelpers.mm',
+    'OOJSEngineNativeWrappers.mm',
     'OOJSEngineTimeManagement.mm',
     'OOJSEntity.mm',
     'OOJSEquipmentInfo.mm',
@@ -17,6 +18,7 @@ oolite_sources += files(
     'OOJSFont.mm',
     'OOJSFrameCallbacks.mm',
     'OOJSFunction.mm',
+    'OOJSFunction+ObjCBridge.mm',
     'OOJSGlobal.mm',
     'OOJSGuiScreenKeyDefinition.mm',
     'OOJSInterfaceDefinition.mm',
@@ -40,6 +42,7 @@ oolite_sources += files(
     'OOJSSystem.mm',
     'OOJSSystemInfo.mm',
     'OOJSTimer.mm',
+    'OOJSTimer+ObjCBridge.mm',
     'OOJSVector.mm',
     'OOJSVisualEffect.mm',
     'OOJSWaypoint.mm',
@@ -49,6 +52,7 @@ oolite_sources += files(
     'OOPListScript.mm',
     'OOScript.mm',
     'OOScriptTimer.mm',
+    'OOScriptTimer+ObjCBridge.mm',
 )
 
 oolite_includes += include_directories('.')
