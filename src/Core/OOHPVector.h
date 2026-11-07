@@ -130,8 +130,8 @@ OOINLINE OOHPScalar HPtriple_product(HPVector first, HPVector second, HPVector t
 /* Given three points on a surface, returns the normal to the surface. */
 OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2, HPVector v3) CONST_FUNC;
 
-#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit until bead oo-dbz), not a plain C++ one
-/*	Objective-C++ only: OOMaths.h is included inside extern "C" (proposed ADR-0043, bead oo-dlox). */
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // a game unit, not a plain C++ one
+/*	C++ only: OOMaths.h is included inside extern "C". */
 extern "C++" {
 #include "oofnd/StdLib.hpp"
 std::string cxx_HPVectorDescription(HPVector vector); // "(x, y, z)"
@@ -193,7 +193,7 @@ OOINLINE void HPscale_vector(HPVector* vec, OOHPScalar factor)
 {
     /*
             Clang static analyzer: reports an unintialized value here when called
-            from -[HeadUpDisplay rescaleByFactor:]. This is blatantly wrong, as
+            from the HUD's rescaling. This is blatantly wrong, as
             the array the vector comes from is fully initialized in the range being
             looped over.
             -- Ahruman 2012-09-14
@@ -207,7 +207,7 @@ OOINLINE HPVector HPvector_multiply_scalar(HPVector v, OOHPScalar s)
 {
     /*
             Clang static analyzer: reports a garbage value here when called from
-            -[OOMesh rescaleByFactor:], apparently on baseless assumption that
+            OOMesh::rescaleByFactor(), apparently on baseless assumption that
             OOMesh._vertices points to only one vertex.
             -- Ahruman 2012-09-14
     */
@@ -341,9 +341,4 @@ OOINLINE HPVector HPnormal_to_surface(HPVector v1, HPVector v2, HPVector v3)
 }
 
 #if __OBJC__
-/*	TRANSITIONAL (proposed ADR-0043, "Transitional bridges"): the Foundation-typed functions this header
-        declared before bead oo-dlox, forwarding to the cxx_ functions above, so unmigrated callers compile
-        unchanged (with their old C linkage). Callers move to the cxx_ API in their own sweep beads; the
-        bridge goes in its own bead.
-*/
 #endif

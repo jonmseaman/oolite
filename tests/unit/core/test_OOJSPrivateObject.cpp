@@ -1,19 +1,19 @@
 /*	test_OOJSPrivateObject.mm
 	Unit tests for the engine's C++ private-slot glue (src/Core/Scripting/OOJSPrivateObject.h/.cpp).
 
-	As the binding tests do (amendment oo-ppc item 6), it runs a JS class in a real QuickJS-ng
-	context and links the glue, the engine's class registry (OOJSClasses.mm) and its exception
-	translator (OOJSEngineNativeWrappers.mm). The class is the test's own: a JS class "Thing" whose
-	private slot holds a C++ Thing (an oo::RefCounted that implements OOJSPrivateObject), with
+	As the binding tests do, it runs a JS class in a real QuickJS-ng context and links the glue, the
+	engine's class registry (OOJSClasses.mm) and its exception translator
+	(OOJSEngineNativeWrappers.mm). The class is the test's own: a JS class "Thing" whose private
+	slot holds a C++ Thing (an oo::RefCounted that implements OOJSPrivateObject), with
 	OOJSCxxObjectWrapperFinalize as its finalizer, a toString() that is
 	OOJSCxxObjectWrapperToString, and a "name" property read through OOJSGetCxxPrivate; a JS
 	subclass "SubThing" is registered as the engine's subclasses are. What the rest of the engine
-	provides (the error reporter, the string conversion, the atom cache and the toString() a
-	foreign `this` falls back to) is the smallest stand-in that does the same thing.
-	The cases pin what replaced each selector the engine sent an id: -oo_jsValueInContext: (one JS
-	object per object, null for null), the getter's class check and its error text, the
-	finalizer's -oo_clearJSSelf: and release, and toString()'s -cxx_oo_jsDescription with its
-	fallbacks and a native's exception. Run: tests/run.sh unit
+	provides (the error reporter, the string conversion, the atom cache and the toString() a foreign
+	`this` falls back to) is the smallest stand-in that does the same thing. The cases pin what
+	replaced each selector the engine sent an id: -oo_jsValueInContext: (one JS object per object,
+	null for null), the getter's class check and its error text, the finalizer's -oo_clearJSSelf:
+	and release, and toString()'s -cxx_oo_jsDescription with its fallbacks and a native's exception.
+	Run: tests/run.sh unit
 */
 
 #include "OOJSPrivateObject.h"
@@ -170,7 +170,7 @@ namespace {
 int sForeignToStrings = 0;
 } // namespace
 
-// The engine's Objective-C toString(), which a `this` of another class falls back to.
+// The engine's toString(), which a `this` of another class falls back to.
 JSValue OOJSObjectWrapperToString(JSContext *context, JSValueConst, int, JSValueConst *)
 {
 	sForeignToStrings++;
@@ -368,7 +368,7 @@ OO_TEST(toString)
 	OO_CHECK_EVAL("String(epsilon)", "[object Thing]");
 	OO_CHECK_EVAL("String(zeta)", "[object SubThing]");
 	OO_CHECK_EVAL("String(thingPrototype)", "[object Thing]");
-	// Another class's `this` is described by the engine's Objective-C toString().
+	// Another class's `this` is described by the engine's toString().
 	sForeignToStrings = 0;
 	OO_CHECK_EVAL("thingPrototype.toString.call({})", "foreign");
 	OO_CHECK_EQ(sForeignToStrings, 1);

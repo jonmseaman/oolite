@@ -2,10 +2,11 @@
 
 OOEquipmentType.h
 
-C++20 since bead oo-fg7i (Phase 3, proposed ADR-0056); it has no Objective-C facade. The
-registries of types are the class's and keep each registered type alive while it is registered;
-ships keep weapon and missile types unretained (OOWeaponType, null: no weapon). A type is its own
-PList::Object payload (oo::PListForeign) and its own JS glue (OOJSPrivateObject).
+The registries of types are the class's and
+keep each registered type alive while it is registered; ships keep weapon and
+missile types unretained (OOWeaponType, null: no weapon). A type is its own
+PList::Object payload (oo::PListForeign) and its own JS glue
+(OOJSPrivateObject).
 
 Class representing a type of ship equipment. Exposed to JavaScript as
 EquipmentInfo.
@@ -34,9 +35,6 @@ SOFTWARE.
 */
 
 #pragma once
-
-#ifndef OOEQUIPMENTTYPE_H
-#define OOEQUIPMENTTYPE_H
 
 #include "OOColor.h"
 #include "OOFoundation.h"
@@ -70,7 +68,7 @@ public:
 
     std::optional<std::string> identifier();
     std::optional<std::string> damagedIdentifier();
-    std::optional<std::string> name(); // localized (bead oo-3rb.289.10)
+    std::optional<std::string> name(); // localized
     std::optional<std::string> descriptiveText(); // localized
     OOTechLevelID techLevel();
     OOCreditsQuantity price(); // Tenths of credits
@@ -153,15 +151,14 @@ public:
     void clearJSSelf(JSValueConst selfVal) override;
     std::optional<std::string> jsDescription() override;
 
-    // oo::PListForeign: what the facade answered (its class, and "%@" as <OOEquipmentType 0x...>{...}).
+    // oo::PListForeign: the class name, and "%@" as <OOEquipmentType 0x...>{...}.
     std::string className() const override;
     std::string description() const override;
 
 private:
     OOEquipmentType() = default;
 
-    // -initWithInfo:, which could fail: createWithInfo() runs it on a new object (ADR-0056
-    // amendment oo-fg7i).
+    // -initWithInfo:, which could fail: createWithInfo() runs it on a new object.
     static oo::Ref<OOEquipmentType> createWithInfo(const oo::PList& info);
     bool initWithInfo(const oo::PList& info); // an equipment.plist entry (an array)
 
@@ -210,8 +207,8 @@ private:
     JSValue _jsSelf = JS_UNDEFINED;
 };
 
-/*	A type carried through plist data as a PList::Object node: the type is the node's foreign
-        object (what oo::PListObject() and oo::ObjectIn() did for the facade).
+/*	A type carried through plist data as a PList::Object node: the type is
+   the node's foreign object.
 */
 inline oo::PList OOEquipmentTypeObjectNode(OOEquipmentType* type) // null type -> null PList
 {
@@ -226,8 +223,7 @@ inline OOEquipmentType* OOEquipmentTypeInObjectNode(const oo::PList& plist) // n
     return (node != nullptr) ? dynamic_cast<OOEquipmentType*>(node->get()) : nullptr;
 }
 
-// An array of Object nodes, one per non-null type, in order (what oo::PListFromObjects() made of
-// the facades).
+// An array of Object nodes, one per non-null type, in order (as oo::PListFromObjects() makes).
 inline oo::PList OOEquipmentTypeObjectNodes(const std::vector<oo::Ref<OOEquipmentType>>& types)
 {
     oo::PList::Array result;
@@ -238,5 +234,3 @@ inline oo::PList OOEquipmentTypeObjectNodes(const std::vector<oo::Ref<OOEquipmen
     }
     return oo::PList(std::move(result));
 }
-
-#endif // OOEQUIPMENTTYPE_H

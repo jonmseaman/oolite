@@ -24,15 +24,14 @@
 
         One deliberate strengthening: iteration is in insertion order. NSSet's order was unspecified
         (pointer-hash order, so it varied run to run); insertion order is deterministic, which can
-        only help the golden runs.
+        only help the game's integration tests.
 
         forEach() iterates over a retained snapshot, so the callback may add or remove members, or
         drop the last other reference to one, without invalidating the iteration (mutating an NSSet
         during enumeration raised an exception instead).
 */
 
-#ifndef OOFND_WEAKSET_HPP
-#define OOFND_WEAKSET_HPP
+#pragma once
 
 #include "oofnd/Ref.hpp"
 
@@ -182,5 +181,3 @@ private:
 };
 
 } // namespace oo
-
-#endif // OOFND_WEAKSET_HPP

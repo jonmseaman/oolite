@@ -2,9 +2,7 @@
 
 OORingEffectEntity.m
 
-C++20 since bead oo-peql (see OORingEffectEntity.h). The bodies are the Objective-C ones: a
-message to self is a member call, [super ...] the base's member, and the universe is handed the
-entity's Objective-C object, oo::ToObjC(this).
+See OORingEffectEntity.h.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -67,7 +65,7 @@ void OORingEffectEntity::initialize()
     }
 }
 
-// The source is the C++ entity (it was its Objective-C object, amendment oo-bj8 item 4).
+// The source is the C++ entity.
 bool OORingEffectEntity::initRingFromEntity(Entity* sourceEntity)
 {
     if (sourceEntity == nullptr) {

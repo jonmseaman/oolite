@@ -30,7 +30,7 @@ MA 02110-1301, USA.
 #include "OOJSVector.h"
 #include "OOJavaScriptEngine.h"
 #include "OOSystemDescriptionManager.h"
-#include "OOTypes.h" // OOCreditsQuantity (ADR-0063 item 5 samplePrice)
+#include "OOTypes.h" // OOCreditsQuantity (samplePrice)
 #include "PlayerEntityScriptMethods.h"
 #include "Universe.h"
 
@@ -74,25 +74,17 @@ MA 02110-1301, USA.
         SpiderMonkey enumerate hook never listed them.
 */
 /*
-        C++20 since bead oo-6ia4, converted the way bead oo-ppc converted OOJSVector.mm (proposed
-        ADR-0056 amendment oo-ppc). The JS class was already C++ on QuickJS-ng;
-        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. OOSystemInfo, the class a
-        SystemInfo wraps, is OOSystemInfo (OOJSSystemInfo.h), which the JS private slot holds; its
-        -initWithGalaxy:system: is a factory that answers null (amendment oo-novu). The natives
-        null-guard where a message to nil answered, and OOSystemDescriptionManager and
-        OOCommodities, which are C++ since beads oo-0sr1 and oo-fqyw, are reached the same way
-        (amendment oo-ppc, item 4). Messages to classes that are still Objective-C (Universe,
-        PlayerEntity, OOJSScript) stay as they are, which is why the file is still .mm until Phase 4.
-        The private slot holds the C++ system info itself, which implements OOJSPrivateObject: the
-        natives read it with OOJSGetCxxPrivate, the finalizer and toString() are the engine's
-        OOJSCxxObjectWrapperFinalize and OOJSCxxObjectWrapperToString, and the converter answers
-        the object itself, as a oo::PListForeign (the Objective-C facade is gone).
+        The private slot holds the C++ system info itself (OOSystemInfo,
+        declared in OOJSSystemInfo.h), which implements OOJSPrivateObject: the
+        natives read it with OOJSGetCxxPrivate, the finalizer and toString() are
+        the engine's OOJSCxxObjectWrapperFinalize and
+        OOJSCxxObjectWrapperToString, and the converter answers the object
+        itself, as a oo::PListForeign. The natives null-guard where a message to
+        nil answered.
 */
 
-// The running script's manifest property (-cxx_propertyNamed: of the running OOJSScript, whose
-// facades are gone); null for no script, or once a script a timer or definition pushed weakly
-// has gone, as the message to nil answered.
+// The running script's manifest property; null for no script, or once a script
+// a timer or definition pushed weakly has gone, as the message to nil answered.
 namespace {
 oo::PList RunningScriptManifest()
 {
@@ -203,7 +195,7 @@ OOSystemID SystemOf(OOSystemInfo* info) { return (info != nullptr) ? info->syste
 NSPoint CoordinatesOf(OOSystemInfo* info) { return (info != nullptr) ? info->coordinates() : NSMakePoint(0, 0); }
 oo::PList ValueForKey(OOSystemInfo* info, const std::optional<std::string>& key) { return (info != nullptr) ? info->valueForKey(key) : oo::PList(); }
 
-// -intValue of a system property (an NSNumber or an NSString; 0 for nil).
+// The integer value of a system property (a number or a string; 0 for none).
 int PropertyIntValue(const oo::PList& value)
 {
     if (const std::string* text = value.getIf<std::string>())
@@ -213,15 +205,14 @@ int PropertyIntValue(const oo::PList& value)
 
 } // namespace
 
-// DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, sSystemInfoClassID, OOSystemInfo) for the
-// C++ system info the slot holds.
+// DEFINE_JS_OBJECT_GETTER(JSSystemInfoGetSystemInfo, sSystemInfoClassID, OOSystemInfo) for the C++ system info the slot holds.
 static bool JSSystemInfoGetSystemInfo(JSContext* context, JSValueConst inObject, OOSystemInfo** outObject)
 {
     return OOJSGetCxxPrivate(context, inObject, sSystemInfoClassID, outObject);
 }
 
-// The system info of an instance, else null: the prototype, or an object of another class (as
-// the Objective-C class check of OOJSNativeObjectOfClassFromJSObject answered nil).
+// The system info of an instance, else null: the prototype, or an object of another class (it
+// answers null).
 static OOSystemInfo* SystemInfoForObject(JSValueConst obj)
 {
     return static_cast<OOSystemInfo*>(static_cast<oo::RefCounted*>(JS_GetOpaque(obj, sSystemInfoClassID)));
@@ -312,7 +303,8 @@ std::vector<std::string> OOSystemInfo::allKeys()
     if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false) && _system == -1) {
         // the dictionary's keys, in key order (-allKeys gave hash order)
         std::vector<std::string> keys;
-        // -cxx_currentSystemData answers a copy: keep it alive while the loop reads it (bead oo-f4241).
+        // -cxx_currentSystemData answers a copy: keep it alive while the loop reads
+        // it.
         const oo::PList systemData = (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList());
         if (const oo::PList::Dict* systemDict = systemData.getIf<oo::PList::Dict>()) {
             for (const auto& entry : *systemDict)
@@ -368,8 +360,7 @@ void OOSystemInfo::clearJSSelf(JSValueConst /*selfVal*/)
     // No wrapper is remembered: each jsValueInContext() makes a new one.
 }
 
-// What the facade's -cxx_oo_jsDescription answered (OOObject (OOJavaScriptConversion)): the JS
-// class name and the components.
+// The JS class name and the components.
 std::string OOSystemInfo::className() const
 {
     return "OOSystemInfo";
@@ -400,7 +391,7 @@ static oo::PList SystemInfoConverter(JSContext* /*context*/, JSValueConst object
     return oo::PList(oo::PList::Object(oo::Ref<oo::PListForeign>(info)));
 }
 
-// +[OOSystemInfo oo_javaScriptEngineWillReset:]: drop the cached SystemInfo object.
+// Drop the cached SystemInfo object.
 static void SystemInfoJavaScriptEngineWillReset()
 {
     JSValue oldCache = sCachedSystemInfo;
@@ -413,7 +404,7 @@ void InitOOJSSystemInfo(JSContext* context, JSValueConst global)
 {
     static bool observing = false;
     if (!observing) {
-        // Process lifetime, as the class registration (the observer was the Objective-C class).
+        // Process lifetime, as the class registration.
         oo::NotificationCenter::defaultCenter().addObserver(nullptr, kOOJavaScriptEngineWillResetNotificationName,
             nullptr,
             [](const oo::Notification&) { SystemInfoJavaScriptEngineWillReset(); });
@@ -535,7 +526,7 @@ static bool SystemInfoGetSystemDataValue(JSContext* context, OOSystemInfo* info,
         return false;
 
     if (propValue.isNumber() || OOIsNumberLiteral(oo::DescriptionOf(propValue), true)) {
-        // -doubleValue: an NSNumber's, or an NSString's (a number literal)
+        // A number's value, or a string's (a number literal)
         const std::string* text = propValue.getIf<std::string>();
         const double number = (text != nullptr) ? oo::plist_get::doubleValue(oo::utf8ToUtf16(*text)) : propValue.doubleValue();
         *outValue = JS_NewNumber(context, number);
@@ -978,7 +969,9 @@ static JSValue SystemInfoSamplePrice(OOJS_NATIVE_ARGS)
         return OOJSNativeFailure(context);
     }
 
-    int economy = PropertyIntValue(ValueForKey(thisInfo, std::string("economy"))); // one system-data read per local, in the order Clang evaluates the arguments: a description that is an array draws (ADR-0063 item 5)
+    int economy = PropertyIntValue(ValueForKey(thisInfo, std::string("economy"))); // one system-data read per local, in the order
+                                                                                   // Clang evaluates the arguments: a description
+                                                                                   // that is an array draws
     std::optional<std::string> commodityScript = ManifestString(ValueForKey(thisInfo, std::string("commodity_script")));
     OOCreditsQuantity price = commodities->samplePriceForCommodity(commodity.value_or(""), economy, commodityScript, SystemOf(thisInfo));
 
@@ -1054,7 +1047,7 @@ static JSValue SystemInfoStaticFilteredSystems(OOJS_NATIVE_ARGS)
 
     JSValue rval = JS_UNDEFINED;
     {
-        oo::AutoreleaseScope pool; // was @autoreleasepool
+        oo::AutoreleaseScope pool;
         std::vector<oo::Ref<OOSystemInfo>> result;
         result.reserve(256);
 

@@ -103,13 +103,11 @@ std::vector<oo::EntityHold> VisualEffectsIn(const OOVisualEffectSubEntities& sub
 
 } // namespace
 
-// [[OOVisualEffectEntity alloc] cxx_initWithKey:definition:] before the effect's facade was
-// deleted: the root's facade holding a new effect (+1, as +alloc gave), then
-// the initialiser's body, which may fail, as the Objective-C one did.
+// A new effect held (+1), then the initialiser's body, which may fail.
 Entity* oo::NewVisualEffect(const std::string& key, const oo::PList& dict)
 {
     const Ref<OOVisualEffectEntity> effect = makeRef<OOVisualEffectEntity>();
-    MadeEntityRetained(effect); // +1, as +alloc gave (its object's, before)
+    MadeEntityRetained(effect); // +1, as +alloc gave
     if (!effect->initWithKey(key, dict)) {
         ReleaseEntity(effect.get());
         return nullptr;
@@ -117,9 +115,9 @@ Entity* oo::NewVisualEffect(const std::string& key, const oo::PList& dict)
     return effect.get();
 }
 
-/*	-cxx_initWithKey:definition:'s body after [super init] (the constructor ran Entity's).
-        oo::NewVisualEffect() runs it once the effect is made (amendment oo-0mxi item 2);
-        false where the initialiser released itself and answered nil.
+/*	-cxx_initWithKey:definition:'s body after [super init] (the constructor
+   ran Entity's). oo::NewVisualEffect() runs it once the effect is made; false
+   where the initialiser released itself and answered nil.
 */
 bool OOVisualEffectEntity::initWithKey(const std::string& key, const oo::PList& dict)
 {
@@ -307,7 +305,6 @@ bool OOVisualEffectEntity::setUpOneSubentity(const oo::PList& subentDict)
 
 bool OOVisualEffectEntity::setUpOneFlasher(const oo::PList& subentDict)
 {
-    // C++ now: the flasher's object is the nearest facade left.
     Entity* flasher = oo::MadeEntity(OOFlasherEntity::flasherWithDictionary(subentDict));
     if (flasher != nullptr)
         flasher->setPosition(subentDict ? OOHPVectorFromPList(subentDict.find("position"), kZeroHPVector) : kZeroHPVector);
@@ -664,8 +661,7 @@ oo::PList OOVisualEffectEntity::effectInfoDictionary()
 }
 
 // (SubEntityRelationship) a slightly misnamed test now things other than ships can have subents
-// The C++ entity: the members its object's messages forwarded to (the virtual
-// getIsVisualEffect() and setOwner(), which an Objective-C entity's adapter sends on; nil's NO for none).
+// The C++ entity: the virtual getIsVisualEffect() and setOwner() members; NO for none.
 bool OOVisualEffectEntity::isShipWithSubEntityShip(Entity* other)
 {
     assert(getIsVisualEffect());
@@ -967,8 +963,7 @@ void OOVisualEffectEntity::setShaderVector2(Vector value)
     _shaderVector2 = value;
 }
 
-// The JS questions, which the effect's facade answered with the binding's functions (the root's
-// facade asks these now).
+// The JS questions, answered with the binding's functions.
 JSClassID OOVisualEffectEntity::jsClassID()
 {
     return ::JSVisualEffectClassID();

@@ -1,5 +1,5 @@
 /*	oofnd/Process.hpp
-        oo::process: what Oolite asked of NSProcessInfo (bead oo-3rb.18, proposed ADR-0029 Decision 5).
+        oo::process: what Oolite asked of NSProcessInfo.
 
             Foundation                                        oofnd
             ------------------------------------------------  --------------------------------------------
@@ -30,11 +30,10 @@
         Header-only, C++20; compiles with -fno-exceptions.
 */
 
-#ifndef OOFND_PROCESS_HPP
-#define OOFND_PROCESS_HPP
+#pragma once
 
-// Objective-C++ callers see OOFoundation.h's `#define true 1` / `#define false 0`; suspend them for the
-// standard headers (as oofnd/Data.hpp does, proposed ADR-0028).
+// Callers see OOFoundation.h's `#define true 1` / `#define false
+// 0`; suspend them for the standard headers (as oofnd/Data.hpp does).
 #pragma push_macro("true")
 #pragma push_macro("false")
 #undef true
@@ -49,7 +48,7 @@
 
 #if defined(_WIN32)
 // Declared exactly as the Windows headers declare them (DWORD = unsigned long, UINT = unsigned
-// int, BOOL = int), so this header does not pull <windows.h> into Objective-C++ game code.
+// int, BOOL = int), so this header does not pull <windows.h> into game code.
 extern "C" {
 __declspec(dllimport) unsigned long __stdcall GetVersion(void);
 __declspec(dllimport) int __stdcall WideCharToMultiByte(unsigned int CodePage, unsigned long dwFlags, const wchar_t* lpWideCharStr, int cchWideChar, char* lpMultiByteStr, int cbMultiByte, const char* lpDefaultChar, int* lpUsedDefaultChar);
@@ -171,5 +170,3 @@ inline std::optional<std::string> env(const char* name)
 
 #pragma pop_macro("false")
 #pragma pop_macro("true")
-
-#endif // OOFND_PROCESS_HPP

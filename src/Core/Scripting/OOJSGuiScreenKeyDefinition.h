@@ -2,8 +2,7 @@
 
 OOJSGuiScreenKeyDefinition.h (QuickJS-ng)
 
-C++20 since bead oo-xg7g (proposed ADR-0056, the OOColor house style). It has no Objective-C
-facade: the JS global object makes it and the player keeps it as oo::Ref.
+The JS global object makes it and the player keeps it as oo::Ref.
 
 
 Oolite
@@ -26,8 +25,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOJSGUISCREENKEYDEFINITION_H
-#define OOJSGUISCREENKEYDEFINITION_H
+#pragma once
 
 #include "OOFoundation.h"
 #include <quickjs.h>
@@ -50,7 +48,7 @@ public:
     OOJSGuiScreenKeyDefinition();
     ~OOJSGuiScreenKeyDefinition() override;
 
-    std::optional<std::string> name(); // nullopt until set (bead oo-3rb.289.7)
+    std::optional<std::string> name(); // nullopt until set
     void setName(const std::optional<std::string>& name);
     oo::PList registerKeys();
     void setRegisterKeys(const oo::PList& registerKeys);
@@ -69,10 +67,8 @@ private:
 
     JSValue _callback = JS_UNDEFINED; // Owned.
     JSValue _callbackThis = JS_UNDEFINED; // Owned.
-    oo::WeakRef<OOJSScript> _owningScript; // a weak reference (was the facade's weak reference proxy)
+    oo::WeakRef<OOJSScript> _owningScript; // a weak reference
 
     std::optional<std::string> _name; // nullopt until set (was nil)
     oo::PList _registerKeys; // key name -> key definitions; null until set (was nil)
 };
-
-#endif // OOJSGUISCREENKEYDEFINITION_H

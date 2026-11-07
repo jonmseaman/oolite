@@ -45,14 +45,6 @@ MA 02110-1301, USA.
         of Object.prototype (such as toString) are found there unless a mission
         variable of the same name exists.
 */
-/*
-        C++20 since bead oo-s4ns, converted the way bead oo-ppc converted OOJSVector.mm (proposed
-        ADR-0056 amendment oo-ppc). The JS class was already C++ on QuickJS-ng;
-        OOJS_NATIVE_ENTER/EXIT and OOJS_PROFILE_ENTER/EXIT are C++ try/catch and scope guards
-        (OOJSEngineNativeWrappers.h); BOOL/YES/NO are bool/true/false. Nothing else in the file was
-        Objective-C: the player (PlayerEntity), which is not converted, is still messaged, which is why
-        the file is still .mm until Phase 4.
-*/
 
 // Property name for a string property ID, or nullopt for other IDs (symbols).
 static std::optional<std::string> NameForPropertyID(JSContext* context, JSAtom propID)
@@ -135,7 +127,7 @@ static JSValue ValueForMissionVariable(JSContext* context, const std::string& ke
     if (const std::string* string = mvar.getIf<std::string>()) // Currently there should only be strings, but we may want to change this.
     {
         if (OOIsNumberLiteral(*string, true)) {
-            return JS_NewNumber(context, oo::str::doubleValue(*string)); // -[NSString doubleValue]
+            return JS_NewNumber(context, oo::str::doubleValue(*string)); // as NSString's doubleValue
         }
     }
 

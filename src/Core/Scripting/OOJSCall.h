@@ -2,12 +2,10 @@
 
 OOJSCall.h
 
-Basic JavaScript-to-ObjC bridge implementation.
+Declarations for the debug console's callObjC().
 
-Converted in bead oo-81hy (proposed ADR-0056 amendment oo-ppc; no class of its own): bool for BOOL.
-An entity is called through its generated name table (OOJSCallEntityMethods.h) and the signature
-templates of any other object are @encode() strings: no Objective-C class or protocol of its own is
-left (the bridge files are deleted).
+An entity is called through its generated name table (OOJSCallEntityMethods.h)
+and the signature templates of any other object are @encode() strings.
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -37,10 +35,6 @@ MA 02110-1301, USA.
 #include "oofnd/StdLib.hpp"
 #include <quickjs.h>
 #include <string>
-
-/*	(OOJSCallObjCObjectMethod(), which called any Objective-C object's method by name for callObjC(),
-        is gone: the console's callObjC() is given only entities and monitors.)
-*/
 
 /*	OOJSCallEntityMethod()
 

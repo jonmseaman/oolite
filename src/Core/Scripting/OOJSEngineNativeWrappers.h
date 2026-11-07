@@ -4,8 +4,8 @@ OOJSEngineNativeWrappers.h (QuickJS-ng)
 
 Exception safety and profiling macros.
 
-Every JavaScript native callback that could concievably cause an
-Objective-C exception should begin with OOJS_NATIVE_ENTER() and end with
+Every JavaScript native callback that could concievably throw
+should begin with OOJS_NATIVE_ENTER() and end with
 OOJS_NATIVE_EXIT. Callbacks which have been carefully audited for potential
 exceptions, and support functions called from JavaScript native callbacks,
 may start with OOJS_PROFILE_ENTER and end with OOJS_PROFILE_EXIT to be
@@ -43,13 +43,11 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef INCLUDED_OOJSENGINENATIVEWRAPPERS_h
-#define INCLUDED_OOJSENGINENATIVEWRAPPERS_h
+#pragma once
 
-/*	Plain includes (bead oo-9ht.72): this header is reached from C++ binding translation units
-        through OOJSEngineCore.h. OOFoundation.h gave it OOLITE_DEBUG and the function attributes.
-        With QuickJS-ng the macros below were defined in OOJavaScriptEngine.h; they are here, with
-        the rest of the engine API's plain C++ part, since that header was split.
+/*	Plain includes: this header is reached from C++ binding translation units
+        through OOJSEngineCore.h. OOFoundation.h gave it OOLITE_DEBUG and the
+        function attributes.
 */
 #include <quickjs.h>
 
@@ -72,7 +70,7 @@ MA 02110-1301, USA.
 #define OOJS_PROFILE (OOLITE_DEBUG && !OOJS_POC_HARNESS)
 
 /*	OOJS_NATIVE_ENTER()/OOJS_NATIVE_EXIT bracket natives that call into
-        Objective-C code which may throw; the exception is converted into a JS
+        code which may throw; the exception is converted into a JS
         error. OOJS_PROFILE_ENTER/EXIT bracket natives that cannot throw. When
         OOJS_PROFILE is set, both also record the time spent in the native for
         the profiler.
@@ -100,19 +98,15 @@ void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function);
 void OOJSProfileExit(OOJSProfileStackFrame* frame);
 
 /*
-        C++ since bead oo-ppc (the Phase 3 scripting-bindings pattern; proposed ADR-0056 amendment
-        oo-ppc). The pairs below were Objective-C try, catch (id) and finally blocks. They are now a
-        C++ try, a catch (...) and scope guards, so a binding file that uses them contains no
-        Objective-C exception syntax. What each one does is unchanged:
+        The pairs below are a C++ try, a catch (...) and scope guards, so a
+   binding file that uses them contains no exception syntax of its own:
           * OOJS_NATIVE_EXIT catches whatever the body throws and hands it to
-            OOJSReportCurrentException() (OOJSEngineNativeWrappers.mm), which reports the game's
-            exception exactly as OOJSReportWrappedException() did (that function went with bead
-            oo-rskgl.1, when the exception became the C++ oo::Exception). It also reports a C++ exception
-            ("Native exception: <what()>"), which the Objective-C catch (id) could not catch: that
-            path ended in std::terminate (ADR-0029 measurement 10). The native then returns
+            OOJSReportCurrentException() (OOJSEngineNativeWrappers.mm), which
+   reports the game's exception (oo::Exception). It also reports a C++
+   exception ("Native exception: <what()>").
+          * The native then returns
             JS_EXCEPTION.
-          * The profiler frame is exited, and the time limiter is resumed, when the scope ends, by
-            return or by exception, as the finally blocks did.
+          * The profiler frame is exited, and the time limiter is resumed, when the scope ends, by return or by exception.
 */
 
 // The scope OOJS_PROFILE_ENTER opens: enters the frame, and exits it however the scope ends.
@@ -192,7 +186,7 @@ void OOJSReportCurrentException(JSContext* context);
     }                        \
     }
 
-// The scope OOJS_BEGIN_FULL_NATIVE opens: what its Objective-C try and finally did, in the same order.
+// The scope OOJS_BEGIN_FULL_NATIVE opens: a try and a finally, in the same order.
 void OOJSPauseTimeLimiter(void);
 void OOJSResumeTimeLimiter(void);
 
@@ -203,5 +197,3 @@ public:
     OOJSFullNativeScope(const OOJSFullNativeScope&) = delete;
     OOJSFullNativeScope& operator=(const OOJSFullNativeScope&) = delete;
 };
-
-#endif // INCLUDED_OOJSENGINENATIVEWRAPPERS_h

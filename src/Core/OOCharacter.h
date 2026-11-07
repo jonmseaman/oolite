@@ -4,9 +4,9 @@ OOCharacter.h
 
 Represents an NPC person (as opposed to an NPC ship).
 
-C++20 since bead oo-8kx7 (Phase 3, proposed ADR-0056); it has no Objective-C facade: ships'
-crews and the character pool hold oo::Ref<OOCharacter>, and a character is its own PList::Object
-payload (oo::PListForeign) for its script's "character".
+Ships' crews and the character pool hold oo::Ref<OOCharacter>, and a
+character is its own PList::Object payload (oo::PListForeign) for its script's
+"character".
 
 Oolite
 Copyright (C) 2004-2013 Giles C Williams and contributors
@@ -28,8 +28,7 @@ MA 02110-1301, USA.
 
 */
 
-#ifndef OOCHARACTER_H
-#define OOCHARACTER_H
+#pragma once
 
 #include "OOJSPropID.h"
 #include "OOTypes.h"
@@ -57,11 +56,11 @@ public:
     void basicSetUp();
     bool castInRole(const std::string& role);
 
-    std::optional<std::string> name(); // nullopt: none (bead oo-3rb.289.9)
+    std::optional<std::string> name(); // nullopt: none
     void setName(const std::optional<std::string>& value);
 
     std::optional<std::string> shortDescription();
-    void setShortDescription(const std::optional<std::string>& value); // nullopt: none (bead oo-qps.51)
+    void setShortDescription(const std::optional<std::string>& value); // nullopt: none
 
     int legalStatus();
     void setLegalStatus(int value);
@@ -79,10 +78,10 @@ public:
 
     // What "%@" prints between the braces of <OOCharacter 0x...>{...} (OODescription.h).
     std::optional<std::string> descriptionComponents() const;
-    // The JavaScript class the character's Objective-C object answered (-oo_jsClassName).
+    // The JavaScript class the character answers.
     std::optional<std::string> oo_jsClassName();
 
-    // oo::PListForeign: what the facade answered (its class, and "%@" as <OOCharacter 0x...>{...}).
+    // oo::PListForeign: the class name, and "%@" as <OOCharacter 0x...>{...}.
     std::string className() const override;
     std::string description() const override;
 
@@ -103,5 +102,3 @@ private:
     oo::PList _scriptActions; // an array; null: none
     oo::Ref<OOScript> _script;
 };
-
-#endif // OOCHARACTER_H

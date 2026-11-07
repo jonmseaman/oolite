@@ -36,8 +36,7 @@ struct OOLaserShotEntityTestAccess;
 
 class OOLaserShotEntity : public Entity {
 public:
-    // A new shot, initialised. A caller that hands it to Objective-C gives it a facade
-    // (oo::NewEntityFacade).
+    // A new shot, initialised.
     static oo::Ref<OOLaserShotEntity> laserFromShip(::ShipEntity* ship, OOWeaponFacing direction, Vector offset);
 
     std::optional<std::string> descriptionComponents() const override;
@@ -63,9 +62,10 @@ public:
 private:
     friend struct ::OOLaserShotEntityTestAccess;
 
-    // -initLaserFromShip:direction:offset:'s body, run once right after construction (amendment
-    // oo-vl43 item 2).
-    void initLaserFromShip(::ShipEntity* srcEntity, OOWeaponFacing direction, Vector offset);
+    // -initLaserFromShip:direction:offset:'s body, run once right after
+    // construction.
+    void initLaserFromShip(::ShipEntity* srcEntity, OOWeaponFacing direction,
+        Vector offset);
 
     GLfloat _color[4] = { };
     OOTimeDelta _lifetime = { };

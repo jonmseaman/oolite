@@ -120,23 +120,23 @@ OOINLINE OOScalar triple_product(Vector first, Vector second, Vector third) INLI
 /* Given three points on a surface, returns the normal to the surface. */
 OOINLINE Vector normal_to_surface(Vector v1, Vector v2, Vector v3) CONST_FUNC;
 
-#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // was __OBJC__: a game unit (an Objective-C++ unit until bead oo-dbz), not a plain C++ one
-/*	Objective-C++ only: OOMaths.h is included inside extern "C" (proposed ADR-0043, bead oo-g7k5). */
+#if defined(__cplusplus) && !defined(OO_PLAIN_CPP_UNIT) // a game unit, not a plain C++ one
+/*	C++ only: OOMaths.h is included inside extern "C". */
 extern "C++" {
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 std::string VectorDescription(Vector vector); // "(x, y, z)"
 
-/*	For storing vectors in property lists: a PList::Object node holds the box (OOJSShip.mm makes
-        them, OOPListGameTypes.mm and the JavaScript engine read them). Its Objective-C facade was
-        deleted by bead oo-9ht.5; the box is the node's foreign object itself.
+/*	For storing vectors in property lists: a PList::Object node holds the
+   box (OOJSShip.mm makes them, OOPListGameTypes.mm and the JavaScript engine
+   read them). The box is the node's foreign object itself.
 */
 class OONativeVector : public oo::PListForeign {
 public:
     explicit OONativeVector(Vector vect);
     Vector getVector();
 
-    // oo::PListForeign: what the facade answered (its class, and "%@" as <OONativeVector 0x...>).
+    // oo::PListForeign: the class name, and "%@" as <OONativeVector 0x...>.
     std::string className() const override;
     std::string description() const override;
 
@@ -182,7 +182,7 @@ OOINLINE void scale_vector(Vector* vec, OOScalar factor)
 {
     /*
             Clang static analyzer: reports an unintialized value here when called
-            from -[HeadUpDisplay rescaleByFactor:]. This is blatantly wrong, as
+            from the HUD's rescaling. This is blatantly wrong, as
             the array the vector comes from is fully initialized in the range being
             looped over.
             -- Ahruman 2012-09-14
@@ -196,7 +196,7 @@ OOINLINE Vector vector_multiply_scalar(Vector v, OOScalar s)
 {
     /*
             Clang static analyzer: reports a garbage value here when called from
-            -[OOMesh rescaleByFactor:], apparently on baseless assumption that
+            OOMesh::rescaleByFactor(), apparently on baseless assumption that
             OOMesh._vertices points to only one vertex.
             -- Ahruman 2012-09-14
     */

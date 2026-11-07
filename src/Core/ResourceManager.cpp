@@ -154,7 +154,7 @@ bool IsWellFormedUTF8(const std::string& bytes)
     return oo::utf16ToUtf8(oo::utf8ToUtf16(bytes)) == bytes;
 }
 
-// An array of strings, as the Objective-C array of them was.
+// An array of strings.
 oo::PList StringArray(const std::vector<std::string>& strings)
 {
     oo::PList::Array result;
@@ -164,10 +164,12 @@ oo::PList StringArray(const std::vector<std::string>& strings)
     return oo::PList(std::move(result));
 }
 
-// -stringByAbbreviatingWithTildeInPath of a search path: the home directory (NSHomeDirectory(),
-// ResourcePaths::homeDirectory()) at its start becomes "~". The search paths are already standard
-// ('/'-separated, absolute, no "." or ".." components: ResourcePaths and the OXP scan build them),
-// so -stringByStandardizingPath left them as they were and is not repeated (bead oo-qps.49).
+// A search path abbreviated with a tilde: the home directory
+// (NSHomeDirectory(), ResourcePaths::homeDirectory()) at its start becomes "~".
+// The search paths are already standard
+// ('/'-separated, absolute, no "." or ".." components: ResourcePaths and the
+// OXP scan build them), so -stringByStandardizingPath left them as they were
+// and is not repeated.
 std::string AbbreviatedWithTilde(const std::string& path)
 {
     const std::string home = oo::fs::utf8String(oo::ResourcePaths::current().homeDirectory());
@@ -180,12 +182,12 @@ std::string AbbreviatedWithTilde(const std::string& path)
     return "~" + path.substr(home.size());
 }
 
-// -[a isEqual:b] of the Foundation objects two property-list values converted to (bead oo-qps.49
-// replaced the conversion); a missing or null one (nil) is never equal. Numbers (booleans among
-// them) compare by value as NSNumber -compare: did: integers as integers, anything with a real as
-// doubles (PList's type-strict == does not); a number never equals a string. Arrays compare
-// element by element and dictionaries entry by entry, as -isEqualToArray: / -isEqualToDictionary:
-// did; strings, data and dates by value; an Object node's object by -isEqual:.
+// Whether two property-list values are equal; a missing or null one is never
+// equal. Numbers (booleans among them) compare by value: integers as integers,
+// anything with a real as doubles (PList's type-strict == does not); a number
+// never equals a string. Arrays compare element by element and dictionaries
+// entry by entry; strings, data and dates by value; Object nodes are never
+// equal.
 bool PListIsEqual(const oo::PList* a, const oo::PList* b)
 {
     if (a == nullptr || b == nullptr || a->isNull() || b->isNull())
@@ -223,8 +225,7 @@ bool PListIsEqual(const oo::PList* a, const oo::PList* b)
         }
         return true;
     }
-    // Object nodes: the -isEqual: of the Objective-C objects they held, nil's NO for any other node
-    // (bead oo-4aq6a.5 deleted the Objective-C object's node; no game object was one).
+    // Object nodes are never equal.
     if (a->getIf<oo::PList::Object>() != nullptr)
         return false;
     return *a == *b; // strings, data, dates
@@ -393,8 +394,9 @@ std::optional<std::string> ResourceManager::errors()
     for (const ResourceManagerError& error : sErrors) {
         std::optional<std::string> errStr = (UNIVERSE != nullptr ? UNIVERSE->descriptionForKey(error.key) : std::optional<std::string>());
         if (errStr.has_value()) {
-            // The descriptions.plist entry is the format (data, not a literal): ADR-0043 item 19.
-            result.push_back(oo::str::formatRuntime(*errStr, { error.param1, error.param2 }));
+            // The descriptions.plist entry is the format (data, not a literal).
+            result.push_back(
+                oo::str::formatRuntime(*errStr, { error.param1, error.param2 }));
         }
     }
 
@@ -632,7 +634,7 @@ void ResourceManager::preloadFileListFromFolder(const std::string& path, const s
 
 void ResourceManager::preloadFilePathFor(const std::string& fileName, const std::string& subFolder, const std::string& path)
 {
-    OOCacheManager* cache = OOCacheManager::sharedCache(); // C++ since bead oo-rmd7
+    OOCacheManager* cache = OOCacheManager::sharedCache();
     const std::string cacheKey = subFolder + "/" + fileName;
     // if nil, not found in another OXP already
     if (cache->pListForKey(cacheKey, "resolved paths").isNull()) {
@@ -687,7 +689,7 @@ void ResourceManager::setUseAddOns(const std::string& useAddOns)
         clearCaches();
         OOHUDResetTextEngine();
 
-        OOCacheManager* cmgr = OOCacheManager::sharedCache(); // C++ since bead oo-rmd7
+        OOCacheManager* cmgr = OOCacheManager::sharedCache();
         /* only allow cache writes for the "all OXPs" default
          *
          * cache should be less necessary for restricted sets anyway */
@@ -919,9 +921,12 @@ bool ResourceManager::areRequirementsFulfilled(const oo::PList& requirements, co
                 if (oo::str::compareVersions(*ooVersionComponents, oo::str::versionComponents(*requiredString)) < 0)
                     OK = NO;
             } else {
-                // The requirements' property-list type, "dict" (was %@ of [requirements class], the class
-                // name of the Foundation dictionary it converted to: bead oo-qps.49)
-                OO_LOG("requirements.wrongType", "Expected {} entry \"{}\" to be string, but got {} in OXP {}.", file, "version", oo::typeName(requirements.type()), (LastPathComponent(path)).value_or("(null)"));
+                // The requirements' property-list type, "dict" (was %@ of [requirements
+                // class], the class name of the Foundation dictionary it converted to)
+                OO_LOG("requirements.wrongType",
+                    "Expected {} entry \"{}\" to be string, but got {} in OXP {}.",
+                    file, "version", oo::typeName(requirements.type()),
+                    (LastPathComponent(path)).value_or("(null)"));
                 OK = NO;
             }
         }
@@ -1261,7 +1266,7 @@ bool ResourceManager::checkCacheUpToDateForPaths(const std::vector<std::string>&
     for (const std::string& path : searchPaths) {
         const auto modTime = oo::fs::modificationTimeSince1970(oo::fs::pathFromUTF8(path));
         if (modTime) {
-            // Double, as before: the cache stored -timeIntervalSince1970 of NSFileModificationDate.
+            // Double: the cache stores the time since 1970 of the file's modification date.
             modDates.emplace_back(*modTime);
         }
     }
@@ -1920,11 +1925,12 @@ std::optional<std::string> ResourceManager::pathForFileNamed(const std::string& 
             return cached->second.get();
     }
 
-    // [[[OOSound alloc] cxx_initWithContentsOfFile:path] autorelease], the facade's class cluster
-    // until bead oo-9ht.68: the C++ factory. With no cache the caller is the only user, as the
-    // autoreleased sound lived until the pool drained: oo::autorelease keeps that.
-    // Its one caller, ooSoundNamed(), always passes the cache, so this reaches oo::autorelease only
-    // with nil, as upstream's did (ADR-0056 amendment oo-31u.9).
+    // [[[OOSound alloc] cxx_initWithContentsOfFile:path] autorelease]: the C++
+    // factory. With no cache
+    // the caller is the only user, as the autoreleased sound lived until the pool
+    // drained: oo::autorelease keeps that. Its one caller, ooSoundNamed(), always
+    // passes the cache, so this reaches oo::autorelease only with nil, as
+    // upstream's did.
     const std::optional<std::string> path = pathForFileNamed(fileName, folderName, useCache);
     if (path.has_value())
         result = ::OOSound::initWithContentsOfFile(path);
@@ -1971,8 +1977,7 @@ std::optional<std::string> ResourceManager::stringFromFilesNamed(const std::stri
 
     const std::optional<std::string> path = pathForFileNamed(fileName, folderName, YES);
     if (path.has_value()) {
-        // +stringWithContentsOfUnicodeFile: (NSStringOOExtensions): the file's bytes, read as it read
-        // them (through the OXZ reader), decoded as it decoded them.
+        // The file's bytes, read through the OXZ reader, then decoded.
         const std::optional<oo::Data> data = OODataFromOXZFile(*path);
         if (data.has_value())
             result = oo::str::decodeUnicodeText(data->stringView());
@@ -1998,7 +2003,7 @@ std::vector<std::pair<std::string, oo::Ref<OOScript>>> ResourceManager::loadScri
         // a problem.
         if (!corePlist("world-scripts.plist", path)) {
             {
-                oo::AutoreleaseScope pool; // was @autoreleasepool (oo-31u.8)
+                oo::AutoreleaseScope pool; // was @autoreleasepool
                 try {
                     std::optional<std::vector<oo::Ref<OOScript>>> results = OOScript::worldScriptsAtPath(oo::str::appendingPathComponent(path, "Config"));
                     if (!results.has_value())
@@ -2087,7 +2092,7 @@ bool ResourceManager::writeDiagnosticString(const std::string& string, const std
 
 bool ResourceManager::writeDiagnosticPList(const oo::PList& plist, const std::string& name)
 {
-    // The old-school writer (oo::writeOldStylePList, the port of the retired Objective-C old-school plist writer). Its
+    // The old-school writer (oo::writeOldStylePList). Its
     // XML fallback's result was never used, so a plist it cannot write is not written.
     const auto data = oo::writeOldStylePList(plist);
     if (!data.has_value())

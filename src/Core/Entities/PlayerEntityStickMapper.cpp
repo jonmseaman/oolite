@@ -248,7 +248,7 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui, ::MyOpenGLView*
 
         const oo::PList& entry = StickFunctionAt(stickFunctions, selFunctionIdx);
         int hw = IntValueForKey(entry, KEY_ALLOWABLE);
-        stickHandler->setCallback([this](const oo::PList& hwDict) { updateFunction(hwDict); }, hw); // was -updateFunction: on the root facade, by name
+        stickHandler->setCallback([this](const oo::PList& hwDict) { updateFunction(hwDict); }, hw);
 
         // Print instructions
         std::string instructions;
@@ -274,7 +274,8 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui, ::MyOpenGLView*
 
 // Callback function, called by JoystickHandler when the callback
 // is set. The dictionary contains the thing that was pressed/moved.
-void PlayerEntity::updateFunction(const oo::PList& hwDict) // called by name (joystick callback)
+void PlayerEntity::updateFunction(
+    const oo::PList& hwDict) // called by name (joystick callback)
 {
     OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
     waitingForStickCallback = NO;
@@ -703,10 +704,12 @@ std::vector<oo::PList> PlayerEntity::stickFunctionList()
     funcList.push_back(
         makeStickGuiDict(OO_DESC("stickmapper-comms-log"), HW_BUTTON, STICK_NOFUNCTION, BUTTON_COMMSLOG));
 #if OO_FOV_INFLIGHT_CONTROL_ENABLED
-    funcList.push_back(
-        makeStickGuiDict(OO_DESC("stickmapper-increase-field-of-view"), HW_AXIS | HW_BUTTON, AXIS_FIELD_OF_VIEW, BUTTON_INC_FIELD_OF_VIEW)); // the member
-    funcList.push_back(
-        makeStickGuiDict(OO_DESC("stickmapper-decrease-field-of-view"), HW_AXIS | HW_BUTTON, AXIS_FIELD_OF_VIEW, BUTTON_DEC_FIELD_OF_VIEW));
+    funcList.push_back(makeStickGuiDict(
+        OO_DESC("stickmapper-increase-field-of-view"), HW_AXIS | HW_BUTTON,
+        AXIS_FIELD_OF_VIEW, BUTTON_INC_FIELD_OF_VIEW));
+    funcList.push_back(makeStickGuiDict(
+        OO_DESC("stickmapper-decrease-field-of-view"), HW_AXIS | HW_BUTTON,
+        AXIS_FIELD_OF_VIEW, BUTTON_DEC_FIELD_OF_VIEW));
 #endif
     if (customEquipActivation.size() > 0) {
         funcList.push_back(makeStickGuiDictHeader(OO_DESC("stickmapper-header-oxp-equip")));

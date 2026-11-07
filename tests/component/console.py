@@ -6,7 +6,7 @@ keep assertions and scenario vocabulary in steps/world_steps.py.
 The protocol is the one tests/launch_snapshot.py speaks: a 4-byte big-endian length followed by an
 XML property list. See src/Core/Debug/OODebugTCPConsoleProtocol.h for the packet types.
 
-NO DESKTOP LOCK here, deliberately (bug oo-ccy9). Every tool that launches the game on the
+NO DESKTOP LOCK here, deliberately. Every tool that launches the game on the
 interactive desktop must take tools/gui-lock - but this file is the shared TRANSPORT, not a tier.
 The component tier spawns it once per scenario (and holds the lock for its whole session, in
 its conftest). An exclusive mutex in here would serialise or outright deadlock any caller that
@@ -39,7 +39,7 @@ IS_WINDOWS = sys.platform == "win32" or os.name == "nt"
 
 # How long evaluate() waits for an answer when the caller names no timeout. 15 s unless
 # OO_CONSOLE_EVAL_TIMEOUT says otherwise: the -O0 AddressSanitizer build answers far more slowly
-# than the test build, and tools/tier-c.sh raises it when its golden stage runs that build.
+# than the test build, and the test harness raises it when it runs that build.
 DEFAULT_EVAL_TIMEOUT = 15
 
 
@@ -129,7 +129,7 @@ class DebugConsole:
             raise ConsoleError(f"no Oolite binary at {path}; build it first")
         argv = [path, "--no-splash"]
         # OO_GAME_EXTRA_ARGS: extra command-line arguments for the game, split on whitespace. A
-        # sanitized run of the golden harness passes --nosound, as tier-c's sanitized launch does
+        # sanitized run passes --nosound
         # (opening the OpenAL device trips a third-party ASan report that is fatal).
         argv += os.environ.get("OO_GAME_EXTRA_ARGS", "").split()
         if self.load_save:

@@ -6,7 +6,7 @@ modified by Alex Smith and Jens Ayton
 
 JoystickHandler handles joystick events, and translates them
 into the appropriate action via a lookup table. The lookup table is
-stored as a simple array rather than an ObjC dictionary since this
+stored as a simple array rather than a dictionary since this
 will be examined fairly often (once per frame during gameplay).
 
 Conversion methods are provided to convert between the internal
@@ -14,14 +14,12 @@ representation and a property-list dictionary (for loading/saving user defaults
 and for use in areas where portability/ease of coding are more important
 than performance such as the GUI)
 
-C++20 since bead oo-6bux (proposed ADR-0056, Amendment 1 of bead oo-cwz: a hierarchy root). The
-methods a subclass overrides (joystickCount, nameOfJoystick, getAxisWithStick) are virtual;
--init's body is init(), run after construction because it reaches those virtual members. Since
-the Objective-C facades were deleted the class is global, its one subclass is the C++
-OOSDLJoystickManager, the shared handler is made by a registered factory function (was
-+setStickHandlerClass:) and the stick-mapper callback is a C++ function (was a selector and an
-object). The event decoders are the SDL manager's (upstream #742): they read and set this
-class's protected state.
+The methods a subclass overrides (joystickCount, nameOfJoystick,
+getAxisWithStick) are virtual; -init's body is init(), run after construction
+because it reaches those virtual members. Its one subclass is the C++
+OOSDLJoystickManager, the shared handler is made by a registered factory
+function (was +setStickHandlerClass:) and the stick-mapper callback is a C++
+function.
 
 
 Oolite
@@ -55,9 +53,9 @@ MA 02110-1301, USA.
 #include <functional>
 #include <string_view>
 
-// Enums are used here rather than a more complex ObjC object because
+// Enums are used here rather than a more complex object because
 // these are required very frequently (once per frame) so must be light
-// on CPU cycles (try and avoid too many objc sendmsgs).
+// on CPU cycles.
 // Controls that can be an axis
 enum {
     AXIS_ROLL,
@@ -190,7 +188,7 @@ public:
     // didn't) so in the future when more handler classes are written,
     // the GameView event loop can just go through an array of handlers
     // until it finds a handler that handles the event.
-    void init(); // -init's body; the facade (or whoever makes the manager) runs it once, right after construction
+    void init(); // run once, right after construction, by whoever makes the manager
 
     // Roll/pitch axis
     NSPoint rollPitchAxis();
@@ -218,7 +216,7 @@ public:
     void loadProfileForAxis(int axis);
 
     // This one just returns a pointer to the entire state array to
-    // allow for multiple lookups with only one objc_sendMsg
+    // allow for multiple lookups with only one call
     const BOOL* getAllButtonStates();
 
     // Hardware introspection.
@@ -256,7 +254,7 @@ private:
 
 protected:
     // Axis/button mapping arrays (the platform manager's event decoders read
-    // and set them, as the Objective-C ivars were)
+    // and set them)
     int8_t axismap[MAX_STICKS][MAX_AXES] = { };
     int8_t buttonmap[MAX_STICKS][MAX_BUTTONS] = { };
     bool true_butstate[MAX_STICKS][MAX_BUTTONS] = { };
