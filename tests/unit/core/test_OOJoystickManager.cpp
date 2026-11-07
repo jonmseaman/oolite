@@ -547,6 +547,177 @@ OO_TEST(sharedHandlerOfTheRegisteredClass)
 }
 
 
+// Upstream #783's GUI table: the functions BUTTON_GUILEFT .. BUTTON_GUISELECT
+// live in a second button table of their own, saved under GuiJoystickButs, so
+// one button can drive both a flight function and a GUI function.
+// clearMappings resets this table with the others (upstream #783 does not, so
+// there an unassigned button held 0, BUTTON_INCTHRUST).
+
+namespace {
+
+void ClearGuiStickDefaults() {
+  ClearStickDefaults();
+  Defaults().removeObject(GUI_BUTTON_SETTINGS);
+}
+
+}  // namespace
+
+OO_TEST(guiFunctionsHaveATableOfTheirOwn) {
+  ClearGuiStickDefaults();
+  {
+    oo::Ref<OOJoystickManager> manager = NewManager();
+    const oo::PList defaultButtons =
+        Functions({{BUTTON_FIRE, StickFn(false, 0, 0)},
+                   {BUTTON_LAUNCHMISSILE, StickFn(false, 0, 1)}});
+    OO_CHECK(manager->guiButtonFunctions() == oo::PList(oo::PList::Dict()));
+
+    // A GUI function goes to the GUI table, an ordinary one to the button
+    // table; the edges of the GUI range included.
+    manager->setFunction(BUTTON_GUISELECT, StickFn(false, 1, 4));
+    manager->setFunction(BUTTON_GUILEFT, StickFn(false, 2, 5));
+    manager->setFunction(BUTTON_TOGGLEHUD, StickFn(false, 2, 6));
+    OO_CHECK(manager->guiButtonFunctions() ==
+             Functions({{BUTTON_GUISELECT, StickFn(false, 1, 4)},
+                        {BUTTON_GUILEFT, StickFn(false, 2, 5)}}));
+    OO_CHECK(manager->buttonFunctions() ==
+             Functions({{BUTTON_FIRE, StickFn(false, 0, 0)},
+                        {BUTTON_LAUNCHMISSILE, StickFn(false, 0, 1)},
+                        {BUTTON_TOGGLEHUD, StickFn(false, 2, 6)}}));
+    manager->unsetButtonFunction(BUTTON_TOGGLEHUD);
+
+    // A button can hold a flight function and a GUI function at once.
+    manager->setFunction(BUTTON_GUIPAGEDOWN, StickFn(false, 0, 0));
+    OO_CHECK(manager->buttonFunctions() == defaultButtons);
+    const oo::PList guiFunctions = manager->guiButtonFunctions();
+    const oo::PList* pageDown = guiFunctions.find(ENUMKEY(BUTTON_GUIPAGEDOWN));
+    OO_CHECK(pageDown != nullptr && *pageDown == StickFn(false, 0, 0));
+
+    // Moving a GUI function frees its old button.
+    manager->setFunction(BUTTON_GUISELECT, StickFn(false, 3, 7));
+    OO_CHECK(manager->guiButtonFunctions() ==
+             Functions({{BUTTON_GUISELECT, StickFn(false, 3, 7)},
+                        {BUTTON_GUILEFT, StickFn(false, 2, 5)},
+                        {BUTTON_GUIPAGEDOWN, StickFn(false, 0, 0)}}));
+
+    // unsetGuiButtonFunction clears it; unsetButtonFunction (what the stick
+    // mapper's remove calls) does not reach the GUI table.
+    manager->unsetButtonFunction(BUTTON_GUILEFT);
+    const oo::PList afterUnset = manager->guiButtonFunctions();
+    OO_CHECK(afterUnset.find(ENUMKEY(BUTTON_GUILEFT)) != nullptr);
+    manager->unsetGuiButtonFunction(BUTTON_GUILEFT);
+    manager->unsetGuiButtonFunction(BUTTON_GUIPAGEDOWN);
+    OO_CHECK(manager->guiButtonFunctions() ==
+             Functions({{BUTTON_GUISELECT, StickFn(false, 3, 7)}}));
+    OO_CHECK(manager->buttonFunctions() == defaultButtons);
+
+    // clearMappings clears the GUI table too.
+    manager->clearMappings();
+    OO_CHECK(manager->buttonFunctions() == oo::PList(oo::PList::Dict()));
+    OO_CHECK(manager->guiButtonFunctions() == oo::PList(oo::PList::Dict()));
+  }
+}
+
+OO_TEST(decodesGuiButtons) {
+  ClearGuiStickDefaults();
+  {
+    oo::Ref<DecodingStickManager> manager = NewDecodingManager();
+    manager->setFunction(BUTTON_GUIDOWN, StickFn(false, 1, 2));
+    manager->setFunction(BUTTON_GUISELECT, StickFn(false, 0, 0));  // and fire
+
+    SDL_JoyButtonEvent evt = Button(1, 2, true);
+    manager->decodeButtonEvent(&evt);
+    OO_CHECK(manager->getButtonState(BUTTON_GUIDOWN));
+    OO_CHECK(manager->getAllButtonStates()[BUTTON_GUIDOWN]);
+    OO_CHECK(manager->isButtonDown(2, 1));
+    evt = Button(1, 2, false);
+    manager->decodeButtonEvent(&evt);
+    OO_CHECK(!manager->getButtonState(BUTTON_GUIDOWN));
+
+    // One button, both tables: both functions follow it.
+    evt = Button(0, 0, true);
+    manager->decodeButtonEvent(&evt);
+    OO_CHECK(manager->getButtonState(BUTTON_FIRE));
+    OO_CHECK(manager->getButtonState(BUTTON_GUISELECT));
+    evt = Button(0, 0, false);
+    manager->decodeButtonEvent(&evt);
+    OO_CHECK(!manager->getButtonState(BUTTON_FIRE));
+    OO_CHECK(!manager->getButtonState(BUTTON_GUISELECT));
+
+    // A button with no GUI function sets no other state (upstream #783's
+    // never-reset table made it drive BUTTON_INCTHRUST).
+    evt = Button(2, 9, true);
+    manager->decodeButtonEvent(&evt);
+    OO_CHECK(!manager->getButtonState(BUTTON_INCTHRUST));
+    evt = Button(0, 1, true);  // the missile button
+    manager->decodeButtonEvent(&evt);
+    OO_CHECK(manager->getButtonState(BUTTON_LAUNCHMISSILE));
+    OO_CHECK(!manager->getButtonState(BUTTON_INCTHRUST));
+    evt = Button(0, 1, false);
+    manager->decodeButtonEvent(&evt);
+    OO_CHECK(!manager->getButtonState(BUTTON_INCTHRUST));
+
+    // A hat's buttons reach the GUI table too (a pad's d-pad).
+    manager->setFunction(BUTTON_GUIUP, StickFn(false, 0, MAX_REAL_BUTTONS));
+    SDL_JoyHatEvent hat = Hat(0, 0, SDL_HAT_UP);
+    manager->decodeHatEvent(&hat);
+    OO_CHECK(manager->getButtonState(BUTTON_GUIUP));
+    hat = Hat(0, 0, SDL_HAT_CENTERED);
+    manager->decodeHatEvent(&hat);
+    OO_CHECK(!manager->getButtonState(BUTTON_GUIUP));
+
+    // A pending callback takes the press, as for any button.
+    StickCallbackTarget target;
+    manager->setCallback(target.callback(), HW_BUTTON);
+    evt = Button(1, 2, true);
+    manager->decodeButtonEvent(&evt);
+    OO_CHECK(target._calls == 1);
+    OO_CHECK(!manager->getButtonState(BUTTON_GUIDOWN));
+  }
+}
+
+OO_TEST(savesAndLoadsGuiButtons) {
+  ClearGuiStickDefaults();
+  oo::Defaults& defaults = Defaults();
+  {
+    oo::Ref<OOJoystickManager> manager = NewManager();
+    manager->setFunction(BUTTON_GUISELECT, StickFn(false, 1, 4));
+    manager->setFunction(BUTTON_GUIPAGEUP, StickFn(false, 0, 7));
+    manager->setFunction(BUTTON_ECM, StickFn(false, 2, 11));
+    manager->saveStickSettings();
+
+    const oo::PList savedGui =
+        Functions({{BUTTON_GUISELECT, StickFn(false, 1, 4)},
+                   {BUTTON_GUIPAGEUP, StickFn(false, 0, 7)}});
+    OO_CHECK(defaults.object(GUI_BUTTON_SETTINGS) == savedGui);
+    OO_CHECK(defaults.object(BUTTON_SETTINGS) ==
+             Functions({{BUTTON_FIRE, StickFn(false, 0, 0)},
+                        {BUTTON_LAUNCHMISSILE, StickFn(false, 0, 1)},
+                        {BUTTON_ECM, StickFn(false, 2, 11)}}));
+
+    // A new manager reads the GUI table back and leaves the flight table as
+    // saved.
+    oo::Ref<DecodingStickManager> loaded = NewDecodingManager();
+    OO_CHECK(loaded->guiButtonFunctions() == savedGui);
+    OO_CHECK(loaded->buttonFunctions() ==
+             Functions({{BUTTON_FIRE, StickFn(false, 0, 0)},
+                        {BUTTON_LAUNCHMISSILE, StickFn(false, 0, 1)},
+                        {BUTTON_ECM, StickFn(false, 2, 11)}}));
+    SDL_JoyButtonEvent evt = Button(1, 4, true);
+    loaded->decodeButtonEvent(&evt);
+    OO_CHECK(loaded->getButtonState(BUTTON_GUISELECT));
+
+    // GUI settings alone still leave the default flight mapping in place.
+    defaults.removeObject(BUTTON_SETTINGS);
+    oo::Ref<OOJoystickManager> guiOnly = NewManager();
+    OO_CHECK(guiOnly->guiButtonFunctions() == savedGui);
+    OO_CHECK(guiOnly->buttonFunctions() ==
+             Functions({{BUTTON_FIRE, StickFn(false, 0, 0)},
+                        {BUTTON_LAUNCHMISSILE, StickFn(false, 0, 1)}}));
+  }
+  ClearGuiStickDefaults();
+}
+
+
 OO_TEST(cleanUp)
 {
 	std::error_code ignored;
