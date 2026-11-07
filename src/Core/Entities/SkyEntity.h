@@ -30,9 +30,8 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/StdLib.hpp"
 
-/*	The universe makes it with oo::makeRef<SkyEntity>(), hands it to
-   Objective-C with oo::NewEntityFacade and finds it by dynamic_cast.
-*/
+// The universe makes it with oo::makeRef<SkyEntity>() and finds it by
+// dynamic_cast.
 class SkyEntity : public OOEntityWithDrawable {
  public:
   /*	-initWithColors::andSystemInfo:'s body after [super init] (the

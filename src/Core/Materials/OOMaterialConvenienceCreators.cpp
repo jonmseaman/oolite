@@ -166,7 +166,6 @@ oo::Ref<OOMaterial> OOMaterial::defaultShaderMaterialWithName(
     const std::optional<std::string>& name,
     const std::optional<std::string>& cacheKey, const oo::PList& configuration,
     const oo::PList& macros, Entity* target) {
-  // The cache manager's facade, still messaged.
   ::OOCacheManager* cache = nullptr;
   oo::PList synthesizedConfig;
   oo::Ref<OOMaterial> result;

@@ -124,9 +124,6 @@ bool OOMultiTextureMaterial::initWithName(
   return true;
 }
 
-// -dealloc's [self willDealloc] is the root facade's, and the maps are released
-// with their oo::ObjCRefs.
-
 std::optional<std::string> OOMultiTextureMaterial::descriptionComponents()
     const {
   std::vector<std::string> bits;

@@ -165,8 +165,7 @@ class OOEquipmentType : public oo::PListForeign, public ::OOJSPrivateObject {
   void clearJSSelf(JSValueConst selfVal) override;
   std::optional<std::string> jsDescription() override;
 
-  // oo::PListForeign: what the facade answered (its class, and "%@" as
-  // <OOEquipmentType 0x...>{...}).
+  // oo::PListForeign: the class name, and "%@" as <OOEquipmentType 0x...>{...}.
   std::string className() const override;
   std::string description() const override;
 
@@ -236,8 +235,8 @@ inline OOEquipmentType* OOEquipmentTypeInObjectNode(
                            : nullptr;
 }
 
-// An array of Object nodes, one per non-null type, in order (what
-// oo::PListFromObjects() made of the facades).
+// An array of Object nodes, one per non-null type, in order (as
+// oo::PListFromObjects() makes).
 inline oo::PList OOEquipmentTypeObjectNodes(
     const std::vector<oo::Ref<OOEquipmentType>>& types) {
   oo::PList::Array result;

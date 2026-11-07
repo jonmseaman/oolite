@@ -1,8 +1,7 @@
 """Debug-console client: framing, handshake, and running JS inside a live Oolite.
 
-Transport only. Several callers may share this file, so nothing here
-knows anything about the component tier, Gherkin, or pytest - keep assertions and scenario
-vocabulary in steps/world_steps.py.
+Transport only. Nothing here knows anything about the component tier, Gherkin, or pytest -
+keep assertions and scenario vocabulary in steps/world_steps.py.
 
 The protocol is the one tests/launch_snapshot.py speaks: a 4-byte big-endian length followed by an
 XML property list. See src/Core/Debug/OODebugTCPConsoleProtocol.h for the packet types.
@@ -37,7 +36,7 @@ IS_WINDOWS = sys.platform == "win32" or os.name == "nt"
 
 # How long evaluate() waits for an answer when the caller names no timeout. 15 s unless
 # OO_CONSOLE_EVAL_TIMEOUT says otherwise: the -O0 AddressSanitizer build answers far more slowly
-# than the test build, and tools/tier-c.sh raises it when its golden stage runs that build.
+# than the test build, and the test harness raises it when it runs that build.
 DEFAULT_EVAL_TIMEOUT = 15
 
 
@@ -103,8 +102,8 @@ class DebugConsole:
         env = os.environ.copy()
         # Headless and silent, exactly as tests/launch_snapshot.py runs the game. The offscreen
         # video driver is deliberately not set on Windows: MSYS2's mesa ships no EGL, so SDL's
-        # offscreen driver cannot create a context there and the game exits during init.
-        # SDL's offscreen driver has no OpenGL on macOS either, so a real window is used there.
+        # offscreen driver cannot create a context there and the game exits during init. It is
+        # not set on macOS either, where it has no OpenGL, so a real window is used there.
         if not IS_WINDOWS and sys.platform != "darwin":
             env["SDL_VIDEODRIVER"] = "offscreen"
         env["LIBGL_ALWAYS_SOFTWARE"] = "1"
@@ -130,7 +129,7 @@ class DebugConsole:
             raise ConsoleError(f"no Oolite binary at {path}; build it first")
         argv = [path, "--no-splash"]
         # OO_GAME_EXTRA_ARGS: extra command-line arguments for the game, split on whitespace. A
-        # sanitized run of the golden harness passes --nosound, as tier-c's sanitized launch does
+        # sanitized run passes --nosound
         # (opening the OpenAL device trips a third-party ASan report that is fatal).
         argv += os.environ.get("OO_GAME_EXTRA_ARGS", "").split()
         if self.load_save:

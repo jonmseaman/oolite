@@ -1,7 +1,7 @@
 /*	test_OODebugTCPConsoleClient.mm
         Unit tests for the TCP debug console client
    (src/Core/Debug/OODebugTCPConsoleClient.h). The client is the debugger the
-   golden harness drives the game through.
+   integration tests drive the game through.
 
         The client opens a non-blocking socket to the console, sends "Request
    Connection", and then speaks the console protocol

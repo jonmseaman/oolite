@@ -57,8 +57,8 @@ class StickProfileTestPlayer : public PlayerEntity {
                      const std::vector<oo::PList>& /*arguments*/) override {}
 };
 
-// [[TestPlayer alloc] init]: a C++ player under the ship's
-// facade, as PlayerEntity::sharedPlayer() makes the game's, retained (+1).
+// NewTestPlayer<TestPlayer>(): a C++ player, as PlayerEntity::sharedPlayer()
+// makes the game's, retained (+1).
 template <class T>
 T* NewTestPlayer() {
   oo::Ref<T> player = oo::makeRef<T>();
@@ -87,9 +87,7 @@ void SetUp() {
   (void)oo::Defaults::standard();
 
   gOOPlayer = NewTestPlayer<StickProfileTestPlayer>();
-  gOOPlayer->Entity::setStatus(
-      STATUS_DOCKED);  // the root's: what the Objective-C stand-in's -status
-                       // answered
+  gOOPlayer->Entity::setStatus(STATUS_DOCKED);  // the root's status()
   gOOJSMainThreadContext = JS_NewContext(JS_NewRuntime());
 }
 

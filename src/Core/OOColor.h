@@ -147,8 +147,7 @@ class OOColor : public oo::PListForeign {
   // (OODescription.h).
   std::optional<std::string> descriptionComponents() const;
 
-  // oo::PListForeign: what the facade answered (its class, and "%@" as <OOColor
-  // 0x...>{...}).
+  // oo::PListForeign: the class name, and "%@" as <OOColor 0x...>{...}.
   std::string className() const override;
   std::string description() const override;
 
@@ -162,8 +161,7 @@ class OOColor : public oo::PListForeign {
 };
 
 /*	A colour carried through plist data as a PList::Object node: the colour
-   is the node's foreign object (what oo::PListObject() and oo::ObjectIn() did
-   for the facade).
+   is the node's foreign object (oo::PListObject() and oo::ObjectIn()).
 */
 inline oo::PList OOColorObjectNode(OOColor* color)  // null colour -> null PList
 {

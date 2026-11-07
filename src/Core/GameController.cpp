@@ -256,10 +256,9 @@ GameController::GameController() {
 
     // rather than seeding this with the date repeatedly, seed it
     // once here at startup
-    // OO_RANDOM_SEED pins the seed so a run can be reproduced. Nothing
-    // downstream of RANROT is repeatable without it, which both the goldens
-    // (0.4) and the component tier (0.13b) depend on. Unset - the normal case -
-    // keeps wall-clock seeding.
+    // OO_RANDOM_SEED pins the seed so a run can be reproduced.
+    // Downstream component tests depend on it.
+    // Unset to keep wall-clock seeding.
     const char* seedEnv = getenv("OO_RANDOM_SEED");
     if (seedEnv != NULL && *seedEnv != '\0') {
       ranrot_srand((uint32_t)strtoul(seedEnv, NULL, 10));
@@ -406,7 +405,7 @@ bool GameController::suppressClangStuff() {
                           // (MacOSX) at the end of the file
 
 void GameController::performGameTick() {
-  oo::AutoreleaseScope pool;  // was an Objective-C autorelease pool
+  oo::AutoreleaseScope pool;
 
   if (_gameView != nullptr) _gameView->pollControls();
   doPerformGameTick();
@@ -557,7 +556,7 @@ void GameController::runFrameLoop() {
 }
 
 void GameController::applicationDidFinishLaunching() {
-  // Was an Objective-C autorelease pool pushed here and popped below.
+  // An autorelease pool is pushed here and popped below.
   std::optional<oo::AutoreleaseScope> pool;
   pool.emplace();
 
@@ -647,8 +646,7 @@ void GameController::loadPlayerIfRequired() {
     if (UNIVERSE != nullptr) UNIVERSE->useGUILightSource(false);
     // A copy: loading resets the add-ons, whose demo screen resets
     // _playerFileToLoad, and a reference into it would dangle while the load
-    // still reads it (an ASan heap-use-after-free; the Objective-C original
-    // passed a retained string object).
+    // still reads it (an ASan heap-use-after-free).
     const std::string fileToLoad = *_playerFileToLoad;
     if (PLAYER != nullptr) PLAYER->loadPlayerFromFile(fileToLoad, false);
   }
@@ -1196,9 +1194,8 @@ static void SetUpSparkle(void) {
 namespace {
 
 /*	The out-pointers below point into the exception's name and reason. The
-   Objective-C OOException was autoreleased, so they stayed valid after the
-   handler; the C++ oo::Exception dies with its handler, so a
-   copy is kept here until the next one (main thread only).
+   C++ oo::Exception dies with its handler, so a copy is kept here until the
+   next one (main thread only).
 */
 std::optional<oo::Exception> sLastDeferredCallException;
 

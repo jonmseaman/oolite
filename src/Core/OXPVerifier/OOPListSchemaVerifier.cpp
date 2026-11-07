@@ -1660,8 +1660,7 @@ OOPListSchemaVerifierError ErrorTypeMismatch(const char* expectedClassName,
       break;
     case oo::PList::Type::Object:
       className = "(null)";
-      break;  // any other object: its class's name, nil's for a node with no
-              // Objective-C object (none is made)
+      break;  // any other object
   }
 
   return ErrorWithDictionary(

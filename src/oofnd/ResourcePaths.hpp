@@ -75,8 +75,8 @@
 
 #if defined(_WIN32)
 // Declared here rather than by including <windows.h>, which would drag min/max
-// macros and the whole Win32 API into every Objective-C++ file that includes
-// oofnd. Identical to the SDK's.
+// macros and the whole Win32 API into every file that includes oofnd. Identical
+// to the SDK's.
 extern "C" __declspec(dllimport) unsigned long __stdcall
 GetEnvironmentVariableW(const wchar_t* name, wchar_t* buffer,
                         unsigned long size);
