@@ -128,6 +128,13 @@ enum {
     BUTTON_DOCKINGMUSIC,
     BUTTON_PAUSE,
     BUTTON_TOGGLEHUD,
+    BUTTON_GUILEFT,
+    BUTTON_GUIRIGHT,
+    BUTTON_GUIUP,
+    BUTTON_GUIDOWN,
+    BUTTON_GUIPAGEUP,
+    BUTTON_GUIPAGEDOWN,
+    BUTTON_GUISELECT,
     BUTTON_end
 };
 
@@ -160,6 +167,7 @@ enum {
 // Dictionary keys - used in the defaults file
 inline constexpr std::string_view AXIS_SETTINGS = "JoystickAxes"; // oo::Defaults key
 inline constexpr std::string_view BUTTON_SETTINGS = "JoystickButs"; // oo::Defaults key
+inline constexpr std::string_view GUI_BUTTON_SETTINGS = "GuiJoystickButs"; // oo::Defaults key
 inline constexpr std::string_view STICK_ISAXIS = "isAxis"; // YES=axis NO=button
 inline constexpr std::string_view STICK_NUMBER = "stickNum"; // Stick number 0 to 4
 inline constexpr std::string_view STICK_AXBUT = "stickAxBt"; // Axis or button number
@@ -199,6 +207,7 @@ public:
     void setFunction(int function, const oo::PList& stickFn);
     void unsetAxisFunction(int function);
     void unsetButtonFunction(int function);
+    void unsetGuiButtonFunction(int function);
 
     // Accessors and discovery about the hardware.
     // These work directly on the internal lookup table so to be fast
@@ -225,6 +234,7 @@ public:
     // loop and are needed for loading/saving defaults.
     oo::PList axisFunctions();
     oo::PList buttonFunctions();
+    oo::PList guiButtonFunctions();
 
     // Set a callback for the next moved axis/pressed button. hwflags
     // is in the form HW_AXIS | HW_BUTTON (or just one of). obj is an Objective-C object, called
@@ -249,6 +259,7 @@ private:
     // Setting button and axis functions
     void setFunctionForAxis(int axis, int function, int stickNum);
     void setFunctionForButton(int button, int function, int stickNum);
+    void setGuiFunctionForButton(int button, int function, int stickNum);
 
     // Transitional: the SDL manager's event decoders read and set the state below, as they did
     // OOJoystickManager's ivars. cxx::OOSDLJoystickManager does not derive from this class yet
@@ -261,6 +272,7 @@ protected:
     // and set them, as the Objective-C ivars were)
     int8_t axismap[MAX_STICKS][MAX_AXES] = { };
     int8_t buttonmap[MAX_STICKS][MAX_BUTTONS] = { };
+    int8_t guibuttonmap[MAX_STICKS][MAX_BUTTONS] = { };
     bool true_butstate[MAX_STICKS][MAX_BUTTONS] = { };
     double axstate[AXIS_end] = { };
     BOOL butstate[BUTTON_end] = { }; // still BOOL: getAllButtonStates() hands unconverted callers a const BOOL *
