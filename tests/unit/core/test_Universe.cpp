@@ -1418,4 +1418,78 @@ OO_TEST(slice26PluralDescriptions) {
   }
 }
 
+// The ship library's up and down. The index is the one the end of the fly-out
+// moves on from (it adds one), and -update: sets DEMO_FLY_OUT the frame after a
+// press; the frame is played here by hand. A press while the ship is still
+// flying out counts: two downs move two ships, two ups move two back, and the
+// change under way is not restarted.
+OO_TEST(shipLibraryCountsEveryPress) {
+  {
+    oo::AutoreleaseScope scope;
+    Universe* u = NewUniverse();
+    oo::PList::Array ships;
+    for (int i = 0; i < 5; i++) ships.push_back(oo::PList(oo::PList::Dict{}));
+    u->demo_ships = oo::PList(oo::PList::Array{oo::PList(ships)});
+    u->universal_time = 10.0;
+    const auto showing = [u](NSUInteger subindex) {
+      u->demo_ship_index = 0;
+      u->demo_ship_subindex = subindex;
+      u->demo_stage = DEMO_SHOW_THING;
+      u->demo_stage_time = u->universal_time + 300.0;
+    };
+    const auto nextFrameStartsFlyOut = [u]() {
+      OO_CHECK(u->demo_stage == DEMO_SHOW_THING &&
+               u->demo_stage_time <= u->universal_time);
+      u->demo_stage = DEMO_FLY_OUT;
+      u->demo_stage_time = u->universal_time + 0.25;
+    };
+
+    // One down: the fly-out's end lands on ship 1.
+    showing(0);
+    u->selectIntro2Next();
+    nextFrameStartsFlyOut();
+    OO_CHECK(u->demo_ship_subindex + 1 == 1);
+
+    // A second down during the fly-out: it lands on ship 2, at the same time.
+    u->selectIntro2Next();
+    OO_CHECK(u->demo_stage == DEMO_FLY_OUT);
+    OO_CHECK(u->demo_stage_time == u->universal_time + 0.25);
+    OO_CHECK((u->demo_ship_subindex + 1) % 5 == 2);
+
+    // Two downs before the frame that starts the fly-out: also two ships.
+    showing(0);
+    u->selectIntro2Next();
+    u->selectIntro2Next();
+    nextFrameStartsFlyOut();
+    OO_CHECK((u->demo_ship_subindex + 1) % 5 == 2);
+
+    // One up from ship 3 lands on ship 2; a second during the fly-out on 1.
+    showing(3);
+    u->selectIntro2Previous();
+    nextFrameStartsFlyOut();
+    OO_CHECK((u->demo_ship_subindex + 1) % 5 == 2);
+    u->selectIntro2Previous();
+    OO_CHECK(u->demo_stage == DEMO_FLY_OUT);
+    OO_CHECK((u->demo_ship_subindex + 1) % 5 == 1);
+
+    // Up from ship 0 wraps to the last ship, and down from the last to 0.
+    showing(0);
+    u->selectIntro2Previous();
+    nextFrameStartsFlyOut();
+    OO_CHECK((u->demo_ship_subindex + 1) % 5 == 4);
+    showing(4);
+    u->selectIntro2Next();
+    nextFrameStartsFlyOut();
+    OO_CHECK((u->demo_ship_subindex + 1) % 5 == 0);
+
+    // A press while the next ship flies in starts a new change.
+    showing(0);
+    u->demo_stage = DEMO_FLY_IN;
+    u->demo_stage_time = u->universal_time + 0.4;
+    u->selectIntro2Next();
+    nextFrameStartsFlyOut();
+    OO_CHECK((u->demo_ship_subindex + 1) % 5 == 1);
+  }
+}
+
 OO_TEST_MAIN()
