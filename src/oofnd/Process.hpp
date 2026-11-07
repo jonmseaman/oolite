@@ -44,8 +44,9 @@
 #include <vector>
 
 #if defined(_WIN32)
-// Declared exactly as the Windows headers declare them (DWORD = unsigned long, UINT = unsigned
-// int, BOOL = int), so this header does not pull <windows.h> into game code.
+// Declared exactly as the Windows headers declare them (DWORD = unsigned long,
+// UINT = unsigned int, BOOL = int), so this header does not pull <windows.h>
+// into game code.
 extern "C" {
 __declspec(dllimport) unsigned long __stdcall GetVersion(void);
 __declspec(dllimport) int __stdcall WideCharToMultiByte(
