@@ -140,10 +140,10 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
 
     gui_screen = GUI_SCREEN_STICKMAPPER;
     [gui clear];
-    [gui setTitle:@"Configure Joysticks"];
+    [gui setTitle:[NSString stringWithFormat:@"%@", DESC(@"stickmapper-header")]];
 
     for (i = 0; i < stickCount; i++) {
-        std::string stickNameForThisRow = oo::str::format("Stick %d %s", i + 1, stickList[i].c_str());
+        std::string stickNameForThisRow = oo::str::format("%s %d %s", oo::StdString(DESC(@"stickmapper-stick")).c_str(), i + 1, stickList[i].c_str());
         // for more than 2 sticks, the stick name rows are populated by more than one name if needed
         std::optional<std::string> stickNameAdditional;
         if (stickCount > 2 && OOStringWidthInEm(oo::NSStringFrom(stickNameForThisRow)) > 18.0) {
@@ -154,7 +154,7 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
         }
         unsigned j = i + 2;
         if (j < stickCount) {
-            stickNameAdditional = oo::str::format("Stick %d %s", j + 1, stickList[j].c_str());
+            stickNameAdditional = oo::str::format("%s %d %s", oo::StdString(DESC(@"stickmapper-stick")).c_str(), j + 1, stickList[j].c_str());
             if (OOStringWidthInEm(oo::NSStringFrom(*stickNameAdditional)) > 11.0) {
                 // string is too long, truncate it until its length gets below threshold
                 do {
@@ -172,10 +172,10 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
     [gui cxx_setKey:oo::StdString(GUI_KEY_OK) forRow:GUI_ROW_STICKPROFILE];
     [self displayFunctionList:gui skip:skip];
 
-    [gui cxx_setArray:std::vector<std::string> { "Select a function and press Enter to modify or 'u' to unset." }
+    [gui cxx_setArray:std::vector<std::string> { oo::StdString(DESC(@"stickmapper-help-text-1")) }
                forRow:GUI_ROW_INSTRUCT];
 
-    [gui cxx_setText:std::optional<std::string>("Space to return to previous screen.") forRow:GUI_ROW_INSTRUCT + 1 align:GUI_ALIGN_CENTER];
+    [gui cxx_setText:oo::OptionalString(DESC(@"stickmapper-help-text-2")) forRow:GUI_ROW_INSTRUCT + 1 align:GUI_ALIGN_CENTER];
 
     if (resetCurrentRow) {
         [gui setSelectedRow:GUI_ROW_STICKPROFILE];
@@ -189,13 +189,12 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
                            view:(MyOpenGLView*)gameView
 {
     OOJoystickManager* stickHandler = [OOJoystickManager sharedStickHandler];
-
     // Don't do anything if the user is supposed to be selecting
     // a function - other than look for Escape.
     if (waitingForStickCallback) {
         if ([gameView isDown:27]) {
             [stickHandler clearCallback];
-            [gui cxx_setArray:std::vector<std::string> { "Function setting aborted." }
+            [gui cxx_setArray:std::vector<std::string> { oo::StdString(DESC(@"stickmapper-set-aborted")) }
                        forRow:GUI_ROW_INSTRUCT];
             waitingForStickCallback = NO;
         }
@@ -203,10 +202,11 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
         // Break out now.
         return;
     }
-
+    const BOOL* joyButtonState = [stickHandler getAllButtonStates];
     [self handleGUIUpDownArrowKeys];
+    BOOL selectKeyPress = ([self checkKeyPress:n_key_gui_select] || joyButtonState[BUTTON_GUISELECT] || [gameView isDown:gvMouseDoubleClick]);
 
-    if ([gui selectedRow] == GUI_ROW_STICKPROFILE && [gameView isDown:13]) {
+    if ([gui selectedRow] == GUI_ROW_STICKPROFILE && selectKeyPress) {
         [self setGuiToStickProfileScreen:gui];
         return;
     }
@@ -217,7 +217,7 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
     else
         selFunctionIdx = -1;
 
-    if ([gameView isDown:13]) {
+    if (selectKeyPress) {
         if (key.has_value() && oo::str::hasPrefix(*key, "More:")) {
             int from_function = NumberAfterColon(*key);
             if (from_function < 0)
@@ -242,13 +242,13 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
         std::string instructions;
         switch (hw) {
         case HW_AXIS:
-            instructions = "Fully deflect the axis you want to use for this function. Esc aborts.";
+            instructions = oo::StdString(DESC(@"stickmapper-set-help-text-axis"));
             break;
         case HW_BUTTON:
-            instructions = "Press the button you want to use for this function. Esc aborts.";
+            instructions = oo::StdString(DESC(@"stickmapper-set-help-text-button"));
             break;
         default:
-            instructions = "Press the button or deflect the axis you want to use for this function.";
+            instructions = oo::StdString(DESC(@"stickmapper-set-help-text-either"));
         }
         [gui cxx_setArray:std::vector<std::string> { instructions } forRow:GUI_ROW_INSTRUCT];
         waitingForStickCallback = YES;
@@ -330,8 +330,12 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
         NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
         [defaults setObject:customEquipActivation forKey:KEYCONFIG_CUSTOMEQUIP];
     } else {
-        [stickHandler setFunction:function withDict:hwDict];
-        [self checkCustomEquipButtons:hwDict ignore:-1];
+        if (function >= BUTTON_GUILEFT && function <= BUTTON_GUISELECT) {
+            [stickHandler setFunction:function withDict:hwDict];
+        } else {
+            [stickHandler setFunction:function withDict:hwDict];
+            [self checkCustomEquipButtons:hwDict ignore:-1];
+        }
         [stickHandler saveStickSettings];
     }
 
@@ -425,7 +429,7 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
     OOJoystickManager* stickHandler = [OOJoystickManager sharedStickHandler];
 
     [gui setColor:[OOColor greenColor] forRow:GUI_ROW_HEADING];
-    [gui cxx_setArray:std::vector<std::string> { "Function", "Assigned to", "Type" }
+    [gui cxx_setArray:std::vector<std::string> { oo::StdString(DESC(@"stickmapper-column-function")), oo::StdString(DESC(@"stickmapper-column-assigned-to")), oo::StdString(DESC(@"stickmapper-column-type")) }
                forRow:GUI_ROW_HEADING];
 
     if (!stickFunctions) {
@@ -434,6 +438,7 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
     }
     const oo::PList assignedAxes = [stickHandler axisFunctions];
     const oo::PList assignedButs = [stickHandler buttonFunctions];
+    const oo::PList assignedGuiButs = [stickHandler guiButtonFunctions];
 
     NSUInteger i, n_functions = [stickFunctions count];
     NSInteger n_rows, start_row, previous = 0;
@@ -480,18 +485,23 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
                 // -objectForKey: of a nil key found nothing
                 const oo::PList* assignedAxis = axFuncKey.has_value() ? assignedAxes.find(*axFuncKey) : nullptr;
                 const oo::PList* assignedButton = butFuncKey.has_value() ? assignedButs.find(*butFuncKey) : nullptr;
+                const oo::PList* assignedGuiButton = butFuncKey.has_value() ? assignedGuiButs.find(*butFuncKey) : nullptr;
                 int allowable = entry.get<int>(KEY_ALLOWABLE);
                 switch (allowable) {
                 case HW_AXIS:
-                    allowedThings = "Axis";
+                    allowedThings = oo::StdString(DESC(@"stickmapper-allowed-axis"));
                     assignment = [self describeStickDict:assignedAxis];
                     break;
                 case HW_BUTTON:
-                    allowedThings = "Button";
+                    allowedThings = oo::StdString(DESC(@"stickmapper-allowed-button"));
                     int bf;
                     bf = [oo::NSStringOrNil(butFuncKey) integerValue];
                     if (bf < 10000) {
-                        assignment = [self describeStickDict:assignedButton];
+                        if (bf >= BUTTON_GUILEFT && bf <= BUTTON_GUISELECT) {
+                            assignment = [self describeStickDict:assignedGuiButton];
+                        } else {
+                            assignment = [self describeStickDict:assignedButton];
+                        }
                     } else {
                         std::string key = oo::StdString(CUSTOMEQUIP_BUTTONACTIVATE);
                         bf -= 10000;
@@ -504,12 +514,18 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
                     }
                     break;
                 default:
-                    allowedThings = "Axis/Button";
+                    allowedThings = oo::StdString(DESC(@"stickmapper-allowed-both"));
 
                     // axis has priority
                     assignment = [self describeStickDict:assignedAxis];
-                    if (!assignment.has_value())
-                        assignment = [self describeStickDict:assignedButton];
+                    if (!assignment.has_value()) {
+                        int bf = [oo::NSStringOrNil(butFuncKey) integerValue];
+                        if (bf >= BUTTON_GUILEFT && bf <= BUTTON_GUISELECT) {
+                            assignment = [self describeStickDict:assignedGuiButton];
+                        } else {
+                            assignment = [self describeStickDict:assignedButton];
+                        }
+                    }
                 }
 
                 // Find out what's assigned for this function currently.
@@ -544,17 +560,18 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
         int stickNumber = [ObjectForKey(*stickDict, oo::StdString(STICK_NUMBER))
             intValue];
         // Button or axis?
+        const std::string stick = oo::StdString(DESC(@"stickmapper-stick"));
         if ([ObjectForKey(*stickDict, oo::StdString(STICK_ISAXIS)) boolValue]) {
-            desc = oo::str::format("Stick %d axis %d",
-                stickNumber + 1, thingNumber + 1);
+            desc = oo::str::format("%s %d %s %d",
+                stick.c_str(), stickNumber + 1, oo::StdString(DESC(@"stickmapper-axis")).c_str(), thingNumber + 1);
         } else if (thingNumber >= MAX_REAL_BUTTONS) {
-            static const char dir[][6] = { "up", "right", "down", "left" };
-            desc = oo::str::format("Stick %d hat %d %s",
-                stickNumber + 1, (thingNumber - MAX_REAL_BUTTONS) / 4 + 1,
-                dir[thingNumber & 3]);
+            const std::string dir[] = { oo::StdString(DESC(@"stickmapper-hat-up")), oo::StdString(DESC(@"stickmapper-hat-right")), oo::StdString(DESC(@"stickmapper-hat-down")), oo::StdString(DESC(@"stickmapper-hat-left")) };
+            desc = oo::str::format("%s %d %s %d %s",
+                stick.c_str(), stickNumber + 1, oo::StdString(DESC(@"stickmapper-hat")).c_str(), (thingNumber - MAX_REAL_BUTTONS) / 4 + 1,
+                dir[thingNumber & 3].c_str());
         } else {
-            desc = oo::str::format("Stick %d button %d",
-                stickNumber + 1, thingNumber + 1);
+            desc = oo::str::format("%s %d %s %d",
+                stick.c_str(), stickNumber + 1, oo::StdString(DESC(@"stickmapper-button")).c_str(), thingNumber + 1);
         }
     }
     return desc;
@@ -565,13 +582,13 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
     std::string hwString;
     switch (hwFlags) {
     case HW_AXIS:
-        hwString = "axis";
+        hwString = oo::StdString(DESC(@"stickmapper-axis"));
         break;
     case HW_BUTTON:
-        hwString = "button";
+        hwString = oo::StdString(DESC(@"stickmapper-button"));
         break;
     default:
-        hwString = "axis/button";
+        hwString = oo::StdString(DESC(@"stickmapper-axis-button"));
     }
     return hwString;
 }
@@ -833,6 +850,43 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
                         axisfn:STICK_NOFUNCTION
                          butfn:BUTTON_ENERGYBOMB]);
 
+    [funcList addObject:[self makeStickGuiDictHeader:DESC(@"stickmapper-header-gui")]];
+    [funcList addObject:
+        [self makeStickGuiDict:DESC(@"stickmapper-gui-left")
+                         allowable:HW_BUTTON
+                            axisfn:STICK_NOFUNCTION
+                             butfn:BUTTON_GUILEFT]];
+    [funcList addObject:
+        [self makeStickGuiDict:DESC(@"stickmapper-gui-right")
+                         allowable:HW_BUTTON
+                            axisfn:STICK_NOFUNCTION
+                             butfn:BUTTON_GUIRIGHT]];
+    [funcList addObject:
+        [self makeStickGuiDict:DESC(@"stickmapper-gui-up")
+                         allowable:HW_BUTTON
+                            axisfn:STICK_NOFUNCTION
+                             butfn:BUTTON_GUIUP]];
+    [funcList addObject:
+        [self makeStickGuiDict:DESC(@"stickmapper-gui-down")
+                         allowable:HW_BUTTON
+                            axisfn:STICK_NOFUNCTION
+                             butfn:BUTTON_GUIDOWN]];
+    [funcList addObject:
+        [self makeStickGuiDict:DESC(@"stickmapper-gui-page-up")
+                         allowable:HW_BUTTON
+                            axisfn:STICK_NOFUNCTION
+                             butfn:BUTTON_GUIPAGEUP]];
+    [funcList addObject:
+        [self makeStickGuiDict:DESC(@"stickmapper-gui-page-down")
+                         allowable:HW_BUTTON
+                            axisfn:STICK_NOFUNCTION
+                             butfn:BUTTON_GUIPAGEDOWN]];
+    [funcList addObject:
+        [self makeStickGuiDict:DESC(@"stickmapper-gui-select")
+                         allowable:HW_BUTTON
+                            axisfn:STICK_NOFUNCTION
+                             butfn:BUTTON_GUISELECT]];
+
     // misc
     funcList.push_back([self makeStickGuiDictHeader:oo::StdString(DESC(@"stickmapper-header-misc"))]);
     funcList.push_back(
@@ -872,12 +926,12 @@ NSInteger IntegerIn(const oo::PList* dict, std::string_view key)
         int i;
         for (i = 0; i < [customEquipActivation count]; i++) {
             funcList.push_back(
-                [self makeStickGuiDict:oo::str::format("Activate '%s'", oo::DescriptionOf(oo::NSStringOrNil(OptionalStringForKey(oo::PListFrom([customEquipActivation objectAtIndex:i]), oo::StdString(CUSTOMEQUIP_EQUIPNAME)))).c_str())
+                [self makeStickGuiDict:oo::str::format("%s '%s'", oo::StdString(DESC(@"stickmapper-cust-activate")).c_str(), oo::DescriptionOf(oo::NSStringOrNil(OptionalStringForKey(oo::PListFrom([customEquipActivation objectAtIndex:i]), oo::StdString(CUSTOMEQUIP_EQUIPNAME)))).c_str())
                              allowable:HW_BUTTON
                                 axisfn:STICK_NOFUNCTION
                                  butfn:(i + 10000)]);
             funcList.push_back(
-                [self makeStickGuiDict:oo::str::format("Mode '%s'", oo::DescriptionOf(oo::NSStringOrNil(OptionalStringForKey(oo::PListFrom([customEquipActivation objectAtIndex:i]), oo::StdString(CUSTOMEQUIP_EQUIPNAME)))).c_str())
+                [self makeStickGuiDict:oo::str::format("%s '%s'", oo::StdString(DESC(@"stickmapper-cust-mode")).c_str(), oo::DescriptionOf(oo::NSStringOrNil(OptionalStringForKey(oo::PListFrom([customEquipActivation objectAtIndex:i]), oo::StdString(CUSTOMEQUIP_EQUIPNAME)))).c_str())
                              allowable:HW_BUTTON
                                 axisfn:STICK_NOFUNCTION
                                  butfn:(i + 20000)]);

@@ -323,6 +323,26 @@ static id sSharedStickHandler = nil;
     return oo::PList(std::move(fnList));
 }
 
+- (oo::PList)guiButtonFunctions
+{
+    int i, j;
+    oo::PList::Dict fnList;
+
+    // Add buttons
+    for (i = 0; i < MAX_BUTTONS; i++) {
+        for (j = 0; j < MAX_STICKS; j++) {
+            if (guibuttonmap[j][i] >= 0) {
+                oo::PList::Dict fnDict;
+                fnDict[oo::StdString(STICK_ISAXIS)] = oo::PList(static_cast<bool>(NO));
+                fnDict[oo::StdString(STICK_NUMBER)] = oo::PList(j);
+                fnDict[oo::StdString(STICK_AXBUT)] = oo::PList(i);
+                fnList[ENUMKEY(guibuttonmap[j][i])] = oo::PList(std::move(fnDict));
+            }
+        }
+    }
+    return oo::PList(std::move(fnList));
+}
+
 - (void)setFunction:(int)function withDict:(const oo::PList&)stickFn
 {
     BOOL isAxis = stickFn.get<bool>(oo::StdString(STICK_ISAXIS)) ? YES : NO;
@@ -334,9 +354,17 @@ static id sSharedStickHandler = nil;
                         function:function
                            stick:stickNum];
     } else {
-        [self setFunctionForButton:stickAxBt
+        if (function >= BUTTON_GUILEFT && function <= BUTTON_GUISELECT) 
+        {
+            [self setGuiFunctionForButton:stickAxBt
                           function:function
                              stick:stickNum];
+        } 
+        else {
+            [self setFunctionForButton:stickAxBt
+                          function:function
+                             stick:stickNum];
+        }
     }
 }
 
@@ -378,6 +406,24 @@ static id sSharedStickHandler = nil;
     buttonmap[stickNum][button] = function;
 }
 
+- (void)setGuiFunctionForButton:(int)button
+                    function:(int)function
+                       stick:(int)stickNum
+{
+    NSParameterAssert(button < MAX_BUTTONS && stickNum < MAX_STICKS);
+
+    int i, j;
+    for (i = 0; i < MAX_BUTTONS; i++) {
+        for (j = 0; j < MAX_STICKS; j++) {
+            if (guibuttonmap[j][i] == function) {
+                guibuttonmap[j][i] = STICK_NOFUNCTION;
+                break;
+            }
+        }
+    }
+    guibuttonmap[stickNum][button] = function;
+}
+
 - (void)unsetAxisFunction:(int)function
 {
     int i, j;
@@ -399,6 +445,19 @@ static id sSharedStickHandler = nil;
         for (j = 0; j < MAX_STICKS; j++) {
             if (buttonmap[j][i] == function) {
                 buttonmap[j][i] = STICK_NOFUNCTION;
+                break;
+            }
+        }
+    }
+}
+
+- (void)unsetGuiButtonFunction:(int)function
+{
+    int i, j;
+    for (i = 0; i < MAX_BUTTONS; i++) {
+        for (j = 0; j < MAX_STICKS; j++) {
+            if (guibuttonmap[j][i] == function) {
+                guibuttonmap[j][i] = STICK_NOFUNCTION;
                 break;
             }
         }
@@ -468,6 +527,8 @@ static id sSharedStickHandler = nil;
                  forKey:AXIS_SETTINGS];
     [defaults setObject:oo::ObjectFromPList([self buttonFunctions])
                  forKey:BUTTON_SETTINGS];
+    [defaults setObject:oo::ObjectFromPList([self guiButtonFunctions])
+                 forKey:GUI_BUTTON_SETTINGS];
     [self saveProfileForAxis:AXIS_ROLL];
     [self saveProfileForAxis:AXIS_PITCH];
     [self saveProfileForAxis:AXIS_YAW];
@@ -480,6 +541,7 @@ static id sSharedStickHandler = nil;
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     const oo::PList axisSettings = oo::PListFrom([defaults objectForKey:AXIS_SETTINGS]);
     const oo::PList buttonSettings = oo::PListFrom([defaults objectForKey:BUTTON_SETTINGS]);
+    const oo::PList guiButtonSettings = oo::PListFrom([defaults objectForKey:GUI_BUTTON_SETTINGS]);
     // Keys are visited in byte order (they came in hash order): where two settings claim the
     // same stick axis or button, the last one still wins (proposed ADR-0043).
     if (axisSettings) {
@@ -500,6 +562,14 @@ static id sSharedStickHandler = nil;
     } else {
         // Nothing to load - set useful defaults
         [self setDefaultMapping];
+    }
+    if (guiButtonSettings) {
+        if (const oo::PList::Dict* settings = guiButtonSettings.getIf<oo::PList::Dict>()) {
+            for (const auto& [key, stickFn] : *settings) {
+                [self setFunction:oo::str::intValue(key)
+                         withDict:stickFn];
+            }
+        }
     }
     [self loadProfileForAxis:AXIS_ROLL];
     [self loadProfileForAxis:AXIS_PITCH];

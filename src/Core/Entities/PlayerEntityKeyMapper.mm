@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #import "OOEquipmentType.h"
 #import "OOFoundationBridge.h"
 #import "OOPListView.h"
+#import "OOJoystickManager.h"
 #import "OOTexture.h"
 #import "PlayerEntityControls.h"
 #import "PlayerEntityScriptMethods.h"
@@ -171,7 +172,7 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
     [[UNIVERSE gameController] setMouseInteractionModeForUIWithMouseInteraction:YES];
 
     [gui clear];
-    [gui setTitle:[NSString stringWithFormat:@"Configure Keyboard"]];
+    [gui setTitle:[NSString stringWithFormat:@"%@", DESC(@"oolite-keyconfig-header")]];
 
     // show keyboard layout
     [gui setArray:[NSArray arrayWithObjects:DESC(@"oolite-keyconfig-keyboard"), [self keyboardDescription:kbd], nil] forRow:GUI_ROW_KC_SELECTKBD];
@@ -216,8 +217,9 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
 
 - (void)keyMapperInputHandler:(GuiDisplayGen*)gui view:(MyOpenGLView*)gameView
 {
+    const BOOL* joyButtonState = [[OOJoystickManager sharedStickHandler] getAllButtonStates];
     [self handleGUIUpDownArrowKeys];
-    BOOL selectKeyPress = ([self checkKeyPress:n_key_gui_select] || [gameView isDown:gvMouseDoubleClick]);
+    BOOL selectKeyPress = ([self checkKeyPress:n_key_gui_select] || joyButtonState[BUTTON_GUISELECT] || [gameView isDown:gvMouseDoubleClick]);
     if ([gameView isDown:gvMouseDoubleClick])
         [gameView clearMouse];
 
@@ -542,8 +544,9 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
 
 - (void)handleKeyConfigKeys:(GuiDisplayGen*)gui view:(MyOpenGLView*)gameView
 {
+    const BOOL* joyButtonState = [[OOJoystickManager sharedStickHandler] getAllButtonStates];
     [self handleGUIUpDownArrowKeys];
-    BOOL selectKeyPress = ([self checkKeyPress:n_key_gui_select] || [gameView isDown:gvMouseDoubleClick]);
+    BOOL selectKeyPress = ([self checkKeyPress:n_key_gui_select] || joyButtonState[BUTTON_GUISELECT] || [gameView isDown:gvMouseDoubleClick]);
     if ([gameView isDown:gvMouseDoubleClick])
         [gameView clearMouse];
 
@@ -609,7 +612,7 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
 
     [gui addLongText:DESC(@"oolite-keyconfig-update-entry-info") startingAtRow:GUI_ROW_KC_ENTRY_INFO align:GUI_ALIGN_LEFT];
 
-    [gui setText:[NSString stringWithFormat:DESC(@"Key: %@"), [gameView typedString]] forRow:end_row align:GUI_ALIGN_LEFT];
+    [gui setText:[NSString stringWithFormat:@"%@: %@", DESC(@"oolite-keyconfig-update-key"), [gameView typedString]] forRow:end_row align:GUI_ALIGN_LEFT];
     [gui setColor:[OOColor cyanColor] forRow:end_row];
     [gui setSelectableRange:NSMakeRange(0, 0)];
 
@@ -638,7 +641,7 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
         last_shift = YES;
 
     [gui setText:
-            [NSString stringWithFormat:DESC(@"Key: %@"), [gameView typedString]]
+            [NSString stringWithFormat:@"%@: %@", DESC(@"oolite-keyconfig-update-key"), [gameView typedString]]
           forRow:end_row];
     [gui setColor:[OOColor cyanColor] forRow:end_row];
 
@@ -761,9 +764,10 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
 
 - (void)handleKeyMapperConfirmClearKeys:(GuiDisplayGen*)gui view:(MyOpenGLView*)gameView
 {
+    const BOOL* joyButtonState = [[OOJoystickManager sharedStickHandler] getAllButtonStates];
     [self handleGUIUpDownArrowKeys];
 
-    BOOL selectKeyPress = ([self checkKeyPress:n_key_gui_select] || [gameView isDown:gvMouseDoubleClick]);
+    BOOL selectKeyPress = ([self checkKeyPress:n_key_gui_select] || joyButtonState[BUTTON_GUISELECT] || [gameView isDown:gvMouseDoubleClick]);
     if ([gameView isDown:gvMouseDoubleClick])
         [gameView clearMouse];
 
@@ -792,7 +796,7 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
 {
     [gui setColor:[OOColor greenColor] forRow:GUI_ROW_KC_HEADING];
     [gui setArray:[NSArray arrayWithObjects:
-                          @"Function", @"Assigned to", @"Overrides", nil]
+                          DESC(@"oolite-keyconfig-column-function"), DESC(@"oolite-keyconfig-column-assigned-to"), DESC(@"oolite-keyconfig-column-overrides"), nil]
            forRow:GUI_ROW_KC_HEADING];
 
     NSDictionary* overrides = [self loadKeySettings];
@@ -1061,9 +1065,9 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
         [funcList addObject:[self makeKeyGuiDictHeader:DESC(@"oolite-keydesc-header-oxp-equip")]];
         int i;
         for (i = 0; i < [customEquipActivation count]; i++) {
-            [funcList addObject:[self makeKeyGuiDict:[NSString stringWithFormat:@"Activate '%@'", oo::PListView([customEquipActivation objectAtIndex:i]).get<NSString*>(CUSTOMEQUIP_EQUIPNAME)]
+            [funcList addObject:[self makeKeyGuiDict:[NSString stringWithFormat:@"%@ '%@'", DESC(@"oolite-keyconfig-cust-activate"), oo::PListView([customEquipActivation objectAtIndex:i]).get<NSString*>(CUSTOMEQUIP_EQUIPNAME)]
                                               keyDef:[NSString stringWithFormat:@"activate_%@", oo::PListView([customEquipActivation objectAtIndex:i]).get<NSString*>(CUSTOMEQUIP_EQUIPKEY)]]];
-            [funcList addObject:[self makeKeyGuiDict:[NSString stringWithFormat:@"Mode '%@'", oo::PListView([customEquipActivation objectAtIndex:i]).get<NSString*>(CUSTOMEQUIP_EQUIPNAME)]
+            [funcList addObject:[self makeKeyGuiDict:[NSString stringWithFormat:@"%@ '%@'", DESC(@"oolite-keyconfig-cust-mode"), oo::PListView([customEquipActivation objectAtIndex:i]).get<NSString*>(CUSTOMEQUIP_EQUIPNAME)]
                                               keyDef:[NSString stringWithFormat:@"mode_%@", oo::PListView([customEquipActivation objectAtIndex:i]).get<NSString*>(CUSTOMEQUIP_EQUIPKEY)]]];
         }
     }
@@ -1110,7 +1114,7 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
     [[UNIVERSE gameController] setMouseInteractionModeForUIWithMouseInteraction:YES];
 
     [gui clear];
-    [gui setTitle:[NSString stringWithFormat:@"Select Keyboard Layout"]];
+    [gui setTitle:[NSString stringWithFormat:@"%@", DESC(@"oolite-keyconfig-select-kbd")]];
 
     [self displayKeyboardLayoutList:gui skip:skip];
 
@@ -1131,8 +1135,9 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
 
 - (void)handleKeyboardLayoutEntryKeys:(GuiDisplayGen*)gui view:(MyOpenGLView*)gameView
 {
+    const BOOL* joyButtonState = [[OOJoystickManager sharedStickHandler] getAllButtonStates];
     [self handleGUIUpDownArrowKeys];
-    BOOL selectKeyPress = ([self checkKeyPress:n_key_gui_select] || [gameView isDown:gvMouseDoubleClick]);
+    BOOL selectKeyPress = ([self checkKeyPress:n_key_gui_select] || joyButtonState[BUTTON_GUISELECT] || [gameView isDown:gvMouseDoubleClick]);
     if ([gameView isDown:gvMouseDoubleClick])
         [gameView clearMouse];
 
@@ -1239,7 +1244,7 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
 - (void)displayKeyboardLayoutList:(GuiDisplayGen*)gui skip:(NSUInteger)skip
 {
     [gui setColor:[OOColor greenColor] forRow:GUI_ROW_KC_HEADING];
-    [gui setArray:[NSArray arrayWithObjects:@"Keyboard layout", nil] forRow:GUI_ROW_KC_HEADING];
+    [gui setArray:[NSArray arrayWithObjects:DESC(@"oolite-keyconfig-kbd-layout"), nil] forRow:GUI_ROW_KC_HEADING];
 
     if (!kbdLayouts)
         kbdLayouts = [[self keyboardLayoutList] retain];
@@ -1283,7 +1288,7 @@ bool Contains(const std::vector<std::string>& list, const std::string& item)
             NSString* desc = [entry objectForKey:@"description"];
             NSString* selected = @"";
             if ([[entry objectForKey:@"key"] isEqualToString:kbd])
-                selected = @"Current";
+                selected = DESC(@"oolite-keyconfig-kbd-current");
             [gui setArray:[NSArray arrayWithObjects:desc, selected, nil] forRow:i + start_row];
             [gui setKey:[NSString stringWithFormat:@"Index:%zu", i + skip] forRow:i + start_row];
         }

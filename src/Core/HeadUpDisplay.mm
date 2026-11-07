@@ -147,6 +147,7 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z, NSSize
 
 static OOTexture* sFontTexture = nil;
 static OOEncodingConverter* sEncodingCoverter = nil;
+static NSString* distance_unit;
 
 enum {
     kFontTextureOptions = kOOTextureMinFilterMipMap | kOOTextureMagFilterLinear | kOOTextureNoShrink | kOOTextureAlphaMask
@@ -360,6 +361,8 @@ OOINLINE void GLColorWithOverallAlpha(const GLfloat* color, GLfloat alpha)
 
     nonlinear_scanner = oo::PListView(hudinfo).get<BOOL>(@"scanner_non_linear", NO);
     scanner_ultra_zoom = oo::PListView(hudinfo).get<BOOL>(@"scanner_ultra_zoom", NO);
+
+    distance_unit = DESC(@"oolite-hud-distance-unit");
 
     return self;
 }
@@ -3425,7 +3428,7 @@ static void hudDrawReticleOnTarget(Entity* target, PlayerEntity* player1, GLfloa
             range = 0.0f; // avoids the occasional -0.001 km distance.
         NSSize textsize = NSMakeSize(rdist * scale, rdist * scale);
         float line_height = rdist * scale;
-        NSString* infoline = [NSString stringWithFormat:@"%0.3f km", range];
+        NSString* infoline = [NSString stringWithFormat:@"%0.3f %@", range, distance_unit];
         if (legal_desc != nil)
             infoline = [NSString stringWithFormat:@"%@ (%@)", infoline, legal_desc];
         // no need to set colour here
@@ -3521,7 +3524,7 @@ static void hudDrawWaypoint(OOWaypointEntity* waypoint, PlayerEntity* player1, G
             range = 0.0f; // avoids the occasional -0.001 km distance.
         NSSize textsize = NSMakeSize(rdist * scale, rdist * scale);
         float line_height = rdist * scale;
-        NSString* infoline = [NSString stringWithFormat:@"%0.3f km", range];
+        NSString* infoline = [NSString stringWithFormat:@"%0.3f %@", range, distance_unit];
         OODrawString(infoline, rs0 * 0.5, -rs2 - line_height, 0, textsize);
     }
 
