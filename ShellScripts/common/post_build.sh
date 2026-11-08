@@ -12,8 +12,7 @@ run_script() {
     local ver_quad="$8"
     local ver_githash="$9"
     local buildtime="${10}"
-    local gnustep_folder="${11}"
-    local stamp_file="${12}"
+    local stamp_file="${11}"
 
     local script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
     pushd "$script_dir" > /dev/null
@@ -149,8 +148,7 @@ run_script() {
             pending=("${next_pending[@]}")
         done
     elif [[ "$host_os" == "darwin" ]]; then
-        # Apple Foundation is used, so there is no GNUstep runtime to bundle, but the Homebrew
-        # libraries are copied in so the app runs on Macs without Homebrew.
+        # The Homebrew libraries are copied in so the app runs on Macs without Homebrew.
         if ! create_info_plist Resources/Info-gnustep.plist "$progdir/Contents/Info.plist" "$appname" "$ver_full" "$ver_quad"; then
             echo "❌ Failed to create Info.plist!" >&2
             return 1
@@ -166,22 +164,6 @@ run_script() {
     else
         # Copy Linux-specific wrapper script
         cp -fu ShellScripts/Linux/run_oolite.sh "$progdir"
-        local gnustep_conf="$gnustep_folder/etc/GNUstep/GNUstep.conf"
-        if [ ! -f "$gnustep_conf" ] && [ "$gnustep_folder" = "/usr" ] && [ -f "/etc/GNUstep/GNUstep.conf" ]; then
-            gnustep_conf="/etc/GNUstep/GNUstep.conf"
-        fi
-        # The game no longer links GNUstep-base (meson.build sets gnustep_folder to ''), so there is
-        # usually no GNUstep.conf to copy; run_oolite.sh copes with GNUstep.conf.orig being absent.
-        if [ -f "$gnustep_conf" ]; then
-            install -D "$gnustep_conf" "$resourcesdir/GNUstep.conf.orig" || { echo "$err_msg GNUstep config" >&2; return 1; }
-        fi
-
-        # If we're using GNUstep libraries that aren't in a system folder copy them
-        ldd "$progpath" | \
-            grep -E "libgnustep-base|libobjc\.so\." | \
-            grep -vE "^[[:space:]]*.*=>[[:space:]]*/(usr/(local/)?|lib(64)?/)" | \
-            awk '{print $3}' | \
-            xargs -I {} cp -Lrfu {} "$progdir/"
     fi
 
     if ! build_documentation "YES" "NO"; then
