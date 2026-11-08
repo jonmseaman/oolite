@@ -1,0 +1,31 @@
+# Commits that only reformat or mechanically rewrite the tree. Use with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Reformat with Google-style clang-format (optional)
+9157d099347d321da7a82fbed6070783a25f89c0
+# Apply clang-format to files the replay left unformatted
+1afa395c364fcc511bed53b704a18d051608c929
+# Apply clang-format to files the replay left unformatted
+0ffa5f13ed51646b89cc08e2b97e087d7ed0f87c
+# Apply clang-format to files the replay left unformatted
+796d2456e6dc682dd7a7e5816deb620607530baf
+# Apply clang-format to files the replay left unformatted
+c80d55fde4085fd984078438898b804a12e26799
+# Apply clang-format to files the replay left unformatted
+aec817ac8276ab44c2642ce5cca469be806997f3
+# Apply clang-format to files the replay left unformatted
+f8b845dfcca6f08a48497d4d0f4ab3ce64c5a37a
+# Apply clang-format to files the replay left unformatted
+b65f5f0756ebdbede7a77d556d59727570cd5382
+# Reformat with clang-format 22
+a2c7294df965f413dd814c0e2907b366a733af03
+# Replace NULL and 0 with nullptr (modernize-use-nullptr)
+59870a65a1948d75715bce741e427f1be0f09fe3
+# Remove redundant void from empty parameter lists (modernize-redundant-void-arg)
+ea69ff1a9ad1a6afe8d8ebb72d1256e92cd4ccdf
+# Use using instead of typedef (modernize-use-using)
+d37ead013c9fb000b9894649d9640795ca496287
+# Add override where missing (modernize-use-override)
+91a3296769fdcf470659ed96dcab8398fc23cb32
+# Format with clang-format 22.1.2 as CI checks it
+431fe95ff08b62b8c73c6f0cfe0de4905419e038
