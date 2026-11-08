@@ -31,6 +31,7 @@
 #include "OOColor.h"
 #include "OOConstToString.h"
 #include "OOJavaScriptEngine.h"
+#include "OOJoystickManager.h"
 #include "OOPListParsing.h"
 #include "OOShipRegistry.h"
 #include "OOSound.h"
@@ -343,6 +344,7 @@ std::optional<std::string> PlayerEntity::commanderSelector()
     ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     std::string dir = (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr ? UNIVERSE->gameController()->playerFileDirectory() : std::optional<std::string>()).value_or("");
+    const bool* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
 
     int idx;
     if (handleGUIUpDownArrowKeys()) {
@@ -363,14 +365,14 @@ std::optional<std::string> PlayerEntity::commanderSelector()
     }
 
     // handle page <-- and page --> keys
-    if ((checkKeyPress(n_key_gui_arrow_left) || checkKeyPress(n_key_gui_page_up)) && (gui->keyForRow(BACKROW) == GUI_KEY_OK)) {
+    if ((checkKeyPress(n_key_gui_arrow_left) || checkKeyPress(n_key_gui_page_up) || joyButtonState[BUTTON_GUILEFT] || joyButtonState[BUTTON_GUIPAGEUP]) && (gui->keyForRow(BACKROW) == GUI_KEY_OK)) {
         currentPage--;
         playMenuPagePrevious();
         lsCommanders(gui, dir, currentPage, std::nullopt);
         if (gameView != nullptr)
             gameView->suppressKeysUntilKeyUp();
     }
-    if ((checkKeyPress(n_key_gui_arrow_right) || checkKeyPress(n_key_gui_page_down)) && (gui->keyForRow(MOREROW) == GUI_KEY_OK)) {
+    if ((checkKeyPress(n_key_gui_arrow_right) || checkKeyPress(n_key_gui_page_down) || joyButtonState[BUTTON_GUIRIGHT] || joyButtonState[BUTTON_GUIPAGEDOWN]) && (gui->keyForRow(MOREROW) == GUI_KEY_OK)) {
         currentPage++;
         playMenuPageNext();
         lsCommanders(gui, dir, currentPage, std::nullopt);
@@ -380,7 +382,7 @@ std::optional<std::string> PlayerEntity::commanderSelector()
 
     // Enter pressed - find the commander name underneath.
     // ignore Ctrl for the moment - we check for it explicitly later
-    if (checkKeyPressIgnoreCtrl(n_key_gui_select, true) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
+    if (checkKeyPressIgnoreCtrl(n_key_gui_select, true) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false) || joyButtonState[BUTTON_GUISELECT]) {
         switch (gui->getSelectedRow()) {
         case EXITROW:
             if (status() == STATUS_START_GAME) {
@@ -435,6 +437,7 @@ void PlayerEntity::saveCommanderInputHandler()
     ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
     std::string dir = (UNIVERSE != nullptr && UNIVERSE->gameController() != nullptr ? UNIVERSE->gameController()->playerFileDirectory() : std::optional<std::string>()).value_or("");
+    const bool* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
 
     if (handleGUIUpDownArrowKeys()) {
         int guiSelectedRow = gui->getSelectedRow();
@@ -463,7 +466,7 @@ void PlayerEntity::saveCommanderInputHandler()
     gui->setColor(OOColor::cyanColor().get(), INPUTROW);
 
     // handle page <-- and page --> keys, and on-screen buttons
-    if (((((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false) || checkKeyPress(n_key_gui_select)) && gui->getSelectedRow() == BACKROW) || (checkKeyPress(n_key_gui_arrow_left) || checkKeyPress(n_key_gui_page_up)))
+    if (((((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false) || checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT]) && gui->getSelectedRow() == BACKROW) || (checkKeyPress(n_key_gui_arrow_left) || checkKeyPress(n_key_gui_page_up)))
         && (gui->keyForRow(BACKROW) == GUI_KEY_OK)) {
         currentPage--;
         lsCommanders(gui, dir, currentPage, std::nullopt);
@@ -471,7 +474,7 @@ void PlayerEntity::saveCommanderInputHandler()
             gameView->suppressKeysUntilKeyUp();
     }
     //
-    if (((((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false) || checkKeyPress(n_key_gui_select)) && gui->getSelectedRow() == MOREROW) || (checkKeyPress(n_key_gui_arrow_right) || checkKeyPress(n_key_gui_page_down)))
+    if (((((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false) || checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT]) && gui->getSelectedRow() == MOREROW) || (checkKeyPress(n_key_gui_arrow_right) || checkKeyPress(n_key_gui_page_down)))
         && (gui->keyForRow(MOREROW) == GUI_KEY_OK)) {
         currentPage++;
         lsCommanders(gui, dir, currentPage, std::nullopt);
@@ -480,7 +483,7 @@ void PlayerEntity::saveCommanderInputHandler()
     }
 
     // ignore Ctrl if pressed together with Enter for the moment - we check for it explicitly immediately after
-    if ((checkKeyPressIgnoreCtrl(n_key_gui_select, true) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) && !commanderNameString.empty()) {
+    if ((checkKeyPressIgnoreCtrl(n_key_gui_select, true) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false) || joyButtonState[BUTTON_GUISELECT]) && !commanderNameString.empty()) {
         if (IsCommandModifierKeyDown(gameView) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
             int guiSelectedRow = gui->getSelectedRow();
             int idx = (guiSelectedRow - STARTROW) + (currentPage * NUMROWS);
@@ -527,6 +530,7 @@ void PlayerEntity::overwriteCommanderInputHandler()
 {
     ::MyOpenGLView* gameView = (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
     ::GuiDisplayGen* gui = (UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr);
+    const bool* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
 
     handleGUIUpDownArrowKeys();
 
@@ -538,7 +542,7 @@ void PlayerEntity::overwriteCommanderInputHandler()
     cYes = FirstUnitLowByte(valueYes); // Use lower byte of unichar.
     cNo = FirstUnitLowByte(valueNo); // Use lower byte of unichar.
 
-    if ((checkKeyPress(n_key_gui_select) && (gui->getSelectedRow() == SAVE_OVERWRITE_YES_ROW)) || (gameView != nullptr ? gameView->isDown(cYes) : false) || (gameView != nullptr ? gameView->isDown(cYes - 32) : false)) {
+    if (((checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT]) && (gui->getSelectedRow() == SAVE_OVERWRITE_YES_ROW)) || (gameView != nullptr ? gameView->isDown(cYes) : false) || (gameView != nullptr ? gameView->isDown(cYes - 32) : false)) {
         pollControls = true;
         nativeSavePlayer(commanderNameString);
         playSaveOverwriteYes();
@@ -547,7 +551,7 @@ void PlayerEntity::overwriteCommanderInputHandler()
         setGuiToStatusScreen();
     }
 
-    if ((checkKeyPress(n_key_gui_select) && (gui->getSelectedRow() == SAVE_OVERWRITE_NO_ROW)) || (gameView != nullptr ? gameView->isDown(27) : false) || (gameView != nullptr ? gameView->isDown(cNo) : false) || (gameView != nullptr ? gameView->isDown(cNo - 32) : false)) {
+    if (((checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT]) && (gui->getSelectedRow() == SAVE_OVERWRITE_NO_ROW)) || (gameView != nullptr ? gameView->isDown(27) : false) || (gameView != nullptr ? gameView->isDown(cNo) : false) || (gameView != nullptr ? gameView->isDown(cNo - 32) : false)) {
         // esc or NO was pressed - get out of here
         pollControls = true;
         playSaveOverwriteNo();
