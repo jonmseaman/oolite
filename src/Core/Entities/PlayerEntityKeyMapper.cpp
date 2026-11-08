@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #include "GameController.h"
 #include "HeadUpDisplay.h"
 #include "OOEquipmentType.h"
+#include "OOJoystickManager.h"
 #include "OOTexture.h"
 #include "PlayerEntityControls.h"
 #include "PlayerEntityScriptMethods.h"
@@ -244,7 +245,7 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip, bool resetCurrentRow)
         UNIVERSE->gameController()->setMouseInteractionModeForUIWithMouseInteraction(YES);
 
     gui->clear();
-    gui->setTitle(std::string("Configure Keyboard"));
+    gui->setTitle(OO_DESC("oolite-keyconfig-header"));
 
     // show keyboard layout
     gui->setArray(Columns({ OO_DESC("oolite-keyconfig-keyboard"), keyboardDescription(kbd) }), GUI_ROW_KC_SELECTKBD);
@@ -292,8 +293,9 @@ void PlayerEntity::setGuiToKeyMapperScreen(unsigned skip, bool resetCurrentRow)
 
 void PlayerEntity::keyMapperInputHandler(::GuiDisplayGen* gui, ::MyOpenGLView* gameView)
 {
+    const BOOL* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
     handleGUIUpDownArrowKeys();
-    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
+    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT] || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
     if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
         if (gameView != nullptr)
             gameView->clearMouse();
@@ -613,8 +615,9 @@ void PlayerEntity::outputKeyDefinition(const std::string& key, const std::string
 
 void PlayerEntity::handleKeyConfigKeys(::GuiDisplayGen* gui, ::MyOpenGLView* gameView)
 {
+    const BOOL* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
     handleGUIUpDownArrowKeys();
-    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
+    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT] || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
     if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
         if (gameView != nullptr)
             gameView->clearMouse();
@@ -683,7 +686,7 @@ void PlayerEntity::setGuiToKeyConfigEntryScreen()
 
     gui->addLongText(OO_DESC("oolite-keyconfig-update-entry-info"), GUI_ROW_KC_ENTRY_INFO, GUI_ALIGN_LEFT);
 
-    gui->setText(oo::str::formatRuntime(OO_DESC("Key: %@"), { TextArg((gameView != nullptr ? gameView->getTypedString() : std::optional<std::string>())) }), end_row, GUI_ALIGN_LEFT);
+    gui->setText(oo::str::format("%s: %s", OO_DESC("oolite-keyconfig-update-key").c_str(), DescriptionOfString((gameView != nullptr ? gameView->getTypedString() : std::optional<std::string>())).c_str()), end_row, GUI_ALIGN_LEFT);
     gui->setColor(OOColor::cyanColor().get(), end_row);
     gui->setSelectableRange(NSMakeRange(0, 0));
 
@@ -714,7 +717,7 @@ void PlayerEntity::handleKeyConfigEntryKeys(::GuiDisplayGen* gui, ::MyOpenGLView
     if ((gameView != nullptr ? gameView->lastKeyWasShifted() : false))
         last_shift = YES;
 
-    gui->setText(oo::str::formatRuntime(OO_DESC("Key: %@"), { TextArg((gameView != nullptr ? gameView->getTypedString() : std::optional<std::string>())) }), end_row);
+    gui->setText(oo::str::format("%s: %s", OO_DESC("oolite-keyconfig-update-key").c_str(), DescriptionOfString((gameView != nullptr ? gameView->getTypedString() : std::optional<std::string>())).c_str()), end_row);
     gui->setColor(OOColor::cyanColor().get(), end_row);
 
     if (checkKeyPress(n_key_gui_select)) {
@@ -826,9 +829,10 @@ void PlayerEntity::setGuiToConfirmClearScreen()
 
 void PlayerEntity::handleKeyMapperConfirmClearKeys(::GuiDisplayGen* gui, ::MyOpenGLView* gameView)
 {
+    const BOOL* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
     handleGUIUpDownArrowKeys();
 
-    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
+    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT] || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
     if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
         if (gameView != nullptr)
             gameView->clearMouse();
@@ -862,7 +866,7 @@ void PlayerEntity::handleKeyMapperConfirmClearKeys(::GuiDisplayGen* gui, ::MyOpe
 void PlayerEntity::displayKeyFunctionList(::GuiDisplayGen* gui, NSUInteger skip)
 {
     gui->setColor(OOColor::greenColor().get(), GUI_ROW_KC_HEADING);
-    gui->setArray({ "Function", "Assigned to", "Overrides" }, GUI_ROW_KC_HEADING);
+    gui->setArray({ OO_DESC("oolite-keyconfig-column-function"), OO_DESC("oolite-keyconfig-column-assigned-to"), OO_DESC("oolite-keyconfig-column-overrides") }, GUI_ROW_KC_HEADING);
 
     const oo::PList overrides = loadKeySettings();
 
@@ -1136,8 +1140,8 @@ std::vector<oo::PList> PlayerEntity::keyFunctionList()
             const oo::PList equip = customEquipActivation[i];
             const std::string equipName = DescriptionOfString(OptionalStringForKey(equip, std::string(CUSTOMEQUIP_EQUIPNAME))); // %@: "(null)" for nil
             const std::string equipKey = DescriptionOfString(OptionalStringForKey(equip, std::string(CUSTOMEQUIP_EQUIPKEY)));
-            funcList.push_back(makeKeyGuiDict(oo::str::format("Activate '%s'", equipName.c_str()), oo::str::format("activate_%s", equipKey.c_str())));
-            funcList.push_back(makeKeyGuiDict(oo::str::format("Mode '%s'", equipName.c_str()), oo::str::format("mode_%s", equipKey.c_str())));
+            funcList.push_back(makeKeyGuiDict(oo::str::format("%s '%s'", OO_DESC("oolite-keyconfig-cust-activate").c_str(), equipName.c_str()), oo::str::format("activate_%s", equipKey.c_str())));
+            funcList.push_back(makeKeyGuiDict(oo::str::format("%s '%s'", OO_DESC("oolite-keyconfig-cust-mode").c_str(), equipName.c_str()), oo::str::format("mode_%s", equipKey.c_str())));
         }
     }
     return funcList;
@@ -1185,7 +1189,7 @@ void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip, bool /*resetCurre
         UNIVERSE->gameController()->setMouseInteractionModeForUIWithMouseInteraction(YES);
 
     gui->clear();
-    gui->setTitle(std::string("Select Keyboard Layout"));
+    gui->setTitle(OO_DESC("oolite-keyconfig-select-kbd"));
 
     displayKeyboardLayoutList(gui, skip);
 
@@ -1209,8 +1213,9 @@ void PlayerEntity::setGuiToKeyboardLayoutScreen(unsigned skip, bool /*resetCurre
 
 void PlayerEntity::handleKeyboardLayoutEntryKeys(::GuiDisplayGen* gui, ::MyOpenGLView* gameView)
 {
+    const BOOL* joyButtonState = OOJoystickManager::sharedStickHandler()->getAllButtonStates();
     handleGUIUpDownArrowKeys();
-    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
+    BOOL selectKeyPress = (checkKeyPress(n_key_gui_select) || joyButtonState[BUTTON_GUISELECT] || (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false));
     if ((gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
         if (gameView != nullptr)
             gameView->clearMouse();
@@ -1303,7 +1308,7 @@ std::vector<oo::PList> PlayerEntity::keyboardLayoutList()
 void PlayerEntity::displayKeyboardLayoutList(::GuiDisplayGen* gui, NSUInteger skip)
 {
     gui->setColor(OOColor::greenColor().get(), GUI_ROW_KC_HEADING);
-    gui->setArray({ "Keyboard layout" }, GUI_ROW_KC_HEADING);
+    gui->setArray({ OO_DESC("oolite-keyconfig-kbd-layout") }, GUI_ROW_KC_HEADING);
 
     if (kbdLayouts.empty())
         kbdLayouts = keyboardLayoutList(); // never empty once built ("default" first)
@@ -1346,7 +1351,7 @@ void PlayerEntity::displayKeyboardLayoutList(::GuiDisplayGen* gui, NSUInteger sk
             const std::optional<std::string> desc = OptionalStringForKey(entry, "description");
             std::string selected;
             if (OptionalStringForKey(entry, "key") == kbd)
-                selected = "Current";
+                selected = OO_DESC("oolite-keyconfig-kbd-current");
             gui->setArray(Columns({ desc, selected }), i + start_row);
             gui->setKey(oo::str::format("Index:%zu", i + skip), i + start_row);
         }
