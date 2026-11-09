@@ -973,7 +973,7 @@ static std::optional<OOPListSchemaVerifierError> Verify_Dictionary(cxx::OOPListS
     // Get schema.
     schema = params.get<oo::PList::Dict>("schema");
     valueType = params.find("valueType");
-    allowOthers = params.get<BOOL>("allowOthers", YES);
+    allowOthers = params.get<bool>("allowOthers", true);
     requiredKeyList = params.get<oo::PList::Array>("requiredKeys");
 
     // If these conditions are met, all members must pass:
