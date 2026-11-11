@@ -66,6 +66,10 @@ class OOJSTimer : public OOScriptTimer, public ::OOJSPrivateObject {
   void clearJSSelf(JSValueConst selfVal) override;
   std::optional<std::string> jsDescription() override;
 
+  // A one-shot timer whose callback is running: it is dropped once the callback
+  // returns.
+  bool willNotFireAgain();
+
   /*	The reference created with the JS object by the initialiser belongs to
           whoever calls this, once (the constructor, which returns it).
           SpiderMonkey's unrooted _jsSelf pointer added no reference, so this is
@@ -95,6 +99,9 @@ class OOJSTimer : public OOScriptTimer, public ::OOJSPrivateObject {
   JSValue _jsSelf =
       JS_UNDEFINED;  // The JS Timer object proxy for this OOJSTimer. Not owned
                      // (it owns us); cleared when finalized.
+
+  bool _firing =
+      false;  // In the callback, during which the timer is still scheduled.
 };
 
 void InitOOJSTimer(JSContext* context, JSValueConst global);
