@@ -78,6 +78,8 @@ MA 02110-1301, USA.
 			case "bigint": return String(value) + "n";
 		}
 		if (value === null) return "null";
+		// Arrays and plain objects share the list of objects being visited, so cycles through either end.
+		if (Array.isArray(value) && value.toSource === Array.prototype.toSource) return arrayToSource(value, seen);
 		if (typeof value.toSource === "function" && value.toSource !== Object.prototype.toSource)
 		{
 			return value.toSource();
@@ -105,14 +107,25 @@ MA 02110-1301, USA.
 		}
 	}
 
+	function arrayToSource(array, seen)
+	{
+		seen = seen || [];
+		if (seen.indexOf(array) !== -1) return "[]"; // SpiderMonkey used sharp variables here.
+		seen.push(array);
+		try
+		{
+			return "[" + Array.prototype.map.call(array, function (item) { return uneval(item, seen); }).join(", ") + "]";
+		}
+		finally
+		{
+			seen.pop();
+		}
+	}
+
 	define(global, "uneval", function uneval_(value) { return uneval(value); });
 
 	define(Object.prototype, "toSource", function toSource() { return objectToSource(this); });
-	define(Array.prototype, "toSource", function toSource()
-	{
-		var array = this;
-		return "[" + Array.prototype.map.call(array, function (item) { return uneval(item, [array]); }).join(", ") + "]";
-	});
+	define(Array.prototype, "toSource", function toSource() { return arrayToSource(this); });
 	define(String.prototype, "toSource", function toSource() { return "(new String(" + quote(String(this)) + "))"; });
 	define(Number.prototype, "toSource", function toSource() { return "(new Number(" + uneval(Number(this)) + "))"; });
 	define(Boolean.prototype, "toSource", function toSource() { return "(new Boolean(" + String(Boolean(this.valueOf())) + "))"; });
@@ -275,9 +288,10 @@ MA 02110-1301, USA.
 		return out.join("");
 	}
 
-	// Called by the engine on every script before it is compiled (OOJSScript.m).
-	define(global, "__ooliteRewriteLegacyConst", oojsRewriteLegacyConst);
-
 	// SpiderMonkey returned decompiled source; QuickJS keeps the original source text.
 	define(Function.prototype, "toSource", function toSource() { return Function.prototype.toString.call(this); });
-})(globalThis);
+
+	// The engine keeps this and calls it on every script before it is compiled (OOJSScript.m).
+	// It isn't put on the global object, so OXPs can't see it or change how later scripts compile.
+	return oojsRewriteLegacyConst;
+})(this);
