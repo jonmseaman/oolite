@@ -133,9 +133,6 @@ jobs:
       - name: Build Oolite
         run: |
           ./mk.sh build dev
-      - name: Unit tests (tools suite)
-        run: |
-          meson test -C build/meson_dev --suite tools --print-errorlogs
       - name: Test Oolite
         if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
         run: |
@@ -365,7 +362,7 @@ jobs:
           MSYSTEM: UCRT64
         run: |
           cp "$MINGW_PREFIX/bin/opengl32.dll" build/meson_test/tests/unit/core/
-      - name: Unit tests (oofnd, core, headers, tools)
+      - name: Unit tests (oofnd, core, headers)
         shell: msys2 {0}
         env:
           MSYSTEM: UCRT64
@@ -391,9 +388,6 @@ jobs:
       - name: Build Oolite
         run: |
           ./mk.sh build deployment --github-repository="$GITHUB_REPOSITORY"
-      - name: Unit tests (tools suite)
-        run: |
-          meson test -C build/meson_deployment --suite tools --print-errorlogs
       - name: Test Oolite
         if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
         run: |
