@@ -214,11 +214,13 @@ void OOJSTimer::timerFired()
     JSValue jsThis = JS_DupValue(context, _jsThis);
 
     OOJSScript::pushScript(_owningScript);
+    _firing = true;
     [engine callJSFunction:function
                  forObject:jsThis
                       argc:0
                       argv:NULL
                     result:&rval];
+    _firing = false;
     OOJSScript::popScript(_owningScript.get());
 
     JS_FreeValue(context, rval);
@@ -242,7 +244,7 @@ JSValue OOJSTimer::jsValueInContext(JSContext* context)
 // TimerFinalize's warning, before the engine's finalizer releases the slot's retain.
 void OOJSTimer::clearJSSelf(JSValueConst selfVal)
 {
-    if (isScheduled()) {
+    if (isScheduled() && !willNotFireAgain()) {
         // Described from the timer's own state and the cached function name: the finalizer must
         // not run JS code.
         OO_LOG_WARN("script.javaScript.unrootedTimer", "Timer {} is being garbage-collected while still running. You must keep a reference to all running timers, or they will stop unpredictably!", description());
@@ -260,6 +262,16 @@ std::optional<std::string> OOJSTimer::jsDescription()
     if (components.has_value())
         return oo::str::format("[%s %s]", name.c_str(), components->c_str());
     return oo::str::format("[object %s]", name.c_str());
+}
+
+/*	A one-shot timer stays scheduled while its callback runs, and is dropped
+        afterwards. A callback that replaces the only reference to its own timer
+        (e.g. with a new timer) frees the JS object at once under QuickJS's
+        reference counting, which SpiderMonkey's GC almost never did.
+*/
+bool OOJSTimer::willNotFireAgain()
+{
+    return _firing && interval() <= 0.0;
 }
 
 /*	The reference created with the JS object in initWithDelay() belongs to
