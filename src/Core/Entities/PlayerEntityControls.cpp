@@ -3296,8 +3296,7 @@ void PlayerEntity::handleGameOptionsScreenKeys()
     }
 
     if ((guiSelectedRow == GUI_ROW(GAME, VOLUME))
-        && ((checkKeyPress(n_key_gui_arrow_right) || joyButtonState[BUTTON_GUIRIGHT]) || (checkKeyPress(n_key_gui_arrow_left) || joyButtonState[BUTTON_GUILEFT])))
-    {
+        && ((checkKeyPress(n_key_gui_arrow_right) || joyButtonState[BUTTON_GUIRIGHT]) || (checkKeyPress(n_key_gui_arrow_left) || joyButtonState[BUTTON_GUILEFT]))) {
         if ((!volumeControlPressed) || (script_time > timeLastKeyPress + KEY_REPEAT_INTERVAL)) {
             bool rightKeyDown = checkKeyPress(n_key_gui_arrow_right) || joyButtonState[BUTTON_GUIRIGHT];
             bool leftKeyDown = checkKeyPress(n_key_gui_arrow_left) || joyButtonState[BUTTON_GUILEFT];
