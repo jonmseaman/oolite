@@ -1105,8 +1105,7 @@ OOTextureSprite* NewTextureSpriteWithDescriptor(const oo::PList& descriptor, uin
 
     if (JS_IsObject(value)) {
         // String objects are converted to NSStrings; anything else is treated as a dictionary.
-        // TODO (port): use a String class test when the QuickJS engine header provides one.
-        if (![OOJSNativeObjectFromJSValue(context, value) isKindOfClass:[NSString class]]) {
+        if (JS_GetClassID(value) != gOOJSStringClassID) {
             result = oo::PListFrom(OOJSDictionaryFromJSObject(context, value));
         }
     }
