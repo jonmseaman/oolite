@@ -49,6 +49,8 @@ MA 02110-1301, USA.
 
 #include "oofnd/String.hpp"
 
+#include <unordered_map>
+
 typedef struct RunningStack RunningStack;
 struct RunningStack {
     RunningStack* back;
@@ -878,31 +880,40 @@ static BOOL HasModernScopeDirective(std::string_view source)
 /*	In SpiderMonkey 1.8.5, const declarations were function-scoped and usable
         before the declaration, like var; under ES2015 rules they are
         block-scoped with a temporal dead zone, which breaks some OXPs. The
-        compatibility script's __ooliteRewriteLegacyConst() replaces the const
+        compatibility script's const rewriter (OOJSLegacyConstRewriter()) replaces the const
         keyword with var (keeping line and column positions).
+
+        The rewriter is interpreted JavaScript, and a ship script is loaded again
+        for every ship that uses it, so results are kept for the rest of the
+        session, keyed by the source text.
 */
 static std::string RewriteLegacyConst(JSContext* context, const std::string& source)
 {
+    static std::unordered_map<std::string, std::string> sRewritten;
+
     if (source.find("const") == std::string::npos)
         return source;
 
-    JSValue global = JS_GetGlobalObject(context);
-    JSValue rewriter = JS_GetPropertyStr(context, global, "__ooliteRewriteLegacyConst");
+    const auto cached = sRewritten.find(source);
+    if (cached != sRewritten.end())
+        return cached->second;
+
+    JSValueConst rewriter = OOJSLegacyConstRewriter();
     std::string result = source;
 
     if (JS_IsFunction(context, rewriter)) {
         JSValue argument = JS_NewStringLen(context, source.data(), source.size());
-        JSValue rewritten = JS_Call(context, rewriter, global, 1, (JSValueConst*)&argument);
-        if (JS_IsException(rewritten))
+        JSValue rewritten = JS_Call(context, rewriter, JS_UNDEFINED, 1, (JSValueConst*)&argument);
+        if (JS_IsException(rewritten)) {
             OOJSReportPendingException(context);
-        else
+        } else {
             result = cxx_OOStringFromJSValue(context, rewritten).value_or(source);
+            sRewritten.emplace(source, result);
+        }
         JS_FreeValue(context, rewritten);
         JS_FreeValue(context, argument);
     }
 
-    JS_FreeValue(context, rewriter);
-    JS_FreeValue(context, global);
     return result;
 }
 

@@ -23,15 +23,6 @@ cleanup:
   - "*.a"
   - "*.la"
 modules:
-  - name: pandoc
-    buildsystem: simple
-    build-commands:
-      - install -Dm755 bin/pandoc /app/bin/pandoc
-    sources:
-      - type: archive
-        url: https://github.com/jgm/pandoc/releases/download/3.13/pandoc-3.13-linux-amd64.tar.gz
-        sha256: "38aa33b325a2bc96a4c39409631212db55702f564250bcdbead180b3bf646389"
-        strip-components: 1
   - name: typst
     buildsystem: simple
     build-commands:
@@ -41,7 +32,6 @@ modules:
         url: https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-unknown-linux-musl.tar.xz
         sha256: "a6d077d0a95eed5a2eba715b2dae06be954f624ccbf85758a03f389ded33118c"
         strip-components: 1
-  - python-weasyprint.json
   - shared-modules/glu/glu-9.json
   - name: pcaudiolib
     sources:
@@ -122,7 +112,7 @@ modules:
     build-commands:
       # Update --ver-full for FlatHub release. For CI and local builds, create_flatpak.sh replaces
       # --ver-full and --github-repository values
-      - ./mk.sh flatpak deployment --ver-full="1.92.1" --buildtime="2026.03.19 07:13" --github-repository="OoliteProject/oolite"
+      - ./mk.sh flatpak deployment --setup-flags="-Ddocs=enabled" --ver-full="1.92.1" --buildtime="2026.03.19 07:13" --github-repository="OoliteProject/oolite"
     sources:
       # Update tag and commit for FlatHub release. For CI and local builds, create_flatpak.sh replaces git source with:
       # - type: dir
@@ -132,7 +122,7 @@ modules:
         tag: "1.92.1.0"
         commit: dd117d31c2f0e756d478e64584120d3d5cbf64d8
       # QuickJS-ng, from subprojects/quickjs-ng.wrap: flatpak-builder has no network
-      # access, so the source and the wrap's diff_files patch are provided here.
+      # access, so the source and the wrap's diff_files patches are provided here.
       - type: git
         url: https://github.com/quickjs-ng/quickjs.git
         tag: v0.17.0
@@ -140,4 +130,7 @@ modules:
         dest: subprojects/quickjs-ng
       - type: patch
         path: ../../subprojects/packagefiles/quickjs-ng/0001-oolite-primitive-property-assignment.patch
+        dest: subprojects/quickjs-ng
+      - type: patch
+        path: ../../subprojects/packagefiles/quickjs-ng/0002-oolite-new-on-native-functions.patch
         dest: subprojects/quickjs-ng
