@@ -104,11 +104,14 @@ static unsigned sErrorHandlerStackSkip = 0;
 
 JSContext* gOOJSMainThreadContext = NULL;
 
+static JSValue sLegacyConstRewriter = JS_UNDEFINED;
+
 const char* const kOOJavaScriptEngineWillResetNotificationName = "org.aegidian.oolite OOJavaScriptEngine will reset";
 const char* const kOOJavaScriptEngineDidResetNotificationName = "org.aegidian.oolite OOJavaScriptEngine did reset";
 
 static int InterruptHandler(JSRuntime* runtime, void* opaque);
 static void RegisterStandardObjectConverters(JSContext* context);
+static void RemoveNonSpiderMonkeyGlobals(JSContext* context, JSValueConst global);
 static void LoadCompatibilityScript(JSContext* context);
 
 //===========================================================================
@@ -182,6 +185,7 @@ void OOJavaScriptEngine::createMainThreadContext()
 
     // Create the global object.
     _globalObject = JS_GetGlobalObject(_context);
+    RemoveNonSpiderMonkeyGlobals(_context, _globalObject);
     JS_DefinePropertyValueStr(_context, _globalObject, "global", JS_DupValue(_context, _globalObject), OOJS_PROP_READONLY);
 
     RegisterStandardObjectConverters(_context);
@@ -238,6 +242,9 @@ void OOJavaScriptEngine::destroyMainThreadContext()
 {
     if (gOOJSMainThreadContext != NULL) {
         OOConstToJSStringDestroy();
+
+        JS_FreeValue(_context, sLegacyConstRewriter);
+        sLegacyConstRewriter = JS_UNDEFINED;
 
         JS_FreeValue(_context, _globalObject);
         _globalObject = JS_UNDEFINED;
@@ -453,9 +460,52 @@ void OOJavaScriptEngine::sendMonitorLogMessage(const std::optional<std::string>&
 
 #endif
 
+/*	QuickJS-ng defines ES2015 and later globals (Map, Symbol, Promise,
+        globalThis...) that SpiderMonkey 1.8.5 didn't have. Remove them, so that
+        OXPs see the same global object under either engine and can't come to
+        depend on QuickJS-only features. Some couldn't work anyway: nothing runs
+        the job queue, so Promise reactions and queueMicrotask() callbacks would
+        never be called.
+*/
+static void RemoveNonSpiderMonkeyGlobals(JSContext* context, JSValueConst global)
+{
+    static const char* const kSpiderMonkeyGlobals[] = {
+        "undefined", "NaN", "Infinity", "eval", "isNaN", "isFinite", "parseFloat", "parseInt",
+        "escape", "unescape", "decodeURI", "encodeURI", "decodeURIComponent", "encodeURIComponent",
+        "Object", "Function", "Array", "Boolean", "Number", "String", "Date", "RegExp", "Math", "JSON",
+        "Error", "InternalError", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError",
+        "ArrayBuffer", "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array",
+        "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "Proxy"
+    };
+
+    JSPropertyEnum* properties = NULL;
+    uint32_t count = 0;
+    if (JS_GetOwnPropertyNames(context, &properties, &count, global, JS_GPN_STRING_MASK) < 0) {
+        JS_FreeValue(context, JS_GetException(context));
+        return;
+    }
+
+    for (uint32_t i = 0; i < count; i++) {
+        const char* name = JS_AtomToCString(context, properties[i].atom);
+        BOOL keep = (name == NULL);
+        for (size_t j = 0; !keep && j < sizeof kSpiderMonkeyGlobals / sizeof *kSpiderMonkeyGlobals; j++) {
+            keep = (strcmp(name, kSpiderMonkeyGlobals[j]) == 0);
+        }
+        JS_FreeCString(context, name);
+        if (!keep)
+            JS_DeleteProperty(context, global, properties[i].atom, 0);
+    }
+    JS_FreePropertyEnum(context, properties, count);
+}
+
+JSValueConst OOJSLegacyConstRewriter(void)
+{
+    return sLegacyConstRewriter;
+}
+
 /*	Define the SpiderMonkey extensions OXPs rely on (toSource(), uneval()...)
         before any other script runs. The script is run as plain global code, not
-        wrapped like normal scripts.
+        wrapped like normal scripts. Its result is the const rewriter.
 */
 static void LoadCompatibilityScript(JSContext* context)
 {
@@ -475,6 +525,8 @@ static void LoadCompatibilityScript(JSContext* context)
     JSValue result = JS_Eval(context, source->c_str(), source->size(), path->c_str(), JS_EVAL_TYPE_GLOBAL);
     if (JS_IsException(result))
         OOJSReportPendingException(context);
+    else if (JS_IsFunction(context, result))
+        sLegacyConstRewriter = JS_DupValue(context, result);
     JS_FreeValue(context, result);
 
     /*	The bundled QuickJS-ng is patched (subprojects/packagefiles/quickjs-ng)
@@ -484,7 +536,7 @@ static void LoadCompatibilityScript(JSContext* context)
     static BOOL checked = NO;
     if (!checked) {
         checked = YES;
-        const char* test = "(function () { 'use strict'; try { 'x'.oolite = 1; return true; } catch (e) { return false; } })()";
+        const char* test = "(function () { 'use strict'; try { 'x'.oolite = 1; new Math.max(); return true; } catch (e) { return false; } })()";
         JSValue patched = JS_Eval(context, test, strlen(test), "<compatibility check>", JS_EVAL_TYPE_GLOBAL);
         if (!JS_IsException(patched) && !OOJSValueToBOOL(context, patched)) {
             OO_LOG_WARN("script.javaScript.init.unpatchedEngine", "{}", "This QuickJS-ng library lacks Oolite's compatibility patches; some OXPs that worked with SpiderMonkey may fail. Build with the bundled QuickJS-ng subproject.");
@@ -671,7 +723,8 @@ static BOOL GetLocationFromStack(const std::optional<std::string>& stack, std::o
             continue;
         frame.remove_prefix(3);
 
-        const std::size_t open = frame.rfind('(');
+        // The first "(" opens the location: the path may itself contain parentheses ("Program Files (x86)").
+        const std::size_t open = frame.find('(');
         if (open != std::string_view::npos && !frame.empty() && frame.back() == ')') {
             frame = frame.substr(open + 1, frame.size() - open - 2);
         }
@@ -717,8 +770,8 @@ static void LogProblem(JSContext* context, const std::string& severity, const st
     const std::string highlight = (severity == "warning") ? "-----" : "*****";
     cxx::OOJavaScriptEngine* jsEng = cxx::OOJavaScriptEngine::sharedEngine();
 
-    // Skip the rest if this is a warning being ignored.
-    if (!oo::log::willDisplay(messageClass))
+    // Skip the rest if this is a warning being ignored. Errors and exceptions always go to the debug monitor.
+    if (severity == "warning" && !oo::log::willDisplay(messageClass))
         return;
 
     // avoid windows DEP exceptions!
@@ -1937,8 +1990,8 @@ static oo::PList PListFromJSPlainObject(JSContext* context, JSValueConst object)
 {
     /*	SpiderMonkey's global object had a class of its own, with no converter,
             so it converted to nil. QuickJS's is a plain object, and converting it
-            as one recurses until the stack overflows, since globalThis refers to
-            itself; a Timer whose this is the global object did that on firing.
+            as one recurses until the stack overflows, since its global property
+            refers to itself; a Timer whose this is the global object did that on firing.
     */
     JSValue global = JS_GetGlobalObject(context);
     BOOL isGlobal = JS_IsStrictEqual(context, global, object);
