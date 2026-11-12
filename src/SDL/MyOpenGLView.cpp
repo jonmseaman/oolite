@@ -597,6 +597,10 @@ void MyOpenGLView::updateGLSize(NSSize size) {
     y_offset = 320.0 * bounds.size.height / bounds.size.width;
   }
 
+  window_display_z = display_z;
+  _hudArea = NSMakeRect(0, 0, bounds.size.width, bounds.size.height);
+  rebuildDisplayGeometry();
+
   float ratio = 0.5;
   float aspect = bounds.size.height / bounds.size.width;
 
@@ -1173,6 +1177,34 @@ oo::PList MyOpenGLView::currentScreenMode() {
 
 void MyOpenGLView::setFov(float value, bool fromFraction) {
   _fov = fromFraction ? value : tan((value / 2) * M_PI / 180);
+  rebuildDisplayGeometry();
+}
+
+void MyOpenGLView::rebuildDisplayGeometry() {
+  const NSSize size = backingViewSize();
+  if (_fov == _displayGeometryFov && size.width == _displayGeometrySize.width &&
+      size.height == _displayGeometrySize.height) {
+    return;
+  }
+  _displayGeometryFov = _fov;
+  _displayGeometrySize = size;
+  _displayGeometry = OODisplayGeometry::legacy(
+      _fov, static_cast<int>(size.width), static_cast<int>(size.height));
+  _displayGeometryGeneration++;
+  OO_LOG("display.geometry.rebuild", "{}x{}, field of view tangent {}",
+         static_cast<int>(size.width), static_cast<int>(size.height), _fov);
+}
+
+NSRect MyOpenGLView::hudArea() const { return _hudArea; }
+
+GLfloat MyOpenGLView::getWindowDisplay_z() const { return window_display_z; }
+
+const OODisplayGeometry& MyOpenGLView::displayGeometry() const {
+  return _displayGeometry;
+}
+
+std::uint64_t MyOpenGLView::displayGeometryGeneration() const {
+  return _displayGeometryGeneration;
 }
 
 float MyOpenGLView::fov(bool inFraction) {

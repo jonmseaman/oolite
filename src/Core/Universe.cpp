@@ -292,15 +292,17 @@ static std::string DisplayProjectionJSON() {
   if (universe == nullptr || view == nullptr) return "null";
   const double* f = universe->lastSceneFrustum();
   const NSSize size = view->backingViewSize();
+  const NSRect hud = view->hudArea();
   return std::format(
       "{{\"left\":{},\"right\":{},\"bottom\":{},\"top\":{},"
       "\"displayZ\":{},\"windowDisplayZ\":{},"
-      "\"hudArea\":[0,0,{},{}],\"window\":[{},{}],"
-      "\"fovValue\":{},\"screenMatching\":false}}",
-      f[0], f[1], f[2], f[3], view->getDisplay_z(), view->getDisplay_z(),
+      "\"hudArea\":[{},{},{},{}],\"window\":[{},{}],"
+      "\"fovValue\":{},\"screenMatching\":{}}}",
+      f[0], f[1], f[2], f[3], view->getDisplay_z(), view->getWindowDisplay_z(),
+      static_cast<int>(hud.origin.x), static_cast<int>(hud.origin.y),
+      static_cast<int>(hud.size.width), static_cast<int>(hud.size.height),
       static_cast<int>(size.width), static_cast<int>(size.height),
-      static_cast<int>(size.width), static_cast<int>(size.height),
-      view->fov(false));
+      view->fov(false), view->displayGeometry().screenMatching());
 }
 #endif
 

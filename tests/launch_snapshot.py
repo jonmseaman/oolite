@@ -486,6 +486,18 @@ def parse_window(window):
     return int(match.group(1)), int(match.group(2))
 
 
+MAX_GEOMETRY_REBUILDS = 3
+
+
+def count_log_lines(log_dir, log_class):
+    """How many lines of the game's Latest.log carry [log_class]."""
+    path = os.path.join(log_dir, "Latest.log")
+    if not os.path.isfile(path):
+        return 0
+    with open(path, encoding="utf-8", errors="replace") as f:
+        return sum(1 for line in f if f"[{log_class}]" in line)
+
+
 PNG_SIGNATURE = bytes([0x89]) + b"PNG" + bytes([0x0D, 0x0A, 0x1A, 0x0A])
 
 
@@ -668,6 +680,17 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
 
         file_size_kb = os.path.getsize(snap_path) // 1024
         print(f"[*] Captured {snap_path} ({file_size_kb} KB)")
+
+        # Spec 008: the view rebuilds its projection only when its inputs change, although the
+        # player pushes its field of view every frame. A count that grows with the frames drawn
+        # means the per-frame push is rebuilding it (and the warp mesh with it).
+        rebuilds = count_log_lines(test_output, "display.geometry.rebuild")
+        if rebuilds > MAX_GEOMETRY_REBUILDS:
+            print(
+                f"[!] Failure: the display geometry was rebuilt {rebuilds} times "
+                f"(at most {MAX_GEOMETRY_REBUILDS} expected)."
+            )
+            return False
 
         if window_size:
             width, height = png_size(snap_path)
