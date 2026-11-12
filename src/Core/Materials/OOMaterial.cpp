@@ -27,14 +27,13 @@ SOFTWARE.
 
 #include "OOMaterial.h"
 
-#include <cxxabi.h>
-
 #include <cstdlib>
 #include <typeinfo>
 
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"
 #include "OOMaterialState.h"
+#include "oofnd/CxxAbi.h"
 #include "oofnd/Ref.hpp"  // oo::autorelease
 #include "oofnd/String.hpp"
 

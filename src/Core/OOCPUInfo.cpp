@@ -33,6 +33,9 @@ MA 02110-1301, USA.
 
 #if OOLITE_MAC_OS_X
 #include <sys/sysctl.h>
+#elif OOLITE_WINDOWS && defined(_MSC_VER)
+// MSVC has no <unistd.h>, and nothing below needs it on Windows.
+#include <intrin.h>  // __cpuid
 #elif (OOLITE_LINUX || OOLITE_WINDOWS || OOLITE_MACOS)
 // Workaround for clang/glibc incompatibility.
 #if !OOLITE_HAVE_CLANG
@@ -117,6 +120,10 @@ define it
 // gnu_inline was the C (GNU89) spelling of "emit one definition"; C++ inline
 // already means that.
 inline void OOCPUID(int CPUInfo[4], int InfoType) {
+#if defined(_MSC_VER) && !defined(__clang__)
+  // cl.exe has no GNU inline assembly; its <intrin.h> has the instruction.
+  __cpuid(CPUInfo, InfoType);
+#else
   __asm__ __volatile__(
 /* Fixes building on 32-bit systems where %EBX is used for the GOT pointer */
 #if (OOLITE_LINUX && !defined __LP64__)
@@ -130,6 +137,7 @@ inline void OOCPUID(int CPUInfo[4], int InfoType) {
       : "=a"(CPUInfo[0]), "=b"(CPUInfo[1]), "=c"(CPUInfo[2]), "=d"(CPUInfo[3])
 #endif
       : "a"(InfoType));
+#endif
 }
 
 std::string OOCPUDescription(void) {

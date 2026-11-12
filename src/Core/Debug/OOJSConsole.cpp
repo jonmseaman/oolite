@@ -796,7 +796,7 @@ static bool ConsoleConsoleMessage(ooscript::Context context,
     // Attempt to get two numbers, specifying an emphasis range.
     if (ooscript::valueToNumber(context, OOJS_ARGV[2], &location) &&
         ooscript::valueToNumber(context, OOJS_ARGV[3], &length)) {
-      emphasisRange = (NSRange){(NSUInteger)location, (NSUInteger)length};
+      emphasisRange = NSRange{(NSUInteger)location, (NSUInteger)length};
     }
   }
 

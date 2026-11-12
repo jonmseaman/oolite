@@ -498,12 +498,12 @@ inline void deleteUnitAt(std::string& s, std::size_t index) {
 inline std::string vformat(const char* fmt, va_list args) {
   va_list copy;
   va_copy(copy, args);
-  char small[256];
-  const int n = std::vsnprintf(small, sizeof small, fmt, copy);
+  char stackBuffer[256];
+  const int n = std::vsnprintf(stackBuffer, sizeof stackBuffer, fmt, copy);
   va_end(copy);
   if (n < 0) return std::string();
-  if (static_cast<std::size_t>(n) < sizeof small)
-    return std::string(small, static_cast<std::size_t>(n));
+  if (static_cast<std::size_t>(n) < sizeof stackBuffer)
+    return std::string(stackBuffer, static_cast<std::size_t>(n));
   std::string out(static_cast<std::size_t>(n), '\0');
   std::vsnprintf(out.data(), out.size() + 1, fmt, args);
   return out;

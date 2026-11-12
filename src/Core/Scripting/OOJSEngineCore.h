@@ -179,6 +179,7 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
         Create and cache a ooscript::Value referring to an interned string
    literal.
 */
+#if defined(__GNUC__)
 #define OOJSSTR(str)                                          \
   ({                                                          \
     static ooscript::Value strCache;                          \
@@ -187,6 +188,18 @@ ooscript::Value OOJSValueFromPList(ooscript::Context context,
       OOJSStrLiteralCachePRIVATE("" str, &strCache, &inited); \
     strCache;                                                 \
   })
+#else
+// cl.exe has no statement expressions. Each lambda expression is its own type,
+// so each use still has its own cache.
+#define OOJSSTR(str)                                          \
+  ([]() -> ooscript::Value {                                  \
+    static ooscript::Value strCache;                          \
+    static bool inited;                                       \
+    if (EXPECT_NOT(!inited))                                  \
+      OOJSStrLiteralCachePRIVATE("" str, &strCache, &inited); \
+    return strCache;                                          \
+  }())
+#endif
 void OOJSStrLiteralCachePRIVATE(const char* string, ooscript::Value* strCache,
                                 bool* inited);
 

@@ -14,6 +14,7 @@ run_script() {
     local buildtime="${10}"
     local gnustep_folder="${11}"
     local stamp_file="${12}"
+    local dll_dir="${13:-}"  # Visual Studio builds: the vcpkg bin directory to stage DLLs from
 
     local script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
     pushd "$script_dir" > /dev/null
@@ -122,7 +123,11 @@ run_script() {
         objcopy --compress-debug-sections=zlib-gnu "$progpath"
     fi
 
-    if [[ "$host_os" == "windows" ]]; then
+    if [[ "$host_os" == "windows" && -n "$dll_dir" ]]; then
+        # Visual Studio builds link vcpkg's libraries, not MINGW_PREFIX ones, so ldd has nothing to
+        # match. vcpkg's bin directory holds only the manifest's libraries and their dependencies.
+        cp -fu "$dll_dir"/*.dll "$progdir"
+    elif [[ "$host_os" == "windows" ]]; then
         # Determine and copy DLL dependencies, walking the transitive closure:
         # a newly-copied DLL may itself depend on other MINGW_PREFIX DLLs that
         # are not direct dependencies of the binary (e.g. libtre-5.dll pulls in

@@ -19,6 +19,8 @@ project(
 
 host_os = host_machine.system()
 c_family = ['c', 'cpp']
+# cl.exe and clang-cl (the Visual Studio toolchains) take MSVC-style flags.
+msvc_syntax = meson.get_compiler('cpp').get_argument_syntax() == 'msvc'
 
 version_string = meson.project_version()
 cat_cmd = find_program('cat', required: true)
@@ -42,8 +44,12 @@ add_project_arguments(
 
 is_debug = (get_option('optimization') == '0' or get_option('debug'))
 if is_debug
+    # Under the Visual Studio toolchains the optimization option alone sets the level: a /Od here
+    # would sit beside meson's /O2 and cl.exe would warn that one overrides the other.
+    if not msvc_syntax
+        add_project_arguments('-O0', language: c_family)
+    endif
     add_project_arguments(
-        '-O0',
         '-DDEBUG',
         '-DOO_DEBUG',
         '-DOO_CHECK_GL_HEAVY=1',
@@ -74,7 +80,15 @@ endif
 # GLOBAL, not project, arguments: QuickJS-ng is a meson subproject linked into the
 # game binary, its number code produces floats that land in the dumps, and project arguments do
 # not reach a subproject (nor does a subproject() c_args default option).
-add_global_arguments('-ffp-contract=off', language: c_family)
+# cl.exe does not contract under /fp:precise (its default, stated here so it is not lost); clang-cl
+# is clang underneath and takes the clang flag.
+if meson.get_compiler('cpp').get_id() == 'msvc'
+    add_global_arguments('/fp:precise', language: c_family)
+elif msvc_syntax
+    add_global_arguments('/clang:-ffp-contract=off', language: c_family)  # clang-cl
+else
+    add_global_arguments('-ffp-contract=off', language: c_family)
+endif
 
 if get_option('no_shaders')
     add_project_arguments('-DNO_SHADERS=1', language: c_family)
@@ -142,7 +156,7 @@ subdir('src')
 # every test-flavour suite and broke the shipped game. The core suite joins it once its test files
 # build under NDEBUG (78 executables still guard their gDebugFlags
 # definition on !NDEBUG, which upstream #756 moved to OO_DEBUG_MONITOR_ENABLED, and the like).
-if host_machine.system() == 'windows'
+if host_machine.system() == 'windows' and not msvc_syntax
     # Tests load the toolchain's libstdc++/libwinpthread, which must win over older copies earlier
     # on PATH (Git for Windows ships mingw64 ones; a missing symbol surfaces as exit 0xc0000139).
     toolchain_bin = import('fs').parent(find_program(meson.get_compiler('cpp').cmd_array()[0]).full_path())
@@ -151,11 +165,18 @@ if host_machine.system() == 'windows'
     add_test_setup('default', env: test_env, is_default: true)
 endif
 
-if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows'
+# Not built by cl.exe: the test files use GNU extensions it lacks (#if inside a macro's arguments in
+# test_thread.cpp, for one), and test files are not edited for a toolchain. clang-cl builds them.
+unit_tests_toolchain = meson.get_compiler('cpp').get_id() != 'msvc'
+if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows' and unit_tests_toolchain
     # Unit tests that need no game build (meson test --suite oofnd).
     subdir('tests/unit/oofnd')
 endif
-if not get_option('deployment_release') and host_machine.system() == 'windows'
+# Not under the MSVC ABI (cl.exe or clang-cl): several suites link game objects beside stand-in
+# classes (UniverseStandIn.h, ...), which works where a class's vtable is emitted only with its key
+# function (Itanium ABI) and fails where every constructing unit emits it (lld-link: undefined
+# PlayerEntity::... virtuals in core_test_OOJSPlayer and 14 others).
+if not get_option('deployment_release') and host_machine.system() == 'windows' and not msvc_syntax
     # Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
     subdir('tests/unit/core')
 endif
@@ -163,7 +184,8 @@ endif
 # Every game and test header compiles on its own, so include order never matters and clang-format
 # may sort includes freely (meson test --suite headers). Windows-only like the unit tests above,
 # whose headers it also checks; it needs the finished build's dependency log, which meson test has.
-if not get_option('deployment_release') and host_machine.system() == 'windows'
+# It reads Ninja's dependency log, so the Visual Studio backend has no input for it.
+if not get_option('deployment_release') and host_machine.system() == 'windows' and meson.backend() == 'ninja'
     test('headers_standalone', find_program('python3'),
         args: [files('tests/check_headers_standalone.py'), meson.project_build_root()],
         suite: 'headers', timeout: 900, is_parallel: false)

@@ -27,11 +27,10 @@ SOFTWARE.
 
 #include "OODrawable.h"
 
-#include <cxxabi.h>
-
 #include <cstdlib>
 #include <typeinfo>
 
+#include "oofnd/CxxAbi.h"
 #include "oofnd/String.hpp"
 
 void OODrawable::renderOpaqueParts() {}

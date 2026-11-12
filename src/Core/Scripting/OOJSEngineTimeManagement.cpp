@@ -43,7 +43,9 @@ SOFTWARE.
 #endif
 #define __block __glibc_block
 #endif
+#if !defined(_MSC_VER)  // MSVC has no <unistd.h>; Windows sleeps with Sleep()
 #include <unistd.h>
+#endif
 
 #include "OOObjCPList.h"
 #include "oofnd/String.hpp"
@@ -489,12 +491,12 @@ static void FunctionCallback(ooscript::Function function,
           (OOJSProfileStackFrame*)malloc(sizeof(OOJSProfileStackFrame));
       assert(frame != NULL);
 
-      *frame = (OOJSProfileStackFrame){.back = sProfileStack,
-                                       .key = function,
-                                       .startTime = start,
-                                       .subTime = 0.0,
-                                       .total = &sProfilerTotalJavaScriptTime,
-                                       .cleanup = CleanUpJSFrame};
+      *frame = OOJSProfileStackFrame{.back = sProfileStack,
+                                     .key = function,
+                                     .startTime = start,
+                                     .subTime = 0.0,
+                                     .total = &sProfilerTotalJavaScriptTime,
+                                     .cleanup = CleanUpJSFrame};
 
       sProfileStack = frame;
     } else {
@@ -522,13 +524,13 @@ void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function) {
     oo::log::indent();
   }
 
-  *frame = (OOJSProfileStackFrame){.back = sProfileStack,
-                                   .key = function,
-                                   .function = function,
-                                   .startTime = OOGetHighResTime(),
-                                   .subTime = 0,
-                                   .total = &sProfilerTotalNativeTime,
-                                   .cleanup = NULL};
+  *frame = OOJSProfileStackFrame{.back = sProfileStack,
+                                 .key = function,
+                                 .function = function,
+                                 .startTime = OOGetHighResTime(),
+                                 .subTime = 0,
+                                 .total = &sProfilerTotalNativeTime,
+                                 .cleanup = NULL};
   sProfileStack = frame;
 }
 

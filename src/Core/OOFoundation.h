@@ -92,6 +92,7 @@ MA 02110-1301, USA.
 #define OOLITE_LINUX 1
 #endif
 
+#if defined(__GNUC__)
 #if !defined(MAX)
 #define MAX(A, B)            \
   ({                         \
@@ -108,6 +109,19 @@ MA 02110-1301, USA.
     __typeof__(B) __b = (B); \
     __a < __b ? __a : __b;   \
   })
+#endif
+#else
+// cl.exe has no statement expressions. A lambda evaluates each argument once,
+// as above, and its auto parameters decay as __typeof__ does.
+#if !defined(MAX)
+#define MAX(A, B) \
+  ([](auto __a, auto __b) { return __a > __b ? __a : __b; }((A), (B)))
+#endif
+
+#if !defined(MIN)
+#define MIN(A, B) \
+  ([](auto __a, auto __b) { return __a < __b ? __a : __b; }((A), (B)))
+#endif
 #endif
 
 #ifdef HAVE_LIBESPEAK

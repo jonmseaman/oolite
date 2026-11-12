@@ -30,7 +30,8 @@ endif
 # threads under _WIN32), so each link printed "argument unused during compilation: '-pthread'".
 # On Windows the threads dependency is the same compile flag without the unused link flag, so the
 # objects and the links are unchanged and the driver has nothing to report.
-if host_machine.system() == 'windows'
+# Not for the Visual Studio toolchains, which have no -pthread and need no threads flag.
+if host_machine.system() == 'windows' and not msvc_syntax
     meson.override_dependency('threads', declare_dependency(compile_args: ['-pthread']))
 endif
 quickjs_ng_proj = subproject(
@@ -50,7 +51,8 @@ subdir('oofnd')
 oolite_dependencies += [oofnd_dep]
 # oofnd/objc's support (OORaiseException, OOCAssert's failure path). No unit is Objective-C.
 oolite_dependencies += [oofnd_objc_dep]
-oolite_override_options += ['cpp_std=gnu++20']
+# cl.exe and clang-cl have no GNU dialect.
+oolite_override_options += [msvc_syntax ? 'cpp_std=c++20' : 'cpp_std=gnu++20']
 subdir('Core')
 subdir('SDL')
 
@@ -85,6 +87,7 @@ post_build_args = [
     version_vars.get('buildtime'),
     gnustep_folder,
     stamp_file,
+    get_option('vcpkg_bin_dir'),
 ]
 post_build_script = files('../ShellScripts/common/post_build.sh')
 generate_manifest_script = files('../ShellScripts/common/generate_manifest_fn.sh')

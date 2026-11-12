@@ -342,7 +342,7 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
 
   // Orientation should be handled by the code that calls this planetEntity.
   // Starting with a default value anyway.
-  orientation = (Quaternion){M_SQRT1_2, M_SQRT1_2, 0, 0};
+  orientation = Quaternion{M_SQRT1_2, M_SQRT1_2, 0, 0};
   _atmosphereOrientation = kIdentityQuaternion;
   _rotationAxis = vector_up_from_quaternion(orientation);
 
@@ -404,20 +404,20 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
 }
 
 static Vector RandomHSBColor(void) {
-  return (Vector){(OOScalar)(gen_rnd_number() / 256.0),
-                  (OOScalar)(gen_rnd_number() / 256.0),
-                  (OOScalar)(0.5 + gen_rnd_number() / 512.0)};
+  return Vector{(OOScalar)(gen_rnd_number() / 256.0),
+                (OOScalar)(gen_rnd_number() / 256.0),
+                (OOScalar)(0.5 + gen_rnd_number() / 512.0)};
 }
 
 static Vector LighterHSBColor(Vector c) {
-  return (Vector){c.x, c.y * 0.25f, 1.0f - (c.z * 0.1f)};
+  return Vector{c.x, c.y * 0.25f, 1.0f - (c.z * 0.1f)};
 }
 
 namespace {
 
 Vector HSBColorWithColor(OOColor* color) {
   OOHSBAComponents c = color->hsbaComponents();  // never nil here
-  return (Vector){c.h / 360, c.s, c.b};
+  return Vector{c.h / 360, c.s, c.b};
 }
 
 // The planet info's colours are Object nodes of the colour.
@@ -547,7 +547,7 @@ void OOPlanetEntity::setUpColorParametersWithSourceInfo(
 
     // add a cloud_color tinge to sky blue({0.66, 0.3, 1}).
     seaHSB = vector_add(
-        landHSB, ((Vector){1.333, 0.6, 2}));  // 1 part cloud, 2 parts sky blue
+        landHSB, (Vector{1.333, 0.6, 2}));  // 1 part cloud, 2 parts sky blue
     scale_vector(&seaHSB, 0.333);
 
     float cloudAlpha =

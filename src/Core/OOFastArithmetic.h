@@ -30,6 +30,10 @@ MA 02110-1301, USA.
 #error Do not include OOFastArithmetic.h directly; include OOMaths.h.
 #else
 
+#if !defined(__GNUC__)
+#include <bit>
+#endif
+
 /* Clamp to range. */
 OOINLINE float OOClamp_0_1_f(float value) INLINE_CONST_FUNC;
 OOINLINE float OOClamp_n1_1_f(float value) INLINE_CONST_FUNC;
@@ -48,15 +52,25 @@ OOINLINE double OOLerpd(double v0, double v1,
    optimised x86-64 build has always returned for them, so debug and release
    agree: 2 for 1, and 1 for 0 and for values above the high bit (not 0, as an
    older note here said). */
+#if defined(__GNUC__)
+#define OO_COUNT_LEADING_ZEROS_32(x) __builtin_clz(x)
+#define OO_COUNT_LEADING_ZEROS_64(x) __builtin_clzll(x)
+#else
+// cl.exe has no __builtin_clz. value - 1 is never 0 here (1 returns early), so
+// std::countl_zero gives the same count.
+#define OO_COUNT_LEADING_ZEROS_32(x) std::countl_zero(static_cast<uint32_t>(x))
+#define OO_COUNT_LEADING_ZEROS_64(x) std::countl_zero(static_cast<uint64_t>(x))
+#endif
+
 OOINLINE INLINE_CONST_FUNC uint32_t OORoundUpToPowerOf2_32(uint32_t value) {
   if (value == 1) return 2;
-  int zeros = __builtin_clz(value - 1);
+  int zeros = OO_COUNT_LEADING_ZEROS_32(value - 1);
   return (zeros == 0) ? 1 : 0x80000000U >> (zeros - 1);
 }
 
 OOINLINE INLINE_CONST_FUNC uint64_t OORoundUpToPowerOf2_64(uint64_t value) {
   if (value == 1) return 2;
-  int zeros = __builtin_clzll(value - 1);
+  int zeros = OO_COUNT_LEADING_ZEROS_64(value - 1);
   return (zeros == 0) ? 1 : 0x8000000000000000ULL >> (zeros - 1);
 }
 

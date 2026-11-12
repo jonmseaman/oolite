@@ -1,0 +1,13 @@
+{
+  "name": "oolite",
+  "description": "Libraries for the Visual Studio (MSVC / clang-cl) build: ./mk.sh build vs-clang | vs-msvc",
+  "dependencies": [
+    "icu",
+    "libpng",
+    "libvorbis",
+    "opengl-registry",
+    "openal-soft",
+    "sdl3",
+    "zlib"
+  ]
+}

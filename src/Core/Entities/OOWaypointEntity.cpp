@@ -62,7 +62,7 @@ void OOWaypointEntity::initWithDictionary(const oo::PList& info) {
   Quaternion q =
       info ? OOQuaternionFromPList(info.find(OOWAYPOINT_KEY_ORIENTATION),
                                    kIdentityQuaternion)
-           : (Quaternion){0, 0, 0, 0};
+           : Quaternion{0, 0, 0, 0};
   setOrientation(q);
   setSize(info.get<oo::NonNegative<float>>(OOWAYPOINT_KEY_SIZE, 1000.0));
   setBeaconCode(info ? std::optional<std::string>(

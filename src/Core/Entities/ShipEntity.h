@@ -1594,20 +1594,22 @@ class ShipEntity : public OOEntityWithDrawable,
         The ship is the C++ ship; a null ship sends nothing, as the message to
    nil did.
 */
+// argv ends in an unused element so that an event with no arguments is not a
+// zero-length array (a GNU extension cl.exe rejects); argc does not count it.
 #define ShipScriptEvent(context, ship, event, ...)                           \
   do {                                                                       \
-    ooscript::Value argv[] = {__VA_ARGS__};                                  \
-    unsigned argc = sizeof argv / sizeof *argv;                              \
+    ooscript::Value argv[] = {__VA_ARGS__ __VA_OPT__(, ) ooscript::Value()}; \
+    unsigned argc = sizeof argv / sizeof *argv - 1;                          \
     if (ShipEntity* ooScriptEventShip_ = (ship))                             \
       ooScriptEventShip_->doScriptEvent(OOJSID(event), context, argv, argc); \
   } while (0)
 
-#define ShipScriptEventNoCx(ship, event, ...)                       \
-  do {                                                              \
-    ooscript::Value argv[] = {__VA_ARGS__};                         \
-    unsigned argc = sizeof argv / sizeof *argv;                     \
-    if (ShipEntity* ooScriptEventShip_ = (ship))                    \
-      ooScriptEventShip_->doScriptEvent(OOJSID(event), argv, argc); \
+#define ShipScriptEventNoCx(ship, event, ...)                                \
+  do {                                                                       \
+    ooscript::Value argv[] = {__VA_ARGS__ __VA_OPT__(, ) ooscript::Value()}; \
+    unsigned argc = sizeof argv / sizeof *argv - 1;                          \
+    if (ShipEntity* ooScriptEventShip_ = (ship))                             \
+      ooScriptEventShip_->doScriptEvent(OOJSID(event), argv, argc);          \
   } while (0)
 
 Vector cxx_positionOffsetForShipInRotationToAlignment(ShipEntity* ship,

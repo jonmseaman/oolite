@@ -35,6 +35,7 @@ MA 02110-1301, USA.
    hit, then cached.
 */
 
+#if defined(__GNUC__)
 #define OOJSID(str)                               \
   ({                                              \
     static ooscript::PropertyId idCache;          \
@@ -45,4 +46,18 @@ MA 02110-1301, USA.
     }                                             \
     idCache;                                      \
   })
+#else
+// cl.exe has no statement expressions. Each lambda expression is its own type,
+// so each use still has its own cache.
+#define OOJSID(str)                               \
+  ([]() -> ooscript::PropertyId {                 \
+    static ooscript::PropertyId idCache;          \
+    static bool inited;                           \
+    if (EXPECT_NOT(!inited)) {                    \
+      OOJSInitJSIDCachePRIVATE("" str, &idCache); \
+      inited = true;                              \
+    }                                             \
+    return idCache;                               \
+  }())
+#endif
 void OOJSInitJSIDCachePRIVATE(const char* name, ooscript::PropertyId* idCache);

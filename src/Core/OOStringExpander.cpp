@@ -242,7 +242,7 @@ void SyntaxIssue(OOStringExpansionContext* context, const char* function,
                  const char* logMessageClass, const char* prefix,
                  const char* format, ...) OO_PRINTF_FORMAT(7, 8);
 void ReportJavaScriptWarning(ooscript::Context jsc, const char* format, ...)
-    __attribute__((format(printf, 2, 3)));
+    OO_PRINTF_FORMAT(2, 3);
 }  // namespace
 
 // OOLOG_WARNING_PREFIX's text, as a C string.

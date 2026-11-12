@@ -27,8 +27,6 @@
 #include "OOTexture.h"
 // Before OOConcreteTexture.h, in a block of its own: OOTextureInternal.h tests
 // OOTEXTURE_RELOADABLE, which OOConcreteTexture.h defines.
-#include <cxxabi.h>
-
 #include <cstdlib>
 #include <typeinfo>
 
@@ -45,6 +43,7 @@
 #include "OOTextureLoader.h"
 #include "ResourceManager.h"
 #include "Universe.h"
+#include "oofnd/CxxAbi.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/StdLib.hpp"

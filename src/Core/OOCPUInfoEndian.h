@@ -43,7 +43,8 @@ MA 02110-1301, USA.
 #endif
 
 #if !defined(OOLITE_BIG_ENDIAN) && !defined(OOLITE_LITTLE_ENDIAN)
-#if defined(__i386__) || defined(__amd64__) || defined(__x86_64__)
+#if defined(__i386__) || defined(__amd64__) || defined(__x86_64__) || \
+    defined(_M_IX86) || defined(_M_X64) || defined(_M_ARM64)
 #define OOLITE_LITTLE_ENDIAN 1
 #endif
 

@@ -547,8 +547,8 @@ static bool GlobalRandomName(ooscript::Context context,
           so randomName() isn't repeatable.
   */
   RNG_Seed savedSeed = currentRandomSeed();
-  setRandomSeed((RNG_Seed){(int32_t)Ranrot(), (int32_t)Ranrot(),
-                           (int32_t)Ranrot(), (int32_t)Ranrot()});
+  setRandomSeed(RNG_Seed{(int32_t)Ranrot(), (int32_t)Ranrot(),
+                         (int32_t)Ranrot(), (int32_t)Ranrot()});
 
   std::optional<std::string> result = cxx_OOExpand("%N");
 

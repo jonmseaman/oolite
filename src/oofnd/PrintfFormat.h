@@ -14,6 +14,8 @@ GCC names gnu_printf; Clang's printf already checks C99 and is unchanged.
 
 #pragma once
 
+#include "oofnd/Compiler.h"
+
 #if defined(__MINGW32__) && defined(__GNUC__) && !defined(__clang__)
 #define OO_PRINTF_FORMAT(fmt, first) \
   __attribute__((format(gnu_printf, fmt, first)))

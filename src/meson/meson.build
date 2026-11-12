@@ -20,7 +20,7 @@ if get_option('b_lto')
         if host_os != 'darwin'
             oolite_link_args += ['-Wl,--thinlto-cache-dir=thinlto_cache']
         endif
-    else
+    elif not msvc_syntax
         add_project_arguments('-flto=auto', language: c_family)
         oolite_link_args += ['-flto=auto']
     endif

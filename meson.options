@@ -47,3 +47,7 @@ option('pdb', type: 'boolean', value: false,
 # Flavour coverage
 option('deployment_unit_tests', type: 'boolean', value: false,
        description: 'Also build the oofnd unit tests when deployment_release is set (off for the shipped deployment build)')
+
+# Visual Studio toolchains (./mk.sh build vs-clang | vs-msvc)
+option('vcpkg_bin_dir', type: 'string', value: '',
+       description: 'Visual Studio builds: vcpkg bin directory whose DLLs are staged next to the game')

@@ -129,14 +129,20 @@ class WeakSet {
   }
 
   friend bool operator==(const WeakSet& a, const WeakSet& b) {
-    if (a.count() != b.count()) return false;
-    for (const WeakRef<T>& w : a.entries_) {
-      if (!b.index_.contains(w.ctl_)) return false;
+    return a.sameMembers(b);
+  }
+
+ private:
+  // operator=='s body, a member so that it has WeakRef's friendship of WeakSet
+  // (cl.exe does not extend it to a hidden friend).
+  bool sameMembers(const WeakSet& other) const {
+    if (count() != other.count()) return false;
+    for (const WeakRef<T>& w : entries_) {
+      if (!other.index_.contains(w.ctl_)) return false;
     }
     return true;
   }
 
- private:
   // OOWeakSet's -compact: drop entries whose object has gone. Logically const
   // (the set's observable contents already exclude them), hence the mutable
   // members.
