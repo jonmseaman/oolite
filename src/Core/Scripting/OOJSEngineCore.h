@@ -142,7 +142,7 @@ bool OOJSValueToInt32(JSContext* context, JSValueConst value,
 std::string OOJSWrapScriptSource(const std::string& source);
 
 /*	The compatibility script's const rewriter (see RewriteLegacyConst() in
-        OOJSScript.m), or JS_UNDEFINED if it failed to load. Kept here rather
+        OOJSScript), or JS_UNDEFINED if it failed to load. Kept here rather
         than on the global object so that OXPs can't see or replace it. The
         caller does not own the returned value.
 */
