@@ -36,6 +36,16 @@ class OODebugMonitor;
 
 #include <quickjs.h>
 
+#include <string>
+
 // Create the JS console object for the debug monitor. The caller owns the
 // result.
 JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor);
+
+// console.__displayProjection() (spec 008, contracts/settings.md "Debug read"):
+// the game installs a function that describes the projection in use as a JSON
+// object; the console parses and returns it. Kept as a hook so this file does
+// not depend on Universe or the view.
+using OODisplayProjectionProvider = std::string (*)();
+void OOJSConsoleSetDisplayProjectionProvider(
+    OODisplayProjectionProvider provider);

@@ -11,6 +11,10 @@
 # Extra arguments after the tier go to pytest (component, gui):
 #     tests/run.sh component -k s1
 #
+# --window WxH (smoke, component) sets the game's window size; smoke then checks the snapshot is
+# that size:
+#     tests/run.sh smoke --window 3840x1080
+#
 # Environment: BUILD_TYPE (default dev), OO_VENV (default build/.venv-tests), OO_APP_DIR.
 # dev, not test: test links with LTO, and every core unit test re-runs LTO over the game's objects.
 # The venv lives under build/, which is git-ignored. Delete it to force a clean reinstall.
@@ -110,6 +114,18 @@ run_smoke() {
 tier=${1:-}
 [[ $# -gt 0 ]] && shift
 
+# --window WxH (smoke, component): the game's window size, passed to it as preferences on its
+# command line (tests/launch_snapshot.py, tests/component/console.py read OO_WINDOW).
+rest=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --window)   export OO_WINDOW="${2:?--window needs WxH}"; shift 2 ;;
+        --window=*) export OO_WINDOW="${1#--window=}"; shift ;;
+        *)          rest+=("$1"); shift ;;
+    esac
+done
+set -- "${rest[@]+"${rest[@]}"}"
+
 case "$tier" in
     venv)      ensure_venv ;;
     unit)      run_unit ;;  # no Python needed; meson drives it
@@ -118,7 +134,7 @@ case "$tier" in
     smoke)     run_smoke ;;
     all)       ensure_venv; run_unit; run_component; run_smoke; run_gui ;;
     *)
-        sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+        sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         [[ -z "$tier" ]] || exit 2
         ;;
 esac

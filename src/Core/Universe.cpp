@@ -32,6 +32,9 @@ MA 02110-1301, USA.
 #include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
 #include "MyOpenGLView.h"
+#ifdef OO_DEBUG_MONITOR_ENABLED
+#include "OOJSConsole.h"
+#endif
 #include "OOAsyncWorkManager.h"
 #include "OOBreakPatternEntity.h"
 #include "OOCPUInfo.h"
@@ -107,6 +110,7 @@ MA 02110-1301, USA.
 
 #if OO_LOCALIZATION_TOOLS
 #include <cstring>
+#include <format>
 
 #include "OOConvertSystemDescriptions.h"
 #endif
@@ -280,8 +284,31 @@ Universe* Universe::newUniverse(::MyOpenGLView* inGameView) {
 /*	-initWithGameView: after [super init]: newUniverse() made the universe
    and checked that it is the only one. The body is the method's.
 */
+#ifdef OO_DEBUG_MONITOR_ENABLED
+// console.__displayProjection() (spec 008, contracts/settings.md "Debug read").
+static std::string DisplayProjectionJSON() {
+  Universe* universe = gSharedUniverse;
+  MyOpenGLView* view = universe != nullptr ? universe->getGameView() : nullptr;
+  if (universe == nullptr || view == nullptr) return "null";
+  const double* f = universe->lastSceneFrustum();
+  const NSSize size = view->backingViewSize();
+  return std::format(
+      "{{\"left\":{},\"right\":{},\"bottom\":{},\"top\":{},"
+      "\"displayZ\":{},\"windowDisplayZ\":{},"
+      "\"hudArea\":[0,0,{},{}],\"window\":[{},{}],"
+      "\"fovValue\":{},\"screenMatching\":false}}",
+      f[0], f[1], f[2], f[3], view->getDisplay_z(), view->getDisplay_z(),
+      static_cast<int>(size.width), static_cast<int>(size.height),
+      static_cast<int>(size.width), static_cast<int>(size.height),
+      view->fov(false));
+}
+#endif
+
 void Universe::initWithGameView(::MyOpenGLView* inGameView) {
   _doingStartUp = true;
+#ifdef OO_DEBUG_MONITOR_ENABLED
+  OOJSConsoleSetDisplayProjectionProvider(DisplayProjectionJSON);
+#endif
 
   OOInitReallyRandom(oo::date::timeIntervalSinceReferenceDate() * 1e9);
 
@@ -5330,14 +5357,27 @@ void Universe::drawUniverse() {
             nearPlane / distanceFactor;  // 0.5 is field of view ratio for GUIs
 
         OOGLResetProjection();
+        float frustumLeft, frustumRight, frustumBottom, frustumTop;
         if ((displayGUI && 4 * aspect >= 3) ||
             (!displayGUI && 4 * aspect <= 3)) {
-          OOGLFrustum(-ratio, ratio, -aspect * ratio, aspect * ratio,
-                      nearPlane / distanceFactor, farPlane);
+          frustumLeft = -ratio;
+          frustumRight = ratio;
+          frustumBottom = -aspect * ratio;
+          frustumTop = aspect * ratio;
         } else {
-          OOGLFrustum(-3 * ratio / aspect / 4, 3 * ratio / aspect / 4,
-                      -3 * ratio / 4, 3 * ratio / 4, nearPlane / distanceFactor,
-                      farPlane);
+          frustumLeft = -3 * ratio / aspect / 4;
+          frustumRight = 3 * ratio / aspect / 4;
+          frustumBottom = -3 * ratio / 4;
+          frustumTop = 3 * ratio / 4;
+        }
+        const float frustumNear = nearPlane / distanceFactor;
+        OOGLFrustum(frustumLeft, frustumRight, frustumBottom, frustumTop,
+                    frustumNear, farPlane);
+        if (vdist == 1) {
+          _lastSceneFrustum[0] = frustumLeft / frustumNear;
+          _lastSceneFrustum[1] = frustumRight / frustumNear;
+          _lastSceneFrustum[2] = frustumBottom / frustumNear;
+          _lastSceneFrustum[3] = frustumTop / frustumNear;
         }
 
         getActiveViewMatrix(&view_matrix, &view_dir, &view_up);
