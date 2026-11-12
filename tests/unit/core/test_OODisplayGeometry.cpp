@@ -398,4 +398,27 @@ OO_TEST(centreIsStraightAhead) {
   }
 }
 
+// G16: the HUD area (contracts/hud-area.md H1) and detection plausibility.
+OO_TEST(hudAreaAndPlausibility) {
+  struct Case {
+    int w, h, x, width;
+  } cases[] = {{1920, 1080, 0, 1920},  {2560, 1080, 320, 1920},
+               {3440, 1440, 440, 2560}, {5120, 1440, 1280, 2560},
+               {1280, 1024, 0, 1280}};
+  for (const Case& c : cases) {
+    OOPixelRect r = OOHudAreaForWindow(c.w, c.h);
+    OO_CHECK(r.x == c.x && r.y == 0 && r.width == c.width && r.height == c.h);
+  }
+  const double w27 = 27 * kInch * 16 / std::hypot(16.0, 9.0);
+  const double w49 = 49 * kInch * 32 / std::hypot(32.0, 9.0);
+  OO_CHECK(OOPlausibleDisplaySize(w27, w27 * 9 / 16, 2560, 1440));
+  OO_CHECK(OOPlausibleDisplaySize(w49, w49 * 9 / 32, 5120, 1440));
+  const double w8 = 8 * kInch * 16 / std::hypot(16.0, 9.0);
+  const double w130 = 130 * kInch * 16 / std::hypot(16.0, 9.0);
+  OO_CHECK(!OOPlausibleDisplaySize(w8, w8 * 9 / 16, 1920, 1080));
+  OO_CHECK(!OOPlausibleDisplaySize(w130, w130 * 9 / 16, 1920, 1080));
+  OO_CHECK(!OOPlausibleDisplaySize(w27, w27 * 9 / 16, 1920, 1200));  // 16:9 mm, 16:10 px
+  OO_CHECK(!OOPlausibleDisplaySize(0, 0, 1920, 1080));
+}
+
 OO_TEST_MAIN()

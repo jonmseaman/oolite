@@ -43,3 +43,13 @@ Feature: Screen matching (spec 008)
     And the projection's "top" is about 0.1533425 within 0.000001
     And the projection's "windowDisplayZ" is about 1706.6666 within 0.001
     And the projection's "fovValue" is about 57.2 within 0.0001
+
+  # H5 (spec 008 FR-016): on a window wider than 16:9 the HUD and the GUI are laid out in the
+  # centred 16:9 area, at full height, while the space view keeps the whole window (C5 above).
+  Scenario: The HUD area on a 3840x1080 window is its centred 16:9 part
+    Given the preference "fov-value" is "57.2"
+    And a window of 3840x1080
+    And a universe seeded with 20260910
+    Then the projection's "hudArea" equals [960, 0, 1920, 1080]
+    And the projection's "displayZ" is about 853.3333 within 0.001
+    And the projection's "windowDisplayZ" is about 1706.6666 within 0.001

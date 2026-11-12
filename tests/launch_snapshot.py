@@ -41,6 +41,7 @@ import argparse
 import os
 import plistlib
 import re
+import zlib
 import select
 import shutil
 import socket
@@ -501,6 +502,71 @@ def count_log_lines(log_dir, log_class):
 PNG_SIGNATURE = bytes([0x89]) + b"PNG" + bytes([0x0D, 0x0A, 0x1A, 0x0A])
 
 
+def png_pixels(path):
+    """(width, height, channels, rows) of an 8-bit RGB or RGBA PNG, rows as bytes, unfiltered.
+
+    Standard library only: the smoke run's Python need not have Pillow.
+    """
+    with open(path, "rb") as f:
+        data = f.read()
+    if data[:8] != PNG_SIGNATURE:
+        raise ValueError(f"{path} is not a PNG")
+    pos, idat, width = 8, [], 0
+    while pos < len(data):
+        length, kind = struct.unpack(">I4s", data[pos:pos + 8])
+        body = data[pos + 8:pos + 8 + length]
+        if kind == b"IHDR":
+            width, height, depth, colour = struct.unpack(">IIBB", body[:10])
+            if depth != 8 or colour not in (2, 6):
+                raise ValueError(f"{path}: only 8-bit RGB/RGBA PNGs are read here")
+            channels = 3 if colour == 2 else 4
+        elif kind == b"IDAT":
+            idat.append(body)
+        pos += 12 + length
+    raw = zlib.decompress(b"".join(idat))
+    stride = width * channels
+    rows, previous = [], bytearray(stride)
+    for y in range(height):
+        start = y * (stride + 1)
+        kind, line = raw[start], bytearray(raw[start + 1:start + 1 + stride])
+        for i in range(stride):
+            left = line[i - channels] if i >= channels else 0
+            up = previous[i]
+            if kind == 1:
+                line[i] = (line[i] + left) & 0xFF
+            elif kind == 2:
+                line[i] = (line[i] + up) & 0xFF
+            elif kind == 3:
+                line[i] = (line[i] + ((left + up) >> 1)) & 0xFF
+            elif kind == 4:
+                corner = previous[i - channels] if i >= channels else 0
+                estimate = left + up - corner
+                pa, pb, pc = abs(estimate - left), abs(estimate - up), abs(estimate - corner)
+                predictor = left if pa <= pb and pa <= pc else (up if pb <= pc else corner)
+                line[i] = (line[i] + predictor) & 0xFF
+        rows.append(bytes(line))
+        previous = line
+    return width, height, channels, rows
+
+
+def hud_area_bars_are_clear(path):
+    """Spec 008 H3: on a GUI screen wider than 16:9, nothing is drawn beside the centred 16:9
+    HUD area. Returns None when that holds (or the window is not wider than 16:9), else a reason.
+    """
+    width, height, channels, rows = png_pixels(path)
+    if width * 9 <= height * 16:
+        return None
+    area = round(height * 16 / 9)
+    x0 = (width - area) // 2
+    for y in range(0, height, 4):
+        row = rows[y]
+        for x in list(range(0, x0, 4)) + list(range(x0 + area, width, 4)):
+            r, g, b = row[x * channels:x * channels + 3]
+            if r + g + b > 24:
+                return f"pixel ({x}, {y}) beside the HUD area is ({r}, {g}, {b}), not black"
+    return None
+
+
 def png_size(path):
     """A PNG's width and height from its IHDR chunk."""
     with open(path, "rb") as f:
@@ -691,6 +757,14 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
                 f"(at most {MAX_GEOMETRY_REBUILDS} expected)."
             )
             return False
+
+        if window_size and not os.environ.get("OO_GAME_EXTRA_ARGS", "").strip():
+            # The smoke run snapshots the start screen, a GUI screen, so beside the 16:9 HUD
+            # area there must be nothing at all (spec 008 FR-016, H3).
+            reason = hud_area_bars_are_clear(snap_path)
+            if reason:
+                print(f"[!] Failure: {reason}.")
+                return False
 
         if window_size:
             width, height = png_size(snap_path)

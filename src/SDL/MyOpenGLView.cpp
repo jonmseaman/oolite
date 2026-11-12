@@ -587,18 +587,28 @@ void MyOpenGLView::updateGLSize(NSSize size) {
   bounds.size = size;
   viewSize = size;
 
-  if (bounds.size.width / bounds.size.height > 4.0 / 3.0) {
-    display_z = 480.0 * bounds.size.width / bounds.size.height;
-    x_offset = 240.0 * bounds.size.width / bounds.size.height;
+  // The HUD and the GUI are laid out in the HUD area: the window when it is
+  // 16:9 or narrower, else its centred full-height 16:9 part (spec 008
+  // FR-016). The space view, and its own overlays such as sun glare, keep the
+  // whole window (window_display_z).
+  const OOPixelRect area =
+      OOHudAreaForWindow(static_cast<int>(bounds.size.width),
+                         static_cast<int>(bounds.size.height));
+  _hudArea = NSMakeRect(area.x, area.y, area.width, area.height);
+  const double hudWidth = area.width;
+  const double hudHeight = area.height;
+  if (hudWidth / hudHeight > 4.0 / 3.0) {
+    display_z = 480.0 * hudWidth / hudHeight;
+    x_offset = 240.0 * hudWidth / hudHeight;
     y_offset = 240.0;
   } else {
     display_z = 640.0;
     x_offset = 320.0;
-    y_offset = 320.0 * bounds.size.height / bounds.size.width;
+    y_offset = 320.0 * hudHeight / hudWidth;
   }
-
-  window_display_z = display_z;
-  _hudArea = NSMakeRect(0, 0, bounds.size.width, bounds.size.height);
+  window_display_z = bounds.size.width / bounds.size.height > 4.0 / 3.0
+                         ? 480.0 * bounds.size.width / bounds.size.height
+                         : 640.0;
   rebuildDisplayGeometry();
 
   float ratio = 0.5;
