@@ -513,7 +513,7 @@ static void RemoveNonSpiderMonkeyGlobals(JSContext* context,
 
   for (uint32_t i = 0; i < count; i++) {
     const char* name = JS_AtomToCString(context, properties[i].atom);
-    BOOL keep = (name == NULL);
+    bool keep = (name == NULL);
     for (size_t j = 0; !keep && j < sizeof kSpiderMonkeyGlobals /
                                         sizeof *kSpiderMonkeyGlobals;
          j++) {
