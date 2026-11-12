@@ -74,7 +74,7 @@ MA 02110-1301, USA.
         spawned = [UNIVERSE spawnShipWithRole:oo::NSStringFrom(role) near:ship];
         if (spawned != nil) {
             [spawned setTemperature:[self randomEjectaTemperature]];
-            if ([self isMissileFlagSet] && oo::PListView([spawned shipInfoDictionary]).get<BOOL>(@"is_submunition")) {
+            if ([self isMissileFlagSet] && oo::PListView([spawned shipInfoDictionary]).get<bool>(@"is_submunition")) {
                 [spawned setOwner:[self owner]];
                 [spawned addTarget:[self primaryTarget]];
                 [spawned setIsMissileFlag:YES];
