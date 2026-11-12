@@ -70,6 +70,7 @@ oofnd_plist_tests = [
     'test_plist_oldstyle_structures',
     'test_plist_writers',
     'test_plist_xml',
+    'test_plist_json5',
     'test_plist_get',
     'test_plist_carrier',
     'test_plist_game_tuples',

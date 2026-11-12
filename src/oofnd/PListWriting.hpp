@@ -41,11 +41,24 @@
         Both writers treat a string holding a lone surrogate as GNUstep does:
    its UTF-8 conversion fails, so the old-style writer fails as a whole and the
    XML writer writes nothing for it.
+
+        JSON5 (oo::writeJSON5PList, no Objective-C original; read back by
+   oofnd/PListJSON5.hpp): tab indentation, one entry per line, a comma after
+   every entry; keys in the dict's own (byte) order, bare when they are ASCII
+   identifiers ([A-Za-z$_][A-Za-z0-9$_]*), otherwise double-quoted; strings
+   double-quoted, escaping " \ and the C0 controls, and writing a lone
+   surrogate as \uXXXX; integers in decimal; reals in the shortest form that
+   reads back the same, always with a '.' or an exponent (Infinity, -Infinity,
+   NaN); data as {$data: "<base64>"} and dates as {$date:
+   "YYYY-MM-DDTHH:MM:SSZ"} (whole seconds, as the XML writer). It fails on a
+   null, on a foreign object, and on a dict whose only entry is a string under
+   "$data" or "$date", which would read back as data or a date.
 */
 
 #pragma once
 
 #include <algorithm>
+#include <charconv>
 #include <cinttypes>
 #include <cmath>
 #include <cstddef>
@@ -515,7 +528,201 @@ inline void appendXML(std::string& out, const PList& v, unsigned level) {
   }
 }
 
+// --- JSON5 ---------------------------------------------------------------
+
+inline bool isJSON5BareKey(std::string_view key) noexcept {
+  if (key.empty()) return false;
+  const auto start = [](char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '$' ||
+           c == '_';
+  };
+  if (!start(key[0])) return false;
+  return std::all_of(key.begin() + 1, key.end(), [&](char c) {
+    return start(c) || (c >= '0' && c <= '9');
+  });
+}
+
+// A PList string (UTF-8, or WTF-8 with lone surrogates) as a double-quoted
+// JSON5 string.
+inline void appendJSON5String(std::string& out, const std::string& s) {
+  const std::u16string units = utf8ToUtf16(s);
+  char buf[8];
+  out += '"';
+  for (std::size_t i = 0; i < units.size(); ++i) {
+    const char16_t u = units[i];
+    switch (u) {
+      case u'"':
+        out += "\\\"";
+        continue;
+      case u'\\':
+        out += "\\\\";
+        continue;
+      case u'\b':
+        out += "\\b";
+        continue;
+      case u'\f':
+        out += "\\f";
+        continue;
+      case u'\n':
+        out += "\\n";
+        continue;
+      case u'\r':
+        out += "\\r";
+        continue;
+      case u'\t':
+        out += "\\t";
+        continue;
+      case u'\v':
+        out += "\\v";
+        continue;
+      default:
+        break;
+    }
+    if (u < 0x20) {
+      std::snprintf(buf, sizeof buf, "\\x%02X", static_cast<unsigned>(u));
+      out += buf;
+    } else if (u >= 0xD800 && u <= 0xDBFF && i + 1 < units.size() &&
+               units[i + 1] >= 0xDC00 && units[i + 1] <= 0xDFFF) {
+      appendUtf16AsUtf8(out, &units[i], 2);
+      ++i;
+    } else if (u >= 0xD800 && u <= 0xDFFF) {
+      std::snprintf(buf, sizeof buf, "\\u%04X", static_cast<unsigned>(u));
+      out += buf;
+    } else {
+      appendUtf16AsUtf8(out, &units[i], 1);
+    }
+  }
+  out += '"';
+}
+
+inline void appendJSON5Key(std::string& out, const std::string& key) {
+  if (isJSON5BareKey(key))
+    out += key;
+  else
+    appendJSON5String(out, key);
+}
+
+// A real that reads back as the same double, and as a real.
+inline void appendJSON5Real(std::string& out, double d) {
+  if (std::isnan(d)) {
+    out += "NaN";
+    return;
+  }
+  if (std::isinf(d)) {
+    out += d < 0 ? "-Infinity" : "Infinity";
+    return;
+  }
+  char buf[64];
+  const std::to_chars_result r = std::to_chars(buf, buf + sizeof buf, d);
+  const std::string_view text(buf, static_cast<std::size_t>(r.ptr - buf));
+  out += text;
+  if (text.find_first_of(".e") == std::string_view::npos) out += ".0";
+}
+
+class JSON5Writer {
+ public:
+  std::string error;
+
+  bool format(const PList& v, unsigned level, std::string& out) {
+    switch (v.type()) {
+      case PList::Type::String:
+        appendJSON5String(out, *v.getIf<std::string>());
+        return true;
+      case PList::Type::Bool:
+        out += *v.getIf<bool>() ? "true" : "false";
+        return true;
+      case PList::Type::Integer: {
+        const PList::Integer& i = *v.getIf<PList::Integer>();
+        out += i.isUnsigned ? std::to_string(i.unsignedValue())
+                            : std::to_string(i.value);
+        return true;
+      }
+      case PList::Type::Real:
+        appendJSON5Real(out, *v.getIf<double>());
+        return true;
+      case PList::Type::Data:
+        out += "{$data: \"";
+        appendBase64(out, *v.getIf<Data>());
+        out += "\"}";
+        return true;
+      case PList::Type::Date: {
+        long y;
+        int mo, d, h, mi, s;
+        breakDate(v.getIf<PList::Date>()->sinceReferenceDate, y, mo, d, h, mi,
+                  s);
+        char buf[64];
+        std::snprintf(buf, sizeof buf,
+                      "{$date: \"%04ld-%02d-%02dT%02d:%02d:%02dZ\"}", y, mo, d,
+                      h, mi, s);
+        out += buf;
+        return true;
+      }
+      case PList::Type::Array: {
+        const PList::Array& array = *v.getIf<PList::Array>();
+        if (array.empty()) {
+          out += "[]";
+          return true;
+        }
+        out += "[\n";
+        for (const PList& e : array) {
+          out.append(level + 1, '\t');
+          if (!format(e, level + 1, out)) return false;
+          out += ",\n";
+        }
+        out.append(level, '\t');
+        out += ']';
+        return true;
+      }
+      case PList::Type::Dict: {
+        const PList::Dict& dict = *v.getIf<PList::Dict>();
+        if (dict.empty()) {
+          out += "{}";
+          return true;
+        }
+        const std::string& firstKey = dict.begin()->first;
+        if (dict.size() == 1 && (firstKey == "$data" || firstKey == "$date") &&
+            dict.begin()->second.isString()) {
+          error = "a dict whose only entry is a string under \"" + firstKey +
+                  "\" cannot be written as JSON5 (it would read back as " +
+                  (firstKey == "$data" ? "data)" : "a date)");
+          return false;
+        }
+        out += "{\n";
+        for (const auto& [key, value] : dict) {
+          out.append(level + 1, '\t');
+          appendJSON5Key(out, key);
+          out += ": ";
+          if (!format(value, level + 1, out)) return false;
+          out += ",\n";
+        }
+        out.append(level, '\t');
+        out += '}';
+        return true;
+      }
+      case PList::Type::Null:
+        error = "null cannot be written as JSON5";
+        return false;
+      case PList::Type::Object:
+        error = "Class " + v.getIf<PList::Object>()->get()->className() +
+                " does not support JSON5 writing";
+        return false;
+    }
+    return false;
+  }
+};
+
 }  // namespace plist_detail
+
+// The JSON5 form of a property list (see the comment at the top), ending in a
+// newline.
+inline std::expected<Data, PListError> writeJSON5PList(const PList& plist) {
+  plist_detail::JSON5Writer writer;
+  std::string out;
+  if (!writer.format(plist, 0, out))
+    return std::unexpected(PListError{writer.error});
+  out += '\n';
+  return Data(out.data(), out.size());
+}
 
 // -[NSObject(OldSchoolPropertyListWriting)
 // oldSchoolPListFormatWithErrorDescription:]
