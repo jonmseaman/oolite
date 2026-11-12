@@ -589,6 +589,7 @@ class Universe : public oo::RefCounted {
   void selectIntro2NextCategory();
   void selectIntro2Next();
   void stepDemoShip(int delta);
+  void animateDemoShip(OOTimeDelta delta_t);
   // station(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
   ::StationEntity* stationWithRole(const std::string& role, HPVector position);

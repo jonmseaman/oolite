@@ -4078,6 +4078,25 @@ void Universe::stepDemoShip(int delta) {
   }
 }
 
+// Moves the ship library's demo ship between stage changes: it flies in from
+// demo_start_z to its destination, and flies out at the velocity
+// DEMO_SHOW_THING gave it. The entity update does not move a
+// STATUS_COCKPIT_DISPLAY ship, so without this the fly-out leaves the old ship
+// standing still until the next one appears.
+void Universe::animateDemoShip(OOTimeDelta delta_t) {
+  if (demo_ship == nullptr) return;
+  if (demo_stage == DEMO_FLY_IN) {
+    GLfloat delta =
+        (universal_time - demo_start_time) / DEMO2_FLY_IN_STAGE_TIME;
+    const HPVector destination = demo_ship->destination();
+    demo_ship->setPositionX(
+        0.0f, destination.y * delta,
+        demo_start_z + (destination.z - demo_start_z) * delta);
+  } else if (demo_stage == DEMO_FLY_OUT) {
+    demo_ship->applyVelocity(delta_t);
+  }
+}
+
 void Universe::selectIntro2PreviousCategory() {
   demo_stage = DEMO_SHOW_THING;
   demo_ship_index =
@@ -7519,20 +7538,8 @@ void Universe::update(OOTimeDelta inDeltaT) {
                 break;
             }
           }
-        } else if (demo_stage == DEMO_FLY_IN) {
-          GLfloat delta =
-              (universal_time - demo_start_time) / DEMO2_FLY_IN_STAGE_TIME;
-          if (demo_ship != nullptr)
-            demo_ship->setPositionX(
-                0.0f,
-                (demo_ship != nullptr ? demo_ship->destination() : HPVector{})
-                        .y *
-                    delta,
-                demo_start_z + ((demo_ship != nullptr ? demo_ship->destination()
-                                                      : HPVector{})
-                                    .z -
-                                demo_start_z) *
-                                   delta);
+        } else {
+          animateDemoShip(delta_t);
         }
       }
 
