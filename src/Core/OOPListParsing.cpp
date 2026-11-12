@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 #include "Universe.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
+#include "oofnd/PListFile.hpp"
 #include "oofnd/PListParsing.hpp"
 
 oo::PList OOPropertyListFromData(const std::optional<oo::Data>& data,
@@ -60,14 +61,32 @@ oo::PList OOPropertyListFromData(const std::optional<oo::Data>& data,
   return result;
 }
 
+// A <name>.json5 beside <name>.plist is read instead of it
+// (oofnd/PListFile.hpp).
 oo::PList OOPropertyListFromFile(const std::string& path) {
   oo::PList result;
 
   // Load file, if it exists...
-  const std::optional<oo::Data> data = OODataFromOXZFile(path);
-  if (data.has_value()) {
+  oo::PListFileLoad load = oo::loadPListFile(
+      path, [](const std::string& p) { return OODataFromOXZFile(p); });
+  if (load.isJSON5) {
+    if (UNIVERSE != nullptr) {
+      OO_LOG("plist.information", "Parsing {} as JSON5.", load.source);
+    }
+    if (load.shadowedPlist) {
+      OO_LOG("plist.json5.shadowed",
+             "Both {} and {} exist; reading the JSON5 file and ignoring the "
+             "property list.",
+             load.source, path);
+    }
+    if (load.error.has_value()) {
+      OO_LOG("plist.parse.failed", "Failed to parse {} as JSON5.\n{}",
+             load.source, load.error->description());
+    }
+    result = std::move(load.plist);
+  } else if (load.plistData.has_value()) {
     // ...and parse it
-    result = OOPropertyListFromData(data, path);
+    result = OOPropertyListFromData(load.plistData, path);
   }
   // Non-existent file is not an error.
 
