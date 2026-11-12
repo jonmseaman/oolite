@@ -22,6 +22,7 @@ oolite_sources += files(
       'OOCharacter.cpp',
     'OOFoundation.cpp',
     'OOColor.cpp',
+    'OODisplayGeometry.cpp',
     'OOCommodities.cpp',
     'OOCommodityMarket.cpp',
     'OOConstToString.cpp',
