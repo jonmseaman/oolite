@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #include "OOJSTimer.h"
 
 #include <cstddef>
+#include <format>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -183,10 +184,9 @@ std::optional<std::string> OOJSTimer::descriptionComponents() const {
     return "invalid";
   }
 
-  return oo::str::format(
-      "%s, function: %s",
-      OOScriptTimer::descriptionComponents().value_or("(null)").c_str(),
-      _functionName.value_or("anonymous").c_str());
+  return std::format("{}, function: {}",
+                     OOScriptTimer::descriptionComponents().value_or("(null)"),
+                     _functionName.value_or("anonymous"));
 }
 
 std::optional<std::string> OOJSTimer::oo_jsClassName() {
@@ -264,9 +264,8 @@ void OOJSTimer::clearJSSelf(JSValueConst selfVal) {
 std::optional<std::string> OOJSTimer::jsDescription() {
   const std::optional<std::string> components = descriptionComponents();
   const std::string name = oo_jsClassName().value_or("OOJSTimer");
-  if (components.has_value())
-    return oo::str::format("[%s %s]", name.c_str(), components->c_str());
-  return oo::str::format("[object %s]", name.c_str());
+  if (components.has_value()) return std::format("[{} {}]", name, *components);
+  return std::format("[object {}]", name);
 }
 
 /*	The reference created with the JS object in initWithDelay() belongs to
