@@ -280,13 +280,13 @@ static void FunctionCallHook(JSContext* context, JSValueConst function,
           malloc(sizeof(OOJSProfileStackFrame)));
       assert(frame != nullptr);
 
-      *frame = (OOJSProfileStackFrame){.back = sProfileStack,
-                                       .key = code,
-                                       .function = nullptr,
-                                       .startTime = start,
-                                       .subTime = 0.0,
-                                       .total = &sProfilerTotalJavaScriptTime,
-                                       .cleanup = CleanUpJSFrame};
+      *frame = OOJSProfileStackFrame{.back = sProfileStack,
+                                     .key = code,
+                                     .function = nullptr,
+                                     .startTime = start,
+                                     .subTime = 0.0,
+                                     .total = &sProfilerTotalJavaScriptTime,
+                                     .cleanup = CleanUpJSFrame};
 
       sProfileStack = frame;
       startOwnedByFrame = true;
@@ -318,13 +318,13 @@ void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function) {
     oo::log::indent();
   }
 
-  *frame = (OOJSProfileStackFrame){.back = sProfileStack,
-                                   .key = function,
-                                   .function = function,
-                                   .startTime = OOGetHighResTime(),
-                                   .subTime = 0,
-                                   .total = &sProfilerTotalNativeTime,
-                                   .cleanup = nullptr};
+  *frame = OOJSProfileStackFrame{.back = sProfileStack,
+                                 .key = function,
+                                 .function = function,
+                                 .startTime = OOGetHighResTime(),
+                                 .subTime = 0,
+                                 .total = &sProfilerTotalNativeTime,
+                                 .cleanup = nullptr};
   sProfileStack = frame;
 }
 

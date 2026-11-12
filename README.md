@@ -163,6 +163,34 @@ You can install the build folder:
 ./mk.sh install dev
 ```
 
+### Building with Visual Studio (Windows)
+
+Two more build types make a Visual Studio solution, from the same MSYS2 UCRT64 prompt:
+
+- **"vs-msvc"**: Visual Studio's own compiler, cl.exe.
+- **"vs-clang"**: Visual Studio's clang-cl. Its solution needs the Visual Studio component "C++ Clang-cl
+  build tools" (the ClangCL platform toolset), which the plain "C++ Clang compiler" component does not include.
+
+```bash
+./mk.sh build vs-msvc
+```
+
+This needs Visual Studio 2022 or 2026 with the C++ desktop workload. The libraries come from vcpkg
+(`vcpkg.json`), using the vcpkg that ships with Visual Studio; the first build compiles them, which takes about
+ten minutes. Open `build/meson_vs-msvc/oolite.sln`: its startup project stages the game into
+`build/meson_vs-msvc/oolite.app` and F5 runs it under the debugger.
+
+Differences from the MinGW build:
+
+- Speech is off: espeak-ng has no vcpkg port.
+- The unit tests are not built by cl.exe (the test files use GNU extensions), and the core suite is not built
+  under either Visual Studio compiler (its stand-in classes need the Itanium C++ ABI). clang-cl builds and runs the
+  oofnd suite.
+- The Microsoft C runtime formats `%a` differently from glibc and MinGW (`0x1.0000000000000p+0` for 1.0, not
+  `0x1p+0`), so `test_string`'s `formatMatchesGNUstepForTheGamesConversions` fails under clang-cl.
+- `./mk.sh test vs-msvc` copies MSYS2's Mesa `opengl32.dll` into `oolite.app` for the snapshot, as it does for the
+  MinGW builds. Delete it before running from Visual Studio, or the game renders in software.
+
 Optionally you can pass `--install-flags` to pass specific options to meson.
 
 CI rejects code under `src` that `clang-format` 22 would change (other major versions wrap some expressions

@@ -104,6 +104,20 @@ typedef double OOHPScalar;
     __a < 0 ? -__a : __a;    \
   })
 #endif
+#elif defined(__cplusplus)
+// cl.exe has no statement expressions. A lambda evaluates each argument once,
+// as above, and its auto parameters decay as __typeof__ does.
+#ifndef MIN
+#define MIN(A, B) \
+  ([](auto __a, auto __b) { return __a < __b ? __a : __b; }((A), (B)))
+#endif
+#if !defined(MAX)
+#define MAX(A, B) \
+  ([](auto __a, auto __b) { return __a < __b ? __b : __a; }((A), (B)))
+#endif
+#if !defined(ABS)
+#define ABS(A) ([](auto __a) { return __a < 0 ? -__a : __a; }((A)))
+#endif
 #else
 /* These definitions are unsafe in that the "winning" expression is evaluated
  * twice. */

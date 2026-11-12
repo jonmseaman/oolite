@@ -33,7 +33,7 @@ std::string FormatV(const char* format, va_list args) {
   if (oo::log::willDisplay("gnustep"))
     oo::log::message("gnustep", nullptr, nullptr, 0, "{}", reason);
   OORaiseException(OOInternalInconsistencyException, "%s", reason.c_str());
-  __builtin_unreachable();
+  OO_BUILTIN_UNREACHABLE();
 }
 
 }  // namespace

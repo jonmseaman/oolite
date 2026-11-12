@@ -30,11 +30,11 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include <cxxabi.h>
-
 #include <cstdlib>
 #include <memory>
 #include <string>
+
+#include "oofnd/CxxAbi.h"
 
 inline std::string OODemangle(const char* mangled) {
   int status = 0;

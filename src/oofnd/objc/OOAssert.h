@@ -35,9 +35,10 @@
 #include "oofnd/PrintfFormat.h"
 
 // Log and raise; never return. Called by the macros below, not directly.
-void OOAssertFailedInFunction(const char* function, const char* file, long line,
-                              const char* format, ...) OO_PRINTF_FORMAT(4, 5)
-    __attribute__((noreturn));
+[[noreturn]] void OOAssertFailedInFunction(const char* function,
+                                           const char* file, long line,
+                                           const char* format, ...)
+    OO_PRINTF_FORMAT(4, 5);
 
 // Not conditional on NDEBUG: see the head of this file.
 #define OOCAssert(condition, ...)                                       \

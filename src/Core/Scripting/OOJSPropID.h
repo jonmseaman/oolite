@@ -40,6 +40,7 @@ typedef JSValue OOJSVal;
         Macro to create a property ID. The string is interned the first time the
         macro is hit, then cached; the atom lives as long as the runtime.
 */
+#if defined(__GNUC__)
 #define OOJSID(str)                            \
   ({                                           \
     static JSAtom idCache = JS_ATOM_NULL;      \
@@ -47,4 +48,15 @@ typedef JSValue OOJSVal;
       idCache = OOJSInternAtomPRIVATE("" str); \
     idCache;                                   \
   })
+#else
+// cl.exe has no statement expressions. Each lambda expression is its own type,
+// so each use still has its own cache.
+#define OOJSID(str)                            \
+  ([]() -> JSAtom {                            \
+    static JSAtom idCache = JS_ATOM_NULL;      \
+    if (EXPECT_NOT(idCache == JS_ATOM_NULL))   \
+      idCache = OOJSInternAtomPRIVATE("" str); \
+    return idCache;                            \
+  }())
+#endif
 JSAtom OOJSInternAtomPRIVATE(const char* name);
