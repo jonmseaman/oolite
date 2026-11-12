@@ -744,7 +744,7 @@ static JSValue ConsoleConsoleMessage(OOJS_NATIVE_ARGS) {
     // Attempt to get two numbers, specifying an emphasis range.
     if (JS_ToFloat64(context, &location, OOJS_ARGV[2]) == 0 &&
         JS_ToFloat64(context, &length, OOJS_ARGV[3]) == 0) {
-      emphasisRange = (NSRange){(NSUInteger)location, (NSUInteger)length};
+      emphasisRange = NSRange{(NSUInteger)location, (NSUInteger)length};
     }
   }
 

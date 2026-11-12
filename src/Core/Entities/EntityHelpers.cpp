@@ -25,8 +25,6 @@ MA 02110-1301, USA.
 
 */
 
-#include <cxxabi.h>
-
 #include <cstdlib>
 #include <typeinfo>
 
@@ -34,6 +32,7 @@ MA 02110-1301, USA.
 #include "OOVisualEffectEntity.h"
 #include "OOWaypointEntity.h"
 #include "ShipEntity.h"
+#include "oofnd/CxxAbi.h"
 #include "oofnd/Ref.hpp"  // oo::autorelease
 #include "oofnd/String.hpp"
 

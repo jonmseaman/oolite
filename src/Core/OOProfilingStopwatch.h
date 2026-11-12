@@ -68,9 +68,24 @@ SOFTWARE.
 // DWORD and timeGetTime(), from their own headers: <windows.h> here would bring
 // in the old <winsock.h> ahead of a later <winsock2.h>.
 // clang-format off
+#if defined(_MSC_VER)
+// The Windows SDK's windef.h needs the target architecture <windows.h> sets
+// (winnt.h: "No Target Architecture"). WIN32_LEAN_AND_MEAN keeps <winsock.h>
+// out of it.
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#define OO_PROFILING_STOPWATCH_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#ifdef OO_PROFILING_STOPWATCH_LEAN_AND_MEAN
+#undef WIN32_LEAN_AND_MEAN
+#undef OO_PROFILING_STOPWATCH_LEAN_AND_MEAN
+#endif
+#else
 // windef.h must come first: timeapi.h's mmsyscom.h uses BYTE, DWORD and
 // DECLARE_HANDLE without defining them. Don't let the include sorter reorder.
 #include <windef.h>
+#endif
 #include <timeapi.h>
 // clang-format on
 #define OO_PROFILING_STOPWATCH_WINDOWS 1

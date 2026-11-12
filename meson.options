@@ -54,3 +54,7 @@ option('deployment_unit_tests', type: 'boolean', value: false,
 # JavaScript engine (QuickJS-ng)
 option('quickjs_poc', type: 'boolean', value: false,
        description: 'Build the QuickJS-ng proof-of-concept test harness (oojs-quickjs-poc)')
+
+# Visual Studio toolchains (./mk.sh build vs-clang | vs-msvc)
+option('vcpkg_bin_dir', type: 'string', value: '',
+       description: 'Visual Studio builds: vcpkg bin directory whose DLLs are staged next to the game')

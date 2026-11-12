@@ -18,6 +18,8 @@ project(
 
 host_os = host_machine.system()
 c_family = ['c', 'cpp']
+# cl.exe and clang-cl (the Visual Studio toolchains) take MSVC-style flags.
+msvc_syntax = meson.get_compiler('cpp').get_argument_syntax() == 'msvc'
 
 version_string = meson.project_version()
 cat_cmd = find_program('cat', required: true)
@@ -42,8 +44,12 @@ oo_version_conf.set_quoted('OO_BUILDER', version_vars.get('builder'))
 
 is_debug = (get_option('optimization') == '0' or get_option('debug'))
 if is_debug
+    # Under the Visual Studio toolchains the optimization option alone sets the level: a /Od here
+    # would sit beside meson's /O2 and cl.exe would warn that one overrides the other.
+    if not msvc_syntax
+        add_project_arguments('-O0', language: c_family)
+    endif
     add_project_arguments(
-        '-O0',
         '-DDEBUG',
         '-DOO_DEBUG',
         '-DOO_CHECK_GL_HEAVY=1',
@@ -118,7 +124,7 @@ endif
 # non-LTO build directory (meson setup with -Ddeployment_unit_tests=true): OOCAssert compiled out
 # under NDEBUG, and with it PlayerEntity's -deferredInit ship set-up, passes every test-flavour
 # suite and breaks the shipped game.
-if host_machine.system() == 'windows'
+if host_machine.system() == 'windows' and not msvc_syntax
     # Tests load the toolchain's libstdc++/libwinpthread, which must win over older copies earlier
     # on PATH (Git for Windows ships mingw64 ones; a missing symbol surfaces as exit 0xc0000139).
     toolchain_bin = import('fs').parent(find_program(meson.get_compiler('cpp').cmd_array()[0]).full_path())
@@ -127,12 +133,19 @@ if host_machine.system() == 'windows'
     add_test_setup('default', env: test_env, is_default: true)
 endif
 
-if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows'
+# Not built by cl.exe: the test files use GNU extensions it lacks (#if inside a macro's arguments in
+# test_thread.cpp, for one), and test files are not edited for a toolchain. clang-cl builds them.
+unit_tests_toolchain = meson.get_compiler('cpp').get_id() != 'msvc'
+if (not get_option('deployment_release') or get_option('deployment_unit_tests')) and host_machine.system() == 'windows' and unit_tests_toolchain
     # Unit tests that need no game build (meson test --suite oofnd).
     subdir('tests/unit/oofnd')
 endif
 
-if not get_option('deployment_release') and host_machine.system() == 'windows'
+# Not under the MSVC ABI (cl.exe or clang-cl): several suites link game objects beside stand-in
+# classes (UniverseStandIn.h, ...), which works where a class's vtable is emitted only with its key
+# function (Itanium ABI) and fails where every constructing unit emits it (lld-link: undefined
+# PlayerEntity::... virtuals in core_test_OOJSPlayer and 14 others).
+if not get_option('deployment_release') and host_machine.system() == 'windows' and not msvc_syntax
     # Unit tests of converted game classes, linked from the game's own objects (meson test --suite core).
     subdir('tests/unit/core')
 endif

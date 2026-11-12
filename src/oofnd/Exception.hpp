@@ -65,8 +65,8 @@ extern const char* const OOMallocException;
 /*	+[OOException raise:name format:...] as a function: throws oo::Exception
    with the name and the printf-formatted reason. Never returns.
 */
-void OORaiseException(const char* name, const char* format, ...)
-    OO_PRINTF_FORMAT(2, 3) __attribute__((noreturn));
+[[noreturn]] void OORaiseException(const char* name, const char* format, ...)
+    OO_PRINTF_FORMAT(2, 3);
 
 namespace oo {
 

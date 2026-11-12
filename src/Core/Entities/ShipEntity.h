@@ -1574,10 +1574,12 @@ class ShipEntity : public OOEntityWithDrawable,
    so they must be fresh values that are not used again afterwards. The ship is
    the C++ ship; a null ship sends nothing, as the message to nil did.
 */
+// argv ends in an unused element so that an event with no arguments is not a
+// zero-length array (a GNU extension cl.exe rejects); argc does not count it.
 #define ShipScriptEvent(context, ship, event, ...)                           \
   do {                                                                       \
-    OOJSVal argv[] = {__VA_ARGS__};                                          \
-    int argc = sizeof argv / sizeof *argv;                                   \
+    OOJSVal argv[] = {__VA_ARGS__ __VA_OPT__(, ) JS_UNDEFINED};              \
+    int argc = sizeof argv / sizeof *argv - 1;                               \
     if (ShipEntity* ooScriptEventShip_ = (ship))                             \
       ooScriptEventShip_->doScriptEvent(OOJSID(event), context, argv, argc); \
     for (int oojsArgIndex = 0; oojsArgIndex < argc; oojsArgIndex++) {        \
@@ -1585,11 +1587,11 @@ class ShipEntity : public OOEntityWithDrawable,
     }                                                                        \
   } while (0)
 
-#define ShipScriptEventNoCx(ship, event, ...)                      \
-  do {                                                             \
-    JSContext* oojsEventContext = OOJSAcquireContext();            \
-    ShipScriptEvent(oojsEventContext, ship, event, ##__VA_ARGS__); \
-    OOJSRelinquishContext(oojsEventContext);                       \
+#define ShipScriptEventNoCx(ship, event, ...)                                  \
+  do {                                                                         \
+    JSContext* oojsEventContext = OOJSAcquireContext();                        \
+    ShipScriptEvent(oojsEventContext, ship, event __VA_OPT__(, ) __VA_ARGS__); \
+    OOJSRelinquishContext(oojsEventContext);                                   \
   } while (0)
 
 Vector cxx_positionOffsetForShipInRotationToAlignment(ShipEntity* ship,

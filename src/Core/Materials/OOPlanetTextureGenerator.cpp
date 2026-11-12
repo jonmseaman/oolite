@@ -468,7 +468,7 @@ void OOPlanetTextureGenerator::loadTexture() {
     if (!generateNormalMap) normalScale *= 3.0f;
 
     // Deep sea colour: sea darker past the continental shelf.
-    _info.deepSeaColor = Blend(0.85f, _info.seaColor, (FloatRGB){0, 0, 0});
+    _info.deepSeaColor = Blend(0.85f, _info.seaColor, FloatRGB{0, 0, 0});
 
     int x, y;
     FloatRGBA color;
@@ -638,8 +638,8 @@ OOINLINE float Lerp(float v0, float v1, float fraction) {
 }
 
 static FloatRGB Blend(float fraction, FloatRGB a, FloatRGB b) {
-  return (FloatRGB){Lerp(b.r, a.r, fraction), Lerp(b.g, a.g, fraction),
-                    Lerp(b.b, a.b, fraction)};
+  return FloatRGB{Lerp(b.r, a.r, fraction), Lerp(b.g, a.g, fraction),
+                  Lerp(b.b, a.b, fraction)};
 }
 
 static float BlendAlpha(float fraction, float a, float b) {
@@ -695,7 +695,7 @@ static FloatRGBA CloudMix(OOPlanetTextureGeneratorInfo* info, float q,
     alpha = 1.0;
   }
 
-  return (FloatRGBA){cloudColor.r, cloudColor.g, cloudColor.b, alpha};
+  return FloatRGBA{cloudColor.r, cloudColor.g, cloudColor.b, alpha};
 }
 
 static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q,
@@ -765,7 +765,7 @@ static FloatRGBA PlanetMix(OOPlanetTextureGeneratorInfo* info, float q,
   }
 #endif
 
-  return (FloatRGBA){diffuse.r, diffuse.g, diffuse.b, specular};
+  return FloatRGBA{diffuse.r, diffuse.g, diffuse.b, specular};
 }
 
 namespace {
@@ -779,11 +779,11 @@ FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary,
             (value != nullptr) ? oo::DescriptionOf(*value).c_str() : "(null)");
 
   if (color == nullptr)
-    return (FloatRGB){0.0f, 0.0f,
-                      0.0f};  // a nil colour answered zeros (release builds)
-  return (FloatRGB){color->redComponent() * ALBEDO_FACTOR,
-                    color->greenComponent() * ALBEDO_FACTOR,
-                    color->blueComponent() * ALBEDO_FACTOR};
+    return FloatRGB{0.0f, 0.0f,
+                    0.0f};  // a nil colour answered zeros (release builds)
+  return FloatRGB{color->redComponent() * ALBEDO_FACTOR,
+                  color->greenComponent() * ALBEDO_FACTOR,
+                  color->blueComponent() * ALBEDO_FACTOR};
 }
 
 }  // namespace
@@ -907,7 +907,7 @@ static float SampleNoise3D(OOPlanetTextureGeneratorInfo* info, Vector p) {
   //	Calculate noise contributions from each of the eight corners.
 #if !LUT_DOT
 #define DOT3(idx, x_, y_, z_) \
-  dot_product(kGradients[(idx) % kGradientCount], (Vector){(x_), (y_), (z_)})
+  dot_product(kGradients[(idx) % kGradientCount], Vector{(x_), (y_), (z_)})
 #else
 #define DOT3(idx, x_, y_, z_) \
   TDot3(kGradients[(idx) % kGradientCount], (x_), (y_), (z_))

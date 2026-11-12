@@ -26,8 +26,6 @@ SOFTWARE.
 
 #include "OOALSound.h"
 
-#include <cxxabi.h>
-
 #include <cstdlib>
 #include <string_view>
 #include <typeinfo>
@@ -39,6 +37,7 @@ SOFTWARE.
 #include "OOLogging.h"
 #include "OOMaths.h"
 #include "OOOpenALController.h"
+#include "oofnd/CxxAbi.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/String.hpp"
 

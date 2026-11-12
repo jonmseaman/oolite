@@ -24,8 +24,6 @@ MA 02110-1301, USA.
 
 #include "OOScript.h"
 
-#include <cxxabi.h>
-
 #include <cstdlib>
 #include <typeinfo>
 
@@ -37,6 +35,7 @@ MA 02110-1301, USA.
 #include "OOPListScript.h"
 #include "ResourceManager.h"
 #include "Universe.h"
+#include "oofnd/CxxAbi.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Ref.hpp"  // oo::autorelease
 #include "oofnd/String.hpp"

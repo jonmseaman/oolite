@@ -36,11 +36,10 @@ SOFTWARE.
 
 #if OO_OXP_VERIFIER_ENABLED
 
-#include <cxxabi.h>
-
 #include <cstdlib>
 #include <typeinfo>
 
+#include "oofnd/CxxAbi.h"
 #include "oofnd/Log.hpp"
 
 // Adding a stage to a set of stages: identity, no duplicates, null ignored.

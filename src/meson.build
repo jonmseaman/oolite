@@ -59,6 +59,7 @@ post_build_args = [
     version_vars.get('buildtime'),
     stamp_file,
     build_docs ? 'yes' : 'no',
+    get_option('vcpkg_bin_dir'),
 ]
 post_build_script = files('../ShellScripts/common/post_build.sh')
 generate_manifest_script = files('../ShellScripts/common/generate_manifest_fn.sh')

@@ -366,8 +366,8 @@ static JSValue GlobalRandomName(OOJS_NATIVE_ARGS) {
           so randomName() isn't repeatable.
   */
   RNG_Seed savedSeed = currentRandomSeed();
-  setRandomSeed((RNG_Seed){(int32_t)Ranrot(), (int32_t)Ranrot(),
-                           (int32_t)Ranrot(), (int32_t)Ranrot()});
+  setRandomSeed(RNG_Seed{(int32_t)Ranrot(), (int32_t)Ranrot(),
+                         (int32_t)Ranrot(), (int32_t)Ranrot()});
 
   std::optional<std::string> result = cxx_OOExpand("%N");
 

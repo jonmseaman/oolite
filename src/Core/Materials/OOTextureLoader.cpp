@@ -29,7 +29,6 @@ SOFTWARE.
 // MinGW's or the UCRT's printf/strtod family is used.
 #include "OOTextureLoader.h"
 
-#include <cxxabi.h>
 #include <stdlib.h>
 
 #include <cstdlib>
@@ -48,6 +47,7 @@ SOFTWARE.
 #include "OOTextureScaling.h"
 #include "ResourceManager.h"
 #include "Universe.h"
+#include "oofnd/CxxAbi.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"

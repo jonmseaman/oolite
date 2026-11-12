@@ -156,12 +156,12 @@ void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function) {
     oo::log::indent();
   }
 
-  *frame = (OOJSProfileStackFrame){.back = sProfileStack,
-                                   .key = function,
-                                   .function = function,
-                                   .startTime = OOGetHighResTime(),
-                                   .subTime = 0,
-                                   .total = &sProfilerTotalNativeTime};
+  *frame = OOJSProfileStackFrame{.back = sProfileStack,
+                                 .key = function,
+                                 .function = function,
+                                 .startTime = OOGetHighResTime(),
+                                 .subTime = 0,
+                                 .total = &sProfilerTotalNativeTime};
   sProfileStack = frame;
 }
 

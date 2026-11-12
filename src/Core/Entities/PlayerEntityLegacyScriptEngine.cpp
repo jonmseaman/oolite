@@ -2866,7 +2866,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     if (ship != nullptr) ship->setPosition(vectorToHPVector(model_p0));
     if (UNIVERSE != nullptr)
       UNIVERSE->setMainLightPosition(
-          (Vector){DEMO_LIGHT_POSITION});  // set light origin
+          Vector{DEMO_LIGHT_POSITION});  // set light origin
     if (ship != nullptr) ship->setScanClass(CLASS_NO_DRAW);
     if (ship != nullptr) ship->switchAITo("nullAI.plist");
     if (UNIVERSE != nullptr)
@@ -2909,7 +2909,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
       doppelganger->setPosition(vectorToHPVector(model_p0));
     if (UNIVERSE != nullptr)
       UNIVERSE->setMainLightPosition(
-          (Vector){DEMO_LIGHT_POSITION});  // set light origin
+          Vector{DEMO_LIGHT_POSITION});  // set light origin
     if (doppelganger != nullptr) doppelganger->setScanClass(CLASS_NO_DRAW);
     if (doppelganger != nullptr) doppelganger->switchAITo("nullAI.plist");
     if (UNIVERSE != nullptr) UNIVERSE->addEntity(doppelganger);
@@ -2935,11 +2935,11 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     // different positions.
     if (info_system_id & 8) {
       _sysInfoLight = (info_system_id & 2)
-                          ? (Vector){-10000.0, 4000.0, -10000.0}
-                          : (Vector){-12000.0, -5000.0, -10000.0};
+                          ? Vector{-10000.0, 4000.0, -10000.0}
+                          : Vector{-12000.0, -5000.0, -10000.0};
     } else {
-      _sysInfoLight = (info_system_id & 2) ? (Vector){6000.0, -5000.0, -10000.0}
-                                           : (Vector){6000.0, 4000.0, -10000.0};
+      _sysInfoLight = (info_system_id & 2) ? Vector{6000.0, -5000.0, -10000.0}
+                                           : Vector{6000.0, 4000.0, -10000.0};
     }
 
     if (UNIVERSE != nullptr)

@@ -1704,7 +1704,7 @@ void Universe::setUpWitchspaceBetweenSystem(OOSystemID s1, OOSystemID s2) {
 #ifdef OO_DUMP_PLANETINFO
   OO_LOG("planetinfo.record", "planet zpos = {:f}", planet_zpos);
 #endif
-  if (a_planet != nullptr) a_planet->setPosition((HPVector){0, 0, planet_zpos});
+  if (a_planet != nullptr) a_planet->setPosition(HPVector{0, 0, planet_zpos});
   if (a_planet != nullptr) a_planet->setEnergy(1000000.0);
 
   if (allPlanets.size() >
@@ -6981,7 +6981,7 @@ void Universe::setViewDirection(OOViewID vd) {
 
     case VIEW_GUI_DISPLAY:
       setDisplayText(true);
-      setMainLightPosition((Vector){DEMO_LIGHT_POSITION});
+      setMainLightPosition(Vector{DEMO_LIGHT_POSITION});
       guiSelected = true;
       break;
 

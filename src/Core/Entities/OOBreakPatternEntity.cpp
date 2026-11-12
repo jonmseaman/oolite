@@ -51,8 +51,8 @@ void OOBreakPatternEntity::initWithPolygonSides(NSUInteger sides,
       float s = sin(angle) * xAspect;
       float c = cos(angle) * yAspect;
 
-      _vertexPosition[vi++] = (Vector){s * 50, c * 50, -40};
-      _vertexPosition[vi++] = (Vector){s * 40, c * 40, 0};
+      _vertexPosition[vi++] = Vector{s * 50, c * 50, -40};
+      _vertexPosition[vi++] = Vector{s * 40, c * 40, 0};
 
       angle += deltaAngle;
     }
@@ -60,8 +60,9 @@ void OOBreakPatternEntity::initWithPolygonSides(NSUInteger sides,
     _vertexPosition[vi++] = _vertexPosition[0];
     _vertexPosition[vi++] = _vertexPosition[1];
 
-    setInnerColorComponents((GLfloat[]){1.0f, 0.0f, 0.0f, 0.5f},
-                            (GLfloat[]){0.0f, 0.0f, 1.0f, 0.25f});
+    GLfloat innerColor1[4] = {1.0f, 0.0f, 0.0f, 0.5f};
+    GLfloat innerColor2[4] = {0.0f, 0.0f, 1.0f, 0.25f};
+    setInnerColorComponents(innerColor1, innerColor2);
 
     setStatus(STATUS_EFFECT);
     setScanClass(CLASS_NO_DRAW);
