@@ -140,6 +140,9 @@ endif
 # tools/icosmesh generates src/Core/OOPlanetData.{cpp,h}. Plain C++, so on every platform.
 subdir('tools/icosmesh')
 
+# tools/plist2json5 converts property lists to JSON5 and checks the result. Plain C++, every platform.
+subdir('tools/plist2json5')
+
 # Source checks (meson test --suite headers). Windows-only like the unit tests above.
 if not get_option('deployment_release') and host_machine.system() == 'windows'
     # Debug-monitor code is guarded by OO_DEBUG_MONITOR_ENABLED, not NDEBUG: the deployment flavour
