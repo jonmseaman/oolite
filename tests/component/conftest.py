@@ -90,12 +90,15 @@ class World:
         self.console = None
         self.seed = None
         self.spawned = {}
+        # Preferences for this scenario's game, passed on its command line ("-key value", the
+        # argument domain: read before the saved preferences, never written back).
+        self.preferences = {}
 
     def start(self, seed, load_save=None):
         self.seed = seed
         self.console = DebugConsole(
             self.app_dir, self.port, seed=seed, output_dir=self.output_dir,
-            load_save=load_save
+            load_save=load_save, preferences=self.preferences
         )
         self.console.start()
         return self.console

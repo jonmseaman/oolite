@@ -57,7 +57,7 @@ class DebugConsole:
     """
 
     def __init__(self, app_dir, port, seed=None, output_dir=None, host="127.0.0.1",
-                 load_save=None):
+                 load_save=None, preferences=None):
         self.app_dir = os.path.abspath(app_dir)
         self.port = int(port)
         self.seed = seed
@@ -66,6 +66,7 @@ class DebugConsole:
         # and never acquire a target. -load starts a real game (src/SDL/main.m:167). There is no
         # JS route out of the intro screen - that is keyboard work and belongs to the GUI tier.
         self.load_save = load_save
+        self.preferences = dict(preferences or {})
         self.output_dir = os.path.abspath(output_dir) if output_dir else None
         self.host = host
         self._server = None
@@ -132,6 +133,15 @@ class DebugConsole:
         # sanitized run passes --nosound
         # (opening the OpenAL device trips a third-party ASan report that is fatal).
         argv += os.environ.get("OO_GAME_EXTRA_ARGS", "").split()
+        # OO_WINDOW ("WxH", from tests/run.sh --window): the window size as the argument domain's
+        # window_width/window_height, which the game reads before the saved preferences and never
+        # writes back (oofnd/Defaults.hpp).
+        window = os.environ.get("OO_WINDOW", "").lower().split("x")
+        if len(window) == 2 and all(part.strip().isdigit() for part in window):
+            argv += ["-window_width", window[0].strip(), "-window_height", window[1].strip()]
+        # A scenario's own preferences ("Given the preference ..."), the same way.
+        for key, value in self.preferences.items():
+            argv += [f"-{key}", str(value)]
         if self.load_save:
             argv += ["-load", self.load_save]
         # The game's stderr is kept in the output dir when there is one: a sanitized

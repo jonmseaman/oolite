@@ -40,6 +40,7 @@ Three things here are not obvious:
 import argparse
 import os
 import plistlib
+import re
 import select
 import shutil
 import socket
@@ -475,8 +476,30 @@ def _is_reparse_point(path):
         return False
 
 
+def parse_window(window):
+    """"WxH" (from --window or $OO_WINDOW) as (width, height), or None when unset."""
+    if not window:
+        return None
+    match = re.fullmatch(r"\s*(\d+)\s*[xX]\s*(\d+)\s*", window)
+    if not match:
+        raise ValueError(f"--window takes WxH, e.g. 3840x1080, not {window!r}")
+    return int(match.group(1)), int(match.group(2))
+
+
+PNG_SIGNATURE = bytes([0x89]) + b"PNG" + bytes([0x0D, 0x0A, 0x1A, 0x0A])
+
+
+def png_size(path):
+    """A PNG's width and height from its IHDR chunk."""
+    with open(path, "rb") as f:
+        header = f.read(24)
+    if header[:8] != PNG_SIGNATURE or header[12:16] != b"IHDR":
+        raise ValueError(f"{path} is not a PNG")
+    return struct.unpack(">II", header[16:24])
+
+
 def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, ready_timeout,
-             app_dir=None, keep_staged=False):
+             app_dir=None, keep_staged=False, window=None):
     """Launch one game and capture one snapshot. Safe to run N times concurrently.
 
     ``app_dir`` is the built oolite.app to run. The game is NOT launched from it: a private copy
@@ -540,6 +563,14 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
         # other callers invoke directly with whatever their own MSYS shell handed them.
         # native_path is a no-op on an already-native path, so converting twice is harmless.
         cmd += ["-load", native_path(load_save)]
+    # --window / $OO_WINDOW: the window size, as the argument domain's window_width and
+    # window_height (oofnd/Defaults.hpp reads "-key value" before the saved preferences and
+    # never writes it back). $OO_GAME_EXTRA_ARGS: further arguments, split on whitespace, as
+    # tests/component/console.py takes them.
+    window_size = parse_window(window)
+    if window_size:
+        cmd += ["-window_width", str(window_size[0]), "-window_height", str(window_size[1])]
+    cmd += os.environ.get("OO_GAME_EXTRA_ARGS", "").split()
 
     print(f"[*] Executing: {' '.join(cmd)}")
     proc = subprocess.Popen(
@@ -638,6 +669,15 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
         file_size_kb = os.path.getsize(snap_path) // 1024
         print(f"[*] Captured {snap_path} ({file_size_kb} KB)")
 
+        if window_size:
+            width, height = png_size(snap_path)
+            if (width, height) != window_size:
+                print(
+                    f"[!] Failure: snapshot is {width}x{height}, the window asked for was "
+                    f"{window_size[0]}x{window_size[1]}."
+                )
+                return False
+
         if file_size_kb < MIN_FILE_SIZE_KB:
             print(
                 f"[!] Failure: Snapshot is too small ({file_size_kb} KB). Likely a black frame."
@@ -724,6 +764,11 @@ def parse_args(argv=None):
         help="Seconds to wait for the game to start answering the console (default: 120)",
     )
     parser.add_argument(
+        "--window",
+        default=os.environ.get("OO_WINDOW"),
+        help="window size WxH (default $OO_WINDOW); the snapshot must come back that size",
+    )
+    parser.add_argument(
         "--keep-staged",
         action="store_true",
         help="keep this run's private staged oolite.app instead of removing it",
@@ -798,6 +843,7 @@ if __name__ == "__main__":
             args.ready_timeout,
             app_dir=target_dir,
             keep_staged=args.keep_staged,
+            window=args.window,
         )
 
     except Exception as e:

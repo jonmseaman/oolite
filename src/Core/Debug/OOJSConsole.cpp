@@ -111,6 +111,7 @@ static JSValue ConsoleDumpHeap(OOJS_NATIVE_ARGS);
 static JSValue ConsoleProfile(OOJS_NATIVE_ARGS);
 static JSValue ConsoleGetProfile(OOJS_NATIVE_ARGS);
 static JSValue ConsoleTrace(OOJS_NATIVE_ARGS);
+static JSValue ConsoleDisplayProjection(OOJS_NATIVE_ARGS);
 
 namespace {
 bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
@@ -269,6 +270,7 @@ static const JSCFunctionListEntry sConsoleMethods[] = {
     JS_CFUNC_DEF("__setUpCallObjC", 1, ConsoleSetUpCallObjC),
 #endif
     JS_CFUNC_DEF("isExecutableJavaScript", 2, ConsoleIsExecutableJavaScript),
+    JS_CFUNC_DEF("__displayProjection", 0, ConsoleDisplayProjection),
     JS_CFUNC_DEF("displayMessagesInClass", 1, ConsoleDisplayMessagesInClass),
     JS_CFUNC_DEF("setDisplayMessagesInClass", 2,
                  ConsoleSetDisplayMessagesInClass),
@@ -1207,6 +1209,26 @@ static JSValue ConsoleWriteLogMarker(OOJS_NATIVE_ARGS) {
 
   OOLogInsertMarker();
   OOJS_RETURN_VOID;
+
+  OOJS_NATIVE_EXIT
+}
+
+static OODisplayProjectionProvider sDisplayProjectionProvider = nullptr;
+
+void OOJSConsoleSetDisplayProjectionProvider(
+    OODisplayProjectionProvider provider) {
+  sDisplayProjectionProvider = provider;
+}
+
+// function __displayProjection() : Object (undefined when the game installed no
+// provider). Spec 008's projection read for the component scenarios.
+static JSValue ConsoleDisplayProjection(OOJS_NATIVE_ARGS) {
+  OOJS_NATIVE_ENTER(context)
+
+  if (sDisplayProjectionProvider == nullptr) OOJS_RETURN_VOID;
+  const std::string json = sDisplayProjectionProvider();
+  return JS_ParseJSON(context, json.c_str(), json.size(),
+                      "<displayProjection>");
 
   OOJS_NATIVE_EXIT
 }

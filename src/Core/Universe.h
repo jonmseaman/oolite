@@ -472,6 +472,7 @@ class Universe : public oo::Object {
   bool doProcedurallyTexturedPlanets = false;
 
   GLfloat frustum[6][4] = {};
+  double _lastSceneFrustum[4] = {};
 
   std::map<std::string, std::shared_ptr<OOScript>, std::less<>>
       conditionScripts;
@@ -695,6 +696,9 @@ class Universe : public oo::Object {
   int getFramesDoneThisUpdate();
   void resetFramesDoneThisUpdate();
   OOMatrix getViewMatrix();
+  // The space view's frustum extents at distance 1 (left, right, bottom, top)
+  // from the last frame's far pass, for the debug console's projection read.
+  const double* lastSceneFrustum() const { return _lastSceneFrustum; }
 
   // Messages and the watermark, entity look-up, the linked lists,
   // adding and removing entities, demo ships.
