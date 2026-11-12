@@ -1492,4 +1492,46 @@ OO_TEST(shipLibraryCountsEveryPress) {
   }
 }
 
+// The ship library's demo ship moves between stage changes: it leaves at its
+// velocity while flying out (the entity update never moves a
+// STATUS_COCKPIT_DISPLAY ship, so nothing else does), comes in from
+// demo_start_z towards its destination while flying in, and stays put while
+// shown.
+OO_TEST(shipLibraryDemoShipMovesBetweenStages) {
+  {
+    oo::AutoreleaseScope scope;
+    Universe* u = NewUniverse();
+    ShipEntity* ship = new ShipEntity();  // never released
+    ship->setStatus(STATUS_COCKPIT_DISPLAY);
+    u->demo_ship = ship;
+
+    // Flying out: 0.1 s at 1000 per second moves it 100 further away.
+    ship->setPosition(make_HPvector(0, 0, 50));
+    ship->setVelocity(make_vector(0, 0, 1000));
+    u->demo_stage = DEMO_FLY_OUT;
+    u->animateDemoShip(0.1);
+    OO_CHECK(ship->position.z > 149.9 && ship->position.z < 150.1);
+
+    // Shown: it stays where it is.
+    u->demo_stage = DEMO_SHOW_THING;
+    u->animateDemoShip(0.1);
+    OO_CHECK(ship->position.z > 149.9 && ship->position.z < 150.1);
+
+    // Flying in: halfway through the 0.4 s stage it is halfway from 600 to 10.
+    ship->setVelocity(kZeroVector);
+    ship->setDestination(make_HPvector(0, 0, 10));
+    u->demo_start_z = 600;
+    u->demo_start_time = 20.0;
+    u->universal_time = 20.2;
+    u->demo_stage = DEMO_FLY_IN;
+    u->animateDemoShip(0.016);
+    OO_CHECK(ship->position.z > 304.9 && ship->position.z < 305.1);
+
+    // No demo ship: nothing to move.
+    u->demo_ship = nullptr;
+    u->demo_stage = DEMO_FLY_OUT;
+    u->animateDemoShip(0.1);
+  }
+}
+
 OO_TEST_MAIN()
