@@ -284,6 +284,29 @@ Universe* Universe::newUniverse(::MyOpenGLView* inGameView) {
 /*	-initWithGameView: after [super init]: newUniverse() made the universe
    and checked that it is the only one. The body is the method's.
 */
+// Spec 008 FR-016: the HUD and the GUI are drawn in the view's HUD area (the
+// window, or its centred 16:9 part on a wider window); the space view uses the
+// whole window. OpenGL's viewport origin is the bottom left.
+static void SetViewportToWindow(MyOpenGLView* view) {
+  if (view == nullptr) return;
+  const NSSize size = view->backingViewSize();
+  OOGL(glViewport(0, 0, static_cast<GLsizei>(size.width),
+                  static_cast<GLsizei>(size.height)));
+}
+
+// Sets the viewport to the HUD area and returns its aspect (height / width).
+static float SetViewportToHudArea(MyOpenGLView* view) {
+  if (view == nullptr) return 1.0f;
+  const NSSize size = view->backingViewSize();
+  const NSRect area = view->hudArea();
+  OOGL(glViewport(
+      static_cast<GLint>(area.origin.x),
+      static_cast<GLint>(size.height - area.origin.y - area.size.height),
+      static_cast<GLsizei>(area.size.width),
+      static_cast<GLsizei>(area.size.height)));
+  return static_cast<float>(area.size.height / area.size.width);
+}
+
 #ifdef OO_DEBUG_MONITOR_ENABLED
 // console.__displayProjection() (spec 008, contracts/settings.md "Debug read").
 static std::string DisplayProjectionJSON() {
@@ -5315,6 +5338,9 @@ void Universe::drawUniverse() {
       OOSetOpenGLState(OPENGL_STATE_OPAQUE);  // FIXME: should be redundant.
 
       OOGL(glClear(GL_COLOR_BUFFER_BIT));
+      // A GUI screen, its background and its demo ships, all sit in the HUD
+      // area; the clear above leaves the bars beside it black.
+      if (displayGUI) aspect = SetViewportToHudArea(gameView);
 
       if (!displayGUI) {
         OOGL(glClearColor(skyClearColor[0], skyClearColor[1], skyClearColor[2],
@@ -5645,6 +5671,16 @@ void Universe::drawUniverse() {
       cxx_OOCheckOpenGLErrors("Universe after drawing entities");
       OO_LOG("universe.profile.draw", "{}", "Begin HUD");
 
+      // The HUD and the GUI are laid out in the HUD area (spec 008 FR-016);
+      // HeadUpDisplay switches back to the whole window for the markers it
+      // places over objects in space.
+      {
+        const float hudAspect = SetViewportToHudArea(gameView);
+        OOGLResetProjection();
+        OOGLFrustum(-0.5, 0.5, -hudAspect * 0.5, hudAspect * 0.5, 1.0,
+                    MAX_CLEAR_DEPTH);
+      }
+
       GLfloat lineWidth =
           (gameView != nullptr ? gameView->backingViewSize() : NSSize{}).width /
           1024.0;  // restore line size
@@ -5711,6 +5747,7 @@ void Universe::drawUniverse() {
       drawWatermarkString("Development version " OO_VERSION_FULL);
 #endif
 
+      SetViewportToWindow(gameView);
       OO_LOG("universe.profile.drawHUD", "{}", "End HUD drawing");
       cxx_OOCheckOpenGLErrors("Universe after drawing HUD");
 
@@ -11652,6 +11689,10 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
   OOGL(glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &previousVAO));
   GLint previousActiveTexture;
   OOGL(glGetIntegerv(GL_ACTIVE_TEXTURE, &previousActiveTexture));
+  // The copy covers the whole window, whatever the HUD left the viewport at.
+  GLint previousViewport[4];
+  OOGL(glGetIntegerv(GL_VIEWPORT, previousViewport));
+  SetViewportToWindow(gameView);
 
   OOGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
   // fixes transparency issue for some reason
@@ -11745,6 +11786,8 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
   OOGL(glBindTexture(GL_TEXTURE_2D, previousTextureID));
   OOGL(glUseProgram(previousProgramID));
   OOGL(glBindVertexArray(previousVAO));
+  OOGL(glViewport(previousViewport[0], previousViewport[1], previousViewport[2],
+                  previousViewport[3]));
   OOGL(glEnable(GL_BLEND));
 }
 

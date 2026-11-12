@@ -98,6 +98,39 @@ struct OOHUDWidget {
 
 namespace {
 
+// Spec 008 FR-016: the HUD is laid out in the HUD area, but a marker over an
+// object in space (target reticle, waypoint) is placed through the space
+// view's projection, which covers the whole window. While one is alive, the
+// viewport and projection are the whole window's, as the HUD had them before
+// the HUD area existed; both are put back afterwards.
+class MarkersInWholeWindow {
+ public:
+  MarkersInWholeWindow() {
+    OOGL(glGetIntegerv(GL_VIEWPORT, _viewport));
+    MyOpenGLView* view =
+        UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr;
+    const NSSize size = view != nullptr ? view->backingViewSize() : NSSize{};
+    if (size.width <= 0 || size.height <= 0) return;
+    OOGL(glViewport(0, 0, static_cast<GLsizei>(size.width),
+                    static_cast<GLsizei>(size.height)));
+    const double aspect = size.height / size.width;
+    OOGLPushProjection();
+    OOGLResetProjection();
+    OOGLFrustum(-0.5, 0.5, -aspect * 0.5, aspect * 0.5, 1.0, MAX_CLEAR_DEPTH);
+    _pushed = true;
+  }
+  ~MarkersInWholeWindow() {
+    if (_pushed) OOGLPopProjection();
+    OOGL(glViewport(_viewport[0], _viewport[1], _viewport[2], _viewport[3]));
+  }
+  MarkersInWholeWindow(const MarkersInWholeWindow&) = delete;
+  MarkersInWholeWindow& operator=(const MarkersInWholeWindow&) = delete;
+
+ private:
+  GLint _viewport[4] = {};
+  bool _pushed = false;
+};
+
 const OOHUDWidget* sCurrentDrawItem;
 
 /*	The current widget's cached geometry. An MFD entry that is not a
@@ -3803,6 +3836,7 @@ void hudDrawReticleOnTarget(
 
   if (HeadUpDisplayShipIsCloaked(target_ship)) return;
 
+  const MarkersInWholeWindow wholeWindow;
   Vector p1;
 
   // by definition close enough that single precision is fine
@@ -4032,6 +4066,7 @@ void hudDrawWaypoint(Entity* waypoint, PlayerEntity* player1, GLfloat /*z1*/,
     return;
   }
 
+  const MarkersInWholeWindow wholeWindow;
   Vector p1 = HPVectorToVector(
       HPvector_subtract(HeadUpDisplayEntityPosition(waypoint),
                         HeadUpDisplayPlayerViewpointPosition(player1)));

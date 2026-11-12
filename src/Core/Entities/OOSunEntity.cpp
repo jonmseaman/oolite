@@ -596,7 +596,7 @@ void OOSunEntity::drawDirectVisionSunGlare() {
     GLfloat aspectRatio =
         ((gameView != nullptr ? gameView->getViewSize() : NSSize{}).width /
          (gameView != nullptr ? gameView->getViewSize() : NSSize{}).height);
-    GLfloat z = (gameView != nullptr ? gameView->getDisplay_z() : 0.0f) /
+    GLfloat z = (gameView != nullptr ? gameView->getWindowDisplay_z() : 0.0f) /
                 (aspectRatio > 4.0f / 3.0f ? aspectRatio : 1.0f / aspectRatio);
     GLfloat atmosphericReductionFactor =
         1.0f - (PLAYER != nullptr ? PLAYER->insideAtmosphereFraction() : 0.0f);
@@ -648,7 +648,7 @@ void OOSunEntity::drawStarGlare() {
     GLfloat aspectRatio =
         ((gameView != nullptr ? gameView->getViewSize() : NSSize{}).width /
          (gameView != nullptr ? gameView->getViewSize() : NSSize{}).height);
-    GLfloat z = (gameView != nullptr ? gameView->getDisplay_z() : 0.0f) /
+    GLfloat z = (gameView != nullptr ? gameView->getWindowDisplay_z() : 0.0f) /
                 (aspectRatio > 4.0f / 3.0f ? aspectRatio : 1.0f / aspectRatio);
     OOGL(glColor4fv(glareColor));
 

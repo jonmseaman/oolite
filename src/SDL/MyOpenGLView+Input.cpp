@@ -341,12 +341,18 @@ void MyOpenGLView::pollControls() {
             if (pixelDensity <= 0.0f) pixelDensity = 1.0f;
             double mx = mmove_event->x * pixelDensity - w / 2.0;
             double my = mmove_event->y * pixelDensity - h / 2.0;
+            // The GUI is laid out in the HUD area (spec 008 FR-016), centred
+            // in the window, so positions are scaled by its size.
+            const double hudWidth =
+                _hudArea.size.width > 0 ? _hudArea.size.width : w;
+            const double hudHeight =
+                _hudArea.size.height > 0 ? _hudArea.size.height : h;
             if (display_z > 640.0) {
-              mx /= w * MAIN_GUI_PIXEL_WIDTH / display_z;
-              my /= h;
+              mx /= hudWidth * MAIN_GUI_PIXEL_WIDTH / display_z;
+              my /= hudHeight;
             } else {
-              mx /= MAIN_GUI_PIXEL_WIDTH * w / 640.0;
-              my /= MAIN_GUI_PIXEL_HEIGHT * w / 640.0;
+              mx /= MAIN_GUI_PIXEL_WIDTH * hudWidth / 640.0;
+              my /= MAIN_GUI_PIXEL_HEIGHT * hudWidth / 640.0;
             }
 
             setVirtualJoystick(mx, my);
