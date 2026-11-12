@@ -31,6 +31,7 @@ core_tests = {
     'test_OOFullScreenController': ['Core/OOFullScreenController.cpp'],
     'test_OOSoundReferencePoint': ['Core/OOBasicSoundReferencePoint.cpp'],
     'test_OOColor': ['Core/OOColor.cpp'],
+    'test_OODisplayGeometry': ['Core/OODisplayGeometry.cpp'],
     'test_OOJoystickProfile': ['Core/OOJoystickProfile.cpp'],
     'test_OOSDLJoystickManager': ['SDL/OOSDLJoystickManager.cpp', 'Core/OOJoystickManager.cpp', 'Core/OOJoystickProfile.cpp'],
     'test_OOJoystickDecoding': ['Core/OOJoystickProfile.cpp'],	# upstream #742's layout and dead zone
