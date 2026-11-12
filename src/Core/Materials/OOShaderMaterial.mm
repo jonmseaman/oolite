@@ -200,7 +200,7 @@ static NSString* MacrosToString(NSDictionary* macros);
 			if (shaderProgram == nil)
 			{
 
-				BOOL canFallBack = !oo::PListView(modifiedMacros).get<BOOL>(@"OO_REDUCED_COMPLEXITY");
+				BOOL canFallBack = !oo::PListView(modifiedMacros).get<bool>(@"OO_REDUCED_COMPLEXITY");
 #ifdef OO_DEBUG_MONITOR_ENABLED
 				if (gDebugFlags & DEBUG_NO_SHADER_FALLBACK)  canFallBack = NO;
 #endif
@@ -267,7 +267,7 @@ static NSString* MacrosToString(NSDictionary* macros);
         }
 
         if (uniforms.find("uGammaCorrect") == uniforms.end()) {
-            BOOL gammaCorrect = oo::PListView(configuration).get<BOOL>(@"gamma_correct", ![[NSUserDefaults standardUserDefaults] boolForKey:@"no-gamma-correct"]);
+            BOOL gammaCorrect = oo::PListView(configuration).get<bool>(@"gamma_correct", ![[NSUserDefaults standardUserDefaults] boolForKey:@"no-gamma-correct"]);
             [self setUniform:"uGammaCorrect" floatValue:(float)gammaCorrect];
         }
     }

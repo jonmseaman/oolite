@@ -1013,7 +1013,7 @@ static NSError* Verify_Dictionary(OOPListSchemaVerifier* verifier, const oo::PLi
     // Get schema.
     schema = params.get<oo::PList::Dict>("schema");
     valueType = params.find("valueType");
-    allowOthers = params.get<BOOL>("allowOthers", YES);
+    allowOthers = params.get<bool>("allowOthers", YES);
     requiredKeyList = params.get<oo::PList::Array>("requiredKeys");
 
     // If these conditions are met, all members must pass:

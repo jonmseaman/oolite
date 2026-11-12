@@ -673,7 +673,7 @@ void OpenLogFile()
 {
     //	Open log file in appropriate application / provide feedback.
 
-    if (oo::PListView([NSUserDefaults standardUserDefaults]).get<BOOL>(@"oxp-verifier-open-log", YES)) {
+    if (oo::PListView([NSUserDefaults standardUserDefaults]).get<bool>(@"oxp-verifier-open-log", YES)) {
 #if OOLITE_MAC_COCOA_UI
         [[NSWorkspace sharedWorkspace] openFile:OOLogHandlerGetLogPath()];
 #elif OOLITE_WINDOWS

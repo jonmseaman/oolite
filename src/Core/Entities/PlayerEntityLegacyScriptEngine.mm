@@ -1798,7 +1798,7 @@ static int shipsFound;
                 alignment = GUI_ALIGN_RIGHT;
             }
             id colorDesc = [choiceOpts objectForKey:@"color"];
-            if (oo::PListView(choiceOpts).get<BOOL>(@"unselectable")) {
+            if (oo::PListView(choiceOpts).get<bool>(@"unselectable")) {
                 selectable = NO;
             }
             if (colorDesc != nil) {

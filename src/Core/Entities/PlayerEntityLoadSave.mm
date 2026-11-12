@@ -342,7 +342,7 @@ static uint16_t PersonalityForCommanderDict(NSDictionary* dict);
             break;
         default:
             cdr = [cdrDetailArray objectAtIndex:idx];
-            if (oo::PListView(cdr).get<BOOL>(@"isSavedGame"))
+            if (oo::PListView(cdr).get<bool>(@"isSavedGame"))
                 return oo::PListView(cdr).get<NSString*>(@"saved_game_path");
             else {
                 if ([gameView isCommandModifierKeyDown] || [gameView isDown:gvMouseDoubleClick]) {
@@ -377,7 +377,7 @@ static uint16_t PersonalityForCommanderDict(NSDictionary* dict);
         int idx = (guiSelectedRow - STARTROW) + (currentPage * NUMROWS);
         if (guiSelectedRow != MOREROW && guiSelectedRow != BACKROW) {
             [self showCommanderShip:idx];
-            if (oo::PListView((NSDictionary*)[cdrDetailArray objectAtIndex:idx]).get<BOOL>(@"isSavedGame")) // don't show things that aren't saved games
+            if (oo::PListView((NSDictionary*)[cdrDetailArray objectAtIndex:idx]).get<bool>(@"isSavedGame")) // don't show things that aren't saved games
                 commanderNameString = oo::StdString(oo::PListView(oo::PListView(cdrDetailArray).at<NSDictionary*>(idx)).get<NSString*>(@"player_save_name", oo::PListView(oo::PListView(cdrDetailArray).at<NSDictionary*>(idx)).get<NSString*>(@"player_name")));
             else
                 commanderNameString = oo::StdString([gameView typedString]);
@@ -420,7 +420,7 @@ static uint16_t PersonalityForCommanderDict(NSDictionary* dict);
             int idx = (guiSelectedRow - STARTROW) + (currentPage * NUMROWS);
             NSDictionary* cdr = [cdrDetailArray objectAtIndex:idx];
 
-            if (!oo::PListView(cdr).get<BOOL>(@"isSavedGame")) // don't open saved games
+            if (!oo::PListView(cdr).get<bool>(@"isSavedGame")) // don't open saved games
             {
                 // change directory to the selected path
                 NSString* newDir = oo::PListView(cdr).get<NSString*>(@"saved_game_path");
@@ -518,7 +518,7 @@ static uint16_t PersonalityForCommanderDict(NSDictionary* dict);
         NSString* scenarioRestrict = oo::PListView(fileDic).get<NSString*>(@"scenario_restriction", nil);
         if (scenarioRestrict == nil) {
             // older save game - use the 'strict' key instead
-            BOOL strict = oo::PListView(fileDic).get<BOOL>(@"strict", NO);
+            BOOL strict = oo::PListView(fileDic).get<bool>(@"strict", NO);
             if (strict) {
                 scenarioRestrict = SCENARIO_OXP_DEFINITION_NONE;
             } else {
@@ -944,7 +944,7 @@ NSComparisonResult sortCommanders(id cdr1, id cdr2, void* context)
 
     for (i = firstIndex; i < lastIndex; i++) {
         NSDictionary* cdr = [cdrDetailArray objectAtIndex:i];
-        if (oo::PListView(cdr).get<BOOL>(@"isSavedGame")) {
+        if (oo::PListView(cdr).get<bool>(@"isSavedGame")) {
             NSString* ratingDesc = OODisplayRatingStringFromKillCount(oo::PListView(cdr).get<unsigned int>(@"ship_kills"));
             [gui setArray:[NSArray arrayWithObjects:
                                   [NSString stringWithFormat:@" %@ ", oo::PListView(cdr).get<NSString*>(@"player_save_name", oo::PListView(cdr).get<NSString*>(@"player_name"))],
@@ -958,7 +958,7 @@ NSComparisonResult sortCommanders(id cdr1, id cdr2, void* context)
             [gui setKey:GUI_KEY_OK forRow:row];
             row++;
         }
-        if (oo::PListView(cdr).get<BOOL>(@"isParentFolder")) {
+        if (oo::PListView(cdr).get<bool>(@"isParentFolder")) {
             [gui setArray:[NSArray arrayWithObjects:
                                   [NSString stringWithFormat:@" (..) %@ ", [oo::PListView(cdr).get<NSString*>(@"saved_game_path") lastPathComponent]],
                               @"",
@@ -968,7 +968,7 @@ NSComparisonResult sortCommanders(id cdr1, id cdr2, void* context)
             [gui setKey:GUI_KEY_OK forRow:row];
             row++;
         }
-        if (oo::PListView(cdr).get<BOOL>(@"isFolder")) {
+        if (oo::PListView(cdr).get<bool>(@"isFolder")) {
             [gui setArray:[NSArray arrayWithObjects:
                                   [NSString stringWithFormat:@" >> %@ ", [oo::PListView(cdr).get<NSString*>(@"saved_game_path") lastPathComponent]],
                               @"",
@@ -1005,14 +1005,14 @@ NSComparisonResult sortCommanders(id cdr1, id cdr2, void* context)
     [gui setText:@"" forRow:CDRDESCROW + 1 align:GUI_ALIGN_LEFT];
     [gui setText:@"" forRow:CDRDESCROW + 2 align:GUI_ALIGN_LEFT];
 
-    if (oo::PListView(cdr).get<BOOL>(@"isFolder")) {
+    if (oo::PListView(cdr).get<bool>(@"isFolder")) {
         NSString* folderDesc = [NSString stringWithFormat:DESC(@"loadsavescreen-hold-@-and-press-return-to-open-folder-@"), @COMMAND_MODIFIER_KEY, [oo::PListView(cdr).get<NSString*>(@"saved_game_path") lastPathComponent]];
         [gui setColor:[OOColor orangeColor] forRow:CDRDESCROW];
         [gui addLongText:folderDesc startingAtRow:CDRDESCROW align:GUI_ALIGN_LEFT];
         return;
     }
 
-    if (oo::PListView(cdr).get<BOOL>(@"isParentFolder")) {
+    if (oo::PListView(cdr).get<bool>(@"isParentFolder")) {
         NSString* folderDesc = [NSString stringWithFormat:DESC(@"loadsavescreen-hold-@-and-press-return-to-open-parent-folder-@"), @COMMAND_MODIFIER_KEY, [oo::PListView(cdr).get<NSString*>(@"saved_game_path") lastPathComponent]];
         [gui setColor:[OOColor orangeColor] forRow:CDRDESCROW];
         [gui addLongText:folderDesc startingAtRow:CDRDESCROW align:GUI_ALIGN_LEFT];
@@ -1020,7 +1020,7 @@ NSComparisonResult sortCommanders(id cdr1, id cdr2, void* context)
     }
     [gui setColor:[gui colorFromSetting:nil defaultValue:nil] forRow:CDRDESCROW];
 
-    if (!oo::PListView(cdr).get<BOOL>(@"isSavedGame"))
+    if (!oo::PListView(cdr).get<bool>(@"isSavedGame"))
         return; // don't show things that aren't saved games
 
     if ([self dockedStation] == nil)
