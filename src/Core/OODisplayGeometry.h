@@ -82,6 +82,10 @@ struct OOPixelRect {
 
 class OODisplayGeometry {
  public:
+  // A placeholder until the view has a size: a 90-degree square perspective.
+  // Header-only, so a type that holds one needs nothing else linked.
+  OODisplayGeometry() = default;
+
   // Screen-matching off: today's projection from the view's field-of-view
   // tangent (MyOpenGLView::fov(true)).
   static OODisplayGeometry legacy(double fovTangent, int windowWidthPx,
@@ -140,8 +144,6 @@ class OODisplayGeometry {
     OOFlatFrustum frustum;
   };
 
-  OODisplayGeometry() = default;
-
   // Panel model, millimetres, eye at the origin.
   void panelPoint(double s, double yp, double out[3]) const;
   std::optional<OOWindowPoint> eyeToPanelWindow(OODirection d) const;
@@ -184,7 +186,7 @@ class OODisplayGeometry {
   // Linear mode (no warp): window <-> scene gnomonic is linear.
   OOFlatFrustum _linear{-1.0, 1.0, -1.0, 1.0};
 
-  std::vector<Slice> _slices;
+  std::vector<Slice> _slices{Slice{0.0, {-1.0, 1.0, -1.0, 1.0}}};
   std::vector<double> _seamWindowX;  // window x of slice boundaries
   int _flatWidthPx = 1;
   int _flatHeightPx = 1;

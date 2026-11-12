@@ -44,6 +44,7 @@ MA 02110-1301, USA.
 #include <utility>
 #include <vector>
 
+#include "OODisplayGeometry.h"
 #include "OOEnumFlags.h"
 #include "OOFoundation.h"
 #include "OOMouseInteractionMode.h"
@@ -281,6 +282,13 @@ class MyOpenGLView : public oo::Object {
   GLfloat getDisplay_z();
   GLfloat getX_offset();
   GLfloat getY_offset();
+  // Spec 008: the HUD area (contracts/hud-area.md), today's window-based
+  // display_z for the space view's own overlays (sun glare), and the
+  // projection in use with a counter that changes only when it does.
+  NSRect hudArea() const;
+  GLfloat getWindowDisplay_z() const;
+  const OODisplayGeometry& displayGeometry() const;
+  std::uint64_t displayGeometryGeneration() const;
   ::GameController* getGameController();
   virtual void setGameController(::GameController* controller);
   bool isRunningOnPrimaryDisplayDevice();
@@ -431,6 +439,16 @@ class MyOpenGLView : public oo::Object {
 
   float _fov = {};
   bool _msaa = {};
+
+  // Spec 008. Rebuilt only when its inputs change: PlayerEntity pushes its
+  // field of view through setFov() on every update.
+  void rebuildDisplayGeometry();
+  OODisplayGeometry _displayGeometry;
+  std::uint64_t _displayGeometryGeneration = 0;
+  float _displayGeometryFov = -1.0f;
+  NSSize _displayGeometrySize = {};
+  GLfloat window_display_z = {};
+  NSRect _hudArea = {};
 
   // Full screen sizes
   std::vector<oo::PList>
