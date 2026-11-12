@@ -5,10 +5,10 @@ source_filename = quickjs-ng-0.17.0.tar.gz
 source_hash = 559bc4c420475e55c7ab4510adbc562f55d7524d75e8e89d79ce4bb02f5687d9
 source_fallback_url = https://wrapdb.mesonbuild.com/v2/quickjs-ng_0.17.0-1/get_source/quickjs-ng-0.17.0.tar.gz
 wrapdb_version = 0.17.0-1
-# Oolite compatibility patch from upstream #768 (SpiderMonkey 1.8.5 behaviour that OXPs rely
-# on; see the comment in the file). Upstream request for an option instead:
+# Oolite compatibility patches from upstream #768 (SpiderMonkey 1.8.5 behaviour that OXPs rely
+# on; see the comments in each file). Upstream request for an option instead:
 # https://github.com/quickjs-ng/quickjs/issues/1837
-diff_files = quickjs-ng/0001-oolite-primitive-property-assignment.patch, quickjs-ng/0002-oolite-new-on-native-functions.patch
+diff_files = quickjs-ng-o2.patch, quickjs-ng-void-return.patch, quickjs-ng/0001-oolite-primitive-property-assignment.patch, quickjs-ng/0002-oolite-new-on-native-functions.patch
 
 [provide]
 dependency_names = quickjs-ng
