@@ -211,7 +211,7 @@ MA 02110-1301, USA.
     // What moved?
     int function;
     NSDictionary* entry = [stickFunctions objectAtIndex:selFunctionIdx];
-    if (oo::PListView(hwDict).get<BOOL>(STICK_ISAXIS)) {
+    if (oo::PListView(hwDict).get<bool>(STICK_ISAXIS)) {
         function = oo::PListView(entry).get<int>(KEY_AXISFN);
         if (function == AXIS_THRUST) {
             [stickHandler unsetButtonFunction:BUTTON_INCTHRUST];
