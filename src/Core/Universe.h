@@ -353,6 +353,7 @@ class Universe : public oo::RefCounted {
   OOTimeAbsolute demo_start_time = 0;
   GLfloat demo_start_z = 0;
   int demo_stage = 0;
+  bool demo_change_requested = false;  // a key press asked for the next ship
   NSUInteger demo_ship_index = 0;
   NSUInteger demo_ship_subindex = 0;
   oo::PList demo_ships;  // arrays (one per class) of demo ship dictionaries
@@ -590,6 +591,7 @@ class Universe : public oo::RefCounted {
   void selectIntro2Next();
   void stepDemoShip(int delta);
   void animateDemoShip(OOTimeDelta delta_t);
+  void startDemoFlyOut();
   // station(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
   ::StationEntity* stationWithRole(const std::string& role, HPVector position);

@@ -1492,6 +1492,42 @@ OO_TEST(shipLibraryCountsEveryPress) {
   }
 }
 
+// A press in the ship library shows the next ship on the next frame: the
+// fly-out it starts ends at once, so the swap does not wait 0.25 s. A ship
+// left on show long enough to move on by itself still flies out.
+OO_TEST(shipLibraryPressSwapsShipAtOnce) {
+  {
+    oo::AutoreleaseScope scope;
+    Universe* u = NewUniverse();
+    oo::PList::Array ships;
+    for (int i = 0; i < 5; i++) ships.push_back(oo::PList(oo::PList::Dict{}));
+    u->demo_ships = oo::PList(oo::PList::Array{oo::PList(ships)});
+    u->universal_time = 10.0;
+
+    // Down, up, and a change of class each end the fly-out at once.
+    for (int press = 0; press < 4; press++) {
+      u->demo_ship_index = 0;
+      u->demo_ship_subindex = 0;
+      u->demo_stage = DEMO_SHOW_THING;
+      u->demo_stage_time = u->universal_time + 300.0;
+      if (press == 0) u->selectIntro2Next();
+      if (press == 1) u->selectIntro2Previous();
+      if (press == 2) u->selectIntro2NextCategory();
+      if (press == 3) u->selectIntro2PreviousCategory();
+      u->startDemoFlyOut();
+      OO_CHECK(u->demo_stage == DEMO_FLY_OUT);
+      OO_CHECK(u->demo_stage_time <= u->universal_time);
+    }
+
+    // Shown for its 300 s with no press: it flies out for 0.25 s.
+    u->demo_stage = DEMO_SHOW_THING;
+    u->demo_stage_time = u->universal_time;
+    u->startDemoFlyOut();
+    OO_CHECK(u->demo_stage == DEMO_FLY_OUT);
+    OO_CHECK(u->demo_stage_time == u->universal_time + 0.25);
+  }
+}
+
 // The ship library's demo ship moves between stage changes: it leaves at its
 // velocity while flying out (the entity update never moves a
 // STATUS_COCKPIT_DISPLAY ship, so nothing else does), comes in from

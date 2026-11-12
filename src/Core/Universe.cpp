@@ -3817,6 +3817,7 @@ void Universe::setupIntroFirstGo(bool justCobra) {
   if (!justCobra) {
     demo_stage = DEMO_SHOW_THING;
     demo_stage_time = universal_time + 300.0;
+    demo_change_requested = false;
   }
 }
 
@@ -4075,7 +4076,22 @@ void Universe::stepDemoShip(int delta) {
   if (!changeDue) {
     demo_stage = DEMO_SHOW_THING;
     demo_stage_time = universal_time - 1.0;  // force change
+    demo_change_requested = true;
   }
+}
+
+// Sends the shown demo ship away. A fly-out a key press asked for ends at once,
+// so the next ship appears on the next frame, as quickly as the shipyard's; a
+// ship that has been shown for its full time flies out for 0.25 s.
+void Universe::startDemoFlyOut() {
+  if (demo_ship != nullptr) {
+    demo_ship->setVelocity(make_vector(
+        0, 0, DEMO2_VANISHING_DISTANCE * demo_ship->collision_radius * 6.0));
+  }
+  demo_stage = DEMO_FLY_OUT;
+  demo_stage_time =
+      demo_change_requested ? universal_time : universal_time + 0.25;
+  demo_change_requested = false;
 }
 
 // Moves the ship library's demo ship between stage changes: it flies in from
@@ -4103,6 +4119,7 @@ void Universe::selectIntro2PreviousCategory() {
       (demo_ship_index + demo_ships.count() - 1) % demo_ships.count();
   demo_ship_subindex = DemoClassCount(demo_ships, demo_ship_index) - 1;
   demo_stage_time = universal_time - 1.0;  // force change
+  demo_change_requested = true;
 }
 
 void Universe::selectIntro2NextCategory() {
@@ -4110,6 +4127,7 @@ void Universe::selectIntro2NextCategory() {
   demo_ship_index = (demo_ship_index + 1) % demo_ships.count();
   demo_ship_subindex = DemoClassCount(demo_ships, demo_ship_index) - 1;
   demo_stage_time = universal_time - 1.0;  // force change
+  demo_change_requested = true;
 }
 
 void Universe::selectIntro2Next() { stepDemoShip(1); }
@@ -7452,7 +7470,6 @@ void Universe::update(OOTimeDelta inDeltaT) {
 
         if (universal_time >= demo_stage_time) {
           if (ent_count > 1) {
-            Vector vel;
             Quaternion q2 = kIdentityQuaternion;
 
             quaternion_rotate_about_y(&q2, M_PI);
@@ -7467,12 +7484,7 @@ void Universe::update(OOTimeDelta inDeltaT) {
                 demo_stage_time = universal_time + 300.0;
                 break;
               case DEMO_SHOW_THING:
-                vel = make_vector(0, 0,
-                                  DEMO2_VANISHING_DISTANCE *
-                                      demo_ship->collision_radius * 6.0);
-                if (demo_ship != nullptr) demo_ship->setVelocity(vel);
-                demo_stage = DEMO_FLY_OUT;
-                demo_stage_time = universal_time + 0.25;
+                startDemoFlyOut();
                 break;
               case DEMO_FLY_OUT:
                 // change the demo_ship here
