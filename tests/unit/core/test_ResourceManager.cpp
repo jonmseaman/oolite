@@ -642,4 +642,38 @@ OO_TEST(soundLookupHandsNothingToTheScope) {
   OO_CHECK(oo::AutoreleaseScope::leakedWithoutScope() == leaked);
 }
 
+// --- <name>.json5 where <name>.plist is asked for --- Over the same scratch
+// game folder: built-in data in JSON5 merges with an add-on's plist of the same
+// name, and a single file is found by its .plist name.
+
+OO_TEST(json5FilesStandInForPlists) {
+  namespace stdfs = std::filesystem;
+  const stdfs::path work = stdfs::current_path();
+  WriteText(work / "Resources" / "Config" / "oo-test-json5.json5",
+            "{ base: 1, shared: { x: 1, y: 1 } }");
+  WriteText(work / "AddOns" / "a.oxp" / "Config" / "oo-test-json5.plist",
+            "{ fromA = 2; shared = { y = 2; z = 2; }; }");
+  WriteText(work / "Resources" / "AIs" / "oo-test-json5AI.json5",
+            "{ GLOBAL: { ENTER: [] } }");
+  ResourceManager::reset();
+  (void)ResourceManager::paths();
+
+  const oo::PList smart = ResourceManager::dictionaryFromFilesNamed(
+      "oo-test-json5.plist", std::string("Config"), MERGE_SMART, false);
+  std::printf("  JSON5 + plist, MERGE_SMART: %s\n",
+              oo::DescriptionOf(smart).c_str());
+  OO_CHECK(smart.find("base") != nullptr && smart.find("fromA") != nullptr);
+  OO_CHECK(smart.find("shared") != nullptr &&
+           smart.find("shared")->find("x") != nullptr &&
+           smart.find("shared")->find("z") != nullptr);
+
+  const std::optional<std::string> ai = ResourceManager::pathForFileNamed(
+      "oo-test-json5AI.plist", std::string("AIs"), false);
+  OO_CHECK(ai.has_value() &&
+           EndsWith(*ai, "Resources/AIs/oo-test-json5AI.json5"));
+  OO_CHECK(ResourceManager::pathForFileNamed("oo-test-json5-missing.plist",
+                                             std::string("AIs"),
+                                             false) == std::nullopt);
+}
+
 OO_TEST_MAIN()
