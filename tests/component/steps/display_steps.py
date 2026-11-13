@@ -174,3 +174,27 @@ def last_log_line_says(world, log_class, text):
     found = [line for line in _closed_log_lines(world) if tag in line]
     assert found, f"no {tag} line in Latest.log"
     assert text in found[-1], f"the last {tag} line is {found[-1]!r}, expected it to say {text!r}"
+
+
+@when(parsers.parse('the display preference "{key}" is set to "{value}"'))
+def display_preference_set(world, key, value):
+    """A live change, applied at once as the Screen Matching screen applies it (FR-015)."""
+    import time
+
+    world.console.perform(f'console.__setDisplayPreference("{key}", "{value}");')
+    time.sleep(1.0)
+
+
+@when("OpenGL errors are logged")
+def opengl_errors_logged(world):
+    """Turn on the game's own OpenGL error check (rendering.opengl.error, off by default)."""
+    import time
+
+    world.console.perform('console.setDisplayMessagesInClass("rendering.opengl.error", true);')
+    time.sleep(2.0)
+
+
+@then(parsers.parse('the projection\'s "{field}" is at least {minimum:g}'))
+def projection_field_at_least(world, field, minimum):
+    value = display_projection(world)[field]
+    assert float(value) >= minimum, f"projection {field} is {value}, expected at least {minimum}"

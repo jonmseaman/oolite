@@ -31,6 +31,7 @@ MA 02110-1301, USA.
 #include "GameController.h"
 #include "GuiDisplayGen.h"
 #include "OOConstToString.h"
+#include "OODisplaySize.h"
 #include "OOFullScreenController.h"
 #include "OOGraphicsResetManager.h"
 #include "OOSDLJoystickManager.h"
@@ -59,6 +60,9 @@ int SaveEXRSnapshot(const char* outfilename, int width, int height,
                     const float* rgb);
 
 #include <ctype.h>
+
+#include <cmath>
+#include <cstdio>
 
 #include "oofnd/Date.hpp"
 
@@ -1186,16 +1190,90 @@ oo::PList MyOpenGLView::currentScreenMode() {
 }
 
 void MyOpenGLView::setFov(float value, bool fromFraction) {
-  _requestedFov = fromFraction ? value : tan((value / 2) * M_PI / 180);
+  const float requested = fromFraction ? value : tan((value / 2) * M_PI / 180);
+#if OO_FOV_INFLIGHT_CONTROL_ENABLED
+  // With in-flight control, a change the player makes while screen matching
+  // is on becomes an unsaved custom angle for the session (spec 008 research
+  // R14). The steady per-update push of an unchanged angle does nothing.
+  if (_screenMatching && _haveRequestedFov && requested != _requestedFov) {
+    _requestedFov = requested;
+    _fovChoice.mode = OOFovMode::kCustom;
+    _fovChoice.customHorizontalDeg = 2 * std::atan(requested) * 180 / M_PI;
+    rebuildDisplayGeometry(true);
+    return;
+  }
+#endif
+  _requestedFov = requested;
+  _haveRequestedFov = true;
   // With screen matching on, the field of view comes from the screen and the
   // seat (spec 008); PlayerEntity's per-update push must not override it.
   if (!_screenMatching) _fov = _requestedFov;
   rebuildDisplayGeometry();
 }
 
+// Spec 008 FR-009/FR-010: with screen matching on and no size the player
+// entered, the size and aspect come from the display when it reports a
+// plausible one; an entered size is never overwritten.
+void MyOpenGLView::detectDisplaySize() {
+  oo::Defaults& prefs = oo::Defaults::standard();
+  if (!_displaySizeQueried) {
+    _displaySizeQueried = true;
+    const SDL_DisplayID display = window != nullptr
+                                      ? SDL_GetDisplayForWindow(window)
+                                      : SDL_GetPrimaryDisplay();
+    const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(display);
+    if (mode != nullptr) {
+      _detectedPixelWidth = mode->w;
+      _detectedPixelHeight = mode->h;
+    }
+    // Test aid: "WxH" in millimetres, optionally "@PWxPH" for the display's
+    // pixels, stands in for the platform's answer, so a scenario does not
+    // depend on the monitor it runs on.
+    const std::string pinned =
+        prefs.stringForKey("screen-detected-size-mm").value_or("");
+    double w = 0, h = 0;
+    int pw = 0, ph = 0;
+    const int read =
+        pinned.empty()
+            ? 0
+            : std::sscanf(pinned.c_str(), "%lfx%lf@%dx%d", &w, &h, &pw, &ph);
+    if (read >= 2) {
+      _detectedSizeMm = std::make_pair(w, h);
+      if (read == 4) {
+        _detectedPixelWidth = pw;
+        _detectedPixelHeight = ph;
+      }
+    } else if (pinned.empty()) {
+      _detectedSizeMm = OOQueryDisplayPhysicalSize(static_cast<int>(display));
+    }
+    if (_detectedSizeMm) {
+      OO_LOG("display.size.detected", "{:.0f} x {:.0f} mm",
+             _detectedSizeMm->first, _detectedSizeMm->second);
+    } else {
+      OO_LOG("display.size.detected", "{}", "not detected");
+    }
+  }
+  if (!_screenMatching || !_detectedSizeMm) return;
+  if (prefs.stringForKey("screen-size-source").value_or("") == "entered") {
+    return;
+  }
+
+  // Plausible: 10-120 inches, and the aspect within 5% of the display's
+  // pixel aspect (research R7).
+  const auto [widthMm, heightMm] = *_detectedSizeMm;
+  if (!OOPlausibleDisplaySize(widthMm, heightMm, _detectedPixelWidth,
+                              _detectedPixelHeight)) {
+    return;
+  }
+  prefs.setDouble("screen-diagonal-mm", std::hypot(widthMm, heightMm));
+  prefs.setDouble("screen-aspect", widthMm / heightMm);
+  prefs.setObject("screen-size-source", oo::PList("detected"));
+}
+
 void MyOpenGLView::reloadScreenMatchingPreferences() {
   const oo::Defaults& prefs = oo::Defaults::standard();
   _screenMatching = prefs.boolForKey("screen-matching");
+  detectDisplaySize();
 
   OOScreenDescription screen;
   if (!prefs.object("screen-diagonal-mm").isNull())

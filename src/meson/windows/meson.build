@@ -15,6 +15,7 @@ endif
 dep_libs = [
     'glu32',
     'opengl32',
+    'setupapi',
     'dwmapi',
     'winmm',
     'ws2_32',

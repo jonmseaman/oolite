@@ -107,6 +107,7 @@ static JSValue ConsoleProfile(OOJS_NATIVE_ARGS);
 static JSValue ConsoleGetProfile(OOJS_NATIVE_ARGS);
 static JSValue ConsoleTrace(OOJS_NATIVE_ARGS);
 static JSValue ConsoleDisplayProjection(OOJS_NATIVE_ARGS);
+static JSValue ConsoleSetDisplayPreference(OOJS_NATIVE_ARGS);
 
 namespace {
 bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
@@ -249,6 +250,7 @@ static const JSCFunctionListEntry sConsoleMethods[] = {
 #endif
     JS_CFUNC_DEF("isExecutableJavaScript", 2, ConsoleIsExecutableJavaScript),
     JS_CFUNC_DEF("__displayProjection", 0, ConsoleDisplayProjection),
+    JS_CFUNC_DEF("__setDisplayPreference", 2, ConsoleSetDisplayPreference),
     JS_CFUNC_DEF("displayMessagesInClass", 1, ConsoleDisplayMessagesInClass),
     JS_CFUNC_DEF("setDisplayMessagesInClass", 2,
                  ConsoleSetDisplayMessagesInClass),
@@ -1187,6 +1189,28 @@ static JSValue ConsoleWriteLogMarker(OOJS_NATIVE_ARGS) {
 }
 
 static OODisplayProjectionProvider sDisplayProjectionProvider = nullptr;
+static OODisplayPreferenceSetter sDisplayPreferenceSetter = nullptr;
+
+void OOJSConsoleSetDisplayPreferenceSetter(OODisplayPreferenceSetter setter) {
+  sDisplayPreferenceSetter = setter;
+}
+
+// function __setDisplayPreference(key : String, value : String) : void
+// Spec 008's live change for the component scenarios: the value is stored as a
+// number when it reads as one, else as a string, and applied at once.
+static JSValue ConsoleSetDisplayPreference(OOJS_NATIVE_ARGS) {
+  OOJS_NATIVE_ENTER(context)
+
+  if (sDisplayPreferenceSetter == nullptr || argc < 2) OOJS_RETURN_VOID;
+  const std::optional<std::string> key =
+      cxx_OOStringFromJSValue(context, OOJS_ARGV[0]);
+  const std::optional<std::string> value =
+      cxx_OOStringFromJSValue(context, OOJS_ARGV[1]);
+  if (key && value) sDisplayPreferenceSetter(*key, *value);
+  OOJS_RETURN_VOID;
+
+  OOJS_NATIVE_EXIT
+}
 
 void OOJSConsoleSetDisplayProjectionProvider(
     OODisplayProjectionProvider provider) {

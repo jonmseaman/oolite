@@ -35,6 +35,8 @@ MA 02110-1301, USA.
 #ifdef OO_DEBUG_MONITOR_ENABLED
 #include "OOJSConsole.h"
 #endif
+#include <cstdlib>
+
 #include "OOAsyncWorkManager.h"
 #include "OOBreakPatternEntity.h"
 #include "OOCPUInfo.h"
@@ -317,6 +319,27 @@ static std::string ReticleJSON() {
                      at[1], direction[0], direction[1], direction[2]);
 }
 
+static const char* SizeSourceName(OOScreenSizeSource source) {
+  return source == OOScreenSizeSource::kEntered    ? "entered"
+         : source == OOScreenSizeSource::kDetected ? "detected"
+                                                   : "default";
+}
+
+static void SetDisplayPreference(const std::string& key,
+                                 const std::string& value) {
+  oo::Defaults& prefs = oo::Defaults::standard();
+  char* end = nullptr;
+  const double number = std::strtod(value.c_str(), &end);
+  if (!value.empty() && end != nullptr && *end == '\0') {
+    prefs.setDouble(key, number);
+  } else {
+    prefs.setObject(key, oo::PList(value));
+  }
+  Universe* universe = gSharedUniverse;
+  MyOpenGLView* view = universe != nullptr ? universe->getGameView() : nullptr;
+  if (view != nullptr) view->reloadScreenMatchingPreferences();
+}
+
 static std::string DisplayProjectionJSON() {
   Universe* universe = gSharedUniverse;
   MyOpenGLView* view = universe != nullptr ? universe->getGameView() : nullptr;
@@ -329,13 +352,14 @@ static std::string DisplayProjectionJSON() {
       "\"displayZ\":{},\"windowDisplayZ\":{},"
       "\"hudArea\":[{},{},{},{}],\"window\":[{},{}],"
       "\"fovValue\":{},\"screenMatching\":{},\"warped\":{},"
-      "\"reticle\":{}}}",
+      "\"slices\":{},\"sizeSource\":\"{}\",\"reticle\":{}}}",
       f[0], f[1], f[2], f[3], view->getDisplay_z(), view->getWindowDisplay_z(),
       static_cast<int>(hud.origin.x), static_cast<int>(hud.origin.y),
       static_cast<int>(hud.size.width), static_cast<int>(hud.size.height),
       static_cast<int>(size.width), static_cast<int>(size.height),
       view->fov(false), view->displayGeometry().screenMatching(),
-      universe->spaceViewIsWarped(), ReticleJSON());
+      universe->spaceViewIsWarped(), view->displayGeometry().sliceCount(),
+      SizeSourceName(view->screenDescription().source), ReticleJSON());
 }
 #endif
 
@@ -343,6 +367,7 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView) {
   _doingStartUp = true;
 #ifdef OO_DEBUG_MONITOR_ENABLED
   OOJSConsoleSetDisplayProjectionProvider(DisplayProjectionJSON);
+  OOJSConsoleSetDisplayPreferenceSetter(SetDisplayPreference);
 #endif
 
   OOInitReallyRandom(oo::date::timeIntervalSinceReferenceDate() * 1e9);
@@ -5410,14 +5435,34 @@ void Universe::drawUniverse() {
                     (1.0 + 1.0 / (aspect * aspect))));
       if (!displayGUI && gameView != nullptr &&
           gameView->displayGeometry().screenMatching()) {
-        // Spec 008: bring the near plane in by the flat render's own corner.
-        const OOFlatFrustum f = gameView->displayGeometry().flatFrustum();
-        const double x = std::max(std::fabs(f.left), std::fabs(f.right));
-        const double y = std::max(std::fabs(f.bottom), std::fabs(f.top));
+        // Spec 008: bring the near plane in by the flat render's own corner,
+        // the widest of its slices'.
+        const OODisplayGeometry& geometry = gameView->displayGeometry();
+        double x = 0, y = 0;
+        for (int slice = 0; slice < geometry.sliceCount(); slice++) {
+          const OOFlatFrustum f = geometry.flatFrustum(slice);
+          x = std::max({x, std::fabs(f.left), std::fabs(f.right)});
+          y = std::max({y, std::fabs(f.bottom), std::fabs(f.top)});
+        }
         distanceFactor = static_cast<float>(std::sqrt(1 + x * x + y * y));
       }
 
-      for (vdist = 0; vdist <= 1; vdist++) {
+      // Spec 008 (research R6): a very wide warped view is drawn as several
+      // slices side by side in the flat render, each with its own yaw and
+      // frustum; each slice has the far and the near pass.
+      const int sliceCount =
+          warping ? gameView->displayGeometry().sliceCount() : 1;
+      for (int pass = 0; pass < 2 * sliceCount; pass++) {
+        vdist = pass % 2;
+        const int slice = pass / 2;
+        if (warping && sliceCount > 1 && vdist == 0) {
+          const OODisplayGeometry& geometry = gameView->displayGeometry();
+          OOGL(glViewport(slice * geometry.flatRenderWidthPx(), 0,
+                          geometry.flatRenderWidthPx(),
+                          geometry.flatRenderHeightPx()));
+          // Every slice draws every entity it can see.
+          if (slice > 0) drawCounter++;
+        }
         float nearPlane = vdist ? 1.0 : INTERMEDIATE_CLEAR_DEPTH;
         float farPlane = vdist ? breakPlane : MAX_CLEAR_DEPTH;
         float ratio =
@@ -5432,7 +5477,8 @@ void Universe::drawUniverse() {
             gameView->displayGeometry().screenMatching();
         if (screenMatching) {
           // Spec 008: the flat render's frustum, from the screen and seat.
-          const OOFlatFrustum flat = gameView->displayGeometry().flatFrustum();
+          const OOFlatFrustum flat =
+              gameView->displayGeometry().flatFrustum(slice);
           const float scale = nearPlane / distanceFactor;
           frustumLeft = static_cast<float>(flat.left) * scale;
           frustumRight = static_cast<float>(flat.right) * scale;
@@ -5463,6 +5509,18 @@ void Universe::drawUniverse() {
         getActiveViewMatrix(&view_matrix, &view_dir, &view_up);
 
         OOGLResetModelView();  // reset matrix
+        if (warping && sliceCount > 1) {
+          // Turn the eye to the slice's yaw (scene +x right, +z forward; GL
+          // eye space looks down -z): x' = x cos + z sin, z' = z cos - x sin.
+          const double yaw =
+              gameView->displayGeometry().sliceYawDeg(slice) * M_PI / 180;
+          OOMatrix turn = kIdentityMatrix;
+          turn.m[0][0] = static_cast<OOScalar>(std::cos(yaw));
+          turn.m[2][0] = static_cast<OOScalar>(std::sin(yaw));
+          turn.m[0][2] = static_cast<OOScalar>(-std::sin(yaw));
+          turn.m[2][2] = static_cast<OOScalar>(std::cos(yaw));
+          OOGLMultModelView(turn);
+        }
         OOGLLookAt(kZeroVector, kBasisZVector, kBasisYVector);
 
         // HACK BUSTED
@@ -5686,6 +5744,13 @@ void Universe::drawUniverse() {
         }
 
         OOGLPopModelView();
+      }
+      if (warping && sliceCount > 1) {
+        // The glare and the HUD draw with the flat viewpoint the passes leave
+        // behind; put it back without the last slice's turn.
+        OOGLResetModelView();
+        OOGLLookAt(kZeroVector, kBasisZVector, kBasisYVector);
+        OOGLMultModelView(OOMatrixForScale(-1.0, 1.0, 1.0));
       }
 
       if (warping) {

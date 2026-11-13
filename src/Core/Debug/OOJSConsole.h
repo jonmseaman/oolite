@@ -49,3 +49,8 @@ JSValue DebugMonitorToJSConsole(JSContext* context, OODebugMonitor* monitor);
 using OODisplayProjectionProvider = std::string (*)();
 void OOJSConsoleSetDisplayProjectionProvider(
     OODisplayProjectionProvider provider);
+// Spec 008: sets one display preference and applies it at once, as the Screen
+// Matching screen does, so a scenario can change a setting mid-run.
+using OODisplayPreferenceSetter = void (*)(const std::string& key,
+                                           const std::string& value);
+void OOJSConsoleSetDisplayPreferenceSetter(OODisplayPreferenceSetter setter);

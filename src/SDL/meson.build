@@ -8,6 +8,16 @@ oolite_sources += files(
     'main.cpp',
 )
 
+# The display's physical size (spec 008 research R7): EDID on Windows, Core
+# Graphics on macOS, nothing elsewhere.
+if host_machine.system() == 'windows'
+    oolite_sources += files('OODisplaySizeWindows.cpp')
+elif host_machine.system() == 'darwin'
+    oolite_sources += files('OODisplaySizeMac.cpp')
+else
+    oolite_sources += files('OODisplaySizeLinux.cpp')
+endif
+
 oolite_includes += include_directories('.')
 
 # Enter child subdirectories

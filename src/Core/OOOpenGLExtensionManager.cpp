@@ -741,8 +741,8 @@ void OOOpenGLExtensionManager::checkFBOSupported() {
         (PFNGLBLENDFUNCSEPARATEPROC)wglGetProcAddress("glBlendFuncSeparate");
     glUniform1f = (PFNGLUNIFORM1FPROC)wglGetProcAddress("glUniform1f");
     glUniform2fv = (PFNGLUNIFORM2FVPROC)wglGetProcAddress("glUniform2fv");
-    glDeleteRenderbuffers =
-        (PFNGLDELETERENDERBUFFERSPROC)wglGetProcAddress("glDeleteRenderbuffer");
+    glDeleteRenderbuffers = (PFNGLDELETERENDERBUFFERSPROC)wglGetProcAddress(
+        "glDeleteRenderbuffers");
     glDeleteFramebuffers =
         (PFNGLDELETEFRAMEBUFFERSPROC)wglGetProcAddress("glDeleteFramebuffers");
     glDeleteVertexArrays =
