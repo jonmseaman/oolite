@@ -96,6 +96,14 @@ run_script() {
     rm -f "$resourcesdir/espeak-ng-data/voices/!v/f2"
     rm -f "$resourcesdir/espeak-ng-data/voices/default"
     cp -rfu Resources/. "$resourcesdir"
+    # A data file that moved from <name>.plist to <name>.json5 leaves its old copy in an existing
+    # build, where the game reads the JSON5 one and warns about the other. Remove such copies.
+    local stale_plist
+    while IFS= read -r -d '' stale_plist; do
+        if [[ -f "${stale_plist%.plist}.json5" && ! -f "Resources/${stale_plist#"$resourcesdir"/}" ]]; then
+            rm -f "$stale_plist"
+        fi
+    done < <(find "$resourcesdir" -name '*.plist' -print0)
     rm -f "$resourcesdir/AIReference.html" "$resourcesdir/*.icns"
 
     # Strip binary if requested
