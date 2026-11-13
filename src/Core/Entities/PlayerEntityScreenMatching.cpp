@@ -275,6 +275,9 @@ void PlayerEntity::handleScreenMatchingScreenKeys() {
   if (select && !sSelectHeld) {
     sSelectHeld = true;
     if (selected == kRowBack) {
+      // The Enter that chose Back is still down on Game Options' first frame,
+      // where Enter on Field Of View would reopen this screen.
+      gameView->clearKeys();
       setGuiToGameOptionsScreen();
       gui->setSelectedRow(GUI_ROW(GAME, FOV));
       return;
