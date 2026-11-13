@@ -71,6 +71,7 @@ SOFTWARE.
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
+#include "oofnd/PListFile.hpp"
 #include "oofnd/PListGet.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/Process.hpp"
@@ -334,13 +335,15 @@ bool OOOXPVerifier::initWithPath(const std::optional<std::string>& path) {
     const std::string verifierPListPath = oo::str::appendingPathComponent(
         oo::str::appendingPathComponent(*builtInPath, "Config"),
         "verifyOXP.plist");
-    if (const oo::fs::Result<oo::Data> bytes =
-            oo::fs::readFile(oo::fs::pathFromUTF8(verifierPListPath));
-        bytes && !bytes->empty()) {
-      std::expected<oo::PList, oo::PListError> parsed =
-          oo::parsePropertyList(bytes->stringView());
-      if (parsed && parsed->isDict()) _verifierPList = std::move(*parsed);
-    }
+    // (an empty file is no file, in either format)
+    std::expected<oo::PList, oo::PListError> parsed = oo::parsePListFile(
+        verifierPListPath, [](const std::string& p) -> std::optional<oo::Data> {
+          oo::fs::Result<oo::Data> bytes =
+              oo::fs::readFile(oo::fs::pathFromUTF8(p));
+          if (!bytes || bytes->empty()) return std::nullopt;
+          return std::move(*bytes);
+        });
+    if (parsed && parsed->isDict()) _verifierPList = std::move(*parsed);
   }
 
   _basePath = path.value_or(std::string());  // never nullopt: the path always
