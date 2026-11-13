@@ -289,6 +289,9 @@ class MyOpenGLView : public oo::Object {
   GLfloat getWindowDisplay_z() const;
   const OODisplayGeometry& displayGeometry() const;
   std::uint64_t displayGeometryGeneration() const;
+  // Spec 008: reads the screen-matching preferences (data-model.md) and
+  // rebuilds the projection from them. Call after any of them changes.
+  void reloadScreenMatchingPreferences();
   ::GameController* getGameController();
   virtual void setGameController(::GameController* controller);
   bool isRunningOnPrimaryDisplayDevice();
@@ -442,7 +445,14 @@ class MyOpenGLView : public oo::Object {
 
   // Spec 008. Rebuilt only when its inputs change: PlayerEntity pushes its
   // field of view through setFov() on every update.
-  void rebuildDisplayGeometry();
+  void rebuildDisplayGeometry(bool force = false);
+  // The field of view set through setFov(); with screen matching off it is
+  // _fov, with it on _fov follows the projection instead.
+  float _requestedFov = {};
+  bool _screenMatching = false;
+  OOScreenDescription _screenDescription;
+  double _viewerDistanceMm = 600.0;
+  OOFieldOfViewChoice _fovChoice;
   OODisplayGeometry _displayGeometry;
   std::uint64_t _displayGeometryGeneration = 0;
   float _displayGeometryFov = -1.0f;
