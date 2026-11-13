@@ -3036,6 +3036,7 @@ void PlayerEntity::update(OOTimeDelta delta_t) {
                  gui_screen != OOGUIScreenID::kGameOptions &&
                  gui_screen != OOGUIScreenID::kStickMapper &&
                  gui_screen != OOGUIScreenID::kStickProfile &&
+                 gui_screen != OOGUIScreenID::kScreenMatching &&
                  gui_screen != OOGUIScreenID::kNewGame &&
                  gui_screen != OOGUIScreenID::kOXZManager &&
                  gui_screen != OOGUIScreenID::kLoad &&
@@ -3899,6 +3900,7 @@ void PlayerEntity::checkScriptsIfAppropriate() {
       case OOGUIScreenID::kSaveOverwrite:
       case OOGUIScreenID::kStickMapper:
       case OOGUIScreenID::kStickProfile:
+      case OOGUIScreenID::kScreenMatching:
       case OOGUIScreenID::kMission:
       case OOGUIScreenID::kReport:
       case OOGUIScreenID::kKeyboardConfirmClear:
@@ -9313,10 +9315,22 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
     const std::string fovWordDesc = OO_DESC("gameoptions-fov-value");
     // %c 176 gave U+00B0 (probed on GNUstep base); written as its
     // UTF-8 bytes
-    gui->setText(
-        std::format("{}{} ({}{}) ", fovWordDesc, SliderString(fovTicks),
-                    static_cast<int>(fov), "\xC2\xB0" /*the degrees symbol*/),
-        OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_FOV), OOGUIAlignment::kCenter);
+    if (gameView != nullptr && gameView->screenMatching()) {
+      // Spec 008: the angle comes from the screen and seat; Enter opens the
+      // screen-matching settings.
+      gui->setText(std::format("{}{}{}{}", fovWordDesc,
+                               static_cast<int>(std::lround(fov)),
+                               "\xC2\xB0" /*the degrees symbol*/,
+                               OO_DESC("gameoptions-screen-matching-suffix")),
+                   OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_FOV),
+                   OOGUIAlignment::kCenter);
+    } else {
+      gui->setText(
+          std::format("{}{} ({}{}) ", fovWordDesc, SliderString(fovTicks),
+                      static_cast<int>(fov), "\xC2\xB0" /*the degrees symbol*/),
+          OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_FOV),
+          OOGUIAlignment::kCenter);
+    }
     gui->setKey(std::string(GUI_KEY_OK),
                 OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_FOV));
 

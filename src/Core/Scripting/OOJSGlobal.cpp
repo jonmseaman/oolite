@@ -514,7 +514,8 @@ static JSValue GlobalSetExtraGuiScreenKeys(OOJS_NATIVE_ARGS) {
   // gui will be 0 for invalid screen id's as well as OOGUIScreenID::kMain
   if (oo::ToUnderlying(gui) == 0 || gui == OOGUIScreenID::kLoad ||
       gui == OOGUIScreenID::kSave || gui == OOGUIScreenID::kStickMapper ||
-      gui == OOGUIScreenID::kOXZManager || gui == OOGUIScreenID::kNewGame ||
+      gui == OOGUIScreenID::kOXZManager ||
+      gui == OOGUIScreenID::kScreenMatching || gui == OOGUIScreenID::kNewGame ||
       gui == OOGUIScreenID::kSaveOverwrite || gui == OOGUIScreenID::kKeyboard ||
       gui == OOGUIScreenID::kStickProfile ||
       gui == OOGUIScreenID::kKeyboardConfirmClear ||

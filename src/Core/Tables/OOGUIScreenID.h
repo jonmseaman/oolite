@@ -46,6 +46,7 @@ enum class OOGUIScreenID : std::int32_t {
   kKeyboardConfig = 26,
   kKeyboardEntry = 27,
   kKeyboardLayout = 28,
+  kScreenMatching = 29,
 };
 
 // What an unknown name reads as.
@@ -115,6 +116,8 @@ constexpr std::string_view OOEnumName(OOGUIScreenID value) noexcept {
       return "GUI_SCREEN_KEYBOARD_ENTRY";
     case OOGUIScreenID::kKeyboardLayout:
       return "GUI_SCREEN_KEYBOARD_LAYOUT";
+    case OOGUIScreenID::kScreenMatching:
+      return "GUI_SCREEN_SCREENMATCHING";
   }
   return {};
 }
@@ -132,7 +135,8 @@ inline constexpr auto kOOGUIScreenIDTable = oo::MakeEnumTable<
     OOGUIScreenID::kStickProfile, OOGUIScreenID::kMission,
     OOGUIScreenID::kReport, OOGUIScreenID::kInterfaces,
     OOGUIScreenID::kKeyboardConfirmClear, OOGUIScreenID::kKeyboardConfig,
-    OOGUIScreenID::kKeyboardEntry, OOGUIScreenID::kKeyboardLayout>();
+    OOGUIScreenID::kKeyboardEntry, OOGUIScreenID::kKeyboardLayout,
+    OOGUIScreenID::kScreenMatching>();
 
 // Every number that leaves the program, pinned.
 static_assert(oo::ToUnderlying(OOGUIScreenID::kMain) == 0);
@@ -164,3 +168,4 @@ static_assert(oo::ToUnderlying(OOGUIScreenID::kKeyboardConfirmClear) == 25);
 static_assert(oo::ToUnderlying(OOGUIScreenID::kKeyboardConfig) == 26);
 static_assert(oo::ToUnderlying(OOGUIScreenID::kKeyboardEntry) == 27);
 static_assert(oo::ToUnderlying(OOGUIScreenID::kKeyboardLayout) == 28);
+static_assert(oo::ToUnderlying(OOGUIScreenID::kScreenMatching) == 29);
