@@ -64,8 +64,8 @@ oo::PList cxx_OOPropertyListFromData(
   return result;
 }
 
-// A <name>.json5 beside <name>.plist is read instead of it
-// (oofnd/PListFile.hpp).
+// A <name>.json5 beside <name>.plist is read instead of it, and a .json5 path
+// is read as JSON5 (oofnd/PListFile.hpp).
 oo::PList cxx_OOPropertyListFromFile(const std::string& path) {
   oo::PList result;
 

@@ -12,9 +12,11 @@
 
 #include <cmath>
 #include <cstdint>
+#include <expected>
 #include <limits>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -509,6 +511,71 @@ OO_TEST(otherFilesAreReadAsTheyAre) {
   OO_CHECK(fs.reads == (std::vector<std::string>{"Saved/x.oolite-save"}));
   FakeFiles none;
   OO_CHECK_EQ(load(none, "c/missing.plist").source, "");
+}
+
+OO_TEST(aJSON5PathIsReadAsJSON5) {
+  OO_CHECK(oo::isJSON5Path("Config/shipdata.json5"));
+  OO_CHECK(oo::isJSON5Path("AIs/X.JSON5"));
+  OO_CHECK(!oo::isJSON5Path("Config/shipdata.plist"));
+  OO_CHECK(!oo::isJSON5Path(".json5"));
+  OO_CHECK(!oo::isJSON5Path("dir/.json5"));
+
+  FakeFiles fs{{{"AIs/n.json5", "{GLOBAL: {}}"}, {"AIs/bad.json5", "{"}}, {}};
+  oo::PListFileLoad r = load(fs, "AIs/n.json5");
+  OO_CHECK(r.isJSON5);
+  OO_CHECK(!r.shadowedPlist);
+  OO_CHECK_EQ(r.source, "AIs/n.json5");
+  OO_CHECK_EQ(oo_test::dump(r.plist), "{\"GLOBAL\"={};}");
+  OO_CHECK(fs.reads == (std::vector<std::string>{"AIs/n.json5"}));
+
+  oo::PListFileLoad bad = load(fs, "AIs/bad.json5");
+  OO_CHECK(bad.isJSON5);
+  OO_CHECK(bad.error.has_value());
+  OO_CHECK(!bad.plistData.has_value());
+
+  oo::PListFileLoad missing = load(fs, "AIs/missing.json5");
+  OO_CHECK(!missing.isJSON5);
+  OO_CHECK_EQ(missing.source, "");
+  OO_CHECK(!missing.plistData.has_value());
+}
+
+OO_TEST(existingPListPathPrefersTheJSON5) {
+  const std::set<std::string> files = {"a/both.json5", "a/both.plist",
+                                       "a/old.plist", "a/new.json5",
+                                       "a/model.dat"};
+  auto exists = [&](const std::string& p) { return files.contains(p); };
+  OO_CHECK(oo::existingPListPath("a/both.plist", exists) ==
+           std::optional<std::string>("a/both.json5"));
+  OO_CHECK(oo::existingPListPath("a/old.plist", exists) ==
+           std::optional<std::string>("a/old.plist"));
+  OO_CHECK(oo::existingPListPath("a/new.plist", exists) ==
+           std::optional<std::string>("a/new.json5"));
+  OO_CHECK(oo::existingPListPath("a/new.json5", exists) ==
+           std::optional<std::string>("a/new.json5"));
+  OO_CHECK(oo::existingPListPath("a/model.dat", exists) ==
+           std::optional<std::string>("a/model.dat"));
+  OO_CHECK(!oo::existingPListPath("a/none.plist", exists).has_value());
+  OO_CHECK(!oo::existingPListPath("a/model.json5", exists).has_value());
+}
+
+OO_TEST(parsePListFileReadsEitherFormat) {
+  FakeFiles fs{{{"c/old.plist", "{ a = 1; }"},
+                {"c/new.json5", "{a: 1}"},
+                {"c/bad.json5", "{a: }"},
+                {"c/bad.plist", "{ a = ; }"}},
+               {}};
+  auto parse = [&](const std::string& path) {
+    return oo::parsePListFile(path,
+                              [&](const std::string& p) { return fs(p); });
+  };
+  std::expected<oo::PList, oo::PListError> old = parse("c/old.plist");
+  OO_CHECK(old.has_value() && oo_test::dump(*old) == "{\"a\"=S\"1\";}");
+  std::expected<oo::PList, oo::PListError> json5 = parse("c/new.plist");
+  OO_CHECK(json5.has_value() && oo_test::dump(*json5) == "{\"a\"=I1;}");
+  std::expected<oo::PList, oo::PListError> none = parse("c/none.plist");
+  OO_CHECK(none.has_value() && none->isNull());
+  OO_CHECK(!parse("c/bad.plist").has_value());
+  OO_CHECK(!parse("c/bad.json5").has_value());
 }
 
 OO_TEST_MAIN()
