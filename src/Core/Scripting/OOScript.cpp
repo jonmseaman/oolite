@@ -194,7 +194,8 @@ OOScript::scriptsFromFileAtPath(const std::string& filePath) {
     if (script != nullptr)
       result = std::vector<std::shared_ptr<OOScript>>{script};
     return result;
-  } else if (extension == "plist") {
+  } else if (extension == "plist" || extension == "json5") {
+    // (pathForFileNamed finds <name>.json5 where <name>.plist was asked for)
     oo::StandardsDeprecated(
         std::format("Legacy script {} is deprecated", filePath));
     if (oo::EnforceStandards()) {
