@@ -61,6 +61,19 @@ oo::PList OOPropertyListFromData(const std::optional<oo::Data>& data,
   return result;
 }
 
+namespace {
+
+// Whether this is the first time the JSON5 file `source` has been read in place
+// of a property list beside it.
+bool FirstShadowingBy(const std::string& source) {
+  static std::mutex mutex;
+  static std::set<std::string> reported;
+  const std::lock_guard<std::mutex> lock(mutex);
+  return reported.insert(source).second;
+}
+
+}  // namespace
+
 // A <name>.json5 beside <name>.plist is read instead of it, and a .json5 path
 // is read as JSON5 (oofnd/PListFile.hpp).
 oo::PList OOPropertyListFromFile(const std::string& path) {
@@ -73,7 +86,8 @@ oo::PList OOPropertyListFromFile(const std::string& path) {
     if (UNIVERSE != nullptr) {
       OO_LOG("plist.information", "Parsing {} as JSON5.", load.source);
     }
-    if (load.shadowedPlist) {
+    // (once for each file: an AI's state machine is loaded again and again)
+    if (load.shadowedPlist && FirstShadowingBy(load.source)) {
       OO_LOG("plist.json5.shadowed",
              "Both {} and {} exist; reading the JSON5 file and ignoring the "
              "property list.",
