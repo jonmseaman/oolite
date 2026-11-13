@@ -34,6 +34,7 @@ oolite_sources += files(
     'PlayerEntityLoadSave.cpp',
     'PlayerEntityScriptMethods.cpp',
     'PlayerEntitySound.cpp',
+    'PlayerEntityScreenMatching.cpp',
     'PlayerEntityStickMapper.cpp',
     'PlayerEntityStickProfile.cpp',
     'ProxyPlayerEntity.cpp',

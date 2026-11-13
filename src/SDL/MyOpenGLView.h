@@ -212,6 +212,12 @@ class MyOpenGLView : public oo::RefCounted {
   // Spec 008: reads the screen-matching preferences (data-model.md) and
   // rebuilds the projection from them. Call after any of them changes.
   void reloadScreenMatchingPreferences();
+  bool screenMatching() const { return _screenMatching; }
+  const OOScreenDescription& screenDescription() const {
+    return _screenDescription;
+  }
+  double viewerDistanceMm() const { return _viewerDistanceMm; }
+  const OOFieldOfViewChoice& fovChoice() const { return _fovChoice; }
   ::GameController* getGameController();
   virtual void setGameController(::GameController* controller);
   bool isRunningOnPrimaryDisplayDevice();

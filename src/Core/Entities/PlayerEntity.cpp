@@ -3019,6 +3019,7 @@ void PlayerEntity::update(OOTimeDelta delta_t) {
           gui_screen != GUI_SCREEN_GAMEOPTIONS &&
           gui_screen != GUI_SCREEN_STICKMAPPER &&
           gui_screen != GUI_SCREEN_STICKPROFILE &&
+          gui_screen != GUI_SCREEN_SCREENMATCHING &&
           gui_screen != GUI_SCREEN_NEWGAME &&
           gui_screen != GUI_SCREEN_OXZMANAGER &&
           gui_screen != GUI_SCREEN_LOAD && gui_screen != GUI_SCREEN_KEYBOARD &&
@@ -3882,6 +3883,7 @@ void PlayerEntity::checkScriptsIfAppropriate() {
       case GUI_SCREEN_SAVE_OVERWRITE:
       case GUI_SCREEN_STICKMAPPER:
       case GUI_SCREEN_STICKPROFILE:
+      case GUI_SCREEN_SCREENMATCHING:
       case GUI_SCREEN_MISSION:
       case GUI_SCREEN_REPORT:
       case GUI_SCREEN_KEYBOARD_CONFIRMCLEAR:
@@ -9259,10 +9261,20 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
     const std::string fovWordDesc = OO_DESC("gameoptions-fov-value");
     // %c 176 gave U+00B0 (probed on GNUstep base); written as its
     // UTF-8 bytes
-    gui->setText(oo::str::format("%s%s (%d%s) ", fovWordDesc.c_str(),
-                                 SliderString(fovTicks).c_str(), (int)fov,
-                                 "\xC2\xB0" /*the degrees symbol*/),
-                 GUI_ROW(GAME, FOV), GUI_ALIGN_CENTER);
+    if (gameView != nullptr && gameView->screenMatching()) {
+      // Spec 008: the angle comes from the screen and seat; Enter opens the
+      // screen-matching settings.
+      gui->setText(oo::str::format(
+                       "%s%d%s%s", fovWordDesc.c_str(), (int)lround(fov),
+                       "\xC2\xB0" /*the degrees symbol*/,
+                       OO_DESC("gameoptions-screen-matching-suffix").c_str()),
+                   GUI_ROW(GAME, FOV), GUI_ALIGN_CENTER);
+    } else {
+      gui->setText(oo::str::format("%s%s (%d%s) ", fovWordDesc.c_str(),
+                                   SliderString(fovTicks).c_str(), (int)fov,
+                                   "\xC2\xB0" /*the degrees symbol*/),
+                   GUI_ROW(GAME, FOV), GUI_ALIGN_CENTER);
+    }
     gui->setKey(std::string(GUI_KEY_OK), GUI_ROW(GAME, FOV));
 
     // color blind mode

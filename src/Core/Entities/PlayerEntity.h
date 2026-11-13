@@ -1167,6 +1167,10 @@ class PlayerEntity : public ShipEntity {
   void handleKeyMapperScreenKeys();
   void handleKeyboardLayoutKeys();
   void handleStickMapperScreenKeys();
+  // PlayerEntityScreenMatching.cpp: the screen-matching settings (spec 008),
+  // opened from the Field Of View row of Game Options.
+  void setGuiToScreenMatchingScreen(OOGUIRow selectedRow);
+  void handleScreenMatchingScreenKeys();
   void pollCustomViewControls();
   void pollViewControls();
   void pollFlightArrowKeyControls(double delta_t);

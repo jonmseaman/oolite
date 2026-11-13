@@ -1922,6 +1922,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
           gui_screen == GUI_SCREEN_GAMEOPTIONS ||
           gui_screen == GUI_SCREEN_STICKMAPPER ||
           gui_screen == GUI_SCREEN_STICKPROFILE ||
+          gui_screen == GUI_SCREEN_SCREENMATCHING ||
           gui_screen == GUI_SCREEN_KEYBOARD ||
           gui_screen == GUI_SCREEN_KEYBOARD_CONFIRMCLEAR ||
           gui_screen == GUI_SCREEN_KEYBOARD_CONFIG ||
@@ -2618,6 +2619,10 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
 
     case GUI_SCREEN_STICKMAPPER:
       handleStickMapperScreenKeys();
+      break;
+
+    case GUI_SCREEN_SCREENMATCHING:
+      handleScreenMatchingScreenKeys();
       break;
 
     case GUI_SCREEN_STICKPROFILE:
@@ -3958,7 +3963,14 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
   } else
     volumeControlPressed = false;
 
+  // Spec 008: Enter on the Field Of View row opens the screen-matching
+  // settings; with screen matching on, the arrows do not change the angle.
+  if ((guiSelectedRow == GUI_ROW(GAME, FOV)) && selectKeyPress) {
+    setGuiToScreenMatchingScreen(-1);
+    return;
+  }
   if ((guiSelectedRow == GUI_ROW(GAME, FOV)) &&
+      !(gameView != nullptr && gameView->screenMatching()) &&
       ((checkKeyPress(n_key_gui_arrow_right) ||
         joyButtonState[BUTTON_GUIRIGHT]) ||
        (checkKeyPress(n_key_gui_arrow_left) ||
@@ -5355,6 +5367,10 @@ void PlayerEntity::pollDemoControls(double /*delta_t*/) {
 
     case GUI_SCREEN_STICKMAPPER:
       handleStickMapperScreenKeys();
+      break;
+
+    case GUI_SCREEN_SCREENMATCHING:
+      handleScreenMatchingScreenKeys();
       break;
 
     case GUI_SCREEN_STICKPROFILE:
