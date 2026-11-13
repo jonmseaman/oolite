@@ -1,0 +1,12 @@
+// The final warp (spec 008): the flat render, sampled where the warp mesh says.
+layout (location = 0) out vec4 out_color;
+
+in vec2 vs_out_texture_coordinate;
+
+uniform sampler2D image;
+
+
+void main()
+{
+	out_color = texture(image, vs_out_texture_coordinate);
+}

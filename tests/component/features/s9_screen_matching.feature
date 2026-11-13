@@ -68,3 +68,70 @@ Feature: Screen matching (spec 008)
     Then the game setting "fovValue" is about 53.0
     And the projection's "screenMatching" equals true
     And the projection's "right" is about 0.4981 within 0.001
+
+  # C2 for a curved screen (spec 008 Story 2): the Samsung Odyssey G9, 49" 32:9 at 1000R, seen
+  # from 80 cm, fills 84 degrees across.
+  Scenario: A 49-inch 32:9 1000R screen at 80 cm gives 84.0 degrees
+    Given the preference "screen-matching" is "YES"
+    And the preference "screen-diagonal-mm" is "1244.6"
+    And the preference "screen-aspect" is "3.5555556"
+    And the preference "screen-curvature-mm" is "1000"
+    And the preference "viewer-distance-mm" is "800"
+    And the preference "screen-window-fraction" is "1"
+    And a window of 3840x1080
+    And a universe seeded with 20260910
+    Then the game setting "fovValue" is about 84.0
+    And the projection's "screenMatching" equals true
+
+  # The final warp (spec 008 FR-006a, T020-T021): a curved screen is drawn as a flat render plus
+  # the warp, and its buffers are complete.
+  Scenario: A curved screen in flight runs the warp pass
+    Given the preference "screen-matching" is "YES"
+    And the preference "screen-diagonal-mm" is "1244.6"
+    And the preference "screen-aspect" is "3.5555556"
+    And the preference "screen-curvature-mm" is "1000"
+    And the preference "viewer-distance-mm" is "800"
+    And the preference "screen-window-fraction" is "1"
+    And a window of 3840x1080
+    And a universe seeded with 20260910
+    Then the log has a "display.warp.pass" line
+    And no log line contains "framebuffer not complete"
+
+  # With screen matching off nothing new is drawn (research R4).
+  Scenario: Screen matching off never runs the warp pass
+    Given the preference "fov-value" is "57.2"
+    And a window of 3840x1080
+    And a universe seeded with 20260910
+    Then the log has no "display.warp.pass" line
+
+  # C3 (spec 008 research R13): with the warp, a marker sits where the curved screen shows its
+  # target, near the edge too, not where a flat projection would put it.
+  Scenario: The reticle follows its target to the edge of a curved screen
+    Given the preference "screen-matching" is "YES"
+    And the preference "screen-diagonal-mm" is "1244.6"
+    And the preference "screen-aspect" is "3.5555556"
+    And the preference "screen-curvature-mm" is "1000"
+    And the preference "viewer-distance-mm" is "800"
+    And the preference "screen-window-fraction" is "1"
+    And a window of 3840x1080
+    And a universe seeded with 20260910
+    And a buoy targeted 35 degrees right of the nose at 10 km
+    Then the projection's "warped" equals true
+    And the reticle is within 2 px of where the curved screen shows its target
+
+  # FR-017: without shaders there is no warp. A curved screen is drawn classic flat at the same
+  # physical angle, and the change applies without a restart.
+  Scenario: Lowering the detail level drops the warp and keeps the angle
+    Given the preference "screen-matching" is "YES"
+    And the preference "screen-diagonal-mm" is "1244.6"
+    And the preference "screen-aspect" is "3.5555556"
+    And the preference "screen-curvature-mm" is "1000"
+    And the preference "viewer-distance-mm" is "800"
+    And the preference "screen-window-fraction" is "1"
+    And a window of 3840x1080
+    And a universe seeded with 20260910
+    When the detail level is set to "DETAIL_LEVEL_MINIMUM"
+    Then the projection's "warped" equals false
+    And the game setting "fovValue" is about 84.0
+    And the log has a "display.warp.pass" line
+    And the last "display.warp.pass" line says "off"
