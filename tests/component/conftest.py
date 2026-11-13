@@ -6,6 +6,8 @@ wedging it.
 
 import os
 import shutil
+import sys
+import tempfile
 import threading
 
 import pytest
@@ -96,17 +98,49 @@ class World:
 
     def start(self, seed, load_save=None):
         self.seed = seed
+        app_dir = self.app_dir
+        if self.preferences:
+            app_dir = self._stage_private_app()
         self.console = DebugConsole(
-            self.app_dir, self.port, seed=seed, output_dir=self.output_dir,
+            app_dir, self.port, seed=seed, output_dir=self.output_dir,
             load_save=load_save, preferences=self.preferences
         )
         self.console.start()
         return self.console
 
+    def _stage_private_app(self):
+        """A private oolite.app with empty saved preferences, for a scenario that sets its own.
+
+        The game writes its saved preferences on exit, and a scenario that changes a setting
+        while it runs (or a size the game detects) would otherwise leave it in the build's
+        GNUstep/Defaults for every later run. tests/launch_snapshot.py's stage_app does the
+        staging: junctions and hard links to the real build, real copies only of what the game
+        writes. GNUstep/ is created empty first, so stage_app does not copy the build's into it.
+        The folder comes from tempfile rather than pytest's tmp_path so that nothing but
+        unstage_app ever removes it: the junctions lead into the real build.
+        """
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+        from launch_snapshot import stage_app
+
+        self._staged_root = tempfile.mkdtemp(prefix=f"oolite-scenario-{self.port}-")
+        staged = os.path.join(self._staged_root, "oolite.app")
+        os.makedirs(os.path.join(staged, "GNUstep"))
+        return stage_app(self.app_dir, staged)
+
     def close(self):
         if self.console is not None:
             self.console.close()
             self.console = None
+        staged_root = getattr(self, "_staged_root", None)
+        if staged_root:
+            from launch_snapshot import unstage_app
+
+            unstage_app(os.path.join(staged_root, "oolite.app"))
+            try:
+                os.rmdir(staged_root)
+            except OSError:
+                pass
+            self._staged_root = None
 
 
 @pytest.fixture

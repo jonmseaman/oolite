@@ -135,3 +135,105 @@ Feature: Screen matching (spec 008)
     And the game setting "fovValue" is about 84.0
     And the log has a "display.warp.pass" line
     And the last "display.warp.pass" line says "off"
+
+  # Story 3 (T023): a custom horizontal angle wider than the physical one, its look changed and
+  # Physical restored, all while flying. Settings changed live are not given on the command line,
+  # where they would win over the change.
+  Scenario: A custom 120-degree angle on the G9, its look changed live, then Physical again
+    Given the preference "screen-matching" is "YES"
+    And the preference "screen-diagonal-mm" is "1244.6"
+    And the preference "screen-aspect" is "3.5555556"
+    And the preference "screen-curvature-mm" is "1000"
+    And the preference "viewer-distance-mm" is "800"
+    And the preference "screen-window-fraction" is "1"
+    And a window of 3840x1080
+    And a universe seeded with 20260910
+    When the display preference "fov-custom-horizontal" is set to "120"
+    And the display preference "fov-mode" is set to "custom"
+    Then the game setting "fovValue" is about 120.0
+    And the projection's "warped" equals true
+    When the display preference "fov-wide-look" is set to "even"
+    Then the game setting "fovValue" is about 120.0
+    And the projection's "warped" equals true
+    When the display preference "fov-mode" is set to "physical"
+    Then the game setting "fovValue" is about 84.0
+
+  # T024 (research R4): on a flat screen the warp runs only for Panini (the default look) or even
+  # spacing above the physical angle; classic flat at the same angle is an ordinary perspective.
+  Scenario: A flat screen at a custom 120 degrees warps for Panini but not for classic flat
+    Given the preference "screen-matching" is "YES"
+    And the preference "screen-diagonal-mm" is "685.8"
+    And the preference "screen-aspect" is "1.7777778"
+    And the preference "viewer-distance-mm" is "600"
+    And the preference "screen-window-fraction" is "1"
+    And the preference "fov-mode" is "custom"
+    And the preference "fov-custom-horizontal" is "120"
+    And a window of 1920x1080
+    And a universe seeded with 20260910
+    Then the game setting "fovValue" is about 120.0
+    And the projection's "warped" equals true
+    When the display preference "fov-wide-look" is set to "classic"
+    Then the projection's "warped" equals false
+    And the game setting "fovValue" is about 120.0
+
+  # T025 (research R14): the player pushes its field of view every update; with screen matching
+  # on that push must not move the angle off the one worked out from the screen.
+  Scenario: Flying does not move the screen-matched angle
+    Given the preference "screen-matching" is "YES"
+    And the preference "screen-diagonal-mm" is "1244.6"
+    And the preference "screen-aspect" is "3.5555556"
+    And the preference "screen-curvature-mm" is "1000"
+    And the preference "viewer-distance-mm" is "800"
+    And the preference "screen-window-fraction" is "1"
+    And the preference "fov-value" is "57.2"
+    And a window of 3840x1080
+    And a universe seeded with 20260910
+    When the simulation runs for 60 ticks
+    Then the game setting "fovValue" is about 84.0
+
+  # C4 (spec 008 FR-009, FR-010, SC-004): with no size entered, screen matching takes the size the
+  # display reports. screen-detected-size-mm stands in for the platform's answer (the G9's
+  # 1198 x 337 mm, on a 3840 x 1080 display). Entering only the curvature and the distance then
+  # gives the G9's angle.
+  Scenario: A detected size fills in the screen, and curvature and distance finish the job
+    Given the preference "screen-matching" is "YES"
+    And the preference "screen-detected-size-mm" is "1198x337@3840x1080"
+    And the preference "screen-curvature-mm" is "1000"
+    And the preference "viewer-distance-mm" is "800"
+    And the preference "screen-window-fraction" is "1"
+    And a window of 3840x1080
+    And a universe seeded with 20260910
+    Then the projection's "sizeSource" equals "detected"
+    And the game setting "fovValue" is about 84.0
+
+  Scenario: An entered size is never overwritten by detection
+    Given the preference "screen-matching" is "YES"
+    And the preference "screen-size-source" is "entered"
+    And the preference "screen-diagonal-mm" is "685.8"
+    And the preference "screen-aspect" is "1.7777778"
+    And the preference "screen-detected-size-mm" is "1198x337"
+    And the preference "viewer-distance-mm" is "600"
+    And the preference "screen-window-fraction" is "1"
+    And a window of 1920x1080
+    And a universe seeded with 20260910
+    Then the projection's "sizeSource" equals "entered"
+    And the game setting "fovValue" is about 53.0
+
+  # T026 (FR-018, research R6): a very wide angle is drawn as several slices, each with its own
+  # yaw, warped together; no OpenGL error on the way.
+  Scenario: A custom 160 degrees on the G9 is drawn in slices
+    Given the preference "screen-matching" is "YES"
+    And the preference "screen-diagonal-mm" is "1244.6"
+    And the preference "screen-aspect" is "3.5555556"
+    And the preference "screen-curvature-mm" is "1000"
+    And the preference "viewer-distance-mm" is "800"
+    And the preference "screen-window-fraction" is "1"
+    And the preference "fov-mode" is "custom"
+    And the preference "fov-custom-horizontal" is "160"
+    And a window of 3840x1080
+    And a universe seeded with 20260910
+    When OpenGL errors are logged
+    Then the game setting "fovValue" is about 160.0
+    And the projection's "warped" equals true
+    And the projection's "slices" is at least 2
+    And no log line contains "OpenGL error"

@@ -758,6 +758,12 @@ def run_test(bin_name, test_output, port, host, load_save, settle_game_seconds, 
             )
             return False
 
+        # Spec 008 FR-009: the display's physical size is asked for once at start-up, and the
+        # answer, a size or "not detected", is logged.
+        if count_log_lines(test_output, "display.size.detected") != 1:
+            print("[!] Failure: the log has no single display.size.detected line.")
+            return False
+
         if window_size and not os.environ.get("OO_GAME_EXTRA_ARGS", "").strip():
             # The smoke run snapshots the start screen, a GUI screen, so beside the 16:9 HUD
             # area there must be nothing at all (spec 008 FR-016, H3).

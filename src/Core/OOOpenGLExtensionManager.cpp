@@ -772,7 +772,7 @@ void OOOpenGLExtensionManager::checkFBOSupported() {
     glUniform2fv = reinterpret_cast<PFNGLUNIFORM2FVPROC>(
         wglGetProcAddress("glUniform2fv"));
     glDeleteRenderbuffers = reinterpret_cast<PFNGLDELETERENDERBUFFERSPROC>(
-        wglGetProcAddress("glDeleteRenderbuffer"));
+        wglGetProcAddress("glDeleteRenderbuffers"));
     glDeleteFramebuffers = reinterpret_cast<PFNGLDELETEFRAMEBUFFERSPROC>(
         wglGetProcAddress("glDeleteFramebuffers"));
     glDeleteVertexArrays = reinterpret_cast<PFNGLDELETEVERTEXARRAYSPROC>(

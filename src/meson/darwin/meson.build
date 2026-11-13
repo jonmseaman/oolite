@@ -11,5 +11,5 @@ oolite_link_args += [
 ]
 
 oolite_dependencies += [
-    dependency('appleframeworks', modules: ['OpenGL']),
+    dependency('appleframeworks', modules: ['OpenGL', 'CoreGraphics']),
 ]

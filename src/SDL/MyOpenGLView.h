@@ -455,6 +455,12 @@ class MyOpenGLView : public oo::Object {
   // The field of view set through setFov(); with screen matching off it is
   // _fov, with it on _fov follows the projection instead.
   float _requestedFov = {};
+  // Spec 008 FR-009: the display's physical size, asked for once.
+  bool _displaySizeQueried = false;
+  std::optional<std::pair<double, double>> _detectedSizeMm;
+  int _detectedPixelWidth = 0, _detectedPixelHeight = 0;
+  void detectDisplaySize();
+  bool _haveRequestedFov = false;
   bool _screenMatching = false;
   OOScreenDescription _screenDescription;
   double _viewerDistanceMm = 600.0;
