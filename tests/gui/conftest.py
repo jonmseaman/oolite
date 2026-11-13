@@ -542,6 +542,10 @@ VK_CODES = {
     # F12 is Oolite's fullscreen toggle: MyOpenGLView+Input.m:469-473 calls -toggleScreenMode
     # directly from the SDLK_F12 case. Not an extended key (see EXTENDED_VK_CODES).
     "f12": 0x7B,
+    # F6 opens the charts (key_gui_chart_screens, keyconfig2.plist); Home recentres a chart on
+    # the current system (key_map_home). Home is an extended key (EXTENDED_VK_CODES).
+    "f6": 0x75,
+    "home": 0x24,
 }
 
 # Keys whose scancode is only unambiguous with KEYEVENTF_EXTENDEDKEY set. The arrow cluster
