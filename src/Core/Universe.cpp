@@ -309,6 +309,14 @@ static float SetViewportToHudArea(MyOpenGLView* view) {
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 // console.__displayProjection() (spec 008, contracts/settings.md "Debug read").
+// The primary reticle's window point and the scene direction it marks.
+static std::string ReticleJSON() {
+  double at[2], direction[3];
+  if (!OOHudLastReticle(at, direction)) return "null";
+  return std::format("{{\"window\":[{},{}],\"direction\":[{},{},{}]}}", at[0],
+                     at[1], direction[0], direction[1], direction[2]);
+}
+
 static std::string DisplayProjectionJSON() {
   Universe* universe = gSharedUniverse;
   MyOpenGLView* view = universe != nullptr ? universe->getGameView() : nullptr;
@@ -320,12 +328,14 @@ static std::string DisplayProjectionJSON() {
       "{{\"left\":{},\"right\":{},\"bottom\":{},\"top\":{},"
       "\"displayZ\":{},\"windowDisplayZ\":{},"
       "\"hudArea\":[{},{},{},{}],\"window\":[{},{}],"
-      "\"fovValue\":{},\"screenMatching\":{}}}",
+      "\"fovValue\":{},\"screenMatching\":{},\"warped\":{},"
+      "\"reticle\":{}}}",
       f[0], f[1], f[2], f[3], view->getDisplay_z(), view->getWindowDisplay_z(),
       static_cast<int>(hud.origin.x), static_cast<int>(hud.origin.y),
       static_cast<int>(hud.size.width), static_cast<int>(hud.size.height),
       static_cast<int>(size.width), static_cast<int>(size.height),
-      view->fov(false), view->displayGeometry().screenMatching());
+      view->fov(false), view->displayGeometry().screenMatching(),
+      universe->spaceViewIsWarped(), ReticleJSON());
 }
 #endif
 
@@ -5291,6 +5301,26 @@ void Universe::drawUniverse() {
         OOGL(glBindFramebuffer(GL_FRAMEBUFFER, targetFramebufferID));
       }
     }
+    // Spec 008: when the projection needs the final warp, the space view is
+    // drawn into the flat render and warped into the target before the glare
+    // and the HUD (research R1).
+    const bool warping = warpsThisFrame();
+    if (warping != warpedLastFrame) {
+      // Once each time the pass starts or stops, not every frame.
+      OO_LOG("display.warp.pass", "warp pass {}", warping ? "on" : "off");
+      warpedLastFrame = warping;
+    }
+    if (warping) {
+      const OODisplayGeometry& geometry = gameView->displayGeometry();
+      ensureFlatRenderTarget(
+          NSMakeSize(geometry.flatRenderWidthPx() * geometry.sliceCount(),
+                     geometry.flatRenderHeightPx()));
+      OOGL(glBindFramebuffer(GL_FRAMEBUFFER, gameView->msaa()
+                                                 ? flatMsaaFramebufferID
+                                                 : flatFramebufferID));
+      OOGL(glViewport(0, 0, geometry.flatRenderWidthPx(),
+                      geometry.flatRenderHeightPx()));
+    }
     try {
       no_update = true;  // block other attempts to draw
 
@@ -5656,6 +5686,26 @@ void Universe::drawUniverse() {
         }
 
         OOGLPopModelView();
+      }
+
+      if (warping) {
+        // Resolve the flat render, then draw it through the warp mesh into
+        // the window-sized target, where everything after this works as it
+        // always has. Glare is drawn after the warp, in window space.
+        const NSSize flat = flatFramebufferSize;
+        if (gameView->msaa()) {
+          OOGL(glBindFramebuffer(GL_READ_FRAMEBUFFER, flatMsaaFramebufferID));
+          OOGL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, flatFramebufferID));
+          OOGL(glBlitFramebuffer(0, 0, (GLint)flat.width, (GLint)flat.height, 0,
+                                 0, (GLint)flat.width, (GLint)flat.height,
+                                 GL_COLOR_BUFFER_BIT, GL_NEAREST));
+        }
+        OOGL(glBindFramebuffer(GL_FRAMEBUFFER, gameView->msaa()
+                                                   ? msaaFramebufferID
+                                                   : targetFramebufferID));
+        SetViewportToWindow(gameView);
+        OOGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        drawWarpIntoBoundFramebuffer();
       }
 
       // glare effects covering the entire game window
@@ -10473,6 +10523,9 @@ void Universe::setDetailLevel(OOGraphicsDetail value) {
     OO_LOG("rendering.detail-level", "Detail level set to {}.",
            cxx_OOStringFromGraphicsDetail(detailLevel));
     ::OOGraphicsResetManager::sharedManager()->resetGraphicsState();
+    // Spec 008 FR-017: without shaders there is no warp, so the projection
+    // falls back to classic flat; rebuild it for the new level.
+    if (gameView != nullptr) gameView->reloadScreenMatchingPreferences();
   }
 }
 
@@ -11569,6 +11622,10 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
     textureProgram = OOShaderProgram::shaderProgramWithVertexShaderName(
         "oolite-texture.vertex", "oolite-texture.fragment", "#version 330\n",
         oo::PList(oo::PList::Dict{}));
+    // Spec 008: the final warp, a texture lookup through the warp mesh.
+    warpProgram = OOShaderProgram::shaderProgramWithVertexShaderName(
+        "oolite-warp.vertex", "oolite-warp.fragment", "#version 330\n",
+        oo::PList(oo::PList::Dict{}));
     // shader for blurring the over-threshold brightness image generated from
     // the previous step using Gaussian filter
     blurProgram = OOShaderProgram::shaderProgramWithVertexShaderName(
@@ -11642,6 +11699,174 @@ void Universe::deleteOpenGLObjects() {
   textureProgram = nullptr;
   blurProgram = nullptr;
   finalProgram = nullptr;
+  warpProgram = nullptr;
+  deleteWarpObjects();
+  if (warpMeshVAO != 0) OOGL(glDeleteVertexArrays(1, &warpMeshVAO));
+  if (warpMeshVBO != 0) OOGL(glDeleteBuffers(1, &warpMeshVBO));
+  warpMeshVAO = warpMeshVBO = 0;
+  warpMeshVertexCount = 0;
+}
+
+// --- Spec 008: the flat render and the final warp --------------------------
+
+bool Universe::warpsThisFrame() {
+  return useShaders() && !displayGUI && gameView != nullptr &&
+         warpProgram != nullptr && gameView->displayGeometry().needsWarp();
+}
+
+void Universe::ensureFlatRenderTarget(NSSize size) {
+  const bool msaa = gameView != nullptr && gameView->msaa();
+  if (size.width == flatFramebufferSize.width &&
+      size.height == flatFramebufferSize.height &&
+      msaa == (flatMsaaFramebufferID != 0)) {
+    return;
+  }
+  GLint previousFramebuffer;
+  OOGL(glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previousFramebuffer));
+  deleteWarpObjects();
+  const GLsizei width = (GLsizei)size.width, height = (GLsizei)size.height;
+
+  OOGL(glGenFramebuffers(1, &flatFramebufferID));
+  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, flatFramebufferID));
+  OOGL(glGenTextures(1, &flatTextureID));
+  OOGL(glBindTexture(GL_TEXTURE_2D, flatTextureID));
+  OOGL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA,
+                    GL_FLOAT, nullptr));
+  OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+  OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+  OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+  OOGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+  OOGL(glBindTexture(GL_TEXTURE_2D, 0));
+  OOGL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                              GL_TEXTURE_2D, flatTextureID, 0));
+  OOGL(glGenRenderbuffers(1, &flatDepthBufferID));
+  OOGL(glBindRenderbuffer(GL_RENDERBUFFER, flatDepthBufferID));
+  OOGL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, width,
+                             height));
+  OOGL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+  OOGL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                 GL_RENDERBUFFER, flatDepthBufferID));
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    OO_LOG_ERR("display.warp.framebuffer", "{}",
+               "***** Error: flat render framebuffer not complete");
+  }
+
+  if (msaa) {
+    OOGL(glGenFramebuffers(1, &flatMsaaFramebufferID));
+    OOGL(glBindFramebuffer(GL_FRAMEBUFFER, flatMsaaFramebufferID));
+    OOGL(glGenRenderbuffers(1, &flatMsaaColorBufferID));
+    OOGL(glBindRenderbuffer(GL_RENDERBUFFER, flatMsaaColorBufferID));
+    OOGL(glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA16F, width,
+                                          height));
+    OOGL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_RENDERBUFFER, flatMsaaColorBufferID));
+    OOGL(glGenRenderbuffers(1, &flatMsaaDepthBufferID));
+    OOGL(glBindRenderbuffer(GL_RENDERBUFFER, flatMsaaDepthBufferID));
+    OOGL(glRenderbufferStorageMultisample(
+        GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT32F, width, height));
+    OOGL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                   GL_RENDERBUFFER, flatMsaaDepthBufferID));
+    OOGL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+      OO_LOG_ERR("display.warp.framebuffer", "{}",
+                 "***** Error: multisample flat render framebuffer not "
+                 "complete");
+    }
+  }
+  flatFramebufferSize = size;
+  OO_LOG("display.warp.framebuffer", "flat render {}x{}{}", width, height,
+         msaa ? ", 4x MSAA" : "");
+  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, previousFramebuffer));
+}
+
+void Universe::ensureWarpMesh() {
+  if (gameView == nullptr) return;
+  const std::uint64_t generation = gameView->displayGeometryGeneration();
+  if (warpMeshVAO != 0 && generation == warpMeshGeneration) return;
+
+  const std::vector<OOWarpVertex> mesh = gameView->displayGeometry().warpMesh();
+  // Window points to clip space: x right, y up.
+  std::vector<float> data;
+  data.reserve(mesh.size() * 4);
+  for (const OOWarpVertex& v : mesh) {
+    data.push_back(v.windowX * 2.0f - 1.0f);
+    data.push_back(1.0f - v.windowY * 2.0f);
+    data.push_back(v.u);
+    data.push_back(v.v);
+  }
+
+  GLint previousVAO, previousArrayBuffer;
+  OOGL(glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &previousVAO));
+  OOGL(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &previousArrayBuffer));
+  if (warpMeshVAO == 0) {
+    OOGL(glGenVertexArrays(1, &warpMeshVAO));
+    OOGL(glGenBuffers(1, &warpMeshVBO));
+  }
+  OOGL(glBindVertexArray(warpMeshVAO));
+  OOGL(glBindBuffer(GL_ARRAY_BUFFER, warpMeshVBO));
+  OOGL(glBufferData(GL_ARRAY_BUFFER,
+                    static_cast<GLsizeiptr>(data.size() * sizeof(float)),
+                    data.data(), GL_STATIC_DRAW));
+  OOGL(glEnableVertexAttribArray(0));
+  OOGL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                             (void*)nullptr));
+  OOGL(glEnableVertexAttribArray(1));
+  OOGL(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                             (void*)(2 * sizeof(float))));
+  OOGL(glBindVertexArray(previousVAO));
+  OOGL(glBindBuffer(GL_ARRAY_BUFFER, previousArrayBuffer));
+  warpMeshVertexCount = static_cast<GLsizei>(mesh.size());
+  warpMeshGeneration = generation;
+  OO_LOG("display.warp.mesh", "{} vertices", warpMeshVertexCount);
+}
+
+void Universe::drawWarpIntoBoundFramebuffer() {
+  ensureWarpMesh();
+  if (warpMeshVertexCount == 0 || warpProgram == nullptr) return;
+
+  GLint previousProgram, previousTexture, previousVAO, previousActiveTexture;
+  OOGL(glGetIntegerv(GL_CURRENT_PROGRAM, &previousProgram));
+  OOGL(glGetIntegerv(GL_ACTIVE_TEXTURE, &previousActiveTexture));
+  OOGL(glActiveTexture(GL_TEXTURE0));
+  OOGL(glGetIntegerv(GL_TEXTURE_BINDING_2D, &previousTexture));
+  OOGL(glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &previousVAO));
+  const GLboolean depthTest = glIsEnabled(GL_DEPTH_TEST);
+  const GLboolean blend = glIsEnabled(GL_BLEND);
+  const GLboolean cull = glIsEnabled(GL_CULL_FACE);
+  OOGL(glDisable(GL_DEPTH_TEST));
+  OOGL(glDisable(GL_BLEND));
+  OOGL(glDisable(GL_CULL_FACE));
+
+  const GLuint program = OOGLProgramName(warpProgram->program());
+  OOGL(glUseProgram(program));
+  OOGL(glUniform1i(glGetUniformLocation(program, "image"), 0));
+  OOGL(glBindTexture(GL_TEXTURE_2D, flatTextureID));
+  OOGL(glBindVertexArray(warpMeshVAO));
+  OOGL(glDrawArrays(GL_TRIANGLES, 0, warpMeshVertexCount));
+
+  OOGL(glBindVertexArray(previousVAO));
+  OOGL(glBindTexture(GL_TEXTURE_2D, previousTexture));
+  OOGL(glActiveTexture(previousActiveTexture));
+  OOGL(glUseProgram(previousProgram));
+  if (depthTest) OOGL(glEnable(GL_DEPTH_TEST));
+  if (blend) OOGL(glEnable(GL_BLEND));
+  if (cull) OOGL(glEnable(GL_CULL_FACE));
+}
+
+void Universe::deleteWarpObjects() {
+  if (flatMsaaColorBufferID != 0)
+    OOGL(glDeleteRenderbuffers(1, &flatMsaaColorBufferID));
+  if (flatMsaaDepthBufferID != 0)
+    OOGL(glDeleteRenderbuffers(1, &flatMsaaDepthBufferID));
+  if (flatMsaaFramebufferID != 0)
+    OOGL(glDeleteFramebuffers(1, &flatMsaaFramebufferID));
+  if (flatDepthBufferID != 0)
+    OOGL(glDeleteRenderbuffers(1, &flatDepthBufferID));
+  if (flatTextureID != 0) OOGL(glDeleteTextures(1, &flatTextureID));
+  if (flatFramebufferID != 0) OOGL(glDeleteFramebuffers(1, &flatFramebufferID));
+  flatMsaaColorBufferID = flatMsaaDepthBufferID = flatMsaaFramebufferID = 0;
+  flatDepthBufferID = flatTextureID = flatFramebufferID = 0;
+  flatFramebufferSize = NSSize{};
 }
 
 void Universe::resizeTargetFramebufferWithViewSize(NSSize viewSize) {

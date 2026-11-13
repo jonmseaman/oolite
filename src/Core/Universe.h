@@ -251,6 +251,15 @@ class Universe : public oo::RefCounted {
   void deleteOpenGLObjects();
   void resizeTargetFramebufferWithViewSize(NSSize viewSize);
   void drawTargetTextureIntoDefaultFramebuffer();
+  // Spec 008: the flat render (research R1) and the final warp.
+  bool warpsThisFrame();
+  // True while this frame's space view went through the final warp, so object
+  // markers must be placed through the mapping (spec 008 research R13).
+  bool spaceViewIsWarped() const { return warpedLastFrame; }
+  void ensureFlatRenderTarget(NSSize size);
+  void ensureWarpMesh();
+  void drawWarpIntoBoundFramebuffer();
+  void deleteWarpObjects();
   NSUInteger sessionID();
   bool doingStartUp();
   bool getDoProcedurallyTexturedPlanets();
@@ -484,6 +493,17 @@ class Universe : public oo::RefCounted {
   oo::Ref<OOShaderProgram> blurProgram = {};
   oo::Ref<OOShaderProgram> finalProgram = {};
   GLuint quadTextureVBO = 0, quadTextureVAO = 0, quadTextureEBO = 0;
+  // Spec 008: the flat render the space view is drawn into when the projection
+  // needs the final warp, and the warp mesh. Created on first use.
+  GLuint flatFramebufferID = 0, flatTextureID = 0, flatDepthBufferID = 0;
+  GLuint flatMsaaFramebufferID = 0, flatMsaaColorBufferID = 0,
+         flatMsaaDepthBufferID = 0;
+  NSSize flatFramebufferSize = {};
+  GLuint warpMeshVAO = 0, warpMeshVBO = 0;
+  GLsizei warpMeshVertexCount = 0;
+  std::uint64_t warpMeshGeneration = 0;
+  bool warpedLastFrame = false;
+  oo::Ref<OOShaderProgram> warpProgram = {};
   GLint defaultDrawFBO = 0;
   GLuint pingpongFBO[2] = {};
   GLuint pingpongColorbuffers[2] = {};

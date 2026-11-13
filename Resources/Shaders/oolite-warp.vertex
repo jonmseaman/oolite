@@ -1,0 +1,14 @@
+// The final warp (spec 008): one vertex of OODisplayGeometry::warpMesh(), at its
+// window position, carrying the flat-render coordinate of the scene direction
+// shown there. The mapping is worked out in C++; this shader only draws it.
+layout(location = 0) in vec2 vert_position;
+layout(location = 1) in vec2 texture_coordinate;
+
+out vec2 vs_out_texture_coordinate;
+
+
+void main()
+{
+	gl_Position = vec4(vert_position, 0.0, 1.0);
+	vs_out_texture_coordinate = texture_coordinate;
+}

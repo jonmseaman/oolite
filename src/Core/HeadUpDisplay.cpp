@@ -133,6 +133,13 @@ class MarkersInWholeWindow {
 
 const OOHUDWidget* sCurrentDrawItem;
 
+// Spec 008: the scene direction of the marker hudRotateViewpointForVirtualDepth
+// last placed, and the primary reticle's record for the debug read.
+OODirection sLastMarkerSceneDirection{0, 0, 1};
+bool sHaveReticle = false;
+double sReticleWindow[2] = {};
+OODirection sReticleSceneDirection{0, 0, 1};
+
 /*	The current widget's cached geometry. An MFD entry that is not a
    dictionary was a tuple built with arrayWithObjects: starting at its nil info,
    i.e. an empty array, and reading its cache raised this exception (caught by
@@ -3859,6 +3866,19 @@ void hudDrawReticleOnTarget(
   OOGLPushModelView();
   hudRotateViewpointForVirtualDepth(player1, p1);
 
+  if (player1->primaryTarget() == target) {
+    // Where the marker's origin lands, through the matrices it is drawn with.
+    MyOpenGLView* view =
+        UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr;
+    const NSSize size = view != nullptr ? view->backingViewSize() : NSSize{};
+    const Vector ndc =
+        OOVectorMultiplyMatrix(kZeroVector, OOGLGetModelViewProjection());
+    sReticleWindow[0] = (ndc.x + 1.0) / 2.0 * size.width;
+    sReticleWindow[1] = (1.0 - ndc.y) / 2.0 * size.height;
+    sReticleSceneDirection = sLastMarkerSceneDirection;
+    sHaveReticle = true;
+  }
+
   // draw the reticle
   float range = sqrt(target->zero_distance) - target->collision_radius;
 
@@ -4200,6 +4220,55 @@ static void hudRotateViewpointForVirtualDepth(PlayerEntity* player1,
   OOGLMultModelView(HeadUpDisplayPlayerRotationMatrix(player1));
   // translate the view
   OOGLTranslateModelView(p1);
+
+  // Spec 008 (research R13): the marker's eye-space position, unscaled. GL eye
+  // space looks down -z; the geometry's scene space looks down +z.
+  const float markerScale =
+      3.0f * aspect >= 4.0f ? 1 / ratio : (4.0f / 3.0f) / (aspect * ratio);
+  const OOMatrix placed = OOGLGetModelView();
+  const Vector eye = OOVectorMultiplyMatrix(kZeroVector, placed);
+  const double distance = std::sqrt(
+      static_cast<double>(eye.x / markerScale) * (eye.x / markerScale) +
+      static_cast<double>(eye.y / markerScale) * (eye.y / markerScale) +
+      static_cast<double>(eye.z) * eye.z);
+  if (distance > 0) {
+    sLastMarkerSceneDirection = {eye.x / markerScale / distance,
+                                 eye.y / markerScale / distance,
+                                 -eye.z / distance};
+  }
+  // With the final warp the space view is no longer the flat projection the
+  // marker was placed by: move it, at the same depth, to where the warp drew
+  // its target, and size it by the local magnification there.
+  MyOpenGLView* gameView =
+      UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr;
+  if (gameView != nullptr && UNIVERSE->spaceViewIsWarped() && eye.z < 0 &&
+      distance > 0) {
+    const OODisplayGeometry& geometry = gameView->displayGeometry();
+    const std::optional<OOWindowPoint> at =
+        geometry.sceneToWindow(sLastMarkerSceneDirection);
+    const NSSize size = gameView->backingViewSize();
+    if (at && size.width > 0 && size.height > 0) {
+      // MarkersInWholeWindow's frustum: +-0.5 across, +-0.5 * height / width
+      // up, at distance 1.
+      const double nx = 2.0 * at->x / size.width - 1.0;
+      const double ny = 1.0 - 2.0 * at->y / size.height;
+      const double depth = -eye.z;
+      const Vector moved = make_vector(
+          static_cast<float>(0.5 * nx * depth),
+          static_cast<float>(0.5 * size.height / size.width * ny * depth),
+          eye.z);
+      OOGLLoadModelView(OOMatrixMultiply(
+          placed, OOMatrixForTranslation(vector_subtract(moved, eye))));
+      // A billboard at this depth covers size.width / depth pixels per unit;
+      // the warp shows the target at localPixelsPerRadian / distance.
+      const double fov = gameView->fov(true);
+      const float grow =
+          static_cast<float>(geometry.localPixelsPerRadian(*at) * 2.0 * fov *
+                             depth / (size.width * distance));
+      if (grow > 0) OOGLScaleModelView(make_vector(grow, grow, grow));
+    }
+  }
+
   // rotate to face player1
   OOGLMultModelView(OOMatrixForQuaternionRotation(back_q));
 
@@ -4834,6 +4903,16 @@ void HeadUpDisplayUniverseGUISetGLColorFromSetting(
     const std::optional<std::string>& setting, OOColor* defaultValue,
     GLfloat alpha) {
   UNIVERSE->getGui()->setGLColorFromSetting(setting, defaultValue, alpha);
+}
+
+bool OOHudLastReticle(double windowXY[2], double sceneDirection[3]) {
+  if (!sHaveReticle) return false;
+  windowXY[0] = sReticleWindow[0];
+  windowXY[1] = sReticleWindow[1];
+  sceneDirection[0] = sReticleSceneDirection.x;
+  sceneDirection[1] = sReticleSceneDirection.y;
+  sceneDirection[2] = sReticleSceneDirection.z;
+  return true;
 }
 
 // --- Sends of the reticles and waypoints (hudDrawReticleOnTarget(),

@@ -570,6 +570,10 @@ WORMHOLE_SCANINFO HeadUpDisplayWormholeScanInfo(WormholeEntity* wormhole);
 double HeadUpDisplayWormholeEstimatedArrivalTime(WormholeEntity* wormhole);
 double HeadUpDisplayWormholeExpiryTime(WormholeEntity* wormhole);
 OOTimeAbsolute HeadUpDisplayUniverseGetTime();
+// Spec 008 debug read: where the primary target's reticle was last drawn, in
+// window pixels (origin top-left), and the scene direction it marks (+z
+// forward, +x right, +y up). False before any reticle has been drawn.
+bool OOHudLastReticle(double windowXY[2], double sceneDirection[3]);
 const oo::PList*
 HeadUpDisplayUniverseDescriptions();  // MissileIconDefinition()
 OOViewID HeadUpDisplayUniverseViewDirection();
