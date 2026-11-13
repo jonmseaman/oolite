@@ -27,6 +27,8 @@ Rules that hold for every component:
 | `src/oofnd/PListXML.hpp` | `oo::parseXMLPList` (GNUstep's GSXMLPListParser over GSSloppyXMLParser) and `oo::changeDTDIfApplicable` (OOPListParsing.m), ported quirk-for-quirk |
 | `src/oofnd/PListWriting.hpp` | `oo::writeOldStylePList` (OldSchoolPropertyListWriting.m) and `oo::writeXMLPList` (GNUstep's XML writer), byte-identical output |
 | `src/oofnd/PListParsing.hpp` | `oo::parsePropertyList`: OOPropertyListFromData's DTD change + format detection + dispatch to the two readers |
+| `src/oofnd/PListJSON5.hpp` | `oo::parseJSON5PList`: a JSON5 1.0.0 document as the same `oo::PList` tree (`{$data: "<base64>"}` and `{$date: "<ISO 8601>"}` for data and dates; `null` is an error); errors carry line and column |
+| `src/oofnd/PListFile.hpp` | where a property list file's data comes from: `oo::loadPListFile` reads `<name>.json5` in place of `<name>.plist` when it is there (the core game's own data files are JSON5), `oo::existingPListPath` finds whichever exists, `oo::parsePListFile` gives the tree from either |
 | `src/oofnd/PListDescription.hpp` | `oo::describe(plist)`: gnustep-base's `-description` of the Foundation form of a `PList` (what `%@` printed for `ObjectFromPList(plist)`), byte for byte; pinned by rows captured from gnustep-base 1.31.1 (`tests/unit/oofnd/plist_description_captured.inc`). Game code calls `oo::DescriptionOf(plist)` |
 | `src/oofnd/PListGet.hpp` | `oo::PList::get<T>(key, fallback)` / `at<T>(index, fallback)`: OOCollectionExtractors' `oo_*ForKey:` / `oo_*AtIndex:` with GNUstep's exact conversions; included by `PList.hpp` |
 | `src/oofnd/Data.hpp` | `oo::Data`: `NSData` / `NSMutableData` as a value type |

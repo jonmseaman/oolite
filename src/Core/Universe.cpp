@@ -100,6 +100,7 @@ MA 02110-1301, USA.
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/PList.hpp"
+#include "oofnd/PListFile.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/Process.hpp"  // IWYU pragma: keep: used only with OO_LOCALIZATION_TOOLS
 #include "oofnd/Scanner.hpp"
@@ -826,9 +827,12 @@ unsigned sDescriptionsGeneration = 0;
 // list if it is a dictionary, else (missing, unreadable, unparsable, another
 // kind) a null PList. As ResourceManager.cpp.
 oo::PList DictionaryWithContentsOfFile(const std::string& path) {
-  const auto data = oo::fs::readFile(oo::fs::pathFromUTF8(path));
-  if (!data) return oo::PList();
-  auto plist = oo::parsePropertyListData(data->stringView());
+  auto plist = oo::parsePListFile(
+      path, [](const std::string& p) -> std::optional<oo::Data> {
+        auto data = oo::fs::readFile(oo::fs::pathFromUTF8(p));
+        if (!data) return std::nullopt;
+        return std::move(*data);
+      });
   if (!plist || !plist->isDict()) return oo::PList();
   return std::move(*plist);
 }

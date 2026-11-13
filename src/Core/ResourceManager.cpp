@@ -53,6 +53,7 @@ MA 02110-1301, USA.
 #include "oofnd/Encoding.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/PList.hpp"
+#include "oofnd/PListFile.hpp"
 #include "oofnd/PListParsing.hpp"
 #include "oofnd/PListWriting.hpp"
 #include "oofnd/ResourcePaths.hpp"
@@ -312,9 +313,12 @@ const oo::PList* TextureListKey(const oo::PList* value) {
 // list if it is a dictionary, else (missing, unreadable, unparsable, another
 // kind) a null PList.
 oo::PList DictionaryWithContentsOfFile(const std::string& path) {
-  const auto data = oo::fs::readFile(oo::fs::pathFromUTF8(path));
-  if (!data) return oo::PList();
-  auto plist = oo::parsePropertyListData(data->stringView());
+  auto plist = oo::parsePListFile(
+      path, [](const std::string& p) -> std::optional<oo::Data> {
+        auto data = oo::fs::readFile(oo::fs::pathFromUTF8(p));
+        if (!data) return std::nullopt;
+        return std::move(*data);
+      });
   if (!plist || !plist->isDict()) return oo::PList();
   return std::move(*plist);
 }
@@ -2096,7 +2100,8 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
 
   // Search for file (OXZ-aware exists, same answers as
   // -oo_oxzFileExistsAtPath:). reverse object enumerator allows OXPs to
-  // override core
+  // override core. A <name>.json5 beside where <name>.plist is looked for is
+  // found in its place (oofnd/PListFile.hpp).
   const std::vector<std::string> paths = ResourceManager::paths();
   for (auto pathIt = paths.rbegin(); pathIt != paths.rend(); ++pathIt) {
     const std::string& path = *pathIt;
@@ -2106,21 +2111,17 @@ std::optional<std::string> ResourceManager::pathForFileNamed(
             ? oo::str::appendingPathComponent(path, *folderName)
             : path,
         fileName);
-    if (OOOxzFileExistsAtPath(filePath)) {
-      result = filePath;
-      break;
-    }
+    result = oo::existingPListPath(filePath, OOOxzFileExistsAtPath);
+    if (result.has_value()) break;
 
     filePath = oo::str::appendingPathComponent(path, fileName);
-    if (OOOxzFileExistsAtPath(filePath)) {
-      result = filePath;
-      break;
-    }
+    result = oo::existingPListPath(filePath, OOOxzFileExistsAtPath);
+    if (result.has_value()) break;
   }
 
   if (result.has_value()) {
     OO_LOG("resourceManager.foundFile", "Found {}/{} at {}",
-           folderName.value_or("(null)"), fileName, filePath);
+           folderName.value_or("(null)"), fileName, *result);
     if (useCache) {
       cache->setPList(oo::PList(*result), cacheKey, "resolved paths");
     }
