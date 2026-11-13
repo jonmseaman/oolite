@@ -1186,23 +1186,99 @@ oo::PList MyOpenGLView::currentScreenMode() {
 }
 
 void MyOpenGLView::setFov(float value, bool fromFraction) {
-  _fov = fromFraction ? value : tan((value / 2) * M_PI / 180);
+  _requestedFov = fromFraction ? value : tan((value / 2) * M_PI / 180);
+  // With screen matching on, the field of view comes from the screen and the
+  // seat (spec 008); PlayerEntity's per-update push must not override it.
+  if (!_screenMatching) _fov = _requestedFov;
   rebuildDisplayGeometry();
 }
 
-void MyOpenGLView::rebuildDisplayGeometry() {
+void MyOpenGLView::reloadScreenMatchingPreferences() {
+  const oo::Defaults& prefs = oo::Defaults::standard();
+  _screenMatching = prefs.boolForKey("screen-matching");
+
+  OOScreenDescription screen;
+  if (!prefs.object("screen-diagonal-mm").isNull())
+    screen.diagonalMm = prefs.doubleForKey("screen-diagonal-mm");
+  if (!prefs.object("screen-aspect").isNull())
+    screen.aspect = prefs.doubleForKey("screen-aspect");
+  if (!prefs.object("screen-curvature-mm").isNull() &&
+      prefs.doubleForKey("screen-curvature-mm") > 0) {
+    screen.curvatureMm = prefs.doubleForKey("screen-curvature-mm");
+  }
+  const std::string source =
+      prefs.stringForKey("screen-size-source").value_or("");
+  screen.source = source == "entered"    ? OOScreenSizeSource::kEntered
+                  : source == "detected" ? OOScreenSizeSource::kDetected
+                                         : OOScreenSizeSource::kDefault;
+  _screenDescription = screen;
+  _viewerDistanceMm = prefs.object("viewer-distance-mm").isNull()
+                          ? 600.0
+                          : prefs.doubleForKey("viewer-distance-mm");
+
+  OOFieldOfViewChoice choice;
+  if (prefs.stringForKey("fov-mode").value_or("") == "custom")
+    choice.mode = OOFovMode::kCustom;
+  if (!prefs.object("fov-custom-horizontal").isNull())
+    choice.customHorizontalDeg = prefs.doubleForKey("fov-custom-horizontal");
+  const std::string look = prefs.stringForKey("fov-wide-look").value_or("");
+  choice.look = look == "even"      ? OOWideLook::kEvenSpacing
+                : look == "classic" ? OOWideLook::kClassicFlat
+                                    : OOWideLook::kPanini;
+  _fovChoice = choice;
+
+  if (!_screenMatching) _fov = _requestedFov;
+  rebuildDisplayGeometry(true);
+}
+
+void MyOpenGLView::rebuildDisplayGeometry(bool force) {
   const NSSize size = backingViewSize();
-  if (_fov == _displayGeometryFov && size.width == _displayGeometrySize.width &&
+  const int width = static_cast<int>(size.width);
+  const int height = static_cast<int>(size.height);
+  if (!force && _fov == _displayGeometryFov &&
+      size.width == _displayGeometrySize.width &&
       size.height == _displayGeometrySize.height) {
     return;
   }
+  if (!_screenMatching) {
+    _displayGeometry = OODisplayGeometry::legacy(_fov, width, height);
+  } else {
+    // The part of the panel the window covers: all of it in full screen,
+    // else the window's share of the display's pixels.
+    double fractionX = 1.0, fractionY = 1.0;
+    const oo::Defaults& prefs = oo::Defaults::standard();
+    if (!prefs.object("screen-window-fraction").isNull()) {
+      // Tests pin the share (data-model.md): it otherwise depends on the
+      // monitor the test runs on.
+      fractionX = fractionY = prefs.doubleForKey("screen-window-fraction");
+    } else if (!fullScreen && window != nullptr) {
+      const SDL_DisplayMode* mode =
+          SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(window));
+      if (mode != nullptr && mode->w > 0 && mode->h > 0) {
+        const float density = mode->pixel_density > 0 ? mode->pixel_density : 1;
+        fractionX = std::min(1.0, size.width / (mode->w * density));
+        fractionY = std::min(1.0, size.height / (mode->h * density));
+      }
+    }
+    GLint maxTexture = 16384;
+    if (glContext != nullptr) glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexture);
+    const bool shaders = UNIVERSE == nullptr || UNIVERSE->useShaders();
+    _displayGeometry = OODisplayGeometry(
+        _screenDescription, _viewerDistanceMm, _fovChoice, width, height,
+        fractionX, fractionY, shaders, static_cast<int>(maxTexture));
+    // With no warp the projection is an ordinary perspective, and the frustum
+    // and the HUD's markers both follow the view's field of view (spec 008
+    // tasks.md, "Change while implementing").
+    _fov = static_cast<float>(
+        std::tan(_displayGeometry.horizontalDeg() / 2 * M_PI / 180));
+  }
   _displayGeometryFov = _fov;
   _displayGeometrySize = size;
-  _displayGeometry = OODisplayGeometry::legacy(
-      _fov, static_cast<int>(size.width), static_cast<int>(size.height));
   _displayGeometryGeneration++;
-  OO_LOG("display.geometry.rebuild", "{}x{}, field of view tangent {}",
-         static_cast<int>(size.width), static_cast<int>(size.height), _fov);
+  OO_LOG("display.geometry.rebuild",
+         "{}x{}, screen matching {}, {:.2f} x {:.2f} degrees", width, height,
+         _screenMatching ? "on" : "off", _displayGeometry.horizontalDeg(),
+         _displayGeometry.verticalDeg());
 }
 
 NSRect MyOpenGLView::hudArea() const { return _hudArea; }

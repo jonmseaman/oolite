@@ -402,6 +402,9 @@ void Universe::initWithGameView(::MyOpenGLView* inGameView) {
   if ((inGameView != nullptr ? inGameView->fov(false) : 0.0f) < MIN_FOV_DEG) {
     if (inGameView != nullptr) inGameView->setFov(MIN_FOV_DEG, false);
   }
+  // Spec 008: with screen matching on, the field of view comes from the
+  // player's screen and seat instead of fov-value.
+  if (inGameView != nullptr) inGameView->reloadScreenMatchingPreferences();
 
   setECMVisualFXEnabled(prefs.object("ecm-visual-fx").isNull()
                             ? true
@@ -5375,6 +5378,14 @@ void Universe::drawUniverse() {
           sqrt(1 + ((gameView != nullptr ? gameView->fov(true) : 0.0f) *
                     (gameView != nullptr ? gameView->fov(true) : 0.0f) *
                     (1.0 + 1.0 / (aspect * aspect))));
+      if (!displayGUI && gameView != nullptr &&
+          gameView->displayGeometry().screenMatching()) {
+        // Spec 008: bring the near plane in by the flat render's own corner.
+        const OOFlatFrustum f = gameView->displayGeometry().flatFrustum();
+        const double x = std::max(std::fabs(f.left), std::fabs(f.right));
+        const double y = std::max(std::fabs(f.bottom), std::fabs(f.top));
+        distanceFactor = static_cast<float>(std::sqrt(1 + x * x + y * y));
+      }
 
       for (vdist = 0; vdist <= 1; vdist++) {
         float nearPlane = vdist ? 1.0 : INTERMEDIATE_CLEAR_DEPTH;
@@ -5386,8 +5397,19 @@ void Universe::drawUniverse() {
 
         OOGLResetProjection();
         float frustumLeft, frustumRight, frustumBottom, frustumTop;
-        if ((displayGUI && 4 * aspect >= 3) ||
-            (!displayGUI && 4 * aspect <= 3)) {
+        const bool screenMatching =
+            !displayGUI && gameView != nullptr &&
+            gameView->displayGeometry().screenMatching();
+        if (screenMatching) {
+          // Spec 008: the flat render's frustum, from the screen and seat.
+          const OOFlatFrustum flat = gameView->displayGeometry().flatFrustum();
+          const float scale = nearPlane / distanceFactor;
+          frustumLeft = static_cast<float>(flat.left) * scale;
+          frustumRight = static_cast<float>(flat.right) * scale;
+          frustumBottom = static_cast<float>(flat.bottom) * scale;
+          frustumTop = static_cast<float>(flat.top) * scale;
+        } else if ((displayGUI && 4 * aspect >= 3) ||
+                   (!displayGUI && 4 * aspect <= 3)) {
           frustumLeft = -ratio;
           frustumRight = ratio;
           frustumBottom = -aspect * ratio;
