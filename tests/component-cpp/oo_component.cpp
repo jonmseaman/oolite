@@ -8,14 +8,18 @@
 #include <SDL3/SDL.h>
 #include <quickjs.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <format>
 #include <functional>
 #include <limits>
+#include <map>
+#include <set>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -89,9 +93,46 @@ bool ClassIs(std::string_view messageClass, std::string_view listed) {
           messageClass[listed.size()] == '.');
 }
 
+// The windowed steps' set-up for a role (world_steps.py): the pinned ship key
+// (ROLE_SHIP_KEY), the AI (ROLE_AI), the pirate's bounty (PIRATE_BOUNTY) and
+// the radius of an unpositioned spawn (SPAWN_RADIUS_M).
+const std::map<std::string, std::string, std::less<>>& RoleShipKey() {
+  static const std::map<std::string, std::string, std::less<>> keys = {
+      {"police", "[viper]"},
+      {"pirate", "[sidewinder]"},
+      {"trader", "[boa]"},
+      {"escort", "[sidewinder-escort]"}};
+  return keys;
+}
+
+const std::map<std::string, std::string, std::less<>>& RoleAI() {
+  static const std::map<std::string, std::string, std::less<>> ais = {
+      {"police", "oolite-policeAI.js"},
+      {"pirate", "oolite-pirateAI.js"},
+      {"trader", "oolite-traderAI.js"},
+      {"shuttle", "oolite-shuttleAI.js"}};
+  return ais;
+}
+
+constexpr int kPirateBounty = 100;
+constexpr int kSpawnRadiusMetres = 5000;
+constexpr double kPollSeconds = 0.5;  // POLL_SECONDS
+
+// A string as a JavaScript literal (world_steps.py _js_string).
+std::string JsString(std::string_view value) {
+  std::string quoted = "\"";
+  for (char c : value) {
+    if (c == '\\' || c == '"') quoted += '\\';
+    quoted += c;
+  }
+  return quoted + "\"";
+}
+
 struct State {
   bool exists = false;
   EventRecord events;
+  std::optional<std::array<double, 3>> locus;
+  std::vector<std::string> spawnedRoles;  // in first-spawn order
   std::uint32_t seed = 0;
   std::uint64_t steps = 0;
   fs::path scratch;
@@ -222,10 +263,14 @@ void PrintEvent(const Event& event) {
 void PrintState(const char* file, int line) {
   const State& state = TheState();
   if (!state.exists) return;
-  std::printf("     at %s:%d: seed %u, game time %.3f s, step %llu\n", file,
-              line, static_cast<unsigned>(state.seed),
+  PlayerEntity* player = PlayerEntity::sharedPlayer();
+  std::printf("     at %s:%d: seed %u, game time %.3f s, step %llu, screen %s\n",
+              file, line, static_cast<unsigned>(state.seed),
               UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
-              static_cast<unsigned long long>(state.steps));
+              static_cast<unsigned long long>(state.steps),
+              player != nullptr
+                  ? OOStringFromGUIScreenID(player->guiScreen()).c_str()
+                  : "(no player)");
   const std::vector<Event>& entries = state.events.entries();
   const std::size_t from = entries.size() > kFailureContextEntries
                                ? entries.size() - kFailureContextEntries
@@ -302,6 +347,34 @@ std::string ExceptionMessage(JSContext* context) {
 }  // namespace
 
 const std::vector<std::string>& programArguments() { return Arguments(); }
+
+ShipHandle::ShipHandle(const std::shared_ptr<ShipEntity>& ship) : ship_(ship) {
+  if (ship != nullptr) {
+    id_ = static_cast<std::uint32_t>(ship->getUniversalID());
+    key_ = ship->shipDataKey().value_or("");
+  }
+}
+
+bool ShipHandle::alive() const {
+  const std::shared_ptr<ShipEntity> ship = ship_.lock();
+  if (ship == nullptr || UNIVERSE == nullptr) return false;
+  if (ship->status() == OOEntityStatus::kDead) return false;
+  return UNIVERSE->entityForUniversalID(
+             static_cast<OOUniversalID>(id_)) == ship.get();
+}
+
+ShipEntity* ShipHandle::operator->() const {
+  if (!alive()) {
+    fail(std::format("ship {} ({}) is gone", id_, key_), __FILE__, __LINE__);
+    std::fflush(stdout);
+    std::exit(1);  // the call through it cannot go on
+  }
+  return ship_.lock().get();
+}
+
+ShipHandle::operator ShipEntity*() const {
+  return alive() ? ship_.lock().get() : nullptr;
+}
 
 bool EventRecord::has(std::string_view name, std::uint32_t subjectId) const {
   return firstOf(name, subjectId) != nullptr;
@@ -461,6 +534,117 @@ GameController* Game::controller() const {
 }
 
 std::uint64_t Game::steps() const { return TheState().steps; }
+
+std::optional<std::array<double, 3>> Game::locus() const {
+  return TheState().locus;
+}
+
+std::vector<ShipHandle> Game::spawn(const ShipsWithRole& what) {
+  State& state = TheState();
+  const std::string& role = what.role_;
+
+  // Every ship there is now, so the new ones can be told apart.
+  std::set<const Entity*> before;
+  for (const oo::EntityHold& entity : universe()->entityList()) {
+    before.insert(entity.get());
+  }
+
+  // world_steps.py _spawn: "within K km" measures from the first ship spawned
+  // (debugConsole.__ooLocus there; undefined before any spawn), otherwise
+  // around the player.
+  std::string at = "player.ship.position";
+  int radius = kSpawnRadiusMetres;
+  if (what.withinKm_.has_value()) {
+    radius = *what.withinKm_ * 1000;
+    at = state.locus.has_value()
+             ? std::format("new Vector3D({:.17g}, {:.17g}, {:.17g})",
+                           (*state.locus)[0], (*state.locus)[1],
+                           (*state.locus)[2])
+             : "undefined";
+  }
+  const auto pinned = RoleShipKey().find(role);
+  const std::string selector = pinned != RoleShipKey().end() ? pinned->second : role;
+  std::string perShip = role == "pirate"
+                            ? std::format("added[i].bounty = {};", kPirateBounty)
+                            : "";
+  const auto ai = RoleAI().find(role);
+  if (ai != RoleAI().end()) {
+    perShip += std::format(" added[i].setAI({});", JsString(ai->second));
+  }
+  const std::string js = std::format(
+      "(function(){{"
+      " var at = {0};"
+      " var added = system.addShips({1}, {2}, at, {3});"
+      " if (!added) return 0;"
+      " for (var i = 0; i < added.length; i++) {{"
+      "   added[i].primaryRole = {4};"
+      "   {5}"
+      " }}"
+      " return added.length; }})()",
+      at, JsString(selector), what.count_, radius, JsString(role), perShip);
+  const int added = static_cast<int>(eval(js));
+  if (added != what.count_) {
+    fail(std::format("asked for {} {}, addShips returned {}", what.count_, role,
+                     added),
+         __FILE__, __LINE__);
+  }
+
+  std::vector<ShipHandle> ships;
+  for (const oo::EntityHold& entity : universe()->entityList()) {
+    if (before.contains(entity.get())) continue;
+    ShipEntity* ship = dynamic_cast<ShipEntity*>(entity.get());
+    if (ship == nullptr || ship->getPrimaryRole().value_or("") != role) continue;
+    ships.emplace_back(oo::share(ship));
+  }
+  if (!ships.empty() && !state.locus.has_value()) {
+    const HPVector p = static_cast<ShipEntity*>(ships.front())->getPosition();
+    state.locus = std::array<double, 3>{p.x, p.y, p.z};
+  }
+  if (std::find(state.spawnedRoles.begin(), state.spawnedRoles.end(), role) ==
+      state.spawnedRoles.end()) {
+    state.spawnedRoles.push_back(role);
+  }
+  return ships;
+}
+
+int Game::countWithRole(std::string_view role) {
+  // world_steps.py count_with_role.
+  return static_cast<int>(
+      eval(std::format("system.countShipsWithRole({})", JsString(role))));
+}
+
+bool Game::engages(std::string_view hunter, std::string_view quarry) {
+  // The expression of the windowed step "within N ticks a ship with role H
+  // engages a ship with role Q".
+  return eval(std::format(
+             "(function(){{ var r = 0;"
+             " system.allShips.forEach(function(s){{"
+             "   if (s.primaryRole == {0} && s.hasHostileTarget"
+             "       && s.target && s.target.primaryRole == {1}) r = 1;"
+             " }});"
+             " return r; }})()",
+             JsString(hunter), JsString(quarry))) == 1.0;
+}
+
+void Game::simulateAtMost(GameTime span) {
+  // world_steps.py run_simulation: every spawned role except police.
+  std::vector<std::string> watched;
+  for (const std::string& role : TheState().spawnedRoles) {
+    if (role != "police") watched.push_back(role);
+  }
+  const double deadline = time() + span.count();
+  double nextPoll = time() + kPollSeconds;
+  while (time() < deadline) {
+    step();
+    if (time() < nextPoll || watched.empty()) continue;
+    nextPoll += kPollSeconds;
+    bool allGone = true;
+    for (const std::string& role : watched) {
+      if (countWithRole(role) != 0) allGone = false;
+    }
+    if (allGone) return;
+  }
+}
 
 const EventRecord& Game::events() const { return TheState().events; }
 

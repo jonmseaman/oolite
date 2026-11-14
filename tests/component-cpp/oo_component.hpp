@@ -30,14 +30,18 @@
 
 #include <chrono>
 #include <cstdint>
+#include <array>
 #include <filesystem>
 #include <functional>
+#include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
 class GameController;
 class PlayerEntity;
+class ShipEntity;
 class Universe;
 struct OOPresentationRecord;
 
@@ -87,6 +91,53 @@ class EventRecord {
   std::vector<Event> entries_;
 };
 
+// What to spawn, said fluently and passed to one call; the call that takes it
+// does the work:
+//   game.spawn(ShipsWithRole("pirate").count(2).withinKm(10))
+// The windowed step "I spawn N ship(s) with role R [within K km]".
+class ShipsWithRole {
+ public:
+  explicit ShipsWithRole(std::string_view role) : role_(role) {}
+  ShipsWithRole count(int n) const {
+    ShipsWithRole next = *this;
+    next.count_ = n;
+    return next;
+  }
+  // Of the first ship spawned in this game; unset: around the player.
+  ShipsWithRole withinKm(int km) const {
+    ShipsWithRole next = *this;
+    next.withinKm_ = km;
+    return next;
+  }
+
+ private:
+  friend class Game;
+  std::string role_;
+  int count_ = 1;
+  std::optional<int> withinKm_;
+};
+
+// A ship a test was handed. Use it like a ShipEntity*; ask alive() before
+// using it after the ship could have died. It never keeps the ship alive:
+// inside it is a std::weak_ptr<ShipEntity>.
+class ShipHandle {
+ public:
+  ShipHandle() = default;
+  explicit ShipHandle(const std::shared_ptr<ShipEntity>& ship);
+
+  bool alive() const;  // still in the universe
+  // Kept after the ship is gone, so events can still be matched.
+  std::uint32_t id() const { return id_; }
+  const std::string& key() const { return key_; }
+  ShipEntity* operator->() const;  // fails the test, by name, if gone
+  operator ShipEntity*() const;    // null if gone
+
+ private:
+  std::weak_ptr<ShipEntity> ship_;
+  std::uint32_t id_ = 0;
+  std::string key_;
+};
+
 class Game {
  public:
   // An empty system, the player in flight, no keys: the windowed step
@@ -101,6 +152,19 @@ class Game {
   void simulate(GameTime span);  // rounded up to whole steps
   bool simulateUntil(const std::function<bool()>& done, GameTime atMost);
   double time() const;  // the universe's game time, s
+  // The windowed step "the simulation runs for at most N ticks": steps for the
+  // span, stopping early (checked every half second of game time, as the
+  // windowed step polls) once every role spawned so far except police has no
+  // ship left.
+  void simulateAtMost(GameTime span);
+
+  // The world, in the vocabulary of tests/component/steps/world_steps.py:
+  // each runs that step's own script.
+  std::vector<ShipHandle> spawn(const ShipsWithRole& what);  // the ships added
+  int countWithRole(std::string_view role);
+  bool engages(std::string_view hunter, std::string_view quarry);
+  // Where the first ship spawned was, which "within K km" measures from.
+  std::optional<std::array<double, 3>> locus() const;
 
   // The game's own objects; the game owns both for the whole process.
   Universe* universe() const;
