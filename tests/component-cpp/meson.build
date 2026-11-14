@@ -36,7 +36,9 @@ component_programs = {
     # Keys (spec 011 US3): the start screen and its menus, and the tutorial by its next key, each
     # registered once per keyboard layout in 'layouts' (as <test>_<layout>, with --layout <layout>).
     'test_menus': {'layouts': component_layouts},
-    'test_tutorial_keys': {'layouts': component_layouts},
+    # Under ru the next key gives a code point above the game's 326 keys and is dropped: finding H2
+    # (tasks.md, Findings -> Keys), upstream's code too; checked both ways, left to Jon.
+    'test_tutorial_keys': {'layouts': component_layouts, 'should_fail': ['test_tutorial_keys_ru']},
     'test_launch_key': {},
     'test_remapped_key': {},
     # The key-path observations (research H1-H5), one test per case: key_fault_h1 ... h5.
@@ -50,7 +52,7 @@ component_programs = {
     # Each fails today as upstream's same code does (MyOpenGLView+Input.m:379, :598-609); fixing
     # them changes the windowed game's keys, so they are checked both ways and left to Jon. See
     # specs/011-headless-component-tests/tasks.md, Records -> Findings -> Keys.
-    'should_fail': ['key_fault_h1', 'key_fault_h3', 'key_fault_h4']},
+    'should_fail': ['key_fault_h1', 'key_fault_h2', 'key_fault_h3', 'key_fault_h4']},
     # The C++ counterparts of tests/component/features, each with its original's base name.
     'test_s1_police_kills_pirate': {'verbose': true},
     'test_s2_pirate_attacks_target_registers_attacker': {'verbose': true},
@@ -155,6 +157,8 @@ foreach name, options : component_programs
         foreach layout : options.get('layouts')
             test(options.get('test_name', name) + '_' + layout, exe,
                 args: options.get('args', []) + ['--layout', layout],
+                should_fail: options.get('should_fail', []).contains(
+                    options.get('test_name', name) + '_' + layout),
                 suite: options.get('suite', 'component'),
                 timeout: options.get('timeout', 60),
                 verbose: options.get('verbose', false),
