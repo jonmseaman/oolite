@@ -340,6 +340,37 @@ jobs:
           set -o pipefail
           env -u DISPLAY -u WAYLAND_DISPLAY BUILD_TYPE=test tests/run.sh component --cpp 2>&1 | tee build/component-cpp.log
           grep -q "GL trap: linked" build/component-cpp.log
+      # The recorded keyboard layouts the key tests use (tests/component-cpp/layouts/): SDL's X11
+      # backend under a throwaway X server, set to each layout with setxkbmap. The fresh tables are
+      # uploaded, and a committed table whose rows differ from its fresh one fails the job.
+      - name: Record keyboard layouts
+        run: |
+          dnf -y install xorg-x11-server-Xvfb setxkbmap xkeyboard-config
+          mkdir -p build/layouts
+          status=0
+          for pair in fr:fr_azerty ru:ru; do
+            xkb=${pair%%:*}
+            name=${pair##*:}
+            xvfb-run -a sh -c "setxkbmap $xkb && SDL_VIDEO_DRIVER=x11 build/meson_test/tests/component-cpp/record_layout --name '$name (setxkbmap $xkb, Xvfb, Fedora CI)'" > "build/layouts/$name.tsv"
+            echo "$name: $(grep -vc '^#' "build/layouts/$name.tsv") rows"
+            committed="tests/component-cpp/layouts/$name.tsv"
+            if [ -f "$committed" ]; then
+              if ! diff <(grep -v '^#' "$committed") <(grep -v '^#' "build/layouts/$name.tsv"); then
+                echo "::error::$committed differs from the table recorded now"
+                status=1
+              fi
+            else
+              echo "::warning::$committed is not committed yet"
+            fi
+          done
+          exit $status
+        shell: bash
+      - name: Upload the recorded layouts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: keyboard-layouts
+          path: build/layouts/
       - name: Test Oolite
         if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
         run: |
