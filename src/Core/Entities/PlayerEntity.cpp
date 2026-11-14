@@ -13466,6 +13466,11 @@ void PlayerEntity::doScriptEvent(OOJSPropID message, JSContext* context,
 // ORDER-SENSITIVE (decision D): the world scripts run in load order (was the
 // dictionary's order).
 bool PlayerEntity::doWorldEventUntilMissionScreen(OOJSPropID message) {
+  if (OOGameObserver* observer =
+          ::GameController::sharedController()->observer()) {
+    observer->worldEvent(UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
+                         OOStringFromJSID(message).value_or(""));
+  }
   const std::vector<std::pair<std::string, std::shared_ptr<OOScript>>> scripts =
       worldScripts;  // a snapshot, as the enumerator kept the dictionary
   auto scriptEntry = scripts.begin();
@@ -13503,6 +13508,12 @@ void PlayerEntity::doWorldScriptEvent(OOJSPropID message, JSContext* context,
                                       JSValue* argv, int argc,
                                       OOTimeDelta limit) {
   OOCParameterAssert(context != nullptr);
+
+  if (OOGameObserver* observer =
+          ::GameController::sharedController()->observer()) {
+    observer->worldEvent(UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
+                         OOStringFromJSID(message).value_or(""));
+  }
 
   // ORDER-SENSITIVE (decision D): load order (was -allValues order); a
   // snapshot, as -allValues was.

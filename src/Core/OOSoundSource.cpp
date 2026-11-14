@@ -31,6 +31,8 @@ SOFTWARE.
 #include "oofnd/String.hpp"
 
 namespace {
+OOSoundSource::PlayObserver sPlayObserver = nullptr;
+
 // The sources that are playing, each once, retained (a Foundation mutable set
 // before; sources compare by identity). Created lazily and dropped by +stopAll,
 // as the set was.
@@ -120,8 +122,13 @@ bool OOSoundSource::isPlaying() { return _channel != nullptr; }
    this source alive while it plays, as the old object kept itself; the playing
    set holds the source.
 */
+void OOSoundSource::setPlayObserver(PlayObserver observer) {
+  sPlayObserver = observer;
+}
+
 void OOSoundSource::play() {
   if (sound() == nullptr) return;
+  if (sPlayObserver != nullptr) sPlayObserver(sound());
 
   OOSoundAcquireLock();
 

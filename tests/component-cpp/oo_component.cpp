@@ -32,12 +32,15 @@
 #include "GameController.h"
 #include "OOHeadless.h"
 #include "OOJSEngineCore.h"
+#include "OOLogOutputHandler.h"
 #include "OOLoggingExtended.h"
 #include "PlayerEntity.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
+#include "ShipEntity.h"
 #include "oofnd/Exception.hpp"
+#include "oofnd/Log.hpp"
 #include "oofnd/Process.hpp"
 
 // main.cpp defines the debug flags, and a component program has its own main.
@@ -68,8 +71,27 @@ constexpr std::string_view kClearNonPlayerShipsJs =  // CLEAR_NON_PLAYER_SHIPS_J
 // a program meson stops at its timeout then shows its last game time.
 constexpr double kProgressIntervalSeconds = 10.0;
 
+// The log classes whose lines are errors (data-model.md, Event record), and
+// the prefix the game puts on an error line.
+constexpr std::string_view kErrorClasses[] = {
+    "shipData.load.error", "setup.ship.badEntry", "script.javaScript.exception",
+    "exception", "equipment.load"};
+constexpr std::string_view kErrorPrefix = "***** ERROR";
+constexpr std::string_view kScriptErrorClass = "script.javaScript.exception";
+
+// How many entries a failure prints.
+constexpr std::size_t kFailureContextEntries = 10;
+
+bool ClassIs(std::string_view messageClass, std::string_view listed) {
+  return messageClass == listed ||
+         (messageClass.size() > listed.size() &&
+          messageClass.substr(0, listed.size()) == listed &&
+          messageClass[listed.size()] == '.');
+}
+
 struct State {
   bool exists = false;
+  EventRecord events;
   std::uint32_t seed = 0;
   std::uint64_t steps = 0;
   fs::path scratch;
@@ -172,6 +194,31 @@ void PrepareProcess() {
   oo::process::setArguments(3, gameArguments);
 }
 
+const char* KindName(EventKind kind) {
+  switch (kind) {
+    case EventKind::kShipEvent:
+      return "shipEvent";
+    case EventKind::kWorldEvent:
+      return "worldEvent";
+    case EventKind::kLog:
+      return "log";
+    case EventKind::kScriptError:
+      return "scriptError";
+  }
+  return "?";
+}
+
+void PrintEvent(const Event& event) {
+  std::printf("       %9.3f %-11s %s", event.time, KindName(event.kind),
+              event.name.c_str());
+  if (event.subjectId != 0) {
+    std::printf(" (ship %u %s)", static_cast<unsigned>(event.subjectId),
+                event.subjectKey.c_str());
+  }
+  if (!event.text.empty()) std::printf(": %s", event.text.c_str());
+  std::printf("%s\n", event.isError ? "  [error]" : "");
+}
+
 void PrintState(const char* file, int line) {
   const State& state = TheState();
   if (!state.exists) return;
@@ -179,7 +226,69 @@ void PrintState(const char* file, int line) {
               line, static_cast<unsigned>(state.seed),
               UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
               static_cast<unsigned long long>(state.steps));
+  const std::vector<Event>& entries = state.events.entries();
+  const std::size_t from = entries.size() > kFailureContextEntries
+                               ? entries.size() - kFailureContextEntries
+                               : 0;
+  if (from < entries.size()) std::printf("     the last events:\n");
+  for (std::size_t i = from; i < entries.size(); ++i) PrintEvent(entries[i]);
   std::fflush(stdout);
+}
+
+double GameTimeNow() { return UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0; }
+
+// Every log line: into the event record, then on to the log file as the
+// game's own sink sends it.
+void RecordLogLine(std::string_view line) {
+  Event event;
+  event.time = GameTimeNow();
+  event.kind = EventKind::kLog;
+  event.text = std::string(line);
+  // "<time> [class]: text" (the class is shown in the game's log).
+  const std::size_t open = line.find('[');
+  const std::size_t close =
+      open == std::string_view::npos ? open : line.find(']', open);
+  if (close != std::string_view::npos) {
+    event.name = std::string(line.substr(open + 1, close - open - 1));
+  }
+  for (std::string_view listed : kErrorClasses) {
+    if (ClassIs(event.name, listed)) event.isError = true;
+  }
+  if (line.find(kErrorPrefix) != std::string_view::npos) event.isError = true;
+  if (ClassIs(event.name, kScriptErrorClass)) {
+    event.kind = EventKind::kScriptError;
+    event.isError = true;
+  }
+  TheState().events.add(std::move(event));
+  OOLogOutputHandlerPrintLine(line);
+}
+
+// The game's script events, as they are dispatched.
+class Observer final : public OOGameObserver {
+ public:
+  void shipEvent(double time, ShipEntity* ship, std::string_view name) override {
+    Event event;
+    event.time = time;
+    event.kind = EventKind::kShipEvent;
+    event.name = std::string(name);
+    if (ship != nullptr) {
+      event.subjectId = static_cast<std::uint32_t>(ship->getUniversalID());
+      event.subjectKey = ship->shipDataKey().value_or("");
+    }
+    TheState().events.add(std::move(event));
+  }
+  void worldEvent(double time, std::string_view name) override {
+    Event event;
+    event.time = time;
+    event.kind = EventKind::kWorldEvent;
+    event.name = std::string(name);
+    TheState().events.add(std::move(event));
+  }
+};
+
+Observer& TheObserver() {
+  static Observer observer;
+  return observer;
 }
 
 std::string ExceptionMessage(JSContext* context) {
@@ -193,6 +302,40 @@ std::string ExceptionMessage(JSContext* context) {
 }  // namespace
 
 const std::vector<std::string>& programArguments() { return Arguments(); }
+
+bool EventRecord::has(std::string_view name, std::uint32_t subjectId) const {
+  return firstOf(name, subjectId) != nullptr;
+}
+
+std::size_t EventRecord::count(std::string_view name) const {
+  std::size_t n = 0;
+  for (const Event& event : entries_) {
+    if (event.name == name) ++n;
+  }
+  return n;
+}
+
+const Event* EventRecord::firstOf(std::string_view name,
+                                  std::uint32_t subjectId) const {
+  for (const Event& event : entries_) {
+    if (event.name == name && (subjectId == 0 || event.subjectId == subjectId)) {
+      return &event;
+    }
+  }
+  return nullptr;
+}
+
+void checkNoErrors(const Game& game, const char* file, int line) {
+  const std::vector<Event> errors = game.errors();
+  if (errors.empty()) {
+    ::oo_test::check(true, "no error in the event record", file, line);
+    return;
+  }
+  ::oo_test::check(false, "no error in the event record", file, line);
+  std::printf("     %zu error entries:\n", errors.size());
+  for (const Event& event : errors) PrintEvent(event);
+  PrintState(file, line);
+}
 
 void fail(std::string_view message, const char* file, int line) {
   const std::string text(message);
@@ -211,6 +354,8 @@ Game Game::scenario(std::uint32_t seed) {
   const auto startedAt = std::chrono::steady_clock::now();
   PrepareProcess();
   OOLoggingInit();
+  oo::log::logger().setSink(&RecordLogLine);
+  GameController::sharedController()->setObserver(&TheObserver());
 
   // Until the game makes no GL call, a hidden GL window (spec 011 T021
   // removes it); test_boot_nogl is built without it.
@@ -316,6 +461,23 @@ GameController* Game::controller() const {
 }
 
 std::uint64_t Game::steps() const { return TheState().steps; }
+
+const EventRecord& Game::events() const { return TheState().events; }
+
+std::vector<Event> Game::errors() const { return errorsSince(0); }
+
+std::vector<Event> Game::errorsSince(std::size_t mark) const {
+  std::vector<Event> found;
+  const std::vector<Event>& entries = TheState().events.entries();
+  for (std::size_t i = mark; i < entries.size(); ++i) {
+    if (entries[i].isError) found.push_back(entries[i]);
+  }
+  return found;
+}
+
+const OOPresentationRecord& Game::presentation() const {
+  return controller()->presentation();
+}
 
 std::filesystem::path Game::scratchDirectory() { return TheState().scratch; }
 

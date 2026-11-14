@@ -75,6 +75,13 @@ class OOSound : public oo::Object {
 
   static bool isSoundOK();
 
+  /*	A headless game has no sound device, so no sound loads; with this set,
+     initWithContentsOfFile answers a silent sound that has only a name, so a
+     request to play it still reaches its source (and is recorded there) and
+     then finds no channel. Off, the default: null, as before.
+  */
+  static void setNamedWithoutDevice(bool named);
+
   virtual ALuint soundBuffer();
   virtual bool soundIncomplete();
   virtual void rewind();
