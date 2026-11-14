@@ -371,6 +371,17 @@ jobs:
         with:
           name: keyboard-layouts
           path: build/layouts/
+      # The C++ component tests under the address and undefined-behaviour sanitizers, with no
+      # suppression: a report fails the job. MSYS2's Clang has no sanitizer runtime, so this is
+      # where they run.
+      - name: C++ component tests under sanitizers
+        run: |
+          set -o pipefail
+          dnf -y install compiler-rt
+          meson setup build/meson_asan -Db_sanitize=address,undefined -Db_lto=false -Ddev_release=true -Ddebug=false --native-file clang.ini
+          ninja -C build/meson_asan
+          env -u DISPLAY -u WAYLAND_DISPLAY meson test -C build/meson_asan --suite component --print-errorlogs -t 4 2>&1 | tee build/component-asan.log
+        shell: bash
       - name: Test Oolite
         if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
         run: |
