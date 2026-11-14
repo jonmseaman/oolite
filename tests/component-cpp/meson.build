@@ -11,10 +11,12 @@
 # working directory. OO_COMPONENT_SOURCE_ROOT (layouts, fixtures) and OO_COMPONENT_BUILD_ROOT
 # (scratch) are in its environment; run by hand, a program finds both itself.
 #
-# Add a program as one entry: its name (the source is <name>.cpp) and its options.
+# Add a program as one entry: its name (the source is <name>.cpp) and its options: 'args',
+# 'suite' (default 'component'), 'timeout' (default 60 s), 'verbose' (print its output even when
+# it passes, for a program whose output is a record, like the skeleton's probes).
 
 component_programs = {
-    'test_skeleton': {},
+    'test_skeleton': {'verbose': true},
 }
 
 fs = import('fs')
@@ -49,6 +51,7 @@ foreach name, options : component_programs
         args: options.get('args', []),
         suite: options.get('suite', 'component'),
         timeout: options.get('timeout', 60),
+        verbose: options.get('verbose', false),
         workdir: prog_dir,
         env: component_env,
         depends: oolite_app_bundle,
