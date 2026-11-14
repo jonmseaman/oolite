@@ -35,6 +35,13 @@ OO_TEST(the_whole_game_links) {
   OO_CHECK(shared != nullptr);
 }
 
+// The simulation half of the frame is a member of its own, which a headless
+// game steps.
+OO_TEST(the_controller_has_tick) {
+  void (GameController::*tick)(double) = &GameController::tick;
+  OO_CHECK(tick != nullptr);
+}
+
 OO_TEST(sdl_dummy_video_driver_initialises) {
   SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "dummy");
   const bool initialised = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
