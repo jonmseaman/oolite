@@ -323,7 +323,9 @@ jobs:
         run: |
           export CCACHE_DIR="$GITHUB_WORKSPACE/build/.ccache" CCACHE_BASEDIR="$GITHUB_WORKSPACE" CCACHE_MAXSIZE=1G
           ccache --zero-stats
-          ./mk.sh build test --setup-flags="-Ddocs=enabled" --ccache
+          # LTO off: the C++ component tests' GL trap is generated from the game's real objects.
+          # LTO on Linux stays covered by build-appimage and build-ubuntu.
+          ./mk.sh build test --setup-flags="-Ddocs=enabled -Db_lto=false" --ccache
           ccache --show-stats
       - name: Save the compiler cache
         if: always() && steps.ccache-restore.outputs.cache-hit != 'true'
@@ -331,6 +333,10 @@ jobs:
         with:
           path: build/.ccache
           key: ccache-build-fedora-${{ github.sha }}
+      # The headless C++ half of the component tier: no display, no GL context.
+      - name: C++ component tests
+        run: |
+          BUILD_TYPE=test tests/run.sh component --cpp
       - name: Test Oolite
         if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
         run: |
@@ -577,6 +583,14 @@ jobs:
           GALLIUM_DRIVER: llvmpipe
         run: |
           tests/run.sh unit
+      # The headless C++ half of the component tier: no window, no GL context, no Mesa.
+      - name: C++ component tests
+        shell: msys2 {0}
+        env:
+          MSYSTEM: UCRT64
+          PYTHONUTF8: "1"
+        run: |
+          tests/run.sh component --cpp
 
   build-macos:
     needs: clang-format-check
@@ -609,6 +623,13 @@ jobs:
           ccache --zero-stats
           ./mk.sh build deployment --setup-flags="-Ddocs=enabled" --ccache --github-repository="$GITHUB_REPOSITORY"
           ccache --show-stats
+      # The deployment flavour builds no tests: the headless C++ half of the component tier gets a
+      # test-flavour tree of its own, with LTO off for the GL trap generated from its objects.
+      - name: Build the C++ component tests
+        run: |
+          export CCACHE_DIR="$GITHUB_WORKSPACE/build/.ccache" CCACHE_BASEDIR="$GITHUB_WORKSPACE" CCACHE_MAXSIZE=1G
+          ./mk.sh build test --setup-flags="-Db_lto=false" --ccache
+          ccache --show-stats
       - name: Save the compiler cache
         if: always() && steps.ccache-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
@@ -619,6 +640,9 @@ jobs:
         if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
         run: |
           ./mk.sh test deployment
+      - name: C++ component tests
+        run: |
+          BUILD_TYPE=test tests/run.sh component --cpp
       # The app is only ad-hoc signed, so Gatekeeper blocks the downloaded DMG's app until the
       # user allows it in System Settings (issue #779). Fixing that needs Developer ID signing
       # and notarisation, i.e. signing keys and Apple credentials added as repository secrets.
