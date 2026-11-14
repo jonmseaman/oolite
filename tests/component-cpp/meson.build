@@ -23,6 +23,8 @@ component_programs = {
     'test_gl_trap': {'needs_trap': true, 'verbose': true},
     # The C++ counterparts of tests/component/features, each with its original's base name.
     'test_s1_police_kills_pirate': {'verbose': true},
+    # Runs test_s1_police_kills_pirate twice and compares the digests of every step.
+    'test_repeat': {'verbose': true, 'timeout': 120},
 }
 
 fs = import('fs')

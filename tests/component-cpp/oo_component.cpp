@@ -14,8 +14,10 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <format>
+#include <fstream>
 #include <functional>
 #include <limits>
 #include <map>
@@ -29,6 +31,7 @@
 #if defined(_WIN32)
 #include <process.h>
 #else
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 
@@ -127,9 +130,35 @@ std::string JsString(std::string_view value) {
   return quoted + "\"";
 }
 
+// FNV-1a, 64 bits: a digest that is the same on every run of one build.
+class Fnv1a {
+ public:
+  void add(const void* data, std::size_t size) {
+    const unsigned char* bytes = static_cast<const unsigned char*>(data);
+    for (std::size_t i = 0; i < size; ++i) {
+      hash_ ^= bytes[i];
+      hash_ *= 0x100000001b3ULL;
+    }
+  }
+  template <class T>
+  void addValue(const T& value) {
+    add(&value, sizeof value);
+  }
+  void addString(std::string_view text) {
+    add(text.data(), text.size());
+    addValue(static_cast<std::uint64_t>(text.size()));
+  }
+  std::uint64_t value() const { return hash_; }
+
+ private:
+  std::uint64_t hash_ = 0xcbf29ce484222325ULL;
+};
+
 struct State {
   bool exists = false;
   EventRecord events;
+  Fnv1a eventsDigest;  // of every event so far, in order
+  std::optional<std::ofstream> digestOut;  // --digest-out
   std::optional<std::array<double, 3>> locus;
   std::vector<std::string> spawnedRoles;  // in first-spawn order
   std::uint32_t seed = 0;
@@ -283,6 +312,20 @@ void PrintState(const char* file, int line) {
 
 double GameTimeNow() { return UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0; }
 
+// Into the record, and into the running digest of the record. A log line's
+// text carries the wall-clock time, so only its class and error flag count.
+void AddEvent(Event event) {
+  State& state = TheState();
+  Fnv1a& digest = state.eventsDigest;
+  digest.addValue(event.time);
+  digest.addValue(static_cast<int>(event.kind));
+  digest.addString(event.name);
+  digest.addValue(event.subjectId);
+  digest.addString(event.subjectKey);
+  digest.addValue(event.isError);
+  state.events.add(std::move(event));
+}
+
 // Every log line: into the event record, then on to the log file as the
 // game's own sink sends it.
 void RecordLogLine(std::string_view line) {
@@ -305,7 +348,7 @@ void RecordLogLine(std::string_view line) {
     event.kind = EventKind::kScriptError;
     event.isError = true;
   }
-  TheState().events.add(std::move(event));
+  AddEvent(std::move(event));
   OOLogOutputHandlerPrintLine(line);
 }
 
@@ -321,14 +364,14 @@ class Observer final : public OOGameObserver {
       event.subjectId = static_cast<std::uint32_t>(ship->getUniversalID());
       event.subjectKey = ship->shipDataKey().value_or("");
     }
-    TheState().events.add(std::move(event));
+    AddEvent(std::move(event));
   }
   void worldEvent(double time, std::string_view name) override {
     Event event;
     event.time = time;
     event.kind = EventKind::kWorldEvent;
     event.name = std::string(name);
-    TheState().events.add(std::move(event));
+    AddEvent(std::move(event));
   }
 };
 
@@ -350,6 +393,42 @@ std::string ExceptionMessage(JSContext* context) {
 const std::vector<std::string>& programArguments() { return Arguments(); }
 
 const std::string& programPath() { return ProgramPath(); }
+
+std::string siblingProgram(std::string_view name) {
+  fs::path path = fs::path(ProgramPath()).parent_path() / std::string(name);
+#if defined(_WIN32)
+  path += ".exe";
+#endif
+  return path.string();
+}
+
+int runChild(const std::string& program, const std::vector<std::string>& arguments,
+             const std::string& outputFile, const std::string& errorFile) {
+#if defined(_WIN32)
+  const char* discard = "NUL";
+#else
+  const char* discard = "/dev/null";
+#endif
+  std::string command = "\"" + program + "\"";
+  for (const std::string& argument : arguments) command += " \"" + argument + "\"";
+  command += " > \"" + (outputFile.empty() ? std::string(discard) : outputFile) + "\"";
+  command += " 2> \"" + (errorFile.empty() ? std::string(discard) : errorFile) + "\"";
+#if defined(_WIN32)
+  // cmd.exe /c drops the first and the last quote of a line that starts
+  // with one; a pair round the whole line keeps the rest as written.
+  command = "\"" + command + "\"";
+#endif
+  std::fflush(stdout);
+  std::fflush(stderr);
+  const int status = std::system(command.c_str());
+#if defined(_WIN32)
+  return status;
+#else
+  if (status == -1) return -1;
+  if (WIFEXITED(status)) return WEXITSTATUS(status);
+  return 128 + (WIFSIGNALED(status) ? WTERMSIG(status) : 0);
+#endif
+}
 
 std::string glTrapState() {
 #if defined(OO_COMPONENT_GL_TRAP)
@@ -465,6 +544,14 @@ Game Game::scenario(std::uint32_t seed) {
     std::exit(1);  // nothing else in the program can run without the game
   }
   state.exists = true;
+  for (std::size_t i = 0; i + 1 < Arguments().size(); ++i) {
+    if (Arguments()[i] == "--digest-out") {
+      state.digestOut.emplace(Arguments()[i + 1], std::ios::out | std::ios::trunc);
+      if (!*state.digestOut) {
+        fail("cannot write " + Arguments()[i + 1], __FILE__, __LINE__);
+      }
+    }
+  }
   state.startupSeconds =
       std::chrono::duration<double>(std::chrono::steady_clock::now() - startedAt)
           .count();
@@ -502,6 +589,10 @@ void Game::step(int steps) {
     controller()->tick(kStepSeconds);
     controller()->fireDueDeferredCalls();  // as the frame loop's pass does
     ++state.steps;
+    if (state.digestOut.has_value()) {
+      *state.digestOut << state.steps << ' ' << std::hex << digest() << std::dec
+                       << '\n';
+    }
     const auto now = std::chrono::steady_clock::now();
     if (std::chrono::duration<double>(now - state.lastProgress).count() >=
         kProgressIntervalSeconds) {
@@ -540,6 +631,30 @@ GameController* Game::controller() const {
 }
 
 std::uint64_t Game::steps() const { return TheState().steps; }
+
+std::uint64_t Game::digest() const {
+  Fnv1a digest;
+  for (const oo::EntityHold& held : universe()->entityList()) {
+    Entity* entity = held.get();
+    if (entity == nullptr) continue;
+    digest.addValue(entity->getUniversalID());
+    if (ShipEntity* ship = dynamic_cast<ShipEntity*>(entity)) {
+      digest.addString(ship->shipDataKey().value_or(""));
+    }
+    const HPVector p = entity->getPosition();
+    digest.addValue(p.x);
+    digest.addValue(p.y);
+    digest.addValue(p.z);
+    const Quaternion q = entity->getOrientation();
+    digest.addValue(q.w);
+    digest.addValue(q.x);
+    digest.addValue(q.y);
+    digest.addValue(q.z);
+    digest.addValue(entity->getEnergy());
+  }
+  digest.addValue(TheState().eventsDigest.value());
+  return digest.value();
+}
 
 std::optional<std::array<double, 3>> Game::locus() const {
   return TheState().locus;
