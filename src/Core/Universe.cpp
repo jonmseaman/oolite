@@ -2535,12 +2535,18 @@ void Universe::setLighting() {
       if (::SkyEntity* sky = dynamic_cast<::SkyEntity*>(sortedEntities[i]))
         the_sky = sky;
 
+  // Headless: the values below are still worked out, but nothing is told to
+  // a GL that is not there.
+  const bool graphics = OOGraphicsAvailable();
+
   if (the_sun) {
     if (the_sun != nullptr) the_sun->getDiffuseComponents(sun_diffuse);
     if (the_sun != nullptr) the_sun->getSpecularComponents(sun_specular);
-    OOGL(glLightfv(GL_LIGHT1, GL_AMBIENT, sun_ambient));
-    OOGL(glLightfv(GL_LIGHT1, GL_DIFFUSE, sun_diffuse));
-    OOGL(glLightfv(GL_LIGHT1, GL_SPECULAR, sun_specular));
+    if (graphics) {
+      OOGL(glLightfv(GL_LIGHT1, GL_AMBIENT, sun_ambient));
+      OOGL(glLightfv(GL_LIGHT1, GL_DIFFUSE, sun_diffuse));
+      OOGL(glLightfv(GL_LIGHT1, GL_SPECULAR, sun_specular));
+    }
     sun_pos[0] = the_sun->position.x;
     sun_pos[1] = the_sun->position.y;
     sun_pos[2] = the_sun->position.z;
@@ -2558,12 +2564,14 @@ void Universe::setLighting() {
     sun_specular[1] = 1.0;
     sun_specular[2] = 0.95;
     sun_specular[3] = 1.0;
-    OOGL(glLightfv(GL_LIGHT1, GL_AMBIENT, sun_ambient));
-    OOGL(glLightfv(GL_LIGHT1, GL_DIFFUSE, sun_diffuse));
-    OOGL(glLightfv(GL_LIGHT1, GL_SPECULAR, sun_specular));
+    if (graphics) {
+      OOGL(glLightfv(GL_LIGHT1, GL_AMBIENT, sun_ambient));
+      OOGL(glLightfv(GL_LIGHT1, GL_DIFFUSE, sun_diffuse));
+      OOGL(glLightfv(GL_LIGHT1, GL_SPECULAR, sun_specular));
+    }
   }
 
-  OOGL(glLightfv(GL_LIGHT1, GL_POSITION, sun_pos));
+  if (graphics) OOGL(glLightfv(GL_LIGHT1, GL_POSITION, sun_pos));
 
   if (the_sky) {
     // ambient lighting!
@@ -2590,6 +2598,7 @@ void Universe::setLighting() {
   }
 
   // light for demo ships display..
+  if (!graphics) return;
   OOGL(glLightfv(GL_LIGHT0, GL_AMBIENT, docked_light_ambient));
   OOGL(glLightfv(GL_LIGHT0, GL_DIFFUSE, docked_light_diffuse));
   OOGL(glLightfv(GL_LIGHT0, GL_SPECULAR, docked_light_specular));
@@ -5019,7 +5028,9 @@ oo::PList Universe::gameSettings() {
 
 void Universe::useGUILightSource(bool GUILight) {
   if (GUILight != demo_light_on) {
-    if (!useShaders()) {
+    if (!OOGraphicsAvailable()) {
+      // Headless: nothing to switch.
+    } else if (!useShaders()) {
       if (GUILight) {
         OOGL(glEnable(GL_LIGHT0));
         OOGL(glDisable(GL_LIGHT1));
@@ -11353,6 +11364,7 @@ int Universe::prevColorblindMode(int index) {
 int Universe::colorblindMode() { return _colorblindMode; }
 
 void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
+  if (!OOGraphicsAvailable()) return;  // headless: no framebuffer to make
   // liberate us from the 0.0 to 1.0 rgb range!
   OOGL(glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE));
   OOGL(glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE));
@@ -11587,6 +11599,7 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
 }
 
 void Universe::deleteOpenGLObjects() {
+  if (!OOGraphicsAvailable()) return;  // headless: none were made
 #if OO_MSAA_COLOR_RENDERBUFFER
   OOGL(glDeleteRenderbuffers(1, &msaaTextureID));
 #else
