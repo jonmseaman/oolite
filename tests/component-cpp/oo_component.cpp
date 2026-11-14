@@ -23,6 +23,7 @@
 #include <limits>
 #include <map>
 #include <set>
+#include <sstream>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -43,6 +44,7 @@
 #include "OOLogOutputHandler.h"
 #include "OOLoggingExtended.h"
 #include "PlayerEntity.h"
+#include "GuiDisplayGen.h"
 #include "Universe.h"
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
@@ -79,6 +81,10 @@ constexpr std::string_view kClearNonPlayerShipsJs =  // CLEAR_NON_PLAYER_SHIPS_J
 // How often, in real time, a stepping program says how far it got (FR-013):
 // a program meson stops at its timeout then shows its last game time.
 constexpr double kProgressIntervalSeconds = 10.0;
+// A press: steps with the key down, then up (the game samples keys once a
+// frame, and a key not seen up makes the next press a repeat).
+constexpr int kPressSteps = 2;
+constexpr int kGuiMaxRows = 64;  // a GUI screen has fewer rows than this
 
 // The log classes whose lines are errors (data-model.md, Event record), and
 // the prefix the game puts on an error line.
@@ -612,8 +618,12 @@ Game Game::atStartScreen(std::uint32_t seed) {
   options.populate = true;
   options.startInFlight = false;
   options.inputView = true;
-  start(options);
-  return Game();
+  if (!start(options)) return Game();
+  Game game;
+  for (std::size_t i = 0; i + 1 < Arguments().size(); ++i) {
+    if (Arguments()[i] == "--layout") game.useLayout(Arguments()[i + 1]);
+  }
+  return game;
 }
 
 std::string Game::screen() const {
@@ -623,6 +633,377 @@ std::string Game::screen() const {
 }
 
 MyOpenGLView* Game::view() const { return controller()->gameView(); }
+
+// ----- Keys --------------------------------------------------------------
+
+namespace {
+
+struct NamedKey {
+  const char* name;
+  SDL_Scancode scancode;
+};
+
+constexpr NamedKey kNamedKeys[] = {
+    {"enter", SDL_SCANCODE_RETURN},    {"escape", SDL_SCANCODE_ESCAPE},
+    {"space", SDL_SCANCODE_SPACE},     {"tab", SDL_SCANCODE_TAB},
+    {"backspace", SDL_SCANCODE_BACKSPACE}, {"delete", SDL_SCANCODE_DELETE},
+    {"insert", SDL_SCANCODE_INSERT},   {"home", SDL_SCANCODE_HOME},
+    {"end", SDL_SCANCODE_END},         {"pageup", SDL_SCANCODE_PAGEUP},
+    {"pagedown", SDL_SCANCODE_PAGEDOWN}, {"up", SDL_SCANCODE_UP},
+    {"down", SDL_SCANCODE_DOWN},       {"left", SDL_SCANCODE_LEFT},
+    {"right", SDL_SCANCODE_RIGHT},     {"f1", SDL_SCANCODE_F1},
+    {"f2", SDL_SCANCODE_F2},           {"f3", SDL_SCANCODE_F3},
+    {"f4", SDL_SCANCODE_F4},           {"f5", SDL_SCANCODE_F5},
+    {"f6", SDL_SCANCODE_F6},           {"f7", SDL_SCANCODE_F7},
+    {"f8", SDL_SCANCODE_F8},           {"f9", SDL_SCANCODE_F9},
+    {"f10", SDL_SCANCODE_F10},         {"f11", SDL_SCANCODE_F11},
+    {"f12", SDL_SCANCODE_F12},
+};
+
+constexpr const char* kModsNames[] = {"-", "shift", "caps", "shift+caps", "altgr"};
+constexpr std::uint16_t kModsStates[] = {
+    SDL_KMOD_NONE, SDL_KMOD_LSHIFT, SDL_KMOD_CAPS,
+    static_cast<std::uint16_t>(SDL_KMOD_LSHIFT | SDL_KMOD_CAPS), SDL_KMOD_MODE};
+
+// The one code point of a UTF-8 string, or nullopt if it is not one.
+std::optional<std::uint32_t> SingleCodePoint(std::string_view text) {
+  if (text.empty()) return std::nullopt;
+  const auto* bytes = reinterpret_cast<const unsigned char*>(text.data());
+  std::uint32_t code = 0;
+  std::size_t length = 0;
+  if (bytes[0] < 0x80) {
+    code = bytes[0];
+    length = 1;
+  } else if ((bytes[0] & 0xE0) == 0xC0) {
+    code = bytes[0] & 0x1F;
+    length = 2;
+  } else if ((bytes[0] & 0xF0) == 0xE0) {
+    code = bytes[0] & 0x0F;
+    length = 3;
+  } else if ((bytes[0] & 0xF8) == 0xF0) {
+    code = bytes[0] & 0x07;
+    length = 4;
+  } else {
+    return std::nullopt;
+  }
+  if (text.size() != length) return std::nullopt;
+  for (std::size_t i = 1; i < length; ++i) {
+    if ((bytes[i] & 0xC0) != 0x80) return std::nullopt;
+    code = (code << 6) | (bytes[i] & 0x3F);
+  }
+  return code;
+}
+
+std::string ModsText(std::uint16_t mods) {
+  const int cls = Layout::modsClass(mods);
+  return cls == 0 ? "no modifiers" : kModsNames[cls];
+}
+
+struct Stroke {
+  int scancode = SDL_SCANCODE_UNKNOWN;
+  std::uint16_t mods = SDL_KMOD_NONE;
+};
+
+std::optional<Layout>& TheLayout() {
+  static std::optional<Layout> layout;
+  return layout;
+}
+
+std::optional<Stroke> StrokeFor(std::string_view key) {
+  for (const NamedKey& named : kNamedKeys) {
+    if (key == named.name) return Stroke{named.scancode, SDL_KMOD_NONE};
+  }
+  const std::optional<std::uint32_t> code = SingleCodePoint(key);
+  if (!code.has_value()) return std::nullopt;
+  if (TheLayout().has_value()) {
+    const auto stroke = TheLayout()->strokeFor(*code);
+    if (!stroke.has_value()) return std::nullopt;
+    return Stroke{stroke->first, stroke->second};
+  }
+  SDL_Keymod mods = SDL_KMOD_NONE;
+  const SDL_Scancode scancode = SDL_GetScancodeFromKey(*code, &mods);
+  if (scancode == SDL_SCANCODE_UNKNOWN) return std::nullopt;
+  return Stroke{scancode, static_cast<std::uint16_t>(mods)};
+}
+
+// What a real event would carry in its key field for this layout.
+std::uint32_t EventKeyFor(int scancode, std::uint16_t mods) {
+  if (TheLayout().has_value()) return TheLayout()->keyFor(scancode, mods);
+  return SDL_GetKeyFromScancode(static_cast<SDL_Scancode>(scancode),
+                                static_cast<SDL_Keymod>(mods), true);
+}
+
+void PushKey(bool down, int scancode, std::uint16_t mods) {
+  SDL_Event event{};
+  event.type = down ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
+  event.key.timestamp = SDL_GetTicksNS();
+  event.key.scancode = static_cast<SDL_Scancode>(scancode);
+  event.key.key = EventKeyFor(scancode, mods);
+  event.key.mod = static_cast<SDL_Keymod>(mods);
+  event.key.down = down;
+  if (!SDL_PushEvent(&event)) {
+    fail(std::string("SDL_PushEvent failed: ") + SDL_GetError(), __FILE__,
+         __LINE__);
+  }
+}
+
+GuiDisplayGen* ShowingGui() {
+  return UNIVERSE != nullptr ? UNIVERSE->getGui() : nullptr;
+}
+
+std::string Trimmed(const std::string& text) {
+  const std::size_t first = text.find_first_not_of(' ');
+  if (first == std::string::npos) return std::string();
+  return text.substr(first, text.find_last_not_of(' ') - first + 1);
+}
+
+std::string RowText(GuiDisplayGen* gui, OOGUIRow row) {
+  if (gui == nullptr || row < 0) return std::string();
+  const oo::PList text = gui->objectForRow(row);
+  if (const std::string* string = text.getIf<std::string>()) return Trimmed(*string);
+  if (text.isArray()) {
+    const oo::PList* first = text.at(0);
+    if (first != nullptr) {
+      if (const std::string* string = first->getIf<std::string>()) {
+        return Trimmed(*string);
+      }
+    }
+  }
+  return std::string();
+}
+
+}  // namespace
+
+int Layout::modsClass(std::uint16_t mods) {
+  if ((mods & SDL_KMOD_MODE) != 0) return 4;
+  const bool shift = (mods & SDL_KMOD_SHIFT) != 0;
+  const bool caps = (mods & SDL_KMOD_CAPS) != 0;
+  return shift && caps ? 3 : caps ? 2 : shift ? 1 : 0;
+}
+
+Layout Layout::load(std::string_view nameOrPath) {
+  Layout layout;
+  fs::path path(std::string{nameOrPath});
+  if (path.extension() != ".tsv") {
+    path = Game::sourceRoot() / "tests" / "component-cpp" / "layouts" /
+           (std::string(nameOrPath) + ".tsv");
+  }
+  layout.name_ = path.stem().string();
+  std::ifstream in(path);
+  if (!in) {
+    fail("cannot read layout " + path.generic_string(), __FILE__, __LINE__);
+    return layout;
+  }
+  std::string line;
+  int number = 0;
+  while (std::getline(in, line)) {
+    ++number;
+    if (!line.empty() && line.back() == '\r') line.pop_back();
+    const std::size_t hash = line.find('#');
+    const std::string body = line.substr(0, hash);
+    std::istringstream fields(body);
+    std::string scancode, mods, keycode;
+    if (!(fields >> scancode)) continue;  // blank or comment
+    if (!(fields >> mods >> keycode)) {
+      fail(std::format("{}:{}: a row needs scancode, mods and keycode",
+                       path.generic_string(), number),
+           __FILE__, __LINE__);
+      continue;
+    }
+    int cls = -1;
+    for (int i = 0; i < 5; ++i) {
+      if (mods == kModsNames[i]) cls = i;
+    }
+    if (cls < 0) {
+      fail(std::format("{}:{}: unknown mods \"{}\"", path.generic_string(),
+                       number, mods),
+           __FILE__, __LINE__);
+      continue;
+    }
+    try {
+      layout.rows_[{std::stoi(scancode), cls}] =
+          static_cast<std::uint32_t>(std::stoul(keycode, nullptr, 16));
+    } catch (const std::exception&) {
+      fail(std::format("{}:{}: bad number", path.generic_string(), number),
+           __FILE__, __LINE__);
+    }
+  }
+  return layout;
+}
+
+std::uint32_t Layout::keyFor(int scancode, std::uint16_t mods) const {
+  const auto row = rows_.find({scancode, modsClass(mods)});
+  return row != rows_.end() ? row->second : 0;
+}
+
+std::optional<std::pair<int, std::uint16_t>> Layout::strokeFor(
+    std::uint32_t code) const {
+  for (int cls = 0; cls < 5; ++cls) {
+    for (const auto& [where, keycode] : rows_) {
+      if (where.second == cls && keycode == code) {
+        return std::pair<int, std::uint16_t>{where.first, kModsStates[cls]};
+      }
+    }
+  }
+  return std::nullopt;
+}
+
+void Game::useLayout(std::string_view nameOrPath) {
+  TheLayout() = Layout::load(nameOrPath);
+  if (view() == nullptr) {
+    fail("useLayout: this game has no view to take key events", __FILE__,
+         __LINE__);
+    return;
+  }
+  const Layout* layout = &*TheLayout();
+  view()->keyLookup = [layout](SDL_Scancode scancode, SDL_Keymod mod) {
+    return static_cast<SDL_Keycode>(layout->keyFor(scancode, mod));
+  };
+}
+
+std::string Game::layoutName() const {
+  return TheLayout().has_value() ? TheLayout()->name() : std::string("SDL");
+}
+
+void Game::keyDownScancode(int scancode, std::uint16_t mods) {
+  if (view() == nullptr) {
+    fail("a key press in a game with no view (use atStartScreen, docked or "
+         "inFlightWithKeys)",
+         __FILE__, __LINE__);
+    return;
+  }
+  PushKey(true, scancode, mods);
+}
+
+void Game::keyUpScancode(int scancode, std::uint16_t mods) {
+  if (view() == nullptr) return;
+  PushKey(false, scancode, mods);
+}
+
+void Game::pressScancode(int scancode, std::uint16_t mods) {
+  keyDownScancode(scancode, mods);
+  step(kPressSteps);
+  keyUpScancode(scancode, SDL_KMOD_NONE);
+  step(kPressSteps);
+}
+
+void Game::press(std::string_view key) {
+  const std::optional<Stroke> stroke = StrokeFor(key);
+  if (!stroke.has_value()) {
+    fail(std::format("no key gives \"{}\" in layout {}", key, layoutName()),
+         __FILE__, __LINE__);
+    return;
+  }
+  pressScancode(stroke->scancode, stroke->mods);
+}
+
+bool Game::hold(std::string_view key, const std::function<bool()>& done,
+                GameTime atMost) {
+  const std::optional<Stroke> stroke = StrokeFor(key);
+  if (!stroke.has_value()) {
+    fail(std::format("no key gives \"{}\" in layout {}", key, layoutName()),
+         __FILE__, __LINE__);
+    return false;
+  }
+  keyDownScancode(stroke->scancode, stroke->mods);
+  const bool reached = simulateUntil(done, atMost);
+  keyUpScancode(stroke->scancode, SDL_KMOD_NONE);
+  step(kPressSteps);
+  return reached;
+}
+
+void Game::type(std::string_view text) {
+  std::size_t i = 0;
+  while (i < text.size()) {
+    std::size_t length = 1;
+    const auto lead = static_cast<unsigned char>(text[i]);
+    if (lead >= 0xF0) {
+      length = 4;
+    } else if (lead >= 0xE0) {
+      length = 3;
+    } else if (lead >= 0xC0) {
+      length = 2;
+    }
+    const std::string_view character = text.substr(i, length);
+    press(character == " " ? std::string_view("space") : character);
+    i += length;
+  }
+}
+
+std::string Game::describeKey(std::string_view key) const {
+  const std::optional<Stroke> stroke = StrokeFor(key);
+  if (!stroke.has_value()) {
+    return std::format("layout {}: no key gives {}", layoutName(), key);
+  }
+  return std::format(
+      "layout {}: {} -> scancode {} ({}), {} -> key 0x{:x}", layoutName(), key,
+      stroke->scancode,
+      SDL_GetScancodeName(static_cast<SDL_Scancode>(stroke->scancode)),
+      ModsText(stroke->mods), EventKeyFor(stroke->scancode, stroke->mods));
+}
+
+long Game::selectedRow() const {
+  GuiDisplayGen* gui = ShowingGui();
+  return gui != nullptr ? static_cast<long>(gui->getSelectedRow()) : -1;
+}
+
+std::string Game::rowText(long row) const { return RowText(ShowingGui(), row); }
+
+std::string Game::rowKey(long row) const {
+  GuiDisplayGen* gui = ShowingGui();
+  if (gui == nullptr || row < 0) return std::string();
+  return gui->keyForRow(row).value_or(std::string());
+}
+
+namespace {
+
+bool SelectRow(Game& game, const std::function<bool()>& selected,
+               std::string_view what) {
+  if (selected()) return true;
+  for (const char* direction : {"down", "up"}) {
+    // One full cycle: the GUI has at most kGuiMaxRows rows.
+    for (int i = 0; i < kGuiMaxRows; ++i) {
+      const long before = game.selectedRow();
+      game.press(direction);
+      if (selected()) return true;
+      if (game.selectedRow() == before) break;  // the end of the range
+    }
+  }
+  fail(std::format("no row {} could be selected at {}", what, game.screen()),
+       __FILE__, __LINE__);
+  return false;
+}
+
+}  // namespace
+
+bool Game::selectRowWithKey(std::string_view key) {
+  return SelectRow(
+      *this, [&] { return rowKey(selectedRow()) == key; },
+      std::format("with key \"{}\"", key));
+}
+
+bool Game::selectRowWithText(std::string_view text) {
+  return SelectRow(
+      *this, [&] { return rowText(selectedRow()) == text; },
+      std::format("saying \"{}\"", text));
+}
+
+bool Game::exitRequested() const {
+  return controller()->exitRequested().has_value();
+}
+
+void Game::checkPressEffect(std::string_view key, bool changed,
+                            const char* file, int line) const {
+  if (changed) {
+    ::oo_test::check(true, "", file, line);
+    return;
+  }
+  const std::string message =
+      std::format("pressing {} had no effect at {}, game time {:.3f}\n     {}",
+                  key, screen(), time(), describeKey(key));
+  ::oo_test::check(false, message.c_str(), file, line);
+  PrintState(file, line);
+}
 
 Game Game::scenario(std::uint32_t seed) {
   OOHeadlessOptions options = BaseOptions(seed);

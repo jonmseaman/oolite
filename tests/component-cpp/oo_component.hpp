@@ -30,6 +30,8 @@
 
 #include <chrono>
 #include <cstdint>
+#include <map>
+#include <utility>
 #include <array>
 #include <filesystem>
 #include <functional>
@@ -178,6 +180,34 @@ class ShipHandle {
   std::string key_;
 };
 
+// A recorded keyboard layout (tests/component-cpp/layouts/<name>.tsv): what
+// key code each (scancode, modifiers) pair gives. Columns: scancode, mods (-,
+// shift, caps, shift+caps, altgr), keycode (hex), comment; # starts a comment.
+class Layout {
+ public:
+  // A name in tests/component-cpp/layouts/, or a path to a .tsv file. Fails
+  // the test, and gives an empty layout, if it cannot be read.
+  static Layout load(std::string_view nameOrPath);
+
+  const std::string& name() const { return name_; }
+  // The key code for a physical key and modifier state; 0 (SDLK_UNKNOWN) if
+  // the table has no row for it. Modifiers other than shift, caps lock and
+  // AltGr (SDL_KMOD_MODE) are ignored, as the table records none.
+  std::uint32_t keyFor(int scancode, std::uint16_t mods) const;
+  // The physical key and modifiers that give a code point: the first row
+  // giving it, trying no modifiers, then shift, caps, shift+caps and altgr.
+  std::optional<std::pair<int, std::uint16_t>> strokeFor(std::uint32_t code) const;
+  // Every row: (scancode, mods class 0-4) -> key code.
+  const std::map<std::pair<int, int>, std::uint32_t>& rows() const { return rows_; }
+  // The modifier class of a modifier state: 0 none, 1 shift, 2 caps,
+  // 3 shift+caps, 4 altgr.
+  static int modsClass(std::uint16_t mods);
+
+ private:
+  std::string name_;
+  std::map<std::pair<int, int>, std::uint32_t> rows_;
+};
+
 class Game {
  public:
   // An empty system, the player in flight, no keys: the windowed step
@@ -194,6 +224,50 @@ class Game {
   std::string screen() const;
   // The view that takes key events; null unless the game was made with one.
   MyOpenGLView* view() const;
+
+  // Keys, for a game with a view. A key is a character ("n", "1") or a named
+  // key: enter, escape, space, tab, backspace, delete, insert, home, end,
+  // pageup, pagedown, up, down, left, right, f1-f12. A character is looked up
+  // in the installed layout (SDL's own map if none) for its scancode and
+  // modifiers; a named key is its physical key. Every press is
+  // SDL_EVENT_KEY_DOWN / SDL_EVENT_KEY_UP pushed onto SDL's queue and read by
+  // the game's own pollControls(); the view's key state is never written.
+  //
+  // Installs a recorded layout as the view's key lookup. --layout <name> on
+  // the command line installs one when the game starts.
+  void useLayout(std::string_view nameOrPath);
+  // The installed layout's name; "SDL" if none.
+  std::string layoutName() const;
+  // Key down, two steps (the game samples keys once a frame), key up, two
+  // steps (so the next press is not a repeat).
+  void press(std::string_view key);
+  // Key down, simulateUntil(done, atMost), key up, two steps; done's answer.
+  bool hold(std::string_view key, const std::function<bool()>& done,
+            GameTime atMost);
+  // By physical key, for the fault tests: down, two steps, up, two steps.
+  void pressScancode(int scancode, std::uint16_t mods);
+  void keyDownScancode(int scancode, std::uint16_t mods);
+  void keyUpScancode(int scancode, std::uint16_t mods);
+  // One press per character.
+  void type(std::string_view text);
+  // How a key is pressed under the installed layout, for failure messages:
+  // "n -> scancode 17 (N), no modifiers -> key 0x6e".
+  std::string describeKey(std::string_view key) const;
+
+  // Menu state, from the GUI showing.
+  long selectedRow() const;  // -1 for none
+  std::string rowText(long row) const;  // the first column's text, trimmed
+  std::string rowKey(long row) const;
+  // Presses down, then up, until the row with that key (text) is selected;
+  // fails the test after one full cycle each way.
+  bool selectRowWithKey(std::string_view key);
+  bool selectRowWithText(std::string_view text);
+  // The game asked to quit (headless, the request is recorded, not obeyed).
+  bool exitRequested() const;
+
+  // OO_COMPONENT_PRESS_EXPECT's check, after the press.
+  void checkPressEffect(std::string_view key, bool changed, const char* file,
+                        int line) const;
 
   // Time. Nothing here waits on the real clock.
   void step(int steps = 1);  // each step is 1/60 s
@@ -318,6 +392,15 @@ void checkNoErrors(const Game& game, const char* file, int line);
 int runMain(int argc, char** argv, const char* file);
 
 }  // namespace oo::component
+
+// Presses key and fails, with "pressing <key> had no effect at <screen>, game
+// time <t>" and how the layout translated the key, unless effect then holds.
+#define OO_COMPONENT_PRESS_EXPECT(game, key, effect)                      \
+  do {                                                                    \
+    (game).press(key);                                                    \
+    (game).checkPressEffect((key), static_cast<bool>(effect), __FILE__,   \
+                            __LINE__);                                    \
+  } while (0)
 
 #define OO_COMPONENT_CHECK_NO_ERRORS(game) \
   ::oo::component::checkNoErrors((game), __FILE__, __LINE__)
