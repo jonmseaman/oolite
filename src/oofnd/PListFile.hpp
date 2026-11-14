@@ -7,7 +7,7 @@
             oo::PListFileLoad r = oo::loadPListFile(path, read);
 
    then r.plistData holds a plist's bytes to parse as before, or r.isJSON5 says
-   r.plist (or r.error) came from the .json5. cxx_OOPropertyListFromFile
+   r.plist (or r.error) came from the .json5. OOPropertyListFromFile
    (src/Core/OOPListParsing.cpp) is the game's one caller.
 
         The reader is a callable std::optional<oo::Data>(const std::string&):

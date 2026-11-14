@@ -625,27 +625,27 @@ class JSON5Writer {
 
   bool format(const PList& v, unsigned level, std::string& out) {
     switch (v.type()) {
-      case PList::Type::String:
+      case PList::Type::kString:
         appendJSON5String(out, *v.getIf<std::string>());
         return true;
-      case PList::Type::Bool:
+      case PList::Type::kBool:
         out += *v.getIf<bool>() ? "true" : "false";
         return true;
-      case PList::Type::Integer: {
+      case PList::Type::kInteger: {
         const PList::Integer& i = *v.getIf<PList::Integer>();
         out += i.isUnsigned ? std::to_string(i.unsignedValue())
                             : std::to_string(i.value);
         return true;
       }
-      case PList::Type::Real:
+      case PList::Type::kReal:
         appendJSON5Real(out, *v.getIf<double>());
         return true;
-      case PList::Type::Data:
+      case PList::Type::kData:
         out += "{$data: \"";
         appendBase64(out, *v.getIf<Data>());
         out += "\"}";
         return true;
-      case PList::Type::Date: {
+      case PList::Type::kDate: {
         long y;
         int mo, d, h, mi, s;
         breakDate(v.getIf<PList::Date>()->sinceReferenceDate, y, mo, d, h, mi,
@@ -657,7 +657,7 @@ class JSON5Writer {
         out += buf;
         return true;
       }
-      case PList::Type::Array: {
+      case PList::Type::kArray: {
         const PList::Array& array = *v.getIf<PList::Array>();
         if (array.empty()) {
           out += "[]";
@@ -673,7 +673,7 @@ class JSON5Writer {
         out += ']';
         return true;
       }
-      case PList::Type::Dict: {
+      case PList::Type::kDict: {
         const PList::Dict& dict = *v.getIf<PList::Dict>();
         if (dict.empty()) {
           out += "{}";
@@ -699,10 +699,10 @@ class JSON5Writer {
         out += '}';
         return true;
       }
-      case PList::Type::Null:
+      case PList::Type::kNull:
         error = "null cannot be written as JSON5";
         return false;
-      case PList::Type::Object:
+      case PList::Type::kObject:
         error = "Class " + v.getIf<PList::Object>()->get()->className() +
                 " does not support JSON5 writing";
         return false;
