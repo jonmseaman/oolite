@@ -472,6 +472,33 @@ bool EventRecord::has(std::string_view name, std::uint32_t subjectId) const {
   return firstOf(name, subjectId) != nullptr;
 }
 
+bool EventRecord::has(std::string_view name, const ShipHandle& ship) const {
+  return ship.id() != 0 && has(name, ship.id());
+}
+
+ShipWithKey ShipWithKey::at(HPVector position) const {
+  ShipWithKey next = *this;
+  next.placement_ = Placement::kAt;
+  next.position_ = position;
+  return next;
+}
+
+ShipWithKey ShipWithKey::aheadOf(Entity* entity, double metres) const {
+  ShipWithKey next = *this;
+  next.placement_ = Placement::kAheadOf;
+  next.reference_ = entity;
+  next.metres_ = metres;
+  return next;
+}
+
+ShipWithKey ShipWithKey::near(Entity* entity, double metres) const {
+  ShipWithKey next = *this;
+  next.placement_ = Placement::kNear;
+  next.reference_ = entity;
+  next.metres_ = metres;
+  return next;
+}
+
 std::size_t EventRecord::count(std::string_view name) const {
   std::size_t n = 0;
   for (const Event& event : entries_) {
@@ -655,6 +682,74 @@ std::uint64_t Game::digest() const {
   digest.addValue(TheState().eventsDigest.value());
   return digest.value();
 }
+
+namespace {
+
+constexpr double kNearPlayerMetres = 5000.0;
+
+// Somewhere within metres of centre, from the game's seeded generator.
+HPVector Near(HPVector centre, double metres) {
+  const HPVector direction = OORandomUnitHPVector();
+  return HPvector_add(centre, HPvector_multiply_scalar(direction, metres * randf()));
+}
+
+HPVector PlaceFor(const ShipWithKey::Placement placement, HPVector position,
+                  Entity* reference, double metres) {
+  switch (placement) {
+    case ShipWithKey::Placement::kAt:
+      return position;
+    case ShipWithKey::Placement::kAheadOf: {
+      const Vector forward = vector_forward_from_quaternion(reference->getOrientation());
+      return HPvector_add(reference->getPosition(),
+                          HPvector_multiply_scalar(vectorToHPVector(forward), metres));
+    }
+    case ShipWithKey::Placement::kNear:
+      return Near(reference->getPosition(), metres);
+    case ShipWithKey::Placement::kNearPlayer:
+      break;
+  }
+  return Near(PlayerEntity::sharedPlayer()->getPosition(), kNearPlayerMetres);
+}
+
+}  // namespace
+
+ShipHandle Game::add(const ShipWithKey& what) {
+  if ((what.placement_ == ShipWithKey::Placement::kAheadOf ||
+       what.placement_ == ShipWithKey::Placement::kNear) &&
+      what.reference_ == nullptr) {
+    fail("ShipWithKey(" + what.key_ + "): placed by a ship that is gone", __FILE__,
+         __LINE__);
+    return ShipHandle();
+  }
+  const HPVector position =
+      PlaceFor(what.placement_, what.position_, what.reference_, what.metres_);
+  return ShipHandle(spawnKey(what.key_, position));
+}
+
+std::shared_ptr<ShipEntity> Game::spawnKey(const std::string& shipKey,
+                                           HPVector position) {
+  std::shared_ptr<ShipEntity> ship = universe()->newShipWithName(shipKey);
+  if (ship == nullptr) return nullptr;
+  ship->setPosition(position);
+  if (!universe()->addEntity(ship.get())) return nullptr;
+  return ship;
+}
+
+void Game::remove(ShipEntity* ship) {
+  if (ship != nullptr) universe()->removeEntity(ship);
+}
+
+std::vector<ShipHandle> Game::shipsWithRole(std::string_view role) {
+  std::vector<ShipHandle> ships;
+  for (const oo::EntityHold& entity : universe()->entityList()) {
+    ShipEntity* ship = dynamic_cast<ShipEntity*>(entity.get());
+    if (ship == nullptr || ship->status() == OOEntityStatus::kDead) continue;
+    if (ship->getPrimaryRole().value_or("") == role) ships.emplace_back(oo::share(ship));
+  }
+  return ships;
+}
+
+std::size_t Game::entityCount() const { return universe()->entityCount(); }
 
 std::optional<std::array<double, 3>> Game::locus() const {
   return TheState().locus;
