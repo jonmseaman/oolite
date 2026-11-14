@@ -1,0 +1,1096 @@
+# Russian (JCUKEN).
+# Derived, not recorded: layouts/us.tsv (SDL's built-in map) with the keys xkeyboard-config's
+# ru(basic) moves (letters, the number row, punctuation), derived in spec
+# 011 T041. A recording under Xvfb with setxkbmap (build-fedora, run 43628739112) gave the US
+# table for both layouts, so it was not used; a real recording is asked for (tasks.md, For Jon).
+# Dead keys are given as their spacing characters. AltGr rows are the unmodified key, as in us.tsv.
+# scancode	mods	keycode	comment
+# SDL's default keycode options (SDL_HINT_KEYCODE_OPTIONS "latin_letters") may give Latin
+# letters on this layout instead; this table is the layout's own letters.
+4	-	0x444	ф
+4	shift	0x424	Ф
+4	caps	0x424	Ф
+4	shift+caps	0x444	ф
+5	-	0x438	и
+5	shift	0x418	И
+5	caps	0x418	И
+5	shift+caps	0x438	и
+6	-	0x441	с
+6	shift	0x421	С
+6	caps	0x421	С
+6	shift+caps	0x441	с
+7	-	0x432	в
+7	shift	0x412	В
+7	caps	0x412	В
+7	shift+caps	0x432	в
+8	-	0x443	у
+8	shift	0x423	У
+8	caps	0x423	У
+8	shift+caps	0x443	у
+9	-	0x430	а
+9	shift	0x410	А
+9	caps	0x410	А
+9	shift+caps	0x430	а
+10	-	0x43f	п
+10	shift	0x41f	П
+10	caps	0x41f	П
+10	shift+caps	0x43f	п
+11	-	0x440	р
+11	shift	0x420	Р
+11	caps	0x420	Р
+11	shift+caps	0x440	р
+12	-	0x448	ш
+12	shift	0x428	Ш
+12	caps	0x428	Ш
+12	shift+caps	0x448	ш
+13	-	0x43e	о
+13	shift	0x41e	О
+13	caps	0x41e	О
+13	shift+caps	0x43e	о
+14	-	0x43b	л
+14	shift	0x41b	Л
+14	caps	0x41b	Л
+14	shift+caps	0x43b	л
+15	-	0x434	д
+15	shift	0x414	Д
+15	caps	0x414	Д
+15	shift+caps	0x434	д
+16	-	0x44c	ь
+16	shift	0x42c	Ь
+16	caps	0x42c	Ь
+16	shift+caps	0x44c	ь
+17	-	0x442	т
+17	shift	0x422	Т
+17	caps	0x422	Т
+17	shift+caps	0x442	т
+18	-	0x449	щ
+18	shift	0x429	Щ
+18	caps	0x429	Щ
+18	shift+caps	0x449	щ
+19	-	0x437	з
+19	shift	0x417	З
+19	caps	0x417	З
+19	shift+caps	0x437	з
+20	-	0x439	й
+20	shift	0x419	Й
+20	caps	0x419	Й
+20	shift+caps	0x439	й
+21	-	0x43a	к
+21	shift	0x41a	К
+21	caps	0x41a	К
+21	shift+caps	0x43a	к
+22	-	0x44b	ы
+22	shift	0x42b	Ы
+22	caps	0x42b	Ы
+22	shift+caps	0x44b	ы
+23	-	0x435	е
+23	shift	0x415	Е
+23	caps	0x415	Е
+23	shift+caps	0x435	е
+24	-	0x433	г
+24	shift	0x413	Г
+24	caps	0x413	Г
+24	shift+caps	0x433	г
+25	-	0x43c	м
+25	shift	0x41c	М
+25	caps	0x41c	М
+25	shift+caps	0x43c	м
+26	-	0x446	ц
+26	shift	0x426	Ц
+26	caps	0x426	Ц
+26	shift+caps	0x446	ц
+27	-	0x447	ч
+27	shift	0x427	Ч
+27	caps	0x427	Ч
+27	shift+caps	0x447	ч
+28	-	0x43d	н
+28	shift	0x41d	Н
+28	caps	0x41d	Н
+28	shift+caps	0x43d	н
+29	-	0x44f	я
+29	shift	0x42f	Я
+29	caps	0x42f	Я
+29	shift+caps	0x44f	я
+30	-	0x31	1
+30	shift	0x21	!
+30	caps	0x31	1
+30	shift+caps	0x21	!
+31	-	0x32	2
+31	shift	0x22	"
+31	caps	0x32	2
+31	shift+caps	0x22	"
+32	-	0x33	3
+32	shift	0x2116	№
+32	caps	0x33	3
+32	shift+caps	0x2116	№
+33	-	0x34	4
+33	shift	0x3b	;
+33	caps	0x34	4
+33	shift+caps	0x3b	;
+34	-	0x35	5
+34	shift	0x25	%
+34	caps	0x35	5
+34	shift+caps	0x25	%
+35	-	0x36	6
+35	shift	0x3a	:
+35	caps	0x36	6
+35	shift+caps	0x3a	:
+36	-	0x37	7
+36	shift	0x3f	?
+36	caps	0x37	7
+36	shift+caps	0x3f	?
+37	-	0x38	8
+37	shift	0x2a	*
+37	caps	0x38	8
+37	shift+caps	0x2a	*
+38	-	0x39	9
+38	shift	0x28	(
+38	caps	0x39	9
+38	shift+caps	0x28	(
+39	-	0x30	0
+39	shift	0x29	)
+39	caps	0x30	0
+39	shift+caps	0x29	)
+40	-	0xd	
+40	shift	0xd	
+40	caps	0xd	
+40	shift+caps	0xd	
+41	-	0x1b	
+41	shift	0x1b	
+41	caps	0x1b	
+41	shift+caps	0x1b	
+42	-	0x8	
+42	shift	0x8	
+42	caps	0x8	
+42	shift+caps	0x8	
+43	-	0x9	
+43	shift	0x9	
+43	caps	0x9	
+43	shift+caps	0x9	
+44	-	0x20	
+44	shift	0x20	
+44	caps	0x20	
+44	shift+caps	0x20	
+45	-	0x2d	-
+45	shift	0x5f	_
+45	caps	0x2d	-
+45	shift+caps	0x5f	_
+46	-	0x3d	=
+46	shift	0x2b	+
+46	caps	0x3d	=
+46	shift+caps	0x2b	+
+47	-	0x445	х
+47	shift	0x425	Х
+47	caps	0x425	Х
+47	shift+caps	0x445	х
+48	-	0x44a	ъ
+48	shift	0x42a	Ъ
+48	caps	0x42a	Ъ
+48	shift+caps	0x44a	ъ
+49	-	0x5c	\
+49	shift	0x2f	/
+49	caps	0x5c	\
+49	shift+caps	0x2f	/
+50	-	0x23	#
+50	shift	0x23	#
+50	caps	0x23	#
+50	shift+caps	0x23	#
+51	-	0x436	ж
+51	shift	0x416	Ж
+51	caps	0x416	Ж
+51	shift+caps	0x436	ж
+52	-	0x44d	э
+52	shift	0x42d	Э
+52	caps	0x42d	Э
+52	shift+caps	0x44d	э
+53	-	0x451	ё
+53	shift	0x401	Ё
+53	caps	0x401	Ё
+53	shift+caps	0x451	ё
+54	-	0x431	б
+54	shift	0x411	Б
+54	caps	0x411	Б
+54	shift+caps	0x431	б
+55	-	0x44e	ю
+55	shift	0x42e	Ю
+55	caps	0x42e	Ю
+55	shift+caps	0x44e	ю
+56	-	0x2e	.
+56	shift	0x2c	,
+56	caps	0x2e	.
+56	shift+caps	0x2c	,
+57	-	0x40000039	
+57	shift	0x40000039	
+57	caps	0x40000039	
+57	shift+caps	0x40000039	
+57	altgr	0x40000039	
+58	-	0x4000003a	
+58	shift	0x4000003a	
+58	caps	0x4000003a	
+58	shift+caps	0x4000003a	
+58	altgr	0x4000003a	
+59	-	0x4000003b	
+59	shift	0x4000003b	
+59	caps	0x4000003b	
+59	shift+caps	0x4000003b	
+59	altgr	0x4000003b	
+60	-	0x4000003c	
+60	shift	0x4000003c	
+60	caps	0x4000003c	
+60	shift+caps	0x4000003c	
+60	altgr	0x4000003c	
+61	-	0x4000003d	
+61	shift	0x4000003d	
+61	caps	0x4000003d	
+61	shift+caps	0x4000003d	
+61	altgr	0x4000003d	
+62	-	0x4000003e	
+62	shift	0x4000003e	
+62	caps	0x4000003e	
+62	shift+caps	0x4000003e	
+62	altgr	0x4000003e	
+63	-	0x4000003f	
+63	shift	0x4000003f	
+63	caps	0x4000003f	
+63	shift+caps	0x4000003f	
+63	altgr	0x4000003f	
+64	-	0x40000040	
+64	shift	0x40000040	
+64	caps	0x40000040	
+64	shift+caps	0x40000040	
+64	altgr	0x40000040	
+65	-	0x40000041	
+65	shift	0x40000041	
+65	caps	0x40000041	
+65	shift+caps	0x40000041	
+65	altgr	0x40000041	
+66	-	0x40000042	
+66	shift	0x40000042	
+66	caps	0x40000042	
+66	shift+caps	0x40000042	
+66	altgr	0x40000042	
+67	-	0x40000043	
+67	shift	0x40000043	
+67	caps	0x40000043	
+67	shift+caps	0x40000043	
+67	altgr	0x40000043	
+68	-	0x40000044	
+68	shift	0x40000044	
+68	caps	0x40000044	
+68	shift+caps	0x40000044	
+68	altgr	0x40000044	
+69	-	0x40000045	
+69	shift	0x40000045	
+69	caps	0x40000045	
+69	shift+caps	0x40000045	
+69	altgr	0x40000045	
+70	-	0x40000046	
+70	shift	0x40000046	
+70	caps	0x40000046	
+70	shift+caps	0x40000046	
+70	altgr	0x40000046	
+71	-	0x40000047	
+71	shift	0x40000047	
+71	caps	0x40000047	
+71	shift+caps	0x40000047	
+71	altgr	0x40000047	
+72	-	0x40000048	
+72	shift	0x40000048	
+72	caps	0x40000048	
+72	shift+caps	0x40000048	
+72	altgr	0x40000048	
+73	-	0x40000049	
+73	shift	0x40000049	
+73	caps	0x40000049	
+73	shift+caps	0x40000049	
+73	altgr	0x40000049	
+74	-	0x4000004a	
+74	shift	0x4000004a	
+74	caps	0x4000004a	
+74	shift+caps	0x4000004a	
+74	altgr	0x4000004a	
+75	-	0x4000004b	
+75	shift	0x4000004b	
+75	caps	0x4000004b	
+75	shift+caps	0x4000004b	
+75	altgr	0x4000004b	
+76	-	0x7f	
+76	shift	0x7f	
+76	caps	0x7f	
+76	shift+caps	0x7f	
+76	altgr	0x7f	
+77	-	0x4000004d	
+77	shift	0x4000004d	
+77	caps	0x4000004d	
+77	shift+caps	0x4000004d	
+77	altgr	0x4000004d	
+78	-	0x4000004e	
+78	shift	0x4000004e	
+78	caps	0x4000004e	
+78	shift+caps	0x4000004e	
+78	altgr	0x4000004e	
+79	-	0x4000004f	
+79	shift	0x4000004f	
+79	caps	0x4000004f	
+79	shift+caps	0x4000004f	
+79	altgr	0x4000004f	
+80	-	0x40000050	
+80	shift	0x40000050	
+80	caps	0x40000050	
+80	shift+caps	0x40000050	
+80	altgr	0x40000050	
+81	-	0x40000051	
+81	shift	0x40000051	
+81	caps	0x40000051	
+81	shift+caps	0x40000051	
+81	altgr	0x40000051	
+82	-	0x40000052	
+82	shift	0x40000052	
+82	caps	0x40000052	
+82	shift+caps	0x40000052	
+82	altgr	0x40000052	
+83	-	0x40000053	
+83	shift	0x40000053	
+83	caps	0x40000053	
+83	shift+caps	0x40000053	
+83	altgr	0x40000053	
+84	-	0x40000054	
+84	shift	0x40000054	
+84	caps	0x40000054	
+84	shift+caps	0x40000054	
+84	altgr	0x40000054	
+85	-	0x40000055	
+85	shift	0x40000055	
+85	caps	0x40000055	
+85	shift+caps	0x40000055	
+85	altgr	0x40000055	
+86	-	0x40000056	
+86	shift	0x40000056	
+86	caps	0x40000056	
+86	shift+caps	0x40000056	
+86	altgr	0x40000056	
+87	-	0x40000057	
+87	shift	0x40000057	
+87	caps	0x40000057	
+87	shift+caps	0x40000057	
+87	altgr	0x40000057	
+88	-	0x40000058	
+88	shift	0x40000058	
+88	caps	0x40000058	
+88	shift+caps	0x40000058	
+88	altgr	0x40000058	
+89	-	0x40000059	
+89	shift	0x40000059	
+89	caps	0x40000059	
+89	shift+caps	0x40000059	
+89	altgr	0x40000059	
+90	-	0x4000005a	
+90	shift	0x4000005a	
+90	caps	0x4000005a	
+90	shift+caps	0x4000005a	
+90	altgr	0x4000005a	
+91	-	0x4000005b	
+91	shift	0x4000005b	
+91	caps	0x4000005b	
+91	shift+caps	0x4000005b	
+91	altgr	0x4000005b	
+92	-	0x4000005c	
+92	shift	0x4000005c	
+92	caps	0x4000005c	
+92	shift+caps	0x4000005c	
+92	altgr	0x4000005c	
+93	-	0x4000005d	
+93	shift	0x4000005d	
+93	caps	0x4000005d	
+93	shift+caps	0x4000005d	
+93	altgr	0x4000005d	
+94	-	0x4000005e	
+94	shift	0x4000005e	
+94	caps	0x4000005e	
+94	shift+caps	0x4000005e	
+94	altgr	0x4000005e	
+95	-	0x4000005f	
+95	shift	0x4000005f	
+95	caps	0x4000005f	
+95	shift+caps	0x4000005f	
+95	altgr	0x4000005f	
+96	-	0x40000060	
+96	shift	0x40000060	
+96	caps	0x40000060	
+96	shift+caps	0x40000060	
+96	altgr	0x40000060	
+97	-	0x40000061	
+97	shift	0x40000061	
+97	caps	0x40000061	
+97	shift+caps	0x40000061	
+97	altgr	0x40000061	
+98	-	0x40000062	
+98	shift	0x40000062	
+98	caps	0x40000062	
+98	shift+caps	0x40000062	
+98	altgr	0x40000062	
+99	-	0x40000063	
+99	shift	0x40000063	
+99	caps	0x40000063	
+99	shift+caps	0x40000063	
+99	altgr	0x40000063	
+101	-	0x40000065	
+101	shift	0x40000065	
+101	caps	0x40000065	
+101	shift+caps	0x40000065	
+101	altgr	0x40000065	
+102	-	0x40000066	
+102	shift	0x40000066	
+102	caps	0x40000066	
+102	shift+caps	0x40000066	
+102	altgr	0x40000066	
+103	-	0x40000067	
+103	shift	0x40000067	
+103	caps	0x40000067	
+103	shift+caps	0x40000067	
+103	altgr	0x40000067	
+104	-	0x40000068	
+104	shift	0x40000068	
+104	caps	0x40000068	
+104	shift+caps	0x40000068	
+104	altgr	0x40000068	
+105	-	0x40000069	
+105	shift	0x40000069	
+105	caps	0x40000069	
+105	shift+caps	0x40000069	
+105	altgr	0x40000069	
+106	-	0x4000006a	
+106	shift	0x4000006a	
+106	caps	0x4000006a	
+106	shift+caps	0x4000006a	
+106	altgr	0x4000006a	
+107	-	0x4000006b	
+107	shift	0x4000006b	
+107	caps	0x4000006b	
+107	shift+caps	0x4000006b	
+107	altgr	0x4000006b	
+108	-	0x4000006c	
+108	shift	0x4000006c	
+108	caps	0x4000006c	
+108	shift+caps	0x4000006c	
+108	altgr	0x4000006c	
+109	-	0x4000006d	
+109	shift	0x4000006d	
+109	caps	0x4000006d	
+109	shift+caps	0x4000006d	
+109	altgr	0x4000006d	
+110	-	0x4000006e	
+110	shift	0x4000006e	
+110	caps	0x4000006e	
+110	shift+caps	0x4000006e	
+110	altgr	0x4000006e	
+111	-	0x4000006f	
+111	shift	0x4000006f	
+111	caps	0x4000006f	
+111	shift+caps	0x4000006f	
+111	altgr	0x4000006f	
+112	-	0x40000070	
+112	shift	0x40000070	
+112	caps	0x40000070	
+112	shift+caps	0x40000070	
+112	altgr	0x40000070	
+113	-	0x40000071	
+113	shift	0x40000071	
+113	caps	0x40000071	
+113	shift+caps	0x40000071	
+113	altgr	0x40000071	
+114	-	0x40000072	
+114	shift	0x40000072	
+114	caps	0x40000072	
+114	shift+caps	0x40000072	
+114	altgr	0x40000072	
+115	-	0x40000073	
+115	shift	0x40000073	
+115	caps	0x40000073	
+115	shift+caps	0x40000073	
+115	altgr	0x40000073	
+116	-	0x40000074	
+116	shift	0x40000074	
+116	caps	0x40000074	
+116	shift+caps	0x40000074	
+116	altgr	0x40000074	
+117	-	0x40000075	
+117	shift	0x40000075	
+117	caps	0x40000075	
+117	shift+caps	0x40000075	
+117	altgr	0x40000075	
+118	-	0x40000076	
+118	shift	0x40000076	
+118	caps	0x40000076	
+118	shift+caps	0x40000076	
+118	altgr	0x40000076	
+119	-	0x40000077	
+119	shift	0x40000077	
+119	caps	0x40000077	
+119	shift+caps	0x40000077	
+119	altgr	0x40000077	
+120	-	0x40000078	
+120	shift	0x40000078	
+120	caps	0x40000078	
+120	shift+caps	0x40000078	
+120	altgr	0x40000078	
+121	-	0x40000079	
+121	shift	0x40000079	
+121	caps	0x40000079	
+121	shift+caps	0x40000079	
+121	altgr	0x40000079	
+122	-	0x4000007a	
+122	shift	0x4000007a	
+122	caps	0x4000007a	
+122	shift+caps	0x4000007a	
+122	altgr	0x4000007a	
+123	-	0x4000007b	
+123	shift	0x4000007b	
+123	caps	0x4000007b	
+123	shift+caps	0x4000007b	
+123	altgr	0x4000007b	
+124	-	0x4000007c	
+124	shift	0x4000007c	
+124	caps	0x4000007c	
+124	shift+caps	0x4000007c	
+124	altgr	0x4000007c	
+125	-	0x4000007d	
+125	shift	0x4000007d	
+125	caps	0x4000007d	
+125	shift+caps	0x4000007d	
+125	altgr	0x4000007d	
+126	-	0x4000007e	
+126	shift	0x4000007e	
+126	caps	0x4000007e	
+126	shift+caps	0x4000007e	
+126	altgr	0x4000007e	
+127	-	0x4000007f	
+127	shift	0x4000007f	
+127	caps	0x4000007f	
+127	shift+caps	0x4000007f	
+127	altgr	0x4000007f	
+128	-	0x40000080	
+128	shift	0x40000080	
+128	caps	0x40000080	
+128	shift+caps	0x40000080	
+128	altgr	0x40000080	
+129	-	0x40000081	
+129	shift	0x40000081	
+129	caps	0x40000081	
+129	shift+caps	0x40000081	
+129	altgr	0x40000081	
+133	-	0x40000085	
+133	shift	0x40000085	
+133	caps	0x40000085	
+133	shift+caps	0x40000085	
+133	altgr	0x40000085	
+134	-	0x40000086	
+134	shift	0x40000086	
+134	caps	0x40000086	
+134	shift+caps	0x40000086	
+134	altgr	0x40000086	
+153	-	0x40000099	
+153	shift	0x40000099	
+153	caps	0x40000099	
+153	shift+caps	0x40000099	
+153	altgr	0x40000099	
+154	-	0x4000009a	
+154	shift	0x4000009a	
+154	caps	0x4000009a	
+154	shift+caps	0x4000009a	
+154	altgr	0x4000009a	
+155	-	0x4000009b	
+155	shift	0x4000009b	
+155	caps	0x4000009b	
+155	shift+caps	0x4000009b	
+155	altgr	0x4000009b	
+156	-	0x4000009c	
+156	shift	0x4000009c	
+156	caps	0x4000009c	
+156	shift+caps	0x4000009c	
+156	altgr	0x4000009c	
+157	-	0x4000009d	
+157	shift	0x4000009d	
+157	caps	0x4000009d	
+157	shift+caps	0x4000009d	
+157	altgr	0x4000009d	
+158	-	0x4000009e	
+158	shift	0x4000009e	
+158	caps	0x4000009e	
+158	shift+caps	0x4000009e	
+158	altgr	0x4000009e	
+159	-	0x4000009f	
+159	shift	0x4000009f	
+159	caps	0x4000009f	
+159	shift+caps	0x4000009f	
+159	altgr	0x4000009f	
+160	-	0x400000a0	
+160	shift	0x400000a0	
+160	caps	0x400000a0	
+160	shift+caps	0x400000a0	
+160	altgr	0x400000a0	
+161	-	0x400000a1	
+161	shift	0x400000a1	
+161	caps	0x400000a1	
+161	shift+caps	0x400000a1	
+161	altgr	0x400000a1	
+162	-	0x400000a2	
+162	shift	0x400000a2	
+162	caps	0x400000a2	
+162	shift+caps	0x400000a2	
+162	altgr	0x400000a2	
+163	-	0x400000a3	
+163	shift	0x400000a3	
+163	caps	0x400000a3	
+163	shift+caps	0x400000a3	
+163	altgr	0x400000a3	
+164	-	0x400000a4	
+164	shift	0x400000a4	
+164	caps	0x400000a4	
+164	shift+caps	0x400000a4	
+164	altgr	0x400000a4	
+165	-	0x400000a5	
+165	shift	0x400000a5	
+165	caps	0x400000a5	
+165	shift+caps	0x400000a5	
+165	altgr	0x400000a5	
+176	-	0x400000b0	
+176	shift	0x400000b0	
+176	caps	0x400000b0	
+176	shift+caps	0x400000b0	
+176	altgr	0x400000b0	
+177	-	0x400000b1	
+177	shift	0x400000b1	
+177	caps	0x400000b1	
+177	shift+caps	0x400000b1	
+177	altgr	0x400000b1	
+178	-	0x400000b2	
+178	shift	0x400000b2	
+178	caps	0x400000b2	
+178	shift+caps	0x400000b2	
+178	altgr	0x400000b2	
+179	-	0x400000b3	
+179	shift	0x400000b3	
+179	caps	0x400000b3	
+179	shift+caps	0x400000b3	
+179	altgr	0x400000b3	
+180	-	0x400000b4	
+180	shift	0x400000b4	
+180	caps	0x400000b4	
+180	shift+caps	0x400000b4	
+180	altgr	0x400000b4	
+181	-	0x400000b5	
+181	shift	0x400000b5	
+181	caps	0x400000b5	
+181	shift+caps	0x400000b5	
+181	altgr	0x400000b5	
+182	-	0x400000b6	
+182	shift	0x400000b6	
+182	caps	0x400000b6	
+182	shift+caps	0x400000b6	
+182	altgr	0x400000b6	
+183	-	0x400000b7	
+183	shift	0x400000b7	
+183	caps	0x400000b7	
+183	shift+caps	0x400000b7	
+183	altgr	0x400000b7	
+184	-	0x400000b8	
+184	shift	0x400000b8	
+184	caps	0x400000b8	
+184	shift+caps	0x400000b8	
+184	altgr	0x400000b8	
+185	-	0x400000b9	
+185	shift	0x400000b9	
+185	caps	0x400000b9	
+185	shift+caps	0x400000b9	
+185	altgr	0x400000b9	
+186	-	0x400000ba	
+186	shift	0x400000ba	
+186	caps	0x400000ba	
+186	shift+caps	0x400000ba	
+186	altgr	0x400000ba	
+187	-	0x400000bb	
+187	shift	0x400000bb	
+187	caps	0x400000bb	
+187	shift+caps	0x400000bb	
+187	altgr	0x400000bb	
+188	-	0x400000bc	
+188	shift	0x400000bc	
+188	caps	0x400000bc	
+188	shift+caps	0x400000bc	
+188	altgr	0x400000bc	
+189	-	0x400000bd	
+189	shift	0x400000bd	
+189	caps	0x400000bd	
+189	shift+caps	0x400000bd	
+189	altgr	0x400000bd	
+190	-	0x400000be	
+190	shift	0x400000be	
+190	caps	0x400000be	
+190	shift+caps	0x400000be	
+190	altgr	0x400000be	
+191	-	0x400000bf	
+191	shift	0x400000bf	
+191	caps	0x400000bf	
+191	shift+caps	0x400000bf	
+191	altgr	0x400000bf	
+192	-	0x400000c0	
+192	shift	0x400000c0	
+192	caps	0x400000c0	
+192	shift+caps	0x400000c0	
+192	altgr	0x400000c0	
+193	-	0x400000c1	
+193	shift	0x400000c1	
+193	caps	0x400000c1	
+193	shift+caps	0x400000c1	
+193	altgr	0x400000c1	
+194	-	0x400000c2	
+194	shift	0x400000c2	
+194	caps	0x400000c2	
+194	shift+caps	0x400000c2	
+194	altgr	0x400000c2	
+195	-	0x400000c3	
+195	shift	0x400000c3	
+195	caps	0x400000c3	
+195	shift+caps	0x400000c3	
+195	altgr	0x400000c3	
+196	-	0x400000c4	
+196	shift	0x400000c4	
+196	caps	0x400000c4	
+196	shift+caps	0x400000c4	
+196	altgr	0x400000c4	
+197	-	0x400000c5	
+197	shift	0x400000c5	
+197	caps	0x400000c5	
+197	shift+caps	0x400000c5	
+197	altgr	0x400000c5	
+198	-	0x400000c6	
+198	shift	0x400000c6	
+198	caps	0x400000c6	
+198	shift+caps	0x400000c6	
+198	altgr	0x400000c6	
+199	-	0x400000c7	
+199	shift	0x400000c7	
+199	caps	0x400000c7	
+199	shift+caps	0x400000c7	
+199	altgr	0x400000c7	
+200	-	0x400000c8	
+200	shift	0x400000c8	
+200	caps	0x400000c8	
+200	shift+caps	0x400000c8	
+200	altgr	0x400000c8	
+201	-	0x400000c9	
+201	shift	0x400000c9	
+201	caps	0x400000c9	
+201	shift+caps	0x400000c9	
+201	altgr	0x400000c9	
+202	-	0x400000ca	
+202	shift	0x400000ca	
+202	caps	0x400000ca	
+202	shift+caps	0x400000ca	
+202	altgr	0x400000ca	
+203	-	0x400000cb	
+203	shift	0x400000cb	
+203	caps	0x400000cb	
+203	shift+caps	0x400000cb	
+203	altgr	0x400000cb	
+204	-	0x400000cc	
+204	shift	0x400000cc	
+204	caps	0x400000cc	
+204	shift+caps	0x400000cc	
+204	altgr	0x400000cc	
+205	-	0x400000cd	
+205	shift	0x400000cd	
+205	caps	0x400000cd	
+205	shift+caps	0x400000cd	
+205	altgr	0x400000cd	
+206	-	0x400000ce	
+206	shift	0x400000ce	
+206	caps	0x400000ce	
+206	shift+caps	0x400000ce	
+206	altgr	0x400000ce	
+207	-	0x400000cf	
+207	shift	0x400000cf	
+207	caps	0x400000cf	
+207	shift+caps	0x400000cf	
+207	altgr	0x400000cf	
+208	-	0x400000d0	
+208	shift	0x400000d0	
+208	caps	0x400000d0	
+208	shift+caps	0x400000d0	
+208	altgr	0x400000d0	
+209	-	0x400000d1	
+209	shift	0x400000d1	
+209	caps	0x400000d1	
+209	shift+caps	0x400000d1	
+209	altgr	0x400000d1	
+210	-	0x400000d2	
+210	shift	0x400000d2	
+210	caps	0x400000d2	
+210	shift+caps	0x400000d2	
+210	altgr	0x400000d2	
+211	-	0x400000d3	
+211	shift	0x400000d3	
+211	caps	0x400000d3	
+211	shift+caps	0x400000d3	
+211	altgr	0x400000d3	
+212	-	0x400000d4	
+212	shift	0x400000d4	
+212	caps	0x400000d4	
+212	shift+caps	0x400000d4	
+212	altgr	0x400000d4	
+213	-	0x400000d5	
+213	shift	0x400000d5	
+213	caps	0x400000d5	
+213	shift+caps	0x400000d5	
+213	altgr	0x400000d5	
+214	-	0x400000d6	
+214	shift	0x400000d6	
+214	caps	0x400000d6	
+214	shift+caps	0x400000d6	
+214	altgr	0x400000d6	
+215	-	0x400000d7	
+215	shift	0x400000d7	
+215	caps	0x400000d7	
+215	shift+caps	0x400000d7	
+215	altgr	0x400000d7	
+216	-	0x400000d8	
+216	shift	0x400000d8	
+216	caps	0x400000d8	
+216	shift+caps	0x400000d8	
+216	altgr	0x400000d8	
+217	-	0x400000d9	
+217	shift	0x400000d9	
+217	caps	0x400000d9	
+217	shift+caps	0x400000d9	
+217	altgr	0x400000d9	
+218	-	0x400000da	
+218	shift	0x400000da	
+218	caps	0x400000da	
+218	shift+caps	0x400000da	
+218	altgr	0x400000da	
+219	-	0x400000db	
+219	shift	0x400000db	
+219	caps	0x400000db	
+219	shift+caps	0x400000db	
+219	altgr	0x400000db	
+220	-	0x400000dc	
+220	shift	0x400000dc	
+220	caps	0x400000dc	
+220	shift+caps	0x400000dc	
+220	altgr	0x400000dc	
+221	-	0x400000dd	
+221	shift	0x400000dd	
+221	caps	0x400000dd	
+221	shift+caps	0x400000dd	
+221	altgr	0x400000dd	
+224	-	0x400000e0	
+224	shift	0x400000e0	
+224	caps	0x400000e0	
+224	shift+caps	0x400000e0	
+224	altgr	0x400000e0	
+225	-	0x400000e1	
+225	shift	0x400000e1	
+225	caps	0x400000e1	
+225	shift+caps	0x400000e1	
+225	altgr	0x400000e1	
+226	-	0x400000e2	
+226	shift	0x400000e2	
+226	caps	0x400000e2	
+226	shift+caps	0x400000e2	
+226	altgr	0x400000e2	
+227	-	0x400000e3	
+227	shift	0x400000e3	
+227	caps	0x400000e3	
+227	shift+caps	0x400000e3	
+227	altgr	0x400000e3	
+228	-	0x400000e4	
+228	shift	0x400000e4	
+228	caps	0x400000e4	
+228	shift+caps	0x400000e4	
+228	altgr	0x400000e4	
+229	-	0x400000e5	
+229	shift	0x400000e5	
+229	caps	0x400000e5	
+229	shift+caps	0x400000e5	
+229	altgr	0x400000e5	
+230	-	0x400000e6	
+230	shift	0x400000e6	
+230	caps	0x400000e6	
+230	shift+caps	0x400000e6	
+230	altgr	0x400000e6	
+231	-	0x400000e7	
+231	shift	0x400000e7	
+231	caps	0x400000e7	
+231	shift+caps	0x400000e7	
+231	altgr	0x400000e7	
+257	-	0x40000101	
+257	shift	0x40000101	
+257	caps	0x40000101	
+257	shift+caps	0x40000101	
+257	altgr	0x40000101	
+258	-	0x40000102	
+258	shift	0x40000102	
+258	caps	0x40000102	
+258	shift+caps	0x40000102	
+258	altgr	0x40000102	
+259	-	0x40000103	
+259	shift	0x40000103	
+259	caps	0x40000103	
+259	shift+caps	0x40000103	
+259	altgr	0x40000103	
+260	-	0x40000104	
+260	shift	0x40000104	
+260	caps	0x40000104	
+260	shift+caps	0x40000104	
+260	altgr	0x40000104	
+261	-	0x40000105	
+261	shift	0x40000105	
+261	caps	0x40000105	
+261	shift+caps	0x40000105	
+261	altgr	0x40000105	
+262	-	0x40000106	
+262	shift	0x40000106	
+262	caps	0x40000106	
+262	shift+caps	0x40000106	
+262	altgr	0x40000106	
+263	-	0x40000107	
+263	shift	0x40000107	
+263	caps	0x40000107	
+263	shift+caps	0x40000107	
+263	altgr	0x40000107	
+264	-	0x40000108	
+264	shift	0x40000108	
+264	caps	0x40000108	
+264	shift+caps	0x40000108	
+264	altgr	0x40000108	
+265	-	0x40000109	
+265	shift	0x40000109	
+265	caps	0x40000109	
+265	shift+caps	0x40000109	
+265	altgr	0x40000109	
+266	-	0x4000010a	
+266	shift	0x4000010a	
+266	caps	0x4000010a	
+266	shift+caps	0x4000010a	
+266	altgr	0x4000010a	
+267	-	0x4000010b	
+267	shift	0x4000010b	
+267	caps	0x4000010b	
+267	shift+caps	0x4000010b	
+267	altgr	0x4000010b	
+268	-	0x4000010c	
+268	shift	0x4000010c	
+268	caps	0x4000010c	
+268	shift+caps	0x4000010c	
+268	altgr	0x4000010c	
+269	-	0x4000010d	
+269	shift	0x4000010d	
+269	caps	0x4000010d	
+269	shift+caps	0x4000010d	
+269	altgr	0x4000010d	
+270	-	0x4000010e	
+270	shift	0x4000010e	
+270	caps	0x4000010e	
+270	shift+caps	0x4000010e	
+270	altgr	0x4000010e	
+271	-	0x4000010f	
+271	shift	0x4000010f	
+271	caps	0x4000010f	
+271	shift+caps	0x4000010f	
+271	altgr	0x4000010f	
+272	-	0x40000110	
+272	shift	0x40000110	
+272	caps	0x40000110	
+272	shift+caps	0x40000110	
+272	altgr	0x40000110	
+273	-	0x40000111	
+273	shift	0x40000111	
+273	caps	0x40000111	
+273	shift+caps	0x40000111	
+273	altgr	0x40000111	
+274	-	0x40000112	
+274	shift	0x40000112	
+274	caps	0x40000112	
+274	shift+caps	0x40000112	
+274	altgr	0x40000112	
+275	-	0x40000113	
+275	shift	0x40000113	
+275	caps	0x40000113	
+275	shift+caps	0x40000113	
+275	altgr	0x40000113	
+276	-	0x40000114	
+276	shift	0x40000114	
+276	caps	0x40000114	
+276	shift+caps	0x40000114	
+276	altgr	0x40000114	
+277	-	0x40000115	
+277	shift	0x40000115	
+277	caps	0x40000115	
+277	shift+caps	0x40000115	
+277	altgr	0x40000115	
+278	-	0x40000116	
+278	shift	0x40000116	
+278	caps	0x40000116	
+278	shift+caps	0x40000116	
+278	altgr	0x40000116	
+279	-	0x40000117	
+279	shift	0x40000117	
+279	caps	0x40000117	
+279	shift+caps	0x40000117	
+279	altgr	0x40000117	
+280	-	0x40000118	
+280	shift	0x40000118	
+280	caps	0x40000118	
+280	shift+caps	0x40000118	
+280	altgr	0x40000118	
+281	-	0x40000119	
+281	shift	0x40000119	
+281	caps	0x40000119	
+281	shift+caps	0x40000119	
+281	altgr	0x40000119	
+282	-	0x4000011a	
+282	shift	0x4000011a	
+282	caps	0x4000011a	
+282	shift+caps	0x4000011a	
+282	altgr	0x4000011a	
+283	-	0x4000011b	
+283	shift	0x4000011b	
+283	caps	0x4000011b	
+283	shift+caps	0x4000011b	
+283	altgr	0x4000011b	
+284	-	0x4000011c	
+284	shift	0x4000011c	
+284	caps	0x4000011c	
+284	shift+caps	0x4000011c	
+284	altgr	0x4000011c	
+285	-	0x4000011d	
+285	shift	0x4000011d	
+285	caps	0x4000011d	
+285	shift+caps	0x4000011d	
+285	altgr	0x4000011d	
+286	-	0x4000011e	
+286	shift	0x4000011e	
+286	caps	0x4000011e	
+286	shift+caps	0x4000011e	
+286	altgr	0x4000011e	
+287	-	0x4000011f	
+287	shift	0x4000011f	
+287	caps	0x4000011f	
+287	shift+caps	0x4000011f	
+287	altgr	0x4000011f	
+288	-	0x40000120	
+288	shift	0x40000120	
+288	caps	0x40000120	
+288	shift+caps	0x40000120	
+288	altgr	0x40000120	
+289	-	0x40000121	
+289	shift	0x40000121	
+289	caps	0x40000121	
+289	shift+caps	0x40000121	
+289	altgr	0x40000121	
+290	-	0x40000122	
+290	shift	0x40000122	
+290	caps	0x40000122	
+290	shift+caps	0x40000122	
+290	altgr	0x40000122	

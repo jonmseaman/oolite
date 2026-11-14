@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,13 +37,18 @@ OO_TEST(the_default_lookup_is_sdls_own) {
   Game game = Game::current();
   OO_CHECK(game.view() != nullptr);
   if (game.view() == nullptr) return;
+  // Run with --layout, the view's lookup is that layout's table instead.
+  std::optional<oo::component::Layout> layout;
+  if (game.layoutName() != "SDL") layout = oo::component::Layout::load(game.layoutName());
   const SDL_Keymod mods[] = {SDL_KMOD_NONE, SDL_KMOD_SHIFT, SDL_KMOD_CAPS};
   int differ = 0;
   for (int code = 0; code < SDL_SCANCODE_COUNT; ++code) {
     for (SDL_Keymod mod : mods) {
       const auto scancode = static_cast<SDL_Scancode>(code);
       const SDL_Keycode ours = game.view()->keyLookup(scancode, mod);
-      const SDL_Keycode sdls = SDL_GetKeyFromScancode(scancode, mod, false);
+      const SDL_Keycode sdls = layout.has_value()
+                                   ? static_cast<SDL_Keycode>(layout->keyFor(code, mod))
+                                   : SDL_GetKeyFromScancode(scancode, mod, false);
       if (ours != sdls) {
         if (differ++ < 5) {
           std::printf("     scancode %d mods 0x%x: 0x%x, SDL 0x%x\n", code,
@@ -58,9 +64,11 @@ OO_TEST(the_default_lookup_is_sdls_own) {
 OO_TEST(us_tsv_agrees_with_sdls_built_in_map) {
   // Under the dummy video driver SDL answers from its own built-in US map.
   const oo::component::Layout us = oo::component::Layout::load("us");
-  const SDL_Keymod mods[] = {SDL_KMOD_NONE, SDL_KMOD_LSHIFT, SDL_KMOD_CAPS,
-                             static_cast<SDL_Keymod>(SDL_KMOD_LSHIFT | SDL_KMOD_CAPS),
-                             SDL_KMOD_MODE};
+  // The modifier sets the default lookup is checked under (the case above).
+  // Shift with Caps Lock is left out: SDL's own built-in map answers it
+  // differently by platform (A on macOS, a on Windows and Linux), so no one
+  // table can agree with it everywhere (tasks.md, Findings -> Keys).
+  const SDL_Keymod mods[] = {SDL_KMOD_NONE, SDL_KMOD_LSHIFT, SDL_KMOD_CAPS};
   int differ = 0;
   int rows = 0;
   for (int code = 1; code < SDL_SCANCODE_COUNT; ++code) {
@@ -77,7 +85,23 @@ OO_TEST(us_tsv_agrees_with_sdls_built_in_map) {
     }
   }
   OO_CHECK_EQ(differ, 0);
-  OO_CHECK_EQ(us.rows().size(), static_cast<std::size_t>(rows));
+  std::size_t tableRows = 0;
+  for (const auto& [where, keycode] : us.rows()) {
+    if (where.second <= 2) ++tableRows;  // -, shift, caps
+  }
+  OO_CHECK_EQ(tableRows, static_cast<std::size_t>(rows));
+}
+
+OO_TEST(every_layout_file_loads) {
+  using oo::component::Layout;
+  for (const char* name : {"us", "fr_azerty", "ru"}) {
+    const Layout layout = Layout::load(name);
+    OO_CHECK(layout.rows().size() > 100);
+  }
+  // Letters move on AZERTY: the key in the US Q position gives a.
+  OO_CHECK_EQ(Layout::load("fr_azerty").keyFor(SDL_SCANCODE_Q, SDL_KMOD_NONE), 0x61u);
+  // A non-Latin layout: the N key gives a code point above the game's 326 keys.
+  OO_CHECK(Layout::load("ru").keyFor(SDL_SCANCODE_N, SDL_KMOD_NONE) > 326u);
 }
 
 // US3 scenario 1.
