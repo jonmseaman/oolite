@@ -29,9 +29,16 @@ SOFTWARE.
 
 #pragma once
 
+#include <cstdint>
+#include <optional>
+
 #include "OOJavaScriptEngine.h"
 
 void InitOOJSFrameCallbacks(JSContext* context, JSValueConst global);
+
+// The first frame-callback id comes from the clock unless a seed is set here
+// (a headless game sets its seed before the engine starts), so ids repeat.
+void OOJSFrameCallbacksSetIDSeed(std::optional<std::uint32_t> seed);
 
 void OOJSFrameCallbacksInvoke(oo::TimeDelta delta);
 

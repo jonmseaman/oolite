@@ -134,9 +134,18 @@ TickClock::time_point NextGameTick() {
 namespace {
 
 struct DeferredCall {
-  std::chrono::steady_clock::time_point deadline;
+  double deadline;              // on the game's clock (DeferredCallNow)
   std::function<void()>* call;  // a C++ call
 };
+
+// "Now" for deferred calls: the game's clock, so a headless game's calls fall
+// due in game time. Before the shared controller exists, the system clock,
+// which is the same clock the windowed controller reads.
+double DeferredCallNow() {
+  return sSharedController != nullptr
+             ? sSharedController->clock().monotonicSeconds()
+             : oo::date::monotonicSeconds();
+}
 
 // call() with the perform's try/catch (below).
 bool DeferredCallRunCatching(const std::function<void()>& call,
@@ -153,11 +162,8 @@ void ScheduleDeferredCall(std::function<void()> call, double delay) {
   if (!oo::thread::isMainThread() || !call) return;
 
   if (delay <= 0.0) delay = 0.0001;  // as the Foundation timer did
-  DeferredCall entry = {
-      std::chrono::steady_clock::now() +
-          std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-              std::chrono::duration<double>(delay)),
-      new std::function<void()>(std::move(call))};
+  DeferredCall entry = {DeferredCallNow() + delay,
+                        new std::function<void()>(std::move(call))};
   sDeferredCalls.push_back(entry);
 }
 
@@ -179,8 +185,7 @@ void LogDeferredCallException(std::string_view exceptionName,
 // One step of the run loop's timer firing: the first due call in scheduling
 // order.
 void FireOneDueDeferredCall() {
-  const std::chrono::steady_clock::time_point now =
-      std::chrono::steady_clock::now();
+  const double now = DeferredCallNow();
   for (std::vector<DeferredCall>::iterator it = sDeferredCalls.begin();
        it != sDeferredCalls.end(); ++it) {
     if (it->deadline <= now) {
@@ -205,11 +210,18 @@ void FireOneDueDeferredCall() {
 bool NextDeferredCallDeadline(
     std::chrono::steady_clock::time_point* outDeadline) {
   bool found = false;
+  double earliest = 0.0;
   for (const DeferredCall& call : sDeferredCalls) {
-    if (!found || call.deadline < *outDeadline) {
-      *outDeadline = call.deadline;
+    if (!found || call.deadline < earliest) {
+      earliest = call.deadline;
       found = true;
     }
+  }
+  if (found) {
+    *outDeadline =
+        std::chrono::steady_clock::now() +
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+            std::chrono::duration<double>(earliest - DeferredCallNow()));
   }
   return found;
 }
@@ -472,6 +484,11 @@ void GameController::fireDueDeadlines() {
   oo::LogOutputHandlerFlushIfDue();
 }
 
+void GameController::fireDueDeferredCalls() {
+  FireOneDueDeferredCall();
+  FireOneDueDeferredCall();
+}
+
 void GameController::fireDueTimers() {
   fireDueDeadlines();
   FireOneDueDeferredCall();
@@ -482,8 +499,7 @@ void GameController::runFrameLoop() {
     {
       oo::AutoreleaseScope pool;  // was an autorelease-pool block
       fireDueDeadlines();
-      FireOneDueDeferredCall();
-      FireOneDueDeferredCall();
+      fireDueDeferredCalls();
 
       // Wait for input until the tick or the next deferred call, whichever is
       // first.
@@ -648,6 +664,7 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
     oo::process::setArguments(static_cast<int>(argv.size()), argv.data());
   }
 
+  OOJSFrameCallbacksSetIDSeed(options.seed);
   _universe = Universe::newUniverse(_gameView.get(), options);
   loadPlayerIfRequired();
 
@@ -670,6 +687,7 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
                          kHeadlessLaunchLimitSeconds);
       }
       tick(options.step);
+      fireDueDeferredCalls();
       launched += options.step;
     }
   }

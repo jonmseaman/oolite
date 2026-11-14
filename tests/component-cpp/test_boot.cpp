@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "GameController.h"
+#include "OOHeadless.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
 #include "Universe.h"
@@ -84,6 +86,38 @@ OO_TEST(six_hundred_steps_advance_game_time_by_10_s) {
   const double before = game.time();
   game.step(600);
   OO_CHECK(std::fabs(game.time() - before - 10.0) < 1e-6);
+}
+
+// The scenario game loads the standard save, which sets the ship clock, so
+// the clock's start is not visible here (a new commander's is: T045). What
+// is: the game clock's time of day comes from the seed, and the ship clock
+// follows game time.
+OO_TEST(the_ship_clock_starts_from_the_seed) {
+  Game game = Game::current();
+  const OOGameClock& clock = game.controller()->clock();
+  OO_CHECK(clock.isManual());
+  const double expected =
+      OOGameClock::manualTimeOfDayStart(kSeed) + clock.monotonicSeconds();
+  OO_CHECK(std::fabs(clock.timeOfDay() - std::fmod(expected, 86400.0)) < 1e-6);
+  const double shipBefore = game.player()->clockTime();
+  const double gameBefore = game.time();
+  game.step(60);
+  const double shipElapsed = game.player()->clockTime() - shipBefore;
+  const double gameElapsed = game.time() - gameBefore;
+  std::printf("ship clock moved %.6f s in %.6f s of game time\n", shipElapsed,
+              gameElapsed);
+  // The ship clock is about 1.8e11 s, so its doubles resolve ~3e-5 s.
+  OO_CHECK(std::fabs(shipElapsed - gameElapsed) < 1e-3);
+}
+
+OO_TEST(a_deferred_call_fires_on_game_time) {
+  Game game = Game::current();
+  bool fired = false;
+  OOScheduleDeferredCall([&fired] { fired = true; }, 2.0);
+  game.step(119);
+  OO_CHECK(!fired);
+  game.step(1);
+  OO_CHECK(fired);
 }
 
 OO_COMPONENT_MAIN()
