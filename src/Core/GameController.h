@@ -127,6 +127,12 @@ class GameController : public oo::Object {
   */
   void fireDueTimers();
 
+  /*	The deferred calls one pass of the frame loop fires: up to two that are
+     due on the game's clock, in scheduling order. A headless stepper calls it
+     after each tick(), as the frame loop does after the tick.
+  */
+  void fireDueDeferredCalls();
+
   // Start-up, splash and progress messages, exit, player file.
   void applicationDidFinishLaunching();
 

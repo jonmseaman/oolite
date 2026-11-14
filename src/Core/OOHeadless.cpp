@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #include "OOHeadless.h"
 
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 
 #include "oofnd/Date.hpp"
@@ -33,6 +34,7 @@ MA 02110-1301, USA.
 
 namespace {
 constexpr double kSecondsPerDay = 86400.0;
+constexpr double kNanosecondsPerSecond = 1e9;
 }  // namespace
 
 void OOHeadlessOptions::validate() const {
@@ -60,13 +62,15 @@ double OOGameClock::manualTimeOfDayStart(std::uint32_t seed) {
 }
 
 double OOGameClock::monotonicSeconds() const {
-  if (_manual) return _elapsed;
+  if (_manual) {
+    return static_cast<double>(_elapsedNanoseconds) / kNanosecondsPerSecond;
+  }
   return oo::date::monotonicSeconds();
 }
 
 double OOGameClock::timeOfDay() const {
   if (_manual) {
-    const double t = _timeOfDayStart + _elapsed;
+    const double t = _timeOfDayStart + monotonicSeconds();
     return t - kSecondsPerDay * static_cast<double>(static_cast<std::uint64_t>(
                                     t / kSecondsPerDay));
   }
@@ -83,7 +87,9 @@ double OOGameClock::timeOfDay() const {
 }
 
 void OOGameClock::advance(double dt) {
-  if (_manual) _elapsed += dt;
+  if (_manual) {
+    _elapsedNanoseconds += std::llround(dt * kNanosecondsPerSecond);
+  }
 }
 
 double OOSeededRandom::nextDouble() {

@@ -86,12 +86,13 @@ class OOGameClock {
   // Seconds since local midnight, in [0, 86400).
   double timeOfDay() const;
 
-  // The manual clock moves on by dt; the system clock ignores it.
+  // The manual clock moves on by dt, rounded to a whole nanosecond so that a
+  // run of fixed steps sums exactly; the system clock ignores it.
   void advance(double dt);
 
  private:
   bool _manual = false;
-  double _elapsed = 0.0;
+  std::int64_t _elapsedNanoseconds = 0;
   double _timeOfDayStart = 0.0;
 };
 

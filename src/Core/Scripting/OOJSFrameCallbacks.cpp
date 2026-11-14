@@ -29,6 +29,7 @@ SOFTWARE.
 
 #include <algorithm>
 #include <new>
+#include <optional>
 #include <vector>
 
 #include "oofnd/Date.hpp"
@@ -107,6 +108,7 @@ static std::vector<DeferredOperation>*
     sDeferredOps;  // Deferred adds/removes while running.
 }  // namespace
 static uint32_t sNextID;
+static std::optional<uint32_t> sIDSeed;  // set by a headless game
 namespace {
 static bool sRunning;
 }  // namespace
@@ -161,9 +163,18 @@ void InitOOJSFrameCallbacks(JSContext* context, JSValueConst global) {
 #if DEBUG_FCB_SIMPLE_TRACKING_IDS
   sNextID = 1;
 #else
-  // Set randomish initial ID to catch bad habits.
-  sNextID = oo::date::timeIntervalSinceReferenceDate();
+  // Set randomish initial ID to catch bad habits (from the seed in a headless
+  // game, so its ids repeat).
+  if (sIDSeed.has_value()) {
+    sNextID = *sIDSeed;
+  } else {
+    sNextID = oo::date::timeIntervalSinceReferenceDate();
+  }
 #endif
+}
+
+void OOJSFrameCallbacksSetIDSeed(std::optional<uint32_t> seed) {
+  sIDSeed = seed;
 }
 
 void OOJSFrameCallbacksInvoke(OOTimeDelta inDeltaT) {

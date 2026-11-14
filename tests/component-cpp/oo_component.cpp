@@ -268,6 +268,7 @@ void Game::step(int steps) {
   for (int i = 0; i < steps; ++i) {
     oo::AutoreleaseScope pool;  // as performGameTick has, per frame
     controller()->tick(kStepSeconds);
+    controller()->fireDueDeferredCalls();  // as the frame loop's pass does
     ++state.steps;
     const auto now = std::chrono::steady_clock::now();
     if (std::chrono::duration<double>(now - state.lastProgress).count() >=

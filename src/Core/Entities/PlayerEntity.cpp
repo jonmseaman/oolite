@@ -2537,14 +2537,10 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
 
   // The local hour, minute and second of now, as the calendar date gave them
   // (oofnd/Date.hpp).
-  const oo::date::Clock::time_point now = oo::date::Clock::now();
-  long long secondOfDay =
-      (static_cast<long long>(
-           std::chrono::floor<std::chrono::seconds>(now.time_since_epoch())
-               .count()) +
-       static_cast<long long>(oo::date::localUTCOffsetMinutes(now)) * 60) %
-      86400;
-  if (secondOfDay < 0) secondOfDay += 86400;
+  // The time of day from the game's clock: the local time for the windowed
+  // game, the seed's for a headless one.
+  const long long secondOfDay = static_cast<long long>(
+      ::GameController::sharedController()->clock().timeOfDay());
   ship_clock = PLAYER_SHIP_CLOCK_START;
   ship_clock += static_cast<int>(secondOfDay / 3600) * 3600.0;
   ship_clock += static_cast<int>(secondOfDay / 60 % 60) * 60.0;
