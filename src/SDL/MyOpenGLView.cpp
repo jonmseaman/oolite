@@ -35,6 +35,7 @@ MA 02110-1301, USA.
 #include "GuiDisplayGen.h"
 #include "OOConstToString.h"
 #include "OOFullScreenController.h"
+#include "OOHeadless.h"
 #include "OOSDLJoystickManager.h"
 #include "OOVersion.h"
 #include "PlayerEntity.h"
@@ -522,6 +523,10 @@ bool MyOpenGLView::initHeadless() {
     return false;
   }
 
+  // The dummy driver's one display: the options screen lists its modes, and
+  // builds nothing without them.
+  populateFullScreenModelist();
+
   showSplashScreen = false;
   fullScreen = false;
   currentSize = 0;
@@ -683,6 +688,12 @@ void MyOpenGLView::setUpBasicOpenGLStateWithSize() {
 }
 
 void MyOpenGLView::initialiseGLWithSize(NSSize v_size) {
+  // A headless view (initHeadless) has no window and makes none: the size is
+  // noted, as a resize would note it.
+  if (!OOGraphicsAvailable()) {
+    viewSize = v_size;
+    return;
+  }
   if (!window) {
     createWindowWithSize(v_size);
   }

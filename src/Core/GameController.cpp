@@ -683,6 +683,8 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
                        "view");
     }
     _gameView->setGameController(this);
+    setUpDisplayModes();  // as the windowed start: the options screen lists
+                          // them
   }
   _universe = Universe::newUniverse(_gameView.get(), options);
   loadPlayerIfRequired();
