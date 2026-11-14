@@ -39,6 +39,7 @@ SOFTWARE.
 #include "OODebugStandards.h"
 #include "OODemangle.h"
 #include "OOFunctionAttributes.h"
+#include "OOHeadless.h"
 #include "OOPNGTextureLoader.h"
 #include "OOPixMapChannelOperations.h"
 #include "OOTexture.h"
@@ -298,8 +299,8 @@ void OOTextureLoader::loadTexture() { OOLogGenericSubclassResponsibility(); }
 
 void OOTextureLoader::setUp() {
   // Load two maximum sizes - graphics hardware limit and user-specified limit.
-  GLint maxSize;
-  OOGL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize));
+  GLint maxSize = 0;  // headless: no GL to ask
+  if (OOGraphicsAvailable()) OOGL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize));
   sGLMaxSize = MAX(maxSize, 64);
   OO_LOG("texture.load.rescale.maxSize", "GL maximum texture size: {}",
          static_cast<unsigned>(sGLMaxSize));
