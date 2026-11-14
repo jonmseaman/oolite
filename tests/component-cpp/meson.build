@@ -16,7 +16,8 @@
 # it passes, for a program whose output is a record, like the skeleton's probes), 'source' (another
 # program's source), 'needs_trap' (registered only where the GL trap is linked), 'layouts' (one
 # test per keyboard layout, <test>_<layout>, each given --layout <layout>), 'cases' (one test per
-# case, {test name: case name}, each given --case <case>).
+# case, {test name: case name}, each given --case <case>), 'should_fail' (those of its tests that
+# are expected to fail: a recorded finding, checked both ways).
 # Every program links the GL trap where there is one.
 
 # The recorded keyboard layouts the key tests run under (layouts/<name>.tsv); a layout whose table
@@ -45,7 +46,11 @@ component_programs = {
         'key_fault_h3': 'h3_n_activates_with_num_lock_or_altgr_bits',
         'key_fault_h4': 'h4_caps_lock_and_num_lock_are_not_other_keys',
         'key_fault_h5': 'h5_every_scancode_can_be_pressed_and_released',
-    }},
+    },
+    # Each fails today as upstream's same code does (MyOpenGLView+Input.m:379, :598-609); fixing
+    # them changes the windowed game's keys, so they are checked both ways and left to Jon. See
+    # specs/011-headless-component-tests/tasks.md, Records -> Findings -> Keys.
+    'should_fail': ['key_fault_h1', 'key_fault_h3', 'key_fault_h4']},
     # The C++ counterparts of tests/component/features, each with its original's base name.
     'test_s1_police_kills_pirate': {'verbose': true},
     'test_s2_pirate_attacks_target_registers_attacker': {'verbose': true},
@@ -137,6 +142,7 @@ foreach name, options : component_programs
         foreach test_name, case_name : options.get('cases')
             test(test_name, exe,
                 args: options.get('args', []) + ['--case', case_name],
+                should_fail: options.get('should_fail', []).contains(test_name),
                 suite: options.get('suite', 'component'),
                 timeout: options.get('timeout', 60),
                 verbose: options.get('verbose', false),
