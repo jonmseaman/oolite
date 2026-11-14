@@ -663,7 +663,9 @@ void MyOpenGLView::pollControls() {
         }
 
         // if we've got the unicode value, we can store it in our array now
-        if (key_id > 0) scancode2Unicode[scan_code] = key_id;
+        // scancode2Unicode has NUM_KEYS entries; scancodes go to 511.
+        if (key_id > 0 && scan_code < NUM_KEYS)
+          scancode2Unicode[scan_code] = key_id;
 
         if (allowingStringInput != StringInput::kNo && !modifier_pressed) {
           handleStringInput(kbd_event, key_id);
@@ -692,7 +694,7 @@ void MyOpenGLView::pollControls() {
 
         // all the work should have been down on the keydown event, so all we
         // need to do is get the unicode value from the array
-        key_id = static_cast<Uint16>(scancode2Unicode[scan_code]);
+        key_id = scan_code < NUM_KEYS ? scancode2Unicode[scan_code] : 0;
 
         // deal with modifiers first
         switch (kbd_event->key) {
