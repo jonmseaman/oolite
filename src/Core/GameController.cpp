@@ -665,6 +665,7 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
   }
 
   OOJSFrameCallbacksSetIDSeed(options.seed);
+  OOJSSetHeadlessScripting(options.seed, options.scriptTimeLimit);
   _universe = Universe::newUniverse(_gameView.get(), options);
   loadPlayerIfRequired();
 

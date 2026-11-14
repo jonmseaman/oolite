@@ -50,6 +50,8 @@ constexpr GameTime ticks(int n) { return GameTime{n * 0.125}; }
 
 // The fixed step a headless game advances by.
 inline constexpr double kStepSeconds = 1.0 / 60.0;
+// The script limiter's limit in a headless game, s.
+inline constexpr double kScriptTimeLimitSeconds = 10.0;
 
 class Game {
  public:
@@ -74,6 +76,8 @@ class Game {
   // Script expressions, evaluated as the debug console evaluates them. An
   // expression that throws fails the test and prints the message.
   double eval(std::string_view js);
+  bool evalBool(std::string_view js);
+  std::string evalString(std::string_view js);
 
   // How many steps this game has taken.
   std::uint64_t steps() const;

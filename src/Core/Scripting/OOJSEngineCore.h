@@ -475,6 +475,18 @@ void OOJSRegisterObjectConverter(JSClassID classID,
 void OOJSStartTimeLimiterWithTimeLimit(oo::TimeDelta limit);
 #define OOJSStartTimeLimiter() OOJSStartTimeLimiterWithTimeLimit(0.0)
 void OOJSStopTimeLimiter();
+
+/*	A headless game's script engine (src/Core/OOHeadless.h): with a seed,
+   every main-thread context the engine makes has a Math.random that draws
+   from an OOSeededRandom seeded so, instead of QuickJS's clock-seeded one;
+   with a limit above zero, that is the limiter's default limit instead of
+   OOJS_TIME_LIMIT. Set before the engine starts. The defaults are the
+   engine's own behaviour.
+*/
+void OOJSSetHeadlessScripting(std::optional<std::uint32_t> mathRandomSeed,
+                              OOTimeDelta defaultTimeLimit);
+// How many numbers the seeded Math.random has handed out since it was set.
+std::uint64_t OOJSSeededMathRandomDraws();
 void OOJSPauseTimeLimiter();
 void OOJSResumeTimeLimiter();
 

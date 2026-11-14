@@ -14,6 +14,7 @@
 
 #include "GameController.h"
 #include "OOHeadless.h"
+#include "OOJSEngineCore.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
 #include "Universe.h"
@@ -118,6 +119,21 @@ OO_TEST(a_deferred_call_fires_on_game_time) {
   OO_CHECK(!fired);
   game.step(1);
   OO_CHECK(fired);
+}
+
+// A headless game's Math.random draws from OOSeededRandom seeded with the
+// game's seed: the next three values are the generator's next three draws,
+// after the draws the core scripts have already taken.
+OO_TEST(math_random_draws_from_the_seed) {
+  Game game = Game::current();
+  const std::uint64_t taken = OOJSSeededMathRandomDraws();
+  OOSeededRandom expected(kSeed);
+  for (std::uint64_t i = 0; i < taken; ++i) expected.nextDouble();
+  std::printf("Math.random drawn %llu times before this case\n",
+              static_cast<unsigned long long>(taken));
+  for (int i = 0; i < 3; ++i) {
+    OO_CHECK_EQ(game.eval("Math.random()"), expected.nextDouble());
+  }
 }
 
 OO_COMPONENT_MAIN()
