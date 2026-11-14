@@ -1107,6 +1107,7 @@ void MyOpenGLView::populateFullScreenModelist() {
   if (!displayModeCount) {
     OO_LOG("display.mode.list.none", "{}",
            "SDL didn't return any screen modes");
+    SDL_free(modes);  // an empty list is still SDL's to free
     return;
   }
 
