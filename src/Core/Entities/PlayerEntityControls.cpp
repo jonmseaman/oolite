@@ -1745,10 +1745,9 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             if (!escapePodKey_pressed) {
               escapePodKey_pressed = true;
               // first keypress will unregister in KEY_REPEAT_INTERVAL seconds
-              escapePodKeyResetTime = ::GameController::sharedController()
-                                          ->clock()
-                                          .monotonicSeconds() +
-                                      KEY_REPEAT_INTERVAL;
+              escapePodKeyResetTime =
+                  ::GameController::currentClock().monotonicSeconds() +
+                  KEY_REPEAT_INTERVAL;
               //[gameView clearKey:key_launch_escapepod];
               if (gameView != nullptr)
                 gameView->clearKey(getFirstKeyCode(n_key_launch_escapepod));
@@ -1757,8 +1756,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
               }
             } else {
               oo::TimeDelta timeNow =
-                  ::GameController::sharedController()
-                      ->clock()
+                  ::GameController::currentClock()
                       .monotonicSeconds();  // same clock as
                                             // escapePodKeyResetTime
               escapePodKey_pressed = false;
@@ -1987,8 +1985,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
         else
           UNIVERSE->messageGUI()->clear();
         double time_this_frame =
-            ::GameController::sharedController()
-                ->clock()
+            ::GameController::currentClock()
                 .monotonicSeconds();  // intervals only (time_last_frame)
         oo::TimeDelta time_delta;
         if (!::GameController::sharedController()->isGamePaused()) {

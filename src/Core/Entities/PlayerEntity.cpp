@@ -2576,8 +2576,8 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
   // (oofnd/Date.hpp).
   // The time of day from the game's clock: the local time for the windowed
   // game, the seed's for a headless one.
-  const long long secondOfDay = static_cast<long long>(
-      ::GameController::sharedController()->clock().timeOfDay());
+  const long long secondOfDay =
+      static_cast<long long>(::GameController::currentClock().timeOfDay());
   ship_clock = PLAYER_SHIP_CLOCK_START;
   ship_clock += static_cast<int>(secondOfDay / 3600) * 3600.0;
   ship_clock += static_cast<int>(secondOfDay / 60 % 60) * 60.0;
@@ -13604,8 +13604,7 @@ void PlayerEntity::doScriptEvent(OOJSPropID message, JSContext* context,
 // ORDER-SENSITIVE (decision D): the world scripts run in load order (was the
 // dictionary's order).
 bool PlayerEntity::doWorldEventUntilMissionScreen(OOJSPropID message) {
-  if (OOGameObserver* observer =
-          ::GameController::sharedController()->observer()) {
+  if (OOGameObserver* observer = ::GameController::currentObserver()) {
     observer->worldEvent(UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
                          OOStringFromJSID(message).value_or(""));
   }
@@ -13647,8 +13646,7 @@ void PlayerEntity::doWorldScriptEvent(OOJSPropID message, JSContext* context,
                                       oo::TimeDelta limit) {
   OOCParameterAssert(context != nullptr);
 
-  if (OOGameObserver* observer =
-          ::GameController::sharedController()->observer()) {
+  if (OOGameObserver* observer = ::GameController::currentObserver()) {
     observer->worldEvent(UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
                          OOStringFromJSID(message).value_or(""));
   }

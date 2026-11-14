@@ -228,6 +228,15 @@ bool NextDeferredCallDeadline(
 
 }  // namespace
 
+const OOGameClock& GameController::currentClock() {
+  static const OOGameClock systemClock;
+  return sSharedController != nullptr ? sSharedController->_clock : systemClock;
+}
+
+OOGameObserver* GameController::currentObserver() {
+  return sSharedController != nullptr ? sSharedController->_observer : nullptr;
+}
+
 GameController* GameController::sharedController() {
   if (sSharedController == nullptr) {
     static std::shared_ptr<GameController>* sSharedControllerHolder =

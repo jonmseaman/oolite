@@ -14014,8 +14014,7 @@ void ShipEntity::doScriptEvent(OOJSPropID message, OOJSVal* argv, int argc) {
 void ShipEntity::doScriptEvent(OOJSPropID message, JSContext* context,
                                OOJSVal* argv, int argc) {
   // This method is a bottleneck so that PlayerEntity can override at one point.
-  if (OOGameObserver* observer =
-          ::GameController::sharedController()->observer()) {
+  if (OOGameObserver* observer = ::GameController::currentObserver()) {
     observer->shipEvent(UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0, this,
                         OOStringFromJSID(message).value_or(""));
   }
