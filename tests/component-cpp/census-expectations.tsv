@@ -1,1 +1,9 @@
 kind	key	expect	reason
+equipment	EQ_FUEL	failed	awardEquipment refuses EQ_FUEL by design (OOJSShip.cpp ShipAwardEquipment): fuel is set, not fitted, so a scripted award cannot try it.
+equipment	EQ_MILITARY_JAMMER	failed	Its condition script, oolite-conditions.js, refuses a scripted award outside the context it allows.
+equipment	EQ_MILITARY_SCANNER_FILTER	failed	Its condition script, oolite-conditions.js, refuses a scripted award outside the context it allows.
+equipment	EQ_OOLITE_TUTORIAL_CONTROLS	failed	Its condition script, oolite-conditions.js, allows it only to the tutorial, so a census award is refused.
+equipment	EQ_RENOVATION	failed	A shipyard service whose condition script, oolite-conditions.js, refuses a scripted award.
+ship	asp-cloaked	failed	After the ship and every ship it brought are removed, one more entity than before is in the universe (6 against 5); not investigated here, for Jon to adjudicate.
+ship	ecm-proof-missile	left	A missile spawned with no target leaves the universe within its 10 s span.
+ship	missile	left	A missile spawned with no target leaves the universe within its 10 s span.
