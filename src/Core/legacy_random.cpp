@@ -106,8 +106,12 @@ RANROTSeed MakeRanrotSeed(uint32_t seed) {
 }
 
 RANROTSeed RanrotSeedFromRNGSeed(RNG_Seed seed) {
-  return MakeRanrotSeed(seed.a * 0x1000000 + seed.b * 0x10000 + seed.c * 0x100 +
-                        seed.d);
+  // In unsigned arithmetic: a byte above 127 in a shifted the int product
+  // past INT_MAX (undefined; UBSan reported it). The bits are the same.
+  return MakeRanrotSeed(static_cast<uint32_t>(seed.a) * 0x1000000u +
+                        static_cast<uint32_t>(seed.b) * 0x10000u +
+                        static_cast<uint32_t>(seed.c) * 0x100u +
+                        static_cast<uint32_t>(seed.d));
 }
 
 RANROTSeed RanrotSeedFromRandomSeed(Random_Seed seed) {
