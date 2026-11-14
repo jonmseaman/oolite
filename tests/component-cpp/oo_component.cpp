@@ -892,6 +892,17 @@ const OOPresentationRecord& Game::presentation() const {
 
 std::filesystem::path Game::scratchDirectory() { return TheState().scratch; }
 
+std::filesystem::path Game::buildRoot() { return BuildRoot(); }
+
+std::filesystem::path Game::sourceRoot() {
+  if (std::optional<std::string> root = Environment("OO_COMPONENT_SOURCE_ROOT")) {
+    return fs::path(*root);
+  }
+  return (BuildRoot() / ".." / "..").lexically_normal();
+}
+
+void Game::reseed(std::uint32_t seed) { ranrot_srand(seed); }
+
 double Game::startupSeconds() { return TheState().startupSeconds; }
 
 namespace {
@@ -986,10 +997,9 @@ int RunCases(const char* file) {
 
 }  // namespace
 
-int runMain(int argc, char** argv, const char* file) {
-  ProgramPath() = argc > 0 ? argv[0] : "component";
-  for (int i = 1; i < argc; ++i) Arguments().emplace_back(argv[i]);
-  const int result = RunCases(file);
+namespace {
+
+void FinishScratch(int result) {
   const State& state = TheState();
   if (!state.scratch.empty()) {
     if (result == 0) {
@@ -1002,6 +1012,20 @@ int runMain(int argc, char** argv, const char* file) {
   }
   std::fflush(stdout);
   std::fflush(stderr);
+}
+
+}  // namespace
+
+void exitProgram(int code) {
+  FinishScratch(code);
+  std::exit(code);
+}
+
+int runMain(int argc, char** argv, const char* file) {
+  ProgramPath() = argc > 0 ? argv[0] : "component";
+  for (int i = 1; i < argc; ++i) Arguments().emplace_back(argv[i]);
+  const int result = RunCases(file);
+  FinishScratch(result);
   return result;
 }
 

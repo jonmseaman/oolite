@@ -249,8 +249,17 @@ class Game {
   // first step).
   static double startupSeconds();
 
-  // Where this process's scratch directory is.
+  // Where this process's scratch directory is, and the build and source trees
+  // (OO_COMPONENT_BUILD_ROOT and OO_COMPONENT_SOURCE_ROOT, or found from the
+  // program's own path when run by hand).
   static std::filesystem::path scratchDirectory();
+  static std::filesystem::path buildRoot();
+  static std::filesystem::path sourceRoot();
+
+  // Seeds RANROT again, as a new game with that seed has it (the census
+  // reseeds per definition). The really-random generator is seeded once per
+  // process by the game's design (legacy_random.h) and is not reset.
+  void reseed(std::uint32_t seed);
 
  private:
   Game() = default;
@@ -283,6 +292,11 @@ void fail(std::string_view message, const char* file, int line);
 
 // Fails the case, printing each error entry, if the game logged any error.
 void checkNoErrors(const Game& game, const char* file, int line);
+
+// Ends the program now with that code, as main would: the scratch directory
+// goes if the code is 0 and stays otherwise. For a program whose output and
+// exit code are its own (the census).
+[[noreturn]] void exitProgram(int code);
 
 // main(): runs the cases, then removes the scratch directory if every case
 // passed, or says where it was kept.
