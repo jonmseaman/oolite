@@ -236,6 +236,9 @@ class Game {
   std::vector<Event> errorsSince(std::size_t mark) const;
   // What the game would have drawn and played.
   const OOPresentationRecord& presentation() const;
+  // The log lines so far that contain text: the windowed step "no ERROR
+  // appears in the log" is logLinesContaining("ERROR").empty().
+  std::vector<std::string> logLinesContaining(std::string_view text) const;
 
   // The scenario digest now: a hash of every entity's id, definition key,
   // position, orientation and energy, and of the event record so far. Two runs
