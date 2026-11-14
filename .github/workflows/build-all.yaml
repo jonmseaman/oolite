@@ -333,16 +333,13 @@ jobs:
         with:
           path: build/.ccache
           key: ccache-build-fedora-${{ github.sha }}
-      # The headless C++ half of the component tier: no display, no GL context.
+      # The headless C++ half of the component tier: no display, no GL context. The GL trap must be
+      # linked here, so a GL call from the game fails a test by name.
       - name: C++ component tests
         run: |
-          BUILD_TYPE=test tests/run.sh component --cpp
-      # Temporary (spec 011 T017-T021): the GL calls a headless boot still makes, named by the GL
-      # trap. Expected to fail until the last site is guarded; it is removed then.
-      - name: GL sites still called headless
-        continue-on-error: true
-        run: |
-          meson test -C build/meson_test --suite component-nogl --print-errorlogs
+          set -o pipefail
+          env -u DISPLAY -u WAYLAND_DISPLAY BUILD_TYPE=test tests/run.sh component --cpp 2>&1 | tee build/component-cpp.log
+          grep -q "GL trap: linked" build/component-cpp.log
       - name: Test Oolite
         if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
         run: |
@@ -646,14 +643,12 @@ jobs:
         if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
         run: |
           ./mk.sh test deployment
+      # As in build-fedora: the GL trap must be linked.
       - name: C++ component tests
         run: |
-          BUILD_TYPE=test tests/run.sh component --cpp
-      # Temporary (spec 011 T017-T021), as in build-fedora.
-      - name: GL sites still called headless
-        continue-on-error: true
-        run: |
-          meson test -C build/meson_test --suite component-nogl --print-errorlogs
+          set -o pipefail
+          BUILD_TYPE=test tests/run.sh component --cpp 2>&1 | tee build/component-cpp.log
+          grep -q "GL trap: linked" build/component-cpp.log
       # The app is only ad-hoc signed, so Gatekeeper blocks the downloaded DMG's app until the
       # user allows it in System Settings (issue #779). Fixing that needs Developer ID signing
       # and notarisation, i.e. signing keys and Apple credentials added as repository secrets.

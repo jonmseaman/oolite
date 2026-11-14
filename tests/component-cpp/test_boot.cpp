@@ -1,6 +1,7 @@
 /*	tests/component-cpp/test_boot.cpp
         The headless game boots: one game, made by the first case, with no
-   window and no sound device, the player in flight in a system cleared down
+   window, no GL context and no sound device (on Linux and macOS the GL trap
+   is linked, so a GL call would fail it by name), the player in flight in a system cleared down
    to the player, add-ons off; and stepping it advances game time without
    waiting on the clock. Later cases reach the same game with
    Game::current().
@@ -47,6 +48,8 @@ bool IsUnder(const std::filesystem::path& path,
 }  // namespace
 
 OO_TEST(the_universe_exists) {
+  // CI's Linux and macOS steps require the first form in this program's log.
+  std::printf("%s\n", oo::component::glTrapState().c_str());
   Game game = Game::scenario(kSeed);
   OO_CHECK(game.universe() != nullptr);
   OO_CHECK(game.player() != nullptr);

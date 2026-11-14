@@ -199,8 +199,14 @@ class Game {
   Game() = default;
 };
 
-// The program's arguments after the name, for options such as --digest-out.
+// The program's arguments after the name, for options such as --digest-out,
+// and its own path.
 const std::vector<std::string>& programArguments();
+const std::string& programPath();
+
+// "GL trap: linked", or "GL trap: not linked (<reason>)": whether a GL call
+// from this program would fail it by name (Linux and macOS with LTO off).
+std::string glTrapState();
 
 // Fail the current case with a message (and the game's state, if there is
 // a game).
