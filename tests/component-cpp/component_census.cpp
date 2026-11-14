@@ -105,7 +105,8 @@ Options ParseOptions() {
     } else if (a == "--expectations" && hasValue) {
       o.expectations = args[++i];
     } else if (a == "--data-overlay" && hasValue) {
-      o.overlay = args[++i];
+      // Absolute: the children run in the application directory.
+      o.overlay = fs::absolute(args[++i]).string();
     } else {
       std::fprintf(stderr, "component_census: unknown or incomplete argument %s\n",
                    a.c_str());

@@ -1,0 +1,19 @@
+/*
+	A test fixture for component_census --data-overlay (spec 011 T036), written for
+	that test; it is not expansion content. One ship definition whose model file does
+	not exist, so the census must report this key, and only this key, as an
+	unexpected failure.
+*/
+{
+	"oo-component-broken-ship" =
+	{
+		name = "Broken ship (census fixture)";
+		model = "oo-component-no-such-model.dat";
+		roles = "oo-component-broken";
+		max_energy = 100;
+		max_flight_speed = 100;
+		max_flight_roll = 1;
+		max_flight_pitch = 1;
+		ai_type = "nullAI.plist";
+	};
+}
