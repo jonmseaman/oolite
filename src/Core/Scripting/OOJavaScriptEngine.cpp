@@ -37,6 +37,7 @@ MA 02110-1301, USA.
 #include "EntityOOJavaScriptExtensions.h"
 #include "OOConstToJSString.h"
 #include "OOFoundation.h"  // OOLITE_DEBUG
+#include "OOHeadless.h"
 #include "OOJSClock.h"
 #include "OOJSDock.h"
 #include "OOJSEngineTimeManagement.h"
@@ -116,6 +117,7 @@ static int InterruptHandler(JSRuntime* runtime, void* opaque);
 static void RegisterStandardObjectConverters(JSContext* context);
 static void RemoveNonSpiderMonkeyGlobals(JSContext* context,
                                          JSValueConst global);
+static void InstallSeededMathRandom(JSContext* context, JSValueConst global);
 static void LoadCompatibilityScript(JSContext* context);
 
 //===========================================================================
@@ -194,6 +196,7 @@ void OOJavaScriptEngine::createMainThreadContext() {
   // Create the global object.
   _globalObject = JS_GetGlobalObject(_context);
   RemoveNonSpiderMonkeyGlobals(_context, _globalObject);
+  InstallSeededMathRandom(_context, _globalObject);
   JS_DefinePropertyValueStr(_context, _globalObject, "global",
                             JS_DupValue(_context, _globalObject),
                             OOJS_PROP_READONLY);
@@ -628,6 +631,41 @@ bool OOJSValueToInt32(JSContext* context, JSValueConst value,
 // Time limiter
 //===========================================================================
 
+// A headless game's Math.random and default limit (OOJSSetHeadlessScripting).
+static std::optional<OOSeededRandom> sSeededMathRandom;
+static std::uint64_t sSeededMathRandomDraws;
+static double sHeadlessTimeLimit;
+
+static JSValue SeededMathRandom(JSContext* context, JSValueConst thisValue,
+                                int argc, JSValueConst* argv) {
+  (void)thisValue;
+  (void)argc;
+  (void)argv;
+  ++sSeededMathRandomDraws;
+  return JS_NewFloat64(context, sSeededMathRandom->nextDouble());
+}
+
+void OOJSSetHeadlessScripting(std::optional<std::uint32_t> mathRandomSeed,
+                              OOTimeDelta defaultTimeLimit) {
+  if (mathRandomSeed.has_value()) {
+    sSeededMathRandom.emplace(*mathRandomSeed);
+  } else {
+    sSeededMathRandom.reset();
+  }
+  sSeededMathRandomDraws = 0;
+  sHeadlessTimeLimit = defaultTimeLimit;
+}
+
+std::uint64_t OOJSSeededMathRandomDraws() { return sSeededMathRandomDraws; }
+
+static void InstallSeededMathRandom(JSContext* context, JSValueConst global) {
+  if (!sSeededMathRandom.has_value()) return;
+  JSValue math = JS_GetPropertyStr(context, global, "Math");
+  JS_SetPropertyStr(context, math, "random",
+                    JS_NewCFunction(context, SeededMathRandom, "random", 0));
+  JS_FreeValue(context, math);
+}
+
 static unsigned sLimiterStartDepth;
 static int sLimiterPauseDepth;
 static double sLimiterStart;
@@ -651,7 +689,9 @@ static double MonotonicTime() {
 
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit) {
   if (sLimiterStartDepth++ == 0) {
-    if (limit <= 0.0) limit = OOJS_TIME_LIMIT;
+    if (limit <= 0.0) {
+      limit = sHeadlessTimeLimit > 0.0 ? sHeadlessTimeLimit : OOJS_TIME_LIMIT;
+    }
     sLimiterTimeLimit = limit;
     sLimiterPauseDepth = 0;
     sLimiterStart = MonotonicTime();

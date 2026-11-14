@@ -223,6 +223,7 @@ Game Game::scenario(std::uint32_t seed) {
   options.populate = false;
   options.startInFlight = true;
   options.step = kStepSeconds;
+  options.scriptTimeLimit = kScriptTimeLimitSeconds;
   state.seed = seed;
   state.lastProgress = std::chrono::steady_clock::now();
   try {
@@ -310,6 +311,46 @@ GameController* Game::controller() const {
 std::uint64_t Game::steps() const { return TheState().steps; }
 
 std::filesystem::path Game::scratchDirectory() { return TheState().scratch; }
+
+namespace {
+
+// Evaluates source as the debug console does, in the global scope, under the
+// limiter; with(result) runs on a value that did not throw.
+void Evaluate(std::string_view js,
+              const std::function<void(JSContext*, JSValueConst)>& with) {
+  const std::string source(js);  // JS_Eval needs the terminating NUL
+  JSContext* context = OOJSAcquireContext();
+  OOJSStartTimeLimiter();
+  JSValue result = JS_Eval(context, source.c_str(), source.size(),
+                           "<oo_component>", JS_EVAL_TYPE_GLOBAL);
+  OOJSStopTimeLimiter();
+  if (JS_IsException(result)) {
+    fail("eval threw " + ExceptionMessage(context) + ": " + source, __FILE__,
+         __LINE__);
+  } else {
+    with(context, result);
+  }
+  JS_FreeValue(context, result);
+  OOJSRelinquishContext(context);
+}
+
+}  // namespace
+
+bool Game::evalBool(std::string_view js) {
+  bool value = false;
+  Evaluate(js, [&value](JSContext* context, JSValueConst result) {
+    value = JS_ToBool(context, result) > 0;
+  });
+  return value;
+}
+
+std::string Game::evalString(std::string_view js) {
+  std::string value;
+  Evaluate(js, [&value](JSContext* context, JSValueConst result) {
+    value = OOStringFromJSValue(context, result).value_or("");
+  });
+  return value;
+}
 
 double Game::eval(std::string_view js) {
   const std::string source(js);  // JS_Eval needs the terminating NUL
