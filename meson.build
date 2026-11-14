@@ -137,6 +137,13 @@ if not get_option('deployment_release') and host_machine.system() == 'windows'
     subdir('tests/unit/core')
 endif
 
+# The C++ half of the component tier (meson test --suite component): headless programs that
+# start the real game. Built on every platform, by every flavour but deployment, like the unit
+# tests (the Flatpak leg builds a test-flavour tree of its own to run them).
+if not get_option('deployment_release')
+    subdir('tests/component-cpp')
+endif
+
 # tools/icosmesh generates src/Core/OOPlanetData.{cpp,h}. Plain C++, so on every platform.
 subdir('tools/icosmesh')
 
