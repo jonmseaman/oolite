@@ -82,6 +82,10 @@ class Game {
   // How many steps this game has taken.
   std::uint64_t steps() const;
 
+  // How long, in real seconds, the game took to start (scenario() up to its
+  // first step).
+  static double startupSeconds();
+
   // Where this process's scratch directory is.
   static std::filesystem::path scratchDirectory();
 

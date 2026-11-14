@@ -7,7 +7,9 @@
    Run: meson test -C build/meson_dev test_boot
 */
 
+#include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -85,8 +87,15 @@ OO_TEST(user_directories_are_under_the_scratch_directory) {
 OO_TEST(six_hundred_steps_advance_game_time_by_10_s) {
   Game game = Game::current();
   const double before = game.time();
+  const auto started = std::chrono::steady_clock::now();
   game.step(600);
+  const double real =
+      std::chrono::duration<double>(std::chrono::steady_clock::now() - started)
+          .count();
   OO_CHECK(std::fabs(game.time() - before - 10.0) < 1e-6);
+  // The measurement spec 011 T015 records (research R12).
+  std::printf("test_boot: startup %.2f s, %.0f steps/s, %.0fx real time\n",
+              Game::startupSeconds(), 600.0 / real, 10.0 / real);
 }
 
 // The scenario game loads the standard save, which sets the ship clock, so
