@@ -36,6 +36,7 @@ oolite_sources += files(
     'EquipmentType.cpp',
     'FullScreenController.cpp',
     'GraphicsResetManager.cpp',
+    'Headless.cpp',
     'HPVector.cpp',
     'IsNumberLiteral.cpp',
     'JoystickManager.cpp',

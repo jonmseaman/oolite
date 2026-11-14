@@ -8,6 +8,9 @@
    comes back from SDL_PollEvent unchanged; and what SDL's built-in keymap
    gives for N with Caps Lock (printed, since only n or N is a sane answer and
    which one decides how Caps Lock reaches the game).
+
+        And the headless options and the game clock (src/Core/OOHeadless.h),
+   which need no game to be running.
    Run: meson test -C build/meson_dev test_skeleton
 */
 
@@ -15,9 +18,12 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <string>
 
 #include "GameController.h"
+#include "OOHeadless.h"
 #include "oo_test.hpp"
+#include "oofnd/Exception.hpp"
 
 // main.cpp defines the debug flags, and the program has its own main.
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -73,6 +79,71 @@ OO_TEST(caps_lock_n_lookup_is_printed) {
               static_cast<unsigned>(key));
   OO_CHECK(key == SDLK_N || key == static_cast<SDL_Keycode>('N'));
   SDL_Quit();
+}
+
+namespace {
+// The reason validate() raised with, or "" if it did not raise.
+std::string ValidationFailure(const OOHeadlessOptions& options) {
+  try {
+    options.validate();
+  } catch (const oo::Exception& exception) {
+    return exception.reason();
+  }
+  return "";
+}
+}  // namespace
+
+OO_TEST(default_options_are_the_windowed_game) {
+  const OOHeadlessOptions options;
+  OO_CHECK(!options.headless);
+  OO_CHECK(!options.seed.has_value());
+  OO_CHECK(options.addOns == OOHeadlessOptions::AddOns::kAll);
+  OO_CHECK(options.populate);
+  OO_CHECK(!options.startInFlight);
+  OO_CHECK(!options.inputView);
+  OO_CHECK_EQ(options.scriptTimeLimit, 0.0);
+  OO_CHECK_EQ(ValidationFailure(options), std::string());
+}
+
+OO_TEST(headless_without_a_seed_is_rejected) {
+  OOHeadlessOptions options;
+  options.headless = true;
+  options.addOns = OOHeadlessOptions::AddOns::kNone;
+  OO_CHECK_EQ(ValidationFailure(options),
+              std::string("headless true requires seed to be given"));
+  options.seed = 20260910;
+  OO_CHECK_EQ(ValidationFailure(options), std::string());
+}
+
+OO_TEST(headless_with_all_addons_is_rejected) {
+  OOHeadlessOptions options;
+  options.headless = true;
+  options.seed = 20260910;
+  OO_CHECK_EQ(ValidationFailure(options),
+              std::string("addOns is never all when headless is true"));
+}
+
+OO_TEST(the_manual_clock_moves_only_when_advanced) {
+  OOGameClock clock = OOGameClock::manual(20260910);
+  OO_CHECK(clock.isManual());
+  OO_CHECK_EQ(clock.monotonicSeconds(), 0.0);
+  const double startOfDay = OOGameClock::manualTimeOfDayStart(20260910);
+  OO_CHECK_EQ(clock.timeOfDay(), startOfDay);
+  OO_CHECK(startOfDay >= 0.0 && startOfDay < 86400.0);
+  OO_CHECK_EQ(clock.monotonicSeconds(), 0.0);  // reading does not move it
+  clock.advance(0.5);
+  clock.advance(0.25);
+  OO_CHECK_EQ(clock.monotonicSeconds(), 0.75);
+  OO_CHECK_EQ(clock.timeOfDay(), startOfDay + 0.75);
+  clock.advance(86400.0);  // a day later it is the same time of day
+  OO_CHECK(clock.timeOfDay() - (startOfDay + 0.75) < 1e-6 &&
+           (startOfDay + 0.75) - clock.timeOfDay() < 1e-6);
+  // The system clock is not moved by advance.
+  OOGameClock system = OOGameClock::system();
+  OO_CHECK(!system.isManual());
+  const double before = system.monotonicSeconds();
+  system.advance(1000.0);
+  OO_CHECK(system.monotonicSeconds() - before < 1000.0);
 }
 
 OO_TEST_MAIN()
