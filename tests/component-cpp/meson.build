@@ -36,6 +36,31 @@ component_game_objects = oolite_bin.extract_objects(component_game_sources)
 # oo_component: what every program but the skeleton is written against.
 component_support_sources = files('oo_component.cpp')
 
+# The GL trap (Linux and macOS): every GL function the game's objects import, defined to print its
+# name and abort, so a GL call from a headless test fails it by name (gl_trap_gen.py). It needs the
+# real objects: with LTO they are bitcode, and its definitions would meet the GL headers' at link
+# time, so it is left out and the programs say so (test_boot prints "GL trap: not linked").
+component_trap_sources = []
+component_trap_args = []
+if host_machine.system() in ['linux', 'darwin']
+    if get_option('b_lto')
+        message('C++ component tests: the GL trap is left out because b_lto is on; build with -Db_lto=false to link it')
+    else
+        component_nm = find_program('nm', 'llvm-nm', required: false)
+        if component_nm.found()
+            component_trap_sources = custom_target('gl_trap',
+                input: component_game_objects,
+                output: 'gl_trap.cpp',
+                build_by_default: true,
+                command: [find_program('python3'), files('gl_trap_gen.py'), '--nm', component_nm, '-o', '@OUTPUT@', '@INPUT@'],
+            )
+            component_trap_args = ['-DOO_COMPONENT_GL_TRAP=1']
+        else
+            message('C++ component tests: the GL trap is left out because no nm was found')
+        endif
+    endif
+endif
+
 component_env = environment()
 component_env.set('OO_COMPONENT_SOURCE_ROOT', meson.project_source_root())
 component_env.set('OO_COMPONENT_BUILD_ROOT', meson.project_build_root())
