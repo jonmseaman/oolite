@@ -43,6 +43,7 @@ SOFTWARE.
 #include "ConvertCubeMapToLatLong.h"
 #include "DebugStandards.h"
 #include "Demangle.h"
+#include "Headless.h"
 #include "PNGTextureLoader.h"
 #include "PixMapChannelOperations.h"
 #include "ResourceManager.h"
@@ -297,8 +298,9 @@ void oo::TextureLoader::loadTexture() { OOLogGenericSubclassResponsibility(); }
 
 void oo::TextureLoader::setUp() {
   // Load two maximum sizes - graphics hardware limit and user-specified limit.
-  GLint maxSize;
-  OOGL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize));
+  GLint maxSize = 0;  // headless: no GL to ask
+  if (oo::GraphicsAvailable())
+    OOGL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize));
   sGLMaxSize = static_cast<unsigned int>(std::max(maxSize, 64));
   OO_LOG("texture.load.rescale.maxSize", "GL maximum texture size: {}",
          static_cast<unsigned>(sGLMaxSize));

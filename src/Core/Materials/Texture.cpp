@@ -25,6 +25,8 @@
 */
 
 #include "Texture.h"
+
+#include "Headless.h"
 // Before OOConcreteTexture.h, in a block of its own: OOTextureInternal.h tests
 // OOTEXTURE_RELOADABLE, which OOConcreteTexture.h defines.
 #include <cstddef>
@@ -142,10 +144,20 @@ std::shared_ptr<oo::Texture> oo::Texture::loadTextureWithName(
   std::optional<std::string> path;
   bool noFNF;
 
-  if (!name.has_value()) [[unlikely]]
-    return nullptr;
-  if (!sCheckedExtensions) [[unlikely]]
-    checkExtensions();
+  if (EXPECT_NOT(!name.has_value())) return nullptr;
+  if (!oo::GraphicsAvailable()) {
+    // Headless: the file is still looked for, so a missing one is still
+    // reported, but nothing is decoded or uploaded; the null texture stands
+    // in, with zero size.
+    if (!ResourceManager::pathForFileNamed(*name, directory).has_value()) {
+      if (!oo::Any(options & oo::TextureFlags::kNoFNFMessage))
+        OO_LOG_WARN(oo::kLogFileNotFound, "Could not find texture file \"{}\".",
+                    *name);
+      return nullptr;
+    }
+    return nullTexture();
+  }
+  if (EXPECT_NOT(!sCheckedExtensions)) checkExtensions();
 
   if (!gOOTextureInfo.anisotropyAvailable ||
       (options & oo::TextureFlags::kMinFilterMask) !=
@@ -226,6 +238,8 @@ std::shared_ptr<oo::Texture> oo::Texture::textureWithGenerator(
 std::shared_ptr<oo::Texture> oo::Texture::textureWithGenerator(
     ::oo::TextureGenerator* generator, bool enqueue) {
   if (generator == nullptr) return nullptr;
+  // Headless: no generator is queued, so no loader thread runs.
+  if (!oo::GraphicsAvailable()) return nullTexture();
   ::oo::TextureGenerator* cxxGenerator = generator;
 
 #ifndef OOTEXTURE_NO_CACHE
@@ -507,6 +521,7 @@ void oo::Texture::checkExtensions() {
   OO_ENTER_OPENGL();
 
   sCheckedExtensions = true;
+  if (!OOGraphicsAvailable()) return;  // headless: nothing is supported
 
   oo::OpenGLExtensionManager* extMgr =
       oo::OpenGLExtensionManager::sharedManager();
