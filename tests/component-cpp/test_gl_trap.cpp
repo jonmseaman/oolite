@@ -40,9 +40,7 @@ OO_TEST(a_gl_call_while_headless_is_caught) {
   }
   const std::string program = oo::component::programPath();
   const std::string errors = program + ".child-stderr.txt";
-  const std::string command =
-      "\"" + program + "\" --child > /dev/null 2> \"" + errors + "\"";
-  const int status = std::system(command.c_str());
+  const int status = oo::component::runChild(program, {"--child"}, "", errors);
   std::ifstream in(errors);
   std::stringstream text;
   text << in.rdbuf();

@@ -185,6 +185,12 @@ class Game {
   // What the game would have drawn and played.
   const OOPresentationRecord& presentation() const;
 
+  // The scenario digest now: a hash of every entity's id, definition key,
+  // position, orientation and energy, and of the event record so far. Two runs
+  // with the same seed give the same digest at every step. With
+  // --digest-out <path> a program writes one per step (data-model.md).
+  std::uint64_t digest() const;
+
   // How many steps this game has taken.
   std::uint64_t steps() const;
 
@@ -203,6 +209,17 @@ class Game {
 // and its own path.
 const std::vector<std::string>& programArguments();
 const std::string& programPath();
+
+// Another component program, built beside this one: its path (with .exe on
+// Windows).
+std::string siblingProgram(std::string_view name);
+
+// Runs program with arguments as a child process, its standard output and
+// error written to the files given ("" discards), and answers its exit status
+// (nonzero also when it was killed). The child inherits the environment and
+// the working directory.
+int runChild(const std::string& program, const std::vector<std::string>& arguments,
+             const std::string& outputFile, const std::string& errorFile);
 
 // "GL trap: linked", or "GL trap: not linked (<reason>)": whether a GL call
 // from this program would fail it by name (Linux and macOS with LTO off).
