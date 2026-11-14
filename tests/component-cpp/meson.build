@@ -26,6 +26,7 @@ component_programs = {
     'test_s2_pirate_attacks_target_registers_attacker': {'verbose': true},
     'test_s3_hostile_spawn_drives_ship_into_attack': {'verbose': true},
     'test_s4_missile_armed_ship_kills_by_missile': {'verbose': true},
+    'test_s5_escorts_converge_on_their_mother': {'verbose': true},
     # Runs test_s1_police_kills_pirate twice and compares the digests of every step.
     'test_repeat': {'verbose': true, 'timeout': 120},
     # One ship, one behaviour (spec 011 US6). Each takes --without-weapon, which must make it fail.
