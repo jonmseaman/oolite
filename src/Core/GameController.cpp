@@ -63,6 +63,7 @@ MA 02110-1301, USA.
 #include "oofnd/Defaults.hpp"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"
+#include "oofnd/Process.hpp"
 #include "oofnd/ResourcePaths.hpp"
 #include "oofnd/String.hpp"
 #include "oofnd/Thread.hpp"
@@ -606,6 +607,74 @@ void GameController::applicationDidFinishLaunching() {
   pool.reset();
 
   runFrameLoop();
+}
+
+namespace {
+// The save the windowed component tier loads for a scenario
+// (tests/component/steps/world_steps.py SCENARIO_SAVE), relative to the
+// application directory.
+constexpr const char* kHeadlessScenarioSave =
+    "Resources/Scenarios/oolite-standard.oolite-save";
+// How much game time a headless launch may take before it is an error.
+constexpr double kHeadlessLaunchLimitSeconds = 60.0;
+}  // namespace
+
+void GameController::startHeadless(const OOHeadlessOptions& options) {
+  if (!options.headless) {
+    OORaiseException(OOInvalidArgumentException, "%s",
+                     "startHeadless: options.headless is false");
+  }
+  options.validate();
+  if (_universe != nullptr || UNIVERSE != nullptr) {
+    OORaiseException(OOInternalInconsistencyException, "%s",
+                     "startHeadless: a universe already exists in this "
+                     "process; a headless game is one per process");
+  }
+
+  _options = options;
+  _clock = OOGameClock::manual(*options.seed);
+  last_timeInterval = _clock.monotonicSeconds();
+  ranrot_srand(*options.seed);
+
+  // No sound device: -nosound's path, so every sound call is a no-op.
+  if (!oo::process::hasArgument("-nosound")) {
+    std::vector<std::string> arguments = oo::process::arguments();
+    arguments.emplace_back("-nosound");
+    std::vector<const char*> argv;
+    argv.reserve(arguments.size());
+    for (const std::string& argument : arguments) {
+      argv.push_back(argument.c_str());
+    }
+    oo::process::setArguments(static_cast<int>(argv.size()), argv.data());
+  }
+
+  _universe = Universe::newUniverse(_gameView.get(), options);
+  loadPlayerIfRequired();
+
+  if (options.startInFlight) {
+    setPlayerFileToLoad(kHeadlessScenarioSave);
+    loadPlayerIfRequired();
+    if (PLAYER == nullptr || !PLAYER->isDocked()) {
+      OORaiseException(OOInternalInconsistencyException,
+                       "startHeadless: the player is not docked after "
+                       "loading %s",
+                       kHeadlessScenarioSave);
+    }
+    PLAYER->launchFromStation();
+    double launched = 0.0;
+    while (PLAYER->status() != OOEntityStatus::kInFlight) {
+      if (launched > kHeadlessLaunchLimitSeconds) {
+        OORaiseException(OOInternalInconsistencyException,
+                         "startHeadless: the player was not in flight after "
+                         "%.0f s of game time",
+                         kHeadlessLaunchLimitSeconds);
+      }
+      tick(options.step);
+      launched += options.step;
+    }
+  }
+
+  _finishedLaunching = true;
 }
 
 void GameController::loadPlayerIfRequired() {

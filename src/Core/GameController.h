@@ -181,6 +181,7 @@ class GameController : public oo::Object {
   std::unique_ptr<::Universe> _universe;  // the game's universe (UNIVERSE)
 
   OOGameClock _clock;  // the system clock unless a headless game set one
+  OOHeadlessOptions _options;  // the windowed game's unless startHeadless
   double last_timeInterval = {};
   double delta_t = {};
 
