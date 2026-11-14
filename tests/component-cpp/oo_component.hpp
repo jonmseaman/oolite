@@ -208,6 +208,24 @@ class Layout {
   std::map<std::pair<int, int>, std::uint32_t> rows_;
 };
 
+// The player's saved settings a game starts with, written to the test's
+// private settings before the game starts, in the form the game's own screens
+// store them: a remapped key as the keyboard settings screen stores it
+// (KeyConfigOverrides, as PlayerEntity::saveKeySetting writes it).
+class Settings {
+ public:
+  // control: a key setting's name ("key_fire_lasers"); key: as press() takes
+  // it, a character or a named key.
+  Settings& remapKey(std::string_view control, std::string_view key);
+  // The keyboard-code preference (which keymappings table the view loads).
+  Settings& keyboardCode(std::string_view code);
+
+ private:
+  friend class Game;
+  std::vector<std::pair<std::string, std::string>> remaps_;
+  std::optional<std::string> keyboardCode_;
+};
+
 class Game {
  public:
   // An empty system, the player in flight, no keys: the windowed step
@@ -217,6 +235,12 @@ class Game {
   // The start screen, the system populated, not in flight, with a view that
   // takes key events (no window). One per process, as scenario().
   static Game atStartScreen(std::uint32_t seed);
+  // The scenario game (an empty system, the player in flight), with a view
+  // that takes key events and the settings given.
+  static Game inFlightWithKeys(std::uint32_t seed, const Settings& settings = {});
+  // A new commander docked at the main station, with a view that takes key
+  // events and the settings given.
+  static Game docked(std::uint32_t seed, const Settings& settings = {});
   // The game an earlier case made. Fails the test if there is none.
   static Game current();
 
@@ -229,7 +253,9 @@ class Game {
   // key: enter, escape, space, tab, backspace, delete, insert, home, end,
   // pageup, pagedown, up, down, left, right, f1-f12. A character is looked up
   // in the installed layout (SDL's own map if none) for its scancode and
-  // modifiers; a named key is its physical key. Every press is
+  // modifiers; a character no key of the layout gives is pressed at its US
+  // position (SDL's built-in map), as a player presses the key the letter is
+  // printed on; a named key is its physical key. Every press is
   // SDL_EVENT_KEY_DOWN / SDL_EVENT_KEY_UP pushed onto SDL's queue and read by
   // the game's own pollControls(); the view's key state is never written.
   //
@@ -250,6 +276,10 @@ class Game {
   void keyUpScancode(int scancode, std::uint16_t mods);
   // One press per character.
   void type(std::string_view text);
+  // The key the game's own key settings name for a control
+  // ("key_activate_equipment"), as press() takes it: its first definition's
+  // key, a character or a named key. Fails the test if there is none.
+  std::string keyForControl(std::string_view control) const;
   // How a key is pressed under the installed layout, for failure messages:
   // "n -> scancode 17 (N), no modifiers -> key 0x6e".
   std::string describeKey(std::string_view key) const;
@@ -262,6 +292,11 @@ class Game {
   // fails the test after one full cycle each way.
   bool selectRowWithKey(std::string_view key);
   bool selectRowWithText(std::string_view text);
+  bool selectRow(long row);
+  // The rows the showing GUI lets the player select: its selectable range,
+  // less rows that have no key or are skipped (SKIP-ROW), as the GUI's own
+  // up and down keys skip them.
+  std::vector<long> selectableRows() const;
   // The game asked to quit (headless, the request is recorded, not obeyed).
   bool exitRequested() const;
 
@@ -351,7 +386,8 @@ class Game {
 
  private:
   Game() = default;
-  static bool start(const OOHeadlessOptions& options);
+  static bool start(const OOHeadlessOptions& options, const Settings& settings = {});
+  static Game clearedScenario(const OOHeadlessOptions& options, const Settings& settings);
 };
 
 // The program's arguments after the name, for options such as --digest-out,

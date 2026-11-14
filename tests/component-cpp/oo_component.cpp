@@ -44,6 +44,8 @@
 #include "OOLogOutputHandler.h"
 #include "OOLoggingExtended.h"
 #include "PlayerEntity.h"
+#include "PlayerEntityKeyMapper.h"
+#include "oofnd/Defaults.hpp"
 #include "GuiDisplayGen.h"
 #include "Universe.h"
 #include "oo_test.hpp"
@@ -85,6 +87,10 @@ constexpr double kProgressIntervalSeconds = 10.0;
 // frame, and a key not seen up makes the next press a repeat).
 constexpr int kPressSteps = 2;
 constexpr int kGuiMaxRows = 64;  // a GUI screen has fewer rows than this
+// The save Start New Commander's standard scenario loads (scenarios.plist),
+// relative to the application directory.
+constexpr const char* kStandardScenarioSave =
+    "Resources/Scenarios/oolite-standard.oolite-save";
 
 // The log classes whose lines are errors (data-model.md, Event record), and
 // the prefix the game puts on an error line.
@@ -571,7 +577,78 @@ OOHeadlessOptions BaseOptions(std::uint32_t seed) {
 }  // namespace
 
 // Starts the one game of the process; false (the test failed) if one exists.
-bool Game::start(const OOHeadlessOptions& options) {
+namespace {
+
+// The game's key code for a key as press() names it (the inverse of
+// keyForControl): a character's code, or a named key's game code.
+std::optional<int> GameKeyCode(std::string_view key) {
+  struct Named {
+    const char* name;
+    int code;
+  };
+  static constexpr Named kNames[] = {
+      {"enter", 13},          {"escape", 27},         {"space", 32},
+      {"tab", 9},             {"up", gvArrowKeyUp},   {"down", gvArrowKeyDown},
+      {"left", gvArrowKeyLeft}, {"right", gvArrowKeyRight}, {"home", gvHomeKey},
+      {"end", gvEndKey},      {"insert", gvInsertKey}, {"delete", gvDeleteKey},
+      {"pageup", gvPageUpKey}, {"pagedown", gvPageDownKey},
+      {"backspace", gvBackspaceKey},
+  };
+  for (const Named& named : kNames) {
+    if (key == named.name) return named.code;
+  }
+  if (key.size() >= 2 && key[0] == 'f') {
+    const int n = std::atoi(std::string(key.substr(1)).c_str());
+    if (n >= 1 && n <= 11) return gvFunctionKey1 + n - 1;
+  }
+  if (key.size() == 1 && key[0] > 32 && key[0] < 127) return key[0];
+  return std::nullopt;
+}
+
+void WriteSettings(const std::vector<std::pair<std::string, std::string>>& remaps,
+                   const std::optional<std::string>& keyboardCode) {
+  oo::Defaults& defaults = oo::Defaults::standard();
+  if (!remaps.empty()) {
+    const oo::PList existing = defaults.object(std::string(KEYCONFIG_OVERRIDES));
+    const oo::PList::Dict* dict = existing.getIf<oo::PList::Dict>();
+    oo::PList::Dict overrides = dict != nullptr ? *dict : oo::PList::Dict();
+    for (const auto& [control, key] : remaps) {
+      const std::optional<int> code = GameKeyCode(key);
+      if (!code.has_value()) {
+        fail(std::format("remapKey: {} is not a key press() can name", key),
+             __FILE__, __LINE__);
+        continue;
+      }
+      oo::PList::Dict definition;
+      definition["key"] = oo::PList::unsignedInteger(static_cast<unsigned>(*code));
+      definition["shift"] = oo::PList(false);
+      definition["mod1"] = oo::PList(false);
+      definition["mod2"] = oo::PList(false);
+      oo::PList::Array list;
+      list.push_back(oo::PList(std::move(definition)));
+      overrides[control] = oo::PList(std::move(list));
+    }
+    defaults.setObject(std::string(KEYCONFIG_OVERRIDES), oo::PList(std::move(overrides)));
+  }
+  if (keyboardCode.has_value()) {
+    defaults.setObject("keyboard-code", oo::PList(*keyboardCode));
+  }
+  defaults.synchronize();
+}
+
+}  // namespace
+
+Settings& Settings::remapKey(std::string_view control, std::string_view key) {
+  remaps_.emplace_back(std::string(control), std::string(key));
+  return *this;
+}
+
+Settings& Settings::keyboardCode(std::string_view code) {
+  keyboardCode_ = std::string(code);
+  return *this;
+}
+
+bool Game::start(const OOHeadlessOptions& options, const Settings& settings) {
   State& state = TheState();
   if (state.exists) {
     fail("a second Game in one process: one game per process; use "
@@ -584,6 +661,7 @@ bool Game::start(const OOHeadlessOptions& options) {
   OOLoggingInit();
   oo::log::logger().setSink(&RecordLogLine);
   GameController::sharedController()->setObserver(&TheObserver());
+  WriteSettings(settings.remaps_, settings.keyboardCode_);
 
   const std::uint32_t seed = *options.seed;
   state.seed = seed;
@@ -717,8 +795,10 @@ std::optional<Stroke> StrokeFor(std::string_view key) {
   if (!code.has_value()) return std::nullopt;
   if (TheLayout().has_value()) {
     const auto stroke = TheLayout()->strokeFor(*code);
-    if (!stroke.has_value()) return std::nullopt;
-    return Stroke{stroke->first, stroke->second};
+    if (stroke.has_value()) return Stroke{stroke->first, stroke->second};
+    // No key of this layout gives the character (n on a Russian board): a
+    // player presses the key in its US position, the one the key settings'
+    // letter is printed on, and the layout says what that key gives.
   }
   SDL_Keymod mods = SDL_KMOD_NONE;
   const SDL_Scancode scancode = SDL_GetScancodeFromKey(*code, &mods);
@@ -930,6 +1010,42 @@ void Game::type(std::string_view text) {
   }
 }
 
+std::string Game::keyForControl(std::string_view control) const {
+  PlayerEntity* player = PlayerEntity::sharedPlayer();
+  const oo::PList config = player != nullptr ? player->keyConfig() : oo::PList();
+  const oo::PList* definitions = config.find(std::string(control));
+  const oo::PList* first =
+      definitions != nullptr && definitions->isArray() ? definitions->at(0) : nullptr;
+  if (first == nullptr) {
+    fail(std::format("the key settings have no {}", control), __FILE__, __LINE__);
+    return std::string();
+  }
+  const int code = first->get<int>("key");
+  struct Named {
+    int code;
+    const char* name;
+  };
+  static constexpr Named kGameKeys[] = {
+      {13, "enter"},          {27, "escape"},         {32, "space"},
+      {9, "tab"},             {gvArrowKeyUp, "up"},   {gvArrowKeyDown, "down"},
+      {gvArrowKeyLeft, "left"}, {gvArrowKeyRight, "right"}, {gvHomeKey, "home"},
+      {gvEndKey, "end"},      {gvInsertKey, "insert"}, {gvDeleteKey, "delete"},
+      {gvPageUpKey, "pageup"}, {gvPageDownKey, "pagedown"},
+      {gvBackspaceKey, "backspace"},
+  };
+  for (const Named& named : kGameKeys) {
+    if (code == named.code) return named.name;
+  }
+  if (code >= gvFunctionKey1 && code < gvFunctionKey1 + 11) {
+    return std::format("f{}", code - gvFunctionKey1 + 1);
+  }
+  if (code > 32 && code < 127) return std::string(1, static_cast<char>(code));
+  fail(std::format("{} is game key code {}, which press() cannot name", control,
+                   code),
+       __FILE__, __LINE__);
+  return std::string();
+}
+
 std::string Game::describeKey(std::string_view key) const {
   const std::optional<Stroke> stroke = StrokeFor(key);
   if (!stroke.has_value()) {
@@ -988,6 +1104,27 @@ bool Game::selectRowWithText(std::string_view text) {
       std::format("saying \"{}\"", text));
 }
 
+bool Game::selectRow(long row) {
+  return SelectRow(
+      *this, [&] { return selectedRow() == row; }, std::format("{}", row));
+}
+
+std::vector<long> Game::selectableRows() const {
+  std::vector<long> rows;
+  GuiDisplayGen* gui = ShowingGui();
+  if (gui == nullptr) return rows;
+  const NSRange range = gui->getSelectableRange();
+  for (std::size_t row = range.location; row < range.location + range.length;
+       ++row) {
+    const std::optional<std::string> key =
+        gui->keyForRow(static_cast<OOGUIRow>(row));
+    if (key.has_value() && !key->empty() && *key != "SKIP-ROW") {
+      rows.push_back(static_cast<long>(row));
+    }
+  }
+  return rows;
+}
+
 bool Game::exitRequested() const {
   return controller()->exitRequested().has_value();
 }
@@ -1009,7 +1146,51 @@ Game Game::scenario(std::uint32_t seed) {
   OOHeadlessOptions options = BaseOptions(seed);
   options.populate = false;
   options.startInFlight = true;
-  if (!start(options)) return Game();
+  return clearedScenario(options, Settings());
+}
+
+Game Game::inFlightWithKeys(std::uint32_t seed, const Settings& settings) {
+  OOHeadlessOptions options = BaseOptions(seed);
+  options.populate = false;
+  options.startInFlight = true;
+  options.inputView = true;
+  Game game = clearedScenario(options, settings);
+  for (std::size_t i = 0; i + 1 < Arguments().size(); ++i) {
+    if (Arguments()[i] == "--layout") game.useLayout(Arguments()[i + 1]);
+  }
+  return game;
+}
+
+Game Game::docked(std::uint32_t seed, const Settings& settings) {
+  OOHeadlessOptions options = BaseOptions(seed);
+  options.populate = true;
+  options.startInFlight = false;
+  options.inputView = true;
+  if (!start(options, settings)) return Game();
+  Game game;
+  // A new commander: the standard scenario's save, as Start New Commander
+  // loads it, docked at the main station.
+  PlayerEntity* player = PlayerEntity::sharedPlayer();
+  if (player == nullptr ||
+      !player->loadPlayerFromFile(kStandardScenarioSave, false) || !player->isDocked()) {
+    fail("docked: the new commander is not docked after loading the standard "
+         "scenario",
+         __FILE__, __LINE__);
+  }
+  // A load holds every key until one is released (suppressKeysUntilKeyUp):
+  // a player's load ends with the release of the key that chose it, so this
+  // game's does too.
+  game.keyUpScancode(SDL_SCANCODE_RETURN, SDL_KMOD_NONE);
+  game.step(kPressSteps);
+  for (std::size_t i = 0; i + 1 < Arguments().size(); ++i) {
+    if (Arguments()[i] == "--layout") game.useLayout(Arguments()[i + 1]);
+  }
+  return game;
+}
+
+Game Game::clearedScenario(const OOHeadlessOptions& options,
+                           const Settings& settings) {
+  if (!start(options, settings)) return Game();
 
   // As the windowed step: let the launch settle, then clear the system down
   // to the player, repeating until one clear-then-count sees only the player.
@@ -1129,7 +1310,12 @@ HPVector PlaceFor(const ShipWithKey::Placement placement, HPVector position,
     case ShipWithKey::Placement::kAt:
       return position;
     case ShipWithKey::Placement::kAheadOf: {
-      const Vector forward = vector_forward_from_quaternion(reference->getOrientation());
+      // A ship's own forward vector: the player's orientation is held the
+      // other way round, so its quaternion's forward is not its nose.
+      auto* ship = dynamic_cast<ShipEntity*>(reference);
+      const Vector forward = ship != nullptr
+                                 ? ship->forwardVector()
+                                 : vector_forward_from_quaternion(reference->getOrientation());
       return HPvector_add(reference->getPosition(),
                           HPvector_multiply_scalar(vectorToHPVector(forward), metres));
     }
