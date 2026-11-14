@@ -665,8 +665,13 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
   }
 
   OOOpenGLExtensionManager::setHeadless(true);  // before its first use
-  OOJSFrameCallbacksSetIDSeed(options.seed);
+  // The windowed start makes the script engine while the view sets up GL (the
+  // extension manager's per-GPU look-up uses a regular expression, which needs
+  // it); a headless start has no view, so it makes the engine here, at the
+  // same point, before the universe.
   OOJSSetHeadlessScripting(options.seed, options.scriptTimeLimit);
+  OOJSFrameCallbacksSetIDSeed(options.seed);
+  OOJavaScriptEngine::sharedEngine();
   _universe = Universe::newUniverse(_gameView.get(), options);
   loadPlayerIfRequired();
 
