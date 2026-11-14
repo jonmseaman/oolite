@@ -49,6 +49,7 @@
 
 class Entity;
 class GameController;
+struct OOHeadlessOptions;
 class PlayerEntity;
 class ShipEntity;
 class Universe;
@@ -182,8 +183,14 @@ class Game {
   // "a universe seeded with <seed>". One per process; a second call fails the
   // test and returns the game that exists.
   static Game scenario(std::uint32_t seed);
+  // The start screen, the system populated, not in flight, with a view that
+  // takes key events (no window). One per process, as scenario().
+  static Game atStartScreen(std::uint32_t seed);
   // The game an earlier case made. Fails the test if there is none.
   static Game current();
+
+  // The player's GUI screen, by name (GUI_SCREEN_...).
+  std::string screen() const;
 
   // Time. Nothing here waits on the real clock.
   void step(int steps = 1);  // each step is 1/60 s
@@ -267,6 +274,7 @@ class Game {
 
  private:
   Game() = default;
+  static bool start(const OOHeadlessOptions& options);
 };
 
 // The program's arguments after the name, for options such as --digest-out,

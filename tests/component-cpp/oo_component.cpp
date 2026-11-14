@@ -37,6 +37,7 @@
 #endif
 
 #include "GameController.h"
+#include "MyOpenGLView.h"
 #include "OOHeadless.h"
 #include "OOJSEngineCore.h"
 #include "OOLogOutputHandler.h"
@@ -547,13 +548,30 @@ void fail(std::string_view message, const char* file, int line) {
   PrintState(file, line);
 }
 
-Game Game::scenario(std::uint32_t seed) {
+namespace {
+
+// The options every game here shares: headless, seeded, no add-ons, fixed
+// step and script limit.
+OOHeadlessOptions BaseOptions(std::uint32_t seed) {
+  OOHeadlessOptions options;
+  options.headless = true;
+  options.seed = seed;
+  options.addOns = OOHeadlessOptions::AddOns::kNone;
+  options.step = kStepSeconds;
+  options.scriptTimeLimit = kScriptTimeLimitSeconds;
+  return options;
+}
+
+}  // namespace
+
+// Starts the one game of the process; false (the test failed) if one exists.
+bool Game::start(const OOHeadlessOptions& options) {
   State& state = TheState();
   if (state.exists) {
     fail("a second Game in one process: one game per process; use "
          "Game::current()",
          __FILE__, __LINE__);
-    return Game();
+    return false;
   }
   const auto startedAt = std::chrono::steady_clock::now();
   PrepareProcess();
@@ -561,15 +579,7 @@ Game Game::scenario(std::uint32_t seed) {
   oo::log::logger().setSink(&RecordLogLine);
   GameController::sharedController()->setObserver(&TheObserver());
 
-
-  OOHeadlessOptions options;
-  options.headless = true;
-  options.seed = seed;
-  options.addOns = OOHeadlessOptions::AddOns::kNone;
-  options.populate = false;
-  options.startInFlight = true;
-  options.step = kStepSeconds;
-  options.scriptTimeLimit = kScriptTimeLimitSeconds;
+  const std::uint32_t seed = *options.seed;
   state.seed = seed;
   state.lastProgress = std::chrono::steady_clock::now();
   try {
@@ -594,6 +604,29 @@ Game Game::scenario(std::uint32_t seed) {
   state.startupSeconds =
       std::chrono::duration<double>(std::chrono::steady_clock::now() - startedAt)
           .count();
+  return true;
+}
+
+Game Game::atStartScreen(std::uint32_t seed) {
+  OOHeadlessOptions options = BaseOptions(seed);
+  options.populate = true;
+  options.startInFlight = false;
+  options.inputView = true;
+  start(options);
+  return Game();
+}
+
+std::string Game::screen() const {
+  PlayerEntity* player = PlayerEntity::sharedPlayer();
+  return player != nullptr ? OOStringFromGUIScreenID(player->guiScreen())
+                           : "(no player)";
+}
+
+Game Game::scenario(std::uint32_t seed) {
+  OOHeadlessOptions options = BaseOptions(seed);
+  options.populate = false;
+  options.startInFlight = true;
+  if (!start(options)) return Game();
 
   // As the windowed step: let the launch settle, then clear the system down
   // to the player, repeating until one clear-then-count sees only the player.
@@ -625,6 +658,8 @@ void Game::step(int steps) {
   State& state = TheState();
   for (int i = 0; i < steps; ++i) {
     oo::AutoreleaseScope pool;  // as performGameTick has, per frame
+    // As performGameTick: the view's input first, when there is a view.
+    if (controller()->gameView() != nullptr) controller()->gameView()->pollControls();
     controller()->tick(kStepSeconds);
     controller()->fireDueDeferredCalls();  // as the frame loop's pass does
     ++state.steps;

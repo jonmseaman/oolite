@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 #include "MyOpenGLView.h"
 
 #include <SDL3/SDL_clipboard.h>
+#include <SDL3/SDL_hints.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_timer.h>
 
@@ -510,6 +511,45 @@ bool MyOpenGLView::init() {
 
   _mouseWheelDelta = 0.0f;
 
+  return true;
+}
+
+bool MyOpenGLView::initHeadless() {
+  initKeyMappingData();
+  scancode2Unicode[55] = gvPrintScreenKey;  // as init()
+
+  matrixManager = oo::makeShared<OOOpenGLMatrixManager>();
+
+  OO_LOG("sdl.init", "{}", "initialising SDL (headless)");
+  SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "dummy");
+  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
+    OO_LOG("sdl.init.failed", "Unable to init SDL: {}\n", SDL_GetError());
+    return false;
+  }
+
+  showSplashScreen = false;
+  fullScreen = false;
+  currentSize = 0;
+  currentWindowSize =
+      NSMakeSize(WINDOW_SIZE_DEFAULT_WIDTH, WINDOW_SIZE_DEFAULT_HEIGHT);
+  firstScreen = currentWindowSize;
+  viewSize = currentWindowSize;
+  bounds.size = currentWindowSize;
+
+  OOJoystickManager::setStickHandlerFactory(
+      []() -> std::shared_ptr<OOJoystickManager> {
+        return oo::makeShared<OOSDLJoystickManager>();
+      });
+
+  grabMouseStatus = false;
+  virtualJoystickPosition = NSMakePoint(0.0, 0.0);
+  mouseWarped = false;
+  _mouseVirtualStickSensitivityFactor = 0.95f;
+  allowingStringInput = StringInput::kNo;
+  isAlphabetKeyDown = false;
+  timeIntervalAtLastClick = static_cast<double>(SDL_GetTicksNS()) / 1e9;
+  timeSinceLastMouseWheel = oo::date::monotonicSeconds();
+  _mouseWheelDelta = 0.0f;
   return true;
 }
 
