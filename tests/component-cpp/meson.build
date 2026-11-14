@@ -14,15 +14,30 @@
 # Add a program as one entry: its name (the source is <name>.cpp) and its options: 'args',
 # 'suite' (default 'component'), 'timeout' (default 60 s), 'verbose' (print its output even when
 # it passes, for a program whose output is a record, like the skeleton's probes), 'source' (another
-# program's source), 'needs_trap' (registered only where the GL trap is linked).
+# program's source), 'needs_trap' (registered only where the GL trap is linked), 'layouts' (one
+# test per keyboard layout, <test>_<layout>, each given --layout <layout>).
 # Every program links the GL trap where there is one.
+
+# The recorded keyboard layouts the key tests run under (layouts/<name>.tsv); a layout whose table
+# is not committed yet is left out.
+component_layouts = []
+foreach layout : ['us', 'fr_azerty', 'ru']
+    if import('fs').exists('layouts' / layout + '.tsv')
+        component_layouts += [layout]
+    endif
+endforeach
 
 component_programs = {
     'test_skeleton': {'verbose': true},
     'test_boot': {'verbose': true},
     'test_gl_trap': {'needs_trap': true, 'verbose': true},
+    # Keys (spec 011 US3): the start screen and its menus, and the tutorial by its next key, each
+    # registered once per keyboard layout in 'layouts' (as <test>_<layout>, with --layout <layout>).
+    'test_menus': {'layouts': component_layouts},
+    'test_tutorial_keys': {'layouts': component_layouts},
+    'test_launch_key': {},
+    'test_remapped_key': {},
     # The C++ counterparts of tests/component/features, each with its original's base name.
-    'test_menus': {},
     'test_s1_police_kills_pirate': {'verbose': true},
     'test_s2_pirate_attacks_target_registers_attacker': {'verbose': true},
     'test_s3_hostile_spawn_drives_ship_into_attack': {'verbose': true},
@@ -37,6 +52,7 @@ component_programs = {
     'test_laser_fires': {},
     'test_ship_attacks': {},
     'test_mining_laser': {},
+    'test_fire_key': {},
     # Every ship and equipment item in the core data, one outcome each (contracts/census.md).
     'component_census': {'test_name': 'census', 'timeout': 600, 'verbose': true},
 }
@@ -108,15 +124,29 @@ foreach name, options : component_programs
         override_options: oolite_override_options,
         install: false,
     )
-    test(options.get('test_name', name), exe,
-        args: options.get('args', []),
-        suite: options.get('suite', 'component'),
-        timeout: options.get('timeout', 60),
-        verbose: options.get('verbose', false),
-        workdir: component_app_dir,
-        env: component_env,
-        depends: oolite_app_bundle,
-    )
+    if options.has_key('layouts')
+        foreach layout : options.get('layouts')
+            test(options.get('test_name', name) + '_' + layout, exe,
+                args: options.get('args', []) + ['--layout', layout],
+                suite: options.get('suite', 'component'),
+                timeout: options.get('timeout', 60),
+                verbose: options.get('verbose', false),
+                workdir: component_app_dir,
+                env: component_env,
+                depends: oolite_app_bundle,
+            )
+        endforeach
+    else
+        test(options.get('test_name', name), exe,
+            args: options.get('args', []),
+            suite: options.get('suite', 'component'),
+            timeout: options.get('timeout', 60),
+            verbose: options.get('verbose', false),
+            workdir: component_app_dir,
+            env: component_env,
+            depends: oolite_app_bundle,
+        )
+    endif
 endforeach
 
 # Prints the keyboard layout SDL sees as a layouts/<name>.tsv table. Built, not a test.
