@@ -46,6 +46,7 @@
 #include "oo_test.hpp"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "ShipEntity.h"
+#include "StationEntity.h"
 #include "oofnd/Exception.hpp"
 #include "oofnd/Log.hpp"
 #include "oofnd/Process.hpp"
@@ -747,7 +748,27 @@ std::shared_ptr<ShipEntity> Game::spawnKey(const std::string& shipKey,
 }
 
 void Game::remove(ShipEntity* ship) {
-  if (ship != nullptr) universe()->removeEntity(ship);
+  if (ship == nullptr || ship->getIsPlayer()) return;
+  // What the script API's ship.remove() does (OOJSShip.cpp RemoveOrExplodeShip):
+  // the ship dies with no explosion, and the universe takes it out in its next
+  // update, as for any ship that dies, so nothing is left pointing at it.
+  if (ship == oo::ToShip(universe()->station())) universe()->unMagicMainStation();
+  if (ship->status() == OOEntityStatus::kDocked) {
+    ship->setStatus(OOEntityStatus::kDead);
+  } else {
+    ship->setSuppressExplosion(true);
+    ship->setEnergy(1);
+    ship->takeEnergyDamage(500000000.0, nullptr, nullptr, std::string());
+  }
+  std::shared_ptr<ShipEntity> held = oo::share(ship);
+  const std::weak_ptr<ShipEntity> watched = held;
+  held.reset();
+  const OOUniversalID id = ship->getUniversalID();
+  for (int i = 0; i < 60; ++i) {  // a second at most
+    const std::shared_ptr<ShipEntity> still = watched.lock();
+    if (still == nullptr || universe()->entityForUniversalID(id) != still.get()) return;
+    step();
+  }
 }
 
 std::vector<ShipHandle> Game::shipsWithRole(std::string_view role) {
