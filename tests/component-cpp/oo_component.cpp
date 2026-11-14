@@ -73,6 +73,7 @@ struct State {
   std::uint32_t seed = 0;
   std::uint64_t steps = 0;
   fs::path scratch;
+  double startupSeconds = 0.0;
   std::chrono::steady_clock::time_point lastProgress;
 };
 
@@ -207,6 +208,7 @@ Game Game::scenario(std::uint32_t seed) {
          __FILE__, __LINE__);
     return Game();
   }
+  const auto startedAt = std::chrono::steady_clock::now();
   PrepareProcess();
   OOLoggingInit();
 
@@ -237,6 +239,9 @@ Game Game::scenario(std::uint32_t seed) {
     std::exit(1);  // nothing else in the program can run without the game
   }
   state.exists = true;
+  state.startupSeconds =
+      std::chrono::duration<double>(std::chrono::steady_clock::now() - startedAt)
+          .count();
 
   // As the windowed step: let the launch settle, then clear the system down
   // to the player, repeating until one clear-then-count sees only the player.
@@ -311,6 +316,8 @@ GameController* Game::controller() const {
 std::uint64_t Game::steps() const { return TheState().steps; }
 
 std::filesystem::path Game::scratchDirectory() { return TheState().scratch; }
+
+double Game::startupSeconds() { return TheState().startupSeconds; }
 
 namespace {
 
