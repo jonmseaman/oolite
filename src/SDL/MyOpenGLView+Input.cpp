@@ -394,8 +394,7 @@ void MyOpenGLView::pollControls() {
       }
       case SDL_EVENT_KEY_DOWN:
         kbd_event = reinterpret_cast<SDL_KeyboardEvent*>(&event);
-        key_id = static_cast<Uint16>(
-            SDL_GetKeyFromScancode(kbd_event->scancode, kbd_event->mod, false));
+        key_id = keyLookup(kbd_event->scancode, kbd_event->mod);
         scan_code = kbd_event->scancode;
 
         // char *keychar = SDL_GetKeyName(kbd_event->keysym.sym);

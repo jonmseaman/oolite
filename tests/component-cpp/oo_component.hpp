@@ -49,6 +49,7 @@
 
 class Entity;
 class GameController;
+class MyOpenGLView;
 struct OOHeadlessOptions;
 class PlayerEntity;
 class ShipEntity;
@@ -191,6 +192,8 @@ class Game {
 
   // The player's GUI screen, by name (GUI_SCREEN_...).
   std::string screen() const;
+  // The view that takes key events; null unless the game was made with one.
+  MyOpenGLView* view() const;
 
   // Time. Nothing here waits on the real clock.
   void step(int steps = 1);  // each step is 1/60 s

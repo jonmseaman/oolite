@@ -622,6 +622,8 @@ std::string Game::screen() const {
                            : "(no player)";
 }
 
+MyOpenGLView* Game::view() const { return controller()->gameView(); }
+
 Game Game::scenario(std::uint32_t seed) {
   OOHeadlessOptions options = BaseOptions(seed);
   options.populate = false;
