@@ -1268,6 +1268,8 @@ bool MyOpenGLView::pollShiftKey() {
 // Snapshots and debug image dumps.
 
 bool MyOpenGLView::snapShot(const std::optional<std::string>& filename) {
+  // A headless view has no framebuffer to read: no snapshot is taken.
+  if (!OOGraphicsAvailable()) return false;
   bool snapShotOK = true;
   SDL_Surface* tmpSurface;
 
