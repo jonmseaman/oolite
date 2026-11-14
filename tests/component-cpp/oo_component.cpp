@@ -907,6 +907,16 @@ std::vector<Event> Game::errorsSince(std::size_t mark) const {
   return found;
 }
 
+std::vector<std::string> Game::logLinesContaining(std::string_view text) const {
+  std::vector<std::string> lines;
+  for (const Event& event : TheState().events.entries()) {
+    if (event.kind == EventKind::kLog || event.kind == EventKind::kScriptError) {
+      if (event.text.find(text) != std::string::npos) lines.push_back(event.text);
+    }
+  }
+  return lines;
+}
+
 const OOPresentationRecord& Game::presentation() const {
   return controller()->presentation();
 }

@@ -23,6 +23,7 @@ component_programs = {
     'test_gl_trap': {'needs_trap': true, 'verbose': true},
     # The C++ counterparts of tests/component/features, each with its original's base name.
     'test_s1_police_kills_pirate': {'verbose': true},
+    'test_s2_pirate_attacks_target_registers_attacker': {'verbose': true},
     # Runs test_s1_police_kills_pirate twice and compares the digests of every step.
     'test_repeat': {'verbose': true, 'timeout': 120},
     # One ship, one behaviour (spec 011 US6). Each takes --without-weapon, which must make it fail.
