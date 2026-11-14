@@ -276,6 +276,8 @@ void PrintState(const char* file, int line) {
                                : 0;
   if (from < entries.size()) std::printf("     the last events:\n");
   for (std::size_t i = from; i < entries.size(); ++i) PrintEvent(entries[i]);
+  std::printf("     rerun: tests/run.sh component --cpp -k %s\n",
+              ProgramName().c_str());
   std::fflush(stdout);
 }
 

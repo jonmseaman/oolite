@@ -21,6 +21,8 @@ component_programs = {
     'test_skeleton': {'verbose': true},
     'test_boot': {'verbose': true},
     'test_gl_trap': {'needs_trap': true, 'verbose': true},
+    # The C++ counterparts of tests/component/features, each with its original's base name.
+    'test_s1_police_kills_pirate': {'verbose': true},
 }
 
 fs = import('fs')
