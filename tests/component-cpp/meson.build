@@ -17,6 +17,9 @@
 
 component_programs = {
     'test_skeleton': {'verbose': true},
+    # Needs a window until the game makes no GL call (spec 011 T021): run it with
+    # meson test --suite component-window. CI builds it but does not run it.
+    'test_boot': {'suite': 'component-window', 'verbose': true},
 }
 
 fs = import('fs')
@@ -30,17 +33,22 @@ foreach f : oolite_sources
 endforeach
 component_game_objects = oolite_bin.extract_objects(component_game_sources)
 
-component_support_sources = []
+# oo_component: what every program but the skeleton is written against.
+component_support_sources = files('oo_component.cpp')
 
 component_env = environment()
 component_env.set('OO_COMPONENT_SOURCE_ROOT', meson.project_source_root())
 component_env.set('OO_COMPONENT_BUILD_ROOT', meson.project_build_root())
 
+# The game reads Resources from its working directory: the application directory, which on macOS
+# is the bundle's Contents.
+component_app_dir = host_machine.system() == 'darwin' ? prog_dir / 'Contents' : prog_dir
+
 foreach name, options : component_programs
     exe = executable(
         name,
         name + '.cpp',
-        component_support_sources,
+        name == 'test_skeleton' ? [] : component_support_sources,
         objects: component_game_objects,
         include_directories: [oolite_includes, include_directories('../unit/oofnd')],
         dependencies: oolite_dependencies,
@@ -52,7 +60,7 @@ foreach name, options : component_programs
         suite: options.get('suite', 'component'),
         timeout: options.get('timeout', 60),
         verbose: options.get('verbose', false),
-        workdir: prog_dir,
+        workdir: component_app_dir,
         env: component_env,
         depends: oolite_app_bundle,
     )
