@@ -102,4 +102,5 @@ double OOSeededRandom::nextDouble() {
   return static_cast<double>(z >> 11) * 0x1.0p-53;
 }
 
-bool OOGraphicsAvailable() { return true; }
+// OOGraphicsAvailable() is defined in OOOpenGLExtensionManager.cpp, beside
+// the headless state it reads.

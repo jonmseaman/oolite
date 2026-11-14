@@ -213,10 +213,12 @@ Game Game::scenario(std::uint32_t seed) {
   OOLoggingInit();
 
   // Until the game makes no GL call, a hidden GL window (spec 011 T021
-  // removes it).
+  // removes it); test_boot_nogl is built without it.
+#ifndef OO_COMPONENT_NO_GL_WINDOW
   if (!OOTestGLContext()) {
     fail("no OpenGL context for the hidden window", __FILE__, __LINE__);
   }
+#endif
 
   OOHeadlessOptions options;
   options.headless = true;

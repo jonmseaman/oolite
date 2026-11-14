@@ -337,6 +337,12 @@ jobs:
       - name: C++ component tests
         run: |
           BUILD_TYPE=test tests/run.sh component --cpp
+      # Temporary (spec 011 T017-T021): the GL calls a headless boot still makes, named by the GL
+      # trap. Expected to fail until the last site is guarded; it is removed then.
+      - name: GL sites still called headless
+        continue-on-error: true
+        run: |
+          meson test -C build/meson_test --suite component-nogl --print-errorlogs
       - name: Test Oolite
         if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
         run: |
@@ -643,6 +649,11 @@ jobs:
       - name: C++ component tests
         run: |
           BUILD_TYPE=test tests/run.sh component --cpp
+      # Temporary (spec 011 T017-T021), as in build-fedora.
+      - name: GL sites still called headless
+        continue-on-error: true
+        run: |
+          meson test -C build/meson_test --suite component-nogl --print-errorlogs
       # The app is only ad-hoc signed, so Gatekeeper blocks the downloaded DMG's app until the
       # user allows it in System Settings (issue #779). Fixing that needs Developer ID signing
       # and notarisation, i.e. signing keys and Apple credentials added as repository secrets.

@@ -131,4 +131,5 @@ class OOSeededRandom {
 };
 
 // False in a headless game: no gl* function may be called while it is false.
+// (Defined in OOOpenGLExtensionManager.cpp, which holds the state.)
 bool OOGraphicsAvailable();
