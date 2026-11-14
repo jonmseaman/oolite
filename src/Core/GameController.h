@@ -37,6 +37,7 @@ MA 02110-1301, USA.
 #include "Foundation.h"
 #include "FullScreenController.h"
 #include "FunctionAttributes.h"
+#include "Headless.h"
 #include "MouseInteractionMode.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
@@ -95,6 +96,18 @@ class GameController : public oo::Object {
 
   // The frame loop.
   void performGameTick();
+
+  // One simulation step: the game clock moves on by dt, then the universe
+  // update, the restart check, the sound update and the frame callbacks, in
+  // that order. The windowed frame calls it with the dt it measured, then
+  // draws; a headless game calls it with its fixed step. It reads no clock and
+  // draws nothing.
+  void tick(double dt);
+
+  // What the simulation reads as "now": the system clock, unless a headless
+  // game installed a manual one.
+  const OOGameClock& clock() const { return _clock; }
+
   void startAnimationTimer();
   void stopAnimationTimer();
 
@@ -167,6 +180,7 @@ class GameController : public oo::Object {
       _gameView;                          // was gameView, named like its getter
   std::unique_ptr<::Universe> _universe;  // the game's universe (UNIVERSE)
 
+  OOGameClock _clock;  // the system clock unless a headless game set one
   double last_timeInterval = {};
   double delta_t = {};
 

@@ -237,9 +237,9 @@ GameController::GameController() {
   {
     _finishedLaunching = false;
     last_timeInterval =
-        oo::date::monotonicSeconds();  // the frame clock: intervals only
-                                       // (-doPerformGameTick)
-    delta_t = 0.01;                    // one hundredth of a second
+        _clock.monotonicSeconds();  // the frame clock: intervals only
+                                    // (-doPerformGameTick)
+    delta_t = 0.01;                 // one hundredth of a second
     {
       oo::Defaults& prefs = oo::Defaults::standard();
       _animationTimerInterval =
@@ -390,12 +390,25 @@ void GameController::performGameTick() {
   doPerformGameTick();
 }
 
+void GameController::tick(double dt) {
+  _clock.advance(dt);  // the system clock ignores it
+  if (UNIVERSE != nullptr) UNIVERSE->update(dt);
+  if (EXPECT_NOT((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
+                 OOEntityStatus::kRestartGame)) {
+    if (UNIVERSE != nullptr) UNIVERSE->reinitAndShowDemo(true);
+  }
+  ::OOSound::update();
+  if (!gameIsPaused) {
+    OOJSFrameCallbacksInvoke(dt);
+  }
+}
+
 void GameController::doPerformGameTick() {
   try {
     if (gameIsPaused) {
       delta_t = 0.0;  // no movement!
     } else {
-      delta_t = oo::date::monotonicSeconds() - last_timeInterval;
+      delta_t = _clock.monotonicSeconds() - last_timeInterval;
       last_timeInterval += delta_t;
       if (delta_t > MINIMUM_GAME_TICK)
         delta_t =
@@ -403,15 +416,7 @@ void GameController::doPerformGameTick() {
                                 // to protect against when the machine sleeps
     }
 
-    if (UNIVERSE != nullptr) UNIVERSE->update(delta_t);
-    if ((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) ==
-        oo::EntityStatus::kRestartGame) [[unlikely]] {
-      if (UNIVERSE != nullptr) UNIVERSE->reinitAndShowDemo(true);
-    }
-    ::oo::Sound::update();
-    if (!gameIsPaused) {
-      OOJSFrameCallbacksInvoke(delta_t);
-    }
+    tick(delta_t);
   } catch (const oo::Exception& exception) {
     // was @catch (id): the game throws
     // only oo::Exception
