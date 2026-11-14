@@ -674,6 +674,16 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
         OOSoundRequest{UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
                        sound != nullptr ? sound->name().value_or("") : ""});
   });
+  if (options.inputView) {
+    _gameView = oo::makeShared<::MyOpenGLView>();
+    if (!_gameView->initHeadless()) {
+      _gameView.reset();
+      OORaiseException(OOInternalInconsistencyException, "%s",
+                       "startHeadless: SDL could not start for the input "
+                       "view");
+    }
+    _gameView->setGameController(this);
+  }
   _universe = Universe::newUniverse(_gameView.get(), options);
   loadPlayerIfRequired();
 

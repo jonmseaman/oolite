@@ -22,6 +22,7 @@ component_programs = {
     'test_boot': {'verbose': true},
     'test_gl_trap': {'needs_trap': true, 'verbose': true},
     # The C++ counterparts of tests/component/features, each with its original's base name.
+    'test_menus': {},
     'test_s1_police_kills_pirate': {'verbose': true},
     'test_s2_pirate_attacks_target_registers_attacker': {'verbose': true},
     'test_s3_hostile_spawn_drives_ship_into_attack': {'verbose': true},

@@ -263,6 +263,13 @@ class MyOpenGLView : public oo::Object {
   // (GameController::beginSplashScreen()). false where -init answered nil (SDL
   // could not start).
   bool init();
+  /*	For a headless game that takes key events
+     (OOHeadlessOptions::inputView): SDL's events and video subsystems on its
+     "dummy" video driver, no audio, joystick or gamepad subsystem, no window
+     and no GL context, and a fixed nominal view size. pollControls() then works
+     as in the windowed game. false if SDL could not start.
+  */
+  bool initHeadless();
   std::optional<std::string> getWindowCaption();
   void createWindowWithSize(NSSize size);
   void initSplashScreen();
