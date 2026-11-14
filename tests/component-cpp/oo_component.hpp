@@ -39,6 +39,7 @@
 class GameController;
 class PlayerEntity;
 class Universe;
+struct OOPresentationRecord;
 
 namespace oo::component {
 
@@ -52,6 +53,39 @@ constexpr GameTime ticks(int n) { return GameTime{n * 0.125}; }
 inline constexpr double kStepSeconds = 1.0 / 60.0;
 // The script limiter's limit in a headless game, s.
 inline constexpr double kScriptTimeLimitSeconds = 10.0;
+
+// One thing the game raised, in the order it raised it
+// (specs/011-headless-component-tests/data-model.md, Event record).
+enum class EventKind { kShipEvent, kWorldEvent, kLog, kScriptError };
+
+struct Event {
+  double time = 0.0;  // game time, s
+  EventKind kind = EventKind::kLog;
+  std::string name;              // event name, or log class
+  std::uint32_t subjectId = 0;   // the ship's universal id; 0: none
+  std::string subjectKey;        // its definition key, if any
+  std::string text;              // the log line, for kLog and kScriptError
+  bool isError = false;
+};
+
+class EventRecord {
+ public:
+  std::size_t size() const { return entries_.size(); }
+  const Event& operator[](std::size_t i) const { return entries_[i]; }
+  const std::vector<Event>& entries() const { return entries_; }
+
+  bool has(std::string_view name) const { return count(name) > 0; }
+  // An event of that name whose subject is the ship with that id.
+  bool has(std::string_view name, std::uint32_t subjectId) const;
+  std::size_t count(std::string_view name) const;
+  // The first event of that name for that subject (0: any), or null.
+  const Event* firstOf(std::string_view name, std::uint32_t subjectId = 0) const;
+
+  void add(Event event) { entries_.push_back(std::move(event)); }
+
+ private:
+  std::vector<Event> entries_;
+};
 
 class Game {
  public:
@@ -79,6 +113,14 @@ class Game {
   bool evalBool(std::string_view js);
   std::string evalString(std::string_view js);
 
+  // What happened: every script event and log line, in order.
+  const EventRecord& events() const;
+  std::vector<Event> errors() const;
+  // The errors from entry <mark> on (mark: an earlier events().size()).
+  std::vector<Event> errorsSince(std::size_t mark) const;
+  // What the game would have drawn and played.
+  const OOPresentationRecord& presentation() const;
+
   // How many steps this game has taken.
   std::uint64_t steps() const;
 
@@ -100,11 +142,17 @@ const std::vector<std::string>& programArguments();
 // a game).
 void fail(std::string_view message, const char* file, int line);
 
+// Fails the case, printing each error entry, if the game logged any error.
+void checkNoErrors(const Game& game, const char* file, int line);
+
 // main(): runs the cases, then removes the scratch directory if every case
 // passed, or says where it was kept.
 int runMain(int argc, char** argv, const char* file);
 
 }  // namespace oo::component
+
+#define OO_COMPONENT_CHECK_NO_ERRORS(game) \
+  ::oo::component::checkNoErrors((game), __FILE__, __LINE__)
 
 #define OO_COMPONENT_MAIN()                                        \
   int main(int argc, char** argv) {                                \

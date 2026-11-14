@@ -405,6 +405,8 @@ void GameController::performGameTick() {
 
 void GameController::tick(double dt) {
   _clock.advance(dt);  // the system clock ignores it
+  // Headless, a step is a frame the game would have drawn.
+  if (_options.headless) ++_presentation.framesRequested;
   if (UNIVERSE != nullptr) UNIVERSE->update(dt);
   if (EXPECT_NOT((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
                  OOEntityStatus::kRestartGame)) {
@@ -672,6 +674,15 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
   OOJSSetHeadlessScripting(options.seed, options.scriptTimeLimit);
   OOJSFrameCallbacksSetIDSeed(options.seed);
   OOJavaScriptEngine::sharedEngine();
+  // Each sound asked for, with the game time, in the presentation record. With
+  // no device no sound would load, so sounds are names without data.
+  OOSound::setNamedWithoutDevice(true);
+  OOSoundSource::setPlayObserver([](OOSound* sound) {
+    GameController* controller = sharedController();
+    controller->_presentation.soundsRequested.push_back(
+        OOSoundRequest{UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
+                       sound != nullptr ? sound->name().value_or("") : ""});
+  });
   _universe = Universe::newUniverse(_gameView.get(), options);
   loadPlayerIfRequired();
 

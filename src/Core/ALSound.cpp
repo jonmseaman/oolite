@@ -33,6 +33,7 @@ SOFTWARE.
 #include <string>
 #include <string_view>
 #include <typeinfo>
+#include <utility>
 
 #include "ALBufferedSound.h"
 #include "ALSoundDecoder.h"
@@ -105,9 +106,36 @@ oo::Sound::Sound() {
    scope, as [decoder release] did.
 */
 
+namespace {
+bool sNamedWithoutDevice = false;  // oo::Sound::setNamedWithoutDevice
+
+// What a headless game loads in place of a sound: a name and no data.
+class OONamedSilentSound final : public oo::Sound {
+ public:
+  explicit OONamedSilentSound(std::string name) : _name(std::move(name)) {}
+
+  std::optional<std::string> name() override { return _name; }
+
+  ALuint soundBuffer() override { return 0; }
+
+ private:
+  std::string _name;
+};
+}  // namespace
+
+void oo::Sound::setNamedWithoutDevice(bool named) {
+  sNamedWithoutDevice = named;
+}
+
 std::shared_ptr<oo::Sound> oo::Sound::initWithContentsOfFile(
     const std::optional<std::string>& path) {
-  if (!sIsSoundOK) return nullptr;
+  if (!sIsSoundOK) {
+    if (sNamedWithoutDevice && path.has_value()) {
+      return oo::makeShared<OONamedSilentSound>(
+          oo::str::lastPathComponent(*path));
+    }
+    return nullptr;
+  }
 
   if (!sIsSetUp && !setUp()) return nullptr;
 

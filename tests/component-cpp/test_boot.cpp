@@ -17,6 +17,7 @@
 #include "GameController.h"
 #include "OOHeadless.h"
 #include "OOJSEngineCore.h"
+#include "OOSound.h"
 #include "PlayerEntity.h"
 #include "ResourceManager.h"
 #include "Universe.h"
@@ -142,6 +143,68 @@ OO_TEST(math_random_draws_from_the_seed) {
               static_cast<unsigned long long>(taken));
   for (int i = 0; i < 3; ++i) {
     OO_CHECK_EQ(game.eval("Math.random()"), expected.nextDouble());
+  }
+}
+
+// The observer hears ship script events as they are dispatched.
+OO_TEST(a_spawned_ship_raises_shipSpawned) {
+  Game game = Game::current();
+  const std::size_t mark = game.events().size();
+  OO_CHECK_EQ(game.eval("system.addShips(\"[adder]\", 1, "
+                        "player.ship.position.add([0, 0, 5000]), 0).length"),
+              1.0);
+  game.step();
+  const oo::component::Event* spawned = nullptr;
+  for (std::size_t i = mark; i < game.events().size(); ++i) {
+    if (game.events()[i].name == "shipSpawned") {
+      spawned = &game.events()[i];
+      break;
+    }
+  }
+  OO_CHECK(spawned != nullptr);
+  OO_CHECK(spawned != nullptr && spawned->subjectId != 0);
+  OO_CHECK(spawned != nullptr && spawned->subjectKey == "adder");
+}
+
+// Run before the case that throws on purpose.
+OO_TEST(a_clean_run_has_no_errors) {
+  Game game = Game::current();
+  game.simulate(oo::component::GameTime{5.0});
+  OO_COMPONENT_CHECK_NO_ERRORS(game);
+}
+
+OO_TEST(a_thrown_script_error_is_an_error_entry) {
+  Game game = Game::current();
+  const std::size_t mark = game.events().size();
+  game.eval("(function () { var id = addFrameCallback(function () {"
+            " removeFrameCallback(id);"
+            " throw new Error('a component test throws on purpose'); });"
+            " return 1; })()");
+  game.step(2);
+  const std::vector<oo::component::Event> errors = game.errorsSince(mark);
+  OO_CHECK(!errors.empty());
+  bool named = false;
+  for (const oo::component::Event& event : errors) {
+    std::printf("error entry: [%s] %s\n", event.name.c_str(), event.text.c_str());
+    if (event.text.find("a component test throws on purpose") != std::string::npos)
+      named = true;
+  }
+  OO_CHECK(named);
+}
+
+// US1 scenario 4: what the game would have drawn and played is recorded.
+OO_TEST(frames_and_sounds_asked_for_are_recorded) {
+  Game game = Game::current();
+  const std::uint64_t frames = game.presentation().framesRequested;
+  const std::size_t sounds = game.presentation().soundsRequested.size();
+  game.step(10);
+  OO_CHECK_EQ(game.presentation().framesRequested, frames + 10);
+  game.eval("(function () { var s = new SoundSource; s.sound = 'beep.ogg';"
+            " s.play(); return 1; })()");
+  OO_CHECK_EQ(game.presentation().soundsRequested.size(), sounds + 1);
+  if (game.presentation().soundsRequested.size() == sounds + 1) {
+    OO_CHECK_EQ(game.presentation().soundsRequested.back().name,
+                std::string("beep.ogg"));
   }
 }
 

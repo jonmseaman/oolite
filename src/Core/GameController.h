@@ -127,6 +127,15 @@ class GameController : public oo::Object {
   // Start-up, splash and progress messages, exit, player file.
   void applicationDidFinishLaunching();
 
+  // Told of each ship and world script event before the scripts run; null,
+  // the default, in the windowed game. Not owned.
+  oo::GameObserver* observer() const { return _observer; }
+
+  void setObserver(oo::GameObserver* observer) { _observer = observer; }
+
+  // What a headless game would have drawn and played.
+  oo::PresentationRecord& presentation() { return _presentation; }
+
   void exitAppWithContext(const std::string& context);
 
   void exitAppCommandQ();
@@ -188,6 +197,8 @@ class GameController : public oo::Object {
 
   OOGameClock _clock;  // the system clock unless a headless game set one
   OOHeadlessOptions _options;  // the windowed game's unless startHeadless
+  OOGameObserver* _observer = nullptr;  // not owned; null when windowed
+  OOPresentationRecord _presentation;   // a headless game's only
   double last_timeInterval = {};
   double delta_t = {};
 
