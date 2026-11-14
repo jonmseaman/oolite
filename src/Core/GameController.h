@@ -117,6 +117,14 @@ class GameController : public oo::Object {
   // What the simulation reads as "now": the system clock, unless a headless
   // game installed a manual one.
   const OOGameClock& clock() const { return _clock; }
+
+  /*	For the game's code that must not make a controller as a side effect (a
+     controller's constructor reseeds RANROT, which a unit test with no
+     controller would notice): the shared controller's clock and observer if
+     it exists, else the system clock and none.
+  */
+  static const OOGameClock& currentClock();
+  static OOGameObserver* currentObserver();
   void startAnimationTimer();
   void stopAnimationTimer();
 
