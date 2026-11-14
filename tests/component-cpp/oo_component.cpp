@@ -867,6 +867,8 @@ Layout Layout::load(std::string_view nameOrPath) {
   if (path.extension() != ".tsv") {
     path = Game::sourceRoot() / "tests" / "component-cpp" / "layouts" /
            (std::string(nameOrPath) + ".tsv");
+  } else if (path.is_relative() && !fs::exists(path)) {
+    path = Game::sourceRoot() / path;  // the program runs in the application directory
   }
   layout.name_ = path.stem().string();
   std::ifstream in(path);
