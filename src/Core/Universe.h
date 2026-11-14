@@ -50,6 +50,7 @@ MA 02110-1301, USA.
 #include "OOCommodityMarket.h"  // the universe keeps its market (std::shared_ptr)
 #include "OOEntityWithDrawable.h"
 #include "OOFoundation.h"
+#include "OOHeadless.h"
 #include "OOJSPropID.h"
 #include "OOMaths.h"
 #include "OOOpenGL.h"
@@ -237,10 +238,17 @@ class Universe : public oo::Object {
      gSharedUniverse). A second universe while one exists is destroyed (its
      teardown runs) and raises.
   */
-  static std::unique_ptr<Universe> newUniverse(::MyOpenGLView* inGameView);
+  static std::unique_ptr<Universe> newUniverse(
+      ::MyOpenGLView* inGameView,
+      const OOHeadlessOptions& options = OOHeadlessOptions());
 
-  // The set-up of a new universe.
-  void initWithGameView(::MyOpenGLView* inGameView);
+  // The set-up of a new universe. Default options: the windowed game's.
+  void initWithGameView(::MyOpenGLView* inGameView,
+                        const OOHeadlessOptions& options = OOHeadlessOptions());
+
+  // The options the universe was made with: which add-ons it reads, whether
+  // it populates, its seed.
+  const OOHeadlessOptions& headlessOptions() const { return _options; }
   // The teardown body, run by the destructor.
   void dealloc();
 
@@ -437,6 +445,7 @@ class Universe : public oo::Object {
       closeSystems;  // the current system's neighbours; nullopt until cached
 
   std::string useAddOns;
+  OOHeadlessOptions _options;  // as made; the windowed game's by default
 
   bool no_update = false;
 
