@@ -35,7 +35,9 @@ create_flatpak() {
     # installs, it also builds the test flavour with LTO off inside the build sandbox and runs the
     # C++ component tests there. Without it a packager's build is unchanged.
     if [[ "${OO_FLATPAK_RUN_COMPONENT:-}" == "1" ]]; then
-        local component_command='      - ./mk.sh build test --setup-flags="-Db_lto=false" \&\& meson test -C build/meson_test --suite component --print-errorlogs'
+        # The version flags as the module's own line has them: get_version.sh cannot ask git in
+        # the sandbox.
+        local component_command="      - ./mk.sh build test --setup-flags=\"-Db_lto=false\" --ver-full=\"$ver_full\" --buildtime=\"$buildtime\" \\&\\& meson test -C build/meson_test --suite component --print-errorlogs"
         if ! sed -i "s|^\([[:space:]]*- \./mk.sh flatpak-internal.*\)|$component_command\n\1|" "$manifest"; then
             echo "❌ Adding the component tests to $manifest failed!" >&2
             return 1
