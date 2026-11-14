@@ -9,7 +9,9 @@
    the player in an empty system, run for 10 s of game time, checked and
    removed; an equipment item is awarded to the player's ship, activated if
    it has a script, run for 5 s and removed. Each try is reseeded from the
-   base seed and the key, so no result depends on the order.
+   base seed and the key, so no result depends on the order; the player's
+   energy is made full before it, and a try after which the player is not in
+   flight ends the child like an unclean universe.
 
         The whole run is a parent that starts this program again as a child;
    the child writes each index and key to a progress file before trying it,
@@ -57,7 +59,10 @@ namespace {
 constexpr std::uint32_t kDefaultSeed = 20260910;
 constexpr double kShipSpanSeconds = 10.0;       // research R8
 constexpr double kEquipmentSpanSeconds = 5.0;   // research R8
-constexpr double kSpawnDistanceMetres = 10'000.0;
+// From the player, away from the planet, beyond the player's scanner range
+// (25.6 km), so that a hostile definition does not take the player on and
+// nothing spawns inside the planet.
+constexpr double kSpawnDistanceMetres = 40'000.0;
 constexpr int kMaxRestarts = 50;
 constexpr int kExitUnclean = 3;  // a child stopped: the universe was left unclean
 constexpr std::size_t kTailLines = 12;
@@ -240,6 +245,9 @@ bool Fitted(Game& game, const std::string& key) {
 // met, or "".
 std::string Prepare(Game& game, OOEquipmentType* type) {
   if (type == nullptr) return "not an equipment type";
+  if (!type->isAvailableToPlayer()) {
+    return "not available to the player, and the census fits equipment to the player's ship";
+  }
   if (type->requiresNonFullFuel()) game.eval("player.ship.fuel = 0");
   if (type->requiresFullFuel()) game.eval("player.ship.fuel = 7");
   if (std::optional<std::vector<std::string>> all = type->requiresEquipment()) {
@@ -282,6 +290,10 @@ Row TryEquipment(Game& game, const Definition& d, std::uint32_t baseSeed) {
       "player.ship.forwardWeapon ? player.ship.forwardWeapon.equipmentKey : 'EQ_WEAPON_NONE'");
 
   std::shared_ptr<OOEquipmentType> type = OOEquipmentType::equipmentTypeWithIdentifier(d.key);
+  // The standard save's ship already carries some items, and an item cannot
+  // be awarded twice: take it off for the try and put it back afterwards.
+  const bool hadIt = Fitted(game, d.key) && !(type != nullptr && type->isPrimaryWeapon());
+  if (hadIt) game.eval(std::format("player.ship.removeEquipment({})", JsQuote(d.key)));
   const std::string unmet = Prepare(game, type.get());
   const bool awarded = unmet.empty() && Award(game, type.get(), d.key);
   if (!unmet.empty()) {
@@ -318,6 +330,7 @@ Row TryEquipment(Game& game, const Definition& d, std::uint32_t baseSeed) {
     r.outcome = "failed";
     r.evidence = FirstError(errors);
   }
+  if (hadIt) game.eval(std::format("player.ship.awardEquipment({})", JsQuote(d.key)));
   r.gameTime = game.time() - started;
   return r;
 }
@@ -335,9 +348,13 @@ Row TryShip(Game& game, const Definition& d, std::uint32_t baseSeed, bool* clean
   const double started = game.time();
 
   PlayerEntity* player = game.player();
-  const HPVector at = HPvector_add(
-      player->getPosition(),
-      HPvector_multiply_scalar(vectorToHPVector(player->forwardVector()), kSpawnDistanceMetres));
+  HPVector away = vectorToHPVector(player->forwardVector());
+  if (Entity* planet = game.universe()->planet()) {
+    const HPVector d = HPvector_subtract(player->getPosition(), planet->getPosition());
+    if (HPmagnitude(d) > 0.0) away = HPvector_normal(d);
+  }
+  const HPVector at = HPvector_add(player->getPosition(),
+                                   HPvector_multiply_scalar(away, kSpawnDistanceMetres));
   std::shared_ptr<ShipEntity> ship = game.spawnKey(d.key, at);
   if (ship == nullptr) {
     r.outcome = "failed";
@@ -377,7 +394,9 @@ Row TryShip(Game& game, const Definition& d, std::uint32_t baseSeed, bool* clean
       if (!s->getIsPlayer() && !s->getIsSubEntity()) brought.push_back(s);
     }
   }
-  for (ShipEntity* s : brought) game.remove(s);
+  std::vector<oo::component::ShipHandle> leaving;
+  for (ShipEntity* s : brought) leaving.emplace_back(oo::share(s));
+  for (const oo::component::ShipHandle& s : leaving) game.remove(s);
   game.step();
   if (game.entityCount() != countBefore) {
     *clean = false;
@@ -409,9 +428,12 @@ std::vector<Definition> Definitions(Game& game, const Options& o) {
     std::shared_ptr<OOEquipmentType> type = OOEquipmentType::equipmentTypeWithIdentifier(d.key);
     const std::string forward = game.evalString(
         "player.ship.forwardWeapon ? player.ship.forwardWeapon.equipmentKey : 'EQ_WEAPON_NONE'");
+    const bool hadIt = Fitted(game, d.key) && !(type != nullptr && type->isPrimaryWeapon());
+    if (hadIt) game.eval(std::format("player.ship.removeEquipment({})", JsQuote(d.key)));
     const bool awarded = Prepare(game, type.get()).empty() && Award(game, type.get(), d.key);
     if (awarded && !Fitted(game, d.key)) d.cls = "service";
     if (awarded) game.eval(std::format("player.ship.removeEquipment({})", JsQuote(d.key)));
+    if (hadIt) game.eval(std::format("player.ship.awardEquipment({})", JsQuote(d.key)));
     game.eval(std::format("player.ship.forwardWeapon = {}", JsQuote(forward)));
   }
   all.insert(all.end(), items.begin(), items.end());
@@ -434,8 +456,21 @@ Row Try(Game& game, const Definition& d, std::uint32_t seed, bool* clean) {
     return Row{d.kind, d.key, d.cls, "not-applicable", SeedFor(seed, d.kind, d.key), 0.0,
                d.cls};
   }
-  if (d.kind == "ship") return TryShip(game, d, seed, clean);
-  return TryEquipment(game, d, seed);
+  PlayerEntity* player = game.player();
+  // Every try starts from the same player: stopped (a census is about 2,000 s
+  // of game time, and a player still flying at launch speed would reach the
+  // planet), and at full energy (the script API's maxEnergy: the player's
+  // own field is not its maximum).
+  player->setSpeed(0.0);
+  game.eval("player.ship.energy = player.ship.maxEnergy");
+  Row r = d.kind == "ship" ? TryShip(game, d, seed, clean) : TryEquipment(game, d, seed);
+  if (player->status() != OOEntityStatus::kInFlight) {
+    *clean = false;  // the next try would not start where this one did
+    r.outcome = "failed";
+    r.evidence = std::format("the player was {} after it",
+                             OOStringFromEntityStatus(player->status()));
+  }
+  return r;
 }
 
 // --- the parent ---------------------------------------------------------------

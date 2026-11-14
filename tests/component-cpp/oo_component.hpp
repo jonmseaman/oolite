@@ -208,7 +208,8 @@ class Game {
   // As add, at a plain position, answering the owning pointer
   // Universe::newShipWithName made; the census uses it.
   std::shared_ptr<ShipEntity> spawnKey(const std::string& shipKey, HPVector position);
-  // Takes it out of the universe at once, with no explosion.
+  // Takes it out of the universe with no explosion, as ship.remove() does, and
+  // steps (at most a second) until the universe has let it go.
   void remove(ShipEntity* ship);
   // The live ships whose primary role is role.
   std::vector<ShipHandle> shipsWithRole(std::string_view role);
