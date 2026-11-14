@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <csignal>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -292,8 +293,13 @@ void PrintState(const char* file, int line) {
   const State& state = TheState();
   if (!state.exists) return;
   PlayerEntity* player = PlayerEntity::sharedPlayer();
-  std::printf("     at %s:%d: seed %u, game time %.3f s, step %llu, screen %s\n",
-              file, line, static_cast<unsigned>(state.seed),
+  if (line > 0) {
+    std::printf("     at %s:%d:", file, line);
+  } else {
+    std::printf("     after the case:");  // RunCases, for a plain OO_CHECK
+  }
+  std::printf(" seed %u, game time %.3f s, step %llu, screen %s\n",
+              static_cast<unsigned>(state.seed),
               UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0,
               static_cast<unsigned long long>(state.steps),
               player != nullptr
@@ -393,6 +399,11 @@ std::string ExceptionMessage(JSContext* context) {
 const std::vector<std::string>& programArguments() { return Arguments(); }
 
 const std::string& programPath() { return ProgramPath(); }
+
+bool hasArgument(std::string_view argument) {
+  return std::find(Arguments().begin(), Arguments().end(), argument) !=
+         Arguments().end();
+}
 
 std::string siblingProgram(std::string_view name) {
   fs::path path = fs::path(ProgramPath()).parent_path() / std::string(name);
@@ -944,10 +955,41 @@ double Game::eval(std::string_view js) {
   return value;
 }
 
+namespace {
+
+// oo_test::runAll's loop and output, and after a case that failed, the game's
+// state (seed, game time, screen, the last events, the rerun command): a
+// plain OO_CHECK knows nothing of the game.
+int RunCases(const char* file) {
+  const std::vector<::oo_test::Case>& cases = ::oo_test::registry();
+  std::signal(SIGABRT, [](int) {
+    std::fprintf(stderr, "oo_test: abort() in case %s\n", ::oo_test::currentTest());
+    std::fflush(stderr);
+  });
+  for (const ::oo_test::Case& c : cases) {
+    ::oo_test::currentTest() = c.name;
+    const int before = ::oo_test::failures();
+    c.fn();
+    const bool passed = ::oo_test::failures() == before;
+    if (!passed) PrintState(file, 0);
+    std::printf("%s %s\n", passed ? "ok  " : "FAIL", c.name);
+    std::fflush(stdout);
+  }
+  std::printf("oo_test: %s: %zu tests, %d checks, %d failures\n", file, cases.size(),
+              ::oo_test::checks(), ::oo_test::failures());
+  if (cases.empty()) {
+    std::printf("FAIL %s: no tests registered\n", file);
+    return 2;
+  }
+  return ::oo_test::failures() == 0 ? 0 : 1;
+}
+
+}  // namespace
+
 int runMain(int argc, char** argv, const char* file) {
   ProgramPath() = argc > 0 ? argv[0] : "component";
   for (int i = 1; i < argc; ++i) Arguments().emplace_back(argv[i]);
-  const int result = ::oo_test::runAll(file);
+  const int result = RunCases(file);
   const State& state = TheState();
   if (!state.scratch.empty()) {
     if (result == 0) {

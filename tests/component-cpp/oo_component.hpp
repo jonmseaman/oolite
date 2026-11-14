@@ -260,6 +260,7 @@ class Game {
 // and its own path.
 const std::vector<std::string>& programArguments();
 const std::string& programPath();
+bool hasArgument(std::string_view argument);
 
 // Another component program, built beside this one: its path (with .exe on
 // Windows).
