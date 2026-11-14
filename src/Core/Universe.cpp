@@ -284,7 +284,8 @@ Universe::Universe() {}
 // The body, then the members go.
 Universe::~Universe() { dealloc(); }
 
-std::unique_ptr<Universe> Universe::newUniverse(::MyOpenGLView* inGameView) {
+std::unique_ptr<Universe> Universe::newUniverse(
+    ::MyOpenGLView* inGameView, const OOHeadlessOptions& options) {
   /*	The universe first: one refused below is destroyed at once, and its
      teardown runs the whole body.
   */
@@ -299,24 +300,33 @@ std::unique_ptr<Universe> Universe::newUniverse(::MyOpenGLView* inGameView) {
 
   OO_DEBUG_PROGRESS("Universe initWithGameView:");
 
-  universe->initWithGameView(inGameView);
+  universe->initWithGameView(inGameView, options);
   return universe;
 }
 
 /*	-initWithGameView: after [super init]: newUniverse() made the universe
    and checked that it is the only one. The body is the method's.
 */
-void Universe::initWithGameView(::MyOpenGLView* inGameView) {
+void Universe::initWithGameView(::MyOpenGLView* inGameView,
+                                const OOHeadlessOptions& options) {
   _doingStartUp = true;
+  _options = options;
 
-  oo::InitReallyRandom(
-      static_cast<uint64_t>(oo::date::timeIntervalSinceReferenceDate() * 1e9));
+  if (options.seed.has_value()) {
+    // One seed for both generators, so a seeded game repeats.
+    ranrot_srand(*options.seed);
+    oo::InitReallyRandom(*options.seed);
+  } else {
+    oo::InitReallyRandom(oo::date::timeIntervalSinceReferenceDate() * 1e9);
+  }
 
   oo::Defaults& prefs = oo::Defaults::standard();
 
   // prefs value no longer used - per save game but startup needs to
-  // be non-strict
-  useAddOns = std::string(SCENARIO_OXP_DEFINITION_ALL);
+  // be non-strict (a game made with no add-ons stays strict)
+  useAddOns = std::string(options.addOns == OOHeadlessOptions::AddOns::kNone
+                              ? SCENARIO_OXP_DEFINITION_NONE
+                              : SCENARIO_OXP_DEFINITION_ALL);
 
   setGameView(inGameView);
   gSharedUniverse = this;
@@ -2137,6 +2147,7 @@ void Universe::setUpSpace() {
 }
 
 void Universe::populateNormalSpace() {
+  if (!_options.populate) return;  // a game made empty stays empty
   const oo::PList systeminfo =
       (systemManager != nullptr ? systemManager->getPropertiesForCurrentSystem()
                                 : oo::PList());
@@ -7441,8 +7452,9 @@ void Universe::showGUIMessage(const std::optional<std::string>& text,
 }
 
 void Universe::repopulateSystem() {
-  if ((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) ==
-      oo::EntityStatus::kStartGame) [[unlikely]] {
+  if (!_options.populate) return;  // a game made empty stays empty
+  if (EXPECT_NOT((PLAYER != nullptr ? PLAYER->status() : oo::EntityStatus{}) ==
+                 oo::EntityStatus::kStartGame)) {
     return;  // no need to be adding ships as this is not a "real" game
   }
   JSContext* context = OOJSAcquireContext();
@@ -11827,8 +11839,12 @@ bool Universe::setUseAddOns(const std::string& newUse, bool saveGame) {
   return setUseAddOns(newUse, saveGame, false);
 }
 
-bool Universe::setUseAddOns(const std::string& newUse, bool saveGame,
+bool Universe::setUseAddOns(const std::string& requestedUse, bool saveGame,
                             bool force) {
+  // A game made with no add-ons reads none, whatever a scenario asks for.
+  const std::string newUse = _options.addOns == OOHeadlessOptions::AddOns::kNone
+                                 ? std::string(SCENARIO_OXP_DEFINITION_NONE)
+                                 : requestedUse;
   if (!force && newUse == useAddOns) {
     return true;
   }
