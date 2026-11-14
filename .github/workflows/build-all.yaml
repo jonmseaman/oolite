@@ -252,6 +252,15 @@ jobs:
         with:
           path: build/.ccache
           key: ccache-build-ubuntu-${{ github.sha }}
+      # The C++ component tests built with GCC: every other job builds them with Clang.
+      - name: C++ component tests (GCC)
+        run: |
+          set -o pipefail
+          command -v g++ > /dev/null || apt install -y g++
+          meson setup build/meson_gcc -Ddev_release=true -Ddebug=false -Db_lto=false --native-file gcc.ini
+          ninja -C build/meson_gcc
+          env -u DISPLAY -u WAYLAND_DISPLAY meson test -C build/meson_gcc --suite component --print-errorlogs 2>&1 | tee build/component-gcc.log
+        shell: bash
       - name: Test Oolite
         if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
         run: |
