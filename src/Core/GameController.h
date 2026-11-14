@@ -130,6 +130,19 @@ class GameController : public oo::Object {
   // Start-up, splash and progress messages, exit, player file.
   void applicationDidFinishLaunching();
 
+  /*	A game with no window: the steps of applicationDidFinishLaunching in its
+     order, without the splash, the display modes, the expansion manager, the
+     window, the sound device or the frame loop. The manual clock replaces the
+     system's; every generator is seeded from options.seed. With
+     options.startInFlight the standard scenario is loaded and the player
+     launched, ticking at options.step until in flight. Returns when the game
+     is ready for its first tick(); the caller steps it. Raises, with a
+     message, if the options are inconsistent or a universe already exists.
+     Call it on sharedController(), the controller the game's code reaches.
+  */
+  void startHeadless(const OOHeadlessOptions& options);
+  const OOHeadlessOptions& headlessOptions() const { return _options; }
+
   void exitAppWithContext(const std::string& context);
   void exitAppCommandQ();
 
@@ -189,6 +202,7 @@ class GameController : public oo::Object {
   std::unique_ptr<::Universe> _universe;  // the game's universe (UNIVERSE)
 
   OOGameClock _clock;  // the system clock unless a headless game set one
+  OOHeadlessOptions _options;  // the windowed game's unless startHeadless
   double last_timeInterval = {};
   double delta_t = {};
 
