@@ -270,6 +270,13 @@ class MyOpenGLView : public oo::Object {
      as in the windowed game. false if SDL could not start.
   */
   bool initHeadless();
+
+  // What key a physical key gives: SDL's answer for the active layout, unless
+  // a test has installed a recorded layout. The shipped game never replaces it.
+  std::function<SDL_Keycode(SDL_Scancode, SDL_Keymod)> keyLookup =
+      [](SDL_Scancode scancode, SDL_Keymod mod) {
+        return SDL_GetKeyFromScancode(scancode, mod, false);
+      };
   std::optional<std::string> getWindowCaption();
   void createWindowWithSize(NSSize size);
   void initSplashScreen();
