@@ -1614,7 +1614,16 @@ int RunCases(const char* file) {
     std::fprintf(stderr, "oo_test: abort() in case %s\n", ::oo_test::currentTest());
     std::fflush(stderr);
   });
+  // --case <name>: that case alone (a program whose cases each need a game of
+  // their own is registered once per case).
+  std::optional<std::string> only;
+  for (std::size_t i = 0; i + 1 < Arguments().size(); ++i) {
+    if (Arguments()[i] == "--case") only = Arguments()[i + 1];
+  }
+  std::size_t ran = 0;
   for (const ::oo_test::Case& c : cases) {
+    if (only.has_value() && *only != c.name) continue;
+    ++ran;
     ::oo_test::currentTest() = c.name;
     const int before = ::oo_test::failures();
     c.fn();
@@ -1623,9 +1632,9 @@ int RunCases(const char* file) {
     std::printf("%s %s\n", passed ? "ok  " : "FAIL", c.name);
     std::fflush(stdout);
   }
-  std::printf("oo_test: %s: %zu tests, %d checks, %d failures\n", file, cases.size(),
+  std::printf("oo_test: %s: %zu tests, %d checks, %d failures\n", file, ran,
               ::oo_test::checks(), ::oo_test::failures());
-  if (cases.empty()) {
+  if (ran == 0) {
     std::printf("FAIL %s: no tests registered\n", file);
     return 2;
   }
