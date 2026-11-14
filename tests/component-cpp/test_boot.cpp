@@ -7,6 +7,7 @@
    Run: meson test -C build/meson_dev test_boot
 */
 
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -205,6 +206,53 @@ OO_TEST(frames_and_sounds_asked_for_are_recorded) {
   if (game.presentation().soundsRequested.size() == sounds + 1) {
     OO_CHECK_EQ(game.presentation().soundsRequested.back().name,
                 std::string("beep.ogg"));
+  }
+}
+
+// The scenario steps (T023). They spawn traders and pirates, so they come
+// last.
+OO_TEST(spawn_returns_the_ships_it_added) {
+  Game game = Game::current();
+  // Each boa comes with escorts, some of which have the trader role as well,
+  // so countWithRole("trader") grows by more than two; what spawn hands back
+  // is the two ships addShips returned.
+  const std::vector<oo::component::ShipHandle> traders =
+      game.spawn(oo::component::ShipsWithRole("trader").count(2));
+  OO_CHECK_EQ(traders.size(), static_cast<std::size_t>(2));
+  for (const oo::component::ShipHandle& ship : traders) {
+    OO_CHECK(ship.alive());
+    OO_CHECK(ship.id() != 0);
+    OO_CHECK_EQ(ship.key(), std::string("boa"));
+  }
+  OO_CHECK(game.countWithRole("trader") >= 2);
+}
+
+OO_TEST(spawned_ships_carry_the_scenario_role) {
+  Game game = Game::current();
+  const std::vector<oo::component::ShipHandle> pirates =
+      game.spawn(oo::component::ShipsWithRole("pirate"));
+  OO_CHECK_EQ(pirates.size(), static_cast<std::size_t>(1));
+  for (const oo::component::ShipHandle& ship : pirates) {
+    OO_CHECK(ship->getPrimaryRole().value_or("") == "pirate");  // not "[sidewinder]"
+    OO_CHECK_EQ(ship.key(), std::string("sidewinder"));     // the pinned key
+  }
+  OO_CHECK_EQ(game.eval("system.shipsWithPrimaryRole('pirate')[0].bounty"), 100.0);
+}
+
+OO_TEST(within_km_is_measured_from_the_first_spawn) {
+  Game game = Game::current();
+  OO_CHECK(game.locus().has_value());
+  const std::vector<oo::component::ShipHandle> police =
+      game.spawn(oo::component::ShipsWithRole("police").count(3).withinKm(10));
+  OO_CHECK_EQ(police.size(), static_cast<std::size_t>(3));
+  if (!game.locus().has_value()) return;
+  const std::array<double, 3> locus = *game.locus();
+  for (const oo::component::ShipHandle& ship : police) {
+    const HPVector p = ship->getPosition();
+    const double dx = p.x - locus[0], dy = p.y - locus[1], dz = p.z - locus[2];
+    const double km = std::sqrt(dx * dx + dy * dy + dz * dz) / 1000.0;
+    std::printf("police %u is %.2f km from the locus\n", ship.id(), km);
+    OO_CHECK(km <= 10.5);
   }
 }
 
