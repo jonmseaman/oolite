@@ -366,7 +366,7 @@ inline bool isXML(std::string_view bytes) {
 inline std::string describe(const oo::PList& v) {
   if (const std::string* s = v.getIf<std::string>())
     return "string \"" + *s + "\"";
-  return oo::typeName(v.type());
+  return std::string(oo::typeName(v.type()));
 }
 
 // Equal, or (typed) a typed JSON5 value the game reads the same from the
