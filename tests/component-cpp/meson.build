@@ -29,6 +29,8 @@ component_programs = {
     'test_laser_fires': {},
     'test_ship_attacks': {},
     'test_mining_laser': {},
+    # Every ship and equipment item in the core data, one outcome each (contracts/census.md).
+    'component_census': {'test_name': 'census', 'timeout': 600, 'verbose': true},
 }
 
 fs = import('fs')
@@ -98,7 +100,7 @@ foreach name, options : component_programs
         override_options: oolite_override_options,
         install: false,
     )
-    test(name, exe,
+    test(options.get('test_name', name), exe,
         args: options.get('args', []),
         suite: options.get('suite', 'component'),
         timeout: options.get('timeout', 60),
