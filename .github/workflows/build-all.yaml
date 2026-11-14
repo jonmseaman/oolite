@@ -414,7 +414,8 @@ jobs:
           source ShellScripts/Linux/install_gitversion_fn.sh
           mkdir -p /usr/local/bin
           install_gitversion /usr/local/bin "."
-          ./mk.sh pkg-flatpak deployment --github-repository="$GITHUB_REPOSITORY"
+          # The C++ component tests also run inside the build sandbox (create_flatpak_fn.sh).
+          OO_FLATPAK_RUN_COMPONENT=1 ./mk.sh pkg-flatpak deployment --github-repository="$GITHUB_REPOSITORY"
       - name: Archive installer
         uses: actions/upload-artifact@v6
         with:

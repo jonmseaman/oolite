@@ -31,6 +31,20 @@ create_flatpak() {
         echo "❌ Replacement of ./mk.sh line in $manifest failed!" >&2
         return 1
     fi
+    # OO_FLATPAK_RUN_COMPONENT=1 (CI's build-flatpak sets it): before the module builds and
+    # installs, it also builds the test flavour with LTO off inside the build sandbox and runs the
+    # C++ component tests there. Without it a packager's build is unchanged.
+    if [[ "${OO_FLATPAK_RUN_COMPONENT:-}" == "1" ]]; then
+        local component_command='      - ./mk.sh build test --setup-flags="-Db_lto=false" \&\& meson test -C build/meson_test --suite component --print-errorlogs'
+        if ! sed -i "s|^\([[:space:]]*- \./mk.sh flatpak-internal.*\)|$component_command\n\1|" "$manifest"; then
+            echo "❌ Adding the component tests to $manifest failed!" >&2
+            return 1
+        fi
+        if ! grep -q "suite component" "$manifest"; then
+            echo "❌ The component test command is not in $manifest!" >&2
+            return 1
+        fi
+    fi
     tail -n 12 $manifest
 
     local lint_exceptions=$(mktemp /tmp/oolite-lint-XXXXXX.json)
