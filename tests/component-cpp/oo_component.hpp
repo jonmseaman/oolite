@@ -39,11 +39,24 @@
 #include <string_view>
 #include <vector>
 
+#include "OOHPVector.h"
+
+// <windows.h> (through the game's headers) defines near and far as empty
+// macros for 16-bit pointers; ShipWithKey::near is the interface's name.
+#ifdef near
+#undef near
+#endif
+
+class Entity;
 class GameController;
 class PlayerEntity;
 class ShipEntity;
 class Universe;
 struct OOPresentationRecord;
+
+namespace oo::component {
+class ShipHandle;
+}
 
 namespace oo::component {
 
@@ -79,8 +92,10 @@ class EventRecord {
   const std::vector<Event>& entries() const { return entries_; }
 
   bool has(std::string_view name) const { return count(name) > 0; }
-  // An event of that name whose subject is the ship with that id.
+  // An event of that name whose subject is the ship with that id; a handle
+  // matches by id, so it works after the ship is gone.
   bool has(std::string_view name, std::uint32_t subjectId) const;
+  bool has(std::string_view name, const ShipHandle& ship) const;
   std::size_t count(std::string_view name) const;
   // The first event of that name for that subject (0: any), or null.
   const Event* firstOf(std::string_view name, std::uint32_t subjectId = 0) const;
@@ -115,6 +130,29 @@ class ShipsWithRole {
   std::string role_;
   int count_ = 1;
   std::optional<int> withinKm_;
+};
+
+// One ship by definition key, placed, for game.add():
+//   game.add(ShipWithKey("adder").aheadOf(game.player(), 5'000.0))
+// Placement: .at(position), .aheadOf(entity, metres) (on its nose) or
+// .near(entity, metres) (anywhere within that distance, from the seeded
+// generator); unset, near the player within 5 km.
+class ShipWithKey {
+ public:
+  explicit ShipWithKey(std::string_view shipKey) : key_(shipKey) {}
+  ShipWithKey at(HPVector position) const;
+  ShipWithKey aheadOf(Entity* entity, double metres) const;
+  ShipWithKey near(Entity* entity, double metres) const;
+
+  enum class Placement { kNearPlayer, kAt, kAheadOf, kNear };
+
+ private:
+  friend class Game;
+  std::string key_;
+  Placement placement_ = Placement::kNearPlayer;
+  HPVector position_ = {0, 0, 0};
+  Entity* reference_ = nullptr;
+  double metres_ = 0.0;
 };
 
 // A ship a test was handed. Use it like a ShipEntity*; ask alive() before
@@ -163,6 +201,19 @@ class Game {
   std::vector<ShipHandle> spawn(const ShipsWithRole& what);  // the ships added
   int countWithRole(std::string_view role);
   bool engages(std::string_view hunter, std::string_view quarry);
+  // The world, directly: one ship by key, added to the universe. The test owns
+  // nothing: the universe keeps the ship, the handle only watches it (not
+  // alive() if it could not be made).
+  ShipHandle add(const ShipWithKey& what);
+  // As add, at a plain position, answering the owning pointer
+  // Universe::newShipWithName made; the census uses it.
+  std::shared_ptr<ShipEntity> spawnKey(const std::string& shipKey, HPVector position);
+  // Takes it out of the universe at once, with no explosion.
+  void remove(ShipEntity* ship);
+  // The live ships whose primary role is role.
+  std::vector<ShipHandle> shipsWithRole(std::string_view role);
+  std::size_t entityCount() const;
+
   // Where the first ship spawned was, which "within K km" measures from.
   std::optional<std::array<double, 3>> locus() const;
 

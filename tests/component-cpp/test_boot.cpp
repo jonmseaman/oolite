@@ -259,4 +259,35 @@ OO_TEST(within_km_is_measured_from_the_first_spawn) {
   }
 }
 
+// The plain style (T027): a ship by key, and what a handle does.
+OO_TEST(a_removed_ship_is_gone_for_its_handle) {
+  Game game = Game::current();
+  const std::size_t before = game.entityCount();
+  oo::component::ShipHandle adder =
+      game.add(oo::component::ShipWithKey("adder").aheadOf(game.player(), 3000.0));
+  OO_CHECK(adder.alive());
+  OO_CHECK(game.entityCount() > before);
+  const std::uint32_t id = adder.id();
+  game.remove(adder);
+  OO_CHECK(!adder.alive());
+  OO_CHECK(static_cast<ShipEntity*>(adder) == nullptr);
+  OO_CHECK_EQ(adder.id(), id);  // kept, so events can still be matched
+  OO_CHECK_EQ(game.entityCount(), before);
+}
+
+OO_TEST(a_handle_does_not_keep_a_ship_alive) {
+  Game game = Game::current();
+  std::shared_ptr<ShipEntity> ship =
+      game.spawnKey("adder", game.player()->getPosition());
+  OO_CHECK(ship != nullptr);
+  if (ship == nullptr) return;
+  const long owners = ship.use_count();
+  {
+    const oo::component::ShipHandle handle(ship);
+    OO_CHECK_EQ(ship.use_count(), owners);
+    OO_CHECK(handle.alive());
+  }
+  game.remove(ship.get());
+}
+
 OO_COMPONENT_MAIN()
