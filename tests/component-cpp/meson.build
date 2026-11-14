@@ -15,7 +15,8 @@
 # 'suite' (default 'component'), 'timeout' (default 60 s), 'verbose' (print its output even when
 # it passes, for a program whose output is a record, like the skeleton's probes), 'source' (another
 # program's source), 'needs_trap' (registered only where the GL trap is linked), 'layouts' (one
-# test per keyboard layout, <test>_<layout>, each given --layout <layout>).
+# test per keyboard layout, <test>_<layout>, each given --layout <layout>), 'cases' (one test per
+# case, {test name: case name}, each given --case <case>).
 # Every program links the GL trap where there is one.
 
 # The recorded keyboard layouts the key tests run under (layouts/<name>.tsv); a layout whose table
@@ -37,6 +38,14 @@ component_programs = {
     'test_tutorial_keys': {'layouts': component_layouts},
     'test_launch_key': {},
     'test_remapped_key': {},
+    # The key-path observations (research H1-H5), one test per case: key_fault_h1 ... h5.
+    'test_key_faults': {'cases': {
+        'key_fault_h1': 'h1_n_activates_with_caps_lock_on',
+        'key_fault_h2': 'h2_n_activates_under_ru',
+        'key_fault_h3': 'h3_n_activates_with_num_lock_or_altgr_bits',
+        'key_fault_h4': 'h4_caps_lock_and_num_lock_are_not_other_keys',
+        'key_fault_h5': 'h5_every_scancode_can_be_pressed_and_released',
+    }},
     # The C++ counterparts of tests/component/features, each with its original's base name.
     'test_s1_police_kills_pirate': {'verbose': true},
     'test_s2_pirate_attacks_target_registers_attacker': {'verbose': true},
@@ -124,7 +133,19 @@ foreach name, options : component_programs
         override_options: oolite_override_options,
         install: false,
     )
-    if options.has_key('layouts')
+    if options.has_key('cases')
+        foreach test_name, case_name : options.get('cases')
+            test(test_name, exe,
+                args: options.get('args', []) + ['--case', case_name],
+                suite: options.get('suite', 'component'),
+                timeout: options.get('timeout', 60),
+                verbose: options.get('verbose', false),
+                workdir: component_app_dir,
+                env: component_env,
+                depends: oolite_app_bundle,
+            )
+        endforeach
+    elif options.has_key('layouts')
         foreach layout : options.get('layouts')
             test(options.get('test_name', name) + '_' + layout, exe,
                 args: options.get('args', []) + ['--layout', layout],
