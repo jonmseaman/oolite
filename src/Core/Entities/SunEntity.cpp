@@ -37,6 +37,7 @@ MA 02110-1301, USA.
 #include "DebugFlags.h"
 #include "MacroOpenGL.h"
 #include "MyOpenGLView.h"
+#include "Headless.h"
 #include "OOJSSun.h"
 #include "PlanetEntity.h"
 #include "PlayerEntity.h"
@@ -89,9 +90,11 @@ bool oo::SunEntity::setSunColor(oo::Color* sun_colorIn) {
   sun_specular[2] = b;
   sun_specular[3] = 1.0;
 
-  OOGL(glLightfv(GL_LIGHT1, GL_AMBIENT, sun_ambient));
-  OOGL(glLightfv(GL_LIGHT1, GL_DIFFUSE, sun_diffuse));
-  OOGL(glLightfv(GL_LIGHT1, GL_SPECULAR, sun_specular));
+  if (OOGraphicsAvailable()) {  // headless: nothing to tell the GL about
+    OOGL(glLightfv(GL_LIGHT1, GL_AMBIENT, sun_ambient));
+    OOGL(glLightfv(GL_LIGHT1, GL_DIFFUSE, sun_diffuse));
+    OOGL(glLightfv(GL_LIGHT1, GL_SPECULAR, sun_specular));
+  }
 
   // main disc less saturation (partially taken care of by the ACES tonemapper)
   // more brightness
