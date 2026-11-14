@@ -32,7 +32,6 @@
 #include <unistd.h>
 #endif
 
-#include "../unit/core/oo_gl_test_context.hpp"
 #include "GameController.h"
 #include "OOHeadless.h"
 #include "OOJSEngineCore.h"
@@ -348,6 +347,18 @@ std::string ExceptionMessage(JSContext* context) {
 
 const std::vector<std::string>& programArguments() { return Arguments(); }
 
+const std::string& programPath() { return ProgramPath(); }
+
+std::string glTrapState() {
+#if defined(OO_COMPONENT_GL_TRAP)
+  return "GL trap: linked";
+#elif defined(OO_COMPONENT_GL_TRAP_ABSENT)
+  return std::string("GL trap: not linked (") + OO_COMPONENT_GL_TRAP_ABSENT + ")";
+#else
+  return "GL trap: not linked (unknown)";
+#endif
+}
+
 ShipHandle::ShipHandle(const std::shared_ptr<ShipEntity>& ship) : ship_(ship) {
   if (ship != nullptr) {
     id_ = static_cast<std::uint32_t>(ship->getUniversalID());
@@ -430,13 +441,6 @@ Game Game::scenario(std::uint32_t seed) {
   oo::log::logger().setSink(&RecordLogLine);
   GameController::sharedController()->setObserver(&TheObserver());
 
-  // Until the game makes no GL call, a hidden GL window (spec 011 T021
-  // removes it); test_boot_nogl is built without it.
-#ifndef OO_COMPONENT_NO_GL_WINDOW
-  if (!OOTestGLContext()) {
-    fail("no OpenGL context for the hidden window", __FILE__, __LINE__);
-  }
-#endif
 
   OOHeadlessOptions options;
   options.headless = true;
