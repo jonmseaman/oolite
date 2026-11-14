@@ -804,6 +804,10 @@ void GameController::endSplashScreen() {
 #if OOLITE_SDL
 void GameController::exitAppWithContext(const std::string& context) {
   OO_LOG("exit.context", "Exiting: {}.", context);
+  if (_options.headless) {
+    _exitRequested = context;
+    return;
+  }
 #if (OOLITE_SDL && defined(OO_DEBUG_MONITOR_ENABLED))
   ::OODebugMonitor::sharedDebugMonitor()->applicationWillTerminate();
 #endif

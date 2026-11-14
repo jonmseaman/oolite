@@ -166,6 +166,11 @@ class GameController : public oo::Object {
   OOPresentationRecord& presentation() { return _presentation; }
 
   void exitAppWithContext(const std::string& context);
+  // Headless, a request to quit is recorded here (with its context) and not
+  // obeyed: the test that made the game decides when the process ends.
+  const std::optional<std::string>& exitRequested() const {
+    return _exitRequested;
+  }
   void exitAppCommandQ();
 
   // nullopt: no saved game to load (was nil).
@@ -224,6 +229,7 @@ class GameController : public oo::Object {
   std::unique_ptr<::Universe> _universe;  // the game's universe (UNIVERSE)
 
   OOGameClock _clock;  // the system clock unless a headless game set one
+  std::optional<std::string> _exitRequested;
   OOHeadlessOptions _options;  // the windowed game's unless startHeadless
   OOGameObserver* _observer = nullptr;  // not owned; null when windowed
   OOPresentationRecord _presentation;   // a headless game's only

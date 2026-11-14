@@ -118,3 +118,10 @@ foreach name, options : component_programs
         depends: oolite_app_bundle,
     )
 endforeach
+
+# Prints the keyboard layout SDL sees as a layouts/<name>.tsv table. Built, not a test.
+executable('record_layout', 'record_layout.cpp',
+    dependencies: oolite_dependencies,
+    override_options: oolite_override_options,
+    install: false,
+)
