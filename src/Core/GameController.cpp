@@ -35,6 +35,7 @@ MA 02110-1301, USA.
 #include "OOOXPVerifier.h"
 #include "OOOXZManager.h"
 #include "OOOpenALController.h"
+#include "OOOpenGLExtensionManager.h"
 #include "ResourceManager.h"
 #include "Universe.h"
 #include "legacy_random.h"
@@ -644,6 +645,7 @@ void GameController::startHeadless(const OOHeadlessOptions& options) {
     oo::process::setArguments(static_cast<int>(argv.size()), argv.data());
   }
 
+  OOOpenGLExtensionManager::setHeadless(true);  // before its first use
   OOJSFrameCallbacksSetIDSeed(options.seed);
   OOJSSetHeadlessScripting(options.seed, options.scriptTimeLimit);
   _universe = Universe::newUniverse(_gameView.get(), options);

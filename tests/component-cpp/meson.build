@@ -13,13 +13,18 @@
 #
 # Add a program as one entry: its name (the source is <name>.cpp) and its options: 'args',
 # 'suite' (default 'component'), 'timeout' (default 60 s), 'verbose' (print its output even when
-# it passes, for a program whose output is a record, like the skeleton's probes).
+# it passes, for a program whose output is a record, like the skeleton's probes), 'source' (another
+# program's source), 'cpp_args', 'gl_trap' (link the GL trap where there is one).
 
 component_programs = {
     'test_skeleton': {'verbose': true},
     # Needs a window until the game makes no GL call (spec 011 T021): run it with
     # meson test --suite component-window. CI builds it but does not run it.
     'test_boot': {'suite': 'component-window', 'verbose': true},
+    # test_boot with no hidden window and, on Linux and macOS, the GL trap: it fails, naming a GL
+    # function, until the last GL site on its path is guarded (spec 011 T017-T021).
+    'test_boot_nogl': {'suite': 'component-nogl', 'source': 'test_boot.cpp',
+                       'cpp_args': ['-DOO_COMPONENT_NO_GL_WINDOW=1'], 'gl_trap': true},
 }
 
 fs = import('fs')
@@ -70,10 +75,13 @@ component_env.set('OO_COMPONENT_BUILD_ROOT', meson.project_build_root())
 component_app_dir = host_machine.system() == 'darwin' ? prog_dir / 'Contents' : prog_dir
 
 foreach name, options : component_programs
+    trapped = options.get('gl_trap', false)
     exe = executable(
         name,
-        name + '.cpp',
+        options.get('source', name + '.cpp'),
         name == 'test_skeleton' ? [] : component_support_sources,
+        trapped ? component_trap_sources : [],
+        cpp_args: options.get('cpp_args', []) + (trapped ? component_trap_args : []),
         objects: component_game_objects,
         include_directories: [oolite_includes, include_directories('../unit/oofnd')],
         dependencies: oolite_dependencies,

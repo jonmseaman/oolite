@@ -70,6 +70,14 @@ class OOOpenGLExtensionManager : public oo::Object {
 
   ~OOOpenGLExtensionManager();
 
+  /*	A headless game has no GL context: set before the manager is first
+     used, and reset() then reports no GL, no extensions and no shaders
+     without calling glGetString. OOGraphicsAvailable() (OOHeadless.h) reads
+     it.
+  */
+  static void setHeadless(bool headless);
+  static bool isHeadless();
+
   void reset();
 
   bool haveExtension(const std::string& extension);

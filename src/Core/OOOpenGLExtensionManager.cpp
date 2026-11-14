@@ -33,6 +33,7 @@ SOFTWARE.
 
 #include "OOConstToString.h"
 #include "OOFunctionAttributes.h"
+#include "OOHeadless.h"
 #include "OORegExpMatcher.h"
 #include "ResourceManager.h"
 #include "oofnd/Log.hpp"
@@ -262,8 +263,53 @@ std::optional<std::string> OptionalGLString(const GLubyte* string) {
 
 }  // namespace
 
+namespace {
+bool sHeadless = false;  // OOOpenGLExtensionManager::setHeadless
+}  // namespace
+
+void OOOpenGLExtensionManager::setHeadless(bool headless) {
+  sHeadless = headless;
+}
+
+bool OOOpenGLExtensionManager::isHeadless() { return sHeadless; }
+
+// Declared in OOHeadless.h; defined here, beside the state it reads, so that
+// whatever links the manager links this too.
+bool OOGraphicsAvailable() { return !sHeadless; }
+
 void OOOpenGLExtensionManager::reset() {
   const GLubyte *versionString = nullptr, *curr = nullptr;
+
+  if (sHeadless) {
+    // No context: nothing to ask the driver, and nothing is supported.
+    extensions.clear();
+    vendor.reset();
+    renderer.reset();
+    major = minor = release_ = 0;
+#if OO_SHADERS
+    shadersAvailable = false;
+    defaultShaderSetting = OOShaderSetting::kNotSupported;
+    maximumShaderSetting = OOShaderSetting::kNotSupported;
+    textureImageUnitCount_ = 0;
+#endif
+#if OO_USE_VBO
+    vboSupported_ = false;
+#endif
+#if OO_USE_FBO
+    fboSupported_ = false;
+#endif
+#if OO_MULTITEXTURE
+    textureCombinersSupported_ = false;
+    textureUnitCount_ = 0;
+#endif
+    usePointSmoothing_ = false;
+    useLineSmoothing_ = false;
+    useDustShader_ = false;
+    ResourceManager::paths();  // as below, for the log's order
+    OO_LOG("rendering.opengl.version", "{}",
+           "OpenGL: none (a headless game has no context).");
+    return;
+  }
 
   const std::optional<std::string> extensionsStr =
       OptionalGLString(glGetString(GL_EXTENSIONS));
