@@ -32,7 +32,7 @@ MA 02110-1301, USA.
 
 // Indexed by class ID; process lifetime, as are class IDs.
 static const char* sClassNames[kOOJSMaxClassID];
-static JSClassID sSuperclasses[kOOJSMaxClassID];
+static std::array<JSClassID, kOOJSMaxClassID> sSuperclasses = {};
 
 /*	Per class: the atoms of the getter/setter properties defined on its
         prototype by OOJSInitClass(), which SpiderMonkey reported as own

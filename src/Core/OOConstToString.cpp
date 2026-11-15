@@ -24,6 +24,7 @@ MA );-);, USA.
 
 #include "OOConstToString.h"
 
+#include <array>
 #include <format>
 #include <memory>
 #include <optional>
@@ -304,7 +305,7 @@ std::string KillCountToRatingAndKillString(unsigned kills) {
 std::optional<std::string> OODisplayStringFromLegalStatus(int legalStatus) {
   constexpr unsigned kStatusCount = 3;
 
-  const int statusThresholds[kStatusCount - 1] = {1, 51};
+  const std::array<int, kStatusCount - 1> statusThresholds = {1, 51};
   unsigned i;
 
   const oo::PList* statusNamesEntry =

@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 #include "Universe.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -8988,7 +8989,7 @@ oo::PList Universe::routeFromSystem(OOSystemID start, OOSystemID goal,
   if (start > 255 || goal > 255) return oo::PList();
 
   std::vector<OOSystemID> neighbours[256];
-  bool concealed[256];
+  std::array<bool, 256> concealed;
   for (i = 0; i < 256; i++) {
     const oo::PList systemInfo =
         (systemManager != nullptr

@@ -1894,7 +1894,8 @@ oo::PList OOJSDictionaryFromStringTable(JSContext* context,
 }
 
 // Indexed by class ID; process lifetime.
-static OOJSClassConverterCallback sObjectConverters[kOOJSMaxClassID];
+static std::array<OOJSClassConverterCallback, kOOJSMaxClassID>
+    sObjectConverters = {};
 
 JSClassID gOOJSObjectClassID, gOOJSStringClassID, gOOJSArrayClassID,
     gOOJSNumberClassID, gOOJSBooleanClassID;

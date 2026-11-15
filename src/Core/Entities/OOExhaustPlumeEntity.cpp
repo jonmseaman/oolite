@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 
 #include "OOExhaustPlumeEntity.h"
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -408,7 +409,8 @@ static GLuint afttstr2[4] = {2, 6, 26, 30};
 static GLuint afttstr3[4] = {3, 7, 27, 31};
 static GLuint afttstr4[4] = {4, 8, 28, 32};
 
-static GLfloat pA[6] = {0.01, 0.0, 2.0, 4.0, 6.0, 10.0};  // phase adjustments
+static std::array<GLfloat, 6> pA = {0.01, 0.0, 2.0,
+                                    4.0,  6.0, 10.0};  // phase adjustments
 
 void OOExhaustPlumeEntity::drawSubEntityImmediate(bool /*immediate*/,
                                                   bool translucent) {
