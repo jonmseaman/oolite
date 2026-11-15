@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #pragma once
 
 #include <cstdint>
+#include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -228,9 +229,9 @@ struct OOGLVector {
   GLfloat z;
 };
 
-void GLDrawPoints(OOGLVector* points, int n);
-void GLDrawFilledPoints(OOGLVector* points, int n);
-void GLDrawQuadStrip(OOGLVector* points, int n);
+void GLDrawPoints(std::span<const OOGLVector> points);
+void GLDrawFilledPoints(std::span<const OOGLVector> points);
+void GLDrawQuadStrip(std::span<const OOGLVector> points);
 
 inline constexpr OOShaderSetting kOOShaderSettingDefault =
     OOShaderSetting::kNotSupported;

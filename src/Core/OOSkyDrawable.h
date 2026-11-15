@@ -31,6 +31,7 @@ SOFTWARE.
 
 #include <cstddef>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "OODrawable.h"
@@ -78,7 +79,7 @@ class OOSkyDrawable : public OODrawable, public OOGraphicsResetClient {
   void loadStarTextures();
   void loadNebulaTextures();
 
-  void addQuads(OOSkyQuadDesc* quads, unsigned count);
+  void addQuads(std::span<const OOSkyQuadDesc> quads);
 
   void ensureTexturesLoaded();
 
