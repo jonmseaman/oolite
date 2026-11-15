@@ -1932,8 +1932,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kThrust:
-      //			if (ship->getIsPlayer()) [[unlikely]]  goto
-      // playerReadOnly;
+      //			if (ship->getIsPlayer()) [[unlikely]]
+      // return playerReadOnly();
 
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         ship->setThrust(OOClamp_0_max_f(fValue, ship->maxThrust()));
