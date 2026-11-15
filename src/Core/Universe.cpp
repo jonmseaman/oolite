@@ -5060,42 +5060,24 @@ void Universe::lightForEntity(bool isLit) {
   }
 }
 
-void Universe::getActiveViewMatrix(OOMatrix* outMatrix, Vector* outForward,
-                                   Vector* outUp) {
-  assert(outMatrix != nullptr && outForward != nullptr && outUp != nullptr);
-
-  ::PlayerEntity* player = nullptr;
-
+Universe::ActiveView Universe::activeView() {
   switch (viewDirection) {
     case OOViewID::kAft:
-      *outMatrix = aft_matrix;
-      *outForward = vector_flip(kBasisZVector);
-      *outUp = kBasisYVector;
-      return;
+      return {aft_matrix, vector_flip(kBasisZVector), kBasisYVector};
 
     case OOViewID::kPort:
-      *outMatrix = port_matrix;
-      *outForward = vector_flip(kBasisXVector);
-      *outUp = kBasisYVector;
-      return;
+      return {port_matrix, vector_flip(kBasisXVector), kBasisYVector};
 
     case OOViewID::kStarboard:
-      *outMatrix = starboard_matrix;
-      *outForward = kBasisXVector;
-      *outUp = kBasisYVector;
-      return;
+      return {starboard_matrix, kBasisXVector, kBasisYVector};
 
-    case OOViewID::kCustom:
-      OOCParameterAssert(
-          outUp !=
-          nullptr);  // as the assert above (the analyser follows this one)
-      player = PLAYER;
-      *outMatrix =
-          (player != nullptr ? player->getCustomViewMatrix() : OOMatrix{});
-      *outForward =
-          (player != nullptr ? player->getCustomViewForwardVector() : Vector{});
-      *outUp = (player != nullptr ? player->getCustomViewUpVector() : Vector{});
-      return;
+    case OOViewID::kCustom: {
+      ::PlayerEntity* player = PLAYER;
+      return {
+          (player != nullptr ? player->getCustomViewMatrix() : OOMatrix{}),
+          (player != nullptr ? player->getCustomViewForwardVector() : Vector{}),
+          (player != nullptr ? player->getCustomViewUpVector() : Vector{})};
+    }
 
     case OOViewID::kForward:
     case OOViewID::kNone:
@@ -5103,18 +5085,10 @@ void Universe::getActiveViewMatrix(OOMatrix* outMatrix, Vector* outForward,
     case OOViewID::kBreakPattern:;
   }
 
-  *outMatrix = fwd_matrix;
-  *outForward = kBasisZVector;
-  *outUp = kBasisYVector;
+  return {fwd_matrix, kBasisZVector, kBasisYVector};
 }
 
-OOMatrix Universe::activeViewMatrix() {
-  OOMatrix m;
-  Vector f, u;
-
-  getActiveViewMatrix(&m, &f, &u);
-  return m;
-}
+OOMatrix Universe::activeViewMatrix() { return activeView().matrix; }
 
 // The view frustum.
 
@@ -5370,7 +5344,10 @@ void Universe::drawUniverse() {
                       farPlane);
         }
 
-        getActiveViewMatrix(&view_matrix, &view_dir, &view_up);
+        const ActiveView activeViewNow = activeView();
+        view_matrix = activeViewNow.matrix;
+        view_dir = activeViewNow.forward;
+        view_up = activeViewNow.up;
 
         OOGLResetModelView();  // reset matrix
         OOGLLookAt(kZeroVector, kBasisZVector, kBasisYVector);
