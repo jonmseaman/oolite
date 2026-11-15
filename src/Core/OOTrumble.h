@@ -41,10 +41,10 @@ class OOTexture;
 class PlayerEntity;
 class OOSound;
 
-#define TRUMBLE_MAX_ROTATION 15.0
-#define TRUMBLE_MAX_ROTATIONAL_VELOCITY 5.0
+inline constexpr double TRUMBLE_MAX_ROTATION = 15.0;
+inline constexpr double TRUMBLE_MAX_ROTATIONAL_VELOCITY = 5.0;
 
-#define TRUMBLE_GROWTH_RATE 0.01
+inline constexpr double TRUMBLE_GROWTH_RATE = 0.01;
 
 enum class trumble_animation : int {
   kNone = 0,
