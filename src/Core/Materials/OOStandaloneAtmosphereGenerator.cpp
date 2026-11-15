@@ -497,19 +497,19 @@ static float SampleNoise3D(OOStandaloneAtmosphereGeneratorInfo* info,
   unsigned PZ0 = PERM(Z);
   unsigned PZ1 = PERM(Z + 1);
 
-  unsigned PY0Z0 = PERM(static_cast<unsigned int>(Y + PZ0));
-  unsigned PY1Z0 = PERM(Y + 1 + PZ0);
-  unsigned PY0Z1 = PERM(static_cast<unsigned int>(Y + PZ1));
-  unsigned PY1Z1 = PERM(Y + 1 + PZ1);
+  unsigned PY0Z0 = PERM(static_cast<unsigned>(Y) + PZ0);
+  unsigned PY1Z0 = PERM(static_cast<unsigned>(Y + 1) + PZ0);
+  unsigned PY0Z1 = PERM(static_cast<unsigned>(Y) + PZ1);
+  unsigned PY1Z1 = PERM(static_cast<unsigned>(Y + 1) + PZ1);
 
-  unsigned gi000 = PERM(static_cast<unsigned int>(X + PY0Z0));
-  unsigned gi010 = PERM(static_cast<unsigned int>(X + PY1Z0));
-  unsigned gi100 = PERM(X + 1 + PY0Z0);
-  unsigned gi110 = PERM(X + 1 + PY1Z0);
-  unsigned gi001 = PERM(static_cast<unsigned int>(X + PY0Z1));
-  unsigned gi011 = PERM(static_cast<unsigned int>(X + PY1Z1));
-  unsigned gi101 = PERM(X + 1 + PY0Z1);
-  unsigned gi111 = PERM(X + 1 + PY1Z1);
+  unsigned gi000 = PERM(static_cast<unsigned>(X) + PY0Z0);
+  unsigned gi010 = PERM(static_cast<unsigned>(X) + PY1Z0);
+  unsigned gi100 = PERM(static_cast<unsigned>(X + 1) + PY0Z0);
+  unsigned gi110 = PERM(static_cast<unsigned>(X + 1) + PY1Z0);
+  unsigned gi001 = PERM(static_cast<unsigned>(X) + PY0Z1);
+  unsigned gi011 = PERM(static_cast<unsigned>(X) + PY1Z1);
+  unsigned gi101 = PERM(static_cast<unsigned>(X + 1) + PY0Z1);
+  unsigned gi111 = PERM(static_cast<unsigned>(X + 1) + PY1Z1);
 
 #undef PERM
 

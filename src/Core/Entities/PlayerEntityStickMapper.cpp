@@ -250,7 +250,7 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
       int from_function = NumberAfterColon(*key);
       if (from_function < 0) from_function = 0;
 
-      setGuiToStickMapperScreen(from_function);
+      setGuiToStickMapperScreen(static_cast<unsigned int>(from_function));
       if (UNIVERSE->getGui()->getSelectedRow() < 0)
         UNIVERSE->getGui()->setSelectedRow(GUI_ROW_FUNCSTART);
       if (from_function == 0)
@@ -259,7 +259,8 @@ void PlayerEntity::stickMapperInputHandler(::GuiDisplayGen* gui,
       return;
     }
 
-    const oo::PList& entry = StickFunctionAt(stickFunctions, selFunctionIdx);
+    const oo::PList& entry = StickFunctionAt(
+        stickFunctions, static_cast<std::size_t>(selFunctionIdx));
     int hw = IntValueForKey(entry, KEY_ALLOWABLE);
     stickHandler->setCallback(
         [this](const oo::PList& hwDict) { updateFunction(hwDict); },
@@ -301,7 +302,8 @@ void PlayerEntity::updateFunction(const oo::PList& hwDict) {
   }
   // What moved?
   int function;
-  const oo::PList& entry = StickFunctionAt(stickFunctions, selFunctionIdx);
+  const oo::PList& entry =
+      StickFunctionAt(stickFunctions, static_cast<std::size_t>(selFunctionIdx));
   if (hwDict.get<bool>(STICK_ISAXIS)) {
     function = entry.get<int>(KEY_AXISFN);
     if (function == AXIS_THRUST) {
@@ -349,8 +351,8 @@ void PlayerEntity::updateFunction(const oo::PList& hwDict) {
       key = std::string(CUSTOMEQUIP_BUTTONMODE);
     }
     // the customEquipActivation entry is edited in place
-    if (oo::PList::Dict* custEquipDict =
-            CustomEquipFields(customEquipActivation, function))
+    if (oo::PList::Dict* custEquipDict = CustomEquipFields(
+            customEquipActivation, static_cast<std::size_t>(function)))
       (*custEquipDict)[key] = hwDict;
     checkCustomEquipButtons(hwDict, function);
     oo::Defaults::standard().setObject(KEYCONFIG_CUSTOMEQUIP,
@@ -370,9 +372,10 @@ void PlayerEntity::updateFunction(const oo::PList& hwDict) {
   if (selFunctionIdx < MAX_ROWS_FUNCTIONS - 1) {
     skip = 0;
   } else {
-    skip = ((selFunctionIdx - 1) / (MAX_ROWS_FUNCTIONS - 2)) *
-               (MAX_ROWS_FUNCTIONS - 2) +
-           1;
+    skip = static_cast<unsigned int>(
+        ((selFunctionIdx - 1) / (MAX_ROWS_FUNCTIONS - 2)) *
+            (MAX_ROWS_FUNCTIONS - 2) +
+        1);
   }
 
   setGuiToStickMapperScreen(skip);
@@ -386,8 +389,11 @@ void PlayerEntity::checkCustomEquipButtons(const oo::PList& stickFn, int idx) {
   int i;
   for (i = 0; static_cast<std::size_t>(i) < customEquipActivation.size(); i++) {
     if (i != idx) {
-      const oo::PList original = customEquipActivation[i];
-      oo::PList& custEquip = customEquipActivation[i];  // edited in place
+      const oo::PList original =
+          customEquipActivation[static_cast<unsigned long long>(i)];
+      oo::PList& custEquip =
+          customEquipActivation[static_cast<unsigned long long>(
+              i)];  // edited in place
       oo::PList::Dict* custEquipDict = custEquip.getIf<oo::PList::Dict>();
       const oo::PList* bf = original.find(activateKey);
       if (IntegerIn(bf, stickNumberKey) ==
@@ -411,7 +417,8 @@ void PlayerEntity::checkCustomEquipButtons(const oo::PList& stickFn, int idx) {
 
 void PlayerEntity::removeFunction(int idx) {
   OOJoystickManager* stickHandler = OOJoystickManager::sharedStickHandler();
-  const oo::PList& entry = StickFunctionAt(stickFunctions, idx);
+  const oo::PList& entry =
+      StickFunctionAt(stickFunctions, static_cast<std::size_t>(idx));
   const oo::PList* butfunc = entry.find(KEY_BUTTONFN);  // -intValue as before
   const oo::PList* axfunc = entry.find(KEY_AXISFN);
   bool custom = false;
@@ -431,8 +438,8 @@ void PlayerEntity::removeFunction(int idx) {
         key = std::string(CUSTOMEQUIP_BUTTONMODE);
       }
       // edited in place; both tests reduce to "remove key if present"
-      if (oo::PList::Dict* custEquipDict =
-              CustomEquipFields(customEquipActivation, bf))
+      if (oo::PList::Dict* custEquipDict = CustomEquipFields(
+              customEquipActivation, static_cast<std::size_t>(bf)))
         custEquipDict->erase(key);
     } else {
       stickHandler->unsetButtonFunction(IntValueOf(*butfunc));
@@ -452,9 +459,10 @@ void PlayerEntity::removeFunction(int idx) {
   if (selFunctionIdx < MAX_ROWS_FUNCTIONS - 1)
     skip = 0;
   else
-    skip = ((selFunctionIdx - 1) / (MAX_ROWS_FUNCTIONS - 2)) *
-               (MAX_ROWS_FUNCTIONS - 2) +
-           1;
+    skip = static_cast<unsigned int>(
+        ((selFunctionIdx - 1) / (MAX_ROWS_FUNCTIONS - 2)) *
+            (MAX_ROWS_FUNCTIONS - 2) +
+        1);
   setGuiToStickMapperScreen(skip);
 }
 
@@ -493,7 +501,7 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, std::size_t skip) {
       n_rows -= 1;
       start_row += 1;
       if (skip > MAX_ROWS_FUNCTIONS)
-        previous = skip - (MAX_ROWS_FUNCTIONS - 2);
+        previous = static_cast<std::ptrdiff_t>(skip - (MAX_ROWS_FUNCTIONS - 2));
       else
         previous = 0;
     }
@@ -513,8 +521,9 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, std::size_t skip) {
         const std::optional<std::string> header =
             OptionalStringForKey(entry, KEY_HEADER);
         gui->setArray(ColumnsUpToNil({header, std::string(), std::string()}),
-                      i + start_row);
-        gui->setColor(OOColor::cyanColor().get(), i + start_row);
+                      static_cast<OOGUIRow>(i) + start_row);
+        gui->setColor(OOColor::cyanColor().get(),
+                      static_cast<OOGUIRow>(i) + start_row);
       } else {
         std::string allowedThings;
         std::optional<std::string> assignment;
@@ -555,8 +564,8 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, std::size_t skip) {
                 bf -= 10000;
                 key = std::string(CUSTOMEQUIP_BUTTONMODE);
               }
-              const oo::PList& custom =
-                  CustomEquipEntry(customEquipActivation, bf);
+              const oo::PList& custom = CustomEquipEntry(
+                  customEquipActivation, static_cast<std::size_t>(bf));
               assignment = describeStickDict(custom.find(key));
             }
             break;
@@ -584,21 +593,26 @@ void PlayerEntity::displayFunctionList(::GuiDisplayGen* gui, std::size_t skip) {
 
         gui->setArray(ColumnsUpToNil({OptionalStringForKey(entry, KEY_GUIDESC),
                                       assignment, allowedThings}),
-                      i + start_row);
+                      static_cast<OOGUIRow>(i) + start_row);
         //[gui setKey: GUI_KEY_OK forRow: i + start_row];
-        gui->setKey(std::format("Index:{}", i + skip), i + start_row);
+        gui->setKey(std::format("Index:{}", i + skip),
+                    static_cast<OOGUIRow>(i) + start_row);
       }
     }
     if (i < n_functions - skip) {
-      gui->setColor(OOColor::greenColor().get(), start_row + i);
+      gui->setColor(OOColor::greenColor().get(),
+                    start_row + static_cast<OOGUIRow>(i));
       gui->setArray(ColumnsUpToNil({OO_DESC("gui-more"), std::string(" --> ")}),
-                    start_row + i);
-      gui->setKey(std::format("More:{}", n_rows + skip), start_row + i);
+                    start_row + static_cast<OOGUIRow>(i));
+      gui->setKey(
+          std::format("More:{}", static_cast<std::size_t>(n_rows) + skip),
+          start_row + static_cast<OOGUIRow>(i));
       i++;
     }
 
-    gui->setSelectableRange(NSMakeRange(GUI_ROW_STICKPROFILE,
-                                        i + start_row - GUI_ROW_STICKPROFILE));
+    gui->setSelectableRange(NSMakeRange(
+        GUI_ROW_STICKPROFILE,
+        i + static_cast<std::size_t>(start_row) - GUI_ROW_STICKPROFILE));
   }
 }
 
@@ -858,16 +872,20 @@ std::vector<oo::PList> PlayerEntity::stickFunctionList() {
     for (i = 0; static_cast<std::size_t>(i) < customEquipActivation.size();
          i++) {
       funcList.push_back(makeStickGuiDict(
-          std::format("{} '{}'", OO_DESC("stickmapper-cust-activate").c_str(),
-                      OptionalStringForKey(customEquipActivation[i],
-                                           CUSTOMEQUIP_EQUIPNAME)
-                          .value_or("(null)")),
+          std::format(
+              "{} '{}'", OO_DESC("stickmapper-cust-activate").c_str(),
+              OptionalStringForKey(
+                  customEquipActivation[static_cast<unsigned long long>(i)],
+                  CUSTOMEQUIP_EQUIPNAME)
+                  .value_or("(null)")),
           HW_BUTTON, STICK_NOFUNCTION, (i + 10000)));
       funcList.push_back(makeStickGuiDict(
-          std::format("{} '{}'", OO_DESC("stickmapper-cust-mode").c_str(),
-                      OptionalStringForKey(customEquipActivation[i],
-                                           CUSTOMEQUIP_EQUIPNAME)
-                          .value_or("(null)")),
+          std::format(
+              "{} '{}'", OO_DESC("stickmapper-cust-mode").c_str(),
+              OptionalStringForKey(
+                  customEquipActivation[static_cast<unsigned long long>(i)],
+                  CUSTOMEQUIP_EQUIPNAME)
+                  .value_or("(null)")),
           HW_BUTTON, STICK_NOFUNCTION, (i + 20000)));
     }
   }

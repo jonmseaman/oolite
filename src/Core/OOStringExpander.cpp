@@ -75,8 +75,9 @@ bool HasSuffix(const OOUnits& string, std::u16string_view suffix);
 #define WARNINGS 0
 #endif
 
-#define OO_EXPANDER_RANDOM \
-  (context->useGoodRNG ? (Ranrot() & 0xFF) : gen_rnd_number())
+#define OO_EXPANDER_RANDOM                 \
+  (context->useGoodRNG ? (Ranrot() & 0xFF) \
+                       : static_cast<unsigned>(gen_rnd_number()))
 
 /*
         Total stack limit for strings being parsed (in UTF-16 code elements,
