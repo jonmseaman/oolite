@@ -124,7 +124,7 @@ constexpr std::string_view kOOLogSyntaxSubtract =
 constexpr std::string_view kOOLogRemoveAllCargoNotDocked =
     "script.error.removeAllCargo.notDocked";
 
-#define ACTIONS_TEMP_PREFIX "__oolite_actions_temp"
+constexpr char ACTIONS_TEMP_PREFIX[] = "__oolite_actions_temp";
 
 namespace {
 constexpr const char* kActionTempPrefix = ACTIONS_TEMP_PREFIX;
