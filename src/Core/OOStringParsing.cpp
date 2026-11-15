@@ -188,12 +188,12 @@ Random_Seed RandomSeedFromString(
   if (error.empty() && i < 6) error = "found less than six int values.";
 
   if (error.empty()) {
-    result.a = abcdef[0];
-    result.b = abcdef[1];
-    result.c = abcdef[2];
-    result.d = abcdef[3];
-    result.e = abcdef[4];
-    result.f = abcdef[5];
+    result.a = static_cast<uint8_t>(abcdef[0]);
+    result.b = static_cast<uint8_t>(abcdef[1]);
+    result.c = static_cast<uint8_t>(abcdef[2]);
+    result.d = static_cast<uint8_t>(abcdef[3]);
+    result.e = static_cast<uint8_t>(abcdef[4]);
+    result.f = static_cast<uint8_t>(abcdef[5]);
   } else {
     OO_LOG_ERR("strings.conversion.randomSeed",
                "cannot make Random_Seed from '{}': {}",

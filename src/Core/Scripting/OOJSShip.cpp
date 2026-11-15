@@ -1566,7 +1566,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kFuel:
       if ((JS_ToFloat64(context, &fValue, value) == 0)) {
         fValue = OOClamp_0_max_d(fValue, MAX_JUMP_RANGE);
-        ship->setFuel(lround(fValue * 10.0));
+        ship->setFuel(static_cast<OOFuelQuantity>(lround(fValue * 10.0)));
         return JS_UNDEFINED;
       }
       break;
@@ -1583,7 +1583,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
               ENTITY_PERSONALITY_MAX);
           return OOJSNativeFailure(context);
         }
-        ship->setEntityPersonalityInt(iValue);
+        ship->setEntityPersonalityInt(static_cast<uint16_t>(iValue));
         return JS_UNDEFINED;
       }
       [[fallthrough]];  // as upstream: a value that is not an int32 is tried as
@@ -1625,7 +1625,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kDestinationSystem:
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue < 0) iValue = 0;
-        ship->setDestinationSystem(iValue);
+        ship->setDestinationSystem(static_cast<OOSystemID>(iValue));
         return JS_UNDEFINED;
       }
       break;
@@ -1633,7 +1633,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kHomeSystem:
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue < 0) iValue = 0;
-        ship->setHomeSystem(iValue);
+        ship->setHomeSystem(static_cast<OOSystemID>(iValue));
         return JS_UNDEFINED;
       }
       break;
@@ -2129,7 +2129,7 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
               MAX_ESCORTS);
           return OOJSNativeFailure(context);
         }
-        ship->setMaxEscortCount(iValue);
+        ship->setMaxEscortCount(static_cast<uint8_t>(iValue));
         return JS_UNDEFINED;
       }
 
@@ -3562,7 +3562,7 @@ static JSValue ShipExitSystem(OOJS_NATIVE_ARGS) {
   }
 
   OK = ship->performHyperSpaceToSpecificSystem(
-      systemID);  // -1 == random destination system
+      static_cast<OOSystemID>(systemID));  // -1 == random destination system
 
   OOJS_RETURN_BOOL(OK);
 

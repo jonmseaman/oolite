@@ -295,7 +295,7 @@ void OOSDLJoystickManager::decodeHatEvent(SDL_JoyHatEvent* evt) {
     if ((evt->value ^ hatstate[evt->which][evt->hat]) & (1 << i)) {
       btn.type = (evt->value & (1 << i)) ? SDL_EVENT_JOYSTICK_BUTTON_DOWN
                                          : SDL_EVENT_JOYSTICK_BUTTON_UP;
-      btn.button = MAX_REAL_BUTTONS + i + evt->which * 4;
+      btn.button = static_cast<Uint8>(MAX_REAL_BUTTONS + i + evt->which * 4);
       btn.down = (evt->value & (1 << i));
       decodeButtonEvent(&btn);
     }

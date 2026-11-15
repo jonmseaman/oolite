@@ -253,7 +253,8 @@ static JSValue SoundSourceSetProperty(OOJS_SETTER_ARGS) {
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue > 100) iValue = 100;
         if (100 < 1) iValue = 1;
-        if (soundSource != nullptr) soundSource->setRepeatCount(iValue);
+        if (soundSource != nullptr)
+          soundSource->setRepeatCount(static_cast<uint8_t>(iValue));
         return JS_UNDEFINED;
       }
       break;
@@ -320,7 +321,7 @@ static JSValue SoundSourcePlay(OOJS_NATIVE_ARGS) {
 
   if (count > 0) {
     if (count > 100) count = 100;
-    if (thisv != nullptr) thisv->setRepeatCount(count);
+    if (thisv != nullptr) thisv->setRepeatCount(static_cast<uint8_t>(count));
   }
 
   OOJS_BEGIN_FULL_NATIVE(context)

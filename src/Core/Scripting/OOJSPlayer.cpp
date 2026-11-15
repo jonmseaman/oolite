@@ -799,9 +799,9 @@ static JSValue PlayerSetEscapePodDestination(JSContext* context,
           // at the end of the docking sequence we'll check if the target system
           // is the same as the system we're in...
           if (player != nullptr)
-            player->PlayerEntity::setTargetSystemID(
-                i);  // qualified: the final overrider, so the binding test
-                     // stands in for it
+            player->PlayerEntity::setTargetSystemID(static_cast<OOSystemID>(
+                i));  // qualified: the final overrider, so the binding test
+                      // stands in for it
         }
         OK = true;
       }

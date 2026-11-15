@@ -1186,7 +1186,8 @@ oo::PList PlayerEntity::systemGovernment_string() {
   int government = IntValueOf(
       systemGovernment_number());  // 0 .. 7 (0 anarchic .. 7 most stable)
   return oo::PList(
-      OODisplayStringFromGovernmentID(government).value_or("UNKNOWN"));
+      OODisplayStringFromGovernmentID(static_cast<OOGovernmentID>(government))
+          .value_or("UNKNOWN"));
 }
 
 oo::PList PlayerEntity::systemGovernment_number() {
@@ -1199,7 +1200,9 @@ oo::PList PlayerEntity::systemEconomy_string() {
   int economy =
       IntValueOf(systemEconomy_number());  // 0 .. 7 (0 rich industrial .. 7
                                            // poor agricultural)
-  return oo::PList(OODisplayStringFromEconomyID(economy).value_or("UNKNOWN"));
+  return oo::PList(
+      OODisplayStringFromEconomyID(static_cast<OOEconomyID>(economy))
+          .value_or("UNKNOWN"));
 }
 
 oo::PList PlayerEntity::systemEconomy_number() {
@@ -1403,9 +1406,9 @@ void PlayerEntity::setSpecificPlanetInfo(const std::string& key_valueString) {
   const std::string valueString = TrimWhitespace(tokens[3]);
 
   if (UNIVERSE != nullptr)
-    UNIVERSE->setSystemDataForGalaxy(gnum, pnum, keyString,
-                                     oo::PList(valueString), std::string(),
-                                     OOSystemLayer::kOXPDynamic);
+    UNIVERSE->setSystemDataForGalaxy(
+        static_cast<OOGalaxyID>(gnum), static_cast<OOSystemID>(pnum), keyString,
+        oo::PList(valueString), std::string(), OOSystemLayer::kOXPDynamic);
 }
 
 void PlayerEntity::awardCargo(const std::string& amount_typeString) {
@@ -1529,7 +1532,8 @@ void PlayerEntity::awardFuel(const std::string& valueString) {
     if (::scriptTarget != nullptr) ::scriptTarget->setFuel(0);
   } else {
     if (::scriptTarget != nullptr)
-      ::scriptTarget->setFuel((scriptTargetFuelBeforeAward + delta));
+      ::scriptTarget->setFuel(
+          (static_cast<OOFuelQuantity>(scriptTargetFuelBeforeAward + delta)));
   }
 }
 
@@ -2205,7 +2209,7 @@ void PlayerEntity::addMissionDestination(const std::string& destinations) {
     const int dest = oo::str::intValue(token);  // -oo_intAtIndex: of the token
     if (dest < 0 || dest > 255) continue;
 
-    addMissionDestinationMarker(defaultMarker(dest));
+    addMissionDestinationMarker(defaultMarker(static_cast<OOSystemID>(dest)));
   }
 }
 
@@ -2215,7 +2219,8 @@ void PlayerEntity::removeMissionDestination(const std::string& destinations) {
     const int dest = oo::str::intValue(token);
     if (dest < 0 || dest > 255) continue;
 
-    removeMissionDestinationMarker(defaultMarker(dest));
+    removeMissionDestinationMarker(
+        defaultMarker(static_cast<OOSystemID>(dest)));
   }
 }
 

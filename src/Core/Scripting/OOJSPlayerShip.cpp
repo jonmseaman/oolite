@@ -1258,7 +1258,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
 
         if (OOJSValueToInt32(context, value, &iValue)) {
           if (iValue >= 0 && iValue < OO_SYSTEMS_PER_GALAXY) {
-            if (player != nullptr) player->setTargetSystemID(iValue);
+            if (player != nullptr)
+              player->setTargetSystemID(static_cast<OOSystemID>(iValue));
             return JS_UNDEFINED;
           } else {
             return OOJSNativeFailure(context);
@@ -1279,7 +1280,8 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
     case kInfoSystem:
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue >= 0 && iValue < OO_SYSTEMS_PER_GALAXY) {
-          if (player != nullptr) player->setInfoSystemID(iValue, true);
+          if (player != nullptr)
+            player->setInfoSystemID(static_cast<OOSystemID>(iValue), true);
           return JS_UNDEFINED;
         } else {
           return OOJSNativeFailure(context);
@@ -2246,7 +2248,7 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
                            &argv[offset + 0], std::nullopt, "system ID");
     return false;
   }
-  *start = iValue;
+  *start = static_cast<OOSystemID>(iValue);
 
   if (!OOJSValueToInt32(context, argv[offset + 1], &iValue) || iValue < 0 ||
       iValue > kOOMaximumSystemID) {
@@ -2254,7 +2256,7 @@ static bool ValidateContracts(JSContext* context, int argc, JSValueConst* argv,
                            &argv[offset + 1], std::nullopt, "system ID");
     return false;
   }
-  *destination = iValue;
+  *destination = static_cast<OOSystemID>(iValue);
 
   if (JS_ToFloat64(context, &fValue, argv[offset + 2]) != 0 ||
       !isfinite(fValue) ||

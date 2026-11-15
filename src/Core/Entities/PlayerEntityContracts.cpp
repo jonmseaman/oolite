@@ -102,9 +102,11 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
   const oo::PList* governmentValue = systemData.find(KEY_GOVERNMENT);
   OOGovernmentID government = 0;
   if (governmentValue != nullptr && governmentValue->isString())
-    government = oo::str::intValue(*governmentValue->getIf<std::string>());
+    government = static_cast<OOGovernmentID>(
+        oo::str::intValue(*governmentValue->getIf<std::string>()));
   else if (governmentValue != nullptr)
-    government = static_cast<int>(governmentValue->int64Value());
+    government = static_cast<OOGovernmentID>(
+        static_cast<int>(governmentValue->int64Value()));
   if ((UNIVERSE != nullptr ? UNIVERSE->inInterstellarSpace() : false))
     government = 1;  // equivalent to Feudal. I'm assuming any station in
                      // interstellar space is military. -- Ahruman 2008-05-29
@@ -243,8 +245,9 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
     int dest = passenger_info.get<int>(CONTRACT_KEY_DESTINATION);
     // the system name can change via script
     const std::optional<std::string> passenger_dest_name =
-        (UNIVERSE != nullptr ? UNIVERSE->getSystemName(dest)
-                             : std::optional<std::string>());
+        (UNIVERSE != nullptr
+             ? UNIVERSE->getSystemName(static_cast<OOSystemID>(dest))
+             : std::optional<std::string>());
     int dest_eta =
         passenger_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
 
@@ -1158,9 +1161,10 @@ std::vector<std::string> PlayerEntity::contractsListFromEntries(
     // the system name can change via script. The following PASSENGER_KEYs are
     // identical to the corresponding CONTRACT_KEYs
     const std::optional<std::string> destination =
-        (UNIVERSE != nullptr ? UNIVERSE->getSystemName(contract_info.get<int>(
-                                   CONTRACT_KEY_DESTINATION))
-                             : std::optional<std::string>());
+        (UNIVERSE != nullptr
+             ? UNIVERSE->getSystemName(static_cast<OOSystemID>(
+                   contract_info.get<int>(CONTRACT_KEY_DESTINATION)))
+             : std::optional<std::string>());
     int dest_eta =
         contract_info.get<double>(CONTRACT_KEY_ARRIVAL_TIME) - ship_clock;
     const std::optional<std::string> deadline =

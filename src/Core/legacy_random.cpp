@@ -50,7 +50,7 @@ int16_t munge_checksum(std::int64_t value_) {
   checksum *= mult1;
   checksum += mult1;
   checksum &= 0xffff;
-  return checksum;
+  return static_cast<int16_t>(checksum);
 }
 
 // cunning price rounding routine:
@@ -246,12 +246,12 @@ void OORestoreRandomState(OORandomState state) {
 }
 
 void make_pseudo_random_seed(Random_Seed* seed_ptr) {
-  seed_ptr->a = gen_rnd_number();
-  seed_ptr->b = gen_rnd_number();
-  seed_ptr->c = gen_rnd_number();
-  seed_ptr->d = gen_rnd_number();
-  seed_ptr->e = gen_rnd_number();
-  seed_ptr->f = gen_rnd_number();
+  seed_ptr->a = static_cast<uint8_t>(gen_rnd_number());
+  seed_ptr->b = static_cast<uint8_t>(gen_rnd_number());
+  seed_ptr->c = static_cast<uint8_t>(gen_rnd_number());
+  seed_ptr->d = static_cast<uint8_t>(gen_rnd_number());
+  seed_ptr->e = static_cast<uint8_t>(gen_rnd_number());
+  seed_ptr->f = static_cast<uint8_t>(gen_rnd_number());
 }
 
 void rotate_seed(Random_Seed* seed_ptr) {
@@ -274,6 +274,6 @@ void rotate_seed(Random_Seed* seed_ptr) {
   seed_ptr->c = seed_ptr->e;
   seed_ptr->d = seed_ptr->f;
 
-  seed_ptr->e = x;
-  seed_ptr->f = y + (x >> 8);
+  seed_ptr->e = static_cast<uint8_t>(x);
+  seed_ptr->f = static_cast<uint8_t>(y + (x >> 8));
 }

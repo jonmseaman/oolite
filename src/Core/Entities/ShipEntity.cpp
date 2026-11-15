@@ -1328,7 +1328,8 @@ bool ShipEntity::setUpOneStandardSubentity(const oo::PList& subentDict,
     subentity->setReference(vector_forward_from_quaternion(subOrientation));
   // subentities inherit parent personality
   if (subentity != nullptr)
-    subentity->setEntityPersonalityInt(entityPersonalityInt());
+    subentity->setEntityPersonalityInt(
+        static_cast<uint16_t>(entityPersonalityInt()));
 
   if (asTurret) {
     if (subentity != nullptr)
@@ -1949,8 +1950,8 @@ void ShipEntity::setUpEscorts() {
   refreshEscortPositions();
 
   uint8_t currentEscortCount =
-      (escortGroup != nullptr ? escortGroup->count() : 0) -
-      1;  // always at least 0.
+      static_cast<uint8_t>((escortGroup != nullptr ? escortGroup->count() : 0) -
+                           1);  // always at least 0.
 
   while (_pendingEscortCount > 0 &&
          (isThargoid() || currentEscortCount < _maxEscortCount)) {
@@ -1969,8 +1970,8 @@ void ShipEntity::setUpEscorts() {
     escorter.reset();
 
     _pendingEscortCount--;
-    currentEscortCount =
-        (escortGroup != nullptr ? escortGroup->count() : 0) - 1;
+    currentEscortCount = static_cast<uint8_t>(
+        (escortGroup != nullptr ? escortGroup->count() : 0) - 1);
   }
   // done assigning escorts
   _pendingEscortCount = 0;
@@ -2001,8 +2002,8 @@ void ShipEntity::setUpMixedEscorts() {
   refreshEscortPositions();
 
   uint8_t currentEscortCount =
-      (escortGroup != nullptr ? escortGroup->count() : 0) -
-      1;  // always at least 0
+      static_cast<uint8_t>((escortGroup != nullptr ? escortGroup->count() : 0) -
+                           1);  // always at least 0
 
   _maxEscortCount = 0;
   int8_t i = 0;
@@ -2013,8 +2014,8 @@ void ShipEntity::setUpMixedEscorts() {
     }
     // int rather than uint because, at least for min, there is a
     // use to giving a negative value
-    int8_t min = escortDefinition.get<int>("min", 0);
-    int8_t max = escortDefinition.get<int>("max", 2);
+    int8_t min = static_cast<int8_t>(escortDefinition.get<int>("min", 0));
+    int8_t max = static_cast<int8_t>(escortDefinition.get<int>("max", 2));
     const std::string escortRole =
         escortDefinition.get<std::string>("role", "escort");
     int8_t desired = max;
@@ -2618,7 +2619,8 @@ void ShipEntity::update(OOTimeDelta delta_t) {
       for (const auto& [other_key, other_position] : closeContactsTemp) {
         ::ShipEntity* other = oo::ToShip(
             (UNIVERSE != nullptr
-                 ? UNIVERSE->entityForUniversalID(IntValueOfKey(other_key))
+                 ? UNIVERSE->entityForUniversalID(
+                       static_cast<OOUniversalID>(IntValueOfKey(other_key)))
                  : nullptr));
         if ((other != nullptr) && (other->isShip)) {
           if (HPdistance2(position, other->position) >
@@ -6835,7 +6837,7 @@ std::vector<oo::EntityHold> ShipEntity::escortArray() { return escorts(); }
 
 uint8_t ShipEntity::escortCount() {
   if (_escortGroup == nullptr) return 0;
-  return _escortGroup->count() - 1;
+  return static_cast<uint8_t>(_escortGroup->count() - 1);
 }
 
 uint8_t ShipEntity::pendingEscortCount() { return _pendingEscortCount; }
@@ -11718,7 +11720,8 @@ bool ShipEntity::launchCascadeMine() {
   for (i = 1; i < n_pods; i++) {
     ::ShipEntity* passenger = nullptr;
     passenger = launchPodWithCrew(std::vector<std::shared_ptr<OOCharacter>>{
-        OOCharacter::randomCharacterWithRole("passenger", gen_rnd_number())});
+        OOCharacter::randomCharacterWithRole(
+            "passenger", static_cast<OOSystemID>(gen_rnd_number()))});
     if (passengers.has_value()) passengers->emplace_back(oo::Hold(passenger));
   }
 
@@ -13510,12 +13513,14 @@ void ShipEntity::interpretAIMessage(const std::string& ms) {
     int switcher_id =
         oo::str::intValue(tokens[1]);  // Attacker that switched targets.
     Entity* switcher =
-        (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(switcher_id)
+        (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(
+                                   static_cast<OOUniversalID>(switcher_id))
                              : nullptr);  // the C++ entity
     int rescuer_id =
         oo::str::intValue(tokens[2]);  // New primary target of attacker.
     Entity* rescuer =
-        (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(rescuer_id)
+        (UNIVERSE != nullptr ? UNIVERSE->entityForUniversalID(
+                                   static_cast<OOUniversalID>(rescuer_id))
                              : nullptr);
     if ((switcher == primaryAggressor()) && (switcher == primaryTarget()) &&
         (switcher) && (rescuer) && (rescuer->isShip) &&

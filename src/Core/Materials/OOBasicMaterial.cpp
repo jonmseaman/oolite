@@ -102,7 +102,7 @@ void OOBasicMaterial::initWithName(const std::optional<std::string>& name,
   specularExponent = OOMaterialSpecularExponent(config);
   if (specularExponent != 0 && permitSpecular()) {
     colorDesc = OOMaterialSpecularColor(config);
-    setShininess(specularExponent);
+    setShininess(static_cast<uint8_t>(specularExponent));
     if (colorDesc != nullptr) setSpecularColor(colorDesc.get());
   }
 }

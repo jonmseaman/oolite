@@ -197,8 +197,8 @@ void OOCharacter::basicSetUp() {
                            : oo::PList());
   const std::optional<std::string> planet =
       OptionalStringForKey(originInfo, KEY_NAME);
-  OOGovernmentID government = originInfo.get<int>(
-      KEY_GOVERNMENT);  // 0 .. 7 (0 anarchic .. 7 most stable)
+  OOGovernmentID government = static_cast<OOGovernmentID>(originInfo.get<int>(
+      KEY_GOVERNMENT));  // 0 .. 7 (0 anarchic .. 7 most stable)
   int criminalTendency = government ^ 0x07;
 
   // determine the character's species
@@ -439,7 +439,7 @@ void OOCharacter::setCharacterFromDictionary(const oo::PList& dict) {
   if ((origin != nullptr && origin->isNumber()) ||
       ((originName != nullptr) && (originValue != 0 || *originName == "0"))) {
     // Number or numerical string
-    setOriginSystem(originValue);
+    setOriginSystem(static_cast<OOSystemID>(originValue));
   } else if (originName != nullptr) {
     OOSystemID sys =
         (UNIVERSE != nullptr ? UNIVERSE->findSystemFromName(*originName) : 0);

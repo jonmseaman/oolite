@@ -466,7 +466,7 @@ static void ScaleToHalf_1_x1(void* srcBytes, void* dstBytes,
       sum >>= 2;
 
       // ...and write output pixel.
-      *dst++ = sum;
+      *dst++ = static_cast<uint8_t>(sum);
     } while (--x);
 
     // Skip a row for each source row
@@ -682,7 +682,7 @@ static void ScaleToHalf_2_x1(void* srcBytes, void* dstBytes,
       sumLo = ((sumHi & 0x3FC00) | sumLo) >> 2;
 
       // ...and write output pixel.
-      *dst++ = sumLo;
+      *dst++ = static_cast<uint16_t>(sumLo);
     } while (--x);
 
     // Skip a row for each source row
@@ -1292,7 +1292,7 @@ static void SqueezeHorizontally1(OOPixMap srcPx, OOPixMapDimension dstWidth) {
         }
       }
 
-      *dst++ = accum / weight;
+      *dst++ = static_cast<uint8_t>(accum / weight);
     }
 
     srcStart = reinterpret_cast<uint8_t*>(reinterpret_cast<char*>(srcStart) +
@@ -1361,7 +1361,7 @@ static void SqueezeVertically1(OOPixMap srcPx, OOPixMapDimension dstHeight) {
         }
       }
 
-      *dst++ = accum / weight;
+      *dst++ = static_cast<uint8_t>(accum / weight);
     }
   }
 }

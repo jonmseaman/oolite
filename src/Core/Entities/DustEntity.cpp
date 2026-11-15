@@ -93,8 +93,8 @@ void DustEntity::init() {
     vertices[vi].z = (ranrot_rand() % DUST_SCALE) - DUST_SCALE / 2;
 
     // Set up element index array for warp mode.
-    indices[vi * 2] = vi;
-    indices[vi * 2 + 1] = vi + DUST_N_PARTICLES;
+    indices[vi * 2] = static_cast<GLushort>(vi);
+    indices[vi * 2 + 1] = static_cast<GLushort>(vi + DUST_N_PARTICLES);
 
 #if OO_SHADERS
     vertices[vi + DUST_N_PARTICLES] = vertices[vi];
