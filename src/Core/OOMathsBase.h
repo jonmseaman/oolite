@@ -71,18 +71,3 @@ using OOHPScalar = double;
 #define M_SQRT1_2 0.70710678118654752440 /* 1/sqrt(2) */
 #endif
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#if !defined(ABS)
-#define ABS(A)               \
-  ({                         \
-    __typeof__(A) __a = (A); \
-    __a < 0 ? -__a : __a;    \
-  })
-#endif
-#else
-/* These definitions are unsafe in that the "winning" expression is evaluated
- * twice. */
-#if !defined(ABS)
-#define ABS(A) ((A) < 0 ? (-(A)) : (A))
-#endif
-#endif
