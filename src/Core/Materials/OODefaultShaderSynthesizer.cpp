@@ -1382,7 +1382,7 @@ oo::PList CanonicalizeMaterialSpecifier(
 }
 
 std::string FormatFloat(double value) {
-  std::int64_t intValue = value;
+  std::int64_t intValue = static_cast<std::int64_t>(value);
   if (value == intValue) {
     return std::format("{}.0", intValue);
   } else {

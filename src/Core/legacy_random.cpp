@@ -60,12 +60,14 @@ double cunningFee(double value, double precision) {
   double superfee = 100000.0;
   double max = 1 + precision;
   double min = 1 - precision;
-  std::uint64_t rounded_fee = superfee * floor(0.5 + fee / superfee);
+  std::uint64_t rounded_fee =
+      static_cast<std::uint64_t>(superfee * floor(0.5 + fee / superfee));
   if (rounded_fee == 0) rounded_fee = 1;
   double ratio = fee / static_cast<double>(rounded_fee);
 
   while ((ratio < min || ratio > max) && superfee > 1) {
-    rounded_fee = superfee * floor(0.5 + fee / superfee);
+    rounded_fee =
+        static_cast<std::uint64_t>(superfee * floor(0.5 + fee / superfee));
     if (rounded_fee == 0) rounded_fee = 1;
     ratio = fee / static_cast<double>(rounded_fee);
     superfee /= 10.0;

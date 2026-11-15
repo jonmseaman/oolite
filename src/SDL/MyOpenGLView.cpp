@@ -192,9 +192,10 @@ void MyOpenGLView::createWindowWithSize(NSSize size) {
   SDL_PropertiesID props = SDL_CreateProperties();
   SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING,
                         windowCaption.c_str());
-  SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, size.width);
+  SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER,
+                        static_cast<Sint64>(size.width));
   SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER,
-                        size.height);
+                        static_cast<Sint64>(size.height));
   SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER,
                         windowFlags);
 
@@ -602,7 +603,8 @@ void MyOpenGLView::updateGLSize(NSSize size) {
   float ratio = 0.5;
   float aspect = bounds.size.height / bounds.size.width;
 
-  OOGL(glViewport(0, 0, bounds.size.width, bounds.size.height));
+  OOGL(glViewport(0, 0, static_cast<GLsizei>(bounds.size.width),
+                  static_cast<GLsizei>(bounds.size.height)));
   OOGLResetProjection();
   OOGLFrustum(-ratio, ratio, -aspect * ratio, aspect * ratio, 1.0,
               MAX_CLEAR_DEPTH);
@@ -660,7 +662,8 @@ void MyOpenGLView::initialiseGLWithSize(NSSize v_size) {
   SDL_SetWindowFullscreen(window, fullScreen);
 
   if (!fullScreen) {
-    SDL_SetWindowSize(window, viewSize.width, viewSize.height);
+    SDL_SetWindowSize(window, static_cast<int>(viewSize.width),
+                      static_cast<int>(viewSize.height));
     SDL_SetWindowBordered(window, true);
   }
 #if OOLITE_WINDOWS
@@ -749,7 +752,8 @@ void MyOpenGLView::initSplashScreen() {
     pixelDensity = 1.0f;
   }
 
-  glViewport(0, 0, dest.w * pixelDensity, dest.h * pixelDensity);
+  glViewport(0, 0, static_cast<GLsizei>(dest.w * pixelDensity),
+             static_cast<GLsizei>(dest.h * pixelDensity));
 
   glEnable(GL_TEXTURE_2D);
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

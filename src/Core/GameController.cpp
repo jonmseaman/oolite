@@ -876,8 +876,8 @@ void GameController::setUpDisplayModes() {
   } else {
     NSSize fsmSize =
         (_gameView != nullptr ? _gameView->currentScreenSize() : NSSize{});
-    width = fsmSize.width;
-    height = fsmSize.height;
+    width = static_cast<unsigned int>(fsmSize.width);
+    height = static_cast<unsigned int>(fsmSize.height);
   }
 }
 

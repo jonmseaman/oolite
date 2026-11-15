@@ -747,7 +747,7 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace,
         "DEBUG: {} Jumping {:f} which is further than allowed.  I have {} fuel",
         oo::EntityDescription(this), dist, fuel);
   }
-  fuel -= 10 * dist;
+  fuel = static_cast<OOFuelQuantity>(fuel - (10 * dist));
 
   // create wormhole
   // A new C++ wormhole.
@@ -1122,7 +1122,7 @@ void ShipEntity::scanForLoot() {
       return;
     }
   } else {
-    if (magnitude2(getVelocity())) {
+    if (static_cast<bool>(magnitude2(getVelocity()))) {
       if (shipAI != nullptr)
         shipAI->message(
             "NOTHING_FOUND");  // can't collect loot if you're a moving station
@@ -1700,7 +1700,9 @@ void ShipEntity::commsMessageByUnpiloted(const std::string& valueString) {
 }
 
 void ShipEntity::ejectCargo() {
-  OOCargoQuantity i, cargo_to_go = 0.1 * maxAvailableCargoSpace();
+  OOCargoQuantity i,
+      cargo_to_go =
+          static_cast<OOCargoQuantity>(0.1 * maxAvailableCargoSpace());
   while (cargo_to_go > 15) {
     cargo_to_go = ranrot_rand() % cargo_to_go;
   }
@@ -1962,7 +1964,8 @@ void ShipEntity::setPlanetPatrolCoordinates() {
     HPVector stn_pos = the_station->position;
     HPVector sun_dir = HPvector_subtract(sun_pos, stn_pos);
     Vector vSun = make_vector(0, 0, 1);
-    if (sun_dir.x || sun_dir.y || sun_dir.z)
+    if (static_cast<bool>(sun_dir.x) || static_cast<bool>(sun_dir.y) ||
+        static_cast<bool>(sun_dir.z))
       vSun = HPVectorToVector(HPvector_normal(sun_dir));
     Vector v0 =
         (the_station != nullptr ? the_station->forwardVector() : Vector{});
@@ -2060,7 +2063,8 @@ void ShipEntity::setSunSkimExitCoordinates() {
                            : HPVector{});
   HPVector vs = the_sun->position;
   HPVector vout = HPvector_subtract(v1, vs);
-  if (vout.x || vout.y || vout.z)
+  if (static_cast<bool>(vout.x) || static_cast<bool>(vout.y) ||
+      static_cast<bool>(vout.z))
     vout = HPvector_normal(vout);
   else
     vout.z = 1.0;

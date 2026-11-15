@@ -363,8 +363,8 @@ void MyOpenGLView::pollControls() {
           // mouse pointer.
           mmove_event = reinterpret_cast<SDL_MouseMotionEvent*>(&event);
 
-          int w = viewSize.width;
-          int h = viewSize.height;
+          int w = static_cast<int>(viewSize.width);
+          int h = static_cast<int>(viewSize.height);
 
           if (!mouseWarped) {
             // standard event, handle it

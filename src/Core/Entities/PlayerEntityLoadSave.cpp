@@ -1415,7 +1415,7 @@ OOCreditsQuantity OODeciCreditsFromDouble(double doubleDeciCredits) {
     double threshold = nextafter(kOOMaxCredits, -1);
 
     if (doubleDeciCredits <= threshold) {
-      return doubleDeciCredits;
+      return static_cast<OOCreditsQuantity>(doubleDeciCredits);
     } else {
       return kOOMaxCredits;
     }

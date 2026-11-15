@@ -588,7 +588,7 @@ oo::PList StationEntity::launchPolice() {
     //**Lazygun** added 30 Nov 04 to put a bounty on those pirates' heads.
     if (pirate_ship != nullptr)
       pirate_ship->setBounty(
-          10 + floor(randf() * 20),
+          static_cast<OOCreditsQuantity>(10 + floor(randf() * 20)),
           OOLegalStatusReason::kSetup);  // modified for variety
 
     addShipToLaunchQueue(pirate_ship.get(), false);
@@ -2148,7 +2148,7 @@ void StationEntity::takeEnergyDamage(double amount, Entity* entPart,
       if ((oo::ToShip(other) != nullptr ? oo::ToShip(other)->getBounty() : 0) >=
           b) {
         // already a hardened criminal?
-        b *= 1.5;  // bigger bounty!
+        b = static_cast<unsigned int>(b * (1.5));  // bigger bounty!
       }
       if (oo::ToShip(other) != nullptr)
         oo::ToShip(other)->markAsOffender(

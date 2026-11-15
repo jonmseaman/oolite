@@ -135,7 +135,8 @@ float OOPlanetDrawable::levelOfDetail() {
 }
 
 void OOPlanetDrawable::setLevelOfDetail(float lod) {
-  _lod = roundf(OOClamp_0_1_f(lod) * LOD_GRANULARITY);
+  _lod =
+      static_cast<unsigned int>(roundf(OOClamp_0_1_f(lod) * LOD_GRANULARITY));
 }
 
 void OOPlanetDrawable::calculateLevelOfDetailForViewDistance(float distance) {

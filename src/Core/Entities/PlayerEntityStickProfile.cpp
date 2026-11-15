@@ -560,7 +560,7 @@ void StickProfileScreen::showScreen() {
                   GUI_ROW_STICKPROFILE_POWER);
     gui->setKey(std::string(GUI_KEY_OK), GUI_ROW_STICKPROFILE_POWER);
     value = standard_profile->parameter();
-    bars = 20 * value;
+    bars = static_cast<int>(20 * value);
     if (bars < 0) bars = 0;
     if (bars > 20) bars = 20;
     gui->setArray(

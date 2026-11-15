@@ -684,8 +684,8 @@ GLfloat Entity::getMaxEnergy() { return maxEnergy; }
 void Entity::applyRoll(GLfloat roll, GLfloat climb) {
   if ((roll == 0.0) && (climb == 0.0) && (!hasRotated)) return;
 
-  if (roll) quaternion_rotate_about_z(&orientation, -roll);
-  if (climb) quaternion_rotate_about_x(&orientation, -climb);
+  if (static_cast<bool>(roll)) quaternion_rotate_about_z(&orientation, -roll);
+  if (static_cast<bool>(climb)) quaternion_rotate_about_x(&orientation, -climb);
 
   orientationChanged();
 }
@@ -693,9 +693,9 @@ void Entity::applyRoll(GLfloat roll, GLfloat climb) {
 void Entity::applyRoll(GLfloat roll, GLfloat climb, GLfloat yaw) {
   if ((roll == 0.0) && (climb == 0.0) && (yaw == 0.0) && (!hasRotated)) return;
 
-  if (roll) quaternion_rotate_about_z(&orientation, -roll);
-  if (climb) quaternion_rotate_about_x(&orientation, -climb);
-  if (yaw) quaternion_rotate_about_y(&orientation, -yaw);
+  if (static_cast<bool>(roll)) quaternion_rotate_about_z(&orientation, -roll);
+  if (static_cast<bool>(climb)) quaternion_rotate_about_x(&orientation, -climb);
+  if (static_cast<bool>(yaw)) quaternion_rotate_about_y(&orientation, -yaw);
 
   orientationChanged();
 }

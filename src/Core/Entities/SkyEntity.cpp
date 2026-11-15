@@ -115,29 +115,31 @@ void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In,
   scale = systemInfo.get<float>("sky_blur_scale", SKY_scale);
 
   // Load star count
-  starCount = systemInfo.get<float>("sky_n_stars", -1);
+  starCount = static_cast<int>(systemInfo.get<float>("sky_n_stars", -1));
   starCountMultiplier = systemInfo.get<float>("star_count_multiplier", 1.0f);
   if (starCountMultiplier < 0.0f) starCountMultiplier *= -1.0f;
   if (0 <= starCount) {
     // changed for 1.82, default set to 1
     // lets OXPers modify the broad number without stopping variation
-    starCount *= starCountMultiplier;
+    starCount = static_cast<int>(starCount * (starCountMultiplier));
   } else {
-    starCount = starCountMultiplier * SKY_BASIS_STARS * (0.5 + randf());
+    starCount = static_cast<int>(starCountMultiplier * SKY_BASIS_STARS *
+                                 (0.5 + randf()));
   }
 
   // ...and nebula count. (Note: simplifying this would change the appearance of
   // stars/blobs.)
-  nebulaCount = systemInfo.get<float>("sky_n_blurs", -1);
+  nebulaCount = static_cast<int>(systemInfo.get<float>("sky_n_blurs", -1));
   nebulaCountMultiplier =
       systemInfo.get<float>("nebula_count_multiplier", 1.0f);
   if (nebulaCountMultiplier < 0.0f) nebulaCountMultiplier *= -1.0f;
   if (0 <= nebulaCount) {
     // changed for 1.82, default set to 1
     // lets OXPers modify the broad number without stopping variation
-    nebulaCount *= nebulaCountMultiplier;
+    nebulaCount = static_cast<int>(nebulaCount * (nebulaCountMultiplier));
   } else {
-    nebulaCount = nebulaCountMultiplier * SKY_BASIS_BLOBS * (0.5 + randf());
+    nebulaCount = static_cast<int>(nebulaCountMultiplier * SKY_BASIS_BLOBS *
+                                   (0.5 + randf()));
   }
 
   if ((UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false)) {
