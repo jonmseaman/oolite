@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #include <array>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -44,30 +45,30 @@ MA 02110-1301, USA.
 #include "oofnd/PListGet.hpp"
 #include "oofnd/objc/OOAssert.h"
 
-constexpr char KEY_SHIP_KEY[] = "ship_key";
-constexpr char KEY_SHIPDATA_OVERRIDES[] = "shipdata_overrides";
-constexpr char KEY_SHIPDATA_DELETES[] = "shipdata_deletes";
-constexpr char KEY_PRIMARY_ROLE[] = "primary_role";
-constexpr char KEY_POSITION[] = "position";
-constexpr char KEY_ORIENTATION[] = "orientation";
-constexpr char KEY_ROLES[] = "roles";
-constexpr char KEY_FUEL[] = "fuel";
-constexpr char KEY_BOUNTY[] = "bounty";
-constexpr char KEY_ENERGY_LEVEL[] = "energy_level";
-constexpr char KEY_EQUIPMENT[] = "equipment";
-constexpr char KEY_MISSILES[] = "missiles";
-constexpr char KEY_FORWARD_WEAPON[] = "forward_weapon_type";
-constexpr char KEY_AFT_WEAPON[] = "aft_weapon_type";
-constexpr char KEY_SCAN_CLASS[] = "scan_class";
+constexpr std::string_view kKeyShipKey = "ship_key";
+constexpr std::string_view kKeyShipdataOverrides = "shipdata_overrides";
+constexpr std::string_view kKeyShipdataDeletes = "shipdata_deletes";
+constexpr std::string_view kKeyPrimaryRole = "primary_role";
+constexpr std::string_view kKeyPosition = "position";
+constexpr std::string_view kKeyOrientation = "orientation";
+constexpr std::string_view kKeyRoles = "roles";
+constexpr std::string_view kKeyFuel = "fuel";
+constexpr std::string_view kKeyBounty = "bounty";
+constexpr std::string_view kKeyEnergyLevel = "energy_level";
+constexpr std::string_view kKeyEquipment = "equipment";
+constexpr std::string_view kKeyMissiles = "missiles";
+constexpr std::string_view kKeyForwardWeapon = "forward_weapon_type";
+constexpr std::string_view kKeyAftWeapon = "aft_weapon_type";
+constexpr std::string_view kKeyScanClass = "scan_class";
 
 // AI is a complete pickled AI state.
-constexpr char KEY_AI[] = "AI";
+constexpr std::string_view kKeyAi = "AI";
 
 // Group IDs are numbers synchronised through the context object.
-constexpr char KEY_GROUP_ID[] = "group";
-constexpr char KEY_GROUP_NAME[] = "group_name";
-constexpr char KEY_IS_GROUP_LEADER[] = "is_group_leader";
-constexpr char KEY_ESCORT_GROUP_ID[] = "escort_group";
+constexpr std::string_view kKeyGroupId = "group";
+constexpr std::string_view kKeyGroupName = "group_name";
+constexpr std::string_view kKeyIsGroupLeader = "is_group_leader";
+constexpr std::string_view kKeyEscortGroupId = "escort_group";
 
 namespace {
 
@@ -92,7 +93,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   OOShipSaveContext localContext;
   if (context == nullptr) context = &localContext;
 
-  result[KEY_SHIP_KEY] =
+  result[std::string(kKeyShipKey)] =
       _shipKey.value_or(std::string());  // nil as "", as oo::StdString gave
 
   oo::PList::Dict updatedShipInfo = DictFrom(shipinfoDictionary);
@@ -102,40 +103,40 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   const std::shared_ptr<OORoleSet> roles = getRoleSet();
   if (const std::optional<std::string> roleString =
           (roles != nullptr) ? roles->roleString() : std::nullopt)
-    updatedShipInfo[KEY_ROLES] = *roleString;
-  updatedShipInfo[KEY_FUEL] = oo::PList::unsignedInteger(fuel);
-  updatedShipInfo[KEY_BOUNTY] = oo::PList::unsignedInteger(bounty);
-  updatedShipInfo[KEY_FORWARD_WEAPON] =
+    updatedShipInfo[std::string(kKeyRoles)] = *roleString;
+  updatedShipInfo[std::string(kKeyFuel)] = oo::PList::unsignedInteger(fuel);
+  updatedShipInfo[std::string(kKeyBounty)] = oo::PList::unsignedInteger(bounty);
+  updatedShipInfo[std::string(kKeyForwardWeapon)] =
       OOStringFromWeaponType(forward_weapon_type).value_or("");
-  updatedShipInfo[KEY_AFT_WEAPON] =
+  updatedShipInfo[std::string(kKeyAftWeapon)] =
       OOStringFromWeaponType(aft_weapon_type).value_or("");
-  updatedShipInfo[KEY_SCAN_CLASS] = OOStringFromScanClass(scanClass);
+  updatedShipInfo[std::string(kKeyScanClass)] = OOStringFromScanClass(scanClass);
 
   std::vector<std::string> deletes;
   simplifyShipdata(updatedShipInfo, &deletes);
 
-  result[KEY_SHIPDATA_OVERRIDES] = oo::PList(std::move(updatedShipInfo));
+  result[std::string(kKeyShipdataOverrides)] = oo::PList(std::move(updatedShipInfo));
   if (!deletes.empty())
-    result[KEY_SHIPDATA_DELETES] = ArrayFromStrings(deletes);
+    result[std::string(kKeyShipdataDeletes)] = ArrayFromStrings(deletes);
 
   if (!HPvector_equal(getPosition(), kZeroHPVector)) {
-    result[KEY_POSITION] = OOPListFromHPVector(getPosition());
+    result[std::string(kKeyPosition)] = OOPListFromHPVector(getPosition());
   }
   if (!quaternion_equal(normalOrientation(), kIdentityQuaternion)) {
-    result[KEY_ORIENTATION] = OOPListFromQuaternion(normalOrientation());
+    result[std::string(kKeyOrientation)] = OOPListFromQuaternion(normalOrientation());
   }
 
   // -oo_setFloat:forKey: stored a double.
   if (energy != maxEnergy)
-    result[KEY_ENERGY_LEVEL] =
+    result[std::string(kKeyEnergyLevel)] =
         oo::PList(static_cast<double>(energy / maxEnergy));
 
-  result[KEY_PRIMARY_ROLE] = getPrimaryRole().value_or("");
+  result[std::string(kKeyPrimaryRole)] = getPrimaryRole().value_or("");
 
   // Add equipment.
   const std::vector<std::string> equipment = equipmentKeys();
   if (equipment.size() != 0)
-    result[KEY_EQUIPMENT] = ArrayFromStrings(equipment);
+    result[std::string(kKeyEquipment)] = ArrayFromStrings(equipment);
 
   // Add missiles.
   if (missiles > 0) {
@@ -147,24 +148,24 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
                                       : std::optional<std::string>());
       if (missileType.has_value()) missileArray.push_back(*missileType);
     }
-    result[KEY_MISSILES] = ArrayFromStrings(missileArray);
+    result[std::string(kKeyMissiles)] = ArrayFromStrings(missileArray);
   }
 
   // Add groups.
   if (_group != nullptr) {
-    result[KEY_GROUP_ID] =
+    result[std::string(kKeyGroupId)] =
         oo::PList::unsignedInteger(GroupIDForGroup(_group.get(), *context));
     if ((_group != nullptr ? _group->leader()
                            : static_cast<::ShipEntity*>(nullptr)) == this)
-      result[KEY_IS_GROUP_LEADER] = oo::PList(true);
+      result[std::string(kKeyIsGroupLeader)] = oo::PList(true);
     const std::optional<std::string> groupName =
         (_group != nullptr ? _group->name() : std::optional<std::string>());
     if (groupName.has_value()) {
-      result[KEY_GROUP_NAME] = *groupName;
+      result[std::string(kKeyGroupName)] = *groupName;
     }
   }
   if (_escortGroup != nullptr) {
-    result[KEY_ESCORT_GROUP_ID] = oo::PList::unsignedInteger(
+    result[std::string(kKeyEscortGroupId)] = oo::PList::unsignedInteger(
         GroupIDForGroup(_escortGroup.get(), *context));
   } else if (_group != nullptr &&
              (_group != nullptr
@@ -175,7 +176,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
     witchspace. But it is needed in the save file to correctly restore an
     escorted group.
     */
-    result[KEY_ESCORT_GROUP_ID] =
+    result[std::string(kKeyEscortGroupId)] =
         oo::PList::unsignedInteger(GroupIDForGroup(_group.get(), *context));
   }
 
@@ -189,10 +190,10 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
     if (const std::optional<std::string> js =
             (getAI() != nullptr ? getAI()->associatedJS()
                                 : std::optional<std::string>()))
-      result[KEY_AI] = *js;
+      result[std::string(kKeyAi)] = *js;
     // if there isn't, loading nullAI.js will load nullAI.plist anyway
   } else {
-    result[KEY_AI] =
+    result[std::string(kKeyAi)] =
         (getAI() != nullptr ? getAI()->name() : std::optional<std::string>())
             .value_or(std::string());
   }
@@ -209,7 +210,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   ::ShipEntity* ship = nullptr;
 
   const std::string shipKey =
-      dict.get<std::string>(KEY_SHIP_KEY);  // "" finds no ship, as nil did
+      dict.get<std::string>(kKeyShipKey);  // "" finds no ship, as nil did
   const oo::PList shipData =
       OOShipRegistry::sharedRegistry()->shipInfoForKey(shipKey);
 
@@ -218,14 +219,14 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
 
     StripIgnoredKeys(mergedData);
     if (const oo::PList* deletes =
-            dict.get<oo::PList::Array>(KEY_SHIPDATA_DELETES)) {
+            dict.get<oo::PList::Array>(kKeyShipdataDeletes)) {
       for (const oo::PList& key : *deletes->getIf<oo::PList::Array>()) {
         if (const std::string* name = key.getIf<std::string>())
           mergedData.erase(*name);
       }
     }
     if (const oo::PList* overrides =
-            dict.get<oo::PList::Dict>(KEY_SHIPDATA_OVERRIDES)) {
+            dict.get<oo::PList::Dict>(kKeyShipdataOverrides)) {
       for (const auto& [key, value] : *overrides->getIf<oo::PList::Dict>())
         mergedData.insert_or_assign(key, value);
     }
@@ -244,10 +245,10 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
 
     // FIXME: restore AI.
     if (ship != nullptr)
-      ship->setAITo(dict.get<std::string>(KEY_AI, "nullAI.plist"));
+      ship->setAITo(dict.get<std::string>(kKeyAi, "nullAI.plist"));
 
     const std::optional<std::string> primaryRole =
-        OptionalStringForKey(dict, KEY_PRIMARY_ROLE);
+        OptionalStringForKey(dict, kKeyPrimaryRole);
     if (primaryRole.has_value()) {
       if (ship != nullptr) {
         ship->setPrimaryRole(*primaryRole);
@@ -258,7 +259,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   } else {
     // Unknown ship; fall back on role if desired and possible.
     const std::optional<std::string> shipPrimaryRole =
-        OptionalStringForKey(dict, KEY_PRIMARY_ROLE);
+        OptionalStringForKey(dict, kKeyPrimaryRole);
     if (!fallback || !shipPrimaryRole.has_value()) return nullptr;
 
     ship = oo::ToShip(oo::autorelease(
@@ -271,18 +272,18 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   // fallback.
   if (ship != nullptr)
     ship->setPosition(
-        OOHPVectorFromPList(dict.find(KEY_POSITION), kZeroHPVector));
+        OOHPVectorFromPList(dict.find(kKeyPosition), kZeroHPVector));
   if (ship != nullptr)
     ship->setNormalOrientation(
-        OOQuaternionFromPList(dict.find(KEY_ORIENTATION), kIdentityQuaternion));
+        OOQuaternionFromPList(dict.find(kKeyOrientation), kIdentityQuaternion));
 
-  float energyLevel = dict.get<float>(KEY_ENERGY_LEVEL, 1.0f);
+  float energyLevel = dict.get<float>(kKeyEnergyLevel, 1.0f);
   if (ship != nullptr)
     ship->setEnergy(energyLevel *
                     (ship != nullptr ? ship->getMaxEnergy() : 0.0f));
 
   if (ship != nullptr) ship->removeAllEquipment();
-  if (const oo::PList* equipment = dict.get<oo::PList::Array>(KEY_EQUIPMENT)) {
+  if (const oo::PList* equipment = dict.get<oo::PList::Array>(kKeyEquipment)) {
     for (const oo::PList& eqKey : *equipment->getIf<oo::PList::Array>()) {
       if (const std::string* key = eqKey.getIf<std::string>()) {
         if (ship != nullptr) ship->addEquipmentItem(*key, false, "loading");
@@ -291,7 +292,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   }
 
   if (ship != nullptr) ship->removeMissiles();
-  if (const oo::PList* missileList = dict.get<oo::PList::Array>(KEY_MISSILES)) {
+  if (const oo::PList* missileList = dict.get<oo::PList::Array>(kKeyMissiles)) {
     for (const oo::PList& eqKey : *missileList->getIf<oo::PList::Array>()) {
       if (const std::string* key = eqKey.getIf<std::string>()) {
         if (ship != nullptr) ship->addEquipmentItem(*key, false, "loading");
@@ -301,15 +302,15 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
 
   // Groups.
   std::size_t groupID = static_cast<std::size_t>(
-      dict.get<std::ptrdiff_t>(KEY_GROUP_ID, oo::kNotFound));
+      dict.get<std::ptrdiff_t>(kKeyGroupId, oo::kNotFound));
   if (groupID != oo::kNotFound) {
     ::OOShipGroup* group = GroupForGroupID(groupID, *context);
     if (ship != nullptr) ship->setGroup(group);  // Handles adding to group
-    if (dict.get<bool>(KEY_IS_GROUP_LEADER)) {
+    if (dict.get<bool>(kKeyIsGroupLeader)) {
       if (group != nullptr) group->setLeader(ship);
     }
     const std::optional<std::string> groupName =
-        OptionalStringForKey(dict, KEY_GROUP_NAME);
+        OptionalStringForKey(dict, kKeyGroupName);
     if (groupName.has_value()) {
       if (group != nullptr) group->setName(groupName);
     }
@@ -324,7 +325,7 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   }
 
   groupID = static_cast<std::size_t>(
-      dict.get<std::ptrdiff_t>(KEY_ESCORT_GROUP_ID, oo::kNotFound));
+      dict.get<std::ptrdiff_t>(kKeyEscortGroupId, oo::kNotFound));
   if (groupID != oo::kNotFound) {
     ::OOShipGroup* group = GroupForGroupID(groupID, *context);
     if (group != nullptr) group->setLeader(ship);

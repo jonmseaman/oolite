@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "Entity.h"
 #include "HeadUpDisplay.h"
@@ -40,11 +41,11 @@ MA 02110-1301, USA.
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
 
-constexpr char OOWAYPOINT_KEY_POSITION[] = "position";
-constexpr char OOWAYPOINT_KEY_ORIENTATION[] = "orientation";
-constexpr char OOWAYPOINT_KEY_SIZE[] = "size";
-constexpr char OOWAYPOINT_KEY_CODE[] = "beaconCode";
-constexpr char OOWAYPOINT_KEY_LABEL[] = "beaconLabel";
+constexpr std::string_view kWaypointKeyPosition = "position";
+constexpr std::string_view kWaypointKeyOrientation = "orientation";
+constexpr std::string_view kWaypointKeySize = "size";
+constexpr std::string_view kWaypointKeyCode = "beaconCode";
+constexpr std::string_view kWaypointKeyLabel = "beaconLabel";
 
 std::shared_ptr<OOWaypointEntity> OOWaypointEntity::waypointWithDictionary(
     const oo::PList& info) {
@@ -60,20 +61,20 @@ void OOWaypointEntity::initWithDictionary(const oo::PList& info) {
   // A nil dictionary read zero-filled values and nil strings (messaging nil),
   // not the defaults.
   oriented = true;
-  position = info ? OOHPVectorFromPList(info.find(OOWAYPOINT_KEY_POSITION),
+  position = info ? OOHPVectorFromPList(info.find(kWaypointKeyPosition),
                                         kZeroHPVector)
                   : kZeroHPVector;
   Quaternion q =
-      info ? OOQuaternionFromPList(info.find(OOWAYPOINT_KEY_ORIENTATION),
+      info ? OOQuaternionFromPList(info.find(kWaypointKeyOrientation),
                                    kIdentityQuaternion)
            : Quaternion{0, 0, 0, 0};
   setOrientation(q);
-  setSize(info.get<oo::NonNegative<float>>(OOWAYPOINT_KEY_SIZE, 1000.0));
+  setSize(info.get<oo::NonNegative<float>>(kWaypointKeySize, 1000.0));
   setBeaconCode(info ? std::optional<std::string>(
-                           info.get<std::string>(OOWAYPOINT_KEY_CODE, "W"))
+                           info.get<std::string>(kWaypointKeyCode, "W"))
                      : std::nullopt);
   setBeaconLabel(info ? std::optional<std::string>(info.get<std::string>(
-                            OOWAYPOINT_KEY_LABEL, "Waypoint"))
+                            kWaypointKeyLabel, "Waypoint"))
                       : std::nullopt);
 
   setStatus(OOEntityStatus::kEffect);

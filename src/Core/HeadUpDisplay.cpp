@@ -373,18 +373,18 @@ void HeadUpDisplay::initWithDictionary(
   bool reticleColorsSet = false;
 
   // populate arrays
-  const oo::PList* dials = info.get<oo::PList::Array>(DIALS_KEY);
+  const oo::PList* dials = info.get<oo::PList::Array>(kDialsKey);
   const oo::PList noEntry;  // an entry that is not a dictionary, as nil was
   for (i = 0; dials != nullptr && i < dials->count(); i++) {
     const oo::PList* dialEntry = dials->at<oo::PList::Dict>(i);
     const oo::PList& dial_info = (dialEntry != nullptr) ? *dialEntry : noEntry;
     if (!areTrumblesToBeDrawn &&
-        dial_info.get<std::string>(SELECTOR_KEY) == "drawTrumbles:")
+        dial_info.get<std::string>(kSelectorKey) == "drawTrumbles:")
       areTrumblesToBeDrawn = true;
     if (!isCompassToBeDrawn &&
-        dial_info.get<std::string>(SELECTOR_KEY) == "drawCompass:")
+        dial_info.get<std::string>(kSelectorKey) == "drawCompass:")
       isCompassToBeDrawn = true;
-    if (dial_info.get<std::string>(SELECTOR_KEY) == "drawTargetReticle:") {
+    if (dial_info.get<std::string>(kSelectorKey) == "drawTargetReticle:") {
       oo::PList targetColor = PListForKeyIn(dial_info, "target_rgba");
       oo::PList targetSensitiveColor =
           PListForKeyIn(dial_info, "target_sensitive_rgba");
@@ -419,7 +419,7 @@ void HeadUpDisplay::initWithDictionary(
     // naughty - a hud with no built-in drawTrumbles:
     // - one must be added!
     const oo::PList trumble_dial_info(oo::PList::Dict{
-        {SELECTOR_KEY, oo::PList(std::string("drawTrumbles:"))}});
+        {std::string(kSelectorKey), oo::PList(std::string("drawTrumbles:"))}});
     addDial(trumble_dial_info);
   }
 
@@ -427,13 +427,13 @@ void HeadUpDisplay::initWithDictionary(
 
   _lastWeaponType = nullptr;
 
-  const oo::PList* legends = info.get<oo::PList::Array>(LEGENDS_KEY);
+  const oo::PList* legends = info.get<oo::PList::Array>(kLegendsKey);
   for (i = 0; legends != nullptr && i < legends->count(); i++) {
     const oo::PList* legend = legends->at<oo::PList::Dict>(i);
     addLegend((legend != nullptr) ? *legend : noEntry);
   }
 
-  const oo::PList* mfds = info.get<oo::PList::Array>(MFDS_KEY);
+  const oo::PList* mfds = info.get<oo::PList::Array>(kMfdsKey);
   for (i = 0; mfds != nullptr && i < mfds->count(); i++) {
     const oo::PList* mfd = mfds->at<oo::PList::Dict>(i);
     addMFD((mfd != nullptr) ? *mfd : noEntry);
@@ -494,21 +494,21 @@ void HeadUpDisplay::resetGui(::GuiDisplayGen* gui, const oo::PList& gui_info) {
   NSSize siz = gui->size();
   int rht = static_cast<int>(gui->rowHeight());
   std::optional<std::string> title = gui->getTitle();
-  if (gui_info.find(WIDTH_KEY) != nullptr)
-    siz.width = gui_info.get<float>(WIDTH_KEY);
-  if (gui_info.find(HEIGHT_KEY) != nullptr)
-    siz.height = gui_info.get<float>(HEIGHT_KEY);
-  if (gui_info.find(ROW_HEIGHT_KEY) != nullptr)
-    rht = static_cast<int>(gui_info.get<float>(ROW_HEIGHT_KEY));
-  if (gui_info.find(TITLE_KEY) != nullptr)
-    title = OptionalStringIn(gui_info, TITLE_KEY);
+  if (gui_info.find(kWidthKey) != nullptr)
+    siz.width = gui_info.get<float>(kWidthKey);
+  if (gui_info.find(kHeightKey) != nullptr)
+    siz.height = gui_info.get<float>(kHeightKey);
+  if (gui_info.find(kRowHeightKey) != nullptr)
+    rht = static_cast<int>(gui_info.get<float>(kRowHeightKey));
+  if (gui_info.find(kTitleKey) != nullptr)
+    title = OptionalStringIn(gui_info, kTitleKey);
   gui->resizeTo(siz, rht, title);
-  if (gui_info.find(BACKGROUND_RGBA_KEY) != nullptr)
+  if (gui_info.find(kBackgroundRgbaKey) != nullptr)
     gui->setBackgroundColor(
-        OOColor::colorFromString(gui_info.get<std::string>(BACKGROUND_RGBA_KEY))
+        OOColor::colorFromString(gui_info.get<std::string>(kBackgroundRgbaKey))
             .get());
-  if (gui_info.find(ALPHA_KEY) != nullptr)
-    gui->setMaxAlpha(OOClamp_0_max_f(gui_info.get<float>(ALPHA_KEY), 1.0f));
+  if (gui_info.find(kAlphaKey) != nullptr)
+    gui->setMaxAlpha(OOClamp_0_max_f(gui_info.get<float>(kAlphaKey), 1.0f));
   else
     gui->setMaxAlpha(1.0f);
 }
@@ -516,18 +516,18 @@ void HeadUpDisplay::resetGui(::GuiDisplayGen* gui, const oo::PList& gui_info) {
 void HeadUpDisplay::resetGuiPosition(::GuiDisplayGen* gui,
                                      const oo::PList& gui_info) {
   Vector pos = gui->getDrawPosition();
-  if (gui_info.find(X_KEY) != nullptr)
-    pos.x = gui_info.get<float>(X_KEY) +
+  if (gui_info.find(kXKey) != nullptr)
+    pos.x = gui_info.get<float>(kXKey) +
             (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
                  ? UNIVERSE->getGameView()->getX_offset()
                  : 0.0f) *
-                gui_info.get<float>(X_ORIGIN_KEY, 0.0);
-  if (gui_info.find(Y_KEY) != nullptr)
-    pos.y = gui_info.get<float>(Y_KEY) +
+                gui_info.get<float>(kXOriginKey, 0.0);
+  if (gui_info.find(kYKey) != nullptr)
+    pos.y = gui_info.get<float>(kYKey) +
             (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
                  ? UNIVERSE->getGameView()->getY_offset()
                  : 0.0f) *
-                gui_info.get<float>(Y_ORIGIN_KEY, 0.0);
+                gui_info.get<float>(kYOriginKey, 0.0);
 
   gui->setDrawPosition(pos);
 }
@@ -775,7 +775,7 @@ void HeadUpDisplay::addLegend(const oo::PList& info) {
   // prefetch data associated with this legend
   prefetchData(info, &cache);
 
-  imageName = OptionalStringIn(info, IMAGE_KEY);
+  imageName = OptionalStringIn(info, kImageKey);
   if (imageName.has_value()) {
     texture = OOTexture::textureWithName(
         imageName, std::string("Images"),
@@ -790,16 +790,16 @@ void HeadUpDisplay::addLegend(const oo::PList& info) {
 
     imageSize = texture->dimensions();
     imageSize.width =
-        info.get<float>(WIDTH_KEY, static_cast<float>(imageSize.width));
+        info.get<float>(kWidthKey, static_cast<float>(imageSize.width));
     imageSize.height =
-        info.get<float>(HEIGHT_KEY, static_cast<float>(imageSize.height));
+        info.get<float>(kHeightKey, static_cast<float>(imageSize.height));
 
     legendSprite = OOTextureSprite::initWithTexture(texture.get(), imageSize);
 
     // add info and cache to the list; the widget holds the sprite
     AddHUDWidget(legendArray, info, &cache, nullptr, "");
     legendArray.back().sprite = legendSprite;
-  } else if (OptionalStringIn(info, TEXT_KEY).has_value()) {
+  } else if (OptionalStringIn(info, kTextKey).has_value()) {
     // add info and cache to the list
     AddHUDWidget(legendArray, info, &cache, nullptr, "");
   }
@@ -822,7 +822,7 @@ void HeadUpDisplay::addDial(const oo::PList& info) {
   }
 
   std::optional<std::string> selectorString =
-      OptionalStringIn(info, SELECTOR_KEY);
+      OptionalStringIn(info, kSelectorKey);
   if (!selectorString.has_value()) {
     OO_LOG_ERR("hud.dial.noSelector", "HUD dial in {} is missing selector.",
                hudName.value_or("(null)"));
@@ -1129,7 +1129,7 @@ oo::PList HeadUpDisplay::crosshairDefinitionForWeaponType(OOWeaponType weapon) {
 void HeadUpDisplay::drawLegend(const oo::PList& info) {
   // check if equipment is required
   std::optional<std::string> equipmentRequired =
-      OptionalStringIn(info, EQUIPMENT_REQUIRED_KEY);
+      OptionalStringIn(info, kEquipmentRequiredKey);
   if (equipmentRequired.has_value() &&
       !(PLAYER != nullptr
             ? PLAYER->hasEquipmentItemProviding(*equipmentRequired)
@@ -1138,7 +1138,7 @@ void HeadUpDisplay::drawLegend(const oo::PList& info) {
   }
 
   // check alert condition
-  std::size_t alertMask = info.get<unsigned int>(ALERT_CONDITIONS_KEY, 15);
+  std::size_t alertMask = info.get<unsigned int>(kAlertConditionsKey, 15);
   // 1=docked, 2=green, 4=yellow, 8=red
   if (alertMask < 15) {
     OOAlertCondition alertCondition =
@@ -1148,7 +1148,7 @@ void HeadUpDisplay::drawLegend(const oo::PList& info) {
     }
   }
 
-  bool viewOnly = info.get<bool>(VIEWSCREEN_KEY, false);
+  bool viewOnly = info.get<bool>(kViewscreenKey, false);
   // 1=docked, 2=green, 4=yellow, 8=red
   if (viewOnly && (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) !=
                       OOGUIScreenID::kMain) {
@@ -1156,7 +1156,7 @@ void HeadUpDisplay::drawLegend(const oo::PList& info) {
   }
 
   // check association with hidden dials
-  if (hasHidden(OptionalStringIn(info, DIAL_REQUIRED_KEY))) {
+  if (hasHidden(OptionalStringIn(info, kDialRequiredKey))) {
     return;
   }
 
@@ -1188,7 +1188,7 @@ void HeadUpDisplay::drawLegend(const oo::PList& info) {
   if (legendSprite != nullptr) {
     legendSprite->blitCentredToX(x, y, z1, alpha);
   } else {
-    legendText = OptionalStringIn(info, TEXT_KEY);
+    legendText = OptionalStringIn(info, kTextKey);
     if (legendText.has_value()) {
       // randomly chosen default width & height
       size.width = useDefined(cached.width, 14.0f);
@@ -1205,7 +1205,7 @@ void HeadUpDisplay::drawLegend(const oo::PList& info) {
 
 void HeadUpDisplay::drawHUDItem(const oo::PList& info) {
   std::optional<std::string> equipment =
-      OptionalStringIn(info, EQUIPMENT_REQUIRED_KEY);
+      OptionalStringIn(info, kEquipmentRequiredKey);
 
   if (equipment.has_value() &&
       !(PLAYER != nullptr ? PLAYER->hasEquipmentItemProviding(*equipment)
@@ -1214,7 +1214,7 @@ void HeadUpDisplay::drawHUDItem(const oo::PList& info) {
   }
 
   // check alert condition
-  std::size_t alertMask = info.get<unsigned int>(ALERT_CONDITIONS_KEY, 15);
+  std::size_t alertMask = info.get<unsigned int>(kAlertConditionsKey, 15);
   // 1=docked, 2=green, 4=yellow, 8=red
   if (alertMask < 15) {
     OOAlertCondition alertCondition =
@@ -1224,7 +1224,7 @@ void HeadUpDisplay::drawHUDItem(const oo::PList& info) {
     }
   }
 
-  bool viewOnly = info.get<bool>(VIEWSCREEN_KEY, false);
+  bool viewOnly = info.get<bool>(kViewscreenKey, false);
 
   // 1=docked, 2=green, 4=yellow, 8=red
   if (viewOnly && (PLAYER != nullptr ? PLAYER->guiScreen() : OOGUIScreenID{}) !=
@@ -1317,7 +1317,7 @@ void HeadUpDisplay::drawMultiFunctionDisplay(const oo::PList& info,
     return;
   }
   GLfloat alpha =
-      info.get<oo::NonNegative<float>>(ALPHA_KEY, 1.0f) * overallAlpha;
+      info.get<oo::NonNegative<float>>(kAlphaKey, 1.0f) * overallAlpha;
 
   GLfloat mfd_color[4] = {0.0, 1.0, 0.0, static_cast<GLfloat>(0.9 * alpha)};
   std::shared_ptr<OOColor> mfdcol =
@@ -1388,7 +1388,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
   NSSize siz;
   GLfloat scanner_color[4] = {1.0, 0.0, 0.0, 1.0};
 
-  bool emptyDial = (info.get<float>(ALPHA_KEY) == 0.0f);
+  bool emptyDial = (info.get<float>(kAlphaKey) == 0.0f);
 
   bool isHostile = false;
 
@@ -2020,7 +2020,7 @@ void HeadUpDisplay::drawAegis(const oo::PList& /*info*/) {
 
 void HeadUpDisplay::drawTargetReticle(const oo::PList& info) {
   GLfloat alpha =
-      info.get<oo::NonNegative<float>>(ALPHA_KEY, 1.0f) * overallAlpha;
+      info.get<oo::NonNegative<float>>(kAlphaKey, 1.0f) * overallAlpha;
 
   if ((PLAYER != nullptr ? PLAYER->primaryTarget()
                          : static_cast<Entity*>(nullptr)) != nullptr) {
@@ -2041,7 +2041,7 @@ void HeadUpDisplay::drawTargetReticle(const oo::PList& info) {
 
 void HeadUpDisplay::drawSecondaryTargetReticle(const oo::PList& info) {
   GLfloat alpha = static_cast<GLfloat>(
-      info.get<oo::NonNegative<float>>(ALPHA_KEY, 1.0f) * overallAlpha * 0.4);
+      info.get<oo::NonNegative<float>>(kAlphaKey, 1.0f) * overallAlpha * 0.4);
 
   ::PlayerEntity* player = PLAYER;
   if ((player != nullptr ? player->hasEquipmentItemProviding("EQ_TARGET_MEMORY")
@@ -2078,7 +2078,7 @@ void HeadUpDisplay::drawSecondaryTargetReticle(const oo::PList& info) {
 
 void HeadUpDisplay::drawWaypoints(const oo::PList& info) {
   GLfloat alpha =
-      info.get<oo::NonNegative<float>>(ALPHA_KEY, 1.0f) * overallAlpha;
+      info.get<oo::NonNegative<float>>(kAlphaKey, 1.0f) * overallAlpha;
   GLfloat scale = info.get<float>("reticle_scale", ONE_SIXTYFOURTH);
 
   Entity* compass = (PLAYER != nullptr ? PLAYER->getCompassTargetEntity()
@@ -2102,7 +2102,7 @@ void HeadUpDisplay::drawCustomBar(const oo::PList& info) {
   GLfloat ds = OOClamp_0_1_f(
       (PLAYER != nullptr
            ? PLAYER->dialCustomFloat(
-                 OptionalStringIn(info, CUSTOM_DIAL_KEY).value_or(""))
+                 OptionalStringIn(info, kCustomDialKey).value_or(""))
            : 0.0f));
   struct CachedInfo cached;
 
@@ -2124,7 +2124,7 @@ void HeadUpDisplay::drawCustomBar(const oo::PList& info) {
   siz.height = useDefined(cached.height, 8);
   alpha *= cached.alpha;
 
-  draw_surround = info.get<bool>(DRAW_SURROUND_KEY, false);
+  draw_surround = info.get<bool>(kDrawSurroundKey, false);
 
   SET_COLOR_SURROUND(green_color);
   if (draw_surround) {
@@ -2151,7 +2151,7 @@ void HeadUpDisplay::drawCustomText(const oo::PList& info) {
   std::string text =
       (PLAYER != nullptr
            ? PLAYER->dialCustomString(
-                 OptionalStringIn(info, CUSTOM_DIAL_KEY).value_or(""))
+                 OptionalStringIn(info, kCustomDialKey).value_or(""))
            : std::string());  // nil drew nothing, as "" does
   struct CachedInfo cached;
 
@@ -2193,7 +2193,7 @@ void HeadUpDisplay::drawCustomIndicator(const oo::PList& info) {
   GLfloat iv = OOClamp_n1_1_f(
       (PLAYER != nullptr
            ? PLAYER->dialCustomFloat(
-                 OptionalStringIn(info, CUSTOM_DIAL_KEY).value_or(""))
+                 OptionalStringIn(info, kCustomDialKey).value_or(""))
            : 0.0f));
 
   struct CachedInfo cached;
@@ -2215,7 +2215,7 @@ void HeadUpDisplay::drawCustomIndicator(const oo::PList& info) {
   siz.width = useDefined(cached.width, 50);
   siz.height = useDefined(cached.height, 8);
   alpha *= cached.alpha;
-  draw_surround = info.get<bool>(DRAW_SURROUND_KEY, false);
+  draw_surround = info.get<bool>(kDrawSurroundKey, false);
 
   if (draw_surround) {
     // draw custom surround
@@ -2259,7 +2259,7 @@ void HeadUpDisplay::drawCustomLight(const oo::PList& info) {
   std::shared_ptr<OOColor> color =
       (PLAYER != nullptr
            ? PLAYER->dialCustomColor(
-                 OptionalStringIn(info, CUSTOM_DIAL_KEY).value_or(""))
+                 OptionalStringIn(info, kCustomDialKey).value_or(""))
            : std::shared_ptr<OOColor>());
   if (color != nullptr) {
     // a message to nil left the colour as it was
@@ -2302,7 +2302,7 @@ void HeadUpDisplay::drawCustomImage(const oo::PList& info) {
   std::optional<std::string> textureFile = std::optional<std::string>(
       (PLAYER != nullptr
            ? PLAYER->dialCustomString(
-                 OptionalStringIn(info, CUSTOM_DIAL_KEY).value_or(""))
+                 OptionalStringIn(info, kCustomDialKey).value_or(""))
            : std::string()));
   if (!textureFile.has_value() || textureFile->empty()) {
     return;
@@ -2364,7 +2364,7 @@ void HeadUpDisplay::drawSpeedBar(const oo::PList& info) {
   siz.height = useDefined(cached.height, SPEED_BAR_HEIGHT);
   alpha *= cached.alpha;
 
-  draw_surround = info.get<bool>(DRAW_SURROUND_KEY, SPEED_BAR_DRAW_SURROUND);
+  draw_surround = info.get<bool>(kDrawSurroundKey, SPEED_BAR_DRAW_SURROUND);
 
   SET_COLOR_SURROUND(green_color);
   if (draw_surround) {
@@ -2408,7 +2408,7 @@ void HeadUpDisplay::drawRollBar(const oo::PList& info) {
   siz.width = useDefined(cached.width, ROLL_BAR_WIDTH);
   siz.height = useDefined(cached.height, ROLL_BAR_HEIGHT);
   alpha *= cached.alpha;
-  draw_surround = info.get<bool>(DRAW_SURROUND_KEY, ROLL_BAR_DRAW_SURROUND);
+  draw_surround = info.get<bool>(kDrawSurroundKey, ROLL_BAR_DRAW_SURROUND);
 
   if (draw_surround) {
     // draw ROLL surround
@@ -2446,7 +2446,7 @@ void HeadUpDisplay::drawPitchBar(const oo::PList& info) {
   siz.width = useDefined(cached.width, PITCH_BAR_WIDTH);
   siz.height = useDefined(cached.height, PITCH_BAR_HEIGHT);
   alpha *= cached.alpha;
-  draw_surround = info.get<bool>(DRAW_SURROUND_KEY, PITCH_BAR_DRAW_SURROUND);
+  draw_surround = info.get<bool>(kDrawSurroundKey, PITCH_BAR_DRAW_SURROUND);
 
   if (draw_surround) {
     // draw PITCH surround
@@ -2485,7 +2485,7 @@ void HeadUpDisplay::drawYawBar(const oo::PList& info) {
   siz.width = useDefined(cached.width, PITCH_BAR_WIDTH);
   siz.height = useDefined(cached.height, PITCH_BAR_HEIGHT);
   alpha *= cached.alpha;
-  draw_surround = info.get<bool>(DRAW_SURROUND_KEY, PITCH_BAR_DRAW_SURROUND);
+  draw_surround = info.get<bool>(kDrawSurroundKey, PITCH_BAR_DRAW_SURROUND);
 
   if (draw_surround) {
     // draw YAW surround
@@ -2510,7 +2510,7 @@ void HeadUpDisplay::drawEnergyGauge(const oo::PList& info) {
 
   unsigned n_bars = static_cast<unsigned int>(
       (player != nullptr ? player->dialMaxEnergy() : 0.0f) / 64.0);
-  n_bars = info.get<unsigned int>(N_BARS_KEY, n_bars);
+  n_bars = info.get<unsigned int>(kNBarsKey, n_bars);
   if (n_bars < 1) {
     n_bars = 1;
   }
@@ -2535,8 +2535,8 @@ void HeadUpDisplay::drawEnergyGauge(const oo::PList& info) {
   siz.width = useDefined(cached.width, ENERGY_GAUGE_WIDTH);
   siz.height = useDefined(cached.height, ENERGY_GAUGE_HEIGHT);
   alpha *= cached.alpha;
-  drawSurround = info.get<bool>(DRAW_SURROUND_KEY, ENERGY_GAUGE_DRAW_SURROUND);
-  labelled = info.get<bool>(LABELLED_KEY, true);
+  drawSurround = info.get<bool>(kDrawSurroundKey, ENERGY_GAUGE_DRAW_SURROUND);
+  labelled = info.get<bool>(kLabelledKey, true);
   if (n_bars > 8) labelled = false;
 
   if (drawSurround) {
@@ -2612,7 +2612,7 @@ void HeadUpDisplay::drawForwardShieldBar(const oo::PList& info) {
   siz.height = useDefined(cached.height, FORWARD_SHIELD_BAR_HEIGHT);
   alpha *= cached.alpha;
   draw_surround =
-      info.get<bool>(DRAW_SURROUND_KEY, FORWARD_SHIELD_BAR_DRAW_SURROUND);
+      info.get<bool>(kDrawSurroundKey, FORWARD_SHIELD_BAR_DRAW_SURROUND);
 
   if (draw_surround) {
     // draw forward_shield surround
@@ -2658,7 +2658,7 @@ void HeadUpDisplay::drawAftShieldBar(const oo::PList& info) {
   siz.height = useDefined(cached.height, AFT_SHIELD_BAR_HEIGHT);
   alpha *= cached.alpha;
   draw_surround =
-      info.get<bool>(DRAW_SURROUND_KEY, AFT_SHIELD_BAR_DRAW_SURROUND);
+      info.get<bool>(kDrawSurroundKey, AFT_SHIELD_BAR_DRAW_SURROUND);
 
   if (draw_surround) {
     // draw forward_shield surround
@@ -2703,7 +2703,7 @@ void HeadUpDisplay::drawFuelBar(const oo::PList& info) {
   siz.width = useDefined(cached.width, FUEL_BAR_WIDTH);
   siz.height = useDefined(cached.height, FUEL_BAR_HEIGHT);
   alpha *= cached.alpha;
-  draw_surround = info.get<bool>(DRAW_SURROUND_KEY, false);
+  draw_surround = info.get<bool>(kDrawSurroundKey, false);
 
   if (draw_surround) {
     SET_COLOR_SURROUND(green_color);
@@ -2811,7 +2811,7 @@ void HeadUpDisplay::drawCabinTempBar(const oo::PList& info) {
   siz.width = useDefined(cached.width, CABIN_TEMP_BAR_WIDTH);
   siz.height = useDefined(cached.height, CABIN_TEMP_BAR_HEIGHT);
   alpha *= cached.alpha;
-  draw_surround = info.get<bool>(DRAW_SURROUND_KEY, false);
+  draw_surround = info.get<bool>(kDrawSurroundKey, false);
 
   if (draw_surround) {
     SET_COLOR_SURROUND(green_color);
@@ -2863,7 +2863,7 @@ void HeadUpDisplay::drawWeaponTempBar(const oo::PList& info) {
   siz.width = useDefined(cached.width, WEAPON_TEMP_BAR_WIDTH);
   siz.height = useDefined(cached.height, WEAPON_TEMP_BAR_HEIGHT);
   alpha *= cached.alpha;
-  draw_surround = info.get<bool>(DRAW_SURROUND_KEY, false);
+  draw_surround = info.get<bool>(kDrawSurroundKey, false);
 
   if (draw_surround) {
     SET_COLOR_SURROUND(green_color);
@@ -2906,7 +2906,7 @@ void HeadUpDisplay::drawAltitudeBar(const oo::PList& info) {
   siz.width = useDefined(cached.width, ALTITUDE_BAR_WIDTH);
   siz.height = useDefined(cached.height, ALTITUDE_BAR_HEIGHT);
   alpha *= cached.alpha;
-  draw_surround = info.get<bool>(DRAW_SURROUND_KEY, false);
+  draw_surround = info.get<bool>(kDrawSurroundKey, false);
 
   if (draw_surround) {
     SET_COLOR_SURROUND(yellow_color);
@@ -3090,7 +3090,7 @@ void HeadUpDisplay::drawMissileDisplay(const oo::PList& info) {
   siz.height = useDefined(cached.height, MISSILE_ICON_HEIGHT);
   alpha *= cached.alpha;
   sp = static_cast<int>(
-      info.get<unsigned int>(SPACING_KEY, MISSILES_DISPLAY_SPACING));
+      info.get<unsigned int>(kSpacingKey, MISSILES_DISPLAY_SPACING));
 
   bool weaponsOnline = (PLAYER != nullptr ? PLAYER->weaponsOnline() : false);
   if (!weaponsOnline)
@@ -3592,7 +3592,7 @@ void HeadUpDisplay::drawScoopStatus(const oo::PList& info) {
   siz.width = useDefined(cached.width, SCOOPSTATUS_WIDTH);
   siz.height = useDefined(cached.height, SCOOPSTATUS_HEIGHT);
   // default alpha value different from all others, won't use cached.alpha
-  alpha = info.get<oo::NonNegative<float>>(ALPHA_KEY, 0.75f);
+  alpha = info.get<oo::NonNegative<float>>(kAlphaKey, 0.75f);
 
   const GLfloat* s0_color = red_color;
   GLfloat s1c[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -3752,13 +3752,13 @@ void HeadUpDisplay::drawTrumbles(const oo::PList& /*info*/) {
 namespace {
 
 void prefetchData(const oo::PList& info, struct CachedInfo* data) {
-  data->x = info.get<float>(X_KEY, NOT_DEFINED);
-  data->x0 = info.get<float>(X_ORIGIN_KEY, 0.0);
-  data->y = info.get<float>(Y_KEY, NOT_DEFINED);
-  data->y0 = info.get<float>(Y_ORIGIN_KEY, 0.0);
-  data->width = info.get<float>(WIDTH_KEY, NOT_DEFINED);
-  data->height = info.get<float>(HEIGHT_KEY, NOT_DEFINED);
-  data->alpha = info.get<oo::NonNegative<float>>(ALPHA_KEY, 1.0f);
+  data->x = info.get<float>(kXKey, NOT_DEFINED);
+  data->x0 = info.get<float>(kXOriginKey, 0.0);
+  data->y = info.get<float>(kYKey, NOT_DEFINED);
+  data->y0 = info.get<float>(kYOriginKey, 0.0);
+  data->width = info.get<float>(kWidthKey, NOT_DEFINED);
+  data->height = info.get<float>(kHeightKey, NOT_DEFINED);
+  data->alpha = info.get<oo::NonNegative<float>>(kAlphaKey, 1.0f);
 }
 
 }  // namespace
@@ -5021,8 +5021,8 @@ void GetRGBAArrayFromInfo(const oo::PList& info, GLfloat ioColor[4]) {
   std::shared_ptr<OOColor> color;
 
   // First, look for general colour specifier.
-  const oo::PList colorDesc = PListForKeyIn(info, RGB_COLOR_KEY);
-  if (!colorDesc.isNull() && info.find(ALPHA_KEY) == nullptr) {
+  const oo::PList colorDesc = PListForKeyIn(info, kRgbColorKey);
+  if (!colorDesc.isNull() && info.find(kAlphaKey) == nullptr) {
     color = OOColor::colorWithDescription(colorDesc);
     if (color != nullptr) {
       color->getRed(&ioColor[0], &ioColor[1], &ioColor[2], &ioColor[3]);
@@ -5031,13 +5031,13 @@ void GetRGBAArrayFromInfo(const oo::PList& info, GLfloat ioColor[4]) {
   }
 
   // Failing that, look for rgb_color and alpha.
-  const oo::PList* components = info.get<oo::PList::Array>(RGB_COLOR_KEY);
+  const oo::PList* components = info.get<oo::PList::Array>(kRgbColorKey);
   if (components != nullptr && components->count() == 3) {
     ioColor[0] = components->at<oo::NonNegative<float>>(0);
     ioColor[1] = components->at<oo::NonNegative<float>>(1);
     ioColor[2] = components->at<oo::NonNegative<float>>(2);
   }
-  ioColor[3] = info.get<oo::NonNegative<float>>(ALPHA_KEY, ioColor[3]);
+  ioColor[3] = info.get<oo::NonNegative<float>>(kAlphaKey, ioColor[3]);
 }
 
 }  // namespace
