@@ -693,7 +693,7 @@ void GameController::exitAppWithContext(const std::string& context) {
   // desktop resolution is restored also on some Intel cards on Win10
   if (!(_gameView != nullptr ? _gameView->getAtDesktopResolution() : false)) {
     OO_LOG("gameController.exitApp", "{}", "Restoring desktop resolution.");
-    ChangeDisplaySettingsEx(NULL, NULL, NULL, 0, NULL);
+    ChangeDisplaySettingsEx(nullptr, nullptr, nullptr, 0, nullptr);
   }
 #endif
   // The work threads are owned by the never-destroyed manager, so they are

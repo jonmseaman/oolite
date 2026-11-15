@@ -147,7 +147,7 @@ std::optional<std::string> OOGenerateSystemDescription(
 
 // Equivalent to [[UNIVERSE systemManager] getRandomSeedForCurrentSystem],
 // without pulling in Universe.h.
-Random_Seed OOStringExpanderDefaultRandomSeed(void);
+Random_Seed OOStringExpanderDefaultRandomSeed();
 
 /*
         Evil macro magic.

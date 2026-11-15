@@ -32,19 +32,19 @@ SOFTWARE.
 
 #include "OOLogging.h"  // IWYU pragma: export
 
-void OOLoggingInit(void);
-void OOLoggingTerminate(void);
+void OOLoggingInit();
+void OOLoggingTerminate();
 
-void OOLogInsertMarker(void);
+void OOLogInsertMarker();
 
 // Get/set display settings. These are stored in user defaults.
-bool OOLogShowFunction(void);
+bool OOLogShowFunction();
 void OOLogSetShowFunction(bool flag);
-bool OOLogShowFileAndLine(void);
+bool OOLogShowFileAndLine();
 void OOLogSetShowFileAndLine(bool flag);
-bool OOLogShowTime(void);
+bool OOLogShowTime();
 void OOLogSetShowTime(bool flag);
-bool OOLogShowMessageClass(void);
+bool OOLogShowMessageClass();
 void OOLogSetShowMessageClass(bool flag);
 
 // Change message class visibility without saving to user defaults.

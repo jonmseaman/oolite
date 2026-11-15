@@ -34,12 +34,12 @@ MA 02110-1301, USA.
 
 void InitOOJSExhaustPlume(JSContext* context, JSValueConst global);
 
-JSClassID JSExhaustPlumeClassID(void);
+JSClassID JSExhaustPlumeClassID();
 
 /*	The bodies of OOExhaustPlumeEntity (OOJavaScriptExtensions), which the
    engine reaches by selector through the root's JS members: the C++
    OOExhaustPlumeEntity's overrides call these. Its jsClassID() answers
    JSExhaustPlumeClassID().
 */
-std::optional<std::string> OOJSExhaustPlumeJSClassName(void);
-bool OOJSExhaustPlumeIsVisibleToScripts(void);
+std::optional<std::string> OOJSExhaustPlumeJSClassName();
+bool OOJSExhaustPlumeIsVisibleToScripts();

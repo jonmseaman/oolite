@@ -38,7 +38,7 @@ class OOPlanetEntity;
 
 void InitOOJSPlanet(JSContext* context, JSValueConst global);
 
-JSClassID JSPlanetClassID(void);
+JSClassID JSPlanetClassID();
 
 /*	The bodies of OOPlanetEntity (OOJavaScriptExtensions), which the engine
    reaches through the root Entity's virtual members: the C++ planet's overrides

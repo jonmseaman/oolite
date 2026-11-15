@@ -33,4 +33,4 @@ class ShipEntity;  // C++
 
 void InitOOJSShip(JSContext* context, JSValueConst global);
 
-JSClassID JSShipClassID(void);
+JSClassID JSShipClassID();

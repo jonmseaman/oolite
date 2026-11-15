@@ -27,6 +27,8 @@ Checks: >
   google-readability-casting,
   misc-include-cleaner
 WarningsAsErrors: >
+  modernize-use-nullptr,
+  modernize-redundant-void-arg,
   modernize-use-using,
   readability-redundant-inline-specifier,
   bugprone-*,

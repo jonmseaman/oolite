@@ -55,7 +55,7 @@ struct RANROTSeed {
 extern const Random_Seed kNilRandomSeed;
 
 // checksum stuff
-void clear_checksum(void);
+void clear_checksum();
 int16_t munge_checksum(std::int64_t value);
 
 // cunning price rounding routine:
@@ -66,15 +66,15 @@ double cunningFee(double value,
 // an implementation of RANROT
 // pseudo random number generator
 void ranrot_srand(uint32_t seed);
-unsigned Ranrot(void);
+unsigned Ranrot();
 #define ranrot_rand() \
   (static_cast<int>(  \
       Ranrot()))  // Some uses perform arithmetic that does weird things if
                   // result is unsigned -- DustEntity.m, for instance.
-float randf(void);
+float randf();
 float bellf(int n);
 
-RANROTSeed RANROTGetFullSeed(void);
+RANROTSeed RANROTGetFullSeed();
 void RANROTSetFullSeed(RANROTSeed seed);
 
 RANROTSeed MakeRanrotSeed(uint32_t seed);
@@ -98,11 +98,11 @@ namespace oo {
 // std::mt19937 seeded once by std::random_device. Game thread only.
 Random_Seed RandomDescriptionSeed();
 }  // namespace oo
-RNG_Seed currentRandomSeed(void);
+RNG_Seed currentRandomSeed();
 void setRandomSeed(RNG_Seed a_seed);
 
 // Range: 0..255
-int gen_rnd_number(void);
+int gen_rnd_number();
 
 void make_pseudo_random_seed(Random_Seed* seed_ptr);
 
@@ -124,12 +124,12 @@ inline int equal_seeds(Random_Seed seed1, Random_Seed seed2) INLINE_CONST_FUNC;
    thread.
 */
 
-uint32_t OOReallyRandom(void);
+uint32_t OOReallyRandom();
 void OOInitReallyRandom(uint64_t seed);
 
-void OOSetReallyRandomRANROTSeed(void);
-void OOSetReallyRandomRndSeed(void);
-void OOSetReallyRandomRANROTAndRndSeeds(void);
+void OOSetReallyRandomRANROTSeed();
+void OOSetReallyRandomRndSeed();
+void OOSetReallyRandomRANROTAndRndSeeds();
 
 /*
         OOSaveRandomState()/OORestoreRandomState(): save and restore both the
@@ -140,7 +140,7 @@ struct OORandomState {
   RNG_Seed rnd;
 };
 
-OORandomState OOSaveRandomState(void);
+OORandomState OOSaveRandomState();
 void OORestoreRandomState(OORandomState state);
 
 /*** Only inline definitions beyond this point ***/

@@ -73,7 +73,7 @@ struct OOPixMap {
 
 extern const OOPixMap kOONullPixMap;
 
-inline bool OOIsNullPixMap(OOPixMap pixMap) { return pixMap.pixels == NULL; }
+inline bool OOIsNullPixMap(OOPixMap pixMap) { return pixMap.pixels == nullptr; }
 bool OOIsValidPixMap(OOPixMap pixMap);
 inline size_t OOMinimumPixMapBufferSize(OOPixMap pixMap) {
   return pixMap.rowBytes * pixMap.height;

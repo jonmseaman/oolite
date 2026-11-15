@@ -169,8 +169,8 @@ void OOJSReportCurrentException(JSContext* context);
 
 // The scope OOJS_BEGIN_FULL_NATIVE opens: a try and a finally, in the same
 // order.
-void OOJSPauseTimeLimiter(void);
-void OOJSResumeTimeLimiter(void);
+void OOJSPauseTimeLimiter();
+void OOJSResumeTimeLimiter();
 
 class OOJSFullNativeScope {
  public:

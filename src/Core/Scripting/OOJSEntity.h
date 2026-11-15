@@ -42,7 +42,7 @@ void InitOOJSEntity(JSContext* context, JSValueConst global);
 bool JSValueToEntity(JSContext* context, JSValueConst value,
                      Entity** outEntity);
 
-JSClassID JSEntityClassID(void);
+JSClassID JSEntityClassID();
 
 /*	OOJSEntityGetEntity: the slot holds an OOJSEntityHolder, so the getter
    is OOJSGetCxxPrivate's (the same JS class check and error) and answers the
@@ -116,7 +116,7 @@ bool EntityFromArgumentList(JSContext* context,
 */
 // The global holds the player's C++ entity while the flag is in effect, else
 // null.
-inline bool OOIsPlayerStale(void) {
+inline bool OOIsPlayerStale() {
   extern Entity* gOOJSPlayerIfStale;
   return gOOJSPlayerIfStale != nullptr;
 }

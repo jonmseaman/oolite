@@ -65,7 +65,6 @@ HPVector OOHPRandomPositionInBoundingBox(BoundingBox bb);
 /*** Only inline definitions beyond this point ***/
 
 inline void bounding_box_add_vector(BoundingBox* box, Vector vec) {
-  assert(box != NULL);
   box->min.x = fmin(box->min.x, vec.x);
   box->max.x = fmax(box->max.x, vec.x);
   box->min.y = fmin(box->min.y, vec.y);
@@ -76,7 +75,6 @@ inline void bounding_box_add_vector(BoundingBox* box, Vector vec) {
 
 inline void bounding_box_add_xyz(BoundingBox* box, GLfloat x, GLfloat y,
                                  GLfloat z) {
-  assert(box != NULL);
   box->min.x = fmin(box->min.x, x);
   box->max.x = fmax(box->max.x, x);
   box->min.y = fmin(box->min.y, y);
@@ -86,21 +84,19 @@ inline void bounding_box_add_xyz(BoundingBox* box, GLfloat x, GLfloat y,
 }
 
 inline void bounding_box_reset(BoundingBox* box) {
-  assert(box != NULL);
   *box = kZeroBoundingBox;
 }
 
 inline void bounding_box_reset_to_vector(BoundingBox* box, Vector vec) {
-  assert(box != NULL);
   box->min = vec;
   box->max = vec;
 }
 
 inline void bounding_box_get_dimensions(BoundingBox bb, GLfloat* xSize,
                                         GLfloat* ySize, GLfloat* zSize) {
-  if (xSize != NULL) *xSize = bb.max.x - bb.min.x;
-  if (ySize != NULL) *ySize = bb.max.y - bb.min.y;
-  if (zSize != NULL) *zSize = bb.max.z - bb.min.z;
+  if (xSize != nullptr) *xSize = bb.max.x - bb.min.x;
+  if (ySize != nullptr) *ySize = bb.max.y - bb.min.y;
+  if (zSize != nullptr) *zSize = bb.max.z - bb.min.z;
 }
 
 inline Vector OOBoundingBoxCenter(BoundingBox bb) {

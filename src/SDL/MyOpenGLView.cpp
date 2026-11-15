@@ -279,7 +279,7 @@ void MyOpenGLView::createWindowWithSize(NSSize size) {
   // transitioning between full screen and window). Don't use anywhere else.
   SDL_PropertiesID windowPropertiesId = SDL_GetWindowProperties(window);
   windowHandle = static_cast<HWND>(SDL_GetPointerProperty(
-      windowPropertiesId, SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL));
+      windowPropertiesId, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
   if (!windowHandle) {
     OO_LOG("sdl.window_handle", "{}", "Failed to retrieve window handle");
     exit(1);
@@ -297,7 +297,7 @@ void MyOpenGLView::createWindowWithSize(NSSize size) {
   SDL_Surface* icon = SDL_LoadBMP(
       oo::str::appendingPathComponent(imagesDir, "WMicon.bmp").c_str());
 
-  if (icon != NULL) {
+  if (icon != nullptr) {
     const SDL_PixelFormatDetails* pixelFormat =
         SDL_GetPixelFormatDetails(icon->format);
     const SDL_Palette* palette = SDL_GetSurfacePalette(icon);
@@ -516,7 +516,7 @@ void MyOpenGLView::endSplashScreen() {
   // been shown - this method also prepares the main game window
   if (hdrOutput() && !isOutputDisplayHDREnabled()) {
     if (MessageBox(
-            NULL,
+            nullptr,
             "No primary display in HDR mode was detected.\n\n"
             "If you continue, graphics will not be rendered as intended.\n"
             "Click OK to launch anyway, or Cancel to exit.",
