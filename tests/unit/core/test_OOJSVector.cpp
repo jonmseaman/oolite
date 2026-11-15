@@ -385,19 +385,18 @@ OO_TEST(nativeInterface) {
   JSValue value = JS_UNDEFINED;
   OO_CHECK(HPVectorToJSValue(sContext, make_HPvector(1, 2, 3), &value));
   HPVector hp = kZeroHPVector;
-  OO_CHECK(JSValueToHPVector(sContext, value, &hp) && hp.x == 1 && hp.y == 2 &&
-           hp.z == 3);
+  std::optional<HPVector> gotHP = JSValueToHPVector(sContext, value);
+  OO_CHECK(gotHP && gotHP->x == 1 && gotHP->y == 2 && gotHP->z == 3);
   OO_CHECK(JSVectorSetHPVector(sContext, value, make_HPvector(4, 5, 6)));
-  Vector v = kZeroVector;
-  OO_CHECK(JSValueToVector(sContext, value, &v) && v.x == 4 && v.y == 5 &&
-           v.z == 6);
-  OO_CHECK(!JSValueToVector(sContext, JS_NewInt32(sContext, 3), &v));
+  const std::optional<Vector> gotV = JSValueToVector(sContext, value);
+  OO_CHECK(gotV && gotV->x == 4 && gotV->y == 5 && gotV->z == 6);
+  OO_CHECK(!JSValueToVector(sContext, JS_NewInt32(sContext, 3)));
   OO_CHECK(!JSObjectGetVector(sContext, JS_NULL, &hp));
   JS_FreeValue(sContext, value);
   value = JS_UNDEFINED;
   OO_CHECK(NSPointToVectorJSValue(sContext, NSMakePoint(7, 8), &value) &&
-           JSValueToHPVector(sContext, value, &hp) && hp.x == 7 && hp.y == 8 &&
-           hp.z == 0);
+           (gotHP = JSValueToHPVector(sContext, value)) && gotHP->x == 7 &&
+           gotHP->y == 8 && gotHP->z == 0);
   int consumed = 99;
   OO_CHECK(VectorFromArgumentListNoError(sContext, 1, &value, &hp, &consumed) &&
            consumed == 1);

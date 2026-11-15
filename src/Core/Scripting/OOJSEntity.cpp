@@ -382,7 +382,9 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
   switch (static_cast<EntityProperty>(magic)) {
     using enum EntityProperty;
     case kPosition:
-      if (JSValueToHPVector(context, value, &hpvValue)) {
+      if (const std::optional<HPVector> converted =
+              JSValueToHPVector(context, value)) {
+        hpvValue = *converted;
         cxxEntity->setPosition(hpvValue);
         if (cxxEntity->getIsShip()) {
           if (oo::ToShip(cxxEntity) != nullptr)
@@ -395,7 +397,9 @@ static JSValue EntitySetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kOrientation:
-      if (JSValueToQuaternion(context, value, &qValue)) {
+      if (const std::optional<Quaternion> converted =
+              JSValueToQuaternion(context, value)) {
+        qValue = *converted;
         cxxEntity->setNormalOrientation(qValue);
         return JS_UNDEFINED;
       }

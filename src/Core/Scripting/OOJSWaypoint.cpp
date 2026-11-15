@@ -23,6 +23,7 @@ MA 02110-1301, USA.
 
 #include "OOJSWaypoint.h"
 
+#include <optional>
 #include <string>
 
 #include "OOJSEntity.h"
@@ -225,7 +226,9 @@ static JSValue WaypointSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kOrientation:
-      if (JSValueToQuaternion(context, value, &qValue)) {
+      if (const std::optional<Quaternion> converted =
+              JSValueToQuaternion(context, value)) {
+        qValue = *converted;
         waypoint->Entity::setNormalOrientation(
             qValue);  // what the object's selector called; qualified: the final
                       // overrider for a waypoint (no override, no subclass), so

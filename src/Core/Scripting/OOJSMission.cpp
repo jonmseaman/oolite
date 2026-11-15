@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -747,7 +748,9 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
   value = GetParameter(context, params, "customChartCentre");
   if (!JS_IsUndefined(value)) {
     Vector vValue;
-    if (JSValueToVector(context, value, &vValue)) {
+    if (const std::optional<Vector> converted =
+            JSValueToVector(context, value)) {
+      vValue = *converted;
       NSPoint coords = {vValue.x, vValue.y};
       if (player != nullptr) player->setCustomChartCentre(coords);
     } else {
@@ -768,7 +771,9 @@ static JSValue MissionRunScreen(JSContext* context, JSValueConst /*oojsThis*/,
   value = GetParameter(context, params, "customChartCentreInLY");
   if (!JS_IsUndefined(value)) {
     Vector vValue;
-    if (JSValueToVector(context, value, &vValue)) {
+    if (const std::optional<Vector> converted =
+            JSValueToVector(context, value)) {
+      vValue = *converted;
       NSPoint coords = OOInternalCoordinatesFromGalactic(vValue);
       if (player != nullptr) player->setCustomChartCentre(coords);
     } else {

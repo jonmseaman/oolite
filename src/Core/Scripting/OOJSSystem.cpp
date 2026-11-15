@@ -1619,7 +1619,9 @@ static JSValue SystemSetPopulator(JSContext* context, JSValueConst /*oojsThis*/,
     JSValue coords = GetParam(context, params, "coordinates");
     if (!JS_IsUndefined(coords)) {
       Vector coordinates = kZeroVector;
-      if (JSValueToVector(context, coords, &coordinates)) {
+      if (const std::optional<Vector> converted =
+              JSValueToVector(context, coords)) {
+        coordinates = *converted;
         // convert vector in NS-storable form (three floats)
         if (settingsDict != nullptr)
           (*settingsDict)["coordinates"] =
@@ -1673,18 +1675,24 @@ static JSValue SystemSetWaypoint(JSContext* context, JSValueConst /*oojsThis*/,
     if (UNIVERSE != nullptr) UNIVERSE->defineWaypoint(oo::PList(), *key);
   } else {
     // adding
-    if (!JSValueToHPVector(context, OOJS_ARGV[1], &position)) {
+    const std::optional<HPVector> gotPosition =
+        JSValueToHPVector(context, OOJS_ARGV[1]);
+    if (!gotPosition.has_value()) {
       OOJSReportBadArguments(context, "System", "setWaypoint",
                              std::min(argc, 2), OOJS_ARGV, std::nullopt,
                              "key, position, orientation, definition");
       return OOJSNativeFailure(context);
     }
-    if (!JSValueToQuaternion(context, OOJS_ARGV[2], &orientation)) {
+    position = *gotPosition;
+    const std::optional<Quaternion> gotOrientation =
+        JSValueToQuaternion(context, OOJS_ARGV[2]);
+    if (!gotOrientation.has_value()) {
       OOJSReportBadArguments(context, "System", "setWaypoint",
                              std::min(argc, 3), OOJS_ARGV, std::nullopt,
                              "key, position, orientation, definition");
       return OOJSNativeFailure(context);
     }
+    orientation = *gotOrientation;
     if (!JS_IsObject(OOJS_ARGV[3]) || JS_IsNull(OOJS_ARGV[3])) {
       OOJSReportBadArguments(context, "System", "setWaypoint",
                              std::min(argc, 4), OOJS_ARGV, std::nullopt,

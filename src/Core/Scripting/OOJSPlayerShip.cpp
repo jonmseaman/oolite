@@ -1020,7 +1020,9 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kGalacticHyperspaceFixedCoords:
-      if (JSValueToVector(context, value, &vValue)) {
+      if (const std::optional<Vector> converted =
+              JSValueToVector(context, value)) {
+        vValue = *converted;
         NSPoint coords = {vValue.x, vValue.y};
         if (player != nullptr) player->setGalacticHyperspaceFixedCoords(coords);
         return JS_UNDEFINED;
@@ -1028,7 +1030,9 @@ static JSValue PlayerShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kGalacticHyperspaceFixedCoordsInLY:
-      if (JSValueToVector(context, value, &vValue)) {
+      if (const std::optional<Vector> converted =
+              JSValueToVector(context, value)) {
+        vValue = *converted;
         NSPoint coords = OOInternalCoordinatesFromGalactic(vValue);
         if (player != nullptr) player->setGalacticHyperspaceFixedCoords(coords);
         return JS_UNDEFINED;
@@ -1838,25 +1842,26 @@ static JSValue PlayerShipSetCustomView(JSContext* context,
 
   oo::PList::Dict viewData;
 
-  Vector position = kZeroVector;
-  bool gotpos = JSValueToVector(context, OOJS_ARGV[0], &position);
-  if (!gotpos) {
+  const std::optional<Vector> gotpos = JSValueToVector(context, OOJS_ARGV[0]);
+  if (!gotpos.has_value()) {
     OOJSReportBadArguments(context, "PlayerShip", "setCustomView", argc,
                            OOJS_ARGV, std::nullopt,
                            "position, orientiation, [weapon]");
     return OOJSNativeFailure(context);
   }
+  const Vector position = *gotpos;
   std::string positionstr =
       std::format("{:f} {:f} {:f}", position.x, position.y, position.z);
 
-  Quaternion orientation = kIdentityQuaternion;
-  bool gotquat = JSValueToQuaternion(context, OOJS_ARGV[1], &orientation);
-  if (!gotquat) {
+  const std::optional<Quaternion> gotquat =
+      JSValueToQuaternion(context, OOJS_ARGV[1]);
+  if (!gotquat.has_value()) {
     OOJSReportBadArguments(context, "PlayerShip", "setCustomView", argc,
                            OOJS_ARGV, std::nullopt,
                            "position, orientiation, [weapon]");
     return OOJSNativeFailure(context);
   }
+  const Quaternion orientation = *gotquat;
   std::string orientationstr =
       std::format("{:f} {:f} {:f} {:f}", orientation.w, orientation.x,
                   orientation.y, orientation.z);

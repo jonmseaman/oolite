@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #include "OOJSPlanet.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -329,7 +330,9 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
     }
 
     case kOrientation:
-      if (JSValueToQuaternion(context, value, &qValue)) {
+      if (const std::optional<Quaternion> converted =
+              JSValueToQuaternion(context, value)) {
+        qValue = *converted;
         quaternion_normalize(&qValue);
         // The C++ member, qualified: the final overrider (OOPlanetEntity has no
         // subclass), so the binding test stands in for it; nothing for none.
@@ -346,7 +349,9 @@ static JSValue PlanetSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kTerminatorThresholdVector:
-      if (JSValueToVector(context, value, &vValue)) {
+      if (const std::optional<Vector> converted =
+              JSValueToVector(context, value)) {
+        vValue = *converted;
         if (planet != nullptr) planet->setTerminatorThresholdVector(vValue);
         return JS_UNDEFINED;
       }

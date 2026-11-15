@@ -13203,7 +13203,11 @@ void ShipEntity::refreshEscortPositions() {
                                      context, args, std::size(args), &result)
                 : false);
 
-      if (OK) OK = JSValueToVector(context, result, &_escortPositions[i]);
+      if (OK) {
+        const std::optional<Vector> position = JSValueToVector(context, result);
+        OK = position.has_value();
+        if (OK) _escortPositions[i] = *position;
+      }
       OOJSFreeValue(context, result);
 
       if (!OK) _escortPositions[i] = kZeroVector;
