@@ -79,15 +79,15 @@
 #include "oofnd/PList.hpp"  // utf8ToUtf16 / utf16ToUtf8, and PListGet.hpp's GNUstep number readers
 #include "oofnd/PrintfFormat.h"
 
-// ICU (C API), for localizedCompare: GNUstep-base already links it, so no new
-// runtime dependency.
+// ICU (C API): case mapping and localizedCompare.
+#include <unicode/uchar.h>
 #include <unicode/ucol.h>
 #include <unicode/uloc.h>
 
 namespace oo::str {
 
-// --- character classes and case, GNUstep 1.31.1's tables (probed over the BMP)
-// ---------------
+// --- character classes and case
+// ------------------------------------------------------------------
 
 // +[NSCharacterSet whitespaceAndNewlineCharacterSet]. The set GNUstep's
 // trimming, tokenising, NSScanner skipping and -capitalizedString word breaks
@@ -98,147 +98,6 @@ constexpr bool isWhitespaceOrNewline(char16_t c) noexcept {
 
 namespace detail {
 
-// A run of units first..last (every stride-th one) whose case mapping is c +
-// delta.
-struct CaseRun {
-  char16_t first, last;
-  std::int16_t delta;
-  std::uint8_t stride;
-};
-
-// uni_toupper / uni_tolower as -uppercaseString / -lowercaseString apply them,
-// one unit to one unit (GNUstep maps no unit to several). Generated from the
-// probe's full BMP table.
-inline constexpr CaseRun kUpper[] = {
-    {0x0061, 0x007A, -32, 1},   {0x00B5, 0x00B5, 743, 1},
-    {0x00E0, 0x00F6, -32, 1},   {0x00F8, 0x00FE, -32, 1},
-    {0x00FF, 0x00FF, 121, 1},   {0x0101, 0x012F, -1, 2},
-    {0x0131, 0x0131, -232, 1},  {0x0133, 0x0137, -1, 2},
-    {0x013A, 0x0148, -1, 2},    {0x014B, 0x0177, -1, 2},
-    {0x017A, 0x017E, -1, 2},    {0x017F, 0x017F, -300, 1},
-    {0x0183, 0x0185, -1, 2},    {0x0188, 0x0188, -1, 1},
-    {0x018C, 0x018C, -1, 1},    {0x0192, 0x0192, -1, 1},
-    {0x0195, 0x0195, 97, 1},    {0x0199, 0x0199, -1, 1},
-    {0x01A1, 0x01A5, -1, 2},    {0x01A8, 0x01A8, -1, 1},
-    {0x01AD, 0x01AD, -1, 1},    {0x01B0, 0x01B0, -1, 1},
-    {0x01B4, 0x01B6, -1, 2},    {0x01B9, 0x01B9, -1, 1},
-    {0x01BD, 0x01BD, -1, 1},    {0x01BF, 0x01BF, 56, 1},
-    {0x01C5, 0x01C5, -1, 1},    {0x01C6, 0x01C6, -2, 1},
-    {0x01C8, 0x01C8, -1, 1},    {0x01C9, 0x01C9, -2, 1},
-    {0x01CB, 0x01CB, -1, 1},    {0x01CC, 0x01CC, -2, 1},
-    {0x01CE, 0x01DC, -1, 2},    {0x01DD, 0x01DD, -79, 1},
-    {0x01DF, 0x01EF, -1, 2},    {0x01F2, 0x01F2, -1, 1},
-    {0x01F3, 0x01F3, -2, 1},    {0x01F5, 0x01F5, -1, 1},
-    {0x01F9, 0x021F, -1, 2},    {0x0223, 0x0233, -1, 2},
-    {0x0253, 0x0253, -210, 1},  {0x0254, 0x0254, -206, 1},
-    {0x0256, 0x0257, -205, 1},  {0x0259, 0x0259, -202, 1},
-    {0x025B, 0x025B, -203, 1},  {0x0260, 0x0260, -205, 1},
-    {0x0263, 0x0263, -207, 1},  {0x0268, 0x0268, -209, 1},
-    {0x0269, 0x0269, -211, 1},  {0x026F, 0x026F, -211, 1},
-    {0x0272, 0x0272, -213, 1},  {0x0275, 0x0275, -214, 1},
-    {0x0280, 0x0280, -218, 1},  {0x0283, 0x0283, -218, 1},
-    {0x0288, 0x0288, -218, 1},  {0x028A, 0x028B, -217, 1},
-    {0x0292, 0x0292, -219, 1},  {0x0345, 0x0345, 84, 1},
-    {0x03AC, 0x03AC, -38, 1},   {0x03AD, 0x03AF, -37, 1},
-    {0x03B1, 0x03C1, -32, 1},   {0x03C2, 0x03C2, -31, 1},
-    {0x03C3, 0x03CB, -32, 1},   {0x03CC, 0x03CC, -64, 1},
-    {0x03CD, 0x03CE, -63, 1},   {0x03D0, 0x03D0, -62, 1},
-    {0x03D1, 0x03D1, -57, 1},   {0x03D5, 0x03D5, -47, 1},
-    {0x03D6, 0x03D6, -54, 1},   {0x03DB, 0x03EF, -1, 2},
-    {0x03F0, 0x03F0, -86, 1},   {0x03F1, 0x03F1, -80, 1},
-    {0x03F2, 0x03F2, -79, 1},   {0x0430, 0x044F, -32, 1},
-    {0x0450, 0x045F, -80, 1},   {0x0461, 0x0481, -1, 2},
-    {0x048D, 0x04BF, -1, 2},    {0x04C2, 0x04C4, -1, 2},
-    {0x04C8, 0x04C8, -1, 1},    {0x04CC, 0x04CC, -1, 1},
-    {0x04D1, 0x04F5, -1, 2},    {0x04F9, 0x04F9, -1, 1},
-    {0x0561, 0x0586, -48, 1},   {0x1E01, 0x1E95, -1, 2},
-    {0x1E9B, 0x1E9B, -59, 1},   {0x1EA1, 0x1EF9, -1, 2},
-    {0x1F00, 0x1F07, 8, 1},     {0x1F10, 0x1F15, 8, 1},
-    {0x1F20, 0x1F27, 8, 1},     {0x1F30, 0x1F37, 8, 1},
-    {0x1F40, 0x1F45, 8, 1},     {0x1F51, 0x1F57, 8, 2},
-    {0x1F60, 0x1F67, 8, 1},     {0x1F70, 0x1F71, 74, 1},
-    {0x1F72, 0x1F75, 86, 1},    {0x1F76, 0x1F77, 100, 1},
-    {0x1F78, 0x1F79, 128, 1},   {0x1F7A, 0x1F7B, 112, 1},
-    {0x1F7C, 0x1F7D, 126, 1},   {0x1F80, 0x1F87, 8, 1},
-    {0x1F90, 0x1F97, 8, 1},     {0x1FA0, 0x1FA7, 8, 1},
-    {0x1FB0, 0x1FB1, 8, 1},     {0x1FB3, 0x1FB3, 9, 1},
-    {0x1FBE, 0x1FBE, -7205, 1}, {0x1FC3, 0x1FC3, 9, 1},
-    {0x1FD0, 0x1FD1, 8, 1},     {0x1FE0, 0x1FE1, 8, 1},
-    {0x1FE5, 0x1FE5, 7, 1},     {0x1FF3, 0x1FF3, 9, 1},
-    {0x2170, 0x217F, -16, 1},   {0x24D0, 0x24E9, -26, 1},
-    {0xFF41, 0xFF5A, -32, 1},
-};
-
-inline constexpr CaseRun kLower[] = {
-    {0x0041, 0x005A, 32, 1},    {0x00C0, 0x00D6, 32, 1},
-    {0x00D8, 0x00DE, 32, 1},    {0x0100, 0x012E, 1, 2},
-    {0x0130, 0x0130, -199, 1},  {0x0132, 0x0136, 1, 2},
-    {0x0139, 0x0147, 1, 2},     {0x014A, 0x0176, 1, 2},
-    {0x0178, 0x0178, -121, 1},  {0x0179, 0x017D, 1, 2},
-    {0x0181, 0x0181, 210, 1},   {0x0182, 0x0184, 1, 2},
-    {0x0186, 0x0186, 206, 1},   {0x0187, 0x0187, 1, 1},
-    {0x0189, 0x018A, 205, 1},   {0x018B, 0x018B, 1, 1},
-    {0x018E, 0x018E, 79, 1},    {0x018F, 0x018F, 202, 1},
-    {0x0190, 0x0190, 203, 1},   {0x0191, 0x0191, 1, 1},
-    {0x0193, 0x0193, 205, 1},   {0x0194, 0x0194, 207, 1},
-    {0x0196, 0x0196, 211, 1},   {0x0197, 0x0197, 209, 1},
-    {0x0198, 0x0198, 1, 1},     {0x019C, 0x019C, 211, 1},
-    {0x019D, 0x019D, 213, 1},   {0x019F, 0x019F, 214, 1},
-    {0x01A0, 0x01A4, 1, 2},     {0x01A6, 0x01A6, 218, 1},
-    {0x01A7, 0x01A7, 1, 1},     {0x01A9, 0x01A9, 218, 1},
-    {0x01AC, 0x01AC, 1, 1},     {0x01AE, 0x01AE, 218, 1},
-    {0x01AF, 0x01AF, 1, 1},     {0x01B1, 0x01B2, 217, 1},
-    {0x01B3, 0x01B5, 1, 2},     {0x01B7, 0x01B7, 219, 1},
-    {0x01B8, 0x01B8, 1, 1},     {0x01BC, 0x01BC, 1, 1},
-    {0x01C4, 0x01C4, 2, 1},     {0x01C5, 0x01C5, 1, 1},
-    {0x01C7, 0x01C7, 2, 1},     {0x01C8, 0x01C8, 1, 1},
-    {0x01CA, 0x01CA, 2, 1},     {0x01CB, 0x01DB, 1, 2},
-    {0x01DE, 0x01EE, 1, 2},     {0x01F1, 0x01F1, 2, 1},
-    {0x01F2, 0x01F4, 1, 2},     {0x01F6, 0x01F6, -97, 1},
-    {0x01F7, 0x01F7, -56, 1},   {0x01F8, 0x021E, 1, 2},
-    {0x0222, 0x0232, 1, 2},     {0x0386, 0x0386, 38, 1},
-    {0x0388, 0x038A, 37, 1},    {0x038C, 0x038C, 64, 1},
-    {0x038E, 0x038F, 63, 1},    {0x0391, 0x03A1, 32, 1},
-    {0x03A3, 0x03AB, 32, 1},    {0x03DA, 0x03EE, 1, 2},
-    {0x0400, 0x040F, 80, 1},    {0x0410, 0x042F, 32, 1},
-    {0x0460, 0x0480, 1, 2},     {0x048C, 0x04BE, 1, 2},
-    {0x04C1, 0x04C3, 1, 2},     {0x04C7, 0x04C7, 1, 1},
-    {0x04CB, 0x04CB, 1, 1},     {0x04D0, 0x04F4, 1, 2},
-    {0x04F8, 0x04F8, 1, 1},     {0x0531, 0x0556, 48, 1},
-    {0x1E00, 0x1E94, 1, 2},     {0x1EA0, 0x1EF8, 1, 2},
-    {0x1F08, 0x1F0F, -8, 1},    {0x1F18, 0x1F1D, -8, 1},
-    {0x1F28, 0x1F2F, -8, 1},    {0x1F38, 0x1F3F, -8, 1},
-    {0x1F48, 0x1F4D, -8, 1},    {0x1F59, 0x1F5F, -8, 2},
-    {0x1F68, 0x1F6F, -8, 1},    {0x1F88, 0x1F8F, -8, 1},
-    {0x1F98, 0x1F9F, -8, 1},    {0x1FA8, 0x1FAF, -8, 1},
-    {0x1FB8, 0x1FB9, -8, 1},    {0x1FBA, 0x1FBB, -74, 1},
-    {0x1FBC, 0x1FBC, -9, 1},    {0x1FC8, 0x1FCB, -86, 1},
-    {0x1FCC, 0x1FCC, -9, 1},    {0x1FD8, 0x1FD9, -8, 1},
-    {0x1FDA, 0x1FDB, -100, 1},  {0x1FE8, 0x1FE9, -8, 1},
-    {0x1FEA, 0x1FEB, -112, 1},  {0x1FEC, 0x1FEC, -7, 1},
-    {0x1FF8, 0x1FF9, -128, 1},  {0x1FFA, 0x1FFB, -126, 1},
-    {0x1FFC, 0x1FFC, -9, 1},    {0x2126, 0x2126, -7517, 1},
-    {0x212A, 0x212A, -8383, 1}, {0x212B, 0x212B, -8262, 1},
-    {0x2160, 0x216F, 16, 1},    {0x24B6, 0x24CF, 26, 1},
-    {0xFF21, 0xFF3A, 32, 1},
-};
-
-template <std::size_t N>
-constexpr char16_t mapCase(const CaseRun (&runs)[N], char16_t c) noexcept {
-  std::size_t lo = 0, hi = N;
-  while (lo < hi) {
-    const std::size_t mid = (lo + hi) / 2;
-    if (runs[mid].last < c)
-      lo = mid + 1;
-    else
-      hi = mid;
-  }
-  if (lo == N || c < runs[lo].first ||
-      (c - runs[lo].first) % runs[lo].stride != 0)
-    return c;
-  return static_cast<char16_t>(c + runs[lo].delta);
-}
-
 template <class F>
 std::string mapUnits(std::string_view s, F f) {
   std::u16string u = utf8ToUtf16(s);
@@ -246,13 +105,23 @@ std::string mapUnits(std::string_view s, F f) {
   return utf16ToUtf8(u);
 }
 
+// ICU's answer for one unit, or the unit itself when the answer is outside
+// the BMP (ICU 78 has none there).
+inline char16_t bmpOr(char16_t c, UChar32 mapped) noexcept {
+  return mapped >= 0 && mapped <= 0xFFFF ? static_cast<char16_t>(mapped) : c;
+}
+
 }  // namespace detail
 
-constexpr char16_t toUpper(char16_t c) noexcept {
-  return detail::mapCase(detail::kUpper, c);
+// Simple (one unit to one unit) case mapping: ICU's u_toupper / u_tolower.
+// GNUstep 1.31.1 mapped units with an older table. Both agree on U+0000-U+017F,
+// and ICU maps several hundred units GNUstep left alone. Only U+03F2 disagrees:
+// ICU upper-cases it to U+03F9, GNUstep to U+03A3.
+inline char16_t toUpper(char16_t c) noexcept {
+  return detail::bmpOr(c, u_toupper(c));
 }
-constexpr char16_t toLower(char16_t c) noexcept {
-  return detail::mapCase(detail::kLower, c);
+inline char16_t toLower(char16_t c) noexcept {
+  return detail::bmpOr(c, u_tolower(c));
 }
 
 // -[NSString length]: UTF-16 units.
