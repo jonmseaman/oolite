@@ -46,34 +46,34 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/OOObject.h"
 
-#define WINDOW_SIZE_DEFAULT_WIDTH 1280
-#define WINDOW_SIZE_DEFAULT_HEIGHT 720
+inline constexpr int WINDOW_SIZE_DEFAULT_WIDTH = 1280;
+inline constexpr int WINDOW_SIZE_DEFAULT_HEIGHT = 720;
 
 #define MIN_FOV_DEG 30.0f
 #define MAX_FOV_DEG 80.0f
 #define MIN_FOV (tan((MIN_FOV_DEG / 2) * std::numbers::pi / 180.0f))
 #define MAX_FOV (tan((MAX_FOV_DEG / 2) * std::numbers::pi / 180.0f))
 
-#define MIN_HDR_MAXBRIGHTNESS 400.0
-#define MAX_HDR_MAXBRIGHTNESS 1000.0
+inline constexpr double MIN_HDR_MAXBRIGHTNESS = 400.0;
+inline constexpr double MAX_HDR_MAXBRIGHTNESS = 1000.0;
 
-#define MIN_HDR_PAPERWHITE 80.0f
-#define MAX_HDR_PAPERWHITE 280.0f
+inline constexpr float MIN_HDR_PAPERWHITE = 80.0f;
+inline constexpr float MAX_HDR_PAPERWHITE = 280.0f;
 
-#define MAX_COLOR_SATURATION 2.0f
+inline constexpr float MAX_COLOR_SATURATION = 2.0f;
 
-#define MOUSEX_MAXIMUM 0.6
-#define MOUSEY_MAXIMUM 0.6
+inline constexpr double MOUSEX_MAXIMUM = 0.6;
+inline constexpr double MOUSEY_MAXIMUM = 0.6;
 
-#define MAX_CLEAR_DEPTH 10000000000.0
+inline constexpr double MAX_CLEAR_DEPTH = 10000000000.0;
 // 10 000 000 km.
-#define INTERMEDIATE_CLEAR_DEPTH 25000.0
+inline constexpr double INTERMEDIATE_CLEAR_DEPTH = 25000.0;
 // 100 m.
 
-#define NUM_KEYS 327
-#define MOUSE_DOUBLE_CLICK_INTERVAL 0.40
-#define OOMOUSEWHEEL_EVENTS_DELAY_INTERVAL 0.05
-#define OOMOUSEWHEEL_DELTA 120  // Same as Windows WHEEL_DELTA
+inline constexpr int NUM_KEYS = 327;
+inline constexpr double MOUSE_DOUBLE_CLICK_INTERVAL = 0.40;
+inline constexpr double OOMOUSEWHEEL_EVENTS_DELAY_INTERVAL = 0.05;
+inline constexpr int OOMOUSEWHEEL_DELTA = 120;  // Same as Windows WHEEL_DELTA
 
 #define SNAPSHOTS_PNG_FORMAT 1
 inline constexpr std::string_view SNAPSHOTHDR_EXTENSION_EXR = ".exr";
