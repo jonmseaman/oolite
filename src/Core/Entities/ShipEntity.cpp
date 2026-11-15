@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #include "ShipEntity.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -8211,7 +8212,7 @@ float ShipEntity::randomEjectaTemperatureWithMaxFactor(float factor) {
   float interp = OOClamp_0_1_f((parentTemp - SHIP_MIN_CABIN_TEMP) /
                                (SHIP_MAX_CABIN_TEMP - SHIP_MIN_CABIN_TEMP));
 
-  return OOLerp(SHIP_MIN_CABIN_TEMP, adjusted, interp);
+  return std::lerp(SHIP_MIN_CABIN_TEMP, adjusted, interp);
 }
 
 GLfloat ShipEntity::heatInsulation() { return _heatInsulation; }

@@ -4020,7 +4020,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       int vol = (volume / 5.0 + 0.5);
       if (rightKeyDown) vol++;
       if (leftKeyDown) vol--;
-      vol = static_cast<int>(OOClampInteger(vol, 0, 20));
+      vol = std::clamp(vol, 0, 20);
       ::OOSound::setMasterVolume(0.05 * vol);
       playChangedOption();
       oo::SpeechSynthesizer::shared().setVolume(vol * 5);

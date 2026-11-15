@@ -37,10 +37,6 @@ inline double OOClamp_0_1_d(double value) INLINE_CONST_FUNC;
 inline float OOClamp_0_max_f(float value, float max) INLINE_CONST_FUNC;
 inline double OOClamp_0_max_d(double value, double max) INLINE_CONST_FUNC;
 
-/* Linear interpolation. */
-inline float OOLerp(float v0, float v1, float fraction) INLINE_CONST_FUNC;
-inline double OOLerpd(double v0, double v1, double fraction) INLINE_CONST_FUNC;
-
 /* Round integer up to nearest power of 2.
    The expression has no defined value for 1 (__builtin_clz(0)) nor for 0 and
    values above the high bit (a shift by -1). Those inputs return what the
@@ -83,24 +79,4 @@ inline float OOClamp_0_max_f(float value, float max) {
 
 inline double OOClamp_0_max_d(double value, double max) {
   return fmax(0.0, fmin(value, max));
-}
-
-inline std::int64_t OOClampInteger(std::int64_t value, std::int64_t minValue,
-                                   std::int64_t maxValue) ALWAYS_INLINE_FUNC;
-
-inline std::int64_t OOClampInteger(std::int64_t value, std::int64_t minValue,
-                                   std::int64_t maxValue) {
-  return (minValue < value) ? ((value < maxValue) ? value : maxValue)
-                            : minValue;
-}
-
-inline float OOLerp(float v0, float v1, float fraction) {
-  // Linear interpolation - equivalent to v0 * (1.0f - fraction) + v1 *
-  // fraction.
-  return v0 + fraction * (v1 - v0);
-}
-
-inline double OOLerpd(double v0, double v1, double fraction) {
-  // Linear interpolation - equivalent to v0 * (1.0 - fraction) + v1 * fraction.
-  return v0 + fraction * (v1 - v0);
 }

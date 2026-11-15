@@ -25,6 +25,7 @@ MA 02110-1301, USA.
 #include "GuiDisplayGen.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -1166,8 +1167,8 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
       // three or more
       pageCount =
           ceil(static_cast<float>(eqptCount - i) / (itemsPerColumn * 2)) + 2;
-      statusPage =
-          static_cast<std::ptrdiff_t>(OOClampInteger(statusPage, 1, pageCount));
+      statusPage = static_cast<std::ptrdiff_t>(
+          std::clamp<std::int64_t>(statusPage, 1, pageCount));
       start = (statusPage == 1) ? 0 : (statusPage - 1) * itemsPerColumn * 2 + 2;
     }
   } else {
@@ -1231,7 +1232,7 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
 
   if (statusPage == 1 || statusPage == pageCount) itemsPerColumn++;
   eqptCount = static_cast<std::ptrdiff_t>(
-      OOClampInteger(eqptCount, 1, start + itemsPerColumn * 2));
+      std::clamp<std::int64_t>(eqptCount, 1, start + itemsPerColumn * 2));
   for (i = start; i < eqptCount; i++) {
     const oo::PList& info = (*eqptArray)[i];
     std::string name = info.at<std::string>(0);
@@ -1915,8 +1916,8 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
           glVertex3f(x + star.x, y + star.y, z);
 
           float frac = (d / jumpRange);
-          OOGL(glColor4f(OOLerp(lr, lr2, frac), OOLerp(lg, lg2, frac),
-                         OOLerp(lb, lb2, frac), OOLerp(la, la2, frac)));
+          OOGL(glColor4f(std::lerp(lr, lr2, frac), std::lerp(lg, lg2, frac),
+                         std::lerp(lb, lb2, frac), std::lerp(la, la2, frac)));
           glVertex3f(x + star2.x, y + star2.y, z);
 
         } else {
