@@ -290,12 +290,14 @@ static JSValue OoliteSetProperty(OOJS_SETTER_ARGS) {
       if (sValue.has_value()) {
 #if OOLITE_WINDOWS
         if ((gameView != nullptr ? gameView->hdrOutput() : false)) {
-          if (gameView != nullptr)
+          if (gameView != nullptr) {
             gameView->setHDRToneMapper(OOHDRToneMapperFromString(*sValue));
-        } else
+          }
+        } else {
           OOJSReportWarning(
               context,
               "hdrToneMapper cannot be set if not running in HDR mode");
+        }
 #endif
         return JS_UNDEFINED;
       }
@@ -306,12 +308,14 @@ static JSValue OoliteSetProperty(OOJS_SETTER_ARGS) {
       sValue = OOStringFromJSValue(context, value);
       if (sValue.has_value()) {
         if (!(gameView != nullptr ? gameView->hdrOutput() : false)) {
-          if (gameView != nullptr)
+          if (gameView != nullptr) {
             gameView->setSDRToneMapper(OOSDRToneMapperFromString(*sValue));
-        } else
+          }
+        } else {
           OOJSReportWarning(
               context,
               "sdrToneMapper cannot be set if not running in SDR mode");
+        }
         return JS_UNDEFINED;
       }
       break;

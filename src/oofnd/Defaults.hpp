@@ -473,7 +473,9 @@ class Defaults {
     std::lock_guard<std::mutex> lock(mutex_);
     for (const PList::Dict* domain :
          {&arguments_, &application_, &global_, &registration_}) {
-      if (auto it = domain->find(key); it != domain->end()) return it->second;
+      if (auto it = domain->find(key); it != domain->end()) {
+        return it->second;
+      }
     }
     return PList();
   }

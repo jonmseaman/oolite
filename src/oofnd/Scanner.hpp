@@ -400,9 +400,9 @@ class Scanner {
     std::size_t loc = location_;
     if (!skip(loc)) return false;
     bool negative = false;
-    if (units_[loc] == u'+')
+    if (units_[loc] == u'+') {
       ++loc;
-    else if (units_[loc] == u'-') {
+    } else if (units_[loc] == u'-') {
       negative = true;
       ++loc;
     }

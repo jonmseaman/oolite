@@ -1427,8 +1427,9 @@ bool ResourceManager::checkCacheUpToDateForPaths(
                        kOOCacheSearchPathModDates);
     cacheMgr->setPList(modDateList, kOOCacheKeyModificationDates,
                        kOOCacheSearchPathModDates);
-  } else
+  } else {
     OO_LOG("dataCache.upToDate", "{}", "Data cache is up to date.");
+  }
 
   return upToDate;
 }
@@ -1734,22 +1735,23 @@ void ResourceManager::handleEquipmentOverrides(oo::PList& arrayToProcess) {
         oo::PList equipArray = entries[i];
         // cycle through all the properties found for this equipment key in the
         // overrides file
-        if (overrideInfo != nullptr)
+        if (overrideInfo != nullptr) {
           for (const auto& [infoKey, infoValue] : *overrideInfo) {
             // special cases for the array items that don't have a direct
             // keyname
             if (infoKey == "techlevel")
               ReplaceArrayElement(equipArray, EQUIPMENT_TECH_LEVEL_INDEX,
                                   infoValue);
-            else if (infoKey == "price")
+            else if (infoKey == "price") {
               ReplaceArrayElement(equipArray, EQUIPMENT_PRICE_INDEX, infoValue);
-            else if (infoKey == "short_description" || infoKey == "name")
+            } else if (infoKey == "short_description" || infoKey == "name") {
               ReplaceArrayElement(equipArray, EQUIPMENT_SHORT_DESC_INDEX,
                                   infoValue);
-            else if (infoKey == "long_description" || infoKey == "description")
+            } else if (infoKey == "long_description" ||
+                       infoKey == "description") {
               ReplaceArrayElement(equipArray, EQUIPMENT_LONG_DESC_INDEX,
                                   infoValue);
-            else {
+            } else {
               // for everything else
               // do we actually have an extras dictionary? if not, start from a
               // blank one we can add to
@@ -1787,6 +1789,7 @@ void ResourceManager::handleEquipmentOverrides(oo::PList& arrayToProcess) {
                                   extra);
             }
           }
+        }
         entries[i] = std::move(equipArray);
       }
     }
@@ -2248,14 +2251,16 @@ ResourceManager::loadScripts() {
                 auto existing = std::find_if(
                     loadedScripts.begin(), loadedScripts.end(),
                     [&](const auto& entry) { return entry.first == *name; });
-                if (existing != loadedScripts.end())
+                if (existing != loadedScripts.end()) {
                   existing->second = script;
-                else
+                } else {
                   loadedScripts.emplace_back(*name, script);
-              } else
+                }
+              } else {
                 OO_LOG("script.load.unnamed", "Discarding anonymous script {}",
                        (script != nullptr) ? script->description()
                                            : std::string("(null)"));
+              }
             }
           }
         } catch (...) {

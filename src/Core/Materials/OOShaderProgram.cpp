@@ -368,8 +368,9 @@ bool OOShaderProgram::initWithVertexShaderSource(
       OOGL(glCompileShaderARB(vertexShader));
 
       OK = ValidateShaderObject(vertexShader, vertexName);
-    } else
+    } else {
       OK = false;
+    }
   }
 
   if (OK && fragmentSource.has_value()) {
@@ -381,8 +382,9 @@ bool OOShaderProgram::initWithVertexShaderSource(
       OOGL(glCompileShaderARB(fragmentShader));
 
       OK = ValidateShaderObject(fragmentShader, fragmentName);
-    } else
+    } else {
       OK = false;
+    }
   }
 
   if (OK) {
@@ -398,8 +400,9 @@ bool OOShaderProgram::initWithVertexShaderSource(
 
       OK = ValidateShaderObject(_program, StringOrNull(vertexName) + "/" +
                                               StringOrNull(fragmentName));
-    } else
+    } else {
       OK = false;
+    }
   }
 
   if (OK) {
@@ -542,8 +545,9 @@ bool IsWellFormedUTF8(std::string_view bytes) {
       extra = 3;
       c = b & 0x07;
       minimum = 0x10000;
-    } else
+    } else {
       return false;
+    }
     if (i + extra >= bytes.size()) return false;
     for (std::size_t k = 1; k <= extra; ++k) {
       const unsigned char next = static_cast<unsigned char>(bytes[i + k]);
@@ -579,9 +583,9 @@ std::string GetGLSLInfoLog(GLhandleARB shaderObject) {
     result.clear();
     for (GLint i = 0; i < length - 1; ++i) {
       const unsigned char b = static_cast<unsigned char>(log[i]);
-      if (b < 0x80)
+      if (b < 0x80) {
         result += static_cast<char>(b);
-      else {
+      } else {
         result += static_cast<char>(0xC0 | (b >> 6));
         result += static_cast<char>(0x80 | (b & 0x3F));
       }

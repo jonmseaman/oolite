@@ -392,8 +392,9 @@ static JSValue ShipGroupAddShip(OOJS_NATIVE_ARGS) {
       OOJS_RETURN_BOOL(
           cxxGroup != nullptr &&
           cxxGroup->addShip(ship));  // if ship is there already, noop & YES
-    } else
+    } else {
       OOJS_RETURN_BOOL(false);
+    }
   }
 
   OOJS_NATIVE_EXIT

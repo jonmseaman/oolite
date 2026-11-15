@@ -883,9 +883,9 @@ oo::PList AI::cleanActions(const oo::PList& actions,
       if (aliasedSelector->isString()) {
         // Change selector and action to use real method name.
         const std::string& alias = *aliasedSelector->getIf<std::string>();
-        if (space == std::string::npos)
+        if (space == std::string::npos) {
           action = alias;
-        else {
+        } else {
           std::string parameters = action.substr(space);
           action = alias;
           action += parameters;

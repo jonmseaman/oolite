@@ -1285,9 +1285,9 @@ static JSValue StationAddShipToShipyard(OOJS_NATIVE_ARGS) {
       shipyardInfo.get<oo::PList::Dict>(KEY_STANDARD_EQUIPMENT);
   oo::PList extras;
   if (const oo::PList* definedExtras =
-          shipyardDefinition.get<oo::PList::Array>(KEY_EQUIPMENT_EXTRAS))
+          shipyardDefinition.get<oo::PList::Array>(KEY_EQUIPMENT_EXTRAS)) {
     extras = *definedExtras;
-  else {
+  } else {
     // pick up defaults if extras not supplied (-arrayWithArray: made an empty
     // array of a missing one)
     const oo::PList* standardExtras =

@@ -84,8 +84,9 @@ std::optional<std::string> OORoleSet::descriptionComponents() const {
 bool OORoleSet::isEqual(OORoleSet* other) {
   if (other != nullptr) {
     return _rolesAndProbabilities == other->_rolesAndProbabilities;
-  } else
+  } else {
     return false;
+  }
 }
 
 std::size_t OORoleSet::hash() {

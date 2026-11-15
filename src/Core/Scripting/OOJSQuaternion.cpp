@@ -351,9 +351,9 @@ bool QuaternionFromArgumentList(JSContext* context,
                                 JSValueConst* argv, Quaternion* outQuaternion,
                                 int* outConsumed) {
   if (QuaternionFromArgumentListNoErrorInternal(
-          context, argc, argv, outQuaternion, outConsumed, false))
+          context, argc, argv, outQuaternion, outConsumed, false)) {
     return true;
-  else {
+  } else {
     OOJSReportBadArguments(context, scriptClass, function, argc, argv,
                            "Could not construct quaternion from parameters",
                            "Quaternion, Entity or four numbers");

@@ -55,8 +55,8 @@ void OOBreakPatternEntity::initWithPolygonSides(std::size_t sides,
       float s = sin(angle) * xAspect;
       float c = cos(angle) * yAspect;
 
-      _vertexPosition[vi++] = (Vector){s * 50, c * 50, -40};
-      _vertexPosition[vi++] = (Vector){s * 40, c * 40, 0};
+      _vertexPosition[vi++] = Vector{s * 50, c * 50, -40};
+      _vertexPosition[vi++] = Vector{s * 40, c * 40, 0};
 
       angle += deltaAngle;
     }

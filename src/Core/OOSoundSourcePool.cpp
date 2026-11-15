@@ -102,9 +102,9 @@ void OOSoundSourcePool::playSoundWithKey(const std::string& key, float priority,
   if (sound == nullptr) return;
 
   // Stop playing sound or set up sound source as appropriate
-  if (element->source != nullptr)
+  if (element->source != nullptr) {
     element->source->stop();
-  else {
+  } else {
     element->source = oo::makeShared<::OOSoundSource>();
   }
   if (slot == _reserved)
@@ -173,9 +173,9 @@ uint8_t OOSoundSourcePool::selectSlotForPriority(float priority) {
     curr = NEXT(curr);
     element = &_sources[curr];
 
-    if (element->source == nullptr || !element->source->isPlaying())
+    if (element->source == nullptr || !element->source->isPlaying()) {
       return curr;  // Best type of slot: empty
-    else if (element->priority < priority) {
+    } else if (element->priority < priority) {
       if (element->expiryTime <= now)
         expiredLower = curr;  // Second-best type: expired lower-priority
       else if (curr != _reserved)

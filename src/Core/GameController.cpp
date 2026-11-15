@@ -384,9 +384,9 @@ void GameController::performGameTick() {
 
 void GameController::doPerformGameTick() {
   try {
-    if (gameIsPaused)
+    if (gameIsPaused) {
       delta_t = 0.0;  // no movement!
-    else {
+    } else {
       delta_t = oo::date::monotonicSeconds() - last_timeInterval;
       last_timeInterval += delta_t;
       if (delta_t > MINIMUM_GAME_TICK)

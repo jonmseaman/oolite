@@ -449,10 +449,11 @@ oo::PList OOConcreteProbabilitySet::privObjectForWeight(float target) {
     if (weight > target) {
       if (EXPECT_NOT(idx == 0)) break;
       high = idx - 1;
-    } else if (weight < target)
+    } else if (weight < target) {
       low = idx + 1;
-    else
+    } else {
       break;
+    }
   }
 
   if (weight > target) {
@@ -590,9 +591,9 @@ bool OOConcreteMutableProbabilitySet::initWithPropertyListRepresentation(
 
     // Validate
     if (objects == nullptr || !objects->isArray() || weights == nullptr ||
-        !weights->isArray())
+        !weights->isArray()) {
       OK = false;
-    else {
+    } else {
       count = objects->count();
       if (count != weights->count()) OK = false;
     }

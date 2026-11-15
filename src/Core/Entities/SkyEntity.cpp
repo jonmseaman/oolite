@@ -279,9 +279,10 @@ bool SkyEntity::readColor1(std::shared_ptr<OOColor>* ioColor1,
     if (color != nullptr) {
       *ioColor3 = color;
       nebulaSet = true;
-    } else
+    } else {
       OO_LOG_WARN("sky.fromDict", "could not interpret \"{}\" as a colour.",
                   oo::DescriptionOf(colorDesc));
+    }
   } else {
     colorDesc = ValueForKey(dictionary, "sky_color_1");
     if (!colorDesc.isNull()) {
@@ -300,9 +301,10 @@ bool SkyEntity::readColor1(std::shared_ptr<OOColor>* ioColor1,
     if (color != nullptr) {
       *ioColor4 = color;
       nebulaSet = true;
-    } else
+    } else {
       OO_LOG_WARN("sky.fromDict", "could not interpret \"{}\" as a colour.",
                   oo::DescriptionOf(colorDesc));
+    }
   } else {
     colorDesc = ValueForKey(dictionary, "sky_color_2");
     if (!colorDesc.isNull()) {

@@ -556,7 +556,7 @@ NSPoint OOSystemDescriptionManager::getCoordinatesForSystem(OOSystemID s,
            "'{} {}' is an invalid system key. This is an internal error. "
            "Please report it.",
            static_cast<int>(g), static_cast<int>(s));
-    return (NSPoint){0, 0};
+    return NSPoint{0, 0};
   }
   std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
   if (index >= OO_SYSTEM_CACHE_LENGTH) {
@@ -564,7 +564,7 @@ NSPoint OOSystemDescriptionManager::getCoordinatesForSystem(OOSystemID s,
            "'{} {}' is an invalid system key. This is an internal error. "
            "Please report it.",
            static_cast<int>(g), static_cast<int>(s));
-    return (NSPoint){0, 0};
+    return NSPoint{0, 0};
   }
   return coordinatesCache[index];
 }

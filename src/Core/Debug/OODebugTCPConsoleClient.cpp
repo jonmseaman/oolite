@@ -620,11 +620,11 @@ bool OODebugTCPConsoleClient::sendBytes(const void* bytes, size_t count) {
 
   do {
     std::ptrdiff_t written;
-    if (_outStatus == kStreamStatusAtEnd)
+    if (_outStatus == kStreamStatusAtEnd) {
       written = 0;
-    else if (_outStatus != kStreamStatusOpen)
+    } else if (_outStatus != kStreamStatusOpen) {
       written = -1;
-    else {
+    } else {
       written =
           send(static_cast<OOSocket>(_socket), static_cast<const char*>(bytes),
                static_cast<int>(count), kSendFlags);

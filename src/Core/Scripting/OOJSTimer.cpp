@@ -202,9 +202,9 @@ void OOJSTimer::timerFired() {
   // stop and remove the timer if _jsThis (the first parameter in the
   // constructor) dies.
   const oo::PList thisValue = OOJSPListFromJSObject(context, _jsThis);
-  if (oo::EntityIn(thisValue) != nullptr)
+  if (oo::EntityIn(thisValue) != nullptr) {
     described = true;  // an entity's object described itself
-  else {
+  } else {
     // A plain value (object, array, String/Number/Boolean object): its
     // Foundation form's -oo_jsDescription was never nil.
     described = !thisValue.isNull();
