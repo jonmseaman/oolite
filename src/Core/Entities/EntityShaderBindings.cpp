@@ -31,6 +31,7 @@ MA 02110-1301, USA.
 #include <array>
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -901,10 +902,9 @@ std::array<OOShaderMemberGetter, sizeof...(I)> ShaderBindingGetters(
 
 }  // namespace
 
-bool EntityShaderMemberBindingFor(Entity* entity, const char* property,
+bool EntityShaderMemberBindingFor(Entity* entity, std::string_view property,
                                   OOShaderMemberBinding* outBinding) {
-  if (entity == nullptr || property == nullptr || outBinding == nullptr)
-    return false;
+  if (entity == nullptr || outBinding == nullptr) return false;
 
   static const std::unordered_map<std::string, size_t> rows = [] {
     std::unordered_map<std::string, size_t> result;
@@ -917,7 +917,7 @@ bool EntityShaderMemberBindingFor(Entity* entity, const char* property,
       getters = ShaderBindingGetters(
           std::make_index_sequence<std::size(kEntityShaderBindings)>());
 
-  const auto found = rows.find(property);
+  const auto found = rows.find(std::string(property));
   if (found == rows.end()) return false;
   const EntityShaderBindingRow& row = kEntityShaderBindings[found->second];
   if (!row.answers(entity)) return false;  // the selector path fails as it did
@@ -953,6 +953,7 @@ std::string ShaderDescription(Entity* entity) {
 bool ShaderMemberBinding(Entity* entity, const char* property,
                          OOShaderMemberBinding* outBinding) {
   if (oo::WithObject(entity) == nullptr) return false;  // nil bound nothing
+  if (property == nullptr) return false;
   return EntityShaderMemberBindingFor(entity, property, outBinding);
 }
 
