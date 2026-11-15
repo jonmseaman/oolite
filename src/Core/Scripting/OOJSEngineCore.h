@@ -346,7 +346,7 @@ inline bool OOJSValueIsFunction(JSContext* context, JSValueConst value) {
   return JS_IsFunction(context, value);
 }
 
-inline bool OOJSValueIsArray(JSContext* context, JSValueConst value) {
+inline bool OOJSValueIsArray(JSContext* /*context*/, JSValueConst value) {
   return JS_IsArray(value);
 }
 
@@ -401,7 +401,7 @@ const char* OOJSClassName(JSClassID classID);
 
 void OOJSRegisterSubclass(JSClassID subclass, JSClassID superclass);
 bool OOJSIsSubclass(JSClassID putativeSubclass, JSClassID superclass);
-inline bool OOJSIsMemberOfSubclass(JSContext* context, JSValueConst object,
+inline bool OOJSIsMemberOfSubclass(JSContext* /*context*/, JSValueConst object,
                                    JSClassID superclass) {
   return JS_IsObject(object) &&
          OOJSIsSubclass(JS_GetClassID(object), superclass);

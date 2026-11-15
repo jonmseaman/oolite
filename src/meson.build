@@ -32,7 +32,7 @@ oolite_link_args = []
 # -Wsign-compare report nothing today; keep it that way.
 oolite_cpp_args = ['-Wold-style-cast', '-Wunused', '-Wsign-compare',
                    '-Wimplicit-fallthrough', '-Wsuggest-destructor-override',
-                   '-Wshadow']
+                   '-Wshadow', '-Wunused-parameter']
 oolite_dependencies = [
     dependency('sdl3', include_type: 'system'),
     dependency('libpng', include_type: 'system'),

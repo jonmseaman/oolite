@@ -743,7 +743,7 @@ void OOJSExcludeTimeFromLimiter(OOTimeDelta time) {
         SpiderMonkey operation callback no watchdog thread is needed. Returning
         non-zero throws an uncatchable error, which unwinds all JS frames.
 */
-static int InterruptHandler(JSRuntime* runtime, void* opaque) {
+static int InterruptHandler(JSRuntime* /*runtime*/, void* /*opaque*/) {
   if (sLimiterStartDepth == 0 || sLimiterPauseDepth > 0) [[likely]]
     return 0;
 
@@ -1628,7 +1628,7 @@ JSValue OONull::jsValueInContext(JSContext* /*context*/) { return JS_NULL; }
 //===========================================================================
 
 JSValue OOJSUnconstructableConstruct(JSContext* context, JSValueConst thisObj,
-                                     int argc, JSValueConst* argv) {
+                                     int /*argc*/, JSValueConst* /*argv*/) {
   // For constructors, this is new.target, i.e. the constructor function itself.
   JSValue nameVal = JS_GetPropertyStr(context, thisObj, "name");
   if (JS_IsException(nameVal)) {
@@ -1656,7 +1656,7 @@ void OOJSObjectWrapperFinalize(JSRuntime* runtime, JSValueConst thisObj) {
 
 // The JS class names the object.
 JSValue OOJSObjectWrapperToString(JSContext* context, JSValueConst thisObj,
-                                  int argc, JSValueConst* argv) {
+                                  int /*argc*/, JSValueConst* /*argv*/) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> description;
@@ -1742,7 +1742,7 @@ OOEntityStatus OOJavaScriptEngineStatus(Entity* entity) {
 
 }  // namespace
 
-bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* parameter) {
+bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* /*parameter*/) {
   OOJS_PROFILE_ENTER
 
   return OOJavaScriptEngineIsVisibleToScripts(entity);
@@ -1750,7 +1750,8 @@ bool JSEntityIsJavaScriptVisiblePredicate(Entity* entity, void* parameter) {
   OOJS_PROFILE_EXIT
 }
 
-bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void* parameter) {
+bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity,
+                                             void* /*parameter*/) {
   OOJS_PROFILE_ENTER
 
   if (!OOJavaScriptEngineIsVisibleToScripts(entity)) return false;
@@ -1777,7 +1778,7 @@ bool JSEntityIsJavaScriptSearchablePredicate(Entity* entity, void* parameter) {
   OOJS_PROFILE_EXIT
 }
 
-bool JSEntityIsDemoShipPredicate(Entity* entity, void* parameter) {
+bool JSEntityIsDemoShipPredicate(Entity* entity, void* /*parameter*/) {
   return (OOJavaScriptEngineIsVisibleToScripts(entity) &&
           OOJavaScriptEngineIsShip(entity) &&
           OOJavaScriptEngineStatus(entity) == OOEntityStatus::kCockpitDisplay &&

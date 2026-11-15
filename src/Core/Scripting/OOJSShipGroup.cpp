@@ -297,7 +297,8 @@ std::optional<std::string> OOShipGroup::jsDescription() {
 // *** Methods ***
 
 // toString() : String
-static JSValue ShipGroupToString(OOJS_NATIVE_ARGS) {
+static JSValue ShipGroupToString(JSContext* context, JSValueConst oojsThis,
+                                 int /*argc*/, JSValueConst* /*oojsArgv*/) {
   return OOJSCxxObjectWrapperToString(context, OOJS_THIS, sShipGroupClassID);
 }
 

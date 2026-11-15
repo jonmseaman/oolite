@@ -159,8 +159,9 @@ static JSValue ValueForMissionVariable(JSContext* context,
 
 static int MissionVariablesGetOwnProperty(JSContext* context,
                                           JSPropertyDescriptor* desc,
-                                          JSValueConst object, JSAtom propID) {
-  OOJS_PROFILE_ENTER
+                                          JSValueConst /*object*/,
+                                          JSAtom propID) {
+  OOJS_PROFILE_SCOPE();
 
   try {
     std::optional<std::string> key =
@@ -183,15 +184,13 @@ static int MissionVariablesGetOwnProperty(JSContext* context,
     OOJSReportCurrentException(context);
     return -1;
   }
-
-  OOJS_PROFILE_EXIT
 }
 
 static int MissionVariablesGetOwnPropertyNames(JSContext* context,
                                                JSPropertyEnum** outTable,
                                                uint32_t* outCount,
-                                               JSValueConst object) {
-  OOJS_PROFILE_ENTER
+                                               JSValueConst /*object*/) {
+  OOJS_PROFILE_SCOPE();
 
   try {
     // A copy of the keys, which is good since the enumerating code might
@@ -237,13 +236,12 @@ static int MissionVariablesGetOwnPropertyNames(JSContext* context,
     OOJSReportCurrentException(context);
     return -1;
   }
-
-  OOJS_PROFILE_EXIT
 }
 
 static int MissionVariablesDeleteProperty(JSContext* context,
-                                          JSValueConst object, JSAtom propID) {
-  OOJS_PROFILE_ENTER
+                                          JSValueConst /*object*/,
+                                          JSAtom propID) {
+  OOJS_PROFILE_SCOPE();
 
   try {
     PlayerEntity* player = OOPlayerForScripting();
@@ -260,13 +258,11 @@ static int MissionVariablesDeleteProperty(JSContext* context,
     OOJSReportCurrentException(context);
     return -1;
   }
-
-  OOJS_PROFILE_EXIT
 }
 
 static JSValue MissionVariablesGetProperty(JSContext* context,
                                            JSValueConst object, JSAtom propID,
-                                           JSValueConst receiver) {
+                                           JSValueConst /*receiver*/) {
   OOJS_NATIVE_ENTER(context)
 
   std::optional<std::string> key =
@@ -326,10 +322,12 @@ static bool SetMissionVariable(JSContext* context, JSAtom propID,
   return true;
 }
 
-static int MissionVariablesSetProperty(JSContext* context, JSValueConst object,
-                                       JSAtom propID, JSValueConst value,
-                                       JSValueConst receiver, int flags) {
-  OOJS_PROFILE_ENTER
+static int MissionVariablesSetProperty(JSContext* context,
+                                       JSValueConst /*object*/, JSAtom propID,
+                                       JSValueConst value,
+                                       JSValueConst /*receiver*/,
+                                       int /*flags*/) {
+  OOJS_PROFILE_SCOPE();
 
   try {
     return SetMissionVariable(context, propID, value) ? true : -1;
@@ -337,15 +335,14 @@ static int MissionVariablesSetProperty(JSContext* context, JSValueConst object,
     OOJSReportCurrentException(context);
     return -1;
   }
-
-  OOJS_PROFILE_EXIT
 }
 
 static int MissionVariablesDefineOwnProperty(JSContext* context,
-                                             JSValueConst object, JSAtom propID,
-                                             JSValueConst value,
-                                             JSValueConst getter,
-                                             JSValueConst setter, int flags) {
+                                             JSValueConst /*object*/,
+                                             JSAtom propID, JSValueConst value,
+                                             JSValueConst /*getter*/,
+                                             JSValueConst /*setter*/,
+                                             int flags) {
   /*	Object.defineProperty() and friends. Mission variables can't be
           accessors; a defined value is stored like an assignment.
   */

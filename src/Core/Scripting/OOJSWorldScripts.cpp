@@ -88,8 +88,8 @@ static std::optional<std::string> ScriptNameForPropertyID(JSContext* context,
 
 static int WorldScriptsGetOwnProperty(JSContext* context,
                                       JSPropertyDescriptor* desc,
-                                      JSValueConst object, JSAtom propID) {
-  OOJS_PROFILE_ENTER
+                                      JSValueConst /*object*/, JSAtom propID) {
+  OOJS_PROFILE_SCOPE();
 
   try {
     PlayerEntity* player = OOPlayerForScripting();
@@ -133,15 +133,13 @@ static int WorldScriptsGetOwnProperty(JSContext* context,
     OOJSReportCurrentException(context);
     return -1;
   }
-
-  OOJS_PROFILE_EXIT
 }
 
 static int WorldScriptsGetOwnPropertyNames(JSContext* context,
                                            JSPropertyEnum** outTable,
                                            uint32_t* outCount,
-                                           JSValueConst object) {
-  OOJS_PROFILE_ENTER
+                                           JSValueConst /*object*/) {
+  OOJS_PROFILE_SCOPE();
 
   /*	In order to support enumeration of world scripts (e.g.,
           for (name in worldScripts) { ... }), report each name.
@@ -174,6 +172,4 @@ static int WorldScriptsGetOwnPropertyNames(JSContext* context,
     OOJSReportCurrentException(context);
     return -1;
   }
-
-  OOJS_PROFILE_EXIT
 }

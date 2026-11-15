@@ -325,7 +325,7 @@ bool JSVectorSetVector(JSContext* context, JSValueConst vectorObj,
   return JSVectorSetHPVector(context, vectorObj, vectorToHPVector(vector));
 }
 
-bool JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj,
+bool JSVectorSetHPVector(JSContext* /*context*/, JSValueConst vectorObj,
                          HPVector vector) {
   OOJS_PROFILE_SCOPE();
 
@@ -347,7 +347,6 @@ bool JSVectorSetHPVector(JSContext* context, JSValueConst vectorObj,
   }
 
   return false;
-
 }
 
 static bool VectorFromArgumentListNoErrorInternal(JSContext* context, int argc,
@@ -496,14 +495,13 @@ static JSValue VectorSetProperty(JSContext* context, JSValueConst thisObj,
 
 }
 
-static void VectorFinalize(JSRuntime* runtime, JSValueConst thisObj) {
+static void VectorFinalize(JSRuntime* /*runtime*/, JSValueConst thisObj) {
   OOJS_PROFILE_SCOPE();
 
   delete static_cast<HPVector*>(JS_GetOpaque(thisObj, sVectorClassID));
-
 }
 
-static JSValue VectorConstruct(JSContext* context, JSValueConst newTarget,
+static JSValue VectorConstruct(JSContext* context, JSValueConst /*newTarget*/,
                                int argc, JSValueConst* argv) {
   OOJS_PROFILE_SCOPE();
 
@@ -520,13 +518,13 @@ static JSValue VectorConstruct(JSContext* context, JSValueConst newTarget,
   }
 
   return JSVectorWithHPVector(context, vector);
-
 }
 
 // *** Methods ***
 
 // toString() : String
-static JSValue VectorToString(OOJS_NATIVE_ARGS) {
+static JSValue VectorToString(JSContext* context, JSValueConst oojsThis,
+                              int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   HPVector thisv;
@@ -540,7 +538,8 @@ static JSValue VectorToString(OOJS_NATIVE_ARGS) {
 }
 
 // toSource() : String
-static JSValue VectorToSource(OOJS_NATIVE_ARGS) {
+static JSValue VectorToSource(JSContext* context, JSValueConst oojsThis,
+                              int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   HPVector thisv;
@@ -736,7 +735,8 @@ static JSValue VectorTripleProduct(OOJS_NATIVE_ARGS) {
 }
 
 // direction() : Vector3D
-static JSValue VectorDirection(OOJS_NATIVE_ARGS) {
+static JSValue VectorDirection(JSContext* context, JSValueConst oojsThis,
+                               int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   HPVector thisv, result;
@@ -747,11 +747,11 @@ static JSValue VectorDirection(OOJS_NATIVE_ARGS) {
   result = HPvector_normal(thisv);
 
   OOJS_RETURN_HPVECTOR(result);
-
 }
 
 // magnitude() : Number
-static JSValue VectorMagnitude(OOJS_NATIVE_ARGS) {
+static JSValue VectorMagnitude(JSContext* context, JSValueConst oojsThis,
+                               int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   HPVector thisv;
@@ -763,11 +763,12 @@ static JSValue VectorMagnitude(OOJS_NATIVE_ARGS) {
   result = HPmagnitude(thisv);
 
   OOJS_RETURN_DOUBLE(result);
-
 }
 
 // squaredMagnitude() : Number
-static JSValue VectorSquaredMagnitude(OOJS_NATIVE_ARGS) {
+static JSValue VectorSquaredMagnitude(JSContext* context, JSValueConst oojsThis,
+                                      int /*argc*/,
+                                      JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   HPVector thisv;
@@ -780,7 +781,6 @@ static JSValue VectorSquaredMagnitude(OOJS_NATIVE_ARGS) {
   result = HPmagnitude2(thisv);
 
   OOJS_RETURN_DOUBLE(result);
-
 }
 
 // rotationTo(v : vectorExpression [, limit : Number]) : Quaternion
@@ -843,7 +843,8 @@ static JSValue VectorRotateBy(OOJS_NATIVE_ARGS) {
 }
 
 // toArray() : Array
-static JSValue VectorToArray(OOJS_NATIVE_ARGS) {
+static JSValue VectorToArray(JSContext* context, JSValueConst oojsThis,
+                             int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   HPVector thisv;
@@ -867,13 +868,14 @@ static JSValue VectorToArray(OOJS_NATIVE_ARGS) {
   }
 
   return result;
-
 }
 
 // *** Static methods ***
 
 // interpolate(v : Vector3D, u : Vector3D, alpha : Number) : Vector3D
-static JSValue VectorStaticInterpolate(OOJS_NATIVE_ARGS) {
+static JSValue VectorStaticInterpolate(JSContext* context,
+                                       JSValueConst /*oojsThis*/, int argc,
+                                       JSValueConst* oojsArgv) {
   OOJS_PROFILE_SCOPE();
 
   HPVector av, bv;
@@ -913,11 +915,11 @@ INSUFFICIENT_ARGUMENTS:
                          "Insufficient parameters",
                          "vector expression, vector expression and number");
   return JS_EXCEPTION;
-
 }
 
 // random([maxLength : Number]) : Vector3D
-static JSValue VectorStaticRandom(OOJS_NATIVE_ARGS) {
+static JSValue VectorStaticRandom(JSContext* context, JSValueConst /*oojsThis*/,
+                                  int argc, JSValueConst* oojsArgv) {
   OOJS_PROFILE_SCOPE();
 
   double maxLength;
@@ -927,11 +929,12 @@ static JSValue VectorStaticRandom(OOJS_NATIVE_ARGS) {
     maxLength = 1.0;
 
   OOJS_RETURN_HPVECTOR(OOHPVectorRandomSpatial(maxLength));
-
 }
 
 // randomDirection([scale : Number]) : Vector3D
-static JSValue VectorStaticRandomDirection(OOJS_NATIVE_ARGS) {
+static JSValue VectorStaticRandomDirection(JSContext* context,
+                                           JSValueConst /*oojsThis*/, int argc,
+                                           JSValueConst* oojsArgv) {
   OOJS_PROFILE_SCOPE();
 
   double scale;
@@ -941,11 +944,13 @@ static JSValue VectorStaticRandomDirection(OOJS_NATIVE_ARGS) {
     scale = 1.0;
 
   OOJS_RETURN_HPVECTOR(HPvector_multiply_scalar(OORandomUnitHPVector(), scale));
-
 }
 
 // randomDirectionAndLength([maxLength : Number]) : Vector3D
-static JSValue VectorStaticRandomDirectionAndLength(OOJS_NATIVE_ARGS) {
+static JSValue VectorStaticRandomDirectionAndLength(JSContext* context,
+                                                    JSValueConst /*oojsThis*/,
+                                                    int argc,
+                                                    JSValueConst* oojsArgv) {
   OOJS_PROFILE_SCOPE();
 
   double maxLength;
@@ -955,7 +960,6 @@ static JSValue VectorStaticRandomDirectionAndLength(OOJS_NATIVE_ARGS) {
     maxLength = 1.0;
 
   OOJS_RETURN_HPVECTOR(OOHPVectorRandomRadial(maxLength));
-
 }
 
 #ifndef OOJS_POC_HARNESS

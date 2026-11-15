@@ -195,7 +195,8 @@ static JSValue ClockGetProperty(OOJS_GETTER_ARGS) {
 // *** Methods ***
 
 // toString() : String
-static JSValue JSClockToString(OOJS_NATIVE_ARGS) {
+static JSValue JSClockToString(JSContext* context, JSValueConst /*oojsThis*/,
+                               int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -206,7 +207,9 @@ static JSValue JSClockToString(OOJS_NATIVE_ARGS) {
 }
 
 // clockStringForTime(time : Number) : String
-static JSValue ClockClockStringForTime(OOJS_NATIVE_ARGS) {
+static JSValue ClockClockStringForTime(JSContext* context,
+                                       JSValueConst /*oojsThis*/, int argc,
+                                       JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   double time;
@@ -228,7 +231,8 @@ static JSValue ClockClockStringForTime(OOJS_NATIVE_ARGS) {
 }
 
 // addSeconds(seconds : Number) : String
-static JSValue ClockAddSeconds(OOJS_NATIVE_ARGS) {
+static JSValue ClockAddSeconds(JSContext* context, JSValueConst /*oojsThis*/,
+                               int argc, JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   double time;

@@ -274,7 +274,8 @@ static bool GetThisQuaternion(JSContext* context, JSValueConst quaternionObj,
   return false;
 }
 
-bool JSQuaternionSetQuaternion(JSContext* context, JSValueConst quaternionObj,
+bool JSQuaternionSetQuaternion(JSContext* /*context*/,
+                               JSValueConst quaternionObj,
                                Quaternion quaternion) {
   OOJS_PROFILE_SCOPE();
 
@@ -294,7 +295,6 @@ bool JSQuaternionSetQuaternion(JSContext* context, JSValueConst quaternionObj,
   }
 
   return false;
-
 }
 
 static bool QuaternionFromArgumentListNoErrorInternal(
@@ -456,15 +456,15 @@ static JSValue QuaternionSetProperty(JSContext* context, JSValueConst thisObj,
 
 }
 
-static void QuaternionFinalize(JSRuntime* runtime, JSValueConst thisObj) {
+static void QuaternionFinalize(JSRuntime* /*runtime*/, JSValueConst thisObj) {
   OOJS_PROFILE_SCOPE();
 
   delete static_cast<Quaternion*>(JS_GetOpaque(thisObj, sQuaternionClassID));
-
 }
 
-static JSValue QuaternionConstruct(JSContext* context, JSValueConst newTarget,
-                                   int argc, JSValueConst* argv) {
+static JSValue QuaternionConstruct(JSContext* context,
+                                   JSValueConst /*newTarget*/, int argc,
+                                   JSValueConst* argv) {
   OOJS_PROFILE_SCOPE();
 
   Quaternion quaternion = kIdentityQuaternion;
@@ -480,13 +480,13 @@ static JSValue QuaternionConstruct(JSContext* context, JSValueConst newTarget,
   }
 
   return JSQuaternionWithQuaternion(context, quaternion);
-
 }
 
 // *** Methods ***
 
 // toString() : String
-static JSValue QuaternionToString(OOJS_NATIVE_ARGS) {
+static JSValue QuaternionToString(JSContext* context, JSValueConst oojsThis,
+                                  int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   Quaternion thisq;
@@ -500,7 +500,8 @@ static JSValue QuaternionToString(OOJS_NATIVE_ARGS) {
 }
 
 // toSource() : String
-static JSValue QuaternionToSource(OOJS_NATIVE_ARGS) {
+static JSValue QuaternionToSource(JSContext* context, JSValueConst oojsThis,
+                                  int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   Quaternion thisq;
@@ -639,7 +640,8 @@ static JSValue QuaternionRotateZ(OOJS_NATIVE_ARGS) {
 }
 
 // normalize() : Quaternion
-static JSValue QuaternionNormalize(OOJS_NATIVE_ARGS) {
+static JSValue QuaternionNormalize(JSContext* context, JSValueConst oojsThis,
+                                   int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   Quaternion quat;
@@ -650,11 +652,11 @@ static JSValue QuaternionNormalize(OOJS_NATIVE_ARGS) {
   quaternion_normalize(&quat);
 
   OOJS_RETURN_QUATERNION(quat);
-
 }
 
 // conjugate() : Quaternion
-static JSValue QuaternionConjugate(OOJS_NATIVE_ARGS) {
+static JSValue QuaternionConjugate(JSContext* context, JSValueConst oojsThis,
+                                   int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   Quaternion quat, result;
@@ -665,11 +667,12 @@ static JSValue QuaternionConjugate(OOJS_NATIVE_ARGS) {
   result = quaternion_conjugate(quat);
 
   OOJS_RETURN_QUATERNION(result);
-
 }
 
 // vectorForward() : Vector
-static JSValue QuaternionVectorForward(OOJS_NATIVE_ARGS) {
+static JSValue QuaternionVectorForward(JSContext* context,
+                                       JSValueConst oojsThis, int /*argc*/,
+                                       JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   Quaternion thisq;
@@ -682,11 +685,11 @@ static JSValue QuaternionVectorForward(OOJS_NATIVE_ARGS) {
   result = vector_forward_from_quaternion(thisq);
 
   OOJS_RETURN_VECTOR(result);
-
 }
 
 // vectorUp() : Vector
-static JSValue QuaternionVectorUp(OOJS_NATIVE_ARGS) {
+static JSValue QuaternionVectorUp(JSContext* context, JSValueConst oojsThis,
+                                  int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   Quaternion thisq;
@@ -698,11 +701,11 @@ static JSValue QuaternionVectorUp(OOJS_NATIVE_ARGS) {
   result = vector_up_from_quaternion(thisq);
 
   OOJS_RETURN_VECTOR(result);
-
 }
 
 // vectorRight() : Vector
-static JSValue QuaternionVectorRight(OOJS_NATIVE_ARGS) {
+static JSValue QuaternionVectorRight(JSContext* context, JSValueConst oojsThis,
+                                     int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   Quaternion thisq;
@@ -715,11 +718,11 @@ static JSValue QuaternionVectorRight(OOJS_NATIVE_ARGS) {
   result = vector_right_from_quaternion(thisq);
 
   OOJS_RETURN_VECTOR(result);
-
 }
 
 // toArray() : Array
-static JSValue QuaternionToArray(OOJS_NATIVE_ARGS) {
+static JSValue QuaternionToArray(JSContext* context, JSValueConst oojsThis,
+                                 int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   Quaternion thisq;
@@ -745,15 +748,15 @@ static JSValue QuaternionToArray(OOJS_NATIVE_ARGS) {
   }
 
   return result;
-
 }
 
 // *** Static methods ***
 
 // random() : Quaternion
-static JSValue QuaternionStaticRandom(OOJS_NATIVE_ARGS) {
+static JSValue QuaternionStaticRandom(JSContext* context,
+                                      JSValueConst /*oojsThis*/, int /*argc*/,
+                                      JSValueConst* /*oojsArgv*/) {
   OOJS_PROFILE_SCOPE();
 
   OOJS_RETURN_QUATERNION(OORandomQuaternion());
-
 }

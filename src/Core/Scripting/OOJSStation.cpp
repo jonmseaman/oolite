@@ -499,7 +499,9 @@ static JSValue StationSetProperty(OOJS_SETTER_ARGS) {
 
 // *** Methods ***
 
-static JSValue StationAbortAllDockings(OOJS_NATIVE_ARGS) {
+static JSValue StationAbortAllDockings(JSContext* context,
+                                       JSValueConst oojsThis, int /*argc*/,
+                                       JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
@@ -576,7 +578,8 @@ static JSValue StationCanDockShip(OOJS_NATIVE_ARGS) {
 
 // dockPlayer()
 // Proposed and written by Frame 20090729
-static JSValue StationDockPlayer(OOJS_NATIVE_ARGS) {
+static JSValue StationDockPlayer(JSContext* context, JSValueConst oojsThis,
+                                 int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   PlayerEntity* player = OOPlayerForScripting();
@@ -618,7 +621,9 @@ static JSValue StationDockPlayer(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue StationIncreaseAlertLevel(OOJS_NATIVE_ARGS) {
+static JSValue StationIncreaseAlertLevel(JSContext* context,
+                                         JSValueConst oojsThis, int /*argc*/,
+                                         JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
   StationEntity* station = nullptr;
 
@@ -637,7 +642,9 @@ static JSValue StationIncreaseAlertLevel(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue StationDecreaseAlertLevel(OOJS_NATIVE_ARGS) {
+static JSValue StationDecreaseAlertLevel(JSContext* context,
+                                         JSValueConst oojsThis, int /*argc*/,
+                                         JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
   StationEntity* station = nullptr;
 
@@ -691,7 +698,9 @@ static JSValue StationLaunchShipWithRole(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue StationLaunchDefenseShip(OOJS_NATIVE_ARGS) {
+static JSValue StationLaunchDefenseShip(JSContext* context,
+                                        JSValueConst oojsThis, int /*argc*/,
+                                        JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
@@ -708,7 +717,8 @@ static JSValue StationLaunchDefenseShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue StationLaunchEscort(OOJS_NATIVE_ARGS) {
+static JSValue StationLaunchEscort(JSContext* context, JSValueConst oojsThis,
+                                   int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
@@ -725,7 +735,9 @@ static JSValue StationLaunchEscort(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue StationLaunchScavenger(OOJS_NATIVE_ARGS) {
+static JSValue StationLaunchScavenger(JSContext* context, JSValueConst oojsThis,
+                                      int /*argc*/,
+                                      JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
@@ -742,7 +754,8 @@ static JSValue StationLaunchScavenger(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue StationLaunchMiner(OOJS_NATIVE_ARGS) {
+static JSValue StationLaunchMiner(JSContext* context, JSValueConst oojsThis,
+                                  int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
@@ -758,7 +771,9 @@ static JSValue StationLaunchMiner(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue StationLaunchPirateShip(OOJS_NATIVE_ARGS) {
+static JSValue StationLaunchPirateShip(JSContext* context,
+                                       JSValueConst oojsThis, int /*argc*/,
+                                       JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
@@ -775,7 +790,8 @@ static JSValue StationLaunchPirateShip(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue StationLaunchShuttle(OOJS_NATIVE_ARGS) {
+static JSValue StationLaunchShuttle(JSContext* context, JSValueConst oojsThis,
+                                    int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
@@ -791,7 +807,8 @@ static JSValue StationLaunchShuttle(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue StationLaunchPatrol(OOJS_NATIVE_ARGS) {
+static JSValue StationLaunchPatrol(JSContext* context, JSValueConst oojsThis,
+                                   int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;
@@ -807,7 +824,8 @@ static JSValue StationLaunchPatrol(OOJS_NATIVE_ARGS) {
   OOJS_NATIVE_EXIT
 }
 
-static JSValue StationLaunchPolice(OOJS_NATIVE_ARGS) {
+static JSValue StationLaunchPolice(JSContext* context, JSValueConst oojsThis,
+                                   int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   StationEntity* station = nullptr;

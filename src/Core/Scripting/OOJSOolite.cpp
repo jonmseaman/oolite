@@ -372,7 +372,9 @@ static unsigned UnsignedIntValue(const oo::PList& number) {
         if (0 < oolite.compareVersion("1.70"))  log("Old version of Oolite!")
         else  this.doStuffThatRequires170()
 */
-static JSValue OoliteCompareVersion(OOJS_NATIVE_ARGS) {
+static JSValue OoliteCompareVersion(JSContext* context,
+                                    JSValueConst /*oojsThis*/, int argc,
+                                    JSValueConst* oojsArgv) {
   OOJS_NATIVE_ENTER(context)
 
   oo::PList components;

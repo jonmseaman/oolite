@@ -167,7 +167,8 @@ static JSValue SunGoNova(OOJS_NATIVE_ARGS) {
 // namespace
 
 // cancelNova()
-static JSValue SunCancelNova(OOJS_NATIVE_ARGS) {
+static JSValue SunCancelNova(JSContext* context, JSValueConst oojsThis,
+                             int /*argc*/, JSValueConst* /*oojsArgv*/) {
   OOJS_NATIVE_ENTER(context)
 
   OOSunEntity* sun = nullptr;
