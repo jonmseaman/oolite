@@ -240,7 +240,7 @@ OOMeshToOctreeConverter::OOMeshToOctreeConverter(std::size_t capacity) {
   if (capacity == 0) capacity = 1;  // Happens for models with no faces.
 
   {
-    InitGeometryData(&_data, capacity);
+    InitGeometryData(&_data, static_cast<uint32_t>(capacity));
   }
 }
 

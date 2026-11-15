@@ -185,7 +185,8 @@ unsigned WorkThreadCount() {
 #if OO_DEBUG
   return kMaxWorkThreads;
 #else
-  return std::min(OOCPUCount(), static_cast<std::size_t>(kMaxWorkThreads));
+  return static_cast<unsigned int>(
+      std::min(OOCPUCount(), static_cast<std::size_t>(kMaxWorkThreads)));
 #endif
 }
 

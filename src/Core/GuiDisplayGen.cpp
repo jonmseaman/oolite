@@ -490,7 +490,7 @@ bool GuiDisplayGen::setSelectedRow(OOGUIRow row) {
   if (RowInRange(row, selectableRange)) {
     if (!IsSkipKey(rowKey[row])) {
       selectedRow = row;
-      reportSelectedRow(row);
+      reportSelectedRow(static_cast<int>(row));
       return true;
     }
   }
@@ -502,7 +502,7 @@ bool GuiDisplayGen::setNextRow(int direction) {
   while (RowInRange(row, selectableRange)) {
     if (!IsSkipKey(rowKey[row])) {
       selectedRow = row;
-      reportSelectedRow(row);
+      reportSelectedRow(static_cast<int>(row));
       return true;
     }
     row += direction;
@@ -515,7 +515,7 @@ bool GuiDisplayGen::setFirstSelectableRow() {
   while (RowInRange(row, selectableRange)) {
     if (!IsSkipKey(rowKey[row])) {
       selectedRow = row;
-      reportSelectedRow(row);
+      reportSelectedRow(static_cast<int>(row));
       return true;
     }
     row++;
@@ -529,7 +529,7 @@ bool GuiDisplayGen::setLastSelectableRow() {
   while (RowInRange(row, selectableRange)) {
     if (!IsSkipKey(rowKey[row])) {
       selectedRow = row;
-      reportSelectedRow(row);
+      reportSelectedRow(static_cast<int>(row));
       return true;
     }
     row--;

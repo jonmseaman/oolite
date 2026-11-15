@@ -357,7 +357,7 @@ std::optional<std::string> PlayerEntity::commanderSelector() {
 
   int idx;
   if (handleGUIUpDownArrowKeys()) {
-    int guiSelectedRow = gui->getSelectedRow();
+    int guiSelectedRow = static_cast<int>(gui->getSelectedRow());
     idx = (guiSelectedRow - STARTROW) + (currentPage * NUMROWS);
     if (guiSelectedRow != MOREROW && guiSelectedRow != BACKROW &&
         guiSelectedRow != EXITROW) {
@@ -370,8 +370,8 @@ std::optional<std::string> PlayerEntity::commanderSelector() {
     }
 
   } else {
-    idx = (gui->getSelectedRow() - STARTROW) +
-          static_cast<OOGUIRow>(currentPage * NUMROWS);
+    idx = static_cast<int>((gui->getSelectedRow() - STARTROW) +
+                           static_cast<OOGUIRow>(currentPage * NUMROWS));
   }
 
   // handle page <-- and page --> keys
@@ -460,7 +460,7 @@ void PlayerEntity::saveCommanderInputHandler() {
       OOJoystickManager::sharedStickHandler()->getAllButtonStates();
 
   if (handleGUIUpDownArrowKeys()) {
-    int guiSelectedRow = gui->getSelectedRow();
+    int guiSelectedRow = static_cast<int>(gui->getSelectedRow());
     int idx = (guiSelectedRow - STARTROW) + (currentPage * NUMROWS);
     if (guiSelectedRow != MOREROW && guiSelectedRow != BACKROW) {
       showCommanderShip(idx);
@@ -524,7 +524,7 @@ void PlayerEntity::saveCommanderInputHandler() {
       !commanderNameString.empty()) {
     if (IsCommandModifierKeyDown(gameView) ||
         (gameView != nullptr ? gameView->isDown(gvMouseDoubleClick) : false)) {
-      int guiSelectedRow = gui->getSelectedRow();
+      int guiSelectedRow = static_cast<int>(gui->getSelectedRow());
       int idx = (guiSelectedRow - STARTROW) + (currentPage * NUMROWS);
       const oo::PList cdr =
           (idx >= 0 && static_cast<std::size_t>(idx) < cdrDetailArray.size())
@@ -1158,7 +1158,7 @@ void PlayerEntity::lsCommanders(
   }
 
   if (firstIndex + NUMROWS >= cdrDetailArray.size()) {
-    lastIndex = cdrDetailArray.size();
+    lastIndex = static_cast<unsigned int>(cdrDetailArray.size());
     gui->setSelectableRange(NSMakeRange(rangeStart, rangeStart + NUMROWS + 2));
   } else {
     lastIndex = (page * NUMROWS) + NUMROWS;

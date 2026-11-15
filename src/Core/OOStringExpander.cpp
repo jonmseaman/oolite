@@ -1611,7 +1611,8 @@ void SyntaxIssue(OOStringExpansionContext* context, const char* function,
       ReportJavaScriptWarning(jsc, "%s", message.c_str());
       OOJSRelinquishContext(jsc);
     } else {
-      oo::log::logger().write(logMessageClass, function, fileName, line,
+      oo::log::logger().write(logMessageClass, function, fileName,
+                              static_cast<std::uint32_t>(line),
                               std::string(prefix) + message);
     }
   }
