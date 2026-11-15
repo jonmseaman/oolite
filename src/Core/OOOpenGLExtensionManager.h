@@ -56,7 +56,7 @@ class OOOpenGLExtensionManager : public oo::Object {
   */
   static OOOpenGLExtensionManager* sharedManager();
 
-  ~OOOpenGLExtensionManager();
+  ~OOOpenGLExtensionManager() override;
 
   void reset();
 

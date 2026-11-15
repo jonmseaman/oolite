@@ -98,7 +98,7 @@ class OODebugTCPConsoleClient : public OODebuggerInterface {
       const std::optional<std::string>& address,  // Pass nullopt for localhost
       uint16_t port);                             // Pass 0 for default port
 
-  ~OODebugTCPConsoleClient();
+  ~OODebugTCPConsoleClient() override;
 
   // The debugger interface (OODebuggerInterface).
   bool connectDebugMonitor(OODebugMonitor* debugMonitor,
