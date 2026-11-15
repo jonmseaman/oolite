@@ -117,7 +117,7 @@ MA 02110-1301, USA.
         std::vector<Triangle> heap
                 Storage after smallData is outgrown; its size is capacity.
 */
-using GeometryData = struct OOMeshToOctreeConverterInternalData;
+using GeometryData = OOMeshToOctreeConverterInternalData;
 
 /*
         InitGeometryData(data, capacity)

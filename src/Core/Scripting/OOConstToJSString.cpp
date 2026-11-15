@@ -50,13 +50,13 @@ MA 02110-1301, USA.
         -- Ahruman 2011-01-15
 */
 
-using TableEntry = struct {
+struct TableEntry {
   std::ptrdiff_t value;
   const char* cString;
   JSAtom atom;
 };
 
-using ConstTable = struct ConstTable {
+struct ConstTable {
   std::size_t count;
   TableEntry* entries;
 };

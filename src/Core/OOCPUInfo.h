@@ -66,7 +66,7 @@ std::size_t OOCPUCount(void);
 std::string OOCPUDescription(void);  // UTF-8
 void OOCPUID(int CPUInfo[4], int InfoType);
 
-using OOMemoryStatus = struct {
+struct OOMemoryStatus {
   unsigned long long ooPhysicalMemory;
   unsigned long long ooAvailableMemory;
 };

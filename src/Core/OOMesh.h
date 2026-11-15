@@ -83,7 +83,7 @@ using OOMeshVertexCount = uint32_t;
 using OOMeshFaceCount = uint32_t;
 using OOMeshFaceVertexCount = uint8_t;
 
-using OOMeshFace = struct {
+struct OOMeshFace {
   OOMeshSmoothGroup smoothGroup;
   OOMeshMaterialIndex materialIndex;
   GLuint vertex[3];
@@ -94,7 +94,7 @@ using OOMeshFace = struct {
   GLfloat t[3];
 };
 
-using OOMeshDisplayLists = struct {
+struct OOMeshDisplayLists {
   GLint* indexArray;
   GLfloat* textureUVArray;
   Vector* vertexArray;

@@ -66,7 +66,7 @@ SOFTWARE.
 */
 using OOPolygonContour = std::vector<NSPoint>;
 
-using TessPolygonData = struct {
+struct TessPolygonData {
   std::vector<GLfloat> data;   // the vertices, as x, y pairs
   GLenum mode;                 // Current primitive mode.
   size_t vCount;               // Number of vertices so far in primitive.

@@ -19,13 +19,15 @@ buffers and property lists, implemented over oofnd.
    OOALPropertyListFromData() belongs to the innermost
         OOALCreateAutoreleasePool() and is freed when it is destroyed.
 */
-using OOALObjectRef = struct OOALObject*;
+struct OOALObject;
+using OOALObjectRef = OOALObject*;
 
-using OOALStringRef = struct OOALObject*;
-using OOALDataRef = struct OOALObject*;
-using OOALMutableDataRef = struct OOALObject*;
-using OOALDictionaryRef = struct OOALObject*;
-using OOALAutoreleasePoolRef = struct OOALAutoreleasePool*;
+using OOALStringRef = OOALObject*;
+using OOALDataRef = OOALObject*;
+using OOALMutableDataRef = OOALObject*;
+using OOALDictionaryRef = OOALObject*;
+struct OOALAutoreleasePool;
+using OOALAutoreleasePoolRef = OOALAutoreleasePool*;
 
 OOALStringRef OOALGetConstantString(
     const char* string);  // Should only be used with string literals!

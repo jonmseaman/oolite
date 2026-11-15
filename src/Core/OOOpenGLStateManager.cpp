@@ -70,7 +70,7 @@ std::string StateFlagToString(StateFlag flag) {
         StateFlag for an on/off flag, bool for a client-array flag, GLint for an
         integer, and the special item's own type.
 */
-using OOOpenGLState = struct {
+struct OOOpenGLState {
   std::string_view name;
 
   StateFlag LIGHTING;
