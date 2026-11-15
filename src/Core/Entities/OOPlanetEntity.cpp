@@ -167,9 +167,9 @@ void OOPlanetEntity::initAsMainPlanetForSystem(OOSystemID s) {
   oo::PList planetInfo =
       (UNIVERSE != nullptr ? UNIVERSE->generateSystemData(s) : oo::PList());
 
-  SetInfo(planetInfo, "mainForLocalSystem", oo::PList(static_cast<bool>(true)));
+  SetInfo(planetInfo, "mainForLocalSystem", oo::PList(true));
   if (s != (PLAYER != nullptr ? PLAYER->systemID() : 0)) {
-    SetInfo(planetInfo, "isMiniature", oo::PList(static_cast<bool>(true)));
+    SetInfo(planetInfo, "isMiniature", oo::PList(true));
   }
   initFromDictionary(
       planetInfo, planetInfo.get<bool>("has_atmosphere", true),

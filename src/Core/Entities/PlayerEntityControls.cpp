@@ -707,15 +707,12 @@ bool PlayerEntity::checkKeyPress(const oo::PList& key_def, bool fKey_only,
       continue;
     if ((gameView != nullptr ? gameView->isDown(keycode) : false) &&
         (def->get<bool>("shift") ==
-         static_cast<bool>(
-             (gameView != nullptr ? gameView->isShiftDown() : false))) &&
+         (gameView != nullptr ? gameView->isShiftDown() : false)) &&
         (ignore_ctrl ||
          (def->get<bool>("mod1") ==
-          static_cast<bool>(
-              (gameView != nullptr ? gameView->isCtrlDown() : false)))) &&
+          (gameView != nullptr ? gameView->isCtrlDown() : false))) &&
         (def->get<bool>("mod2") ==
-         static_cast<bool>(
-             (gameView != nullptr ? gameView->isOptDown() : false))))
+         (gameView != nullptr ? gameView->isOptDown() : false)))
       return true;
   }
   return false;
@@ -1426,7 +1423,7 @@ void PlayerEntity::pollFlightControls(double delta_t) {
             if (UNIVERSE != nullptr)
               UNIVERSE->addMessage(weaponsOnlineToggleMsg, 2.0);
             doScriptEvent(OOJSID("weaponsSystemsToggled"),
-                          {oo::PList(static_cast<bool>(weaponsOnline()))});
+                          {oo::PList(weaponsOnline())});
             weaponsOnlineToggle_pressed = true;
           }
         } else

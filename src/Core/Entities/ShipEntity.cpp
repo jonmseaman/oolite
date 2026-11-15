@@ -3204,8 +3204,7 @@ void ShipEntity::respondToAttackFrom(Entity* from, Entity* other) {
                                       : static_cast<OOShipGroup*>(nullptr))) {
         // we are in the same group, do we forgive you?
         // criminals are less likely to forgive
-        if (randf() < (0.8 - static_cast<OOCreditsQuantity>(
-                                 bounty / 100)))  // whole hundreds, as before
+        if (randf() < (0.8 - (bounty / 100)))  // whole hundreds, as before
         {
           // it was an honest mistake, lets get on with it
           return;

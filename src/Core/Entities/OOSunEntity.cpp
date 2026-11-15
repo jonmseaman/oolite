@@ -268,7 +268,7 @@ void OOSunEntity::update(OOTimeDelta delta_t) {
           // This sun has now gone nova!
           if (UNIVERSE != nullptr)
             UNIVERSE->setSystemDataKey(
-                "sun_gone_nova", oo::PList(static_cast<bool>(true)),
+                "sun_gone_nova", oo::PList(true),
                 "org.oolite.oolite");  // +numberWithBool:
           if (UNIVERSE != nullptr)
             UNIVERSE->setSystemDataKey(

@@ -256,7 +256,7 @@ bool CallMethod(JSContext* context, const std::string& oo_jsClassName, int argc,
 
         case kMethodTypeFloatVoid:
         case kMethodTypeDoubleVoid:
-          result = oo::PList(static_cast<double>(typed.real));
+          result = oo::PList(typed.real);
           break;
 
         case kMethodTypeVectorVoid: {
