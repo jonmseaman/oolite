@@ -42,18 +42,18 @@ MA 02110-1301, USA.
 
 #define SUN_CORONA_SAMPLES \
   729  // Samples at half-degree intervals, with a bit of overlap.
-#define MAX_CORONAFLARE 600000.0  // nova flare
+inline constexpr double MAX_CORONAFLARE = 600000.0;  // nova flare
 
 #ifndef SUN_DIRECT_VISION_GLARE
 #define SUN_DIRECT_VISION_GLARE 1
 #endif
 
 #if SUN_DIRECT_VISION_GLARE
-#define SUN_GLARE_MULT_FACTOR 3.0
+inline constexpr double SUN_GLARE_MULT_FACTOR = 3.0;
 #define SUN_GLARE_ADD_FACTOR (std::numbers::pi / 16.0)
-#define SUN_GLARE_CORONA_FACTOR 0.5f
+inline constexpr float SUN_GLARE_CORONA_FACTOR = 0.5f;
 #else
-#define SUN_GLARE_CORONA_FACTOR 1.5
+inline constexpr double SUN_GLARE_CORONA_FACTOR = 1.5;
 #endif
 
 /*	The universe makes it with
