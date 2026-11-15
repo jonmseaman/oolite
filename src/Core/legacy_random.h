@@ -91,6 +91,13 @@ inline double accurateDistanceBetweenPlanetPositions(int x1, int y1, int x2,
 
 void seed_for_planet_description(Random_Seed s_seed);
 void seed_RNG_only_for_planet_description(Random_Seed s_seed);
+
+namespace oo {
+// A seed of six random bytes for seed_RNG_only_for_planet_description(): the
+// comms messages' and legacy scripts' "very random seed". From a
+// std::mt19937 seeded once by std::random_device. Game thread only.
+Random_Seed RandomDescriptionSeed();
+}  // namespace oo
 RNG_Seed currentRandomSeed(void);
 void setRandomSeed(RNG_Seed a_seed);
 

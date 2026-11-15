@@ -31,6 +31,7 @@ MA 02110-1301, USA.
 
 #include <cstdint>
 #include <format>
+#include <random>
 
 const Random_Seed kNilRandomSeed = {0};
 
@@ -147,6 +148,19 @@ float bellf(int n) {
 RANROTSeed RANROTGetFullSeed() { return sRANROT; }
 
 void RANROTSetFullSeed(RANROTSeed seed) { sRANROT = seed; }
+
+Random_Seed oo::RandomDescriptionSeed() {
+  static std::mt19937 engine{std::random_device{}()};
+  std::uniform_int_distribution<int> byte(0, 255);
+  Random_Seed seed;
+  seed.a = static_cast<uint8_t>(byte(engine));
+  seed.b = static_cast<uint8_t>(byte(engine));
+  seed.c = static_cast<uint8_t>(byte(engine));
+  seed.d = static_cast<uint8_t>(byte(engine));
+  seed.e = static_cast<uint8_t>(byte(engine));
+  seed.f = static_cast<uint8_t>(byte(engine));
+  return seed;
+}
 
 void seed_RNG_only_for_planet_description(Random_Seed s_seed) {
   rnd_seed.a = s_seed.c;
