@@ -31,6 +31,7 @@ MA 02110-1301, USA.
 #include <functional>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <set>
 #include <string>
@@ -4153,21 +4154,21 @@ static void hudRotateViewpointForVirtualDepth(PlayerEntity* player1,
       view_dir.x = 0.0;
       view_dir.y = 0.0;
       view_dir.z = -1.0;
-      quaternion_rotate_about_axis(&back_q, v1, M_PI);
+      quaternion_rotate_about_axis(&back_q, v1, std::numbers::pi);
       break;
 
     case OOViewID::kPort:
       view_dir.x = -1.0;
       view_dir.y = 0.0;
       view_dir.z = 0.0;
-      quaternion_rotate_about_axis(&back_q, v1, 0.5 * M_PI);
+      quaternion_rotate_about_axis(&back_q, v1, 0.5 * std::numbers::pi);
       break;
 
     case OOViewID::kStarboard:
       view_dir.x = 1.0;
       view_dir.y = 0.0;
       view_dir.z = 0.0;
-      quaternion_rotate_about_axis(&back_q, v1, -0.5 * M_PI);
+      quaternion_rotate_about_axis(&back_q, v1, -0.5 * std::numbers::pi);
       break;
 
     case OOViewID::kCustom:
@@ -4489,7 +4490,7 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
     OOGL(glColor4f(1.0, 0.5, 1.0, alpha));
     spacepos.y = 0;
     for (i = 0; i < 24; i++) {
-      theta = i * 2 * M_PI / 24;
+      theta = i * 2 * std::numbers::pi / 24;
       spacepos.x = centre.x + r0 * cos(theta);
       spacepos.z = centre.z + r0 * sin(theta);
       scannerpos =
@@ -4525,9 +4526,9 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
     strip[2 * i + 1].z = z;
   }
   for (i = 1; i <= 24; i++) {
-    theta = i * M_PI / 24;
+    theta = i * std::numbers::pi / 24;
     for (j = 0; j <= 24; j++) {
-      phi = j * M_PI / 12;
+      phi = j * std::numbers::pi / 12;
       // copy point from bottom edge of previous strip into top edge position
       strip[2 * j] = strip[2 * j + 1];
 
@@ -4716,10 +4717,10 @@ static void DrawSpecialOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
   GLfloat delta;
   GLfloat s;
 
-  delta = step * M_PI / 180.0f;
+  delta = step * std::numbers::pi / 180.0f;
 
   OOGLBEGIN(GL_LINE_LOOP);
-  for (theta = 0.0f; theta < (2.0f * M_PI); theta += delta) {
+  for (theta = 0.0f; theta < (2.0f * std::numbers::pi); theta += delta) {
     s = sin(theta);
     glColor4f(color4v[0], color4v[1], color4v[2], fabs(s * color4v[3]));
     glVertex3f(x + ww * s, y + hh * cos(theta), z);

@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #include <algorithm>
 #include <cstring>
 #include <memory>
+#include <numbers>
 #include <string>
 
 #include "OOColor.h"
@@ -45,8 +46,8 @@ void OOBreakPatternEntity::initWithPolygonSides(std::size_t sides,
   // [super init] could not fail: the constructor ran Entity's -init body.
   {
     _vertexCount = (sides + 1) * 2;
-    float angle = startAngleDegrees * M_PI / 180.0f;
-    float deltaAngle = M_PI * 2.0f / sides;
+    float angle = startAngleDegrees * std::numbers::pi / 180.0f;
+    float deltaAngle = std::numbers::pi * 2.0f / sides;
     float xAspect = fmin(1.0f, aspectRatio);
     float yAspect = fmin(1.0f, 1.0f / aspectRatio);
 

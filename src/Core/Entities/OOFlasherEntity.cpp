@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #include "OOFlasherEntity.h"
 
 #include <memory>
+#include <numbers>
 #include <string>
 #include <utility>
 #include <vector>
@@ -108,7 +109,7 @@ void OOFlasherEntity::update(OOTimeDelta delta_t) {
   _time += delta_t;
 
   if (_frequency != 0) {
-    float wave = sinf(_frequency * M_PI * (_time + _phase));
+    float wave = sinf(_frequency * std::numbers::pi * (_time + _phase));
     std::size_t count = _colors.size();
     if (count > 1 && wave < 0) {
       if (!_justSwitched && wave > _wave) {
@@ -124,7 +125,7 @@ void OOFlasherEntity::update(OOTimeDelta delta_t) {
       _justSwitched = false;
     }
 
-    float threshold = cosf(_brightfraction * M_PI);
+    float threshold = cosf(_brightfraction * std::numbers::pi);
 
     float brightness = _brightfraction;
     if (wave > threshold) {

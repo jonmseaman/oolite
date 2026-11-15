@@ -22,6 +22,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstring>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 
@@ -345,7 +346,7 @@ OO_TEST(methods) {
   OO_CHECK_EQ(Eval("new Vector3D(3, 4, 0).squaredMagnitude()"), "25");
   OO_CHECK_EQ(Eval("new Vector3D(3, 4, 0).direction()"), "(0.6, 0.8, 0)");
   OO_CHECK(std::fabs(EvalNumber("new Vector3D(1, 0, 0).angleTo([0, 1, 0])") -
-                     M_PI / 2) < 1e-9);
+                     std::numbers::pi / 2) < 1e-9);
   OO_CHECK_EQ(Eval("new Vector3D(1, 2, 3).toArray()"), "1,2,3");
   OO_CHECK_EQ(Eval("Array.isArray(new Vector3D(1, 2, 3).toArray())"), "true");
   OO_CHECK_EQ(Eval("new Vector3D(1, 0, 0).rotationTo([1, 0, 0])"), "1,0,0,0");

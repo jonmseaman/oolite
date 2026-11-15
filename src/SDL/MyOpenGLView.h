@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <set>
 #include <string>
@@ -50,8 +51,8 @@ MA 02110-1301, USA.
 
 #define MIN_FOV_DEG 30.0f
 #define MAX_FOV_DEG 80.0f
-#define MIN_FOV (tan((MIN_FOV_DEG / 2) * M_PI / 180.0f))
-#define MAX_FOV (tan((MAX_FOV_DEG / 2) * M_PI / 180.0f))
+#define MIN_FOV (tan((MIN_FOV_DEG / 2) * std::numbers::pi / 180.0f))
+#define MAX_FOV (tan((MAX_FOV_DEG / 2) * std::numbers::pi / 180.0f))
 
 #define MIN_HDR_MAXBRIGHTNESS 400.0
 #define MAX_HDR_MAXBRIGHTNESS 1000.0

@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <numbers>
 #include <optional>
 #include <string>
 
@@ -49,7 +50,7 @@ MA 02110-1301, USA.
 
 #if SUN_DIRECT_VISION_GLARE
 #define SUN_GLARE_MULT_FACTOR 3.0
-#define SUN_GLARE_ADD_FACTOR (M_PI / 16.0)
+#define SUN_GLARE_ADD_FACTOR (std::numbers::pi / 16.0)
 #define SUN_GLARE_CORONA_FACTOR 0.5f
 #else
 #define SUN_GLARE_CORONA_FACTOR 1.5

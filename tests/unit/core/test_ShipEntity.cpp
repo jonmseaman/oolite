@@ -32,6 +32,7 @@
 
 #include <cmath>
 #include <initializer_list>
+#include <numbers>
 #include <string>
 
 
@@ -1473,7 +1474,7 @@ OO_TEST(attitude)
 		if (a != nullptr)  a->setPitch(0.25);
 		if (a != nullptr)  a->setYaw(-0.5);
 		if (a != nullptr)  a->applyAttitudeChanges(0.2);
-		if (b != nullptr)  b->applyRoll((GLfloat)(0.5 * M_PI / 2.0) * 0.2, (GLfloat)(0.25 * M_PI / 2.0) * 0.2, (GLfloat)(-0.5 * M_PI / 2.0) * 0.2);	// -setRoll: is a fraction of a right angle
+		if (b != nullptr)  b->applyRoll((GLfloat)(0.5 * std::numbers::pi / 2.0) * 0.2, (GLfloat)(0.25 * std::numbers::pi / 2.0) * 0.2, (GLfloat)(-0.5 * std::numbers::pi / 2.0) * 0.2);	// -setRoll: is a fraction of a right angle
 		Quaternion qa = (a != nullptr ? a->getOrientation() : Quaternion{}), qb = (b != nullptr ? b->getOrientation() : Quaternion{});
 		OO_CHECK(fabs(qa.w - qb.w) < 1e-6 && fabs(qa.x - qb.x) < 1e-6 && fabs(qa.y - qb.y) < 1e-6 && fabs(qa.z - qb.z) < 1e-6);
 	}
@@ -1781,12 +1782,12 @@ OO_TEST(sticksAndRates)
 		OO_CHECK(fabs((ship != nullptr ? ship->getFlightRoll() : 0.0f) - (0.2f - 0.8f)) < 1e-6);
 
 		if (ship != nullptr)  ship->setRoll(1);
-		OO_CHECK(fabs((ship != nullptr ? ship->getFlightRoll() : 0.0f) - M_PI / 2.0) < 1e-6);
+		OO_CHECK(fabs((ship != nullptr ? ship->getFlightRoll() : 0.0f) - std::numbers::pi / 2.0) < 1e-6);
 		if (ship != nullptr)  ship->setRawRoll(0.25);
 		OO_CHECK((ship != nullptr ? ship->getFlightRoll() : 0.0f) == 0.25f);
 		if (ship != nullptr)  ship->setPitch(-1);
 		if (ship != nullptr)  ship->setYaw(0.5);
-		OO_CHECK(fabs((ship != nullptr ? ship->getFlightPitch() : 0.0f) + M_PI / 2.0) < 1e-6 && fabs((ship != nullptr ? ship->getFlightYaw() : 0.0f) - M_PI / 4.0) < 1e-6);
+		OO_CHECK(fabs((ship != nullptr ? ship->getFlightPitch() : 0.0f) + std::numbers::pi / 2.0) < 1e-6 && fabs((ship != nullptr ? ship->getFlightYaw() : 0.0f) - std::numbers::pi / 4.0) < 1e-6);
 		if (ship != nullptr)  ship->setThrust(12);
 		OO_CHECK((ship != nullptr ? ship->getThrust() : 0.0f) == 12);
 		if (ship != nullptr)  ship->setThrustForDemo(0.5f);

@@ -32,6 +32,7 @@ MA 02110-1301, USA.
 #include <functional>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <set>
 #include <string>
@@ -2534,19 +2535,19 @@ void ShipEntity::update(OOTimeDelta delta_t) {
   if (isDemoShip) {
     if (demoRate > 0) {
       OOScalar cos1 = cos(
-          M_PI *
+          std::numbers::pi *
           ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) *
           demoRate / 11);
       OOScalar sin1 = sin(
-          M_PI *
+          std::numbers::pi *
           ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) *
           demoRate / 11);
       OOScalar cos2 = cos(
-          -M_PI *
+          -std::numbers::pi *
           ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) *
           demoRate / 15);
       OOScalar sin2 = sin(
-          -M_PI *
+          -std::numbers::pi *
           ((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) - demoStartTime) *
           demoRate / 15);
       Quaternion q1 = make_quaternion(cos1, sin1 * sqrt(3) / 2, sin1 / 2, 0);
@@ -7758,13 +7759,19 @@ void ShipEntity::applySticks(double delta_t) {
   }
 }
 
-void ShipEntity::setRoll(double amount) { flightRoll = amount * M_PI / 2.0; }
+void ShipEntity::setRoll(double amount) {
+  flightRoll = amount * std::numbers::pi / 2.0;
+}
 
 void ShipEntity::setRawRoll(double amount) { flightRoll = amount; }
 
-void ShipEntity::setPitch(double amount) { flightPitch = amount * M_PI / 2.0; }
+void ShipEntity::setPitch(double amount) {
+  flightPitch = amount * std::numbers::pi / 2.0;
+}
 
-void ShipEntity::setYaw(double amount) { flightYaw = amount * M_PI / 2.0; }
+void ShipEntity::setYaw(double amount) {
+  flightYaw = amount * std::numbers::pi / 2.0;
+}
 
 void ShipEntity::setThrust(double amount) { thrust = amount; }
 

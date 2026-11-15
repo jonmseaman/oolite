@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #include <cstring>
 #include <format>
 #include <memory>
+#include <numbers>
 #include <string>
 
 #include "AI.h"
@@ -471,7 +472,7 @@ void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
 
   std::uint16_t i, j, k;
   GLfloat theta = 0.0f, delta;
-  delta = M_PI / 180.0f;  // Convert step from degrees to radians
+  delta = std::numbers::pi / 180.0f;  // Convert step from degrees to radians
   pt0 = (1.0 - corona_stage) * corona_blending;
   pt1 = corona_stage * corona_blending;
 

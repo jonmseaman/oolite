@@ -38,6 +38,7 @@
 #include <cstdint>
 #include <format>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -949,15 +950,15 @@ static bool GenerateFBMNoise3D(OOPlanetTextureGeneratorInfo* info) {
   {
     unsigned x, y, width = info->width, height = info->height;
     float lon, lat;  // Longitude and latitude in radians.
-    float dlon = 2.0f * M_PI / width;
-    float dlat = M_PI / height;
+    float dlon = 2.0f * std::numbers::pi / width;
+    float dlat = std::numbers::pi / height;
     float* px = info->fbmBuffer.data();
 
-    for (y = 0, lat = -M_PI_2; y < height; y++, lat += dlat) {
+    for (y = 0, lat = -(std::numbers::pi / 2); y < height; y++, lat += dlat) {
       float las = sin(lat);
       float lac = cos(lat);
 
-      for (x = 0, lon = -M_PI; x < width; x++, lon += dlon) {
+      for (x = 0, lon = -std::numbers::pi; x < width; x++, lon += dlon) {
         // FIXME: in real life, we really don't want sin and cos per pixel.
         // Convert spherical coordinates to vector.
         float los = sin(lon);

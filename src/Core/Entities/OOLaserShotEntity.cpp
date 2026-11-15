@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 
 #include <format>
 #include <memory>
+#include <numbers>
 #include <string>
 
 #include "MyOpenGLView.h"
@@ -126,15 +127,15 @@ void OOLaserShotEntity::initLaserFromShip(::ShipEntity* srcEntity,
       break;
 
     case OOWeaponFacing::kAft:
-      quaternion_rotate_about_axis(&q, q_up, M_PI);
+      quaternion_rotate_about_axis(&q, q_up, std::numbers::pi);
       break;
 
     case OOWeaponFacing::kPort:
-      quaternion_rotate_about_axis(&q, q_up, M_PI / 2.0);
+      quaternion_rotate_about_axis(&q, q_up, std::numbers::pi / 2.0);
       break;
 
     case OOWeaponFacing::kStarboard:
-      quaternion_rotate_about_axis(&q, q_up, -M_PI / 2.0);
+      quaternion_rotate_about_axis(&q, q_up, -std::numbers::pi / 2.0);
       break;
   }
 

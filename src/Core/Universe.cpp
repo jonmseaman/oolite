@@ -31,6 +31,7 @@ MA 02110-1301, USA.
 #include <functional>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <set>
 #include <string>
@@ -6523,15 +6524,15 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
       break;
 
     case OOWeaponFacing::kAft:
-      quaternion_rotate_about_axis(&q1, u1, M_PI);
+      quaternion_rotate_about_axis(&q1, u1, std::numbers::pi);
       break;
 
     case OOWeaponFacing::kPort:
-      quaternion_rotate_about_axis(&q1, u1, M_PI / 2.0);
+      quaternion_rotate_about_axis(&q1, u1, std::numbers::pi / 2.0);
       break;
 
     case OOWeaponFacing::kStarboard:
-      quaternion_rotate_about_axis(&q1, u1, -M_PI / 2.0);
+      quaternion_rotate_about_axis(&q1, u1, -std::numbers::pi / 2.0);
       break;
   }
 
@@ -6627,13 +6628,13 @@ Entity* Universe::firstEntityTargetedByPlayer() {
   // views count as forward for targeting.
   switch (viewDirection) {
     case OOViewID::kAft:
-      quaternion_rotate_about_axis(&q1, u1, M_PI);
+      quaternion_rotate_about_axis(&q1, u1, std::numbers::pi);
       break;
     case OOViewID::kPort:
-      quaternion_rotate_about_axis(&q1, u1, 0.5 * M_PI);
+      quaternion_rotate_about_axis(&q1, u1, 0.5 * std::numbers::pi);
       break;
     case OOViewID::kStarboard:
-      quaternion_rotate_about_axis(&q1, u1, -0.5 * M_PI);
+      quaternion_rotate_about_axis(&q1, u1, -0.5 * std::numbers::pi);
       break;
     default:
       break;
@@ -7453,7 +7454,7 @@ void Universe::update(OOTimeDelta inDeltaT) {
             Vector vel;
             Quaternion q2 = kIdentityQuaternion;
 
-            quaternion_rotate_about_y(&q2, M_PI);
+            quaternion_rotate_about_y(&q2, std::numbers::pi);
 
             switch (demo_stage) {
               case DEMO_FLY_IN:

@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #include <SDL3/SDL_timer.h>
 
 #include <memory>
+#include <numbers>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -1220,11 +1221,11 @@ oo::PList MyOpenGLView::currentScreenMode() {
 }
 
 void MyOpenGLView::setFov(float value, bool fromFraction) {
-  _fov = fromFraction ? value : tan((value / 2) * M_PI / 180);
+  _fov = fromFraction ? value : tan((value / 2) * std::numbers::pi / 180);
 }
 
 float MyOpenGLView::fov(bool inFraction) {
-  return inFraction ? _fov : 2 * atan(_fov) * 180 / M_PI;
+  return inFraction ? _fov : 2 * atan(_fov) * 180 / std::numbers::pi;
 }
 
 bool MyOpenGLView::msaa() { return _msaa; }
