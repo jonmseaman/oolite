@@ -38,6 +38,7 @@ SOFTWARE.
 #include <cstdint>
 #include <memory>
 #include <new>
+#include <utility>
 
 #include "OODebugTCPConsoleProtocol.h"
 
@@ -58,8 +59,6 @@ struct OOTCPStreamDecoder {
   OOTCPStreamDecoderPacketCallback Packet;
   OOTCPStreamDecoderErrorCallback Error;
   OOTCPStreamDecoderFinalizeCallback Finalize;
-
-  void* cbInfo;
 };
 
 static void Error(OOTCPStreamDecoderRef decoder, OOALStringRef format, ...);
@@ -68,7 +67,7 @@ static void PacketReady(OOTCPStreamDecoderRef decoder);
 OOTCPStreamDecoderRef OOTCPStreamDecoderCreate(
     OOTCPStreamDecoderPacketCallback packetCB,
     OOTCPStreamDecoderErrorCallback errorCB,
-    OOTCPStreamDecoderFinalizeCallback finalizeCB, void* cbInfo) {
+    OOTCPStreamDecoderFinalizeCallback finalizeCB) {
   if (packetCB == nullptr) return nullptr;
 
   // The caller owns the handle until OOTCPStreamDecoderDestroy().
@@ -78,10 +77,9 @@ OOTCPStreamDecoderRef OOTCPStreamDecoderCreate(
   decoder->headerSpaceUsed = 0;
   decoder->nextPacketData = nullptr;
   decoder->nextSize = 0;
-  decoder->Packet = packetCB;
-  decoder->Error = errorCB;
-  decoder->Finalize = finalizeCB;
-  decoder->cbInfo = cbInfo;
+  decoder->Packet = std::move(packetCB);
+  decoder->Error = std::move(errorCB);
+  decoder->Finalize = std::move(finalizeCB);
 
   return decoder;
 }
@@ -92,7 +90,7 @@ void OOTCPStreamDecoderDestroy(OOTCPStreamDecoderRef decoder) {
       decoder);  // deleted on return
 
   if (decoder->Finalize != nullptr) {
-    decoder->Finalize(decoder->cbInfo);
+    decoder->Finalize();
   }
 
   if (decoder->nextPacketData != nullptr) {
@@ -215,7 +213,7 @@ static void PacketReady(OOTCPStreamDecoderRef decoder) {
     return;
   }
 
-  decoder->Packet(decoder->cbInfo, packetType, packet);
+  decoder->Packet(packetType, packet);
 }
 
 static void Error(OOTCPStreamDecoderRef decoder, OOALStringRef format, ...) {
@@ -230,7 +228,7 @@ static void Error(OOTCPStreamDecoderRef decoder, OOALStringRef format, ...) {
   va_end(args);
 
   if (string != nullptr) {
-    decoder->Error(decoder->cbInfo, string);
+    decoder->Error(string);
     OOALRelease(string);
   }
 }
