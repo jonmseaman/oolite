@@ -2,13 +2,13 @@
         Foundation-free assertions: the failure path (see OOAssert.h).
 */
 
-#include "oofnd/objc/OOAssert.h"
-
 #include <cstdarg>
+#include <cstdint>
 #include <cstdio>
 #include <string>
 
 #include "oofnd/Log.hpp"
+#include "oofnd/objc/OOAssert.h"
 
 namespace {
 
@@ -38,8 +38,8 @@ std::string FormatV(const char* format, va_list args) {
 
 }  // namespace
 
-void OOAssertFailedInFunction(const char* function, const char* file, long line,
-                              const char* format, ...) {
+void OOAssertFailedInFunction(const char* function, const char* file,
+                              std::int32_t line, const char* format, ...) {
   va_list args;
   va_start(args, format);
   const std::string message = FormatV(format, args);

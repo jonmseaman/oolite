@@ -26,6 +26,7 @@ SOFTWARE.
 
 */
 
+#include <cstdint>
 #include <map>
 #include <set>
 #include <string>
@@ -54,15 +55,15 @@ SOFTWARE.
 */
 namespace {
 
-using KeysToIndices = std::map<std::string, long long>;
-using UsedIndices = std::set<long long>;
+using KeysToIndices = std::map<std::string, std::int64_t>;
+using UsedIndices = std::set<std::int64_t>;
 
 void InitKeyToIndexDict(const oo::PList& dict, KeysToIndices& outKeysToIndices,
                         UsedIndices& outUsedIndices) {
   if (const oo::PList::Dict* entries = dict.getIf<oo::PList::Dict>()) {
     for (const auto& [key, value] : *entries) {
       // Convert keys of dict to array indices
-      const long long number = oo::str::intValue(key);
+      const std::int64_t number = oo::str::intValue(key);
       if (const std::string* name = value.getIf<std::string>())
         outKeysToIndices[*name] = number;
       outUsedIndices.insert(number);
@@ -81,17 +82,17 @@ std::optional<std::string> IndexToKey(std::size_t index,
   return std::nullopt;
 }
 
-long long KeyToIndex(const std::string& key, KeysToIndices& ioKeysToIndices,
-                     UsedIndices& ioUsedIndicies, std::size_t* ioSlotCache) {
+std::int64_t KeyToIndex(const std::string& key, KeysToIndices& ioKeysToIndices,
+                        UsedIndices& ioUsedIndicies, std::size_t* ioSlotCache) {
   assert(ioSlotCache != nullptr);
 
   const auto found = ioKeysToIndices.find(key);
   if (found != ioKeysToIndices.end()) return found->second;
 
   // Search for free index
-  long long result;
+  std::int64_t result;
   do {
-    result = static_cast<long long>((*ioSlotCache)++);
+    result = static_cast<std::int64_t>((*ioSlotCache)++);
   } while (ioUsedIndicies.contains(result));
 
   ioKeysToIndices[key] = result;
@@ -133,7 +134,7 @@ oo::PList ConvertKeysToIndices(const oo::PList& entry,
 
       if (middle.size() > 1 && middle[0] == u'#') {
         // Found [] around key
-        const long long index =
+        const std::int64_t index =
             KeyToIndex(oo::utf16ToUtf8(middle.substr(1)), ioKeysToIndices,
                        ioUsedIndicies, ioSlotCache);
         std::u16string replaced = before;
@@ -167,7 +168,7 @@ oo::PList ConvertIndicesToKeys(const oo::PList& entry,
 // The highest index, as the Foundation code worked it out (each through
 // -intValue into an std::size_t). Its callers use it as the count, so the
 // highest entry is not copied.
-std::size_t HighestIndex(const std::map<long long, oo::PList>& sparseArray) {
+std::size_t HighestIndex(const std::map<std::int64_t, oo::PList>& sparseArray) {
   std::size_t curr, highest = 0;
 
   for (const auto& [key, value] : sparseArray) {
@@ -266,7 +267,7 @@ void ExportSystemDescriptions(bool asXML) {
 oo::PList OOConvertSystemDescriptionsToArrayFormat(
     const oo::PList& descriptionsInDictionaryFormat,
     const oo::PList& indicesToKeys) {
-  std::map<long long, oo::PList> result;  // a sparse array
+  std::map<std::int64_t, oo::PList> result;  // a sparse array
   KeysToIndices keysToIndices;
   UsedIndices usedIndices;
   std::size_t slotCache = 0;
@@ -280,7 +281,7 @@ oo::PList OOConvertSystemDescriptionsToArrayFormat(
     for (const auto& [key, value] : *descriptions) {
       oo::PList entry =
           ConvertKeysToIndices(value, keysToIndices, usedIndices, &slotCache);
-      const long long index =
+      const std::int64_t index =
           KeyToIndex(key, keysToIndices, usedIndices, &slotCache);
 
       result[index] = std::move(entry);
@@ -290,7 +291,7 @@ oo::PList OOConvertSystemDescriptionsToArrayFormat(
   count = HighestIndex(result);
   realResult.reserve(count);
   for (i = 0; i < count; i++) {
-    const auto found = result.find(static_cast<long long>(i));
+    const auto found = result.find(static_cast<std::int64_t>(i));
     realResult.push_back((found != result.end())
                              ? found->second
                              : oo::PList(oo::PList::Array()));

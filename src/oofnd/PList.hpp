@@ -415,7 +415,7 @@ inline std::optional<double> parseCalendarDate(std::string_view s, bool zulu) {
   std::size_t src = 0;
   // getDigits(): returns the characters consumed; *value gets the digits'
   // value.
-  auto getDigits = [&](unsigned limit, long* value) {
+  auto getDigits = [&](unsigned limit, std::int64_t* value) {
     unsigned i = 0;
     bool found = false;
     *value = 0;
@@ -431,8 +431,8 @@ inline std::optional<double> parseCalendarDate(std::string_view s, bool zulu) {
     if (!found) error = true;
     return i;
   };
-  long year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0,
-       zoneSeconds = 0;
+  std::int64_t year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0,
+               zoneSeconds = 0;
   for (std::size_t f = 0; !error && f < format.size(); ++f) {
     const char fc = format[f];
     if (fc != '%') {
@@ -466,7 +466,7 @@ inline std::optional<double> parseCalendarDate(std::string_view s, bool zulu) {
         src += getDigits(2, &second);
         break;
       case 'z': {
-        long sign = 1, zone = 0;
+        std::int64_t sign = 1, zone = 0;
         if (at(src) == '+') {
           ++src;
         } else if (at(src) == '-') {
@@ -479,7 +479,7 @@ inline std::optional<double> parseCalendarDate(std::string_view s, bool zulu) {
           if (found == 2) zone *= 100;
           // +timeZoneForSecondsFromGMT: is nil beyond 18 hours, and a nil zone
           // is the local one: UTC in oofnd.
-          const long seconds = ((zone / 100) * 60 + (zone % 100)) * 60;
+          const std::int64_t seconds = ((zone / 100) * 60 + (zone % 100)) * 60;
           zoneSeconds = seconds > 64800 ? 0 : sign * seconds;
         }
         break;
@@ -490,7 +490,7 @@ inline std::optional<double> parseCalendarDate(std::string_view s, bool zulu) {
   }
   if (error) return std::nullopt;
 
-  auto lastDayOfMonth = [](long m, long y) -> long {
+  auto lastDayOfMonth = [](std::int64_t m, std::int64_t y) -> std::int64_t {
     switch (m) {
       case 2:
         return ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0) ? 29 : 28;
@@ -503,12 +503,13 @@ inline std::optional<double> parseCalendarDate(std::string_view s, bool zulu) {
         return 31;
     }
   };
-  auto absoluteDay = [&](long d, long m, long y) {
+  auto absoluteDay = [&](std::int64_t d, std::int64_t m, std::int64_t y) {
     while (--m > 0) d += lastDayOfMonth(m, y);
     if (y > 0) --y;
     return d + 365 * y + y / 4 - y / 100 + y / 400;
   };
-  const long days = absoluteDay(day, month, year) - absoluteDay(1, 1, 2001);
+  const std::int64_t days =
+      absoluteDay(day, month, year) - absoluteDay(1, 1, 2001);
   return static_cast<double>(days) * 86400.0 +
          static_cast<double>(hour * 3600 + minute * 60 + second - zoneSeconds);
 }

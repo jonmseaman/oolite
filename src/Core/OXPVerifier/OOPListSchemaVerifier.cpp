@@ -654,12 +654,12 @@ bool HasSubString(const std::string& string, const std::string& sub) {
 // OORangeException with this reason (captured, whatever the string's class);
 // -verifyPList: reports it as before.
 std::u16string SubstringToIndex(const std::u16string& units,
-                                unsigned long long index) {
+                                std::uint64_t index) {
   if (index > units.size()) {
     OORaiseException(
         OORangeException,
         "in substringWithRange:, range { 0, %llu } extends beyond size (%llu)",
-        index, static_cast<unsigned long long>(units.size()));
+        index, static_cast<std::uint64_t>(units.size()));
   }
   return units.substr(0, index);
 }
@@ -705,11 +705,11 @@ std::string ApplyStringFilter(
         result = oo::utf8ToUtf16(oo::str::capitalized(oo::utf16ToUtf8(result)));
       } else if (oo::str::hasPrefix(*filter, "truncFront:")) {
         result = SubstringToIndex(
-            result, static_cast<unsigned long long>(static_cast<std::size_t>(
+            result, static_cast<std::uint64_t>(static_cast<std::size_t>(
                         oo::str::intValue(oo::utf16ToUtf8(argument(11))))));
       } else if (oo::str::hasPrefix(*filter, "truncBack:")) {
         result = SubstringToIndex(
-            result, static_cast<unsigned long long>(static_cast<std::size_t>(
+            result, static_cast<std::uint64_t>(static_cast<std::size_t>(
                         oo::str::intValue(oo::utf16ToUtf8(argument(10))))));
       } else if (oo::str::hasPrefix(*filter, "subStringTo:")) {
         const std::u16string sub = argument(12);
@@ -1211,8 +1211,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_Integer(
     const oo::PList& params, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
-  long long numericValue;
-  long long constraint;
+  std::int64_t numericValue;
+  std::int64_t constraint;
 
   // OOLongLongFromObject(value, d): d for nil and for what cannot be read.
   numericValue = oo::plist_get::longLongFrom(&value, 0);
@@ -1226,14 +1226,14 @@ static std::optional<OOPListSchemaVerifierError> Verify_Integer(
   }
 
   // Check constraints.
-  constraint = params.get<long long>("minimum", LLONG_MIN);
+  constraint = params.get<std::int64_t>("minimum", LLONG_MIN);
   if (numericValue < constraint) {
     return Error(OOPListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
                  &keyPath, "Number is too small (%lli, minimum is %lli).",
                  numericValue, constraint);
   }
 
-  constraint = params.get<long long>("maximum", LLONG_MAX);
+  constraint = params.get<std::int64_t>("maximum", LLONG_MAX);
   if (constraint < numericValue) {
     return Error(OOPListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
                  &keyPath, "Number is too large (%lli, maximum is %lli).",
@@ -1252,8 +1252,8 @@ static std::optional<OOPListSchemaVerifierError> Verify_PositiveInteger(
     const oo::PList& params, const oo::PList& /*rootPList*/,
     const std::string& /*name*/, BackLinkChain keyPath, bool /*tentative*/,
     bool* /*outStop*/) {
-  unsigned long long numericValue;
-  unsigned long long constraint;
+  std::uint64_t numericValue;
+  std::uint64_t constraint;
 
   numericValue = oo::plist_get::unsignedLongLongFrom(&value, 0);
 
@@ -1266,14 +1266,14 @@ static std::optional<OOPListSchemaVerifierError> Verify_PositiveInteger(
   }
 
   // Check constraints.
-  constraint = params.get<unsigned long long>("minimum", 0);
+  constraint = params.get<std::uint64_t>("minimum", 0);
   if (numericValue < constraint) {
     return Error(OOPListSchemaVerifierErrorCode::kMinimumConstraintNotMet,
                  &keyPath, "Number is too small (%zu, minimum is %zu).",
                  numericValue, constraint);
   }
 
-  constraint = params.get<unsigned long long>("maximum", ULLONG_MAX);
+  constraint = params.get<std::uint64_t>("maximum", ULLONG_MAX);
   if (constraint < numericValue) {
     return Error(OOPListSchemaVerifierErrorCode::kMaximumConstraintNotMet,
                  &keyPath, "Number is too large (%zu, maximum is %zu).",

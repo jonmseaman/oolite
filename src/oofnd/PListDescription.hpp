@@ -41,6 +41,7 @@
 #include <unicode/unorm2.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdio>
 #include <format>
 #include <optional>
@@ -137,9 +138,8 @@ inline std::string numberText(const PList& v) {
   if (const bool* b = v.getIf<bool>()) return *b ? "1" : "0";
   if (const PList::Integer* i = v.getIf<PList::Integer>()) {
     if (i->isUnsigned)
-      return std::format("{}",
-                         static_cast<unsigned long long>(i->unsignedValue()));
-    return std::format("{}", static_cast<long long>(i->value));
+      return std::format("{}", static_cast<std::uint64_t>(i->unsignedValue()));
+    return std::format("{}", static_cast<std::int64_t>(i->value));
   }
   return v.isSinglePrecision() ? std::format("{:.7g}", v.doubleValue())
                                : std::format("{:.16g}", v.doubleValue());

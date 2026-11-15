@@ -22,13 +22,14 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOCPUInfo.h"
-
 #include <stdlib.h>
 
 #include <bit>
+#include <cstdint>
 #include <cstring>
 #include <string>
+
+#include "OOCPUInfo.h"
 
 #if (OOLITE_LINUX || OOLITE_WINDOWS || OOLITE_MACOS)
 // Workaround for clang/glibc incompatibility.
@@ -168,9 +169,9 @@ OOMemoryStatus OOSystemMemoryStatus(void) {
   struct sysinfo si;
   sysinfo(&si);
   systemMemoryStatus.ooPhysicalMemory =
-      static_cast<unsigned long long>(si.totalram / toMegabyte);
+      static_cast<std::uint64_t>(si.totalram / toMegabyte);
   systemMemoryStatus.ooAvailableMemory =
-      static_cast<unsigned long long>(si.freeram / toMegabyte);
+      static_cast<std::uint64_t>(si.freeram / toMegabyte);
 #endif
 
   return systemMemoryStatus;
@@ -205,9 +206,9 @@ std::string operatingSystemFullVersion(void) {
   const std::string csdVersion = oo::utf16ToUtf8(std::u16string_view(
       reinterpret_cast<const char16_t*>(osver.szCSDVersion)));
   return std::format("{}.{}.{}{} {}",
-                     static_cast<unsigned long>(osver.dwMajorVersion),
-                     static_cast<unsigned long>(osver.dwMinorVersion),
-                     static_cast<unsigned long>(osver.dwBuildNumber),
+                     static_cast<std::uint32_t>(osver.dwMajorVersion),
+                     static_cast<std::uint32_t>(osver.dwMinorVersion),
+                     static_cast<std::uint32_t>(osver.dwBuildNumber),
                      outUBRString, csdVersion);
 }
 

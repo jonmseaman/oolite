@@ -28,6 +28,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <cstdint>
+
 #include "OOMathsBase.h"
 
 // Each maths header includes what it uses, so OOMaths.h may list them in any
@@ -41,6 +43,6 @@ inline constexpr int CUBE_FACE_BOTTOM = 0x08;
 inline constexpr int CUBE_FACE_FRONT = 0x10;
 inline constexpr int CUBE_FACE_BACK = 0x20;
 
-Vector lineIntersectionWithFace(Vector p1, Vector p2, long mask,
+Vector lineIntersectionWithFace(Vector p1, Vector p2, std::int32_t mask,
                                 GLfloat rd) CONST_FUNC;
 int lineCubeIntersection(Vector v0, Vector v1, GLfloat rd) CONST_FUNC;

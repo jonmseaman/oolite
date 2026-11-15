@@ -22,10 +22,9 @@ MA 02110-1301, USA.
 
 */
 
-#include "OOCharacter.h"
-
 #include <quickjs.h>
 
+#include <cstdint>
 #include <format>
 #include <memory>
 #include <optional>
@@ -33,6 +32,7 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <utility>
 
+#include "OOCharacter.h"
 #include "OOJSEngineCore.h"
 #include "OOJSPropID.h"
 #include "OOScript.h"
@@ -481,7 +481,7 @@ void OOCharacter::setCharacterFromDictionary(const oo::PList& dict) {
     setLegalStatus(dict.get<int>("legal_status"));
   if (dict.find("bounty") != nullptr) setLegalStatus(dict.get<int>("bounty"));
   if (dict.find("insurance") != nullptr)
-    setInsuranceCredits(dict.get<unsigned long long>("insurance"));
+    setInsuranceCredits(dict.get<std::uint64_t>("insurance"));
   if (const std::optional<std::string> script =
           OptionalStringForKey(dict, "script"))
     setCharacterScript(*script);

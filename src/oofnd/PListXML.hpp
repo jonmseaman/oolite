@@ -257,7 +257,7 @@ inline std::optional<std::string> xmlDataAsUtf8(std::string_view data) {
 inline Data decodeMimeBase64(std::string_view source) {
   std::vector<std::uint8_t> out;
   if (source.empty()) return Data();
-  long length = static_cast<long>(source.size());
+  std::ptrdiff_t length = static_cast<std::ptrdiff_t>(source.size());
   unsigned char buf[4] = {0, 0, 0, 0};
   unsigned char group[3];
   unsigned pos = 0;
@@ -449,8 +449,10 @@ class XMLPListReader {
       while (c != kEOF && !isCSpace(c) && c != '>' && c != '/' && c != '?')
         c = cget();
       const bool closing = byteAt(tp) == '/';
-      const long tagStart = static_cast<long>(closing ? tp + 1 : tp);
-      const long tagLen = static_cast<long>(cp_) - tagStart - 1;
+      const std::ptrdiff_t tagStart =
+          static_cast<std::ptrdiff_t>(closing ? tp + 1 : tp);
+      const std::ptrdiff_t tagLen =
+          static_cast<std::ptrdiff_t>(cp_) - tagStart - 1;
       if (tagLen < 0) return fail();  // "invalid character in tag"
       const std::string_view rawTag(
           reinterpret_cast<const char*>(bytes_) + tagStart,
@@ -831,12 +833,12 @@ class XMLPListReader {
     } else if (name == "string") {
       item = PList(unescapeXMLPListString(value_));
     } else if (name == "integer") {
-      const long long v =
+      const std::int64_t v =
           std::strtoll(value_.c_str(), nullptr, 10);  // -longLongValue
       if (!value_.empty() && value_[0] == '-')
         item = PList::signedInteger(v);
       else
-        item = PList::unsignedInteger(static_cast<unsigned long long>(v));
+        item = PList::unsignedInteger(static_cast<std::uint64_t>(v));
     } else if (name == "real") {
       item = PList(std::strtod(value_.c_str(), nullptr));
     } else if (name == "true") {

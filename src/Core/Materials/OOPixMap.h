@@ -154,15 +154,15 @@ void OODumpPixMap(OOPixMap pixMap, const std::string& name);
 bool OOIsValidPixMapFormat(OOPixMapFormat format);
 
 #ifndef NDEBUG
-unsigned short OOPixMapBytesPerPixelForFormat(OOPixMapFormat format) PURE_FUNC;
+std::uint16_t OOPixMapBytesPerPixelForFormat(OOPixMapFormat format) PURE_FUNC;
 #else
-inline unsigned short OOPixMapBytesPerPixelForFormat(OOPixMapFormat format) {
+inline std::uint16_t OOPixMapBytesPerPixelForFormat(OOPixMapFormat format) {
   // Currently, format values are component counts. This is subject to change.
   return format;
 }
 #endif
 
-inline unsigned short OOPixMapBytesPerPixel(OOPixMap pixMap) {
+inline std::uint16_t OOPixMapBytesPerPixel(OOPixMap pixMap) {
   return OOPixMapBytesPerPixelForFormat(pixMap.format);
 }
 

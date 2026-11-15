@@ -608,7 +608,7 @@ void OODebugTCPConsoleClient::serviceSocketFor(double seconds) {
       Sleep(static_cast<DWORD>(ceil(remaining * 1000.0)));
 #else
       std::this_thread::sleep_for(std::chrono::milliseconds(
-          static_cast<long long>(ceil(remaining * 1000.0))));
+          static_cast<std::int64_t>(ceil(remaining * 1000.0))));
 #endif
     }
   }
@@ -985,9 +985,10 @@ void OODebugTCPConsoleServiceInput(double timeout) {
 
   if (timeout >= 0.0) {
     // Whole milliseconds, rounded up, as the run loop waited (measured).
-    const long long millis = static_cast<long long>(ceil(timeout * 1000.0));
-    limit.tv_sec = static_cast<long>(millis / 1000);
-    limit.tv_usec = static_cast<long>(millis % 1000) * 1000;
+    const std::int64_t millis =
+        static_cast<std::int64_t>(ceil(timeout * 1000.0));
+    limit.tv_sec = static_cast<decltype(limit.tv_sec)>(millis / 1000);
+    limit.tv_usec = static_cast<decltype(limit.tv_usec)>(millis % 1000) * 1000;
     limitPtr = &limit;
   }
   if (select(highest + 1, &readSet, &writeSet, &exceptSet, limitPtr) <= 0)

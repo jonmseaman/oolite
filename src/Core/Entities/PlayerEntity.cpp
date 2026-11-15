@@ -1228,11 +1228,11 @@ oo::PList PlayerEntity::commanderDataDictionary() {
     OOTechLevelID techlevel = systemData.get<int>(KEY_TECHLEVEL);
     OOEconomyID economy = systemData.get<int>(KEY_ECONOMY);
     result["current_system_government"] =
-        oo::PList::unsignedInteger(static_cast<unsigned short>(government));
+        oo::PList::unsignedInteger(static_cast<std::uint16_t>(government));
     result["current_system_techlevel"] =
         oo::PList::unsignedInteger(static_cast<std::size_t>(techlevel));
     result["current_system_economy"] =
-        oo::PList::unsignedInteger(static_cast<unsigned short>(economy));
+        oo::PList::unsignedInteger(static_cast<std::uint16_t>(economy));
   }
 
   if (const std::optional<std::string> value = commanderName())
@@ -1253,10 +1253,10 @@ oo::PList PlayerEntity::commanderDataDictionary() {
   */
   result["credits"] = oo::PList(
       static_cast<double>(credits));  // oo_setFloat: was +numberWithDouble:
-  result["fuel"] = oo::PList::unsignedInteger(static_cast<unsigned long>(fuel));
+  result["fuel"] = oo::PList::unsignedInteger(static_cast<std::uint64_t>(fuel));
 
   result["galaxy_number"] =
-      oo::PList::signedInteger(static_cast<long>(galaxy_number));
+      oo::PList::signedInteger(static_cast<std::int64_t>(galaxy_number));
 
   result["weapons_online"] = oo::PList(weaponsOnline());
 
@@ -1292,8 +1292,8 @@ oo::PList PlayerEntity::commanderDataDictionary() {
         oo::PList(static_cast<double>(hud->scannerZoom()));  // oo_setFloat:
   }
 
-  result["max_cargo"] = oo::PList::signedInteger(
-      static_cast<long>(max_cargo + PASSENGER_BERTH_SPACE * max_passengers));
+  result["max_cargo"] = oo::PList::signedInteger(static_cast<std::int64_t>(
+      max_cargo + PASSENGER_BERTH_SPACE * max_passengers));
 
   result["shipCommodityData"] =
       (shipCommodityData != nullptr ? shipCommodityData->savePlayerAmounts()
@@ -1315,18 +1315,19 @@ oo::PList PlayerEntity::commanderDataDictionary() {
   }
   result["missile_roles"] = oo::PList(std::move(missileRoles));
 
-  result["missiles"] = oo::PList::signedInteger(static_cast<long>(missiles));
+  result["missiles"] =
+      oo::PList::signedInteger(static_cast<std::int64_t>(missiles));
 
   result["legal_status"] =
-      oo::PList::signedInteger(static_cast<long>(legalStatusValue));
+      oo::PList::signedInteger(static_cast<std::int64_t>(legalStatusValue));
   result["market_rnd"] =
-      oo::PList::signedInteger(static_cast<long>(market_rnd));
+      oo::PList::signedInteger(static_cast<std::int64_t>(market_rnd));
   result["ship_kills"] =
-      oo::PList::signedInteger(static_cast<long>(ship_kills));
+      oo::PList::signedInteger(static_cast<std::int64_t>(ship_kills));
 
   // ship depreciation
   result["ship_trade_in_factor"] =
-      oo::PList::signedInteger(static_cast<long>(ship_trade_in_factor));
+      oo::PList::signedInteger(static_cast<std::int64_t>(ship_trade_in_factor));
 
   // mission variables
   if (!mission_variables.isNull()) {
@@ -1339,13 +1340,13 @@ oo::PList PlayerEntity::commanderDataDictionary() {
     result["comm_log"] = oo::PList(oo::PList::Array(log->begin(), log->end()));
 
   result["entity_personality"] = oo::PList::unsignedInteger(
-      static_cast<unsigned long>(entity_personality));
+      static_cast<std::uint64_t>(entity_personality));
 
   // extra equipment flags
   oo::PList::Dict equipment;
   for (const std::string& eqDesc : equipmentKeys()) {
-    equipment[eqDesc] =
-        oo::PList::signedInteger(static_cast<long>(countEquipmentItem(eqDesc)));
+    equipment[eqDesc] = oo::PList::signedInteger(
+        static_cast<std::int64_t>(countEquipmentItem(eqDesc)));
   }
   if (!equipment.empty()) {
     result["extra_equipment"] = oo::PList(equipment);
@@ -1389,7 +1390,7 @@ oo::PList PlayerEntity::commanderDataDictionary() {
 
   // passengers
   result["max_passengers"] =
-      oo::PList::signedInteger(static_cast<long>(max_passengers));
+      oo::PList::signedInteger(static_cast<std::int64_t>(max_passengers));
   result["passengers"] = oo::PList(passengers);
   result["passenger_record"] = oo::PList(passenger_record);
 
@@ -1436,7 +1437,7 @@ oo::PList PlayerEntity::commanderDataDictionary() {
 
   // custom view no.
   result["custom_view_index"] =
-      oo::PList::unsignedInteger(static_cast<unsigned long>(_customViewIndex));
+      oo::PList::unsignedInteger(static_cast<std::uint64_t>(_customViewIndex));
 
   // escape pod rescue time
   result["escape_pod_rescue_time"] =
@@ -1533,7 +1534,7 @@ oo::PList PlayerEntity::commanderDataDictionary() {
 
   // set checksum
   result["checksum"] =
-      oo::PList::signedInteger(static_cast<long>(final_checksum));
+      oo::PList::signedInteger(static_cast<std::int64_t>(final_checksum));
 
   return oo::PList(std::move(result));
 }
@@ -2192,7 +2193,7 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
           -- Ahruman 2009-09-13
   */
   entity_personality =
-      dict.get<unsigned short>("entity_personality", entity_personality);
+      dict.get<std::uint16_t>("entity_personality", entity_personality);
 
   // set up missiles
   setActiveMissile(0);
@@ -2533,11 +2534,11 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
   // The local hour, minute and second of now, as the calendar date gave them
   // (oofnd/Date.hpp).
   const oo::date::Clock::time_point now = oo::date::Clock::now();
-  long long secondOfDay =
-      (static_cast<long long>(
+  std::int64_t secondOfDay =
+      (static_cast<std::int64_t>(
            std::chrono::floor<std::chrono::seconds>(now.time_since_epoch())
                .count()) +
-       static_cast<long long>(oo::date::localUTCOffsetMinutes(now)) * 60) %
+       static_cast<std::int64_t>(oo::date::localUTCOffsetMinutes(now)) * 60) %
       86400;
   if (secondOfDay < 0) secondOfDay += 86400;
   ship_clock = PLAYER_SHIP_CLOCK_START;
@@ -8892,7 +8893,7 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
 
       for (i = 1; i <= 16; i++) {
         const std::string ln =
-            std::format("sysdata-line-{}", static_cast<long>(i));
+            std::format("sysdata-line-{}", static_cast<std::int64_t>(i));
         const std::string line = ExpandKeyWithSeed(
             infoSystemRandomSeed, ln,
             {{"economy_desc", oo::PList(economy_desc)},
@@ -10789,8 +10790,8 @@ void PlayerEntity::buySelectedItem() {
       oo::PList::Array boughtArguments;
       if (key.has_value())
         boughtArguments = {oo::PList(*key),
-                           oo::PList::signedInteger(
-                               static_cast<long long>(old_credits - credits))};
+                           oo::PList::signedInteger(static_cast<std::int64_t>(
+                               old_credits - credits))};
       doScriptEvent(OOJSID("playerBoughtEquipment"), boughtArguments);
       if (gui_screen == OOGUIScreenID::kEquipShip) {
         // if we haven't changed gui screen inside

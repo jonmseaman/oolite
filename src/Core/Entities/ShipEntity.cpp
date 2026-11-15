@@ -958,7 +958,7 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict) {
   scannerRange = shipDict.get<float>("scanner_range",
                                      static_cast<float>(SCANNER_MAX_RANGE));
 
-  fuel = shipDict.get<unsigned short>(
+  fuel = shipDict.get<std::uint16_t>(
       "fuel");  // Does it make sense that this defaults to 0? Should it not be
                 // 70? -- Ahruman
 
@@ -6718,8 +6718,8 @@ void ShipEntity::avoidCollision() {
 
   if (prox_ship) {
     oo::PList::Dict condition;
-    condition["behaviour"] =
-        oo::PList(static_cast<long>(behaviour));  // as oo_setInteger: stored it
+    condition["behaviour"] = oo::PList(
+        static_cast<std::int64_t>(behaviour));  // as oo_setInteger: stored it
     if (primaryTarget() != nullptr) {
       // must use the weak ref here to prevent potential over-retention
       condition["primaryTarget"] = oo::EntityWeakNode(

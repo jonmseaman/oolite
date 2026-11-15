@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 */
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -134,10 +135,10 @@ void StoreShaderBindingValue(OOShaderBindingValue& out, R value) {
   else if constexpr (std::is_same_v<R, signed char>)
     out.i =
         value < 0
-            ? static_cast<long long>(static_cast<unsigned char>(value)) - 256
-            : static_cast<long long>(static_cast<unsigned char>(value));
+            ? static_cast<std::int64_t>(static_cast<unsigned char>(value)) - 256
+            : static_cast<std::int64_t>(static_cast<unsigned char>(value));
   else
-    out.i = static_cast<long long>(value);  // integers and enums
+    out.i = static_cast<std::int64_t>(value);  // integers and enums
 }
 
 struct EntityShaderBindingRow {

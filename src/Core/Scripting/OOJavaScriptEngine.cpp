@@ -281,7 +281,7 @@ void OOJavaScriptEngine::destroyMainThreadContext() {
                   "{} JavaScript objects are still alive after the context was "
                   "destroyed; something is holding a JSValue it does not own, "
                   "or has not freed one it does.",
-                  static_cast<long long>(usage.obj_count));
+                  static_cast<std::int64_t>(usage.obj_count));
     } else {
       OO_LOG(
           "script.javaScript.reset.liveObjects", "{}",
@@ -357,7 +357,7 @@ std::size_t OOJavaScriptEngine::shutDown() {
            "***** JavaScript runtime shut down with {} objects still alive; "
            "something is holding a JSValue it does not own, or has not freed "
            "one it does.",
-           static_cast<long long>(usage.obj_count));
+           static_cast<std::int64_t>(usage.obj_count));
     _runtime = nullptr;
     return static_cast<std::size_t>(usage.obj_count);
   }
@@ -1194,14 +1194,14 @@ JSValue OOJSValueFromPList(JSContext* context, const oo::PList& plist) {
       // when it is in range.
       const oo::PList::Integer& integer = *plist.getIf<oo::PList::Integer>();
       if (integer.isUnsigned) {
-        const unsigned long long u = integer.unsignedValue();
-        if (u <= static_cast<unsigned long long>(INT32_MAX))
+        const std::uint64_t u = integer.unsignedValue();
+        if (u <= static_cast<std::uint64_t>(INT32_MAX))
           return JS_NewInt32(context, static_cast<int32_t>(u));
         return JS_NewNumber(context, static_cast<double>(u));
       }
-      const long long v = integer.value;
-      if (static_cast<long long>(INT32_MIN) <= v &&
-          v <= static_cast<long long>(INT32_MAX))
+      const std::int64_t v = integer.value;
+      if (static_cast<std::int64_t>(INT32_MIN) <= v &&
+          v <= static_cast<std::int64_t>(INT32_MAX))
         return JS_NewInt32(context, static_cast<int32_t>(v));
       return JS_NewNumber(context, static_cast<double>(v));
     }
@@ -1413,14 +1413,14 @@ static std::string DescribeValue(JSContext* context, JSValueConst value,
         }
         if (effectiveCount != count) {
           arrayDesc += std::format(", ... <{} items total>]",
-                                   static_cast<long long>(count));
+                                   static_cast<std::int64_t>(count));
         } else {
           arrayDesc += "]";
         }
 
         result = arrayDesc;
       } else {
-        result = std::format("[<{} items>]", static_cast<long long>(count));
+        result = std::format("[<{} items>]", static_cast<std::int64_t>(count));
       }
     } else {
       JS_FreeValue(context, JS_GetException(context));

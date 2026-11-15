@@ -867,7 +867,7 @@ struct MonitorMethod {
   void (*voidVoid)(OODebugMonitor*);
   void (*voidString)(OODebugMonitor*, const std::string&);
   oo::PList (*pListString)(OODebugMonitor*, const std::string&);
-  long long (*scalar)(OODebugMonitor*);
+  std::int64_t (*scalar)(OODebugMonitor*);
   oo::ValueType type;  // a kScalar row: the return type's kind, else kVoid
 };
 
@@ -898,24 +898,26 @@ const MonitorMethod kMonitorMethods[] = {
      nullptr, oo::ValueType::kVoid},
 #endif
     {"debuggerConnected", MonitorMethodForm::kScalar, nullptr, nullptr, nullptr,
-     [](OODebugMonitor* m) -> long long { return m->debuggerConnected(); },
+     [](OODebugMonitor* m) -> std::int64_t { return m->debuggerConnected(); },
      oo::kValueType<bool>},
     {"TCPIgnoresDroppedPackets", MonitorMethodForm::kScalar, nullptr, nullptr,
      nullptr,
-     [](OODebugMonitor* m) -> long long {
+     [](OODebugMonitor* m) -> std::int64_t {
        return m->TCPIgnoresDroppedPackets();
      },
      oo::kValueType<bool>},
     {"usingPlugInController", MonitorMethodForm::kScalar, nullptr, nullptr,
      nullptr,
-     [](OODebugMonitor* m) -> long long { return m->usingPlugInController(); },
+     [](OODebugMonitor* m) -> std::int64_t {
+       return m->usingPlugInController();
+     },
      oo::kValueType<bool>},
     {"configurationKeys", MonitorMethodForm::kNotCallable, nullptr, nullptr,
      nullptr, nullptr, oo::ValueType::kVoid},  // a std::vector result
     {"dumpJSMemoryStatistics", MonitorMethodForm::kScalar, nullptr, nullptr,
      nullptr,
-     [](OODebugMonitor* m) -> long long {
-       return static_cast<long long>(m->dumpJSMemoryStatistics());
+     [](OODebugMonitor* m) -> std::int64_t {
+       return static_cast<std::int64_t>(m->dumpJSMemoryStatistics());
      },
      oo::kValueType<size_t>},
 };
@@ -993,7 +995,7 @@ bool CallMonitorMethod(JSContext* context, OODebugMonitor* monitor, int argc,
 
         case kOOShaderUniformTypeUnsignedLong:
           result = oo::PList::unsignedInteger(
-              static_cast<unsigned long long>(method->scalar(monitor)));
+              static_cast<std::uint64_t>(method->scalar(monitor)));
           break;
 
         default:
@@ -1130,8 +1132,8 @@ static bool IsIncompleteSyntaxError(JSContext* context, JSValueConst exception,
   const std::string lastLine =
       (lastNewline == std::string::npos) ? code : code.substr(lastNewline + 1);
   const std::string endLocation = std::format(
-      "<console input>:{}:{}", static_cast<unsigned long>(lineCount),
-      static_cast<unsigned long>(oo::utf8ToUtf16(lastLine).size()) + 1);
+      "<console input>:{}:{}", static_cast<std::uint64_t>(lineCount),
+      static_cast<std::uint64_t>(oo::utf8ToUtf16(lastLine).size()) + 1);
   const std::string firstFrame = stack.substr(0, stack.find('\n'));
   return firstFrame.find(endLocation) != std::string::npos;
 }

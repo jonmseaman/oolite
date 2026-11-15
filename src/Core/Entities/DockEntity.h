@@ -93,7 +93,7 @@ class DockEntity : public ShipEntity {
   std::size_t pruneAndCountShipsOnApproach();
   void noteDockingForShip(::ShipEntity* ship);
   void autoDockShipsInQueue(
-      std::map<unsigned short, std::vector<oo::PList>>& queue);
+      std::map<OOUniversalID, std::vector<oo::PList>>& queue);
   void addShipToShipsOnApproach(::ShipEntity* ship);
   void pullInShipIfPermitted(::ShipEntity* ship);
 
@@ -123,7 +123,7 @@ class DockEntity : public ShipEntity {
   void drawImmediate(bool immediate, bool translucent) override;
 
   // Public so the tests read them.
-  std::map<unsigned short, std::vector<oo::PList>>
+  std::map<OOUniversalID, std::vector<oo::PList>>
       shipsOnApproach;  // coordinate stacks (Dicts) by ship ID
   std::vector<oo::EntityHold> launchQueue;  // the ships' objects held
   double last_launch_time = {};

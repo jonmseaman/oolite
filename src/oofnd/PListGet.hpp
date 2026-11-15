@@ -154,8 +154,8 @@ I saturatingParse(std::string_view buf) noexcept {
 
 // -[GSString longLongValue] / -intValue (strtol: `long`, then the int
 // conversion).
-inline long long longLongValue(std::u16string_view s) noexcept {
-  return saturatingParse<long long>(intBuf(s));
+inline std::int64_t longLongValue(std::u16string_view s) noexcept {
+  return saturatingParse<std::int64_t>(intBuf(s));
 }
 inline int intValue(std::u16string_view s) noexcept {
   return static_cast<int>(saturatingParse<long>(intBuf(s)));
@@ -331,7 +331,8 @@ inline std::uint64_t realToUnsigned(double d) noexcept {
 // --- OOCollectionExtractors' OO*FromObject over a PList value (nullptr = nil)
 // -----------------
 
-inline long long longLongFrom(const PList* v, long long fallback) noexcept {
+inline std::int64_t longLongFrom(const PList* v,
+                                 std::int64_t fallback) noexcept {
   if (v == nullptr) return fallback;
   if (const bool* b = v->getIf<bool>()) return *b ? 1 : 0;
   if (const PList::Integer* i = v->getIf<PList::Integer>()) return i->value;
@@ -341,16 +342,16 @@ inline long long longLongFrom(const PList* v, long long fallback) noexcept {
   return fallback;
 }
 
-inline unsigned long long unsignedLongLongFrom(
-    const PList* v, unsigned long long fallback) noexcept {
+inline std::uint64_t unsignedLongLongFrom(const PList* v,
+                                          std::uint64_t fallback) noexcept {
   if (v == nullptr) return fallback;
   if (const bool* b = v->getIf<bool>()) return *b ? 1u : 0u;
   if (const PList::Integer* i = v->getIf<PList::Integer>())
     return i->unsignedValue();
   if (const double* d = v->getIf<double>()) return realToUnsigned(*d);
   if (const std::string* s = v->getIf<std::string>()) {
-    return static_cast<unsigned long long>(
-        static_cast<long long>(intValue(utf8ToUtf16(*s))));
+    return static_cast<std::uint64_t>(
+        static_cast<std::int64_t>(intValue(utf8ToUtf16(*s))));
   }
   return fallback;
 }
@@ -519,9 +520,8 @@ inline std::string numberStringValue(const PList& v) {
   if (const bool* b = v.getIf<bool>()) return *b ? "1" : "0";
   if (const PList::Integer* i = v.getIf<PList::Integer>()) {
     if (i->isUnsigned)
-      return std::format("{}",
-                         static_cast<unsigned long long>(i->unsignedValue()));
-    return std::format("{}", static_cast<long long>(i->value));
+      return std::format("{}", static_cast<std::uint64_t>(i->unsignedValue()));
+    return std::format("{}", static_cast<std::int64_t>(i->value));
   }
   const double d = v.doubleValue();
   if (std::isnan(d)) return "nan";
@@ -551,21 +551,21 @@ struct PListGet<T> {
   using Fallback = T;
   static constexpr T defaultFallback() noexcept { return T(0); }
   static T from(const PList* v, T fallback) noexcept {
-    if constexpr (sizeof(T) == sizeof(long long) && std::is_signed_v<T>) {
+    if constexpr (sizeof(T) == sizeof(std::int64_t) && std::is_signed_v<T>) {
       return static_cast<T>(
           plist_get::longLongFrom(v, fallback));  // OOLongLongFromObject
-    } else if constexpr (sizeof(T) == sizeof(long long)) {
+    } else if constexpr (sizeof(T) == sizeof(std::int64_t)) {
       return static_cast<T>(plist_get::unsignedLongLongFrom(
           v, fallback));  // OOUnsignedLongLongFromObject
     } else {
       // OO_DEFINE_CLAMP: OOClampInteger(OOLongLongFromObject(v, fallback), MIN,
       // MAX).
-      const long long ll =
-          plist_get::longLongFrom(v, static_cast<long long>(fallback));
-      const long long lo =
-          static_cast<long long>(std::numeric_limits<T>::min());
-      const long long hi =
-          static_cast<long long>(std::numeric_limits<T>::max());
+      const std::int64_t ll =
+          plist_get::longLongFrom(v, static_cast<std::int64_t>(fallback));
+      const std::int64_t lo =
+          static_cast<std::int64_t>(std::numeric_limits<T>::min());
+      const std::int64_t hi =
+          static_cast<std::int64_t>(std::numeric_limits<T>::max());
       return static_cast<T>((lo < ll) ? ((ll < hi) ? ll : hi) : lo);
     }
   }

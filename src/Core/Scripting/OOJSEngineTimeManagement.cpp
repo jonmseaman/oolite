@@ -25,10 +25,10 @@ SOFTWARE.
 
 */
 
-#include "OOJSEngineTimeManagement.h"
-
+#include <cstdint>
 #include <memory>
 
+#include "OOJSEngineTimeManagement.h"
 #include "oofnd/PList.hpp"
 
 #if OOJS_PROFILE
@@ -263,7 +263,7 @@ std::optional<std::string> OOTimeProfile::description() {
           "\n{:>60}  {}{:7} {:8.2f} {:8.2f}   {:5.1f}   {:5.1f} {:8.2f}",
           entry->function().value_or("(null)"),
           entry->isJavaScriptFrame() ? 'J' : 'N',
-          static_cast<unsigned long>(entry->hitCount()),
+          static_cast<std::uint64_t>(entry->hitCount()),
           entry->totalTimeSum() * 1000.0, entry->selfTimeSum() * 1000.0,
           totalPc, selfPc, entry->selfTimeMax() * 1000.0);
     }
