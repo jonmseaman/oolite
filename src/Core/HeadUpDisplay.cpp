@@ -68,10 +68,11 @@ MA 02110-1301, USA.
 #include "oofnd/objc/OOAssert.h"
 #include "oofnd/objc/OOException.h"
 
-#define ONE_SIXTEENTH 0.0625
-#define ONE_SIXTYFOURTH 0.015625
-#define DEFAULT_OVERALL_ALPHA 0.75
-#define GLYPH_SCALE_FACTOR 0.13  // 0.13 is an inherited magic number
+constexpr double ONE_SIXTEENTH = 0.0625;
+constexpr double ONE_SIXTYFOURTH = 0.015625;
+constexpr double DEFAULT_OVERALL_ALPHA = 0.75;
+constexpr double GLYPH_SCALE_FACTOR =
+    0.13;  // 0.13 is an inherited magic number
 #define IDENTIFY_SCANNER_LOLLIPOPS (0 && OOLITE_DEBUG)
 
 #define NOT_DEFINED INFINITY
