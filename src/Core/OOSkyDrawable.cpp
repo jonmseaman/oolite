@@ -80,12 +80,12 @@ constexpr std::uint8_t kSkyQuadSetColorEntriesPerVertex = 4;
 */
 class OOSkyQuadSet : public oo::Object {
  public:
-  static void addQuads(OOSkyQuadDesc* quads, unsigned count,
+  static void addQuads(std::span<const OOSkyQuadDesc> quads,
                        std::vector<std::unique_ptr<OOSkyQuadSet>>& ioArray);
 
   // Null where -initWithQuadsWithTexture:inArray:count: answered nil.
   static std::unique_ptr<OOSkyQuadSet> initWithQuadsWithTexture(
-      OOTexture* texture, OOSkyQuadDesc* array, unsigned totalCount);
+      OOTexture* texture, std::span<const OOSkyQuadDesc> quads);
 
   ~OOSkyQuadSet() override;
 
@@ -314,7 +314,7 @@ void OOSkyDrawable::setUpStars(OOColor* color1, OOColor* color2) {
     ++currQuad;
   }
 
-  addQuads(quads.data(), _starCount);
+  addQuads(std::span(quads).first(_starCount));
 }
 
 void OOSkyDrawable::setUpNebulae(OOColor* color1, OOColor* color2,
@@ -411,11 +411,11 @@ void OOSkyDrawable::setUpNebulae(OOColor* color1, OOColor* color2,
   */
   _nebulaCount = actualCount;
 
-  addQuads(quads.data(), _nebulaCount);
+  addQuads(std::span(quads).first(_nebulaCount));
 }
 
-void OOSkyDrawable::addQuads(OOSkyQuadDesc* quads, unsigned count) {
-  OOSkyQuadSet::addQuads(quads, count, _quadSets);
+void OOSkyDrawable::addQuads(std::span<const OOSkyQuadDesc> quads) {
+  OOSkyQuadSet::addQuads(quads, _quadSets);
 }
 
 void OOSkyDrawable::loadStarTextures() {
@@ -485,17 +485,16 @@ void OOSkyDrawable::resetGraphicsState() {
 // OOSkyQuadSet
 
 void OOSkyQuadSet::addQuads(
-    OOSkyQuadDesc* quads, unsigned count,
+    std::span<const OOSkyQuadDesc> quads,
     std::vector<std::unique_ptr<OOSkyQuadSet>>& ioArray) {
   std::vector<std::shared_ptr<OOTexture>>
       seenTextures;  // by identity (textures do not override -isEqual:)
   OOTexture* texture = nullptr;
   std::unique_ptr<OOSkyQuadSet> quadSet;
-  unsigned i;
 
   // Iterate over all quads.
-  for (i = 0; i != count; ++i) {
-    texture = quads[i].texture;
+  for (const OOSkyQuadDesc& quad : quads) {
+    texture = quad.texture;
 
     // If we haven't seen this quad's texture before...
     if (std::ranges::find(seenTextures, texture, [](const auto& owner) {
@@ -504,7 +503,7 @@ void OOSkyQuadSet::addQuads(
       seenTextures.emplace_back(oo::share(texture));
 
       // ...create a quad set for this texture.
-      quadSet = initWithQuadsWithTexture(texture, quads, count);
+      quadSet = initWithQuadsWithTexture(texture, quads);
       if (quadSet != nullptr) {
         ioArray.push_back(std::move(quadSet));
       }
@@ -513,9 +512,9 @@ void OOSkyQuadSet::addQuads(
 }
 
 std::unique_ptr<OOSkyQuadSet> OOSkyQuadSet::initWithQuadsWithTexture(
-    OOTexture* texture, OOSkyQuadDesc* array, unsigned totalCount) {
+    OOTexture* texture, std::span<const OOSkyQuadDesc> quads) {
   bool OK = true;
-  unsigned i, j, vertexCount;
+  unsigned j, vertexCount;
   GLfloat* pos;
   GLfloat* tc;
   GLfloat* col;
@@ -539,8 +538,8 @@ std::unique_ptr<OOSkyQuadSet> OOSkyQuadSet::initWithQuadsWithTexture(
 
   if (OK) {
     // Count the quads in the array using this texture.
-    for (i = 0; i != totalCount; ++i) {
-      if (array[i].texture == texture) ++self->_count;
+    for (const OOSkyQuadDesc& quad : quads) {
+      if (quad.texture == texture) ++self->_count;
     }
     if (self->_count == 0) OK = false;
   }
@@ -560,19 +559,19 @@ std::unique_ptr<OOSkyQuadSet> OOSkyQuadSet::initWithQuadsWithTexture(
   if (OK) {
     // Find the matching quads again, and convert them to renderable
     // representation.
-    for (i = 0; i != totalCount; ++i) {
-      if (array[i].texture == texture) {
+    for (const OOSkyQuadDesc& quad : quads) {
+      if (quad.texture == texture) {
         // A message to a nil colour answered 0.
-        OOColor* color = array[i].color.get();
+        OOColor* color = quad.color.get();
         r = (color != nullptr) ? color->redComponent() : 0.0f;
         g = (color != nullptr) ? color->greenComponent() : 0.0f;
         b = (color != nullptr) ? color->blueComponent() : 0.0f;
 
         // Loop over vertices
         for (j = 0; j != 4; ++j) {
-          *pos++ = array[i].corners[j].x;
-          *pos++ = array[i].corners[j].y;
-          *pos++ = array[i].corners[j].z;
+          *pos++ = quad.corners[j].x;
+          *pos++ = quad.corners[j].y;
+          *pos++ = quad.corners[j].z;
 
           // Colour is the same for each vertex
           if (skyColorCorrection == 0) {

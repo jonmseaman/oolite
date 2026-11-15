@@ -4725,7 +4725,7 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
     ring[24].x = x + scannerpos.x;
     ring[24].y = y + scannerpos.z * z_factor + scannerpos.y * y_factor;
     ring[24].z = z;
-    GLDrawPoints(ring.data(), static_cast<int>(ring.size()));
+    GLDrawPoints(ring);
   }
   OOGL(glColor4f(0.5, 0.0, 1.0, static_cast<GLfloat>(0.33333 * alpha)));
   // Here, we draw a sphere distorted by the nonlinear function. We draw the
@@ -4762,7 +4762,7 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
           y + scannerpos.y * y_factor + scannerpos.z * z_factor;
       strip[static_cast<unsigned long long>(2 * j + 1)].z = z;
     }
-    GLDrawQuadStrip(strip.data(), static_cast<int>(strip.size()));
+    GLDrawQuadStrip(strip);
   }
   return;
 }
