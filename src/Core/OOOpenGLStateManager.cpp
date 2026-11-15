@@ -320,7 +320,7 @@ static void SwitchOpenGLStateInternal(
         exist in every build; the GetState_ accessors are called only by the
         state verifier, while the SetState_ accessors are called in either mode.
 */
-static inline bool GetState_DEPTH_WRITEMASK() {
+static bool GetState_DEPTH_WRITEMASK() {
   OO_ENTER_OPENGL();
 
   GLboolean value;
@@ -328,19 +328,19 @@ static inline bool GetState_DEPTH_WRITEMASK() {
   return value;
 }
 
-static inline void SetState_DEPTH_WRITEMASK(bool value) {
+static void SetState_DEPTH_WRITEMASK(bool value) {
   OO_ENTER_OPENGL();
 
   OOGL(glDepthMask(value));
 }
 
-static inline void SetState_SHADE_MODEL(GLint value) {
+static void SetState_SHADE_MODEL(GLint value) {
   OO_ENTER_OPENGL();
 
   OOGL(glShadeModel(value));
 }
 
-static inline GLenum GetState_TEXTURE_ENV_MODE() {
+static GLenum GetState_TEXTURE_ENV_MODE() {
   OO_ENTER_OPENGL();
 
   GLint value;
@@ -348,14 +348,14 @@ static inline GLenum GetState_TEXTURE_ENV_MODE() {
   return value;
 }
 
-static inline void SetState_TEXTURE_ENV_MODE(GLenum value) {
+static void SetState_TEXTURE_ENV_MODE(GLenum value) {
   OO_ENTER_OPENGL();
 
   OOGL(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, value));
 }
 
 #if OO_MULTITEXTURE
-static inline GLenum GetState_ACTIVE_TEXTURE() {
+static GLenum GetState_ACTIVE_TEXTURE() {
   OO_ENTER_OPENGL();
 
   GLint value;
@@ -363,13 +363,13 @@ static inline GLenum GetState_ACTIVE_TEXTURE() {
   return value;
 }
 
-static inline void SetState_ACTIVE_TEXTURE(GLenum value) {
+static void SetState_ACTIVE_TEXTURE(GLenum value) {
   OO_ENTER_OPENGL();
 
   OOGL(glActiveTextureARB(value));
 }
 
-static inline GLenum GetState_CLIENT_ACTIVE_TEXTURE() {
+static GLenum GetState_CLIENT_ACTIVE_TEXTURE() {
   OO_ENTER_OPENGL();
 
   GLint value;
@@ -377,26 +377,26 @@ static inline GLenum GetState_CLIENT_ACTIVE_TEXTURE() {
   return value;
 }
 
-static inline void SetState_CLIENT_ACTIVE_TEXTURE(GLenum value) {
+static void SetState_CLIENT_ACTIVE_TEXTURE(GLenum value) {
   OO_ENTER_OPENGL();
 
   OOGL(glClientActiveTextureARB(value));
 }
 
 #else
-static inline GLenum GetState_ACTIVE_TEXTURE(void) {}
-static inline void SetState_ACTIVE_TEXTURE(GLenum value) {}
-static inline GLenum GetState_CLIENT_ACTIVE_TEXTURE(void) {}
-static inline void SetState_CLIENT_ACTIVE_TEXTURE(GLenum value) {}
+static GLenum GetState_ACTIVE_TEXTURE(void) {}
+static void SetState_ACTIVE_TEXTURE(GLenum value) {}
+static GLenum GetState_CLIENT_ACTIVE_TEXTURE(void) {}
+static void SetState_CLIENT_ACTIVE_TEXTURE(GLenum value) {}
 #endif
 
-static inline void SetState_CULL_FACE_MODE(GLint value) {
+static void SetState_CULL_FACE_MODE(GLint value) {
   OO_ENTER_OPENGL();
 
   OOGL(glCullFace(value));
 }
 
-static inline void SetState_FRONT_FACE(GLint value) {
+static void SetState_FRONT_FACE(GLint value) {
   OO_ENTER_OPENGL();
 
   OOGL(glFrontFace(value));
@@ -730,16 +730,13 @@ void OOGLNoteCurrentFunction(const char* function, unsigned line) {
         Enable or disable OOGLNoteCurrentFunction(). It is disabled within the
         state manager implementation.
 */
-static inline void SetFunctionTracking(bool value) {
-  sGLFunctionTracking = value;
-}
+static void SetFunctionTracking(bool value) { sGLFunctionTracking = value; }
 
 #else
 
 namespace {
-inline void OOGLNoteCurrentFunction(const char* /*function*/,
-                                    unsigned /*line*/) {}
-inline void SetFunctionTracking(bool /*value*/) {}
+void OOGLNoteCurrentFunction(const char* /*function*/, unsigned /*line*/) {}
+void SetFunctionTracking(bool /*value*/) {}
 }  // namespace
 
 #endif
