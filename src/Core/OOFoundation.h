@@ -33,17 +33,12 @@ MA 02110-1301, USA.
 
 #pragma once
 
-#include <math.h>     // IWYU pragma: export
-#include <stdbool.h>  // IWYU pragma: export
-
+// OOLITE_DEBUG: 1 in every build without NDEBUG (dev, debug and test; not
+// deployment).
 #ifdef NDEBUG
 #define OOLITE_DEBUG 0
 #else
 #define OOLITE_DEBUG 1
-#endif
-
-#if !OOLITE_DEBUG
-#define NS_BLOCK_ASSERTIONS 1
 #endif
 
 /*	OO_DEBUG is set by the build system for debug builds (meson.build adds
@@ -55,27 +50,14 @@ MA 02110-1301, USA.
    preprocessor has not seen yet. Nothing between here and the old site defines
    it, so the meaning is unchanged.
 */
+// OO_DEBUG: 1 only in Meson's debug builds (optimization 0 or debug=true).
 #ifndef OO_DEBUG
-// Defined by makefile/Xcode in debug builds.
 #define OO_DEBUG 0
 #endif
 
 #include <assert.h>  // IWYU pragma: export
 
 #include "oofnd/objc/OOFoundationTypes.h"  // IWYU pragma: export
-
-#ifdef __clang__
-#define OOLITE_HAVE_CLANG 1
-#else
-#define OOLITE_HAVE_CLANG 0
-#endif
-
-#if defined(__GNUC__) && !OOLITE_HAVE_CLANG
-// GCC version; for instance, 40300 for 4.3.0. Deliberately undefined in Clang
-// (which defines fake __GNUC__ macros for compatibility).
-#define OOLITE_GCC_VERSION \
-  (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
-#endif
 
 #include <limits.h>  // IWYU pragma: export
 #include <stdint.h>  // IWYU pragma: export
@@ -87,10 +69,10 @@ MA 02110-1301, USA.
 
 #ifdef WIN32
 #define OOLITE_WINDOWS 1
-#if defined(_WIN64)
-#define OOLITE_64_BIT 1
 #endif
-#endif
+
+// Every target is 64-bit.
+static_assert(sizeof(void*) == 8, "Oolite builds for 64-bit targets only");
 
 #ifdef LINUX
 #define OOLITE_LINUX 1
@@ -126,10 +108,6 @@ MA 02110-1301, USA.
 
 #ifndef OOLITE_ESPEAK
 #define OOLITE_ESPEAK 0
-#endif
-
-#ifndef OOLITE_64_BIT
-#define OOLITE_64_BIT 0
 #endif
 
 #include "OOLogging.h"            // IWYU pragma: export
