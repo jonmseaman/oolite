@@ -75,7 +75,7 @@ static_assert(std::to_underlying(OOTCPClientConnectionStatus::kDisconnected) ==
    OODebugTCPConsoleServiceInput() waits up to timeout seconds (< 0: no limit)
    for that, then handles what arrived, as one run-loop wait did.
 */
-bool OODebugTCPConsoleIsWaitingForInput(void);
+bool OODebugTCPConsoleIsWaitingForInput();
 void OODebugTCPConsoleServiceInput(double timeout);
 
 class OODebugMonitor;
@@ -119,7 +119,7 @@ class OODebugTCPConsoleClient : public OODebuggerInterface {
 
  private:
   // The frame loop's functions below read the clients' sockets.
-  friend bool ::OODebugTCPConsoleIsWaitingForInput(void);
+  friend bool ::OODebugTCPConsoleIsWaitingForInput();
   friend void ::OODebugTCPConsoleServiceInput(double timeout);
 
   OODebugTCPConsoleClient() = default;

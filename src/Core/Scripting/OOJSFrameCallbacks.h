@@ -42,4 +42,4 @@ void OOJSFrameCallbacksSetIDSeed(std::optional<std::uint32_t> seed);
 
 void OOJSFrameCallbacksInvoke(OOTimeDelta delta);
 
-void OOJSFrameCallbacksRemoveAll(void);
+void OOJSFrameCallbacksRemoveAll();

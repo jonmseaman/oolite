@@ -516,10 +516,10 @@ void OODrawStringAligned(const std::string& text, GLfloat x, GLfloat y,
  *
  * - CIM
  */
-void OOStartDrawingStrings(void);
+void OOStartDrawingStrings();
 void OODrawStringQuadsAligned(const std::string& text, GLfloat x, GLfloat y,
                               GLfloat z, NSSize siz, bool rightAlign);
-void OOStopDrawingStrings(void);
+void OOStopDrawingStrings();
 
 void OODrawHilightedString(const std::string& text, GLfloat x, GLfloat y,
                            GLfloat z, NSSize siz);
@@ -532,7 +532,7 @@ NSRect OORectFromString(const std::string& text, GLfloat x, GLfloat y,
 
 #include "OOStringWidth.h"  // OOStringWidthInEm()
 
-void OOHUDResetTextEngine(void);
+void OOHUDResetTextEngine();
 
 #include "WormholeEntity.h"  // WORMHOLE_SCANINFO (a send below)
 

@@ -37,10 +37,10 @@ class WormholeEntity;
 
 void InitOOJSWormhole(JSContext* context, JSValueConst global);
 
-JSClassID JSWormholeClassID(void);
+JSClassID JSWormholeClassID();
 
 /*	The bodies of WormholeEntity (OOJavaScriptExtensions), which the engine
    reaches by selector. (-oo_jsClassID answers JSWormholeClassID().)
 */
-std::optional<std::string> OOJSWormholeJSClassName(void);
-bool OOJSWormholeIsVisibleToScripts(void);
+std::optional<std::string> OOJSWormholeJSClassName();
+bool OOJSWormholeIsVisibleToScripts();

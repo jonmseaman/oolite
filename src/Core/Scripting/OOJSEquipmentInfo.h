@@ -58,4 +58,4 @@ std::optional<std::string> JSValueToEquipmentKeyRelaxed(JSContext* context,
 /*	The JS class name of OOEquipmentType's OOJSPrivateObject members,
    defined in OOJSEquipmentInfo.cpp.
 */
-std::optional<std::string> OOJSEquipmentInfoJSClassName(void);
+std::optional<std::string> OOJSEquipmentInfoJSClassName();

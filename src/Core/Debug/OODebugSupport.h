@@ -31,7 +31,7 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
-void OOInitDebugSupport(void);
+void OOInitDebugSupport();
 
 #else
 

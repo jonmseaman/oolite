@@ -32,4 +32,4 @@ MA 02110-1301, USA.
 #include "OOFoundation.h"
 
 void InitOOJSMission(JSContext* context, JSValueConst global);
-void MissionRunCallback(void);
+void MissionRunCallback();

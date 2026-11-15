@@ -517,7 +517,7 @@ static void RemoveNonSpiderMonkeyGlobals(JSContext* context,
                                                      "Float64Array",
                                                      "Proxy"};
 
-  JSPropertyEnum* properties = NULL;
+  JSPropertyEnum* properties = nullptr;
   uint32_t count = 0;
   if (JS_GetOwnPropertyNames(context, &properties, &count, global,
                              JS_GPN_STRING_MASK) < 0) {
@@ -527,7 +527,7 @@ static void RemoveNonSpiderMonkeyGlobals(JSContext* context,
 
   for (uint32_t i = 0; i < count; i++) {
     const char* name = JS_AtomToCString(context, properties[i].atom);
-    bool keep = (name == NULL);
+    bool keep = (name == nullptr);
     for (size_t j = 0; !keep && j < sizeof kSpiderMonkeyGlobals /
                                         sizeof *kSpiderMonkeyGlobals;
          j++) {
@@ -539,7 +539,7 @@ static void RemoveNonSpiderMonkeyGlobals(JSContext* context,
   JS_FreePropertyEnum(context, properties, count);
 }
 
-JSValueConst OOJSLegacyConstRewriter(void) { return sLegacyConstRewriter; }
+JSValueConst OOJSLegacyConstRewriter() { return sLegacyConstRewriter; }
 
 /*	Define the SpiderMonkey extensions OXPs rely on (toSource(),
    uneval()...) before any other script runs. The script is run as plain global

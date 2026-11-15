@@ -41,9 +41,9 @@ void OOStandardsError(const std::string& message);
 // Return true if in standard enforcing mode
 // Always false in release builds
 // This will *not* exit in "exit on error" mode
-bool OOEnforceStandards(void);
+bool OOEnforceStandards();
 
-void OOSetStandardsForOXPVerifierMode(void);
+void OOSetStandardsForOXPVerifierMode();
 
 /*	TRANSITIONAL: the Foundation-typed API forwarding to the cxx_ functions
    above, so unmigrated callers compile unchanged. Callers move to the cxx_

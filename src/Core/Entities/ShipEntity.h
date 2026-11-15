@@ -1623,7 +1623,7 @@ inline ShipEntity* ToShip(Entity* entity) {
 
 }  // namespace oo
 
-oo::PList OODefaultShipShaderMacros(void);
+oo::PList OODefaultShipShaderMacros();
 
 GLfloat getWeaponRangeFromType(OOWeaponType weapon_type);
 

@@ -82,7 +82,7 @@
 #if defined(_WIN32)
 // As in ResourcePaths.hpp: identical to the SDK's declarations, without
 // <windows.h>.
-extern "C" __declspec(dllimport) wchar_t* __stdcall GetCommandLineW(void);
+extern "C" __declspec(dllimport) wchar_t* __stdcall GetCommandLineW();
 extern "C" __declspec(dllimport) wchar_t** __stdcall CommandLineToArgvW(
     const wchar_t* cmdLine, int* argc);
 extern "C" __declspec(dllimport) void* __stdcall LocalFree(void* mem);

@@ -37,10 +37,10 @@ class StationEntity;
 
 void InitOOJSStation(JSContext* context, JSValueConst global);
 
-JSClassID JSStationClassID(void);
+JSClassID JSStationClassID();
 
 /*	The bodies of StationEntity (OOJavaScriptExtensions), which the engine
    reaches by selector. StationEntity::jsClassName calls these. Its JS class is
    JSStationClassID() (StationEntity::jsClassID()).
 */
-std::optional<std::string> OOJSStationJSClassName(void);
+std::optional<std::string> OOJSStationJSClassName();

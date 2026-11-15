@@ -39,25 +39,25 @@ MA 02110-1301, USA.
 #include <sys/sysinfo.h>
 #endif
 
-void OOCPUInfoInit(void);
+void OOCPUInfoInit();
 
 /*	Number of processors (whether they be individual or cores), used to
    select number of threads to use for things like texture loading.
 */
-std::size_t OOCPUCount(void);
+std::size_t OOCPUCount();
 
 /*
         Returns the CPU identifier string. Currently Windows and Linux only.
 */
 #if (OOLITE_WINDOWS || OOLITE_LINUX)
-std::string OOCPUDescription(void);  // UTF-8
+std::string OOCPUDescription();  // UTF-8
 void OOCPUID(int CPUInfo[4], int InfoType);
 
 struct OOMemoryStatus {
   std::uint64_t ooPhysicalMemory;
   std::uint64_t ooAvailableMemory;
 };
-OOMemoryStatus OOSystemMemoryStatus(void);
+OOMemoryStatus OOSystemMemoryStatus();
 #endif
 
 #if OOLITE_WINDOWS
@@ -65,8 +65,8 @@ OOMemoryStatus OOSystemMemoryStatus(void);
 
 // IsWow64Process, to check for a 64/32 bit system: windows.h's BOOL is an int
 using IW64PFP = BOOL(WINAPI*)(HANDLE, BOOL*);
-bool is64BitSystem(void);
-std::string operatingSystemFullVersion(void);  // UTF-8
+bool is64BitSystem();
+std::string operatingSystemFullVersion();  // UTF-8
 #endif
 
 #include "OOCPUInfoEndian.h"

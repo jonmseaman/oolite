@@ -34,11 +34,11 @@ MA 02110-1301, USA.
 
 void InitOOJSFlasher(JSContext* context, JSValueConst global);
 
-JSClassID JSFlasherClassID(void);
+JSClassID JSFlasherClassID();
 
 /*	The bodies of OOFlasherEntity (OOJavaScriptExtensions), which the engine
    reaches by selector through the root's JS members: the C++ OOFlasherEntity's
    overrides call these. Its jsClassID() answers JSFlasherClassID().
 */
-std::optional<std::string> OOJSFlasherJSClassName(void);
-bool OOJSFlasherIsVisibleToScripts(void);
+std::optional<std::string> OOJSFlasherJSClassName();
+bool OOJSFlasherIsVisibleToScripts();

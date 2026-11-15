@@ -101,10 +101,10 @@ SOFTWARE.
 
 class OOTimeProfile;
 
-std::shared_ptr<OOTimeProfile> OOJSEndProfiling(void);
+std::shared_ptr<OOTimeProfile> OOJSEndProfiling();
 
 void OOJSBeginProfiling(bool trace);
-bool OOJSIsProfiling(void);
+bool OOJSIsProfiling();
 
 void OOJSExcludeTimeFromLimiter(OOTimeDelta time);
 

@@ -68,7 +68,7 @@ inline HPVector vectorToHPVector(Vector v) INLINE_CONST_FUNC;
 inline Vector HPVectorToVector(HPVector v) INLINE_CONST_FUNC;
 
 /* Generate random vectors. */
-HPVector OORandomUnitHPVector(void);
+HPVector OORandomUnitHPVector();
 HPVector OOHPVectorRandomSpatial(
     OOHPScalar
         maxLength);  // Random vector uniformly distributed in radius-maxLength

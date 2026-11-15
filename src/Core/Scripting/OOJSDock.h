@@ -37,10 +37,10 @@ class DockEntity;
 
 void InitOOJSDock(JSContext* context, JSValueConst global);
 
-JSClassID JSDockClassID(void);
+JSClassID JSDockClassID();
 
 /*	The bodies of Entity (OOJavaScriptExtensions)'s class questions for a
    dock, which the C++ DockEntity's overrides call. Its JS class is
    JSDockClassID() (DockEntity::jsClassID()).
 */
-std::optional<std::string> OOJSDockJSClassName(void);
+std::optional<std::string> OOJSDockJSClassName();

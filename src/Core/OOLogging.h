@@ -65,14 +65,14 @@ SOFTWARE.
 #define OOLOG_SHORT_CIRCUIT 1
 #endif
 
-void OOLogIndent(void);
-void OOLogOutdent(void);
+void OOLogIndent();
+void OOLogOutdent();
 
 // Remember/restore indent levels, for cases where an exception may occur while
 // indented.
 
-void OOLogPushIndent(void);
-void OOLogPopIndent(void);
+void OOLogPushIndent();
+void OOLogPopIndent();
 
 // OOLogGenericParameterError(): general parameter error message, "*****
 // $function_name: bad parameters. (This is an internal programming error,

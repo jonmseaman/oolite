@@ -39,7 +39,7 @@ MA 02110-1301, USA.
 #include "OOTypes.h"
 
 void OOConstToJSStringInit(JSContext* context);
-void OOConstToJSStringDestroy(void);
+void OOConstToJSStringDestroy();
 
 struct ConstTable;
 

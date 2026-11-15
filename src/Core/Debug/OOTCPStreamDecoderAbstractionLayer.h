@@ -60,7 +60,7 @@ void OOALMutableDataAppendBytes(OOALMutableDataRef data, const void* bytes,
 const void* OOALDataGetBytePtr(OOALDataRef data);
 size_t OOALDataGetLength(OOALDataRef data);
 
-OOALAutoreleasePoolRef OOALCreateAutoreleasePool(void);
+OOALAutoreleasePoolRef OOALCreateAutoreleasePool();
 void OOALDestroyAutoreleasePool(OOALAutoreleasePoolRef pool);
 
 OOALObjectRef OOALPropertyListFromData(OOALMutableDataRef data,

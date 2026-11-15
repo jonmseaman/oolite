@@ -170,12 +170,12 @@ void OOSetOpenGLState(OOOpenGLStateID state);
 
 // Inform the SetState/VerifyState mechanism that the OpenGL context has been
 // reset to its initial state.
-void OOResetGLStateVerifier(void);
+void OOResetGLStateVerifier();
 
 /*	LogOpenGLState()
         Write a bunch of OpenGL state information to the log.
 */
-void LogOpenGLState(void);
+void LogOpenGLState();
 
 /*	GLScaledLineWidth()
         GLScaledPointSize()
@@ -190,7 +190,7 @@ void LogOpenGLState(void);
 */
 void GLScaledLineWidth(GLfloat width);
 void GLScaledPointSize(GLfloat size);
-GLfloat GLGetDisplayScaleFactor(void);
+GLfloat GLGetDisplayScaleFactor();
 void GLSetDisplayScaleFactor(GLfloat factor);
 
 /*	OOGLWireframeModeOn()
@@ -198,8 +198,8 @@ void GLSetDisplayScaleFactor(GLfloat factor);
         Enable/disable polygon-to-lines wireframe rendering with line width
    of 1.
 */
-void OOGLWireframeModeOn(void);
-void OOGLWireframeModeOff(void);
+void OOGLWireframeModeOn();
+void OOGLWireframeModeOff();
 
 /*	GLDrawBallBillboard()
         Draws a circle corresponding to a sphere of given radius at given

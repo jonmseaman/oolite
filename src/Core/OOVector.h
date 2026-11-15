@@ -59,7 +59,7 @@ inline Vector make_vector(OOScalar vx, OOScalar vy,
 inline Vector2D MakeVector2D(OOScalar vx, OOScalar vy) INLINE_CONST_FUNC;
 
 /* Generate random vectors. */
-Vector OORandomUnitVector(void);
+Vector OORandomUnitVector();
 Vector OOVectorRandomSpatial(
     OOScalar
         maxLength);  // Random vector uniformly distributed in radius-maxLength

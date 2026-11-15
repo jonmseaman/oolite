@@ -352,7 +352,7 @@ static std::uint64_t GetSysCtlInt(const char* name) {
 
 #else
 namespace {
-std::string AdditionalLogHeaderInfo(void) {
+std::string AdditionalLogHeaderInfo() {
   unsigned cpuCount = OOCPUCount();
   const std::string cpuDescription = OOCPUDescription();
   OOMemoryStatus systemMemoryStatus = OOSystemMemoryStatus();
