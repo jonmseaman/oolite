@@ -40,11 +40,11 @@ MA 02110-1301, USA.
 #include "oofnd/PListGet.hpp"
 #include "oofnd/String.hpp"
 
-#define OOWAYPOINT_KEY_POSITION "position"
-#define OOWAYPOINT_KEY_ORIENTATION "orientation"
-#define OOWAYPOINT_KEY_SIZE "size"
-#define OOWAYPOINT_KEY_CODE "beaconCode"
-#define OOWAYPOINT_KEY_LABEL "beaconLabel"
+constexpr char OOWAYPOINT_KEY_POSITION[] = "position";
+constexpr char OOWAYPOINT_KEY_ORIENTATION[] = "orientation";
+constexpr char OOWAYPOINT_KEY_SIZE[] = "size";
+constexpr char OOWAYPOINT_KEY_CODE[] = "beaconCode";
+constexpr char OOWAYPOINT_KEY_LABEL[] = "beaconLabel";
 
 std::shared_ptr<OOWaypointEntity> OOWaypointEntity::waypointWithDictionary(
     const oo::PList& info) {
