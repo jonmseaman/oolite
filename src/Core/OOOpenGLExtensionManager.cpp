@@ -31,6 +31,7 @@ SOFTWARE.
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <string_view>
@@ -436,13 +437,8 @@ OOOpenGLExtensionManager* OOOpenGLExtensionManager::sharedManager() {
 bool OOOpenGLExtensionManager::haveExtension(const std::string& extension) {
   // The Foundation set was documented as thread-safe under OS X, but I'm not
   // sure about GNUstep. -- Ahruman
-  lock.lock();
-
-  bool result = extensions.contains(extension) ? true : false;
-
-  lock.unlock();
-
-  return result;
+  const std::lock_guard guard(lock);
+  return extensions.contains(extension);
 }
 
 bool OOOpenGLExtensionManager::shadersSupported() {

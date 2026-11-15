@@ -312,7 +312,7 @@ void OOAsyncWorkManagerInternal::shutdown() noexcept {
 void OOAsyncWorkManagerInternal::completePendingTasks() {
   std::shared_ptr<OOAsyncWorkTask> next;
 
-  _pendingOpsLock.lock();
+  const std::lock_guard guard(_pendingOpsLock);
   for (;;) {
     next = _readyQueue.tryDequeue();
     if (next == nullptr) break;
@@ -320,7 +320,6 @@ void OOAsyncWorkManagerInternal::completePendingTasks() {
     PendingRemove(_pendingCompletableOperations, next.get());
     next->completeAsyncTask();
   }
-  _pendingOpsLock.unlock();
 }
 
 void OOAsyncWorkManagerInternal::waitForTaskToComplete(OOAsyncWorkTask* task) {
@@ -332,10 +331,12 @@ void OOAsyncWorkManagerInternal::waitForTaskToComplete(OOAsyncWorkTask* task) {
             "%s can only be called from the main thread.", __PRETTY_FUNCTION__);
 #endif
 
-  _pendingOpsLock.lock();
-  bool exists = PendingContains(_pendingCompletableOperations, task);
-  if (exists) PendingRemove(_pendingCompletableOperations, task);
-  _pendingOpsLock.unlock();
+  bool exists;
+  {
+    const std::lock_guard guard(_pendingOpsLock);
+    exists = PendingContains(_pendingCompletableOperations, task);
+    if (exists) PendingRemove(_pendingCompletableOperations, task);
+  }
 
   if (!exists) return;
 
@@ -343,9 +344,10 @@ void OOAsyncWorkManagerInternal::waitForTaskToComplete(OOAsyncWorkTask* task) {
   do {
     // Dequeue a task and complete it.
     next = _readyQueue.dequeue();
-    _pendingOpsLock.lock();
-    PendingRemove(_pendingCompletableOperations, next.get());
-    _pendingOpsLock.unlock();
+    {
+      const std::lock_guard guard(_pendingOpsLock);
+      PendingRemove(_pendingCompletableOperations, next.get());
+    }
 
     next->completeAsyncTask();
 
@@ -360,11 +362,10 @@ void OOAsyncWorkManagerInternal::queueResult(OOAsyncWorkTask* task) {
 }
 
 void OOAsyncWorkManagerInternal::noteTaskQueued(OOAsyncWorkTask* task) {
-  _pendingOpsLock.lock();
+  const std::lock_guard guard(_pendingOpsLock);
   if (!PendingContains(_pendingCompletableOperations, task))
     _pendingCompletableOperations.emplace_back(
         oo::share(task));  // a set: added once
-  _pendingOpsLock.unlock();
 }
 
 /******* OOManualDispatchAsyncWorkManager - manual thread management *******/
