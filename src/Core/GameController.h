@@ -43,10 +43,10 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/OOObject.h"
 
-#define MINIMUM_GAME_TICK 0.25
+inline constexpr double MINIMUM_GAME_TICK = 0.25;
 // * reduced from 0.5s for tgape * //
 
-#define MINIMUM_ANIMATION_TICK 0.0041667
+inline constexpr double MINIMUM_ANIMATION_TICK = 0.0041667;
 // 1.0 / (desired framerate cap)
 
 class MyOpenGLView;
