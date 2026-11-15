@@ -57,10 +57,10 @@ enum class OOSystemLayer : std::int32_t {
   kOXPDynamic = 2,
   kOXPPriority = 3,
 };
-static_assert(static_cast<std::int32_t>(OOSystemLayer::kCore) == 0);
-static_assert(static_cast<std::int32_t>(OOSystemLayer::kOXPStatic) == 1);
-static_assert(static_cast<std::int32_t>(OOSystemLayer::kOXPDynamic) == 2);
-static_assert(static_cast<std::int32_t>(OOSystemLayer::kOXPPriority) == 3);
+static_assert(std::to_underlying(OOSystemLayer::kCore) == 0);
+static_assert(std::to_underlying(OOSystemLayer::kOXPStatic) == 1);
+static_assert(std::to_underlying(OOSystemLayer::kOXPDynamic) == 2);
+static_assert(std::to_underlying(OOSystemLayer::kOXPPriority) == 3);
 
 // A system's concealment: planetinfo.plist's number, compared with these
 // thresholds (any value may occur), so typed constants.

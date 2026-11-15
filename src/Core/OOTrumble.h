@@ -26,6 +26,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <utility>
+
 #include "OOEnumFlags.h"
 #include "OOFoundation.h"
 #include "OOOpenGL.h"
@@ -54,16 +56,16 @@ enum class trumble_animation : int {
   kSleep,
   kDie,
 };
-static_assert(static_cast<int>(trumble_animation::kNone) == 0);
-static_assert(static_cast<int>(trumble_animation::kIdle) == 1);
-static_assert(static_cast<int>(trumble_animation::kBlink) == 2);
-static_assert(static_cast<int>(trumble_animation::kSnarl) == 3);
-static_assert(static_cast<int>(trumble_animation::kProot) == 4);
-static_assert(static_cast<int>(trumble_animation::kShudder) == 5);
-static_assert(static_cast<int>(trumble_animation::kStoned) == 6);
-static_assert(static_cast<int>(trumble_animation::kSpawn) == 7);
-static_assert(static_cast<int>(trumble_animation::kSleep) == 8);
-static_assert(static_cast<int>(trumble_animation::kDie) == 9);
+static_assert(std::to_underlying(trumble_animation::kNone) == 0);
+static_assert(std::to_underlying(trumble_animation::kIdle) == 1);
+static_assert(std::to_underlying(trumble_animation::kBlink) == 2);
+static_assert(std::to_underlying(trumble_animation::kSnarl) == 3);
+static_assert(std::to_underlying(trumble_animation::kProot) == 4);
+static_assert(std::to_underlying(trumble_animation::kShudder) == 5);
+static_assert(std::to_underlying(trumble_animation::kStoned) == 6);
+static_assert(std::to_underlying(trumble_animation::kSpawn) == 7);
+static_assert(std::to_underlying(trumble_animation::kSleep) == 8);
+static_assert(std::to_underlying(trumble_animation::kDie) == 9);
 
 enum class trumble_eyes : int {
   kNone = 0,
@@ -71,10 +73,10 @@ enum class trumble_eyes : int {
   kShut,
   kWide,
 };
-static_assert(static_cast<int>(trumble_eyes::kNone) == 0);
-static_assert(static_cast<int>(trumble_eyes::kOpen) == 1);
-static_assert(static_cast<int>(trumble_eyes::kShut) == 2);
-static_assert(static_cast<int>(trumble_eyes::kWide) == 3);
+static_assert(std::to_underlying(trumble_eyes::kNone) == 0);
+static_assert(std::to_underlying(trumble_eyes::kOpen) == 1);
+static_assert(std::to_underlying(trumble_eyes::kShut) == 2);
+static_assert(std::to_underlying(trumble_eyes::kWide) == 3);
 
 enum class trumble_mouth : int {
   kNone = 0,
@@ -83,11 +85,11 @@ enum class trumble_mouth : int {
   kSnarl,
   kNormal,
 };
-static_assert(static_cast<int>(trumble_mouth::kNone) == 0);
-static_assert(static_cast<int>(trumble_mouth::kPout) == 1);
-static_assert(static_cast<int>(trumble_mouth::kGrowl) == 2);
-static_assert(static_cast<int>(trumble_mouth::kSnarl) == 3);
-static_assert(static_cast<int>(trumble_mouth::kNormal) == 4);
+static_assert(std::to_underlying(trumble_mouth::kNone) == 0);
+static_assert(std::to_underlying(trumble_mouth::kPout) == 1);
+static_assert(std::to_underlying(trumble_mouth::kGrowl) == 2);
+static_assert(std::to_underlying(trumble_mouth::kSnarl) == 3);
+static_assert(std::to_underlying(trumble_mouth::kNormal) == 4);
 
 struct OOTrumbleTestAccess;  // tests/unit/core/test_OOTrumble.cpp
 

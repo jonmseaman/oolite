@@ -77,14 +77,14 @@ enum class OOMouseInteractionMode : std::int32_t {
   kFlightNoMouseControl,
   kFlightWithMouseControl,
 };
-static_assert(static_cast<std::int32_t>(
-                  OOMouseInteractionMode::kUiScreenNoInteraction) == 0);
-static_assert(static_cast<std::int32_t>(
-                  OOMouseInteractionMode::kUiScreenWithInteraction) == 1);
-static_assert(static_cast<std::int32_t>(
-                  OOMouseInteractionMode::kFlightNoMouseControl) == 2);
-static_assert(static_cast<std::int32_t>(
-                  OOMouseInteractionMode::kFlightWithMouseControl) == 3);
+static_assert(
+    std::to_underlying(OOMouseInteractionMode::kUiScreenNoInteraction) == 0);
+static_assert(
+    std::to_underlying(OOMouseInteractionMode::kUiScreenWithInteraction) == 1);
+static_assert(
+    std::to_underlying(OOMouseInteractionMode::kFlightNoMouseControl) == 2);
+static_assert(
+    std::to_underlying(OOMouseInteractionMode::kFlightWithMouseControl) == 3);
 
 std::string OOStringFromMouseInteractionMode(OOMouseInteractionMode mode);
 bool OOMouseInteractionModeIsUIScreen(OOMouseInteractionMode mode);

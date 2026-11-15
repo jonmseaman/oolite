@@ -70,16 +70,16 @@ enum class OOTCPClientConnectionStatus : int {
   kConnectionRefused,
   kDisconnected,
 };
-static_assert(static_cast<int>(OOTCPClientConnectionStatus::kNotConnected) ==
+static_assert(std::to_underlying(OOTCPClientConnectionStatus::kNotConnected) ==
               0);
-static_assert(static_cast<int>(
+static_assert(std::to_underlying(
                   OOTCPClientConnectionStatus::kStartedConnectionStage1) == 1);
-static_assert(static_cast<int>(
+static_assert(std::to_underlying(
                   OOTCPClientConnectionStatus::kStartedConnectionStage2) == 2);
-static_assert(static_cast<int>(OOTCPClientConnectionStatus::kConnected) == 3);
+static_assert(std::to_underlying(OOTCPClientConnectionStatus::kConnected) == 3);
 static_assert(
-    static_cast<int>(OOTCPClientConnectionStatus::kConnectionRefused) == 4);
-static_assert(static_cast<int>(OOTCPClientConnectionStatus::kDisconnected) ==
+    std::to_underlying(OOTCPClientConnectionStatus::kConnectionRefused) == 4);
+static_assert(std::to_underlying(OOTCPClientConnectionStatus::kDisconnected) ==
               5);
 
 /*	The frame loop's side of the console socket: what the run loop did for

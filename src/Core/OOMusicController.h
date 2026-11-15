@@ -59,9 +59,9 @@ enum class OOMusicMode : std::int32_t {
   kITunes,
 
 };
-static_assert(static_cast<std::int32_t>(OOMusicMode::kOff) == 0);
-static_assert(static_cast<std::int32_t>(OOMusicMode::kOn) == 1);
-static_assert(static_cast<std::int32_t>(OOMusicMode::kITunes) == 2);
+static_assert(std::to_underlying(OOMusicMode::kOff) == 0);
+static_assert(std::to_underlying(OOMusicMode::kOn) == 1);
+static_assert(std::to_underlying(OOMusicMode::kITunes) == 2);
 inline constexpr OOMusicMode kOOMusicModeMax = OOMusicMode::kOn;
 
 class OOMusicController : public oo::Object {
