@@ -1324,11 +1324,10 @@ void PlayerEntity::awardEquipment(const std::string& equipString) {
            "***** SCRIPT ERROR: in {}, CANNOT award undamaged weapon:'{}'. "
            "Damaged weapons can be awarded instead.",
            CurrentScriptDescription(), equipKey);
-  }
-  // (the "_DAMAGED" suffix is ASCII, so its bytes are its characters)
-  else if (oo::str::hasSuffix(equipKey, "_DAMAGED") &&
-           hasEquipmentItem(
-               oo::PList(equipKey.substr(0, equipKey.size() - 8)))) {
+  } else if (oo::str::hasSuffix(equipKey, "_DAMAGED") &&
+             hasEquipmentItem(
+                 oo::PList(equipKey.substr(0, equipKey.size() - 8)))) {
+    // (the "_DAMAGED" suffix is ASCII, so its bytes are its characters)
     OO_LOG(kOOLogSyntaxAwardEquipment,
            "***** SCRIPT ERROR: in {}, CANNOT award damaged equipment:'{}'. "
            "Undamaged version already equipped.",

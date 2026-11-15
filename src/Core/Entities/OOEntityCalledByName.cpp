@@ -125,12 +125,12 @@ oo::PList OOEntityByNameAdaptPList(Entity* entity, const std::string*,
 template <auto Function>
 void OOEntityByNameTyped(Entity* entity, OOEntityByNameValue& value) {
   using Result = decltype(Function(entity));
-  if constexpr (std::is_void_v<Result>)
+  if constexpr (std::is_void_v<Result>) {
     Function(entity);
-  else if constexpr (std::is_same_v<Result, oo::PList>)
+  } else if constexpr (std::is_same_v<Result, oo::PList>) {
     value.plist = Function(entity);
-  else if constexpr (std::is_integral_v<Result> && std::is_signed_v<Result> &&
-                     sizeof(Result) == 1) {
+  } else if constexpr (std::is_integral_v<Result> && std::is_signed_v<Result> &&
+                       sizeof(Result) == 1) {
     // a signed char (bool): its value, sign kept, as OOCallIntegerMethod()
     // converted it
     const long long bits = static_cast<unsigned char>(Function(entity));
@@ -141,15 +141,16 @@ void OOEntityByNameTyped(Entity* entity, OOEntityByNameValue& value) {
     value.real = static_cast<double>(Function(entity));
   } else if constexpr (std::is_same_v<Result, Vector>) {
     value.vector = Function(entity);
-  } else if constexpr (std::is_same_v<Result, Quaternion>)
+  } else if constexpr (std::is_same_v<Result, Quaternion>) {
     value.quaternion = Function(entity);
-  else if constexpr (std::is_same_v<Result, OOColor*>)
+  } else if constexpr (std::is_same_v<Result, OOColor*>) {
     value.color = Function(entity);  // borrowed
-  else if constexpr (std::is_convertible_v<Result, Entity*>)
+  } else if constexpr (std::is_convertible_v<Result, Entity*>) {
     value.entity = Function(entity);  // the C++ entity
-  else
+  } else {
     (void)Function(entity);  // a result callObjC() cannot read (it does not
                              // call such a method)
+  }
 }
 
 }  // namespace

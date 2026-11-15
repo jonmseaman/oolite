@@ -4763,15 +4763,14 @@ void ShipEntity::behaviour_attack_target(double /*delta_t*/) {
           behaviour = OOBehaviour::kAttackFlyToTarget;
         }
       }
-    }
-    // if our current target isn't targeting us, and we have some idea of how to
-    // fight, and our weapons are running hot, and we're fairly nearby
-    else if (weapons_heating && accuracy >= COMBAT_AI_ISNT_AWFUL &&
-             oo::EntityIsShip(target) &&
-             (oo::ToShip(target) != nullptr
-                  ? oo::ToShip(target)->primaryTarget()
-                  : static_cast<Entity*>(nullptr)) != this &&
-             range < COMBAT_OUT_RANGE_FACTOR * weaponRange) {
+    } else if (weapons_heating && accuracy >= COMBAT_AI_ISNT_AWFUL &&
+               oo::EntityIsShip(target) &&
+               (oo::ToShip(target) != nullptr
+                    ? oo::ToShip(target)->primaryTarget()
+                    : static_cast<Entity*>(nullptr)) != this &&
+               range < COMBAT_OUT_RANGE_FACTOR * weaponRange) {
+      // if our current target isn't targeting us, and we have some idea of how
+      // to fight, and our weapons are running hot, and we're fairly nearby
       // then back off a bit for weapons to cool so we get a good attack run
       // later, rather than weaving closer
       float relativeSpeed = magnitude(vector_subtract(
@@ -4823,9 +4822,8 @@ void ShipEntity::behaviour_attack_target(double /*delta_t*/) {
         if (getWeaponRangeFromType(forward_weapon_real_type) > 12500 &&
             range > 12500) {
           behaviour = OOBehaviour::kAttackSniper;
-        }
-        // generally not good tactics the next two
-        else if (accuracy < COMBAT_AI_ISNT_AWFUL && aspect < 0) {
+        } else if (accuracy < COMBAT_AI_ISNT_AWFUL && aspect < 0) {
+          // generally not good tactics the next two
           behaviour = OOBehaviour::kAttackFlyToTargetSix;
         } else if (accuracy < COMBAT_AI_ISNT_AWFUL) {
           behaviour = OOBehaviour::kAttackFlyToTargetTwelve;
@@ -7473,11 +7471,10 @@ OOAegisStatus ShipEntity::checkForAegis() {
                                             // near-planet station.
       }
       transitionToAegisNone();
-    }
-    // approaching..
-    else if (EXPECT_NOT((result == OOAegisStatus::kCloseToAnyPlanet ||
-                         result == OOAegisStatus::kCloseToMainPlanet) &&
-                        lastAegisLock() != nearest)) {
+    } else if (EXPECT_NOT((result == OOAegisStatus::kCloseToAnyPlanet ||
+                           result == OOAegisStatus::kCloseToMainPlanet) &&
+                          lastAegisLock() != nearest)) {
+      // approaching..
       if (aegis_status != OOAegisStatus::kNone && lastAegisLock() != nullptr) {
         // we were close to another stellar body
         doScriptEvent(OOJSID("shipExitedPlanetaryVicinity"), lastAegisLock());
@@ -8829,10 +8826,9 @@ void ShipEntity::becomeExplosion() {
 
       if (!canFragment) {
         n_alloys = 0.0;
-      }
-      // If UNIVERSE is almost full, don't create more than 1 piece of scrap
-      // metal.
-      else if (!add_debris) {
+      } else if (!add_debris) {
+        // If UNIVERSE is almost full, don't create more than 1 piece of scrap
+        // metal.
         n_alloys = (n_alloys > 1.0) ? 1.0 : 0.0;
       }
 
@@ -12075,10 +12071,11 @@ bool ShipEntity::collideWithShip(::ShipEntity* other) {
   if (std::vector<oo::EntityHold>* colliding =
           (other != nullptr
                ? other->getCollidingEntities()
-               : static_cast<std::vector<oo::EntityHold>*>(nullptr)))
+               : static_cast<std::vector<oo::EntityHold>*>(nullptr))) {
     std::erase_if(*colliding, [this](const oo::EntityHold& e) {
       return e.get() == this;
     });  // -removeObject:
+  }
 
   doScriptEvent(OOJSID("shipCollided"), other, "COLLISION");
   if (other != nullptr)
@@ -12332,10 +12329,11 @@ void ShipEntity::scoopUpProcess(::ShipEntity* other, bool procEvents,
   if (std::vector<oo::EntityHold>* colliding =
           (other != nullptr
                ? other->getCollidingEntities()
-               : static_cast<std::vector<oo::EntityHold>*>(nullptr)))
+               : static_cast<std::vector<oo::EntityHold>*>(nullptr))) {
     std::erase_if(*colliding, [this](const oo::EntityHold& e) {
       return e.get() == this;
     });  // -removeObject:, so it can't be scooped twice!
+  }
   // make sure other ships trying to scoop it lose it
   // probably already happened, but some may have acquired it
   // after the scooping started, and they might get stuck in a scooping

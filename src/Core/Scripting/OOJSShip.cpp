@@ -2905,10 +2905,9 @@ static JSValue ShipAwardEquipment(OOJS_NATIVE_ARGS) {
     } else {
       if (identifier == "EQ_MISSILE_REMOVAL") {
         ship->removeMissiles();
-      }
-      // no passenger handling for NPCs. EQ_CARGO_BAY is dealt with inside
-      // addEquipmentItem
-      else if (!berth && identifier != "EQ_PASSENGER_BERTH_REMOVAL") {
+      } else if (!berth && identifier != "EQ_PASSENGER_BERTH_REMOVAL") {
+        // no passenger handling for NPCs. EQ_CARGO_BAY is dealt with inside
+        // addEquipmentItem
         OK = ship->addEquipmentItem(identifier, true, "scripted");
       } else {
         OK = false;

@@ -677,9 +677,9 @@ bool OOInterpretTextureSpecifier(const oo::PList& specifier,
             (extractValue->isString() || extractValue->isNumber())) {
           const std::string extractChannel =
               specifier.get<std::string>("extract_channel");
-          if (extractChannel == "r")
+          if (extractChannel == "r") {
             options |= OOTextureFlags::kExtractChannelR;
-          else if (extractChannel == "g") {
+          } else if (extractChannel == "g") {
             options |= OOTextureFlags::kExtractChannelG;
           } else if (extractChannel == "b") {
             options |= OOTextureFlags::kExtractChannelB;

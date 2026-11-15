@@ -625,8 +625,9 @@ class Defaults {
         if (c == 0) {
           argv.push_back(std::move(arg));
           arg.clear();
-        } else
+        } else {
           arg += static_cast<char>(c);
+        }
       }
       std::fclose(f);
     }

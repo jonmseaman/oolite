@@ -1767,7 +1767,7 @@ void ShipEntity::thargonCheckMother() {
         setGroup((mother != nullptr ? mother->group()
                                     : static_cast<OOShipGroup*>(nullptr)));
       }
-    };
+    }
   }
 }
 
