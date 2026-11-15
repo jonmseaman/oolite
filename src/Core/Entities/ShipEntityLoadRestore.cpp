@@ -44,30 +44,30 @@ MA 02110-1301, USA.
 #include "oofnd/PListGet.hpp"
 #include "oofnd/objc/OOAssert.h"
 
-#define KEY_SHIP_KEY "ship_key"
-#define KEY_SHIPDATA_OVERRIDES "shipdata_overrides"
-#define KEY_SHIPDATA_DELETES "shipdata_deletes"
-#define KEY_PRIMARY_ROLE "primary_role"
-#define KEY_POSITION "position"
-#define KEY_ORIENTATION "orientation"
-#define KEY_ROLES "roles"
-#define KEY_FUEL "fuel"
-#define KEY_BOUNTY "bounty"
-#define KEY_ENERGY_LEVEL "energy_level"
-#define KEY_EQUIPMENT "equipment"
-#define KEY_MISSILES "missiles"
-#define KEY_FORWARD_WEAPON "forward_weapon_type"
-#define KEY_AFT_WEAPON "aft_weapon_type"
-#define KEY_SCAN_CLASS "scan_class"
+constexpr char KEY_SHIP_KEY[] = "ship_key";
+constexpr char KEY_SHIPDATA_OVERRIDES[] = "shipdata_overrides";
+constexpr char KEY_SHIPDATA_DELETES[] = "shipdata_deletes";
+constexpr char KEY_PRIMARY_ROLE[] = "primary_role";
+constexpr char KEY_POSITION[] = "position";
+constexpr char KEY_ORIENTATION[] = "orientation";
+constexpr char KEY_ROLES[] = "roles";
+constexpr char KEY_FUEL[] = "fuel";
+constexpr char KEY_BOUNTY[] = "bounty";
+constexpr char KEY_ENERGY_LEVEL[] = "energy_level";
+constexpr char KEY_EQUIPMENT[] = "equipment";
+constexpr char KEY_MISSILES[] = "missiles";
+constexpr char KEY_FORWARD_WEAPON[] = "forward_weapon_type";
+constexpr char KEY_AFT_WEAPON[] = "aft_weapon_type";
+constexpr char KEY_SCAN_CLASS[] = "scan_class";
 
 // AI is a complete pickled AI state.
-#define KEY_AI "AI"
+constexpr char KEY_AI[] = "AI";
 
 // Group IDs are numbers synchronised through the context object.
-#define KEY_GROUP_ID "group"
-#define KEY_GROUP_NAME "group_name"
-#define KEY_IS_GROUP_LEADER "is_group_leader"
-#define KEY_ESCORT_GROUP_ID "escort_group"
+constexpr char KEY_GROUP_ID[] = "group";
+constexpr char KEY_GROUP_NAME[] = "group_name";
+constexpr char KEY_IS_GROUP_LEADER[] = "is_group_leader";
+constexpr char KEY_ESCORT_GROUP_ID[] = "escort_group";
 
 namespace {
 
