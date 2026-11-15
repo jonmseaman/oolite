@@ -112,9 +112,9 @@ def world(app_dir, console_port, tmp_path, request):
 
     On Windows ``SDL_VIDEODRIVER=offscreen`` is deliberately left unset (console.py::_env - MSYS2's
     Mesa ships no EGL and the offscreen driver cannot make a context), so every scenario opens a
-    REAL window on the real desktop, which can take the foreground away from a running GUI test.
+    REAL window on the real desktop, which takes the foreground.
     Scenarios run sequentially on ONE console port (``console_port``), and nothing locks the
-    desktop: do not run this tier alongside the GUI tier.
+    desktop: run one copy of this tier at a time.
 
     The timeout is enforced by a watchdog thread rather than a signal: SIGALRM does not exist on
     Windows, and this tier runs natively on Windows.

@@ -91,11 +91,10 @@ controls work. The flying challenges (lessons 3-7, 9) are left with that skip.
 
 Why the presses are what they are:
 
-- **`SendInput` by scancode, into the foreground window**, the GUI tier's recipe restated in
-  `keyboard.py`: the SDL3 build dispatches by scancode, and synthetic input goes to whichever
+- **`SendInput` by scancode, into the foreground window** (`keyboard.py`): the SDL3 build dispatches by scancode, and synthetic input goes to whichever
   window is focused. The tier runs alone on the desktop, which is what lets it take the
   foreground. **Windows only**, like `test_paused_console_priority.py`.
-- **Longer than the GUI tier's 0.15 s.** This tier renders on llvmpipe, which draws 6-9 frames a
+- **Held 0.4 s, not tapped.** This tier renders on llvmpipe, which draws 6-9 frames a
   second in the tutorial's flight scenes; the game samples keys once per frame, so a 0.15 s tap
   was lost. Taps are 0.4 s down and 0.4 s up (`OO_COMPONENT_KEY_HOLD` /
   `OO_COMPONENT_KEY_RELEASE`). "Next" is **held until the tutorial moves**, because even 0.4 s
