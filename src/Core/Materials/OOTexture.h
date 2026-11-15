@@ -251,7 +251,7 @@ oo::PList OOTextureSpecFromObject(
 
 uint8_t OOTextureComponentsForFormat(OOTextureDataFormat format);
 
-bool OOCubeMapsAvailable(void);
+bool OOCubeMapsAvailable();
 
 /*	OOInterpretTextureSpecifier()
 

@@ -126,7 +126,7 @@ const uintptr_t kNoSocket = ~static_cast<uintptr_t>(0);
 #if OOLITE_WINDOWS
 using OOSocket = SOCKET;
 using OOSocketLength = int;
-int LastSocketError(void) { return WSAGetLastError(); }
+int LastSocketError() { return WSAGetLastError(); }
 bool ErrorIsWouldBlock(int error) { return error == WSAEWOULDBLOCK; }
 bool ErrorIsConnectInProgress(int error) { return error == WSAEWOULDBLOCK; }
 bool ErrorIsAbortOnSend(int error) { return error == WSAECONNABORTED; }
@@ -144,19 +144,19 @@ constexpr int kSendFlags = 0;
 // trailing line break kept), as UTF-8; nullopt (was nil) when the system has
 // none.
 std::optional<std::string> SocketErrorDescription(int error) {
-  wchar_t* buffer = NULL;
+  wchar_t* buffer = nullptr;
   DWORD length = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                                     FORMAT_MESSAGE_FROM_SYSTEM |
                                     FORMAT_MESSAGE_IGNORE_INSERTS,
-                                NULL, static_cast<DWORD>(error),
+                                nullptr, static_cast<DWORD>(error),
                                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                reinterpret_cast<LPWSTR>(&buffer), 0, NULL);
+                                reinterpret_cast<LPWSTR>(&buffer), 0, nullptr);
   std::optional<std::string> result;
-  if (length != 0 && buffer != NULL) {
+  if (length != 0 && buffer != nullptr) {
     result = oo::utf16ToUtf8(
         std::u16string(reinterpret_cast<const char16_t*>(buffer), length));
   }
-  if (buffer != NULL) LocalFree(buffer);
+  if (buffer != nullptr) LocalFree(buffer);
   return result;
 }
 #else

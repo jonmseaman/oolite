@@ -36,10 +36,10 @@ MA 02110-1301, USA.
 
 void InitOOJSSun(JSContext* context, JSValueConst global);
 
-JSClassID JSSunClassID(void);
+JSClassID JSSunClassID();
 
 /*	The bodies of OOSunEntity (OOJavaScriptExtensions), which the engine
    reaches by selector. (-oo_jsClassID answers JSSunClassID().)
 */
-bool OOJSSunIsVisibleToScripts(void);
-std::optional<std::string> OOJSSunJSClassName(void);
+bool OOJSSunIsVisibleToScripts();
+std::optional<std::string> OOJSSunJSClassName();

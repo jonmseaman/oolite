@@ -37,7 +37,7 @@
 // does not drag <windows.h> (and its BOOL, min/max and interface macros) into
 // game code. A TU that also includes <windows.h> sees identical redeclarations.
 extern "C" {
-__declspec(dllimport) void* __stdcall GetCurrentThread(void);
+__declspec(dllimport) void* __stdcall GetCurrentThread();
 __declspec(dllimport) long __stdcall SetThreadDescription(
     void* hThread, const wchar_t* lpThreadDescription);
 __declspec(dllimport) int __stdcall MultiByteToWideChar(

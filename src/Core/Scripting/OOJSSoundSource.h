@@ -46,7 +46,7 @@ void InitOOJSSoundSource(JSContext* context, JSValueConst global);
 */
 JSValue OOJSSoundSourceJSValueInContext(OOSoundSource* source,
                                         JSContext* context);
-std::optional<std::string> OOJSSoundSourceJSClassName(void);
+std::optional<std::string> OOJSSoundSourceJSClassName();
 
 /*	What a SoundSource object's private slot holds. Each SoundSource object
    has its own holder, which retains the source; the slot retains the holder

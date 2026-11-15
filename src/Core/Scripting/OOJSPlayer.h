@@ -34,13 +34,13 @@ class PlayerEntity;
 
 void InitOOJSPlayer(JSContext* context, JSValueConst global);
 
-JSClassID JSPlayerClassID(void);
+JSClassID JSPlayerClassID();
 
 /*	The global player object. The returned value is owned by the caller, who
         must JS_FreeValue() it. (SpiderMonkey's JSPlayerPrototype() is no
         longer needed; use JS_GetClassProto(context, JSPlayerClassID()).)
 */
-JSValue JSPlayerObject(void);
+JSValue JSPlayerObject();
 
 /*	All JS functions which talk to the player entity should call
         OOOPlayerForScripting() to ensure that the script target (for the legacy
@@ -48,4 +48,4 @@ JSValue JSPlayerObject(void);
    _always_ call OOPlayerForScripting(), even if they end up not using it, to
    ensure consistent state.
 */
-PlayerEntity* OOPlayerForScripting(void);
+PlayerEntity* OOPlayerForScripting();

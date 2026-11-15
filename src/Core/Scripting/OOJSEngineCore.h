@@ -92,9 +92,9 @@ MA 02110-1301, USA.
 #define OOJS_COUNT(array) (sizeof(array) / sizeof *(array))
 
 // There is only one context, created on the main thread.
-inline JSContext* OOJSAcquireContext(void) {
+inline JSContext* OOJSAcquireContext() {
   extern JSContext* gOOJSMainThreadContext;
-  OOCAssert(gOOJSMainThreadContext != NULL,
+  OOCAssert(gOOJSMainThreadContext != nullptr,
             "Attempt to use JavaScript context before JavaScript engine is "
             "initialized.");
   return gOOJSMainThreadContext;
@@ -150,7 +150,7 @@ std::string OOJSWrapScriptSource(const std::string& source);
         than on the global object so that OXPs can't see or replace it. The
         caller does not own the returned value.
 */
-JSValueConst OOJSLegacyConstRewriter(void);
+JSValueConst OOJSLegacyConstRewriter();
 
 // Report and clear a pending exception, as SpiderMonkey's error reporter did.
 void OOJSReportPendingException(JSContext* context);
@@ -244,7 +244,7 @@ bool OOJSArgumentListGetNumberNoError(JSContext* context, int argc,
                                       JSValueConst* argv, double* outNumber,
                                       int* outConsumed);
 
-inline JSValue OOJSValueFromBOOL(int b) { return JS_NewBool(NULL, b != 0); }
+inline JSValue OOJSValueFromBOOL(int b) { return JS_NewBool(nullptr, b != 0); }
 
 /*	OOJSValueFromPList()
         Return the owned JavaScript value representation of a property list,
@@ -470,14 +470,14 @@ void OOJSRegisterObjectConverter(JSClassID classID,
 #define kOOJSLongTimeLimit (5.0)
 void OOJSStartTimeLimiterWithTimeLimit(OOTimeDelta limit);
 #define OOJSStartTimeLimiter() OOJSStartTimeLimiterWithTimeLimit(0.0)
-void OOJSStopTimeLimiter(void);
-void OOJSPauseTimeLimiter(void);
-void OOJSResumeTimeLimiter(void);
+void OOJSStopTimeLimiter();
+void OOJSPauseTimeLimiter();
+void OOJSResumeTimeLimiter();
 
 #ifndef NDEBUG
 // Debug console support for the time limiter.
-void OOJSResetTimeLimiter(void);
-OOTimeDelta OOJSGetTimeLimiterLimit(void);
+void OOJSResetTimeLimiter();
+OOTimeDelta OOJSGetTimeLimiterLimit();
 void OOJSSetTimeLimiterLimit(OOTimeDelta limit);
 #endif
 

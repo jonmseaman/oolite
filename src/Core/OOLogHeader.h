@@ -34,8 +34,8 @@ SOFTWARE.
 
 #include "OOFoundation.h"
 
-void OOPrintLogHeader(void);
+void OOPrintLogHeader();
 
 // "<system> (<cpu><variant>)", as the log header prints it;
 // console.platformDescription.
-std::string OOPlatformDescription(void);
+std::string OOPlatformDescription();

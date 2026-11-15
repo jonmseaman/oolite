@@ -61,7 +61,7 @@ inline Quaternion quaternion_conjugate(Quaternion q) INLINE_CONST_FUNC;
 
 /* Set quaternion to random unit quaternion */
 void quaternion_set_random(Quaternion* quat) NONNULL_FUNC;
-inline Quaternion OORandomQuaternion(void) ALWAYS_INLINE_FUNC;
+inline Quaternion OORandomQuaternion() ALWAYS_INLINE_FUNC;
 
 /* Build quaternion representing a rotation around a given axis */
 inline void quaternion_set_rotate_about_axis(Quaternion* quat, Vector axis,
@@ -162,7 +162,7 @@ inline void quaternion_normalize(Quaternion* quat) {
   quat->z = lv * z;
 }
 
-inline Quaternion OORandomQuaternion(void) {
+inline Quaternion OORandomQuaternion() {
   Quaternion q;
   quaternion_set_random(&q);
   return q;

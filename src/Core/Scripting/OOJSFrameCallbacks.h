@@ -35,4 +35,4 @@ void InitOOJSFrameCallbacks(JSContext* context, JSValueConst global);
 
 void OOJSFrameCallbacksInvoke(OOTimeDelta delta);
 
-void OOJSFrameCallbacksRemoveAll(void);
+void OOJSFrameCallbacksRemoveAll();

@@ -61,7 +61,7 @@ constexpr int kMinMinorVersion = 3;
 /*	Define the function pointers for the OpenGL extensions used in the game
         (required for Windows only).
 */
-static void OOBadOpenGLExtensionUsed(void) GCC_ATTR((noreturn, used));
+static void OOBadOpenGLExtensionUsed() GCC_ATTR((noreturn, used));
 
 #if OO_SHADERS
 
@@ -943,7 +943,7 @@ oo::PList OOOpenGLExtensionManager::lookUpPerGPUSettingsWithVersionString(
 
 #if OOLITE_WINDOWS
 
-static void OOBadOpenGLExtensionUsed(void) {
+static void OOBadOpenGLExtensionUsed() {
   OO_LOG("rendering.opengl.badExtension", "{}",
          "***** An uninitialized OpenGL extension function has been called, "
          "terminating. This is a serious error, please report it. *****");

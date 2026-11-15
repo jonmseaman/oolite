@@ -130,7 +130,7 @@ inline void OOCPUID(int CPUInfo[4], int InfoType) {
       : "a"(InfoType));
 }
 
-std::string OOCPUDescription(void) {
+std::string OOCPUDescription() {
   // This code taken from https://stackoverflow.com/questions/850774
   int CPUInfo[4] = {-1};
   unsigned nExIds, i = 0;
@@ -151,7 +151,7 @@ std::string OOCPUDescription(void) {
   return std::string(CPUBrandString.data());
 }
 
-OOMemoryStatus OOSystemMemoryStatus(void) {
+OOMemoryStatus OOSystemMemoryStatus() {
   const unsigned int toMegabyte = 1024 * 1024;
 
   OOMemoryStatus systemMemoryStatus;
@@ -179,7 +179,7 @@ OOMemoryStatus OOSystemMemoryStatus(void) {
 #endif  //(OOLITE_WINDOWS || OOLITE_LINUX)
 
 #if OOLITE_WINDOWS
-std::string operatingSystemFullVersion(void) {
+std::string operatingSystemFullVersion() {
   OSVERSIONINFOW osver;
   std::string outUBRString;
 
@@ -193,7 +193,7 @@ std::string operatingSystemFullVersion(void) {
                     KEY_READ, &hKey) == ERROR_SUCCESS) {
     DWORD dwUBRSize = sizeof(DWORD);
     DWORD dwUBR = 0;
-    if (RegQueryValueEx(hKey, "UBR", NULL, NULL,
+    if (RegQueryValueEx(hKey, "UBR", nullptr, nullptr,
                         reinterpret_cast<BYTE*>(&dwUBR),
                         &dwUBRSize) == ERROR_SUCCESS) {
       outUBRString = "." + std::to_string(dwUBR);
@@ -217,7 +217,7 @@ is64bitSystem: Detect operating system bitness. This function is based mainly on
 code by Mark S. Kolich, as seen in
 http://mark.koli.ch/2009/10/reliably-checking-os-bitness-32-or-64-bit-on-windows-with-a-tiny-c-app.html
 */
-bool is64BitSystem(void) {
+bool is64BitSystem() {
 #if defined(_WIN64)
   // if we have been compiled as a 64-bit app and we are running, we are
   // obviously on a 64-bit system

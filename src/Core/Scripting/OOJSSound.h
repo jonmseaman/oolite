@@ -52,7 +52,7 @@ OOSound* SoundFromJSValue(JSContext* context, JSValueConst value);
 */
 JSValue OOJSSoundJSValueInContext(OOSound* sound, JSContext* context);
 std::optional<std::string> OOJSSoundJSDescription(OOSound* sound);
-std::optional<std::string> OOJSSoundJSClassName(void);
+std::optional<std::string> OOJSSoundJSClassName();
 
 /*	What a Sound object's private slot holds. Each Sound object has its own
    holder, which shares the sound; the slot shares the holder

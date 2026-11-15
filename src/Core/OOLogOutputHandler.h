@@ -45,21 +45,21 @@ SOFTWARE.
 
 #include "OOFoundation.h"
 
-void OOLogOutputHandlerInit(void);
-void OOLogOutputHandlerClose(void);
+void OOLogOutputHandlerInit();
+void OOLogOutputHandlerClose();
 // One finished log line (UTF-8, no newline) to Latest.log and, if enabled,
 // stderr/stdout.
 void OOLogOutputHandlerPrintLine(std::string_view line);
 
 // Queue the pending log-file flush if its deadline has passed. Called from the
 // frame loop.
-void OOLogOutputHandlerFlushIfDue(void);
+void OOLogOutputHandlerFlushIfDue();
 
 // This will attempt to ensure the containing directory exists. If it fails, it
 // will return nullopt.
-std::optional<std::string> OOLogHandlerGetLogPath(void);
-std::optional<std::string> OOLogHandlerGetLogBasePath(void);
+std::optional<std::string> OOLogHandlerGetLogPath();
+std::optional<std::string> OOLogHandlerGetLogBasePath();
 void OOLogOutputHandlerChangeLogFile(const std::string& newLogName);
 
-void OOLogOutputHandlerStartLoggingToStdout(void);
-void OOLogOutputHandlerStopLoggingToStdout(void);
+void OOLogOutputHandlerStartLoggingToStdout();
+void OOLogOutputHandlerStopLoggingToStdout();

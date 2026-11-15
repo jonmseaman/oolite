@@ -980,8 +980,8 @@ class Universe : public oo::Object {
         The purpose of this is that it makes UNIVERSE essentially a read-only
         global with zero overhead.
 */
-inline Universe* OOGetUniverse(void) INLINE_CONST_FUNC;
-inline Universe* OOGetUniverse(void) {
+inline Universe* OOGetUniverse() INLINE_CONST_FUNC;
+inline Universe* OOGetUniverse() {
   extern Universe* gSharedUniverse;
   return gSharedUniverse;
 }

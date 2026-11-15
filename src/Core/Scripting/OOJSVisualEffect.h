@@ -39,14 +39,14 @@ class OOVisualEffectEntity;
 
 void InitOOJSVisualEffect(JSContext* context, JSValueConst global);
 
-JSClassID JSVisualEffectClassID(void);
+JSClassID JSVisualEffectClassID();
 
 /*	The bodies of OOVisualEffectEntity (OOJavaScriptExtensions), which the
    engine reaches by selector: the C++ effect's
    jsClassID()/jsClassName()/isVisibleToScripts() overrides call them. Its JS
    class is JSVisualEffectClassID().
 */
-std::optional<std::string> OOJSVisualEffectJSClassName(void);
-bool OOJSVisualEffectIsVisibleToScripts(void);
+std::optional<std::string> OOJSVisualEffectJSClassName();
+bool OOJSVisualEffectIsVisibleToScripts();
 std::vector<oo::EntityHold> OOJSVisualEffectSubEntitiesForScript(
     OOVisualEffectEntity* effect);

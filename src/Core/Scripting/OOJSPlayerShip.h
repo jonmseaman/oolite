@@ -44,20 +44,20 @@ class PlayerEntity;
 
 void InitOOJSPlayerShip(JSContext* context, JSValueConst global);
 
-JSClassID JSPlayerShipClassID(void);
+JSClassID JSPlayerShipClassID();
 
 /*	The player's ship object (player.ship), which is also the PlayerEntity's
         jsValueInContext(). The returned value is owned by the caller, who must
         JS_FreeValue() it. (SpiderMonkey's JSPlayerShipPrototype() is no longer
         needed; use JS_GetClassProto(context, JSPlayerShipClassID()).)
 */
-JSValue JSPlayerShipObject(void);
+JSValue JSPlayerShipObject();
 
 /*	PlayerEntity (OOJavaScriptExtensions), whose methods the engine and the
    player send by selector: the bodies, as free functions. The C++ player calls
    them (PlayerEntity::jsClassName()).
         Its JS class is JSPlayerShipClassID() (PlayerEntity::jsClassID()).
 */
-std::optional<std::string> OOJSPlayerShipJSClassName(void);
+std::optional<std::string> OOJSPlayerShipJSClassName();
 void OOJSPlayerShipSetJSSelf(PlayerEntity* player, JSValueConst val,
                              JSContext* context);

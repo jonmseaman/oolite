@@ -41,13 +41,13 @@ MA 02110-1301, USA.
 class ShipEntity;  // Entity extensions. The JS object's functions take the C++
                    // entity (Entity's
 // JS glue members call them; the engine asks those members).
-bool EntityJSIsVisibleToScripts(void);
-std::optional<std::string> EntityJSClassName(void);
+bool EntityJSIsVisibleToScripts();
+std::optional<std::string> EntityJSClassName();
 // The entity's JS object, owned by the caller (JS null for none).
 JSValue EntityJSValueInContext(Entity* entity, JSContext* context);
 // The JS class of the entity's wrapper object; subclasses override
 // -oo_jsClassID.
-JSClassID EntityJSClassID(void);
+JSClassID EntityJSClassID();
 void EntityJSDeleteJSSelf(Entity* entity);
 std::optional<std::string> EntityJSDescription(Entity* entity);
 
@@ -63,8 +63,8 @@ JSClassID OOJSEntityJSClassID(Entity* entity);
 JSValue OOJSEntityJSValue(Entity* entity, JSContext* context);
 
 // ShipEntity (OOJavaScriptExtensions)
-bool ShipEntityJSIsVisibleToScripts(void);
-JSClassID ShipEntityJSClassID(void);
-std::optional<std::string> ShipEntityJSClassName(void);
+bool ShipEntityJSIsVisibleToScripts();
+JSClassID ShipEntityJSClassID();
+std::optional<std::string> ShipEntityJSClassName();
 std::vector<oo::EntityHold> ShipEntityJSSubEntitiesForScript(ShipEntity* ship);
 void ShipEntityJSSetTargetForScript(ShipEntity* ship, ShipEntity* target);

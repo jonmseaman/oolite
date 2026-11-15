@@ -805,8 +805,9 @@ void OpenLogFile() {
       // ShellExecute will automatically use the app associated with .log files
       // A nil path's -UTF8String was NULL.
       const std::optional<std::string> logPath = OOLogHandlerGetLogPath();
-      ShellExecute(NULL, NULL, logPath.has_value() ? logPath->c_str() : NULL,
-                   NULL, NULL, SW_SHOWNORMAL);
+      ShellExecute(nullptr, nullptr,
+                   logPath.has_value() ? logPath->c_str() : nullptr, nullptr,
+                   nullptr, SW_SHOWNORMAL);
 #elif OOLITE_LINUX
       // MKW - needed to suppress 'ignoring return value' warning for system()
       // call

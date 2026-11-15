@@ -308,7 +308,6 @@ inline bool OOMatrixIsIdentity(OOMatrix m) {
 
 inline void OOMatrixGetBasisVectors(OOMatrix m, Vector* outRight, Vector* outUp,
                                     Vector* outForward) {
-  assert(outRight != NULL && outUp != NULL && outForward != NULL);
 
   *outRight = make_vector(m.m[0][0], m.m[1][0], m.m[2][0]);
   *outUp = make_vector(m.m[0][1], m.m[1][1], m.m[2][1]);
