@@ -84,7 +84,7 @@ using EntityFilterPredicate = bool (*)(Entity* entity,
 #define OO_SCANCLASS_TYPE
 #endif
 
-#define CROSSHAIR_SIZE 32.0
+inline constexpr double CROSSHAIR_SIZE = 32.0;
 
 inline constexpr int MARKET_NAME = 0;
 inline constexpr int MARKET_QUANTITY = 1;
@@ -120,18 +120,19 @@ inline constexpr int OO_POSTFX_ENDOFLIST =
 
 #define SHADERS_MIN OOShaderSetting::kOff
 
-#define MAX_MESSAGES 5
+inline constexpr int MAX_MESSAGES = 5;
 
-#define PROXIMITY_WARN_DISTANCE 4  // Eric 2010-10-17: old value was 20.0
+inline constexpr int PROXIMITY_WARN_DISTANCE =
+    4;  // Eric 2010-10-17: old value was 20.0
 #define PROXIMITY_WARN_DISTANCE2 \
   (PROXIMITY_WARN_DISTANCE * PROXIMITY_WARN_DISTANCE)
-#define PROXIMITY_AVOID_DISTANCE_FACTOR 10.0
+inline constexpr double PROXIMITY_AVOID_DISTANCE_FACTOR = 10.0;
 #define SAFE_ADDITION_FACTOR2 \
   800  // Eric 2010-10-17: used to be "2 * PROXIMITY_WARN_DISTANCE2"
 
 #define SUN_SKIM_RADIUS_FACTOR \
   1.15470053838  // 2 sqrt(3) / 3. Why? I have no idea. -- Ahruman 2009-10-04
-#define SUN_SPARKS_RADIUS_FACTOR 2.0
+inline constexpr double SUN_SPARKS_RADIUS_FACTOR = 2.0;
 
 inline constexpr std::string_view KEY_TECHLEVEL = "techlevel";
 inline constexpr std::string_view KEY_ECONOMY = "economy";
@@ -173,7 +174,7 @@ inline constexpr std::string_view SHIPYARD_KEY_SHIP = "ship";
 inline constexpr std::string_view SHIPYARD_KEY_PRICE = "price";
 inline constexpr std::string_view SHIPYARD_KEY_PERSONALITY = "personality";
 // default passenger berth required space
-#define PASSENGER_BERTH_SPACE 5
+inline constexpr int PASSENGER_BERTH_SPACE = 5;
 
 inline constexpr std::string_view PLANETINFO_UNIVERSAL_KEY = "universal";
 inline constexpr std::string_view PLANETINFO_INTERSTELLAR_KEY =
@@ -187,9 +188,9 @@ inline constexpr std::string_view PLANETINFO_INTERSTELLAR_KEY =
 // though it appears at infinity
 #define BILLBOARD_DEPTH 75000.0
 
-#define TIME_ACCELERATION_FACTOR_MIN 0.0625f
-#define TIME_ACCELERATION_FACTOR_DEFAULT 1.0f
-#define TIME_ACCELERATION_FACTOR_MAX 16.0f
+inline constexpr float TIME_ACCELERATION_FACTOR_MIN = 0.0625f;
+inline constexpr float TIME_ACCELERATION_FACTOR_DEFAULT = 1.0f;
+inline constexpr float TIME_ACCELERATION_FACTOR_MAX = 16.0f;
 
 #define DEMO_LIGHT_POSITION 5000.0f, 25000.0f, -10000.0f
 
