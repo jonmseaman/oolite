@@ -113,7 +113,7 @@ constexpr int kVertexFaceDefInternalCount = 11;  // sizeof (VertexFaceRef) = 32
 constexpr int kVertexFaceDefInternalCount = 5;  // sizeof (VertexFaceRef) = 16
 #endif
 
-using VertexFaceRef = struct VertexFaceRef {
+struct VertexFaceRef {
   uint16_t internCount;
   uint16_t internFaces[kVertexFaceDefInternalCount];
   std::vector<std::size_t> extra;

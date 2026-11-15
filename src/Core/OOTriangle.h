@@ -32,7 +32,7 @@ MA 02110-1301, USA.
 // order.
 #include "OOVector.h"
 
-using Triangle = struct {
+struct Triangle {
   Vector v[3];
 };
 

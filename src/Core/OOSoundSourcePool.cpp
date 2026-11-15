@@ -31,11 +31,12 @@ SOFTWARE.
 
 constexpr uint8_t kNoSlot = UINT8_MAX;
 
-using PoolElement = struct OOSoundSourcePoolElement {
+struct OOSoundSourcePoolElement {
   std::shared_ptr<OOSoundSource> source;  // or null
   OOTimeAbsolute expiryTime = 0;
   float priority = 0;
 };
+using PoolElement = OOSoundSourcePoolElement;
 
 std::shared_ptr<OOSoundSourcePool> OOSoundSourcePool::poolWithCount(
     uint8_t count, OOTimeDelta minRepeat) {

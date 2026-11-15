@@ -126,7 +126,7 @@ void OOSetReallyRandomRANROTAndRndSeeds(void);
         OOSaveRandomState()/OORestoreRandomState(): save and restore both the
    main RANROT seed and the rnd seed in one shot.
 */
-using OORandomState = struct {
+struct OORandomState {
   RANROTSeed ranrot;
   RNG_Seed rnd;
 };

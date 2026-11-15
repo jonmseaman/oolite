@@ -32,7 +32,8 @@ SOFTWARE.
 
 #include "OOTCPStreamDecoderAbstractionLayer.h"
 
-using OOTCPStreamDecoderRef = struct OOTCPStreamDecoder*;
+struct OOTCPStreamDecoder;
+using OOTCPStreamDecoderRef = OOTCPStreamDecoder*;
 
 using OOTCPStreamDecoderPacketCallback = void (*)(void* cbInfo,
                                                   OOALStringRef packetType,

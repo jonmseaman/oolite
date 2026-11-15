@@ -385,7 +385,7 @@ std::optional<std::string> AI::state() { return currentState; }
 std::size_t AI::stackDepth() { return aiStack.size(); }
 
 #ifndef NDEBUG
-using AIStackElement = struct AIStackElement;
+struct AIStackElement;
 struct AIStackElement {
   AIStackElement* back;
   ::ShipEntity* owner;

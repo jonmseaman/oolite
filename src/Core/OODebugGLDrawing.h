@@ -43,7 +43,7 @@ SOFTWARE.
 
 class OOMaterial;
 
-using OODebugWFState = struct {
+struct OODebugWFState {
   std::shared_ptr<OOMaterial> material;  // from OODebugBeginWireframe(),
                                          // given up by OODebugEndWireframe()
 };

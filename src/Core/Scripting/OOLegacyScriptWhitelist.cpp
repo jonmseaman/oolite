@@ -49,7 +49,7 @@ MA 02110-1301, USA.
    null oo::PList stands for nil.
 */
 
-using SanStackElement = struct SanStackElement;
+struct SanStackElement;
 struct SanStackElement {
   SanStackElement* back;
   std::optional<std::string> key;  // Dictionary key; nullopt for arrays.

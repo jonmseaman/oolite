@@ -46,7 +46,7 @@ MA 02110-1301, USA.
 #include "OOTexture.h"
 #include "ShipEntity.h"
 
-using Frame = struct {
+struct Frame {
   double timeframe;  // universal time for this frame
   HPVector position;
   Quaternion orientation;
