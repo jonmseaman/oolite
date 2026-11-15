@@ -51,13 +51,13 @@ MA 02110-1301, USA.
 #include "oofnd/Object.hpp"
 #include "oofnd/PList.hpp"
 
-typedef struct {
+using OORGBAComponents = struct {
   float r, g, b, a;
-} OORGBAComponents;
+};
 
-typedef struct {
+using OOHSBAComponents = struct {
   float h, s, b, a;
-} OOHSBAComponents;
+};
 
 class OOColor : public oo::PListForeign {
  public:

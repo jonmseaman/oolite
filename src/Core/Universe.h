@@ -89,8 +89,8 @@ class OOPlanetEntity;
 #include "GuiDisplayGen.h"  // the universe keeps its GUIs (std::shared_ptr)
 class CollisionRegion;
 
-typedef bool (*EntityFilterPredicate)(Entity* entity,
-                                      void* parameter);  // the C++ entity
+using EntityFilterPredicate = bool (*)(Entity* entity,
+                                       void* parameter);  // the C++ entity
 
 #ifndef OO_SCANCLASS_TYPE
 #define OO_SCANCLASS_TYPE

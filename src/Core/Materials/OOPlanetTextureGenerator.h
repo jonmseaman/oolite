@@ -36,7 +36,7 @@ MA 02110-1301, USA.
 class OOPlanetNormalMapGenerator;  // private to OOPlanetTextureGenerator.cpp
 class OOPlanetAtmosphereGenerator;
 
-typedef struct OOPlanetTextureGeneratorInfo {
+struct OOPlanetTextureGeneratorInfo {
   RANROTSeed seed;
 
   unsigned width;
@@ -74,7 +74,7 @@ typedef struct OOPlanetTextureGeneratorInfo {
   unsigned planetAspectRatio;
   unsigned planetScaleOffset;
   bool perlin3d;
-} OOPlanetTextureGeneratorInfo;
+};
 
 /*	A leaf of the texture generators, over
         OOTextureGenerator; so are the two helper generators private to

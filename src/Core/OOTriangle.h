@@ -32,9 +32,9 @@ MA 02110-1301, USA.
 // order.
 #include "OOVector.h"
 
-typedef struct {
+using Triangle = struct {
   Vector v[3];
-} Triangle;
+};
 
 /* Calculate normal for triangle. */
 OOINLINE Vector calculateNormalForTriangle(Triangle* ioTriangle) NONNULL_FUNC;

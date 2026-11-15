@@ -76,13 +76,14 @@ class OOMeshBuffer;  // OOMesh.cpp: one refcounted buffer (an oo::Data), shared
 
 inline constexpr int kOOMeshMaxMaterials = 8;
 
-typedef uint16_t OOMeshSmoothGroup;
-typedef uint8_t OOMeshMaterialIndex, OOMeshMaterialCount;
-typedef uint32_t OOMeshVertexCount;
-typedef uint32_t OOMeshFaceCount;
-typedef uint8_t OOMeshFaceVertexCount;
+using OOMeshSmoothGroup = uint16_t;
+using OOMeshMaterialIndex = uint8_t;
+using OOMeshMaterialCount = uint8_t;
+using OOMeshVertexCount = uint32_t;
+using OOMeshFaceCount = uint32_t;
+using OOMeshFaceVertexCount = uint8_t;
 
-typedef struct {
+using OOMeshFace = struct {
   OOMeshSmoothGroup smoothGroup;
   OOMeshMaterialIndex materialIndex;
   GLuint vertex[3];
@@ -91,9 +92,9 @@ typedef struct {
   Vector tangent;
   GLfloat s[3];
   GLfloat t[3];
-} OOMeshFace;
+};
 
-typedef struct {
+using OOMeshDisplayLists = struct {
   GLint* indexArray;
   GLfloat* textureUVArray;
   Vector* vertexArray;
@@ -101,7 +102,7 @@ typedef struct {
   Vector* tangentArray;
 
   GLuint count;
-} OOMeshDisplayLists;
+};
 
 class Octree;
 

@@ -49,7 +49,7 @@ SOFTWARE.
 
 #include "OOMaths.h"
 
-typedef uint32_t OOPixMapDimension;  // Note: dimensions are assumed to be less
+using OOPixMapDimension = uint32_t;  // Note: dimensions are assumed to be less
                                      // than 1048576 (2^20) pixels.
 
 #define OORoundUpToPowerOf2_PixMap OORoundUpToPowerOf2_32
@@ -72,14 +72,14 @@ using OOPixelBuffer = std::shared_ptr<std::vector<std::uint8_t>>;
 // A new zero-filled buffer of size bytes.
 OOPixelBuffer OOMakePixelBuffer(size_t size);
 
-typedef struct OOPixMap {
+struct OOPixMap {
   void* pixels;
   OOPixMapDimension width, height;
   OOPixMapFormat format;
   size_t rowBytes;
   size_t bufferSize;
   OOPixelBuffer buffer;  // owns pixels, or null (see OOPixelBuffer)
-} OOPixMap;
+};
 
 extern const OOPixMap kOONullPixMap;
 

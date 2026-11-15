@@ -33,22 +33,22 @@ MA 02110-1301, USA.
 
 #include "OOFunctionAttributes.h"
 
-typedef struct Random_Seed {
+struct Random_Seed {
   uint8_t a, /* 6c */
       b,     /* 6d */
       c,     /* 6e */
       d,     /* 6f */
       e,     /* 70 */
       f;     /* 71 */
-} Random_Seed;
+};
 
-typedef struct RNG_Seed {
+struct RNG_Seed {
   int32_t a, b, c, d;
-} RNG_Seed;
+};
 
-typedef struct RANROTSeed {
+struct RANROTSeed {
   uint32_t high, low;
-} RANROTSeed;
+};
 
 extern const Random_Seed kNilRandomSeed;
 
@@ -127,10 +127,10 @@ void OOSetReallyRandomRANROTAndRndSeeds(void);
         OOSaveRandomState()/OORestoreRandomState(): save and restore both the
    main RANROT seed and the rnd seed in one shot.
 */
-typedef struct {
+using OORandomState = struct {
   RANROTSeed ranrot;
   RNG_Seed rnd;
-} OORandomState;
+};
 
 OORandomState OOSaveRandomState(void);
 void OORestoreRandomState(OORandomState state);

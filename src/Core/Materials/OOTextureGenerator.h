@@ -31,13 +31,13 @@ SOFTWARE.
 
 #include "OOTextureLoader.h"
 
-typedef struct {
+using FloatRGB = struct {
   float r, g, b;
-} FloatRGB;
+};
 
-typedef struct {
+using FloatRGBA = struct {
   float r, g, b, a;
-} FloatRGBA;
+};
 
 /*	An intermediate class of the texture loaders, which
    OOPixMapTextureLoader and the planet, atmosphere and emission-map generators

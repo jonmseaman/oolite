@@ -36,16 +36,16 @@ MA 02110-1301, USA.
 
 #ifndef OOMATHS_EXTERNAL_VECTOR_TYPES
 
-typedef struct HPVector {
+struct HPVector {
   OOHPScalar x;
   OOHPScalar y;
   OOHPScalar z;
-} HPVector;
+};
 
-typedef struct HPVector2D {
+struct HPVector2D {
   OOHPScalar x;
   OOHPScalar y;
-} HPVector2D;
+};
 
 #endif
 

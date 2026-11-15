@@ -468,8 +468,8 @@ JSValueConst OOJSInitClass(JSContext* context, JSValueConst global,
         OOJSRegisterObjectConverter() registers a callback for a specific JS
    class. It is not automatically propagated to subclasses.
 */
-typedef oo::PList (*OOJSClassConverterCallback)(JSContext* context,
-                                                JSValueConst object);
+using OOJSClassConverterCallback = oo::PList (*)(JSContext* context,
+                                                 JSValueConst object);
 oo::PList OOJSBasicPrivateObjectConverter(JSContext* context,
                                           JSValueConst object);
 
