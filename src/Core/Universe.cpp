@@ -122,13 +122,13 @@ constexpr int DEMO_FLY_IN = 101;
 constexpr int DEMO_SHOW_THING = DEMO_FLY_IN + 1;
 constexpr int DEMO_FLY_OUT = DEMO_SHOW_THING + 1;
 
-#define DEMO2_VANISHING_DISTANCE 650.0
-#define DEMO2_FLY_IN_STAGE_TIME 0.4
+constexpr double DEMO2_VANISHING_DISTANCE = 650.0;
+constexpr double DEMO2_FLY_IN_STAGE_TIME = 0.4;
 
-#define MAX_NUMBER_OF_ENTITIES 200
-#define STANDARD_STATION_ROLL 0.4
+constexpr int MAX_NUMBER_OF_ENTITIES = 200;
+constexpr double STANDARD_STATION_ROLL = 0.4;
 // currently twice scanner radius
-#define LANE_WIDTH 51200.0
+constexpr double LANE_WIDTH = 51200.0;
 
 constexpr std::string_view kOOLogUniversePopulateError =
     "universe.populate.error";
@@ -505,8 +505,9 @@ static bool demo_light_on = false;
 static GLfloat sun_off[4] = {0.0, 0.0, 0.0, 1.0};
 static GLfloat demo_light_position[4] = {DEMO_LIGHT_POSITION, 1.0};
 
-#define DOCKED_AMBIENT_LEVEL 0.2f  // Was 0.05, 'temporarily' set to 0.2.
-#define DOCKED_ILLUM_LEVEL 0.7f
+constexpr float DOCKED_AMBIENT_LEVEL =
+    0.2f;  // Was 0.05, 'temporarily' set to 0.2.
+constexpr float DOCKED_ILLUM_LEVEL = 0.7f;
 static GLfloat docked_light_ambient[4] = {
     DOCKED_AMBIENT_LEVEL, DOCKED_AMBIENT_LEVEL, DOCKED_AMBIENT_LEVEL, 1.0f};
 static GLfloat docked_light_diffuse[4] = {
@@ -519,9 +520,9 @@ static GLfloat docked_light_specular[4] = {
 // used for ambient, 0.0 means only sky colour is used.
 // TODO: considering the size of the sun and the number of background stars
 // might be worthwhile. -- Ahruman 20080322
-#define SUN_AMBIENT_INFLUENCE 0.75
+constexpr double SUN_AMBIENT_INFLUENCE = 0.75;
 // How dark the default ambient level of 1.0 will be
-#define SKY_AMBIENT_ADJUSTMENT 0.0625
+constexpr double SKY_AMBIENT_ADJUSTMENT = 0.0625;
 
 namespace {
 
