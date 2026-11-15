@@ -4021,6 +4021,7 @@ void hudDrawReticleOnTarget(
           OODrawString(wormholeETA, rs0, 0.5 * rs2 - 3 * line_height, 0,
                        textsize);
         }
+          [[fallthrough]];
         case WORMHOLE_SCANINFO::kCollapseTime: {
           OOTimeDelta timeForCollapsing =
               HeadUpDisplayWormholeExpiryTime(
@@ -4035,6 +4036,7 @@ void hudDrawReticleOnTarget(
           OODrawString(wormholeExpiringIn, rs0, 0.5 * rs2 - 2 * line_height, 0,
                        textsize);
         }
+          [[fallthrough]];
         case WORMHOLE_SCANINFO::kScanned:
         case WORMHOLE_SCANINFO::kNone:
           break;
