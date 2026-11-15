@@ -51,6 +51,7 @@ SOFTWARE.
 #include <memory>
 #include <optional>
 #include <set>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -124,9 +125,9 @@ class OOOXPVerifier : public oo::Object {
   void buildDependencyGraph();
   void runStages();
 
-  bool setUpDependencies(const std::vector<std::string>& dependencies,
+  bool setUpDependencies(std::span<const std::string> dependencies,
                          ::OOOXPVerifierStage* stage);
-  void setUpDependents(const std::vector<std::string>& dependents,
+  void setUpDependents(std::span<const std::string> dependents,
                        ::OOOXPVerifierStage* stage);
 
   void dumpDebugGraphviz();

@@ -40,6 +40,7 @@ SOFTWARE.
 #include <map>
 #include <optional>
 #include <set>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -131,7 +132,7 @@ class OOFileScannerVerifierStage : public OOOXPVerifierStage {
                   { foo = Foo; bar = BAR }
   */
   std::optional<std::map<std::string, std::string, std::less<>>> lowercaseMap(
-      const std::vector<std::string>& array);
+      std::span<const std::string> array);
 
   std::optional<std::map<std::string, std::string, std::less<>>> scanDirectory(
       const std::string& path);

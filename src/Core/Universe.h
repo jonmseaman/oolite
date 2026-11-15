@@ -32,6 +32,7 @@ MA 02110-1301, USA.
 #include <memory>
 #include <optional>
 #include <set>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -890,8 +891,8 @@ class Universe : public oo::Object {
   // FPS and autosave. tradeInValueForCommanderDictionary(): virtual, in
   // OO_UNIVERSE_VIRTUAL_MEMBERS (UniverseVirtualMembers.h)
   std::optional<std::string> brochureDescriptionWithDictionary(
-      const oo::PList& dict, const std::vector<std::string>& extras,
-      const std::vector<std::string>& options);
+      const oo::PList& dict, std::span<const std::string> extras,
+      std::span<const std::string> options);
   // getWitchspaceExitPosition(): virtual, in OO_UNIVERSE_VIRTUAL_MEMBERS
   // (UniverseVirtualMembers.h)
   Quaternion getWitchspaceExitRotation();
