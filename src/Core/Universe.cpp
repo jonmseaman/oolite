@@ -6509,7 +6509,12 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
   }
 
   Vector u1, f1, r1;
-  basis_vectors_from_quaternion(q1, &r1, &u1, &f1);
+  {
+    const oo::BasisVectors basis = basis_vectors_from_quaternion(q1);
+    r1 = basis.right;
+    u1 = basis.up;
+    f1 = basis.forward;
+  }
   p0 = HPvector_add(p0, vectorToHPVector(OOVectorMultiplyMatrix(
                             offset, OOMatrixFromBasisVectors(r1, u1, f1))));
 
@@ -6534,7 +6539,11 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
       break;
   }
 
-  basis_vectors_from_quaternion(q1, &r1, nullptr, &f1);
+  {
+    const oo::BasisVectors basis = basis_vectors_from_quaternion(q1);
+    r1 = basis.right;
+    f1 = basis.forward;
+  }
   HPVector p1 =
       HPvector_add(p0, vectorToHPVector(vector_multiply_scalar(
                            f1, static_cast<OOScalar>(nearest))));  // endpoint
@@ -6617,7 +6626,12 @@ Entity* Universe::firstEntityTargetedByPlayer() {
   Quaternion q1 =
       (player != nullptr ? player->normalOrientation() : Quaternion{});
   Vector u1, f1, r1;
-  basis_vectors_from_quaternion(q1, &r1, &u1, &f1);
+  {
+    const oo::BasisVectors basis = basis_vectors_from_quaternion(q1);
+    r1 = basis.right;
+    u1 = basis.up;
+    f1 = basis.forward;
+  }
   Vector offset = (player != nullptr ? player->weaponViewOffset() : Vector{});
 
   HPVector p1 =
@@ -6643,7 +6657,11 @@ Entity* Universe::firstEntityTargetedByPlayer() {
     default:
       break;
   }
-  basis_vectors_from_quaternion(q1, &r1, nullptr, &f1);
+  {
+    const oo::BasisVectors basis = basis_vectors_from_quaternion(q1);
+    r1 = basis.right;
+    f1 = basis.forward;
+  }
 
   for (i = 0; i < ship_count; i++) {
     Entity* e2 = my_entities[static_cast<unsigned long long>(i)];

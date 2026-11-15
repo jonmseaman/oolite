@@ -46,6 +46,17 @@ struct Vector2D {
 
 #endif
 
+namespace oo {
+
+// The right, up and forward unit vectors of an orientation.
+struct BasisVectors {
+  Vector right;
+  Vector up;
+  Vector forward;
+};
+
+}  // namespace oo
+
 extern const Vector kZeroVector, /* 0, 0, 0 */
     kBasisXVector,               /* 1, 0, 0 */
     kBasisYVector,               /* 0, 1, 0 */
