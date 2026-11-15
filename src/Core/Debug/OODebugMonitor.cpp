@@ -43,6 +43,7 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "LogIndentScope.h"
 #include "OOConcreteTexture.h"
 #include "OODrawable.h"
 #include "OOJSConsole.h"
@@ -422,7 +423,7 @@ void OODebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
   state->totalEntityObjSize += entitySize;
   state->totalDrawableSize += drawableSize;
 
-  oo::log::indent();
+  const oo::LogIndentScope indent;
   if (oo::EntityIsShip(entity)) {
     for (const auto& subRef : (oo::ToShip(entity) != nullptr
                                    ? oo::ToShip(entity)->subEntityEnumerator()
@@ -456,12 +457,11 @@ void OODebugMonitor::dumpEntity(Entity* entity, EntityDumpState* state,
       }
     }
   }
-  oo::log::outdent();
 }
 
 void OODebugMonitor::dumpMemoryStatistics() {
   OO_LOG("debug.memStats", "{}", "Memory statistics:");
-  oo::log::indent();
+  const oo::LogIndentScope indent;
 
   //	Get texture retain counts before the entity dumper starts messing with
   // them.
@@ -477,22 +477,21 @@ void OODebugMonitor::dumpMemoryStatistics() {
   size_t totalSize = 0;
 
   writeMemStat("Entitites:");
-  oo::log::indent();
-
   EntityDumpState entityDumpState;
+  {
+    const oo::LogIndentScope entitiesIndent;
 
-  for (const auto& entity :
-       (UNIVERSE != nullptr ? UNIVERSE->entityList()
+    for (const auto& entity :
+         (UNIVERSE != nullptr ? UNIVERSE->entityList()
+                              : std::vector<oo::EntityHold>())) {
+      dumpEntity(entity.get(), &entityDumpState, true);
+    }
+    for (const oo::EntityHold& entityRef :
+         (PLAYER != nullptr ? PLAYER->getScannedWormholes()
                             : std::vector<oo::EntityHold>())) {
-    dumpEntity(entity.get(), &entityDumpState, true);
+      dumpEntity(entityRef.get(), &entityDumpState, true);
+    }
   }
-  for (const oo::EntityHold& entityRef :
-       (PLAYER != nullptr ? PLAYER->getScannedWormholes()
-                          : std::vector<oo::EntityHold>())) {
-    dumpEntity(entityRef.get(), &entityDumpState, true);
-  }
-
-  oo::log::outdent();
   writeMemStat(
       std::format("Total entity size (excluding {} entities not accounted "
                   "for): {} ({} entity objects, {} drawables)",
@@ -521,12 +520,13 @@ void OODebugMonitor::dumpMemoryStatistics() {
   size_t visibleTextureDataSize = 0;
 
   writeMemStat("Textures:");
-  oo::log::indent();
+  {
+    const oo::LogIndentScope texturesIndent;
 
-  for (const std::shared_ptr<OOTexture>& texRef : textures) {
-    OOTexture* tex = texRef.get();
-    size_t objSize = sizeof *tex;  // the texture root's size
-    size_t dataSize = tex->dataSize();
+    for (const std::shared_ptr<OOTexture>& texRef : textures) {
+      OOTexture* tex = texRef.get();
+      size_t objSize = sizeof *tex;  // the texture root's size
+      size_t dataSize = tex->dataSize();
 
 #if OOTEXTURE_RELOADABLE
     const char* byteCountSuffix = "";
@@ -557,8 +557,7 @@ void OODebugMonitor::dumpMemoryStatistics() {
     totalTextureObjSize += objSize;
   }
   totalSize += totalTextureObjSize + totalTextureDataSize;
-
-  oo::log::outdent();
+  }
 
 #if !OOTEXTURE_RELOADABLE
   totalTextureDataSize *= 2;
@@ -573,8 +572,6 @@ void OODebugMonitor::dumpMemoryStatistics() {
   totalSize += dumpJSMemoryStatistics();
 
   writeMemStat(std::format("Total: {}", SizeString(totalSize)));
-
-  oo::log::outdent();
 }
 
 size_t OODebugMonitor::dumpJSMemoryStatistics() {

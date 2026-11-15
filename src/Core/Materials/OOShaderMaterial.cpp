@@ -39,6 +39,7 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include "LogIndentScope.h"
 #include "OODescription.h"
 #include "OOShaderUniformMethodType.h"  // the binding target's hooks
 #include "oofnd/PList.hpp"
@@ -204,12 +205,13 @@ bool OOShaderMaterial::initWithName(const std::optional<std::string>& name,
           fsCacheKey.has_value() ? fsCacheKey->c_str() : "(null)",
           macroString.has_value() ? macroString->c_str() : "(null)");
 
-      OOLogIndent();
-      // Held by the Ref for as long as the material wants the cached program.
-      shaderProgram = OOShaderProgram::shaderProgramWithVertexShader(
-          vertexShader, fragmentShader, vsName, fsName, macroString,
-          attributeBindings, cacheKey);
-      OOLogOutdent();
+      {
+        const oo::LogIndentScope indent;
+        // Held by the Ref for as long as the material wants the cached program.
+        shaderProgram = OOShaderProgram::shaderProgramWithVertexShader(
+            vertexShader, fragmentShader, vsName, fsName, macroString,
+            attributeBindings, cacheKey);
+      }
 
 // no reduced complexity mode now
 #if 0

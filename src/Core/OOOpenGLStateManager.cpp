@@ -31,6 +31,7 @@ MA 02110-1301, USA.
 #include <string>
 #include <string_view>
 
+#include "LogIndentScope.h"  // IWYU pragma: keep: used only with OO_GL_STATE_VERIFICATION
 #include "OOMacroOpenGL.h"
 #include "OOOpenGL.h"
 #include "OOOpenGLExtensionManager.h"  // IWYU pragma: keep: the OpenGL feature macros its #if lines test
@@ -822,7 +823,7 @@ static void VerifyOpenGLStateInternal(const char* caller,
       OO_LOG(kOOLogOpenGLVerifyDump, "Expected previous state: {}",
              expectedState->name);
 
-      oo::log::indent();
+      const oo::LogIndentScope indent;
 
       std::string shouldBe;
       std::string is;
@@ -842,8 +843,6 @@ static void VerifyOpenGLStateInternal(const char* caller,
                OOGLEnumToString(currentState.BLEND_SRC),
                OOGLEnumToString(currentState.BLEND_DST));
       }
-
-      oo::log::outdent();
     }
 
     SwitchOpenGLStateInternal(&currentState, expectedState);

@@ -60,6 +60,7 @@ SOFTWARE.
 #endif
 
 #include "GameController.h"
+#include "LogIndentScope.h"
 #include "OOAIStateMachineVerifierStage.h"
 #include "OOCacheManager.h"
 #include "OOCheckDemoShipsPListVerifierStage.h"
@@ -628,11 +629,10 @@ void OOOXPVerifier::runStages() {
   if (!_waitingStages.empty()) {
     OO_LOG("verifyOXP.incomplete", "{}",
            "Some verifier stages could not be run:");
-    oo::log::indent();
+    const oo::LogIndentScope indent;
     for (const auto& candidateStage : _waitingStages) {
       OO_LOG("verifyOXP.incomplete.item", "{}", candidateStage->description());
     }
-    oo::log::outdent();
   }
   _waitingStages.clear();
 }
