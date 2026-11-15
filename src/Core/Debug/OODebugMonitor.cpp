@@ -34,6 +34,7 @@ SOFTWARE.
 #include <cstddef>
 #include <format>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>

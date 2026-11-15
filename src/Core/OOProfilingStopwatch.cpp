@@ -30,6 +30,8 @@ SOFTWARE.
 
 #include "OOProfilingStopwatch.h"
 
+#include <memory>
+
 OOProfilingStopwatch::OOProfilingStopwatch() {
   _start = OOGetHighResTime();
   _end = OOCopyHighResTime(_start);

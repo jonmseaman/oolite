@@ -27,6 +27,8 @@ SOFTWARE.
 
 #include "OOMaterialSpecifier.h"
 
+#include <memory>
+#include <string>
 #include <string_view>
 
 #include "OOColor.h"

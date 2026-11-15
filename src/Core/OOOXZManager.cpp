@@ -28,10 +28,13 @@ MA 02110-1301, USA.
 
 #include <algorithm>
 #include <array>
+#include <cstdio>
 #include <format>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "GameController.h"

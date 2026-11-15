@@ -25,6 +25,9 @@ MA 02110-1301, USA.
 
 #include "ProxyPlayerEntity.h"
 
+#include <memory>
+#include <string>
+
 std::shared_ptr<::ShipEntity> ProxyPlayerEntity::newProxyObject(
     const std::string& key, const oo::PList& dict) {
   const std::shared_ptr<ProxyPlayerEntity> proxy =

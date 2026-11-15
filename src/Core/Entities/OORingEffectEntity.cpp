@@ -27,6 +27,8 @@ MA 02110-1301, USA.
 #include "OORingEffectEntity.h"
 
 #include <format>
+#include <memory>
+#include <string>
 
 #include "OOMacroOpenGL.h"
 #include "Universe.h"

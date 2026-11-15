@@ -36,11 +36,13 @@ SOFTWARE.
 #include <algorithm>
 #include <condition_variable>
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <stop_token>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "oofnd/AutoreleaseScope.hpp"

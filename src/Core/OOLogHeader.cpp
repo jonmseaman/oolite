@@ -27,6 +27,9 @@ SOFTWARE.
 
 #include "OOLogHeader.h"
 
+#include <string>
+#include <vector>
+
 #include "OOCPUInfo.h"  // IWYU pragma: keep: the endianness and CPU macros its #if lines test
 #include "OOJavaScriptEngine.h"  // IWYU pragma: keep: OOJS_PROFILE, which its #if lines test
 #include "OOVersion.h"

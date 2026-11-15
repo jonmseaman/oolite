@@ -25,6 +25,8 @@ MA 02110-1301, USA.
 
 #include "OOFlashEffectEntity.h"
 
+#include <memory>
+
 #include "OOColor.h"
 #include "OOGraphicsResetManager.h"
 #include "OOTexture.h"

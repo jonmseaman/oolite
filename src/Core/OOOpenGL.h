@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>

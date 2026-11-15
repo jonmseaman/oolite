@@ -25,6 +25,10 @@ MA 02110-1301, USA.
 
 #include "OOExhaustPlumeEntity.h"
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "MyOpenGLView.h"
 #include "OOGraphicsResetManager.h"
 #include "OOJSExhaustPlume.h"

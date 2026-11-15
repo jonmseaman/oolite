@@ -31,6 +31,9 @@ SOFTWARE.
 
 #include <assert.h>
 
+#include <string>
+#include <vector>
+
 #include "oofnd/String.hpp"
 #include "oofnd/objc/OOException.h"
 

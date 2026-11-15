@@ -27,7 +27,10 @@ SOFTWARE.
 
 #include "OOCombinedEmissionMapGenerator.h"
 
+#include <algorithm>
 #include <format>
+#include <memory>
+#include <string>
 
 #include "OOColor.h"
 #include "OOPixMapChannelOperations.h"

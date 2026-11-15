@@ -35,7 +35,9 @@ SOFTWARE.
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <format>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>

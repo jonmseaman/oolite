@@ -35,6 +35,12 @@ SOFTWARE.
 #include "OOOXPVerifier.h"
 
 #include <format>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 #if OO_OXP_VERIFIER_ENABLED
 

@@ -27,6 +27,7 @@ SOFTWARE.
 #include "OOEncodingConverter.h"
 
 #include <format>
+#include <string>
 
 #include "OOCache.h"
 #include "oofnd/Encoding.hpp"

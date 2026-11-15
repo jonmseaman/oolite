@@ -27,6 +27,10 @@ MA 02110-1301, USA.
 
 #include "OOEntityFilterPredicate.h"
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "Entity.h"
 #include "OOPlanetEntity.h"
 #include "OORoleSet.h"

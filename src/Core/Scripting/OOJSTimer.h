@@ -32,6 +32,9 @@ MA 02110-1301, USA.
 
 #include <quickjs.h>
 
+#include <memory>
+#include <string>
+
 #include "OOJSPrivateObject.h"
 #include "OOScriptTimer.h"
 

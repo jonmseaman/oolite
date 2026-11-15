@@ -28,8 +28,14 @@ SOFTWARE.
 
 #include <stdlib.h>
 
+#include <algorithm>
 #include <array>
+#include <memory>
+#include <set>
+#include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include "OOConstToString.h"
 #include "OOFunctionAttributes.h"

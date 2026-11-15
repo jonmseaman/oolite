@@ -630,4 +630,6 @@ inline std::u16string utf8ToUtf16(std::string_view s) {
 // The definitions of get<T>/at<T>. Outside the include guard so that
 // PListGet.hpp, which includes this header first, still sees the complete class
 // when it is the header included first.
+#include <memory>
+
 #include "oofnd/PListGet.hpp"

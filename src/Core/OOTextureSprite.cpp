@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 #include "OOTextureSprite.h"
 
+#include <memory>
+
 #include "OOMacroOpenGL.h"
 #include "OOTexture.h"
 

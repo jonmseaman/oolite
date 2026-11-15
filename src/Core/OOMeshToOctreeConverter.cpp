@@ -75,7 +75,9 @@ MA 02110-1301, USA.
 
 #include <cstring>
 #include <format>
+#include <memory>
 #include <new>
+#include <string>
 #include <vector>
 
 #include "OOMaths.h"

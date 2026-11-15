@@ -26,7 +26,10 @@ MA 02110-1301, USA.
 
 #include <array>  // IWYU pragma: keep: used only with DEBUG_GRAPHVIZ
 #include <format>
+#include <set>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "OOFunctionAttributes.h"
 #include "OOJSEngineTimeManagement.h"

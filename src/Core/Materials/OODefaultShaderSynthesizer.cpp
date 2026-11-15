@@ -30,6 +30,7 @@ SOFTWARE.
 #include <cstddef>
 #include <format>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>

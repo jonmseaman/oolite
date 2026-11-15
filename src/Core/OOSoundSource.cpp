@@ -28,6 +28,10 @@ SOFTWARE.
 #include "OOSoundSource.h"
 
 #include <format>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "OOALSoundChannel.h"
 #include "OOALSoundMixer.h"

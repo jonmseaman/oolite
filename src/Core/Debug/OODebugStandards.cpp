@@ -29,6 +29,8 @@ SOFTWARE.
 
 #include "OODebugStandards.h"
 
+#include <string>
+
 #include "GameController.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/Log.hpp"

@@ -24,6 +24,11 @@ MA 02110-1301, USA.
 
 #include "OOPListScript.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "OOCacheManager.h"
 #include "OOLegacyScriptWhitelist.h"
 #include "OOPListParsing.h"

@@ -15,6 +15,7 @@ Usage: oojs-quickjs-poc <tests directory>
 #include <cstdio>
 #include <ctime>
 #include <format>
+#include <memory>
 #include <optional>
 #include <string>
 

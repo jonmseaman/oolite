@@ -26,6 +26,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include "Entity.h"
 #include "OODrawable.h"  // the drawable is held by std::shared_ptr (a complete type wherever the entity is destroyed)
 

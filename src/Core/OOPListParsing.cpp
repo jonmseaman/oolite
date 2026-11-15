@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 #include "OOPListParsing.h"
 
+#include <string>
+
 #include "Universe.h"
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/Log.hpp"

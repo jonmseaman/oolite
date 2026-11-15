@@ -26,7 +26,11 @@ SOFTWARE.
 
 #include "OOSkyDrawable.h"
 
+#include <algorithm>
 #include <format>
+#include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "GameController.h"

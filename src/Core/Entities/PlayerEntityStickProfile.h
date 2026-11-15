@@ -26,6 +26,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "PlayerEntity.h"
 
 /* The category PlayerEntity (StickProfile) is members of PlayerEntity,

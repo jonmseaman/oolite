@@ -26,6 +26,10 @@ MA 02110-1301, USA.
 #include "OOSDLJoystickManager.h"
 
 #include <format>
+#include <functional>
+#include <map>
+#include <string>
+#include <utility>
 
 #include "oofnd/Log.hpp"
 

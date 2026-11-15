@@ -29,6 +29,10 @@ MA 02110-1301, USA.
 #include "OOJSScript.h"
 
 #include <format>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "Entity.h"
 #include "OOJSEngineTimeManagement.h"

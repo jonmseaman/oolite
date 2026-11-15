@@ -25,7 +25,11 @@ MA 02110-1301, USA.
 #include "OOScript.h"
 
 #include <format>
+#include <memory>
+#include <string>
 #include <typeinfo>
+#include <utility>
+#include <vector>
 
 #include "OODebugStandards.h"
 #include "OODemangle.h"

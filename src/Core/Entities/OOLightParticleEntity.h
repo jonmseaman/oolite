@@ -27,6 +27,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <vector>
+
 #include "Entity.h"
 
 class OOTexture;

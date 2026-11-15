@@ -27,7 +27,11 @@ MA 02110-1301, USA.
 #include "OOSystemDescriptionManager.h"
 
 #include <format>
+#include <memory>
+#include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include "OOStringParsing.h"
 #include "OOTypes.h"

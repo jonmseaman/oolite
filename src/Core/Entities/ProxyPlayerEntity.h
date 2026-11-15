@@ -31,6 +31,9 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "PlayerEntity.h"
 
 /*	The proxy's state and methods. Its ship part is ShipEntity's.

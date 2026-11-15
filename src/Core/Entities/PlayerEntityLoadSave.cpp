@@ -26,6 +26,9 @@
 
 #include <algorithm>
 #include <format>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "GameController.h"
 #include "OOColor.h"

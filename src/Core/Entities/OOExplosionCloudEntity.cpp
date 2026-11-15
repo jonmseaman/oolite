@@ -27,6 +27,9 @@ MA 02110-1301, USA.
 
 #include "OOExplosionCloudEntity.h"
 
+#include <memory>
+#include <string>
+
 #include "OOTexture.h"
 #include "PlayerEntity.h"
 #include "Universe.h"

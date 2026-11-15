@@ -25,6 +25,8 @@ MA 02110-1301, USA.
 
 #include "OOSparkEntity.h"
 
+#include <memory>
+
 #include "OOColor.h"
 #include "Universe.h"
 

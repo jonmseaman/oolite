@@ -30,9 +30,12 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "OOTypes.h"
 #include "oofnd/Object.hpp"

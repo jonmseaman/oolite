@@ -27,6 +27,9 @@ MA 02110-1301, USA.
 
 #include "OOPlasmaShotEntity.h"
 
+#include <memory>
+#include <vector>
+
 #include "OOColor.h"
 #include "OOPlasmaBurstEntity.h"
 #include "Universe.h"

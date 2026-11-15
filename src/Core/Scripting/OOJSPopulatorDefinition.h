@@ -31,6 +31,8 @@ MA 02110-1301, USA.
 
 #include <quickjs.h>
 
+#include <memory>
+
 #include "OOFoundation.h"
 #include "OOMaths.h"
 #include "oofnd/Object.hpp"

@@ -27,7 +27,12 @@ MA 02110-1301, USA.
 #include <cstring>
 #include <format>
 #include <functional>
+#include <memory>
+#include <set>
+#include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include "GameController.h"
 #include "OOCacheManager.h"

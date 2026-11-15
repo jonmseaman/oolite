@@ -24,6 +24,11 @@ MA 02110-1301, USA.
 
 #include "OOTrumble.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "OOMaths.h"
 #include "OOStringParsing.h"
 #include "OOTexture.h"

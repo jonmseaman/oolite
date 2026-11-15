@@ -50,6 +50,7 @@ sets that will then be immutablized.
 
 #include <cstddef>
 #include <format>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>

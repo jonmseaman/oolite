@@ -29,6 +29,8 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <string>
+
 #if DEBUG_GRAPHVIZ
 
 #include "OOFoundation.h"

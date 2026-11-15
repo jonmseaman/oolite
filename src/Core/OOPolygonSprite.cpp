@@ -43,7 +43,11 @@ SOFTWARE.
 #include "OOPolygonSprite.h"
 
 #include <format>
+#include <memory>
+#include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include "OOGraphicsResetManager.h"
 #include "OOMacroOpenGL.h"

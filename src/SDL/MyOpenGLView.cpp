@@ -29,7 +29,10 @@ MA 02110-1301, USA.
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_timer.h>
 
+#include <memory>
+#include <string>
 #include <string_view>
+#include <utility>
 
 #include "GameController.h"
 #include "GuiDisplayGen.h"

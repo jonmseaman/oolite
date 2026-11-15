@@ -24,6 +24,7 @@ MA 02110-1301, USA.
 
 #include "OOJSPlayer.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <optional>

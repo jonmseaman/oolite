@@ -24,6 +24,9 @@ MA 02110-1301, USA.
 
 #include "OOWaypointEntity.h"
 
+#include <memory>
+#include <string>
+
 #include "Entity.h"
 #include "HeadUpDisplay.h"
 #include "OOJSWaypoint.h"

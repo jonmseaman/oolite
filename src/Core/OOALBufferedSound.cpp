@@ -28,6 +28,9 @@ SOFTWARE.
 
 #include "OOALBufferedSound.h"
 
+#include <memory>
+#include <string>
+
 #include "OOALSoundDecoder.h"
 #include "oofnd/Log.hpp"
 

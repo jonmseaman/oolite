@@ -37,6 +37,9 @@ OUT OF OR
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "OOALSoundChannel.h"
 #include "OOMaths.h"
 #include "OOSoundSource.h"

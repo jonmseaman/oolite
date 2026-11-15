@@ -31,6 +31,8 @@ SOFTWARE.
   1  // a plain C++ unit: the shared headers' game-unit parts stay out of it
 #include "OOConvertCubeMapToLatLong.h"
 
+#include <vector>
+
 #include "OOTextureScaling.h"
 #include "oofnd/objc/OOAssert.h"
 

@@ -30,10 +30,14 @@ SOFTWARE.
 
 #include <stdlib.h>
 
+#include <algorithm>
 #include <cstring>
 #include <format>
+#include <memory>
+#include <string>
 #include <string_view>
 #include <typeinfo>
+#include <utility>
 
 #include "OOConvertCubeMapToLatLong.h"
 #include "OODebugStandards.h"

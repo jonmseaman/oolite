@@ -29,6 +29,10 @@ MA 02110-1301, USA.
 
 #pragma once
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "OOJavaScriptEngine.h"
 #include "OOScript.h"
 #include "oofnd/Notification.hpp"
