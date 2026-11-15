@@ -373,10 +373,12 @@ std::optional<std::string> OoliteInfoString(std::string_view key) {
   } while (0);
 #endif
 
-#define VELOCITY_CLEANUP_MIN 2000.0f  // Minimum speed for "power braking".
+constexpr float VELOCITY_CLEANUP_MIN =
+    2000.0f;  // Minimum speed for "power braking".
 #define VELOCITY_CLEANUP_FULL \
   5000.0f  // Speed at which full "power braking" factor is used.
-#define VELOCITY_CLEANUP_RATE 0.001f  // Factor for full "power braking".
+constexpr float VELOCITY_CLEANUP_RATE =
+    0.001f;  // Factor for full "power braking".
 
 /////////////////////////////////////////////////////////////////////
 
