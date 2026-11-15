@@ -31,9 +31,6 @@ SOFTWARE.
 
 #pragma once
 
-#include <optional>
-#include <string>
-
 #include "OOMaterial.h"
 #include "oofnd/PList.hpp"
 

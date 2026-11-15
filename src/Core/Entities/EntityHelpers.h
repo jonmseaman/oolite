@@ -34,7 +34,6 @@ MA 02110-1301, USA.
 
 #include <optional>
 #include <string>
-#include <vector>
 
 #include "Entity.h"  // also includes this file at its end; the guard above makes either order work
 #include "EntityPListForeign.h"  // the entity's node, and whether it has its object
