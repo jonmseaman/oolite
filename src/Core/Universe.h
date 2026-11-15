@@ -678,8 +678,15 @@ class Universe : public oo::Object {
   oo::PList gameSettings();
   void useGUILightSource(bool GUILight);
   void lightForEntity(bool isLit);
-  void getActiveViewMatrix(OOMatrix* outMatrix, Vector* outForward,
-                           Vector* outUp);
+
+  // The active view's matrix, forward and up vectors.
+  struct ActiveView {
+    OOMatrix matrix;
+    Vector forward;
+    Vector up;
+  };
+
+  ActiveView activeView();
   OOMatrix activeViewMatrix();
 
   // The view frustum.
