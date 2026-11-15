@@ -48,16 +48,16 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/objc/OOObject.h"
 
-#define GUI_DEFAULT_COLUMNS 6
-#define GUI_DEFAULT_ROWS 30
+inline constexpr int GUI_DEFAULT_COLUMNS = 6;
+inline constexpr int GUI_DEFAULT_ROWS = 30;
 
-#define GUI_MAX_ROWS 64
-#define GUI_MAX_COLUMNS 40
-#define MAIN_GUI_PIXEL_HEIGHT 480
-#define MAIN_GUI_PIXEL_WIDTH 480
+inline constexpr int GUI_MAX_ROWS = 64;
+inline constexpr int GUI_MAX_COLUMNS = 40;
+inline constexpr int MAIN_GUI_PIXEL_HEIGHT = 480;
+inline constexpr int MAIN_GUI_PIXEL_WIDTH = 480;
 #define MAIN_GUI_ROW_HEIGHT 16
-#define MAIN_GUI_ROW_WIDTH 16
-#define MAIN_GUI_PIXEL_ROW_START 40
+inline constexpr int MAIN_GUI_ROW_WIDTH = 16;
+inline constexpr int MAIN_GUI_PIXEL_ROW_START = 40;
 
 enum class OOGUIAlignment : std::int32_t {
   kLeft,
