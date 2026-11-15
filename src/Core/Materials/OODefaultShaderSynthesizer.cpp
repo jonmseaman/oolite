@@ -462,23 +462,20 @@ void OODefaultShaderSynthesizer::setUpOneTexture(const oo::PList& textureSpec) {
   }
 }
 
-void OODefaultShaderSynthesizer::getSampleName(std::string* outSampleName,
-                                               std::string* outSwizzleOp,
-                                               const oo::PList& textureSpec) {
-  OOCParameterAssert(outSampleName != nullptr && outSwizzleOp != nullptr &&
-                     !textureSpec.isNull());
+OODefaultShaderSynthesizer::SampleName
+OODefaultShaderSynthesizer::getSampleName(const oo::PList& textureSpec) {
+  OOCParameterAssert(!textureSpec.isNull());
 
   setUpOneTexture(textureSpec);
   std::size_t texID = textureIDForSpec(textureSpec);
 
-  *outSampleName = std::format("tex{}Sample", texID);
-  *outSwizzleOp = GetExtractMode(textureSpec).value_or(std::string());
+  return {std::format("tex{}Sample", texID),
+          GetExtractMode(textureSpec).value_or(std::string())};
 }
 
 std::optional<std::string> OODefaultShaderSynthesizer::readRGBForTextureSpec(
     const oo::PList& textureSpec, const std::string& mapName) {
-  std::string sample, swizzle;
-  getSampleName(&sample, &swizzle, textureSpec);
+  auto [sample, swizzle] = getSampleName(textureSpec);
 
   if (swizzle.empty()) {
     return sample + ".rgb";
@@ -503,8 +500,7 @@ std::optional<std::string> OODefaultShaderSynthesizer::readRGBForTextureSpec(
 std::optional<std::string>
 OODefaultShaderSynthesizer::readOneChannelForTextureSpec(
     const oo::PList& textureSpec, const std::string& mapName) {
-  std::string sample, swizzle;
-  getSampleName(&sample, &swizzle, textureSpec);
+  auto [sample, swizzle] = getSampleName(textureSpec);
 
   if (swizzle.empty()) {
     return sample + ".r";
@@ -769,8 +765,7 @@ void OODefaultShaderSynthesizer::writeNormalIfNeeded() {
     normalMap = OOMaterialNormalAndParallaxMapSpecifier(_configuration);
   }
   if (!normalMap.isNull()) {
-    std::string sample, swizzle;
-    getSampleName(&sample, &swizzle, normalMap);
+    auto [sample, swizzle] = getSampleName(normalMap);
     if (swizzle.empty()) swizzle = "rgb";
     if (swizzle.size() == 3) {
       _fragmentBody += std::format(
