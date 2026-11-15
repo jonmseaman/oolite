@@ -306,7 +306,7 @@ void OOSmallFragmentBurstEntity::update(OOTimeDelta delta_t) {
   GLfloat timePassed = _timePassed;
 
   for (i = 0; i < count; i++) {
-    GLfloat du = 0.5f + (1.0f / 32.0f) * (32 - i);
+    GLfloat du = 0.5f + (1.0f / 32.0f) * (static_cast<float>(32 - i));
     particleColor[i][3] = OOClamp_0_1_f(1.0f - timePassed / du);
   }
 }
@@ -362,10 +362,10 @@ void OOBigFragmentBurstEntity::update(double delta_t) {
   GLfloat duration = _duration;
 
   GLfloat size = (1.0f + timePassed) * _baseSize;
-  GLfloat di = 1.0f / (count - 1);
+  GLfloat di = 1.0f / (static_cast<float>(count - 1));
 
   for (i = 0; i < count; i++) {
-    GLfloat du = duration * (0.5f + di * i);
+    GLfloat du = duration * (0.5f + di * static_cast<GLfloat>(i));
     particleColor[i][3] = OOClamp_0_1_f(1.0f - timePassed / du);
 
     particleSize[i] = size;

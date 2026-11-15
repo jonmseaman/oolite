@@ -535,8 +535,10 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
   switch (static_cast<PlayerShipProperty>(magic)) {
     using enum PlayerShipProperty;
     case kActiveMissile:
-      return JS_NewNumber(context,
-                          (player != nullptr ? player->getActiveMissile() : 0));
+      return JS_NewNumber(
+          context,
+          (player != nullptr ? static_cast<double>(player->getActiveMissile())
+                             : 0));
 
     case kFuelLeakRate:
       return JS_NewNumber(context,
@@ -636,7 +638,8 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
           (player != nullptr ? player->aftShieldRechargeRate() : 0.0f));
 
     case kMultiFunctionDisplays:
-      return JS_NewNumber(context, AskHud(player, &HeadUpDisplay::mfdCount));
+      return JS_NewNumber(context, static_cast<double>(AskHud(
+                                       player, &HeadUpDisplay::mfdCount)));
 
     case kMultiFunctionDisplayList: {
       oo::PList::Array list;  // [OONull null] for an inactive MFD
@@ -813,9 +816,10 @@ static JSValue PlayerShipGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewNumber(
           context,
           (UNIVERSE != nullptr
-               ? UNIVERSE->tradeInValueForCommanderDictionary(
-                     (player != nullptr ? player->commanderDataDictionary()
-                                        : oo::PList()))
+               ? static_cast<double>(
+                     UNIVERSE->tradeInValueForCommanderDictionary(
+                         (player != nullptr ? player->commanderDataDictionary()
+                                            : oo::PList())))
                : 0));
 
     case kServiceLevel:

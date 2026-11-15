@@ -311,9 +311,10 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
     case kTrumbleCount:
       return JS_NewNumber(
           context,
-          (player != nullptr ? player->PlayerEntity::getTrumbleCount()
-                             : 0));  // qualified: the final overrider, so the
-                                     // binding test stands in for it
+          (player != nullptr
+               ? static_cast<double>(player->PlayerEntity::getTrumbleCount())
+               : 0));  // qualified: the final overrider, so the
+                       // binding test stands in for it
 
       /* For compatibility with previous versions, these are still on
        * a -7 to +7 scale */

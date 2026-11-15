@@ -749,7 +749,8 @@ void DockEntity::addShipToShipsOnApproach(::ShipEntity* ship) {
   for (i = corridor_count - 1; i >= 0; i--) {
     oo::PList::Dict nextCoords;
     int offset = corridor_offset[i];
-    float corridor_length = port_depth * corridor_distance[i];
+    float corridor_length =
+        port_depth * static_cast<float>(corridor_distance[i]);
 
     float rx = s * port_depth * offset;
     float ry = c * port_depth * offset;

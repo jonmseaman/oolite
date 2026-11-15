@@ -6250,7 +6250,7 @@ bool PlayerEntity::fireMainWeapon() {
     multiplier = laserPortOffset(currentWeaponFacing).size();
   }
 
-  if (energy <= weapon_energy_use * multiplier) {
+  if (energy <= weapon_energy_use * static_cast<GLfloat>(multiplier)) {
     if (UNIVERSE != nullptr)
       UNIVERSE->addMessage(OO_DESC("weapon-out-of-juice"), 3.0);
     return false;
@@ -6260,26 +6260,30 @@ bool PlayerEntity::fireMainWeapon() {
       ((weapon_to_be_fired != nullptr ? weapon_to_be_fired->isMiningLaser()
                                       : false) != false);
 
-  energy -= weapon_energy_use * multiplier;
+  energy -= weapon_energy_use * static_cast<GLfloat>(multiplier);
 
   switch (currentWeaponFacing) {
     case OOWeaponFacing::kForward:
-      forward_weapon_temp += weapon_shot_temperature * multiplier;
+      forward_weapon_temp +=
+          weapon_shot_temperature * static_cast<GLfloat>(multiplier);
       forward_shot_time = 0.0;
       break;
 
     case OOWeaponFacing::kAft:
-      aft_weapon_temp += weapon_shot_temperature * multiplier;
+      aft_weapon_temp +=
+          weapon_shot_temperature * static_cast<GLfloat>(multiplier);
       aft_shot_time = 0.0;
       break;
 
     case OOWeaponFacing::kPort:
-      port_weapon_temp += weapon_shot_temperature * multiplier;
+      port_weapon_temp +=
+          weapon_shot_temperature * static_cast<GLfloat>(multiplier);
       port_shot_time = 0.0;
       break;
 
     case OOWeaponFacing::kStarboard:
-      starboard_weapon_temp += weapon_shot_temperature * multiplier;
+      starboard_weapon_temp +=
+          weapon_shot_temperature * static_cast<GLfloat>(multiplier);
       starboard_shot_time = 0.0;
       break;
 
@@ -9983,7 +9987,9 @@ void PlayerEntity::setGuiToEquipShipScreen(
         gui->setColor(dispCol.get(), row);
 
         if (eqKey == "EQ_FUEL") {
-          price = (PLAYER_MAX_FUEL - fuel) * pricePerUnit * fuelChargeRate();
+          price =
+              static_cast<GLfloat>((PLAYER_MAX_FUEL - fuel) * pricePerUnit) *
+              fuelChargeRate();
         } else if (eqKey == "EQ_RENOVATION") {
           price = renovationCosts();
           gui->setColor(gui->colorFromSetting(kGuiEquipmentRepairColor,
@@ -9991,11 +9997,11 @@ void PlayerEntity::setGuiToEquipShipScreen(
                             .get(),
                         row);
         } else {
-          price = pricePerUnit;
+          price = static_cast<double>(pricePerUnit);
         }
 
-        price = adjustPriceByScriptForEqKey(
-            eqKey, static_cast<OOCreditsQuantity>(price));
+        price = static_cast<double>(adjustPriceByScriptForEqKey(
+            eqKey, static_cast<OOCreditsQuantity>(price)));
 
         price *= priceFactor;  // increased prices at some stations
 
@@ -10021,7 +10027,8 @@ void PlayerEntity::setGuiToEquipShipScreen(
         }
 
         const std::string timeString =
-            (UNIVERSE != nullptr ? UNIVERSE->shortTimeDescription(installTime)
+            (UNIVERSE != nullptr ? UNIVERSE->shortTimeDescription(
+                                       static_cast<double>(installTime))
                                  : std::optional<std::string>())
                 .value_or("(null)");
         std::string priceString = std::format(
@@ -10093,9 +10100,9 @@ void PlayerEntity::setGuiToEquipShipScreen(
               // Always true for the first pass. The first pass
               // is used to display the name of the weapon being
               // purchased.
-              priceString =
-                  std::format(" {} ", OOCredits(static_cast<OOCreditsQuantity>(
-                                          price * multiplier)));
+              priceString = std::format(
+                  " {} ", OOCredits(static_cast<OOCreditsQuantity>(
+                              price * static_cast<double>(multiplier))));
 
               gui->setKey(eqKey, row);
               gui->setArray(
@@ -10816,8 +10823,9 @@ void PlayerEntity::buySelectedItem() {
       } else {
         adjust = (eqInfo != nullptr ? eqInfo->installTime() : 0);
       }
-      double time_adjust =
-          (old_credits > credits) ? (old_credits - credits) : 0.0;
+      double time_adjust = (old_credits > credits)
+                               ? (static_cast<double>(old_credits - credits))
+                               : 0.0;
       if (UNIVERSE != nullptr) UNIVERSE->forceWitchspaceEntries();
       if (adjust == 0) {
         ship_clock_adjust += time_adjust + 600.0;
@@ -10901,7 +10909,7 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
   const std::optional<std::string> eqKeyDamaged =
       (eqType != nullptr ? eqType->damagedIdentifier()
                          : std::optional<std::string>());
-  double price = pricePerUnit;
+  double price = static_cast<double>(pricePerUnit);
   double priceFactor = 1.0;
   OOCreditsQuantity tradeIn = 0;
   bool isRepair = false;
@@ -10916,8 +10924,8 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
     price = renovationCosts();
   }
 
-  price =
-      adjustPriceByScriptForEqKey(eqKey, static_cast<OOCreditsQuantity>(price));
+  price = static_cast<double>(adjustPriceByScriptForEqKey(
+      eqKey, static_cast<OOCreditsQuantity>(price)));
 
   ::StationEntity* dockedStation = this->dockedStation();
   if (dockedStation) {
@@ -10928,7 +10936,7 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
 
   price *= priceFactor;  // increased prices at some stations
 
-  if (price > credits) {
+  if (price > static_cast<double>(credits)) {
     return false;
   }
 
@@ -10981,9 +10989,9 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
         break;
     }
 
-    price *= multiplier;
+    price *= static_cast<double>(multiplier);
 
-    if (price > credits) {
+    if (price > static_cast<double>(credits)) {
       // not enough money - ensure that weapon
       // type is reset to what it was before
       // the attempt to buy took place
@@ -11005,7 +11013,8 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
       }
       return false;
     }
-    credits = static_cast<OOCreditsQuantity>(credits - (price));
+    credits =
+        static_cast<OOCreditsQuantity>(static_cast<double>(credits) - (price));
 
     // Refund current_weapon
     if (current_weapon != nullptr) {
@@ -11047,7 +11056,8 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
   if ((eqKey == "EQ_FUEL")) {
 #if MASS_DEPENDENT_FUEL_PRICES
     OOCreditsQuantity creditsForRefuel = static_cast<OOCreditsQuantity>(
-        (fuelCapacity() - getFuel()) * pricePerUnit * fuelChargeRate());
+        static_cast<GLfloat>((fuelCapacity() - getFuel()) * pricePerUnit) *
+        fuelChargeRate());
 #else
     OOCreditsQuantity creditsForRefuel =
         (fuelCapacity() - getFuel()) * pricePerUnit;
@@ -11115,7 +11125,8 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
           (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
               .get<unsigned int>(KEY_TECHLEVEL);
 
-    credits = static_cast<OOCreditsQuantity>(credits - (price));
+    credits =
+        static_cast<OOCreditsQuantity>(static_cast<double>(credits) - (price));
     ship_trade_in_factor +=
         5 + techLevel;  // you get better value at high-tech repair bases
     if (ship_trade_in_factor > 100) ship_trade_in_factor = 100;
@@ -11138,7 +11149,8 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
 
     bool mounted_okay = mountMissile(weapon);
     if (mounted_okay) {
-      credits = static_cast<OOCreditsQuantity>(credits - (price));
+      credits = static_cast<OOCreditsQuantity>(static_cast<double>(credits) -
+                                               (price));
       safeAllMissiles();
       tidyMissilePylons();
       setActiveMissile(0);
@@ -11148,25 +11160,29 @@ bool PlayerEntity::tryBuyingItem(const std::string& eqKey) {
 
   if ((eqKey == "EQ_PASSENGER_BERTH")) {
     changePassengerBerths(+1);
-    credits = static_cast<OOCreditsQuantity>(credits - (price));
+    credits =
+        static_cast<OOCreditsQuantity>(static_cast<double>(credits) - (price));
     return true;
   }
 
   if ((eqKey == "EQ_PASSENGER_BERTH_REMOVAL")) {
     changePassengerBerths(-1);
-    credits = static_cast<OOCreditsQuantity>(credits - (price));
+    credits =
+        static_cast<OOCreditsQuantity>(static_cast<double>(credits) - (price));
     return true;
   }
 
   if ((eqKey == "EQ_MISSILE_REMOVAL")) {
-    credits = static_cast<OOCreditsQuantity>(credits - (price));
+    credits =
+        static_cast<OOCreditsQuantity>(static_cast<double>(credits) - (price));
     tradeIn += removeMissiles();
     doTradeIn(tradeIn, priceFactor);
     return true;
   }
 
   if (canAddEquipment(eqKey, "purchase")) {
-    credits = static_cast<OOCreditsQuantity>(credits - (price));
+    credits =
+        static_cast<OOCreditsQuantity>(static_cast<double>(credits) - (price));
     addEquipmentItem(eqKey, false, "purchase");  // no need to validate twice.
     if (isRepair) {
       doScriptEvent(OOJSID("equipmentRepaired"), {oo::PList(eqKey)});
@@ -11275,8 +11291,8 @@ void PlayerEntity::doTradeIn(OOCreditsQuantity tradeInValue,
                              double priceFactor) {
   if (tradeInValue != 0) {
     if (priceFactor < 1.0)
-      tradeInValue =
-          static_cast<OOCreditsQuantity>(tradeInValue * (priceFactor));
+      tradeInValue = static_cast<OOCreditsQuantity>(
+          static_cast<double>(tradeInValue) * (priceFactor));
     credits += tradeInValue;
   }
 }
@@ -12615,8 +12631,10 @@ double PlayerEntity::renovationCosts() {
                                  commanderDataDictionary())
                            : 0);
 
-  double costs = 0.005 * (100 - ship_trade_in_factor) * shipValue;
-  costs += 0.01 * shipValue * missingSubEntitiesAdjustment();
+  double costs =
+      0.005 * (100 - ship_trade_in_factor) * static_cast<double>(shipValue);
+  costs += 0.01 * static_cast<double>(shipValue) *
+           static_cast<double>(missingSubEntitiesAdjustment());
   costs *= renovationFactor();
   return cunningFee(costs, 0.05);
 }
@@ -13731,7 +13749,7 @@ OODockingClearanceStatus PlayerEntity::getDockingClearanceStatus() {
 void PlayerEntity::penaltyForUnauthorizedDocking() {
   OOCreditsQuantity amountToPay = 0;
   OOCreditsQuantity calculatedFine =
-      static_cast<OOCreditsQuantity>(credits * 0.05);
+      static_cast<OOCreditsQuantity>(static_cast<double>(credits) * 0.05);
   OOCreditsQuantity maximumFine = 50000ULL;
 
   if (clearedToDock()) return;

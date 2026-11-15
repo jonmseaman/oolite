@@ -349,8 +349,9 @@ static JSValue EquipmentInfoGetProperty(OOJS_GETTER_ARGS) {
                                      // for it
         return JS_NewNumber(
             context,
-            (PLAYER_MAX_FUEL - (player != nullptr ? player->getFuel() : 0)) *
-                Ask(type, &OOEquipmentType::price) *
+            static_cast<float>((PLAYER_MAX_FUEL -
+                                (player != nullptr ? player->getFuel() : 0)) *
+                               Ask(type, &OOEquipmentType::price)) *
                 (player != nullptr ? player->PlayerEntity::fuelChargeRate()
                                    : 0.0f));
       } else if (Ask(type, &OOEquipmentType::identifier) == "EQ_RENOVATION") {
@@ -363,13 +364,15 @@ static JSValue EquipmentInfoGetProperty(OOJS_GETTER_ARGS) {
       } else {
         PlayerEntity* player = OOPlayerForScripting();
         return JS_NewNumber(
-            context, (Ask(type, &OOEquipmentType::identifier).has_value()
-                          ? (player != nullptr
-                                 ? player->adjustPriceByScriptForEqKey(
-                                       *Ask(type, &OOEquipmentType::identifier),
-                                       Ask(type, &OOEquipmentType::price))
-                                 : 0)
-                          : Ask(type, &OOEquipmentType::price)));
+            context,
+            (Ask(type, &OOEquipmentType::identifier).has_value()
+                 ? (player != nullptr
+                        ? static_cast<double>(
+                              player->adjustPriceByScriptForEqKey(
+                                  *Ask(type, &OOEquipmentType::identifier),
+                                  Ask(type, &OOEquipmentType::price)))
+                        : 0)
+                 : static_cast<double>(Ask(type, &OOEquipmentType::price))));
       }
     case kCanCarryMultiple:
       return OOJSValueFromBOOL(Ask(type, &OOEquipmentType::canCarryMultiple));
@@ -416,7 +419,8 @@ static JSValue EquipmentInfoGetProperty(OOJS_GETTER_ARGS) {
                              Ask(type, &OOEquipmentType::effectiveTechLevel)));
 
     case kPrice:
-      return JS_NewNumber(context, Ask(type, &OOEquipmentType::price));
+      return JS_NewNumber(
+          context, static_cast<double>(Ask(type, &OOEquipmentType::price)));
 
     case kProvides: {
       const std::vector<std::string> provides =

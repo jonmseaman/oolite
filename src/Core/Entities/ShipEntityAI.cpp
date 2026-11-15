@@ -1611,10 +1611,12 @@ void ShipEntity::scanForOffenders() {
         !(ship != nullptr ? ship->isCloaked() : false)) {
       GLfloat d2 = distance2_scanned_ships[i];
       float legal_factor =
-          (ship != nullptr ? ship->legalStatus() : int{}) * gov_factor;
+          (ship != nullptr ? static_cast<float>(ship->legalStatus()) : int{}) *
+          gov_factor;
       int random_factor =
           ranrot_rand() & 255;  // 25% chance of spotting a fugitive in 15s
-      if ((d2 < found_d2) && (random_factor < legal_factor) &&
+      if ((d2 < found_d2) &&
+          (static_cast<float>(random_factor) < legal_factor) &&
           (legal_factor > worst_legal_factor)) {
         if (group == nullptr ||
             group != (ship != nullptr ? ship->group()

@@ -1080,7 +1080,7 @@ static JSValue SystemInfoSamplePrice(OOJS_NATIVE_ARGS) {
       commodity.value_or(""), static_cast<OOEconomyID>(economy),
       commodityScript, SystemOf(thisInfo));
 
-  return JS_NewNumber(context, price);
+  return JS_NewNumber(context, static_cast<double>(price));
 
   OOJS_NATIVE_EXIT
 }

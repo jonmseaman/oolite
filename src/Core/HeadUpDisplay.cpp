@@ -1273,7 +1273,7 @@ void HeadUpDisplay::drawSurroundInternal(const oo::PList& /*info*/,
 
   // draw the surround
   GLColorWithOverallAlpha(color, alpha);
-  hudDrawSurroundAt(x, y, z1, siz);
+  hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz);
 }
 
 void HeadUpDisplay::drawSurround(const oo::PList& info) {
@@ -1340,10 +1340,10 @@ void HeadUpDisplay::drawMultiFunctionDisplay(const oo::PList& info,
   siz.width = useDefined(cached.width / 15, MFD_TEXT_WIDTH);
   siz.height = useDefined(cached.height / 10, MFD_TEXT_HEIGHT);
 
-  GLfloat x0 = static_cast<GLfloat>(x - cached.width / 2);
-  GLfloat y0 = static_cast<GLfloat>(y + cached.height / 2);
-  GLfloat x1 = static_cast<GLfloat>(x + cached.width / 2);
-  GLfloat y1 = static_cast<GLfloat>(y - cached.height / 2);
+  GLfloat x0 = static_cast<GLfloat>(static_cast<float>(x) - cached.width / 2);
+  GLfloat y0 = static_cast<GLfloat>(static_cast<float>(y) + cached.height / 2);
+  GLfloat x1 = static_cast<GLfloat>(static_cast<float>(x) + cached.width / 2);
+  GLfloat y1 = static_cast<GLfloat>(static_cast<float>(y) - cached.height / 2);
   GLColorWithOverallAlpha(mfd_color, alpha * 0.3);
   OOGLBEGIN(GL_QUADS);
   glVertex3f(x0 - 2, y0 + 2, z1);
@@ -1463,7 +1463,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
   if (!emptyDial) {
     OOGL(glColor4fv(scanner_color));
     drawScannerGrid(
-        x, y, z1, siz,
+        static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz,
         (UNIVERSE != nullptr ? UNIVERSE->getViewDirection() : OOViewID{}),
         lineWidth, zoom, nonlinear_scanner, minimalistic_scanner);
   }
@@ -1608,9 +1608,9 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
         }
 
         // position the scanner
-        x1 += scanner_cx;
-        y1 += scanner_cy;
-        y2 += scanner_cy;
+        x1 += static_cast<GLfloat>(scanner_cx);
+        y1 += static_cast<GLfloat>(scanner_cy);
+        y2 += static_cast<GLfloat>(scanner_cy);
 
         if (oo::EntityIsShip(scannedEntity)) {
           ::ShipEntity* ship = oo::ToShip(scannedEntity);
@@ -1644,11 +1644,11 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
               } else {
                 scale_vector(&bounds[corner], upscale);
               }
-              bounds[corner] =
-                  make_vector(bounds[corner].x + scanner_cx,
-                              bounds[corner].z * z_factor +
-                                  bounds[corner].y * y_factor + scanner_cy,
-                              z1);
+              bounds[corner] = make_vector(
+                  bounds[corner].x + static_cast<OOScalar>(scanner_cx),
+                  bounds[corner].z * z_factor + bounds[corner].y * y_factor +
+                      static_cast<GLfloat>(scanner_cy),
+                  z1);
             }
             // draw the diamond
             //
@@ -1678,9 +1678,10 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
         }
         if (OOEntityIsCascadeWeapon(scannedEntity)) {
           if (nonlinear_scanner) {
-            GLDrawNonlinearCascadeWeapon(scanner_cx, scanner_cy, z1, siz, rrp,
-                                         scannedEntity->collision_radius, zoom,
-                                         alpha);
+            GLDrawNonlinearCascadeWeapon(
+                static_cast<GLfloat>(scanner_cx),
+                static_cast<GLfloat>(scanner_cy), z1, siz, rrp,
+                scannedEntity->collision_radius, zoom, alpha);
           } else {
             GLfloat r1 = 2.5 + scannedEntity->collision_radius * upscale;
             GLfloat l2 = r1 * r1 - relativePosition.y * relativePosition.y;
@@ -1831,18 +1832,18 @@ void HeadUpDisplay::drawCompass(const oo::PList& info) {
   GLfloat w3 = siz.width * 0.375;
   OOGL(GLScaledLineWidth(2.0 * lineWidth));  // thicker
   OOGL(glColor4f(compass_color[0], compass_color[1], compass_color[2], alpha));
-  GLDrawOval(x, y, z1, siz, 12);
+  GLDrawOval(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz, 12);
   OOGL(glColor4f(compass_color[0], compass_color[1], compass_color[2],
                  0.5f * alpha));
   OOGLBEGIN(GL_LINES);
-  glVertex3f(x - w1, y, z1);
-  glVertex3f(x - w3, y, z1);
-  glVertex3f(x + w1, y, z1);
-  glVertex3f(x + w3, y, z1);
-  glVertex3f(x, y - h1, z1);
-  glVertex3f(x, y - h3, z1);
-  glVertex3f(x, y + h1, z1);
-  glVertex3f(x, y + h3, z1);
+  glVertex3f(static_cast<GLfloat>(x) - w1, static_cast<GLfloat>(y), z1);
+  glVertex3f(static_cast<GLfloat>(x) - w3, static_cast<GLfloat>(y), z1);
+  glVertex3f(static_cast<GLfloat>(x) + w1, static_cast<GLfloat>(y), z1);
+  glVertex3f(static_cast<GLfloat>(x) + w3, static_cast<GLfloat>(y), z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) - h1, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) - h3, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) + h1, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) + h3, z1);
   OOGLEND();
   OOGL(GLScaledLineWidth(lineWidth));  // thinner
 
@@ -1864,8 +1865,8 @@ void HeadUpDisplay::drawCompass(const oo::PList& info) {
 
     relativePosition.x *= siz.width * 0.4;
     relativePosition.y *= siz.height * 0.4;
-    relativePosition.x += x;
-    relativePosition.y += y;
+    relativePosition.x += static_cast<OOScalar>(x);
+    relativePosition.y += static_cast<OOScalar>(y);
 
     siz.width *= 0.2;
     siz.height *= 0.2;
@@ -1967,7 +1968,8 @@ void HeadUpDisplay::drawAegis(const oo::PList& /*info*/) {
   OOGLBEGIN(GL_QUAD_STRIP);
   int i;
   for (i = 0; i < 32; i += 2) {
-    glVertex3f(x + w * strip[i], y - h * strip[i + 1], z1);
+    glVertex3f(static_cast<GLfloat>(x) + w * strip[i],
+               static_cast<GLfloat>(y) - h * strip[i + 1], z1);
   }
   OOGLEND();
 #else
@@ -2098,7 +2100,8 @@ void HeadUpDisplay::drawCustomBar(const oo::PList& info) {
   SET_COLOR_SURROUND(green_color);
   if (draw_surround) {
     // draw custom surround
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
   // draw custom bar
   if (ds > .75) {
@@ -2109,7 +2112,7 @@ void HeadUpDisplay::drawCustomBar(const oo::PList& info) {
     SET_COLOR_LOW(red_color);
   }
 
-  hudDrawBarAt(x, y, z1, siz, ds);
+  hudDrawBarAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz, ds);
 }
 
 void HeadUpDisplay::drawCustomText(const oo::PList& info) {
@@ -2145,9 +2148,11 @@ void HeadUpDisplay::drawCustomText(const oo::PList& info) {
   size.height = useDefined(cached.height, 10.0f);
 
   if (info.get<int>("align") == 1) {
-    OODrawStringAligned(text, x, y, z1, size, true);
+    OODrawStringAligned(text, static_cast<GLfloat>(x), static_cast<GLfloat>(y),
+                        z1, size, true);
   } else {
-    OODrawStringAligned(text, x, y, z1, size, false);
+    OODrawStringAligned(text, static_cast<GLfloat>(x), static_cast<GLfloat>(y),
+                        z1, size, false);
   }
 }
 
@@ -2186,11 +2191,13 @@ void HeadUpDisplay::drawCustomIndicator(const oo::PList& info) {
   if (draw_surround) {
     // draw custom surround
     SET_COLOR_SURROUND(green_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
   // draw custom indicator
   SET_COLOR(yellow_color);
-  hudDrawIndicatorAt(x, y, z1, siz, iv);
+  hudDrawIndicatorAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz,
+                     iv);
 }
 
 void HeadUpDisplay::drawCustomLight(const oo::PList& info) {
@@ -2296,7 +2303,8 @@ void HeadUpDisplay::drawCustomImage(const oo::PList& info) {
       OOTextureSprite::initWithTexture(texture.get(), imageSize);
 
   if (sprite != nullptr)
-    sprite->blitCentredToX(x, y, z1, alpha);  // a message to nil did nothing
+    sprite->blitCentredToX(static_cast<float>(x), static_cast<float>(y), z1,
+                           alpha);  // a message to nil did nothing
 }
 
 void HeadUpDisplay::drawSpeedBar(const oo::PList& info) {
@@ -2330,7 +2338,8 @@ void HeadUpDisplay::drawSpeedBar(const oo::PList& info) {
   SET_COLOR_SURROUND(green_color);
   if (draw_surround) {
     // draw speed surround
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
   // draw speed bar
   if (ds > .80) {
@@ -2341,7 +2350,7 @@ void HeadUpDisplay::drawSpeedBar(const oo::PList& info) {
     SET_COLOR_LOW(green_color);
   }
 
-  hudDrawBarAt(x, y, z1, siz, ds);
+  hudDrawBarAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz, ds);
 }
 
 void HeadUpDisplay::drawRollBar(const oo::PList& info) {
@@ -2373,11 +2382,12 @@ void HeadUpDisplay::drawRollBar(const oo::PList& info) {
   if (draw_surround) {
     // draw ROLL surround
     SET_COLOR_SURROUND(green_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
   // draw ROLL bar
   SET_COLOR(yellow_color);
-  hudDrawIndicatorAt(x, y, z1, siz,
+  hudDrawIndicatorAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz,
                      (PLAYER != nullptr ? PLAYER->dialRoll() : 0.0f));
 }
 
@@ -2410,11 +2420,12 @@ void HeadUpDisplay::drawPitchBar(const oo::PList& info) {
   if (draw_surround) {
     // draw PITCH surround
     SET_COLOR_SURROUND(green_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
   // draw PITCH bar
   SET_COLOR(yellow_color);
-  hudDrawIndicatorAt(x, y, z1, siz,
+  hudDrawIndicatorAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz,
                      (PLAYER != nullptr ? PLAYER->dialPitch() : 0.0f));
 }
 
@@ -2448,11 +2459,12 @@ void HeadUpDisplay::drawYawBar(const oo::PList& info) {
   if (draw_surround) {
     // draw YAW surround
     SET_COLOR_SURROUND(green_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
   // draw YAW bar
   SET_COLOR(yellow_color);
-  hudDrawIndicatorAt(x, y, z1, siz,
+  hudDrawIndicatorAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz,
                      (PLAYER != nullptr ? PLAYER->dialYaw() : 0.0f));
 }
 
@@ -2471,7 +2483,8 @@ void HeadUpDisplay::drawEnergyGauge(const oo::PList& info) {
   if (n_bars < 1) {
     n_bars = 1;
   }
-  GLfloat energy = (player != nullptr ? player->dialEnergy() : 0.0f) * n_bars;
+  GLfloat energy = (player != nullptr ? player->dialEnergy() : 0.0f) *
+                   static_cast<float>(n_bars);
   struct CachedInfo cached;
 
   GetCurrentCachedInfo(&cached);
@@ -2498,7 +2511,8 @@ void HeadUpDisplay::drawEnergyGauge(const oo::PList& info) {
   if (drawSurround) {
     // draw energy surround
     SET_COLOR_SURROUND(yellow_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
 
   bankHeight = siz.height / n_bars;
@@ -2506,7 +2520,8 @@ void HeadUpDisplay::drawEnergyGauge(const oo::PList& info) {
   NSSize barSize =
       NSMakeSize(siz.width, bankHeight - 2.0);  // leave a gap between bars
   GLfloat midBank = bankHeight / 2.0f;
-  bankY = y - (n_bars - 1) * midBank - 1.0;
+  bankY = static_cast<GLfloat>(y) -
+          (static_cast<GLfloat>(n_bars - 1)) * midBank - 1.0;
 
   // avoid constant colour switching...
   if (labelled) {
@@ -2525,12 +2540,13 @@ void HeadUpDisplay::drawEnergyGauge(const oo::PList& info) {
   } else {
     SET_COLOR_MEDIUM(yellow_color);
   }
-  bankY = y - (n_bars - 1) * midBank;
+  bankY =
+      static_cast<GLfloat>(y) - (static_cast<GLfloat>(n_bars - 1)) * midBank;
   for (i = 0; i < n_bars; i++) {
     if (energy > 1.0) {
-      hudDrawBarAt(x, bankY, z1, barSize, 1.0);
+      hudDrawBarAt(static_cast<GLfloat>(x), bankY, z1, barSize, 1.0);
     } else if (energy > 0.0) {
-      hudDrawBarAt(x, bankY, z1, barSize, energy);
+      hudDrawBarAt(static_cast<GLfloat>(x), bankY, z1, barSize, energy);
     }
 
     energy -= 1.0;
@@ -2569,7 +2585,8 @@ void HeadUpDisplay::drawForwardShieldBar(const oo::PList& info) {
   if (draw_surround) {
     // draw forward_shield surround
     SET_COLOR_SURROUND(green_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
   // draw forward_shield bar
   if (shield < .25) {
@@ -2579,7 +2596,8 @@ void HeadUpDisplay::drawForwardShieldBar(const oo::PList& info) {
   } else {
     SET_COLOR_HIGH(green_color);
   }
-  hudDrawBarAt(x, y, z1, siz, shield);
+  hudDrawBarAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz,
+               shield);
 }
 
 void HeadUpDisplay::drawAftShieldBar(const oo::PList& info) {
@@ -2613,7 +2631,8 @@ void HeadUpDisplay::drawAftShieldBar(const oo::PList& info) {
   if (draw_surround) {
     // draw forward_shield surround
     SET_COLOR_SURROUND(green_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
   // draw forward_shield bar
   if (shield < .25) {
@@ -2623,7 +2642,8 @@ void HeadUpDisplay::drawAftShieldBar(const oo::PList& info) {
   } else {
     SET_COLOR_HIGH(green_color);
   }
-  hudDrawBarAt(x, y, z1, siz, shield);
+  hudDrawBarAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz,
+               shield);
 }
 
 void HeadUpDisplay::drawFuelBar(const oo::PList& info) {
@@ -2655,7 +2675,8 @@ void HeadUpDisplay::drawFuelBar(const oo::PList& info) {
 
   if (draw_surround) {
     SET_COLOR_SURROUND(green_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
 
   fu = (PLAYER != nullptr ? PLAYER->dialFuel() : 0.0f);
@@ -2663,7 +2684,7 @@ void HeadUpDisplay::drawFuelBar(const oo::PList& info) {
 
   // draw fuel bar
   SET_COLOR_MEDIUM(yellow_color);
-  hudDrawBarAt(x, y, z1, siz, fu);
+  hudDrawBarAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz, fu);
 
   // draw range indicator
   if (hr > 0.0f && hr <= 1.0f) {
@@ -2672,7 +2693,8 @@ void HeadUpDisplay::drawFuelBar(const oo::PList& info) {
     } else {
       SET_COLOR_LOW(red_color);
     }
-    hudDrawMarkerAt(x, y, z1, siz, hr);
+    hudDrawMarkerAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz,
+                    hr);
   }
 }
 
@@ -2724,9 +2746,11 @@ void HeadUpDisplay::drawWitchspaceDestination(const oo::PList& info) {
   SET_COLOR(green_color);
 
   if (info.get<int>("align") == 1) {
-    OODrawStringAligned(dest, x, y, z1, siz, true);
+    OODrawStringAligned(dest, static_cast<GLfloat>(x), static_cast<GLfloat>(y),
+                        z1, siz, true);
   } else {
-    OODrawStringAligned(dest, x, y, z1, siz, false);
+    OODrawStringAligned(dest, static_cast<GLfloat>(x), static_cast<GLfloat>(y),
+                        z1, siz, false);
   }
 }
 
@@ -2759,7 +2783,8 @@ void HeadUpDisplay::drawCabinTempBar(const oo::PList& info) {
 
   if (draw_surround) {
     SET_COLOR_SURROUND(green_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
 
   int flash =
@@ -2778,7 +2803,7 @@ void HeadUpDisplay::drawCabinTempBar(const oo::PList& info) {
       SET_COLOR_LOW(green_color);
   }
 
-  hudDrawBarAt(x, y, z1, siz, temp);
+  hudDrawBarAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz, temp);
 }
 
 void HeadUpDisplay::drawWeaponTempBar(const oo::PList& info) {
@@ -2810,7 +2835,8 @@ void HeadUpDisplay::drawWeaponTempBar(const oo::PList& info) {
 
   if (draw_surround) {
     SET_COLOR_SURROUND(green_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
 
   // draw weapon_temp bar (only need to call GLColor() once!)
@@ -2820,7 +2846,7 @@ void HeadUpDisplay::drawWeaponTempBar(const oo::PList& info) {
     SET_COLOR_MEDIUM(yellow_color);
   else
     SET_COLOR_LOW(green_color);
-  hudDrawBarAt(x, y, z1, siz, temp);
+  hudDrawBarAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz, temp);
 }
 
 void HeadUpDisplay::drawAltitudeBar(const oo::PList& info) {
@@ -2852,7 +2878,8 @@ void HeadUpDisplay::drawAltitudeBar(const oo::PList& info) {
 
   if (draw_surround) {
     SET_COLOR_SURROUND(yellow_color);
-    hudDrawSurroundAt(x, y, z1, siz);
+    hudDrawSurroundAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                      siz);
   }
 
   int flash =
@@ -2872,7 +2899,7 @@ void HeadUpDisplay::drawAltitudeBar(const oo::PList& info) {
       SET_COLOR_LOW(green_color);
   }
 
-  hudDrawBarAt(x, y, z1, siz, alt);
+  hudDrawBarAt(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz, alt);
 }
 
 static constexpr const char* kDefaultMissileIconKey =
@@ -2944,8 +2971,9 @@ void HeadUpDisplay::drawIconForMissile(::ShipEntity* missile, bool selected,
   if (selected) {
     // Draw yellow outline.
     OOGLPushModelView();
-    OOGLTranslateModelView(
-        make_vector(x - width * 2.0f, y - height * 2.0f, z1));
+    OOGLTranslateModelView(make_vector(static_cast<float>(x) - width * 2.0f,
+                                       static_cast<float>(y) - height * 2.0f,
+                                       z1));
     OOGLScaleModelView(make_vector(width, height, 1.0f));
     GLColorWithOverallAlpha(yellow_color, alpha);
     if (sprite != nullptr)
@@ -2954,8 +2982,9 @@ void HeadUpDisplay::drawIconForMissile(::ShipEntity* missile, bool selected,
 
     // Draw black backing, so outline colour isn’t blended into missile colour.
     OOGLPushModelView();
-    OOGLTranslateModelView(
-        make_vector(x - width * 2.0f, y - height * 2.0f, z1));
+    OOGLTranslateModelView(make_vector(static_cast<float>(x) - width * 2.0f,
+                                       static_cast<float>(y) - height * 2.0f,
+                                       z1));
     OOGLScaleModelView(make_vector(width, height, 1.0f));
     GLColorWithOverallAlpha(black_color, alpha);
     if (sprite != nullptr)
@@ -2982,7 +3011,9 @@ void HeadUpDisplay::drawIconForMissile(::ShipEntity* missile, bool selected,
   }
 
   OOGLPushModelView();
-  OOGLTranslateModelView(make_vector(x - width * 2.0f, y - height * 2.0f, z1));
+  OOGLTranslateModelView(make_vector(static_cast<float>(x) - width * 2.0f,
+                                     static_cast<float>(y) - height * 2.0f,
+                                     z1));
   OOGLScaleModelView(make_vector(width, height, 1.0f));
   if (sprite != nullptr) sprite->drawFilled();  // a message to nil did nothing
   OOGLPopModelView();
@@ -2994,7 +3025,9 @@ void HeadUpDisplay::drawIconForEmptyPylonAtX(int x, int y, GLfloat width,
 
   // Draw gray outline.
   OOGLPushModelView();
-  OOGLTranslateModelView(make_vector(x - width * 2.0f, y - height * 2.0f, z1));
+  OOGLTranslateModelView(make_vector(static_cast<float>(x) - width * 2.0f,
+                                     static_cast<float>(y) - height * 2.0f,
+                                     z1));
   OOGLScaleModelView(make_vector(width, height, 1.0f));
   GLColorWithOverallAlpha(lightgray_color, alpha);
   if (sprite != nullptr) sprite->drawOutline();  // a message to nil did nothing
@@ -3078,7 +3111,8 @@ void HeadUpDisplay::drawMissileDisplay(const oo::PList& info) {
     OODrawString((PLAYER != nullptr ? PLAYER->dialTargetName()
                                     : std::optional<std::string>())
                      .value_or(""),
-                 x + sp, y - 1, z1, NSMakeSize(siz.width, siz.height));
+                 static_cast<GLfloat>(x + sp), static_cast<GLfloat>(y - 1), z1,
+                 NSMakeSize(siz.width, siz.height));
   }
 }
 
@@ -3112,9 +3146,10 @@ void HeadUpDisplay::drawStatusLight(const oo::PList& /*info*/) {
   OOAlertCondition alertCondition =
       (PLAYER != nullptr ? PLAYER->getAlertCondition() : OOAlertCondition{});
   GLfloat flash_alpha =
-      0.333 * (2.0f + sin(static_cast<GLfloat>(
-                              UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0) *
-                          2.5f * oo::ToUnderlying(alertCondition)));
+      0.333 *
+      (2.0f + sin(static_cast<GLfloat>(UNIVERSE != nullptr ? UNIVERSE->getTime()
+                                                           : 0.0) *
+                  2.5f * static_cast<float>(oo::ToUnderlying(alertCondition))));
 
   switch (alertCondition) {
     case OOAlertCondition::kRed:
@@ -3268,8 +3303,8 @@ void HeadUpDisplay::drawClock(const oo::PList& info) {
   itemColor[3] *= overallAlpha;
 
   OOGL(glColor4f(itemColor[0], itemColor[1], itemColor[2], itemColor[3]));
-  OODrawString((PLAYER != nullptr ? PLAYER->dial_clock() : std::string()), x, y,
-               z1, siz);
+  OODrawString((PLAYER != nullptr ? PLAYER->dial_clock() : std::string()),
+               static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz);
 }
 
 void HeadUpDisplay::drawPrimedEquipment(const oo::PList& info) {
@@ -3319,7 +3354,7 @@ void HeadUpDisplay::drawPrimedEquipment(const oo::PList& info) {
                            : std::optional<std::string>());
     OODrawString(OOExpandKey("equipment-primed-hud", equipmentName)
                      .value_or(std::string()),
-                 x, y, z1, size);
+                 static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, size);
   } else {
     std::ptrdiff_t negative = (lines - 1) / 2;
     std::ptrdiff_t positive = lines / 2;
@@ -3327,15 +3362,17 @@ void HeadUpDisplay::drawPrimedEquipment(const oo::PList& info) {
       if (i >= -(pec) / 2 && i <= (pec + 1) / 2) {
         // don't display loops if we have more equipment than lines
         // instead compact the display towards its centre
-        GLfloat alphaScale = 1.0 / ((i < 0) ? (1.0 - i) : (1.0 + i));
+        GLfloat alphaScale = 1.0 / ((i < 0) ? (1.0 - static_cast<double>(i))
+                                            : (1.0 + static_cast<double>(i)));
         OOGL(glColor4f(itemColor[0], itemColor[1], itemColor[2],
                        itemColor[3] * alphaScale));
         OODrawString((PLAYER != nullptr ? PLAYER->primedEquipmentName(i)
                                         : std::optional<std::string>())
                          .value_or(""),
-                     x, y, z1, size);
+                     static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                     size);
       }
-      y = static_cast<std::ptrdiff_t>(y - (size.height));
+      y = static_cast<std::ptrdiff_t>(static_cast<double>(y) - (size.height));
     }
   }
 }
@@ -3378,12 +3415,14 @@ void HeadUpDisplay::drawASCTarget(const oo::PList& info) {
     OODrawStringAligned((PLAYER != nullptr ? PLAYER->compassTargetLabel()
                                            : std::optional<std::string>())
                             .value_or(""),
-                        x, y, z1, size, true);
+                        static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                        size, true);
   } else {
     OODrawStringAligned((PLAYER != nullptr ? PLAYER->compassTargetLabel()
                                            : std::optional<std::string>())
                             .value_or(""),
-                        x, y, z1, size, false);
+                        static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1,
+                        size, false);
   }
 }
 
@@ -3429,7 +3468,8 @@ void HeadUpDisplay::drawWeaponsOfflineText(const oo::PList& info) {
 
     OOGL(glColor4f(textColor[0], textColor[1], textColor[2], textColor[3]));
     // TODO: some caching required...
-    OODrawString(OO_DESC("weapons-systems-offline"), x, y, z1, siz);
+    OODrawString(OO_DESC("weapons-systems-offline"), static_cast<GLfloat>(x),
+                 static_cast<GLfloat>(y), z1, siz);
   }
 }
 
@@ -3469,23 +3509,24 @@ void HeadUpDisplay::drawFPSInfoCounter(const oo::PList& info) {
   // don't. We prefer the FPS counter to be always visible - Nikos 20100405
   GetRGBAArrayFromInfo(info, textColor);
   OOGL(glColor4f(textColor[0], textColor[1], textColor[2], 1.0f));
-  OODrawString((PLAYER != nullptr ? PLAYER->dial_fpsinfo() : std::string()), x,
-               y, z1, siz);
+  OODrawString((PLAYER != nullptr ? PLAYER->dial_fpsinfo() : std::string()),
+               static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz);
 
 #ifndef NDEBUG
   NSSize siz08 = NSMakeSize(0.8 * siz.width, 0.8 * siz.width);
   std::string collDebugInfo = std::format(
       "{} - {}", PLAYER != nullptr ? PLAYER->dial_objinfo() : std::string(),
       UNIVERSE != nullptr ? UNIVERSE->collisionDescription() : std::string());
-  OODrawString(collDebugInfo, x, y - siz.height, z1, siz);
+  OODrawString(collDebugInfo, static_cast<GLfloat>(x), y - siz.height, z1, siz);
 
-  OODrawString(positionInfo, x, y - 1.8 * siz.height, z1, siz08);
+  OODrawString(positionInfo, static_cast<GLfloat>(x), y - 1.8 * siz.height, z1,
+               siz08);
 
   std::string timeAccelerationFactorInfo = std::format(
       "TAF: {}{:.2f}", OO_DESC("multiplication-sign").c_str(),
       (UNIVERSE != nullptr ? UNIVERSE->getTimeAccelerationFactor() : 0.0));
-  OODrawString(timeAccelerationFactorInfo, x, y - 3.2 * siz08.height, z1,
-               siz08);
+  OODrawString(timeAccelerationFactorInfo, static_cast<GLfloat>(x),
+               y - 3.2 * siz08.height, z1, siz08);
 #endif
 }
 
@@ -3573,30 +3614,30 @@ void HeadUpDisplay::drawScoopStatus(const oo::PList& info) {
   OOGLBEGIN(GL_QUADS);
   // section 1
   GLColorWithOverallAlpha(s1c, overallAlpha);
-  glVertex3f(x, y + h1, z1);
-  glVertex3f(x - w2, y + h2, z1);
-  glVertex3f(x, y + h3, z1);
-  glVertex3f(x + w2, y + h2, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) + h1, z1);
+  glVertex3f(static_cast<GLfloat>(x) - w2, static_cast<GLfloat>(y) + h2, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) + h3, z1);
+  glVertex3f(static_cast<GLfloat>(x) + w2, static_cast<GLfloat>(y) + h2, z1);
   // section 2
   GLColorWithOverallAlpha(s2c, overallAlpha);
-  glVertex3f(x, y - h1, z1);
-  glVertex3f(x - w4, y + h1, z1);
-  glVertex3f(x - w4, y + h2, z1);
-  glVertex3f(x, y, z1);
-  glVertex3f(x, y - h1, z1);
-  glVertex3f(x + w4, y + h1, z1);
-  glVertex3f(x + w4, y + h2, z1);
-  glVertex3f(x, y, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) - h1, z1);
+  glVertex3f(static_cast<GLfloat>(x) - w4, static_cast<GLfloat>(y) + h1, z1);
+  glVertex3f(static_cast<GLfloat>(x) - w4, static_cast<GLfloat>(y) + h2, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) - h1, z1);
+  glVertex3f(static_cast<GLfloat>(x) + w4, static_cast<GLfloat>(y) + h1, z1);
+  glVertex3f(static_cast<GLfloat>(x) + w4, static_cast<GLfloat>(y) + h2, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1);
   // section 3
   GLColorWithOverallAlpha(s3c, overallAlpha);
-  glVertex3f(x, y - h4, z1);
-  glVertex3f(x - w2, y - h2, z1);
-  glVertex3f(x - w2, y - h1, z1);
-  glVertex3f(x, y - h2, z1);
-  glVertex3f(x, y - h4, z1);
-  glVertex3f(x + w2, y - h2, z1);
-  glVertex3f(x + w2, y - h1, z1);
-  glVertex3f(x, y - h2, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) - h4, z1);
+  glVertex3f(static_cast<GLfloat>(x) - w2, static_cast<GLfloat>(y) - h2, z1);
+  glVertex3f(static_cast<GLfloat>(x) - w2, static_cast<GLfloat>(y) - h1, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) - h2, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) - h4, z1);
+  glVertex3f(static_cast<GLfloat>(x) + w2, static_cast<GLfloat>(y) - h2, z1);
+  glVertex3f(static_cast<GLfloat>(x) + w2, static_cast<GLfloat>(y) - h1, z1);
+  glVertex3f(static_cast<GLfloat>(x), static_cast<GLfloat>(y) - h2, z1);
   OOGLEND();
 }
 
@@ -4473,7 +4514,7 @@ void OODrawPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y,
 
   GLfloat cx = x;
   int tl = tec + 1;
-  GLfloat ce1 = 1.0f - 0.125f * eco;
+  GLfloat ce1 = 1.0f - 0.125f * static_cast<float>(eco);
 
   OOSetOpenGLState(OOOpenGLStateID::kOverlay);
 
@@ -4682,7 +4723,8 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
         if (i % 10 == 0) {
           w1 = wdiv * 4;
           drawdiv = true;
-          if (nonlinearScannerFunc((i + 5) * 1000, zoom, hh) -
+          if (nonlinearScannerFunc(static_cast<GLfloat>((i + 5) * 1000), zoom,
+                                   hh) -
                   nonlinearScannerFunc(i * 1000.0, zoom, hh) >
               2) {
             drawdiv5 = true;
@@ -4692,7 +4734,8 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
         } else if (i % 5 == 0) {
           w1 = wdiv * 2;
           drawdiv = drawdiv5;
-          if (nonlinearScannerFunc((i + 1) * 1000, zoom, hh) -
+          if (nonlinearScannerFunc(static_cast<GLfloat>((i + 1) * 1000), zoom,
+                                   hh) -
                   nonlinearScannerFunc(i * 1000.0, zoom, hh) >
               2) {
             drawdiv1 = true;
@@ -4721,7 +4764,7 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
       }
 
       for (i = ii; 2.0 * hdiv * i < siz.height; i += ii) {
-        h1 = i * hdiv;
+        h1 = static_cast<GLfloat>(i) * hdiv;
         w1 = wdiv;
         if (i % 5 == 0) w1 = w1 * 2.5;
         if (i % 10 == 0) w1 = w1 * 2.0;

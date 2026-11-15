@@ -360,7 +360,7 @@ std::string SizeString(size_t size) {
     suffix = "GiB";
   }
 
-  float unit = 1 << (magnitude * 10);
+  float unit = static_cast<float>(1 << (magnitude * 10));
   float sizef = static_cast<float>(size) / unit;
   sizef = round(sizef * 100.0f) / 100.f;
 

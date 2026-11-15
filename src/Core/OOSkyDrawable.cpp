@@ -337,7 +337,7 @@ void OOSkyDrawable::setUpNebulae(OOColor* color1, OOColor* color2,
     while ((i < _nebulaCount) && (randf() < nebulaClusterFactor)) {
       // Select size.
       r1 = 1 + (ranrot_rand() & 15);
-      size = nebulaScale * r1 * SKY_ELEMENT_SCALE_FACTOR;
+      size = nebulaScale * static_cast<float>(r1) * SKY_ELEMENT_SCALE_FACTOR;
 
       // Calculate centre position and offset to first corner.
       basis_vectors_from_quaternion(q, &vi, &vj, &vk);
