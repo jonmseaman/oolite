@@ -563,7 +563,8 @@ std::optional<std::string> OOTimeProfileEntry::description() {
     } else {
       return std::format(
           "{}: {} times, total {:g} ms, avg {:g} ms, max {:g} ms", function,
-          _hitCount, totalTimeSum, totalTimeSum / _hitCount, totalTimeMax);
+          _hitCount, totalTimeSum, totalTimeSum / static_cast<float>(_hitCount),
+          totalTimeMax);
     }
   } else {
     if (_hitCount == 1) {
@@ -574,7 +575,8 @@ std::optional<std::string> OOTimeProfileEntry::description() {
           "{}: {} times, total {:g} ms (self {:g} ms), avg {:g} ms (self {:g} "
           "ms), max {:g} ms, max self {:g} ms",
           function, _hitCount, totalTimeSum, selfTimeSum,
-          totalTimeSum / _hitCount, selfTimeSum / _hitCount, totalTimeMax,
+          totalTimeSum / static_cast<float>(_hitCount),
+          selfTimeSum / static_cast<float>(_hitCount), totalTimeMax,
           selfTimeMax);
     }
   }
@@ -589,11 +591,11 @@ double OOTimeProfileEntry::totalTimeSum() { return _totalTimeSum; }
 double OOTimeProfileEntry::selfTimeSum() { return _selfTimeSum; }
 
 double OOTimeProfileEntry::totalTimeAverage() {
-  return _hitCount ? (_totalTimeSum / _hitCount) : 0.0;
+  return _hitCount ? (_totalTimeSum / static_cast<double>(_hitCount)) : 0.0;
 }
 
 double OOTimeProfileEntry::selfTimeAverage() {
-  return _hitCount ? (_selfTimeSum / _hitCount) : 0.0;
+  return _hitCount ? (_selfTimeSum / static_cast<double>(_hitCount)) : 0.0;
 }
 
 double OOTimeProfileEntry::totalTimeMax() { return _totalTimeMax; }

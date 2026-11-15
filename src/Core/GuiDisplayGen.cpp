@@ -186,11 +186,11 @@ GuiDisplayGen::GuiDisplayGen() {
   max_alpha = 1.0;
 
   pixel_text_size =
-      NSMakeSize(0.9f * pixel_row_height,
+      NSMakeSize(0.9f * static_cast<float>(pixel_row_height),
                  pixel_row_height);  // main gui has 18x20 characters
 
-  pixel_title_size =
-      NSMakeSize(pixel_row_height * 1.75f, pixel_row_height * 1.5f);
+  pixel_title_size = NSMakeSize(static_cast<float>(pixel_row_height) * 1.75f,
+                                static_cast<float>(pixel_row_height) * 1.5f);
 
   int stops[6] = {0, 192, 256, 320, 384, 448};
   unsigned i;
@@ -240,8 +240,8 @@ GuiDisplayGen::GuiDisplayGen(NSSize gui_size, int gui_cols, int gui_rows,
 
   pixel_text_size = NSMakeSize(pixel_row_height, pixel_row_height);
 
-  pixel_title_size =
-      NSMakeSize(pixel_row_height * 1.75f, pixel_row_height * 1.5f);
+  pixel_title_size = NSMakeSize(static_cast<float>(pixel_row_height) * 1.75f,
+                                static_cast<float>(pixel_row_height) * 1.5f);
 
   unsigned i;
 
@@ -280,8 +280,8 @@ void GuiDisplayGen::resizeWithPixelSize(
   pixel_row_start = gui_row_start;  // first position down the page...
 
   pixel_text_size = NSMakeSize(pixel_row_height, pixel_row_height);
-  pixel_title_size =
-      NSMakeSize(pixel_row_height * 1.75f, pixel_row_height * 1.5f);
+  pixel_title_size = NSMakeSize(static_cast<float>(pixel_row_height) * 1.75f,
+                                static_cast<float>(pixel_row_height) * 1.5f);
 
   rowRange = NSMakeRange(0, n_rows);
   clear();
@@ -304,8 +304,9 @@ void GuiDisplayGen::resizeTo(NSSize gui_size, int csize,
   currentRow = n_rows - 1;  // first position down the page...
 
   if (title.has_value())
-    pixel_row_start = static_cast<int>(
-        2.75f * csize + 0.5f * (gui_size.height - n_rows * csize));
+    pixel_row_start =
+        static_cast<int>(2.75f * static_cast<float>(csize) +
+                         0.5f * (gui_size.height - n_rows * csize));
   else
     pixel_row_start =
         static_cast<int>(csize + 0.5f * (gui_size.height - n_rows * csize));
@@ -326,7 +327,8 @@ void GuiDisplayGen::resizeTo(NSSize gui_size, int csize,
   }
 
   pixel_text_size = NSMakeSize(csize, csize);
-  pixel_title_size = NSMakeSize(csize * 1.75f, csize * 1.5f);
+  pixel_title_size = NSMakeSize(static_cast<float>(csize) * 1.75f,
+                                static_cast<float>(csize) * 1.5f);
 
   OO_LOG("gui.reset", "gui {} reset to rows:{} columns:{} start:{}",
          std::format("<GuiDisplayGen {}>", oo::str::pointerDescription(this)),
@@ -721,7 +723,7 @@ std::optional<std::string> GuiDisplayGen::reflowTextForMFD(
         if (OORectFromString(accum, 0.0f, 0.0f, chSize).size.width +
                 OORectFromString(words[first + 1], 0.0f, 0.0f, chSize)
                     .size.width >
-            limit) {
+            static_cast<double>(limit)) {
           // can't fit next word on this line
           // (-whitespaceCharacterSet trimming: accum holds tokens and spaces,
           // no newlines)
@@ -1169,7 +1171,9 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
     } else {
       // three or more
       pageCount = static_cast<std::size_t>(
-          ceil(static_cast<float>(eqptCount - i) / (itemsPerColumn * 2)) + 2);
+          ceil(static_cast<float>(eqptCount - i) /
+               (static_cast<float>(itemsPerColumn * 2))) +
+          2);
       statusPage = static_cast<std::ptrdiff_t>(
           std::clamp<std::int64_t>(statusPage, 1, pageCount));
       start = (statusPage == 1) ? 0 : (statusPage - 1) * itemsPerColumn * 2 + 2;
@@ -1260,12 +1264,14 @@ void GuiDisplayGen::drawEquipmentList(const oo::PList& eqptList, GLfloat z) {
 
     if (i - start < itemsPerColumn) {
       OODrawString(name, -220,
-                   firstY - 16 * static_cast<std::ptrdiff_t>(i - start), z,
-                   NSMakeSize(15, 15));
+                   static_cast<GLfloat>(
+                       firstY - 16 * static_cast<std::ptrdiff_t>(i - start)),
+                   z, NSMakeSize(15, 15));
     } else {
       OODrawString(
           name, 50,
-          firstY - 16 * static_cast<std::ptrdiff_t>(i - itemsPerColumn - start),
+          static_cast<GLfloat>(firstY - 16 * static_cast<std::ptrdiff_t>(
+                                                 i - itemsPerColumn - start)),
           z, NSMakeSize(15, 15));
     }
   }
@@ -1490,9 +1496,11 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
     setGLColorFromSetting(kGuiScreenTitleColor, OOColor::redColor().get(),
                           alpha);
 
-    OODrawString(*title, x + pixel_row_center - strsize.width / 2.0,
-                 y + size_in_pixels.height - pixel_title_size.height, z,
-                 titleCharacterSize);
+    OODrawString(
+        *title,
+        x + static_cast<GLfloat>(pixel_row_center) - strsize.width / 2.0,
+        y + size_in_pixels.height - pixel_title_size.height, z,
+        titleCharacterSize);
 
     // draw a horizontal divider
     //
@@ -1598,7 +1606,7 @@ void GuiDisplayGen::drawGLDisplay(GLfloat x, GLfloat y, GLfloat z,
             array.at<std::string>(j);  // -oo_stringAtIndex: ("" for none)
         if (text.size() != 0) {
           isLeftAligned = tabStops[j] >= 0;
-          rowPosition[i].x = llabs(tabStops[j]);
+          rowPosition[i].x = static_cast<double>(llabs(tabStops[j]));
 
           // we don't want to highlight leading space(s) or narrow spaces
           // (\037s)
@@ -2123,10 +2131,11 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
   clipRect = NSMakeRect(
       (viewSize.width - size_in_pixels.width * pixelRatio) / 2.0,
       (viewSize.height + size_in_pixels.height * pixelRatio) / 2.0 -
-          (pixel_title_size.height + 15 + (textRow - 2) * MAIN_GUI_ROW_HEIGHT) *
+          (pixel_title_size.height + 15 +
+           static_cast<double>((textRow - 2) * MAIN_GUI_ROW_HEIGHT)) *
               pixelRatio,
       size_in_pixels.width * pixelRatio,
-      (textRow - 1) * MAIN_GUI_ROW_HEIGHT * pixelRatio);
+      static_cast<OOScalar>((textRow - 1) * MAIN_GUI_ROW_HEIGHT) * pixelRatio);
 
   OOSystemID target = (PLAYER != nullptr ? PLAYER->targetSystemID() : 0);
   double dx, dy;
@@ -2366,7 +2375,7 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
         case OOLongRangeChartMode::kEconomy:
           if (noNova) [[likely]] {
             systemParameter = nearby_systems[i].eco;
-            GLfloat ce1 = 1.0f - 0.125f * systemParameter;
+            GLfloat ce1 = 1.0f - 0.125f * static_cast<float>(systemParameter);
             setGLColorFromSetting(
                 oo::str::format(kGuiChartEconomyUColor, systemParameter),
                 OOColor::colorWithRed(ce1, 1.0f, 0.0f, 1.0f).get(), 1.0);
@@ -2510,8 +2519,9 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
 
   int targetIdx = -1;
   struct saved_system* sys;
-  NSSize chSize = NSMakeSize(pixel_row_height * systemNameScale / zoom,
-                             pixel_row_height * systemNameScale / zoom);
+  NSSize chSize = NSMakeSize(
+      static_cast<GLfloat>(pixel_row_height) * systemNameScale / zoom,
+      static_cast<GLfloat>(pixel_row_height) * systemNameScale / zoom);
 
   double jumpRange =
       MAX_JUMP_RANGE * (PLAYER != nullptr ? PLAYER->dialFuel() : 0.0f);
@@ -2668,24 +2678,28 @@ void GuiDisplayGen::drawStarChart(GLfloat x, GLfloat y, GLfloat z,
                         OOColor::colorWithWhite(0.75, 1.0).get(), alpha);
   OOGLBEGIN(GL_QUADS);
   glVertex3f(x + 0,
-             static_cast<float>(y + size_in_pixels.height -
-                                (textRow - 1) * MAIN_GUI_ROW_HEIGHT -
-                                pixel_title_size.height),
+             static_cast<float>(
+                 y + size_in_pixels.height -
+                 static_cast<double>((textRow - 1) * MAIN_GUI_ROW_HEIGHT) -
+                 pixel_title_size.height),
              z);
   glVertex3f(x + size_in_pixels.width,
-             static_cast<GLfloat>(y + size_in_pixels.height -
-                                  (textRow - 1) * MAIN_GUI_ROW_HEIGHT -
-                                  pixel_title_size.height),
+             static_cast<GLfloat>(
+                 y + size_in_pixels.height -
+                 static_cast<double>((textRow - 1) * MAIN_GUI_ROW_HEIGHT) -
+                 pixel_title_size.height),
              z);
   glVertex3f(x + size_in_pixels.width,
-             static_cast<GLfloat>(y + size_in_pixels.height -
-                                  (textRow - 1) * MAIN_GUI_ROW_HEIGHT -
-                                  pixel_title_size.height - 2),
+             static_cast<GLfloat>(
+                 y + size_in_pixels.height -
+                 static_cast<double>((textRow - 1) * MAIN_GUI_ROW_HEIGHT) -
+                 pixel_title_size.height - 2),
              z);
   glVertex3f(x + 0,
-             static_cast<GLfloat>(y + size_in_pixels.height -
-                                  (textRow - 1) * MAIN_GUI_ROW_HEIGHT -
-                                  pixel_title_size.height - 2),
+             static_cast<GLfloat>(
+                 y + size_in_pixels.height -
+                 static_cast<double>((textRow - 1) * MAIN_GUI_ROW_HEIGHT) -
+                 pixel_title_size.height - 2),
              z);
   OOGLEND();
 }

@@ -150,8 +150,9 @@ static JSValue ShipGroupGetProperty(OOJS_GETTER_ARGS) {
     }
 
     case kCount:
-      return JS_NewNumber(context,
-                          (cxxGroup != nullptr) ? cxxGroup->count() : 0);
+      return JS_NewNumber(context, (cxxGroup != nullptr)
+                                       ? static_cast<double>(cxxGroup->count())
+                                       : 0);
 
     default:
       OOJSReportBadPropertySelector(context, thisObj, magic,

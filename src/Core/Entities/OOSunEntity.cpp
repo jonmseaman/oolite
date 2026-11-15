@@ -415,7 +415,8 @@ void OOSunEntity::drawOpaqueParts() {
     // FIXME: use vertex arrays
     OOGL(glDisable(GL_BLEND));
     OOGLBEGIN(GL_TRIANGLE_FAN);
-    GLDrawBallBillboard(effective_radius, steps, sqrt_zero_distance);
+    GLDrawBallBillboard(effective_radius, static_cast<GLfloat>(steps),
+                        sqrt_zero_distance);
     OOGLEND();
     OOGL(glEnable(GL_BLEND));
 

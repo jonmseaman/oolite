@@ -461,9 +461,9 @@ void StickProfileScreen::graphProfile(GLfloat alpha, Vector at, NSSize size) {
   OOGL(glColor4f(0.9, 0.9, 0.9, alpha));
   OOGL(GLScaledLineWidth(2.0f));
   OOGLBEGIN(GL_LINE_STRIP);
-  for (i = 0; i <= size.width - 20; i++) {
+  for (i = 0; static_cast<double>(i) <= size.width - 20; i++) {
     glVertex3f(
-        at.x + i + 10,
+        at.x + static_cast<OOScalar>(i) + 10,
         at.y + 10 +
             (size.height - 20) *
                 profile->rawValue((static_cast<float>(i)) / (size.width - 20)),

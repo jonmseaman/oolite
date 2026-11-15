@@ -196,7 +196,7 @@ void OOExplosionCloudEntity::update(OOTimeDelta delta_t) {
   OOParticleSystem::update(delta_t);
 
   // Fade out.
-  GLfloat fadeRate = _count * _brightnessMult / 25.0;
+  GLfloat fadeRate = static_cast<float>(_count) * _brightnessMult / 25.0;
   unsigned i, count = _count;
   GLfloat(*particleColor)[4] = _particleColor;
 

@@ -83,7 +83,9 @@ unsigned PlayerEntity::score() { return ship_kills; }
 
 void PlayerEntity::setScore(unsigned value) { ship_kills = value; }
 
-double PlayerEntity::creditBalance() { return 0.1 * credits; }
+double PlayerEntity::creditBalance() {
+  return 0.1 * static_cast<double>(credits);
+}
 
 void PlayerEntity::setCreditBalance(double value) {
   credits = OODeciCreditsFromDouble(value * 10.0);

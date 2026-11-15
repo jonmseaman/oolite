@@ -3198,7 +3198,7 @@ void ShipEntity::respondToAttackFrom(Entity* from, Entity* other) {
                                       : static_cast<OOShipGroup*>(nullptr))) {
         // we are in the same group, do we forgive you?
         // criminals are less likely to forgive
-        if (randf() < (0.8 - (bounty / 100))) {
+        if (randf() < (0.8 - (static_cast<double>(bounty / 100)))) {
           // whole hundreds, as before
           // it was an honest mistake, lets get on with it
           return;
@@ -8799,7 +8799,7 @@ void ShipEntity::becomeExplosion() {
               // must be sub-wreckage here
               n_wreckage = (mass > 600.0 && randf() < 0.2) ? 2 : 0;
             } else {
-              n_wreckage = (n_alloys < maxWrecks)
+              n_wreckage = (n_alloys < static_cast<GLfloat>(maxWrecks))
                                ? static_cast<std::size_t>(
                                      floorf(randf() * (n_alloys + 2)))
                                : maxWrecks;
@@ -8810,7 +8810,8 @@ void ShipEntity::becomeExplosion() {
             Vector r1 = (octree ? octree->randomPoint() : kZeroVector);
             Vector dir = quaternion_rotate_vector(normalOrientation(), r1);
             HPVector rpos = HPvector_add(vectorToHPVector(dir), xposition);
-            GLfloat lifetime = 750.0 * randf() + 250.0 * i + 100.0;
+            GLfloat lifetime =
+                750.0 * randf() + 250.0 * static_cast<double>(i) + 100.0;
             ::ShipEntity* wreck =
                 (UNIVERSE != nullptr
                      ? UNIVERSE->addWreckageFrom(this, "wreckage", rpos, 1.0,
@@ -10716,7 +10717,8 @@ bool ShipEntity::fireWeapon(OOWeaponType weapon_type, OOWeaponFacing direction,
     multiplier = laserPortOffset(direction).size();
   }
 
-  if (energy <= weapon_energy_use * multiplier) return false;
+  if (energy <= weapon_energy_use * static_cast<GLfloat>(multiplier))
+    return false;
   if (shotTime() < weapon_recharge_rate) return false;
   if (!(weapon_type != nullptr ? weapon_type->isTurretLaser()
                                : false)) {  // thargoid laser may just pick
@@ -10741,22 +10743,26 @@ bool ShipEntity::fireWeapon(OOWeaponType weapon_type, OOWeaponFacing direction,
   }
 
   if (fired) {
-    energy -= weapon_energy_use * multiplier;
+    energy -= weapon_energy_use * static_cast<GLfloat>(multiplier);
     switch (direction) {
       case OOWeaponFacing::kForward:
-        forward_weapon_temp += weapon_shot_temperature * multiplier;
+        forward_weapon_temp +=
+            weapon_shot_temperature * static_cast<GLfloat>(multiplier);
         break;
 
       case OOWeaponFacing::kAft:
-        aft_weapon_temp += weapon_shot_temperature * multiplier;
+        aft_weapon_temp +=
+            weapon_shot_temperature * static_cast<GLfloat>(multiplier);
         break;
 
       case OOWeaponFacing::kPort:
-        port_weapon_temp += weapon_shot_temperature * multiplier;
+        port_weapon_temp +=
+            weapon_shot_temperature * static_cast<GLfloat>(multiplier);
         break;
 
       case OOWeaponFacing::kStarboard:
-        starboard_weapon_temp += weapon_shot_temperature * multiplier;
+        starboard_weapon_temp +=
+            weapon_shot_temperature * static_cast<GLfloat>(multiplier);
         break;
 
       case OOWeaponFacing::kNone:
@@ -12884,8 +12890,8 @@ void ShipEntity::markAsOffender(int offence_value, OOLegalStatusReason reason) {
 
       JSContext* context = OOJSAcquireContext();
 
-      OOJSVal amountVal =
-          OOJSValueFromDouble(context, (bounty | offence_value) - bounty);
+      OOJSVal amountVal = OOJSValueFromDouble(
+          context, static_cast<double>((bounty | offence_value) - bounty));
 
       bounty |= offence_value;  // can't set the new bounty until the size of
                                 // the change is known
@@ -13544,7 +13550,10 @@ void ShipEntity::interpretAIMessage(const std::string& ms) {
         if (rescueShip != nullptr)
           rescueShip->setBounty(
               static_cast<OOCreditsQuantity>(
-                  (rescueShip != nullptr ? rescueShip->getBounty() : 0) * 0.80),
+                  (rescueShip != nullptr
+                       ? static_cast<double>(rescueShip->getBounty())
+                       : 0) *
+                  0.80),
               OOLegalStatusReason::kAssistingPolice);  // lower bounty by 20%
       } else {
         sendExpandedMessage("[thanks-for-assist]", rescueShip);

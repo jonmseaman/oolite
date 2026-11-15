@@ -803,8 +803,9 @@ void MyOpenGLView::initSplashScreen() {
     pixelDensity = 1.0f;
   }
 
-  glViewport(0, 0, static_cast<GLsizei>(dest.w * pixelDensity),
-             static_cast<GLsizei>(dest.h * pixelDensity));
+  glViewport(0, 0,
+             static_cast<GLsizei>(static_cast<float>(dest.w) * pixelDensity),
+             static_cast<GLsizei>(static_cast<float>(dest.h) * pixelDensity));
 
   glEnable(GL_TEXTURE_2D);
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -1138,8 +1139,9 @@ NSSize MyOpenGLView::loadWindowSize() {
   oo::Defaults& defaults = oo::Defaults::standard();
   if (!defaults.object("window_width").isNull() &&
       !defaults.object("window_height").isNull()) {
-    windowSize = NSMakeSize(defaults.integerForKey("window_width"),
-                            defaults.integerForKey("window_height"));
+    windowSize = NSMakeSize(
+        static_cast<double>(defaults.integerForKey("window_width")),
+        static_cast<double>(defaults.integerForKey("window_height")));
   } else {
     windowSize =
         NSMakeSize(WINDOW_SIZE_DEFAULT_WIDTH, WINDOW_SIZE_DEFAULT_HEIGHT);

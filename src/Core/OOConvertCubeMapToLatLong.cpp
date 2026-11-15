@@ -56,10 +56,10 @@ OOPixMap OOConvertCubeMapToLatLong(OOPixMap sourcePixMap,
 
   OOPixMapDimension x, y;
   uint32_t* pixel = static_cast<uint32_t*>(outPixMap.pixels);
-  float fheight = height;
+  float fheight = static_cast<float>(height);
   float rheight = 1.0f / fheight;
 
-  float halfSize = (sourcePixMap.width - 1) * 0.5f;
+  float halfSize = (static_cast<float>(sourcePixMap.width - 1)) * 0.5f;
   uint8_t* srcBytes = static_cast<uint8_t*>(sourcePixMap.pixels);
 
   // Build tables of sin/cos of longitude.

@@ -372,10 +372,12 @@ void OOPlanetEntity::initFromDictionary(const oo::PList& dictionary,
   // from PlanetEntity.
   int deltaT = static_cast<int>(floor(
       fmod((PLAYER != nullptr ? PLAYER->clockTimeAdjusted() : 0.0), 86400)));
-  quaternion_rotate_about_axis(&orientation, _rotationAxis,
-                               _rotationalVelocity * deltaT);
-  quaternion_rotate_about_axis(&_atmosphereOrientation, kBasisYVector,
-                               _atmosphereRotationalVelocity * deltaT);
+  quaternion_rotate_about_axis(
+      &orientation, _rotationAxis,
+      _rotationalVelocity * static_cast<float>(deltaT));
+  quaternion_rotate_about_axis(
+      &_atmosphereOrientation, kBasisYVector,
+      _atmosphereRotationalVelocity * static_cast<float>(deltaT));
 
 #ifdef OO_DUMP_PLANETINFO
 #define CPROP(PROP)                                                     \

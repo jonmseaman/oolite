@@ -2135,8 +2135,8 @@ OOGUIRow OOOXZManager::showInstallOptions() {
         // be in YYYY-MM-DD format
         const std::string updatedDesc =
             oo::str::split(
-                oo::date::description(
-                    oo::date::dateWithTimeIntervalSince1970(timestamp)),
+                oo::date::description(oo::date::dateWithTimeIntervalSince1970(
+                    static_cast<double>(timestamp))),
                 " ")
                 .front();
 

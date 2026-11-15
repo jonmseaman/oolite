@@ -240,7 +240,8 @@ std::string OOStringFromDeciCredits(OOCreditsQuantity tenthsOfCredits,
           can't happen.
   */
   static bool reentrancyLock;
-  if (reentrancyLock) return std::format("{:0.1f}", tenthsOfCredits * 0.1);
+  if (reentrancyLock)
+    return std::format("{:0.1f}", static_cast<double>(tenthsOfCredits) * 0.1);
 
   reentrancyLock = true;
 

@@ -3790,7 +3790,8 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       controller->setDisplayWidth(modeWidth, modeHeight, modeRefresh);
 
     const std::string displayModeString =
-        screenModeStringForWidth(modeWidth, modeHeight, modeRefresh)
+        screenModeStringForWidth(modeWidth, modeHeight,
+                                 static_cast<float>(modeRefresh))
             .value_or("");
 
     playChangedOption();

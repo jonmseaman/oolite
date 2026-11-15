@@ -442,7 +442,7 @@ void OOPlanetTextureGenerator::loadTexture() {
 
     _info.paleSeaColor = Blend(0.35f, _info.polarSeaColor,
                                Blend(0.7f, _info.seaColor, _info.landColor));
-    float normalScale = (1 << _planetScale);
+    float normalScale = (static_cast<float>(1 << _planetScale));
 #ifndef NDEBUG
     // test-release only, make normalScale adjustable from within user defaults
     {
@@ -461,8 +461,8 @@ void OOPlanetTextureGenerator::loadTexture() {
     Vector norm;
     float q, yN, yS, yW, yE, nearPole;
     GLfloat shade;
-    float rHeight = 1.0f / _height;
-    float fy, fHeight = _height;
+    float rHeight = 1.0f / static_cast<float>(_height);
+    float fy, fHeight = static_cast<float>(_height);
     // The second parameter is the temperature fraction. Most favourable: 1.0f,
     // little ice. Most unfavourable: 0.0f, frozen planet. TODO: make it
     // dependent on ranrot / planetinfo key...
@@ -959,7 +959,7 @@ static bool GenerateFBMNoise3D(OOPlanetTextureGeneratorInfo* info) {
 #if 1
         // fBM
         unsigned octaveMask = 4;
-        float octave = octaveMask;
+        float octave = static_cast<float>(octaveMask);
         octaveMask -= 1;
         float scale = 0.4f;
         float sum = 0;
@@ -1002,7 +1002,7 @@ static void AddNoise(OOPlanetTextureGeneratorInfo* info, float* randomBuffer,
   unsigned x, y;
   unsigned width = info->width, height = info->height;
   int ix, jx, iy, jy;
-  float rr = octave / width;
+  float rr = octave / static_cast<float>(width);
   float fx, fy, qx, qy, rix, rjx, rfinal;
   float* dst = info->fbmBuffer.data();
 
@@ -1010,7 +1010,7 @@ static void AddNoise(OOPlanetTextureGeneratorInfo* info, float* randomBuffer,
     qy = fy * rr;
     iy = fast_floor(qy);
     jy = (iy + 1) & octaveMask;
-    qy = Hermite(qy - iy);
+    qy = Hermite(qy - static_cast<float>(iy));
     iy &= (kRandomBufferSize - 1);
     jy &= (kRandomBufferSize - 1);
 
@@ -1019,7 +1019,7 @@ static void AddNoise(OOPlanetTextureGeneratorInfo* info, float* randomBuffer,
         // first pass: initialise buffers.
         qx = fx * rr;
         ix = fast_floor(qx);
-        qx -= ix;
+        qx -= static_cast<float>(ix);
         ix &= (kRandomBufferSize - 1);
         ixBuffer[x] = ix;
         qxBuffer[x] = Hermite(qx);
@@ -1064,7 +1064,7 @@ static bool GenerateFBMNoise(OOPlanetTextureGeneratorInfo* info) {
   // Generate basic fBM noise.
   unsigned height = info->height;
   unsigned octaveMask = 8 * info->planetAspectRatio;
-  float octave = octaveMask;
+  float octave = static_cast<float>(octaveMask);
   octaveMask -= 1;
   float scale = 0.5f;
 

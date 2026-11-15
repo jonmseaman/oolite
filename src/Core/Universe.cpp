@@ -9365,7 +9365,7 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
 
     std::int64_t c_time =
         ship_seed.a * 0x10000 + ship_seed.b * 0x100 + ship_seed.c;
-    double ship_sold_time = reference_time + c_time;
+    double ship_sold_time = static_cast<double>(reference_time + c_time);
 
     if (ship_sold_time < 0) ship_sold_time += 0x1000000;  // wraparound
 
@@ -9548,11 +9548,13 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
             eqTechLevel = std::min(eqTechLevel, static_cast<OOTechLevelID>(15));
 
             // Higher tech items are rarer!
-            if (randf() * (eqTechLevel - techlevel) < 1.0) {
+            if (randf() * (static_cast<float>(eqTechLevel - techlevel)) < 1.0) {
               // All included equip has a 10% discount.
               eqPrice = static_cast<OOCreditsQuantity>(
-                  eqPrice *
-                  ((tech_price_boost + eqTechLevel - techlevel) * 90 / 100));
+                  static_cast<float>(eqPrice) *
+                  ((tech_price_boost + static_cast<float>(eqTechLevel) -
+                    static_cast<float>(techlevel)) *
+                   90 / 100));
             } else {
               break;  // Bar this upgrade.
             }
@@ -9770,7 +9772,8 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
       }
       if (price > base_price) {
         price = static_cast<OOCreditsQuantity>(
-            base_price + cunningFee(price - base_price, 0.05));
+            static_cast<double>(base_price) +
+            cunningFee(static_cast<double>(price - base_price), 0.05));
       }
 
       shortShipDescription +=
@@ -10050,8 +10053,9 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
 
   // 10% discount for second hand value, steeper reduction if worse than
   // standard.
-  extra_equipment_value = static_cast<std::int64_t>(
-      extra_equipment_value * (extra_equipment_value < 0 ? 1.4 : 0.9));
+  extra_equipment_value =
+      static_cast<std::int64_t>(static_cast<double>(extra_equipment_value) *
+                                (extra_equipment_value < 0 ? 1.4 : 0.9));
 
   // we'll return at least the scrap value
   // TODO: calculate scrap value based on the size of the ship.
@@ -10088,7 +10092,7 @@ std::optional<std::string> Universe::brochureDescriptionWithDictionary(
   }
 
   // speed
-  float top_speed = dict.get<int>("max_flight_speed");
+  float top_speed = static_cast<float>(dict.get<int>("max_flight_speed"));
   desc += std::format(" Top speed {:.3f}LS.", 0.001 * top_speed);
 
   // passenger berths
