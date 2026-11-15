@@ -75,7 +75,7 @@ constexpr double GLYPH_SCALE_FACTOR =
     0.13;  // 0.13 is an inherited magic number
 #define IDENTIFY_SCANNER_LOLLIPOPS (0 && OOLITE_DEBUG)
 
-#define NOT_DEFINED INFINITY
+constexpr auto NOT_DEFINED = INFINITY;
 
 /* Convenience macros to make set-colour-or-default quicker. 'info' must be the
  * configuration (an oo::PList) and 'alpha' must be the overall alpha or these
