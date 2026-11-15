@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 
 #include "OOOpenGLMatrixManager.h"
 
+#include <numbers>
 #include <utility>
 
 #include "MyOpenGLView.h"
@@ -226,7 +227,7 @@ void OOOpenGLMatrixManager::orthoLeft(double l, double r, double b, double t,
 void OOOpenGLMatrixManager::perspectiveFovy(double fovy, double aspect,
                                             double zNear, double zFar) {
   if (aspect == 0.0 || zNear == zFar) return;
-  double f = 1.0 / tan(M_PI * fovy / 360);
+  double f = 1.0 / tan(std::numbers::pi * fovy / 360);
   multProjection(OOMatrixConstruct(f / aspect, 0.0, 0.0, 0.0, 0.0, f, 0.0, 0.0,
                                    0.0, 0.0, (zFar + zNear) / (zNear - zFar),
                                    -1.0, 0.0, 0.0,

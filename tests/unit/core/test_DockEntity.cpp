@@ -13,6 +13,7 @@
 */
 
 #include <cmath>
+#include <numbers>
 #include <string>
 
 #include "DockEntity.h"
@@ -183,7 +184,7 @@ OO_TEST(isOffCentre) {
     OO_CHECK((dock != nullptr ? dock->isOffCentre() : false));
     if (dock != nullptr) dock->setPosition(kZeroHPVector);
     Quaternion q = kIdentityQuaternion;
-    quaternion_rotate_about_y(&q, M_PI_2);
+    quaternion_rotate_about_y(&q, std::numbers::pi / 2);
     if (dock != nullptr) dock->setOrientation(q);
     OO_CHECK((dock != nullptr ? dock->isOffCentre() : false));
   }

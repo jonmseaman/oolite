@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 #include <format>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -443,13 +444,13 @@ static JSValue StationSetProperty(OOJS_SETTER_ARGS) {
       if (JS_ToFloat64(context, &fValue, value) == 0) {
         /*				if (fValue < -2.0)  fValue = -2.0;
                                         if (fValue > 2.0)  fValue = 2.0;
-           // clamping to -2.0...2.0 gives us ±M_PI actual maximum rotation
-                                        [entity setRoll:fValue]; */
+           // clamping to -2.0...2.0 gives us ±std::numbers::pi actual maximum
+           rotation [entity setRoll:fValue]; */
         // use setRawRoll to make the units here equal to those in kShip_roll
-        if (fValue < -M_PI)
-          fValue = -M_PI;
-        else if (fValue > M_PI)
-          fValue = M_PI;
+        if (fValue < -std::numbers::pi)
+          fValue = -std::numbers::pi;
+        else if (fValue > std::numbers::pi)
+          fValue = std::numbers::pi;
         if (entity != nullptr) entity->setRawRoll(fValue);
         return JS_UNDEFINED;
       }

@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #include <format>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -715,8 +716,8 @@ void DockEntity::addShipToShipsOnApproach(::ShipEntity* ship) {
   // ship ID)
   int offset_id = (ship != nullptr ? ship->entityPersonalityInt() : GLint{}) &
                   0xf;  // 16  point compass
-  double c = cos(offset_id * M_PI * ONE_EIGHTH);
-  double s = sin(offset_id * M_PI * ONE_EIGHTH);
+  double c = cos(offset_id * std::numbers::pi * ONE_EIGHTH);
+  double s = sin(offset_id * std::numbers::pi * ONE_EIGHTH);
 
   // test if this points at the ship
   HPVector point1 = absolutePositionForSubentity();
@@ -777,8 +778,8 @@ void DockEntity::addShipToShipsOnApproach(::ShipEntity* ship) {
           ((ship != nullptr ? ship->entityPersonalityInt() : GLint{}) &
            0xf00) >>
           8;  // 16  point step position
-      float c2 = cos(offset_id2 * M_PI * ONE_EIGHTH);
-      float s2 = sin(offset_id2 * M_PI * ONE_EIGHTH);
+      float c2 = cos(offset_id2 * std::numbers::pi * ONE_EIGHTH);
+      float s2 = sin(offset_id2 * std::numbers::pi * ONE_EIGHTH);
       float ssize = std::max(port_depth, 1500.0f);
       rx += c2 * ssize;
       ry += s2 * ssize;
@@ -1176,7 +1177,8 @@ void DockEntity::launchShip(::ShipEntity* ship) {
       (bb.max.x - bb.min.x < bb.max.y - bb.min.y)) {
     quaternion_rotate_about_axis(
         &q1, launchVector,
-        M_PI * 0.5);  // to account for the slot being at 90 degrees to vertical
+        std::numbers::pi *
+            0.5);  // to account for the slot being at 90 degrees to vertical
   }
   if (ship != nullptr) ship->setNormalOrientation(q1);
   // launch position

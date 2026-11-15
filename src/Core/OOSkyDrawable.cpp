@@ -29,6 +29,7 @@ SOFTWARE.
 #include <algorithm>
 #include <format>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <utility>
 #include <vector>
@@ -360,7 +361,7 @@ void OOSkyDrawable::setUpNebulae(OOColor* color1, OOColor* color2,
       offset = vector_multiply_scalar(vector_add(vi, vj), 0.5f * size);
 
       // Rotate vi and vj by a random angle
-      r2 = randf() * M_PI * 2.0;
+      r2 = randf() * std::numbers::pi * 2.0;
       quaternion_rotate_about_axis(&q, vk, r2);
       vi = vector_right_from_quaternion(q);
       vj = vector_up_from_quaternion(q);

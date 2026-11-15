@@ -26,13 +26,14 @@ MA 02110-1301, USA.
 
 #include <cmath>
 #include <format>
+#include <numbers>
 #include <string>
 
 #include "OOFunctionAttributes.h"
 #include "OOLogging.h"  // IWYU pragma: keep: used only without NDEBUG or with OO_CHECK_GL_HEAVY
 #include "OOMacroOpenGL.h"
-// M_PI: Windows' <math.h> leaves it out unless _USE_MATH_DEFINES is set, and
-// OOMathsBase.h supplies it there.
+// std::numbers::pi: Windows' <math.h> leaves it out unless _USE_MATH_DEFINES is
+// set, and OOMathsBase.h supplies it there.
 #include "OOMathsBase.h"               // IWYU pragma: keep
 #include "OOOpenGLExtensionManager.h"  // IWYU pragma: keep: used only without NDEBUG
 #include "oofnd/Log.hpp"
@@ -141,10 +142,11 @@ void GLDrawBallBillboard(GLfloat radius, GLfloat step, GLfloat z_distance) {
   OO_ENTER_OPENGL();
 
   r = radius * z_distance / sqrt(z_distance * z_distance - radius * radius);
-  delta = step * M_PI / 180.0f;  // Convert step from degrees to radians
+  delta =
+      step * std::numbers::pi / 180.0f;  // Convert step from degrees to radians
 
   glVertex3i(0, 0, 0);
-  for (i = 0; i < (M_PI * 2.0); i += delta) {
+  for (i = 0; i < (std::numbers::pi * 2.0); i += delta) {
     s = r * sin(i);
     c = r * cos(i);
     glVertex3f(s, c, 0.0);
@@ -161,9 +163,9 @@ static void GLDrawOvalPoints(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
 
   OO_ENTER_OPENGL();
 
-  delta = step * M_PI / 180.0f;
+  delta = step * std::numbers::pi / 180.0f;
 
-  for (theta = 0.0f; theta < (2.0f * M_PI); theta += delta) {
+  for (theta = 0.0f; theta < (2.0f * std::numbers::pi); theta += delta) {
     glVertex3f(x + ww * sin(theta), y + hh * cos(theta), z);
   }
   glVertex3f(x, y + hh, z);

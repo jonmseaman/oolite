@@ -33,6 +33,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -192,11 +193,11 @@ OO_TEST(slice2AccessorsAndViewSettings) {
 
     // FOV: stored as tan(half the angle); in degrees or as that fraction.
     view->setFov(60.0f, false);
-    OO_CHECK(Near(view->fov(true), std::tan(30.0 * M_PI / 180.0)));
+    OO_CHECK(Near(view->fov(true), std::tan(30.0 * std::numbers::pi / 180.0)));
     OO_CHECK(Near(view->fov(false), 60.0));
     view->setFov(0.5f, true);
     OO_CHECK(Near(view->fov(true), 0.5));
-    OO_CHECK(Near(view->fov(false), 2.0 * std::atan(0.5) * 180.0 / M_PI));
+    OO_CHECK(Near(view->fov(false), 2.0 * std::atan(0.5) * 180.0 / std::numbers::pi));
 
     view->setMsaa(true);
     OO_CHECK(view->msaa());
