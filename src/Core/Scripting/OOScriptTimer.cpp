@@ -47,7 +47,7 @@ OOPriorityQueueOf<OOScriptTimer>* sTimers;
 
 // During an update, new timers must be deferred to avoid an infinite loop.
 bool sUpdating;
-std::vector<std::shared_ptr<OOScriptTimer>>* sDeferredTimers;
+std::unique_ptr<std::vector<std::shared_ptr<OOScriptTimer>>> sDeferredTimers;
 
 }  // namespace
 
@@ -153,7 +153,8 @@ bool OOScriptTimer::scheduleTimer() {
     sTimers->addObject(this);  // the queue holds the timer
   } else {
     if (sDeferredTimers == nullptr)
-      sDeferredTimers = new std::vector<std::shared_ptr<OOScriptTimer>>;
+      sDeferredTimers =
+          std::make_unique<std::vector<std::shared_ptr<OOScriptTimer>>>();
     sDeferredTimers->emplace_back(oo::share(this));
   }
 
@@ -201,8 +202,7 @@ void OOScriptTimer::updateTimers() {
     for (const auto& deferred : *sDeferredTimers)
       if (sTimers != nullptr)
         sTimers->addObject(deferred.get());  // as -addObjects: did, in order
-    delete sDeferredTimers;
-    sDeferredTimers = nullptr;
+    sDeferredTimers.reset();
   }
 
   sUpdating = false;
