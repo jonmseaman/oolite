@@ -232,19 +232,18 @@ bool VectorToJSValue(JSContext *context, Vector vector, JSValue *outValue)
 }
 
 
-bool JSValueToVector(JSContext *context, JSValueConst value, Vector *outVector)
+std::optional<Vector> JSValueToVector(JSContext *context, JSValueConst value)
 {
 	double v[3] = {};
-	if (!JS_IsArray(value))  return false;
+	if (!JS_IsArray(value))  return std::nullopt;
 	for (std::uint32_t i = 0; i < 3; i++)
 	{
 		JSValue element = JS_GetPropertyUint32(context, value, i);
 		const bool ok = !JS_IsException(element) && JS_ToFloat64(context, &v[i], element) == 0;
 		JS_FreeValue(context, element);
-		if (!ok)  return false;
+		if (!ok)  return std::nullopt;
 	}
-	*outVector = make_vector(v[0], v[1], v[2]);
-	return true;
+	return make_vector(v[0], v[1], v[2]);
 }
 
 

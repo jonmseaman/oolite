@@ -534,14 +534,18 @@ static JSValue VisualEffectSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kShaderVector1:
-      if (JSValueToVector(context, value, &vValue)) {
+      if (const std::optional<Vector> converted =
+              JSValueToVector(context, value)) {
+        vValue = *converted;
         if (entity != nullptr) entity->setShaderVector1(vValue);
         return JS_UNDEFINED;
       }
       break;
 
     case kShaderVector2:
-      if (JSValueToVector(context, value, &vValue)) {
+      if (const std::optional<Vector> converted =
+              JSValueToVector(context, value)) {
+        vValue = *converted;
         if (entity != nullptr) entity->setShaderVector2(vValue);
         return JS_UNDEFINED;
       }

@@ -1778,7 +1778,9 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       if (ship->getIsPlayer()) [[unlikely]]
         return playerReadOnly();
 
-      if (JSValueToHPVector(context, value, &hpvValue)) {
+      if (const std::optional<HPVector> converted =
+              JSValueToHPVector(context, value)) {
+        hpvValue = *converted;
         // use setEscortDestination rather than setDestination as
         // scripted amendments shouldn't necessarily reset frustration
         ship->setEscortDestination(hpvValue);
@@ -1844,7 +1846,9 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kSavedCoordinates:
-      if (JSValueToHPVector(context, value, &hpvValue)) {
+      if (const std::optional<HPVector> converted =
+              JSValueToHPVector(context, value)) {
+        hpvValue = *converted;
         ship->setCoordinate(hpvValue);
         return JS_UNDEFINED;
       }
@@ -1919,7 +1923,9 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kSubEntityRotation:
-      if (JSValueToQuaternion(context, value, &qValue)) {
+      if (const std::optional<Quaternion> converted =
+              JSValueToQuaternion(context, value)) {
+        qValue = *converted;
         ship->setSubEntityRotationalVelocity(qValue);
         return JS_UNDEFINED;
       }
@@ -2070,7 +2076,9 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kVelocity:
-      if (JSValueToVector(context, value, &vValue)) {
+      if (const std::optional<Vector> converted =
+              JSValueToVector(context, value)) {
+        vValue = *converted;
         ship->setTotalVelocity(vValue);
         return JS_UNDEFINED;
       }
