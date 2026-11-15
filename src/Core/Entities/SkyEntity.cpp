@@ -42,8 +42,8 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 
-#define SKY_BASIS_STARS 4800
-#define SKY_BASIS_BLOBS 1280
+constexpr int SKY_BASIS_STARS = 4800;
+constexpr int SKY_BASIS_BLOBS = 1280;
 #define SKY_clusterChance 0.80
 #define SKY_alpha 0.10
 #define SKY_scale 10.0
