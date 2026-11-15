@@ -30,22 +30,25 @@ SOFTWARE.
 
 #pragma once
 
+#include <functional>
+
 #include "OOTCPStreamDecoderAbstractionLayer.h"
 
 struct OOTCPStreamDecoder;
 using OOTCPStreamDecoderRef = OOTCPStreamDecoder*;
 
-using OOTCPStreamDecoderPacketCallback = void (*)(void* cbInfo,
-                                                  OOALStringRef packetType,
-                                                  OOALDictionaryRef packet);
-using OOTCPStreamDecoderErrorCallback = void (*)(void* cbInfo,
-                                                 OOALStringRef errorDesc);
-using OOTCPStreamDecoderFinalizeCallback = void (*)(void* cbInfo);
+// The callbacks carry their own context (a lambda's captures), so there is no
+// void* to pass back. The error and finalize callbacks may be empty.
+using OOTCPStreamDecoderPacketCallback =
+    std::function<void(OOALStringRef packetType, OOALDictionaryRef packet)>;
+using OOTCPStreamDecoderErrorCallback =
+    std::function<void(OOALStringRef errorDesc)>;
+using OOTCPStreamDecoderFinalizeCallback = std::function<void()>;
 
 OOTCPStreamDecoderRef OOTCPStreamDecoderCreate(
     OOTCPStreamDecoderPacketCallback packetCB,
     OOTCPStreamDecoderErrorCallback errorCB,
-    OOTCPStreamDecoderFinalizeCallback finalizeCB, void* cbInfo);
+    OOTCPStreamDecoderFinalizeCallback finalizeCB);
 void OOTCPStreamDecoderDestroy(OOTCPStreamDecoderRef decoder);
 
 void OOTCPStreamDecoderReceiveData(OOTCPStreamDecoderRef decoder,
