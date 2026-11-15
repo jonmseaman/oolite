@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOCharacter.h"
+
 #include <quickjs.h>
 
 #include <cstdint>
@@ -32,7 +34,6 @@ MA 02110-1301, USA.
 #include <string_view>
 #include <utility>
 
-#include "OOCharacter.h"
 #include "OOJSEngineCore.h"
 #include "OOJSPropID.h"
 #include "OOScript.h"

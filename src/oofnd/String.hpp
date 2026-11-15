@@ -84,8 +84,8 @@
 // ICU (C API): case mapping and localizedCompare.
 #include <unicode/uchar.h>
 #include <unicode/ucol.h>
-#include <unicode/ustring.h>
 #include <unicode/uloc.h>
+#include <unicode/ustring.h>
 
 namespace oo::str {
 
@@ -575,16 +575,14 @@ constexpr bool isAscii(std::string_view s) noexcept {
 }  // namespace detail
 
 inline bool hasPrefix(std::string_view s, std::string_view prefix) {
-  if (detail::isAscii(prefix))
-    return !prefix.empty() && s.starts_with(prefix);
+  if (detail::isAscii(prefix)) return !prefix.empty() && s.starts_with(prefix);
   const std::u16string u = utf8ToUtf16(s), p = utf8ToUtf16(prefix);
   return !p.empty() && p.size() <= u.size() &&
          std::u16string_view(u).substr(0, p.size()) == p;
 }
 
 inline bool hasSuffix(std::string_view s, std::string_view suffix) {
-  if (detail::isAscii(suffix))
-    return !suffix.empty() && s.ends_with(suffix);
+  if (detail::isAscii(suffix)) return !suffix.empty() && s.ends_with(suffix);
   const std::u16string u = utf8ToUtf16(s), x = utf8ToUtf16(suffix);
   if (x.empty() || x.size() > u.size()) return false;
   return std::u16string_view(u).substr(u.size() - x.size()) == x;

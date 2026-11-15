@@ -25,6 +25,8 @@ SOFTWARE.
 
 */
 
+#include "OOPixMap.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
@@ -32,8 +34,6 @@ SOFTWARE.
 #include <memory>
 #include <string>
 #include <utility>
-
-#include "OOPixMap.h"
 
 const OOPixMap kOONullPixMap = {.pixels = nullptr,
                                 .width = 0,

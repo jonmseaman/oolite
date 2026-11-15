@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "PlayerEntityKeyMapper.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -37,7 +39,6 @@ MA 02110-1301, USA.
 #include "HeadUpDisplay.h"
 #include "OOEquipmentType.h"
 #include "OOJoystickManager.h"
-#include "PlayerEntityKeyMapper.h"
 #include "ResourceManager.h"
 #include "oofnd/Defaults.hpp"
 #include "oofnd/PList.hpp"

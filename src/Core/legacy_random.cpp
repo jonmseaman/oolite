@@ -23,14 +23,14 @@ MA 02110-1301, USA.
 
 */
 
+#include "legacy_random.h"
+
 #include <assert.h>
 #include <math.h>
 #include <stdint.h>
 
 #include <cstdint>
 #include <format>
-
-#include "legacy_random.h"
 
 const Random_Seed kNilRandomSeed = {0};
 

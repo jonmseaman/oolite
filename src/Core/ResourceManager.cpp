@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "ResourceManager.h"
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -47,7 +49,6 @@ MA 02110-1301, USA.
 #include "OOManifestProperties.h"
 #include "OOPListParsing.h"
 #include "OOSystemDescriptionManager.h"
-#include "ResourceManager.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/Defaults.hpp"

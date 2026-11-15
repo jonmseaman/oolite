@@ -27,12 +27,13 @@ SOFTWARE.
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
 
+#include "OODebugSupport.h"
+
 #include <cstdint>
 #include <memory>
 #include <string>
 
 #include "OODebugMonitor.h"
-#include "OODebugSupport.h"
 #include "OODebugTCPConsoleClient.h"
 #include "OOJavaScriptEngine.h"
 #include "ResourceManager.h"

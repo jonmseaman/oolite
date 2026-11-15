@@ -25,13 +25,14 @@ SOFTWARE.
 
 */
 
+#include "OOLogHeader.h"
+
 #include <cstdint>
 #include <string>
 #include <vector>
 
 #include "OOCPUInfo.h"  // IWYU pragma: keep: the endianness and CPU macros its #if lines test
 #include "OOJavaScriptEngine.h"  // IWYU pragma: keep: OOJS_PROFILE, which its #if lines test
-#include "OOLogHeader.h"
 #include "OOVersion.h"
 #include "oofnd/Date.hpp"
 #include "oofnd/Log.hpp"

@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "PlayerEntityContracts.h"
+
 #include <cstdint>
 #include <format>
 #include <memory>
@@ -40,7 +42,6 @@ MA 02110-1301, USA.
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"
 #include "PlayerEntity.h"
-#include "PlayerEntityContracts.h"
 #include "ShipEntityAI.h"
 #include "StationEntity.h"
 #include "Universe.h"
