@@ -213,7 +213,7 @@ class OOOXZManager : public oo::Object {
                      url);  // lowercased; nullopt: none (was nil)
   oo::PList applyCurrentFilter(const oo::PList& list);  // an Array
 
-  void setCurrentDownload(oo::http::Download* download,
+  void setCurrentDownload(std::unique_ptr<oo::http::Download> download,
                           const std::string& label);
   void setProgressStatus(const std::string& newValue);
 
@@ -268,6 +268,6 @@ class OOOXZManager : public oo::Object {
  private:
   void init();  // -init's body: run by sharedManager() on the new object
 
-  oo::http::Download* _currentDownload = {};  // oofnd/Http.hpp; owned
+  std::unique_ptr<oo::http::Download> _currentDownload;  // oofnd/Http.hpp
   FILE* _fileWriter = {};
 };

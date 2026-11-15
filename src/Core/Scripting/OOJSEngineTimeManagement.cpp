@@ -73,7 +73,8 @@ static bool sTracing = false;
 static OOJSProfileStackFrame* sProfileStack = nullptr;
 // Profile key (native name or JS function, by pointer) -> entry, retained.
 namespace {
-static std::unordered_map<const void*, std::shared_ptr<OOTimeProfileEntry>>*
+static std::unique_ptr<
+    std::unordered_map<const void*, std::shared_ptr<OOTimeProfileEntry>>>
     sProfileInfo;
 
 static OOTimeProfileEntry* ProfileEntryForKey(const void* key) {
@@ -90,8 +91,8 @@ void OOJSBeginProfiling(bool trace) {
   assert(sProfiling == false);
   sProfiling = true;
   sTracing = trace;
-  sProfileInfo =
-      new std::unordered_map<const void*, std::shared_ptr<OOTimeProfileEntry>>;
+  sProfileInfo = std::make_unique<
+      std::unordered_map<const void*, std::shared_ptr<OOTimeProfileEntry>>>();
   sProfileInfo->reserve(100);
   sProfilerOverhead = 0.0;
   sProfilerTotalNativeTime = 0.0;
@@ -143,8 +144,7 @@ std::shared_ptr<OOTimeProfile> OOJSEndProfiling() {
   }
 
   // Clean up (the table held the entries' references).
-  delete sProfileInfo;
-  sProfileInfo = nullptr;
+  sProfileInfo.reset();
   OODisposeHighResTime(sProfilerStartTime);
 
   OODisposeHighResTime(now);

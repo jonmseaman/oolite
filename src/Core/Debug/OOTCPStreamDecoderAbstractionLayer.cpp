@@ -64,13 +64,9 @@ std::string DescriptionOf(OOALObjectRef object) {
 // linkage.
 OOALStringRef OOALGetConstantString(const char* string);
 OOALStringRef OOALGetConstantString(const char* string) {
-  static std::map<const char*, std::unique_ptr<OOALObject>>* sStrings = nullptr;
+  static std::map<const char*, std::unique_ptr<OOALObject>> sStrings;
 
-  if (sStrings == nullptr) {
-    sStrings = new std::map<const char*, std::unique_ptr<OOALObject>>;
-  }
-
-  std::unique_ptr<OOALObject>& value = (*sStrings)[string];
+  std::unique_ptr<OOALObject>& value = sStrings[string];
   if (value == nullptr) {
     // Note: non-ASCII strings are not permitted, but we don't bother to detect
     // them.

@@ -106,7 +106,7 @@ struct DeferredOperation {
 };
 
 namespace {
-static std::vector<DeferredOperation>*
+static std::unique_ptr<std::vector<DeferredOperation>>
     sDeferredOps;  // Deferred adds/removes while running.
 }  // namespace
 static uint32_t sNextID;
@@ -212,8 +212,7 @@ void OOJSFrameCallbacksInvoke(OOTimeDelta inDeltaT) {
 
     if (sDeferredOps != nullptr) [[unlikely]] {
       RunDeferredOperations(context);
-      delete sDeferredOps;
-      sDeferredOps = nullptr;
+      sDeferredOps.reset();
     }
     OOJSRelinquishContext(context);
   }
@@ -447,7 +446,7 @@ static void QueueDeferredOperation(const std::string& opType,
             __PRETTY_FUNCTION__);
 
   if (sDeferredOps == nullptr)
-    sDeferredOps = new std::vector<DeferredOperation>;
+    sDeferredOps = std::make_unique<std::vector<DeferredOperation>>();
   sDeferredOps->push_back(
       DeferredOperation{opType, trackingID, oo::share(value)});
 }
