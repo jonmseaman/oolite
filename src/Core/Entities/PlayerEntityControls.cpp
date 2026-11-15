@@ -6007,22 +6007,20 @@ void PlayerEntity::handleAutopilotOn(bool fastDocking) {
     message =
         ExpandKeyWithArguments("autopilot-station-does-not-allow-autodocking",
                                {{"stationName", oo::PList(stationName)}});
-  }
-  // Deny if station is hostile or player is a fugitive trying to dock at the
-  // main station.
-  else if ((legalStatusValue > 50 &&
-            ts == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr)) ||
-           (ts != nullptr ? ts->isHostileTo(this) : false)) {
+  } else if ((legalStatusValue > 50 &&
+              ts == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr)) ||
+             (ts != nullptr ? ts->isHostileTo(this) : false)) {
+    // Deny if station is hostile or player is a fugitive trying to dock at the
+    // main station.
     playAutopilotCannotDockWithTarget();
     message = ExpandKeyWithArguments(
         (ts == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr))
             ? "autopilot-denied"
             : "autopilot-target-docking-instructions-denied",
         {{"stationName", oo::PList(stationName)}});
-  }
-  // If we're fast-docking, perform the docking logic
-  else if (fastDocking &&
-           (ts != nullptr ? ts->getAllowsFastDocking() : false)) {
+  } else if (fastDocking &&
+             (ts != nullptr ? ts->getAllowsFastDocking() : false)) {
+    // If we're fast-docking, perform the docking logic
     // check whether there are docks that do not accept docking - even one such
     // dock will result in rejection
     for (const auto& sub : (ts != nullptr ? ts->dockSubEntities()

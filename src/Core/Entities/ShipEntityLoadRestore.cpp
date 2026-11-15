@@ -166,15 +166,15 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
   if (_escortGroup != nullptr) {
     result[KEY_ESCORT_GROUP_ID] = oo::PList::unsignedInteger(
         GroupIDForGroup(_escortGroup.get(), *context));
-  }
-  /*	Eric:
-          The escortGroup property is removed from the lead ship, on entering
-     witchspace. But it is needed in the save file to correctly restore an
-     escorted group.
-  */
-  else if (_group != nullptr &&
-           (_group != nullptr ? _group->leader()
-                              : static_cast<::ShipEntity*>(nullptr)) == this) {
+  } else if (_group != nullptr &&
+             (_group != nullptr
+                  ? _group->leader()
+                  : static_cast<::ShipEntity*>(nullptr)) == this) {
+    /*	Eric:
+    The escortGroup property is removed from the lead ship, on entering
+    witchspace. But it is needed in the save file to correctly restore an
+    escorted group.
+    */
     result[KEY_ESCORT_GROUP_ID] =
         oo::PList::unsignedInteger(GroupIDForGroup(_group.get(), *context));
   }

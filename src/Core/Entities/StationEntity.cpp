@@ -1761,11 +1761,9 @@ void StationEntity::update(OOTimeDelta delta_t) {
         }
         player_reserved_dock = nullptr;
       }
-    }
-
-    else if ((player != nullptr ? player->getDockingClearanceStatus()
-                                : OODockingClearanceStatus{}) ==
-             OODockingClearanceStatus::kNotRequired) {
+    } else if ((player != nullptr ? player->getDockingClearanceStatus()
+                                  : OODockingClearanceStatus{}) ==
+               OODockingClearanceStatus::kNotRequired) {
       if (last_launch_time < unitime) {
         if (player != nullptr)
           player->setDockingClearanceStatus(OODockingClearanceStatus::kNone);
@@ -1774,12 +1772,10 @@ void StationEntity::update(OOTimeDelta delta_t) {
           doScriptEvent(OOJSID("stationDockingQueuesAreEmpty"));
         }
       }
-    }
-
-    else if ((player != nullptr ? player->getDockingClearanceStatus()
-                                : OODockingClearanceStatus{}) ==
-                 OODockingClearanceStatus::kRequested &&
-             hasClearDock()) {
+    } else if ((player != nullptr ? player->getDockingClearanceStatus()
+                                  : OODockingClearanceStatus{}) ==
+                   OODockingClearanceStatus::kRequested &&
+               hasClearDock()) {
       ::DockEntity* dock = selectDockForDocking();
       last_launch_time = unitime + DOCKING_CLEARANCE_WINDOW;
       if (hasMultipleDocks()) {

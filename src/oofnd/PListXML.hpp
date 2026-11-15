@@ -271,11 +271,11 @@ inline Data decodeMimeBase64(std::string_view source) {
   for (unsigned char uc : source) {
     if (uc == '\0') break;
     int c = uc;
-    if (c >= 'A' && c <= 'Z')
+    if (c >= 'A' && c <= 'Z') {
       c -= 'A';
-    else if (c >= 'a' && c <= 'z')
+    } else if (c >= 'a' && c <= 'z') {
       c = c - 'a' + 26;
-    else if (c >= '0' && c <= '9') {
+    } else if (c >= '0' && c <= '9') {
       c = c - '0' + 52;
     } else if (c == '/' || c == '_') {
       c = 63;

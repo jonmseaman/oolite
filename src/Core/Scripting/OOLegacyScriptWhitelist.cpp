@@ -233,14 +233,14 @@ static oo::PList SanitizeCondition(const std::string& condition,
   // Parse operator.
   if (tokenCount > 1) {
     comparatorString = tokens[1];
-    if (comparatorString == "equal")
+    if (comparatorString == "equal") {
       comparatorValue = OOComparisonType::kEqual;
-    else if (comparatorString == "notequal")
+    } else if (comparatorString == "notequal") {
       comparatorValue = OOComparisonType::kNotEqual;
-    else if (comparatorString == "lessthan")
+    } else if (comparatorString == "lessthan") {
       comparatorValue = OOComparisonType::kLessThan;
-    else if (comparatorString == "greaterthan" ||
-             comparatorString == "morethan") {
+    } else if (comparatorString == "greaterthan" ||
+               comparatorString == "morethan") {
       comparatorValue = OOComparisonType::kGreaterThan;
     } else if (comparatorString == "oneof") {
       comparatorValue = OOComparisonType::kOneOf;
