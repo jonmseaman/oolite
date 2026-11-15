@@ -57,7 +57,6 @@ enum class WormholeProperty : std::int16_t {
   kDestination,
   kExpiryTime,
   kOrigin
-
 };
 
 }  // namespace

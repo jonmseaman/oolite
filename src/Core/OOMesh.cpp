@@ -1378,7 +1378,6 @@ bool OOMesh::loadData(const std::string& filename, float scale) {
       }
       calculateVertexNormalsAndTangentsWithFaceRefs(faceRefs);
       PROFILE("finished calculateVertexNormalsAndTangents");
-
     } else if (IsPerVertexNormalMode(
                    static_cast<OOMeshNormalMode>(_normalMode)) &&
                !explicitTangents) {

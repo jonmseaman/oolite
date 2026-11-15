@@ -2694,7 +2694,6 @@ void ShipEntity::update(OOTimeDelta delta_t) {
         }
       }
     }  // end if trackCloseContacts
-
   }  // end if !isSubEntity
 
 #ifdef OO_DEBUG_MONITOR_ENABLED
@@ -12796,7 +12795,6 @@ bool ShipEntity::abandonShip() {
       removeEquipmentItem(
           equipmentItemProviding("EQ_ESCAPE_POD").value_or(std::string()));
     }
-
   } else {
     // this shouldn't happen any more!
     OO_LOG("ShipEntity.abandonShip.notPossible",

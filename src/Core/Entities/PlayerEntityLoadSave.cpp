@@ -372,7 +372,6 @@ std::optional<std::string> PlayerEntity::commanderSelector() {
       gui->setText("", CDRDESCROW + 1, OOGUIAlignment::kLeft);
       gui->setText("", CDRDESCROW + 2, OOGUIAlignment::kLeft);
     }
-
   } else {
     idx = static_cast<int>((gui->getSelectedRow() - STARTROW) +
                            static_cast<OOGUIRow>(currentPage * NUMROWS));

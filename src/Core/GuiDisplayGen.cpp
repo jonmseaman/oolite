@@ -1994,7 +1994,6 @@ void GuiDisplayGen::drawAdvancedNavArrayAtX(float x, float y, float z,
                          std::lerp(lb, lb2, frac), std::lerp(la, la2, frac)));
           glVertex3f(static_cast<GLfloat>(x + star2.x),
                      static_cast<GLfloat>(y + star2.y), z);
-
         } else {
           thisConnectionColor =
               OOColor::colorWithDescription(systemManager->getProperty(

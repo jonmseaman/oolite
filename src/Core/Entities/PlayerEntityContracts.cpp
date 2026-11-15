@@ -379,7 +379,6 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
             {oo::PList("parcel"), oo::PList("success"),
              oo::PList::unsignedInteger(static_cast<std::size_t>(10 * fee)),
              parcel_info});
-
       } else {
         // but we're late!
         std::int64_t fee =
@@ -492,7 +491,6 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
               {oo::PList("cargo"), oo::PList("success"),
                oo::PList::unsignedInteger(static_cast<std::size_t>(fee)),
                contract_info});
-
         } else {
           // see if the amount of goods delivered is acceptable
 
@@ -536,7 +534,6 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
                 {oo::PList("cargo"), oo::PList("short"),
                  oo::PList::unsignedInteger(static_cast<std::size_t>(payment)),
                  contract_info});
-
           } else {
             result += oo::str::formatRuntime(OO_DESC("cargo-refused-short-%@"),
                                              {TextArg(contract_cargo_desc)}) +

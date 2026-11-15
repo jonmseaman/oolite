@@ -352,7 +352,6 @@ void OOAsyncWorkManagerInternal::waitForTaskToComplete(OOAsyncWorkTask* task) {
     }
 
     next->completeAsyncTask();
-
   } while (next.get() != task);  // We don't control order, so keep looking
                                  // until we get the one we care about.
 }

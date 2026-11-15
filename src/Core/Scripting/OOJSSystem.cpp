@@ -174,7 +174,6 @@ enum class SystemProperty : std::int16_t {
   kTechLevel,               // tech level ID, integer, read/write
   kWaypoints,               // dictionary of current player waypoints, read-only
   kWormholes,               // list of active entry wormholes, read-only
-
 };
 
 }  // namespace

@@ -255,7 +255,6 @@ oo::PList ShipEntity::savedShipDictionaryWithContext(
     } else {
       ship->primaryRole = std::nullopt;  // as -setPrimaryRole: stored nil
     }
-
   } else {
     // Unknown ship; fall back on role if desired and possible.
     const std::optional<std::string> shipPrimaryRole =

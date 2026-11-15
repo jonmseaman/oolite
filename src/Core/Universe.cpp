@@ -3032,7 +3032,6 @@ bool Universe::addShipsAtPosition(int howMany, const std::string& desc,
               sqrt(safe_distance2);  // expand to the next distance
         }
       }
-
     } while (!safe);
 
     if (ship != nullptr) ship->setPosition(ship_pos);
@@ -7750,7 +7749,6 @@ void Universe::update(OOTimeDelta inDeltaT) {
     update_stage = "JS Garbage Collection";
     OO_LOG("universe.profile.update", "{}", std::string_view(update_stage));
     OOJavaScriptEngine::sharedEngine()->garbageCollectionOpportunity(false);
-
   } else {
     // always perform player's dead updates: allows deferred JS resets.
     if ((PLAYER != nullptr ? PLAYER->status() : OOEntityStatus{}) ==
@@ -9760,7 +9758,6 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
                 RemoveOption(options, equipmentKey);  // dont try again
               }
             }
-
           } else {
             if (*equipmentKey == "EQ_PASSENGER_BERTH") {
               if ((maxCargo >= PASSENGER_BERTH_SPACE) && (randf() < chance)) {

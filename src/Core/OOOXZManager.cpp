@@ -1616,7 +1616,6 @@ void OOOXZManager::gui() {
                      OXZ_GUI_ROW_CANCEL, OOGUIAlignment::kCenter);
         gui->setKey("_CANCEL", OXZ_GUI_ROW_CANCEL);
       }
-
     } break;
     case OXZInterfaceState::kExtractdone:
       if (gui != nullptr) {
