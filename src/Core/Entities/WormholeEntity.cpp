@@ -54,7 +54,7 @@ MA 02110-1301, USA.
 #include "oofnd/PList.hpp"
 #include "oofnd/String.hpp"
 
-#define OO_WORMHOLE_COLOR_BOOST 25.0
+constexpr double OO_WORMHOLE_COLOR_BOOST = 25.0;
 #define OO_WORMHOLE_COLOR_FVEC4 {0.067, 0.067, 1.0, 0.25}
 
 // Static local functions
