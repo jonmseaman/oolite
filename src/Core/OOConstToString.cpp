@@ -326,7 +326,9 @@ std::optional<std::string> OODisplayStringFromAlertCondition(
       UNIVERSE->descriptions()->find("condition");
   const oo::PList conditionNames =
       (conditionNamesEntry != nullptr) ? *conditionNamesEntry : oo::PList();
-  return DescriptionStringAt(conditionNames, oo::ToUnderlying(alertCondition));
+  return DescriptionStringAt(
+      conditionNames,
+      static_cast<std::size_t>(oo::ToUnderlying(alertCondition)));
 }
 
 std::optional<std::string> OODisplayStringFromShaderSetting(

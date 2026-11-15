@@ -575,12 +575,13 @@ GLfloat PlayerEntity::baseMass() {
 
 void PlayerEntity::unloadAllCargoPodsForType(const std::string& type,
                                              ::OOCommodityMarket* manifest) {
-  std::ptrdiff_t i, cargoCount = cargo.size();
+  std::ptrdiff_t i, cargoCount = static_cast<std::ptrdiff_t>(cargo.size());
   if (cargoCount == 0) return;
 
   // step through the cargo pods adding in the quantities
   for (i = cargoCount - 1; i >= 0; i--) {
-    ::ShipEntity* cargoItem = oo::ToShip(cargo[i].get());
+    ::ShipEntity* cargoItem =
+        oo::ToShip(cargo[static_cast<unsigned long long>(i)].get());
     const std::optional<std::string> commodityType =
         (cargoItem != nullptr ? cargoItem->commodityType()
                               : std::optional<std::string>());
@@ -603,7 +604,7 @@ void PlayerEntity::unloadAllCargoPodsForType(const std::string& type,
 
 void PlayerEntity::unloadCargoPodsForType(const std::string& type,
                                           OOCargoQuantity quantity) {
-  std::ptrdiff_t i, n_cargo = cargo.size();
+  std::ptrdiff_t i, n_cargo = static_cast<std::ptrdiff_t>(cargo.size());
   if (n_cargo == 0) return;
 
   ::ShipEntity* cargoItem = nullptr;
@@ -613,7 +614,7 @@ void PlayerEntity::unloadCargoPodsForType(const std::string& type,
 
   // step through the cargo pods removing pods or quantities
   for (i = n_cargo - 1; (i >= 0 && cargoToGo > 0); i--) {
-    cargoItem = oo::ToShip(cargo[i].get());
+    cargoItem = oo::ToShip(cargo[static_cast<unsigned long long>(i)].get());
     co_type = (cargoItem != nullptr ? cargoItem->commodityType()
                                     : std::optional<std::string>());
     if (!co_type.has_value() || *co_type == type) {
@@ -761,7 +762,9 @@ void PlayerEntity::loadCargoPodsForType(const std::string& type,
       int amount_per_container =
           (unit == OOMassUnit::kKilograms) ? KILOGRAMS_PER_POD : GRAMS_PER_POD;
       while (quantity > 0) {
-        int smaller_quantity = 1 + ((quantity - 1) % amount_per_container);
+        int smaller_quantity =
+            static_cast<int>(1 + ((quantity - 1) % static_cast<OOCargoQuantity>(
+                                                       amount_per_container)));
         if (cargo.size() < maxAvailableCargoSpace()) {
           std::shared_ptr<::ShipEntity> container =
               (UNIVERSE != nullptr ? UNIVERSE->newShipWithRole("1t-cargopod")
@@ -774,7 +777,8 @@ void PlayerEntity::loadCargoPodsForType(const std::string& type,
             if (container != nullptr)
               container->setScanClass(OOScanClass::kCargo);
             if (container != nullptr)
-              container->setCommodity(type, smaller_quantity);
+              container->setCommodity(
+                  type, static_cast<OOCargoQuantity>(smaller_quantity));
             cargo.emplace_back(container);
             container.reset();
           }
@@ -783,7 +787,7 @@ void PlayerEntity::loadCargoPodsForType(const std::string& type,
           int amount = (shipCommodityData != nullptr
                             ? shipCommodityData->quantityForGood(type)
                             : 0) +
-                       smaller_quantity;
+                       static_cast<OOCargoQuantity>(smaller_quantity);
           if (amount > MAX_GRAMS_IN_SAFE && unit == OOMassUnit::kGrams)
             amount = MAX_GRAMS_IN_SAFE;
           else if (amount > MAX_KILOGRAMS_IN_SAFE &&
@@ -791,9 +795,10 @@ void PlayerEntity::loadCargoPodsForType(const std::string& type,
             amount = MAX_KILOGRAMS_IN_SAFE;
 
           if (shipCommodityData != nullptr)
-            shipCommodityData->setQuantity(amount, type);
+            shipCommodityData->setQuantity(static_cast<OOCargoQuantity>(amount),
+                                           type);
         }
-        quantity -= smaller_quantity;
+        quantity -= static_cast<OOCargoQuantity>(smaller_quantity);
       }
     } else {
       // put each ton in a separate container
@@ -1234,7 +1239,8 @@ oo::PList PlayerEntity::commanderDataDictionary() {
         (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList());
     OOGovernmentID government =
         static_cast<OOGovernmentID>(systemData.get<int>(KEY_GOVERNMENT));
-    OOTechLevelID techlevel = systemData.get<int>(KEY_TECHLEVEL);
+    OOTechLevelID techlevel =
+        static_cast<OOTechLevelID>(systemData.get<int>(KEY_TECHLEVEL));
     OOEconomyID economy =
         static_cast<OOEconomyID>(systemData.get<int>(KEY_ECONOMY));
     result["current_system_government"] =
@@ -1522,7 +1528,7 @@ oo::PList PlayerEntity::commanderDataDictionary() {
   // munge_checksum(galaxy_seed.e);	munge_checksum(galaxy_seed.f);
   munge_checksum(static_cast<std::int64_t>(galaxy_coordinates.x));
   munge_checksum(static_cast<std::int64_t>(galaxy_coordinates.y));
-  munge_checksum(credits);
+  munge_checksum(static_cast<std::int64_t>(credits));
   munge_checksum(fuel);
   munge_checksum(max_cargo);
   munge_checksum(missiles);
@@ -1533,14 +1539,16 @@ oo::PList PlayerEntity::commanderDataDictionary() {
   if (!mission_variables.isNull()) {
     // the length of the dictionary's -description, as before (the same GNUstep
     // text)
-    munge_checksum(oo::str::length(oo::DescriptionOf(mission_variables)));
+    munge_checksum(static_cast<std::int64_t>(
+        oo::str::length(oo::DescriptionOf(mission_variables))));
   }
   // the equipment dictionary always existed: the length of its -description, as
   // above
-  munge_checksum(oo::str::length(oo::DescriptionOf(oo::PList(equipment))));
+  munge_checksum(static_cast<std::int64_t>(
+      oo::str::length(oo::DescriptionOf(oo::PList(equipment)))));
 
-  int final_checksum =
-      munge_checksum(oo::str::length(shipDataKey().value_or(std::string())));
+  int final_checksum = munge_checksum(static_cast<std::int64_t>(
+      oo::str::length(shipDataKey().value_or(std::string()))));
 
   // set checksum
   result["checksum"] =
@@ -1866,7 +1874,8 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
 
   // passengers and contracts
 
-  max_passengers = dict.get<int>("max_passengers", 0);
+  max_passengers =
+      static_cast<unsigned int>(dict.get<int>("max_passengers", 0));
   const oo::PList& savedPassengers = ValueForKey(dict, "passengers");
   passengers = savedPassengers.isArray()
                    ? *savedPassengers.getIf<oo::PList::Array>()
@@ -1886,7 +1895,9 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
   for (std::ptrdiff_t i = static_cast<std::ptrdiff_t>(contracts.size()) - 1;
        i >= 0; i--) {
     oo::PList contractInfo =
-        contracts[i].isDict() ? contracts[i] : oo::PList(oo::PList::Dict());
+        contracts[static_cast<unsigned long long>(i)].isDict()
+            ? contracts[static_cast<unsigned long long>(i)]
+            : oo::PList(oo::PList::Dict());
     const oo::PList* cargoType = contractInfo.find(CARGO_KEY_TYPE);
     // if the trade good ID is an int
     if (cargoType != nullptr && cargoType->isNumber()) {
@@ -1895,7 +1906,7 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
       (*contractInfo.getIf<oo::PList::Dict>())[std::string(CARGO_KEY_TYPE)] =
           oo::PList(
               OOCommodities::legacyCommodityType(legacy_type).value_or(""));
-      contracts[i] = std::move(contractInfo);
+      contracts[static_cast<unsigned long long>(i)] = std::move(contractInfo);
     } else {
       // -oo_stringForKey: (nil when absent)
       const oo::PList* typeValue = contractInfo.find(CARGO_KEY_TYPE);
@@ -1993,11 +2004,14 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
                 static_cast<unsigned>(max_passengers));
     for (std::ptrdiff_t i = static_cast<std::ptrdiff_t>(passengers.size()) - 1;
          i >= max_passengers; i--) {
-      const oo::PList* passengerName = passengers[i].find(PASSENGER_KEY_NAME);
+      const oo::PList* passengerName =
+          passengers[static_cast<unsigned long long>(i)].find(
+              PASSENGER_KEY_NAME);
       if (passengerName != nullptr &&
           (passengerName->isString() || passengerName->isNumber()))
-        passenger_record.erase(passengers[i].get<std::string>(
-            PASSENGER_KEY_NAME));  // -oo_stringForKey:
+        passenger_record.erase(
+            passengers[static_cast<unsigned long long>(i)].get<std::string>(
+                PASSENGER_KEY_NAME));  // -oo_stringForKey:
       passengers.erase(passengers.begin() + i);
     }
   }
@@ -2122,7 +2136,7 @@ bool PlayerEntity::setCommanderDataFromDictionary(const oo::PList& dict) {
 
   legalStatusValue = dict.get<int>("legal_status");
   market_rnd = dict.get<int>("market_rnd");
-  ship_kills = dict.get<int>("ship_kills");
+  ship_kills = static_cast<unsigned int>(dict.get<int>("ship_kills"));
 
   ship_clock = dict.get<double>("ship_clock", PLAYER_SHIP_CLOCK_START);
   fps_check_time = ship_clock;
@@ -2566,7 +2580,9 @@ bool PlayerEntity::setUpAndConfirmOK(bool stopOnError, bool saveGame) {
 #if OOLITE_ESPEAK
   voice_gender_m = true;
   voice_no =
-      (UNIVERSE != nullptr ? UNIVERSE->setVoice(-1, voice_gender_m) : 0u);
+      (UNIVERSE != nullptr
+           ? UNIVERSE->setVoice(static_cast<unsigned int>(-1), voice_gender_m)
+           : 0u);
 #endif
 
   _customViews.clear();
@@ -3602,15 +3618,16 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
     return;
   }
 
-  int i, ent_count = UNIVERSE->n_entities;
+  int i, ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(
-      ent_count);  // the C++ entities, their objects retained
+  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+      ent_count));  // the C++ entities, their objects retained
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   Entity* scannedEntity = nullptr;
   for (i = 0; i < ent_count; i++) {
-    my_entities[i] = oo::HoldIn(my_holds, uni_entities[i]);  // retained
+    my_entities[static_cast<unsigned long long>(i)] =
+        oo::HoldIn(my_holds, uni_entities[i]);  // retained
   }
   bool massLocked = false;
   bool foundHostiles = false;
@@ -3620,7 +3637,7 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
 #endif
   for (i = 0; i < ent_count; i++) {
     // scanner lollypops
-    scannedEntity = my_entities[i];
+    scannedEntity = my_entities[static_cast<unsigned long long>(i)];
 
 #if OO_VARIABLE_TORUS_SPEED
     if (needHyperspeedNearest) [[unlikely]] {
@@ -5124,7 +5141,7 @@ std::string PlayerEntity::dial_clock_adjusted() {
 }
 
 std::string PlayerEntity::dial_fpsinfo() {
-  unsigned fpsVal = fps_counter;
+  unsigned fpsVal = static_cast<unsigned int>(fps_counter);
   return std::format("FPS: {:3}", static_cast<int>(fpsVal));
 }
 
@@ -5236,7 +5253,8 @@ void PlayerEntity::addRoleForAggression(::ShipEntity* victim) {
   if (!role.has_value()) {
     return;
   }
-  std::size_t times = RoleFlagCount(roleWeightFlags, *role);
+  std::size_t times =
+      static_cast<std::size_t>(RoleFlagCount(roleWeightFlags, *role));
   times++;
   roleWeightFlags.insert_or_assign(
       *role, oo::PList::signedInteger(static_cast<std::int64_t>(times)));
@@ -5248,7 +5266,8 @@ void PlayerEntity::addRoleForAggression(::ShipEntity* victim) {
 
 void PlayerEntity::addRoleForMining() {
   const std::string role = "miner";
-  std::size_t times = RoleFlagCount(roleWeightFlags, role);
+  std::size_t times =
+      static_cast<std::size_t>(RoleFlagCount(roleWeightFlags, role));
   times++;
   roleWeightFlags.insert_or_assign(
       role, oo::PList::signedInteger(static_cast<std::int64_t>(times)));
@@ -5819,7 +5838,7 @@ void PlayerEntity::selectNextMissile() {
 
   unsigned i;
   for (i = 1; i < max_missiles; i++) {
-    int next_missile = (activeMissile + i) % max_missiles;
+    int next_missile = static_cast<int>((activeMissile + i) % max_missiles);
     if (missile_entity[next_missile]) {
       // If we don't have the multi-targeting module installed, clear the active
       // missiles' target
@@ -5833,7 +5852,7 @@ void PlayerEntity::selectNextMissile() {
       }
 
       // Set next missile to active
-      setActiveMissile(next_missile);
+      setActiveMissile(static_cast<std::size_t>(next_missile));
 
       if (missile_status != OOMissileStatus::kSafe) {
         missile_status = OOMissileStatus::kArmed;
@@ -6783,7 +6802,7 @@ void PlayerEntity::dumpCargo() {
 }
 
 void PlayerEntity::rotateCargo() {
-  std::ptrdiff_t i, n_cargo = cargo.size();
+  std::ptrdiff_t i, n_cargo = static_cast<std::ptrdiff_t>(cargo.size());
   if (n_cargo == 0) return;
 
   ::ShipEntity* pod = oo::ToShip(cargo[0].get());
@@ -6826,7 +6845,7 @@ void PlayerEntity::rotateCargo() {
   // cargo to the last place this means the cargo gets to be sorted as it is
   // rotated through
   for (i = 1; i < (n_cargo - rotates); i++) {
-    pod = oo::ToShip(cargo[i].get());
+    pod = oo::ToShip(cargo[static_cast<unsigned long long>(i)].get());
     if (sameContents((pod != nullptr ? pod->commodityType()
                                      : std::optional<std::string>()))) {
       podHold = oo::Hold(pod);  // retained while it moves
@@ -6869,7 +6888,9 @@ void PlayerEntity::setBounty(OOCreditsQuantity amount,
 // ending a scenario, docking and leaving dock. (Sends to self are member
 // calls.)
 
-OOCreditsQuantity PlayerEntity::getBounty() { return legalStatusValue; }
+OOCreditsQuantity PlayerEntity::getBounty() {
+  return static_cast<OOCreditsQuantity>(legalStatusValue);
+}
 
 int PlayerEntity::getLegalStatus() { return legalStatusValue; }
 
@@ -6961,11 +6982,11 @@ bool PlayerEntity::takeInternalDamage() {
   unsigned n_cargo = maxAvailableCargoSpace();
   unsigned n_mass = static_cast<unsigned int>(getMass() / 10000);
   unsigned n_considered =
-      (n_cargo + n_mass) * ship_trade_in_factor /
+      (n_cargo + n_mass) * static_cast<unsigned int>(ship_trade_in_factor) /
       100;  // a lower value of n_considered means more vulnerable to damage.
-  unsigned damage_to = n_considered
-                           ? (ranrot_rand() % n_considered)
-                           : 0;  // n_considered can be 0 for small ships.
+  unsigned damage_to =
+      n_considered ? (static_cast<unsigned int>(ranrot_rand()) % n_considered)
+                   : 0;  // n_considered can be 0 for small ships.
   bool result = false;
   // cargo damage
   if (damage_to < cargo.size()) {
@@ -7109,17 +7130,17 @@ void PlayerEntity::getDestroyedBy(Entity* whom, OOShipDamageType type) {
 
 void PlayerEntity::loseTargetStatus() {
   if (!UNIVERSE) return;
-  int ent_count = UNIVERSE->n_entities;
+  int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(ent_count);
+  std::vector<Entity*> my_entities(static_cast<unsigned long long>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   int i;
   for (i = 0; i < ent_count; i++)
-    my_entities[i] =
+    my_entities[static_cast<unsigned long long>(i)] =
         oo::HoldIn(my_holds, uni_entities[i]);  //	retained (its object)
   for (i = 0; i < ent_count; i++) {
-    Entity* thing = my_entities[i];
+    Entity* thing = my_entities[static_cast<unsigned long long>(i)];
     if (thing->isShip) {
       ::ShipEntity* ship = oo::ToShip(thing);
       if (this == (ship != nullptr ? ship->primaryTarget()
@@ -7768,8 +7789,9 @@ void PlayerEntity::enterWitchspace() {
   //  perform any check here for forced witchspace encounters
   unsigned malfunc_chance = 253;
   if (ship_trade_in_factor < 80) {
-    malfunc_chance -= (1 + ranrot_rand() % (81 - ship_trade_in_factor)) /
-                      2;  // increase chance of misjump in worn-out craft
+    malfunc_chance -= static_cast<unsigned int>(
+        (1 + ranrot_rand() % (81 - ship_trade_in_factor)) /
+        2);  // increase chance of misjump in worn-out craft
   } else if (ship_trade_in_factor >= 100) {
     malfunc_chance = 256;  // force no misjumps on first jump
   }
@@ -7903,7 +7925,7 @@ void PlayerEntity::witchJumpTo(OOSystemID sTo, bool misjump) {
     ship_clock_adjust += distance * distance * 3600.0;
     setSystemID(sTo);
     setBounty(
-        (legalStatusValue / 2),
+        (static_cast<OOCreditsQuantity>(legalStatusValue / 2)),
         OOLegalStatusReason::kNewSystem);  // 'another day, another system'
     witchEnd();
     if (market_rnd < 8)
@@ -8443,7 +8465,8 @@ std::size_t PlayerEntity::primedEquipmentCount() { return eqScripts.size(); }
 std::optional<std::string> PlayerEntity::primedEquipmentName(
     std::ptrdiff_t offset) {
   std::size_t c = primedEquipmentCount();
-  std::size_t idx = (primedEquipment + (c + 1) + offset) % (c + 1);
+  std::size_t idx =
+      (primedEquipment + (c + 1) + static_cast<std::size_t>(offset)) % (c + 1);
   if (idx == c) {
     return OO_DESC("equipment-primed-none-hud-label");
   } else {
@@ -8813,7 +8836,8 @@ void PlayerEntity::setGuiToSystemDataScreenRefreshBackground(
     gui->overrideTabs(tab_stops, kGuiSystemdataTabs, 3);
     gui->setTabStops(tab_stops);
 
-    std::size_t techLevel = infoSystemData.get<int>(KEY_TECHLEVEL) + 1;
+    std::size_t techLevel =
+        static_cast<std::size_t>(infoSystemData.get<int>(KEY_TECHLEVEL) + 1);
     int population = infoSystemData.get<int>(KEY_POPULATION);
     int productivity = infoSystemData.get<int>(KEY_PRODUCTIVITY);
     int radius = infoSystemData.get<int>(KEY_RADIUS);
@@ -9444,8 +9468,8 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
         (UNIVERSE != nullptr
              ? UNIVERSE->descriptionForArrayKey(
                    "music-mode",
-                   oo::ToUnderlying(
-                       OOMusicController::sharedController()->mode()))
+                   static_cast<unsigned int>(oo::ToUnderlying(
+                       OOMusicController::sharedController()->mode())))
              : std::optional<std::string>())
             .value_or(std::string());
     const std::string message = ExpandKeyWithSeed(
@@ -9528,8 +9552,8 @@ void PlayerEntity::setGuiToGameOptionsScreen() {
     gui->setKey(std::string(GUI_KEY_OK),
                 OOGUIGameOptionsRow(GUI_ROW_GAMEOPTIONS_BACK));
 
-    gui->setSelectableRange(
-        NSMakeRange(first_sel_row, GUI_ROW_GAMEOPTIONS_END_OF_LIST));
+    gui->setSelectableRange(NSMakeRange(static_cast<std::size_t>(first_sel_row),
+                                        GUI_ROW_GAMEOPTIONS_END_OF_LIST));
     gui->setSelectedRow(first_sel_row);
 
     gui->setShowTextCursor(false);
@@ -9649,8 +9673,8 @@ void PlayerEntity::setGuiToLoadSaveScreen() {
     gui->setKey(std::string(GUI_KEY_OK), OOGUIOptionsRow(GUI_ROW_OPTIONS_QUIT));
 #endif
 
-    gui->setSelectableRange(
-        NSMakeRange(first_sel_row, GUI_ROW_OPTIONS_END_OF_LIST));
+    gui->setSelectableRange(NSMakeRange(static_cast<std::size_t>(first_sel_row),
+                                        GUI_ROW_OPTIONS_END_OF_LIST));
 
     if (gamePaused || (!canLoadOrSave && status() == OOEntityStatus::kDocked)) {
       gui->setSelectedRow(OOGUIOptionsRow(GUI_ROW_OPTIONS_GAMEOPTIONS));
@@ -9768,7 +9792,7 @@ void PlayerEntity::setGuiToEquipShipScreen(
     skip = 0;
     searchStatus = OOEntityStatus::kTest;
   } else {
-    skip = skipParam;
+    skip = static_cast<unsigned int>(skipParam);
     searchStatus = OOEntityStatus::kActive;
   }
 
@@ -9777,9 +9801,9 @@ void PlayerEntity::setGuiToEquipShipScreen(
   if (skip == 1) skip = 0;
 
   double priceFactor = 1.0;
-  OOTechLevelID techlevel =
+  OOTechLevelID techlevel = static_cast<OOTechLevelID>(
       (UNIVERSE != nullptr ? UNIVERSE->currentSystemData() : oo::PList())
-          .get<int>(KEY_TECHLEVEL);
+          .get<int>(KEY_TECHLEVEL));
 
   ::StationEntity* dockedStation = this->dockedStation();
   if (dockedStation) {
@@ -10142,7 +10166,9 @@ void PlayerEntity::setGuiToEquipShipScreen(
         gui->setKey(std::format("More:{}", static_cast<int>(i - 1)), row - 1);
       }
 
-      gui->setSelectableRange(NSMakeRange(start_row, row - start_row));
+      gui->setSelectableRange(
+          NSMakeRange(static_cast<std::size_t>(start_row),
+                      static_cast<std::size_t>(row - start_row)));
 
       if (gui->getSelectedRow() != start_row) gui->setSelectedRow(start_row);
 
@@ -10231,9 +10257,10 @@ void PlayerEntity::showInformationForSelectedUpgradeWithFormatString(
       const std::string eq_key_damaged = *eqKey + "_DAMAGED";
       int weight =
           (OOEquipmentType::equipmentTypeWithIdentifier(*eqKey).get() != nullptr
-               ? OOEquipmentType::equipmentTypeWithIdentifier(*eqKey)
-                     .get()
-                     ->requiredCargoSpace()
+               ? static_cast<int>(
+                     OOEquipmentType::equipmentTypeWithIdentifier(*eqKey)
+                         .get()
+                         ->requiredCargoSpace())
                : 0);
       if (hasEquipmentItem(oo::PList(eq_key_damaged))) {
         desc = oo::str::formatRuntime(
@@ -10320,7 +10347,8 @@ void PlayerEntity::setGuiToInterfacesScreen(int skip) {
         if (count <= n_rows || skip < static_cast<std::ptrdiff_t>(n_rows)) {
           previous = 0;  // single page
         } else {
-          previous = skip - (n_rows - 2);  // multi-page.
+          previous =
+              static_cast<unsigned int>(skip) - (n_rows - 2);  // multi-page.
           if (previous < 2) {
             previous = 0;  // if only one previous item, just show it
           }
@@ -10338,7 +10366,8 @@ void PlayerEntity::setGuiToInterfacesScreen(int skip) {
       for (i = skip; i < static_cast<std::ptrdiff_t>(count) &&
                      (row - start_row < static_cast<OOGUIRow>(n_rows));
            i++) {
-        const std::string& interfaceKey = interfaceKeys[i];
+        const std::string& interfaceKey =
+            interfaceKeys[static_cast<unsigned long long>(i)];
         ::OOJSInterfaceDefinition* definition =
             interfaces->find(interfaceKey)->second.get();
 
@@ -10369,7 +10398,9 @@ void PlayerEntity::setGuiToInterfacesScreen(int skip) {
         gui->setKey(std::format("More:{}", i - 1), row - 1);
       }
 
-      gui->setSelectableRange(NSMakeRange(start_row, row - start_row));
+      gui->setSelectableRange(
+          NSMakeRange(static_cast<std::size_t>(start_row),
+                      static_cast<std::size_t>(row - start_row)));
 
       if (gui->getSelectedRow() != start_row) {
         gui->setSelectedRow(start_row);
@@ -10538,7 +10569,9 @@ void PlayerEntity::setupStartScreenGui() {
   gui->setColor(OOColor::yellowColor().get(), row);
   gui->setKey(std::format("Start:{}", row), row);
 
-  gui->setSelectableRange(NSMakeRange(initialRow, row - initialRow + 1));
+  gui->setSelectableRange(
+      NSMakeRange(static_cast<std::size_t>(initialRow),
+                  static_cast<std::size_t>(row - initialRow + 1)));
   gui->setSelectedRow(initialRow);
 
   gui->setBackgroundTextureKey("intro");
@@ -11264,8 +11297,8 @@ bool PlayerEntity::changePassengerBerths(int addRemove) {
       (maxAvailableCargoSpace() - current_cargo < PASSENGER_BERTH_SPACE &&
        addRemove == 1))
     return false;
-  max_passengers += addRemove;
-  max_cargo -= PASSENGER_BERTH_SPACE * addRemove;
+  max_passengers += static_cast<unsigned int>(addRemove);
+  max_cargo -= static_cast<OOCargoQuantity>(PASSENGER_BERTH_SPACE * addRemove);
   return true;
 }
 
@@ -11279,9 +11312,9 @@ OOCreditsQuantity PlayerEntity::removeMissiles() {
                                     : std::optional<std::string>());
 
     if (weapon_key.has_value())
-      tradeIn += static_cast<int>(
+      tradeIn += static_cast<OOCreditsQuantity>(static_cast<int>(
           UNIVERSE != nullptr ? UNIVERSE->getEquipmentPriceForKey(*weapon_key)
-                              : 0);
+                              : 0));
   }
 
   for (i = 0; i < max_missiles; i++) {
@@ -11314,8 +11347,8 @@ OOCargoQuantity PlayerEntity::cargoQuantityForType(const std::string& type) {
     std::ptrdiff_t i;
     ::ShipEntity* cargoItem = nullptr;
 
-    for (i = cargo.size() - 1; i >= 0; i--) {
-      cargoItem = oo::ToShip(cargo[i].get());
+    for (i = static_cast<std::ptrdiff_t>(cargo.size() - 1); i >= 0; i--) {
+      cargoItem = oo::ToShip(cargo[static_cast<unsigned long long>(i)].get());
       if ((cargoItem != nullptr ? cargoItem->commodityType()
                                 : std::optional<std::string>()) == type) {
         // (a nil commodity type never matched)
@@ -11721,7 +11754,8 @@ void PlayerEntity::setGuiToMarketScreen() {
       localMarket);
   std::ptrdiff_t maxOffset = 0;
   if (goods.size() > (GUI_ROW_MARKET_END - GUI_ROW_MARKET_START)) {
-    maxOffset = goods.size() - (GUI_ROW_MARKET_END - GUI_ROW_MARKET_START);
+    maxOffset = static_cast<std::ptrdiff_t>(
+        goods.size() - (GUI_ROW_MARKET_END - GUI_ROW_MARKET_START));
   }
 
   std::size_t commodityCount =
@@ -11759,7 +11793,8 @@ void PlayerEntity::setGuiToMarketScreen() {
       }
     }
     if (maxOffset > 0) {
-      std::ptrdiff_t goodsIndex = IndexOfGood(goods, marketSelectedCommodity);
+      std::ptrdiff_t goodsIndex = static_cast<std::ptrdiff_t>(
+          IndexOfGood(goods, marketSelectedCommodity));
       // validate marketOffset when returning from infoscreen
       if (goodsIndex <= marketOffset) {
         // is off top of list, move list upwards
@@ -11811,7 +11846,9 @@ void PlayerEntity::setGuiToMarketScreen() {
           ++i;
           continue;
         }
-        showMarketScreenDataLine(row, good, localMarket, quantityInHold[i++]);
+        showMarketScreenDataLine(
+            row, good, localMarket,
+            quantityInHold[static_cast<unsigned long long>(i++)]);
         if (good == selectedCommodity) {
           active_row = row;
         }
@@ -11888,7 +11925,9 @@ void PlayerEntity::setGuiToMarketScreen() {
 
     showMarketCashAndLoadLine();
 
-    gui->setSelectableRange(NSMakeRange(start_row, row - start_row));
+    gui->setSelectableRange(
+        NSMakeRange(static_cast<std::size_t>(start_row),
+                    static_cast<std::size_t>(row - start_row)));
     gui->setSelectedRow(active_row);
 
     gui->setShowTextCursor(false);
@@ -12082,18 +12121,22 @@ bool PlayerEntity::tryBuyingCommodity(const std::string& index, bool all) {
     return false;  // can't buy tons of stuff when carrying a specialCargo
   }
   int manifest_quantity =
-      (shipCommodityData != nullptr ? shipCommodityData->quantityForGood(index)
-                                    : 0);
+      (shipCommodityData != nullptr
+           ? static_cast<int>(shipCommodityData->quantityForGood(index))
+           : 0);
   int market_quantity =
-      (localMarket != nullptr ? localMarket->quantityForGood(index) : 0);
+      (localMarket != nullptr
+           ? static_cast<int>(localMarket->quantityForGood(index))
+           : 0);
 
   int purchase = 1;
   if (all) {
     // if cargo contracts, put a break point on the contract volume
-    int contracted = contractedVolumeForGood(index);
+    int contracted = static_cast<int>(contractedVolumeForGood(index));
     if (manifest_quantity >= contracted) {
-      purchase =
-          (localMarket != nullptr ? localMarket->capacityForGood(index) : 0);
+      purchase = (localMarket != nullptr
+                      ? static_cast<int>(localMarket->capacityForGood(index))
+                      : 0);
     } else {
       purchase = contracted - manifest_quantity;
     }
@@ -12101,14 +12144,16 @@ bool PlayerEntity::tryBuyingCommodity(const std::string& index, bool all) {
   if (purchase > market_quantity) {
     purchase = market_quantity;  // limit to what's available
   }
-  if (purchase * pricePerUnit > credits) {
+  if (static_cast<OOCreditsQuantity>(purchase) * pricePerUnit > credits) {
     purchase = static_cast<int>(
         floor(credits / pricePerUnit));  // limit to what's affordable
   }
   // TODO - fix brokenness here...
   if (unit == OOMassUnit::kTons &&
-      purchase + current_cargo > maxAvailableCargoSpace()) {
-    purchase = availableCargoSpace();  // limit to available cargo space
+      static_cast<OOCargoQuantity>(purchase) + current_cargo >
+          maxAvailableCargoSpace()) {
+    purchase = static_cast<int>(
+        availableCargoSpace());  // limit to available cargo space
   } else {
     if (current_cargo == maxAvailableCargoSpace()) {
       // other cases are fine so long as buying is limited to <1000kg /
@@ -12136,10 +12181,12 @@ bool PlayerEntity::tryBuyingCommodity(const std::string& index, bool all) {
     return false;  // stop if that results in nothing to be bought
   }
 
-  if (localMarket != nullptr) localMarket->removeQuantity(purchase, index);
+  if (localMarket != nullptr)
+    localMarket->removeQuantity(static_cast<OOCargoQuantity>(purchase), index);
   if (shipCommodityData != nullptr)
-    shipCommodityData->addQuantity(purchase, index);
-  credits -= pricePerUnit * purchase;
+    shipCommodityData->addQuantity(static_cast<OOCargoQuantity>(purchase),
+                                   index);
+  credits -= pricePerUnit * static_cast<OOCreditsQuantity>(purchase);
 
   calculateCurrentCargo();
 
@@ -12174,22 +12221,26 @@ bool PlayerEntity::trySellingCommodity(const std::string& index, bool all) {
 
   ::OOCommodityMarket* localMarket = this->localMarket();
   int available_units =
-      (shipCommodityData != nullptr ? shipCommodityData->quantityForGood(index)
-                                    : 0);
+      (shipCommodityData != nullptr
+           ? static_cast<int>(shipCommodityData->quantityForGood(index))
+           : 0);
   OOCreditsQuantity pricePerUnit =
       (localMarket != nullptr ? localMarket->priceForGood(index) : 0);
 
   if (available_units == 0) return false;
 
   int market_quantity =
-      (localMarket != nullptr ? localMarket->quantityForGood(index) : 0);
+      (localMarket != nullptr
+           ? static_cast<int>(localMarket->quantityForGood(index))
+           : 0);
 
-  int capacity =
-      (localMarket != nullptr ? localMarket->capacityForGood(index) : 0);
+  int capacity = (localMarket != nullptr
+                      ? static_cast<int>(localMarket->capacityForGood(index))
+                      : 0);
   int sell = 1;
   if (all) {
     // if cargo contracts, put a break point on the contract volume
-    int contracted = contractedVolumeForGood(index);
+    int contracted = static_cast<int>(contractedVolumeForGood(index));
     if (available_units <= contracted) {
       sell = capacity;
     } else {
@@ -12203,10 +12254,12 @@ bool PlayerEntity::trySellingCommodity(const std::string& index, bool all) {
     sell = capacity - market_quantity;  // avoid flooding the market
   if (sell <= 0) return false;  // stop if that results in nothing to be sold
 
-  if (localMarket != nullptr) localMarket->addQuantity(sell, index);
+  if (localMarket != nullptr)
+    localMarket->addQuantity(static_cast<OOCargoQuantity>(sell), index);
   if (shipCommodityData != nullptr)
-    shipCommodityData->removeQuantity(sell, index);
-  credits += pricePerUnit * sell;
+    shipCommodityData->removeQuantity(static_cast<OOCargoQuantity>(sell),
+                                      index);
+  credits += pricePerUnit * static_cast<OOCreditsQuantity>(sell);
 
   calculateCurrentCargo();
 
@@ -12349,7 +12402,9 @@ void PlayerEntity::validateCustomEquipActivationArray() {
   std::optional<std::string> equipmentKey;
   if (customEquipActivation.empty()) return;
   for (i = static_cast<int>(customEquipActivation.size() - 1); i >= 0; i--) {
-    equipmentKey = StringForKey(customEquipActivation[i], CUSTOMEQUIP_EQUIPKEY);
+    equipmentKey =
+        StringForKey(customEquipActivation[static_cast<unsigned long long>(i)],
+                     CUSTOMEQUIP_EQUIPKEY);
     ::OOEquipmentType* eq =
         (equipmentKey.has_value()
              ? OOEquipmentType::equipmentTypeWithIdentifier(*equipmentKey).get()
@@ -12602,10 +12657,12 @@ void PlayerEntity::getFined() {
     local_gov = 1;  // equivalent to Feudal. I'm assuming any station in
                     // interstellar space is military. -- Ahruman 2008-05-29
   OOCreditsQuantity fine = 500 + ((local_gov < 2 || local_gov > 5) ? 500 : 0);
-  fine *= legalStatusValue;
+  fine *= static_cast<OOCreditsQuantity>(legalStatusValue);
   if (fine > credits) {
-    int payback = static_cast<int>(legalStatusValue * credits / fine);
-    setBounty((legalStatusValue - payback), OOLegalStatusReason::kPaidFine);
+    int payback = static_cast<int>(
+        static_cast<OOCreditsQuantity>(legalStatusValue) * credits / fine);
+    setBounty((static_cast<OOCreditsQuantity>(legalStatusValue - payback)),
+              OOLegalStatusReason::kPaidFine);
     credits = 0;
   } else {
     setBounty(0, OOLegalStatusReason::kPaidFine);
@@ -12711,8 +12768,12 @@ void PlayerEntity::setUpTrumbles() {
   }
   int i;
   for (i = 0; i < PLAYER_MAX_TRUMBLES; i++) {
-    digramchars[0] = (trumbleDigrams[i] & 0x007f) | 0x0020;
-    digramchars[1] = ((trumbleDigrams[i + 1] ^ xchar) & 0x007f) | 0x0020;
+    digramchars[0] =
+        (trumbleDigrams[static_cast<unsigned long long>(i)] & 0x007f) | 0x0020;
+    digramchars[1] =
+        ((trumbleDigrams[static_cast<unsigned long long>(i + 1)] ^ xchar) &
+         0x007f) |
+        0x0020;
     xchar = digramchars[0];
     const std::string digramstring = {
         static_cast<char>(digramchars[0]),
@@ -12767,9 +12828,9 @@ oo::PList PlayerEntity::trumbleValue() {
 
   clear_checksum();
   mungChecksumWithString(commanderName());
-  munge_checksum(credits);
+  munge_checksum(static_cast<std::int64_t>(credits));
   munge_checksum(ship_kills);
-  trumbleHash = munge_checksum(trumbleCount);
+  trumbleHash = munge_checksum(static_cast<std::int64_t>(trumbleCount));
 
   oo::Defaults::standard().setInteger(namekey, trumbleHash);
 
@@ -12813,7 +12874,7 @@ void PlayerEntity::setTrumbleValueFrom(const oo::PList& trumbleValue) {
     // calculate a hash for the putative values
     clear_checksum();
     mungChecksumWithString(commanderName());
-    munge_checksum(credits);
+    munge_checksum(static_cast<std::int64_t>(credits));
     munge_checksum(ship_kills);
     trumbleHash = munge_checksum(putativeNTrumbles);
 
@@ -12828,7 +12889,7 @@ void PlayerEntity::setTrumbleValueFrom(const oo::PList& trumbleValue) {
       // try to determine trumbleCount from the key in the saved game
       clear_checksum();
       mungChecksumWithString(commanderName());
-      munge_checksum(credits);
+      munge_checksum(static_cast<std::int64_t>(credits));
       munge_checksum(ship_kills);
       trumbleHash = munge_checksum(i);
       if (putativeHash == trumbleHash) {
@@ -12854,7 +12915,7 @@ void PlayerEntity::setTrumbleValueFrom(const oo::PList& trumbleValue) {
     for (i = 1; (info_failed) && (i < PLAYER_MAX_TRUMBLES); i++) {
       clear_checksum();
       mungChecksumWithString(commanderName());
-      munge_checksum(credits);
+      munge_checksum(static_cast<std::int64_t>(credits));
       munge_checksum(ship_kills);
       trumbleHash = munge_checksum(i);
       if (putativeHash == trumbleHash) {
@@ -12868,22 +12929,22 @@ void PlayerEntity::setTrumbleValueFrom(const oo::PList& trumbleValue) {
              "CHEAT DEFEATED - that's not the way to get rid of trumbles!");
   }
   // at this stage we've done the best we can to stop cheaters
-  trumbleCount = putativeNTrumbles;
+  trumbleCount = static_cast<std::size_t>(putativeNTrumbles);
 
   if ((!putativeTrumbleArray.isNull()) &&
       (putativeTrumbleArray.count() == PLAYER_MAX_TRUMBLES)) {
     for (i = 0; i < PLAYER_MAX_TRUMBLES; i++)
       trumble[i]->setFromDictionary(
-          putativeTrumbleArray.at(i)->isDict()
-              ? *putativeTrumbleArray.at(i)
+          putativeTrumbleArray.at(static_cast<std::size_t>(i))->isDict()
+              ? *putativeTrumbleArray.at(static_cast<std::size_t>(i))
               : oo::PList());  // null PList unless a dictionary
   }
 
   clear_checksum();
   mungChecksumWithString(commanderName());
-  munge_checksum(credits);
+  munge_checksum(static_cast<std::int64_t>(credits));
   munge_checksum(ship_kills);
-  trumbleHash = munge_checksum(trumbleCount);
+  trumbleHash = munge_checksum(static_cast<std::int64_t>(trumbleCount));
 
   oo::Defaults::standard().setInteger(namekey, trumbleHash);
 }
@@ -13027,7 +13088,7 @@ bool PlayerEntity::moveTargetMemoryBy(std::ptrdiff_t delta) {
         static_cast<std::ptrdiff_t>(target_memory_index) + delta;
     while (idx < 0) idx += PLAYER_TARGET_MEMORY_SIZE;
     while (idx >= PLAYER_TARGET_MEMORY_SIZE) idx -= PLAYER_TARGET_MEMORY_SIZE;
-    target_memory_index = idx;
+    target_memory_index = static_cast<std::size_t>(idx);
 
     const std::weak_ptr<Entity>& targ_ref =
         target_memory.at(target_memory_index);

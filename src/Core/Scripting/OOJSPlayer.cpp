@@ -200,8 +200,8 @@ void InitOOJSPlayer(JSContext* context, JSValueConst global) {
           up there rather than keeping a reference that must be dropped on
           reset.
   */
-  JSValue playerObject =
-      JS_NewObjectClass(context, static_cast<int>(sPlayerClassID));
+  JSValue playerObject = JS_NewObjectClass(
+      context, static_cast<JSClassID>(static_cast<int>(sPlayerClassID)));
   JS_DefinePropertyValueStr(context, global, "player", playerObject,
                             OOJS_PROP_READONLY);
 }
@@ -244,7 +244,7 @@ static JSValue PlayerGetProperty(OOJS_GETTER_ARGS) {
     case kScore:
       return JS_NewInt32(
           context, (player != nullptr
-                        ? player->PlayerEntity::score()
+                        ? static_cast<int32_t>(player->PlayerEntity::score())
                         : unsigned{}));  // qualified: the final overrider, so
                                          // the binding test stands in for it
 
@@ -415,7 +415,8 @@ static JSValue PlayerSetProperty(OOJS_SETTER_ARGS) {
     case kScore:
       if (OOJSValueToInt32(context, value, &iValue)) {
         iValue = std::max(iValue, 0);
-        if (player != nullptr) player->setScore(iValue);
+        if (player != nullptr)
+          player->setScore(static_cast<unsigned int>(iValue));
         return JS_UNDEFINED;
       }
       break;
@@ -432,7 +433,7 @@ static JSValue PlayerSetProperty(OOJS_SETTER_ARGS) {
         if (iValue < 0) iValue = 0;
         if (player != nullptr)
           player->PlayerEntity::setBounty(
-              iValue,
+              static_cast<OOCreditsQuantity>(iValue),
               OOLegalStatusReason::kByScript);  // qualified: the final
                                                 // overrider, so the binding
                                                 // test stands in for it
@@ -777,7 +778,7 @@ static JSValue PlayerSetEscapePodDestination(JSContext* context,
         if (nDests > 0) {
           for (i = --nDests; i > 0; i--) {
             if (sDests[i].get<bool>("nova")) {
-              sDests.erase(sDests.begin() + i);
+              sDests.erase(sDests.begin() + static_cast<long long>(i));
             }
           }
         }
@@ -787,7 +788,8 @@ static JSValue PlayerSetEscapePodDestination(JSContext* context,
         if (nDests > 0) {
           // we have a system with a main station!
           if (nDests > 1)
-            i = ranrot_rand() % nDests;  // any nearby system will do.
+            i = static_cast<std::size_t>(ranrot_rand()) %
+                nDests;  // any nearby system will do.
           const oo::PList& dest = sDests[i];
 
           // add more time until rescue, with overheads for entering witchspace

@@ -1296,10 +1296,11 @@ bool DockEntity::dockingCorridorIsEmpty() {
 
   // check against all ships
   bool isEmpty = true;
-  int ent_count = UNIVERSE->n_entities;
+  int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;                 // grab the public sorted list
-  std::vector<Entity*> my_entities(ent_count);  // each one's object retained
+  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+      ent_count));                              // each one's object retained
   std::vector<oo::EntityHold> my_holds;         // each one's object, held
   int i;
   int ship_count = 0;
@@ -1312,13 +1313,14 @@ bool DockEntity::dockingCorridorIsEmpty() {
           station->getAlertLevel() < OOStationAlertLevel::kRed) ||
          !oo::EntityIsPlayer(uni_entities[i])) &&
         uni_entities[i]->getMass() > 1000) {
-      my_entities[ship_count++] =
+      my_entities[static_cast<unsigned long long>(ship_count++)] =
           oo::HoldIn(my_holds, uni_entities[i]);  //	retained
     }
   }
 
   for (i = 0; (i < ship_count) && (isEmpty); i++) {
-    ::ShipEntity* ship = oo::ToShip(my_entities[i]);
+    ::ShipEntity* ship =
+        oo::ToShip(my_entities[static_cast<unsigned long long>(i)]);
     if (ship == nullptr)
       continue;  // (every one is a ship: the list holds the ships)
     double d2 =
@@ -1366,23 +1368,25 @@ void DockEntity::clearDockingCorridor() {
   // check against all ships
   ::StationEntity* station = oo::ToStation(parentEntity());
   bool isClear = true;
-  int ent_count = UNIVERSE->n_entities;
+  int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;                 // grab the public sorted list
-  std::vector<Entity*> my_entities(ent_count);  // each one's object retained
+  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+      ent_count));                              // each one's object retained
   std::vector<oo::EntityHold> my_holds;         // each one's object, held
   int i;
   int ship_count = 0;
 
   for (i = 0; i < ent_count; i++) {
     if (uni_entities[i]->isShip) {
-      my_entities[ship_count++] =
+      my_entities[static_cast<unsigned long long>(ship_count++)] =
           oo::HoldIn(my_holds, uni_entities[i]);  //	retained
     }
   }
 
   for (i = 0; i < ship_count; i++) {
-    ::ShipEntity* ship = oo::ToShip(my_entities[i]);
+    ::ShipEntity* ship =
+        oo::ToShip(my_entities[static_cast<unsigned long long>(i)]);
     if (ship == nullptr)
       continue;  // (every one is a ship: the list holds the ships)
     double d2 =

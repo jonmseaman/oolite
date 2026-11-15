@@ -233,7 +233,7 @@ std::uint16_t OOPixMapBytesPerPixelForFormat(OOPixMapFormat format) {
       return 4;
   }
 
-  return -1;
+  return static_cast<std::uint16_t>(-1);
 }
 #endif
 

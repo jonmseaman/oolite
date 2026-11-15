@@ -396,7 +396,8 @@ class OldStyleScanner {
             escaped++;
           } else if (escaped > 1) {
             if (hex && isHexDigit(c)) {
-              pending = static_cast<char16_t>((pending << 4) | hexValue(c));
+              pending = static_cast<char16_t>(
+                  (static_cast<unsigned int>(pending << 4)) | hexValue(c));
               if (++escaped == 6) {
                 escaped = 0;
                 chars += pending;

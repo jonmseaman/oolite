@@ -330,7 +330,8 @@ static JSValue SoundStaticStopMusic(JSContext* context,
 JSValue OOJSSoundJSValueInContext(OOSound* sound, JSContext* context) {
   if (sound == nullptr) return JS_NULL;
 
-  JSValue result = JS_NewObjectClass(context, static_cast<int>(sSoundClassID));
+  JSValue result = JS_NewObjectClass(
+      context, static_cast<JSClassID>(static_cast<int>(sSoundClassID)));
   if (JS_IsException(result)) {
     JS_FreeValue(context, JS_GetException(context));
     return JS_NULL;

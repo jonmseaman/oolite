@@ -347,7 +347,8 @@ int OOJoystickSplineAxisProfile::addControl(NSPoint point) {
       return static_cast<int>(i - 1);
     }
     if ((right.x - point.x) >= SPLINE_POINT_MIN_SPACING) {
-      controlPoints_.insert(controlPoints_.begin() + i, point);
+      controlPoints_.insert(controlPoints_.begin() + static_cast<long long>(i),
+                            point);
       makeSegments();
       return static_cast<int>(i);
     }
@@ -365,7 +366,7 @@ NSPoint OOJoystickSplineAxisProfile::pointAtIndex(std::ptrdiff_t index) {
     point.x = 1.0;
     point.y = 1.0;
   } else {
-    point = controlPoints_[index];
+    point = controlPoints_[static_cast<unsigned long long>(index)];
   }
   return point;
 }
@@ -399,7 +400,7 @@ bool OOJoystickSplineAxisProfile::makeSegments() {
     gradientleft = 1.0;
     right = controlPoints_[0];
     for (i = 0; i < controlPoints_.size(); i++) {
-      next = pointAtIndex(i + 1);
+      next = pointAtIndex(static_cast<std::ptrdiff_t>(i + 1));
       if (next.x - left.x > 0.0) {
         // we make the gradient at right equal to the gradient of a straight
         // line between the neighcouring points
@@ -463,13 +464,13 @@ void OOJoystickSplineAxisProfile::moveControl(std::ptrdiff_t index,
     left.x = 0.0;
     right.x = 0.0;
   } else {
-    left = controlPoints_[index - 1];
+    left = controlPoints_[static_cast<unsigned long long>(index - 1)];
   }
   if (index == static_cast<std::ptrdiff_t>(controlPoints_.size()) - 1) {
     right.x = 1.0;
     right.y = 1.0;
   } else {
-    right = controlPoints_[index + 1];
+    right = controlPoints_[static_cast<unsigned long long>(index + 1)];
   }
   // preserve order of control points - if we attempt to move this control point
   // beyond either of its neighbours, move it back inside.  Also keep neighbours
@@ -485,7 +486,7 @@ void OOJoystickSplineAxisProfile::moveControl(std::ptrdiff_t index,
       point.x = (left.x + right.x) / 2;
     }
   }
-  controlPoints_[index] = point;
+  controlPoints_[static_cast<unsigned long long>(index)] = point;
   makeSegments();
   return;
 }

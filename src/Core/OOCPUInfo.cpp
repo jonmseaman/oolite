@@ -136,10 +136,10 @@ std::string OOCPUDescription() {
   unsigned nExIds, i = 0;
   std::array<char, 0x40> CPUBrandString{};
   // Get the information associated with each extended ID.
-  OOCPUID(CPUInfo, 0x80000000);
-  nExIds = CPUInfo[0];
+  OOCPUID(CPUInfo, static_cast<int>(0x80000000));
+  nExIds = static_cast<unsigned int>(CPUInfo[0]);
   for (i = 0x80000000; i <= nExIds; ++i) {
-    OOCPUID(CPUInfo, i);
+    OOCPUID(CPUInfo, static_cast<int>(i));
     // Interpret CPU brand string
     if (i == 0x80000002)
       memcpy(CPUBrandString.data(), CPUInfo, sizeof(CPUInfo));

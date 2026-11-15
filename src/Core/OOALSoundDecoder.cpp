@@ -194,10 +194,12 @@ bool OOALSoundVorbisCodec::initWithPath(
 
       const std::string zipFile =
           oo::str::pathWithComponents(std::vector<std::string>(
-              components.begin(), components.begin() + i + 1));
+              components.begin(),
+              components.begin() + static_cast<long long>(i) + 1));
       const std::string containedFile =
           oo::str::pathWithComponents(std::vector<std::string>(
-              components.begin() + i + 1, components.end()));
+              components.begin() + static_cast<long long>(i) + 1,
+              components.end()));
 
       uf = unzOpen64(zipFile.c_str());
       if (uf == nullptr) {
@@ -275,7 +277,7 @@ OOALSoundVorbisCodec::comments() {
 
   comments = ov_comment(&_vf, -1);
   if (nullptr != comments) {
-    count = comments->comments;
+    count = static_cast<unsigned int>(comments->comments);
     if (0 != count) {
       result.emplace();
       for (i = 0; i != count; ++i) {
@@ -312,11 +314,12 @@ bool OOALSoundVorbisCodec::readCreatingBuffer(std::vector<char>& out) {
       static_cast<uint64_t>(SIZE_MAX));  // Should have been checked by caller
   sizeInFrames = static_cast<size_t>(totalSizeInFrames);
 
-  std::vector<char> buffer(frameSize * sizeInFrames);
+  std::vector<char> buffer(static_cast<size_t>(frameSize) * sizeInFrames);
 
   if (sizeInFrames) {
-    remaining = static_cast<int>(
-        std::min(frameSize * sizeInFrames, static_cast<size_t>(INT_MAX)));
+    remaining =
+        static_cast<int>(std::min(static_cast<size_t>(frameSize) * sizeInFrames,
+                                  static_cast<size_t>(INT_MAX)));
     dst = buffer.data();
 
     std::array<char, 4096> pcmout{};
@@ -333,16 +336,20 @@ bool OOALSoundVorbisCodec::readCreatingBuffer(std::vector<char>& out) {
         break;
       }
 
-      memcpy(dst, pcmout.data(), sizeof(char) * framesRead);
+      memcpy(dst, pcmout.data(),
+             sizeof(char) * static_cast<std::size_t>(static_cast<std::size_t>(
+                                static_cast<std::size_t>(framesRead))));
 
       remaining -= framesRead;
       dst += framesRead;
     } while (0 < remaining);
 
-    sizeInFrames -= remaining;  // In case we stopped at an error
+    sizeInFrames -=
+        static_cast<size_t>(remaining);  // In case we stopped at an error
   }
 
-  buffer.resize(std::min(buffer.size(), sizeInFrames * frameSize));
+  buffer.resize(
+      std::min(buffer.size(), sizeInFrames * static_cast<size_t>(frameSize)));
   out = std::move(buffer);
   return true;
 }
@@ -366,10 +373,17 @@ size_t OOALSoundVorbisCodec::streamToBuffer(char* buffer) {
       // else:
       break;
     }
-    memcpy(dst, pcmout.data(), sizeof(char) * framesRead);
-    remaining -= sizeof(char) * framesRead;
-    dst += sizeof(char) * framesRead;
-    streamed += sizeof(char) * framesRead;
+    memcpy(dst, pcmout.data(),
+           sizeof(char) * static_cast<std::size_t>(static_cast<std::size_t>(
+                              static_cast<std::size_t>(framesRead))));
+    remaining -=
+        sizeof(char) * static_cast<std::size_t>(static_cast<std::size_t>(
+                           static_cast<std::size_t>(framesRead)));
+    dst += sizeof(char) * static_cast<std::size_t>(static_cast<std::size_t>(
+                              static_cast<std::size_t>(framesRead)));
+    streamed +=
+        sizeof(char) * static_cast<std::size_t>(static_cast<std::size_t>(
+                           static_cast<std::size_t>(framesRead)));
   } while (0 < remaining);
 
   return streamed;
@@ -441,9 +455,9 @@ static size_t OOReadOXZVorbis(void* ptr, size_t size, size_t nmemb,
   //	OO_LOG("sound.replay", "Read {} blocks, got {}",
   // static_cast<int>(toRead), static_cast<int>(err));
   if (err < 0) {
-    return OV_EREAD;
+    return static_cast<size_t>(OV_EREAD);
   }
-  return err;
+  return static_cast<size_t>(err);
 }
 
 int OOCloseOXZVorbis(void* /*datasource*/) {

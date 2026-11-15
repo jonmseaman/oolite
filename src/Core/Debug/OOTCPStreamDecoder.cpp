@@ -153,9 +153,9 @@ void OOTCPStreamDecoderReceiveBytes(OOTCPStreamDecoderRef decoder,
       decoder->header[decoder->headerSpaceUsed++] = *bytes++;
     } else if (decoder->headerSpaceUsed == 4) {
       // We've read a header, start on a packet.
-      decoder->nextSize = (decoder->header[0] << 24) |
-                          (decoder->header[1] << 16) |
-                          (decoder->header[2] << 8) | (decoder->header[3] << 0);
+      decoder->nextSize = static_cast<uint32_t>(
+          (decoder->header[0] << 24) | (decoder->header[1] << 16) |
+          (decoder->header[2] << 8) | (decoder->header[3] << 0));
 
       decoder->headerSpaceUsed = 0;
       if (decoder->nextSize != 0) {

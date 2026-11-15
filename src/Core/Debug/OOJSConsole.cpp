@@ -520,7 +520,7 @@ static JSValue ConsoleSetProperty(OOJS_SETTER_ARGS) {
 #ifdef OO_DEBUG_MONITOR_ENABLED
     case kDebugFlags:
       if (OOJSValueToInt32(context, value, &iValue)) {
-        gDebugFlags = iValue;
+        gDebugFlags = static_cast<std::uint32_t>(iValue);
       }
       break;
 #endif

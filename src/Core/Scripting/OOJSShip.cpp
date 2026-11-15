@@ -1084,14 +1084,17 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       return OOJSValueFromBOOL(ship->withinStationAegis());
 
     case kCargoSpaceCapacity:
-      return JS_NewInt32(context, ship->maxAvailableCargoSpace());
+      return JS_NewInt32(context,
+                         static_cast<int32_t>(ship->maxAvailableCargoSpace()));
 
     case kCargoSpaceUsed:
-      return JS_NewInt32(context, ship->maxAvailableCargoSpace() -
-                                      ship->availableCargoSpace());
+      return JS_NewInt32(context,
+                         static_cast<int32_t>(ship->maxAvailableCargoSpace() -
+                                              ship->availableCargoSpace()));
 
     case kCargoSpaceAvailable:
-      return JS_NewInt32(context, ship->availableCargoSpace());
+      return JS_NewInt32(context,
+                         static_cast<int32_t>(ship->availableCargoSpace()));
 
     case kCargoList:
       result = ship->cargoListForScripting();
@@ -1107,7 +1110,8 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       break;
 
     case kCommodityAmount:
-      return JS_NewInt32(context, ship->commodityAmount());
+      return JS_NewInt32(context,
+                         static_cast<int32_t>(ship->commodityAmount()));
 
     case kCollisionExceptions:
       result = oo::EntityNodesFrom(ship->collisionExceptions());
@@ -1602,7 +1606,8 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
     case kBounty:
       if (OOJSValueToInt32(context, value, &iValue)) {
         if (iValue < 0) iValue = 0;
-        ship->setBounty(iValue, OOLegalStatusReason::kByScript);
+        ship->setBounty(static_cast<OOCreditsQuantity>(iValue),
+                        OOLegalStatusReason::kByScript);
         return JS_UNDEFINED;
       }
       break;
@@ -1618,9 +1623,10 @@ static JSValue ShipSetProperty(OOJS_SETTER_ARGS) {
         } else if (static_cast<OOCargoQuantity>(iValue) <
                    ship->maxAvailableCargoSpace() -
                        ship->availableCargoSpace()) {
-          iValue = ship->maxAvailableCargoSpace() - ship->availableCargoSpace();
+          iValue = static_cast<int32_t>(ship->maxAvailableCargoSpace() -
+                                        ship->availableCargoSpace());
         }
-        ship->setMaxAvailableCargoSpace(iValue);
+        ship->setMaxAvailableCargoSpace(static_cast<OOCargoQuantity>(iValue));
         return JS_UNDEFINED;
       }
       break;
@@ -2606,7 +2612,7 @@ static JSValue ShipSpawn(OOJS_NATIVE_ARGS) {
   }
 
   OOJS_BEGIN_FULL_NATIVE(context)
-  result = ship->spawnShipsWithRole(*role, count);
+  result = ship->spawnShipsWithRole(*role, static_cast<std::size_t>(count));
   OOJS_END_FULL_NATIVE
 
   OOJS_RETURN_PLIST(oo::EntityNodesFrom(result));
@@ -3313,7 +3319,7 @@ static JSValue ShipSetCargo(OOJS_NATIVE_ARGS) {
            ? UNIVERSE->getCommodities()
            : nullptr);  // null: no good is defined, as a message to nil
   if (commodities != nullptr && commodities->goodDefined(*commodity)) {
-    ship->setCommodityForPod(commodity, count);
+    ship->setCommodityForPod(commodity, static_cast<OOCargoQuantity>(count));
   }
 
   OOJS_RETURN_BOOL(commodities != nullptr &&
@@ -4230,7 +4236,7 @@ static JSValue ShipCheckScanner(OOJS_NATIVE_ARGS) {
     ship->checkScanner();
   }
   ShipEntity** scannedShips = ship->scannedShips();
-  unsigned num = ship->numberOfScannedShips();
+  unsigned num = static_cast<unsigned int>(ship->numberOfScannedShips());
   oo::PList::Array scanResult;
   for (unsigned i = 0; i < num; i++) {
     if (scannedShips[i] != nullptr)
@@ -4274,8 +4280,9 @@ static JSValue ShipAdjustCargo(OOJS_NATIVE_ARGS) {
   if (adjustment > 0) {
     ok = ship->addCargo(
         (UNIVERSE != nullptr
-             ? UNIVERSE->getContainersOfCommodity(commodity.value_or(""),
-                                                  adjustment)
+             ? UNIVERSE->getContainersOfCommodity(
+                   commodity.value_or(""),
+                   static_cast<OOCargoQuantity>(adjustment))
              : std::vector<oo::EntityHold>()));  // non-reified templates
   } else if (adjustment < 0) {
     OOCargoQuantity r = static_cast<OOCargoQuantity>(-adjustment);

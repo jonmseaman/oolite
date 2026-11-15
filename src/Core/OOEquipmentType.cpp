@@ -674,8 +674,9 @@ OOTechLevelID OOEquipmentType::effectiveTechLevel() {
                : oo::PList());  // OOUIntegerFromObject:
                                 // OOUnsignedLongLongFromObject on this 64-bit
                                 // build
-      tl = static_cast<std::ptrdiff_t>(oo::plist_get::unsignedLongLongFrom(
-          !missionValue.isNull() ? &missionValue : nullptr, tl));
+      tl = static_cast<OOTechLevelID>(
+          static_cast<std::ptrdiff_t>(oo::plist_get::unsignedLongLongFrom(
+              !missionValue.isNull() ? &missionValue : nullptr, tl)));
     }
   }
 

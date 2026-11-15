@@ -172,7 +172,8 @@ void OOSystemDescriptionManager::setProperties(const oo::PList& properties,
       tokens.at<std::size_t>(1) < OO_SYSTEMS_PER_GALAXY) {
     OOGalaxyID g = static_cast<OOGalaxyID>(tokens.at<std::size_t>(0));
     OOSystemID s = static_cast<OOSystemID>(tokens.at<std::size_t>(1));
-    std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
+    std::size_t index =
+        static_cast<std::size_t>((g * OO_SYSTEMS_PER_GALAXY) + s);
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
       OO_LOG("system.description.error",
              "'{}' is an invalid system key. This is an internal error. Please "
@@ -203,7 +204,8 @@ void OOSystemDescriptionManager::setProperty(
 
     OOGalaxyID g = static_cast<OOGalaxyID>(tokens.at<std::size_t>(0));
     OOSystemID s = static_cast<OOSystemID>(tokens.at<std::size_t>(1));
-    std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
+    std::size_t index =
+        static_cast<std::size_t>((g * OO_SYSTEMS_PER_GALAXY) + s);
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
       OO_LOG("system.description.error",
              "'{}' is an invalid system key. This is an internal error. Please "
@@ -318,12 +320,12 @@ oo::PList OOSystemDescriptionManager::exportScriptedChanges() {
 oo::PList OOSystemDescriptionManager::getPropertiesForCurrentSystem() {
   OOSystemID s = (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0);
   if (s >= 0) {
-    std::size_t index =
+    std::size_t index = static_cast<std::size_t>(
         ((PLAYER != nullptr ? PLAYER->PlayerEntity::galaxyNumber()
                             : OOGalaxyID{}) *
          OO_SYSTEMS_PER_GALAXY) +
-        s;  // qualified: the final overrider, so the binding
-            // test stands in for it
+        s);  // qualified: the final overrider, so the binding
+             // test stands in for it
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
       OO_LOG("system.description.error",
              "'{}' is an invalid system index for the current system. This is "
@@ -349,7 +351,8 @@ oo::PList OOSystemDescriptionManager::getPropertiesForSystemKey(
       tokens.at<std::size_t>(1) < OO_SYSTEMS_PER_GALAXY) {
     OOGalaxyID g = static_cast<OOGalaxyID>(tokens.at<std::size_t>(0));
     OOSystemID s = static_cast<OOSystemID>(tokens.at<std::size_t>(1));
-    std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
+    std::size_t index =
+        static_cast<std::size_t>((g * OO_SYSTEMS_PER_GALAXY) + s);
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
       OO_LOG("system.description.error",
              "'{}' is an invalid system key. This is an internal error. Please "
@@ -365,7 +368,7 @@ oo::PList OOSystemDescriptionManager::getPropertiesForSystemKey(
 
 oo::PList OOSystemDescriptionManager::getPropertiesForSystem(OOSystemID s,
                                                              OOGalaxyID g) {
-  std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
+  std::size_t index = static_cast<std::size_t>((g * OO_SYSTEMS_PER_GALAXY) + s);
   if (index >= OO_SYSTEM_CACHE_LENGTH) {
     OO_LOG("system.description.error",
            "'{}, {}' is an invalid system. This is an internal error. Please "
@@ -390,7 +393,7 @@ oo::PList OOSystemDescriptionManager::getProperty(const std::string& property,
            static_cast<int>(g), static_cast<int>(s));
     return oo::PList();
   }
-  std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
+  std::size_t index = static_cast<std::size_t>((g * OO_SYSTEMS_PER_GALAXY) + s);
   if (index >= OO_SYSTEM_CACHE_LENGTH) {
     OO_LOG("system.description.error",
            "'{} {}' is an invalid system key. This is an internal error. "
@@ -555,7 +558,7 @@ NSPoint OOSystemDescriptionManager::getCoordinatesForSystem(OOSystemID s,
            static_cast<int>(g), static_cast<int>(s));
     return NSPoint{0, 0};
   }
-  std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
+  std::size_t index = static_cast<std::size_t>((g * OO_SYSTEMS_PER_GALAXY) + s);
   if (index >= OO_SYSTEM_CACHE_LENGTH) {
     OO_LOG("system.description.error",
            "'{} {}' is an invalid system key. This is an internal error. "
@@ -575,7 +578,7 @@ std::vector<OOSystemID> OOSystemDescriptionManager::getNeighbourIDsForSystem(
            static_cast<int>(g), static_cast<int>(s));
     return {};
   }
-  std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
+  std::size_t index = static_cast<std::size_t>((g * OO_SYSTEMS_PER_GALAXY) + s);
   if (index >= OO_SYSTEM_CACHE_LENGTH) {
     OO_LOG("system.description.error",
            "'{} {}' is an invalid system key. This is an internal error. "
@@ -592,12 +595,12 @@ Random_Seed OOSystemDescriptionManager::getRandomSeedForCurrentSystem() {
     return kNilRandomSeed;
   } else {
     OOSystemID s = (UNIVERSE != nullptr ? UNIVERSE->currentSystemID() : 0);
-    std::size_t index =
+    std::size_t index = static_cast<std::size_t>(
         ((PLAYER != nullptr ? PLAYER->PlayerEntity::galaxyNumber()
                             : OOGalaxyID{}) *
          OO_SYSTEMS_PER_GALAXY) +
-        s;  // qualified: the final overrider, so the binding
-            // test stands in for it
+        s);  // qualified: the final overrider, so the binding
+             // test stands in for it
     if (index >= OO_SYSTEM_CACHE_LENGTH) {
       OO_LOG("system.description.error",
              "'{}' is an invalid system index for the current system. This is "
@@ -620,7 +623,7 @@ Random_Seed OOSystemDescriptionManager::getRandomSeedForSystem(OOSystemID s,
            static_cast<int>(g), static_cast<int>(s));
     return kNilRandomSeed;
   }
-  std::size_t index = (g * OO_SYSTEMS_PER_GALAXY) + s;
+  std::size_t index = static_cast<std::size_t>((g * OO_SYSTEMS_PER_GALAXY) + s);
   if (index >= OO_SYSTEM_CACHE_LENGTH) {
     OO_LOG("system.description.error",
            "'{} {}' is an invalid system key. This is an internal error. "

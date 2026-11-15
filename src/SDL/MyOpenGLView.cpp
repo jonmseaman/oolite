@@ -953,7 +953,8 @@ std::vector<oo::PList> MyOpenGLView::getScreenSizeArray() {
 }
 
 NSSize MyOpenGLView::modeAsSize(int sizeIndex) {
-  const oo::PList& mode = screenSizes.at(sizeIndex);
+  const oo::PList& mode =
+      screenSizes.at(static_cast<unsigned long long>(sizeIndex));
   return NSMakeSize(mode.get<int>(kOODisplayWidth),
                     mode.get<int>(kOODisplayHeight));
 }
@@ -1179,7 +1180,9 @@ int MyOpenGLView::loadFullscreenSettings() {
   }
 
   if (width && height) {
-    currentSize = indexOfDisplayModeForWidth(width, height, refresh);
+    currentSize = indexOfDisplayModeForWidth(
+        static_cast<unsigned int>(width), static_cast<unsigned int>(height),
+        static_cast<unsigned int>(refresh));
     return currentSize;
   }
   return currentSize;
@@ -1194,10 +1197,11 @@ int MyOpenGLView::indexOfDisplayModeForWidth(unsigned int d_width,
   modeCount = static_cast<int>(screenSizes.size());
 
   for (i = 0; i < modeCount; i++) {
-    const oo::PList& mode = screenSizes[i];
-    modeWidth = mode.get<int>(kOODisplayWidth);
-    modeHeight = mode.get<int>(kOODisplayHeight);
-    modeRefresh = mode.get<int>(kOODisplayRefreshRate);
+    const oo::PList& mode = screenSizes[static_cast<unsigned long long>(i)];
+    modeWidth = static_cast<unsigned int>(mode.get<int>(kOODisplayWidth));
+    modeHeight = static_cast<unsigned int>(mode.get<int>(kOODisplayHeight));
+    modeRefresh =
+        static_cast<unsigned int>(mode.get<int>(kOODisplayRefreshRate));
     if ((modeWidth == d_width) && (modeHeight == d_height) &&
         (modeRefresh == d_refresh)) {
       OO_LOG("display.mode.found", "Found mode {}", oo::DescriptionOf(mode));
@@ -1215,7 +1219,8 @@ int MyOpenGLView::indexOfDisplayModeForWidth(unsigned int d_width,
 }
 
 NSSize MyOpenGLView::currentScreenSize() {
-  const oo::PList& mode = screenSizes.at(currentSize);
+  const oo::PList& mode =
+      screenSizes.at(static_cast<unsigned long long>(currentSize));
 
   if (mode) {
     return NSMakeSize(mode.get<int>(kOODisplayWidth),
@@ -1226,7 +1231,7 @@ NSSize MyOpenGLView::currentScreenSize() {
 }
 
 oo::PList MyOpenGLView::currentScreenMode() {
-  return screenSizes.at(currentSize);
+  return screenSizes.at(static_cast<unsigned long long>(currentSize));
 }
 
 void MyOpenGLView::setFov(float value, bool fromFraction) {
@@ -1351,7 +1356,7 @@ bool MyOpenGLView::snapShot(const std::optional<std::string>& filename) {
 
   int pitch = surface->pitch;
   std::vector<unsigned char> pixls(static_cast<std::size_t>(pitch) *
-                                   surface->h);
+                                   static_cast<std::size_t>(surface->h));
   int y;
   int off;
 
@@ -1403,7 +1408,8 @@ bool MyOpenGLView::snapShot(const std::optional<std::string>& filename) {
     OO_LOG("screenshot", "Saving screen shot \"{}\" ({} x {} pixels).",
            pathToPicHDR, static_cast<unsigned>(surface->w),
            static_cast<unsigned>(surface->h));
-    std::vector<GLfloat> pixlsf(static_cast<std::size_t>(pitch) * surface->h);
+    std::vector<GLfloat> pixlsf(static_cast<std::size_t>(pitch) *
+                                static_cast<std::size_t>(surface->h));
     for (y = surface->h - 1, off = 0; y >= 0; y--, off += pitch) {
       glReadPixels(0, y, surface->w, 1, GL_RGB, GL_FLOAT, pixlsf.data() + off);
     }
@@ -1489,14 +1495,14 @@ void MyOpenGLView::dumpGrayToFileNamed(const std::string& name, uint8_t* bytes,
       SDL_CreateSurface(static_cast<int>(width), static_cast<int>(height),
                         SDL_PIXELFORMAT_RGBA32);
   for (int y = 0; static_cast<std::size_t>(y) < height; y++) {
-    uint8_t* srcRow = bytes + rowBytes * y;
+    uint8_t* srcRow = bytes + rowBytes * static_cast<std::size_t>(y);
     uint8_t* dstRow =
         static_cast<uint8_t*>(tmpSurface->pixels) + y * tmpSurface->pitch;
     for (int x = 0; static_cast<std::size_t>(x) < width; x++) {
       dstRow[4 * x + 0] = srcRow[x];
       dstRow[4 * x + 1] = srcRow[x];
       dstRow[4 * x + 2] = srcRow[x];
-      dstRow[4 * x + 3] = '\xff';
+      dstRow[4 * x + 3] = static_cast<uint8_t>('\xff');
     }
   }
   SDL_SavePNG(tmpSurface, dumpFile.c_str());
@@ -1523,7 +1529,7 @@ void MyOpenGLView::dumpGrayAlphaToFileNamed(const std::string& name,
       SDL_PIXELFORMAT_RGBA32);  // its own pixels, as -dumpGray: never the
                                 // caller's 2-byte-a-pixel buffer
   for (int y = 0; static_cast<std::size_t>(y) < height; y++) {
-    uint8_t* srcRow = bytes + rowBytes * y;
+    uint8_t* srcRow = bytes + rowBytes * static_cast<std::size_t>(y);
     uint8_t* dstRow =
         static_cast<uint8_t*>(tmpSurface->pixels) + y * tmpSurface->pitch;
     for (int x = 0; static_cast<std::size_t>(x) < width; x++) {

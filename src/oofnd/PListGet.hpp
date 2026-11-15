@@ -204,7 +204,8 @@ inline bool scanDoubleAt(std::u16string_view s, std::size_t& location,
       if (mantissaLength == 0 && c == u'0') {
         if (dotPos >= 0) ++shift;
       } else if (mantissaLength < 19) {
-        mantissa[mantissaLength++] = static_cast<char>(c);
+        mantissa[static_cast<unsigned long long>(mantissaLength++)] =
+            static_cast<char>(c);
       }
     }
   }

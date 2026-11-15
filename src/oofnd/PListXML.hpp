@@ -235,13 +235,15 @@ inline std::optional<std::string> xmlDataAsUtf8(std::string_view data) {
   const bool ascii = charset == "us-ascii" || charset == "ascii";
   bool decodes = !latin1 && isStrictUtf8(data);
   if (decodes && ascii) {
-    for (unsigned char b : data)
-      decodes = decodes && b < 0x80;  // NSASCIIStringEncoding
+    for (const char bChar : data)
+      decodes = decodes && static_cast<unsigned char>(bChar) <
+                               0x80;  // NSASCIIStringEncoding
   }
   if (decodes) return std::string(data);
   std::string out;
   out.reserve(data.size() + data.size() / 8);
-  for (unsigned char b : data) {
+  for (const char bChar : data) {
+    const auto b = static_cast<unsigned char>(bChar);
     if (b < 0x80) {
       out += static_cast<char>(b);
     } else {
@@ -268,7 +270,8 @@ inline Data decodeMimeBase64(std::string_view source) {
                                       ((in[2] & 0x3C) >> 2));
     o[2] = static_cast<unsigned char>(((in[2] & 0x03) << 6) | (in[3] & 0x3F));
   };
-  for (unsigned char uc : source) {
+  for (const char ucChar : source) {
+    const auto uc = static_cast<unsigned char>(ucChar);
     if (uc == '\0') break;
     int c = uc;
     if (c >= 'A' && c <= 'Z') {
@@ -803,7 +806,8 @@ class XMLPListReader {
       value_.clear();
       return;
     } else if (name == "data") {
-      for (unsigned char ch : value_) {
+      for (const char chChar : value_) {
+        const auto ch = static_cast<unsigned char>(chChar);
         if (ch >= 0x80) {
           // -dataUsingEncoding:NSASCIIStringEncoding is nil
           abort_ = true;

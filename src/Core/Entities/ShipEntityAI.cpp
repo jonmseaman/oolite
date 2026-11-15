@@ -486,26 +486,28 @@ void ShipEntity::enterTargetWormhole() {
 
   if (!whole) {
     // locate nearest wormhole
-    int ent_count = UNIVERSE->n_entities;
+    int ent_count = static_cast<int>(UNIVERSE->n_entities);
     Entity** uni_entities =
         UNIVERSE->sortedEntities;  // grab the public sorted list
     std::vector<std::shared_ptr<Entity>> wormholes(
-        ent_count);  // kept for the loop, as the objects were retained
+        static_cast<unsigned long long>(
+            ent_count));  // kept for the loop, as the objects were retained
     int i;
     int wh_count = 0;
     for (i = 0; i < ent_count; i++)
       if (uni_entities[i]->isWormhole)
-        wormholes[wh_count++] = oo::share(uni_entities[i]);
+        wormholes[static_cast<unsigned long long>(wh_count++)] =
+            oo::share(uni_entities[i]);
     //
     // double found_d2 = scannerRange * scannerRange;
     for (i = 0; i < wh_count; i++) {
-      Entity* wh = wormholes[i].get();
+      Entity* wh = wormholes[static_cast<unsigned long long>(i)].get();
       double d2 = HPdistance2(position, wh->position);
       if (d2 < found_d2) {
         whole = static_cast<WormholeEntity*>(wh);
         found_d2 = d2;
       }
-      wormholes[i] = nullptr;
+      wormholes[static_cast<unsigned long long>(i)] = nullptr;
     }
   }
 
@@ -724,7 +726,7 @@ bool ShipEntity::performHyperSpaceExitReplace(bool replace,
   if (systemID == -1) {
     // select one at random
     if (n_dests > 1) {
-      i = ranrot_rand() % n_dests;
+      i = static_cast<std::size_t>(ranrot_rand()) % n_dests;
     }
 
     targetSystem = static_cast<OOSystemID>(sDests.at(i)->get<int>("sysID"));
@@ -1100,7 +1102,8 @@ void ShipEntity::scanForRandomMerchantman() {
   if (n_found == 0) {
     if (shipAI != nullptr) shipAI->message("NOTHING_FOUND");
   } else {
-    i = ranrot_rand() % n_found;  // pick a number from 0 -> (n_found - 1)
+    i = static_cast<unsigned int>(ranrot_rand()) %
+        n_found;  // pick a number from 0 -> (n_found - 1)
     setFoundTarget(ids_found[i]);
     if (shipAI != nullptr) shipAI->message("TARGET_FOUND");
   }
@@ -1188,7 +1191,8 @@ void ShipEntity::scanForRandomLoot() {
   }
 
   if (things_found != 0) {
-    setFoundTarget(thing_uids_found[ranrot_rand() % things_found]);
+    setFoundTarget(thing_uids_found[static_cast<unsigned int>(ranrot_rand()) %
+                                    things_found]);
     if (shipAI != nullptr) shipAI->message("TARGET_FOUND");
   } else {
     if (shipAI != nullptr) shipAI->message("NOTHING_FOUND");
@@ -1712,7 +1716,7 @@ void ShipEntity::ejectCargo() {
       cargo_to_go =
           static_cast<OOCargoQuantity>(0.1 * maxAvailableCargoSpace());
   while (cargo_to_go > 15) {
-    cargo_to_go = ranrot_rand() % cargo_to_go;
+    cargo_to_go = static_cast<OOCargoQuantity>(ranrot_rand()) % cargo_to_go;
   }
   dumpCargo();
   for (i = 1; i < cargo_to_go; i++) {
@@ -1791,7 +1795,7 @@ void ShipEntity::thargonCheckMother() {
 }
 
 void ShipEntity::becomeUncontrolledThargon() {
-  int ent_count = UNIVERSE->n_entities;
+  int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
   int i;
@@ -2534,11 +2538,12 @@ void ShipEntity::checkForNormalSpace() {
 
 void ShipEntity::setTargetToRandomStation() {
   /*- selects the nearest station it can find -*/
-  int ent_count = UNIVERSE->n_entities;
+  int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
   std::vector<std::shared_ptr<Entity>> my_entities(
-      ent_count);  // kept for the search, as the objects were retained
+      static_cast<unsigned long long>(
+          ent_count));  // kept for the search, as the objects were retained
   ::StationEntity *station = nullptr, *my_station = nullptr;
   double maxRange2 = desired_range * desired_range;
   int i;
@@ -2554,25 +2559,30 @@ void ShipEntity::setTargetToRandomStation() {
           HPdistance2(position,
                       (my_station != nullptr ? my_station->getPosition()
                                              : HPVector{})) < maxRange2) {
-        my_entities[station_count++] = oo::share(uni_entities[i]);  //	retained
+        my_entities[static_cast<unsigned long long>(station_count++)] =
+            oo::share(uni_entities[i]);  //	retained
       }
     }
   }
 
   if (station_count != 0) {
     // select a random station
-    station = oo::ToStation(my_entities[ranrot_rand() % station_count].get());
+    station = oo::ToStation(my_entities[static_cast<unsigned long long>(
+                                            ranrot_rand() % station_count)]
+                                .get());
     // if more than one candidate do not select main station
     if (station == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr) &&
         station_count > 1) {
       while (station == (UNIVERSE != nullptr ? UNIVERSE->station() : nullptr)) {
-        station =
-            oo::ToStation(my_entities[ranrot_rand() % station_count].get());
+        station = oo::ToStation(my_entities[static_cast<unsigned long long>(
+                                                ranrot_rand() % station_count)]
+                                    .get());
       }
     }
   }
 
-  for (i = 0; i < station_count; i++) my_entities[i] = nullptr;  //	released
+  for (i = 0; i < station_count; i++)
+    my_entities[static_cast<unsigned long long>(i)] = nullptr;  //	released
   //
   if (station) {
     addTarget(station);

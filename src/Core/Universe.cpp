@@ -655,7 +655,7 @@ static bool MaintainLinkedLists(Universe* uni) {
 
     last = nullptr;
 
-    n = uni->n_entities;
+    n = static_cast<int>(uni->n_entities);
     checkEnt = uni->x_list_start;
     while ((n--) && (checkEnt)) {
       last = checkEnt;
@@ -669,7 +669,7 @@ static bool MaintainLinkedLists(Universe* uni) {
       result = false;
     }
 
-    n = uni->n_entities;
+    n = static_cast<int>(uni->n_entities);
     checkEnt = last;
     while ((n--) && (checkEnt)) checkEnt = checkEnt->x_previous;
     if ((checkEnt) || (n > 0)) {
@@ -693,7 +693,7 @@ static bool MaintainLinkedLists(Universe* uni) {
       }
     }
 
-    n = uni->n_entities;
+    n = static_cast<int>(uni->n_entities);
     checkEnt = uni->y_list_start;
     while ((n--) && (checkEnt)) {
       last = checkEnt;
@@ -708,7 +708,7 @@ static bool MaintainLinkedLists(Universe* uni) {
       result = false;
     }
 
-    n = uni->n_entities;
+    n = static_cast<int>(uni->n_entities);
     checkEnt = last;
     while ((n--) && (checkEnt)) checkEnt = checkEnt->y_previous;
     if ((checkEnt) || (n > 0)) {
@@ -732,7 +732,7 @@ static bool MaintainLinkedLists(Universe* uni) {
       }
     }
 
-    n = uni->n_entities;
+    n = static_cast<int>(uni->n_entities);
     checkEnt = uni->z_list_start;
     while ((n--) && (checkEnt)) {
       last = checkEnt;
@@ -746,7 +746,7 @@ static bool MaintainLinkedLists(Universe* uni) {
       result = false;
     }
 
-    n = uni->n_entities;
+    n = static_cast<int>(uni->n_entities);
     checkEnt = last;
     while ((n--) && (checkEnt)) checkEnt = checkEnt->z_previous;
     if ((checkEnt) || (n > 0)) {
@@ -1373,7 +1373,8 @@ void Universe::carryPlayerOn(::StationEntity* /*carrier */,
     populateNormalSpace();
     if (player != nullptr)
       player->setBounty(
-          ((player != nullptr ? player->getLegalStatus() : int{}) / 2),
+          (static_cast<OOCreditsQuantity>(
+              (player != nullptr ? player->getLegalStatus() : int{}) / 2)),
           OOLegalStatusReason::kNewSystem);
     if ((player != nullptr ? player->random_factor() : int{}) < 8) {
       if (player != nullptr) player->erodeReputation();
@@ -1445,7 +1446,7 @@ void Universe::setUpUniverseFromStation() {
       setSystemTo(sys);
       int index = 0;
       while (entities.size() > 2) {
-        Entity* ent = entities[index].get();
+        Entity* ent = entities[static_cast<unsigned long long>(index)].get();
         if ((ent != player) && (ent != dockedStation)) {
           if (ent->isStation)  // clear out queues
             if (oo::ToStation(ent) != nullptr) oo::ToStation(ent)->clear();
@@ -2528,7 +2529,7 @@ void Universe::setLighting() {
   int i;
 
   // The sky is C++: found by its C++ part.
-  for (i = n_entities - 1; i > 0; i--)
+  for (i = static_cast<int>(n_entities - 1); i > 0; i--)
     if (sortedEntities[i] != nullptr)
       if (::SkyEntity* sky = dynamic_cast<::SkyEntity*>(sortedEntities[i]))
         the_sky = sky;
@@ -2977,7 +2978,8 @@ bool Universe::addShipsAtPosition(int howMany, const std::string& desc,
   HPVector launchPos = coordinatesForPosition(pos, system, &scalar);
   GLfloat distance_from_center = 0.0;
   HPVector v_from_center, ship_pos;
-  std::vector<HPVector> ship_positions(howMany);
+  std::vector<HPVector> ship_positions(
+      static_cast<unsigned long long>(howMany));
   int i = 0;
   int scale_up_after = 0;
   int current_shell = 0;
@@ -3014,8 +3016,11 @@ bool Universe::addShipsAtPosition(int howMany, const std::string& desc,
       safe = true;
       int j = i - 1;
       while (safe && (j >= current_shell)) {
-        safe = (safe &&
-                (HPdistance2(ship_pos, ship_positions[j]) > safe_distance2));
+        safe =
+            (safe &&
+             (HPdistance2(ship_pos,
+                          ship_positions[static_cast<unsigned long long>(j)]) >
+              safe_distance2));
         j--;
       }
       if (!safe) {
@@ -3042,7 +3047,7 @@ bool Universe::addShipsAtPosition(int howMany, const std::string& desc,
 
     // [self addEntity:ship];	// OOEntityStatus::kInFlight, AI state GLOBAL
 
-    ship_positions[i] = ship_pos;
+    ship_positions[static_cast<unsigned long long>(i)] = ship_pos;
     i++;
     if (i > scale_up_after) {
       current_shell = i;
@@ -3794,18 +3799,19 @@ void Universe::setupIntroFirstGo(bool justCobra) {
         const oo::PList& subList = (*demoClasses)[k];
         if (OptionalStringIn(DemoShipEntry(demo_ships, k, 0),
                              kOODemoShipClass) == "ship") {
-          demo_ship_index =
+          demo_ship_index = static_cast<std::size_t>(
               std::find(demoClasses->begin(), demoClasses->end(), subList) -
-              demoClasses->begin();  // -indexOfObject:
+              demoClasses->begin());  // -indexOfObject:
           const oo::PList::Array* shipEntries =
               subList.getIf<oo::PList::Array>();  // an array: its first entry
                                                   // was found above
           for (const oo::PList& shipEntry : *shipEntries) {
             if (OptionalStringIn(shipEntry, kOODemoShipKey) ==
                 "cobra3-trader") {
-              demo_ship_subindex = std::find(shipEntries->begin(),
-                                             shipEntries->end(), shipEntry) -
-                                   shipEntries->begin();  // -indexOfObject:
+              demo_ship_subindex = static_cast<std::size_t>(
+                  std::find(shipEntries->begin(), shipEntries->end(),
+                            shipEntry) -
+                  shipEntries->begin());  // -indexOfObject:
               break;
             }
           }
@@ -3896,7 +3902,7 @@ void Universe::setLibraryTextForDemoShip() {
 
   // clear rows
   for (std::size_t i = 1; i <= 26; i++) {
-    gui->setText("", i);
+    gui->setText("", static_cast<OOGUIRow>(i));
   }
 
   /* Row 1: ScanClass, Name, Summary */
@@ -4786,7 +4792,7 @@ std::vector<oo::EntityHold> Universe::getContainersOfGoods(
 
     int qr = 0;
     if (total_quantity) {
-      qr = 1 + (Ranrot() % total_quantity);
+      qr = static_cast<int>(1 + (Ranrot() % total_quantity));
       co_type = 0;
       while (qr > 0) {
         OOCAssert(static_cast<std::size_t>(co_type) < commodityCount,
@@ -5289,9 +5295,9 @@ void Universe::drawUniverse() {
       OOEntityStatus v_status;
       Vector view_dir, view_up;
       OOMatrix view_matrix;
-      int ent_count = n_entities;
-      std::vector<Entity*> my_entities(
-          ent_count);  // each one's object retained and autoreleased
+      int ent_count = static_cast<int>(n_entities);
+      std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+          ent_count));  // each one's object retained and autoreleased
       int draw_count = 0;
       ::PlayerEntity* player = PLAYER;
       Entity* drawthing = nullptr;
@@ -5322,7 +5328,7 @@ void Universe::drawUniverse() {
         Entity* e = sortedEntities[i];  // ordered NEAREST -> FURTHEST AWAY
         if (e->isVisible()) {
           (void)oo::autorelease(oo::Hold(e));  // retained, autoreleased
-          my_entities[draw_count++] = e;
+          my_entities[static_cast<unsigned long long>(draw_count++)] = e;
         }
       }
 
@@ -5353,11 +5359,14 @@ void Universe::drawUniverse() {
       drawCounter++;
       float breakPlane = INTERMEDIATE_CLEAR_DEPTH;
       for (int entityIndex = 0; entityIndex < draw_count; entityIndex++) {
-        if (my_entities[entityIndex]->cameraRangeFront() > breakPlane) {
+        if (my_entities[static_cast<unsigned long long>(entityIndex)]
+                ->cameraRangeFront() > breakPlane) {
           continue;
         }
-        if (my_entities[entityIndex]->cameraRangeBack() > breakPlane) {
-          breakPlane = my_entities[entityIndex]->cameraRangeBack();
+        if (my_entities[static_cast<unsigned long long>(entityIndex)]
+                ->cameraRangeBack() > breakPlane) {
+          breakPlane = my_entities[static_cast<unsigned long long>(entityIndex)]
+                           ->cameraRangeBack();
         }
       }
 
@@ -5488,7 +5497,7 @@ void Universe::drawUniverse() {
 
           //		DRAW ALL THE OPAQUE ENTITIES
           for (i = furthest; i >= nearest; i--) {
-            drawthing = my_entities[i];
+            drawthing = my_entities[static_cast<unsigned long long>(i)];
             OOEntityStatus d_status = oo::EntityStatus(drawthing);
 
             if (bpHide && !drawthing->isImmuneToBreakPatternHide) continue;
@@ -5635,7 +5644,8 @@ void Universe::drawUniverse() {
             OOOpenGLStateID::kOverlay);  // FIXME: should be redundant.
 
         prepareToRenderIntoDefaultFramebuffer();
-        OOGL(glBindFramebuffer(GL_FRAMEBUFFER, defaultDrawFBO));
+        OOGL(glBindFramebuffer(GL_FRAMEBUFFER,
+                               static_cast<GLuint>(defaultDrawFBO)));
 
         OO_LOG("universe.profile.secondPassDraw", "{}",
                "Begin second pass draw");
@@ -5756,7 +5766,8 @@ void Universe::drawUniverse() {
   if (!hudSeparateRenderPass) {
     if (useShaders()) {
       prepareToRenderIntoDefaultFramebuffer();
-      OOGL(glBindFramebuffer(GL_FRAMEBUFFER, defaultDrawFBO));
+      OOGL(glBindFramebuffer(GL_FRAMEBUFFER,
+                             static_cast<GLuint>(defaultDrawFBO)));
 
       OO_LOG("universe.profile.secondPassDraw", "{}", "Begin second pass draw");
       drawTargetTextureIntoDefaultFramebuffer();
@@ -5975,15 +5986,15 @@ bool Universe::addEntity(Entity* entity) {
     entity->zero_distance = static_cast<GLfloat>(z_distance);
     unsigned index = n_entities;
     sortedEntities[index] = entity;
-    entity->zero_index = index;
+    entity->zero_index = static_cast<int>(index);
     while ((index > 0) &&
            (z_distance < sortedEntities[index - 1]->zero_distance)) {
       // bubble into place
       sortedEntities[index] = sortedEntities[index - 1];
-      sortedEntities[index]->zero_index = index;
+      sortedEntities[index]->zero_index = static_cast<int>(index);
       index--;
       sortedEntities[index] = entity;
-      entity->zero_index = index;
+      entity->zero_index = static_cast<int>(index);
     }
 
     // increase n_entities...
@@ -6093,7 +6104,7 @@ void Universe::removeAllEntitiesExceptPlayer() {
 
 void Universe::removeDemoShips() {
   int i;
-  int ent_count = n_entities;
+  int ent_count = static_cast<int>(n_entities);
   if (ent_count > 0) {
     Entity* ent;
     for (i = 0; i < ent_count; i++) {
@@ -6167,11 +6178,13 @@ bool Universe::isVectorClearFromEntity(Entity* e1, double dist, HPVector p2) {
   if (nearest < 0.0) return true;  // within range already!
 
   int i;
-  int ent_count = n_entities;
-  std::vector<Entity*> my_entities(ent_count);  // each one's object retained
+  int ent_count = static_cast<int>(n_entities);
+  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+      ent_count));                              // each one's object retained
   std::vector<oo::EntityHold> my_holds;         // each one's object, held
   for (i = 0; i < ent_count; i++)
-    my_entities[i] = oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
+    my_entities[static_cast<unsigned long long>(i)] =
+        oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
 
   if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
       static_cast<bool>(v1.z))
@@ -6180,7 +6193,7 @@ bool Universe::isVectorClearFromEntity(Entity* e1, double dist, HPVector p2) {
     f1 = make_HPvector(0, 0, 1);
 
   for (i = 0; i < ent_count; i++) {
-    Entity* e2 = my_entities[i];
+    Entity* e2 = my_entities[static_cast<unsigned long long>(i)];
     if ((e2 != e1) && (e2->canCollide())) {
       HPVector epos = e2->position;
       epos.x -= p1.x;
@@ -6235,11 +6248,13 @@ Entity* Universe::hazardOnRouteFromEntity(Entity* e1, double dist,
 
   Entity* result = nullptr;
   int i;
-  int ent_count = n_entities;
-  std::vector<Entity*> my_entities(ent_count);  // each one's object retained
+  int ent_count = static_cast<int>(n_entities);
+  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+      ent_count));                              // each one's object retained
   std::vector<oo::EntityHold> my_holds;         // each one's object, held
   for (i = 0; i < ent_count; i++)
-    my_entities[i] = oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
+    my_entities[static_cast<unsigned long long>(i)] =
+        oo::HoldIn(my_holds, sortedEntities[i]);  //	retained
 
   if (static_cast<bool>(v1.x) || static_cast<bool>(v1.y) ||
       static_cast<bool>(v1.z))
@@ -6248,7 +6263,7 @@ Entity* Universe::hazardOnRouteFromEntity(Entity* e1, double dist,
     f1 = make_HPvector(0, 0, 1);
 
   for (i = 0; (i < ent_count) && (!result); i++) {
-    Entity* e2 = my_entities[i];
+    Entity* e2 = my_entities[static_cast<unsigned long long>(i)];
     if ((e2 != e1) && (e2->canCollide())) {
       HPVector epos = e2->position;
       epos.x -= p1.x;
@@ -6296,11 +6311,13 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
   HPVector f1;
   HPVector result = p2;
   int i;
-  int ent_count = n_entities;
-  std::vector<Entity*> my_entities(ent_count);  // each one's object retained
+  int ent_count = static_cast<int>(n_entities);
+  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+      ent_count));                              // each one's object retained
   std::vector<oo::EntityHold> my_holds;         // each one's object, held
   for (i = 0; i < ent_count; i++)
-    my_entities[i] = oo::HoldIn(my_holds, sortedEntities[i]);  // retained
+    my_entities[static_cast<unsigned long long>(i)] =
+        oo::HoldIn(my_holds, sortedEntities[i]);  // retained
   HPVector p1 = e1->position;
   HPVector v1 = p2;
   v1.x -= p1.x;
@@ -6317,7 +6334,7 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
     f1 = make_HPvector(0, 0, 1);
 
   for (i = 0; i < ent_count; i++) {
-    Entity* e2 = my_entities[i];
+    Entity* e2 = my_entities[static_cast<unsigned long long>(i)];
     if ((e2 != e1) && (e2->canCollide())) {
       HPVector epos = e2->position;
       epos.x -= p1.x;
@@ -6525,16 +6542,17 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
 
   double nearest = (srcEntity != nullptr ? srcEntity->getWeaponRange() : 0.0f);
   int i;
-  int ent_count = n_entities;
+  int ent_count = static_cast<int>(n_entities);
   int ship_count = 0;
-  std::vector<::ShipEntity*> my_entities(ent_count);
+  std::vector<::ShipEntity*> my_entities(
+      static_cast<unsigned long long>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
 
   for (i = 0; i < ent_count; i++) {
     Entity* ent = sortedEntities[i];
     if (ent != srcEntity && ent != parent && oo::EntityIsShip(ent) &&
         ent->canCollide()) {
-      my_entities[ship_count++] =
+      my_entities[static_cast<unsigned long long>(ship_count++)] =
           (oo::ToShip(ent) != nullptr ? oo::HoldIn(my_holds, oo::ToShip(ent))
                                       : static_cast<::ShipEntity*>(nullptr));
     }
@@ -6572,7 +6590,7 @@ void Universe::addLaserHitEffectsAt(HPVector pos, ::ShipEntity* target,
                            f1, static_cast<OOScalar>(nearest))));  // endpoint
 
   for (i = 0; i < ship_count; i++) {
-    ::ShipEntity* e2 = my_entities[i];
+    ::ShipEntity* e2 = my_entities[static_cast<unsigned long long>(i)];
     if (e2 == nullptr)
       continue;  // (every one is a ship: the list holds the ships)
 
@@ -6631,16 +6649,18 @@ Entity* Universe::firstEntityTargetedByPlayer() {
                       100;  // 100m shorter than range at which target is lost
   nearest2 *= nearest2;
   int i;
-  int ent_count = n_entities;
+  int ent_count = static_cast<int>(n_entities);
   int ship_count = 0;
-  std::vector<Entity*> my_entities(ent_count);  // each one's object retained
+  std::vector<Entity*> my_entities(static_cast<unsigned long long>(
+      ent_count));                              // each one's object retained
   std::vector<oo::EntityHold> my_holds;         // each one's object, held
 
   for (i = 0; i < ent_count; i++) {
     if ((oo::EntityIsShip(sortedEntities[i]) &&
          !oo::EntityIsPlayer(sortedEntities[i])) ||
         sortedEntities[i]->getIsWormhole()) {
-      my_entities[ship_count++] = oo::HoldIn(my_holds, sortedEntities[i]);
+      my_entities[static_cast<unsigned long long>(ship_count++)] =
+          oo::HoldIn(my_holds, sortedEntities[i]);
     }
   }
 
@@ -6676,7 +6696,7 @@ Entity* Universe::firstEntityTargetedByPlayer() {
   basis_vectors_from_quaternion(q1, &r1, nullptr, &f1);
 
   for (i = 0; i < ship_count; i++) {
-    Entity* e2 = my_entities[i];
+    Entity* e2 = my_entities[static_cast<unsigned long long>(i)];
     if (e2->canCollide() && e2->getScanClass() != OOScanClass::kNoDraw) {
       Vector rp = HPVectorToVector(HPvector_subtract(e2->getPosition(), p1));
       OOScalar dist2 = magnitude2(rp);
@@ -8540,9 +8560,10 @@ void Universe::setSystemDataForGalaxy(
     if (key == std::string(KEY_TECHLEVEL)) {
       if (station()) {
         if (station() != nullptr)
-          station()->setEquivalentTechLevel(ScriptValueInt(object));
+          station()->setEquivalentTechLevel(
+              static_cast<OOTechLevelID>(ScriptValueInt(object)));
         const oo::PList shipyard = shipsForSaleForSystem(
-            systemID, ScriptValueInt(object),
+            systemID, static_cast<OOTechLevelID>(ScriptValueInt(object)),
             (PLAYER != nullptr ? PLAYER->clockTime() : 0.0));
         const oo::PList::Array* entries = shipyard.getIf<oo::PList::Array>();
         if (station() != nullptr)
@@ -8556,7 +8577,7 @@ void Universe::setSystemDataForGalaxy(
       int i;
 
       // The sky is C++: found by its C++ part.
-      for (i = n_entities - 1; i > 0; i--)
+      for (i = static_cast<int>(n_entities - 1); i > 0; i--)
         if (sortedEntities[i] != nullptr)
           if (::SkyEntity* sky = dynamic_cast<::SkyEntity*>(sortedEntities[i]))
             the_sky = sky;
@@ -8572,7 +8593,7 @@ void Universe::setSystemDataForGalaxy(
             if (the_sun != nullptr)
               the_sun->getSpecularComponents(sun_specular);
           }
-          for (i = n_entities - 1; i > 0; i--)
+          for (i = static_cast<int>(n_entities - 1); i > 0; i--)
             if (sortedEntities[i])
               if (DustEntity* dust =
                       dynamic_cast<DustEntity*>(sortedEntities[i]))
@@ -8786,7 +8807,7 @@ oo::PList Universe::nearbyDestinationsWithinRange(double range) {
       (PLAYER != nullptr ? PLAYER->getGalaxy_coordinates() : NSPoint{});
 
   for (std::uint16_t i = 0; i < 256; i++) {
-    NSPoint there = coordinatesForSystem(i);
+    NSPoint there = coordinatesForSystem(static_cast<OOSystemID>(i));
     double dist = distanceBetweenPlanetPositions(
         static_cast<int>(here.x), static_cast<int>(here.y),
         static_cast<int>(there.x), static_cast<int>(there.y));
@@ -8797,8 +8818,8 @@ oo::PList Universe::nearbyDestinationsWithinRange(double range) {
       result.push_back(oo::PList(oo::PList::Dict{
           {"distance", oo::PList(dist)},
           {"sysID", oo::PList::signedInteger(i)},
-          {"nova", oo::PList(generateSystemData(i).get<std::string>(
-                       "sun_gone_nova", "0"))}}));
+          {"nova", oo::PList(generateSystemData(static_cast<OOSystemID>(i))
+                                 .get<std::string>("sun_gone_nova", "0"))}}));
     }
   }
 
@@ -9083,7 +9104,7 @@ oo::PList Universe::routeFromSystem(OOSystemID start, OOSystemID goal,
       for (j = 0; j < ns.size(); j++) {
         ::RouteElement* ce = cheapest[elemI->location()].get();
         OOSystemID n = ns[j];
-        if (concealed[n]) {
+        if (concealed[static_cast<unsigned long long>(n)]) {
           continue;
         }
         OOSystemID c = ce->location();
@@ -9464,7 +9485,8 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
         (ship_seed.d * 0x100 + ship_seed.e) % keysForShips.size();
     const std::string ship_key = keysForShips[ship_index];
     const oo::PList ship_info = registry->shipyardInfoForKey(ship_key);
-    OOTechLevelID ship_techlevel = ship_info.get<int>(KEY_TECHLEVEL);
+    OOTechLevelID ship_techlevel =
+        static_cast<OOTechLevelID>(ship_info.get<int>(KEY_TECHLEVEL));
 
     double chance = 1.0 - pow(1.0 - ship_info.get<double>(KEY_CHANCE),
                               std::max(static_cast<OOTechLevelID>(1),
@@ -9560,8 +9582,9 @@ oo::PList Universe::shipsForSaleForSystem(OOSystemID s, OOTechLevelID specialTL,
       while ((randf() < chance) && (options.size())) {
         chance *= chance;  // decrease the chance of a further customisation
                            // (unless it is 1, which might be a bug)
-        int optionIndex = Ranrot() % options.size();
-        const std::optional<std::string> equipmentKey = options[optionIndex];
+        int optionIndex = static_cast<int>(Ranrot() % options.size());
+        const std::optional<std::string> equipmentKey =
+            options[static_cast<unsigned long long>(optionIndex)];
         ::OOEquipmentType* item =
             equipmentKey.has_value()
                 ? OOEquipmentType::equipmentTypeWithIdentifier(*equipmentKey)
@@ -10044,7 +10067,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
   // (the search range 0..i-2 never looks at the entry just before)
   for (i = static_cast<std::ptrdiff_t>(base_extra_equipment.size()) - 1; i > 0;
        i--) {
-    eq_key = base_extra_equipment[i];
+    eq_key = base_extra_equipment[static_cast<unsigned long long>(i)];
     const auto searchEnd = base_extra_equipment.begin() + (i - 1);
     if (eq_key.has_value() &&
         std::find(base_extra_equipment.begin(), searchEnd, eq_key) != searchEnd)
@@ -10054,7 +10077,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
   // do we at least have the same equipment as a standard ship?
   for (i = static_cast<std::ptrdiff_t>(base_extra_equipment.size()) - 1; i >= 0;
        i--) {
-    eq_key = base_extra_equipment[i];
+    eq_key = base_extra_equipment[static_cast<unsigned long long>(i)];
     if (eq_key.has_value() &&
         std::find(ship_extra_equipment.begin(), ship_extra_equipment.end(),
                   *eq_key) != ship_extra_equipment.end())
@@ -10069,7 +10092,8 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
 
   for (i = static_cast<std::ptrdiff_t>(ship_extra_equipment.size()) - 1; i >= 0;
        i--) {
-    item = OOEquipmentType::equipmentTypeWithIdentifier(ship_extra_equipment[i])
+    item = OOEquipmentType::equipmentTypeWithIdentifier(
+               ship_extra_equipment[static_cast<unsigned long long>(i)])
                .get();
     if ((item != nullptr ? item->isPortableBetweenShips() : false))
       ship_extra_equipment.erase(ship_extra_equipment.begin() + i);
@@ -10080,7 +10104,8 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
        i--)
     extra_equipment_value +=
         ((UNIVERSE != nullptr
-              ? UNIVERSE->getEquipmentPriceForKey(ship_extra_equipment[i])
+              ? UNIVERSE->getEquipmentPriceForKey(
+                    ship_extra_equipment[static_cast<unsigned long long>(i)])
               : 0) /
          10);
 
@@ -10096,7 +10121,7 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
       static_cast<std::int64_t>(base_price) + extra_equipment_value)
     return scrap_value;
 
-  return base_price + extra_equipment_value;
+  return base_price + static_cast<OOCreditsQuantity>(extra_equipment_value);
 }
 
 std::optional<std::string> Universe::brochureDescriptionWithDictionary(
@@ -10361,25 +10386,26 @@ std::vector<oo::EntityHold> Universe::listBeaconsWithCode(
 void Universe::allShipsDoScriptEvent(
     OOJSPropID event, const std::optional<std::string>& message) {
   int i;
-  int ent_count = n_entities;
+  int ent_count = static_cast<int>(n_entities);
   int ship_count = 0;
-  std::vector<::ShipEntity*> my_ships(ent_count);
+  std::vector<::ShipEntity*> my_ships(
+      static_cast<unsigned long long>(ent_count));
   std::vector<oo::EntityHold> ship_holds;  // my_ships[i]'s object, held
   for (i = 0; i < ent_count; i++) {
     if (sortedEntities[i]->isShip) {
-      my_ships[ship_count++] = oo::ToShip(
+      my_ships[static_cast<unsigned long long>(ship_count++)] = oo::ToShip(
           oo::HoldIn(ship_holds, sortedEntities[i]));  // retained (its object)
     }
   }
 
   for (i = 0; i < ship_count; i++) {
-    ::ShipEntity* se = my_ships[i];
+    ::ShipEntity* se = my_ships[static_cast<unsigned long long>(i)];
     if (se != nullptr) se->doScriptEvent(event);
     if (message.has_value()) {
       if (se != nullptr && se->getAI() != nullptr)
         se->getAI()->reactToMessage(*message, "global message");
     }
-    ship_holds[i].reset();  //	released
+    ship_holds[static_cast<unsigned long long>(i)].reset();  //	released
   }
 }
 
@@ -10921,7 +10947,7 @@ bool Universe::doRemoveEntity(Entity* entity) {
       unsigned i;
       index = -1;
       for (i = 0; (i < n_entities) && (index == -1); i++)
-        if (sortedEntities[i] == entity) index = i;
+        if (sortedEntities[i] == entity) index = static_cast<int>(i);
       if (index == -1)
         OO_LOG(kOOLogInconsistentState,
                "DEBUG: Universe removeEntity:{} ENTITY IS NOT IN THE "
@@ -10930,7 +10956,8 @@ bool Universe::doRemoveEntity(Entity* entity) {
     }
     if (index != -1) {
       while (static_cast<unsigned>(index) < n_entities) {
-        while ((static_cast<unsigned>(index) + n < n_entities) &&
+        while ((static_cast<unsigned>(index) + static_cast<unsigned int>(n) <
+                n_entities) &&
                (sortedEntities[index + n] == entity)) {
           n++;  // ie there's a duplicate entry for this entity
         }
@@ -11205,7 +11232,7 @@ void Universe::addNumericRefsInString(const std::string& string,
     remaining = end;
 
     const std::string index = string.substr(start, end - start);
-    i = oo::str::intValue(index);
+    i = static_cast<unsigned int>(oo::str::intValue(index));
 
     // Each node gets a colour for its incoming edges. The multiplication and
     // mod shuffle them to avoid adjacent nodes having similar colours.
@@ -11272,7 +11299,8 @@ void Universe::prunePreloadingPlanetMaterials() {
   std::size_t i = _preloadingPlanetMaterials.size();
   while (i--) {
     if (_preloadingPlanetMaterials[i]->isFinishedLoading()) {
-      _preloadingPlanetMaterials.erase(_preloadingPlanetMaterials.begin() + i);
+      _preloadingPlanetMaterials.erase(_preloadingPlanetMaterials.begin() +
+                                       static_cast<long long>(i));
     }
   }
 }
@@ -11447,7 +11475,7 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
                "***** Error: Framebuffer not complete");
   }
 
-  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, defaultDrawFBO));
+  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(defaultDrawFBO)));
 
   targetFramebufferSize = viewSize;
 
@@ -11485,7 +11513,7 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
     OO_LOG_ERR("initTargetFramebufferWithViewSize.result", "{}",
                "***** Error: Passthrough framebuffer not complete");
   }
-  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, defaultDrawFBO));
+  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(defaultDrawFBO)));
 
   // ping-pong-framebuffer for blurring
   OOGL(glGenFramebuffers(2, pingpongFBO));
@@ -11511,7 +11539,7 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
                  "***** Error: Pingpong framebuffers not complete");
     }
   }
-  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, defaultDrawFBO));
+  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(defaultDrawFBO)));
 
   _bloom = getDetailLevel() >= OOGraphicsDetail::kExtras;
   _currentPostFX = _colorblindMode = OO_POSTFX_NONE;
@@ -11576,11 +11604,12 @@ void Universe::initTargetFramebufferWithViewSize(NSSize viewSize) {
                              reinterpret_cast<void*>(2 * sizeof(float))));
 
   // restoring previous bindings
-  OOGL(glUseProgram(previousProgramID));
-  OOGL(glBindTexture(GL_TEXTURE_2D, previousTextureID));
-  OOGL(glBindVertexArray(previousVAO));
-  OOGL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, previousElementBuffer));
-  OOGL(glBindBuffer(GL_ARRAY_BUFFER, previousArrayBuffer));
+  OOGL(glUseProgram(static_cast<GLuint>(previousProgramID)));
+  OOGL(glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previousTextureID)));
+  OOGL(glBindVertexArray(static_cast<GLuint>(previousVAO)));
+  OOGL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,
+                    static_cast<GLuint>(previousElementBuffer)));
+  OOGL(glBindBuffer(GL_ARRAY_BUFFER, static_cast<GLuint>(previousArrayBuffer)));
 }
 
 void Universe::deleteOpenGLObjects() {
@@ -11702,7 +11731,7 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
   OOGL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
   OOGL(glBindVertexArray(0));
 
-  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, defaultDrawFBO));
+  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(defaultDrawFBO)));
 
   bool horizontal = true, firstIteration = true;
   unsigned int amount =
@@ -11724,7 +11753,7 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
     horizontal = !horizontal;
     firstIteration = false;
   }
-  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, defaultDrawFBO));
+  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(defaultDrawFBO)));
 
   OOGL(glUseProgram(final));
 
@@ -11770,11 +11799,11 @@ void Universe::drawTargetTextureIntoDefaultFramebuffer() {
   OOGL(glBindTexture(GL_TEXTURE_2D, 0));
 
   // restore previous bindings
-  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, previousFBO));
-  OOGL(glActiveTexture(previousActiveTexture));
-  OOGL(glBindTexture(GL_TEXTURE_2D, previousTextureID));
-  OOGL(glUseProgram(previousProgramID));
-  OOGL(glBindVertexArray(previousVAO));
+  OOGL(glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(previousFBO)));
+  OOGL(glActiveTexture(static_cast<GLenum>(previousActiveTexture)));
+  OOGL(glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previousTextureID)));
+  OOGL(glUseProgram(static_cast<GLuint>(previousProgramID)));
+  OOGL(glBindVertexArray(static_cast<GLuint>(previousVAO)));
   OOGL(glEnable(GL_BLEND));
 }
 
@@ -11817,7 +11846,7 @@ std::size_t Universe::entityCount() { return entities.size(); }
 #ifdef OO_DEBUG_MONITOR_ENABLED
 void Universe::debugDumpEntities() {
   int i;
-  int show_count = n_entities;
+  int show_count = static_cast<int>(n_entities);
 
   if (!oo::log::willDisplay("universe.objectDump")) return;
 

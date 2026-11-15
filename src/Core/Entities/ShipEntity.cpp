@@ -700,7 +700,7 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
       true);  // Nikos - switched passive cloak default to YES 20120523
   cloakAutomatic = shipDict.get<bool>("cloak_automatic", true);
 
-  missiles = shipDict.get<int>("missiles", 0);
+  missiles = static_cast<unsigned int>(shipDict.get<int>("missiles", 0));
   /* TODO: The following initializes the missile list to be blank, which
      prevents a crash caused by hasOneEquipmentItem trying to access a missile
      list previously initialized but then released.  See issue #204.  We need to
@@ -718,7 +718,8 @@ bool ShipEntity::setUpFromDictionary(const oo::PList& inShipDict) {
   for (i = 0; i < missiles; i++) {
     missile_list[i] = nullptr;
   }
-  max_missiles = shipDict.get<int>("max_missiles", missiles);
+  max_missiles = static_cast<unsigned int>(
+      shipDict.get<int>("max_missiles", static_cast<int>(missiles)));
   if (max_missiles > SHIPENTITY_MAX_MISSILES)
     max_missiles = SHIPENTITY_MAX_MISSILES;
   if (missiles > max_missiles) missiles = max_missiles;
@@ -1007,14 +1008,16 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict) {
         c_commodity = scanner.remainder();
         if (commodities != nullptr &&
             commodities->goodDefined(c_commodity.value_or(""))) {
-          setCommodityForPod(c_commodity, c_amount);
+          setCommodityForPod(c_commodity,
+                             static_cast<OOCargoQuantity>(c_amount));
         } else {
           c_commodity = (commodities != nullptr)
                             ? commodities->goodNamed(c_commodity.value_or(""))
                             : std::nullopt;
           if (commodities != nullptr &&
               commodities->goodDefined(c_commodity.value_or(""))) {
-            setCommodityForPod(c_commodity, c_amount);
+            setCommodityForPod(c_commodity,
+                               static_cast<OOCargoQuantity>(c_amount));
           }
         }
       } else {
@@ -1022,14 +1025,16 @@ bool ShipEntity::setUpShipFromDictionary(const oo::PList& shipDict) {
         c_commodity = StringForKey(shipDict, "cargo_carried");
         if (commodities != nullptr &&
             commodities->goodDefined(c_commodity.value_or(""))) {
-          setCommodityForPod(c_commodity, c_amount);
+          setCommodityForPod(c_commodity,
+                             static_cast<OOCargoQuantity>(c_amount));
         } else {
           c_commodity = (commodities != nullptr)
                             ? commodities->goodNamed(c_commodity.value_or(""))
                             : std::nullopt;
           if (commodities != nullptr &&
               commodities->goodDefined(c_commodity.value_or(""))) {
-            setCommodityForPod(c_commodity, c_amount);
+            setCommodityForPod(c_commodity,
+                               static_cast<OOCargoQuantity>(c_amount));
           }
         }
       }
@@ -1206,7 +1211,7 @@ void ShipEntity::deserializeShipSubEntitiesFrom(const std::string& string) {
   for (i = start; i >= 0; i--) {
     se = oo::ToShip(subEnts[static_cast<std::size_t>(i)].get());
     idx = (se != nullptr
-               ? se->subIdx()
+               ? static_cast<std::ptrdiff_t>(se->subIdx())
                : 0);  // should be identical to i, but better safe than sorry...
     if (idx <= strMaxIdx && units[static_cast<std::size_t>(idx)] == u'0') {
       if (se != nullptr) se->setSuppressExplosion(false);
@@ -6047,7 +6052,8 @@ void ShipEntity::behaviour_track_as_turret(double delta_t) {
 }
 
 void ShipEntity::behaviour_fly_thru_navpoints(double delta_t) {
-  int navpoint_plus_index = (next_navpoint_index + 1) % number_of_navpoints;
+  int navpoint_plus_index =
+      static_cast<int>((next_navpoint_index + 1) % number_of_navpoints);
   HPVector d1 = navpoints[next_navpoint_index];  // head for this one
   HPVector d2 = navpoints[navpoint_plus_index];  // but be facing this one
 
@@ -6085,7 +6091,8 @@ void ShipEntity::behaviour_fly_thru_navpoints(double delta_t) {
       doScriptEvent(OOJSID("shipReachedEndPoint"), "ENDPOINT_REACHED");
       behaviour = OOBehaviour::kIdle;
     }
-    next_navpoint_index = navpoint_plus_index;  // loop as required
+    next_navpoint_index =
+        static_cast<unsigned int>(navpoint_plus_index);  // loop as required
   } else {
     double last_success_factor = success_factor;
     double last_dist2 = last_success_factor;
@@ -7029,9 +7036,10 @@ std::optional<std::string> ShipEntity::scanDescription() {
             UNIVERSE->descriptions()->find("legal_status");
         const oo::PList legalStatus =
             (legalStatusEntry != nullptr) ? *legalStatusEntry : oo::PList();
-        const oo::PList* entry = legalStatus.at(legal_i);
+        const oo::PList* entry =
+            legalStatus.at(static_cast<std::size_t>(legal_i));
         if (entry != nullptr && (entry->isString() || entry->isNumber()))
-          desc = legalStatus.at<std::string>(legal_i);
+          desc = legalStatus.at<std::string>(static_cast<std::size_t>(legal_i));
       } break;
 
       case OOScanClass::kThargoid:
@@ -8042,7 +8050,7 @@ bool ShipEntity::removeCargo(const std::string& commodity,
              ? oo::ToShip(cargo[i].get())->commodityType()
              : std::optional<std::string>()) == commodity) {
       amount--;
-      cargo.erase(cargo.begin() + i);
+      cargo.erase(cargo.begin() + static_cast<long long>(i));
     }
     // check above means array index can't underflow here
     i--;
@@ -9343,7 +9351,9 @@ void ShipEntity::checkScannerIgnoringUnpowered() {
   return scanned_ships;
 }
 
-int ShipEntity::numberOfScannedShips() { return n_scanned_ships; }
+int ShipEntity::numberOfScannedShips() {
+  return static_cast<int>(n_scanned_ships);
+}
 
 // The C++ entity: null, and forgotten, when its object is gone or it is no
 // valid target, as before.
@@ -11897,7 +11907,7 @@ void ShipEntity::dumpCargo() { dumpCargoItem(std::nullopt); }
     if (jetto != nullptr) {
       dumpItem(jetto);  // OOScanClass::kCargo, OOEntityStatus::kInFlight, AI
                         // state GLOBAL
-      cargo.erase(cargo.begin() + i);
+      cargo.erase(cargo.begin() + static_cast<long long>(i));
       broadcastAIMessage("CARGO_DUMPED");  // goes only to 16 nearby ships in
                                            // range, but that should be enough.
       unsigned shipIndex;
@@ -13006,10 +13016,13 @@ void ShipEntity::markAsOffender(int offence_value, OOLegalStatusReason reason) {
       JSContext* context = OOJSAcquireContext();
 
       OOJSVal amountVal = OOJSValueFromDouble(
-          context, static_cast<double>((bounty | offence_value) - bounty));
+          context, static_cast<double>((bounty | static_cast<OOCreditsQuantity>(
+                                                     offence_value)) -
+                                       bounty));
 
-      bounty |= offence_value;  // can't set the new bounty until the size of
-                                // the change is known
+      bounty |= static_cast<OOCreditsQuantity>(
+          offence_value);  // can't set the new bounty until the size of
+                           // the change is known
 
       OOJSVal reasonVal = OOJSValueFromLegalStatusReason(context, reason);
 
@@ -13267,7 +13280,7 @@ void ShipEntity::deployEscorts() {
   escortCount = idleEscorts.size();
   if (escortCount == 0) return;
 
-  deployCount = ranrot_rand() % escortCount + 1;
+  deployCount = static_cast<std::size_t>(ranrot_rand()) % escortCount + 1;
 
   // Deploy deployCount idle escorts.
   target = oo::ToShip(primaryTarget());
@@ -13338,16 +13351,16 @@ void ShipEntity::setTargetToNearestStationIncludingHostiles(
 
   /*- selects the nearest station it can find -*/
   if (!UNIVERSE) return;
-  int ent_count = UNIVERSE->n_entities;
+  int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(ent_count);
+  std::vector<Entity*> my_entities(static_cast<unsigned long long>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   int i;
   int station_count = 0;
   for (i = 0; i < ent_count; i++)
     if (uni_entities[i]->isStation)
-      my_entities[station_count++] =
+      my_entities[static_cast<unsigned long long>(station_count++)] =
           oo::HoldIn(my_holds, uni_entities[i]);  //	retained
   //
   ::StationEntity *thing = nullptr, *station = nullptr;
@@ -13355,7 +13368,7 @@ void ShipEntity::setTargetToNearestStationIncludingHostiles(
       nearest2 = SCANNER_MAX_RANGE2 *
                  1000000.0;  // 1000x typical scanner range (25600 km), squared.
   for (i = 0; i < station_count; i++) {
-    thing = oo::ToStation(my_entities[i]);
+    thing = oo::ToStation(my_entities[static_cast<unsigned long long>(i)]);
     range2 = HPdistance2(position, thing->position);
     if (range2 < nearest2 &&
         (includeHostiles ||
@@ -13701,7 +13714,7 @@ void ShipEntity::spawn(const std::string& roles_number) {
   const std::string& roleString = tokens[0];
   const std::string& numberString = tokens[1];
 
-  number = oo::str::intValue(numberString);
+  number = static_cast<std::size_t>(oo::str::intValue(numberString));
 
   spawnShipsWithRole(roleString, number);
 }
@@ -13720,21 +13733,22 @@ int ShipEntity::checkShipsInVicinityForWitchJumpExit() {
 
   GLfloat k = static_cast<GLfloat>(0.1);
 
-  int ent_count = UNIVERSE->n_entities;
+  int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<::ShipEntity*> my_entities(ent_count);
+  std::vector<::ShipEntity*> my_entities(
+      static_cast<unsigned long long>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   int i;
 
   int ship_count = 0;
   for (i = 0; i < ent_count; i++)
     if ((uni_entities[i]->isShip) && (uni_entities[i] != this))
-      my_entities[ship_count++] =
+      my_entities[static_cast<unsigned long long>(ship_count++)] =
           oo::HoldIn(my_holds, oo::ToShip(uni_entities[i]));  //	retained
   //
   for (i = 0; (i < ship_count) && (result == NO_TARGET); i++) {
-    ::ShipEntity* ship = my_entities[i];
+    ::ShipEntity* ship = my_entities[static_cast<unsigned long long>(i)];
     HPVector delta = HPvector_between(position, ship->position);
     GLfloat d2 = static_cast<GLfloat>(HPmagnitude2(delta));
     if (!(ship != nullptr ? ship->getIsPlayer() : false) ||

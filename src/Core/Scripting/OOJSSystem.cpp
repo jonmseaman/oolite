@@ -287,8 +287,8 @@ void InitOOJSSystem(JSContext* context, JSValueConst global) {
                 OOJS_COUNT(sSystemStaticMethods));
 
   // Create system object as a property of the global object.
-  JSValue systemObject =
-      JS_NewObjectClass(context, static_cast<int>(sSystemClassID));
+  JSValue systemObject = JS_NewObjectClass(
+      context, static_cast<JSClassID>(static_cast<int>(sSystemClassID)));
   JS_DefinePropertyValueStr(context, global, "system", systemObject,
                             OOJS_PROP_READONLY);
 }
@@ -425,14 +425,16 @@ static JSValue SystemGetProperty(OOJS_GETTER_ARGS) {
           (player != nullptr ? player->systemPseudoRandomFloat() : 0.0));
 
     case kPseudoRandom100:
-      return JS_NewInt32(context, player != nullptr
-                                      ? player->systemPseudoRandom100()
-                                      : unsigned{});
+      return JS_NewInt32(
+          context, player != nullptr
+                       ? static_cast<int32_t>(player->systemPseudoRandom100())
+                       : unsigned{});
 
     case kPseudoRandom256:
-      return JS_NewInt32(context, player != nullptr
-                                      ? player->systemPseudoRandom256()
-                                      : unsigned{});
+      return JS_NewInt32(
+          context, player != nullptr
+                       ? static_cast<int32_t>(player->systemPseudoRandom256())
+                       : unsigned{});
 
     case kBreakPattern:
       return OOJSValueFromBOOL(
@@ -850,7 +852,7 @@ static JSValue SystemCountShipsWithPrimaryRole(JSContext* context,
                 : 0u);
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN_INT(result);
+  OOJS_RETURN_INT(static_cast<int32_t>(result));
 
   OOJS_NATIVE_EXIT
 }
@@ -888,7 +890,7 @@ static JSValue SystemCountShipsWithRole(JSContext* context,
                 : 0u);
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN_INT(result);
+  OOJS_RETURN_INT(static_cast<int32_t>(result));
 
   OOJS_NATIVE_EXIT
 }
@@ -1001,7 +1003,7 @@ static JSValue SystemCountEntitiesWithScanClass(JSContext* context,
                                 : 0u);
   OOJS_END_FULL_NATIVE
 
-  OOJS_RETURN_INT(result);
+  OOJS_RETURN_INT(static_cast<int32_t>(result));
 
   OOJS_NATIVE_EXIT
 }
@@ -1444,7 +1446,9 @@ static JSValue SystemStaticSystemIDForName(JSContext* context,
 
   OOJS_BEGIN_FULL_NATIVE(context)
 
-  result = (UNIVERSE != nullptr ? UNIVERSE->findSystemFromName(*name) : 0);
+  result = (UNIVERSE != nullptr
+                ? static_cast<unsigned int>(UNIVERSE->findSystemFromName(*name))
+                : 0);
 
   OOJS_END_FULL_NATIVE
 
@@ -1765,10 +1769,10 @@ static JSValue SystemAddShipsOrGroup(JSContext* context, int argc,
   // Note: the use of witchspace-in effects (as in legacy_addShips) depends on
   // proximity to the witchpoint.
   const std::vector<oo::EntityHold> added =
-      (UNIVERSE != nullptr
-           ? UNIVERSE->addShipsAt(where, *role, count,
-                                  static_cast<GLfloat>(radius), isGroup)
-           : std::vector<oo::EntityHold>());
+      (UNIVERSE != nullptr ? UNIVERSE->addShipsAt(
+                                 where, *role, static_cast<unsigned int>(count),
+                                 static_cast<GLfloat>(radius), isGroup)
+                           : std::vector<oo::EntityHold>());
   if (!added.empty())
     result =
         oo::EntityNodesFrom(added);  // null where no ship was added, as before
@@ -1848,7 +1852,9 @@ static JSValue SystemAddShipsOrGroupToRoute(JSContext* context, int argc,
   // proximity to the witchpoint.
   const std::vector<oo::EntityHold> added =
       (UNIVERSE != nullptr
-           ? UNIVERSE->addShipsToRoute(*route, *role, count, where, isGroup)
+           ? UNIVERSE->addShipsToRoute(*route, *role,
+                                       static_cast<unsigned int>(count), where,
+                                       isGroup)
            : std::vector<oo::EntityHold>());
   if (!added.empty())
     result =

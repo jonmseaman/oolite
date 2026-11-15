@@ -389,8 +389,8 @@ NSPoint OOSystemInfo::coordinates() {
 }
 
 JSValue OOSystemInfo::jsValueInContext(JSContext* context) {
-  JSValue result =
-      JS_NewObjectClass(context, static_cast<int>(sSystemInfoClassID));
+  JSValue result = JS_NewObjectClass(
+      context, static_cast<JSClassID>(static_cast<int>(sSystemInfoClassID)));
   if (JS_IsException(result)) {
     JS_FreeValue(context, JS_GetException(context));
     return JS_NULL;

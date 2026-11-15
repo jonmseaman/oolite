@@ -624,8 +624,9 @@ static JSValue EquipmentInfoGetAllEqipment(JSContext* context,
 */
 JSValue OOEquipmentType::jsValueInContext(JSContext* context) {
   if (!JS_IsObject(_jsSelf)) {
-    JSValue newSelf =
-        JS_NewObjectClass(context, static_cast<int>(sEquipmentInfoClassID));
+    JSValue newSelf = JS_NewObjectClass(
+        context,
+        static_cast<JSClassID>(static_cast<int>(sEquipmentInfoClassID)));
     if (JS_IsException(newSelf)) {
       JS_FreeValue(context, JS_GetException(context));
       return JS_NULL;

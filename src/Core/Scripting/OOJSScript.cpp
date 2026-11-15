@@ -165,7 +165,8 @@ bool OOJSScript::initWithPath(const std::optional<std::string>& path,
 
     // Set up JS object
     if (!problem.has_value()) {
-      _jsSelf = JS_NewObjectClass(context, static_cast<int>(sScriptClassID));
+      _jsSelf = JS_NewObjectClass(
+          context, static_cast<JSClassID>(static_cast<int>(sScriptClassID)));
       if (JS_IsException(_jsSelf)) {
         JS_FreeValue(context, JS_GetException(context));
         _jsSelf = JS_UNDEFINED;
