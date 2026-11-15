@@ -24,6 +24,7 @@ MA 02110-1301, USA.
 
 #include "OOSunEntity.h"
 
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <format>
@@ -461,7 +462,8 @@ void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
   //	if (inner_radius >= z_distance) [[unlikely]]  return;	// inside the
   // sphere
 
-  GLfloat activity[8] = {0.84, 0.74, 0.64, 0.54, 0.3, 0.4, 0.7, 0.8};
+  std::array<GLfloat, 8> activity = {0.84, 0.74, 0.64, 0.54,
+                                     0.3,  0.4,  0.7,  0.8};
 
   GLfloat si, ci;
   GLfloat rv0, rv1, rv2, c0, c1, c2;
