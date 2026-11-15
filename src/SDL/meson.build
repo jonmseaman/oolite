@@ -5,12 +5,11 @@ oolite_sources += files(
     'MyOpenGLView.cpp',
     'MyOpenGLView+Input.cpp',
     'OOSDLJoystickManager.cpp',
+    'OOSaveEXRSnapshot.cpp',
     'main.cpp',
 )
-oolite_vendored_sources += files('stb_image_write.cpp')
 
 oolite_includes += include_directories('.')
 
 # Enter child subdirectories
-subdir('EXRSnapshotSupport')
 subdir('OOResourcesWin')
