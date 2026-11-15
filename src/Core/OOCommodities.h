@@ -43,7 +43,7 @@ MA 02110-1301, USA.
 // A trade-goods.plist quantity_unit as an OOMassUnit: 0-2 are the units,
 // anything else is OOMassUnit::kUnknown (a bare cast would be undefined for
 // those values).
-static inline OOMassUnit OOMassUnitFromNumber(unsigned n) {
+inline OOMassUnit OOMassUnitFromNumber(unsigned n) {
   return (n <= oo::ToUnderlying(OOMassUnit::kGrams))
              ? static_cast<OOMassUnit>(n)
              : OOMassUnit::kUnknown;

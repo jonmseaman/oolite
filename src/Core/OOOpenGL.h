@@ -73,7 +73,7 @@ constexpr std::string_view OOEnumName(OOShaderSetting value) noexcept {
 // GLhandleARB is a pointer type on macOS and an integer elsewhere; convert it
 // to a GLuint for the core GL 2.0+ shader API.
 template <class Handle>
-inline GLuint OOGLProgramName(Handle handle) {
+GLuint OOGLProgramName(Handle handle) {
   if constexpr (std::is_pointer_v<Handle>) {
     return static_cast<GLuint>(reinterpret_cast<std::uintptr_t>(handle));
   } else {

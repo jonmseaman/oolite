@@ -19,6 +19,7 @@ Checks: >
   modernize-use-using,
   modernize-redundant-void-arg,
   readability-redundant-void-arg,
+  readability-redundant-inline-specifier,
   readability-make-member-function-const,
   cppcoreguidelines-no-malloc,
   cppcoreguidelines-use-enum-class,
@@ -27,6 +28,7 @@ Checks: >
   misc-include-cleaner
 WarningsAsErrors: >
   modernize-use-using,
+  readability-redundant-inline-specifier,
   bugprone-*,
   performance-*,
   cppcoreguidelines-no-malloc,
@@ -73,6 +75,8 @@ WarningsAsErrors: >
   -performance-unnecessary-value-param,
   -performance-use-std-move
 CheckOptions:
+  # inline on a function that is already internal (static, an unnamed namespace) is reported too.
+  readability-redundant-inline-specifier.StrictMode: true
   # An unused #include is an error; a missing direct include is not reported (the
   # umbrella headers export what they gather, IWYU pragma: export). An include that only a
   # platform's #if code or a complete-type conversion needs says so with IWYU pragma: keep.
