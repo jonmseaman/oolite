@@ -46,8 +46,8 @@ MA 02110-1301, USA.
 
 #include "PlayerEntity.h"
 
-#define FAR_PLANE (DUST_SCALE * 0.50f)
-#define NEAR_PLANE (DUST_SCALE * 0.25f)
+constexpr auto FAR_PLANE = (DUST_SCALE * 0.50f);
+constexpr auto NEAR_PLANE = (DUST_SCALE * 0.25f);
 
 #if OO_SHADERS
 constexpr int kShaderModeOff = 0;
