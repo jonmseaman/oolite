@@ -383,12 +383,11 @@ bool VectorToJSValue(JSContext *context, Vector vector, JSValue *outValue)
 }
 
 
-bool JSValueToVector(JSContext *context, JSValueConst value, Vector *outVector)
+std::optional<Vector> JSValueToVector(JSContext *context, JSValueConst value)
 {
 	double v[3] = {};
-	if (!JSValueToNumbers(context, value, v, 3))  return false;
-	*outVector = make_vector(v[0], v[1], v[2]);
-	return true;
+	if (!JSValueToNumbers(context, value, v, 3))  return std::nullopt;
+	return make_vector(v[0], v[1], v[2]);
 }
 
 
@@ -440,12 +439,11 @@ bool QuaternionToJSValue(JSContext *context, Quaternion quaternion, JSValue *out
 }
 
 
-bool JSValueToQuaternion(JSContext *context, JSValueConst value, Quaternion *outQuaternion)
+std::optional<Quaternion> JSValueToQuaternion(JSContext *context, JSValueConst value)
 {
 	double q[4] = {};
-	if (!JSValueToNumbers(context, value, q, 4))  return false;
-	*outQuaternion = make_quaternion(q[0], q[1], q[2], q[3]);
-	return true;
+	if (!JSValueToNumbers(context, value, q, 4))  return std::nullopt;
+	return make_quaternion(q[0], q[1], q[2], q[3]);
 }
 
 

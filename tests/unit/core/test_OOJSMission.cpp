@@ -735,19 +735,18 @@ PlayerEntity *OOPlayerForScripting(void)
 
 
 // A vector is the array [x, y, z] here.
-bool JSValueToVector(JSContext *context, JSValueConst value, Vector *outVector)
+std::optional<Vector> JSValueToVector(JSContext *context, JSValueConst value)
 {
-	if (!JS_IsArray(value))  return false;
+	if (!JS_IsArray(value))  return std::nullopt;
 	double v[3] = {};
 	for (std::uint32_t i = 0; i < 3; i++)
 	{
 		JSValue element = JS_GetPropertyUint32(context, value, i);
 		const bool ok = !JS_IsException(element) && JS_ToFloat64(context, &v[i], element) == 0;
 		JS_FreeValue(context, element);
-		if (!ok)  return false;
+		if (!ok)  return std::nullopt;
 	}
-	*outVector = make_vector(static_cast<OOScalar>(v[0]), static_cast<OOScalar>(v[1]), static_cast<OOScalar>(v[2]));
-	return true;
+	return make_vector(static_cast<OOScalar>(v[0]), static_cast<OOScalar>(v[1]), static_cast<OOScalar>(v[2]));
 }
 
 

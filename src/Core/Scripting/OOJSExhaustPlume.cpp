@@ -23,6 +23,7 @@ MA 02110-1301, USA.
 
 #include "OOJSExhaustPlume.h"
 
+#include <optional>
 #include <string>
 
 #include "EntityOOJavaScriptExtensions.h"
@@ -156,7 +157,9 @@ static JSValue ExhaustPlumeSetProperty(OOJS_SETTER_ARGS) {
   switch (static_cast<ExhaustPlumeProperty>(magic)) {
     using enum ExhaustPlumeProperty;
     case kSize:
-      if (JSValueToVector(context, value, &vValue)) {
+      if (const std::optional<Vector> converted =
+              JSValueToVector(context, value)) {
+        vValue = *converted;
         entity->setScale(vValue);
         return JS_UNDEFINED;
       }

@@ -327,19 +327,18 @@ bool QuaternionToJSValue(JSContext *context, Quaternion quaternion, JSValue *out
 }
 
 
-bool JSValueToQuaternion(JSContext *context, JSValueConst value, Quaternion *outQuaternion)
+std::optional<Quaternion> JSValueToQuaternion(JSContext *context, JSValueConst value)
 {
 	double q[4] = {};
-	if (!JS_IsArray(value))  return false;
+	if (!JS_IsArray(value))  return std::nullopt;
 	for (std::uint32_t i = 0; i < 4; i++)
 	{
 		JSValue element = JS_GetPropertyUint32(context, value, i);
 		const bool ok = !JS_IsException(element) && JS_ToFloat64(context, &q[i], element) == 0;
 		JS_FreeValue(context, element);
-		if (!ok)  return false;
+		if (!ok)  return std::nullopt;
 	}
-	*outQuaternion = make_quaternion(q[0], q[1], q[2], q[3]);
-	return true;
+	return make_quaternion(q[0], q[1], q[2], q[3]);
 }
 
 

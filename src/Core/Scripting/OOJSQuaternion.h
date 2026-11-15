@@ -43,8 +43,10 @@ JSValue JSQuaternionWithQuaternion(JSContext* context,
 // *outValue is owned by the caller on success.
 bool QuaternionToJSValue(JSContext* context, Quaternion quaternion,
                          JSValue* outValue) NONNULL_FUNC;
-bool JSValueToQuaternion(JSContext* context, JSValueConst value,
-                         Quaternion* outQuaternion) NONNULL_FUNC;
+// Empty where the value is not a quaternion (an object that
+// JSObjectGetQuaternion() reads).
+std::optional<Quaternion> JSValueToQuaternion(JSContext* context,
+                                              JSValueConst value) NONNULL_FUNC;
 
 /*	Given a JS Quaternion object, get the corresponding Vector struct. Given
    a JS Entity, get its orientation. Given a JS Array with exactly four

@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 
 #include <format>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "OOJSPrivateObject.h"
@@ -260,7 +261,9 @@ static JSValue SoundSourceSetProperty(OOJS_SETTER_ARGS) {
       break;
 
     case kPosition:
-      if (JSValueToVector(context, value, &vValue)) {
+      if (const std::optional<Vector> converted =
+              JSValueToVector(context, value)) {
+        vValue = *converted;
         if (soundSource != nullptr) soundSource->setPosition(vValue);
         return JS_UNDEFINED;
       }

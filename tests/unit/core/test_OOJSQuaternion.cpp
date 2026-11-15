@@ -383,10 +383,11 @@ OO_TEST(nativeInterface)
 	JSValue value = JS_UNDEFINED;
 	OO_CHECK(QuaternionToJSValue(sContext, make_quaternion(1, 2, 3, 4), &value));
 	Quaternion q = kZeroQuaternion;
-	OO_CHECK(JSValueToQuaternion(sContext, value, &q) && q.w == 1 && q.x == 2 && q.y == 3 && q.z == 4);
+	const std::optional<Quaternion> got = JSValueToQuaternion(sContext, value);
+	OO_CHECK(got && got->w == 1 && got->x == 2 && got->y == 3 && got->z == 4);
 	OO_CHECK(JSQuaternionSetQuaternion(sContext, value, make_quaternion(5, 6, 7, 8)));
 	OO_CHECK(JSObjectGetQuaternion(sContext, value, &q) && q.w == 5 && q.x == 6 && q.y == 7 && q.z == 8);
-	OO_CHECK(!JSValueToQuaternion(sContext, JS_NewInt32(sContext, 3), &q));
+	OO_CHECK(!JSValueToQuaternion(sContext, JS_NewInt32(sContext, 3)));
 	OO_CHECK(!JSObjectGetQuaternion(sContext, JS_NULL, &q));
 	JSValue made = JSQuaternionWithQuaternion(sContext, make_quaternion(0, 0, 0, 1));
 	OO_CHECK(JS_IsObject(made) && JSObjectGetQuaternion(sContext, made, &q) && q.z == 1);

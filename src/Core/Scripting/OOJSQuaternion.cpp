@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #endif
 #include <memory>
 #include <new>
+#include <optional>
 #include <string>
 
 #include "OOJavaScriptEngine.h"
@@ -174,12 +175,14 @@ bool QuaternionToJSValue(JSContext* context, Quaternion quaternion,
   return true;
 }
 
-bool JSValueToQuaternion(JSContext* context, JSValueConst value,
-                         Quaternion* outQuaternion) {
+std::optional<Quaternion> JSValueToQuaternion(JSContext* context,
+                                              JSValueConst value) {
   if (!JS_IsObject(value)) [[unlikely]]
-    return false;
+    return std::nullopt;
 
-  return JSObjectGetQuaternion(context, value, outQuaternion);
+  Quaternion quaternion;
+  if (!JSObjectGetQuaternion(context, value, &quaternion)) return std::nullopt;
+  return quaternion;
 }
 
 static bool GetArrayElementNumber(JSContext* context, JSValueConst array,

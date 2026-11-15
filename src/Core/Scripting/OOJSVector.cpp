@@ -37,6 +37,7 @@ MA 02110-1301, USA.
 #include <format>
 #include <memory>
 #include <new>
+#include <optional>
 #include <string>
 
 /*
@@ -213,22 +214,22 @@ bool NSPointToVectorJSValue(JSContext* context, NSPoint point,
                          outValue);
 }
 
-bool JSValueToHPVector(JSContext* context, JSValueConst value,
-                       HPVector* outVector) {
+std::optional<HPVector> JSValueToHPVector(JSContext* context,
+                                          JSValueConst value) {
   if (!JS_IsObject(value)) [[unlikely]]
-    return false;
+    return std::nullopt;
 
-  return JSObjectGetVector(context, value, outVector);
+  HPVector vector;
+  if (!JSObjectGetVector(context, value, &vector)) return std::nullopt;
+  return vector;
 }
 
-bool JSValueToVector(JSContext* context, JSValueConst value,
-                     Vector* outVector) {
+std::optional<Vector> JSValueToVector(JSContext* context, JSValueConst value) {
   if (!JS_IsObject(value)) [[unlikely]]
-    return false;
-  HPVector tmp = kZeroHPVector;
-  bool result = JSObjectGetVector(context, value, &tmp);
-  *outVector = HPVectorToVector(tmp);
-  return result;
+    return std::nullopt;
+  const std::optional<HPVector> vector = JSValueToHPVector(context, value);
+  if (!vector.has_value()) return std::nullopt;
+  return HPVectorToVector(*vector);
 }
 
 // Get array element as a number. Like JS_ValueToNumber(), non-numbers give NaN

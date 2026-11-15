@@ -49,10 +49,12 @@ bool HPVectorToJSValue(JSContext* context, HPVector vector,
                        JSValue* outValue) NONNULL_FUNC;
 bool NSPointToVectorJSValue(JSContext* context, NSPoint point,
                             JSValue* outValue) NONNULL_FUNC;
-bool JSValueToVector(JSContext* context, JSValueConst value,
-                     Vector* outVector) NONNULL_FUNC;
-bool JSValueToHPVector(JSContext* context, JSValueConst value,
-                       HPVector* outVector) NONNULL_FUNC;
+// Empty where the value is not a vector (an object that JSObjectGetVector()
+// reads).
+std::optional<Vector> JSValueToVector(JSContext* context,
+                                      JSValueConst value) NONNULL_FUNC;
+std::optional<HPVector> JSValueToHPVector(JSContext* context,
+                                          JSValueConst value) NONNULL_FUNC;
 
 /*	Given a JS Vector object, get the corresponding Vector struct. Given a
    JS Entity, get its position. Given a JS Array with exactly three elements,
