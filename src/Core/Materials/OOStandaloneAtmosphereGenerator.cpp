@@ -260,10 +260,10 @@ void OOStandaloneAtmosphereGenerator::loadTexture() {
         q = QFactor(_info.fbmBuffer.data(), x, y, _width, paleClouds,
                     cloudFraction, nearPole);
         color = CloudMix(&_info, q, nearPole);
-        *apx++ = 255.0f * color.r;
-        *apx++ = 255.0f * color.g;
-        *apx++ = 255.0f * color.b;
-        *apx++ = 255.0f * color.a * _info.cloudAlpha;
+        *apx++ = static_cast<uint8_t>(255.0f * color.r);
+        *apx++ = static_cast<uint8_t>(255.0f * color.g);
+        *apx++ = static_cast<uint8_t>(255.0f * color.b);
+        *apx++ = static_cast<uint8_t>(255.0f * color.a * _info.cloudAlpha);
       }
     }
 
@@ -484,9 +484,9 @@ static float SampleNoise3D(OOStandaloneAtmosphereGeneratorInfo* info,
   float fx = floor(p.x);
   float fy = floor(p.y);
   float fz = floor(p.z);
-  int X = fx;
-  int Y = fy;
-  int Z = fz;
+  int X = static_cast<int>(fx);
+  int Y = static_cast<int>(fy);
+  int Z = static_cast<int>(fz);
   float x = p.x - fx;
   float y = p.y - fy;
   float z = p.z - fz;

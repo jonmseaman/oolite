@@ -150,17 +150,20 @@ static JSValue ClockGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewNumber(context, floor(clockTime / 3600.0));
 
     case kSecondsComponent:
-      return JS_NewInt32(context, fmod(clockTime, 60.0));
+      return JS_NewInt32(context, static_cast<int32_t>(fmod(clockTime, 60.0)));
 
     case kMinutesComponent:
-      return JS_NewInt32(context, fmod(floor(clockTime / 60.0), 60.0));
+      return JS_NewInt32(
+          context, static_cast<int32_t>(fmod(floor(clockTime / 60.0), 60.0)));
 
     case kHoursComponent:
-      return JS_NewInt32(context, fmod(floor(clockTime / 3600.0), 24.0));
+      return JS_NewInt32(
+          context, static_cast<int32_t>(fmod(floor(clockTime / 3600.0), 24.0)));
 
     case kDays:
     case kDaysComponent:
-      return JS_NewInt32(context, floor(clockTime / 86400.0));
+      return JS_NewInt32(context,
+                         static_cast<int32_t>(floor(clockTime / 86400.0)));
 
     case kClockString:
       return OOJSValueFromPList(

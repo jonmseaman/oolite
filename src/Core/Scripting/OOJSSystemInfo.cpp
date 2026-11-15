@@ -984,7 +984,8 @@ static JSValue SystemInfoDistanceToSystem(OOJS_NATIVE_ARGS) {
   NSPoint otherCoord = CoordinatesOf(otherInfo);
 
   OOJS_RETURN_DOUBLE(distanceBetweenPlanetPositions(
-      thisCoord.x, thisCoord.y, otherCoord.x, otherCoord.y));
+      static_cast<int>(thisCoord.x), static_cast<int>(thisCoord.y),
+      static_cast<int>(otherCoord.x), static_cast<int>(otherCoord.y)));
 
   OOJS_NATIVE_EXIT
 }

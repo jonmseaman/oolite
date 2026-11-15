@@ -170,7 +170,7 @@ void InitOOJSFrameCallbacks(JSContext* context, JSValueConst global) {
   sNextID = 1;
 #else
   // Set randomish initial ID to catch bad habits.
-  sNextID = oo::date::timeIntervalSinceReferenceDate();
+  sNextID = static_cast<uint32_t>(oo::date::timeIntervalSinceReferenceDate());
 #endif
 }
 

@@ -185,8 +185,10 @@ bool OOPixMapModulateUniform(OOPixMap* ioPixMap, float f0, float f1, float f2,
   if (!OOPixMapToRGBA(ioPixMap)) [[unlikely]]
     return false;
 
-  ModulateUniform_4(*ioPixMap, f0 * 256.0f, f1 * 256.0f, f2 * 256.0f,
-                    f3 * 256.0f);
+  ModulateUniform_4(*ioPixMap, static_cast<uint16_t>(f0 * 256.0f),
+                    static_cast<uint16_t>(f1 * 256.0f),
+                    static_cast<uint16_t>(f2 * 256.0f),
+                    static_cast<uint16_t>(f3 * 256.0f));
 
   return true;
 }

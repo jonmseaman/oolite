@@ -517,11 +517,11 @@ void OOPlanetTextureGenerator::loadTexture() {
           norm = OOVectorInterpolate(norm, kBasisZVector, color.a);
 
           // Put norm in normal map, scaled from [-1..1] to [0..255].
-          *npx++ = 127.5f * (norm.y + 1.0f);
-          *npx++ = 127.5f * (-norm.x + 1.0f);
-          *npx++ = 127.5f * (norm.z + 1.0f);
+          *npx++ = static_cast<uint8_t>(127.5f * (norm.y + 1.0f));
+          *npx++ = static_cast<uint8_t>(127.5f * (-norm.x + 1.0f));
+          *npx++ = static_cast<uint8_t>(127.5f * (norm.z + 1.0f));
 
-          *npx++ = 255.0f * color.a;  // Specular channel.
+          *npx++ = static_cast<uint8_t>(255.0f * color.a);  // Specular channel.
         } else {
           //	Terrain shading - lambertian lighting from straight above.
           shade = norm.z;
@@ -536,9 +536,9 @@ void OOPlanetTextureGenerator::loadTexture() {
                                           // than - previous implementation.
         }
 
-        *px++ = 255.0f * color.r * shade;
-        *px++ = 255.0f * color.g * shade;
-        *px++ = 255.0f * color.b * shade;
+        *px++ = static_cast<uint8_t>(255.0f * color.r * shade);
+        *px++ = static_cast<uint8_t>(255.0f * color.g * shade);
+        *px++ = static_cast<uint8_t>(255.0f * color.b * shade);
 
         *px++ = 0;  // FIXME: light map goes here.
 
@@ -546,10 +546,10 @@ void OOPlanetTextureGenerator::loadTexture() {
           q = QFactor(_info.fbmBuffer.data(), x, y, _width, paleClouds,
                       cloudFraction, nearPole);
           color = CloudMix(&_info, q, nearPole);
-          *apx++ = 255.0f * color.r;
-          *apx++ = 255.0f * color.g;
-          *apx++ = 255.0f * color.b;
-          *apx++ = 255.0f * color.a * _info.cloudAlpha;
+          *apx++ = static_cast<uint8_t>(255.0f * color.r);
+          *apx++ = static_cast<uint8_t>(255.0f * color.g);
+          *apx++ = static_cast<uint8_t>(255.0f * color.b);
+          *apx++ = static_cast<uint8_t>(255.0f * color.a * _info.cloudAlpha);
         }
       }
     }
@@ -849,9 +849,9 @@ static float SampleNoise3D(OOPlanetTextureGeneratorInfo* info, Vector p) {
   float fx = floor(p.x);
   float fy = floor(p.y);
   float fz = floor(p.z);
-  int X = fx;
-  int Y = fy;
-  int Z = fz;
+  int X = static_cast<int>(fx);
+  int Y = static_cast<int>(fy);
+  int Z = static_cast<int>(fz);
   float x = p.x - fx;
   float y = p.y - fy;
   float z = p.z - fz;

@@ -93,7 +93,7 @@ void OOColor::setHue(float h, float s, float b, float a) {
   if (h < 0.0) h += 360.0f;
   h /= 60.0f;
 
-  i = floor(h);
+  i = static_cast<int>(floor(h));
   f = h - i;
   p = b * (1.0f - s);
   q = b * (1.0f - (s * f));

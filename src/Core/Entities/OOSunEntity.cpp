@@ -387,7 +387,7 @@ void OOSunEntity::drawOpaqueParts() {
         sqrt_zero_distance;  // equivalent to size on screen in pixels
 
     if (cam_zero_distance > 0.0f) {
-      subdivideLevel = 2 + floorf(drawRatio2);
+      subdivideLevel = static_cast<int>(2 + floorf(drawRatio2));
       if (subdivideLevel > 4) subdivideLevel = 4;
     }
 
@@ -592,7 +592,7 @@ void OOSunEntity::drawDirectVisionSunGlare() {
       (PLAYER != nullptr ? PLAYER->lookingAtSunWithThresholdAngleCos(
                                cosf(sunGlareAngularSize))
                          : 0.0f);
-  if (directVisionSunGlare) {
+  if (static_cast<bool>(directVisionSunGlare)) {
     NSSize siz = UNIVERSE->getGui()->size();
     ::MyOpenGLView* gameView =
         (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);

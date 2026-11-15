@@ -363,7 +363,7 @@ std::vector<std::shared_ptr<OOTexture>> OOTexture::allTextures() {
 
 size_t OOTexture::dataSize() {
   NSSize dimensions = this->dimensions();
-  size_t size = dimensions.width * dimensions.height;
+  size_t size = static_cast<size_t>(dimensions.width * dimensions.height);
   if (isCubeMap()) size *= 6;
   if (isMipMapped()) size = size * 4 / 3;
 

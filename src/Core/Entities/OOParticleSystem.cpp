@@ -258,7 +258,7 @@ void OOSmallFragmentBurstEntity::initFragmentBurstFrom(HPVector fragPosition,
   constexpr int kMinSpeed = 100;
   constexpr int kMaxSpeed = 400;
 
-  unsigned count = 0.4f * size;
+  unsigned count = static_cast<unsigned int>(0.4f * size);
   count =
       std::min(count | 12, static_cast<unsigned>(kFragmentBurstMaxParticles));
 
@@ -317,7 +317,7 @@ void OOBigFragmentBurstEntity::initFragmentBurstFrom(HPVector fragPosition,
   float minSpeed = 1.0f + size * 0.5f;
   float maxSpeed = minSpeed * 4.0f;
 
-  unsigned count = 0.2f * size;
+  unsigned count = static_cast<unsigned int>(0.2f * size);
   count =
       std::min(count | 3, static_cast<unsigned>(kBigFragmentBurstMaxParticles));
 

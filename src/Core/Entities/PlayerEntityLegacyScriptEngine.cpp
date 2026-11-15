@@ -1522,7 +1522,8 @@ void PlayerEntity::testForEquipment(const std::string& equipString) {
 
 void PlayerEntity::awardFuel(const std::string& valueString) {
   // called by name; add to fuel up to 7.0 LY
-  int delta = 10 * static_cast<float>(oo::str::doubleValue(valueString));
+  int delta = static_cast<int>(
+      10 * static_cast<float>(oo::str::doubleValue(valueString)));
   OOFuelQuantity scriptTargetFuelBeforeAward =
       (::scriptTarget != nullptr ? ::scriptTarget->getFuel()
                                  : OOFuelQuantity{});
@@ -2463,7 +2464,8 @@ void PlayerEntity::addPlanet(const std::string& planetKey) {
       (UNIVERSE != nullptr
            ? UNIVERSE->coordinatesFromCoordinateSystemString(positionString)
            : HPVector{});
-  if (posn.x || posn.y || posn.z) {
+  if (static_cast<bool>(posn.x) || static_cast<bool>(posn.y) ||
+      static_cast<bool>(posn.z)) {
     OO_LOG(kOOLogDebugAddPlanet,
            "planet position ({:.2f} {:.2f} {:.2f}) derived from {}", posn.x,
            posn.y, posn.z, positionString);
@@ -2556,7 +2558,8 @@ void PlayerEntity::addMoon(const std::string& moonKey) {
       (UNIVERSE != nullptr
            ? UNIVERSE->coordinatesFromCoordinateSystemString(positionString)
            : HPVector{});
-  if (posn.x || posn.y || posn.z) {
+  if (static_cast<bool>(posn.x) || static_cast<bool>(posn.y) ||
+      static_cast<bool>(posn.z)) {
     OO_LOG(kOOLogDebugAddPlanet,
            "moon position ({:.2f} {:.2f} {:.2f}) derived from {}", posn.x,
            posn.y, posn.z, positionString);
@@ -2985,7 +2988,7 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     /* MKW - add rotation based on current time
      *     - necessary to duplicate the rotation already performed in
      * PlanetEntity.m since we reset the orientation above. */
-    int deltaT = floor(fmod(clockTimeAdjusted(), 86400));
+    int deltaT = static_cast<int>(floor(fmod(clockTimeAdjusted(), 86400)));
     if (doppelganger != nullptr) doppelganger->update(deltaT);
     if (UNIVERSE != nullptr) UNIVERSE->addEntity(doppelganger);
 
