@@ -38,8 +38,11 @@ struct OOMatrix {
   OOScalar m[4][4];
 };
 
-extern const OOMatrix kIdentityMatrix; /* {1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1,
-                                          0}, {0, 0, 0, 1} */
+inline constexpr OOMatrix kIdentityMatrix = {.m = {{1.0f, 0.0f, 0.0f, 0.0f},
+                                                   {0.0f, 1.0f, 0.0f, 0.0f},
+                                                   {0.0f, 0.0f, 1.0f, 0.0f},
+                                                   {0.0f, 0.0f, 0.0f, 1.0f}}};
+// Stays an extern: test_OOJSCall.cpp defines its own.
 extern const OOMatrix
     kZeroMatrix; /* {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0} */
 
