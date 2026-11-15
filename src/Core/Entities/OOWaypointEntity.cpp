@@ -98,8 +98,9 @@ OOScalar OOWaypointEntity::size() { return _size; }
 void OOWaypointEntity::setSize(OOScalar newSize) {
   if (newSize > 0) {
     _size = newSize;
-    no_draw_distance = newSize * newSize * NO_DRAW_DISTANCE_FACTOR *
-                       NO_DRAW_DISTANCE_FACTOR * 2;
+    no_draw_distance =
+        static_cast<GLfloat>(newSize * newSize * NO_DRAW_DISTANCE_FACTOR *
+                             NO_DRAW_DISTANCE_FACTOR * 2);
   }
 }
 
@@ -123,7 +124,7 @@ void OOWaypointEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   GLfloat a = 0.75;
   if ((PLAYER != nullptr ? PLAYER->getCompassTargetEntity() : nullptr) !=
       this) {
-    a *= 0.25;
+    a *= static_cast<GLfloat>(0.25);
   }
   if (cam_zero_distance > _size * _size) {
     // dim out as gets further away; 2-D HUD display more
@@ -166,7 +167,7 @@ void OOWaypointEntity::drawImmediate(bool /*immediate*/, bool translucent) {
       glVertex3f(0, 0, s1);
       glVertex3f(20.0, 0, s1 - 20.0f);
       glVertex3f(0, 0, s1);
-      s1 *= 0.5;
+      s1 *= static_cast<GLfloat>(0.5);
     }
   }
   OOGLEND();

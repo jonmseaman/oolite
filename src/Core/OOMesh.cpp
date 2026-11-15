@@ -1542,7 +1542,7 @@ void OOMesh::debugDrawNormals() {
 
     // Draw normal
     length = magnitude2(n);
-    blend = fabs(length - 1) * 5.0;
+    blend = static_cast<float>(fabs(length - 1) * 5.0);
     color[0] = std::min(blend, 1.0f);
     color[1] = 1.0f - color[0];
     color[2] = color[1];
@@ -1908,12 +1908,12 @@ void OOMesh::calculateBoundingVolumes() {
   if (_boundingBox.max.z - _boundingBox.min.z < length_shortest_axis)
     length_shortest_axis = _boundingBox.max.z - _boundingBox.min.z;
 
-  d_squared = (length_longest_axis + length_shortest_axis) *
-              (length_longest_axis + length_shortest_axis) *
-              0.25;  // square of average length
-  _maxDrawDistance =
+  d_squared = static_cast<float>((length_longest_axis + length_shortest_axis) *
+                                 (length_longest_axis + length_shortest_axis) *
+                                 0.25);  // square of average length
+  _maxDrawDistance = static_cast<GLfloat>(
       d_squared * NO_DRAW_DISTANCE_FACTOR *
-      NO_DRAW_DISTANCE_FACTOR;  // no longer based on the collision radius
+      NO_DRAW_DISTANCE_FACTOR);  // no longer based on the collision radius
 
   _collisionRadius = sqrtf(result);
 }

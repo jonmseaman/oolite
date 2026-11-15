@@ -148,10 +148,14 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
                                              : static_cast<OOColor*>(nullptr)))
     emissive->getRed(&ex_emissive[0], &ex_emissive[1], &ex_emissive[2],
                      &ex_emissive[3]);  // a nil colour left them as they were
-  const GLfloat s1[8] = {0.0, M_SQRT1_2,  1.0,  M_SQRT1_2,
-                         0.0, -M_SQRT1_2, -1.0, -M_SQRT1_2};
-  const GLfloat c1[8] = {1.0,  M_SQRT1_2,  0.0, -M_SQRT1_2,
-                         -1.0, -M_SQRT1_2, 0.0, M_SQRT1_2};
+  const GLfloat s1[8] = {0.0,  static_cast<GLfloat>(M_SQRT1_2),
+                         1.0,  static_cast<GLfloat>(M_SQRT1_2),
+                         0.0,  static_cast<const GLfloat>(-M_SQRT1_2),
+                         -1.0, static_cast<const GLfloat>(-M_SQRT1_2)};
+  const GLfloat c1[8] = {1.0,  static_cast<GLfloat>(M_SQRT1_2),
+                         0.0,  static_cast<const GLfloat>(-M_SQRT1_2),
+                         -1.0, static_cast<const GLfloat>(-M_SQRT1_2),
+                         0.0,  static_cast<GLfloat>(M_SQRT1_2)};
 
   Quaternion shipQrotation =
       (ship != nullptr ? ship->normalOrientation() : Quaternion{});
@@ -241,7 +245,8 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
   ex_emissive[1] = green_factor;  // diminish green part towards rear of exhaust
   ex_emissive[0] = red_factor;    // diminish red part towards rear of exhaust
   vertex = HPvector_add(f01.position, vectorToHPVector(b01));
-  collision_radius = HPmagnitude(HPvector_subtract(vertex, currentPos));
+  collision_radius =
+      static_cast<GLfloat>(HPmagnitude(HPvector_subtract(vertex, currentPos)));
   _vertices[iv++] = vertex.x;  // + zero.k.x * flare_factor * 4.0;
   _vertices[iv++] = vertex.y;  // + zero.k.y * flare_factor * 4.0;
   _vertices[iv++] = vertex.z;  // + zero.k.z * flare_factor * 4.0;
@@ -261,7 +266,8 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
         f01.position, vectorToHPVector(vector_add(
                           b01, vector_add(vector_multiply_scalar(i1, s1[i]),
                                           vector_multiply_scalar(j1, c1[i])))));
-    length = HPmagnitude(HPvector_subtract(vertex, currentPos));
+    length = static_cast<GLfloat>(
+        HPmagnitude(HPvector_subtract(vertex, currentPos)));
     if (length > collision_radius) {
       collision_radius = length;
     }
@@ -294,7 +300,8 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
             b03, vector_add(vector_multiply_scalar(i1, s1[i]),
                             vector_add(vector_multiply_scalar(j1, c1[i]),
                                        vector_multiply_scalar(k1, r1))))));
-    length = HPmagnitude(HPvector_subtract(vertex, currentPos));
+    length = static_cast<GLfloat>(
+        HPmagnitude(HPvector_subtract(vertex, currentPos)));
     if (length > collision_radius) {
       collision_radius = length;
     }
@@ -329,7 +336,8 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
             b06, vector_add(vector_multiply_scalar(i1, s1[i]),
                             vector_add(vector_multiply_scalar(j1, c1[i]),
                                        vector_multiply_scalar(k1, r1))))));
-    length = HPmagnitude(HPvector_subtract(vertex, currentPos));
+    length = static_cast<GLfloat>(
+        HPmagnitude(HPvector_subtract(vertex, currentPos)));
     if (length > collision_radius) {
       collision_radius = length;
     }
@@ -363,7 +371,8 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
             b08, vector_add(vector_multiply_scalar(i1, s1[i]),
                             vector_add(vector_multiply_scalar(j1, c1[i]),
                                        vector_multiply_scalar(k1, r1))))));
-    length = HPmagnitude(HPvector_subtract(vertex, currentPos));
+    length = static_cast<GLfloat>(
+        HPmagnitude(HPvector_subtract(vertex, currentPos)));
     if (length > collision_radius) {
       collision_radius = length;
     }
@@ -379,7 +388,8 @@ void OOExhaustPlumeEntity::update(OOTimeDelta /*delta_t*/) {
   ex_emissive[3] = 0.0;  // fade alpha towards rear of exhaust
   ex_emissive[1] = 0.0;  // diminish green part towards rear of exhaust
   ex_emissive[0] = 0.0;  // diminish red part towards rear of exhaust
-  length = HPmagnitude(HPvector_subtract(vertex, currentPos));
+  length =
+      static_cast<GLfloat>(HPmagnitude(HPvector_subtract(vertex, currentPos)));
   if (length > collision_radius) {
     collision_radius = length;
   }
@@ -409,8 +419,8 @@ static GLuint afttstr2[4] = {2, 6, 26, 30};
 static GLuint afttstr3[4] = {3, 7, 27, 31};
 static GLuint afttstr4[4] = {4, 8, 28, 32};
 
-static std::array<GLfloat, 6> pA = {0.01, 0.0, 2.0,
-                                    4.0,  6.0, 10.0};  // phase adjustments
+static std::array<GLfloat, 6> pA = {
+    static_cast<float>(0.01), 0.0, 2.0, 4.0, 6.0, 10.0};  // phase adjustments
 
 void OOExhaustPlumeEntity::drawSubEntityImmediate(bool /*immediate*/,
                                                   bool translucent) {
@@ -465,25 +475,79 @@ void OOExhaustPlumeEntity::drawSubEntityImmediate(bool /*immediate*/,
   GLfloat phase = static_cast<GLfloat>(dphase);
 
   GLfloat texCoords[68] = {
-      0.5, phase + pA[0],
+      0.5,
+      phase + pA[0],
 
-      0.1, phase + pA[1], 0.1, phase + pA[1], 0.1, phase + pA[1],
-      0.1, phase + pA[1], 0.9, phase + pA[1], 0.9, phase + pA[1],
-      0.9, phase + pA[1], 0.9, phase + pA[1],
+      static_cast<GLfloat>(0.1),
+      phase + pA[1],
+      static_cast<GLfloat>(0.1),
+      phase + pA[1],
+      static_cast<GLfloat>(0.1),
+      phase + pA[1],
+      static_cast<GLfloat>(0.1),
+      phase + pA[1],
+      static_cast<GLfloat>(0.9),
+      phase + pA[1],
+      static_cast<GLfloat>(0.9),
+      phase + pA[1],
+      static_cast<GLfloat>(0.9),
+      phase + pA[1],
+      static_cast<GLfloat>(0.9),
+      phase + pA[1],
 
-      0.1, phase + pA[2], 0.1, phase + pA[2], 0.1, phase + pA[2],
-      0.1, phase + pA[2], 0.9, phase + pA[2], 0.9, phase + pA[2],
-      0.9, phase + pA[2], 0.9, phase + pA[2],
+      static_cast<GLfloat>(0.1),
+      phase + pA[2],
+      static_cast<GLfloat>(0.1),
+      phase + pA[2],
+      static_cast<GLfloat>(0.1),
+      phase + pA[2],
+      static_cast<GLfloat>(0.1),
+      phase + pA[2],
+      static_cast<GLfloat>(0.9),
+      phase + pA[2],
+      static_cast<GLfloat>(0.9),
+      phase + pA[2],
+      static_cast<GLfloat>(0.9),
+      phase + pA[2],
+      static_cast<GLfloat>(0.9),
+      phase + pA[2],
 
-      0.1, phase + pA[3], 0.1, phase + pA[3], 0.1, phase + pA[3],
-      0.1, phase + pA[3], 0.9, phase + pA[3], 0.9, phase + pA[3],
-      0.9, phase + pA[3], 0.9, phase + pA[3],
+      static_cast<GLfloat>(0.1),
+      phase + pA[3],
+      static_cast<GLfloat>(0.1),
+      phase + pA[3],
+      static_cast<GLfloat>(0.1),
+      phase + pA[3],
+      static_cast<GLfloat>(0.1),
+      phase + pA[3],
+      static_cast<GLfloat>(0.9),
+      phase + pA[3],
+      static_cast<GLfloat>(0.9),
+      phase + pA[3],
+      static_cast<GLfloat>(0.9),
+      phase + pA[3],
+      static_cast<GLfloat>(0.9),
+      phase + pA[3],
 
-      0.1, phase + pA[4], 0.1, phase + pA[4], 0.1, phase + pA[4],
-      0.1, phase + pA[4], 0.9, phase + pA[4], 0.9, phase + pA[4],
-      0.9, phase + pA[4], 0.9, phase + pA[4],
+      static_cast<GLfloat>(0.1),
+      phase + pA[4],
+      static_cast<GLfloat>(0.1),
+      phase + pA[4],
+      static_cast<GLfloat>(0.1),
+      phase + pA[4],
+      static_cast<GLfloat>(0.1),
+      phase + pA[4],
+      static_cast<GLfloat>(0.9),
+      phase + pA[4],
+      static_cast<GLfloat>(0.9),
+      phase + pA[4],
+      static_cast<GLfloat>(0.9),
+      phase + pA[4],
+      static_cast<GLfloat>(0.9),
+      phase + pA[4],
 
-      0.5, phase + pA[5],
+      0.5,
+      phase + pA[5],
   };
   OOGL(glTexCoordPointer(2, GL_FLOAT, 0, texCoords));
 

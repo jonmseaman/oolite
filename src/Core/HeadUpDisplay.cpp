@@ -655,7 +655,9 @@ void HeadUpDisplay::resetGuis(const oo::PList& info) {
       gui->setDrawPosition(make_vector(0.0, 180.0, 640.0));
       gui->resizeTo(NSMakeSize(360, 120), 12, std::nullopt);
       gui->setBackgroundColor(
-          OOColor::colorWithRed(0.0, 0.05, 0.45, 0.5).get());
+          OOColor::colorWithRed(0.0, static_cast<float>(0.05),
+                                static_cast<float>(0.45), 0.5)
+              .get());
       gui->setTextColor(OOColor::whiteColor().get());
       gui->printLongText(OO_DESC("communications-log-string"),
                          OOGUIAlignment::kCenter, OOColor::yellowColor().get(),
@@ -787,8 +789,10 @@ void HeadUpDisplay::addLegend(const oo::PList& info) {
     }
 
     imageSize = texture->dimensions();
-    imageSize.width = info.get<float>(WIDTH_KEY, imageSize.width);
-    imageSize.height = info.get<float>(HEIGHT_KEY, imageSize.height);
+    imageSize.width =
+        info.get<float>(WIDTH_KEY, static_cast<float>(imageSize.width));
+    imageSize.height =
+        info.get<float>(HEIGHT_KEY, static_cast<float>(imageSize.height));
 
     legendSprite = OOTextureSprite::initWithTexture(texture.get(), imageSize);
 
@@ -894,7 +898,8 @@ Vector HeadUpDisplay::nonlinearScannerScale(Vector V, GLfloat zoom,
                                             double scale) {
   OOScalar mag = magnitude(V);
   Vector unit = vector_normal(V);
-  return vector_multiply_scalar(unit, nonlinearScannerFunc(mag, zoom, scale));
+  return vector_multiply_scalar(
+      unit, nonlinearScannerFunc(mag, zoom, static_cast<GLfloat>(scale)));
 }
 
 bool HeadUpDisplay::nonlinearScanner() { return nonlinear_scanner; }
@@ -1321,7 +1326,7 @@ void HeadUpDisplay::drawMultiFunctionDisplay(const oo::PList& info,
     mfdcol->getRed(&mfd_color[0], &mfd_color[1], &mfd_color[2], &mfd_color[3]);
   }
   if (index != (player1 != nullptr ? player1->getActiveMFD() : 0)) {
-    mfd_color[3] *= 0.75;
+    mfd_color[3] *= static_cast<GLfloat>(0.75);
   }
   drawSurroundInternal(info, mfd_color);
 
@@ -1344,7 +1349,7 @@ void HeadUpDisplay::drawMultiFunctionDisplay(const oo::PList& info,
   GLfloat y0 = static_cast<GLfloat>(static_cast<float>(y) + cached.height / 2);
   GLfloat x1 = static_cast<GLfloat>(static_cast<float>(x) + cached.width / 2);
   GLfloat y1 = static_cast<GLfloat>(static_cast<float>(y) - cached.height / 2);
-  GLColorWithOverallAlpha(mfd_color, alpha * 0.3);
+  GLColorWithOverallAlpha(mfd_color, static_cast<GLfloat>(alpha * 0.3));
   OOGLBEGIN(GL_QUADS);
   glVertex3f(x0 - 2, y0 + 2, z1);
   glVertex3f(x0 - 2, y1 - 2, z1);
@@ -1358,9 +1363,10 @@ void HeadUpDisplay::drawMultiFunctionDisplay(const oo::PList& info,
   for (i = 0; i < 10; i++) {
     if (static_cast<std::size_t>(i) < lines.size()) {
       const std::string& line = lines[i];
-      y0 -= siz.height;
+      y0 -= static_cast<GLfloat>(siz.height);
       // all lines should be shorter than the size of the MFD
-      GLfloat textwidth = OORectFromString(line, 0.0f, 0.0f, siz).size.width;
+      GLfloat textwidth = static_cast<GLfloat>(
+          OORectFromString(line, 0.0f, 0.0f, siz).size.width);
       if (textwidth <= cached.width) {
         OODrawString(line, x0, y0, z1, siz);
       } else {
@@ -1422,8 +1428,9 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
   GLfloat alpha = scanner_color[3];
   GLfloat col[4] = {1.0, 1.0, 1.0, alpha};  // temporary colour variable
 
-  GLfloat z_factor = siz.height / siz.width;  // approx 1/4
-  GLfloat y_factor = 1.0 - sqrt(z_factor);    // approx 1/2
+  GLfloat z_factor =
+      static_cast<GLfloat>(siz.height / siz.width);               // approx 1/4
+  GLfloat y_factor = static_cast<GLfloat>(1.0 - sqrt(z_factor));  // approx 1/2
 
   int scanner_cx = x;
   int scanner_cy = y;
@@ -1431,7 +1438,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
   int scannerFootprint = static_cast<int>(SCANNER_MAX_RANGE * 2.5 / siz.width);
 
   GLfloat zoom = scanner_zoom;
-  if (scanner_ultra_zoom) zoom = pow(2, zoom - 1.0);
+  if (scanner_ultra_zoom) zoom = static_cast<GLfloat>(pow(2, zoom - 1.0));
   GLfloat max_zoomed_range2 = SCANNER_SCALE * SCANNER_SCALE * 10000.0;
   if (!nonlinear_scanner) {
     max_zoomed_range2 /= zoom * zoom;
@@ -1469,7 +1476,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
   }
 
   if (checkPlayerInFlight()) {
-    GLfloat upscale = zoom * 1.25 / scannerFootprint;
+    GLfloat upscale = static_cast<GLfloat>(zoom * 1.25 / scannerFootprint);
     GLfloat max_blip = 0.0;
     OOScanClass drawClass;
 
@@ -1523,9 +1530,10 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
         // has it sent a recent message
         //
         if (oo::EntityIsShip(scannedEntity))
-          ms_blip = 2.0 * (oo::ToShip(scannedEntity) != nullptr
-                               ? oo::ToShip(scannedEntity)->getMessageTime()
-                               : 0.0);
+          ms_blip = static_cast<float>(
+              2.0 * (oo::ToShip(scannedEntity) != nullptr
+                         ? oo::ToShip(scannedEntity)->getMessageTime()
+                         : 0.0));
         if (ms_blip > max_blip) {
           max_blip = ms_blip;
           last_transmitter = scannedEntity->getUniversalID();
@@ -1540,7 +1548,8 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
                   ? UNIVERSE->gameController()->isGamePaused()
                   : false)) {
           relativePosition =
-              vector_add(relativePosition, OOVectorRandomRadial(fuzz));
+              vector_add(relativePosition,
+                         OOVectorRandomRadial(static_cast<OOScalar>(fuzz)));
         }
 
         Vector rp = relativePosition;
@@ -1616,8 +1625,10 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
           ::ShipEntity* ship = oo::ToShip(scannedEntity);
           if ((!nonlinear_scanner && ship->collision_radius * upscale > 4.5) ||
               (nonlinear_scanner &&
-               nonlinearScannerFunc(act_dist, zoom, siz.width) -
-                       nonlinearScannerFunc(lim_dist, zoom, siz.width) >
+               nonlinearScannerFunc(act_dist, zoom,
+                                    static_cast<GLfloat>(siz.width)) -
+                       nonlinearScannerFunc(lim_dist, zoom,
+                                            static_cast<GLfloat>(siz.width)) >
                    4.5)) {
             std::array<Vector, 6> bounds;
             BoundingBox bb = ship->totalBoundingBox;
@@ -1653,7 +1664,8 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
             // draw the diamond
             //
             OOGLBEGIN(GL_QUADS);
-            glColor4f(col[0], col[1], col[2], 0.33333 * col[3]);
+            glColor4f(col[0], col[1], col[2],
+                      static_cast<GLfloat>(0.33333 * col[3]));
             glVertex3f(bounds[0].x, bounds[0].y, bounds[0].z);
             glVertex3f(bounds[4].x, bounds[4].y, bounds[4].z);
             glVertex3f(bounds[1].x, bounds[1].y, bounds[1].z);
@@ -1672,8 +1684,8 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
 
         if (ms_blip > 0.0) {
           DrawSpecialOval(
-              x1 - 0.5, y2 + 1.5, z1,
-              NSMakeSize(16.0 * (1.0 - ms_blip), 8.0 * (1.0 - ms_blip)), 30,
+              static_cast<GLfloat>(x1 - 0.5), static_cast<GLfloat>(y2 + 1.5),
+              z1, NSMakeSize(16.0 * (1.0 - ms_blip), 8.0 * (1.0 - ms_blip)), 30,
               col);
         }
         if (OOEntityIsCascadeWeapon(scannedEntity)) {
@@ -1683,16 +1695,21 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
                 static_cast<GLfloat>(scanner_cy), z1, siz, rrp,
                 scannedEntity->collision_radius, zoom, alpha);
           } else {
-            GLfloat r1 = 2.5 + scannedEntity->collision_radius * upscale;
+            GLfloat r1 = static_cast<GLfloat>(
+                2.5 + scannedEntity->collision_radius * upscale);
             GLfloat l2 = r1 * r1 - relativePosition.y * relativePosition.y;
             GLfloat r0 = (l2 > 0) ? sqrt(l2) : 0;
             if (r0 > 0) {
               OOGL(glColor4f(1.0, 0.5, 1.0, alpha));
-              GLDrawOval(x1 - 0.5, y1 + 1.5, z1,
+              GLDrawOval(static_cast<GLfloat>(x1 - 0.5),
+                         static_cast<GLfloat>(y1 + 1.5), z1,
                          NSMakeSize(r0, r0 * siz.height / siz.width), 20);
             }
-            OOGL(glColor4f(0.5, 0.0, 1.0, 0.33333 * alpha));
-            GLDrawFilledOval(x1 - 0.5, y2 + 1.5, z1, NSMakeSize(r1, r1), 15);
+            OOGL(glColor4f(0.5, 0.0, 1.0,
+                           static_cast<GLfloat>(0.33333 * alpha)));
+            GLDrawFilledOval(static_cast<GLfloat>(x1 - 0.5),
+                             static_cast<GLfloat>(y2 + 1.5), z1,
+                             NSMakeSize(r1, r1), 15);
           }
         } else {
 #if IDENTIFY_SCANNER_LOLLIPOPS
@@ -1721,7 +1738,7 @@ void HeadUpDisplay::drawScanner(const oo::PList& info) {
             OOGLEND();
           }
           OOGLBEGIN(GL_QUADS);  // lollipop tail
-          col[3] *= 0.3333;     // one third the alpha
+          col[3] *= static_cast<GLfloat>(0.3333);  // one third the alpha
           glColor4fv(col);
           glVertex3f(x1, y1, z1);
           glVertex3f(x1 + 2, y1, z1);
@@ -1766,15 +1783,15 @@ void HeadUpDisplay::drawScannerZoomIndicator(const oo::PList& info) {
   zoom_color[3] *= overallAlpha;
   alpha = zoom_color[3];
 
-  GLfloat cx = x - 0.3 * siz.width;
-  GLfloat cy = y - 0.75 * siz.height;
+  GLfloat cx = static_cast<GLfloat>(x - 0.3 * siz.width);
+  GLfloat cy = static_cast<GLfloat>(y - 0.75 * siz.height);
 
   int zoomLevel = static_cast<int>(
       scanner_zoom);  // was zl, which reads as the member z1
                       // (clang-tidy misc-confusable-identifiers)
   if (zoomLevel < 1) zoomLevel = 1;
   if (zoomLevel > SCANNER_ZOOM_LEVELS) zoomLevel = SCANNER_ZOOM_LEVELS;
-  if (zoomLevel == 1) zoom_color[3] *= 0.75;
+  if (zoomLevel == 1) zoom_color[3] *= static_cast<GLfloat>(0.75);
   if (scanner_ultra_zoom) zoomLevel = static_cast<int>(pow(2, zoomLevel - 1));
   GLColorWithOverallAlpha(zoom_color, alpha);
   OOGL(glEnable(GL_TEXTURE_2D));
@@ -1784,10 +1801,12 @@ void HeadUpDisplay::drawScannerZoomIndicator(const oo::PList& info) {
   OOGLBEGIN(GL_QUADS);
   if (zoomLevel / 10 > 0)
     drawCharacterQuad(static_cast<uint8_t>(48 + zoomLevel / 10),
-                      cx - 0.8 * siz.width, cy, z1, siz);
-  drawCharacterQuad(48 + zoomLevel % 10, cx - 0.4 * siz.width, cy, z1, siz);
+                      static_cast<GLfloat>(cx - 0.8 * siz.width), cy, z1, siz);
+  drawCharacterQuad(48 + zoomLevel % 10,
+                    static_cast<GLfloat>(cx - 0.4 * siz.width), cy, z1, siz);
   drawCharacterQuad(58, cx, cy, z1, siz);
-  drawCharacterQuad(49, cx + 0.3 * siz.width, cy, z1, siz);
+  drawCharacterQuad(49, static_cast<GLfloat>(cx + 0.3 * siz.width), cy, z1,
+                    siz);
   OOGLEND();
 
   OOTexture::applyNone();
@@ -1826,11 +1845,11 @@ void HeadUpDisplay::drawCompass(const oo::PList& info) {
   OOMatrix rotMatrix =
       (PLAYER != nullptr ? PLAYER->rotationMatrix() : OOMatrix{});
 
-  GLfloat h1 = siz.height * 0.125;
-  GLfloat h3 = siz.height * 0.375;
-  GLfloat w1 = siz.width * 0.125;
-  GLfloat w3 = siz.width * 0.375;
-  OOGL(GLScaledLineWidth(2.0 * lineWidth));  // thicker
+  GLfloat h1 = static_cast<GLfloat>(siz.height * 0.125);
+  GLfloat h3 = static_cast<GLfloat>(siz.height * 0.375);
+  GLfloat w1 = static_cast<GLfloat>(siz.width * 0.125);
+  GLfloat w3 = static_cast<GLfloat>(siz.width * 0.375);
+  OOGL(GLScaledLineWidth(static_cast<GLfloat>(2.0 * lineWidth)));  // thicker
   OOGL(glColor4f(compass_color[0], compass_color[1], compass_color[2], alpha));
   GLDrawOval(static_cast<GLfloat>(x), static_cast<GLfloat>(y), z1, siz, 12);
   OOGL(glColor4f(compass_color[0], compass_color[1], compass_color[2],
@@ -1863,14 +1882,14 @@ void HeadUpDisplay::drawCompass(const oo::PList& info) {
     relativePosition =
         vector_normal_or_fallback(relativePosition, kBasisZVector);
 
-    relativePosition.x *= siz.width * 0.4;
-    relativePosition.y *= siz.height * 0.4;
+    relativePosition.x *= static_cast<OOScalar>(siz.width * 0.4);
+    relativePosition.y *= static_cast<OOScalar>(siz.height * 0.4);
     relativePosition.x += static_cast<OOScalar>(x);
     relativePosition.y += static_cast<OOScalar>(y);
 
     siz.width *= 0.2;
     siz.height *= 0.2;
-    OOGL(GLScaledLineWidth(2.0 * lineWidth));
+    OOGL(GLScaledLineWidth(static_cast<GLfloat>(2.0 * lineWidth)));
     switch ((PLAYER != nullptr ? PLAYER->getCompassMode() : OOCompassMode{})) {
       case OOCompassMode::kInactive:
         break;
@@ -1956,8 +1975,8 @@ void HeadUpDisplay::drawAegis(const oo::PList& /*info*/) {
 
   // draw the aegis indicator
   //
-  GLfloat w = siz.width / 16.0;
-  GLfloat h = siz.height / 16.0;
+  GLfloat w = static_cast<GLfloat>(siz.width / 16.0);
+  GLfloat h = static_cast<GLfloat>(siz.height / 16.0);
 
   GLfloat strip[] = {-7, 8,  -6, 5,  5,  8,  3,  5,  7, 2,  4,
                      2,  6,  -1, 4,  2,  -4, -1, -6, 2, -4, -1,
@@ -2011,8 +2030,8 @@ void HeadUpDisplay::drawTargetReticle(const oo::PList& info) {
 }
 
 void HeadUpDisplay::drawSecondaryTargetReticle(const oo::PList& info) {
-  GLfloat alpha =
-      info.get<oo::NonNegative<float>>(ALPHA_KEY, 1.0f) * overallAlpha * 0.4;
+  GLfloat alpha = static_cast<GLfloat>(
+      info.get<oo::NonNegative<float>>(ALPHA_KEY, 1.0f) * overallAlpha * 0.4);
 
   ::PlayerEntity* player = PLAYER;
   if ((player != nullptr ? player->hasEquipmentItemProviding("EQ_TARGET_MEMORY")
@@ -2291,8 +2310,10 @@ void HeadUpDisplay::drawCustomImage(const oo::PList& info) {
   }
 
   NSSize imageSize = texture->dimensions();
-  imageSize.width = useDefined(cached.width, imageSize.width);
-  imageSize.height = useDefined(cached.height, imageSize.height);
+  imageSize.width =
+      useDefined(cached.width, static_cast<float>(imageSize.width));
+  imageSize.height =
+      useDefined(cached.height, static_cast<float>(imageSize.height));
 
   /* There's possibly some optimisation which could be done by
    * caching the sprite, but regenerating it each frame doesn't
@@ -2515,18 +2536,19 @@ void HeadUpDisplay::drawEnergyGauge(const oo::PList& info) {
                       siz);
   }
 
-  bankHeight = siz.height / n_bars;
+  bankHeight = static_cast<GLfloat>(siz.height / n_bars);
   // draw energy banks
   NSSize barSize =
       NSMakeSize(siz.width, bankHeight - 2.0);  // leave a gap between bars
   GLfloat midBank = bankHeight / 2.0f;
-  bankY = static_cast<GLfloat>(y) -
-          (static_cast<GLfloat>(n_bars - 1)) * midBank - 1.0;
+  bankY =
+      static_cast<GLfloat>(static_cast<GLfloat>(y) -
+                           (static_cast<GLfloat>(n_bars - 1)) * midBank - 1.0);
 
   // avoid constant colour switching...
   if (labelled) {
     GLColorWithOverallAlpha(green_color, alpha);
-    GLfloat labelStartX = x + 0.5f * barSize.width + 3.0f;
+    GLfloat labelStartX = static_cast<GLfloat>(x + 0.5f * barSize.width + 3.0f);
     NSSize labelSize = NSMakeSize(9.0, (bankHeight < 18.0) ? bankHeight : 18.0);
     for (i = 0; i < n_bars; i++) {
       OODrawString(std::format("E{:x}", n_bars - i), labelStartX,
@@ -2549,7 +2571,7 @@ void HeadUpDisplay::drawEnergyGauge(const oo::PList& info) {
       hudDrawBarAt(static_cast<GLfloat>(x), bankY, z1, barSize, energy);
     }
 
-    energy -= 1.0;
+    energy -= static_cast<GLfloat>(1.0);
     bankY += bankHeight;
   }
 }
@@ -3076,11 +3098,14 @@ void HeadUpDisplay::drawMissileDisplay(const oo::PList& info) {
             missile,
             weaponsOnline &&
                 i == (PLAYER != nullptr ? PLAYER->getActiveMissile() : 0),
-            status, x + static_cast<int>(i) * sp + 2, y, siz.width * 0.25f,
-            siz.height * 0.25f, alpha);
+            status, x + static_cast<int>(i) * sp + 2, y,
+            static_cast<GLfloat>(siz.width * 0.25f),
+            static_cast<GLfloat>(siz.height * 0.25f), alpha);
       } else {
         drawIconForEmptyPylonAtX(x + static_cast<int>(i) * sp + 2, y,
-                                 siz.width * 0.25f, siz.height * 0.25f, alpha);
+                                 static_cast<GLfloat>(siz.width * 0.25f),
+                                 static_cast<GLfloat>(siz.height * 0.25f),
+                                 alpha);
       }
     }
   } else {
@@ -3145,11 +3170,12 @@ void HeadUpDisplay::drawStatusLight(const oo::PList& /*info*/) {
   GLfloat status_color[4] = {0.25, 0.25, 0.25, 1.0};
   OOAlertCondition alertCondition =
       (PLAYER != nullptr ? PLAYER->getAlertCondition() : OOAlertCondition{});
-  GLfloat flash_alpha =
+  GLfloat flash_alpha = static_cast<GLfloat>(
       0.333 *
-      (2.0f + sin(static_cast<GLfloat>(UNIVERSE != nullptr ? UNIVERSE->getTime()
-                                                           : 0.0) *
-                  2.5f * static_cast<float>(oo::ToUnderlying(alertCondition))));
+      (2.0f +
+       sin(static_cast<GLfloat>(UNIVERSE != nullptr ? UNIVERSE->getTime()
+                                                    : 0.0) *
+           2.5f * static_cast<float>(oo::ToUnderlying(alertCondition)))));
 
   switch (alertCondition) {
     case OOAlertCondition::kRed:
@@ -3362,8 +3388,9 @@ void HeadUpDisplay::drawPrimedEquipment(const oo::PList& info) {
       if (i >= -(pec) / 2 && i <= (pec + 1) / 2) {
         // don't display loops if we have more equipment than lines
         // instead compact the display towards its centre
-        GLfloat alphaScale = 1.0 / ((i < 0) ? (1.0 - static_cast<double>(i))
-                                            : (1.0 + static_cast<double>(i)));
+        GLfloat alphaScale = static_cast<GLfloat>(
+            1.0 / ((i < 0) ? (1.0 - static_cast<double>(i))
+                           : (1.0 + static_cast<double>(i))));
         OOGL(glColor4f(itemColor[0], itemColor[1], itemColor[2],
                        itemColor[3] * alphaScale));
         OODrawString((PLAYER != nullptr ? PLAYER->primedEquipmentName(i)
@@ -3517,16 +3544,17 @@ void HeadUpDisplay::drawFPSInfoCounter(const oo::PList& info) {
   std::string collDebugInfo = std::format(
       "{} - {}", PLAYER != nullptr ? PLAYER->dial_objinfo() : std::string(),
       UNIVERSE != nullptr ? UNIVERSE->collisionDescription() : std::string());
-  OODrawString(collDebugInfo, static_cast<GLfloat>(x), y - siz.height, z1, siz);
+  OODrawString(collDebugInfo, static_cast<GLfloat>(x),
+               static_cast<GLfloat>(y - siz.height), z1, siz);
 
-  OODrawString(positionInfo, static_cast<GLfloat>(x), y - 1.8 * siz.height, z1,
-               siz08);
+  OODrawString(positionInfo, static_cast<GLfloat>(x),
+               static_cast<GLfloat>(y - 1.8 * siz.height), z1, siz08);
 
   std::string timeAccelerationFactorInfo = std::format(
       "TAF: {}{:.2f}", OO_DESC("multiplication-sign").c_str(),
       (UNIVERSE != nullptr ? UNIVERSE->getTimeAccelerationFactor() : 0.0));
   OODrawString(timeAccelerationFactorInfo, static_cast<GLfloat>(x),
-               y - 3.2 * siz08.height, z1, siz08);
+               static_cast<GLfloat>(y - 3.2 * siz08.height), z1, siz08);
 #endif
 }
 
@@ -3561,7 +3589,8 @@ void HeadUpDisplay::drawScoopStatus(const oo::PList& info) {
   GLfloat s3c[4] = {0.0f, 0.0f, 0.0f, 0.0f};
   OOFuelScoopStatus scoop_status =
       (PLAYER != nullptr ? PLAYER->dialFuelScoopStatus() : OOFuelScoopStatus{});
-  GLfloat t = (UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0);
+  GLfloat t =
+      (UNIVERSE != nullptr ? static_cast<GLfloat>(UNIVERSE->getTime()) : 0.0);
   GLfloat a1 = alpha * 0.5f * (1.0f + sin(t * 8.0f));
   GLfloat a2 = alpha * 0.5f * (1.0f + sin(t * 8.0f - 1.0f));
   GLfloat a3 = alpha * 0.5f * (1.0f + sin(t * 8.0f - 2.0f));
@@ -3572,7 +3601,7 @@ void HeadUpDisplay::drawScoopStatus(const oo::PList& info) {
 
     case OOFuelScoopStatus::kFullHold:
       s0_color = darkgreen_color;
-      alpha *= 0.75;
+      alpha *= static_cast<GLfloat>(0.75);
       break;
 
     case OOFuelScoopStatus::kActive:
@@ -3601,14 +3630,14 @@ void HeadUpDisplay::drawScoopStatus(const oo::PList& info) {
     s3c[3] = alpha;
   }
 
-  GLfloat w1 = siz.width / 8.0;
-  GLfloat w2 = 2.0 * w1;
+  GLfloat w1 = static_cast<GLfloat>(siz.width / 8.0);
+  GLfloat w2 = static_cast<GLfloat>(2.0 * w1);
   //	GLfloat w3 = 3.0 * w1;
-  GLfloat w4 = 4.0 * w1;
-  GLfloat h1 = siz.height / 8.0;
-  GLfloat h2 = 2.0 * h1;
-  GLfloat h3 = 3.0 * h1;
-  GLfloat h4 = 4.0 * h1;
+  GLfloat w4 = static_cast<GLfloat>(4.0 * w1);
+  GLfloat h1 = static_cast<GLfloat>(siz.height / 8.0);
+  GLfloat h2 = static_cast<GLfloat>(2.0 * h1);
+  GLfloat h3 = static_cast<GLfloat>(3.0 * h1);
+  GLfloat h4 = static_cast<GLfloat>(4.0 * h1);
 
   OOGL(glDisable(GL_TEXTURE_2D));
   OOGLBEGIN(GL_QUADS);
@@ -3672,7 +3701,7 @@ void HeadUpDisplay::drawStickSensitivityIndicator(const oo::PList& /*info*/) {
   siz.height = useDefined(cached.height, STATUS_LIGHT_HEIGHT);
   alpha *= cached.alpha;
 
-  GLfloat div = stickHandler->getSensitivity();
+  GLfloat div = static_cast<GLfloat>(stickHandler->getSensitivity());
 
   GLColorWithOverallAlpha(black_color, alpha / 4);
   GLDrawFilledOval(x, y, z1, siz, 10);
@@ -3734,7 +3763,7 @@ inline void SetCompassBlipColor(GLfloat relativeZ, GLfloat alpha) {
 void HeadUpDisplay::drawCompassPlanetBlipAt(Vector relativePosition, NSSize siz,
                                             GLfloat alpha) {
   if (relativePosition.z >= 0) {
-    OOGL(glColor4f(0.0, 1.0, 0.0, 0.75 * alpha));
+    OOGL(glColor4f(0.0, 1.0, 0.0, static_cast<GLfloat>(0.75 * alpha)));
     GLDrawFilledOval(relativePosition.x, relativePosition.y, z1, siz, 30);
     OOGL(glColor4f(0.0, 1.0, 0.0, alpha));
     GLDrawOval(relativePosition.x, relativePosition.y, z1, siz, 30);
@@ -3749,20 +3778,20 @@ void HeadUpDisplay::drawCompassStationBlipAt(Vector relativePosition,
   SetCompassBlipColor(relativePosition.z, alpha);
 
   OOGLBEGIN(GL_LINE_LOOP);
-  glVertex3f(relativePosition.x - 0.5 * siz.width,
-             relativePosition.y - 0.5 * siz.height, z1);
-  glVertex3f(relativePosition.x + 0.5 * siz.width,
-             relativePosition.y - 0.5 * siz.height, z1);
-  glVertex3f(relativePosition.x + 0.5 * siz.width,
-             relativePosition.y + 0.5 * siz.height, z1);
-  glVertex3f(relativePosition.x - 0.5 * siz.width,
-             relativePosition.y + 0.5 * siz.height, z1);
+  glVertex3f(static_cast<GLfloat>(relativePosition.x - 0.5 * siz.width),
+             static_cast<GLfloat>(relativePosition.y - 0.5 * siz.height), z1);
+  glVertex3f(static_cast<GLfloat>(relativePosition.x + 0.5 * siz.width),
+             static_cast<GLfloat>(relativePosition.y - 0.5 * siz.height), z1);
+  glVertex3f(static_cast<GLfloat>(relativePosition.x + 0.5 * siz.width),
+             static_cast<GLfloat>(relativePosition.y + 0.5 * siz.height), z1);
+  glVertex3f(static_cast<GLfloat>(relativePosition.x - 0.5 * siz.width),
+             static_cast<GLfloat>(relativePosition.y + 0.5 * siz.height), z1);
   OOGLEND();
 }
 
 void HeadUpDisplay::drawCompassSunBlipAt(Vector relativePosition, NSSize siz,
                                          GLfloat alpha) {
-  OOGL(glColor4f(1.0, 1.0, 0.0, 0.75 * alpha));
+  OOGL(glColor4f(1.0, 1.0, 0.0, static_cast<GLfloat>(0.75 * alpha)));
   GLDrawFilledOval(relativePosition.x, relativePosition.y, z1, siz, 30);
 
   SetCompassBlipColor(relativePosition.z, alpha);
@@ -3775,10 +3804,14 @@ void HeadUpDisplay::drawCompassTargetBlipAt(Vector relativePosition, NSSize siz,
   SetCompassBlipColor(relativePosition.z, alpha);
 
   OOGLBEGIN(GL_LINES);
-  glVertex3f(relativePosition.x - siz.width, relativePosition.y, z1);
-  glVertex3f(relativePosition.x + siz.width, relativePosition.y, z1);
-  glVertex3f(relativePosition.x, relativePosition.y - siz.height, z1);
-  glVertex3f(relativePosition.x, relativePosition.y + siz.height, z1);
+  glVertex3f(static_cast<GLfloat>(relativePosition.x - siz.width),
+             relativePosition.y, z1);
+  glVertex3f(static_cast<GLfloat>(relativePosition.x + siz.width),
+             relativePosition.y, z1);
+  glVertex3f(relativePosition.x,
+             static_cast<GLfloat>(relativePosition.y - siz.height), z1);
+  glVertex3f(relativePosition.x,
+             static_cast<GLfloat>(relativePosition.y + siz.height), z1);
   OOGLEND();
 
   GLDrawOval(relativePosition.x, relativePosition.y, z1, siz, 30);
@@ -3800,17 +3833,25 @@ void HeadUpDisplay::drawCompassBeaconBlipAt(Vector relativePosition, NSSize siz,
           glVertex3f(relativePosition.x - 0.5 * siz.width, relativePosition.y -
      0.5 * siz.height, z1); glVertex3f(relativePosition.x + 0.5 * siz.width,
      relativePosition.y - 0.5 * siz.height, z1); */
-  glVertex3f(relativePosition.x + 0.6 * siz.width, relativePosition.y, z1);
-  glVertex3f(relativePosition.x, relativePosition.y + 0.6 * siz.height, z1);
+  glVertex3f(static_cast<GLfloat>(relativePosition.x + 0.6 * siz.width),
+             relativePosition.y, z1);
+  glVertex3f(relativePosition.x,
+             static_cast<GLfloat>(relativePosition.y + 0.6 * siz.height), z1);
 
-  glVertex3f(relativePosition.x - 0.6 * siz.width, relativePosition.y, z1);
-  glVertex3f(relativePosition.x, relativePosition.y + 0.6 * siz.height, z1);
+  glVertex3f(static_cast<GLfloat>(relativePosition.x - 0.6 * siz.width),
+             relativePosition.y, z1);
+  glVertex3f(relativePosition.x,
+             static_cast<GLfloat>(relativePosition.y + 0.6 * siz.height), z1);
 
-  glVertex3f(relativePosition.x + 0.6 * siz.width, relativePosition.y, z1);
-  glVertex3f(relativePosition.x, relativePosition.y - 0.6 * siz.height, z1);
+  glVertex3f(static_cast<GLfloat>(relativePosition.x + 0.6 * siz.width),
+             relativePosition.y, z1);
+  glVertex3f(relativePosition.x,
+             static_cast<GLfloat>(relativePosition.y - 0.6 * siz.height), z1);
 
-  glVertex3f(relativePosition.x - 0.6 * siz.width, relativePosition.y, z1);
-  glVertex3f(relativePosition.x, relativePosition.y - 0.6 * siz.height, z1);
+  glVertex3f(static_cast<GLfloat>(relativePosition.x - 0.6 * siz.width),
+             relativePosition.y, z1);
+  glVertex3f(relativePosition.x,
+             static_cast<GLfloat>(relativePosition.y - 0.6 * siz.height), z1);
 
   OOGLEND();
 }
@@ -3820,21 +3861,21 @@ void HeadUpDisplay::drawCompassBeaconBlipAt(Vector relativePosition, NSSize siz,
 static void hudDrawIndicatorAt(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
                                GLfloat amount) {
   if (siz.width > siz.height) {
-    GLfloat dial_oy = y - siz.height / 2;
-    GLfloat position = x + amount * siz.width / 2;
+    GLfloat dial_oy = static_cast<GLfloat>(y - siz.height / 2);
+    GLfloat position = static_cast<GLfloat>(x + amount * siz.width / 2);
     OOGLBEGIN(GL_QUADS);
     glVertex3f(position, dial_oy, z);
     glVertex3f(position + 2, y, z);
-    glVertex3f(position, dial_oy + siz.height, z);
+    glVertex3f(position, static_cast<GLfloat>(dial_oy + siz.height), z);
     glVertex3f(position - 2, y, z);
     OOGLEND();
   } else {
-    GLfloat dial_ox = x - siz.width / 2;
-    GLfloat position = y + amount * siz.height / 2;
+    GLfloat dial_ox = static_cast<GLfloat>(x - siz.width / 2);
+    GLfloat position = static_cast<GLfloat>(y + amount * siz.height / 2);
     OOGLBEGIN(GL_QUADS);
     glVertex3f(dial_ox, position, z);
     glVertex3f(x, position + 2, z);
-    glVertex3f(dial_ox + siz.width, position, z);
+    glVertex3f(static_cast<GLfloat>(dial_ox + siz.width), position, z);
     glVertex3f(x, position - 2, z);
     OOGLEND();
   }
@@ -3843,21 +3884,23 @@ static void hudDrawIndicatorAt(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
 static void hudDrawMarkerAt(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
                             GLfloat amount) {
   if (siz.width > siz.height) {
-    GLfloat dial_oy = y - siz.height / 2;
-    GLfloat position = x + amount * siz.width - siz.width / 2;
+    GLfloat dial_oy = static_cast<GLfloat>(y - siz.height / 2);
+    GLfloat position =
+        static_cast<GLfloat>(x + amount * siz.width - siz.width / 2);
     OOGLBEGIN(GL_QUADS);
     glVertex3f(position + 1, dial_oy + 1, z);
-    glVertex3f(position + 1, dial_oy + siz.height - 1, z);
-    glVertex3f(position - 1, dial_oy + siz.height - 1, z);
+    glVertex3f(position + 1, static_cast<GLfloat>(dial_oy + siz.height - 1), z);
+    glVertex3f(position - 1, static_cast<GLfloat>(dial_oy + siz.height - 1), z);
     glVertex3f(position - 1, dial_oy + 1, z);
     OOGLEND();
   } else {
-    GLfloat dial_ox = x - siz.width / 2;
-    GLfloat position = y + amount * siz.height - siz.height / 2;
+    GLfloat dial_ox = static_cast<GLfloat>(x - siz.width / 2);
+    GLfloat position =
+        static_cast<GLfloat>(y + amount * siz.height - siz.height / 2);
     OOGLBEGIN(GL_QUADS);
     glVertex3f(dial_ox + 1, position + 1, z);
-    glVertex3f(dial_ox + siz.width - 1, position + 1, z);
-    glVertex3f(dial_ox + siz.width - 1, position - 1, z);
+    glVertex3f(static_cast<GLfloat>(dial_ox + siz.width - 1), position + 1, z);
+    glVertex3f(static_cast<GLfloat>(dial_ox + siz.width - 1), position - 1, z);
     glVertex3f(dial_ox + 1, position - 1, z);
     OOGLEND();
   }
@@ -3865,38 +3908,39 @@ static void hudDrawMarkerAt(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
 
 static void hudDrawBarAt(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
                          GLfloat amount) {
-  GLfloat dial_ox = x - siz.width / 2;
-  GLfloat dial_oy = y - siz.height / 2;
+  GLfloat dial_ox = static_cast<GLfloat>(x - siz.width / 2);
+  GLfloat dial_oy = static_cast<GLfloat>(y - siz.height / 2);
   if (fabs(siz.width) > fabs(siz.height)) {
-    GLfloat position = dial_ox + amount * siz.width;
+    GLfloat position = static_cast<GLfloat>(dial_ox + amount * siz.width);
 
     OOGLBEGIN(GL_QUADS);
     glVertex3f(dial_ox, dial_oy, z);
     glVertex3f(position, dial_oy, z);
-    glVertex3f(position, dial_oy + siz.height, z);
-    glVertex3f(dial_ox, dial_oy + siz.height, z);
+    glVertex3f(position, static_cast<GLfloat>(dial_oy + siz.height), z);
+    glVertex3f(dial_ox, static_cast<GLfloat>(dial_oy + siz.height), z);
     OOGLEND();
   } else {
-    GLfloat position = dial_oy + amount * siz.height;
+    GLfloat position = static_cast<GLfloat>(dial_oy + amount * siz.height);
 
     OOGLBEGIN(GL_QUADS);
     glVertex3f(dial_ox, dial_oy, z);
     glVertex3f(dial_ox, position, z);
-    glVertex3f(dial_ox + siz.width, position, z);
-    glVertex3f(dial_ox + siz.width, dial_oy, z);
+    glVertex3f(static_cast<GLfloat>(dial_ox + siz.width), position, z);
+    glVertex3f(static_cast<GLfloat>(dial_ox + siz.width), dial_oy, z);
     OOGLEND();
   }
 }
 
 static void hudDrawSurroundAt(GLfloat x, GLfloat y, GLfloat z, NSSize siz) {
-  GLfloat dial_ox = x - siz.width / 2;
-  GLfloat dial_oy = y - siz.height / 2;
+  GLfloat dial_ox = static_cast<GLfloat>(x - siz.width / 2);
+  GLfloat dial_oy = static_cast<GLfloat>(y - siz.height / 2);
 
   OOGLBEGIN(GL_LINE_LOOP);
   glVertex3f(dial_ox - 2, dial_oy - 2, z);
-  glVertex3f(dial_ox + siz.width + 2, dial_oy - 2, z);
-  glVertex3f(dial_ox + siz.width + 2, dial_oy + siz.height + 2, z);
-  glVertex3f(dial_ox - 2, dial_oy + siz.height + 2, z);
+  glVertex3f(static_cast<GLfloat>(dial_ox + siz.width + 2), dial_oy - 2, z);
+  glVertex3f(static_cast<GLfloat>(dial_ox + siz.width + 2),
+             static_cast<GLfloat>(dial_oy + siz.height + 2), z);
+  glVertex3f(dial_ox - 2, static_cast<GLfloat>(dial_oy + siz.height + 2), z);
   OOGLEND();
 }
 
@@ -3960,7 +4004,7 @@ void hudDrawReticleOnTarget(
   if (rsize < rdist * scale) rsize = rdist * scale;
 
   GLfloat rs0 = rsize;
-  GLfloat rs2 = rsize * 0.50;
+  GLfloat rs2 = static_cast<GLfloat>(rsize * 0.50);
 
   OOGLPushModelView();
   hudRotateViewpointForVirtualDepth(player1, p1);
@@ -4110,8 +4154,9 @@ void hudDrawReticleOnTarget(
       infoline = std::format("{} ({})", infoline, *legal_desc);
     // no need to set colour here
     OODrawString(HeadUpDisplayPlayerDialTargetName(player1).value_or(""), rs0,
-                 0.5 * rs2, 0, textsize);
-    OODrawString(infoline, rs0, 0.5 * rs2 - line_height, 0, textsize);
+                 static_cast<GLfloat>(0.5 * rs2), 0, textsize);
+    OODrawString(infoline, rs0, static_cast<GLfloat>(0.5 * rs2 - line_height),
+                 0, textsize);
 
     if (HeadUpDisplayEntityIsWormhole(target)) {
       // Note: No break statements in the following switch() since every case
@@ -4134,7 +4179,8 @@ void hudDrawReticleOnTarget(
               {ClockToString(HeadUpDisplayWormholeEstimatedArrivalTime(
                                  static_cast<WormholeEntity*>(target)),
                              false)});
-          OODrawString(wormholeETA, rs0, 0.5 * rs2 - 3 * line_height, 0,
+          OODrawString(wormholeETA, rs0,
+                       static_cast<GLfloat>(0.5 * rs2 - 3 * line_height), 0,
                        textsize);
         }
           [[fallthrough]];
@@ -4150,7 +4196,8 @@ void hudDrawReticleOnTarget(
           std::string wormholeExpiringIn =
               oo::str::formatRuntime(OO_DESC("wormhole-collapsing-in-mm:ss"),
                                      {minutesToCollapse, secondsToCollapse});
-          OODrawString(wormholeExpiringIn, rs0, 0.5 * rs2 - 2 * line_height, 0,
+          OODrawString(wormholeExpiringIn, rs0,
+                       static_cast<GLfloat>(0.5 * rs2 - 2 * line_height), 0,
                        textsize);
         }
           [[fallthrough]];
@@ -4185,12 +4232,12 @@ void hudDrawWaypoint(Entity* waypoint, PlayerEntity* player1, GLfloat /*z1*/,
   GLfloat rsize = rdist * scale;
 
   GLfloat rs0 = rsize;
-  GLfloat rs2 = rsize * 0.50;
+  GLfloat rs2 = static_cast<GLfloat>(rsize * 0.50);
 
   if (selected) {
     GLColorWithOverallAlpha(blue_color, alpha);
   } else {
-    GLColorWithOverallAlpha(blue_color, alpha * 0.25);
+    GLColorWithOverallAlpha(blue_color, static_cast<GLfloat>(alpha * 0.25));
   }
 
   OOGLBEGIN(GL_LINES);
@@ -4219,15 +4266,17 @@ void hudDrawWaypoint(Entity* waypoint, PlayerEntity* player1, GLfloat /*z1*/,
   OOGLEND();
 
   if (selected) {
-    GLfloat range = HPdistance(HeadUpDisplayEntityPosition(player1),
-                               HeadUpDisplayEntityPosition(waypoint)) *
-                    0.001f;
+    GLfloat range =
+        static_cast<GLfloat>(HPdistance(HeadUpDisplayEntityPosition(player1),
+                                        HeadUpDisplayEntityPosition(waypoint)) *
+                             0.001f);
     if (range < 0.001f)
       range = 0.0f;  // avoids the occasional -0.001 km distance.
     NSSize textsize = NSMakeSize(rdist * scale, rdist * scale);
     float line_height = rdist * scale;
     std::string infoline = std::format("{:0.3f} {}", range, distance_unit);
-    OODrawString(infoline, rs0 * 0.5, -rs2 - line_height, 0, textsize);
+    OODrawString(infoline, static_cast<GLfloat>(rs0 * 0.5), -rs2 - line_height,
+                 0, textsize);
   }
 
   OOGLPopModelView();
@@ -4243,7 +4292,7 @@ static void hudRotateViewpointForVirtualDepth(PlayerEntity* player1,
   NSSize viewSize = (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
                          ? UNIVERSE->getGameView()->getViewSize()
                          : NSSize{});
-  float aspect = viewSize.width / viewSize.height;
+  float aspect = static_cast<float>(viewSize.width / viewSize.height);
 
   // The field of view transformation is really a scale operation on the view
   // window. We must unapply it through these transformations for them to be
@@ -4273,21 +4322,24 @@ static void hudRotateViewpointForVirtualDepth(PlayerEntity* player1,
       view_dir.x = 0.0;
       view_dir.y = 0.0;
       view_dir.z = -1.0;
-      quaternion_rotate_about_axis(&back_q, v1, std::numbers::pi);
+      quaternion_rotate_about_axis(&back_q, v1,
+                                   static_cast<OOScalar>(std::numbers::pi));
       break;
 
     case OOViewID::kPort:
       view_dir.x = -1.0;
       view_dir.y = 0.0;
       view_dir.z = 0.0;
-      quaternion_rotate_about_axis(&back_q, v1, 0.5 * std::numbers::pi);
+      quaternion_rotate_about_axis(
+          &back_q, v1, static_cast<OOScalar>(0.5 * std::numbers::pi));
       break;
 
     case OOViewID::kStarboard:
       view_dir.x = 1.0;
       view_dir.y = 0.0;
       view_dir.z = 0.0;
-      quaternion_rotate_about_axis(&back_q, v1, -0.5 * std::numbers::pi);
+      quaternion_rotate_about_axis(
+          &back_q, v1, static_cast<OOScalar>(-0.5 * std::numbers::pi));
       break;
 
     case OOViewID::kCustom:
@@ -4333,7 +4385,8 @@ static void InitTextEngine() {
   count = (widths != nullptr && widths->isArray()) ? widths->count() : 0;
   if (count > 256) count = 256;
   for (i = 0; i != count; ++i) {
-    sGlyphWidths[i] = widths->at<float>(i) * GLYPH_SCALE_FACTOR;
+    sGlyphWidths[i] =
+        static_cast<float>(widths->at<float>(i) * GLYPH_SCALE_FACTOR);
   }
 }
 
@@ -4362,23 +4415,26 @@ static GLfloat drawCharacterQuad(uint8_t chr, GLfloat x, GLfloat y, GLfloat z,
   // 31 (narrow space) and 32 (space) are non-printing characters, so
   // don't print them, just return their width to move the pointer
   if (chr > 32 || chr < 31) {
-    GLfloat texture_x = ONE_SIXTEENTH * (chr & 0x0f);
-    GLfloat texture_y = ONE_SIXTEENTH * (chr >> 4);
+    GLfloat texture_x = static_cast<GLfloat>(ONE_SIXTEENTH * (chr & 0x0f));
+    GLfloat texture_y = static_cast<GLfloat>(ONE_SIXTEENTH * (chr >> 4));
     if (chr > 32)
-      y += ONE_EIGHTH *
-           siz.height;  // Adjust for baseline offset change in 1.71 (needed to
+      y += static_cast<GLfloat>(
+          ONE_EIGHTH *
+          siz.height);  // Adjust for baseline offset change in 1.71 (needed to
                         // keep accented characters in box)
 
-    glTexCoord2f(texture_x, texture_y + ONE_SIXTEENTH);
+    glTexCoord2f(texture_x, static_cast<GLfloat>(texture_y + ONE_SIXTEENTH));
     glVertex3f(x, y, z);
-    glTexCoord2f(texture_x + ONE_SIXTEENTH, texture_y + ONE_SIXTEENTH);
-    glVertex3f(x + siz.width, y, z);
-    glTexCoord2f(texture_x + ONE_SIXTEENTH, texture_y);
-    glVertex3f(x + siz.width, y + siz.height, z);
+    glTexCoord2f(static_cast<GLfloat>(texture_x + ONE_SIXTEENTH),
+                 static_cast<GLfloat>(texture_y + ONE_SIXTEENTH));
+    glVertex3f(static_cast<GLfloat>(x + siz.width), y, z);
+    glTexCoord2f(static_cast<GLfloat>(texture_x + ONE_SIXTEENTH), texture_y);
+    glVertex3f(static_cast<GLfloat>(x + siz.width),
+               static_cast<GLfloat>(y + siz.height), z);
     glTexCoord2f(texture_x, texture_y);
-    glVertex3f(x, y + siz.height, z);
+    glVertex3f(x, static_cast<GLfloat>(y + siz.height), z);
   }
-  return siz.width * sGlyphWidths[chr];
+  return static_cast<GLfloat>(siz.width * sGlyphWidths[chr]);
 }
 
 NSRect OORectFromString(const std::string& text, GLfloat x, GLfloat y,
@@ -4393,7 +4449,7 @@ NSRect OORectFromString(const std::string& text, GLfloat x, GLfloat y,
   length = data.length();
 
   for (i = 0; i < length; i++) {
-    w += siz.width * sGlyphWidths[bytes[i]];
+    w += static_cast<GLfloat>(siz.width * sGlyphWidths[bytes[i]]);
   }
 
   return NSMakeRect(x, y, w, siz.height);
@@ -4411,25 +4467,29 @@ void drawHighlight(GLfloat x, GLfloat y, GLfloat z, NSSize siz, GLfloat alpha) {
 
   OOGLBEGIN(GL_POLYGON);
   // thin 'halo' around the 'solid' highlight
-  glVertex3f(x + 1.0f, y + siz.height + 2.5f, z);
-  glVertex3f(x + siz.width + 3.0f, y + siz.height + 2.5f, z);
-  glVertex3f(x + siz.width + 4.5f, y + siz.height + 1.0f, z);
-  glVertex3f(x + siz.width + 4.5f, y + 3.0f, z);
-  glVertex3f(x + siz.width + 3.0f, y + 1.5f, z);
+  glVertex3f(x + 1.0f, static_cast<GLfloat>(y + siz.height + 2.5f), z);
+  glVertex3f(static_cast<GLfloat>(x + siz.width + 3.0f),
+             static_cast<GLfloat>(y + siz.height + 2.5f), z);
+  glVertex3f(static_cast<GLfloat>(x + siz.width + 4.5f),
+             static_cast<GLfloat>(y + siz.height + 1.0f), z);
+  glVertex3f(static_cast<GLfloat>(x + siz.width + 4.5f), y + 3.0f, z);
+  glVertex3f(static_cast<GLfloat>(x + siz.width + 3.0f), y + 1.5f, z);
   glVertex3f(x + 1.0f, y + 1.5f, z);
   glVertex3f(x - 0.5f, y + 3.0f, z);
-  glVertex3f(x - 0.5f, y + siz.height + 1.0f, z);
+  glVertex3f(x - 0.5f, static_cast<GLfloat>(y + siz.height + 1.0f), z);
   OOGLEND();
 
   OOGLBEGIN(GL_POLYGON);
-  glVertex3f(x + 1.0f, y + siz.height + 2.0f, z);
-  glVertex3f(x + siz.width + 3.0f, y + siz.height + 2.0f, z);
-  glVertex3f(x + siz.width + 4.0f, y + siz.height + 1.0f, z);
-  glVertex3f(x + siz.width + 4.0f, y + 3.0f, z);
-  glVertex3f(x + siz.width + 3.0f, y + 2.0f, z);
+  glVertex3f(x + 1.0f, static_cast<GLfloat>(y + siz.height + 2.0f), z);
+  glVertex3f(static_cast<GLfloat>(x + siz.width + 3.0f),
+             static_cast<GLfloat>(y + siz.height + 2.0f), z);
+  glVertex3f(static_cast<GLfloat>(x + siz.width + 4.0f),
+             static_cast<GLfloat>(y + siz.height + 1.0f), z);
+  glVertex3f(static_cast<GLfloat>(x + siz.width + 4.0f), y + 3.0f, z);
+  glVertex3f(static_cast<GLfloat>(x + siz.width + 3.0f), y + 2.0f, z);
   glVertex3f(x + 1.0f, y + 2.0f, z);
   glVertex3f(x, y + 3.0f, z);
-  glVertex3f(x, y + siz.height + 1.0f, z);
+  glVertex3f(x, static_cast<GLfloat>(y + siz.height + 1.0f), z);
   OOGLEND();
 }
 
@@ -4466,7 +4526,8 @@ void OODrawStringQuadsAligned(const std::string& text, GLfloat x, GLfloat y,
   bytes = static_cast<const uint8_t*>(data.bytes());
 
   if (rightAlign) [[unlikely]] {
-    cx -= OORectFromString(text, 0.0f, 0.0f, siz).size.width;
+    cx -= static_cast<GLfloat>(
+        OORectFromString(text, 0.0f, 0.0f, siz).size.width);
   }
 
   for (i = 0; i < length; i++) {
@@ -4508,9 +4569,30 @@ void OODrawHilightedString(const std::string& text, GLfloat x, GLfloat y,
 
 void OODrawPlanetInfo(int gov, int eco, int tec, GLfloat x, GLfloat y,
                       GLfloat z, NSSize siz) {
-  GLfloat govcol[] = {0.5, 0.0, 0.7, 0.7, 0.5, 0.3, 0.0, 1.0,
-                      0.3, 1.0, 0.8, 0.1, 1.0, 0.0, 0.0, 0.1,
-                      0.5, 1.0, 0.7, 0.7, 0.7, 0.7, 1.0, 1.0};
+  GLfloat govcol[] = {0.5,
+                      0.0,
+                      static_cast<GLfloat>(0.7),
+                      static_cast<GLfloat>(0.7),
+                      0.5,
+                      static_cast<GLfloat>(0.3),
+                      0.0,
+                      1.0,
+                      static_cast<GLfloat>(0.3),
+                      1.0,
+                      static_cast<GLfloat>(0.8),
+                      static_cast<GLfloat>(0.1),
+                      1.0,
+                      0.0,
+                      0.0,
+                      static_cast<GLfloat>(0.1),
+                      0.5,
+                      1.0,
+                      static_cast<GLfloat>(0.7),
+                      static_cast<GLfloat>(0.7),
+                      static_cast<GLfloat>(0.7),
+                      static_cast<GLfloat>(0.7),
+                      1.0,
+                      1.0};
 
   GLfloat cx = x;
   int tl = tec + 1;
@@ -4599,8 +4681,9 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
                                          GLfloat alpha) {
   Vector spacepos, scannerpos;
   GLfloat theta, phi;
-  GLfloat z_factor = siz.height / siz.width;  // approx 1/4
-  GLfloat y_factor = 1.0 - sqrt(z_factor);    // approx 1/2
+  GLfloat z_factor =
+      static_cast<GLfloat>(siz.height / siz.width);               // approx 1/4
+  GLfloat y_factor = static_cast<GLfloat>(1.0 - sqrt(z_factor));  // approx 1/2
   std::array<OOGLVector, 25> ring;
   int i, j;
 
@@ -4609,7 +4692,7 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
     OOGL(glColor4f(1.0, 0.5, 1.0, alpha));
     spacepos.y = 0;
     for (i = 0; i < 24; i++) {
-      theta = i * 2 * std::numbers::pi / 24;
+      theta = static_cast<GLfloat>(i * 2 * std::numbers::pi / 24);
       spacepos.x = centre.x + r0 * cos(theta);
       spacepos.z = centre.z + r0 * sin(theta);
       scannerpos =
@@ -4628,7 +4711,7 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
     ring[24].z = z;
     GLDrawPoints(ring.data(), static_cast<int>(ring.size()));
   }
-  OOGL(glColor4f(0.5, 0.0, 1.0, 0.33333 * alpha));
+  OOGL(glColor4f(0.5, 0.0, 1.0, static_cast<GLfloat>(0.33333 * alpha)));
   // Here, we draw a sphere distorted by the nonlinear function. We draw the
   // sphere as a set of horizontal strips The even indices of strip are the
   // points on the upper edge of the strip, while odd indices are points on the
@@ -4645,9 +4728,9 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
     strip[2 * i + 1].z = z;
   }
   for (i = 1; i <= 24; i++) {
-    theta = i * std::numbers::pi / 24;
+    theta = static_cast<GLfloat>(i * std::numbers::pi / 24);
     for (j = 0; j <= 24; j++) {
-      phi = j * std::numbers::pi / 12;
+      phi = static_cast<GLfloat>(j * std::numbers::pi / 12);
       // copy point from bottom edge of previous strip into top edge position
       strip[2 * j] = strip[2 * j + 1];
 
@@ -4668,7 +4751,7 @@ static void GLDrawNonlinearCascadeWeapon(GLfloat x, GLfloat y, GLfloat z,
 
 static GLfloat nonlinearScannerFunc(GLfloat distance, GLfloat zoom,
                                     GLfloat scale) {
-  GLfloat x = fabs(distance / SCANNER_MAX_RANGE);
+  GLfloat x = static_cast<GLfloat>(fabs(distance / SCANNER_MAX_RANGE));
   if (x >= 1.0) return scale;
   if (zoom <= 1.0) return scale * x;
   GLfloat c = 1 / (zoom - 1);
@@ -4686,8 +4769,8 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
       (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
 
   GLfloat w1, h1;
-  GLfloat ww = 0.5 * siz.width;
-  GLfloat hh = 0.5 * siz.height;
+  GLfloat ww = static_cast<GLfloat>(0.5 * siz.width);
+  GLfloat hh = static_cast<GLfloat>(0.5 * siz.height);
 
   GLfloat km_scan;
   GLfloat hdiv;
@@ -4696,7 +4779,7 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
 
   int i, ii;
 
-  OOGL(GLScaledLineWidth(2.0 * thickness));
+  OOGL(GLScaledLineWidth(static_cast<GLfloat>(2.0 * thickness)));
   GLDrawOval(x, y, z, siz, 4);
   OOGL(GLScaledLineWidth(thickness));  // reset (thickness = lineWidth)
 
@@ -4716,7 +4799,7 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
               nonlinearScannerFunc(5000.0, zoom, hh) >
           2)
         drawdiv5 = true;
-      wdiv = ww / (0.001 * SCANNER_MAX_RANGE);
+      wdiv = static_cast<GLfloat>(ww / (0.001 * SCANNER_MAX_RANGE));
       for (i = 1; 1000.0 * i < SCANNER_MAX_RANGE; i++) {
         drawdiv = drawdiv1;
         w1 = wdiv;
@@ -4725,7 +4808,8 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
           drawdiv = true;
           if (nonlinearScannerFunc(static_cast<GLfloat>((i + 5) * 1000), zoom,
                                    hh) -
-                  nonlinearScannerFunc(i * 1000.0, zoom, hh) >
+                  nonlinearScannerFunc(static_cast<GLfloat>(i * 1000.0), zoom,
+                                       hh) >
               2) {
             drawdiv5 = true;
           } else {
@@ -4736,7 +4820,8 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
           drawdiv = drawdiv5;
           if (nonlinearScannerFunc(static_cast<GLfloat>((i + 1) * 1000), zoom,
                                    hh) -
-                  nonlinearScannerFunc(i * 1000.0, zoom, hh) >
+                  nonlinearScannerFunc(static_cast<GLfloat>(i * 1000.0), zoom,
+                                       hh) >
               2) {
             drawdiv1 = true;
           } else {
@@ -4744,7 +4829,7 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
           }
         }
         if (drawdiv) {
-          h1 = nonlinearScannerFunc(i * 1000.0, zoom, hh);
+          h1 = nonlinearScannerFunc(static_cast<GLfloat>(i * 1000.0), zoom, hh);
           glVertex3f(x - w1, y + h1, z);
           glVertex3f(x + w1, y + h1, z);
           glVertex3f(x - w1, y - h1, z);
@@ -4752,12 +4837,12 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
         }
       }
     } else {
-      km_scan =
-          0.001 * SCANNER_MAX_RANGE / zoom;  // calculate kilometer divisions
-      hdiv = 0.5 * siz.height / km_scan;
-      wdiv = 0.25 * siz.width / km_scan;
+      km_scan = static_cast<GLfloat>(0.001 * SCANNER_MAX_RANGE /
+                                     zoom);  // calculate kilometer divisions
+      hdiv = static_cast<GLfloat>(0.5 * siz.height / km_scan);
+      wdiv = static_cast<GLfloat>(0.25 * siz.width / km_scan);
       if (wdiv < 4.0) {
-        wdiv *= 2.0;
+        wdiv *= static_cast<GLfloat>(2.0);
         ii = 5;
       } else {
         ii = 1;
@@ -4766,8 +4851,8 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
       for (i = ii; 2.0 * hdiv * i < siz.height; i += ii) {
         h1 = static_cast<GLfloat>(i) * hdiv;
         w1 = wdiv;
-        if (i % 5 == 0) w1 = w1 * 2.5;
-        if (i % 10 == 0) w1 = w1 * 2.0;
+        if (i % 5 == 0) w1 = static_cast<GLfloat>(w1 * 2.5);
+        if (i % 10 == 0) w1 = static_cast<GLfloat>(w1 * 2.0);
         if (w1 > 3.5) {
           // don't draw tiny marks
           glVertex3f(x - w1, y + h1, z);
@@ -4780,9 +4865,9 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
   }
 
   double tanfov = (gameView != nullptr ? gameView->fov(true) : 0.0f);
-  GLfloat aspect =
+  GLfloat aspect = static_cast<GLfloat>(
       (gameView != nullptr ? gameView->getViewSize() : NSSize{}).width /
-      (gameView != nullptr ? gameView->getViewSize() : NSSize{}).height;
+      (gameView != nullptr ? gameView->getViewSize() : NSSize{}).height);
   if (aspect < 4.0 / 3.0) {
     tanfov *= 0.75 * aspect;
   }
@@ -4795,30 +4880,38 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
     case OOViewID::kForward:
     case OOViewID::kNone:
       glVertex3f(x, y, z);
-      glVertex3f(x - ww * sinfov, y + hh * cosfov, z);
+      glVertex3f(static_cast<GLfloat>(x - ww * sinfov),
+                 static_cast<GLfloat>(y + hh * cosfov), z);
       glVertex3f(x, y, z);
-      glVertex3f(x + ww * sinfov, y + hh * cosfov, z);
+      glVertex3f(static_cast<GLfloat>(x + ww * sinfov),
+                 static_cast<GLfloat>(y + hh * cosfov), z);
       break;
 
     case OOViewID::kAft:
       glVertex3f(x, y, z);
-      glVertex3f(x - ww * sinfov, y - hh * cosfov, z);
+      glVertex3f(static_cast<GLfloat>(x - ww * sinfov),
+                 static_cast<GLfloat>(y - hh * cosfov), z);
       glVertex3f(x, y, z);
-      glVertex3f(x + ww * sinfov, y - hh * cosfov, z);
+      glVertex3f(static_cast<GLfloat>(x + ww * sinfov),
+                 static_cast<GLfloat>(y - hh * cosfov), z);
       break;
 
     case OOViewID::kPort:
       glVertex3f(x, y, z);
-      glVertex3f(x - ww * cosfov, y + hh * sinfov, z);
+      glVertex3f(static_cast<GLfloat>(x - ww * cosfov),
+                 static_cast<GLfloat>(y + hh * sinfov), z);
       glVertex3f(x, y, z);
-      glVertex3f(x - ww * cosfov, y - hh * sinfov, z);
+      glVertex3f(static_cast<GLfloat>(x - ww * cosfov),
+                 static_cast<GLfloat>(y - hh * sinfov), z);
       break;
 
     case OOViewID::kStarboard:
       glVertex3f(x, y, z);
-      glVertex3f(x + ww * cosfov, y + hh * sinfov, z);
+      glVertex3f(static_cast<GLfloat>(x + ww * cosfov),
+                 static_cast<GLfloat>(y + hh * sinfov), z);
       glVertex3f(x, y, z);
-      glVertex3f(x + ww * cosfov, y - hh * sinfov, z);
+      glVertex3f(static_cast<GLfloat>(x + ww * cosfov),
+                 static_cast<GLfloat>(y - hh * sinfov), z);
       break;
 
     case OOViewID::kCustom:
@@ -4832,13 +4925,13 @@ static void drawScannerGrid(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
 
 static void DrawSpecialOval(GLfloat x, GLfloat y, GLfloat z, NSSize siz,
                             GLfloat step, GLfloat* color4v) {
-  GLfloat ww = 0.5 * siz.width;
-  GLfloat hh = 0.5 * siz.height;
+  GLfloat ww = static_cast<GLfloat>(0.5 * siz.width);
+  GLfloat hh = static_cast<GLfloat>(0.5 * siz.height);
   GLfloat theta;
   GLfloat delta;
   GLfloat s;
 
-  delta = step * std::numbers::pi / 180.0f;
+  delta = static_cast<GLfloat>(step * std::numbers::pi / 180.0f);
 
   OOGLBEGIN(GL_LINE_LOOP);
   for (theta = 0.0f; theta < (2.0f * std::numbers::pi); theta += delta) {
@@ -4860,19 +4953,19 @@ void OOPolygonSprite::drawHUDBeaconIconAt(NSPoint where, NSSize size,
 
 void OOPolygonSpriteDrawHUDBeaconIcon(OOPolygonSprite* sprite, NSPoint where,
                                       NSSize size, GLfloat alpha, GLfloat z) {
-  GLfloat x = where.x - size.width;
-  GLfloat y = where.y - 1.5 * size.height;
+  GLfloat x = static_cast<GLfloat>(where.x - size.width);
+  GLfloat y = static_cast<GLfloat>(where.y - 1.5 * size.height);
 
-  GLfloat ox = x - size.width * 0.5;
-  GLfloat oy = y - size.height * 0.5;
-  GLfloat width = size.width * (1.0f / 6.0f);
-  GLfloat height = size.height * (1.0f / 6.0f);
+  GLfloat ox = static_cast<GLfloat>(x - size.width * 0.5);
+  GLfloat oy = static_cast<GLfloat>(y - size.height * 0.5);
+  GLfloat width = static_cast<GLfloat>(size.width * (1.0f / 6.0f));
+  GLfloat height = static_cast<GLfloat>(size.height * (1.0f / 6.0f));
 
   OOGLPushModelView();
   OOGLTranslateModelView(make_vector(ox, oy, z));
   OOGLScaleModelView(make_vector(width, height, 1.0f));
   sprite->drawFilled();
-  glColor4f(0.0, 0.0, 0.0, 0.5 * alpha);
+  glColor4f(0.0, 0.0, 0.0, static_cast<GLfloat>(0.5 * alpha));
   sprite->drawOutline();
   OOGLPopModelView();
 }
@@ -4883,8 +4976,9 @@ OOHUDBeaconCodeIcon::OOHUDBeaconCodeIcon(const std::string& text) {
 
 void OOHUDBeaconCodeIcon::drawHUDBeaconIconAt(NSPoint where, NSSize size,
                                               GLfloat /*alpha*/, GLfloat z) {
-  OODrawString(_text, where.x - 2.5 * size.width, where.y - 3.0 * size.height,
-               z, NSMakeSize(size.width * 2, size.height * 2));
+  OODrawString(_text, static_cast<GLfloat>(where.x - 2.5 * size.width),
+               static_cast<GLfloat>(where.y - 3.0 * size.height), z,
+               NSMakeSize(size.width * 2, size.height * 2));
 }
 
 namespace {

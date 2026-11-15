@@ -552,10 +552,10 @@ std::optional<std::string> OOTimeProfileEntry::description() {
   if (_hitCount == 0) return std::format("{}: --", function);
 
   // Convert everything to milliseconds.
-  float totalTimeSum = _totalTimeSum * 1000.0;
-  float selfTimeSum = _selfTimeSum * 1000.0;
-  float totalTimeMax = _totalTimeMax * 1000.0;
-  float selfTimeMax = _selfTimeMax * 1000.0;
+  float totalTimeSum = static_cast<float>(_totalTimeSum * 1000.0);
+  float selfTimeSum = static_cast<float>(_selfTimeSum * 1000.0);
+  float totalTimeMax = static_cast<float>(_totalTimeMax * 1000.0);
+  float selfTimeMax = static_cast<float>(_selfTimeMax * 1000.0);
 
   if (totalTimeSum == selfTimeSum && totalTimeMax == selfTimeMax) {
     if (_hitCount == 1) {

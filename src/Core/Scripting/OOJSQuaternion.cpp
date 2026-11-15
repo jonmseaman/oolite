@@ -220,16 +220,16 @@ bool JSObjectGetQuaternion(JSContext* context, JSValueConst quaternionObj,
       // ...use the four numbers as [w, x, y, z]
       if (!GetArrayElementNumber(context, quaternionObj, 0, &dVal))
         return false;
-      outQuaternion->w = dVal;
+      outQuaternion->w = static_cast<OOScalar>(dVal);
       if (!GetArrayElementNumber(context, quaternionObj, 1, &dVal))
         return false;
-      outQuaternion->x = dVal;
+      outQuaternion->x = static_cast<OOScalar>(dVal);
       if (!GetArrayElementNumber(context, quaternionObj, 2, &dVal))
         return false;
-      outQuaternion->y = dVal;
+      outQuaternion->y = static_cast<OOScalar>(dVal);
       if (!GetArrayElementNumber(context, quaternionObj, 3, &dVal))
         return false;
-      outQuaternion->z = dVal;
+      outQuaternion->z = static_cast<OOScalar>(dVal);
 
       return true;
     }
@@ -332,7 +332,9 @@ static bool QuaternionFromArgumentListNoErrorInternal(
     return false;
 
   // We got our four numbers.
-  *outQuaternion = make_quaternion(w, x, y, z);
+  *outQuaternion =
+      make_quaternion(static_cast<OOScalar>(w), static_cast<OOScalar>(x),
+                      static_cast<OOScalar>(y), static_cast<OOScalar>(z));
   if (outConsumed != nullptr) *outConsumed = 4;
 
   return true;
@@ -424,19 +426,19 @@ static JSValue QuaternionSetProperty(JSContext* context, JSValueConst thisObj,
   switch (static_cast<QuaternionProperty>(magic)) {
     using enum QuaternionProperty;
     case kW:
-      quaternion.w = dval;
+      quaternion.w = static_cast<OOScalar>(dval);
       break;
 
     case kX:
-      quaternion.x = dval;
+      quaternion.x = static_cast<OOScalar>(dval);
       break;
 
     case kY:
-      quaternion.y = dval;
+      quaternion.y = static_cast<OOScalar>(dval);
       break;
 
     case kZ:
-      quaternion.z = dval;
+      quaternion.z = static_cast<OOScalar>(dval);
       break;
 
     default:
@@ -566,7 +568,8 @@ static JSValue QuaternionRotate(OOJS_NATIVE_ARGS) {
     if (!OOJSArgumentListGetNumber(context, "Quaternion", "rotate", argc, argv,
                                    &angle, nullptr)) [[unlikely]]
       return JS_EXCEPTION;
-    quaternion_rotate_about_axis(&thisq, HPVectorToVector(axis), angle);
+    quaternion_rotate_about_axis(&thisq, HPVectorToVector(axis),
+                                 static_cast<OOScalar>(angle));
   }
   // Else no angle specified, so don't rotate and pass value through unchanged.
 
@@ -586,7 +589,7 @@ static JSValue QuaternionRotateX(OOJS_NATIVE_ARGS) {
                                  OOJS_ARGV, &angle, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
-  quaternion_rotate_about_x(&quat, angle);
+  quaternion_rotate_about_x(&quat, static_cast<OOScalar>(angle));
 
   OOJS_RETURN_QUATERNION(quat);
 }
@@ -604,7 +607,7 @@ static JSValue QuaternionRotateY(OOJS_NATIVE_ARGS) {
                                  OOJS_ARGV, &angle, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
-  quaternion_rotate_about_y(&quat, angle);
+  quaternion_rotate_about_y(&quat, static_cast<OOScalar>(angle));
 
   OOJS_RETURN_QUATERNION(quat);
 }
@@ -622,7 +625,7 @@ static JSValue QuaternionRotateZ(OOJS_NATIVE_ARGS) {
                                  OOJS_ARGV, &angle, nullptr)) [[unlikely]]
     return JS_EXCEPTION;
 
-  quaternion_rotate_about_z(&quat, angle);
+  quaternion_rotate_about_z(&quat, static_cast<OOScalar>(angle));
 
   OOJS_RETURN_QUATERNION(quat);
 }

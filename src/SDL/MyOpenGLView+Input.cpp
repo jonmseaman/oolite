@@ -137,8 +137,9 @@ void MyOpenGLView::resetMouse() {
     // on high-DPI displays)
     float pixelDensity = SDL_GetWindowPixelDensity(window);
     if (pixelDensity <= 0.0f) pixelDensity = 1.0f;
-    SDL_WarpMouseInWindow(window, viewSize.width / 2 / pixelDensity,
-                          viewSize.height / 2 / pixelDensity);
+    SDL_WarpMouseInWindow(
+        window, static_cast<float>(viewSize.width / 2 / pixelDensity),
+        static_cast<float>(viewSize.height / 2 / pixelDensity));
     mouseWarped = true;
   }
 }
@@ -223,9 +224,9 @@ void MyOpenGLView::pollControls() {
   SDL_MouseWheelEvent* mw_event;
   float mxdelta, mydelta;
   float mouseVirtualStickSensitivityX =
-      viewSize.width * _mouseVirtualStickSensitivityFactor;
+      static_cast<float>(viewSize.width * _mouseVirtualStickSensitivityFactor);
   float mouseVirtualStickSensitivityY =
-      viewSize.height * _mouseVirtualStickSensitivityFactor;
+      static_cast<float>(viewSize.height * _mouseVirtualStickSensitivityFactor);
   double timeNow =
       oo::date::monotonicSeconds();  // same clock as MyOpenGLView.cpp's -init
   Uint16 key_id;

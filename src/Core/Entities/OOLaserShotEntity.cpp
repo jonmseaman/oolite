@@ -128,15 +128,18 @@ void OOLaserShotEntity::initLaserFromShip(::ShipEntity* srcEntity,
       break;
 
     case OOWeaponFacing::kAft:
-      quaternion_rotate_about_axis(&q, q_up, std::numbers::pi);
+      quaternion_rotate_about_axis(&q, q_up,
+                                   static_cast<OOScalar>(std::numbers::pi));
       break;
 
     case OOWeaponFacing::kPort:
-      quaternion_rotate_about_axis(&q, q_up, std::numbers::pi / 2.0);
+      quaternion_rotate_about_axis(
+          &q, q_up, static_cast<OOScalar>(std::numbers::pi / 2.0));
       break;
 
     case OOWeaponFacing::kStarboard:
-      quaternion_rotate_about_axis(&q, q_up, -std::numbers::pi / 2.0);
+      quaternion_rotate_about_axis(
+          &q, q_up, static_cast<OOScalar>(-std::numbers::pi / 2.0));
       break;
   }
 
@@ -145,7 +148,7 @@ void OOLaserShotEntity::initLaserFromShip(::ShipEntity* srcEntity,
   setRange((srcEntity != nullptr ? srcEntity->getWeaponRange() : 0.0f));
   _lifetime = kLaserDuration;
 
-  _color[0] = kLaserRed / 3.0;
+  _color[0] = static_cast<GLfloat>(kLaserRed / 3.0);
   _color[1] = kLaserGreen / 3.0;
   _color[2] = kLaserBlue / 3.0;
   _color[3] = kLaserAlpha;
@@ -174,12 +177,15 @@ std::optional<std::string> OOLaserShotEntity::descriptionComponents() const {
 
 void OOLaserShotEntity::setColor(OOColor* color) {
   // Messages to a nil colour answered 0.
-  _color[0] = kLaserBrightness *
-              (color != nullptr ? color->redComponent() : 0.0f) / 3.0;
-  _color[1] = kLaserBrightness *
-              (color != nullptr ? color->greenComponent() : 0.0f) / 3.0;
-  _color[2] = kLaserBrightness *
-              (color != nullptr ? color->blueComponent() : 0.0f) / 3.0;
+  _color[0] = static_cast<GLfloat>(
+      kLaserBrightness * (color != nullptr ? color->redComponent() : 0.0f) /
+      3.0);
+  _color[1] = static_cast<GLfloat>(
+      kLaserBrightness * (color != nullptr ? color->greenComponent() : 0.0f) /
+      3.0);
+  _color[2] = static_cast<GLfloat>(
+      kLaserBrightness * (color != nullptr ? color->blueComponent() : 0.0f) /
+      3.0);
   // Ignore alpha; _color[3] is constant.
 }
 
@@ -239,7 +245,8 @@ void OOLaserShotEntity::drawImmediate(bool /*immediate*/, bool translucent) {
   OOGLScaleModelView(make_vector(kLaserHalfWidth, kLaserHalfWidth, _range));
   if (OOTexture* shot = texture1())
     shot->apply();  // a message to nil did nothing
-  GLfloat s = sinf((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0));
+  GLfloat s = sinf(
+      (UNIVERSE != nullptr ? static_cast<float>(UNIVERSE->getTime()) : 0.0));
   GLfloat phase = s * (_range / 200.0f);
   GLfloat phase2 = (1.0f + s) * (_range / 200.0f);
   GLfloat phase3 = -s * (_range / 500.0f);
@@ -261,14 +268,15 @@ void OOLaserShotEntity::drawImmediate(bool /*immediate*/, bool translucent) {
 
   OOGLScaleModelView(make_vector(kLaserCoreWidth / kLaserHalfWidth,
                                  kLaserCoreWidth / kLaserHalfWidth, 1.0));
-  OOGL(glColor4f(kLaserBrightness, kLaserBrightness, kLaserBrightness, 0.9));
+  OOGL(glColor4f(kLaserBrightness, kLaserBrightness, kLaserBrightness,
+                 static_cast<GLfloat>(0.9)));
   glDrawArrays(GL_QUADS, 0, 8);
 
   if (OOTexture* shot = texture2())
     shot->apply();  // a message to nil did nothing
   OOGLScaleModelView(make_vector(kLaserFlareWidth / kLaserCoreWidth,
                                  kLaserFlareWidth / kLaserCoreWidth, 1.0));
-  OOGL(glColor4f(_color[0], _color[1], _color[2], 0.9));
+  OOGL(glColor4f(_color[0], _color[1], _color[2], static_cast<GLfloat>(0.9)));
   glTexCoordPointer(2, GL_FLOAT, 0, laserTexCoords);
   glDrawArrays(GL_QUADS, 0, 8);
 

@@ -68,16 +68,17 @@ void OOTextureSprite::blitToX(float x, float y, float z, float a) {
   if (texture != nullptr) texture->apply();  // a message to nil did nothing
   OOGLBEGIN(GL_QUADS);
   glTexCoord2f(0.0, 0.0);
-  glVertex3f(x, y + size.height, z);
+  glVertex3f(x, static_cast<GLfloat>(y + size.height), z);
 
   glTexCoord2f(0.0, 1.0);
   glVertex3f(x, y, z);
 
   glTexCoord2f(1.0, 1.0);
-  glVertex3f(x + size.width, y, z);
+  glVertex3f(static_cast<GLfloat>(x + size.width), y, z);
 
   glTexCoord2f(1.0, 0.0);
-  glVertex3f(x + size.width, y + size.height, z);
+  glVertex3f(static_cast<GLfloat>(x + size.width),
+             static_cast<GLfloat>(y + size.height), z);
   OOGLEND();
 
   OOGL(glDisable(GL_TEXTURE_2D));
@@ -86,8 +87,8 @@ void OOTextureSprite::blitToX(float x, float y, float z, float a) {
 }
 
 void OOTextureSprite::blitCentredToX(float x, float y, float z, float a) {
-  float xs = x - size.width / 2.0;
-  float ys = y - size.height / 2.0;
+  float xs = static_cast<float>(x - size.width / 2.0);
+  float ys = static_cast<float>(y - size.height / 2.0);
   blitToX(xs, ys, z, a);
 }
 

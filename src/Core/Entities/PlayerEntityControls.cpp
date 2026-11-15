@@ -1322,7 +1322,8 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                                     : OOViewID{}) <= OOViewID::kStarboard ||
                !(gameView != nullptr ? gameView->isCapsLockOn() : false)))) &&
             (flightSpeed < maxFlightSpeed) && (!afterburner_engaged)) {
-          flightSpeed += speed_delta * delta_t * mouseWheelDeltaFactor;
+          flightSpeed += static_cast<GLfloat>(speed_delta * delta_t *
+                                              mouseWheelDeltaFactor);
         }
 
         if ((checkKeyPress(n_key_decrease_speed) ||
@@ -1335,7 +1336,8 @@ void PlayerEntity::pollFlightControls(double delta_t) {
                                     : OOViewID{}) <= OOViewID::kStarboard ||
                !(gameView != nullptr ? gameView->isCapsLockOn() : false)))) &&
             (!afterburner_engaged)) {
-          flightSpeed -= speed_delta * delta_t * mouseWheelDeltaFactor;
+          flightSpeed -= static_cast<GLfloat>(speed_delta * delta_t *
+                                              mouseWheelDeltaFactor);
           // ** tgape ** - decrease obviously means no hyperspeed
           hyperspeed_engaged = false;
         }
@@ -1347,10 +1349,10 @@ void PlayerEntity::pollFlightControls(double delta_t) {
         if (stickHandler->joystickCount() != 0 &&
             functionForThrustAxis != nullptr) {
           if (flightSpeed < maxFlightSpeed * reqSpeed) {
-            flightSpeed += speed_delta * delta_t;
+            flightSpeed += static_cast<GLfloat>(speed_delta * delta_t);
           }
           if (flightSpeed > maxFlightSpeed * reqSpeed) {
-            flightSpeed -= speed_delta * delta_t;
+            flightSpeed -= static_cast<GLfloat>(speed_delta * delta_t);
           }
         }  // DJS: end joystick thrust axis (Getafix - End code update for
            // fixing BUG #17482)
@@ -2082,16 +2084,18 @@ void PlayerEntity::pollFlightControls(double delta_t) {
         if (!leftRightKeyPressed) {
           float newTimeAccelerationFactor =
               checkKeyPress(n_key_gui_arrow_left)
-                  ? fmax((UNIVERSE != nullptr
-                              ? UNIVERSE->getTimeAccelerationFactor()
-                              : 0.0) /
-                             2.0f,
-                         TIME_ACCELERATION_FACTOR_MIN)
-                  : fmin((UNIVERSE != nullptr
-                              ? UNIVERSE->getTimeAccelerationFactor()
-                              : 0.0) *
-                             2.0f,
-                         TIME_ACCELERATION_FACTOR_MAX);
+                  ? static_cast<float>(
+                        fmax((UNIVERSE != nullptr
+                                  ? UNIVERSE->getTimeAccelerationFactor()
+                                  : 0.0) /
+                                 2.0f,
+                             TIME_ACCELERATION_FACTOR_MIN))
+                  : static_cast<float>(
+                        fmin((UNIVERSE != nullptr
+                                  ? UNIVERSE->getTimeAccelerationFactor()
+                                  : 0.0) *
+                                 2.0f,
+                             TIME_ACCELERATION_FACTOR_MAX));
           if (UNIVERSE != nullptr)
             UNIVERSE->setTimeAccelerationFactor(newTimeAccelerationFactor);
         }
@@ -2377,9 +2381,13 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             centre_at_mouse_click = chart_centre_coordinates;
             mouse_click_position = maus;
             chart_focus_coordinates.x = OOClamp_0_max_f(
-                centre.x + (maus.x * MAIN_GUI_PIXEL_WIDTH) / hscale, 256.0);
+                static_cast<float>(centre.x +
+                                   (maus.x * MAIN_GUI_PIXEL_WIDTH) / hscale),
+                256.0);
             chart_focus_coordinates.y = OOClamp_0_max_f(
-                centre.y + (maus.y * MAIN_GUI_PIXEL_HEIGHT + vadjust) / vscale,
+                static_cast<float>(centre.y +
+                                   (maus.y * MAIN_GUI_PIXEL_HEIGHT + vadjust) /
+                                       vscale),
                 256.0);
             target_chart_focus = chart_focus_coordinates;
           }
@@ -2388,12 +2396,14 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
               fabs(maus.y - mouse_click_position.y) * MAIN_GUI_PIXEL_HEIGHT >
                   2) {
             chart_centre_coordinates.x = OOClamp_0_max_f(
-                centre_at_mouse_click.x - (maus.x - mouse_click_position.x) *
-                                              MAIN_GUI_PIXEL_WIDTH / hscale,
+                static_cast<float>(centre_at_mouse_click.x -
+                                   (maus.x - mouse_click_position.x) *
+                                       MAIN_GUI_PIXEL_WIDTH / hscale),
                 256.0);
             chart_centre_coordinates.y = OOClamp_0_max_f(
-                centre_at_mouse_click.y - (maus.y - mouse_click_position.y) *
-                                              MAIN_GUI_PIXEL_HEIGHT / vscale,
+                static_cast<float>(centre_at_mouse_click.y -
+                                   (maus.y - mouse_click_position.y) *
+                                       MAIN_GUI_PIXEL_HEIGHT / vscale),
                 256.0);
             target_chart_centre = chart_centre_coordinates;
             dragging = true;
@@ -2439,7 +2449,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             (gameView != nullptr
                  ? gameView->mouseWheelState()
                  : MouseWheelStatus::kNeutral) == MouseWheelStatus::kDown) {
-          target_chart_zoom *= CHART_ZOOM_SPEED_FACTOR;
+          target_chart_zoom *= static_cast<OOScalar>(CHART_ZOOM_SPEED_FACTOR);
           if (target_chart_zoom > CHART_MAX_ZOOM)
             target_chart_zoom = CHART_MAX_ZOOM;
           saved_chart_zoom = target_chart_zoom;
@@ -2452,7 +2462,7 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             target_chart_zoom = CHART_MAX_ZOOM;
             setGuiToShortRangeChartScreen();
           }
-          target_chart_zoom /= CHART_ZOOM_SPEED_FACTOR;
+          target_chart_zoom /= static_cast<OOScalar>(CHART_ZOOM_SPEED_FACTOR);
           if (target_chart_zoom < 1.0) target_chart_zoom = 1.0;
           saved_chart_zoom = target_chart_zoom;
           // target_chart_centre = cursor_coordinates;
@@ -2603,7 +2613,8 @@ void PlayerEntity::pollGuiArrowKeyControls(double delta_t) {
             (3.0 * chart_centre_coordinates.x + target_chart_centre.x) / 4.0;
         chart_centre_coordinates.y =
             (3.0 * chart_centre_coordinates.y + target_chart_centre.y) / 4.0;
-        chart_zoom = (3.0 * chart_zoom + target_chart_zoom) / 4.0;
+        chart_zoom =
+            static_cast<OOScalar>((3.0 * chart_zoom + target_chart_zoom) / 4.0);
         chart_focus_coordinates.x =
             (3.0 * chart_focus_coordinates.x + target_chart_focus.x) / 4.0;
         chart_focus_coordinates.y =
@@ -4025,7 +4036,7 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
       if (rightKeyDown) vol++;
       if (leftKeyDown) vol--;
       vol = std::clamp(vol, 0, 20);
-      ::OOSound::setMasterVolume(0.05 * vol);
+      ::OOSound::setMasterVolume(static_cast<float>(0.05 * vol));
       playChangedOption();
       oo::SpeechSynthesizer::shared().setVolume(vol * 5);
       if (vol > 0) {
@@ -4515,9 +4526,9 @@ void PlayerEntity::pollCustomViewControls() {
         ctrl_down ? CUSTOM_VIEW_ZOOM_SPEED * CUSTOM_VIEW_SPEED_REDUCTION_FACTOR
                   : CUSTOM_VIEW_ZOOM_SPEED;
     float customViewRotateSpeed =
-        ctrl_down
-            ? CUSTOM_VIEW_ROTATE_SPEED * CUSTOM_VIEW_SPEED_REDUCTION_FACTOR
-            : CUSTOM_VIEW_ROTATE_SPEED;
+        ctrl_down ? static_cast<float>(CUSTOM_VIEW_ROTATE_SPEED *
+                                       CUSTOM_VIEW_SPEED_REDUCTION_FACTOR)
+                  : CUSTOM_VIEW_ROTATE_SPEED;
 
     if (!caps_on) caps_on = true;
 
@@ -4527,54 +4538,63 @@ void PlayerEntity::pollCustomViewControls() {
         (gameView != nullptr
              ? gameView->mouseWheelState()
              : MouseWheelStatus::kNeutral) == MouseWheelStatus::kDown) {
-      customViewZoomOut(pow(customViewZoomSpeed, delta_t));
+      customViewZoomOut(
+          static_cast<OOScalar>(pow(customViewZoomSpeed, delta_t)));
     }
     if ((checkKeyPressIgnoreCtrl(n_key_custom_view_zoom_in, true) &&
          !checkKeyPressIgnoreCtrl(n_key_custom_view_zoom_out, true)) ||
         (gameView != nullptr
              ? gameView->mouseWheelState()
              : MouseWheelStatus::kNeutral) == MouseWheelStatus::kUp) {
-      customViewZoomIn(pow(customViewZoomSpeed, delta_t));
+      customViewZoomIn(
+          static_cast<OOScalar>(pow(customViewZoomSpeed, delta_t)));
     }
     if (checkKeyPressIgnoreCtrl(n_key_custom_view_roll_left, true) &&
         !checkKeyPressIgnoreCtrl(n_key_custom_view_roll_right, true)) {
-      customViewRollLeft(customViewRotateSpeed * delta_t);
+      customViewRollLeft(
+          static_cast<OOScalar>(customViewRotateSpeed * delta_t));
     }
     if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_left, true) &&
         !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_right, true)) {
-      customViewPanLeft(customViewRotateSpeed * delta_t);
+      customViewPanLeft(static_cast<OOScalar>(customViewRotateSpeed * delta_t));
     }
     if (checkKeyPressIgnoreCtrl(n_key_custom_view_roll_right, true) &&
         !checkKeyPressIgnoreCtrl(n_key_custom_view_roll_left, true)) {
-      customViewRollRight(customViewRotateSpeed * delta_t);
+      customViewRollRight(
+          static_cast<OOScalar>(customViewRotateSpeed * delta_t));
     }
     if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_right, true) &&
         !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_left, true)) {
-      customViewPanRight(customViewRotateSpeed * delta_t);
+      customViewPanRight(
+          static_cast<OOScalar>(customViewRotateSpeed * delta_t));
     }
     if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_up, true) &&
         !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_down, true)) {
-      customViewRotateUp(customViewRotateSpeed * delta_t);
+      customViewRotateUp(
+          static_cast<OOScalar>(customViewRotateSpeed * delta_t));
     }
     if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_down, true) &&
         !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_up, true)) {
-      customViewPanDown(customViewRotateSpeed * delta_t);
+      customViewPanDown(static_cast<OOScalar>(customViewRotateSpeed * delta_t));
     }
     if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_down, true) &&
         !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_up, true)) {
-      customViewRotateDown(customViewRotateSpeed * delta_t);
+      customViewRotateDown(
+          static_cast<OOScalar>(customViewRotateSpeed * delta_t));
     }
     if (checkKeyPressIgnoreCtrl(n_key_custom_view_pan_up, true) &&
         !checkKeyPressIgnoreCtrl(n_key_custom_view_pan_down, true)) {
-      customViewPanUp(customViewRotateSpeed * delta_t);
+      customViewPanUp(static_cast<OOScalar>(customViewRotateSpeed * delta_t));
     }
     if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_left, true) &&
         !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_right, true)) {
-      customViewRotateLeft(customViewRotateSpeed * delta_t);
+      customViewRotateLeft(
+          static_cast<OOScalar>(customViewRotateSpeed * delta_t));
     }
     if (checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_right, true) &&
         !checkKeyPressIgnoreCtrl(n_key_custom_view_rotate_left, true)) {
-      customViewRotateRight(customViewRotateSpeed * delta_t);
+      customViewRotateRight(
+          static_cast<OOScalar>(customViewRotateSpeed * delta_t));
     }
     if ((gameView != nullptr ? gameView->isDown(gvMouseLeftButton) : false)) {
       if (!mouse_clicked ||
@@ -4599,11 +4619,13 @@ void PlayerEntity::pollCustomViewControls() {
       NSPoint mouse_position =
           (gameView != nullptr ? gameView->getVirtualJoystickPosition()
                                : NSPoint{});
-      Vector axis =
-          vector_add(vector_multiply_scalar(
-                         up, mouse_position.x - mouse_clicked_position.x),
-                     vector_multiply_scalar(
-                         right, mouse_position.y - mouse_clicked_position.y));
+      Vector axis = vector_add(
+          vector_multiply_scalar(
+              up, static_cast<OOScalar>(mouse_position.x -
+                                        mouse_clicked_position.x)),
+          vector_multiply_scalar(
+              right, static_cast<OOScalar>(mouse_position.y -
+                                           mouse_clicked_position.y)));
       float angle = magnitude(axis);
       axis = vector_normal(axis);
       Quaternion newViewQuaternion = viewQuaternion;
@@ -4894,7 +4916,7 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t) {
   }
   if (((mouse_control_on && !mouse_x_axis_map_to_yaw) || numSticks) &&
       !keyboardRollOverride && !capsLockCustomView) {
-    stick_roll = max_flight_roll * virtualStick.x;
+    stick_roll = static_cast<GLfloat>(max_flight_roll * virtualStick.x);
     if (flightRoll < stick_roll) {
       increase_flight_roll(delta_t * roll_delta);
       if (flightRoll > stick_roll) flightRoll = stick_roll;
@@ -4946,7 +4968,7 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t) {
   }
   if ((mouse_control_on || (numSticks && !keyboardPitchOverride)) &&
       !capsLockCustomView) {
-    stick_pitch = max_flight_pitch * virtualStick.y;
+    stick_pitch = static_cast<GLfloat>(max_flight_pitch * virtualStick.y);
     if (flightPitch < stick_pitch) {
       increase_flight_pitch(delta_t * pitch_delta);
       if (flightPitch > stick_pitch) flightPitch = stick_pitch;
@@ -4998,7 +5020,7 @@ void PlayerEntity::pollFlightArrowKeyControls(double delta_t) {
       !keyboardYawOverride && !capsLockCustomView) {
     // I think yaw is handled backwards in the code,
     // which is why the negative sign is here.
-    stick_yaw = max_flight_yaw * (-reqYaw);
+    stick_yaw = static_cast<GLfloat>(max_flight_yaw * (-reqYaw));
     if (flightYaw < stick_yaw) {
       increase_flight_yaw(delta_t * yaw_delta);
       if (flightYaw > stick_yaw) flightYaw = stick_yaw;

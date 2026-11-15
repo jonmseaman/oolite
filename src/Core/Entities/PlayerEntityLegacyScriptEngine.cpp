@@ -2288,7 +2288,7 @@ void PlayerEntity::setFuelLeak(const std::string& value) {
     return;
   }
 
-  fuel_leak_rate = oo::str::doubleValue(value);
+  fuel_leak_rate = static_cast<GLfloat>(oo::str::doubleValue(value));
   if (fuel_leak_rate > 0) {
     playFuelLeak();
     if (UNIVERSE != nullptr)
@@ -2964,9 +2964,10 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     // radius bigger than 60 a bit futher away.
     model_p0 = vector_multiply_scalar(
         model_p0,
-        1 - 0.5 * ((60 -
-                    (doppelganger != nullptr ? doppelganger->radius() : 0.0)) /
-                   60));
+        static_cast<OOScalar>(
+            1 - 0.5 * ((60 - (doppelganger != nullptr ? doppelganger->radius()
+                                                      : 0.0)) /
+                       60)));
 
     model_p0 = vector_add(model_p0, off);
 
@@ -2975,7 +2976,9 @@ bool PlayerEntity::processSceneString(const std::string& item, Vector off) {
     // planets' north pole. Quaternion model_q = { 0.83, -0.365148, 0.182574,
     // 0.0 }; // shows new planets' south pole.
     Quaternion defaultOrientation = {
-        0.83, 0.12, 0.44, 0.0};  // new planets - default orientation.
+        static_cast<OOScalar>(0.83), static_cast<OOScalar>(0.12),
+        static_cast<OOScalar>(0.44),
+        0.0};  // new planets - default orientation.
     OO_LOG(kOOLogDebugProcessSceneStringAddMiniPlanet,
            "::::: adding {} to scene:'{}'", i_key,
            oo::EntityDescription(doppelganger));

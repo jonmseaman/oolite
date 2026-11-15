@@ -213,15 +213,17 @@ std::string StringFromRandomSeed(Random_Seed seed) {
 
 std::string OOPadStringToEms(const std::string& string, float padEms) {
   std::string result = string;
-  float numEms = padEms - OOStringWidthInEm(result);
+  float numEms = static_cast<float>(padEms - OOStringWidthInEm(result));
   if (numEms > 0) {
-    numEms /= OOStringWidthInEm(" ");  // start with wide space
+    numEms /=
+        static_cast<float>(OOStringWidthInEm(" "));  // start with wide space
     result = std::string(static_cast<std::size_t>(numEms), ' ') + result;
   }
   // most of the way there, so switch to narrow space
-  numEms = padEms - OOStringWidthInEm(result);
+  numEms = static_cast<float>(padEms - OOStringWidthInEm(result));
   if (numEms > 0) {
-    numEms /= OOStringWidthInEm("\037");  // 037 is narrow space
+    numEms /=
+        static_cast<float>(OOStringWidthInEm("\037"));  // 037 is narrow space
     result = std::string(static_cast<std::size_t>(numEms), '\037') + result;
   }
   return result;

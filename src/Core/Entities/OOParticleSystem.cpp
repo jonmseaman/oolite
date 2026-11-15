@@ -106,7 +106,7 @@ void OOParticleSystem::update(OOTimeDelta delta_t) {
   Entity::update(delta_t);
 
   _timePassed += delta_t;
-  collision_radius += delta_t * _maxSpeed;
+  collision_radius += static_cast<GLfloat>(delta_t * _maxSpeed);
 
   unsigned i, count = _count;
   Vector* particlePosition = _particlePosition;
@@ -115,7 +115,8 @@ void OOParticleSystem::update(OOTimeDelta delta_t) {
   for (i = 0; i < count; i++) {
     particlePosition[i] =
         vector_add(particlePosition[i],
-                   vector_multiply_scalar(particleVelocity[i], delta_t));
+                   vector_multiply_scalar(particleVelocity[i],
+                                          static_cast<OOScalar>(delta_t)));
   }
 
   // disappear eventually.
@@ -303,7 +304,7 @@ void OOSmallFragmentBurstEntity::update(OOTimeDelta delta_t) {
 
   unsigned i, count = _count;
   GLfloat(*particleColor)[4] = _particleColor;
-  GLfloat timePassed = _timePassed;
+  GLfloat timePassed = static_cast<GLfloat>(_timePassed);
 
   for (i = 0; i < count; i++) {
     GLfloat du = 0.5f + (1.0f / 32.0f) * (static_cast<float>(32 - i));
@@ -342,7 +343,8 @@ OOBigFragmentBurstEntity::fragmentBurstFromEntity(Entity* entity) {
   result->initFragmentBurstFrom(
       entity != nullptr ? entity->getPosition() : kZeroHPVector,
       vector_multiply_scalar(
-          entity != nullptr ? entity->getVelocity() : kZeroVector, 0.85),
+          entity != nullptr ? entity->getVelocity() : kZeroVector,
+          static_cast<OOScalar>(0.85)),
       entity != nullptr ? entity->collisionRadius()
                         : 0.0f);  // the C++ entity's members
   return result;
@@ -358,8 +360,8 @@ void OOBigFragmentBurstEntity::update(double delta_t) {
   unsigned i, count = _count;
   GLfloat(*particleColor)[4] = _particleColor;
   GLfloat* particleSize = _particleSize;
-  GLfloat timePassed = _timePassed;
-  GLfloat duration = _duration;
+  GLfloat timePassed = static_cast<GLfloat>(_timePassed);
+  GLfloat duration = static_cast<GLfloat>(_duration);
 
   GLfloat size = (1.0f + timePassed) * _baseSize;
   GLfloat di = 1.0f / (static_cast<float>(count - 1));

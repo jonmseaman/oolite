@@ -3124,7 +3124,7 @@ void PlayerEntity::doBookkeeping(double delta_t) {
 
   UPDATE_STAGE("updating weapon temperatures and shot times");
   // cool all weapons.
-  float coolAmount = WEAPON_COOLING_FACTOR * delta_t;
+  float coolAmount = static_cast<float>(WEAPON_COOLING_FACTOR * delta_t);
   forward_weapon_temp = fdim(forward_weapon_temp, coolAmount);
   aft_weapon_temp = fdim(aft_weapon_temp, coolAmount);
   port_weapon_temp = fdim(port_weapon_temp, coolAmount);
@@ -3228,13 +3228,15 @@ void PlayerEntity::doBookkeeping(double delta_t) {
   UPDATE_STAGE("updating energy and shield charges");
 
   // 1. (Over)charge energy banks (will get normalised later)
-  energy += energyRechargeRate() * delta_t;
+  energy += static_cast<GLfloat>(energyRechargeRate() * delta_t);
 
   // 2. Calculate shield recharge rates
   float fwdMax = maxForwardShieldLevel();
   float aftMax = maxAftShieldLevel();
-  float shieldRechargeFwd = forwardShieldRechargeRate() * delta_t;
-  float shieldRechargeAft = aftShieldRechargeRate() * delta_t;
+  float shieldRechargeFwd =
+      static_cast<float>(forwardShieldRechargeRate() * delta_t);
+  float shieldRechargeAft =
+      static_cast<float>(aftShieldRechargeRate() * delta_t);
   /* there is potential for negative rechargeFwd and rechargeAFt values here
      (e.g. getting shield boosters damaged while shields are full). This may
      lead to energy being gained rather than consumed when recharging. Leaving
@@ -3257,13 +3259,13 @@ void PlayerEntity::doBookkeeping(double delta_t) {
     float minEnergyBankLevel =
         (UNIVERSE != nullptr ? UNIVERSE->getGlobalSettings() : oo::PList())
             .get<float>("shield_charge_energybank_threshold", 0.25);
-    energyForShields = std::max(
+    energyForShields = static_cast<float>(std::max(
         0.0, energy - 0.1 -
                  (maxEnergy *
-                  minEnergyBankLevel));  // NB: The - 0.1 ensures the energy
-                                         // value does not 'bounce' across the
-                                         // critical energy message and causes
-                                         // spurious energy-low warnings
+                  minEnergyBankLevel)));  // NB: The - 0.1 ensures the energy
+                                          // value does not 'bounce' across the
+                                          // critical energy message and causes
+                                          // spurious energy-low warnings
   }
 
   if (forward_shield < aft_shield) {
@@ -3321,7 +3323,7 @@ void PlayerEntity::doBookkeeping(double delta_t) {
     // work on the cabin temperature
     float heatInsulation =
         this->heatInsulation();  // Optimisation, suggested by EricW
-    float deltaInsulation = delta_t / heatInsulation;
+    float deltaInsulation = static_cast<float>(delta_t / heatInsulation);
     float heatThreshold = heatInsulation * 100.0f;
     ship_temperature +=
         flightSpeed * air_friction * deltaInsulation;  // wind_speed
@@ -3473,7 +3475,8 @@ void PlayerEntity::doBookkeeping(double delta_t) {
       // slow back down...
       if (travelling_at_hyperspeed) {
         // decrease speed to maximum normal speed
-        float deceleration = (speed_delta * delta_t * HYPERSPEED_FACTOR);
+        float deceleration =
+            (static_cast<float>(speed_delta * delta_t * HYPERSPEED_FACTOR));
         if (OOAlertFlagIsOn(alertFlags, OOAlertFlags::kMassLock)) {
           // decelerate much quicker in masslocks
           // this does also apply to injector deceleration
@@ -3515,11 +3518,11 @@ void PlayerEntity::doBookkeeping(double delta_t) {
         scanner_zoom_rate = 0.0f;
       }
     }
-    if (hud != nullptr) hud->setScannerZoom(z1);
+    if (hud != nullptr) hud->setScannerZoom(static_cast<GLfloat>(z1));
   }
 
   if (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr)
-    UNIVERSE->getGameView()->setFov(fieldOfView, true);
+    UNIVERSE->getGameView()->setFov(static_cast<float>(fieldOfView), true);
 
   // scanner sanity check - lose any targets further than maximum scanner range
   Entity* primeTarget = primaryTarget();  // any entity (a wormhole too)
@@ -3566,14 +3569,16 @@ void PlayerEntity::doBookkeeping(double delta_t) {
       if (gView != nullptr) gView->setMouseWheelDelta(0.0f);
     } else {
       if (gView != nullptr)
-        gView->setMouseWheelDelta(mouseWheelDelta - delta_t);
+        gView->setMouseWheelDelta(
+            static_cast<float>(mouseWheelDelta - delta_t));
     }
   } else if (mouseWheelDelta < 0.0f) {
     if (mouseWheelDelta > -delta_t) {
       if (gView != nullptr) gView->setMouseWheelDelta(0.0f);
     } else {
       if (gView != nullptr)
-        gView->setMouseWheelDelta(mouseWheelDelta + delta_t);
+        gView->setMouseWheelDelta(
+            static_cast<float>(mouseWheelDelta + delta_t));
     }
   }
 
@@ -3675,7 +3680,8 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
     if (factor < 1.0) {
       hyperspeedFactor = MIN_HYPERSPEED_FACTOR;
     } else {
-      hyperspeedFactor = MIN_HYPERSPEED_FACTOR * sqrt(factor);
+      hyperspeedFactor =
+          static_cast<GLfloat>(MIN_HYPERSPEED_FACTOR * sqrt(factor));
       if (hyperspeedFactor > MAX_HYPERSPEED_FACTOR) {
         // caps out at ~10^8m from nearest object
         // which takes ~10 minutes of flying
@@ -3704,17 +3710,17 @@ void PlayerEntity::updateAlertConditionForNearbyEntities() {
 
 void PlayerEntity::setMaxFlightPitch(GLfloat newValue) {
   max_flight_pitch = newValue;
-  pitch_delta = 2.0 * newValue;
+  pitch_delta = static_cast<GLfloat>(2.0 * newValue);
 }
 
 void PlayerEntity::setMaxFlightRoll(GLfloat newValue) {
   max_flight_roll = newValue;
-  roll_delta = 2.0 * newValue;
+  roll_delta = static_cast<GLfloat>(2.0 * newValue);
 }
 
 void PlayerEntity::setMaxFlightYaw(GLfloat newValue) {
   max_flight_yaw = newValue;
-  yaw_delta = 2.0 * newValue;
+  yaw_delta = static_cast<GLfloat>(2.0 * newValue);
 }
 
 bool PlayerEntity::checkEntityForMassLock(Entity* ent, OOScanClass theirClass) {
@@ -4328,11 +4334,11 @@ void PlayerEntity::gameOverFadeToBW() {
       // frame rate and original color saturation
       if (fps_counter != 0) {
         if (gameView != nullptr)
-          gameView->adjustColorSaturation(
+          gameView->adjustColorSaturation(static_cast<float>(
               -(originalColorSaturation * (1.0f / secondsToBWFadeOut) *
                 (UNIVERSE != nullptr ? UNIVERSE->getTimeAccelerationFactor()
                                      : 0.0) /
-                fps_counter));
+                fps_counter)));
       }
     }
 
@@ -4460,7 +4466,7 @@ void PlayerEntity::showShipModelWithKey(
   if (ship != nullptr)
     ship->setPositionX(factorX * cr, factorY * cr, factorZ * cr);
   if (ship != nullptr) ship->setScanClass(OOScanClass::kNoDraw);
-  if (ship != nullptr) ship->setDemoShip(0.6);
+  if (ship != nullptr) ship->setDemoShip(static_cast<OOScalar>(0.6));
   if (ship != nullptr)
     ship->setDemoStartTime((UNIVERSE != nullptr ? UNIVERSE->getTime() : 0.0));
   if ((ship != nullptr ? ship->pendingEscortCount() : uint8_t{}) > 0) {
@@ -4651,8 +4657,9 @@ void PlayerEntity::orientationChanged() {
 }
 
 void PlayerEntity::applyAttitudeChanges(double delta_t) {
-  applyRoll(flightRoll * delta_t, flightPitch * delta_t);
-  applyYaw(flightYaw * delta_t);
+  applyRoll(static_cast<GLfloat>(flightRoll * delta_t),
+            static_cast<GLfloat>(flightPitch * delta_t));
+  applyYaw(static_cast<GLfloat>(flightYaw * delta_t));
 }
 
 void PlayerEntity::applyRoll(GLfloat roll1, GLfloat climb1) {
@@ -4883,7 +4890,7 @@ bool PlayerEntity::switchHudTo(const std::string& hudFileName) {
     hud->initWithDictionary(hudDict, hudFileName);
     hud->resetGuis(hudDict);
     // reset zoom & hidden to what they were before the swich
-    hud->setScannerZoom(scannerZoom);
+    hud->setScannerZoom(static_cast<GLfloat>(scannerZoom));
     hud->setCompassActive(wasCompassActive);
     hud->setHidden(wasHidden);
     activeMFD = 0;
@@ -6436,7 +6443,7 @@ void PlayerEntity::takeEnergyDamage(double amount, Entity* entPart,
   }
 
   if (d_forward >= 0) {
-    forward_shield -= amount;
+    forward_shield -= static_cast<GLfloat>(amount);
     if (forward_shield < 0.0) {
       amount = -forward_shield;
       forward_shield = 0.0f;
@@ -6444,7 +6451,7 @@ void PlayerEntity::takeEnergyDamage(double amount, Entity* entPart,
       amount = 0.0;
     }
   } else {
-    aft_shield -= amount;
+    aft_shield -= static_cast<GLfloat>(amount);
     if (aft_shield < 0.0) {
       amount = -aft_shield;
       aft_shield = 0.0f;
@@ -6457,15 +6464,15 @@ void PlayerEntity::takeEnergyDamage(double amount, Entity* entPart,
                                               : OOShipDamageType::kEnergy;
 
   if (amount > 0.0) {
-    energy -= amount;
+    energy -= static_cast<GLfloat>(amount);
     playDirectHit(relative, weaponIdentifier);
     if (ship_temperature < SHIP_MAX_CABIN_TEMP) {
       /* Heat increase from energy impacts will never directly cause
        * overheating - too easy for missile hits to cause an uncredited
        * death by overheating against NPCs, so same rules for player */
-      ship_temperature +=
+      ship_temperature += static_cast<float>(
           amount * (mass > 400000 ? 200000 / mass : 0.5) /
-          heatInsulation();  // SHIP_ENERGY_DAMAGE_TO_HEAT_FACTOR
+          heatInsulation());  // SHIP_ENERGY_DAMAGE_TO_HEAT_FACTOR
       if (ship_temperature > SHIP_MAX_CABIN_TEMP) {
         ship_temperature = SHIP_MAX_CABIN_TEMP;
       }
@@ -6523,7 +6530,7 @@ void PlayerEntity::takeScrapeDamage(double amount, Entity* ent) {
 
   playScrapeDamage(relative);
   if (d_forward >= 0) {
-    forward_shield -= amount;
+    forward_shield -= static_cast<GLfloat>(amount);
     if (forward_shield < 0.0) {
       amount = -forward_shield;
       forward_shield = 0.0f;
@@ -6531,7 +6538,7 @@ void PlayerEntity::takeScrapeDamage(double amount, Entity* ent) {
       amount = 0.0;
     }
   } else {
-    aft_shield -= amount;
+    aft_shield -= static_cast<GLfloat>(amount);
     if (aft_shield < 0.0) {
       amount = -aft_shield;
       aft_shield = 0.0f;
@@ -6660,8 +6667,8 @@ void PlayerEntity::takeHeatDamage(double amount) {
       position, vectorToHPVector(vector_multiply_scalar(v_up, sheight)));
   float sdepth = static_cast<float>(boundingBox.max.z - boundingBox.min.z);
   position = HPvector_subtract(
-      position,
-      vectorToHPVector(vector_multiply_scalar(v_forward, sdepth / 2.0)));
+      position, vectorToHPVector(vector_multiply_scalar(
+                    v_forward, static_cast<OOScalar>(sdepth / 2.0))));
 
   // set up you
   escapePod = (UNIVERSE != nullptr ? UNIVERSE->newShipWithName("escape-capsule")
@@ -6716,7 +6723,7 @@ void PlayerEntity::takeHeatDamage(double amount) {
 
   // new ship, so lose some memory of player actions
   if (ship_kills >= 6400) {
-    clearRolesFromPlayer(0.1);
+    clearRolesFromPlayer(static_cast<float>(0.1));
   } else if (ship_kills >= 2560) {
     clearRolesFromPlayer(0.25);
   } else {
@@ -7654,7 +7661,7 @@ void PlayerEntity::enterGalacticWitchspace() {
   } else if (ship_kills >= 2560) {
     clearRolesFromPlayer(0.5);
   } else {
-    clearRolesFromPlayer(0.9);
+    clearRolesFromPlayer(static_cast<float>(0.9));
   }
   roleWeightFlags.clear();
   roleSystemList.clear();
@@ -7998,7 +8005,9 @@ void PlayerEntity::leaveWitchspace() {
    * there's also going to be a lot of stale ship scripts. Force a
    * garbage collection while we have chance. - CIM */
   OOJavaScriptEngine::sharedEngine()->garbageCollectionOpportunity(true);
-  flightSpeed = wormhole ? (wormhole != nullptr ? wormhole->exitSpeed() : 0.0)
+  flightSpeed = wormhole ? (wormhole != nullptr
+                                ? static_cast<GLfloat>(wormhole->exitSpeed())
+                                : 0.0)
                          : fmin(maxFlightSpeed, 50.0f);
   wormholeObject = nullptr;  // OK even if nil
   wormhole = nullptr;
@@ -8178,7 +8187,7 @@ void PlayerEntity::setGuiToStatusScreen() {
     if (demoShipKey.has_value())
       showShipModelWithKey(*demoShipKey, oo::PList(),
                            static_cast<uint16_t>(entityPersonalityInt()), 2.5,
-                           1.7, 8.0, "GUI_SCREEN_STATUS");
+                           static_cast<GLfloat>(1.7), 8.0, "GUI_SCREEN_STATUS");
     setShowDemoShips(true);
   } else {
     setShowDemoShips(false);
@@ -13110,11 +13119,13 @@ void PlayerEntity::setCustomViewRotationCenter(Vector center) {
 void PlayerEntity::customViewZoomIn(OOScalar rate) {
   customViewOffset =
       vector_subtract(customViewOffset, customViewRotationCenter);
-  customViewOffset = vector_multiply_scalar(customViewOffset, 1.0 / rate);
+  customViewOffset = vector_multiply_scalar(customViewOffset,
+                                            static_cast<OOScalar>(1.0 / rate));
   OOScalar m = magnitude(customViewOffset);
   if (m < CUSTOM_VIEW_MAX_ZOOM_IN * collision_radius) {
-    scale_vector(&customViewOffset,
-                 CUSTOM_VIEW_MAX_ZOOM_IN * collision_radius / m);
+    scale_vector(
+        &customViewOffset,
+        static_cast<OOScalar>(CUSTOM_VIEW_MAX_ZOOM_IN * collision_radius / m));
   }
   customViewOffset = vector_add(customViewOffset, customViewRotationCenter);
 }
@@ -13563,8 +13574,10 @@ OOGalacticHyperspaceBehaviour PlayerEntity::getGalacticHyperspaceBehaviour() {
 
 void PlayerEntity::setGalacticHyperspaceFixedCoords(NSPoint point) {
   return setGalacticHyperspaceFixedCoordsX(
-      static_cast<unsigned char>(OOClamp_0_max_f(round(point.x), 255.0f)),
-      static_cast<unsigned char>(OOClamp_0_max_f(round(point.y), 255.0f)));
+      static_cast<unsigned char>(
+          OOClamp_0_max_f(static_cast<float>(round(point.x)), 255.0f)),
+      static_cast<unsigned char>(
+          OOClamp_0_max_f(static_cast<float>(round(point.y)), 255.0f)));
 }
 
 void PlayerEntity::setGalacticHyperspaceFixedCoordsX(unsigned char x,
@@ -13608,7 +13621,8 @@ GLfloat PlayerEntity::fuelChargeRate() {
     const int tradeInHundreds =
         ship_trade_in_factor /
         100;                        // integer division kept: upstream behaviour
-    rate *= 2.0 - tradeInHundreds;  // between 1.1x and 1.25x
+    rate *=
+        static_cast<GLfloat>(2.0 - tradeInHundreds);  // between 1.1x and 1.25x
     // fuelPrices: shipDataKey repair status ship_trade_in_factor rate (retired
     // log)
   }

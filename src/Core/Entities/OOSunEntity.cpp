@@ -59,7 +59,8 @@ bool OOSunEntity::setSunColor(OOColor* sun_colorIn) {
 
   // blend some white into the sun color to brighten it up
   const std::shared_ptr<OOColor> sun_color =
-      sun_colorIn->blendedColorWithFraction(0.3, OOColor::whiteColor().get());
+      sun_colorIn->blendedColorWithFraction(static_cast<float>(0.3),
+                                            OOColor::whiteColor().get());
 
   sun_color->getHue(&hue, &sat, &bri, &alf);
   hue /= 360;
@@ -160,7 +161,8 @@ void OOSunEntity::initSunWithColor(OOColor* sun_color, const oo::PList& dict) {
     // on average:  0 = .25 , 1 = 2.25  -  the same sun should give the same
     // random component
     corona_speed_factor =
-        OOClamp_0_1_f(corona_speed_factor) * 2.0 + randf() * randf();
+        OOClamp_0_1_f(static_cast<float>(corona_speed_factor)) * 2.0 +
+        randf() * randf();
   }
 #ifdef OO_DUMP_PLANETINFO
   OO_LOG("planetinfo.record", "corona_shimmer = {:f}", corona_speed_factor);
@@ -266,8 +268,9 @@ void OOSunEntity::update(OOTimeDelta delta_t) {
                                      0.0f, 0.0f, 0.0f);
         } else {
           if (UNIVERSE != nullptr)
-            UNIVERSE->setSkyColorRed(sky_bri,  // whiteout
-                                     sky_bri, sky_bri, 1.0f);
+            UNIVERSE->setSkyColorRed(static_cast<GLfloat>(sky_bri),  // whiteout
+                                     static_cast<GLfloat>(sky_bri),
+                                     static_cast<GLfloat>(sky_bri), 1.0f);
         }
         if (sky_bri == 1.0) {
           // This sun has now gone nova!
@@ -277,27 +280,27 @@ void OOSunEntity::update(OOTimeDelta delta_t) {
                 "org.oolite.oolite");  // +numberWithBool:
           if (UNIVERSE != nullptr)
             UNIVERSE->setSystemDataKey(
-                "corona_flare", oo::PList::singleReal(0.3),
+                "corona_flare", oo::PList::singleReal(static_cast<float>(0.3)),
                 "org.oolite.oolite");  // +numberWithFloat:
           if (UNIVERSE != nullptr)
-            UNIVERSE->setSystemDataKey("corona_hues",
-                                       oo::PList::singleReal(0.05),
-                                       "org.oolite.oolite");
+            UNIVERSE->setSystemDataKey(
+                "corona_hues", oo::PList::singleReal(static_cast<float>(0.05)),
+                "org.oolite.oolite");
           // Novas are stored under the core manifest if the
           // player was there at the time. Default layer 2
           // is fine.
           OO_LOG("sun.nova.start", "DEBUG: NOVA original radius {:.1f}",
                  collision_radius);
         }
-        discColor[0] = 1.0 * _sunBrightnessFactor;
-        discColor[1] = 1.0 * _sunBrightnessFactor;
-        discColor[2] = 1.0 * _sunBrightnessFactor;
+        discColor[0] = static_cast<GLfloat>(1.0 * _sunBrightnessFactor);
+        discColor[1] = static_cast<GLfloat>(1.0 * _sunBrightnessFactor);
+        discColor[2] = static_cast<GLfloat>(1.0 * _sunBrightnessFactor);
         _novaExpansionTimer += delta_t;
         if (UNIVERSE != nullptr)
           UNIVERSE->setSystemDataKey(
               "sun_radius",
-              oo::PList::singleReal(collision_radius +
-                                    delta_t * _novaExpansionRate),
+              oo::PList::singleReal(static_cast<float>(
+                  collision_radius + delta_t * _novaExpansionRate)),
               "org.oolite.oolite");  // +numberWithFloat:
       } else {
         OO_LOG("sun.nova.end", "DEBUG: NOVA final radius {:.1f}",
@@ -379,12 +382,12 @@ void OOSunEntity::drawOpaqueParts() {
 
   if ((UNIVERSE != nullptr ? UNIVERSE->reducedDetail() : false)) {
     int subdivideLevel = 2;  // 4 is probably the maximum!
-    float drawFactor =
+    float drawFactor = static_cast<float>(
         (UNIVERSE != nullptr && UNIVERSE->getGameView() != nullptr
              ? UNIVERSE->getGameView()->getViewSize()
              : NSSize{})
             .width /
-        100.0;
+        100.0);
     float drawRatio2 =
         drawFactor * effective_radius /
         sqrt_zero_distance;  // equivalent to size on screen in pixels
@@ -466,8 +469,11 @@ void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
   //	if (inner_radius >= z_distance) [[unlikely]]  return;	// inside the
   // sphere
 
-  std::array<GLfloat, 8> activity = {0.84, 0.74, 0.64, 0.54,
-                                     0.3,  0.4,  0.7,  0.8};
+  std::array<GLfloat, 8> activity = {
+      static_cast<float>(0.84), static_cast<float>(0.74),
+      static_cast<float>(0.64), static_cast<float>(0.54),
+      static_cast<float>(0.3),  static_cast<float>(0.4),
+      static_cast<float>(0.7),  static_cast<float>(0.8)};
 
   GLfloat si, ci;
   GLfloat rv0, rv1, rv2, c0, c1, c2;
@@ -475,9 +481,10 @@ void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
 
   std::uint16_t i, j, k;
   GLfloat theta = 0.0f, delta;
-  delta = std::numbers::pi / 180.0f;  // Convert step from degrees to radians
-  pt0 = (1.0 - corona_stage) * corona_blending;
-  pt1 = corona_stage * corona_blending;
+  delta = static_cast<GLfloat>(std::numbers::pi /
+                               180.0f);  // Convert step from degrees to radians
+  pt0 = static_cast<GLfloat>((1.0 - corona_stage) * corona_blending);
+  pt1 = static_cast<GLfloat>(corona_stage * corona_blending);
 
   sunVertices[0] = 0.0;
   sunVertices[1] = 0.0;
@@ -503,11 +510,12 @@ void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
     for (i = 0; i < 360; i++) {
       GLfloat rm = 1.0;
       if (j >= 1 && j < 4) {
-        rm = 1.0 +
-             ((0.04 / j) *
-              (pt0 * (rvalue[i] + rvalue[i + 1] + rvalue[i + 2]) +
-               pt1 * (rvalue[i + 360] + rvalue[i + 361] + rvalue[i + 362]))) /
-                 3;
+        rm = static_cast<GLfloat>(
+            1.0 +
+            ((0.04 / j) *
+             (pt0 * (rvalue[i] + rvalue[i + 1] + rvalue[i + 2]) +
+              pt1 * (rvalue[i + 360] + rvalue[i + 361] + rvalue[i + 362]))) /
+                3);
       }
       GLfloat z = r * r * rm * rm / z_distance;
       si = sinf(theta);
@@ -537,15 +545,15 @@ void OOSunEntity::calculateGLArrays(GLfloat inner_radius, GLfloat width,
         break;
       case 3:
         color = outerCoronaColor;
-        alpha = 0.1;
+        alpha = static_cast<GLfloat>(0.1);
         break;
       case 2:
         color = outerCoronaColor;
-        alpha = 0.6;
+        alpha = static_cast<GLfloat>(0.6);
         break;
       case 1:
         color = discColor;
-        alpha = 0.95;
+        alpha = static_cast<GLfloat>(0.95);
         break;
       case 0:
         color = discColor;
@@ -584,13 +592,13 @@ void OOSunEntity::drawDirectVisionSunGlare() {
 
   OOSetOpenGLState(OOOpenGLStateID::kOverlay);
 
-  GLfloat sunGlareAngularSize =
+  GLfloat sunGlareAngularSize = static_cast<GLfloat>(
       atan(radius() /
            HPdistance(
                (PLAYER != nullptr ? PLAYER->viewpointPosition() : HPVector{}),
                getPosition())) *
           SUN_GLARE_MULT_FACTOR +
-      (SUN_GLARE_ADD_FACTOR);
+      (SUN_GLARE_ADD_FACTOR));
 
   GLfloat directVisionSunGlare =
       (PLAYER != nullptr ? PLAYER->lookingAtSunWithThresholdAngleCos(
@@ -600,19 +608,19 @@ void OOSunEntity::drawDirectVisionSunGlare() {
     NSSize siz = UNIVERSE->getGui()->size();
     ::MyOpenGLView* gameView =
         (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
-    GLfloat aspectRatio =
-        ((gameView != nullptr ? gameView->getViewSize() : NSSize{}).width /
-         (gameView != nullptr ? gameView->getViewSize() : NSSize{}).height);
+    GLfloat aspectRatio = (static_cast<GLfloat>(
+        (gameView != nullptr ? gameView->getViewSize() : NSSize{}).width /
+        (gameView != nullptr ? gameView->getViewSize() : NSSize{}).height));
     GLfloat z = (gameView != nullptr ? gameView->getDisplay_z() : 0.0f) /
                 (aspectRatio > 4.0f / 3.0f ? aspectRatio : 1.0f / aspectRatio);
     GLfloat atmosphericReductionFactor =
         1.0f - (PLAYER != nullptr ? PLAYER->insideAtmosphereFraction() : 0.0f);
     // 182: square of ratio of radius to sun-witchpoint distance
     // in default Lave
-    GLfloat distanceReductionFactor = OOClamp_0_1_f(
+    GLfloat distanceReductionFactor = OOClamp_0_1_f(static_cast<float>(
         (radius() * radius() * 182.0) /
         HPdistance2((PLAYER != nullptr ? PLAYER->getPosition() : HPVector{}),
-                    getPosition()));
+                    getPosition())));
     GLfloat sunGlareFilterMultiplierLocal =
         (PLAYER != nullptr ? PLAYER->getSunGlareFilter() : 0.0f);
     GLfloat directVisionSunGlareColor[4] = {
@@ -624,10 +632,14 @@ void OOSunEntity::drawDirectVisionSunGlare() {
     OOGL(glColor4fv(directVisionSunGlareColor));
 
     OOGLBEGIN(GL_QUADS);
-    glVertex3f(siz.width, siz.height, z);
-    glVertex3f(siz.width, -siz.height, z);
-    glVertex3f(-siz.width, -siz.height, z);
-    glVertex3f(-siz.width, siz.height, z);
+    glVertex3f(static_cast<GLfloat>(siz.width),
+               static_cast<GLfloat>(siz.height), z);
+    glVertex3f(static_cast<GLfloat>(siz.width),
+               static_cast<GLfloat>(-siz.height), z);
+    glVertex3f(static_cast<GLfloat>(-siz.width),
+               static_cast<GLfloat>(-siz.height), z);
+    glVertex3f(static_cast<GLfloat>(-siz.width),
+               static_cast<GLfloat>(siz.height), z);
     OOGLEND();
   }
 #endif
@@ -652,18 +664,22 @@ void OOSunEntity::drawStarGlare() {
     NSSize siz = UNIVERSE->getGui()->size();
     ::MyOpenGLView* gameView =
         (UNIVERSE != nullptr ? UNIVERSE->getGameView() : nullptr);
-    GLfloat aspectRatio =
-        ((gameView != nullptr ? gameView->getViewSize() : NSSize{}).width /
-         (gameView != nullptr ? gameView->getViewSize() : NSSize{}).height);
+    GLfloat aspectRatio = (static_cast<GLfloat>(
+        (gameView != nullptr ? gameView->getViewSize() : NSSize{}).width /
+        (gameView != nullptr ? gameView->getViewSize() : NSSize{}).height));
     GLfloat z = (gameView != nullptr ? gameView->getDisplay_z() : 0.0f) /
                 (aspectRatio > 4.0f / 3.0f ? aspectRatio : 1.0f / aspectRatio);
     OOGL(glColor4fv(glareColor));
 
     OOGLBEGIN(GL_QUADS);
-    glVertex3f(siz.width, siz.height, z);
-    glVertex3f(siz.width, -siz.height, z);
-    glVertex3f(-siz.width, -siz.height, z);
-    glVertex3f(-siz.width, siz.height, z);
+    glVertex3f(static_cast<GLfloat>(siz.width),
+               static_cast<GLfloat>(siz.height), z);
+    glVertex3f(static_cast<GLfloat>(siz.width),
+               static_cast<GLfloat>(-siz.height), z);
+    glVertex3f(static_cast<GLfloat>(-siz.width),
+               static_cast<GLfloat>(-siz.height), z);
+    glVertex3f(static_cast<GLfloat>(-siz.width),
+               static_cast<GLfloat>(siz.height), z);
     OOGLEND();
   }
 }
@@ -674,9 +690,9 @@ bool OOSunEntity::changeSunProperty(const std::string& key,
   // get<> with fallback 0 is the same for a string or a number
   static GLfloat oldRadius = 0.0;
   if (key == "sun_radius") {
-    oldRadius = dict.get<double>(
-        key, 0.0);  // clamp corona_flare in case planetinfo.plist / savegame
-                    // contains the wrong value
+    oldRadius = static_cast<GLfloat>(dict.get<double>(
+        key, 0.0));  // clamp corona_flare in case planetinfo.plist / savegame
+                     // contains the wrong value
     setRadius(oldRadius, dict.get<float>("corona_flare", 0.0f));
   } else if (key == std::string(KEY_SUNNAME)) {
     // the Foundation get<> read nil unless a string or a number's text
@@ -732,8 +748,8 @@ void OOSunEntity::setRadius(GLfloat rad, GLfloat corona) {
 
   GLfloat corouter = rad * (1 + (8 * corona));
 
-  lim16k =
-      corouter * corouter * NO_DRAW_DISTANCE_FACTOR * NO_DRAW_DISTANCE_FACTOR;
+  lim16k = static_cast<GLfloat>(corouter * corouter * NO_DRAW_DISTANCE_FACTOR *
+                                NO_DRAW_DISTANCE_FACTOR);
 }
 
 void OOSunEntity::setPosition(HPVector posn) {

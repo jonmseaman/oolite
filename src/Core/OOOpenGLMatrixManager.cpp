@@ -195,29 +195,36 @@ void OOOpenGLMatrixManager::scaleProjection(Vector scale) {
 void OOOpenGLMatrixManager::frustumLeft(double l, double r, double b, double t,
                                         double n, double f) {
   if (l == r || t == b || n == f || n <= 0 || f <= 0) return;
-  multProjection(OOMatrixConstruct(2 * n / (r - l), 0.0, 0.0, 0.0, 0.0,
-                                   2 * n / (t - b), 0.0, 0.0, (r + l) / (r - l),
-                                   (t + b) / (t - b), -(f + n) / (f - n), -1.0,
-                                   0.0, 0.0, -2 * f * n / (f - n), 0.0));
+  multProjection(
+      OOMatrixConstruct(static_cast<OOScalar>(2 * n / (r - l)), 0.0, 0.0, 0.0,
+                        0.0, static_cast<OOScalar>(2 * n / (t - b)), 0.0, 0.0,
+                        static_cast<OOScalar>((r + l) / (r - l)),
+                        static_cast<OOScalar>((t + b) / (t - b)),
+                        static_cast<OOScalar>(-(f + n) / (f - n)), -1.0, 0.0,
+                        0.0, static_cast<OOScalar>(-2 * f * n / (f - n)), 0.0));
 }
 
 void OOOpenGLMatrixManager::orthoLeft(double l, double r, double b, double t,
                                       double n, double f) {
   if (l == r || t == b || n == f) return;
-  multProjection(OOMatrixConstruct(2 / (r - l), 0.0, 0.0, 0.0, 0.0, 2 / (t - b),
-                                   0.0, 0.0, 0.0, 0.0, 2 / (n - f), 0.0,
-                                   (l + r) / (l - r), (b + t) / (b - t),
-                                   (n + f) / (n - f), 1.0));
+  multProjection(
+      OOMatrixConstruct(static_cast<OOScalar>(2 / (r - l)), 0.0, 0.0, 0.0, 0.0,
+                        static_cast<OOScalar>(2 / (t - b)), 0.0, 0.0, 0.0, 0.0,
+                        static_cast<OOScalar>(2 / (n - f)), 0.0,
+                        static_cast<OOScalar>((l + r) / (l - r)),
+                        static_cast<OOScalar>((b + t) / (b - t)),
+                        static_cast<OOScalar>((n + f) / (n - f)), 1.0));
 }
 
 void OOOpenGLMatrixManager::perspectiveFovy(double fovy, double aspect,
                                             double zNear, double zFar) {
   if (aspect == 0.0 || zNear == zFar) return;
   double f = 1.0 / tan(std::numbers::pi * fovy / 360);
-  multProjection(OOMatrixConstruct(f / aspect, 0.0, 0.0, 0.0, 0.0, f, 0.0, 0.0,
-                                   0.0, 0.0, (zFar + zNear) / (zNear - zFar),
-                                   -1.0, 0.0, 0.0,
-                                   2 * zFar * zNear / (zNear - zFar), 0.0));
+  multProjection(OOMatrixConstruct(
+      static_cast<OOScalar>(f / aspect), 0.0, 0.0, 0.0, 0.0,
+      static_cast<OOScalar>(f), 0.0, 0.0, 0.0, 0.0,
+      static_cast<OOScalar>((zFar + zNear) / (zNear - zFar)), -1.0, 0.0, 0.0,
+      static_cast<OOScalar>(2 * zFar * zNear / (zNear - zFar)), 0.0));
 }
 
 void OOOpenGLMatrixManager::resetProjection() {
@@ -267,7 +274,7 @@ OOMatrix OOOpenGLMatrixManager::getMatrix(int which) {
       matrices[which] = OOMatrixTranspose(
           OOMatrixInverseWithDeterminant(matrices[which], &d));
       if (d != 0.0) {
-        d = powf(fabsf(d), 1.0 / 3);
+        d = powf(fabsf(d), static_cast<float>(1.0 / 3));
         for (int i = 0; i < 3; i++) {
           for (int j = 0; j < 3; j++) {
             matrices[which].m[i][j] /= d;

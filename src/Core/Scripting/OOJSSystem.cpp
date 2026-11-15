@@ -582,7 +582,8 @@ static JSValue SystemSetProperty(OOJS_SETTER_ARGS) {
     using enum SystemProperty;
     case kAmbientLevel:
       if (JS_ToFloat64(context, &fValue, value) == 0) {
-        if (UNIVERSE != nullptr) UNIVERSE->setAmbientLightLevel(fValue);
+        if (UNIVERSE != nullptr)
+          UNIVERSE->setAmbientLightLevel(static_cast<float>(fValue));
         if (UNIVERSE != nullptr) UNIVERSE->setLighting();
         return JS_UNDEFINED;
       }
@@ -1765,7 +1766,8 @@ static JSValue SystemAddShipsOrGroup(JSContext* context, int argc,
   // proximity to the witchpoint.
   const std::vector<oo::EntityHold> added =
       (UNIVERSE != nullptr
-           ? UNIVERSE->addShipsAt(where, *role, count, radius, isGroup)
+           ? UNIVERSE->addShipsAt(where, *role, count,
+                                  static_cast<GLfloat>(radius), isGroup)
            : std::vector<oo::EntityHold>());
   if (!added.empty())
     result =
@@ -1951,8 +1953,8 @@ static OOComparisonResult CompareEntitiesByDistance(Entity* a, Entity* b,
   Entity* r = relativeTo;  // the C++ entity
   float d1, d2;
 
-  d1 = HPdistance2(ea->position, r->position);
-  d2 = HPdistance2(eb->position, r->position);
+  d1 = static_cast<float>(HPdistance2(ea->position, r->position));
+  d2 = static_cast<float>(HPdistance2(eb->position, r->position));
 
   if (d1 < d2)
     return OOComparisonResult::kAscending;

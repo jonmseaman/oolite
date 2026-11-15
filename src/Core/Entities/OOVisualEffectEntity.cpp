@@ -253,7 +253,7 @@ void OOVisualEffectEntity::clearSubEntities() {
 
   // reset size & mass!
   if (mesh()) {
-    collision_radius = findCollisionRadius();
+    collision_radius = static_cast<GLfloat>(findCollisionRadius());
   } else {
     collision_radius = 0.0;
   }
@@ -287,8 +287,8 @@ void OOVisualEffectEntity::removeSubEntity(Entity* sub) {
 
 void OOVisualEffectEntity::setNoDrawDistance() {
   GLfloat r = _profileRadius * scaleMax();
-  no_draw_distance =
-      r * r * NO_DRAW_DISTANCE_FACTOR * NO_DRAW_DISTANCE_FACTOR * 2.0;
+  no_draw_distance = static_cast<GLfloat>(r * r * NO_DRAW_DISTANCE_FACTOR *
+                                          NO_DRAW_DISTANCE_FACTOR * 2.0);
 }
 
 bool OOVisualEffectEntity::setUpOneSubentity(const oo::PList& subentDict) {
@@ -363,7 +363,7 @@ void OOVisualEffectEntity::addSubEntity(Entity* sub) {
   double distance =
       HPmagnitude(sub->getPosition()) + sub->findCollisionRadius();
   if (distance > _profileRadius) {
-    _profileRadius = distance;
+    _profileRadius = static_cast<GLfloat>(distance);
   }
 }
 
@@ -476,7 +476,8 @@ GLfloat OOVisualEffectEntity::scaleX() { return _scaleX; }
 void OOVisualEffectEntity::setScaleX(GLfloat factor) {
   // rescale subentities
   Entity* se = nullptr;
-  GLfloat flasher_factor = pow(factor / _scaleX, 1.0 / 3.0);
+  GLfloat flasher_factor =
+      static_cast<GLfloat>(pow(factor / _scaleX, 1.0 / 3.0));
   for (const auto& seRef : SubEntitiesOf(_subEntities)) {
     se = seRef.get();
     if (se == nullptr) continue;  // every message went to nil
@@ -500,7 +501,8 @@ GLfloat OOVisualEffectEntity::scaleY() { return _scaleY; }
 void OOVisualEffectEntity::setScaleY(GLfloat factor) {
   // rescale subentities
   Entity* se = nullptr;
-  GLfloat flasher_factor = pow(factor / _scaleY, 1.0 / 3.0);
+  GLfloat flasher_factor =
+      static_cast<GLfloat>(pow(factor / _scaleY, 1.0 / 3.0));
   for (const auto& seRef : SubEntitiesOf(_subEntities)) {
     se = seRef.get();
     if (se == nullptr) continue;  // every message went to nil
@@ -524,7 +526,8 @@ GLfloat OOVisualEffectEntity::scaleZ() { return _scaleZ; }
 void OOVisualEffectEntity::setScaleZ(GLfloat factor) {
   // rescale subentities
   Entity* se = nullptr;
-  GLfloat flasher_factor = pow(factor / _scaleZ, 1.0 / 3.0);
+  GLfloat flasher_factor =
+      static_cast<GLfloat>(pow(factor / _scaleZ, 1.0 / 3.0));
   for (const auto& seRef : SubEntitiesOf(_subEntities)) {
     se = seRef.get();
     if (se == nullptr) continue;  // every message went to nil

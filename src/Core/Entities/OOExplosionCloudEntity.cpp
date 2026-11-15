@@ -196,11 +196,13 @@ void OOExplosionCloudEntity::update(OOTimeDelta delta_t) {
   OOParticleSystem::update(delta_t);
 
   // Fade out.
-  GLfloat fadeRate = static_cast<float>(_count) * _brightnessMult / 25.0;
+  GLfloat fadeRate =
+      static_cast<GLfloat>(static_cast<float>(_count) * _brightnessMult / 25.0);
   unsigned i, count = _count;
   GLfloat(*particleColor)[4] = _particleColor;
 
-  float newAlpha = _alpha * (1 - (_timePassed / _cloudDuration));
+  float newAlpha =
+      static_cast<float>(_alpha * (1 - (_timePassed / _cloudDuration)));
   const std::string color_order =
       _settings.get<std::string>(kExplosionColors, "rgb");
   std::size_t primary = 0, secondary = 1, tertiary = 2;
@@ -231,9 +233,9 @@ void OOExplosionCloudEntity::update(OOTimeDelta delta_t) {
     tertiary = 0;
   }
 
-  float fdelta_t = delta_t;
+  float fdelta_t = static_cast<float>(delta_t);
   for (i = 0; i < count; i++) {
-    _particleSize[i] += delta_t * _growthRate;
+    _particleSize[i] += static_cast<GLfloat>(delta_t * _growthRate);
 
     particleColor[i][3] = newAlpha;
     if (color_order != "white") {

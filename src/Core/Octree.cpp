@@ -275,7 +275,8 @@ void Octree::drawOctreeCollisionFromLocation(uint32_t loc, GLfloat scale,
     // full - draw
     OO_ENTER_OPENGL();
 
-    GLfloat red = static_cast<GLfloat>(_collisionOctree[loc]) / 255.0;
+    GLfloat red = static_cast<GLfloat>(
+        static_cast<GLfloat>(_collisionOctree[loc]) / 255.0);
     glColor4f(1.0, 0.0, 0.0, red);  // 50% translucent
 
     drawTestForCollisions = true;

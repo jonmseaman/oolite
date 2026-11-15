@@ -46,8 +46,10 @@ void OOBreakPatternEntity::initWithPolygonSides(std::size_t sides,
   // [super init] could not fail: the constructor ran Entity's -init body.
   {
     _vertexCount = (sides + 1) * 2;
-    float angle = startAngleDegrees * std::numbers::pi / 180.0f;
-    float deltaAngle = std::numbers::pi * 2.0f / static_cast<double>(sides);
+    float angle =
+        static_cast<float>(startAngleDegrees * std::numbers::pi / 180.0f);
+    float deltaAngle = static_cast<float>(std::numbers::pi * 2.0f /
+                                          static_cast<double>(sides));
     float xAspect = fmin(1.0f, aspectRatio);
     float yAspect = fmin(1.0f, 1.0f / aspectRatio);
 
