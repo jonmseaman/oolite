@@ -1432,7 +1432,8 @@ void MyOpenGLView::dumpRGBAToFileNamed(const std::string& name, uint8_t* bytes,
   dumpFile = oo::str::appendingPathComponent(dumpFile, name + ".png");
 
   SDL_Surface* tmpSurface = SDL_CreateSurfaceFrom(
-      width, height, SDL_PIXELFORMAT_RGBA32, bytes, rowBytes);
+      static_cast<int>(width), static_cast<int>(height), SDL_PIXELFORMAT_RGBA32,
+      bytes, static_cast<int>(rowBytes));
   SDL_SavePNG(tmpSurface, dumpFile.c_str());
   SDL_DestroySurface(tmpSurface);
 }
@@ -1452,7 +1453,8 @@ void MyOpenGLView::dumpRGBToFileNamed(const std::string& name, uint8_t* bytes,
   dumpFile = oo::str::appendingPathComponent(dumpFile, name + ".png");
 
   SDL_Surface* tmpSurface = SDL_CreateSurfaceFrom(
-      width, height, SDL_PIXELFORMAT_RGB24, bytes, rowBytes);
+      static_cast<int>(width), static_cast<int>(height), SDL_PIXELFORMAT_RGB24,
+      bytes, static_cast<int>(rowBytes));
   SDL_SavePNG(tmpSurface, dumpFile.c_str());
   SDL_DestroySurface(tmpSurface);
 }
@@ -1471,7 +1473,8 @@ void MyOpenGLView::dumpGrayToFileNamed(const std::string& name, uint8_t* bytes,
   dumpFile = oo::str::appendingPathComponent(dumpFile, name + ".png");
 
   SDL_Surface* tmpSurface =
-      SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA32);
+      SDL_CreateSurface(static_cast<int>(width), static_cast<int>(height),
+                        SDL_PIXELFORMAT_RGBA32);
   for (int y = 0; static_cast<std::size_t>(y) < height; y++) {
     uint8_t* srcRow = bytes + rowBytes * y;
     uint8_t* dstRow =
@@ -1503,7 +1506,7 @@ void MyOpenGLView::dumpGrayAlphaToFileNamed(const std::string& name,
   dumpFile = oo::str::appendingPathComponent(dumpFile, name + ".png");
 
   SDL_Surface* tmpSurface = SDL_CreateSurface(
-      width, height,
+      static_cast<int>(width), static_cast<int>(height),
       SDL_PIXELFORMAT_RGBA32);  // its own pixels, as -dumpGray: never the
                                 // caller's 2-byte-a-pixel buffer
   for (int y = 0; static_cast<std::size_t>(y) < height; y++) {

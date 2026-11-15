@@ -7208,11 +7208,11 @@ void PlayerEntity::docked() {
   if ((dockedStation != nullptr ? dockedStation->getMarketMonitored()
                                 : false)) {
     OOCreditsQuantity oldbounty = getBounty();
-    markAsOffender(
-        (dockedStation != nullptr ? dockedStation->legalStatusOfManifest(
-                                        shipCommodityData.get(), false)
-                                  : 0),
-        OOLegalStatusReason::kIllegalImports);
+    markAsOffender(static_cast<int>(dockedStation != nullptr
+                                        ? dockedStation->legalStatusOfManifest(
+                                              shipCommodityData.get(), false)
+                                        : 0),
+                   OOLegalStatusReason::kIllegalImports);
     if (getBounty() > oldbounty) {
       addRoleToPlayer("trader-smuggler");
     }
@@ -7299,10 +7299,11 @@ void PlayerEntity::leaveDock(::StationEntity* station) {
   if ((station != nullptr ? station->getMarketMonitored() : false)) {
     // 'leaving with those guns were you sir?'
     OOCreditsQuantity oldbounty = getBounty();
-    markAsOffender((station != nullptr ? station->legalStatusOfManifest(
-                                             shipCommodityData.get(), true)
-                                       : 0),
-                   OOLegalStatusReason::kIllegalExports);
+    markAsOffender(
+        static_cast<int>(station != nullptr ? station->legalStatusOfManifest(
+                                                  shipCommodityData.get(), true)
+                                            : 0),
+        OOLegalStatusReason::kIllegalExports);
     if (getBounty() > oldbounty) {
       addRoleToPlayer("trader-smuggler");
     }
@@ -12290,7 +12291,7 @@ void PlayerEntity::validateCustomEquipActivationArray() {
   bool update = false;
   std::optional<std::string> equipmentKey;
   if (customEquipActivation.empty()) return;
-  for (i = customEquipActivation.size() - 1; i >= 0; i--) {
+  for (i = static_cast<int>(customEquipActivation.size() - 1); i >= 0; i--) {
     equipmentKey = StringForKey(customEquipActivation[i], CUSTOMEQUIP_EQUIPKEY);
     ::OOEquipmentType* eq =
         (equipmentKey.has_value()

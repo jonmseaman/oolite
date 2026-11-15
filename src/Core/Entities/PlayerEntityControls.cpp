@@ -3803,8 +3803,8 @@ void PlayerEntity::handleGameOptionsScreenKeys() {
      sets the actual screen resolution (controller just stores
      it). This probably ought to change. */
     if (gameView != nullptr)
-      gameView->setScreenSize(
-          displayModeIndex);  // changes fullscreen mode immediately
+      gameView->setScreenSize(static_cast<int>(
+          displayModeIndex));  // changes fullscreen mode immediately
 #endif
   }
   if (switching_resolution && !checkKeyPress(n_key_gui_arrow_right) &&

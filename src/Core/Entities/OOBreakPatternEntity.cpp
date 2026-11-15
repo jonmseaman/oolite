@@ -138,7 +138,7 @@ void OOBreakPatternEntity::drawImmediate(bool immediate, bool translucent) {
     OOGL(glEnableClientState(GL_COLOR_ARRAY));
     OOGL(glColorPointer(4, GL_FLOAT, 0, _vertexColor));
 
-    OOGL(glDrawArrays(GL_TRIANGLE_STRIP, 0, _vertexCount));
+    OOGL(glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(_vertexCount)));
 
     OOGL(glEnable(GL_LIGHTING));
     OOGL(glEnable(GL_TEXTURE_2D));

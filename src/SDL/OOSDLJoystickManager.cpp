@@ -90,14 +90,15 @@ std::optional<std::string> OOSDLJoystickManager::nameOfJoystick(
 
 int16_t OOSDLJoystickManager::getAxisWithStick(std::size_t stickNum,
                                                std::size_t axisNum) {
-  return SDL_GetJoystickAxis(stick[stickNum], axisNum);
+  return SDL_GetJoystickAxis(stick[stickNum], static_cast<int>(axisNum));
 }
 
 SDL_JoyAxisEvent OOSDLJoystickManager::makeJoyAxisEvent(
     SDL_JoyAxisEvent* sdlevt) {
   SDL_JoyAxisEvent evt;
   evt.type = sdlevt->type;
-  evt.which = getJoystickIndexFromId(sdlevt->which);
+  evt.which =
+      static_cast<SDL_JoystickID>(getJoystickIndexFromId(sdlevt->which));
   evt.axis = sdlevt->axis;
   evt.value = sdlevt->value;
   return evt;
@@ -107,7 +108,8 @@ SDL_JoyButtonEvent OOSDLJoystickManager::makeJoyButtonEvent(
     SDL_JoyButtonEvent* sdlevt) {
   SDL_JoyButtonEvent evt;
   evt.type = sdlevt->type;
-  evt.which = getJoystickIndexFromId(sdlevt->which);
+  evt.which =
+      static_cast<SDL_JoystickID>(getJoystickIndexFromId(sdlevt->which));
   evt.button = sdlevt->button;
   evt.down = sdlevt->down;
   return evt;
@@ -116,7 +118,8 @@ SDL_JoyButtonEvent OOSDLJoystickManager::makeJoyButtonEvent(
 SDL_JoyHatEvent OOSDLJoystickManager::makeJoyHatEvent(SDL_JoyHatEvent* sdlevt) {
   SDL_JoyHatEvent evt;
   evt.type = sdlevt->type;
-  evt.which = getJoystickIndexFromId(sdlevt->which);
+  evt.which =
+      static_cast<SDL_JoystickID>(getJoystickIndexFromId(sdlevt->which));
   evt.hat = sdlevt->hat;
   evt.value = sdlevt->value;
   return evt;

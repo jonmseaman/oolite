@@ -197,7 +197,7 @@ void OOMultiTextureMaterial::unapplyWithNext(OOMaterial* next) {
       dynamic_cast<OOMultiTextureMaterial*>(next);
   i = (nextMulti != nullptr) ? nextMulti->textureUnitCount() : 0;
   for (; i != _unitsUsed; ++i) {
-    OOGL(glActiveTextureARB(GL_TEXTURE0_ARB + i));
+    OOGL(glActiveTextureARB(static_cast<GLenum>(GL_TEXTURE0_ARB + i)));
     OOTexture::applyNone();
     OOGL(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE));
   }
