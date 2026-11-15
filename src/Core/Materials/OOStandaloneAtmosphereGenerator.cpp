@@ -329,7 +329,7 @@ inline float Lerp(float v0, float v1, float fraction) {
 
 static FloatRGB Blend(float fraction, FloatRGB a, FloatRGB b) {
   return FloatRGB{Lerp(b.r, a.r, fraction), Lerp(b.g, a.g, fraction),
-                    Lerp(b.b, a.b, fraction)};
+                  Lerp(b.b, a.b, fraction)};
 }
 
 static float BlendAlpha(float fraction, float a, float b) {
@@ -400,10 +400,10 @@ FloatRGB FloatRGBFromDictColor(const oo::PList& dictionary,
 
   if (color == nullptr)
     return FloatRGB{0.0f, 0.0f,
-                      0.0f};  // a nil colour answered zeros (release builds)
+                    0.0f};  // a nil colour answered zeros (release builds)
   return FloatRGB{color->redComponent() * ALBEDO_FACTOR,
-                    color->greenComponent() * ALBEDO_FACTOR,
-                    color->blueComponent() * ALBEDO_FACTOR};
+                  color->greenComponent() * ALBEDO_FACTOR,
+                  color->blueComponent() * ALBEDO_FACTOR};
 }
 
 }  // namespace

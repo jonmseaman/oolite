@@ -22,6 +22,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "GuiDisplayGen.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -36,7 +38,6 @@ MA 02110-1301, USA.
 #include <vector>
 
 #include "GameController.h"
-#include "GuiDisplayGen.h"
 #include "HeadUpDisplay.h"
 #include "OOJavaScriptEngine.h"
 #include "OOStringExpander.h"

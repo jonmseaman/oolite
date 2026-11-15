@@ -283,7 +283,7 @@ GLfloat OOPlanetDrawable::maxDrawDistance() {
 
 BoundingBox OOPlanetDrawable::boundingBox() {
   return BoundingBox{{-_radius, -_radius, -_radius},
-                       {_radius, _radius, _radius}};
+                     {_radius, _radius, _radius}};
 }
 
 void OOPlanetDrawable::setBindingTarget(Entity* target) {

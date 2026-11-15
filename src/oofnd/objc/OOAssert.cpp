@@ -2,13 +2,14 @@
         Foundation-free assertions: the failure path (see OOAssert.h).
 */
 
+#include "oofnd/objc/OOAssert.h"
+
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
 #include <string>
 
 #include "oofnd/Log.hpp"
-#include "oofnd/objc/OOAssert.h"
 
 namespace {
 

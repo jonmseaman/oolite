@@ -22,14 +22,14 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOCPUInfo.h"
+
 #include <stdlib.h>
 
 #include <bit>
 #include <cstdint>
 #include <cstring>
 #include <string>
-
-#include "OOCPUInfo.h"
 
 #if (OOLITE_LINUX || OOLITE_WINDOWS || OOLITE_MACOS)
 // Workaround for clang/glibc incompatibility.

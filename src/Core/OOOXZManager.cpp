@@ -24,6 +24,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOOXZManager.h"
+
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -42,7 +44,6 @@ MA 02110-1301, USA.
 #include "OOCacheManager.h"
 #include "OOColor.h"
 #include "OOManifestProperties.h"
-#include "OOOXZManager.h"
 #include "OOPListParsing.h"
 #include "OOStringExpander.h"
 #include "OOStringParsing.h"

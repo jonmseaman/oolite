@@ -32,6 +32,8 @@ MA 02110-1301, USA.
 
 */
 
+#include "OOEntityCalledByName.h"
+
 #include <cstdint>
 #include <cstring>
 #include <memory>
@@ -46,7 +48,6 @@ MA 02110-1301, USA.
 #include "Entity.h"
 #include "GameController.h"  // OOScheduleDeferredCall (oo::ScheduleEntityCall, the player's selectors called by name)
 #include "OOCallByName.h"
-#include "OOEntityCalledByName.h"
 #include "OOPlanetEntity.h"  // the root-entity rows
 #include "OOQuiriumCascadeEntity.h"
 #include "OOVisualEffectEntity.h"

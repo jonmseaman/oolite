@@ -25,10 +25,11 @@ SOFTWARE.
 
 */
 
+#include "OOJSEngineTimeManagement.h"
+
 #include <cstdint>
 #include <memory>
 
-#include "OOJSEngineTimeManagement.h"
 #include "oofnd/PList.hpp"
 
 #if OOJS_PROFILE
@@ -169,11 +170,11 @@ void OOJSProfileEnter(OOJSProfileStackFrame* frame, const char* function) {
   }
 
   *frame = OOJSProfileStackFrame{.back = sProfileStack,
-                                   .key = function,
-                                   .function = function,
-                                   .startTime = OOGetHighResTime(),
-                                   .subTime = 0,
-                                   .total = &sProfilerTotalNativeTime};
+                                 .key = function,
+                                 .function = function,
+                                 .startTime = OOGetHighResTime(),
+                                 .subTime = 0,
+                                 .total = &sProfilerTotalNativeTime};
   sProfileStack = frame;
 }
 
