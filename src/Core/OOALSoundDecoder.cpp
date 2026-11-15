@@ -32,6 +32,7 @@ SOFTWARE.
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -194,10 +195,10 @@ bool OOALSoundVorbisCodec::initWithPath(
       const std::string zipFile =
           oo::str::pathWithComponents(std::vector<std::string>(
               components.begin(),
-              components.begin() + static_cast<long long>(i) + 1));
+              components.begin() + static_cast<std::ptrdiff_t>(i) + 1));
       const std::string containedFile =
           oo::str::pathWithComponents(std::vector<std::string>(
-              components.begin() + static_cast<long long>(i) + 1,
+              components.begin() + static_cast<std::ptrdiff_t>(i) + 1,
               components.end()));
 
       uf = unzOpen64(zipFile.c_str());

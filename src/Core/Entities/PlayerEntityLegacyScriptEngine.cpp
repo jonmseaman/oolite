@@ -1491,7 +1491,7 @@ void PlayerEntity::removeAllCargo(bool forceRemoval) {
     std::ptrdiff_t i;
     for (i = static_cast<std::ptrdiff_t>(cargo.size() - 1); i >= 0; i--) {
       ::ShipEntity* canister =
-          oo::ToShip(cargo[static_cast<unsigned long long>(i)].get());
+          oo::ToShip(cargo[static_cast<std::size_t>(i)].get());
       if (!canister) break;
       // Since we are forcing cargo removal, we don't really care about the unit
       // of measurement. Any commodity at more than 1000kg or 1000000gr will be
@@ -2345,15 +2345,15 @@ void PlayerEntity::sendAllShipsAway() {
   int ent_count = static_cast<int>(UNIVERSE->n_entities);
   Entity** uni_entities =
       UNIVERSE->sortedEntities;  // grab the public sorted list
-  std::vector<Entity*> my_entities(static_cast<unsigned long long>(ent_count));
+  std::vector<Entity*> my_entities(static_cast<std::size_t>(ent_count));
   std::vector<oo::EntityHold> my_holds;  // each one's object, held
   int i;
   for (i = 0; i < ent_count; i++)
-    my_entities[static_cast<unsigned long long>(i)] =
+    my_entities[static_cast<std::size_t>(i)] =
         oo::HoldIn(my_holds, uni_entities[i]);  //	retained
 
   for (i = 1; i < ent_count; i++) {
-    Entity* e1 = my_entities[static_cast<unsigned long long>(i)];
+    Entity* e1 = my_entities[static_cast<std::size_t>(i)];
     if (oo::EntityIsShip(e1)) {
       ::ShipEntity* se1 = oo::ToShip(e1);
       OOScanClass e_class = e1->getScanClass();  // virtual

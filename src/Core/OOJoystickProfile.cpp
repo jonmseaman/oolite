@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -347,8 +348,8 @@ int OOJoystickSplineAxisProfile::addControl(NSPoint point) {
       return static_cast<int>(i - 1);
     }
     if ((right.x - point.x) >= SPLINE_POINT_MIN_SPACING) {
-      controlPoints_.insert(controlPoints_.begin() + static_cast<long long>(i),
-                            point);
+      controlPoints_.insert(
+          controlPoints_.begin() + static_cast<std::ptrdiff_t>(i), point);
       makeSegments();
       return static_cast<int>(i);
     }
@@ -366,7 +367,7 @@ NSPoint OOJoystickSplineAxisProfile::pointAtIndex(std::ptrdiff_t index) {
     point.x = 1.0;
     point.y = 1.0;
   } else {
-    point = controlPoints_[static_cast<unsigned long long>(index)];
+    point = controlPoints_[static_cast<std::size_t>(index)];
   }
   return point;
 }
@@ -464,13 +465,13 @@ void OOJoystickSplineAxisProfile::moveControl(std::ptrdiff_t index,
     left.x = 0.0;
     right.x = 0.0;
   } else {
-    left = controlPoints_[static_cast<unsigned long long>(index - 1)];
+    left = controlPoints_[static_cast<std::size_t>(index - 1)];
   }
   if (index == static_cast<std::ptrdiff_t>(controlPoints_.size()) - 1) {
     right.x = 1.0;
     right.y = 1.0;
   } else {
-    right = controlPoints_[static_cast<unsigned long long>(index + 1)];
+    right = controlPoints_[static_cast<std::size_t>(index + 1)];
   }
   // preserve order of control points - if we attempt to move this control point
   // beyond either of its neighbours, move it back inside.  Also keep neighbours
@@ -486,7 +487,7 @@ void OOJoystickSplineAxisProfile::moveControl(std::ptrdiff_t index,
       point.x = (left.x + right.x) / 2;
     }
   }
-  controlPoints_[static_cast<unsigned long long>(index)] = point;
+  controlPoints_[static_cast<std::size_t>(index)] = point;
   makeSegments();
   return;
 }
