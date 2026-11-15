@@ -38,7 +38,6 @@ SOFTWARE.
 
 #include <quickjs.h>
 
-#include <map>
 #include <optional>
 #include <string>
 #include <vector>

@@ -30,7 +30,6 @@
 #include <string>
 #include <string_view>
 #include <thread>
-#include <utility>
 
 #if defined(_WIN32)
 // The three kernel32 entry points, declared exactly as <processthreadsapi.h>

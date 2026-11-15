@@ -39,23 +39,7 @@
 #include "oofnd/objc/OOFoundationTypes.h"  // bool
 #endif
 
-#include <algorithm>
-#include <chrono>
-#include <condition_variable>
-#include <cstddef>
-#include <cstdint>
-#include <functional>
-#include <map>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <set>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
-#include <vector>
 
 /*	Recognise C-style decimal integer or float literals, without type
    suffix. More formally, it tests against the following grammar:
