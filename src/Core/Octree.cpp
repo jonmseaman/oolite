@@ -40,7 +40,7 @@ MA 02110-1301, USA.
 #define OctreeDebugLog(format, ...)                                 \
   do {                                                              \
     if (OODebugFlagIsOn(OODebugFlags::kOctreeLogging)) [[unlikely]] \
-      OO_LOG("octree.debug", format, ##__VA_ARGS__);                \
+      OO_LOG("octree.debug", format __VA_OPT__(, ) __VA_ARGS__);    \
   } while (0)
 #else
 #define OctreeDebugLog(...) \
