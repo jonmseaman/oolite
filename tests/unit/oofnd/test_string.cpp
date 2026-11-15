@@ -11,6 +11,11 @@
    built the same inputs and printed, per input, exactly the line this test
    hashes (units() is its line format); to find which line differs after a
    failure, rebuild that program and diff its lines against these.
+        Case mapping is the exception: it is ICU's simple mapping
+   (specs/015-icu-string-tables). The case digest pins GNUstep's answers only on
+   U+0000-U+017F, where every ICU version agrees with them, and the corpus
+   digest was re-captured with ICU; its pool's units map alike in every ICU
+   since 11.
 */
 
 
@@ -21,6 +26,8 @@
 #include <limits>
 #include <string>
 #include <vector>
+
+#include <unicode/uchar.h>
 
 #include "oo_test.hpp"
 
@@ -92,12 +99,11 @@ std::string units(const std::string& s) {
 // --- character tables
 // ----------------------------------------------------------------------------
 
-OO_TEST(caseTablesMatchGNUstepOverTheBMP) {
-  // -uppercaseString / -lowercaseString of every unit, upper then lower,
-  // little-endian.
+OO_TEST(caseMappingIsIcusAndMatchesGNUstepOnLatin) {
+  // -uppercaseString / -lowercaseString of U+0000-U+017F, upper then lower,
+  // little-endian: GNUstep 1.31.1's answers, which every ICU version shares.
   Fnv f;
-  for (unsigned c = 0; c < 0x10000; c++) {
-    if (c >= 0xD800 && c < 0xE000) continue;
+  for (unsigned c = 0; c < 0x180; c++) {
     const char16_t u = toUpper(static_cast<char16_t>(c)),
                    l = toLower(static_cast<char16_t>(c));
     f.add(static_cast<unsigned char>(u & 0xFF));
@@ -105,7 +111,23 @@ OO_TEST(caseTablesMatchGNUstepOverTheBMP) {
     f.add(static_cast<unsigned char>(l & 0xFF));
     f.add(static_cast<unsigned char>(l >> 8));
   }
-  OO_CHECK_EQ(f.h, 0x314D997D349929D1ULL);
+  OO_CHECK_EQ(f.h, 0x11F9C71353F9624FULL);
+
+  // Over the rest of the BMP, ICU's simple case mapping (whose answers vary by
+  // ICU version), kept to one unit.
+  unsigned mismatches = 0;
+  for (unsigned c = 0; c < 0x10000; c++) {
+    const UChar32 iu = u_toupper(static_cast<UChar32>(c)),
+                  il = u_tolower(static_cast<UChar32>(c));
+    const char16_t eu = iu <= 0xFFFF ? static_cast<char16_t>(iu)
+                                     : static_cast<char16_t>(c),
+                   el = il <= 0xFFFF ? static_cast<char16_t>(il)
+                                     : static_cast<char16_t>(c);
+    if (toUpper(static_cast<char16_t>(c)) != eu ||
+        toLower(static_cast<char16_t>(c)) != el)
+      ++mismatches;
+  }
+  OO_CHECK_EQ(mismatches, 0u);
 
   OO_CHECK_EQ(toUpper(u'a'), u'A');
   OO_CHECK_EQ(toUpper(0xDF),
@@ -115,7 +137,7 @@ OO_TEST(caseTablesMatchGNUstepOverTheBMP) {
   OO_CHECK_EQ(toUpper(0x3C2), char16_t(0x3A3));  // final sigma -> SIGMA
   OO_CHECK_EQ(toLower(0x212A), char16_t(0x6B));  // KELVIN SIGN -> k
   OO_CHECK_EQ(toUpper(0x2C30),
-              char16_t(0x2C30));  // Glagolitic: newer than GNUstep's tables
+              char16_t(0x2C00));  // Glagolitic: newer than GNUstep's tables
   OO_CHECK(isWhitespaceOrNewline(0x85) && isWhitespaceOrNewline(0x3000) &&
            !isWhitespaceOrNewline(0xFEFF));
 }
@@ -123,7 +145,7 @@ OO_TEST(caseTablesMatchGNUstepOverTheBMP) {
 // --- the string corpus: case, capitalisation, trimming, path extensions
 // ------------------------------
 
-OO_TEST(stringCorpusMatchesGNUstep) {
+OO_TEST(stringCorpusMatchesGNUstepWithIcuCase) {
   // 20,000 strings x {itself, -capitalizedString, -uppercaseString,
   // -lowercaseString, leading trim, trailing trim, -pathExtension}, one probe
   // line each.
@@ -139,7 +161,7 @@ OO_TEST(stringCorpusMatchesGNUstep) {
     f.add("tt " + units(trimTrailingWhitespaceAndNewlines(s)) + "|\n");
     f.add("ext " + units(pathExtension(s)) + "|\n");
   }
-  OO_CHECK_EQ(f.h, 0x078ADF6EE40A0057ULL);
+  OO_CHECK_EQ(f.h, 0xE9A5708421748AEBULL);
 }
 
 OO_TEST(capitalizationAndTrimming) {
