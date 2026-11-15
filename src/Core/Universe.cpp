@@ -5334,12 +5334,12 @@ void Universe::drawUniverse() {
 
       drawCounter++;
       float breakPlane = INTERMEDIATE_CLEAR_DEPTH;
-      for (int i = 0; i < draw_count; i++) {
-        if (my_entities[i]->cameraRangeFront() > breakPlane) {
+      for (int entityIndex = 0; entityIndex < draw_count; entityIndex++) {
+        if (my_entities[entityIndex]->cameraRangeFront() > breakPlane) {
           continue;
         }
-        if (my_entities[i]->cameraRangeBack() > breakPlane) {
-          breakPlane = my_entities[i]->cameraRangeBack();
+        if (my_entities[entityIndex]->cameraRangeBack() > breakPlane) {
+          breakPlane = my_entities[entityIndex]->cameraRangeBack();
         }
       }
 
@@ -6178,10 +6178,10 @@ bool Universe::isVectorClearFromEntity(Entity* e1, double dist, HPVector p2) {
         p0.y += d_forward * f1.y;
         p0.z += d_forward * f1.z;
         // p0 holds nearest point on current course to center of incident object
-        HPVector epos = e2->position;
-        p0.x -= epos.x;
-        p0.y -= epos.y;
-        p0.z -= epos.z;
+        HPVector center = e2->position;
+        p0.x -= center.x;
+        p0.y -= center.y;
+        p0.z -= center.z;
         // compare with center of incident object
         double dist2 = p0.x * p0.x + p0.y * p0.y + p0.z * p0.z;
         if (dist2 < cr * cr) {
@@ -6245,10 +6245,10 @@ Entity* Universe::hazardOnRouteFromEntity(Entity* e1, double dist,
         p0.y += d_forward * f1.y;
         p0.z += d_forward * f1.z;
         // p0 holds nearest point on current course to center of incident object
-        HPVector epos = e2->position;
-        p0.x -= epos.x;
-        p0.y -= epos.y;
-        p0.z -= epos.z;
+        HPVector center = e2->position;
+        p0.x -= center.x;
+        p0.y -= center.y;
+        p0.z -= center.z;
         // compare with center of incident object
         double dist2 = HPmagnitude2(p0);
         if (dist2 < cr * cr) result = e2;
@@ -6311,10 +6311,10 @@ HPVector Universe::getSafeVectorFromEntity(Entity* e1, double dist,
         p0.z += d_forward * f1.z;
         // p0 holds nearest point on current course to center of incident object
 
-        HPVector epos = e2->position;
-        p0.x -= epos.x;
-        p0.y -= epos.y;
-        p0.z -= epos.z;
+        HPVector center = e2->position;
+        p0.x -= center.x;
+        p0.y -= center.y;
+        p0.z -= center.z;
         // compare with center of incident object
 
         double dist2 = p0.x * p0.x + p0.y * p0.y + p0.z * p0.z;

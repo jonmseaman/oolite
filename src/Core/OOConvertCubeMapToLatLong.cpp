@@ -97,35 +97,35 @@ OOPixMap OOConvertCubeMapToLatLong(OOPixMap sourcePixMap,
       OOPixMapDimension yOffset;
 
       // Coordinates within selected face.
-      float x, y, r;
+      float faceX, faceY, r;
 
       // Select source face.
       if (ax >= ay && ax >= az) {
-        x = cz;
-        y = -cy;
+        faceX = cz;
+        faceY = -cy;
         r = ax;
         if (0.0f < cx) {
           yOffset = 0;
         } else {
-          x = -x;
+          faceX = -faceX;
           yOffset = 1;
         }
       } else if (ay >= ax && ay >= az) {
-        x = cx;
-        y = cz;
+        faceX = cx;
+        faceY = cz;
         r = ay;
         if (0.0f < cy) {
-          y = -y;
+          faceY = -faceY;
           yOffset = 2;
         } else {
           yOffset = 3;
         }
       } else {
-        x = cx;
-        y = -cy;
+        faceX = cx;
+        faceY = -cy;
         r = az;
         if (0.0f < cz) {
-          x = -x;
+          faceX = -faceX;
           yOffset = 5;
         } else {
           yOffset = 4;
@@ -134,8 +134,8 @@ OOPixMap OOConvertCubeMapToLatLong(OOPixMap sourcePixMap,
 
       // Scale coordinates.
       r = 1.0f / r;
-      OOPixMapDimension ix = (x * r + 1.0f) * halfSize;
-      OOPixMapDimension iy = (y * r + 1.0f) * halfSize;
+      OOPixMapDimension ix = (faceX * r + 1.0f) * halfSize;
+      OOPixMapDimension iy = (faceY * r + 1.0f) * halfSize;
 
 #ifndef NDEBUG
       assert(ix < sourcePixMap.width && iy < sourcePixMap.width);

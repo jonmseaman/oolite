@@ -172,42 +172,42 @@ void OOSunEntity::initSunWithColor(OOColor* sun_color, const oo::PList& dict) {
   changeSunProperty("sun_radius", dict);
 
   unsigned k = 0;
-  for (unsigned i = 0; i < 360; i++) {
-    unsigned j = (i + 1) % 360;
+  for (unsigned segment = 0; segment < 360; segment++) {
+    unsigned j = (segment + 1) % 360;
     // disc
     sunTriangles[k++] = 0;
-    sunTriangles[k++] = 1 + i;
+    sunTriangles[k++] = 1 + segment;
     sunTriangles[k++] = 1 + j;
   }
-  for (unsigned i = 0; i < 360; i++) {
-    unsigned j = (i + 1) % 360;
+  for (unsigned segment = 0; segment < 360; segment++) {
+    unsigned j = (segment + 1) % 360;
     // ring 1
-    sunTriangles[k++] = 1 + i;
+    sunTriangles[k++] = 1 + segment;
     sunTriangles[k++] = 1 + j;
-    sunTriangles[k++] = 361 + i;
+    sunTriangles[k++] = 361 + segment;
     sunTriangles[k++] = 1 + j;
-    sunTriangles[k++] = 361 + i;
+    sunTriangles[k++] = 361 + segment;
     sunTriangles[k++] = 361 + j;
     // ring 2
-    sunTriangles[k++] = 361 + i;
+    sunTriangles[k++] = 361 + segment;
     sunTriangles[k++] = 361 + j;
-    sunTriangles[k++] = 721 + i;
+    sunTriangles[k++] = 721 + segment;
     sunTriangles[k++] = 361 + j;
-    sunTriangles[k++] = 721 + i;
+    sunTriangles[k++] = 721 + segment;
     sunTriangles[k++] = 721 + j;
     // ring 3
-    sunTriangles[k++] = 721 + i;
+    sunTriangles[k++] = 721 + segment;
     sunTriangles[k++] = 721 + j;
-    sunTriangles[k++] = 1081 + i;
+    sunTriangles[k++] = 1081 + segment;
     sunTriangles[k++] = 721 + j;
-    sunTriangles[k++] = 1081 + i;
+    sunTriangles[k++] = 1081 + segment;
     sunTriangles[k++] = 1081 + j;
     // ring 4
-    sunTriangles[k++] = 1081 + i;
+    sunTriangles[k++] = 1081 + segment;
     sunTriangles[k++] = 1081 + j;
-    sunTriangles[k++] = 1441 + i;
+    sunTriangles[k++] = 1441 + segment;
     sunTriangles[k++] = 1081 + j;
-    sunTriangles[k++] = 1441 + i;
+    sunTriangles[k++] = 1441 + segment;
     sunTriangles[k++] = 1441 + j;
   }
 }
