@@ -65,8 +65,9 @@ void OOBreakPatternEntity::initWithPolygonSides(std::size_t sides,
     _vertexPosition[vi++] = _vertexPosition[0];
     _vertexPosition[vi++] = _vertexPosition[1];
 
-    setInnerColorComponents((GLfloat[]){1.0f, 0.0f, 0.0f, 0.5f},
-                            (GLfloat[]){0.0f, 0.0f, 1.0f, 0.25f});
+    GLfloat innerColor1[4] = {1.0f, 0.0f, 0.0f, 0.5f};
+    GLfloat innerColor2[4] = {0.0f, 0.0f, 1.0f, 0.25f};
+    setInnerColorComponents(innerColor1, innerColor2);
 
     setStatus(OOEntityStatus::kEffect);
     setScanClass(OOScanClass::kNoDraw);

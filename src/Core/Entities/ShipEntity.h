@@ -1592,11 +1592,11 @@ class ShipEntity : public OOEntityWithDrawable,
     }                                                                        \
   } while (0)
 
-#define ShipScriptEventNoCx(ship, event, ...)                      \
-  do {                                                             \
-    JSContext* oojsEventContext = OOJSAcquireContext();            \
-    ShipScriptEvent(oojsEventContext, ship, event, ##__VA_ARGS__); \
-    OOJSRelinquishContext(oojsEventContext);                       \
+#define ShipScriptEventNoCx(ship, event, ...)                                  \
+  do {                                                                         \
+    JSContext* oojsEventContext = OOJSAcquireContext();                        \
+    ShipScriptEvent(oojsEventContext, ship, event __VA_OPT__(, ) __VA_ARGS__); \
+    OOJSRelinquishContext(oojsEventContext);                                   \
   } while (0)
 
 Vector positionOffsetForShipInRotationToAlignment(ShipEntity* ship,
