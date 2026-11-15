@@ -47,7 +47,7 @@ void OOBreakPatternEntity::initWithPolygonSides(std::size_t sides,
   {
     _vertexCount = (sides + 1) * 2;
     float angle = startAngleDegrees * std::numbers::pi / 180.0f;
-    float deltaAngle = std::numbers::pi * 2.0f / sides;
+    float deltaAngle = std::numbers::pi * 2.0f / static_cast<double>(sides);
     float xAspect = fmin(1.0f, aspectRatio);
     float yAspect = fmin(1.0f, 1.0f / aspectRatio);
 

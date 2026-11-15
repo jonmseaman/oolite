@@ -797,7 +797,8 @@ void OODefaultShaderSynthesizer::writeNormal() {
 }
 
 void OODefaultShaderSynthesizer::writeSpecularLighting() {
-  float specularExponent = OOMaterialSpecularExponent(_configuration);
+  float specularExponent =
+      static_cast<float>(OOMaterialSpecularExponent(_configuration));
   if (specularExponent <= 0) return;
 
   oo::PList specularColorMap =
@@ -1383,7 +1384,7 @@ oo::PList CanonicalizeMaterialSpecifier(
 
 std::string FormatFloat(double value) {
   std::int64_t intValue = static_cast<std::int64_t>(value);
-  if (value == intValue) {
+  if (value == static_cast<double>(intValue)) {
     return std::format("{}.0", intValue);
   } else {
     return std::format("{:g}", value);

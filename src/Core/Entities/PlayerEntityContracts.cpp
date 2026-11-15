@@ -143,7 +143,7 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
           nullptr);
     } else if (rescuee->insuranceCredits() && rescuee->legalStatus()) {
       float reward = (5.0 + government) * rescuee->legalStatus();
-      float insurance = 10 * rescuee->insuranceCredits();
+      float insurance = static_cast<float>(10 * rescuee->insuranceCredits());
       if (government > (Ranrot() & 7) || reward >= insurance) {
         // claim bounty for capture, ignore insurance
         result += oo::str::formatRuntime(
@@ -175,7 +175,8 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
             {oo::PList::unsignedInteger(static_cast<std::size_t>(reward)),
              oo::PList("insurance"), rescuee->infoForScripting()});
       }
-      credits = static_cast<OOCreditsQuantity>(credits + (reward));
+      credits = static_cast<OOCreditsQuantity>(static_cast<float>(credits) +
+                                               (reward));
       added_entry = true;
     } else if (rescuee->insuranceCredits()) {
       // claim insurance reward
@@ -201,7 +202,8 @@ std::optional<std::string> PlayerEntity::processEscapePods() {
            rescuee->shortDescription().value_or("(null)"),
            OOStringFromDeciCredits(static_cast<OOCreditsQuantity>(reward), true,
                                    false)});
-      credits = static_cast<OOCreditsQuantity>(credits + (reward));
+      credits = static_cast<OOCreditsQuantity>(static_cast<float>(credits) +
+                                               (reward));
       doScriptEvent(
           OOJSID("playerRescuedEscapePod"),
           {oo::PList::unsignedInteger(static_cast<std::size_t>(reward)),
@@ -498,7 +500,8 @@ std::optional<std::string> PlayerEntity::checkPassengerContracts() {
 
             // pay the fee
             int shortfall = static_cast<int>(100 - percent_delivered);
-            int payment = static_cast<int>(percent_delivered * (fee) / 100.0);
+            int payment = static_cast<int>(percent_delivered *
+                                           (static_cast<float>(fee)) / 100.0);
             credits += payment;
 
             if ((shipCommodityData != nullptr
@@ -1896,12 +1899,15 @@ OOCreditsQuantity PlayerEntity::tradeInValue() {
                            : 0);
   // TODO: 0.006 might need rethinking.
   value = static_cast<std::uint64_t>(
-      value - value * 0.006 * missingSubEntitiesAdjustment());
+      static_cast<double>(value) -
+      static_cast<double>(value) * 0.006 *
+          static_cast<double>(missingSubEntitiesAdjustment()));
   const std::uint64_t rounded =
       ((value * 75 * ship_trade_in_factor) + 5000) /
       10000;  // Multiply by two percentages, divide by 100*100. The +5000 is to
               // get normal rounding.
-  value = static_cast<std::uint64_t>(cunningFee(rounded, 0.005));
+  value = static_cast<std::uint64_t>(
+      cunningFee(static_cast<double>(rounded), 0.005));
   return value * 10;
 }
 

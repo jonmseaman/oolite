@@ -920,7 +920,7 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       return JS_NewNumber(context, ship->fuelChargeRate());
 
     case kBounty:
-      return JS_NewNumber(context, ship->getBounty());
+      return JS_NewNumber(context, static_cast<double>(ship->getBounty()));
 
     case kSubEntities:
       // What -subEntitiesForScript answered: ShipEntity's
@@ -938,7 +938,8 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       break;
 
     case kSubEntityCapacity:
-      return JS_NewNumber(context, ship->maxShipSubEntities());
+      return JS_NewNumber(context,
+                          static_cast<double>(ship->maxShipSubEntities()));
 
     case kSubEntityRotation:
       OOJS_RETURN_QUATERNION(ship->subEntityRotationalVelocity());
@@ -1097,7 +1098,7 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       break;
 
     case kExtraCargo:
-      return JS_NewNumber(context, ship->extraCargo());
+      return JS_NewNumber(context, static_cast<double>(ship->extraCargo()));
 
     case kCommodity:
       if (ship->commodityAmount() > 0) {
@@ -1255,16 +1256,18 @@ static JSValue ShipGetProperty(OOJS_GETTER_ARGS) {
       return OOJSValueFromBOOL(ship->getTrackCloseContacts());
 
     case kPassengerCount:
-      return JS_NewNumber(context, ship->passengerCount());
+      return JS_NewNumber(context, static_cast<double>(ship->passengerCount()));
 
     case kParcelCount:
-      return JS_NewNumber(context, ship->parcelCount());
+      return JS_NewNumber(context, static_cast<double>(ship->parcelCount()));
 
     case kPassengerCapacity:
-      return JS_NewNumber(context, ship->passengerCapacity());
+      return JS_NewNumber(context,
+                          static_cast<double>(ship->passengerCapacity()));
 
     case kMissileCapacity:
-      return JS_NewNumber(context, ship->missileCapacity());
+      return JS_NewNumber(context,
+                          static_cast<double>(ship->missileCapacity()));
 
     case kMissileLoadTime:
       return JS_NewNumber(context, ship->missileLoadTime());
@@ -4347,7 +4350,7 @@ static JSValue ShipThreatAssessment(OOJS_NATIVE_ARGS) {
   /* TODO: consider making ship combat behaviour try to
    * stay at long range from enemies with turrets. Then
    * we could perhaps reduce this bonus a bit. */
-  assessment += ship->turretCount();
+  assessment += static_cast<double>(ship->turretCount());
 
   if (fullCheck) {
     // consider pilot skill

@@ -73,7 +73,7 @@ double cunningFee(double value, double precision) {
     superfee /= 10.0;
   }
 
-  if (ratio > min && ratio < max) fee = rounded_fee;
+  if (ratio > min && ratio < max) fee = static_cast<double>(rounded_fee);
 
   return fee;
 }
@@ -141,7 +141,7 @@ float bellf(int n) {
   }
 
   while (i-- > 0) total += (Ranrot() & 1023);
-  return total / (1024.0f * n);
+  return total / (1024.0f * static_cast<float>(n));
 }
 
 RANROTSeed RANROTGetFullSeed() { return sRANROT; }

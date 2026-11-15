@@ -175,12 +175,15 @@ static JSValue DockGetProperty(OOJS_GETTER_ARGS) {
     case kDockingQueueLength:
       return JS_NewNumber(
           context,
-          (entity != nullptr ? entity->countOfShipsInDockingQueue() : 0));
+          (entity != nullptr
+               ? static_cast<double>(entity->countOfShipsInDockingQueue())
+               : 0));
 
     case kLaunchingQueueLength:
       return JS_NewNumber(
-          context,
-          (entity != nullptr ? entity->countOfShipsInLaunchQueue() : 0));
+          context, (entity != nullptr ? static_cast<double>(
+                                            entity->countOfShipsInLaunchQueue())
+                                      : 0));
 
     default:
       OOJSReportBadPropertySelector(context, thisObj, magic, sDockProperties,

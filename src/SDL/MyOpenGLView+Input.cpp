@@ -375,7 +375,7 @@ void MyOpenGLView::pollControls() {
             double mx = mmove_event->x * pixelDensity - w / 2.0;
             double my = mmove_event->y * pixelDensity - h / 2.0;
             if (display_z > 640.0) {
-              mx /= w * MAIN_GUI_PIXEL_WIDTH / display_z;
+              mx /= static_cast<GLfloat>(w * MAIN_GUI_PIXEL_WIDTH) / display_z;
               my /= h;
             } else {
               mx /= MAIN_GUI_PIXEL_WIDTH * w / 640.0;

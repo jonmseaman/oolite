@@ -246,8 +246,8 @@ void OOStandaloneAtmosphereGenerator::loadTexture() {
     int x, y;
     FloatRGBA color;
     float q, nearPole;
-    float rHeight = 1.0f / _height;
-    float fy, fHeight = _height;
+    float rHeight = 1.0f / static_cast<float>(_height);
+    float fy, fHeight = static_cast<float>(_height);
 
     float cloudFraction = _info.cloudFraction;
 
@@ -609,7 +609,7 @@ static bool GenerateFBMNoise3D(OOStandaloneAtmosphereGeneratorInfo* info) {
 #if 1
         // fBM
         unsigned octaveMask = 4;
-        float octave = octaveMask;
+        float octave = static_cast<float>(octaveMask);
         octaveMask -= 1;
         float scale = 0.4f;
         float sum = 0;
@@ -652,7 +652,7 @@ static void AddNoise(OOStandaloneAtmosphereGeneratorInfo* info,
   unsigned x, y;
   unsigned width = info->width, height = info->height;
   int ix, jx, iy, jy;
-  float rr = octave / width;
+  float rr = octave / static_cast<float>(width);
   float fx, fy, qx, qy, rix, rjx, rfinal;
   float* dst = info->fbmBuffer.data();
 
@@ -660,7 +660,7 @@ static void AddNoise(OOStandaloneAtmosphereGeneratorInfo* info,
     qy = fy * rr;
     iy = fast_floor(qy);
     jy = (iy + 1) & octaveMask;
-    qy = Hermite(qy - iy);
+    qy = Hermite(qy - static_cast<float>(iy));
     iy &= (kRandomBufferSize - 1);
     jy &= (kRandomBufferSize - 1);
 
@@ -669,7 +669,7 @@ static void AddNoise(OOStandaloneAtmosphereGeneratorInfo* info,
         // first pass: initialise buffers.
         qx = fx * rr;
         ix = fast_floor(qx);
-        qx -= ix;
+        qx -= static_cast<float>(ix);
         ix &= (kRandomBufferSize - 1);
         ixBuffer[x] = ix;
         qxBuffer[x] = Hermite(qx);
@@ -714,7 +714,7 @@ static bool GenerateFBMNoise(OOStandaloneAtmosphereGeneratorInfo* info) {
   // Generate basic fBM noise.
   unsigned height = info->height;
   unsigned octaveMask = 8 * info->planetAspectRatio;
-  float octave = octaveMask;
+  float octave = static_cast<float>(octaveMask);
   octaveMask -= 1;
   float scale = 0.5f;
 

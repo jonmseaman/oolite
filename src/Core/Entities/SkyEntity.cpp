@@ -121,7 +121,8 @@ void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In,
   if (0 <= starCount) {
     // changed for 1.82, default set to 1
     // lets OXPers modify the broad number without stopping variation
-    starCount = static_cast<int>(starCount * (starCountMultiplier));
+    starCount =
+        static_cast<int>(static_cast<float>(starCount) * (starCountMultiplier));
   } else {
     starCount = static_cast<int>(starCountMultiplier * SKY_BASIS_STARS *
                                  (0.5 + randf()));
@@ -136,7 +137,8 @@ void SkyEntity::initWithColors(OOColor* col1In, OOColor* col2In,
   if (0 <= nebulaCount) {
     // changed for 1.82, default set to 1
     // lets OXPers modify the broad number without stopping variation
-    nebulaCount = static_cast<int>(nebulaCount * (nebulaCountMultiplier));
+    nebulaCount = static_cast<int>(static_cast<float>(nebulaCount) *
+                                   (nebulaCountMultiplier));
   } else {
     nebulaCount = static_cast<int>(nebulaCountMultiplier * SKY_BASIS_BLOBS *
                                    (0.5 + randf()));
