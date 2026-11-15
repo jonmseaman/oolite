@@ -35,6 +35,7 @@ SOFTWARE.
 #include <stdint.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -503,16 +504,15 @@ bool OODebugTCPConsoleClient::openSocketToHost(const std::string& address,
   return true;
 }
 
-std::ptrdiff_t OODebugTCPConsoleClient::receive(uint8_t* buffer,
-                                                size_t length) {
+std::ptrdiff_t OODebugTCPConsoleClient::receive(std::span<uint8_t> buffer) {
   if (_socket == kNoSocket) return 0;
   if (_inStatus == kStreamStatusAtEnd) return 0;
   if (_inStatus != kStreamStatusOpen && _inStatus != kStreamStatusReading)
     return -1;
 
   int received = static_cast<int>(recv(static_cast<OOSocket>(_socket),
-                                       reinterpret_cast<char*>(buffer),
-                                       static_cast<int>(length), 0));
+                                       reinterpret_cast<char*>(buffer.data()),
+                                       static_cast<int>(buffer.size()), 0));
   if (received > 0) {
     _inStatus = kStreamStatusOpen;
     return received;
@@ -633,8 +633,8 @@ void OODebugTCPConsoleClient::serviceSocketFor(double seconds) {
   }
 }
 
-bool OODebugTCPConsoleClient::sendBytes(const void* bytes, size_t count) {
-  if (bytes == nullptr || count == 0) return true;
+bool OODebugTCPConsoleClient::sendBytes(std::span<const std::byte> bytes) {
+  if (bytes.empty()) return true;
   if (!StatusIsSendable(_status) || _socket == kNoSocket) return false;
 
   do {
@@ -644,9 +644,9 @@ bool OODebugTCPConsoleClient::sendBytes(const void* bytes, size_t count) {
     } else if (_outStatus != kStreamStatusOpen) {
       written = -1;
     } else {
-      written =
-          send(static_cast<OOSocket>(_socket), static_cast<const char*>(bytes),
-               static_cast<int>(count), kSendFlags);
+      written = send(static_cast<OOSocket>(_socket),
+                     reinterpret_cast<const char*>(bytes.data()),
+                     static_cast<int>(bytes.size()), kSendFlags);
       if (written < 0) {
         int error = LastSocketError();
         if (ErrorIsAbortOnSend(error)) {
@@ -660,9 +660,8 @@ bool OODebugTCPConsoleClient::sendBytes(const void* bytes, size_t count) {
     }
     if (written < 1) return false;
 
-    count -= static_cast<size_t>(written);
-    bytes = static_cast<const uint8_t*>(bytes) + written;
-  } while (count > 0);
+    bytes = bytes.subspan(static_cast<size_t>(written));
+  } while (!bytes.empty());
 
   return true;
 }
@@ -703,27 +702,27 @@ void OODebugTCPConsoleClient::sendDictionary(const oo::PList& dictionary) {
           rejecting headers. Made the protocol a bit more fault tolerant.
           -- Kaks 2012.03.24
   */
-  if (!sendBytes(&header, sizeof header)) {
+  if (!sendBytes(std::as_bytes(std::span(&header, 1)))) {
     OO_LOG("debugTCP.send.warning", "{}",
            "Error sending packet header, retrying.");
     // wait 8 milliseconds, resend the header
     serviceSocketFor(.008);
-    if (!sendBytes(&header, sizeof header)) {
+    if (!sendBytes(std::as_bytes(std::span(&header, 1)))) {
       // debugTCP.send.warning: Error sending packet header, retrying one more
       // time. wait 16 milliseconds, try to resend the header one last time!
       serviceSocketFor(.016);
-      if (!sendBytes(&header, sizeof header)) {
+      if (!sendBytes(std::as_bytes(std::span(&header, 1)))) {
         sentOK = false;
       }
     }
   }
 
-  if (sentOK && !sendBytes(bytes, count)) {
+  if (sentOK && !sendBytes(std::as_bytes(std::span(bytes, count)))) {
     OO_LOG("debugTCP.send.warning", "{}",
            "Error sending packet body, retrying.");
     // wait 8 milliseconds, try again.
     serviceSocketFor(.008);
-    if (!sendBytes(bytes, count)) {
+    if (!sendBytes(std::as_bytes(std::span(bytes, count)))) {
       sentOK = false;
     }
   }
@@ -764,19 +763,20 @@ void OODebugTCPConsoleClient::sendPacket(const std::string& packetType,
 void OODebugTCPConsoleClient::readData() {
   constexpr std::size_t kBufferSize = 16 << 10;
 
-  uint8_t buffer[kBufferSize];
+  std::array<uint8_t, kBufferSize> buffer;
   std::ptrdiff_t length;
 
-  length = receive(buffer, kBufferSize);
+  length = receive(buffer);
   while (length > 0) {
     // The bytes go to the decoder in a data handle
     // (OOTCPStreamDecoderAbstractionLayer), which is released once the decoder
     // has taken them, as the no-copy data object was.
     auto data = OOALDataCreateMutable(static_cast<size_t>(length));
-    OOALMutableDataAppendBytes(data, buffer, static_cast<size_t>(length));
+    OOALMutableDataAppendBytes(data, buffer.data(),
+                               static_cast<size_t>(length));
     OOTCPStreamDecoderReceiveData(_decoder, data);
     OOALRelease(data);
-    length = receive(buffer, kBufferSize);
+    length = receive(buffer);
   }
 }
 
