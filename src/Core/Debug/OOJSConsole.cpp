@@ -1439,7 +1439,8 @@ bool PerformProfiling(JSContext* context, const char* nominalFunction, int argc,
   // Fiddle with time limiter.
   // We want to save the current limit, reset the limiter, and set the time
   // limit to a long time.
-#define LONG_TIME (1e7)  // A long time - 115.7 days - but, crucially, finite.
+  constexpr double LONG_TIME =
+      (1e7);  // A long time - 115.7 days - but, crucially, finite.
 
   OOTimeDelta originalLimit = OOJSGetTimeLimiterLimit();
   OOJSSetTimeLimiterLimit(LONG_TIME);
