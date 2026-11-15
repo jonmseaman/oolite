@@ -168,7 +168,7 @@ bool IsWellFormedUTF8(const std::string& bytes) {
 }
 
 // An array of strings.
-oo::PList StringArray(const std::vector<std::string>& strings) {
+oo::PList StringArray(std::span<const std::string> strings) {
   oo::PList::Array result;
   result.reserve(strings.size());
   for (const std::string& string : strings) result.emplace_back(string);
@@ -598,7 +598,7 @@ void ResourceManager::preloadFileLists() {
 }
 
 void ResourceManager::preloadFileListFromOXZ(
-    const std::string& path, const std::vector<std::string>& folders) {
+    const std::string& path, std::span<const std::string> folders) {
   unzFile uf = unzOpen64(path.c_str());
   std::array<char, 512> componentName{};
 
@@ -635,7 +635,7 @@ void ResourceManager::preloadFileListFromOXZ(
 }
 
 void ResourceManager::preloadFileListFromFolder(
-    const std::string& path, const std::vector<std::string>& folders) {
+    const std::string& path, std::span<const std::string> folders) {
   // search each subfolder for files
   for (const std::string& subFolder : folders) {
     const std::string subFolderPath =
@@ -1365,7 +1365,7 @@ void ResourceManager::addErrorWithKey(const std::string& descriptionKey,
 }
 
 bool ResourceManager::checkCacheUpToDateForPaths(
-    const std::vector<std::string>& searchPaths) {
+    std::span<const std::string> searchPaths) {
   /*	Check if caches are up to date.
           The strategy is to use a two-entry cache. One entry is an array
           containing the search paths, the other an array of modification dates

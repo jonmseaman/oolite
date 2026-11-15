@@ -637,8 +637,8 @@ void OOOXPVerifier::runStages() {
   _waitingStages.clear();
 }
 
-bool OOOXPVerifier::setUpDependencies(
-    const std::vector<std::string>& dependencies, ::OOOXPVerifierStage* stage) {
+bool OOOXPVerifier::setUpDependencies(std::span<const std::string> dependencies,
+                                      ::OOOXPVerifierStage* stage) {
   ::OOOXPVerifierStage* depStage = nullptr;
 
   // Iterate over dependencies, connecting them up.
@@ -665,7 +665,7 @@ bool OOOXPVerifier::setUpDependencies(
   return true;
 }
 
-void OOOXPVerifier::setUpDependents(const std::vector<std::string>& dependents,
+void OOOXPVerifier::setUpDependents(std::span<const std::string> dependents,
                                     ::OOOXPVerifierStage* stage) {
   ::OOOXPVerifierStage* depStage = nullptr;
 

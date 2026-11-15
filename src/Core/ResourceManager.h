@@ -32,6 +32,7 @@ MA 02110-1301, USA.
 #include <memory>
 #include <optional>
 #include <set>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -209,9 +210,9 @@ class ResourceManager {
   static void logPaths();
   static void preloadFileLists();
   static void preloadFileListFromOXZ(const std::string& path,
-                                     const std::vector<std::string>& folders);
-  static void preloadFileListFromFolder(
-      const std::string& path, const std::vector<std::string>& folders);
+                                     std::span<const std::string> folders);
+  static void preloadFileListFromFolder(const std::string& path,
+                                        std::span<const std::string> folders);
   static void preloadFilePathFor(const std::string& fileName,
                                  const std::string& subFolder,
                                  const std::string& path);
@@ -223,7 +224,7 @@ class ResourceManager {
                        // keeps it
   static bool directoryExists(const std::string& inPath, bool inCreate);
   static bool checkCacheUpToDateForPaths(
-      const std::vector<std::string>& searchPaths);
+      std::span<const std::string> searchPaths);
   static void mergeRoleCategories(const oo::PList& catData,
                                   oo::PList& categories);
   static void checkOXPMessagesInPath(const std::string& path);

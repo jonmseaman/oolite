@@ -496,8 +496,7 @@ void OOFileScannerVerifierStage::checkKnownFiles() {
 }
 
 std::optional<std::map<std::string, std::string, std::less<>>>
-OOFileScannerVerifierStage::lowercaseMap(
-    const std::vector<std::string>& array) {
+OOFileScannerVerifierStage::lowercaseMap(std::span<const std::string> array) {
   std::map<std::string, std::string, std::less<>> result;
 
   for (const std::string& canonical : array) {

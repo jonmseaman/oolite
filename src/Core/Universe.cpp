@@ -10120,9 +10120,9 @@ OOCreditsQuantity Universe::tradeInValueForCommanderDictionary(
 }
 
 std::optional<std::string> Universe::brochureDescriptionWithDictionary(
-    const oo::PList& dict, const std::vector<std::string>& extras,
-    const std::vector<std::string>& options) {
-  std::vector<std::string> mut_extras = extras;
+    const oo::PList& dict, std::span<const std::string> extras,
+    std::span<const std::string> options) {
+  std::vector<std::string> mut_extras(extras.begin(), extras.end());
   std::string allOptions;
   for (std::size_t k = 0; k < options.size(); k++) {
     if (k > 0) allOptions += " ";
