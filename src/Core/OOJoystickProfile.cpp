@@ -34,7 +34,7 @@ MA 02110-1301, USA.
 #include "OOJoystickManager.h"
 #include "oofnd/Object.hpp"
 #include "oofnd/objc/OOFoundationTypes.h"
-#define SPLINE_POINT_MIN_SPACING 0.02
+constexpr double SPLINE_POINT_MIN_SPACING = 0.02;
 
 class OOJoystickSplineSegment : public oo::Object {
  public:
