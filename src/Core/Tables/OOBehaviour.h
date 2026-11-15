@@ -1,6 +1,6 @@
 /*	OOBehaviour.h
 
-The values of a ship's behaviour: callObjC (encoded "i", OOTypeEncodings.h) and
+The values of a ship's behaviour: callObjC (an int, ValueType.h) and
 the AI's logs, and the names the game reads and writes for them. It was
 OOBehaviour.tbl, an X-macro table.
 */

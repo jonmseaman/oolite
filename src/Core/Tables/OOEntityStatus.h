@@ -2,8 +2,8 @@
 
 /*	OOEntityStatus.h
 
-The values of an entity's status: saves, JS and callObjC (encoded "i",
-OOTypeEncodings.h), and the names the game reads and writes for them. It was
+The values of an entity's status: saves, JS and callObjC (an int,
+ValueType.h), and the names the game reads and writes for them. It was
 OOEntityStatus.tbl, an X-macro table.
 */
 

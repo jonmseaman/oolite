@@ -56,7 +56,7 @@ SOFTWARE.
 #include "oofnd/PList.hpp"
 #if OO_DEBUG
 #include "OOShaderUniformMethodType.h"  // callObjC()'s scalar results on the console
-#include "OOTypeEncodings.h"            // the monitor rows' measured encodings
+#include "ValueType.h"
 #endif
 
 #include "oofnd/String.hpp"
@@ -846,7 +846,7 @@ namespace {
 
 /*	callObjC()'s names on the console objects: the debug monitor's methods
    without arguments, and the two that take the joined string argument. Each row
-   calls the C++ member of that name. A scalar row keeps the type encoding of
+   calls the C++ member of that name. A scalar row keeps the kind of
    the member's return type, which decides its result (or the "cannot be called"
    error), and a row that cannot be called from JavaScript (kNotCallable)
    answers that error. Every other name answers "does not respond".
@@ -866,7 +866,7 @@ struct MonitorMethod {
   void (*voidString)(OODebugMonitor*, const std::string&);
   oo::PList (*pListString)(OODebugMonitor*, const std::string&);
   long long (*scalar)(OODebugMonitor*);
-  const char* encoding;  // a kScalar row: the type encoding of the return type
+  oo::ValueType type;  // a kScalar row: the return type's kind, else kVoid
 };
 
 const MonitorMethod kMonitorMethods[] = {
@@ -874,48 +874,48 @@ const MonitorMethod kMonitorMethods[] = {
      [](OODebugMonitor* m, const std::string& s) {
        m->performJSConsoleCommand(s);
      },
-     nullptr, nullptr, nullptr},
+     nullptr, nullptr, oo::ValueType::kVoid},
     {"configurationValueForKey:", MonitorMethodForm::kPListString, nullptr,
      nullptr,
      [](OODebugMonitor* m, const std::string& s) {
        return m->configurationValueForKey(s);
      },
-     nullptr, nullptr},
+     nullptr, oo::ValueType::kVoid},
     {"clearJSConsole", MonitorMethodForm::kVoidVoid,
      [](OODebugMonitor* m) { m->clearJSConsole(); }, nullptr, nullptr, nullptr,
-     nullptr},
+     oo::ValueType::kVoid},
     {"showJSConsole", MonitorMethodForm::kVoidVoid,
      [](OODebugMonitor* m) { m->showJSConsole(); }, nullptr, nullptr, nullptr,
-     nullptr},
+     oo::ValueType::kVoid},
     {"dumpMemoryStatistics", MonitorMethodForm::kVoidVoid,
      [](OODebugMonitor* m) { m->dumpMemoryStatistics(); }, nullptr, nullptr,
-     nullptr, nullptr},
+     nullptr, oo::ValueType::kVoid},
 #if OOLITE_SDL
     {"applicationWillTerminate", MonitorMethodForm::kVoidVoid,
      [](OODebugMonitor* m) { m->applicationWillTerminate(); }, nullptr, nullptr,
-     nullptr, nullptr},
+     nullptr, oo::ValueType::kVoid},
 #endif
     {"debuggerConnected", MonitorMethodForm::kScalar, nullptr, nullptr, nullptr,
      [](OODebugMonitor* m) -> long long { return m->debuggerConnected(); },
-     kOOTypeEncoding<bool>},
+     oo::kValueType<bool>},
     {"TCPIgnoresDroppedPackets", MonitorMethodForm::kScalar, nullptr, nullptr,
      nullptr,
      [](OODebugMonitor* m) -> long long {
        return m->TCPIgnoresDroppedPackets();
      },
-     kOOTypeEncoding<bool>},
+     oo::kValueType<bool>},
     {"usingPlugInController", MonitorMethodForm::kScalar, nullptr, nullptr,
      nullptr,
      [](OODebugMonitor* m) -> long long { return m->usingPlugInController(); },
-     kOOTypeEncoding<bool>},
+     oo::kValueType<bool>},
     {"configurationKeys", MonitorMethodForm::kNotCallable, nullptr, nullptr,
-     nullptr, nullptr, nullptr},  // a std::vector result
+     nullptr, nullptr, oo::ValueType::kVoid},  // a std::vector result
     {"dumpJSMemoryStatistics", MonitorMethodForm::kScalar, nullptr, nullptr,
      nullptr,
      [](OODebugMonitor* m) -> long long {
        return static_cast<long long>(m->dumpJSMemoryStatistics());
      },
-     kOOTypeEncoding<size_t>},
+     oo::kValueType<size_t>},
 };
 
 /*	OOJSCallObjCObjectMethod()'s steps for the monitor's methods, on the
@@ -978,7 +978,7 @@ bool CallMonitorMethod(JSContext* context, OODebugMonitor* monitor, int argc,
       break;
 
     case MonitorMethodForm::kScalar:
-      switch (OOShaderUniformTypeFromEncoding(method->encoding)) {
+      switch (oo::ShaderUniformTypeOf(method->type)) {
         case kOOShaderUniformTypeChar:
         case kOOShaderUniformTypeUnsignedChar:
         case kOOShaderUniformTypeShort:

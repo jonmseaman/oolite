@@ -2,8 +2,8 @@
 
 /*	OOScanClass.h
 
-The values of a scan class: shipdata, saves, JS and callObjC (encoded "i",
-OOTypeEncodings.h), and the names the game reads and writes for them. It was
+The values of a scan class: shipdata, saves, JS and callObjC (an int,
+ValueType.h), and the names the game reads and writes for them. It was
 OOScanClass.tbl, an X-macro table.
 */
 

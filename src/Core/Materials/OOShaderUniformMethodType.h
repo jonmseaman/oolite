@@ -38,6 +38,7 @@ SOFTWARE.
 #include <string>
 
 #include "OOMaths.h"
+#include "ValueType.h"
 
 // A uniform's (and a by-name method's) type tag: stored as uint8_t, an index
 // into the template table, and the start of OOJSCall's method-type numbers, so
@@ -106,11 +107,67 @@ static_assert(static_cast<int>(kOOShaderUniformTypePoint) == 17);
 static_assert(static_cast<int>(kOOShaderUniformTypeColor) == 18);
 static_assert(static_cast<int>(kOOShaderUniformTypeObject) == 19);
 
-/*	The uniform type of a return type's encoding (@encode() of the type;
-   NULL gives invalid): the member tables below give their rows' types this way,
-   so a row's type is the method's it replaced.
+namespace oo {
+
+/*	The uniform type of a row's value type (ValueType.h): the member tables
+   give their rows' types this way, so a row's type is the method's it
+   replaced. Each answer is the one the old template table gave the type's
+   @encode() string: bool was "c" (Char), and long long, unsigned long long,
+   the rectangle, the bounding box, values and other pointers matched no
+   template (Invalid).
 */
-OOShaderUniformType OOShaderUniformTypeFromEncoding(const char* typeCode);
+constexpr OOShaderUniformType ShaderUniformTypeOf(ValueType type) {
+  switch (type) {
+    case ValueType::kBool:
+    case ValueType::kChar:
+      return kOOShaderUniformTypeChar;
+    case ValueType::kUChar:
+      return kOOShaderUniformTypeUnsignedChar;
+    case ValueType::kShort:
+      return kOOShaderUniformTypeShort;
+    case ValueType::kUShort:
+      return kOOShaderUniformTypeUnsignedShort;
+    case ValueType::kInt:
+      return kOOShaderUniformTypeInt;
+    case ValueType::kUInt:
+      return kOOShaderUniformTypeUnsignedInt;
+    case ValueType::kLong:
+      return kOOShaderUniformTypeLong;
+    case ValueType::kULong:
+      return kOOShaderUniformTypeUnsignedLong;
+    case ValueType::kFloat:
+      return kOOShaderUniformTypeFloat;
+    case ValueType::kDouble:
+      return kOOShaderUniformTypeDouble;
+    case ValueType::kVector:
+      return kOOShaderUniformTypeVector;
+    case ValueType::kHPVector:
+      return kOOShaderUniformTypeHPVector;
+    case ValueType::kQuaternion:
+      return kOOShaderUniformTypeQuaternion;
+    case ValueType::kMatrix:
+      return kOOShaderUniformTypeMatrix;
+    case ValueType::kPoint:
+      return kOOShaderUniformTypePoint;
+    case ValueType::kColor:
+      return kOOShaderUniformTypeColor;
+    case ValueType::kObject:
+      return kOOShaderUniformTypeObject;
+    case ValueType::kVoid:
+    case ValueType::kLongLong:
+    case ValueType::kULongLong:
+    case ValueType::kRect:
+    case ValueType::kBoundingBox:
+    case ValueType::kPList:
+    case ValueType::kString:
+    case ValueType::kOptionalString:
+    case ValueType::kOther:
+      return kOOShaderUniformTypeInvalid;
+  }
+  return kOOShaderUniformTypeInvalid;
+}
+
+}  // namespace oo
 
 /*	Binding to a target's C++ members: a uniform
         bound to a property name the target's class lists in its member table
