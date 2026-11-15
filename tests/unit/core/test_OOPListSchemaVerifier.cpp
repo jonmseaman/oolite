@@ -31,14 +31,13 @@
 // Link stubs: OOPListGameTypes.mm reaches OOStringParsing.mm's scanners for
 // vector and quaternion values, whose object links the game. No schema here
 // uses those types, so each stub aborts.
-bool ScanVectorFromString(const std::optional<std::string>&, Vector*) {
+std::optional<Vector> ScanVectorFromString(const std::optional<std::string>&) {
   std::abort();
 }
-bool ScanHPVectorFromString(const std::optional<std::string>&, HPVector*) {
+std::optional<HPVector> ScanHPVectorFromString(const std::optional<std::string>&) {
   std::abort();
 }
-bool ScanQuaternionFromString(const std::optional<std::string>&,
-                                  Quaternion*) {
+std::optional<Quaternion> ScanQuaternionFromString(const std::optional<std::string>&) {
   std::abort();
 }
 

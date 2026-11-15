@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #include <array>
 #include <cstdint>
 #include <cstdio>
+#include <expected>
 #include <format>
 #include <memory>
 #include <optional>
@@ -814,7 +815,7 @@ bool OOOXZManager::processDownloadedManifests() {
     // atomically; nothing for no cache directory (a nil path), and a failure is
     // ignored as before.
     if (const std::optional<std::string> manifestPath = this->manifestPath())
-      (void)OOWriteXMLPListToFile(_oxzList, *manifestPath, nullptr);
+      (void)OOWriteXMLPListToFile(_oxzList, *manifestPath);
     // and clean up the temp file
     if (const std::optional<std::string> downloadPath = this->downloadPath()) {
       (void)oo::fs::removeItem(oo::fs::pathFromUTF8(*downloadPath));

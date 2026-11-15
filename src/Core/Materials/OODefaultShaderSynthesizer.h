@@ -47,16 +47,21 @@ class OOMesh;
 /*	The material configuration is an oo::PList dictionary, the
         material key and entity name are nil-able strings, and the outputs are
    the two shader sources, the texture list (a PList array) and the uniform
-   specifications (a PList dictionary). On failure the strings are empty and the
-   two PLists null, where all four used to be nil.
+   specifications (a PList dictionary). When synthesis fails the strings are
+   empty and the two PLists null, where all four used to be nil; the result is
+   still there, as the old function still answered YES.
 */
-bool OOSynthesizeMaterialShader(const oo::PList& materialConfiguration,
-                                const std::optional<std::string>& materialKey,
-                                const std::optional<std::string>& entityName,
-                                std::string* outVertexShader,
-                                std::string* outFragmentShader,
-                                oo::PList* outTextureSpecs,
-                                oo::PList* outUniformSpecs);
+struct OOSynthesizedShader {
+  std::string vertexShader;
+  std::string fragmentShader;
+  oo::PList textureSpecs;
+  oo::PList uniformSpecs;
+};
+
+std::optional<OOSynthesizedShader> OOSynthesizeMaterialShader(
+    const oo::PList& materialConfiguration,
+    const std::optional<std::string>& materialKey,
+    const std::optional<std::string>& entityName);
 
 /*	The synthesizer itself, private to OODefaultShaderSynthesizer.cpp; its
    one caller is OOSynthesizeMaterialShader() above.

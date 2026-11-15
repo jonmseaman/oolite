@@ -253,16 +253,21 @@ uint8_t OOTextureComponentsForFormat(OOTextureDataFormat format);
 
 bool OOCubeMapsAvailable();
 
+// A texture specifier's parts.
+struct OOTextureSpecifier {
+  std::string name;
+  OOTextureFlags options;
+  float anisotropy;
+  float lodBias;
+};
+
 /*	OOInterpretTextureSpecifier()
 
-        Interpret a texture specifier (string or dictionary). All out parameters
-        may be NULL.
+        Interpret a texture specifier (string or dictionary); nullopt where it
+        is not one.
 */
-bool OOInterpretTextureSpecifier(const oo::PList& specifier,
-                                 std::string* outName,
-                                 OOTextureFlags* outOptions,
-                                 float* outAnisotropy, float* outLODBias,
-                                 bool ignoreExtract);
+std::optional<OOTextureSpecifier> OOInterpretTextureSpecifier(
+    const oo::PList& specifier, bool ignoreExtract);
 
 /*	OOMakeTextureSpecifier()
 

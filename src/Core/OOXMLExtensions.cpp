@@ -24,29 +24,24 @@ MA 02110-1301, USA.
 
 #include "OOXMLExtensions.h"
 
+#include <expected>
 #include <string>
 
 #include "oofnd/FileSystem.hpp"
 #include "oofnd/PListWriting.hpp"
 
-bool OOWriteXMLPListToFile(const oo::PList& plist, const std::string& path,
-                           std::string* outError) {
+std::expected<void, std::string> OOWriteXMLPListToFile(
+    const oo::PList& plist, const std::string& path) {
   const std::expected<oo::Data, oo::PListError> data = oo::writeXMLPList(plist);
   if (!data) {
-    if (outError != nullptr) {
-      *outError = "could not convert property list to XML: " +
-                  data.error().description();
-    }
-    return false;
+    return std::unexpected("could not convert property list to XML: " +
+                           data.error().description());
   }
 
   if (!oo::fs::writeFile(oo::fs::pathFromUTF8(path), *data,
                          oo::fs::WriteMode::kAtomic)) {
-    if (outError != nullptr) {
-      *outError = "could not write data to " + path + ".";
-    }
-    return false;
+    return std::unexpected("could not write data to " + path + ".");
   }
 
-  return true;
+  return {};
 }

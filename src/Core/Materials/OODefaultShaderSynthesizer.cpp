@@ -88,37 +88,24 @@ std::optional<std::string> GetExtractMode(const oo::PList& textureSpecifier);
 
 }  // namespace
 
-bool OOSynthesizeMaterialShader(const oo::PList& configuration,
-                                const std::optional<std::string>& materialKey,
-                                const std::optional<std::string>& entityName,
-                                std::string* outVertexShader,
-                                std::string* outFragmentShader,
-                                oo::PList* outTextureSpecs,
-                                oo::PList* outUniformSpecs) {
-  OOCParameterAssert(!configuration.isNull() && outVertexShader != nullptr &&
-                     outFragmentShader != nullptr &&
-                     outTextureSpecs != nullptr && outUniformSpecs != nullptr);
+std::optional<OOSynthesizedShader> OOSynthesizeMaterialShader(
+    const oo::PList& configuration,
+    const std::optional<std::string>& materialKey,
+    const std::optional<std::string>& entityName) {
+  OOCParameterAssert(!configuration.isNull());
 
-  {
-    std::shared_ptr<OODefaultShaderSynthesizer> synthesizer =
-        oo::makeShared<OODefaultShaderSynthesizer>(configuration, materialKey,
-                                                   entityName);
+  std::shared_ptr<OODefaultShaderSynthesizer> synthesizer =
+      oo::makeShared<OODefaultShaderSynthesizer>(configuration, materialKey,
+                                                 entityName);
 
-    bool OK = synthesizer->run();
-    if (OK) {
-      *outVertexShader = synthesizer->vertexShader();
-      *outFragmentShader = synthesizer->fragmentShader();
-      *outTextureSpecs = synthesizer->textureSpecifications();
-      *outUniformSpecs = synthesizer->uniformSpecifications();
-    } else {
-      outVertexShader->clear();
-      outFragmentShader->clear();
-      *outTextureSpecs = oo::PList();
-      *outUniformSpecs = oo::PList();
-    }
+  OOSynthesizedShader result;
+  if (synthesizer->run()) {
+    result.vertexShader = synthesizer->vertexShader();
+    result.fragmentShader = synthesizer->fragmentShader();
+    result.textureSpecs = synthesizer->textureSpecifications();
+    result.uniformSpecs = synthesizer->uniformSpecifications();
   }
-
-  return true;
+  return result;
 }
 
 OODefaultShaderSynthesizer::OODefaultShaderSynthesizer(
@@ -363,14 +350,16 @@ std::string KeyFromTextureParameters(const std::string& name,
 }
 
 std::string KeyFromTextureSpec(const oo::PList& spec) {
-  std::string texName;
-  OOTextureFlags texOptions;
-  float anisotropy, lodBias;
-  if (!OOInterpretTextureSpecifier(spec, &texName, &texOptions, &anisotropy,
-                                   &lodBias, true)) {
+  const std::optional<OOTextureSpecifier> interpreted =
+      OOInterpretTextureSpecifier(spec, true);
+  if (!interpreted.has_value()) {
     // OOInterpretTextureSpecifier() will have logged something.
     OORaiseException(OOGenericException, "Invalid texture specifier");
   }
+  const std::string& texName = interpreted->name;
+  const OOTextureFlags texOptions = interpreted->options;
+  const float anisotropy = interpreted->anisotropy;
+  const float lodBias = interpreted->lodBias;
 
   return KeyFromTextureParameters(texName, texOptions, anisotropy, lodBias);
 }
@@ -388,14 +377,16 @@ std::size_t OODefaultShaderSynthesizer::assignIDForTexture(
     dict->erase(kOOTextureSpecifierSwizzleKey);
   }
 
-  std::string texName;
-  OOTextureFlags texOptions;
-  float anisotropy, lodBias;
-  if (!OOInterpretTextureSpecifier(spec, &texName, &texOptions, &anisotropy,
-                                   &lodBias, true)) {
+  const std::optional<OOTextureSpecifier> interpreted =
+      OOInterpretTextureSpecifier(spec, true);
+  if (!interpreted.has_value()) {
     // OOInterpretTextureSpecifier() will have logged something.
     OORaiseException(OOGenericException, "Invalid texture specifier");
   }
+  const std::string& texName = interpreted->name;
+  const OOTextureFlags texOptions = interpreted->options;
+  const float anisotropy = interpreted->anisotropy;
+  const float lodBias = interpreted->lodBias;
 
   if (oo::Any(texOptions & OOTextureFlags::kAllowCubeMap)) {
     // cube_map = true; fail regardless of whether actual texture qualifies.

@@ -175,9 +175,8 @@ static std::vector<std::string> gGenerators;
 
 OOTextureLoader::OOTextureLoader() {}
 OOTextureLoader::~OOTextureLoader() {}
-bool OOTextureLoader::getResult(OOPixMap*, OOTextureDataFormat*, uint32_t*,
-                                uint32_t*) {
-  return false;
+std::optional<OOTextureLoader::Result> OOTextureLoader::getResult() {
+  return std::nullopt;
 }
 std::optional<std::string> OOTextureLoader::cacheKey() { return std::nullopt; }
 std::optional<std::string> OOTextureLoader::descriptionComponents() const {

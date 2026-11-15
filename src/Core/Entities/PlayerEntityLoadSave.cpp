@@ -26,7 +26,9 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <expected>
 #include <format>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -887,7 +889,10 @@ void PlayerEntity::writePlayerToPath(const std::string& path) {
   if (dict.isNull()) {
     errDesc = "could not construct commander data dictionary.";
   } else {
-    didSave = OOWriteXMLPListToFile(dict, path, &errDesc);
+    const std::expected<void, std::string> written =
+        OOWriteXMLPListToFile(dict, path);
+    didSave = written.has_value();
+    if (!didSave) errDesc = written.error();
   }
   if (didSave) {
     if (UNIVERSE != nullptr)

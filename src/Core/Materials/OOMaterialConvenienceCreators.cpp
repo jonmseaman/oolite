@@ -242,16 +242,14 @@ std::shared_ptr<OOMaterial> OOMaterial::defaultShaderMaterialWithName(
     const std::optional<std::string>& cacheKey, const oo::PList& configuration,
     const oo::PList& macros, Entity* target) {
   (void)macros;
-  std::string vertexShaderSource, fragmentShaderSource;
-  oo::PList textureSpecList, uniformSpecDict;
-
-  if (!OOSynthesizeMaterialShader(
-          configuration, name,
-          cacheKey /* FIXME: entity name for error reporting */,
-          &vertexShaderSource, &fragmentShaderSource, &textureSpecList,
-          &uniformSpecDict)) {
-    return nullptr;
-  }
+  std::optional<OOSynthesizedShader> synthesis = OOSynthesizeMaterialShader(
+      configuration, name,
+      cacheKey /* FIXME: entity name for error reporting */);
+  if (!synthesis.has_value()) return nullptr;
+  std::string& vertexShaderSource = synthesis->vertexShader;
+  std::string& fragmentShaderSource = synthesis->fragmentShader;
+  const oo::PList& textureSpecList = synthesis->textureSpecs;
+  const oo::PList& uniformSpecDict = synthesis->uniformSpecs;
   // A failed synthesis leaves the texture list null (and the shaders empty)
   // where it left all four nil. Mirror dictionaryWithObjectsAndKeys: nil-stop —
   // unsynthesized keeps only the is-synthesized flag.

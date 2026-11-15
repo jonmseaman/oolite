@@ -153,7 +153,11 @@ struct Baked {
 
 void Bake(OOTextureGenerator* generator, Baked& baked) {
   OO_CHECK(generator->enqueue());
-  baked.ok = generator->getResult(&baked.pixMap, &baked.format, NULL, NULL);
+  if (std::optional<OOTextureLoader::Result> loaded = generator->getResult()) {
+    baked.ok = true;
+    baked.pixMap = loaded->pixMap;
+    baked.format = loaded->format;
+  }
 }
 
 // The diffuse map: d.png, loaded.
@@ -193,10 +197,13 @@ OO_TEST(settingsFromTheOptionsSpecifier) {
                         {"min_filter", oo::PList("nearest")},
                         {"anisotropy", oo::PList(0.5)},
                         {"texture_LOD_bias", oo::PList(-0.25)}});
-    OOTextureFlags expected = OOTextureFlags::kNone;
-    float anisotropy = 0, lodBias = 0;
-    OO_CHECK(OOInterpretTextureSpecifier(options, NULL, &expected,
-                                             &anisotropy, &lodBias, true));
+    const std::optional<OOTextureSpecifier> interpreted =
+        OOInterpretTextureSpecifier(options, true);
+    OO_CHECK(interpreted.has_value());
+    const OOTextureFlags expected =
+        interpreted ? interpreted->options : OOTextureFlags::kNone;
+    const float anisotropy = interpreted ? interpreted->anisotropy : 0;
+    const float lodBias = interpreted ? interpreted->lodBias : 0;
     OOTextureGenerator* generator = NewGenerator(
         oo::PList("e.png"), nullptr, nullptr, nullptr, oo::PList(), nullptr, options);
     OO_CHECK(generator != nullptr &&

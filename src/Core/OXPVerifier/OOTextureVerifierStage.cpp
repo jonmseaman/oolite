@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #include "OOTextureVerifierStage.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -104,7 +105,6 @@ void OOTextureVerifierStage::checkTextureNamed(const std::string& name,
   OOPixMapDimension rWidth, rHeight;
   bool success;
   OOPixMap pixmap;
-  OOTextureDataFormat format;
 
   fileScanner = static_cast<OOFileScannerVerifierStage*>(
       verifier()->stageWithName(OOFileScannerVerifierStage::kName));
@@ -124,7 +124,9 @@ void OOTextureVerifierStage::checkTextureNamed(const std::string& name,
            "***** ERROR: image {} could not be read.",
            displayName.value_or("(null)"));
   } else {
-    success = loader->getResult(&pixmap, &format, nullptr, nullptr);
+    std::optional<OOTextureLoader::Result> loaded = loader->getResult();
+    success = loaded.has_value();
+    if (success) pixmap = loaded->pixMap;
 
     if (success) {
       rWidth = OORoundUpToPowerOf2_PixMap((2 * pixmap.width) / 3);

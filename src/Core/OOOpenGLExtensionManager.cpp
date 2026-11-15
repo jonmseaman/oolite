@@ -32,6 +32,7 @@ SOFTWARE.
 #include <array>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
@@ -575,12 +576,8 @@ std::size_t OOOpenGLExtensionManager::releaseVersionNumber() {
   return release_;
 }
 
-void OOOpenGLExtensionManager::getVersionMajor(unsigned* outMajor,
-                                               unsigned* outMinor,
-                                               unsigned* outRelease) {
-  if (outMajor != nullptr) *outMajor = major;
-  if (outMinor != nullptr) *outMinor = minor;
-  if (outRelease != nullptr) *outRelease = release_;
+OOOpenGLExtensionManager::Version OOOpenGLExtensionManager::version() {
+  return {major, minor, release_};
 }
 
 bool OOOpenGLExtensionManager::versionIsAtLeastMajor(unsigned maj,

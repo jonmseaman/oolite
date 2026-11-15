@@ -9,7 +9,7 @@
    goes into the subregion, one that crosses a border is left out), which region
    an entity is filed in (the first subregion within whose borders it lies, else
    the universe), the counts in -debugOut, the description text, the collision
-   counters and the shadow geometry of shadowAtPointOcclusionToValue(). Run:
+   counters and the shadow geometry of shadowAtPointOcclusion(). Run:
    tests/run.sh unit
 */
 
@@ -176,21 +176,18 @@ OO_TEST(shadowGeometry) {
     Entity* between = MakeEntity(make_HPvector(0, 0, 100), 50);
     Entity* behind = MakeEntity(make_HPvector(0, 0, -100), 50);
     Entity* small = MakeEntity(make_HPvector(0, 0, 100), 0.5f);
-    float value = 0;
+    Occlusion o = shadowAtPointOcclusion(kZeroHPVector, 1, between, sun);
+    OO_CHECK(o.occluded);
+    OO_CHECK(o.value == 0.0f);
 
-    OO_CHECK(
-        shadowAtPointOcclusionToValue(kZeroHPVector, 1, between, sun, &value));
-    OO_CHECK(value == 0.0f);
+    o = shadowAtPointOcclusion(kZeroHPVector, 1, behind, sun);
+    OO_CHECK(!o.occluded);
+    OO_CHECK(o.value == 1.5f);
 
-    value = 0;
-    OO_CHECK(
-        !shadowAtPointOcclusionToValue(kZeroHPVector, 1, behind, sun, &value));
-    OO_CHECK(value == 1.5f);
-
-    value = 0;
-    OO_CHECK(!shadowAtPointOcclusionToValue(
-        kZeroHPVector, 1, small, sun, &value));  // smaller can't shade bigger
-    OO_CHECK(value == 1.5f);
+    o = shadowAtPointOcclusion(kZeroHPVector, 1, small,
+                               sun);  // smaller can't shade bigger
+    OO_CHECK(!o.occluded);
+    OO_CHECK(o.value == 1.5f);
   }
 }
 

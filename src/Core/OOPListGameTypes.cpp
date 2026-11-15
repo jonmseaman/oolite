@@ -56,7 +56,9 @@ Vector OOVectorFromPList(const oo::PList* value, Vector defaultValue) {
     case oo::plist_get::TupleSource::kString:
       // Writes result only if a valid vector is found, and logs an error
       // otherwise.
-      ScanVectorFromString(*value->getIf<std::string>(), &result);
+      if (const std::optional<Vector> scanned =
+              ScanVectorFromString(*value->getIf<std::string>()))
+        result = *scanned;
       break;
 
     case oo::plist_get::TupleSource::kObject: {
@@ -87,7 +89,9 @@ HPVector OOHPVectorFromPList(const oo::PList* value, HPVector defaultValue) {
       break;
 
     case oo::plist_get::TupleSource::kString:
-      ScanHPVectorFromString(*value->getIf<std::string>(), &result);
+      if (const std::optional<HPVector> scanned =
+              ScanHPVectorFromString(*value->getIf<std::string>()))
+        result = *scanned;
       break;
 
     case oo::plist_get::TupleSource::kObject:  // (no native HPVector object:
@@ -113,7 +117,9 @@ Quaternion OOQuaternionFromPList(const oo::PList* value,
       break;
 
     case oo::plist_get::TupleSource::kString:
-      ScanQuaternionFromString(*value->getIf<std::string>(), &result);
+      if (const std::optional<Quaternion> scanned =
+              ScanQuaternionFromString(*value->getIf<std::string>()))
+        result = *scanned;
       break;
 
     case oo::plist_get::TupleSource::kObject:

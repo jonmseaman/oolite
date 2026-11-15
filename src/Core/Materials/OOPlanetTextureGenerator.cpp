@@ -109,8 +109,7 @@ class OOPlanetAtmosphereGenerator : public OOTextureGenerator {
   OOTextureFlags textureOptions() override;
   bool enqueue() override;
   void loadTexture() override;
-  bool getResult(OOPixMap* result, OOTextureDataFormat* outFormat,
-                 uint32_t* outWidth, uint32_t* outHeight) override;
+  std::optional<Result> getResult() override;
 
  private:
   bool _enqueued = {};
@@ -376,9 +375,8 @@ OOPlanetAtmosphereGenerator* OOPlanetTextureGenerator::atmosphereGenerator() {
   return _atmoGenerator.get();
 }
 
-bool OOPlanetTextureGenerator::getResultFormatWidthHeight(
-    OOPixMap* outData, OOTextureDataFormat* outFormat, uint32_t* outWidth,
-    uint32_t* outHeight) {
+std::optional<OOTextureLoader::Result>
+OOPlanetTextureGenerator::getResultFormatWidthHeight() {
   bool waiting = false;
   if (!isReady()) {
     waiting = true;
@@ -386,16 +384,16 @@ bool OOPlanetTextureGenerator::getResultFormatWidthHeight(
            description());
   }
 
-  bool result =
-      OOTextureGenerator::getResult(outData, outFormat, outWidth, outHeight);
+  std::optional<Result> result = OOTextureGenerator::getResult();
 
   if (waiting) {
     OO_LOG("texture.planet.generate.dequeue", "{} generator {}",
-           result ? "Dequeued" : "Failed to dequeue", description());
+           result.has_value() ? "Dequeued" : "Failed to dequeue",
+           description());
   } else {
-    OO_LOG("texture.planet.generate.dequeue",
-           "{} generator {} without waiting.",
-           result ? "Dequeued" : "Failed to dequeue", description());
+    OO_LOG(
+        "texture.planet.generate.dequeue", "{} generator {} without waiting.",
+        result.has_value() ? "Dequeued" : "Failed to dequeue", description());
   }
 
   return result;
@@ -1238,16 +1236,14 @@ void OOPlanetAtmosphereGenerator::loadTexture() {
  * by the time the parent task is complete, this texture loader will
  * have been enqueued, and [super getResult] will then work
  * properly. - CIM 2014-04-05 */
-bool OOPlanetAtmosphereGenerator::getResult(OOPixMap* result,
-                                            OOTextureDataFormat* outFormat,
-                                            uint32_t* outWidth,
-                                            uint32_t* outHeight) {
+std::optional<OOTextureLoader::Result>
+OOPlanetAtmosphereGenerator::getResult() {
   if (!_ready) {
     OOAsyncWorkManager::sharedAsyncWorkManager()->waitForTaskToComplete(
         _parent.get());
   }
 
-  return OOTextureGenerator::getResult(result, outFormat, outWidth, outHeight);
+  return OOTextureGenerator::getResult();
 }
 
 void OOPlanetAtmosphereGenerator::completeWithData(OOPixelBuffer data_,

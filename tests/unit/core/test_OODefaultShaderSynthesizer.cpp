@@ -103,10 +103,15 @@ Synthesized Synthesize(oo::PList::Dict configuration,
   result.vertex = "unwritten";
   result.fragment = "unwritten";
   StartLog();
-  result.ok = OOSynthesizeMaterialShader(
-      oo::PList(std::move(configuration)), materialKey,
-      std::string("test entity"), &result.vertex, &result.fragment,
-      &result.textures, &result.uniforms);
+  if (std::optional<OOSynthesizedShader> synthesized =
+          OOSynthesizeMaterialShader(oo::PList(std::move(configuration)),
+                                     materialKey, std::string("test entity"))) {
+    result.ok = true;
+    result.vertex = synthesized->vertexShader;
+    result.fragment = synthesized->fragmentShader;
+    result.textures = synthesized->textureSpecs;
+    result.uniforms = synthesized->uniformSpecs;
+  }
   return result;
 }
 

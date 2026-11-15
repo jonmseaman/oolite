@@ -370,12 +370,19 @@ GLint OOConcreteTexture::glTextureName() {
 // Private (was the (Private) category).
 
 void OOConcreteTexture::setUpTexture() {
-  OOPixMap pm;
-
   // This will block until loading is completed, if necessary.
-  if (_loader != nullptr &&
-      _loader->getResult(&pm, &_format, &_originalWidth, &_originalHeight)) {
-    // a message to nil answered NO
+  std::optional<OOTextureLoader::Result> loaded;
+  if (_loader != nullptr) {  // a message to nil answered NO
+    loaded = _loader->getResult();
+    // A failed load left the format invalid.
+    _format = loaded.has_value() ? loaded->format : kOOTextureDataInvalid;
+    if (loaded.has_value()) {
+      _originalWidth = loaded->originalWidth;
+      _originalHeight = loaded->originalHeight;
+    }
+  }
+  if (loaded.has_value()) {
+    const OOPixMap& pm = loaded->pixMap;
     _bytes = OOPixMapOwnedBuffer(pm);
     _width = pm.width;
     _height = pm.height;
