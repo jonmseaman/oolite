@@ -82,9 +82,17 @@ oolite_sources += files(
     'OOXMLExtensions.cpp',
     'Octree.cpp',
     'ResourceManager.cpp',
+    'SpeechSynthesizer.cpp',
     'Universe.cpp',
     'legacy_random.cpp',
 )
+
+# oo::SpeechSynthesizer's espeak calls, or the silent stand-in when the build has no espeak.
+if get_option('espeak')
+    oolite_sources += files('SpeechSynthesizer_espeak.cpp')
+else
+    oolite_sources += files('SpeechSynthesizer_none.cpp')
+endif
 
 # OO_VERSION_FULL, OO_BUILD_DATE and OO_BUILDER (meson.build); on the include path through the
 # include_directories('.') below, which covers this build directory.

@@ -18,6 +18,7 @@
 */
 
 #include "PlayerEntity.h"
+#include "SpeechSynthesizer.h"
 #include "Universe.h"
 #include "oofnd/AutoreleaseScope.hpp"
 #include "oofnd/objc/OOException.h"  // -handleOoliteException:
@@ -1255,21 +1256,14 @@ OO_TEST(slice24Voices) {
   {
     oo::AutoreleaseScope scope;
     Universe* u = NewUniverse();
-    espeak_VOICE v0 = {}, v1 = {}, v2 = {};
-    v0.name = "zero";
-    v1.name = "one";
-    v2.name = "two";
-    const espeak_VOICE* voices[] = {&v0, &v1, &v2, NULL};
-    u->espeak_voices = voices;
-    u->espeak_voice_count = 3;
+    oo::SpeechSynthesizer::shared().setVoiceNamesForTesting({"zero", "one", "two"});
 
     OO_CHECK(u->nextVoice(0) == 1 && u->nextVoice(2) == 0);
     OO_CHECK(u->prevVoice(1) == 0 && u->prevVoice(0) == 2);
     OO_CHECK(u->voiceName(1) == "one" && u->voiceName(3) == "-");
     OO_CHECK(u->voiceNumber("two") == 2 && u->voiceNumber("nine") == UINT_MAX);
 
-    u->espeak_voices = nullptr;
-    u->espeak_voice_count = 0;
+    oo::SpeechSynthesizer::shared().setVoiceNamesForTesting({});
   }
 }
 #endif
