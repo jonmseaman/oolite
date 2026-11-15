@@ -94,15 +94,15 @@ struct _NSRange {
   std::size_t length;
 };
 
-static inline std::size_t NSMaxRange(NSRange range) {
+inline std::size_t NSMaxRange(NSRange range) {
   return range.location + range.length;
 }
 
-static inline bool NSLocationInRange(std::size_t location, NSRange range) {
+inline bool NSLocationInRange(std::size_t location, NSRange range) {
   return (location >= range.location) && (location < NSMaxRange(range));
 }
 
-static inline NSRange NSMakeRange(std::size_t location, std::size_t length) {
+inline NSRange NSMakeRange(std::size_t location, std::size_t length) {
   NSRange range;
   std::size_t end = location + length;
   if (end < location || end < length) {
@@ -118,26 +118,26 @@ static inline NSRange NSMakeRange(std::size_t location, std::size_t length) {
   return range;
 }
 
-static inline bool NSEqualRanges(NSRange range1, NSRange range2) {
+inline bool NSEqualRanges(NSRange range1, NSRange range2) {
   return ((range1.location == range2.location) &&
           (range1.length == range2.length));
 }
 
-static inline NSPoint NSMakePoint(double x, double y) {
+inline NSPoint NSMakePoint(double x, double y) {
   NSPoint point;
   point.x = x;
   point.y = y;
   return point;
 }
 
-static inline NSSize NSMakeSize(double w, double h) {
+inline NSSize NSMakeSize(double w, double h) {
   NSSize size;
   size.width = w;
   size.height = h;
   return size;
 }
 
-static inline NSRect NSMakeRect(double x, double y, double w, double h) {
+inline NSRect NSMakeRect(double x, double y, double w, double h) {
   NSRect rect;
   rect.origin.x = x;
   rect.origin.y = y;
@@ -148,17 +148,17 @@ static inline NSRect NSMakeRect(double x, double y, double w, double h) {
 
 // GNUstep exports these from NSGeometry.m; the bodies are its (plain ==, so
 // -0.0 equals 0.0 and NaN equals nothing, as recorded by the unit test).
-static inline bool NSEqualPoints(NSPoint aPoint, NSPoint bPoint) {
+inline bool NSEqualPoints(NSPoint aPoint, NSPoint bPoint) {
   return ((aPoint.x == bPoint.x) && (aPoint.y == bPoint.y)) ? true : false;
 }
 
-static inline bool NSEqualSizes(NSSize aSize, NSSize bSize) {
+inline bool NSEqualSizes(NSSize aSize, NSSize bSize) {
   return ((aSize.width == bSize.width) && (aSize.height == bSize.height))
              ? true
              : false;
 }
 
-static inline bool NSEqualRects(NSRect aRect, NSRect bRect) {
+inline bool NSEqualRects(NSRect aRect, NSRect bRect) {
   return (NSEqualPoints(aRect.origin, bRect.origin) &&
           NSEqualSizes(aRect.size, bRect.size))
              ? true

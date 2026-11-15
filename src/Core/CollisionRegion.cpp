@@ -517,8 +517,7 @@ bool shadowAtPointOcclusionToValue(HPVector e1pos, GLfloat e1rad, Entity* e2,
 
 namespace {
 
-inline bool testEntityOccludedByEntity(Entity* e1, Entity* e2,
-                                       OOSunEntity* the_sun) {
+bool testEntityOccludedByEntity(Entity* e1, Entity* e2, OOSunEntity* the_sun) {
   float tmp;  // we're not interested in the amount of occlusion just now.
   return entityByEntityOcclusionToValue(e1, e2, the_sun, &tmp);
 }
