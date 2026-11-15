@@ -69,7 +69,7 @@ class OOTexture;
 class StickProfileScreen;  // PlayerEntityStickProfile.h
 
 #define ALLOW_CUSTOM_VIEWS_WHILE_PAUSED 1
-#define SCRIPT_TIMER_INTERVAL 10.0
+inline constexpr double SCRIPT_TIMER_INTERVAL = 10.0;
 
 #ifndef OO_VARIABLE_TORUS_SPEED
 #define OO_VARIABLE_TORUS_SPEED 1
@@ -77,8 +77,8 @@ class StickProfileScreen;  // PlayerEntityStickProfile.h
 
 #define GUI_ROW_INIT(GUI) /*int n_rows = [(GUI) rows]*/
 
-#define CUSTOM_VIEW_MAX_ZOOM_IN 1.5
-#define CUSTOM_VIEW_MAX_ZOOM_OUT 25
+inline constexpr double CUSTOM_VIEW_MAX_ZOOM_IN = 1.5;
+inline constexpr int CUSTOM_VIEW_MAX_ZOOM_OUT = 25;
 
 // OOGUIScreenID, OOGalacticHyperspaceBehaviour and their defaults (plain
 // header).
@@ -95,18 +95,18 @@ static_assert(oo::ToUnderlying(OOSpeechSettings::kAll) == 2);
 
 // When fully zoomed in, chart shows area of galaxy that's 64x64 galaxy units.
 #define CHART_WIDTH_AT_MAX_ZOOM 64.0
-#define CHART_HEIGHT_AT_MAX_ZOOM 64.0
+inline constexpr double CHART_HEIGHT_AT_MAX_ZOOM = 64.0;
 // Galaxy width / width of chart area at max zoom
 #define CHART_MAX_ZOOM (256.0 / CHART_WIDTH_AT_MAX_ZOOM)
 // start scrolling when cursor is this number of units away from centre
-#define CHART_SCROLL_AT_X 25.0
-#define CHART_SCROLL_AT_Y 31.0
-#define CHART_CLIP_BORDER 10.0
+inline constexpr double CHART_SCROLL_AT_X = 25.0;
+inline constexpr double CHART_SCROLL_AT_Y = 31.0;
+inline constexpr double CHART_CLIP_BORDER = 10.0;
 #define CHART_SCREEN_VERTICAL_CENTRE (10 * MAIN_GUI_ROW_HEIGHT)
 #define CHART_SCREEN_VERTICAL_CENTRE_COMPACT (7 * MAIN_GUI_ROW_HEIGHT)
-#define CHART_ZOOM_SPEED_FACTOR 1.05
+inline constexpr double CHART_ZOOM_SPEED_FACTOR = 1.05;
 
-#define CHART_ZOOM_SHOW_LABELS 2.0
+inline constexpr double CHART_ZOOM_SHOW_LABELS = 2.0;
 
 // OO_RESOLUTION_OPTION: true if full screen resolution can be changed.
 #define OO_RESOLUTION_OPTION 1
@@ -348,54 +348,54 @@ static_assert(oo::ToUnderlying(OOMarketSorterMode::kStock) == 3);
 static_assert(oo::ToUnderlying(OOMarketSorterMode::kHold) == 4);
 static_assert(oo::ToUnderlying(OOMarketSorterMode::kUnit) == 5);
 
-#define ECM_ENERGY_DRAIN_FACTOR 20.0f
-#define ECM_DURATION 2.5f
+inline constexpr float ECM_ENERGY_DRAIN_FACTOR = 20.0f;
+inline constexpr float ECM_DURATION = 2.5f;
 
-#define ROLL_DAMPING_FACTOR 1.0f
-#define PITCH_DAMPING_FACTOR 1.0f
-#define YAW_DAMPING_FACTOR 1.0f
+inline constexpr float ROLL_DAMPING_FACTOR = 1.0f;
+inline constexpr float PITCH_DAMPING_FACTOR = 1.0f;
+inline constexpr float YAW_DAMPING_FACTOR = 1.0f;
 
-#define PLAYER_MAX_WEAPON_TEMP 256.0f
+inline constexpr float PLAYER_MAX_WEAPON_TEMP = 256.0f;
 #ifdef OO_DUMP_PLANETINFO
 // debugging
-#define PLAYER_MAX_FUEL 7000
+inline constexpr int PLAYER_MAX_FUEL = 7000;
 #else
-#define PLAYER_MAX_FUEL 70
+inline constexpr int PLAYER_MAX_FUEL = 70;
 #endif
-#define PLAYER_MAX_MISSILES 16
-#define PLAYER_STARTING_MAX_MISSILES 4
-#define PLAYER_STARTING_MISSILES 3
-#define PLAYER_DIAL_MAX_ALTITUDE 40000.0
-#define PLAYER_SUPER_ALTITUDE2 10000000000.0
+inline constexpr int PLAYER_MAX_MISSILES = 16;
+inline constexpr int PLAYER_STARTING_MAX_MISSILES = 4;
+inline constexpr int PLAYER_STARTING_MISSILES = 3;
+inline constexpr double PLAYER_DIAL_MAX_ALTITUDE = 40000.0;
+inline constexpr double PLAYER_SUPER_ALTITUDE2 = 10000000000.0;
 
-#define PLAYER_MAX_TRUMBLES 24
+inline constexpr int PLAYER_MAX_TRUMBLES = 24;
 
-#define PLAYER_TARGET_MEMORY_SIZE 16
+inline constexpr int PLAYER_TARGET_MEMORY_SIZE = 16;
 
 #if OO_VARIABLE_TORUS_SPEED
 #define HYPERSPEED_FACTOR \
   (PLAYER != nullptr ? PLAYER->getHyperspeedFactor() : 0.0f)
-#define MIN_HYPERSPEED_FACTOR 32.0
-#define MAX_HYPERSPEED_FACTOR 1024.0
+inline constexpr double MIN_HYPERSPEED_FACTOR = 32.0;
+inline constexpr double MAX_HYPERSPEED_FACTOR = 1024.0;
 #else
-#define HYPERSPEED_FACTOR 32.0
+inline constexpr double HYPERSPEED_FACTOR = 32.0;
 #endif
 
 inline constexpr std::string_view PLAYER_SHIP_DESC = "cobra3-player";
 
-#define ESCAPE_SEQUENCE_TIME 10.0
+inline constexpr double ESCAPE_SEQUENCE_TIME = 10.0;
 
 #define FORWARD_FACING_STRING OO_DESC("forward-facing-string")
 #define AFT_FACING_STRING OO_DESC("aft-facing-string")
 #define PORT_FACING_STRING OO_DESC("port-facing-string")
 #define STARBOARD_FACING_STRING OO_DESC("starboard-facing-string")
 
-#define KEY_REPEAT_INTERVAL 0.20
+inline constexpr double KEY_REPEAT_INTERVAL = 0.20;
 
 #define PLAYER_SHIP_CLOCK_START (2084004 * 86400.0)
 // adding or removing a player ship subentity increases or decreases the ship's
 // trade-in factor respectively by this amount
-#define PLAYER_SHIP_SUBENTITY_TRADE_IN_VALUE 3
+inline constexpr int PLAYER_SHIP_SUBENTITY_TRADE_IN_VALUE = 3;
 
 inline constexpr std::string_view CONTRACTS_GOOD_KEY = "contracts_fulfilled";
 inline constexpr std::string_view CONTRACTS_BAD_KEY = "contracts_expired";
@@ -407,16 +407,16 @@ inline constexpr std::string_view PARCEL_GOOD_KEY = "parcels_fulfilled";
 inline constexpr std::string_view PARCEL_BAD_KEY = "parcels_expired";
 inline constexpr std::string_view PARCEL_UNKNOWN_KEY = "parcels_unknown";
 
-#define SCANNER_ZOOM_RATE_UP 2.0
-#define SCANNER_ZOOM_RATE_DOWN -8.0
-#define SCANNER_ECM_FUZZINESS 1.25
+inline constexpr double SCANNER_ZOOM_RATE_UP = 2.0;
+inline constexpr double SCANNER_ZOOM_RATE_DOWN = -8.0;
+inline constexpr double SCANNER_ECM_FUZZINESS = 1.25;
 
-#define PLAYER_INTERNAL_DAMAGE_FACTOR 31
+inline constexpr int PLAYER_INTERNAL_DAMAGE_FACTOR = 31;
 
 inline constexpr std::string_view PLAYER_DOCKING_AI_NAME =
     "oolite-player-AI.plist";
 
-#define MANIFEST_SCREEN_ROW_BACK 1
+inline constexpr int MANIFEST_SCREEN_ROW_BACK = 1;
 #define MANIFEST_SCREEN_ROW_NEXT                        \
   ((PLAYER != nullptr && PLAYER->getHud() != nullptr && \
     PLAYER->getHud()->isHidden())                       \
