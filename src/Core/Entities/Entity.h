@@ -70,10 +70,10 @@ extern size_t gTotalEntityMemory;
 // ie. the furthest away thing we can draw is at 1280km (a 2.5km wide object
 // would disappear at that range)
 
-#define SCANNER_MAX_RANGE 25600.0
-#define SCANNER_MAX_RANGE2 655360000.0
+inline constexpr double SCANNER_MAX_RANGE = 25600.0;
+inline constexpr double SCANNER_MAX_RANGE2 = 655360000.0;
 
-#define CLOSE_COLLISION_CHECK_MAX_RANGE2 1000000000.0
+inline constexpr double CLOSE_COLLISION_CHECK_MAX_RANGE2 = 1000000000.0;
 
 // OOEntityStatus, OOScanClass and their defaults (a plain header).
 #include "OOEntityEnums.h"
