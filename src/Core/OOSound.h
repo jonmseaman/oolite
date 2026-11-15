@@ -45,16 +45,8 @@ MA 02110-1301, USA.
 
 #include "OOFoundation.h"
 
-#define OOLITE_OPENAL 1
-
-#if OOLITE_OPENAL
 #include "OOALMusic.h"
 #include "OOALSound.h"
 #include "OOBasicSoundReferencePoint.h"
-#else
-
-#warning No sound implementation selected. Currently, the only option is OOLITE_OPENAL. There are SDL and Mac CoreAudio implementations in the revision history.
-
-#endif
 
 #include "OOSoundSource.h"
